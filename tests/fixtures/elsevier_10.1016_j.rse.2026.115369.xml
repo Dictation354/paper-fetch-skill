@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<full-text-retrieval-response
+  xmlns="http://www.elsevier.com/xml/svapi/article/dtd"
+  xmlns:ce="http://www.elsevier.com/xml/common/dtd"
+>
+  <body>
+    <ce:sections>
+      <ce:section>
+        <ce:section-title>Introduction</ce:section-title>
+        <ce:para>
+          This review summarizes how Sentinel-1 synthetic aperture radar products are being used across offshore wind-energy
+          workflows, with emphasis on high spatial detail, wake mapping and practical wind-resource interpretation.
+        </ce:para>
+        <ce:para>
+          The fixture keeps the structure of a long review article while reducing the text to a compact offline sample that
+          still exercises section parsing, heading detection and AI-markdown serialization for a realistic Elsevier XML case.
+        </ce:para>
+      </ce:section>
+
+      <ce:section>
+        <ce:section-title>Operational systems</ce:section-title>
+        <ce:para>
+          The article compares operational Sentinel-1 wind products produced by public services and research groups, including
+          differences in resolution, geophysical model functions and input wind-direction sources.
+        </ce:para>
+      </ce:section>
+
+      <ce:section>
+        <ce:section-title>Wind direction sources</ce:section-title>
+        <ce:para>
+          Wind direction can be estimated from streaks inside the SAR scene or imported from models and local measurements.
+          The appropriate source depends on scene quality, coastal complexity and the scale of the target application.
+        </ce:para>
+      </ce:section>
+
+      <ce:section>
+        <ce:section-title>Trend analysis</ce:section-title>
+        <ce:para>
+          Longer observational archives make it possible to compare wind-resource statistics across years and to ask how
+          coverage, revisit time and auxiliary stability information influence estimates used by the offshore wind sector.
+        </ce:para>
+      </ce:section>
+    </ce:sections>
+  </body>
+</full-text-retrieval-response>

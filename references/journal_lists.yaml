@@ -1,0 +1,31 @@
+list_1:
+  - journal_name: Solar Energy
+    normalized_name: solar energy
+    publisher: Elsevier
+    official_provider: elsevier
+    match_aliases:
+      - solar energy journal
+  - journal_name: Advanced Energy Materials
+    normalized_name: advanced energy materials
+    publisher: Wiley
+    official_provider: wiley
+    match_aliases:
+      - adv energy materials
+
+list_2:
+  - journal_name: Boundary-Layer Meteorology
+    normalized_name: boundary layer meteorology
+    publisher: Springer
+    official_provider: springer
+    match_aliases:
+      - boundary layer meteorology
+  - journal_name: Climate Dynamics
+    normalized_name: climate dynamics
+    publisher: Springer
+    official_provider: springer
+    match_aliases: []
+  - journal_name: Atmospheric Environment
+    normalized_name: atmospheric environment
+    publisher: Elsevier
+    official_provider: elsevier
+    match_aliases: []

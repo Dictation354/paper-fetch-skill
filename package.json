@@ -1,0 +1,11 @@
+{
+  "name": "paper-fetch-skill-formula-tools",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Auxiliary Node tools for MathML to LaTeX evaluation",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "katex": "0.16.45",
+    "mathml-to-latex": "1.5.0"
+  }
+}

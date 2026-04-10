@@ -1,0 +1,4 @@
+beautifulsoup4==4.14.3
+trafilatura==2.0.0
+lxml==6.0.3
+PyMuPDF==1.27.2.2

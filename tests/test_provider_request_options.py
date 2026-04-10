@@ -1,0 +1,153 @@
+from __future__ import annotations
+
+import json
+import sys
+import unittest
+from pathlib import Path
+
+
+SCRIPT_DIR = Path(__file__).resolve().parent.parent / "scripts"
+if str(SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_DIR))
+
+from fetch_common import DEFAULT_FULLTEXT_TIMEOUT_SECONDS, DEFAULT_TIMEOUT_SECONDS
+from providers.crossref import CrossrefClient
+from providers.elsevier import ElsevierClient
+from providers.springer import SpringerClient
+from providers.wiley import WileyClient
+
+
+class RecordingTransport:
+    def __init__(self, responses: dict[tuple[str, str], dict[str, object]]) -> None:
+        self.responses = responses
+        self.calls: list[dict[str, object]] = []
+
+    def request(
+        self,
+        method,
+        url,
+        *,
+        headers=None,
+        query=None,
+        timeout=DEFAULT_TIMEOUT_SECONDS,
+        retry_on_rate_limit=False,
+        rate_limit_retries=1,
+        max_rate_limit_wait_seconds=5,
+    ):
+        self.calls.append(
+            {
+                "method": method,
+                "url": url,
+                "headers": dict(headers or {}),
+                "query": dict(query or {}),
+                "timeout": timeout,
+                "retry_on_rate_limit": retry_on_rate_limit,
+                "rate_limit_retries": rate_limit_retries,
+                "max_rate_limit_wait_seconds": max_rate_limit_wait_seconds,
+            }
+        )
+        key = (method, url)
+        if key not in self.responses:
+            raise AssertionError(f"Missing fake response for {method} {url}")
+        return self.responses[key]
+
+
+class ProviderRequestOptionsTests(unittest.TestCase):
+    def test_crossref_metadata_uses_default_timeout_and_rate_limit_retry(self) -> None:
+        transport = RecordingTransport(
+            {
+                ("GET", "https://api.crossref.org/works/10.1234%2Fexample"): {
+                    "status_code": 200,
+                    "headers": {"content-type": "application/json"},
+                    "body": json.dumps(
+                        {
+                            "message": {
+                                "DOI": "10.1234/example",
+                                "title": ["Example"],
+                                "container-title": ["Journal"],
+                                "publisher": "Publisher",
+                                "URL": "https://example.test/article",
+                            }
+                        }
+                    ).encode("utf-8"),
+                    "url": "https://api.crossref.org/works/10.1234%2Fexample",
+                }
+            }
+        )
+
+        client = CrossrefClient(transport, {"CROSSREF_MAILTO": "alice@example.com"})
+        metadata = client.fetch_metadata({"doi": "10.1234/example"})
+
+        self.assertEqual(metadata["doi"], "10.1234/example")
+        self.assertEqual(transport.calls[0]["timeout"], DEFAULT_TIMEOUT_SECONDS)
+        self.assertTrue(transport.calls[0]["retry_on_rate_limit"])
+
+    def test_elsevier_fulltext_uses_extended_timeout(self) -> None:
+        doi = "10.1016/test"
+        transport = RecordingTransport(
+            {
+                ("GET", "https://api.elsevier.com/content/article/doi/10.1016%2Ftest"): {
+                    "status_code": 200,
+                    "headers": {"content-type": "text/xml"},
+                    "body": b"<xml />",
+                    "url": "https://api.elsevier.com/content/article/doi/10.1016%2Ftest",
+                }
+            }
+        )
+
+        client = ElsevierClient(transport, {"ELSEVIER_API_KEY": "secret"})
+        payload = client.fetch_raw_fulltext(doi, {})
+
+        self.assertEqual(payload.content_type, "text/xml")
+        self.assertEqual(transport.calls[0]["timeout"], DEFAULT_FULLTEXT_TIMEOUT_SECONDS)
+        self.assertTrue(transport.calls[0]["retry_on_rate_limit"])
+
+    def test_springer_openaccess_fulltext_uses_extended_timeout(self) -> None:
+        doi = "10.1186/1471-2105-11-421"
+        transport = RecordingTransport(
+            {
+                ("GET", "https://api.springernature.com/openaccess/jats"): {
+                    "status_code": 200,
+                    "headers": {"content-type": "application/xml"},
+                    "body": b"<article />",
+                    "url": "https://api.springernature.com/openaccess/jats",
+                }
+            }
+        )
+
+        client = SpringerClient(transport, {"SPRINGER_OPENACCESS_API_KEY": "secret"})
+        payload = client.fetch_raw_fulltext(doi, {})
+
+        self.assertEqual(payload.content_type, "application/xml")
+        self.assertEqual(transport.calls[0]["timeout"], DEFAULT_FULLTEXT_TIMEOUT_SECONDS)
+        self.assertTrue(transport.calls[0]["retry_on_rate_limit"])
+
+    def test_wiley_fulltext_uses_extended_timeout(self) -> None:
+        doi = "10.1002/ece3.9361"
+        transport = RecordingTransport(
+            {
+                ("GET", "https://api.wiley.com/onlinelibrary/tdm/v1/articles/10.1002%2Fece3.9361"): {
+                    "status_code": 200,
+                    "headers": {"content-type": "application/pdf"},
+                    "body": b"%PDF-1.4",
+                    "url": "https://api.wiley.com/onlinelibrary/tdm/v1/articles/10.1002%2Fece3.9361",
+                }
+            }
+        )
+
+        client = WileyClient(
+            transport,
+            {
+                "WILEY_TDM_URL_TEMPLATE": "https://api.wiley.com/onlinelibrary/tdm/v1/articles/{doi}",
+                "WILEY_TDM_TOKEN": "secret",
+            },
+        )
+        payload = client.fetch_raw_fulltext(doi, {})
+
+        self.assertEqual(payload.content_type, "application/pdf")
+        self.assertEqual(transport.calls[0]["timeout"], DEFAULT_FULLTEXT_TIMEOUT_SECONDS)
+        self.assertTrue(transport.calls[0]["retry_on_rate_limit"])
+
+
+if __name__ == "__main__":
+    unittest.main()
