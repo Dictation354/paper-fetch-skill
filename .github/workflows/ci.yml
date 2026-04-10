@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install package
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install .
+
+      - name: Run unittest suite
+        run: python -m unittest discover -s tests -q
+
+      - name: Run CLI help smoke
+        run: PYTHONPATH=src python -m paper_fetch.cli --help
+
+      - name: Run MCP integration smoke
+        run: PYTHONPATH=src python -m unittest discover -s tests -p 'test_mcp_integration.py' -q
