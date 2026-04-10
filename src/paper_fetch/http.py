@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+import threading
 import time
 import urllib.error
 import urllib.parse
@@ -82,6 +83,7 @@ class HttpTransport:
         self.cache_capacity = max(0, int(cache_capacity))
         self.max_cacheable_body_bytes = max(0, int(max_cacheable_body_bytes))
         self._cache: OrderedDict[tuple[str, str, tuple[tuple[str, str], ...]], tuple[float, dict[str, Any]]] = OrderedDict()
+        self._cache_lock = threading.RLock()
 
     def _build_cache_key(
         self,
@@ -121,15 +123,16 @@ class HttpTransport:
     ) -> dict[str, Any] | None:
         if cache_key is None:
             return None
-        cached_entry = self._cache.get(cache_key)
-        if cached_entry is None:
-            return None
-        expires_at, response = cached_entry
-        if expires_at <= time.monotonic():
-            self._cache.pop(cache_key, None)
-            return None
-        self._cache.move_to_end(cache_key)
-        return self._clone_response(response)
+        with self._cache_lock:
+            cached_entry = self._cache.get(cache_key)
+            if cached_entry is None:
+                return None
+            expires_at, response = cached_entry
+            if expires_at <= time.monotonic():
+                self._cache.pop(cache_key, None)
+                return None
+            self._cache.move_to_end(cache_key)
+            return self._clone_response(response)
 
     def _store_cached_response(
         self,
@@ -138,10 +141,11 @@ class HttpTransport:
     ) -> None:
         if cache_key is None or not self._is_cacheable_response(response):
             return
-        self._cache[cache_key] = (time.monotonic() + self.cache_ttl, self._clone_response(response))
-        self._cache.move_to_end(cache_key)
-        while len(self._cache) > self.cache_capacity:
-            self._cache.popitem(last=False)
+        with self._cache_lock:
+            self._cache[cache_key] = (time.monotonic() + self.cache_ttl, self._clone_response(response))
+            self._cache.move_to_end(cache_key)
+            while len(self._cache) > self.cache_capacity:
+                self._cache.popitem(last=False)
 
     def _is_cacheable_response(self, response: Mapping[str, Any]) -> bool:
         if self.max_cacheable_body_bytes <= 0:

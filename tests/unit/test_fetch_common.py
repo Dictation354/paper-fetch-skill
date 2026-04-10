@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import concurrent.futures
 import io
+import threading
 import unittest
 import urllib.error
 import warnings
@@ -184,6 +186,35 @@ class HttpTransportCacheTests(unittest.TestCase):
                 )
 
         server_error.close.assert_called_once_with()
+
+    def test_concurrent_get_requests_keep_cache_consistent(self) -> None:
+        transport = http_module.HttpTransport(cache_ttl=30, cache_capacity=4)
+        call_count = 0
+        call_lock = threading.Lock()
+
+        def fake_urlopen(request, timeout=20):
+            nonlocal call_count
+            with call_lock:
+                call_count += 1
+            return FakeHTTPResponse(
+                request.full_url.encode("utf-8"),
+                request.full_url,
+                headers={"content-type": "text/plain"},
+            )
+
+        urls = [f"https://example.test/article/{index % 6}" for index in range(48)]
+        with mock.patch.object(http_module.urllib.request, "urlopen", side_effect=fake_urlopen):
+            with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
+                responses = list(
+                    executor.map(
+                        lambda url: transport.request("GET", url, headers={"Accept": "text/plain"}),
+                        urls,
+                    )
+                )
+
+        self.assertEqual([item["body"] for item in responses], [url.encode("utf-8") for url in urls])
+        self.assertLessEqual(len(transport._cache), 4)
+        self.assertTrue(call_count >= len({*urls}))
 
     def test_map_request_failure_returns_rate_limited_provider_failure(self) -> None:
         failure = http_module.RequestFailure(

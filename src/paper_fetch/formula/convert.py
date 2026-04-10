@@ -16,6 +16,7 @@ from typing import Iterable, Mapping
 
 from ..config import ROOT_DIR
 
+SCRIPT_DIR = ROOT_DIR / "scripts"
 FORMULA_TOOLS_DIR = ROOT_DIR / ".formula-tools"
 FORMULA_TOOLS_BIN_DIR = FORMULA_TOOLS_DIR / "bin"
 FORMULA_TOOLS_LIB_DIR = FORMULA_TOOLS_DIR / "lib"

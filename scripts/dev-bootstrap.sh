@@ -49,8 +49,7 @@ fi
 
 log "Installing Python dependencies"
 "$PYTHON_BIN" -m pip install --quiet --upgrade pip
-"$PYTHON_BIN" -m pip install --quiet -r "$REPO_DIR/requirements.txt"
-"$PYTHON_BIN" -m pip install --quiet -e "$REPO_DIR"
+"$PYTHON_BIN" -m pip install --quiet -e "$REPO_DIR[dev]"
 
 if [ "$COPY_ENV_FILE" = "1" ] && [ -f "$REPO_DIR/.env.example" ] && [ ! -f "$REPO_DIR/.env" ]; then
     cp "$REPO_DIR/.env.example" "$REPO_DIR/.env"

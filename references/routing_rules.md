@@ -1,5 +1,9 @@
 # Routing Rules
 
+This file is a historical design sketch for routing heuristics. It is not loaded by the runtime, and it is not the source of truth for current provider routing.
+
+Current runtime behavior lives in `src/paper_fetch/publisher_identity.py` plus the resolve/service flow that uses those conservative DOI and publisher-name inferences.
+
 ## Goal
 
 Choose the most appropriate metadata lookup provider with this fixed priority:
@@ -21,7 +25,7 @@ If a journal belongs to a publisher with another official API, do not infer supp
 
 1. Parse `doi`, `journal_title`, and `article_title`.
 2. Normalize `journal_title`.
-3. Match the normalized title against `references/journal_lists.yaml`.
+3. Optionally match the normalized title against a curated journal list.
 4. If the matched record declares a supported `official_provider`, choose it.
 5. If there is no matched record, try a conservative DOI-prefix inference for supported publishers.
 6. If there is still no supported official route, choose `crossref`.

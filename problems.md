@@ -1,12 +1,12 @@
 # Paper Fetch Skill 可改进项
 
-本文档记录当前仓库里仍值得继续观察的点，以及已经完成并固化的架构收口状态。
+本文档是当前仓库 backlog 的唯一真理源。架构 rationale 继续放在 `docs/architecture/target-architecture.md`，但后续收口项和剩余观察点只在这里维护。
 
 ---
 
 ## 仍未处理
 
-当前没有阻塞性开放项，也没有待完成的架构迁移主线。接下来主要继续观察真实论文里的边角 case：
+当前没有阻塞性开放项，也没有待完成的架构迁移主线。除下列真实论文边角 case 外，本轮非边角 backlog 已完成收口：
 
 - 极端公式块、代码块与 ASCII 表格混排时的 Markdown 保真度
 - Wiley PDF 抽取在复杂版式论文上的稳定性
@@ -16,33 +16,38 @@
 
 ## 本轮已完成
 
-### 收口与验收固化
+### 文档与资源语义
 
-- ✅ 当前分支被明确视为 `core library + CLI + MCP + thin skill` 的已实现基线
-- ✅ closeout 守卫测试会持续阻止 `tests/` 回退到 `sys.path` 注入、`spec_from_file_location`、`sys.modules[...]` 注入和裸旧模块导入
-- ✅ CLI `--help` smoke 和 MCP stdio integration smoke 被纳入持续验收基线
-- ✅ 最小 CI 会跑离线 `unittest`、CLI smoke 和 MCP smoke，不依赖外部 API key 或网络稳定性
+- ✅ `target-architecture.md` 不再并行维护 follow-on backlog；当前 backlog 只在本文件更新
+- ✅ `references/` 明确降级为设计草稿 / 人工参考资料，不再自称运行时 authoritative 数据
+- ✅ 当前 routing 真理源已明确回到运行时代码里的保守推断逻辑，而不是 `journal_lists.yaml`
+- ✅ benchmark 产物路径从 tracked 的 `references/formula_backend_report.json` 挪到 `.formula-benchmarks/`
+- ✅ `scripts/` 已明确保留为安装器与开发/诊断自动化入口，`scripts/__init__.py` 已删除，不再伪装成 Python package
 
-### Thin Skill 与安装流
+### 运行时行为与安全性
 
-- ✅ 新增静态 skill 源文件：`skills/paper-fetch-skill/SKILL.md`
-- ✅ skill 改为 MCP-first，默认引导使用 `resolve_paper` / `fetch_paper`，CLI 只作 fallback
-- ✅ 新增 `scripts/install-claude-skill.sh` 与 `scripts/install-codex-skill.sh`
-- ✅ 新增 `scripts/dev-bootstrap.sh`，把 repo-local `.venv`、`.env.example`、公式后端安装收回开发者工作流
-- ✅ 删除根目录旧 installer、模板化 `SKILL.md` 渲染链路，以及 repo 内的 `agents/openai.yaml`
-- ✅ README 改为新职责分层，并补充“如何手动把 `paper-fetch-mcp` 接到 Claude/Codex”
-- ✅ `tests/test_skill_template.py` 改为静态 skill 断言和 installer smoke tests
+- ✅ `HttpTransport` 的进程内 LRU GET 缓存已加 `threading.RLock` 保护
+- ✅ CLI 默认下载目录已改为：`PAPER_FETCH_DOWNLOAD_DIR` -> `XDG_DATA_HOME/paper-fetch/downloads` -> 创建失败时回落 `./live-downloads`
+- ✅ `--save-markdown` 与 Wiley raw/binary 落盘已统一走同一套目录解析逻辑
 
-### Core Library / CLI / MCP
+### 依赖与护栏
 
-- ✅ `src/paper_fetch/service.py` 提供统一 orchestration，CLI 和 MCP 共享同一抓取入口
-- ✅ `paper-fetch` 与 `paper-fetch-mcp` 通过 `pyproject.toml` 暴露标准入口
-- ✅ `fetch_paper` 返回固定 `FetchEnvelope` 形状，顶层保留 provenance 字段
-- ✅ MCP 入口收敛为 `resolve_paper` 和 `fetch_paper`
+- ✅ `pyproject.toml` 已区分 runtime 依赖和 `dev` extra
+- ✅ 新增 `ruff` 配置与独立 `lint` CI job
+- ✅ 新增 `.github/dependabot.yml`，覆盖 `pip`、`npm`、`github-actions`
+- ✅ `requirements.txt` 已收敛为开发者便利入口，不再平铺 runtime pins
+- ✅ `scripts/dev-bootstrap.sh` 已改为直接安装 `.[dev]`，避免重复安装 runtime 依赖
 
-### 运行时与抓取行为
+### 可维护性
 
-- ✅ HTML fallback 保留自适应正文阈值，兼顾常规正文与短 commentary / editorial
-- ✅ Wiley PDF 落盘副作用与 HTML fallback 已解耦，`--no-download` 只控制写盘
-- ✅ `HttpTransport` 继续维持短 TTL 的 LRU GET 缓存，并明确标注非线程安全
-- ✅ 配置加载顺序已收敛到：进程环境变量 -> `PAPER_FETCH_ENV_FILE` -> `~/.config/paper-fetch/.env` -> repo-local `.env`
+- ✅ `_article_markdown.py` 已拆分成共享 helper、公式渲染、Springer、Elsevier、文档装配五层，原模块保留薄 façade 兼容入口
+- ✅ Markdown 回归测试继续覆盖 Elsevier / Springer 主路径，拆分后输出行为保持不变
+- ✅ façade 兼容入口已有守卫测试，继续暴露 `render_mathml_expression`、`build_article_structure`、`write_article_markdown`
+
+### 既有收口基线
+
+- ✅ 当前分支继续视为 `core library + CLI + MCP + thin skill` 的已实现基线
+- ✅ closeout 守卫测试持续阻止 `tests/` 回退到旧的导入 hack
+- ✅ CLI `--help` smoke 和 MCP stdio integration smoke 已收编进 integration 验收基线
+- ✅ `tests/` 继续按 `unit/ integration/ live/` 分层，根目录 `unittest discover -s tests -q` 保持可用
+- ✅ 当前离线验收基线已覆盖 `ruff check .`、`tests/unit`、`tests/integration` 和根目录 `tests/` discover

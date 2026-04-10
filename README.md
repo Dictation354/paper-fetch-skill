@@ -7,12 +7,14 @@
 当前收口基线：
 
 - `src/paper_fetch/` 是唯一的运行时代码入口
+- `scripts/` 只保留安装器和开发/诊断自动化入口，不再充当 Python package
+- `references/` 保留设计草稿和人工参考资料，不是运行时资源目录
 - `paper-fetch` 与 `paper-fetch-mcp` 是稳定的包入口
 - `skills/paper-fetch-skill/SKILL.md` 是静态、MCP-first 的 thin skill
-- 本地默认验收基线是 `python3 -m unittest discover -s tests -q`、CLI `--help` smoke、以及 MCP stdio integration smoke
-- `.github/workflows/ci.yml` 复用同一套离线验收基线，不依赖外部 API key 或 live publisher 稳定性
+- 本地默认验收基线保留 `python3 -m unittest discover -s tests -q`；需要按层跑时使用 `tests/unit` 与 `tests/integration`
+- `.github/workflows/ci.yml` 会把离线测试拆成 `lint` / `unit` / `integration` 三条 job，不依赖外部 API key 或 live publisher 稳定性
 
-后续工作重点是稳定性和边角 case，而不是继续做机械式目录搬迁。像 `references/` 资源归位、`outputs.py`、`formula/backends.py` 这类调整都属于后续 refinement。
+后续工作重点是稳定性和真实论文里的边角 case，而不是继续做机械式目录搬迁。当前 backlog 统一维护在 `problems.md`。
 
 ## 当前定位
 
@@ -38,8 +40,8 @@ paper-fetch --query "<DOI | URL | 题名>"
 默认行为：
 
 - 默认 `stdout` 输出 AI-friendly Markdown
-- 默认不落盘，不产生临时文件；但 Wiley 若官方 TDM 返回 PDF / binary，默认会落到 `live-downloads/`
-- 加上 `--save-markdown` 可在任何 provider 成功取到全文时，把渲染后的 AI Markdown 另存一份到 `--output-dir`（默认 `live-downloads/`）
+- 默认不落盘，不产生临时文件；但 Wiley 若官方 TDM 返回 PDF / binary，默认会落到 `PAPER_FETCH_DOWNLOAD_DIR` 或 XDG user data 下载目录
+- 加上 `--save-markdown` 可在任何 provider 成功取到全文时，把渲染后的 AI Markdown 另存一份到 `--output-dir`（默认同上）
 - 题名或 URL 解析歧义时，非零退出并在 `stderr` 输出候选 JSON
 - 优先官方 API / XML；Wiley PDF 会优先尝试内存提取正文；官方路径不够用时再走 HTML fallback，最后退到 Crossref metadata-only
 
@@ -136,8 +138,7 @@ Codex 安装器和 Claude 版相同，但会额外生成一个最小 `agents/ope
 默认行为：
 
 - 创建或复用 `./.venv/`
-- 安装 `requirements.txt`
-- 以 editable 方式安装当前仓库
+- 以 editable 方式安装当前仓库的 `dev` extra
 - 若缺少 `.env`，从 `.env.example` 复制一份模板
 - 运行 `install-formula-tools.sh`
 
@@ -178,6 +179,7 @@ python3 -m paper_fetch.mcp.server
 - `CROSSREF_MAILTO`
 - 出版商对应的 API key / token
 - `PAPER_FETCH_DOWNLOAD_DIR`
+- `XDG_DATA_HOME`
 
 详细变量说明见 [docs/providers.md](docs/providers.md)。
 
@@ -218,13 +220,13 @@ Wiley 特殊行为：
 - Wiley 官方 TDM 当前仍以 PDF / binary 为主
 - `paper-fetch` 会优先尝试从 Wiley PDF 中直接提取正文给 agent 使用
 - `--no-download` 只关闭落盘副作用，不会关闭 PDF 正文提取
-- 未显式指定 `--output-dir` 且未开启 `--no-download` 时，Wiley PDF 默认保存到当前工作目录下的 `live-downloads/`
+- 未显式指定 `--output-dir` 且未开启 `--no-download` 时，Wiley PDF 默认保存到 `PAPER_FETCH_DOWNLOAD_DIR`，否则走 `XDG_DATA_HOME/paper-fetch/downloads`（未设置时回落到 `~/.local/share/paper-fetch/downloads`）
 
 ### 并行调用建议
 
 - 同一篇论文不要在同一会话里高并发重复抓取
 - 更稳的做法是先抓一次，再复用返回的 Markdown / JSON
-- 如果你自己在外面包线程池或 worker 池，不要共享同一个 `HttpTransport` 实例；它的进程内缓存不是线程安全的
+- `HttpTransport` 的进程内 GET 缓存现在带锁保护，但更稳的做法仍是限制并发度，优先避免命中 provider 侧 429
 
 ## 本地验证
 
@@ -233,6 +235,8 @@ Wiley 特殊行为：
 ```bash
 python3 -m pip install .
 python3 -m unittest discover -s tests -q
+python3 -m unittest discover -s tests/unit -q
+PYTHONPATH=src python3 -m unittest discover -s tests/integration -q
 paper-fetch --query "<DOI | URL | 题名>"
 paper-fetch-mcp
 ```
@@ -249,12 +253,12 @@ paper-fetch-mcp
 
 ```bash
 PYTHONPATH=src python -m unittest discover -s tests -q
-PAPER_FETCH_RUN_LIVE=1 PYTHONPATH=src python -m unittest tests.test_live_publishers -q
+PAPER_FETCH_RUN_LIVE=1 PYTHONPATH=src python -m unittest discover -s tests/live -q
 ```
 
 说明：
 
-- 默认离线测试不会真的访问外网；`tests/test_live_publishers.py` 会自动跳过
+- 默认离线测试不会真的访问外网；`tests/live/test_live_publishers.py` 会自动跳过
 - 只有在显式设置 `PAPER_FETCH_RUN_LIVE=1`，并且环境变量或 `.env` 里填了对应 publisher 的 key / token 时，才会真正发起真实请求
 - 当前 live smoke 样本按 `2026-04-10` 实测通过：
   - Elsevier DOI `10.1016/j.rse.2025.114648`
@@ -281,18 +285,9 @@ PAPER_FETCH_RUN_LIVE=1 PYTHONPATH=src python -m unittest tests.test_live_publish
 ## 推荐回归命令
 
 ```bash
-PYTHONPATH=src python -m unittest \
-  tests.test_mcp \
-  tests.test_mcp_integration \
-  tests.test_config \
-  tests.test_elsevier_markdown \
-  tests.test_springer_markdown \
-  tests.test_formula_conversion \
-  tests.test_publisher_identity \
-  tests.test_resolve_query \
-  tests.test_html_generic \
-  tests.test_paper_fetch \
-  tests.test_skill_template
+python -m unittest discover -s tests/unit -q
+PYTHONPATH=src python -m unittest discover -s tests/integration -q
+python -m unittest discover -s tests -q
 ```
 
 ## 已知边界

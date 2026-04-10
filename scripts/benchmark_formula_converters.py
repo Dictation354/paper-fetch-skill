@@ -13,7 +13,6 @@ from typing import Any
 
 from paper_fetch.formula.convert import (
     BENCHMARK_BACKENDS,
-    FormulaSample,
     collect_formula_samples,
     convert_mathml_string,
 )
@@ -109,7 +108,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--output",
         type=Path,
-        default=ROOT_DIR / "references" / "formula_backend_report.json",
+        default=ROOT_DIR / ".formula-benchmarks" / "formula_backend_report.json",
         help="Path to write the benchmark JSON report.",
     )
     return parser.parse_args()
@@ -159,6 +158,7 @@ def main() -> int:
         "summary": summary,
         "results": results,
     }
+    args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     print(json.dumps({"winner": winner, "samples": len(samples), "summary": summary}, indent=2, ensure_ascii=False))
     return 0

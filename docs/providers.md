@@ -20,6 +20,14 @@
 
 拼到 Crossref 请求里的联系邮箱。Crossref 推荐携带。
 
+#### `PAPER_FETCH_DOWNLOAD_DIR`
+
+显式覆盖 CLI / MCP 的默认下载目录。
+
+#### `XDG_DATA_HOME`
+
+未设置 `PAPER_FETCH_DOWNLOAD_DIR` 时，用来推导默认下载目录根路径；CLI 与 MCP 都会落到 `paper-fetch/downloads/` 下。
+
 ## 速率限制与缓存
 
 ### 进程内 HTTP 缓存
@@ -36,7 +44,7 @@ client 的 Accept / Authorization 不会互相污染。
 
 - 缓存 key 会对敏感 query 参数和鉴权 header 做脱敏，不保留明文 `api_key` / token / `mailto`
 - 只有小体积文本响应会进入缓存；PDF 和其他二进制正文不会缓存
-- `HttpTransport` 不是线程安全对象；如果你自己在外面并发调多个 fetch，请给每个线程 / worker 各自创建 transport
+- 缓存读写由 `threading.RLock` 保护；如果你自己在外面并发调多个 fetch，主要风险改成 provider 速率限制，而不是进程内 cache race
 
 ### 各 provider 的速率限制参考
 
@@ -209,7 +217,7 @@ Wiley-TDM-Client-Token
 ### 现状说明
 
 - 当前实现明确按“默认 PDF”处理 Wiley。
-- 未显式指定 `--output-dir` 且未开启 `--no-download` 时，`paper-fetch` 会把 Wiley PDF 默认保存到当前工作目录下的 `live-downloads/`。
+- 未显式指定 `--output-dir` 且未开启 `--no-download` 时，`paper-fetch` 会把 Wiley PDF 默认保存到 `PAPER_FETCH_DOWNLOAD_DIR`，否则走 `XDG_DATA_HOME/paper-fetch/downloads`（未设置时回落到 `~/.local/share/paper-fetch/downloads`）。
 - 即使关闭落盘，运行时仍会优先尝试从 PDF 提取可用正文。
 - 其他格式，例如 XML，不假定可用。
 - 如果 Wiley 后续单独为你的账户开通 XML 或其他格式，并给出正式 endpoint / header / accept 说明，再扩展当前实现。
@@ -240,13 +248,13 @@ Wiley-TDM-Client-Token
 
 ## Live Smoke 回归
 
-仓库内提供一个 opt-in 的真实出版商 smoke test 文件：`tests/test_live_publishers.py`。
+仓库内提供一个 opt-in 的真实出版商 smoke test 文件：`tests/live/test_live_publishers.py`。
 
 运行方式：
 
 ```bash
 python -m unittest discover -s tests -q
-PAPER_FETCH_RUN_LIVE=1 python -m unittest tests.test_live_publishers -q
+PAPER_FETCH_RUN_LIVE=1 PYTHONPATH=src python -m unittest discover -s tests/live -q
 ```
 
 说明：

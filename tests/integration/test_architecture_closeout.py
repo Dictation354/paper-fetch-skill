@@ -7,11 +7,9 @@ import sys
 import unittest
 from pathlib import Path
 
+from tests.paths import REPO_ROOT, SKILL_DIR, SRC_DIR, TESTS_ROOT
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
-TESTS_DIR = REPO_ROOT / "tests"
-SKILL_DIR = REPO_ROOT / "skills" / "paper-fetch-skill"
-SRC_DIR = REPO_ROOT / "src"
+ARCHITECTURE_DOC = REPO_ROOT / "docs" / "architecture" / "target-architecture.md"
 
 
 def pythonpath_env() -> dict[str, str]:
@@ -93,10 +91,18 @@ def forbidden_test_patterns(path: Path) -> list[str]:
     return problems
 
 
+def iter_test_files() -> list[Path]:
+    return [
+        path
+        for path in sorted(TESTS_ROOT.rglob("test_*.py"))
+        if "fixtures" not in path.parts and path.name != "__init__.py"
+    ]
+
+
 class ArchitectureCloseoutTests(unittest.TestCase):
     def test_tests_no_longer_depend_on_legacy_import_hacks(self) -> None:
         problems: list[str] = []
-        for path in sorted(TESTS_DIR.glob("test_*.py")):
+        for path in iter_test_files():
             problems.extend(forbidden_test_patterns(path))
         self.assertEqual(problems, [], "\n".join(problems))
 
@@ -106,6 +112,17 @@ class ArchitectureCloseoutTests(unittest.TestCase):
 
         entries = sorted(path.relative_to(SKILL_DIR).as_posix() for path in SKILL_DIR.rglob("*"))
         self.assertEqual(entries, ["SKILL.md"])
+
+    def test_repo_hygiene_guards_against_old_script_package_and_tracked_benchmarks(self) -> None:
+        self.assertFalse((REPO_ROOT / "scripts" / "__init__.py").exists())
+        self.assertFalse((REPO_ROOT / "references" / "formula_backend_report.json").exists())
+
+    def test_architecture_doc_defers_backlog_to_problems_md(self) -> None:
+        text = ARCHITECTURE_DOC.read_text(encoding="utf-8")
+        header = text.split("## Decision", 1)[0]
+
+        self.assertIn("problems.md", header)
+        self.assertNotIn("Remaining deltas", header)
 
     def test_cli_module_help_smoke(self) -> None:
         result = subprocess.run(
@@ -122,6 +139,7 @@ class ArchitectureCloseoutTests(unittest.TestCase):
         self.assertIn("--query", result.stdout)
         self.assertIn("--format", result.stdout)
         self.assertIn("--no-html-fallback", result.stdout)
+        self.assertIn("PAPER_FETCH_DOWNLOAD_DIR", result.stdout)
 
 
 if __name__ == "__main__":

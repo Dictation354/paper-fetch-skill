@@ -20,7 +20,7 @@ def extend_unique(target: list[str], items: list[str] | None) -> None:
             target.append(item)
 
 
-def save_markdown_to_disk(envelope: FetchEnvelope, *, output_dir: Path | None) -> None:
+def save_markdown_to_disk(envelope: FetchEnvelope, *, output_dir: Path) -> None:
     has_usable_fulltext = bool(envelope.has_fulltext and envelope.markdown and envelope.article and envelope.article.sections)
     if not has_usable_fulltext:
         extend_unique(
@@ -33,10 +33,9 @@ def save_markdown_to_disk(envelope: FetchEnvelope, *, output_dir: Path | None) -
             extend_unique(envelope.article.quality.source_trail, envelope.source_trail)
         return
 
-    effective_dir = output_dir or Path("live-downloads")
-    effective_dir.mkdir(parents=True, exist_ok=True)
+    output_dir.mkdir(parents=True, exist_ok=True)
     base = sanitize_filename(envelope.doi or envelope.article.metadata.title or "article")
-    target = effective_dir / f"{base}.md"
+    target = output_dir / f"{base}.md"
     target.write_text(envelope.markdown or "", encoding="utf-8")
     extend_unique(envelope.warnings, [f"Markdown full text was saved to {target}."])
     extend_unique(envelope.source_trail, ["download:markdown_saved"])
@@ -73,14 +72,18 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--output", default="-", help="Output destination. Use - for stdout.")
     parser.add_argument(
         "--output-dir",
-        help="Directory for saving raw provider downloads such as Wiley PDFs. Defaults to ./live-downloads for Wiley binary full text.",
+        help=(
+            "Directory for saving raw provider downloads such as Wiley PDFs. "
+            "Defaults to PAPER_FETCH_DOWNLOAD_DIR or the user data downloads directory."
+        ),
     )
     parser.add_argument("--no-download", action="store_true", help="Do not write provider PDF/binary payloads to disk.")
     parser.add_argument(
         "--save-markdown",
         action="store_true",
         help=(
-            "Also write the rendered AI Markdown full text to disk (defaults to ./live-downloads, "
+            "Also write the rendered AI Markdown full text to disk (defaults to PAPER_FETCH_DOWNLOAD_DIR "
+            "or the user data downloads directory, "
             "overridable via --output-dir). Only writes when full text was actually retrieved. "
             "For Wiley the Markdown is produced from PDF text extraction and may be lower fidelity "
             "than Elsevier/Springer XML."

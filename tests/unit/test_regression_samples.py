@@ -1,15 +1,12 @@
 from __future__ import annotations
 
 import unittest
-from pathlib import Path
 
-TESTS_DIR = Path(__file__).resolve().parent
-FIXTURE_DIR = TESTS_DIR / "fixtures"
 from paper_fetch import service as paper_fetch
-from paper_fetch.models import OutputMode
 from paper_fetch.providers import elsevier as elsevier_provider
 from paper_fetch.providers import html_generic
 from paper_fetch.providers.base import ProviderFailure, RawFulltextPayload
+from tests.paths import FIXTURE_DIR
 
 
 class FixtureTransport(html_generic.HttpTransport):

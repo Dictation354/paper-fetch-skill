@@ -8,9 +8,9 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from tests.paths import REPO_ROOT, SKILL_DIR
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
-STATIC_SKILL_PATH = REPO_ROOT / "skills" / "paper-fetch-skill" / "SKILL.md"
+STATIC_SKILL_PATH = SKILL_DIR / "SKILL.md"
 
 
 def write_fake_python(path: Path, log_path: Path) -> None:

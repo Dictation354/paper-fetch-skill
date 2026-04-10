@@ -5,7 +5,27 @@ on:
   pull_request:
 
 jobs:
-  test:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install lint dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+
+      - name: Run ruff
+        run: python -m ruff check .
+
+  unit:
     runs-on: ubuntu-latest
 
     steps:
@@ -22,11 +42,25 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install .
 
-      - name: Run unittest suite
-        run: python -m unittest discover -s tests -q
+      - name: Run unit suite
+        run: python -m unittest discover -s tests/unit -q
 
-      - name: Run CLI help smoke
-        run: PYTHONPATH=src python -m paper_fetch.cli --help
+  integration:
+    runs-on: ubuntu-latest
 
-      - name: Run MCP integration smoke
-        run: PYTHONPATH=src python -m unittest discover -s tests -p 'test_mcp_integration.py' -q
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install package
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install .
+
+      - name: Run integration suite
+        run: PYTHONPATH=src python -m unittest discover -s tests/integration -q

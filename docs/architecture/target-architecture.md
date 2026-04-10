@@ -1,8 +1,8 @@
 # Paper Fetch Skill Target Architecture
 
-Date: 2026-04-10 (revision 5)
+Date: 2026-04-10 (revision 7)
 
-## Status / Remaining Deltas
+## Status
 
 **Status:** the current branch should be treated as the closed-out baseline for this architecture. The package layout under `src/paper_fetch/`, the `paper-fetch` CLI, the `paper-fetch-mcp` stdio server, the static thin skill, and the thin install scripts are all already landed and covered by the test suite.
 
@@ -14,11 +14,7 @@ Date: 2026-04-10 (revision 5)
 - step 4 complete: the repo skill source is static `skills/paper-fetch-skill/SKILL.md`
 - step 5 complete: install scripts are thin, and the Codex manifest is generated only at install time
 
-**Remaining deltas:** these are now follow-on refinements, not blockers for architecture closeout:
-
-- optional resource relocation such as `references/` -> `src/paper_fetch/resources/`
-- optional module reshaping such as `outputs.py` or `formula/backends.py`
-- optional test-directory reshuffling into `unit/`, `integration/`, and `live/`
+For current operational backlog, including any post-closeout follow-up work, use `problems.md`. This document is architecture rationale and baseline contract only.
 
 ## Decision
 
@@ -52,7 +48,7 @@ The target should be:
 
 ## Recommended Directory Layout
 
-The layout below describes the stable architectural shape. Items called out in **Remaining deltas** above are optional follow-on refinements, not required work for architecture closeout.
+The layout below describes the stable architectural shape.
 
 ```text
 paper-fetch-skill/
@@ -294,13 +290,13 @@ Recommended writable runtime paths:
 - cache: `~/.cache/paper-fetch/`
 - logs: `~/.local/state/paper-fetch/`
 - downloads: configurable, with **different defaults per adapter**:
-  - CLI default: `./live-downloads` (relative to cwd — matches current human workflow of "run one DOI, inspect files in place")
+  - CLI default: `PAPER_FETCH_DOWNLOAD_DIR` first, otherwise XDG data dir `paper-fetch/downloads`, with `./live-downloads` only as a creation fallback
   - MCP default: `~/.local/share/paper-fetch/downloads/` (XDG data dir — avoids scattering files wherever the MCP server happens to be launched from)
   - Both can be overridden by `PAPER_FETCH_DOWNLOAD_DIR` env var or an explicit argument.
 
 **Where the split is enforced:** `service.py` must have *no default* for the download directory. It takes a required `download_dir` argument (or `None` meaning "don't write to disk"). Each adapter is responsible for resolving its own default:
 
-- `cli.py` resolves `./live-downloads` before calling the service
+- `cli.py` resolves `PAPER_FETCH_DOWNLOAD_DIR` or the XDG default before calling the service, and only falls back to `./live-downloads` if the user-data directory cannot be created
 - `mcp/server.py` resolves `~/.local/share/paper-fetch/downloads/` before calling the service
 
 This keeps the service layer cwd-agnostic and makes the per-adapter behavior explicit and testable. A service-layer default would either be wrong for one of the two adapters or require the service to know which adapter called it — both are bad.
@@ -390,9 +386,9 @@ Step 1 ("package without changing behavior") is where most migrations of this sh
 
 2. **Decouple tests from internal module paths first.** The current test suite couples to `scripts/` in at least three different ways, and a naive `from scripts.` grep will miss most of them. Audit `tests/` for all of these patterns:
 
-   - **Explicit `sys.path` injection** — `sys.path.insert(0, .../scripts)` followed by bare `from paper_fetch import ...` or `from fetch_common import ...`. Example today: [tests/test_live_publishers.py:9-14](../../tests/test_live_publishers.py#L9-L14).
-   - **`importlib.util.spec_from_file_location` loading** — manually loading `scripts/paper_fetch.py` as a module and registering it in `sys.modules` under a chosen name, then relying on that registration for subsequent bare imports. Example today: [tests/test_paper_fetch.py:15-20](../../tests/test_paper_fetch.py#L15-L20).
-   - **Bare top-level imports that silently depend on the above side effects** — `from article_model import ...`, `from fetch_common import ...`, `from providers.wiley import ...`. These look like ordinary imports but only resolve because an earlier line in the same file put `scripts/` on `sys.path` or because `paper_fetch.py`'s own import machinery did. Example today: [tests/test_paper_fetch.py:22-24](../../tests/test_paper_fetch.py#L22-L24).
+   - **Explicit `sys.path` injection** — `sys.path.insert(0, .../scripts)` followed by bare `from paper_fetch import ...` or `from fetch_common import ...`. Example today: [tests/live/test_live_publishers.py:9-14](../../tests/live/test_live_publishers.py#L9-L14).
+   - **`importlib.util.spec_from_file_location` loading** — manually loading `scripts/paper_fetch.py` as a module and registering it in `sys.modules` under a chosen name, then relying on that registration for subsequent bare imports. Example today: [tests/unit/test_paper_fetch.py:15-20](../../tests/unit/test_paper_fetch.py#L15-L20).
+   - **Bare top-level imports that silently depend on the above side effects** — `from article_model import ...`, `from fetch_common import ...`, `from providers.wiley import ...`. These look like ordinary imports but only resolve because an earlier line in the same file put `scripts/` on `sys.path` or because `paper_fetch.py`'s own import machinery did. Example today: [tests/unit/test_paper_fetch.py:22-24](../../tests/unit/test_paper_fetch.py#L22-L24).
 
    Search patterns to actually use (not just `from scripts.`):
 
@@ -403,7 +399,7 @@ Step 1 ("package without changing behavior") is where most migrations of this sh
 
    Replace all of them with calls through the intended public surface (`from paper_fetch.service import ...`, `from paper_fetch.models import ...`, etc. once those modules exist). If a test reaches into a private helper, either promote the helper to public or rewrite the test to go through the public path. **Do this before moving any files** — otherwise every file move breaks every test at once, and you lose the ability to bisect.
 
-   Closeout acceptance criterion: `tests/test_architecture_closeout.py` passes, which bans `sys.path` mutation, `spec_from_file_location`, `sys.modules[...]` injection, and bare legacy imports such as `from article_model ...`, `from fetch_common ...`, or `from providers...`, while explicitly allowing `from paper_fetch...` imports through the public package surface.
+   Closeout acceptance criterion: `tests/integration/test_architecture_closeout.py` passes, which bans `sys.path` mutation, `spec_from_file_location`, `sys.modules[...]` injection, and bare legacy imports such as `from article_model ...`, `from fetch_common ...`, or `from providers...`, while explicitly allowing `from paper_fetch...` imports through the public package surface.
 
 3. **Add `pyproject.toml` and an empty `src/paper_fetch/` package.** Register the package so `pip install -e .` works. At this point nothing imports from it yet.
 
@@ -448,12 +444,17 @@ This repository already has a valuable command-line product surface and testable
 
 ## Revision History
 
+**Revision 6 (2026-04-10)** — test-suite layering landed:
+
+- Removed test-directory reshuffling from **Remaining Deltas** because the suite now lives under `tests/unit`, `tests/integration`, and `tests/live`.
+- Updated architecture-closeout references to the layered test paths, including `tests/integration/test_architecture_closeout.py`, `tests/live/test_live_publishers.py`, and `tests/unit/test_paper_fetch.py`.
+
 **Revision 5 (2026-04-10)** — architecture closeout status made explicit:
 
 - Added a top-level **Status / Remaining Deltas** section that treats the current branch as the closed-out baseline for `core library + CLI + MCP + thin skill`.
 - Marked migration-order steps 1-5 as complete on the current branch and reframed the remaining items (`resources/`, `outputs.py`, `formula/backends.py`, test-directory reshuffling) as optional follow-on refinements rather than required next steps.
 - Updated the live contract wording to reference the current package entrypoints (`src/paper_fetch/cli.py`, `src/paper_fetch/service.py`) instead of describing the repo as if `scripts/paper_fetch.py` were still the active product surface.
-- Replaced the old test-decoupling grep acceptance criterion with the implemented closeout guard in `tests/test_architecture_closeout.py`, which bans legacy import hacks while explicitly allowing `from paper_fetch...` imports through the public package surface.
+- Replaced the old test-decoupling grep acceptance criterion with the implemented closeout guard in `tests/integration/test_architecture_closeout.py`, which bans legacy import hacks while explicitly allowing `from paper_fetch...` imports through the public package surface.
 
 **Revision 4 (2026-04-10)** — two contract tightenings, no direction changes:
 
@@ -464,7 +465,7 @@ This repository already has a valuable command-line product surface and testable
 
 - **`fetch_paper` return contract rewritten as a fixed `FetchEnvelope`, not a shape-switching union.** The revision-2 signature `fetch_paper(mode) -> ArticleModel | str` would have lost the existing "structured + markdown together" capability that today's CLI already provides via `--format both` ([scripts/paper_fetch.py:361](../../scripts/paper_fetch.py#L361)), and would have forced agents into a double-fetch whenever they needed both the Markdown body and its provenance. The envelope always carries `doi`, `source`, `has_fulltext`, `warnings`, `source_trail`, `token_estimate` at the top level, regardless of which modes were requested. `article`, `markdown`, `metadata` are present as optional payloads. Agents always get provenance without having to dig into `article.quality`, and `ArticleModel.to_ai_markdown` does not need to change to round-trip warnings through the Markdown string.
 - **Output modes and fetch strategy separated into two orthogonal axes.** The revision-2 `mode` parameter conflated "what to return" with "how to fetch", which would have erased the existing `--no-html-fallback` capability ([scripts/paper_fetch.py:301](../../scripts/paper_fetch.py#L301)) and left the metadata-only-fallback semantics ambiguous. Output format is now a composable `modes: set[OutputMode]`; fetch behavior is a `strategy: FetchStrategy` dataclass containing `allow_html_fallback`, `allow_metadata_only_fallback`, and `preferred_providers`. The concrete use case "official link only, no HTML fallback, fail loudly if there's no formal full text" now has a single direct expression, with no adapter-layer branching.
-- **Migration checklist step 2 expanded** to call out the three real coupling patterns in the current test suite: explicit `sys.path.insert` ([tests/test_live_publishers.py:9-14](../../tests/test_live_publishers.py#L9-L14)), `importlib.util.spec_from_file_location` loading with `sys.modules` registration ([tests/test_paper_fetch.py:15-20](../../tests/test_paper_fetch.py#L15-L20)), and bare imports that depend on those side effects ([tests/test_paper_fetch.py:22-24](../../tests/test_paper_fetch.py#L22-L24)). The previous "grep `from scripts.`" hint would have missed all three. Added a concrete acceptance-criterion grep.
+- **Migration checklist step 2 expanded** to call out the three real coupling patterns in the current test suite: explicit `sys.path.insert` ([tests/live/test_live_publishers.py:9-14](../../tests/live/test_live_publishers.py#L9-L14)), `importlib.util.spec_from_file_location` loading with `sys.modules` registration ([tests/unit/test_paper_fetch.py:15-20](../../tests/unit/test_paper_fetch.py#L15-L20)), and bare imports that depend on those side effects ([tests/unit/test_paper_fetch.py:22-24](../../tests/unit/test_paper_fetch.py#L22-L24)). The previous "grep `from scripts.`" hint would have missed all three. Added a concrete acceptance-criterion grep.
 - Decision Revisit Triggers updated for the new envelope/strategy shape. The non-negotiable invariant is now explicit: the envelope shape is fixed; if we ever want to shape-switch on `modes`, the whole contract needs rethinking, not a local patch.
 
 **Revision 2 (2026-04-10)** — resolved open questions from the initial draft review:
@@ -472,9 +473,9 @@ This repository already has a valuable command-line product surface and testable
 - MCP tool granularity changed from four flat tools to a hybrid: `resolve_paper` stays separate (different return shape, different intent), and `fetch_paper_fulltext` / `fetch_paper_metadata` / `fetch_paper_markdown` merge into `fetch_paper(query, mode=...)`. Service-layer signature updated to match.
 - `formula/` confirmed as its own subpackage because two backends (`texmath` primary, `mathml-to-latex` fallback) already exist; documented that backend selection is global with fallback, not per-provider.
 - `skills/paper-fetch-skill/agents/openai.yaml` removed from the repo skill source. Codex's manifest is now explicitly framed as an install-time compatibility shim produced by `scripts/install-codex-skill.sh`, not a committed artifact. Repo skill source is `SKILL.md` only.
-- Download directory defaults split per adapter: CLI defaults to `./live-downloads`, MCP defaults to `~/.local/share/paper-fetch/downloads/`. Enforced at the adapter layer — service layer has no default and takes `download_dir` as a required argument.
+- Download directory defaults remain adapter-owned: CLI resolves `PAPER_FETCH_DOWNLOAD_DIR` first, then XDG `paper-fetch/downloads`, and only falls back to `./live-downloads` if the user-data path cannot be created; MCP stays on the XDG data dir default. Service layer still has no default.
 - Migration is now explicitly one-shot: no `scripts/` compatibility shim, old paths deleted in the same commit as the corresponding move.
-- `routing_rules.yaml` is now explicitly the source of truth. Any remaining `docs/routing_rules.md` may only describe schema and rationale, not individual rules, to prevent drift.
+- Routing drafts remain documentation only. Current runtime routing truth lives in the conservative code path under `publisher_identity.py` and the resolve/service flow that consumes it.
 - Added a **Migration Checklist** expanding step 1 of the migration order into seven ordered sub-steps, with the explicit instruction to decouple tests from `scripts.*` imports *before* moving any files.
 - Added a **Decision Revisit Triggers** section listing the conditions under which each major decision should be reopened.
 

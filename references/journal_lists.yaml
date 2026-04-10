@@ -1,3 +1,6 @@
+# Design draft only: the runtime does not currently load this file.
+# Current routing truth lives in src/paper_fetch/publisher_identity.py.
+
 list_1:
   - journal_name: Solar Energy
     normalized_name: solar energy

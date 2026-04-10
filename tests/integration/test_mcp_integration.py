@@ -4,14 +4,11 @@ import sys
 import tempfile
 import textwrap
 import unittest
-from pathlib import Path
 
 from mcp.client.session import ClientSession
 from mcp.client.stdio import StdioServerParameters, stdio_client
 
-
-REPO_ROOT = Path(__file__).resolve().parents[1]
-SRC_DIR = REPO_ROOT / "src"
+from tests.paths import REPO_ROOT, SRC_DIR
 
 
 SERVER_SCRIPT = textwrap.dedent(

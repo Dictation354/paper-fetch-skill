@@ -7,6 +7,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 import fitz
 
@@ -213,6 +214,37 @@ class PaperFetchTests(unittest.TestCase):
                 self.assertIn("# Example Article", output_path.read_text(encoding="utf-8"))
         finally:
             paper_fetch_cli.fetch_paper = original_fetch
+
+    def test_main_uses_resolved_default_download_dir_for_save_markdown(self) -> None:
+        article = sample_article()
+        captured: dict[str, object] = {}
+
+        def fake_fetch(*args, **kwargs):
+            captured.update(kwargs)
+            return build_envelope(article)
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            default_dir = Path(tmpdir) / "downloads"
+            stdout = io.StringIO()
+            stderr = io.StringIO()
+            original_argv = sys.argv
+            sys.argv = ["paper_fetch.py", "--query", "10.1016/test", "--save-markdown"]
+            try:
+                with (
+                    mock.patch.object(paper_fetch_cli, "build_runtime_env", return_value={}),
+                    mock.patch.object(paper_fetch_cli, "resolve_cli_download_dir", return_value=default_dir),
+                    mock.patch.object(paper_fetch_cli, "fetch_paper", side_effect=fake_fetch),
+                    contextlib.redirect_stdout(stdout),
+                    contextlib.redirect_stderr(stderr),
+                ):
+                    exit_code = paper_fetch_cli.main()
+            finally:
+                sys.argv = original_argv
+
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(stderr.getvalue(), "")
+            self.assertEqual(captured["download_dir"], default_dir)
+            self.assertTrue((default_dir / "10.1016_test.md").exists())
 
     def test_main_reports_ambiguous_errors_as_json(self) -> None:
         original_fetch = paper_fetch_cli.fetch_paper

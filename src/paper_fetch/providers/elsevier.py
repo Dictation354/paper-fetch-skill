@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import re
 import urllib.parse
 import uuid
 import xml.etree.ElementTree as ET

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import sys
 import tempfile
 import unittest
 import xml.etree.ElementTree as ET
@@ -51,6 +50,11 @@ def build_elsevier_markdown(
 
 
 class ElsevierMarkdownTests(unittest.TestCase):
+    def test_article_markdown_facade_exports_expected_helpers(self) -> None:
+        self.assertTrue(callable(article_markdown.render_mathml_expression))
+        self.assertTrue(callable(article_markdown.build_article_structure))
+        self.assertTrue(callable(article_markdown.write_article_markdown))
+
     def test_mathml_nested_subscripts_are_grouped_for_katex(self) -> None:
         math_node = ET.fromstring(
             """

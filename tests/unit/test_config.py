@@ -54,9 +54,41 @@ class ConfigTests(unittest.TestCase):
 
         self.assertEqual(env["SHARED"], "user")
 
+    def test_cli_default_download_dir_uses_xdg_user_data_home(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            env = {config.XDG_DATA_HOME_ENV_VAR: tmpdir}
+            expected = Path(tmpdir) / "paper-fetch" / "downloads"
+
+            resolved = config.resolve_cli_download_dir(env)
+            self.assertTrue(expected.exists())
+
+        self.assertEqual(resolved, expected)
+
+    def test_cli_download_dir_falls_back_to_cwd_when_default_user_data_dir_cannot_be_created(self) -> None:
+        preferred_root = Path("/tmp/paper-fetch-test-user-data")
+        preferred_dir = preferred_root / "downloads"
+        original_mkdir = Path.mkdir
+
+        def fake_mkdir(path: Path, *args, **kwargs):
+            if path == preferred_dir:
+                raise OSError("permission denied")
+            return original_mkdir(path, *args, **kwargs)
+
+        with (
+            mock.patch.object(config, "resolve_user_data_dir", return_value=preferred_root),
+            mock.patch.object(Path, "mkdir", fake_mkdir),
+        ):
+            resolved = config.resolve_cli_download_dir({})
+
+        self.assertEqual(resolved, Path("live-downloads"))
+
     def test_cli_and_mcp_download_dirs_use_distinct_defaults(self) -> None:
-        self.assertEqual(config.resolve_cli_download_dir({}), Path("live-downloads"))
-        self.assertEqual(config.resolve_mcp_download_dir({}), config.DEFAULT_MCP_DOWNLOAD_DIR)
+        with tempfile.TemporaryDirectory() as tmpdir:
+            env = {config.XDG_DATA_HOME_ENV_VAR: tmpdir}
+            expected = Path(tmpdir) / "paper-fetch" / "downloads"
+
+            self.assertEqual(config.resolve_cli_download_dir(env), expected)
+            self.assertEqual(config.resolve_mcp_download_dir(env), expected)
 
     def test_download_dir_env_var_overrides_both_adapter_defaults(self) -> None:
         env = {config.DOWNLOAD_DIR_ENV_VAR: "~/paper-fetch-downloads"}
