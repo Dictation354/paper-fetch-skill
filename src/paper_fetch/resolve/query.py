@@ -6,21 +6,17 @@ from __future__ import annotations
 import argparse
 import json
 import re
-import sys
 import urllib.parse
 from dataclasses import asdict, dataclass, field
 from difflib import SequenceMatcher
-from pathlib import Path
 from typing import Any, Mapping
 
-SCRIPT_DIR = Path(__file__).resolve().parent
-if str(SCRIPT_DIR) not in sys.path:
-    sys.path.insert(0, str(SCRIPT_DIR))
-
-from fetch_common import HttpTransport, ProviderFailure, build_runtime_env, build_user_agent
-from providers.crossref import CrossrefClient
-from providers.html_generic import decode_html, infer_provider_from_url, parse_html_metadata
-from publisher_identity import infer_provider_from_doi, normalize_doi
+from ..config import build_runtime_env, build_user_agent
+from ..http import HttpTransport
+from ..providers.base import ProviderFailure
+from ..providers.crossref import CrossrefClient
+from ..providers.html_generic import decode_html, infer_provider_from_url, parse_html_metadata
+from ..publisher_identity import infer_provider_from_doi, normalize_doi
 
 DOI_PATTERN = re.compile(r"10\.\d{4,9}/[^\s\"'<>]+", flags=re.IGNORECASE)
 CONFIDENT_SCORE_MIN = 0.90

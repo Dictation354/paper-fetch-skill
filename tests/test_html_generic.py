@@ -1,17 +1,8 @@
 from __future__ import annotations
 
-import importlib.util
-import sys
 import unittest
-from pathlib import Path
 
-
-SCRIPT_PATH = Path(__file__).resolve().parent.parent / "scripts" / "providers" / "html_generic.py"
-SPEC = importlib.util.spec_from_file_location("html_generic", SCRIPT_PATH)
-html_generic = importlib.util.module_from_spec(SPEC)
-assert SPEC.loader is not None
-sys.modules[SPEC.name] = html_generic
-SPEC.loader.exec_module(html_generic)
+from paper_fetch.providers import html_generic
 
 
 class FakeTransport(html_generic.HttpTransport):

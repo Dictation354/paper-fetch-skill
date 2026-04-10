@@ -1,21 +1,14 @@
 from __future__ import annotations
 
-import importlib.util
 import io
-import sys
 import unittest
 import urllib.error
 import warnings
-from pathlib import Path
 from unittest import mock
 
-
-MODULE_PATH = Path(__file__).resolve().parent.parent / "scripts" / "fetch_common.py"
-SPEC = importlib.util.spec_from_file_location("fetch_common", MODULE_PATH)
-fetch_common = importlib.util.module_from_spec(SPEC)
-assert SPEC.loader is not None
-sys.modules[SPEC.name] = fetch_common
-SPEC.loader.exec_module(fetch_common)
+from paper_fetch import http as http_module
+from paper_fetch import utils
+from paper_fetch.providers import base as provider_base
 
 warnings.filterwarnings(
     "ignore",
@@ -60,7 +53,7 @@ def build_http_error(url: str, *, status: int, headers: dict[str, str] | None = 
 
 class HttpTransportCacheTests(unittest.TestCase):
     def test_get_requests_hit_in_memory_cache_for_same_url_and_headers(self) -> None:
-        transport = fetch_common.HttpTransport(cache_ttl=30, cache_capacity=128)
+        transport = http_module.HttpTransport(cache_ttl=30, cache_capacity=128)
         call_count = 0
 
         def fake_urlopen(request, timeout=20):
@@ -68,7 +61,7 @@ class HttpTransportCacheTests(unittest.TestCase):
             call_count += 1
             return FakeHTTPResponse(b"ok", request.full_url)
 
-        with mock.patch.object(fetch_common.urllib.request, "urlopen", side_effect=fake_urlopen):
+        with mock.patch.object(http_module.urllib.request, "urlopen", side_effect=fake_urlopen):
             first = transport.request("GET", "https://example.test/article", headers={"Accept": "text/plain"})
             second = transport.request("GET", "https://example.test/article", headers={"Accept": "text/plain"})
 
@@ -77,7 +70,7 @@ class HttpTransportCacheTests(unittest.TestCase):
         self.assertEqual(second["body"], b"ok")
 
     def test_cache_key_redacts_sensitive_query_params_and_header_values(self) -> None:
-        transport = fetch_common.HttpTransport(cache_ttl=30, cache_capacity=128)
+        transport = http_module.HttpTransport(cache_ttl=30, cache_capacity=128)
         call_count = 0
 
         def fake_urlopen(request, timeout=20):
@@ -85,7 +78,7 @@ class HttpTransportCacheTests(unittest.TestCase):
             call_count += 1
             return FakeHTTPResponse(b'{"ok":true}', request.full_url, headers={"content-type": "application/json"})
 
-        with mock.patch.object(fetch_common.urllib.request, "urlopen", side_effect=fake_urlopen):
+        with mock.patch.object(http_module.urllib.request, "urlopen", side_effect=fake_urlopen):
             transport.request(
                 "GET",
                 "https://example.test/article",
@@ -122,7 +115,7 @@ class HttpTransportCacheTests(unittest.TestCase):
         self.assertIn(("x-els-reqid", "<volatile>"), cached_headers)
 
     def test_pdf_payloads_are_not_cached(self) -> None:
-        transport = fetch_common.HttpTransport(cache_ttl=30, cache_capacity=128)
+        transport = http_module.HttpTransport(cache_ttl=30, cache_capacity=128)
         call_count = 0
         pdf_body = b"%PDF-" + (b"x" * 4096)
 
@@ -131,7 +124,7 @@ class HttpTransportCacheTests(unittest.TestCase):
             call_count += 1
             return FakeHTTPResponse(pdf_body, request.full_url, headers={"content-type": "application/pdf"})
 
-        with mock.patch.object(fetch_common.urllib.request, "urlopen", side_effect=fake_urlopen):
+        with mock.patch.object(http_module.urllib.request, "urlopen", side_effect=fake_urlopen):
             transport.request("GET", "https://example.test/article.pdf", headers={"Accept": "*/*"})
             transport.request("GET", "https://example.test/article.pdf", headers={"Accept": "*/*"})
 
@@ -139,23 +132,26 @@ class HttpTransportCacheTests(unittest.TestCase):
         self.assertEqual(len(transport._cache), 0)
 
     def test_retry_after_is_respected_once_for_rate_limited_requests(self) -> None:
-        transport = fetch_common.HttpTransport(cache_ttl=0, cache_capacity=0)
+        transport = http_module.HttpTransport(cache_ttl=0, cache_capacity=0)
         call_count = 0
+        rate_limited_error = build_http_error(
+            "https://example.test/article",
+            status=429,
+            headers={"Retry-After": "1"},
+            body=b"rate limited",
+        )
+        original_close = rate_limited_error.close
+        rate_limited_error.close = mock.Mock(side_effect=original_close)
 
         def fake_urlopen(request, timeout=20):
             nonlocal call_count
             call_count += 1
             if call_count == 1:
-                raise build_http_error(
-                    request.full_url,
-                    status=429,
-                    headers={"Retry-After": "1"},
-                    body=b"rate limited",
-                )
+                raise rate_limited_error
             return FakeHTTPResponse(b"ok", request.full_url)
 
-        with mock.patch.object(fetch_common.urllib.request, "urlopen", side_effect=fake_urlopen):
-            with mock.patch.object(fetch_common.time, "sleep") as mocked_sleep:
+        with mock.patch.object(http_module.urllib.request, "urlopen", side_effect=fake_urlopen):
+            with mock.patch.object(http_module.time, "sleep") as mocked_sleep:
                 response = transport.request(
                     "GET",
                     "https://example.test/article",
@@ -166,15 +162,37 @@ class HttpTransportCacheTests(unittest.TestCase):
         self.assertEqual(call_count, 2)
         self.assertEqual(response["body"], b"ok")
         mocked_sleep.assert_called_once_with(1)
+        rate_limited_error.close.assert_called_once_with()
+
+    def test_http_error_wrapper_is_closed_when_request_failure_is_raised(self) -> None:
+        transport = http_module.HttpTransport(cache_ttl=0, cache_capacity=0)
+        server_error = build_http_error(
+            "https://example.test/article",
+            status=500,
+            headers={},
+            body=b"server error",
+        )
+        original_close = server_error.close
+        server_error.close = mock.Mock(side_effect=original_close)
+
+        with mock.patch.object(http_module.urllib.request, "urlopen", side_effect=server_error):
+            with self.assertRaises(http_module.RequestFailure):
+                transport.request(
+                    "GET",
+                    "https://example.test/article",
+                    headers={"Accept": "text/plain"},
+                )
+
+        server_error.close.assert_called_once_with()
 
     def test_map_request_failure_returns_rate_limited_provider_failure(self) -> None:
-        failure = fetch_common.RequestFailure(
+        failure = http_module.RequestFailure(
             429,
             "HTTP 429 for https://example.test/article (Retry-After: 4s)",
             retry_after_seconds=4,
         )
 
-        mapped = fetch_common.map_request_failure(failure)
+        mapped = provider_base.map_request_failure(failure)
 
         self.assertEqual(mapped.code, "rate_limited")
         self.assertEqual(mapped.retry_after_seconds, 4)
@@ -182,18 +200,18 @@ class HttpTransportCacheTests(unittest.TestCase):
     def test_sanitize_filename_truncates_long_values_with_stable_hash_suffix(self) -> None:
         long_name = "10.1016/" + ("a" * 260)
 
-        sanitized = fetch_common.sanitize_filename(long_name)
+        sanitized = utils.sanitize_filename(long_name)
 
         self.assertLessEqual(len(sanitized), 180)
         self.assertRegex(sanitized, r"_[0-9a-f]{8}$")
 
     def test_sanitize_filename_uses_hash_fallback_for_non_ascii_titles(self) -> None:
-        sanitized = fetch_common.sanitize_filename("这是一个非常长的中文标题" * 30)
+        sanitized = utils.sanitize_filename("这是一个非常长的中文标题" * 30)
 
         self.assertRegex(sanitized, r"^fulltext_[0-9a-f]{8}$")
 
     def test_dedupe_authors_uses_semantic_name_key(self) -> None:
-        authors = fetch_common.dedupe_authors(["Zhang, San", "San Zhang", "Alice Example"])
+        authors = utils.dedupe_authors(["Zhang, San", "San Zhang", "Alice Example"])
 
         self.assertEqual(authors, ["Zhang, San", "Alice Example"])
 

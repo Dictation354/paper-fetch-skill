@@ -4,19 +4,16 @@ from __future__ import annotations
 
 import html
 import re
-import sys
 import urllib.parse
 from html.parser import HTMLParser
-from pathlib import Path
 from typing import Any, Mapping
 
-SCRIPT_DIR = Path(__file__).resolve().parent.parent
-if str(SCRIPT_DIR) not in sys.path:
-    sys.path.insert(0, str(SCRIPT_DIR))
-
-from article_model import article_from_markdown, normalize_markdown_text, normalize_text
-from fetch_common import HttpTransport, ProviderFailure, RequestFailure, build_user_agent, dedupe_authors, map_request_failure
-from publisher_identity import normalize_doi
+from ..config import build_user_agent
+from ..http import HttpTransport, RequestFailure
+from ..models import article_from_markdown, normalize_markdown_text, normalize_text
+from ..publisher_identity import normalize_doi
+from ..utils import dedupe_authors
+from .base import ProviderFailure, map_request_failure
 
 try:
     import trafilatura

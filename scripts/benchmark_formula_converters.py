@@ -11,7 +11,7 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Any
 
-from formula_conversion import (
+from paper_fetch.formula.convert import (
     BENCHMARK_BACKENDS,
     FormulaSample,
     collect_formula_samples,

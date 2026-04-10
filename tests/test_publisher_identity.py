@@ -1,17 +1,8 @@
 from __future__ import annotations
 
-import importlib.util
-import sys
 import unittest
-from pathlib import Path
 
-
-SCRIPT_PATH = Path(__file__).resolve().parent.parent / "scripts" / "publisher_identity.py"
-SPEC = importlib.util.spec_from_file_location("publisher_identity", SCRIPT_PATH)
-publisher_identity = importlib.util.module_from_spec(SPEC)
-assert SPEC.loader is not None
-sys.modules[SPEC.name] = publisher_identity
-SPEC.loader.exec_module(publisher_identity)
+from paper_fetch import publisher_identity
 
 
 class PublisherIdentityTests(unittest.TestCase):

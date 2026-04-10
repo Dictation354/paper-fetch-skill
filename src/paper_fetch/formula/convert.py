@@ -14,8 +14,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable, Mapping
 
-SCRIPT_DIR = Path(__file__).resolve().parent
-ROOT_DIR = SCRIPT_DIR.parent
+from ..config import ROOT_DIR
+
 FORMULA_TOOLS_DIR = ROOT_DIR / ".formula-tools"
 FORMULA_TOOLS_BIN_DIR = FORMULA_TOOLS_DIR / "bin"
 FORMULA_TOOLS_LIB_DIR = FORMULA_TOOLS_DIR / "lib"

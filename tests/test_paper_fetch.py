@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import contextlib
-import importlib.util
 import io
 import json
 import sys
@@ -11,17 +10,12 @@ from pathlib import Path
 
 import fitz
 
-
-SCRIPT_PATH = Path(__file__).resolve().parent.parent / "scripts" / "paper_fetch.py"
-SPEC = importlib.util.spec_from_file_location("paper_fetch", SCRIPT_PATH)
-paper_fetch = importlib.util.module_from_spec(SPEC)
-assert SPEC.loader is not None
-sys.modules[SPEC.name] = paper_fetch
-SPEC.loader.exec_module(paper_fetch)
-
-from article_model import ArticleModel, Metadata, Quality, Section, article_from_markdown
-from fetch_common import HttpTransport, RawFulltextPayload
-from providers.wiley import WileyClient
+from paper_fetch import cli as paper_fetch_cli
+from paper_fetch import service as paper_fetch
+from paper_fetch.http import HttpTransport
+from paper_fetch.models import ArticleModel, FetchEnvelope, Metadata, Quality, RenderOptions, Section, article_from_markdown
+from paper_fetch.providers.base import RawFulltextPayload
+from paper_fetch.providers.wiley import WileyClient
 
 
 class StubProvider:
@@ -57,6 +51,41 @@ class StubHtmlClient:
         if self.error:
             raise self.error
         return self.article
+
+
+def build_envelope(article: ArticleModel, *, include_markdown: bool = True) -> FetchEnvelope:
+    modes = {"article"}
+    if include_markdown:
+        modes.add("markdown")
+    return paper_fetch.build_fetch_envelope(article, modes=modes, render=RenderOptions())
+
+
+def fetch_paper_model(
+    query: str,
+    *,
+    allow_html_fallback: bool = True,
+    allow_downloads: bool = True,
+    output_dir: Path | None = None,
+    clients=None,
+    html_client=None,
+    transport=None,
+    env=None,
+) -> ArticleModel:
+    envelope = paper_fetch.fetch_paper(
+        query,
+        modes={"article"},
+        strategy=paper_fetch.FetchStrategy(
+            allow_html_fallback=allow_html_fallback,
+            allow_metadata_only_fallback=True,
+        ),
+        download_dir=output_dir if allow_downloads else None,
+        clients=clients,
+        html_client=html_client,
+        transport=transport,
+        env=env,
+    )
+    assert envelope.article is not None
+    return envelope.article
 
 
 def sample_article() -> paper_fetch.ArticleModel:
@@ -125,9 +154,9 @@ def short_pdf_bytes() -> bytes:
 class PaperFetchTests(unittest.TestCase):
     def test_main_writes_markdown_json_and_both_to_stdout(self) -> None:
         article = sample_article()
-        original_fetch = paper_fetch.fetch_paper_model
+        original_fetch = paper_fetch_cli.fetch_paper
         try:
-            paper_fetch.fetch_paper_model = lambda *args, **kwargs: article
+            paper_fetch_cli.fetch_paper = lambda *args, **kwargs: build_envelope(article)
             for output_format in ("markdown", "json", "both"):
                 stdout = io.StringIO()
                 stderr = io.StringIO()
@@ -142,7 +171,7 @@ class PaperFetchTests(unittest.TestCase):
                 sys.argv = argv
                 try:
                     with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
-                        exit_code = paper_fetch.main()
+                        exit_code = paper_fetch_cli.main()
                 finally:
                     sys.argv = original_argv
 
@@ -160,13 +189,13 @@ class PaperFetchTests(unittest.TestCase):
                         self.assertIn("article", payload)
                         self.assertIn("markdown", payload)
         finally:
-            paper_fetch.fetch_paper_model = original_fetch
+            paper_fetch_cli.fetch_paper = original_fetch
 
     def test_main_writes_single_output_file_when_requested(self) -> None:
         article = sample_article()
-        original_fetch = paper_fetch.fetch_paper_model
+        original_fetch = paper_fetch_cli.fetch_paper
         try:
-            paper_fetch.fetch_paper_model = lambda *args, **kwargs: article
+            paper_fetch_cli.fetch_paper = lambda *args, **kwargs: build_envelope(article)
             with tempfile.TemporaryDirectory() as tmpdir:
                 output_path = Path(tmpdir) / "article.md"
                 stdout = io.StringIO()
@@ -174,7 +203,7 @@ class PaperFetchTests(unittest.TestCase):
                 sys.argv = ["paper_fetch.py", "--query", "10.1016/test", "--output", str(output_path)]
                 try:
                     with contextlib.redirect_stdout(stdout):
-                        exit_code = paper_fetch.main()
+                        exit_code = paper_fetch_cli.main()
                 finally:
                     sys.argv = original_argv
 
@@ -183,12 +212,12 @@ class PaperFetchTests(unittest.TestCase):
                 self.assertTrue(output_path.exists())
                 self.assertIn("# Example Article", output_path.read_text(encoding="utf-8"))
         finally:
-            paper_fetch.fetch_paper_model = original_fetch
+            paper_fetch_cli.fetch_paper = original_fetch
 
     def test_main_reports_ambiguous_errors_as_json(self) -> None:
-        original_fetch = paper_fetch.fetch_paper_model
+        original_fetch = paper_fetch_cli.fetch_paper
         try:
-            paper_fetch.fetch_paper_model = lambda *args, **kwargs: (_ for _ in ()).throw(
+            paper_fetch_cli.fetch_paper = lambda *args, **kwargs: (_ for _ in ()).throw(
                 paper_fetch.PaperFetchFailure(
                     "ambiguous",
                     "Need user confirmation.",
@@ -201,7 +230,7 @@ class PaperFetchTests(unittest.TestCase):
             sys.argv = ["paper_fetch.py", "--query", "ambiguous title"]
             try:
                 with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
-                    exit_code = paper_fetch.main()
+                    exit_code = paper_fetch_cli.main()
             finally:
                 sys.argv = original_argv
 
@@ -211,7 +240,7 @@ class PaperFetchTests(unittest.TestCase):
             self.assertEqual(payload["status"], "ambiguous")
             self.assertEqual(payload["candidates"][0]["doi"], "10.1000/a")
         finally:
-            paper_fetch.fetch_paper_model = original_fetch
+            paper_fetch_cli.fetch_paper = original_fetch
 
     def test_fetch_paper_model_prefers_raw_xml_pipeline(self) -> None:
         resolved = paper_fetch.ResolvedQuery(
@@ -224,10 +253,10 @@ class PaperFetchTests(unittest.TestCase):
         official_article = sample_article()
         official_article.source = "elsevier_xml"
         official_article.quality.has_fulltext = True
-        original_resolve = paper_fetch.resolve_query
+        original_resolve = paper_fetch.resolve_paper
         try:
-            paper_fetch.resolve_query = lambda *args, **kwargs: resolved
-            article = paper_fetch.fetch_paper_model(
+            paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
+            article = fetch_paper_model(
                 "10.1016/test",
                 clients={
                     "elsevier": StubProvider(
@@ -265,7 +294,7 @@ class PaperFetchTests(unittest.TestCase):
                 html_client=StubHtmlClient(error=paper_fetch.ProviderFailure("no_result", "HTML should not be used.")),
             )
         finally:
-            paper_fetch.resolve_query = original_resolve
+            paper_fetch.resolve_paper = original_resolve
 
         self.assertEqual(article.source, "elsevier_xml")
         self.assertTrue(article.quality.has_fulltext)
@@ -282,10 +311,10 @@ class PaperFetchTests(unittest.TestCase):
             title="Example Article",
         )
         official_article = sample_article()
-        original_resolve = paper_fetch.resolve_query
+        original_resolve = paper_fetch.resolve_paper
         try:
-            paper_fetch.resolve_query = lambda *args, **kwargs: resolved
-            article = paper_fetch.fetch_paper_model(
+            paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
+            article = fetch_paper_model(
                 resolved.query,
                 clients={
                     "elsevier": StubProvider(
@@ -322,7 +351,7 @@ class PaperFetchTests(unittest.TestCase):
                 html_client=StubHtmlClient(error=paper_fetch.ProviderFailure("no_result", "HTML should not be used.")),
             )
         finally:
-            paper_fetch.resolve_query = original_resolve
+            paper_fetch.resolve_paper = original_resolve
 
         self.assertEqual(article.source, "elsevier_xml")
         self.assertTrue(article.quality.has_fulltext)
@@ -358,12 +387,211 @@ class PaperFetchTests(unittest.TestCase):
                     }
                 ),
             },
+            strategy=paper_fetch.FetchStrategy(),
         )
 
         self.assertEqual(provider_name, "springer")
         self.assertEqual(metadata["title"], "Crossref Fallback")
         self.assertIn("metadata:springer_not_configured", source_trail)
         self.assertIn("metadata:crossref_ok", source_trail)
+
+    def test_fetch_paper_returns_fixed_envelope_shape_with_public_source_mapping(self) -> None:
+        resolved = paper_fetch.ResolvedQuery(
+            query="10.1111/test",
+            query_kind="doi",
+            doi="10.1111/test",
+            landing_url="https://example.test/wiley",
+            provider_hint="wiley",
+            confidence=1.0,
+        )
+        official_article = sample_article()
+        official_article.source = "wiley"
+        original_resolve = paper_fetch.resolve_paper
+        try:
+            paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
+            envelope = paper_fetch.fetch_paper(
+                "10.1111/test",
+                modes={"markdown"},
+                strategy=paper_fetch.FetchStrategy(),
+                clients={
+                    "wiley": StubProvider(
+                        metadata=paper_fetch.ProviderFailure("not_supported", "No official metadata."),
+                        raw_payload=RawFulltextPayload(
+                            provider="wiley",
+                            source_url="https://example.test/wiley.pdf",
+                            content_type="application/pdf",
+                            body=b"%PDF-1.4",
+                        ),
+                        article=official_article,
+                    ),
+                    "crossref": StubProvider(
+                        metadata={
+                            "provider": "crossref",
+                            "official_provider": False,
+                            "doi": "10.1111/test",
+                            "title": "Example Article",
+                            "landing_page_url": "https://example.test/wiley",
+                            "fulltext_links": [],
+                            "references": [],
+                        }
+                    ),
+                },
+            )
+        finally:
+            paper_fetch.resolve_paper = original_resolve
+
+        self.assertEqual(
+            set(envelope.to_dict().keys()),
+            {"doi", "source", "has_fulltext", "warnings", "source_trail", "token_estimate", "article", "markdown", "metadata"},
+        )
+        self.assertEqual(envelope.source, "wiley_tdm")
+        self.assertIsNone(envelope.article)
+        self.assertIsNone(envelope.metadata)
+        self.assertTrue(envelope.markdown)
+        self.assertTrue(envelope.has_fulltext)
+
+    def test_fetch_paper_only_populates_envelope_metadata_when_requested(self) -> None:
+        resolved = paper_fetch.ResolvedQuery(
+            query="10.1016/test",
+            query_kind="doi",
+            doi="10.1016/test",
+            landing_url="https://example.test/article",
+            provider_hint="elsevier",
+            confidence=1.0,
+        )
+        official_article = sample_article()
+        original_resolve = paper_fetch.resolve_paper
+        try:
+            paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
+            without_metadata = paper_fetch.fetch_paper(
+                "10.1016/test",
+                modes={"article"},
+                strategy=paper_fetch.FetchStrategy(),
+                clients={
+                    "elsevier": StubProvider(
+                        metadata={
+                            "provider": "elsevier",
+                            "official_provider": True,
+                            "doi": "10.1016/test",
+                            "title": "Example Article",
+                            "landing_page_url": "https://example.test/article",
+                            "fulltext_links": [],
+                            "references": [],
+                        },
+                        raw_payload=RawFulltextPayload(
+                            provider="elsevier",
+                            source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest",
+                            content_type="text/xml",
+                            body=b"<xml/>",
+                        ),
+                        article=official_article,
+                    ),
+                    "crossref": StubProvider(
+                        metadata={
+                            "provider": "crossref",
+                            "official_provider": False,
+                            "doi": "10.1016/test",
+                            "title": "Example Article",
+                            "landing_page_url": "https://example.test/article",
+                            "fulltext_links": [],
+                            "references": [],
+                        }
+                    ),
+                },
+            )
+            with_metadata = paper_fetch.fetch_paper(
+                "10.1016/test",
+                modes={"article", "metadata"},
+                strategy=paper_fetch.FetchStrategy(),
+                clients={
+                    "elsevier": StubProvider(
+                        metadata={
+                            "provider": "elsevier",
+                            "official_provider": True,
+                            "doi": "10.1016/test",
+                            "title": "Example Article",
+                            "landing_page_url": "https://example.test/article",
+                            "fulltext_links": [],
+                            "references": [],
+                        },
+                        raw_payload=RawFulltextPayload(
+                            provider="elsevier",
+                            source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest",
+                            content_type="text/xml",
+                            body=b"<xml/>",
+                        ),
+                        article=official_article,
+                    ),
+                    "crossref": StubProvider(
+                        metadata={
+                            "provider": "crossref",
+                            "official_provider": False,
+                            "doi": "10.1016/test",
+                            "title": "Example Article",
+                            "landing_page_url": "https://example.test/article",
+                            "fulltext_links": [],
+                            "references": [],
+                        }
+                    ),
+                },
+            )
+        finally:
+            paper_fetch.resolve_paper = original_resolve
+
+        self.assertIsNone(without_metadata.metadata)
+        self.assertIsNotNone(with_metadata.metadata)
+        self.assertEqual(with_metadata.metadata.title, with_metadata.article.metadata.title)
+
+    def test_fetch_paper_raises_when_metadata_only_fallback_is_disabled(self) -> None:
+        resolved = paper_fetch.ResolvedQuery(
+            query="10.1016/test",
+            query_kind="doi",
+            doi="10.1016/test",
+            landing_url="https://example.test/article",
+            provider_hint="elsevier",
+            confidence=1.0,
+        )
+        original_resolve = paper_fetch.resolve_paper
+        try:
+            paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
+            with self.assertRaises(paper_fetch.PaperFetchFailure):
+                paper_fetch.fetch_paper(
+                    "10.1016/test",
+                    modes={"article"},
+                    strategy=paper_fetch.FetchStrategy(
+                        allow_html_fallback=False,
+                        allow_metadata_only_fallback=False,
+                    ),
+                    clients={
+                        "elsevier": StubProvider(
+                            metadata={
+                                "provider": "elsevier",
+                                "official_provider": True,
+                                "doi": "10.1016/test",
+                                "title": "Example Article",
+                                "landing_page_url": "https://example.test/article",
+                                "fulltext_links": [],
+                                "references": [],
+                            },
+                            raw_error=paper_fetch.ProviderFailure("no_result", "No full text."),
+                        ),
+                        "crossref": StubProvider(
+                            metadata={
+                                "provider": "crossref",
+                                "official_provider": False,
+                                "doi": "10.1016/test",
+                                "title": "Example Article",
+                                "landing_page_url": "https://example.test/article",
+                                "abstract": "Fallback abstract",
+                                "fulltext_links": [],
+                                "references": [],
+                            }
+                        ),
+                    },
+                    html_client=StubHtmlClient(error=paper_fetch.ProviderFailure("no_result", "HTML should not be used.")),
+                )
+        finally:
+            paper_fetch.resolve_paper = original_resolve
 
     def test_fetch_paper_model_records_rate_limited_fulltext_trail(self) -> None:
         resolved = paper_fetch.ResolvedQuery(
@@ -374,10 +602,10 @@ class PaperFetchTests(unittest.TestCase):
             provider_hint="elsevier",
             confidence=1.0,
         )
-        original_resolve = paper_fetch.resolve_query
+        original_resolve = paper_fetch.resolve_paper
         try:
-            paper_fetch.resolve_query = lambda *args, **kwargs: resolved
-            article = paper_fetch.fetch_paper_model(
+            paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
+            article = fetch_paper_model(
                 "10.1016/test",
                 allow_html_fallback=False,
                 clients={
@@ -414,7 +642,7 @@ class PaperFetchTests(unittest.TestCase):
                 html_client=StubHtmlClient(error=paper_fetch.ProviderFailure("no_result", "HTML should not be used.")),
             )
         finally:
-            paper_fetch.resolve_query = original_resolve
+            paper_fetch.resolve_paper = original_resolve
 
         self.assertEqual(article.source, "crossref_meta")
         self.assertIn("fulltext:elsevier_rate_limited", article.quality.source_trail)
@@ -447,11 +675,11 @@ class PaperFetchTests(unittest.TestCase):
             provider_hint="wiley",
             confidence=1.0,
         )
-        original_resolve = paper_fetch.resolve_query
+        original_resolve = paper_fetch.resolve_paper
         try:
-            paper_fetch.resolve_query = lambda *args, **kwargs: resolved
+            paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
             with tempfile.TemporaryDirectory() as tmpdir:
-                article = paper_fetch.fetch_paper_model(
+                article = fetch_paper_model(
                     "10.1111/test",
                     output_dir=Path(tmpdir),
                     clients={
@@ -487,7 +715,7 @@ class PaperFetchTests(unittest.TestCase):
                 self.assertTrue(downloaded.exists())
                 self.assertTrue(downloaded.read_bytes().startswith(b"%PDF"))
         finally:
-            paper_fetch.resolve_query = original_resolve
+            paper_fetch.resolve_paper = original_resolve
 
         self.assertEqual(article.source, "wiley")
         self.assertTrue(article.quality.has_fulltext)
@@ -506,11 +734,11 @@ class PaperFetchTests(unittest.TestCase):
             confidence=1.0,
         )
         official_article = sample_article()
-        original_resolve = paper_fetch.resolve_query
+        original_resolve = paper_fetch.resolve_paper
         try:
-            paper_fetch.resolve_query = lambda *args, **kwargs: resolved
+            paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
             with tempfile.TemporaryDirectory() as tmpdir:
-                article = paper_fetch.fetch_paper_model(
+                article = fetch_paper_model(
                     "10.1016/test",
                     output_dir=Path(tmpdir),
                     clients={
@@ -551,7 +779,7 @@ class PaperFetchTests(unittest.TestCase):
                 downloaded = Path(tmpdir) / "10.1016_test.pdf"
                 self.assertTrue(downloaded.exists())
         finally:
-            paper_fetch.resolve_query = original_resolve
+            paper_fetch.resolve_paper = original_resolve
 
         self.assertIn("download:custompdf_saved", article.quality.source_trail)
         self.assertNotIn("download:elsevier_saved", article.quality.source_trail)
@@ -565,11 +793,11 @@ class PaperFetchTests(unittest.TestCase):
             provider_hint="wiley",
             confidence=1.0,
         )
-        original_resolve = paper_fetch.resolve_query
+        original_resolve = paper_fetch.resolve_paper
         try:
-            paper_fetch.resolve_query = lambda *args, **kwargs: resolved
+            paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
             with tempfile.TemporaryDirectory() as tmpdir:
-                article = paper_fetch.fetch_paper_model(
+                article = fetch_paper_model(
                     "10.1111/test",
                     allow_downloads=False,
                     output_dir=Path(tmpdir),
@@ -605,7 +833,7 @@ class PaperFetchTests(unittest.TestCase):
                 downloaded = Path(tmpdir) / "10.1111_test.pdf"
                 self.assertFalse(downloaded.exists())
         finally:
-            paper_fetch.resolve_query = original_resolve
+            paper_fetch.resolve_paper = original_resolve
 
         self.assertTrue(article.quality.has_fulltext)
         self.assertIn("download:wiley_skipped", article.quality.source_trail)
@@ -620,10 +848,10 @@ class PaperFetchTests(unittest.TestCase):
             provider_hint="wiley",
             confidence=1.0,
         )
-        original_resolve = paper_fetch.resolve_query
+        original_resolve = paper_fetch.resolve_paper
         try:
-            paper_fetch.resolve_query = lambda *args, **kwargs: resolved
-            article = paper_fetch.fetch_paper_model(
+            paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
+            article = fetch_paper_model(
                 "10.1111/test",
                 allow_downloads=False,
                 clients={
@@ -656,7 +884,7 @@ class PaperFetchTests(unittest.TestCase):
                 html_client=StubHtmlClient(article=sample_html_article()),
             )
         finally:
-            paper_fetch.resolve_query = original_resolve
+            paper_fetch.resolve_paper = original_resolve
 
         self.assertEqual(article.source, "html_generic")
         self.assertTrue(article.quality.has_fulltext)
@@ -673,10 +901,10 @@ class PaperFetchTests(unittest.TestCase):
             provider_hint="wiley",
             confidence=1.0,
         )
-        original_resolve = paper_fetch.resolve_query
+        original_resolve = paper_fetch.resolve_paper
         try:
-            paper_fetch.resolve_query = lambda *args, **kwargs: resolved
-            article = paper_fetch.fetch_paper_model(
+            paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
+            article = fetch_paper_model(
                 "10.1111/test",
                 allow_html_fallback=False,
                 allow_downloads=False,
@@ -710,7 +938,7 @@ class PaperFetchTests(unittest.TestCase):
                 html_client=StubHtmlClient(error=paper_fetch.ProviderFailure("no_result", "HTML should not be used.")),
             )
         finally:
-            paper_fetch.resolve_query = original_resolve
+            paper_fetch.resolve_paper = original_resolve
 
         self.assertEqual(article.source, "crossref_meta")
         self.assertFalse(article.quality.has_fulltext)

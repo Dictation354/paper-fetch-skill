@@ -10,33 +10,26 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Any, Mapping
 
-from article_markdown import build_article_structure, write_article_markdown
-from article_model import article_from_markdown, article_from_structure, metadata_only_article
-from elsevier_xml_rules import (
-    ELSEVIER_IMAGE_ASSET_TYPES,
-    classify_elsevier_asset_kind,
-    infer_elsevier_asset_group_key,
-)
-from fetch_common import (
-    DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
-    HttpTransport,
-    ProviderClient,
-    ProviderFailure,
-    RawFulltextPayload,
-    RequestFailure,
+from ..config import build_user_agent
+from ..http import DEFAULT_FULLTEXT_TIMEOUT_SECONDS, HttpTransport, RequestFailure, build_text_preview, is_xml_content_type
+from ..models import article_from_markdown, article_from_structure, metadata_only_article
+from ..publisher_identity import normalize_doi
+from ..utils import (
     build_asset_output_path,
     build_output_path,
-    build_text_preview,
-    build_user_agent,
     empty_asset_results,
     first_non_empty,
-    is_xml_content_type,
-    map_request_failure,
     sanitize_filename,
     save_payload,
     strip_html_tags,
 )
-from publisher_identity import normalize_doi
+from ._article_markdown import build_article_structure, write_article_markdown
+from ._elsevier_xml_rules import (
+    ELSEVIER_IMAGE_ASSET_TYPES,
+    classify_elsevier_asset_kind,
+    infer_elsevier_asset_group_key,
+)
+from .base import ProviderClient, ProviderFailure, RawFulltextPayload, map_request_failure
 
 
 def xml_local_name(tag: str) -> str:

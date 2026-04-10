@@ -4,11 +4,13 @@ from __future__ import annotations
 
 from typing import Mapping
 
-from fetch_common import HttpTransport, ProviderClient, build_runtime_env
-from providers.crossref import CrossrefClient
-from providers.elsevier import ElsevierClient
-from providers.springer import SpringerClient
-from providers.wiley import WileyClient
+from ..config import build_runtime_env
+from ..http import HttpTransport
+from .base import ProviderClient
+from .crossref import CrossrefClient
+from .elsevier import ElsevierClient
+from .springer import SpringerClient
+from .wiley import WileyClient
 
 
 def build_clients(

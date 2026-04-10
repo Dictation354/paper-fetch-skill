@@ -11,15 +11,15 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Mapping
 
-from elsevier_xml_rules import (
+from ..publisher_identity import normalize_doi
+from ..utils import first_non_empty, sanitize_filename
+from ._elsevier_xml_rules import (
     ELSEVIER_IMAGE_ASSET_TYPES,
     get_elsevier_element_rule,
     infer_elsevier_asset_group_key,
     should_ignore_elsevier_section_title,
 )
-from fetch_common import first_non_empty, sanitize_filename
-from formula_conversion import convert_mathml_element_to_latex
-from publisher_identity import normalize_doi
+from ..formula.convert import convert_mathml_element_to_latex
 
 XLINK_HREF = "{http://www.w3.org/1999/xlink}href"
 XLINK_TITLE = "{http://www.w3.org/1999/xlink}title"

@@ -1,32 +1,15 @@
 from __future__ import annotations
 
-import importlib.util
-import sys
 import unittest
 from pathlib import Path
 
-
 TESTS_DIR = Path(__file__).resolve().parent
 FIXTURE_DIR = TESTS_DIR / "fixtures"
-SCRIPT_DIR = TESTS_DIR.parent / "scripts"
-if str(SCRIPT_DIR) not in sys.path:
-    sys.path.insert(0, str(SCRIPT_DIR))
-
-
-def load_module(name: str, path: Path):
-    spec = importlib.util.spec_from_file_location(name, path)
-    module = importlib.util.module_from_spec(spec)
-    assert spec.loader is not None
-    sys.modules[spec.name] = module
-    spec.loader.exec_module(module)
-    return module
-
-
-paper_fetch = load_module("paper_fetch_regression", SCRIPT_DIR / "paper_fetch.py")
-html_generic = load_module("html_generic_regression", SCRIPT_DIR / "providers" / "html_generic.py")
-elsevier_provider = load_module("elsevier_regression", SCRIPT_DIR / "providers" / "elsevier.py")
-
-from fetch_common import ProviderFailure, RawFulltextPayload
+from paper_fetch import service as paper_fetch
+from paper_fetch.models import OutputMode
+from paper_fetch.providers import elsevier as elsevier_provider
+from paper_fetch.providers import html_generic
+from paper_fetch.providers.base import ProviderFailure, RawFulltextPayload
 
 
 class FixtureTransport(html_generic.HttpTransport):
@@ -85,6 +68,12 @@ class FailingHtmlClient:
 
     def fetch_article_model(self, landing_url, *, metadata=None, expected_doi=None):
         raise self.error
+
+
+def fetch_article(query: str, **kwargs):
+    envelope = paper_fetch.fetch_paper(query, modes={"article"}, **kwargs)
+    assert envelope.article is not None
+    return envelope.article
 
 
 NATURE_HTML_SAMPLES = [
@@ -173,7 +162,7 @@ class RegressionSampleTests(unittest.TestCase):
                 self.assertNotIn("(ref.)", markdown)
 
     def test_paper_fetch_uses_html_fallback_for_nature_samples(self) -> None:
-        original_resolve = paper_fetch.resolve_query
+        original_resolve = paper_fetch.resolve_paper
         try:
             for sample in NATURE_HTML_SAMPLES:
                 with self.subTest(doi=sample["doi"]):
@@ -185,7 +174,7 @@ class RegressionSampleTests(unittest.TestCase):
                         provider_hint="springer",
                         confidence=1.0,
                     )
-                    paper_fetch.resolve_query = lambda *args, _resolved=resolved, **kwargs: _resolved
+                    paper_fetch.resolve_paper = lambda *args, _resolved=resolved, **kwargs: _resolved
 
                     html_client = html_generic.HtmlGenericClient(
                         FixtureTransport({sample["url"]: (read_fixture_bytes(sample["fixture"]), sample["url"])}),
@@ -203,8 +192,9 @@ class RegressionSampleTests(unittest.TestCase):
                         "references": [],
                     }
 
-                    article = paper_fetch.fetch_paper_model(
+                    article = fetch_article(
                         sample["doi"],
+                        strategy=paper_fetch.FetchStrategy(),
                         clients={
                             "springer": ProviderStub(
                                 metadata=ProviderFailure("not_supported", "Regression fixture omits official XML."),
@@ -219,7 +209,7 @@ class RegressionSampleTests(unittest.TestCase):
                     self.assertEqual(article.metadata.title, sample["title"])
                     self.assertTrue(article.quality.has_fulltext)
         finally:
-            paper_fetch.resolve_query = original_resolve
+            paper_fetch.resolve_paper = original_resolve
 
     def test_paper_fetch_uses_elsevier_xml_fixture_for_positive_sample(self) -> None:
         doi = "10.1016/j.rse.2026.115369"
@@ -251,9 +241,9 @@ class RegressionSampleTests(unittest.TestCase):
             article_factory=real_elsevier_client.to_article_model,
         )
 
-        original_resolve = paper_fetch.resolve_query
+        original_resolve = paper_fetch.resolve_paper
         try:
-            paper_fetch.resolve_query = lambda *args, **kwargs: paper_fetch.ResolvedQuery(
+            paper_fetch.resolve_paper = lambda *args, **kwargs: paper_fetch.ResolvedQuery(
                 query=doi,
                 query_kind="doi",
                 doi=doi,
@@ -262,8 +252,9 @@ class RegressionSampleTests(unittest.TestCase):
                 confidence=1.0,
             )
 
-            article = paper_fetch.fetch_paper_model(
+            article = fetch_article(
                 doi,
+                strategy=paper_fetch.FetchStrategy(),
                 clients={
                     "elsevier": replay_provider,
                     "crossref": ProviderStub(metadata=metadata),
@@ -273,7 +264,7 @@ class RegressionSampleTests(unittest.TestCase):
                 ),
             )
         finally:
-            paper_fetch.resolve_query = original_resolve
+            paper_fetch.resolve_paper = original_resolve
 
         self.assertEqual(article.source, "elsevier_xml")
         self.assertEqual(article.metadata.title, metadata["title"])
@@ -306,9 +297,9 @@ class RegressionSampleTests(unittest.TestCase):
             "HTTP 404 for https://api.elsevier.com/content/article/doi/10.1016%2Fj.solener.2024.01.001?view=FULL",
         )
 
-        original_resolve = paper_fetch.resolve_query
+        original_resolve = paper_fetch.resolve_paper
         try:
-            paper_fetch.resolve_query = lambda *args, **kwargs: paper_fetch.ResolvedQuery(
+            paper_fetch.resolve_paper = lambda *args, **kwargs: paper_fetch.ResolvedQuery(
                 query=doi,
                 query_kind="doi",
                 doi=doi,
@@ -317,8 +308,9 @@ class RegressionSampleTests(unittest.TestCase):
                 confidence=1.0,
             )
 
-            article = paper_fetch.fetch_paper_model(
+            article = fetch_article(
                 doi,
+                strategy=paper_fetch.FetchStrategy(),
                 clients={
                     "elsevier": ProviderStub(
                         metadata=ProviderFailure("not_supported", "Regression fixture omits official metadata."),
@@ -331,7 +323,7 @@ class RegressionSampleTests(unittest.TestCase):
                 ),
             )
         finally:
-            paper_fetch.resolve_query = original_resolve
+            paper_fetch.resolve_paper = original_resolve
 
         self.assertEqual(article.source, "crossref_meta")
         self.assertFalse(article.quality.has_fulltext)

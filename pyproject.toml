@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "paper-fetch-skill"
+version = "0.2.0"
+description = "AI-friendly paper fetch tooling"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "beautifulsoup4==4.14.3",
+  "mcp==1.27.0",
+  "trafilatura==2.0.0",
+  "lxml==6.0.3",
+  "PyMuPDF==1.27.2.2",
+]
+
+[project.scripts]
+paper-fetch = "paper_fetch.cli:main"
+paper-fetch-mcp = "paper_fetch.mcp.server:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]

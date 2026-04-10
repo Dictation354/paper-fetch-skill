@@ -9,6 +9,7 @@ from dataclasses import asdict, dataclass, field
 from typing import Any, Literal, Mapping
 
 SourceKind = Literal["elsevier_xml", "springer_xml", "wiley", "html_generic", "crossref_meta"]
+OutputMode = Literal["article", "markdown", "metadata"]
 MARKDOWN_FENCE_PATTERN = re.compile(r"^\s*(```+|~~~+)")
 MARKDOWN_TABLE_RULE_PATTERN = re.compile(r"^\s*[-+:| ]{3,}\s*$")
 MARKDOWN_LIST_MARKER_PATTERN = re.compile(r"^(\s{0,3}(?:[-*+]|\d+[.)])\s+)(.*)$")
@@ -187,6 +188,31 @@ class Quality:
     token_estimate: int
     warnings: list[str] = field(default_factory=list)
     source_trail: list[str] = field(default_factory=list)
+
+
+@dataclass(frozen=True)
+class RenderOptions:
+    include_refs: str = "top10"
+    max_tokens: int = 8000
+
+
+@dataclass
+class FetchEnvelope:
+    doi: str | None
+    source: str
+    has_fulltext: bool
+    warnings: list[str] = field(default_factory=list)
+    source_trail: list[str] = field(default_factory=list)
+    token_estimate: int = 0
+    article: "ArticleModel | None" = None
+    markdown: str | None = None
+    metadata: Metadata | None = None
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+    def to_json(self) -> str:
+        return json.dumps(self.to_dict(), ensure_ascii=False, indent=2)
 
 
 @dataclass

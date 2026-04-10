@@ -7,22 +7,16 @@ import urllib.parse
 from pathlib import Path
 from typing import Any, Mapping
 
-from article_model import article_from_markdown, metadata_only_article, normalize_text
-from fetch_common import (
-    DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
-    HttpTransport,
-    ProviderClient,
-    ProviderFailure,
-    RawFulltextPayload,
-    RequestFailure,
+from ..config import build_user_agent
+from ..http import DEFAULT_FULLTEXT_TIMEOUT_SECONDS, HttpTransport, RequestFailure, build_text_preview
+from ..models import article_from_markdown, metadata_only_article, normalize_text
+from ..publisher_identity import normalize_doi
+from ..utils import (
     build_output_path,
-    build_text_preview,
-    build_user_agent,
     empty_asset_results,
-    map_request_failure,
     save_payload,
 )
-from publisher_identity import normalize_doi
+from .base import ProviderClient, ProviderFailure, RawFulltextPayload, map_request_failure
 
 WILEY_PDF_TEXT_MIN_CHARS = 1200
 WILEY_PDF_FULLTEXT_MARKERS = (

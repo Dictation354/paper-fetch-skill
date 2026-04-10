@@ -1,20 +1,13 @@
 from __future__ import annotations
 
 import json
-import sys
 import unittest
-from pathlib import Path
 
-
-SCRIPT_DIR = Path(__file__).resolve().parent.parent / "scripts"
-if str(SCRIPT_DIR) not in sys.path:
-    sys.path.insert(0, str(SCRIPT_DIR))
-
-from fetch_common import DEFAULT_FULLTEXT_TIMEOUT_SECONDS, DEFAULT_TIMEOUT_SECONDS
-from providers.crossref import CrossrefClient
-from providers.elsevier import ElsevierClient
-from providers.springer import SpringerClient
-from providers.wiley import WileyClient
+from paper_fetch.http import DEFAULT_FULLTEXT_TIMEOUT_SECONDS, DEFAULT_TIMEOUT_SECONDS
+from paper_fetch.providers.crossref import CrossrefClient
+from paper_fetch.providers.elsevier import ElsevierClient
+from paper_fetch.providers.springer import SpringerClient
+from paper_fetch.providers.wiley import WileyClient
 
 
 class RecordingTransport:

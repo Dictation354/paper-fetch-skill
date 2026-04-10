@@ -1,20 +1,30 @@
 from __future__ import annotations
 
 import os
-import sys
 import unittest
-from pathlib import Path
 
-
-SCRIPT_DIR = Path(__file__).resolve().parent.parent / "scripts"
-if str(SCRIPT_DIR) not in sys.path:
-    sys.path.insert(0, str(SCRIPT_DIR))
-
-from fetch_common import HttpTransport, build_runtime_env
-from paper_fetch import fetch_paper_model
+from paper_fetch.config import build_runtime_env
+from paper_fetch.http import HttpTransport
+from paper_fetch.service import FetchStrategy, fetch_paper
 
 
 RUN_LIVE = os.environ.get("PAPER_FETCH_RUN_LIVE") == "1"
+
+
+def fetch_article(query: str, *, allow_html_fallback: bool, transport: HttpTransport, env: dict[str, str]):
+    envelope = fetch_paper(
+        query,
+        modes={"article"},
+        strategy=FetchStrategy(
+            allow_html_fallback=allow_html_fallback,
+            allow_metadata_only_fallback=True,
+        ),
+        download_dir=None,
+        transport=transport,
+        env=env,
+    )
+    assert envelope.article is not None
+    return envelope.article
 
 
 class LivePublisherTests(unittest.TestCase):
@@ -31,10 +41,9 @@ class LivePublisherTests(unittest.TestCase):
 
     def test_elsevier_doi_live_fulltext(self) -> None:
         self._require_env("ELSEVIER_API_KEY", "CROSSREF_MAILTO")
-        article = fetch_paper_model(
+        article = fetch_article(
             "10.1016/j.rse.2025.114648",
             allow_html_fallback=False,
-            allow_downloads=False,
             transport=HttpTransport(),
             env=self.env,
         )
@@ -45,10 +54,9 @@ class LivePublisherTests(unittest.TestCase):
 
     def test_springer_doi_live_fulltext(self) -> None:
         self._require_env("SPRINGER_META_API_KEY", "SPRINGER_OPENACCESS_API_KEY", "CROSSREF_MAILTO")
-        article = fetch_paper_model(
+        article = fetch_article(
             "10.1186/1471-2105-11-421",
             allow_html_fallback=False,
-            allow_downloads=False,
             transport=HttpTransport(),
             env=self.env,
         )
@@ -59,10 +67,9 @@ class LivePublisherTests(unittest.TestCase):
 
     def test_wiley_doi_live_fulltext(self) -> None:
         self._require_env("WILEY_TDM_URL_TEMPLATE", "WILEY_TDM_TOKEN", "CROSSREF_MAILTO")
-        article = fetch_paper_model(
+        article = fetch_article(
             "10.1002/ece3.9361",
             allow_html_fallback=False,
-            allow_downloads=False,
             transport=HttpTransport(),
             env=self.env,
         )
@@ -74,10 +81,9 @@ class LivePublisherTests(unittest.TestCase):
 
     def test_elsevier_url_live_recovers_doi_and_uses_official_fulltext(self) -> None:
         self._require_env("ELSEVIER_API_KEY", "CROSSREF_MAILTO")
-        article = fetch_paper_model(
+        article = fetch_article(
             "https://linkinghub.elsevier.com/retrieve/pii/S0034425725000525",
             allow_html_fallback=False,
-            allow_downloads=False,
             transport=HttpTransport(),
             env=self.env,
         )
@@ -92,9 +98,9 @@ class LivePublisherTests(unittest.TestCase):
 
     def test_short_html_body_live_falls_back_to_html_generic(self) -> None:
         self._require_env("SPRINGER_META_API_KEY", "SPRINGER_OPENACCESS_API_KEY", "CROSSREF_MAILTO")
-        article = fetch_paper_model(
+        article = fetch_article(
             "https://www.nature.com/articles/sj.bdj.2017.900",
-            allow_downloads=False,
+            allow_html_fallback=True,
             transport=HttpTransport(),
             env=self.env,
         )

@@ -1,18 +1,9 @@
 from __future__ import annotations
 
-import importlib.util
 import json
-import sys
 import unittest
-from pathlib import Path
 
-
-SCRIPT_PATH = Path(__file__).resolve().parent.parent / "scripts" / "resolve_query.py"
-SPEC = importlib.util.spec_from_file_location("resolve_query", SCRIPT_PATH)
-resolve_query = importlib.util.module_from_spec(SPEC)
-assert SPEC.loader is not None
-sys.modules[SPEC.name] = resolve_query
-SPEC.loader.exec_module(resolve_query)
+from paper_fetch.resolve import query as resolve_query
 
 
 class RecordingTransport(resolve_query.HttpTransport):

@@ -5,16 +5,9 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, Mapping
 
-from fetch_common import (
-    HttpTransport,
-    ProviderFailure,
-    RequestFailure,
-    build_output_path,
-    build_text_preview,
-    empty_asset_results,
-    map_request_failure,
-    save_payload,
-)
+from paper_fetch.http import HttpTransport, RequestFailure, build_text_preview
+from paper_fetch.providers.base import ProviderFailure, map_request_failure
+from paper_fetch.utils import build_output_path, empty_asset_results, save_payload
 
 
 def download_from_fulltext_links(

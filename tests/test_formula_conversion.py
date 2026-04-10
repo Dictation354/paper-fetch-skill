@@ -1,19 +1,11 @@
 from __future__ import annotations
 
-import importlib.util
-import sys
 import tempfile
 import unittest
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-
-MODULE_PATH = Path(__file__).resolve().parent.parent / "scripts" / "formula_conversion.py"
-SPEC = importlib.util.spec_from_file_location("formula_conversion", MODULE_PATH)
-formula_conversion = importlib.util.module_from_spec(SPEC)
-assert SPEC.loader is not None
-sys.modules[SPEC.name] = formula_conversion
-SPEC.loader.exec_module(formula_conversion)
+from paper_fetch.formula import convert as formula_conversion
 
 
 class FormulaConversionTests(unittest.TestCase):

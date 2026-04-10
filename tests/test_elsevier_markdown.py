@@ -6,12 +6,7 @@ import unittest
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-
-SCRIPT_DIR = Path(__file__).resolve().parent.parent / "scripts"
-if str(SCRIPT_DIR) not in sys.path:
-    sys.path.insert(0, str(SCRIPT_DIR))
-
-import article_markdown
+from paper_fetch.providers import _article_markdown as article_markdown
 
 
 def build_elsevier_markdown(

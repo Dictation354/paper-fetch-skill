@@ -6,20 +6,16 @@ import json
 import urllib.parse
 from typing import Any, Mapping
 
-from fetch_common import (
-    DEFAULT_TIMEOUT_SECONDS,
-    HttpTransport,
-    ProviderClient,
-    ProviderFailure,
-    RequestFailure,
-    build_user_agent,
+from ..config import build_user_agent
+from ..http import DEFAULT_TIMEOUT_SECONDS, HttpTransport, RequestFailure
+from ..publisher_identity import normalize_doi
+from ..utils import (
     date_parts_to_string,
     first_list_item,
     first_non_empty,
-    map_request_failure,
     strip_html_tags,
 )
-from publisher_identity import normalize_doi
+from .base import ProviderClient, ProviderFailure, map_request_failure
 
 
 class CrossrefClient(ProviderClient):
