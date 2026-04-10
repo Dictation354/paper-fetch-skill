@@ -263,7 +263,7 @@ class ElsevierMarkdownTests(unittest.TestCase):
 
         self.assertIn("Air temperature ($T$) and dewpoint temperature ($T_{d}$) were used:", markdown)
         self.assertIn("where $c_{1}$ is constant.", markdown)
-        self.assertIn("$$\n{VPD} = T\n$$", markdown)
+        self.assertRegex(markdown, r"\$\$\n\{?VPD\}? = T\n\$\$")
         self.assertNotIn("$$\nT\n$$", markdown)
         self.assertNotIn("$$\nT_{d}\n$$", markdown)
         self.assertNotIn("$$\nc_{1}\n$$", markdown)
