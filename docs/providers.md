@@ -24,8 +24,8 @@
 
 ### 进程内 HTTP 缓存
 
-`HttpTransport` 带一个短 TTL 的 LRU GET 缓存（见 `scripts/fetch_common.py` 的
-`DEFAULT_CACHE_TTL_SECONDS` / `DEFAULT_CACHE_CAPACITY`）。`paper_fetch.py` 的
+`HttpTransport` 带一个短 TTL 的 LRU GET 缓存（见 `src/paper_fetch/http.py` 的
+`DEFAULT_CACHE_TTL_SECONDS` / `DEFAULT_CACHE_CAPACITY`）。`paper-fetch` 的
 resolve 阶段和 metadata 阶段会复用同一个 transport，因此同一 DOI 的重复
 Crossref / 出版商 GET 会直接命中缓存，不会真正发请求。
 
@@ -55,7 +55,7 @@ client 的 Accept / Authorization 不会互相污染。
   侧的 roundtrip 成本仍在。
 - 需要处理多篇时按顺序串行，或至少把并发度限制在 2–3，避免被 Elsevier /
   Springer 触发 429。
-- 首次 `paper_fetch.py` 返回后，直接复用它吐出的 Markdown / JSON，不要重复跑
+- 首次 `paper-fetch` 返回后，直接复用它吐出的 Markdown / JSON，不要重复跑
   同一个 query。
 - 如果第一次返回 `ambiguous`，先把 DOI 定下来再重试，不要同时对多个候选发起抓取。
 
@@ -176,7 +176,7 @@ Full Text API 请求时的 `Accept` 值，默认是 `application/xml`。
 - 全文使用 Wiley TDM endpoint。
 - 当前实现把 Wiley 返回内容按“单个全文文件”处理。
 - 根据当前已验证结果，默认获取的是 PDF。
-- `paper_fetch.py` 命中 Wiley PDF 时会先尝试用 PyMuPDF 从字节流提取正文。
+- `paper-fetch` 命中 Wiley PDF 时会先尝试用 PyMuPDF 从字节流提取正文。
 - PDF 正文提取失败时，如果 HTML fallback 仍开启，会继续尝试 HTML fallback。
 - 是否把 Wiley PDF 落盘由 `--no-download` 控制，和 HTML fallback 不再耦合。
 
@@ -209,7 +209,7 @@ Wiley-TDM-Client-Token
 ### 现状说明
 
 - 当前实现明确按“默认 PDF”处理 Wiley。
-- 未显式指定 `--output-dir` 且未开启 `--no-download` 时，`paper_fetch.py` 会把 Wiley PDF 默认保存到 repo 根目录下的 `live-downloads/`。
+- 未显式指定 `--output-dir` 且未开启 `--no-download` 时，`paper-fetch` 会把 Wiley PDF 默认保存到当前工作目录下的 `live-downloads/`。
 - 即使关闭落盘，运行时仍会优先尝试从 PDF 提取可用正文。
 - 其他格式，例如 XML，不假定可用。
 - 如果 Wiley 后续单独为你的账户开通 XML 或其他格式，并给出正式 endpoint / header / accept 说明，再扩展当前实现。
