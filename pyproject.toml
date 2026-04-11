@@ -24,12 +24,16 @@ dev = [
 [project.scripts]
 paper-fetch = "paper_fetch.cli:main"
 paper-fetch-mcp = "paper_fetch.mcp.server:main"
+paper-fetch-install-formula-tools = "paper_fetch.formula.install:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+"paper_fetch.resources.formula" = ["*.json", "*.mjs"]
 
 [tool.ruff]
 target-version = "py311"

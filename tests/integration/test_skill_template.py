@@ -17,6 +17,22 @@ def write_fake_python(path: Path, log_path: Path) -> None:
     path.write_text(
         "#!/bin/sh\n"
         f'echo "$0 $@" >> "{log_path}"\n'
+        'if [ "$1" = "-c" ]; then\n'
+        '  printf "%s\\n" "$0"\n'
+        "fi\n"
+        "exit 0\n",
+        encoding="utf-8",
+    )
+    path.chmod(path.stat().st_mode | stat.S_IXUSR)
+
+
+def write_fake_mcp_cli(path: Path, log_path: Path) -> None:
+    path.write_text(
+        "#!/bin/sh\n"
+        f'echo "$0 $@" >> "{log_path}"\n'
+        'if [ "$1" = "mcp" ] && [ "$2" = "get" ]; then\n'
+        "  exit 1\n"
+        "fi\n"
         "exit 0\n",
         encoding="utf-8",
     )
@@ -50,7 +66,10 @@ class InstallerSmokeTests(unittest.TestCase):
         self,
         *,
         script_name: str,
+        args: list[str] | None = None,
         extra_env: dict[str, str] | None = None,
+        fake_codex: bool = False,
+        fake_claude: bool = False,
     ) -> tuple[Path, Path, Path]:
         temp_dir = tempfile.TemporaryDirectory()
         self.addCleanup(temp_dir.cleanup)
@@ -66,6 +85,10 @@ class InstallerSmokeTests(unittest.TestCase):
         home_dir.mkdir(parents=True, exist_ok=True)
         codex_home.mkdir(parents=True, exist_ok=True)
         write_fake_python(fake_bin_dir / "python3", log_path)
+        if fake_codex:
+            write_fake_mcp_cli(fake_bin_dir / "codex", log_path)
+        if fake_claude:
+            write_fake_mcp_cli(fake_bin_dir / "claude", log_path)
 
         env = os.environ.copy()
         env["PATH"] = f"{fake_bin_dir}{os.pathsep}{env.get('PATH', '')}"
@@ -75,7 +98,7 @@ class InstallerSmokeTests(unittest.TestCase):
             env.update(extra_env)
 
         subprocess.run(
-            ["bash", str(repo_dir / "scripts" / script_name)],
+            ["bash", str(repo_dir / "scripts" / script_name), *(args or [])],
             cwd=repo_dir,
             env=env,
             check=True,
@@ -96,6 +119,21 @@ class InstallerSmokeTests(unittest.TestCase):
         self.assertIn("-m pip install --quiet .", log_path.read_text(encoding="utf-8"))
         self.assertFalse((installed_skill.parent / "agents").exists())
 
+    def test_claude_installer_can_register_mcp_server(self) -> None:
+        _, _, log_path = self.run_installer(
+            script_name="install-claude-skill.sh",
+            args=["--register-mcp", "--env-file", "/tmp/paper-fetch.env", "--mcp-scope", "project"],
+            fake_claude=True,
+        )
+
+        log_text = log_path.read_text(encoding="utf-8")
+        self.assertIn("claude mcp remove -s project paper-fetch", log_text)
+        self.assertIn(
+            "claude mcp add -s project -e PAPER_FETCH_ENV_FILE=/tmp/paper-fetch.env paper-fetch --",
+            log_text,
+        )
+        self.assertIn("-m paper_fetch.mcp.server", log_text)
+
     def test_codex_installer_adds_openai_manifest_shim(self) -> None:
         repo_dir, sandbox, log_path = self.run_installer(script_name="install-codex-skill.sh")
 
@@ -112,6 +150,21 @@ class InstallerSmokeTests(unittest.TestCase):
         self.assertFalse((repo_dir / ".venv").exists())
         self.assertFalse((repo_dir / ".env").exists())
         self.assertIn("-m pip install --quiet .", log_path.read_text(encoding="utf-8"))
+
+    def test_codex_installer_can_register_mcp_server(self) -> None:
+        _, _, log_path = self.run_installer(
+            script_name="install-codex-skill.sh",
+            args=["--register-mcp", "--env-file", "/tmp/paper-fetch.env"],
+            fake_codex=True,
+        )
+
+        log_text = log_path.read_text(encoding="utf-8")
+        self.assertIn("codex mcp remove paper-fetch", log_text)
+        self.assertIn(
+            "codex mcp add --env PAPER_FETCH_ENV_FILE=/tmp/paper-fetch.env paper-fetch --",
+            log_text,
+        )
+        self.assertIn("-m paper_fetch.mcp.server", log_text)
 
 
 if __name__ == "__main__":

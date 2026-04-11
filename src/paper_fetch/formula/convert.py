@@ -14,13 +14,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable, Mapping
 
-from ..config import ROOT_DIR
-
-SCRIPT_DIR = ROOT_DIR / "scripts"
-FORMULA_TOOLS_DIR = ROOT_DIR / ".formula-tools"
-FORMULA_TOOLS_BIN_DIR = FORMULA_TOOLS_DIR / "bin"
-FORMULA_TOOLS_LIB_DIR = FORMULA_TOOLS_DIR / "lib"
-FORMULA_TOOLS_VENDOR_DIR = FORMULA_TOOLS_DIR / "vendor"
+from .paths import formula_tools_subpaths, mathml_to_latex_script_candidates
 
 BACKEND_AUTO = "auto"
 BACKEND_TEXMATH = "texmath"
@@ -189,11 +183,7 @@ def convert_with_texmath(
     runtime_env = dict(env or os.environ)
     texmath_bin = (
         runtime_env.get("TEXMATH_BIN", "").strip()
-        or first_existing_path(
-            [
-                FORMULA_TOOLS_BIN_DIR / "texmath",
-            ]
-        )
+        or first_existing_path(formula_tools_subpaths(Path("bin") / "texmath", runtime_env))
         or "texmath"
     )
     started_at = time.monotonic()
@@ -262,10 +252,11 @@ def convert_with_mathml_to_latex(
 ) -> FormulaConversionResult:
     runtime_env = dict(env or os.environ)
     node_bin = runtime_env.get("MATHML_TO_LATEX_NODE_BIN", "node").strip() or "node"
-    script_path = runtime_env.get(
-        "MATHML_TO_LATEX_SCRIPT",
-        str(SCRIPT_DIR / "mathml_to_latex_cli.mjs"),
-    )
+    configured_script = runtime_env.get("MATHML_TO_LATEX_SCRIPT", "").strip()
+    script_candidates = mathml_to_latex_script_candidates(runtime_env)
+    script_path = configured_script or first_existing_path(script_candidates)
+    if not script_path and script_candidates:
+        script_path = str(script_candidates[0])
     started_at = time.monotonic()
 
     if shutil.which(node_bin) is None and not Path(node_bin).exists():
@@ -288,8 +279,9 @@ def convert_with_mathml_to_latex(
         )
 
     args = [node_bin, script_path]
+    script_cwd = Path(script_path).resolve().parent if script_path else None
     try:
-        process = _run_command(args, input_text=raw_mathml, env=runtime_env, cwd=ROOT_DIR)
+        process = _run_command(args, input_text=raw_mathml, env=runtime_env, cwd=script_cwd)
     except subprocess.TimeoutExpired:
         return _completed_result(
             backend=BACKEND_MATHML_TO_LATEX,
@@ -338,18 +330,18 @@ def convert_with_mml2tex(
     runtime_env = dict(env or os.environ)
     java_bin = (
         runtime_env.get("MML2TEX_JAVA_BIN", "").strip()
-        or first_existing_path(
-            [
-                FORMULA_TOOLS_BIN_DIR / "java",
-            ]
-        )
+        or first_existing_path(formula_tools_subpaths(Path("bin") / "java", runtime_env))
         or "java"
     )
-    local_saxon_jar = first_existing_path([FORMULA_TOOLS_LIB_DIR / "Saxon-HE-12.5.jar"])
-    local_xmlresolver_jar = first_existing_path([FORMULA_TOOLS_LIB_DIR / "xmlresolver-5.2.2.jar"])
-    local_xmlresolver_data_jar = first_existing_path([FORMULA_TOOLS_LIB_DIR / "xmlresolver-5.2.2-data.jar"])
-    local_stylesheet = first_existing_path([FORMULA_TOOLS_VENDOR_DIR / "mml2tex" / "xsl" / "invoke-mml2tex.xsl"])
-    local_catalog = first_existing_path([FORMULA_TOOLS_DIR / "mml2tex.catalog.xml"])
+    local_saxon_jar = first_existing_path(formula_tools_subpaths(Path("lib") / "Saxon-HE-12.5.jar", runtime_env))
+    local_xmlresolver_jar = first_existing_path(formula_tools_subpaths(Path("lib") / "xmlresolver-5.2.2.jar", runtime_env))
+    local_xmlresolver_data_jar = first_existing_path(
+        formula_tools_subpaths(Path("lib") / "xmlresolver-5.2.2-data.jar", runtime_env)
+    )
+    local_stylesheet = first_existing_path(
+        formula_tools_subpaths(Path("vendor") / "mml2tex" / "xsl" / "invoke-mml2tex.xsl", runtime_env)
+    )
+    local_catalog = first_existing_path(formula_tools_subpaths("mml2tex.catalog.xml", runtime_env))
 
     classpath = runtime_env.get("MML2TEX_CLASSPATH", "").strip()
     saxon_jar = runtime_env.get("MML2TEX_SAXON_JAR", "").strip() or local_saxon_jar

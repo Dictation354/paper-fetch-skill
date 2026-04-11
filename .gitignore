@@ -10,6 +10,18 @@ node_modules/
 __pycache__/
 *.py[cod]
 *.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+build/
+dist/
+pip-wheel-metadata/
+
+# Project-local agent installs
+.codex/
+.claude/
 
 # Secrets and local data
 .env

@@ -1,0 +1,144 @@
+# Deployment Guide
+
+这份文档面向“把 `paper-fetch-skill` 部署到一个可用环境里”的场景，重点说明安装顺序、MCP 接入方式和可选依赖。
+
+## 1. 安装 Python 包
+
+先把包安装到目标环境：
+
+```bash
+python3 -m pip install .
+```
+
+安装完成后，当前环境会提供这些命令：
+
+- `paper-fetch`
+- `paper-fetch-mcp`
+- `paper-fetch-install-formula-tools`
+
+## 2. 准备配置
+
+如果你需要出版社 API key、`mailto` 或自定义下载目录，可以先准备 `.env`：
+
+```bash
+cp .env.example .env
+```
+
+详细变量说明见 [providers.md](providers.md)。
+
+补充说明：
+
+- 安装脚本在仓库根目录发现 `.env` 时，会优先把它用于 MCP 注册
+- 如果配置文件不在仓库根目录，可以显式传 `--env-file /path/to/.env`
+
+## 3. 可选：安装公式后端
+
+主抓取链路不依赖外部公式后端；不安装也能工作。只有当你希望 `texmath` / `mathml-to-latex` 真正在部署后的环境里可用时，才需要这一步。
+
+推荐分两种场景理解：
+
+- 已经 `pip install .`，或者要在另一台机器上部署：
+
+  ```bash
+  paper-fetch-install-formula-tools
+  ```
+
+- 只是在当前仓库里做 repo-local 开发：
+
+  ```bash
+  ./install-formula-tools.sh
+  ```
+
+区别是：
+
+- `paper-fetch-install-formula-tools` 会把工具装到用户数据目录，适合安装后环境复用
+- `install-formula-tools.sh` 会把工具装到当前仓库的 `./.formula-tools/`，更适合本仓库开发
+
+## 4. 部署到 Codex
+
+最常用的部署方式是：
+
+```bash
+python3 -m pip install .
+./scripts/install-codex-skill.sh --register-mcp
+```
+
+这个脚本会做三件事：
+
+- 在当前 `python3` 环境里执行 `pip install .`
+- 把静态 skill 安装到用户级或项目级 Codex skill 目录
+- 如果带了 `--register-mcp`，调用 Codex CLI 注册 `paper-fetch` 这个 stdio MCP server
+
+常用选项：
+
+- `--project`: 安装到当前仓库的 `.codex/skills/`
+- `--env-file <path>`: 指定 MCP 启动时读取的环境文件
+- `--mcp-name <name>`: 修改默认 MCP server 名称 `paper-fetch`
+
+完成后重启 Codex，让它重新扫描 skill 和 MCP。
+
+## 5. 部署到 Claude Code
+
+最常用的部署方式是：
+
+```bash
+python3 -m pip install .
+./scripts/install-claude-skill.sh --register-mcp
+```
+
+这个脚本同样会安装包、复制静态 skill，并在显式传入 `--register-mcp` 时注册 MCP。
+
+常用选项：
+
+- `--project`: 安装到当前仓库的 `.claude/skills/`
+- `--env-file <path>`: 指定 MCP 启动时读取的环境文件
+- `--mcp-scope local|user|project`: 指定 Claude MCP 配置作用域
+- `--mcp-name <name>`: 修改默认 MCP server 名称 `paper-fetch`
+
+完成后重启 Claude Code，让它重新扫描 skill 和 MCP。
+
+## 6. 手动接入 MCP
+
+如果你不想使用安装脚本，也可以手动注册一个 stdio MCP server，启动命令指向下面任一入口：
+
+```bash
+paper-fetch-mcp
+```
+
+或：
+
+```bash
+python3 -m paper_fetch.mcp.server
+```
+
+如果配置文件不在进程环境里，可以额外设置：
+
+```bash
+PAPER_FETCH_ENV_FILE=/path/to/.env
+```
+
+当前 MCP 入口是 stdio server，适合挂到 Codex、Claude Code 或其他支持 stdio MCP 的 agent runtime。
+
+## 7. 验证是否部署成功
+
+可以先做一个最小 smoke test：
+
+```bash
+paper-fetch --query "10.1186/1471-2105-11-421"
+```
+
+如果你还想验证仓库自带的离线测试：
+
+```bash
+python3 -m unittest discover -s tests/integration -q
+```
+
+部署到 agent 之后，推荐再实际调用一次：
+
+- `resolve_paper(query)`
+- `fetch_paper(query, modes, strategy, include_refs, max_tokens)`
+
+## 相关文档
+
+- [providers.md](providers.md)
+- [architecture/target-architecture.md](architecture/target-architecture.md)

@@ -141,6 +141,20 @@ class ArchitectureCloseoutTests(unittest.TestCase):
         self.assertIn("--no-html-fallback", result.stdout)
         self.assertIn("PAPER_FETCH_DOWNLOAD_DIR", result.stdout)
 
+    def test_formula_installer_help_smoke(self) -> None:
+        result = subprocess.run(
+            ["paper-fetch-install-formula-tools", "--help"],
+            cwd=REPO_ROOT,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("Install optional external formula backends for paper-fetch.", result.stdout)
+        self.assertIn("--target-dir", result.stdout)
+        self.assertIn("--no-node", result.stdout)
+
 
 if __name__ == "__main__":
     unittest.main()
