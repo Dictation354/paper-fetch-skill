@@ -21,6 +21,13 @@ class PublisherIdentityTests(unittest.TestCase):
         self.assertEqual(publisher_identity.infer_provider_from_doi("10.1016/j.solener.2024.01.001"), "elsevier")
         self.assertEqual(publisher_identity.infer_provider_from_doi("10.1111/example"), "wiley")
 
+    def test_extract_doi_handles_embedded_text_and_trailing_punctuation(self) -> None:
+        self.assertEqual(
+            publisher_identity.extract_doi("Find it at DOI: 10.1016/J.RSE.2026.115369)."),
+            "10.1016/j.rse.2026.115369",
+        )
+        self.assertIsNone(publisher_identity.extract_doi("No DOI here."))
+
     def test_infer_provider_from_publisher(self) -> None:
         self.assertEqual(publisher_identity.infer_provider_from_publisher("Springer Nature"), "springer")
         self.assertEqual(publisher_identity.infer_provider_from_publisher("Elsevier BV"), "elsevier")

@@ -16,6 +16,14 @@ def first_non_empty(*values: Any) -> Any:
     return None
 
 
+def safe_text(value: Any) -> str:
+    text = str(value or "").replace("\xa0", " ")
+    text = re.sub(r"[ \t\r\f\v]+", " ", text)
+    text = re.sub(r"\s*\n\s*", "\n", text)
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    return text.strip()
+
+
 def strip_html_tags(value: str | None) -> str | None:
     if not value:
         return value

@@ -8,6 +8,8 @@ import re
 from dataclasses import asdict, dataclass, field
 from typing import Any, Literal, Mapping
 
+from .utils import safe_text
+
 SourceKind = Literal["elsevier_xml", "springer_xml", "wiley", "html_generic", "crossref_meta"]
 OutputMode = Literal["article", "markdown", "metadata"]
 AssetProfile = Literal["none", "body", "all"]
@@ -15,6 +17,7 @@ MaxTokensMode = int | Literal["full_text"]
 MARKDOWN_FENCE_PATTERN = re.compile(r"^\s*(```+|~~~+)")
 MARKDOWN_TABLE_RULE_PATTERN = re.compile(r"^\s*[-+:| ]{3,}\s*$")
 MARKDOWN_LIST_MARKER_PATTERN = re.compile(r"^(\s{0,3}(?:[-*+]|\d+[.)])\s+)(.*)$")
+TRUNCATION_WARNING = "Output truncated to satisfy token budget."
 
 SECTION_PRIORITY = {
     "abstract": 0,
@@ -99,9 +102,13 @@ def normalize_markdown_prose_line(line: str) -> str:
 
 def estimate_tokens(text: str) -> int:
     normalized = normalize_markdown_text(text)
-    if not normalized:
+    return estimate_normalized_tokens(normalized)
+
+
+def estimate_normalized_tokens(text: str) -> int:
+    if not text:
         return 0
-    return max(1, math.ceil(len(normalized) / 4))
+    return max(1, math.ceil(len(text) / 4))
 
 
 def strip_markdown_images(text: str) -> str:
@@ -114,7 +121,7 @@ def asset_link(asset: "Asset") -> str:
 
 
 def local_asset_link(value: Any) -> str | None:
-    normalized = normalize_text(str(value or ""))
+    normalized = safe_text(value)
     if not normalized:
         return None
     if normalized.startswith(("http://", "https://", "//")):
@@ -126,13 +133,19 @@ def truncate_text_to_tokens(text: str, token_budget: int) -> str:
     if token_budget <= 0:
         return ""
     normalized = normalize_markdown_text(text)
-    if estimate_tokens(normalized) <= token_budget:
+    if estimate_normalized_tokens(normalized) <= token_budget:
         return normalized
     max_chars = max(32, token_budget * 4)
     truncated = normalized[:max_chars].rstrip(" ,;:\n")
     if len(truncated) < len(normalized):
         truncated += "..."
     return truncated
+
+
+def normalize_token_budget(max_tokens: MaxTokensMode) -> float:
+    if max_tokens == "full_text":
+        return math.inf
+    return float(max_tokens)
 
 
 def section_kind_for_heading(heading: str) -> str:
@@ -258,6 +271,7 @@ class ArticleModel:
         max_tokens: MaxTokensMode = "full_text",
     ) -> str:
         warnings = list(self.quality.warnings)
+        token_budget = normalize_token_budget(max_tokens)
         effective_include_refs = resolve_reference_mode(include_refs, max_tokens=max_tokens)
         effective_include_figures = resolve_figure_mode(include_figures, asset_profile=asset_profile)
         effective_include_supplementary = resolve_supplementary_mode(
@@ -301,71 +315,43 @@ class ArticleModel:
             asset_profile=asset_profile,
             include_supplementary=effective_include_supplementary,
         )
-
-        if max_tokens == "full_text":
-            abstract_text = normalize_text(self.metadata.abstract)
-            if abstract_text:
-                lines.extend([f"**Abstract.** {abstract_text}", ""])
-
-            for section in body_sections:
-                lines.extend([render_heading(section, level_shift=level_shift), section.text, ""])
-
-            append_asset_block(
-                lines,
-                heading="Figures",
-                item_groups=render_figure_asset_groups(figure_assets, include_figures=effective_include_figures),
-            )
-            append_asset_block(
-                lines,
-                heading="Tables",
-                item_groups=render_table_asset_groups(table_assets),
-            )
-            reference_count = resolve_reference_limit(effective_include_refs, len(self.references))
-            append_asset_block(
-                lines,
-                heading="Supplementary Materials",
-                item_groups=render_supplementary_asset_groups(supplementary_assets),
-            )
-            append_reference_block(
-                lines,
-                references=self.references[:reference_count],
-                total_references=len(self.references),
-                shown_references=reference_count,
-            )
-            return "\n".join(lines).strip() + "\n"
-
-        remaining_budget = max_tokens - estimate_tokens("\n".join(lines))
+        remaining_budget = token_budget - estimate_tokens("\n".join(lines))
         if remaining_budget <= 0:
-            if "Output truncated to satisfy token budget." not in warnings:
-                warnings.append("Output truncated to satisfy token budget.")
+            if TRUNCATION_WARNING not in warnings:
+                warnings.append(TRUNCATION_WARNING)
             return "\n".join(lines).strip() + "\n"
 
         truncated_any = False
         abstract_text = normalize_text(self.metadata.abstract)
         if abstract_text:
             abstract_rendered = f"**Abstract.** {abstract_text}"
-            if estimate_tokens(abstract_rendered) <= remaining_budget:
+            abstract_tokens = estimate_normalized_tokens(normalize_markdown_text(abstract_rendered))
+            if abstract_tokens <= remaining_budget:
                 lines.extend([abstract_rendered, ""])
-                remaining_budget -= estimate_tokens(abstract_rendered)
+                remaining_budget -= abstract_tokens
             else:
-                truncated_text = truncate_text_to_tokens(abstract_text, max(remaining_budget - 8, 0))
+                truncated_text = truncate_text_to_tokens(abstract_text, max(int(remaining_budget - 8), 0))
                 if truncated_text:
                     rendered_abstract = f"**Abstract.** {truncated_text}"
+                    rendered_abstract_tokens = estimate_normalized_tokens(normalize_markdown_text(rendered_abstract))
                     lines.extend([rendered_abstract, ""])
-                    remaining_budget -= estimate_tokens(rendered_abstract)
+                    remaining_budget -= rendered_abstract_tokens
                 truncated_any = True
 
         selected_sections: list[tuple[int, Section]] = []
         indexed_sections = list(enumerate(body_sections))
         for index, section in sorted(indexed_sections, key=lambda item: (section_priority(item[1]), item[0])):
             rendered = render_section(section, level_shift=level_shift)
-            section_tokens = estimate_tokens(rendered)
+            section_tokens = estimate_normalized_tokens(normalize_markdown_text(rendered))
             if section_tokens <= remaining_budget:
                 selected_sections.append((index, section))
                 remaining_budget -= section_tokens
                 continue
-            if remaining_budget > 64:
-                truncated_text = truncate_text_to_tokens(section.text, remaining_budget - estimate_tokens(section.heading) - 4)
+            if not math.isinf(remaining_budget) and remaining_budget > 64:
+                truncated_text = truncate_text_to_tokens(
+                    section.text,
+                    max(int(remaining_budget - estimate_tokens(section.heading) - 4), 0),
+                )
                 if truncated_text:
                     selected_sections.append(
                         (
@@ -416,8 +402,8 @@ class ArticleModel:
         )
         truncated_any = truncated_any or references_truncated
 
-        if truncated_any and "Output truncated to satisfy token budget." not in warnings:
-            warnings.append("Output truncated to satisfy token budget.")
+        if truncated_any and TRUNCATION_WARNING not in warnings:
+            warnings.append(TRUNCATION_WARNING)
         return "\n".join(lines).strip() + "\n"
 
 
@@ -510,13 +496,13 @@ def append_asset_block_with_budget(
     *,
     heading: str,
     item_groups: list[list[str]],
-    remaining_budget: int,
-) -> tuple[int, bool]:
+    remaining_budget: float,
+) -> tuple[float, bool]:
     if not item_groups:
         return remaining_budget, False
 
     header_lines = [f"## {heading}", ""]
-    header_tokens = estimate_tokens("\n".join(header_lines))
+    header_tokens = estimate_normalized_tokens(normalize_markdown_text("\n".join(header_lines)))
     if header_tokens > remaining_budget:
         return remaining_budget, True
 
@@ -524,7 +510,7 @@ def append_asset_block_with_budget(
     remaining_after_header = remaining_budget - header_tokens
     truncated = False
     for group in item_groups:
-        group_tokens = estimate_tokens("\n".join(group))
+        group_tokens = estimate_normalized_tokens(normalize_markdown_text("\n".join(group)))
         if group_tokens <= remaining_after_header:
             selected_groups.append(group)
             remaining_after_header -= group_tokens
@@ -562,13 +548,13 @@ def append_reference_block_with_budget(
     *,
     references: list[Reference],
     total_references: int,
-    remaining_budget: int,
-) -> tuple[int, bool]:
+    remaining_budget: float,
+) -> tuple[float, bool]:
     if not references:
         return remaining_budget, False
 
     header_lines = [f"## References ({total_references} total, showing {len(references)})", ""]
-    header_tokens = estimate_tokens("\n".join(header_lines))
+    header_tokens = estimate_normalized_tokens(normalize_markdown_text("\n".join(header_lines)))
     if header_tokens > remaining_budget:
         return remaining_budget, True
 
@@ -577,14 +563,14 @@ def append_reference_block_with_budget(
     truncated = False
     for reference in references:
         candidate = f"- {reference.raw}"
-        candidate_tokens = estimate_tokens(candidate)
+        candidate_tokens = estimate_normalized_tokens(normalize_markdown_text(candidate))
         if candidate_tokens <= remaining_after_header:
             selected_references.append(candidate)
             remaining_after_header -= candidate_tokens
             continue
-        if remaining_after_header > 16:
-            truncated_reference = f"- {truncate_text_to_tokens(reference.raw, max(8, remaining_after_header - 2))}"
-            truncated_tokens = estimate_tokens(truncated_reference)
+        if not math.isinf(remaining_after_header) and remaining_after_header > 16:
+            truncated_reference = f"- {truncate_text_to_tokens(reference.raw, max(8, int(remaining_after_header - 2)))}"
+            truncated_tokens = estimate_normalized_tokens(normalize_markdown_text(truncated_reference))
             if truncated_tokens <= remaining_after_header:
                 selected_references.append(truncated_reference)
                 remaining_after_header -= truncated_tokens
@@ -717,31 +703,31 @@ def lines_to_sections(lines: list[str], *, fallback_heading: str = "Full Text") 
 
 def normalize_authors(value: Any) -> list[str]:
     if isinstance(value, list):
-        return [normalize_text(str(item)) for item in value if normalize_text(str(item))]
+        return [safe_text(item) for item in value if safe_text(item)]
     if isinstance(value, str):
-        parts = [normalize_text(part) for part in re.split(r"\s*;\s*|\s*,\s*", value)]
+        parts = [safe_text(part) for part in re.split(r"\s*;\s*|\s*,\s*", value)]
         return [part for part in parts if part]
     return []
 
 
 def build_metadata(metadata: Mapping[str, Any]) -> Metadata:
     return Metadata(
-        title=normalize_text(str(metadata.get("title") or "")) or None,
+        title=safe_text(metadata.get("title")) or None,
         authors=normalize_authors(metadata.get("authors")),
-        abstract=normalize_text(str(metadata.get("abstract") or "")) or None,
-        journal=normalize_text(str(metadata.get("journal_title") or metadata.get("journal") or "")) or None,
-        published=normalize_text(str(metadata.get("published") or "")) or None,
+        abstract=safe_text(metadata.get("abstract")) or None,
+        journal=safe_text(metadata.get("journal_title") or metadata.get("journal")) or None,
+        published=safe_text(metadata.get("published")) or None,
         keywords=[
-            normalize_text(str(item))
+            safe_text(item)
             for item in (metadata.get("keywords") or [])
-            if normalize_text(str(item))
+            if safe_text(item)
         ],
         license_urls=[
-            normalize_text(str(item))
+            safe_text(item)
             for item in (metadata.get("license_urls") or [])
-            if normalize_text(str(item))
+            if safe_text(item)
         ],
-        landing_page_url=normalize_text(str(metadata.get("landing_page_url") or "")) or None,
+        landing_page_url=safe_text(metadata.get("landing_page_url")) or None,
     )
 
 
@@ -763,7 +749,7 @@ def metadata_only_article(
         )
     )
     return ArticleModel(
-        doi=doi or normalize_text(str(metadata.get("doi") or "")) or None,
+        doi=doi or safe_text(metadata.get("doi")) or None,
         source=source,
         metadata=article_metadata,
         sections=[],
@@ -784,19 +770,19 @@ def build_references(raw_references: Any) -> list[Reference]:
         return references
     for item in raw_references:
         if isinstance(item, Mapping):
-            raw = normalize_text(str(item.get("raw") or item.get("unstructured") or item.get("title") or ""))
+            raw = safe_text(item.get("raw") or item.get("unstructured") or item.get("title"))
             if not raw:
                 continue
             references.append(
                 Reference(
                     raw=raw,
-                    doi=normalize_text(str(item.get("doi") or "")) or None,
-                    title=normalize_text(str(item.get("title") or "")) or None,
-                    year=normalize_text(str(item.get("year") or "")) or None,
+                    doi=safe_text(item.get("doi")) or None,
+                    title=safe_text(item.get("title")) or None,
+                    year=safe_text(item.get("year")) or None,
                 )
             )
         else:
-            raw = normalize_text(str(item))
+            raw = safe_text(item)
             if raw:
                 references.append(Reference(raw=raw))
     return references
@@ -838,33 +824,33 @@ def article_from_structure(
         assets.append(
             Asset(
                 kind="figure",
-                heading=normalize_text(str(entry.get("heading") or "Figure")) or "Figure",
-                caption=normalize_text(str(entry.get("caption") or "")),
+                heading=safe_text(entry.get("heading") or "Figure") or "Figure",
+                caption=safe_text(entry.get("caption")),
                 url=local_asset_link(entry.get("link")),
-                path=normalize_text(str(entry.get("path") or "")) or None,
-                section=normalize_text(str(entry.get("section") or "")) or None,
+                path=safe_text(entry.get("path")) or None,
+                section=safe_text(entry.get("section")) or None,
             )
         )
     for entry in table_entries:
         assets.append(
             Asset(
                 kind="table",
-                heading=normalize_text(str(entry.get("heading") or "Table")) or "Table",
-                caption=normalize_text(str(entry.get("caption") or "")),
+                heading=safe_text(entry.get("heading") or "Table") or "Table",
+                caption=safe_text(entry.get("caption")),
                 url=local_asset_link(entry.get("link")),
-                path=normalize_text(str(entry.get("path") or "")) or None,
-                section=normalize_text(str(entry.get("section") or "")) or None,
+                path=safe_text(entry.get("path")) or None,
+                section=safe_text(entry.get("section")) or None,
             )
         )
     for entry in supplement_entries:
         assets.append(
             Asset(
                 kind="supplementary",
-                heading=normalize_text(str(entry.get("heading") or "Supplementary Material")) or "Supplementary Material",
-                caption=normalize_text(str(entry.get("caption") or "")),
+                heading=safe_text(entry.get("heading") or "Supplementary Material") or "Supplementary Material",
+                caption=safe_text(entry.get("caption")),
                 url=local_asset_link(entry.get("link")),
-                path=normalize_text(str(entry.get("path") or "")) or None,
-                section=normalize_text(str(entry.get("section") or "")) or None,
+                path=safe_text(entry.get("path")) or None,
+                section=safe_text(entry.get("section")) or None,
             )
         )
 
@@ -873,7 +859,7 @@ def article_from_structure(
     token_estimate = estimate_tokens("\n\n".join(fulltext_chunks))
 
     return ArticleModel(
-        doi=doi or normalize_text(str(metadata.get("doi") or "")) or None,
+        doi=doi or safe_text(metadata.get("doi")) or None,
         source=source,
         metadata=article_metadata,
         sections=sections,
@@ -909,12 +895,12 @@ def article_from_markdown(
     article_metadata.abstract = extracted_abstract or article_metadata.abstract
     normalized_assets = [
         Asset(
-            kind=normalize_text(str(item.get("kind") or item.get("asset_type") or "asset")) or "asset",
-            heading=normalize_text(str(item.get("heading") or "Asset")) or "Asset",
-            caption=normalize_text(str(item.get("caption") or "")),
+            kind=safe_text(item.get("kind") or item.get("asset_type") or "asset") or "asset",
+            heading=safe_text(item.get("heading") or "Asset") or "Asset",
+            caption=safe_text(item.get("caption")),
             url=local_asset_link(item.get("url") or item.get("source_url")),
-            path=normalize_text(str(item.get("path") or "")) or None,
-            section=normalize_text(str(item.get("section") or "")) or None,
+            path=safe_text(item.get("path")) or None,
+            section=safe_text(item.get("section")) or None,
         )
         for item in (assets or [])
     ]
@@ -922,7 +908,7 @@ def article_from_markdown(
         "\n\n".join([article_metadata.abstract or ""] + [section.text for section in sections])
     )
     return ArticleModel(
-        doi=doi or normalize_text(str(metadata.get("doi") or "")) or None,
+        doi=doi or safe_text(metadata.get("doi")) or None,
         source=source,
         metadata=article_metadata,
         sections=sections,

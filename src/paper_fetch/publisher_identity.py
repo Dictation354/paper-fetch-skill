@@ -39,6 +39,7 @@ URL_PROVIDER_TOKENS = {
     "springer": ("springer.com", "springernature.com", "nature.com", "biomedcentral.com"),
     "wiley": ("wiley.com", "onlinelibrary.wiley.com"),
 }
+DOI_PATTERN = re.compile(r"10\.\d{4,9}/[^\s\"'<>]+", flags=re.IGNORECASE)
 
 
 def normalize_doi(doi: str | None) -> str:
@@ -48,6 +49,15 @@ def normalize_doi(doi: str | None) -> str:
     value = re.sub(r"^https?://(dx\.)?doi\.org/", "", value)
     value = re.sub(r"^doi:\s*", "", value)
     return value
+
+
+def extract_doi(text: str | None) -> str | None:
+    if not text:
+        return None
+    match = DOI_PATTERN.search(text)
+    if not match:
+        return None
+    return normalize_doi(match.group(0).rstrip(").,;"))
 
 
 def infer_provider_from_doi(doi: str | None) -> str | None:

@@ -12,7 +12,7 @@ from typing import Any, Mapping
 from ..config import build_user_agent
 from ..http import DEFAULT_FULLTEXT_TIMEOUT_SECONDS, HttpTransport, RequestFailure
 from ..models import AssetProfile, article_from_markdown, normalize_markdown_text, normalize_text
-from ..publisher_identity import normalize_doi
+from ..publisher_identity import extract_doi, normalize_doi
 from ..utils import build_asset_output_path, dedupe_authors, empty_asset_results, sanitize_filename, save_payload
 from .base import ProviderFailure, map_request_failure
 
@@ -28,7 +28,6 @@ except ImportError:  # pragma: no cover - exercised implicitly when dependency i
     NavigableString = None
     Tag = None
 
-DOI_PATTERN = re.compile(r"10\.\d{4,9}/[^\s\"'<>]+", flags=re.IGNORECASE)
 HTML_ROOT_SELECTORS = ("article", "main", '[role="main"]')
 HTML_DROP_TAGS = ("script", "style", "svg", "noscript", "template")
 HTML_BLOCK_TAGS = {
@@ -1283,12 +1282,7 @@ def extract_doi_from_meta(meta: Mapping[str, list[str]]) -> str | None:
 
 
 def extract_doi_from_text(value: str | None) -> str | None:
-    if not value:
-        return None
-    match = DOI_PATTERN.search(value)
-    if not match:
-        return None
-    return normalize_doi(match.group(0).rstrip(").,;"))
+    return extract_doi(value)
 
 
 def extract_article_markdown(html_text: str, source_url: str) -> str:

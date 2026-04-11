@@ -38,6 +38,11 @@ SENSITIVE_CACHE_HEADER_NAMES = {
     "cr-clickthrough-client-token",
     "proxy-authorization",
 }
+CACHE_KEY_HEADER_NAMES = {
+    "accept",
+    "accept-language",
+    *SENSITIVE_CACHE_HEADER_NAMES,
+}
 UNSTABLE_CACHE_HEADER_NAMES = {
     "x-els-reqid",
 }
@@ -103,6 +108,7 @@ class HttpTransport:
             sorted(
                 (str(key).lower(), self._normalize_header_value_for_cache(str(key), str(value)))
                 for key, value in headers.items()
+                if str(key).lower() in CACHE_KEY_HEADER_NAMES
             )
         )
         return (method.upper(), redact_url_for_cache(url), normalized_headers)

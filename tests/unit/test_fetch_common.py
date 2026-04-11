@@ -90,6 +90,7 @@ class HttpTransportCacheTests(unittest.TestCase):
                 headers={
                     "Accept": "application/json",
                     "User-Agent": "UnitTest/1.0",
+                    "Accept-Language": "en-US",
                     "X-ELS-APIKey": "top-secret",
                     "X-ELS-ReqId": "req-1",
                 },
@@ -100,7 +101,8 @@ class HttpTransportCacheTests(unittest.TestCase):
                 "https://example.test/article",
                 headers={
                     "Accept": "application/json",
-                    "User-Agent": "UnitTest/1.0",
+                    "User-Agent": "AnotherUserAgent/9.9",
+                    "Accept-Language": "en-US",
                     "X-ELS-APIKey": "different-secret",
                     "X-ELS-ReqId": "req-2",
                 },
@@ -116,8 +118,40 @@ class HttpTransportCacheTests(unittest.TestCase):
         self.assertNotIn("alice@example.com", cached_url)
         self.assertIn("api_key=%2A%2A%2A", cached_url)
         self.assertIn("mailto=%2A%2A%2A", cached_url)
+        self.assertIn(("accept", "application/json"), cached_headers)
+        self.assertIn(("accept-language", "en-US"), cached_headers)
         self.assertIn(("x-els-apikey", "***"), cached_headers)
-        self.assertIn(("x-els-reqid", "<volatile>"), cached_headers)
+        self.assertNotIn(("user-agent", "UnitTest/1.0"), cached_headers)
+        self.assertFalse(any(key == "x-els-reqid" for key, _ in cached_headers))
+
+    def test_cache_key_distinguishes_accept_language_and_authorization_presence(self) -> None:
+        transport = http_module.HttpTransport(cache_ttl=30, cache_capacity=128)
+        call_count = 0
+
+        def fake_urlopen(request, timeout=20):
+            nonlocal call_count
+            call_count += 1
+            return FakeHTTPResponse(b'{"ok":true}', request.full_url, headers={"content-type": "application/json"})
+
+        with mock.patch.object(http_module.urllib.request, "urlopen", side_effect=fake_urlopen):
+            transport.request(
+                "GET",
+                "https://example.test/article",
+                headers={"Accept": "application/json", "Accept-Language": "en-US"},
+            )
+            transport.request(
+                "GET",
+                "https://example.test/article",
+                headers={"Accept": "application/json", "Accept-Language": "zh-CN"},
+            )
+            transport.request(
+                "GET",
+                "https://example.test/article",
+                headers={"Accept": "application/json", "Accept-Language": "zh-CN", "Authorization": "Bearer secret"},
+            )
+
+        self.assertEqual(call_count, 3)
+        self.assertEqual(len(transport._cache), 3)
 
     def test_pdf_payloads_are_not_cached(self) -> None:
         transport = http_module.HttpTransport(cache_ttl=30, cache_capacity=128)

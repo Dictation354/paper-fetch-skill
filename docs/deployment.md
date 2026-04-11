@@ -136,8 +136,10 @@ paper-fetch --query "10.1186/1471-2105-11-421"
 如果你还想验证仓库自带的离线测试：
 
 ```bash
-python3 -m unittest discover -s tests/integration -q
+PYTHONPATH=src python3 -m unittest discover -s tests/integration -q
 ```
+
+如果你是在仓库源码目录里做 repo-local 验证，而不是验证已安装环境，推荐所有 `unittest` 命令都显式带上 `PYTHONPATH=src`，避免误导入环境里旧的已安装包。
 
 部署到 agent 之后，推荐再实际调用一次：
 

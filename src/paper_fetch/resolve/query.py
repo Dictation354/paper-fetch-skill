@@ -16,9 +16,7 @@ from ..http import HttpTransport, RequestFailure
 from ..providers.base import ProviderFailure
 from ..providers.crossref import CrossrefClient
 from ..providers.html_generic import decode_html, parse_html_metadata
-from ..publisher_identity import infer_provider_from_signals, normalize_doi
-
-DOI_PATTERN = re.compile(r"10\.\d{4,9}/[^\s\"'<>]+", flags=re.IGNORECASE)
+from ..publisher_identity import extract_doi, infer_provider_from_signals, normalize_doi
 CONFIDENT_SCORE_MIN = 0.90
 CONFIDENT_MARGIN_MIN = 0.05
 MIN_HTML_TITLE_LOOKUP_CHARS = 24
@@ -44,17 +42,6 @@ class ResolvedQuery:
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
-
-
-def extract_doi(text: str | None) -> str | None:
-    if not text:
-        return None
-    match = DOI_PATTERN.search(text)
-    if not match:
-        return None
-    return normalize_doi(match.group(0).rstrip(").,;"))
-
-
 def is_url(value: str) -> bool:
     parsed = urllib.parse.urlparse(value)
     return parsed.scheme in {"http", "https"} and bool(parsed.netloc)

@@ -15,20 +15,6 @@
 - **`html_generic.py` 1615 行未拆分**
   - 与 `problems.md` 里已完成的 `_article_markdown` 拆分不对称；承担了 HTML 清洗 / figure 识别 / supplementary 识别 / Nature 专用路径 / markdown 清洗 / 资产下载 / client 类
   - 建议拆成 `html_noise.py` / `html_assets.py` / `html_nature.py` / `html_generic.py`（只剩 `HtmlGenericClient` + `parse_html_metadata`）
-- **`ArticleModel.to_ai_markdown` 两条渲染路径几乎重复**
-  - [src/paper_fetch/models.py:305-421](src/paper_fetch/models.py#L305-L421) `full_text` 分支与预算裁剪分支各写一遍 ~100 行；新增 section 类型要改两次容易漂移
-  - 建议 `full_text` 建模成 `math.inf` 预算跑同一份代码
-- **`estimate_tokens` 在裁剪循环里重复 normalize**
-  - [src/paper_fetch/models.py:100-104](src/paper_fetch/models.py#L100-L104) 每次调用都跑一遍 `normalize_markdown_text`；在裁剪循环里 section/group/reference 各一次，整体 O(n²)
-  - 裁剪循环里应假设输入已 normalized，直接 `max(1, math.ceil(len(text)/4))`
-- **`_fetch_article` 嵌套 4 层、超过 100 行**
-  - [src/paper_fetch/service.py:328-437](src/paper_fetch/service.py#L328-L437) 应拆 `_try_official_provider()` / `_try_html_fallback()` / `_fallback_to_metadata_only()`，主函数线性串联
-- **HTTP 缓存键包含所有请求头**
-  - [src/paper_fetch/http.py:85-101](src/paper_fetch/http.py#L85-L101) 任意 header 变动都 miss（如 UA 里 mailto、不同 Accept）；只保留 `accept / accept-language / authorization(脱敏)` 这类有语义的
-- **DOI pattern 重复定义**
-  - [src/paper_fetch/resolve/query.py:21](src/paper_fetch/resolve/query.py#L21)、[src/paper_fetch/providers/html_generic.py:31](src/paper_fetch/providers/html_generic.py#L31)、`publisher_identity.py` 各写一份，应归一
-- **`normalize_text(str(x.get("y") or ""))` 模式 30+ 处**
-  - service.py / models.py / elsevier.py 到处链式调用；抽一个 `safe_text(x.get("y"))` helper 清掉噪音
 
 ### 优先级 P2（体验 / 结果质量）
 
@@ -100,6 +86,13 @@
 - ✅ `_article_markdown.py` 已拆分成共享 helper、公式渲染、Springer、Elsevier、文档装配五层，原模块保留薄 façade 兼容入口
 - ✅ Markdown 回归测试继续覆盖 Elsevier / Springer 主路径，拆分后输出行为保持不变
 - ✅ façade 兼容入口已有守卫测试，继续暴露 `render_mathml_expression`、`build_article_structure`、`write_article_markdown`
+- ✅ `ArticleModel.to_ai_markdown()` 已收敛到单一路径；`max_tokens="full_text"` 现在会先归一成 `math.inf` 预算，再复用同一套渲染/裁剪逻辑
+- ✅ `estimate_tokens()` 继续保留为安全入口，但裁剪热路径已改用“已 normalized 文本”的轻量 token 估算 helper，避免在 section/group/reference 循环里重复 normalize
+- ✅ `_fetch_article()` 已拆成 `_try_official_provider()` / `_try_html_fallback()` / `_fallback_to_metadata_only()`，主流程改成线性串联，warning 与 `source_trail` 语义保持不变
+- ✅ HTTP GET 缓存键已从“全部请求头”收敛为语义白名单：`accept`、`accept-language` 和认证/权限相关头；`User-Agent` 这类 incidental header 不再导致 cache miss
+- ✅ DOI 提取逻辑已统一到 `publisher_identity.extract_doi()`；`resolve/query.py` 与 `html_generic.py` 不再各自维护一份 DOI regex
+- ✅ 新增共享 `safe_text()` helper，已替换本轮 models/service 等维护性收口中的链式 `normalize_text(str(x or \"\"))` 噪音
+- ✅ 已补守卫测试，覆盖 `full_text` 与大预算渲染等价、缓存键白名单行为、共享 DOI 提取
 
 ### 既有收口基线
 

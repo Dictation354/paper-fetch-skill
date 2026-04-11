@@ -2044,6 +2044,19 @@ class PaperFetchTests(unittest.TestCase):
         self.assertIn("- Reference 10", markdown)
         self.assertNotIn("- Reference 11", markdown)
 
+    def test_to_ai_markdown_full_text_matches_large_budget_rendering(self) -> None:
+        article = sample_article()
+        article.references = [Reference(raw=f"Reference {index}") for index in range(1, 4)]
+        article.assets = [
+            Asset(kind="figure", heading="Figure 1", caption="Overview figure.", path="downloads/figure-1.png", section="body"),
+            Asset(kind="supplementary", heading="Supplementary Data", caption="Raw measurements.", path="downloads/supplement.csv"),
+        ]
+
+        full_text_markdown = article.to_ai_markdown(include_refs="all", asset_profile="all", max_tokens="full_text")
+        large_budget_markdown = article.to_ai_markdown(include_refs="all", asset_profile="all", max_tokens=100000)
+
+        self.assertEqual(full_text_markdown, large_budget_markdown)
+
     def test_to_ai_markdown_inline_figures_fall_back_to_captions_without_links(self) -> None:
         article = sample_article()
         article.assets = [

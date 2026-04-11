@@ -29,7 +29,7 @@ from .publisher_identity import (
     ordered_provider_candidates,
 )
 from .resolve.query import ResolvedQuery, resolve_query
-from .utils import build_output_path, dedupe_authors, empty_asset_results, save_payload
+from .utils import build_output_path, dedupe_authors, empty_asset_results, safe_text, save_payload
 
 DEFAULT_OUTPUT_MODES: set[OutputMode] = {"article", "markdown"}
 OFFICIAL_PROVIDER_NAMES = ("elsevier", "springer", "wiley")
@@ -120,7 +120,7 @@ def merge_metadata(primary: Mapping[str, Any] | None, secondary: Mapping[str, An
             return "" if preserve_blank and value else None
         if value is None:
             return None
-        normalized = normalize_text(str(value))
+        normalized = safe_text(value)
         if normalized:
             return normalized
         return "" if preserve_blank else None
@@ -225,9 +225,9 @@ def build_official_provider_candidates(
     candidates = ordered_provider_candidates(
         landing_urls=[
             resolved.landing_url,
-            str((routing_metadata or {}).get("landing_page_url") or ""),
+            safe_text((routing_metadata or {}).get("landing_page_url")),
         ],
-        publishers=[str((routing_metadata or {}).get("publisher") or "")],
+        publishers=[safe_text((routing_metadata or {}).get("publisher"))],
         doi=resolved.doi,
     )
     return [
@@ -307,9 +307,9 @@ def fetch_metadata_for_resolved_query(
         route_signal_markers(
             landing_urls=[
                 resolved.landing_url,
-                str((routing_metadata or {}).get("landing_page_url") or ""),
+                safe_text((routing_metadata or {}).get("landing_page_url")),
             ],
-            publishers=[str((routing_metadata or {}).get("publisher") or "")],
+            publishers=[safe_text((routing_metadata or {}).get("publisher"))],
             doi=resolved.doi,
         ),
     )
@@ -361,7 +361,7 @@ def build_metadata_only_result(
     return metadata_only_article(
         source="crossref_meta",
         metadata=metadata,
-        doi=normalize_doi(str(metadata.get("doi") or resolved.doi or "")) or None,
+        doi=normalize_doi(safe_text(metadata.get("doi") or resolved.doi)) or None,
         warnings=list(warnings or []),
         source_trail=list(source_trail or []),
     )
@@ -376,7 +376,7 @@ def maybe_save_provider_payload(
 ) -> tuple[list[str], list[str]]:
     if not raw_payload.needs_local_copy:
         return [], []
-    provider_slug = normalize_text(str(raw_payload.provider or "provider")).lower().replace(" ", "_") or "provider"
+    provider_slug = safe_text(raw_payload.provider or "provider").lower().replace(" ", "_") or "provider"
     provider_label = provider_slug.replace("_", " ").title()
     if download_dir is None:
         return [f"{provider_label} official PDF/binary was not written to disk because --no-download was set."], [
@@ -387,7 +387,7 @@ def maybe_save_provider_payload(
         build_output_path(
             download_dir,
             doi,
-            str(metadata.get("title") or ""),
+            safe_text(metadata.get("title")),
             raw_payload.content_type,
             raw_payload.source_url,
         ),
@@ -417,7 +417,7 @@ def maybe_download_provider_assets(
     if asset_profile == "none":
         return empty_asset_results(), [], [f"download:{provider_name}_assets_skipped_profile_none"]
 
-    provider_label = normalize_text(provider_name).replace("_", " ").title() or "Provider"
+    provider_label = safe_text(provider_name).replace("_", " ").title() or "Provider"
     try:
         asset_results = provider_client.download_related_assets(
             doi,
@@ -450,6 +450,126 @@ def maybe_download_provider_assets(
     }, warnings, source_trail
 
 
+def _try_official_provider(
+    *,
+    doi: str | None,
+    metadata: Mapping[str, Any],
+    provider_name: str | None,
+    strategy: FetchStrategy,
+    download_dir: Path | None,
+    clients: Mapping[str, Any],
+    warnings: list[str],
+    source_trail: list[str],
+) -> ArticleModel | None:
+    if not doi or not provider_name or provider_name == "crossref":
+        return None
+    if not provider_allowed(provider_name, strategy):
+        extend_unique(source_trail, [f"fulltext:{provider_name}_skipped"])
+        return None
+
+    provider_client = clients.get(provider_name)
+    if provider_client is None:
+        return None
+
+    extend_unique(source_trail, [f"fulltext:{provider_name}_attempt"])
+    try:
+        raw_payload = provider_client.fetch_raw_fulltext(doi, metadata)
+        extend_unique(source_trail, [f"fulltext:{provider_name}_raw_ok"])
+        download_warnings, download_trail = maybe_save_provider_payload(
+            raw_payload,
+            download_dir=download_dir,
+            doi=doi,
+            metadata=metadata,
+        )
+        extend_unique(warnings, download_warnings)
+        extend_unique(source_trail, download_trail)
+        asset_results, asset_warnings, asset_trail = maybe_download_provider_assets(
+            provider_client,
+            provider_name=provider_name,
+            raw_payload=raw_payload,
+            download_dir=download_dir,
+            doi=doi,
+            metadata=metadata,
+            asset_profile=strategy.asset_profile,
+        )
+        raw_payload.metadata["downloaded_assets"] = list(asset_results.get("assets") or [])
+        raw_payload.metadata["asset_failures"] = list(asset_results.get("asset_failures") or [])
+        extend_unique(warnings, asset_warnings)
+        extend_unique(source_trail, asset_trail)
+        article = provider_client.to_article_model(metadata, raw_payload)
+        extend_unique(source_trail, article.quality.source_trail)
+        if article.quality.has_fulltext and article.sections:
+            extend_unique(source_trail, [f"fulltext:{provider_name}_article_ok"])
+            return finalize_article(article, warnings=warnings, source_trail=source_trail)
+        if article.quality.has_fulltext and not article.sections:
+            warnings.append("Official full text only contained abstract-level content; continuing to HTML fallback.")
+            extend_unique(source_trail, [f"fulltext:{provider_name}_abstract_only"])
+        else:
+            extend_unique(source_trail, [f"fulltext:{provider_name}_not_usable"])
+        extend_unique(warnings, article.quality.warnings)
+    except ProviderFailure as exc:
+        warnings.append(exc.message)
+        extend_unique(source_trail, [source_trail_for_failure("fulltext", provider_name, exc)])
+    return None
+
+
+def _try_html_fallback(
+    *,
+    landing_url: str | None,
+    doi: str | None,
+    metadata: Mapping[str, Any],
+    strategy: FetchStrategy,
+    download_dir: Path | None,
+    html_client: HtmlGenericClient,
+    warnings: list[str],
+    source_trail: list[str],
+) -> ArticleModel | None:
+    if not html_fallback_allowed(strategy):
+        extend_unique(source_trail, ["fallback:html_disabled"])
+        return None
+    if not landing_url:
+        extend_unique(source_trail, ["fallback:html_unavailable"])
+        return None
+
+    extend_unique(source_trail, ["fallback:html_attempt"])
+    try:
+        article = html_client.fetch_article_model(
+            landing_url,
+            metadata=metadata,
+            expected_doi=doi,
+            download_dir=download_dir,
+            asset_profile=strategy.asset_profile,
+        )
+        if article.quality.has_fulltext:
+            extend_unique(source_trail, article.quality.source_trail)
+            extend_unique(source_trail, ["fallback:html_ok"])
+            return finalize_article(article, warnings=warnings, source_trail=source_trail)
+        extend_unique(warnings, article.quality.warnings)
+        extend_unique(source_trail, article.quality.source_trail)
+        extend_unique(source_trail, ["fallback:html_not_usable"])
+    except ProviderFailure as exc:
+        warnings.append(exc.message)
+        extend_unique(source_trail, ["fallback:html_fail"])
+    return None
+
+
+def _fallback_to_metadata_only(
+    *,
+    metadata: Mapping[str, Any],
+    resolved: ResolvedQuery,
+    strategy: FetchStrategy,
+    warnings: list[str],
+    source_trail: list[str],
+) -> ArticleModel:
+    if not metadata:
+        raise PaperFetchFailure("error", "Unable to resolve metadata or full text for the requested paper.")
+    if not strategy.allow_metadata_only_fallback:
+        raise PaperFetchFailure("error", "Full text was not available and metadata-only fallback is disabled.")
+    warnings.append("Full text was not available; returning metadata and abstract only.")
+    extend_unique(source_trail, ["fallback:metadata_only"])
+    return build_metadata_only_result(metadata, resolved=resolved, warnings=warnings, source_trail=source_trail)
+
+
 def _fetch_article(
     query: str,
     *,
@@ -476,102 +596,56 @@ def _fetch_article(
 
     metadata, provider_name, metadata_trail = fetch_metadata_for_resolved_query(resolved, clients=client_registry, strategy=strategy)
     extend_unique(source_trail, metadata_trail)
-    landing_url = normalize_text(str(metadata.get("landing_page_url") or resolved.landing_url or "")) or None
-    doi = normalize_doi(str(metadata.get("doi") or resolved.doi or "")) or None
+    landing_url = safe_text(metadata.get("landing_page_url") or resolved.landing_url) or None
+    doi = normalize_doi(safe_text(metadata.get("doi") or resolved.doi)) or None
     html_fallback_client = html_client or HtmlGenericClient(active_transport, active_env)
     warnings: list[str] = []
 
-    if doi and provider_name and provider_name != "crossref":
-        if provider_allowed(provider_name, strategy):
-            provider_client = client_registry.get(provider_name)
-            if provider_client is not None:
-                extend_unique(source_trail, [f"fulltext:{provider_name}_attempt"])
-                try:
-                    raw_payload = provider_client.fetch_raw_fulltext(doi, metadata)
-                    extend_unique(source_trail, [f"fulltext:{provider_name}_raw_ok"])
-                    download_warnings, download_trail = maybe_save_provider_payload(
-                        raw_payload,
-                        download_dir=download_dir,
-                        doi=doi,
-                        metadata=metadata,
-                    )
-                    extend_unique(warnings, download_warnings)
-                    extend_unique(source_trail, download_trail)
-                    asset_results, asset_warnings, asset_trail = maybe_download_provider_assets(
-                        provider_client,
-                        provider_name=provider_name,
-                        raw_payload=raw_payload,
-                        download_dir=download_dir,
-                        doi=doi,
-                        metadata=metadata,
-                        asset_profile=strategy.asset_profile,
-                    )
-                    raw_payload.metadata["downloaded_assets"] = list(asset_results.get("assets") or [])
-                    raw_payload.metadata["asset_failures"] = list(asset_results.get("asset_failures") or [])
-                    extend_unique(warnings, asset_warnings)
-                    extend_unique(source_trail, asset_trail)
-                    article = provider_client.to_article_model(metadata, raw_payload)
-                    extend_unique(source_trail, article.quality.source_trail)
-                    if article.quality.has_fulltext and article.sections:
-                        extend_unique(source_trail, [f"fulltext:{provider_name}_article_ok"])
-                        return finalize_article(article, warnings=warnings, source_trail=source_trail)
-                    if article.quality.has_fulltext and not article.sections:
-                        warnings.append("Official full text only contained abstract-level content; continuing to HTML fallback.")
-                        extend_unique(source_trail, [f"fulltext:{provider_name}_abstract_only"])
-                    else:
-                        extend_unique(source_trail, [f"fulltext:{provider_name}_not_usable"])
-                    extend_unique(warnings, article.quality.warnings)
-                except ProviderFailure as exc:
-                    warnings.append(exc.message)
-                    extend_unique(source_trail, [source_trail_for_failure("fulltext", provider_name, exc)])
-        else:
-            extend_unique(source_trail, [f"fulltext:{provider_name}_skipped"])
+    article = _try_official_provider(
+        doi=doi,
+        metadata=metadata,
+        provider_name=provider_name,
+        strategy=strategy,
+        download_dir=download_dir,
+        clients=client_registry,
+        warnings=warnings,
+        source_trail=source_trail,
+    )
+    if article is not None:
+        return article
 
-    if not html_fallback_allowed(strategy):
-        extend_unique(source_trail, ["fallback:html_disabled"])
-    if html_fallback_allowed(strategy) and landing_url:
-        extend_unique(source_trail, ["fallback:html_attempt"])
-        try:
-            article = html_fallback_client.fetch_article_model(
-                landing_url,
-                metadata=metadata,
-                expected_doi=doi,
-                download_dir=download_dir,
-                asset_profile=strategy.asset_profile,
-            )
-            if article.quality.has_fulltext:
-                extend_unique(source_trail, article.quality.source_trail)
-                extend_unique(source_trail, ["fallback:html_ok"])
-                return finalize_article(article, warnings=warnings, source_trail=source_trail)
-            extend_unique(warnings, article.quality.warnings)
-            extend_unique(source_trail, article.quality.source_trail)
-            extend_unique(source_trail, ["fallback:html_not_usable"])
-        except ProviderFailure as exc:
-            warnings.append(exc.message)
-            extend_unique(source_trail, ["fallback:html_fail"])
-    elif html_fallback_allowed(strategy):
-        extend_unique(source_trail, ["fallback:html_unavailable"])
+    article = _try_html_fallback(
+        landing_url=landing_url,
+        doi=doi,
+        metadata=metadata,
+        strategy=strategy,
+        download_dir=download_dir,
+        html_client=html_fallback_client,
+        warnings=warnings,
+        source_trail=source_trail,
+    )
+    if article is not None:
+        return article
 
-    if metadata:
-        if not strategy.allow_metadata_only_fallback:
-            raise PaperFetchFailure("error", "Full text was not available and metadata-only fallback is disabled.")
-        warnings.append("Full text was not available; returning metadata and abstract only.")
-        extend_unique(source_trail, ["fallback:metadata_only"])
-        return build_metadata_only_result(metadata, resolved=resolved, warnings=warnings, source_trail=source_trail)
-
-    raise PaperFetchFailure("error", "Unable to resolve metadata or full text for the requested paper.")
+    return _fallback_to_metadata_only(
+        metadata=metadata,
+        resolved=resolved,
+        strategy=strategy,
+        warnings=warnings,
+        source_trail=source_trail,
+    )
 
 
 def metadata_model_from_mapping(metadata: Mapping[str, Any]) -> Metadata:
     return Metadata(
-        title=normalize_text(str(metadata.get("title") or "")) or None,
-        authors=[normalize_text(str(item)) for item in list(metadata.get("authors") or []) if normalize_text(str(item))],
-        abstract=normalize_text(str(metadata.get("abstract") or "")) or None,
-        journal=normalize_text(str(metadata.get("journal_title") or metadata.get("journal") or "")) or None,
-        published=normalize_text(str(metadata.get("published") or "")) or None,
-        keywords=[normalize_text(str(item)) for item in list(metadata.get("keywords") or []) if normalize_text(str(item))],
-        license_urls=[normalize_text(str(item)) for item in list(metadata.get("license_urls") or []) if normalize_text(str(item))],
-        landing_page_url=normalize_text(str(metadata.get("landing_page_url") or "")) or None,
+        title=safe_text(metadata.get("title")) or None,
+        authors=[safe_text(item) for item in list(metadata.get("authors") or []) if safe_text(item)],
+        abstract=safe_text(metadata.get("abstract")) or None,
+        journal=safe_text(metadata.get("journal_title") or metadata.get("journal")) or None,
+        published=safe_text(metadata.get("published")) or None,
+        keywords=[safe_text(item) for item in list(metadata.get("keywords") or []) if safe_text(item)],
+        license_urls=[safe_text(item) for item in list(metadata.get("license_urls") or []) if safe_text(item)],
+        landing_page_url=safe_text(metadata.get("landing_page_url")) or None,
     )
 
 

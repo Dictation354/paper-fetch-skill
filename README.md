@@ -147,6 +147,15 @@ paper-fetch-install-formula-tools
 
 不安装公式后端也能使用主抓取链路，只是公式渲染会退回到较弱的内置路径。
 
+## Repo-local 验收
+
+如果你是在仓库源码目录里直接跑测试，推荐显式带上 `PYTHONPATH=src`，这样会优先导入当前工作树，而不是环境里可能已经安装过的旧版 `paper_fetch`：
+
+```bash
+PYTHONPATH=src python3 -m unittest tests.unit.test_paper_fetch tests.unit.test_fetch_common tests.unit.test_publisher_identity tests.unit.test_resolve_query
+PYTHONPATH=src python3 -m unittest discover -s tests -q
+```
+
 ## 文档
 
 - [docs/deployment.md](docs/deployment.md): 安装、MCP 注册、公式后端和验证步骤

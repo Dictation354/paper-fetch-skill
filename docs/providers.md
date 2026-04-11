@@ -370,7 +370,7 @@ Wiley-TDM-Client-Token
 运行方式：
 
 ```bash
-python -m unittest discover -s tests -q
+PYTHONPATH=src python -m unittest discover -s tests -q
 PAPER_FETCH_RUN_LIVE=1 PYTHONPATH=src python -m unittest discover -s tests/live -q
 ```
 
