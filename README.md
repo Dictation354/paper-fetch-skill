@@ -43,6 +43,21 @@ python3 -m pip install .
 ./scripts/install-claude-skill.sh --register-mcp
 ```
 
+## 如何更新
+
+进入你原来安装用的那个 Python 环境后，重新安装当前仓库即可：
+
+```bash
+python3 -m pip install .
+```
+
+如果你还在用 Codex 或 Claude Code，推荐顺手再跑一次对应安装脚本，让 skill 和 MCP 一起更新：
+
+```bash
+./scripts/install-codex-skill.sh --register-mcp
+./scripts/install-claude-skill.sh --register-mcp
+```
+
 ### 可选：安装公式后端
 
 如果你希望公式转换效果更好，可以额外安装公式后端：
