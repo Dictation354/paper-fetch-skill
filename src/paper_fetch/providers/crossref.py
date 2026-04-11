@@ -53,6 +53,7 @@ class CrossrefClient(ProviderClient):
                     query=self._query_params(),
                     timeout=DEFAULT_TIMEOUT_SECONDS,
                     retry_on_rate_limit=True,
+                    retry_on_transient=True,
                 )
             except RequestFailure as exc:
                 raise map_request_failure(exc) from exc
@@ -99,6 +100,7 @@ class CrossrefClient(ProviderClient):
                 query=params,
                 timeout=DEFAULT_TIMEOUT_SECONDS,
                 retry_on_rate_limit=True,
+                retry_on_transient=True,
             )
         except RequestFailure as exc:
             raise map_request_failure(exc) from exc

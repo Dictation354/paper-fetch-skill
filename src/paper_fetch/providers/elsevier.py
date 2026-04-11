@@ -240,6 +240,7 @@ def download_elsevier_related_assets(
                 headers=headers,
                 timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
                 retry_on_rate_limit=True,
+                retry_on_transient=True,
             )
         except RequestFailure as exc:
             failures.append(
@@ -324,6 +325,7 @@ class ElsevierClient(ProviderClient):
                 headers=self._base_headers("application/json"),
                 query={"view": "META_ABS"},
                 retry_on_rate_limit=True,
+                retry_on_transient=True,
             )
         except RequestFailure as exc:
             raise map_request_failure(exc) from exc
@@ -423,6 +425,7 @@ class ElsevierClient(ProviderClient):
                     query={"view": "FULL"},
                     timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
                     retry_on_rate_limit=True,
+                    retry_on_transient=True,
                 )
             except RequestFailure as exc:
                 provider_failure = map_request_failure(exc)

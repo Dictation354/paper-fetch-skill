@@ -9,11 +9,12 @@ description = "AI-friendly paper fetch tooling"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-  "beautifulsoup4==4.14.3",
-  "mcp==1.27.0",
-  "trafilatura==2.0.0",
-  "lxml==6.0.3",
-  "PyMuPDF==1.27.2.2",
+  "beautifulsoup4>=4.14,<5",
+  "mcp>=1.27,<2",
+  "trafilatura>=2.0,<3",
+  "lxml>=6,<7",
+  "PyMuPDF>=1.27,<2",
+  "pydantic>=2,<3",
 ]
 
 [project.optional-dependencies]

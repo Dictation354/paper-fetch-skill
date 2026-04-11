@@ -27,6 +27,11 @@ cp .env.example ~/.config/paper-fetch/.env
 
 变量说明见 [docs/providers.md](docs/providers.md)。
 
+补充说明：
+
+- 运行时依赖现在都显式声明在 `pyproject.toml` 里，安装不再依赖上游包“顺带带进来”的传递依赖
+- HTTP 传输层默认带 `32 MiB` 响应上限，以及针对 `5xx` / timeout 的短重试；更详细的行为见 [docs/providers.md](docs/providers.md)
+
 ## 默认输出策略
 
 当前默认值统一如下：

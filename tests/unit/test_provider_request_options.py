@@ -26,6 +26,9 @@ class RecordingTransport:
         retry_on_rate_limit=False,
         rate_limit_retries=1,
         max_rate_limit_wait_seconds=5,
+        retry_on_transient=False,
+        transient_retries=2,
+        transient_backoff_base_seconds=0.5,
     ):
         self.calls.append(
             {
@@ -37,6 +40,9 @@ class RecordingTransport:
                 "retry_on_rate_limit": retry_on_rate_limit,
                 "rate_limit_retries": rate_limit_retries,
                 "max_rate_limit_wait_seconds": max_rate_limit_wait_seconds,
+                "retry_on_transient": retry_on_transient,
+                "transient_retries": transient_retries,
+                "transient_backoff_base_seconds": transient_backoff_base_seconds,
             }
         )
         key = (method, url)
@@ -74,6 +80,7 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         self.assertEqual(metadata["doi"], "10.1234/example")
         self.assertEqual(transport.calls[0]["timeout"], DEFAULT_TIMEOUT_SECONDS)
         self.assertTrue(transport.calls[0]["retry_on_rate_limit"])
+        self.assertTrue(transport.calls[0]["retry_on_transient"])
 
     def test_elsevier_fulltext_uses_extended_timeout(self) -> None:
         doi = "10.1016/test"
@@ -94,6 +101,7 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         self.assertEqual(payload.content_type, "text/xml")
         self.assertEqual(transport.calls[0]["timeout"], DEFAULT_FULLTEXT_TIMEOUT_SECONDS)
         self.assertTrue(transport.calls[0]["retry_on_rate_limit"])
+        self.assertTrue(transport.calls[0]["retry_on_transient"])
 
     def test_springer_openaccess_fulltext_uses_extended_timeout(self) -> None:
         doi = "10.1186/1471-2105-11-421"
@@ -114,6 +122,7 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         self.assertEqual(payload.content_type, "application/xml")
         self.assertEqual(transport.calls[0]["timeout"], DEFAULT_FULLTEXT_TIMEOUT_SECONDS)
         self.assertTrue(transport.calls[0]["retry_on_rate_limit"])
+        self.assertTrue(transport.calls[0]["retry_on_transient"])
 
     def test_wiley_fulltext_uses_extended_timeout(self) -> None:
         doi = "10.1002/ece3.9361"
@@ -140,6 +149,7 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         self.assertEqual(payload.content_type, "application/pdf")
         self.assertEqual(transport.calls[0]["timeout"], DEFAULT_FULLTEXT_TIMEOUT_SECONDS)
         self.assertTrue(transport.calls[0]["retry_on_rate_limit"])
+        self.assertTrue(transport.calls[0]["retry_on_transient"])
 
     def test_elsevier_body_asset_profile_excludes_appendix_and_supplementary(self) -> None:
         references = [

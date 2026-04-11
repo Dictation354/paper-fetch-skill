@@ -91,6 +91,19 @@ client 的 Accept / Authorization 不会互相污染。
 - 只有小体积文本响应会进入缓存；PDF 和其他二进制正文不会缓存
 - 缓存读写由 `threading.RLock` 保护；如果你自己在外面并发调多个 fetch，主要风险改成 provider 速率限制，而不是进程内 cache race
 
+### HTTP 护栏与重试
+
+`HttpTransport` 现在还带了两层运行时护栏：
+
+- 默认 `max_response_bytes=32 MiB`；超过上限会直接抛 `RequestFailure`，而不是把超大正文 / supplement 一次性吃进内存
+- 对 `HTTP 5xx` 和 timeout-class 网络错误支持有限指数退避重试；当前官方 provider 请求和 HTML fallback 请求都会启用
+
+重试策略保持比较保守：
+
+- `429` 仍只按 `Retry-After` 处理，不和瞬时错误重试混用
+- 瞬时错误默认只做两次额外尝试，退避序列固定为 `0.5s -> 1.0s`
+- 非 timeout 的普通 `URLError` 仍会立即失败，避免把权限、DNS 或配置问题误当成短暂抖动
+
 ### 各 provider 的速率限制参考
 
 以下数值以各家官方条款为准，本仓库不自动 throttle，只通过缓存 + "同一篇只抓一次" 的使用约束来避免超限。

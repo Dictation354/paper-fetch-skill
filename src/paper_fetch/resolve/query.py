@@ -12,7 +12,7 @@ from difflib import SequenceMatcher
 from typing import Any, Mapping
 
 from ..config import build_runtime_env, build_user_agent
-from ..http import HttpTransport
+from ..http import HttpTransport, RequestFailure
 from ..providers.base import ProviderFailure
 from ..providers.crossref import CrossrefClient
 from ..providers.html_generic import decode_html, infer_provider_from_url, parse_html_metadata
@@ -152,10 +152,9 @@ def resolve_query(
                     "Accept": "text/html,application/xhtml+xml",
                     "User-Agent": build_user_agent(active_env),
                 },
+                retry_on_transient=True,
             )
-        except Exception as exc:
-            if isinstance(exc, ProviderFailure):
-                raise
+        except RequestFailure as exc:
             raise ProviderFailure("error", f"Failed to fetch landing page: {exc}") from exc
         html_metadata = parse_html_metadata(decode_html(response["body"]), response["url"])
         resolved_doi = normalize_doi(str(html_metadata.get("doi") or "")) or None

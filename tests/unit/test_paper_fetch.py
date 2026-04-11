@@ -13,7 +13,7 @@ import fitz
 
 from paper_fetch import cli as paper_fetch_cli
 from paper_fetch import service as paper_fetch
-from paper_fetch.http import HttpTransport
+from paper_fetch.http import HttpTransport, RequestFailure
 from paper_fetch.models import Asset, ArticleModel, FetchEnvelope, Metadata, Quality, Reference, RenderOptions, Section, article_from_markdown
 from paper_fetch.providers import html_generic
 from paper_fetch.providers.base import RawFulltextPayload
@@ -93,6 +93,9 @@ class FixtureHtmlTransport(HttpTransport):
         retry_on_rate_limit=False,
         rate_limit_retries=1,
         max_rate_limit_wait_seconds=5,
+        retry_on_transient=False,
+        transient_retries=2,
+        transient_backoff_base_seconds=0.5,
     ):
         if url not in self.responses:
             raise html_generic.RequestFailure(404, f"Missing fixture response for {url}")
@@ -843,6 +846,182 @@ class PaperFetchTests(unittest.TestCase):
 
         self.assertEqual(related_asset_calls, [])
         self.assertIn("download:elsevier_assets_skipped_profile_none", article.quality.source_trail)
+
+    def test_fetch_paper_model_treats_request_failure_during_asset_download_as_warning(self) -> None:
+        resolved = paper_fetch.ResolvedQuery(
+            query="10.1016/test",
+            query_kind="doi",
+            doi="10.1016/test",
+            landing_url="https://example.test/article",
+            provider_hint="elsevier",
+            confidence=1.0,
+        )
+        original_resolve = paper_fetch.resolve_paper
+        try:
+            paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
+            with tempfile.TemporaryDirectory() as tmpdir:
+                article = fetch_paper_model(
+                    "10.1016/test",
+                    asset_profile="all",
+                    output_dir=Path(tmpdir),
+                    clients={
+                        "elsevier": StubProvider(
+                            metadata={
+                                "provider": "elsevier",
+                                "official_provider": True,
+                                "doi": "10.1016/test",
+                                "title": "Example Article",
+                                "landing_page_url": "https://example.test/article",
+                                "fulltext_links": [],
+                                "references": [],
+                            },
+                            raw_payload=RawFulltextPayload(
+                                provider="elsevier",
+                                source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest",
+                                content_type="text/xml",
+                                body=b"<xml/>",
+                                metadata={"reason": "Downloaded full text from the official Elsevier API."},
+                            ),
+                            article=sample_article(),
+                            related_asset_error=RequestFailure(503, "HTTP 503 for https://example.test/asset"),
+                        ),
+                        "crossref": StubProvider(
+                            metadata={
+                                "provider": "crossref",
+                                "official_provider": False,
+                                "doi": "10.1016/test",
+                                "title": "Example Article",
+                                "landing_page_url": "https://example.test/article",
+                                "fulltext_links": [],
+                                "references": [],
+                            }
+                        ),
+                    },
+                    html_client=StubHtmlClient(error=paper_fetch.ProviderFailure("no_result", "HTML should not be used.")),
+                )
+        finally:
+            paper_fetch.resolve_paper = original_resolve
+
+        self.assertEqual(article.source, "elsevier_xml")
+        self.assertIn("fulltext:elsevier_article_ok", article.quality.source_trail)
+        self.assertIn("download:elsevier_assets_failed", article.quality.source_trail)
+        self.assertTrue(any("HTTP 503" in warning for warning in article.quality.warnings))
+
+    def test_fetch_paper_model_treats_oserror_during_asset_download_as_warning(self) -> None:
+        resolved = paper_fetch.ResolvedQuery(
+            query="10.1016/test",
+            query_kind="doi",
+            doi="10.1016/test",
+            landing_url="https://example.test/article",
+            provider_hint="elsevier",
+            confidence=1.0,
+        )
+        original_resolve = paper_fetch.resolve_paper
+        try:
+            paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
+            with tempfile.TemporaryDirectory() as tmpdir:
+                article = fetch_paper_model(
+                    "10.1016/test",
+                    asset_profile="all",
+                    output_dir=Path(tmpdir),
+                    clients={
+                        "elsevier": StubProvider(
+                            metadata={
+                                "provider": "elsevier",
+                                "official_provider": True,
+                                "doi": "10.1016/test",
+                                "title": "Example Article",
+                                "landing_page_url": "https://example.test/article",
+                                "fulltext_links": [],
+                                "references": [],
+                            },
+                            raw_payload=RawFulltextPayload(
+                                provider="elsevier",
+                                source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest",
+                                content_type="text/xml",
+                                body=b"<xml/>",
+                                metadata={"reason": "Downloaded full text from the official Elsevier API."},
+                            ),
+                            article=sample_article(),
+                            related_asset_error=OSError("disk full"),
+                        ),
+                        "crossref": StubProvider(
+                            metadata={
+                                "provider": "crossref",
+                                "official_provider": False,
+                                "doi": "10.1016/test",
+                                "title": "Example Article",
+                                "landing_page_url": "https://example.test/article",
+                                "fulltext_links": [],
+                                "references": [],
+                            }
+                        ),
+                    },
+                    html_client=StubHtmlClient(error=paper_fetch.ProviderFailure("no_result", "HTML should not be used.")),
+                )
+        finally:
+            paper_fetch.resolve_paper = original_resolve
+
+        self.assertEqual(article.source, "elsevier_xml")
+        self.assertIn("fulltext:elsevier_article_ok", article.quality.source_trail)
+        self.assertIn("download:elsevier_assets_failed", article.quality.source_trail)
+        self.assertTrue(any("disk full" in warning for warning in article.quality.warnings))
+
+    def test_fetch_paper_model_does_not_swallow_programming_errors_during_asset_download(self) -> None:
+        resolved = paper_fetch.ResolvedQuery(
+            query="10.1016/test",
+            query_kind="doi",
+            doi="10.1016/test",
+            landing_url="https://example.test/article",
+            provider_hint="elsevier",
+            confidence=1.0,
+        )
+        original_resolve = paper_fetch.resolve_paper
+        try:
+            paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
+            with tempfile.TemporaryDirectory() as tmpdir:
+                with self.assertRaises(AttributeError):
+                    fetch_paper_model(
+                        "10.1016/test",
+                        asset_profile="all",
+                        output_dir=Path(tmpdir),
+                        clients={
+                            "elsevier": StubProvider(
+                                metadata={
+                                    "provider": "elsevier",
+                                    "official_provider": True,
+                                    "doi": "10.1016/test",
+                                    "title": "Example Article",
+                                    "landing_page_url": "https://example.test/article",
+                                    "fulltext_links": [],
+                                    "references": [],
+                                },
+                                raw_payload=RawFulltextPayload(
+                                    provider="elsevier",
+                                    source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest",
+                                    content_type="text/xml",
+                                    body=b"<xml/>",
+                                    metadata={"reason": "Downloaded full text from the official Elsevier API."},
+                                ),
+                                article=sample_article(),
+                                related_asset_error=AttributeError("buggy asset pipeline"),
+                            ),
+                            "crossref": StubProvider(
+                                metadata={
+                                    "provider": "crossref",
+                                    "official_provider": False,
+                                    "doi": "10.1016/test",
+                                    "title": "Example Article",
+                                    "landing_page_url": "https://example.test/article",
+                                    "fulltext_links": [],
+                                    "references": [],
+                                }
+                            ),
+                        },
+                        html_client=StubHtmlClient(error=paper_fetch.ProviderFailure("no_result", "HTML should not be used.")),
+                    )
+        finally:
+            paper_fetch.resolve_paper = original_resolve
 
     def test_fetch_metadata_records_not_configured_source_trail(self) -> None:
         resolved = paper_fetch.ResolvedQuery(

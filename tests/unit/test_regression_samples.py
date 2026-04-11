@@ -24,6 +24,9 @@ class FixtureTransport(html_generic.HttpTransport):
         retry_on_rate_limit=False,
         rate_limit_retries=1,
         max_rate_limit_wait_seconds=5,
+        retry_on_transient=False,
+        transient_retries=2,
+        transient_backoff_base_seconds=0.5,
     ):
         if url not in self.responses:
             raise html_generic.RequestFailure(404, f"Missing fixture response for {url}")

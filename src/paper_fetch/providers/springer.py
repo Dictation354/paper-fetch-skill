@@ -205,6 +205,7 @@ def download_springer_related_assets(
                 headers={"User-Agent": user_agent, "Accept": "*/*"},
                 timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
                 retry_on_rate_limit=True,
+                retry_on_transient=True,
             )
         except RequestFailure as exc:
             failures.append(
@@ -297,6 +298,7 @@ class SpringerClient(ProviderClient):
                 headers=self._headers("application/json"),
                 query=self._meta_query(doi),
                 retry_on_rate_limit=True,
+                retry_on_transient=True,
             )
         except RequestFailure as exc:
             raise map_request_failure(exc) from exc
@@ -403,6 +405,7 @@ class SpringerClient(ProviderClient):
                 headers=headers,
                 timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
                 retry_on_rate_limit=True,
+                retry_on_transient=True,
             )
         except RequestFailure as exc:
             raise map_request_failure(exc) from exc
@@ -426,6 +429,7 @@ class SpringerClient(ProviderClient):
                 query=self._openaccess_query(doi),
                 timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
                 retry_on_rate_limit=True,
+                retry_on_transient=True,
             )
         except RequestFailure as exc:
             raise map_request_failure(exc) from exc

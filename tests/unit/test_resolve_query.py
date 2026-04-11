@@ -22,6 +22,9 @@ class RecordingTransport(resolve_query.HttpTransport):
         retry_on_rate_limit=False,
         rate_limit_retries=1,
         max_rate_limit_wait_seconds=5,
+        retry_on_transient=False,
+        transient_retries=2,
+        transient_backoff_base_seconds=0.5,
     ):
         self.calls.append(
             {
@@ -33,6 +36,9 @@ class RecordingTransport(resolve_query.HttpTransport):
                 "retry_on_rate_limit": retry_on_rate_limit,
                 "rate_limit_retries": rate_limit_retries,
                 "max_rate_limit_wait_seconds": max_rate_limit_wait_seconds,
+                "retry_on_transient": retry_on_transient,
+                "transient_retries": transient_retries,
+                "transient_backoff_base_seconds": transient_backoff_base_seconds,
             }
         )
         key = (method, url)
@@ -81,6 +87,7 @@ class ResolveQueryTests(unittest.TestCase):
         self.assertEqual(result.provider_hint, "wiley")
         self.assertEqual(transport.calls[0]["timeout"], 20)
         self.assertIn("User-Agent", transport.calls[0]["headers"])
+        self.assertTrue(transport.calls[0]["retry_on_transient"])
 
     def test_title_query_selects_unique_crossref_match(self) -> None:
         transport = RecordingTransport(
@@ -247,7 +254,27 @@ class ResolveQueryTests(unittest.TestCase):
             "Seasonality of vegetation greenness in Southeast Asia unveiled by geostationary satellite observations",
         )
         self.assertEqual(transport.calls[0]["headers"]["User-Agent"], "ResolveTest/1.0")
+        self.assertTrue(transport.calls[0]["retry_on_transient"])
         self.assertEqual(transport.calls[1]["query"]["query.bibliographic"], result.title)
+
+    def test_url_query_wraps_request_failure_from_landing_page_fetch(self) -> None:
+        class FailingTransport:
+            def request(self, *args, **kwargs):
+                raise resolve_query.RequestFailure(502, "HTTP 502 for https://example.test/paper")
+
+        with self.assertRaises(resolve_query.ProviderFailure) as context:
+            resolve_query.resolve_query("https://example.test/paper", transport=FailingTransport(), env={})
+
+        self.assertEqual(context.exception.code, "error")
+        self.assertIn("Failed to fetch landing page", context.exception.message)
+
+    def test_url_query_does_not_swallow_programming_errors(self) -> None:
+        class BrokenTransport:
+            def request(self, *args, **kwargs):
+                raise AttributeError("broken transport")
+
+        with self.assertRaises(AttributeError):
+            resolve_query.resolve_query("https://example.test/paper", transport=BrokenTransport(), env={})
 
     def test_title_query_returns_candidates_when_ambiguous(self) -> None:
         transport = RecordingTransport(

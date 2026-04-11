@@ -133,6 +133,7 @@ class WileyClient(ProviderClient):
                 headers=headers,
                 timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
                 retry_on_rate_limit=True,
+                retry_on_transient=True,
             )
         except RequestFailure as exc:
             raise map_request_failure(exc) from exc

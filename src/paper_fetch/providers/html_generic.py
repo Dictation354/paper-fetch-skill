@@ -646,6 +646,7 @@ def figure_download_candidates(
                 headers={"User-Agent": user_agent, "Accept": "text/html,application/xhtml+xml"},
                 timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
                 retry_on_rate_limit=True,
+                retry_on_transient=True,
             )
             full_size_url = extract_full_size_figure_image_url(decode_html(response["body"]), response["url"])
             if full_size_url:
@@ -1446,6 +1447,7 @@ def download_figure_assets(
                     headers={"User-Agent": user_agent, "Accept": "*/*"},
                     timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
                     retry_on_rate_limit=True,
+                    retry_on_transient=True,
                 )
                 source_url = candidate_url
                 break
@@ -1549,6 +1551,7 @@ class HtmlGenericClient:
                 "GET",
                 landing_url,
                 headers={"User-Agent": self.user_agent, "Accept": "text/html,application/xhtml+xml"},
+                retry_on_transient=True,
             )
         except RequestFailure as exc:
             raise map_request_failure(exc) from exc

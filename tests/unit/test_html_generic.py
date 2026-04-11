@@ -20,6 +20,9 @@ class FakeTransport(html_generic.HttpTransport):
         retry_on_rate_limit=False,
         rate_limit_retries=1,
         max_rate_limit_wait_seconds=5,
+        retry_on_transient=False,
+        transient_retries=2,
+        transient_backoff_base_seconds=0.5,
     ):
         return self.response
 
@@ -40,6 +43,9 @@ class RecordingTransport(FakeTransport):
         retry_on_rate_limit=False,
         rate_limit_retries=1,
         max_rate_limit_wait_seconds=5,
+        retry_on_transient=False,
+        transient_retries=2,
+        transient_backoff_base_seconds=0.5,
     ):
         self.calls.append(
             {
@@ -48,6 +54,7 @@ class RecordingTransport(FakeTransport):
                 "headers": dict(headers or {}),
                 "query": dict(query or {}),
                 "timeout": timeout,
+                "retry_on_transient": retry_on_transient,
             }
         )
         return super().request(
@@ -59,6 +66,9 @@ class RecordingTransport(FakeTransport):
             retry_on_rate_limit=retry_on_rate_limit,
             rate_limit_retries=rate_limit_retries,
             max_rate_limit_wait_seconds=max_rate_limit_wait_seconds,
+            retry_on_transient=retry_on_transient,
+            transient_retries=transient_retries,
+            transient_backoff_base_seconds=transient_backoff_base_seconds,
         )
 
 
@@ -77,6 +87,9 @@ class MappingTransport(html_generic.HttpTransport):
         retry_on_rate_limit=False,
         rate_limit_retries=1,
         max_rate_limit_wait_seconds=5,
+        retry_on_transient=False,
+        transient_retries=2,
+        transient_backoff_base_seconds=0.5,
     ):
         if url not in self.responses:
             raise html_generic.RequestFailure(404, f"Missing fixture response for {url}")

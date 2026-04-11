@@ -16,6 +16,10 @@ python3 -m pip install .
 - `paper-fetch-mcp`
 - `paper-fetch-install-formula-tools`
 
+补充说明：
+
+- runtime 依赖都在 `pyproject.toml` 里显式声明；安装后不需要再额外手动补 `pydantic`
+
 ## 2. 准备配置
 
 默认主配置文件是 `~/.config/paper-fetch/.env`。如果你需要出版社 API key、`mailto` 或自定义下载目录，可以这样准备：

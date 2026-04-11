@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any, Mapping
 
 from .config import build_runtime_env
-from .http import HttpTransport
+from .http import HttpTransport, RequestFailure
 from .models import (
     ArticleModel,
     AssetProfile,
@@ -305,7 +305,7 @@ def maybe_download_provider_assets(
         return empty_asset_results(), [f"{provider_label} related assets could not be downloaded: {exc.message}"], [
             f"download:{provider_name}_assets_failed"
         ]
-    except Exception as exc:
+    except (RequestFailure, OSError) as exc:
         return empty_asset_results(), [f"{provider_label} related assets could not be downloaded: {exc}"], [
             f"download:{provider_name}_assets_failed"
         ]

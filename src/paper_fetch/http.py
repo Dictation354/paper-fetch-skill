@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+import socket
 import threading
 import time
 import urllib.error
@@ -18,6 +19,9 @@ DEFAULT_FULLTEXT_TIMEOUT_SECONDS = 90
 DEFAULT_CACHE_TTL_SECONDS = 30
 DEFAULT_CACHE_CAPACITY = 128
 DEFAULT_MAX_CACHEABLE_BODY_BYTES = 1024 * 1024
+DEFAULT_MAX_RESPONSE_BYTES = 32 * 1024 * 1024
+DEFAULT_TRANSIENT_RETRIES = 2
+DEFAULT_TRANSIENT_BACKOFF_BASE_SECONDS = 0.5
 
 TEXTUAL_CONTENT_TYPES = (
     "text/",
@@ -78,10 +82,12 @@ class HttpTransport:
         cache_ttl: int = DEFAULT_CACHE_TTL_SECONDS,
         cache_capacity: int = DEFAULT_CACHE_CAPACITY,
         max_cacheable_body_bytes: int = DEFAULT_MAX_CACHEABLE_BODY_BYTES,
+        max_response_bytes: int = DEFAULT_MAX_RESPONSE_BYTES,
     ) -> None:
         self.cache_ttl = max(0, int(cache_ttl))
         self.cache_capacity = max(0, int(cache_capacity))
         self.max_cacheable_body_bytes = max(0, int(max_cacheable_body_bytes))
+        self.max_response_bytes = max(0, int(max_response_bytes))
         self._cache: OrderedDict[tuple[str, str, tuple[tuple[str, str], ...]], tuple[float, dict[str, Any]]] = OrderedDict()
         self._cache_lock = threading.RLock()
 
@@ -167,6 +173,9 @@ class HttpTransport:
         retry_on_rate_limit: bool = False,
         rate_limit_retries: int = 1,
         max_rate_limit_wait_seconds: int = 5,
+        retry_on_transient: bool = False,
+        transient_retries: int = DEFAULT_TRANSIENT_RETRIES,
+        transient_backoff_base_seconds: float = DEFAULT_TRANSIENT_BACKOFF_BASE_SECONDS,
     ) -> dict[str, Any]:
         if query:
             encoded_query = urllib.parse.urlencode(query, doseq=True)
@@ -179,22 +188,35 @@ class HttpTransport:
         if cached_response is not None:
             return cached_response
         attempts_remaining = max(0, int(rate_limit_retries))
+        transient_attempts_remaining = max(0, int(transient_retries))
+        transient_attempts_made = 0
+        transient_backoff_base_seconds = max(0.0, float(transient_backoff_base_seconds))
         while True:
             request = urllib.request.Request(url=url, headers=request_headers, method=method)
             try:
                 with urllib.request.urlopen(request, timeout=timeout) as response:
-                    payload = response.read()
+                    response_url = response.geturl() or url
+                    payload = self._read_response_body(
+                        response,
+                        status_code=response.status,
+                        url=response_url,
+                    )
                     response_payload = {
                         "status_code": response.status,
                         "headers": {key.lower(): value for key, value in response.headers.items()},
                         "body": payload,
-                        "url": redact_url_for_cache(response.geturl()),
+                        "url": redact_url_for_cache(response_url),
                     }
                     self._store_cached_response(cache_key, response_payload)
                     return response_payload
             except urllib.error.HTTPError as exc:
                 try:
-                    body = exc.read()
+                    error_url = exc.geturl() or url
+                    body = self._read_response_body(
+                        exc,
+                        status_code=exc.code,
+                        url=error_url,
+                    )
                     headers_map = {key.lower(): value for key, value in exc.headers.items()}
                     retry_after_seconds = parse_retry_after_seconds(headers_map.get("retry-after"))
                     if (
@@ -207,22 +229,63 @@ class HttpTransport:
                         attempts_remaining -= 1
                         time.sleep(max(0, retry_after_seconds))
                         continue
+                    if retry_on_transient and transient_attempts_remaining > 0 and is_transient_http_status(exc.code):
+                        transient_attempts_remaining -= 1
+                        time.sleep(transient_backoff_base_seconds * (2**transient_attempts_made))
+                        transient_attempts_made += 1
+                        continue
                     raise RequestFailure(
                         exc.code,
                         build_http_error_message(exc.code, url, retry_after_seconds=retry_after_seconds),
                         body=body,
                         headers=headers_map,
-                        url=redact_url_for_cache(exc.geturl() or url),
+                        url=redact_url_for_cache(error_url),
                         retry_after_seconds=retry_after_seconds,
                     ) from exc
                 finally:
                     exc.close()
             except urllib.error.URLError as exc:
+                if retry_on_transient and transient_attempts_remaining > 0 and is_transient_url_error(exc):
+                    transient_attempts_remaining -= 1
+                    time.sleep(transient_backoff_base_seconds * (2**transient_attempts_made))
+                    transient_attempts_made += 1
+                    continue
                 raise RequestFailure(
                     None,
                     f"Network error for {redact_url_for_cache(url)}: {exc.reason}",
                     url=redact_url_for_cache(url),
                 ) from exc
+            except (socket.timeout, TimeoutError) as exc:
+                if retry_on_transient and transient_attempts_remaining > 0:
+                    transient_attempts_remaining -= 1
+                    time.sleep(transient_backoff_base_seconds * (2**transient_attempts_made))
+                    transient_attempts_made += 1
+                    continue
+                raise RequestFailure(
+                    None,
+                    f"Network error for {redact_url_for_cache(url)}: {exc}",
+                    url=redact_url_for_cache(url),
+                ) from exc
+
+    def _read_response_body(
+        self,
+        response: Any,
+        *,
+        status_code: int | None,
+        url: str,
+    ) -> bytes:
+        payload = response.read(self.max_response_bytes + 1)
+        if not isinstance(payload, (bytes, bytearray)):
+            payload = bytes(payload or b"")
+        body = bytes(payload)
+        if len(body) > self.max_response_bytes:
+            raise RequestFailure(
+                status_code,
+                f"Response body exceeded {self.max_response_bytes} bytes for {redact_url_for_cache(url)}",
+                body=body[: self.max_response_bytes],
+                url=redact_url_for_cache(url),
+            )
+        return body
 
 
 def redact_url_for_cache(url: str) -> str:
@@ -268,6 +331,15 @@ def build_http_error_message(status_code: int | None, url: str, *, retry_after_s
     if retry_after_seconds is not None:
         message += f" (Retry-After: {retry_after_seconds}s)"
     return message
+
+
+def is_transient_http_status(status_code: int | None) -> bool:
+    return status_code is not None and 500 <= status_code < 600
+
+
+def is_transient_url_error(exc: urllib.error.URLError) -> bool:
+    reason = getattr(exc, "reason", None)
+    return isinstance(reason, (socket.timeout, TimeoutError))
 
 
 def is_xml_content_type(content_type: str | None) -> bool:
