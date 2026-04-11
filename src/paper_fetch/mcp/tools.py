@@ -69,8 +69,8 @@ def fetch_paper_payload(
     query: str,
     modes: list[str] | None = None,
     strategy: FetchStrategyInput | Mapping[str, Any] | None = None,
-    include_refs: str = "top10",
-    max_tokens: int = 8000,
+    include_refs: str | None = None,
+    max_tokens: int | str = "full_text",
     env: Mapping[str, str] | None = None,
     download_dir: Path | None | object = _MCP_DEFAULT_DOWNLOAD_DIR,
 ) -> dict[str, Any]:
@@ -106,8 +106,8 @@ def fetch_paper_tool(
     query: str,
     modes: list[str] | None = None,
     strategy: FetchStrategyInput | Mapping[str, Any] | None = None,
-    include_refs: str = "top10",
-    max_tokens: int = 8000,
+    include_refs: str | None = None,
+    max_tokens: int | str = "full_text",
     env: Mapping[str, str] | None = None,
     download_dir: Path | None | object = _MCP_DEFAULT_DOWNLOAD_DIR,
 ) -> CallToolResult:

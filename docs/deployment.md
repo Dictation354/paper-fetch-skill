@@ -140,6 +140,21 @@ python3 -m unittest discover -s tests/integration -q
 - `resolve_paper(query)`
 - `fetch_paper(query, modes, strategy, include_refs, max_tokens)`
 
+`fetch_paper` 的当前 MCP 默认值是：
+
+- `modes=["article", "markdown"]`
+- `strategy.allow_html_fallback=true`
+- `strategy.allow_metadata_only_fallback=true`
+- `strategy.asset_profile="none"`
+- `max_tokens="full_text"`
+- `include_refs=null`
+
+也就是默认更偏向“先把全文文字完整拿回来，但不额外下载图片/补充材料”。如果你希望精读某篇论文，可以在 MCP 请求里显式传：
+
+- `strategy.asset_profile="body"`: 下载并渲染正文 figure + 正文表格原图
+- `strategy.asset_profile="all"`: 下载并渲染全部识别资产
+- `max_tokens=<整数>`: 改成 token 紧张场景下的硬上限模式
+
 ## 相关文档
 
 - [providers.md](providers.md)

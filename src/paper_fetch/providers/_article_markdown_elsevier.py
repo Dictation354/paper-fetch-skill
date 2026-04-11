@@ -726,6 +726,7 @@ def elsevier_figure_registry(
             "heading": label,
             "caption": caption,
             "link": path_relative_to(markdown_path.parent, asset_path),
+            "path": asset_path,
             "section": (
                 "appendix"
                 if asset_type == "appendix_image"
@@ -752,6 +753,7 @@ def elsevier_figure_registry(
                 "heading": Path(asset["path"]).name,
                 "caption": "",
                 "link": path_relative_to(markdown_path.parent, asset["path"]),
+                "path": str(asset["path"]),
                 "section": "appendix" if asset.get("asset_type") == "appendix_image" else "body",
             }
         )
@@ -790,6 +792,8 @@ def elsevier_supplement_entries(root: ET.Element, assets: list[dict[str, Any]], 
                 "heading": label or Path(asset["path"]).name,
                 "caption": caption,
                 "link": path_relative_to(markdown_path.parent, asset["path"]),
+                "path": str(asset["path"]),
+                "section": "supplementary",
             }
         )
 
@@ -801,6 +805,8 @@ def elsevier_supplement_entries(root: ET.Element, assets: list[dict[str, Any]], 
                 "heading": Path(asset["path"]).name,
                 "caption": "",
                 "link": path_relative_to(markdown_path.parent, asset["path"]),
+                "path": str(asset["path"]),
+                "section": "supplementary",
             }
         )
     return entries

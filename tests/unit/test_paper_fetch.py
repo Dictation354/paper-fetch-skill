@@ -14,18 +14,32 @@ import fitz
 from paper_fetch import cli as paper_fetch_cli
 from paper_fetch import service as paper_fetch
 from paper_fetch.http import HttpTransport
-from paper_fetch.models import ArticleModel, FetchEnvelope, Metadata, Quality, RenderOptions, Section, article_from_markdown
+from paper_fetch.models import Asset, ArticleModel, FetchEnvelope, Metadata, Quality, Reference, RenderOptions, Section, article_from_markdown
 from paper_fetch.providers.base import RawFulltextPayload
 from paper_fetch.providers.wiley import WileyClient
+from paper_fetch.utils import empty_asset_results
 
 
 class StubProvider:
-    def __init__(self, metadata=None, raw_payload=None, raw_error=None, article=None, article_factory=None):
+    def __init__(
+        self,
+        metadata=None,
+        raw_payload=None,
+        raw_error=None,
+        article=None,
+        article_factory=None,
+        related_assets=None,
+        related_asset_factory=None,
+        related_asset_error=None,
+    ):
         self._metadata = metadata
         self._raw_payload = raw_payload
         self._raw_error = raw_error
         self._article = article
         self._article_factory = article_factory
+        self._related_assets = related_assets
+        self._related_asset_factory = related_asset_factory
+        self._related_asset_error = related_asset_error
 
     def fetch_metadata(self, query):
         if isinstance(self._metadata, Exception):
@@ -41,6 +55,15 @@ class StubProvider:
         if self._article_factory is not None:
             return self._article_factory(metadata, raw_payload)
         return self._article
+
+    def download_related_assets(self, doi, metadata, raw_payload, output_dir, *, asset_profile="all"):
+        if self._related_asset_error:
+            raise self._related_asset_error
+        if self._related_asset_factory is not None:
+            return self._related_asset_factory(doi, metadata, raw_payload, output_dir, asset_profile=asset_profile)
+        if self._related_assets is not None:
+            return self._related_assets
+        return empty_asset_results()
 
 
 class StubHtmlClient:
@@ -66,6 +89,7 @@ def fetch_paper_model(
     *,
     allow_html_fallback: bool = True,
     allow_downloads: bool = True,
+    asset_profile: str = "none",
     output_dir: Path | None = None,
     clients=None,
     html_client=None,
@@ -78,6 +102,7 @@ def fetch_paper_model(
         strategy=paper_fetch.FetchStrategy(
             allow_html_fallback=allow_html_fallback,
             allow_metadata_only_fallback=True,
+            asset_profile=asset_profile,
         ),
         download_dir=output_dir if allow_downloads else None,
         clients=clients,
@@ -246,6 +271,47 @@ class PaperFetchTests(unittest.TestCase):
             self.assertEqual(captured["download_dir"], default_dir)
             self.assertTrue((default_dir / "10.1016_test.md").exists())
 
+    def test_main_defaults_to_full_text_and_asset_profile_none(self) -> None:
+        article = sample_article()
+        captured: dict[str, object] = {}
+
+        def fake_fetch(*args, **kwargs):
+            captured.update(kwargs)
+            return build_envelope(article)
+
+        stdout = io.StringIO()
+        stderr = io.StringIO()
+        original_argv = sys.argv
+        sys.argv = ["paper_fetch.py", "--query", "10.1016/test"]
+        try:
+            with (
+                mock.patch.object(paper_fetch_cli, "build_runtime_env", return_value={}),
+                mock.patch.object(paper_fetch_cli, "resolve_cli_download_dir", return_value=Path("/tmp/downloads")),
+                mock.patch.object(paper_fetch_cli, "fetch_paper", side_effect=fake_fetch),
+                contextlib.redirect_stdout(stdout),
+                contextlib.redirect_stderr(stderr),
+            ):
+                exit_code = paper_fetch_cli.main()
+        finally:
+            sys.argv = original_argv
+
+        self.assertEqual(exit_code, 0)
+        self.assertEqual(stderr.getvalue(), "")
+        self.assertEqual(captured["render"], RenderOptions(include_refs=None, asset_profile="none", max_tokens="full_text"))
+        self.assertEqual(
+            captured["strategy"],
+            paper_fetch.FetchStrategy(
+                allow_html_fallback=True,
+                allow_metadata_only_fallback=True,
+                preferred_providers=None,
+                asset_profile="none",
+            ),
+        )
+
+    def test_parse_max_tokens_accepts_full_text_and_integers(self) -> None:
+        self.assertEqual(paper_fetch_cli.parse_max_tokens("full_text"), "full_text")
+        self.assertEqual(paper_fetch_cli.parse_max_tokens("16000"), 16000)
+
     def test_main_reports_ambiguous_errors_as_json(self) -> None:
         original_fetch = paper_fetch_cli.fetch_paper
         try:
@@ -390,6 +456,220 @@ class PaperFetchTests(unittest.TestCase):
         self.assertIn("resolve:url", article.quality.source_trail)
         self.assertIn("fulltext:elsevier_article_ok", article.quality.source_trail)
         self.assertNotIn("fallback:metadata_only", article.quality.source_trail)
+
+    def test_fetch_paper_model_downloads_related_assets_for_official_xml(self) -> None:
+        resolved = paper_fetch.ResolvedQuery(
+            query="10.1016/test",
+            query_kind="doi",
+            doi="10.1016/test",
+            landing_url="https://example.test/article",
+            provider_hint="elsevier",
+            confidence=1.0,
+        )
+        official_article = sample_article()
+
+        def write_related_assets(doi, metadata, raw_payload, output_dir, *, asset_profile="all"):
+            asset_dir = output_dir / "10.1016_test_assets"
+            asset_dir.mkdir(parents=True, exist_ok=True)
+            figure_path = asset_dir / "figure-1.png"
+            supplement_path = asset_dir / "supplement.pdf"
+            figure_path.write_bytes(b"fake-image")
+            supplement_path.write_bytes(b"%PDF-1.7 fake supplement")
+            return {
+                "assets": [
+                    {
+                        "asset_type": "image",
+                        "path": str(figure_path),
+                    },
+                    {
+                        "asset_type": "supplementary",
+                        "path": str(supplement_path),
+                    },
+                ],
+                "asset_failures": [],
+            }
+
+        original_resolve = paper_fetch.resolve_paper
+        try:
+            paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
+            with tempfile.TemporaryDirectory() as tmpdir:
+                article = fetch_paper_model(
+                    "10.1016/test",
+                    asset_profile="all",
+                    output_dir=Path(tmpdir),
+                    clients={
+                        "elsevier": StubProvider(
+                            metadata={
+                                "provider": "elsevier",
+                                "official_provider": True,
+                                "doi": "10.1016/test",
+                                "title": "Example Article",
+                                "landing_page_url": "https://example.test/article",
+                                "fulltext_links": [],
+                                "references": [],
+                            },
+                            raw_payload=RawFulltextPayload(
+                                provider="elsevier",
+                                source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest",
+                                content_type="text/xml",
+                                body=b"<xml/>",
+                                metadata={"reason": "Downloaded full text from the official Elsevier API."},
+                            ),
+                            article=official_article,
+                            related_asset_factory=write_related_assets,
+                        ),
+                        "crossref": StubProvider(
+                            metadata={
+                                "provider": "crossref",
+                                "official_provider": False,
+                                "doi": "10.1016/test",
+                                "title": "Example Article",
+                                "landing_page_url": "https://example.test/article",
+                                "fulltext_links": [],
+                                "references": [],
+                            }
+                        ),
+                    },
+                    html_client=StubHtmlClient(error=paper_fetch.ProviderFailure("no_result", "HTML should not be used.")),
+                )
+                asset_dir = Path(tmpdir) / "10.1016_test_assets"
+                self.assertTrue((asset_dir / "figure-1.png").exists())
+                self.assertTrue((asset_dir / "supplement.pdf").exists())
+        finally:
+            paper_fetch.resolve_paper = original_resolve
+
+        self.assertIn("download:elsevier_assets_saved_profile_all", article.quality.source_trail)
+
+    def test_fetch_paper_model_skips_related_asset_downloads_when_no_download_is_set(self) -> None:
+        resolved = paper_fetch.ResolvedQuery(
+            query="10.1016/test",
+            query_kind="doi",
+            doi="10.1016/test",
+            landing_url="https://example.test/article",
+            provider_hint="elsevier",
+            confidence=1.0,
+        )
+        official_article = sample_article()
+        related_asset_calls: list[str] = []
+
+        def write_related_assets(doi, metadata, raw_payload, output_dir, *, asset_profile="all"):
+            related_asset_calls.append(doi)
+            return empty_asset_results()
+
+        original_resolve = paper_fetch.resolve_paper
+        try:
+            paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
+            with tempfile.TemporaryDirectory() as tmpdir:
+                article = fetch_paper_model(
+                    "10.1016/test",
+                    allow_downloads=False,
+                    asset_profile="all",
+                    output_dir=Path(tmpdir),
+                    clients={
+                        "elsevier": StubProvider(
+                            metadata={
+                                "provider": "elsevier",
+                                "official_provider": True,
+                                "doi": "10.1016/test",
+                                "title": "Example Article",
+                                "landing_page_url": "https://example.test/article",
+                                "fulltext_links": [],
+                                "references": [],
+                            },
+                            raw_payload=RawFulltextPayload(
+                                provider="elsevier",
+                                source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest",
+                                content_type="text/xml",
+                                body=b"<xml/>",
+                                metadata={"reason": "Downloaded full text from the official Elsevier API."},
+                            ),
+                            article=official_article,
+                            related_asset_factory=write_related_assets,
+                        ),
+                        "crossref": StubProvider(
+                            metadata={
+                                "provider": "crossref",
+                                "official_provider": False,
+                                "doi": "10.1016/test",
+                                "title": "Example Article",
+                                "landing_page_url": "https://example.test/article",
+                                "fulltext_links": [],
+                                "references": [],
+                            }
+                        ),
+                    },
+                    html_client=StubHtmlClient(error=paper_fetch.ProviderFailure("no_result", "HTML should not be used.")),
+                )
+        finally:
+            paper_fetch.resolve_paper = original_resolve
+
+        self.assertEqual(related_asset_calls, [])
+        self.assertNotIn("download:elsevier_assets_saved", article.quality.source_trail)
+
+    def test_fetch_paper_model_skips_related_asset_downloads_for_profile_none(self) -> None:
+        resolved = paper_fetch.ResolvedQuery(
+            query="10.1016/test",
+            query_kind="doi",
+            doi="10.1016/test",
+            landing_url="https://example.test/article",
+            provider_hint="elsevier",
+            confidence=1.0,
+        )
+        official_article = sample_article()
+        related_asset_calls: list[str] = []
+
+        def write_related_assets(doi, metadata, raw_payload, output_dir, *, asset_profile="all"):
+            related_asset_calls.append(asset_profile)
+            return empty_asset_results()
+
+        original_resolve = paper_fetch.resolve_paper
+        try:
+            paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
+            with tempfile.TemporaryDirectory() as tmpdir:
+                article = fetch_paper_model(
+                    "10.1016/test",
+                    asset_profile="none",
+                    output_dir=Path(tmpdir),
+                    clients={
+                        "elsevier": StubProvider(
+                            metadata={
+                                "provider": "elsevier",
+                                "official_provider": True,
+                                "doi": "10.1016/test",
+                                "title": "Example Article",
+                                "landing_page_url": "https://example.test/article",
+                                "fulltext_links": [],
+                                "references": [],
+                            },
+                            raw_payload=RawFulltextPayload(
+                                provider="elsevier",
+                                source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest",
+                                content_type="text/xml",
+                                body=b"<xml/>",
+                                metadata={"reason": "Downloaded full text from the official Elsevier API."},
+                            ),
+                            article=official_article,
+                            related_asset_factory=write_related_assets,
+                        ),
+                        "crossref": StubProvider(
+                            metadata={
+                                "provider": "crossref",
+                                "official_provider": False,
+                                "doi": "10.1016/test",
+                                "title": "Example Article",
+                                "landing_page_url": "https://example.test/article",
+                                "fulltext_links": [],
+                                "references": [],
+                            }
+                        ),
+                    },
+                    html_client=StubHtmlClient(error=paper_fetch.ProviderFailure("no_result", "HTML should not be used.")),
+                )
+        finally:
+            paper_fetch.resolve_paper = original_resolve
+
+        self.assertEqual(related_asset_calls, [])
+        self.assertIn("download:elsevier_assets_skipped_profile_none", article.quality.source_trail)
 
     def test_fetch_metadata_records_not_configured_source_trail(self) -> None:
         resolved = paper_fetch.ResolvedQuery(
@@ -1013,6 +1293,87 @@ class PaperFetchTests(unittest.TestCase):
         self.assertNotIn("published:", markdown)
         self.assertIn("# Untitled Article", markdown)
         self.assertEqual(article.quality.warnings, ["Existing warning"])
+
+    def test_to_ai_markdown_defaults_to_captions_only_without_supplementary_links(self) -> None:
+        article = sample_article()
+        article.assets = [
+            Asset(kind="figure", heading="Figure 1", caption="Overview figure.", url="downloads/figure-1.png"),
+            Asset(kind="supplementary", heading="Supplementary Data", caption="Raw measurements.", url="downloads/supplement.csv"),
+        ]
+
+        markdown = article.to_ai_markdown()
+
+        self.assertIn("## Figures", markdown)
+        self.assertIn("- Figure 1: Overview figure.", markdown)
+        self.assertNotIn("![Figure 1](downloads/figure-1.png)", markdown)
+        self.assertNotIn("## Supplementary Materials", markdown)
+        self.assertNotIn("[Supplementary Data](downloads/supplement.csv)", markdown)
+
+    def test_to_ai_markdown_body_profile_renders_body_assets_only(self) -> None:
+        article = sample_article()
+        article.assets = [
+            Asset(kind="figure", heading="Figure 1", caption="Body figure.", path="downloads/figure-1.png", section="body"),
+            Asset(kind="figure", heading="Figure A1", caption="Appendix figure.", path="downloads/figure-a1.png", section="appendix"),
+            Asset(kind="table", heading="Table 1", caption="Body table.", path="downloads/table-1.png", section="body"),
+            Asset(kind="supplementary", heading="Supplementary Data", caption="Raw measurements.", path="downloads/supplement.csv"),
+        ]
+
+        markdown = article.to_ai_markdown(asset_profile="body")
+
+        self.assertIn("![Figure 1](downloads/figure-1.png)", markdown)
+        self.assertIn("## Tables", markdown)
+        self.assertIn("![Table 1](downloads/table-1.png)", markdown)
+        self.assertNotIn("Figure A1", markdown)
+        self.assertNotIn("## Supplementary Materials", markdown)
+
+    def test_to_ai_markdown_full_text_defaults_to_all_references(self) -> None:
+        article = sample_article()
+        article.references = [
+            Reference(raw="Reference 1"),
+            Reference(raw="Reference 2"),
+            Reference(raw="Reference 3"),
+        ]
+
+        markdown = article.to_ai_markdown()
+
+        self.assertIn("## References (3 total, showing 3)", markdown)
+        self.assertIn("- Reference 3", markdown)
+
+    def test_to_ai_markdown_full_text_respects_explicit_include_refs(self) -> None:
+        article = sample_article()
+        article.references = [Reference(raw=f"Reference {index}") for index in range(1, 13)]
+
+        markdown = article.to_ai_markdown(include_refs="top10")
+
+        self.assertIn("## References (12 total, showing 10)", markdown)
+        self.assertIn("- Reference 10", markdown)
+        self.assertNotIn("- Reference 11", markdown)
+
+    def test_to_ai_markdown_inline_figures_fall_back_to_captions_without_links(self) -> None:
+        article = sample_article()
+        article.assets = [
+            Asset(kind="figure", heading="Figure 1", caption="Overview figure."),
+        ]
+
+        markdown = article.to_ai_markdown(include_figures="inline", max_tokens=600)
+
+        self.assertIn("## Figures", markdown)
+        self.assertIn("- Figure 1: Overview figure.", markdown)
+        self.assertNotIn("![Figure 1]", markdown)
+
+    def test_build_fetch_envelope_default_markdown_uses_captions_only_and_no_supplementary_links(self) -> None:
+        article = sample_article()
+        article.assets = [
+            Asset(kind="figure", heading="Figure 1", caption="Overview figure.", url="downloads/figure-1.png"),
+            Asset(kind="supplementary", heading="Supplementary Data", caption="Raw measurements.", url="downloads/supplement.csv"),
+        ]
+
+        envelope = paper_fetch.build_fetch_envelope(article, modes={"article", "markdown"}, render=RenderOptions())
+
+        assert envelope.markdown is not None
+        self.assertIn("- Figure 1: Overview figure.", envelope.markdown)
+        self.assertNotIn("![Figure 1](downloads/figure-1.png)", envelope.markdown)
+        self.assertNotIn("[Supplementary Data](downloads/supplement.csv)", envelope.markdown)
 
     def test_article_from_markdown_preserves_code_fences_and_ascii_tables(self) -> None:
         article = article_from_markdown(

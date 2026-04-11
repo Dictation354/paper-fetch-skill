@@ -65,6 +65,19 @@ def write_output(serialized: str, output: str) -> None:
     Path(output).write_text(serialized, encoding="utf-8")
 
 
+def parse_max_tokens(value: str) -> int | str:
+    normalized = value.strip().lower()
+    if normalized == "full_text":
+        return "full_text"
+    try:
+        parsed = int(value)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError("max_tokens must be a positive integer or 'full_text'.") from exc
+    if parsed <= 0:
+        raise argparse.ArgumentTypeError("max_tokens must be greater than 0.")
+    return parsed
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Fetch AI-friendly full text for a paper by DOI, URL, or title.")
     parser.add_argument("--query", required=True, help="DOI, paper landing URL, or title query")
@@ -89,8 +102,9 @@ def build_parser() -> argparse.ArgumentParser:
             "than Elsevier/Springer XML."
         ),
     )
-    parser.add_argument("--include-refs", choices=("none", "top10", "all"), default="top10")
-    parser.add_argument("--max-tokens", type=int, default=8000)
+    parser.add_argument("--include-refs", choices=("none", "top10", "all"), default=None)
+    parser.add_argument("--asset-profile", choices=("none", "body", "all"), default="none")
+    parser.add_argument("--max-tokens", type=parse_max_tokens, default="full_text")
     parser.add_argument("--no-html-fallback", action="store_true")
     return parser
 
@@ -113,8 +127,13 @@ def main() -> int:
             strategy=FetchStrategy(
                 allow_html_fallback=not args.no_html_fallback,
                 allow_metadata_only_fallback=True,
+                asset_profile=args.asset_profile,
             ),
-            render=RenderOptions(include_refs=args.include_refs, max_tokens=args.max_tokens),
+            render=RenderOptions(
+                include_refs=args.include_refs,
+                asset_profile=args.asset_profile,
+                max_tokens=args.max_tokens,
+            ),
             download_dir=None if args.no_download else output_dir,
             env=runtime_env,
         )

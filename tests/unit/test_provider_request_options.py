@@ -5,8 +5,8 @@ import unittest
 
 from paper_fetch.http import DEFAULT_FULLTEXT_TIMEOUT_SECONDS, DEFAULT_TIMEOUT_SECONDS
 from paper_fetch.providers.crossref import CrossrefClient
-from paper_fetch.providers.elsevier import ElsevierClient
-from paper_fetch.providers.springer import SpringerClient
+from paper_fetch.providers.elsevier import ElsevierClient, filter_elsevier_asset_references
+from paper_fetch.providers.springer import SpringerClient, extract_springer_asset_references, filter_springer_asset_references
 from paper_fetch.providers.wiley import WileyClient
 
 
@@ -140,6 +140,54 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         self.assertEqual(payload.content_type, "application/pdf")
         self.assertEqual(transport.calls[0]["timeout"], DEFAULT_FULLTEXT_TIMEOUT_SECONDS)
         self.assertTrue(transport.calls[0]["retry_on_rate_limit"])
+
+    def test_elsevier_body_asset_profile_excludes_appendix_and_supplementary(self) -> None:
+        references = [
+            {"asset_type": "image", "source_ref": "fx1"},
+            {"asset_type": "table_asset", "source_ref": "tx1"},
+            {"asset_type": "appendix_image", "source_ref": "app1"},
+            {"asset_type": "supplementary", "source_ref": "sup1"},
+            {"asset_type": "graphical_abstract", "source_ref": "ga1"},
+        ]
+
+        filtered = filter_elsevier_asset_references(references, asset_profile="body")
+
+        self.assertEqual(
+            [reference["asset_type"] for reference in filtered],
+            ["image", "table_asset"],
+        )
+
+    def test_springer_body_asset_profile_excludes_appendix_and_supplementary(self) -> None:
+        xml_body = b"""<?xml version="1.0"?>
+<response xmlns:xlink="http://www.w3.org/1999/xlink">
+  <records>
+    <article>
+      <body>
+        <sec>
+          <fig id="Fig1"><graphic xlink:href="MediaObjects/Fig1.png" /></fig>
+          <table-wrap id="Tab1"><graphic xlink:href="MediaObjects/Tab1.png" /></table-wrap>
+        </sec>
+      </body>
+      <app-group>
+        <app id="App1">
+          <sec>
+            <fig id="FigA1"><graphic xlink:href="MediaObjects/FigA1.png" /></fig>
+            <supplementary-material id="Sup1"><media xlink:href="MediaObjects/Sup1.pdf" /></supplementary-material>
+          </sec>
+        </app>
+      </app-group>
+    </article>
+  </records>
+</response>
+"""
+
+        references = extract_springer_asset_references(xml_body, "10.1007/test")
+        filtered = filter_springer_asset_references(references, asset_profile="body")
+
+        self.assertEqual(
+            [(reference["asset_type"], reference["section"]) for reference in filtered],
+            [("image", "body"), ("table_asset", "body")],
+        )
 
 
 if __name__ == "__main__":

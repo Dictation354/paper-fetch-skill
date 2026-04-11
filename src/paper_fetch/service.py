@@ -8,13 +8,22 @@ from typing import Any, Mapping
 
 from .config import build_runtime_env
 from .http import HttpTransport
-from .models import ArticleModel, FetchEnvelope, Metadata, OutputMode, RenderOptions, metadata_only_article, normalize_text
+from .models import (
+    ArticleModel,
+    AssetProfile,
+    FetchEnvelope,
+    Metadata,
+    OutputMode,
+    RenderOptions,
+    metadata_only_article,
+    normalize_text,
+)
 from .providers.base import ProviderFailure
 from .providers.html_generic import HtmlGenericClient
 from .providers.registry import build_clients
 from .publisher_identity import infer_provider_from_doi, normalize_doi
 from .resolve.query import ResolvedQuery, resolve_query
-from .utils import build_output_path, dedupe_authors, save_payload
+from .utils import build_output_path, dedupe_authors, empty_asset_results, save_payload
 
 DEFAULT_OUTPUT_MODES: set[OutputMode] = {"article", "markdown"}
 PUBLIC_SOURCE_BY_ARTICLE_SOURCE = {
@@ -40,6 +49,7 @@ class FetchStrategy:
     allow_html_fallback: bool = True
     allow_metadata_only_fallback: bool = True
     preferred_providers: list[str] | None = None
+    asset_profile: AssetProfile = "none"
 
     def normalized_preferred_providers(self) -> set[str] | None:
         if self.preferred_providers is None:
@@ -267,6 +277,54 @@ def maybe_save_provider_payload(
     ]
 
 
+def maybe_download_provider_assets(
+    provider_client: Any,
+    *,
+    provider_name: str,
+    raw_payload: Any,
+    download_dir: Path | None,
+    doi: str,
+    metadata: Mapping[str, Any],
+    asset_profile: AssetProfile,
+) -> tuple[dict[str, list[dict[str, Any]]], list[str], list[str]]:
+    if download_dir is None:
+        return empty_asset_results(), [], []
+    if asset_profile == "none":
+        return empty_asset_results(), [], [f"download:{provider_name}_assets_skipped_profile_none"]
+
+    provider_label = normalize_text(provider_name).replace("_", " ").title() or "Provider"
+    try:
+        asset_results = provider_client.download_related_assets(
+            doi,
+            metadata,
+            raw_payload,
+            download_dir,
+            asset_profile=asset_profile,
+        )
+    except ProviderFailure as exc:
+        return empty_asset_results(), [f"{provider_label} related assets could not be downloaded: {exc.message}"], [
+            f"download:{provider_name}_assets_failed"
+        ]
+    except Exception as exc:
+        return empty_asset_results(), [f"{provider_label} related assets could not be downloaded: {exc}"], [
+            f"download:{provider_name}_assets_failed"
+        ]
+
+    assets = list(asset_results.get("assets") or [])
+    failures = list(asset_results.get("asset_failures") or [])
+    warnings: list[str] = []
+    source_trail: list[str] = []
+    if assets:
+        source_trail.append(f"download:{provider_name}_assets_saved_profile_{asset_profile}")
+    if failures:
+        warnings.append(f"{provider_label} related assets were only partially downloaded ({len(failures)} failed).")
+        source_trail.append(f"download:{provider_name}_asset_failures")
+    return {
+        "assets": assets,
+        "asset_failures": failures,
+    }, warnings, source_trail
+
+
 def _fetch_article(
     query: str,
     *,
@@ -314,6 +372,19 @@ def _fetch_article(
                     )
                     extend_unique(warnings, download_warnings)
                     extend_unique(source_trail, download_trail)
+                    asset_results, asset_warnings, asset_trail = maybe_download_provider_assets(
+                        provider_client,
+                        provider_name=provider_name,
+                        raw_payload=raw_payload,
+                        download_dir=download_dir,
+                        doi=doi,
+                        metadata=metadata,
+                        asset_profile=strategy.asset_profile,
+                    )
+                    raw_payload.metadata["downloaded_assets"] = list(asset_results.get("assets") or [])
+                    raw_payload.metadata["asset_failures"] = list(asset_results.get("asset_failures") or [])
+                    extend_unique(warnings, asset_warnings)
+                    extend_unique(source_trail, asset_trail)
                     article = provider_client.to_article_model(metadata, raw_payload)
                     extend_unique(source_trail, article.quality.source_trail)
                     if article.quality.has_fulltext and article.sections:
@@ -389,7 +460,16 @@ def build_fetch_envelope(
     modes: set[OutputMode],
     render: RenderOptions,
 ) -> FetchEnvelope:
-    markdown = article.to_ai_markdown(include_refs=render.include_refs, max_tokens=render.max_tokens) if "markdown" in modes else None
+    effective_asset_profile = render.asset_profile or "none"
+    markdown = (
+        article.to_ai_markdown(
+            include_refs=render.include_refs,
+            asset_profile=effective_asset_profile,
+            max_tokens=render.max_tokens,
+        )
+        if "markdown" in modes
+        else None
+    )
     metadata = article.metadata if "metadata" in modes else None
     return FetchEnvelope(
         doi=article.doi,
@@ -428,6 +508,11 @@ def fetch_paper(
     requested_modes = set(modes or DEFAULT_OUTPUT_MODES)
     active_strategy = strategy or FetchStrategy()
     active_render = render or RenderOptions()
+    resolved_render = RenderOptions(
+        include_refs=active_render.include_refs,
+        asset_profile=active_render.asset_profile or active_strategy.asset_profile,
+        max_tokens=active_render.max_tokens,
+    )
 
     article = _fetch_article(
         query,
@@ -438,7 +523,7 @@ def fetch_paper(
         transport=transport,
         env=env,
     )
-    envelope = build_fetch_envelope(article, modes=requested_modes, render=active_render)
+    envelope = build_fetch_envelope(article, modes=requested_modes, render=resolved_render)
     if "metadata" in requested_modes and envelope.metadata is None:
         envelope.metadata = metadata_model_from_mapping({})
     return envelope

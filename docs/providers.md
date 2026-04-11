@@ -6,9 +6,39 @@
 
 | 出版商 | 元数据 | 全文 | 附件下载 | Markdown |
 | --- | --- | --- | --- | --- |
-| Elsevier | 优先官方，失败时回退 Crossref | 官方全文 XML | 支持图片、补充材料，表格原图按官方对象资源可用性处理 | 支持 |
-| Springer | 官方 Meta API | 优先 Full Text API，其次 Open Access API | 支持图片与补充材料 | 支持 |
+| Elsevier | 优先官方，失败时回退 Crossref | 官方全文 XML | 支持分层下载：`none` 不下载，`body` 下载正文 figure + 正文表格原图，`all` 下载全部识别资产 | 支持 |
+| Springer | 官方 Meta API | 优先 Full Text API，其次 Open Access API | 支持分层下载：`none` 不下载，`body` 下载正文 figure + 正文表格原图，`all` 下载全部识别资产 | 支持 |
 | Wiley | 当前未接官方 metadata endpoint，走 Crossref | 官方 TDM endpoint | 当前按单文件全文处理 | 默认不支持正文 Markdown |
+
+## 默认输出与资产层级
+
+CLI、Python API、MCP 现在统一采用下面的默认策略：
+
+- `asset_profile="none"`
+- `max_tokens="full_text"`
+- `include_refs` 默认不显式收紧
+  - `full_text` 模式下默认等价于 `all`
+  - 数值 `max_tokens` 模式下默认等价于 `top10`
+
+`asset_profile` 的语义如下：
+
+- `none`
+  - 不下载 assets
+  - Markdown 保留 figure captions
+  - 不输出远程图片 URL
+  - 不输出 supplementary 链接
+- `body`
+  - 下载并渲染正文 figure
+  - 下载并渲染正文表格原图
+  - 不包含 appendix / supplementary
+- `all`
+  - 下载并渲染当前 provider 已识别的全部相关资产
+
+额外规则：
+
+- `--no-download` / `download_dir=None` 优先级最高；即使 profile 是 `body` / `all`，也不会落盘
+- 没有本地文件时，AI Markdown 会自动降级为 captions-only / 无 supplementary 链接
+- `full_text` 模式不再受旧的固定 `8000` 默认值约束
 
 ## 配置文件位置
 
@@ -93,7 +123,16 @@ client 的 Accept / Authorization 不会互相污染。
   - appendix 图片
   - supplementary materials
   - 表格相关对象资源（如果官方 XML / objects 中可对上）
+- 下载行为由 `asset_profile` 决定：
+  - `none`: 不下载
+  - `body`: 只下载正文图片和正文表格原图
+  - `all`: 下载全部已识别资产
+- 当 CLI / MCP 主链路允许下载且 profile 允许时，这些关联 assets 会和全文一起写到本地 `*_assets/` 目录。
 - 对 XML 会进一步生成本地 Markdown。
+- AI Markdown 会和 profile 保持一致：
+  - `none`: 保留 figure captions，不输出图片和 supplementary 链接
+  - `body`: 输出正文 figure + 正文表格原图
+  - `all`: 输出全部本地 figure / table-image / supplementary 链接
 
 当前 Elsevier Markdown 里的表格策略已经和 Springer 收敛到同一模式：
 
@@ -142,9 +181,13 @@ Springer 现在是“分离配置”的版本：
 
 拿到 XML 后会：
 
-- 下载正文图片
-- 下载补充材料
+- 按 `asset_profile` 分层下载相关 assets
 - 生成 Markdown
+- 当 CLI / MCP 主链路允许下载且 profile 允许时，这些关联 assets 会和全文一起写到本地 `*_assets/` 目录。
+- AI Markdown 会和 profile 保持一致：
+  - `none`: 保留 figure captions，不输出图片和 supplementary 链接
+  - `body`: 输出正文 figure + 正文表格原图
+  - `all`: 输出全部本地 figure / table-image / supplementary 链接
 
 当前 Springer article XML 转换层已经覆盖：
 
@@ -188,7 +231,7 @@ Full Text API 请求时的 `Accept` 值，默认是 `application/xml`。
 - `Meta API`、`Open Access API`、`Full Text API` 在实现里已经拆分。
 - 这三者被当成不同权限层级处理，不再混用。
 - 如果后续 Full Text API 审批通过，只需要补全对应环境变量即可。
-- 当前 Springer OA XML 样本里，figure / supplementary / table-wrap 的 Markdown 链路已验证。
+- 当前 Springer OA XML 样本里，`none|body|all` 三档下的 figure / supplementary / table-wrap Markdown 链路已验证。
 
 ## Wiley
 

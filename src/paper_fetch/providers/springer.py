@@ -10,7 +10,7 @@ from typing import Any, Mapping
 
 from ..config import build_user_agent
 from ..http import DEFAULT_FULLTEXT_TIMEOUT_SECONDS, HttpTransport, RequestFailure, build_text_preview, is_xml_content_type
-from ..models import article_from_markdown, article_from_structure, metadata_only_article
+from ..models import AssetProfile, article_from_markdown, article_from_structure, metadata_only_article
 from ..publisher_identity import normalize_doi
 from ..utils import (
     build_asset_output_path,
@@ -75,48 +75,101 @@ def build_springer_static_asset_url(doi: str, source_href: str, *, asset_bucket:
     return f"https://static-content.springer.com/{asset_bucket}/{article_segment}/{resource_segment}"
 
 
+def springer_xml_local_name(tag: str) -> str:
+    return tag.rsplit("}", 1)[-1] if "}" in tag else tag
+
+
+def walk_springer_asset_elements(
+    element: ET.Element,
+    *,
+    location: str = "body",
+    in_table: bool = False,
+) -> list[tuple[ET.Element, str, bool]]:
+    entries: list[tuple[ET.Element, str, bool]] = []
+    if not isinstance(element.tag, str):
+        return entries
+
+    local_name = springer_xml_local_name(element.tag)
+    next_location = location
+    if local_name == "body":
+        next_location = "body"
+    elif local_name in {"app-group", "app"} and location != "supplementary":
+        next_location = "appendix"
+    elif local_name == "supplementary-material":
+        next_location = "supplementary"
+
+    next_in_table = in_table or local_name == "table-wrap"
+    entries.append((element, next_location, next_in_table))
+    for child in list(element):
+        if isinstance(child.tag, str):
+            entries.extend(
+                walk_springer_asset_elements(
+                    child,
+                    location=next_location,
+                    in_table=next_in_table,
+                )
+            )
+    return entries
+
+
 def extract_springer_asset_references(xml_body: bytes, doi: str) -> list[dict[str, Any]]:
     try:
         root = ET.fromstring(xml_body)
     except ET.ParseError:
         return []
 
-    asset_tag_map = {
-        "graphic": ("image", "image"),
-        "inline-graphic": ("image", "image"),
-        "media": ("supplementary", "esm"),
-    }
     references: list[dict[str, Any]] = []
-    seen: set[tuple[str, str]] = set()
+    seen: set[tuple[str, str, str]] = set()
 
-    for element in root.iter():
-        if not isinstance(element.tag, str):
-            continue
-        tag = element.tag.rsplit("}", 1)[-1]
-        asset_type_and_bucket = asset_tag_map.get(tag)
-        if not asset_type_and_bucket:
+    for element, location, in_table in walk_springer_asset_elements(root):
+        tag = springer_xml_local_name(element.tag)
+        if tag not in {"graphic", "inline-graphic", "media"}:
             continue
 
         href = (element.get(XLINK_HREF) or element.get("href") or "").strip()
         if not href:
             continue
 
-        key = (tag, href)
+        key = (tag, href, location)
         if key in seen:
             continue
         seen.add(key)
 
-        asset_type, asset_bucket = asset_type_and_bucket
+        if tag == "media":
+            asset_type = "supplementary"
+            asset_bucket = "esm"
+        else:
+            asset_type = "table_asset" if in_table else "image"
+            asset_bucket = "image"
         references.append(
             {
                 "tag": tag,
                 "asset_type": asset_type,
                 "source_href": href,
                 "source_url": build_springer_static_asset_url(doi, href, asset_bucket=asset_bucket),
+                "section": location,
             }
         )
 
     return references
+
+
+def filter_springer_asset_references(
+    references: list[dict[str, Any]],
+    *,
+    asset_profile: AssetProfile,
+) -> list[dict[str, Any]]:
+    if asset_profile == "none":
+        return []
+    if asset_profile == "body":
+        allowed_asset_types = {"image", "table_asset"}
+        return [
+            reference
+            for reference in references
+            if str(reference.get("section") or "") == "body"
+            and str(reference.get("asset_type") or "") in allowed_asset_types
+        ]
+    return list(references)
 
 
 def download_springer_related_assets(
@@ -126,11 +179,15 @@ def download_springer_related_assets(
     xml_body: bytes,
     output_dir: Path | None,
     user_agent: str,
+    asset_profile: AssetProfile = "all",
 ) -> dict[str, list[dict[str, Any]]]:
     if output_dir is None:
         return empty_asset_results()
 
-    references = extract_springer_asset_references(xml_body, doi)
+    references = filter_springer_asset_references(
+        extract_springer_asset_references(xml_body, doi),
+        asset_profile=asset_profile,
+    )
     if not references:
         return empty_asset_results()
 
@@ -156,6 +213,7 @@ def download_springer_related_assets(
                     "tag": reference["tag"],
                     "source_href": reference["source_href"],
                     "source_url": reference["source_url"],
+                    "section": reference.get("section"),
                     "status": exc.status_code,
                     "reason": str(exc),
                 }
@@ -179,6 +237,7 @@ def download_springer_related_assets(
                 "content_type": content_type,
                 "path": save_payload(output_path, response["body"]),
                 "downloaded_bytes": len(response["body"]),
+                "section": reference.get("section"),
             }
         )
 
@@ -253,16 +312,9 @@ class SpringerClient(ProviderClient):
         normalized_doi = normalize_doi(doi)
         output_path = build_output_path(output_dir, normalized_doi, metadata.get("title"), payload.content_type, payload.source_url)
         saved_path = save_payload(output_path, payload.body)
-        asset_results = empty_asset_results()
+        asset_results = self.download_related_assets(normalized_doi, metadata, payload, output_dir)
         markdown_path = None
         if is_xml_content_type(payload.content_type):
-            asset_results = download_springer_related_assets(
-                self.transport,
-                doi=normalized_doi,
-                xml_body=payload.body,
-                output_dir=output_dir,
-                user_agent=self.user_agent,
-            )
             markdown_path = write_article_markdown(
                 provider="springer",
                 metadata=metadata,
@@ -285,6 +337,27 @@ class SpringerClient(ProviderClient):
             "reason": str(payload.metadata.get("reason") or "Downloaded full text from the official Springer Open Access API."),
             **asset_results,
         }
+
+    def download_related_assets(
+        self,
+        doi: str,
+        metadata: Mapping[str, Any],
+        raw_payload: RawFulltextPayload,
+        output_dir: Path | None,
+        *,
+        asset_profile: AssetProfile = "all",
+    ) -> dict[str, list[dict[str, Any]]]:
+        normalized_doi = normalize_doi(doi)
+        if not normalized_doi or not is_xml_content_type(raw_payload.content_type):
+            return empty_asset_results()
+        return download_springer_related_assets(
+            self.transport,
+            doi=normalized_doi,
+            xml_body=raw_payload.body,
+            output_dir=output_dir,
+            user_agent=self.user_agent,
+            asset_profile=asset_profile,
+        )
 
     def fetch_raw_fulltext(self, doi: str, metadata: Mapping[str, Any]) -> RawFulltextPayload:
         normalized_doi = normalize_doi(doi)
@@ -371,13 +444,14 @@ class SpringerClient(ProviderClient):
         doi = normalize_doi(metadata.get("doi"))
         warnings: list[str] = []
         if is_xml_content_type(raw_payload.content_type):
+            downloaded_assets = raw_payload.metadata.get("downloaded_assets")
             xml_path = Path(f"{sanitize_filename(doi or str(metadata.get('title') or 'article'))}.xml")
             structure = build_article_structure(
                 provider="springer",
                 metadata=metadata,
                 xml_body=raw_payload.body,
                 xml_path=xml_path,
-                assets=[],
+                assets=downloaded_assets if isinstance(downloaded_assets, list) else [],
             )
             if structure is not None:
                 return article_from_structure(

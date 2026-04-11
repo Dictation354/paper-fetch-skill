@@ -15,7 +15,9 @@ def build_server() -> FastMCP:
         instructions=(
             "Resolve or fetch a specific paper by DOI, landing URL, or title query. "
             "Use resolve_paper when the query may be ambiguous, and fetch_paper when you need "
-            "structured article metadata and/or AI-friendly markdown."
+            "structured article metadata and/or AI-friendly markdown. "
+            "By default fetch_paper returns article+markdown, uses asset_profile='none', "
+            "and max_tokens='full_text'."
         ),
         json_response=True,
     )
@@ -32,7 +34,9 @@ def build_server() -> FastMCP:
         name="fetch_paper",
         description=(
             "Fetch AI-friendly paper content. Returns a fixed FetchEnvelope-style object with "
-            "top-level provenance and optional article/markdown/metadata payloads."
+            "top-level provenance and optional article/markdown/metadata payloads. "
+            "Defaults: modes=['article','markdown'], strategy.asset_profile='none', "
+            "max_tokens='full_text'. Use strategy.asset_profile='body' or 'all' to include local assets."
         ),
         structured_output=False,
     )
@@ -40,8 +44,8 @@ def build_server() -> FastMCP:
         query: str,
         modes: list[str] | None = None,
         strategy: FetchStrategyInput | None = None,
-        include_refs: str = "top10",
-        max_tokens: int = 8000,
+        include_refs: str | None = None,
+        max_tokens: int | str = "full_text",
     ) -> CallToolResult:
         return fetch_paper_tool(
             query=query,

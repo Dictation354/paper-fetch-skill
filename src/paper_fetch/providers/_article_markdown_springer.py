@@ -30,17 +30,40 @@ from ._article_markdown_math import render_display_formula
 def build_springer_asset_lookup(
     assets: list[dict[str, Any]],
     *,
-    asset_type: str,
+    asset_types: set[str],
 ) -> dict[str, dict[str, Any]]:
     lookup: dict[str, dict[str, Any]] = {}
     for asset in assets:
-        if asset.get("asset_type") != asset_type or not asset.get("path"):
+        if asset.get("asset_type") not in asset_types or not asset.get("path"):
             continue
         source_href = (asset.get("source_href") or "").strip()
         if source_href:
             lookup[source_href] = asset
             lookup[Path(source_href).name] = asset
     return lookup
+
+
+def build_jats_section_locations(
+    root: ET.Element,
+) -> dict[int, str]:
+    locations: dict[int, str] = {}
+
+    def walk(element: ET.Element, *, location: str = "body") -> None:
+        local_name = xml_local_name(element.tag)
+        next_location = location
+        if local_name == "body":
+            next_location = "body"
+        elif local_name in {"app-group", "app"} and location != "supplementary":
+            next_location = "appendix"
+        elif local_name == "supplementary-material":
+            next_location = "supplementary"
+        locations[id(element)] = next_location
+        for child in list(element):
+            if isinstance(child.tag, str):
+                walk(child, location=next_location)
+
+    walk(root)
+    return locations
 
 
 def resolve_jats_graphic_href(element: ET.Element | None) -> str:
@@ -376,7 +399,8 @@ def springer_table_registry(
     markdown_path: Path,
     doi: str,
 ) -> tuple[dict[str, dict[str, Any]], list[dict[str, Any]], set[str]]:
-    image_assets = build_springer_asset_lookup(assets, asset_type="image")
+    image_assets = build_springer_asset_lookup(assets, asset_types={"image", "table_asset"})
+    section_locations = build_jats_section_locations(root)
 
     lookup: dict[str, dict[str, Any]] = {}
     entries: list[dict[str, Any]] = []
@@ -395,6 +419,9 @@ def springer_table_registry(
         link = resolve_springer_asset_link(markdown_path, asset, href, doi, asset_bucket="image")
         if asset and asset.get("path"):
             reserved_image_paths.add(str(asset["path"]))
+        section = normalize_text(
+            str((asset.get("section") if asset else None) or section_locations.get(id(table_wrap), "body") or "body")
+        ) or "body"
 
         entry: dict[str, Any]
         if table_rows:
@@ -406,6 +433,7 @@ def springer_table_registry(
                 "rows": table_rows,
                 "footnotes": footnotes,
                 "link": link,
+                "section": section,
             }
         elif table_node is not None and link:
             entry = {
@@ -416,6 +444,7 @@ def springer_table_registry(
                 "footnotes": footnotes,
                 "link": link,
                 "fallback_message": "Table content could not be fully converted to Markdown; the original table image is retained below.",
+                "section": section,
             }
         elif table_node is not None:
             entry = {
@@ -426,6 +455,7 @@ def springer_table_registry(
                 "footnotes": footnotes,
                 "link": "",
                 "fallback_message": "Table content could not be fully converted to Markdown; no original table image was available.",
+                "section": section,
             }
         elif link:
             entry = {
@@ -435,6 +465,7 @@ def springer_table_registry(
                 "caption": caption,
                 "footnotes": footnotes,
                 "link": link,
+                "section": section,
             }
         else:
             entry = {
@@ -445,6 +476,7 @@ def springer_table_registry(
                 "footnotes": footnotes,
                 "link": "",
                 "fallback_message": "Table content could not be fully converted to Markdown; no original table image was available.",
+                "section": section,
             }
         entries.append(entry)
         for key in {
@@ -466,8 +498,9 @@ def springer_figure_registry(
     *,
     excluded_asset_paths: set[str] | None = None,
 ) -> tuple[dict[str, dict[str, str]], list[dict[str, str]]]:
-    image_assets = build_springer_asset_lookup(assets, asset_type="image")
+    image_assets = build_springer_asset_lookup(assets, asset_types={"image"})
     excluded_paths = excluded_asset_paths or set()
+    section_locations = build_jats_section_locations(root)
 
     lookup: dict[str, dict[str, str]] = {}
     entries: list[dict[str, str]] = []
@@ -479,20 +512,26 @@ def springer_figure_registry(
         caption = render_inline_text(first_child(fig, "caption"))
         href = resolve_jats_graphic_href(fig)
         asset = image_assets.get(href) or image_assets.get(Path(href).name)
+        asset_path = str(asset["path"]) if asset and asset.get("path") else ""
         link = resolve_springer_asset_link(markdown_path, asset, href, doi, asset_bucket="image")
         if (
-            (asset and asset.get("path") and str(asset["path"]) in used_asset_paths)
-            or (asset and asset.get("path") and str(asset["path"]) in excluded_paths)
+            (asset_path and asset_path in used_asset_paths)
+            or (asset_path and asset_path in excluded_paths)
             or not link
         ):
             continue
-        if asset and asset.get("path"):
-            used_asset_paths.add(str(asset["path"]))
+        if asset_path:
+            used_asset_paths.add(asset_path)
         entry = {
             "key": normalize_text(fig.get("id")) or normalize_text(href) or link,
             "heading": label,
             "caption": caption,
             "link": link,
+            "path": asset_path or "",
+            "section": normalize_text(
+                str((asset.get("section") if asset else None) or section_locations.get(id(fig), "body") or "body")
+            )
+            or "body",
         }
         entries.append(entry)
         for key in {
@@ -518,13 +557,15 @@ def springer_figure_registry(
                 "heading": Path(asset_path).name,
                 "caption": "",
                 "link": path_relative_to(markdown_path.parent, asset_path),
+                "path": asset_path,
+                "section": normalize_text(str(asset.get("section") or "body")) or "body",
             }
         )
     return lookup, entries
 
 
 def springer_supplement_entries(root: ET.Element, assets: list[dict[str, Any]], markdown_path: Path, doi: str) -> list[dict[str, str]]:
-    supplementary_assets = build_springer_asset_lookup(assets, asset_type="supplementary")
+    supplementary_assets = build_springer_asset_lookup(assets, asset_types={"supplementary"})
 
     entries: list[dict[str, str]] = []
     used_paths: set[str] = set()
@@ -558,6 +599,8 @@ def springer_supplement_entries(root: ET.Element, assets: list[dict[str, Any]], 
                 "heading": heading,
                 "caption": extra_caption,
                 "link": link,
+                "path": asset_path,
+                "section": "supplementary",
             }
         )
 
@@ -570,6 +613,8 @@ def springer_supplement_entries(root: ET.Element, assets: list[dict[str, Any]], 
                 "heading": Path(asset_path).name,
                 "caption": "",
                 "link": path_relative_to(markdown_path.parent, asset_path),
+                "path": asset_path,
+                "section": "supplementary",
             }
         )
     return entries

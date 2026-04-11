@@ -11,7 +11,7 @@ from typing import Any, Mapping
 
 from ..config import build_user_agent
 from ..http import DEFAULT_FULLTEXT_TIMEOUT_SECONDS, HttpTransport, RequestFailure, build_text_preview, is_xml_content_type
-from ..models import article_from_markdown, article_from_structure, metadata_only_article
+from ..models import AssetProfile, article_from_markdown, article_from_structure, metadata_only_article
 from ..publisher_identity import normalize_doi
 from ..utils import (
     build_asset_output_path,
@@ -194,6 +194,19 @@ def extract_elsevier_asset_references(xml_body: bytes) -> list[dict[str, Any]]:
     return [item[1] for item in references_by_key.values()]
 
 
+def filter_elsevier_asset_references(
+    references: list[dict[str, Any]],
+    *,
+    asset_profile: AssetProfile,
+) -> list[dict[str, Any]]:
+    if asset_profile == "none":
+        return []
+    if asset_profile == "body":
+        allowed_asset_types = {"image", "table_asset"}
+        return [reference for reference in references if str(reference.get("asset_type") or "") in allowed_asset_types]
+    return list(references)
+
+
 def download_elsevier_related_assets(
     transport: HttpTransport,
     *,
@@ -201,11 +214,15 @@ def download_elsevier_related_assets(
     xml_body: bytes,
     output_dir: Path | None,
     headers: Mapping[str, str],
+    asset_profile: AssetProfile = "all",
 ) -> dict[str, list[dict[str, Any]]]:
     if output_dir is None:
         return empty_asset_results()
 
-    references = extract_elsevier_asset_references(xml_body)
+    references = filter_elsevier_asset_references(
+        extract_elsevier_asset_references(xml_body),
+        asset_profile=asset_profile,
+    )
     if not references:
         return empty_asset_results()
 
@@ -344,16 +361,9 @@ class ElsevierClient(ProviderClient):
         normalized_doi = normalize_doi(doi)
         output_path = build_output_path(output_dir, normalized_doi, metadata.get("title"), payload.content_type, payload.source_url)
         saved_path = save_payload(output_path, payload.body)
-        asset_results = empty_asset_results()
+        asset_results = self.download_related_assets(normalized_doi, metadata, payload, output_dir)
         markdown_path = None
         if is_xml_content_type(payload.content_type):
-            asset_results = download_elsevier_related_assets(
-                self.transport,
-                doi=normalized_doi,
-                xml_body=payload.body,
-                output_dir=output_dir,
-                headers=self._base_headers("*/*"),
-            )
             markdown_path = write_article_markdown(
                 provider="elsevier",
                 metadata=metadata,
@@ -376,6 +386,27 @@ class ElsevierClient(ProviderClient):
             "reason": str(payload.metadata.get("reason") or "Downloaded full text from the official Elsevier API."),
             **asset_results,
         }
+
+    def download_related_assets(
+        self,
+        doi: str,
+        metadata: Mapping[str, Any],
+        raw_payload: RawFulltextPayload,
+        output_dir: Path | None,
+        *,
+        asset_profile: AssetProfile = "all",
+    ) -> dict[str, list[dict[str, Any]]]:
+        normalized_doi = normalize_doi(doi)
+        if not normalized_doi or not is_xml_content_type(raw_payload.content_type):
+            return empty_asset_results()
+        return download_elsevier_related_assets(
+            self.transport,
+            doi=normalized_doi,
+            xml_body=raw_payload.body,
+            output_dir=output_dir,
+            headers=self._base_headers("*/*"),
+            asset_profile=asset_profile,
+        )
 
     def fetch_raw_fulltext(self, doi: str, metadata: Mapping[str, Any]) -> RawFulltextPayload:
         normalized_doi = normalize_doi(doi)
@@ -415,7 +446,8 @@ class ElsevierClient(ProviderClient):
         doi = normalize_doi(metadata.get("doi"))
         warnings: list[str] = []
         if is_xml_content_type(raw_payload.content_type):
-            pseudo_assets = extract_elsevier_asset_references(raw_payload.body)
+            downloaded_assets = raw_payload.metadata.get("downloaded_assets")
+            pseudo_assets = downloaded_assets if isinstance(downloaded_assets, list) and downloaded_assets else extract_elsevier_asset_references(raw_payload.body)
             xml_path = Path(f"{sanitize_filename(doi or str(metadata.get('title') or 'article'))}.xml")
             structure = build_article_structure(
                 provider="elsevier",

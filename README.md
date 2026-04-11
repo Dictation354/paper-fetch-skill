@@ -27,6 +27,66 @@ cp .env.example ~/.config/paper-fetch/.env
 
 变量说明见 [docs/providers.md](docs/providers.md)。
 
+## 默认输出策略
+
+当前默认值统一如下：
+
+- `asset_profile="none"`
+  - 不下载 figure / table-image / supplementary 到本地
+  - Markdown 仍保留 figure captions
+  - 不保留远程图片 URL，也不输出 supplementary 链接
+- `max_tokens="full_text"`
+  - 默认尽量输出完整 abstract + 正文文字
+  - references 默认全量输出
+  - 如果 `asset_profile` 允许展示本地资产，也会一并完整展示
+- 只有显式传数值 `max_tokens` 时，才进入硬上限裁剪模式
+  - 裁剪优先级为：正文文字 > 当前 profile 对应非文字内容 > references
+
+可选资产层级：
+
+- `none`: 适合泛读 / 搜索 / 大规模文献调研
+- `body`: 下载并渲染正文 figure + 正文表格原图
+- `all`: 下载并渲染 provider 已识别的全部相关资产，包括 supplementary
+
+## CLI 常用法
+
+默认抓取：
+
+```bash
+paper-fetch --query "10.1186/1471-2105-11-421"
+```
+
+抓正文图和正文表格原图：
+
+```bash
+paper-fetch --query "10.1016/j.rse.2025.114648" --asset-profile body
+```
+
+抓全部资产：
+
+```bash
+paper-fetch --query "10.1016/j.rse.2025.114648" --asset-profile all
+```
+
+在 token 紧张时改成数值上限：
+
+```bash
+paper-fetch --query "10.1016/j.rse.2025.114648" --asset-profile body --max-tokens 12000
+```
+
+如果只想拿全文文字，不想落任何文件：
+
+```bash
+paper-fetch --query "10.1016/j.rse.2025.114648" --no-download
+```
+
+注意：
+
+- `--no-download` 优先级高于 `--asset-profile`
+- `--include-refs` 现在默认不需要传
+  - `max_tokens=full_text` 时默认等价于全量 refs
+  - 显式传数值 `--max-tokens` 时默认等价于 `top10`
+
 ## 如何部署
 
 ### 部署到 Codex

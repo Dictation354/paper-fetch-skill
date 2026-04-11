@@ -67,13 +67,14 @@ class McpToolTests(unittest.TestCase):
         self.assertEqual(captured["modes"], {"article", "markdown"})
         self.assertEqual(captured["download_dir"], default_download_dir)
         self.assertEqual(captured["env"], runtime_env)
-        self.assertEqual(captured["render"], RenderOptions(include_refs="top10", max_tokens=8000))
+        self.assertEqual(captured["render"], RenderOptions(include_refs=None, asset_profile="none", max_tokens="full_text"))
         self.assertEqual(
             captured["strategy"],
             FetchStrategy(
                 allow_html_fallback=True,
                 allow_metadata_only_fallback=True,
                 preferred_providers=None,
+                asset_profile="none",
             ),
         )
 
@@ -113,6 +114,27 @@ class McpToolTests(unittest.TestCase):
         self.assertTrue(result.isError)
         self.assertIn("unsupported include_refs value", result.structuredContent["reason"])
         mocked_fetch.assert_not_called()
+
+    def test_fetch_paper_payload_accepts_full_text_and_asset_profile_strategy(self) -> None:
+        captured: dict[str, object] = {}
+
+        def fake_fetch_paper(query, **kwargs):
+            captured.update(kwargs)
+            return sample_envelope(modes=kwargs["modes"])
+
+        with (
+            mock.patch.object(mcp_tools, "build_runtime_env", return_value={}),
+            mock.patch.object(mcp_tools, "resolve_mcp_download_dir", return_value=Path("/tmp/downloads")),
+            mock.patch.object(mcp_tools, "service_fetch_paper", side_effect=fake_fetch_paper),
+        ):
+            mcp_tools.fetch_paper_payload(
+                query="10.1000/example",
+                strategy={"asset_profile": "body"},
+                max_tokens="full_text",
+            )
+
+        self.assertEqual(captured["render"], RenderOptions(include_refs=None, asset_profile="body", max_tokens="full_text"))
+        self.assertEqual(captured["strategy"], FetchStrategy(asset_profile="body"))
 
     def test_fetch_paper_tool_success_preserves_fixed_top_level_fields_and_null_payloads(self) -> None:
         envelope = sample_envelope(modes={"markdown"})
