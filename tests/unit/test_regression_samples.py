@@ -63,7 +63,7 @@ class FailingHtmlClient:
     def __init__(self, error):
         self.error = error
 
-    def fetch_article_model(self, landing_url, *, metadata=None, expected_doi=None):
+    def fetch_article_model(self, landing_url, *, metadata=None, expected_doi=None, download_dir=None, asset_profile="none"):
         raise self.error
 
 

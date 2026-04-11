@@ -62,6 +62,31 @@ class RecordingTransport(FakeTransport):
         )
 
 
+class MappingTransport(html_generic.HttpTransport):
+    def __init__(self, responses):
+        self.responses = responses
+
+    def request(
+        self,
+        method,
+        url,
+        *,
+        headers=None,
+        query=None,
+        timeout=20,
+        retry_on_rate_limit=False,
+        rate_limit_retries=1,
+        max_rate_limit_wait_seconds=5,
+    ):
+        if url not in self.responses:
+            raise html_generic.RequestFailure(404, f"Missing fixture response for {url}")
+        response = dict(self.responses[url])
+        response.setdefault("status_code", 200)
+        response.setdefault("headers", {})
+        response.setdefault("url", url)
+        return response
+
+
 class HtmlGenericTests(unittest.TestCase):
     def test_parse_html_metadata_reads_citation_fields(self) -> None:
         html = """
@@ -176,6 +201,268 @@ class HtmlGenericTests(unittest.TestCase):
         self.assertFalse(any("sign in" in section.text.lower() for section in article.sections))
         self.assertTrue(any(section.heading == "Data availability" for section in article.sections))
         self.assertEqual(article.assets[0].caption, "Overview figure.")
+
+    def test_extract_figure_assets_reads_nature_full_size_links(self) -> None:
+        html = """
+<html>
+  <body>
+    <div class="c-article-section__figure-item">
+      <picture class="c-article-section__figure-picture">
+        <img
+          aria-describedby="figure-1-desc"
+          src="//media.springernature.com/lw685/springer-static/image/art%3A10.1038%2Ftest/MediaObjects/Fig1.png"
+          alt="Fig. 1: Sensitivity of vegetation function."
+        />
+      </picture>
+      <div class="c-article-section__figure-link">
+        <a href="/articles/test/figures/1" aria-label="Full size image figure 1">Full size image</a>
+      </div>
+    </div>
+    <div class="c-article-section__figure-description" id="figure-1-desc">
+      <p>Figure caption from Nature HTML structure.</p>
+    </div>
+  </body>
+</html>
+"""
+
+        assets = html_generic.extract_figure_assets(html, "https://www.nature.com/articles/test")
+
+        self.assertEqual(len(assets), 1)
+        self.assertEqual(
+            assets[0]["url"],
+            "https://media.springernature.com/lw685/springer-static/image/art%3A10.1038%2Ftest/MediaObjects/Fig1.png",
+        )
+        self.assertEqual(assets[0]["figure_page_url"], "https://www.nature.com/articles/test/figures/1")
+        self.assertEqual(assets[0]["caption"], "Figure caption from Nature HTML structure.")
+
+    def test_extract_figure_assets_dedupes_duplicate_nature_figure_wrappers(self) -> None:
+        html = """
+<html>
+  <body>
+    <figure>
+      <img src="//media.springernature.com/lw685/springer-static/image/art%3A10.1038%2Ftest/MediaObjects/Fig1.png" alt="Fig. 1: Short title." />
+      <figcaption>Fig. 1: Short title.</figcaption>
+    </figure>
+    <div class="c-article-section__figure-item">
+      <picture class="c-article-section__figure-picture">
+        <img
+          aria-describedby="figure-1-desc"
+          src="//media.springernature.com/lw685/springer-static/image/art%3A10.1038%2Ftest/MediaObjects/Fig1.png"
+          alt="Fig. 1: Short title."
+        />
+      </picture>
+      <div class="c-article-section__figure-link">
+        <a href="/articles/test/figures/1" aria-label="Full size image figure 1">Full size image</a>
+      </div>
+    </div>
+    <div class="c-article-section__figure-description" id="figure-1-desc">
+      <p>Figure caption from Nature HTML structure with more detail.</p>
+    </div>
+  </body>
+</html>
+"""
+
+        assets = html_generic.extract_figure_assets(html, "https://www.nature.com/articles/test")
+
+        self.assertEqual(len(assets), 1)
+        self.assertEqual(assets[0]["figure_page_url"], "https://www.nature.com/articles/test/figures/1")
+        self.assertEqual(assets[0]["caption"], "Figure caption from Nature HTML structure with more detail.")
+
+    def test_extract_supplementary_assets_reads_nature_supplementary_links(self) -> None:
+        html = """
+<html>
+  <body>
+    <div class="c-article-supplementary__item">
+      <h3>
+        <a
+          data-test="supp-info-link"
+          href="/articles/test/figures/5"
+          data-supp-info-image="//media.springernature.com/lw685/springer-static/esm/art%3A10.1038%2Ftest/MediaObjects/Fig5_ESM.jpg"
+        >
+          Extended Data Fig. 1 Across historical simulations.
+        </a>
+      </h3>
+      <div class="c-article-supplementary__description">Extended-data description text.</div>
+    </div>
+    <div class="c-article-supplementary__item">
+      <a
+        data-test="supp-info-link"
+        href="https://static-content.springer.com/esm/art%3A10.1038%2Ftest/MediaObjects/Supp1.pdf"
+      >
+        Supplementary Information (download PDF)
+      </a>
+    </div>
+  </body>
+</html>
+"""
+
+        assets = html_generic.extract_supplementary_assets(html, "https://www.nature.com/articles/test")
+
+        self.assertEqual(len(assets), 2)
+        self.assertEqual(assets[0]["kind"], "supplementary")
+        self.assertEqual(assets[0]["section"], "supplementary")
+        self.assertEqual(assets[0]["figure_page_url"], "https://www.nature.com/articles/test/figures/5")
+        self.assertEqual(
+            assets[0]["url"],
+            "https://media.springernature.com/lw685/springer-static/esm/art%3A10.1038%2Ftest/MediaObjects/Fig5_ESM.jpg",
+        )
+        self.assertEqual(assets[0]["caption"], "Extended-data description text.")
+        self.assertEqual(
+            assets[1]["url"],
+            "https://static-content.springer.com/esm/art%3A10.1038%2Ftest/MediaObjects/Supp1.pdf",
+        )
+
+    def test_fetch_article_model_downloads_full_size_nature_figure_when_available(self) -> None:
+        article_url = "https://www.nature.com/articles/test"
+        figure_page_url = "https://www.nature.com/articles/test/figures/1"
+        preview_bytes = b"preview-image"
+        full_bytes = b"full-size-image"
+        client = html_generic.HtmlGenericClient(
+            MappingTransport(
+                {
+                    article_url: {
+                        "headers": {"content-type": "text/html"},
+                        "body": (
+                            b"<html><head>"
+                            b'<meta name="citation_title" content="Nature HTML Article" />'
+                            b'<meta name="citation_doi" content="10.1038/test" />'
+                            b"</head><body>"
+                            b'<div class="c-article-section__figure-item">'
+                            b'<picture class="c-article-section__figure-picture">'
+                            b'<img aria-describedby="figure-1-desc" src="//media.springernature.com/lw685/springer-static/image/art%3A10.1038%2Ftest/MediaObjects/Fig1.png" alt="Preview image" />'
+                            b"</picture>"
+                            b'<div class="c-article-section__figure-link"><a href="/articles/test/figures/1" aria-label="Full size image figure 1">Full size image</a></div>'
+                            b"</div>"
+                            b'<div class="c-article-section__figure-description" id="figure-1-desc"><p>Nature figure caption.</p></div>'
+                            b"</body></html>"
+                        ),
+                    },
+                    figure_page_url: {
+                        "headers": {"content-type": "text/html"},
+                        "body": (
+                            b"<html><head>"
+                            b'<meta name="twitter:image" content="https://media.springernature.com/full/springer-static/image/art%3A10.1038%2Ftest/MediaObjects/Fig1.png" />'
+                            b"</head><body>"
+                            b'<img src="//media.springernature.com/full/springer-static/image/art%3A10.1038%2Ftest/MediaObjects/Fig1.png" />'
+                            b"</body></html>"
+                        ),
+                    },
+                    "https://media.springernature.com/full/springer-static/image/art%3A10.1038%2Ftest/MediaObjects/Fig1.png": {
+                        "headers": {"content-type": "image/png"},
+                        "body": full_bytes,
+                    },
+                    "https://media.springernature.com/lw685/springer-static/image/art%3A10.1038%2Ftest/MediaObjects/Fig1.png": {
+                        "headers": {"content-type": "image/png"},
+                        "body": preview_bytes,
+                    },
+                }
+            ),
+            {},
+        )
+
+        original_extract = html_generic.extract_article_markdown
+        try:
+            html_generic.extract_article_markdown = lambda html, url: "# Nature HTML Article\n\n" + ("Body text " * 120)
+            with self.subTest("download full size"):
+                import tempfile
+                from pathlib import Path
+
+                with tempfile.TemporaryDirectory() as tmpdir:
+                    article = client.fetch_article_model(
+                        article_url,
+                        download_dir=Path(tmpdir),
+                        asset_profile="body",
+                    )
+                    asset_path = Path(article.assets[0].path or "")
+                    self.assertTrue(asset_path.exists())
+                    self.assertEqual(asset_path.read_bytes(), full_bytes)
+                    self.assertIn("download:html_assets_saved_profile_body", article.quality.source_trail)
+        finally:
+            html_generic.extract_article_markdown = original_extract
+
+    def test_fetch_article_model_downloads_supplementary_assets_when_profile_all(self) -> None:
+        article_url = "https://www.nature.com/articles/test"
+        client = html_generic.HtmlGenericClient(
+            MappingTransport(
+                {
+                    article_url: {
+                        "headers": {"content-type": "text/html"},
+                        "body": (
+                            b"<html><head>"
+                            b'<meta name="citation_title" content="Nature HTML Article" />'
+                            b'<meta name="citation_doi" content="10.1038/test" />'
+                            b"</head><body>"
+                            b'<figure><img src="/fig1.png" /><figcaption>Overview figure.</figcaption></figure>'
+                            b'<div class="c-article-supplementary__item">'
+                            b'<a data-test="supp-info-link" href="https://static-content.springer.com/esm/art%3A10.1038%2Ftest/MediaObjects/Supp1.pdf">Supplementary Information (download PDF)</a>'
+                            b"</div>"
+                            b"</body></html>"
+                        ),
+                    },
+                    "https://www.nature.com/fig1.png": {
+                        "headers": {"content-type": "image/png"},
+                        "body": b"figure-image",
+                    },
+                    "https://static-content.springer.com/esm/art%3A10.1038%2Ftest/MediaObjects/Supp1.pdf": {
+                        "headers": {"content-type": "application/pdf"},
+                        "body": b"%PDF-1.7 supplementary",
+                    },
+                }
+            ),
+            {},
+        )
+
+        original_extract = html_generic.extract_article_markdown
+        try:
+            html_generic.extract_article_markdown = lambda html, url: "# Nature HTML Article\n\n" + ("Body text " * 120)
+            import tempfile
+            from pathlib import Path
+
+            with tempfile.TemporaryDirectory() as tmpdir:
+                article = client.fetch_article_model(
+                    article_url,
+                    download_dir=Path(tmpdir),
+                    asset_profile="all",
+                )
+                markdown = article.to_ai_markdown(asset_profile="all")
+                self.assertEqual(len(article.assets), 2)
+                self.assertTrue(any(asset.kind == "supplementary" for asset in article.assets))
+                supplement = next(asset for asset in article.assets if asset.kind == "supplementary")
+                self.assertTrue(Path(supplement.path or "").exists())
+                self.assertIn("## Supplementary Materials", markdown)
+                self.assertIn("[Supplementary Information]", markdown)
+                self.assertIn("download:html_assets_saved_profile_all", article.quality.source_trail)
+        finally:
+            html_generic.extract_article_markdown = original_extract
+
+    def test_resolve_figure_download_url_prefers_promoted_full_size_when_figure_page_is_cookie_stub(self) -> None:
+        transport = MappingTransport(
+            {
+                "https://www.nature.com/articles/test/figures/1": {
+                    "headers": {"content-type": "text/html"},
+                    "url": "https://www.nature.com/articles/test/figures/1?error=cookies_not_supported",
+                    "body": (
+                        b"<html><body>"
+                        b'<img src="https://media.springernature.com/full/nature-cms/uploads/product/nature/header.svg" />'
+                        b"</body></html>"
+                    ),
+                }
+            }
+        )
+
+        resolved = html_generic.resolve_figure_download_url(
+            transport,
+            asset={
+                "url": "https://media.springernature.com/lw685/springer-static/image/art%3A10.1038%2Ftest/MediaObjects/Fig1.png",
+                "figure_page_url": "https://www.nature.com/articles/test/figures/1",
+            },
+            user_agent="paper-fetch-skill/0.2",
+        )
+
+        self.assertEqual(
+            resolved,
+            "https://media.springernature.com/full/springer-static/image/art%3A10.1038%2Ftest/MediaObjects/Fig1.png",
+        )
 
     def test_clean_html_for_extraction_removes_noise_but_keeps_sections(self) -> None:
         html = """

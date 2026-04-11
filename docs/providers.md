@@ -38,6 +38,7 @@ CLI、Python API、MCP 现在统一采用下面的默认策略：
 
 - `--no-download` / `download_dir=None` 优先级最高；即使 profile 是 `body` / `all`，也不会落盘
 - 没有本地文件时，AI Markdown 会自动降级为 captions-only / 无 supplementary 链接
+- HTML fallback 现在也会在允许落盘且 profile 是 `body` / `all` 时，尝试把页面里的 `<figure><img>` 下载到本地 `*_assets/` 目录；对 Nature / Springer 这类带 `Full size image` figure 页面的网站，会优先解析 full-size 图链接；`all` 还会额外抓取站点已识别的 supplementary / extended-data 资产
 - `full_text` 模式不再受旧的固定 `8000` 默认值约束
 
 ## 配置文件位置
@@ -232,6 +233,7 @@ Full Text API 请求时的 `Accept` 值，默认是 `application/xml`。
 - 这三者被当成不同权限层级处理，不再混用。
 - 如果后续 Full Text API 审批通过，只需要补全对应环境变量即可。
 - 当前 Springer OA XML 样本里，`none|body|all` 三档下的 figure / supplementary / table-wrap Markdown 链路已验证。
+- 当 Springer / Nature / BMC 站点退到 HTML fallback 时，`body|all` 也会尝试把 HTML figure 图片下载到本地，并在 Markdown 中按本地路径内联；如果正文页提供 `Full size image` 按钮，会优先抓 full-size 图而不是正文缩略图。`all` 还会把已识别的 supplementary / extended-data figure / PDF 一起落盘并渲染到 `Supplementary Materials`。
 
 ## Wiley
 

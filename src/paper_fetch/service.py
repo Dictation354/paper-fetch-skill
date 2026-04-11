@@ -411,6 +411,8 @@ def _fetch_article(
                 landing_url,
                 metadata=metadata,
                 expected_doi=doi,
+                download_dir=download_dir,
+                asset_profile=strategy.asset_profile,
             )
             if article.quality.has_fulltext:
                 extend_unique(source_trail, article.quality.source_trail)

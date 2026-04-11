@@ -15,6 +15,7 @@ from paper_fetch import cli as paper_fetch_cli
 from paper_fetch import service as paper_fetch
 from paper_fetch.http import HttpTransport
 from paper_fetch.models import Asset, ArticleModel, FetchEnvelope, Metadata, Quality, Reference, RenderOptions, Section, article_from_markdown
+from paper_fetch.providers import html_generic
 from paper_fetch.providers.base import RawFulltextPayload
 from paper_fetch.providers.wiley import WileyClient
 from paper_fetch.utils import empty_asset_results
@@ -71,10 +72,35 @@ class StubHtmlClient:
         self.article = article
         self.error = error
 
-    def fetch_article_model(self, landing_url, *, metadata=None, expected_doi=None):
+    def fetch_article_model(self, landing_url, *, metadata=None, expected_doi=None, download_dir=None, asset_profile="none"):
         if self.error:
             raise self.error
         return self.article
+
+
+class FixtureHtmlTransport(HttpTransport):
+    def __init__(self, responses):
+        self.responses = responses
+
+    def request(
+        self,
+        method,
+        url,
+        *,
+        headers=None,
+        query=None,
+        timeout=20,
+        retry_on_rate_limit=False,
+        rate_limit_retries=1,
+        max_rate_limit_wait_seconds=5,
+    ):
+        if url not in self.responses:
+            raise html_generic.RequestFailure(404, f"Missing fixture response for {url}")
+        response = dict(self.responses[url])
+        response.setdefault("status_code", 200)
+        response.setdefault("headers", {})
+        response.setdefault("url", url)
+        return response
 
 
 def build_envelope(article: ArticleModel, *, include_markdown: bool = True) -> FetchEnvelope:
@@ -270,6 +296,153 @@ class PaperFetchTests(unittest.TestCase):
             self.assertEqual(stderr.getvalue(), "")
             self.assertEqual(captured["download_dir"], default_dir)
             self.assertTrue((default_dir / "10.1016_test.md").exists())
+
+    def test_save_markdown_to_disk_rewrites_local_asset_links_relative_to_saved_file(self) -> None:
+        article = sample_article()
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            output_dir = Path(tmpdir) / "downloads"
+            asset_dir = output_dir / "10.1016_test_assets"
+            asset_dir.mkdir(parents=True)
+            figure_path = asset_dir / "figure 1.png"
+            supplement_path = asset_dir / "supplement data.pdf"
+            figure_path.write_bytes(b"figure")
+            supplement_path.write_bytes(b"supplement")
+
+            article.assets = [
+                Asset(kind="figure", heading="Figure 1", caption="Body figure.", path=str(figure_path), section="body"),
+                Asset(kind="supplementary", heading="Supplementary Data", caption="Raw measurements.", path=str(supplement_path)),
+                Asset(
+                    kind="supplementary",
+                    heading="Remote Appendix",
+                    caption="Hosted by publisher.",
+                    url="https://example.test/appendix.pdf",
+                ),
+            ]
+            envelope = paper_fetch.build_fetch_envelope(
+                article,
+                modes={"article", "markdown"},
+                render=RenderOptions(asset_profile="all"),
+            )
+
+            assert envelope.markdown is not None
+            self.assertIn(str(figure_path), envelope.markdown)
+            self.assertIn(str(supplement_path), envelope.markdown)
+
+            paper_fetch_cli.save_markdown_to_disk(envelope, output_dir=output_dir)
+
+            rendered = (output_dir / "10.1016_test.md").read_text(encoding="utf-8")
+            self.assertIn("![Figure 1](10.1016_test_assets/figure%201.png)", rendered)
+            self.assertIn("[Supplementary Data](10.1016_test_assets/supplement%20data.pdf)", rendered)
+            self.assertIn("[Remote Appendix](https://example.test/appendix.pdf)", rendered)
+            self.assertNotIn(str(figure_path), rendered)
+            self.assertNotIn(str(supplement_path), rendered)
+
+    def test_main_rewrites_local_asset_links_for_markdown_output_file(self) -> None:
+        article = sample_article()
+        captured: dict[str, object] = {}
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            output_dir = Path(tmpdir) / "downloads"
+            output_dir.mkdir(parents=True)
+            asset_dir = output_dir / "10.1016_test_assets"
+            asset_dir.mkdir()
+            figure_path = asset_dir / "figure-1.png"
+            figure_path.write_bytes(b"figure")
+            article.assets = [
+                Asset(kind="figure", heading="Figure 1", caption="Body figure.", path=str(figure_path), section="body")
+            ]
+
+            def fake_fetch(*args, **kwargs):
+                captured.update(kwargs)
+                return paper_fetch.build_fetch_envelope(article, modes=kwargs["modes"], render=kwargs["render"])
+
+            output_path = output_dir / "article.md"
+            stdout = io.StringIO()
+            stderr = io.StringIO()
+            original_argv = sys.argv
+            sys.argv = [
+                "paper_fetch.py",
+                "--query",
+                "10.1016/test",
+                "--format",
+                "markdown",
+                "--asset-profile",
+                "body",
+                "--output",
+                str(output_path),
+            ]
+            try:
+                with (
+                    mock.patch.object(paper_fetch_cli, "build_runtime_env", return_value={}),
+                    mock.patch.object(paper_fetch_cli, "resolve_cli_download_dir", return_value=output_dir),
+                    mock.patch.object(paper_fetch_cli, "fetch_paper", side_effect=fake_fetch),
+                    contextlib.redirect_stdout(stdout),
+                    contextlib.redirect_stderr(stderr),
+                ):
+                    exit_code = paper_fetch_cli.main()
+            finally:
+                sys.argv = original_argv
+
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(stdout.getvalue(), "")
+            self.assertEqual(stderr.getvalue(), "")
+            self.assertEqual(captured["modes"], {"article", "markdown"})
+            self.assertEqual(captured["download_dir"], output_dir)
+            rendered = output_path.read_text(encoding="utf-8")
+            self.assertIn("![Figure 1](10.1016_test_assets/figure-1.png)", rendered)
+            self.assertNotIn(str(figure_path), rendered)
+
+    def test_main_rewrites_local_asset_links_for_both_output_file(self) -> None:
+        article = sample_article()
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            output_dir = Path(tmpdir) / "downloads"
+            output_dir.mkdir(parents=True)
+            asset_dir = output_dir / "10.1016_test_assets"
+            asset_dir.mkdir()
+            figure_path = asset_dir / "figure-1.png"
+            figure_path.write_bytes(b"figure")
+            article.assets = [
+                Asset(kind="figure", heading="Figure 1", caption="Body figure.", path=str(figure_path), section="body")
+            ]
+
+            def fake_fetch(*args, **kwargs):
+                return paper_fetch.build_fetch_envelope(article, modes=kwargs["modes"], render=kwargs["render"])
+
+            output_path = output_dir / "result.json"
+            stdout = io.StringIO()
+            stderr = io.StringIO()
+            original_argv = sys.argv
+            sys.argv = [
+                "paper_fetch.py",
+                "--query",
+                "10.1016/test",
+                "--format",
+                "both",
+                "--asset-profile",
+                "body",
+                "--output",
+                str(output_path),
+            ]
+            try:
+                with (
+                    mock.patch.object(paper_fetch_cli, "build_runtime_env", return_value={}),
+                    mock.patch.object(paper_fetch_cli, "resolve_cli_download_dir", return_value=output_dir),
+                    mock.patch.object(paper_fetch_cli, "fetch_paper", side_effect=fake_fetch),
+                    contextlib.redirect_stdout(stdout),
+                    contextlib.redirect_stderr(stderr),
+                ):
+                    exit_code = paper_fetch_cli.main()
+            finally:
+                sys.argv = original_argv
+
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(stdout.getvalue(), "")
+            self.assertEqual(stderr.getvalue(), "")
+            payload = json.loads(output_path.read_text(encoding="utf-8"))
+            self.assertIn("![Figure 1](10.1016_test_assets/figure-1.png)", payload["markdown"])
+            self.assertNotIn(str(figure_path), payload["markdown"])
 
     def test_main_defaults_to_full_text_and_asset_profile_none(self) -> None:
         article = sample_article()
@@ -1203,6 +1376,122 @@ class PaperFetchTests(unittest.TestCase):
         self.assertIn("fulltext:wiley_pdf_extract_fail", article.quality.source_trail)
         self.assertIn("fallback:html_ok", article.quality.source_trail)
         self.assertTrue(any("did not produce enough usable article text" in warning for warning in article.quality.warnings))
+
+    def test_springer_html_fallback_downloads_figure_assets_when_enabled(self) -> None:
+        landing_url = "https://www.nature.com/articles/example"
+        figure_page_url = "https://www.nature.com/articles/example/figures/1"
+        preview_image_url = "https://media.springernature.com/lw685/springer-static/image/art%3A10.1007%2Ftest/MediaObjects/Fig1.png"
+        full_image_url = "https://media.springernature.com/full/springer-static/image/art%3A10.1007%2Ftest/MediaObjects/Fig1.png"
+        preview_bytes = b"preview-image"
+        full_bytes = b"full-size-image"
+        resolved = paper_fetch.ResolvedQuery(
+            query="10.1007/test",
+            query_kind="doi",
+            doi="10.1007/test",
+            landing_url=landing_url,
+            provider_hint="springer",
+            confidence=1.0,
+        )
+        html_client = html_generic.HtmlGenericClient(
+            FixtureHtmlTransport(
+                {
+                    landing_url: {
+                        "headers": {"content-type": "text/html; charset=utf-8"},
+                        "body": (
+                            b"<html><head>"
+                            b'<meta name="citation_title" content="HTML Springer Article" />'
+                            b'<meta name="citation_doi" content="10.1007/test" />'
+                            b"</head><body>"
+                            b'<div class="c-article-section__figure-item">'
+                            b'<picture class="c-article-section__figure-picture">'
+                            b'<img aria-describedby="figure-1-desc" src="//media.springernature.com/lw685/springer-static/image/art%3A10.1007%2Ftest/MediaObjects/Fig1.png" alt="Preview image" />'
+                            b"</picture>"
+                            b'<div class="c-article-section__figure-link"><a href="/articles/example/figures/1" aria-label="Full size image figure 1">Full size image</a></div>'
+                            b"</div>"
+                            b'<div class="c-article-section__figure-description" id="figure-1-desc"><p>Figure showing a woodland canopy.</p></div>'
+                            b"</body></html>"
+                        ),
+                    },
+                    figure_page_url: {
+                        "headers": {"content-type": "text/html; charset=utf-8"},
+                        "body": (
+                            b"<html><head>"
+                            b'<meta name="twitter:image" content="https://media.springernature.com/full/springer-static/image/art%3A10.1007%2Ftest/MediaObjects/Fig1.png" />'
+                            b"</head><body>"
+                            b'<img src="//media.springernature.com/full/springer-static/image/art%3A10.1007%2Ftest/MediaObjects/Fig1.png" />'
+                            b"</body></html>"
+                        ),
+                    },
+                    preview_image_url: {
+                        "headers": {"content-type": "image/png"},
+                        "body": preview_bytes,
+                    },
+                    full_image_url: {
+                        "headers": {"content-type": "image/png"},
+                        "body": full_bytes,
+                    },
+                }
+            ),
+            {},
+        )
+        original_resolve = paper_fetch.resolve_paper
+        original_extract = html_generic.extract_article_markdown
+        try:
+            paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
+            html_generic.extract_article_markdown = lambda html, url: "\n".join(
+                [
+                    "# HTML Springer Article",
+                    "",
+                    "## Introduction",
+                    ("Important body text for HTML fallback. " * 30).strip(),
+                    "",
+                    "## Results",
+                    ("More important body text for HTML fallback. " * 30).strip(),
+                ]
+            )
+            with tempfile.TemporaryDirectory() as tmpdir:
+                article = fetch_paper_model(
+                    "10.1007/test",
+                    asset_profile="body",
+                    output_dir=Path(tmpdir),
+                    clients={
+                        "springer": StubProvider(
+                            metadata=paper_fetch.ProviderFailure("not_supported", "No official metadata."),
+                            raw_error=paper_fetch.ProviderFailure("no_result", "Official XML unavailable."),
+                        ),
+                        "crossref": StubProvider(
+                            metadata={
+                                "provider": "crossref",
+                                "official_provider": False,
+                                "doi": "10.1007/test",
+                                "title": "HTML Springer Article",
+                                "landing_page_url": landing_url,
+                                "authors": ["Alice Example"],
+                                "fulltext_links": [],
+                                "references": [],
+                            }
+                        ),
+                    },
+                    html_client=html_client,
+                )
+                markdown = article.to_ai_markdown(asset_profile="body")
+                self.assertEqual(article.source, "html_generic")
+                self.assertTrue(article.quality.has_fulltext)
+                self.assertEqual(len(article.assets), 1)
+                self.assertEqual(article.assets[0].section, "body")
+                self.assertIsNotNone(article.assets[0].path)
+                asset_path = Path(article.assets[0].path or "")
+                self.assertTrue(asset_path.exists())
+                self.assertEqual(asset_path.parent.name, "10.1007_test_assets")
+                self.assertEqual(asset_path.read_bytes(), full_bytes)
+                self.assertIn("![Figure showing a woodland canopy.]", markdown)
+                self.assertIn(str(asset_path), markdown)
+        finally:
+            paper_fetch.resolve_paper = original_resolve
+            html_generic.extract_article_markdown = original_extract
+
+        self.assertIn("fallback:html_ok", article.quality.source_trail)
+        self.assertIn("download:html_assets_saved_profile_body", article.quality.source_trail)
 
     def test_wiley_pdf_extraction_failure_returns_metadata_only_without_html_fallback(self) -> None:
         resolved = paper_fetch.ResolvedQuery(
