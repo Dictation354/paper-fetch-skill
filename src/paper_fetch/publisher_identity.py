@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+import urllib.parse
 
 from .normalize_journal_name import normalize_journal_name
 
@@ -17,6 +18,9 @@ PUBLISHER_PROVIDER_MAP = {
     "springer nature": "springer",
     "springer science and business media llc": "springer",
     "elsevier": "elsevier",
+    "elsevier bv": "elsevier",
+    "elsevier ltd": "elsevier",
+    "elsevier masson sas": "elsevier",
     "wiley": "wiley",
     "wiley blackwell": "wiley",
     "john wiley and sons": "wiley",
@@ -29,6 +33,11 @@ DOI_PREFIX_PROVIDER_MAP = {
     "10.1016/": "elsevier",
     "10.1002/": "wiley",
     "10.1111/": "wiley",
+}
+URL_PROVIDER_TOKENS = {
+    "elsevier": ("sciencedirect.com", "elsevier.com"),
+    "springer": ("springer.com", "springernature.com", "nature.com", "biomedcentral.com"),
+    "wiley": ("wiley.com", "onlinelibrary.wiley.com"),
 }
 
 
@@ -54,3 +63,54 @@ def infer_provider_from_publisher(publisher: str | None) -> str | None:
         return None
     normalized = normalize_journal_name(publisher)
     return PUBLISHER_PROVIDER_MAP.get(normalized)
+
+
+def infer_provider_from_url(url: str | None) -> str | None:
+    if not url:
+        return None
+    hostname = urllib.parse.urlparse(url).netloc.lower()
+    for provider, tokens in URL_PROVIDER_TOKENS.items():
+        if any(token in hostname for token in tokens):
+            return provider
+    return None
+
+
+def ordered_provider_candidates(
+    *,
+    landing_urls: list[str | None] | None = None,
+    publishers: list[str | None] | None = None,
+    doi: str | None = None,
+) -> list[tuple[str, str]]:
+    candidates: list[tuple[str, str]] = []
+    seen: set[str] = set()
+
+    for url in landing_urls or []:
+        provider = infer_provider_from_url(url)
+        if provider and provider not in seen:
+            seen.add(provider)
+            candidates.append((provider, "domain"))
+
+    for publisher in publishers or []:
+        provider = infer_provider_from_publisher(publisher)
+        if provider and provider not in seen:
+            seen.add(provider)
+            candidates.append((provider, "publisher"))
+
+    provider = infer_provider_from_doi(doi)
+    if provider and provider not in seen:
+        candidates.append((provider, "doi"))
+    return candidates
+
+
+def infer_provider_from_signals(
+    *,
+    landing_urls: list[str | None] | None = None,
+    publishers: list[str | None] | None = None,
+    doi: str | None = None,
+) -> str | None:
+    candidates = ordered_provider_candidates(
+        landing_urls=landing_urls,
+        publishers=publishers,
+        doi=doi,
+    )
+    return candidates[0][0] if candidates else None

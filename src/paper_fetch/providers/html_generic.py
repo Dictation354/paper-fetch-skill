@@ -1518,18 +1518,6 @@ def merge_metadata(base_metadata: Mapping[str, Any] | None, html_metadata: Mappi
     merged["raw_meta"] = html_metadata.get("raw_meta", {})
     return merged
 
-
-def infer_provider_from_url(url: str) -> str | None:
-    hostname = urllib.parse.urlparse(url).netloc.lower()
-    if any(token in hostname for token in ("sciencedirect.com", "elsevier.com")):
-        return "elsevier"
-    if any(token in hostname for token in ("springer.com", "springernature.com", "nature.com", "biomedcentral.com")):
-        return "springer"
-    if any(token in hostname for token in ("wiley.com", "onlinelibrary.wiley.com")):
-        return "wiley"
-    return None
-
-
 class HtmlGenericClient:
     name = "html_generic"
 

@@ -31,6 +31,7 @@ cp .env.example ~/.config/paper-fetch/.env
 
 - 运行时依赖现在都显式声明在 `pyproject.toml` 里，安装不再依赖上游包“顺带带进来”的传递依赖
 - HTTP 传输层默认带 `32 MiB` 响应上限，以及针对 `5xx` / timeout 的短重试；更详细的行为见 [docs/providers.md](docs/providers.md)
+- provider 路由现在采用 `domain / Crossref publisher` 优先、`DOI prefix` 兜底的策略；像 `10.1006/jaer.1996.0085` 这类 Elsevier DOI 现在也能更稳定地命中官方链路
 
 ## 默认输出策略
 
@@ -52,6 +53,13 @@ cp .env.example ~/.config/paper-fetch/.env
 - `none`: 适合泛读 / 搜索 / 大规模文献调研
 - `body`: 下载并渲染正文 figure + 正文表格原图
 - `all`: 下载并渲染 provider 已识别的全部相关资产，包括 supplementary
+
+## Provider 路由说明
+
+- `resolve_paper().provider_hint` 现在表示“基于落地 URL domain、Crossref publisher、Crossref landing page 综合得出的最佳 hint”，不再等同于 DOI 前缀猜测
+- provider 候选优先级固定为：`domain > publisher > DOI fallback`
+- `preferred_providers` 仍严格限制最终允许使用的 official/fulltext/html 路径
+- 即使 `preferred_providers` 没有包含 `crossref`，运行时仍可能内部调用 Crossref 只做 routing signal；这不会让最终结果自动变成 Crossref 来源
 
 ## CLI 常用法
 

@@ -143,7 +143,7 @@ A dataclass with at least these fields, each mirroring a real capability in the 
 
 - `allow_html_fallback: bool = True` — when `False`, do not attempt HTML-landing-page extraction after official-provider paths fail. Mirrors the existing `--no-html-fallback` flag.
 - `allow_metadata_only_fallback: bool = True` — when `False`, failing to obtain a usable body is an error (`PaperFetchFailure`) rather than a degraded-but-successful metadata-only response. Mirrors the behavior a caller gets today when they want to know "is there formal full text available, yes or no".
-- `preferred_providers: list[str] | None = None` — optional provider allow-list for callers who want to force "official path only".
+- `preferred_providers: list[str] | None = None` — optional provider allow-list for callers who want to constrain the final official/fulltext/html path. Internal Crossref routing signals may still be used even when `crossref` is not in the allow-list.
 
 The strategy dataclass is where all future "how to fetch" knobs accrue. Output modes are only about "what to return". A caller who wants "official full text only, give me both structured and Markdown, fail loudly if there's no body" expresses it as `modes={"article", "markdown"}, strategy=FetchStrategy(allow_html_fallback=False, allow_metadata_only_fallback=False)`. No second fetch, no adapter-layer branching.
 

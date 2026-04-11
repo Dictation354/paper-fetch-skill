@@ -79,6 +79,11 @@
 - ✅ `--save-markdown` 与 Wiley raw/binary 落盘已统一走同一套目录解析逻辑
 - ✅ `maybe_download_provider_assets()` 只降级处理 `ProviderFailure | RequestFailure | OSError`；`AttributeError` / `TypeError` 等编程错误不再被伪装成 partial download
 - ✅ `resolve_query()` 的 landing-page fetch 只包装 `RequestFailure`；HTML 解析与后续逻辑里的编程错误继续向外冒泡
+- ✅ provider 路由已从“DOI prefix 主导”切到“Crossref publisher / landing-page domain 主导，DOI 只做最后 fallback”
+- ✅ `resolve_paper().provider_hint` 已改成 Crossref/domain-first 语义；纯 DOI 在需要时会补一次 Crossref DOI metadata lookup
+- ✅ `fetch_metadata_for_resolved_query()` 已改成三态 probe：`positive=命中`、`negative=no_result`、`unknown=no_access/rate_limited/error/not_configured/not_supported`
+- ✅ `preferred_providers` 继续限制最终来源链路，但允许内部 Crossref 仅作为 routing signal 使用
+- ✅ `source_trail` 已补充 `route:*` 诊断标记，用于区分路由信号与真实 metadata/fulltext 来源
 
 ### 依赖与护栏
 

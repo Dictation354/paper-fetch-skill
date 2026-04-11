@@ -15,8 +15,8 @@ from ..config import build_runtime_env, build_user_agent
 from ..http import HttpTransport, RequestFailure
 from ..providers.base import ProviderFailure
 from ..providers.crossref import CrossrefClient
-from ..providers.html_generic import decode_html, infer_provider_from_url, parse_html_metadata
-from ..publisher_identity import infer_provider_from_doi, normalize_doi
+from ..providers.html_generic import decode_html, parse_html_metadata
+from ..publisher_identity import infer_provider_from_signals, normalize_doi
 
 DOI_PATTERN = re.compile(r"10\.\d{4,9}/[^\s\"'<>]+", flags=re.IGNORECASE)
 CONFIDENT_SCORE_MIN = 0.90
@@ -88,7 +88,11 @@ def score_candidates(query: str, candidates: list[dict[str, Any]]) -> list[dict[
     for item in candidates:
         title = str(item.get("title") or "")
         score = candidate_score(query, title)
-        provider_hint = infer_provider_from_doi(item.get("doi"))
+        provider_hint = infer_provider_from_signals(
+            landing_urls=[str(item.get("landing_page_url") or "")],
+            publishers=[str(item.get("publisher") or "")],
+            doi=str(item.get("doi") or ""),
+        )
         scored.append(
             {
                 "doi": item.get("doi"),
@@ -130,20 +134,10 @@ def resolve_query(
 
     active_transport = transport or HttpTransport()
     active_env = env or build_runtime_env()
-
-    direct_doi = extract_doi(normalized_query)
-    if direct_doi:
-        landing_url = normalized_query if is_url(normalized_query) else None
-        return ResolvedQuery(
-            query=normalized_query,
-            query_kind="url" if landing_url else "doi",
-            doi=direct_doi,
-            landing_url=landing_url,
-            provider_hint=infer_provider_from_doi(direct_doi) or (infer_provider_from_url(landing_url) if landing_url else None),
-            confidence=1.0,
-        )
+    crossref = CrossrefClient(active_transport, active_env)
 
     if is_url(normalized_query):
+        direct_doi = extract_doi(normalized_query)
         try:
             response = active_transport.request(
                 "GET",
@@ -157,41 +151,67 @@ def resolve_query(
         except RequestFailure as exc:
             raise ProviderFailure("error", f"Failed to fetch landing page: {exc}") from exc
         html_metadata = parse_html_metadata(decode_html(response["body"]), response["url"])
-        resolved_doi = normalize_doi(str(html_metadata.get("doi") or "")) or None
-        provider_hint = infer_provider_from_doi(resolved_doi) if resolved_doi else infer_provider_from_url(response["url"])
+        landing_url = str(html_metadata.get("landing_page_url") or response["url"])
+        resolved_doi = normalize_doi(str(html_metadata.get("doi") or direct_doi or "")) or None
+        provider_hint = infer_provider_from_signals(
+            landing_urls=[response["url"], landing_url],
+            doi=resolved_doi,
+        )
         html_title = str(html_metadata.get("title") or "").strip() or None
         lookup_title = str(html_metadata.get("lookup_title") or "").strip() or None
         title_for_lookup = html_title if is_viable_html_title_for_lookup(html_title) else None
         if title_for_lookup is None and is_viable_html_title_for_lookup(lookup_title):
             title_for_lookup = lookup_title
-        selected_title = html_title if resolved_doi else title_for_lookup
+        selected_title = html_title or title_for_lookup
         candidates: list[dict[str, Any]] = []
-        confidence = 0.95 if resolved_doi else 0.0
-        if not resolved_doi and title_for_lookup:
-            crossref = CrossrefClient(active_transport, active_env)
+        confidence = 1.0 if direct_doi else (0.95 if resolved_doi else 0.0)
+        if title_for_lookup and (not resolved_doi or provider_hint is None):
             candidates = score_candidates(
                 title_for_lookup,
                 crossref.search_bibliographic_candidates(title_for_lookup, rows=5),
             )
             if is_confident_top_candidate(candidates):
                 top_one = candidates[0]
-                resolved_doi = normalize_doi(str(top_one.get("doi") or "")) or None
-                provider_hint = top_one.get("provider_hint") or provider_hint
-                confidence = top_one["score"]
-                selected_title = str(top_one.get("title") or "") or title_for_lookup
-                candidates = []
+                if not resolved_doi:
+                    resolved_doi = normalize_doi(str(top_one.get("doi") or "")) or None
+                    confidence = top_one["score"]
+                    selected_title = str(top_one.get("title") or "") or title_for_lookup
+                    candidates = []
+                if provider_hint is None:
+                    provider_hint = top_one.get("provider_hint") or provider_hint
         return ResolvedQuery(
             query=normalized_query,
             query_kind="url",
             doi=resolved_doi,
-            landing_url=str(html_metadata.get("landing_page_url") or response["url"]),
+            landing_url=landing_url,
             provider_hint=provider_hint,
             confidence=confidence,
             candidates=candidates,
             title=selected_title,
         )
 
-    crossref = CrossrefClient(active_transport, active_env)
+    direct_doi = extract_doi(normalized_query)
+    if direct_doi:
+        provider_hint = infer_provider_from_signals(doi=direct_doi)
+        if provider_hint is None:
+            try:
+                crossref_metadata = crossref.fetch_metadata({"doi": direct_doi})
+            except ProviderFailure:
+                crossref_metadata = None
+            provider_hint = infer_provider_from_signals(
+                landing_urls=[str((crossref_metadata or {}).get("landing_page_url") or "")],
+                publishers=[str((crossref_metadata or {}).get("publisher") or "")],
+                doi=direct_doi,
+            )
+        return ResolvedQuery(
+            query=normalized_query,
+            query_kind="doi",
+            doi=direct_doi,
+            landing_url=None,
+            provider_hint=provider_hint,
+            confidence=1.0,
+        )
+
     candidates = crossref.search_bibliographic_candidates(normalized_query, rows=5)
     if not candidates:
         raise ProviderFailure("no_result", "Crossref returned no metadata results for the title query.")

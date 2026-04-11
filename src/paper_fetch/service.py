@@ -21,11 +21,18 @@ from .models import (
 from .providers.base import ProviderFailure
 from .providers.html_generic import HtmlGenericClient
 from .providers.registry import build_clients
-from .publisher_identity import infer_provider_from_doi, normalize_doi
+from .publisher_identity import (
+    infer_provider_from_doi,
+    infer_provider_from_publisher,
+    infer_provider_from_url,
+    normalize_doi,
+    ordered_provider_candidates,
+)
 from .resolve.query import ResolvedQuery, resolve_query
 from .utils import build_output_path, dedupe_authors, empty_asset_results, save_payload
 
 DEFAULT_OUTPUT_MODES: set[OutputMode] = {"article", "markdown"}
+OFFICIAL_PROVIDER_NAMES = ("elsevier", "springer", "wiley")
 PUBLIC_SOURCE_BY_ARTICLE_SOURCE = {
     "elsevier_xml": "elsevier_xml",
     "springer_xml": "springer_xml",
@@ -42,6 +49,13 @@ class PaperFetchFailure(Exception):
         self.status = status
         self.reason = reason
         self.candidates = list(candidates or [])
+
+
+@dataclass(frozen=True)
+class RouteProbeResult:
+    provider: str
+    state: str
+    metadata: dict[str, Any] | None = None
 
 
 @dataclass(frozen=True)
@@ -174,48 +188,159 @@ def html_fallback_allowed(strategy: FetchStrategy) -> bool:
     return any(alias in normalized for alias in HTML_PROVIDER_ALIASES)
 
 
+def crossref_allowed_as_source(strategy: FetchStrategy) -> bool:
+    return provider_allowed("crossref", strategy)
+
+
+def route_signal_markers(
+    *,
+    landing_urls: list[str | None] | None = None,
+    publishers: list[str | None] | None = None,
+    doi: str | None = None,
+) -> list[str]:
+    markers: list[str] = []
+
+    for url in landing_urls or []:
+        provider = infer_provider_from_url(url)
+        if provider:
+            extend_unique(markers, [f"route:signal_domain_{provider}"])
+
+    for publisher in publishers or []:
+        provider = infer_provider_from_publisher(publisher)
+        if provider:
+            extend_unique(markers, [f"route:signal_publisher_{provider}"])
+
+    provider = infer_provider_from_doi(doi)
+    if provider:
+        extend_unique(markers, [f"route:signal_doi_{provider}"])
+    return markers
+
+
+def build_official_provider_candidates(
+    resolved: ResolvedQuery,
+    *,
+    routing_metadata: Mapping[str, Any] | None,
+    strategy: FetchStrategy,
+) -> list[tuple[str, str]]:
+    candidates = ordered_provider_candidates(
+        landing_urls=[
+            resolved.landing_url,
+            str((routing_metadata or {}).get("landing_page_url") or ""),
+        ],
+        publishers=[str((routing_metadata or {}).get("publisher") or "")],
+        doi=resolved.doi,
+    )
+    return [
+        (provider, signal)
+        for provider, signal in candidates
+        if provider in OFFICIAL_PROVIDER_NAMES and provider_allowed(provider, strategy)
+    ]
+
+
+def classify_probe_state(failure: ProviderFailure) -> str:
+    if failure.code == "no_result":
+        return "negative"
+    return "unknown"
+
+
+def probe_official_provider(
+    provider_name: str,
+    *,
+    doi: str,
+    clients: Mapping[str, Any],
+) -> RouteProbeResult:
+    if provider_name == "wiley":
+        return RouteProbeResult(provider=provider_name, state="unknown")
+
+    client = clients.get(provider_name)
+    if client is None:
+        return RouteProbeResult(provider=provider_name, state="unknown")
+
+    try:
+        metadata = client.fetch_metadata({"doi": doi})
+    except ProviderFailure as exc:
+        return RouteProbeResult(provider=provider_name, state=classify_probe_state(exc))
+
+    if metadata:
+        return RouteProbeResult(provider=provider_name, state="positive", metadata=dict(metadata))
+    return RouteProbeResult(provider=provider_name, state="negative")
+
+
+def select_route_probe(probes: list[RouteProbeResult]) -> RouteProbeResult | None:
+    for state in ("positive", "unknown", "negative"):
+        for probe in probes:
+            if probe.state == state:
+                return probe
+    return None
+
+
 def fetch_metadata_for_resolved_query(
     resolved: ResolvedQuery,
     *,
     clients: Mapping[str, Any],
     strategy: FetchStrategy,
 ) -> tuple[dict[str, Any], str | None, list[str]]:
-    provider_name = resolved.provider_hint
-    if not provider_name and resolved.doi:
-        provider_name = infer_provider_from_doi(resolved.doi)
-    provider_name = provider_name or "crossref"
-
     official_metadata: dict[str, Any] | None = None
     crossref_metadata: dict[str, Any] | None = None
     source_trail: list[str] = []
+    provider_name: str | None = None
+    routing_metadata: dict[str, Any] | None = None
+    crossref_is_public_source = crossref_allowed_as_source(strategy)
+    crossref_client = clients.get("crossref")
 
-    if resolved.doi and provider_name != "crossref":
-        if provider_allowed(provider_name, strategy):
-            client = clients.get(provider_name)
-            if client is not None:
-                try:
-                    official_metadata = client.fetch_metadata({"doi": resolved.doi})
-                    if official_metadata:
-                        source_trail.append(f"metadata:{provider_name}_ok")
-                except ProviderFailure as exc:
-                    official_metadata = None
-                    source_trail.append(source_trail_for_failure("metadata", provider_name, exc))
-        else:
-            source_trail.append(f"metadata:{provider_name}_skipped")
-
-    if resolved.doi and provider_allowed("crossref", strategy):
+    if resolved.doi and crossref_client is not None:
         try:
-            crossref_metadata = clients["crossref"].fetch_metadata({"doi": resolved.doi})
-            if crossref_metadata:
-                source_trail.append("metadata:crossref_ok")
+            routing_metadata = dict(crossref_client.fetch_metadata({"doi": resolved.doi}))
+            if routing_metadata:
+                if crossref_is_public_source:
+                    crossref_metadata = routing_metadata
+                    source_trail.append("metadata:crossref_ok")
+                else:
+                    source_trail.append("route:crossref_signal_ok")
         except ProviderFailure as exc:
-            crossref_metadata = None
-            source_trail.append(source_trail_for_failure("metadata", "crossref", exc))
-    elif resolved.doi:
-        source_trail.append("metadata:crossref_skipped")
+            routing_metadata = None
+            if crossref_is_public_source:
+                source_trail.append(source_trail_for_failure("metadata", "crossref", exc))
+
+    extend_unique(
+        source_trail,
+        route_signal_markers(
+            landing_urls=[
+                resolved.landing_url,
+                str((routing_metadata or {}).get("landing_page_url") or ""),
+            ],
+            publishers=[str((routing_metadata or {}).get("publisher") or "")],
+            doi=resolved.doi,
+        ),
+    )
+
+    probes: list[RouteProbeResult] = []
+    if resolved.doi:
+        for candidate_provider, _signal in build_official_provider_candidates(
+            resolved,
+            routing_metadata=routing_metadata,
+            strategy=strategy,
+        ):
+            probe = probe_official_provider(candidate_provider, doi=resolved.doi, clients=clients)
+            probes.append(probe)
+            source_trail.append(f"route:probe_{candidate_provider}_{probe.state}")
+            if probe.state == "positive":
+                break
+
+    selected_probe = select_route_probe(probes)
+    if selected_probe is not None:
+        provider_name = selected_probe.provider
+        official_metadata = selected_probe.metadata
+        source_trail.append(f"route:provider_selected_{provider_name}")
+    elif crossref_metadata:
+        provider_name = "crossref"
+    elif resolved.provider_hint and provider_allowed(resolved.provider_hint, strategy):
+        provider_name = resolved.provider_hint
 
     if official_metadata or crossref_metadata:
-        metadata = merge_metadata(official_metadata, crossref_metadata)
+        if official_metadata:
+            source_trail.append(f"metadata:{provider_name}_ok")
+        metadata = merge_metadata(official_metadata, crossref_metadata if crossref_is_public_source else None)
         metadata["provider"] = (official_metadata or crossref_metadata or {}).get("provider")
         metadata["official_provider"] = (official_metadata or crossref_metadata or {}).get("official_provider")
         if not metadata.get("landing_page_url"):

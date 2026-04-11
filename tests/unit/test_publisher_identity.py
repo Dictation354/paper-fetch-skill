@@ -23,7 +23,52 @@ class PublisherIdentityTests(unittest.TestCase):
 
     def test_infer_provider_from_publisher(self) -> None:
         self.assertEqual(publisher_identity.infer_provider_from_publisher("Springer Nature"), "springer")
+        self.assertEqual(publisher_identity.infer_provider_from_publisher("Elsevier BV"), "elsevier")
+        self.assertEqual(publisher_identity.infer_provider_from_publisher("Elsevier Ltd"), "elsevier")
+        self.assertEqual(publisher_identity.infer_provider_from_publisher("Elsevier Masson SAS"), "elsevier")
         self.assertEqual(publisher_identity.infer_provider_from_publisher("John Wiley & Sons"), "wiley")
+
+    def test_infer_provider_from_url(self) -> None:
+        self.assertEqual(
+            publisher_identity.infer_provider_from_url("https://linkinghub.elsevier.com/retrieve/pii/S0021863496900852"),
+            "elsevier",
+        )
+        self.assertEqual(
+            publisher_identity.infer_provider_from_url("https://www.sciencedirect.com/science/article/pii/S0021863496900852"),
+            "elsevier",
+        )
+        self.assertEqual(
+            publisher_identity.infer_provider_from_url("https://www.springernature.com/gp/journal/12345"),
+            "springer",
+        )
+        self.assertEqual(
+            publisher_identity.infer_provider_from_url("https://onlinelibrary.wiley.com/doi/10.1111/example"),
+            "wiley",
+        )
+
+    def test_infer_provider_from_signals_prefers_domain_then_publisher_then_doi(self) -> None:
+        candidates = publisher_identity.ordered_provider_candidates(
+            landing_urls=["https://linkinghub.elsevier.com/retrieve/pii/S0021863496900852"],
+            publishers=["Springer Nature"],
+            doi="10.1111/example",
+        )
+
+        self.assertEqual(
+            candidates,
+            [
+                ("elsevier", "domain"),
+                ("springer", "publisher"),
+                ("wiley", "doi"),
+            ],
+        )
+        self.assertEqual(
+            publisher_identity.infer_provider_from_signals(
+                landing_urls=["https://linkinghub.elsevier.com/retrieve/pii/S0021863496900852"],
+                publishers=["Springer Nature"],
+                doi="10.1111/example",
+            ),
+            "elsevier",
+        )
 
 
 if __name__ == "__main__":

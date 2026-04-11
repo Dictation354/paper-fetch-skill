@@ -56,12 +56,52 @@ class ResolveQueryTests(unittest.TestCase):
         self.assertEqual(result.provider_hint, "elsevier")
         self.assertEqual(result.confidence, 1.0)
 
-    def test_doi_url_is_resolved_without_network(self) -> None:
-        result = resolve_query.resolve_query("https://doi.org/10.1007/s00376-024-4012-9")
+    def test_doi_url_prefers_final_landing_domain(self) -> None:
+        transport = RecordingTransport(
+            {
+                ("GET", "https://doi.org/10.1006/jaer.1996.0085"): {
+                    "status_code": 200,
+                    "headers": {"content-type": "text/html"},
+                    "body": b"<html><head><title>Example</title></head><body>Example</body></html>",
+                    "url": "https://linkinghub.elsevier.com/retrieve/pii/S0021863496900852",
+                }
+            }
+        )
+
+        result = resolve_query.resolve_query("https://doi.org/10.1006/jaer.1996.0085", transport=transport, env={})
 
         self.assertEqual(result.query_kind, "url")
-        self.assertEqual(result.doi, "10.1007/s00376-024-4012-9")
-        self.assertEqual(result.provider_hint, "springer")
+        self.assertEqual(result.doi, "10.1006/jaer.1996.0085")
+        self.assertEqual(result.provider_hint, "elsevier")
+        self.assertTrue(transport.calls[0]["retry_on_transient"])
+
+    def test_direct_doi_query_uses_crossref_publisher_before_doi_fallback(self) -> None:
+        transport = RecordingTransport(
+            {
+                ("GET", "https://api.crossref.org/works/10.1006%2Fjaer.1996.0085"): {
+                    "status_code": 200,
+                    "headers": {"content-type": "application/json"},
+                    "body": json.dumps(
+                        {
+                            "message": {
+                                "DOI": "10.1006/jaer.1996.0085",
+                                "title": ["Journal of Environmental Research Article"],
+                                "publisher": "Elsevier BV",
+                                "URL": "https://linkinghub.elsevier.com/retrieve/pii/S0021863496900852",
+                            }
+                        }
+                    ).encode("utf-8"),
+                    "url": "https://api.crossref.org/works/10.1006%2Fjaer.1996.0085",
+                }
+            }
+        )
+
+        result = resolve_query.resolve_query("10.1006/jaer.1996.0085", transport=transport, env={})
+
+        self.assertEqual(result.query_kind, "doi")
+        self.assertEqual(result.doi, "10.1006/jaer.1996.0085")
+        self.assertEqual(result.provider_hint, "elsevier")
+        self.assertEqual(len(transport.calls), 1)
 
     def test_landing_url_extracts_doi_from_meta_tags(self) -> None:
         transport = RecordingTransport(
@@ -134,6 +174,44 @@ class ResolveQueryTests(unittest.TestCase):
         self.assertGreaterEqual(result.confidence, 0.9)
         self.assertEqual(result.candidates, [])
         self.assertEqual(transport.calls[0]["query"]["query.bibliographic"], "Deep learning for land cover classification")
+
+    def test_title_query_uses_crossref_publisher_and_landing_url_for_provider_hint(self) -> None:
+        transport = RecordingTransport(
+            {
+                ("GET", "https://api.crossref.org/works"): {
+                    "status_code": 200,
+                    "headers": {"content-type": "application/json"},
+                    "body": json.dumps(
+                        {
+                            "message": {
+                                "items": [
+                                    {
+                                        "DOI": "10.1006/jaer.1996.0085",
+                                        "title": ["A Precise Elsevier Candidate"],
+                                        "container-title": ["Journal of AI Research"],
+                                        "publisher": "Elsevier BV",
+                                        "URL": "https://linkinghub.elsevier.com/retrieve/pii/S0021863496900852",
+                                    },
+                                    {
+                                        "DOI": "10.5555/other",
+                                        "title": ["A Different Candidate"],
+                                        "container-title": ["Other Journal"],
+                                        "publisher": "Other Publisher",
+                                        "URL": "https://example.test/other",
+                                    },
+                                ]
+                            }
+                        }
+                    ).encode("utf-8"),
+                    "url": "https://api.crossref.org/works",
+                }
+            }
+        )
+
+        result = resolve_query.resolve_query("A Precise Elsevier Candidate", transport=transport, env={})
+
+        self.assertEqual(result.doi, "10.1006/jaer.1996.0085")
+        self.assertEqual(result.provider_hint, "elsevier")
 
     def test_url_query_skips_crossref_lookup_for_invalid_html_title(self) -> None:
         transport = RecordingTransport(

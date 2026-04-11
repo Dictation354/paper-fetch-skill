@@ -10,6 +10,48 @@
 | Springer | 官方 Meta API | 优先 Full Text API，其次 Open Access API | 支持分层下载：`none` 不下载，`body` 下载正文 figure + 正文表格原图，`all` 下载全部识别资产 | 支持 |
 | Wiley | 当前未接官方 metadata endpoint，走 Crossref | 官方 TDM endpoint | 当前按单文件全文处理 | 默认不支持正文 Markdown |
 
+## Provider 路由与判定
+
+当前运行时的 provider 决策已经从“DOI 前缀主导”收口到“Crossref publisher / landing-page domain 主导，DOI 只做最后 fallback”。
+
+统一规则如下：
+
+- 路由信号强弱顺序固定为：`domain > publisher > DOI fallback`
+- `resolve_paper().provider_hint` 表示 Crossref/domain-first 的最佳 hint，不再等同于 DOI 前缀猜测
+- 纯 DOI 查询在需要时会额外做一次 Crossref DOI metadata lookup，用 `publisher + landing_page_url` 推导更准确的 hint
+- `10.1016/...`、`10.1007/...`、`10.1111/...` / `10.1002/...` 这类 DOI 前缀规则仍保留，但只在更强信号缺失时兜底
+
+官方 provider probe 现在统一按三态解释：
+
+- `positive`: 官方 probe 明确命中
+- `negative`: 官方 probe 返回 `no_result`
+- `unknown`: `no_access`、`rate_limited`、`error`、`not_configured`、`not_supported`
+
+这意味着：
+
+- `negative` 只表示“这次 metadata probe 没打中”，是弱负信号，不会在没有更优候选时永久排除该 publisher 的 fulltext 尝试
+- `unknown` 不会被解释成“不是这家”，只表示当前无法确认
+- Wiley 由于没有对称的官方 metadata probe，当前保持 signal-selected，在 fulltext 阶段确认
+
+### `preferred_providers` 的当前语义
+
+- 继续严格限制最终允许使用的 official/fulltext/html 路径
+- 允许内部调用 Crossref 只做 routing signal，即使 allow-list 没有包含 `crossref`
+- 当 `preferred_providers=["crossref"]` 时，不会再探测官方 provider，行为保持 Crossref-only
+
+### `source_trail` 里的路由标记
+
+当前会额外记录一组 routing diagnostics，用来区分“路由信号”与“真实结果来源”：
+
+- `route:crossref_signal_ok`
+- `route:signal_domain_<provider>`
+- `route:signal_publisher_<provider>`
+- `route:signal_doi_<provider>`
+- `route:probe_<provider>_positive|negative|unknown`
+- `route:provider_selected_<provider>`
+
+现有的 `metadata:<provider>_ok`、`fulltext:<provider>_*` 仍只表示真实来源或真实抓取尝试，不用于表达 route-only 的信号。
+
 ## 默认输出与资产层级
 
 CLI、Python API、MCP 现在统一采用下面的默认策略：
@@ -129,6 +171,7 @@ client 的 Accept / Authorization 不会互相污染。
 
 ### 当前实现
 
+- 路由到 Elsevier 不再只依赖 `10.1016/`；Crossref 的 `publisher=Elsevier BV`、`Elsevier Ltd`、`Elsevier Masson SAS` 以及 `linkinghub.elsevier.com` / `sciencedirect.com` 这类 domain 也会触发 Elsevier 优先路由。
 - 路由到 `elsevier` 后，元数据会先尝试官方接口。
 - 如果官方元数据接口当前 DOI 不可用或返回无记录，则自动回退到 Crossref。
 - 全文优先走官方 Elsevier API，目标是获取 `text/xml`。
@@ -252,7 +295,7 @@ Full Text API 请求时的 `Accept` 值，默认是 `application/xml`。
 
 ### 当前实现
 
-- 官方 metadata endpoint 当前没有在本仓库里实现，因此元数据走 Crossref。
+- 官方 metadata endpoint 当前没有在本仓库里实现，因此 metadata 仍走 Crossref；但 provider 路由不再只靠 DOI 前缀，而是优先参考 Crossref publisher / landing page signal。
 - 全文使用 Wiley TDM endpoint。
 - 当前实现把 Wiley 返回内容按“单个全文文件”处理。
 - 根据当前已验证结果，默认获取的是 PDF。
@@ -299,7 +342,9 @@ Wiley-TDM-Client-Token
 ### 元数据回退
 
 - 优先官方元数据接口
-- 官方元数据不可用时回退 Crossref
+- Crossref 既可以作为公开 metadata 来源，也可以只作为内部 routing signal
+- 官方元数据 probe 返回 `no_result` 时，只记为弱负信号；如果没有更优 provider，仍允许继续尝试该 provider 的 fulltext
+- 官方元数据不可用或未实现时，再回退到 Crossref / resolution-only metadata
 
 ### 全文回退
 
