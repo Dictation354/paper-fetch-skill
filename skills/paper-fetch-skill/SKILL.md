@@ -1,6 +1,6 @@
 ---
 name: paper-fetch-skill
-description: Fetch the AI-friendly full text of one specific paper by DOI, URL, or title. Use when the user wants to read, summarize, analyze, translate, or extract information from a known paper and you do not already have its text. Not for topic surveys, literature discovery, or recommendation queries.
+description: Fetch the AI-friendly full text of one specific paper by DOI, URL, or title, or verify full-text availability for identifiable papers in a citation list. Use when the user wants to read, summarize, analyze, translate, or extract information from a known paper and you do not already have its text. Not for topic surveys, literature discovery, or recommendation queries.
 ---
 
 # Paper Fetch Skill
@@ -12,6 +12,7 @@ Use this skill when an agent needs the contents of one specific paper, not just 
 Typical triggers:
 - The user gives a `doi`, paper `url`, or only a paper `title`.
 - The user asks to read, summarize, compare, critique, translate, or extract methods/results from a specific paper.
+- The user gives a citation list or bibliography and asks which specific papers are readable, fetchable, or available in full text.
 - You need compact Markdown or structured metadata that can go directly into model context.
 
 ## When NOT to Use
@@ -19,20 +20,22 @@ Typical triggers:
 Do not use this skill when:
 - The user is asking for a broad literature survey like "最近有哪些论文讲 X".
 - The user wants recommendations or paper discovery across a topic rather than one identifiable paper.
-- You already have the full paper text in the conversation or workspace.
+- You already have the verified full paper text in the conversation or workspace and do not need to confirm availability again.
 
 ## Workflow
 
 1. Prefer the MCP tools when they are available.
-2. Call `resolve_paper(query)` first if the query may be ambiguous.
-3. Call `fetch_paper(query, modes, strategy, include_refs, max_tokens)` to retrieve AI-friendly Markdown, structured article data, or metadata.
-4. If the MCP tools are unavailable in the current runtime, fall back to the CLI:
+2. If the task is "Can you read this paper?" or "Which entries in this citation list are readable?", do not conclude "unreadable" just because there is no local PDF. Verify with MCP first for each identifiable paper that lacks verified local full text.
+3. For bibliography or citation-list tasks, process the papers one by one. Reuse local PDFs when they are already present, but use MCP to verify entries that are only represented by title, DOI, URL, or incomplete local artifacts.
+4. Call `resolve_paper(query)` first if the query may be ambiguous.
+5. Call `fetch_paper(query, modes, strategy, include_refs, max_tokens)` to retrieve AI-friendly Markdown, structured article data, or metadata.
+6. If the MCP tools are unavailable in the current runtime, fall back to the CLI:
 
    ```bash
    paper-fetch --query "<user input>"
    ```
 
-5. If full text is unavailable, continue with the metadata-only result and tell the user they are working from metadata / abstract only.
+7. If full text is unavailable, continue with the metadata-only result and tell the user they are working from metadata / abstract only.
 
 ## MCP Tools
 
@@ -87,6 +90,10 @@ If `resolve_paper` or CLI resolution is ambiguous:
 If `fetch_paper` returns metadata only:
 - tell the user full text was not available
 - continue from the metadata / abstract if that still helps
+
+If a paper is not present as a local PDF or text file:
+- do not treat "missing local file" as proof that the paper is unreadable
+- verify with MCP or CLI before concluding it is unavailable
 
 ## Parallel-use Notes
 

@@ -133,7 +133,7 @@ cat > "$SKILL_DIR/agents/openai.yaml" <<'EOF'
 interface:
   display_name: "Paper Fetch Skill"
   short_description: "Fetch AI-friendly paper text by DOI, URL, or title"
-  default_prompt: "Use $paper-fetch-skill when you need the text of a specific paper and only have a DOI, URL, or title."
+  default_prompt: "Use $paper-fetch-skill whenever you need the text, readability, or full-text availability of a specific paper or a citation list of identifiable papers."
 EOF
 
 if [ "$REGISTER_MCP" = "1" ]; then
