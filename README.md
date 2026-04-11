@@ -18,10 +18,11 @@ python3 -m pip install .
 paper-fetch --query "10.1186/1471-2105-11-421"
 ```
 
-如果需要出版社 API key 或自定义配置，可以先准备 `.env`：
+如果需要出版社 API key 或自定义配置，默认配置文件放在 `~/.config/paper-fetch/.env`：
 
 ```bash
-cp .env.example .env
+mkdir -p ~/.config/paper-fetch
+cp .env.example ~/.config/paper-fetch/.env
 ```
 
 变量说明见 [docs/providers.md](docs/providers.md)。

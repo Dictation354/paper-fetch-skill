@@ -18,18 +18,20 @@ python3 -m pip install .
 
 ## 2. 准备配置
 
-如果你需要出版社 API key、`mailto` 或自定义下载目录，可以先准备 `.env`：
+默认主配置文件是 `~/.config/paper-fetch/.env`。如果你需要出版社 API key、`mailto` 或自定义下载目录，可以这样准备：
 
 ```bash
-cp .env.example .env
+mkdir -p ~/.config/paper-fetch
+cp .env.example ~/.config/paper-fetch/.env
 ```
 
 详细变量说明见 [providers.md](providers.md)。
 
 补充说明：
 
-- 安装脚本在仓库根目录发现 `.env` 时，会优先把它用于 MCP 注册
-- 如果配置文件不在仓库根目录，可以显式传 `--env-file /path/to/.env`
+- 运行时默认读取 `~/.config/paper-fetch/.env`
+- 仓库内的 `.env` 不会自动生效；如果你要在开发场景下使用它，请显式设置 `PAPER_FETCH_ENV_FILE=/path/to/.env`
+- 安装脚本也不会自动绑定仓库 `.env`；如果你希望 MCP 使用某个特定配置文件，请显式传 `--env-file /path/to/.env`
 
 ## 3. 可选：安装公式后端
 
@@ -72,7 +74,7 @@ python3 -m pip install .
 常用选项：
 
 - `--project`: 安装到当前仓库的 `.codex/skills/`
-- `--env-file <path>`: 指定 MCP 启动时读取的环境文件
+- `--env-file <path>`: 显式指定 MCP 启动时读取的环境文件
 - `--mcp-name <name>`: 修改默认 MCP server 名称 `paper-fetch`
 
 完成后重启 Codex，让它重新扫描 skill 和 MCP。
@@ -91,7 +93,7 @@ python3 -m pip install .
 常用选项：
 
 - `--project`: 安装到当前仓库的 `.claude/skills/`
-- `--env-file <path>`: 指定 MCP 启动时读取的环境文件
+- `--env-file <path>`: 显式指定 MCP 启动时读取的环境文件
 - `--mcp-scope local|user|project`: 指定 Claude MCP 配置作用域
 - `--mcp-name <name>`: 修改默认 MCP server 名称 `paper-fetch`
 

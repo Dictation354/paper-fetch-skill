@@ -10,6 +10,20 @@
 | Springer | 官方 Meta API | 优先 Full Text API，其次 Open Access API | 支持图片与补充材料 | 支持 |
 | Wiley | 当前未接官方 metadata endpoint，走 Crossref | 官方 TDM endpoint | 当前按单文件全文处理 | 默认不支持正文 Markdown |
 
+## 配置文件位置
+
+默认主配置文件位置是：
+
+```text
+~/.config/paper-fetch/.env
+```
+
+如果你在仓库里维护一个开发用 `.env`，它不会被运行时自动加载。开发场景下请显式设置：
+
+```bash
+PAPER_FETCH_ENV_FILE=/path/to/.env
+```
+
 ## 通用环境变量
 
 #### `PAPER_FETCH_SKILL_USER_AGENT`

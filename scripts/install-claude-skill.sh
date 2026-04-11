@@ -120,9 +120,6 @@ case "$MCP_SCOPE" in
     *) die "Unsupported --mcp-scope '$MCP_SCOPE' (expected: local, user, project)" ;;
 esac
 
-if [ -z "$MCP_ENV_FILE" ] && [ -f "$REPO_DIR/.env" ]; then
-    MCP_ENV_FILE="$REPO_DIR/.env"
-fi
 if [ -n "$MCP_ENV_FILE" ]; then
     MCP_ENV_FILE="$(abspath "$MCP_ENV_FILE")"
 fi

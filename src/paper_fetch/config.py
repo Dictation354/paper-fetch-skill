@@ -6,10 +6,6 @@ import os
 from pathlib import Path
 from typing import Mapping
 
-PACKAGE_DIR = Path(__file__).resolve().parent
-SRC_DIR = PACKAGE_DIR.parent
-ROOT_DIR = SRC_DIR.parent
-DEFAULT_ENV_FILE = ROOT_DIR / ".env"
 DEFAULT_USER_CONFIG_DIR = Path.home() / ".config" / "paper-fetch"
 DEFAULT_USER_ENV_FILE = DEFAULT_USER_CONFIG_DIR / ".env"
 DEFAULT_XDG_DATA_HOME = Path.home() / ".local" / "share"
@@ -69,14 +65,13 @@ def build_runtime_env(
     - process environment / base_env
     - explicit env_file arg or PAPER_FETCH_ENV_FILE
     - ~/.config/paper-fetch/.env
-    - repo-local .env
     """
     process_env = dict(base_env or os.environ)
     explicit_env_file = normalize_env_file_path(env_file)
     configured_env_file = normalize_env_file_path(process_env.get(ENV_FILE_ENV_VAR))
 
     merged: dict[str, str] = {}
-    candidates: list[Path] = [DEFAULT_ENV_FILE, DEFAULT_USER_ENV_FILE]
+    candidates: list[Path] = [DEFAULT_USER_ENV_FILE]
     for candidate in (configured_env_file, explicit_env_file):
         if candidate is not None and candidate not in candidates:
             candidates.append(candidate)

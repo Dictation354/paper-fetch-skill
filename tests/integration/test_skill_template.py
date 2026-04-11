@@ -70,6 +70,7 @@ class InstallerSmokeTests(unittest.TestCase):
         extra_env: dict[str, str] | None = None,
         fake_codex: bool = False,
         fake_claude: bool = False,
+        create_repo_env: bool = False,
     ) -> tuple[Path, Path, Path]:
         temp_dir = tempfile.TemporaryDirectory()
         self.addCleanup(temp_dir.cleanup)
@@ -81,6 +82,8 @@ class InstallerSmokeTests(unittest.TestCase):
         log_path = sandbox / "python.log"
 
         copy_installer_fixture(repo_dir)
+        if create_repo_env:
+            (repo_dir / ".env").write_text("ELSEVIER_API_KEY=dev\n", encoding="utf-8")
         fake_bin_dir.mkdir(parents=True, exist_ok=True)
         home_dir.mkdir(parents=True, exist_ok=True)
         codex_home.mkdir(parents=True, exist_ok=True)
@@ -165,6 +168,30 @@ class InstallerSmokeTests(unittest.TestCase):
             log_text,
         )
         self.assertIn("-m paper_fetch.mcp.server", log_text)
+
+    def test_claude_installer_does_not_auto_bind_repo_env_for_mcp_registration(self) -> None:
+        _, _, log_path = self.run_installer(
+            script_name="install-claude-skill.sh",
+            args=["--register-mcp", "--mcp-scope", "project"],
+            fake_claude=True,
+            create_repo_env=True,
+        )
+
+        log_text = log_path.read_text(encoding="utf-8")
+        self.assertIn("claude mcp add -s project paper-fetch --", log_text)
+        self.assertNotIn("PAPER_FETCH_ENV_FILE=", log_text)
+
+    def test_codex_installer_does_not_auto_bind_repo_env_for_mcp_registration(self) -> None:
+        _, _, log_path = self.run_installer(
+            script_name="install-codex-skill.sh",
+            args=["--register-mcp"],
+            fake_codex=True,
+            create_repo_env=True,
+        )
+
+        log_text = log_path.read_text(encoding="utf-8")
+        self.assertIn("codex mcp add paper-fetch --", log_text)
+        self.assertNotIn("PAPER_FETCH_ENV_FILE=", log_text)
 
 
 if __name__ == "__main__":

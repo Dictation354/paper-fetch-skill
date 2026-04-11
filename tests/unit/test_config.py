@@ -9,21 +9,16 @@ from paper_fetch import config
 
 
 class ConfigTests(unittest.TestCase):
-    def test_build_runtime_env_prefers_process_env_then_explicit_file_then_user_then_repo(self) -> None:
+    def test_build_runtime_env_prefers_process_env_then_explicit_file_then_user_config(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             tmp = Path(tmpdir)
-            repo_env = tmp / "repo.env"
             user_env = tmp / "user.env"
             explicit_env = tmp / "explicit.env"
 
-            repo_env.write_text("SHARED=repo\nREPO_ONLY=repo\n", encoding="utf-8")
             user_env.write_text("SHARED=user\nUSER_ONLY=user\n", encoding="utf-8")
             explicit_env.write_text("SHARED=explicit\nEXPLICIT_ONLY=explicit\n", encoding="utf-8")
 
-            with (
-                mock.patch.object(config, "DEFAULT_ENV_FILE", repo_env),
-                mock.patch.object(config, "DEFAULT_USER_ENV_FILE", user_env),
-            ):
+            with mock.patch.object(config, "DEFAULT_USER_ENV_FILE", user_env):
                 env = config.build_runtime_env(
                     {
                         "SHARED": "process",
@@ -36,23 +31,36 @@ class ConfigTests(unittest.TestCase):
         self.assertEqual(env["PROCESS_ONLY"], "process")
         self.assertEqual(env["EXPLICIT_ONLY"], "explicit")
         self.assertEqual(env["USER_ONLY"], "user")
-        self.assertEqual(env["REPO_ONLY"], "repo")
 
-    def test_user_env_file_overrides_repo_fallback_when_no_explicit_env_file_is_set(self) -> None:
+    def test_user_env_file_is_the_default_runtime_baseline(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             tmp = Path(tmpdir)
-            repo_env = tmp / "repo.env"
             user_env = tmp / "user.env"
-            repo_env.write_text("SHARED=repo\n", encoding="utf-8")
             user_env.write_text("SHARED=user\n", encoding="utf-8")
 
-            with (
-                mock.patch.object(config, "DEFAULT_ENV_FILE", repo_env),
-                mock.patch.object(config, "DEFAULT_USER_ENV_FILE", user_env),
-            ):
+            with mock.patch.object(config, "DEFAULT_USER_ENV_FILE", user_env):
                 env = config.build_runtime_env({})
 
         self.assertEqual(env["SHARED"], "user")
+
+    def test_repo_local_env_is_not_loaded_implicitly(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            user_env = tmp / "user.env"
+            user_env.write_text("SHARED=user\n", encoding="utf-8")
+            seen_paths: list[Path] = []
+
+            def fake_load_env_file(path: Path) -> dict[str, str]:
+                seen_paths.append(path)
+                return {}
+
+            with (
+                mock.patch.object(config, "DEFAULT_USER_ENV_FILE", user_env),
+                mock.patch.object(config, "load_env_file", side_effect=fake_load_env_file),
+            ):
+                config.build_runtime_env({})
+
+        self.assertEqual(seen_paths, [user_env])
 
     def test_cli_default_download_dir_uses_xdg_user_data_home(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

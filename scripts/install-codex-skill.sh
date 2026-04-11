@@ -103,9 +103,6 @@ else
     SKILL_DIR="$REPO_DIR/.codex/skills/$SKILL_NAME"
 fi
 
-if [ -z "$MCP_ENV_FILE" ] && [ -f "$REPO_DIR/.env" ]; then
-    MCP_ENV_FILE="$REPO_DIR/.env"
-fi
 if [ -n "$MCP_ENV_FILE" ]; then
     MCP_ENV_FILE="$(abspath "$MCP_ENV_FILE")"
 fi

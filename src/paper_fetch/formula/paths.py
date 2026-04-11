@@ -7,7 +7,7 @@ from importlib.resources import files
 from pathlib import Path
 from typing import Mapping
 
-from ..config import ROOT_DIR, resolve_user_data_dir
+from ..config import resolve_user_data_dir
 
 FORMULA_TOOLS_DIR_ENV_VAR = "PAPER_FETCH_FORMULA_TOOLS_DIR"
 FORMULA_NODE_SCRIPT_NAME = "mathml_to_latex_cli.mjs"
@@ -22,7 +22,7 @@ def normalize_optional_path(value: str | os.PathLike[str] | None) -> Path | None
 
 
 def repo_root() -> Path | None:
-    candidate = ROOT_DIR
+    candidate = Path(__file__).resolve().parents[3]
     if (candidate / "install-formula-tools.sh").exists() and (candidate / "src" / "paper_fetch").exists():
         return candidate
     return None

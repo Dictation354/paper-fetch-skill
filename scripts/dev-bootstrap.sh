@@ -2,7 +2,7 @@
 # Bootstrap a repo-local development environment.
 #
 # Usage:
-#   ./scripts/dev-bootstrap.sh              # create/update ./.venv, install deps, copy .env.example, install formula tools
+#   ./scripts/dev-bootstrap.sh              # create/update ./.venv, install deps, optionally copy a repo-local dev .env, install formula tools
 #   ./scripts/dev-bootstrap.sh --system     # install into the current python3 environment instead of ./.venv
 #   ./scripts/dev-bootstrap.sh --no-node    # skip the Node formula fallback install
 #   ./scripts/dev-bootstrap.sh --skip-env-file
@@ -53,7 +53,7 @@ log "Installing Python dependencies"
 
 if [ "$COPY_ENV_FILE" = "1" ] && [ -f "$REPO_DIR/.env.example" ] && [ ! -f "$REPO_DIR/.env" ]; then
     cp "$REPO_DIR/.env.example" "$REPO_DIR/.env"
-    warn "Created $REPO_DIR/.env from template. Fill in the API keys you have before running live fetches."
+    warn "Created $REPO_DIR/.env from template. This repo-local file is not auto-loaded; use it explicitly with PAPER_FETCH_ENV_FILE=$REPO_DIR/.env during development."
 fi
 
 FORMULA_ARGS=()
@@ -71,3 +71,5 @@ if [ "$USE_SYSTEM" = "1" ]; then
 else
     echo "Activate the repo environment with: source $VENV_DIR/bin/activate"
 fi
+echo "Default runtime config lives at ~/.config/paper-fetch/.env"
+echo "To use the repo-local dev file explicitly: export PAPER_FETCH_ENV_FILE=$REPO_DIR/.env"

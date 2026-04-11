@@ -283,7 +283,8 @@ Recommended load order:
 1. process environment variables
 2. `PAPER_FETCH_ENV_FILE`
 3. `~/.config/paper-fetch/.env`
-4. repo-local `.env` only for developer fallback
+
+Repo-local `.env` should only be used in development via an explicit `PAPER_FETCH_ENV_FILE=/path/to/.env` override.
 
 Recommended writable runtime paths:
 
