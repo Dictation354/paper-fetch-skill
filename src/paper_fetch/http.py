@@ -22,6 +22,7 @@ DEFAULT_CACHE_TTL_SECONDS = 30
 DEFAULT_CACHE_CAPACITY = 128
 DEFAULT_MAX_CACHEABLE_BODY_BYTES = 1024 * 1024
 DEFAULT_MAX_RESPONSE_BYTES = 32 * 1024 * 1024
+DEFAULT_MAX_COMPRESSED_BODY_MULTIPLIER = 8
 DEFAULT_TRANSIENT_RETRIES = 2
 DEFAULT_TRANSIENT_BACKOFF_BASE_SECONDS = 0.5
 
@@ -232,15 +233,20 @@ class HttpTransport:
                         content_encoding=headers_map.get("content-encoding"),
                     )
                     retry_after_seconds = parse_retry_after_seconds(headers_map.get("retry-after"))
+                    rate_limit_wait_seconds = retry_after_seconds
+                    if rate_limit_wait_seconds is None:
+                        fallback_wait_seconds = max(0.0, transient_backoff_base_seconds)
+                        if fallback_wait_seconds <= max_rate_limit_wait_seconds:
+                            rate_limit_wait_seconds = fallback_wait_seconds
                     if (
                         exc.code == 429
                         and retry_on_rate_limit
                         and attempts_remaining > 0
-                        and retry_after_seconds is not None
-                        and retry_after_seconds <= max_rate_limit_wait_seconds
+                        and rate_limit_wait_seconds is not None
+                        and rate_limit_wait_seconds <= max_rate_limit_wait_seconds
                     ):
                         attempts_remaining -= 1
-                        time.sleep(max(0, retry_after_seconds))
+                        time.sleep(max(0.0, rate_limit_wait_seconds))
                         continue
                     if retry_on_transient and transient_attempts_remaining > 0 and is_transient_http_status(exc.code):
                         transient_attempts_remaining -= 1
@@ -290,13 +296,27 @@ class HttpTransport:
     ) -> bytes:
         normalized_content_encoding = normalize_content_encoding(content_encoding)
         if normalized_content_encoding == "gzip":
-            payload = response.read()
+            max_compressed_body_bytes = max(
+                self.max_response_bytes,
+                self.max_response_bytes * DEFAULT_MAX_COMPRESSED_BODY_MULTIPLIER,
+            )
+            payload = response.read(max_compressed_body_bytes + 1)
         else:
             payload = response.read(self.max_response_bytes + 1)
         if not isinstance(payload, (bytes, bytearray)):
             payload = bytes(payload or b"")
         body = bytes(payload)
         if normalized_content_encoding == "gzip":
+            if len(body) > max_compressed_body_bytes:
+                raise RequestFailure(
+                    status_code,
+                    (
+                        f"Compressed response body exceeded {max_compressed_body_bytes} bytes "
+                        f"for {redact_url_for_cache(url)}"
+                    ),
+                    body=body[:max_compressed_body_bytes],
+                    url=redact_url_for_cache(url),
+                )
             return decompress_gzip_body(
                 body,
                 status_code=status_code,

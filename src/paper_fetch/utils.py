@@ -138,7 +138,16 @@ def build_output_path(
 def save_payload(output_path: Path | None, body: bytes) -> str | None:
     if output_path is None:
         return None
-    output_path.write_bytes(body)
+    tmp_path = output_path.with_suffix(output_path.suffix + ".part")
+    try:
+        tmp_path.write_bytes(body)
+        tmp_path.replace(output_path)
+    except Exception:
+        try:
+            tmp_path.unlink(missing_ok=True)
+        except OSError:
+            pass
+        raise
     return str(output_path)
 
 

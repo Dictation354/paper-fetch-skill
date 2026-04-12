@@ -12,11 +12,22 @@
 
 ### 优先级 P1（可维护性)
 
-- 当前无 P1 项。
+- **HTTP transport 没有连接复用**（`src/paper_fetch/http.py:205-223`）。`urllib.request.urlopen` 每次都新建 TCP+TLS；对 Elsevier/Springer/Wiley 一次 fetch 多条请求的链路（metadata→fulltext→figures→supplementary），同一域名建连成本占大头。两条路径：(a) 继续用 stdlib，但用 `http.client.HTTPSConnection` per host pool 串行复用；(b) 引入 `urllib3` / `httpx` 为 runtime 依赖直接 pool。动 transport 涉及 cache 行为与测试 stub，建议单独 PR。
+- **渲染热路径仍在每个 section/group/reference 重复 `normalize_markdown_text`**（`src/paper_fetch/models.py:343-346,505,513,557,566,573`）。上一轮已替换成 `estimate_normalized_tokens`，但每次调用前仍 `normalize_markdown_text(rendered)`。`render_section` / `render_heading` 产出的文本本来就受控，让渲染函数直接返回「已规范化文本 + 预估 token 数」，避免循环内重复跑 regex。当前不算瓶颈，但长论文会放大。
+- **`normalize_text`（`models.py:38-43`）与 `safe_text`（`utils.py:19-24`）行为几乎完全重合**。前者 `(value or "")`，后者 `str(value or "")`，正则完全相同。让 `safe_text` 直接调用 `normalize_text(str(value or ""))`，避免两份 regex 失去同步。
+- **`merge_metadata` 同名异义**（`src/paper_fetch/service.py:97` 与 `src/paper_fetch/providers/html_generic.py:232`）。两个 `merge_metadata` 签名不同、合并语义也不同（primary-wins vs base-wins），同时 import 时极易误用。改名一个，比如 `merge_primary_secondary_metadata` / `merge_html_metadata`。
+- **`extend_unique` helper 在 `service.py:74` 与 `cli.py:19` 各写一份**。下沉到 `utils.py` 统一 import。
+- **`HTML_LOOKUP_TITLE_DENYLIST` 在 `resolve/query.py:23-29` 与 `providers/html_generic.py:47-54` 是近似重复**，只差一两个词。统一到 `publisher_identity` 或新 `html_lookup.py`，否则后续加词会漏一处。
+- **`ArticleModel.to_ai_markdown` 仍承担太多职责**（`src/paper_fetch/models.py:264-407`）。140 行里混了 front matter、abstract、section 优先级裁剪、asset block、reference block、truncation 跟踪；已经拆出 `append_*_block_with_budget` helper，但主函数还保留「顺序驱动的 budget 减法」副作用。引入 `RenderContext` dataclass（`remaining`, `truncated_any`, `warnings`）把副作用集中，未来再调裁剪优先级不用动 `to_ai_markdown` 主体。
+- **缺少结构化日志**。全仓只用 `source_trail` 列表 + 错误分支的 stderr JSON；一旦线上某个 live fetch 走偏，重现只能靠 rerun。加一个 `logging.getLogger("paper_fetch.*")`，保留现有 trail 语义，让 `_try_official_provider` / `_try_html_fallback` 在每一步 debug 级打印 url、状态、耗时。不改 public API，纯 opt-in。
+- **provider metadata 仍是松散 `dict[str, Any]`**。`metadata.get("landing_page_url")` / `metadata.get("publisher")` / `metadata.get("fulltext_links")` 在 6+ 处读写，字段漂移无人抓得住。换成 `typing.TypedDict`，零运行时成本，ruff 能静态抓未知 key；可以分几次递进。
 
 ### 优先级 P2（体验 / 结果质量）
 
-- 当前无 P2 项。
+- **`rewrite_markdown_asset_links` 用字符串 `replace` 做路径替换**（`src/paper_fetch/cli.py:25-43`）。即使按长度倒序仍对含 `%` 或 regex-special 的路径脆弱。更稳：在 `to_ai_markdown` 时就把 asset link 发成占位符，CLI 只替换占位符 → 相对路径。
+- **HTTP 响应缓存没有总体内存上限**（`src/paper_fetch/http.py:98`）。默认 128 条 × 1 MiB cacheable body = 最多 ~128 MiB 常驻；长 MCP session 要注意。加一个累加字节上限，超过时按 LRU 淘汰。
+- **`Asset.path` / `caption` / `url` 类型不统一**（`src/paper_fetch/models.py:204-211`），一部分 `str | None`、一部分默认 `""`。统一成 `str | None`，渲染层判空更直接。
+- **`_try_official_provider` 往 `raw_payload.metadata` 里塞 `downloaded_assets` / `asset_failures`**（`src/paper_fetch/service.py:494-495`）是隐式共享状态。由调用方以返回值传递更清晰。
 
 ### 原有真实论文边角 case
 
@@ -40,7 +51,10 @@
 
 - ✅ `HttpTransport` 的进程内 LRU GET 缓存已加 `threading.RLock` 保护
 - ✅ `HttpTransport` 新增默认 `32 MiB` 响应大小上限；超限直接抛 `RequestFailure`，避免大 PDF / supplementary 一次性读爆内存
+- ✅ `HttpTransport` 的 gzip 分支现在会先按压缩体字节数做上限检查，再解压；避免对手端在解压前用超大 gzip 打满内存
+- ✅ `save_payload()` 与所有走该入口的 provider/HTML asset 落盘现在都改成 `.part -> replace` 原子写；临时写失败不会污染最终文件
 - ✅ `HttpTransport.request()` 新增 `retry_on_transient`，对 `HTTP 5xx` 与 timeout-class 网络错误做有限指数退避；当前已启用 `retry_on_rate_limit=True` 的 provider / HTML 请求链路已同步打开
+- ✅ `429` 缺少 `Retry-After` 时现在会退化到一次短退避重试，仍受 `max_rate_limit_wait_seconds` 上限约束
 - ✅ `429` 仍只走 `Retry-After` 语义，不与瞬时错误重试混用
 - ✅ CLI 默认下载目录已改为：`PAPER_FETCH_DOWNLOAD_DIR` -> `XDG_DATA_HOME/paper-fetch/downloads` -> 创建失败时回落 `./live-downloads`
 - ✅ `--save-markdown` 与 Wiley raw/binary 落盘已统一走同一套目录解析逻辑
@@ -78,6 +92,7 @@
 - ✅ 已补守卫测试，覆盖 `full_text` 与大预算渲染等价、缓存键白名单行为、共享 DOI 提取
 - ✅ 单个超大 `tests/unit/test_paper_fetch.py` 已拆成 `test_cli.py` / `test_service.py` / `test_models_render.py`，共享 stub/fixture 已下沉到 `tests/unit/_paper_fetch_support.py`
 - ✅ `HttpTransportCacheTests` 已拆到独立的 `test_http_cache.py`，`test_fetch_common.py` 只保留通用 helper / packaging 守卫
+- ✅ P0 HTTP/落盘修复已补守卫测试：覆盖 gzip 压缩体上限、429 无 `Retry-After` 短退避，以及 `save_payload()` 原子写失败不污染旧文件
 
 ### 既有收口基线
 

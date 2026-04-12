@@ -216,6 +216,24 @@ class HttpTransportCacheTests(unittest.TestCase):
 
         self.assertIn("Response body exceeded 4 bytes", str(context.exception))
 
+    def test_gzip_compressed_size_limit_is_enforced_before_decompression(self) -> None:
+        transport = http_module.HttpTransport(cache_ttl=0, cache_capacity=0, max_response_bytes=8)
+        compressed = gzip.compress(bytes(range(256)) * 2)
+        self.assertGreater(len(compressed), transport.max_response_bytes * http_module.DEFAULT_MAX_COMPRESSED_BODY_MULTIPLIER)
+
+        def fake_urlopen(request, timeout=20):
+            return FakeHTTPResponse(
+                compressed,
+                request.full_url,
+                headers={"content-type": "application/octet-stream", "content-encoding": "gzip"},
+            )
+
+        with mock.patch.object(http_module.urllib.request, "urlopen", side_effect=fake_urlopen):
+            with self.assertRaises(http_module.RequestFailure) as context:
+                transport.request("GET", "https://example.test/article", headers={"Accept": "*/*"})
+
+        self.assertIn("Compressed response body exceeded 64 bytes", str(context.exception))
+
     def test_pdf_payloads_are_not_cached(self) -> None:
         transport = http_module.HttpTransport(cache_ttl=30, cache_capacity=128)
         call_count = 0
@@ -282,6 +300,39 @@ class HttpTransportCacheTests(unittest.TestCase):
         self.assertEqual(call_count, 2)
         self.assertEqual(response["body"], b"ok")
         mocked_sleep.assert_called_once_with(1)
+        rate_limited_error.close.assert_called_once_with()
+
+    def test_rate_limited_request_without_retry_after_uses_short_fallback_backoff(self) -> None:
+        transport = http_module.HttpTransport(cache_ttl=0, cache_capacity=0)
+        call_count = 0
+        rate_limited_error = build_http_error(
+            "https://example.test/article",
+            status=429,
+            headers={},
+            body=b"rate limited",
+        )
+        original_close = rate_limited_error.close
+        rate_limited_error.close = mock.Mock(side_effect=original_close)
+
+        def fake_urlopen(request, timeout=20):
+            nonlocal call_count
+            call_count += 1
+            if call_count == 1:
+                raise rate_limited_error
+            return FakeHTTPResponse(b"ok", request.full_url)
+
+        with mock.patch.object(http_module.urllib.request, "urlopen", side_effect=fake_urlopen):
+            with mock.patch.object(http_module.time, "sleep") as mocked_sleep:
+                response = transport.request(
+                    "GET",
+                    "https://example.test/article",
+                    headers={"Accept": "text/plain"},
+                    retry_on_rate_limit=True,
+                )
+
+        self.assertEqual(call_count, 2)
+        self.assertEqual(response["body"], b"ok")
+        mocked_sleep.assert_called_once_with(http_module.DEFAULT_TRANSIENT_BACKOFF_BASE_SECONDS)
         rate_limited_error.close.assert_called_once_with()
 
     def test_transient_http_5xx_is_retried_with_exponential_backoff(self) -> None:
