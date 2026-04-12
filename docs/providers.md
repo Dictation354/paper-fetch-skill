@@ -124,6 +124,10 @@ PAPER_FETCH_ENV_FILE=/path/to/.env
 resolve 阶段和 metadata 阶段会复用同一个 transport，因此同一 DOI 的重复
 Crossref / 出版商 GET 会直接命中缓存，不会真正发请求。
 
+当前底层传输已经切到 `urllib3.PoolManager`。同一进程里的重复请求会按 host 复用
+HTTP/TLS 连接，官方 provider 那类 “metadata -> fulltext -> assets” 串行链路不再
+为每一步重新建连。
+
 POST 和非 GET 方法不走缓存。不同 header 组合会被视为不同 key，因此不同 provider
 client 的 Accept / Authorization 不会互相污染。
 
@@ -140,6 +144,7 @@ client 的 Accept / Authorization 不会互相污染。
 
 - 默认 `max_response_bytes=32 MiB`；超过上限会直接抛 `RequestFailure`，而不是把超大正文 / supplement 一次性吃进内存
 - 对 `HTTP 5xx` 和 timeout-class 网络错误支持有限指数退避重试；当前官方 provider 请求和 HTML fallback 请求都会启用
+- transport 内部保留一个私有请求 seam 供测试 stub；对外公开的 `HttpTransport.request()` 签名与返回结构不变
 
 重试策略保持比较保守：
 

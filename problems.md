@@ -12,8 +12,8 @@
 
 ### 优先级 P1（可维护性)
 
-- **HTTP transport 没有连接复用**（`src/paper_fetch/http.py:205-223`）。`urllib.request.urlopen` 每次都新建 TCP+TLS；对 Elsevier/Springer/Wiley 一次 fetch 多条请求的链路（metadata→fulltext→figures→supplementary），同一域名建连成本占大头。两条路径：(a) 继续用 stdlib，但用 `http.client.HTTPSConnection` per host pool 串行复用；(b) 引入 `urllib3` / `httpx` 为 runtime 依赖直接 pool。动 transport 涉及 cache 行为与测试 stub，建议单独 PR。
 - **`ArticleModel.to_ai_markdown` 仍承担太多职责**（`src/paper_fetch/models.py:264-407`）。虽然 `RenderContext` 和热路径规范化已收口，但主函数仍混合 front matter、abstract、section 选择和多类 block 拼装。后续若继续重构，优先把“渲染计划生成”和“budget 驱动追加”拆成更小 helper。
+- **`_article_markdown_common.normalize_text` 与 `utils.normalize_text` 是逐字节复制**（`src/paper_fetch/providers/_article_markdown_common.py:23-28` vs `src/paper_fetch/utils.py:19-24`）。两份实现的字符替换、4 个 regex 和 strip 顺序完全一致，没有 XML 特有语义差异，纯属历史遗留。建议删掉 common 里的副本，改成 `from ..utils import normalize_text` 并 re-export，这样依赖它的 `_article_markdown_elsevier.py` / `_article_markdown_springer.py` / `_article_markdown_math.py` 等模块的导入路径无需改动。紧邻的 `normalize_compact_text`（`\s+` 压成单空格，会吞换行）语义不同，保留不动。
 
 ### 优先级 P2（体验 / 结果质量）
 
@@ -44,6 +44,7 @@
 ### 运行时行为与安全性
 
 - ✅ `HttpTransport` 的进程内 LRU GET 缓存已加 `threading.RLock` 保护
+- ✅ `HttpTransport` 内部传输已切到 `urllib3.PoolManager`，同 host 请求现在会复用连接；`request()` 的公开签名与返回 dict 语义保持不变
 - ✅ `HttpTransport` 新增默认 `32 MiB` 响应大小上限；超限直接抛 `RequestFailure`，避免大 PDF / supplementary 一次性读爆内存
 - ✅ `HttpTransport` 的 gzip 分支现在会先按压缩体字节数做上限检查，再解压；避免对手端在解压前用超大 gzip 打满内存
 - ✅ `save_payload()` 与所有走该入口的 provider/HTML asset 落盘现在都改成 `.part -> replace` 原子写；临时写失败不会污染最终文件
@@ -63,6 +64,7 @@
 ### 依赖与护栏
 
 - ✅ `pyproject.toml` 已区分 runtime 依赖和 `dev` extra
+- ✅ runtime 依赖已新增 `urllib3>=2.2,<3`，供 `HttpTransport` 连接池复用
 - ✅ runtime 依赖已从补丁级 `==` pin 改成 library 友好的 `>=,<` 范围约束；精确开发安装继续收敛在 `requirements.txt` / lockfile
 - ✅ `pyproject.toml` 已显式声明 `pydantic>=2,<3`，不再依赖 `mcp` 的传递依赖碰巧托底
 - ✅ 新增 `ruff` 配置与独立 `lint` CI job
@@ -100,6 +102,8 @@
 - ✅ 当前分支继续视为 `core library + CLI + MCP + thin skill` 的已实现基线
 - ✅ closeout 守卫测试持续阻止 `tests/` 回退到旧的导入 hack
 - ✅ CLI `--help` smoke 和 MCP stdio integration smoke 已收编进 integration 验收基线
+- ✅ `urllib3` 连接池改造后的离线回归已通过：`ruff check .`、`python -m pytest tests/unit tests/integration -q`
+- ✅ 条件性 live 验收已执行：`python -m pytest tests/live/test_live_publishers.py tests/integration/test_mcp_integration.py -q`；其中 live publisher smoke 因未设置 `PAPER_FETCH_RUN_LIVE=1` 被跳过，`test_mcp_integration.py` 通过
 - ✅ `tests/` 继续按 `unit/ integration/ live/` 分层，根目录 `unittest discover -s tests -q` 保持可用
 - ✅ 当前离线验收基线已覆盖 `ruff check .`、`tests/unit`、`tests/integration` 和根目录 `tests/` discover
 

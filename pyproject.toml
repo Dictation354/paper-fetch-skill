@@ -15,6 +15,7 @@ dependencies = [
   "lxml>=6,<7",
   "PyMuPDF>=1.27,<2",
   "pydantic>=2,<3",
+  "urllib3>=2.2,<3",
 ]
 
 [project.optional-dependencies]

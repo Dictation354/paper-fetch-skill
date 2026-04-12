@@ -11,11 +11,13 @@ import threading
 import time
 import urllib.error
 import urllib.parse
-import urllib.request
 from collections import OrderedDict
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
 from typing import Any, Mapping
+
+import urllib3
 
 DEFAULT_TIMEOUT_SECONDS = 20
 DEFAULT_FULLTEXT_TIMEOUT_SECONDS = 90
@@ -84,6 +86,13 @@ class RequestFailure(Exception):
         self.retry_after_seconds = retry_after_seconds
 
 
+@dataclass(frozen=True)
+class _PreparedRequest:
+    method: str
+    full_url: str
+    headers: Mapping[str, str]
+
+
 class HttpTransport:
     """Minimal HTTP transport with short-lived in-memory caching."""
 
@@ -104,6 +113,7 @@ class HttpTransport:
         self._cache: OrderedDict[tuple[str, str, tuple[tuple[str, str], ...]], tuple[float, dict[str, Any]]] = OrderedDict()
         self._cache_body_bytes = 0
         self._cache_lock = threading.RLock()
+        self._pool = urllib3.PoolManager()
 
     def _build_cache_key(
         self,
@@ -199,6 +209,113 @@ class HttpTransport:
         _expires_at, response = cached_entry
         self._cache_body_bytes = max(0, self._cache_body_bytes - self._cache_body_size(response))
 
+    def _perform_request(self, request: _PreparedRequest, *, timeout: int) -> Any:
+        return self._pool.request(
+            request.method,
+            request.full_url,
+            headers=dict(request.headers),
+            timeout=urllib3.Timeout(connect=timeout, read=timeout),
+            preload_content=False,
+            retries=False,
+            redirect=True,
+        )
+
+    def _handle_http_failure(
+        self,
+        *,
+        method: str,
+        request_url: str,
+        error_url: str,
+        status_code: int,
+        body: bytes,
+        headers_map: Mapping[str, str],
+        request_started_at: float,
+        attempt: int,
+        retry_on_rate_limit: bool,
+        attempts_remaining: int,
+        max_rate_limit_wait_seconds: int,
+        retry_on_transient: bool,
+        transient_attempts_remaining: int,
+        transient_attempts_made: int,
+        transient_backoff_base_seconds: float,
+    ) -> tuple[bool, int, int, int]:
+        retry_after_seconds = parse_retry_after_seconds(headers_map.get("retry-after"))
+        rate_limit_wait_seconds = retry_after_seconds
+        if rate_limit_wait_seconds is None:
+            fallback_wait_seconds = max(0.0, transient_backoff_base_seconds)
+            if fallback_wait_seconds <= max_rate_limit_wait_seconds:
+                rate_limit_wait_seconds = fallback_wait_seconds
+        if (
+            status_code == 429
+            and retry_on_rate_limit
+            and attempts_remaining > 0
+            and rate_limit_wait_seconds is not None
+            and rate_limit_wait_seconds <= max_rate_limit_wait_seconds
+        ):
+            logger.debug(
+                (
+                    "http_request_retry method=%s url=%s status=%s elapsed_ms=%s "
+                    "retry_after_seconds=%s attempt=%s reason=rate_limit"
+                ),
+                method.upper(),
+                redact_url_for_cache(error_url),
+                status_code,
+                round((time.monotonic() - request_started_at) * 1000, 3),
+                retry_after_seconds,
+                attempt,
+            )
+            attempts_remaining -= 1
+            time.sleep(max(0.0, rate_limit_wait_seconds))
+            return True, attempts_remaining, transient_attempts_remaining, transient_attempts_made
+        if retry_on_transient and transient_attempts_remaining > 0 and is_transient_http_status(status_code):
+            logger.debug(
+                (
+                    "http_request_retry method=%s url=%s status=%s elapsed_ms=%s "
+                    "retry_after_seconds=%s attempt=%s reason=transient_http"
+                ),
+                method.upper(),
+                redact_url_for_cache(error_url),
+                status_code,
+                round((time.monotonic() - request_started_at) * 1000, 3),
+                retry_after_seconds,
+                attempt,
+            )
+            transient_attempts_remaining -= 1
+            time.sleep(transient_backoff_base_seconds * (2**transient_attempts_made))
+            transient_attempts_made += 1
+            return True, attempts_remaining, transient_attempts_remaining, transient_attempts_made
+        logger.debug(
+            "http_request_failure method=%s url=%s status=%s elapsed_ms=%s retry_after_seconds=%s attempt=%s",
+            method.upper(),
+            redact_url_for_cache(error_url),
+            status_code,
+            round((time.monotonic() - request_started_at) * 1000, 3),
+            retry_after_seconds,
+            attempt,
+        )
+        raise RequestFailure(
+            status_code,
+            build_http_error_message(status_code, request_url, retry_after_seconds=retry_after_seconds),
+            body=body,
+            headers=headers_map,
+            url=redact_url_for_cache(error_url),
+            retry_after_seconds=retry_after_seconds,
+        )
+
+    def _release_response(self, response: Any) -> None:
+        release_conn = getattr(response, "release_conn", None)
+        if callable(release_conn):
+            release_conn()
+            return
+        close = getattr(response, "close", None)
+        if callable(close):
+            close()
+
+    def _close_response(self, response: Any) -> None:
+        close = getattr(response, "close", None)
+        if callable(close):
+            close()
+
     def request(
         self,
         method: str,
@@ -243,33 +360,61 @@ class HttpTransport:
                 0.0,
                 attempt,
             )
-            request = urllib.request.Request(url=url, headers=request_headers, method=method)
+            request = _PreparedRequest(method=method.upper(), full_url=url, headers=dict(request_headers))
+            response = None
+            response_reusable = False
             try:
-                with urllib.request.urlopen(request, timeout=timeout) as response:
-                    response_url = response.geturl() or url
-                    headers_map = {key.lower(): value for key, value in response.headers.items()}
-                    payload = self._read_response_body(
-                        response,
-                        status_code=response.status,
-                        url=response_url,
-                        content_encoding=headers_map.get("content-encoding"),
+                response = self._perform_request(request, timeout=timeout)
+                response_url = response.geturl() or url
+                headers_map = {str(key).lower(): str(value) for key, value in response.headers.items()}
+                payload = self._read_response_body(
+                    response,
+                    status_code=response.status,
+                    url=response_url,
+                    content_encoding=headers_map.get("content-encoding"),
+                )
+                response_reusable = True
+                if int(response.status) >= 400:
+                    (
+                        should_retry,
+                        attempts_remaining,
+                        transient_attempts_remaining,
+                        transient_attempts_made,
+                    ) = self._handle_http_failure(
+                        method=method,
+                        request_url=url,
+                        error_url=response_url,
+                        status_code=int(response.status),
+                        body=payload,
+                        headers_map=headers_map,
+                        request_started_at=request_started_at,
+                        attempt=attempt,
+                        retry_on_rate_limit=retry_on_rate_limit,
+                        attempts_remaining=attempts_remaining,
+                        max_rate_limit_wait_seconds=max_rate_limit_wait_seconds,
+                        retry_on_transient=retry_on_transient,
+                        transient_attempts_remaining=transient_attempts_remaining,
+                        transient_attempts_made=transient_attempts_made,
+                        transient_backoff_base_seconds=transient_backoff_base_seconds,
                     )
-                    response_payload = {
-                        "status_code": response.status,
-                        "headers": headers_map,
-                        "body": payload,
-                        "url": redact_url_for_cache(response_url),
-                    }
-                    logger.debug(
-                        "http_request_success method=%s url=%s status=%s elapsed_ms=%s attempt=%s",
-                        method.upper(),
-                        response_payload["url"],
-                        response.status,
-                        round((time.monotonic() - request_started_at) * 1000, 3),
-                        attempt,
-                    )
-                    self._store_cached_response(cache_key, response_payload)
-                    return response_payload
+                    if should_retry:
+                        continue
+                response_payload = {
+                    "status_code": int(response.status),
+                    "headers": headers_map,
+                    "body": payload,
+                    "url": redact_url_for_cache(response_url),
+                }
+                logger.debug(
+                    "http_request_success method=%s url=%s status=%s elapsed_ms=%s attempt=%s",
+                    method.upper(),
+                    response_payload["url"],
+                    response.status,
+                    round((time.monotonic() - request_started_at) * 1000, 3),
+                    attempt,
+                )
+                self._store_cached_response(cache_key, response_payload)
+                return response_payload
             except urllib.error.HTTPError as exc:
                 try:
                     error_url = exc.geturl() or url
@@ -280,74 +425,36 @@ class HttpTransport:
                         url=error_url,
                         content_encoding=headers_map.get("content-encoding"),
                     )
-                    retry_after_seconds = parse_retry_after_seconds(headers_map.get("retry-after"))
-                    rate_limit_wait_seconds = retry_after_seconds
-                    if rate_limit_wait_seconds is None:
-                        fallback_wait_seconds = max(0.0, transient_backoff_base_seconds)
-                        if fallback_wait_seconds <= max_rate_limit_wait_seconds:
-                            rate_limit_wait_seconds = fallback_wait_seconds
-                    if (
-                        exc.code == 429
-                        and retry_on_rate_limit
-                        and attempts_remaining > 0
-                        and rate_limit_wait_seconds is not None
-                        and rate_limit_wait_seconds <= max_rate_limit_wait_seconds
-                    ):
-                        logger.debug(
-                            (
-                                "http_request_retry method=%s url=%s status=%s elapsed_ms=%s "
-                                "retry_after_seconds=%s attempt=%s reason=rate_limit"
-                            ),
-                            method.upper(),
-                            redact_url_for_cache(error_url),
-                            exc.code,
-                            round((time.monotonic() - request_started_at) * 1000, 3),
-                            retry_after_seconds,
-                            attempt,
-                        )
-                        attempts_remaining -= 1
-                        time.sleep(max(0.0, rate_limit_wait_seconds))
-                        continue
-                    if retry_on_transient and transient_attempts_remaining > 0 and is_transient_http_status(exc.code):
-                        logger.debug(
-                            (
-                                "http_request_retry method=%s url=%s status=%s elapsed_ms=%s "
-                                "retry_after_seconds=%s attempt=%s reason=transient_http"
-                            ),
-                            method.upper(),
-                            redact_url_for_cache(error_url),
-                            exc.code,
-                            round((time.monotonic() - request_started_at) * 1000, 3),
-                            retry_after_seconds,
-                            attempt,
-                        )
-                        transient_attempts_remaining -= 1
-                        time.sleep(transient_backoff_base_seconds * (2**transient_attempts_made))
-                        transient_attempts_made += 1
-                        continue
-                    logger.debug(
-                        "http_request_failure method=%s url=%s status=%s elapsed_ms=%s retry_after_seconds=%s attempt=%s",
-                        method.upper(),
-                        redact_url_for_cache(error_url),
-                        exc.code,
-                        round((time.monotonic() - request_started_at) * 1000, 3),
-                        retry_after_seconds,
-                        attempt,
-                    )
-                    raise RequestFailure(
-                        exc.code,
-                        build_http_error_message(exc.code, url, retry_after_seconds=retry_after_seconds),
+                    (
+                        should_retry,
+                        attempts_remaining,
+                        transient_attempts_remaining,
+                        transient_attempts_made,
+                    ) = self._handle_http_failure(
+                        method=method,
+                        request_url=url,
+                        error_url=error_url,
+                        status_code=int(exc.code),
                         body=body,
-                        headers=headers_map,
-                        url=redact_url_for_cache(error_url),
-                        retry_after_seconds=retry_after_seconds,
-                    ) from exc
+                        headers_map=headers_map,
+                        request_started_at=request_started_at,
+                        attempt=attempt,
+                        retry_on_rate_limit=retry_on_rate_limit,
+                        attempts_remaining=attempts_remaining,
+                        max_rate_limit_wait_seconds=max_rate_limit_wait_seconds,
+                        retry_on_transient=retry_on_transient,
+                        transient_attempts_remaining=transient_attempts_remaining,
+                        transient_attempts_made=transient_attempts_made,
+                        transient_backoff_base_seconds=transient_backoff_base_seconds,
+                    )
+                    if should_retry:
+                        continue
                 finally:
                     exc.close()
-            except urllib.error.URLError as exc:
-                if retry_on_transient and transient_attempts_remaining > 0 and is_transient_url_error(exc):
+            except (urllib3.exceptions.HTTPError, urllib.error.URLError) as exc:
+                if retry_on_transient and transient_attempts_remaining > 0 and is_timeout_network_error(exc):
                     logger.debug(
-                        "http_request_retry method=%s url=%s status=%s elapsed_ms=%s retry_after_seconds=%s attempt=%s reason=urlerror_timeout",
+                        "http_request_retry method=%s url=%s status=%s elapsed_ms=%s retry_after_seconds=%s attempt=%s reason=pool_timeout",
                         method.upper(),
                         redacted_url,
                         None,
@@ -370,7 +477,7 @@ class HttpTransport:
                 )
                 raise RequestFailure(
                     None,
-                    f"Network error for {redact_url_for_cache(url)}: {exc.reason}",
+                    f"Network error for {redact_url_for_cache(url)}: {build_network_error_detail(exc)}",
                     url=redact_url_for_cache(url),
                 ) from exc
             except (socket.timeout, TimeoutError) as exc:
@@ -402,6 +509,12 @@ class HttpTransport:
                     f"Network error for {redact_url_for_cache(url)}: {exc}",
                     url=redact_url_for_cache(url),
                 ) from exc
+            finally:
+                if response is not None:
+                    if response_reusable:
+                        self._release_response(response)
+                    else:
+                        self._close_response(response)
 
     def _read_response_body(
         self,
@@ -417,9 +530,9 @@ class HttpTransport:
                 self.max_response_bytes,
                 self.max_response_bytes * DEFAULT_MAX_COMPRESSED_BODY_MULTIPLIER,
             )
-            payload = response.read(max_compressed_body_bytes + 1)
+            payload = self._read_raw_bytes(response, max_compressed_body_bytes + 1)
         else:
-            payload = response.read(self.max_response_bytes + 1)
+            payload = self._read_raw_bytes(response, self.max_response_bytes + 1)
         if not isinstance(payload, (bytes, bytearray)):
             payload = bytes(payload or b"")
         body = bytes(payload)
@@ -448,6 +561,12 @@ class HttpTransport:
                 url=redact_url_for_cache(url),
             )
         return body
+
+    def _read_raw_bytes(self, response: Any, max_bytes: int) -> bytes:
+        try:
+            return response.read(max_bytes, decode_content=False, cache_content=False)
+        except TypeError:
+            return response.read(max_bytes)
 
 
 def redact_url_for_cache(url: str) -> str:
@@ -499,9 +618,18 @@ def is_transient_http_status(status_code: int | None) -> bool:
     return status_code is not None and 500 <= status_code < 600
 
 
-def is_transient_url_error(exc: urllib.error.URLError) -> bool:
+def is_timeout_network_error(exc: Exception) -> bool:
+    if isinstance(exc, urllib3.exceptions.TimeoutError):
+        return True
     reason = getattr(exc, "reason", None)
-    return isinstance(reason, (socket.timeout, TimeoutError))
+    return isinstance(reason, (socket.timeout, TimeoutError, urllib3.exceptions.TimeoutError))
+
+
+def build_network_error_detail(exc: Exception) -> str:
+    reason = getattr(exc, "reason", None)
+    if reason:
+        return str(reason)
+    return str(exc)
 
 
 def is_xml_content_type(content_type: str | None) -> bool:
