@@ -43,7 +43,7 @@ jobs:
           python -m pip install .
 
       - name: Run unit suite
-        run: python -m unittest discover -s tests/unit -q
+        run: python -m unittest discover -s tests/unit -t . -q
 
   integration:
     runs-on: ubuntu-latest
