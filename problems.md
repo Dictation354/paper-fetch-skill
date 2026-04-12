@@ -19,7 +19,6 @@
 
 ### 优先级 P2（体验 / 结果质量）
 
-- **HTTP 响应缓存没有总体内存上限**（`src/paper_fetch/http.py:98`）。默认 128 条 × 1 MiB cacheable body = 最多 ~128 MiB 常驻；长 MCP session 要注意。加一个累加字节上限，超过时按 LRU 淘汰。
 - **`Asset.path` / `caption` / `url` 类型不统一**（`src/paper_fetch/models.py:204-211`），一部分 `str | None`、一部分默认 `""`。统一成 `str | None`，渲染层判空更直接。
 - **`_try_official_provider` 往 `raw_payload.metadata` 里塞 `downloaded_assets` / `asset_failures`**（`src/paper_fetch/service.py:494-495`）是隐式共享状态。由调用方以返回值传递更清晰。
 
@@ -109,6 +108,7 @@
 - ✅ CLI 退出码已细化为 `ambiguous=2`、`no_access=3`、`rate_limited=4`，其余失败保留 `1`
 - ✅ CLI `modes` 组合逻辑已收敛到 `_compute_modes(args)`，并补了为何文件输出/`--save-markdown` 需要 `article` 模式的注释
 - ✅ CLI Markdown 资产链接改成“占位符渲染 -> 定点替换相对路径”；不会再对整段正文做绝对路径字符串替换
+- ✅ `HttpTransport` 的进程内 GET 缓存已新增总体字节上限；超过预算时按 LRU 淘汰旧响应，避免长会话常驻 ~128 MiB 文本缓存
 - ✅ `HttpTransport` 现在默认发送 `Accept-Encoding: gzip`，并会用标准库透明解压 gzip 响应后再执行响应体大小限制
 - ✅ `extract_full_size_figure_image_url()` 不再对全部候选排序；命中 `/full/` 或 `springernature.com` 候选时会提前返回
 - ✅ `fetch_paper` 在 metadata 模式下不再伪造空 `Metadata()`；只返回真实的 `article.metadata`

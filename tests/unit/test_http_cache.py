@@ -251,6 +251,35 @@ class HttpTransportCacheTests(unittest.TestCase):
         self.assertEqual(call_count, 2)
         self.assertEqual(len(transport._cache), 0)
 
+    def test_total_cache_byte_cap_evicts_oldest_entries(self) -> None:
+        transport = http_module.HttpTransport(
+            cache_ttl=30,
+            cache_capacity=8,
+            max_cacheable_body_bytes=8,
+            max_total_cache_bytes=4,
+        )
+        call_count = 0
+
+        def fake_urlopen(request, timeout=20):
+            nonlocal call_count
+            call_count += 1
+            payload = b"abc" if request.full_url.endswith("/one") else b"de"
+            return FakeHTTPResponse(payload, request.full_url, headers={"content-type": "text/plain"})
+
+        with mock.patch.object(http_module.urllib.request, "urlopen", side_effect=fake_urlopen):
+            first = transport.request("GET", "https://example.test/one", headers={"Accept": "text/plain"})
+            second = transport.request("GET", "https://example.test/two", headers={"Accept": "text/plain"})
+            cached_second = transport.request("GET", "https://example.test/two", headers={"Accept": "text/plain"})
+            third_first = transport.request("GET", "https://example.test/one", headers={"Accept": "text/plain"})
+
+        self.assertEqual(first["body"], b"abc")
+        self.assertEqual(second["body"], b"de")
+        self.assertEqual(cached_second["body"], b"de")
+        self.assertEqual(third_first["body"], b"abc")
+        self.assertEqual(call_count, 3)
+        self.assertEqual(len(transport._cache), 1)
+        self.assertLessEqual(transport._cache_body_bytes, 4)
+
     def test_oversized_response_body_raises_and_is_not_cached(self) -> None:
         transport = http_module.HttpTransport(cache_ttl=30, cache_capacity=128, max_response_bytes=4)
         call_count = 0

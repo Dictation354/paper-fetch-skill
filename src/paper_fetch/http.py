@@ -21,6 +21,7 @@ DEFAULT_FULLTEXT_TIMEOUT_SECONDS = 90
 DEFAULT_CACHE_TTL_SECONDS = 30
 DEFAULT_CACHE_CAPACITY = 128
 DEFAULT_MAX_CACHEABLE_BODY_BYTES = 1024 * 1024
+DEFAULT_MAX_TOTAL_CACHE_BYTES = 16 * 1024 * 1024
 DEFAULT_MAX_RESPONSE_BYTES = 32 * 1024 * 1024
 DEFAULT_MAX_COMPRESSED_BODY_MULTIPLIER = 8
 DEFAULT_TRANSIENT_RETRIES = 2
@@ -90,13 +91,16 @@ class HttpTransport:
         cache_ttl: int = DEFAULT_CACHE_TTL_SECONDS,
         cache_capacity: int = DEFAULT_CACHE_CAPACITY,
         max_cacheable_body_bytes: int = DEFAULT_MAX_CACHEABLE_BODY_BYTES,
+        max_total_cache_bytes: int = DEFAULT_MAX_TOTAL_CACHE_BYTES,
         max_response_bytes: int = DEFAULT_MAX_RESPONSE_BYTES,
     ) -> None:
         self.cache_ttl = max(0, int(cache_ttl))
         self.cache_capacity = max(0, int(cache_capacity))
         self.max_cacheable_body_bytes = max(0, int(max_cacheable_body_bytes))
+        self.max_total_cache_bytes = max(0, int(max_total_cache_bytes))
         self.max_response_bytes = max(0, int(max_response_bytes))
         self._cache: OrderedDict[tuple[str, str, tuple[tuple[str, str], ...]], tuple[float, dict[str, Any]]] = OrderedDict()
+        self._cache_body_bytes = 0
         self._cache_lock = threading.RLock()
 
     def _build_cache_key(
@@ -144,7 +148,7 @@ class HttpTransport:
                 return None
             expires_at, response = cached_entry
             if expires_at <= time.monotonic():
-                self._cache.pop(cache_key, None)
+                self._discard_cache_entry(cache_key)
                 return None
             self._cache.move_to_end(cache_key)
             return self._clone_response(response)
@@ -156,11 +160,19 @@ class HttpTransport:
     ) -> None:
         if cache_key is None or not self._is_cacheable_response(response):
             return
+        cloned_response = self._clone_response(response)
+        body_size = self._cache_body_size(cloned_response)
+        if self.max_total_cache_bytes > 0 and body_size > self.max_total_cache_bytes:
+            return
         with self._cache_lock:
-            self._cache[cache_key] = (time.monotonic() + self.cache_ttl, self._clone_response(response))
+            self._discard_cache_entry(cache_key)
+            self._cache[cache_key] = (time.monotonic() + self.cache_ttl, cloned_response)
+            self._cache_body_bytes += body_size
             self._cache.move_to_end(cache_key)
-            while len(self._cache) > self.cache_capacity:
-                self._cache.popitem(last=False)
+            while len(self._cache) > self.cache_capacity or (
+                self.max_total_cache_bytes > 0 and self._cache_body_bytes > self.max_total_cache_bytes
+            ):
+                self._discard_cache_entry(next(iter(self._cache)))
 
     def _is_cacheable_response(self, response: Mapping[str, Any]) -> bool:
         if self.max_cacheable_body_bytes <= 0:
@@ -170,6 +182,20 @@ class HttpTransport:
             return False
         content_type = str((response.get("headers") or {}).get("content-type") or "")
         return is_textual_content_type(content_type)
+
+    def _cache_body_size(self, response: Mapping[str, Any]) -> int:
+        body = response.get("body", b"")
+        return len(body) if isinstance(body, (bytes, bytearray)) else 0
+
+    def _discard_cache_entry(
+        self,
+        cache_key: tuple[str, str, tuple[tuple[str, str], ...]],
+    ) -> None:
+        cached_entry = self._cache.pop(cache_key, None)
+        if cached_entry is None:
+            return
+        _expires_at, response = cached_entry
+        self._cache_body_bytes = max(0, self._cache_body_bytes - self._cache_body_size(response))
 
     def request(
         self,
