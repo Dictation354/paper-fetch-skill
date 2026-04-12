@@ -6,10 +6,11 @@ from dataclasses import dataclass
 import logging
 from pathlib import Path
 import time
-from typing import Any, Mapping
+from typing import Any, Mapping, cast
 
 from .config import build_runtime_env
 from .http import HttpTransport, RequestFailure
+from .metadata_types import ProviderMetadata
 from .utils import (
     build_output_path,
     dedupe_authors,
@@ -64,7 +65,7 @@ class PaperFetchFailure(Exception):
 class RouteProbeResult:
     provider: str
     state: str
-    metadata: dict[str, Any] | None = None
+    metadata: ProviderMetadata | None = None
 
 
 @dataclass(frozen=True)
@@ -95,7 +96,10 @@ def finalize_article(article: ArticleModel, *, warnings: list[str] | None = None
     return article
 
 
-def merge_primary_secondary_metadata(primary: Mapping[str, Any] | None, secondary: Mapping[str, Any] | None) -> dict[str, Any]:
+def merge_primary_secondary_metadata(
+    primary: Mapping[str, Any] | None,
+    secondary: Mapping[str, Any] | None,
+) -> ProviderMetadata:
     merged = dict(secondary or {})
     merged.update(primary or {})
     scalar_keys = ("doi", "title", "journal_title", "published", "landing_page_url", "abstract", "publisher")
@@ -152,10 +156,10 @@ def merge_primary_secondary_metadata(primary: Mapping[str, Any] | None, secondar
     for key in scalar_keys:
         if merged.get(key) == "":
             merged[key] = None
-    return merged
+    return cast(ProviderMetadata, merged)
 
 
-def metadata_from_resolution(resolved: ResolvedQuery) -> dict[str, Any]:
+def metadata_from_resolution(resolved: ResolvedQuery) -> ProviderMetadata:
     return {
         "doi": resolved.doi,
         "title": resolved.title,
@@ -279,12 +283,12 @@ def fetch_metadata_for_resolved_query(
     *,
     clients: Mapping[str, Any],
     strategy: FetchStrategy,
-) -> tuple[dict[str, Any], str | None, list[str]]:
-    official_metadata: dict[str, Any] | None = None
-    crossref_metadata: dict[str, Any] | None = None
+) -> tuple[ProviderMetadata, str | None, list[str]]:
+    official_metadata: ProviderMetadata | None = None
+    crossref_metadata: ProviderMetadata | None = None
     source_trail: list[str] = []
     provider_name: str | None = None
-    routing_metadata: dict[str, Any] | None = None
+    routing_metadata: ProviderMetadata | None = None
     crossref_is_public_source = crossref_allowed_as_source(strategy)
     crossref_client = clients.get("crossref")
 

@@ -8,6 +8,7 @@ from typing import Any, Mapping
 
 from ..config import build_user_agent
 from ..http import DEFAULT_TIMEOUT_SECONDS, HttpTransport, RequestFailure
+from ..metadata_types import CrossrefMetadata, FulltextLink, ReferenceMetadata
 from ..publisher_identity import normalize_doi
 from ..utils import (
     date_parts_to_string,
@@ -38,7 +39,7 @@ class CrossrefClient(ProviderClient):
             params["mailto"] = self.mailto
         return params
 
-    def fetch_metadata(self, query: Mapping[str, str | None]) -> dict[str, Any]:
+    def fetch_metadata(self, query: Mapping[str, str | None]) -> CrossrefMetadata:
         doi = normalize_doi(query.get("doi"))
         article_title = (query.get("article_title") or "").strip()
         journal_title = (query.get("journal_title") or "").strip()
@@ -77,7 +78,7 @@ class CrossrefClient(ProviderClient):
         *,
         journal_title: str | None = None,
         rows: int = 5,
-    ) -> list[dict[str, Any]]:
+    ) -> list[CrossrefMetadata]:
         normalized_title = article_title.strip()
         if not normalized_title:
             raise ProviderFailure("not_supported", "Crossref bibliographic search requires a non-empty title query.")
@@ -111,8 +112,8 @@ class CrossrefClient(ProviderClient):
             return []
         return [self._normalize_message(item, response["url"]) for item in items if isinstance(item, dict)]
 
-    def _normalize_message(self, message: Mapping[str, Any], source_url: str) -> dict[str, Any]:
-        links = []
+    def _normalize_message(self, message: Mapping[str, Any], source_url: str) -> CrossrefMetadata:
+        links: list[FulltextLink] = []
         for item in message.get("link", []) or []:
             if not isinstance(item, dict):
                 continue
@@ -149,7 +150,7 @@ class CrossrefClient(ProviderClient):
                 name = str(author.get("name")).strip()
             if name:
                 authors.append(name)
-        references = []
+        references: list[ReferenceMetadata] = []
         for reference in message.get("reference", []) or []:
             if not isinstance(reference, dict):
                 continue

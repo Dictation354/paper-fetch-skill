@@ -1,0 +1,42 @@
+"""Internal metadata type definitions for provider payloads."""
+
+from __future__ import annotations
+
+from typing import TypedDict
+
+
+class FulltextLink(TypedDict, total=False):
+    url: str
+    content_type: str | None
+    content_version: str | None
+    intended_application: str | None
+
+
+class ReferenceMetadata(TypedDict, total=False):
+    raw: str
+    doi: str | None
+    title: str | None
+    year: str | None
+
+
+class ProviderMetadata(TypedDict, total=False):
+    status: str
+    provider: str
+    official_provider: bool
+    source_url: str
+    doi: str | None
+    title: str | None
+    journal_title: str | None
+    publisher: str | None
+    authors: list[str]
+    keywords: list[str]
+    abstract: str | None
+    published: str | None
+    landing_page_url: str | None
+    license_urls: list[str]
+    fulltext_links: list[FulltextLink]
+    references: list[ReferenceMetadata]
+
+
+class CrossrefMetadata(ProviderMetadata, total=False):
+    pass
