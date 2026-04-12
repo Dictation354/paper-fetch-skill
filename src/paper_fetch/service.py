@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import logging
 from pathlib import Path
+import time
 from typing import Any, Mapping
 
 from .config import build_runtime_env
@@ -47,6 +49,7 @@ PUBLIC_SOURCE_BY_ARTICLE_SOURCE = {
     "crossref_meta": "crossref_meta",
 }
 HTML_PROVIDER_ALIASES = {"html", "html_generic", "html_fallback"}
+logger = logging.getLogger("paper_fetch.service")
 
 
 class PaperFetchFailure(Exception):
@@ -469,6 +472,15 @@ def _try_official_provider(
         return None
 
     extend_unique(source_trail, [f"fulltext:{provider_name}_attempt"])
+    attempt_started_at = time.monotonic()
+    logger.debug(
+        "official_provider_attempt provider=%s url=%s status=%s elapsed_ms=%s attempt=%s",
+        provider_name,
+        safe_text(metadata.get("landing_page_url")) or None,
+        "attempt",
+        0.0,
+        1,
+    )
     try:
         raw_payload = provider_client.fetch_raw_fulltext(doi, metadata)
         extend_unique(source_trail, [f"fulltext:{provider_name}_raw_ok"])
@@ -501,15 +513,47 @@ def _try_official_provider(
         )
         extend_unique(source_trail, article.quality.source_trail)
         if article.quality.has_fulltext and article.sections:
+            logger.debug(
+                "official_provider_result provider=%s url=%s status=%s elapsed_ms=%s attempt=%s",
+                provider_name,
+                raw_payload.source_url,
+                "success",
+                round((time.monotonic() - attempt_started_at) * 1000, 3),
+                1,
+            )
             extend_unique(source_trail, [f"fulltext:{provider_name}_article_ok"])
             return finalize_article(article, warnings=warnings, source_trail=source_trail)
         if article.quality.has_fulltext and not article.sections:
+            logger.debug(
+                "official_provider_result provider=%s url=%s status=%s elapsed_ms=%s attempt=%s",
+                provider_name,
+                raw_payload.source_url,
+                "abstract_only",
+                round((time.monotonic() - attempt_started_at) * 1000, 3),
+                1,
+            )
             warnings.append("Official full text only contained abstract-level content; continuing to HTML fallback.")
             extend_unique(source_trail, [f"fulltext:{provider_name}_abstract_only"])
         else:
+            logger.debug(
+                "official_provider_result provider=%s url=%s status=%s elapsed_ms=%s attempt=%s",
+                provider_name,
+                raw_payload.source_url,
+                "not_usable",
+                round((time.monotonic() - attempt_started_at) * 1000, 3),
+                1,
+            )
             extend_unique(source_trail, [f"fulltext:{provider_name}_not_usable"])
         extend_unique(warnings, article.quality.warnings)
     except ProviderFailure as exc:
+        logger.debug(
+            "official_provider_result provider=%s url=%s status=%s elapsed_ms=%s attempt=%s",
+            provider_name,
+            safe_text(metadata.get("landing_page_url")) or None,
+            exc.code,
+            round((time.monotonic() - attempt_started_at) * 1000, 3),
+            1,
+        )
         warnings.append(exc.message)
         extend_unique(source_trail, [source_trail_for_failure("fulltext", provider_name, exc)])
     return None
@@ -534,6 +578,15 @@ def _try_html_fallback(
         return None
 
     extend_unique(source_trail, ["fallback:html_attempt"])
+    attempt_started_at = time.monotonic()
+    logger.debug(
+        "html_fallback_attempt provider=%s url=%s status=%s elapsed_ms=%s attempt=%s",
+        "html_generic",
+        landing_url,
+        "attempt",
+        0.0,
+        1,
+    )
     try:
         article = html_client.fetch_article_model(
             landing_url,
@@ -543,13 +596,37 @@ def _try_html_fallback(
             asset_profile=strategy.asset_profile,
         )
         if article.quality.has_fulltext:
+            logger.debug(
+                "html_fallback_result provider=%s url=%s status=%s elapsed_ms=%s attempt=%s",
+                "html_generic",
+                landing_url,
+                "success",
+                round((time.monotonic() - attempt_started_at) * 1000, 3),
+                1,
+            )
             extend_unique(source_trail, article.quality.source_trail)
             extend_unique(source_trail, ["fallback:html_ok"])
             return finalize_article(article, warnings=warnings, source_trail=source_trail)
+        logger.debug(
+            "html_fallback_result provider=%s url=%s status=%s elapsed_ms=%s attempt=%s",
+            "html_generic",
+            landing_url,
+            "not_usable",
+            round((time.monotonic() - attempt_started_at) * 1000, 3),
+            1,
+        )
         extend_unique(warnings, article.quality.warnings)
         extend_unique(source_trail, article.quality.source_trail)
         extend_unique(source_trail, ["fallback:html_not_usable"])
     except ProviderFailure as exc:
+        logger.debug(
+            "html_fallback_result provider=%s url=%s status=%s elapsed_ms=%s attempt=%s",
+            "html_generic",
+            landing_url,
+            exc.code,
+            round((time.monotonic() - attempt_started_at) * 1000, 3),
+            1,
+        )
         warnings.append(exc.message)
         extend_unique(source_trail, ["fallback:html_fail"])
     return None

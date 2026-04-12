@@ -164,6 +164,23 @@ class HttpTransportCacheTests(unittest.TestCase):
 
         self.assertEqual(captured_headers[0]["Accept-encoding"], "gzip")
 
+    def test_http_transport_emits_debug_logs_with_url_status_and_elapsed_time(self) -> None:
+        transport = http_module.HttpTransport(cache_ttl=0, cache_capacity=0)
+
+        def fake_urlopen(request, timeout=20):
+            return FakeHTTPResponse(b"ok", request.full_url)
+
+        with (
+            mock.patch.object(http_module.urllib.request, "urlopen", side_effect=fake_urlopen),
+            self.assertLogs("paper_fetch.http", level="DEBUG") as captured_logs,
+        ):
+            transport.request("GET", "https://example.test/article", headers={"Accept": "text/plain"})
+
+        rendered_logs = "\n".join(captured_logs.output)
+        self.assertIn("url=https://example.test/article", rendered_logs)
+        self.assertIn("status=200", rendered_logs)
+        self.assertIn("elapsed_ms=", rendered_logs)
+
     def test_explicit_accept_encoding_is_respected(self) -> None:
         transport = http_module.HttpTransport(cache_ttl=0, cache_capacity=0)
         captured_headers: list[dict[str, str]] = []

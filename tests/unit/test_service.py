@@ -81,6 +81,64 @@ class ServiceTests(unittest.TestCase):
         self.assertTrue(article.quality.has_fulltext)
         self.assertIn("fulltext:elsevier_article_ok", article.quality.source_trail)
 
+    def test_fetch_paper_model_emits_service_debug_logs_for_official_provider(self) -> None:
+        resolved = paper_fetch.ResolvedQuery(
+            query="10.1016/test",
+            query_kind="doi",
+            doi="10.1016/test",
+            provider_hint="elsevier",
+            confidence=1.0,
+        )
+        official_article = sample_article()
+        original_resolve = paper_fetch.resolve_paper
+        try:
+            paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
+            with self.assertLogs("paper_fetch.service", level="DEBUG") as captured_logs:
+                fetch_paper_model(
+                    "10.1016/test",
+                    clients={
+                        "elsevier": StubProvider(
+                            metadata={
+                                "provider": "elsevier",
+                                "official_provider": True,
+                                "doi": "10.1016/test",
+                                "title": "Example Article",
+                                "landing_page_url": "https://example.test/article",
+                                "fulltext_links": [],
+                                "references": [],
+                            },
+                            raw_payload=RawFulltextPayload(
+                                provider="elsevier",
+                                source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest",
+                                content_type="text/xml",
+                                body=b"<xml/>",
+                                metadata={"reason": "Downloaded full text from the official Elsevier API."},
+                            ),
+                            article=official_article,
+                        ),
+                        "crossref": StubProvider(
+                            metadata={
+                                "provider": "crossref",
+                                "official_provider": False,
+                                "doi": "10.1016/test",
+                                "title": "Example Article",
+                                "authors": ["Alice Example"],
+                                "landing_page_url": "https://example.test/article",
+                                "fulltext_links": [],
+                                "references": [],
+                            }
+                        ),
+                    },
+                    html_client=StubHtmlClient(error=paper_fetch.ProviderFailure("no_result", "HTML should not be used.")),
+                )
+        finally:
+            paper_fetch.resolve_paper = original_resolve
+
+        rendered_logs = "\n".join(captured_logs.output)
+        self.assertIn("provider=elsevier", rendered_logs)
+        self.assertIn("status=success", rendered_logs)
+        self.assertIn("elapsed_ms=", rendered_logs)
+
     def test_fetch_paper_model_uses_official_pipeline_for_resolved_elsevier_url(self) -> None:
         resolved = paper_fetch.ResolvedQuery(
             query="https://linkinghub.elsevier.com/retrieve/pii/S0034425725000525",

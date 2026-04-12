@@ -131,6 +131,7 @@ client 的 Accept / Authorization 不会互相污染。
 
 - 缓存 key 会对敏感 query 参数和鉴权 header 做脱敏，不保留明文 `api_key` / token / `mailto`
 - 只有小体积文本响应会进入缓存；PDF 和其他二进制正文不会缓存
+- 开启 `paper_fetch.*` 的 `DEBUG` 日志时，会额外看到 HTTP / official provider / HTML fallback 的 url、状态、耗时和重试事件，便于 live 排障
 - 缓存读写由 `threading.RLock` 保护；如果你自己在外面并发调多个 fetch，主要风险改成 provider 速率限制，而不是进程内 cache race
 
 ### HTTP 护栏与重试
