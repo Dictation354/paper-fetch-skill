@@ -15,7 +15,7 @@ from collections import OrderedDict
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
-from typing import Any, Mapping
+from typing import Any, Iterator, Mapping
 
 import urllib3
 
@@ -618,17 +618,39 @@ def is_transient_http_status(status_code: int | None) -> bool:
     return status_code is not None and 500 <= status_code < 600
 
 
+def iter_network_error_causes(exc: Exception) -> Iterator[BaseException]:
+    pending: list[BaseException] = [exc]
+    seen: set[int] = set()
+    while pending:
+        current = pending.pop()
+        current_id = id(current)
+        if current_id in seen:
+            continue
+        seen.add(current_id)
+        yield current
+        for attribute_name in ("reason", "__cause__", "__context__"):
+            nested = getattr(current, attribute_name, None)
+            if isinstance(nested, BaseException):
+                pending.append(nested)
+        for item in getattr(current, "args", ()):
+            if isinstance(item, BaseException):
+                pending.append(item)
+
+
 def is_timeout_network_error(exc: Exception) -> bool:
-    if isinstance(exc, urllib3.exceptions.TimeoutError):
-        return True
-    reason = getattr(exc, "reason", None)
-    return isinstance(reason, (socket.timeout, TimeoutError, urllib3.exceptions.TimeoutError))
+    return any(
+        isinstance(item, (socket.timeout, TimeoutError, urllib3.exceptions.TimeoutError))
+        for item in iter_network_error_causes(exc)
+    )
 
 
 def build_network_error_detail(exc: Exception) -> str:
-    reason = getattr(exc, "reason", None)
-    if reason:
-        return str(reason)
+    for nested in iter_network_error_causes(exc):
+        if nested is exc:
+            continue
+        detail = str(nested).strip()
+        if detail:
+            return detail
     return str(exc)
 
 

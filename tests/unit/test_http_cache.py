@@ -12,6 +12,7 @@ from unittest import mock
 
 from paper_fetch import http as http_module
 from paper_fetch.providers import base as provider_base
+import urllib3
 
 warnings.filterwarnings(
     "ignore",
@@ -281,6 +282,44 @@ class HttpTransportCacheTests(unittest.TestCase):
         self.assertEqual(call_count, 2)
         self.assertEqual(len(transport._cache), 0)
 
+    def test_successful_pooled_response_releases_connection(self) -> None:
+        transport = http_module.HttpTransport(cache_ttl=0, cache_capacity=0)
+        response = FakeHTTPResponse(b"ok", "https://example.test/article")
+
+        with mock.patch.object(transport, "_perform_request", return_value=response):
+            payload = transport.request("GET", "https://example.test/article", headers={"Accept": "text/plain"})
+
+        self.assertEqual(payload["body"], b"ok")
+        self.assertTrue(response.released)
+        self.assertFalse(response.closed)
+
+    def test_oversized_pooled_response_is_closed_without_releasing_connection(self) -> None:
+        transport = http_module.HttpTransport(cache_ttl=0, cache_capacity=0, max_response_bytes=4)
+        response = FakeHTTPResponse(b"abcde", "https://example.test/article")
+
+        with mock.patch.object(transport, "_perform_request", return_value=response):
+            with self.assertRaises(http_module.RequestFailure):
+                transport.request("GET", "https://example.test/article", headers={"Accept": "text/plain"})
+
+        self.assertTrue(response.closed)
+        self.assertFalse(response.released)
+
+    def test_http_error_response_releases_connection_after_request_failure(self) -> None:
+        transport = http_module.HttpTransport(cache_ttl=0, cache_capacity=0)
+        response = FakeHTTPResponse(
+            b"server error",
+            "https://example.test/article",
+            status=503,
+            headers={"content-type": "text/plain"},
+        )
+
+        with mock.patch.object(transport, "_perform_request", return_value=response):
+            with self.assertRaises(http_module.RequestFailure):
+                transport.request("GET", "https://example.test/article", headers={"Accept": "text/plain"})
+
+        self.assertTrue(response.released)
+        self.assertFalse(response.closed)
+
     def test_total_cache_byte_cap_evicts_oldest_entries(self) -> None:
         transport = http_module.HttpTransport(
             cache_ttl=30,
@@ -418,6 +457,54 @@ class HttpTransportCacheTests(unittest.TestCase):
         self.assertEqual(response["body"], b"ok")
         self.assertEqual(mocked_sleep.call_args_list, [mock.call(0.5), mock.call(1.0)])
 
+    def test_urllib3_read_timeout_is_retried_with_exponential_backoff(self) -> None:
+        transport = http_module.HttpTransport(cache_ttl=0, cache_capacity=0)
+        call_count = 0
+
+        def fake_urlopen(request, timeout=20):
+            nonlocal call_count
+            call_count += 1
+            if call_count <= 2:
+                raise urllib3.exceptions.ReadTimeoutError(None, request.full_url, "timed out")
+            return FakeHTTPResponse(b"ok", request.full_url)
+
+        with mock.patch.object(transport, "_perform_request", side_effect=fake_urlopen):
+            with mock.patch.object(http_module.time, "sleep") as mocked_sleep:
+                response = transport.request(
+                    "GET",
+                    "https://example.test/article",
+                    headers={"Accept": "text/plain"},
+                    retry_on_transient=True,
+                )
+
+        self.assertEqual(call_count, 3)
+        self.assertEqual(response["body"], b"ok")
+        self.assertEqual(mocked_sleep.call_args_list, [mock.call(0.5), mock.call(1.0)])
+
+    def test_urllib3_protocol_timeout_is_retried_with_exponential_backoff(self) -> None:
+        transport = http_module.HttpTransport(cache_ttl=0, cache_capacity=0)
+        call_count = 0
+
+        def fake_urlopen(request, timeout=20):
+            nonlocal call_count
+            call_count += 1
+            if call_count <= 2:
+                raise urllib3.exceptions.ProtocolError("conn broken", socket.timeout("timed out"))
+            return FakeHTTPResponse(b"ok", request.full_url)
+
+        with mock.patch.object(transport, "_perform_request", side_effect=fake_urlopen):
+            with mock.patch.object(http_module.time, "sleep") as mocked_sleep:
+                response = transport.request(
+                    "GET",
+                    "https://example.test/article",
+                    headers={"Accept": "text/plain"},
+                    retry_on_transient=True,
+                )
+
+        self.assertEqual(call_count, 3)
+        self.assertEqual(response["body"], b"ok")
+        self.assertEqual(mocked_sleep.call_args_list, [mock.call(0.5), mock.call(1.0)])
+
     def test_timeout_urlerror_is_retried_with_exponential_backoff(self) -> None:
         transport = http_module.HttpTransport(cache_ttl=0, cache_capacity=0)
         call_count = 0
@@ -474,6 +561,28 @@ class HttpTransportCacheTests(unittest.TestCase):
             nonlocal call_count
             call_count += 1
             raise urllib.error.URLError(OSError("connection reset"))
+
+        with mock.patch.object(transport, "_perform_request", side_effect=fake_urlopen):
+            with mock.patch.object(http_module.time, "sleep") as mocked_sleep:
+                with self.assertRaises(http_module.RequestFailure):
+                    transport.request(
+                        "GET",
+                        "https://example.test/article",
+                        headers={"Accept": "text/plain"},
+                        retry_on_transient=True,
+                    )
+
+        self.assertEqual(call_count, 1)
+        mocked_sleep.assert_not_called()
+
+    def test_non_timeout_urllib3_error_is_not_retried(self) -> None:
+        transport = http_module.HttpTransport(cache_ttl=0, cache_capacity=0)
+        call_count = 0
+
+        def fake_urlopen(request, timeout=20):
+            nonlocal call_count
+            call_count += 1
+            raise urllib3.exceptions.ProtocolError("conn broken", OSError("connection reset"))
 
         with mock.patch.object(transport, "_perform_request", side_effect=fake_urlopen):
             with mock.patch.object(http_module.time, "sleep") as mocked_sleep:
