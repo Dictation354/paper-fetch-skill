@@ -9,6 +9,7 @@ from typing import Any, Mapping
 
 from ..config import build_user_agent
 from ..http import DEFAULT_FULLTEXT_TIMEOUT_SECONDS, HttpTransport, RequestFailure, build_text_preview
+from ..metadata_types import ProviderMetadata
 from ..models import article_from_markdown, metadata_only_article, normalize_text
 from ..publisher_identity import normalize_doi
 from ..utils import (
@@ -178,13 +179,13 @@ class WileyClient(ProviderClient):
         self.auth_header = env.get("WILEY_TDM_AUTH_HEADER", "Wiley-TDM-Client-Token").strip() or "Wiley-TDM-Client-Token"
         self.user_agent = build_user_agent(env)
 
-    def fetch_metadata(self, query: Mapping[str, str | None]) -> dict[str, Any]:
+    def fetch_metadata(self, query: Mapping[str, str | None]) -> ProviderMetadata:
         raise ProviderFailure(
             "not_supported",
             "Wiley official metadata retrieval is not implemented because the public docs in this repo do not define a stable metadata endpoint.",
         )
 
-    def fetch_fulltext(self, doi: str, metadata: Mapping[str, Any], output_dir: Path | None) -> dict[str, Any]:
+    def fetch_fulltext(self, doi: str, metadata: ProviderMetadata, output_dir: Path | None) -> dict[str, Any]:
         payload = self.fetch_raw_fulltext(doi, metadata)
         normalized_doi = normalize_doi(doi)
         output_path = build_output_path(output_dir, normalized_doi, metadata.get("title"), payload.content_type, payload.source_url)
@@ -203,7 +204,7 @@ class WileyClient(ProviderClient):
             **empty_asset_results(),
         }
 
-    def fetch_raw_fulltext(self, doi: str, metadata: Mapping[str, Any]) -> RawFulltextPayload:
+    def fetch_raw_fulltext(self, doi: str, metadata: ProviderMetadata) -> RawFulltextPayload:
         normalized_doi = normalize_doi(doi)
         if not normalized_doi:
             raise ProviderFailure("not_supported", "Wiley full-text retrieval requires a DOI.")
@@ -247,7 +248,7 @@ class WileyClient(ProviderClient):
 
     def to_article_model(
         self,
-        metadata: Mapping[str, Any],
+        metadata: ProviderMetadata,
         raw_payload: RawFulltextPayload,
         *,
         downloaded_assets: list[Mapping[str, Any]] | None = None,

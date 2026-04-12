@@ -11,6 +11,7 @@ from typing import Any, Mapping
 
 from ..config import build_user_agent
 from ..http import DEFAULT_FULLTEXT_TIMEOUT_SECONDS, HttpTransport, RequestFailure, build_text_preview, is_xml_content_type
+from ..metadata_types import ProviderMetadata
 from ..models import AssetProfile, article_from_markdown, article_from_structure, metadata_only_article
 from ..publisher_identity import normalize_doi
 from ..utils import (
@@ -309,7 +310,7 @@ class ElsevierClient(ProviderClient):
             headers["CR-Clickthrough-Client-Token"] = self.clickthrough_token
         return headers
 
-    def fetch_metadata(self, query: Mapping[str, str | None]) -> dict[str, Any]:
+    def fetch_metadata(self, query: Mapping[str, str | None]) -> ProviderMetadata:
         doi = normalize_doi(query.get("doi"))
         if not doi:
             raise ProviderFailure(
@@ -333,7 +334,7 @@ class ElsevierClient(ProviderClient):
         payload = json.loads(response["body"].decode("utf-8"))
         root = payload.get("abstracts-retrieval-response", {})
         core = root.get("coredata", {}) if isinstance(root, dict) else {}
-        metadata = {
+        metadata: ProviderMetadata = {
             "status": "ok",
             "provider": "elsevier",
             "official_provider": True,
@@ -358,7 +359,7 @@ class ElsevierClient(ProviderClient):
             raise ProviderFailure("no_result", "Elsevier metadata payload did not contain a title.")
         return metadata
 
-    def fetch_fulltext(self, doi: str, metadata: Mapping[str, Any], output_dir: Path | None) -> dict[str, Any]:
+    def fetch_fulltext(self, doi: str, metadata: ProviderMetadata, output_dir: Path | None) -> dict[str, Any]:
         payload = self.fetch_raw_fulltext(doi, metadata)
         normalized_doi = normalize_doi(doi)
         output_path = build_output_path(output_dir, normalized_doi, metadata.get("title"), payload.content_type, payload.source_url)
@@ -392,7 +393,7 @@ class ElsevierClient(ProviderClient):
     def download_related_assets(
         self,
         doi: str,
-        metadata: Mapping[str, Any],
+        metadata: ProviderMetadata,
         raw_payload: RawFulltextPayload,
         output_dir: Path | None,
         *,
@@ -410,7 +411,7 @@ class ElsevierClient(ProviderClient):
             asset_profile=asset_profile,
         )
 
-    def fetch_raw_fulltext(self, doi: str, metadata: Mapping[str, Any]) -> RawFulltextPayload:
+    def fetch_raw_fulltext(self, doi: str, metadata: ProviderMetadata) -> RawFulltextPayload:
         normalized_doi = normalize_doi(doi)
         if not normalized_doi:
             raise ProviderFailure("not_supported", "Elsevier full-text retrieval requires a DOI.")
@@ -447,7 +448,7 @@ class ElsevierClient(ProviderClient):
 
     def to_article_model(
         self,
-        metadata: Mapping[str, Any],
+        metadata: ProviderMetadata,
         raw_payload: RawFulltextPayload,
         *,
         downloaded_assets: list[Mapping[str, Any]] | None = None,

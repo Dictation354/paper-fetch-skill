@@ -10,6 +10,7 @@ from typing import Any, Mapping
 
 from ..config import build_user_agent
 from ..http import DEFAULT_FULLTEXT_TIMEOUT_SECONDS, HttpTransport, RequestFailure, build_text_preview, is_xml_content_type
+from ..metadata_types import FulltextLink, ProviderMetadata
 from ..models import AssetProfile, article_from_markdown, article_from_structure, metadata_only_article
 from ..publisher_identity import normalize_doi
 from ..utils import (
@@ -283,7 +284,7 @@ class SpringerClient(ProviderClient):
             "q": f"doi:{doi}",
         }
 
-    def fetch_metadata(self, query: Mapping[str, str | None]) -> dict[str, Any]:
+    def fetch_metadata(self, query: Mapping[str, str | None]) -> ProviderMetadata:
         doi = normalize_doi(query.get("doi"))
         if not doi:
             raise ProviderFailure(
@@ -309,7 +310,7 @@ class SpringerClient(ProviderClient):
             raise ProviderFailure("no_result", "Springer Meta API returned no records.")
         return self._normalize_record(records[0], response["url"])
 
-    def fetch_fulltext(self, doi: str, metadata: Mapping[str, Any], output_dir: Path | None) -> dict[str, Any]:
+    def fetch_fulltext(self, doi: str, metadata: ProviderMetadata, output_dir: Path | None) -> dict[str, Any]:
         payload = self.fetch_raw_fulltext(doi, metadata)
         normalized_doi = normalize_doi(doi)
         output_path = build_output_path(output_dir, normalized_doi, metadata.get("title"), payload.content_type, payload.source_url)
@@ -343,7 +344,7 @@ class SpringerClient(ProviderClient):
     def download_related_assets(
         self,
         doi: str,
-        metadata: Mapping[str, Any],
+        metadata: ProviderMetadata,
         raw_payload: RawFulltextPayload,
         output_dir: Path | None,
         *,
@@ -361,7 +362,7 @@ class SpringerClient(ProviderClient):
             asset_profile=asset_profile,
         )
 
-    def fetch_raw_fulltext(self, doi: str, metadata: Mapping[str, Any]) -> RawFulltextPayload:
+    def fetch_raw_fulltext(self, doi: str, metadata: ProviderMetadata) -> RawFulltextPayload:
         normalized_doi = normalize_doi(doi)
         if not normalized_doi:
             raise ProviderFailure("not_supported", "Springer full-text retrieval requires a DOI.")
@@ -381,7 +382,7 @@ class SpringerClient(ProviderClient):
 
         raise combine_provider_failures(failures)
 
-    def _fetch_fulltext_api(self, doi: str, metadata: Mapping[str, Any]) -> RawFulltextPayload:
+    def _fetch_fulltext_api(self, doi: str, metadata: ProviderMetadata) -> RawFulltextPayload:
         if not self.fulltext_url_template or not self.fulltext_api_key:
             raise ProviderFailure(
                 "not_configured",
@@ -420,7 +421,7 @@ class SpringerClient(ProviderClient):
             needs_local_copy=not (content_type.startswith("text/") or is_xml_content_type(content_type)),
         )
 
-    def _fetch_openaccess_fulltext(self, doi: str, metadata: Mapping[str, Any]) -> RawFulltextPayload:
+    def _fetch_openaccess_fulltext(self, doi: str, metadata: ProviderMetadata) -> RawFulltextPayload:
         try:
             response = self.transport.request(
                 "GET",
@@ -446,7 +447,7 @@ class SpringerClient(ProviderClient):
 
     def to_article_model(
         self,
-        metadata: Mapping[str, Any],
+        metadata: ProviderMetadata,
         raw_payload: RawFulltextPayload,
         *,
         downloaded_assets: list[Mapping[str, Any]] | None = None,
@@ -498,8 +499,8 @@ class SpringerClient(ProviderClient):
             warnings=warnings,
         )
 
-    def _normalize_record(self, record: Mapping[str, Any], source_url: str) -> dict[str, Any]:
-        links = []
+    def _normalize_record(self, record: Mapping[str, Any], source_url: str) -> ProviderMetadata:
+        links: list[FulltextLink] = []
         raw_url_field = record.get("url")
         if isinstance(raw_url_field, list):
             for item in raw_url_field:
