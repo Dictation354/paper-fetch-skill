@@ -165,3 +165,24 @@ class ModelsRenderTests(unittest.TestCase):
         self.assertIn("```python", article.sections[0].text)
         self.assertIn("    print('kept')", article.sections[0].text)
         self.assertIn("| col_a | col_b |", article.sections[0].text)
+
+    def test_article_from_markdown_normalizes_blank_asset_fields_to_none(self) -> None:
+        article = article_from_markdown(
+            source="html_generic",
+            metadata={"title": "Structured Article"},
+            doi="10.1000/test",
+            markdown_text="## Results\n\nBody text",
+            assets=[
+                {
+                    "kind": "figure",
+                    "heading": "Figure 1",
+                    "caption": "",
+                    "path": "",
+                    "url": "https://example.test/figure.png",
+                }
+            ],
+        )
+
+        self.assertIsNone(article.assets[0].caption)
+        self.assertIsNone(article.assets[0].path)
+        self.assertIsNone(article.assets[0].url)

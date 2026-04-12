@@ -195,7 +195,7 @@ class Reference:
 class Asset:
     kind: str
     heading: str
-    caption: str = ""
+    caption: str | None = None
     url: str | None = None
     path: str | None = None
     section: str | None = None
@@ -853,7 +853,7 @@ def article_from_structure(
             Asset(
                 kind="figure",
                 heading=safe_text(entry.get("heading") or "Figure") or "Figure",
-                caption=safe_text(entry.get("caption")),
+                caption=safe_text(entry.get("caption")) or None,
                 url=local_asset_link(entry.get("link")),
                 path=safe_text(entry.get("path")) or None,
                 section=safe_text(entry.get("section")) or None,
@@ -864,7 +864,7 @@ def article_from_structure(
             Asset(
                 kind="table",
                 heading=safe_text(entry.get("heading") or "Table") or "Table",
-                caption=safe_text(entry.get("caption")),
+                caption=safe_text(entry.get("caption")) or None,
                 url=local_asset_link(entry.get("link")),
                 path=safe_text(entry.get("path")) or None,
                 section=safe_text(entry.get("section")) or None,
@@ -875,7 +875,7 @@ def article_from_structure(
             Asset(
                 kind="supplementary",
                 heading=safe_text(entry.get("heading") or "Supplementary Material") or "Supplementary Material",
-                caption=safe_text(entry.get("caption")),
+                caption=safe_text(entry.get("caption")) or None,
                 url=local_asset_link(entry.get("link")),
                 path=safe_text(entry.get("path")) or None,
                 section=safe_text(entry.get("section")) or None,
@@ -925,7 +925,7 @@ def article_from_markdown(
         Asset(
             kind=safe_text(item.get("kind") or item.get("asset_type") or "asset") or "asset",
             heading=safe_text(item.get("heading") or "Asset") or "Asset",
-            caption=safe_text(item.get("caption")),
+            caption=safe_text(item.get("caption")) or None,
             url=local_asset_link(item.get("url") or item.get("source_url")),
             path=safe_text(item.get("path")) or None,
             section=safe_text(item.get("section")) or None,
