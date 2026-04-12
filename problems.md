@@ -13,8 +13,7 @@
 ### 优先级 P1（可维护性)
 
 - **HTTP transport 没有连接复用**（`src/paper_fetch/http.py:205-223`）。`urllib.request.urlopen` 每次都新建 TCP+TLS；对 Elsevier/Springer/Wiley 一次 fetch 多条请求的链路（metadata→fulltext→figures→supplementary），同一域名建连成本占大头。两条路径：(a) 继续用 stdlib，但用 `http.client.HTTPSConnection` per host pool 串行复用；(b) 引入 `urllib3` / `httpx` 为 runtime 依赖直接 pool。动 transport 涉及 cache 行为与测试 stub，建议单独 PR。
-- **渲染热路径仍在每个 section/group/reference 重复 `normalize_markdown_text`**（`src/paper_fetch/models.py:343-346,505,513,557,566,573`）。上一轮已替换成 `estimate_normalized_tokens`，但每次调用前仍 `normalize_markdown_text(rendered)`。`render_section` / `render_heading` 产出的文本本来就受控，让渲染函数直接返回「已规范化文本 + 预估 token 数」，避免循环内重复跑 regex。当前不算瓶颈，但长论文会放大。
-- **`ArticleModel.to_ai_markdown` 仍承担太多职责**（`src/paper_fetch/models.py:264-407`）。140 行里混了 front matter、abstract、section 优先级裁剪、asset block、reference block、truncation 跟踪；已经拆出 `append_*_block_with_budget` helper，但主函数还保留「顺序驱动的 budget 减法」副作用。引入 `RenderContext` dataclass（`remaining`, `truncated_any`, `warnings`）把副作用集中，未来再调裁剪优先级不用动 `to_ai_markdown` 主体。
+- **`ArticleModel.to_ai_markdown` 仍承担太多职责**（`src/paper_fetch/models.py:264-407`）。虽然 `RenderContext` 和热路径规范化已收口，但主函数仍混合 front matter、abstract、section 选择和多类 block 拼装。后续若继续重构，优先把“渲染计划生成”和“budget 驱动追加”拆成更小 helper。
 - **缺少结构化日志**。全仓只用 `source_trail` 列表 + 错误分支的 stderr JSON；一旦线上某个 live fetch 走偏，重现只能靠 rerun。加一个 `logging.getLogger("paper_fetch.*")`，保留现有 trail 语义，让 `_try_official_provider` / `_try_html_fallback` 在每一步 debug 级打印 url、状态、耗时。不改 public API，纯 opt-in。
 - **provider metadata 仍是松散 `dict[str, Any]`**。`metadata.get("landing_page_url")` / `metadata.get("publisher")` / `metadata.get("fulltext_links")` 在 6+ 处读写，字段漂移无人抓得住。换成 `typing.TypedDict`，零运行时成本，ruff 能静态抓未知 key；可以分几次递进。
 
@@ -84,6 +83,8 @@
 - ✅ `html_generic.py` 已拆分成 `html_noise.py` / `html_assets.py` / `html_nature.py` / `html_generic.py` façade；现有 `HtmlGenericClient`、`parse_html_metadata` 和常用 helper 入口保持兼容
 - ✅ `ArticleModel.to_ai_markdown()` 已收敛到单一路径；`max_tokens="full_text"` 现在会先归一成 `math.inf` 预算，再复用同一套渲染/裁剪逻辑
 - ✅ `estimate_tokens()` 继续保留为安全入口，但裁剪热路径已改用“已 normalized 文本”的轻量 token 估算 helper，避免在 section/group/reference 循环里重复 normalize
+- ✅ `ArticleModel.to_ai_markdown()` 已引入 `RenderContext`，把剩余 budget、truncation 标记和 warning 收口到单一状态对象
+- ✅ section / asset / reference 渲染热路径现在复用 `RenderedBlock` 预计算结果，不再在循环里重复执行 `normalize_markdown_text()`
 - ✅ `max_tokens="full_text"` 的字符串 sentinel 现在只停留在公开输入边界；渲染内部已先归一化成 `token_budget + full_text_requested`
 - ✅ `_fetch_article()` 已拆成 `_try_official_provider()` / `_try_html_fallback()` / `_fallback_to_metadata_only()`，主流程改成线性串联，warning 与 `source_trail` 语义保持不变
 - ✅ HTTP GET 缓存键已从“全部请求头”收敛为语义白名单：`accept`、`accept-language` 和认证/权限相关头；`User-Agent` 这类 incidental header 不再导致 cache miss
@@ -93,6 +94,7 @@
 - ✅ 单个超大 `tests/unit/test_paper_fetch.py` 已拆成 `test_cli.py` / `test_service.py` / `test_models_render.py`，共享 stub/fixture 已下沉到 `tests/unit/_paper_fetch_support.py`
 - ✅ `HttpTransportCacheTests` 已拆到独立的 `test_http_cache.py`，`test_fetch_common.py` 只保留通用 helper / packaging 守卫
 - ✅ P0 HTTP/落盘修复已补守卫测试：覆盖 gzip 压缩体上限、429 无 `Retry-After` 短退避，以及 `save_payload()` 原子写失败不污染旧文件
+- ✅ 渲染管线重构已保持守卫测试绿：覆盖 `full_text` 与大预算渲染等价、CLI Markdown 输出兼容，以及 token budget 裁剪行为不变
 
 ### 既有收口基线
 
