@@ -16,12 +16,23 @@ def first_non_empty(*values: Any) -> Any:
     return None
 
 
-def safe_text(value: Any) -> str:
-    text = str(value or "").replace("\xa0", " ")
+def normalize_text(value: str | None) -> str:
+    text = (value or "").replace("\xa0", " ")
     text = re.sub(r"[ \t\r\f\v]+", " ", text)
     text = re.sub(r"\s*\n\s*", "\n", text)
     text = re.sub(r"\n{3,}", "\n\n", text)
     return text.strip()
+
+
+def safe_text(value: Any) -> str:
+    return normalize_text(str(value or ""))
+
+
+def extend_unique(target: list[str], items: list[str] | None) -> None:
+    for item in items or []:
+        normalized = normalize_text(item)
+        if normalized and normalized not in target:
+            target.append(normalized)
 
 
 def strip_html_tags(value: str | None) -> str | None:

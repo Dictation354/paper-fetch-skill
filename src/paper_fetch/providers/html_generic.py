@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any, Mapping
 
 from ..config import build_user_agent
+from ..html_lookup import is_usable_html_lookup_title
 from ..http import HttpTransport, RequestFailure
 from ..models import AssetProfile, article_from_markdown, normalize_text
 from ..publisher_identity import extract_doi, normalize_doi
@@ -44,14 +45,6 @@ html_asset_identity_key = _html_assets.html_asset_identity_key
 promote_springer_media_url_to_full_size = _html_assets.promote_springer_media_url_to_full_size
 resolve_figure_download_url = _html_assets.resolve_figure_download_url
 
-HTML_LOOKUP_TITLE_DENYLIST = (
-    "redirecting",
-    "sign in",
-    "just a moment",
-    "cookie",
-    "subscribe",
-    "access denied",
-)
 INPUT_TAG_PATTERN = re.compile(r"<input\b[^>]*>", flags=re.IGNORECASE)
 HTML_ATTRIBUTE_PATTERN = re.compile(r'([A-Za-z_:][-A-Za-z0-9_:.]*)\s*=\s*("([^"]*)"|\'([^\']*)\')')
 HTML_REFRESH_URL_PATTERN = re.compile(r"url\s*=\s*(?P<quote>['\"]?)(?P<url>[^'\";>]+)(?P=quote)", flags=re.IGNORECASE)
@@ -113,7 +106,7 @@ def parse_html_metadata(html_text: str, source_url: str) -> dict[str, Any]:
     authors = dedupe_authors([normalize_text(value) for value in parser.meta.get("citation_author", []) if normalize_text(value)])
     doi = extract_doi_from_meta(parser.meta) or extract_doi_from_text(parser.canonical_url or "")
     html_title = normalize_text("".join(parser.title)) or None
-    if not is_usable_lookup_title(html_title):
+    if not is_usable_html_lookup_title(html_title):
         html_title = lookup_hints.get("lookup_title")
     title = first("citation_title", "dc.title", "og:title") or html_title or None
     abstract = first("citation_abstract", "description", "dc.description", "og:description")
@@ -169,7 +162,7 @@ def extract_html_lookup_hints(
     )
 
     return {
-        "lookup_title": lookup_title if is_usable_lookup_title(lookup_title) else None,
+        "lookup_title": lookup_title if is_usable_html_lookup_title(lookup_title) else None,
         "redirect_url": hidden_redirect or refresh_redirect,
         "identifier_value": identifier_value,
     }
@@ -209,13 +202,6 @@ def normalize_lookup_url(value: str | None, source_url: str) -> str | None:
     return urllib.parse.urljoin(source_url, unquoted)
 
 
-def is_usable_lookup_title(value: str | None) -> bool:
-    normalized = normalize_text(value).lower()
-    if not normalized:
-        return False
-    return not any(token in normalized for token in HTML_LOOKUP_TITLE_DENYLIST)
-
-
 def extract_doi_from_meta(meta: Mapping[str, list[str]]) -> str | None:
     for key in ("citation_doi", "dc.identifier", "dc.identifier.doi", "prism.doi"):
         for value in meta.get(key, []):
@@ -229,7 +215,7 @@ def extract_doi_from_text(value: str | None) -> str | None:
     return extract_doi(value)
 
 
-def merge_metadata(base_metadata: Mapping[str, Any] | None, html_metadata: Mapping[str, Any]) -> dict[str, Any]:
+def merge_html_metadata(base_metadata: Mapping[str, Any] | None, html_metadata: Mapping[str, Any]) -> dict[str, Any]:
     base = dict(base_metadata or {})
     merged = dict(base)
     for key in ("title", "journal_title", "published", "landing_page_url", "doi"):
@@ -279,7 +265,7 @@ class HtmlGenericClient:
 
         html_text = decode_html(response["body"])
         html_metadata = parse_html_metadata(html_text, response["url"])
-        merged_metadata = merge_metadata(metadata, html_metadata)
+        merged_metadata = merge_html_metadata(metadata, html_metadata)
         if expected_doi and not merged_metadata.get("doi"):
             merged_metadata["doi"] = normalize_doi(expected_doi)
 

@@ -1048,7 +1048,7 @@ class ServiceTests(unittest.TestCase):
         self.assertTrue(any("Retry-After: 3s" in warning for warning in article.quality.warnings))
 
     def test_merge_metadata_preserves_explicit_blank_primary_scalar(self) -> None:
-        merged = paper_fetch.merge_metadata(
+        merged = paper_fetch.merge_primary_secondary_metadata(
             {"abstract": "", "title": "Primary Title"},
             {"abstract": "Crossref abstract", "title": "Secondary Title"},
         )
@@ -1057,7 +1057,7 @@ class ServiceTests(unittest.TestCase):
         self.assertEqual(merged["title"], "Primary Title")
 
     def test_merge_metadata_dedupes_semantic_author_names(self) -> None:
-        merged = paper_fetch.merge_metadata(
+        merged = paper_fetch.merge_primary_secondary_metadata(
             {"authors": ["Zhang, San", "Alice Example"]},
             {"authors": ["San Zhang", "Alice Example"]},
         )

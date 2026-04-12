@@ -13,13 +13,7 @@ from .config import build_runtime_env, resolve_cli_download_dir
 from .models import FetchEnvelope, RenderOptions
 from .providers.base import ProviderFailure
 from .service import FetchStrategy, PaperFetchFailure, fetch_paper
-from .utils import sanitize_filename
-
-
-def extend_unique(target: list[str], items: list[str] | None) -> None:
-    for item in items or []:
-        if item and item not in target:
-            target.append(item)
+from .utils import extend_unique, sanitize_filename
 
 
 def rewrite_markdown_asset_links(markdown: str, envelope: FetchEnvelope, *, target_path: Path) -> str:

@@ -8,7 +8,7 @@ import re
 from dataclasses import asdict, dataclass, field
 from typing import Any, Literal, Mapping
 
-from .utils import safe_text
+from .utils import normalize_text, safe_text
 
 SourceKind = Literal["elsevier_xml", "springer_xml", "wiley", "html_generic", "crossref_meta"]
 OutputMode = Literal["article", "markdown", "metadata"]
@@ -33,16 +33,6 @@ SECTION_PRIORITY = {
     "conclusions": 5,
     "references": 6,
 }
-
-
-def normalize_text(value: str | None) -> str:
-    text = (value or "").replace("\xa0", " ")
-    text = re.sub(r"[ \t\r\f\v]+", " ", text)
-    text = re.sub(r"\s*\n\s*", "\n", text)
-    text = re.sub(r"\n{3,}", "\n\n", text)
-    return text.strip()
-
-
 def normalize_markdown_text(value: str | None) -> str:
     text = (value or "").replace("\r\n", "\n").replace("\r", "\n").replace("\xa0", " ")
     normalized_lines: list[str] = []

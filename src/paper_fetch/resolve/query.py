@@ -12,6 +12,7 @@ from difflib import SequenceMatcher
 from typing import Any, Mapping
 
 from ..config import build_runtime_env, build_user_agent
+from ..html_lookup import is_usable_html_lookup_title
 from ..http import HttpTransport, RequestFailure
 from ..providers.base import ProviderFailure
 from ..providers.crossref import CrossrefClient
@@ -20,13 +21,6 @@ from ..publisher_identity import extract_doi, infer_provider_from_signals, norma
 CONFIDENT_SCORE_MIN = 0.90
 CONFIDENT_MARGIN_MIN = 0.05
 MIN_HTML_TITLE_LOOKUP_CHARS = 24
-HTML_TITLE_LOOKUP_DENYLIST = (
-    "sign in",
-    "just a moment",
-    "cookie",
-    "subscribe",
-    "access denied",
-)
 
 
 @dataclass
@@ -102,13 +96,6 @@ def is_confident_top_candidate(candidates: list[dict[str, Any]]) -> bool:
     return top_one["score"] >= CONFIDENT_SCORE_MIN and (top_one["score"] - top_two_score) >= CONFIDENT_MARGIN_MIN
 
 
-def is_viable_html_title_for_lookup(value: str | None) -> bool:
-    normalized = normalize_title(value or "")
-    if len(normalized) < MIN_HTML_TITLE_LOOKUP_CHARS:
-        return False
-    return not any(token in normalized for token in HTML_TITLE_LOOKUP_DENYLIST)
-
-
 def resolve_query(
     query: str,
     *,
@@ -146,8 +133,15 @@ def resolve_query(
         )
         html_title = str(html_metadata.get("title") or "").strip() or None
         lookup_title = str(html_metadata.get("lookup_title") or "").strip() or None
-        title_for_lookup = html_title if is_viable_html_title_for_lookup(html_title) else None
-        if title_for_lookup is None and is_viable_html_title_for_lookup(lookup_title):
+        title_for_lookup = (
+            html_title
+            if is_usable_html_lookup_title(html_title, min_normalized_chars=MIN_HTML_TITLE_LOOKUP_CHARS)
+            else None
+        )
+        if title_for_lookup is None and is_usable_html_lookup_title(
+            lookup_title,
+            min_normalized_chars=MIN_HTML_TITLE_LOOKUP_CHARS,
+        ):
             title_for_lookup = lookup_title
         selected_title = html_title or title_for_lookup
         candidates: list[dict[str, Any]] = []

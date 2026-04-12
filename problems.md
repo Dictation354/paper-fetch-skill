@@ -14,10 +14,6 @@
 
 - **HTTP transport 没有连接复用**（`src/paper_fetch/http.py:205-223`）。`urllib.request.urlopen` 每次都新建 TCP+TLS；对 Elsevier/Springer/Wiley 一次 fetch 多条请求的链路（metadata→fulltext→figures→supplementary），同一域名建连成本占大头。两条路径：(a) 继续用 stdlib，但用 `http.client.HTTPSConnection` per host pool 串行复用；(b) 引入 `urllib3` / `httpx` 为 runtime 依赖直接 pool。动 transport 涉及 cache 行为与测试 stub，建议单独 PR。
 - **渲染热路径仍在每个 section/group/reference 重复 `normalize_markdown_text`**（`src/paper_fetch/models.py:343-346,505,513,557,566,573`）。上一轮已替换成 `estimate_normalized_tokens`，但每次调用前仍 `normalize_markdown_text(rendered)`。`render_section` / `render_heading` 产出的文本本来就受控，让渲染函数直接返回「已规范化文本 + 预估 token 数」，避免循环内重复跑 regex。当前不算瓶颈，但长论文会放大。
-- **`normalize_text`（`models.py:38-43`）与 `safe_text`（`utils.py:19-24`）行为几乎完全重合**。前者 `(value or "")`，后者 `str(value or "")`，正则完全相同。让 `safe_text` 直接调用 `normalize_text(str(value or ""))`，避免两份 regex 失去同步。
-- **`merge_metadata` 同名异义**（`src/paper_fetch/service.py:97` 与 `src/paper_fetch/providers/html_generic.py:232`）。两个 `merge_metadata` 签名不同、合并语义也不同（primary-wins vs base-wins），同时 import 时极易误用。改名一个，比如 `merge_primary_secondary_metadata` / `merge_html_metadata`。
-- **`extend_unique` helper 在 `service.py:74` 与 `cli.py:19` 各写一份**。下沉到 `utils.py` 统一 import。
-- **`HTML_LOOKUP_TITLE_DENYLIST` 在 `resolve/query.py:23-29` 与 `providers/html_generic.py:47-54` 是近似重复**，只差一两个词。统一到 `publisher_identity` 或新 `html_lookup.py`，否则后续加词会漏一处。
 - **`ArticleModel.to_ai_markdown` 仍承担太多职责**（`src/paper_fetch/models.py:264-407`）。140 行里混了 front matter、abstract、section 优先级裁剪、asset block、reference block、truncation 跟踪；已经拆出 `append_*_block_with_budget` helper，但主函数还保留「顺序驱动的 budget 减法」副作用。引入 `RenderContext` dataclass（`remaining`, `truncated_any`, `warnings`）把副作用集中，未来再调裁剪优先级不用动 `to_ai_markdown` 主体。
 - **缺少结构化日志**。全仓只用 `source_trail` 列表 + 错误分支的 stderr JSON；一旦线上某个 live fetch 走偏，重现只能靠 rerun。加一个 `logging.getLogger("paper_fetch.*")`，保留现有 trail 语义，让 `_try_official_provider` / `_try_html_fallback` 在每一步 debug 级打印 url、状态、耗时。不改 public API，纯 opt-in。
 - **provider metadata 仍是松散 `dict[str, Any]`**。`metadata.get("landing_page_url")` / `metadata.get("publisher")` / `metadata.get("fulltext_links")` 在 6+ 处读写，字段漂移无人抓得住。换成 `typing.TypedDict`，零运行时成本，ruff 能静态抓未知 key；可以分几次递进。
@@ -46,6 +42,10 @@
 - ✅ 当前 routing 真理源已明确回到运行时代码里的保守推断逻辑，而不是 `journal_lists.yaml`
 - ✅ benchmark 产物路径从 tracked 的 `references/formula_backend_report.json` 挪到 `.formula-benchmarks/`
 - ✅ `scripts/` 已明确保留为安装器与开发/诊断自动化入口，`scripts/__init__.py` 已删除，不再伪装成 Python package
+- ✅ 文本归一化 helper 已收口到 `utils.normalize_text()`；`models.normalize_text` 保留为兼容导出，`safe_text()` 直接复用同一实现
+- ✅ `extend_unique()` 已下沉到 `utils.py`，CLI 与 service 不再各维护一份副本
+- ✅ service/html fallback 两处同名异义 `merge_metadata()` 已完成消歧，改为 `merge_primary_secondary_metadata()` / `merge_html_metadata()`
+- ✅ HTML lookup denylist 与可复用标题判定逻辑已统一到共享 `html_lookup.py`
 
 ### 运行时行为与安全性
 

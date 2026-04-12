@@ -8,6 +8,15 @@ from typing import Any, Mapping
 
 from .config import build_runtime_env
 from .http import HttpTransport, RequestFailure
+from .utils import (
+    build_output_path,
+    dedupe_authors,
+    empty_asset_results,
+    extend_unique,
+    normalize_text,
+    safe_text,
+    save_payload,
+)
 from .models import (
     ArticleModel,
     AssetProfile,
@@ -15,7 +24,6 @@ from .models import (
     OutputMode,
     RenderOptions,
     metadata_only_article,
-    normalize_text,
 )
 from .providers.base import ProviderFailure
 from .providers.html_generic import HtmlGenericClient
@@ -28,7 +36,6 @@ from .publisher_identity import (
     ordered_provider_candidates,
 )
 from .resolve.query import ResolvedQuery, resolve_query
-from .utils import build_output_path, dedupe_authors, empty_asset_results, safe_text, save_payload
 
 DEFAULT_OUTPUT_MODES: set[OutputMode] = {"article", "markdown"}
 OFFICIAL_PROVIDER_NAMES = ("elsevier", "springer", "wiley")
@@ -69,15 +76,6 @@ class FetchStrategy:
             return None
         normalized = {normalize_text(item).lower() for item in self.preferred_providers if normalize_text(item)}
         return normalized or set()
-
-
-def extend_unique(target: list[str], items: list[str] | None) -> None:
-    for item in items or []:
-        normalized = normalize_text(item)
-        if normalized and normalized not in target:
-            target.append(normalized)
-
-
 def source_trail_for_failure(stage: str, provider_name: str, failure: ProviderFailure) -> str:
     if failure.code == "not_configured":
         suffix = "not_configured"
@@ -94,7 +92,7 @@ def finalize_article(article: ArticleModel, *, warnings: list[str] | None = None
     return article
 
 
-def merge_metadata(primary: Mapping[str, Any] | None, secondary: Mapping[str, Any] | None) -> dict[str, Any]:
+def merge_primary_secondary_metadata(primary: Mapping[str, Any] | None, secondary: Mapping[str, Any] | None) -> dict[str, Any]:
     merged = dict(secondary or {})
     merged.update(primary or {})
     scalar_keys = ("doi", "title", "journal_title", "published", "landing_page_url", "abstract", "publisher")
@@ -339,7 +337,7 @@ def fetch_metadata_for_resolved_query(
     if official_metadata or crossref_metadata:
         if official_metadata:
             source_trail.append(f"metadata:{provider_name}_ok")
-        metadata = merge_metadata(official_metadata, crossref_metadata if crossref_is_public_source else None)
+        metadata = merge_primary_secondary_metadata(official_metadata, crossref_metadata if crossref_is_public_source else None)
         metadata["provider"] = (official_metadata or crossref_metadata or {}).get("provider")
         metadata["official_provider"] = (official_metadata or crossref_metadata or {}).get("official_provider")
         if not metadata.get("landing_page_url"):
