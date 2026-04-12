@@ -102,6 +102,38 @@ def parse_max_tokens(value: str) -> int | str:
     return parsed
 
 
+def _compute_modes(args: argparse.Namespace) -> set[str]:
+    modes = {"markdown"} if args.format == "markdown" else {"article"}
+
+    # Writing Markdown to a file or saving an extra Markdown copy needs the
+    # structured article payload so we can rewrite local asset links relative
+    # to the target path and decide whether full text was actually usable.
+    if args.format == "markdown" and args.output != "-":
+        modes.add("article")
+    if args.format == "both" or args.save_markdown:
+        modes.add("markdown")
+    if args.save_markdown:
+        modes.add("article")
+    return modes
+
+
+def exit_code_for_error(error: Exception) -> int:
+    if isinstance(error, PaperFetchFailure):
+        status = error.status
+    elif isinstance(error, ProviderFailure):
+        status = error.code
+    else:
+        status = "error"
+
+    if status == "ambiguous":
+        return 2
+    if status == "no_access":
+        return 3
+    if status == "rate_limited":
+        return 4
+    return 1
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Fetch AI-friendly full text for a paper by DOI, URL, or title.")
     parser.add_argument("--query", required=True, help="DOI, paper landing URL, or title query")
@@ -140,13 +172,7 @@ def main() -> int:
     try:
         runtime_env = build_runtime_env()
         output_dir = Path(args.output_dir) if args.output_dir else resolve_cli_download_dir(runtime_env)
-        modes = {"markdown"} if args.format == "markdown" else {"article"}
-        if args.format == "markdown" and args.output != "-":
-            modes.add("article")
-        if args.format == "both" or args.save_markdown:
-            modes.add("markdown")
-        if args.save_markdown:
-            modes.add("article")
+        modes = _compute_modes(args)
         envelope = fetch_paper(
             args.query,
             modes=modes,
@@ -185,10 +211,10 @@ def main() -> int:
             )
             + "\n"
         )
-        return 2 if exc.status == "ambiguous" else 1
+        return exit_code_for_error(exc)
     except ProviderFailure as exc:
-        sys.stderr.write(json.dumps({"status": "error", "reason": exc.message}, ensure_ascii=False) + "\n")
-        return 1
+        sys.stderr.write(json.dumps({"status": exc.code, "reason": exc.message}, ensure_ascii=False) + "\n")
+        return exit_code_for_error(exc)
 
 
 if __name__ == "__main__":

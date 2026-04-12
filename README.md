@@ -99,6 +99,12 @@ paper-fetch --query "10.1016/j.rse.2025.114648" --no-download
 - `--include-refs` 现在默认不需要传
   - `max_tokens=full_text` 时默认等价于全量 refs
   - 显式传数值 `--max-tokens` 时默认等价于 `top10`
+- CLI 退出码现在固定为：
+  - `0`: 成功
+  - `1`: 其他失败
+  - `2`: `ambiguous`
+  - `3`: `no_access`
+  - `4`: `rate_limited`
 
 ## 如何部署
 
@@ -152,7 +158,8 @@ paper-fetch-install-formula-tools
 如果你是在仓库源码目录里直接跑测试，推荐显式带上 `PYTHONPATH=src`，这样会优先导入当前工作树，而不是环境里可能已经安装过的旧版 `paper_fetch`：
 
 ```bash
-PYTHONPATH=src python3 -m unittest tests.unit.test_paper_fetch tests.unit.test_fetch_common tests.unit.test_publisher_identity tests.unit.test_resolve_query
+ruff check .
+PYTHONPATH=src python3 -m unittest -q tests.unit.test_cli tests.unit.test_service tests.unit.test_models_render tests.unit.test_html_generic tests.unit.test_http_cache tests.unit.test_fetch_common tests.unit.test_mcp tests.unit.test_provider_request_options tests.unit.test_publisher_identity tests.unit.test_resolve_query
 PYTHONPATH=src python3 -m unittest discover -s tests -q
 ```
 

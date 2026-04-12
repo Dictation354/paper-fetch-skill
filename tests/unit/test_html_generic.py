@@ -248,6 +248,30 @@ class HtmlGenericTests(unittest.TestCase):
         self.assertEqual(assets[0]["figure_page_url"], "https://www.nature.com/articles/test/figures/1")
         self.assertEqual(assets[0]["caption"], "Figure caption from Nature HTML structure.")
 
+    def test_extract_full_size_figure_image_url_prefers_full_and_springer_candidates(self) -> None:
+        html = """
+<html>
+  <head>
+    <meta name="citation_title" content="Example Figure Article" />
+  </head>
+  <body>
+    <img src="/preview/generic.png" />
+    <img src="https://media.springernature.com/lw685/springer-static/image/art%3A10.1007%2Ftest/MediaObjects/Fig1.png" />
+    <img src="https://media.springernature.com/full/springer-static/image/art%3A10.1007%2Ftest/MediaObjects/Fig1.png" />
+  </body>
+</html>
+"""
+
+        full_size_url = html_generic.extract_full_size_figure_image_url(
+            html,
+            "https://www.nature.com/articles/test",
+        )
+
+        self.assertEqual(
+            full_size_url,
+            "https://media.springernature.com/full/springer-static/image/art%3A10.1007%2Ftest/MediaObjects/Fig1.png",
+        )
+
     def test_extract_figure_assets_dedupes_duplicate_nature_figure_wrappers(self) -> None:
         html = """
 <html>

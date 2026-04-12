@@ -388,8 +388,8 @@ Step 1 ("package without changing behavior") is where most migrations of this sh
 2. **Decouple tests from internal module paths first.** The current test suite couples to `scripts/` in at least three different ways, and a naive `from scripts.` grep will miss most of them. Audit `tests/` for all of these patterns:
 
    - **Explicit `sys.path` injection** — `sys.path.insert(0, .../scripts)` followed by bare `from paper_fetch import ...` or `from fetch_common import ...`. Example today: [tests/live/test_live_publishers.py:9-14](../../tests/live/test_live_publishers.py#L9-L14).
-   - **`importlib.util.spec_from_file_location` loading** — manually loading `scripts/paper_fetch.py` as a module and registering it in `sys.modules` under a chosen name, then relying on that registration for subsequent bare imports. Example today: [tests/unit/test_paper_fetch.py:15-20](../../tests/unit/test_paper_fetch.py#L15-L20).
-   - **Bare top-level imports that silently depend on the above side effects** — `from article_model import ...`, `from fetch_common import ...`, `from providers.wiley import ...`. These look like ordinary imports but only resolve because an earlier line in the same file put `scripts/` on `sys.path` or because `paper_fetch.py`'s own import machinery did. Example today: [tests/unit/test_paper_fetch.py:22-24](../../tests/unit/test_paper_fetch.py#L22-L24).
+   - **`importlib.util.spec_from_file_location` loading** — manually loading `scripts/paper_fetch.py` as a module and registering it in `sys.modules` under a chosen name, then relying on that registration for subsequent bare imports. Historical example before the test-suite split lived in the old combined `tests/unit/test_paper_fetch.py`.
+   - **Bare top-level imports that silently depend on the above side effects** — `from article_model import ...`, `from fetch_common import ...`, `from providers.wiley import ...`. These look like ordinary imports but only resolve because an earlier line in the same file put `scripts/` on `sys.path` or because `paper_fetch.py`'s own import machinery did. Historical example before the test-suite split also lived in the old combined `tests/unit/test_paper_fetch.py`.
 
    Search patterns to actually use (not just `from scripts.`):
 
@@ -445,10 +445,15 @@ This repository already has a valuable command-line product surface and testable
 
 ## Revision History
 
+**Revision 7 (2026-04-12)** — backlog closeout follow-through:
+
+- Documented the post-closeout unit-test layout as the active repo-local acceptance baseline in the README, including the split `test_cli` / `test_service` / `test_models_render` / `test_html_generic` / `test_http_cache` entrypoints plus the MCP and provider request-option guards.
+- Recorded the fact that the large combined `tests/unit/test_paper_fetch.py` example referenced by older migration notes is now historical context only; ongoing implementation and acceptance work should use the split test modules and the compatibility facades that back them.
+
 **Revision 6 (2026-04-10)** — test-suite layering landed:
 
 - Removed test-directory reshuffling from **Remaining Deltas** because the suite now lives under `tests/unit`, `tests/integration`, and `tests/live`.
-- Updated architecture-closeout references to the layered test paths, including `tests/integration/test_architecture_closeout.py`, `tests/live/test_live_publishers.py`, and `tests/unit/test_paper_fetch.py`.
+- Updated architecture-closeout references to the layered test paths, including `tests/integration/test_architecture_closeout.py`, `tests/live/test_live_publishers.py`, `tests/unit/test_cli.py`, `tests/unit/test_service.py`, and `tests/unit/test_models_render.py`.
 
 **Revision 5 (2026-04-10)** — architecture closeout status made explicit:
 
@@ -466,7 +471,7 @@ This repository already has a valuable command-line product surface and testable
 
 - **`fetch_paper` return contract rewritten as a fixed `FetchEnvelope`, not a shape-switching union.** The revision-2 signature `fetch_paper(mode) -> ArticleModel | str` would have lost the existing "structured + markdown together" capability that today's CLI already provides via `--format both` ([scripts/paper_fetch.py:361](../../scripts/paper_fetch.py#L361)), and would have forced agents into a double-fetch whenever they needed both the Markdown body and its provenance. The envelope always carries `doi`, `source`, `has_fulltext`, `warnings`, `source_trail`, `token_estimate` at the top level, regardless of which modes were requested. `article`, `markdown`, `metadata` are present as optional payloads. Agents always get provenance without having to dig into `article.quality`, and `ArticleModel.to_ai_markdown` does not need to change to round-trip warnings through the Markdown string.
 - **Output modes and fetch strategy separated into two orthogonal axes.** The revision-2 `mode` parameter conflated "what to return" with "how to fetch", which would have erased the existing `--no-html-fallback` capability ([scripts/paper_fetch.py:301](../../scripts/paper_fetch.py#L301)) and left the metadata-only-fallback semantics ambiguous. Output format is now a composable `modes: set[OutputMode]`; fetch behavior is a `strategy: FetchStrategy` dataclass containing `allow_html_fallback`, `allow_metadata_only_fallback`, and `preferred_providers`. The concrete use case "official link only, no HTML fallback, fail loudly if there's no formal full text" now has a single direct expression, with no adapter-layer branching.
-- **Migration checklist step 2 expanded** to call out the three real coupling patterns in the current test suite: explicit `sys.path.insert` ([tests/live/test_live_publishers.py:9-14](../../tests/live/test_live_publishers.py#L9-L14)), `importlib.util.spec_from_file_location` loading with `sys.modules` registration ([tests/unit/test_paper_fetch.py:15-20](../../tests/unit/test_paper_fetch.py#L15-L20)), and bare imports that depend on those side effects ([tests/unit/test_paper_fetch.py:22-24](../../tests/unit/test_paper_fetch.py#L22-L24)). The previous "grep `from scripts.`" hint would have missed all three. Added a concrete acceptance-criterion grep.
+- **Migration checklist step 2 expanded** to call out the three real coupling patterns that existed during the closeout work: explicit `sys.path.insert` ([tests/live/test_live_publishers.py:9-14](../../tests/live/test_live_publishers.py#L9-L14)), `importlib.util.spec_from_file_location` loading with `sys.modules` registration (historically in the old combined `tests/unit/test_paper_fetch.py`), and bare imports that depended on those side effects (also historically in that file). The previous "grep `from scripts.`" hint would have missed all three. Added a concrete acceptance-criterion grep.
 - Decision Revisit Triggers updated for the new envelope/strategy shape. The non-negotiable invariant is now explicit: the envelope shape is fixed; if we ever want to shape-switch on `modes`, the whole contract needs rethinking, not a local patch.
 
 **Revision 2 (2026-04-10)** — resolved open questions from the initial draft review:

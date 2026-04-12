@@ -142,10 +142,10 @@ def truncate_text_to_tokens(text: str, token_budget: int) -> str:
     return truncated
 
 
-def normalize_token_budget(max_tokens: MaxTokensMode) -> float:
+def normalize_token_budget(max_tokens: MaxTokensMode) -> tuple[float, bool]:
     if max_tokens == "full_text":
-        return math.inf
-    return float(max_tokens)
+        return math.inf, True
+    return float(max_tokens), False
 
 
 def section_kind_for_heading(heading: str) -> str:
@@ -271,8 +271,8 @@ class ArticleModel:
         max_tokens: MaxTokensMode = "full_text",
     ) -> str:
         warnings = list(self.quality.warnings)
-        token_budget = normalize_token_budget(max_tokens)
-        effective_include_refs = resolve_reference_mode(include_refs, max_tokens=max_tokens)
+        token_budget, full_text_requested = normalize_token_budget(max_tokens)
+        effective_include_refs = resolve_reference_mode(include_refs, full_text_requested=full_text_requested)
         effective_include_figures = resolve_figure_mode(include_figures, asset_profile=asset_profile)
         effective_include_supplementary = resolve_supplementary_mode(
             include_supplementary,
@@ -421,10 +421,10 @@ def resolve_reference_limit(include_refs: str, total: int) -> int:
     return min(total, 10)
 
 
-def resolve_reference_mode(include_refs: str | None, *, max_tokens: MaxTokensMode) -> str:
+def resolve_reference_mode(include_refs: str | None, *, full_text_requested: bool) -> str:
     if include_refs is not None:
         return include_refs
-    if max_tokens == "full_text":
+    if full_text_requested:
         return "all"
     return "top10"
 

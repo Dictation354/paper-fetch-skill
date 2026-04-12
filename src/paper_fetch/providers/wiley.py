@@ -30,6 +30,17 @@ WILEY_PDF_FULLTEXT_MARKERS = (
     "references",
     "keywords",
 )
+WILEY_PDF_SECTION_HEADINGS = {
+    "abstract": "Abstract",
+    "introduction": "Introduction",
+    "methods": "Methods",
+    "materials and methods": "Materials and Methods",
+    "results": "Results",
+    "discussion": "Discussion",
+    "conclusion": "Conclusion",
+    "references": "References",
+    "keywords": "Keywords",
+}
 
 
 def is_pdf_payload(raw_payload: RawFulltextPayload) -> bool:
@@ -69,7 +80,92 @@ def pdf_text_to_markdown(text: str) -> str:
     normalized = normalize_text(text)
     if not normalized:
         return ""
-    return f"## Full Text\n\n{normalized}"
+
+    def detect_heading(line: str) -> str | None:
+        candidate = normalize_text(line)
+        if not candidate:
+            return None
+        cleaned = re.sub(r"[:.]+$", "", candidate).strip().lower()
+        if len(cleaned.split()) > 4:
+            return None
+        return WILEY_PDF_SECTION_HEADINGS.get(cleaned)
+
+    def render_section_text(lines: list[str]) -> str:
+        paragraphs: list[str] = []
+        current_paragraph: list[str] = []
+        for line in lines:
+            cleaned = normalize_text(line)
+            if not cleaned:
+                if current_paragraph:
+                    paragraphs.append(" ".join(current_paragraph))
+                    current_paragraph = []
+                continue
+            current_paragraph.append(cleaned)
+        if current_paragraph:
+            paragraphs.append(" ".join(current_paragraph))
+        return "\n\n".join(paragraphs).strip()
+
+    sections: list[tuple[str, str]] = []
+    preamble_lines: list[str] = []
+    current_heading: str | None = None
+    current_lines: list[str] = []
+
+    def flush_current_section() -> None:
+        if current_heading is None:
+            return
+        rendered = render_section_text(current_lines)
+        if rendered:
+            sections.append((current_heading, rendered))
+
+    for raw_line in normalized.splitlines():
+        line = raw_line.strip()
+        if not line:
+            if current_heading is None:
+                if preamble_lines and preamble_lines[-1] != "":
+                    preamble_lines.append("")
+            elif current_lines and current_lines[-1] != "":
+                current_lines.append("")
+            continue
+
+        heading = detect_heading(line)
+        if heading:
+            if current_heading is None:
+                if preamble_lines:
+                    if heading == "Abstract":
+                        current_heading = "Abstract"
+                        current_lines = list(preamble_lines)
+                        preamble_lines = []
+                        continue
+                    rendered_preamble = render_section_text(preamble_lines)
+                    if rendered_preamble:
+                        sections.append(("Abstract", rendered_preamble))
+                    preamble_lines = []
+            elif current_heading == heading and not current_lines:
+                continue
+            else:
+                flush_current_section()
+            current_heading = heading
+            current_lines = []
+            continue
+
+        if current_heading is None:
+            preamble_lines.append(line)
+        else:
+            current_lines.append(line)
+
+    if current_heading is None:
+        rendered_full_text = render_section_text(preamble_lines)
+        if not rendered_full_text:
+            return ""
+        return f"## Full Text\n\n{rendered_full_text}"
+
+    flush_current_section()
+    rendered_sections = [
+        f"## {heading}\n\n{section_text}"
+        for heading, section_text in sections
+        if section_text
+    ]
+    return "\n\n".join(rendered_sections).strip()
 
 
 class WileyClient(ProviderClient):

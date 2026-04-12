@@ -12,7 +12,6 @@ from .models import (
     ArticleModel,
     AssetProfile,
     FetchEnvelope,
-    Metadata,
     OutputMode,
     RenderOptions,
     metadata_only_article,
@@ -635,20 +634,6 @@ def _fetch_article(
         source_trail=source_trail,
     )
 
-
-def metadata_model_from_mapping(metadata: Mapping[str, Any]) -> Metadata:
-    return Metadata(
-        title=safe_text(metadata.get("title")) or None,
-        authors=[safe_text(item) for item in list(metadata.get("authors") or []) if safe_text(item)],
-        abstract=safe_text(metadata.get("abstract")) or None,
-        journal=safe_text(metadata.get("journal_title") or metadata.get("journal")) or None,
-        published=safe_text(metadata.get("published")) or None,
-        keywords=[safe_text(item) for item in list(metadata.get("keywords") or []) if safe_text(item)],
-        license_urls=[safe_text(item) for item in list(metadata.get("license_urls") or []) if safe_text(item)],
-        landing_page_url=safe_text(metadata.get("landing_page_url")) or None,
-    )
-
-
 def public_source_for_article(article: ArticleModel) -> str:
     if "fallback:metadata_only" in article.quality.source_trail:
         return "metadata_only"
@@ -725,6 +710,4 @@ def fetch_paper(
         env=env,
     )
     envelope = build_fetch_envelope(article, modes=requested_modes, render=resolved_render)
-    if "metadata" in requested_modes and envelope.metadata is None:
-        envelope.metadata = metadata_model_from_mapping({})
     return envelope

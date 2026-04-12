@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import gzip
+import io
 import re
 import socket
 import threading
@@ -189,6 +191,8 @@ class HttpTransport:
             url = f"{url}{separator}{encoded_query}"
 
         request_headers = {key: value for key, value in (headers or {}).items() if value is not None}
+        if not any(str(key).lower() == "accept-encoding" for key in request_headers):
+            request_headers["Accept-Encoding"] = "gzip"
         cache_key = self._build_cache_key(method, url, request_headers)
         cached_response = self._load_cached_response(cache_key)
         if cached_response is not None:
@@ -202,14 +206,16 @@ class HttpTransport:
             try:
                 with urllib.request.urlopen(request, timeout=timeout) as response:
                     response_url = response.geturl() or url
+                    headers_map = {key.lower(): value for key, value in response.headers.items()}
                     payload = self._read_response_body(
                         response,
                         status_code=response.status,
                         url=response_url,
+                        content_encoding=headers_map.get("content-encoding"),
                     )
                     response_payload = {
                         "status_code": response.status,
-                        "headers": {key.lower(): value for key, value in response.headers.items()},
+                        "headers": headers_map,
                         "body": payload,
                         "url": redact_url_for_cache(response_url),
                     }
@@ -218,12 +224,13 @@ class HttpTransport:
             except urllib.error.HTTPError as exc:
                 try:
                     error_url = exc.geturl() or url
+                    headers_map = {key.lower(): value for key, value in exc.headers.items()}
                     body = self._read_response_body(
                         exc,
                         status_code=exc.code,
                         url=error_url,
+                        content_encoding=headers_map.get("content-encoding"),
                     )
-                    headers_map = {key.lower(): value for key, value in exc.headers.items()}
                     retry_after_seconds = parse_retry_after_seconds(headers_map.get("retry-after"))
                     if (
                         exc.code == 429
@@ -279,11 +286,23 @@ class HttpTransport:
         *,
         status_code: int | None,
         url: str,
+        content_encoding: str | None = None,
     ) -> bytes:
-        payload = response.read(self.max_response_bytes + 1)
+        normalized_content_encoding = normalize_content_encoding(content_encoding)
+        if normalized_content_encoding == "gzip":
+            payload = response.read()
+        else:
+            payload = response.read(self.max_response_bytes + 1)
         if not isinstance(payload, (bytes, bytearray)):
             payload = bytes(payload or b"")
         body = bytes(payload)
+        if normalized_content_encoding == "gzip":
+            return decompress_gzip_body(
+                body,
+                status_code=status_code,
+                url=url,
+                max_response_bytes=self.max_response_bytes,
+            )
         if len(body) > self.max_response_bytes:
             raise RequestFailure(
                 status_code,
@@ -370,3 +389,40 @@ def build_text_preview(body: bytes, content_type: str | None) -> str | None:
         return None
     text = re.sub(r"\s+", " ", text).strip()
     return text[:500] or None
+
+
+def normalize_content_encoding(value: str | None) -> str:
+    if not value:
+        return ""
+    return ",".join(
+        token.strip().lower()
+        for token in str(value).split(",")
+        if token.strip()
+    )
+
+
+def decompress_gzip_body(
+    body: bytes,
+    *,
+    status_code: int | None,
+    url: str,
+    max_response_bytes: int,
+) -> bytes:
+    try:
+        with gzip.GzipFile(fileobj=io.BytesIO(body)) as gzip_file:
+            decompressed = gzip_file.read(max_response_bytes + 1)
+    except OSError as exc:
+        raise RequestFailure(
+            status_code,
+            f"Unable to decompress gzip response for {redact_url_for_cache(url)}: {exc}",
+            body=body[:max_response_bytes],
+            url=redact_url_for_cache(url),
+        ) from exc
+    if len(decompressed) > max_response_bytes:
+        raise RequestFailure(
+            status_code,
+            f"Response body exceeded {max_response_bytes} bytes for {redact_url_for_cache(url)}",
+            body=decompressed[:max_response_bytes],
+            url=redact_url_for_cache(url),
+        )
+    return decompressed
