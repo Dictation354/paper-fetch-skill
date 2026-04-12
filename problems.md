@@ -12,8 +12,7 @@
 
 ### 优先级 P1（可维护性)
 
-- **`ArticleModel.to_ai_markdown` 仍承担太多职责**（`src/paper_fetch/models.py:264-407`）。虽然 `RenderContext` 和热路径规范化已收口，但主函数仍混合 front matter、abstract、section 选择和多类 block 拼装。后续若继续重构，优先把“渲染计划生成”和“budget 驱动追加”拆成更小 helper。
-- **`_article_markdown_common.normalize_text` 与 `utils.normalize_text` 是逐字节复制**（`src/paper_fetch/providers/_article_markdown_common.py:23-28` vs `src/paper_fetch/utils.py:19-24`）。两份实现的字符替换、4 个 regex 和 strip 顺序完全一致，没有 XML 特有语义差异，纯属历史遗留。建议删掉 common 里的副本，改成 `from ..utils import normalize_text` 并 re-export，这样依赖它的 `_article_markdown_elsevier.py` / `_article_markdown_springer.py` / `_article_markdown_math.py` 等模块的导入路径无需改动。紧邻的 `normalize_compact_text`（`\s+` 压成单空格，会吞换行）语义不同，保留不动。
+- 当前无 P1 项。
 
 ### 优先级 P2（体验 / 结果质量）
 
@@ -83,6 +82,7 @@
 - ✅ `ArticleModel.to_ai_markdown()` 已引入 `RenderContext`，把剩余 budget、truncation 标记和 warning 收口到单一状态对象
 - ✅ section / asset / reference 渲染热路径现在复用 `RenderedBlock` 预计算结果，不再在循环里重复执行 `normalize_markdown_text()`
 - ✅ `max_tokens="full_text"` 的字符串 sentinel 现在只停留在公开输入边界；渲染内部已先归一化成 `token_budget + full_text_requested`
+- ✅ `ArticleModel.to_ai_markdown()` 已进一步收敛成薄 orchestrator；front matter/title block、渲染计划生成，以及 abstract / section 的 budget 驱动追加都已拆到私有 helper，公开签名与输出保持不变
 - ✅ 已新增 `paper_fetch.http` / `paper_fetch.service` debug 日志，记录官方 provider / HTML fallback / HTTP 请求链路的 url、状态、耗时与重试信息，且不改变 `source_trail` 语义
 - ✅ provider metadata TypedDict 已完成第一批：新增共享 `metadata_types.py`，Crossref 输出与 service 核心路由/合并读写已接入类型约束
 - ✅ provider metadata TypedDict 已完成第二批：Elsevier / Springer / Wiley 的 metadata 生产与消费已接入共享字段类型
@@ -94,7 +94,9 @@
 - ✅ 已补守卫测试，覆盖 `full_text` 与大预算渲染等价、缓存键白名单行为、共享 DOI 提取
 - ✅ 单个超大 `tests/unit/test_paper_fetch.py` 已拆成 `test_cli.py` / `test_service.py` / `test_models_render.py`，共享 stub/fixture 已下沉到 `tests/unit/_paper_fetch_support.py`
 - ✅ `HttpTransportCacheTests` 已拆到独立的 `test_http_cache.py`，`test_fetch_common.py` 只保留通用 helper / packaging 守卫
+- ✅ `_article_markdown_common.normalize_text` 已改为直接 re-export `utils.normalize_text()`；依赖它的 Elsevier / Springer / math 模块导入路径保持不变，`normalize_compact_text()` 继续保留独立语义
 - ✅ P0 HTTP/落盘修复已补守卫测试：覆盖 gzip 压缩体上限、429 无 `Retry-After` 短退避，以及 `save_payload()` 原子写失败不污染旧文件
+- ✅ 连接池改造已补守卫测试：覆盖 pooled 成功响应的 `release_conn()`、预读失败时的 `close()`，以及 `urllib3` timeout / non-timeout 异常的重试分类
 - ✅ 渲染管线重构已保持守卫测试绿：覆盖 `full_text` 与大预算渲染等价、CLI Markdown 输出兼容，以及 token budget 裁剪行为不变
 
 ### 既有收口基线
