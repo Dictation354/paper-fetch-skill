@@ -14,6 +14,7 @@ from typing import Any, Mapping
 from ..config import build_runtime_env, build_user_agent
 from ..html_lookup import is_usable_html_lookup_title
 from ..http import HttpTransport, RequestFailure
+from ..metadata_types import CrossrefMetadata
 from ..providers.base import ProviderFailure
 from ..providers.crossref import CrossrefClient
 from ..providers.html_generic import decode_html, parse_html_metadata
@@ -64,7 +65,7 @@ def candidate_score(query: str, candidate_title: str) -> float:
     return round((0.7 * jaccard) + (0.3 * ratio), 6)
 
 
-def score_candidates(query: str, candidates: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def score_candidates(query: str, candidates: list[CrossrefMetadata]) -> list[dict[str, Any]]:
     scored: list[dict[str, Any]] = []
     for item in candidates:
         title = str(item.get("title") or "")

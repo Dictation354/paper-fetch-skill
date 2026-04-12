@@ -40,3 +40,16 @@ class ProviderMetadata(TypedDict, total=False):
 
 class CrossrefMetadata(ProviderMetadata, total=False):
     pass
+
+
+class HtmlLookupHints(TypedDict, total=False):
+    lookup_title: str | None
+    redirect_url: str | None
+    identifier_value: str | None
+
+
+class HtmlMetadata(ProviderMetadata, total=False):
+    raw_meta: dict[str, list[str]]
+    lookup_title: str | None
+    lookup_redirect_url: str | None
+    identifier_value: str | None

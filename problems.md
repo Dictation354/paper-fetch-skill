@@ -14,7 +14,6 @@
 
 - **HTTP transport 没有连接复用**（`src/paper_fetch/http.py:205-223`）。`urllib.request.urlopen` 每次都新建 TCP+TLS；对 Elsevier/Springer/Wiley 一次 fetch 多条请求的链路（metadata→fulltext→figures→supplementary），同一域名建连成本占大头。两条路径：(a) 继续用 stdlib，但用 `http.client.HTTPSConnection` per host pool 串行复用；(b) 引入 `urllib3` / `httpx` 为 runtime 依赖直接 pool。动 transport 涉及 cache 行为与测试 stub，建议单独 PR。
 - **`ArticleModel.to_ai_markdown` 仍承担太多职责**（`src/paper_fetch/models.py:264-407`）。虽然 `RenderContext` 和热路径规范化已收口，但主函数仍混合 front matter、abstract、section 选择和多类 block 拼装。后续若继续重构，优先把“渲染计划生成”和“budget 驱动追加”拆成更小 helper。
-- **provider metadata TypedDict 收口（HTML fallback 批次）**。`html_generic` / `resolve/query.py` 的 HTML metadata 和 lookup hints 仍是松散 dict；需要接上共享 `TypedDict`，减少 key 漂移。
 
 ### 优先级 P2（体验 / 结果质量）
 
@@ -85,6 +84,7 @@
 - ✅ 已新增 `paper_fetch.http` / `paper_fetch.service` debug 日志，记录官方 provider / HTML fallback / HTTP 请求链路的 url、状态、耗时与重试信息，且不改变 `source_trail` 语义
 - ✅ provider metadata TypedDict 已完成第一批：新增共享 `metadata_types.py`，Crossref 输出与 service 核心路由/合并读写已接入类型约束
 - ✅ provider metadata TypedDict 已完成第二批：Elsevier / Springer / Wiley 的 metadata 生产与消费已接入共享字段类型
+- ✅ provider metadata TypedDict 已完成第三批：HTML fallback metadata / lookup hints 与 `resolve/query.py` 已接入共享类型
 - ✅ `_fetch_article()` 已拆成 `_try_official_provider()` / `_try_html_fallback()` / `_fallback_to_metadata_only()`，主流程改成线性串联，warning 与 `source_trail` 语义保持不变
 - ✅ HTTP GET 缓存键已从“全部请求头”收敛为语义白名单：`accept`、`accept-language` 和认证/权限相关头；`User-Agent` 这类 incidental header 不再导致 cache miss
 - ✅ DOI 提取逻辑已统一到 `publisher_identity.extract_doi()`；`resolve/query.py` 与 `html_generic.py` 不再各自维护一份 DOI regex

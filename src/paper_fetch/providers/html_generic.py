@@ -7,11 +7,12 @@ import re
 import urllib.parse
 from html.parser import HTMLParser
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Mapping
 
 from ..config import build_user_agent
 from ..html_lookup import is_usable_html_lookup_title
 from ..http import HttpTransport, RequestFailure
+from ..metadata_types import HtmlLookupHints, HtmlMetadata, ProviderMetadata
 from ..models import AssetProfile, article_from_markdown, normalize_text
 from ..publisher_identity import extract_doi, normalize_doi
 from ..utils import dedupe_authors
@@ -88,7 +89,7 @@ def extract_article_markdown(html_text: str, source_url: str) -> str:
     )
 
 
-def parse_html_metadata(html_text: str, source_url: str) -> dict[str, Any]:
+def parse_html_metadata(html_text: str, source_url: str) -> HtmlMetadata:
     parser = _MetaParser()
     parser.feed(html_text)
     parser.close()
@@ -141,7 +142,7 @@ def extract_html_lookup_hints(
     source_url: str,
     *,
     meta: Mapping[str, list[str]] | None = None,
-) -> dict[str, str | None]:
+) -> HtmlLookupHints:
     input_values = extract_html_input_values(html_text)
     hidden_redirect = normalize_lookup_url(input_values.get("redirecturl"), source_url)
     refresh_redirect = None
@@ -215,7 +216,7 @@ def extract_doi_from_text(value: str | None) -> str | None:
     return extract_doi(value)
 
 
-def merge_html_metadata(base_metadata: Mapping[str, Any] | None, html_metadata: Mapping[str, Any]) -> dict[str, Any]:
+def merge_html_metadata(base_metadata: ProviderMetadata | None, html_metadata: HtmlMetadata) -> HtmlMetadata:
     base = dict(base_metadata or {})
     merged = dict(base)
     for key in ("title", "journal_title", "published", "landing_page_url", "doi"):
@@ -248,7 +249,7 @@ class HtmlGenericClient:
         self,
         landing_url: str,
         *,
-        metadata: Mapping[str, Any] | None = None,
+        metadata: ProviderMetadata | None = None,
         expected_doi: str | None = None,
         download_dir: Path | None = None,
         asset_profile: AssetProfile = "none",
