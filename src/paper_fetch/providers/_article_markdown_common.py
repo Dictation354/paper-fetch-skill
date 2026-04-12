@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Any, Mapping
 
 from ..publisher_identity import normalize_doi
-from ..utils import sanitize_filename
+from ..utils import normalize_text, sanitize_filename
 
 XLINK_HREF = "{http://www.w3.org/1999/xlink}href"
 XLINK_TITLE = "{http://www.w3.org/1999/xlink}title"
@@ -18,14 +18,6 @@ XLINK_TITLE = "{http://www.w3.org/1999/xlink}title"
 
 def xml_local_name(tag: str) -> str:
     return tag.rsplit("}", 1)[-1] if "}" in tag else tag
-
-
-def normalize_text(value: str | None) -> str:
-    text = (value or "").replace("\xa0", " ")
-    text = re.sub(r"[ \t\r\f\v]+", " ", text)
-    text = re.sub(r"\s*\n\s*", "\n", text)
-    text = re.sub(r"\n{3,}", "\n\n", text)
-    return text.strip()
 
 
 def normalize_compact_text(value: str | None) -> str:

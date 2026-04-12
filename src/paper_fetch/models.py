@@ -223,6 +223,19 @@ class RenderedBlock:
     token_estimate: int
 
 
+@dataclass(frozen=True)
+class _MarkdownRenderPlan:
+    token_budget: float
+    abstract_text: str
+    level_shift: int
+    include_figures: str
+    reference_count: int
+    body_sections: tuple["Section", ...]
+    figure_assets: tuple["Asset", ...]
+    table_assets: tuple["Asset", ...]
+    supplementary_assets: tuple["Asset", ...]
+
+
 @dataclass
 class RenderContext:
     remaining_budget: float
@@ -289,126 +302,55 @@ class ArticleModel:
         max_tokens: MaxTokensMode = "full_text",
     ) -> str:
         warnings = list(self.quality.warnings)
-        token_budget, full_text_requested = normalize_token_budget(max_tokens)
-        effective_include_refs = resolve_reference_mode(include_refs, full_text_requested=full_text_requested)
-        effective_include_figures = resolve_figure_mode(include_figures, asset_profile=asset_profile)
-        effective_include_supplementary = resolve_supplementary_mode(
-            include_supplementary,
+        render_plan = _build_markdown_render_plan(
+            self,
+            include_refs=include_refs,
+            include_figures=include_figures,
+            include_supplementary=include_supplementary,
             asset_profile=asset_profile,
+            max_tokens=max_tokens,
         )
-        lines = ["---"]
-        front_matter_fields = (
-            ("title", self.metadata.title),
-            ("authors", ", ".join(self.metadata.authors) if self.metadata.authors else None),
-            ("journal", self.metadata.journal),
-            ("doi", self.doi),
-            ("published", self.metadata.published),
-        )
-        for key, value in front_matter_fields:
-            normalized_value = normalize_text(value)
-            if normalized_value:
-                lines.append(f'{key}: "{normalized_value.replace(chr(34), chr(39))}"')
-        lines.extend(
-            [
-                f'source: "{self.source}"',
-                f"has_fulltext: {str(self.quality.has_fulltext).lower()}",
-                f"token_estimate: {self.quality.token_estimate}",
-                "---",
-                "",
-                f"# {self.metadata.title or 'Untitled Article'}",
-                "",
-            ]
-        )
-        front_matter_block = build_rendered_block(lines)
+        front_matter_block = _build_article_header_block(self)
         lines = list(front_matter_block.lines)
         context = RenderContext(
-            remaining_budget=token_budget - front_matter_block.token_estimate,
+            remaining_budget=render_plan.token_budget - front_matter_block.token_estimate,
             warnings=warnings,
-        )
-
-        level_shift = compute_level_shift(self.sections)
-        body_sections = [
-            section
-            for section in self.sections
-            if section.kind not in {"abstract", "references", "supplementary", "diagnostics"}
-        ]
-        figure_assets = selected_figure_assets(self.assets, asset_profile=asset_profile)
-        table_assets = selected_table_assets(self.assets, asset_profile=asset_profile)
-        supplementary_assets = selected_supplementary_assets(
-            self.assets,
-            asset_profile=asset_profile,
-            include_supplementary=effective_include_supplementary,
         )
         if context.remaining_budget <= 0:
             context.mark_truncated()
             context.finalize_warnings()
             return "\n".join(lines).strip() + "\n"
 
-        abstract_text = normalize_text(self.metadata.abstract)
-        if abstract_text:
-            abstract_block = render_abstract_block(abstract_text)
-            if not context.append_if_fits(lines, abstract_block):
-                truncated_text = truncate_text_to_tokens(abstract_text, max(int(context.remaining_budget - 8), 0))
-                if truncated_text:
-                    context.append_if_fits(lines, render_abstract_block(truncated_text))
-                context.mark_truncated()
-
-        selected_sections: list[tuple[int, RenderedBlock]] = []
-        indexed_sections = list(enumerate(body_sections))
-        for index, section in sorted(indexed_sections, key=lambda item: (section_priority(item[1]), item[0])):
-            section_block = render_section_block(section, level_shift=level_shift)
-            if section_block.token_estimate <= context.remaining_budget:
-                selected_sections.append((index, section_block))
-                context.remaining_budget -= section_block.token_estimate
-                continue
-            if not math.isinf(context.remaining_budget) and context.remaining_budget > 64:
-                truncated_text = truncate_text_to_tokens(
-                    section.text,
-                    max(int(context.remaining_budget - estimate_tokens(section.heading) - 4), 0),
-                )
-                if truncated_text:
-                    truncated_section = Section(
-                        heading=section.heading,
-                        level=section.level,
-                        kind=section.kind,
-                        text=truncated_text,
-                    )
-                    selected_sections.append(
-                        (
-                            index,
-                            render_section_block(truncated_section, level_shift=level_shift),
-                        )
-                    )
-                    context.remaining_budget = 0
-            context.mark_truncated()
-            break
-
-        for _, section_block in sorted(selected_sections, key=lambda item: item[0]):
-            lines.extend(section_block.lines)
+        _append_abstract_with_budget(lines, abstract_text=render_plan.abstract_text, context=context)
+        _append_sections_with_budget(
+            lines,
+            sections=render_plan.body_sections,
+            level_shift=render_plan.level_shift,
+            context=context,
+        )
 
         append_asset_block_with_budget(
             lines,
             heading="Figures",
-            item_groups=render_figure_asset_groups(figure_assets, include_figures=effective_include_figures),
+            item_groups=render_figure_asset_groups(list(render_plan.figure_assets), include_figures=render_plan.include_figures),
             context=context,
         )
         append_asset_block_with_budget(
             lines,
             heading="Tables",
-            item_groups=render_table_asset_groups(table_assets),
+            item_groups=render_table_asset_groups(list(render_plan.table_assets)),
             context=context,
         )
         append_asset_block_with_budget(
             lines,
             heading="Supplementary Materials",
-            item_groups=render_supplementary_asset_groups(supplementary_assets),
+            item_groups=render_supplementary_asset_groups(list(render_plan.supplementary_assets)),
             context=context,
         )
 
-        reference_count = resolve_reference_limit(effective_include_refs, len(self.references))
         append_reference_block_with_budget(
             lines,
-            references=self.references[:reference_count],
+            references=self.references[: render_plan.reference_count],
             total_references=len(self.references),
             context=context,
         )
@@ -449,6 +391,126 @@ def resolve_supplementary_mode(include_supplementary: bool | None, *, asset_prof
     if include_supplementary is not None:
         return include_supplementary
     return asset_profile == "all"
+
+
+def _build_article_header_block(article: "ArticleModel") -> RenderedBlock:
+    lines = ["---"]
+    front_matter_fields = (
+        ("title", article.metadata.title),
+        ("authors", ", ".join(article.metadata.authors) if article.metadata.authors else None),
+        ("journal", article.metadata.journal),
+        ("doi", article.doi),
+        ("published", article.metadata.published),
+    )
+    for key, value in front_matter_fields:
+        normalized_value = normalize_text(value)
+        if normalized_value:
+            lines.append(f'{key}: "{normalized_value.replace(chr(34), chr(39))}"')
+    lines.extend(
+        [
+            f'source: "{article.source}"',
+            f"has_fulltext: {str(article.quality.has_fulltext).lower()}",
+            f"token_estimate: {article.quality.token_estimate}",
+            "---",
+            "",
+            f"# {article.metadata.title or 'Untitled Article'}",
+            "",
+        ]
+    )
+    return build_rendered_block(lines)
+
+
+def _build_markdown_render_plan(
+    article: "ArticleModel",
+    *,
+    include_refs: str | None,
+    include_figures: str | None,
+    include_supplementary: bool | None,
+    asset_profile: AssetProfile,
+    max_tokens: MaxTokensMode,
+) -> _MarkdownRenderPlan:
+    token_budget, full_text_requested = normalize_token_budget(max_tokens)
+    effective_include_refs = resolve_reference_mode(include_refs, full_text_requested=full_text_requested)
+    effective_include_figures = resolve_figure_mode(include_figures, asset_profile=asset_profile)
+    effective_include_supplementary = resolve_supplementary_mode(
+        include_supplementary,
+        asset_profile=asset_profile,
+    )
+    body_sections = tuple(
+        section
+        for section in article.sections
+        if section.kind not in {"abstract", "references", "supplementary", "diagnostics"}
+    )
+    return _MarkdownRenderPlan(
+        token_budget=token_budget,
+        abstract_text=normalize_text(article.metadata.abstract),
+        level_shift=compute_level_shift(article.sections),
+        include_figures=effective_include_figures,
+        reference_count=resolve_reference_limit(effective_include_refs, len(article.references)),
+        body_sections=body_sections,
+        figure_assets=tuple(selected_figure_assets(article.assets, asset_profile=asset_profile)),
+        table_assets=tuple(selected_table_assets(article.assets, asset_profile=asset_profile)),
+        supplementary_assets=tuple(
+            selected_supplementary_assets(
+                article.assets,
+                asset_profile=asset_profile,
+                include_supplementary=effective_include_supplementary,
+            )
+        ),
+    )
+
+
+def _append_abstract_with_budget(lines: list[str], *, abstract_text: str, context: RenderContext) -> None:
+    if not abstract_text:
+        return
+    abstract_block = render_abstract_block(abstract_text)
+    if context.append_if_fits(lines, abstract_block):
+        return
+    truncated_text = truncate_text_to_tokens(abstract_text, max(int(context.remaining_budget - 8), 0))
+    if truncated_text:
+        context.append_if_fits(lines, render_abstract_block(truncated_text))
+    context.mark_truncated()
+
+
+def _append_sections_with_budget(
+    lines: list[str],
+    *,
+    sections: tuple["Section", ...],
+    level_shift: int,
+    context: RenderContext,
+) -> None:
+    selected_sections: list[tuple[int, RenderedBlock]] = []
+    indexed_sections = list(enumerate(sections))
+    for index, section in sorted(indexed_sections, key=lambda item: (section_priority(item[1]), item[0])):
+        section_block = render_section_block(section, level_shift=level_shift)
+        if section_block.token_estimate <= context.remaining_budget:
+            selected_sections.append((index, section_block))
+            context.remaining_budget -= section_block.token_estimate
+            continue
+        if not math.isinf(context.remaining_budget) and context.remaining_budget > 64:
+            truncated_text = truncate_text_to_tokens(
+                section.text,
+                max(int(context.remaining_budget - estimate_tokens(section.heading) - 4), 0),
+            )
+            if truncated_text:
+                truncated_section = Section(
+                    heading=section.heading,
+                    level=section.level,
+                    kind=section.kind,
+                    text=truncated_text,
+                )
+                selected_sections.append(
+                    (
+                        index,
+                        render_section_block(truncated_section, level_shift=level_shift),
+                    )
+                )
+                context.remaining_budget = 0
+        context.mark_truncated()
+        break
+
+    for _, section_block in sorted(selected_sections, key=lambda item: item[0]):
+        lines.extend(section_block.lines)
 
 
 def normalize_asset_section(asset: Asset) -> str:

@@ -7,6 +7,7 @@ from tempfile import TemporaryDirectory
 from unittest import mock
 
 from paper_fetch import utils
+from paper_fetch.providers import _article_markdown_common as markdown_common
 from tests.paths import REPO_ROOT
 
 
@@ -36,7 +37,11 @@ class FetchCommonTests(unittest.TestCase):
         dependencies = list(pyproject["project"]["dependencies"])
 
         self.assertIn("pydantic>=2,<3", dependencies)
+        self.assertIn("urllib3>=2.2,<3", dependencies)
         self.assertTrue(all("==" not in dependency for dependency in dependencies))
+
+    def test_article_markdown_common_reexports_shared_normalize_text(self) -> None:
+        self.assertIs(markdown_common.normalize_text, utils.normalize_text)
 
     def test_save_payload_is_atomic_when_replacing_existing_file(self) -> None:
         with TemporaryDirectory() as tmpdir:
