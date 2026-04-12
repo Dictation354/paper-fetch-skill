@@ -15,7 +15,7 @@ from ..http import HttpTransport, RequestFailure
 from ..metadata_types import HtmlLookupHints, HtmlMetadata, ProviderMetadata
 from ..models import AssetProfile, article_from_markdown, normalize_text
 from ..publisher_identity import extract_doi, normalize_doi
-from ..utils import dedupe_authors
+from ..utils import choose_public_landing_page_url, dedupe_authors
 from . import html_assets as _html_assets
 from . import html_noise as _html_noise
 from .base import ProviderFailure, map_request_failure
@@ -216,6 +216,13 @@ def extract_doi_from_text(value: str | None) -> str | None:
     return extract_doi(value)
 
 
+def build_sciencedirect_article_url(identifier_value: str | None) -> str | None:
+    identifier = normalize_text(identifier_value)
+    if not identifier:
+        return None
+    return f"https://www.sciencedirect.com/science/article/pii/{urllib.parse.quote(identifier, safe='')}"
+
+
 def merge_html_metadata(base_metadata: ProviderMetadata | None, html_metadata: HtmlMetadata) -> HtmlMetadata:
     base = dict(base_metadata or {})
     merged = dict(base)
@@ -271,6 +278,31 @@ class HtmlGenericClient:
             merged_metadata["doi"] = normalize_doi(expected_doi)
 
         markdown_text = clean_markdown(extract_article_markdown(html_text, response["url"]))
+        redirect_url = choose_public_landing_page_url(
+            html_metadata.get("lookup_redirect_url"),
+            build_sciencedirect_article_url(html_metadata.get("identifier_value")),
+        )
+        if (
+            redirect_url
+            and redirect_url != response["url"]
+            and not has_sufficient_article_body(markdown_text, merged_metadata)
+        ):
+            try:
+                response = self.transport.request(
+                    "GET",
+                    redirect_url,
+                    headers={"User-Agent": self.user_agent, "Accept": "text/html,application/xhtml+xml"},
+                    retry_on_transient=True,
+                )
+            except RequestFailure as exc:
+                raise map_request_failure(exc) from exc
+            html_text = decode_html(response["body"])
+            redirected_metadata = parse_html_metadata(html_text, response["url"])
+            merged_metadata = merge_html_metadata(merged_metadata, redirected_metadata)
+            if expected_doi and not merged_metadata.get("doi"):
+                merged_metadata["doi"] = normalize_doi(expected_doi)
+            markdown_text = clean_markdown(extract_article_markdown(html_text, response["url"]))
+
         if not has_sufficient_article_body(markdown_text, merged_metadata):
             raise ProviderFailure("no_result", "HTML extraction did not produce enough article body text.")
 

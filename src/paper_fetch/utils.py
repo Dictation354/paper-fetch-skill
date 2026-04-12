@@ -16,6 +16,72 @@ def first_non_empty(*values: Any) -> Any:
     return None
 
 
+def flatten_url_candidates(value: Any) -> list[str]:
+    candidates: list[str] = []
+
+    def visit(node: Any) -> None:
+        if isinstance(node, str):
+            normalized = normalize_text(node)
+            if is_http_url(normalized):
+                candidates.append(normalized)
+            return
+        if isinstance(node, list):
+            for item in node:
+                visit(item)
+            return
+        if isinstance(node, dict):
+            for key in ("@href", "href", "url", "URL", "@value", "value"):
+                if key in node:
+                    visit(node.get(key))
+
+    visit(value)
+    deduped: list[str] = []
+    seen: set[str] = set()
+    for candidate in candidates:
+        if candidate not in seen:
+            seen.add(candidate)
+            deduped.append(candidate)
+    return deduped
+
+
+def is_http_url(url: str | None) -> bool:
+    normalized = normalize_text(url)
+    if not normalized:
+        return False
+    parsed = urllib.parse.urlparse(normalized)
+    return parsed.scheme in {"http", "https"} and bool(parsed.netloc)
+
+
+def is_api_like_url(url: str | None) -> bool:
+    normalized = normalize_text(url)
+    if not normalized:
+        return False
+    parsed = urllib.parse.urlparse(normalized)
+    hostname = parsed.netloc.lower()
+    path = parsed.path.lower()
+    if not hostname:
+        return False
+    if hostname in {"www.scopus.com", "scopus.com"}:
+        return True
+    if hostname.startswith("api."):
+        return True
+    return any(token in path for token in ("/content/abstract/", "/content/article/", "/inward/record.uri", "/inward/citedby.uri"))
+
+
+def choose_public_landing_page_url(*values: Any) -> str | None:
+    candidates: list[str] = []
+    seen: set[str] = set()
+    for value in values:
+        for candidate in flatten_url_candidates(value):
+            if candidate not in seen:
+                seen.add(candidate)
+                candidates.append(candidate)
+    for candidate in candidates:
+        if not is_api_like_url(candidate):
+            return candidate
+    return candidates[0] if candidates else None
+
+
 def normalize_text(value: str | None) -> str:
     text = (value or "").replace("\xa0", " ")
     text = re.sub(r"[ \t\r\f\v]+", " ", text)

@@ -75,6 +75,7 @@ class RecordingTransport(FakeTransport):
 class MappingTransport(html_generic.HttpTransport):
     def __init__(self, responses):
         self.responses = responses
+        self.calls = []
 
     def request(
         self,
@@ -91,6 +92,7 @@ class MappingTransport(html_generic.HttpTransport):
         transient_retries=2,
         transient_backoff_base_seconds=0.5,
     ):
+        self.calls.append(url)
         if url not in self.responses:
             raise html_generic.RequestFailure(404, f"Missing fixture response for {url}")
         response = dict(self.responses[url])
@@ -214,6 +216,77 @@ class HtmlGenericTests(unittest.TestCase):
         self.assertFalse(any("sign in" in section.text.lower() for section in article.sections))
         self.assertTrue(any(section.heading == "Data availability" for section in article.sections))
         self.assertEqual(article.assets[0].caption, "Overview figure.")
+
+    def test_fetch_article_model_follows_elsevier_redirect_stub_when_initial_body_is_too_short(self) -> None:
+        transport = MappingTransport(
+            {
+                "https://linkinghub.elsevier.com/retrieve/pii/S0034425725000525": {
+                    "status_code": 200,
+                    "headers": {"content-type": "text/html"},
+                    "body": (
+                        b"<html><head>"
+                        b"<title>Redirecting</title>"
+                        b'<meta http-equiv="refresh" content="2; url=\'/retrieve/articleSelectSinglePerm\'" />'
+                        b"</head><body>"
+                        b'<input type="hidden" name="redirectURL" value="https%3A%2F%2Fwww.sciencedirect.com%2Fscience%2Farticle%2Fpii%2FS0034425725000525" />'
+                        b"<script>"
+                        b"siteCatalyst.pageDataLoad({ articleName : 'Stub Article Title', identifierValue : 'S0034425725000525' });"
+                        b"</script>"
+                        b"</body></html>"
+                    ),
+                    "url": "https://linkinghub.elsevier.com/retrieve/pii/S0034425725000525",
+                },
+                "https://www.sciencedirect.com/science/article/pii/S0034425725000525": {
+                    "status_code": 200,
+                    "headers": {"content-type": "text/html"},
+                    "body": (
+                        b"<html><head>"
+                        b'<meta name="citation_title" content="ScienceDirect Article" />'
+                        b'<meta name="citation_author" content="Alice Example" />'
+                        b"</head><body>ScienceDirect body</body></html>"
+                    ),
+                    "url": "https://www.sciencedirect.com/science/article/pii/S0034425725000525",
+                },
+            }
+        )
+        client = html_generic.HtmlGenericClient(transport, {})
+
+        original_extract = html_generic.extract_article_markdown
+        try:
+            def fake_extract(html: str, url: str) -> str:
+                if "linkinghub.elsevier.com" in url:
+                    return "# Redirecting\n\nPlease wait."
+                return "\n".join(
+                    [
+                        "# ScienceDirect Article",
+                        "",
+                        "## Introduction",
+                        "Important body text " * 70,
+                        "",
+                        "## Results",
+                        "More important body text " * 70,
+                    ]
+                )
+
+            html_generic.extract_article_markdown = fake_extract
+            article = client.fetch_article_model(
+                "https://linkinghub.elsevier.com/retrieve/pii/S0034425725000525",
+                expected_doi="10.1016/j.rse.2025.114648",
+            )
+        finally:
+            html_generic.extract_article_markdown = original_extract
+
+        self.assertEqual(
+            transport.calls,
+            [
+                "https://linkinghub.elsevier.com/retrieve/pii/S0034425725000525",
+                "https://www.sciencedirect.com/science/article/pii/S0034425725000525",
+            ],
+        )
+        self.assertEqual(article.metadata.title, "Stub Article Title")
+        self.assertEqual(article.metadata.authors, ["Alice Example"])
+        self.assertEqual(article.doi, "10.1016/j.rse.2025.114648")
+        self.assertTrue(article.quality.has_fulltext)
 
     def test_extract_figure_assets_reads_nature_full_size_links(self) -> None:
         html = """

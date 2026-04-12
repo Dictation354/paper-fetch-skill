@@ -17,6 +17,7 @@ from ..publisher_identity import normalize_doi
 from ..utils import (
     build_asset_output_path,
     build_output_path,
+    choose_public_landing_page_url,
     empty_asset_results,
     first_non_empty,
     sanitize_filename,
@@ -350,7 +351,7 @@ class ElsevierClient(ProviderClient):
                 )
             ),
             "published": first_non_empty(core.get("prism:coverDate"), core.get("prism:coverDisplayDate")),
-            "landing_page_url": first_non_empty(core.get("prism:url"), core.get("link")),
+            "landing_page_url": choose_public_landing_page_url(core.get("link"), core.get("prism:url")),
             "license_urls": [],
             "fulltext_links": [],
             "keywords": extract_elsevier_keywords(root),

@@ -9,6 +9,7 @@ from paper_fetch.http import HttpTransport, RequestFailure
 from paper_fetch.providers import html_generic
 from paper_fetch.providers.base import RawFulltextPayload
 from paper_fetch.providers.wiley import WileyClient
+from paper_fetch.utils import choose_public_landing_page_url
 
 from ._paper_fetch_support import (
     FixtureHtmlTransport,
@@ -608,7 +609,7 @@ class ServiceTests(unittest.TestCase):
                         "official_provider": True,
                         "doi": "10.1006/jaer.1996.0085",
                         "title": "Official Elsevier Title",
-                        "landing_page_url": "https://linkinghub.elsevier.com/retrieve/pii/S0021863496900852",
+                        "landing_page_url": "https://api.elsevier.com/content/abstract/scopus_id/0012465826",
                         "authors": ["Alice Example"],
                         "fulltext_links": [],
                         "references": [],
@@ -633,6 +634,7 @@ class ServiceTests(unittest.TestCase):
 
         self.assertEqual(provider_name, "elsevier")
         self.assertEqual(metadata["title"], "Official Elsevier Title")
+        self.assertEqual(metadata["landing_page_url"], "https://linkinghub.elsevier.com/retrieve/pii/S0021863496900852")
         self.assertIn("route:crossref_signal_ok", source_trail)
         self.assertIn("route:signal_domain_elsevier", source_trail)
         self.assertIn("route:signal_publisher_elsevier", source_trail)
@@ -1123,6 +1125,36 @@ class ServiceTests(unittest.TestCase):
         )
 
         self.assertEqual(merged["authors"], ["Zhang, San", "Alice Example"])
+
+    def test_merge_metadata_prefers_public_landing_page_over_api_endpoint(self) -> None:
+        merged = paper_fetch.merge_primary_secondary_metadata(
+            {"landing_page_url": "https://api.elsevier.com/content/abstract/scopus_id/0012465826"},
+            {"landing_page_url": "https://linkinghub.elsevier.com/retrieve/pii/S0021863496900852"},
+        )
+
+        self.assertEqual(
+            merged["landing_page_url"],
+            "https://linkinghub.elsevier.com/retrieve/pii/S0021863496900852",
+        )
+
+    def test_choose_public_landing_page_url_ignores_elsevier_link_flags_and_scopus_urls(self) -> None:
+        selected = choose_public_landing_page_url(
+            [
+                {
+                    "@_fa": "true",
+                    "@rel": "self",
+                    "@href": "https://api.elsevier.com/content/abstract/scopus_id/0012465826",
+                },
+                {
+                    "@_fa": "true",
+                    "@rel": "scopus",
+                    "@href": "https://www.scopus.com/inward/record.uri?partnerID=HzOxMe3b&scp=0012465826&origin=inward",
+                },
+            ],
+            "https://linkinghub.elsevier.com/retrieve/pii/S0021863496900852",
+        )
+
+        self.assertEqual(selected, "https://linkinghub.elsevier.com/retrieve/pii/S0021863496900852")
 
     def test_wiley_pdf_is_downloaded_and_extracted_into_fulltext(self) -> None:
         resolved = paper_fetch.ResolvedQuery(

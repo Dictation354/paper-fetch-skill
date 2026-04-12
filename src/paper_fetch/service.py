@@ -13,6 +13,7 @@ from .http import HttpTransport, RequestFailure
 from .metadata_types import ProviderMetadata
 from .utils import (
     build_output_path,
+    choose_public_landing_page_url,
     dedupe_authors,
     empty_asset_results,
     extend_unique,
@@ -102,7 +103,7 @@ def merge_primary_secondary_metadata(
 ) -> ProviderMetadata:
     merged = dict(secondary or {})
     merged.update(primary or {})
-    scalar_keys = ("doi", "title", "journal_title", "published", "landing_page_url", "abstract", "publisher")
+    scalar_keys = ("doi", "title", "journal_title", "published", "abstract", "publisher")
 
     def scalarize(value: Any, *, preserve_blank: bool = False) -> str | None:
         if isinstance(value, str):
@@ -135,6 +136,10 @@ def merge_primary_secondary_metadata(
             merged[key] = scalarize(primary.get(key), preserve_blank=True)
         else:
             merged[key] = scalarize((secondary or {}).get(key))
+    merged["landing_page_url"] = choose_public_landing_page_url(
+        (primary or {}).get("landing_page_url"),
+        (secondary or {}).get("landing_page_url"),
+    )
 
     def merged_list(key: str, *, semantic: bool = False) -> list[Any]:
         result: list[Any] = []
@@ -296,8 +301,8 @@ def fetch_metadata_for_resolved_query(
         try:
             routing_metadata = dict(crossref_client.fetch_metadata({"doi": resolved.doi}))
             if routing_metadata:
+                crossref_metadata = routing_metadata
                 if crossref_is_public_source:
-                    crossref_metadata = routing_metadata
                     source_trail.append("metadata:crossref_ok")
                 else:
                     source_trail.append("route:crossref_signal_ok")
@@ -344,7 +349,7 @@ def fetch_metadata_for_resolved_query(
     if official_metadata or crossref_metadata:
         if official_metadata:
             source_trail.append(f"metadata:{provider_name}_ok")
-        metadata = merge_primary_secondary_metadata(official_metadata, crossref_metadata if crossref_is_public_source else None)
+        metadata = merge_primary_secondary_metadata(official_metadata, crossref_metadata)
         metadata["provider"] = (official_metadata or crossref_metadata or {}).get("provider")
         metadata["official_provider"] = (official_metadata or crossref_metadata or {}).get("official_provider")
         if not metadata.get("landing_page_url"):
@@ -679,7 +684,10 @@ def _fetch_article(
 
     metadata, provider_name, metadata_trail = fetch_metadata_for_resolved_query(resolved, clients=client_registry, strategy=strategy)
     extend_unique(source_trail, metadata_trail)
-    landing_url = safe_text(metadata.get("landing_page_url") or resolved.landing_url) or None
+    landing_url = choose_public_landing_page_url(
+        resolved.landing_url,
+        metadata.get("landing_page_url"),
+    )
     doi = normalize_doi(safe_text(metadata.get("doi") or resolved.doi)) or None
     html_fallback_client = html_client or HtmlGenericClient(active_transport, active_env)
     warnings: list[str] = []
