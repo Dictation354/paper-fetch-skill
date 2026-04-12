@@ -173,6 +173,13 @@ class ServiceTests(unittest.TestCase):
             }
 
         original_resolve = paper_fetch.resolve_paper
+        raw_payload = RawFulltextPayload(
+            provider="elsevier",
+            source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest",
+            content_type="text/xml",
+            body=b"<xml/>",
+            metadata={"reason": "Downloaded full text from the official Elsevier API."},
+        )
         try:
             paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
             with tempfile.TemporaryDirectory() as tmpdir:
@@ -191,13 +198,7 @@ class ServiceTests(unittest.TestCase):
                                 "fulltext_links": [],
                                 "references": [],
                             },
-                            raw_payload=RawFulltextPayload(
-                                provider="elsevier",
-                                source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest",
-                                content_type="text/xml",
-                                body=b"<xml/>",
-                                metadata={"reason": "Downloaded full text from the official Elsevier API."},
-                            ),
+                            raw_payload=raw_payload,
                             article=official_article,
                             related_asset_factory=write_related_assets,
                         ),
@@ -222,6 +223,7 @@ class ServiceTests(unittest.TestCase):
             paper_fetch.resolve_paper = original_resolve
 
         self.assertIn("download:elsevier_assets_saved_profile_all", article.quality.source_trail)
+        self.assertEqual(raw_payload.metadata, {"reason": "Downloaded full text from the official Elsevier API."})
 
     def test_fetch_paper_model_skips_related_asset_downloads_when_no_download_is_set(self) -> None:
         resolved = paper_fetch.ResolvedQuery(

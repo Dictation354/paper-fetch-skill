@@ -445,12 +445,18 @@ class ElsevierClient(ProviderClient):
 
         raise ProviderFailure("error", "Elsevier full-text retrieval did not yield a supported representation.")
 
-    def to_article_model(self, metadata: Mapping[str, Any], raw_payload: RawFulltextPayload):
+    def to_article_model(
+        self,
+        metadata: Mapping[str, Any],
+        raw_payload: RawFulltextPayload,
+        *,
+        downloaded_assets: list[Mapping[str, Any]] | None = None,
+        asset_failures: list[Mapping[str, Any]] | None = None,
+    ):
         doi = normalize_doi(metadata.get("doi"))
         warnings: list[str] = []
         if is_xml_content_type(raw_payload.content_type):
-            downloaded_assets = raw_payload.metadata.get("downloaded_assets")
-            pseudo_assets = downloaded_assets if isinstance(downloaded_assets, list) and downloaded_assets else extract_elsevier_asset_references(raw_payload.body)
+            pseudo_assets = downloaded_assets if downloaded_assets else extract_elsevier_asset_references(raw_payload.body)
             xml_path = Path(f"{sanitize_filename(doi or str(metadata.get('title') or 'article'))}.xml")
             structure = build_article_structure(
                 provider="elsevier",

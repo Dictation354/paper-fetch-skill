@@ -489,11 +489,16 @@ def _try_official_provider(
             metadata=metadata,
             asset_profile=strategy.asset_profile,
         )
-        raw_payload.metadata["downloaded_assets"] = list(asset_results.get("assets") or [])
-        raw_payload.metadata["asset_failures"] = list(asset_results.get("asset_failures") or [])
+        downloaded_assets = list(asset_results.get("assets") or [])
+        asset_failures = list(asset_results.get("asset_failures") or [])
         extend_unique(warnings, asset_warnings)
         extend_unique(source_trail, asset_trail)
-        article = provider_client.to_article_model(metadata, raw_payload)
+        article = provider_client.to_article_model(
+            metadata,
+            raw_payload,
+            downloaded_assets=downloaded_assets,
+            asset_failures=asset_failures,
+        )
         extend_unique(source_trail, article.quality.source_trail)
         if article.quality.has_fulltext and article.sections:
             extend_unique(source_trail, [f"fulltext:{provider_name}_article_ok"])

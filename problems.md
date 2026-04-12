@@ -19,7 +19,7 @@
 
 ### 优先级 P2（体验 / 结果质量）
 
-- **`_try_official_provider` 往 `raw_payload.metadata` 里塞 `downloaded_assets` / `asset_failures`**（`src/paper_fetch/service.py:494-495`）是隐式共享状态。由调用方以返回值传递更清晰。
+- 当前无 P2 项。
 
 ### 原有真实论文边角 case
 
@@ -109,6 +109,7 @@
 - ✅ CLI Markdown 资产链接改成“占位符渲染 -> 定点替换相对路径”；不会再对整段正文做绝对路径字符串替换
 - ✅ `HttpTransport` 的进程内 GET 缓存已新增总体字节上限；超过预算时按 LRU 淘汰旧响应，避免长会话常驻 ~128 MiB 文本缓存
 - ✅ `Asset.path` / `caption` / `url` 现在已统一成 `str | None` 语义；模型构造层不再保留空字符串占位
+- ✅ official provider 的下载资产结果已改为 service 显式传参；不再通过 `raw_payload.metadata["downloaded_assets"/"asset_failures"]` 共享隐式状态
 - ✅ `HttpTransport` 现在默认发送 `Accept-Encoding: gzip`，并会用标准库透明解压 gzip 响应后再执行响应体大小限制
 - ✅ `extract_full_size_figure_image_url()` 不再对全部候选排序；命中 `/full/` 或 `springernature.com` 候选时会提前返回
 - ✅ `fetch_paper` 在 metadata 模式下不再伪造空 `Metadata()`；只返回真实的 `article.metadata`

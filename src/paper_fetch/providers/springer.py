@@ -444,18 +444,24 @@ class SpringerClient(ProviderClient):
             needs_local_copy=not (content_type.startswith("text/") or is_xml_content_type(content_type)),
         )
 
-    def to_article_model(self, metadata: Mapping[str, Any], raw_payload: RawFulltextPayload):
+    def to_article_model(
+        self,
+        metadata: Mapping[str, Any],
+        raw_payload: RawFulltextPayload,
+        *,
+        downloaded_assets: list[Mapping[str, Any]] | None = None,
+        asset_failures: list[Mapping[str, Any]] | None = None,
+    ):
         doi = normalize_doi(metadata.get("doi"))
         warnings: list[str] = []
         if is_xml_content_type(raw_payload.content_type):
-            downloaded_assets = raw_payload.metadata.get("downloaded_assets")
             xml_path = Path(f"{sanitize_filename(doi or str(metadata.get('title') or 'article'))}.xml")
             structure = build_article_structure(
                 provider="springer",
                 metadata=metadata,
                 xml_body=raw_payload.body,
                 xml_path=xml_path,
-                assets=downloaded_assets if isinstance(downloaded_assets, list) else [],
+                assets=list(downloaded_assets or []),
             )
             if structure is not None:
                 return article_from_structure(

@@ -245,7 +245,14 @@ class WileyClient(ProviderClient):
             needs_local_copy=needs_local_copy,
         )
 
-    def to_article_model(self, metadata: Mapping[str, Any], raw_payload: RawFulltextPayload):
+    def to_article_model(
+        self,
+        metadata: Mapping[str, Any],
+        raw_payload: RawFulltextPayload,
+        *,
+        downloaded_assets: list[Mapping[str, Any]] | None = None,
+        asset_failures: list[Mapping[str, Any]] | None = None,
+    ):
         doi = normalize_doi(metadata.get("doi"))
         warnings: list[str] = []
         content_type = (raw_payload.content_type or "").split(";", 1)[0].strip().lower()

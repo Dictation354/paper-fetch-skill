@@ -56,10 +56,15 @@ class ProviderStub:
             raise self._raw_error
         return self._raw_payload
 
-    def to_article_model(self, metadata, raw_payload):
+    def to_article_model(self, metadata, raw_payload, *, downloaded_assets=None, asset_failures=None):
         if self._article_factory is None:
             raise AssertionError("article_factory must be provided for raw full-text tests.")
-        return self._article_factory(metadata, raw_payload)
+        return self._article_factory(
+            metadata,
+            raw_payload,
+            downloaded_assets=downloaded_assets,
+            asset_failures=asset_failures,
+        )
 
 
 class FailingHtmlClient:
