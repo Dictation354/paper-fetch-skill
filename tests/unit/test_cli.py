@@ -119,10 +119,11 @@ class CliTests(unittest.TestCase):
             output_dir = Path(tmpdir) / "downloads"
             asset_dir = output_dir / "10.1016_test_assets"
             asset_dir.mkdir(parents=True)
-            figure_path = asset_dir / "figure 1.png"
-            supplement_path = asset_dir / "supplement data.pdf"
+            figure_path = asset_dir / "figure%201.png"
+            supplement_path = asset_dir / "supplement data%.pdf"
             figure_path.write_bytes(b"figure")
             supplement_path.write_bytes(b"supplement")
+            article.sections[0].text += f"\n\nAbsolute path mention: {figure_path}"
 
             article.assets = [
                 Asset(kind="figure", heading="Figure 1", caption="Body figure.", path=str(figure_path), section="body"),
@@ -144,14 +145,20 @@ class CliTests(unittest.TestCase):
             self.assertIn(str(figure_path), envelope.markdown)
             self.assertIn(str(supplement_path), envelope.markdown)
 
-            paper_fetch_cli.save_markdown_to_disk(envelope, output_dir=output_dir)
+            paper_fetch_cli.save_markdown_to_disk(
+                envelope,
+                output_dir=output_dir,
+                render=RenderOptions(asset_profile="all"),
+            )
 
             rendered = (output_dir / "10.1016_test.md").read_text(encoding="utf-8")
-            self.assertIn("![Figure 1](10.1016_test_assets/figure%201.png)", rendered)
-            self.assertIn("[Supplementary Data](10.1016_test_assets/supplement%20data.pdf)", rendered)
+            self.assertIn("![Figure 1](10.1016_test_assets/figure%25201.png)", rendered)
+            self.assertIn("[Supplementary Data](10.1016_test_assets/supplement%20data%25.pdf)", rendered)
             self.assertIn("[Remote Appendix](https://example.test/appendix.pdf)", rendered)
-            self.assertNotIn(str(figure_path), rendered)
-            self.assertNotIn(str(supplement_path), rendered)
+            self.assertIn(f"Absolute path mention: {figure_path}", rendered)
+            self.assertEqual(rendered.count(str(figure_path)), 1)
+            self.assertNotIn(f"]({figure_path})", rendered)
+            self.assertNotIn(f"]({supplement_path})", rendered)
 
     def test_main_rewrites_local_asset_links_for_markdown_output_file(self) -> None:
         article = sample_article()
@@ -207,6 +214,40 @@ class CliTests(unittest.TestCase):
             rendered = output_path.read_text(encoding="utf-8")
             self.assertIn("![Figure 1](10.1016_test_assets/figure-1.png)", rendered)
             self.assertNotIn(str(figure_path), rendered)
+
+    def test_rewrite_markdown_asset_links_only_changes_placeholder_links(self) -> None:
+        article = sample_article()
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            output_dir = Path(tmpdir) / "downloads"
+            output_dir.mkdir(parents=True)
+            asset_dir = output_dir / "10.1016_test_assets"
+            asset_dir.mkdir()
+            figure_path = asset_dir / "figure-1.png"
+            supplementary_path = asset_dir / "figure-1.png.backup"
+            figure_path.write_bytes(b"figure")
+            supplementary_path.write_bytes(b"supplementary")
+            article.sections[0].text += f"\n\nBody mentions {figure_path} and {supplementary_path}."
+            article.assets = [
+                Asset(kind="figure", heading="Figure 1", caption="Body figure.", path=str(figure_path), section="body"),
+                Asset(kind="supplementary", heading="Backup", caption="Archive.", path=str(supplementary_path)),
+            ]
+            envelope = paper_fetch.build_fetch_envelope(
+                article,
+                modes={"article", "markdown"},
+                render=RenderOptions(asset_profile="all"),
+            )
+
+            rewritten = paper_fetch_cli.rewrite_markdown_asset_links(
+                envelope.markdown or "",
+                envelope,
+                target_path=output_dir / "article.md",
+                render=RenderOptions(asset_profile="all"),
+            )
+
+            self.assertIn("![Figure 1](10.1016_test_assets/figure-1.png)", rewritten)
+            self.assertIn("[Backup](10.1016_test_assets/figure-1.png.backup)", rewritten)
+            self.assertIn(f"Body mentions {figure_path} and {supplementary_path}.", rewritten)
 
     def test_main_rewrites_local_asset_links_for_both_output_file(self) -> None:
         article = sample_article()

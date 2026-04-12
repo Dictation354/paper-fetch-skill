@@ -7,37 +7,74 @@ import json
 import os
 import sys
 import urllib.parse
+from dataclasses import replace
 from pathlib import Path
 
 from .config import build_runtime_env, resolve_cli_download_dir
-from .models import FetchEnvelope, RenderOptions
+from .models import ArticleModel, FetchEnvelope, RenderOptions
 from .providers.base import ProviderFailure
 from .service import FetchStrategy, PaperFetchFailure, fetch_paper
 from .utils import extend_unique, sanitize_filename
 
+ASSET_LINK_PLACEHOLDER_PREFIX = "paper-fetch-asset://"
 
-def rewrite_markdown_asset_links(markdown: str, envelope: FetchEnvelope, *, target_path: Path) -> str:
+
+def _relative_asset_link(value: str | None, *, target_path: Path) -> str | None:
+    original = str(value or "").strip()
+    if not original or original.startswith(("http://", "https://", "//")):
+        return None
+    source_path = Path(original)
+    if not source_path.is_absolute():
+        return None
+    relative = Path(os.path.relpath(source_path, start=target_path.parent))
+    return urllib.parse.quote(relative.as_posix(), safe="/._-")
+
+
+def _article_with_placeholder_asset_links(article: ArticleModel, *, target_path: Path) -> tuple[ArticleModel, dict[str, str]]:
+    replacements: dict[str, str] = {}
+    rewritten_assets = []
+    placeholder_index = 0
+    for asset in article.assets:
+        placeholder_asset = asset
+        relative_path = _relative_asset_link(asset.path, target_path=target_path)
+        rewrite_field = "path"
+        if relative_path is None:
+            relative_path = _relative_asset_link(asset.url, target_path=target_path)
+            rewrite_field = "url"
+        if relative_path is not None:
+            placeholder = f"{ASSET_LINK_PLACEHOLDER_PREFIX}{placeholder_index}"
+            placeholder_index += 1
+            replacements[placeholder] = relative_path
+            placeholder_asset = replace(asset, **{rewrite_field: placeholder})
+        rewritten_assets.append(placeholder_asset)
+    return replace(article, assets=rewritten_assets), replacements
+
+
+def rewrite_markdown_asset_links(
+    markdown: str,
+    envelope: FetchEnvelope,
+    *,
+    target_path: Path,
+    render: RenderOptions,
+) -> str:
     if not markdown or envelope.article is None:
         return markdown
 
-    replacements: dict[str, str] = {}
-    for asset in envelope.article.assets:
-        original = str(asset.path or "").strip()
-        if not original or original.startswith(("http://", "https://", "//")):
-            continue
-        source_path = Path(original)
-        if not source_path.is_absolute():
-            continue
-        relative = Path(os.path.relpath(source_path, start=target_path.parent))
-        replacements[original] = urllib.parse.quote(relative.as_posix(), safe="/._-")
+    article_with_placeholders, replacements = _article_with_placeholder_asset_links(envelope.article, target_path=target_path)
+    if not replacements:
+        return markdown
 
-    rewritten = markdown
-    for original in sorted(replacements, key=len, reverse=True):
-        rewritten = rewritten.replace(original, replacements[original])
+    rewritten = article_with_placeholders.to_ai_markdown(
+        include_refs=render.include_refs,
+        asset_profile=render.asset_profile or "none",
+        max_tokens=render.max_tokens,
+    )
+    for placeholder, relative_path in replacements.items():
+        rewritten = rewritten.replace(placeholder, relative_path)
     return rewritten
 
 
-def save_markdown_to_disk(envelope: FetchEnvelope, *, output_dir: Path) -> None:
+def save_markdown_to_disk(envelope: FetchEnvelope, *, output_dir: Path, render: RenderOptions) -> None:
     has_usable_fulltext = bool(envelope.has_fulltext and envelope.markdown and envelope.article and envelope.article.sections)
     if not has_usable_fulltext:
         extend_unique(
@@ -53,7 +90,10 @@ def save_markdown_to_disk(envelope: FetchEnvelope, *, output_dir: Path) -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
     base = sanitize_filename(envelope.doi or envelope.article.metadata.title or "article")
     target = output_dir / f"{base}.md"
-    target.write_text(rewrite_markdown_asset_links(envelope.markdown or "", envelope, target_path=target), encoding="utf-8")
+    target.write_text(
+        rewrite_markdown_asset_links(envelope.markdown or "", envelope, target_path=target, render=render),
+        encoding="utf-8",
+    )
     extend_unique(envelope.warnings, [f"Markdown full text was saved to {target}."])
     extend_unique(envelope.source_trail, ["download:markdown_saved"])
     if envelope.article is not None:
@@ -167,6 +207,11 @@ def main() -> int:
         runtime_env = build_runtime_env()
         output_dir = Path(args.output_dir) if args.output_dir else resolve_cli_download_dir(runtime_env)
         modes = _compute_modes(args)
+        render_options = RenderOptions(
+            include_refs=args.include_refs,
+            asset_profile=args.asset_profile,
+            max_tokens=args.max_tokens,
+        )
         envelope = fetch_paper(
             args.query,
             modes=modes,
@@ -175,18 +220,19 @@ def main() -> int:
                 allow_metadata_only_fallback=True,
                 asset_profile=args.asset_profile,
             ),
-            render=RenderOptions(
-                include_refs=args.include_refs,
-                asset_profile=args.asset_profile,
-                max_tokens=args.max_tokens,
-            ),
+            render=render_options,
             download_dir=None if args.no_download else output_dir,
             env=runtime_env,
         )
         if args.save_markdown:
-            save_markdown_to_disk(envelope, output_dir=output_dir)
+            save_markdown_to_disk(envelope, output_dir=output_dir, render=render_options)
         markdown_override = (
-            rewrite_markdown_asset_links(envelope.markdown or "", envelope, target_path=Path(args.output))
+            rewrite_markdown_asset_links(
+                envelope.markdown or "",
+                envelope,
+                target_path=Path(args.output),
+                render=render_options,
+            )
             if args.output != "-" and args.format in {"markdown", "both"}
             else None
         )
