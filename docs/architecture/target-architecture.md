@@ -14,7 +14,7 @@ Date: 2026-04-10 (revision 7)
 - step 4 complete: the repo skill source is static `skills/paper-fetch-skill/SKILL.md`
 - step 5 complete: install scripts are thin, and the Codex manifest is generated only at install time
 
-For current operational backlog, including any post-closeout follow-up work, use `problems.md`. This document is architecture rationale and baseline contract only.
+Public shipped changes belong in `CHANGELOG.md`. Keep any local-only scratch backlog outside the repository. This document is architecture rationale and baseline contract only.
 
 ## Decision
 

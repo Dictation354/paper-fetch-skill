@@ -117,11 +117,12 @@ class ArchitectureCloseoutTests(unittest.TestCase):
         self.assertFalse((REPO_ROOT / "scripts" / "__init__.py").exists())
         self.assertFalse((REPO_ROOT / "references" / "formula_backend_report.json").exists())
 
-    def test_architecture_doc_defers_backlog_to_problems_md(self) -> None:
+    def test_architecture_doc_defers_public_history_to_changelog(self) -> None:
         text = ARCHITECTURE_DOC.read_text(encoding="utf-8")
         header = text.split("## Decision", 1)[0]
 
-        self.assertIn("problems.md", header)
+        self.assertIn("CHANGELOG.md", header)
+        self.assertNotIn("problems.md", header)
         self.assertNotIn("Remaining deltas", header)
 
     def test_cli_module_help_smoke(self) -> None:

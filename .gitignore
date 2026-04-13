@@ -26,6 +26,8 @@ pip-wheel-metadata/
 # Secrets and local data
 .env
 live-downloads/
+problems.md
+agent-surface-plan.md
 
 # Editors / OS
 .vscode/
