@@ -111,6 +111,11 @@ PAPER_FETCH_ENV_FILE=/path/to/.env
 
 显式覆盖 CLI / MCP 的默认下载目录。
 
+补充说明：
+
+- MCP 默认共享缓存 resources 只覆盖默认共享下载目录
+- 如果你在 MCP `fetch_paper(..., download_dir=...)` 里显式传了目录，就会写入那个隔离目录，并由 `list_cached(download_dir)` / `get_cached(doi, download_dir)` 读取
+
 #### `XDG_DATA_HOME`
 
 未设置 `PAPER_FETCH_DOWNLOAD_DIR` 时，用来推导默认下载目录根路径；CLI 与 MCP 都会落到 `paper-fetch/downloads/` 下。
@@ -371,7 +376,10 @@ Wiley-TDM-Client-Token
 
 ## Live Smoke 回归
 
-仓库内提供一个 opt-in 的真实出版商 smoke test 文件：`tests/live/test_live_publishers.py`。
+仓库内提供两个 opt-in 的 live smoke 入口：
+
+- `tests/live/test_live_publishers.py`: 直接打 service 层
+- `tests/live/test_live_mcp.py`: 通过真实 stdio MCP server + MCP client 打 agent surface
 
 运行方式：
 
@@ -390,6 +398,10 @@ PAPER_FETCH_RUN_LIVE=1 PYTHONPATH=src python -m unittest discover -s tests/live 
   - Wiley DOI `10.1002/ece3.9361`
   - Elsevier URL `https://linkinghub.elsevier.com/retrieve/pii/S0034425725000525`
   - 短正文 HTML fallback `https://www.nature.com/articles/sj.bdj.2017.900`
+- `test_live_mcp.py` 当前重点验收：
+  - Elsevier 官方全文 DOI 的 MCP `fetch_paper`
+  - Nature 短正文 HTML fallback 的 MCP `fetch_paper`
+  - client 侧 progress notifications 与 structured log notifications
 - Springer live 验收当前以 `Meta API + Open Access API` 为准；如果你后续拿到了 `Full Text API` key，可在同一测试入口下继续扩展
 
 ## 不应误解的点

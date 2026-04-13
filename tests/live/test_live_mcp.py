@@ -1,0 +1,114 @@
+from __future__ import annotations
+
+import os
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+
+from mcp.client.session import ClientSession
+from mcp.client.stdio import StdioServerParameters, stdio_client
+
+from paper_fetch.config import build_runtime_env
+from tests.paths import REPO_ROOT, SRC_DIR
+
+
+RUN_LIVE = os.environ.get("PAPER_FETCH_RUN_LIVE") == "1"
+
+
+class LiveMcpServerTests(unittest.IsolatedAsyncioTestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        if not RUN_LIVE:
+            raise unittest.SkipTest("Set PAPER_FETCH_RUN_LIVE=1 to run live MCP smoke tests.")
+        cls.env = build_runtime_env()
+
+    def _require_env(self, *keys: str) -> None:
+        missing = [key for key in keys if not self.env.get(key, "").strip()]
+        if missing:
+            self.skipTest(f"Missing required environment variables for live test: {', '.join(missing)}")
+
+    async def _call_fetch(
+        self,
+        *,
+        query: str,
+        args: dict[str, object] | None = None,
+    ) -> tuple[object, list[tuple[float, float | None, str | None]], list[object]]:
+        progress_updates: list[tuple[float, float | None, str | None]] = []
+        log_messages: list[object] = []
+
+        async def progress_callback(progress, total, message) -> None:
+            progress_updates.append((progress, total, message))
+
+        async def logging_callback(params) -> None:
+            log_messages.append(params.data)
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            server = StdioServerParameters(
+                command=sys.executable,
+                args=["-m", "paper_fetch.mcp.server"],
+                cwd=str(REPO_ROOT),
+                env={
+                    **os.environ,
+                    **self.env,
+                    "PYTHONPATH": str(SRC_DIR),
+                    "PAPER_FETCH_DOWNLOAD_DIR": str(Path(tmpdir) / "downloads"),
+                },
+            )
+
+            with tempfile.TemporaryFile(mode="w+") as errlog:
+                async with stdio_client(server, errlog=errlog) as (read_stream, write_stream):
+                    async with ClientSession(read_stream, write_stream, logging_callback=logging_callback) as session:
+                        await session.initialize()
+                        result = await session.call_tool(
+                            "fetch_paper",
+                            {"query": query, **(args or {})},
+                            progress_callback=progress_callback,
+                        )
+        return result, progress_updates, log_messages
+
+    async def test_elsevier_doi_live_via_mcp_reports_progress_and_logs(self) -> None:
+        self._require_env("ELSEVIER_API_KEY", "CROSSREF_MAILTO")
+
+        result, progress_updates, log_messages = await self._call_fetch(
+            query="10.1016/j.rse.2025.114648",
+            args={"modes": ["metadata"], "strategy": {"allow_html_fallback": False}},
+        )
+
+        self.assertFalse(result.isError)
+        self.assertEqual(result.structuredContent["source"], "elsevier_xml")
+        self.assertTrue(result.structuredContent["has_fulltext"])
+        self.assertIn("fulltext:elsevier_article_ok", result.structuredContent["source_trail"])
+        self.assertEqual(progress_updates[-1], (4, 4, "fetch_paper complete"))
+        self.assertTrue(
+            any(
+                isinstance(message, dict)
+                and str(message.get("event", "")).startswith("official_provider_")
+                for message in log_messages
+            )
+        )
+
+    async def test_html_fallback_live_via_mcp_reports_progress_and_logs(self) -> None:
+        self._require_env("SPRINGER_META_API_KEY", "SPRINGER_OPENACCESS_API_KEY", "CROSSREF_MAILTO")
+
+        result, progress_updates, log_messages = await self._call_fetch(
+            query="https://www.nature.com/articles/sj.bdj.2017.900",
+            args={"modes": ["metadata"], "strategy": {"allow_html_fallback": True}},
+        )
+
+        self.assertFalse(result.isError)
+        self.assertEqual(result.structuredContent["source"], "html_fallback")
+        self.assertTrue(result.structuredContent["has_fulltext"])
+        self.assertIn("fallback:html_ok", result.structuredContent["source_trail"])
+        self.assertEqual(progress_updates[-1], (4, 4, "fetch_paper complete"))
+        self.assertTrue(
+            any(
+                isinstance(message, dict)
+                and str(message.get("event", "")).startswith("html_fallback_")
+                for message in log_messages
+            )
+        )
+
+
+if __name__ == "__main__":
+    unittest.main()

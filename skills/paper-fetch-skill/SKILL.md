@@ -1,60 +1,115 @@
 ---
 name: paper-fetch-skill
-description: Fetch the AI-friendly full text of one specific paper by DOI, URL, or title, or verify full-text availability for identifiable papers in a citation list. Use when the user wants to read, summarize, analyze, translate, or extract information from a known paper and you do not already have its text. Not for topic surveys, literature discovery, or recommendation queries.
+description: Use when: fetch one known paper by DOI, URL, or title, or verify a citation list serially. Not for: topic surveys, literature discovery, or recommendation-only requests.
 ---
 
 # Paper Fetch Skill
 
 ## When to Use
 
-Use this skill when an agent needs the contents of one specific paper, not just a topic overview or recommendation list.
+Use this skill when an agent needs the contents or availability of one specific paper, not a broad topic overview.
 
 Typical triggers:
-- The user gives a `doi`, paper `url`, or only a paper `title`.
+- The user gives a `doi`, paper `url`, or paper `title`.
 - The user asks to read, summarize, compare, critique, translate, or extract methods/results from a specific paper.
-- The user gives a citation list or bibliography and asks which specific papers are readable, fetchable, or available in full text.
+- The user gives a citation list or bibliography and asks which specific papers are readable or fetchable.
 - You need compact Markdown or structured metadata that can go directly into model context.
 
 ## When NOT to Use
 
 Do not use this skill when:
-- The user is asking for a broad literature survey like "最近有哪些论文讲 X".
-- The user wants recommendations or paper discovery across a topic rather than one identifiable paper.
-- You already have the verified full paper text in the conversation or workspace and do not need to confirm availability again.
+- The user wants a broad literature survey like "最近有哪些论文讲 X".
+- The user wants topic recommendations or paper discovery rather than one identifiable paper.
+- The verified full paper text is already in the conversation or workspace and does not need to be re-fetched.
+
+## Call Discipline
+
+- In multi-turn sessions, prefer `list_cached()` or `get_cached(doi)` before re-fetching.
+- For bibliography or citation-list tasks, prefer `batch_check(queries, mode)` first.
+- Avoid duplicate fetches for the same DOI or URL in one session; reuse the prior Markdown or JSON when possible.
+- If a result is `ambiguous`, resolve the DOI first, then retry `fetch_paper`.
 
 ## Workflow
 
 1. Prefer the MCP tools when they are available.
-2. If the task is "Can you read this paper?" or "Which entries in this citation list are readable?", do not conclude "unreadable" just because there is no local PDF. Verify with MCP first for each identifiable paper that lacks verified local full text.
-3. For bibliography or citation-list tasks, process the papers one by one. Reuse local PDFs when they are already present, but use MCP to verify entries that are only represented by title, DOI, URL, or incomplete local artifacts.
-4. Call `resolve_paper(query)` first if the query may be ambiguous.
-5. Call `fetch_paper(query, modes, strategy, include_refs, max_tokens)` to retrieve AI-friendly Markdown, structured article data, or metadata.
-6. If the MCP tools are unavailable in the current runtime, fall back to the CLI:
+2. If the task is "Can you read this paper?" or "Which entries in this citation list are readable?", do not conclude "unreadable" just because there is no local PDF.
+3. In multi-turn sessions, call `list_cached()` or `get_cached(doi)` first.
+4. For bibliography or citation-list tasks, call `batch_check(queries, mode)` before doing per-paper full fetches.
+5. Call `resolve_paper(query)` first if the query may be ambiguous.
+6. Call `fetch_paper(query, modes, strategy, include_refs, max_tokens, download_dir)` when you need AI-friendly Markdown, structured article data, or metadata.
+7. If the MCP tools are unavailable in the current runtime, fall back to the CLI:
 
    ```bash
    paper-fetch --query "<user input>"
    ```
 
-7. If full text is unavailable, continue with the metadata-only result and tell the user they are working from metadata / abstract only.
+8. If full text is unavailable, continue with the metadata-only result and tell the user they are working from metadata or abstract only.
 
 ## MCP Tools
 
-### `resolve_paper(query)`
+### `resolve_paper(query | title, authors, year)`
 
-Use this when the input may resolve to multiple papers. It returns a normalized candidate object and can surface ambiguity before a fetch.
+Use this when the input may resolve to multiple papers. It accepts either:
+- a raw `query`
+- or structured `title` plus optional `authors` / `year`
 
-### `fetch_paper(query, modes, strategy, include_refs, max_tokens)`
+It returns a normalized candidate object and can surface ambiguity before a fetch.
+
+### `fetch_paper(query, modes, strategy, include_refs, max_tokens, download_dir)`
 
 Use this when you need the paper contents. Important behavior:
 - The return shape is always a fixed JSON object.
 - Top-level provenance fields such as `source`, `warnings`, `source_trail`, `has_fulltext`, and `token_estimate` are always present.
 - Unrequested payload fields (`article`, `markdown`, `metadata`) come back as `null`.
+- `download_dir` is optional and lets you isolate one task's downloads from the shared MCP cache directory.
+- When `strategy.asset_profile` is `body` or `all`, supporting MCP clients may also receive a few key local body figures as `ImageContent` after the JSON block.
+- Supporting MCP clients may also receive `notifications/progress` and structured `notifications/message` updates while `fetch_paper`, `batch_check`, or `batch_resolve` is running.
 
 Recommended defaults:
 - `modes=["article", "markdown"]`
+- `strategy.asset_profile="none"`
 - `strategy.allow_html_fallback=true`
 - `strategy.allow_metadata_only_fallback=true`
-- `include_refs="top10"`
+- `include_refs=null`
+- `max_tokens="full_text"`
+- `include_refs=null` behaves like `all` when `max_tokens="full_text"`.
+- When `max_tokens` is a positive integer, `include_refs=null` behaves like `top10`.
+
+### `list_cached(download_dir)`
+
+Use this to inspect the MCP cache index without hitting the network. If `download_dir` is omitted, it reads the default shared MCP download directory.
+
+### `get_cached(doi, download_dir)`
+
+Use this to look up cached local files for one DOI and get preferred local paths for Markdown, the primary payload, and assets.
+
+### `batch_resolve(queries)`
+
+Use this to resolve multiple DOI, URL, or title queries serially while reusing one shared HTTP transport.
+
+### `batch_check(queries, mode)`
+
+Use this to check many identifiable papers serially without returning full bodies. Success items keep only lightweight provenance fields such as `doi`, `title`, `source`, `has_fulltext`, `warnings`, `source_trail`, and `token_estimate`.
+
+## Environment
+
+- `ELSEVIER_API_KEY`: Required for official Elsevier full-text access.
+- `ELSEVIER_INSTTOKEN`: Optional institution token for Elsevier entitlement.
+- `SPRINGER_META_API_KEY`: Enables Springer Meta API metadata lookups.
+- `SPRINGER_OPENACCESS_API_KEY`: Enables Springer Open Access full-text fallback.
+- `SPRINGER_FULLTEXT_API_KEY`: Enables Springer Full Text API when paired with its URL template.
+- `PAPER_FETCH_DOWNLOAD_DIR`: Overrides the default CLI or MCP download directory.
+- `PAPER_FETCH_RUN_LIVE`: Test-only flag for live publisher integration checks.
+- Without `PAPER_FETCH_DOWNLOAD_DIR`, the MCP default directory is `XDG_DATA_HOME/paper-fetch/downloads`, which defaults to `~/.local/share/paper-fetch/downloads`.
+
+## Error Contract
+
+- `ambiguous`: Contains `candidates`; prompt the user to choose and retry.
+- `no_access`: Credentials or entitlements are missing; check environment and retry.
+- `rate_limited`: Back off and retry later.
+- `error`: Any other failure; inspect `reason`.
+- These fields appear in both MCP `structuredContent` and CLI stderr JSON.
+- CLI exit codes remain `ambiguous=2`, `no_access=3`, `rate_limited=4`.
 
 ## CLI Fallback
 
@@ -89,15 +144,8 @@ If `resolve_paper` or CLI resolution is ambiguous:
 
 If `fetch_paper` returns metadata only:
 - tell the user full text was not available
-- continue from the metadata / abstract if that still helps
+- continue from the metadata or abstract if that still helps
 
 If a paper is not present as a local PDF or text file:
 - do not treat "missing local file" as proof that the paper is unreadable
 - verify with MCP or CLI before concluding it is unavailable
-
-## Parallel-use Notes
-
-- Avoid firing many parallel requests for the same paper in the same session.
-- Prefer one fetch per DOI / URL, then reuse the returned Markdown or JSON.
-- If the first call returns `ambiguous`, resolve the DOI before retrying.
-- If you wrap the CLI in your own threaded caller, use one process / worker per fetch. The internal HTTP cache transport is not thread-safe.

@@ -3,6 +3,13 @@ name: CI
 on:
   push:
   pull_request:
+  workflow_dispatch:
+    inputs:
+      run_live_mcp:
+        description: "Run live MCP smoke tests"
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   lint:
@@ -64,3 +71,44 @@ jobs:
 
       - name: Run integration suite
         run: PYTHONPATH=src python -m unittest discover -s tests/integration -q
+
+  live-mcp:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_live_mcp }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Install package
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install .
+
+      - name: Run live MCP suite when secrets are available
+        shell: bash
+        env:
+          PAPER_FETCH_RUN_LIVE: "1"
+          CROSSREF_MAILTO: ${{ secrets.CROSSREF_MAILTO }}
+          ELSEVIER_API_KEY: ${{ secrets.ELSEVIER_API_KEY }}
+          SPRINGER_META_API_KEY: ${{ secrets.SPRINGER_META_API_KEY }}
+          SPRINGER_OPENACCESS_API_KEY: ${{ secrets.SPRINGER_OPENACCESS_API_KEY }}
+        run: |
+          missing=()
+          for key in CROSSREF_MAILTO ELSEVIER_API_KEY SPRINGER_META_API_KEY SPRINGER_OPENACCESS_API_KEY; do
+            if [ -z "${!key}" ]; then
+              missing+=("$key")
+            fi
+          done
+
+          if [ "${#missing[@]}" -gt 0 ]; then
+            echo "Skipping live MCP tests because required secrets are missing: ${missing[*]}"
+            exit 0
+          fi
+
+          PYTHONPATH=src python -m unittest tests.live.test_live_mcp -q

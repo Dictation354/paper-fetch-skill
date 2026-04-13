@@ -4,29 +4,102 @@ from __future__ import annotations
 
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from ..models import RenderOptions, normalize_text
 from ..service import FetchStrategy
+from ..utils import dedupe_authors
 
 ALLOWED_INCLUDE_REFS = {"none", "top10", "all"}
 ALLOWED_ASSET_PROFILES = {"none", "body", "all"}
 ALLOWED_OUTPUT_MODES = {"article", "markdown", "metadata"}
+ALLOWED_BATCH_CHECK_MODES = {"article", "metadata"}
 DEFAULT_MCP_MODES = ["article", "markdown"]
 
 
 class ResolvePaperRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    query: str
+    query: str | None = None
+    title: str | None = None
+    authors: list[str] | None = None
+    year: int | None = None
 
-    @field_validator("query")
+    @field_validator("query", "title", mode="before")
     @classmethod
-    def validate_query(cls, value: str) -> str:
+    def normalize_optional_text_field(cls, value: Any) -> str | None:
+        if value is None:
+            return None
         normalized = normalize_text(value)
         if not normalized:
-            raise ValueError("query must not be empty.")
+            return None
         return normalized
+
+    @field_validator("authors", mode="before")
+    @classmethod
+    def coerce_authors(cls, value: Any) -> Any:
+        if value is None:
+            return None
+        if isinstance(value, str):
+            return [value]
+        return value
+
+    @field_validator("authors")
+    @classmethod
+    def normalize_authors(cls, value: list[str] | None) -> list[str] | None:
+        if value is None:
+            return None
+        normalized_authors = dedupe_authors([normalize_text(str(item)) for item in value if normalize_text(str(item))])
+        return normalized_authors or None
+
+    @field_validator("year")
+    @classmethod
+    def validate_year(cls, value: int | None) -> int | None:
+        if value is None:
+            return None
+        if value < 1000 or value > 9999:
+            raise ValueError("year must be a four-digit integer.")
+        return value
+
+    @model_validator(mode="after")
+    def validate_input_mode(self) -> "ResolvePaperRequest":
+        has_query = self.query is not None
+        has_structured = self.title is not None or self.authors is not None or self.year is not None
+
+        if has_query and has_structured:
+            raise ValueError("provide either query or structured title/authors/year fields, but not both.")
+        if has_query:
+            return self
+        if self.title is None:
+            raise ValueError("title is required when query is omitted.")
+        return self
+
+    def composed_query(self) -> str:
+        if self.query is not None:
+            return self.query
+
+        parts: list[str] = [self.title or ""]
+        parts.extend((self.authors or [])[:3])
+        if self.year is not None:
+            parts.append(str(self.year))
+        return normalize_text(" ".join(parts))
+
+
+def _normalize_query_list(value: Any) -> list[str]:
+    if value is None:
+        raise ValueError("queries must contain at least one entry.")
+    if not isinstance(value, list):
+        raise ValueError("queries must be provided as a list of strings.")
+    if not value:
+        raise ValueError("queries must contain at least one entry.")
+
+    normalized_queries: list[str] = []
+    for index, item in enumerate(value):
+        normalized = normalize_text(str(item))
+        if not normalized:
+            raise ValueError(f"queries[{index}] must not be empty.")
+        normalized_queries.append(normalized)
+    return normalized_queries
 
 
 class FetchStrategyInput(BaseModel):
@@ -160,3 +233,38 @@ class FetchPaperRequest(BaseModel):
             asset_profile=self.strategy.asset_profile,
             max_tokens=self.max_tokens,
         )
+
+
+class BatchResolveRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    queries: list[str]
+
+    @field_validator("queries", mode="before")
+    @classmethod
+    def normalize_queries(cls, value: Any) -> list[str]:
+        return _normalize_query_list(value)
+
+
+class BatchCheckRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    queries: list[str]
+    mode: str = "metadata"
+
+    @field_validator("queries", mode="before")
+    @classmethod
+    def normalize_queries(cls, value: Any) -> list[str]:
+        return _normalize_query_list(value)
+
+    @field_validator("mode")
+    @classmethod
+    def normalize_mode(cls, value: str) -> str:
+        normalized = normalize_text(value).lower()
+        if normalized not in ALLOWED_BATCH_CHECK_MODES:
+            raise ValueError(
+                f"unsupported batch_check mode: {value!r}. Expected one of: "
+                + ", ".join(sorted(ALLOWED_BATCH_CHECK_MODES))
+                + "."
+            )
+        return normalized

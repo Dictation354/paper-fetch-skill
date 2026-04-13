@@ -143,8 +143,12 @@ PYTHONPATH=src python3 -m unittest discover -s tests/integration -q
 
 部署到 agent 之后，推荐再实际调用一次：
 
-- `resolve_paper(query)`
-- `fetch_paper(query, modes, strategy, include_refs, max_tokens)`
+- `resolve_paper(query | title, authors, year)`
+- `fetch_paper(query, modes, strategy, include_refs, max_tokens, download_dir)`
+- `list_cached(download_dir)`
+- `get_cached(doi, download_dir)`
+- `batch_resolve(queries)`
+- `batch_check(queries, mode)`
 
 `fetch_paper` 的当前 MCP 默认值是：
 
@@ -155,13 +159,31 @@ PYTHONPATH=src python3 -m unittest discover -s tests/integration -q
 - `max_tokens="full_text"`
 - `include_refs=null`
 
-也就是默认更偏向“先把全文文字完整拿回来，但不额外下载图片/补充材料”。如果你希望精读某篇论文，可以在 MCP 请求里显式传：
+也就是默认更偏向“先把全文文字完整拿回来，但不额外下载图片/补充材料”。补充说明：
+
+- `resolve_paper` 支持原始 `query`，也支持 `title` + 可选 `authors` / `year` 的结构化输入
+- `include_refs=null` 在 `max_tokens="full_text"` 下默认等价于 `all`
+- 显式 `download_dir` 的优先级高于 `PAPER_FETCH_DOWNLOAD_DIR` 和 XDG 默认目录
+- `list_cached()` / `get_cached()` 只读本地 cache index，不会触发网络
+- `batch_check()` 串行复用一个 transport，但不会把正文或 provider payload 写入磁盘
+- 当 `strategy.asset_profile` 为 `body` / `all` 时，`fetch_paper` 可能在 JSON 块后附带少量关键正文图的 `ImageContent`
+- 支持这些能力的 MCP client 会在 `fetch_paper` / `batch_check` / `batch_resolve` 期间收到 progress 和 structured log notifications
+
+如果你希望精读某篇论文，可以在 MCP 请求里显式传：
 
 - `strategy.asset_profile="body"`: 下载并渲染正文 figure + 正文表格原图
 - `strategy.asset_profile="all"`: 下载并渲染全部识别资产
 - `max_tokens=<整数>`: 改成 token 紧张场景下的硬上限模式
 
+默认共享缓存资源会暴露在 MCP resources 下：
+
+- `resource://paper-fetch/cache-index`
+- `resource://paper-fetch/cached/{entry_id}`
+
+这些 resources 只覆盖默认共享下载目录。若你在工具调用里显式传了 `download_dir`，请改用 `list_cached(download_dir)` 和 `get_cached(doi, download_dir)` 访问隔离目录。
+
 ## 相关文档
 
 - [providers.md](providers.md)
+- [architecture/probe-semantics.md](architecture/probe-semantics.md)
 - [architecture/target-architecture.md](architecture/target-architecture.md)

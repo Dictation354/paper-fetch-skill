@@ -61,6 +61,43 @@ cp .env.example ~/.config/paper-fetch/.env
 - `preferred_providers` 仍严格限制最终允许使用的 official/fulltext/html 路径
 - 即使 `preferred_providers` 没有包含 `crossref`，运行时仍可能内部调用 Crossref 只做 routing signal；这不会让最终结果自动变成 Crossref 来源
 
+## MCP Surface
+
+当前 MCP server 提供这些工具：
+
+- `resolve_paper(query | title, authors, year)`
+- `fetch_paper(query, modes, strategy, include_refs, max_tokens, download_dir)`
+- `list_cached(download_dir)`
+- `get_cached(doi, download_dir)`
+- `batch_resolve(queries)`
+- `batch_check(queries, mode)`
+
+`fetch_paper` 的 MCP 默认值是：
+
+- `modes=["article", "markdown"]`
+- `strategy.asset_profile="none"`
+- `strategy.allow_html_fallback=true`
+- `strategy.allow_metadata_only_fallback=true`
+- `include_refs=null`
+- `max_tokens="full_text"`
+
+补充说明：
+
+- `resolve_paper` 既支持原始 `query`，也支持 `title` + 可选 `authors` / `year` 的结构化输入
+- `include_refs=null` 在 `max_tokens="full_text"` 下等价于 `all`
+- 显式传 `download_dir` 会覆盖 `PAPER_FETCH_DOWNLOAD_DIR` 和 XDG 默认目录，适合隔离多任务下载目录
+- `list_cached()` / `get_cached()` 只读本地 cache index，不触发网络
+- `batch_check()` 会串行复用同一个 HTTP transport，但不会把正文或原始 payload 写入磁盘
+- 当 `strategy.asset_profile` 为 `body` / `all` 时，`fetch_paper` 可能在 JSON 结果后附带少量关键正文图的 `ImageContent`
+- 支持这些能力的 MCP client 还会在 `fetch_paper` / `batch_check` / `batch_resolve` 期间收到 progress 和 structured log notifications
+
+默认共享缓存资源会暴露在 MCP resources 下：
+
+- `resource://paper-fetch/cache-index`
+- `resource://paper-fetch/cached/{entry_id}`
+
+这些 resources 只覆盖默认共享下载目录。若你在工具调用里显式传了 `download_dir`，请改用 `list_cached(download_dir)` 和 `get_cached(doi, download_dir)` 访问隔离目录。
+
 ## CLI 常用法
 
 默认抓取：
@@ -161,10 +198,12 @@ paper-fetch-install-formula-tools
 ruff check .
 PYTHONPATH=src python3 -m unittest -q tests.unit.test_cli tests.unit.test_service tests.unit.test_models_render tests.unit.test_html_generic tests.unit.test_http_cache tests.unit.test_fetch_common tests.unit.test_mcp tests.unit.test_provider_request_options tests.unit.test_publisher_identity tests.unit.test_resolve_query
 PYTHONPATH=src python3 -m unittest discover -s tests -q
+PAPER_FETCH_RUN_LIVE=1 PYTHONPATH=src python3 -m unittest tests.live.test_live_mcp -q
 ```
 
 ## 文档
 
 - [docs/deployment.md](docs/deployment.md): 安装、MCP 注册、公式后端和验证步骤
 - [docs/providers.md](docs/providers.md): 环境变量、provider 配置和 API key 说明
+- [docs/architecture/probe-semantics.md](docs/architecture/probe-semantics.md): `has_fulltext` probe 语义设计 note
 - [docs/architecture/target-architecture.md](docs/architecture/target-architecture.md): 项目结构和架构说明

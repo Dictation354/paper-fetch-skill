@@ -8,6 +8,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from paper_fetch.mcp._instructions import DEFAULT_FETCH_NOTES, DEFAULT_FETCH_VALUES, ERROR_CONTRACT, SKILL_ENVIRONMENT_VARIABLES
 from tests.paths import REPO_ROOT, SKILL_DIR
 
 STATIC_SKILL_PATH = SKILL_DIR / "SKILL.md"
@@ -54,9 +55,24 @@ class StaticSkillTests(unittest.TestCase):
 
         self.assertIn("resolve_paper", text)
         self.assertIn("fetch_paper", text)
+        self.assertIn("list_cached", text)
+        self.assertIn("get_cached", text)
+        self.assertIn("batch_check", text)
         self.assertIn("paper-fetch --query", text)
         self.assertIn("citation list", text)
         self.assertIn("do not conclude \"unreadable\" just because there is no local PDF", text)
+        self.assertIn("## Call Discipline", text)
+        self.assertIn("## Environment", text)
+        self.assertIn("## Error Contract", text)
+        self.assertNotIn("not thread-safe", text)
+        for key, value in DEFAULT_FETCH_VALUES:
+            self.assertIn(f"`{key}={value}`", text)
+        for note in DEFAULT_FETCH_NOTES:
+            self.assertIn(note, text)
+        for name, _description in SKILL_ENVIRONMENT_VARIABLES:
+            self.assertIn(f"`{name}`", text)
+        for status, _description in ERROR_CONTRACT:
+            self.assertIn(f"`{status}`", text)
         self.assertNotIn("${", text)
         self.assertNotIn(str(REPO_ROOT), text)
         self.assertNotIn(".venv", text)

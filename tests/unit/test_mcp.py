@@ -1,14 +1,18 @@
 from __future__ import annotations
 
+import asyncio
+import logging
+import tempfile
 import unittest
 from pathlib import Path
 from unittest import mock
 
 from paper_fetch.mcp import tools as mcp_tools
-from paper_fetch.models import ArticleModel, FetchEnvelope, Metadata, Quality, RenderOptions, Section
+from paper_fetch.models import ArticleModel, Asset, FetchEnvelope, Metadata, Quality, RenderOptions, Section
 from paper_fetch.providers.base import ProviderFailure
 from paper_fetch.resolve.query import ResolvedQuery
 from paper_fetch.service import FetchStrategy, PaperFetchFailure
+from paper_fetch.utils import sanitize_filename
 
 
 def sample_article() -> ArticleModel:
@@ -29,10 +33,12 @@ def sample_article() -> ArticleModel:
     )
 
 
-def sample_envelope(*, modes: set[str]) -> FetchEnvelope:
+def sample_envelope(*, modes: set[str], doi: str = "10.1000/example") -> FetchEnvelope:
     article = sample_article()
+    article.doi = doi
+    article.metadata.title = "Example Article" if doi == "10.1000/example" else f"Article for {doi}"
     return FetchEnvelope(
-        doi=article.doi,
+        doi=doi,
         source="elsevier_xml",
         has_fulltext=True,
         warnings=["example warning"],
@@ -42,6 +48,59 @@ def sample_envelope(*, modes: set[str]) -> FetchEnvelope:
         markdown="# Example Article\n\nExample body.\n" if "markdown" in modes else None,
         metadata=article.metadata if "metadata" in modes else None,
     )
+
+
+def sample_resolved_query(query: str) -> ResolvedQuery:
+    return ResolvedQuery(
+        query=query,
+        query_kind="doi",
+        doi=query if query.startswith("10.") else "10.1000/example",
+        landing_url="https://example.test/article",
+        provider_hint="crossref",
+        confidence=1.0,
+        candidates=[],
+        title="Example Article",
+    )
+
+
+def create_cached_downloads(download_dir: Path, doi: str) -> None:
+    base = sanitize_filename(doi)
+    download_dir.mkdir(parents=True, exist_ok=True)
+    (download_dir / f"{base}.xml").write_text("<article />", encoding="utf-8")
+    (download_dir / f"{base}.md").write_text("# Cached Markdown\n", encoding="utf-8")
+    asset_dir = download_dir / f"{base}_assets"
+    asset_dir.mkdir(parents=True, exist_ok=True)
+    (asset_dir / "figure-1.png").write_bytes(b"\x89PNG\r\n")
+
+
+def write_binary(path: Path, size: int = 8) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(b"\x89PNG\r\n" + (b"x" * max(0, size - 6)))
+
+
+class FakeSession:
+    def __init__(self) -> None:
+        self.messages: list[dict[str, object]] = []
+
+    async def send_log_message(self, *, level, data, logger=None, related_request_id=None) -> None:
+        self.messages.append(
+            {
+                "level": level,
+                "data": data,
+                "logger": logger,
+                "related_request_id": related_request_id,
+            }
+        )
+
+
+class FakeContext:
+    def __init__(self) -> None:
+        self.progress: list[tuple[float, float | None, str | None]] = []
+        self.session = FakeSession()
+        self.request_id = "unit-request"
+
+    async def report_progress(self, progress: float, total: float | None = None, message: str | None = None) -> None:
+        self.progress.append((progress, total, message))
 
 
 class McpToolTests(unittest.TestCase):
@@ -59,6 +118,7 @@ class McpToolTests(unittest.TestCase):
             mock.patch.object(mcp_tools, "build_runtime_env", return_value=runtime_env),
             mock.patch.object(mcp_tools, "resolve_mcp_download_dir", return_value=default_download_dir),
             mock.patch.object(mcp_tools, "service_fetch_paper", side_effect=fake_fetch_paper),
+            mock.patch.object(mcp_tools, "refresh_cache_index_for_doi"),
         ):
             payload = mcp_tools.fetch_paper_payload(query="10.1000/example")
 
@@ -78,6 +138,28 @@ class McpToolTests(unittest.TestCase):
             ),
         )
 
+    def test_fetch_paper_payload_explicit_download_dir_overrides_env_default(self) -> None:
+        captured: dict[str, object] = {}
+        explicit_download_dir = Path("/tmp/isolated-paper-fetch")
+
+        def fake_fetch_paper(query, **kwargs):
+            captured.update(kwargs)
+            return sample_envelope(modes=kwargs["modes"])
+
+        with (
+            mock.patch.object(mcp_tools, "build_runtime_env", return_value={"PAPER_FETCH_DOWNLOAD_DIR": "/tmp/shared"}),
+            mock.patch.object(mcp_tools, "resolve_mcp_download_dir") as mocked_resolve,
+            mock.patch.object(mcp_tools, "service_fetch_paper", side_effect=fake_fetch_paper),
+            mock.patch.object(mcp_tools, "refresh_cache_index_for_doi"),
+        ):
+            mcp_tools.fetch_paper_payload(
+                query="10.1000/example",
+                download_dir=explicit_download_dir,
+            )
+
+        mocked_resolve.assert_not_called()
+        self.assertEqual(captured["download_dir"], explicit_download_dir)
+
     def test_fetch_paper_payload_normalizes_preferred_providers(self) -> None:
         captured: dict[str, object] = {}
 
@@ -89,6 +171,7 @@ class McpToolTests(unittest.TestCase):
             mock.patch.object(mcp_tools, "build_runtime_env", return_value={}),
             mock.patch.object(mcp_tools, "resolve_mcp_download_dir", return_value=Path("/tmp/downloads")),
             mock.patch.object(mcp_tools, "service_fetch_paper", side_effect=fake_fetch_paper),
+            mock.patch.object(mcp_tools, "refresh_cache_index_for_doi"),
         ):
             mcp_tools.fetch_paper_payload(
                 query="10.1000/example",
@@ -126,6 +209,7 @@ class McpToolTests(unittest.TestCase):
             mock.patch.object(mcp_tools, "build_runtime_env", return_value={}),
             mock.patch.object(mcp_tools, "resolve_mcp_download_dir", return_value=Path("/tmp/downloads")),
             mock.patch.object(mcp_tools, "service_fetch_paper", side_effect=fake_fetch_paper),
+            mock.patch.object(mcp_tools, "refresh_cache_index_for_doi"),
         ):
             mcp_tools.fetch_paper_payload(
                 query="10.1000/example",
@@ -143,6 +227,7 @@ class McpToolTests(unittest.TestCase):
             mock.patch.object(mcp_tools, "build_runtime_env", return_value={}),
             mock.patch.object(mcp_tools, "resolve_mcp_download_dir", return_value=Path("/tmp/downloads")),
             mock.patch.object(mcp_tools, "service_fetch_paper", return_value=envelope),
+            mock.patch.object(mcp_tools, "refresh_cache_index_for_doi"),
         ):
             result = mcp_tools.fetch_paper_tool(query="10.1000/example", modes=["markdown"])
 
@@ -164,6 +249,7 @@ class McpToolTests(unittest.TestCase):
             mock.patch.object(mcp_tools, "build_runtime_env", return_value={}),
             mock.patch.object(mcp_tools, "resolve_mcp_download_dir", return_value=Path("/tmp/downloads")),
             mock.patch.object(mcp_tools, "service_fetch_paper", return_value=envelope),
+            mock.patch.object(mcp_tools, "refresh_cache_index_for_doi"),
         ):
             result = mcp_tools.fetch_paper_tool(query="10.1000/example", modes=["metadata"])
 
@@ -187,29 +273,238 @@ class McpToolTests(unittest.TestCase):
         self.assertEqual(result.structuredContent["status"], "ambiguous")
         self.assertEqual(result.structuredContent["candidates"][0]["doi"], "10.1000/example")
 
-    def test_fetch_paper_tool_returns_provider_failure_payload(self) -> None:
+    def test_fetch_paper_tool_returns_provider_failure_payload_with_specific_status(self) -> None:
         with mock.patch.object(
             mcp_tools,
             "service_fetch_paper",
-            side_effect=ProviderFailure("error", "Provider request failed."),
+            side_effect=ProviderFailure("no_access", "Provider request failed."),
         ):
             result = mcp_tools.fetch_paper_tool(query="10.1000/example")
 
         self.assertTrue(result.isError)
-        self.assertEqual(result.structuredContent["status"], "error")
+        self.assertEqual(result.structuredContent["status"], "no_access")
         self.assertEqual(result.structuredContent["reason"], "Provider request failed.")
 
-    def test_resolve_paper_tool_serializes_resolved_query(self) -> None:
-        resolved = ResolvedQuery(
+    def test_fetch_paper_payload_updates_cache_index_for_saved_files(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            download_dir = Path(tmpdir)
+
+            def fake_fetch_paper(query, **kwargs):
+                create_cached_downloads(kwargs["download_dir"], query)
+                return sample_envelope(modes=kwargs["modes"], doi=query)
+
+            with (
+                mock.patch.object(mcp_tools, "build_runtime_env", return_value={}),
+                mock.patch.object(mcp_tools, "service_fetch_paper", side_effect=fake_fetch_paper),
+            ):
+                payload = mcp_tools.fetch_paper_payload(
+                    query="10.1000/example",
+                    download_dir=download_dir,
+                )
+
+            self.assertEqual(payload["doi"], "10.1000/example")
+            listed = mcp_tools.list_cached_payload(download_dir=download_dir)
+            self.assertEqual(len(listed["entries"]), 3)
+            self.assertTrue((download_dir / ".paper-fetch-mcp-cache.json").exists())
+            self.assertEqual({entry["kind"] for entry in listed["entries"]}, {"asset", "markdown", "primary_payload"})
+
+    def test_list_cached_payload_reads_manifest_only(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            download_dir = Path(tmpdir)
+            create_cached_downloads(download_dir, "10.1000/example")
+
+            listed = mcp_tools.list_cached_payload(download_dir=download_dir)
+
+        self.assertEqual(listed["entries"], [])
+
+    def test_get_cached_payload_refreshes_single_doi_and_returns_preferred_paths(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            download_dir = Path(tmpdir)
+            create_cached_downloads(download_dir, "10.1000/example")
+
+            payload = mcp_tools.get_cached_payload(
+                doi="10.1000/example",
+                download_dir=download_dir,
+            )
+            listed = mcp_tools.list_cached_payload(download_dir=download_dir)
+
+        self.assertEqual(payload["status"], "hit")
+        self.assertEqual(len(payload["entries"]), 3)
+        self.assertIsNotNone(payload["preferred"]["markdown"])
+        self.assertIsNotNone(payload["preferred"]["primary_payload"])
+        self.assertEqual(len(payload["preferred"]["assets"]), 1)
+        self.assertEqual(len(listed["entries"]), 3)
+
+    def test_batch_resolve_payload_reuses_transport_and_aborts_on_rate_limit(self) -> None:
+        transport_ids: list[int] = []
+        seen_queries: list[str] = []
+
+        def fake_resolve(query, *, transport=None, env=None):
+            seen_queries.append(query)
+            transport_ids.append(id(transport))
+            if query == "second":
+                raise ProviderFailure("rate_limited", "Slow down.")
+            return sample_resolved_query(query)
+
+        with mock.patch.object(mcp_tools, "service_resolve_paper", side_effect=fake_resolve):
+            payload = mcp_tools.batch_resolve_payload(queries=["first", "second", "third"])
+
+        self.assertTrue(payload["aborted"])
+        self.assertEqual(payload["abort_reason"]["status"], "rate_limited")
+        self.assertEqual(len(payload["results"]), 2)
+        self.assertEqual(seen_queries, ["first", "second"])
+        self.assertEqual(len(set(transport_ids)), 1)
+
+    def test_batch_check_payload_uses_lightweight_results_and_no_downloads(self) -> None:
+        captured_download_dirs: list[Path | None] = []
+        transport_ids: list[int] = []
+
+        def fake_fetch_paper(query, **kwargs):
+            captured_download_dirs.append(kwargs["download_dir"])
+            transport_ids.append(id(kwargs["transport"]))
+            return sample_envelope(modes=kwargs["modes"], doi=query)
+
+        with mock.patch.object(mcp_tools, "service_fetch_paper", side_effect=fake_fetch_paper):
+            payload = mcp_tools.batch_check_payload(queries=["10.1000/one", "10.1000/two"], mode="metadata")
+
+        self.assertEqual(payload["mode"], "metadata")
+        self.assertFalse(payload["aborted"])
+        self.assertEqual(len(payload["results"]), 2)
+        self.assertEqual(payload["results"][0]["query"], "10.1000/one")
+        self.assertEqual(payload["results"][0]["doi"], "10.1000/one")
+        self.assertIn("title", payload["results"][0])
+        self.assertNotIn("markdown", payload["results"][0])
+        self.assertEqual(captured_download_dirs, [None, None])
+        self.assertEqual(len(set(transport_ids)), 1)
+
+    def test_batch_check_payload_aborts_on_rate_limit(self) -> None:
+        seen_queries: list[str] = []
+
+        def fake_fetch_paper(query, **kwargs):
+            seen_queries.append(query)
+            if query == "10.1000/two":
+                raise ProviderFailure("rate_limited", "Slow down.")
+            return sample_envelope(modes=kwargs["modes"], doi=query)
+
+        with mock.patch.object(mcp_tools, "service_fetch_paper", side_effect=fake_fetch_paper):
+            payload = mcp_tools.batch_check_payload(
+                queries=["10.1000/one", "10.1000/two", "10.1000/three"],
+                mode="article",
+            )
+
+        self.assertTrue(payload["aborted"])
+        self.assertEqual(payload["abort_reason"]["status"], "rate_limited")
+        self.assertEqual(seen_queries, ["10.1000/one", "10.1000/two"])
+        self.assertEqual(len(payload["results"]), 2)
+
+    def test_resolve_paper_payload_composes_structured_query(self) -> None:
+        captured: dict[str, object] = {}
+
+        def fake_resolve(query, *, transport=None, env=None):
+            captured["query"] = query
+            return sample_resolved_query(query)
+
+        with mock.patch.object(mcp_tools, "service_resolve_paper", side_effect=fake_resolve):
+            payload = mcp_tools.resolve_paper_payload(
+                title="Example title",
+                authors=[" Alice Example ", "Bob Example", "Alice Example", "Carol Example", "Dana Example"],
+                year=2024,
+            )
+
+        self.assertEqual(captured["query"], "Example title Alice Example Bob Example Carol Example 2024")
+        self.assertEqual(payload["query"], "Example title Alice Example Bob Example Carol Example 2024")
+
+    def test_resolve_paper_tool_rejects_mixed_query_and_structured_fields(self) -> None:
+        result = mcp_tools.resolve_paper_tool(
             query="10.1000/example",
-            query_kind="doi",
-            doi="10.1000/example",
-            landing_url="https://example.test/article",
-            provider_hint="crossref",
-            confidence=1.0,
-            candidates=[],
             title="Example Article",
         )
+
+        self.assertTrue(result.isError)
+        self.assertEqual(result.structuredContent["status"], "error")
+        self.assertIn("either query or structured title/authors/year", result.structuredContent["reason"])
+
+    def test_parse_structured_log_message_extracts_fields(self) -> None:
+        payload = mcp_tools.parse_structured_log_message(
+            "http_request_success method=GET status=200 elapsed_ms=12.5 attempt=1",
+            logger_name="paper_fetch.http",
+        )
+
+        self.assertEqual(
+            payload,
+            {
+                "event": "http_request_success",
+                "logger": "paper_fetch.http",
+                "method": "GET",
+                "status": 200,
+                "elapsed_ms": 12.5,
+                "attempt": 1,
+            },
+        )
+
+    def test_inline_image_contents_limits_and_filters_assets(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            figure_paths = [root / f"figure-{index}.png" for index in range(1, 5)]
+            for path in figure_paths:
+                write_binary(path, size=32)
+            oversized_path = root / "oversized.png"
+            write_binary(oversized_path, size=(2 * 1024 * 1024) + 1)
+            text_path = root / "figure.txt"
+            text_path.write_text("not an image", encoding="utf-8")
+
+            article = sample_article()
+            article.assets = [
+                Asset(kind="figure", heading="Figure 1", caption="Body 1", path=str(figure_paths[0]), section="body"),
+                Asset(kind="figure", heading="Figure 2", caption="Body 2", path=str(figure_paths[1]), section="body"),
+                Asset(kind="figure", heading="Figure 3", caption="Body 3", path=str(figure_paths[2]), section="body"),
+                Asset(kind="figure", heading="Figure 4", caption="Body 4", path=str(figure_paths[3]), section="body"),
+                Asset(kind="figure", heading="Supplement", caption="Skip", path=str(figure_paths[0]), section="supplementary"),
+                Asset(kind="figure", heading="Too big", caption="Skip", path=str(oversized_path), section="body"),
+                Asset(kind="figure", heading="Text file", caption="Skip", path=str(text_path), section="body"),
+            ]
+
+            contents, warnings = mcp_tools._inline_image_contents(article)
+
+        self.assertEqual(len(contents), 6)
+        self.assertEqual([content.type for content in contents], ["text", "image", "text", "image", "text", "image"])
+        self.assertEqual(len(warnings), 1)
+        self.assertIn("omitted from inline MCP image output", warnings[0])
+
+    def test_build_fetch_tool_result_keeps_article_hidden_while_attaching_images(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            image_path = Path(tmpdir) / "figure-1.png"
+            write_binary(image_path, size=32)
+
+            article = sample_article()
+            article.assets = [
+                Asset(kind="figure", heading="Figure 1", caption="Body figure", path=str(image_path), section="body")
+            ]
+            envelope = FetchEnvelope(
+                doi=article.doi,
+                source="elsevier_xml",
+                has_fulltext=True,
+                warnings=[],
+                source_trail=["source:ok"],
+                token_estimate=article.quality.token_estimate,
+                article=article,
+                markdown="# Example Article\n\nExample body.\n",
+                metadata=None,
+            )
+            request = mcp_tools.FetchPaperRequest(
+                query="10.1000/example",
+                modes=["markdown"],
+                strategy={"asset_profile": "body"},
+            )
+
+            result = mcp_tools.build_fetch_tool_result(envelope, request)
+
+        self.assertFalse(result.isError)
+        self.assertEqual(result.structuredContent["article"], None)
+        self.assertEqual([content.type for content in result.content], ["text", "text", "image"])
+
+    def test_resolve_paper_tool_serializes_resolved_query(self) -> None:
+        resolved = sample_resolved_query("10.1000/example")
 
         with mock.patch.object(mcp_tools, "service_resolve_paper", return_value=resolved):
             result = mcp_tools.resolve_paper_tool(query="10.1000/example")
@@ -217,6 +512,93 @@ class McpToolTests(unittest.TestCase):
         self.assertFalse(result.isError)
         self.assertEqual(result.structuredContent["doi"], "10.1000/example")
         self.assertEqual(result.structuredContent["query_kind"], "doi")
+
+
+class McpAsyncToolTests(unittest.IsolatedAsyncioTestCase):
+    async def test_fetch_paper_tool_async_reports_progress_and_bridges_logs(self) -> None:
+        ctx = FakeContext()
+
+        def fake_fetch_paper(query, **kwargs):
+            logging.getLogger("paper_fetch.service").debug("fetch_stage query=%s attempt=%s", query, 1)
+            return sample_envelope(modes=kwargs["modes"], doi=query)
+
+        with (
+            mock.patch.object(mcp_tools, "build_runtime_env", return_value={}),
+            mock.patch.object(mcp_tools, "resolve_mcp_download_dir", return_value=Path("/tmp/downloads")),
+            mock.patch.object(mcp_tools, "service_fetch_paper", side_effect=fake_fetch_paper),
+            mock.patch.object(mcp_tools, "refresh_cache_index_for_doi"),
+        ):
+            result = await mcp_tools.fetch_paper_tool_async(
+                query="10.1000/example",
+                ctx=ctx,
+            )
+            await asyncio.sleep(0.05)
+
+        self.assertFalse(result.isError)
+        self.assertEqual(
+            ctx.progress,
+            [
+                (0, 4, "Validating fetch_paper request"),
+                (1, 4, "Fetching paper content"),
+                (3, 4, "Shaping MCP result"),
+                (4, 4, "fetch_paper complete"),
+            ],
+        )
+        self.assertEqual(ctx.session.messages[0]["data"]["event"], "fetch_stage")
+        self.assertEqual(ctx.session.messages[0]["data"]["query"], "10.1000/example")
+
+    async def test_batch_check_tool_async_reports_per_query_progress(self) -> None:
+        ctx = FakeContext()
+
+        def fake_fetch_paper(query, **kwargs):
+            logging.getLogger("paper_fetch.http").debug("batch_check_item query=%s status=%s", query, "ok")
+            return sample_envelope(modes=kwargs["modes"], doi=query)
+
+        with mock.patch.object(mcp_tools, "service_fetch_paper", side_effect=fake_fetch_paper):
+            result = await mcp_tools.batch_check_tool_async(
+                queries=["10.1000/one", "10.1000/two"],
+                mode="metadata",
+                ctx=ctx,
+            )
+            await asyncio.sleep(0.05)
+
+        self.assertFalse(result.isError)
+        self.assertEqual(
+            ctx.progress,
+            [
+                (0, 2, "Starting batch_check"),
+                (1, 2, "Checked 1 of 2 queries"),
+                (2, 2, "Checked 2 of 2 queries"),
+                (2, 2, "batch_check complete"),
+            ],
+        )
+        self.assertTrue(any(message["data"]["event"] == "batch_check_item" for message in ctx.session.messages))
+
+    async def test_batch_resolve_tool_async_reports_per_query_progress(self) -> None:
+        ctx = FakeContext()
+
+        def fake_resolve(query, *, transport=None, env=None):
+            logging.getLogger("paper_fetch.service").debug("batch_resolve_item query=%s status=%s", query, "ok")
+            return sample_resolved_query(query)
+
+        with mock.patch.object(mcp_tools, "service_resolve_paper", side_effect=fake_resolve):
+            result = await mcp_tools.batch_resolve_tool_async(
+                queries=["10.1000/one", "10.1000/two"],
+                ctx=ctx,
+            )
+            await asyncio.sleep(0.05)
+
+        self.assertFalse(result.isError)
+        self.assertEqual(
+            ctx.progress,
+            [
+                (0, 2, "Starting batch_resolve"),
+                (1, 2, "Resolved 1 of 2 queries"),
+                (2, 2, "Resolved 2 of 2 queries"),
+                (2, 2, "batch_resolve complete"),
+            ],
+        )
+        self.assertTrue(any(message["data"]["event"] == "batch_resolve_item" for message in ctx.session.messages))
 
 
 if __name__ == "__main__":
