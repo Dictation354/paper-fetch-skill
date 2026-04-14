@@ -28,6 +28,9 @@ pip-wheel-metadata/
 live-downloads/
 problems.md
 agent-surface-plan.md
+vendor/flaresolverr/.work/
+vendor/flaresolverr/.venv-flaresolverr/
+vendor/flaresolverr/.flaresolverr/
 
 # Editors / OS
 .vscode/

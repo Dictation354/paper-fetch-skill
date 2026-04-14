@@ -2,13 +2,15 @@
 
 ## 总览
 
-当前项目对三家优先出版商的策略如下：
+当前项目对已接入 provider 的策略如下：
 
 | 出版商 | 元数据 | 全文 | 附件下载 | Markdown |
 | --- | --- | --- | --- | --- |
 | Elsevier | 优先官方，失败时回退 Crossref | 官方全文 XML | 支持分层下载：`none` 不下载，`body` 下载正文 figure + 正文表格原图，`all` 下载全部识别资产 | 支持 |
 | Springer | 官方 Meta API | 优先 Full Text API，其次 Open Access API | 支持分层下载：`none` 不下载，`body` 下载正文 figure + 正文表格原图，`all` 下载全部识别资产 | 支持 |
 | Wiley | 当前未接官方 metadata endpoint，走 Crossref | 官方 TDM endpoint | 当前按单文件全文处理 | 默认不支持正文 Markdown |
+| Science | Crossref metadata + Crossref/domain 路由信号 | repo-local FlareSolverr 抓 HTML，失败时带 cookies 的 Playwright PDF fallback | 当前固定按 text-only 处理，`body|all` 会降级 | 支持 |
+| PNAS | Crossref metadata + Crossref/domain 路由信号 | repo-local FlareSolverr 抓 HTML，失败时带 cookies 的 Playwright PDF fallback | 当前固定按 text-only 处理，`body|all` 会降级 | 支持 |
 
 ## Provider 路由与判定
 
@@ -20,6 +22,7 @@
 - `resolve_paper().provider_hint` 表示 Crossref/domain-first 的最佳 hint，不再等同于 DOI 前缀猜测
 - 纯 DOI 查询在需要时会额外做一次 Crossref DOI metadata lookup，用 `publisher + landing_page_url` 推导更准确的 hint
 - `10.1016/...`、`10.1007/...`、`10.1111/...` / `10.1002/...` 这类 DOI 前缀规则仍保留，但只在更强信号缺失时兜底
+- `10.1126/...` 和 `10.1073/...` 现在也会分别把 `provider_hint` 推向 `science` / `pnas`，但仍然遵循 `domain > publisher > DOI fallback`
 
 官方 provider probe 现在统一按三态解释：
 
@@ -38,6 +41,8 @@
 - 继续严格限制最终允许使用的 official/fulltext/html 路径
 - 允许内部调用 Crossref 只做 routing signal，即使 allow-list 没有包含 `crossref`
 - 当 `preferred_providers=["crossref"]` 时，不会再探测官方 provider，行为保持 Crossref-only
+- `preferred_providers` 现在可以显式指定 `science` / `pnas`
+- `science` / `pnas` 与 Wiley 一样，不要求先有成功的官方 metadata probe 才允许进入全文抓取
 
 ### `source_trail` 里的路由标记
 
@@ -49,6 +54,14 @@
 - `route:signal_doi_<provider>`
 - `route:probe_<provider>_positive|negative|unknown`
 - `route:provider_selected_<provider>`
+- `fulltext:science_html_ok`
+- `fulltext:science_pdf_fallback_ok`
+- `fulltext:pnas_html_ok`
+- `fulltext:pnas_pdf_fallback_ok`
+- `fallback:science_html_managed_by_provider`
+- `fallback:pnas_html_managed_by_provider`
+- `download:science_assets_skipped_text_only`
+- `download:pnas_assets_skipped_text_only`
 
 现有的 `metadata:<provider>_ok`、`fulltext:<provider>_*` 仍只表示真实来源或真实抓取尝试，不用于表达 route-only 的信号。
 
@@ -120,6 +133,46 @@ PAPER_FETCH_ENV_FILE=/path/to/.env
 
 未设置 `PAPER_FETCH_DOWNLOAD_DIR` 时，用来推导默认下载目录根路径；CLI 与 MCP 都会落到 `paper-fetch/downloads/` 下。
 
+## Science / PNAS 额外环境变量
+
+#### `FLARESOLVERR_URL`
+
+Science / PNAS 本地 FlareSolverr 服务地址。默认值：
+
+```text
+http://127.0.0.1:8191/v1
+```
+
+#### `FLARESOLVERR_ENV_FILE`
+
+Science / PNAS 必填。必须显式指向当前仓库 `vendor/flaresolverr/` 下的一份 preset，例如：
+
+```text
+vendor/flaresolverr/.env.flaresolverr-source-headless
+```
+
+不会自动猜 preset。
+
+#### `FLARESOLVERR_SOURCE_DIR`
+
+可选。覆盖 repo-local FlareSolverr workflow 根目录。默认值是当前仓库里的：
+
+```text
+vendor/flaresolverr/
+```
+
+#### `FLARESOLVERR_MIN_INTERVAL_SECONDS`
+
+Science / PNAS 必填。本地强制最小请求间隔。
+
+#### `FLARESOLVERR_MAX_REQUESTS_PER_HOUR`
+
+Science / PNAS 必填。本地强制每小时最大请求数。
+
+#### `FLARESOLVERR_MAX_REQUESTS_PER_DAY`
+
+Science / PNAS 必填。本地强制每天最大请求数。
+
 ## 速率限制与缓存
 
 ### 进程内 HTTP 缓存
@@ -159,7 +212,7 @@ client 的 Accept / Authorization 不会互相污染。
 
 ### 各 provider 的速率限制参考
 
-以下数值以各家官方条款为准，本仓库不自动 throttle，只通过缓存 + "同一篇只抓一次" 的使用约束来避免超限。
+以下数值以各家官方条款为准。除 `science` / `pnas` 的本地账本限速外，本仓库其余 provider 不自动 throttle，主要通过缓存 + "同一篇只抓一次" 的使用约束来避免超限。
 
 | Provider | 建议速率 | 说明 |
 | --- | --- | --- |
@@ -167,6 +220,9 @@ client 的 Accept / Authorization 不会互相污染。
 | Elsevier | ~10 req/s，每周 / 每日有机构配额 | 需要 `ELSEVIER_API_KEY` 与机构授权；超限返回 429 |
 | Springer (Meta / OA / Full Text) | 每日配额，按 key 计费 | Meta / OA / Full Text 是三个独立 key、独立配额 |
 | Wiley TDM | 按 token 每日配额 | 默认只能拿 PDF，一次请求代价高，尽量缓存结果 |
+| Science / PNAS | 不依赖官方 API 配额；由本地账本强制限速 | 必须显式配置 `FLARESOLVERR_MIN_INTERVAL_SECONDS`、`FLARESOLVERR_MAX_REQUESTS_PER_HOUR`、`FLARESOLVERR_MAX_REQUESTS_PER_DAY`，未配置直接拒绝运行 |
+
+Science / PNAS 和其他 provider 不同，这里会额外把请求事件记到用户数据目录下的本地账本，只对这两个通道生效。命中限制时返回 `rate_limited`，而不是静默继续请求。
 
 ### 并行调用提示
 
@@ -348,6 +404,32 @@ Wiley-TDM-Client-Token
 - 其他格式，例如 XML，不假定可用。
 - 如果 Wiley 后续单独为你的账户开通 XML 或其他格式，并给出正式 endpoint / header / accept 说明，再扩展当前实现。
 
+## Science / PNAS
+
+### 当前实现
+
+- `science` / `pnas` 现在是公开 provider 名字：
+  - `resolve_paper().provider_hint` 可直接返回它们
+  - `preferred_providers` 可显式指定它们
+  - 成功结果里的 `source` 也直接写 `science` / `pnas`
+- metadata 仍只来自 Crossref；当前没有接 AAAS / PNAS 官方 metadata endpoint。
+- 路由语义和 Wiley 类似：Crossref 负责 metadata 与 routing signal，但不要求 metadata probe 成功后才允许进入全文抓取。
+- provider 自己负责完整链路：
+  - 先用 repo-local FlareSolverr 抓 landing/full HTML
+  - 如果 HTML 被判定为摘要页、Cloudflare / 登录页、正文过短，或只有 `Abstract` / `References`，就转到 PDF fallback
+  - PDF fallback 会把 FlareSolverr 解出的 cookies 和 user-agent 注入 Playwright Chromium，再访问 PDF candidates
+  - PDF 转 markdown 用 `pymupdf4llm`
+- 通用 `allow_html_fallback` 只控制“官方 provider 失败后的普通 landing-page HTML fallback”；它不会关闭 `science` / `pnas` provider 自己的 HTML 主路径。
+- 对这两个 provider，service 会显式跳过通用 `html_generic` fallback，避免 FlareSolverr 失败后又走一遍无 cookies 的普通 HTML 路线。
+- `asset_profile="body"` / `"all"` 当前不会阻塞正文成功，但会降级为 text-only，并在 `warnings` / `source_trail` 里附带说明。
+
+### 运行边界
+
+- 这两个通道只保证在当前仓库 checkout 中运行。
+- 若你把项目单独安装成 wheel / sdist 后脱离仓库运行，命中 `science` / `pnas` 时会明确报缺少 repo-local `vendor/flaresolverr` 工作流，而不是静默退回普通 HTML fallback。
+- 启动方式、preset 选择和排障见 [flaresolverr.md](flaresolverr.md)。
+- 使用 `science` / `pnas` 的法律、条款、robots 或机构授权风险由操作者自己承担。
+
 ## 回退策略
 
 ### 元数据回退
@@ -373,13 +455,16 @@ Wiley-TDM-Client-Token
 ### 可用但能力较窄
 
 - Wiley PDF（可尝试正文提取，但不做 OCR）
+- Science HTML-first 链路
+- PNAS HTML-first + PDF fallback 链路
 
 ## Live Smoke 回归
 
-仓库内提供两个 opt-in 的 live smoke 入口：
+仓库内提供三个 opt-in 的 live smoke 入口：
 
 - `tests/live/test_live_publishers.py`: 直接打 service 层
 - `tests/live/test_live_mcp.py`: 通过真实 stdio MCP server + MCP client 打 agent surface
+- `tests/live/test_live_science_pnas.py`: repo-local FlareSolverr + Playwright 的 Science / PNAS smoke
 
 运行方式：
 
@@ -402,6 +487,13 @@ PAPER_FETCH_RUN_LIVE=1 PYTHONPATH=src python -m unittest discover -s tests/live 
   - Elsevier 官方全文 DOI 的 MCP `fetch_paper`
   - Nature 短正文 HTML fallback 的 MCP `fetch_paper`
   - client 侧 progress notifications 与 structured log notifications
+- `test_live_science_pnas.py` 额外要求：
+  - 本地 FlareSolverr 已启动并能通过 `sessions.list`
+  - `FLARESOLVERR_ENV_FILE`
+  - `FLARESOLVERR_MIN_INTERVAL_SECONDS`
+  - `FLARESOLVERR_MAX_REQUESTS_PER_HOUR`
+  - `FLARESOLVERR_MAX_REQUESTS_PER_DAY`
+  - 当前覆盖 1 个 Science HTML DOI 和 1 个 PNAS PDF fallback DOI
 - Springer live 验收当前以 `Meta API + Open Access API` 为准；如果你后续拿到了 `Full Text API` key，可在同一测试入口下继续扩展
 
 ## 不应误解的点

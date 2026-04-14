@@ -10,7 +10,7 @@ from typing import Any, Literal, Mapping
 
 from .utils import normalize_text, safe_text
 
-SourceKind = Literal["elsevier_xml", "springer_xml", "wiley", "html_generic", "crossref_meta"]
+SourceKind = Literal["elsevier_xml", "springer_xml", "wiley", "science", "pnas", "html_generic", "crossref_meta"]
 OutputMode = Literal["article", "markdown", "metadata"]
 AssetProfile = Literal["none", "body", "all"]
 MaxTokensMode = int | Literal["full_text"]

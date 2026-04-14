@@ -105,6 +105,22 @@ class ConfigTests(unittest.TestCase):
         self.assertEqual(config.resolve_cli_download_dir(env), expected)
         self.assertEqual(config.resolve_mcp_download_dir(env), expected)
 
+    def test_flaresolverr_paths_default_to_repo_local_vendor_and_url(self) -> None:
+        self.assertEqual(config.resolve_flaresolverr_source_dir({}), config.DEFAULT_VENDOR_FLARESOLVERR_DIR)
+        self.assertEqual(config.resolve_flaresolverr_env_file({}), None)
+        self.assertEqual(config.resolve_flaresolverr_url({}), config.DEFAULT_FLARESOLVERR_URL)
+
+    def test_flaresolverr_paths_expand_explicit_configuration(self) -> None:
+        env = {
+            config.FLARESOLVERR_SOURCE_DIR_ENV_VAR: "~/custom-flaresolverr",
+            config.FLARESOLVERR_ENV_FILE_ENV_VAR: "~/custom-flaresolverr/.env.test",
+            config.FLARESOLVERR_URL_ENV_VAR: "http://127.0.0.1:9000/v1",
+        }
+
+        self.assertEqual(config.resolve_flaresolverr_source_dir(env), Path("~/custom-flaresolverr").expanduser())
+        self.assertEqual(config.resolve_flaresolverr_env_file(env), Path("~/custom-flaresolverr/.env.test").expanduser())
+        self.assertEqual(config.resolve_flaresolverr_url(env), "http://127.0.0.1:9000/v1")
+
 
 if __name__ == "__main__":
     unittest.main()

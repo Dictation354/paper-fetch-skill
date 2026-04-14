@@ -20,6 +20,8 @@ class PublisherIdentityTests(unittest.TestCase):
         self.assertEqual(publisher_identity.infer_provider_from_doi("10.1038/nphys1170"), "springer")
         self.assertEqual(publisher_identity.infer_provider_from_doi("10.1016/j.solener.2024.01.001"), "elsevier")
         self.assertEqual(publisher_identity.infer_provider_from_doi("10.1111/example"), "wiley")
+        self.assertEqual(publisher_identity.infer_provider_from_doi("10.1126/science.ady3136"), "science")
+        self.assertEqual(publisher_identity.infer_provider_from_doi("10.1073/pnas.81.23.7500"), "pnas")
 
     def test_extract_doi_handles_embedded_text_and_trailing_punctuation(self) -> None:
         self.assertEqual(
@@ -34,6 +36,16 @@ class PublisherIdentityTests(unittest.TestCase):
         self.assertEqual(publisher_identity.infer_provider_from_publisher("Elsevier Ltd"), "elsevier")
         self.assertEqual(publisher_identity.infer_provider_from_publisher("Elsevier Masson SAS"), "elsevier")
         self.assertEqual(publisher_identity.infer_provider_from_publisher("John Wiley & Sons"), "wiley")
+        self.assertEqual(
+            publisher_identity.infer_provider_from_publisher("American Association for the Advancement of Science"),
+            "science",
+        )
+        self.assertEqual(
+            publisher_identity.infer_provider_from_publisher(
+                "Proceedings of the National Academy of Sciences of the United States of America"
+            ),
+            "pnas",
+        )
 
     def test_infer_provider_from_url(self) -> None:
         self.assertEqual(
@@ -51,6 +63,14 @@ class PublisherIdentityTests(unittest.TestCase):
         self.assertEqual(
             publisher_identity.infer_provider_from_url("https://onlinelibrary.wiley.com/doi/10.1111/example"),
             "wiley",
+        )
+        self.assertEqual(
+            publisher_identity.infer_provider_from_url("https://www.science.org/doi/full/10.1126/science.ady3136"),
+            "science",
+        )
+        self.assertEqual(
+            publisher_identity.infer_provider_from_url("https://www.pnas.org/doi/10.1073/pnas.81.23.7500"),
+            "pnas",
         )
 
     def test_infer_provider_from_signals_prefers_domain_then_publisher_then_doi(self) -> None:

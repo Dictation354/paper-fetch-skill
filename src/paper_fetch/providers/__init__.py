@@ -11,6 +11,8 @@ from .elsevier import (
     infer_elsevier_asset_group_key,
     xml_local_name,
 )
+from .pnas import PnasClient
+from .science import ScienceClient
 from .springer import (
     SpringerClient,
     build_springer_static_asset_url,
@@ -22,6 +24,8 @@ from .wiley import WileyClient
 __all__ = [
     "CrossrefClient",
     "ElsevierClient",
+    "PnasClient",
+    "ScienceClient",
     "SpringerClient",
     "WileyClient",
     "build_elsevier_object_url",

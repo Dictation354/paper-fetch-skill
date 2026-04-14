@@ -1577,3 +1577,112 @@ class ServiceTests(unittest.TestCase):
         self.assertIn("fallback:html_disabled", article.quality.source_trail)
         self.assertIn("fallback:metadata_only", article.quality.source_trail)
         self.assertTrue(any("Full text was not available" in warning for warning in article.quality.warnings))
+
+    def test_science_provider_skips_generic_html_fallback_after_provider_failure(self) -> None:
+        resolved = paper_fetch.ResolvedQuery(
+            query="10.1126/science.ady3136",
+            query_kind="doi",
+            doi="10.1126/science.ady3136",
+            landing_url="https://www.science.org/doi/full/10.1126/science.ady3136",
+            provider_hint="science",
+            confidence=1.0,
+        )
+        original_resolve = paper_fetch.resolve_paper
+        try:
+            paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
+            article = fetch_paper_model(
+                "10.1126/science.ady3136",
+                clients={
+                    "science": StubProvider(
+                        metadata=paper_fetch.ProviderFailure("not_supported", "Science metadata probe is route-only."),
+                        raw_error=paper_fetch.ProviderFailure("no_result", "Science provider failed."),
+                    ),
+                    "crossref": StubProvider(
+                        metadata={
+                            "provider": "crossref",
+                            "official_provider": False,
+                            "doi": "10.1126/science.ady3136",
+                            "title": "Science Example",
+                            "publisher": "American Association for the Advancement of Science",
+                            "landing_page_url": resolved.landing_url,
+                            "authors": ["Alice Example"],
+                            "abstract": "Fallback abstract",
+                            "fulltext_links": [],
+                            "references": [],
+                        }
+                    ),
+                },
+                html_client=StubHtmlClient(article=sample_html_article()),
+            )
+        finally:
+            paper_fetch.resolve_paper = original_resolve
+
+        self.assertEqual(article.source, "crossref_meta")
+        self.assertFalse(article.quality.has_fulltext)
+        self.assertIn("fallback:science_html_managed_by_provider", article.quality.source_trail)
+        self.assertIn("fallback:metadata_only", article.quality.source_trail)
+
+    def test_science_provider_public_source_and_asset_profile_downgrade_are_exposed(self) -> None:
+        resolved = paper_fetch.ResolvedQuery(
+            query="10.1126/science.aeg3511",
+            query_kind="doi",
+            doi="10.1126/science.aeg3511",
+            landing_url="https://www.science.org/doi/full/10.1126/science.aeg3511",
+            provider_hint="science",
+            confidence=1.0,
+        )
+        original_resolve = paper_fetch.resolve_paper
+
+        def science_article_factory(metadata, raw_payload, *, downloaded_assets=None, asset_failures=None):
+            article = sample_article()
+            article.doi = "10.1126/science.aeg3511"
+            article.source = "science"
+            article.metadata.title = "Science Example"
+            article.quality.source_trail = list(raw_payload.metadata.get("source_trail") or [])
+            article.quality.warnings = list(raw_payload.metadata.get("warnings") or [])
+            return article
+
+        try:
+            paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
+            envelope = paper_fetch.fetch_paper(
+                "10.1126/science.aeg3511",
+                modes={"article", "markdown"},
+                strategy=paper_fetch.FetchStrategy(asset_profile="body"),
+                clients={
+                    "science": StubProvider(
+                        metadata=paper_fetch.ProviderFailure("not_supported", "Science metadata probe is route-only."),
+                        raw_payload=RawFulltextPayload(
+                            provider="science",
+                            source_url=resolved.landing_url,
+                            content_type="text/html",
+                            body=b"<html />",
+                            metadata={
+                                "source_trail": ["fulltext:science_html_ok"],
+                                "warnings": [],
+                            },
+                        ),
+                        article_factory=science_article_factory,
+                    ),
+                    "crossref": StubProvider(
+                        metadata={
+                            "provider": "crossref",
+                            "official_provider": False,
+                            "doi": "10.1126/science.aeg3511",
+                            "title": "Science Example",
+                            "publisher": "American Association for the Advancement of Science",
+                            "landing_page_url": resolved.landing_url,
+                            "authors": ["Alice Example"],
+                            "abstract": "Fallback abstract",
+                            "fulltext_links": [],
+                            "references": [],
+                        }
+                    ),
+                },
+                html_client=StubHtmlClient(error=paper_fetch.ProviderFailure("no_result", "HTML should not be used.")),
+            )
+        finally:
+            paper_fetch.resolve_paper = original_resolve
+
+        self.assertEqual(envelope.source, "science")
+        self.assertIn("download:science_assets_skipped_text_only", envelope.source_trail)
+        self.assertTrue(any("text-only full text" in warning for warning in envelope.warnings))

@@ -11,6 +11,8 @@ PROVIDER_DISPLAY_NAMES = {
     "springer": "Springer",
     "elsevier": "Elsevier",
     "wiley": "Wiley",
+    "science": "Science",
+    "pnas": "PNAS",
     "crossref": "Crossref",
 }
 PUBLISHER_PROVIDER_MAP = {
@@ -25,6 +27,10 @@ PUBLISHER_PROVIDER_MAP = {
     "wiley blackwell": "wiley",
     "john wiley and sons": "wiley",
     "john wiley sons": "wiley",
+    "american association for the advancement of science": "science",
+    "aaas": "science",
+    "proceedings of the national academy of sciences": "pnas",
+    "proceedings of the national academy of sciences of the united states of america": "pnas",
 }
 DOI_PREFIX_PROVIDER_MAP = {
     "10.1038/": "springer",
@@ -33,11 +39,15 @@ DOI_PREFIX_PROVIDER_MAP = {
     "10.1016/": "elsevier",
     "10.1002/": "wiley",
     "10.1111/": "wiley",
+    "10.1126/": "science",
+    "10.1073/": "pnas",
 }
 URL_PROVIDER_TOKENS = {
     "elsevier": ("sciencedirect.com", "elsevier.com"),
     "springer": ("springer.com", "springernature.com", "nature.com", "biomedcentral.com"),
     "wiley": ("wiley.com", "onlinelibrary.wiley.com"),
+    "science": ("science.org",),
+    "pnas": ("pnas.org",),
 }
 DOI_PATTERN = re.compile(r"10\.\d{4,9}/[^\s\"'<>]+", flags=re.IGNORECASE)
 

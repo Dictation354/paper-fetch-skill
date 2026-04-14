@@ -1,0 +1,299 @@
+from __future__ import annotations
+
+import tempfile
+import unittest
+from pathlib import Path
+from unittest import mock
+
+from paper_fetch.providers import _flaresolverr
+
+
+class SciencePnasFlareSolverrTests(unittest.TestCase):
+    def setUp(self) -> None:
+        _flaresolverr.reset_session_registry_for_tests()
+
+    def tearDown(self) -> None:
+        _flaresolverr.reset_session_registry_for_tests()
+
+    def _runtime_config(self, tmpdir: str, provider: str, doi: str) -> _flaresolverr.FlareSolverrRuntimeConfig:
+        return _flaresolverr.FlareSolverrRuntimeConfig(
+            provider=provider,
+            doi=doi,
+            url="http://127.0.0.1:8191/v1",
+            env_file=Path(tmpdir) / ".env.flaresolverr",
+            source_dir=Path(tmpdir),
+            artifact_dir=Path(tmpdir) / "artifacts",
+            headless=True,
+            min_interval_seconds=0,
+            max_requests_per_hour=0,
+            max_requests_per_day=0,
+            rate_limit_file=Path(tmpdir) / "rate_limits.json",
+        )
+
+    def _html_response(
+        self,
+        url: str,
+        *,
+        title: str = "Example Article",
+        body: str = "Readable full text.",
+        final_url: str | None = None,
+        status: int = 200,
+    ) -> dict[str, object]:
+        return {
+            "status": "ok",
+            "solution": {
+                "response": f"<html><head><title>{title}</title></head><body><main>{body}</main></body></html>",
+                "url": final_url or url,
+                "status": status,
+                "headers": {"content-type": "text/html"},
+                "cookies": [{"name": "cf_clearance", "value": "secret", "domain": ".science.org", "path": "/"}],
+                "userAgent": "Mozilla/5.0",
+            },
+        }
+
+    def test_normalize_browser_cookie_for_playwright(self) -> None:
+        cookie = _flaresolverr.normalize_browser_cookie_for_playwright(
+            {
+                "name": "cf_clearance",
+                "value": "secret",
+                "domain": ".science.org",
+                "path": "/",
+                "secure": True,
+                "httpOnly": True,
+                "sameSite": "lax",
+            }
+        )
+
+        self.assertEqual(cookie["name"], "cf_clearance")
+        self.assertEqual(cookie["domain"], ".science.org")
+        self.assertEqual(cookie["sameSite"], "Lax")
+        self.assertTrue(cookie["secure"])
+        self.assertTrue(cookie["httpOnly"])
+
+    def test_redact_flaresolverr_response_payload_redacts_cookie_values(self) -> None:
+        redacted = _flaresolverr.redact_flaresolverr_response_payload(
+            {
+                "status": "ok",
+                "solution": {
+                    "cookies": [
+                        {"name": "cf_clearance", "value": "secret"},
+                        {"name": "session", "value": "another"},
+                    ]
+                },
+            }
+        )
+
+        cookies = redacted["solution"]["cookies"]
+        self.assertEqual(cookies[0]["value"], "[redacted]")
+        self.assertEqual(cookies[1]["value"], "[redacted]")
+
+    def test_load_runtime_config_requires_explicit_rate_limits(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            env_file = tmp / ".env.flaresolverr"
+            env_file.write_text('HEADLESS="true"\n', encoding="utf-8")
+
+            with self.assertRaises(_flaresolverr.ProviderFailure) as ctx:
+                _flaresolverr.load_runtime_config(
+                    {
+                        "FLARESOLVERR_ENV_FILE": str(env_file),
+                        "FLARESOLVERR_SOURCE_DIR": str(tmp / "vendor" / "flaresolverr"),
+                        "XDG_DATA_HOME": str(tmp),
+                    },
+                    provider="science",
+                    doi="10.1126/science.ady3136",
+                )
+
+        self.assertEqual(ctx.exception.code, "not_configured")
+        self.assertIn("FLARESOLVERR_MIN_INTERVAL_SECONDS", ctx.exception.message)
+
+    def test_health_check_accepts_ok_payload(self) -> None:
+        with mock.patch.object(_flaresolverr, "post_to_flaresolverr", return_value={"status": "ok"}):
+            _flaresolverr.health_check("http://127.0.0.1:8191/v1")
+
+    def test_fetch_html_with_flaresolverr_reuses_session_across_dois(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config_one = self._runtime_config(tmpdir, "science", "10.1126/science.ady3136")
+            config_two = self._runtime_config(tmpdir, "science", "10.1126/science.aeg3511")
+            created_sessions: list[str] = []
+            request_payloads: list[dict[str, object]] = []
+
+            def fake_post(_base_url: str, payload: dict[str, object], **_kwargs: object) -> dict[str, object]:
+                if payload["cmd"] == "sessions.create":
+                    created_sessions.append(str(payload["session"]))
+                    return {"status": "ok"}
+                if payload["cmd"] == "request.get":
+                    request_payloads.append(dict(payload))
+                    return self._html_response(str(payload["url"]))
+                raise AssertionError(f"Unexpected FlareSolverr payload: {payload}")
+
+            with mock.patch.object(_flaresolverr, "post_to_flaresolverr", side_effect=fake_post):
+                first = _flaresolverr.fetch_html_with_flaresolverr(
+                    ["https://www.science.org/doi/full/10.1126/science.ady3136"],
+                    publisher="science",
+                    config=config_one,
+                )
+                second = _flaresolverr.fetch_html_with_flaresolverr(
+                    ["https://www.science.org/doi/full/10.1126/science.aeg3511"],
+                    publisher="science",
+                    config=config_two,
+                )
+
+        self.assertEqual(len(created_sessions), 1)
+        self.assertEqual(first.final_url, "https://www.science.org/doi/full/10.1126/science.ady3136")
+        self.assertEqual(second.final_url, "https://www.science.org/doi/full/10.1126/science.aeg3511")
+        self.assertEqual([payload["session"] for payload in request_payloads], [created_sessions[0], created_sessions[0]])
+        self.assertEqual([payload["waitInSeconds"] for payload in request_payloads], [8, 1])
+
+    def test_fetch_html_with_flaresolverr_retries_warm_challenge_with_cold_wait(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config = self._runtime_config(tmpdir, "science", "10.1126/science.ady3136")
+            created_sessions: list[str] = []
+            request_payloads: list[dict[str, object]] = []
+            request_count = 0
+
+            def fake_post(_base_url: str, payload: dict[str, object], **_kwargs: object) -> dict[str, object]:
+                nonlocal request_count
+                if payload["cmd"] == "sessions.create":
+                    created_sessions.append(str(payload["session"]))
+                    return {"status": "ok"}
+                if payload["cmd"] == "request.get":
+                    request_payloads.append(dict(payload))
+                    request_count += 1
+                    if request_count == 1:
+                        return self._html_response(str(payload["url"]))
+                    if request_count == 2:
+                        return self._html_response(
+                            str(payload["url"]),
+                            title="Just a moment...",
+                            body="Verify you are human",
+                        )
+                    return self._html_response(str(payload["url"]))
+                raise AssertionError(f"Unexpected FlareSolverr payload: {payload}")
+
+            with mock.patch.object(_flaresolverr, "post_to_flaresolverr", side_effect=fake_post):
+                _flaresolverr.fetch_html_with_flaresolverr(
+                    ["https://www.science.org/doi/full/10.1126/science.ady3136"],
+                    publisher="science",
+                    config=config,
+                )
+                result = _flaresolverr.fetch_html_with_flaresolverr(
+                    ["https://www.science.org/doi/full/10.1126/science.ady3136"],
+                    publisher="science",
+                    config=config,
+                )
+
+        self.assertEqual(len(created_sessions), 1)
+        self.assertEqual(result.final_url, "https://www.science.org/doi/full/10.1126/science.ady3136")
+        self.assertEqual([payload["waitInSeconds"] for payload in request_payloads], [8, 1, 8])
+        self.assertEqual([payload["session"] for payload in request_payloads], [created_sessions[0]] * 3)
+
+    def test_fetch_html_with_flaresolverr_recreates_invalid_session(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config_one = self._runtime_config(tmpdir, "science", "10.1126/science.ady3136")
+            config_two = self._runtime_config(tmpdir, "science", "10.1126/science.aeg3511")
+            created_sessions: list[str] = []
+            destroyed_sessions: list[str] = []
+            request_payloads: list[dict[str, object]] = []
+            invalid_returned = False
+
+            def fake_post(_base_url: str, payload: dict[str, object], **_kwargs: object) -> dict[str, object]:
+                nonlocal invalid_returned
+                if payload["cmd"] == "sessions.create":
+                    created_sessions.append(str(payload["session"]))
+                    return {"status": "ok"}
+                if payload["cmd"] == "sessions.destroy":
+                    destroyed_sessions.append(str(payload["session"]))
+                    return {"status": "ok"}
+                if payload["cmd"] == "request.get":
+                    request_payloads.append(dict(payload))
+                    if not invalid_returned and len(request_payloads) == 2:
+                        invalid_returned = True
+                        return {"status": "error", "message": "Session not found"}
+                    return self._html_response(str(payload["url"]))
+                raise AssertionError(f"Unexpected FlareSolverr payload: {payload}")
+
+            with mock.patch.object(_flaresolverr, "post_to_flaresolverr", side_effect=fake_post):
+                _flaresolverr.fetch_html_with_flaresolverr(
+                    ["https://www.science.org/doi/full/10.1126/science.ady3136"],
+                    publisher="science",
+                    config=config_one,
+                )
+                result = _flaresolverr.fetch_html_with_flaresolverr(
+                    ["https://www.science.org/doi/full/10.1126/science.aeg3511"],
+                    publisher="science",
+                    config=config_two,
+                )
+
+        self.assertEqual(len(created_sessions), 2)
+        self.assertEqual(destroyed_sessions, [created_sessions[0]])
+        self.assertEqual(result.final_url, "https://www.science.org/doi/full/10.1126/science.aeg3511")
+        self.assertEqual([payload["waitInSeconds"] for payload in request_payloads], [8, 1, 8])
+        self.assertEqual([payload["session"] for payload in request_payloads], [created_sessions[0], created_sessions[0], created_sessions[1]])
+
+    def test_fetch_html_with_flaresolverr_preserves_browser_seed_on_abstract_redirect_without_recreate(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config = self._runtime_config(tmpdir, "pnas", "10.1073/pnas.81.23.7500")
+            created_sessions: list[str] = []
+            destroyed_sessions: list[str] = []
+            request_payloads: list[dict[str, object]] = []
+            request_count = 0
+
+            def fake_post(_base_url: str, payload: dict[str, object], **_kwargs: object) -> dict[str, object]:
+                nonlocal request_count
+                if payload["cmd"] == "sessions.create":
+                    created_sessions.append(str(payload["session"]))
+                    return {"status": "ok"}
+                if payload["cmd"] == "sessions.destroy":
+                    destroyed_sessions.append(str(payload["session"]))
+                    return {"status": "ok"}
+                if payload["cmd"] == "request.get":
+                    request_payloads.append(dict(payload))
+                    request_count += 1
+                    if request_count == 1:
+                        return {
+                            "status": "ok",
+                            "solution": {
+                                "response": "<html><head><title>PNAS Article</title></head><body><main>Readable full text.</main></body></html>",
+                                "url": str(payload["url"]),
+                                "status": 200,
+                                "headers": {"content-type": "text/html"},
+                                "cookies": [{"name": "cf_clearance", "value": "secret", "domain": ".pnas.org", "path": "/"}],
+                                "userAgent": "Mozilla/5.0",
+                            },
+                        }
+                    return {
+                        "status": "ok",
+                        "solution": {
+                            "response": "<html><head><title>Abstract</title></head><body>Abstract only</body></html>",
+                            "url": "https://www.pnas.org/doi/abs/10.1073/pnas.81.23.7500",
+                            "status": 200,
+                            "headers": {"content-type": "text/html"},
+                            "cookies": [{"name": "cf_clearance", "value": "secret", "domain": ".pnas.org", "path": "/"}],
+                            "userAgent": "Mozilla/5.0",
+                        },
+                    }
+                raise AssertionError(f"Unexpected FlareSolverr payload: {payload}")
+
+            with mock.patch.object(_flaresolverr, "post_to_flaresolverr", side_effect=fake_post):
+                _flaresolverr.fetch_html_with_flaresolverr(
+                    ["https://www.pnas.org/doi/full/10.1073/pnas.81.23.7500"],
+                    publisher="pnas",
+                    config=config,
+                )
+                with self.assertRaises(_flaresolverr.FlareSolverrFailure) as ctx:
+                    _flaresolverr.fetch_html_with_flaresolverr(
+                        ["https://www.pnas.org/doi/full/10.1073/pnas.81.23.7500"],
+                        publisher="pnas",
+                        config=config,
+                    )
+
+        self.assertEqual(ctx.exception.kind, "redirected_to_abstract")
+        self.assertTrue(ctx.exception.browser_context_seed["browser_cookies"])
+        self.assertEqual(len(created_sessions), 1)
+        self.assertEqual(destroyed_sessions, [])
+        self.assertEqual([payload["waitInSeconds"] for payload in request_payloads], [8, 1])
+
+
+if __name__ == "__main__":
+    unittest.main()

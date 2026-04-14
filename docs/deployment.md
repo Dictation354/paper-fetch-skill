@@ -36,6 +36,7 @@ cp .env.example ~/.config/paper-fetch/.env
 - 运行时默认读取 `~/.config/paper-fetch/.env`
 - 仓库内的 `.env` 不会自动生效；如果你要在开发场景下使用它，请显式设置 `PAPER_FETCH_ENV_FILE=/path/to/.env`
 - 安装脚本也不会自动绑定仓库 `.env`；如果你希望 MCP 使用某个特定配置文件，请显式传 `--env-file /path/to/.env`
+- `science` / `pnas` 额外要求 `FLARESOLVERR_ENV_FILE` 与三条本地限速变量；这些变量说明见 [providers.md](providers.md)，完整工作流见 [flaresolverr.md](flaresolverr.md)
 
 ## 3. 可选：安装公式后端
 
@@ -59,6 +60,49 @@ cp .env.example ~/.config/paper-fetch/.env
 
 - `paper-fetch-install-formula-tools` 会把工具装到用户数据目录，适合安装后环境复用
 - `install-formula-tools.sh` 会把工具装到当前仓库的 `./.formula-tools/`，更适合本仓库开发
+
+补充说明：
+
+- `./install-formula-tools.sh` 现在还会顺手引导 repo-local Science / PNAS 依赖：
+  - 调 `vendor/flaresolverr/setup_flaresolverr_source.sh`
+  - 调 `python3 -m playwright install chromium`
+  - 对 headless preset 检查 `Xvfb`
+- 如果你只想装公式后端，不想碰 Science / PNAS 依赖，可以传：
+
+  ```bash
+  ./install-formula-tools.sh --skip-flaresolverr-setup --skip-playwright-install
+  ```
+
+## 3.1 Repo-local Science / PNAS 依赖
+
+`science` / `pnas` 不是“装完 wheel 就自动可用”的那类 provider。当前只保证在仓库 checkout 里运行，并依赖 repo-local `vendor/flaresolverr/` 工作流。
+
+推荐准备顺序：
+
+```bash
+./install-formula-tools.sh
+export FLARESOLVERR_ENV_FILE="$PWD/vendor/flaresolverr/.env.flaresolverr-source-headless"
+export FLARESOLVERR_MIN_INTERVAL_SECONDS=20
+export FLARESOLVERR_MAX_REQUESTS_PER_HOUR=30
+export FLARESOLVERR_MAX_REQUESTS_PER_DAY=200
+./scripts/flaresolverr-up "$FLARESOLVERR_ENV_FILE"
+./scripts/flaresolverr-status "$FLARESOLVERR_ENV_FILE"
+```
+
+如果你在 WSLg 下想看见浏览器，也可以改成：
+
+```bash
+export FLARESOLVERR_ENV_FILE="$PWD/vendor/flaresolverr/.env.flaresolverr-source-wslg"
+./scripts/flaresolverr-up "$FLARESOLVERR_ENV_FILE"
+```
+
+补充说明：
+
+- `FLARESOLVERR_URL` 默认是 `http://127.0.0.1:8191/v1`
+- `FLARESOLVERR_SOURCE_DIR` 默认是当前仓库的 `vendor/flaresolverr/`
+- `FLARESOLVERR_ENV_FILE` 对 Science / PNAS 是必填；wrapper 脚本不会自动猜 preset
+- headless preset 依赖 `Xvfb`
+- 如果你把项目单独安装到一个没有当前仓库 checkout 的环境里，命中 `science` / `pnas` 时会得到明确的 “需要 repo-local vendor/flaresolverr” 错误
 
 ## 4. 部署到 Codex
 
@@ -125,6 +169,14 @@ PAPER_FETCH_ENV_FILE=/path/to/.env
 
 当前 MCP 入口是 stdio server，适合挂到 Codex、Claude Code 或其他支持 stdio MCP 的 agent runtime。
 
+如果 MCP 请求命中 `science` / `pnas` 路由，server 会在 provider 运行前后做这些检查：
+
+- repo-local `vendor/flaresolverr/` 工作流资源是否存在
+- `FLARESOLVERR_ENV_FILE` 与三条本地限速变量是否齐全
+- 本地 FlareSolverr 的 `sessions.list` 健康检查是否通过
+
+检查不通过时会返回明确的 `not_configured` 或 `rate_limited` 错误，并在 reason 里带上 `./scripts/flaresolverr-up <preset>` 这一类启动提示。
+
 ## 7. 验证是否部署成功
 
 可以先做一个最小 smoke test：
@@ -168,6 +220,7 @@ PYTHONPATH=src python3 -m unittest discover -s tests/integration -q
 - `batch_check()` 串行复用一个 transport，但不会把正文或 provider payload 写入磁盘
 - 当 `strategy.asset_profile` 为 `body` / `all` 时，`fetch_paper` 可能在 JSON 块后附带少量关键正文图的 `ImageContent`
 - 支持这些能力的 MCP client 会在 `fetch_paper` / `batch_check` / `batch_resolve` 期间收到 progress 和 structured log notifications
+- `science` / `pnas` 当前只承诺正文 markdown；即使 `strategy.asset_profile` 是 `body` / `all`，也会降级为 text-only 并在结果里给 warning
 
 如果你希望精读某篇论文，可以在 MCP 请求里显式传：
 
@@ -182,8 +235,20 @@ PYTHONPATH=src python3 -m unittest discover -s tests/integration -q
 
 这些 resources 只覆盖默认共享下载目录。若你在工具调用里显式传了 `download_dir`，请改用 `list_cached(download_dir)` 和 `get_cached(doi, download_dir)` 访问隔离目录。
 
+如果你要验收 Science / PNAS 的 repo-local live 路径，可以额外跑：
+
+```bash
+PAPER_FETCH_RUN_LIVE=1 \
+FLARESOLVERR_ENV_FILE="$PWD/vendor/flaresolverr/.env.flaresolverr-source-headless" \
+FLARESOLVERR_MIN_INTERVAL_SECONDS=20 \
+FLARESOLVERR_MAX_REQUESTS_PER_HOUR=30 \
+FLARESOLVERR_MAX_REQUESTS_PER_DAY=200 \
+PYTHONPATH=src python3 -m unittest tests.live.test_live_science_pnas -q
+```
+
 ## 相关文档
 
 - [providers.md](providers.md)
+- [flaresolverr.md](flaresolverr.md)
 - [architecture/probe-semantics.md](architecture/probe-semantics.md)
 - [architecture/target-architecture.md](architecture/target-architecture.md)

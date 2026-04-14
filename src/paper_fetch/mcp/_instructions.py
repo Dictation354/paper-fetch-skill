@@ -22,6 +22,12 @@ SKILL_ENVIRONMENT_VARIABLES: tuple[tuple[str, str], ...] = (
     ("SPRINGER_META_API_KEY", "Enables Springer Meta API metadata lookups."),
     ("SPRINGER_OPENACCESS_API_KEY", "Enables Springer Open Access full-text fallback."),
     ("SPRINGER_FULLTEXT_API_KEY", "Enables Springer Full Text API when paired with its URL template."),
+    ("FLARESOLVERR_URL", "Optional override for the local Science/PNAS FlareSolverr endpoint; defaults to http://127.0.0.1:8191/v1."),
+    ("FLARESOLVERR_ENV_FILE", "Required for Science/PNAS; points at a repo-local vendor/flaresolverr preset file."),
+    ("FLARESOLVERR_SOURCE_DIR", "Optional override for the repo-local vendor/flaresolverr directory."),
+    ("FLARESOLVERR_MIN_INTERVAL_SECONDS", "Required local minimum spacing between Science/PNAS requests."),
+    ("FLARESOLVERR_MAX_REQUESTS_PER_HOUR", "Required local hourly cap for Science/PNAS requests."),
+    ("FLARESOLVERR_MAX_REQUESTS_PER_DAY", "Required local daily cap for Science/PNAS requests."),
     ("PAPER_FETCH_DOWNLOAD_DIR", "Overrides the default CLI/MCP download directory."),
     ("PAPER_FETCH_RUN_LIVE", "Test-only flag for live publisher integration checks."),
 )
@@ -66,8 +72,11 @@ def server_instructions() -> str:
         "Defaults: modes=['article','markdown'], strategy.asset_profile='none', "
         "strategy.allow_html_fallback=true, strategy.allow_metadata_only_fallback=true, "
         "include_refs=null, max_tokens='full_text'. In full_text mode include_refs=null "
-        "behaves like 'all'. On supporting clients, fetch_paper and batch tools also emit "
-        "progress updates and structured log notifications."
+        "behaves like 'all'. `provider_hint`, `preferred_providers`, and final `source` may "
+        "also be `science` or `pnas`; those routes require repo-local FlareSolverr plus "
+        "explicit local rate-limit env vars, and currently return text-only markdown even "
+        "when `asset_profile` is `body` or `all`. On supporting clients, fetch_paper and "
+        "batch tools also emit progress updates and structured log notifications."
     )
 
 
@@ -79,6 +88,8 @@ def fetch_tool_description() -> str:
         "strategy.allow_html_fallback=true, strategy.allow_metadata_only_fallback=true, "
         "include_refs=null, max_tokens='full_text'. Use strategy.asset_profile='body' or "
         "'all' to include local assets. With body/all profiles, key local figures may be "
-        "returned as ImageContent alongside the JSON result. Set download_dir to isolate "
+        "returned as ImageContent alongside the JSON result. `science` and `pnas` routes use "
+        "a provider-managed HTML-first, PDF-second repo-local workflow and downgrade "
+        "body/all requests to text-only with warnings. Set download_dir to isolate "
         "task-local downloads."
     )

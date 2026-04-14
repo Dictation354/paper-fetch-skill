@@ -26,12 +26,14 @@ cp .env.example ~/.config/paper-fetch/.env
 ```
 
 变量说明见 [docs/providers.md](docs/providers.md)。
+如果你要启用 `science` / `pnas`，还需要看 [docs/flaresolverr.md](docs/flaresolverr.md) 里的 repo-local FlareSolverr 工作流说明。
 
 补充说明：
 
 - 运行时依赖现在都显式声明在 `pyproject.toml` 里，安装不再依赖上游包“顺带带进来”的传递依赖
 - HTTP 传输层默认带 `32 MiB` 响应上限，以及针对 `5xx` / timeout 的短重试；更详细的行为见 [docs/providers.md](docs/providers.md)
 - provider 路由现在采用 `domain / Crossref publisher` 优先、`DOI prefix` 兜底的策略；像 `10.1006/jaer.1996.0085` 这类 Elsevier DOI 现在也能更稳定地命中官方链路
+- `science` / `pnas` 已作为公开 provider 名字接入；但这两个通道只保证在当前仓库 checkout + `vendor/flaresolverr/` 工作流下可用，离开仓库单独 `pip install .` 的环境会明确报缺少 repo-local 依赖
 
 ## 默认输出策略
 
@@ -60,6 +62,8 @@ cp .env.example ~/.config/paper-fetch/.env
 - provider 候选优先级固定为：`domain > publisher > DOI fallback`
 - `preferred_providers` 仍严格限制最终允许使用的 official/fulltext/html 路径
 - 即使 `preferred_providers` 没有包含 `crossref`，运行时仍可能内部调用 Crossref 只做 routing signal；这不会让最终结果自动变成 Crossref 来源
+- `provider_hint` / `preferred_providers` / 最终 `source` 现在都可能直接出现 `science` 或 `pnas`
+- `science` / `pnas` 的公开 `source` 固定是 provider 级别的 `science` / `pnas`；HTML 成功还是 PDF fallback 成功，会写在 `source_trail` 里，比如 `fulltext:science_html_ok`、`fulltext:pnas_pdf_fallback_ok`
 
 ## MCP Surface
 
@@ -188,7 +192,63 @@ paper-fetch-install-formula-tools
 ./install-formula-tools.sh
 ```
 
-不安装公式后端也能使用主抓取链路，只是公式渲染会退回到较弱的内置路径。
+这个脚本现在也会顺手引导 Science/PNAS 的 repo-local 依赖：
+
+- 调 `vendor/flaresolverr/setup_flaresolverr_source.sh`
+- 调 `python3 -m playwright install chromium`
+- 对 headless preset 检查 `Xvfb`
+
+如果只想装公式后端，可以传：
+
+```bash
+./install-formula-tools.sh --skip-flaresolverr-setup --skip-playwright-install
+```
+
+不安装公式后端也能使用主抓取链路，只是公式渲染会退回到较弱的内置路径。若要启用 `science` / `pnas`，仍然需要下面的 repo-local FlareSolverr 步骤。
+
+## Science / PNAS
+
+`science` 和 `pnas` 现在已经是公开通道：
+
+- `resolve_paper().provider_hint` 可直接返回它们
+- `preferred_providers` 可显式指定它们
+- `fetch_paper()` / MCP 返回的 `source` 也直接是 `science` 或 `pnas`
+
+这两个通道的正文链路是：
+
+- Crossref 提供 metadata 和路由信号
+- provider 自己走 `HTML first -> PDF fallback`
+- HTML 由 repo-local FlareSolverr 抓取
+- HTML 被判定为摘要页、挑战页、登录页或正文不足时，转到带 cookies + user-agent 的 Playwright PDF fallback
+- PDF 最终通过 `pymupdf4llm` 转成 AI-friendly markdown
+
+启用前需要：
+
+```bash
+export FLARESOLVERR_ENV_FILE="$PWD/vendor/flaresolverr/.env.flaresolverr-source-headless"
+export FLARESOLVERR_MIN_INTERVAL_SECONDS=20
+export FLARESOLVERR_MAX_REQUESTS_PER_HOUR=30
+export FLARESOLVERR_MAX_REQUESTS_PER_DAY=200
+./scripts/flaresolverr-up "$FLARESOLVERR_ENV_FILE"
+./scripts/flaresolverr-status "$FLARESOLVERR_ENV_FILE"
+```
+
+停止服务时：
+
+```bash
+./scripts/flaresolverr-down "$FLARESOLVERR_ENV_FILE"
+```
+
+补充说明：
+
+- `FLARESOLVERR_URL` 默认是 `http://127.0.0.1:8191/v1`
+- `FLARESOLVERR_SOURCE_DIR` 默认是当前仓库里的 `vendor/flaresolverr/`
+- `FLARESOLVERR_ENV_FILE` 对 `science` / `pnas` 是必填，不会自动猜 preset
+- `asset_profile=body|all` 在 `science` / `pnas` 当前会自动降级成 text-only，并在 `warnings` / `source_trail` 里说明
+- 通用 `allow_html_fallback` 只控制 provider 失败后的普通 landing-page fallback，不会关闭 `science` / `pnas` 自己的 HTML 主路径
+- 使用这些通道时，目标站点 ToS / robots / 授权风险由操作者自己承担
+
+更完整的启动、限速和排障说明见 [docs/flaresolverr.md](docs/flaresolverr.md)。
 
 ## Repo-local 验收
 
@@ -197,13 +257,26 @@ paper-fetch-install-formula-tools
 ```bash
 ruff check .
 PYTHONPATH=src python3 -m unittest -q tests.unit.test_cli tests.unit.test_service tests.unit.test_models_render tests.unit.test_html_generic tests.unit.test_http_cache tests.unit.test_fetch_common tests.unit.test_mcp tests.unit.test_provider_request_options tests.unit.test_publisher_identity tests.unit.test_resolve_query
+PYTHONPATH=src python3 -m unittest -q tests.unit.test_science_pnas_html tests.unit.test_science_pnas_flaresolverr tests.unit.test_science_pnas_provider
 PYTHONPATH=src python3 -m unittest discover -s tests -q
 PAPER_FETCH_RUN_LIVE=1 PYTHONPATH=src python3 -m unittest tests.live.test_live_mcp -q
+```
+
+如果你要验收 `science` / `pnas` live 路径，再额外加上：
+
+```bash
+PAPER_FETCH_RUN_LIVE=1 \
+FLARESOLVERR_ENV_FILE="$PWD/vendor/flaresolverr/.env.flaresolverr-source-headless" \
+FLARESOLVERR_MIN_INTERVAL_SECONDS=20 \
+FLARESOLVERR_MAX_REQUESTS_PER_HOUR=30 \
+FLARESOLVERR_MAX_REQUESTS_PER_DAY=200 \
+PYTHONPATH=src python3 -m unittest tests.live.test_live_science_pnas -q
 ```
 
 ## 文档
 
 - [docs/deployment.md](docs/deployment.md): 安装、MCP 注册、公式后端和验证步骤
+- [docs/flaresolverr.md](docs/flaresolverr.md): Science / PNAS 的 repo-local FlareSolverr、Playwright 和限速工作流
 - [docs/providers.md](docs/providers.md): 环境变量、provider 配置和 API key 说明
 - [docs/architecture/probe-semantics.md](docs/architecture/probe-semantics.md): `has_fulltext` probe 语义设计 note
 - [docs/architecture/target-architecture.md](docs/architecture/target-architecture.md): 项目结构和架构说明

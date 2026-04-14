@@ -42,11 +42,13 @@ from .publisher_identity import (
 from .resolve.query import ResolvedQuery, resolve_query
 
 DEFAULT_OUTPUT_MODES: set[OutputMode] = {"article", "markdown"}
-OFFICIAL_PROVIDER_NAMES = ("elsevier", "springer", "wiley")
+OFFICIAL_PROVIDER_NAMES = ("elsevier", "springer", "wiley", "science", "pnas")
 PUBLIC_SOURCE_BY_ARTICLE_SOURCE = {
     "elsevier_xml": "elsevier_xml",
     "springer_xml": "springer_xml",
     "wiley": "wiley_tdm",
+    "science": "science",
+    "pnas": "pnas",
     "html_generic": "html_fallback",
     "crossref_meta": "crossref_meta",
 }
@@ -258,7 +260,7 @@ def probe_official_provider(
     doi: str,
     clients: Mapping[str, Any],
 ) -> RouteProbeResult:
-    if provider_name == "wiley":
+    if provider_name in {"wiley", "science", "pnas"}:
         return RouteProbeResult(provider=provider_name, state="unknown")
 
     client = clients.get(provider_name)
@@ -345,6 +347,7 @@ def fetch_metadata_for_resolved_query(
         provider_name = "crossref"
     elif resolved.provider_hint and provider_allowed(resolved.provider_hint, strategy):
         provider_name = resolved.provider_hint
+        source_trail.append(f"route:provider_selected_{provider_name}")
 
     if official_metadata or crossref_metadata:
         if official_metadata:
@@ -423,10 +426,20 @@ def maybe_download_provider_assets(
 ) -> tuple[dict[str, list[dict[str, Any]]], list[str], list[str]]:
     if download_dir is None:
         return empty_asset_results(), [], []
+    provider_label = safe_text(provider_name).replace("_", " ").title() or "Provider"
     if asset_profile == "none":
         return empty_asset_results(), [], [f"download:{provider_name}_assets_skipped_profile_none"]
-
-    provider_label = safe_text(provider_name).replace("_", " ").title() or "Provider"
+    if provider_name in {"science", "pnas"}:
+        return (
+            empty_asset_results(),
+            [
+                (
+                    f"{provider_label} asset downloads are not implemented in this workflow yet; "
+                    "continuing with text-only full text."
+                )
+            ],
+            [f"download:{provider_name}_assets_skipped_text_only"],
+        )
     try:
         asset_results = provider_client.download_related_assets(
             doi,
@@ -501,19 +514,28 @@ def _try_official_provider(
         )
         extend_unique(warnings, download_warnings)
         extend_unique(source_trail, download_trail)
-        asset_results, asset_warnings, asset_trail = maybe_download_provider_assets(
-            provider_client,
-            provider_name=provider_name,
-            raw_payload=raw_payload,
-            download_dir=download_dir,
-            doi=doi,
-            metadata=metadata,
-            asset_profile=strategy.asset_profile,
-        )
-        downloaded_assets = list(asset_results.get("assets") or [])
-        asset_failures = list(asset_results.get("asset_failures") or [])
-        extend_unique(warnings, asset_warnings)
-        extend_unique(source_trail, asset_trail)
+        downloaded_assets: list[Mapping[str, Any]] = []
+        asset_failures: list[Mapping[str, Any]] = []
+        if provider_name in {"science", "pnas"} and strategy.asset_profile != "none":
+            extend_unique(
+                warnings,
+                [f"{provider_name.title()} asset downloads are not implemented in this workflow yet; continuing with text-only full text."],
+            )
+            extend_unique(source_trail, [f"download:{provider_name}_assets_skipped_text_only"])
+        else:
+            asset_results, asset_warnings, asset_trail = maybe_download_provider_assets(
+                provider_client,
+                provider_name=provider_name,
+                raw_payload=raw_payload,
+                download_dir=download_dir,
+                doi=doi,
+                metadata=metadata,
+                asset_profile=strategy.asset_profile,
+            )
+            downloaded_assets = list(asset_results.get("assets") or [])
+            asset_failures = list(asset_results.get("asset_failures") or [])
+            extend_unique(warnings, asset_warnings)
+            extend_unique(source_trail, asset_trail)
         article = provider_client.to_article_model(
             metadata,
             raw_payload,
@@ -570,6 +592,7 @@ def _try_official_provider(
 
 def _try_html_fallback(
     *,
+    provider_name: str | None,
     landing_url: str | None,
     doi: str | None,
     metadata: Mapping[str, Any],
@@ -579,6 +602,9 @@ def _try_html_fallback(
     warnings: list[str],
     source_trail: list[str],
 ) -> ArticleModel | None:
+    if provider_name in {"science", "pnas"}:
+        extend_unique(source_trail, [f"fallback:{provider_name}_html_managed_by_provider"])
+        return None
     if not html_fallback_allowed(strategy):
         extend_unique(source_trail, ["fallback:html_disabled"])
         return None
@@ -706,6 +732,7 @@ def _fetch_article(
         return article
 
     article = _try_html_fallback(
+        provider_name=provider_name,
         landing_url=landing_url,
         doi=doi,
         metadata=metadata,

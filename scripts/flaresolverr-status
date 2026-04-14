@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+VENDOR_DIR="${REPO_DIR}/vendor/flaresolverr"
+ENV_FILE="${1:-${FLARESOLVERR_ENV_FILE:-}}"
+
+if [[ -z "${ENV_FILE}" ]]; then
+  echo "Pass a preset path or set FLARESOLVERR_ENV_FILE." >&2
+  exit 1
+fi
+
+if [[ ! -f "${ENV_FILE}" ]]; then
+  echo "Missing FlareSolverr env file: ${ENV_FILE}" >&2
+  exit 1
+fi
+
+source "${VENDOR_DIR}/flaresolverr_source_common.sh"
+flaresolverr_source_load_env "${ENV_FILE}"
+flaresolverr_source_probe_direct "${FLARESOLVERR_SERVICE_URL}"

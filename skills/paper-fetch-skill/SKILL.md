@@ -64,6 +64,7 @@ Use this when you need the paper contents. Important behavior:
 - `download_dir` is optional and lets you isolate one task's downloads from the shared MCP cache directory.
 - When `strategy.asset_profile` is `body` or `all`, supporting MCP clients may also receive a few key local body figures as `ImageContent` after the JSON block.
 - Supporting MCP clients may also receive `notifications/progress` and structured `notifications/message` updates while `fetch_paper`, `batch_check`, or `batch_resolve` is running.
+- `provider_hint`, `preferred_providers`, and final `source` may also be `science` or `pnas`; those routes require repo-local FlareSolverr plus explicit local rate-limit env vars, and currently return text-only markdown even when `asset_profile` is `body` or `all`.
 
 Recommended defaults:
 - `modes=["article", "markdown"]`
@@ -98,6 +99,12 @@ Use this to check many identifiable papers serially without returning full bodie
 - `SPRINGER_META_API_KEY`: Enables Springer Meta API metadata lookups.
 - `SPRINGER_OPENACCESS_API_KEY`: Enables Springer Open Access full-text fallback.
 - `SPRINGER_FULLTEXT_API_KEY`: Enables Springer Full Text API when paired with its URL template.
+- `FLARESOLVERR_URL`: Optional override for the local Science/PNAS FlareSolverr endpoint; defaults to `http://127.0.0.1:8191/v1`.
+- `FLARESOLVERR_ENV_FILE`: Required for Science/PNAS; points at a repo-local `vendor/flaresolverr` preset file.
+- `FLARESOLVERR_SOURCE_DIR`: Optional override for the repo-local `vendor/flaresolverr` directory.
+- `FLARESOLVERR_MIN_INTERVAL_SECONDS`: Required local minimum spacing between Science/PNAS requests.
+- `FLARESOLVERR_MAX_REQUESTS_PER_HOUR`: Required local hourly cap for Science/PNAS requests.
+- `FLARESOLVERR_MAX_REQUESTS_PER_DAY`: Required local daily cap for Science/PNAS requests.
 - `PAPER_FETCH_DOWNLOAD_DIR`: Overrides the default CLI or MCP download directory.
 - `PAPER_FETCH_RUN_LIVE`: Test-only flag for live publisher integration checks.
 - Without `PAPER_FETCH_DOWNLOAD_DIR`, the MCP default directory is `XDG_DATA_HOME/paper-fetch/downloads`, which defaults to `~/.local/share/paper-fetch/downloads`.

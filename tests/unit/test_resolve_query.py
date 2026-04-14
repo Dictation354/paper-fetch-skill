@@ -56,6 +56,13 @@ class ResolveQueryTests(unittest.TestCase):
         self.assertEqual(result.provider_hint, "elsevier")
         self.assertEqual(result.confidence, 1.0)
 
+    def test_direct_science_and_pnas_doi_queries_use_new_provider_hints(self) -> None:
+        science_result = resolve_query.resolve_query("10.1126/science.ady3136")
+        pnas_result = resolve_query.resolve_query("10.1073/pnas.81.23.7500")
+
+        self.assertEqual(science_result.provider_hint, "science")
+        self.assertEqual(pnas_result.provider_hint, "pnas")
+
     def test_doi_url_prefers_final_landing_domain(self) -> None:
         transport = RecordingTransport(
             {
@@ -212,6 +219,41 @@ class ResolveQueryTests(unittest.TestCase):
 
         self.assertEqual(result.doi, "10.1006/jaer.1996.0085")
         self.assertEqual(result.provider_hint, "elsevier")
+
+    def test_title_query_can_infer_science_provider_from_crossref_signals(self) -> None:
+        transport = RecordingTransport(
+            {
+                ("GET", "https://api.crossref.org/works"): {
+                    "status_code": 200,
+                    "headers": {"content-type": "application/json"},
+                    "body": json.dumps(
+                        {
+                            "message": {
+                                "items": [
+                                    {
+                                        "DOI": "10.1126/science.ady3136",
+                                        "title": ["Hyaluronic acid and tissue mechanics orchestrate mammalian digit tip regeneration"],
+                                        "container-title": ["Science"],
+                                        "publisher": "American Association for the Advancement of Science",
+                                        "URL": "https://www.science.org/doi/full/10.1126/science.ady3136",
+                                    }
+                                ]
+                            }
+                        }
+                    ).encode("utf-8"),
+                    "url": "https://api.crossref.org/works",
+                }
+            }
+        )
+
+        result = resolve_query.resolve_query(
+            "Hyaluronic acid and tissue mechanics orchestrate mammalian digit tip regeneration",
+            transport=transport,
+            env={},
+        )
+
+        self.assertEqual(result.doi, "10.1126/science.ady3136")
+        self.assertEqual(result.provider_hint, "science")
 
     def test_url_query_skips_crossref_lookup_for_invalid_html_title(self) -> None:
         transport = RecordingTransport(
