@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
@@ -15,6 +16,41 @@ ALLOWED_ASSET_PROFILES = {"none", "body", "all"}
 ALLOWED_OUTPUT_MODES = {"article", "markdown", "metadata"}
 ALLOWED_BATCH_CHECK_MODES = {"article", "metadata"}
 DEFAULT_MCP_MODES = ["article", "markdown"]
+DEFAULT_INLINE_IMAGE_MAX_IMAGES = 3
+DEFAULT_INLINE_IMAGE_MAX_BYTES_PER_IMAGE = 2 * 1024 * 1024
+DEFAULT_INLINE_IMAGE_MAX_TOTAL_BYTES = 8 * 1024 * 1024
+
+
+@dataclass(frozen=True)
+class InlineImageBudget:
+    max_images: int = DEFAULT_INLINE_IMAGE_MAX_IMAGES
+    max_bytes_per_image: int = DEFAULT_INLINE_IMAGE_MAX_BYTES_PER_IMAGE
+    max_total_bytes: int = DEFAULT_INLINE_IMAGE_MAX_TOTAL_BYTES
+
+    @property
+    def disabled(self) -> bool:
+        return self.max_images == 0 or self.max_bytes_per_image == 0 or self.max_total_bytes == 0
+
+
+class InlineImageBudgetInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    max_images: int | None = Field(default=None, ge=0)
+    max_bytes_per_image: int | None = Field(default=None, ge=0)
+    max_total_bytes: int | None = Field(default=None, ge=0)
+
+    def resolved(self) -> InlineImageBudget:
+        return InlineImageBudget(
+            max_images=self.max_images if self.max_images is not None else DEFAULT_INLINE_IMAGE_MAX_IMAGES,
+            max_bytes_per_image=(
+                self.max_bytes_per_image
+                if self.max_bytes_per_image is not None
+                else DEFAULT_INLINE_IMAGE_MAX_BYTES_PER_IMAGE
+            ),
+            max_total_bytes=(
+                self.max_total_bytes if self.max_total_bytes is not None else DEFAULT_INLINE_IMAGE_MAX_TOTAL_BYTES
+            ),
+        )
 
 
 class ResolvePaperRequest(BaseModel):
@@ -123,6 +159,7 @@ class FetchStrategyInput(BaseModel):
     allow_metadata_only_fallback: bool = True
     preferred_providers: list[str] | None = None
     asset_profile: str = "none"
+    inline_image_budget: InlineImageBudgetInput | None = None
 
     @field_validator("preferred_providers", mode="before")
     @classmethod
@@ -162,6 +199,13 @@ class FetchStrategyInput(BaseModel):
             preferred_providers=list(self.preferred_providers) if self.preferred_providers is not None else None,
             asset_profile=self.asset_profile,
         )
+
+    def resolved_inline_image_budget(self) -> InlineImageBudget:
+        budget = self.inline_image_budget or InlineImageBudgetInput()
+        return budget.resolved()
+
+    def cache_request_payload(self) -> dict[str, Any]:
+        return self.model_dump(mode="json", exclude={"inline_image_budget"})
 
 
 class FetchPaperRequest(BaseModel):

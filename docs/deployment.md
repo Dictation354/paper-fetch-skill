@@ -231,6 +231,7 @@ PYTHONPATH=src python3 -m unittest discover -s tests/integration -q
 - `batch_check(mode="metadata")` 现在复用廉价 probe，返回 `probe_state` / `evidence` / `warnings` 等轻量字段，不会走完整 fetch，也不会把正文或 provider payload 写入磁盘
 - `batch_check(mode="article")` 仍保留完整 fetch 语义
 - 当 `strategy.asset_profile` 为 `body` / `all` 时，`fetch_paper` 可能在 JSON 块后附带少量关键正文图的 `ImageContent`
+- 可选 `strategy.inline_image_budget={max_images,max_bytes_per_image,max_total_bytes}` 用来调节这些 inline 图片的默认上限：`3` 张、单张 `2 MiB`、总计 `8 MiB`；任一生效上限为 `0` 时会直接禁用 inline 图片附带
 - 这 7 个 MCP tools 现在都会暴露 `outputSchema`，支持 schema-aware 的 host 可以直接做参数补全与结果校验
 - 当错误能明确归因到缺失凭证或环境变量时，MCP `structuredContent` 现在会附带 `missing_env=[...]`
 - 支持这些能力的 MCP client 会在 `fetch_paper` / `batch_check` / `batch_resolve` 期间收到 progress 和 structured log notifications

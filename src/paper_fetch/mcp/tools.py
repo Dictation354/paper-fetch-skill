@@ -36,6 +36,7 @@ from .schemas import (
     FetchPaperRequest,
     FetchStrategyInput,
     HasFulltextRequest,
+    InlineImageBudget,
     ResolvePaperRequest,
 )
 
@@ -44,9 +45,6 @@ _BATCH_CHECK_MODES = {
     "article": ["article"],
     "metadata": ["metadata"],
 }
-_INLINE_IMAGE_MAX_COUNT = 3
-_INLINE_IMAGE_MAX_BYTES = 2 * 1024 * 1024
-_INLINE_IMAGE_MAX_TOTAL_BYTES = 8 * 1024 * 1024
 _FETCH_ENVELOPE_CACHE_VERSION = 1
 _FETCH_PROGRESS_TOTAL = 4
 _FETCH_LOGGER_NAMES = ("paper_fetch.service", "paper_fetch.http")
@@ -140,7 +138,7 @@ def _fetch_envelope_cache_path(download_dir: Path, doi: str) -> Path:
 def _request_cache_payload(request: FetchPaperRequest) -> dict[str, Any]:
     return {
         "modes": list(request.modes),
-        "strategy": request.strategy.model_dump(mode="json"),
+        "strategy": request.strategy.cache_request_payload(),
         "include_refs": request.include_refs,
         "max_tokens": request.max_tokens,
     }
@@ -153,7 +151,7 @@ def _cached_request_matches(
     cached_modes = {str(item) for item in cached_request.get("modes") or []}
     if not request.requested_modes().issubset(cached_modes):
         return False
-    if cached_request.get("strategy") != request.strategy.model_dump(mode="json"):
+    if cached_request.get("strategy") != request.strategy.cache_request_payload():
         return False
     if cached_request.get("include_refs") != request.include_refs:
         return False
@@ -644,8 +642,14 @@ def _inline_image_note(asset: Asset, path: Path) -> str:
     return "\n".join(lines)
 
 
-def _inline_image_contents(article: ArticleModel | None) -> tuple[list[TextContent | ImageContent], list[str]]:
+def _inline_image_contents(
+    article: ArticleModel | None,
+    *,
+    budget: InlineImageBudget,
+) -> tuple[list[TextContent | ImageContent], list[str]]:
     if article is None:
+        return [], []
+    if budget.disabled:
         return [], []
 
     contents: list[TextContent | ImageContent] = []
@@ -677,10 +681,10 @@ def _inline_image_contents(article: ArticleModel | None) -> tuple[list[TextConte
             omitted += 1
             continue
 
-        if selected_count >= _INLINE_IMAGE_MAX_COUNT:
+        if selected_count >= budget.max_images:
             omitted += 1
             continue
-        if size > _INLINE_IMAGE_MAX_BYTES or total_bytes + size > _INLINE_IMAGE_MAX_TOTAL_BYTES:
+        if size > budget.max_bytes_per_image or total_bytes + size > budget.max_total_bytes:
             omitted += 1
             continue
 
@@ -714,7 +718,10 @@ def build_fetch_tool_result(envelope: FetchEnvelope, request: FetchPaperRequest)
     extra_content: list[TextContent | ImageContent] = []
 
     if request.strategy.asset_profile in {"body", "all"}:
-        extra_content, image_warnings = _inline_image_contents(envelope.article)
+        extra_content, image_warnings = _inline_image_contents(
+            envelope.article,
+            budget=request.strategy.resolved_inline_image_budget(),
+        )
         warnings = list(payload.get("warnings") or [])
         extend_unique(warnings, image_warnings)
         payload["warnings"] = warnings
