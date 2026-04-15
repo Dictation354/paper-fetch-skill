@@ -63,6 +63,7 @@ Use this when you need the paper contents. Important behavior:
 - Top-level provenance fields such as `source`, `warnings`, `source_trail`, `has_fulltext`, and `token_estimate` are always present.
 - Unrequested payload fields (`article`, `markdown`, `metadata`) come back as `null`.
 - `download_dir` is optional and lets you isolate one task's downloads from the shared MCP cache directory.
+- The MCP tool surface now publishes `outputSchema` for schema-aware clients.
 - When `strategy.asset_profile` is `body` or `all`, supporting MCP clients may also receive a few key local body figures as `ImageContent` after the JSON block.
 - Supporting MCP clients may also receive `notifications/progress` and structured `notifications/message` updates while `fetch_paper`, `batch_check`, or `batch_resolve` is running.
 - `provider_hint`, `preferred_providers`, and final `source` may also be `science` or `pnas`; those routes require repo-local FlareSolverr plus explicit local rate-limit env vars, and currently return text-only markdown even when `asset_profile` is `body` or `all`.
@@ -83,6 +84,7 @@ Use this when you only need a cheap probe. Important behavior:
 - It checks resolution, Crossref metadata, lightweight official metadata probes, and landing-page HTML meta.
 - It does not run the full `fetch_paper` waterfall.
 - The success payload is `{query, doi, state, evidence, warnings}`.
+- The MCP tool surface now publishes `outputSchema` for schema-aware clients.
 - Current v1 states are practically `likely_yes` or `unknown`; `confirmed_yes` and `no` are reserved for future iterations.
 
 ### `list_cached(download_dir)`

@@ -153,6 +153,7 @@ class McpStdioIntegrationTests(unittest.IsolatedAsyncioTestCase):
                                 "resolve_paper",
                             ],
                         )
+                        self.assertTrue(all(tool.outputSchema is not None for tool in listed.tools))
 
                         resolved = await session.call_tool("resolve_paper", {"query": "10.1000/example"})
                         self.assertFalse(resolved.isError)

@@ -7,6 +7,7 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 ### Added
 
 - Added a dedicated `has_fulltext(query)` MCP probe tool with cheap Crossref, provider-metadata, and landing-page HTML-meta signals.
+- Added JSON output schemas for all 7 public MCP tools so schema-aware clients can validate tool results and surface stronger autocomplete.
 
 ### Changed
 

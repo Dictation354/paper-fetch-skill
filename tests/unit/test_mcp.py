@@ -8,6 +8,7 @@ from pathlib import Path
 from unittest import mock
 
 from paper_fetch.mcp import tools as mcp_tools
+from paper_fetch.mcp.server import build_server
 from paper_fetch.models import ArticleModel, Asset, FetchEnvelope, Metadata, Quality, RenderOptions, Section
 from paper_fetch.providers.base import ProviderFailure
 from paper_fetch.resolve.query import ResolvedQuery
@@ -123,6 +124,11 @@ class FakeContext:
 
 
 class McpToolTests(unittest.TestCase):
+    def test_build_server_exposes_output_schemas_for_all_tools(self) -> None:
+        server = build_server()
+        for name, tool in server._tool_manager._tools.items():
+            self.assertIsNotNone(tool.output_schema, name)
+
     def test_fetch_paper_payload_uses_default_arguments_and_mcp_download_dir(self) -> None:
         captured: dict[str, object] = {}
         runtime_env = {"CROSSREF_MAILTO": "unit@example.test"}
@@ -449,6 +455,9 @@ class McpToolTests(unittest.TestCase):
         self.assertIn("either query or structured title/authors/year", result.structuredContent["reason"])
 
     def test_has_fulltext_tool_serializes_probe_result(self) -> None:
+        server = build_server()
+        tool_schema = server._tool_manager._tools["has_fulltext"].fn_metadata.output_model
+        assert tool_schema is not None
         with mock.patch.object(
             mcp_tools,
             "service_probe_has_fulltext",
@@ -461,6 +470,7 @@ class McpToolTests(unittest.TestCase):
         self.assertEqual(result.structuredContent["state"], "likely_yes")
         self.assertEqual(result.structuredContent["evidence"], ["crossref_fulltext_link"])
         self.assertNotIn("title", result.structuredContent)
+        tool_schema.model_validate(result.structuredContent)
 
     def test_has_fulltext_tool_keeps_ambiguous_error_payload(self) -> None:
         error = PaperFetchFailure(
@@ -468,12 +478,27 @@ class McpToolTests(unittest.TestCase):
             "Query resolution is ambiguous; choose one of the DOI candidates.",
             candidates=[{"doi": "10.1000/one"}],
         )
+        server = build_server()
+        tool_schema = server._tool_manager._tools["has_fulltext"].fn_metadata.output_model
+        assert tool_schema is not None
         with mock.patch.object(mcp_tools, "service_probe_has_fulltext", side_effect=error):
             result = mcp_tools.has_fulltext_tool(query="Example title")
 
         self.assertTrue(result.isError)
         self.assertEqual(result.structuredContent["status"], "ambiguous")
         self.assertEqual(result.structuredContent["candidates"], [{"doi": "10.1000/one"}])
+        tool_schema.model_validate(result.structuredContent)
+
+    def test_fetch_paper_tool_error_payload_matches_output_schema(self) -> None:
+        server = build_server()
+        tool_schema = server._tool_manager._tools["fetch_paper"].fn_metadata.output_model
+        assert tool_schema is not None
+
+        result = mcp_tools.fetch_paper_tool(query="10.1000/example", modes=["pdf"])
+
+        self.assertTrue(result.isError)
+        self.assertEqual(result.structuredContent["status"], "error")
+        tool_schema.model_validate(result.structuredContent)
 
     def test_parse_structured_log_message_extracts_fields(self) -> None:
         payload = mcp_tools.parse_structured_log_message(
