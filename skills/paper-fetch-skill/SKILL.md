@@ -41,6 +41,7 @@ Use this skill when an agent needs the contents or full-text availability of one
 - `fetch_paper(...)`: `prefer_cache=true` tries a local cached FetchEnvelope sidecar before hitting the network.
 - `fetch_paper(...)`: `strategy.asset_profile="body"` or `all` may also emit a few key local figures as `ImageContent`.
 - `fetch_paper(...)`: `science` and `pnas` routes require repo-local FlareSolverr plus explicit local rate-limit env vars, and currently return text-only markdown even when `asset_profile` is `body` or `all`.
+- `fetch_paper(...)` and the batch tools: supporting MCP hosts may cancel in-flight requests; the worker cooperatively stops issuing follow-up network requests after cancellation is observed.
 - `has_fulltext(query)`: runs a cheap probe over resolution, Crossref metadata, lightweight official metadata probes, and landing-page HTML meta without triggering the full fetch waterfall.
 - `has_fulltext(query)`: the success payload is `{query, doi, state, evidence, warnings}`; v1 only actively returns `likely_yes` or `unknown`, while `confirmed_yes` and `no` remain reserved states.
 - `batch_resolve(queries, concurrency)` and `batch_check(queries, mode, concurrency)`: default `concurrency=1`; higher values let different hosts overlap while the shared transport still keeps the same host serialized.

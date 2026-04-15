@@ -105,6 +105,7 @@ cp .env.example ~/.config/paper-fetch/.env
 - 这 7 个 MCP tools 现在都会向支持的 client 暴露 `outputSchema`，可直接用于 JSON Schema 参数补全和结果校验
 - 当错误能明确定位到缺少的凭证或配置时，MCP `structuredContent` 现在会附带 `missing_env=[...]`
 - 支持这些能力的 MCP client 还会在 `fetch_paper` / `batch_check` / `batch_resolve` 期间收到 progress 和 structured log notifications
+- 支持 MCP cancellation 的 host 现在可以中途取消 `fetch_paper` / `batch_check` / `batch_resolve`；worker 会协作式停止继续发后续网络请求
 
 默认共享缓存资源会暴露在 MCP resources 下：
 

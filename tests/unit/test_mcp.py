@@ -793,6 +793,30 @@ class McpAsyncToolTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(ctx.session.messages[0]["data"]["event"], "fetch_stage")
         self.assertEqual(ctx.session.messages[0]["data"]["query"], "10.1000/example")
 
+    async def test_fetch_paper_tool_async_sets_cancellation_flag_for_worker_transport(self) -> None:
+        started = threading.Event()
+        cancelled_seen = threading.Event()
+
+        def fake_fetch_envelope(request, *, env, download_dir, transport, include_article_for_assets):
+            started.set()
+            deadline = time.monotonic() + 1.0
+            while time.monotonic() < deadline:
+                if transport is not None and transport.cancelled:
+                    cancelled_seen.set()
+                    raise mcp_tools.RequestCancelledError("Request cancelled.")
+                time.sleep(0.01)
+            return sample_envelope(modes={"article", "markdown"})
+
+        with mock.patch.object(mcp_tools, "_fetch_paper_envelope", side_effect=fake_fetch_envelope):
+            task = asyncio.create_task(mcp_tools.fetch_paper_tool_async(query="10.1000/example"))
+            await asyncio.to_thread(started.wait, 1.0)
+            task.cancel()
+            with self.assertRaises(asyncio.CancelledError):
+                await task
+            await asyncio.to_thread(cancelled_seen.wait, 1.0)
+
+        self.assertTrue(cancelled_seen.is_set())
+
     async def test_batch_check_tool_async_reports_per_query_progress(self) -> None:
         ctx = FakeContext()
 

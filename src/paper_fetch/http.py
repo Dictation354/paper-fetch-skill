@@ -16,7 +16,7 @@ from collections import OrderedDict
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
-from typing import Any, Iterator, Mapping
+from typing import Any, Callable, Iterator, Mapping
 
 import urllib3
 
@@ -87,6 +87,10 @@ class RequestFailure(Exception):
         self.retry_after_seconds = retry_after_seconds
 
 
+class RequestCancelledError(Exception):
+    """Raised when a cooperative cancellation check trips."""
+
+
 @dataclass(frozen=True)
 class _PreparedRequest:
     method: str
@@ -105,12 +109,14 @@ class HttpTransport:
         max_cacheable_body_bytes: int = DEFAULT_MAX_CACHEABLE_BODY_BYTES,
         max_total_cache_bytes: int = DEFAULT_MAX_TOTAL_CACHE_BYTES,
         max_response_bytes: int = DEFAULT_MAX_RESPONSE_BYTES,
+        cancel_check: Callable[[], bool] | None = None,
     ) -> None:
         self.cache_ttl = max(0, int(cache_ttl))
         self.cache_capacity = max(0, int(cache_capacity))
         self.max_cacheable_body_bytes = max(0, int(max_cacheable_body_bytes))
         self.max_total_cache_bytes = max(0, int(max_total_cache_bytes))
         self.max_response_bytes = max(0, int(max_response_bytes))
+        self._cancel_check = cancel_check
         self._cache: OrderedDict[tuple[str, str, tuple[tuple[str, str], ...]], tuple[float, dict[str, Any]]] = OrderedDict()
         self._cache_body_bytes = 0
         self._cache_lock = threading.RLock()
@@ -129,6 +135,14 @@ class HttpTransport:
                 lock = threading.Lock()
                 self._host_locks[normalized] = lock
         return lock
+
+    @property
+    def cancelled(self) -> bool:
+        return bool(self._cancel_check and self._cancel_check())
+
+    def _check_cancelled(self) -> None:
+        if self.cancelled:
+            raise RequestCancelledError("Request cancelled.")
 
     def _build_cache_key(
         self,
@@ -358,6 +372,7 @@ class HttpTransport:
         cached_response = self._load_cached_response(cache_key)
         if cached_response is not None:
             return cached_response
+        self._check_cancelled()
         attempts_remaining = max(0, int(rate_limit_retries))
         transient_attempts_remaining = max(0, int(transient_retries))
         transient_attempts_made = 0
@@ -366,6 +381,7 @@ class HttpTransport:
         host_lock = self._host_lock_for_url(url)
         with host_lock if host_lock is not None else nullcontext():
             while True:
+                self._check_cancelled()
                 attempt += 1
                 request_started_at = time.monotonic()
                 redacted_url = redact_url_for_cache(url)

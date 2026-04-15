@@ -9,6 +9,7 @@ import json
 import logging
 import mimetypes
 from pathlib import Path
+import threading
 from typing import Any, Callable, Mapping, Sequence
 
 from mcp.server.fastmcp import Context
@@ -16,7 +17,7 @@ from mcp.types import CallToolResult, ImageContent, TextContent
 from pydantic import ValidationError
 
 from ..config import build_runtime_env, resolve_mcp_download_dir
-from ..http import HttpTransport
+from ..http import HttpTransport, RequestCancelledError
 from ..models import ArticleModel, Asset, FetchEnvelope, Metadata, Quality, Reference, Section
 from ..providers.base import ProviderFailure
 from ..service import PaperFetchFailure, fetch_paper as service_fetch_paper
@@ -89,6 +90,8 @@ def _validation_reason(error: ValidationError) -> str:
 def error_payload_from_exception(error: Exception) -> dict[str, Any]:
     if isinstance(error, ValidationError):
         return {"status": "error", "reason": _validation_reason(error), "candidates": None, "missing_env": None}
+    if isinstance(error, RequestCancelledError):
+        return {"status": "error", "reason": "Request cancelled.", "candidates": None, "missing_env": None}
     if isinstance(error, PaperFetchFailure):
         return {
             "status": error.status,
@@ -990,6 +993,8 @@ async def fetch_paper_tool_async(
         return _tool_result(error_payload_from_exception(error), is_error=True)
 
     await _report_progress(ctx, 1, _FETCH_PROGRESS_TOTAL, "Fetching paper content")
+    cancelled = threading.Event()
+    transport = HttpTransport(cancel_check=cancelled.is_set)
     try:
         loop = asyncio.get_running_loop()
         bridge = PaperFetchLogBridge(ctx=ctx, loop=loop) if ctx is not None else None
@@ -999,7 +1004,7 @@ async def fetch_paper_tool_async(
                 request,
                 env=env,
                 download_dir=download_dir,
-                transport=None,
+                transport=transport,
                 include_article_for_assets=True,
             )
         else:
@@ -1009,13 +1014,16 @@ async def fetch_paper_tool_async(
                     request,
                     env=env,
                     download_dir=download_dir,
-                    transport=None,
+                    transport=transport,
                     include_article_for_assets=True,
                 )
         await _report_progress(ctx, 3, _FETCH_PROGRESS_TOTAL, "Shaping MCP result")
         result = build_fetch_tool_result(envelope, request)
         await _report_progress(ctx, _FETCH_PROGRESS_TOTAL, _FETCH_PROGRESS_TOTAL, "fetch_paper complete")
         return result
+    except asyncio.CancelledError:
+        cancelled.set()
+        raise
     except Exception as error:
         await _report_progress(ctx, _FETCH_PROGRESS_TOTAL, _FETCH_PROGRESS_TOTAL, "fetch_paper failed")
         return _tool_result(error_payload_from_exception(error), is_error=True)
@@ -1037,7 +1045,8 @@ async def batch_resolve_tool_async(
     await _report_progress(ctx, 0, total_queries, "Starting batch_resolve")
 
     runtime_env = build_runtime_env(env)
-    transport = HttpTransport()
+    cancelled = threading.Event()
+    transport = HttpTransport(cancel_check=cancelled.is_set)
     loop = asyncio.get_running_loop()
     bridge = PaperFetchLogBridge(ctx=ctx, loop=loop) if ctx is not None else None
 
@@ -1051,6 +1060,9 @@ async def batch_resolve_tool_async(
             ctx=ctx,
             progress_prefix="Resolved",
         )
+    except asyncio.CancelledError:
+        cancelled.set()
+        raise
     finally:
         if bridge is not None:
             bridge.__exit__(None, None, None)
@@ -1086,7 +1098,8 @@ async def batch_check_tool_async(
     await _report_progress(ctx, 0, total_queries, "Starting batch_check")
 
     runtime_env = build_runtime_env(env)
-    transport = HttpTransport()
+    cancelled = threading.Event()
+    transport = HttpTransport(cancel_check=cancelled.is_set)
     requested_modes = _BATCH_CHECK_MODES[request.mode]
     loop = asyncio.get_running_loop()
     bridge = PaperFetchLogBridge(ctx=ctx, loop=loop) if ctx is not None else None
@@ -1107,6 +1120,9 @@ async def batch_check_tool_async(
             ctx=ctx,
             progress_prefix="Checked",
         )
+    except asyncio.CancelledError:
+        cancelled.set()
+        raise
     finally:
         if bridge is not None:
             bridge.__exit__(None, None, None)
