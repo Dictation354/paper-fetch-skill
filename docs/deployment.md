@@ -226,6 +226,7 @@ PYTHONPATH=src python3 -m unittest discover -s tests/integration -q
 - `batch_check(mode="article")` 仍保留完整 fetch 语义
 - 当 `strategy.asset_profile` 为 `body` / `all` 时，`fetch_paper` 可能在 JSON 块后附带少量关键正文图的 `ImageContent`
 - 这 7 个 MCP tools 现在都会暴露 `outputSchema`，支持 schema-aware 的 host 可以直接做参数补全与结果校验
+- 当错误能明确归因到缺失凭证或环境变量时，MCP `structuredContent` 现在会附带 `missing_env=[...]`
 - 支持这些能力的 MCP client 会在 `fetch_paper` / `batch_check` / `batch_resolve` 期间收到 progress 和 structured log notifications
 - `science` / `pnas` 当前只承诺正文 markdown；即使 `strategy.asset_profile` 是 `body` / `all`，也会降级为 text-only 并在结果里给 warning
 

@@ -19,6 +19,7 @@ class ErrorPayloadOutput(TypedDict, total=False):
     status: str
     reason: str
     candidates: list[ResolvedCandidateOutput] | None
+    missing_env: list[str] | None
 
 
 class ResolvePaperOutput(ErrorPayloadOutput, total=False):

@@ -399,6 +399,40 @@ class McpToolTests(unittest.TestCase):
         self.assertTrue(result.isError)
         self.assertEqual(result.structuredContent["status"], "no_access")
         self.assertEqual(result.structuredContent["reason"], "Provider request failed.")
+        self.assertIsNone(result.structuredContent["missing_env"])
+
+    def test_error_payload_from_exception_exposes_missing_env_and_promotes_not_configured(self) -> None:
+        payload = mcp_tools.error_payload_from_exception(
+            ProviderFailure(
+                "not_configured",
+                "ELSEVIER_API_KEY is not configured.",
+                missing_env=["ELSEVIER_API_KEY"],
+            )
+        )
+
+        self.assertEqual(payload["status"], "no_access")
+        self.assertEqual(payload["missing_env"], ["ELSEVIER_API_KEY"])
+
+    def test_fetch_paper_tool_missing_env_payload_matches_output_schema(self) -> None:
+        server = build_server()
+        tool_schema = server._tool_manager._tools["fetch_paper"].fn_metadata.output_model
+        assert tool_schema is not None
+
+        with mock.patch.object(
+            mcp_tools,
+            "service_fetch_paper",
+            side_effect=ProviderFailure(
+                "not_configured",
+                "ELSEVIER_API_KEY is not configured.",
+                missing_env=["ELSEVIER_API_KEY"],
+            ),
+        ):
+            result = mcp_tools.fetch_paper_tool(query="10.1000/example")
+
+        self.assertTrue(result.isError)
+        self.assertEqual(result.structuredContent["status"], "no_access")
+        self.assertEqual(result.structuredContent["missing_env"], ["ELSEVIER_API_KEY"])
+        tool_schema.model_validate(result.structuredContent)
 
     def test_fetch_paper_payload_updates_cache_index_for_saved_files(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

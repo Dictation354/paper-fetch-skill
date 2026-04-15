@@ -100,6 +100,7 @@ cp .env.example ~/.config/paper-fetch/.env
 - `batch_check(mode="article")` 仍保留“完整 fetch 后给最终 verdict”的语义
 - 当 `strategy.asset_profile` 为 `body` / `all` 时，`fetch_paper` 可能在 JSON 结果后附带少量关键正文图的 `ImageContent`
 - 这 7 个 MCP tools 现在都会向支持的 client 暴露 `outputSchema`，可直接用于 JSON Schema 参数补全和结果校验
+- 当错误能明确定位到缺少的凭证或配置时，MCP `structuredContent` 现在会附带 `missing_env=[...]`
 - 支持这些能力的 MCP client 还会在 `fetch_paper` / `batch_check` / `batch_resolve` 期间收到 progress 和 structured log notifications
 
 默认共享缓存资源会暴露在 MCP resources 下：

@@ -14,11 +14,19 @@ from ..utils import empty_asset_results
 class ProviderFailure(Exception):
     """Provider-specific failure with a stable category."""
 
-    def __init__(self, code: str, message: str, *, retry_after_seconds: int | None = None) -> None:
+    def __init__(
+        self,
+        code: str,
+        message: str,
+        *,
+        retry_after_seconds: int | None = None,
+        missing_env: list[str] | None = None,
+    ) -> None:
         super().__init__(message)
         self.code = code
         self.message = message
         self.retry_after_seconds = retry_after_seconds
+        self.missing_env = list(missing_env or [])
 
 
 @dataclass
@@ -63,10 +71,16 @@ def combine_provider_failures(failures: list[tuple[str, ProviderFailure]]) -> Pr
     message = "; ".join(f"{label}: {failure.message}" for label, failure in failures)
     if len(failures) == 1:
         message = f"{selected_label}: {selected_failure.message}"
+    missing_env: list[str] = []
+    for _label, failure in failures:
+        for name in failure.missing_env:
+            if name not in missing_env:
+                missing_env.append(name)
     return ProviderFailure(
         selected_failure.code,
         message,
         retry_after_seconds=selected_failure.retry_after_seconds,
+        missing_env=missing_env,
     )
 
 

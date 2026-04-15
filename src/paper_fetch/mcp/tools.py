@@ -87,17 +87,25 @@ def _validation_reason(error: ValidationError) -> str:
 
 def error_payload_from_exception(error: Exception) -> dict[str, Any]:
     if isinstance(error, ValidationError):
-        return {"status": "error", "reason": _validation_reason(error), "candidates": None}
+        return {"status": "error", "reason": _validation_reason(error), "candidates": None, "missing_env": None}
     if isinstance(error, PaperFetchFailure):
         return {
             "status": error.status,
             "reason": error.reason,
             "candidates": error.candidates or None,
+            "missing_env": None,
         }
     if isinstance(error, ProviderFailure):
         status = error.code if error.code in {"no_access", "rate_limited"} else "error"
-        return {"status": status, "reason": error.message, "candidates": None}
-    return {"status": "error", "reason": str(error), "candidates": None}
+        if error.code == "not_configured" and error.missing_env:
+            status = "no_access"
+        return {
+            "status": status,
+            "reason": error.message,
+            "candidates": None,
+            "missing_env": error.missing_env or None,
+        }
+    return {"status": "error", "reason": str(error), "candidates": None, "missing_env": None}
 
 
 def _resolve_download_dir(
