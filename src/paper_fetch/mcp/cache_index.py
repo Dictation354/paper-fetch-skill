@@ -15,6 +15,9 @@ INDEX_VERSION = 1
 CACHE_INDEX_RESOURCE_URI = "resource://paper-fetch/cache-index"
 CACHED_RESOURCE_URI_PREFIX = "resource://paper-fetch/cached/"
 CACHED_RESOURCE_TEMPLATE = "resource://paper-fetch/cached/{entry_id}"
+SCOPED_CACHE_INDEX_RESOURCE_PREFIX = f"{CACHE_INDEX_RESOURCE_URI}/"
+SCOPED_CACHED_RESOURCE_URI_PREFIX = "resource://paper-fetch/cached-dir/"
+SCOPED_CACHED_RESOURCE_TEMPLATE = "resource://paper-fetch/cached-dir/{scope_id}/{entry_id}"
 
 _TEXT_MIME_TYPES = {
     "application/json",
@@ -30,6 +33,23 @@ def cache_index_path(download_dir: Path) -> Path:
 
 def cached_resource_uri(entry_id: str) -> str:
     return f"{CACHED_RESOURCE_URI_PREFIX}{entry_id}"
+
+
+def cache_scope_id(download_dir: Path) -> str:
+    digest = sha1(str(download_dir.expanduser().resolve()).encode("utf-8", errors="ignore")).hexdigest()
+    return digest[:12]
+
+
+def scoped_cache_index_resource_uri(scope_id: str) -> str:
+    return f"{SCOPED_CACHE_INDEX_RESOURCE_PREFIX}{scope_id}"
+
+
+def scoped_cached_resource_uri(scope_id: str, entry_id: str) -> str:
+    return f"{SCOPED_CACHED_RESOURCE_URI_PREFIX}{scope_id}/{entry_id}"
+
+
+def scoped_cached_resource_uri_prefix(scope_id: str) -> str:
+    return f"{SCOPED_CACHED_RESOURCE_URI_PREFIX}{scope_id}/"
 
 
 def is_text_mime_type(mime_type: str | None) -> bool:

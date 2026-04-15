@@ -17,6 +17,7 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 - Changed the bundled skill layout to a thin `SKILL.md` entrypoint plus `references/` docs for environment variables, CLI fallback, and failure handling.
 - Changed `batch_resolve` and `batch_check` to accept optional `concurrency`, allowing cross-host overlap while the shared HTTP transport still serializes same-host requests.
 - Changed long-running MCP `fetch_paper` and `batch_*` tool calls to observe cancellation cooperatively so cancelled requests stop issuing follow-up network work.
+- Changed MCP cache resources so explicit non-default `download_dir` values also register scoped cache-index and cached-entry resources for the current server session.
 
 ### Docs
 
@@ -24,6 +25,7 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 - Updated the static skill installer and architecture docs to treat `skills/paper-fetch-skill/` as a runtime-agnostic bundle that can include on-demand `references/` files.
 - Updated MCP-facing docs to describe the new `concurrency` parameter and the "cross-host concurrent, same-host serial" behavior of `batch_*`.
 - Updated the MCP-facing docs and skill notes to describe cooperative cancellation for `fetch_paper` and `batch_*`.
+- Updated README, deployment docs, and MCP instruction text to document scoped cache resources for explicit isolated download directories.
 
 ## 2026-04-14
 

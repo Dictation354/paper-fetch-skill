@@ -10,6 +10,12 @@ from pathlib import Path
 from mcp.client.session import ClientSession
 from mcp.client.stdio import StdioServerParameters, stdio_client
 
+from paper_fetch.mcp.cache_index import (
+    cache_scope_id,
+    scoped_cache_index_resource_uri,
+    scoped_cached_resource_uri,
+    scoped_cached_resource_uri_prefix,
+)
 from tests.paths import REPO_ROOT, SRC_DIR
 
 
@@ -224,6 +230,12 @@ class McpStdioIntegrationTests(unittest.IsolatedAsyncioTestCase):
                         resource_uris = sorted(str(resource.uri) for resource in resources.resources)
                         self.assertIn("resource://paper-fetch/cache-index", resource_uris)
                         self.assertTrue(any(uri.startswith("resource://paper-fetch/cached/") for uri in resource_uris))
+                        custom_scope_id = cache_scope_id(isolated_dir)
+                        custom_index_uri = scoped_cache_index_resource_uri(custom_scope_id)
+                        self.assertIn(custom_index_uri, resource_uris)
+                        self.assertTrue(
+                            any(uri.startswith(scoped_cached_resource_uri_prefix(custom_scope_id)) for uri in resource_uris)
+                        )
 
                         templates = await session.list_resource_templates()
                         template_uris = [str(template.uriTemplate) for template in templates.resourceTemplates]
@@ -243,6 +255,19 @@ class McpStdioIntegrationTests(unittest.IsolatedAsyncioTestCase):
                             f"resource://paper-fetch/cached/{markdown_entry['id']}"
                         )
                         self.assertIn("# Example Article", markdown_resource.contents[0].text)
+
+                        custom_cache_index = await session.read_resource(custom_index_uri)
+                        custom_cache_payload = json.loads(custom_cache_index.contents[0].text)
+                        self.assertEqual(str(isolated_dir), custom_cache_payload["download_dir"])
+                        custom_markdown_entry = next(
+                            entry
+                            for entry in custom_cache_payload["entries"]
+                            if entry["doi"] == "10.1000/custom" and entry["kind"] == "markdown"
+                        )
+                        custom_markdown_resource = await session.read_resource(
+                            scoped_cached_resource_uri(custom_scope_id, custom_markdown_entry["id"])
+                        )
+                        self.assertIn("# Example Article", custom_markdown_resource.contents[0].text)
 
                         invalid = await session.call_tool("fetch_paper", {"query": "10.1000/example", "modes": ["pdf"]})
                         self.assertTrue(invalid.isError)

@@ -39,6 +39,7 @@ Use this skill when an agent needs the contents or full-text availability of one
 - `fetch_paper(...)`: `include_refs=null` behaves like `all` when `max_tokens="full_text"`.
 - `fetch_paper(...)`: When `max_tokens` is a positive integer, `include_refs=null` behaves like `top10`.
 - `fetch_paper(...)`: `prefer_cache=true` tries a local cached FetchEnvelope sidecar before hitting the network.
+- `fetch_paper(...)`: when you pass `download_dir`, the MCP server can also expose scoped cache resources for that isolated directory during the current session.
 - `fetch_paper(...)`: `strategy.asset_profile="body"` or `all` may also emit a few key local figures as `ImageContent`.
 - `fetch_paper(...)`: `science` and `pnas` routes require repo-local FlareSolverr plus explicit local rate-limit env vars, and currently return text-only markdown even when `asset_profile` is `body` or `all`.
 - `fetch_paper(...)` and the batch tools: supporting MCP hosts may cancel in-flight requests; the worker cooperatively stops issuing follow-up network requests after cancellation is observed.

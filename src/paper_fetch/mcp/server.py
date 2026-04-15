@@ -15,9 +15,13 @@ from .cache_index import (
     CACHE_INDEX_RESOURCE_URI,
     CACHED_RESOURCE_TEMPLATE,
     CACHED_RESOURCE_URI_PREFIX,
+    cache_scope_id,
     cached_resource_uri,
     is_text_mime_type,
     list_cache_entries,
+    scoped_cache_index_resource_uri,
+    scoped_cached_resource_uri,
+    scoped_cached_resource_uri_prefix,
 )
 from .output_schemas import (
     BatchCheckOutput,
@@ -53,22 +57,63 @@ def _parse_download_dir(download_dir: str | None) -> Path | None:
     return Path(text).expanduser()
 
 
-def _cache_index_resource_payload() -> dict[str, object]:
-    return list_cached_payload()
+def _cache_index_resource_payload(download_dir: Path | None = None) -> dict[str, object]:
+    tool_kwargs: dict[str, object] = {}
+    if download_dir is not None:
+        tool_kwargs["download_dir"] = download_dir
+    return list_cached_payload(**tool_kwargs)
 
 
-def _sync_default_cache_resources(server: FastMCP) -> None:
-    download_dir = _default_download_dir()
+def _sync_cache_resources(
+    server: FastMCP,
+    *,
+    download_dir: Path,
+    scope_id: str | None = None,
+) -> None:
     entries = list_cache_entries(download_dir)
-    active_uris = {cached_resource_uri(str(entry["id"])) for entry in entries}
     resources = server._resource_manager._resources
 
-    stale_uris = [uri for uri in list(resources) if uri.startswith(CACHED_RESOURCE_URI_PREFIX) and uri not in active_uris]
+    def default_entry_uri(entry_id: object) -> str:
+        return cached_resource_uri(str(entry_id))
+
+    def scoped_entry_uri(entry_id: object) -> str:
+        assert scope_id is not None
+        return scoped_cached_resource_uri(scope_id, str(entry_id))
+
+    if scope_id is None:
+        index_uri = CACHE_INDEX_RESOURCE_URI
+        entry_uri_for = default_entry_uri
+        entry_prefix = CACHED_RESOURCE_URI_PREFIX
+        name = "cache_index"
+        description = "JSON index of cached MCP downloads in the default shared download directory."
+    else:
+        index_uri = scoped_cache_index_resource_uri(scope_id)
+        entry_uri_for = scoped_entry_uri
+        entry_prefix = scoped_cached_resource_uri_prefix(scope_id)
+        name = f"cache_index_{scope_id}"
+        description = (
+            "JSON index of cached MCP downloads in an isolated download directory. "
+            f"Scope id: {scope_id}."
+        )
+
+    def index_payload_for_download_dir() -> dict[str, object]:
+        return _cache_index_resource_payload(download_dir)
+
+    resources[index_uri] = FunctionResource.from_function(
+        index_payload_for_download_dir,
+        uri=index_uri,
+        name=name,
+        description=description,
+        mime_type="application/json",
+    )
+
+    active_uris = {entry_uri_for(entry["id"]) for entry in entries}
+    stale_uris = [uri for uri in list(resources) if uri.startswith(entry_prefix) and uri not in active_uris]
     for uri in stale_uris:
         del resources[uri]
 
     for entry in entries:
-        uri = cached_resource_uri(str(entry["id"]))
+        uri = entry_uri_for(entry["id"])
         resources[uri] = FileResource(
             uri=uri,
             name=f"cached_{entry['id']}",
@@ -77,6 +122,13 @@ def _sync_default_cache_resources(server: FastMCP) -> None:
             mime_type=str(entry["mime"]),
             is_binary=not is_text_mime_type(str(entry["mime"])),
         )
+
+
+def _sync_resources_for_download_dir(server: FastMCP, download_dir: Path | None) -> None:
+    if download_dir is None:
+        _sync_cache_resources(server, download_dir=_default_download_dir())
+        return
+    _sync_cache_resources(server, download_dir=download_dir, scope_id=cache_scope_id(download_dir))
 
 
 def build_server() -> FastMCP:
@@ -111,7 +163,7 @@ def build_server() -> FastMCP:
             return path.read_text(encoding="utf-8")
         return path.read_bytes()
 
-    _sync_default_cache_resources(server)
+    _sync_resources_for_download_dir(server, None)
 
     @server.tool(
         name="resolve_paper",
@@ -168,8 +220,8 @@ def build_server() -> FastMCP:
             ctx=ctx,
             **tool_kwargs,
         )
-        if parsed_download_dir is None and not result.isError:
-            _sync_default_cache_resources(server)
+        if not result.isError:
+            _sync_resources_for_download_dir(server, parsed_download_dir)
         return result
 
     @server.tool(
@@ -183,8 +235,8 @@ def build_server() -> FastMCP:
         if parsed_download_dir is not None:
             tool_kwargs["download_dir"] = parsed_download_dir
         result = list_cached_tool(**tool_kwargs)
-        if parsed_download_dir is None and not result.isError:
-            _sync_default_cache_resources(server)
+        if not result.isError:
+            _sync_resources_for_download_dir(server, parsed_download_dir)
         return result
 
     @server.tool(
@@ -198,8 +250,8 @@ def build_server() -> FastMCP:
         if parsed_download_dir is not None:
             tool_kwargs["download_dir"] = parsed_download_dir
         result = get_cached_tool(doi=doi, **tool_kwargs)
-        if parsed_download_dir is None and not result.isError:
-            _sync_default_cache_resources(server)
+        if not result.isError:
+            _sync_resources_for_download_dir(server, parsed_download_dir)
         return result
 
     @server.tool(
