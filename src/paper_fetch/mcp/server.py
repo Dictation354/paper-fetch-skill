@@ -150,6 +150,7 @@ def build_server() -> FastMCP:
         strategy: FetchStrategyInput | None = None,
         include_refs: str | None = None,
         max_tokens: int | str = "full_text",
+        prefer_cache: bool = False,
         download_dir: str | None = None,
         ctx: Context | None = None,
     ) -> Annotated[CallToolResult, FetchPaperOutput]:
@@ -163,6 +164,7 @@ def build_server() -> FastMCP:
             strategy=strategy,
             include_refs=include_refs,
             max_tokens=max_tokens,
+            prefer_cache=prefer_cache,
             ctx=ctx,
             **tool_kwargs,
         )

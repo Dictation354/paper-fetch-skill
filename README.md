@@ -71,7 +71,7 @@ cp .env.example ~/.config/paper-fetch/.env
 
 - `resolve_paper(query | title, authors, year)`
 - `has_fulltext(query)`
-- `fetch_paper(query, modes, strategy, include_refs, max_tokens, download_dir)`
+- `fetch_paper(query, modes, strategy, include_refs, max_tokens, prefer_cache, download_dir)`
 - `list_cached(download_dir)`
 - `get_cached(doi, download_dir)`
 - `batch_resolve(queries)`
@@ -85,6 +85,7 @@ cp .env.example ~/.config/paper-fetch/.env
 - `strategy.allow_metadata_only_fallback=true`
 - `include_refs=null`
 - `max_tokens="full_text"`
+- `prefer_cache=false`
 
 补充说明：
 
@@ -92,6 +93,7 @@ cp .env.example ~/.config/paper-fetch/.env
 - `has_fulltext()` 是廉价 probe：只看 resolution、Crossref/官方 metadata probe 与 landing-page HTML meta，不会走完整正文抓取瀑布
 - `has_fulltext()` 当前只主动产出 `state="likely_yes"` 或 `state="unknown"`；`confirmed_yes` / `no` 仍保留给后续迭代
 - `include_refs=null` 在 `max_tokens="full_text"` 下等价于 `all`
+- 显式 `prefer_cache=true` 时，`fetch_paper` 会先尝试命中本地 MCP cache 里的 envelope sidecar；命中才短路，未命中再照常上网
 - 显式传 `download_dir` 会覆盖 `PAPER_FETCH_DOWNLOAD_DIR` 和 XDG 默认目录，适合隔离多任务下载目录
 - `list_cached()` / `get_cached()` 只读本地 cache index，不触发网络
 - `batch_check(mode="metadata")` 现在复用同一个廉价 probe，返回 `probe_state` / `evidence` / `warnings` 这类轻量字段，不会走完整抓取，也不会把正文或原始 payload 写入磁盘

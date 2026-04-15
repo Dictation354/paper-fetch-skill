@@ -37,7 +37,7 @@ Do not use this skill when:
 4. For bibliography or citation-list tasks, call `batch_check(queries, mode)` before doing per-paper full fetches.
 5. Call `resolve_paper(query)` first if the query may be ambiguous.
 6. Call `has_fulltext(query)` when you need a cheap readability probe rather than the full fetch waterfall.
-7. Call `fetch_paper(query, modes, strategy, include_refs, max_tokens, download_dir)` when you need AI-friendly Markdown, structured article data, or metadata.
+7. Call `fetch_paper(query, modes, strategy, include_refs, max_tokens, prefer_cache, download_dir)` when you need AI-friendly Markdown, structured article data, or metadata.
 8. If the MCP tools are unavailable in the current runtime, fall back to the CLI:
 
    ```bash
@@ -56,13 +56,14 @@ Use this when the input may resolve to multiple papers. It accepts either:
 
 It returns a normalized candidate object and can surface ambiguity before a fetch.
 
-### `fetch_paper(query, modes, strategy, include_refs, max_tokens, download_dir)`
+### `fetch_paper(query, modes, strategy, include_refs, max_tokens, prefer_cache, download_dir)`
 
 Use this when you need the paper contents. Important behavior:
 - The return shape is always a fixed JSON object.
 - Top-level provenance fields such as `source`, `warnings`, `source_trail`, `has_fulltext`, and `token_estimate` are always present.
 - Unrequested payload fields (`article`, `markdown`, `metadata`) come back as `null`.
 - `download_dir` is optional and lets you isolate one task's downloads from the shared MCP cache directory.
+- `prefer_cache=true` tries a local cached FetchEnvelope sidecar first and only falls back to the network on a cache miss or shape mismatch.
 - The MCP tool surface now publishes `outputSchema` for schema-aware clients.
 - When `strategy.asset_profile` is `body` or `all`, supporting MCP clients may also receive a few key local body figures as `ImageContent` after the JSON block.
 - Supporting MCP clients may also receive `notifications/progress` and structured `notifications/message` updates while `fetch_paper`, `batch_check`, or `batch_resolve` is running.
@@ -75,6 +76,7 @@ Recommended defaults:
 - `strategy.allow_metadata_only_fallback=true`
 - `include_refs=null`
 - `max_tokens="full_text"`
+- `prefer_cache=false`
 - `include_refs=null` behaves like `all` when `max_tokens="full_text"`.
 - When `max_tokens` is a positive integer, `include_refs=null` behaves like `top10`.
 

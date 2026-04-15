@@ -172,6 +172,7 @@ class FetchPaperRequest(BaseModel):
     strategy: FetchStrategyInput = Field(default_factory=FetchStrategyInput)
     include_refs: str | None = None
     max_tokens: int | str = "full_text"
+    prefer_cache: bool = False
 
     @field_validator("query")
     @classmethod

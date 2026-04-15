@@ -191,11 +191,11 @@ class McpStdioIntegrationTests(unittest.IsolatedAsyncioTestCase):
                         )
                         self.assertFalse(custom_cached.isError)
                         self.assertEqual(custom_cached.structuredContent["status"], "hit")
-                        self.assertEqual(len(custom_cached.structuredContent["entries"]), 3)
+                        self.assertEqual(len(custom_cached.structuredContent["entries"]), 4)
 
                         listed_custom = await session.call_tool("list_cached", {"download_dir": str(isolated_dir)})
                         self.assertFalse(listed_custom.isError)
-                        self.assertEqual(len(listed_custom.structuredContent["entries"]), 3)
+                        self.assertEqual(len(listed_custom.structuredContent["entries"]), 4)
 
                         batch = await session.call_tool(
                             "batch_check",

@@ -9,6 +9,7 @@ DEFAULT_FETCH_VALUES: tuple[tuple[str, str], ...] = (
     ("strategy.allow_metadata_only_fallback", "true"),
     ("include_refs", "null"),
     ("max_tokens", '"full_text"'),
+    ("prefer_cache", "false"),
 )
 
 DEFAULT_FETCH_NOTES: tuple[str, ...] = (
@@ -90,10 +91,11 @@ def fetch_tool_description() -> str:
         "result validation. "
         "Defaults: modes=['article','markdown'], strategy.asset_profile='none', "
         "strategy.allow_html_fallback=true, strategy.allow_metadata_only_fallback=true, "
-        "include_refs=null, max_tokens='full_text'. Use strategy.asset_profile='body' or "
-        "'all' to include local assets. With body/all profiles, key local figures may be "
-        "returned as ImageContent alongside the JSON result. `science` and `pnas` routes use "
-        "a provider-managed HTML-first, PDF-second repo-local workflow and downgrade "
-        "body/all requests to text-only with warnings. Set download_dir to isolate "
-        "task-local downloads."
+        "include_refs=null, max_tokens='full_text', prefer_cache=false. Set "
+        "prefer_cache=true to try a local cached FetchEnvelope sidecar before hitting the "
+        "network. Use strategy.asset_profile='body' or 'all' to include local assets. "
+        "With body/all profiles, key local figures may be returned as ImageContent "
+        "alongside the JSON result. `science` and `pnas` routes use a provider-managed "
+        "HTML-first, PDF-second repo-local workflow and downgrade body/all requests to "
+        "text-only with warnings. Set download_dir to isolate task-local downloads."
     )

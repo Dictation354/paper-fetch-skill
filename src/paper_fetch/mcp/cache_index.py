@@ -51,6 +51,8 @@ def _entry_kind_for_path(path: Path, *, doi: str) -> str:
     base = sanitize_filename(doi)
     if path.parent.name == f"{base}_assets":
         return "asset"
+    if path.name == f"{base}.fetch-envelope.json":
+        return "fetch_envelope"
     if path.name == f"{base}.md":
         return "markdown"
     return "primary_payload"
