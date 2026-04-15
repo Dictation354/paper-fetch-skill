@@ -5,173 +5,48 @@ description: Use when: fetch one known paper by DOI, URL, or title, or verify a 
 
 # Paper Fetch Skill
 
-## When to Use
+Use this skill when an agent needs the contents or full-text availability of one specific paper, not a broad topic overview.
 
-Use this skill when an agent needs the contents or availability of one specific paper, not a broad topic overview.
+## Use This When
 
-Typical triggers:
 - The user gives a `doi`, paper `url`, or paper `title`.
 - The user asks to read, summarize, compare, critique, translate, or extract methods/results from a specific paper.
 - The user gives a citation list or bibliography and asks which specific papers are readable or fetchable.
 - You need compact Markdown or structured metadata that can go directly into model context.
 
-## When NOT to Use
+## Avoid This When
 
-Do not use this skill when:
-- The user wants a broad literature survey like "最近有哪些论文讲 X".
-- The user wants topic recommendations or paper discovery rather than one identifiable paper.
+- The user wants a broad literature survey or paper discovery.
 - The verified full paper text is already in the conversation or workspace and does not need to be re-fetched.
-
-## Call Discipline
-
-- In multi-turn sessions, prefer `list_cached()` or `get_cached(doi)` before re-fetching.
-- For bibliography or citation-list tasks, prefer `batch_check(queries, mode)` first.
-- Avoid duplicate fetches for the same DOI or URL in one session; reuse the prior Markdown or JSON when possible.
-- If a result is `ambiguous`, resolve the DOI first, then retry `fetch_paper`.
 
 ## Workflow
 
 1. Prefer the MCP tools when they are available.
-2. If the task is "Can you read this paper?" or "Which entries in this citation list are readable?", do not conclude "unreadable" just because there is no local PDF.
-3. In multi-turn sessions, call `list_cached()` or `get_cached(doi)` first.
-4. For bibliography or citation-list tasks, call `batch_check(queries, mode)` before doing per-paper full fetches.
-5. Call `resolve_paper(query)` first if the query may be ambiguous.
-6. Call `has_fulltext(query)` when you need a cheap readability probe rather than the full fetch waterfall.
-7. Call `fetch_paper(query, modes, strategy, include_refs, max_tokens, prefer_cache, download_dir)` when you need AI-friendly Markdown, structured article data, or metadata.
-8. If the MCP tools are unavailable in the current runtime, fall back to the CLI:
+2. In multi-turn sessions, call `list_cached()` or `get_cached(doi)` before re-fetching.
+3. If the query may be ambiguous, call `resolve_paper(query | title, authors, year)` first.
+4. For bibliography or citation-list tasks, call `batch_check(queries, mode)` before per-paper full fetches.
+5. Call `has_fulltext(query)` when you only need a cheap readability probe.
+6. Call `fetch_paper(query, modes, strategy, include_refs, max_tokens, prefer_cache, download_dir)` when you need AI-friendly Markdown, structured article data, or metadata.
+7. Do not conclude "unreadable" just because there is no local PDF or cached text file.
+8. If full text is unavailable, continue with the metadata-only result and tell the user they are working from metadata or abstract only.
 
-   ```bash
-   paper-fetch --query "<user input>"
-   ```
+## Tool Notes
 
-9. If full text is unavailable, continue with the metadata-only result and tell the user they are working from metadata or abstract only.
+- `resolve_paper(query | title, authors, year)`: normalize a DOI, URL, or title query before a fetch and surface ambiguity early.
+- `fetch_paper(...)`: returns one stable JSON payload with top-level provenance plus optional `article`, `markdown`, and `metadata` fields.
+- `fetch_paper(...)`: supporting MCP clients also see an `outputSchema`; `progress` and structured log notifications may arrive while `fetch_paper`, `batch_check`, or `batch_resolve` runs.
+- `fetch_paper(...)`: recommended defaults are `modes=["article", "markdown"]`, `strategy.asset_profile="none"`, `strategy.allow_html_fallback=true`, `strategy.allow_metadata_only_fallback=true`, `include_refs=null`, `max_tokens="full_text"`, and `prefer_cache=false`.
+- `fetch_paper(...)`: `include_refs=null` behaves like `all` when `max_tokens="full_text"`.
+- `fetch_paper(...)`: When `max_tokens` is a positive integer, `include_refs=null` behaves like `top10`.
+- `fetch_paper(...)`: `prefer_cache=true` tries a local cached FetchEnvelope sidecar before hitting the network.
+- `fetch_paper(...)`: `strategy.asset_profile="body"` or `all` may also emit a few key local figures as `ImageContent`.
+- `fetch_paper(...)`: `science` and `pnas` routes require repo-local FlareSolverr plus explicit local rate-limit env vars, and currently return text-only markdown even when `asset_profile` is `body` or `all`.
+- `has_fulltext(query)`: runs a cheap probe over resolution, Crossref metadata, lightweight official metadata probes, and landing-page HTML meta without triggering the full fetch waterfall.
+- `has_fulltext(query)`: the success payload is `{query, doi, state, evidence, warnings}`; v1 only actively returns `likely_yes` or `unknown`, while `confirmed_yes` and `no` remain reserved states.
+- `batch_check(queries, mode)`: `mode="metadata"` reuses the cheap probe and returns lightweight provenance fields; `mode="article"` still runs the full fetch path and reports the final full-text verdict.
 
-## MCP Tools
+## References
 
-### `resolve_paper(query | title, authors, year)`
-
-Use this when the input may resolve to multiple papers. It accepts either:
-- a raw `query`
-- or structured `title` plus optional `authors` / `year`
-
-It returns a normalized candidate object and can surface ambiguity before a fetch.
-
-### `fetch_paper(query, modes, strategy, include_refs, max_tokens, prefer_cache, download_dir)`
-
-Use this when you need the paper contents. Important behavior:
-- The return shape is always a fixed JSON object.
-- Top-level provenance fields such as `source`, `warnings`, `source_trail`, `has_fulltext`, and `token_estimate` are always present.
-- Unrequested payload fields (`article`, `markdown`, `metadata`) come back as `null`.
-- `download_dir` is optional and lets you isolate one task's downloads from the shared MCP cache directory.
-- `prefer_cache=true` tries a local cached FetchEnvelope sidecar first and only falls back to the network on a cache miss or shape mismatch.
-- The MCP tool surface now publishes `outputSchema` for schema-aware clients.
-- When `strategy.asset_profile` is `body` or `all`, supporting MCP clients may also receive a few key local body figures as `ImageContent` after the JSON block.
-- Supporting MCP clients may also receive `notifications/progress` and structured `notifications/message` updates while `fetch_paper`, `batch_check`, or `batch_resolve` is running.
-- `provider_hint`, `preferred_providers`, and final `source` may also be `science` or `pnas`; those routes require repo-local FlareSolverr plus explicit local rate-limit env vars, and currently return text-only markdown even when `asset_profile` is `body` or `all`.
-
-Recommended defaults:
-- `modes=["article", "markdown"]`
-- `strategy.asset_profile="none"`
-- `strategy.allow_html_fallback=true`
-- `strategy.allow_metadata_only_fallback=true`
-- `include_refs=null`
-- `max_tokens="full_text"`
-- `prefer_cache=false`
-- `include_refs=null` behaves like `all` when `max_tokens="full_text"`.
-- When `max_tokens` is a positive integer, `include_refs=null` behaves like `top10`.
-
-### `has_fulltext(query)`
-
-Use this when you only need a cheap probe. Important behavior:
-- It checks resolution, Crossref metadata, lightweight official metadata probes, and landing-page HTML meta.
-- It does not run the full `fetch_paper` waterfall.
-- The success payload is `{query, doi, state, evidence, warnings}`.
-- The MCP tool surface now publishes `outputSchema` for schema-aware clients.
-- Current v1 states are practically `likely_yes` or `unknown`; `confirmed_yes` and `no` are reserved for future iterations.
-
-### `list_cached(download_dir)`
-
-Use this to inspect the MCP cache index without hitting the network. If `download_dir` is omitted, it reads the default shared MCP download directory.
-
-### `get_cached(doi, download_dir)`
-
-Use this to look up cached local files for one DOI and get preferred local paths for Markdown, the primary payload, and assets.
-
-### `batch_resolve(queries)`
-
-Use this to resolve multiple DOI, URL, or title queries serially while reusing one shared HTTP transport.
-
-### `batch_check(queries, mode)`
-
-Use this to check many identifiable papers serially without returning full bodies.
-- `mode="metadata"` now reuses the cheap `has_fulltext` probe and returns lightweight fields such as `doi`, `title`, `has_fulltext`, `probe_state`, `evidence`, and `warnings`.
-- `mode="article"` still runs the full fetch path and returns the final full-text verdict fields without embedding article bodies.
-
-## Environment
-
-- `ELSEVIER_API_KEY`: Required for official Elsevier full-text access.
-- `ELSEVIER_INSTTOKEN`: Optional institution token for Elsevier entitlement.
-- `SPRINGER_META_API_KEY`: Enables Springer Meta API metadata lookups.
-- `SPRINGER_OPENACCESS_API_KEY`: Enables Springer Open Access full-text fallback.
-- `SPRINGER_FULLTEXT_API_KEY`: Enables Springer Full Text API when paired with its URL template.
-- `SPRINGER_FULLTEXT_URL_TEMPLATE`: Required with `SPRINGER_FULLTEXT_API_KEY` for Springer Full Text API retrieval.
-- `FLARESOLVERR_URL`: Optional override for the local Science/PNAS FlareSolverr endpoint; defaults to `http://127.0.0.1:8191/v1`.
-- `FLARESOLVERR_ENV_FILE`: Required for Science/PNAS; points at a repo-local `vendor/flaresolverr` preset file.
-- `FLARESOLVERR_SOURCE_DIR`: Optional override for the repo-local `vendor/flaresolverr` directory.
-- `FLARESOLVERR_MIN_INTERVAL_SECONDS`: Required local minimum spacing between Science/PNAS requests.
-- `FLARESOLVERR_MAX_REQUESTS_PER_HOUR`: Required local hourly cap for Science/PNAS requests.
-- `FLARESOLVERR_MAX_REQUESTS_PER_DAY`: Required local daily cap for Science/PNAS requests.
-- `WILEY_TDM_URL_TEMPLATE`: Required Wiley TDM endpoint template for official Wiley full-text retrieval.
-- `WILEY_TDM_TOKEN`: Required Wiley TDM token for official Wiley full-text retrieval.
-- `PAPER_FETCH_DOWNLOAD_DIR`: Overrides the default CLI or MCP download directory.
-- `PAPER_FETCH_RUN_LIVE`: Test-only flag for live publisher integration checks.
-- Without `PAPER_FETCH_DOWNLOAD_DIR`, the MCP default directory is `XDG_DATA_HOME/paper-fetch/downloads`, which defaults to `~/.local/share/paper-fetch/downloads`.
-
-## Error Contract
-
-- `ambiguous`: Contains `candidates`; prompt the user to choose and retry.
-- `no_access`: Credentials or entitlements are missing; inspect `missing_env` when present, then retry.
-- `rate_limited`: Back off and retry later.
-- `error`: Any other failure; inspect `reason`.
-- These fields appear in both MCP `structuredContent` and CLI stderr JSON.
-- MCP error payloads may also include `missing_env=[...]` when credentials or required env vars are known.
-- CLI exit codes remain `ambiguous=2`, `no_access=3`, `rate_limited=4`.
-
-## CLI Fallback
-
-If MCP is unavailable, use:
-
-```bash
-paper-fetch --query "<DOI | URL | title>"
-```
-
-Useful options:
-- `--format markdown|json|both`
-- `--output -|<path>`
-- `--output-dir <dir>`
-- `--no-download`
-- `--save-markdown`
-- `--include-refs none|top10|all`
-- `--max-tokens 8000`
-- `--no-html-fallback`
-
-Output contract:
-- `--format markdown`: prints AI-friendly Markdown
-- `--format json`: prints `ArticleModel` JSON
-- `--format both`: prints `{"article": ..., "markdown": ...}`
-- On failure, `stderr` is always JSON
-
-## Failure Handling
-
-If `resolve_paper` or CLI resolution is ambiguous:
-- show the candidates to the user
-- ask which paper they meant
-- retry with the selected DOI
-
-If `fetch_paper` returns metadata only:
-- tell the user full text was not available
-- continue from the metadata or abstract if that still helps
-
-If a paper is not present as a local PDF or text file:
-- do not treat "missing local file" as proof that the paper is unreadable
-- verify with MCP or CLI before concluding it is unavailable
+- Read [`references/environment.md`](references/environment.md) when you need provider credentials, download-dir behavior, or Science / PNAS runtime requirements.
+- Read [`references/cli-fallback.md`](references/cli-fallback.md) when MCP is unavailable or the user explicitly wants shell commands.
+- Read [`references/failure-handling.md`](references/failure-handling.md) when a result is `ambiguous`, `no_access`, `rate_limited`, or metadata-only.

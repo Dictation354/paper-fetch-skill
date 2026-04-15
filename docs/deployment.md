@@ -116,7 +116,7 @@ python3 -m pip install .
 这个脚本会做三件事：
 
 - 在当前 `python3` 环境里执行 `pip install .`
-- 把静态 skill 安装到用户级或项目级 Codex skill 目录
+- 把静态 skill bundle 安装到用户级或项目级 Codex skill 目录，包括 `SKILL.md` 和 `references/`
 - 如果带了 `--register-mcp`，调用 Codex CLI 注册 `paper-fetch` 这个 stdio MCP server
 
 常用选项：
@@ -137,6 +137,11 @@ python3 -m pip install .
 ```
 
 这个脚本同样会安装包、复制静态 skill，并在显式传入 `--register-mcp` 时注册 MCP。
+
+补充说明：
+
+- 复制的是整个静态 skill bundle，而不只是入口 `SKILL.md`
+- 详细环境变量、CLI fallback 和错误语义文档会随 `references/` 一起进入安装后的 skill 目录
 
 常用选项：
 

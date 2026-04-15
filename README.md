@@ -6,6 +6,7 @@
 
 - `paper-fetch`: 在终端里按 DOI、URL 或标题抓取论文
 - `paper-fetch-mcp`: 给 agent runtime 使用的 stdio MCP server
+- `skills/paper-fetch-skill/`: 精简 skill 入口，详细环境变量、CLI fallback 和失败处理拆到 `references/` 按需读取
 - `scripts/install-codex-skill.sh`: 把 skill 安装到 Codex，并可顺手注册 MCP
 - `scripts/install-claude-skill.sh`: 把 skill 安装到 Claude Code，并可顺手注册 MCP
 
@@ -185,6 +186,8 @@ python3 -m pip install .
 ./scripts/install-codex-skill.sh --register-mcp
 ./scripts/install-claude-skill.sh --register-mcp
 ```
+
+安装脚本会复制整个静态 skill bundle：`SKILL.md` 以及 `skills/paper-fetch-skill/references/` 下的按需参考文档。
 
 ### 可选：安装公式后端
 

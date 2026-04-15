@@ -11,6 +11,7 @@ from pathlib import Path
 from paper_fetch.mcp._instructions import DEFAULT_FETCH_NOTES, DEFAULT_FETCH_VALUES, ERROR_CONTRACT, SKILL_ENVIRONMENT_VARIABLES
 from tests.paths import REPO_ROOT, SKILL_DIR
 
+STATIC_SKILL_DIR = SKILL_DIR
 STATIC_SKILL_PATH = SKILL_DIR / "SKILL.md"
 
 
@@ -42,15 +43,34 @@ def write_fake_mcp_cli(path: Path, log_path: Path) -> None:
 
 def copy_installer_fixture(repo_dir: Path) -> None:
     (repo_dir / "scripts").mkdir(parents=True, exist_ok=True)
-    (repo_dir / "skills" / "paper-fetch-skill").mkdir(parents=True, exist_ok=True)
     shutil.copy2(REPO_ROOT / "scripts" / "install-claude-skill.sh", repo_dir / "scripts" / "install-claude-skill.sh")
     shutil.copy2(REPO_ROOT / "scripts" / "install-codex-skill.sh", repo_dir / "scripts" / "install-codex-skill.sh")
-    shutil.copy2(STATIC_SKILL_PATH, repo_dir / "skills" / "paper-fetch-skill" / "SKILL.md")
+    shutil.copytree(STATIC_SKILL_DIR, repo_dir / "skills" / "paper-fetch-skill", dirs_exist_ok=True)
     shutil.copy2(REPO_ROOT / "pyproject.toml", repo_dir / "pyproject.toml")
 
 
+def iter_skill_markdown_files(root: Path) -> list[Path]:
+    return sorted(path for path in root.rglob("*.md") if path.is_file())
+
+
+def read_skill_bundle(root: Path) -> str:
+    return "\n\n".join(path.read_text(encoding="utf-8") for path in iter_skill_markdown_files(root))
+
+
+def assert_skill_bundle_matches_repo(testcase: unittest.TestCase, installed_root: Path) -> None:
+    expected_files = [path.relative_to(STATIC_SKILL_DIR).as_posix() for path in iter_skill_markdown_files(STATIC_SKILL_DIR)]
+    actual_files = [path.relative_to(installed_root).as_posix() for path in iter_skill_markdown_files(installed_root)]
+
+    testcase.assertEqual(actual_files, expected_files)
+    for relative_path in expected_files:
+        testcase.assertEqual(
+            (installed_root / relative_path).read_text(encoding="utf-8"),
+            (STATIC_SKILL_DIR / relative_path).read_text(encoding="utf-8"),
+        )
+
+
 class StaticSkillTests(unittest.TestCase):
-    def test_static_skill_covers_mcp_first_contract(self) -> None:
+    def test_static_skill_entrypoint_stays_thin_and_points_at_references(self) -> None:
         text = STATIC_SKILL_PATH.read_text(encoding="utf-8")
 
         self.assertIn("resolve_paper", text)
@@ -58,11 +78,17 @@ class StaticSkillTests(unittest.TestCase):
         self.assertIn("list_cached", text)
         self.assertIn("get_cached", text)
         self.assertIn("batch_check", text)
-        self.assertIn("paper-fetch --query", text)
         self.assertIn("citation list", text)
-        self.assertIn("do not conclude \"unreadable\" just because there is no local PDF", text)
-        self.assertIn("## Call Discipline", text)
-        self.assertIn("## Environment", text)
+        self.assertIn('do not conclude "unreadable" just because there is no local pdf', text.lower())
+        self.assertIn("references/environment.md", text)
+        self.assertIn("references/cli-fallback.md", text)
+        self.assertIn("references/failure-handling.md", text)
+        self.assertLessEqual(len(text.splitlines()), 80)
+
+    def test_static_skill_bundle_covers_runtime_contract(self) -> None:
+        text = read_skill_bundle(STATIC_SKILL_DIR)
+
+        self.assertIn("paper-fetch --query", text)
         self.assertIn("## Error Contract", text)
         self.assertNotIn("not thread-safe", text)
         for key, value in DEFAULT_FETCH_VALUES:
@@ -132,13 +158,14 @@ class InstallerSmokeTests(unittest.TestCase):
     def test_claude_installer_copies_static_skill_without_repo_bootstrap_side_effects(self) -> None:
         repo_dir, sandbox, log_path = self.run_installer(script_name="install-claude-skill.sh")
 
-        installed_skill = sandbox / "home" / ".claude" / "skills" / "paper-fetch-skill" / "SKILL.md"
+        installed_root = sandbox / "home" / ".claude" / "skills" / "paper-fetch-skill"
+        installed_skill = installed_root / "SKILL.md"
         self.assertTrue(installed_skill.exists())
-        self.assertEqual(installed_skill.read_text(encoding="utf-8"), STATIC_SKILL_PATH.read_text(encoding="utf-8"))
+        assert_skill_bundle_matches_repo(self, installed_root)
         self.assertFalse((repo_dir / ".venv").exists())
         self.assertFalse((repo_dir / ".env").exists())
         self.assertIn("-m pip install --quiet .", log_path.read_text(encoding="utf-8"))
-        self.assertFalse((installed_skill.parent / "agents").exists())
+        self.assertFalse((installed_root / "agents").exists())
 
     def test_claude_installer_can_register_mcp_server(self) -> None:
         _, _, log_path = self.run_installer(
@@ -163,7 +190,7 @@ class InstallerSmokeTests(unittest.TestCase):
         manifest_path = skill_dir / "agents" / "openai.yaml"
 
         self.assertTrue(installed_skill.exists())
-        self.assertEqual(installed_skill.read_text(encoding="utf-8"), STATIC_SKILL_PATH.read_text(encoding="utf-8"))
+        assert_skill_bundle_matches_repo(self, skill_dir)
         self.assertTrue(manifest_path.exists())
         manifest_text = manifest_path.read_text(encoding="utf-8")
         self.assertIn('display_name: "Paper Fetch Skill"', manifest_text)

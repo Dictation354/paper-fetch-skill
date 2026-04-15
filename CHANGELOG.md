@@ -14,10 +14,12 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 ### Changed
 
 - Changed `batch_check(mode="metadata")` to reuse the cheap probe path instead of running the full fetch waterfall.
+- Changed the bundled skill layout to a thin `SKILL.md` entrypoint plus `references/` docs for environment variables, CLI fallback, and failure handling.
 
 ### Docs
 
 - Updated README, deployment docs, the skill guide, and the probe-semantics note to document the shipped `has_fulltext` v1 behavior and the new `batch_check(mode="metadata")` semantics.
+- Updated the static skill installer and architecture docs to treat `skills/paper-fetch-skill/` as a runtime-agnostic bundle that can include on-demand `references/` files.
 
 ## 2026-04-14
 
