@@ -4,6 +4,8 @@ import asyncio
 import json
 import logging
 import tempfile
+import threading
+import time
 import unittest
 from pathlib import Path
 from unittest import mock
@@ -507,6 +509,36 @@ class McpToolTests(unittest.TestCase):
         self.assertEqual(seen_queries, ["first", "second"])
         self.assertEqual(len(set(transport_ids)), 1)
 
+    def test_batch_resolve_payload_supports_optional_concurrency(self) -> None:
+        active = 0
+        max_active = 0
+        lock = threading.Lock()
+        barrier = threading.Barrier(2)
+
+        def fake_resolve(query, *, transport=None, env=None):
+            nonlocal active, max_active
+            with lock:
+                active += 1
+                max_active = max(max_active, active)
+            try:
+                if query in {"first", "second"}:
+                    barrier.wait(timeout=1)
+                time.sleep(0.02)
+                return sample_resolved_query(query)
+            finally:
+                with lock:
+                    active -= 1
+
+        with mock.patch.object(mcp_tools, "service_resolve_paper", side_effect=fake_resolve):
+            payload = mcp_tools.batch_resolve_payload(
+                queries=["first", "second", "third"],
+                concurrency=2,
+            )
+
+        self.assertFalse(payload["aborted"])
+        self.assertEqual([item["query"] for item in payload["results"]], ["first", "second", "third"])
+        self.assertGreaterEqual(max_active, 2)
+
     def test_batch_check_payload_uses_lightweight_results_and_no_downloads(self) -> None:
         transport_ids: list[int] = []
 
@@ -533,6 +565,17 @@ class McpToolTests(unittest.TestCase):
         self.assertEqual(payload["results"][0]["token_estimate"], None)
         self.assertEqual(len(set(transport_ids)), 1)
         mocked_fetch.assert_not_called()
+
+    def test_batch_check_tool_rejects_invalid_concurrency(self) -> None:
+        result = mcp_tools.batch_check_tool(
+            queries=["10.1000/one"],
+            mode="metadata",
+            concurrency=0,
+        )
+
+        self.assertTrue(result.isError)
+        self.assertEqual(result.structuredContent["status"], "error")
+        self.assertIn("greater than or equal to 1", result.structuredContent["reason"])
 
     def test_batch_check_payload_aborts_on_rate_limit(self) -> None:
         seen_queries: list[str] = []

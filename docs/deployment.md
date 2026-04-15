@@ -205,8 +205,8 @@ PYTHONPATH=src python3 -m unittest discover -s tests/integration -q
 - `fetch_paper(query, modes, strategy, include_refs, max_tokens, prefer_cache, download_dir)`
 - `list_cached(download_dir)`
 - `get_cached(doi, download_dir)`
-- `batch_resolve(queries)`
-- `batch_check(queries, mode)`
+- `batch_resolve(queries, concurrency)`
+- `batch_check(queries, mode, concurrency)`
 
 `fetch_paper` 的当前 MCP 默认值是：
 
@@ -227,6 +227,7 @@ PYTHONPATH=src python3 -m unittest discover -s tests/integration -q
 - 显式 `prefer_cache=true` 时，`fetch_paper` 会先尝试读取本地 MCP cache 里的 envelope sidecar；只有命中才短路，否则仍会正常联网
 - 显式 `download_dir` 的优先级高于 `PAPER_FETCH_DOWNLOAD_DIR` 和 XDG 默认目录
 - `list_cached()` / `get_cached()` 只读本地 cache index，不会触发网络
+- `batch_resolve()` / `batch_check()` 默认 `concurrency=1`；显式提高时，不同 host 的查询可以并发执行，但同一 host 仍会保持串行
 - `batch_check(mode="metadata")` 现在复用廉价 probe，返回 `probe_state` / `evidence` / `warnings` 等轻量字段，不会走完整 fetch，也不会把正文或 provider payload 写入磁盘
 - `batch_check(mode="article")` 仍保留完整 fetch 语义
 - 当 `strategy.asset_profile` 为 `body` / `all` 时，`fetch_paper` 可能在 JSON 块后附带少量关键正文图的 `ImageContent`

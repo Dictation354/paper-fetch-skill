@@ -11,6 +11,7 @@ import threading
 import time
 import urllib.error
 import urllib.parse
+from contextlib import nullcontext
 from collections import OrderedDict
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -113,7 +114,21 @@ class HttpTransport:
         self._cache: OrderedDict[tuple[str, str, tuple[tuple[str, str], ...]], tuple[float, dict[str, Any]]] = OrderedDict()
         self._cache_body_bytes = 0
         self._cache_lock = threading.RLock()
+        self._host_locks: dict[str, threading.Lock] = {}
+        self._host_locks_lock = threading.Lock()
         self._pool = urllib3.PoolManager()
+
+    def _host_lock_for_url(self, url: str) -> threading.Lock | None:
+        hostname = urllib.parse.urlparse(url).hostname
+        if not hostname:
+            return None
+        normalized = hostname.lower()
+        with self._host_locks_lock:
+            lock = self._host_locks.get(normalized)
+            if lock is None:
+                lock = threading.Lock()
+                self._host_locks[normalized] = lock
+        return lock
 
     def _build_cache_key(
         self,
@@ -348,173 +363,175 @@ class HttpTransport:
         transient_attempts_made = 0
         transient_backoff_base_seconds = max(0.0, float(transient_backoff_base_seconds))
         attempt = 0
-        while True:
-            attempt += 1
-            request_started_at = time.monotonic()
-            redacted_url = redact_url_for_cache(url)
-            logger.debug(
-                "http_request_start method=%s url=%s status=%s elapsed_ms=%s attempt=%s",
-                method.upper(),
-                redacted_url,
-                "attempt",
-                0.0,
-                attempt,
-            )
-            request = _PreparedRequest(method=method.upper(), full_url=url, headers=dict(request_headers))
-            response = None
-            response_reusable = False
-            try:
-                response = self._perform_request(request, timeout=timeout)
-                response_url = response.geturl() or url
-                headers_map = {str(key).lower(): str(value) for key, value in response.headers.items()}
-                payload = self._read_response_body(
-                    response,
-                    status_code=response.status,
-                    url=response_url,
-                    content_encoding=headers_map.get("content-encoding"),
-                )
-                response_reusable = True
-                if int(response.status) >= 400:
-                    (
-                        should_retry,
-                        attempts_remaining,
-                        transient_attempts_remaining,
-                        transient_attempts_made,
-                    ) = self._handle_http_failure(
-                        method=method,
-                        request_url=url,
-                        error_url=response_url,
-                        status_code=int(response.status),
-                        body=payload,
-                        headers_map=headers_map,
-                        request_started_at=request_started_at,
-                        attempt=attempt,
-                        retry_on_rate_limit=retry_on_rate_limit,
-                        attempts_remaining=attempts_remaining,
-                        max_rate_limit_wait_seconds=max_rate_limit_wait_seconds,
-                        retry_on_transient=retry_on_transient,
-                        transient_attempts_remaining=transient_attempts_remaining,
-                        transient_attempts_made=transient_attempts_made,
-                        transient_backoff_base_seconds=transient_backoff_base_seconds,
-                    )
-                    if should_retry:
-                        continue
-                response_payload = {
-                    "status_code": int(response.status),
-                    "headers": headers_map,
-                    "body": payload,
-                    "url": redact_url_for_cache(response_url),
-                }
+        host_lock = self._host_lock_for_url(url)
+        with host_lock if host_lock is not None else nullcontext():
+            while True:
+                attempt += 1
+                request_started_at = time.monotonic()
+                redacted_url = redact_url_for_cache(url)
                 logger.debug(
-                    "http_request_success method=%s url=%s status=%s elapsed_ms=%s attempt=%s",
+                    "http_request_start method=%s url=%s status=%s elapsed_ms=%s attempt=%s",
                     method.upper(),
-                    response_payload["url"],
-                    response.status,
-                    round((time.monotonic() - request_started_at) * 1000, 3),
+                    redacted_url,
+                    "attempt",
+                    0.0,
                     attempt,
                 )
-                self._store_cached_response(cache_key, response_payload)
-                return response_payload
-            except urllib.error.HTTPError as exc:
+                request = _PreparedRequest(method=method.upper(), full_url=url, headers=dict(request_headers))
+                response = None
+                response_reusable = False
                 try:
-                    error_url = exc.geturl() or url
-                    headers_map = {key.lower(): value for key, value in exc.headers.items()}
-                    body = self._read_response_body(
-                        exc,
-                        status_code=exc.code,
-                        url=error_url,
+                    response = self._perform_request(request, timeout=timeout)
+                    response_url = response.geturl() or url
+                    headers_map = {str(key).lower(): str(value) for key, value in response.headers.items()}
+                    payload = self._read_response_body(
+                        response,
+                        status_code=response.status,
+                        url=response_url,
                         content_encoding=headers_map.get("content-encoding"),
                     )
-                    (
-                        should_retry,
-                        attempts_remaining,
-                        transient_attempts_remaining,
-                        transient_attempts_made,
-                    ) = self._handle_http_failure(
-                        method=method,
-                        request_url=url,
-                        error_url=error_url,
-                        status_code=int(exc.code),
-                        body=body,
-                        headers_map=headers_map,
-                        request_started_at=request_started_at,
-                        attempt=attempt,
-                        retry_on_rate_limit=retry_on_rate_limit,
-                        attempts_remaining=attempts_remaining,
-                        max_rate_limit_wait_seconds=max_rate_limit_wait_seconds,
-                        retry_on_transient=retry_on_transient,
-                        transient_attempts_remaining=transient_attempts_remaining,
-                        transient_attempts_made=transient_attempts_made,
-                        transient_backoff_base_seconds=transient_backoff_base_seconds,
+                    response_reusable = True
+                    if int(response.status) >= 400:
+                        (
+                            should_retry,
+                            attempts_remaining,
+                            transient_attempts_remaining,
+                            transient_attempts_made,
+                        ) = self._handle_http_failure(
+                            method=method,
+                            request_url=url,
+                            error_url=response_url,
+                            status_code=int(response.status),
+                            body=payload,
+                            headers_map=headers_map,
+                            request_started_at=request_started_at,
+                            attempt=attempt,
+                            retry_on_rate_limit=retry_on_rate_limit,
+                            attempts_remaining=attempts_remaining,
+                            max_rate_limit_wait_seconds=max_rate_limit_wait_seconds,
+                            retry_on_transient=retry_on_transient,
+                            transient_attempts_remaining=transient_attempts_remaining,
+                            transient_attempts_made=transient_attempts_made,
+                            transient_backoff_base_seconds=transient_backoff_base_seconds,
+                        )
+                        if should_retry:
+                            continue
+                    response_payload = {
+                        "status_code": int(response.status),
+                        "headers": headers_map,
+                        "body": payload,
+                        "url": redact_url_for_cache(response_url),
+                    }
+                    logger.debug(
+                        "http_request_success method=%s url=%s status=%s elapsed_ms=%s attempt=%s",
+                        method.upper(),
+                        response_payload["url"],
+                        response.status,
+                        round((time.monotonic() - request_started_at) * 1000, 3),
+                        attempt,
                     )
-                    if should_retry:
+                    self._store_cached_response(cache_key, response_payload)
+                    return response_payload
+                except urllib.error.HTTPError as exc:
+                    try:
+                        error_url = exc.geturl() or url
+                        headers_map = {key.lower(): value for key, value in exc.headers.items()}
+                        body = self._read_response_body(
+                            exc,
+                            status_code=exc.code,
+                            url=error_url,
+                            content_encoding=headers_map.get("content-encoding"),
+                        )
+                        (
+                            should_retry,
+                            attempts_remaining,
+                            transient_attempts_remaining,
+                            transient_attempts_made,
+                        ) = self._handle_http_failure(
+                            method=method,
+                            request_url=url,
+                            error_url=error_url,
+                            status_code=int(exc.code),
+                            body=body,
+                            headers_map=headers_map,
+                            request_started_at=request_started_at,
+                            attempt=attempt,
+                            retry_on_rate_limit=retry_on_rate_limit,
+                            attempts_remaining=attempts_remaining,
+                            max_rate_limit_wait_seconds=max_rate_limit_wait_seconds,
+                            retry_on_transient=retry_on_transient,
+                            transient_attempts_remaining=transient_attempts_remaining,
+                            transient_attempts_made=transient_attempts_made,
+                            transient_backoff_base_seconds=transient_backoff_base_seconds,
+                        )
+                        if should_retry:
+                            continue
+                    finally:
+                        exc.close()
+                except (urllib3.exceptions.HTTPError, urllib.error.URLError) as exc:
+                    if retry_on_transient and transient_attempts_remaining > 0 and is_timeout_network_error(exc):
+                        logger.debug(
+                            "http_request_retry method=%s url=%s status=%s elapsed_ms=%s retry_after_seconds=%s attempt=%s reason=pool_timeout",
+                            method.upper(),
+                            redacted_url,
+                            None,
+                            round((time.monotonic() - request_started_at) * 1000, 3),
+                            None,
+                            attempt,
+                        )
+                        transient_attempts_remaining -= 1
+                        time.sleep(transient_backoff_base_seconds * (2**transient_attempts_made))
+                        transient_attempts_made += 1
                         continue
+                    logger.debug(
+                        "http_request_failure method=%s url=%s status=%s elapsed_ms=%s retry_after_seconds=%s attempt=%s",
+                        method.upper(),
+                        redacted_url,
+                        None,
+                        round((time.monotonic() - request_started_at) * 1000, 3),
+                        None,
+                        attempt,
+                    )
+                    raise RequestFailure(
+                        None,
+                        f"Network error for {redact_url_for_cache(url)}: {build_network_error_detail(exc)}",
+                        url=redact_url_for_cache(url),
+                    ) from exc
+                except (socket.timeout, TimeoutError) as exc:
+                    if retry_on_transient and transient_attempts_remaining > 0:
+                        logger.debug(
+                            "http_request_retry method=%s url=%s status=%s elapsed_ms=%s retry_after_seconds=%s attempt=%s reason=timeout",
+                            method.upper(),
+                            redacted_url,
+                            None,
+                            round((time.monotonic() - request_started_at) * 1000, 3),
+                            None,
+                            attempt,
+                        )
+                        transient_attempts_remaining -= 1
+                        time.sleep(transient_backoff_base_seconds * (2**transient_attempts_made))
+                        transient_attempts_made += 1
+                        continue
+                    logger.debug(
+                        "http_request_failure method=%s url=%s status=%s elapsed_ms=%s retry_after_seconds=%s attempt=%s",
+                        method.upper(),
+                        redacted_url,
+                        None,
+                        round((time.monotonic() - request_started_at) * 1000, 3),
+                        None,
+                        attempt,
+                    )
+                    raise RequestFailure(
+                        None,
+                        f"Network error for {redact_url_for_cache(url)}: {exc}",
+                        url=redact_url_for_cache(url),
+                    ) from exc
                 finally:
-                    exc.close()
-            except (urllib3.exceptions.HTTPError, urllib.error.URLError) as exc:
-                if retry_on_transient and transient_attempts_remaining > 0 and is_timeout_network_error(exc):
-                    logger.debug(
-                        "http_request_retry method=%s url=%s status=%s elapsed_ms=%s retry_after_seconds=%s attempt=%s reason=pool_timeout",
-                        method.upper(),
-                        redacted_url,
-                        None,
-                        round((time.monotonic() - request_started_at) * 1000, 3),
-                        None,
-                        attempt,
-                    )
-                    transient_attempts_remaining -= 1
-                    time.sleep(transient_backoff_base_seconds * (2**transient_attempts_made))
-                    transient_attempts_made += 1
-                    continue
-                logger.debug(
-                    "http_request_failure method=%s url=%s status=%s elapsed_ms=%s retry_after_seconds=%s attempt=%s",
-                    method.upper(),
-                    redacted_url,
-                    None,
-                    round((time.monotonic() - request_started_at) * 1000, 3),
-                    None,
-                    attempt,
-                )
-                raise RequestFailure(
-                    None,
-                    f"Network error for {redact_url_for_cache(url)}: {build_network_error_detail(exc)}",
-                    url=redact_url_for_cache(url),
-                ) from exc
-            except (socket.timeout, TimeoutError) as exc:
-                if retry_on_transient and transient_attempts_remaining > 0:
-                    logger.debug(
-                        "http_request_retry method=%s url=%s status=%s elapsed_ms=%s retry_after_seconds=%s attempt=%s reason=timeout",
-                        method.upper(),
-                        redacted_url,
-                        None,
-                        round((time.monotonic() - request_started_at) * 1000, 3),
-                        None,
-                        attempt,
-                    )
-                    transient_attempts_remaining -= 1
-                    time.sleep(transient_backoff_base_seconds * (2**transient_attempts_made))
-                    transient_attempts_made += 1
-                    continue
-                logger.debug(
-                    "http_request_failure method=%s url=%s status=%s elapsed_ms=%s retry_after_seconds=%s attempt=%s",
-                    method.upper(),
-                    redacted_url,
-                    None,
-                    round((time.monotonic() - request_started_at) * 1000, 3),
-                    None,
-                    attempt,
-                )
-                raise RequestFailure(
-                    None,
-                    f"Network error for {redact_url_for_cache(url)}: {exc}",
-                    url=redact_url_for_cache(url),
-                ) from exc
-            finally:
-                if response is not None:
-                    if response_reusable:
-                        self._release_response(response)
-                    else:
-                        self._close_response(response)
+                    if response is not None:
+                        if response_reusable:
+                            self._release_response(response)
+                        else:
+                            self._close_response(response)
 
     def _read_response_body(
         self,

@@ -254,6 +254,7 @@ class BatchResolveRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     queries: list[str]
+    concurrency: int = Field(default=1, ge=1, le=8)
 
     @field_validator("queries", mode="before")
     @classmethod
@@ -266,6 +267,7 @@ class BatchCheckRequest(BaseModel):
 
     queries: list[str]
     mode: str = "metadata"
+    concurrency: int = Field(default=1, ge=1, le=8)
 
     @field_validator("queries", mode="before")
     @classmethod

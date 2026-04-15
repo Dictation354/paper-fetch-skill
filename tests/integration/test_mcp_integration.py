@@ -199,13 +199,23 @@ class McpStdioIntegrationTests(unittest.IsolatedAsyncioTestCase):
 
                         batch = await session.call_tool(
                             "batch_check",
-                            {"queries": ["10.1000/custom", "10.1000/other"], "mode": "metadata"},
+                            {"queries": ["10.1000/custom", "10.1000/other"], "mode": "metadata", "concurrency": 2},
                         )
                         self.assertFalse(batch.isError)
                         self.assertEqual(batch.structuredContent["mode"], "metadata")
                         self.assertEqual(len(batch.structuredContent["results"]), 2)
                         self.assertEqual(batch.structuredContent["results"][0]["probe_state"], "likely_yes")
                         self.assertEqual(batch.structuredContent["results"][0]["source"], None)
+
+                        batch_resolved = await session.call_tool(
+                            "batch_resolve",
+                            {"queries": ["10.1000/custom", "10.1000/other"], "concurrency": 2},
+                        )
+                        self.assertFalse(batch_resolved.isError)
+                        self.assertEqual(
+                            [item["doi"] for item in batch_resolved.structuredContent["results"]],
+                            ["10.1000/custom", "10.1000/other"],
+                        )
 
                         default_fetch = await session.call_tool("fetch_paper", {"query": "10.1000/default"})
                         self.assertFalse(default_fetch.isError)

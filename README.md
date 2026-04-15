@@ -75,8 +75,8 @@ cp .env.example ~/.config/paper-fetch/.env
 - `fetch_paper(query, modes, strategy, include_refs, max_tokens, prefer_cache, download_dir)`
 - `list_cached(download_dir)`
 - `get_cached(doi, download_dir)`
-- `batch_resolve(queries)`
-- `batch_check(queries, mode)`
+- `batch_resolve(queries, concurrency)`
+- `batch_check(queries, mode, concurrency)`
 
 `fetch_paper` 的 MCP 默认值是：
 
@@ -97,6 +97,8 @@ cp .env.example ~/.config/paper-fetch/.env
 - 显式 `prefer_cache=true` 时，`fetch_paper` 会先尝试命中本地 MCP cache 里的 envelope sidecar；命中才短路，未命中再照常上网
 - 显式传 `download_dir` 会覆盖 `PAPER_FETCH_DOWNLOAD_DIR` 和 XDG 默认目录，适合隔离多任务下载目录
 - `list_cached()` / `get_cached()` 只读本地 cache index，不触发网络
+- `batch_resolve()` / `batch_check()` 默认 `concurrency=1`；显式提高时会复用同一个 transport，并允许不同 host 的查询并发执行
+- `batch_resolve()` / `batch_check()` 在同一 host 内仍保持串行，避免把本地批量工作流直接变成对单个 publisher 的并发冲击
 - `batch_check(mode="metadata")` 现在复用同一个廉价 probe，返回 `probe_state` / `evidence` / `warnings` 这类轻量字段，不会走完整抓取，也不会把正文或原始 payload 写入磁盘
 - `batch_check(mode="article")` 仍保留“完整 fetch 后给最终 verdict”的语义
 - 当 `strategy.asset_profile` 为 `body` / `all` 时，`fetch_paper` 可能在 JSON 结果后附带少量关键正文图的 `ImageContent`

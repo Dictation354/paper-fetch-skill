@@ -1,6 +1,6 @@
 ---
 name: paper-fetch-skill
-description: Use when: fetch one known paper by DOI, URL, or title, or verify a citation list serially. Not for: topic surveys, literature discovery, or recommendation-only requests.
+description: Use when: fetch one known paper by DOI, URL, or title, or verify a citation list of identifiable papers. Not for: topic surveys, literature discovery, or recommendation-only requests.
 ---
 
 # Paper Fetch Skill
@@ -24,7 +24,7 @@ Use this skill when an agent needs the contents or full-text availability of one
 1. Prefer the MCP tools when they are available.
 2. In multi-turn sessions, call `list_cached()` or `get_cached(doi)` before re-fetching.
 3. If the query may be ambiguous, call `resolve_paper(query | title, authors, year)` first.
-4. For bibliography or citation-list tasks, call `batch_check(queries, mode)` before per-paper full fetches.
+4. For bibliography or citation-list tasks, call `batch_check(queries, mode, concurrency)` before per-paper full fetches.
 5. Call `has_fulltext(query)` when you only need a cheap readability probe.
 6. Call `fetch_paper(query, modes, strategy, include_refs, max_tokens, prefer_cache, download_dir)` when you need AI-friendly Markdown, structured article data, or metadata.
 7. Do not conclude "unreadable" just because there is no local PDF or cached text file.
@@ -43,7 +43,8 @@ Use this skill when an agent needs the contents or full-text availability of one
 - `fetch_paper(...)`: `science` and `pnas` routes require repo-local FlareSolverr plus explicit local rate-limit env vars, and currently return text-only markdown even when `asset_profile` is `body` or `all`.
 - `has_fulltext(query)`: runs a cheap probe over resolution, Crossref metadata, lightweight official metadata probes, and landing-page HTML meta without triggering the full fetch waterfall.
 - `has_fulltext(query)`: the success payload is `{query, doi, state, evidence, warnings}`; v1 only actively returns `likely_yes` or `unknown`, while `confirmed_yes` and `no` remain reserved states.
-- `batch_check(queries, mode)`: `mode="metadata"` reuses the cheap probe and returns lightweight provenance fields; `mode="article"` still runs the full fetch path and reports the final full-text verdict.
+- `batch_resolve(queries, concurrency)` and `batch_check(queries, mode, concurrency)`: default `concurrency=1`; higher values let different hosts overlap while the shared transport still keeps the same host serialized.
+- `batch_check(queries, mode, concurrency)`: `mode="metadata"` reuses the cheap probe and returns lightweight provenance fields; `mode="article"` still runs the full fetch path and reports the final full-text verdict.
 
 ## References
 

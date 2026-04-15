@@ -7,6 +7,7 @@ import socket
 import threading
 import unittest
 import urllib.error
+import urllib.parse
 import warnings
 from unittest import mock
 
@@ -646,6 +647,46 @@ class HttpTransportCacheTests(unittest.TestCase):
         self.assertEqual([item["body"] for item in responses], [url.encode("utf-8") for url in urls])
         self.assertLessEqual(len(transport._cache), 4)
         self.assertTrue(call_count >= len({*urls}))
+
+    def test_same_host_requests_are_serialized_while_different_hosts_can_overlap(self) -> None:
+        transport = http_module.HttpTransport(cache_ttl=0, cache_capacity=0)
+        active_by_host: dict[str, int] = {}
+        max_active_by_host: dict[str, int] = {}
+        global_active = 0
+        max_global_active = 0
+        lock = threading.Lock()
+
+        def fake_urlopen(request, timeout=20):
+            nonlocal global_active, max_global_active
+            host = urllib.parse.urlparse(request.full_url).hostname or ""
+            with lock:
+                active_by_host[host] = active_by_host.get(host, 0) + 1
+                max_active_by_host[host] = max(max_active_by_host.get(host, 0), active_by_host[host])
+                global_active += 1
+                max_global_active = max(max_global_active, global_active)
+            try:
+                threading.Event().wait(0.05)
+                return FakeHTTPResponse(
+                    request.full_url.encode("utf-8"),
+                    request.full_url,
+                    headers={"content-type": "text/plain"},
+                )
+            finally:
+                with lock:
+                    active_by_host[host] -= 1
+                    global_active -= 1
+
+        urls = [
+            "https://same.test/one",
+            "https://same.test/two",
+            "https://other.test/three",
+        ]
+        with mock.patch.object(transport, "_perform_request", side_effect=fake_urlopen):
+            with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+                list(executor.map(lambda url: transport.request("GET", url, headers={"Accept": "text/plain"}), urls))
+
+        self.assertEqual(max_active_by_host["same.test"], 1)
+        self.assertGreaterEqual(max_global_active, 2)
 
     def test_map_request_failure_returns_rate_limited_provider_failure(self) -> None:
         failure = http_module.RequestFailure(

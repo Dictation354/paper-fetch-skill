@@ -204,16 +204,20 @@ def build_server() -> FastMCP:
 
     @server.tool(
         name="batch_resolve",
-        description="Resolve multiple DOI, URL, or title queries serially with shared transport reuse.",
+        description="Resolve multiple DOI, URL, or title queries with shared transport reuse and optional cross-host concurrency.",
         structured_output=True,
     )
-    async def batch_resolve(queries: list[str], ctx: Context | None = None) -> Annotated[CallToolResult, BatchResolveOutput]:
-        return await batch_resolve_tool_async(queries=queries, ctx=ctx)
+    async def batch_resolve(
+        queries: list[str],
+        concurrency: int = 1,
+        ctx: Context | None = None,
+    ) -> Annotated[CallToolResult, BatchResolveOutput]:
+        return await batch_resolve_tool_async(queries=queries, concurrency=concurrency, ctx=ctx)
 
     @server.tool(
         name="batch_check",
         description=(
-            "Check multiple papers serially without returning full bodies. "
+            "Check multiple papers without returning full bodies, with optional cross-host concurrency. "
             "Success items keep only lightweight provenance fields."
         ),
         structured_output=True,
@@ -221,9 +225,10 @@ def build_server() -> FastMCP:
     async def batch_check(
         queries: list[str],
         mode: str = "metadata",
+        concurrency: int = 1,
         ctx: Context | None = None,
     ) -> Annotated[CallToolResult, BatchCheckOutput]:
-        return await batch_check_tool_async(queries=queries, mode=mode, ctx=ctx)
+        return await batch_check_tool_async(queries=queries, mode=mode, concurrency=concurrency, ctx=ctx)
 
     return server
 
