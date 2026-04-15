@@ -32,6 +32,7 @@ from .output_schemas import (
     ListCachedOutput,
     ResolvePaperOutput,
 )
+from .prompts import summarize_paper_prompt, verify_citation_list_prompt
 from .schemas import FetchStrategyInput
 from .tools import (
     batch_check_tool_async,
@@ -164,6 +165,20 @@ def build_server() -> FastMCP:
         return path.read_bytes()
 
     _sync_resources_for_download_dir(server, None)
+
+    @server.prompt(
+        name="summarize_paper",
+        description="Template for summarizing one known paper with cache-first and provenance-aware fetch discipline.",
+    )
+    def summarize_paper(query: str, focus: str = "general") -> str:
+        return summarize_paper_prompt(query=query, focus=focus)
+
+    @server.prompt(
+        name="verify_citation_list",
+        description="Template for checking a citation list with batch-first probe discipline.",
+    )
+    def verify_citation_list(citations: str, mode: str = "metadata") -> str:
+        return verify_citation_list_prompt(citations=citations, mode=mode)
 
     @server.tool(
         name="resolve_paper",

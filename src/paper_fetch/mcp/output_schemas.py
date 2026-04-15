@@ -75,9 +75,16 @@ class AssetOutput(TypedDict, total=False):
     section: str | None
 
 
+class TokenEstimateBreakdownOutput(TypedDict, total=False):
+    abstract: int
+    body: int
+    refs: int
+
+
 class QualityOutput(TypedDict, total=False):
     has_fulltext: bool
     token_estimate: int
+    token_estimate_breakdown: TokenEstimateBreakdownOutput
     warnings: list[str]
     source_trail: list[str]
 
@@ -99,6 +106,7 @@ class FetchPaperOutput(ErrorPayloadOutput, total=False):
     warnings: list[str]
     source_trail: list[str]
     token_estimate: int
+    token_estimate_breakdown: TokenEstimateBreakdownOutput
     article: ArticleOutput | None
     markdown: str | None
     metadata: MetadataOutput | None
@@ -148,6 +156,7 @@ class BatchCheckItemOutput(ErrorPayloadOutput, total=False):
     warnings: list[str]
     source_trail: list[str]
     token_estimate: int | None
+    token_estimate_breakdown: TokenEstimateBreakdownOutput | None
     probe_state: str | None
     evidence: list[str]
 

@@ -22,6 +22,7 @@ from ..publisher_identity import extract_doi, infer_provider_from_signals, norma
 CONFIDENT_SCORE_MIN = 0.90
 CONFIDENT_MARGIN_MIN = 0.05
 MIN_HTML_TITLE_LOOKUP_CHARS = 24
+MAX_URL_REDIRECTS = 3
 
 
 @dataclass
@@ -113,23 +114,41 @@ def resolve_query(
 
     if is_url(normalized_query):
         direct_doi = extract_doi(normalized_query)
+        request_headers = {
+            "Accept": "text/html,application/xhtml+xml",
+            "User-Agent": build_user_agent(active_env),
+        }
+        current_url = normalized_query
         try:
             response = active_transport.request(
                 "GET",
-                normalized_query,
-                headers={
-                    "Accept": "text/html,application/xhtml+xml",
-                    "User-Agent": build_user_agent(active_env),
-                },
+                current_url,
+                headers=request_headers,
                 retry_on_transient=True,
             )
+            for _ in range(MAX_URL_REDIRECTS):
+                status_code = int(response.get("status_code") or 0)
+                redirect_location = str((response.get("headers") or {}).get("location") or "").strip()
+                if status_code not in {301, 302, 303, 307, 308} or not redirect_location:
+                    break
+                current_url = urllib.parse.urljoin(current_url, redirect_location)
+                response = active_transport.request(
+                    "GET",
+                    current_url,
+                    headers=request_headers,
+                    retry_on_transient=True,
+                )
         except RequestFailure as exc:
             raise ProviderFailure("error", f"Failed to fetch landing page: {exc}") from exc
-        html_metadata = parse_html_metadata(decode_html(response["body"]), response["url"])
-        landing_url = str(html_metadata.get("landing_page_url") or response["url"])
+        response_url = urllib.parse.urljoin(current_url, str(response.get("url") or "").strip() or current_url)
+        html_metadata = parse_html_metadata(decode_html(response["body"]), response_url)
+        landing_url = urllib.parse.urljoin(
+            response_url,
+            str(html_metadata.get("landing_page_url") or response_url).strip() or response_url,
+        )
         resolved_doi = normalize_doi(str(html_metadata.get("doi") or direct_doi or "")) or None
         provider_hint = infer_provider_from_signals(
-            landing_urls=[response["url"], landing_url],
+            landing_urls=[response_url, landing_url],
             doi=resolved_doi,
         )
         html_title = str(html_metadata.get("title") or "").strip() or None

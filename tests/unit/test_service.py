@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import tempfile
 import unittest
 from pathlib import Path
@@ -21,6 +22,15 @@ from ._paper_fetch_support import (
     sample_html_article,
     short_pdf_bytes,
 )
+
+
+class RecordCaptureHandler(logging.Handler):
+    def __init__(self) -> None:
+        super().__init__(level=logging.DEBUG)
+        self.records: list[logging.LogRecord] = []
+
+    def emit(self, record: logging.LogRecord) -> None:
+        self.records.append(record)
 
 
 class ServiceTests(unittest.TestCase):
@@ -273,53 +283,84 @@ class ServiceTests(unittest.TestCase):
         )
         official_article = sample_article()
         original_resolve = paper_fetch.resolve_paper
+        service_logger = logging.getLogger("paper_fetch.service")
+        original_level = service_logger.level
+        handler = RecordCaptureHandler()
+        service_logger.addHandler(handler)
+        service_logger.setLevel(logging.DEBUG)
         try:
             paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
-            with self.assertLogs("paper_fetch.service", level="DEBUG") as captured_logs:
-                fetch_paper_model(
-                    "10.1016/test",
-                    clients={
-                        "elsevier": StubProvider(
-                            metadata={
-                                "provider": "elsevier",
-                                "official_provider": True,
-                                "doi": "10.1016/test",
-                                "title": "Example Article",
-                                "landing_page_url": "https://example.test/article",
-                                "fulltext_links": [],
-                                "references": [],
-                            },
-                            raw_payload=RawFulltextPayload(
-                                provider="elsevier",
-                                source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest",
-                                content_type="text/xml",
-                                body=b"<xml/>",
-                                metadata={"reason": "Downloaded full text from the official Elsevier API."},
-                            ),
-                            article=official_article,
+            fetch_paper_model(
+                "10.1016/test",
+                clients={
+                    "elsevier": StubProvider(
+                        metadata={
+                            "provider": "elsevier",
+                            "official_provider": True,
+                            "doi": "10.1016/test",
+                            "title": "Example Article",
+                            "landing_page_url": "https://example.test/article",
+                            "fulltext_links": [],
+                            "references": [],
+                        },
+                        raw_payload=RawFulltextPayload(
+                            provider="elsevier",
+                            source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest",
+                            content_type="text/xml",
+                            body=b"<xml/>",
+                            metadata={"reason": "Downloaded full text from the official Elsevier API."},
                         ),
-                        "crossref": StubProvider(
-                            metadata={
-                                "provider": "crossref",
-                                "official_provider": False,
-                                "doi": "10.1016/test",
-                                "title": "Example Article",
-                                "authors": ["Alice Example"],
-                                "landing_page_url": "https://example.test/article",
-                                "fulltext_links": [],
-                                "references": [],
-                            }
-                        ),
-                    },
-                    html_client=StubHtmlClient(error=paper_fetch.ProviderFailure("no_result", "HTML should not be used.")),
-                )
+                        article=official_article,
+                    ),
+                    "crossref": StubProvider(
+                        metadata={
+                            "provider": "crossref",
+                            "official_provider": False,
+                            "doi": "10.1016/test",
+                            "title": "Example Article",
+                            "authors": ["Alice Example"],
+                            "landing_page_url": "https://example.test/article",
+                            "fulltext_links": [],
+                            "references": [],
+                        }
+                    ),
+                },
+                html_client=StubHtmlClient(error=paper_fetch.ProviderFailure("no_result", "HTML should not be used.")),
+            )
         finally:
             paper_fetch.resolve_paper = original_resolve
+            service_logger.removeHandler(handler)
+            service_logger.setLevel(original_level)
 
-        rendered_logs = "\n".join(captured_logs.output)
+        rendered_logs = "\n".join(record.getMessage() for record in handler.records)
         self.assertIn("provider=elsevier", rendered_logs)
         self.assertIn("status=success", rendered_logs)
         self.assertIn("elapsed_ms=", rendered_logs)
+        payloads = [
+            record.structured_data
+            for record in handler.records
+            if isinstance(getattr(record, "structured_data", None), dict)
+        ]
+        self.assertIn(
+            {
+                "event": "official_provider_attempt",
+                "provider": "elsevier",
+                "url": "https://example.test/article",
+                "status": "attempt",
+                "elapsed_ms": 0.0,
+                "attempt": 1,
+            },
+            payloads,
+        )
+        self.assertTrue(
+            any(
+                payload.get("event") == "official_provider_result"
+                and payload.get("provider") == "elsevier"
+                and payload.get("status") == "success"
+                and isinstance(payload.get("elapsed_ms"), float)
+                for payload in payloads
+            )
+        )
 
     def test_fetch_paper_model_uses_official_pipeline_for_resolved_elsevier_url(self) -> None:
         resolved = paper_fetch.ResolvedQuery(
@@ -1083,7 +1124,18 @@ class ServiceTests(unittest.TestCase):
 
         self.assertEqual(
             set(envelope.to_dict().keys()),
-            {"doi", "source", "has_fulltext", "warnings", "source_trail", "token_estimate", "article", "markdown", "metadata"},
+            {
+                "doi",
+                "source",
+                "has_fulltext",
+                "warnings",
+                "source_trail",
+                "token_estimate",
+                "token_estimate_breakdown",
+                "article",
+                "markdown",
+                "metadata",
+            },
         )
         self.assertEqual(envelope.source, "wiley_tdm")
         self.assertIsNone(envelope.article)

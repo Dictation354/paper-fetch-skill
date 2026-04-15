@@ -12,7 +12,16 @@ from unittest import mock
 
 from paper_fetch.mcp import tools as mcp_tools
 from paper_fetch.mcp.server import build_server
-from paper_fetch.models import ArticleModel, Asset, FetchEnvelope, Metadata, Quality, RenderOptions, Section
+from paper_fetch.models import (
+    ArticleModel,
+    Asset,
+    FetchEnvelope,
+    Metadata,
+    Quality,
+    RenderOptions,
+    Section,
+    TokenEstimateBreakdown,
+)
 from paper_fetch.providers.base import ProviderFailure
 from paper_fetch.resolve.query import ResolvedQuery
 from paper_fetch.service import FetchStrategy, HasFulltextProbeResult, PaperFetchFailure
@@ -33,7 +42,13 @@ def sample_article() -> ArticleModel:
         sections=[Section(heading="Introduction", level=2, kind="body", text="Example body.")],
         references=[],
         assets=[],
-        quality=Quality(has_fulltext=True, token_estimate=128, warnings=["example warning"], source_trail=["source:ok"]),
+        quality=Quality(
+            has_fulltext=True,
+            token_estimate=128,
+            warnings=["example warning"],
+            source_trail=["source:ok"],
+            token_estimate_breakdown=TokenEstimateBreakdown(abstract=32, body=96, refs=24),
+        ),
     )
 
 
@@ -48,6 +63,7 @@ def sample_envelope(*, modes: set[str], doi: str = "10.1000/example") -> FetchEn
         warnings=["example warning"],
         source_trail=["source:ok"],
         token_estimate=article.quality.token_estimate,
+        token_estimate_breakdown=article.quality.token_estimate_breakdown,
         article=article if "article" in modes else None,
         markdown="# Example Article\n\nExample body.\n" if "markdown" in modes else None,
         metadata=article.metadata if "metadata" in modes else None,
@@ -315,6 +331,39 @@ class McpToolTests(unittest.TestCase):
         self.assertIsNotNone(payload["article"])
         mocked_fetch.assert_called_once()
 
+    def test_fetch_paper_payload_prefer_cache_derives_breakdown_from_legacy_sidecar_payload(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            download_dir = Path(tmpdir)
+            create_cached_fetch_envelope(download_dir, "10.1000/example", modes=["article", "metadata"])
+            cache_path = mcp_tools._fetch_envelope_cache_path(download_dir, "10.1000/example")
+            cache_payload = json.loads(cache_path.read_text(encoding="utf-8"))
+            cache_payload["payload"].pop("token_estimate_breakdown", None)
+            cache_payload["payload"]["article"]["quality"].pop("token_estimate_breakdown", None)
+            cache_path.write_text(json.dumps(cache_payload, ensure_ascii=False, indent=2), encoding="utf-8")
+
+            with (
+                mock.patch.object(mcp_tools, "build_runtime_env", return_value={}),
+                mock.patch.object(
+                    mcp_tools,
+                    "service_resolve_paper",
+                    return_value=sample_resolved_query("10.1000/example"),
+                ),
+                mock.patch.object(mcp_tools, "service_fetch_paper") as mocked_fetch,
+            ):
+                payload = mcp_tools.fetch_paper_payload(
+                    query="10.1000/example",
+                    modes=["article", "metadata"],
+                    prefer_cache=True,
+                    download_dir=download_dir,
+                )
+
+        self.assertEqual(payload["token_estimate_breakdown"], {"abstract": 4, "body": 4, "refs": 0})
+        self.assertEqual(
+            payload["article"]["quality"]["token_estimate_breakdown"],
+            {"abstract": 4, "body": 4, "refs": 0},
+        )
+        mocked_fetch.assert_not_called()
+
     def test_fetch_paper_payload_accepts_full_text_and_asset_profile_strategy(self) -> None:
         captured: dict[str, object] = {}
 
@@ -397,6 +446,7 @@ class McpToolTests(unittest.TestCase):
         self.assertTrue(payload["has_fulltext"])
         self.assertEqual(payload["warnings"], ["example warning"])
         self.assertEqual(payload["source_trail"], ["source:ok"])
+        self.assertEqual(payload["token_estimate_breakdown"], {"abstract": 32, "body": 96, "refs": 24})
         self.assertEqual(payload["article"], None)
         self.assertIsNotNone(payload["markdown"])
         self.assertEqual(payload["metadata"], None)
@@ -418,6 +468,7 @@ class McpToolTests(unittest.TestCase):
         self.assertEqual(payload["article"], None)
         self.assertEqual(payload["markdown"], None)
         self.assertEqual(payload["metadata"]["title"], "Example Article")
+        self.assertEqual(payload["token_estimate_breakdown"], {"abstract": 32, "body": 96, "refs": 24})
 
     def test_fetch_paper_tool_returns_ambiguous_error_payload(self) -> None:
         error = PaperFetchFailure(
@@ -606,8 +657,23 @@ class McpToolTests(unittest.TestCase):
         self.assertEqual(payload["results"][0]["source"], None)
         self.assertEqual(payload["results"][0]["source_trail"], [])
         self.assertEqual(payload["results"][0]["token_estimate"], None)
+        self.assertEqual(payload["results"][0]["token_estimate_breakdown"], None)
         self.assertEqual(len(set(transport_ids)), 1)
         mocked_fetch.assert_not_called()
+
+    def test_batch_check_payload_article_mode_keeps_breakdown(self) -> None:
+        with mock.patch.object(
+            mcp_tools,
+            "service_fetch_paper",
+            return_value=sample_envelope(modes={"article"}, doi="10.1000/one"),
+        ):
+            payload = mcp_tools.batch_check_payload(queries=["10.1000/one"], mode="article")
+
+        self.assertEqual(payload["results"][0]["token_estimate"], 128)
+        self.assertEqual(
+            payload["results"][0]["token_estimate_breakdown"],
+            {"abstract": 32, "body": 96, "refs": 24},
+        )
 
     def test_batch_check_tool_rejects_invalid_concurrency(self) -> None:
         result = mcp_tools.batch_check_tool(
@@ -742,6 +808,34 @@ class McpToolTests(unittest.TestCase):
             },
         )
 
+    def test_structured_log_payload_from_record_prefers_record_payload(self) -> None:
+        record = logging.LogRecord(
+            name="paper_fetch.service",
+            level=logging.DEBUG,
+            pathname=__file__,
+            lineno=1,
+            msg="official_provider_result provider=wiley note=message with spaces",
+            args=(),
+            exc_info=None,
+        )
+        record.structured_data = {
+            "event": "official_provider_result",
+            "provider": "wiley",
+            "note": "message with spaces",
+        }
+
+        payload = mcp_tools.structured_log_payload_from_record(record)
+
+        self.assertEqual(
+            payload,
+            {
+                "event": "official_provider_result",
+                "provider": "wiley",
+                "note": "message with spaces",
+                "logger": "paper_fetch.service",
+            },
+        )
+
     def test_inline_image_contents_limits_and_filters_assets(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
@@ -862,6 +956,7 @@ class McpToolTests(unittest.TestCase):
                 warnings=[],
                 source_trail=["source:ok"],
                 token_estimate=article.quality.token_estimate,
+                token_estimate_breakdown=article.quality.token_estimate_breakdown,
                 article=article,
                 markdown="# Example Article\n\nExample body.\n",
                 metadata=None,
@@ -890,6 +985,37 @@ class McpToolTests(unittest.TestCase):
 
 
 class McpAsyncToolTests(unittest.IsolatedAsyncioTestCase):
+    async def test_structured_log_notification_handler_prefers_structured_data_with_spaces(self) -> None:
+        ctx = FakeContext()
+        handler = mcp_tools.StructuredLogNotificationHandler(ctx=ctx, loop=asyncio.get_running_loop())
+        record = logging.LogRecord(
+            name="paper_fetch.service",
+            level=logging.DEBUG,
+            pathname=__file__,
+            lineno=1,
+            msg="official_provider_result provider=wiley note=message with spaces",
+            args=(),
+            exc_info=None,
+        )
+        record.structured_data = {
+            "event": "official_provider_result",
+            "provider": "wiley",
+            "note": "message with spaces",
+        }
+
+        handler.emit(record)
+        await asyncio.sleep(0.05)
+
+        self.assertEqual(
+            ctx.session.messages[0]["data"],
+            {
+                "event": "official_provider_result",
+                "provider": "wiley",
+                "note": "message with spaces",
+                "logger": "paper_fetch.service",
+            },
+        )
+
     async def test_fetch_paper_tool_async_reports_progress_and_bridges_logs(self) -> None:
         ctx = FakeContext()
 

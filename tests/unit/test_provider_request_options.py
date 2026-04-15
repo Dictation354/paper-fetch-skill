@@ -151,6 +151,40 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         self.assertTrue(transport.calls[0]["retry_on_rate_limit"])
         self.assertTrue(transport.calls[0]["retry_on_transient"])
 
+    def test_wiley_fulltext_follows_redirect_to_signed_download_url(self) -> None:
+        doi = "10.1002/ece3.9361"
+        transport = RecordingTransport(
+            {
+                ("GET", "https://api.wiley.com/onlinelibrary/tdm/v1/articles/10.1002%2Fece3.9361"): {
+                    "status_code": 302,
+                    "headers": {"location": "https://alm.wiley.com/download/test.pdf", "content-length": "0"},
+                    "body": b"",
+                    "url": "/onlinelibrary/tdm/v1/articles/10.1002%2Fece3.9361",
+                },
+                ("GET", "https://alm.wiley.com/download/test.pdf"): {
+                    "status_code": 200,
+                    "headers": {"content-type": "application/pdf"},
+                    "body": b"%PDF-1.4",
+                    "url": "https://alm.wiley.com/download/test.pdf",
+                },
+            }
+        )
+
+        client = WileyClient(
+            transport,
+            {
+                "WILEY_TDM_URL_TEMPLATE": "https://api.wiley.com/onlinelibrary/tdm/v1/articles/{doi}",
+                "WILEY_TDM_TOKEN": "secret",
+            },
+        )
+        payload = client.fetch_raw_fulltext(doi, {})
+
+        self.assertEqual(payload.content_type, "application/pdf")
+        self.assertEqual(payload.source_url, "https://alm.wiley.com/download/test.pdf")
+        self.assertEqual(payload.body, b"%PDF-1.4")
+        self.assertEqual(len(transport.calls), 2)
+        self.assertEqual(transport.calls[1]["timeout"], DEFAULT_FULLTEXT_TIMEOUT_SECONDS)
+
     def test_elsevier_body_asset_profile_excludes_appendix_and_supplementary(self) -> None:
         references = [
             {"asset_type": "image", "source_ref": "fx1"},

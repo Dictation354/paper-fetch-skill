@@ -6,7 +6,7 @@ import fitz
 
 from paper_fetch import service as paper_fetch
 from paper_fetch.http import HttpTransport
-from paper_fetch.models import ArticleModel, FetchEnvelope, Metadata, Quality, RenderOptions, Section
+from paper_fetch.models import ArticleModel, FetchEnvelope, Metadata, Quality, RenderOptions, Section, TokenEstimateBreakdown
 from paper_fetch.providers import html_generic
 from paper_fetch.utils import empty_asset_results
 
@@ -155,7 +155,12 @@ def sample_article() -> paper_fetch.ArticleModel:
         ],
         references=[],
         assets=[],
-        quality=Quality(has_fulltext=True, token_estimate=600, warnings=[]),
+        quality=Quality(
+            has_fulltext=True,
+            token_estimate=600,
+            warnings=[],
+            token_estimate_breakdown=TokenEstimateBreakdown(abstract=120, body=480, refs=64),
+        ),
     )
 
 

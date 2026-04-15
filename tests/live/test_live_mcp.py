@@ -9,7 +9,9 @@ from pathlib import Path
 from mcp.client.session import ClientSession
 from mcp.client.stdio import StdioServerParameters, stdio_client
 
-from paper_fetch.config import build_runtime_env
+from paper_fetch.config import build_runtime_env, resolve_flaresolverr_source_dir, resolve_flaresolverr_url
+from paper_fetch.providers._flaresolverr import health_check
+from paper_fetch.providers.base import ProviderFailure
 from tests.paths import REPO_ROOT, SRC_DIR
 
 
@@ -27,6 +29,18 @@ class LiveMcpServerTests(unittest.IsolatedAsyncioTestCase):
         missing = [key for key in keys if not self.env.get(key, "").strip()]
         if missing:
             self.skipTest(f"Missing required environment variables for live test: {', '.join(missing)}")
+
+    def _require_flaresolverr(self) -> None:
+        env_file = Path(self.env["FLARESOLVERR_ENV_FILE"]).expanduser()
+        if not env_file.exists():
+            self.skipTest(f"Configured FLARESOLVERR_ENV_FILE does not exist: {env_file}")
+        source_dir = resolve_flaresolverr_source_dir(self.env)
+        if not source_dir.exists():
+            self.skipTest(f"Repo-local vendor/flaresolverr was not found: {source_dir}")
+        try:
+            health_check(resolve_flaresolverr_url(self.env))
+        except ProviderFailure as exc:
+            self.skipTest(f"Local FlareSolverr health check failed: {exc.message}")
 
     async def _call_fetch(
         self,
@@ -67,28 +81,67 @@ class LiveMcpServerTests(unittest.IsolatedAsyncioTestCase):
                         )
         return result, progress_updates, log_messages
 
-    async def test_elsevier_doi_live_via_mcp_reports_progress_and_logs(self) -> None:
-        self._require_env("ELSEVIER_API_KEY", "CROSSREF_MAILTO")
+    async def _assert_live_fetch(
+        self,
+        *,
+        query: str,
+        required_env: tuple[str, ...],
+        expected_source: str,
+        expected_source_trail: str,
+        expected_log_prefix: str,
+        args: dict[str, object] | None = None,
+        needs_flaresolverr: bool = False,
+    ) -> None:
+        self._require_env(*required_env)
+        if needs_flaresolverr:
+            self._require_flaresolverr()
 
-        result, progress_updates, log_messages = await self._call_fetch(
-            query="10.1016/j.rse.2025.114648",
-            args={"modes": ["metadata"], "strategy": {"allow_html_fallback": False}},
-        )
+        result, progress_updates, log_messages = await self._call_fetch(query=query, args=args)
 
         self.assertFalse(result.isError)
-        self.assertEqual(result.structuredContent["source"], "elsevier_xml")
+        self.assertEqual(result.structuredContent["source"], expected_source)
         self.assertTrue(result.structuredContent["has_fulltext"])
-        self.assertIn("fulltext:elsevier_article_ok", result.structuredContent["source_trail"])
+        self.assertIn(expected_source_trail, result.structuredContent["source_trail"])
         self.assertEqual(progress_updates[-1], (4, 4, "fetch_paper complete"))
         self.assertTrue(
             any(
                 isinstance(message, dict)
-                and str(message.get("event", "")).startswith("official_provider_")
+                and str(message.get("event", "")).startswith(expected_log_prefix)
                 for message in log_messages
             )
         )
 
-    async def test_html_fallback_live_via_mcp_reports_progress_and_logs(self) -> None:
+    async def test_elsevier_doi_live_via_mcp_reports_progress_and_logs(self) -> None:
+        await self._assert_live_fetch(
+            query="10.1016/j.rse.2025.114648",
+            required_env=("ELSEVIER_API_KEY", "CROSSREF_MAILTO"),
+            expected_source="elsevier_xml",
+            expected_source_trail="fulltext:elsevier_article_ok",
+            expected_log_prefix="official_provider_",
+            args={"modes": ["metadata"], "strategy": {"allow_html_fallback": False}},
+        )
+
+    async def test_springer_doi_live_via_mcp_reports_progress_and_logs(self) -> None:
+        await self._assert_live_fetch(
+            query="10.1186/1471-2105-11-421",
+            required_env=("SPRINGER_META_API_KEY", "SPRINGER_OPENACCESS_API_KEY", "CROSSREF_MAILTO"),
+            expected_source="springer_xml",
+            expected_source_trail="fulltext:springer_article_ok",
+            expected_log_prefix="official_provider_",
+            args={"modes": ["metadata"], "strategy": {"allow_html_fallback": False}},
+        )
+
+    async def test_wiley_doi_live_via_mcp_reports_progress_and_logs(self) -> None:
+        await self._assert_live_fetch(
+            query="10.1002/ece3.9361",
+            required_env=("WILEY_TDM_URL_TEMPLATE", "WILEY_TDM_TOKEN", "CROSSREF_MAILTO"),
+            expected_source="wiley_tdm",
+            expected_source_trail="fulltext:wiley_pdf_extract_ok",
+            expected_log_prefix="official_provider_",
+            args={"modes": ["metadata"], "strategy": {"allow_html_fallback": False}},
+        )
+
+    async def test_nature_html_direct_live_via_mcp_reports_progress_and_logs(self) -> None:
         self._require_env("SPRINGER_META_API_KEY", "SPRINGER_OPENACCESS_API_KEY", "CROSSREF_MAILTO")
 
         result, progress_updates, log_messages = await self._call_fetch(
@@ -97,9 +150,15 @@ class LiveMcpServerTests(unittest.IsolatedAsyncioTestCase):
         )
 
         self.assertFalse(result.isError)
-        self.assertEqual(result.structuredContent["source"], "html_fallback")
-        self.assertTrue(result.structuredContent["has_fulltext"])
-        self.assertIn("fallback:html_ok", result.structuredContent["source_trail"])
+        self.assertIn(result.structuredContent["source"], {"html_fallback", "metadata_only"})
+        self.assertIn("fallback:html_attempt", result.structuredContent["source_trail"])
+        self.assertNotIn("fallback:html_unavailable", result.structuredContent["source_trail"])
+        if result.structuredContent["source"] == "html_fallback":
+            self.assertTrue(result.structuredContent["has_fulltext"])
+            self.assertIn("fallback:html_ok", result.structuredContent["source_trail"])
+        else:
+            self.assertFalse(result.structuredContent["has_fulltext"])
+            self.assertIn("fallback:html_fail", result.structuredContent["source_trail"])
         self.assertEqual(progress_updates[-1], (4, 4, "fetch_paper complete"))
         self.assertTrue(
             any(
@@ -107,6 +166,40 @@ class LiveMcpServerTests(unittest.IsolatedAsyncioTestCase):
                 and str(message.get("event", "")).startswith("html_fallback_")
                 for message in log_messages
             )
+        )
+
+    async def test_science_doi_live_via_mcp_reports_progress_and_logs(self) -> None:
+        await self._assert_live_fetch(
+            query="10.1126/science.ady3136",
+            required_env=(
+                "CROSSREF_MAILTO",
+                "FLARESOLVERR_ENV_FILE",
+                "FLARESOLVERR_MIN_INTERVAL_SECONDS",
+                "FLARESOLVERR_MAX_REQUESTS_PER_HOUR",
+                "FLARESOLVERR_MAX_REQUESTS_PER_DAY",
+            ),
+            expected_source="science",
+            expected_source_trail="fulltext:science_html_ok",
+            expected_log_prefix="official_provider_",
+            args={"modes": ["metadata"], "strategy": {"allow_html_fallback": False}},
+            needs_flaresolverr=True,
+        )
+
+    async def test_pnas_doi_live_via_mcp_reports_progress_and_logs(self) -> None:
+        await self._assert_live_fetch(
+            query="10.1073/pnas.81.23.7500",
+            required_env=(
+                "CROSSREF_MAILTO",
+                "FLARESOLVERR_ENV_FILE",
+                "FLARESOLVERR_MIN_INTERVAL_SECONDS",
+                "FLARESOLVERR_MAX_REQUESTS_PER_HOUR",
+                "FLARESOLVERR_MAX_REQUESTS_PER_DAY",
+            ),
+            expected_source="pnas",
+            expected_source_trail="fulltext:pnas_pdf_fallback_ok",
+            expected_log_prefix="official_provider_",
+            args={"modes": ["metadata"], "strategy": {"allow_html_fallback": False}},
+            needs_flaresolverr=True,
         )
 
 

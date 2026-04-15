@@ -230,14 +230,29 @@ class WileyClient(ProviderClient):
             "Accept": "*/*",
         }
         try:
+            request_url = url
             response = self.transport.request(
                 "GET",
-                url,
+                request_url,
                 headers=headers,
                 timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
                 retry_on_rate_limit=True,
                 retry_on_transient=True,
             )
+            for _ in range(3):
+                status_code = int(response.get("status_code") or 0)
+                redirect_location = str((response.get("headers") or {}).get("location") or "").strip()
+                if status_code not in {301, 302, 303, 307, 308} or not redirect_location:
+                    break
+                request_url = urllib.parse.urljoin(request_url, redirect_location)
+                response = self.transport.request(
+                    "GET",
+                    request_url,
+                    headers=headers,
+                    timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
+                    retry_on_rate_limit=True,
+                    retry_on_transient=True,
+                )
         except RequestFailure as exc:
             raise map_request_failure(exc) from exc
 
@@ -245,7 +260,7 @@ class WileyClient(ProviderClient):
         needs_local_copy = not (content_type.startswith("text/") or content_type.endswith("xml"))
         return RawFulltextPayload(
             provider="wiley",
-            source_url=response["url"],
+            source_url=urllib.parse.urljoin(request_url, str(response.get("url") or "").strip() or request_url),
             content_type=content_type,
             body=response["body"],
             metadata={"reason": "Downloaded full text from the configured Wiley TDM endpoint."},

@@ -18,7 +18,18 @@ from pydantic import ValidationError
 
 from ..config import build_runtime_env, resolve_mcp_download_dir
 from ..http import HttpTransport, RequestCancelledError
-from ..models import ArticleModel, Asset, FetchEnvelope, Metadata, Quality, Reference, Section
+from ..models import (
+    ArticleModel,
+    Asset,
+    FetchEnvelope,
+    Metadata,
+    Quality,
+    Reference,
+    Section,
+    TokenEstimateBreakdown,
+    build_token_estimate_breakdown,
+    coerce_token_estimate_breakdown,
+)
 from ..providers.base import ProviderFailure
 from ..service import PaperFetchFailure, fetch_paper as service_fetch_paper
 from ..service import probe_has_fulltext as service_probe_has_fulltext
@@ -184,6 +195,19 @@ def _metadata_from_payload(value: Mapping[str, Any] | None) -> Metadata | None:
     )
 
 
+def _derived_breakdown(
+    *,
+    metadata: Metadata | None,
+    sections: Sequence[Section],
+    references: Sequence[Reference],
+) -> TokenEstimateBreakdown:
+    return build_token_estimate_breakdown(
+        abstract_text=metadata.abstract if metadata is not None else None,
+        sections=sections,
+        references=references,
+    )
+
+
 def _quality_from_payload(value: Mapping[str, Any] | None) -> Quality:
     payload = value or {}
     return Quality(
@@ -191,6 +215,7 @@ def _quality_from_payload(value: Mapping[str, Any] | None) -> Quality:
         token_estimate=int(payload.get("token_estimate") or 0),
         warnings=[normalize_text(item) for item in payload.get("warnings") or [] if normalize_text(item)],
         source_trail=[normalize_text(item) for item in payload.get("source_trail") or [] if normalize_text(item)],
+        token_estimate_breakdown=coerce_token_estimate_breakdown(payload.get("token_estimate_breakdown")),
     )
 
 
@@ -200,30 +225,39 @@ def _article_from_payload(value: Mapping[str, Any] | None) -> ArticleModel | Non
     metadata = _metadata_from_payload(value.get("metadata"))
     if metadata is None:
         return None
+    sections = [
+        Section(
+            heading=normalize_text(entry.get("heading")) or "",
+            level=int(entry.get("level") or 0),
+            kind=normalize_text(entry.get("kind")) or "body",
+            text=normalize_text(entry.get("text")) or "",
+        )
+        for entry in value.get("sections") or []
+        if isinstance(entry, Mapping)
+    ]
+    references = [
+        Reference(
+            raw=normalize_text(entry.get("raw")) or "",
+            doi=normalize_text(entry.get("doi")) or None,
+            title=normalize_text(entry.get("title")) or None,
+            year=normalize_text(entry.get("year")) or None,
+        )
+        for entry in value.get("references") or []
+        if isinstance(entry, Mapping) and normalize_text(entry.get("raw"))
+    ]
+    quality = _quality_from_payload(value.get("quality") if isinstance(value.get("quality"), Mapping) else None)
+    if quality.token_estimate_breakdown == TokenEstimateBreakdown():
+        quality.token_estimate_breakdown = _derived_breakdown(
+            metadata=metadata,
+            sections=sections,
+            references=references,
+        )
     return ArticleModel(
         doi=normalize_text(value.get("doi")) or None,
         source=normalize_text(value.get("source")) or "crossref_meta",
         metadata=metadata,
-        sections=[
-            Section(
-                heading=normalize_text(entry.get("heading")) or "",
-                level=int(entry.get("level") or 0),
-                kind=normalize_text(entry.get("kind")) or "body",
-                text=normalize_text(entry.get("text")) or "",
-            )
-            for entry in value.get("sections") or []
-            if isinstance(entry, Mapping)
-        ],
-        references=[
-            Reference(
-                raw=normalize_text(entry.get("raw")) or "",
-                doi=normalize_text(entry.get("doi")) or None,
-                title=normalize_text(entry.get("title")) or None,
-                year=normalize_text(entry.get("year")) or None,
-            )
-            for entry in value.get("references") or []
-            if isinstance(entry, Mapping) and normalize_text(entry.get("raw"))
-        ],
+        sections=sections,
+        references=references,
         assets=[
             Asset(
                 kind=normalize_text(entry.get("kind")) or "",
@@ -236,11 +270,19 @@ def _article_from_payload(value: Mapping[str, Any] | None) -> ArticleModel | Non
             for entry in value.get("assets") or []
             if isinstance(entry, Mapping)
         ],
-        quality=_quality_from_payload(value.get("quality") if isinstance(value.get("quality"), Mapping) else None),
+        quality=quality,
     )
 
 
 def _envelope_from_payload(payload: Mapping[str, Any]) -> FetchEnvelope:
+    article = _article_from_payload(payload.get("article") if isinstance(payload.get("article"), Mapping) else None)
+    metadata = _metadata_from_payload(payload.get("metadata") if isinstance(payload.get("metadata"), Mapping) else None)
+    breakdown = coerce_token_estimate_breakdown(payload.get("token_estimate_breakdown"))
+    if breakdown == TokenEstimateBreakdown():
+        if article is not None:
+            breakdown = article.quality.token_estimate_breakdown
+        elif metadata is not None:
+            breakdown = _derived_breakdown(metadata=metadata, sections=[], references=[])
     return FetchEnvelope(
         doi=normalize_text(payload.get("doi")) or None,
         source=normalize_text(payload.get("source")) or "metadata_only",
@@ -248,9 +290,10 @@ def _envelope_from_payload(payload: Mapping[str, Any]) -> FetchEnvelope:
         warnings=[normalize_text(item) for item in payload.get("warnings") or [] if normalize_text(item)],
         source_trail=[normalize_text(item) for item in payload.get("source_trail") or [] if normalize_text(item)],
         token_estimate=int(payload.get("token_estimate") or 0),
-        article=_article_from_payload(payload.get("article") if isinstance(payload.get("article"), Mapping) else None),
+        token_estimate_breakdown=breakdown,
+        article=article,
         markdown=payload.get("markdown"),
-        metadata=_metadata_from_payload(payload.get("metadata") if isinstance(payload.get("metadata"), Mapping) else None),
+        metadata=metadata,
     )
 
 
@@ -497,6 +540,7 @@ def _batch_check_success_payload(query: str, payload: Mapping[str, Any], *, mode
             "source": None,
             "source_trail": [],
             "token_estimate": None,
+            "token_estimate_breakdown": None,
         }
     else:
         article = payload.get("article") or {}
@@ -514,6 +558,7 @@ def _batch_check_success_payload(query: str, payload: Mapping[str, Any], *, mode
         "warnings": list(payload.get("warnings") or []),
         "source_trail": list(payload.get("source_trail") or []),
         "token_estimate": payload.get("token_estimate"),
+        "token_estimate_breakdown": payload.get("token_estimate_breakdown"),
     }
 
 
@@ -772,6 +817,16 @@ def parse_structured_log_message(message: str, *, logger_name: str | None = None
     return payload
 
 
+def structured_log_payload_from_record(record: logging.LogRecord) -> dict[str, Any]:
+    raw_payload = getattr(record, "structured_data", None)
+    if isinstance(raw_payload, Mapping):
+        payload = dict(raw_payload)
+        payload["event"] = normalize_text(payload.get("event")) or "log"
+        payload.setdefault("logger", record.name)
+        return payload
+    return parse_structured_log_message(record.getMessage(), logger_name=record.name)
+
+
 def _mcp_log_level(record: logging.LogRecord) -> str:
     for level, name in sorted(_LOG_LEVEL_BY_RECORD_LEVEL.items()):
         if record.levelno <= level:
@@ -787,7 +842,7 @@ class StructuredLogNotificationHandler(logging.Handler):
 
     def emit(self, record: logging.LogRecord) -> None:
         try:
-            payload = parse_structured_log_message(record.getMessage(), logger_name=record.name)
+            payload = structured_log_payload_from_record(record)
             asyncio.run_coroutine_threadsafe(
                 self._ctx.session.send_log_message(
                     level=_mcp_log_level(record),

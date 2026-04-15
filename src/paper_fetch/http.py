@@ -20,6 +20,8 @@ from typing import Any, Callable, Iterator, Mapping
 
 import urllib3
 
+from .logging_utils import emit_structured_log
+
 DEFAULT_TIMEOUT_SECONDS = 20
 DEFAULT_FULLTEXT_TIMEOUT_SECONDS = 90
 DEFAULT_CACHE_TTL_SECONDS = 30
@@ -281,46 +283,48 @@ class HttpTransport:
             and rate_limit_wait_seconds is not None
             and rate_limit_wait_seconds <= max_rate_limit_wait_seconds
         ):
-            logger.debug(
-                (
-                    "http_request_retry method=%s url=%s status=%s elapsed_ms=%s "
-                    "retry_after_seconds=%s attempt=%s reason=rate_limit"
-                ),
-                method.upper(),
-                redact_url_for_cache(error_url),
-                status_code,
-                round((time.monotonic() - request_started_at) * 1000, 3),
-                retry_after_seconds,
-                attempt,
+            emit_structured_log(
+                logger,
+                logging.DEBUG,
+                "http_request_retry",
+                method=method.upper(),
+                url=redact_url_for_cache(error_url),
+                status=status_code,
+                elapsed_ms=round((time.monotonic() - request_started_at) * 1000, 3),
+                retry_after_seconds=retry_after_seconds,
+                attempt=attempt,
+                reason="rate_limit",
             )
             attempts_remaining -= 1
             time.sleep(max(0.0, rate_limit_wait_seconds))
             return True, attempts_remaining, transient_attempts_remaining, transient_attempts_made
         if retry_on_transient and transient_attempts_remaining > 0 and is_transient_http_status(status_code):
-            logger.debug(
-                (
-                    "http_request_retry method=%s url=%s status=%s elapsed_ms=%s "
-                    "retry_after_seconds=%s attempt=%s reason=transient_http"
-                ),
-                method.upper(),
-                redact_url_for_cache(error_url),
-                status_code,
-                round((time.monotonic() - request_started_at) * 1000, 3),
-                retry_after_seconds,
-                attempt,
+            emit_structured_log(
+                logger,
+                logging.DEBUG,
+                "http_request_retry",
+                method=method.upper(),
+                url=redact_url_for_cache(error_url),
+                status=status_code,
+                elapsed_ms=round((time.monotonic() - request_started_at) * 1000, 3),
+                retry_after_seconds=retry_after_seconds,
+                attempt=attempt,
+                reason="transient_http",
             )
             transient_attempts_remaining -= 1
             time.sleep(transient_backoff_base_seconds * (2**transient_attempts_made))
             transient_attempts_made += 1
             return True, attempts_remaining, transient_attempts_remaining, transient_attempts_made
-        logger.debug(
-            "http_request_failure method=%s url=%s status=%s elapsed_ms=%s retry_after_seconds=%s attempt=%s",
-            method.upper(),
-            redact_url_for_cache(error_url),
-            status_code,
-            round((time.monotonic() - request_started_at) * 1000, 3),
-            retry_after_seconds,
-            attempt,
+        emit_structured_log(
+            logger,
+            logging.DEBUG,
+            "http_request_failure",
+            method=method.upper(),
+            url=redact_url_for_cache(error_url),
+            status=status_code,
+            elapsed_ms=round((time.monotonic() - request_started_at) * 1000, 3),
+            retry_after_seconds=retry_after_seconds,
+            attempt=attempt,
         )
         raise RequestFailure(
             status_code,
@@ -385,13 +389,15 @@ class HttpTransport:
                 attempt += 1
                 request_started_at = time.monotonic()
                 redacted_url = redact_url_for_cache(url)
-                logger.debug(
-                    "http_request_start method=%s url=%s status=%s elapsed_ms=%s attempt=%s",
-                    method.upper(),
-                    redacted_url,
-                    "attempt",
-                    0.0,
-                    attempt,
+                emit_structured_log(
+                    logger,
+                    logging.DEBUG,
+                    "http_request_start",
+                    method=method.upper(),
+                    url=redacted_url,
+                    status="attempt",
+                    elapsed_ms=0.0,
+                    attempt=attempt,
                 )
                 request = _PreparedRequest(method=method.upper(), full_url=url, headers=dict(request_headers))
                 response = None
@@ -438,13 +444,15 @@ class HttpTransport:
                         "body": payload,
                         "url": redact_url_for_cache(response_url),
                     }
-                    logger.debug(
-                        "http_request_success method=%s url=%s status=%s elapsed_ms=%s attempt=%s",
-                        method.upper(),
-                        response_payload["url"],
-                        response.status,
-                        round((time.monotonic() - request_started_at) * 1000, 3),
-                        attempt,
+                    emit_structured_log(
+                        logger,
+                        logging.DEBUG,
+                        "http_request_success",
+                        method=method.upper(),
+                        url=response_payload["url"],
+                        status=int(response.status),
+                        elapsed_ms=round((time.monotonic() - request_started_at) * 1000, 3),
+                        attempt=attempt,
                     )
                     self._store_cached_response(cache_key, response_payload)
                     return response_payload
@@ -486,27 +494,32 @@ class HttpTransport:
                         exc.close()
                 except (urllib3.exceptions.HTTPError, urllib.error.URLError) as exc:
                     if retry_on_transient and transient_attempts_remaining > 0 and is_timeout_network_error(exc):
-                        logger.debug(
-                            "http_request_retry method=%s url=%s status=%s elapsed_ms=%s retry_after_seconds=%s attempt=%s reason=pool_timeout",
-                            method.upper(),
-                            redacted_url,
-                            None,
-                            round((time.monotonic() - request_started_at) * 1000, 3),
-                            None,
-                            attempt,
+                        emit_structured_log(
+                            logger,
+                            logging.DEBUG,
+                            "http_request_retry",
+                            method=method.upper(),
+                            url=redacted_url,
+                            status=None,
+                            elapsed_ms=round((time.monotonic() - request_started_at) * 1000, 3),
+                            retry_after_seconds=None,
+                            attempt=attempt,
+                            reason="pool_timeout",
                         )
                         transient_attempts_remaining -= 1
                         time.sleep(transient_backoff_base_seconds * (2**transient_attempts_made))
                         transient_attempts_made += 1
                         continue
-                    logger.debug(
-                        "http_request_failure method=%s url=%s status=%s elapsed_ms=%s retry_after_seconds=%s attempt=%s",
-                        method.upper(),
-                        redacted_url,
-                        None,
-                        round((time.monotonic() - request_started_at) * 1000, 3),
-                        None,
-                        attempt,
+                    emit_structured_log(
+                        logger,
+                        logging.DEBUG,
+                        "http_request_failure",
+                        method=method.upper(),
+                        url=redacted_url,
+                        status=None,
+                        elapsed_ms=round((time.monotonic() - request_started_at) * 1000, 3),
+                        retry_after_seconds=None,
+                        attempt=attempt,
                     )
                     raise RequestFailure(
                         None,
@@ -515,27 +528,32 @@ class HttpTransport:
                     ) from exc
                 except (socket.timeout, TimeoutError) as exc:
                     if retry_on_transient and transient_attempts_remaining > 0:
-                        logger.debug(
-                            "http_request_retry method=%s url=%s status=%s elapsed_ms=%s retry_after_seconds=%s attempt=%s reason=timeout",
-                            method.upper(),
-                            redacted_url,
-                            None,
-                            round((time.monotonic() - request_started_at) * 1000, 3),
-                            None,
-                            attempt,
+                        emit_structured_log(
+                            logger,
+                            logging.DEBUG,
+                            "http_request_retry",
+                            method=method.upper(),
+                            url=redacted_url,
+                            status=None,
+                            elapsed_ms=round((time.monotonic() - request_started_at) * 1000, 3),
+                            retry_after_seconds=None,
+                            attempt=attempt,
+                            reason="timeout",
                         )
                         transient_attempts_remaining -= 1
                         time.sleep(transient_backoff_base_seconds * (2**transient_attempts_made))
                         transient_attempts_made += 1
                         continue
-                    logger.debug(
-                        "http_request_failure method=%s url=%s status=%s elapsed_ms=%s retry_after_seconds=%s attempt=%s",
-                        method.upper(),
-                        redacted_url,
-                        None,
-                        round((time.monotonic() - request_started_at) * 1000, 3),
-                        None,
-                        attempt,
+                    emit_structured_log(
+                        logger,
+                        logging.DEBUG,
+                        "http_request_failure",
+                        method=method.upper(),
+                        url=redacted_url,
+                        status=None,
+                        elapsed_ms=round((time.monotonic() - request_started_at) * 1000, 3),
+                        retry_after_seconds=None,
+                        attempt=attempt,
                     )
                     raise RequestFailure(
                         None,

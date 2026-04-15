@@ -78,6 +78,11 @@ cp .env.example ~/.config/paper-fetch/.env
 - `batch_resolve(queries, concurrency)`
 - `batch_check(queries, mode, concurrency)`
 
+另外，server 还会发布两个可选 MCP prompts：
+
+- `summarize_paper(query, focus="general")`
+- `verify_citation_list(citations, mode="metadata")`
+
 `fetch_paper` 的 MCP 默认值是：
 
 - `modes=["article", "markdown"]`
@@ -91,8 +96,10 @@ cp .env.example ~/.config/paper-fetch/.env
 补充说明：
 
 - `resolve_paper` 既支持原始 `query`，也支持 `title` + 可选 `authors` / `year` 的结构化输入
+- `summarize_paper()` 和 `verify_citation_list()` 是薄 prompt 模板，分别面向“单篇论文总结”和“citation list 批量甄别”这两类常见 host workflow
 - `has_fulltext()` 是廉价 probe：只看 resolution、Crossref/官方 metadata probe 与 landing-page HTML meta，不会走完整正文抓取瀑布
 - `has_fulltext()` 当前只主动产出 `state="likely_yes"` 或 `state="unknown"`；`confirmed_yes` / `no` 仍保留给后续迭代
+- `fetch_paper()` 顶层现在还会附带 `token_estimate_breakdown={abstract,body,refs}`；现有 `token_estimate` 仍保持兼容语义，只表示 `abstract + body`
 - `include_refs=null` 在 `max_tokens="full_text"` 下等价于 `all`
 - 显式 `prefer_cache=true` 时，`fetch_paper` 会先尝试命中本地 MCP cache 里的 envelope sidecar；命中才短路，未命中再照常上网
 - 显式传 `download_dir` 会覆盖 `PAPER_FETCH_DOWNLOAD_DIR` 和 XDG 默认目录，适合隔离多任务下载目录

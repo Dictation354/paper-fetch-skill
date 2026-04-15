@@ -24,7 +24,7 @@ SERVER_SCRIPT = textwrap.dedent(
     import logging
     from pathlib import Path
 
-    from paper_fetch.models import ArticleModel, Asset, FetchEnvelope, Metadata, Quality, Section
+    from paper_fetch.models import ArticleModel, Asset, FetchEnvelope, Metadata, Quality, Section, TokenEstimateBreakdown
     from paper_fetch.mcp.server import main
     from paper_fetch.resolve.query import ResolvedQuery
     from paper_fetch.service import HasFulltextProbeResult
@@ -56,7 +56,11 @@ SERVER_SCRIPT = textwrap.dedent(
             figure_path = asset_dir / "figure-1.png"
             figure_path.write_bytes(b"PNG")
 
-        logging.getLogger("paper_fetch.service").debug("fetch_stage query=%s step=%s", query, "fake")
+        logging.getLogger("paper_fetch.service").debug(
+            "fetch_stage message=legacy-fallback",
+            extra={"structured_data": {"event": "fetch_stage", "query": query, "step": "fake stage with spaces"}},
+        )
+        logging.getLogger("paper_fetch.http").debug("legacy_fetch_stage query=%s status=%s", query, "ok")
 
         article = ArticleModel(
             doi=query,
@@ -84,6 +88,7 @@ SERVER_SCRIPT = textwrap.dedent(
                 token_estimate=64,
                 warnings=[],
                 source_trail=["source:ok"],
+                token_estimate_breakdown=TokenEstimateBreakdown(abstract=16, body=48, refs=20),
             ),
         )
         requested_modes = set(modes or set())
@@ -94,6 +99,7 @@ SERVER_SCRIPT = textwrap.dedent(
             warnings=[],
             source_trail=["source:ok"],
             token_estimate=64,
+            token_estimate_breakdown=TokenEstimateBreakdown(abstract=16, body=48, refs=20),
             article=article if "article" in requested_modes else None,
             markdown="# Example Article\\n\\nExample body.\\n" if "markdown" in requested_modes else None,
             metadata=article.metadata if "metadata" in requested_modes else None,
@@ -161,6 +167,22 @@ class McpStdioIntegrationTests(unittest.IsolatedAsyncioTestCase):
                         )
                         self.assertTrue(all(tool.outputSchema is not None for tool in listed.tools))
 
+                        prompts = await session.list_prompts()
+                        self.assertEqual(
+                            sorted(prompt.name for prompt in prompts.prompts),
+                            ["summarize_paper", "verify_citation_list"],
+                        )
+                        summarize_prompt = await session.get_prompt(
+                            "summarize_paper",
+                            {"query": "10.1000/example", "focus": "methods"},
+                        )
+                        self.assertIn("token_estimate_breakdown", summarize_prompt.messages[0].content.text)
+                        verify_prompt = await session.get_prompt(
+                            "verify_citation_list",
+                            {"citations": "Citation A\\nCitation B", "mode": "metadata"},
+                        )
+                        self.assertIn("batch_check", verify_prompt.messages[0].content.text)
+
                         resolved = await session.call_tool("resolve_paper", {"query": "10.1000/example"})
                         self.assertFalse(resolved.isError)
                         self.assertEqual(resolved.structuredContent["doi"], "10.1000/example")
@@ -188,9 +210,28 @@ class McpStdioIntegrationTests(unittest.IsolatedAsyncioTestCase):
                         )
                         self.assertFalse(custom_fetch.isError)
                         self.assertEqual(custom_fetch.structuredContent["article"], None)
+                        self.assertEqual(
+                            custom_fetch.structuredContent["token_estimate_breakdown"],
+                            {"abstract": 16, "body": 48, "refs": 20},
+                        )
                         self.assertEqual([content.type for content in custom_fetch.content], ["text", "text", "image"])
                         self.assertEqual(progress_updates[-1], (4, 4, "fetch_paper complete"))
-                        self.assertTrue(any(isinstance(message, dict) and message.get("event") == "fetch_stage" for message in log_messages))
+                        self.assertTrue(
+                            any(
+                                isinstance(message, dict)
+                                and message.get("event") == "fetch_stage"
+                                and message.get("step") == "fake stage with spaces"
+                                for message in log_messages
+                            )
+                        )
+                        self.assertTrue(
+                            any(
+                                isinstance(message, dict)
+                                and message.get("event") == "legacy_fetch_stage"
+                                and message.get("query") == "10.1000/custom"
+                                for message in log_messages
+                            )
+                        )
                         custom_cached = await session.call_tool(
                             "get_cached",
                             {"doi": "10.1000/custom", "download_dir": str(isolated_dir)},
@@ -212,6 +253,7 @@ class McpStdioIntegrationTests(unittest.IsolatedAsyncioTestCase):
                         self.assertEqual(len(batch.structuredContent["results"]), 2)
                         self.assertEqual(batch.structuredContent["results"][0]["probe_state"], "likely_yes")
                         self.assertEqual(batch.structuredContent["results"][0]["source"], None)
+                        self.assertEqual(batch.structuredContent["results"][0]["token_estimate_breakdown"], None)
 
                         batch_resolved = await session.call_tool(
                             "batch_resolve",

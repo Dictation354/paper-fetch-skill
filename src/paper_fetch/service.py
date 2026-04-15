@@ -10,6 +10,7 @@ from typing import Any, Mapping, cast
 
 from .config import build_runtime_env, build_user_agent
 from .http import HttpTransport, RequestFailure
+from .logging_utils import emit_structured_log
 from .metadata_types import ProviderMetadata
 from .utils import (
     build_output_path,
@@ -641,13 +642,15 @@ def _try_official_provider(
 
     extend_unique(source_trail, [f"fulltext:{provider_name}_attempt"])
     attempt_started_at = time.monotonic()
-    logger.debug(
-        "official_provider_attempt provider=%s url=%s status=%s elapsed_ms=%s attempt=%s",
-        provider_name,
-        safe_text(metadata.get("landing_page_url")) or None,
-        "attempt",
-        0.0,
-        1,
+    emit_structured_log(
+        logger,
+        logging.DEBUG,
+        "official_provider_attempt",
+        provider=provider_name,
+        url=safe_text(metadata.get("landing_page_url")) or None,
+        status="attempt",
+        elapsed_ms=0.0,
+        attempt=1,
     )
     try:
         raw_payload = provider_client.fetch_raw_fulltext(doi, metadata)
@@ -690,46 +693,54 @@ def _try_official_provider(
         )
         extend_unique(source_trail, article.quality.source_trail)
         if article.quality.has_fulltext and article.sections:
-            logger.debug(
-                "official_provider_result provider=%s url=%s status=%s elapsed_ms=%s attempt=%s",
-                provider_name,
-                raw_payload.source_url,
-                "success",
-                round((time.monotonic() - attempt_started_at) * 1000, 3),
-                1,
+            emit_structured_log(
+                logger,
+                logging.DEBUG,
+                "official_provider_result",
+                provider=provider_name,
+                url=raw_payload.source_url,
+                status="success",
+                elapsed_ms=round((time.monotonic() - attempt_started_at) * 1000, 3),
+                attempt=1,
             )
             extend_unique(source_trail, [f"fulltext:{provider_name}_article_ok"])
             return finalize_article(article, warnings=warnings, source_trail=source_trail)
         if article.quality.has_fulltext and not article.sections:
-            logger.debug(
-                "official_provider_result provider=%s url=%s status=%s elapsed_ms=%s attempt=%s",
-                provider_name,
-                raw_payload.source_url,
-                "abstract_only",
-                round((time.monotonic() - attempt_started_at) * 1000, 3),
-                1,
+            emit_structured_log(
+                logger,
+                logging.DEBUG,
+                "official_provider_result",
+                provider=provider_name,
+                url=raw_payload.source_url,
+                status="abstract_only",
+                elapsed_ms=round((time.monotonic() - attempt_started_at) * 1000, 3),
+                attempt=1,
             )
             warnings.append("Official full text only contained abstract-level content; continuing to HTML fallback.")
             extend_unique(source_trail, [f"fulltext:{provider_name}_abstract_only"])
         else:
-            logger.debug(
-                "official_provider_result provider=%s url=%s status=%s elapsed_ms=%s attempt=%s",
-                provider_name,
-                raw_payload.source_url,
-                "not_usable",
-                round((time.monotonic() - attempt_started_at) * 1000, 3),
-                1,
+            emit_structured_log(
+                logger,
+                logging.DEBUG,
+                "official_provider_result",
+                provider=provider_name,
+                url=raw_payload.source_url,
+                status="not_usable",
+                elapsed_ms=round((time.monotonic() - attempt_started_at) * 1000, 3),
+                attempt=1,
             )
             extend_unique(source_trail, [f"fulltext:{provider_name}_not_usable"])
         extend_unique(warnings, article.quality.warnings)
     except ProviderFailure as exc:
-        logger.debug(
-            "official_provider_result provider=%s url=%s status=%s elapsed_ms=%s attempt=%s",
-            provider_name,
-            safe_text(metadata.get("landing_page_url")) or None,
-            exc.code,
-            round((time.monotonic() - attempt_started_at) * 1000, 3),
-            1,
+        emit_structured_log(
+            logger,
+            logging.DEBUG,
+            "official_provider_result",
+            provider=provider_name,
+            url=safe_text(metadata.get("landing_page_url")) or None,
+            status=exc.code,
+            elapsed_ms=round((time.monotonic() - attempt_started_at) * 1000, 3),
+            attempt=1,
         )
         warnings.append(exc.message)
         extend_unique(source_trail, [source_trail_for_failure("fulltext", provider_name, exc)])
@@ -760,13 +771,15 @@ def _try_html_fallback(
 
     extend_unique(source_trail, ["fallback:html_attempt"])
     attempt_started_at = time.monotonic()
-    logger.debug(
-        "html_fallback_attempt provider=%s url=%s status=%s elapsed_ms=%s attempt=%s",
-        "html_generic",
-        landing_url,
-        "attempt",
-        0.0,
-        1,
+    emit_structured_log(
+        logger,
+        logging.DEBUG,
+        "html_fallback_attempt",
+        provider="html_generic",
+        url=landing_url,
+        status="attempt",
+        elapsed_ms=0.0,
+        attempt=1,
     )
     try:
         article = html_client.fetch_article_model(
@@ -777,36 +790,42 @@ def _try_html_fallback(
             asset_profile=strategy.asset_profile,
         )
         if article.quality.has_fulltext:
-            logger.debug(
-                "html_fallback_result provider=%s url=%s status=%s elapsed_ms=%s attempt=%s",
-                "html_generic",
-                landing_url,
-                "success",
-                round((time.monotonic() - attempt_started_at) * 1000, 3),
-                1,
+            emit_structured_log(
+                logger,
+                logging.DEBUG,
+                "html_fallback_result",
+                provider="html_generic",
+                url=landing_url,
+                status="success",
+                elapsed_ms=round((time.monotonic() - attempt_started_at) * 1000, 3),
+                attempt=1,
             )
             extend_unique(source_trail, article.quality.source_trail)
             extend_unique(source_trail, ["fallback:html_ok"])
             return finalize_article(article, warnings=warnings, source_trail=source_trail)
-        logger.debug(
-            "html_fallback_result provider=%s url=%s status=%s elapsed_ms=%s attempt=%s",
-            "html_generic",
-            landing_url,
-            "not_usable",
-            round((time.monotonic() - attempt_started_at) * 1000, 3),
-            1,
+        emit_structured_log(
+            logger,
+            logging.DEBUG,
+            "html_fallback_result",
+            provider="html_generic",
+            url=landing_url,
+            status="not_usable",
+            elapsed_ms=round((time.monotonic() - attempt_started_at) * 1000, 3),
+            attempt=1,
         )
         extend_unique(warnings, article.quality.warnings)
         extend_unique(source_trail, article.quality.source_trail)
         extend_unique(source_trail, ["fallback:html_not_usable"])
     except ProviderFailure as exc:
-        logger.debug(
-            "html_fallback_result provider=%s url=%s status=%s elapsed_ms=%s attempt=%s",
-            "html_generic",
-            landing_url,
-            exc.code,
-            round((time.monotonic() - attempt_started_at) * 1000, 3),
-            1,
+        emit_structured_log(
+            logger,
+            logging.DEBUG,
+            "html_fallback_result",
+            provider="html_generic",
+            url=landing_url,
+            status=exc.code,
+            elapsed_ms=round((time.monotonic() - attempt_started_at) * 1000, 3),
+            attempt=1,
         )
         warnings.append(exc.message)
         extend_unique(source_trail, ["fallback:html_fail"])
@@ -929,6 +948,7 @@ def build_fetch_envelope(
         warnings=list(article.quality.warnings),
         source_trail=list(article.quality.source_trail),
         token_estimate=article.quality.token_estimate,
+        token_estimate_breakdown=article.quality.token_estimate_breakdown,
         article=article if "article" in modes else None,
         markdown=markdown,
         metadata=metadata,

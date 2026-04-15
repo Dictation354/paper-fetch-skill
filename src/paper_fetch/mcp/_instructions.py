@@ -74,6 +74,8 @@ def server_instructions() -> str:
         "Use resolve_paper when the query may be ambiguous; it accepts either a raw query or "
         "structured title/authors/year fields. Use fetch_paper when you need "
         "structured article metadata, AI-friendly markdown, or both. "
+        "The server also publishes `summarize_paper` and `verify_citation_list` prompt templates "
+        "for cache-first single-paper summaries and bibliography triage workflows. "
         "All MCP tools now publish JSON output schemas for clients that support tool-result "
         "validation and autocomplete. "
         "Defaults: modes=['article','markdown'], strategy.asset_profile='none', "
@@ -93,7 +95,8 @@ def server_instructions() -> str:
 def fetch_tool_description() -> str:
     return (
         "Fetch AI-friendly paper content. Returns a fixed FetchEnvelope-style object with "
-        "top-level provenance and optional article/markdown/metadata payloads. "
+        "top-level provenance, `token_estimate_breakdown={abstract,body,refs}`, and optional "
+        "article/markdown/metadata payloads. "
         "The MCP tool also publishes an output schema for clients that support structured "
         "result validation. "
         "Defaults: modes=['article','markdown'], strategy.asset_profile='none', "

@@ -10,6 +10,8 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 - Added JSON output schemas for all 7 public MCP tools so schema-aware clients can validate tool results and surface stronger autocomplete.
 - Added `fetch_paper(..., prefer_cache=true)` cache-first short-circuiting backed by an MCP-local cached FetchEnvelope sidecar.
 - Added `missing_env=[...]` on MCP error payloads when missing credentials or required environment variables can be identified.
+- Added two MCP prompt templates, `summarize_paper(query, focus)` and `verify_citation_list(citations, mode)`, for cache-first paper summaries and batch-first citation-list triage.
+- Added `token_estimate_breakdown={abstract,body,refs}` to `fetch_paper` results, `article.quality`, and `batch_check(mode="article")` item payloads.
 
 ### Changed
 
@@ -19,6 +21,8 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 - Changed long-running MCP `fetch_paper` and `batch_*` tool calls to observe cancellation cooperatively so cancelled requests stop issuing follow-up network work.
 - Changed MCP cache resources so explicit non-default `download_dir` values also register scoped cache-index and cached-entry resources for the current server session.
 - Changed MCP `fetch_paper.strategy` to accept optional `inline_image_budget` controls for inline `ImageContent` limits without changing service-layer fetch behavior or cache eligibility.
+- Changed `token_estimate` semantics to remain backward compatible as `abstract + body`, while the new `refs` budget now lives only in `token_estimate_breakdown`.
+- Changed MCP cached FetchEnvelope sidecar loading to backfill missing token-breakdown fields when reading older cache entries that predate the new contract.
 
 ### Docs
 
@@ -28,6 +32,7 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 - Updated the MCP-facing docs and skill notes to describe cooperative cancellation for `fetch_paper` and `batch_*`.
 - Updated README, deployment docs, and MCP instruction text to document scoped cache resources for explicit isolated download directories.
 - Updated README, deployment docs, skill notes, and MCP instruction text to document `strategy.inline_image_budget` and its default `3 / 2 MiB / 8 MiB` inline-image caps.
+- Updated README, deployment docs, and the bundled skill guide to document the two published MCP prompts and the new `token_estimate_breakdown` budgeting hint.
 
 ## 2026-04-14
 

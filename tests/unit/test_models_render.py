@@ -3,7 +3,20 @@ from __future__ import annotations
 import unittest
 
 from paper_fetch import service as paper_fetch
-from paper_fetch.models import Asset, ArticleModel, Metadata, Quality, Reference, RenderOptions, Section, article_from_markdown
+from paper_fetch.models import (
+    Asset,
+    ArticleModel,
+    Metadata,
+    Quality,
+    Reference,
+    RenderOptions,
+    Section,
+    TokenEstimateBreakdown,
+    article_from_markdown,
+    article_from_structure,
+    estimate_tokens,
+    metadata_only_article,
+)
 
 from ._paper_fetch_support import sample_article
 
@@ -32,7 +45,12 @@ class ModelsRenderTests(unittest.TestCase):
             sections=[Section(heading="Introduction", level=2, kind="body", text="Intro " * 200)],
             references=[],
             assets=[],
-            quality=Quality(has_fulltext=True, token_estimate=200, warnings=["Existing warning"]),
+            quality=Quality(
+                has_fulltext=True,
+                token_estimate=200,
+                warnings=["Existing warning"],
+                token_estimate_breakdown=TokenEstimateBreakdown(body=200),
+            ),
         )
 
         markdown = article.to_ai_markdown(max_tokens=60)
@@ -186,3 +204,56 @@ class ModelsRenderTests(unittest.TestCase):
         self.assertIsNone(article.assets[0].caption)
         self.assertIsNone(article.assets[0].path)
         self.assertIsNone(article.assets[0].url)
+
+    def test_metadata_only_article_populates_token_breakdown(self) -> None:
+        article = metadata_only_article(
+            source="crossref_meta",
+            metadata={
+                "title": "Metadata Only",
+                "abstract": "Abstract summary text.",
+                "references": ["Reference 1", "Reference 2"],
+            },
+            doi="10.1000/meta",
+        )
+
+        self.assertEqual(article.quality.token_estimate_breakdown.abstract, estimate_tokens("Abstract summary text."))
+        self.assertEqual(article.quality.token_estimate_breakdown.body, 0)
+        self.assertEqual(article.quality.token_estimate_breakdown.refs, estimate_tokens("Reference 1\nReference 2"))
+        self.assertEqual(article.quality.token_estimate, estimate_tokens("Abstract summary text."))
+
+    def test_article_from_structure_populates_token_breakdown(self) -> None:
+        article = article_from_structure(
+            source="elsevier_xml",
+            metadata={"title": "Structured", "abstract": "Abstract words here.", "references": ["Reference 1"]},
+            doi="10.1000/structured",
+            abstract_lines=[],
+            body_lines=["## Results", "", "Result text lives here."],
+            figure_entries=[],
+            table_entries=[],
+            supplement_entries=[],
+            conversion_notes=[],
+        )
+
+        self.assertEqual(article.quality.token_estimate_breakdown.abstract, estimate_tokens("Abstract words here."))
+        self.assertEqual(article.quality.token_estimate_breakdown.body, estimate_tokens("Result text lives here."))
+        self.assertEqual(article.quality.token_estimate_breakdown.refs, estimate_tokens("Reference 1"))
+        self.assertEqual(
+            article.quality.token_estimate,
+            estimate_tokens("Abstract words here.") + estimate_tokens("Result text lives here."),
+        )
+
+    def test_article_from_markdown_populates_token_breakdown(self) -> None:
+        article = article_from_markdown(
+            source="html_generic",
+            metadata={"title": "Markdown Article", "references": ["Reference 1", "Reference 2"]},
+            doi="10.1000/markdown",
+            markdown_text="# Markdown Article\n\n## Abstract\n\nShort abstract.\n\n## Results\n\nBody text lives here.",
+        )
+
+        self.assertEqual(article.quality.token_estimate_breakdown.abstract, estimate_tokens("Short abstract."))
+        self.assertEqual(article.quality.token_estimate_breakdown.body, estimate_tokens("Body text lives here."))
+        self.assertEqual(article.quality.token_estimate_breakdown.refs, estimate_tokens("Reference 1\nReference 2"))
+        self.assertEqual(
+            article.quality.token_estimate,
+            estimate_tokens("Short abstract.") + estimate_tokens("Body text lives here."),
+        )

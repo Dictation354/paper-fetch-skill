@@ -3,6 +3,7 @@ from __future__ import annotations
 import concurrent.futures
 import gzip
 import io
+import logging
 import socket
 import threading
 import unittest
@@ -67,6 +68,15 @@ def build_http_error(url: str, *, status: int, headers: dict[str, str] | None = 
 
 def lower_header_map(headers: dict[str, str]) -> dict[str, str]:
     return {key.lower(): value for key, value in headers.items()}
+
+
+class RecordCaptureHandler(logging.Handler):
+    def __init__(self) -> None:
+        super().__init__(level=logging.DEBUG)
+        self.records: list[logging.LogRecord] = []
+
+    def emit(self, record: logging.LogRecord) -> None:
+        self.records.append(record)
 
 
 class HttpTransportCacheTests(unittest.TestCase):
@@ -181,20 +191,57 @@ class HttpTransportCacheTests(unittest.TestCase):
 
     def test_http_transport_emits_debug_logs_with_url_status_and_elapsed_time(self) -> None:
         transport = http_module.HttpTransport(cache_ttl=0, cache_capacity=0)
+        http_logger = logging.getLogger("paper_fetch.http")
+        original_level = http_logger.level
+        handler = RecordCaptureHandler()
+        http_logger.addHandler(handler)
+        http_logger.setLevel(logging.DEBUG)
 
         def fake_urlopen(request, timeout=20):
             return FakeHTTPResponse(b"ok", request.full_url)
 
-        with (
-            mock.patch.object(transport, "_perform_request", side_effect=fake_urlopen),
-            self.assertLogs("paper_fetch.http", level="DEBUG") as captured_logs,
-        ):
-            transport.request("GET", "https://example.test/article", headers={"Accept": "text/plain"})
+        try:
+            with mock.patch.object(transport, "_perform_request", side_effect=fake_urlopen):
+                transport.request("GET", "https://example.test/article", headers={"Accept": "text/plain"})
+        finally:
+            http_logger.removeHandler(handler)
+            http_logger.setLevel(original_level)
 
-        rendered_logs = "\n".join(captured_logs.output)
+        rendered_logs = "\n".join(record.getMessage() for record in handler.records)
         self.assertIn("url=https://example.test/article", rendered_logs)
         self.assertIn("status=200", rendered_logs)
         self.assertIn("elapsed_ms=", rendered_logs)
+        payloads = [
+            record.structured_data
+            for record in handler.records
+            if isinstance(getattr(record, "structured_data", None), dict)
+        ]
+        self.assertIn(
+            {
+                "event": "http_request_start",
+                "method": "GET",
+                "url": "https://example.test/article",
+                "status": "attempt",
+                "elapsed_ms": 0.0,
+                "attempt": 1,
+            },
+            payloads,
+        )
+        self.assertIn(
+            {
+                "event": "http_request_success",
+                "method": "GET",
+                "url": "https://example.test/article",
+                "status": 200,
+                "attempt": 1,
+                "elapsed_ms": next(
+                    payload["elapsed_ms"]
+                    for payload in payloads
+                    if payload.get("event") == "http_request_success"
+                ),
+            },
+            payloads,
+        )
 
     def test_explicit_accept_encoding_is_respected(self) -> None:
         transport = http_module.HttpTransport(cache_ttl=0, cache_capacity=0)

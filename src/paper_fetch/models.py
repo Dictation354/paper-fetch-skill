@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import math
 import re
+from collections.abc import Sequence
 from dataclasses import asdict, dataclass, field
 from typing import Any, Literal, Mapping
 
@@ -33,6 +34,8 @@ SECTION_PRIORITY = {
     "conclusions": 5,
     "references": 6,
 }
+
+
 def normalize_markdown_text(value: str | None) -> str:
     text = (value or "").replace("\r\n", "\n").replace("\r", "\n").replace("\xa0", " ")
     normalized_lines: list[str] = []
@@ -202,11 +205,51 @@ class Asset:
 
 
 @dataclass
+class TokenEstimateBreakdown:
+    abstract: int = 0
+    body: int = 0
+    refs: int = 0
+
+
+def coerce_token_estimate_breakdown(
+    value: TokenEstimateBreakdown | Mapping[str, Any] | None,
+) -> TokenEstimateBreakdown:
+    if isinstance(value, TokenEstimateBreakdown):
+        return value
+    if isinstance(value, Mapping):
+        return TokenEstimateBreakdown(
+            abstract=int(value.get("abstract") or 0),
+            body=int(value.get("body") or 0),
+            refs=int(value.get("refs") or 0),
+        )
+    return TokenEstimateBreakdown()
+
+
+def build_token_estimate_breakdown(
+    *,
+    abstract_text: str | None,
+    sections: Sequence["Section"],
+    references: Sequence["Reference"],
+) -> TokenEstimateBreakdown:
+    abstract = estimate_tokens(abstract_text or "")
+    body = estimate_tokens(
+        "\n\n".join(
+            normalize_text(section.text)
+            for section in sections
+            if section.kind not in {"abstract", "references"} and normalize_text(section.text)
+        )
+    )
+    refs = estimate_tokens("\n".join(normalize_text(reference.raw) for reference in references if normalize_text(reference.raw)))
+    return TokenEstimateBreakdown(abstract=abstract, body=body, refs=refs)
+
+
+@dataclass
 class Quality:
     has_fulltext: bool
     token_estimate: int
     warnings: list[str] = field(default_factory=list)
     source_trail: list[str] = field(default_factory=list)
+    token_estimate_breakdown: TokenEstimateBreakdown = field(default_factory=TokenEstimateBreakdown)
 
 
 @dataclass(frozen=True)
@@ -265,6 +308,7 @@ class FetchEnvelope:
     warnings: list[str] = field(default_factory=list)
     source_trail: list[str] = field(default_factory=list)
     token_estimate: int = 0
+    token_estimate_breakdown: TokenEstimateBreakdown = field(default_factory=TokenEstimateBreakdown)
     article: "ArticleModel | None" = None
     markdown: str | None = None
     metadata: Metadata | None = None
@@ -830,26 +874,26 @@ def metadata_only_article(
     source_trail: list[str] | None = None,
 ) -> ArticleModel:
     article_metadata = build_metadata(metadata)
-    token_estimate = estimate_tokens(
-        "\n".join(
-            [
-                article_metadata.title or "",
-                article_metadata.abstract or "",
-            ]
-        )
+    references = build_references(metadata.get("references"))
+    token_estimate_breakdown = build_token_estimate_breakdown(
+        abstract_text=article_metadata.abstract,
+        sections=[],
+        references=references,
     )
+    token_estimate = token_estimate_breakdown.abstract + token_estimate_breakdown.body
     return ArticleModel(
         doi=doi or safe_text(metadata.get("doi")) or None,
         source=source,
         metadata=article_metadata,
         sections=[],
-        references=build_references(metadata.get("references")),
+        references=references,
         assets=[],
         quality=Quality(
             has_fulltext=False,
             token_estimate=token_estimate,
             warnings=list(warnings or []),
             source_trail=list(source_trail or []),
+            token_estimate_breakdown=token_estimate_breakdown,
         ),
     )
 
@@ -946,20 +990,27 @@ def article_from_structure(
 
     fulltext_chunks = [article_metadata.abstract or ""]
     fulltext_chunks.extend(section.text for section in sections)
-    token_estimate = estimate_tokens("\n\n".join(fulltext_chunks))
+    normalized_references = list(references or build_references(metadata.get("references")))
+    token_estimate_breakdown = build_token_estimate_breakdown(
+        abstract_text=article_metadata.abstract,
+        sections=sections,
+        references=normalized_references,
+    )
+    token_estimate = token_estimate_breakdown.abstract + token_estimate_breakdown.body
 
     return ArticleModel(
         doi=doi or safe_text(metadata.get("doi")) or None,
         source=source,
         metadata=article_metadata,
         sections=sections,
-        references=list(references or build_references(metadata.get("references"))),
+        references=normalized_references,
         assets=assets,
         quality=Quality(
             has_fulltext=bool(sections or article_metadata.abstract),
             token_estimate=token_estimate,
             warnings=list(warnings or []),
             source_trail=list(source_trail or []),
+            token_estimate_breakdown=token_estimate_breakdown,
         ),
     )
 
@@ -994,20 +1045,25 @@ def article_from_markdown(
         )
         for item in (assets or [])
     ]
-    token_estimate = estimate_tokens(
-        "\n\n".join([article_metadata.abstract or ""] + [section.text for section in sections])
+    references = build_references(metadata.get("references"))
+    token_estimate_breakdown = build_token_estimate_breakdown(
+        abstract_text=article_metadata.abstract,
+        sections=sections,
+        references=references,
     )
+    token_estimate = token_estimate_breakdown.abstract + token_estimate_breakdown.body
     return ArticleModel(
         doi=doi or safe_text(metadata.get("doi")) or None,
         source=source,
         metadata=article_metadata,
         sections=sections,
-        references=build_references(metadata.get("references")),
+        references=references,
         assets=normalized_assets,
         quality=Quality(
             has_fulltext=bool(sections or article_metadata.abstract),
             token_estimate=token_estimate,
             warnings=list(warnings or []),
             source_trail=list(source_trail or []),
+            token_estimate_breakdown=token_estimate_breakdown,
         ),
     )

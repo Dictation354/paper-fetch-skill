@@ -136,6 +136,39 @@ class ResolveQueryTests(unittest.TestCase):
         self.assertIn("User-Agent", transport.calls[0]["headers"])
         self.assertTrue(transport.calls[0]["retry_on_transient"])
 
+    def test_url_query_follows_relative_redirect_and_absolutizes_landing_url(self) -> None:
+        transport = RecordingTransport(
+            {
+                ("GET", "https://nature.com/articles/sj.bdj.2017.900"): {
+                    "status_code": 303,
+                    "headers": {"location": "https://www.nature.com/articles/sj.bdj.2017.900"},
+                    "body": b"",
+                    "url": "https://nature.com/articles/sj.bdj.2017.900",
+                },
+                ("GET", "https://www.nature.com/articles/sj.bdj.2017.900"): {
+                    "status_code": 200,
+                    "headers": {"content-type": "text/html"},
+                    "body": (
+                        b"<html><head>"
+                        b"<title>Nature Example</title>"
+                        b'<meta name="citation_doi" content="10.1038/sj.bdj.2017.900" />'
+                        b'<meta name="citation_title" content="Nature Example" />'
+                        b'<meta name="citation_public_url" content="/articles/sj.bdj.2017.900" />'
+                        b"</head><body>Example</body></html>"
+                    ),
+                    "url": "https://www.nature.com/articles/sj.bdj.2017.900",
+                },
+            }
+        )
+
+        result = resolve_query.resolve_query("https://nature.com/articles/sj.bdj.2017.900", transport=transport, env={})
+
+        self.assertEqual(result.query_kind, "url")
+        self.assertEqual(result.doi, "10.1038/sj.bdj.2017.900")
+        self.assertEqual(result.landing_url, "https://www.nature.com/articles/sj.bdj.2017.900")
+        self.assertEqual(result.provider_hint, "springer")
+        self.assertEqual(len(transport.calls), 2)
+
     def test_title_query_selects_unique_crossref_match(self) -> None:
         transport = RecordingTransport(
             {
