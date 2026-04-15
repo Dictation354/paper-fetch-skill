@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Annotated
 
 from mcp.server.fastmcp import Context, FastMCP
 from mcp.server.fastmcp.resources import FileResource, FunctionResource
@@ -18,12 +19,22 @@ from .cache_index import (
     is_text_mime_type,
     list_cache_entries,
 )
+from .output_schemas import (
+    BatchCheckOutput,
+    BatchResolveOutput,
+    FetchPaperOutput,
+    GetCachedOutput,
+    HasFulltextOutput,
+    ListCachedOutput,
+    ResolvePaperOutput,
+)
 from .schemas import FetchStrategyInput
 from .tools import (
     batch_check_tool_async,
     batch_resolve_tool_async,
     cached_entry_payload,
     fetch_paper_tool_async,
+    has_fulltext_tool,
     get_cached_tool,
     list_cached_payload,
     list_cached_tool,
@@ -105,14 +116,14 @@ def build_server() -> FastMCP:
     @server.tool(
         name="resolve_paper",
         description="Resolve a DOI, URL, or title query into a normalized paper candidate.",
-        structured_output=False,
+        structured_output=True,
     )
     def resolve_paper(
         query: str | None = None,
         title: str | None = None,
         authors: list[str] | str | None = None,
         year: int | None = None,
-    ) -> CallToolResult:
+    ) -> Annotated[CallToolResult, ResolvePaperOutput]:
         return resolve_paper_tool(
             query=query,
             title=title,
@@ -121,9 +132,17 @@ def build_server() -> FastMCP:
         )
 
     @server.tool(
+        name="has_fulltext",
+        description="Probe whether a paper likely has accessible full text using cheap metadata and landing-page signals.",
+        structured_output=True,
+    )
+    def has_fulltext(query: str) -> Annotated[CallToolResult, HasFulltextOutput]:
+        return has_fulltext_tool(query=query)
+
+    @server.tool(
         name="fetch_paper",
         description=fetch_tool_description(),
-        structured_output=False,
+        structured_output=True,
     )
     async def fetch_paper(
         query: str,
@@ -131,9 +150,10 @@ def build_server() -> FastMCP:
         strategy: FetchStrategyInput | None = None,
         include_refs: str | None = None,
         max_tokens: int | str = "full_text",
+        prefer_cache: bool = False,
         download_dir: str | None = None,
         ctx: Context | None = None,
-    ) -> CallToolResult:
+    ) -> Annotated[CallToolResult, FetchPaperOutput]:
         parsed_download_dir = _parse_download_dir(download_dir)
         tool_kwargs: dict[str, object] = {}
         if parsed_download_dir is not None:
@@ -144,6 +164,7 @@ def build_server() -> FastMCP:
             strategy=strategy,
             include_refs=include_refs,
             max_tokens=max_tokens,
+            prefer_cache=prefer_cache,
             ctx=ctx,
             **tool_kwargs,
         )
@@ -154,9 +175,9 @@ def build_server() -> FastMCP:
     @server.tool(
         name="list_cached",
         description="List cached downloads known to the MCP cache index without touching the network.",
-        structured_output=False,
+        structured_output=True,
     )
-    def list_cached(download_dir: str | None = None) -> CallToolResult:
+    def list_cached(download_dir: str | None = None) -> Annotated[CallToolResult, ListCachedOutput]:
         parsed_download_dir = _parse_download_dir(download_dir)
         tool_kwargs: dict[str, object] = {}
         if parsed_download_dir is not None:
@@ -169,9 +190,9 @@ def build_server() -> FastMCP:
     @server.tool(
         name="get_cached",
         description="Look up cached downloads for a DOI in the cache index and return preferred local files.",
-        structured_output=False,
+        structured_output=True,
     )
-    def get_cached(doi: str, download_dir: str | None = None) -> CallToolResult:
+    def get_cached(doi: str, download_dir: str | None = None) -> Annotated[CallToolResult, GetCachedOutput]:
         parsed_download_dir = _parse_download_dir(download_dir)
         tool_kwargs: dict[str, object] = {}
         if parsed_download_dir is not None:
@@ -183,22 +204,31 @@ def build_server() -> FastMCP:
 
     @server.tool(
         name="batch_resolve",
-        description="Resolve multiple DOI, URL, or title queries serially with shared transport reuse.",
-        structured_output=False,
+        description="Resolve multiple DOI, URL, or title queries with shared transport reuse and optional cross-host concurrency.",
+        structured_output=True,
     )
-    async def batch_resolve(queries: list[str], ctx: Context | None = None) -> CallToolResult:
-        return await batch_resolve_tool_async(queries=queries, ctx=ctx)
+    async def batch_resolve(
+        queries: list[str],
+        concurrency: int = 1,
+        ctx: Context | None = None,
+    ) -> Annotated[CallToolResult, BatchResolveOutput]:
+        return await batch_resolve_tool_async(queries=queries, concurrency=concurrency, ctx=ctx)
 
     @server.tool(
         name="batch_check",
         description=(
-            "Check multiple papers serially without returning full bodies. "
+            "Check multiple papers without returning full bodies, with optional cross-host concurrency. "
             "Success items keep only lightweight provenance fields."
         ),
-        structured_output=False,
+        structured_output=True,
     )
-    async def batch_check(queries: list[str], mode: str = "metadata", ctx: Context | None = None) -> CallToolResult:
-        return await batch_check_tool_async(queries=queries, mode=mode, ctx=ctx)
+    async def batch_check(
+        queries: list[str],
+        mode: str = "metadata",
+        concurrency: int = 1,
+        ctx: Context | None = None,
+    ) -> Annotated[CallToolResult, BatchCheckOutput]:
+        return await batch_check_tool_async(queries=queries, mode=mode, concurrency=concurrency, ctx=ctx)
 
     return server
 

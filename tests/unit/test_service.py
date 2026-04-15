@@ -24,6 +24,187 @@ from ._paper_fetch_support import (
 
 
 class ServiceTests(unittest.TestCase):
+    def test_probe_has_fulltext_uses_crossref_license_signal(self) -> None:
+        resolved = paper_fetch.ResolvedQuery(
+            query="10.1000/license",
+            query_kind="doi",
+            doi="10.1000/license",
+            confidence=1.0,
+        )
+        original_resolve = paper_fetch.resolve_paper
+        try:
+            paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
+            result = paper_fetch.probe_has_fulltext(
+                "10.1000/license",
+                clients={
+                    "crossref": StubProvider(
+                        metadata={
+                            "provider": "crossref",
+                            "doi": "10.1000/license",
+                            "title": "Licensed Article",
+                            "license_urls": ["https://license.example/test"],
+                            "fulltext_links": [],
+                            "references": [],
+                        }
+                    )
+                },
+            )
+        finally:
+            paper_fetch.resolve_paper = original_resolve
+
+        self.assertEqual(result.state, "likely_yes")
+        self.assertEqual(result.doi, "10.1000/license")
+        self.assertEqual(result.title, "Licensed Article")
+        self.assertEqual(result.evidence, ["crossref_license"])
+        self.assertEqual(result.warnings, [])
+
+    def test_probe_has_fulltext_uses_crossref_fulltext_link_signal(self) -> None:
+        resolved = paper_fetch.ResolvedQuery(
+            query="10.1000/fulltext",
+            query_kind="doi",
+            doi="10.1000/fulltext",
+            confidence=1.0,
+        )
+        original_resolve = paper_fetch.resolve_paper
+        try:
+            paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
+            result = paper_fetch.probe_has_fulltext(
+                "10.1000/fulltext",
+                clients={
+                    "crossref": StubProvider(
+                        metadata={
+                            "provider": "crossref",
+                            "doi": "10.1000/fulltext",
+                            "title": "Linked Article",
+                            "license_urls": [],
+                            "fulltext_links": [{"url": "https://fulltext.example/test.pdf"}],
+                            "references": [],
+                        }
+                    )
+                },
+            )
+        finally:
+            paper_fetch.resolve_paper = original_resolve
+
+        self.assertEqual(result.state, "likely_yes")
+        self.assertEqual(result.evidence, ["crossref_fulltext_link"])
+
+    def test_probe_has_fulltext_uses_provider_metadata_probe_signal(self) -> None:
+        resolved = paper_fetch.ResolvedQuery(
+            query="10.1016/test",
+            query_kind="doi",
+            doi="10.1016/test",
+            confidence=1.0,
+        )
+        original_resolve = paper_fetch.resolve_paper
+        try:
+            paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
+            result = paper_fetch.probe_has_fulltext(
+                "10.1016/test",
+                clients={
+                    "crossref": StubProvider(
+                        metadata={
+                            "provider": "crossref",
+                            "doi": "10.1016/test",
+                            "title": "Crossref Article",
+                            "publisher": "Elsevier BV",
+                            "landing_page_url": "https://example.test/article",
+                            "license_urls": [],
+                            "fulltext_links": [],
+                            "references": [],
+                        }
+                    ),
+                    "elsevier": StubProvider(
+                        metadata={
+                            "provider": "elsevier",
+                            "doi": "10.1016/test",
+                            "title": "Official Elsevier Article",
+                            "landing_page_url": "https://example.test/article",
+                            "fulltext_links": [],
+                            "references": [],
+                        }
+                    ),
+                },
+            )
+        finally:
+            paper_fetch.resolve_paper = original_resolve
+
+        self.assertEqual(result.state, "likely_yes")
+        self.assertEqual(result.title, "Official Elsevier Article")
+        self.assertEqual(result.evidence, ["provider_probe:elsevier"])
+
+    def test_probe_has_fulltext_uses_landing_page_citation_pdf_url_signal(self) -> None:
+        resolved = paper_fetch.ResolvedQuery(
+            query="https://example.test/article",
+            query_kind="url",
+            doi=None,
+            landing_url="https://example.test/article",
+            confidence=1.0,
+        )
+        original_resolve = paper_fetch.resolve_paper
+        try:
+            paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
+            result = paper_fetch.probe_has_fulltext(
+                "https://example.test/article",
+                transport=FixtureHtmlTransport(
+                    {
+                        "https://example.test/article": {
+                            "body": (
+                                b"<html><head>"
+                                b"<meta name='citation_title' content='Landing Page Article' />"
+                                b"<meta name='citation_pdf_url' content='https://example.test/article.pdf' />"
+                                b"</head><body></body></html>"
+                            )
+                        }
+                    }
+                ),
+                clients={},
+                env={"PAPER_FETCH_SKILL_USER_AGENT": "unit-test"},
+            )
+        finally:
+            paper_fetch.resolve_paper = original_resolve
+
+        self.assertEqual(result.state, "likely_yes")
+        self.assertEqual(result.title, "Landing Page Article")
+        self.assertEqual(result.evidence, ["landing_page_citation_pdf_url"])
+
+    def test_probe_has_fulltext_reports_unknown_with_warning_for_not_configured(self) -> None:
+        resolved = paper_fetch.ResolvedQuery(
+            query="10.1007/test",
+            query_kind="doi",
+            doi="10.1007/test",
+            confidence=1.0,
+        )
+        original_resolve = paper_fetch.resolve_paper
+        try:
+            paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
+            result = paper_fetch.probe_has_fulltext(
+                "10.1007/test",
+                clients={
+                    "crossref": StubProvider(
+                        metadata={
+                            "provider": "crossref",
+                            "doi": "10.1007/test",
+                            "title": "Crossref Article",
+                            "publisher": "Springer Science and Business Media LLC",
+                            "landing_page_url": "https://example.test/article",
+                            "license_urls": [],
+                            "fulltext_links": [],
+                            "references": [],
+                        }
+                    ),
+                    "springer": StubProvider(
+                        metadata=paper_fetch.ProviderFailure("not_configured", "SPRINGER_META_API_KEY is not configured.")
+                    ),
+                },
+            )
+        finally:
+            paper_fetch.resolve_paper = original_resolve
+
+        self.assertEqual(result.state, "unknown")
+        self.assertEqual(result.evidence, [])
+        self.assertTrue(any("SPRINGER_META_API_KEY is not configured" in warning for warning in result.warnings))
+
     def test_fetch_paper_model_prefers_raw_xml_pipeline(self) -> None:
         resolved = paper_fetch.ResolvedQuery(
             query="10.1016/test",

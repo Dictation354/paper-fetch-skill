@@ -4,23 +4,26 @@ from __future__ import annotations
 
 import asyncio
 import base64
+from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
 import json
 import logging
 import mimetypes
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+import threading
+from typing import Any, Callable, Mapping, Sequence
 
 from mcp.server.fastmcp import Context
 from mcp.types import CallToolResult, ImageContent, TextContent
 from pydantic import ValidationError
 
 from ..config import build_runtime_env, resolve_mcp_download_dir
-from ..http import HttpTransport
-from ..models import ArticleModel, Asset, FetchEnvelope
+from ..http import HttpTransport, RequestCancelledError
+from ..models import ArticleModel, Asset, FetchEnvelope, Metadata, Quality, Reference, Section
 from ..providers.base import ProviderFailure
 from ..service import PaperFetchFailure, fetch_paper as service_fetch_paper
+from ..service import probe_has_fulltext as service_probe_has_fulltext
 from ..service import resolve_paper as service_resolve_paper
-from ..utils import extend_unique, normalize_text
+from ..utils import extend_unique, normalize_text, sanitize_filename
 from .cache_index import (
     find_cached_entry,
     list_cache_entries,
@@ -32,6 +35,7 @@ from .schemas import (
     BatchResolveRequest,
     FetchPaperRequest,
     FetchStrategyInput,
+    HasFulltextRequest,
     ResolvePaperRequest,
 )
 
@@ -43,6 +47,7 @@ _BATCH_CHECK_MODES = {
 _INLINE_IMAGE_MAX_COUNT = 3
 _INLINE_IMAGE_MAX_BYTES = 2 * 1024 * 1024
 _INLINE_IMAGE_MAX_TOTAL_BYTES = 8 * 1024 * 1024
+_FETCH_ENVELOPE_CACHE_VERSION = 1
 _FETCH_PROGRESS_TOTAL = 4
 _FETCH_LOGGER_NAMES = ("paper_fetch.service", "paper_fetch.http")
 _LOG_LEVEL_BY_RECORD_LEVEL = {
@@ -84,17 +89,27 @@ def _validation_reason(error: ValidationError) -> str:
 
 def error_payload_from_exception(error: Exception) -> dict[str, Any]:
     if isinstance(error, ValidationError):
-        return {"status": "error", "reason": _validation_reason(error), "candidates": None}
+        return {"status": "error", "reason": _validation_reason(error), "candidates": None, "missing_env": None}
+    if isinstance(error, RequestCancelledError):
+        return {"status": "error", "reason": "Request cancelled.", "candidates": None, "missing_env": None}
     if isinstance(error, PaperFetchFailure):
         return {
             "status": error.status,
             "reason": error.reason,
             "candidates": error.candidates or None,
+            "missing_env": None,
         }
     if isinstance(error, ProviderFailure):
         status = error.code if error.code in {"no_access", "rate_limited"} else "error"
-        return {"status": status, "reason": error.message, "candidates": None}
-    return {"status": "error", "reason": str(error), "candidates": None}
+        if error.code == "not_configured" and error.missing_env:
+            status = "no_access"
+        return {
+            "status": status,
+            "reason": error.message,
+            "candidates": None,
+            "missing_env": error.missing_env or None,
+        }
+    return {"status": "error", "reason": str(error), "candidates": None, "missing_env": None}
 
 
 def _resolve_download_dir(
@@ -118,6 +133,198 @@ def _service_modes_for_fetch_request(
     return requested_modes
 
 
+def _fetch_envelope_cache_path(download_dir: Path, doi: str) -> Path:
+    return download_dir / f"{sanitize_filename(doi)}.fetch-envelope.json"
+
+
+def _request_cache_payload(request: FetchPaperRequest) -> dict[str, Any]:
+    return {
+        "modes": list(request.modes),
+        "strategy": request.strategy.model_dump(mode="json"),
+        "include_refs": request.include_refs,
+        "max_tokens": request.max_tokens,
+    }
+
+
+def _cached_request_matches(
+    cached_request: Mapping[str, Any],
+    request: FetchPaperRequest,
+) -> bool:
+    cached_modes = {str(item) for item in cached_request.get("modes") or []}
+    if not request.requested_modes().issubset(cached_modes):
+        return False
+    if cached_request.get("strategy") != request.strategy.model_dump(mode="json"):
+        return False
+    if cached_request.get("include_refs") != request.include_refs:
+        return False
+    return cached_request.get("max_tokens") == request.max_tokens
+
+
+def _cached_payload_satisfies_request(payload: Mapping[str, Any], request: FetchPaperRequest) -> bool:
+    requested_modes = request.requested_modes()
+    if "article" in requested_modes and payload.get("article") is None:
+        return False
+    if "markdown" in requested_modes and payload.get("markdown") is None:
+        return False
+    if "metadata" in requested_modes and payload.get("metadata") is None:
+        return False
+    return True
+
+
+def _metadata_from_payload(value: Mapping[str, Any] | None) -> Metadata | None:
+    if value is None:
+        return None
+    return Metadata(
+        title=normalize_text(value.get("title")) or None,
+        authors=[normalize_text(item) for item in value.get("authors") or [] if normalize_text(item)],
+        abstract=normalize_text(value.get("abstract")) or None,
+        journal=normalize_text(value.get("journal")) or None,
+        published=normalize_text(value.get("published")) or None,
+        keywords=[normalize_text(item) for item in value.get("keywords") or [] if normalize_text(item)],
+        license_urls=[normalize_text(item) for item in value.get("license_urls") or [] if normalize_text(item)],
+        landing_page_url=normalize_text(value.get("landing_page_url")) or None,
+    )
+
+
+def _quality_from_payload(value: Mapping[str, Any] | None) -> Quality:
+    payload = value or {}
+    return Quality(
+        has_fulltext=bool(payload.get("has_fulltext")),
+        token_estimate=int(payload.get("token_estimate") or 0),
+        warnings=[normalize_text(item) for item in payload.get("warnings") or [] if normalize_text(item)],
+        source_trail=[normalize_text(item) for item in payload.get("source_trail") or [] if normalize_text(item)],
+    )
+
+
+def _article_from_payload(value: Mapping[str, Any] | None) -> ArticleModel | None:
+    if value is None:
+        return None
+    metadata = _metadata_from_payload(value.get("metadata"))
+    if metadata is None:
+        return None
+    return ArticleModel(
+        doi=normalize_text(value.get("doi")) or None,
+        source=normalize_text(value.get("source")) or "crossref_meta",
+        metadata=metadata,
+        sections=[
+            Section(
+                heading=normalize_text(entry.get("heading")) or "",
+                level=int(entry.get("level") or 0),
+                kind=normalize_text(entry.get("kind")) or "body",
+                text=normalize_text(entry.get("text")) or "",
+            )
+            for entry in value.get("sections") or []
+            if isinstance(entry, Mapping)
+        ],
+        references=[
+            Reference(
+                raw=normalize_text(entry.get("raw")) or "",
+                doi=normalize_text(entry.get("doi")) or None,
+                title=normalize_text(entry.get("title")) or None,
+                year=normalize_text(entry.get("year")) or None,
+            )
+            for entry in value.get("references") or []
+            if isinstance(entry, Mapping) and normalize_text(entry.get("raw"))
+        ],
+        assets=[
+            Asset(
+                kind=normalize_text(entry.get("kind")) or "",
+                heading=normalize_text(entry.get("heading")) or "",
+                caption=normalize_text(entry.get("caption")) or None,
+                url=normalize_text(entry.get("url")) or None,
+                path=normalize_text(entry.get("path")) or None,
+                section=normalize_text(entry.get("section")) or None,
+            )
+            for entry in value.get("assets") or []
+            if isinstance(entry, Mapping)
+        ],
+        quality=_quality_from_payload(value.get("quality") if isinstance(value.get("quality"), Mapping) else None),
+    )
+
+
+def _envelope_from_payload(payload: Mapping[str, Any]) -> FetchEnvelope:
+    return FetchEnvelope(
+        doi=normalize_text(payload.get("doi")) or None,
+        source=normalize_text(payload.get("source")) or "metadata_only",
+        has_fulltext=bool(payload.get("has_fulltext")),
+        warnings=[normalize_text(item) for item in payload.get("warnings") or [] if normalize_text(item)],
+        source_trail=[normalize_text(item) for item in payload.get("source_trail") or [] if normalize_text(item)],
+        token_estimate=int(payload.get("token_estimate") or 0),
+        article=_article_from_payload(payload.get("article") if isinstance(payload.get("article"), Mapping) else None),
+        markdown=payload.get("markdown"),
+        metadata=_metadata_from_payload(payload.get("metadata") if isinstance(payload.get("metadata"), Mapping) else None),
+    )
+
+
+def _load_cached_fetch_envelope(
+    request: FetchPaperRequest,
+    *,
+    download_dir: Path | None,
+    transport: HttpTransport | None,
+    env: Mapping[str, str],
+) -> FetchEnvelope | None:
+    if not request.prefer_cache or download_dir is None:
+        return None
+    resolved = service_resolve_paper(request.query, transport=transport, env=env)
+    if resolved.candidates and not resolved.doi:
+        raise PaperFetchFailure(
+            "ambiguous",
+            "Query resolution is ambiguous; choose one of the DOI candidates.",
+            candidates=resolved.candidates,
+        )
+    doi = normalize_text(resolved.doi)
+    if not doi:
+        return None
+    entries = refresh_cache_index_for_doi(download_dir, doi)
+    cached_entry = next(
+        (
+            entry
+            for entry in sorted(entries, key=lambda item: float(item.get("mtime") or 0.0), reverse=True)
+            if entry.get("kind") == "fetch_envelope"
+        ),
+        None,
+    )
+    if cached_entry is None:
+        return None
+    try:
+        cache_payload = json.loads(Path(str(cached_entry["path"])).read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError, KeyError):
+        return None
+    if not isinstance(cache_payload, Mapping):
+        return None
+    if cache_payload.get("version") != _FETCH_ENVELOPE_CACHE_VERSION:
+        return None
+    cached_request = cache_payload.get("request")
+    payload = cache_payload.get("payload")
+    if not isinstance(cached_request, Mapping) or not isinstance(payload, Mapping):
+        return None
+    if not _cached_request_matches(cached_request, request):
+        return None
+    if not _cached_payload_satisfies_request(payload, request):
+        return None
+    return _envelope_from_payload(payload)
+
+
+def _write_cached_fetch_envelope(
+    download_dir: Path,
+    envelope: FetchEnvelope,
+    request: FetchPaperRequest,
+) -> None:
+    doi = normalize_text(envelope.doi)
+    if not doi:
+        return
+    download_dir.mkdir(parents=True, exist_ok=True)
+    cache_path = _fetch_envelope_cache_path(download_dir, doi)
+    payload = {
+        "version": _FETCH_ENVELOPE_CACHE_VERSION,
+        "request": _request_cache_payload(request),
+        "payload": _payload_from_envelope(envelope, request),
+    }
+    tmp_path = cache_path.with_suffix(cache_path.suffix + ".part")
+    tmp_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    tmp_path.replace(cache_path)
+
+
 def _fetch_paper_envelope(
     request: FetchPaperRequest,
     *,
@@ -128,6 +335,14 @@ def _fetch_paper_envelope(
 ) -> FetchEnvelope:
     runtime_env = build_runtime_env(env)
     effective_download_dir = _resolve_download_dir(runtime_env, download_dir)
+    cached_envelope = _load_cached_fetch_envelope(
+        request,
+        download_dir=effective_download_dir,
+        transport=transport,
+        env=runtime_env,
+    )
+    if cached_envelope is not None:
+        return cached_envelope
     envelope = service_fetch_paper(
         request.query,
         modes=_service_modes_for_fetch_request(request, include_article_for_assets=include_article_for_assets),
@@ -138,6 +353,7 @@ def _fetch_paper_envelope(
         env=runtime_env,
     )
     if effective_download_dir is not None and envelope.doi:
+        _write_cached_fetch_envelope(effective_download_dir, envelope, request)
         refresh_cache_index_for_doi(effective_download_dir, envelope.doi)
     return envelope
 
@@ -164,6 +380,20 @@ def resolve_paper_payload(
     return resolved.to_dict()
 
 
+def has_fulltext_payload(
+    *,
+    query: str,
+    env: Mapping[str, str] | None = None,
+    transport: HttpTransport | None = None,
+) -> dict[str, Any]:
+    request = HasFulltextRequest(query=query)
+    runtime_env = build_runtime_env(env)
+    probe_result = service_probe_has_fulltext(request.query, transport=transport, env=runtime_env)
+    payload = probe_result.to_dict()
+    payload.pop("title", None)
+    return payload
+
+
 def fetch_paper_payload(
     *,
     query: str,
@@ -171,6 +401,7 @@ def fetch_paper_payload(
     strategy: FetchStrategyInput | Mapping[str, Any] | None = None,
     include_refs: str | None = None,
     max_tokens: int | str = "full_text",
+    prefer_cache: bool = False,
     env: Mapping[str, str] | None = None,
     download_dir: Path | None | object = _MCP_DEFAULT_DOWNLOAD_DIR,
     transport: HttpTransport | None = None,
@@ -181,6 +412,7 @@ def fetch_paper_payload(
         strategy=strategy,
         include_refs=include_refs,
         max_tokens=max_tokens,
+        prefer_cache=prefer_cache,
     )
     envelope = _fetch_paper_envelope(
         request,
@@ -233,24 +465,17 @@ def get_cached_payload(
 def batch_resolve_payload(
     *,
     queries: list[str],
+    concurrency: int = 1,
     env: Mapping[str, str] | None = None,
 ) -> dict[str, Any]:
-    request = BatchResolveRequest(queries=queries)
+    request = BatchResolveRequest(queries=queries, concurrency=concurrency)
     runtime_env = build_runtime_env(env)
     transport = HttpTransport()
-    results: list[dict[str, Any]] = []
-    abort_reason: dict[str, Any] | None = None
-
-    for query in request.queries:
-        try:
-            results.append(resolve_paper_payload(query=query, env=runtime_env, transport=transport))
-        except Exception as error:
-            payload = error_payload_from_exception(error)
-            payload["query"] = query
-            results.append(payload)
-            if payload["status"] == "rate_limited":
-                abort_reason = dict(payload)
-                break
+    results, abort_reason = _run_batch_sync(
+        queries=request.queries,
+        concurrency=request.concurrency,
+        process_item=lambda query: resolve_paper_payload(query=query, env=runtime_env, transport=transport),
+    )
 
     return {
         "results": results,
@@ -262,9 +487,19 @@ def batch_resolve_payload(
 def _batch_check_success_payload(query: str, payload: Mapping[str, Any], *, mode: str) -> dict[str, Any]:
     title = None
     if mode == "metadata":
-        metadata = payload.get("metadata") or {}
-        if isinstance(metadata, Mapping):
-            title = metadata.get("title")
+        title = payload.get("title")
+        return {
+            "query": query,
+            "doi": payload.get("doi"),
+            "title": title,
+            "has_fulltext": True if payload.get("state") == "likely_yes" else None,
+            "probe_state": payload.get("state"),
+            "evidence": list(payload.get("evidence") or []),
+            "warnings": list(payload.get("warnings") or []),
+            "source": None,
+            "source_trail": [],
+            "token_estimate": None,
+        }
     else:
         article = payload.get("article") or {}
         if isinstance(article, Mapping):
@@ -288,32 +523,24 @@ def batch_check_payload(
     *,
     queries: list[str],
     mode: str = "metadata",
+    concurrency: int = 1,
     env: Mapping[str, str] | None = None,
 ) -> dict[str, Any]:
-    request = BatchCheckRequest(queries=queries, mode=mode)
+    request = BatchCheckRequest(queries=queries, mode=mode, concurrency=concurrency)
     runtime_env = build_runtime_env(env)
     transport = HttpTransport()
-    results: list[dict[str, Any]] = []
-    abort_reason: dict[str, Any] | None = None
     requested_modes = _BATCH_CHECK_MODES[request.mode]
-
-    for query in request.queries:
-        try:
-            payload = fetch_paper_payload(
-                query=query,
-                modes=requested_modes,
-                env=runtime_env,
-                download_dir=None,
-                transport=transport,
-            )
-            results.append(_batch_check_success_payload(query, payload, mode=request.mode))
-        except Exception as error:
-            payload = error_payload_from_exception(error)
-            payload["query"] = query
-            results.append(payload)
-            if payload["status"] == "rate_limited":
-                abort_reason = dict(payload)
-                break
+    results, abort_reason = _run_batch_sync(
+        queries=request.queries,
+        concurrency=request.concurrency,
+        process_item=lambda query: _run_batch_check_item(
+            query,
+            mode=request.mode,
+            env=runtime_env,
+            transport=transport,
+            requested_modes=requested_modes,
+        ),
+    )
 
     return {
         "mode": request.mode,
@@ -321,6 +548,81 @@ def batch_check_payload(
         "aborted": abort_reason is not None,
         "abort_reason": abort_reason,
     }
+
+
+def _run_batch_check_item(
+    query: str,
+    *,
+    mode: str,
+    env: Mapping[str, str],
+    transport: HttpTransport,
+    requested_modes: list[str],
+) -> dict[str, Any]:
+    if mode == "metadata":
+        payload = service_probe_has_fulltext(query, transport=transport, env=env).to_dict()
+    else:
+        payload = fetch_paper_payload(
+            query=query,
+            modes=requested_modes,
+            env=env,
+            download_dir=None,
+            transport=transport,
+        )
+    return _batch_check_success_payload(query, payload, mode=mode)
+
+
+def _run_batch_sync(
+    *,
+    queries: list[str],
+    concurrency: int,
+    process_item: Callable[[str], dict[str, Any]],
+) -> tuple[list[dict[str, Any]], dict[str, Any] | None]:
+    max_workers = max(1, min(concurrency, len(queries)))
+    results: list[dict[str, Any] | None] = [None] * len(queries)
+    abort_reason: dict[str, Any] | None = None
+
+    if max_workers == 1:
+        for index, query in enumerate(queries):
+            try:
+                results[index] = process_item(query)
+            except Exception as error:
+                payload = error_payload_from_exception(error)
+                payload["query"] = query
+                results[index] = payload
+                if payload["status"] == "rate_limited":
+                    abort_reason = dict(payload)
+                    break
+        return [result for result in results if result is not None], abort_reason
+
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        pending: dict[Any, tuple[int, str]] = {}
+        next_index = 0
+
+        def submit(index: int) -> None:
+            future = executor.submit(process_item, queries[index])
+            pending[future] = (index, queries[index])
+
+        while next_index < len(queries) and len(pending) < max_workers:
+            submit(next_index)
+            next_index += 1
+
+        while pending:
+            done, _ = wait(pending, return_when=FIRST_COMPLETED)
+            for future in done:
+                index, query = pending.pop(future)
+                try:
+                    results[index] = future.result()
+                except Exception as error:
+                    payload = error_payload_from_exception(error)
+                    payload["query"] = query
+                    results[index] = payload
+                    if payload["status"] == "rate_limited" and abort_reason is None:
+                        abort_reason = dict(payload)
+                if abort_reason is None and next_index < len(queries):
+                    submit(next_index)
+                    next_index += 1
+
+    return [result for result in results if result is not None], abort_reason
 
 
 def _is_body_figure_asset(asset: Asset) -> bool:
@@ -551,6 +853,23 @@ def resolve_paper_tool(
         return _tool_result(error_payload_from_exception(error), is_error=True)
 
 
+def has_fulltext_tool(
+    *,
+    query: str,
+    env: Mapping[str, str] | None = None,
+) -> CallToolResult:
+    try:
+        return _tool_result(
+            has_fulltext_payload(
+                query=query,
+                env=env,
+            ),
+            is_error=False,
+        )
+    except Exception as error:
+        return _tool_result(error_payload_from_exception(error), is_error=True)
+
+
 def fetch_paper_tool(
     *,
     query: str,
@@ -558,6 +877,7 @@ def fetch_paper_tool(
     strategy: FetchStrategyInput | Mapping[str, Any] | None = None,
     include_refs: str | None = None,
     max_tokens: int | str = "full_text",
+    prefer_cache: bool = False,
     env: Mapping[str, str] | None = None,
     download_dir: Path | None | object = _MCP_DEFAULT_DOWNLOAD_DIR,
 ) -> CallToolResult:
@@ -568,6 +888,7 @@ def fetch_paper_tool(
             strategy=strategy,
             include_refs=include_refs,
             max_tokens=max_tokens,
+            prefer_cache=prefer_cache,
         )
         envelope = _fetch_paper_envelope(
             request,
@@ -620,10 +941,11 @@ def get_cached_tool(
 def batch_resolve_tool(
     *,
     queries: list[str],
+    concurrency: int = 1,
     env: Mapping[str, str] | None = None,
 ) -> CallToolResult:
     try:
-        return _tool_result(batch_resolve_payload(queries=queries, env=env), is_error=False)
+        return _tool_result(batch_resolve_payload(queries=queries, concurrency=concurrency, env=env), is_error=False)
     except Exception as error:
         return _tool_result(error_payload_from_exception(error), is_error=True)
 
@@ -632,10 +954,14 @@ def batch_check_tool(
     *,
     queries: list[str],
     mode: str = "metadata",
+    concurrency: int = 1,
     env: Mapping[str, str] | None = None,
 ) -> CallToolResult:
     try:
-        return _tool_result(batch_check_payload(queries=queries, mode=mode, env=env), is_error=False)
+        return _tool_result(
+            batch_check_payload(queries=queries, mode=mode, concurrency=concurrency, env=env),
+            is_error=False,
+        )
     except Exception as error:
         return _tool_result(error_payload_from_exception(error), is_error=True)
 
@@ -647,6 +973,7 @@ async def fetch_paper_tool_async(
     strategy: FetchStrategyInput | Mapping[str, Any] | None = None,
     include_refs: str | None = None,
     max_tokens: int | str = "full_text",
+    prefer_cache: bool = False,
     env: Mapping[str, str] | None = None,
     download_dir: Path | None | object = _MCP_DEFAULT_DOWNLOAD_DIR,
     ctx: Context | None = None,
@@ -659,12 +986,15 @@ async def fetch_paper_tool_async(
             strategy=strategy,
             include_refs=include_refs,
             max_tokens=max_tokens,
+            prefer_cache=prefer_cache,
         )
     except Exception as error:
         await _report_progress(ctx, _FETCH_PROGRESS_TOTAL, _FETCH_PROGRESS_TOTAL, "fetch_paper failed")
         return _tool_result(error_payload_from_exception(error), is_error=True)
 
     await _report_progress(ctx, 1, _FETCH_PROGRESS_TOTAL, "Fetching paper content")
+    cancelled = threading.Event()
+    transport = HttpTransport(cancel_check=cancelled.is_set)
     try:
         loop = asyncio.get_running_loop()
         bridge = PaperFetchLogBridge(ctx=ctx, loop=loop) if ctx is not None else None
@@ -674,7 +1004,7 @@ async def fetch_paper_tool_async(
                 request,
                 env=env,
                 download_dir=download_dir,
-                transport=None,
+                transport=transport,
                 include_article_for_assets=True,
             )
         else:
@@ -684,13 +1014,16 @@ async def fetch_paper_tool_async(
                     request,
                     env=env,
                     download_dir=download_dir,
-                    transport=None,
+                    transport=transport,
                     include_article_for_assets=True,
                 )
         await _report_progress(ctx, 3, _FETCH_PROGRESS_TOTAL, "Shaping MCP result")
         result = build_fetch_tool_result(envelope, request)
         await _report_progress(ctx, _FETCH_PROGRESS_TOTAL, _FETCH_PROGRESS_TOTAL, "fetch_paper complete")
         return result
+    except asyncio.CancelledError:
+        cancelled.set()
+        raise
     except Exception as error:
         await _report_progress(ctx, _FETCH_PROGRESS_TOTAL, _FETCH_PROGRESS_TOTAL, "fetch_paper failed")
         return _tool_result(error_payload_from_exception(error), is_error=True)
@@ -699,11 +1032,12 @@ async def fetch_paper_tool_async(
 async def batch_resolve_tool_async(
     *,
     queries: list[str],
+    concurrency: int = 1,
     env: Mapping[str, str] | None = None,
     ctx: Context | None = None,
 ) -> CallToolResult:
     try:
-        request = BatchResolveRequest(queries=queries)
+        request = BatchResolveRequest(queries=queries, concurrency=concurrency)
     except Exception as error:
         return _tool_result(error_payload_from_exception(error), is_error=True)
 
@@ -711,33 +1045,24 @@ async def batch_resolve_tool_async(
     await _report_progress(ctx, 0, total_queries, "Starting batch_resolve")
 
     runtime_env = build_runtime_env(env)
-    transport = HttpTransport()
-    results: list[dict[str, Any]] = []
-    abort_reason: dict[str, Any] | None = None
+    cancelled = threading.Event()
+    transport = HttpTransport(cancel_check=cancelled.is_set)
     loop = asyncio.get_running_loop()
     bridge = PaperFetchLogBridge(ctx=ctx, loop=loop) if ctx is not None else None
 
     try:
         if bridge is not None:
             bridge.__enter__()
-        for index, query in enumerate(request.queries, start=1):
-            try:
-                payload = await asyncio.to_thread(
-                    resolve_paper_payload,
-                    query=query,
-                    env=runtime_env,
-                    transport=transport,
-                )
-                results.append(payload)
-            except Exception as error:
-                payload = error_payload_from_exception(error)
-                payload["query"] = query
-                results.append(payload)
-                if payload["status"] == "rate_limited":
-                    abort_reason = dict(payload)
-            await _report_progress(ctx, index, total_queries, f"Resolved {index} of {total_queries} queries")
-            if abort_reason is not None:
-                break
+        results, abort_reason = await _run_batch_async(
+            queries=request.queries,
+            concurrency=request.concurrency,
+            process_item=lambda query: resolve_paper_payload(query=query, env=runtime_env, transport=transport),
+            ctx=ctx,
+            progress_prefix="Resolved",
+        )
+    except asyncio.CancelledError:
+        cancelled.set()
+        raise
     finally:
         if bridge is not None:
             bridge.__exit__(None, None, None)
@@ -760,11 +1085,12 @@ async def batch_check_tool_async(
     *,
     queries: list[str],
     mode: str = "metadata",
+    concurrency: int = 1,
     env: Mapping[str, str] | None = None,
     ctx: Context | None = None,
 ) -> CallToolResult:
     try:
-        request = BatchCheckRequest(queries=queries, mode=mode)
+        request = BatchCheckRequest(queries=queries, mode=mode, concurrency=concurrency)
     except Exception as error:
         return _tool_result(error_payload_from_exception(error), is_error=True)
 
@@ -772,36 +1098,31 @@ async def batch_check_tool_async(
     await _report_progress(ctx, 0, total_queries, "Starting batch_check")
 
     runtime_env = build_runtime_env(env)
-    transport = HttpTransport()
+    cancelled = threading.Event()
+    transport = HttpTransport(cancel_check=cancelled.is_set)
     requested_modes = _BATCH_CHECK_MODES[request.mode]
-    results: list[dict[str, Any]] = []
-    abort_reason: dict[str, Any] | None = None
     loop = asyncio.get_running_loop()
     bridge = PaperFetchLogBridge(ctx=ctx, loop=loop) if ctx is not None else None
 
     try:
         if bridge is not None:
             bridge.__enter__()
-        for index, query in enumerate(request.queries, start=1):
-            try:
-                payload = await asyncio.to_thread(
-                    fetch_paper_payload,
-                    query=query,
-                    modes=requested_modes,
-                    env=runtime_env,
-                    download_dir=None,
-                    transport=transport,
-                )
-                results.append(_batch_check_success_payload(query, payload, mode=request.mode))
-            except Exception as error:
-                payload = error_payload_from_exception(error)
-                payload["query"] = query
-                results.append(payload)
-                if payload["status"] == "rate_limited":
-                    abort_reason = dict(payload)
-            await _report_progress(ctx, index, total_queries, f"Checked {index} of {total_queries} queries")
-            if abort_reason is not None:
-                break
+        results, abort_reason = await _run_batch_async(
+            queries=request.queries,
+            concurrency=request.concurrency,
+            process_item=lambda query: _run_batch_check_item(
+                query,
+                mode=request.mode,
+                env=runtime_env,
+                transport=transport,
+                requested_modes=requested_modes,
+            ),
+            ctx=ctx,
+            progress_prefix="Checked",
+        )
+    except asyncio.CancelledError:
+        cancelled.set()
+        raise
     finally:
         if bridge is not None:
             bridge.__exit__(None, None, None)
@@ -819,6 +1140,50 @@ async def batch_check_tool_async(
         "batch_check complete" if abort_reason is None else "batch_check stopped after rate limit",
     )
     return _tool_result(payload, is_error=False)
+
+
+async def _run_batch_async(
+    *,
+    queries: list[str],
+    concurrency: int,
+    process_item: Callable[[str], dict[str, Any]],
+    ctx: Context | None,
+    progress_prefix: str,
+) -> tuple[list[dict[str, Any]], dict[str, Any] | None]:
+    results: list[dict[str, Any] | None] = [None] * len(queries)
+    abort_reason: dict[str, Any] | None = None
+    completed = 0
+    max_workers = max(1, min(concurrency, len(queries)))
+    pending: dict[asyncio.Task[dict[str, Any]], tuple[int, str]] = {}
+    next_index = 0
+
+    def launch(index: int) -> None:
+        task = asyncio.create_task(asyncio.to_thread(process_item, queries[index]))
+        pending[task] = (index, queries[index])
+
+    while next_index < len(queries) and len(pending) < max_workers:
+        launch(next_index)
+        next_index += 1
+
+    while pending:
+        done, _ = await asyncio.wait(pending, return_when=asyncio.FIRST_COMPLETED)
+        for task in done:
+            index, query = pending.pop(task)
+            try:
+                results[index] = task.result()
+            except Exception as error:
+                payload = error_payload_from_exception(error)
+                payload["query"] = query
+                results[index] = payload
+                if payload["status"] == "rate_limited" and abort_reason is None:
+                    abort_reason = dict(payload)
+            completed += 1
+            await _report_progress(ctx, completed, len(queries), f"{progress_prefix} {completed} of {len(queries)} queries")
+            if abort_reason is None and next_index < len(queries):
+                launch(next_index)
+                next_index += 1
+
+    return [result for result in results if result is not None], abort_reason
 
 
 def cached_entry_payload(

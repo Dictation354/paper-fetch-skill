@@ -21,6 +21,7 @@ SERVER_SCRIPT = textwrap.dedent(
     from paper_fetch.models import ArticleModel, Asset, FetchEnvelope, Metadata, Quality, Section
     from paper_fetch.mcp.server import main
     from paper_fetch.resolve.query import ResolvedQuery
+    from paper_fetch.service import HasFulltextProbeResult
     from paper_fetch.utils import sanitize_filename
     import paper_fetch.mcp.tools as tools
 
@@ -92,8 +93,19 @@ SERVER_SCRIPT = textwrap.dedent(
             metadata=article.metadata if "metadata" in requested_modes else None,
         )
 
+    def fake_probe(query, *, transport=None, env=None):
+        return HasFulltextProbeResult(
+            query=query,
+            doi=query if query.startswith("10.") else "10.1000/example",
+            title=f"Example Article for {query}",
+            state="likely_yes",
+            evidence=["crossref_fulltext_link"],
+            warnings=[],
+        )
+
     tools.service_resolve_paper = fake_resolve
     tools.service_fetch_paper = fake_fetch
+    tools.service_probe_has_fulltext = fake_probe
     main()
     """
 )
@@ -131,8 +143,17 @@ class McpStdioIntegrationTests(unittest.IsolatedAsyncioTestCase):
                         tool_names = sorted(tool.name for tool in listed.tools)
                         self.assertEqual(
                             tool_names,
-                            ["batch_check", "batch_resolve", "fetch_paper", "get_cached", "list_cached", "resolve_paper"],
+                            [
+                                "batch_check",
+                                "batch_resolve",
+                                "fetch_paper",
+                                "get_cached",
+                                "has_fulltext",
+                                "list_cached",
+                                "resolve_paper",
+                            ],
                         )
+                        self.assertTrue(all(tool.outputSchema is not None for tool in listed.tools))
 
                         resolved = await session.call_tool("resolve_paper", {"query": "10.1000/example"})
                         self.assertFalse(resolved.isError)
@@ -143,6 +164,11 @@ class McpStdioIntegrationTests(unittest.IsolatedAsyncioTestCase):
                         )
                         self.assertFalse(structured_resolved.isError)
                         self.assertEqual(structured_resolved.structuredContent["query"], "Example title Alice Example 2024")
+
+                        probe = await session.call_tool("has_fulltext", {"query": "10.1000/example"})
+                        self.assertFalse(probe.isError)
+                        self.assertEqual(probe.structuredContent["state"], "likely_yes")
+                        self.assertEqual(probe.structuredContent["evidence"], ["crossref_fulltext_link"])
 
                         custom_fetch = await session.call_tool(
                             "fetch_paper",
@@ -165,19 +191,31 @@ class McpStdioIntegrationTests(unittest.IsolatedAsyncioTestCase):
                         )
                         self.assertFalse(custom_cached.isError)
                         self.assertEqual(custom_cached.structuredContent["status"], "hit")
-                        self.assertEqual(len(custom_cached.structuredContent["entries"]), 3)
+                        self.assertEqual(len(custom_cached.structuredContent["entries"]), 4)
 
                         listed_custom = await session.call_tool("list_cached", {"download_dir": str(isolated_dir)})
                         self.assertFalse(listed_custom.isError)
-                        self.assertEqual(len(listed_custom.structuredContent["entries"]), 3)
+                        self.assertEqual(len(listed_custom.structuredContent["entries"]), 4)
 
                         batch = await session.call_tool(
                             "batch_check",
-                            {"queries": ["10.1000/custom", "10.1000/other"], "mode": "metadata"},
+                            {"queries": ["10.1000/custom", "10.1000/other"], "mode": "metadata", "concurrency": 2},
                         )
                         self.assertFalse(batch.isError)
                         self.assertEqual(batch.structuredContent["mode"], "metadata")
                         self.assertEqual(len(batch.structuredContent["results"]), 2)
+                        self.assertEqual(batch.structuredContent["results"][0]["probe_state"], "likely_yes")
+                        self.assertEqual(batch.structuredContent["results"][0]["source"], None)
+
+                        batch_resolved = await session.call_tool(
+                            "batch_resolve",
+                            {"queries": ["10.1000/custom", "10.1000/other"], "concurrency": 2},
+                        )
+                        self.assertFalse(batch_resolved.isError)
+                        self.assertEqual(
+                            [item["doi"] for item in batch_resolved.structuredContent["results"]],
+                            ["10.1000/custom", "10.1000/other"],
+                        )
 
                         default_fetch = await session.call_tool("fetch_paper", {"query": "10.1000/default"})
                         self.assertFalse(default_fetch.isError)

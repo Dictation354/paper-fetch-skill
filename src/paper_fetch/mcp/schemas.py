@@ -85,6 +85,20 @@ class ResolvePaperRequest(BaseModel):
         return normalize_text(" ".join(parts))
 
 
+class HasFulltextRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    query: str
+
+    @field_validator("query")
+    @classmethod
+    def validate_query(cls, value: str) -> str:
+        normalized = normalize_text(value)
+        if not normalized:
+            raise ValueError("query must not be empty.")
+        return normalized
+
+
 def _normalize_query_list(value: Any) -> list[str]:
     if value is None:
         raise ValueError("queries must contain at least one entry.")
@@ -158,6 +172,7 @@ class FetchPaperRequest(BaseModel):
     strategy: FetchStrategyInput = Field(default_factory=FetchStrategyInput)
     include_refs: str | None = None
     max_tokens: int | str = "full_text"
+    prefer_cache: bool = False
 
     @field_validator("query")
     @classmethod
@@ -239,6 +254,7 @@ class BatchResolveRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     queries: list[str]
+    concurrency: int = Field(default=1, ge=1, le=8)
 
     @field_validator("queries", mode="before")
     @classmethod
@@ -251,6 +267,7 @@ class BatchCheckRequest(BaseModel):
 
     queries: list[str]
     mode: str = "metadata"
+    concurrency: int = Field(default=1, ge=1, le=8)
 
     @field_validator("queries", mode="before")
     @classmethod

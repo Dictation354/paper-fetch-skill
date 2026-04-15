@@ -296,7 +296,11 @@ class ElsevierClient(ProviderClient):
 
     def _base_headers(self, accept: str) -> dict[str, str]:
         if not self.api_key:
-            raise ProviderFailure("not_configured", "ELSEVIER_API_KEY is not configured.")
+            raise ProviderFailure(
+                "not_configured",
+                "ELSEVIER_API_KEY is not configured.",
+                missing_env=["ELSEVIER_API_KEY"],
+            )
         headers = {
             "Accept": accept,
             "X-ELS-APIKey": self.api_key,

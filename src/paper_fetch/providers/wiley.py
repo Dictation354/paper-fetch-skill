@@ -209,9 +209,15 @@ class WileyClient(ProviderClient):
         if not normalized_doi:
             raise ProviderFailure("not_supported", "Wiley full-text retrieval requires a DOI.")
         if not self.endpoint_template or not self.token:
+            missing_env: list[str] = []
+            if not self.endpoint_template:
+                missing_env.append("WILEY_TDM_URL_TEMPLATE")
+            if not self.token:
+                missing_env.append("WILEY_TDM_TOKEN")
             raise ProviderFailure(
                 "not_configured",
                 "WILEY_TDM_URL_TEMPLATE and WILEY_TDM_TOKEN are required for Wiley full-text retrieval.",
+                missing_env=missing_env,
             )
 
         encoded_doi = urllib.parse.quote(normalized_doi, safe="")

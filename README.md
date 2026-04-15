@@ -6,6 +6,7 @@
 
 - `paper-fetch`: 在终端里按 DOI、URL 或标题抓取论文
 - `paper-fetch-mcp`: 给 agent runtime 使用的 stdio MCP server
+- `skills/paper-fetch-skill/`: 精简 skill 入口，详细环境变量、CLI fallback 和失败处理拆到 `references/` 按需读取
 - `scripts/install-codex-skill.sh`: 把 skill 安装到 Codex，并可顺手注册 MCP
 - `scripts/install-claude-skill.sh`: 把 skill 安装到 Claude Code，并可顺手注册 MCP
 
@@ -70,11 +71,12 @@ cp .env.example ~/.config/paper-fetch/.env
 当前 MCP server 提供这些工具：
 
 - `resolve_paper(query | title, authors, year)`
-- `fetch_paper(query, modes, strategy, include_refs, max_tokens, download_dir)`
+- `has_fulltext(query)`
+- `fetch_paper(query, modes, strategy, include_refs, max_tokens, prefer_cache, download_dir)`
 - `list_cached(download_dir)`
 - `get_cached(doi, download_dir)`
-- `batch_resolve(queries)`
-- `batch_check(queries, mode)`
+- `batch_resolve(queries, concurrency)`
+- `batch_check(queries, mode, concurrency)`
 
 `fetch_paper` 的 MCP 默认值是：
 
@@ -84,16 +86,26 @@ cp .env.example ~/.config/paper-fetch/.env
 - `strategy.allow_metadata_only_fallback=true`
 - `include_refs=null`
 - `max_tokens="full_text"`
+- `prefer_cache=false`
 
 补充说明：
 
 - `resolve_paper` 既支持原始 `query`，也支持 `title` + 可选 `authors` / `year` 的结构化输入
+- `has_fulltext()` 是廉价 probe：只看 resolution、Crossref/官方 metadata probe 与 landing-page HTML meta，不会走完整正文抓取瀑布
+- `has_fulltext()` 当前只主动产出 `state="likely_yes"` 或 `state="unknown"`；`confirmed_yes` / `no` 仍保留给后续迭代
 - `include_refs=null` 在 `max_tokens="full_text"` 下等价于 `all`
+- 显式 `prefer_cache=true` 时，`fetch_paper` 会先尝试命中本地 MCP cache 里的 envelope sidecar；命中才短路，未命中再照常上网
 - 显式传 `download_dir` 会覆盖 `PAPER_FETCH_DOWNLOAD_DIR` 和 XDG 默认目录，适合隔离多任务下载目录
 - `list_cached()` / `get_cached()` 只读本地 cache index，不触发网络
-- `batch_check()` 会串行复用同一个 HTTP transport，但不会把正文或原始 payload 写入磁盘
+- `batch_resolve()` / `batch_check()` 默认 `concurrency=1`；显式提高时会复用同一个 transport，并允许不同 host 的查询并发执行
+- `batch_resolve()` / `batch_check()` 在同一 host 内仍保持串行，避免把本地批量工作流直接变成对单个 publisher 的并发冲击
+- `batch_check(mode="metadata")` 现在复用同一个廉价 probe，返回 `probe_state` / `evidence` / `warnings` 这类轻量字段，不会走完整抓取，也不会把正文或原始 payload 写入磁盘
+- `batch_check(mode="article")` 仍保留“完整 fetch 后给最终 verdict”的语义
 - 当 `strategy.asset_profile` 为 `body` / `all` 时，`fetch_paper` 可能在 JSON 结果后附带少量关键正文图的 `ImageContent`
+- 这 7 个 MCP tools 现在都会向支持的 client 暴露 `outputSchema`，可直接用于 JSON Schema 参数补全和结果校验
+- 当错误能明确定位到缺少的凭证或配置时，MCP `structuredContent` 现在会附带 `missing_env=[...]`
 - 支持这些能力的 MCP client 还会在 `fetch_paper` / `batch_check` / `batch_resolve` 期间收到 progress 和 structured log notifications
+- 支持 MCP cancellation 的 host 现在可以中途取消 `fetch_paper` / `batch_check` / `batch_resolve`；worker 会协作式停止继续发后续网络请求
 
 默认共享缓存资源会暴露在 MCP resources 下：
 
@@ -177,6 +189,8 @@ python3 -m pip install .
 ./scripts/install-codex-skill.sh --register-mcp
 ./scripts/install-claude-skill.sh --register-mcp
 ```
+
+安装脚本会复制整个静态 skill bundle：`SKILL.md` 以及 `skills/paper-fetch-skill/references/` 下的按需参考文档。
 
 ### 可选：安装公式后端
 
@@ -278,5 +292,5 @@ PYTHONPATH=src python3 -m unittest tests.live.test_live_science_pnas -q
 - [docs/deployment.md](docs/deployment.md): 安装、MCP 注册、公式后端和验证步骤
 - [docs/flaresolverr.md](docs/flaresolverr.md): Science / PNAS 的 repo-local FlareSolverr、Playwright 和限速工作流
 - [docs/providers.md](docs/providers.md): 环境变量、provider 配置和 API key 说明
-- [docs/architecture/probe-semantics.md](docs/architecture/probe-semantics.md): `has_fulltext` probe 语义设计 note
+- [docs/architecture/probe-semantics.md](docs/architecture/probe-semantics.md): `has_fulltext` probe 语义与当前 v1 落地范围
 - [docs/architecture/target-architecture.md](docs/architecture/target-architecture.md): 项目结构和架构说明

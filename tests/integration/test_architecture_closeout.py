@@ -110,8 +110,16 @@ class ArchitectureCloseoutTests(unittest.TestCase):
         self.assertTrue((SKILL_DIR / "SKILL.md").exists())
         self.assertFalse((SKILL_DIR / "agents" / "openai.yaml").exists())
 
-        entries = sorted(path.relative_to(SKILL_DIR).as_posix() for path in SKILL_DIR.rglob("*"))
-        self.assertEqual(entries, ["SKILL.md"])
+        files = sorted(path.relative_to(SKILL_DIR).as_posix() for path in SKILL_DIR.rglob("*") if path.is_file())
+        self.assertEqual(
+            files,
+            [
+                "SKILL.md",
+                "references/cli-fallback.md",
+                "references/environment.md",
+                "references/failure-handling.md",
+            ],
+        )
 
     def test_repo_hygiene_guards_against_old_script_package_and_tracked_benchmarks(self) -> None:
         self.assertFalse((REPO_ROOT / "scripts" / "__init__.py").exists())

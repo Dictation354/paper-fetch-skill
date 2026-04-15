@@ -145,7 +145,12 @@ fi
 
 log "Copying static skill to $SKILL_DIR"
 mkdir -p "$SKILL_DIR"
+rm -f "$SKILL_DIR/SKILL.md"
+rm -rf "$SKILL_DIR/references"
 cp "$SOURCE_SKILL_DIR/SKILL.md" "$SKILL_DIR/SKILL.md"
+if [ -d "$SOURCE_SKILL_DIR/references" ]; then
+    cp -R "$SOURCE_SKILL_DIR/references" "$SKILL_DIR/references"
+fi
 
 if [ "$REGISTER_MCP" = "1" ]; then
     register_mcp

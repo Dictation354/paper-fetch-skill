@@ -1,6 +1,6 @@
 # Paper Fetch Skill Target Architecture
 
-Date: 2026-04-10 (revision 7)
+Date: 2026-04-10 (revision 8)
 
 ## Status
 
@@ -11,7 +11,7 @@ Date: 2026-04-10 (revision 7)
 - step 1 complete: the codebase is packaged under `src/paper_fetch/` and exposed via `pyproject.toml`
 - step 2 complete: `paper-fetch` routes through the service layer and preserves the CLI contract
 - step 3 complete: the MCP server exposes `resolve_paper` and `fetch_paper`
-- step 4 complete: the repo skill source is static `skills/paper-fetch-skill/SKILL.md`
+- step 4 complete: the repo skill source is a static `skills/paper-fetch-skill/` bundle with a thin `SKILL.md` plus on-demand `references/`
 - step 5 complete: install scripts are thin, and the Codex manifest is generated only at install time
 
 Public shipped changes belong in `CHANGELOG.md`. Keep any local-only scratch backlog outside the repository. This document is architecture rationale and baseline contract only.
@@ -66,7 +66,11 @@ paper-fetch-skill/
 │   └── dev-smoke-fetch.sh
 ├── skills/
 │   └── paper-fetch-skill/
-│       └── SKILL.md
+│       ├── SKILL.md
+│       └── references/
+│           ├── cli-fallback.md
+│           ├── environment.md
+│           └── failure-handling.md
 ├── src/
 │   └── paper_fetch/
 │       ├── __init__.py
@@ -259,6 +263,7 @@ Its job should be:
 - explain when the paper-fetch tools are appropriate
 - tell the model to call the MCP tool first
 - optionally mention the CLI as a fallback for non-MCP contexts
+- keep detailed environment-variable, CLI, and failure-contract material in `references/` so the main entrypoint stays small
 
 Its job should not be:
 
@@ -271,6 +276,8 @@ Its job should not be:
 **Codex compatibility is handled at install time, not in the skill source.**
 
 Codex expects each skill directory to contain an `agents/openai.yaml` manifest. That file is a Codex-specific requirement, not a generic skill asset, so it does not belong in `skills/paper-fetch-skill/` in the repo. Instead, `scripts/install-codex-skill.sh` generates or copies `agents/openai.yaml` into the *installed* skill directory (typically `~/.codex/skills/paper-fetch-skill/agents/openai.yaml`) as a one-shot compatibility shim. This keeps the in-repo skill source runtime-agnostic and makes it trivial to add other runtimes later — each new runtime gets its own install script, and the skill source itself never grows per-runtime branches.
+
+The repo skill source may still include generic `references/` documents that any runtime can copy alongside `SKILL.md`. Those files are part of the runtime-agnostic skill bundle, not per-runtime shims.
 
 If a future runtime needs a second manifest format (e.g. Claude skills add their own file), add a second install script. Do not put both manifests side by side in the repo skill directory.
 
@@ -370,7 +377,7 @@ Recommended sequence:
    Implement MCP tools as thin wrappers around the same service functions. Start with `resolve_paper` and `fetch_paper(mode=...)`; defer the optional tools.
 
 4. Replace the generated skill with a static thin skill.
-   Make the skill reference MCP tools instead of absolute repo paths. The repo skill source should contain only `SKILL.md`.
+   Make the skill reference MCP tools instead of absolute repo paths. The repo skill source should stay runtime-agnostic and keep only `SKILL.md` plus generic `references/`.
 
 5. Shrink installation scripts.
    The install step should become "install package + copy skill + (Codex only) drop the `agents/openai.yaml` shim". No venv creation, no `.env` bootstrap in the skill installer — those move to a separate `scripts/dev-bootstrap.sh` that developers run, not end users.
@@ -430,7 +437,7 @@ Each of the major decisions in this document has a condition under which it shou
 - **`CLI + MCP + thin skill` shape** → revisit if CLI usage drops to essentially zero for more than a quarter (no human terminal runs, no CI smoke tests, no debugging sessions). At that point `pure MCP` becomes cheaper to maintain.
 - **Hybrid MCP tool granularity (`resolve_paper` + `fetch_paper(modes, strategy)`)** → revisit if any of these signals appear: (a) agents consistently misuse `modes` (e.g. always ask for all three, or never learn to combine `article`+`markdown`); (b) a new output mode needs side effects that other modes must not see, meaning the envelope no longer expresses orthogonal axes; (c) `strategy` grows past ~5 fields and starts needing its own sub-objects, at which point `fetch_paper` should probably split into `fetch_paper_strict` / `fetch_paper_lenient` or similar. The non-negotiable part is the fixed envelope shape — if we ever find ourselves wanting to shape-switch the return based on `modes`, that is the signal the whole contract needs rethinking, not a local patch.
 - **`formula/` as its own subpackage** → revisit if we collapse to a single backend (demote to `outputs/formula.py`) or if a third backend lands with per-provider selection rules (may need a `formula/policy.py` on top).
-- **Skill source contains only `SKILL.md`, runtime manifests generated at install** → revisit if a runtime appears whose manifest depends on build-time information the install script can't produce (e.g. requires signing, or references content hashes of the skill). At that point the manifest has to live in the repo.
+- **Skill source stays runtime-agnostic, with manifests generated at install and optional generic `references/` files in the bundle** → revisit if a runtime appears whose manifest depends on build-time information the install script can't produce (e.g. requires signing, or references content hashes of the skill). At that point the manifest has to live in the repo.
 - **Per-adapter download-dir defaults, service has no default** → revisit if a third adapter appears (HTTP server, library embedding) and the two defaults stop covering the space. The rule to preserve is "service layer is cwd-agnostic", not the specific two defaults.
 - **YAML as source of truth for routing rules** → revisit only if a non-developer stakeholder needs to edit routing rules directly. At that point a prose-authored format with a generator might be worth the drift risk.
 - **One-shot migration with no `scripts/` shim** → this decision is only valid as long as no external caller depends on `scripts/paper_fetch.py`. If you discover such a caller mid-migration, stop and add a shim before proceeding.
@@ -444,6 +451,11 @@ Reason in one sentence:
 This repository already has a valuable command-line product surface and testable fetch core, so MCP should be added as the structured agent interface above that core, not as a replacement for it.
 
 ## Revision History
+
+**Revision 8 (2026-04-15)** — thin skill follow-through:
+
+- Updated the closed-out skill-source contract so the repo may ship a thin `SKILL.md` plus runtime-agnostic `references/` documents, while keeping runtime manifests install-time only.
+- Refreshed the recommended directory layout and migration wording to match the shipped split skill bundle.
 
 **Revision 7 (2026-04-12)** — backlog closeout follow-through:
 
@@ -478,7 +490,7 @@ This repository already has a valuable command-line product surface and testable
 
 - MCP tool granularity changed from four flat tools to a hybrid: `resolve_paper` stays separate (different return shape, different intent), and `fetch_paper_fulltext` / `fetch_paper_metadata` / `fetch_paper_markdown` merge into `fetch_paper(query, mode=...)`. Service-layer signature updated to match.
 - `formula/` confirmed as its own subpackage because two backends (`texmath` primary, `mathml-to-latex` fallback) already exist; documented that backend selection is global with fallback, not per-provider.
-- `skills/paper-fetch-skill/agents/openai.yaml` removed from the repo skill source. Codex's manifest is now explicitly framed as an install-time compatibility shim produced by `scripts/install-codex-skill.sh`, not a committed artifact. Repo skill source is `SKILL.md` only.
+- `skills/paper-fetch-skill/agents/openai.yaml` removed from the repo skill source. Codex's manifest is now explicitly framed as an install-time compatibility shim produced by `scripts/install-codex-skill.sh`, not a committed artifact. Repo skill source stays runtime-agnostic rather than carrying per-runtime files.
 - Download directory defaults remain adapter-owned: CLI resolves `PAPER_FETCH_DOWNLOAD_DIR` first, then XDG `paper-fetch/downloads`, and only falls back to `./live-downloads` if the user-data path cannot be created; MCP stays on the XDG data dir default. Service layer still has no default.
 - Migration is now explicitly one-shot: no `scripts/` compatibility shim, old paths deleted in the same commit as the corresponding move.
 - Routing drafts remain documentation only. Current runtime routing truth lives in the conservative code path under `publisher_identity.py` and the resolve/service flow that consumes it.

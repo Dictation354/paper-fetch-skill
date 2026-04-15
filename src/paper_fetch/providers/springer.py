@@ -270,7 +270,11 @@ class SpringerClient(ProviderClient):
 
     def _meta_query(self, doi: str) -> dict[str, str]:
         if not self.meta_api_key:
-            raise ProviderFailure("not_configured", "SPRINGER_META_API_KEY is not configured.")
+            raise ProviderFailure(
+                "not_configured",
+                "SPRINGER_META_API_KEY is not configured.",
+                missing_env=["SPRINGER_META_API_KEY"],
+            )
         return {
             "api_key": self.meta_api_key,
             "q": f"doi:{doi}",
@@ -278,7 +282,11 @@ class SpringerClient(ProviderClient):
 
     def _openaccess_query(self, doi: str) -> dict[str, str]:
         if not self.openaccess_api_key:
-            raise ProviderFailure("not_configured", "SPRINGER_OPENACCESS_API_KEY is not configured.")
+            raise ProviderFailure(
+                "not_configured",
+                "SPRINGER_OPENACCESS_API_KEY is not configured.",
+                missing_env=["SPRINGER_OPENACCESS_API_KEY"],
+            )
         return {
             "api_key": self.openaccess_api_key,
             "q": f"doi:{doi}",
@@ -384,9 +392,15 @@ class SpringerClient(ProviderClient):
 
     def _fetch_fulltext_api(self, doi: str, metadata: ProviderMetadata) -> RawFulltextPayload:
         if not self.fulltext_url_template or not self.fulltext_api_key:
+            missing_env: list[str] = []
+            if not self.fulltext_api_key:
+                missing_env.append("SPRINGER_FULLTEXT_API_KEY")
+            if not self.fulltext_url_template:
+                missing_env.append("SPRINGER_FULLTEXT_URL_TEMPLATE")
             raise ProviderFailure(
                 "not_configured",
                 "SPRINGER_FULLTEXT_API_KEY and SPRINGER_FULLTEXT_URL_TEMPLATE are required for Springer Full Text API retrieval.",
+                missing_env=missing_env,
             )
 
         encoded_doi = urllib.parse.quote(doi, safe="")

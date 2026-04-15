@@ -116,7 +116,7 @@ python3 -m pip install .
 这个脚本会做三件事：
 
 - 在当前 `python3` 环境里执行 `pip install .`
-- 把静态 skill 安装到用户级或项目级 Codex skill 目录
+- 把静态 skill bundle 安装到用户级或项目级 Codex skill 目录，包括 `SKILL.md` 和 `references/`
 - 如果带了 `--register-mcp`，调用 Codex CLI 注册 `paper-fetch` 这个 stdio MCP server
 
 常用选项：
@@ -137,6 +137,11 @@ python3 -m pip install .
 ```
 
 这个脚本同样会安装包、复制静态 skill，并在显式传入 `--register-mcp` 时注册 MCP。
+
+补充说明：
+
+- 复制的是整个静态 skill bundle，而不只是入口 `SKILL.md`
+- 详细环境变量、CLI fallback 和错误语义文档会随 `references/` 一起进入安装后的 skill 目录
 
 常用选项：
 
@@ -196,11 +201,12 @@ PYTHONPATH=src python3 -m unittest discover -s tests/integration -q
 部署到 agent 之后，推荐再实际调用一次：
 
 - `resolve_paper(query | title, authors, year)`
-- `fetch_paper(query, modes, strategy, include_refs, max_tokens, download_dir)`
+- `has_fulltext(query)`
+- `fetch_paper(query, modes, strategy, include_refs, max_tokens, prefer_cache, download_dir)`
 - `list_cached(download_dir)`
 - `get_cached(doi, download_dir)`
-- `batch_resolve(queries)`
-- `batch_check(queries, mode)`
+- `batch_resolve(queries, concurrency)`
+- `batch_check(queries, mode, concurrency)`
 
 `fetch_paper` 的当前 MCP 默认值是：
 
@@ -210,16 +216,25 @@ PYTHONPATH=src python3 -m unittest discover -s tests/integration -q
 - `strategy.asset_profile="none"`
 - `max_tokens="full_text"`
 - `include_refs=null`
+- `prefer_cache=false`
 
 也就是默认更偏向“先把全文文字完整拿回来，但不额外下载图片/补充材料”。补充说明：
 
 - `resolve_paper` 支持原始 `query`，也支持 `title` + 可选 `authors` / `year` 的结构化输入
+- `has_fulltext()` 是廉价 probe，只用 resolution、Crossref/官方 metadata probe 与 landing-page HTML meta 信号，不会触发完整正文抓取
+- `has_fulltext()` 当前只主动返回 `likely_yes` / `unknown`；`confirmed_yes` / `no` 仍保留给后续迭代
 - `include_refs=null` 在 `max_tokens="full_text"` 下默认等价于 `all`
+- 显式 `prefer_cache=true` 时，`fetch_paper` 会先尝试读取本地 MCP cache 里的 envelope sidecar；只有命中才短路，否则仍会正常联网
 - 显式 `download_dir` 的优先级高于 `PAPER_FETCH_DOWNLOAD_DIR` 和 XDG 默认目录
 - `list_cached()` / `get_cached()` 只读本地 cache index，不会触发网络
-- `batch_check()` 串行复用一个 transport，但不会把正文或 provider payload 写入磁盘
+- `batch_resolve()` / `batch_check()` 默认 `concurrency=1`；显式提高时，不同 host 的查询可以并发执行，但同一 host 仍会保持串行
+- `batch_check(mode="metadata")` 现在复用廉价 probe，返回 `probe_state` / `evidence` / `warnings` 等轻量字段，不会走完整 fetch，也不会把正文或 provider payload 写入磁盘
+- `batch_check(mode="article")` 仍保留完整 fetch 语义
 - 当 `strategy.asset_profile` 为 `body` / `all` 时，`fetch_paper` 可能在 JSON 块后附带少量关键正文图的 `ImageContent`
+- 这 7 个 MCP tools 现在都会暴露 `outputSchema`，支持 schema-aware 的 host 可以直接做参数补全与结果校验
+- 当错误能明确归因到缺失凭证或环境变量时，MCP `structuredContent` 现在会附带 `missing_env=[...]`
 - 支持这些能力的 MCP client 会在 `fetch_paper` / `batch_check` / `batch_resolve` 期间收到 progress 和 structured log notifications
+- 支持 MCP cancellation 的 host 现在可以取消 `fetch_paper` / `batch_check` / `batch_resolve`；worker 会协作式停止继续发后续网络请求
 - `science` / `pnas` 当前只承诺正文 markdown；即使 `strategy.asset_profile` 是 `body` / `all`，也会降级为 text-only 并在结果里给 warning
 
 如果你希望精读某篇论文，可以在 MCP 请求里显式传：

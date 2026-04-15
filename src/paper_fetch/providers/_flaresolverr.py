@@ -132,9 +132,14 @@ def load_runtime_config(env: Mapping[str, str], *, provider: str, doi: str) -> F
                 "Science/PNAS requires FLARESOLVERR_ENV_FILE pointing at a repo-local vendor/flaresolverr preset. "
                 "Start the service with ./scripts/flaresolverr-up <preset> first."
             ),
+            missing_env=["FLARESOLVERR_ENV_FILE"],
         )
     if not env_file.exists():
-        raise ProviderFailure("not_configured", f"Configured FLARESOLVERR_ENV_FILE does not exist: {env_file}")
+        raise ProviderFailure(
+            "not_configured",
+            f"Configured FLARESOLVERR_ENV_FILE does not exist: {env_file}",
+            missing_env=["FLARESOLVERR_ENV_FILE"],
+        )
 
     min_interval_seconds = configured_int_env(FLARESOLVERR_MIN_INTERVAL_SECONDS_ENV_VAR, env)
     max_requests_per_hour = configured_int_env(FLARESOLVERR_MAX_REQUESTS_PER_HOUR_ENV_VAR, env)
@@ -152,6 +157,7 @@ def load_runtime_config(env: Mapping[str, str], *, provider: str, doi: str) -> F
         raise ProviderFailure(
             "not_configured",
             "Science/PNAS requires explicit local rate-limit settings: " + ", ".join(missing),
+            missing_env=missing,
         )
 
     env_values = load_env_file(env_file)

@@ -128,7 +128,12 @@ fi
 
 log "Copying static skill to $SKILL_DIR"
 mkdir -p "$SKILL_DIR/agents"
+rm -f "$SKILL_DIR/SKILL.md"
+rm -rf "$SKILL_DIR/references"
 cp "$SOURCE_SKILL_DIR/SKILL.md" "$SKILL_DIR/SKILL.md"
+if [ -d "$SOURCE_SKILL_DIR/references" ]; then
+    cp -R "$SOURCE_SKILL_DIR/references" "$SKILL_DIR/references"
+fi
 cat > "$SKILL_DIR/agents/openai.yaml" <<'EOF'
 interface:
   display_name: "Paper Fetch Skill"
