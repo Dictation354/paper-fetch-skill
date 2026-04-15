@@ -248,7 +248,12 @@ PYTHONPATH=src python3 -m unittest discover -s tests/integration -q
 - `resource://paper-fetch/cache-index`
 - `resource://paper-fetch/cached/{entry_id}`
 
-这些 resources 只覆盖默认共享下载目录。若你在工具调用里显式传了 `download_dir`，请改用 `list_cached(download_dir)` 和 `get_cached(doi, download_dir)` 访问隔离目录。
+如果你在工具调用里显式传了 `download_dir`，当前 server session 还会为该目录注册一组 scoped cache resources：
+
+- `resource://paper-fetch/cache-index/{scope_id}`
+- `resource://paper-fetch/cached-dir/{scope_id}/{entry_id}`
+
+其中 `scope_id` 是下载目录路径的稳定 hash，不直接暴露本地绝对路径。`list_cached(download_dir)` 和 `get_cached(doi, download_dir)` 仍然是同一批隔离目录缓存的 tool 入口。
 
 如果你要验收 Science / PNAS 的 repo-local live 路径，可以额外跑：
 

@@ -101,5 +101,7 @@ def fetch_tool_description() -> str:
         "With body/all profiles, key local figures may be returned as ImageContent "
         "alongside the JSON result. `science` and `pnas` routes use a provider-managed "
         "HTML-first, PDF-second repo-local workflow and downgrade body/all requests to "
-        "text-only with warnings. Set download_dir to isolate task-local downloads."
+        "text-only with warnings. Set download_dir to isolate task-local downloads; "
+        "the MCP server can also surface scoped cache resources for that directory "
+        "during the current session."
     )

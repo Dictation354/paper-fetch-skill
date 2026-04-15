@@ -31,6 +31,7 @@ agent-surface-plan.md
 vendor/flaresolverr/.work/
 vendor/flaresolverr/.venv-flaresolverr/
 vendor/flaresolverr/.flaresolverr/
+vendor/flaresolverr/run_logs/
 
 # Editors / OS
 .vscode/
