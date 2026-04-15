@@ -19,6 +19,7 @@ from ..http import HttpTransport
 from ..models import ArticleModel, Asset, FetchEnvelope
 from ..providers.base import ProviderFailure
 from ..service import PaperFetchFailure, fetch_paper as service_fetch_paper
+from ..service import probe_has_fulltext as service_probe_has_fulltext
 from ..service import resolve_paper as service_resolve_paper
 from ..utils import extend_unique, normalize_text
 from .cache_index import (
@@ -32,6 +33,7 @@ from .schemas import (
     BatchResolveRequest,
     FetchPaperRequest,
     FetchStrategyInput,
+    HasFulltextRequest,
     ResolvePaperRequest,
 )
 
@@ -164,6 +166,20 @@ def resolve_paper_payload(
     return resolved.to_dict()
 
 
+def has_fulltext_payload(
+    *,
+    query: str,
+    env: Mapping[str, str] | None = None,
+    transport: HttpTransport | None = None,
+) -> dict[str, Any]:
+    request = HasFulltextRequest(query=query)
+    runtime_env = build_runtime_env(env)
+    probe_result = service_probe_has_fulltext(request.query, transport=transport, env=runtime_env)
+    payload = probe_result.to_dict()
+    payload.pop("title", None)
+    return payload
+
+
 def fetch_paper_payload(
     *,
     query: str,
@@ -262,9 +278,19 @@ def batch_resolve_payload(
 def _batch_check_success_payload(query: str, payload: Mapping[str, Any], *, mode: str) -> dict[str, Any]:
     title = None
     if mode == "metadata":
-        metadata = payload.get("metadata") or {}
-        if isinstance(metadata, Mapping):
-            title = metadata.get("title")
+        title = payload.get("title")
+        return {
+            "query": query,
+            "doi": payload.get("doi"),
+            "title": title,
+            "has_fulltext": True if payload.get("state") == "likely_yes" else None,
+            "probe_state": payload.get("state"),
+            "evidence": list(payload.get("evidence") or []),
+            "warnings": list(payload.get("warnings") or []),
+            "source": None,
+            "source_trail": [],
+            "token_estimate": None,
+        }
     else:
         article = payload.get("article") or {}
         if isinstance(article, Mapping):
@@ -299,13 +325,16 @@ def batch_check_payload(
 
     for query in request.queries:
         try:
-            payload = fetch_paper_payload(
-                query=query,
-                modes=requested_modes,
-                env=runtime_env,
-                download_dir=None,
-                transport=transport,
-            )
+            if request.mode == "metadata":
+                payload = service_probe_has_fulltext(query, transport=transport, env=runtime_env).to_dict()
+            else:
+                payload = fetch_paper_payload(
+                    query=query,
+                    modes=requested_modes,
+                    env=runtime_env,
+                    download_dir=None,
+                    transport=transport,
+                )
             results.append(_batch_check_success_payload(query, payload, mode=request.mode))
         except Exception as error:
             payload = error_payload_from_exception(error)
@@ -551,6 +580,23 @@ def resolve_paper_tool(
         return _tool_result(error_payload_from_exception(error), is_error=True)
 
 
+def has_fulltext_tool(
+    *,
+    query: str,
+    env: Mapping[str, str] | None = None,
+) -> CallToolResult:
+    try:
+        return _tool_result(
+            has_fulltext_payload(
+                query=query,
+                env=env,
+            ),
+            is_error=False,
+        )
+    except Exception as error:
+        return _tool_result(error_payload_from_exception(error), is_error=True)
+
+
 def fetch_paper_tool(
     *,
     query: str,
@@ -784,14 +830,19 @@ async def batch_check_tool_async(
             bridge.__enter__()
         for index, query in enumerate(request.queries, start=1):
             try:
-                payload = await asyncio.to_thread(
-                    fetch_paper_payload,
-                    query=query,
-                    modes=requested_modes,
-                    env=runtime_env,
-                    download_dir=None,
-                    transport=transport,
-                )
+                if request.mode == "metadata":
+                    payload = await asyncio.to_thread(
+                        lambda: service_probe_has_fulltext(query, transport=transport, env=runtime_env).to_dict()
+                    )
+                else:
+                    payload = await asyncio.to_thread(
+                        fetch_paper_payload,
+                        query=query,
+                        modes=requested_modes,
+                        env=runtime_env,
+                        download_dir=None,
+                        transport=transport,
+                    )
                 results.append(_batch_check_success_payload(query, payload, mode=request.mode))
             except Exception as error:
                 payload = error_payload_from_exception(error)

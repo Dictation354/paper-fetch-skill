@@ -36,14 +36,15 @@ Do not use this skill when:
 3. In multi-turn sessions, call `list_cached()` or `get_cached(doi)` first.
 4. For bibliography or citation-list tasks, call `batch_check(queries, mode)` before doing per-paper full fetches.
 5. Call `resolve_paper(query)` first if the query may be ambiguous.
-6. Call `fetch_paper(query, modes, strategy, include_refs, max_tokens, download_dir)` when you need AI-friendly Markdown, structured article data, or metadata.
-7. If the MCP tools are unavailable in the current runtime, fall back to the CLI:
+6. Call `has_fulltext(query)` when you need a cheap readability probe rather than the full fetch waterfall.
+7. Call `fetch_paper(query, modes, strategy, include_refs, max_tokens, download_dir)` when you need AI-friendly Markdown, structured article data, or metadata.
+8. If the MCP tools are unavailable in the current runtime, fall back to the CLI:
 
    ```bash
    paper-fetch --query "<user input>"
    ```
 
-8. If full text is unavailable, continue with the metadata-only result and tell the user they are working from metadata or abstract only.
+9. If full text is unavailable, continue with the metadata-only result and tell the user they are working from metadata or abstract only.
 
 ## MCP Tools
 
@@ -76,6 +77,14 @@ Recommended defaults:
 - `include_refs=null` behaves like `all` when `max_tokens="full_text"`.
 - When `max_tokens` is a positive integer, `include_refs=null` behaves like `top10`.
 
+### `has_fulltext(query)`
+
+Use this when you only need a cheap probe. Important behavior:
+- It checks resolution, Crossref metadata, lightweight official metadata probes, and landing-page HTML meta.
+- It does not run the full `fetch_paper` waterfall.
+- The success payload is `{query, doi, state, evidence, warnings}`.
+- Current v1 states are practically `likely_yes` or `unknown`; `confirmed_yes` and `no` are reserved for future iterations.
+
 ### `list_cached(download_dir)`
 
 Use this to inspect the MCP cache index without hitting the network. If `download_dir` is omitted, it reads the default shared MCP download directory.
@@ -90,7 +99,9 @@ Use this to resolve multiple DOI, URL, or title queries serially while reusing o
 
 ### `batch_check(queries, mode)`
 
-Use this to check many identifiable papers serially without returning full bodies. Success items keep only lightweight provenance fields such as `doi`, `title`, `source`, `has_fulltext`, `warnings`, `source_trail`, and `token_estimate`.
+Use this to check many identifiable papers serially without returning full bodies.
+- `mode="metadata"` now reuses the cheap `has_fulltext` probe and returns lightweight fields such as `doi`, `title`, `has_fulltext`, `probe_state`, `evidence`, and `warnings`.
+- `mode="article"` still runs the full fetch path and returns the final full-text verdict fields without embedding article bodies.
 
 ## Environment
 

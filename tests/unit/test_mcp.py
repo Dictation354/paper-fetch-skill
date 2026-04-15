@@ -11,7 +11,7 @@ from paper_fetch.mcp import tools as mcp_tools
 from paper_fetch.models import ArticleModel, Asset, FetchEnvelope, Metadata, Quality, RenderOptions, Section
 from paper_fetch.providers.base import ProviderFailure
 from paper_fetch.resolve.query import ResolvedQuery
-from paper_fetch.service import FetchStrategy, PaperFetchFailure
+from paper_fetch.service import FetchStrategy, HasFulltextProbeResult, PaperFetchFailure
 from paper_fetch.utils import sanitize_filename
 
 
@@ -60,6 +60,25 @@ def sample_resolved_query(query: str) -> ResolvedQuery:
         confidence=1.0,
         candidates=[],
         title="Example Article",
+    )
+
+
+def sample_probe_result(
+    query: str,
+    *,
+    doi: str | None = None,
+    title: str | None = None,
+    state: str = "likely_yes",
+    evidence: list[str] | None = None,
+    warnings: list[str] | None = None,
+) -> HasFulltextProbeResult:
+    return HasFulltextProbeResult(
+        query=query,
+        doi=doi or (query if query.startswith("10.") else "10.1000/example"),
+        title=title or f"Article for {query}",
+        state=state,
+        evidence=list(evidence or ["crossref_fulltext_link"]),
+        warnings=list(warnings or []),
     )
 
 
@@ -356,15 +375,16 @@ class McpToolTests(unittest.TestCase):
         self.assertEqual(len(set(transport_ids)), 1)
 
     def test_batch_check_payload_uses_lightweight_results_and_no_downloads(self) -> None:
-        captured_download_dirs: list[Path | None] = []
         transport_ids: list[int] = []
 
-        def fake_fetch_paper(query, **kwargs):
-            captured_download_dirs.append(kwargs["download_dir"])
-            transport_ids.append(id(kwargs["transport"]))
-            return sample_envelope(modes=kwargs["modes"], doi=query)
+        def fake_probe(query, *, transport=None, env=None):
+            transport_ids.append(id(transport))
+            return sample_probe_result(query, doi=query, title=f"Title for {query}")
 
-        with mock.patch.object(mcp_tools, "service_fetch_paper", side_effect=fake_fetch_paper):
+        with (
+            mock.patch.object(mcp_tools, "service_probe_has_fulltext", side_effect=fake_probe),
+            mock.patch.object(mcp_tools, "service_fetch_paper") as mocked_fetch,
+        ):
             payload = mcp_tools.batch_check_payload(queries=["10.1000/one", "10.1000/two"], mode="metadata")
 
         self.assertEqual(payload["mode"], "metadata")
@@ -372,10 +392,14 @@ class McpToolTests(unittest.TestCase):
         self.assertEqual(len(payload["results"]), 2)
         self.assertEqual(payload["results"][0]["query"], "10.1000/one")
         self.assertEqual(payload["results"][0]["doi"], "10.1000/one")
-        self.assertIn("title", payload["results"][0])
-        self.assertNotIn("markdown", payload["results"][0])
-        self.assertEqual(captured_download_dirs, [None, None])
+        self.assertEqual(payload["results"][0]["title"], "Title for 10.1000/one")
+        self.assertEqual(payload["results"][0]["has_fulltext"], True)
+        self.assertEqual(payload["results"][0]["probe_state"], "likely_yes")
+        self.assertEqual(payload["results"][0]["source"], None)
+        self.assertEqual(payload["results"][0]["source_trail"], [])
+        self.assertEqual(payload["results"][0]["token_estimate"], None)
         self.assertEqual(len(set(transport_ids)), 1)
+        mocked_fetch.assert_not_called()
 
     def test_batch_check_payload_aborts_on_rate_limit(self) -> None:
         seen_queries: list[str] = []
@@ -423,6 +447,33 @@ class McpToolTests(unittest.TestCase):
         self.assertTrue(result.isError)
         self.assertEqual(result.structuredContent["status"], "error")
         self.assertIn("either query or structured title/authors/year", result.structuredContent["reason"])
+
+    def test_has_fulltext_tool_serializes_probe_result(self) -> None:
+        with mock.patch.object(
+            mcp_tools,
+            "service_probe_has_fulltext",
+            return_value=sample_probe_result("10.1000/example", title="Example Article"),
+        ):
+            result = mcp_tools.has_fulltext_tool(query="10.1000/example")
+
+        self.assertFalse(result.isError)
+        self.assertEqual(result.structuredContent["doi"], "10.1000/example")
+        self.assertEqual(result.structuredContent["state"], "likely_yes")
+        self.assertEqual(result.structuredContent["evidence"], ["crossref_fulltext_link"])
+        self.assertNotIn("title", result.structuredContent)
+
+    def test_has_fulltext_tool_keeps_ambiguous_error_payload(self) -> None:
+        error = PaperFetchFailure(
+            "ambiguous",
+            "Query resolution is ambiguous; choose one of the DOI candidates.",
+            candidates=[{"doi": "10.1000/one"}],
+        )
+        with mock.patch.object(mcp_tools, "service_probe_has_fulltext", side_effect=error):
+            result = mcp_tools.has_fulltext_tool(query="Example title")
+
+        self.assertTrue(result.isError)
+        self.assertEqual(result.structuredContent["status"], "ambiguous")
+        self.assertEqual(result.structuredContent["candidates"], [{"doi": "10.1000/one"}])
 
     def test_parse_structured_log_message_extracts_fields(self) -> None:
         payload = mcp_tools.parse_structured_log_message(
@@ -550,11 +601,11 @@ class McpAsyncToolTests(unittest.IsolatedAsyncioTestCase):
     async def test_batch_check_tool_async_reports_per_query_progress(self) -> None:
         ctx = FakeContext()
 
-        def fake_fetch_paper(query, **kwargs):
+        def fake_probe(query, *, transport=None, env=None):
             logging.getLogger("paper_fetch.http").debug("batch_check_item query=%s status=%s", query, "ok")
-            return sample_envelope(modes=kwargs["modes"], doi=query)
+            return sample_probe_result(query, doi=query, title=f"Title for {query}")
 
-        with mock.patch.object(mcp_tools, "service_fetch_paper", side_effect=fake_fetch_paper):
+        with mock.patch.object(mcp_tools, "service_probe_has_fulltext", side_effect=fake_probe):
             result = await mcp_tools.batch_check_tool_async(
                 queries=["10.1000/one", "10.1000/two"],
                 mode="metadata",

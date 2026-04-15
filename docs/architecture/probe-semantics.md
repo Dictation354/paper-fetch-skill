@@ -10,11 +10,14 @@
 4. fall back to HTML when allowed
 5. fall back to metadata-only when allowed
 
-That makes it a good final answer, but not a cheap probe. This note defines what a future probe should mean before we add any new MCP or CLI surface.
+That makes it a good final answer, but not a cheap probe. This note now serves two roles:
+
+- it records the semantics decisions made before implementation
+- it documents the current v1 `has_fulltext(query)` MCP tool that landed from those decisions
 
 ## Decision
 
-The next iteration should add a dedicated `has_fulltext(query)` MCP tool rather than `fetch_paper(probe_only=true)`.
+We shipped a dedicated `has_fulltext(query)` MCP tool rather than `fetch_paper(probe_only=true)`.
 
 Reasoning:
 
@@ -22,7 +25,12 @@ Reasoning:
 - Because of that, a probe result cannot promise exact numerical agreement with `fetch_paper.has_fulltext`.
 - A separate tool keeps the current `fetch_paper` contract simple and avoids mixing "probe semantics" with "final fetch semantics" inside one envelope.
 
-This round adds no code for the probe itself.
+Current v1 scope:
+
+- Uses resolution, Crossref metadata, lightweight official metadata probes, and landing-page HTML meta.
+- Does not call the full `_fetch_article` waterfall.
+- Reuses the same cheap probe path for `batch_check(mode="metadata")`.
+- Publicly exposes four states in the contract, but v1 only actively returns `likely_yes` and `unknown`.
 
 ## Probe Questions
 
@@ -108,7 +116,7 @@ Why not `fetch_paper(probe_only=true)`:
 
 ## Non-goals For This Round
 
-- No new probe-only service helper
-- No new MCP tool
+- No new CLI `has_fulltext` command
 - No change to `fetch_paper.has_fulltext`
 - No provider-specific HEAD/OPTIONS implementation work
+- No active production use of `confirmed_yes` or `no` yet

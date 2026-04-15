@@ -85,6 +85,20 @@ class ResolvePaperRequest(BaseModel):
         return normalize_text(" ".join(parts))
 
 
+class HasFulltextRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    query: str
+
+    @field_validator("query")
+    @classmethod
+    def validate_query(cls, value: str) -> str:
+        normalized = normalize_text(value)
+        if not normalized:
+            raise ValueError("query must not be empty.")
+        return normalized
+
+
 def _normalize_query_list(value: Any) -> list[str]:
     if value is None:
         raise ValueError("queries must contain at least one entry.")

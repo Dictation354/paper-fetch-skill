@@ -196,6 +196,7 @@ PYTHONPATH=src python3 -m unittest discover -s tests/integration -q
 部署到 agent 之后，推荐再实际调用一次：
 
 - `resolve_paper(query | title, authors, year)`
+- `has_fulltext(query)`
 - `fetch_paper(query, modes, strategy, include_refs, max_tokens, download_dir)`
 - `list_cached(download_dir)`
 - `get_cached(doi, download_dir)`
@@ -214,10 +215,13 @@ PYTHONPATH=src python3 -m unittest discover -s tests/integration -q
 也就是默认更偏向“先把全文文字完整拿回来，但不额外下载图片/补充材料”。补充说明：
 
 - `resolve_paper` 支持原始 `query`，也支持 `title` + 可选 `authors` / `year` 的结构化输入
+- `has_fulltext()` 是廉价 probe，只用 resolution、Crossref/官方 metadata probe 与 landing-page HTML meta 信号，不会触发完整正文抓取
+- `has_fulltext()` 当前只主动返回 `likely_yes` / `unknown`；`confirmed_yes` / `no` 仍保留给后续迭代
 - `include_refs=null` 在 `max_tokens="full_text"` 下默认等价于 `all`
 - 显式 `download_dir` 的优先级高于 `PAPER_FETCH_DOWNLOAD_DIR` 和 XDG 默认目录
 - `list_cached()` / `get_cached()` 只读本地 cache index，不会触发网络
-- `batch_check()` 串行复用一个 transport，但不会把正文或 provider payload 写入磁盘
+- `batch_check(mode="metadata")` 现在复用廉价 probe，返回 `probe_state` / `evidence` / `warnings` 等轻量字段，不会走完整 fetch，也不会把正文或 provider payload 写入磁盘
+- `batch_check(mode="article")` 仍保留完整 fetch 语义
 - 当 `strategy.asset_profile` 为 `body` / `all` 时，`fetch_paper` 可能在 JSON 块后附带少量关键正文图的 `ImageContent`
 - 支持这些能力的 MCP client 会在 `fetch_paper` / `batch_check` / `batch_resolve` 期间收到 progress 和 structured log notifications
 - `science` / `pnas` 当前只承诺正文 markdown；即使 `strategy.asset_profile` 是 `body` / `all`，也会降级为 text-only 并在结果里给 warning

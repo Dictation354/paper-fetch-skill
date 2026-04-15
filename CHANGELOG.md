@@ -2,6 +2,20 @@
 
 All notable public changes to `paper-fetch-skill` are documented in this file.
 
+## 2026-04-15
+
+### Added
+
+- Added a dedicated `has_fulltext(query)` MCP probe tool with cheap Crossref, provider-metadata, and landing-page HTML-meta signals.
+
+### Changed
+
+- Changed `batch_check(mode="metadata")` to reuse the cheap probe path instead of running the full fetch waterfall.
+
+### Docs
+
+- Updated README, deployment docs, the skill guide, and the probe-semantics note to document the shipped `has_fulltext` v1 behavior and the new `batch_check(mode="metadata")` semantics.
+
 ## 2026-04-14
 
 ### Added

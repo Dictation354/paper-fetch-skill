@@ -24,6 +24,7 @@ from .tools import (
     batch_resolve_tool_async,
     cached_entry_payload,
     fetch_paper_tool_async,
+    has_fulltext_tool,
     get_cached_tool,
     list_cached_payload,
     list_cached_tool,
@@ -119,6 +120,14 @@ def build_server() -> FastMCP:
             authors=authors,
             year=year,
         )
+
+    @server.tool(
+        name="has_fulltext",
+        description="Probe whether a paper likely has accessible full text using cheap metadata and landing-page signals.",
+        structured_output=False,
+    )
+    def has_fulltext(query: str) -> CallToolResult:
+        return has_fulltext_tool(query=query)
 
     @server.tool(
         name="fetch_paper",

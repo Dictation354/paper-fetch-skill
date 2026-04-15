@@ -70,6 +70,7 @@ cp .env.example ~/.config/paper-fetch/.env
 当前 MCP server 提供这些工具：
 
 - `resolve_paper(query | title, authors, year)`
+- `has_fulltext(query)`
 - `fetch_paper(query, modes, strategy, include_refs, max_tokens, download_dir)`
 - `list_cached(download_dir)`
 - `get_cached(doi, download_dir)`
@@ -88,10 +89,13 @@ cp .env.example ~/.config/paper-fetch/.env
 补充说明：
 
 - `resolve_paper` 既支持原始 `query`，也支持 `title` + 可选 `authors` / `year` 的结构化输入
+- `has_fulltext()` 是廉价 probe：只看 resolution、Crossref/官方 metadata probe 与 landing-page HTML meta，不会走完整正文抓取瀑布
+- `has_fulltext()` 当前只主动产出 `state="likely_yes"` 或 `state="unknown"`；`confirmed_yes` / `no` 仍保留给后续迭代
 - `include_refs=null` 在 `max_tokens="full_text"` 下等价于 `all`
 - 显式传 `download_dir` 会覆盖 `PAPER_FETCH_DOWNLOAD_DIR` 和 XDG 默认目录，适合隔离多任务下载目录
 - `list_cached()` / `get_cached()` 只读本地 cache index，不触发网络
-- `batch_check()` 会串行复用同一个 HTTP transport，但不会把正文或原始 payload 写入磁盘
+- `batch_check(mode="metadata")` 现在复用同一个廉价 probe，返回 `probe_state` / `evidence` / `warnings` 这类轻量字段，不会走完整抓取，也不会把正文或原始 payload 写入磁盘
+- `batch_check(mode="article")` 仍保留“完整 fetch 后给最终 verdict”的语义
 - 当 `strategy.asset_profile` 为 `body` / `all` 时，`fetch_paper` 可能在 JSON 结果后附带少量关键正文图的 `ImageContent`
 - 支持这些能力的 MCP client 还会在 `fetch_paper` / `batch_check` / `batch_resolve` 期间收到 progress 和 structured log notifications
 
@@ -278,5 +282,5 @@ PYTHONPATH=src python3 -m unittest tests.live.test_live_science_pnas -q
 - [docs/deployment.md](docs/deployment.md): 安装、MCP 注册、公式后端和验证步骤
 - [docs/flaresolverr.md](docs/flaresolverr.md): Science / PNAS 的 repo-local FlareSolverr、Playwright 和限速工作流
 - [docs/providers.md](docs/providers.md): 环境变量、provider 配置和 API key 说明
-- [docs/architecture/probe-semantics.md](docs/architecture/probe-semantics.md): `has_fulltext` probe 语义设计 note
+- [docs/architecture/probe-semantics.md](docs/architecture/probe-semantics.md): `has_fulltext` probe 语义与当前 v1 落地范围
 - [docs/architecture/target-architecture.md](docs/architecture/target-architecture.md): 项目结构和架构说明
