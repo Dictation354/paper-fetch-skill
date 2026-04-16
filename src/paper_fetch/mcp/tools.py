@@ -30,7 +30,8 @@ from ..models import (
     build_token_estimate_breakdown,
     coerce_token_estimate_breakdown,
 )
-from ..providers.base import ProviderFailure
+from ..providers.base import ProviderFailure, ProviderStatusResult, build_provider_status_check
+from ..providers.registry import build_clients
 from ..service import PaperFetchFailure, fetch_paper as service_fetch_paper
 from ..service import probe_has_fulltext as service_probe_has_fulltext
 from ..service import resolve_paper as service_resolve_paper
@@ -59,6 +60,7 @@ _BATCH_CHECK_MODES = {
 _FETCH_ENVELOPE_CACHE_VERSION = 1
 _FETCH_PROGRESS_TOTAL = 4
 _FETCH_LOGGER_NAMES = ("paper_fetch.service", "paper_fetch.http")
+_PROVIDER_STATUS_ORDER = ("crossref", "elsevier", "springer", "wiley", "science", "pnas")
 _LOG_LEVEL_BY_RECORD_LEVEL = {
     logging.DEBUG: "debug",
     logging.INFO: "info",
@@ -501,6 +503,57 @@ def get_cached_payload(
         "entries": entries,
         "preferred": preferred,
     }
+
+
+def _provider_status_error_payload(
+    provider: str,
+    *,
+    official_provider: bool,
+    message: str,
+) -> dict[str, Any]:
+    return ProviderStatusResult(
+        provider=provider,
+        status="error",
+        available=False,
+        official_provider=official_provider,
+        notes=[],
+        checks=[build_provider_status_check("diagnostics", "error", message)],
+    ).to_dict()
+
+
+def provider_status_payload(
+    *,
+    env: Mapping[str, str] | None = None,
+    transport: HttpTransport | None = None,
+) -> dict[str, Any]:
+    runtime_env = build_runtime_env(env)
+    active_transport = transport or HttpTransport()
+    clients = build_clients(transport=active_transport, env=runtime_env)
+    results: list[dict[str, Any]] = []
+
+    for provider_name in _PROVIDER_STATUS_ORDER:
+        client = clients.get(provider_name)
+        if client is None:
+            results.append(
+                _provider_status_error_payload(
+                    provider_name,
+                    official_provider=provider_name != "crossref",
+                    message=f"{provider_name} is not registered in the provider client registry.",
+                )
+            )
+            continue
+        try:
+            results.append(client.probe_status().to_dict())
+        except Exception as error:
+            results.append(
+                _provider_status_error_payload(
+                    provider_name,
+                    official_provider=bool(getattr(client, "official_provider", provider_name != "crossref")),
+                    message=f"Provider diagnostics failed unexpectedly: {error}",
+                )
+            )
+
+    return {"providers": results}
 
 
 def batch_resolve_payload(
@@ -996,6 +1049,16 @@ def get_cached_tool(
             ),
             is_error=False,
         )
+    except Exception as error:
+        return _tool_result(error_payload_from_exception(error), is_error=True)
+
+
+def provider_status_tool(
+    *,
+    env: Mapping[str, str] | None = None,
+) -> CallToolResult:
+    try:
+        return _tool_result(provider_status_payload(env=env), is_error=False)
     except Exception as error:
         return _tool_result(error_payload_from_exception(error), is_error=True)
 

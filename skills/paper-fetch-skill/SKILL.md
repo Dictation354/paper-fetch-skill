@@ -26,9 +26,10 @@ Use this skill when an agent needs the contents or full-text availability of one
 3. If the query may be ambiguous, call `resolve_paper(query | title, authors, year)` first.
 4. For bibliography or citation-list tasks, call `batch_check(queries, mode, concurrency)` before per-paper full fetches.
 5. Call `has_fulltext(query)` when you only need a cheap readability probe.
-6. Call `fetch_paper(query, modes, strategy, include_refs, max_tokens, prefer_cache, download_dir)` when you need AI-friendly Markdown, structured article data, or metadata.
-7. Do not conclude "unreadable" just because there is no local PDF or cached text file.
-8. If full text is unavailable, continue with the metadata-only result and tell the user they are working from metadata or abstract only.
+6. Call `provider_status()` before the first fetch when provider credentials or Science / PNAS local runtime readiness may matter.
+7. Call `fetch_paper(query, modes, strategy, include_refs, max_tokens, prefer_cache, download_dir)` when you need AI-friendly Markdown, structured article data, or metadata.
+8. Do not conclude "unreadable" just because there is no local PDF or cached text file.
+9. If full text is unavailable, continue with the metadata-only result and tell the user they are working from metadata or abstract only.
 
 ## Tool Notes
 
@@ -48,8 +49,11 @@ Use this skill when an agent needs the contents or full-text availability of one
 - `fetch_paper(...)` and the batch tools: supporting MCP hosts may cancel in-flight requests; the worker cooperatively stops issuing follow-up network requests after cancellation is observed.
 - `has_fulltext(query)`: runs a cheap probe over resolution, Crossref metadata, lightweight official metadata probes, and landing-page HTML meta without triggering the full fetch waterfall.
 - `has_fulltext(query)`: the success payload is `{query, doi, state, evidence, warnings}`; v1 only actively returns `likely_yes` or `unknown`, while `confirmed_yes` and `no` remain reserved states.
+- `provider_status()`: returns stable local diagnostics for `crossref`, `elsevier`, `springer`, `wiley`, `science`, and `pnas` without calling remote publisher APIs.
+- `provider_status()`: provider-level `status` uses `ready`, `partial`, `not_configured`, `rate_limited`, or `error`; inspect `checks=[...]` for capability-level or runtime-level details before choosing a fetch path.
 - `batch_resolve(queries, concurrency)` and `batch_check(queries, mode, concurrency)`: default `concurrency=1`; higher values let different hosts overlap while the shared transport still keeps the same host serialized.
 - `batch_check(queries, mode, concurrency)`: `mode="metadata"` reuses the cheap probe and returns lightweight provenance fields; `mode="article"` still runs the full fetch path and reports the final full-text verdict.
+- The read-only MCP tools now advertise `ToolAnnotations` hints (`readOnlyHint=true`), so capable hosts may auto-approve them more smoothly; `fetch_paper(...)` remains writable because it may refresh local cache files.
 
 ## References
 

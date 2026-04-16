@@ -17,7 +17,15 @@ from ..utils import (
     empty_asset_results,
     save_payload,
 )
-from .base import ProviderClient, ProviderFailure, RawFulltextPayload, map_request_failure
+from .base import (
+    ProviderClient,
+    ProviderFailure,
+    ProviderStatusResult,
+    RawFulltextPayload,
+    build_provider_status_check,
+    map_request_failure,
+    summarize_capability_status,
+)
 
 WILEY_PDF_TEXT_MIN_CHARS = 1200
 WILEY_PDF_FULLTEXT_MARKERS = (
@@ -178,6 +186,33 @@ class WileyClient(ProviderClient):
         self.token = env.get("WILEY_TDM_TOKEN", "").strip()
         self.auth_header = env.get("WILEY_TDM_AUTH_HEADER", "Wiley-TDM-Client-Token").strip() or "Wiley-TDM-Client-Token"
         self.user_agent = build_user_agent(env)
+
+    def probe_status(self) -> ProviderStatusResult:
+        configured = bool(self.endpoint_template and self.token)
+        return summarize_capability_status(
+            self.name,
+            official_provider=self.official_provider,
+            checks=[
+                build_provider_status_check(
+                    "fulltext_api",
+                    "ok" if configured else "not_configured",
+                    (
+                        "Wiley TDM endpoint credentials are configured."
+                        if configured
+                        else "WILEY_TDM_URL_TEMPLATE and WILEY_TDM_TOKEN are required for Wiley full-text retrieval."
+                    ),
+                    missing_env=[
+                        name
+                        for name, is_configured in (
+                            ("WILEY_TDM_URL_TEMPLATE", bool(self.endpoint_template)),
+                            ("WILEY_TDM_TOKEN", bool(self.token)),
+                        )
+                        if not is_configured
+                    ],
+                    details={"auth_header": self.auth_header},
+                )
+            ],
+        )
 
     def fetch_metadata(self, query: Mapping[str, str | None]) -> ProviderMetadata:
         raise ProviderFailure(

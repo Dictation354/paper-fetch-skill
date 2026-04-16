@@ -203,6 +203,7 @@ PYTHONPATH=src python3 -m unittest discover -s tests/integration -q
 - `resolve_paper(query | title, authors, year)`
 - `has_fulltext(query)`
 - `fetch_paper(query, modes, strategy, include_refs, max_tokens, prefer_cache, download_dir)`
+- `provider_status()`
 - `list_cached(download_dir)`
 - `get_cached(doi, download_dir)`
 - `batch_resolve(queries, concurrency)`
@@ -230,6 +231,8 @@ PYTHONPATH=src python3 -m unittest discover -s tests/integration -q
 - `has_fulltext()` 是廉价 probe，只用 resolution、Crossref/官方 metadata probe 与 landing-page HTML meta 信号，不会触发完整正文抓取
 - `has_fulltext()` 当前只主动返回 `likely_yes` / `unknown`；`confirmed_yes` / `no` 仍保留给后续迭代
 - `fetch_paper()` 顶层结果现在会附带 `token_estimate_breakdown={abstract,body,refs}`；兼容保留的 `token_estimate` 仍只表示 `abstract + body`
+- `provider_status()` 会按稳定顺序返回 `crossref`、`elsevier`、`springer`、`wiley`、`science`、`pnas` 的本地诊断结果；它只检查本地配置、repo-local 依赖、FlareSolverr 健康和本地限速窗口，不会主动探测远端 publisher API 连通性
+- `provider_status()` 的 provider 级 `status` 固定使用 `ready` / `partial` / `not_configured` / `rate_limited` / `error`；每个 provider 还会带 `checks=[...]` 明细，适合 agent 在正式抓取前先做预检
 - `include_refs=null` 在 `max_tokens="full_text"` 下默认等价于 `all`
 - 显式 `prefer_cache=true` 时，`fetch_paper` 会先尝试读取本地 MCP cache 里的 envelope sidecar；只有命中才短路，否则仍会正常联网
 - 显式 `download_dir` 的优先级高于 `PAPER_FETCH_DOWNLOAD_DIR` 和 XDG 默认目录
@@ -239,7 +242,8 @@ PYTHONPATH=src python3 -m unittest discover -s tests/integration -q
 - `batch_check(mode="article")` 仍保留完整 fetch 语义
 - 当 `strategy.asset_profile` 为 `body` / `all` 时，`fetch_paper` 可能在 JSON 块后附带少量关键正文图的 `ImageContent`
 - 可选 `strategy.inline_image_budget={max_images,max_bytes_per_image,max_total_bytes}` 用来调节这些 inline 图片的默认上限：`3` 张、单张 `2 MiB`、总计 `8 MiB`；任一生效上限为 `0` 时会直接禁用 inline 图片附带
-- 这 7 个 MCP tools 现在都会暴露 `outputSchema`，支持 schema-aware 的 host 可以直接做参数补全与结果校验
+- 这 8 个 MCP tools 现在都会暴露 `outputSchema`，支持 schema-aware 的 host 可以直接做参数补全与结果校验
+- 所有只读工具现在还会显式暴露 MCP `ToolAnnotations`：`resolve_paper` / `has_fulltext` / `provider_status` / `list_cached` / `get_cached` / `batch_*` 都标记为 `readOnlyHint=true`；`fetch_paper` 保持可写（会落 cache）
 - 当错误能明确归因到缺失凭证或环境变量时，MCP `structuredContent` 现在会附带 `missing_env=[...]`
 - 支持这些能力的 MCP client 会在 `fetch_paper` / `batch_check` / `batch_resolve` 期间收到 progress 和 structured log notifications
 - 支持 MCP cancellation 的 host 现在可以取消 `fetch_paper` / `batch_check` / `batch_resolve`；worker 会协作式停止继续发后续网络请求

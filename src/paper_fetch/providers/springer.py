@@ -26,9 +26,12 @@ from ._article_markdown import build_article_structure, write_article_markdown
 from .base import (
     ProviderClient,
     ProviderFailure,
+    ProviderStatusResult,
     RawFulltextPayload,
+    build_provider_status_check,
     combine_provider_failures,
     map_request_failure,
+    summarize_capability_status,
 )
 
 XLINK_HREF = "{http://www.w3.org/1999/xlink}href"
@@ -261,6 +264,55 @@ class SpringerClient(ProviderClient):
         self.fulltext_auth_header = env.get("SPRINGER_FULLTEXT_AUTH_HEADER", "").strip()
         self.fulltext_accept = env.get("SPRINGER_FULLTEXT_ACCEPT", "application/xml").strip() or "application/xml"
         self.user_agent = build_user_agent(env)
+
+    def probe_status(self) -> ProviderStatusResult:
+        return summarize_capability_status(
+            self.name,
+            official_provider=self.official_provider,
+            checks=[
+                build_provider_status_check(
+                    "metadata_api",
+                    "ok" if self.meta_api_key else "not_configured",
+                    (
+                        "Springer Meta API credentials are configured."
+                        if self.meta_api_key
+                        else "SPRINGER_META_API_KEY is required for Springer metadata retrieval."
+                    ),
+                    missing_env=[] if self.meta_api_key else ["SPRINGER_META_API_KEY"],
+                ),
+                build_provider_status_check(
+                    "openaccess_api",
+                    "ok" if self.openaccess_api_key else "not_configured",
+                    (
+                        "Springer Open Access API credentials are configured."
+                        if self.openaccess_api_key
+                        else "SPRINGER_OPENACCESS_API_KEY is required for Springer Open Access full-text retrieval."
+                    ),
+                    missing_env=[] if self.openaccess_api_key else ["SPRINGER_OPENACCESS_API_KEY"],
+                ),
+                build_provider_status_check(
+                    "fulltext_api",
+                    "ok" if self.fulltext_api_key and self.fulltext_url_template else "not_configured",
+                    (
+                        "Springer Full Text API credentials are configured."
+                        if self.fulltext_api_key and self.fulltext_url_template
+                        else "SPRINGER_FULLTEXT_API_KEY and SPRINGER_FULLTEXT_URL_TEMPLATE are required for Springer Full Text API retrieval."
+                    ),
+                    missing_env=[
+                        name
+                        for name, configured in (
+                            ("SPRINGER_FULLTEXT_API_KEY", bool(self.fulltext_api_key)),
+                            ("SPRINGER_FULLTEXT_URL_TEMPLATE", bool(self.fulltext_url_template)),
+                        )
+                        if not configured
+                    ],
+                    details={
+                        "auth_header": self.fulltext_auth_header or None,
+                        "accept": self.fulltext_accept,
+                    },
+                ),
+            ],
+        )
 
     def _headers(self, accept: str) -> dict[str, str]:
         return {

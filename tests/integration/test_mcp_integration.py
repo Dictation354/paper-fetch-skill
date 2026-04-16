@@ -26,6 +26,7 @@ SERVER_SCRIPT = textwrap.dedent(
 
     from paper_fetch.models import ArticleModel, Asset, FetchEnvelope, Metadata, Quality, Section, TokenEstimateBreakdown
     from paper_fetch.mcp.server import main
+    from paper_fetch.providers.base import ProviderStatusResult, build_provider_status_check
     from paper_fetch.resolve.query import ResolvedQuery
     from paper_fetch.service import HasFulltextProbeResult
     from paper_fetch.utils import sanitize_filename
@@ -115,9 +116,124 @@ SERVER_SCRIPT = textwrap.dedent(
             warnings=[],
         )
 
+    class FakeProviderClient:
+        def __init__(self, result):
+            self.result = result
+            self.official_provider = result.official_provider
+
+        def probe_status(self):
+            return self.result
+
+    def fake_build_clients(*, transport=None, env=None):
+        return {
+            "crossref": FakeProviderClient(
+                ProviderStatusResult(
+                    provider="crossref",
+                    status="ready",
+                    available=True,
+                    official_provider=False,
+                    notes=["CROSSREF_MAILTO is not configured; adding one is recommended for better API etiquette."],
+                    checks=[build_provider_status_check("metadata_api", "ok", "Crossref metadata lookup is available.")],
+                )
+            ),
+            "elsevier": FakeProviderClient(
+                ProviderStatusResult(
+                    provider="elsevier",
+                    status="not_configured",
+                    available=False,
+                    official_provider=True,
+                    missing_env=["ELSEVIER_API_KEY"],
+                    checks=[
+                        build_provider_status_check(
+                            "fulltext_api",
+                            "not_configured",
+                            "ELSEVIER_API_KEY is required for Elsevier full-text retrieval.",
+                            missing_env=["ELSEVIER_API_KEY"],
+                        )
+                    ],
+                )
+            ),
+            "springer": FakeProviderClient(
+                ProviderStatusResult(
+                    provider="springer",
+                    status="partial",
+                    available=True,
+                    official_provider=True,
+                    missing_env=["SPRINGER_OPENACCESS_API_KEY", "SPRINGER_FULLTEXT_API_KEY", "SPRINGER_FULLTEXT_URL_TEMPLATE"],
+                    checks=[
+                        build_provider_status_check("metadata_api", "ok", "Springer Meta API credentials are configured."),
+                        build_provider_status_check(
+                            "openaccess_api",
+                            "not_configured",
+                            "SPRINGER_OPENACCESS_API_KEY is required for Springer Open Access full-text retrieval.",
+                            missing_env=["SPRINGER_OPENACCESS_API_KEY"],
+                        ),
+                        build_provider_status_check(
+                            "fulltext_api",
+                            "not_configured",
+                            "SPRINGER_FULLTEXT_API_KEY and SPRINGER_FULLTEXT_URL_TEMPLATE are required for Springer Full Text API retrieval.",
+                            missing_env=["SPRINGER_FULLTEXT_API_KEY", "SPRINGER_FULLTEXT_URL_TEMPLATE"],
+                        ),
+                    ],
+                )
+            ),
+            "wiley": FakeProviderClient(
+                ProviderStatusResult(
+                    provider="wiley",
+                    status="not_configured",
+                    available=False,
+                    official_provider=True,
+                    missing_env=["WILEY_TDM_URL_TEMPLATE", "WILEY_TDM_TOKEN"],
+                    checks=[
+                        build_provider_status_check(
+                            "fulltext_api",
+                            "not_configured",
+                            "WILEY_TDM_URL_TEMPLATE and WILEY_TDM_TOKEN are required for Wiley full-text retrieval.",
+                            missing_env=["WILEY_TDM_URL_TEMPLATE", "WILEY_TDM_TOKEN"],
+                        )
+                    ],
+                )
+            ),
+            "science": FakeProviderClient(
+                ProviderStatusResult(
+                    provider="science",
+                    status="not_configured",
+                    available=False,
+                    official_provider=True,
+                    missing_env=["FLARESOLVERR_ENV_FILE"],
+                    checks=[
+                        build_provider_status_check(
+                            "runtime_env",
+                            "not_configured",
+                            "FLARESOLVERR_ENV_FILE is required.",
+                            missing_env=["FLARESOLVERR_ENV_FILE"],
+                        ),
+                        build_provider_status_check("repo_local_workflow", "not_configured", "Skipped because runtime_env is not configured."),
+                        build_provider_status_check("flaresolverr_health", "not_configured", "Skipped because runtime_env is not configured."),
+                        build_provider_status_check("rate_limit_window", "not_configured", "Skipped because runtime_env is not configured."),
+                    ],
+                )
+            ),
+            "pnas": FakeProviderClient(
+                ProviderStatusResult(
+                    provider="pnas",
+                    status="ready",
+                    available=True,
+                    official_provider=True,
+                    checks=[
+                        build_provider_status_check("runtime_env", "ok", "pnas runtime environment is configured."),
+                        build_provider_status_check("repo_local_workflow", "ok", "Repo-local FlareSolverr workflow files are available."),
+                        build_provider_status_check("flaresolverr_health", "ok", "Local FlareSolverr health check passed."),
+                        build_provider_status_check("rate_limit_window", "ok", "Local Science/PNAS rate-limit window allows a new request."),
+                    ],
+                )
+            ),
+        }
+
     tools.service_resolve_paper = fake_resolve
     tools.service_fetch_paper = fake_fetch
     tools.service_probe_has_fulltext = fake_probe
+    tools.build_clients = fake_build_clients
     main()
     """
 )
@@ -162,10 +278,12 @@ class McpStdioIntegrationTests(unittest.IsolatedAsyncioTestCase):
                                 "get_cached",
                                 "has_fulltext",
                                 "list_cached",
+                                "provider_status",
                                 "resolve_paper",
                             ],
                         )
                         self.assertTrue(all(tool.outputSchema is not None for tool in listed.tools))
+                        self.assertTrue(all(tool.annotations is not None for tool in listed.tools))
 
                         prompts = await session.list_prompts()
                         self.assertEqual(
@@ -197,6 +315,15 @@ class McpStdioIntegrationTests(unittest.IsolatedAsyncioTestCase):
                         self.assertFalse(probe.isError)
                         self.assertEqual(probe.structuredContent["state"], "likely_yes")
                         self.assertEqual(probe.structuredContent["evidence"], ["crossref_fulltext_link"])
+
+                        provider_status = await session.call_tool("provider_status", {})
+                        self.assertFalse(provider_status.isError)
+                        self.assertEqual(
+                            [item["provider"] for item in provider_status.structuredContent["providers"]],
+                            ["crossref", "elsevier", "springer", "wiley", "science", "pnas"],
+                        )
+                        self.assertEqual(provider_status.structuredContent["providers"][0]["status"], "ready")
+                        self.assertEqual(provider_status.structuredContent["providers"][1]["missing_env"], ["ELSEVIER_API_KEY"])
 
                         custom_fetch = await session.call_tool(
                             "fetch_paper",

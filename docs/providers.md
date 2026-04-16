@@ -12,6 +12,12 @@
 | Science | Crossref metadata + Crossref/domain 路由信号 | repo-local FlareSolverr 抓 HTML，失败时带 cookies 的 Playwright PDF fallback | 当前固定按 text-only 处理，`body|all` 会降级 | 支持 |
 | PNAS | Crossref metadata + Crossref/domain 路由信号 | repo-local FlareSolverr 抓 HTML，失败时带 cookies 的 Playwright PDF fallback | 当前固定按 text-only 处理，`body|all` 会降级 | 支持 |
 
+`provider_status()` MCP tool 会把上面这些 provider 的本地诊断结果按稳定顺序返回出来：
+
+- `crossref`, `elsevier`, `springer`, `wiley`, `science`, `pnas`
+- 只检查本地配置、repo-local 依赖、FlareSolverr 健康和本地限速窗口，不主动探测远端 publisher API 连通性
+- provider 级 `status` 固定使用 `ready` / `partial` / `not_configured` / `rate_limited` / `error`
+
 ## Provider 路由与判定
 
 当前运行时的 provider 决策已经从“DOI 前缀主导”收口到“Crossref publisher / landing-page domain 主导，DOI 只做最后 fallback”。

@@ -30,7 +30,15 @@ from ._elsevier_xml_rules import (
     classify_elsevier_asset_kind,
     infer_elsevier_asset_group_key,
 )
-from .base import ProviderClient, ProviderFailure, RawFulltextPayload, map_request_failure
+from .base import (
+    ProviderClient,
+    ProviderFailure,
+    ProviderStatusResult,
+    RawFulltextPayload,
+    build_provider_status_check,
+    map_request_failure,
+    summarize_capability_status,
+)
 
 
 def xml_local_name(tag: str) -> str:
@@ -314,6 +322,32 @@ class ElsevierClient(ProviderClient):
         if self.clickthrough_token:
             headers["CR-Clickthrough-Client-Token"] = self.clickthrough_token
         return headers
+
+    def probe_status(self) -> ProviderStatusResult:
+        check_status = "ok" if self.api_key else "not_configured"
+        message = (
+            "Elsevier full-text API credentials are configured."
+            if self.api_key
+            else "ELSEVIER_API_KEY is required for Elsevier full-text retrieval."
+        )
+        missing_env = [] if self.api_key else ["ELSEVIER_API_KEY"]
+        return summarize_capability_status(
+            self.name,
+            official_provider=self.official_provider,
+            checks=[
+                build_provider_status_check(
+                    "fulltext_api",
+                    check_status,
+                    message,
+                    missing_env=missing_env,
+                    details={
+                        "insttoken_configured": bool(self.insttoken),
+                        "authtoken_configured": bool(self.authtoken),
+                        "clickthrough_token_configured": bool(self.clickthrough_token),
+                    },
+                )
+            ],
+        )
 
     def fetch_metadata(self, query: Mapping[str, str | None]) -> ProviderMetadata:
         doi = normalize_doi(query.get("doi"))

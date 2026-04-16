@@ -73,6 +73,7 @@ cp .env.example ~/.config/paper-fetch/.env
 - `resolve_paper(query | title, authors, year)`
 - `has_fulltext(query)`
 - `fetch_paper(query, modes, strategy, include_refs, max_tokens, prefer_cache, download_dir)`
+- `provider_status()`
 - `list_cached(download_dir)`
 - `get_cached(doi, download_dir)`
 - `batch_resolve(queries, concurrency)`
@@ -100,6 +101,8 @@ cp .env.example ~/.config/paper-fetch/.env
 - `has_fulltext()` 是廉价 probe：只看 resolution、Crossref/官方 metadata probe 与 landing-page HTML meta，不会走完整正文抓取瀑布
 - `has_fulltext()` 当前只主动产出 `state="likely_yes"` 或 `state="unknown"`；`confirmed_yes` / `no` 仍保留给后续迭代
 - `fetch_paper()` 顶层现在还会附带 `token_estimate_breakdown={abstract,body,refs}`；现有 `token_estimate` 仍保持兼容语义，只表示 `abstract + body`
+- `provider_status()` 会按稳定顺序返回 `crossref`、`elsevier`、`springer`、`wiley`、`science`、`pnas` 的本地诊断结果；它只检查本地配置、repo-local 依赖、FlareSolverr 健康和本地限速窗口，不会主动探测远端 publisher API 连通性
+- `provider_status()` 的 provider 级 `status` 固定使用 `ready` / `partial` / `not_configured` / `rate_limited` / `error`；每个 provider 还会带 `checks=[...]` 明细，方便 agent 在正式抓取前先做预检
 - `include_refs=null` 在 `max_tokens="full_text"` 下等价于 `all`
 - 显式 `prefer_cache=true` 时，`fetch_paper` 会先尝试命中本地 MCP cache 里的 envelope sidecar；命中才短路，未命中再照常上网
 - 显式传 `download_dir` 会覆盖 `PAPER_FETCH_DOWNLOAD_DIR` 和 XDG 默认目录，适合隔离多任务下载目录
@@ -110,7 +113,8 @@ cp .env.example ~/.config/paper-fetch/.env
 - `batch_check(mode="article")` 仍保留“完整 fetch 后给最终 verdict”的语义
 - 当 `strategy.asset_profile` 为 `body` / `all` 时，`fetch_paper` 可能在 JSON 结果后附带少量关键正文图的 `ImageContent`
 - 可选 `strategy.inline_image_budget={max_images,max_bytes_per_image,max_total_bytes}` 会调节上面这些 inline 图片的默认上限：`3` 张、单张 `2 MiB`、总计 `8 MiB`；任一生效上限为 `0` 时会直接关闭 inline 图片附带
-- 这 7 个 MCP tools 现在都会向支持的 client 暴露 `outputSchema`，可直接用于 JSON Schema 参数补全和结果校验
+- 这 8 个 MCP tools 现在都会向支持的 client 暴露 `outputSchema`，可直接用于 JSON Schema 参数补全和结果校验
+- 所有只读工具现在还会显式暴露 MCP `ToolAnnotations`：`resolve_paper` / `has_fulltext` / `provider_status` / `list_cached` / `get_cached` / `batch_*` 都标记为 `readOnlyHint=true`；`fetch_paper` 保持可写（会落 cache）
 - 当错误能明确定位到缺少的凭证或配置时，MCP `structuredContent` 现在会附带 `missing_env=[...]`
 - 支持这些能力的 MCP client 还会在 `fetch_paper` / `batch_check` / `batch_resolve` 期间收到 progress 和 structured log notifications
 - 支持 MCP cancellation 的 host 现在可以中途取消 `fetch_paper` / `batch_check` / `batch_resolve`；worker 会协作式停止继续发后续网络请求

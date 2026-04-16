@@ -1,8 +1,8 @@
-"""Provider interfaces and shared error types."""
+"""Provider interfaces, diagnostics, and shared error types."""
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, Mapping
 
@@ -37,6 +37,131 @@ class RawFulltextPayload:
     body: bytes
     metadata: dict[str, Any] = field(default_factory=dict)
     needs_local_copy: bool = False
+
+
+@dataclass(frozen=True)
+class ProviderStatusCheck:
+    name: str
+    status: str
+    message: str
+    missing_env: list[str] = field(default_factory=list)
+    details: dict[str, Any] = field(default_factory=dict)
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+
+@dataclass(frozen=True)
+class ProviderStatusResult:
+    provider: str
+    status: str
+    available: bool
+    official_provider: bool
+    missing_env: list[str] = field(default_factory=list)
+    notes: list[str] = field(default_factory=list)
+    checks: list[ProviderStatusCheck] = field(default_factory=list)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "provider": self.provider,
+            "status": self.status,
+            "available": self.available,
+            "official_provider": self.official_provider,
+            "missing_env": list(self.missing_env),
+            "notes": list(self.notes),
+            "checks": [check.to_dict() for check in self.checks],
+        }
+
+
+def _dedupe_strings(values: list[str] | tuple[str, ...] | None) -> list[str]:
+    deduped: list[str] = []
+    for raw_value in values or []:
+        value = str(raw_value or "").strip()
+        if value and value not in deduped:
+            deduped.append(value)
+    return deduped
+
+
+def build_provider_status_check(
+    name: str,
+    status: str,
+    message: str,
+    *,
+    missing_env: list[str] | tuple[str, ...] | None = None,
+    details: Mapping[str, Any] | None = None,
+) -> ProviderStatusCheck:
+    return ProviderStatusCheck(
+        name=name,
+        status=status,
+        message=message,
+        missing_env=_dedupe_strings(list(missing_env or [])),
+        details=dict(details or {}),
+    )
+
+
+def provider_status_check_from_failure(
+    name: str,
+    failure: "ProviderFailure",
+    *,
+    details: Mapping[str, Any] | None = None,
+) -> ProviderStatusCheck:
+    status = failure.code if failure.code in {"not_configured", "rate_limited"} else "error"
+    merged_details = dict(details or {})
+    if failure.retry_after_seconds is not None:
+        merged_details["retry_after_seconds"] = failure.retry_after_seconds
+    return build_provider_status_check(
+        name,
+        status,
+        failure.message,
+        missing_env=failure.missing_env,
+        details=merged_details,
+    )
+
+
+def summarize_capability_status(
+    provider: str,
+    *,
+    official_provider: bool,
+    checks: list[ProviderStatusCheck],
+    notes: list[str] | None = None,
+) -> ProviderStatusResult:
+    deduped_notes = _dedupe_strings(list(notes or []))
+    missing_env: list[str] = []
+    ok_checks = 0
+    has_error = False
+    has_rate_limit = False
+    for check in checks:
+        if check.status == "ok":
+            ok_checks += 1
+        elif check.status == "error":
+            has_error = True
+        elif check.status == "rate_limited":
+            has_rate_limit = True
+        for name in check.missing_env:
+            if name not in missing_env:
+                missing_env.append(name)
+
+    available = ok_checks > 0
+    if has_error:
+        status = "error"
+    elif has_rate_limit and ok_checks == 0:
+        status = "rate_limited"
+    elif checks and all(check.status == "ok" for check in checks):
+        status = "ready"
+    elif available:
+        status = "partial"
+    else:
+        status = "not_configured"
+
+    return ProviderStatusResult(
+        provider=provider,
+        status=status,
+        available=available,
+        official_provider=official_provider,
+        missing_env=missing_env,
+        notes=deduped_notes,
+        checks=list(checks),
+    )
 
 
 def map_request_failure(exc: RequestFailure) -> ProviderFailure:
@@ -88,6 +213,7 @@ class ProviderClient:
     """Provider interface used by the fetch workflow."""
 
     name = "provider"
+    official_provider = True
 
     def fetch_metadata(self, query: Mapping[str, str | None]) -> dict[str, Any]:
         raise ProviderFailure("not_supported", f"{self.name} metadata retrieval is not available.")
@@ -118,3 +244,19 @@ class ProviderClient:
         asset_profile: AssetProfile = "all",
     ) -> dict[str, list[dict[str, Any]]]:
         return empty_asset_results()
+
+    def probe_status(self) -> ProviderStatusResult:
+        return ProviderStatusResult(
+            provider=self.name,
+            status="error",
+            available=False,
+            official_provider=self.official_provider,
+            notes=["Provider diagnostics are not implemented for this client."],
+            checks=[
+                build_provider_status_check(
+                    "diagnostics",
+                    "error",
+                    f"{self.name} provider diagnostics are not implemented.",
+                )
+            ],
+        )

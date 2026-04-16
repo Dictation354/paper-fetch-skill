@@ -183,6 +183,56 @@ class McpToolTests(unittest.TestCase):
         for name, tool in server._tool_manager._tools.items():
             self.assertIsNotNone(tool.output_schema, name)
 
+    def test_build_server_exposes_expected_tool_annotations(self) -> None:
+        server = build_server()
+        expected = {
+            "resolve_paper": {"readOnlyHint": True, "openWorldHint": True},
+            "has_fulltext": {"readOnlyHint": True, "openWorldHint": True},
+            "fetch_paper": {
+                "readOnlyHint": False,
+                "destructiveHint": False,
+                "idempotentHint": False,
+                "openWorldHint": True,
+            },
+            "list_cached": {"readOnlyHint": True, "openWorldHint": False},
+            "get_cached": {"readOnlyHint": True, "openWorldHint": False},
+            "batch_resolve": {"readOnlyHint": True, "openWorldHint": True},
+            "batch_check": {"readOnlyHint": True, "openWorldHint": True},
+            "provider_status": {"readOnlyHint": True, "openWorldHint": False},
+        }
+
+        self.assertEqual(set(server._tool_manager._tools), set(expected))
+        for name, tool in server._tool_manager._tools.items():
+            self.assertIsNotNone(tool.annotations, name)
+            for field_name, value in expected[name].items():
+                self.assertEqual(getattr(tool.annotations, field_name), value, f"{name}.{field_name}")
+
+    def test_provider_status_tool_returns_success_when_providers_are_unconfigured(self) -> None:
+        blank_env = {
+            "CROSSREF_MAILTO": "",
+            "ELSEVIER_API_KEY": "",
+            "SPRINGER_META_API_KEY": "",
+            "SPRINGER_OPENACCESS_API_KEY": "",
+            "SPRINGER_FULLTEXT_API_KEY": "",
+            "SPRINGER_FULLTEXT_URL_TEMPLATE": "",
+            "WILEY_TDM_URL_TEMPLATE": "",
+            "WILEY_TDM_TOKEN": "",
+        }
+        with mock.patch.object(mcp_tools, "build_runtime_env", return_value=blank_env):
+            result = mcp_tools.provider_status_tool()
+
+        self.assertFalse(result.isError)
+        providers = result.structuredContent["providers"]
+        self.assertEqual(
+            [entry["provider"] for entry in providers],
+            list(mcp_tools._PROVIDER_STATUS_ORDER),
+        )
+        self.assertEqual(providers[0]["provider"], "crossref")
+        self.assertEqual(providers[0]["status"], "ready")
+        self.assertTrue(any(entry["provider"] == "elsevier" and entry["status"] == "not_configured" for entry in providers))
+        self.assertTrue(any(entry["provider"] == "science" and entry["status"] == "not_configured" for entry in providers))
+        self.assertTrue(all(entry["checks"] for entry in providers))
+
     def test_fetch_paper_payload_uses_default_arguments_and_mcp_download_dir(self) -> None:
         captured: dict[str, object] = {}
         runtime_env = {"CROSSREF_MAILTO": "unit@example.test"}

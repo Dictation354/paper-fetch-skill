@@ -16,11 +16,19 @@ from ..utils import (
     first_non_empty,
     strip_html_tags,
 )
-from .base import ProviderClient, ProviderFailure, map_request_failure
+from .base import (
+    ProviderClient,
+    ProviderFailure,
+    ProviderStatusResult,
+    build_provider_status_check,
+    map_request_failure,
+    summarize_capability_status,
+)
 
 
 class CrossrefClient(ProviderClient):
     name = "crossref"
+    official_provider = False
 
     def __init__(self, transport: HttpTransport, env: Mapping[str, str]) -> None:
         self.transport = transport
@@ -38,6 +46,24 @@ class CrossrefClient(ProviderClient):
         if self.mailto:
             params["mailto"] = self.mailto
         return params
+
+    def probe_status(self) -> ProviderStatusResult:
+        notes: list[str] = []
+        if not self.mailto:
+            notes.append("CROSSREF_MAILTO is not configured; adding one is recommended for better API etiquette.")
+        return summarize_capability_status(
+            self.name,
+            official_provider=self.official_provider,
+            notes=notes,
+            checks=[
+                build_provider_status_check(
+                    "metadata_api",
+                    "ok",
+                    "Crossref metadata lookup is available without local credentials.",
+                    details={"mailto_configured": bool(self.mailto)},
+                )
+            ],
+        )
 
     def fetch_metadata(self, query: Mapping[str, str | None]) -> CrossrefMetadata:
         doi = normalize_doi(query.get("doi"))

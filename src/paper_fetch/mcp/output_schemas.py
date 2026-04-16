@@ -166,3 +166,25 @@ class BatchCheckOutput(ErrorPayloadOutput, total=False):
     results: list[BatchCheckItemOutput]
     aborted: bool
     abort_reason: ErrorPayloadOutput | None
+
+
+class ProviderStatusCheckOutput(TypedDict, total=False):
+    name: str
+    status: str
+    message: str
+    missing_env: list[str]
+    details: dict[str, object]
+
+
+class ProviderStatusItemOutput(TypedDict, total=False):
+    provider: str
+    status: str
+    available: bool
+    official_provider: bool
+    missing_env: list[str]
+    notes: list[str]
+    checks: list[ProviderStatusCheckOutput]
+
+
+class ProviderStatusOutput(ErrorPayloadOutput, total=False):
+    providers: list[ProviderStatusItemOutput]

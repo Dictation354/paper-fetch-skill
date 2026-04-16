@@ -19,8 +19,8 @@ def build_clients(
     transport: HttpTransport | None = None,
     env: Mapping[str, str] | None = None,
 ) -> dict[str, ProviderClient]:
-    active_transport = transport or HttpTransport()
-    active_env = env or build_runtime_env()
+    active_transport = transport if transport is not None else HttpTransport()
+    active_env = env if env is not None else build_runtime_env()
     return {
         "crossref": CrossrefClient(active_transport, active_env),
         "elsevier": ElsevierClient(active_transport, active_env),

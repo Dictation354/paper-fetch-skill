@@ -7,7 +7,7 @@ from typing import Annotated
 
 from mcp.server.fastmcp import Context, FastMCP
 from mcp.server.fastmcp.resources import FileResource, FunctionResource
-from mcp.types import CallToolResult
+from mcp.types import CallToolResult, ToolAnnotations
 
 from ..config import build_runtime_env, resolve_mcp_download_dir
 from ._instructions import fetch_tool_description, server_instructions
@@ -30,6 +30,7 @@ from .output_schemas import (
     GetCachedOutput,
     HasFulltextOutput,
     ListCachedOutput,
+    ProviderStatusOutput,
     ResolvePaperOutput,
 )
 from .prompts import summarize_paper_prompt, verify_citation_list_prompt
@@ -43,6 +44,7 @@ from .tools import (
     get_cached_tool,
     list_cached_payload,
     list_cached_tool,
+    provider_status_tool,
     resolve_paper_tool,
 )
 
@@ -63,6 +65,22 @@ def _cache_index_resource_payload(download_dir: Path | None = None) -> dict[str,
     if download_dir is not None:
         tool_kwargs["download_dir"] = download_dir
     return list_cached_payload(**tool_kwargs)
+
+
+def _read_only_annotations(*, open_world: bool) -> ToolAnnotations:
+    return ToolAnnotations(
+        readOnlyHint=True,
+        openWorldHint=open_world,
+    )
+
+
+def _fetch_annotations() -> ToolAnnotations:
+    return ToolAnnotations(
+        readOnlyHint=False,
+        destructiveHint=False,
+        idempotentHint=False,
+        openWorldHint=True,
+    )
 
 
 def _sync_cache_resources(
@@ -183,6 +201,7 @@ def build_server() -> FastMCP:
     @server.tool(
         name="resolve_paper",
         description="Resolve a DOI, URL, or title query into a normalized paper candidate.",
+        annotations=_read_only_annotations(open_world=True),
         structured_output=True,
     )
     def resolve_paper(
@@ -201,6 +220,7 @@ def build_server() -> FastMCP:
     @server.tool(
         name="has_fulltext",
         description="Probe whether a paper likely has accessible full text using cheap metadata and landing-page signals.",
+        annotations=_read_only_annotations(open_world=True),
         structured_output=True,
     )
     def has_fulltext(query: str) -> Annotated[CallToolResult, HasFulltextOutput]:
@@ -209,6 +229,7 @@ def build_server() -> FastMCP:
     @server.tool(
         name="fetch_paper",
         description=fetch_tool_description(),
+        annotations=_fetch_annotations(),
         structured_output=True,
     )
     async def fetch_paper(
@@ -242,6 +263,7 @@ def build_server() -> FastMCP:
     @server.tool(
         name="list_cached",
         description="List cached downloads known to the MCP cache index without touching the network.",
+        annotations=_read_only_annotations(open_world=False),
         structured_output=True,
     )
     def list_cached(download_dir: str | None = None) -> Annotated[CallToolResult, ListCachedOutput]:
@@ -257,6 +279,7 @@ def build_server() -> FastMCP:
     @server.tool(
         name="get_cached",
         description="Look up cached downloads for a DOI in the cache index and return preferred local files.",
+        annotations=_read_only_annotations(open_world=False),
         structured_output=True,
     )
     def get_cached(doi: str, download_dir: str | None = None) -> Annotated[CallToolResult, GetCachedOutput]:
@@ -272,6 +295,7 @@ def build_server() -> FastMCP:
     @server.tool(
         name="batch_resolve",
         description="Resolve multiple DOI, URL, or title queries with shared transport reuse and optional cross-host concurrency.",
+        annotations=_read_only_annotations(open_world=True),
         structured_output=True,
     )
     async def batch_resolve(
@@ -287,6 +311,7 @@ def build_server() -> FastMCP:
             "Check multiple papers without returning full bodies, with optional cross-host concurrency. "
             "Success items keep only lightweight provenance fields."
         ),
+        annotations=_read_only_annotations(open_world=True),
         structured_output=True,
     )
     async def batch_check(
@@ -296,6 +321,15 @@ def build_server() -> FastMCP:
         ctx: Context | None = None,
     ) -> Annotated[CallToolResult, BatchCheckOutput]:
         return await batch_check_tool_async(queries=queries, mode=mode, concurrency=concurrency, ctx=ctx)
+
+    @server.tool(
+        name="provider_status",
+        description="Inspect local provider configuration and runtime readiness without calling remote publisher APIs.",
+        annotations=_read_only_annotations(open_world=False),
+        structured_output=True,
+    )
+    def provider_status() -> Annotated[CallToolResult, ProviderStatusOutput]:
+        return provider_status_tool()
 
     return server
 

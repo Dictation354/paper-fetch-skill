@@ -14,6 +14,7 @@ from ._flaresolverr import (
     ensure_runtime_ready,
     fetch_html_with_flaresolverr,
     load_runtime_config,
+    probe_runtime_status,
 )
 from ._pdf_fallback import PdfFallbackFailure, fetch_pdf_with_playwright
 from ._science_pnas_html import (
@@ -36,6 +37,9 @@ class SciencePnasClient(ProviderClient):
         self.transport = transport
         self.env = dict(env)
         self.user_agent = build_user_agent(env)
+
+    def probe_status(self):
+        return probe_runtime_status(self.env, provider=self.name)
 
     def fetch_metadata(self, query: Mapping[str, str | None]) -> ProviderMetadata:
         raise ProviderFailure(
