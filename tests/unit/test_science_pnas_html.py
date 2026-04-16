@@ -77,8 +77,8 @@ class SciencePnasHtmlTests(unittest.TestCase):
         self.assertEqual(
             candidates[1:3],
             [
+                "https://science.org/doi/full/10.1126/science.ady3136",
                 "https://www.science.org/doi/full/10.1126/science.ady3136",
-                "https://www.science.org/doi/10.1126/science.ady3136",
             ],
         )
 

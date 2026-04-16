@@ -8,23 +8,20 @@ from pathlib import Path
 from typing import Any, Mapping
 
 from ..config import build_user_agent
-from ..http import DEFAULT_FULLTEXT_TIMEOUT_SECONDS, HttpTransport, RequestFailure, build_text_preview, is_xml_content_type
-from ..metadata_types import FulltextLink, ProviderMetadata
-from ..models import AssetProfile, article_from_markdown, article_from_structure, metadata_only_article
+from ..http import DEFAULT_FULLTEXT_TIMEOUT_SECONDS, HttpTransport, RequestFailure, build_text_preview
+from ..metadata_types import ProviderMetadata
+from ..models import AssetProfile, article_from_markdown, metadata_only_article
 from ..publisher_identity import normalize_doi
 from ..utils import (
     build_asset_output_path,
     build_output_path,
     choose_public_landing_page_url,
     empty_asset_results,
-    first_non_empty,
     normalize_text,
     sanitize_filename,
     save_payload,
-    strip_html_tags,
 )
 from . import html_generic
-from ._article_markdown import build_article_structure, write_article_markdown
 from .base import (
     ProviderClient,
     ProviderFailure,

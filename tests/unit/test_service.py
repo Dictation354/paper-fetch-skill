@@ -20,7 +20,6 @@ from ._paper_fetch_support import (
     fulltext_pdf_bytes,
     sample_article,
     sample_html_article,
-    short_pdf_bytes,
 )
 
 

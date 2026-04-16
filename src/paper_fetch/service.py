@@ -397,7 +397,7 @@ def probe_has_fulltext(
                     break
             except ProviderFailure as exc:
                 if _is_unknown_has_fulltext_probe_failure(exc):
-                    extend_unique(warnings, [_probe_warning(f"{provider_label} metadata probe unavailable", exc.message)])
+                    extend_unique(warnings, [_probe_warning(f"{provider_name} metadata probe unavailable", exc.message)])
 
     landing_url = choose_public_landing_page_url(
         resolved.landing_url,

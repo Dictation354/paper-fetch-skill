@@ -5,6 +5,7 @@ import unittest
 from paper_fetch import service as paper_fetch
 from paper_fetch.providers import elsevier as elsevier_provider
 from paper_fetch.providers import html_generic
+from paper_fetch.providers import springer as springer_provider
 from paper_fetch.providers.base import ProviderFailure, RawFulltextPayload
 from tests.paths import FIXTURE_DIR
 
@@ -166,7 +167,7 @@ class RegressionSampleTests(unittest.TestCase):
                 self.assertNotIn("(refs.)", markdown)
                 self.assertNotIn("(ref.)", markdown)
 
-    def test_paper_fetch_uses_html_fallback_for_nature_samples(self) -> None:
+    def test_paper_fetch_uses_springer_html_provider_for_nature_samples(self) -> None:
         original_resolve = paper_fetch.resolve_paper
         try:
             for sample in NATURE_HTML_SAMPLES:
@@ -181,10 +182,7 @@ class RegressionSampleTests(unittest.TestCase):
                     )
                     paper_fetch.resolve_paper = lambda *args, _resolved=resolved, **kwargs: _resolved
 
-                    html_client = html_generic.HtmlGenericClient(
-                        FixtureTransport({sample["url"]: (read_fixture_bytes(sample["fixture"]), sample["url"])}),
-                        {},
-                    )
+                    transport = FixtureTransport({sample["url"]: (read_fixture_bytes(sample["fixture"]), sample["url"])})
                     metadata = {
                         "provider": "crossref",
                         "official_provider": False,
@@ -201,18 +199,16 @@ class RegressionSampleTests(unittest.TestCase):
                         sample["doi"],
                         strategy=paper_fetch.FetchStrategy(),
                         clients={
-                            "springer": ProviderStub(
-                                metadata=ProviderFailure("not_supported", "Regression fixture omits official XML."),
-                                raw_error=ProviderFailure("not_supported", "Regression fixture omits official XML."),
-                            ),
+                            "springer": springer_provider.SpringerClient(transport, {}),
                             "crossref": ProviderStub(metadata=metadata),
                         },
-                        html_client=html_client,
+                        transport=transport,
                     )
 
-                    self.assertEqual(article.source, "html_generic")
+                    self.assertEqual(article.source, "springer_html")
                     self.assertEqual(article.metadata.title, sample["title"])
                     self.assertTrue(article.quality.has_fulltext)
+                    self.assertIn("fulltext:springer_html_ok", article.quality.source_trail)
         finally:
             paper_fetch.resolve_paper = original_resolve
 
