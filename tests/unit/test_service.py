@@ -178,7 +178,7 @@ class ServiceTests(unittest.TestCase):
         self.assertEqual(result.title, "Landing Page Article")
         self.assertEqual(result.evidence, ["landing_page_citation_pdf_url"])
 
-    def test_probe_has_fulltext_reports_unknown_with_warning_for_not_configured(self) -> None:
+    def test_probe_has_fulltext_uses_crossref_only_for_springer_signals(self) -> None:
         resolved = paper_fetch.ResolvedQuery(
             query="10.1007/test",
             query_kind="doi",
@@ -190,6 +190,14 @@ class ServiceTests(unittest.TestCase):
             paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
             result = paper_fetch.probe_has_fulltext(
                 "10.1007/test",
+                transport=FixtureHtmlTransport(
+                    {
+                        "https://example.test/article": {
+                            "headers": {"content-type": "text/html; charset=utf-8"},
+                            "body": b"<html><head><title>Example</title></head><body>Example</body></html>",
+                        }
+                    }
+                ),
                 clients={
                     "crossref": StubProvider(
                         metadata={
@@ -204,7 +212,7 @@ class ServiceTests(unittest.TestCase):
                         }
                     ),
                     "springer": StubProvider(
-                        metadata=paper_fetch.ProviderFailure("not_configured", "SPRINGER_META_API_KEY is not configured.")
+                        metadata=paper_fetch.ProviderFailure("not_supported", "Springer metadata probe should not be used.")
                     ),
                 },
             )
@@ -213,7 +221,7 @@ class ServiceTests(unittest.TestCase):
 
         self.assertEqual(result.state, "unknown")
         self.assertEqual(result.evidence, [])
-        self.assertTrue(any("SPRINGER_META_API_KEY is not configured" in warning for warning in result.warnings))
+        self.assertEqual(result.warnings, [])
 
     def test_fetch_paper_model_prefers_raw_xml_pipeline(self) -> None:
         resolved = paper_fetch.ResolvedQuery(
@@ -878,7 +886,7 @@ class ServiceTests(unittest.TestCase):
             resolved,
             clients={
                 "springer": StubProvider(
-                    metadata=paper_fetch.ProviderFailure("not_configured", "SPRINGER_META_API_KEY is not configured.")
+                    metadata=paper_fetch.ProviderFailure("not_supported", "Springer metadata probe is not supported.")
                 ),
                 "crossref": StubProvider(
                     metadata={
@@ -1087,7 +1095,7 @@ class ServiceTests(unittest.TestCase):
             confidence=1.0,
         )
         official_article = sample_article()
-        official_article.source = "wiley"
+        official_article.source = "wiley_browser"
         original_resolve = paper_fetch.resolve_paper
         try:
             paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
@@ -1137,7 +1145,7 @@ class ServiceTests(unittest.TestCase):
                 "metadata",
             },
         )
-        self.assertEqual(envelope.source, "wiley_tdm")
+        self.assertEqual(envelope.source, "wiley_browser")
         self.assertIsNone(envelope.article)
         self.assertIsNone(envelope.metadata)
         self.assertTrue(envelope.markdown)
@@ -1389,7 +1397,7 @@ class ServiceTests(unittest.TestCase):
 
         self.assertEqual(selected, "https://linkinghub.elsevier.com/retrieve/pii/S0021863496900852")
 
-    def test_wiley_pdf_is_downloaded_and_extracted_into_fulltext(self) -> None:
+    def test_wiley_pdf_fallback_is_downloaded_and_extracted_into_fulltext(self) -> None:
         resolved = paper_fetch.ResolvedQuery(
             query="10.1111/test",
             query_kind="doi",
@@ -1413,7 +1421,25 @@ class ServiceTests(unittest.TestCase):
                                 source_url="https://example.test/wiley.pdf",
                                 content_type="application/pdf",
                                 body=fulltext_pdf_bytes(),
-                                metadata={"reason": "Downloaded full text from the configured Wiley TDM endpoint."},
+                                metadata={
+                                    "reason": "Downloaded full text from the Wiley browser workflow PDF fallback.",
+                                    "route": "pdf_fallback",
+                                    "markdown_text": (
+                                        "# Wiley PDF Article\n\n## Introduction\n\n"
+                                        + ("Introduction text " * 60)
+                                        + "\n\n## Methods\n\n"
+                                        + ("Methods text " * 60)
+                                        + "\n\n## Results\n\n"
+                                        + ("Results text " * 60)
+                                    ),
+                                    "warnings": [
+                                        "Full text was extracted from PDF fallback after the HTML path was not usable."
+                                    ],
+                                    "source_trail": [
+                                        "fulltext:wiley_html_fail",
+                                        "fulltext:wiley_pdf_fallback_ok",
+                                    ],
+                                },
                                 needs_local_copy=True,
                             ),
                             article_factory=WileyClient(HttpTransport(), {}).to_article_model,
@@ -1440,14 +1466,14 @@ class ServiceTests(unittest.TestCase):
         finally:
             paper_fetch.resolve_paper = original_resolve
 
-        self.assertEqual(article.source, "wiley")
+        self.assertEqual(article.source, "wiley_browser")
         self.assertTrue(article.quality.has_fulltext)
         self.assertTrue(any("downloaded as PDF/binary" in warning for warning in article.quality.warnings))
-        self.assertTrue(any("extracted from PDF" in warning for warning in article.quality.warnings))
-        self.assertIn("fulltext:wiley_pdf_extract_ok", article.quality.source_trail)
+        self.assertTrue(any("PDF fallback" in warning for warning in article.quality.warnings))
+        self.assertIn("fulltext:wiley_pdf_fallback_ok", article.quality.source_trail)
         self.assertIn("download:wiley_saved", article.quality.source_trail)
 
-    def test_wiley_pdf_extraction_creates_multiple_sections_with_heading_priority(self) -> None:
+    def test_wiley_pdf_fallback_markdown_creates_multiple_sections_with_heading_priority(self) -> None:
         article = WileyClient(HttpTransport(), {}).to_article_model(
             {
                 "doi": "10.1111/test",
@@ -1459,6 +1485,20 @@ class ServiceTests(unittest.TestCase):
                 source_url="https://example.test/wiley.pdf",
                 content_type="application/pdf",
                 body=fulltext_pdf_bytes(),
+                metadata={
+                    "route": "pdf_fallback",
+                    "markdown_text": (
+                        "# Wiley PDF Article\n\n## Introduction\n\n"
+                        + ("Introduction text " * 60)
+                        + "\n\n## Methods\n\n"
+                        + ("Methods text " * 60)
+                        + "\n\n## Results\n\n"
+                        + ("Results text " * 60)
+                        + "\n\n## Discussion\n\n"
+                        + ("Discussion text " * 60)
+                    ),
+                    "source_trail": ["fulltext:wiley_pdf_fallback_ok"],
+                },
             ),
         )
 
@@ -1467,7 +1507,7 @@ class ServiceTests(unittest.TestCase):
         self.assertIn("Methods", headings)
         self.assertIn("Results", headings)
 
-        truncated_markdown = article.to_ai_markdown(max_tokens=1000)
+        truncated_markdown = article.to_ai_markdown(max_tokens=500)
         self.assertIn("## Introduction", truncated_markdown)
         self.assertIn("## Methods", truncated_markdown)
         self.assertNotIn("## Discussion", truncated_markdown)
@@ -1532,7 +1572,7 @@ class ServiceTests(unittest.TestCase):
         self.assertIn("download:custompdf_saved", article.quality.source_trail)
         self.assertNotIn("download:elsevier_saved", article.quality.source_trail)
 
-    def test_wiley_pdf_can_be_processed_without_download_side_effects(self) -> None:
+    def test_wiley_pdf_fallback_can_be_processed_without_download_side_effects(self) -> None:
         resolved = paper_fetch.ResolvedQuery(
             query="10.1111/test",
             query_kind="doi",
@@ -1557,7 +1597,20 @@ class ServiceTests(unittest.TestCase):
                                 source_url="https://example.test/wiley.pdf",
                                 content_type="application/pdf",
                                 body=fulltext_pdf_bytes(),
-                                metadata={"reason": "Downloaded full text from the configured Wiley TDM endpoint."},
+                                metadata={
+                                    "reason": "Downloaded full text from the Wiley browser workflow PDF fallback.",
+                                    "route": "pdf_fallback",
+                                    "markdown_text": (
+                                        "# Wiley PDF Article\n\n## Introduction\n\n"
+                                        + ("Introduction text " * 60)
+                                        + "\n\n## Results\n\n"
+                                        + ("Results text " * 60)
+                                    ),
+                                    "source_trail": [
+                                        "fulltext:wiley_html_fail",
+                                        "fulltext:wiley_pdf_fallback_ok",
+                                    ],
+                                },
                                 needs_local_copy=True,
                             ),
                             article_factory=WileyClient(HttpTransport(), {}).to_article_model,
@@ -1587,7 +1640,7 @@ class ServiceTests(unittest.TestCase):
         self.assertIn("download:wiley_skipped", article.quality.source_trail)
         self.assertTrue(any("--no-download" in warning for warning in article.quality.warnings))
 
-    def test_wiley_pdf_extraction_failure_falls_back_to_html(self) -> None:
+    def test_wiley_provider_skips_generic_html_fallback_after_provider_failure(self) -> None:
         resolved = paper_fetch.ResolvedQuery(
             query="10.1111/test",
             query_kind="doi",
@@ -1605,15 +1658,7 @@ class ServiceTests(unittest.TestCase):
                 clients={
                     "wiley": StubProvider(
                         metadata=paper_fetch.ProviderFailure("not_supported", "No official metadata."),
-                        raw_payload=RawFulltextPayload(
-                            provider="wiley",
-                            source_url="https://example.test/wiley.pdf",
-                            content_type="application/pdf",
-                            body=short_pdf_bytes(),
-                            metadata={"reason": "Downloaded full text from the configured Wiley TDM endpoint."},
-                            needs_local_copy=True,
-                        ),
-                        article_factory=WileyClient(HttpTransport(), {}).to_article_model,
+                        raw_error=paper_fetch.ProviderFailure("no_result", "Browser workflow failed."),
                     ),
                     "crossref": StubProvider(
                         metadata={
@@ -1634,13 +1679,13 @@ class ServiceTests(unittest.TestCase):
         finally:
             paper_fetch.resolve_paper = original_resolve
 
-        self.assertEqual(article.source, "html_generic")
-        self.assertTrue(article.quality.has_fulltext)
-        self.assertIn("fulltext:wiley_pdf_extract_fail", article.quality.source_trail)
-        self.assertIn("fallback:html_ok", article.quality.source_trail)
-        self.assertTrue(any("did not produce enough usable article text" in warning for warning in article.quality.warnings))
+        self.assertEqual(article.source, "crossref_meta")
+        self.assertFalse(article.quality.has_fulltext)
+        self.assertIn("fulltext:wiley_fail", article.quality.source_trail)
+        self.assertIn("fallback:wiley_html_managed_by_provider", article.quality.source_trail)
+        self.assertIn("fallback:metadata_only", article.quality.source_trail)
 
-    def test_springer_html_fallback_downloads_figure_assets_when_enabled(self) -> None:
+    def test_springer_provider_owned_html_downloads_figure_assets_when_enabled(self) -> None:
         landing_url = "https://www.nature.com/articles/example"
         figure_page_url = "https://www.nature.com/articles/example/figures/1"
         preview_image_url = "https://media.springernature.com/lw685/springer-static/image/art%3A10.1007%2Ftest/MediaObjects/Fig1.png"
@@ -1655,47 +1700,44 @@ class ServiceTests(unittest.TestCase):
             provider_hint="springer",
             confidence=1.0,
         )
-        html_client = html_generic.HtmlGenericClient(
-            FixtureHtmlTransport(
-                {
-                    landing_url: {
-                        "headers": {"content-type": "text/html; charset=utf-8"},
-                        "body": (
-                            b"<html><head>"
-                            b'<meta name="citation_title" content="HTML Springer Article" />'
-                            b'<meta name="citation_doi" content="10.1007/test" />'
-                            b"</head><body>"
-                            b'<div class="c-article-section__figure-item">'
-                            b'<picture class="c-article-section__figure-picture">'
-                            b'<img aria-describedby="figure-1-desc" src="//media.springernature.com/lw685/springer-static/image/art%3A10.1007%2Ftest/MediaObjects/Fig1.png" alt="Preview image" />'
-                            b"</picture>"
-                            b'<div class="c-article-section__figure-link"><a href="/articles/example/figures/1" aria-label="Full size image figure 1">Full size image</a></div>'
-                            b"</div>"
-                            b'<div class="c-article-section__figure-description" id="figure-1-desc"><p>Figure showing a woodland canopy.</p></div>'
-                            b"</body></html>"
-                        ),
-                    },
-                    figure_page_url: {
-                        "headers": {"content-type": "text/html; charset=utf-8"},
-                        "body": (
-                            b"<html><head>"
-                            b'<meta name="twitter:image" content="https://media.springernature.com/full/springer-static/image/art%3A10.1007%2Ftest/MediaObjects/Fig1.png" />'
-                            b"</head><body>"
-                            b'<img src="//media.springernature.com/full/springer-static/image/art%3A10.1007%2Ftest/MediaObjects/Fig1.png" />'
-                            b"</body></html>"
-                        ),
-                    },
-                    preview_image_url: {
-                        "headers": {"content-type": "image/png"},
-                        "body": preview_bytes,
-                    },
-                    full_image_url: {
-                        "headers": {"content-type": "image/png"},
-                        "body": full_bytes,
-                    },
-                }
-            ),
-            {},
+        transport = FixtureHtmlTransport(
+            {
+                landing_url: {
+                    "headers": {"content-type": "text/html; charset=utf-8"},
+                    "body": (
+                        b"<html><head>"
+                        b'<meta name="citation_title" content="HTML Springer Article" />'
+                        b'<meta name="citation_doi" content="10.1007/test" />'
+                        b"</head><body>"
+                        b'<div class="c-article-section__figure-item">'
+                        b'<picture class="c-article-section__figure-picture">'
+                        b'<img aria-describedby="figure-1-desc" src="//media.springernature.com/lw685/springer-static/image/art%3A10.1007%2Ftest/MediaObjects/Fig1.png" alt="Preview image" />'
+                        b"</picture>"
+                        b'<div class="c-article-section__figure-link"><a href="/articles/example/figures/1" aria-label="Full size image figure 1">Full size image</a></div>'
+                        b"</div>"
+                        b'<div class="c-article-section__figure-description" id="figure-1-desc"><p>Figure showing a woodland canopy.</p></div>'
+                        b"</body></html>"
+                    ),
+                },
+                figure_page_url: {
+                    "headers": {"content-type": "text/html; charset=utf-8"},
+                    "body": (
+                        b"<html><head>"
+                        b'<meta name="twitter:image" content="https://media.springernature.com/full/springer-static/image/art%3A10.1007%2Ftest/MediaObjects/Fig1.png" />'
+                        b"</head><body>"
+                        b'<img src="//media.springernature.com/full/springer-static/image/art%3A10.1007%2Ftest/MediaObjects/Fig1.png" />'
+                        b"</body></html>"
+                    ),
+                },
+                preview_image_url: {
+                    "headers": {"content-type": "image/png"},
+                    "body": preview_bytes,
+                },
+                full_image_url: {
+                    "headers": {"content-type": "image/png"},
+                    "body": full_bytes,
+                },
+            }
         )
         original_resolve = paper_fetch.resolve_paper
         original_extract = html_generic.extract_article_markdown
@@ -1718,10 +1760,7 @@ class ServiceTests(unittest.TestCase):
                     asset_profile="body",
                     output_dir=Path(tmpdir),
                     clients={
-                        "springer": StubProvider(
-                            metadata=paper_fetch.ProviderFailure("not_supported", "No official metadata."),
-                            raw_error=paper_fetch.ProviderFailure("no_result", "Official XML unavailable."),
-                        ),
+                        "springer": paper_fetch.build_clients(transport, {})["springer"],
                         "crossref": StubProvider(
                             metadata={
                                 "provider": "crossref",
@@ -1735,10 +1774,10 @@ class ServiceTests(unittest.TestCase):
                             }
                         ),
                     },
-                    html_client=html_client,
+                    transport=transport,
                 )
                 markdown = article.to_ai_markdown(asset_profile="body")
-                self.assertEqual(article.source, "html_generic")
+                self.assertEqual(article.source, "springer_html")
                 self.assertTrue(article.quality.has_fulltext)
                 self.assertEqual(len(article.assets), 1)
                 self.assertEqual(article.assets[0].section, "body")
@@ -1753,10 +1792,10 @@ class ServiceTests(unittest.TestCase):
             paper_fetch.resolve_paper = original_resolve
             html_generic.extract_article_markdown = original_extract
 
-        self.assertIn("fallback:html_ok", article.quality.source_trail)
-        self.assertIn("download:html_assets_saved_profile_body", article.quality.source_trail)
+        self.assertIn("fulltext:springer_html_ok", article.quality.source_trail)
+        self.assertIn("download:springer_assets_saved_profile_body", article.quality.source_trail)
 
-    def test_wiley_pdf_extraction_failure_returns_metadata_only_without_html_fallback(self) -> None:
+    def test_wiley_provider_failure_returns_metadata_only_without_generic_html_fallback(self) -> None:
         resolved = paper_fetch.ResolvedQuery(
             query="10.1111/test",
             query_kind="doi",
@@ -1775,15 +1814,7 @@ class ServiceTests(unittest.TestCase):
                 clients={
                     "wiley": StubProvider(
                         metadata=paper_fetch.ProviderFailure("not_supported", "No official metadata."),
-                        raw_payload=RawFulltextPayload(
-                            provider="wiley",
-                            source_url="https://example.test/wiley.pdf",
-                            content_type="application/pdf",
-                            body=short_pdf_bytes(),
-                            metadata={"reason": "Downloaded full text from the configured Wiley TDM endpoint."},
-                            needs_local_copy=True,
-                        ),
-                        article_factory=WileyClient(HttpTransport(), {}).to_article_model,
+                        raw_error=paper_fetch.ProviderFailure("no_result", "Browser workflow failed."),
                     ),
                     "crossref": StubProvider(
                         metadata={
@@ -1806,8 +1837,8 @@ class ServiceTests(unittest.TestCase):
 
         self.assertEqual(article.source, "crossref_meta")
         self.assertFalse(article.quality.has_fulltext)
-        self.assertIn("fulltext:wiley_pdf_extract_fail", article.quality.source_trail)
-        self.assertIn("fallback:html_disabled", article.quality.source_trail)
+        self.assertIn("fulltext:wiley_fail", article.quality.source_trail)
+        self.assertIn("fallback:wiley_html_managed_by_provider", article.quality.source_trail)
         self.assertIn("fallback:metadata_only", article.quality.source_trail)
         self.assertTrue(any("Full text was not available" in warning for warning in article.quality.warnings))
 

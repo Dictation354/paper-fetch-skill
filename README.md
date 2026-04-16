@@ -18,7 +18,7 @@
 这份首页不展开：
 
 - 各 provider 的全部配置细节
-- Science / PNAS 的运维步骤
+- Wiley / Science / PNAS 的运维步骤
 - 架构演进背景和探针语义细节
 
 这些内容分别在 [`docs/providers.md`](docs/providers.md)、[`docs/flaresolverr.md`](docs/flaresolverr.md)、[`docs/architecture/target-architecture.md`](docs/architecture/target-architecture.md) 和 [`docs/architecture/probe-semantics.md`](docs/architecture/probe-semantics.md) 中定义。
@@ -48,10 +48,10 @@
 输入解析
 -> resolve 查询类型（DOI / URL / 标题）
 -> 生成 provider_hint 与候选 DOI
--> 用 Crossref / 官方 metadata 建立路由信号
+-> 用 Crossref / provider metadata 建立路由信号
 -> 合并元数据
--> 尝试官方 provider 全文链路
--> 失败时尝试 HTML fallback 或 provider 内部 fallback
+-> 尝试 provider 全文主链
+-> 失败时尝试 generic HTML fallback 或 provider 内部 fallback
 -> 再失败时降级为 metadata-only
 -> 输出 FetchEnvelope / Markdown / 本地缓存 / MCP 结果
 ```
@@ -61,10 +61,11 @@
 1. `resolve_paper()` 先把原始输入解析成 `ResolvedQuery`。
 2. 路由优先级固定是 `domain > publisher > DOI fallback`。
 3. `crossref` 既可能是公开来源 `source="crossref_meta"`，也可能只是内部 routing signal。
-4. 如果命中官方 provider，就先走官方全文链路。
-5. 官方链路失败后，普通 provider 会根据 `strategy.allow_html_fallback` 决定是否进入通用 `html_generic` fallback。
-6. `science` / `pnas` 不走通用 HTML fallback，而是 provider 自己管理 `HTML -> PDF -> metadata-only`。
-7. 最终统一输出 `FetchEnvelope`，其中会显式给出：
+4. `elsevier` 仍优先走官方 API/XML 主链。
+5. `springer` 走 provider 自管 direct HTML 主链，不再回到通用 `html_generic` fallback。
+6. `wiley`、`science`、`pnas` 走 provider 自管 `HTML -> PDF fallback -> metadata-only` 浏览器工作流。
+7. 普通 provider 或未命中 provider 自管 HTML 路径的场景，才会根据 `strategy.allow_html_fallback` 进入通用 `html_generic` fallback。
+8. 最终统一输出 `FetchEnvelope`，其中会显式给出：
    - `source`
    - `has_fulltext`
    - `warnings`
@@ -129,7 +130,7 @@ python3 -m paper_fetch.mcp.server
   - 同时返回结构化结果和 AI 直接可读的 Markdown。
 - `has_fulltext()`
   - 是廉价 probe，不等同于最终 `fetch_paper().has_fulltext`。
-- `science` / `pnas`
+- `wiley` / `science` / `pnas`
   - 当前只保证在仓库 checkout + `vendor/flaresolverr/` 工作流里可用。
   - `asset_profile=body|all` 目前会降级为 text-only，不阻塞正文成功。
 - metadata-only fallback
@@ -148,9 +149,11 @@ python3 -m paper_fetch.mcp.server
 
 其中：
 
-- `elsevier`、`springer`、`wiley` 主要依赖官方 API / TDM 路径。
-- `science`、`pnas` 依赖 repo-local FlareSolverr + Playwright fallback。
-- `crossref` 负责 metadata、题名检索、路由信号和部分 metadata-only 结果。
+- `elsevier` 是唯一保留的 publisher API fulltext provider，继续走 API/XML 主链。
+- `springer` 使用 provider 自管 direct HTML 主链，公开来源为 `springer_html`。
+- `wiley`、`science`、`pnas` 使用 repo-local FlareSolverr + Playwright 浏览器工作流。
+- `wiley` 公开来源为 `wiley_browser`；`science`、`pnas` 继续保持原有 public source。
+- `crossref` 负责 metadata、题名检索、路由信号和 metadata-only 结果，不承担 publisher fulltext。
 
 完整能力矩阵、环境变量、缓存和限速说明见 [`docs/providers.md`](docs/providers.md)。
 
@@ -214,9 +217,9 @@ CLI 退出码固定为：
 - `3`：`no_access`
 - `4`：`rate_limited`
 
-## Science / PNAS 边界
+## Wiley / Science / PNAS 边界
 
-`science` 和 `pnas` 已经是公开 provider 名字，但它们的运行边界和其他 provider 不一样：
+`wiley`、`science`、`pnas` 已经是公开 provider 名字，但它们的运行边界和 `elsevier` / `springer` 不一样：
 
 - metadata 仍来自 `crossref`
 - 全文链路由 provider 自己管理
@@ -235,7 +238,7 @@ CLI 退出码固定为：
 - [`docs/deployment.md`](docs/deployment.md)
   - 安装、配置、MCP 注册、更新和最小验证步骤。
 - [`docs/flaresolverr.md`](docs/flaresolverr.md)
-  - Science / PNAS 的 repo-local 运维工作流。
+  - Wiley / Science / PNAS 的 repo-local 浏览器工作流。
 - [`docs/architecture/target-architecture.md`](docs/architecture/target-architecture.md)
   - 当前架构分层、端到端业务流程、数据契约与扩展点。
 - [`docs/architecture/probe-semantics.md`](docs/architecture/probe-semantics.md)
@@ -250,7 +253,7 @@ PYTHONPATH=src python3 -m unittest -q tests.unit.test_cli tests.unit.test_servic
 PYTHONPATH=src python3 -m unittest discover -s tests -q
 ```
 
-如果要验收 `science` / `pnas` live 路径，再补充：
+如果要验收 `wiley` / `science` / `pnas` live 路径，再补充：
 
 ```bash
 PAPER_FETCH_RUN_LIVE=1 \

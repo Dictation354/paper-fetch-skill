@@ -124,25 +124,48 @@ class LiveMcpServerTests(unittest.IsolatedAsyncioTestCase):
     async def test_springer_doi_live_via_mcp_reports_progress_and_logs(self) -> None:
         await self._assert_live_fetch(
             query="10.1186/1471-2105-11-421",
-            required_env=("SPRINGER_META_API_KEY", "SPRINGER_OPENACCESS_API_KEY", "CROSSREF_MAILTO"),
-            expected_source="springer_xml",
-            expected_source_trail="fulltext:springer_article_ok",
+            required_env=("CROSSREF_MAILTO",),
+            expected_source="springer_html",
+            expected_source_trail="fulltext:springer_html_ok",
             expected_log_prefix="official_provider_",
             args={"modes": ["metadata"], "strategy": {"allow_html_fallback": False}},
         )
 
     async def test_wiley_doi_live_via_mcp_reports_progress_and_logs(self) -> None:
-        await self._assert_live_fetch(
+        self._require_env(
+            "CROSSREF_MAILTO",
+            "FLARESOLVERR_ENV_FILE",
+            "FLARESOLVERR_MIN_INTERVAL_SECONDS",
+            "FLARESOLVERR_MAX_REQUESTS_PER_HOUR",
+            "FLARESOLVERR_MAX_REQUESTS_PER_DAY",
+        )
+        self._require_flaresolverr()
+
+        result, progress_updates, log_messages = await self._call_fetch(
             query="10.1002/ece3.9361",
-            required_env=("WILEY_TDM_URL_TEMPLATE", "WILEY_TDM_TOKEN", "CROSSREF_MAILTO"),
-            expected_source="wiley_tdm",
-            expected_source_trail="fulltext:wiley_pdf_extract_ok",
-            expected_log_prefix="official_provider_",
             args={"modes": ["metadata"], "strategy": {"allow_html_fallback": False}},
         )
 
+        self.assertFalse(result.isError)
+        self.assertEqual(result.structuredContent["source"], "wiley_browser")
+        self.assertTrue(result.structuredContent["has_fulltext"])
+        self.assertTrue(
+            any(
+                marker in result.structuredContent["source_trail"]
+                for marker in ("fulltext:wiley_html_ok", "fulltext:wiley_pdf_fallback_ok")
+            )
+        )
+        self.assertEqual(progress_updates[-1], (4, 4, "fetch_paper complete"))
+        self.assertTrue(
+            any(
+                isinstance(message, dict)
+                and str(message.get("event", "")).startswith("official_provider_")
+                for message in log_messages
+            )
+        )
+
     async def test_nature_html_direct_live_via_mcp_reports_progress_and_logs(self) -> None:
-        self._require_env("SPRINGER_META_API_KEY", "SPRINGER_OPENACCESS_API_KEY", "CROSSREF_MAILTO")
+        self._require_env("CROSSREF_MAILTO")
 
         result, progress_updates, log_messages = await self._call_fetch(
             query="https://www.nature.com/articles/sj.bdj.2017.900",
@@ -150,20 +173,18 @@ class LiveMcpServerTests(unittest.IsolatedAsyncioTestCase):
         )
 
         self.assertFalse(result.isError)
-        self.assertIn(result.structuredContent["source"], {"html_fallback", "metadata_only"})
-        self.assertIn("fallback:html_attempt", result.structuredContent["source_trail"])
-        self.assertNotIn("fallback:html_unavailable", result.structuredContent["source_trail"])
-        if result.structuredContent["source"] == "html_fallback":
+        self.assertIn(result.structuredContent["source"], {"springer_html", "metadata_only"})
+        if result.structuredContent["source"] == "springer_html":
             self.assertTrue(result.structuredContent["has_fulltext"])
-            self.assertIn("fallback:html_ok", result.structuredContent["source_trail"])
+            self.assertIn("fulltext:springer_html_ok", result.structuredContent["source_trail"])
         else:
             self.assertFalse(result.structuredContent["has_fulltext"])
-            self.assertIn("fallback:html_fail", result.structuredContent["source_trail"])
+            self.assertIn("fallback:springer_html_managed_by_provider", result.structuredContent["source_trail"])
         self.assertEqual(progress_updates[-1], (4, 4, "fetch_paper complete"))
         self.assertTrue(
             any(
                 isinstance(message, dict)
-                and str(message.get("event", "")).startswith("html_fallback_")
+                and str(message.get("event", "")).startswith("official_provider_")
                 for message in log_messages
             )
         )

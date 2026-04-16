@@ -2,8 +2,11 @@ from __future__ import annotations
 
 import json
 import unittest
+from pathlib import Path
+from unittest import mock
 
 from paper_fetch.http import DEFAULT_FULLTEXT_TIMEOUT_SECONDS, DEFAULT_TIMEOUT_SECONDS
+from paper_fetch.providers import _flaresolverr, _science_pnas
 from paper_fetch.providers.crossref import CrossrefClient
 from paper_fetch.providers.elsevier import ElsevierClient, filter_elsevier_asset_references
 from paper_fetch.providers.springer import SpringerClient, extract_springer_asset_references, filter_springer_asset_references
@@ -103,87 +106,134 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         self.assertTrue(transport.calls[0]["retry_on_rate_limit"])
         self.assertTrue(transport.calls[0]["retry_on_transient"])
 
-    def test_springer_openaccess_fulltext_uses_extended_timeout(self) -> None:
+    def test_springer_direct_html_fulltext_uses_extended_timeout(self) -> None:
         doi = "10.1186/1471-2105-11-421"
         transport = RecordingTransport(
             {
-                ("GET", "https://api.springernature.com/openaccess/jats"): {
+                ("GET", "https://www.nature.com/articles/example"): {
                     "status_code": 200,
-                    "headers": {"content-type": "application/xml"},
-                    "body": b"<article />",
-                    "url": "https://api.springernature.com/openaccess/jats",
+                    "headers": {"content-type": "text/html; charset=utf-8"},
+                    "body": (
+                        b"<html><head>"
+                        b'<meta name="citation_title" content="Springer HTML Article" />'
+                        b'<meta name="citation_doi" content="10.1186/1471-2105-11-421" />'
+                        b"</head><body>"
+                        b"<article><h1>Springer HTML Article</h1><h2>Introduction</h2>"
+                        b"<p>"
+                        + (b"Important body text. " * 200)
+                        + b"</p></article></body></html>"
+                    ),
+                    "url": "https://www.nature.com/articles/example",
                 }
             }
         )
 
-        client = SpringerClient(transport, {"SPRINGER_OPENACCESS_API_KEY": "secret"})
-        payload = client.fetch_raw_fulltext(doi, {})
+        client = SpringerClient(transport, {})
+        payload = client.fetch_raw_fulltext(doi, {"landing_page_url": "https://www.nature.com/articles/example"})
 
-        self.assertEqual(payload.content_type, "application/xml")
+        self.assertEqual(payload.content_type, "text/html; charset=utf-8")
         self.assertEqual(transport.calls[0]["timeout"], DEFAULT_FULLTEXT_TIMEOUT_SECONDS)
-        self.assertTrue(transport.calls[0]["retry_on_rate_limit"])
         self.assertTrue(transport.calls[0]["retry_on_transient"])
+        self.assertEqual(transport.calls[0]["url"], "https://www.nature.com/articles/example")
 
-    def test_wiley_fulltext_uses_extended_timeout(self) -> None:
-        doi = "10.1002/ece3.9361"
+    def test_springer_direct_html_follows_http_redirects(self) -> None:
+        doi = "10.1186/s13059-024-03246-2"
         transport = RecordingTransport(
             {
-                ("GET", "https://api.wiley.com/onlinelibrary/tdm/v1/articles/10.1002%2Fece3.9361"): {
-                    "status_code": 200,
-                    "headers": {"content-type": "application/pdf"},
-                    "body": b"%PDF-1.4",
-                    "url": "https://api.wiley.com/onlinelibrary/tdm/v1/articles/10.1002%2Fece3.9361",
-                }
-            }
-        )
-
-        client = WileyClient(
-            transport,
-            {
-                "WILEY_TDM_URL_TEMPLATE": "https://api.wiley.com/onlinelibrary/tdm/v1/articles/{doi}",
-                "WILEY_TDM_TOKEN": "secret",
-            },
-        )
-        payload = client.fetch_raw_fulltext(doi, {})
-
-        self.assertEqual(payload.content_type, "application/pdf")
-        self.assertEqual(transport.calls[0]["timeout"], DEFAULT_FULLTEXT_TIMEOUT_SECONDS)
-        self.assertTrue(transport.calls[0]["retry_on_rate_limit"])
-        self.assertTrue(transport.calls[0]["retry_on_transient"])
-
-    def test_wiley_fulltext_follows_redirect_to_signed_download_url(self) -> None:
-        doi = "10.1002/ece3.9361"
-        transport = RecordingTransport(
-            {
-                ("GET", "https://api.wiley.com/onlinelibrary/tdm/v1/articles/10.1002%2Fece3.9361"): {
-                    "status_code": 302,
-                    "headers": {"location": "https://alm.wiley.com/download/test.pdf", "content-length": "0"},
-                    "body": b"",
-                    "url": "/onlinelibrary/tdm/v1/articles/10.1002%2Fece3.9361",
+                ("GET", "https://genomebiology.biomedcentral.com/articles/10.1186/s13059-024-03246-2"): {
+                    "status_code": 301,
+                    "headers": {
+                        "content-type": "text/html; charset=utf-8",
+                        "location": "https://link.springer.com/article/10.1186/s13059-024-03246-2",
+                    },
+                    "body": b"<html><head><title>301 Moved Permanently</title></head><body>Moved</body></html>",
+                    "url": "/articles/10.1186/s13059-024-03246-2",
                 },
-                ("GET", "https://alm.wiley.com/download/test.pdf"): {
+                ("GET", "https://link.springer.com/article/10.1186/s13059-024-03246-2"): {
                     "status_code": 200,
-                    "headers": {"content-type": "application/pdf"},
-                    "body": b"%PDF-1.4",
-                    "url": "https://alm.wiley.com/download/test.pdf",
+                    "headers": {"content-type": "text/html; charset=utf-8"},
+                    "body": (
+                        b"<html><head>"
+                        b'<meta name="citation_title" content="Single Cell Atlas" />'
+                        b'<meta name="citation_doi" content="10.1186/s13059-024-03246-2" />'
+                        b"</head><body>"
+                        b"<article><h1>Single Cell Atlas</h1><h2>Abstract</h2>"
+                        b"<p>"
+                        + (b"Important body text. " * 200)
+                        + b"</p></article></body></html>"
+                    ),
+                    "url": "https://link.springer.com/article/10.1186/s13059-024-03246-2",
                 },
             }
         )
 
-        client = WileyClient(
-            transport,
-            {
-                "WILEY_TDM_URL_TEMPLATE": "https://api.wiley.com/onlinelibrary/tdm/v1/articles/{doi}",
-                "WILEY_TDM_TOKEN": "secret",
-            },
+        client = SpringerClient(transport, {})
+        payload = client.fetch_raw_fulltext(
+            doi,
+            {"landing_page_url": "https://genomebiology.biomedcentral.com/articles/10.1186/s13059-024-03246-2"},
         )
-        payload = client.fetch_raw_fulltext(doi, {})
 
-        self.assertEqual(payload.content_type, "application/pdf")
-        self.assertEqual(payload.source_url, "https://alm.wiley.com/download/test.pdf")
-        self.assertEqual(payload.body, b"%PDF-1.4")
+        self.assertEqual(payload.source_url, "https://link.springer.com/article/10.1186/s13059-024-03246-2")
         self.assertEqual(len(transport.calls), 2)
-        self.assertEqual(transport.calls[1]["timeout"], DEFAULT_FULLTEXT_TIMEOUT_SECONDS)
+        self.assertEqual(
+            [call["url"] for call in transport.calls],
+            [
+                "https://genomebiology.biomedcentral.com/articles/10.1186/s13059-024-03246-2",
+                "https://link.springer.com/article/10.1186/s13059-024-03246-2",
+            ],
+        )
+        self.assertTrue(all(call["retry_on_transient"] for call in transport.calls))
+        self.assertTrue(all(call["timeout"] == DEFAULT_FULLTEXT_TIMEOUT_SECONDS for call in transport.calls))
+
+    def test_wiley_browser_workflow_prefers_html_route(self) -> None:
+        doi = "10.1002/ece3.9361"
+        runtime = _flaresolverr.FlareSolverrRuntimeConfig(
+            provider="wiley",
+            doi=doi,
+            url="http://127.0.0.1:8191/v1",
+            env_file=Path("/tmp/.env.flaresolverr"),
+            source_dir=Path("/tmp/vendor/flaresolverr"),
+            artifact_dir=Path("/tmp/artifacts"),
+            headless=True,
+            min_interval_seconds=20,
+            max_requests_per_hour=30,
+            max_requests_per_day=200,
+            rate_limit_file=Path("/tmp/rate_limits.json"),
+        )
+
+        client = WileyClient(transport=None, env={})
+        with (
+            mock.patch.object(_science_pnas, "load_runtime_config", return_value=runtime),
+            mock.patch.object(_science_pnas, "ensure_runtime_ready"),
+            mock.patch.object(
+                _science_pnas,
+                "fetch_html_with_flaresolverr",
+                return_value=_flaresolverr.FetchedPublisherHtml(
+                    source_url="https://onlinelibrary.wiley.com/doi/full/10.1002/ece3.9361",
+                    final_url="https://onlinelibrary.wiley.com/doi/full/10.1002/ece3.9361",
+                    html="<html></html>",
+                    response_status=200,
+                    response_headers={"content-type": "text/html"},
+                    title="Example Wiley Article",
+                    summary="Example summary",
+                    browser_context_seed={},
+                ),
+            ),
+            mock.patch.object(
+                _science_pnas,
+                "extract_science_pnas_markdown",
+                return_value=("# Example Wiley Article\n\n## Results\n\n" + ("Body text " * 120), {"title": "Example"}),
+            ),
+            mock.patch.object(_science_pnas, "fetch_pdf_with_playwright") as mocked_pdf,
+        ):
+            payload = client.fetch_raw_fulltext(
+                doi,
+                {"doi": doi, "landing_page_url": "https://onlinelibrary.wiley.com/doi/full/10.1002/ece3.9361"},
+            )
+
+        mocked_pdf.assert_not_called()
+        self.assertEqual(payload.metadata["route"], "html")
+        self.assertEqual(payload.content_type, "text/html")
 
     def test_elsevier_body_asset_profile_excludes_appendix_and_supplementary(self) -> None:
         references = [

@@ -235,12 +235,6 @@ class McpToolTests(unittest.TestCase):
         blank_env = {
             "CROSSREF_MAILTO": "",
             "ELSEVIER_API_KEY": "",
-            "SPRINGER_META_API_KEY": "",
-            "SPRINGER_OPENACCESS_API_KEY": "",
-            "SPRINGER_FULLTEXT_API_KEY": "",
-            "SPRINGER_FULLTEXT_URL_TEMPLATE": "",
-            "WILEY_TDM_URL_TEMPLATE": "",
-            "WILEY_TDM_TOKEN": "",
         }
         with mock.patch.object(mcp_tools, "build_runtime_env", return_value=blank_env):
             result = mcp_tools.provider_status_tool()

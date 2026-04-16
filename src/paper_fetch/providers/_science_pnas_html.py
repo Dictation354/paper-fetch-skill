@@ -1,4 +1,4 @@
-"""Science/PNAS-specific HTML heuristics built on top of the generic markdown pipeline."""
+"""Browser-workflow HTML heuristics built on top of the generic markdown pipeline."""
 
 from __future__ import annotations
 
@@ -170,10 +170,70 @@ SITE_RULES: dict[str, dict[str, Any]] = {
             "Cite",
         },
     },
+    "wiley": {
+        "candidate_selectors": [
+            "article",
+            "main article",
+            "[role='main'] article",
+            ".article-section__content",
+            ".article__body",
+            ".article__content",
+            ".issue-item__body",
+            ".epub-section",
+            ".doi-access",
+            "main",
+            "[role='main']",
+            "#main-content",
+            ".main-content",
+        ],
+        "remove_selectors": [
+            "script",
+            "style",
+            "noscript",
+            "iframe",
+            "svg",
+            ".article-tools",
+            ".citation-tools",
+            ".article-metrics",
+            ".social-share",
+            ".related-content",
+            ".recommended-articles",
+            ".epub-reference",
+            ".article-section__tableofcontents",
+            ".toc",
+            ".breadcrumbs",
+            ".publicationHistory",
+            ".accessDenialWidget",
+        ],
+        "drop_keywords": {
+            "metrics",
+            "metric",
+            "share",
+            "social",
+            "recommend",
+            "related",
+            "toolbar",
+            "breadcrumb",
+            "download",
+            "cookie",
+            "promo",
+            "banner",
+            "citation-tool",
+            "rightslink",
+        },
+        "drop_text": {
+            "Check for updates",
+            "View Metrics",
+            "Share",
+            "Cite",
+            "Recommended articles",
+        },
+    },
 }
 PUBLISHER_HOSTS: dict[str, tuple[str, ...]] = {
     "science": ("science.org", "www.science.org"),
     "pnas": ("pnas.org", "www.pnas.org"),
+    "wiley": ("onlinelibrary.wiley.com", "wiley.com", "www.wiley.com"),
 }
 
 
@@ -194,26 +254,53 @@ def preferred_html_candidate_from_landing_page(
         return None
     parsed = urllib.parse.urlparse(candidate)
     hostname = normalize_text(parsed.hostname or "").lower()
-    if parsed.scheme not in {"http", "https"} or hostname not in PUBLISHER_HOSTS.get(publisher, ()):
+    allowed_hosts = PUBLISHER_HOSTS.get(publisher, ())
+    if parsed.scheme not in {"http", "https"} or not any(
+        hostname == token or hostname.endswith(f".{token}")
+        for token in allowed_hosts
+    ):
         return None
     if normalize_text(urllib.parse.unquote(candidate)).lower().find(doi.lower()) == -1:
         return None
     return candidate
 
 
+def _publisher_base_urls(publisher: str, landing_page_url: str | None = None) -> list[str]:
+    preferred = normalize_text(landing_page_url)
+    base_urls: list[str] = []
+    if preferred:
+        parsed = urllib.parse.urlparse(preferred)
+        hostname = normalize_text(parsed.hostname or "").lower()
+        if parsed.scheme in {"http", "https"} and hostname:
+            if any(hostname == token or hostname.endswith(f".{token}") for token in PUBLISHER_HOSTS.get(publisher, ())):
+                base_urls.append(f"{parsed.scheme}://{hostname}")
+
+    if publisher == "science":
+        candidates = ["https://www.science.org", "https://science.org"]
+    elif publisher == "pnas":
+        candidates = ["https://www.pnas.org", "https://pnas.org"]
+    else:
+        candidates = ["https://onlinelibrary.wiley.com", "https://www.wiley.com"]
+
+    for candidate in candidates:
+        if candidate not in base_urls:
+            base_urls.append(candidate)
+    return base_urls
+
+
 def build_html_candidates(publisher: str, doi: str, landing_page_url: str | None = None) -> list[str]:
     if publisher == "science":
-        base_urls = ["https://www.science.org", "https://science.org"]
         path_templates = ["/doi/full/{doi}", "/doi/{doi}"]
-    else:
-        base_urls = ["https://www.pnas.org", "https://pnas.org"]
+    elif publisher == "pnas":
         path_templates = ["/doi/{doi}", "/doi/full/{doi}"]
+    else:
+        path_templates = ["/doi/full/{doi}", "/doi/{doi}"]
 
     candidates: list[str] = []
     preferred_candidate = preferred_html_candidate_from_landing_page(publisher, doi, landing_page_url)
     if preferred_candidate:
         candidates.append(preferred_candidate)
-    for base in base_urls:
+    for base in _publisher_base_urls(publisher, landing_page_url):
         for template in path_templates:
             candidate = f"{base}{template.format(doi=doi)}"
             if candidate not in candidates:
@@ -227,13 +314,13 @@ def build_pdf_candidates(publisher: str, doi: str, crossref_pdf_url: str | None)
         candidates.append(crossref_pdf_url)
 
     if publisher == "science":
-        base_urls = ["https://www.science.org", "https://science.org"]
         path_templates = ["/doi/pdf/{doi}"]
-    else:
-        base_urls = ["https://www.pnas.org", "https://pnas.org"]
+    elif publisher == "pnas":
         path_templates = ["/doi/pdf/{doi}?download=true", "/doi/pdf/{doi}"]
+    else:
+        path_templates = ["/doi/pdfdirect/{doi}", "/doi/pdf/{doi}", "/doi/epdf/{doi}"]
 
-    for base in base_urls:
+    for base in _publisher_base_urls(publisher, crossref_pdf_url):
         for template in path_templates:
             candidate = f"{base}{template.format(doi=doi)}"
             if candidate not in candidates:
@@ -420,7 +507,7 @@ def markdown_looks_like_fulltext(markdown: str) -> tuple[bool, str]:
     return True, "ok"
 
 
-def extract_science_pnas_markdown(
+def extract_browser_workflow_markdown(
     html_text: str,
     source_url: str,
     publisher: str,
@@ -428,7 +515,7 @@ def extract_science_pnas_markdown(
     metadata: ProviderMetadata | Mapping[str, Any] | None = None,
 ) -> tuple[str, dict[str, Any]]:
     if BeautifulSoup is None:
-        raise SciencePnasHtmlFailure("missing_bs4", "BeautifulSoup is required for Science/PNAS HTML extraction.")
+        raise SciencePnasHtmlFailure("missing_bs4", "BeautifulSoup is required for browser-workflow HTML extraction.")
 
     soup = BeautifulSoup(html_text, choose_parser())
     title = extract_page_title(soup)
@@ -463,3 +550,18 @@ def extract_science_pnas_markdown(
         "container_tag": container.name,
         "container_text_length": len(" ".join(container.stripped_strings)),
     }
+
+
+def extract_science_pnas_markdown(
+    html_text: str,
+    source_url: str,
+    publisher: str,
+    *,
+    metadata: ProviderMetadata | Mapping[str, Any] | None = None,
+) -> tuple[str, dict[str, Any]]:
+    return extract_browser_workflow_markdown(
+        html_text,
+        source_url,
+        publisher,
+        metadata=metadata,
+    )

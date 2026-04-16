@@ -1,4 +1,4 @@
-"""FlareSolverr helpers for Science/PNAS provider access."""
+"""FlareSolverr helpers for browser-workflow provider access."""
 
 from __future__ import annotations
 
@@ -134,7 +134,7 @@ def load_runtime_config(env: Mapping[str, str], *, provider: str, doi: str) -> F
         raise ProviderFailure(
             "not_configured",
             (
-                "Science/PNAS requires FLARESOLVERR_ENV_FILE pointing at a repo-local vendor/flaresolverr preset. "
+                "Wiley/Science/PNAS requires FLARESOLVERR_ENV_FILE pointing at a repo-local vendor/flaresolverr preset. "
                 "Start the service with ./scripts/flaresolverr-up <preset> first."
             ),
             missing_env=["FLARESOLVERR_ENV_FILE"],
@@ -161,14 +161,14 @@ def load_runtime_config(env: Mapping[str, str], *, provider: str, doi: str) -> F
     if missing:
         raise ProviderFailure(
             "not_configured",
-            "Science/PNAS requires explicit local rate-limit settings: " + ", ".join(missing),
+            "Wiley/Science/PNAS requires explicit local rate-limit settings: " + ", ".join(missing),
             missing_env=missing,
         )
 
     env_values = load_env_file(env_file)
     headless = normalize_text(env_values.get("HEADLESS", "true")).lower() != "false"
-    artifact_dir = resolve_user_data_dir(env) / "science-pnas-artifacts" / provider / sanitize_filename(doi)
-    rate_limit_file = resolve_user_data_dir(env) / "science_pnas_rate_limits.json"
+    artifact_dir = resolve_user_data_dir(env) / "publisher-browser-artifacts" / provider / sanitize_filename(doi)
+    rate_limit_file = resolve_user_data_dir(env) / "publisher_browser_rate_limits.json"
     return FlareSolverrRuntimeConfig(
         provider=provider,
         doi=doi,
@@ -194,7 +194,7 @@ def check_local_workflow(config: FlareSolverrRuntimeConfig) -> None:
         raise ProviderFailure(
             "not_configured",
             (
-                "Science/PNAS support is repo-local only. Missing vendor/flaresolverr under the current checkout: "
+                "Wiley/Science/PNAS support is repo-local only. Missing vendor/flaresolverr under the current checkout: "
                 f"{config.source_dir}"
             ),
         )
@@ -203,7 +203,7 @@ def check_local_workflow(config: FlareSolverrRuntimeConfig) -> None:
         raise ProviderFailure(
             "not_configured",
             (
-                "Science/PNAS support requires the repo-local vendor/flaresolverr workflow. "
+                "Wiley/Science/PNAS support requires the repo-local vendor/flaresolverr workflow. "
                 f"Missing files: {', '.join(missing_files)}"
             ),
         )
@@ -216,7 +216,7 @@ def health_check(url: str) -> None:
         raise ProviderFailure(
             "not_configured",
             (
-                "Science/PNAS requires a running local FlareSolverr service. "
+                "Wiley/Science/PNAS requires a running local FlareSolverr service. "
                 f"Health check failed for {url}: {exc.message}. Start it with ./scripts/flaresolverr-up <preset>."
             ),
         ) from exc
@@ -224,7 +224,7 @@ def health_check(url: str) -> None:
         raise ProviderFailure(
             "not_configured",
             (
-                "Science/PNAS requires a running local FlareSolverr service. "
+                "Wiley/Science/PNAS requires a running local FlareSolverr service. "
                 f"Health check returned status={payload.get('status')!r} message={payload.get('message')!r}. "
                 "Start it with ./scripts/flaresolverr-up <preset>."
             ),
@@ -305,7 +305,7 @@ def enforce_rate_limits(config: FlareSolverrRuntimeConfig) -> None:
             "last_request_at": now,
             "events": recorded,
         }
-        fd, temp_path = tempfile.mkstemp(prefix="science_pnas_rate_limits_", suffix=".json")
+        fd, temp_path = tempfile.mkstemp(prefix="publisher_browser_rate_limits_", suffix=".json")
         temp_file = Path(temp_path)
         try:
             os.close(fd)
@@ -514,7 +514,7 @@ def probe_runtime_status(
                         build_provider_status_check(
                             "rate_limit_window",
                             "ok",
-                            "Local Science/PNAS rate-limit window allows a new request.",
+                            "Local browser-workflow rate-limit window allows a new request.",
                             details=rate_limit_details,
                         )
                     )

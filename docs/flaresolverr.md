@@ -1,8 +1,8 @@
-# Science / PNAS FlareSolverr 工作流
+# Wiley / Science / PNAS FlareSolverr 工作流
 
 这份文档解决：
 
-- `science` / `pnas` 的 repo-local 运行边界
+- `wiley` / `science` / `pnas` 的 repo-local 运行边界
 - 必填变量与 preset 选择
 - 一次性准备、启动、检查、停止
 - smoke 命令与常见失败排障
@@ -17,12 +17,12 @@
 
 ## 范围与边界
 
-`science` / `pnas` 当前遵循这些边界：
+`wiley` / `science` / `pnas` 当前遵循这些边界：
 
-- 它们是公开 provider 名字，可能出现在 `provider_hint`、`preferred_providers`、最终 `source` 中
+- 它们是公开 provider 名字，可能出现在 `provider_hint`、`preferred_providers` 中
 - metadata 仍由 `crossref` 提供
 - 正文链路是 provider 自管的 `HTML first -> PDF fallback -> metadata-only`
-- `source` 固定公开为 `science` 或 `pnas`
+- `source` 公开为 `wiley_browser`、`science` 或 `pnas`
 - `asset_profile=body|all` 当前会降级成 text-only
 - 这条链路只保证在当前仓库 checkout 中运行
 - 站点 ToS、robots、授权与合规风险由操作者自行承担
@@ -49,7 +49,7 @@ export FLARESOLVERR_SOURCE_DIR="$PWD/vendor/flaresolverr"
 
 - `FLARESOLVERR_ENV_FILE` 必填，不会自动猜 preset
 - 三条限速变量也必填，未配置时 provider 直接拒绝运行
-- 默认限速账本只影响 `science` / `pnas`
+- 默认限速账本会同时影响 `wiley` / `science` / `pnas`
 
 ## preset 选择
 
@@ -77,7 +77,7 @@ export FLARESOLVERR_SOURCE_DIR="$PWD/vendor/flaresolverr"
 - Playwright Chromium
 - `headless` preset 所需的 `Xvfb` 检查
 
-如果你只想手动准备 Science / PNAS 依赖：
+如果你只想手动准备 Wiley / Science / PNAS 依赖：
 
 ```bash
 bash ./vendor/flaresolverr/setup_flaresolverr_source.sh
@@ -122,6 +122,12 @@ curl --noproxy '*' -fsS -X POST http://127.0.0.1:8191/v1 \
 ```
 
 ## 手动 smoke
+
+Wiley 样例：
+
+```bash
+PYTHONPATH=src python3 -m paper_fetch.cli --query "10.1002/adma.202310123"
+```
 
 Science HTML 成功样例：
 
@@ -171,7 +177,7 @@ PYTHONPATH=src python3 -m unittest tests.live.test_live_science_pnas -q
 ### `asset_profile=body|all` 仍没有图
 
 - 这是当前实现约束
-- `science` / `pnas` v1 只承诺正文 Markdown，不承诺资产下载
+- `wiley` / `science` / `pnas` v1 只承诺正文 Markdown，不承诺资产下载
 
 ## 相关文档
 

@@ -46,8 +46,8 @@ DEFAULT_OUTPUT_MODES: set[OutputMode] = {"article", "markdown"}
 OFFICIAL_PROVIDER_NAMES = ("elsevier", "springer", "wiley", "science", "pnas")
 PUBLIC_SOURCE_BY_ARTICLE_SOURCE = {
     "elsevier_xml": "elsevier_xml",
-    "springer_xml": "springer_xml",
-    "wiley": "wiley_tdm",
+    "springer_html": "springer_html",
+    "wiley_browser": "wiley_browser",
     "science": "science",
     "pnas": "pnas",
     "html_generic": "html_fallback",
@@ -314,7 +314,7 @@ def probe_official_provider(
     doi: str,
     clients: Mapping[str, Any],
 ) -> RouteProbeResult:
-    if provider_name in {"wiley", "science", "pnas"}:
+    if provider_name != "elsevier":
         return RouteProbeResult(provider=provider_name, state="unknown")
 
     client = clients.get(provider_name)
@@ -383,12 +383,7 @@ def probe_has_fulltext(
             routing_metadata=crossref_metadata,
             strategy=strategy,
         ):
-            provider_label = provider_name.replace("_", " ").title()
-            if provider_name in {"wiley", "science", "pnas"}:
-                extend_unique(
-                    warnings,
-                    [_probe_warning(f"{provider_label} metadata probe unavailable", "metadata probe is not supported.")],
-                )
+            if provider_name != "elsevier":
                 continue
 
             client = client_registry.get(provider_name)
@@ -759,7 +754,7 @@ def _try_html_fallback(
     warnings: list[str],
     source_trail: list[str],
 ) -> ArticleModel | None:
-    if provider_name in {"science", "pnas"}:
+    if provider_name in {"springer", "wiley", "science", "pnas"}:
         extend_unique(source_trail, [f"fallback:{provider_name}_html_managed_by_provider"])
         return None
     if not html_fallback_allowed(strategy):

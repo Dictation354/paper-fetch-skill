@@ -1,8 +1,7 @@
-"""Springer provider client and XML asset helpers."""
+"""Springer provider client and legacy XML asset helpers."""
 
 from __future__ import annotations
 
-import json
 import urllib.parse
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -16,12 +15,15 @@ from ..publisher_identity import normalize_doi
 from ..utils import (
     build_asset_output_path,
     build_output_path,
+    choose_public_landing_page_url,
     empty_asset_results,
     first_non_empty,
+    normalize_text,
     sanitize_filename,
     save_payload,
     strip_html_tags,
 )
+from . import html_generic
 from ._article_markdown import build_article_structure, write_article_markdown
 from .base import (
     ProviderClient,
@@ -29,19 +31,19 @@ from .base import (
     ProviderStatusResult,
     RawFulltextPayload,
     build_provider_status_check,
-    combine_provider_failures,
     map_request_failure,
     summarize_capability_status,
 )
 
 XLINK_HREF = "{http://www.w3.org/1999/xlink}href"
+MAX_SPRINGER_HTML_REDIRECTS = 5
 
 
 def extract_springer_keywords(record: Mapping[str, Any]) -> list[str]:
-    """Extract keywords from a Springer Meta API record.
+    """Extract keywords from a Springer metadata record.
 
-    The API exposes them under several aliases (``keyword``, ``subjects``,
-    ``subject``); accept all common shapes.
+    Legacy XML fixtures expose them under several aliases (``keyword``,
+    ``subjects``, ``subject``); accept all common shapes.
     """
     if not isinstance(record, Mapping):
         return []
@@ -79,7 +81,7 @@ def build_springer_static_asset_url(doi: str, source_href: str, *, asset_bucket:
     return f"https://static-content.springer.com/{asset_bucket}/{article_segment}/{resource_segment}"
 
 
-def springer_xml_local_name(tag: str) -> str:
+def springer_tag_local_name(tag: str) -> str:
     return tag.rsplit("}", 1)[-1] if "}" in tag else tag
 
 
@@ -93,7 +95,7 @@ def walk_springer_asset_elements(
     if not isinstance(element.tag, str):
         return entries
 
-    local_name = springer_xml_local_name(element.tag)
+    local_name = springer_tag_local_name(element.tag)
     next_location = location
     if local_name == "body":
         next_location = "body"
@@ -126,7 +128,7 @@ def extract_springer_asset_references(xml_body: bytes, doi: str) -> list[dict[st
     seen: set[tuple[str, str, str]] = set()
 
     for element, location, in_table in walk_springer_asset_elements(root):
-        tag = springer_xml_local_name(element.tag)
+        tag = springer_tag_local_name(element.tag)
         if tag not in {"graphic", "inline-graphic", "media"}:
             continue
 
@@ -257,12 +259,6 @@ class SpringerClient(ProviderClient):
 
     def __init__(self, transport: HttpTransport, env: Mapping[str, str]) -> None:
         self.transport = transport
-        self.meta_api_key = env.get("SPRINGER_META_API_KEY", "").strip()
-        self.openaccess_api_key = env.get("SPRINGER_OPENACCESS_API_KEY", "").strip()
-        self.fulltext_api_key = env.get("SPRINGER_FULLTEXT_API_KEY", "").strip()
-        self.fulltext_url_template = env.get("SPRINGER_FULLTEXT_URL_TEMPLATE", "").strip()
-        self.fulltext_auth_header = env.get("SPRINGER_FULLTEXT_AUTH_HEADER", "").strip()
-        self.fulltext_accept = env.get("SPRINGER_FULLTEXT_ACCEPT", "application/xml").strip() or "application/xml"
         self.user_agent = build_user_agent(env)
 
     def probe_status(self) -> ProviderStatusResult:
@@ -271,104 +267,56 @@ class SpringerClient(ProviderClient):
             official_provider=self.official_provider,
             checks=[
                 build_provider_status_check(
-                    "metadata_api",
-                    "ok" if self.meta_api_key else "not_configured",
-                    (
-                        "Springer Meta API credentials are configured."
-                        if self.meta_api_key
-                        else "SPRINGER_META_API_KEY is required for Springer metadata retrieval."
-                    ),
-                    missing_env=[] if self.meta_api_key else ["SPRINGER_META_API_KEY"],
-                ),
-                build_provider_status_check(
-                    "openaccess_api",
-                    "ok" if self.openaccess_api_key else "not_configured",
-                    (
-                        "Springer Open Access API credentials are configured."
-                        if self.openaccess_api_key
-                        else "SPRINGER_OPENACCESS_API_KEY is required for Springer Open Access full-text retrieval."
-                    ),
-                    missing_env=[] if self.openaccess_api_key else ["SPRINGER_OPENACCESS_API_KEY"],
-                ),
-                build_provider_status_check(
-                    "fulltext_api",
-                    "ok" if self.fulltext_api_key and self.fulltext_url_template else "not_configured",
-                    (
-                        "Springer Full Text API credentials are configured."
-                        if self.fulltext_api_key and self.fulltext_url_template
-                        else "SPRINGER_FULLTEXT_API_KEY and SPRINGER_FULLTEXT_URL_TEMPLATE are required for Springer Full Text API retrieval."
-                    ),
-                    missing_env=[
-                        name
-                        for name, configured in (
-                            ("SPRINGER_FULLTEXT_API_KEY", bool(self.fulltext_api_key)),
-                            ("SPRINGER_FULLTEXT_URL_TEMPLATE", bool(self.fulltext_url_template)),
-                        )
-                        if not configured
-                    ],
-                    details={
-                        "auth_header": self.fulltext_auth_header or None,
-                        "accept": self.fulltext_accept,
-                    },
+                    "html_route",
+                    "ok",
+                    "Springer direct HTML route is available.",
+                    details={"mode": "direct_html"},
                 ),
             ],
         )
 
-    def _headers(self, accept: str) -> dict[str, str]:
+    def _headers(self) -> dict[str, str]:
         return {
-            "Accept": accept,
+            "Accept": "text/html,application/xhtml+xml",
             "User-Agent": self.user_agent,
         }
 
-    def _meta_query(self, doi: str) -> dict[str, str]:
-        if not self.meta_api_key:
-            raise ProviderFailure(
-                "not_configured",
-                "SPRINGER_META_API_KEY is not configured.",
-                missing_env=["SPRINGER_META_API_KEY"],
-            )
-        return {
-            "api_key": self.meta_api_key,
-            "q": f"doi:{doi}",
-        }
-
-    def _openaccess_query(self, doi: str) -> dict[str, str]:
-        if not self.openaccess_api_key:
-            raise ProviderFailure(
-                "not_configured",
-                "SPRINGER_OPENACCESS_API_KEY is not configured.",
-                missing_env=["SPRINGER_OPENACCESS_API_KEY"],
-            )
-        return {
-            "api_key": self.openaccess_api_key,
-            "q": f"doi:{doi}",
-        }
-
-    def fetch_metadata(self, query: Mapping[str, str | None]) -> ProviderMetadata:
-        doi = normalize_doi(query.get("doi"))
-        if not doi:
-            raise ProviderFailure(
-                "not_supported",
-                "Springer official metadata retrieval needs a DOI in this implementation.",
-            )
-
+    def _fetch_html_response(self, landing_url: str) -> tuple[dict[str, Any], str]:
+        current_url = landing_url
         try:
             response = self.transport.request(
                 "GET",
-                "https://api.springernature.com/meta/v2/json",
-                headers=self._headers("application/json"),
-                query=self._meta_query(doi),
-                retry_on_rate_limit=True,
+                current_url,
+                headers=self._headers(),
+                timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
                 retry_on_transient=True,
             )
+            for _ in range(MAX_SPRINGER_HTML_REDIRECTS):
+                response_url = urllib.parse.urljoin(current_url, str(response.get("url") or "").strip() or current_url)
+                status_code = int(response.get("status_code") or 0)
+                redirect_location = str((response.get("headers") or {}).get("location") or "").strip()
+                if status_code not in {301, 302, 303, 307, 308} or not redirect_location:
+                    return response, response_url
+                current_url = urllib.parse.urljoin(response_url, redirect_location)
+                response = self.transport.request(
+                    "GET",
+                    current_url,
+                    headers=self._headers(),
+                    timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
+                    retry_on_transient=True,
+                )
         except RequestFailure as exc:
             raise map_request_failure(exc) from exc
+        raise ProviderFailure(
+            "error",
+            f"Springer direct HTML retrieval exceeded {MAX_SPRINGER_HTML_REDIRECTS} redirects.",
+        )
 
-        payload = json.loads(response["body"].decode("utf-8"))
-        records = payload.get("records") or []
-        if not records:
-            raise ProviderFailure("no_result", "Springer Meta API returned no records.")
-        return self._normalize_record(records[0], response["url"])
+    def fetch_metadata(self, query: Mapping[str, str | None]) -> ProviderMetadata:
+        raise ProviderFailure(
+            "not_supported",
+            "Springer publisher metadata is taken from Crossref; the runtime does not use Springer publisher endpoints.",
+        )
 
     def fetch_fulltext(self, doi: str, metadata: ProviderMetadata, output_dir: Path | None) -> dict[str, Any]:
         payload = self.fetch_raw_fulltext(doi, metadata)
@@ -377,15 +325,6 @@ class SpringerClient(ProviderClient):
         saved_path = save_payload(output_path, payload.body)
         asset_results = self.download_related_assets(normalized_doi, metadata, payload, output_dir)
         markdown_path = None
-        if is_xml_content_type(payload.content_type):
-            markdown_path = write_article_markdown(
-                provider="springer",
-                metadata=metadata,
-                xml_body=payload.body,
-                output_dir=output_dir,
-                xml_path=saved_path,
-                assets=asset_results["assets"],
-            )
         return {
             "attempted": True,
             "status": "saved" if output_path else "fetched",
@@ -397,7 +336,7 @@ class SpringerClient(ProviderClient):
             "markdown_path": markdown_path,
             "downloaded_bytes": len(payload.body),
             "content_preview": build_text_preview(payload.body, payload.content_type),
-            "reason": str(payload.metadata.get("reason") or "Downloaded full text from the official Springer Open Access API."),
+            "reason": str(payload.metadata.get("reason") or "Downloaded full text from the Springer landing page HTML."),
             **asset_results,
         }
 
@@ -410,13 +349,29 @@ class SpringerClient(ProviderClient):
         *,
         asset_profile: AssetProfile = "all",
     ) -> dict[str, list[dict[str, Any]]]:
-        normalized_doi = normalize_doi(doi)
-        if not normalized_doi or not is_xml_content_type(raw_payload.content_type):
+        if output_dir is None or asset_profile == "none":
             return empty_asset_results()
-        return download_springer_related_assets(
+        article_assets = list(raw_payload.metadata.get("extracted_assets") or [])
+        if not article_assets:
+            html_text = html_generic.decode_html(raw_payload.body)
+            article_assets = html_generic.extract_html_assets(
+                html_text,
+                raw_payload.source_url,
+                asset_profile=asset_profile,
+            )
+        if not article_assets:
+            return empty_asset_results()
+        article_id = (
+            normalize_doi(str((raw_payload.metadata.get("merged_metadata") or {}).get("doi") or doi or ""))
+            or normalize_doi(doi)
+            or normalize_doi(str(metadata.get("doi") or ""))
+            or normalize_text(str(metadata.get("title") or ""))
+            or raw_payload.source_url
+        )
+        return html_generic.download_figure_assets(
             self.transport,
-            doi=normalized_doi,
-            xml_body=raw_payload.body,
+            article_id=article_id,
+            assets=article_assets,
             output_dir=output_dir,
             user_agent=self.user_agent,
             asset_profile=asset_profile,
@@ -425,90 +380,35 @@ class SpringerClient(ProviderClient):
     def fetch_raw_fulltext(self, doi: str, metadata: ProviderMetadata) -> RawFulltextPayload:
         normalized_doi = normalize_doi(doi)
         if not normalized_doi:
-            raise ProviderFailure("not_supported", "Springer full-text retrieval requires a DOI.")
+            raise ProviderFailure("not_supported", "Springer direct HTML retrieval requires a DOI.")
 
-        failures: list[tuple[str, ProviderFailure]] = []
-
-        if self.fulltext_url_template or self.fulltext_api_key:
-            try:
-                return self._fetch_fulltext_api(normalized_doi, metadata)
-            except ProviderFailure as exc:
-                failures.append(("Springer Full Text API", exc))
-
-        try:
-            return self._fetch_openaccess_fulltext(normalized_doi, metadata)
-        except ProviderFailure as exc:
-            failures.append(("Springer Open Access API", exc))
-
-        raise combine_provider_failures(failures)
-
-    def _fetch_fulltext_api(self, doi: str, metadata: ProviderMetadata) -> RawFulltextPayload:
-        if not self.fulltext_url_template or not self.fulltext_api_key:
-            missing_env: list[str] = []
-            if not self.fulltext_api_key:
-                missing_env.append("SPRINGER_FULLTEXT_API_KEY")
-            if not self.fulltext_url_template:
-                missing_env.append("SPRINGER_FULLTEXT_URL_TEMPLATE")
-            raise ProviderFailure(
-                "not_configured",
-                "SPRINGER_FULLTEXT_API_KEY and SPRINGER_FULLTEXT_URL_TEMPLATE are required for Springer Full Text API retrieval.",
-                missing_env=missing_env,
-            )
-
-        encoded_doi = urllib.parse.quote(doi, safe="")
-        url = self.fulltext_url_template.format(
-            doi=encoded_doi,
-            raw_doi=doi,
-            api_key=urllib.parse.quote(self.fulltext_api_key, safe=""),
+        landing_url = choose_public_landing_page_url(
+            metadata.get("landing_page_url"),
+            f"https://doi.org/{urllib.parse.quote(normalized_doi, safe='')}",
         )
-        headers = self._headers(self.fulltext_accept)
-        if self.fulltext_auth_header:
-            headers[self.fulltext_auth_header] = self.fulltext_api_key
+        response, response_url = self._fetch_html_response(landing_url)
 
-        try:
-            response = self.transport.request(
-                "GET",
-                url,
-                headers=headers,
-                timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
-                retry_on_rate_limit=True,
-                retry_on_transient=True,
-            )
-        except RequestFailure as exc:
-            raise map_request_failure(exc) from exc
-
-        content_type = response["headers"].get("content-type", self.fulltext_accept)
+        html_text = html_generic.decode_html(response["body"])
+        html_metadata = html_generic.parse_html_metadata(html_text, response_url)
+        merged_metadata = html_generic.merge_html_metadata(metadata, html_metadata)
+        if not merged_metadata.get("doi"):
+            merged_metadata["doi"] = normalized_doi
+        markdown_text = html_generic.clean_markdown(html_generic.extract_article_markdown(html_text, response_url))
+        if not html_generic.has_sufficient_article_body(markdown_text, merged_metadata):
+            raise ProviderFailure("no_result", "Springer HTML extraction did not produce enough article body text.")
+        extracted_assets = html_generic.extract_html_assets(html_text, response_url, asset_profile="all")
         return RawFulltextPayload(
             provider="springer",
-            source_url=response["url"],
-            content_type=content_type,
+            source_url=response_url,
+            content_type=response["headers"].get("content-type", "text/html"),
             body=response["body"],
-            metadata={"reason": "Downloaded full text from the official Springer Full Text API."},
-            needs_local_copy=not (content_type.startswith("text/") or is_xml_content_type(content_type)),
-        )
-
-    def _fetch_openaccess_fulltext(self, doi: str, metadata: ProviderMetadata) -> RawFulltextPayload:
-        try:
-            response = self.transport.request(
-                "GET",
-                "https://api.springernature.com/openaccess/jats",
-                headers=self._headers("application/xml"),
-                query=self._openaccess_query(doi),
-                timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
-                retry_on_rate_limit=True,
-                retry_on_transient=True,
-            )
-        except RequestFailure as exc:
-            raise map_request_failure(exc) from exc
-
-        content_type = response["headers"].get("content-type", "application/xml")
-        return RawFulltextPayload(
-            provider="springer",
-            source_url=response["url"],
-            content_type=content_type,
-            body=response["body"],
-            metadata={"reason": "Downloaded full text from the official Springer Open Access API."},
-            needs_local_copy=not (content_type.startswith("text/") or is_xml_content_type(content_type)),
+            metadata={
+                "reason": "Downloaded full text from the Springer landing page HTML.",
+                "merged_metadata": merged_metadata,
+                "markdown_text": markdown_text,
+                "extracted_assets": extracted_assets,
+            },
+            needs_local_copy=False,
         )
 
     def to_article_model(
@@ -519,89 +419,31 @@ class SpringerClient(ProviderClient):
         downloaded_assets: list[Mapping[str, Any]] | None = None,
         asset_failures: list[Mapping[str, Any]] | None = None,
     ):
-        doi = normalize_doi(metadata.get("doi"))
+        merged_metadata = raw_payload.metadata.get("merged_metadata")
+        article_metadata = merged_metadata if isinstance(merged_metadata, Mapping) else metadata
+        doi = normalize_doi(article_metadata.get("doi") or metadata.get("doi"))
+        markdown_text = str(raw_payload.metadata.get("markdown_text") or "").strip()
         warnings: list[str] = []
-        if is_xml_content_type(raw_payload.content_type):
-            xml_path = Path(f"{sanitize_filename(doi or str(metadata.get('title') or 'article'))}.xml")
-            structure = build_article_structure(
-                provider="springer",
-                metadata=metadata,
-                xml_body=raw_payload.body,
-                xml_path=xml_path,
-                assets=list(downloaded_assets or []),
-            )
-            if structure is not None:
-                return article_from_structure(
-                    source="springer_xml",
-                    metadata=metadata,
-                    doi=doi or None,
-                    abstract_lines=structure.abstract_lines,
-                    body_lines=structure.body_lines,
-                    figure_entries=structure.figure_entries,
-                    table_entries=structure.table_entries,
-                    supplement_entries=structure.supplement_entries,
-                    conversion_notes=structure.conversion_notes,
-                    warnings=warnings,
-                )
-        if raw_payload.content_type.startswith("text/"):
-            try:
-                text = raw_payload.body.decode("utf-8", errors="replace")
-            except Exception:
-                text = ""
-            if text.strip():
-                warnings.append("Official full text was not available in XML format; returned plain text instead.")
-            return article_from_markdown(
-                source="springer_xml",
-                metadata=metadata,
+        source_trail = ["fulltext:springer_html_ok"]
+        assets = list(downloaded_assets or [])
+        if not markdown_text:
+            warnings.append("Springer HTML retrieval did not produce usable Markdown.")
+            source_trail = ["fulltext:springer_html_fail"]
+            return metadata_only_article(
+                source="springer_html",
+                metadata=article_metadata,
                 doi=doi or None,
-                markdown_text=text,
                 warnings=warnings,
+                source_trail=source_trail,
             )
-        warnings.append("Official full text was not convertible to AI-friendly Markdown.")
-        return metadata_only_article(
-            source="springer_xml",
-            metadata=metadata,
+        if asset_failures:
+            warnings.append(f"Springer related assets were only partially downloaded ({len(asset_failures)} failed).")
+        return article_from_markdown(
+            source="springer_html",
+            metadata=article_metadata,
             doi=doi or None,
+            markdown_text=markdown_text,
+            assets=assets,
             warnings=warnings,
+            source_trail=source_trail,
         )
-
-    def _normalize_record(self, record: Mapping[str, Any], source_url: str) -> ProviderMetadata:
-        links: list[FulltextLink] = []
-        raw_url_field = record.get("url")
-        if isinstance(raw_url_field, list):
-            for item in raw_url_field:
-                if isinstance(item, dict) and item.get("value"):
-                    links.append(
-                        {
-                            "url": item.get("value"),
-                            "content_type": item.get("format"),
-                            "content_version": None,
-                            "intended_application": "text-mining",
-                        }
-                    )
-        elif isinstance(raw_url_field, str) and raw_url_field:
-            links.append(
-                {
-                    "url": raw_url_field,
-                    "content_type": None,
-                    "content_version": None,
-                    "intended_application": "text-mining",
-                }
-            )
-
-        return {
-            "status": "ok",
-            "provider": "springer",
-            "official_provider": True,
-            "source_url": source_url,
-            "doi": first_non_empty(record.get("doi"), record.get("doiValue")),
-            "title": first_non_empty(record.get("title"), record.get("publicationName")),
-            "journal_title": first_non_empty(record.get("journalTitle"), record.get("publicationName")),
-            "publisher": first_non_empty(record.get("publisher"), "Springer Nature"),
-            "abstract": strip_html_tags(record.get("abstract")),
-            "published": first_non_empty(record.get("publicationDate"), record.get("publicationDateStart")),
-            "landing_page_url": links[0]["url"] if links else (record.get("url") if isinstance(record.get("url"), str) else None),
-            "license_urls": [],
-            "fulltext_links": links,
-            "keywords": extract_springer_keywords(record),
-        }

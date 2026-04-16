@@ -157,23 +157,14 @@ SERVER_SCRIPT = textwrap.dedent(
             "springer": FakeProviderClient(
                 ProviderStatusResult(
                     provider="springer",
-                    status="partial",
+                    status="ready",
                     available=True,
                     official_provider=True,
-                    missing_env=["SPRINGER_OPENACCESS_API_KEY", "SPRINGER_FULLTEXT_API_KEY", "SPRINGER_FULLTEXT_URL_TEMPLATE"],
                     checks=[
-                        build_provider_status_check("metadata_api", "ok", "Springer Meta API credentials are configured."),
                         build_provider_status_check(
-                            "openaccess_api",
-                            "not_configured",
-                            "SPRINGER_OPENACCESS_API_KEY is required for Springer Open Access full-text retrieval.",
-                            missing_env=["SPRINGER_OPENACCESS_API_KEY"],
-                        ),
-                        build_provider_status_check(
-                            "fulltext_api",
-                            "not_configured",
-                            "SPRINGER_FULLTEXT_API_KEY and SPRINGER_FULLTEXT_URL_TEMPLATE are required for Springer Full Text API retrieval.",
-                            missing_env=["SPRINGER_FULLTEXT_API_KEY", "SPRINGER_FULLTEXT_URL_TEMPLATE"],
+                            "html_route",
+                            "ok",
+                            "Springer direct HTML route is available.",
                         ),
                     ],
                 )
@@ -184,14 +175,17 @@ SERVER_SCRIPT = textwrap.dedent(
                     status="not_configured",
                     available=False,
                     official_provider=True,
-                    missing_env=["WILEY_TDM_URL_TEMPLATE", "WILEY_TDM_TOKEN"],
+                    missing_env=["FLARESOLVERR_ENV_FILE"],
                     checks=[
                         build_provider_status_check(
-                            "fulltext_api",
+                            "runtime_env",
                             "not_configured",
-                            "WILEY_TDM_URL_TEMPLATE and WILEY_TDM_TOKEN are required for Wiley full-text retrieval.",
-                            missing_env=["WILEY_TDM_URL_TEMPLATE", "WILEY_TDM_TOKEN"],
-                        )
+                            "FLARESOLVERR_ENV_FILE is required.",
+                            missing_env=["FLARESOLVERR_ENV_FILE"],
+                        ),
+                        build_provider_status_check("repo_local_workflow", "not_configured", "Skipped because runtime_env is not configured."),
+                        build_provider_status_check("flaresolverr_health", "not_configured", "Skipped because runtime_env is not configured."),
+                        build_provider_status_check("rate_limit_window", "not_configured", "Skipped because runtime_env is not configured."),
                     ],
                 )
             ),

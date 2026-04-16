@@ -106,7 +106,7 @@ Date: 2026-04-16
 - resolve 查询
 - 计算 routing signal
 - 拉取并合并 metadata
-- 执行 official provider / HTML / metadata-only 回退瀑布
+- 执行 provider 主链 / generic HTML / metadata-only 回退瀑布
 - 统一构造 `FetchEnvelope`
 
 ### 5. Provider 层
@@ -140,8 +140,8 @@ Date: 2026-04-16
 resolve
 -> routing signal
 -> metadata merge
--> official provider fulltext
--> HTML fallback 或 provider 内部 fallback
+-> provider fulltext
+-> generic HTML fallback 或 provider 内部 fallback
 -> metadata-only fallback
 -> render / envelope / cache / MCP 暴露
 ```
@@ -189,7 +189,12 @@ domain > publisher > DOI fallback
 service 会尽可能拿到两类元数据：
 
 - Crossref metadata
-- 官方 provider metadata
+- publisher metadata
+
+其中：
+
+- `elsevier` 仍会参与 publisher metadata probe
+- `springer`、`wiley`、`science`、`pnas` 不再做 publisher metadata probe
 
 然后执行 primary / secondary merge，得到后续正文抓取所需的统一 metadata 视图。
 
@@ -199,30 +204,38 @@ service 会尽可能拿到两类元数据：
 - 更稳定的 provider 选择
 - metadata-only 结果的最终内容
 
-### 4. official provider fulltext
+### 4. provider fulltext
 
-如果选中了官方 provider，service 会先尝试官方全文路径。
+如果选中了 provider，service 会先尝试 provider 主路径。
 
 典型行为：
 
-- `elsevier`：优先 XML，并可下载关联资产
-- `springer`：优先 Full Text API，其次 Open Access API
-- `wiley`：走 TDM endpoint，常见是 PDF 提取
-- `science` / `pnas`：由 provider 自己执行 HTML / PDF fallback 逻辑
+- `elsevier`
+  - 继续走官方 API/XML 主链
+- `springer`
+  - 走 provider 自管 direct HTML 主链
+- `wiley`
+  - 走 provider 自管浏览器工作流 `HTML -> PDF fallback`
+- `science` / `pnas`
+  - 与 `wiley` 共用浏览器工作流基座
 
-如果官方正文足够可用，流程在这里结束。
+如果正文足够可用，流程在这里结束。
 
-### 5. HTML fallback 与 provider 内部 fallback
+### 5. generic HTML fallback 与 provider 内部 fallback
 
-普通 provider 在官方路径失败后，可以进入通用 `html_generic` fallback，前提是：
+通用 `html_generic` fallback 只服务“非 provider-owned HTML 路径”的场景，前提是：
 
 - `strategy.allow_html_fallback=true`
 - 允许的 provider 集合没有排除 HTML alias
 
-`science` / `pnas` 是关键例外：
+关键例外：
 
-- 不走通用 `html_generic`
-- 而是 provider 自己管理 `HTML -> PDF -> metadata-only`
+- `springer`
+  - direct HTML 由 provider 内部管理
+  - 失败后直接 metadata-only
+- `wiley` / `science` / `pnas`
+  - 不走通用 `html_generic`
+  - 而是 provider 自己管理 `HTML -> PDF fallback -> metadata-only`
 
 ### 6. metadata-only fallback
 
@@ -320,13 +333,15 @@ service 会尽可能拿到两类元数据：
 
 ## 关键例外与调用方容易误解的点
 
-### `science` / `pnas` 不走通用 HTML fallback
+### `springer` / `wiley` / `science` / `pnas` 不走通用 HTML fallback
 
-它们的 HTML 逻辑由 provider 内部管理，因此：
+这些 provider 的 HTML 逻辑由 provider 内部管理，因此：
 
-- 通用 HTML fallback 开关不会关闭它们自己的 HTML 主路径
-- `source` 仍然公开为 `science` / `pnas`
-- 成功细节要看 `source_trail`
+- 通用 HTML fallback 开关不会关闭它们自己的主路径
+- `springer` 成功时公开为 `springer_html`
+- `wiley` 成功时公开为 `wiley_browser`
+- `science` / `pnas` 仍然公开为 `science` / `pnas`
+- 更细的成功细节要看 `source_trail`
 
 ### `crossref` 既可能是 source，也可能只是 signal
 

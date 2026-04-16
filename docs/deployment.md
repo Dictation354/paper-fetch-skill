@@ -10,10 +10,10 @@
 这份文档不解决：
 
 - provider 差异、路由规则和限速语义
-- Science / PNAS 的详细运维步骤
+- Wiley / Science / PNAS 的详细运维步骤
 - 架构实现细节
 
-provider 与环境变量说明见 [`providers.md`](providers.md)，Science / PNAS 运维说明见 [`flaresolverr.md`](flaresolverr.md)。
+provider 与环境变量说明见 [`providers.md`](providers.md)，Wiley / Science / PNAS 运维说明见 [`flaresolverr.md`](flaresolverr.md)。
 
 ## 1. 安装 Python 包
 
@@ -81,9 +81,9 @@ paper-fetch-install-formula-tools
 - `paper-fetch-install-formula-tools` 会把工具装到用户数据目录，更适合部署环境
 - `./install-formula-tools.sh` 会把工具装到当前仓库的 `./.formula-tools/`
 
-## 4. Science / PNAS 接入入口
+## 4. Wiley / Science / PNAS 接入入口
 
-`science` / `pnas` 不是“装完 wheel 就自动可用”的 provider。
+`wiley`、`science`、`pnas` 不是“装完 wheel 就自动可用”的 provider。
 
 如果你要启用它们，至少还需要：
 
@@ -198,7 +198,7 @@ PYTHONPATH=src python3 -m unittest -q tests.unit.test_cli tests.unit.test_servic
 PYTHONPATH=src python3 -m unittest discover -s tests -q
 ```
 
-如果你要额外验证 `science` / `pnas` live 路径，请先按 [`flaresolverr.md`](flaresolverr.md) 准备环境，再运行对应 live 测试。
+如果你要额外验证 `wiley` / `science` / `pnas` live 路径，请先按 [`flaresolverr.md`](flaresolverr.md) 准备环境，再运行对应 live 测试。
 
 ## 相关文档
 

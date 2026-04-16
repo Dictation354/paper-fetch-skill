@@ -2,9 +2,12 @@ from __future__ import annotations
 
 import os
 import unittest
+from pathlib import Path
 
-from paper_fetch.config import build_runtime_env
+from paper_fetch.config import build_runtime_env, resolve_flaresolverr_source_dir, resolve_flaresolverr_url
 from paper_fetch.http import HttpTransport
+from paper_fetch.providers._flaresolverr import health_check
+from paper_fetch.providers.base import ProviderFailure
 from paper_fetch.service import FetchStrategy, fetch_paper
 
 
@@ -39,6 +42,18 @@ class LivePublisherTests(unittest.TestCase):
         if missing:
             self.skipTest(f"Missing required environment variables for live test: {', '.join(missing)}")
 
+    def _require_flaresolverr(self) -> None:
+        env_file = Path(self.env["FLARESOLVERR_ENV_FILE"]).expanduser()
+        if not env_file.exists():
+            self.skipTest(f"Configured FLARESOLVERR_ENV_FILE does not exist: {env_file}")
+        source_dir = resolve_flaresolverr_source_dir(self.env)
+        if not source_dir.exists():
+            self.skipTest(f"Repo-local vendor/flaresolverr was not found: {source_dir}")
+        try:
+            health_check(resolve_flaresolverr_url(self.env))
+        except ProviderFailure as exc:
+            self.skipTest(f"Local FlareSolverr health check failed: {exc.message}")
+
     def test_elsevier_doi_live_fulltext(self) -> None:
         self._require_env("ELSEVIER_API_KEY", "CROSSREF_MAILTO")
         article = fetch_article(
@@ -53,7 +68,7 @@ class LivePublisherTests(unittest.TestCase):
         self.assertGreater(len(article.sections), 0)
 
     def test_springer_doi_live_fulltext(self) -> None:
-        self._require_env("SPRINGER_META_API_KEY", "SPRINGER_OPENACCESS_API_KEY", "CROSSREF_MAILTO")
+        self._require_env("CROSSREF_MAILTO")
         article = fetch_article(
             "10.1186/1471-2105-11-421",
             allow_html_fallback=False,
@@ -61,12 +76,19 @@ class LivePublisherTests(unittest.TestCase):
             env=self.env,
         )
 
-        self.assertEqual(article.source, "springer_xml")
+        self.assertEqual(article.source, "springer_html")
         self.assertTrue(article.quality.has_fulltext)
         self.assertGreater(len(article.sections), 0)
 
     def test_wiley_doi_live_fulltext(self) -> None:
-        self._require_env("WILEY_TDM_URL_TEMPLATE", "WILEY_TDM_TOKEN", "CROSSREF_MAILTO")
+        self._require_env(
+            "CROSSREF_MAILTO",
+            "FLARESOLVERR_ENV_FILE",
+            "FLARESOLVERR_MIN_INTERVAL_SECONDS",
+            "FLARESOLVERR_MAX_REQUESTS_PER_HOUR",
+            "FLARESOLVERR_MAX_REQUESTS_PER_DAY",
+        )
+        self._require_flaresolverr()
         article = fetch_article(
             "10.1002/ece3.9361",
             allow_html_fallback=False,
@@ -74,10 +96,15 @@ class LivePublisherTests(unittest.TestCase):
             env=self.env,
         )
 
-        self.assertEqual(article.source, "wiley")
+        self.assertEqual(article.source, "wiley_browser")
         self.assertTrue(article.quality.has_fulltext)
         self.assertGreater(len(article.sections), 0)
-        self.assertTrue(any("extracted from PDF" in warning for warning in article.quality.warnings))
+        self.assertTrue(
+            any(
+                marker in article.quality.source_trail
+                for marker in ("fulltext:wiley_html_ok", "fulltext:wiley_pdf_fallback_ok")
+            )
+        )
 
     def test_elsevier_url_live_recovers_doi_and_uses_official_fulltext(self) -> None:
         self._require_env("ELSEVIER_API_KEY", "CROSSREF_MAILTO")
@@ -97,7 +124,7 @@ class LivePublisherTests(unittest.TestCase):
         self.assertNotIn("fallback:metadata_only", article.quality.source_trail)
 
     def test_short_html_body_live_falls_back_to_html_generic(self) -> None:
-        self._require_env("SPRINGER_META_API_KEY", "SPRINGER_OPENACCESS_API_KEY", "CROSSREF_MAILTO")
+        self._require_env("CROSSREF_MAILTO")
         article = fetch_article(
             "https://www.nature.com/articles/sj.bdj.2017.900",
             allow_html_fallback=True,
@@ -106,9 +133,9 @@ class LivePublisherTests(unittest.TestCase):
         )
 
         self.assertEqual(article.doi, "10.1038/sj.bdj.2017.900")
-        self.assertEqual(article.source, "html_generic")
+        self.assertEqual(article.source, "springer_html")
         self.assertTrue(article.quality.has_fulltext)
-        self.assertIn("fallback:html_ok", article.quality.source_trail)
+        self.assertIn("fulltext:springer_html_ok", article.quality.source_trail)
         self.assertNotIn("fallback:metadata_only", article.quality.source_trail)
 
 

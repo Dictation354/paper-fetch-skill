@@ -58,7 +58,7 @@ has_fulltext(query)
 
 - `resolve_paper()` 的解析结果
 - Crossref metadata
-- 轻量官方 metadata probe
+- 轻量 Elsevier metadata probe
 - 落地页 HTML meta，例如 `citation_pdf_url`
 
 当前不会做：
@@ -89,7 +89,7 @@ has_fulltext(query)
 
 - Crossref metadata 中有 `license`
 - Crossref metadata 中有 `fulltext_links`
-- 官方 provider metadata probe 命中
+- Elsevier metadata probe 命中
 - 落地页 HTML meta 中发现 `citation_pdf_url`
 
 这些信号说明“很可能存在可访问或可机器读取的全文”，但不保证当前实现一定能成功抓取。
@@ -99,7 +99,7 @@ has_fulltext(query)
 以下情况通常会返回 `unknown`：
 
 - 没有足够正信号
-- provider probe 当前不可用
+- Elsevier probe 当前不可用
 - 需要凭证但本地未配置
 - provider 不支持对应 probe
 - 落地页 HTML meta 探测失败
@@ -113,7 +113,7 @@ has_fulltext(query)
 这些 `warnings` 主要用来表达：
 
 - Crossref metadata probe 暂时不可用
-- 某个 provider 的 metadata probe 当前不支持
+- 某个 provider 当前不参加 metadata probe
 - 落地页 HTML meta 探测失败
 - 当前环境缺少配置或权限，导致 probe 无法确认
 
@@ -139,7 +139,7 @@ has_fulltext(query)
 
 1. 廉价信号不等于可成功抓取
    - 有 license、link 或 `citation_pdf_url`，不代表正文此刻一定可访问。
-2. provider 探针和真实全文路径未必完全同构
+2. Elsevier 探针和真实全文路径未必完全同构
    - metadata probe 成功，不等于 fulltext endpoint 一定成功。
 3. HTML 与 PDF fallback 可能在 probe 阶段根本没被执行
    - 最终抓取能成功，probe 仍可能只给 `unknown`。

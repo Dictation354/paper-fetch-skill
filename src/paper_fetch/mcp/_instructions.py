@@ -20,18 +20,12 @@ DEFAULT_FETCH_NOTES: tuple[str, ...] = (
 SKILL_ENVIRONMENT_VARIABLES: tuple[tuple[str, str], ...] = (
     ("ELSEVIER_API_KEY", "Required for official Elsevier full-text access."),
     ("ELSEVIER_INSTTOKEN", "Optional institution token for Elsevier entitlement."),
-    ("SPRINGER_META_API_KEY", "Enables Springer Meta API metadata lookups."),
-    ("SPRINGER_OPENACCESS_API_KEY", "Enables Springer Open Access full-text fallback."),
-    ("SPRINGER_FULLTEXT_API_KEY", "Enables Springer Full Text API when paired with its URL template."),
-    ("SPRINGER_FULLTEXT_URL_TEMPLATE", "Required with SPRINGER_FULLTEXT_API_KEY for Springer Full Text API retrieval."),
-    ("FLARESOLVERR_URL", "Optional override for the local Science/PNAS FlareSolverr endpoint; defaults to http://127.0.0.1:8191/v1."),
-    ("FLARESOLVERR_ENV_FILE", "Required for Science/PNAS; points at a repo-local vendor/flaresolverr preset file."),
+    ("FLARESOLVERR_URL", "Optional override for the local Wiley/Science/PNAS FlareSolverr endpoint; defaults to http://127.0.0.1:8191/v1."),
+    ("FLARESOLVERR_ENV_FILE", "Required for Wiley/Science/PNAS; points at a repo-local vendor/flaresolverr preset file."),
     ("FLARESOLVERR_SOURCE_DIR", "Optional override for the repo-local vendor/flaresolverr directory."),
-    ("FLARESOLVERR_MIN_INTERVAL_SECONDS", "Required local minimum spacing between Science/PNAS requests."),
-    ("FLARESOLVERR_MAX_REQUESTS_PER_HOUR", "Required local hourly cap for Science/PNAS requests."),
-    ("FLARESOLVERR_MAX_REQUESTS_PER_DAY", "Required local daily cap for Science/PNAS requests."),
-    ("WILEY_TDM_URL_TEMPLATE", "Required Wiley TDM endpoint template for official Wiley full-text retrieval."),
-    ("WILEY_TDM_TOKEN", "Required Wiley TDM token for official Wiley full-text retrieval."),
+    ("FLARESOLVERR_MIN_INTERVAL_SECONDS", "Required local minimum spacing between Wiley/Science/PNAS requests."),
+    ("FLARESOLVERR_MAX_REQUESTS_PER_HOUR", "Required local hourly cap for Wiley/Science/PNAS requests."),
+    ("FLARESOLVERR_MAX_REQUESTS_PER_DAY", "Required local daily cap for Wiley/Science/PNAS requests."),
     ("PAPER_FETCH_DOWNLOAD_DIR", "Overrides the default CLI/MCP download directory."),
     ("PAPER_FETCH_RUN_LIVE", "Test-only flag for live publisher integration checks."),
 )
@@ -83,12 +77,14 @@ def server_instructions() -> str:
         "include_refs=null, max_tokens='full_text'. In full_text mode include_refs=null "
         "behaves like 'all'. When asset_profile is body/all, optional "
         "strategy.inline_image_budget can tune the default inline ImageContent caps of "
-        "3 figures, 2 MiB each, and 8 MiB total. `provider_hint`, `preferred_providers`, "
-        "and final `source` may also be `science` or `pnas`; those routes require "
-        "repo-local FlareSolverr plus explicit local rate-limit env vars, and currently "
-        "return text-only markdown even when `asset_profile` is `body` or `all`. On "
-        "supporting clients, fetch_paper and batch tools also emit progress updates and "
-        "structured log notifications."
+        "3 figures, 2 MiB each, and 8 MiB total. `provider_hint` and "
+        "`preferred_providers` may include `wiley`, `science`, or `pnas`; those routes require "
+        "repo-local FlareSolverr plus explicit local rate-limit env vars. `wiley` uses a "
+        "provider-managed HTML-first, PDF-second browser workflow and publishes source "
+        "`wiley_browser`; `science` and `pnas` do the same while keeping public sources "
+        "`science` and `pnas`, and all three currently return text-only markdown even when "
+        "`asset_profile` is `body` or `all`. On supporting clients, fetch_paper and batch "
+        "tools also emit progress updates and structured log notifications."
     )
 
 
@@ -107,8 +103,10 @@ def fetch_tool_description() -> str:
         "With body/all profiles, key local figures may be returned as ImageContent "
         "alongside the JSON result; strategy.inline_image_budget can override the default "
         "caps of 3 figures, 2 MiB each, and 8 MiB total, and any resulting zero disables "
-        "inline images. `science` and `pnas` routes use a provider-managed HTML-first, "
-        "PDF-second repo-local workflow and downgrade body/all requests to text-only with "
-        "warnings. Set download_dir to isolate task-local downloads; the MCP server can "
-        "also surface scoped cache resources for that directory during the current session."
+        "inline images. `wiley`, `science`, and `pnas` routes use provider-managed "
+        "HTML-first, PDF-second repo-local browser workflows; `wiley` publishes source "
+        "`wiley_browser`, while `science` and `pnas` keep their existing public source "
+        "names. All three downgrade body/all requests to text-only with warnings. Set "
+        "download_dir to isolate task-local downloads; the MCP server can also surface "
+        "scoped cache resources for that directory during the current session."
     )

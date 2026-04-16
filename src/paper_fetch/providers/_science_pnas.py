@@ -1,4 +1,4 @@
-"""Shared Science/PNAS provider implementation."""
+"""Shared browser-workflow provider implementation for Wiley/Science/PNAS."""
 
 from __future__ import annotations
 
@@ -21,17 +21,18 @@ from ._science_pnas_html import (
     SciencePnasHtmlFailure,
     build_html_candidates,
     build_pdf_candidates,
-    extract_pdf_url_from_crossref,
     extract_science_pnas_markdown,
+    extract_pdf_url_from_crossref,
     preferred_html_candidate_from_landing_page,
 )
 from .base import ProviderClient, ProviderFailure, RawFulltextPayload
 
-logger = logging.getLogger("paper_fetch.providers.science_pnas")
+logger = logging.getLogger("paper_fetch.providers.browser_workflow")
 
 
-class SciencePnasClient(ProviderClient):
-    name = "science_pnas"
+class BrowserWorkflowClient(ProviderClient):
+    name = "browser_workflow"
+    article_source_name: str | None = None
 
     def __init__(self, transport, env: Mapping[str, str]) -> None:
         self.transport = transport
@@ -47,6 +48,30 @@ class SciencePnasClient(ProviderClient):
             f"{self.name} official metadata retrieval is not implemented; routing relies on Crossref metadata.",
         )
 
+    def article_source(self) -> str:
+        return self.article_source_name or self.name
+
+    def html_candidates(self, doi: str, metadata: ProviderMetadata) -> list[str]:
+        landing_page_url = str(metadata.get("landing_page_url") or "") or None
+        return build_html_candidates(self.name, doi, landing_page_url=landing_page_url)
+
+    def pdf_candidates(self, doi: str, metadata: ProviderMetadata) -> list[str]:
+        return build_pdf_candidates(self.name, doi, extract_pdf_url_from_crossref(metadata))
+
+    def extract_markdown(
+        self,
+        html_text: str,
+        final_url: str,
+        *,
+        metadata: ProviderMetadata,
+    ) -> tuple[str, dict[str, Any]]:
+        return extract_science_pnas_markdown(
+            html_text,
+            final_url,
+            self.name,
+            metadata=metadata,
+        )
+
     def fetch_raw_fulltext(self, doi: str, metadata: ProviderMetadata) -> RawFulltextPayload:
         normalized_doi = normalize_doi(doi)
         if not normalized_doi:
@@ -56,11 +81,11 @@ class SciencePnasClient(ProviderClient):
         ensure_runtime_ready(runtime)
 
         landing_page_url = str(metadata.get("landing_page_url") or "") or None
-        html_candidates = build_html_candidates(self.name, normalized_doi, landing_page_url=landing_page_url)
-        pdf_candidates = build_pdf_candidates(self.name, normalized_doi, extract_pdf_url_from_crossref(metadata))
+        html_candidates = self.html_candidates(normalized_doi, metadata)
+        pdf_candidates = self.pdf_candidates(normalized_doi, metadata)
         preferred_html_candidate = preferred_html_candidate_from_landing_page(self.name, normalized_doi, landing_page_url)
         logger.debug(
-            "science_pnas_candidates provider=%s doi=%s preferred_hit=%s first_candidate=%s candidate_count=%s",
+            "browser_workflow_candidates provider=%s doi=%s preferred_hit=%s first_candidate=%s candidate_count=%s",
             self.name,
             normalized_doi,
             bool(preferred_html_candidate and html_candidates and html_candidates[0] == preferred_html_candidate),
@@ -75,10 +100,9 @@ class SciencePnasClient(ProviderClient):
         try:
             html_result = fetch_html_with_flaresolverr(html_candidates, publisher=self.name, config=runtime)
             browser_context_seed = html_result.browser_context_seed
-            markdown_text, extraction = extract_science_pnas_markdown(
+            markdown_text, extraction = self.extract_markdown(
                 html_result.html,
                 html_result.final_url,
-                self.name,
                 metadata=metadata,
             )
             return RawFulltextPayload(
@@ -158,11 +182,12 @@ class SciencePnasClient(ProviderClient):
         warnings = [str(item) for item in raw_payload.metadata.get("warnings") or [] if str(item).strip()]
         source_trail = [str(item) for item in raw_payload.metadata.get("source_trail") or [] if str(item).strip()]
         doi = normalize_doi(metadata.get("doi"))
+        source = self.article_source()
 
         if not markdown_text:
             warnings.append(f"{self.name} retrieval did not produce usable markdown.")
             return metadata_only_article(
-                source=self.name,
+                source=source,
                 metadata=metadata,
                 doi=doi or None,
                 warnings=warnings,
@@ -170,10 +195,14 @@ class SciencePnasClient(ProviderClient):
             )
 
         return article_from_markdown(
-            source=self.name,
+            source=source,
             metadata=metadata,
             doi=doi or None,
             markdown_text=markdown_text,
             warnings=warnings,
             source_trail=source_trail,
         )
+
+
+class SciencePnasClient(BrowserWorkflowClient):
+    """Backward-compatible alias for existing tests and imports."""

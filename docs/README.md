@@ -57,7 +57,7 @@
 - [`deployment.md`](deployment.md)
   - 讲安装、配置入口、MCP 注册、更新和最小验证。
 - [`flaresolverr.md`](flaresolverr.md)
-  - 讲 Science / PNAS 的 repo-local 运维工作流。
+  - 讲 Wiley / Science / PNAS 的 repo-local 浏览器工作流。
 - [`architecture/target-architecture.md`](architecture/target-architecture.md)
   - 讲当前系统分层、端到端业务流程、数据契约和扩展点。
 - [`architecture/probe-semantics.md`](architecture/probe-semantics.md)
@@ -74,13 +74,13 @@
 ### `preferred_providers`
 
 - `FetchStrategy` 中的 provider allow-list。
-- 限制最终允许使用的 official/fulltext/html 路径。
+- 限制最终允许使用的 provider-owned fulltext 或 generic HTML 路径。
 - 不阻止系统内部用 `crossref` 做路由判断。
 
 ### `source`
 
 - 公开给调用方的粗粒度结果来源。
-- 例如 `elsevier_xml`、`springer_xml`、`wiley_tdm`、`science`、`pnas`、`html_fallback`、`metadata_only`。
+- 例如 `elsevier_xml`、`springer_html`、`wiley_browser`、`science`、`pnas`、`html_fallback`、`crossref_meta`、`metadata_only`。
 
 ### `source_trail`
 

@@ -26,7 +26,7 @@ Use this skill when an agent needs the contents or full-text availability of one
 3. If the query may be ambiguous, call `resolve_paper(query | title, authors, year)` first.
 4. For bibliography or citation-list tasks, call `batch_check(queries, mode, concurrency)` before per-paper full fetches.
 5. Call `has_fulltext(query)` when you only need a cheap readability probe.
-6. Call `provider_status()` before the first fetch when provider credentials or Science / PNAS local runtime readiness may matter.
+6. Call `provider_status()` before the first fetch when provider credentials or Wiley / Science / PNAS local runtime readiness may matter.
 7. Call `fetch_paper(query, modes, strategy, include_refs, max_tokens, prefer_cache, download_dir)` when you need AI-friendly Markdown, structured article data, or metadata.
 8. Do not conclude "unreadable" just because there is no local PDF or cached text file.
 9. If full text is unavailable, continue with the metadata-only result and tell the user they are working from metadata or abstract only.
@@ -46,9 +46,9 @@ Use this skill when an agent needs the contents or full-text availability of one
 - `fetch_paper(...)`, `list_cached()`, and `get_cached()`: hosts that support MCP resource-list notifications may receive `resources/list_changed` when cache resource URIs are added or removed.
 - `fetch_paper(...)`: `strategy.asset_profile="body"` or `all` may also emit a few key local figures as `ImageContent`.
 - `fetch_paper(...)`: optional `strategy.inline_image_budget={max_images,max_bytes_per_image,max_total_bytes}` tunes the default inline image caps of `3` figures, `2 MiB` each, and `8 MiB` total; any resulting zero disables inline images.
-- `fetch_paper(...)`: `science` and `pnas` routes require repo-local FlareSolverr plus explicit local rate-limit env vars, and currently return text-only markdown even when `asset_profile` is `body` or `all`.
+- `fetch_paper(...)`: `wiley`, `science`, and `pnas` routes require repo-local FlareSolverr plus explicit local rate-limit env vars. `wiley` publishes public source `wiley_browser`; `science` and `pnas` keep their existing public source names. All three currently return text-only markdown even when `asset_profile` is `body` or `all`.
 - `fetch_paper(...)` and the batch tools: supporting MCP hosts may cancel in-flight requests; the worker cooperatively stops issuing follow-up network requests after cancellation is observed.
-- `has_fulltext(query)`: runs a cheap probe over resolution, Crossref metadata, lightweight official metadata probes, and landing-page HTML meta without triggering the full fetch waterfall.
+- `has_fulltext(query)`: runs a cheap probe over resolution, Crossref metadata, the remaining lightweight Elsevier metadata probe, and landing-page HTML meta without triggering the full fetch waterfall.
 - `has_fulltext(query)`: the success payload is `{query, doi, state, evidence, warnings}`; v1 only actively returns `likely_yes` or `unknown`, while `confirmed_yes` and `no` remain reserved states.
 - `provider_status()`: returns stable local diagnostics for `crossref`, `elsevier`, `springer`, `wiley`, `science`, and `pnas` without calling remote publisher APIs.
 - `provider_status()`: provider-level `status` uses `ready`, `partial`, `not_configured`, `rate_limited`, or `error`; inspect `checks=[...]` for capability-level or runtime-level details before choosing a fetch path.
@@ -58,6 +58,6 @@ Use this skill when an agent needs the contents or full-text availability of one
 
 ## References
 
-- Read [`references/environment.md`](references/environment.md) when you need provider credentials, download-dir behavior, or Science / PNAS runtime requirements.
+- Read [`references/environment.md`](references/environment.md) when you need provider credentials, download-dir behavior, or Wiley / Science / PNAS runtime requirements.
 - Read [`references/cli-fallback.md`](references/cli-fallback.md) when MCP is unavailable or the user explicitly wants shell commands.
 - Read [`references/failure-handling.md`](references/failure-handling.md) when a result is `ambiguous`, `no_access`, `rate_limited`, or metadata-only.
