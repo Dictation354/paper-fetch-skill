@@ -1,122 +1,171 @@
-# `has_fulltext` Probe Semantics Note
+# `has_fulltext` Probe 语义说明
 
-## Context
+这份文档解决：
 
-`fetch_paper.has_fulltext` is currently the result of the full service waterfall:
+- `has_fulltext()` MCP tool 到底在回答什么问题
+- 它和 `fetch_paper().has_fulltext` 有什么差别
+- 当前 v1 使用哪些证据、会返回哪些状态
 
-1. resolve query
-2. fetch metadata
-3. try the official provider full-text path
-4. fall back to HTML when allowed
-5. fall back to metadata-only when allowed
+这份文档不解决：
 
-That makes it a good final answer, but not a cheap probe. This note now serves two roles:
+- 完整抓取瀑布的架构背景
+- provider 详细配置
+- 所有未来 probe 策略的实现细节
 
-- it records the semantics decisions made before implementation
-- it documents the current v1 `has_fulltext(query)` MCP tool that landed from those decisions
+完整业务流程见 [`target-architecture.md`](target-architecture.md)。
 
-## Decision
+## 背景
 
-We shipped a dedicated `has_fulltext(query)` MCP tool rather than `fetch_paper(probe_only=true)`.
+`fetch_paper().has_fulltext` 是完整抓取瀑布跑完之后的最终 verdict：
 
-Reasoning:
+1. resolve 查询
+2. 获取 metadata
+3. 尝试官方 provider 全文路径
+4. 必要时走 HTML fallback 或 provider 内部 fallback
+5. 必要时降级为 metadata-only
 
-- A probe will necessarily use cheaper and weaker signals than the full fetch waterfall.
-- Because of that, a probe result cannot promise exact numerical agreement with `fetch_paper.has_fulltext`.
-- A separate tool keeps the current `fetch_paper` contract simple and avoids mixing "probe semantics" with "final fetch semantics" inside one envelope.
+这很适合作为最终答案，但它不便宜。
 
-Current v1 scope:
+因此系统额外公开了一个 MCP 工具：
 
-- Uses resolution, Crossref metadata, lightweight official metadata probes, and landing-page HTML meta.
-- Does not call the full `_fetch_article` waterfall.
-- Reuses the same cheap probe path for `batch_check(mode="metadata")`.
-- Publicly exposes four states in the contract, but v1 only actively returns `likely_yes` and `unknown`.
+```text
+has_fulltext(query)
+```
 
-## Probe Questions
+它的目标不是“模拟完整抓取”，而是“用更便宜的信号给出一个有用但保守的预判”。
 
-### 1. Does Crossref metadata with `license` or `link` imply `has_fulltext=true`?
+## 结论
 
-No. Crossref metadata alone is not sufficient to claim confirmed full text.
+`has_fulltext()` 与 `fetch_paper().has_fulltext` 不是同一个语义层级：
 
-- A Crossref `license` field is useful evidence that the record is open or machine-readable.
-- A Crossref `link` field is useful evidence that a downloadable representation may exist.
-- Neither guarantees that the concrete full-text payload is still reachable, authorized, or compatible with our current fetch adapters.
+- `has_fulltext()`
+  - 便宜
+  - 快
+  - 允许保守和不确定
+  - 适合批量甄别和预检
+- `fetch_paper().has_fulltext`
+  - 昂贵
+  - 是最终抓取瀑布后的 verdict
+  - 更适合做最终展示或下游处理
 
-Future probe policy:
+因此，probe 结果不要求与最终抓取结果逐案完全一致。
 
-- treat these as `likely_yes`
-- do not treat them as `confirmed_yes`
+## 当前 v1 的证据来源
 
-### 2. Do provider HEAD or OPTIONS probes count?
+当前 `has_fulltext()` 只使用廉价信号，不会触发完整正文抓取瀑布。
 
-Only as provider-specific hints, not as global truth.
+具体包括：
 
-- Some providers do not offer a stable HEAD or OPTIONS contract for the same endpoint that serves usable full text.
-- Authorization and content negotiation may differ between HEAD and GET.
-- A successful HEAD can still overstate the eventual success of the real fetch path.
+- `resolve_paper()` 的解析结果
+- Crossref metadata
+- 轻量官方 metadata probe
+- 落地页 HTML meta，例如 `citation_pdf_url`
 
-Future probe policy:
+当前不会做：
 
-- allow provider-specific HEAD or lightweight metadata checks where a provider contract is known and tested
-- classify positive results as `likely_yes` unless the provider contract is strong enough to guarantee the same full-text object that the fetch path will consume
+- 完整 `_fetch_article` 瀑布
+- 正文下载
+- provider 级完整 HTML / PDF fallback
 
-### 3. Does `citation_pdf_url` on an HTML landing page count?
+## 当前 v1 的状态
 
-It counts as `likely_yes`, not `confirmed_yes`.
-
-- Landing-page metadata can be stale or point to a gated or broken asset.
-- A real GET remains the only reliable proof that the asset is accessible and usable.
-
-Future probe policy:
-
-- HTML metadata such as `citation_pdf_url`, `og:url`, or publisher-specific download hints should increase confidence
-- `confirmed_yes` requires successfully reaching a concrete payload or an equivalent provider guarantee
-
-### 4. Must probe results match `fetch_paper.has_fulltext` exactly?
-
-No.
-
-- `fetch_paper.has_fulltext` is a final, expensive verdict after executing the real fallback chain.
-- A probe is intentionally cheaper and earlier.
-- Requiring strict equality would push the probe toward doing the full fetch, which defeats the purpose.
-
-Future probe policy:
-
-- `confirmed_yes` should be a subset of papers that `fetch_paper` is very likely to return with `has_fulltext=true`
-- `likely_yes` may include cases that later fail during the real fetch
-- `unknown` is acceptable and preferable to an overconfident false negative
-
-### 5. Should the probe use more than three states?
-
-Yes. Use four states:
+公开契约预留了四种状态：
 
 - `confirmed_yes`
 - `likely_yes`
 - `unknown`
 - `no`
 
-Rationale:
+但当前 v1 主动返回的主要是：
 
-- `confirmed_yes` captures cases where the probe has strong evidence
-- `likely_yes` captures weaker but still useful evidence such as Crossref links or landing-page PDF metadata
-- `unknown` prevents us from collapsing transient errors, missing credentials, and unsupported provider paths into false negatives
-- `no` is reserved for cases where the probe has an explicit negative signal, not just a lack of positive evidence
+- `likely_yes`
+- `unknown`
 
-## Follow-up Shape
+也就是说，当前 probe 更偏“保守给正信号”，而不是积极输出否定。
 
-The follow-up interface should be a dedicated MCP tool:
+## 当前 v1 何时返回 `likely_yes`
 
-- `has_fulltext(query)` returning `{query, doi, state, evidence, warnings}`
+出现以下廉价正信号时，会倾向返回 `likely_yes`：
 
-Why not `fetch_paper(probe_only=true)`:
+- Crossref metadata 中有 `license`
+- Crossref metadata 中有 `fulltext_links`
+- 官方 provider metadata probe 命中
+- 落地页 HTML meta 中发现 `citation_pdf_url`
 
-- it would overload one tool with two different truth models
-- it would make `FetchEnvelope.has_fulltext` easier to misread as a probe answer
-- it would force more branching into the thin MCP layer for what should remain a separate intent
+这些信号说明“很可能存在可访问或可机器读取的全文”，但不保证当前实现一定能成功抓取。
 
-## Non-goals For This Round
+## 当前 v1 何时返回 `unknown`
 
-- No new CLI `has_fulltext` command
-- No change to `fetch_paper.has_fulltext`
-- No provider-specific HEAD/OPTIONS implementation work
-- No active production use of `confirmed_yes` or `no` yet
+以下情况通常会返回 `unknown`：
+
+- 没有足够正信号
+- provider probe 当前不可用
+- 需要凭证但本地未配置
+- provider 不支持对应 probe
+- 落地页 HTML meta 探测失败
+
+`unknown` 的设计目的，是避免把“不知道”误判成“没有全文”。
+
+## warnings 的作用
+
+`has_fulltext()` 返回里还会带 `warnings`。
+
+这些 `warnings` 主要用来表达：
+
+- Crossref metadata probe 暂时不可用
+- 某个 provider 的 metadata probe 当前不支持
+- 落地页 HTML meta 探测失败
+- 当前环境缺少配置或权限，导致 probe 无法确认
+
+调用方应把这些 warning 理解为“证据不足”或“当前探测能力受限”，而不是把它们直接解释成负结论。
+
+## 与 `batch_check(mode="metadata")` 的关系
+
+当前 `batch_check(mode="metadata")` 复用的就是同一条廉价 probe 逻辑。
+
+这意味着：
+
+- 它不会触发完整正文抓取
+- 它不会把正文或 provider payload 落盘
+- 它更适合 citation list 批量预判，而不是最终抓取
+
+相对地：
+
+- `batch_check(mode="article")` 仍保留完整抓取语义
+
+## 为什么 probe 不能等价于最终 fetch verdict
+
+原因主要有四个：
+
+1. 廉价信号不等于可成功抓取
+   - 有 license、link 或 `citation_pdf_url`，不代表正文此刻一定可访问。
+2. provider 探针和真实全文路径未必完全同构
+   - metadata probe 成功，不等于 fulltext endpoint 一定成功。
+3. HTML 与 PDF fallback 可能在 probe 阶段根本没被执行
+   - 最终抓取能成功，probe 仍可能只给 `unknown`。
+4. 强行追求完全一致会让 probe 退化成完整抓取
+   - 那就失去了 probe 的意义。
+
+## 当前非目标
+
+当前这一轮明确不做：
+
+- CLI 级 `has_fulltext` 命令
+- 让 probe 结果强制等于 `fetch_paper().has_fulltext`
+- provider 级 HEAD / OPTIONS 深度探测
+- 大规模积极产出 `confirmed_yes` 或 `no`
+
+## 后续可扩展方向
+
+未来如果要增强 probe，优先方向可以是：
+
+- 对少数 provider 增加更强但仍廉价的 metadata-level 证据
+- 在不触发完整抓取的前提下，细化 `confirmed_yes`
+- 明确哪些 provider 允许输出真正的 `no`
+- 继续把 probe 语义和最终 fetch 语义分离，而不是混成一个接口
+
+## 相关文档
+
+- [`target-architecture.md`](target-architecture.md)
+- [`../providers.md`](../providers.md)
+- [`../../README.md`](../../README.md)

@@ -1,74 +1,162 @@
 # Paper Fetch Skill
 
-`paper-fetch-skill` 用来把一篇已知论文（DOI、URL 或标题）抓取成 AI 更容易消费的正文和元数据。它既可以单独作为命令行工具使用，也可以通过 MCP + skill 接入 Codex、Claude Code 等 agent。
+`paper-fetch-skill` 是一个面向“已知论文”的抓取工具：输入 DOI、论文落地页 URL 或标题，把论文解析成更适合 AI 消费的结构化元数据、正文 Markdown，以及可选的本地缓存资源。
 
-## 这个项目提供什么
+它不是文献发现、选题推荐或综述生成系统。它解决的是“我已经知道要看哪篇论文，怎样稳定地拿到可读正文和出处信息”。
 
-- `paper-fetch`: 在终端里按 DOI、URL 或标题抓取论文
-- `paper-fetch-mcp`: 给 agent runtime 使用的 stdio MCP server
-- `skills/paper-fetch-skill/`: 精简 skill 入口，详细环境变量、CLI fallback 和失败处理拆到 `references/` 按需读取
-- `scripts/install-codex-skill.sh`: 把 skill 安装到 Codex，并可顺手注册 MCP
-- `scripts/install-claude-skill.sh`: 把 skill 安装到 Claude Code，并可顺手注册 MCP
+## 这份首页解决什么，不解决什么
 
-## 快速开始
+这份首页解决：
 
-如果你只想先在当前环境里试用：
+- 项目定位和边界
+- 核心能力总览
+- 当前业务主流程
+- 5 分钟上手
+- 关键默认值与限制
+- 文档导航
+
+这份首页不展开：
+
+- 各 provider 的全部配置细节
+- Science / PNAS 的运维步骤
+- 架构演进背景和探针语义细节
+
+这些内容分别在 [`docs/providers.md`](docs/providers.md)、[`docs/flaresolverr.md`](docs/flaresolverr.md)、[`docs/architecture/target-architecture.md`](docs/architecture/target-architecture.md) 和 [`docs/architecture/probe-semantics.md`](docs/architecture/probe-semantics.md) 中定义。
+
+## 项目提供什么
+
+- `paper-fetch`
+  - 命令行抓取入口，适合人工试跑、CI smoke 和本地调试。
+- `paper-fetch-mcp`
+  - 给 Codex、Claude Code 等 runtime 使用的 stdio MCP server。
+- `skills/paper-fetch-skill/`
+  - 静态 thin skill，负责教 agent 何时调用 MCP，而不是承载抓取逻辑。
+- `provider_status()`
+  - 在真正抓取前做本地可用性预检。
+- `has_fulltext()`
+  - 便宜的全文可用性 probe，不触发完整抓取瀑布。
+- `batch_resolve()` / `batch_check()`
+  - 适合 citation list 批量甄别与预处理。
+- MCP cache resources
+  - 暴露共享缓存索引和缓存条目，方便 host 读取已落地结果。
+
+## 业务主流程
+
+当前核心业务逻辑统一走下面这条主线：
+
+```text
+输入解析
+-> resolve 查询类型（DOI / URL / 标题）
+-> 生成 provider_hint 与候选 DOI
+-> 用 Crossref / 官方 metadata 建立路由信号
+-> 合并元数据
+-> 尝试官方 provider 全文链路
+-> 失败时尝试 HTML fallback 或 provider 内部 fallback
+-> 再失败时降级为 metadata-only
+-> 输出 FetchEnvelope / Markdown / 本地缓存 / MCP 结果
+```
+
+更具体一点：
+
+1. `resolve_paper()` 先把原始输入解析成 `ResolvedQuery`。
+2. 路由优先级固定是 `domain > publisher > DOI fallback`。
+3. `crossref` 既可能是公开来源 `source="crossref_meta"`，也可能只是内部 routing signal。
+4. 如果命中官方 provider，就先走官方全文链路。
+5. 官方链路失败后，普通 provider 会根据 `strategy.allow_html_fallback` 决定是否进入通用 `html_generic` fallback。
+6. `science` / `pnas` 不走通用 HTML fallback，而是 provider 自己管理 `HTML -> PDF -> metadata-only`。
+7. 最终统一输出 `FetchEnvelope`，其中会显式给出：
+   - `source`
+   - `has_fulltext`
+   - `warnings`
+   - `source_trail`
+   - `token_estimate_breakdown`
+
+## 5 分钟上手
+
+安装当前仓库：
 
 ```bash
 python3 -m pip install .
+```
+
+最小试跑：
+
+```bash
 paper-fetch --query "10.1186/1471-2105-11-421"
 ```
 
-如果需要出版社 API key 或自定义配置，默认配置文件放在 `~/.config/paper-fetch/.env`：
+如果需要 API key、下载目录或自定义环境变量，默认配置文件位置是：
+
+```text
+~/.config/paper-fetch/.env
+```
+
+可以先准备目录：
 
 ```bash
 mkdir -p ~/.config/paper-fetch
 cp .env.example ~/.config/paper-fetch/.env
 ```
 
-变量说明见 [docs/providers.md](docs/providers.md)。
-如果你要启用 `science` / `pnas`，还需要看 [docs/flaresolverr.md](docs/flaresolverr.md) 里的 repo-local FlareSolverr 工作流说明。
+变量说明见 [`docs/providers.md`](docs/providers.md)。
 
-补充说明：
+如果你要接入 MCP server：
 
-- 运行时依赖现在都显式声明在 `pyproject.toml` 里，安装不再依赖上游包“顺带带进来”的传递依赖
-- HTTP 传输层默认带 `32 MiB` 响应上限，以及针对 `5xx` / timeout 的短重试；更详细的行为见 [docs/providers.md](docs/providers.md)
-- provider 路由现在采用 `domain / Crossref publisher` 优先、`DOI prefix` 兜底的策略；像 `10.1006/jaer.1996.0085` 这类 Elsevier DOI 现在也能更稳定地命中官方链路
-- `science` / `pnas` 已作为公开 provider 名字接入；但这两个通道只保证在当前仓库 checkout + `vendor/flaresolverr/` 工作流下可用，离开仓库单独 `pip install .` 的环境会明确报缺少 repo-local 依赖
+```bash
+paper-fetch-mcp
+```
 
-## 默认输出策略
+或：
 
-当前默认值统一如下：
+```bash
+python3 -m paper_fetch.mcp.server
+```
+
+如果要把 skill 和 MCP 注册到常见 agent runtime，直接看 [`docs/deployment.md`](docs/deployment.md)。
+
+## 默认值与关键限制
+
+这些是最值得先记住的默认行为：
 
 - `asset_profile="none"`
-  - 不下载 figure / table-image / supplementary 到本地
-  - Markdown 仍保留 figure captions
-  - 不保留远程图片 URL，也不输出 supplementary 链接
+  - 默认不下载 figure、表格原图和 supplementary 到本地。
 - `max_tokens="full_text"`
-  - 默认尽量输出完整 abstract + 正文文字
-  - references 默认全量输出
-  - 如果 `asset_profile` 允许展示本地资产，也会一并完整展示
-- 只有显式传数值 `max_tokens` 时，才进入硬上限裁剪模式
-  - 裁剪优先级为：正文文字 > 当前 profile 对应非文字内容 > references
+  - 默认尽量返回完整 abstract、正文和 references。
+- `include_refs=null`
+  - 在 `full_text` 模式下等价于全量 references。
+  - 在数值 token budget 模式下默认等价于 `top10`。
+- `fetch_paper()` 的 MCP 默认 `modes=["article", "markdown"]`
+  - 同时返回结构化结果和 AI 直接可读的 Markdown。
+- `has_fulltext()`
+  - 是廉价 probe，不等同于最终 `fetch_paper().has_fulltext`。
+- `science` / `pnas`
+  - 当前只保证在仓库 checkout + `vendor/flaresolverr/` 工作流里可用。
+  - `asset_profile=body|all` 目前会降级为 text-only，不阻塞正文成功。
+- metadata-only fallback
+  - 默认允许。正文不可用时，系统会返回 metadata + abstract，并显式带 warning。
 
-可选资产层级：
+## 支持的 provider 概览
 
-- `none`: 适合泛读 / 搜索 / 大规模文献调研
-- `body`: 下载并渲染正文 figure + 正文表格原图
-- `all`: 下载并渲染 provider 已识别的全部相关资产，包括 supplementary
+当前公开 provider 包括：
 
-## Provider 路由说明
+- `crossref`
+- `elsevier`
+- `springer`
+- `wiley`
+- `science`
+- `pnas`
 
-- `resolve_paper().provider_hint` 现在表示“基于落地 URL domain、Crossref publisher、Crossref landing page 综合得出的最佳 hint”，不再等同于 DOI 前缀猜测
-- provider 候选优先级固定为：`domain > publisher > DOI fallback`
-- `preferred_providers` 仍严格限制最终允许使用的 official/fulltext/html 路径
-- 即使 `preferred_providers` 没有包含 `crossref`，运行时仍可能内部调用 Crossref 只做 routing signal；这不会让最终结果自动变成 Crossref 来源
-- `provider_hint` / `preferred_providers` / 最终 `source` 现在都可能直接出现 `science` 或 `pnas`
-- `science` / `pnas` 的公开 `source` 固定是 provider 级别的 `science` / `pnas`；HTML 成功还是 PDF fallback 成功，会写在 `source_trail` 里，比如 `fulltext:science_html_ok`、`fulltext:pnas_pdf_fallback_ok`
+其中：
+
+- `elsevier`、`springer`、`wiley` 主要依赖官方 API / TDM 路径。
+- `science`、`pnas` 依赖 repo-local FlareSolverr + Playwright fallback。
+- `crossref` 负责 metadata、题名检索、路由信号和部分 metadata-only 结果。
+
+完整能力矩阵、环境变量、缓存和限速说明见 [`docs/providers.md`](docs/providers.md)。
 
 ## MCP Surface
 
-当前 MCP server 提供这些工具：
+当前 MCP server 公开这些工具：
 
 - `resolve_paper(query | title, authors, year)`
 - `has_fulltext(query)`
@@ -79,62 +167,14 @@ cp .env.example ~/.config/paper-fetch/.env
 - `batch_resolve(queries, concurrency)`
 - `batch_check(queries, mode, concurrency)`
 
-另外，server 还会发布两个可选 MCP prompts：
+还提供两个 prompt 模板：
 
 - `summarize_paper(query, focus="general")`
 - `verify_citation_list(citations, mode="metadata")`
 
-`fetch_paper` 的 MCP 默认值是：
+MCP 细节和部署入口见 [`docs/deployment.md`](docs/deployment.md)。
 
-- `modes=["article", "markdown"]`
-- `strategy.asset_profile="none"`
-- `strategy.allow_html_fallback=true`
-- `strategy.allow_metadata_only_fallback=true`
-- `include_refs=null`
-- `max_tokens="full_text"`
-- `prefer_cache=false`
-
-补充说明：
-
-- `resolve_paper` 既支持原始 `query`，也支持 `title` + 可选 `authors` / `year` 的结构化输入
-- `summarize_paper()` 和 `verify_citation_list()` 是薄 prompt 模板，分别面向“单篇论文总结”和“citation list 批量甄别”这两类常见 host workflow
-- `has_fulltext()` 是廉价 probe：只看 resolution、Crossref/官方 metadata probe 与 landing-page HTML meta，不会走完整正文抓取瀑布
-- `has_fulltext()` 当前只主动产出 `state="likely_yes"` 或 `state="unknown"`；`confirmed_yes` / `no` 仍保留给后续迭代
-- `fetch_paper()` 顶层现在还会附带 `token_estimate_breakdown={abstract,body,refs}`；现有 `token_estimate` 仍保持兼容语义，只表示 `abstract + body`
-- `provider_status()` 会按稳定顺序返回 `crossref`、`elsevier`、`springer`、`wiley`、`science`、`pnas` 的本地诊断结果；它只检查本地配置、repo-local 依赖、FlareSolverr 健康和本地限速窗口，不会主动探测远端 publisher API 连通性
-- `provider_status()` 的 provider 级 `status` 固定使用 `ready` / `partial` / `not_configured` / `rate_limited` / `error`；每个 provider 还会带 `checks=[...]` 明细，方便 agent 在正式抓取前先做预检
-- `include_refs=null` 在 `max_tokens="full_text"` 下等价于 `all`
-- 显式 `prefer_cache=true` 时，`fetch_paper` 会先尝试命中本地 MCP cache 里的 envelope sidecar；命中才短路，未命中再照常上网
-- 显式传 `download_dir` 会覆盖 `PAPER_FETCH_DOWNLOAD_DIR` 和 XDG 默认目录，适合隔离多任务下载目录
-- `list_cached()` / `get_cached()` 只读本地 cache index，不触发网络
-- `batch_resolve()` / `batch_check()` 默认 `concurrency=1`；显式提高时会复用同一个 transport，并允许不同 host 的查询并发执行
-- `batch_resolve()` / `batch_check()` 每次调用最多接受 `50` 条 query；更长的 citation list 需要由 host 自己分块
-- `batch_resolve()` / `batch_check()` 在同一 host 内仍保持串行，避免把本地批量工作流直接变成对单个 publisher 的并发冲击
-- `batch_check(mode="metadata")` 现在复用同一个廉价 probe，返回 `probe_state` / `evidence` / `warnings` 这类轻量字段，不会走完整抓取，也不会把正文或原始 payload 写入磁盘
-- `batch_check(mode="article")` 仍保留“完整 fetch 后给最终 verdict”的语义
-- 当 `strategy.asset_profile` 为 `body` / `all` 时，`fetch_paper` 可能在 JSON 结果后附带少量关键正文图的 `ImageContent`
-- 可选 `strategy.inline_image_budget={max_images,max_bytes_per_image,max_total_bytes}` 会调节上面这些 inline 图片的默认上限：`3` 张、单张 `2 MiB`、总计 `8 MiB`；任一生效上限为 `0` 时会直接关闭 inline 图片附带
-- 这 8 个 MCP tools 现在都会向支持的 client 暴露 `outputSchema`，可直接用于 JSON Schema 参数补全和结果校验
-- 所有只读工具现在还会显式暴露 MCP `ToolAnnotations`：`resolve_paper` / `has_fulltext` / `provider_status` / `list_cached` / `get_cached` / `batch_*` 都标记为 `readOnlyHint=true`；`fetch_paper` 保持可写（会落 cache）
-- 当错误能明确定位到缺少的凭证或配置时，MCP `structuredContent` 现在会附带 `missing_env=[...]`
-- 支持这些能力的 MCP client 还会在 `fetch_paper` / `batch_check` / `batch_resolve` 期间收到 progress 和 structured log notifications
-- 支持 MCP cancellation 的 host 现在可以中途取消 `fetch_paper` / `batch_check` / `batch_resolve`；worker 会协作式停止继续发后续网络请求
-
-默认共享缓存资源会暴露在 MCP resources 下：
-
-- `resource://paper-fetch/cache-index`
-- `resource://paper-fetch/cached/{entry_id}`
-
-如果你在工具调用里显式传了 `download_dir`，当前 server session 还会额外注册该目录对应的 scoped cache resources：
-
-- `resource://paper-fetch/cache-index/{scope_id}`
-- `resource://paper-fetch/cached-dir/{scope_id}/{entry_id}`
-
-其中 `scope_id` 是下载目录路径的稳定 hash，不直接暴露本地绝对路径。你仍然可以继续用 `list_cached(download_dir)` 和 `get_cached(doi, download_dir)` 读同一批隔离目录缓存。
-
-支持资源列表变化通知的 MCP client 现在还会看到 `capabilities.resources.listChanged=true`，并在 `fetch_paper()` / `list_cached()` / `get_cached()` 让 cache resource URI 集合发生增删时收到 `notifications/resources/list_changed`。
-
-## CLI 常用法
+## 常用 CLI 示例
 
 默认抓取：
 
@@ -148,155 +188,69 @@ paper-fetch --query "10.1186/1471-2105-11-421"
 paper-fetch --query "10.1016/j.rse.2025.114648" --asset-profile body
 ```
 
-抓全部资产：
+抓全部已识别资产：
 
 ```bash
 paper-fetch --query "10.1016/j.rse.2025.114648" --asset-profile all
 ```
 
-在 token 紧张时改成数值上限：
+改成数值 token 上限：
 
 ```bash
-paper-fetch --query "10.1016/j.rse.2025.114648" --asset-profile body --max-tokens 12000
+paper-fetch --query "10.1016/j.rse.2025.114648" --max-tokens 12000
 ```
 
-如果只想拿全文文字，不想落任何文件：
+只拿结果、不落本地文件：
 
 ```bash
 paper-fetch --query "10.1016/j.rse.2025.114648" --no-download
 ```
 
-注意：
+CLI 退出码固定为：
 
-- `--no-download` 优先级高于 `--asset-profile`
-- `--include-refs` 现在默认不需要传
-  - `max_tokens=full_text` 时默认等价于全量 refs
-  - 显式传数值 `--max-tokens` 时默认等价于 `top10`
-- CLI 退出码现在固定为：
-  - `0`: 成功
-  - `1`: 其他失败
-  - `2`: `ambiguous`
-  - `3`: `no_access`
-  - `4`: `rate_limited`
+- `0`：成功
+- `1`：其他失败
+- `2`：`ambiguous`
+- `3`：`no_access`
+- `4`：`rate_limited`
 
-## 如何部署
+## Science / PNAS 边界
 
-### 部署到 Codex
+`science` 和 `pnas` 已经是公开 provider 名字，但它们的运行边界和其他 provider 不一样：
 
-```bash
-python3 -m pip install .
-./scripts/install-codex-skill.sh --register-mcp
-```
+- metadata 仍来自 `crossref`
+- 全文链路由 provider 自己管理
+- 主路径是 `HTML first -> PDF fallback -> metadata-only`
+- 依赖 repo-local `vendor/flaresolverr/`
+- 需要显式配置 `FLARESOLVERR_ENV_FILE` 和本地限速变量
 
-### 部署到 Claude Code
+准备和排障细节见 [`docs/flaresolverr.md`](docs/flaresolverr.md)。
 
-```bash
-python3 -m pip install .
-./scripts/install-claude-skill.sh --register-mcp
-```
+## 文档导航
 
-## 如何更新
-
-进入你原来安装用的那个 Python 环境后，重新安装当前仓库即可：
-
-```bash
-python3 -m pip install .
-```
-
-如果你还在用 Codex 或 Claude Code，推荐顺手再跑一次对应安装脚本，让 skill 和 MCP 一起更新：
-
-```bash
-./scripts/install-codex-skill.sh --register-mcp
-./scripts/install-claude-skill.sh --register-mcp
-```
-
-安装脚本会复制整个静态 skill bundle：`SKILL.md` 以及 `skills/paper-fetch-skill/references/` 下的按需参考文档。
-
-### 可选：安装公式后端
-
-如果你希望公式转换效果更好，可以额外安装公式后端：
-
-```bash
-paper-fetch-install-formula-tools
-```
-
-如果你是在当前仓库里做 repo-local 开发，而不是给已安装环境补依赖，才使用：
-
-```bash
-./install-formula-tools.sh
-```
-
-这个脚本现在也会顺手引导 Science/PNAS 的 repo-local 依赖：
-
-- 调 `vendor/flaresolverr/setup_flaresolverr_source.sh`
-- 调 `python3 -m playwright install chromium`
-- 对 headless preset 检查 `Xvfb`
-
-如果只想装公式后端，可以传：
-
-```bash
-./install-formula-tools.sh --skip-flaresolverr-setup --skip-playwright-install
-```
-
-不安装公式后端也能使用主抓取链路，只是公式渲染会退回到较弱的内置路径。若要启用 `science` / `pnas`，仍然需要下面的 repo-local FlareSolverr 步骤。
-
-## Science / PNAS
-
-`science` 和 `pnas` 现在已经是公开通道：
-
-- `resolve_paper().provider_hint` 可直接返回它们
-- `preferred_providers` 可显式指定它们
-- `fetch_paper()` / MCP 返回的 `source` 也直接是 `science` 或 `pnas`
-
-这两个通道的正文链路是：
-
-- Crossref 提供 metadata 和路由信号
-- provider 自己走 `HTML first -> PDF fallback`
-- HTML 由 repo-local FlareSolverr 抓取
-- HTML 被判定为摘要页、挑战页、登录页或正文不足时，转到带 cookies + user-agent 的 Playwright PDF fallback
-- PDF 最终通过 `pymupdf4llm` 转成 AI-friendly markdown
-
-启用前需要：
-
-```bash
-export FLARESOLVERR_ENV_FILE="$PWD/vendor/flaresolverr/.env.flaresolverr-source-headless"
-export FLARESOLVERR_MIN_INTERVAL_SECONDS=20
-export FLARESOLVERR_MAX_REQUESTS_PER_HOUR=30
-export FLARESOLVERR_MAX_REQUESTS_PER_DAY=200
-./scripts/flaresolverr-up "$FLARESOLVERR_ENV_FILE"
-./scripts/flaresolverr-status "$FLARESOLVERR_ENV_FILE"
-```
-
-停止服务时：
-
-```bash
-./scripts/flaresolverr-down "$FLARESOLVERR_ENV_FILE"
-```
-
-补充说明：
-
-- `FLARESOLVERR_URL` 默认是 `http://127.0.0.1:8191/v1`
-- `FLARESOLVERR_SOURCE_DIR` 默认是当前仓库里的 `vendor/flaresolverr/`
-- `FLARESOLVERR_ENV_FILE` 对 `science` / `pnas` 是必填，不会自动猜 preset
-- `asset_profile=body|all` 在 `science` / `pnas` 当前会自动降级成 text-only，并在 `warnings` / `source_trail` 里说明
-- 通用 `allow_html_fallback` 只控制 provider 失败后的普通 landing-page fallback，不会关闭 `science` / `pnas` 自己的 HTML 主路径
-- 使用这些通道时，目标站点 ToS / robots / 授权风险由操作者自己承担
-
-更完整的启动、限速和排障说明见 [docs/flaresolverr.md](docs/flaresolverr.md)。
+- [`docs/README.md`](docs/README.md)
+  - 文档总览、阅读顺序和术语表。
+- [`docs/providers.md`](docs/providers.md)
+  - provider 能力矩阵、路由规则、输出默认值、环境变量、缓存/重试/限速。
+- [`docs/deployment.md`](docs/deployment.md)
+  - 安装、配置、MCP 注册、更新和最小验证步骤。
+- [`docs/flaresolverr.md`](docs/flaresolverr.md)
+  - Science / PNAS 的 repo-local 运维工作流。
+- [`docs/architecture/target-architecture.md`](docs/architecture/target-architecture.md)
+  - 当前架构分层、端到端业务流程、数据契约与扩展点。
+- [`docs/architecture/probe-semantics.md`](docs/architecture/probe-semantics.md)
+  - `has_fulltext()` 探针语义与 `fetch_paper()` 最终 verdict 的边界。
 
 ## Repo-local 验收
 
-如果你是在仓库源码目录里直接跑测试，推荐显式带上 `PYTHONPATH=src`，这样会优先导入当前工作树，而不是环境里可能已经安装过的旧版 `paper_fetch`：
+如果你在仓库源码目录里做本地验证，推荐显式带上 `PYTHONPATH=src`：
 
 ```bash
-ruff check .
-PYTHONPATH=src python3 -m unittest -q tests.unit.test_cli tests.unit.test_service tests.unit.test_models_render tests.unit.test_html_generic tests.unit.test_http_cache tests.unit.test_fetch_common tests.unit.test_mcp tests.unit.test_provider_request_options tests.unit.test_publisher_identity tests.unit.test_resolve_query
-PYTHONPATH=src python3 -m unittest -q tests.unit.test_science_pnas_html tests.unit.test_science_pnas_flaresolverr tests.unit.test_science_pnas_provider
+PYTHONPATH=src python3 -m unittest -q tests.unit.test_cli tests.unit.test_service tests.unit.test_mcp
 PYTHONPATH=src python3 -m unittest discover -s tests -q
-PAPER_FETCH_RUN_LIVE=1 PYTHONPATH=src python3 -m unittest tests.live.test_live_mcp -q
 ```
 
-如果你要验收 `science` / `pnas` live 路径，再额外加上：
+如果要验收 `science` / `pnas` live 路径，再补充：
 
 ```bash
 PAPER_FETCH_RUN_LIVE=1 \
@@ -306,11 +260,3 @@ FLARESOLVERR_MAX_REQUESTS_PER_HOUR=30 \
 FLARESOLVERR_MAX_REQUESTS_PER_DAY=200 \
 PYTHONPATH=src python3 -m unittest tests.live.test_live_science_pnas -q
 ```
-
-## 文档
-
-- [docs/deployment.md](docs/deployment.md): 安装、MCP 注册、公式后端和验证步骤
-- [docs/flaresolverr.md](docs/flaresolverr.md): Science / PNAS 的 repo-local FlareSolverr、Playwright 和限速工作流
-- [docs/providers.md](docs/providers.md): 环境变量、provider 配置和 API key 说明
-- [docs/architecture/probe-semantics.md](docs/architecture/probe-semantics.md): `has_fulltext` probe 语义与当前 v1 落地范围
-- [docs/architecture/target-architecture.md](docs/architecture/target-architecture.md): 项目结构和架构说明

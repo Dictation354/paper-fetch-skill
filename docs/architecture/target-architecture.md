@@ -1,500 +1,425 @@
-# Paper Fetch Skill Target Architecture
+# Paper Fetch Skill 当前架构与业务流程
 
-Date: 2026-04-10 (revision 8)
+Date: 2026-04-16
 
-## Status
+## 状态说明
 
-**Status:** the current branch should be treated as the closed-out baseline for this architecture. The package layout under `src/paper_fetch/`, the `paper-fetch` CLI, the `paper-fetch-mcp` stdio server, the static thin skill, and the thin install scripts are all already landed and covered by the test suite.
+当前分支应视为这套架构的已落地基线。
 
-**Migration status:** the migration-order steps below are complete on the current branch:
+- 代码主体位于 `src/paper_fetch/`
+- `paper-fetch` 是稳定 CLI 入口
+- `paper-fetch-mcp` 是稳定 stdio MCP server 入口
+- `skills/paper-fetch-skill/` 是静态 thin skill bundle
 
-- step 1 complete: the codebase is packaged under `src/paper_fetch/` and exposed via `pyproject.toml`
-- step 2 complete: `paper-fetch` routes through the service layer and preserves the CLI contract
-- step 3 complete: the MCP server exposes `resolve_paper` and `fetch_paper`
-- step 4 complete: the repo skill source is a static `skills/paper-fetch-skill/` bundle with a thin `SKILL.md` plus on-demand `references/`
-- step 5 complete: install scripts are thin, and the Codex manifest is generated only at install time
-
-Public shipped changes belong in `CHANGELOG.md`. Keep any local-only scratch backlog outside the repository. This document is architecture rationale and baseline contract only.
+公共变更历史统一记在 `CHANGELOG.md`。这份文档只描述当前系统如何工作、层次如何分工，以及后续扩展时应遵守的边界。
 
 ## Decision
 
-This repository is a better fit for `CLI + MCP + thin skill` than for `pure MCP`.
-
-## Why This Is The Better Fit
-
-1. The current repository already has a real command-line entrypoint, not just prompt text.
-   `paper-fetch` is exposed via `src/paper_fetch/cli.py`, and the tests already exercise the public CLI entrypoint directly.
-
-2. The core value of the project is reusable fetch logic, not the transport layer.
-   DOI resolution, provider routing, metadata merge, HTML fallback, and Markdown rendering should remain callable outside any agent runtime.
-
-3. A pure MCP design would make manual debugging and shell validation worse.
-   This project is often going to be verified by running one DOI from the terminal, saving payloads, and inspecting files.
-
-4. MCP is still a strong fit, but as an adapter layer.
-   The tool naturally exposes structured operations such as `resolve`, `fetch full text`, and `metadata only`, which map well to MCP tools.
-
-5. A thin skill remains useful for agent discovery, but it should not own environment bootstrapping.
-   The current heavy install flow comes from the skill pointing at repo-local absolute paths and a repo-local `.venv`.
-
-## Target Shape
-
-The target should be:
-
-- `core library`: all fetch logic and models live in importable Python modules
-- `CLI`: stable command for humans, CI, and quick smoke tests
-- `MCP server`: structured tool interface for Codex/Claude/other MCP clients
-- `thin skill`: static skill directory that only teaches the model when to use the MCP tools
-
-## Recommended Directory Layout
-
-The layout below describes the stable architectural shape.
+这个仓库的最佳形态仍然是：
 
 ```text
-paper-fetch-skill/
-├── pyproject.toml
-├── README.md
-├── .gitignore
-├── .env.example
-├── docs/
-│   ├── providers.md
-│   └── architecture/
-│       └── target-architecture.md
-├── scripts/
-│   ├── install-codex-skill.sh
-│   ├── install-claude-skill.sh
-│   └── dev-smoke-fetch.sh
-├── skills/
-│   └── paper-fetch-skill/
-│       ├── SKILL.md
-│       └── references/
-│           ├── cli-fallback.md
-│           ├── environment.md
-│           └── failure-handling.md
-├── src/
-│   └── paper_fetch/
-│       ├── __init__.py
-│       ├── cli.py
-│       ├── config.py
-│       ├── models.py
-│       ├── service.py
-│       ├── outputs.py
-│       ├── resources/
-│       │   ├── journal_lists.yaml
-│       │   ├── routing_rules.yaml
-│       │   └── elsevier_markdown_mapping.md
-│       ├── resolve/
-│       │   ├── __init__.py
-│       │   ├── query.py
-│       │   └── normalize.py
-│       ├── providers/
-│       │   ├── __init__.py
-│       │   ├── registry.py
-│       │   ├── base.py
-│       │   ├── crossref.py
-│       │   ├── elsevier.py
-│       │   ├── springer.py
-│       │   ├── wiley.py
-│       │   └── html_generic.py
-│       ├── formula/
-│       │   ├── __init__.py
-│       │   ├── convert.py
-│       │   └── backends.py
-│       └── mcp/
-│           ├── __init__.py
-│           ├── server.py
-│           ├── tools.py
-│           └── schemas.py
-├── tests/
-│   ├── fixtures/
-│   ├── unit/
-│   ├── integration/
-│   └── live/
-└── live-downloads/
+可复用核心库 + CLI + MCP adapter + thin skill
 ```
 
-## Responsibilities By Layer
+原因很直接：
 
-### `src/paper_fetch/service.py`
+- 核心价值在于论文抓取与转换逻辑，而不是某一种 agent transport
+- CLI 仍然是最直接的人工调试和 smoke 入口
+- MCP 很适合作为结构化工具层，但不应该持有业务逻辑
+- skill 应只负责引导 agent 使用工具，而不是承载运行时实现
 
-Own the main orchestration shared by the CLI and MCP adapters.
+## 这份文档解决什么，不解决什么
 
-Suggested public functions:
+这份文档解决：
 
-- `resolve_paper(query: str, ...) -> ResolvedQuery`
-- `fetch_paper(query: str, *, modes: set[OutputMode], strategy: FetchStrategy, ...) -> FetchEnvelope` — see the contract below
-- `fetch_raw_payload(query: str, ...) -> RawFetchResult` — internal helper used by the above; not necessarily exposed via MCP initially
+- 当前系统有哪些层
+- 从输入到输出的端到端业务流程
+- 关键数据契约各自扮演什么角色
+- 哪些例外会影响调用方理解结果
+- 新增能力时应该改哪一层
 
-The service layer is the single source of truth for dispatch. Both the CLI and the MCP adapter call the same `fetch_paper`, which means adding a new output format or a new fetch-strategy knob only requires editing the service once.
+这份文档不解决：
 
-This module should not parse CLI flags and should not know anything about MCP message envelopes.
+- 每个 provider 的全部配置变量
+- FlareSolverr 的操作细节
+- 所有历史设计演进过程
 
-#### `fetch_paper` contract
+## 当前系统分层
 
-**Output modes and fetch strategy are two separate axes.** Conflating them into a single `mode` parameter was the first draft of this document; review against the CLI contract showed that was wrong, because the current `paper-fetch` CLI already exposes `--no-html-fallback` as a genuine strategy knob that is independent of output format, and it already supports a `"both"` output (`article + markdown` in one response). The contract below preserves both of those existing capabilities.
+### 1. CLI 层
 
-**Axis 1 — output modes** (`modes: set[OutputMode]`, default `{"article", "markdown"}`):
+入口：`src/paper_fetch/cli.py`
 
-- `"article"` — include the structured `ArticleModel` in the response
-- `"markdown"` — include the rendered Markdown string in the response
-- `"metadata"` — include only metadata fields of the article (no sections, no body)
+职责：
 
-Modes are composable. Asking for `{"article", "markdown"}` is the direct successor of today's `--format both` and is the recommended default for agent use: the agent gets the Markdown it will actually read, plus the structured model it needs to reason about provenance and quality. Asking for `{"metadata"}` alone is the successor of "metadata only".
+- 解析命令行参数
+- 组装 `FetchStrategy` 与 `RenderOptions`
+- 调用 service 层
+- 控制 stdout / stderr / 输出文件 / 退出码
 
-**Axis 2 — fetch strategy** (`strategy: FetchStrategy`):
+不负责：
 
-A dataclass with at least these fields, each mirroring a real capability in the current CLI:
+- provider 选择
+- 正文抓取策略
+- MCP 序列化
 
-- `allow_html_fallback: bool = True` — when `False`, do not attempt HTML-landing-page extraction after official-provider paths fail. Mirrors the existing `--no-html-fallback` flag.
-- `allow_metadata_only_fallback: bool = True` — when `False`, failing to obtain a usable body is an error (`PaperFetchFailure`) rather than a degraded-but-successful metadata-only response. Mirrors the behavior a caller gets today when they want to know "is there formal full text available, yes or no".
-- `preferred_providers: list[str] | None = None` — optional provider allow-list for callers who want to constrain the final official/fulltext/html path. Internal Crossref routing signals may still be used even when `crossref` is not in the allow-list.
+### 2. MCP 层
 
-The strategy dataclass is where all future "how to fetch" knobs accrue. Output modes are only about "what to return". A caller who wants "official full text only, give me both structured and Markdown, fail loudly if there's no body" expresses it as `modes={"article", "markdown"}, strategy=FetchStrategy(allow_html_fallback=False, allow_metadata_only_fallback=False)`. No second fetch, no adapter-layer branching.
+入口：`src/paper_fetch/mcp/server.py`、`src/paper_fetch/mcp/tools.py`
 
-**Return type — `FetchEnvelope`** (stable shape, never shape-switches on modes):
+职责：
 
-```python
-@dataclass
-class FetchEnvelope:
-    # Provenance — ALWAYS populated, regardless of which modes were requested
-    doi: str | None
-    source: str                   # open, documented provenance string — see below
-    has_fulltext: bool
-    warnings: list[str]           # promoted from article.quality.warnings
-    source_trail: list[str]       # promoted from article.quality.source_trail
-    token_estimate: int
+- 暴露 MCP tools、prompts 与 resources
+- 校验工具参数
+- 把 service 结果序列化成 JSON-safe payload
+- 管理 cache resources、progress、structured log、cancellation
 
-    # Payloads — present iff the corresponding mode was requested AND obtainable
-    article: ArticleModel | None        # populated iff "article" in modes
-    markdown: str | None                # populated iff "markdown" in modes
-    metadata: Metadata | None           # populated iff "metadata" in modes — see rules below
+不负责：
+
+- provider 路由决策
+- 正文抓取瀑布
+- Markdown 转换细节
+
+### 3. Skill 层
+
+入口：`skills/paper-fetch-skill/`
+
+职责：
+
+- 告诉 agent 什么时候调用哪些 MCP 工具
+- 提供薄说明和引用文档
+
+不负责：
+
+- 安装依赖
+- 实际抓取逻辑
+- provider 配置
+
+### 4. Service 层
+
+入口：`src/paper_fetch/service.py`
+
+这是整个系统的业务主脑。
+
+职责：
+
+- resolve 查询
+- 计算 routing signal
+- 拉取并合并 metadata
+- 执行 official provider / HTML / metadata-only 回退瀑布
+- 统一构造 `FetchEnvelope`
+
+### 5. Provider 层
+
+入口：`src/paper_fetch/providers/`
+
+职责：
+
+- 各 provider 的 metadata / fulltext / asset 下载适配
+- provider 自身格式到 `ArticleModel` 的转换
+- provider 本地可用性诊断
+
+### 6. Transport / Cache 层
+
+入口：`src/paper_fetch/http.py`
+
+职责：
+
+- HTTP 请求
+- 连接复用
+- 进程内短 TTL GET 缓存
+- 响应体大小限制
+- 有限短重试
+- 协作式取消检查
+
+## 端到端业务流程
+
+统一主线如下：
+
+```text
+resolve
+-> routing signal
+-> metadata merge
+-> official provider fulltext
+-> HTML fallback 或 provider 内部 fallback
+-> metadata-only fallback
+-> render / envelope / cache / MCP 暴露
 ```
 
-The envelope shape is **fixed**. Requesting only `{"markdown"}` still returns a `FetchEnvelope` with `article=None`, not a bare string. This is the non-negotiable part of the contract: the MCP adapter must never switch response shape based on the request, because that forces every caller to write type-narrowing logic and weakens the "thin MCP" property.
+### 1. resolve
 
-**`metadata` field population rules** (the `"metadata"` mode is what decides, not `article`):
+`resolve_paper()` 负责把输入标准化成 `ResolvedQuery`。
 
-- If `"metadata" in modes`, then `envelope.metadata` **must** be populated.
-- If `"metadata" not in modes`, then `envelope.metadata` **must** be `null`, *even if `article` is present and carries `article.metadata` internally*. Callers who already asked for `"article"` read `envelope.article.metadata`; callers who asked for `"metadata"` read `envelope.metadata`. There is no "free" metadata in the envelope.
-- If both `"article" in modes` and `"metadata" in modes`, then `envelope.metadata` and `envelope.article.metadata` **must** be content-identical. The service layer populates both from the same source; the MCP adapter does not deduplicate or drop one.
+支持三类输入：
 
-Rationale: this preserves the ergonomic property that `modes={"metadata"}` callers read `.metadata` directly, without having to learn the reverse-intuitive rule "metadata mode actually lives under `.article.metadata`". The cost is a small amount of duplication when both modes are requested, which is deliberate and documented.
+- DOI
+- URL
+- 标题
 
-**`source` is an open, documented provenance string, not a closed enum.**
+它会产出这些关键信息：
 
-The field is typed as `str` rather than a sealed `SourceKind` enum. The MCP contract lists the canonical values known at the time of writing, but future revisions may add new values (new providers, new fallback paths) without a contract bump. Callers must not assume the set is closed and must not pattern-match exhaustively against it — unknown values should be treated as "some provenance the client doesn't recognize yet", not as an error.
+- `query_kind`
+- `doi`
+- `landing_url`
+- `provider_hint`
+- `candidates`
+- `title`
 
-Canonical `source` values as of this document:
+如果标题查询候选不够确定，系统会保留 `candidates`，并由上层返回 `ambiguous`，而不是猜测性继续抓取。
 
-- `"elsevier_xml"` — Elsevier official XML (TDM)
-- `"springer_xml"` — Springer official XML
-- `"wiley_tdm"` — Wiley TDM path
-- `"crossref_meta"` — Crossref metadata only, no body attempted or obtained from a publisher
-- `"html_fallback"` — landing-page HTML extraction after official paths failed or were skipped
-- `"metadata_only"` — the `allow_metadata_only_fallback` degraded path; body not obtainable, metadata returned
+### 2. routing signal
 
-Fine-grained diagnostics continue to live in `source_trail` (which today already carries markers like `fulltext:wiley_article_ok`, `fallback:html_disabled`, `fallback:metadata_only`). The split is: `source` is the coarse, agent-readable "where did this come from" string; `source_trail` is the ordered debug trace. Agents should branch on `source`; humans and tests should read `source_trail`.
+路由优先级固定是：
 
-Current repo note: `ArticleModel` still uses a narrower internal `SourceKind` literal with values like `"wiley"` and `"html_generic"` in `src/paper_fetch/models.py`, while the public MCP/CLI envelope exposes the open provenance string documented here. The reconciliation is already implemented at the envelope construction boundary in `src/paper_fetch/service.py`; the public `source` string is what the contract is anchored on, not the internal enum name.
-
-**Why provenance is promoted to envelope top-level, not buried inside `article.quality`:**
-
-Today's Markdown serializer (`ArticleModel.to_ai_markdown`) does not round-trip `quality.warnings` or `quality.source_trail` into the Markdown string. That is the correct behavior for the Markdown itself (agents read the Markdown as content), but it means a caller who only wants the Markdown string would lose provenance. Promoting `has_fulltext`, `warnings`, `source_trail`, `source` to the envelope top-level means every caller, regardless of which modes they asked for, can always answer "was this Wiley TDM, HTML fallback, or metadata-only?" without re-fetching and without reaching into `article.quality`. This is the concrete agent use case that justifies the envelope design.
-
-**Metadata-only fallback semantics:**
-
-When `strategy.allow_metadata_only_fallback=True` (default) and no usable body is obtainable, `fetch_paper` returns a `FetchEnvelope` with `has_fulltext=False`, `source="metadata_only"`, `article` populated with a metadata-only `ArticleModel` (if `"article" in modes`), `markdown` populated with a metadata-only rendered Markdown (if `"markdown" in modes`), and a warning in `warnings` describing the degradation. The existing `source_trail` marker `fallback:metadata_only` is preserved. When `allow_metadata_only_fallback=False`, the same condition raises `PaperFetchFailure` instead. Both branches exist today in the CLI's behavior and must survive the migration.
-
-### `src/paper_fetch/cli.py`
-
-Own only terminal-facing behavior:
-
-- `argparse`
-- stdout/stderr formatting
-- exit codes
-- optional file writes
-
-The CLI should become the stable shell contract:
-
-```bash
-paper-fetch --query "10.1038/s41586-020-2649-2"
+```text
+domain > publisher > DOI fallback
 ```
 
-### `src/paper_fetch/mcp/`
+信号来源包括：
 
-Expose the same service layer as structured tools.
+- URL 域名
+- Crossref `landing_page_url`
+- Crossref `publisher`
+- DOI 前缀
 
-Recommended first MCP tools (hybrid granularity):
+`provider_hint` 表示最优提示，而不是最终来源承诺。
 
-- `resolve_paper(query)` — returns a `ResolvedQuery`. Kept separate because its return shape is fundamentally different from fetch results (no article body, no provider payload), and agents often want to resolve without committing to a download.
-- `fetch_paper(query, modes, strategy)` — returns a `FetchEnvelope` (see the service-layer contract above). `modes` is a set of output modes (`"article"`, `"markdown"`, `"metadata"`). `strategy` carries fetch-strategy knobs like `allow_html_fallback` and `allow_metadata_only_fallback`.
+### 3. metadata merge
 
-Rationale for the split: `resolve` and `fetch` are genuinely different operations, so they stay as separate tools. The historical three-way split of fetch into `_fulltext` / `_metadata` / `_markdown` collapses into a single `fetch_paper` because those three really only differed in *what the caller wanted back*, which is now expressed by composable `modes`. The result is a short tool list (two tools for the happy path) with explicit, orthogonal knobs.
+service 会尽可能拿到两类元数据：
 
-**MCP JSON shape:** `fetch_paper` always returns a JSON object with the same top-level keys as `FetchEnvelope` — never a bare string, never a shape-switching union. Fields corresponding to un-requested modes are present as `null`. This is load-bearing for the "thin MCP" property: the adapter's job is serialization, not branching.
+- Crossref metadata
+- 官方 provider metadata
 
-**Agent-visible defaults:** the MCP tool's default `modes` is `["article", "markdown"]` and its default `strategy` is "allow HTML fallback, allow metadata-only fallback, no provider allow-list". This matches the most common agent use case ("give me the paper and tell me where it came from") and avoids forcing every caller to spell out the defaults.
+然后执行 primary / secondary merge，得到后续正文抓取所需的统一 metadata 视图。
 
-Optional later MCP tools:
+这一步的结果同时决定：
 
-- `fetch_saved_payload`
-- `list_supported_providers`
-- `validate_provider_config`
+- 更准确的 `landing_page_url`
+- 更稳定的 provider 选择
+- metadata-only 结果的最终内容
 
-The MCP layer should be thin. It should translate MCP inputs to service calls and serialize `FetchEnvelope` to JSON-safe output. It should not contain business logic — if a new mode or a new strategy knob needs non-trivial branching, that branching belongs in `service.py`.
+### 4. official provider fulltext
 
-### `src/paper_fetch/formula/`
+如果选中了官方 provider，service 会先尝试官方全文路径。
 
-Kept as its own subpackage because formula conversion already has two backends:
+典型行为：
 
-- `texmath` is the primary backend
-- `mathml-to-latex` is the Node-based fallback when `texmath` is unavailable
+- `elsevier`：优先 XML，并可下载关联资产
+- `springer`：优先 Full Text API，其次 Open Access API
+- `wiley`：走 TDM endpoint，常见是 PDF 提取
+- `science` / `pnas`：由 provider 自己执行 HTML / PDF fallback 逻辑
 
-`formula/convert.py` owns the public entry point and the fallback chain. `formula/backends.py` owns the per-backend adapters and availability probing. Backend selection is global (service-wide), not per-provider — a provider returns MathML, and the formula layer decides how to render it based on which backends are installed at runtime.
+如果官方正文足够可用，流程在这里结束。
 
-If in the future we collapse to a single backend, this subpackage should be demoted to a single `outputs/formula.py` module. Until then, the two-backend fallback logic is enough complexity to justify the split.
+### 5. HTML fallback 与 provider 内部 fallback
 
-### `skills/paper-fetch-skill/`
+普通 provider 在官方路径失败后，可以进入通用 `html_generic` fallback，前提是：
 
-Make this a real static skill directory that can be copied directly into `~/.codex/skills/`.
+- `strategy.allow_html_fallback=true`
+- 允许的 provider 集合没有排除 HTML alias
 
-Its job should be:
+`science` / `pnas` 是关键例外：
 
-- explain when the paper-fetch tools are appropriate
-- tell the model to call the MCP tool first
-- optionally mention the CLI as a fallback for non-MCP contexts
-- keep detailed environment-variable, CLI, and failure-contract material in `references/` so the main entrypoint stays small
+- 不走通用 `html_generic`
+- 而是 provider 自己管理 `HTML -> PDF -> metadata-only`
 
-Its job should not be:
+### 6. metadata-only fallback
 
-- creating a virtual environment
-- rendering absolute paths
-- owning `.env` bootstrap
-- deciding install location of the codebase
-- carrying runtime-specific manifest files in the repo source tree
+如果正文仍不可得，并且 `strategy.allow_metadata_only_fallback=true`：
 
-**Codex compatibility is handled at install time, not in the skill source.**
+- service 返回 metadata-only 文章
+- `has_fulltext=false`
+- `warnings` 中明确提示已降级
+- `source_trail` 中带 `fallback:metadata_only`
 
-Codex expects each skill directory to contain an `agents/openai.yaml` manifest. That file is a Codex-specific requirement, not a generic skill asset, so it does not belong in `skills/paper-fetch-skill/` in the repo. Instead, `scripts/install-codex-skill.sh` generates or copies `agents/openai.yaml` into the *installed* skill directory (typically `~/.codex/skills/paper-fetch-skill/agents/openai.yaml`) as a one-shot compatibility shim. This keeps the in-repo skill source runtime-agnostic and makes it trivial to add other runtimes later — each new runtime gets its own install script, and the skill source itself never grows per-runtime branches.
+如果关闭这个开关，则抛 `PaperFetchFailure`。
 
-The repo skill source may still include generic `references/` documents that any runtime can copy alongside `SKILL.md`. Those files are part of the runtime-agnostic skill bundle, not per-runtime shims.
+### 7. render / envelope / cache / MCP 暴露
 
-If a future runtime needs a second manifest format (e.g. Claude skills add their own file), add a second install script. Do not put both manifests side by side in the repo skill directory.
+拿到最终 `ArticleModel` 后，service 会构造 `FetchEnvelope`。
 
-## Recommended Config Strategy
+随后：
 
-Move away from "repo root `.env` is the runtime contract".
+- CLI 决定是否写文件、是否改写相对资源链接
+- MCP 决定是否写 cache sidecar、是否暴露 resources、是否附带 inline images
 
-Recommended load order:
+## 数据契约与角色边界
 
-1. process environment variables
-2. `PAPER_FETCH_ENV_FILE`
-3. `~/.config/paper-fetch/.env`
+### `ResolvedQuery`
 
-Repo-local `.env` should only be used in development via an explicit `PAPER_FETCH_ENV_FILE=/path/to/.env` override.
+作用：
 
-Recommended writable runtime paths:
+- 表达“输入已经被解析成什么论文候选”
+- 为后续 routing 与 metadata 拉取提供标准化入口
 
-- cache: `~/.cache/paper-fetch/`
-- logs: `~/.local/state/paper-fetch/`
-- downloads: configurable, with **different defaults per adapter**:
-  - CLI default: `PAPER_FETCH_DOWNLOAD_DIR` first, otherwise XDG data dir `paper-fetch/downloads`, with `./live-downloads` only as a creation fallback
-  - MCP default: `~/.local/share/paper-fetch/downloads/` (XDG data dir — avoids scattering files wherever the MCP server happens to be launched from)
-  - Both can be overridden by `PAPER_FETCH_DOWNLOAD_DIR` env var or an explicit argument.
+不作用于：
 
-**Where the split is enforced:** `service.py` must have *no default* for the download directory. It takes a required `download_dir` argument (or `None` meaning "don't write to disk"). Each adapter is responsible for resolving its own default:
+- 最终输出格式
+- 正文抓取成功与否
 
-- `cli.py` resolves `PAPER_FETCH_DOWNLOAD_DIR` or the XDG default before calling the service, and only falls back to `./live-downloads` if the user-data directory cannot be created
-- `mcp/server.py` resolves `~/.local/share/paper-fetch/downloads/` before calling the service
+### `FetchStrategy`
 
-This keeps the service layer cwd-agnostic and makes the per-adapter behavior explicit and testable. A service-layer default would either be wrong for one of the two adapters or require the service to know which adapter called it — both are bad.
+作用：
 
-This change is important because MCP servers should not depend on the caller's current working directory.
+- 表达“怎么抓”
 
-## Packaging Direction
+当前最重要的字段：
 
-Add a standard `pyproject.toml` and expose console scripts.
+- `allow_html_fallback`
+- `allow_metadata_only_fallback`
+- `preferred_providers`
+- `asset_profile`
 
-Recommended entry points:
+它不决定返回哪些 payload；那是 `modes` 的职责。
 
-```toml
-[project.scripts]
-paper-fetch = "paper_fetch.cli:main"
-paper-fetch-mcp = "paper_fetch.mcp.server:main"
-```
+### `FetchEnvelope`
 
-This gives three usable surfaces from one codebase:
+作用：
 
-- `paper-fetch` for humans
-- `paper-fetch-mcp` for agent clients
-- `skills/paper-fetch-skill/` for thin discovery prompts
+- 固定返回形状的公开抓取结果
 
-## Mapping From Current Files
+它始终承载：
 
-Suggested migration map:
+- `doi`
+- `source`
+- `has_fulltext`
+- `warnings`
+- `source_trail`
+- `token_estimate`
+- `token_estimate_breakdown`
 
-- `scripts/paper_fetch.py` -> split into `src/paper_fetch/service.py` and `src/paper_fetch/cli.py`
-- `scripts/resolve_query.py` -> `src/paper_fetch/resolve/query.py`
-- `scripts/article_model.py` -> `src/paper_fetch/models.py`
-- `scripts/fetch_common.py` -> `src/paper_fetch/config.py` and shared utility modules
-- `scripts/provider_clients.py` -> `src/paper_fetch/providers/registry.py`
-- `scripts/providers/*` -> `src/paper_fetch/providers/*`
-- `scripts/formula_conversion.py` -> `src/paper_fetch/formula/convert.py`
-- `references/journal_lists.yaml` -> `src/paper_fetch/resources/journal_lists.yaml`
-- `references/routing_rules.md` -> convert to machine-readable `src/paper_fetch/resources/routing_rules.yaml`. **The YAML becomes the source of truth.** Do not keep a parallel prose version that duplicates the rules — prose and YAML will drift. Instead, either (a) delete the Markdown entirely and let the YAML + schema comments self-document, or (b) keep a short `docs/routing_rules.md` that only explains the *schema and rationale*, not the individual rules. The individual rules live in YAML only.
-- `templates/skill_template.md` -> replace with static `skills/paper-fetch-skill/SKILL.md`
-- `install-codex.sh` -> shrink into `scripts/install-codex-skill.sh`
+按 `modes` 决定是否附带：
 
-## Why Not Pure MCP
+- `article`
+- `markdown`
+- `metadata`
 
-Pure MCP would remove a useful interface you already have.
+### `provider_status`
 
-That would cost you:
+作用：
 
-- easy terminal smoke tests
-- non-agent batch usage
-- simpler regression debugging
-- a clean interface for CI and local scripts
-- a transport-neutral core for future integrations
+- 在真正抓取前报告本地环境是否就绪
 
-Pure MCP only becomes the best option when the product is primarily a long-running service and almost nobody needs to call it directly from a shell. This repository is not there today.
+边界：
 
-## Migration Order
+- 只检查本地条件
+- 不主动打远端 publisher 可用性探测
 
-**Strategy: one-shot cutover, no shim period.**
+### `has_fulltext`
 
-Status on the current branch: the one-shot cutover is already complete. The sequence below is kept as the migration record and acceptance reference for future archaeology; new work should start from the closed-out architecture above rather than reopen the `scripts/` move.
+这里要区分两个层面：
 
-Recommended sequence:
+1. `fetch_paper().has_fulltext`
+   - 完整抓取瀑布之后的最终 verdict
+2. `has_fulltext()`
+   - MCP 暴露的廉价 probe
+   - 只使用更便宜、更弱的信号
 
-1. Package the existing logic without changing behavior.
-   Move modules from `scripts/` into `src/paper_fetch/` and delete the `scripts/` copies in the same commit. See the [Migration Checklist](#migration-checklist) below for the ordered sub-steps — step 1 is the riskiest and most mechanical.
+这两个值不要求逐案完全一致。
 
-2. Stabilize the CLI.
-   Make `paper-fetch` call the new service layer and preserve current stdout/stderr contracts. Snapshot current `--help` output and a sample DOI fetch before step 1 starts, diff after step 2 finishes.
+## 关键例外与调用方容易误解的点
 
-3. Add the MCP server.
-   Implement MCP tools as thin wrappers around the same service functions. Start with `resolve_paper` and `fetch_paper(mode=...)`; defer the optional tools.
+### `science` / `pnas` 不走通用 HTML fallback
 
-4. Replace the generated skill with a static thin skill.
-   Make the skill reference MCP tools instead of absolute repo paths. The repo skill source should stay runtime-agnostic and keep only `SKILL.md` plus generic `references/`.
+它们的 HTML 逻辑由 provider 内部管理，因此：
 
-5. Shrink installation scripts.
-   The install step should become "install package + copy skill + (Codex only) drop the `agents/openai.yaml` shim". No venv creation, no `.env` bootstrap in the skill installer — those move to a separate `scripts/dev-bootstrap.sh` that developers run, not end users.
+- 通用 HTML fallback 开关不会关闭它们自己的 HTML 主路径
+- `source` 仍然公开为 `science` / `pnas`
+- 成功细节要看 `source_trail`
 
-## Migration Checklist
+### `crossref` 既可能是 source，也可能只是 signal
 
-Step 1 ("package without changing behavior") is where most migrations of this shape go wrong. Do it in this order to keep each commit individually green:
+- 作为 signal 时，用来路由，不代表最终结果来自 Crossref
+- 作为 source 时，才会对外表现成 `crossref_meta` 或 metadata-only 路径
 
-1. **Freeze the behavior snapshot.** Before touching imports, capture golden outputs:
-   - `paper-fetch --help` stdout
-   - one successful DOI fetch's stdout + the contents of the saved payload file
-   - the full `pytest` pass list
-   These become the acceptance criteria for step 1.
+### `warnings` 与 `source_trail` 都是契约的一部分
 
-2. **Decouple tests from internal module paths first.** The current test suite couples to `scripts/` in at least three different ways, and a naive `from scripts.` grep will miss most of them. Audit `tests/` for all of these patterns:
+- `warnings` 用于告诉调用方发生了什么降级或限制
+- `source_trail` 用于告诉维护者和高级调用方每一步是怎么走的
 
-   - **Explicit `sys.path` injection** — `sys.path.insert(0, .../scripts)` followed by bare `from paper_fetch import ...` or `from fetch_common import ...`. Example today: [tests/live/test_live_publishers.py:9-14](../../tests/live/test_live_publishers.py#L9-L14).
-   - **`importlib.util.spec_from_file_location` loading** — manually loading `scripts/paper_fetch.py` as a module and registering it in `sys.modules` under a chosen name, then relying on that registration for subsequent bare imports. Historical example before the test-suite split lived in the old combined `tests/unit/test_paper_fetch.py`.
-   - **Bare top-level imports that silently depend on the above side effects** — `from article_model import ...`, `from fetch_common import ...`, `from providers.wiley import ...`. These look like ordinary imports but only resolve because an earlier line in the same file put `scripts/` on `sys.path` or because `paper_fetch.py`'s own import machinery did. Historical example before the test-suite split also lived in the old combined `tests/unit/test_paper_fetch.py`.
+如果只看正文内容而忽略它们，会误读结果质量。
 
-   Search patterns to actually use (not just `from scripts.`):
+## 输出与可观测性
 
-   - `sys.path.insert` and `sys.path.append` anywhere under `tests/`
-   - `spec_from_file_location` anywhere under `tests/`
-   - `sys.modules[` assignments in `tests/`
-   - Any bare `from article_model`, `from fetch_common`, `from providers.`, `from paper_fetch` import in `tests/` — every one of these is load-bearing on a `sys.path` side effect today and must be rewritten
+### `warnings`
 
-   Replace all of them with calls through the intended public surface (`from paper_fetch.service import ...`, `from paper_fetch.models import ...`, etc. once those modules exist). If a test reaches into a private helper, either promote the helper to public or rewrite the test to go through the public path. **Do this before moving any files** — otherwise every file move breaks every test at once, and you lose the ability to bisect.
+常见内容包括：
 
-   Closeout acceptance criterion: `tests/integration/test_architecture_closeout.py` passes, which bans `sys.path` mutation, `spec_from_file_location`, `sys.modules[...]` injection, and bare legacy imports such as `from article_model ...`, `from fetch_common ...`, or `from providers...`, while explicitly allowing `from paper_fetch...` imports through the public package surface.
+- metadata-only 降级
+- HTML / PDF fallback 提示
+- 资产部分下载失败
+- token 截断
 
-3. **Add `pyproject.toml` and an empty `src/paper_fetch/` package.** Register the package so `pip install -e .` works. At this point nothing imports from it yet.
+### `source_trail`
 
-4. **Move modules one layer at a time**, in dependency order (leaves first):
-   - `models.py` (no internal deps)
-   - `config.py` (depends on stdlib only)
-   - `resolve/` (depends on models + config)
-   - `providers/base.py`, then individual providers
-   - `formula/` subpackage
-   - `service.py` (depends on everything above)
-   - `cli.py` last (depends on service)
+常见轨迹包括：
 
-   After each move, run the full test suite. If a move breaks tests, revert just that move and investigate before proceeding.
+- `resolve:*`
+- `route:*`
+- `metadata:*`
+- `fulltext:*`
+- `fallback:*`
+- `download:*`
 
-5. **Delete `scripts/paper_fetch.py` and friends in the same commit as the final move.** Do not leave a shim. The console script `paper-fetch` defined in `pyproject.toml` replaces it.
+### `token_estimate_breakdown`
 
-6. **Verify against the frozen snapshot from step 1.** Diff `--help` output, diff a real DOI fetch, confirm the test pass list is identical.
+当前拆成三段：
 
-7. **Only now** update `install-codex.sh` to point at the new package layout. Keeping this for last means the install flow can't mask a broken package build during migration.
+- `abstract`
+- `body`
+- `refs`
 
-Do not start step 2 (CLI stabilization) until every sub-step above is green.
+它帮助 host 决定：
 
-## Decision Revisit Triggers
+- 要不要截断
+- 哪一段最占预算
+- 是否要改成 metadata-only / summary-first 策略
 
-Each of the major decisions in this document has a condition under which it should be revisited. If none of these conditions fire, stay the course. If one does, that's the signal to pull this document back up and reconsider — not just patch around it.
+### MCP cache resources
 
-- **`CLI + MCP + thin skill` shape** → revisit if CLI usage drops to essentially zero for more than a quarter (no human terminal runs, no CI smoke tests, no debugging sessions). At that point `pure MCP` becomes cheaper to maintain.
-- **Hybrid MCP tool granularity (`resolve_paper` + `fetch_paper(modes, strategy)`)** → revisit if any of these signals appear: (a) agents consistently misuse `modes` (e.g. always ask for all three, or never learn to combine `article`+`markdown`); (b) a new output mode needs side effects that other modes must not see, meaning the envelope no longer expresses orthogonal axes; (c) `strategy` grows past ~5 fields and starts needing its own sub-objects, at which point `fetch_paper` should probably split into `fetch_paper_strict` / `fetch_paper_lenient` or similar. The non-negotiable part is the fixed envelope shape — if we ever find ourselves wanting to shape-switch the return based on `modes`, that is the signal the whole contract needs rethinking, not a local patch.
-- **`formula/` as its own subpackage** → revisit if we collapse to a single backend (demote to `outputs/formula.py`) or if a third backend lands with per-provider selection rules (may need a `formula/policy.py` on top).
-- **Skill source stays runtime-agnostic, with manifests generated at install and optional generic `references/` files in the bundle** → revisit if a runtime appears whose manifest depends on build-time information the install script can't produce (e.g. requires signing, or references content hashes of the skill). At that point the manifest has to live in the repo.
-- **Per-adapter download-dir defaults, service has no default** → revisit if a third adapter appears (HTTP server, library embedding) and the two defaults stop covering the space. The rule to preserve is "service layer is cwd-agnostic", not the specific two defaults.
-- **YAML as source of truth for routing rules** → revisit only if a non-developer stakeholder needs to edit routing rules directly. At that point a prose-authored format with a generator might be worth the drift risk.
-- **One-shot migration with no `scripts/` shim** → this decision is only valid as long as no external caller depends on `scripts/paper_fetch.py`. If you discover such a caller mid-migration, stop and add a shim before proceeding.
+MCP 层会把缓存暴露成 resources：
 
-## Bottom Line
+- 默认共享缓存索引
+- 默认共享缓存条目
+- 显式 `download_dir` 时的 scoped cache resources
 
-Recommended target: `CLI + MCP + thin skill`
+这让 host 不需要重复抓取相同论文。
 
-Reason in one sentence:
+## 扩展点：新增能力时应改哪一层
 
-This repository already has a valuable command-line product surface and testable fetch core, so MCP should be added as the structured agent interface above that core, not as a replacement for it.
+### 新增 provider
 
-## Revision History
+应该主要改：
 
-**Revision 8 (2026-04-15)** — thin skill follow-through:
+- `src/paper_fetch/providers/`
+- `src/paper_fetch/providers/registry.py`
+- 必要时更新 `publisher_identity.py`
 
-- Updated the closed-out skill-source contract so the repo may ship a thin `SKILL.md` plus runtime-agnostic `references/` documents, while keeping runtime manifests install-time only.
-- Refreshed the recommended directory layout and migration wording to match the shipped split skill bundle.
+不应该把 provider 逻辑塞进 CLI 或 MCP 层。
 
-**Revision 7 (2026-04-12)** — backlog closeout follow-through:
+### 新增 MCP surface
 
-- Documented the post-closeout unit-test layout as the active repo-local acceptance baseline in the README, including the split `test_cli` / `test_service` / `test_models_render` / `test_html_generic` / `test_http_cache` entrypoints plus the MCP and provider request-option guards.
-- Recorded the fact that the large combined `tests/unit/test_paper_fetch.py` example referenced by older migration notes is now historical context only; ongoing implementation and acceptance work should use the split test modules and the compatibility facades that back them.
+应该主要改：
 
-**Revision 6 (2026-04-10)** — test-suite layering landed:
+- `src/paper_fetch/mcp/schemas.py`
+- `src/paper_fetch/mcp/tools.py`
+- `src/paper_fetch/mcp/server.py`
 
-- Removed test-directory reshuffling from **Remaining Deltas** because the suite now lives under `tests/unit`, `tests/integration`, and `tests/live`.
-- Updated architecture-closeout references to the layered test paths, including `tests/integration/test_architecture_closeout.py`, `tests/live/test_live_publishers.py`, `tests/unit/test_cli.py`, `tests/unit/test_service.py`, and `tests/unit/test_models_render.py`.
+如果需要真正的新抓取逻辑，应先落到 service 层。
 
-**Revision 5 (2026-04-10)** — architecture closeout status made explicit:
+### 新增渲染能力
 
-- Added a top-level **Status / Remaining Deltas** section that treats the current branch as the closed-out baseline for `core library + CLI + MCP + thin skill`.
-- Marked migration-order steps 1-5 as complete on the current branch and reframed the remaining items (`resources/`, `outputs.py`, `formula/backends.py`, test-directory reshuffling) as optional follow-on refinements rather than required next steps.
-- Updated the live contract wording to reference the current package entrypoints (`src/paper_fetch/cli.py`, `src/paper_fetch/service.py`) instead of describing the repo as if `scripts/paper_fetch.py` were still the active product surface.
-- Replaced the old test-decoupling grep acceptance criterion with the implemented closeout guard in `tests/integration/test_architecture_closeout.py`, which bans legacy import hacks while explicitly allowing `from paper_fetch...` imports through the public package surface.
+如果是正文渲染或资产展示能力，应优先改：
 
-**Revision 4 (2026-04-10)** — two contract tightenings, no direction changes:
+- `src/paper_fetch/models.py`
+- provider 到 `ArticleModel` 的转换逻辑
 
-- **`FetchEnvelope.metadata` population rules written as hard invariants.** Revision 3 left an "or always, as a subset" escape hatch that would have let implementers silently populate `metadata` even when it wasn't in `modes`, which would erode the ergonomic property the field exists for. The rules are now: `"metadata" in modes` ⟹ `metadata` is populated; `"metadata" not in modes` ⟹ `metadata` is `null` even if `article` is present; both requested ⟹ `metadata` content equals `article.metadata`. The small amount of duplication when both modes are requested is deliberate and documented.
-- **`source` explicitly downgraded from a closed-enum `SourceKind` to an open, documented provenance string.** Revision 3 wrote the field as `SourceKind` but never listed the full set, which would have been worse than either option: implementers would have had to guess whether the type was sealed, and the example values in the doc were already inconsistent with the current internal `ArticleModel.SourceKind` literal ([scripts/article_model.py:11](../../scripts/article_model.py#L11)). The field is now typed `str`, the current canonical values are listed (`elsevier_xml`, `springer_xml`, `wiley_tdm`, `crossref_meta`, `html_fallback`, `metadata_only`), and the doc states explicitly that the set is open and may grow without a contract bump. Fine-grained diagnostics continue to live in `source_trail`; `source` is the coarse agent-readable provenance string. Also added a note that the internal `SourceKind` enum will need reconciling (renaming or mapping at the envelope boundary) as part of step-2 CLI stabilization — the public string is what the contract is anchored on, not the internal name.
+而不是让 CLI 或 MCP 自己拼装业务结果。
 
-**Revision 3 (2026-04-10)** — resolved three issues found by reading this document against the current code:
+## 相关文档
 
-- **`fetch_paper` return contract rewritten as a fixed `FetchEnvelope`, not a shape-switching union.** The revision-2 signature `fetch_paper(mode) -> ArticleModel | str` would have lost the existing "structured + markdown together" capability that today's CLI already provides via `--format both` ([scripts/paper_fetch.py:361](../../scripts/paper_fetch.py#L361)), and would have forced agents into a double-fetch whenever they needed both the Markdown body and its provenance. The envelope always carries `doi`, `source`, `has_fulltext`, `warnings`, `source_trail`, `token_estimate` at the top level, regardless of which modes were requested. `article`, `markdown`, `metadata` are present as optional payloads. Agents always get provenance without having to dig into `article.quality`, and `ArticleModel.to_ai_markdown` does not need to change to round-trip warnings through the Markdown string.
-- **Output modes and fetch strategy separated into two orthogonal axes.** The revision-2 `mode` parameter conflated "what to return" with "how to fetch", which would have erased the existing `--no-html-fallback` capability ([scripts/paper_fetch.py:301](../../scripts/paper_fetch.py#L301)) and left the metadata-only-fallback semantics ambiguous. Output format is now a composable `modes: set[OutputMode]`; fetch behavior is a `strategy: FetchStrategy` dataclass containing `allow_html_fallback`, `allow_metadata_only_fallback`, and `preferred_providers`. The concrete use case "official link only, no HTML fallback, fail loudly if there's no formal full text" now has a single direct expression, with no adapter-layer branching.
-- **Migration checklist step 2 expanded** to call out the three real coupling patterns that existed during the closeout work: explicit `sys.path.insert` ([tests/live/test_live_publishers.py:9-14](../../tests/live/test_live_publishers.py#L9-L14)), `importlib.util.spec_from_file_location` loading with `sys.modules` registration (historically in the old combined `tests/unit/test_paper_fetch.py`), and bare imports that depended on those side effects (also historically in that file). The previous "grep `from scripts.`" hint would have missed all three. Added a concrete acceptance-criterion grep.
-- Decision Revisit Triggers updated for the new envelope/strategy shape. The non-negotiable invariant is now explicit: the envelope shape is fixed; if we ever want to shape-switch on `modes`, the whole contract needs rethinking, not a local patch.
-
-**Revision 2 (2026-04-10)** — resolved open questions from the initial draft review:
-
-- MCP tool granularity changed from four flat tools to a hybrid: `resolve_paper` stays separate (different return shape, different intent), and `fetch_paper_fulltext` / `fetch_paper_metadata` / `fetch_paper_markdown` merge into `fetch_paper(query, mode=...)`. Service-layer signature updated to match.
-- `formula/` confirmed as its own subpackage because two backends (`texmath` primary, `mathml-to-latex` fallback) already exist; documented that backend selection is global with fallback, not per-provider.
-- `skills/paper-fetch-skill/agents/openai.yaml` removed from the repo skill source. Codex's manifest is now explicitly framed as an install-time compatibility shim produced by `scripts/install-codex-skill.sh`, not a committed artifact. Repo skill source stays runtime-agnostic rather than carrying per-runtime files.
-- Download directory defaults remain adapter-owned: CLI resolves `PAPER_FETCH_DOWNLOAD_DIR` first, then XDG `paper-fetch/downloads`, and only falls back to `./live-downloads` if the user-data path cannot be created; MCP stays on the XDG data dir default. Service layer still has no default.
-- Migration is now explicitly one-shot: no `scripts/` compatibility shim, old paths deleted in the same commit as the corresponding move.
-- Routing drafts remain documentation only. Current runtime routing truth lives in the conservative code path under `publisher_identity.py` and the resolve/service flow that consumes it.
-- Added a **Migration Checklist** expanding step 1 of the migration order into seven ordered sub-steps, with the explicit instruction to decouple tests from `scripts.*` imports *before* moving any files.
-- Added a **Decision Revisit Triggers** section listing the conditions under which each major decision should be reopened.
-
-**Revision 1 (2026-04-10)** — initial draft.
+- [`../../README.md`](../../README.md)
+- [`../providers.md`](../providers.md)
+- [`../deployment.md`](../deployment.md)
+- [`probe-semantics.md`](probe-semantics.md)

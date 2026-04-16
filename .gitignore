@@ -28,6 +28,7 @@ pip-wheel-metadata/
 live-downloads/
 problems.md
 agent-surface-plan.md
+docs/pm-dev-overview.local.md
 vendor/flaresolverr/.work/
 vendor/flaresolverr/.venv-flaresolverr/
 vendor/flaresolverr/.flaresolverr/
