@@ -238,6 +238,7 @@ PYTHONPATH=src python3 -m unittest discover -s tests/integration -q
 - 显式 `download_dir` 的优先级高于 `PAPER_FETCH_DOWNLOAD_DIR` 和 XDG 默认目录
 - `list_cached()` / `get_cached()` 只读本地 cache index，不会触发网络
 - `batch_resolve()` / `batch_check()` 默认 `concurrency=1`；显式提高时，不同 host 的查询可以并发执行，但同一 host 仍会保持串行
+- `batch_resolve()` / `batch_check()` 每次调用最多接受 `50` 条 query；更长的 citation list 需要由 host 自行拆分
 - `batch_check(mode="metadata")` 现在复用廉价 probe，返回 `probe_state` / `evidence` / `warnings` 等轻量字段，不会走完整 fetch，也不会把正文或 provider payload 写入磁盘
 - `batch_check(mode="article")` 仍保留完整 fetch 语义
 - 当 `strategy.asset_profile` 为 `body` / `all` 时，`fetch_paper` 可能在 JSON 块后附带少量关键正文图的 `ImageContent`
@@ -266,6 +267,8 @@ PYTHONPATH=src python3 -m unittest discover -s tests/integration -q
 - `resource://paper-fetch/cached-dir/{scope_id}/{entry_id}`
 
 其中 `scope_id` 是下载目录路径的稳定 hash，不直接暴露本地绝对路径。`list_cached(download_dir)` 和 `get_cached(doi, download_dir)` 仍然是同一批隔离目录缓存的 tool 入口。
+
+支持资源列表变化通知的 MCP host 现在还能看到 `capabilities.resources.listChanged=true`，并在 `fetch_paper()` / `list_cached()` / `get_cached()` 让 cache resource URI 集合发生增删时收到 `notifications/resources/list_changed`。
 
 如果你要验收 Science / PNAS 的 repo-local live 路径，可以额外跑：
 

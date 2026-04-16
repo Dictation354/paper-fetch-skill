@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 from pathlib import Path
+from types import MethodType
 from typing import Annotated
 
 from mcp.server.fastmcp import Context, FastMCP
 from mcp.server.fastmcp.resources import FileResource, FunctionResource
+from mcp.server.lowlevel.server import NotificationOptions
 from mcp.types import CallToolResult, ToolAnnotations
 
 from ..config import build_runtime_env, resolve_mcp_download_dir
@@ -83,12 +85,21 @@ def _fetch_annotations() -> ToolAnnotations:
     )
 
 
+def _resource_uri_set(
+    resources: dict[str, object],
+    *,
+    index_uri: str,
+    entry_prefix: str,
+) -> set[str]:
+    return {uri for uri in resources if uri == index_uri or uri.startswith(entry_prefix)}
+
+
 def _sync_cache_resources(
     server: FastMCP,
     *,
     download_dir: Path,
     scope_id: str | None = None,
-) -> None:
+) -> bool:
     entries = list_cache_entries(download_dir)
     resources = server._resource_manager._resources
 
@@ -114,6 +125,12 @@ def _sync_cache_resources(
             "JSON index of cached MCP downloads in an isolated download directory. "
             f"Scope id: {scope_id}."
         )
+
+    before_uris = _resource_uri_set(
+        resources,
+        index_uri=index_uri,
+        entry_prefix=entry_prefix,
+    )
 
     def index_payload_for_download_dir() -> dict[str, object]:
         return _cache_index_resource_payload(download_dir)
@@ -141,13 +158,51 @@ def _sync_cache_resources(
             mime_type=str(entry["mime"]),
             is_binary=not is_text_mime_type(str(entry["mime"])),
         )
+    after_uris = _resource_uri_set(
+        resources,
+        index_uri=index_uri,
+        entry_prefix=entry_prefix,
+    )
+    return before_uris != after_uris
 
 
-def _sync_resources_for_download_dir(server: FastMCP, download_dir: Path | None) -> None:
+def _sync_resources_for_download_dir(server: FastMCP, download_dir: Path | None) -> bool:
     if download_dir is None:
-        _sync_cache_resources(server, download_dir=_default_download_dir())
+        return _sync_cache_resources(server, download_dir=_default_download_dir())
+    return _sync_cache_resources(server, download_dir=download_dir, scope_id=cache_scope_id(download_dir))
+
+
+async def _notify_resource_list_changed(ctx: Context | None) -> None:
+    if ctx is None:
         return
-    _sync_cache_resources(server, download_dir=download_dir, scope_id=cache_scope_id(download_dir))
+    try:
+        await ctx.session.send_resource_list_changed()
+    except Exception:
+        return
+
+
+def _enable_resource_list_changed_capability(server: FastMCP) -> None:
+    original_create_initialization_options = server._mcp_server.create_initialization_options
+
+    def create_initialization_options(
+        _mcp_server: object,
+        notification_options: NotificationOptions | None = None,
+        experimental_capabilities: dict[str, dict[str, object]] | None = None,
+    ):
+        merged_notification_options = NotificationOptions(
+            prompts_changed=notification_options.prompts_changed if notification_options is not None else False,
+            resources_changed=True,
+            tools_changed=notification_options.tools_changed if notification_options is not None else False,
+        )
+        return original_create_initialization_options(
+            notification_options=merged_notification_options,
+            experimental_capabilities=experimental_capabilities,
+        )
+
+    server._mcp_server.create_initialization_options = MethodType(
+        create_initialization_options,
+        server._mcp_server,
+    )
 
 
 def build_server() -> FastMCP:
@@ -156,6 +211,7 @@ def build_server() -> FastMCP:
         instructions=server_instructions(),
         json_response=True,
     )
+    _enable_resource_list_changed_capability(server)
 
     server.add_resource(
         FunctionResource.from_function(
@@ -257,7 +313,9 @@ def build_server() -> FastMCP:
             **tool_kwargs,
         )
         if not result.isError:
-            _sync_resources_for_download_dir(server, parsed_download_dir)
+            resources_changed = _sync_resources_for_download_dir(server, parsed_download_dir)
+            if resources_changed:
+                await _notify_resource_list_changed(ctx)
         return result
 
     @server.tool(
@@ -266,14 +324,19 @@ def build_server() -> FastMCP:
         annotations=_read_only_annotations(open_world=False),
         structured_output=True,
     )
-    def list_cached(download_dir: str | None = None) -> Annotated[CallToolResult, ListCachedOutput]:
+    async def list_cached(
+        download_dir: str | None = None,
+        ctx: Context | None = None,
+    ) -> Annotated[CallToolResult, ListCachedOutput]:
         parsed_download_dir = _parse_download_dir(download_dir)
         tool_kwargs: dict[str, object] = {}
         if parsed_download_dir is not None:
             tool_kwargs["download_dir"] = parsed_download_dir
         result = list_cached_tool(**tool_kwargs)
         if not result.isError:
-            _sync_resources_for_download_dir(server, parsed_download_dir)
+            resources_changed = _sync_resources_for_download_dir(server, parsed_download_dir)
+            if resources_changed:
+                await _notify_resource_list_changed(ctx)
         return result
 
     @server.tool(
@@ -282,14 +345,20 @@ def build_server() -> FastMCP:
         annotations=_read_only_annotations(open_world=False),
         structured_output=True,
     )
-    def get_cached(doi: str, download_dir: str | None = None) -> Annotated[CallToolResult, GetCachedOutput]:
+    async def get_cached(
+        doi: str,
+        download_dir: str | None = None,
+        ctx: Context | None = None,
+    ) -> Annotated[CallToolResult, GetCachedOutput]:
         parsed_download_dir = _parse_download_dir(download_dir)
         tool_kwargs: dict[str, object] = {}
         if parsed_download_dir is not None:
             tool_kwargs["download_dir"] = parsed_download_dir
         result = get_cached_tool(doi=doi, **tool_kwargs)
         if not result.isError:
-            _sync_resources_for_download_dir(server, parsed_download_dir)
+            resources_changed = _sync_resources_for_download_dir(server, parsed_download_dir)
+            if resources_changed:
+                await _notify_resource_list_changed(ctx)
         return result
 
     @server.tool(

@@ -7,6 +7,7 @@ import textwrap
 import unittest
 from pathlib import Path
 
+from mcp import types as mcp_types
 from mcp.client.session import ClientSession
 from mcp.client.stdio import StdioServerParameters, stdio_client
 
@@ -246,6 +247,7 @@ class McpStdioIntegrationTests(unittest.IsolatedAsyncioTestCase):
             isolated_dir = Path(tmpdir) / "isolated"
             progress_updates: list[tuple[float, float | None, str | None]] = []
             log_messages: list[object] = []
+            protocol_messages: list[object] = []
             server = StdioServerParameters(
                 command=sys.executable,
                 args=["-c", SERVER_SCRIPT],
@@ -264,8 +266,18 @@ class McpStdioIntegrationTests(unittest.IsolatedAsyncioTestCase):
                     async def progress_callback(progress, total, message) -> None:
                         progress_updates.append((progress, total, message))
 
-                    async with ClientSession(read_stream, write_stream, logging_callback=logging_callback) as session:
-                        await session.initialize()
+                    async def message_handler(message) -> None:
+                        protocol_messages.append(message)
+
+                    async with ClientSession(
+                        read_stream,
+                        write_stream,
+                        logging_callback=logging_callback,
+                        message_handler=message_handler,
+                    ) as session:
+                        init_result = await session.initialize()
+                        self.assertIsNotNone(init_result.capabilities.resources)
+                        self.assertTrue(init_result.capabilities.resources.listChanged)
 
                         listed = await session.list_tools()
                         tool_names = sorted(tool.name for tool in listed.tools)
@@ -394,6 +406,12 @@ class McpStdioIntegrationTests(unittest.IsolatedAsyncioTestCase):
 
                         default_fetch = await session.call_tool("fetch_paper", {"query": "10.1000/default"})
                         self.assertFalse(default_fetch.isError)
+                        self.assertTrue(
+                            any(
+                                isinstance(getattr(message, "root", None), mcp_types.ResourceListChangedNotification)
+                                for message in protocol_messages
+                            )
+                        )
 
                         resources = await session.list_resources()
                         resource_uris = sorted(str(resource.uri) for resource in resources.resources)

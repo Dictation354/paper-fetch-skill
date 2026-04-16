@@ -19,6 +19,7 @@ DEFAULT_MCP_MODES = ["article", "markdown"]
 DEFAULT_INLINE_IMAGE_MAX_IMAGES = 3
 DEFAULT_INLINE_IMAGE_MAX_BYTES_PER_IMAGE = 2 * 1024 * 1024
 DEFAULT_INLINE_IMAGE_MAX_TOTAL_BYTES = 8 * 1024 * 1024
+MAX_BATCH_QUERIES = 50
 
 
 @dataclass(frozen=True)
@@ -142,6 +143,8 @@ def _normalize_query_list(value: Any) -> list[str]:
         raise ValueError("queries must be provided as a list of strings.")
     if not value:
         raise ValueError("queries must contain at least one entry.")
+    if len(value) > MAX_BATCH_QUERIES:
+        raise ValueError(f"queries must contain at most {MAX_BATCH_QUERIES} entries.")
 
     normalized_queries: list[str] = []
     for index, item in enumerate(value):

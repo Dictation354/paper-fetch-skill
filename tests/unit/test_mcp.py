@@ -10,6 +10,12 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
+from paper_fetch.mcp.cache_index import (
+    cache_scope_id,
+    scoped_cache_index_resource_uri,
+    scoped_cached_resource_uri_prefix,
+)
+from paper_fetch.mcp import server as mcp_server
 from paper_fetch.mcp import tools as mcp_tools
 from paper_fetch.mcp.server import build_server
 from paper_fetch.models import (
@@ -152,9 +158,16 @@ def write_binary(path: Path, size: int = 8) -> None:
     path.write_bytes(b"\x89PNG\r\n" + (b"x" * max(0, size - 6)))
 
 
+def fake_service_fetch_with_cached_downloads(query, *, modes=None, download_dir=None, **kwargs):
+    if download_dir is not None:
+        create_cached_downloads(download_dir, query)
+    return sample_envelope(modes=set(modes or []), doi=query)
+
+
 class FakeSession:
     def __init__(self) -> None:
         self.messages: list[dict[str, object]] = []
+        self.resource_list_changed_calls = 0
 
     async def send_log_message(self, *, level, data, logger=None, related_request_id=None) -> None:
         self.messages.append(
@@ -165,6 +178,9 @@ class FakeSession:
                 "related_request_id": related_request_id,
             }
         )
+
+    async def send_resource_list_changed(self) -> None:
+        self.resource_list_changed_calls += 1
 
 
 class FakeContext:
@@ -182,6 +198,14 @@ class McpToolTests(unittest.TestCase):
         server = build_server()
         for name, tool in server._tool_manager._tools.items():
             self.assertIsNotNone(tool.output_schema, name)
+
+    def test_build_server_advertises_resource_list_changed_capability(self) -> None:
+        server = build_server()
+
+        options = server._mcp_server.create_initialization_options()
+
+        self.assertIsNotNone(options.capabilities.resources)
+        self.assertTrue(options.capabilities.resources.listChanged)
 
     def test_build_server_exposes_expected_tool_annotations(self) -> None:
         server = build_server()
@@ -683,6 +707,15 @@ class McpToolTests(unittest.TestCase):
         self.assertEqual([item["query"] for item in payload["results"]], ["first", "second", "third"])
         self.assertGreaterEqual(max_active, 2)
 
+    def test_batch_resolve_tool_rejects_too_many_queries(self) -> None:
+        result = mcp_tools.batch_resolve_tool(
+            queries=[f"10.1000/{index}" for index in range(51)],
+        )
+
+        self.assertTrue(result.isError)
+        self.assertEqual(result.structuredContent["status"], "error")
+        self.assertIn("queries must contain at most 50 entries.", result.structuredContent["reason"])
+
     def test_batch_check_payload_uses_lightweight_results_and_no_downloads(self) -> None:
         transport_ids: list[int] = []
 
@@ -735,6 +768,16 @@ class McpToolTests(unittest.TestCase):
         self.assertTrue(result.isError)
         self.assertEqual(result.structuredContent["status"], "error")
         self.assertIn("greater than or equal to 1", result.structuredContent["reason"])
+
+    def test_batch_check_tool_rejects_too_many_queries(self) -> None:
+        result = mcp_tools.batch_check_tool(
+            queries=[f"10.1000/{index}" for index in range(51)],
+            mode="metadata",
+        )
+
+        self.assertTrue(result.isError)
+        self.assertEqual(result.structuredContent["status"], "error")
+        self.assertIn("queries must contain at most 50 entries.", result.structuredContent["reason"])
 
     def test_batch_check_payload_aborts_on_rate_limit(self) -> None:
         seen_queries: list[str] = []
@@ -1034,6 +1077,119 @@ class McpToolTests(unittest.TestCase):
         self.assertEqual(result.structuredContent["query_kind"], "doi")
 
 
+class McpServerTests(unittest.IsolatedAsyncioTestCase):
+    async def test_fetch_paper_server_notifies_when_default_resources_change(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            default_dir = Path(tmpdir) / "default"
+            ctx = FakeContext()
+
+            with (
+                mock.patch.object(mcp_server, "build_runtime_env", return_value={}),
+                mock.patch.object(mcp_server, "resolve_mcp_download_dir", return_value=default_dir),
+                mock.patch.object(mcp_tools, "build_runtime_env", return_value={}),
+                mock.patch.object(mcp_tools, "resolve_mcp_download_dir", return_value=default_dir),
+                mock.patch.object(mcp_tools, "service_fetch_paper", side_effect=fake_service_fetch_with_cached_downloads),
+            ):
+                server = build_server()
+                result = await server._tool_manager.call_tool(
+                    "fetch_paper",
+                    {"query": "10.1000/example"},
+                    context=ctx,
+                )
+
+        self.assertFalse(result.isError)
+        self.assertEqual(ctx.session.resource_list_changed_calls, 1)
+        resource_uris = set(server._resource_manager._resources)
+        self.assertTrue(any(uri.startswith("resource://paper-fetch/cached/") for uri in resource_uris))
+
+    async def test_fetch_paper_server_notifies_when_scoped_resources_change(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            default_dir = Path(tmpdir) / "default"
+            isolated_dir = Path(tmpdir) / "isolated"
+            ctx = FakeContext()
+
+            with (
+                mock.patch.object(mcp_server, "build_runtime_env", return_value={}),
+                mock.patch.object(mcp_server, "resolve_mcp_download_dir", return_value=default_dir),
+                mock.patch.object(mcp_tools, "build_runtime_env", return_value={}),
+                mock.patch.object(mcp_tools, "resolve_mcp_download_dir", return_value=default_dir),
+                mock.patch.object(mcp_tools, "service_fetch_paper", side_effect=fake_service_fetch_with_cached_downloads),
+            ):
+                server = build_server()
+                result = await server._tool_manager.call_tool(
+                    "fetch_paper",
+                    {"query": "10.1000/custom", "download_dir": str(isolated_dir)},
+                    context=ctx,
+                )
+
+        self.assertFalse(result.isError)
+        self.assertEqual(ctx.session.resource_list_changed_calls, 1)
+        scope_id = cache_scope_id(isolated_dir)
+        resource_uris = set(server._resource_manager._resources)
+        self.assertIn(scoped_cache_index_resource_uri(scope_id), resource_uris)
+        self.assertTrue(any(uri.startswith(scoped_cached_resource_uri_prefix(scope_id)) for uri in resource_uris))
+
+    async def test_list_cached_and_get_cached_server_notify_on_external_cache_changes(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            default_dir = Path(tmpdir) / "default"
+            isolated_dir = Path(tmpdir) / "isolated"
+            ctx = FakeContext()
+
+            with (
+                mock.patch.object(mcp_server, "build_runtime_env", return_value={}),
+                mock.patch.object(mcp_server, "resolve_mcp_download_dir", return_value=default_dir),
+                mock.patch.object(mcp_tools, "build_runtime_env", return_value={}),
+                mock.patch.object(mcp_tools, "resolve_mcp_download_dir", return_value=default_dir),
+            ):
+                server = build_server()
+
+                create_cached_downloads(default_dir, "10.1000/default")
+                mcp_tools.refresh_cache_index_for_doi(default_dir, "10.1000/default")
+                listed = await server._tool_manager.call_tool("list_cached", {}, context=ctx)
+
+                create_cached_downloads(isolated_dir, "10.1000/custom")
+                mcp_tools.refresh_cache_index_for_doi(isolated_dir, "10.1000/custom")
+                cached = await server._tool_manager.call_tool(
+                    "get_cached",
+                    {"doi": "10.1000/custom", "download_dir": str(isolated_dir)},
+                    context=ctx,
+                )
+
+        self.assertFalse(listed.isError)
+        self.assertFalse(cached.isError)
+        self.assertEqual(len(listed.structuredContent["entries"]), 3)
+        self.assertEqual(cached.structuredContent["status"], "hit")
+        self.assertEqual(ctx.session.resource_list_changed_calls, 2)
+
+    async def test_fetch_paper_server_does_not_notify_when_resource_uris_are_unchanged(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            default_dir = Path(tmpdir) / "default"
+            ctx = FakeContext()
+
+            with (
+                mock.patch.object(mcp_server, "build_runtime_env", return_value={}),
+                mock.patch.object(mcp_server, "resolve_mcp_download_dir", return_value=default_dir),
+                mock.patch.object(mcp_tools, "build_runtime_env", return_value={}),
+                mock.patch.object(mcp_tools, "resolve_mcp_download_dir", return_value=default_dir),
+                mock.patch.object(mcp_tools, "service_fetch_paper", side_effect=fake_service_fetch_with_cached_downloads),
+            ):
+                server = build_server()
+                first = await server._tool_manager.call_tool(
+                    "fetch_paper",
+                    {"query": "10.1000/example"},
+                    context=ctx,
+                )
+                second = await server._tool_manager.call_tool(
+                    "fetch_paper",
+                    {"query": "10.1000/example"},
+                    context=ctx,
+                )
+
+        self.assertFalse(first.isError)
+        self.assertFalse(second.isError)
+        self.assertEqual(ctx.session.resource_list_changed_calls, 1)
+
+
 class McpAsyncToolTests(unittest.IsolatedAsyncioTestCase):
     async def test_structured_log_notification_handler_prefers_structured_data_with_spaces(self) -> None:
         ctx = FakeContext()
@@ -1149,6 +1305,16 @@ class McpAsyncToolTests(unittest.IsolatedAsyncioTestCase):
         )
         self.assertTrue(any(message["data"]["event"] == "batch_check_item" for message in ctx.session.messages))
 
+    async def test_batch_check_tool_async_rejects_too_many_queries(self) -> None:
+        result = await mcp_tools.batch_check_tool_async(
+            queries=[f"10.1000/{index}" for index in range(51)],
+            mode="metadata",
+        )
+
+        self.assertTrue(result.isError)
+        self.assertEqual(result.structuredContent["status"], "error")
+        self.assertIn("queries must contain at most 50 entries.", result.structuredContent["reason"])
+
     async def test_batch_resolve_tool_async_reports_per_query_progress(self) -> None:
         ctx = FakeContext()
 
@@ -1174,6 +1340,15 @@ class McpAsyncToolTests(unittest.IsolatedAsyncioTestCase):
             ],
         )
         self.assertTrue(any(message["data"]["event"] == "batch_resolve_item" for message in ctx.session.messages))
+
+    async def test_batch_resolve_tool_async_rejects_too_many_queries(self) -> None:
+        result = await mcp_tools.batch_resolve_tool_async(
+            queries=[f"10.1000/{index}" for index in range(51)],
+        )
+
+        self.assertTrue(result.isError)
+        self.assertEqual(result.structuredContent["status"], "error")
+        self.assertIn("queries must contain at most 50 entries.", result.structuredContent["reason"])
 
 
 if __name__ == "__main__":

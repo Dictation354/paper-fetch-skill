@@ -43,6 +43,7 @@ Use this skill when an agent needs the contents or full-text availability of one
 - `fetch_paper(...)`: When `max_tokens` is a positive integer, `include_refs=null` behaves like `top10`.
 - `fetch_paper(...)`: `prefer_cache=true` tries a local cached FetchEnvelope sidecar before hitting the network.
 - `fetch_paper(...)`: when you pass `download_dir`, the MCP server can also expose scoped cache resources for that isolated directory during the current session.
+- `fetch_paper(...)`, `list_cached()`, and `get_cached()`: hosts that support MCP resource-list notifications may receive `resources/list_changed` when cache resource URIs are added or removed.
 - `fetch_paper(...)`: `strategy.asset_profile="body"` or `all` may also emit a few key local figures as `ImageContent`.
 - `fetch_paper(...)`: optional `strategy.inline_image_budget={max_images,max_bytes_per_image,max_total_bytes}` tunes the default inline image caps of `3` figures, `2 MiB` each, and `8 MiB` total; any resulting zero disables inline images.
 - `fetch_paper(...)`: `science` and `pnas` routes require repo-local FlareSolverr plus explicit local rate-limit env vars, and currently return text-only markdown even when `asset_profile` is `body` or `all`.
@@ -51,7 +52,7 @@ Use this skill when an agent needs the contents or full-text availability of one
 - `has_fulltext(query)`: the success payload is `{query, doi, state, evidence, warnings}`; v1 only actively returns `likely_yes` or `unknown`, while `confirmed_yes` and `no` remain reserved states.
 - `provider_status()`: returns stable local diagnostics for `crossref`, `elsevier`, `springer`, `wiley`, `science`, and `pnas` without calling remote publisher APIs.
 - `provider_status()`: provider-level `status` uses `ready`, `partial`, `not_configured`, `rate_limited`, or `error`; inspect `checks=[...]` for capability-level or runtime-level details before choosing a fetch path.
-- `batch_resolve(queries, concurrency)` and `batch_check(queries, mode, concurrency)`: default `concurrency=1`; higher values let different hosts overlap while the shared transport still keeps the same host serialized.
+- `batch_resolve(queries, concurrency)` and `batch_check(queries, mode, concurrency)`: default `concurrency=1`; higher values let different hosts overlap while the shared transport still keeps the same host serialized, and each call accepts at most `50` queries.
 - `batch_check(queries, mode, concurrency)`: `mode="metadata"` reuses the cheap probe and returns lightweight provenance fields; `mode="article"` still runs the full fetch path and reports the final full-text verdict.
 - The read-only MCP tools now advertise `ToolAnnotations` hints (`readOnlyHint=true`), so capable hosts may auto-approve them more smoothly; `fetch_paper(...)` remains writable because it may refresh local cache files.
 
