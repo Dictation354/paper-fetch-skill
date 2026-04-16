@@ -46,6 +46,7 @@ DEFAULT_OUTPUT_MODES: set[OutputMode] = {"article", "markdown"}
 OFFICIAL_PROVIDER_NAMES = ("elsevier", "springer", "wiley", "science", "pnas")
 PUBLIC_SOURCE_BY_ARTICLE_SOURCE = {
     "elsevier_xml": "elsevier_xml",
+    "elsevier_browser": "elsevier_browser",
     "springer_html": "springer_html",
     "wiley_browser": "wiley_browser",
     "science": "science",
@@ -614,6 +615,27 @@ def maybe_download_provider_assets(
     }, warnings, source_trail
 
 
+def _text_only_asset_skip(provider_name: str, raw_payload: Any) -> tuple[str, str] | None:
+    route = safe_text((getattr(raw_payload, "metadata", {}) or {}).get("route")).lower()
+    if provider_name in {"science", "pnas"}:
+        provider_label = provider_name.title()
+        return (
+            f"{provider_label} asset downloads are not implemented in this workflow yet; continuing with text-only full text.",
+            f"download:{provider_name}_assets_skipped_text_only",
+        )
+    if provider_name == "elsevier" and route == "html":
+        return (
+            "Elsevier browser fallback currently returns text-only full text; figure and supplementary asset downloads are not implemented yet.",
+            "download:elsevier_assets_skipped_text_only",
+        )
+    if provider_name == "springer" and route == "pdf_fallback":
+        return (
+            "Springer PDF fallback currently returns text-only full text; figure and supplementary asset downloads are not implemented yet.",
+            "download:springer_assets_skipped_text_only",
+        )
+    return None
+
+
 def _try_official_provider(
     *,
     doi: str | None,
@@ -660,12 +682,10 @@ def _try_official_provider(
         extend_unique(source_trail, download_trail)
         downloaded_assets: list[Mapping[str, Any]] = []
         asset_failures: list[Mapping[str, Any]] = []
-        if provider_name in {"science", "pnas"} and strategy.asset_profile != "none":
-            extend_unique(
-                warnings,
-                [f"{provider_name.title()} asset downloads are not implemented in this workflow yet; continuing with text-only full text."],
-            )
-            extend_unique(source_trail, [f"download:{provider_name}_assets_skipped_text_only"])
+        text_only_asset_skip = _text_only_asset_skip(provider_name, raw_payload)
+        if text_only_asset_skip is not None and strategy.asset_profile != "none":
+            extend_unique(warnings, [text_only_asset_skip[0]])
+            extend_unique(source_trail, [text_only_asset_skip[1]])
         else:
             asset_results, asset_warnings, asset_trail = maybe_download_provider_assets(
                 provider_client,
@@ -727,6 +747,8 @@ def _try_official_provider(
             extend_unique(source_trail, [f"fulltext:{provider_name}_not_usable"])
         extend_unique(warnings, article.quality.warnings)
     except ProviderFailure as exc:
+        extend_unique(warnings, exc.warnings)
+        extend_unique(source_trail, exc.source_trail)
         emit_structured_log(
             logger,
             logging.DEBUG,
@@ -754,7 +776,7 @@ def _try_html_fallback(
     warnings: list[str],
     source_trail: list[str],
 ) -> ArticleModel | None:
-    if provider_name in {"springer", "wiley", "science", "pnas"}:
+    if provider_name in {"elsevier", "springer", "wiley", "science", "pnas"}:
         extend_unique(source_trail, [f"fallback:{provider_name}_html_managed_by_provider"])
         return None
     if not html_fallback_allowed(strategy):

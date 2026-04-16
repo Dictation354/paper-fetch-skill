@@ -235,6 +235,7 @@ PUBLISHER_HOSTS: dict[str, tuple[str, ...]] = {
     "pnas": ("pnas.org", "www.pnas.org"),
     "wiley": ("onlinelibrary.wiley.com", "wiley.com", "www.wiley.com"),
 }
+PDF_URL_TOKENS = ("/doi/pdf/", "/doi/pdfdirect/", "/doi/epdf/", "/fullpdf", ".pdf", "download=true")
 
 
 class SciencePnasHtmlFailure(Exception):
@@ -335,7 +336,10 @@ def extract_pdf_url_from_crossref(metadata: Mapping[str, Any]) -> str | None:
         url = normalize_text(str(item.get("url") or ""))
         if not url:
             continue
-        if "/doi/pdf/" in url or normalize_text(str(item.get("content_type") or "")).lower() == "application/pdf":
+        lowered_url = url.lower()
+        if any(token in lowered_url for token in PDF_URL_TOKENS) or normalize_text(
+            str(item.get("content_type") or "")
+        ).lower() == "application/pdf":
             return url
     return None
 

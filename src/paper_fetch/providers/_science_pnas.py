@@ -9,12 +9,14 @@ from ..config import build_user_agent
 from ..metadata_types import ProviderMetadata
 from ..models import article_from_markdown, metadata_only_article
 from ..publisher_identity import normalize_doi
+from ..utils import normalize_text
 from ._flaresolverr import (
     FlareSolverrFailure,
     ensure_runtime_ready,
     fetch_html_with_flaresolverr,
     load_runtime_config,
     probe_runtime_status,
+    warm_browser_context_with_flaresolverr,
 )
 from ._pdf_fallback import PdfFallbackFailure, fetch_pdf_with_playwright
 from ._science_pnas_html import (
@@ -28,6 +30,21 @@ from ._science_pnas_html import (
 from .base import ProviderClient, ProviderFailure, RawFulltextPayload
 
 logger = logging.getLogger("paper_fetch.providers.browser_workflow")
+
+
+def _looks_like_pdf_navigation_url(url: str | None) -> bool:
+    normalized = normalize_text(url).lower()
+    if not normalized:
+        return False
+    return any(token in normalized for token in ("/doi/pdf", "/doi/pdfdirect", "/doi/epdf", "/fullpdf", ".pdf"))
+
+
+def _choose_playwright_seed_url(*candidates: str | None) -> str | None:
+    normalized_candidates = [normalize_text(candidate) for candidate in candidates if normalize_text(candidate)]
+    for candidate in normalized_candidates:
+        if not _looks_like_pdf_navigation_url(candidate):
+            return candidate
+    return normalized_candidates[0] if normalized_candidates else None
 
 
 class BrowserWorkflowClient(ProviderClient):
@@ -133,12 +150,26 @@ class BrowserWorkflowClient(ProviderClient):
         )
 
         try:
+            pdf_browser_context_seed = warm_browser_context_with_flaresolverr(
+                pdf_candidates,
+                publisher=self.name,
+                config=runtime,
+                browser_context_seed=browser_context_seed,
+            )
+            seed_url = _choose_playwright_seed_url(
+                (browser_context_seed or {}).get("browser_final_url"),
+                html_candidates[0] if html_candidates else None,
+                landing_page_url,
+                pdf_browser_context_seed.get("browser_final_url"),
+            )
             pdf_result = fetch_pdf_with_playwright(
                 pdf_candidates,
                 artifact_dir=runtime.artifact_dir / "pdf_fallback",
-                browser_cookies=list((browser_context_seed or {}).get("browser_cookies") or []),
-                browser_user_agent=(browser_context_seed or {}).get("browser_user_agent") or self.user_agent,
+                browser_cookies=list(pdf_browser_context_seed.get("browser_cookies") or []),
+                browser_user_agent=pdf_browser_context_seed.get("browser_user_agent") or self.user_agent,
                 headless=runtime.headless,
+                seed_urls=[seed_url] if seed_url else None,
+                publisher=self.name,
             )
             warnings.append("Full text was extracted from PDF fallback after the HTML path was not usable.")
             return RawFulltextPayload(

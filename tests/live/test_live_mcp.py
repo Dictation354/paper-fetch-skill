@@ -47,6 +47,7 @@ class LiveMcpServerTests(unittest.IsolatedAsyncioTestCase):
         *,
         query: str,
         args: dict[str, object] | None = None,
+        env_override: dict[str, str] | None = None,
     ) -> tuple[object, list[tuple[float, float | None, str | None]], list[object]]:
         progress_updates: list[tuple[float, float | None, str | None]] = []
         log_messages: list[object] = []
@@ -65,6 +66,7 @@ class LiveMcpServerTests(unittest.IsolatedAsyncioTestCase):
                 env={
                     **os.environ,
                     **self.env,
+                    **(env_override or {}),
                     "PYTHONPATH": str(SRC_DIR),
                     "PAPER_FETCH_DOWNLOAD_DIR": str(Path(tmpdir) / "downloads"),
                 },
@@ -132,29 +134,26 @@ class LiveMcpServerTests(unittest.IsolatedAsyncioTestCase):
         )
 
     async def test_wiley_doi_live_via_mcp_reports_progress_and_logs(self) -> None:
-        self._require_env(
-            "CROSSREF_MAILTO",
-            "FLARESOLVERR_ENV_FILE",
-            "FLARESOLVERR_MIN_INTERVAL_SECONDS",
-            "FLARESOLVERR_MAX_REQUESTS_PER_HOUR",
-            "FLARESOLVERR_MAX_REQUESTS_PER_DAY",
-        )
-        self._require_flaresolverr()
+        self._require_env("CROSSREF_MAILTO", "WILEY_TDM_CLIENT_TOKEN")
 
         result, progress_updates, log_messages = await self._call_fetch(
-            query="10.1002/ece3.9361",
+            query="10.1111/j.1745-4506.1980.tb00241.x",
             args={"modes": ["metadata"], "strategy": {"allow_html_fallback": False}},
+            env_override={
+                "FLARESOLVERR_URL": "",
+                "FLARESOLVERR_ENV_FILE": "",
+                "FLARESOLVERR_SOURCE_DIR": "",
+                "FLARESOLVERR_MIN_INTERVAL_SECONDS": "",
+                "FLARESOLVERR_MAX_REQUESTS_PER_HOUR": "",
+                "FLARESOLVERR_MAX_REQUESTS_PER_DAY": "",
+            },
         )
 
         self.assertFalse(result.isError)
         self.assertEqual(result.structuredContent["source"], "wiley_browser")
         self.assertTrue(result.structuredContent["has_fulltext"])
-        self.assertTrue(
-            any(
-                marker in result.structuredContent["source_trail"]
-                for marker in ("fulltext:wiley_html_ok", "fulltext:wiley_pdf_fallback_ok")
-            )
-        )
+        self.assertIn("fulltext:wiley_pdf_api_ok", result.structuredContent["source_trail"])
+        self.assertIn("fulltext:wiley_pdf_fallback_ok", result.structuredContent["source_trail"])
         self.assertEqual(progress_updates[-1], (4, 4, "fetch_paper complete"))
         self.assertTrue(
             any(
@@ -173,13 +172,14 @@ class LiveMcpServerTests(unittest.IsolatedAsyncioTestCase):
         )
 
         self.assertFalse(result.isError)
-        self.assertIn(result.structuredContent["source"], {"springer_html", "metadata_only"})
-        if result.structuredContent["source"] == "springer_html":
-            self.assertTrue(result.structuredContent["has_fulltext"])
-            self.assertIn("fulltext:springer_html_ok", result.structuredContent["source_trail"])
-        else:
-            self.assertFalse(result.structuredContent["has_fulltext"])
-            self.assertIn("fallback:springer_html_managed_by_provider", result.structuredContent["source_trail"])
+        self.assertEqual(result.structuredContent["source"], "springer_html")
+        self.assertTrue(result.structuredContent["has_fulltext"])
+        self.assertTrue(
+            any(
+                marker in result.structuredContent["source_trail"]
+                for marker in ("fulltext:springer_html_ok", "fulltext:springer_pdf_fallback_ok")
+            )
+        )
         self.assertEqual(progress_updates[-1], (4, 4, "fetch_paper complete"))
         self.assertTrue(
             any(

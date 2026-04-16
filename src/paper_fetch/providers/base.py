@@ -21,12 +21,16 @@ class ProviderFailure(Exception):
         *,
         retry_after_seconds: int | None = None,
         missing_env: list[str] | None = None,
+        warnings: list[str] | None = None,
+        source_trail: list[str] | None = None,
     ) -> None:
         super().__init__(message)
         self.code = code
         self.message = message
         self.retry_after_seconds = retry_after_seconds
         self.missing_env = list(missing_env or [])
+        self.warnings = [str(item) for item in (warnings or []) if str(item).strip()]
+        self.source_trail = [str(item) for item in (source_trail or []) if str(item).strip()]
 
 
 @dataclass
@@ -206,6 +210,18 @@ def combine_provider_failures(failures: list[tuple[str, ProviderFailure]]) -> Pr
         message,
         retry_after_seconds=selected_failure.retry_after_seconds,
         missing_env=missing_env,
+        warnings=[
+            warning
+            for _label, failure in failures
+            for warning in failure.warnings
+            if str(warning).strip()
+        ],
+        source_trail=[
+            marker
+            for _label, failure in failures
+            for marker in failure.source_trail
+            if str(marker).strip()
+        ],
     )
 
 

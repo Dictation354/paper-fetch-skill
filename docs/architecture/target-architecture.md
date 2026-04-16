@@ -211,11 +211,11 @@ service 会尽可能拿到两类元数据：
 典型行为：
 
 - `elsevier`
-  - 继续走官方 API/XML 主链
+  - 继续走 `官方 XML/API -> FlareSolverr HTML`
 - `springer`
-  - 走 provider 自管 direct HTML 主链
+  - 走 provider 自管 `direct HTML -> direct HTTP PDF`
 - `wiley`
-  - 走 provider 自管浏览器工作流 `HTML -> PDF fallback`
+  - 走 provider 自管浏览器工作流 `FlareSolverr HTML -> Wiley TDM API PDF`
 - `science` / `pnas`
   - 与 `wiley` 共用浏览器工作流基座
 
@@ -230,12 +230,18 @@ service 会尽可能拿到两类元数据：
 
 关键例外：
 
+- `elsevier`
+  - 官方 API/XML 失败后不走通用 `html_generic`
+  - 而是 provider 自己管理 `FlareSolverr HTML -> metadata-only`
 - `springer`
   - direct HTML 由 provider 内部管理
-  - 失败后直接 metadata-only
-- `wiley` / `science` / `pnas`
+  - 失败后先尝试 direct HTTP PDF，再决定是否 metadata-only
+- `wiley`
   - 不走通用 `html_generic`
-  - 而是 provider 自己管理 `HTML -> PDF fallback -> metadata-only`
+  - 而是 provider 自己管理 `FlareSolverr HTML -> Wiley TDM API PDF -> metadata-only`
+- `science` / `pnas`
+  - 不走通用 `html_generic`
+  - 而是 provider 自己管理 `FlareSolverr HTML -> seeded-browser PDF -> metadata-only`
 
 ### 6. metadata-only fallback
 
@@ -333,11 +339,12 @@ service 会尽可能拿到两类元数据：
 
 ## 关键例外与调用方容易误解的点
 
-### `springer` / `wiley` / `science` / `pnas` 不走通用 HTML fallback
+### `elsevier` / `springer` / `wiley` / `science` / `pnas` 不走通用 HTML fallback
 
 这些 provider 的 HTML 逻辑由 provider 内部管理，因此：
 
 - 通用 HTML fallback 开关不会关闭它们自己的主路径
+- `elsevier` 成功时公开为 `elsevier_xml` 或 `elsevier_browser`
 - `springer` 成功时公开为 `springer_html`
 - `wiley` 成功时公开为 `wiley_browser`
 - `science` / `pnas` 仍然公开为 `science` / `pnas`
@@ -362,7 +369,7 @@ service 会尽可能拿到两类元数据：
 常见内容包括：
 
 - metadata-only 降级
-- HTML / PDF fallback 提示
+- HTML / provider fallback 提示
 - 资产部分下载失败
 - token 截断
 

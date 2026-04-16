@@ -24,11 +24,19 @@ from ..utils import (
     save_payload,
     strip_html_tags,
 )
+from . import html_generic
 from ._article_markdown import build_article_structure, write_article_markdown
 from ._elsevier_xml_rules import (
     ELSEVIER_IMAGE_ASSET_TYPES,
     classify_elsevier_asset_kind,
     infer_elsevier_asset_group_key,
+)
+from ._flaresolverr import (
+    FlareSolverrFailure,
+    ensure_runtime_ready,
+    fetch_html_with_flaresolverr,
+    load_runtime_config,
+    probe_runtime_status,
 )
 from .base import (
     ProviderClient,
@@ -36,6 +44,7 @@ from .base import (
     ProviderStatusResult,
     RawFulltextPayload,
     build_provider_status_check,
+    combine_provider_failures,
     map_request_failure,
     summarize_capability_status,
 )
@@ -110,6 +119,14 @@ def elsevier_asset_priority(asset_kind: str, asset_type: str, category: str | No
 def build_elsevier_object_url(attachment_eid: str) -> str:
     encoded_eid = urllib.parse.quote(attachment_eid.strip(), safe="")
     return f"https://api.elsevier.com/content/object/eid/{encoded_eid}?httpAccept=%2A%2F%2A"
+
+
+def _article_has_body_sections(article: Any) -> bool:
+    return any(
+        str(getattr(section, "kind", "") or "").lower() not in {"abstract", "references", "diagnostics"}
+        and bool(str(getattr(section, "text", "") or "").strip())
+        for section in list(getattr(article, "sections", []) or [])
+    )
 
 
 def extract_elsevier_asset_references(xml_body: bytes) -> list[dict[str, Any]]:
@@ -296,6 +313,7 @@ class ElsevierClient(ProviderClient):
 
     def __init__(self, transport: HttpTransport, env: Mapping[str, str]) -> None:
         self.transport = transport
+        self.env = dict(env)
         self.api_key = env.get("ELSEVIER_API_KEY", "").strip()
         self.insttoken = env.get("ELSEVIER_INSTTOKEN", "").strip()
         self.authtoken = env.get("ELSEVIER_AUTHTOKEN", "").strip()
@@ -331,6 +349,7 @@ class ElsevierClient(ProviderClient):
             else "ELSEVIER_API_KEY is required for Elsevier full-text retrieval."
         )
         missing_env = [] if self.api_key else ["ELSEVIER_API_KEY"]
+        browser_status = probe_runtime_status(self.env, provider=self.name)
         return summarize_capability_status(
             self.name,
             official_provider=self.official_provider,
@@ -345,8 +364,83 @@ class ElsevierClient(ProviderClient):
                         "authtoken_configured": bool(self.authtoken),
                         "clickthrough_token_configured": bool(self.clickthrough_token),
                     },
-                )
+                ),
+                *browser_status.checks,
             ],
+        )
+
+    def _official_article_url(self, doi: str) -> str:
+        return f"https://api.elsevier.com/content/article/doi/{urllib.parse.quote(doi, safe='')}"
+
+    def _browser_html_candidates(self, doi: str, metadata: ProviderMetadata) -> list[str]:
+        candidates: list[str] = []
+        for candidate in (
+            choose_public_landing_page_url(metadata.get("landing_page_url")),
+            f"https://doi.org/{urllib.parse.quote(doi, safe='')}",
+        ):
+            normalized = str(candidate or "").strip()
+            if normalized and normalized not in candidates:
+                candidates.append(normalized)
+        return candidates
+
+    def _fetch_official_payload(self, doi: str) -> RawFulltextPayload:
+        url = self._official_article_url(doi)
+        for accept in ("text/xml", "application/pdf", "text/plain", "application/json"):
+            try:
+                response = self.transport.request(
+                    "GET",
+                    url,
+                    headers=self._base_headers(accept),
+                    query={"view": "FULL"},
+                    timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
+                    retry_on_rate_limit=True,
+                    retry_on_transient=True,
+                )
+            except RequestFailure as exc:
+                provider_failure = map_request_failure(exc)
+                if provider_failure.code == "error" and exc.status_code in {406, 415}:
+                    continue
+                raise provider_failure from exc
+
+            content_type = response["headers"].get("content-type", accept)
+            return RawFulltextPayload(
+                provider="elsevier",
+                source_url=response["url"],
+                content_type=content_type,
+                body=response["body"],
+                metadata={
+                    "route": "official",
+                    "reason": "Downloaded full text from the official Elsevier API.",
+                },
+                needs_local_copy=not (content_type.startswith("text/") or is_xml_content_type(content_type)),
+            )
+
+        raise ProviderFailure("error", "Elsevier full-text retrieval did not yield a supported representation.")
+
+    def _official_payload_is_usable(self, metadata: ProviderMetadata, raw_payload: RawFulltextPayload) -> bool:
+        article = self.to_article_model(metadata, raw_payload)
+        if not article.quality.has_fulltext or not _article_has_body_sections(article):
+            return False
+        if raw_payload.content_type.startswith("text/") and not is_xml_content_type(raw_payload.content_type):
+            try:
+                markdown_text = raw_payload.body.decode("utf-8", errors="replace")
+            except Exception:
+                return False
+            return html_generic.has_sufficient_article_body(markdown_text, metadata)
+        return True
+
+    def _finalize_browser_failure(
+        self,
+        official_failure: ProviderFailure | None,
+        browser_failure: ProviderFailure,
+    ) -> ProviderFailure:
+        if official_failure is None:
+            return browser_failure
+        return combine_provider_failures(
+            [
+                ("official", official_failure),
+                ("browser", browser_failure),
+            ]
         )
 
     def fetch_metadata(self, query: Mapping[str, str | None]) -> ProviderMetadata:
@@ -454,36 +548,100 @@ class ElsevierClient(ProviderClient):
         normalized_doi = normalize_doi(doi)
         if not normalized_doi:
             raise ProviderFailure("not_supported", "Elsevier full-text retrieval requires a DOI.")
+        official_failure: ProviderFailure | None = None
+        warnings: list[str] = []
+        source_trail: list[str] = []
 
-        url = f"https://api.elsevier.com/content/article/doi/{urllib.parse.quote(normalized_doi, safe='')}"
-        for accept in ("text/xml", "application/pdf", "text/plain", "application/json"):
-            try:
-                response = self.transport.request(
-                    "GET",
-                    url,
-                    headers=self._base_headers(accept),
-                    query={"view": "FULL"},
-                    timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
-                    retry_on_rate_limit=True,
-                    retry_on_transient=True,
-                )
-            except RequestFailure as exc:
-                provider_failure = map_request_failure(exc)
-                if provider_failure.code == "error" and exc.status_code in {406, 415}:
-                    continue
-                raise provider_failure from exc
-
-            content_type = response["headers"].get("content-type", accept)
-            return RawFulltextPayload(
-                provider="elsevier",
-                source_url=response["url"],
-                content_type=content_type,
-                body=response["body"],
-                metadata={"reason": "Downloaded full text from the official Elsevier API."},
-                needs_local_copy=not (content_type.startswith("text/") or is_xml_content_type(content_type)),
+        try:
+            official_payload = self._fetch_official_payload(normalized_doi)
+            if self._official_payload_is_usable(metadata, official_payload):
+                return official_payload
+            warnings.append(
+                "Elsevier official XML/API response did not produce enough article body text; attempting browser fallback."
             )
+            source_trail.append("fulltext:elsevier_xml_fail")
+        except ProviderFailure as exc:
+            official_failure = exc
+            warnings.extend(exc.warnings)
+            warnings.append(f"Elsevier official XML/API route was not usable ({exc.message}); attempting browser fallback.")
+            source_trail.extend(exc.source_trail)
+            source_trail.append("fulltext:elsevier_xml_fail")
 
-        raise ProviderFailure("error", "Elsevier full-text retrieval did not yield a supported representation.")
+        html_failure_reason: str | None = None
+        html_failure_message: str | None = None
+        html_source_url = choose_public_landing_page_url(
+            metadata.get("landing_page_url"),
+            f"https://doi.org/{urllib.parse.quote(normalized_doi, safe='')}",
+        )
+
+        try:
+            runtime = load_runtime_config(self.env, provider=self.name, doi=normalized_doi)
+            ensure_runtime_ready(runtime)
+            html_result = fetch_html_with_flaresolverr(
+                self._browser_html_candidates(normalized_doi, metadata),
+                publisher=self.name,
+                config=runtime,
+            )
+            html_source_url = html_result.final_url
+            html_metadata = html_generic.parse_html_metadata(html_result.html, html_result.final_url)
+            merged_metadata = html_generic.merge_html_metadata(metadata, html_metadata)
+            if not merged_metadata.get("doi"):
+                merged_metadata["doi"] = normalized_doi
+            markdown_text = html_generic.clean_markdown(
+                html_generic.extract_article_markdown(html_result.html, html_result.final_url)
+            )
+            if html_generic.has_sufficient_article_body(markdown_text, merged_metadata):
+                return RawFulltextPayload(
+                    provider="elsevier_browser",
+                    source_url=html_result.final_url,
+                    content_type="text/html",
+                    body=html_result.html.encode("utf-8"),
+                    metadata={
+                        "route": "html",
+                        "reason": "Downloaded full text from the Elsevier browser fallback HTML route.",
+                        "merged_metadata": merged_metadata,
+                        "markdown_text": markdown_text,
+                        "warnings": warnings,
+                        "source_trail": [
+                            *source_trail,
+                            "fulltext:elsevier_html_ok",
+                        ],
+                        "html_fetcher": "flaresolverr",
+                    },
+                    needs_local_copy=False,
+                )
+            html_failure_reason = "insufficient_body"
+            html_failure_message = "Elsevier HTML extraction did not produce enough article body text."
+        except FlareSolverrFailure as exc:
+            html_failure_reason = exc.kind
+            html_failure_message = exc.message
+        except ProviderFailure as exc:
+            html_failure_reason = exc.code
+            html_failure_message = exc.message
+
+        warnings.append(
+            f"Elsevier HTML route was not usable ({html_failure_reason or 'html_failed'}); returning metadata-only."
+        )
+        browser_failure_code = (
+            html_failure_reason
+            if html_failure_reason in {"not_configured", "rate_limited"}
+            else "no_result"
+        )
+        browser_failure_message = (
+            html_failure_message or "Elsevier browser fallback runtime is not ready."
+            if browser_failure_code in {"not_configured", "rate_limited"}
+            else (
+                "Elsevier full text could not be retrieved via XML/API or HTML. "
+                f"HTML failure: {html_failure_message or 'unknown'}"
+            )
+        )
+        browser_failure = ProviderFailure(
+            browser_failure_code,
+            browser_failure_message,
+            warnings=warnings,
+            source_trail=[*source_trail, "fulltext:elsevier_html_fail"],
+        )
+        raise self._finalize_browser_failure(official_failure, browser_failure)
 
     def to_article_model(
         self,
@@ -493,8 +651,33 @@ class ElsevierClient(ProviderClient):
         downloaded_assets: list[Mapping[str, Any]] | None = None,
         asset_failures: list[Mapping[str, Any]] | None = None,
     ):
-        doi = normalize_doi(metadata.get("doi"))
-        warnings: list[str] = []
+        route = str(raw_payload.metadata.get("route") or "").strip().lower()
+        merged_metadata = raw_payload.metadata.get("merged_metadata")
+        article_metadata = merged_metadata if isinstance(merged_metadata, Mapping) else metadata
+        doi = normalize_doi(article_metadata.get("doi") or metadata.get("doi"))
+        warnings = [str(item) for item in raw_payload.metadata.get("warnings") or [] if str(item).strip()]
+        source_trail = [str(item) for item in raw_payload.metadata.get("source_trail") or [] if str(item).strip()]
+
+        if route == "html":
+            markdown_text = str(raw_payload.metadata.get("markdown_text") or "").strip()
+            if not markdown_text:
+                warnings.append("Elsevier browser fallback did not produce usable Markdown.")
+                return metadata_only_article(
+                    source="elsevier_browser",
+                    metadata=article_metadata,
+                    doi=doi or None,
+                    warnings=warnings,
+                    source_trail=source_trail + ["fulltext:elsevier_parse_fail"],
+                )
+            return article_from_markdown(
+                source="elsevier_browser",
+                metadata=article_metadata,
+                doi=doi or None,
+                markdown_text=markdown_text,
+                warnings=warnings,
+                source_trail=source_trail,
+            )
+
         if is_xml_content_type(raw_payload.content_type):
             pseudo_assets = downloaded_assets if downloaded_assets else extract_elsevier_asset_references(raw_payload.body)
             xml_path = Path(f"{sanitize_filename(doi or str(metadata.get('title') or 'article'))}.xml")
@@ -508,7 +691,7 @@ class ElsevierClient(ProviderClient):
             if structure is not None:
                 return article_from_structure(
                     source="elsevier_xml",
-                    metadata=metadata,
+                    metadata=article_metadata,
                     doi=doi or None,
                     abstract_lines=structure.abstract_lines,
                     body_lines=structure.body_lines,
@@ -517,6 +700,7 @@ class ElsevierClient(ProviderClient):
                     supplement_entries=structure.supplement_entries,
                     conversion_notes=structure.conversion_notes,
                     warnings=warnings,
+                    source_trail=source_trail,
                 )
         if raw_payload.content_type.startswith("text/"):
             try:
@@ -527,15 +711,17 @@ class ElsevierClient(ProviderClient):
                 warnings.append("Official full text was not available in XML format; returned plain text instead.")
             return article_from_markdown(
                 source="elsevier_xml",
-                metadata=metadata,
+                metadata=article_metadata,
                 doi=doi or None,
                 markdown_text=text,
                 warnings=warnings,
+                source_trail=source_trail,
             )
         warnings.append("Official full text was not convertible to AI-friendly Markdown.")
         return metadata_only_article(
             source="elsevier_xml",
-            metadata=metadata,
+            metadata=article_metadata,
             doi=doi or None,
             warnings=warnings,
+            source_trail=source_trail,
         )

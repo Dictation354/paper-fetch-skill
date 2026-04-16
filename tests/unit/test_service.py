@@ -1421,7 +1421,7 @@ class ServiceTests(unittest.TestCase):
                                 content_type="application/pdf",
                                 body=fulltext_pdf_bytes(),
                                 metadata={
-                                    "reason": "Downloaded full text from the Wiley browser workflow PDF fallback.",
+                                    "reason": "Downloaded full text from the Wiley TDM API PDF fallback.",
                                     "route": "pdf_fallback",
                                     "markdown_text": (
                                         "# Wiley PDF Article\n\n## Introduction\n\n"
@@ -1432,10 +1432,11 @@ class ServiceTests(unittest.TestCase):
                                         + ("Results text " * 60)
                                     ),
                                     "warnings": [
-                                        "Full text was extracted from PDF fallback after the HTML path was not usable."
+                                        "Full text was extracted from the Wiley TDM API PDF fallback after the HTML path was not usable."
                                     ],
                                     "source_trail": [
                                         "fulltext:wiley_html_fail",
+                                        "fulltext:wiley_pdf_api_ok",
                                         "fulltext:wiley_pdf_fallback_ok",
                                     ],
                                 },
@@ -1469,6 +1470,7 @@ class ServiceTests(unittest.TestCase):
         self.assertTrue(article.quality.has_fulltext)
         self.assertTrue(any("downloaded as PDF/binary" in warning for warning in article.quality.warnings))
         self.assertTrue(any("PDF fallback" in warning for warning in article.quality.warnings))
+        self.assertIn("fulltext:wiley_pdf_api_ok", article.quality.source_trail)
         self.assertIn("fulltext:wiley_pdf_fallback_ok", article.quality.source_trail)
         self.assertIn("download:wiley_saved", article.quality.source_trail)
 
@@ -1496,7 +1498,7 @@ class ServiceTests(unittest.TestCase):
                         + "\n\n## Discussion\n\n"
                         + ("Discussion text " * 60)
                     ),
-                    "source_trail": ["fulltext:wiley_pdf_fallback_ok"],
+                    "source_trail": ["fulltext:wiley_pdf_api_ok", "fulltext:wiley_pdf_fallback_ok"],
                 },
             ),
         )
@@ -1597,7 +1599,7 @@ class ServiceTests(unittest.TestCase):
                                 content_type="application/pdf",
                                 body=fulltext_pdf_bytes(),
                                 metadata={
-                                    "reason": "Downloaded full text from the Wiley browser workflow PDF fallback.",
+                                    "reason": "Downloaded full text from the Wiley TDM API PDF fallback.",
                                     "route": "pdf_fallback",
                                     "markdown_text": (
                                         "# Wiley PDF Article\n\n## Introduction\n\n"
@@ -1607,6 +1609,7 @@ class ServiceTests(unittest.TestCase):
                                     ),
                                     "source_trail": [
                                         "fulltext:wiley_html_fail",
+                                        "fulltext:wiley_pdf_api_ok",
                                         "fulltext:wiley_pdf_fallback_ok",
                                     ],
                                 },

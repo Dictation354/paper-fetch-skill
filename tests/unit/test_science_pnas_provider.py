@@ -76,6 +76,10 @@ class SciencePnasProviderTests(unittest.TestCase):
                 "browser_cookies": [{"name": "cf_clearance", "value": "secret", "domain": ".pnas.org", "path": "/"}],
                 "browser_user_agent": "Mozilla/5.0",
             }
+            preflight_seed = {
+                "browser_cookies": [{"name": "sessionid", "value": "warm", "domain": ".pnas.org", "path": "/"}],
+                "browser_user_agent": "Mozilla/5.0",
+            }
             with (
                 mock.patch.object(_science_pnas, "load_runtime_config", return_value=runtime),
                 mock.patch.object(_science_pnas, "ensure_runtime_ready"),
@@ -88,6 +92,15 @@ class SciencePnasProviderTests(unittest.TestCase):
                         browser_context_seed=seed,
                     ),
                 ),
+                mock.patch.object(
+                    _science_pnas,
+                    "warm_browser_context_with_flaresolverr",
+                    return_value={
+                        "browser_cookies": [seed["browser_cookies"][0], preflight_seed["browser_cookies"][0]],
+                        "browser_user_agent": "Mozilla/5.0",
+                        "browser_final_url": "https://www.pnas.org/doi/10.1073/pnas.81.23.7500",
+                    },
+                ) as mocked_warm,
                 mock.patch.object(
                     _science_pnas,
                     "fetch_pdf_with_playwright",
@@ -109,9 +122,14 @@ class SciencePnasProviderTests(unittest.TestCase):
                     raw_payload,
                 )
 
+        mocked_warm.assert_called_once()
         mocked_pdf.assert_called_once()
         kwargs = mocked_pdf.call_args.kwargs
-        self.assertEqual(kwargs["browser_cookies"], seed["browser_cookies"])
+        self.assertEqual(
+            kwargs["browser_cookies"],
+            [seed["browser_cookies"][0], preflight_seed["browser_cookies"][0]],
+        )
+        self.assertEqual(kwargs["seed_urls"], ["https://www.pnas.org/doi/10.1073/pnas.81.23.7500"])
         self.assertEqual(raw_payload.metadata["route"], "pdf_fallback")
         self.assertTrue(raw_payload.needs_local_copy)
         self.assertEqual(article.source, "pnas")

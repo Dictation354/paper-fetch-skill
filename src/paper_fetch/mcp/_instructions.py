@@ -20,12 +20,13 @@ DEFAULT_FETCH_NOTES: tuple[str, ...] = (
 SKILL_ENVIRONMENT_VARIABLES: tuple[tuple[str, str], ...] = (
     ("ELSEVIER_API_KEY", "Required for official Elsevier full-text access."),
     ("ELSEVIER_INSTTOKEN", "Optional institution token for Elsevier entitlement."),
-    ("FLARESOLVERR_URL", "Optional override for the local Wiley/Science/PNAS FlareSolverr endpoint; defaults to http://127.0.0.1:8191/v1."),
-    ("FLARESOLVERR_ENV_FILE", "Required for Wiley/Science/PNAS; points at a repo-local vendor/flaresolverr preset file."),
+    ("WILEY_TDM_CLIENT_TOKEN", "Optional Wiley Text and Data Mining client token for official Wiley PDF fallback."),
+    ("FLARESOLVERR_URL", "Optional override for the local Elsevier/Wiley/Science/PNAS FlareSolverr endpoint; defaults to http://127.0.0.1:8191/v1."),
+    ("FLARESOLVERR_ENV_FILE", "Required for Elsevier browser fallback and Wiley/Science/PNAS; points at a repo-local vendor/flaresolverr preset file."),
     ("FLARESOLVERR_SOURCE_DIR", "Optional override for the repo-local vendor/flaresolverr directory."),
-    ("FLARESOLVERR_MIN_INTERVAL_SECONDS", "Required local minimum spacing between Wiley/Science/PNAS requests."),
-    ("FLARESOLVERR_MAX_REQUESTS_PER_HOUR", "Required local hourly cap for Wiley/Science/PNAS requests."),
-    ("FLARESOLVERR_MAX_REQUESTS_PER_DAY", "Required local daily cap for Wiley/Science/PNAS requests."),
+    ("FLARESOLVERR_MIN_INTERVAL_SECONDS", "Required local minimum spacing between Elsevier browser fallback and Wiley/Science/PNAS requests."),
+    ("FLARESOLVERR_MAX_REQUESTS_PER_HOUR", "Required local hourly cap for Elsevier browser fallback and Wiley/Science/PNAS requests."),
+    ("FLARESOLVERR_MAX_REQUESTS_PER_DAY", "Required local daily cap for Elsevier browser fallback and Wiley/Science/PNAS requests."),
     ("PAPER_FETCH_DOWNLOAD_DIR", "Overrides the default CLI/MCP download directory."),
     ("PAPER_FETCH_RUN_LIVE", "Test-only flag for live publisher integration checks."),
 )
@@ -78,13 +79,21 @@ def server_instructions() -> str:
         "behaves like 'all'. When asset_profile is body/all, optional "
         "strategy.inline_image_budget can tune the default inline ImageContent caps of "
         "3 figures, 2 MiB each, and 8 MiB total. `provider_hint` and "
-        "`preferred_providers` may include `wiley`, `science`, or `pnas`; those routes require "
-        "repo-local FlareSolverr plus explicit local rate-limit env vars. `wiley` uses a "
-        "provider-managed HTML-first, PDF-second browser workflow and publishes source "
-        "`wiley_browser`; `science` and `pnas` do the same while keeping public sources "
-        "`science` and `pnas`, and all three currently return text-only markdown even when "
-        "`asset_profile` is `body` or `all`. On supporting clients, fetch_paper and batch "
-        "tools also emit progress updates and structured log notifications."
+        "`preferred_providers` may include `elsevier`, `wiley`, `science`, or `pnas`. "
+        "`elsevier` keeps an official XML/API route first and may then fall back to "
+        "repo-local FlareSolverr HTML before degrading to metadata-only, publishing "
+        "`elsevier_xml` or `elsevier_browser`. `springer` keeps a provider-managed direct HTML route "
+        "with direct HTTP PDF fallback and publishes `springer_html`. `wiley` keeps "
+        "the repo-local FlareSolverr HTML route and may then use the official Wiley "
+        "TDM API for PDF fallback when `WILEY_TDM_CLIENT_TOKEN` is configured, still "
+        "publishing `wiley_browser`; otherwise it degrades to metadata-only. `science` "
+        "and `pnas` require repo-local FlareSolverr plus "
+        "explicit local rate-limit env vars and keep their existing public source names. "
+        "Elsevier browser fallback plus Wiley/Science/PNAS currently return text-only "
+        "markdown even when `asset_profile` is `body` or `all`, and Springer PDF "
+        "fallback is also text-only in this version. "
+        "On supporting clients, fetch_paper and batch tools also emit progress updates "
+        "and structured log notifications."
     )
 
 
@@ -103,10 +112,18 @@ def fetch_tool_description() -> str:
         "With body/all profiles, key local figures may be returned as ImageContent "
         "alongside the JSON result; strategy.inline_image_budget can override the default "
         "caps of 3 figures, 2 MiB each, and 8 MiB total, and any resulting zero disables "
-        "inline images. `wiley`, `science`, and `pnas` routes use provider-managed "
-        "HTML-first, PDF-second repo-local browser workflows; `wiley` publishes source "
-        "`wiley_browser`, while `science` and `pnas` keep their existing public source "
-        "names. All three downgrade body/all requests to text-only with warnings. Set "
+        "inline images. `elsevier` keeps an official XML/API route and may fall back to "
+        "repo-local FlareSolverr HTML before degrading to metadata-only, publishing "
+        "`elsevier_xml` or `elsevier_browser`. `springer` uses provider-managed direct HTML and direct "
+        "HTTP PDF fallback while keeping public source `springer_html`. `wiley` keeps "
+        "repo-local FlareSolverr HTML first and may then use the official Wiley TDM "
+        "API for PDF fallback when `WILEY_TDM_CLIENT_TOKEN` is configured, otherwise "
+        "it degrades to metadata-only while still publishing source `wiley_browser` on "
+        "success. `science` and `pnas` routes use "
+        "provider-managed FlareSolverr HTML plus seeded-browser PDF repo-local "
+        "workflows and keep their existing public source names. Elsevier browser "
+        "fallback plus Wiley/Science/PNAS downgrade body/all requests to text-only "
+        "with warnings, and Springer PDF fallback is also text-only in this version. Set "
         "download_dir to isolate task-local downloads; the MCP server can also surface "
         "scoped cache resources for that directory during the current session."
     )

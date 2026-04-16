@@ -6,6 +6,7 @@ from paper_fetch.providers._science_pnas_html import (
     SciencePnasHtmlFailure,
     build_html_candidates,
     build_pdf_candidates,
+    extract_pdf_url_from_crossref,
     extract_science_pnas_markdown,
     preferred_html_candidate_from_landing_page,
 )
@@ -56,6 +57,21 @@ class SciencePnasHtmlTests(unittest.TestCase):
                 "https://www.pnas.org/doi/pdf/10.1073/pnas.81.23.7500?download=true",
                 "https://www.pnas.org/doi/pdf/10.1073/pnas.81.23.7500",
             ],
+        )
+
+    def test_extract_pdf_url_from_crossref_recognizes_wiley_fullpdf_links(self) -> None:
+        self.assertEqual(
+            extract_pdf_url_from_crossref(
+                {
+                    "fulltext_links": [
+                        {
+                            "url": "http://onlinelibrary.wiley.com/wol1/doi/10.1111/j.1745-4506.1980.tb00241.x/fullpdf",
+                            "content_type": "unspecified",
+                        }
+                    ]
+                }
+            ),
+            "http://onlinelibrary.wiley.com/wol1/doi/10.1111/j.1745-4506.1980.tb00241.x/fullpdf",
         )
 
     def test_html_candidates_prioritize_matching_landing_page_url(self) -> None:

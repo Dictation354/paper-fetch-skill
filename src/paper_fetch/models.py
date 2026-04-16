@@ -13,6 +13,7 @@ from .utils import normalize_text, safe_text
 
 SourceKind = Literal[
     "elsevier_xml",
+    "elsevier_browser",
     "springer_html",
     "wiley_browser",
     "science",

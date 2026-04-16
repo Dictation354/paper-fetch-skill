@@ -60,6 +60,13 @@ DEFAULT_FLARESOLVERR_MAX_TIMEOUT_MS = 120000
 
 logger = logging.getLogger("paper_fetch.providers.flaresolverr")
 
+_BROWSER_WORKFLOW_LABELS = {
+    "elsevier": "Elsevier browser fallback",
+    "wiley": "Wiley browser workflow",
+    "science": "Science browser workflow",
+    "pnas": "PNAS browser workflow",
+}
+
 
 @dataclass
 class FlareSolverrSessionState:
@@ -127,14 +134,19 @@ class FlareSolverrFailure(Exception):
         self.details = dict(details or {})
 
 
+def _browser_workflow_label(provider: str) -> str:
+    return _BROWSER_WORKFLOW_LABELS.get(provider, f"{provider} browser workflow")
+
+
 def load_runtime_config(env: Mapping[str, str], *, provider: str, doi: str) -> FlareSolverrRuntimeConfig:
     source_dir = resolve_flaresolverr_source_dir(env)
     env_file = resolve_flaresolverr_env_file(env)
+    workflow_label = _browser_workflow_label(provider)
     if env_file is None:
         raise ProviderFailure(
             "not_configured",
             (
-                "Wiley/Science/PNAS requires FLARESOLVERR_ENV_FILE pointing at a repo-local vendor/flaresolverr preset. "
+                f"{workflow_label} requires FLARESOLVERR_ENV_FILE pointing at a repo-local vendor/flaresolverr preset. "
                 "Start the service with ./scripts/flaresolverr-up <preset> first."
             ),
             missing_env=["FLARESOLVERR_ENV_FILE"],
@@ -161,7 +173,7 @@ def load_runtime_config(env: Mapping[str, str], *, provider: str, doi: str) -> F
     if missing:
         raise ProviderFailure(
             "not_configured",
-            "Wiley/Science/PNAS requires explicit local rate-limit settings: " + ", ".join(missing),
+            f"{workflow_label} requires explicit local rate-limit settings: " + ", ".join(missing),
             missing_env=missing,
         )
 
@@ -186,15 +198,26 @@ def load_runtime_config(env: Mapping[str, str], *, provider: str, doi: str) -> F
 
 def ensure_runtime_ready(config: FlareSolverrRuntimeConfig) -> None:
     check_local_workflow(config)
-    health_check(config.url)
+    try:
+        health_check(config.url)
+    except ProviderFailure as exc:
+        workflow_label = _browser_workflow_label(config.provider)
+        raise ProviderFailure(
+            "not_configured",
+            (
+                f"{workflow_label} requires a running local FlareSolverr service. "
+                f"{exc.message} Start it with ./scripts/flaresolverr-up <preset>."
+            ),
+        ) from exc
 
 
 def check_local_workflow(config: FlareSolverrRuntimeConfig) -> None:
+    workflow_label = _browser_workflow_label(config.provider)
     if not config.source_dir.exists():
         raise ProviderFailure(
             "not_configured",
             (
-                "Wiley/Science/PNAS support is repo-local only. Missing vendor/flaresolverr under the current checkout: "
+                f"{workflow_label} is repo-local only. Missing vendor/flaresolverr under the current checkout: "
                 f"{config.source_dir}"
             ),
         )
@@ -203,7 +226,7 @@ def check_local_workflow(config: FlareSolverrRuntimeConfig) -> None:
         raise ProviderFailure(
             "not_configured",
             (
-                "Wiley/Science/PNAS support requires the repo-local vendor/flaresolverr workflow. "
+                f"{workflow_label} requires the repo-local vendor/flaresolverr workflow. "
                 f"Missing files: {', '.join(missing_files)}"
             ),
         )
@@ -213,21 +236,11 @@ def health_check(url: str) -> None:
     try:
         payload = post_to_flaresolverr(url, {"cmd": "sessions.list"}, timeout_seconds=10.0)
     except FlareSolverrFailure as exc:
-        raise ProviderFailure(
-            "not_configured",
-            (
-                "Wiley/Science/PNAS requires a running local FlareSolverr service. "
-                f"Health check failed for {url}: {exc.message}. Start it with ./scripts/flaresolverr-up <preset>."
-            ),
-        ) from exc
+        raise ProviderFailure("not_configured", f"Health check failed for {url}: {exc.message}.") from exc
     if normalize_text(str(payload.get("status") or "")).lower() not in {"", "ok"}:
         raise ProviderFailure(
             "not_configured",
-            (
-                "Wiley/Science/PNAS requires a running local FlareSolverr service. "
-                f"Health check returned status={payload.get('status')!r} message={payload.get('message')!r}. "
-                "Start it with ./scripts/flaresolverr-up <preset>."
-            ),
+            f"Health check returned status={payload.get('status')!r} message={payload.get('message')!r}.",
         )
 
 
@@ -632,6 +645,67 @@ def extract_flaresolverr_browser_context_seed(solution: dict[str, Any]) -> dict[
         "browser_user_agent": normalize_text(str(solution.get("userAgent") or "")) or None,
         "browser_final_url": final_url,
     }
+
+
+def merge_browser_context_seeds(*seeds: Mapping[str, Any] | None) -> dict[str, Any]:
+    merged_cookies: list[dict[str, Any]] = []
+    cookie_positions: dict[tuple[str, str, str, str], int] = {}
+    merged_user_agent: str | None = None
+    merged_final_url: str | None = None
+
+    for seed in seeds:
+        if not isinstance(seed, Mapping):
+            continue
+
+        cookies = normalize_browser_cookies_for_playwright(
+            seed.get("browser_cookies") if isinstance(seed.get("browser_cookies"), list) else None,
+            fallback_url=normalize_text(str(seed.get("browser_final_url") or "")) or None,
+        )
+        for cookie in cookies:
+            key = (
+                normalize_text(str(cookie.get("name") or "")),
+                normalize_text(str(cookie.get("domain") or "")),
+                normalize_text(str(cookie.get("path") or "")),
+                normalize_text(str(cookie.get("url") or "")),
+            )
+            position = cookie_positions.get(key)
+            if position is None:
+                cookie_positions[key] = len(merged_cookies)
+                merged_cookies.append(cookie)
+            else:
+                merged_cookies[position] = cookie
+
+        user_agent = normalize_text(str(seed.get("browser_user_agent") or ""))
+        if user_agent:
+            merged_user_agent = user_agent
+
+        final_url = normalize_text(str(seed.get("browser_final_url") or ""))
+        if final_url:
+            merged_final_url = final_url
+
+    return {
+        "browser_cookies": merged_cookies,
+        "browser_user_agent": merged_user_agent,
+        "browser_final_url": merged_final_url,
+    }
+
+
+def warm_browser_context_with_flaresolverr(
+    candidate_urls: list[str],
+    *,
+    publisher: str,
+    config: FlareSolverrRuntimeConfig,
+    browser_context_seed: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
+    merged_seed = merge_browser_context_seeds(browser_context_seed)
+    if not candidate_urls:
+        return merged_seed
+
+    try:
+        result = fetch_html_with_flaresolverr(candidate_urls, publisher=publisher, config=config)
+    except FlareSolverrFailure as exc:
+        return merge_browser_context_seeds(merged_seed, exc.browser_context_seed)
+    return merge_browser_context_seeds(merged_seed, result.browser_context_seed)
 
 
 def redact_flaresolverr_response_payload(payload: dict[str, Any]) -> dict[str, Any]:

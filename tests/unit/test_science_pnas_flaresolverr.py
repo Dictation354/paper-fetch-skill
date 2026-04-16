@@ -87,6 +87,72 @@ class SciencePnasFlareSolverrTests(unittest.TestCase):
         self.assertEqual(cookies[0]["value"], "[redacted]")
         self.assertEqual(cookies[1]["value"], "[redacted]")
 
+    def test_merge_browser_context_seeds_prefers_latest_cookie_and_url(self) -> None:
+        merged = _flaresolverr.merge_browser_context_seeds(
+            {
+                "browser_cookies": [{"name": "cf_clearance", "value": "old", "domain": ".example.org", "path": "/"}],
+                "browser_user_agent": "UA/1",
+                "browser_final_url": "https://example.org/article",
+            },
+            {
+                "browser_cookies": [
+                    {"name": "cf_clearance", "value": "new", "domain": ".example.org", "path": "/"},
+                    {"name": "sessionid", "value": "warm", "domain": ".example.org", "path": "/"},
+                ],
+                "browser_final_url": "https://example.org/pdf",
+            },
+        )
+
+        self.assertEqual(
+            merged["browser_cookies"],
+            [
+                {"name": "cf_clearance", "value": "new", "domain": ".example.org", "path": "/"},
+                {"name": "sessionid", "value": "warm", "domain": ".example.org", "path": "/"},
+            ],
+        )
+        self.assertEqual(merged["browser_user_agent"], "UA/1")
+        self.assertEqual(merged["browser_final_url"], "https://example.org/pdf")
+
+    def test_warm_browser_context_with_flaresolverr_merges_existing_and_preflight_seed(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config = self._runtime_config(tmpdir, "wiley", "10.1111/test")
+            with mock.patch.object(
+                _flaresolverr,
+                "fetch_html_with_flaresolverr",
+                return_value=_flaresolverr.FetchedPublisherHtml(
+                    source_url="https://onlinelibrary.wiley.com/doi/epdf/10.1111/test",
+                    final_url="https://onlinelibrary.wiley.com/doi/10.1111/test",
+                    html="<html><body>pdf wrapper</body></html>",
+                    response_status=200,
+                    response_headers={"content-type": "text/html"},
+                    title="PDF wrapper",
+                    summary="PDF wrapper",
+                    browser_context_seed={
+                        "browser_cookies": [{"name": "sessionid", "value": "warm", "domain": ".wiley.com", "path": "/"}],
+                        "browser_user_agent": "Mozilla/5.0",
+                        "browser_final_url": "https://onlinelibrary.wiley.com/doi/10.1111/test",
+                    },
+                ),
+            ):
+                warmed = _flaresolverr.warm_browser_context_with_flaresolverr(
+                    ["https://onlinelibrary.wiley.com/doi/epdf/10.1111/test"],
+                    publisher="wiley",
+                    config=config,
+                    browser_context_seed={
+                        "browser_cookies": [{"name": "cf_clearance", "value": "seed", "domain": ".wiley.com", "path": "/"}],
+                        "browser_user_agent": "Mozilla/5.0",
+                    },
+                )
+
+        self.assertEqual(
+            warmed["browser_cookies"],
+            [
+                {"name": "cf_clearance", "value": "seed", "domain": ".wiley.com", "path": "/"},
+                {"name": "sessionid", "value": "warm", "domain": ".wiley.com", "path": "/"},
+            ],
+        )
+        self.assertEqual(warmed["browser_final_url"], "https://onlinelibrary.wiley.com/doi/10.1111/test")
+
     def test_load_runtime_config_requires_explicit_rate_limits(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             tmp = Path(tmpdir)

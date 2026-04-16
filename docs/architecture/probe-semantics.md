@@ -65,7 +65,7 @@ has_fulltext(query)
 
 - 完整 `_fetch_article` 瀑布
 - 正文下载
-- provider 级完整 HTML / PDF fallback
+- provider 级完整正文 fallback
 
 ## 当前 v1 的状态
 

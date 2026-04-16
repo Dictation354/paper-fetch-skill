@@ -57,7 +57,7 @@
 - [`deployment.md`](deployment.md)
   - 讲安装、配置入口、MCP 注册、更新和最小验证。
 - [`flaresolverr.md`](flaresolverr.md)
-  - 讲 Wiley / Science / PNAS 的 repo-local 浏览器工作流。
+  - 讲 Elsevier browser fallback 与 Wiley / Science / PNAS 的 repo-local 浏览器工作流。
 - [`architecture/target-architecture.md`](architecture/target-architecture.md)
   - 讲当前系统分层、端到端业务流程、数据契约和扩展点。
 - [`architecture/probe-semantics.md`](architecture/probe-semantics.md)
@@ -80,7 +80,7 @@
 ### `source`
 
 - 公开给调用方的粗粒度结果来源。
-- 例如 `elsevier_xml`、`springer_html`、`wiley_browser`、`science`、`pnas`、`html_fallback`、`crossref_meta`、`metadata_only`。
+- 例如 `elsevier_xml`、`elsevier_browser`、`springer_html`、`wiley_browser`、`science`、`pnas`、`html_fallback`、`crossref_meta`、`metadata_only`。
 
 ### `source_trail`
 

@@ -99,7 +99,8 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         )
 
         client = ElsevierClient(transport, {"ELSEVIER_API_KEY": "secret"})
-        payload = client.fetch_raw_fulltext(doi, {})
+        with mock.patch.object(client, "_official_payload_is_usable", return_value=True):
+            payload = client.fetch_raw_fulltext(doi, {})
 
         self.assertEqual(payload.content_type, "text/xml")
         self.assertEqual(transport.calls[0]["timeout"], DEFAULT_FULLTEXT_TIMEOUT_SECONDS)

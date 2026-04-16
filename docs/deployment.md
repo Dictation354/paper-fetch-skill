@@ -10,10 +10,10 @@
 这份文档不解决：
 
 - provider 差异、路由规则和限速语义
-- Wiley / Science / PNAS 的详细运维步骤
+- Elsevier browser fallback / Wiley / Science / PNAS 的详细运维步骤
 - 架构实现细节
 
-provider 与环境变量说明见 [`providers.md`](providers.md)，Wiley / Science / PNAS 运维说明见 [`flaresolverr.md`](flaresolverr.md)。
+provider 与环境变量说明见 [`providers.md`](providers.md)，Elsevier browser fallback / Wiley / Science / PNAS 运维说明见 [`flaresolverr.md`](flaresolverr.md)。
 
 ## 1. 安装 Python 包
 
@@ -81,16 +81,21 @@ paper-fetch-install-formula-tools
 - `paper-fetch-install-formula-tools` 会把工具装到用户数据目录，更适合部署环境
 - `./install-formula-tools.sh` 会把工具装到当前仓库的 `./.formula-tools/`
 
-## 4. Wiley / Science / PNAS 接入入口
+## 4. Elsevier Browser Fallback / Wiley / Science / PNAS 接入入口
 
-`wiley`、`science`、`pnas` 不是“装完 wheel 就自动可用”的 provider。
+`elsevier` browser fallback、`wiley`、`science`、`pnas` 不是“装完 wheel 就自动可用”的浏览器路径。
 
 如果你要启用它们，至少还需要：
 
 - 准备 repo-local `vendor/flaresolverr/`
-- 安装 Playwright Chromium
 - 设置 `FLARESOLVERR_ENV_FILE`
 - 设置三条本地限速变量
+
+补充：
+
+- `science` / `pnas` 还需要 Playwright Chromium，因为它们仍有 seeded-browser PDF fallback
+- `elsevier` 现在只走 `官方 XML/API -> FlareSolverr HTML -> metadata-only`
+- `wiley` 现在只走 `FlareSolverr HTML -> Wiley TDM API PDF -> metadata-only`
 
 最常见入口是：
 
