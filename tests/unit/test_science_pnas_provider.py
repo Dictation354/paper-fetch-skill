@@ -6,7 +6,6 @@ from pathlib import Path
 from unittest import mock
 
 from paper_fetch.providers import _flaresolverr, _science_pnas, pnas as pnas_provider, science as science_provider
-from paper_fetch.providers.base import ProviderFailure
 from tests.provider_benchmark_samples import provider_benchmark_sample
 from tests.unit._paper_fetch_support import fulltext_pdf_bytes
 

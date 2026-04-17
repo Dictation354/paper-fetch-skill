@@ -271,7 +271,7 @@ def fetch_pdf_with_playwright(
                     html_base_url = current_url
                     parsed_current_url = urllib.parse.urlparse(current_url)
                     if parsed_current_url.scheme not in {"http", "https"} or not normalize_text(parsed_current_url.netloc):
-                        html_base_url = source_url
+                        html_base_url = url
                     discovered = extract_pdf_candidate_urls_from_html(html, html_base_url)
                     http_retry_candidates: list[str] = []
                     for candidate in [urllib.parse.urljoin(html_base_url or "", url), *discovered]:

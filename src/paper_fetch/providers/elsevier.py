@@ -569,10 +569,6 @@ class ElsevierClient(ProviderClient):
 
         html_failure_reason: str | None = None
         html_failure_message: str | None = None
-        html_source_url = choose_public_landing_page_url(
-            metadata.get("landing_page_url"),
-            f"https://doi.org/{urllib.parse.quote(normalized_doi, safe='')}",
-        )
 
         try:
             runtime = load_runtime_config(self.env, provider=self.name, doi=normalized_doi)
@@ -582,7 +578,6 @@ class ElsevierClient(ProviderClient):
                 publisher=self.name,
                 config=runtime,
             )
-            html_source_url = html_result.final_url
             html_metadata = html_generic.parse_html_metadata(html_result.html, html_result.final_url)
             merged_metadata = html_generic.merge_html_metadata(metadata, html_metadata)
             if not merged_metadata.get("doi"):
