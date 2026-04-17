@@ -6,7 +6,6 @@ import urllib.parse
 from typing import Any, Mapping
 
 from ..http import DEFAULT_FULLTEXT_TIMEOUT_SECONDS, RequestFailure
-from ..publisher_identity import normalize_doi
 from ..utils import normalize_text
 from . import _science_pnas
 from ._pdf_fallback import PdfFallbackFailure, fetch_pdf_over_http
@@ -97,6 +96,7 @@ class WileyClient(_science_pnas.BrowserWorkflowClient):
     def probe_status(self) -> ProviderStatusResult:
         browser_status = _science_pnas.probe_runtime_status(self.env, provider=self.name)
         token_configured = bool(self.tdm_client_token)
+        browser_ready = bool(browser_status.checks) and all(check.status == "ok" for check in browser_status.checks)
         return summarize_capability_status(
             self.name,
             official_provider=self.official_provider,
@@ -104,86 +104,47 @@ class WileyClient(_science_pnas.BrowserWorkflowClient):
                 *browser_status.checks,
                 build_provider_status_check(
                     "tdm_api_token",
-                    "ok" if token_configured else "not_configured",
+                    "ok" if token_configured or browser_ready else "not_configured",
                     (
                         "Wiley TDM API client token is configured."
                         if token_configured
-                        else f"{WILEY_TDM_CLIENT_TOKEN_ENV_VAR} is required for Wiley PDF fallback when HTML is not usable."
+                        else (
+                            "Wiley TDM API client token is optional when the browser workflow runtime is ready."
+                            if browser_ready
+                            else (
+                                f"{WILEY_TDM_CLIENT_TOKEN_ENV_VAR} enables the official Wiley PDF lane when browser PDF fallback "
+                                "is unavailable."
+                            )
+                        )
                     ),
-                    missing_env=[] if token_configured else [WILEY_TDM_CLIENT_TOKEN_ENV_VAR],
+                    missing_env=[] if token_configured or browser_ready else [WILEY_TDM_CLIENT_TOKEN_ENV_VAR],
                     details={"env_var": WILEY_TDM_CLIENT_TOKEN_ENV_VAR},
                 ),
             ],
         )
 
     def fetch_raw_fulltext(self, doi: str, metadata: Mapping[str, Any]) -> RawFulltextPayload:
-        normalized_doi = normalize_doi(doi)
-        if not normalized_doi:
-            raise ProviderFailure("not_supported", f"{self.name} full-text retrieval requires a DOI.")
+        bootstrap = _science_pnas.bootstrap_browser_workflow(self, doi, metadata, allow_runtime_failure=True)
+        if bootstrap.html_payload is not None:
+            return bootstrap.html_payload
 
-        html_candidates = self.html_candidates(normalized_doi, metadata)
-
-        html_failure_reason: str | None = None
-        html_failure_message: str | None = None
-        warnings: list[str] = []
-
-        browser_runtime = None
-        browser_runtime_failure: ProviderFailure | None = None
-        try:
-            browser_runtime = _science_pnas.load_runtime_config(self.env, provider=self.name, doi=normalized_doi)
-            _science_pnas.ensure_runtime_ready(browser_runtime)
-        except ProviderFailure as exc:
-            browser_runtime_failure = exc
-            html_failure_reason = exc.code
-            html_failure_message = exc.message
-
-        if browser_runtime is not None:
-            try:
-                html_result = _science_pnas.fetch_html_with_flaresolverr(
-                    html_candidates,
-                    publisher=self.name,
-                    config=browser_runtime,
-                )
-                markdown_text, extraction = self.extract_markdown(
-                    html_result.html,
-                    html_result.final_url,
-                    metadata=metadata,
-                )
-                return RawFulltextPayload(
-                    provider=self.name,
-                    source_url=html_result.final_url,
-                    content_type="text/html",
-                    body=html_result.html.encode("utf-8"),
-                    metadata={
-                        "route": "html",
-                        "markdown_text": markdown_text,
-                        "warnings": warnings,
-                        "source_trail": [f"fulltext:{self.name}_html_ok"],
-                        "html_fetcher": "flaresolverr",
-                        "extraction": extraction,
-                    },
-                    needs_local_copy=False,
-                )
-            except _science_pnas.FlareSolverrFailure as exc:
-                html_failure_reason = exc.kind
-                html_failure_message = exc.message
-            except _science_pnas.SciencePnasHtmlFailure as exc:
-                html_failure_reason = exc.reason
-                html_failure_message = exc.message
-
+        warnings = bootstrap.warnings
         warnings.append(
-            f"{self.name} HTML route was not usable ({html_failure_reason or 'html_failed'}); attempting Wiley TDM API PDF fallback."
+            (
+                f"{self.name} HTML route was not usable "
+                f"({bootstrap.html_failure_reason or 'html_failed'}); attempting Wiley TDM API PDF fallback."
+            )
         )
 
         api_failure_message: str | None = None
         if self.tdm_client_token:
-            api_url = self._tdm_api_url(normalized_doi)
+            api_url = self._tdm_api_url(bootstrap.normalized_doi)
             try:
                 pdf_result = _fetch_wiley_tdm_pdf_result(
                     self.transport,
                     api_url=api_url,
                     headers=self._tdm_api_headers(),
-                    artifact_dir=(browser_runtime.artifact_dir / "pdf_api_fallback") if browser_runtime is not None else None,
+                    artifact_dir=(bootstrap.runtime.artifact_dir / "pdf_api_fallback") if bootstrap.runtime is not None else None,
                 )
                 warnings.append("Full text was extracted from the Wiley TDM API PDF fallback after the HTML path was not usable.")
                 return RawFulltextPayload(
@@ -195,8 +156,8 @@ class WileyClient(_science_pnas.BrowserWorkflowClient):
                         "route": "pdf_fallback",
                         "markdown_text": pdf_result.markdown_text,
                         "warnings": warnings,
-                        "html_failure_reason": html_failure_reason,
-                        "html_failure_message": html_failure_message,
+                        "html_failure_reason": bootstrap.html_failure_reason,
+                        "html_failure_message": bootstrap.html_failure_message,
                         "source_trail": [
                             f"fulltext:{self.name}_html_fail",
                             f"fulltext:{self.name}_pdf_api_ok",
@@ -208,27 +169,67 @@ class WileyClient(_science_pnas.BrowserWorkflowClient):
                 )
             except PdfFallbackFailure as exc:
                 api_failure_message = exc.message
+                warnings.append(
+                    f"Wiley TDM API PDF fallback was not usable ({exc.message}); attempting publisher PDF/ePDF fallback."
+                )
         else:
             api_failure_message = (
                 f"Wiley TDM API PDF fallback is not configured because {WILEY_TDM_CLIENT_TOKEN_ENV_VAR} is missing."
             )
+            warnings.append(f"{api_failure_message} Attempting publisher PDF/ePDF fallback.")
 
-        failure_parts = [f"HTML failure: {html_failure_message or 'wiley HTML route failed.'}"]
+        browser_pdf_failure_message: str | None = None
+        if bootstrap.runtime is not None:
+            try:
+                return _science_pnas.fetch_seeded_browser_pdf_payload(
+                    provider=self.name,
+                    runtime=bootstrap.runtime,
+                    pdf_candidates=bootstrap.pdf_candidates,
+                    html_candidates=bootstrap.html_candidates,
+                    landing_page_url=bootstrap.landing_page_url,
+                    user_agent=self.user_agent,
+                    browser_context_seed=bootstrap.browser_context_seed,
+                    html_failure_reason=bootstrap.html_failure_reason,
+                    html_failure_message=bootstrap.html_failure_message,
+                    warnings=warnings,
+                    success_source_trail=[
+                        f"fulltext:{self.name}_html_fail",
+                        f"fulltext:{self.name}_pdf_browser_ok",
+                        f"fulltext:{self.name}_pdf_fallback_ok",
+                    ],
+                    success_warning=(
+                        "Full text was extracted from the Wiley publisher PDF/ePDF fallback after the HTML path was not usable."
+                    ),
+                    artifact_subdir="browser_pdf_fallback",
+                )
+            except PdfFallbackFailure as exc:
+                browser_pdf_failure_message = exc.message
+                warnings.append(f"Wiley publisher PDF/ePDF fallback was not usable ({exc.message}).")
+        elif bootstrap.runtime_failure is not None:
+            browser_pdf_failure_message = bootstrap.runtime_failure.message
+            warnings.append(
+                f"Wiley browser PDF/ePDF fallback was not attempted because {bootstrap.runtime_failure.message}"
+            )
+
+        failure_parts = [f"HTML failure: {bootstrap.html_failure_message or 'wiley HTML route failed.'}"]
         if api_failure_message:
             failure_parts.append(f"Wiley API PDF failure: {api_failure_message}")
+        if browser_pdf_failure_message:
+            failure_parts.append(f"Wiley browser PDF failure: {browser_pdf_failure_message}")
         missing_env: list[str] = []
-        if browser_runtime is None and browser_runtime_failure is not None:
-            missing_env.extend(browser_runtime_failure.missing_env)
-        if not self.tdm_client_token and WILEY_TDM_CLIENT_TOKEN_ENV_VAR not in missing_env:
+        if bootstrap.runtime is None and bootstrap.runtime_failure is not None:
+            missing_env.extend(bootstrap.runtime_failure.missing_env)
+        if bootstrap.runtime is None and not self.tdm_client_token and WILEY_TDM_CLIENT_TOKEN_ENV_VAR not in missing_env:
             missing_env.append(WILEY_TDM_CLIENT_TOKEN_ENV_VAR)
 
         raise ProviderFailure(
-            "not_configured" if browser_runtime is None and not self.tdm_client_token else "no_result",
+            "not_configured" if bootstrap.runtime is None and not self.tdm_client_token else "no_result",
             f"{self.name} full text could not be retrieved. " + " ".join(failure_parts),
             missing_env=missing_env,
-            warnings=warnings + ([api_failure_message] if api_failure_message else []),
+            warnings=warnings,
             source_trail=[
                 f"fulltext:{self.name}_html_fail",
                 f"fulltext:{self.name}_pdf_api_fail",
+                *([f"fulltext:{self.name}_pdf_browser_fail"] if bootstrap.runtime is not None else []),
             ],
         )

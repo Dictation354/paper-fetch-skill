@@ -421,6 +421,23 @@ class ResolveQueryTests(unittest.TestCase):
         self.assertEqual(context.exception.code, "error")
         self.assertIn("Failed to fetch landing page", context.exception.message)
 
+    def test_url_query_with_embedded_doi_falls_back_to_doi_when_landing_page_is_blocked(self) -> None:
+        class FailingTransport:
+            def request(self, *args, **kwargs):
+                raise resolve_query.RequestFailure(403, "HTTP 403 for https://www.science.org/doi/epdf/10.1126/science.adp0212")
+
+        result = resolve_query.resolve_query(
+            "https://www.science.org/doi/epdf/10.1126/science.adp0212",
+            transport=FailingTransport(),
+            env={},
+        )
+
+        self.assertEqual(result.query_kind, "url")
+        self.assertEqual(result.doi, "10.1126/science.adp0212")
+        self.assertEqual(result.landing_url, "https://www.science.org/doi/epdf/10.1126/science.adp0212")
+        self.assertEqual(result.provider_hint, "science")
+        self.assertEqual(result.confidence, 1.0)
+
     def test_url_query_does_not_swallow_programming_errors(self) -> None:
         class BrokenTransport:
             def request(self, *args, **kwargs):

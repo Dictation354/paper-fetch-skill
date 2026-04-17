@@ -5,8 +5,16 @@ import unittest
 from paper_fetch import service as paper_fetch
 from paper_fetch.providers import elsevier as elsevier_provider
 from paper_fetch.providers import html_generic
+from paper_fetch.providers import pnas as pnas_provider
+from paper_fetch.providers import science as science_provider
 from paper_fetch.providers import springer as springer_provider
+from paper_fetch.providers import wiley as wiley_provider
+from paper_fetch.providers._science_pnas_html import extract_science_pnas_markdown
 from paper_fetch.providers.base import ProviderFailure, RawFulltextPayload
+from tests.provider_benchmark_samples import (
+    iter_provider_benchmark_samples,
+    provider_benchmark_sample,
+)
 from tests.paths import FIXTURE_DIR
 
 
@@ -128,13 +136,65 @@ NATURE_HTML_SAMPLES = [
         "figure_caption_contains": "Modelled ozone effects",
     },
 ]
+ELSEVIER_SAMPLE = provider_benchmark_sample("elsevier")
+SCIENCE_SAMPLE = provider_benchmark_sample("science")
+SPRINGER_SAMPLE = provider_benchmark_sample("springer")
+WILEY_SAMPLE = provider_benchmark_sample("wiley")
+PNAS_SAMPLE = provider_benchmark_sample("pnas")
 
 
 def read_fixture_bytes(name: str) -> bytes:
     return (FIXTURE_DIR / name).read_bytes()
 
 
+def read_fixture_text(name: str) -> str:
+    return (FIXTURE_DIR / name).read_text(encoding="utf-8")
+
+
 class RegressionSampleTests(unittest.TestCase):
+    def _fetch_replayed_provider_article(
+        self,
+        *,
+        sample,
+        metadata: dict[str, object],
+        provider_name: str,
+        raw_payload: RawFulltextPayload,
+        provider_client,
+    ):
+        replay_provider = ProviderStub(
+            metadata=metadata,
+            raw_payload=raw_payload,
+            article_factory=provider_client.to_article_model,
+        )
+        original_resolve = paper_fetch.resolve_paper
+        try:
+            paper_fetch.resolve_paper = lambda *args, **kwargs: paper_fetch.ResolvedQuery(
+                query=sample.doi,
+                query_kind="doi",
+                doi=sample.doi,
+                landing_url=sample.landing_url,
+                provider_hint=provider_name,
+                confidence=1.0,
+            )
+            return fetch_article(
+                sample.doi,
+                strategy=paper_fetch.FetchStrategy(),
+                clients={
+                    provider_name: replay_provider,
+                    "crossref": ProviderStub(metadata=metadata),
+                },
+                html_client=FailingHtmlClient(
+                    paper_fetch.ProviderFailure("no_result", "HTML fallback should not be used for regression replay.")
+                ),
+            )
+        finally:
+            paper_fetch.resolve_paper = original_resolve
+
+    def test_provider_benchmark_samples_are_post_2020(self) -> None:
+        for sample in iter_provider_benchmark_samples():
+            with self.subTest(provider=sample.provider):
+                self.assertGreaterEqual(sample.year, 2020)
+
     def test_nature_html_generic_regression_samples(self) -> None:
         for sample in NATURE_HTML_SAMPLES:
             with self.subTest(doi=sample["doi"]):
@@ -213,24 +273,24 @@ class RegressionSampleTests(unittest.TestCase):
             paper_fetch.resolve_paper = original_resolve
 
     def test_paper_fetch_uses_elsevier_xml_fixture_for_positive_sample(self) -> None:
-        doi = "10.1016/j.rse.2026.115369"
+        sample = ELSEVIER_SAMPLE
         metadata = {
             "provider": "elsevier",
             "official_provider": True,
-            "doi": doi,
-            "title": "Sentinel-1 for offshore wind energy application",
+            "doi": sample.doi,
+            "title": sample.title,
             "journal_title": "Remote Sensing of Environment",
-            "published": "2026-6",
-            "landing_page_url": "https://www.sciencedirect.com/science/article/pii/S0034425726001030",
-            "authors": ["C.B. Hasager", "K. Dimitriadou"],
-            "abstract": "This review summarizes Sentinel-1 SAR products used in offshore wind-energy applications.",
+            "published": "2025-01-01",
+            "landing_page_url": sample.landing_url,
+            "authors": [],
+            "abstract": "Paraphrased offline fixture for the 2025 geostationary satellite vegetation study.",
             "fulltext_links": [],
             "references": [],
         }
-        xml_body = read_fixture_bytes("elsevier_10.1016_j.rse.2026.115369.xml")
+        xml_body = read_fixture_bytes(sample.fixture_name)
         raw_payload = RawFulltextPayload(
             provider="elsevier",
-            source_url="https://api.elsevier.com/content/article/doi/10.1016%2Fj.rse.2026.115369?view=FULL",
+            source_url="https://api.elsevier.com/content/article/doi/10.1016%2Fj.rse.2025.114648?view=FULL",
             content_type="text/xml",
             body=xml_body,
             metadata={"reason": "Replay fixture for Elsevier XML regression test."},
@@ -245,16 +305,16 @@ class RegressionSampleTests(unittest.TestCase):
         original_resolve = paper_fetch.resolve_paper
         try:
             paper_fetch.resolve_paper = lambda *args, **kwargs: paper_fetch.ResolvedQuery(
-                query=doi,
+                query=sample.doi,
                 query_kind="doi",
-                doi=doi,
-                landing_url=metadata["landing_page_url"],
+                doi=sample.doi,
+                landing_url=sample.landing_url,
                 provider_hint="elsevier",
                 confidence=1.0,
             )
 
             article = fetch_article(
-                doi,
+                sample.doi,
                 strategy=paper_fetch.FetchStrategy(),
                 clients={
                     "elsevier": replay_provider,
@@ -273,9 +333,138 @@ class RegressionSampleTests(unittest.TestCase):
         self.assertTrue(len(article.sections) >= 4)
         headings = [section.heading for section in article.sections]
         self.assertIn("Introduction", headings)
-        self.assertIn("Operational systems", headings)
-        self.assertIn("Wind direction sources", headings)
-        self.assertIn("Trend analysis", headings)
+        self.assertIn("Data sources", headings)
+        self.assertIn("Seasonal transitions", headings)
+        self.assertIn("Regional implications", headings)
+
+    def test_paper_fetch_uses_science_replay_fixture_for_positive_sample(self) -> None:
+        science_html = read_fixture_text(SCIENCE_SAMPLE.fixture_name)
+        markdown_text, _ = extract_science_pnas_markdown(
+            science_html,
+            SCIENCE_SAMPLE.landing_url,
+            "science",
+            metadata={"doi": SCIENCE_SAMPLE.doi},
+        )
+        metadata = {
+            "provider": "crossref",
+            "official_provider": False,
+            "doi": SCIENCE_SAMPLE.doi,
+            "title": SCIENCE_SAMPLE.title,
+            "journal_title": "Science",
+            "published": "2026-01-01",
+            "landing_page_url": SCIENCE_SAMPLE.landing_url,
+            "authors": [],
+            "fulltext_links": [],
+            "references": [],
+        }
+        raw_payload = RawFulltextPayload(
+            provider="science",
+            source_url=SCIENCE_SAMPLE.landing_url,
+            content_type="text/html",
+            body=science_html.encode("utf-8"),
+            metadata={
+                "route": "html",
+                "markdown_text": markdown_text,
+                "source_trail": ["fulltext:science_html_ok"],
+            },
+        )
+
+        article = self._fetch_replayed_provider_article(
+            sample=SCIENCE_SAMPLE,
+            metadata=metadata,
+            provider_name="science",
+            raw_payload=raw_payload,
+            provider_client=science_provider.ScienceClient(FixtureTransport({}), {}),
+        )
+
+        self.assertEqual(article.source, SCIENCE_SAMPLE.expected_source)
+        self.assertEqual(article.metadata.title, SCIENCE_SAMPLE.title)
+        self.assertTrue(article.quality.has_fulltext)
+        self.assertIn("fulltext:science_html_ok", article.quality.source_trail)
+
+    def test_paper_fetch_uses_wiley_replay_fixture_for_positive_sample(self) -> None:
+        markdown_text = read_fixture_text(WILEY_SAMPLE.fixture_name)
+        metadata = {
+            "provider": "crossref",
+            "official_provider": False,
+            "doi": WILEY_SAMPLE.doi,
+            "title": WILEY_SAMPLE.title,
+            "journal_title": "Cancer Science",
+            "published": "2024-01-01",
+            "landing_page_url": WILEY_SAMPLE.landing_url,
+            "authors": [],
+            "fulltext_links": [],
+            "references": [],
+        }
+        raw_payload = RawFulltextPayload(
+            provider="wiley",
+            source_url=f"https://api.wiley.com/onlinelibrary/tdm/v1/articles/{WILEY_SAMPLE.doi}",
+            content_type="application/pdf",
+            body=b"%PDF-1.4\n",
+            metadata={
+                "route": "pdf_fallback",
+                "markdown_text": markdown_text,
+                "source_trail": [
+                    "fulltext:wiley_html_fail",
+                    "fulltext:wiley_pdf_api_ok",
+                    "fulltext:wiley_pdf_fallback_ok",
+                ],
+            },
+            needs_local_copy=True,
+        )
+
+        article = self._fetch_replayed_provider_article(
+            sample=WILEY_SAMPLE,
+            metadata=metadata,
+            provider_name="wiley",
+            raw_payload=raw_payload,
+            provider_client=wiley_provider.WileyClient(FixtureTransport({}), {}),
+        )
+
+        self.assertEqual(article.source, WILEY_SAMPLE.expected_source)
+        self.assertEqual(article.metadata.title, WILEY_SAMPLE.title)
+        self.assertTrue(article.quality.has_fulltext)
+        self.assertIn("fulltext:wiley_pdf_api_ok", article.quality.source_trail)
+        self.assertIn("fulltext:wiley_pdf_fallback_ok", article.quality.source_trail)
+
+    def test_paper_fetch_uses_pnas_replay_fixture_for_positive_sample(self) -> None:
+        markdown_text = read_fixture_text(PNAS_SAMPLE.fixture_name)
+        metadata = {
+            "provider": "crossref",
+            "official_provider": False,
+            "doi": PNAS_SAMPLE.doi,
+            "title": PNAS_SAMPLE.title,
+            "journal_title": "Proceedings of the National Academy of Sciences",
+            "published": "2024-01-01",
+            "landing_page_url": PNAS_SAMPLE.landing_url,
+            "authors": [],
+            "fulltext_links": [],
+            "references": [],
+        }
+        raw_payload = RawFulltextPayload(
+            provider="pnas",
+            source_url=PNAS_SAMPLE.landing_url,
+            content_type="text/html",
+            body=markdown_text.encode("utf-8"),
+            metadata={
+                "route": "html",
+                "markdown_text": markdown_text,
+                "source_trail": ["fulltext:pnas_html_ok"],
+            },
+        )
+
+        article = self._fetch_replayed_provider_article(
+            sample=PNAS_SAMPLE,
+            metadata=metadata,
+            provider_name="pnas",
+            raw_payload=raw_payload,
+            provider_client=pnas_provider.PnasClient(FixtureTransport({}), {}),
+        )
+
+        self.assertEqual(article.source, PNAS_SAMPLE.expected_source)
+        self.assertEqual(article.metadata.title, PNAS_SAMPLE.title)
+        self.assertTrue(article.quality.has_fulltext)
+        self.assertIn("fulltext:pnas_html_ok", article.quality.source_trail)
 
     def test_paper_fetch_elsevier_negative_sample_falls_back_to_crossref_metadata(self) -> None:
         doi = "10.1016/j.solener.2024.01.001"

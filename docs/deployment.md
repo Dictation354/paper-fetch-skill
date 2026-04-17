@@ -93,9 +93,9 @@ paper-fetch-install-formula-tools
 
 补充：
 
-- `science` / `pnas` 还需要 Playwright Chromium，因为它们仍有 seeded-browser PDF fallback
+- `wiley` / `science` / `pnas` 还需要 Playwright Chromium，因为它们仍有 seeded-browser PDF/ePDF fallback
 - `elsevier` 现在只走 `官方 XML/API -> FlareSolverr HTML -> metadata-only`
-- `wiley` 现在只走 `FlareSolverr HTML -> Wiley TDM API PDF -> metadata-only`
+- `wiley` 现在走 `FlareSolverr HTML -> Wiley TDM API PDF -> seeded-browser publisher PDF/ePDF -> metadata-only`
 
 最常见入口是：
 

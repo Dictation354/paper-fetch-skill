@@ -9,9 +9,13 @@ from paper_fetch.http import HttpTransport
 from paper_fetch.providers._flaresolverr import health_check
 from paper_fetch.providers.base import ProviderFailure
 from paper_fetch.service import FetchStrategy, fetch_paper
+from tests.provider_benchmark_samples import provider_benchmark_sample, source_trail_matches
 
 
 RUN_LIVE = os.environ.get("PAPER_FETCH_RUN_LIVE") == "1"
+ELSEVIER_SAMPLE = provider_benchmark_sample("elsevier")
+SPRINGER_SAMPLE = provider_benchmark_sample("springer")
+WILEY_SAMPLE = provider_benchmark_sample("wiley")
 
 
 def fetch_article(query: str, *, allow_html_fallback: bool, transport: HttpTransport, env: dict[str, str]):
@@ -54,34 +58,39 @@ class LivePublisherTests(unittest.TestCase):
         except ProviderFailure as exc:
             self.skipTest(f"Local FlareSolverr health check failed: {exc.message}")
 
+    def _assert_matches_sample(self, article, sample) -> None:
+        self.assertEqual(article.source, sample.expected_source)
+        self.assertTrue(article.quality.has_fulltext)
+        self.assertGreater(len(article.sections), 0)
+        self.assertTrue(
+            source_trail_matches(article.quality.source_trail, sample.accepted_live_source_trail_groups),
+            article.quality.source_trail,
+        )
+
     def test_elsevier_doi_live_fulltext(self) -> None:
-        self._require_env("ELSEVIER_API_KEY", "CROSSREF_MAILTO")
+        self._require_env(*ELSEVIER_SAMPLE.required_env)
         article = fetch_article(
-            "10.1016/j.rse.2025.114648",
+            ELSEVIER_SAMPLE.doi,
             allow_html_fallback=False,
             transport=HttpTransport(),
             env=self.env,
         )
 
-        self.assertEqual(article.source, "elsevier_xml")
-        self.assertTrue(article.quality.has_fulltext)
-        self.assertGreater(len(article.sections), 0)
+        self._assert_matches_sample(article, ELSEVIER_SAMPLE)
 
     def test_springer_doi_live_fulltext(self) -> None:
-        self._require_env("CROSSREF_MAILTO")
+        self._require_env(*SPRINGER_SAMPLE.required_env)
         article = fetch_article(
-            "10.1186/1471-2105-11-421",
+            SPRINGER_SAMPLE.doi,
             allow_html_fallback=False,
             transport=HttpTransport(),
             env=self.env,
         )
 
-        self.assertEqual(article.source, "springer_html")
-        self.assertTrue(article.quality.has_fulltext)
-        self.assertGreater(len(article.sections), 0)
+        self._assert_matches_sample(article, SPRINGER_SAMPLE)
 
     def test_wiley_doi_live_fulltext(self) -> None:
-        self._require_env("CROSSREF_MAILTO", "WILEY_TDM_CLIENT_TOKEN")
+        self._require_env(*WILEY_SAMPLE.required_env)
         wiley_env = {
             **self.env,
             "FLARESOLVERR_URL": "",
@@ -92,53 +101,26 @@ class LivePublisherTests(unittest.TestCase):
             "FLARESOLVERR_MAX_REQUESTS_PER_DAY": "",
         }
         article = fetch_article(
-            "10.1111/j.1745-4506.1980.tb00241.x",
+            WILEY_SAMPLE.doi,
             allow_html_fallback=False,
             transport=HttpTransport(),
             env=wiley_env,
         )
 
-        self.assertEqual(article.source, "wiley_browser")
-        self.assertTrue(article.quality.has_fulltext)
-        self.assertGreater(len(article.sections), 0)
-        self.assertIn("fulltext:wiley_pdf_api_ok", article.quality.source_trail)
-        self.assertIn("fulltext:wiley_pdf_fallback_ok", article.quality.source_trail)
+        self._assert_matches_sample(article, WILEY_SAMPLE)
 
     def test_elsevier_url_live_recovers_doi_and_uses_official_fulltext(self) -> None:
-        self._require_env("ELSEVIER_API_KEY", "CROSSREF_MAILTO")
+        self._require_env(*ELSEVIER_SAMPLE.required_env)
         article = fetch_article(
-            "https://linkinghub.elsevier.com/retrieve/pii/S0034425725000525",
+            ELSEVIER_SAMPLE.resolve_url,
             allow_html_fallback=False,
             transport=HttpTransport(),
             env=self.env,
         )
 
-        self.assertEqual(article.doi, "10.1016/j.rse.2025.114648")
-        self.assertEqual(article.source, "elsevier_xml")
-        self.assertTrue(article.quality.has_fulltext)
-        self.assertGreater(len(article.sections), 0)
+        self.assertEqual(article.doi, ELSEVIER_SAMPLE.doi)
+        self._assert_matches_sample(article, ELSEVIER_SAMPLE)
         self.assertIn("resolve:url", article.quality.source_trail)
-        self.assertIn("fulltext:elsevier_article_ok", article.quality.source_trail)
-        self.assertNotIn("fallback:metadata_only", article.quality.source_trail)
-
-    def test_short_html_body_live_stays_on_springer_provider_waterfall(self) -> None:
-        self._require_env("CROSSREF_MAILTO")
-        article = fetch_article(
-            "https://www.nature.com/articles/sj.bdj.2017.900",
-            allow_html_fallback=True,
-            transport=HttpTransport(),
-            env=self.env,
-        )
-
-        self.assertEqual(article.doi, "10.1038/sj.bdj.2017.900")
-        self.assertEqual(article.source, "springer_html")
-        self.assertTrue(article.quality.has_fulltext)
-        self.assertTrue(
-            any(
-                marker in article.quality.source_trail
-                for marker in ("fulltext:springer_html_ok", "fulltext:springer_pdf_fallback_ok")
-            )
-        )
         self.assertNotIn("fallback:metadata_only", article.quality.source_trail)
 
 

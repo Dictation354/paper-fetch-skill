@@ -60,6 +60,21 @@ class PdfFallbackHelperTests(unittest.TestCase):
             ],
         )
 
+    def test_extract_pdf_candidate_urls_from_html_finds_iframe_pdf_sources(self) -> None:
+        html = """
+        <html><body>
+          <iframe src="/viewer.html?file=/doi/pdfdirect/10.1111/test" type="application/pdf"></iframe>
+        </body></html>
+        """
+
+        candidates = _pdf_candidates.extract_pdf_candidate_urls_from_html(
+            html,
+            "https://example.org/articles/test",
+        )
+
+        self.assertIn("https://example.org/viewer.html?file=/doi/pdfdirect/10.1111/test", candidates)
+        self.assertIn("https://example.org/doi/pdfdirect/10.1111/test", candidates)
+
     def test_rule_based_pdf_candidates_cover_springer(self) -> None:
         springer_candidates = _pdf_candidates.build_springer_pdf_candidates(
             "10.1038/example",
@@ -208,6 +223,62 @@ class PdfFallbackHelperTests(unittest.TestCase):
         self.assertEqual(result.source_url, pdf_url)
         self.assertEqual(open_calls, [seed_url, pdf_url])
         self.assertEqual(transport.calls, [])
+
+    def test_fetch_pdf_over_http_can_attach_browser_cookies(self) -> None:
+        pdf_url = "https://example.org/article.pdf"
+        open_calls: list[dict[str, object]] = []
+
+        class FakeResponse:
+            def __init__(self, url: str, content_type: str, body: bytes) -> None:
+                self.status = 200
+                self._url = url
+                self.headers = {"content-type": content_type}
+                self._body = body
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, exc_type, exc, tb) -> None:
+                return None
+
+            def read(self, _size: int = -1) -> bytes:
+                return self._body
+
+            def geturl(self) -> str:
+                return self._url
+
+            def getcode(self) -> int:
+                return self.status
+
+        class FakeOpener:
+            def open(self, request, timeout=20):
+                open_calls.append({"url": request.full_url, "headers": dict(request.headers)})
+                if request.full_url != pdf_url:
+                    raise AssertionError(f"unexpected url {request.full_url}")
+                return FakeResponse(pdf_url, "application/pdf", b"%PDF-1.7 cookie-seeded")
+
+        with mock.patch.object(
+            _pdf_fallback,
+            "pdf_fetch_result_from_bytes",
+            return_value=_pdf_common.PdfFetchResult(
+                source_url=pdf_url,
+                final_url=pdf_url,
+                pdf_bytes=b"%PDF-1.7 cookie-seeded",
+                markdown_text="# Example\n\n## Results\n\nBody text",
+                suggested_filename="article.pdf",
+            ),
+        ), mock.patch.object(_pdf_fallback.urllib.request, "build_opener", return_value=FakeOpener()):
+            result = _pdf_fallback.fetch_pdf_over_http(
+                RecordingTransport({}),
+                [pdf_url],
+                browser_cookies=[
+                    {"name": "cf_clearance", "value": "token", "domain": ".example.org", "path": "/", "secure": True},
+                    {"name": "other", "value": "ignored", "domain": ".other.org", "path": "/", "secure": True},
+                ],
+            )
+
+        self.assertEqual(result.source_url, pdf_url)
+        self.assertEqual(open_calls[0]["headers"].get("Cookie"), "cf_clearance=token")
 
 
 if __name__ == "__main__":

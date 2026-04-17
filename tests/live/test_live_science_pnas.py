@@ -9,9 +9,12 @@ from paper_fetch.http import HttpTransport
 from paper_fetch.providers.base import ProviderFailure
 from paper_fetch.providers._flaresolverr import health_check
 from paper_fetch.service import FetchStrategy, fetch_paper
+from tests.provider_benchmark_samples import provider_benchmark_sample, source_trail_matches
 
 
 RUN_LIVE = os.environ.get("PAPER_FETCH_RUN_LIVE") == "1"
+SCIENCE_SAMPLE = provider_benchmark_sample("science")
+PNAS_SAMPLE = provider_benchmark_sample("pnas")
 
 
 def fetch_article(query: str, *, transport: HttpTransport, env: dict[str, str]):
@@ -56,47 +59,38 @@ class LiveSciencePnasTests(unittest.TestCase):
         except ProviderFailure as exc:
             self.skipTest(f"Local FlareSolverr health check failed: {exc.message}")
 
+    def _assert_matches_sample(self, article, sample) -> None:
+        self.assertEqual(article.source, sample.expected_source)
+        self.assertTrue(article.quality.has_fulltext)
+        self.assertGreater(len(article.sections), 0)
+        self.assertTrue(
+            source_trail_matches(article.quality.source_trail, sample.accepted_live_source_trail_groups),
+            article.quality.source_trail,
+        )
+
     def test_science_doi_live_fulltext_via_html(self) -> None:
-        self._require_env(
-            "CROSSREF_MAILTO",
-            "FLARESOLVERR_ENV_FILE",
-            "FLARESOLVERR_MIN_INTERVAL_SECONDS",
-            "FLARESOLVERR_MAX_REQUESTS_PER_HOUR",
-            "FLARESOLVERR_MAX_REQUESTS_PER_DAY",
-        )
+        self._require_env(*SCIENCE_SAMPLE.required_env)
         self._require_flaresolverr()
 
         article = fetch_article(
-            "10.1126/science.ady3136",
+            SCIENCE_SAMPLE.doi,
             transport=HttpTransport(),
             env=self.env,
         )
 
-        self.assertEqual(article.source, "science")
-        self.assertTrue(article.quality.has_fulltext)
-        self.assertGreater(len(article.sections), 0)
-        self.assertIn("fulltext:science_html_ok", article.quality.source_trail)
+        self._assert_matches_sample(article, SCIENCE_SAMPLE)
 
-    def test_pnas_doi_live_fulltext_via_pdf_fallback(self) -> None:
-        self._require_env(
-            "CROSSREF_MAILTO",
-            "FLARESOLVERR_ENV_FILE",
-            "FLARESOLVERR_MIN_INTERVAL_SECONDS",
-            "FLARESOLVERR_MAX_REQUESTS_PER_HOUR",
-            "FLARESOLVERR_MAX_REQUESTS_PER_DAY",
-        )
+    def test_pnas_doi_live_fulltext_uses_a_stable_provider_path(self) -> None:
+        self._require_env(*PNAS_SAMPLE.required_env)
         self._require_flaresolverr()
 
         article = fetch_article(
-            "10.1073/pnas.81.23.7500",
+            PNAS_SAMPLE.doi,
             transport=HttpTransport(),
             env=self.env,
         )
 
-        self.assertEqual(article.source, "pnas")
-        self.assertTrue(article.quality.has_fulltext)
-        self.assertGreater(len(article.sections), 0)
-        self.assertIn("fulltext:pnas_pdf_fallback_ok", article.quality.source_trail)
+        self._assert_matches_sample(article, PNAS_SAMPLE)
 
 
 if __name__ == "__main__":

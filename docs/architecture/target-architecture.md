@@ -215,9 +215,10 @@ service 会尽可能拿到两类元数据：
 - `springer`
   - 走 provider 自管 `direct HTML -> direct HTTP PDF`
 - `wiley`
-  - 走 provider 自管浏览器工作流 `FlareSolverr HTML -> Wiley TDM API PDF`
+  - 走 provider 自管浏览器工作流 `FlareSolverr HTML -> Wiley TDM API PDF -> seeded-browser publisher PDF/ePDF`
 - `science` / `pnas`
   - 与 `wiley` 共用浏览器工作流基座
+  - 当前只剩 provider-owned 单栈；不再保留额外的 Science-only live harness 或第二套 browser-PDF 实现
 
 如果正文足够可用，流程在这里结束。
 
@@ -238,10 +239,10 @@ service 会尽可能拿到两类元数据：
   - 失败后先尝试 direct HTTP PDF，再决定是否 metadata-only
 - `wiley`
   - 不走通用 `html_generic`
-  - 而是 provider 自己管理 `FlareSolverr HTML -> Wiley TDM API PDF -> metadata-only`
+  - 而是 provider 自己管理 `FlareSolverr HTML -> Wiley TDM API PDF -> seeded-browser publisher PDF/ePDF -> metadata-only`
 - `science` / `pnas`
   - 不走通用 `html_generic`
-  - 而是 provider 自己管理 `FlareSolverr HTML -> seeded-browser PDF -> metadata-only`
+  - 而是 provider 自己管理 `FlareSolverr HTML -> seeded-browser publisher PDF/ePDF -> metadata-only`
 
 ### 6. metadata-only fallback
 

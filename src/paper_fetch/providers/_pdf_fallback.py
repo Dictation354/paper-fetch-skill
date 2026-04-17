@@ -4,12 +4,14 @@ from __future__ import annotations
 
 import http.cookiejar
 import urllib.error
+import urllib.parse
 import urllib.request
 from pathlib import Path
 from typing import Any, Mapping
 
 from ..http import DEFAULT_FULLTEXT_TIMEOUT_SECONDS, HttpTransport, RequestFailure
 from ..utils import normalize_text
+from ._pdf_candidates import extract_pdf_candidate_urls_from_html
 from ._science_pnas_html import detect_html_block, summarize_html
 from ._pdf_common import (
     PdfFetchFailure,
@@ -29,9 +31,10 @@ def _build_cookie_seeded_opener(
     *,
     headers: Mapping[str, str],
     timeout: int,
+    browser_cookies: list[dict[str, Any]] | None = None,
 ) -> urllib.request.OpenerDirector | None:
     normalized_seed_urls = [normalize_text(url) for url in seed_urls or [] if normalize_text(url)]
-    if not normalized_seed_urls:
+    if not normalized_seed_urls and not any(isinstance(cookie, dict) for cookie in browser_cookies or []):
         return None
 
     opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
@@ -43,7 +46,11 @@ def _build_cookie_seeded_opener(
     seed_headers.setdefault("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
 
     for seed_url in normalized_seed_urls:
-        request = urllib.request.Request(seed_url, headers=seed_headers)
+        request_headers = dict(seed_headers)
+        cookie_header = _cookie_header_for_url(browser_cookies, seed_url)
+        if cookie_header:
+            request_headers["Cookie"] = cookie_header
+        request = urllib.request.Request(seed_url, headers=request_headers)
         try:
             with opener.open(request, timeout=timeout) as response:
                 response.read(1024)
@@ -107,6 +114,42 @@ def _response_to_pdf_result(
     )
 
 
+def _cookie_header_for_url(browser_cookies: list[dict[str, Any]] | None, url: str) -> str | None:
+    parsed_url = urllib.parse.urlparse(normalize_text(url))
+    host = normalize_text(parsed_url.hostname).lower()
+    path = normalize_text(parsed_url.path) or "/"
+    scheme = normalize_text(parsed_url.scheme).lower()
+    if not host:
+        return None
+
+    matched_pairs: list[str] = []
+    for cookie in browser_cookies or []:
+        if not isinstance(cookie, dict):
+            continue
+        name = normalize_text(str(cookie.get("name") or ""))
+        value = str(cookie.get("value") or "")
+        if not name:
+            continue
+
+        cookie_domain = normalize_text(str(cookie.get("domain") or "")).lower().lstrip(".")
+        if not cookie_domain:
+            cookie_url = normalize_text(str(cookie.get("url") or ""))
+            cookie_domain = normalize_text(urllib.parse.urlparse(cookie_url).hostname).lower()
+        if cookie_domain and host != cookie_domain and not host.endswith(f".{cookie_domain}"):
+            continue
+
+        cookie_path = normalize_text(str(cookie.get("path") or "")) or "/"
+        if not path.startswith(cookie_path):
+            continue
+
+        if bool(cookie.get("secure")) and scheme != "https":
+            continue
+
+        matched_pairs.append(f"{name}={value}")
+
+    return "; ".join(matched_pairs) if matched_pairs else None
+
+
 def _download_to_pdf_result(
     download: Any,
     *,
@@ -134,7 +177,6 @@ def fetch_pdf_with_playwright(
     headless: bool = True,
     storage_state_path: Path | None = None,
     seed_urls: list[str] | None = None,
-    publisher: str | None = None,
 ) -> PdfFallbackResult:
     if not candidate_urls:
         raise PdfFallbackFailure("empty_pdf_attempts", "No PDF fallback candidates were attempted.")
@@ -149,11 +191,25 @@ def fetch_pdf_with_playwright(
     artifact_dir.mkdir(parents=True, exist_ok=True)
     last_failure: PdfFallbackFailure | None = None
     sanitized_storage_state_path: Path | None = None
+    active_user_agent = browser_user_agent or "paper-fetch-skill/pdf-fallback"
+
+    if browser_cookies:
+        try:
+            return fetch_pdf_over_http(
+                HttpTransport(),
+                candidate_urls,
+                headers={"User-Agent": active_user_agent},
+                timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
+                artifact_dir=artifact_dir,
+                browser_cookies=list(browser_cookies),
+            )
+        except PdfFallbackFailure as exc:
+            last_failure = exc
 
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch(headless=headless)
         context_kwargs: dict[str, Any] = {
-            "user_agent": browser_user_agent or "paper-fetch-skill/pdf-fallback",
+            "user_agent": active_user_agent,
             "locale": "en-US",
             "viewport": {"width": 1440, "height": 1600},
             "accept_downloads": True,
@@ -211,6 +267,37 @@ def fetch_pdf_with_playwright(
                             continue
                     title = normalize_text(page.title())
                     html = page.content()
+                    current_url = normalize_text(page.url)
+                    html_base_url = current_url
+                    parsed_current_url = urllib.parse.urlparse(current_url)
+                    if parsed_current_url.scheme not in {"http", "https"} or not normalize_text(parsed_current_url.netloc):
+                        html_base_url = source_url
+                    discovered = extract_pdf_candidate_urls_from_html(html, html_base_url)
+                    http_retry_candidates: list[str] = []
+                    for candidate in [urllib.parse.urljoin(html_base_url or "", url), *discovered]:
+                        normalized_candidate = normalize_text(candidate)
+                        if normalized_candidate and normalized_candidate not in http_retry_candidates:
+                            http_retry_candidates.append(normalized_candidate)
+                    if http_retry_candidates:
+                        try:
+                            context_cookies = context.cookies()
+                        except Exception:
+                            context_cookies = list(browser_cookies or [])
+                        http_headers = {"User-Agent": active_user_agent}
+                        referer = normalize_text(html_base_url)
+                        if referer:
+                            http_headers["Referer"] = referer
+                        try:
+                            return fetch_pdf_over_http(
+                                HttpTransport(),
+                                http_retry_candidates,
+                                headers=http_headers,
+                                timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
+                                artifact_dir=artifact_dir,
+                                browser_cookies=context_cookies,
+                            )
+                        except PdfFallbackFailure as exc:
+                            last_failure = exc
                     summary = summarize_html(html)
                     detected = detect_html_block(title, summary, None)
                     (artifact_dir / "pdf.failure.html").write_text(html, encoding="utf-8")
@@ -261,23 +348,33 @@ def fetch_pdf_over_http(
     timeout: int = DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
     artifact_dir: Path | None = None,
     seed_urls: list[str] | None = None,
+    browser_cookies: list[dict[str, Any]] | None = None,
 ) -> PdfFetchResult:
     if not candidate_urls:
         raise PdfFetchFailure("empty_pdf_attempts", "No PDF fallback candidates were attempted.")
 
     request_headers = {"Accept": "application/pdf,*/*;q=0.8", **dict(headers or {})}
     last_failure: PdfFetchFailure | None = None
-    opener = _build_cookie_seeded_opener(seed_urls, headers=request_headers, timeout=timeout)
+    opener = _build_cookie_seeded_opener(
+        seed_urls,
+        headers=request_headers,
+        timeout=timeout,
+        browser_cookies=browser_cookies,
+    )
 
     for url in candidate_urls:
+        per_request_headers = dict(request_headers)
+        cookie_header = _cookie_header_for_url(browser_cookies, url)
+        if cookie_header:
+            per_request_headers["Cookie"] = cookie_header
         try:
             response = (
-                _request_with_opener(opener, url, headers=request_headers, timeout=timeout)
+                _request_with_opener(opener, url, headers=per_request_headers, timeout=timeout)
                 if opener is not None
                 else transport.request(
                     "GET",
                     url,
-                    headers=request_headers,
+                    headers=per_request_headers,
                     timeout=timeout,
                     retry_on_transient=True,
                 )

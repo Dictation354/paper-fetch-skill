@@ -281,7 +281,7 @@ def _publisher_base_urls(publisher: str, landing_page_url: str | None = None) ->
     elif publisher == "pnas":
         candidates = ["https://www.pnas.org", "https://pnas.org"]
     else:
-        candidates = ["https://onlinelibrary.wiley.com", "https://www.wiley.com"]
+        candidates = ["https://onlinelibrary.wiley.com"]
 
     for candidate in candidates:
         if candidate not in base_urls:
@@ -311,21 +311,37 @@ def build_html_candidates(publisher: str, doi: str, landing_page_url: str | None
 
 def build_pdf_candidates(publisher: str, doi: str, crossref_pdf_url: str | None) -> list[str]:
     candidates: list[str] = []
-    if crossref_pdf_url:
-        candidates.append(crossref_pdf_url)
+
+    def _append(candidate: str | None) -> None:
+        normalized = normalize_text(candidate)
+        if normalized and normalized not in candidates:
+            candidates.append(normalized)
 
     if publisher == "science":
-        path_templates = ["/doi/pdf/{doi}"]
-    elif publisher == "pnas":
-        path_templates = ["/doi/pdf/{doi}?download=true", "/doi/pdf/{doi}"]
-    else:
-        path_templates = ["/doi/pdfdirect/{doi}", "/doi/pdf/{doi}", "/doi/epdf/{doi}"]
+        if crossref_pdf_url:
+            _append(crossref_pdf_url)
+        path_templates = ["/doi/epdf/{doi}", "/doi/pdf/{doi}", "/doi/pdf/{doi}?download=true"]
+        for base in _publisher_base_urls(publisher, crossref_pdf_url):
+            for template in path_templates:
+                _append(f"{base}{template.format(doi=doi)}")
+        return candidates
 
-    for base in _publisher_base_urls(publisher, crossref_pdf_url):
-        for template in path_templates:
-            candidate = f"{base}{template.format(doi=doi)}"
-            if candidate not in candidates:
-                candidates.append(candidate)
+    if publisher == "pnas":
+        if crossref_pdf_url:
+            _append(crossref_pdf_url)
+        path_templates = ["/doi/epdf/{doi}", "/doi/pdf/{doi}?download=true", "/doi/pdf/{doi}"]
+        for base in _publisher_base_urls(publisher, crossref_pdf_url):
+            for template in path_templates:
+                _append(f"{base}{template.format(doi=doi)}")
+        return candidates
+
+    for base in _publisher_base_urls(publisher, None):
+        _append(f"{base}/doi/epdf/{doi}")
+    _append(crossref_pdf_url)
+    for base in _publisher_base_urls(publisher, None):
+        _append(f"{base}/doi/pdf/{doi}")
+        _append(f"{base}/doi/pdfdirect/{doi}")
+        _append(f"{base}/wol1/doi/{doi}/fullpdf")
     return candidates
 
 

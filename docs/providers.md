@@ -22,9 +22,16 @@
 | `crossref` | 支持 | 不负责 publisher fulltext | 不支持 | 不适用 | 负责 resolve、routing signal、metadata merge 与 metadata-only fallback |
 | `elsevier` | 官方 API | `官方 XML/API -> FlareSolverr HTML` | XML 路线支持 `none` / `body` / `all`；browser fallback 当前 text-only | 强 | 公开来源可能是 `elsevier_xml` 或 `elsevier_browser` |
 | `springer` | 依赖 Crossref merge | `direct HTML -> direct HTTP PDF` | HTML 路线支持 `none` / `body` / `all`；PDF fallback 当前 text-only | 强 | `nature.com` 继续挂在 `springer` provider / `springer_html` source 下 |
-| `wiley` | 依赖 Crossref merge | `FlareSolverr HTML -> Wiley TDM API PDF` | 当前固定 text-only | 中 | HTML 依赖 repo-local FlareSolverr；PDF fallback 依赖 `WILEY_TDM_CLIENT_TOKEN` |
-| `science` | 依赖 Crossref | `FlareSolverr HTML -> seeded-browser PDF` | 当前固定 text-only | 中 | 与 `wiley` 共用浏览器工作流基座 |
-| `pnas` | 依赖 Crossref | `FlareSolverr HTML -> seeded-browser PDF` | 当前固定 text-only | 中 | 与 `wiley` 共用浏览器工作流基座 |
+| `wiley` | 依赖 Crossref merge | `FlareSolverr HTML -> Wiley TDM API PDF -> seeded-browser publisher PDF/ePDF` | 当前固定 text-only | 中 | HTML 依赖 repo-local FlareSolverr；`WILEY_TDM_CLIENT_TOKEN` 是官方快速 PDF lane；browser PDF/ePDF 需要 Playwright Chromium |
+| `science` | 依赖 Crossref | `FlareSolverr HTML -> seeded-browser publisher PDF/ePDF` | 当前固定 text-only | 中 | 与 `wiley` 共用浏览器工作流基座；AAAS access gate / entitlement 不满足时会停在 provider 内部并降级 `metadata_only` |
+| `pnas` | 依赖 Crossref | `FlareSolverr HTML -> seeded-browser publisher PDF/ePDF` | 当前固定 text-only | 中 | 与 `wiley` 共用浏览器工作流基座；较老文献常见 HTML 仅摘要，再继续走 provider 内部 PDF/ePDF fallback |
+
+说明：
+
+- 这张矩阵描述的是“当前代码里已经实现的 provider-owned waterfall”，不是“任意 DOI、任意运行环境都必然能拿到 publisher 全文”的承诺。
+- 尤其 `wiley` / `science` / `pnas` 的浏览器与 PDF/ePDF 路径，仍受 publisher 访问权限、paywall/challenge 与本地限速护栏影响。
+- `wiley` / `science` / `pnas` 现在只保留一套 provider-owned 浏览器栈：共享 `_science_pnas` bootstrap、共享 `_pdf_fallback` browser-PDF executor，不再存在单独的 Science path harness。
+- 2020+ live / regression 基准样本集中维护在 [`../tests/provider_benchmark_samples.py`](../tests/provider_benchmark_samples.py)。
 
 ## 路由规则
 
@@ -109,12 +116,20 @@ resolve
   - 优先使用 merged metadata 中的 `landing_page_url`，缺失时回退 DOI 解析。
   - 成功时公开 `source="springer_html"`。
 - `wiley`
-  - 使用 provider 自管 HTML + 官方 API PDF waterfall。
-  - 固定顺序是 `FlareSolverr HTML -> Wiley TDM API PDF -> metadata-only`。
+  - 使用 provider 自管 HTML + 官方 API PDF + publisher PDF/ePDF waterfall。
+  - 固定顺序是 `FlareSolverr HTML -> Wiley TDM API PDF -> seeded-browser publisher PDF/ePDF -> metadata-only`。
+  - `WILEY_TDM_CLIENT_TOKEN` 是官方快速 PDF lane；缺失时仍可继续尝试 browser PDF/ePDF。
   - 成功时公开 `source="wiley_browser"`。
-- `science` / `pnas`
+- `science`
+  - 固定顺序是 `FlareSolverr HTML -> seeded-browser publisher PDF/ePDF -> metadata-only`。
   - 与 `wiley` 共享同一套浏览器工作流基座。
-  - 公开 `source` 继续保持 `science` / `pnas`。
+  - 如果落到 AAAS 的 `Check access` / paywall 页面，应优先解读为 `institution not entitled / no access`，而不是 generic HTML fallback 缺失。
+  - 成功时公开 `source="science"`。
+- `pnas`
+  - 固定顺序是 `FlareSolverr HTML -> seeded-browser publisher PDF/ePDF -> metadata-only`。
+  - 与 `wiley` 共享同一套浏览器工作流基座。
+  - 较老文献常见 HTML 只到摘要页，此时 provider 会继续尝试 publisher PDF/ePDF fallback。
+  - 成功时公开 `source="pnas"`。
 
 ### 4. 通用 `html_generic` fallback
 
@@ -134,8 +149,8 @@ resolve
 
 - `elsevier` 会先在 provider 内部做 HTML fallback，再决定是否 metadata-only
 - `springer` 会先在 provider 内部做 direct HTTP PDF fallback，再决定是否 metadata-only
-- `wiley` 先在 provider 内部做 Wiley TDM API PDF fallback，再决定是否 metadata-only
-- `science` / `pnas` 先在 provider 内部做 seeded-browser PDF fallback，再决定是否 metadata-only
+- `wiley` 先在 provider 内部做 Wiley TDM API PDF，再尝试 seeded-browser publisher PDF/ePDF fallback，最后才决定是否 metadata-only
+- `science` / `pnas` 先在 provider 内部做 seeded-browser publisher PDF/ePDF fallback，再决定是否 metadata-only
 
 ### 5. metadata-only fallback
 
@@ -165,19 +180,25 @@ resolve
   - provider 自管 `direct HTML -> direct HTTP PDF`
   - 成功轨迹是 `fulltext:springer_html_*`，PDF fallback 成功时会带 `fulltext:springer_pdf_fallback_ok`
 - `wiley`
-  - provider 自管 HTML + Wiley TDM API PDF waterfall
-  - 成功轨迹是 `fulltext:wiley_html_*` / `fulltext:wiley_pdf_api_ok` / `fulltext:wiley_pdf_fallback_ok`
-- `science` / `pnas`
-  - provider 自管浏览器工作流
-  - 继续保持现有 `science` / `pnas` 风格的公开来源与轨迹命名
+  - provider 自管 HTML + Wiley TDM API PDF + seeded-browser publisher PDF/ePDF waterfall
+  - 成功轨迹是 `fulltext:wiley_html_*` / `fulltext:wiley_pdf_api_ok` / `fulltext:wiley_pdf_browser_ok` / `fulltext:wiley_pdf_fallback_ok`
+  - 失败时若 API lane 未产出 PDF，会保留 `fulltext:wiley_pdf_api_fail`；若 browser PDF/ePDF lane 已实际尝试但失败，会再带 `fulltext:wiley_pdf_browser_fail`
+- `science`
+  - provider 自管 `FlareSolverr HTML + seeded-browser publisher PDF/ePDF`
+  - `fulltext:science_html_fail` / `fulltext:science_pdf_fallback_ok` 只描述 provider 主链的阶段切换；如果页面本身就是 access gate，更准确的业务解释应是 `institution not entitled / no access`
+  - 继续保持现有 `science` 风格的公开来源与轨迹命名
+- `pnas`
+  - provider 自管 `FlareSolverr HTML + seeded-browser publisher PDF/ePDF`
+  - 较老文献可能先表现为 `fulltext:pnas_html_fail`，再进入 `fulltext:pnas_pdf_fallback_ok`
+  - 继续保持现有 `pnas` 风格的公开来源与轨迹命名
 
 因此：
 
 - `strategy.allow_html_fallback=false` 不会关闭它们自己的 provider 主路径
 - 对 `elsevier` 来说，它不会关闭内部 FlareSolverr HTML fallback
 - 对 `springer` 来说，它不会关闭 direct HTML 主路径
-- 对 `wiley` 来说，它不会关闭内部 `FlareSolverr HTML -> Wiley TDM API PDF`
-- 对 `science` / `pnas` 来说，它不会关闭内部 `FlareSolverr HTML -> seeded-browser PDF`
+- 对 `wiley` 来说，它不会关闭内部 `FlareSolverr HTML -> Wiley TDM API PDF -> seeded-browser publisher PDF/ePDF`
+- 对 `science` / `pnas` 来说，它不会关闭内部 `FlareSolverr HTML -> seeded-browser publisher PDF/ePDF`
 
 ## 默认输出策略
 
@@ -359,5 +380,8 @@ Springer direct HTML / direct HTTP PDF 路线当前没有额外必填 publisher 
   - 同时检查 API key 与 browser fallback runtime，就绪度可能表现为 `ready` / `partial` / `not_configured`。
 - `springer`
   - 返回本地 direct HTML route 就绪状态；不依赖 FlareSolverr。
-- `wiley` / `science` / `pnas`
+- `wiley`
+  - 统一检查 `runtime_env`、`repo_local_workflow`、`flaresolverr_health`、`rate_limit_window`，以及可选的 `tdm_api_token`。
+  - browser runtime ready 时，即使 `WILEY_TDM_CLIENT_TOKEN` 缺失，也应表现为 `ready`。
+- `science` / `pnas`
   - 统一检查 `runtime_env`、`repo_local_workflow`、`flaresolverr_health`、`rate_limit_window`。

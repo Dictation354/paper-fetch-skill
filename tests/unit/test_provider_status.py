@@ -166,14 +166,14 @@ class ProviderStatusTests(unittest.TestCase):
                 result = WileyClient(DummyTransport(), env).probe_status()
         checks = {check.name: check for check in result.checks}
 
-        self.assertEqual(result.status, "partial")
+        self.assertEqual(result.status, "ready")
         self.assertTrue(result.available)
         self.assertEqual(checks["runtime_env"].status, "ok")
         self.assertEqual(checks["repo_local_workflow"].status, "ok")
         self.assertEqual(checks["flaresolverr_health"].status, "ok")
         self.assertEqual(checks["rate_limit_window"].status, "ok")
-        self.assertEqual(checks["tdm_api_token"].status, "not_configured")
-        self.assertIn(WILEY_TDM_CLIENT_TOKEN_ENV_VAR, result.missing_env)
+        self.assertEqual(checks["tdm_api_token"].status, "ok")
+        self.assertNotIn(WILEY_TDM_CLIENT_TOKEN_ENV_VAR, result.missing_env)
 
     def test_wiley_status_is_ready_when_html_runtime_and_tdm_token_are_ready(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

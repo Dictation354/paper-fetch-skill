@@ -20,7 +20,7 @@ DEFAULT_FETCH_NOTES: tuple[str, ...] = (
 SKILL_ENVIRONMENT_VARIABLES: tuple[tuple[str, str], ...] = (
     ("ELSEVIER_API_KEY", "Required for official Elsevier full-text access."),
     ("ELSEVIER_INSTTOKEN", "Optional institution token for Elsevier entitlement."),
-    ("WILEY_TDM_CLIENT_TOKEN", "Optional Wiley Text and Data Mining client token for official Wiley PDF fallback."),
+    ("WILEY_TDM_CLIENT_TOKEN", "Optional Wiley Text and Data Mining client token for the official Wiley PDF lane; browser PDF/ePDF fallback can still run without it when the local runtime is ready."),
     ("FLARESOLVERR_URL", "Optional override for the local Elsevier/Wiley/Science/PNAS FlareSolverr endpoint; defaults to http://127.0.0.1:8191/v1."),
     ("FLARESOLVERR_ENV_FILE", "Required for Elsevier browser fallback and Wiley/Science/PNAS; points at a repo-local vendor/flaresolverr preset file."),
     ("FLARESOLVERR_SOURCE_DIR", "Optional override for the repo-local vendor/flaresolverr directory."),
@@ -84,9 +84,10 @@ def server_instructions() -> str:
         "repo-local FlareSolverr HTML before degrading to metadata-only, publishing "
         "`elsevier_xml` or `elsevier_browser`. `springer` keeps a provider-managed direct HTML route "
         "with direct HTTP PDF fallback and publishes `springer_html`. `wiley` keeps "
-        "the repo-local FlareSolverr HTML route and may then use the official Wiley "
-        "TDM API for PDF fallback when `WILEY_TDM_CLIENT_TOKEN` is configured, still "
-        "publishing `wiley_browser`; otherwise it degrades to metadata-only. `science` "
+        "the repo-local FlareSolverr HTML route, may then use the official Wiley "
+        "TDM API PDF lane when `WILEY_TDM_CLIENT_TOKEN` is configured, and may still "
+        "continue into seeded-browser publisher PDF/ePDF fallback while publishing "
+        "`wiley_browser`. `science` "
         "and `pnas` require repo-local FlareSolverr plus "
         "explicit local rate-limit env vars and keep their existing public source names. "
         "Elsevier browser fallback plus Wiley/Science/PNAS currently return text-only "
@@ -116,11 +117,11 @@ def fetch_tool_description() -> str:
         "repo-local FlareSolverr HTML before degrading to metadata-only, publishing "
         "`elsevier_xml` or `elsevier_browser`. `springer` uses provider-managed direct HTML and direct "
         "HTTP PDF fallback while keeping public source `springer_html`. `wiley` keeps "
-        "repo-local FlareSolverr HTML first and may then use the official Wiley TDM "
-        "API for PDF fallback when `WILEY_TDM_CLIENT_TOKEN` is configured, otherwise "
-        "it degrades to metadata-only while still publishing source `wiley_browser` on "
-        "success. `science` and `pnas` routes use "
-        "provider-managed FlareSolverr HTML plus seeded-browser PDF repo-local "
+        "repo-local FlareSolverr HTML first, may then use the official Wiley TDM "
+        "API PDF lane when `WILEY_TDM_CLIENT_TOKEN` is configured, and may still "
+        "continue into seeded-browser publisher PDF/ePDF fallback while publishing "
+        "source `wiley_browser` on success. `science` and `pnas` routes use "
+        "provider-managed FlareSolverr HTML plus seeded-browser publisher PDF/ePDF repo-local "
         "workflows and keep their existing public source names. Elsevier browser "
         "fallback plus Wiley/Science/PNAS downgrade body/all requests to text-only "
         "with warnings, and Springer PDF fallback is also text-only in this version. Set "

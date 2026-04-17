@@ -30,6 +30,26 @@ def _append_candidate(candidates: list[str], candidate: str | None, *, source_ur
         candidates.append(normalized)
 
 
+def _append_query_param_pdf_candidates(
+    candidates: list[str],
+    candidate: str | None,
+    *,
+    source_url: str | None = None,
+) -> None:
+    normalized = normalize_text(candidate)
+    if not normalized:
+        return
+    absolute = urllib.parse.urljoin(source_url or "", normalized)
+    parsed = urllib.parse.urlparse(absolute)
+    for key, values in urllib.parse.parse_qs(parsed.query, keep_blank_values=True).items():
+        if normalize_text(key).lower() not in {"file", "pdf", "src", "url"}:
+            continue
+        for value in values:
+            lowered_value = normalize_text(value).lower()
+            if any(token in lowered_value for token in PDF_HREF_TOKENS):
+                _append_candidate(candidates, value, source_url=absolute)
+
+
 def extract_pdf_url_from_metadata_links(metadata: Mapping[str, Any]) -> str | None:
     for item in metadata.get("fulltext_links") or []:
         if not isinstance(item, Mapping):
@@ -57,15 +77,22 @@ def extract_pdf_candidate_urls_from_html(html_text: str, source_url: str) -> lis
         meta_key = normalize_text(meta.get("name") or meta.get("property") or meta.get("itemprop")).lower()
         if "citation_pdf_url" in meta_key or meta_key.endswith("pdf_url") or meta_key == "pdf_url":
             _append_candidate(candidates, content, source_url=source_url)
+            _append_query_param_pdf_candidates(candidates, content, source_url=source_url)
 
-    for node in soup.find_all(["a", "link"]):
-        href = normalize_text(node.get("href"))
-        if not href:
+    for node in soup.find_all(["a", "link", "iframe", "embed", "object"]):
+        target = normalize_text(node.get("href") or node.get("src") or node.get("data"))
+        if not target:
             continue
-        lowered_href = href.lower()
+        lowered_href = target.lower()
+        content_type = normalize_text(node.get("type")).lower()
         label = normalize_text(" ".join(filter(None, [node.get_text(" ", strip=True), node.get("title"), node.get("aria-label")]))).lower()
-        if any(token in lowered_href for token in PDF_HREF_TOKENS) or any(token in label for token in PDF_LINK_TEXT_TOKENS):
-            _append_candidate(candidates, href, source_url=source_url)
+        if (
+            any(token in lowered_href for token in PDF_HREF_TOKENS)
+            or any(token in label for token in PDF_LINK_TEXT_TOKENS)
+            or "pdf" in content_type
+        ):
+            _append_candidate(candidates, target, source_url=source_url)
+            _append_query_param_pdf_candidates(candidates, target, source_url=source_url)
 
     return candidates
 

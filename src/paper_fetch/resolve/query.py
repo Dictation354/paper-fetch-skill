@@ -139,6 +139,19 @@ def resolve_query(
                     retry_on_transient=True,
                 )
         except RequestFailure as exc:
+            if direct_doi:
+                provider_hint = infer_provider_from_signals(
+                    landing_urls=[normalized_query],
+                    doi=direct_doi,
+                )
+                return ResolvedQuery(
+                    query=normalized_query,
+                    query_kind="url",
+                    doi=direct_doi,
+                    landing_url=normalized_query,
+                    provider_hint=provider_hint,
+                    confidence=1.0,
+                )
             raise ProviderFailure("error", f"Failed to fetch landing page: {exc}") from exc
         response_url = urllib.parse.urljoin(current_url, str(response.get("url") or "").strip() or current_url)
         html_metadata = parse_html_metadata(decode_html(response["body"]), response_url)

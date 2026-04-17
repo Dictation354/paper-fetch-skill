@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<full-text-retrieval-response
+  xmlns="http://www.elsevier.com/xml/svapi/article/dtd"
+  xmlns:ce="http://www.elsevier.com/xml/common/dtd"
+>
+  <body>
+    <ce:sections>
+      <ce:section>
+        <ce:section-title>Introduction</ce:section-title>
+        <ce:para>
+          This minimized fixture paraphrases the 2025 Remote Sensing of Environment article into a compact offline sample
+          while preserving the section structure that the Elsevier XML parser relies on.
+        </ce:para>
+        <ce:para>
+          It focuses on seasonal vegetation greenness over Southeast Asia and keeps enough narrative body text to exercise
+          heading extraction, section normalization and AI-markdown rendering.
+        </ce:para>
+      </ce:section>
+
+      <ce:section>
+        <ce:section-title>Data sources</ce:section-title>
+        <ce:para>
+          The article compares geostationary observations with ancillary environmental signals to describe regional greenness
+          cycles, cloud effects and temporal coverage tradeoffs.
+        </ce:para>
+      </ce:section>
+
+      <ce:section>
+        <ce:section-title>Seasonal transitions</ce:section-title>
+        <ce:para>
+          Seasonal onset and decline vary across monsoon regimes, elevation and land cover, which makes high-cadence
+          geostationary monitoring useful for resolving rapid transitions.
+        </ce:para>
+      </ce:section>
+
+      <ce:section>
+        <ce:section-title>Regional implications</ce:section-title>
+        <ce:para>
+          Stable vegetation-greenness timing helps downstream climate, agriculture and ecosystem analyses that need
+          consistent phenology signals over large tropical regions.
+        </ce:para>
+      </ce:section>
+    </ce:sections>
+  </body>
+</full-text-retrieval-response>

@@ -22,8 +22,9 @@
 - 它们是公开 provider 名字，可能出现在 `provider_hint`、`preferred_providers` 中
 - metadata 仍由 `crossref` 提供
 - `elsevier` 的浏览器链路是 `FlareSolverr HTML -> metadata-only`，前面仍有官方 XML/API 主链
-- `wiley` 的正文链路是 provider 自管的 `FlareSolverr HTML -> Wiley TDM API PDF -> metadata-only`
-- `science` / `pnas` 的正文链路仍是 provider 自管的 `FlareSolverr HTML -> seeded-browser PDF -> metadata-only`
+- `wiley` 的正文链路是 provider 自管的 `FlareSolverr HTML -> Wiley TDM API PDF -> seeded-browser publisher PDF/ePDF -> metadata-only`
+- `science` / `pnas` 的正文链路仍是 provider 自管的 `FlareSolverr HTML -> seeded-browser publisher PDF/ePDF -> metadata-only`
+- `wiley` / `science` / `pnas` 共用同一套 provider-owned 浏览器 bootstrap 与 browser-PDF executor，不再保留单独的 Science path harness
 - `source` 公开可能是 `elsevier_browser`、`wiley_browser`、`science` 或 `pnas`
 - `asset_profile=body|all` 当前都会降级成 text-only
 - 这条链路只保证在当前仓库 checkout 中运行
@@ -76,7 +77,7 @@ export FLARESOLVERR_SOURCE_DIR="$PWD/vendor/flaresolverr"
 它会顺手准备：
 
 - `vendor/flaresolverr/` 源码工作流
-- `science` / `pnas` 所需的 Playwright Chromium
+- `wiley` / `science` / `pnas` 所需的 Playwright Chromium
 - `headless` preset 所需的 `Xvfb` 检查
 
 如果你只想手动准备 Elsevier browser fallback / Wiley / Science / PNAS 依赖：
@@ -85,7 +86,7 @@ export FLARESOLVERR_SOURCE_DIR="$PWD/vendor/flaresolverr"
 bash ./vendor/flaresolverr/setup_flaresolverr_source.sh
 ```
 
-如果你还要启用 `science` / `pnas` 的 seeded-browser PDF fallback，再补：
+如果你还要启用 `wiley` / `science` / `pnas` 的 seeded-browser PDF/ePDF fallback，再补：
 
 ```bash
 python3 -m playwright install chromium
@@ -177,8 +178,8 @@ PYTHONPATH=src python3 -m unittest tests.live.test_live_science_pnas -q
 
 ### HTML 失败但 provider 最终成功
 
-- 对 `wiley` 来说，这可能是 `FlareSolverr HTML -> Wiley TDM API PDF` 的正常路径
-- 对 `science` / `pnas` 来说，这可能是 `FlareSolverr HTML -> seeded-browser PDF` 的正常路径
+- 对 `wiley` 来说，这可能是 `FlareSolverr HTML -> Wiley TDM API PDF`，也可能继续进入 seeded-browser publisher PDF/ePDF
+- 对 `science` / `pnas` 来说，这可能是 `FlareSolverr HTML -> seeded-browser publisher PDF/ePDF` 的正常路径
 - 对 `elsevier` 来说，HTML 失败后会直接降级 metadata-only，不再继续 PDF fallback
 - 最终成功与否以结果为准
 - 细节看 `source_trail`
