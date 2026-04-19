@@ -8,23 +8,25 @@ from typing import Any, Mapping
 
 from ..config import build_user_agent
 from ..metadata_types import ProviderMetadata
-from ..models import article_from_markdown, metadata_only_article
+from ..models import AssetProfile, article_from_markdown, metadata_only_article
 from ..publisher_identity import normalize_doi
-from ..utils import normalize_text
+from ..utils import empty_asset_results, normalize_text
+from . import html_generic
 from ._flaresolverr import (
     FlareSolverrFailure,
     ensure_runtime_ready,
     fetch_html_with_flaresolverr,
     load_runtime_config,
+    merge_browser_context_seeds,
     probe_runtime_status,
     warm_browser_context_with_flaresolverr,
 )
 from ._pdf_fallback import PdfFallbackFailure, fetch_pdf_with_playwright
-from ._science_pnas_html import (
-    SciencePnasHtmlFailure,
+from ._html_access_signals import SciencePnasHtmlFailure
+from ._science_pnas_html import extract_science_pnas_markdown, rewrite_inline_figure_links
+from ._science_pnas_profiles import (
     build_html_candidates,
     build_pdf_candidates,
-    extract_science_pnas_markdown,
     extract_pdf_url_from_crossref,
     preferred_html_candidate_from_landing_page,
 )
@@ -61,6 +63,38 @@ def _choose_playwright_seed_url(*candidates: str | None) -> str | None:
         if not _looks_like_pdf_navigation_url(candidate):
             return candidate
     return normalized_candidates[0] if normalized_candidates else None
+
+
+def _leading_body_after_abstract(
+    metadata_abstract: str | None,
+    extracted_abstract: str | None,
+) -> str | None:
+    normalized_metadata = normalize_text(metadata_abstract)
+    normalized_abstract = normalize_text(extracted_abstract)
+    if not normalized_metadata or not normalized_abstract or normalized_metadata == normalized_abstract:
+        return None
+    if not normalized_metadata.startswith(normalized_abstract):
+        return None
+    remainder = normalized_metadata[len(normalized_abstract) :].strip()
+    return remainder or None
+
+
+def _prepend_leading_body_markdown(markdown_text: str, lead_body: str | None) -> str:
+    normalized_lead_body = normalize_text(lead_body)
+    if not normalized_lead_body:
+        return markdown_text
+    if normalized_lead_body in normalize_text(markdown_text):
+        return markdown_text
+
+    main_text_block = f"## Main Text\n\n{normalized_lead_body}"
+    stripped_markdown = markdown_text.strip()
+    if not stripped_markdown:
+        return main_text_block
+    if stripped_markdown.startswith("# "):
+        parts = stripped_markdown.split("\n\n", 1)
+        if len(parts) == 2:
+            return f"{parts[0]}\n\n{main_text_block}\n\n{parts[1]}".strip()
+    return f"{main_text_block}\n\n{stripped_markdown}".strip()
 
 
 def bootstrap_browser_workflow(
@@ -130,6 +164,8 @@ def bootstrap_browser_workflow(
                 "source_trail": [f"fulltext:{client.name}_html_ok"],
                 "html_fetcher": "flaresolverr",
                 "extraction": extraction,
+                "availability_diagnostics": extraction.get("availability_diagnostics"),
+                "browser_context_seed": dict(result.browser_context_seed or {}),
             },
             needs_local_copy=False,
         )
@@ -306,6 +342,68 @@ class BrowserWorkflowClient(ProviderClient):
                 ),
             ) from exc
 
+    def download_related_assets(
+        self,
+        doi: str,
+        metadata: ProviderMetadata,
+        raw_payload: RawFulltextPayload,
+        output_dir,
+        *,
+        asset_profile: AssetProfile = "all",
+    ) -> dict[str, list[dict[str, Any]]]:
+        if output_dir is None or asset_profile == "none":
+            return empty_asset_results()
+        if str(raw_payload.metadata.get("route") or "").strip().lower() != "html":
+            return empty_asset_results()
+
+        html_text = html_generic.decode_html(raw_payload.body)
+        article_assets = html_generic.extract_html_assets(
+            html_text,
+            raw_payload.source_url,
+            asset_profile=asset_profile,
+        )
+        if not article_assets:
+            return empty_asset_results()
+
+        normalized_doi = normalize_doi(str(metadata.get("doi") or doi or ""))
+        if not normalized_doi:
+            return empty_asset_results()
+
+        runtime = load_runtime_config(self.env, provider=self.name, doi=normalized_doi)
+        ensure_runtime_ready(runtime)
+        browser_context_seed = merge_browser_context_seeds(raw_payload.metadata.get("browser_context_seed"))
+
+        def figure_page_fetcher(figure_page_url: str) -> tuple[str, str] | None:
+            try:
+                html_result = fetch_html_with_flaresolverr(
+                    [figure_page_url],
+                    publisher=self.name,
+                    config=runtime,
+                )
+            except FlareSolverrFailure:
+                return None
+            browser_context_seed.update(
+                merge_browser_context_seeds(browser_context_seed, html_result.browser_context_seed)
+            )
+            return html_result.html, html_result.final_url
+
+        article_id = (
+            normalized_doi
+            or normalize_text(str(metadata.get("title") or ""))
+            or raw_payload.source_url
+        )
+        return html_generic.download_figure_assets(
+            self.transport,
+            article_id=article_id,
+            assets=article_assets,
+            output_dir=output_dir,
+            user_agent=self.user_agent,
+            asset_profile=asset_profile,
+            figure_page_fetcher=figure_page_fetcher,
+            browser_context_seed=browser_context_seed,
+            seed_urls=[raw_payload.source_url],
+        )
+
     def to_article_model(
         self,
         metadata: ProviderMetadata,
@@ -319,6 +417,26 @@ class BrowserWorkflowClient(ProviderClient):
         source_trail = [str(item) for item in raw_payload.metadata.get("source_trail") or [] if str(item).strip()]
         doi = normalize_doi(metadata.get("doi"))
         source = self.article_source()
+        assets = list(downloaded_assets or [])
+        content_type = str(raw_payload.content_type or "").lower()
+
+        if not markdown_text and "html" in content_type:
+            html_text = bytes(raw_payload.body or b"").decode("utf-8", errors="replace").strip()
+            if html_text:
+                try:
+                    markdown_text, extraction = self.extract_markdown(
+                        html_text,
+                        raw_payload.source_url or str(metadata.get("landing_page_url") or ""),
+                        metadata=metadata,
+                    )
+                except SciencePnasHtmlFailure as exc:
+                    warnings.append(f"{self.name} HTML content was not usable ({exc.message}).")
+                else:
+                    raw_payload.metadata["markdown_text"] = markdown_text
+                    raw_payload.metadata["extraction"] = extraction
+                    diagnostics = extraction.get("availability_diagnostics")
+                    if diagnostics is not None:
+                        raw_payload.metadata["availability_diagnostics"] = diagnostics
 
         if not markdown_text:
             warnings.append(f"{self.name} retrieval did not produce usable markdown.")
@@ -329,12 +447,31 @@ class BrowserWorkflowClient(ProviderClient):
                 warnings=warnings,
                 source_trail=source_trail + [f"fulltext:{self.name}_parse_fail"],
             )
+        if asset_failures:
+            warnings.append(f"{self.name} related assets were only partially downloaded ({len(asset_failures)} failed).")
+        if assets and markdown_text:
+            markdown_text = rewrite_inline_figure_links(
+                markdown_text,
+                figure_assets=assets,
+                publisher=self.name,
+            )
+
+        article_metadata = dict(metadata)
+        extraction_payload = raw_payload.metadata.get("extraction") if isinstance(raw_payload.metadata, Mapping) else None
+        extracted_abstract = normalize_text(
+            extraction_payload.get("abstract_text") if isinstance(extraction_payload, Mapping) else ""
+        )
+        if extracted_abstract:
+            lead_body = _leading_body_after_abstract(article_metadata.get("abstract"), extracted_abstract)
+            article_metadata["abstract"] = extracted_abstract
+            markdown_text = _prepend_leading_body_markdown(markdown_text, lead_body)
 
         return article_from_markdown(
             source=source,
-            metadata=metadata,
+            metadata=article_metadata,
             doi=doi or None,
             markdown_text=markdown_text,
+            assets=assets,
             warnings=warnings,
             source_trail=source_trail,
         )

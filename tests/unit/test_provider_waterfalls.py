@@ -7,7 +7,7 @@ from unittest import mock
 
 from paper_fetch.providers import _flaresolverr, _science_pnas, elsevier as elsevier_provider, springer as springer_provider, wiley as wiley_provider
 from paper_fetch.providers.base import ProviderFailure, RawFulltextPayload
-from tests.provider_benchmark_samples import provider_benchmark_sample
+from tests.provider_benchmark_samples import WILEY_PDF_FALLBACK_SAMPLE, provider_benchmark_sample
 from tests.paths import FIXTURE_DIR
 from tests.unit._paper_fetch_support import fulltext_pdf_bytes
 
@@ -15,6 +15,7 @@ from tests.unit._paper_fetch_support import fulltext_pdf_bytes
 ELSEVIER_SAMPLE = provider_benchmark_sample("elsevier")
 SPRINGER_SAMPLE = provider_benchmark_sample("springer")
 WILEY_SAMPLE = provider_benchmark_sample("wiley")
+WILEY_PDF_SAMPLE = WILEY_PDF_FALLBACK_SAMPLE
 
 
 class PublisherWaterfallTests(unittest.TestCase):
@@ -63,6 +64,79 @@ class PublisherWaterfallTests(unittest.TestCase):
         self.assertEqual(raw_payload.provider, "elsevier")
         self.assertEqual(article.source, "elsevier_xml")
         self.assertTrue(article.quality.has_fulltext)
+
+    def test_elsevier_official_xml_usable_records_structured_diagnostics(self) -> None:
+        doi = ELSEVIER_SAMPLE.doi
+        metadata = {
+            "doi": doi,
+            "title": ELSEVIER_SAMPLE.title,
+            "landing_page_url": ELSEVIER_SAMPLE.landing_url,
+        }
+        xml_body = (FIXTURE_DIR / ELSEVIER_SAMPLE.fixture_name).read_bytes()
+        raw_payload = RawFulltextPayload(
+            provider="elsevier",
+            source_url="https://api.elsevier.com/content/article/doi/example",
+            content_type="text/xml",
+            body=xml_body,
+            metadata={"route": "official", "reason": "Downloaded full text from the official Elsevier API."},
+        )
+        client = elsevier_provider.ElsevierClient(transport=mock.Mock(), env={"ELSEVIER_API_KEY": "secret"})
+
+        usable = client._official_payload_is_usable(metadata, raw_payload)
+
+        self.assertTrue(usable)
+        diagnostics = raw_payload.metadata["availability_diagnostics"]
+        self.assertEqual(diagnostics["content_kind"], "fulltext")
+        self.assertTrue(diagnostics["accepted"])
+        self.assertEqual(diagnostics["reason"], "structured_body_sections")
+
+    def test_elsevier_official_plain_text_uses_body_sufficiency(self) -> None:
+        raw_payload = RawFulltextPayload(
+            provider="elsevier",
+            source_url="https://api.elsevier.com/content/article/doi/example",
+            content_type="text/plain",
+            body=("# Example Article\n\n## Results\n\n" + ("Body text " * 120)).encode("utf-8"),
+            metadata={"route": "official", "reason": "Downloaded full text from the official Elsevier API."},
+        )
+        client = elsevier_provider.ElsevierClient(transport=mock.Mock(), env={"ELSEVIER_API_KEY": "secret"})
+
+        usable = client._official_payload_is_usable(
+            {"doi": "10.1016/example", "title": "Example Article"},
+            raw_payload,
+        )
+
+        self.assertTrue(usable)
+        diagnostics = raw_payload.metadata["availability_diagnostics"]
+        self.assertEqual(diagnostics["content_kind"], "fulltext")
+        self.assertTrue(diagnostics["accepted"])
+        self.assertEqual(diagnostics["reason"], "body_sufficient")
+
+    def test_elsevier_official_xml_without_body_sections_is_unusable(self) -> None:
+        raw_payload = RawFulltextPayload(
+            provider="elsevier",
+            source_url="https://api.elsevier.com/content/article/doi/example",
+            content_type="text/xml",
+            body=b"<xml />",
+            metadata={"route": "official", "reason": "Downloaded full text from the official Elsevier API."},
+        )
+        fake_article = mock.Mock()
+        fake_article.quality = mock.Mock(has_fulltext=True)
+        fake_article.sections = [mock.Mock(kind="abstract", text="Abstract only.")]
+        fake_article.assets = []
+        fake_article.metadata = mock.Mock(title="Example Article")
+        client = elsevier_provider.ElsevierClient(transport=mock.Mock(), env={"ELSEVIER_API_KEY": "secret"})
+
+        with mock.patch.object(client, "to_article_model", return_value=fake_article):
+            usable = client._official_payload_is_usable(
+                {"doi": "10.1016/example", "title": "Example Article"},
+                raw_payload,
+            )
+
+        self.assertFalse(usable)
+        diagnostics = raw_payload.metadata["availability_diagnostics"]
+        self.assertEqual(diagnostics["content_kind"], "abstract_only")
+        self.assertFalse(diagnostics["accepted"])
+        self.assertEqual(diagnostics["reason"], "structured_missing_body_sections")
 
     def test_elsevier_falls_back_to_browser_html(self) -> None:
         doi = ELSEVIER_SAMPLE.doi
@@ -385,11 +459,11 @@ class PublisherWaterfallTests(unittest.TestCase):
         self.assertIn("fulltext:wiley_html_ok", article.quality.source_trail)
 
     def test_wiley_uses_official_tdm_api_pdf_when_html_is_not_usable(self) -> None:
-        doi = WILEY_SAMPLE.doi
+        doi = WILEY_PDF_SAMPLE.doi
         metadata = {
             "doi": doi,
-            "title": WILEY_SAMPLE.title,
-            "landing_page_url": WILEY_SAMPLE.landing_url,
+            "title": WILEY_PDF_SAMPLE.title,
+            "landing_page_url": WILEY_PDF_SAMPLE.landing_url,
         }
         client = wiley_provider.WileyClient(
             transport=mock.Mock(),
@@ -416,7 +490,7 @@ class PublisherWaterfallTests(unittest.TestCase):
                         source_url=f"https://api.wiley.com/onlinelibrary/tdm/v1/articles/{doi}",
                         final_url=f"https://api.wiley.com/onlinelibrary/tdm/v1/articles/{doi}",
                         pdf_bytes=fulltext_pdf_bytes(),
-                        markdown_text=f"# {WILEY_SAMPLE.title}\n\n## Results\n\n" + ("Body text " * 120),
+                        markdown_text=f"# {WILEY_PDF_SAMPLE.title}\n\n## Results\n\n" + ("Body text " * 120),
                         suggested_filename="article.pdf",
                     ),
                 ) as mocked_api,
@@ -435,11 +509,11 @@ class PublisherWaterfallTests(unittest.TestCase):
         self.assertEqual(api_headers["Wiley-TDM-Client-Token"], "secret")
 
     def test_wiley_missing_tdm_token_can_use_browser_pdf_fallback(self) -> None:
-        doi = WILEY_SAMPLE.doi
+        doi = WILEY_PDF_SAMPLE.doi
         metadata = {
             "doi": doi,
-            "title": WILEY_SAMPLE.title,
-            "landing_page_url": WILEY_SAMPLE.landing_url,
+            "title": WILEY_PDF_SAMPLE.title,
+            "landing_page_url": WILEY_PDF_SAMPLE.landing_url,
         }
         client = wiley_provider.WileyClient(transport=mock.Mock(), env={})
 
@@ -459,7 +533,7 @@ class PublisherWaterfallTests(unittest.TestCase):
                                 {"name": "cf_clearance", "value": "seed", "domain": ".wiley.com", "path": "/"}
                             ],
                             "browser_user_agent": "Mozilla/5.0",
-                            "browser_final_url": WILEY_SAMPLE.landing_url,
+                            "browser_final_url": WILEY_PDF_SAMPLE.landing_url,
                         },
                     ),
                 ),
@@ -472,7 +546,7 @@ class PublisherWaterfallTests(unittest.TestCase):
                             {"name": "sessionid", "value": "warm", "domain": ".wiley.com", "path": "/"},
                         ],
                         "browser_user_agent": "Mozilla/5.0",
-                        "browser_final_url": WILEY_SAMPLE.landing_url,
+                        "browser_final_url": WILEY_PDF_SAMPLE.landing_url,
                     },
                 ) as mocked_warm,
                 mock.patch.object(wiley_provider, "_fetch_wiley_tdm_pdf_result") as mocked_api,
@@ -483,7 +557,7 @@ class PublisherWaterfallTests(unittest.TestCase):
                         source_url=f"https://onlinelibrary.wiley.com/doi/epdf/{doi}",
                         final_url=f"https://onlinelibrary.wiley.com/doi/epdf/{doi}",
                         pdf_bytes=fulltext_pdf_bytes(),
-                        markdown_text=f"# {WILEY_SAMPLE.title}\n\n## Results\n\n" + ("Body text " * 120),
+                        markdown_text=f"# {WILEY_PDF_SAMPLE.title}\n\n## Results\n\n" + ("Body text " * 120),
                         suggested_filename="article.pdf",
                     ),
                 ) as mocked_browser_pdf,
@@ -510,11 +584,11 @@ class PublisherWaterfallTests(unittest.TestCase):
         )
 
     def test_wiley_falls_back_to_browser_pdf_after_tdm_api_failure(self) -> None:
-        doi = WILEY_SAMPLE.doi
+        doi = WILEY_PDF_SAMPLE.doi
         metadata = {
             "doi": doi,
-            "title": WILEY_SAMPLE.title,
-            "landing_page_url": WILEY_SAMPLE.landing_url,
+            "title": WILEY_PDF_SAMPLE.title,
+            "landing_page_url": WILEY_PDF_SAMPLE.landing_url,
         }
         client = wiley_provider.WileyClient(
             transport=mock.Mock(),
@@ -537,7 +611,7 @@ class PublisherWaterfallTests(unittest.TestCase):
                                 {"name": "cf_clearance", "value": "seed", "domain": ".wiley.com", "path": "/"}
                             ],
                             "browser_user_agent": "Mozilla/5.0",
-                            "browser_final_url": WILEY_SAMPLE.landing_url,
+                            "browser_final_url": WILEY_PDF_SAMPLE.landing_url,
                         },
                     ),
                 ),
@@ -558,7 +632,7 @@ class PublisherWaterfallTests(unittest.TestCase):
                             {"name": "sessionid", "value": "warm", "domain": ".wiley.com", "path": "/"},
                         ],
                         "browser_user_agent": "Mozilla/5.0",
-                        "browser_final_url": WILEY_SAMPLE.landing_url,
+                        "browser_final_url": WILEY_PDF_SAMPLE.landing_url,
                     },
                 ) as mocked_warm,
                 mock.patch.object(
@@ -568,7 +642,7 @@ class PublisherWaterfallTests(unittest.TestCase):
                         source_url=f"https://onlinelibrary.wiley.com/doi/epdf/{doi}",
                         final_url=f"https://onlinelibrary.wiley.com/doi/epdf/{doi}",
                         pdf_bytes=fulltext_pdf_bytes(),
-                        markdown_text=f"# {WILEY_SAMPLE.title}\n\n## Results\n\n" + ("Body text " * 120),
+                        markdown_text=f"# {WILEY_PDF_SAMPLE.title}\n\n## Results\n\n" + ("Body text " * 120),
                         suggested_filename="article.pdf",
                     ),
                 ) as mocked_browser_pdf,
@@ -586,11 +660,11 @@ class PublisherWaterfallTests(unittest.TestCase):
         self.assertNotIn("fulltext:wiley_pdf_api_fail", article.quality.source_trail)
 
     def test_wiley_reports_api_and_browser_pdf_failures_after_html_failure(self) -> None:
-        doi = WILEY_SAMPLE.doi
+        doi = WILEY_PDF_SAMPLE.doi
         metadata = {
             "doi": doi,
-            "title": WILEY_SAMPLE.title,
-            "landing_page_url": WILEY_SAMPLE.landing_url,
+            "title": WILEY_PDF_SAMPLE.title,
+            "landing_page_url": WILEY_PDF_SAMPLE.landing_url,
         }
         client = wiley_provider.WileyClient(
             transport=mock.Mock(),
@@ -624,7 +698,7 @@ class PublisherWaterfallTests(unittest.TestCase):
                     return_value={
                         "browser_cookies": [{"name": "sessionid", "value": "warm", "domain": ".wiley.com", "path": "/"}],
                         "browser_user_agent": "Mozilla/5.0",
-                        "browser_final_url": WILEY_SAMPLE.landing_url,
+                        "browser_final_url": WILEY_PDF_SAMPLE.landing_url,
                     },
                 ),
                 mock.patch.object(
@@ -649,11 +723,11 @@ class PublisherWaterfallTests(unittest.TestCase):
         self.assertIn("Wiley browser PDF failure", raised.exception.message)
 
     def test_wiley_can_use_official_tdm_api_when_browser_runtime_is_not_configured(self) -> None:
-        doi = WILEY_SAMPLE.doi
+        doi = WILEY_PDF_SAMPLE.doi
         metadata = {
             "doi": doi,
-            "title": WILEY_SAMPLE.title,
-            "landing_page_url": WILEY_SAMPLE.landing_url,
+            "title": WILEY_PDF_SAMPLE.title,
+            "landing_page_url": WILEY_PDF_SAMPLE.landing_url,
         }
         client = wiley_provider.WileyClient(
             transport=mock.Mock(),
@@ -677,7 +751,7 @@ class PublisherWaterfallTests(unittest.TestCase):
                     source_url=f"https://api.wiley.com/onlinelibrary/tdm/v1/articles/{doi}",
                     final_url=f"https://api.wiley.com/onlinelibrary/tdm/v1/articles/{doi}",
                     pdf_bytes=fulltext_pdf_bytes(),
-                    markdown_text=f"# {WILEY_SAMPLE.title}\n\n## Results\n\n" + ("Body text " * 120),
+                    markdown_text=f"# {WILEY_PDF_SAMPLE.title}\n\n## Results\n\n" + ("Body text " * 120),
                     suggested_filename="article.pdf",
                 ),
             ) as mocked_api,

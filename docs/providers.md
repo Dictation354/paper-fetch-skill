@@ -22,9 +22,9 @@
 | `crossref` | 支持 | 不负责 publisher fulltext | 不支持 | 不适用 | 负责 resolve、routing signal、metadata merge 与 metadata-only fallback |
 | `elsevier` | 官方 API | `官方 XML/API -> FlareSolverr HTML` | XML 路线支持 `none` / `body` / `all`；browser fallback 当前 text-only | 强 | 公开来源可能是 `elsevier_xml` 或 `elsevier_browser` |
 | `springer` | 依赖 Crossref merge | `direct HTML -> direct HTTP PDF` | HTML 路线支持 `none` / `body` / `all`；PDF fallback 当前 text-only | 强 | `nature.com` 继续挂在 `springer` provider / `springer_html` source 下 |
-| `wiley` | 依赖 Crossref merge | `FlareSolverr HTML -> Wiley TDM API PDF -> seeded-browser publisher PDF/ePDF` | 当前固定 text-only | 中 | HTML 依赖 repo-local FlareSolverr；`WILEY_TDM_CLIENT_TOKEN` 是官方快速 PDF lane；browser PDF/ePDF 需要 Playwright Chromium |
-| `science` | 依赖 Crossref | `FlareSolverr HTML -> seeded-browser publisher PDF/ePDF` | 当前固定 text-only | 中 | 与 `wiley` 共用浏览器工作流基座；AAAS access gate / entitlement 不满足时会停在 provider 内部并降级 `metadata_only` |
-| `pnas` | 依赖 Crossref | `FlareSolverr HTML -> seeded-browser publisher PDF/ePDF` | 当前固定 text-only | 中 | 与 `wiley` 共用浏览器工作流基座；较老文献常见 HTML 仅摘要，再继续走 provider 内部 PDF/ePDF fallback |
+| `wiley` | 依赖 Crossref merge | `FlareSolverr HTML -> Wiley TDM API PDF -> seeded-browser publisher PDF/ePDF` | HTML 路线支持 `none` / `body` / `all`；PDF/ePDF fallback 当前 text-only | 中 | HTML 依赖 repo-local FlareSolverr；`WILEY_TDM_CLIENT_TOKEN` 是官方快速 PDF lane；browser PDF/ePDF 需要 Playwright Chromium |
+| `science` | 依赖 Crossref | `FlareSolverr HTML -> seeded-browser publisher PDF/ePDF` | HTML 路线支持 `none` / `body` / `all`；PDF/ePDF fallback 当前 text-only | 中 | 与 `wiley` 共用浏览器工作流基座；AAAS access gate / entitlement 不满足时会停在 provider 内部并降级 `metadata_only` |
+| `pnas` | 依赖 Crossref | `FlareSolverr HTML -> seeded-browser publisher PDF/ePDF` | HTML 路线支持 `none` / `body` / `all`；PDF/ePDF fallback 当前 text-only | 中 | 与 `wiley` 共用浏览器工作流基座；较老文献常见 HTML 仅摘要，再继续走 provider 内部 PDF/ePDF fallback |
 
 说明：
 
@@ -32,6 +32,10 @@
 - 尤其 `wiley` / `science` / `pnas` 的浏览器与 PDF/ePDF 路径，仍受 publisher 访问权限、paywall/challenge 与本地限速护栏影响。
 - `wiley` / `science` / `pnas` 现在只保留一套 provider-owned 浏览器栈：共享 `_science_pnas` bootstrap、共享 `_pdf_fallback` browser-PDF executor，不再存在单独的 Science path harness。
 - 2020+ live / regression 基准样本集中维护在 [`../tests/provider_benchmark_samples.py`](../tests/provider_benchmark_samples.py)。
+- 自然地理学 live-only 候选集中维护在 [`../tests/live/geography_samples.py`](../tests/live/geography_samples.py)，默认每家尝试前 `10` 条，并通过 [`../scripts/run_geography_live_report.py`](../scripts/run_geography_live_report.py) 产出 JSON/Markdown 报告。
+- `geography` live runner 默认按 provider 轮转执行，保持单家样本顺序不变，同时尽量避免浏览器型 publisher 被本地最小间隔窗口连续判成 `rate_limited`。
+- `run_geography_live_report.py`、`export_geography_issue_artifacts.py`、`group_geography_issue_artifacts.py` 都属于 repo-local internal tooling：不新增 console script，不作为 MCP surface，对外产品面不变。
+- geography live/report/export/group 仍受 `PAPER_FETCH_RUN_LIVE=1` 的 opt-in 边界保护；未启用 live 环境时，对应测试应稳定 skip。
 
 ## 路由规则
 
@@ -223,8 +227,10 @@ CLI、Python API、MCP 当前统一采用这些默认值：
 
 对 `elsevier` browser fallback、`springer` PDF fallback、`wiley` / `science` / `pnas` 而言：
 
-- 当前 `asset_profile=body|all` 会降级成 text-only
-- 不阻塞正文成功，但不会承诺完整资产下载
+- `elsevier` browser fallback 仍会把 `asset_profile=body|all` 降级成 text-only
+- `springer` PDF fallback 仍会把 `asset_profile=body|all` 降级成 text-only
+- `wiley` / `science` / `pnas` 的 `FlareSolverr HTML` 成功路径支持资产下载；figure 会优先尝试 full-size/original，必要时回退 preview
+- `wiley` / `science` / `pnas` 的 PDF/ePDF fallback 仍是 text-only
 
 ### `include_refs`
 

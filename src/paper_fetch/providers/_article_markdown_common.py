@@ -9,11 +9,13 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Any, Mapping
 
-from ..publisher_identity import normalize_doi
 from ..utils import normalize_text, sanitize_filename
 
 XLINK_HREF = "{http://www.w3.org/1999/xlink}href"
 XLINK_TITLE = "{http://www.w3.org/1999/xlink}title"
+INLINE_SPLIT_SUBSCRIPT_PATTERN = re.compile(
+    r"\*(?P<base>[A-Za-zΑ-Ωα-ω])\*\s*\n\s*(?:\*(?P<italic_sub>[A-Za-z0-9]+)\*|(?P<plain_sub>[A-Za-z0-9]{1,6}))"
+)
 
 
 def xml_local_name(tag: str) -> str:
@@ -22,6 +24,24 @@ def xml_local_name(tag: str) -> str:
 
 def normalize_compact_text(value: str | None) -> str:
     return re.sub(r"\s+", " ", value or "").strip()
+
+
+def normalize_inline_markup_text(value: str | None) -> str:
+    text = normalize_text(value)
+    if not text:
+        return ""
+
+    text = INLINE_SPLIT_SUBSCRIPT_PATTERN.sub(
+        lambda match: f"*{match.group('base')}*<sub>{match.group('italic_sub') or match.group('plain_sub')}</sub>",
+        text,
+    )
+    text = re.sub(r"\s*(<(?:sub|sup)>)\s*", r"\1", text, flags=re.IGNORECASE)
+    text = re.sub(r"\s+</(sub|sup)>", r"</\1>", text, flags=re.IGNORECASE)
+    text = re.sub(r"\s+(<(?:sub|sup)>)", r"\1", text, flags=re.IGNORECASE)
+    text = re.sub(r"(</(?:sub|sup)>)\s*\n\s*", r"\1 ", text, flags=re.IGNORECASE)
+    text = re.sub(r"(</(?:sub|sup)>)(?=[A-Za-z0-9])", r"\1 ", text, flags=re.IGNORECASE)
+    text = re.sub(r"(</(?:sub|sup)>)\s+([,.;:%\]\}\+\)])", r"\1\2", text, flags=re.IGNORECASE)
+    return text.strip()
 
 
 def render_inline_text(element: ET.Element | None, *, skip_local_names: set[str] | None = None) -> str:
@@ -83,7 +103,7 @@ def render_inline_text(element: ET.Element | None, *, skip_local_names: set[str]
                 parts.append(child.tail)
 
     visit(element)
-    return normalize_text("".join(parts))
+    return normalize_inline_markup_text("".join(parts))
 
 
 def first_child(element: ET.Element | None, local_name: str) -> ET.Element | None:
@@ -109,35 +129,6 @@ def first_descendant(element: ET.Element, local_name: str) -> ET.Element | None:
 def path_relative_to(base_dir: Path, target_path: str | Path) -> str:
     relative = Path(os.path.relpath(Path(target_path), start=base_dir))
     return urllib.parse.quote(relative.as_posix(), safe="/._-")
-
-
-def build_springer_static_asset_url(doi: str, source_href: str, *, asset_bucket: str) -> str:
-    href = normalize_text(source_href)
-    if not href:
-        return ""
-    if href.startswith(("http://", "https://")):
-        return href
-    if href.startswith("//"):
-        return f"https:{href}"
-
-    article_segment = urllib.parse.quote(f"art:{normalize_doi(doi)}", safe="")
-    resource_segment = urllib.parse.quote(href.lstrip("/"), safe="/")
-    return f"https://static-content.springer.com/{asset_bucket}/{article_segment}/{resource_segment}"
-
-
-def resolve_springer_asset_link(
-    markdown_path: Path,
-    asset: Mapping[str, Any] | None,
-    source_href: str,
-    doi: str,
-    *,
-    asset_bucket: str,
-) -> str:
-    if asset and asset.get("path"):
-        return path_relative_to(markdown_path.parent, str(asset["path"]))
-    if doi:
-        return build_springer_static_asset_url(doi, source_href, asset_bucket=asset_bucket)
-    return normalize_text(source_href)
 
 
 def make_markdown_path(output_dir: Path, doi: str, title: str | None) -> Path:

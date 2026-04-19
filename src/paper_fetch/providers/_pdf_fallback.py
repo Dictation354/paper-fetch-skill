@@ -12,7 +12,7 @@ from typing import Any, Mapping
 from ..http import DEFAULT_FULLTEXT_TIMEOUT_SECONDS, HttpTransport, RequestFailure
 from ..utils import normalize_text
 from ._pdf_candidates import extract_pdf_candidate_urls_from_html
-from ._science_pnas_html import detect_html_block, summarize_html
+from ._html_access_signals import detect_html_block, summarize_html
 from ._pdf_common import (
     PdfFetchFailure,
     PdfFetchResult,

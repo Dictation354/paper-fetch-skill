@@ -28,11 +28,14 @@ class ProviderMetadata(TypedDict, total=False):
     title: str | None
     journal_title: str | None
     publisher: str | None
+    article_type: str | None
     authors: list[str]
     keywords: list[str]
     abstract: str | None
     published: str | None
     landing_page_url: str | None
+    citation_fulltext_html_url: str | None
+    citation_abstract_html_url: str | None
     license_urls: list[str]
     fulltext_links: list[FulltextLink]
     references: list[ReferenceMetadata]

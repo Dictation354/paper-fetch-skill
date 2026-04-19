@@ -1,9 +1,9 @@
-"""Springer provider client and legacy XML asset helpers."""
+"""Springer HTML provider client."""
 
 from __future__ import annotations
 
+import re
 import urllib.parse
-import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Any, Mapping
 
@@ -13,17 +13,17 @@ from ..metadata_types import ProviderMetadata
 from ..models import AssetProfile, article_from_markdown, metadata_only_article
 from ..publisher_identity import normalize_doi
 from ..utils import (
-    build_asset_output_path,
     build_output_path,
     choose_public_landing_page_url,
     empty_asset_results,
     normalize_text,
-    sanitize_filename,
     save_payload,
 )
 from . import html_generic
+from ._html_tables import inject_inline_table_blocks, render_table_markdown, table_placeholder
 from ._pdf_candidates import build_springer_pdf_candidates
 from ._pdf_fallback import PdfFetchFailure, fetch_pdf_over_http
+from ._html_availability import assess_html_fulltext_availability, availability_failure_message
 from .base import (
     ProviderClient,
     ProviderFailure,
@@ -35,223 +35,88 @@ from .base import (
     summarize_capability_status,
 )
 
-XLINK_HREF = "{http://www.w3.org/1999/xlink}href"
+try:
+    from bs4 import BeautifulSoup, Tag
+except ImportError:  # pragma: no cover - dependency is declared in pyproject
+    BeautifulSoup = None
+    Tag = None
+
 MAX_SPRINGER_HTML_REDIRECTS = 5
+SPRINGER_TABLE_LABEL_PATTERN = re.compile(r"\btable\.?\s*(\d+[A-Za-z]?)\b", flags=re.IGNORECASE)
+SPRINGER_INLINE_TABLE_SELECTORS = (
+    "[data-test='inline-table']",
+    ".c-article-table",
+)
+SPRINGER_TABLE_LINK_SELECTORS = (
+    "a[data-test='table-link']",
+    "a[href*='/tables/']",
+)
+SPRINGER_TABLE_CAPTION_SELECTORS = (
+    "[data-test='table-caption']",
+    ".c-article-table__figcaption",
+    "figcaption",
+    "header",
+)
+def _springer_short_text(node: Tag | BeautifulSoup | None) -> str:
+    if node is None:
+        return ""
+    return normalize_text(node.get_text(" ", strip=True))
 
 
-def extract_springer_keywords(record: Mapping[str, Any]) -> list[str]:
-    """Extract keywords from a Springer metadata record.
-
-    Legacy XML fixtures expose them under several aliases (``keyword``,
-    ``subjects``, ``subject``); accept all common shapes.
-    """
-    if not isinstance(record, Mapping):
-        return []
-    keywords: list[str] = []
-    seen: set[str] = set()
-
-    def add(value: Any) -> None:
-        if isinstance(value, str):
-            text = value.strip()
-            if text and text not in seen:
-                seen.add(text)
-                keywords.append(text)
-        elif isinstance(value, Mapping):
-            add(value.get("$") or value.get("value") or value.get("name"))
-        elif isinstance(value, list):
-            for item in value:
-                add(item)
-
-    for key in ("keyword", "keywords", "subjects", "subject"):
-        if key in record:
-            add(record.get(key))
-
-    return keywords
+def _springer_strip_table_label(text: str, label: str) -> str:
+    label_text = normalize_text(label).rstrip(".")
+    if not label_text:
+        return normalize_text(text)
+    stripped = re.sub(rf"^{re.escape(label_text)}\.?\s*", "", text, flags=re.IGNORECASE)
+    return normalize_text(stripped).lstrip(".:;,-) ]")
 
 
-def build_springer_static_asset_url(doi: str, source_href: str, *, asset_bucket: str) -> str:
-    href = source_href.strip()
-    if href.startswith(("http://", "https://")):
-        return href
-    if href.startswith("//"):
-        return f"https:{href}"
-
-    article_segment = urllib.parse.quote(f"art:{normalize_doi(doi)}", safe="")
-    resource_segment = urllib.parse.quote(href.lstrip("/"), safe="/")
-    return f"https://static-content.springer.com/{asset_bucket}/{article_segment}/{resource_segment}"
-
-
-def springer_tag_local_name(tag: str) -> str:
-    return tag.rsplit("}", 1)[-1] if "}" in tag else tag
-
-
-def walk_springer_asset_elements(
-    element: ET.Element,
-    *,
-    location: str = "body",
-    in_table: bool = False,
-) -> list[tuple[ET.Element, str, bool]]:
-    entries: list[tuple[ET.Element, str, bool]] = []
-    if not isinstance(element.tag, str):
-        return entries
-
-    local_name = springer_tag_local_name(element.tag)
-    next_location = location
-    if local_name == "body":
-        next_location = "body"
-    elif local_name in {"app-group", "app"} and location != "supplementary":
-        next_location = "appendix"
-    elif local_name == "supplementary-material":
-        next_location = "supplementary"
-
-    next_in_table = in_table or local_name == "table-wrap"
-    entries.append((element, next_location, next_in_table))
-    for child in list(element):
-        if isinstance(child.tag, str):
-            entries.extend(
-                walk_springer_asset_elements(
-                    child,
-                    location=next_location,
-                    in_table=next_in_table,
-                )
-            )
-    return entries
+def _springer_table_label(node: Tag | BeautifulSoup, *, fallback: str = "Table") -> str:
+    for selector in SPRINGER_TABLE_CAPTION_SELECTORS:
+        candidate = node.select_one(selector)
+        if isinstance(candidate, Tag):
+            text = _springer_short_text(candidate)
+            match = SPRINGER_TABLE_LABEL_PATTERN.search(text)
+            if match:
+                return f"Table {match.group(1)}."
+    if isinstance(node, BeautifulSoup) and isinstance(node.title, Tag):
+        match = SPRINGER_TABLE_LABEL_PATTERN.search(_springer_short_text(node.title))
+        if match:
+            return f"Table {match.group(1)}."
+    match = SPRINGER_TABLE_LABEL_PATTERN.search(_springer_short_text(node))
+    if match:
+        return f"Table {match.group(1)}."
+    return fallback
 
 
-def extract_springer_asset_references(xml_body: bytes, doi: str) -> list[dict[str, Any]]:
-    try:
-        root = ET.fromstring(xml_body)
-    except ET.ParseError:
-        return []
-
-    references: list[dict[str, Any]] = []
-    seen: set[tuple[str, str, str]] = set()
-
-    for element, location, in_table in walk_springer_asset_elements(root):
-        tag = springer_tag_local_name(element.tag)
-        if tag not in {"graphic", "inline-graphic", "media"}:
-            continue
-
-        href = (element.get(XLINK_HREF) or element.get("href") or "").strip()
-        if not href:
-            continue
-
-        key = (tag, href, location)
-        if key in seen:
-            continue
-        seen.add(key)
-
-        if tag == "media":
-            asset_type = "supplementary"
-            asset_bucket = "esm"
-        else:
-            asset_type = "table_asset" if in_table else "image"
-            asset_bucket = "image"
-        references.append(
-            {
-                "tag": tag,
-                "asset_type": asset_type,
-                "source_href": href,
-                "source_url": build_springer_static_asset_url(doi, href, asset_bucket=asset_bucket),
-                "section": location,
-            }
-        )
-
-    return references
+def _springer_table_caption(node: Tag | BeautifulSoup, label: str) -> str:
+    for selector in SPRINGER_TABLE_CAPTION_SELECTORS:
+        candidate = node.select_one(selector)
+        if isinstance(candidate, Tag):
+            text = _springer_strip_table_label(_springer_short_text(candidate), label)
+            if text:
+                return text
+    if isinstance(node, BeautifulSoup) and isinstance(node.title, Tag):
+        text = _springer_strip_table_label(_springer_short_text(node.title), label)
+        if text:
+            return text
+    return ""
 
 
-def filter_springer_asset_references(
-    references: list[dict[str, Any]],
-    *,
-    asset_profile: AssetProfile,
-) -> list[dict[str, Any]]:
-    if asset_profile == "none":
-        return []
-    if asset_profile == "body":
-        allowed_asset_types = {"image", "table_asset"}
-        return [
-            reference
-            for reference in references
-            if str(reference.get("section") or "") == "body"
-            and str(reference.get("asset_type") or "") in allowed_asset_types
-        ]
-    return list(references)
-
-
-def download_springer_related_assets(
-    transport: HttpTransport,
-    *,
-    doi: str,
-    xml_body: bytes,
-    output_dir: Path | None,
-    user_agent: str,
-    asset_profile: AssetProfile = "all",
-) -> dict[str, list[dict[str, Any]]]:
-    if output_dir is None:
-        return empty_asset_results()
-
-    references = filter_springer_asset_references(
-        extract_springer_asset_references(xml_body, doi),
-        asset_profile=asset_profile,
-    )
-    if not references:
-        return empty_asset_results()
-
-    asset_dir = output_dir / f"{sanitize_filename(doi)}_assets"
-    asset_dir.mkdir(parents=True, exist_ok=True)
-    used_names: set[str] = set()
-    downloads: list[dict[str, Any]] = []
-    failures: list[dict[str, Any]] = []
-
-    for reference in references:
+def _springer_inline_table_nodes(soup: BeautifulSoup) -> list[Tag]:
+    nodes: list[Tag] = []
+    seen: set[int] = set()
+    for selector in SPRINGER_INLINE_TABLE_SELECTORS:
         try:
-            response = transport.request(
-                "GET",
-                reference["source_url"],
-                headers={"User-Agent": user_agent, "Accept": "*/*"},
-                timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
-                retry_on_rate_limit=True,
-                retry_on_transient=True,
-            )
-        except RequestFailure as exc:
-            failures.append(
-                {
-                    "asset_type": reference["asset_type"],
-                    "tag": reference["tag"],
-                    "source_href": reference["source_href"],
-                    "source_url": reference["source_url"],
-                    "section": reference.get("section"),
-                    "status": exc.status_code,
-                    "reason": str(exc),
-                }
-            )
+            matches = soup.select(selector)
+        except Exception:
             continue
-
-        content_type = response["headers"].get("content-type")
-        output_path = build_asset_output_path(
-            asset_dir,
-            reference["source_href"],
-            content_type,
-            response["url"],
-            used_names,
-        )
-        downloads.append(
-            {
-                "asset_type": reference["asset_type"],
-                "tag": reference["tag"],
-                "source_href": reference["source_href"],
-                "source_url": response["url"],
-                "content_type": content_type,
-                "path": save_payload(output_path, response["body"]),
-                "downloaded_bytes": len(response["body"]),
-                "section": reference.get("section"),
-            }
-        )
-
-    return {
-        "assets": downloads,
-        "asset_failures": failures,
-    }
+        for match in matches:
+            if not isinstance(match, Tag) or id(match) in seen:
+                continue
+            seen.add(id(match))
+            nodes.append(match)
+    return nodes
 
 
 class SpringerClient(ProviderClient):
@@ -311,6 +176,84 @@ class SpringerClient(ProviderClient):
             "error",
             f"Springer direct HTML retrieval exceeded {MAX_SPRINGER_HTML_REDIRECTS} redirects.",
         )
+
+    def _render_table_page_markdown(
+        self,
+        table_url: str,
+        *,
+        fallback_label: str,
+    ) -> tuple[str | None, str | None]:
+        try:
+            response, _response_url = self._fetch_html_response(table_url)
+        except ProviderFailure as exc:
+            return (
+                None,
+                f"Springer inline table supplement for {fallback_label} could not be fetched ({exc.code}: {exc.message}).",
+            )
+
+        if BeautifulSoup is None:
+            return None, f"Springer inline table supplement for {fallback_label} requires BeautifulSoup."
+
+        table_html = html_generic.decode_html(response["body"])
+        soup = BeautifulSoup(table_html, "html.parser")
+        table = soup.select_one(".c-article-table-container table, table")
+        if not isinstance(table, Tag):
+            return None, f"Springer inline table supplement for {fallback_label} did not include a table element."
+
+        container = table.find_parent("figure")
+        if not isinstance(container, Tag):
+            container = table.find_parent("div", attrs={"data-container-section": "table"})
+        label = _springer_table_label(container or soup, fallback=fallback_label)
+        caption = _springer_table_caption(container or soup, label)
+        markdown = render_table_markdown(table, label=label, caption=caption)
+        if not normalize_text(markdown):
+            return None, f"Springer inline table supplement for {label} did not produce Markdown content."
+        return markdown, None
+
+    def _prepare_html_with_inline_tables(
+        self,
+        html_text: str,
+        source_url: str,
+    ) -> tuple[str, list[dict[str, str]], list[str]]:
+        if BeautifulSoup is None:
+            return html_text, [], []
+
+        soup = BeautifulSoup(html_text, "html.parser")
+        table_entries: list[dict[str, str]] = []
+        warnings: list[str] = []
+
+        for node in _springer_inline_table_nodes(soup):
+            if not isinstance(node, Tag) or node.parent is None:
+                continue
+            label = _springer_table_label(node)
+            table_url = ""
+            for selector in SPRINGER_TABLE_LINK_SELECTORS:
+                link = node.select_one(selector)
+                if isinstance(link, Tag):
+                    table_url = urllib.parse.urljoin(source_url, str(link.get("href") or "").strip())
+                    if table_url:
+                        break
+            if not table_url:
+                warnings.append(f"Springer inline table supplement for {label} was skipped because no table page link was found.")
+                node.decompose()
+                continue
+
+            markdown, warning = self._render_table_page_markdown(table_url, fallback_label=label)
+            if warning:
+                warnings.append(warning)
+                node.decompose()
+                continue
+            if not markdown:
+                node.decompose()
+                continue
+
+            placeholder = table_placeholder(len(table_entries) + 1)
+            block = soup.new_tag("p")
+            block.string = placeholder
+            node.replace_with(block)
+            table_entries.append({"placeholder": placeholder, "markdown": markdown})
+
+        return str(soup), table_entries, warnings
 
     def fetch_metadata(self, query: Mapping[str, str | None]) -> ProviderMetadata:
         raise ProviderFailure(
@@ -401,8 +344,25 @@ class SpringerClient(ProviderClient):
             merged_metadata = html_generic.merge_html_metadata(metadata, html_metadata)
             if not merged_metadata.get("doi"):
                 merged_metadata["doi"] = normalized_doi
-            markdown_text = html_generic.clean_markdown(html_generic.extract_article_markdown(html_text, response_url))
-            if html_generic.has_sufficient_article_body(markdown_text, merged_metadata):
+            prepared_html, table_entries, table_warnings = self._prepare_html_with_inline_tables(html_text, response_url)
+            markdown_text = html_generic.clean_markdown(html_generic.extract_article_markdown(prepared_html, response_url))
+            markdown_text = inject_inline_table_blocks(
+                markdown_text,
+                table_entries=table_entries,
+                clean_markdown_fn=html_generic.clean_markdown,
+            )
+            warnings.extend(table_warnings)
+            diagnostics = assess_html_fulltext_availability(
+                markdown_text,
+                merged_metadata,
+                provider=self.name,
+                html_text=html_text,
+                title=str(merged_metadata.get("title") or ""),
+                requested_url=landing_url,
+                final_url=response_url,
+                response_status=int(response.get("status_code") or 0) or None,
+            )
+            if diagnostics.accepted:
                 extracted_assets = html_generic.extract_html_assets(html_text, response_url, asset_profile="all")
                 return RawFulltextPayload(
                     provider="springer",
@@ -414,6 +374,8 @@ class SpringerClient(ProviderClient):
                         "reason": "Downloaded full text from the Springer landing page HTML.",
                         "merged_metadata": merged_metadata,
                         "markdown_text": markdown_text,
+                        "warnings": warnings,
+                        "availability_diagnostics": diagnostics.to_dict(),
                         "extracted_assets": extracted_assets,
                         "source_trail": ["fulltext:springer_html_ok"],
                     },
@@ -421,7 +383,7 @@ class SpringerClient(ProviderClient):
                 )
             html_failure = ProviderFailure(
                 "no_result",
-                "Springer HTML extraction did not produce enough article body text.",
+                availability_failure_message(diagnostics),
                 source_trail=["fulltext:springer_html_fail"],
             )
         except ProviderFailure as exc:

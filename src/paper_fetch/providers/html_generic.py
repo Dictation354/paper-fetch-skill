@@ -18,8 +18,9 @@ from ..publisher_identity import extract_doi, normalize_doi
 from ..utils import choose_public_landing_page_url, dedupe_authors
 from . import html_assets as _html_assets
 from . import html_noise as _html_noise
+from ._html_availability import assess_html_fulltext_availability, availability_failure_message
 from .base import ProviderFailure, map_request_failure
-from .html_nature import clean_nature_text_fragment, is_nature_like_url
+from .html_springer_nature import clean_springer_nature_text_fragment, is_springer_nature_url
 
 try:
     from bs4 import BeautifulSoup, NavigableString, Tag
@@ -29,8 +30,6 @@ except ImportError:  # pragma: no cover - exercised implicitly when dependency i
     Tag = None
 
 trafilatura = _html_noise.trafilatura
-clean_html_for_extraction = _html_noise.clean_html_for_extraction
-clean_markdown = _html_noise.clean_markdown
 count_words = _html_noise.count_words
 decode_html = _html_noise.decode_html
 body_character_count = _html_noise.body_character_count
@@ -81,11 +80,33 @@ class _MetaParser(HTMLParser):
             self.title.append(data)
 
 
-def extract_article_markdown(html_text: str, source_url: str) -> str:
+def _noise_profile_for_url(source_url: str | None) -> str:
+    if source_url and is_springer_nature_url(source_url):
+        return "springer_nature"
+    return "generic"
+
+
+def clean_html_for_extraction(
+    html_text: str,
+    source_url: str | None = None,
+    *,
+    noise_profile: str | None = None,
+) -> str:
+    active_noise_profile = noise_profile or _noise_profile_for_url(source_url)
+    return _html_noise.clean_html_for_extraction(html_text, noise_profile=active_noise_profile)
+
+
+def clean_markdown(markdown_text: str, *, noise_profile: str | None = None) -> str:
+    return _html_noise.clean_markdown(markdown_text, noise_profile=noise_profile)
+
+
+def extract_article_markdown(html_text: str, source_url: str, *, noise_profile: str | None = None) -> str:
+    active_noise_profile = noise_profile or _noise_profile_for_url(source_url)
     return _html_noise.extract_article_markdown(
         html_text,
         source_url,
         trafilatura_backend=trafilatura,
+        noise_profile=active_noise_profile,
     )
 
 
@@ -111,10 +132,13 @@ def parse_html_metadata(html_text: str, source_url: str) -> HtmlMetadata:
         html_title = lookup_hints.get("lookup_title")
     title = first("citation_title", "dc.title", "og:title") or html_title or None
     abstract = first("citation_abstract", "description", "dc.description", "og:description")
-    if abstract and is_nature_like_url(source_url):
-        abstract = clean_nature_text_fragment(abstract)
+    if abstract and is_springer_nature_url(source_url):
+        abstract = clean_springer_nature_text_fragment(abstract)
     journal_title = first("citation_journal_title", "prism.publicationname", "dc.source")
+    article_type = first("citation_article_type", "dc.type", "prism.section", "article:section")
     published = first("citation_publication_date", "citation_online_date", "dc.date", "prism.publicationdate")
+    citation_fulltext_html_url = normalize_lookup_url(first("citation_fulltext_html_url"), source_url)
+    citation_abstract_html_url = normalize_lookup_url(first("citation_abstract_html_url"), source_url)
     keywords = [
         normalize_text(item)
         for item in parser.meta.get("citation_keywords", []) + parser.meta.get("keywords", [])
@@ -126,8 +150,11 @@ def parse_html_metadata(html_text: str, source_url: str) -> HtmlMetadata:
         "authors": authors,
         "abstract": abstract,
         "journal_title": journal_title,
+        "article_type": article_type,
         "published": published,
         "landing_page_url": parser.canonical_url or source_url,
+        "citation_fulltext_html_url": citation_fulltext_html_url,
+        "citation_abstract_html_url": citation_abstract_html_url,
         "doi": doi,
         "keywords": list(dict.fromkeys(keywords)),
         "raw_meta": parser.meta,
@@ -226,7 +253,16 @@ def build_sciencedirect_article_url(identifier_value: str | None) -> str | None:
 def merge_html_metadata(base_metadata: ProviderMetadata | None, html_metadata: HtmlMetadata) -> HtmlMetadata:
     base = dict(base_metadata or {})
     merged = dict(base)
-    for key in ("title", "journal_title", "published", "landing_page_url", "doi"):
+    for key in (
+        "title",
+        "journal_title",
+        "published",
+        "landing_page_url",
+        "doi",
+        "article_type",
+        "citation_fulltext_html_url",
+        "citation_abstract_html_url",
+    ):
         merged[key] = normalize_text(str(base.get(key) or html_metadata.get(key) or "")) or None
     merged["abstract"] = normalize_text(str(html_metadata.get("abstract") or base.get("abstract") or "")) or None
     base_authors = [normalize_text(str(item)) for item in (base.get("authors") or []) if normalize_text(str(item))]
@@ -278,6 +314,16 @@ class HtmlGenericClient:
             merged_metadata["doi"] = normalize_doi(expected_doi)
 
         markdown_text = clean_markdown(extract_article_markdown(html_text, response["url"]))
+        diagnostics = assess_html_fulltext_availability(
+            markdown_text,
+            merged_metadata,
+            provider=self.name,
+            html_text=html_text,
+            title=str(merged_metadata.get("title") or ""),
+            requested_url=landing_url,
+            final_url=response["url"],
+            response_status=int(response.get("status_code") or 0) or None,
+        )
         redirect_url = choose_public_landing_page_url(
             html_metadata.get("lookup_redirect_url"),
             build_sciencedirect_article_url(html_metadata.get("identifier_value")),
@@ -285,7 +331,8 @@ class HtmlGenericClient:
         if (
             redirect_url
             and redirect_url != response["url"]
-            and not has_sufficient_article_body(markdown_text, merged_metadata)
+            and not diagnostics.accepted
+            and diagnostics.reason == "insufficient_body"
         ):
             try:
                 response = self.transport.request(
@@ -302,9 +349,20 @@ class HtmlGenericClient:
             if expected_doi and not merged_metadata.get("doi"):
                 merged_metadata["doi"] = normalize_doi(expected_doi)
             markdown_text = clean_markdown(extract_article_markdown(html_text, response["url"]))
+            diagnostics = assess_html_fulltext_availability(
+                markdown_text,
+                merged_metadata,
+                provider=self.name,
+                html_text=html_text,
+                title=str(merged_metadata.get("title") or ""),
+                requested_url=landing_url,
+                final_url=response["url"],
+                response_status=int(response.get("status_code") or 0) or None,
+            )
 
-        if not has_sufficient_article_body(markdown_text, merged_metadata):
-            raise ProviderFailure("no_result", "HTML extraction did not produce enough article body text.")
+        if not diagnostics.accepted:
+            failure_code = "abstract_only" if diagnostics.content_kind == "abstract_only" else "no_result"
+            raise ProviderFailure(failure_code, availability_failure_message(diagnostics))
 
         assets = extract_html_assets(
             html_text,

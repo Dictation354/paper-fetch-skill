@@ -160,6 +160,30 @@ class CliTests(unittest.TestCase):
             self.assertNotIn(f"]({figure_path})", rendered)
             self.assertNotIn(f"]({supplement_path})", rendered)
 
+    def test_save_markdown_to_disk_skips_when_content_kind_is_not_fulltext(self) -> None:
+        article = sample_article()
+        article.sections = []
+        article.quality.content_kind = "abstract_only"
+        article.quality.has_fulltext = False
+        article.quality.has_abstract = True
+        envelope = paper_fetch.build_fetch_envelope(
+            article,
+            modes={"article", "markdown"},
+            render=RenderOptions(),
+        )
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            output_dir = Path(tmpdir) / "downloads"
+            paper_fetch_cli.save_markdown_to_disk(
+                envelope,
+                output_dir=output_dir,
+                render=RenderOptions(),
+            )
+
+            self.assertFalse((output_dir / "10.1016_test.md").exists())
+            self.assertIn("download:markdown_skipped_no_fulltext", envelope.source_trail)
+            self.assertTrue(any("nothing written to disk" in warning for warning in envelope.warnings))
+
     def test_main_rewrites_local_asset_links_for_markdown_output_file(self) -> None:
         article = sample_article()
         captured: dict[str, object] = {}

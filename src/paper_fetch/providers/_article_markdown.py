@@ -1,8 +1,8 @@
-"""Facade for XML-to-Markdown helpers shared by provider implementations."""
+"""Facade for Elsevier XML-to-Markdown helpers and shared math rendering."""
 
 from __future__ import annotations
 
-from ._article_markdown_document import (
+from ._article_markdown_elsevier_document import (
     ArticleStructure,
     build_article_structure,
     build_markdown_document,

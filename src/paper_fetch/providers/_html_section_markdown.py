@@ -1,13 +1,13 @@
-"""Nature-specific HTML extraction helpers."""
+"""Shared section-aware HTML-to-Markdown helpers."""
 
 from __future__ import annotations
 
 import re
-import urllib.parse
 from typing import Any
 
 from ..models import normalize_text
-from .html_noise import HTML_BLOCK_TAGS, HTML_DROP_TAGS, clean_markdown, count_words, should_drop_html_element
+from ._html_citations import is_citation_link, is_citation_text
+from .html_noise import HTML_BLOCK_TAGS, HTML_DROP_TAGS, should_drop_html_element
 
 try:
     from bs4 import BeautifulSoup, NavigableString, Tag
@@ -20,44 +20,6 @@ HEADING_TAG_PATTERN = re.compile(r"^h[1-6]$")
 HTML_TIGHT_INLINE_TAGS = {"sub", "sup"}
 HTML_NO_SPACE_AFTER_CHARS = set("([{/+-–—−")
 HTML_NO_SPACE_BEFORE_CHARS = set(")]},.;:!?%/+-–—−")
-NATURE_FIGURE_LINE_PATTERN = re.compile(r"(?im)^(?:extended data\s+)?fig\.\s*[a-z0-9.-]+:.*$")
-NATURE_REFERENCE_RANGE_PATTERN = re.compile(r"(?<=[A-Za-z)])\^?\s*\d+\s*[–-]\s*\d+(?=[.,;:]?(?:\s|$))")
-NATURE_REFERENCE_LIST_PATTERN = re.compile(r"(?<=[A-Za-z)])\^?\s*\d+(?:\s*,\s*\d+){1,}(?=[.,;:]?(?:\s|$))")
-
-
-def select_nature_article_root(root: Any):
-    if BeautifulSoup is None:
-        return None
-
-    best_article = None
-    best_words = 0
-    candidates = []
-    if isinstance(root, Tag) and getattr(root, "name", None) == "article":
-        candidates.append(root)
-    candidates.extend(root.select("article"))
-    for article in candidates:
-        main = article.select_one("div.c-article-body div.main-content")
-        if main is None:
-            continue
-        words = count_words(normalize_text(main.get_text(" ", strip=True)))
-        if words > best_words:
-            best_article = article
-            best_words = words
-    return best_article
-
-
-def is_nature_like_url(url: str) -> bool:
-    hostname = urllib.parse.urlparse(url).netloc.lower()
-    return hostname.endswith("nature.com") or hostname.endswith(".nature.com")
-
-
-def select_nature_abstract_section(body: Any):
-    if BeautifulSoup is None or body is None:
-        return None
-    for section in body.find_all("section", recursive=False):
-        if normalize_section_title(extract_section_title(section)) == "abstract":
-            return section
-    return None
 
 
 def extract_section_title(section: Any) -> str:
@@ -73,77 +35,44 @@ def normalize_section_title(title: str) -> str:
     return re.sub(r"[^a-z0-9]+", " ", title.lower()).strip()
 
 
-def clean_nature_text_fragment(text: str) -> str:
-    cleaned = normalize_text(text)
-    if not cleaned:
-        return ""
-    cleaned = NATURE_REFERENCE_RANGE_PATTERN.sub("", cleaned)
-    cleaned = NATURE_REFERENCE_LIST_PATTERN.sub("", cleaned)
-    cleaned = re.sub(r"\((?:ref|refs)\.\)", "", cleaned, flags=re.IGNORECASE)
-    cleaned = re.sub(r"\s+([,.;:!?])", r"\1", cleaned)
-    cleaned = re.sub(r"([(\[])\s+", r"\1", cleaned)
-    cleaned = re.sub(r"\s+([)\]])", r"\1", cleaned)
-    return normalize_text(cleaned)
+def _select_first(node: Any, selectors: tuple[str, ...]) -> Any:
+    if BeautifulSoup is None or node is None:
+        return None
+    for selector in selectors:
+        match = node.select_one(selector)
+        if match is not None:
+            return match
+    return None
 
 
-def extract_nature_markdown(html_text: str, source_url: str) -> str:
-    if BeautifulSoup is None:
-        return ""
-
-    soup = BeautifulSoup(html_text, "html.parser")
-    article = select_nature_article_root(soup) or soup.select_one("article")
-    if article is None:
-        return ""
-
-    body = article.select_one("div.c-article-body") or article
-    main = body.select_one("div.main-content") or body
-    lines: list[str] = []
-
-    title_node = article.select_one("h1")
-    title_text = render_clean_text_from_html(title_node)
-    if title_text:
-        lines.extend([f"# {title_text}", ""])
-
-    abstract_section = select_nature_abstract_section(body)
-    if abstract_section is not None:
-        render_nature_section_markdown(
-            abstract_section,
-            lines,
-            level=2,
-            force_heading="Abstract",
-        )
-
-    sections = main.find_all("section", recursive=False) if main is not None else []
-    if sections:
-        for section in sections:
-            render_nature_section_markdown(section, lines, level=2)
-    elif main is not None:
-        render_nature_container_markdown(main, lines, level=2)
-
-    rendered = clean_markdown("\n".join(lines))
-    return postprocess_nature_markdown(rendered, source_url)
-
-
-def render_nature_section_markdown(
+def render_section_markdown(
     section: Any,
     lines: list[str],
     *,
     level: int,
     force_heading: str | None = None,
+    section_content_selectors: tuple[str, ...] = ("div.c-article-section__content",),
 ) -> None:
     heading = force_heading or extract_section_title(section)
     if heading:
         lines.extend([f"{'#' * max(2, min(level, 6))} {heading}", ""])
-    content_root = section.select_one("div.c-article-section__content") or section
-    render_nature_container_markdown(content_root, lines, level=level + 1, skip_first_heading=heading or None)
+    content_root = _select_first(section, section_content_selectors) or section
+    render_container_markdown(
+        content_root,
+        lines,
+        level=level + 1,
+        skip_first_heading=heading or None,
+        section_content_selectors=section_content_selectors,
+    )
 
 
-def render_nature_container_markdown(
+def render_container_markdown(
     node: Any,
     lines: list[str],
     *,
     level: int,
     skip_first_heading: str | None = None,
+    section_content_selectors: tuple[str, ...] = ("div.c-article-section__content",),
 ) -> None:
     if BeautifulSoup is None or node is None:
         return
@@ -157,14 +86,25 @@ def render_nature_container_markdown(
             continue
         if not isinstance(child, Tag):
             continue
+        if child.name in {"header", "footer"}:
+            continue
         if child.name in HTML_DROP_TAGS or should_drop_html_element(child):
             continue
         if child.name == "section":
-            render_nature_section_markdown(child, lines, level=level)
+            render_section_markdown(
+                child,
+                lines,
+                level=level,
+                section_content_selectors=section_content_selectors,
+            )
             continue
         if child.name and HEADING_TAG_PATTERN.match(child.name):
             heading_text = render_clean_text_from_html(child)
-            if skip_first_heading and not skipped_heading and normalize_section_title(heading_text) == normalize_section_title(skip_first_heading):
+            if (
+                skip_first_heading
+                and not skipped_heading
+                and normalize_section_title(heading_text) == normalize_section_title(skip_first_heading)
+            ):
                 skipped_heading = True
                 continue
             skipped_heading = True
@@ -192,7 +132,14 @@ def render_nature_container_markdown(
                 lines.extend([text, ""])
             continue
         if child.name in {"div", "article", "main"}:
-            render_nature_container_markdown(child, lines, level=level, skip_first_heading=skip_first_heading if not skipped_heading else None)
+            next_skip = skip_first_heading if not skipped_heading else None
+            render_container_markdown(
+                child,
+                lines,
+                level=level,
+                skip_first_heading=next_skip,
+                section_content_selectors=section_content_selectors,
+            )
             continue
         text = render_clean_text_from_html(child)
         if text:
@@ -294,38 +241,3 @@ def first_significant_char(text: str) -> str:
         if not char.isspace():
             return char
     return ""
-
-
-def is_citation_text(text: str) -> bool:
-    normalized = normalize_text(text)
-    if not normalized:
-        return False
-    return bool(re.fullmatch(r"[\d,\-\u2013\u2014\s]+", normalized))
-
-
-def is_citation_link(href: str, text: str) -> bool:
-    normalized_href = href.strip().lower()
-    normalized_text = normalize_text(text)
-    if "#ref-" in normalized_href or "#bib" in normalized_href or "#cite" in normalized_href:
-        return True
-    if is_citation_text(normalized_text) and normalized_href.startswith("#"):
-        return True
-    return False
-
-
-def postprocess_nature_markdown(markdown_text: str, source_url: str) -> str:
-    if not markdown_text:
-        return ""
-    cleaned = markdown_text
-    cleaned = NATURE_FIGURE_LINE_PATTERN.sub("", cleaned)
-    cleaned = re.sub(r"(?im)^\s*source data\s*$", "", cleaned)
-    cleaned = re.sub(r"\((?:ref|refs)\.\)", "", cleaned, flags=re.IGNORECASE)
-    cleaned = re.sub(r"\[([^\]]+)\]\((?:/articles/[^)]+|#[^)]+)\)", r"\1", cleaned)
-    cleaned = re.sub(r"\s+([,.;:!?])", r"\1", cleaned)
-    cleaned = re.sub(r"([(\[])\s+", r"\1", cleaned)
-    cleaned = re.sub(r"\s+([)\]])", r"\1", cleaned)
-    cleaned = re.sub(r"\n{3,}", "\n\n", cleaned)
-    cleaned = re.sub(r"\b([A-Z]{1,4})\s+(\d+)\b", r"\1\2", cleaned)
-    cleaned = re.sub(r"(?m)^\s*[-*]\s*$", "", cleaned)
-    cleaned = re.sub(r"[ \t]+\n", "\n", cleaned)
-    return clean_markdown(cleaned)

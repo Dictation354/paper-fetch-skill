@@ -2,16 +2,14 @@ from __future__ import annotations
 
 import unittest
 
-from paper_fetch.providers._science_pnas_html import (
-    SciencePnasHtmlFailure,
+from paper_fetch.providers._science_pnas_profiles import (
     build_html_candidates,
     build_pdf_candidates,
     extract_pdf_url_from_crossref,
-    extract_science_pnas_markdown,
     preferred_html_candidate_from_landing_page,
+    site_rule_for_publisher,
 )
 from tests.provider_benchmark_samples import provider_benchmark_sample
-from tests.paths import FIXTURE_DIR
 
 
 SCIENCE_SAMPLE = provider_benchmark_sample("science")
@@ -19,35 +17,43 @@ WILEY_SAMPLE = provider_benchmark_sample("wiley")
 PNAS_SAMPLE = provider_benchmark_sample("pnas")
 
 
-class SciencePnasHtmlTests(unittest.TestCase):
-    def test_science_fixture_extracts_fulltext_markdown(self) -> None:
-        html = (FIXTURE_DIR / SCIENCE_SAMPLE.fixture_name).read_text(encoding="utf-8")
+class SciencePnasCandidateTests(unittest.TestCase):
+    def test_site_rule_merges_default_and_publisher_overrides(self) -> None:
+        cases = {
+            "science": {
+                "candidate_selectors": {".article__fulltext", "[itemprop='articleBody']"},
+                "remove_selectors": {".article-header__access", ".cookie-banner"},
+                "drop_keywords": {"advert", "rightslink"},
+                "drop_text": {"Permissions", "Check for updates"},
+            },
+            "pnas": {
+                "candidate_selectors": {".core-container", "[itemprop='articleBody']"},
+                "remove_selectors": {".article__reference-links", ".cookie-banner"},
+                "drop_keywords": {"tab-nav", "rightslink"},
+                "drop_text": {"Check for updates"},
+            },
+            "wiley": {
+                "candidate_selectors": {".article-section__content", "[itemprop='articleBody']"},
+                "remove_selectors": {".publicationHistory", ".cookie-banner"},
+                "drop_keywords": {"access-widget", "rightslink"},
+                "drop_text": {"Recommended articles", "Check for updates"},
+            },
+        }
 
-        markdown, info = extract_science_pnas_markdown(
-            html,
-            SCIENCE_SAMPLE.landing_url,
-            "science",
-            metadata={"doi": SCIENCE_SAMPLE.doi},
-        )
-
-        self.assertEqual(info["container_tag"], "main")
-        self.assertIn("# Hyaluronic acid and tissue mechanics orchestrate mammalian digit tip regeneration", markdown)
-        self.assertIn("Structured Abstract", markdown)
-        self.assertIn("Discussion", markdown)
-        self.assertIn("Materials and methods", markdown)
-
-    def test_pnas_abstract_fixture_is_rejected(self) -> None:
-        html = (FIXTURE_DIR / "pnas_10.1073_pnas.2406303121.abstract.html").read_text(encoding="utf-8")
-
-        with self.assertRaises(SciencePnasHtmlFailure) as ctx:
-            extract_science_pnas_markdown(
-                html,
-                PNAS_SAMPLE.landing_url,
-                "pnas",
-                metadata={"doi": PNAS_SAMPLE.doi},
-            )
-
-        self.assertEqual(ctx.exception.reason, "insufficient_paragraphs")
+        for publisher, expectations in cases.items():
+            with self.subTest(publisher=publisher):
+                rule = site_rule_for_publisher(publisher)
+                self.assertEqual(
+                    len(rule["candidate_selectors"]),
+                    len(set(rule["candidate_selectors"])),
+                )
+                self.assertEqual(
+                    len(rule["remove_selectors"]),
+                    len(set(rule["remove_selectors"])),
+                )
+                for key, values in expectations.items():
+                    for value in values:
+                        self.assertIn(value, rule[key])
 
     def test_candidate_builders_match_expected_priority(self) -> None:
         self.assertEqual(
@@ -155,6 +161,7 @@ class SciencePnasHtmlTests(unittest.TestCase):
                 f"https://www.pnas.org/doi/full/{PNAS_SAMPLE.doi}",
             ],
         )
+
 
 
 if __name__ == "__main__":

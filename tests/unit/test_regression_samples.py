@@ -12,6 +12,7 @@ from paper_fetch.providers import wiley as wiley_provider
 from paper_fetch.providers._science_pnas_html import extract_science_pnas_markdown
 from paper_fetch.providers.base import ProviderFailure, RawFulltextPayload
 from tests.provider_benchmark_samples import (
+    WILEY_PDF_FALLBACK_SAMPLE,
     iter_provider_benchmark_samples,
     provider_benchmark_sample,
 )
@@ -381,16 +382,19 @@ class RegressionSampleTests(unittest.TestCase):
         self.assertEqual(article.metadata.title, SCIENCE_SAMPLE.title)
         self.assertTrue(article.quality.has_fulltext)
         self.assertIn("fulltext:science_html_ok", article.quality.source_trail)
+        markdown = article.to_ai_markdown(max_tokens=16000)
+        self.assertIn("![Figure 1](", markdown)
+        self.assertIn("**Figure 1.**", markdown)
 
-    def test_paper_fetch_uses_wiley_replay_fixture_for_positive_sample(self) -> None:
-        markdown_text = read_fixture_text(WILEY_SAMPLE.fixture_name)
+    def test_paper_fetch_uses_wiley_html_replay_fixture_for_positive_sample(self) -> None:
+        wiley_html = read_fixture_text(WILEY_SAMPLE.fixture_name)
         metadata = {
             "provider": "crossref",
             "official_provider": False,
             "doi": WILEY_SAMPLE.doi,
             "title": WILEY_SAMPLE.title,
-            "journal_title": "Cancer Science",
-            "published": "2024-01-01",
+            "journal_title": "Global Change Biology",
+            "published": "2022-12-01",
             "landing_page_url": WILEY_SAMPLE.landing_url,
             "authors": [],
             "fulltext_links": [],
@@ -398,7 +402,55 @@ class RegressionSampleTests(unittest.TestCase):
         }
         raw_payload = RawFulltextPayload(
             provider="wiley",
-            source_url=f"https://api.wiley.com/onlinelibrary/tdm/v1/articles/{WILEY_SAMPLE.doi}",
+            source_url=WILEY_SAMPLE.landing_url,
+            content_type="text/html",
+            body=wiley_html.encode("utf-8"),
+            metadata={
+                "route": "html",
+                "source_trail": ["fulltext:wiley_html_ok"],
+            },
+        )
+
+        article = self._fetch_replayed_provider_article(
+            sample=WILEY_SAMPLE,
+            metadata=metadata,
+            provider_name="wiley",
+            raw_payload=raw_payload,
+            provider_client=wiley_provider.WileyClient(FixtureTransport({}), {}),
+        )
+
+        self.assertEqual(article.source, WILEY_SAMPLE.expected_source)
+        self.assertEqual(article.metadata.title, WILEY_SAMPLE.title)
+        self.assertTrue(article.quality.has_fulltext)
+        self.assertTrue(article.metadata.abstract)
+        self.assertIn("fulltext:wiley_html_ok", article.quality.source_trail)
+        markdown = article.to_ai_markdown(max_tokens=16000)
+        self.assertIn("**Abstract.** Global vegetation greening has been widely confirmed in previous studies", markdown)
+        self.assertIn("## 1 INTRODUCTION", markdown)
+        self.assertIn("### 2.1 Study area", markdown)
+        self.assertIn("### 3.1 Spatiotemporal changes in the velocity of vegetation green-up", markdown)
+        self.assertIn("## 4 DISCUSSION", markdown)
+        self.assertNotIn("## Abbreviations", markdown)
+        self.assertIn("![Figure 1](", markdown)
+        self.assertIn("**Figure 1.**", markdown)
+
+    def test_paper_fetch_uses_wiley_pdf_fallback_replay_fixture_for_secondary_sample(self) -> None:
+        markdown_text = read_fixture_text(WILEY_PDF_FALLBACK_SAMPLE.fixture_name)
+        metadata = {
+            "provider": "crossref",
+            "official_provider": False,
+            "doi": WILEY_PDF_FALLBACK_SAMPLE.doi,
+            "title": WILEY_PDF_FALLBACK_SAMPLE.title,
+            "journal_title": "Cancer Science",
+            "published": "2024-01-01",
+            "landing_page_url": WILEY_PDF_FALLBACK_SAMPLE.landing_url,
+            "authors": [],
+            "fulltext_links": [],
+            "references": [],
+        }
+        raw_payload = RawFulltextPayload(
+            provider="wiley",
+            source_url=f"https://api.wiley.com/onlinelibrary/tdm/v1/articles/{WILEY_PDF_FALLBACK_SAMPLE.doi}",
             content_type="application/pdf",
             body=b"%PDF-1.4\n",
             metadata={
@@ -414,28 +466,28 @@ class RegressionSampleTests(unittest.TestCase):
         )
 
         article = self._fetch_replayed_provider_article(
-            sample=WILEY_SAMPLE,
+            sample=WILEY_PDF_FALLBACK_SAMPLE,
             metadata=metadata,
             provider_name="wiley",
             raw_payload=raw_payload,
             provider_client=wiley_provider.WileyClient(FixtureTransport({}), {}),
         )
 
-        self.assertEqual(article.source, WILEY_SAMPLE.expected_source)
-        self.assertEqual(article.metadata.title, WILEY_SAMPLE.title)
+        self.assertEqual(article.source, WILEY_PDF_FALLBACK_SAMPLE.expected_source)
+        self.assertEqual(article.metadata.title, WILEY_PDF_FALLBACK_SAMPLE.title)
         self.assertTrue(article.quality.has_fulltext)
         self.assertIn("fulltext:wiley_pdf_api_ok", article.quality.source_trail)
         self.assertIn("fulltext:wiley_pdf_fallback_ok", article.quality.source_trail)
 
     def test_paper_fetch_uses_pnas_replay_fixture_for_positive_sample(self) -> None:
-        markdown_text = read_fixture_text(PNAS_SAMPLE.fixture_name)
+        pnas_html = read_fixture_text(PNAS_SAMPLE.fixture_name)
         metadata = {
             "provider": "crossref",
             "official_provider": False,
             "doi": PNAS_SAMPLE.doi,
             "title": PNAS_SAMPLE.title,
             "journal_title": "Proceedings of the National Academy of Sciences",
-            "published": "2024-01-01",
+            "published": "2024-11-12",
             "landing_page_url": PNAS_SAMPLE.landing_url,
             "authors": [],
             "fulltext_links": [],
@@ -445,10 +497,9 @@ class RegressionSampleTests(unittest.TestCase):
             provider="pnas",
             source_url=PNAS_SAMPLE.landing_url,
             content_type="text/html",
-            body=markdown_text.encode("utf-8"),
+            body=pnas_html.encode("utf-8"),
             metadata={
                 "route": "html",
-                "markdown_text": markdown_text,
                 "source_trail": ["fulltext:pnas_html_ok"],
             },
         )
@@ -465,6 +516,16 @@ class RegressionSampleTests(unittest.TestCase):
         self.assertEqual(article.metadata.title, PNAS_SAMPLE.title)
         self.assertTrue(article.quality.has_fulltext)
         self.assertIn("fulltext:pnas_html_ok", article.quality.source_trail)
+        markdown = article.to_ai_markdown(max_tokens=16000)
+        self.assertTrue(article.metadata.abstract)
+        self.assertIn("## Significance", markdown)
+        self.assertIn("## Abstract", markdown)
+        self.assertLess(markdown.index("## Significance"), markdown.index("## Abstract"))
+        self.assertIn("![Figure 1](", markdown)
+        self.assertIn("### Data", markdown)
+        self.assertNotIn("### Data.", markdown)
+        self.assertIn("**Equation 1.**", markdown)
+        self.assertIn("**Figure 1.**", markdown)
 
     def test_paper_fetch_elsevier_negative_sample_falls_back_to_crossref_metadata(self) -> None:
         doi = "10.1016/j.solener.2024.01.001"

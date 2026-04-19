@@ -572,17 +572,6 @@ def maybe_download_provider_assets(
     provider_label = safe_text(provider_name).replace("_", " ").title() or "Provider"
     if asset_profile == "none":
         return empty_asset_results(), [], [f"download:{provider_name}_assets_skipped_profile_none"]
-    if provider_name in {"science", "pnas"}:
-        return (
-            empty_asset_results(),
-            [
-                (
-                    f"{provider_label} asset downloads are not implemented in this workflow yet; "
-                    "continuing with text-only full text."
-                )
-            ],
-            [f"download:{provider_name}_assets_skipped_text_only"],
-        )
     try:
         asset_results = provider_client.download_related_assets(
             doi,
@@ -617,12 +606,6 @@ def maybe_download_provider_assets(
 
 def _text_only_asset_skip(provider_name: str, raw_payload: Any) -> tuple[str, str] | None:
     route = safe_text((getattr(raw_payload, "metadata", {}) or {}).get("route")).lower()
-    if provider_name in {"science", "pnas"}:
-        provider_label = provider_name.title()
-        return (
-            f"{provider_label} asset downloads are not implemented in this workflow yet; continuing with text-only full text.",
-            f"download:{provider_name}_assets_skipped_text_only",
-        )
     if provider_name == "elsevier" and route == "html":
         return (
             "Elsevier browser fallback currently returns text-only full text; figure and supplementary asset downloads are not implemented yet.",
@@ -632,6 +615,12 @@ def _text_only_asset_skip(provider_name: str, raw_payload: Any) -> tuple[str, st
         return (
             "Springer PDF fallback currently returns text-only full text; figure and supplementary asset downloads are not implemented yet.",
             "download:springer_assets_skipped_text_only",
+        )
+    if provider_name in {"wiley", "science", "pnas"} and route == "pdf_fallback":
+        provider_label = provider_name.title()
+        return (
+            f"{provider_label} PDF fallback currently returns text-only full text; figure and supplementary asset downloads are not implemented yet.",
+            f"download:{provider_name}_assets_skipped_text_only",
         )
     return None
 
@@ -707,7 +696,7 @@ def _try_official_provider(
             asset_failures=asset_failures,
         )
         extend_unique(source_trail, article.quality.source_trail)
-        if article.quality.has_fulltext and article.sections:
+        if article.quality.content_kind == "fulltext":
             emit_structured_log(
                 logger,
                 logging.DEBUG,
@@ -720,7 +709,7 @@ def _try_official_provider(
             )
             extend_unique(source_trail, [f"fulltext:{provider_name}_article_ok"])
             return finalize_article(article, warnings=warnings, source_trail=source_trail)
-        if article.quality.has_fulltext and not article.sections:
+        if article.quality.content_kind == "abstract_only":
             emit_structured_log(
                 logger,
                 logging.DEBUG,
@@ -806,7 +795,7 @@ def _try_html_fallback(
             download_dir=download_dir,
             asset_profile=strategy.asset_profile,
         )
-        if article.quality.has_fulltext:
+        if article.quality.content_kind == "fulltext":
             emit_structured_log(
                 logger,
                 logging.DEBUG,
@@ -820,6 +809,22 @@ def _try_html_fallback(
             extend_unique(source_trail, article.quality.source_trail)
             extend_unique(source_trail, ["fallback:html_ok"])
             return finalize_article(article, warnings=warnings, source_trail=source_trail)
+        if article.quality.content_kind == "abstract_only":
+            emit_structured_log(
+                logger,
+                logging.DEBUG,
+                "html_fallback_result",
+                provider="html_generic",
+                url=landing_url,
+                status="abstract_only",
+                elapsed_ms=round((time.monotonic() - attempt_started_at) * 1000, 3),
+                attempt=1,
+            )
+            extend_unique(warnings, article.quality.warnings)
+            extend_unique(source_trail, article.quality.source_trail)
+            warnings.append("HTML fallback only contained abstract-level content; continuing to metadata-only fallback.")
+            extend_unique(source_trail, ["fallback:html_abstract_only"])
+            return None
         emit_structured_log(
             logger,
             logging.DEBUG,
@@ -834,6 +839,20 @@ def _try_html_fallback(
         extend_unique(source_trail, article.quality.source_trail)
         extend_unique(source_trail, ["fallback:html_not_usable"])
     except ProviderFailure as exc:
+        if exc.code == "abstract_only":
+            emit_structured_log(
+                logger,
+                logging.DEBUG,
+                "html_fallback_result",
+                provider="html_generic",
+                url=landing_url,
+                status="abstract_only",
+                elapsed_ms=round((time.monotonic() - attempt_started_at) * 1000, 3),
+                attempt=1,
+            )
+            warnings.append("HTML fallback only contained abstract-level content; continuing to metadata-only fallback.")
+            extend_unique(source_trail, ["fallback:html_abstract_only"])
+            return None
         emit_structured_log(
             logger,
             logging.DEBUG,
@@ -962,6 +981,8 @@ def build_fetch_envelope(
         doi=article.doi,
         source=public_source_for_article(article),
         has_fulltext=article.quality.has_fulltext,
+        content_kind=article.quality.content_kind,
+        has_abstract=article.quality.has_abstract,
         warnings=list(article.quality.warnings),
         source_trail=list(article.quality.source_trail),
         token_estimate=article.quality.token_estimate,

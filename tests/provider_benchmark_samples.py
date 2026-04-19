@@ -68,28 +68,12 @@ PROVIDER_BENCHMARK_SAMPLES: dict[str, ProviderBenchmarkSample] = {
     ),
     "wiley": ProviderBenchmarkSample(
         provider="wiley",
-        doi="10.1111/cas.16117",
-        year=2024,
-        title="Cell cycle heterogeneity and plasticity of colorectal cancer stem cells",
-        landing_url="https://onlinelibrary.wiley.com/doi/10.1111/cas.16117",
+        doi="10.1111/gcb.16414",
+        year=2022,
+        title="Contrasting temperature effects on the velocity of early- versus late-stage vegetation green-up in the Northern Hemisphere",
+        landing_url="https://onlinelibrary.wiley.com/doi/full/10.1111/gcb.16414",
         expected_source="wiley_browser",
-        accepted_live_source_trail_groups=(("fulltext:wiley_pdf_api_ok", "fulltext:wiley_pdf_fallback_ok"),),
-        required_env=("CROSSREF_MAILTO", "WILEY_TDM_CLIENT_TOKEN"),
-        fallback_dois=("10.1111/cas.16395",),
-        fixture_name="wiley_10.1111_cas.16117.md",
-        fixture_kind="markdown",
-    ),
-    "pnas": ProviderBenchmarkSample(
-        provider="pnas",
-        doi="10.1073/pnas.2406303121",
-        year=2024,
-        title="The kinetics of SARS-CoV-2 infection based on a human challenge study",
-        landing_url="https://www.pnas.org/doi/full/10.1073/pnas.2406303121",
-        expected_source="pnas",
-        accepted_live_source_trail_groups=(
-            ("fulltext:pnas_html_ok",),
-            ("fulltext:pnas_pdf_fallback_ok",),
-        ),
+        accepted_live_source_trail_groups=(("fulltext:wiley_html_ok",),),
         required_env=(
             "CROSSREF_MAILTO",
             "FLARESOLVERR_ENV_FILE",
@@ -98,11 +82,46 @@ PROVIDER_BENCHMARK_SAMPLES: dict[str, ProviderBenchmarkSample] = {
             "FLARESOLVERR_MAX_REQUESTS_PER_DAY",
         ),
         requires_flaresolverr=True,
-        fallback_dois=("10.1073/pnas.2206192119",),
-        fixture_name="pnas_10.1073_pnas.2406303121.md",
-        fixture_kind="markdown",
+        fixture_name="wiley_10.1111_gcb.16414.html",
+        fixture_kind="html",
+    ),
+    "pnas": ProviderBenchmarkSample(
+        provider="pnas",
+        doi="10.1073/pnas.2406303121",
+        year=2024,
+        title="The kinetics of SARS-CoV-2 infection based on a human challenge study",
+        landing_url="https://www.pnas.org/doi/full/10.1073/pnas.2406303121",
+        expected_source="pnas",
+        accepted_live_source_trail_groups=(("fulltext:pnas_html_ok",),),
+        required_env=(
+            "CROSSREF_MAILTO",
+            "FLARESOLVERR_ENV_FILE",
+            "FLARESOLVERR_MIN_INTERVAL_SECONDS",
+            "FLARESOLVERR_MAX_REQUESTS_PER_HOUR",
+            "FLARESOLVERR_MAX_REQUESTS_PER_DAY",
+        ),
+        requires_flaresolverr=True,
+        fixture_name="pnas_10.1073_pnas.2406303121.html",
+        fixture_kind="html",
     ),
 }
+
+
+WILEY_PDF_FALLBACK_SAMPLE = ProviderBenchmarkSample(
+    provider="wiley",
+    doi="10.1111/cas.16117",
+    year=2024,
+    title="Cell cycle heterogeneity and plasticity of colorectal cancer stem cells",
+    landing_url="https://onlinelibrary.wiley.com/doi/10.1111/cas.16117",
+    expected_source="wiley_browser",
+    accepted_live_source_trail_groups=(
+        ("fulltext:wiley_pdf_api_ok", "fulltext:wiley_pdf_fallback_ok"),
+        ("fulltext:wiley_pdf_browser_ok", "fulltext:wiley_pdf_fallback_ok"),
+    ),
+    required_env=("CROSSREF_MAILTO", "WILEY_TDM_CLIENT_TOKEN"),
+    fixture_name="wiley_10.1111_cas.16117.md",
+    fixture_kind="markdown",
+)
 
 
 def provider_benchmark_sample(provider: str) -> ProviderBenchmarkSample:

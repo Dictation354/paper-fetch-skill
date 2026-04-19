@@ -1,4 +1,4 @@
-"""Document assembly for XML-derived article Markdown."""
+"""Document assembly for Elsevier XML-derived article Markdown."""
 
 from __future__ import annotations
 
@@ -23,12 +23,6 @@ from ._article_markdown_elsevier import (
     elsevier_supplement_entries,
     elsevier_table_registry,
     render_elsevier_blocks,
-)
-from ._article_markdown_springer import (
-    render_jats_blocks,
-    springer_figure_registry,
-    springer_supplement_entries,
-    springer_table_registry,
 )
 
 
@@ -71,41 +65,14 @@ def build_article_structure(
 
     used_figure_keys: set[str] = set()
     used_table_keys: set[str] = set()
-    if provider == "springer":
-        article = first_descendant(root, "article")
-        if article is None:
-            article = root
-        abstract_node = first_descendant(article, "abstract")
-        body_node = first_descendant(article, "body")
-        abstract_lines = render_jats_blocks(abstract_node, heading_level=3)
-        table_lookup, table_entries, reserved_image_paths = springer_table_registry(
-            article,
-            assets,
-            xml_path.with_suffix(".md"),
-            doi,
-        )
-        figure_lookup, figure_entries = springer_figure_registry(
-            article,
-            assets,
-            xml_path.with_suffix(".md"),
-            doi,
-            excluded_asset_paths=reserved_image_paths,
-        )
-        body_lines = render_jats_blocks(
-            body_node,
-            heading_level=3,
-            figure_lookup=figure_lookup,
-            table_lookup=table_lookup,
-            used_figure_keys=used_figure_keys,
-            used_table_keys=used_table_keys,
-        )
-        supplement_entries = springer_supplement_entries(article, assets, xml_path.with_suffix(".md"), doi)
-    elif provider == "elsevier":
+    if provider == "elsevier":
         abstract_node = first_descendant(root, "abstract")
         body_node = first_descendant(root, "body")
         abstract_lines = render_elsevier_blocks(abstract_node, heading_level=3)
         if not abstract_lines:
-            fallback_abstract = normalize_text(str(metadata.get("abstract") or child_text(first_descendant(root, "coredata"), "description")))
+            fallback_abstract = normalize_text(
+                str(metadata.get("abstract") or child_text(first_descendant(root, "coredata"), "description"))
+            )
             if fallback_abstract:
                 abstract_lines = [fallback_abstract, ""]
         table_lookup, table_entries = elsevier_table_registry(root, assets, xml_path.with_suffix(".md"))
@@ -150,6 +117,9 @@ def build_markdown_document(
     xml_path: Path,
     assets: list[dict[str, Any]],
 ) -> str | None:
+    if provider != "elsevier":
+        return None
+
     structure = build_article_structure(
         provider=provider,
         metadata=metadata,
@@ -184,7 +154,7 @@ def build_markdown_document(
     remaining_figure_entries = [
         entry
         for entry in structure.figure_entries
-        if entry["key"] not in structure.used_figure_keys and (provider != "elsevier" or entry.get("section") == "body")
+        if entry["key"] not in structure.used_figure_keys and entry.get("section") == "body"
     ]
     if remaining_figure_entries:
         lines.extend(["## Additional Figures", ""])
@@ -192,9 +162,11 @@ def build_markdown_document(
             lines.extend([f"### {entry['heading']}", ""])
             lines.extend(render_figure_block(entry))
 
-    remaining_table_entries = [entry for entry in structure.table_entries if str(entry["key"]) not in structure.used_table_keys]
-    if provider == "elsevier":
-        remaining_table_entries = [entry for entry in remaining_table_entries if entry.get("section") == "body"]
+    remaining_table_entries = [
+        entry
+        for entry in structure.table_entries
+        if str(entry["key"]) not in structure.used_table_keys and entry.get("section") == "body"
+    ]
     if remaining_table_entries:
         lines.extend(["## Additional Tables", ""])
         for entry in remaining_table_entries:

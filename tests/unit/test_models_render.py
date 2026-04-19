@@ -16,6 +16,7 @@ from paper_fetch.models import (
     article_from_structure,
     estimate_tokens,
     metadata_only_article,
+    normalize_markdown_text,
 )
 
 from ._paper_fetch_support import sample_article
@@ -129,6 +130,32 @@ class ModelsRenderTests(unittest.TestCase):
         large_budget_markdown = article.to_ai_markdown(include_refs="all", asset_profile="all", max_tokens=100000)
 
         self.assertEqual(full_text_markdown, large_budget_markdown)
+
+    def test_to_ai_markdown_preserves_significance_before_abstract_and_body(self) -> None:
+        article = sample_article()
+        article.metadata.abstract = "Abstract summary stays distinct from the significance statement."
+        article.sections = [
+            Section(
+                heading="Significance",
+                level=2,
+                kind="body",
+                text="Significance summary should remain first in the rendered markdown.",
+            ),
+            Section(
+                heading="Results and Discussion",
+                level=2,
+                kind="body",
+                text="Body text should appear after the front-matter summaries.",
+            ),
+        ]
+
+        markdown = article.to_ai_markdown(max_tokens="full_text")
+
+        self.assertIn("## Significance", markdown)
+        self.assertIn("## Abstract", markdown)
+        self.assertNotIn("**Abstract.**", markdown)
+        self.assertLess(markdown.index("## Significance"), markdown.index("## Abstract"))
+        self.assertLess(markdown.index("## Abstract"), markdown.index("## Results and Discussion"))
 
     def test_to_ai_markdown_inline_figures_fall_back_to_captions_without_links(self) -> None:
         article = sample_article()
@@ -257,3 +284,137 @@ class ModelsRenderTests(unittest.TestCase):
             article.quality.token_estimate,
             estimate_tokens("Short abstract.") + estimate_tokens("Body text lives here."),
         )
+
+    def test_article_from_markdown_keeps_data_availability_without_counting_it_as_fulltext(self) -> None:
+        article = article_from_markdown(
+            source="html_generic",
+            metadata={"title": "Markdown Article"},
+            doi="10.1000/data-availability",
+            markdown_text=(
+                "# Markdown Article\n\n"
+                "## Abstract\n\n"
+                "Short abstract.\n\n"
+                "## Data Availability\n\n"
+                "The data are available from the corresponding author on reasonable request."
+            ),
+        )
+
+        self.assertEqual(article.quality.content_kind, "abstract_only")
+        self.assertEqual(len(article.sections), 1)
+        self.assertEqual(article.sections[0].kind, "data_availability")
+        rendered = article.to_ai_markdown(max_tokens="full_text")
+        self.assertIn("## Data Availability", rendered)
+        self.assertIn("The data are available from the corresponding author", rendered)
+
+    def test_article_from_markdown_preserves_inline_figure_links_without_counting_them_as_body_text(self) -> None:
+        article = article_from_markdown(
+            source="pnas",
+            metadata={"title": "Markdown Article"},
+            doi="10.1000/markdown-figures",
+            markdown_text="\n".join(
+                [
+                    "# Markdown Article",
+                    "",
+                    "## Results",
+                    "",
+                    "Body text lives here.",
+                    "",
+                    "![Figure 1](https://example.test/figure-1.png)",
+                    "",
+                    "**Figure 1.** Figure caption text.",
+                ]
+            ),
+        )
+
+        self.assertIn("![Figure 1](https://example.test/figure-1.png)", article.sections[0].text)
+        self.assertIn("![Figure 1](https://example.test/figure-1.png)", article.to_ai_markdown())
+        self.assertEqual(
+            article.quality.token_estimate_breakdown.body,
+            estimate_tokens("Body text lives here.\n\n**Figure 1.** Figure caption text."),
+        )
+
+    def test_article_from_markdown_moves_abstract_into_metadata_and_excludes_abstract_sections(self) -> None:
+        article = article_from_markdown(
+            source="html_generic",
+            metadata={"title": "Markdown Article"},
+            doi="10.1000/markdown",
+            markdown_text="# Markdown Article\n\n## Abstract\n\nShort abstract.\n\n## Results\n\nBody text lives here.",
+        )
+
+        self.assertEqual(article.metadata.abstract, "Short abstract.")
+        self.assertEqual(article.quality.content_kind, "fulltext")
+        self.assertTrue(article.quality.has_abstract)
+        self.assertFalse(any(section.kind == "abstract" for section in article.sections))
+
+    def test_article_from_markdown_splits_leading_inline_abstract_from_main_text(self) -> None:
+        article = article_from_markdown(
+            source="science",
+            metadata={
+                "title": "Markdown Article",
+                "abstract": "Incorrect provider abstract that should be replaced.",
+            },
+            doi="10.1000/inline-abstract",
+            markdown_text=(
+                "# Markdown Article\n\n"
+                "**Abstract.** Short abstract summary stays in metadata only.\n\n"
+                "This lead body paragraph should remain in the article body instead of inflating the abstract.\n\n"
+                "## Results\n\n"
+                "Body text lives here."
+            ),
+        )
+
+        self.assertEqual(article.metadata.abstract, "Short abstract summary stays in metadata only.")
+        self.assertEqual(article.sections[0].heading, "Main Text")
+        self.assertIn("lead body paragraph", article.sections[0].text)
+        self.assertEqual(article.sections[1].heading, "Results")
+
+    def test_article_from_markdown_treats_single_inline_abstract_block_as_abstract_only(self) -> None:
+        article = article_from_markdown(
+            source="science",
+            metadata={"title": "Markdown Article"},
+            doi="10.1000/inline-abstract-only",
+            markdown_text="# Markdown Article\n\n**Abstract.** Only the abstract is available in this markdown sample.",
+        )
+
+        self.assertEqual(article.metadata.abstract, "Only the abstract is available in this markdown sample.")
+        self.assertEqual(article.sections, [])
+        self.assertEqual(article.quality.content_kind, "abstract_only")
+
+    def test_metadata_abstract_strips_redundant_heading_prefix(self) -> None:
+        article = metadata_only_article(
+            source="wiley_browser",
+            metadata={
+                "title": "Metadata Article",
+                "abstract": "Abstract The abstract text should not keep the duplicated heading prefix.",
+            },
+            doi="10.1000/abstract-prefix",
+        )
+
+        self.assertEqual(
+            article.metadata.abstract,
+            "The abstract text should not keep the duplicated heading prefix.",
+        )
+        self.assertNotIn("**Abstract.** Abstract", article.to_ai_markdown(max_tokens="full_text"))
+
+    def test_article_from_markdown_classifies_abstract_only_when_no_body_sections_remain(self) -> None:
+        article = article_from_markdown(
+            source="html_generic",
+            metadata={"title": "Markdown Article"},
+            doi="10.1000/markdown",
+            markdown_text="# Markdown Article\n\n## Abstract\n\nShort abstract.",
+        )
+
+        self.assertEqual(article.metadata.abstract, "Short abstract.")
+        self.assertEqual(article.sections, [])
+        self.assertEqual(article.quality.content_kind, "abstract_only")
+        self.assertFalse(article.quality.has_fulltext)
+        self.assertTrue(article.quality.has_abstract)
+
+    def test_normalize_markdown_text_collapses_padding_inside_display_math(self) -> None:
+        normalized = normalize_markdown_text(
+            "Before\n\n$$\n\n\\begin{matrix} a \\\\ b \\end{matrix}\n\n$$\n\nAfter"
+        )
+
+        self.assertIn("$$\n\\begin{matrix} a \\\\ b \\end{matrix}\n$$", normalized)
+        self.assertNotIn("$$\n\n\\begin{matrix}", normalized)
+        self.assertNotIn("\\end{matrix}\n\n$$", normalized)

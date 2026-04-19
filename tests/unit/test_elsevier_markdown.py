@@ -6,6 +6,7 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 from paper_fetch.providers import _article_markdown as article_markdown
+from paper_fetch.providers import _article_markdown_elsevier_document as elsevier_document
 
 
 def build_elsevier_markdown(
@@ -54,6 +55,10 @@ class ElsevierMarkdownTests(unittest.TestCase):
         self.assertTrue(callable(article_markdown.render_mathml_expression))
         self.assertTrue(callable(article_markdown.build_article_structure))
         self.assertTrue(callable(article_markdown.write_article_markdown))
+
+    def test_elsevier_document_module_remains_importable(self) -> None:
+        self.assertTrue(callable(elsevier_document.build_markdown_document))
+        self.assertTrue(callable(elsevier_document.write_article_markdown))
 
     def test_mathml_nested_subscripts_are_grouped_for_katex(self) -> None:
         math_node = ET.fromstring(
@@ -267,6 +272,33 @@ class ElsevierMarkdownTests(unittest.TestCase):
         self.assertNotIn("$$\nT\n$$", markdown)
         self.assertNotIn("$$\nT_{d}\n$$", markdown)
         self.assertNotIn("$$\nc_{1}\n$$", markdown)
+
+    def test_split_inline_variable_subscripts_are_rejoined_in_paragraphs(self) -> None:
+        xml_body = b"""<?xml version="1.0"?>
+<full-text-retrieval-response xmlns="http://www.elsevier.com/xml/svapi/article/dtd" xmlns:ce="http://www.elsevier.com/xml/common/dtd">
+  <body>
+    <ce:sections>
+      <ce:section>
+        <ce:section-title>Methods</ce:section-title>
+        <ce:para>where <ce:italic>x</ce:italic>
+<ce:italic>i</ce:italic>
+and <ce:italic>x</ce:italic>
+<ce:italic>j</ce:italic>
+represent the grid unit values, and <ce:italic>t</ce:italic>
+<ce:italic>m</ce:italic>
+refers to the tie.</ce:para>
+      </ce:section>
+    </ce:sections>
+  </body>
+</full-text-retrieval-response>
+"""
+
+        markdown = build_elsevier_markdown(xml_body)
+
+        self.assertIn("where *x*<sub>i</sub> and *x*<sub>j</sub> represent the grid unit values", markdown)
+        self.assertIn("*t*<sub>m</sub> refers to the tie.", markdown)
+        self.assertNotIn("where *x*\n*i*", markdown)
+        self.assertNotIn("and *x*\n*j*", markdown)
 
     def test_graphical_abstract_assets_do_not_appear_in_additional_figures(self) -> None:
         xml_body = b"""<?xml version="1.0"?>

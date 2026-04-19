@@ -36,13 +36,9 @@ from .base import (
     build_provider_status_check,
     provider_status_check_from_failure,
 )
-from ._science_pnas_html import (
-    choose_parser,
-    detect_html_block,
-    extract_page_title,
-    looks_like_abstract_redirect,
-    summarize_html,
-)
+from ._html_access_signals import detect_html_block, summarize_html
+from ._html_availability import choose_parser, extract_page_title
+from ._science_pnas_profiles import looks_like_abstract_redirect
 
 try:
     from bs4 import BeautifulSoup

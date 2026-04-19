@@ -75,7 +75,7 @@ def rewrite_markdown_asset_links(
 
 
 def save_markdown_to_disk(envelope: FetchEnvelope, *, output_dir: Path, render: RenderOptions) -> None:
-    has_usable_fulltext = bool(envelope.has_fulltext and envelope.markdown and envelope.article and envelope.article.sections)
+    has_usable_fulltext = bool(envelope.content_kind == "fulltext" and envelope.markdown and envelope.article)
     if not has_usable_fulltext:
         extend_unique(
             envelope.warnings,
@@ -189,7 +189,7 @@ def build_parser() -> argparse.ArgumentParser:
             "or the user data downloads directory, "
             "overridable via --output-dir). Only writes when full text was actually retrieved. "
             "For Wiley the Markdown is produced from PDF text extraction and may be lower fidelity "
-            "than Elsevier/Springer XML."
+            "than Elsevier XML or publisher-managed HTML."
         ),
     )
     parser.add_argument("--include-refs", choices=("none", "top10", "all"), default=None)

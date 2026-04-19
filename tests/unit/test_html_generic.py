@@ -125,7 +125,7 @@ class HtmlGenericTests(unittest.TestCase):
         self.assertEqual(metadata["journal_title"], "Journal of HTML")
         self.assertEqual(metadata["published"], "2026-01-15")
 
-    def test_parse_html_metadata_cleans_nature_abstract_citations(self) -> None:
+    def test_parse_html_metadata_cleans_springer_nature_abstract_citations(self) -> None:
         html = """
 <html>
   <head>
@@ -137,6 +137,19 @@ class HtmlGenericTests(unittest.TestCase):
         metadata = html_generic.parse_html_metadata(html, "https://www.nature.com/articles/example")
 
         self.assertEqual(metadata["abstract"], "Rainfall totals. Growth. Stable ending.")
+
+    def test_parse_html_metadata_leaves_non_springer_abstract_ranges_intact(self) -> None:
+        html = """
+<html>
+  <head>
+    <meta name="citation_abstract" content="Participants were aged 10-12 years. Stable ending." />
+  </head>
+</html>
+"""
+
+        metadata = html_generic.parse_html_metadata(html, "https://example.test/article")
+
+        self.assertEqual(metadata["abstract"], "Participants were aged 10-12 years. Stable ending.")
 
     def test_parse_html_metadata_uses_redirect_stub_lookup_title(self) -> None:
         html = """
@@ -344,6 +357,100 @@ class HtmlGenericTests(unittest.TestCase):
             full_size_url,
             "https://media.springernature.com/full/springer-static/image/art%3A10.1007%2Ftest/MediaObjects/Fig1.png",
         )
+
+    def test_promote_springer_media_url_to_full_size_rewrites_registered_preview_url(self) -> None:
+        preview_url = "https://media.springernature.com/lw685/springer-static/image/art%3A10.1007%2Ftest/MediaObjects/Fig1.png"
+
+        promoted_url = html_generic.promote_springer_media_url_to_full_size(preview_url)
+
+        self.assertEqual(
+            promoted_url,
+            "https://media.springernature.com/full/springer-static/image/art%3A10.1007%2Ftest/MediaObjects/Fig1.png",
+        )
+
+    def test_extract_full_size_figure_image_url_prefers_wiley_data_lg_src_before_preview(self) -> None:
+        html = """
+<html>
+  <body>
+    <figure class="figure">
+      <a href="/cms/asset/full/ece39361-fig-0001-m.jpg">
+        <picture>
+          <source srcset="/cms/asset/full/ece39361-fig-0001-m.jpg" media="(min-width: 1650px)">
+          <img
+            class="figure__image"
+            src="/cms/asset/preview/ece39361-fig-0001-m.png"
+            data-lg-src="/cms/asset/full/ece39361-fig-0001-m.jpg"
+            alt="Wiley figure"
+          />
+        </picture>
+      </a>
+    </figure>
+  </body>
+</html>
+"""
+
+        full_size_url = html_generic.extract_full_size_figure_image_url(
+            html,
+            "https://onlinelibrary.wiley.com/doi/full/10.1002/ece3.9361",
+        )
+
+        self.assertEqual(
+            full_size_url,
+            "https://onlinelibrary.wiley.com/cms/asset/full/ece39361-fig-0001-m.jpg",
+        )
+
+    def test_extract_figure_assets_recognizes_wiley_data_lg_src_as_full_size(self) -> None:
+        html = """
+<html>
+  <body>
+    <figure class="figure" id="ece39361-fig-0001">
+      <a target="_blank" href="/cms/asset/full/ece39361-fig-0001-m.jpg">
+        <picture>
+          <source srcset="/cms/asset/full/ece39361-fig-0001-m.jpg" media="(min-width: 1650px)">
+          <img
+            class="figure__image"
+            src="/cms/asset/preview/ece39361-fig-0001-m.png"
+            data-lg-src="/cms/asset/full/ece39361-fig-0001-m.jpg"
+            alt="Details are in the caption following the image"
+          />
+        </picture>
+      </a>
+      <figcaption class="figure__caption">
+        <div class="figure__caption__header">
+          <strong class="figure__title">FIGURE 1</strong>
+          <div class="figure-extra">
+            <a href="#" class="open-figure-link">Open in figure viewer</a>
+            <a href="/action/downloadFigures?id=ece39361-fig-0001&amp;partId=&amp;doi=10.1002%2Fece3.9361" class="ppt-figure-link">
+              <span>PowerPoint</span>
+            </a>
+          </div>
+        </div>
+        <div class="figure__caption figure__caption-text">Wiley caption text.</div>
+      </figcaption>
+    </figure>
+  </body>
+</html>
+"""
+
+        assets = html_generic.extract_figure_assets(
+            html,
+            "https://onlinelibrary.wiley.com/doi/full/10.1002/ece3.9361",
+        )
+
+        self.assertEqual(len(assets), 1)
+        self.assertEqual(
+            assets[0]["full_size_url"],
+            "https://onlinelibrary.wiley.com/cms/asset/full/ece39361-fig-0001-m.jpg",
+        )
+        self.assertEqual(
+            assets[0]["preview_url"],
+            "https://onlinelibrary.wiley.com/cms/asset/preview/ece39361-fig-0001-m.png",
+        )
+        self.assertEqual(
+            assets[0]["url"],
+            "https://onlinelibrary.wiley.com/cms/asset/full/ece39361-fig-0001-m.jpg",
+        )
+        self.assertEqual(assets[0]["caption"], "FIGURE 1 Open in figure viewer PowerPoint Wiley caption text.")
 
     def test_extract_figure_assets_dedupes_duplicate_nature_figure_wrappers(self) -> None:
         html = """
@@ -605,6 +712,71 @@ class HtmlGenericTests(unittest.TestCase):
         self.assertIn("Data availability", cleaned)
         self.assertIn("Code availability", cleaned)
 
+    def test_clean_html_for_extraction_generic_keeps_publisher_specific_prefix_noise(self) -> None:
+        html = """
+<html>
+  <body>
+    <article>
+      <div>Thank you for visiting nature.com. This page uses fallback styles.</div>
+      <div>Anyone you share the following link with will be able to read this content.</div>
+      <section>
+        <h2>Results</h2>
+        <p>Important body text remains available.</p>
+      </section>
+    </article>
+  </body>
+</html>
+"""
+
+        cleaned = html_generic.clean_html_for_extraction(html)
+
+        self.assertIn("Thank you for visiting nature.com", cleaned)
+        self.assertIn("Anyone you share the following link with will be able to read this content.", cleaned)
+        self.assertIn("Important body text remains available.", cleaned)
+
+    def test_clean_html_for_extraction_uses_springer_nature_profile_for_url(self) -> None:
+        html = """
+<html>
+  <body>
+    <article>
+      <div>Thank you for visiting nature.com. This page uses fallback styles.</div>
+      <div>Anyone you share the following link with will be able to read this content.</div>
+      <section>
+        <h2>Results</h2>
+        <p>Important body text remains available.</p>
+      </section>
+    </article>
+  </body>
+</html>
+"""
+
+        cleaned = html_generic.clean_html_for_extraction(html, source_url="https://www.nature.com/articles/example")
+
+        self.assertNotIn("Thank you for visiting nature.com", cleaned)
+        self.assertNotIn("Anyone you share the following link with will be able to read this content.", cleaned)
+        self.assertIn("Important body text remains available.", cleaned)
+
+    def test_clean_markdown_pnas_alerts_require_pnas_profile(self) -> None:
+        markdown = "\n\n".join(
+            [
+                "# Example Article",
+                "Sign up for PNAS alerts",
+                "Get alerts for new articles, or get an alert when an article is cited",
+                "## Results",
+                "Important body text remains available.",
+            ]
+        )
+
+        generic_cleaned = html_generic.clean_markdown(markdown)
+        pnas_cleaned = html_generic.clean_markdown(markdown, noise_profile="pnas")
+
+        self.assertIn("Sign up for PNAS alerts", generic_cleaned)
+        self.assertIn("Get alerts for new articles, or get an alert when an article is cited", generic_cleaned)
+        self.assertNotIn("Sign up for PNAS alerts", pnas_cleaned)
+        self.assertNotIn("Get alerts for new articles, or get an alert when an article is cited", pnas_cleaned)
+        self.assertIn("## Results", pnas_cleaned)
+        self.assertIn("Important body text remains available.", pnas_cleaned)
+
     def test_extract_article_markdown_preserves_data_availability_section(self) -> None:
         html = """
 <html>
@@ -805,6 +977,70 @@ class HtmlGenericTests(unittest.TestCase):
         self.assertNotIn("(ref.)", markdown)
         self.assertNotIn("Fig. 1:", markdown)
         self.assertIn("## Data availability", markdown)
+
+    def test_extract_article_markdown_handles_springer_link_html(self) -> None:
+        html = """
+<html>
+  <body>
+    <article>
+      <header>
+        <h1>Springer Link Example</h1>
+        <p>Alice Example</p>
+      </header>
+      <section>
+        <h2>Abstract</h2>
+        <p>Rainfall totals<sup><a href="#ref-CR1">1</a>, <a href="#ref-CR2">2</a></sup>. Stable ending.</p>
+      </section>
+      <section>
+        <h2>Results</h2>
+        <p>Body text continues here.</p>
+        <p>PAPER_FETCH_TABLE_PLACEHOLDER_1</p>
+      </section>
+    </article>
+  </body>
+</html>
+"""
+
+        markdown = html_generic.extract_article_markdown(html, "https://link.springer.com/article/10.1007/test")
+
+        self.assertIn("# Springer Link Example", markdown)
+        self.assertIn("## Abstract", markdown)
+        self.assertIn("Rainfall totals. Stable ending.", markdown)
+        self.assertIn("## Results", markdown)
+        self.assertIn("PAPER_FETCH_TABLE_PLACEHOLDER_1", markdown)
+        self.assertNotIn("Alice Example", markdown)
+
+    def test_extract_article_markdown_handles_biomedcentral_html(self) -> None:
+        html = """
+<html>
+  <body>
+    <main>
+      <article>
+        <h1>BMC Example</h1>
+        <section>
+          <h2>Methods</h2>
+          <p>Structured content is preserved.</p>
+          <ul>
+            <li>First bullet</li>
+            <li>Second bullet</li>
+          </ul>
+        </section>
+      </article>
+    </main>
+  </body>
+</html>
+"""
+
+        markdown = html_generic.extract_article_markdown(
+            html,
+            "https://genomebiology.biomedcentral.com/articles/10.1186/test",
+        )
+
+        self.assertIn("# BMC Example", markdown)
+        self.assertIn("## Methods", markdown)
+        self.assertIn("Structured content is preserved.", markdown)
+        self.assertIn("- First bullet", markdown)
+        self.assertIn("- Second bullet", markdown)
 
 
 if __name__ == "__main__":

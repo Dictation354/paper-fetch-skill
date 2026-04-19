@@ -6,11 +6,12 @@ import re
 import urllib.parse
 from html.parser import HTMLParser
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any, Callable, Mapping
 
 from ..http import DEFAULT_FULLTEXT_TIMEOUT_SECONDS, HttpTransport, RequestFailure
 from ..models import AssetProfile, normalize_text
 from ..utils import build_asset_output_path, empty_asset_results, sanitize_filename, save_payload
+from ._pdf_fallback import _build_cookie_seeded_opener, _cookie_header_for_url, _request_with_opener
 from .html_noise import decode_html
 
 try:
@@ -20,6 +21,64 @@ except ImportError:  # pragma: no cover - exercised implicitly when dependency i
     Tag = None
 
 SPRINGER_MEDIA_SIZE_SEGMENT_PATTERN = re.compile(r"^(?:lw|w|m|h)\d+(?:h\d+)?$")
+FULL_SIZE_IMAGE_ATTRS = (
+    "data-original",
+    "data-full-size",
+    "data-fullsize",
+    "data-zoom-src",
+    "data-zoom-image",
+    "data-lg-src",
+    "data-hi-res-src",
+    "data-hires",
+    "data-large-src",
+    "data-image-full",
+    "data-download-url",
+)
+PREVIEW_IMAGE_ATTRS = (
+    "data-src",
+    "src",
+    "data-lazy-src",
+)
+FULL_SIZE_URL_TOKENS = (
+    "/full/",
+    "/large/",
+    "/original/",
+    "/fullsize/",
+    "download=true",
+    "download=1",
+    "hi-res",
+    "hires",
+    "high-res",
+    "highres",
+)
+PREVIEW_URL_TOKENS = (
+    "/thumb/",
+    "/thumbnail/",
+    "thumbnail",
+    "/small/",
+    "/preview/",
+)
+FIGURE_PAGE_HINTS = (
+    "full size image",
+    "view figure",
+    "open in viewer",
+    "view larger",
+    "download figure",
+    "download image",
+    "figure viewer",
+)
+
+FigurePageFetcher = Callable[[str], tuple[str, str] | None]
+AssetUrlRewriter = Callable[[str], str | None]
+SupplementaryUrlDetector = Callable[[str], bool]
+
+
+def _host_matches(hostname: str, expected_host: str) -> bool:
+    normalized_hostname = normalize_text(hostname).lower()
+    normalized_expected = normalize_text(expected_host).lower()
+    if not normalized_hostname or not normalized_expected:
+        return False
+    return normalized_hostname == normalized_expected or normalized_hostname.endswith(f".{normalized_expected}")
 
 
 class _FigureParser(HTMLParser):
@@ -94,6 +153,32 @@ def _soup_attr_url(tag: Any, *attrs: str) -> str:
     return ""
 
 
+def looks_like_full_size_asset_url(url: str | None) -> bool:
+    candidate = normalize_text(url).lower()
+    if not candidate:
+        return False
+    if any(token in candidate for token in PREVIEW_URL_TOKENS):
+        return False
+    return any(token in candidate for token in FULL_SIZE_URL_TOKENS)
+
+
+def _collect_tag_attr_urls(tag: Any, source_url: str, *attrs: str) -> list[str]:
+    if Tag is None or not isinstance(tag, Tag):
+        return []
+    urls: list[str] = []
+    for attr in attrs:
+        raw = tag.get(attr)
+        if not raw:
+            continue
+        values = [raw] if not isinstance(raw, list) else raw
+        for value in values:
+            candidate = _first_url_from_srcset(value) if attr.endswith("srcset") else normalize_text(str(value))
+            absolute_candidate = urllib.parse.urljoin(source_url, candidate) if candidate else ""
+            if absolute_candidate and absolute_candidate not in urls:
+                urls.append(absolute_candidate)
+    return urls
+
+
 def _figure_caption_from_soup(node: Any, soup: Any) -> str:
     if Tag is None or not isinstance(node, Tag):
         return ""
@@ -137,8 +222,14 @@ def _figure_page_url_from_soup(node: Any, source_url: str) -> str:
         for anchor in context.find_all("a", href=True):
             href = normalize_text(str(anchor.get("href") or ""))
             text = normalize_text(anchor.get_text(" ", strip=True)).lower()
-            aria_label = normalize_text(str(anchor.get("aria-label") or "")).lower()
-            if "full size image" in text or "full size image" in aria_label:
+            hint_blob = " ".join(
+                [
+                    text,
+                    normalize_text(str(anchor.get("aria-label") or "")).lower(),
+                    normalize_text(str(anchor.get("title") or "")).lower(),
+                ]
+            )
+            if any(token in hint_blob for token in FIGURE_PAGE_HINTS) and href and not href.startswith("#"):
                 return urllib.parse.urljoin(source_url, href)
 
     for context in contexts:
@@ -149,15 +240,58 @@ def _figure_page_url_from_soup(node: Any, source_url: str) -> str:
     return ""
 
 
+def _figure_full_size_url_from_soup(node: Any, source_url: str) -> str:
+    if Tag is None or not isinstance(node, Tag):
+        return ""
+
+    contexts: list[Any] = [node]
+    if isinstance(node.parent, Tag):
+        contexts.append(node.parent)
+
+    for context in contexts:
+        for tag in [context, *context.find_all(True)]:
+            for candidate in _collect_tag_attr_urls(tag, source_url, *FULL_SIZE_IMAGE_ATTRS):
+                if looks_like_full_size_asset_url(candidate):
+                    return candidate
+
+    for context in contexts:
+        for anchor in context.find_all("a", href=True):
+            href = normalize_text(str(anchor.get("href") or ""))
+            if href.startswith("#"):
+                continue
+            absolute_href = urllib.parse.urljoin(source_url, href)
+            hint_blob = " ".join(
+                [
+                    normalize_text(anchor.get_text(" ", strip=True)).lower(),
+                    normalize_text(str(anchor.get("aria-label") or "")).lower(),
+                    normalize_text(str(anchor.get("title") or "")).lower(),
+                ]
+            )
+            if looks_like_full_size_asset_url(absolute_href) or (
+                any(token in hint_blob for token in FIGURE_PAGE_HINTS) and "/figures/" not in href
+            ):
+                return absolute_href
+    return ""
+
+
 def _figure_asset_from_soup_node(node: Any, soup: Any, source_url: str) -> dict[str, str] | None:
     if Tag is None or not isinstance(node, Tag):
         return None
 
     image = node.find("img")
-    image_url = _soup_attr_url(image, "data-src", "src", "data-original", "data-lazy-src") if image else ""
-    if not image_url:
-        source = node.find("source")
-        image_url = _soup_attr_url(source, "srcset", "data-srcset") if source else ""
+    source = node.find("source")
+    preview_url = _soup_attr_url(image, *PREVIEW_IMAGE_ATTRS) if image else ""
+    if not preview_url:
+        preview_url = _soup_attr_url(source, "srcset", "data-srcset") if source else ""
+    full_size_url = _figure_full_size_url_from_soup(node, source_url)
+    if not full_size_url and image is not None:
+        full_size_url = _soup_attr_url(image, *FULL_SIZE_IMAGE_ATTRS)
+    if not full_size_url and source is not None:
+        full_size_url = _soup_attr_url(source, *FULL_SIZE_IMAGE_ATTRS)
+    if not full_size_url and looks_like_full_size_asset_url(preview_url):
+        full_size_url = preview_url
+    absolute_preview_url = urllib.parse.urljoin(source_url, preview_url) if preview_url else ""
+    absolute_full_size_url = urllib.parse.urljoin(source_url, full_size_url) if full_size_url else ""
 
     caption = _figure_caption_from_soup(node, soup)
     alt_text = normalize_text(str(image.get("alt") or "")) if isinstance(image, Tag) else ""
@@ -165,16 +299,20 @@ def _figure_asset_from_soup_node(node: Any, soup: Any, source_url: str) -> dict[
     if not caption and alt_text:
         caption = alt_text
 
-    if not image_url and not caption:
+    if not preview_url and not full_size_url and not caption:
         return None
 
     asset: dict[str, str] = {
         "kind": "figure",
         "heading": heading,
         "caption": caption,
-        "url": urllib.parse.urljoin(source_url, image_url) if image_url else "",
+        "url": absolute_full_size_url or absolute_preview_url,
         "section": "body",
     }
+    if absolute_preview_url:
+        asset["preview_url"] = absolute_preview_url
+    if absolute_full_size_url:
+        asset["full_size_url"] = absolute_full_size_url
     figure_page_url = _figure_page_url_from_soup(node, source_url)
     if figure_page_url:
         asset["figure_page_url"] = figure_page_url
@@ -210,6 +348,28 @@ def _find_supplementary_context(node: Any) -> Any:
     return None
 
 
+def _springer_supplementary_url_supported(url: str) -> bool:
+    lowered = normalize_text(url).lower()
+    return "static-content.springer.com/esm/" in lowered or "/mediaobjects/" in lowered
+
+
+SUPPLEMENTARY_URL_DETECTORS: dict[str, SupplementaryUrlDetector] = {
+    "static-content.springer.com": _springer_supplementary_url_supported,
+    "media.springernature.com": _springer_supplementary_url_supported,
+}
+
+
+def _matches_supplementary_detector(url: str) -> bool:
+    parsed = urllib.parse.urlsplit(normalize_text(url))
+    hostname = normalize_text(parsed.netloc).lower()
+    if not hostname:
+        return False
+    for registered_host, detector in SUPPLEMENTARY_URL_DETECTORS.items():
+        if _host_matches(hostname, registered_host):
+            return detector(url)
+    return False
+
+
 def _supplementary_anchor_is_supported(anchor: Any) -> bool:
     if Tag is None or not isinstance(anchor, Tag):
         return False
@@ -242,12 +402,14 @@ def _supplementary_anchor_is_supported(anchor: Any) -> bool:
     if any(token in text for token in supported_tokens):
         if "/figures/" in href:
             return True
-        if any(token in href.lower() for token in ("static-content.springer.com/esm/", "/mediaobjects/", ".pdf", ".csv", ".xlsx", ".zip")):
+        if _matches_supplementary_detector(href) or any(
+            token in href.lower() for token in (".pdf", ".csv", ".xlsx", ".zip")
+        ):
             return True
         return False
     if "/figures/" in href and "extended data" in text:
         return True
-    if any(token in href.lower() for token in ("static-content.springer.com/esm/", "/mediaobjects/")) and _find_supplementary_context(anchor) is not None:
+    if _matches_supplementary_detector(href) and _find_supplementary_context(anchor) is not None:
         return True
     return False
 
@@ -424,7 +586,15 @@ def extract_full_size_figure_image_url(html_text: str, source_url: str) -> str |
     springer_candidate = None
     seen: set[str] = set()
     for tag in soup.find_all(["img", "source"]):
-        candidate = _soup_attr_url(tag, "data-src", "src", "data-original", "data-lazy-src", "srcset", "data-srcset")
+        candidate = _soup_attr_url(
+            tag,
+            *FULL_SIZE_IMAGE_ATTRS,
+            "data-src",
+            "src",
+            "data-lazy-src",
+            "srcset",
+            "data-srcset",
+        )
         if not candidate:
             continue
         absolute_candidate = urllib.parse.urljoin(source_url, candidate)
@@ -432,16 +602,16 @@ def extract_full_size_figure_image_url(html_text: str, source_url: str) -> str |
             continue
         seen.add(absolute_candidate)
         lowered = absolute_candidate.lower()
-        if "/full/" in lowered:
+        if looks_like_full_size_asset_url(lowered):
             return absolute_candidate
-        if springer_candidate is None and "springernature.com" in lowered:
+        if springer_candidate is None and _rewrite_registered_asset_url(absolute_candidate):
             springer_candidate = absolute_candidate
         if fallback_candidate is None:
             fallback_candidate = absolute_candidate
     return springer_candidate or fallback_candidate
 
 
-def promote_springer_media_url_to_full_size(url: str | None) -> str | None:
+def _rewrite_springer_media_url_to_full_size(url: str) -> str | None:
     candidate = normalize_text(url)
     if not candidate:
         return None
@@ -476,31 +646,77 @@ def promote_springer_media_url_to_full_size(url: str | None) -> str | None:
     )
 
 
+ASSET_URL_REWRITERS: dict[str, AssetUrlRewriter] = {
+    "media.springernature.com": _rewrite_springer_media_url_to_full_size,
+}
+
+
+def _rewrite_registered_asset_url(url: str | None) -> str | None:
+    candidate = normalize_text(url)
+    if not candidate:
+        return None
+    parsed = urllib.parse.urlsplit(candidate)
+    hostname = normalize_text(parsed.netloc).lower()
+    if not hostname:
+        return None
+    for registered_host, rewriter in ASSET_URL_REWRITERS.items():
+        if _host_matches(hostname, registered_host):
+            return rewriter(candidate)
+    return None
+
+
+def promote_springer_media_url_to_full_size(url: str | None) -> str | None:
+    candidate = normalize_text(url)
+    rewritten = _rewrite_registered_asset_url(candidate)
+    if not candidate or not rewritten:
+        return None
+    parsed = urllib.parse.urlsplit(candidate)
+    if not _host_matches(parsed.netloc, "media.springernature.com"):
+        return None
+    return rewritten
+
+
 def figure_download_candidates(
     transport: HttpTransport,
     *,
     asset: Mapping[str, Any],
     user_agent: str,
+    figure_page_fetcher: FigurePageFetcher | None = None,
 ) -> list[str]:
-    preview_url = normalize_text(str(asset.get("url") or ""))
+    direct_full_size_url = normalize_text(str(asset.get("full_size_url") or ""))
+    primary_url = normalize_text(str(asset.get("url") or ""))
+    preview_url = normalize_text(str(asset.get("preview_url") or "")) or primary_url
     candidates: list[str] = []
 
-    promoted_preview_url = promote_springer_media_url_to_full_size(preview_url)
+    if direct_full_size_url:
+        candidates.append(direct_full_size_url)
+
+    promoted_preview_url = _rewrite_registered_asset_url(primary_url)
     if promoted_preview_url:
         candidates.append(promoted_preview_url)
+    if primary_url and looks_like_full_size_asset_url(primary_url):
+        candidates.append(primary_url)
 
     figure_page_url = normalize_text(str(asset.get("figure_page_url") or ""))
     if figure_page_url:
         try:
-            response = transport.request(
-                "GET",
-                figure_page_url,
-                headers={"User-Agent": user_agent, "Accept": "text/html,application/xhtml+xml"},
-                timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
-                retry_on_rate_limit=True,
-                retry_on_transient=True,
-            )
-            full_size_url = extract_full_size_figure_image_url(decode_html(response["body"]), response["url"])
+            if figure_page_fetcher is not None:
+                page_result = figure_page_fetcher(figure_page_url)
+                if page_result is None:
+                    raise RequestFailure(None, f"Missing figure-page HTML for {figure_page_url}", url=figure_page_url)
+                page_html, page_url = page_result
+            else:
+                response = transport.request(
+                    "GET",
+                    figure_page_url,
+                    headers={"User-Agent": user_agent, "Accept": "text/html,application/xhtml+xml"},
+                    timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
+                    retry_on_rate_limit=True,
+                    retry_on_transient=True,
+                )
+                page_html = decode_html(response["body"])
+                page_url = str(response["url"] or figure_page_url)
+            full_size_url = extract_full_size_figure_image_url(page_html, page_url)
             if full_size_url:
                 candidates.append(full_size_url)
         except RequestFailure:
@@ -572,6 +788,9 @@ def download_figure_assets(
     output_dir: Path | None,
     user_agent: str,
     asset_profile: AssetProfile = "all",
+    figure_page_fetcher: FigurePageFetcher | None = None,
+    browser_context_seed: Mapping[str, Any] | None = None,
+    seed_urls: list[str] | None = None,
 ) -> dict[str, list[dict[str, Any]]]:
     if output_dir is None or asset_profile == "none" or not assets:
         return empty_asset_results()
@@ -583,11 +802,12 @@ def download_figure_assets(
     failures: list[dict[str, Any]] = []
 
     for asset in assets:
-        preview_url = normalize_text(str(asset.get("url") or ""))
+        preview_url = normalize_text(str(asset.get("preview_url") or asset.get("url") or ""))
         candidate_urls = figure_download_candidates(
             transport,
             asset=asset,
             user_agent=user_agent,
+            figure_page_fetcher=figure_page_fetcher,
         )
         if not candidate_urls:
             continue
@@ -595,6 +815,16 @@ def download_figure_assets(
         response = None
         source_url = ""
         last_failure: dict[str, Any] | None = None
+        active_user_agent = normalize_text(str((browser_context_seed or {}).get("browser_user_agent") or "")) or user_agent
+        browser_cookies = list((browser_context_seed or {}).get("browser_cookies") or [])
+        active_seed_urls = [
+            normalized
+            for normalized in [
+                *[normalize_text(item) for item in seed_urls or []],
+                normalize_text(str((browser_context_seed or {}).get("browser_final_url") or "")),
+            ]
+            if normalized
+        ]
         for candidate_url in candidate_urls:
             parsed = urllib.parse.urlparse(candidate_url)
             if parsed.scheme not in {"http", "https"}:
@@ -609,13 +839,36 @@ def download_figure_assets(
                 continue
 
             try:
-                response = transport.request(
-                    "GET",
-                    candidate_url,
-                    headers={"User-Agent": user_agent, "Accept": "*/*"},
-                    timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
-                    retry_on_rate_limit=True,
-                    retry_on_transient=True,
+                request_headers = {"User-Agent": active_user_agent, "Accept": "*/*"}
+                opener = (
+                    _build_cookie_seeded_opener(
+                        active_seed_urls,
+                        headers=request_headers,
+                        timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
+                        browser_cookies=browser_cookies,
+                    )
+                    if browser_cookies
+                    else None
+                )
+                cookie_header = _cookie_header_for_url(browser_cookies, candidate_url)
+                if cookie_header:
+                    request_headers["Cookie"] = cookie_header
+                response = (
+                    _request_with_opener(
+                        opener,
+                        candidate_url,
+                        headers=request_headers,
+                        timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
+                    )
+                    if opener is not None
+                    else transport.request(
+                        "GET",
+                        candidate_url,
+                        headers=request_headers,
+                        timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
+                        retry_on_rate_limit=True,
+                        retry_on_transient=True,
+                    )
                 )
                 source_url = candidate_url
                 break

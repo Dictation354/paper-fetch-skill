@@ -9,6 +9,7 @@ from collections.abc import Sequence
 from dataclasses import asdict, dataclass, field
 from typing import Any, Literal, Mapping
 
+from .publisher_identity import normalize_doi
 from .utils import normalize_text, safe_text
 
 SourceKind = Literal[
@@ -24,12 +25,25 @@ SourceKind = Literal[
 OutputMode = Literal["article", "markdown", "metadata"]
 AssetProfile = Literal["none", "body", "all"]
 MaxTokensMode = int | Literal["full_text"]
+ContentKind = Literal["fulltext", "abstract_only", "metadata_only"]
 MARKDOWN_FENCE_PATTERN = re.compile(r"^\s*(```+|~~~+)")
 MARKDOWN_TABLE_RULE_PATTERN = re.compile(r"^\s*[-+:| ]{3,}\s*$")
 MARKDOWN_LIST_MARKER_PATTERN = re.compile(r"^(\s{0,3}(?:[-*+]|\d+[.)])\s+)(.*)$")
 TRUNCATION_WARNING = "Output truncated to satisfy token budget."
+BODY_SECTION_EXCLUDED_KINDS = frozenset({"abstract", "references", "supplementary", "diagnostics", "data_availability"})
+DATA_AVAILABILITY_SECTION_HEADINGS = frozenset(
+    {
+        "data availability",
+        "data availability statement",
+        "data, materials, and software availability",
+        "data, code, and materials availability",
+        "availability of data and materials",
+    }
+)
 
 SECTION_PRIORITY = {
+    "significance": -1,
+    "significance statement": -1,
     "abstract": 0,
     "introduction": 1,
     "background": 1,
@@ -41,8 +55,19 @@ SECTION_PRIORITY = {
     "discussion": 4,
     "conclusion": 5,
     "conclusions": 5,
+    "abbreviations": 6,
+    "data availability": 6,
+    "data availability statement": 6,
+    "data, materials, and software availability": 6,
+    "data, code, and materials availability": 6,
+    "availability of data and materials": 6,
     "references": 6,
 }
+LEADING_ABSTRACT_CONTEXT_HEADINGS = frozenset({"significance", "significance statement"})
+ABSTRACT_PREFIX_PATTERN = re.compile(r"^(?:[Aa]bstract|[Ss]ummary)\b[:.\-\s]+(?=[A-Z])")
+INLINE_HTML_TAG_PATTERN = re.compile(r"</?(?:sub|sup|br)\b[^>]*>", flags=re.IGNORECASE)
+INLINE_MARKDOWN_ABSTRACT_PREFIX_PATTERN = re.compile(r"^\*\*(?:Abstract|Summary)\.?\*\*\s*", re.IGNORECASE)
+MARKDOWN_ABSTRACT_PREFIX_PATTERN = re.compile(r"^(?:\*\*|__)(?:[Aa]bstract|[Ss]ummary)\.?(?:\*\*|__)\s*")
 
 
 def normalize_markdown_text(value: str | None) -> str:
@@ -72,7 +97,55 @@ def normalize_markdown_text(value: str | None) -> str:
             normalized_lines.append("")
         blank_run += 1
 
-    return "\n".join(normalized_lines).strip()
+    normalized = "\n".join(normalized_lines).strip()
+    return _collapse_display_math_padding(normalized)
+
+
+def _collapse_display_math_padding(text: str) -> str:
+    if not text:
+        return ""
+
+    collapsed_lines: list[str] = []
+    math_lines: list[str] = []
+    in_fence = False
+    in_display_math = False
+
+    for raw_line in text.split("\n"):
+        line = raw_line.rstrip()
+        if MARKDOWN_FENCE_PATTERN.match(line):
+            if in_display_math:
+                math_lines.append(line)
+                continue
+            collapsed_lines.append(line.strip())
+            in_fence = not in_fence
+            continue
+
+        if not in_fence and line.strip() == "$$":
+            if in_display_math:
+                while math_lines and not math_lines[-1].strip():
+                    math_lines.pop()
+                collapsed_lines.extend(math_lines)
+                collapsed_lines.append("$$")
+                math_lines = []
+                in_display_math = False
+            else:
+                collapsed_lines.append("$$")
+                math_lines = []
+                in_display_math = True
+            continue
+
+        if in_display_math:
+            if not math_lines and not line.strip():
+                continue
+            math_lines.append(line)
+            continue
+
+        collapsed_lines.append(line)
+
+    if in_display_math:
+        collapsed_lines.extend(math_lines)
+
+    return "\n".join(collapsed_lines).strip()
 
 
 def should_preserve_markdown_line(line: str) -> bool:
@@ -158,6 +231,8 @@ def section_kind_for_heading(heading: str) -> str:
         return "references"
     if normalized in {"supplementary materials", "supplementary information"}:
         return "supplementary"
+    if normalized in DATA_AVAILABILITY_SECTION_HEADINGS:
+        return "data_availability"
     if normalized in {"conversion notes"}:
         return "diagnostics"
     if normalized in {"abstract"}:
@@ -243,22 +318,75 @@ def build_token_estimate_breakdown(
     abstract = estimate_tokens(abstract_text or "")
     body = estimate_tokens(
         "\n\n".join(
-            normalize_text(section.text)
+            strip_markdown_images(section.text)
             for section in sections
-            if section.kind not in {"abstract", "references"} and normalize_text(section.text)
+            if section.kind not in BODY_SECTION_EXCLUDED_KINDS and strip_markdown_images(section.text)
         )
     )
     refs = estimate_tokens("\n".join(normalize_text(reference.raw) for reference in references if normalize_text(reference.raw)))
     return TokenEstimateBreakdown(abstract=abstract, body=body, refs=refs)
 
 
+def _normalized_text_field(value: Any) -> str:
+    return normalize_text(value) if isinstance(value, str) else ""
+
+
+def filtered_body_sections(sections: Sequence["Section"]) -> list["Section"]:
+    return [
+        section
+        for section in sections
+        if strip_markdown_images(_normalized_text_field(getattr(section, "text", None)))
+        and _normalized_text_field(getattr(section, "kind", None)).lower() not in BODY_SECTION_EXCLUDED_KINDS
+    ]
+
+
+def classify_content(*, sections: Sequence["Section"], abstract_text: str | None) -> ContentKind:
+    if filtered_body_sections(sections):
+        return "fulltext"
+    if normalize_text(abstract_text):
+        return "abstract_only"
+    return "metadata_only"
+
+
+def classify_article_content(article: "ArticleModel") -> ContentKind:
+    metadata = getattr(article, "metadata", None)
+    abstract_text = _normalized_text_field(getattr(metadata, "abstract", None))
+    sections = list(getattr(article, "sections", []) or [])
+    if not abstract_text:
+        abstract_text = next(
+            (
+                _normalized_text_field(getattr(section, "text", None))
+                for section in sections
+                if _normalized_text_field(getattr(section, "kind", None)).lower() == "abstract"
+                and _normalized_text_field(getattr(section, "text", None))
+            ),
+            "",
+        )
+    return classify_content(sections=sections, abstract_text=abstract_text)
+
+
 @dataclass
 class Quality:
     has_fulltext: bool
     token_estimate: int
+    content_kind: ContentKind = "metadata_only"
+    has_abstract: bool = False
     warnings: list[str] = field(default_factory=list)
     source_trail: list[str] = field(default_factory=list)
     token_estimate_breakdown: TokenEstimateBreakdown = field(default_factory=TokenEstimateBreakdown)
+
+    def __post_init__(self) -> None:
+        if self.content_kind == "fulltext":
+            self.has_fulltext = True
+            return
+        if self.content_kind == "abstract_only":
+            self.has_fulltext = False
+            self.has_abstract = True
+            return
+        if self.has_fulltext:
+            self.content_kind = "fulltext"
+        elif self.has_abstract:
+            self.content_kind = "abstract_only"
 
 
 @dataclass(frozen=True)
@@ -282,7 +410,9 @@ class _MarkdownRenderPlan:
     level_shift: int
     include_figures: str
     reference_count: int
+    lead_sections: tuple["Section", ...]
     body_sections: tuple["Section", ...]
+    retained_sections: tuple["Section", ...]
     figure_assets: tuple["Asset", ...]
     table_assets: tuple["Asset", ...]
     supplementary_assets: tuple["Asset", ...]
@@ -314,6 +444,8 @@ class FetchEnvelope:
     doi: str | None
     source: str
     has_fulltext: bool
+    content_kind: ContentKind = "metadata_only"
+    has_abstract: bool = False
     warnings: list[str] = field(default_factory=list)
     source_trail: list[str] = field(default_factory=list)
     token_estimate: int = 0
@@ -327,6 +459,19 @@ class FetchEnvelope:
 
     def to_json(self) -> str:
         return json.dumps(self.to_dict(), ensure_ascii=False, indent=2)
+
+    def __post_init__(self) -> None:
+        if self.content_kind == "fulltext":
+            self.has_fulltext = True
+            return
+        if self.content_kind == "abstract_only":
+            self.has_fulltext = False
+            self.has_abstract = True
+            return
+        if self.has_fulltext:
+            self.content_kind = "fulltext"
+        elif self.has_abstract:
+            self.content_kind = "abstract_only"
 
 
 @dataclass
@@ -344,6 +489,26 @@ class ArticleModel:
 
     def to_json(self) -> str:
         return json.dumps(self.to_dict(), ensure_ascii=False, indent=2)
+
+    def __post_init__(self) -> None:
+        abstract_text = normalize_text(self.metadata.abstract)
+        if not abstract_text:
+            abstract_text = normalize_text(
+                next(
+                    (
+                        section.text
+                        for section in self.sections
+                        if normalize_text(section.kind).lower() == "abstract" and normalize_text(section.text)
+                    ),
+                    "",
+                )
+            )
+            if abstract_text:
+                self.metadata.abstract = abstract_text
+        content_kind = classify_content(sections=self.sections, abstract_text=abstract_text)
+        self.quality.content_kind = content_kind
+        self.quality.has_abstract = bool(abstract_text)
+        self.quality.has_fulltext = content_kind == "fulltext"
 
     def to_ai_markdown(
         self,
@@ -374,10 +539,22 @@ class ArticleModel:
             context.finalize_warnings()
             return "\n".join(lines).strip() + "\n"
 
-        _append_abstract_with_budget(lines, abstract_text=render_plan.abstract_text, context=context)
         _append_sections_with_budget(
             lines,
-            sections=render_plan.body_sections,
+            sections=render_plan.lead_sections,
+            level_shift=render_plan.level_shift,
+            context=context,
+            preserve_source_order=True,
+        )
+        _append_abstract_with_budget(
+            lines,
+            abstract_text=render_plan.abstract_text,
+            context=context,
+            as_section=bool(render_plan.lead_sections),
+        )
+        _append_sections_with_budget(
+            lines,
+            sections=render_plan.body_sections + render_plan.retained_sections,
             level_shift=render_plan.level_shift,
             context=context,
         )
@@ -463,6 +640,8 @@ def _build_article_header_block(article: "ArticleModel") -> RenderedBlock:
         [
             f'source: "{article.source}"',
             f"has_fulltext: {str(article.quality.has_fulltext).lower()}",
+            f'content_kind: "{article.quality.content_kind}"',
+            f"has_abstract: {str(article.quality.has_abstract).lower()}",
             f"token_estimate: {article.quality.token_estimate}",
             "---",
             "",
@@ -489,18 +668,22 @@ def _build_markdown_render_plan(
         include_supplementary,
         asset_profile=asset_profile,
     )
-    body_sections = tuple(
+    body_sections = tuple(filtered_body_sections(article.sections))
+    lead_sections, remaining_body_sections = split_leading_abstract_context_sections(body_sections)
+    retained_sections = tuple(
         section
         for section in article.sections
-        if section.kind not in {"abstract", "references", "supplementary", "diagnostics"}
+        if strip_markdown_images(section.text) and normalize_text(section.kind).lower() == "data_availability"
     )
     return _MarkdownRenderPlan(
         token_budget=token_budget,
         abstract_text=normalize_text(article.metadata.abstract),
-        level_shift=compute_level_shift(article.sections),
+        level_shift=compute_level_shift(body_sections or retained_sections),
         include_figures=effective_include_figures,
         reference_count=resolve_reference_limit(effective_include_refs, len(article.references)),
-        body_sections=body_sections,
+        lead_sections=lead_sections,
+        body_sections=remaining_body_sections,
+        retained_sections=retained_sections,
         figure_assets=tuple(selected_figure_assets(article.assets, asset_profile=asset_profile)),
         table_assets=tuple(selected_table_assets(article.assets, asset_profile=asset_profile)),
         supplementary_assets=tuple(
@@ -513,15 +696,43 @@ def _build_markdown_render_plan(
     )
 
 
-def _append_abstract_with_budget(lines: list[str], *, abstract_text: str, context: RenderContext) -> None:
+def split_leading_abstract_context_sections(
+    sections: Sequence["Section"],
+) -> tuple[tuple["Section", ...], tuple["Section", ...]]:
+    lead_sections: list[Section] = []
+    remaining_index = 0
+    for index, section in enumerate(sections):
+        normalized_heading = normalize_text(section.heading).lower()
+        if normalized_heading in LEADING_ABSTRACT_CONTEXT_HEADINGS:
+            lead_sections.append(section)
+            remaining_index = index + 1
+            continue
+        break
+    return tuple(lead_sections), tuple(sections[remaining_index:])
+
+
+def render_abstract_section_block(abstract_text: str) -> RenderedBlock:
+    return render_section_block(Section(heading="Abstract", level=2, kind="abstract", text=abstract_text))
+
+
+def _append_abstract_with_budget(
+    lines: list[str],
+    *,
+    abstract_text: str,
+    context: RenderContext,
+    as_section: bool = False,
+) -> None:
     if not abstract_text:
         return
-    abstract_block = render_abstract_block(abstract_text)
+    abstract_block = render_abstract_section_block(abstract_text) if as_section else render_abstract_block(abstract_text)
     if context.append_if_fits(lines, abstract_block):
         return
     truncated_text = truncate_text_to_tokens(abstract_text, max(int(context.remaining_budget - 8), 0))
     if truncated_text:
-        context.append_if_fits(lines, render_abstract_block(truncated_text))
+        context.append_if_fits(
+            lines,
+            render_abstract_section_block(truncated_text) if as_section else render_abstract_block(truncated_text),
+        )
     context.mark_truncated()
 
 
@@ -531,10 +742,15 @@ def _append_sections_with_budget(
     sections: tuple["Section", ...],
     level_shift: int,
     context: RenderContext,
+    preserve_source_order: bool = False,
 ) -> None:
     selected_sections: list[tuple[int, RenderedBlock]] = []
     indexed_sections = list(enumerate(sections))
-    for index, section in sorted(indexed_sections, key=lambda item: (section_priority(item[1]), item[0])):
+    ordered_sections = indexed_sections if preserve_source_order else sorted(
+        indexed_sections,
+        key=lambda item: (section_priority(item[1]), item[0]),
+    )
+    for index, section in ordered_sections:
         section_block = render_section_block(section, level_shift=level_shift)
         if section_block.token_estimate <= context.remaining_budget:
             selected_sections.append((index, section_block))
@@ -792,7 +1008,7 @@ def render_section_block(section: Section, *, level_shift: int = 0) -> RenderedB
     )
 
 
-def compute_level_shift(sections: list[Section]) -> int:
+def compute_level_shift(sections: Sequence[Section]) -> int:
     """Return how many heading levels to subtract so the shallowest body
     section renders at level 2 (right under the article title at level 1).
 
@@ -802,14 +1018,19 @@ def compute_level_shift(sections: list[Section]) -> int:
     body_levels = [
         section.level
         for section in sections
-        if section.kind not in {"diagnostics"} and section.level > 0
+        if normalize_text(section.kind).lower() not in BODY_SECTION_EXCLUDED_KINDS and section.level > 0
     ]
     if not body_levels:
         return 0
     return max(0, min(body_levels) - 2)
 
 
-def lines_to_sections(lines: list[str], *, fallback_heading: str = "Full Text") -> list[Section]:
+def lines_to_sections(
+    lines: list[str],
+    *,
+    fallback_heading: str = "Full Text",
+    preserve_images: bool = False,
+) -> list[Section]:
     sections: list[Section] = []
     current_heading = fallback_heading
     current_level = 2
@@ -818,7 +1039,8 @@ def lines_to_sections(lines: list[str], *, fallback_heading: str = "Full Text") 
     def flush() -> None:
         if not buffer:
             return
-        text = strip_markdown_images("\n".join(buffer))
+        raw_text = "\n".join(buffer)
+        text = normalize_markdown_text(raw_text) if preserve_images else strip_markdown_images(raw_text)
         if not text:
             return
         sections.append(
@@ -844,6 +1066,45 @@ def lines_to_sections(lines: list[str], *, fallback_heading: str = "Full Text") 
     return sections
 
 
+def split_leading_inline_abstract(sections: Sequence[Section]) -> tuple[str | None, list[Section]]:
+    if not sections:
+        return None, []
+
+    first = sections[0]
+    if normalize_text(first.kind).lower() != "body":
+        return None, list(sections)
+
+    paragraphs = [paragraph for paragraph in re.split(r"\n\s*\n", first.text) if normalize_text(paragraph)]
+    if not paragraphs:
+        return None, list(sections)
+
+    first_paragraph = paragraphs[0].strip()
+    if not INLINE_MARKDOWN_ABSTRACT_PREFIX_PATTERN.match(first_paragraph):
+        return None, list(sections)
+
+    if len(sections) == 1:
+        return normalize_abstract_text(strip_markdown_images(first.text)) or None, []
+
+    abstract_text = normalize_abstract_text(strip_markdown_images(first_paragraph)) or None
+    remaining_text = normalize_markdown_text("\n\n".join(paragraphs[1:]))
+    remaining_sections = list(sections)
+    if remaining_text:
+        replacement_heading = (
+            "Main Text"
+            if first.level <= 1 or normalize_text(first.heading).lower() == "full text"
+            else first.heading
+        )
+        remaining_sections[0] = Section(
+            heading=replacement_heading,
+            level=first.level,
+            kind=first.kind,
+            text=remaining_text,
+        )
+    else:
+        remaining_sections = remaining_sections[1:]
+    return abstract_text, remaining_sections
+
+
 def normalize_authors(value: Any) -> list[str]:
     if isinstance(value, list):
         return [safe_text(item) for item in value if safe_text(item)]
@@ -853,11 +1114,34 @@ def normalize_authors(value: Any) -> list[str]:
     return []
 
 
+def normalize_abstract_text(value: Any) -> str:
+    text = safe_text(value)
+    if not text:
+        return ""
+    text = MARKDOWN_ABSTRACT_PREFIX_PATTERN.sub("", text, count=1).lstrip()
+    return ABSTRACT_PREFIX_PATTERN.sub("", text, count=1).lstrip()
+
+
+def normalize_inline_html_text(value: Any) -> str:
+    text = safe_text(value)
+    if not text or not INLINE_HTML_TAG_PATTERN.search(text):
+        return text
+    text = re.sub(r"\s*\n\s*", " ", text)
+    text = re.sub(r"\s*(<br\s*/?>)\s*", r"\1", text, flags=re.IGNORECASE)
+    text = re.sub(r"\s*<(sub|sup)>\s*", r"<\1>", text, flags=re.IGNORECASE)
+    text = re.sub(r"\s+</(sub|sup)>", r"</\1>", text, flags=re.IGNORECASE)
+    text = re.sub(r"\s+(<(?:sub|sup)>)", r"\1", text, flags=re.IGNORECASE)
+    text = re.sub(r"(</(?:sub|sup)>)\s*\n\s*", r"\1 ", text, flags=re.IGNORECASE)
+    text = re.sub(r"(</(?:sub|sup)>)(?=[A-Za-z0-9])", r"\1 ", text, flags=re.IGNORECASE)
+    text = re.sub(r"(</(?:sub|sup)>)\s+([,.;:%\]\}\+\)])", r"\1\2", text, flags=re.IGNORECASE)
+    return text.strip()
+
+
 def build_metadata(metadata: Mapping[str, Any]) -> Metadata:
     return Metadata(
-        title=safe_text(metadata.get("title")) or None,
+        title=normalize_inline_html_text(metadata.get("title")) or None,
         authors=normalize_authors(metadata.get("authors")),
-        abstract=safe_text(metadata.get("abstract")) or None,
+        abstract=normalize_abstract_text(metadata.get("abstract")) or None,
         journal=safe_text(metadata.get("journal_title") or metadata.get("journal")) or None,
         published=safe_text(metadata.get("published")) or None,
         keywords=[
@@ -900,6 +1184,7 @@ def metadata_only_article(
         quality=Quality(
             has_fulltext=False,
             token_estimate=token_estimate,
+            has_abstract=bool(article_metadata.abstract),
             warnings=list(warnings or []),
             source_trail=list(source_trail or []),
             token_estimate_breakdown=token_estimate_breakdown,
@@ -919,7 +1204,7 @@ def build_references(raw_references: Any) -> list[Reference]:
             references.append(
                 Reference(
                     raw=raw,
-                    doi=safe_text(item.get("doi")) or None,
+                    doi=normalize_doi(safe_text(item.get("doi"))) or None,
                     title=safe_text(item.get("title")) or None,
                     year=safe_text(item.get("year")) or None,
                 )
@@ -997,8 +1282,6 @@ def article_from_structure(
             )
         )
 
-    fulltext_chunks = [article_metadata.abstract or ""]
-    fulltext_chunks.extend(section.text for section in sections)
     normalized_references = list(references or build_references(metadata.get("references")))
     token_estimate_breakdown = build_token_estimate_breakdown(
         abstract_text=article_metadata.abstract,
@@ -1007,6 +1290,7 @@ def article_from_structure(
     )
     token_estimate = token_estimate_breakdown.abstract + token_estimate_breakdown.body
 
+    content_kind = classify_content(sections=sections, abstract_text=article_metadata.abstract)
     return ArticleModel(
         doi=doi or safe_text(metadata.get("doi")) or None,
         source=source,
@@ -1015,8 +1299,10 @@ def article_from_structure(
         references=normalized_references,
         assets=assets,
         quality=Quality(
-            has_fulltext=bool(sections or article_metadata.abstract),
+            has_fulltext=content_kind == "fulltext",
             token_estimate=token_estimate,
+            content_kind=content_kind,
+            has_abstract=bool(article_metadata.abstract),
             warnings=list(warnings or []),
             source_trail=list(source_trail or []),
             token_estimate_breakdown=token_estimate_breakdown,
@@ -1036,12 +1322,18 @@ def article_from_markdown(
 ) -> ArticleModel:
     article_metadata = build_metadata(metadata)
     normalized = normalize_markdown_text(markdown_text)
-    sections = lines_to_sections(normalized.splitlines())
+    parsed_sections = lines_to_sections(normalized.splitlines(), preserve_images=True)
     extracted_abstract = None
-    for section in sections:
+    sections: list[Section] = []
+    for section in parsed_sections:
         if section.kind == "abstract":
-            extracted_abstract = section.text
-            break
+            if not extracted_abstract:
+                extracted_abstract = strip_markdown_images(section.text)
+            continue
+        sections.append(section)
+    inline_abstract, sections = split_leading_inline_abstract(sections)
+    if inline_abstract and not extracted_abstract:
+        extracted_abstract = inline_abstract
     article_metadata.abstract = extracted_abstract or article_metadata.abstract
     normalized_assets = [
         Asset(
@@ -1061,6 +1353,7 @@ def article_from_markdown(
         references=references,
     )
     token_estimate = token_estimate_breakdown.abstract + token_estimate_breakdown.body
+    content_kind = classify_content(sections=sections, abstract_text=article_metadata.abstract)
     return ArticleModel(
         doi=doi or safe_text(metadata.get("doi")) or None,
         source=source,
@@ -1069,8 +1362,10 @@ def article_from_markdown(
         references=references,
         assets=normalized_assets,
         quality=Quality(
-            has_fulltext=bool(sections or article_metadata.abstract),
+            has_fulltext=content_kind == "fulltext",
             token_estimate=token_estimate,
+            content_kind=content_kind,
+            has_abstract=bool(article_metadata.abstract),
             warnings=list(warnings or []),
             source_trail=list(source_trail or []),
             token_estimate_breakdown=token_estimate_breakdown,

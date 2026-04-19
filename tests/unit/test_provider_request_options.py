@@ -1,15 +1,16 @@
 from __future__ import annotations
 
 import json
+import tempfile
 import unittest
 from pathlib import Path
 from unittest import mock
 
-from paper_fetch.http import DEFAULT_FULLTEXT_TIMEOUT_SECONDS, DEFAULT_TIMEOUT_SECONDS
-from paper_fetch.providers import _flaresolverr, _science_pnas
+from paper_fetch.http import DEFAULT_FULLTEXT_TIMEOUT_SECONDS, DEFAULT_TIMEOUT_SECONDS, RequestFailure
+from paper_fetch.providers import _flaresolverr, _science_pnas, html_assets
 from paper_fetch.providers.crossref import CrossrefClient
 from paper_fetch.providers.elsevier import ElsevierClient, filter_elsevier_asset_references
-from paper_fetch.providers.springer import SpringerClient, extract_springer_asset_references, filter_springer_asset_references
+from paper_fetch.providers.springer import SpringerClient
 from paper_fetch.providers.wiley import WileyClient
 
 
@@ -51,7 +52,10 @@ class RecordingTransport:
         key = (method, url)
         if key not in self.responses:
             raise AssertionError(f"Missing fake response for {method} {url}")
-        return self.responses[key]
+        response = self.responses[key]
+        if isinstance(response, Exception):
+            raise response
+        return response
 
 
 class ProviderRequestOptionsTests(unittest.TestCase):
@@ -159,7 +163,7 @@ class ProviderRequestOptionsTests(unittest.TestCase):
                         b'<meta name="citation_doi" content="10.1186/s13059-024-03246-2" />'
                         b"</head><body>"
                         b"<article><h1>Single Cell Atlas</h1><h2>Abstract</h2>"
-                        b"<p>"
+                        b"<p>Short abstract summary.</p><h2>Results</h2><p>"
                         + (b"Important body text. " * 200)
                         + b"</p></article></body></html>"
                     ),
@@ -236,6 +240,161 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         self.assertEqual(payload.metadata["route"], "html")
         self.assertEqual(payload.content_type, "text/html")
 
+    def test_html_asset_download_prefers_direct_full_size_url_before_preview(self) -> None:
+        transport = RecordingTransport(
+            {
+                ("GET", "https://example.test/images/large/figure1.png"): {
+                    "status_code": 200,
+                    "headers": {"content-type": "image/png"},
+                    "body": b"large-image",
+                    "url": "https://example.test/images/large/figure1.png",
+                },
+                ("GET", "https://example.test/images/preview/figure1.png"): {
+                    "status_code": 200,
+                    "headers": {"content-type": "image/png"},
+                    "body": b"preview-image",
+                    "url": "https://example.test/images/preview/figure1.png",
+                },
+            }
+        )
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            result = html_assets.download_figure_assets(
+                transport,
+                article_id="10.1000/example",
+                assets=[
+                    {
+                        "kind": "figure",
+                        "heading": "Figure 1",
+                        "caption": "Direct full-size figure",
+                        "url": "https://example.test/images/large/figure1.png",
+                        "preview_url": "https://example.test/images/preview/figure1.png",
+                        "section": "body",
+                    }
+                ],
+                output_dir=Path(tmpdir),
+                user_agent="unit-test",
+                asset_profile="body",
+            )
+
+            self.assertEqual([call["url"] for call in transport.calls], ["https://example.test/images/large/figure1.png"])
+            self.assertEqual(len(result["assets"]), 1)
+            self.assertEqual(Path(result["assets"][0]["path"]).read_bytes(), b"large-image")
+
+    def test_html_asset_download_uses_figure_page_full_size_before_preview(self) -> None:
+        transport = RecordingTransport(
+            {
+                ("GET", "https://example.test/figures/figure-1"): {
+                    "status_code": 200,
+                    "headers": {"content-type": "text/html; charset=utf-8"},
+                    "body": (
+                        b"<html><head>"
+                        b"<meta property='og:image' content='https://example.test/images/original/figure1.png' />"
+                        b"</head><body></body></html>"
+                    ),
+                    "url": "https://example.test/figures/figure-1",
+                },
+                ("GET", "https://example.test/images/original/figure1.png"): {
+                    "status_code": 200,
+                    "headers": {"content-type": "image/png"},
+                    "body": b"original-image",
+                    "url": "https://example.test/images/original/figure1.png",
+                },
+                ("GET", "https://example.test/images/preview/figure1.png"): {
+                    "status_code": 200,
+                    "headers": {"content-type": "image/png"},
+                    "body": b"preview-image",
+                    "url": "https://example.test/images/preview/figure1.png",
+                },
+            }
+        )
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            result = html_assets.download_figure_assets(
+                transport,
+                article_id="10.1000/example",
+                assets=[
+                    {
+                        "kind": "figure",
+                        "heading": "Figure 1",
+                        "caption": "Figure page full-size",
+                        "url": "https://example.test/images/preview/figure1.png",
+                        "figure_page_url": "https://example.test/figures/figure-1",
+                        "section": "body",
+                    }
+                ],
+                output_dir=Path(tmpdir),
+                user_agent="unit-test",
+                asset_profile="body",
+            )
+
+            self.assertEqual(
+                [call["url"] for call in transport.calls],
+                [
+                    "https://example.test/figures/figure-1",
+                    "https://example.test/images/original/figure1.png",
+                ],
+            )
+            self.assertEqual(Path(result["assets"][0]["path"]).read_bytes(), b"original-image")
+
+    def test_html_asset_download_falls_back_to_preview_when_full_size_fetch_fails(self) -> None:
+        transport = RecordingTransport(
+            {
+                ("GET", "https://example.test/figures/figure-1"): {
+                    "status_code": 200,
+                    "headers": {"content-type": "text/html; charset=utf-8"},
+                    "body": (
+                        b"<html><head>"
+                        b"<meta property='og:image' content='https://example.test/images/original/figure1.png' />"
+                        b"</head><body></body></html>"
+                    ),
+                    "url": "https://example.test/figures/figure-1",
+                },
+                ("GET", "https://example.test/images/original/figure1.png"): RequestFailure(
+                    403,
+                    "Forbidden",
+                    url="https://example.test/images/original/figure1.png",
+                ),
+                ("GET", "https://example.test/images/preview/figure1.png"): {
+                    "status_code": 200,
+                    "headers": {"content-type": "image/png"},
+                    "body": b"preview-image",
+                    "url": "https://example.test/images/preview/figure1.png",
+                },
+            }
+        )
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            result = html_assets.download_figure_assets(
+                transport,
+                article_id="10.1000/example",
+                assets=[
+                    {
+                        "kind": "figure",
+                        "heading": "Figure 1",
+                        "caption": "Preview fallback",
+                        "url": "https://example.test/images/preview/figure1.png",
+                        "figure_page_url": "https://example.test/figures/figure-1",
+                        "section": "body",
+                    }
+                ],
+                output_dir=Path(tmpdir),
+                user_agent="unit-test",
+                asset_profile="body",
+            )
+
+            self.assertEqual(
+                [call["url"] for call in transport.calls],
+                [
+                    "https://example.test/figures/figure-1",
+                    "https://example.test/images/original/figure1.png",
+                    "https://example.test/images/preview/figure1.png",
+                ],
+            )
+            self.assertEqual(len(result["assets"]), 1)
+            self.assertEqual(result["asset_failures"], [])
+            self.assertEqual(Path(result["assets"][0]["path"]).read_bytes(), b"preview-image")
+
     def test_elsevier_body_asset_profile_excludes_appendix_and_supplementary(self) -> None:
         references = [
             {"asset_type": "image", "source_ref": "fx1"},
@@ -251,39 +410,6 @@ class ProviderRequestOptionsTests(unittest.TestCase):
             [reference["asset_type"] for reference in filtered],
             ["image", "table_asset"],
         )
-
-    def test_springer_body_asset_profile_excludes_appendix_and_supplementary(self) -> None:
-        xml_body = b"""<?xml version="1.0"?>
-<response xmlns:xlink="http://www.w3.org/1999/xlink">
-  <records>
-    <article>
-      <body>
-        <sec>
-          <fig id="Fig1"><graphic xlink:href="MediaObjects/Fig1.png" /></fig>
-          <table-wrap id="Tab1"><graphic xlink:href="MediaObjects/Tab1.png" /></table-wrap>
-        </sec>
-      </body>
-      <app-group>
-        <app id="App1">
-          <sec>
-            <fig id="FigA1"><graphic xlink:href="MediaObjects/FigA1.png" /></fig>
-            <supplementary-material id="Sup1"><media xlink:href="MediaObjects/Sup1.pdf" /></supplementary-material>
-          </sec>
-        </app>
-      </app-group>
-    </article>
-  </records>
-</response>
-"""
-
-        references = extract_springer_asset_references(xml_body, "10.1007/test")
-        filtered = filter_springer_asset_references(references, asset_profile="body")
-
-        self.assertEqual(
-            [(reference["asset_type"], reference["section"]) for reference in filtered],
-            [("image", "body"), ("table_asset", "body")],
-        )
-
 
 if __name__ == "__main__":
     unittest.main()

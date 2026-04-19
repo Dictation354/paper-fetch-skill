@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import tempfile
 import unittest
 from pathlib import Path
@@ -42,6 +43,31 @@ class ConfigTests(unittest.TestCase):
                 env = config.build_runtime_env({})
 
         self.assertEqual(env["SHARED"], "user")
+
+    def test_build_runtime_env_treats_explicit_empty_env_as_isolated_from_process_env(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            user_env = tmp / "user.env"
+            process_env_file = tmp / "process.env"
+            user_env.write_text("USER_ONLY=user\n", encoding="utf-8")
+            process_env_file.write_text("PROCESS_FILE_ONLY=process\n", encoding="utf-8")
+
+            with (
+                mock.patch.object(config, "DEFAULT_USER_ENV_FILE", user_env),
+                mock.patch.dict(
+                    os.environ,
+                    {
+                        "PROCESS_ONLY": "process",
+                        config.ENV_FILE_ENV_VAR: str(process_env_file),
+                    },
+                    clear=False,
+                ),
+            ):
+                env = config.build_runtime_env({})
+
+        self.assertEqual(env["USER_ONLY"], "user")
+        self.assertNotIn("PROCESS_ONLY", env)
+        self.assertNotIn("PROCESS_FILE_ONLY", env)
 
     def test_repo_local_env_is_not_loaded_implicitly(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

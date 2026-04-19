@@ -83,6 +83,8 @@ class TokenEstimateBreakdownOutput(TypedDict, total=False):
 
 class QualityOutput(TypedDict, total=False):
     has_fulltext: bool
+    content_kind: str
+    has_abstract: bool
     token_estimate: int
     token_estimate_breakdown: TokenEstimateBreakdownOutput
     warnings: list[str]
@@ -103,6 +105,8 @@ class FetchPaperOutput(ErrorPayloadOutput, total=False):
     doi: str | None
     source: str
     has_fulltext: bool
+    content_kind: str
+    has_abstract: bool
     warnings: list[str]
     source_trail: list[str]
     token_estimate: int
@@ -153,6 +157,8 @@ class BatchCheckItemOutput(ErrorPayloadOutput, total=False):
     title: str | None
     source: str | None
     has_fulltext: bool | None
+    content_kind: str | None
+    has_abstract: bool | None
     warnings: list[str]
     source_trail: list[str]
     token_estimate: int | None

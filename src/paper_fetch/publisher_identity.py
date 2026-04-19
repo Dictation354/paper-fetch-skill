@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 import urllib.parse
+import unicodedata
 
 from .normalize_journal_name import normalize_journal_name
 
@@ -50,14 +51,28 @@ URL_PROVIDER_TOKENS = {
     "pnas": ("pnas.org",),
 }
 DOI_PATTERN = re.compile(r"10\.\d{4,9}/[^\s\"'<>]+", flags=re.IGNORECASE)
+DOI_DASH_TRANSLATION = str.maketrans(
+    {
+        "‐": "-",
+        "‑": "-",
+        "‒": "-",
+        "–": "-",
+        "—": "-",
+        "−": "-",
+        "﹣": "-",
+        "－": "-",
+    }
+)
 
 
 def normalize_doi(doi: str | None) -> str:
     if not doi:
         return ""
-    value = doi.strip().lower()
+    value = unicodedata.normalize("NFKC", doi).strip().lower().translate(DOI_DASH_TRANSLATION)
     value = re.sub(r"^https?://(dx\.)?doi\.org/", "", value)
     value = re.sub(r"^doi:\s*", "", value)
+    value = re.sub(r"\s+", "", value)
+    value = value.rstrip(").,;")
     return value
 
 

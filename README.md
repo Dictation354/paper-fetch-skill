@@ -132,7 +132,8 @@ python3 -m paper_fetch.mcp.server
   - 是廉价 probe，不等同于最终 `fetch_paper().has_fulltext`。
 - `wiley` / `science` / `pnas`
   - 当前只保证在仓库 checkout + `vendor/flaresolverr/` 工作流里可用。
-  - `asset_profile=body|all` 目前会降级为 text-only，不阻塞正文成功。
+  - `FlareSolverr HTML` 成功路径支持 `asset_profile=body|all`；会优先尝试 full-size/original figure，必要时回退 preview。
+  - `PDF/ePDF fallback` 仍是 text-only，不阻塞正文成功。
 - metadata-only fallback
   - 默认允许。正文不可用时，系统会返回 metadata + abstract，并显式带 warning。
 
@@ -226,6 +227,7 @@ CLI 退出码固定为：
 - `elsevier` 的浏览器链路是 `FlareSolverr HTML -> metadata-only`，前面仍有官方 XML/API 主链
 - `wiley` 的主路径是 `FlareSolverr HTML -> Wiley TDM API PDF -> metadata-only`
 - `science` / `pnas` 的主路径是 `FlareSolverr HTML -> seeded-browser PDF -> metadata-only`
+- `wiley` / `science` / `pnas` 的 HTML 成功路径支持 `none/body/all` 资产下载；PDF/ePDF fallback 仍是 text-only
 - 依赖 repo-local `vendor/flaresolverr/`
 - 需要显式配置 `FLARESOLVERR_ENV_FILE` 和本地限速变量
 
@@ -264,4 +266,39 @@ FLARESOLVERR_MIN_INTERVAL_SECONDS=20 \
 FLARESOLVERR_MAX_REQUESTS_PER_HOUR=30 \
 FLARESOLVERR_MAX_REQUESTS_PER_DAY=200 \
 PYTHONPATH=src python3 -m unittest tests.live.test_live_science_pnas -q
+```
+
+如果要跑自然地理五出版商的 live-only 全链路报告，直接走当前项目提取链路，不经过 MCP：
+
+```bash
+PAPER_FETCH_RUN_LIVE=1 \
+FLARESOLVERR_ENV_FILE="$PWD/vendor/flaresolverr/.env.flaresolverr-source-headless" \
+FLARESOLVERR_MIN_INTERVAL_SECONDS=20 \
+FLARESOLVERR_MAX_REQUESTS_PER_HOUR=30 \
+FLARESOLVERR_MAX_REQUESTS_PER_DAY=200 \
+PYTHONPATH=src python3 scripts/run_geography_live_report.py
+```
+
+这些 geography 脚本现在按仓库内部 live tooling 维护：
+
+- 只通过 `scripts/*.py` 运行
+- 不新增安装后的 console script
+- 不暴露为 MCP tool
+- 继续受 `PAPER_FETCH_RUN_LIVE=1` 这条 opt-in 边界约束
+
+默认会输出到：
+
+```text
+live-downloads/reports/geography-live-report.json
+live-downloads/reports/geography-live-report.md
+```
+
+自然地理 live 样本清单维护在 [`tests/live/geography_samples.py`](tests/live/geography_samples.py)，默认每家 publisher 尝试前 `10` 条、后 `2` 条作为备用候选。对应的 live 测试入口是 [`tests/live/test_live_geography_publishers.py`](tests/live/test_live_geography_publishers.py)。
+默认调度会在保持各 provider 内部 DOI 顺序不变的前提下做跨 provider 轮转，尽量减少 `wiley` / `science` / `pnas` 被本地最小间隔护栏连续打成 `rate_limited`。
+
+如果需要把 issue 样本导出成独立工件目录，或按问题类型生成分组视图，也继续走 repo-local 脚本：
+
+```bash
+PYTHONPATH=src python3 scripts/export_geography_issue_artifacts.py --help
+PYTHONPATH=src python3 scripts/group_geography_issue_artifacts.py --help
 ```

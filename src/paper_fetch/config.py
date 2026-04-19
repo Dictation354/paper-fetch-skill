@@ -63,6 +63,10 @@ def normalize_env_file_path(value: str | os.PathLike[str] | None) -> Path | None
     return Path(text).expanduser()
 
 
+def _active_env(env: Mapping[str, str] | None = None) -> Mapping[str, str]:
+    return os.environ if env is None else env
+
+
 def build_runtime_env(
     base_env: Mapping[str, str] | None = None,
     *,
@@ -75,7 +79,7 @@ def build_runtime_env(
     - explicit env_file arg or PAPER_FETCH_ENV_FILE
     - ~/.config/paper-fetch/.env
     """
-    process_env = dict(base_env or os.environ)
+    process_env = dict(_active_env(base_env))
     explicit_env_file = normalize_env_file_path(env_file)
     configured_env_file = normalize_env_file_path(process_env.get(ENV_FILE_ENV_VAR))
 
@@ -100,7 +104,7 @@ def build_user_agent(env: Mapping[str, str]) -> str:
 
 
 def _configured_download_dir(env: Mapping[str, str] | None = None) -> Path | None:
-    active_env = env or os.environ
+    active_env = _active_env(env)
     configured = str(active_env.get(DOWNLOAD_DIR_ENV_VAR, "")).strip()
     if not configured:
         return None
@@ -108,7 +112,7 @@ def _configured_download_dir(env: Mapping[str, str] | None = None) -> Path | Non
 
 
 def resolve_user_data_dir(env: Mapping[str, str] | None = None) -> Path:
-    active_env = env or os.environ
+    active_env = _active_env(env)
     configured = str(active_env.get(XDG_DATA_HOME_ENV_VAR, "")).strip()
     base_dir = Path(configured).expanduser() if configured else DEFAULT_XDG_DATA_HOME
     return base_dir / "paper-fetch"
@@ -136,7 +140,7 @@ def resolve_repo_root() -> Path:
 
 
 def resolve_flaresolverr_source_dir(env: Mapping[str, str] | None = None) -> Path:
-    active_env = env or os.environ
+    active_env = _active_env(env)
     configured = str(active_env.get(FLARESOLVERR_SOURCE_DIR_ENV_VAR, "")).strip()
     if configured:
         return Path(configured).expanduser()
@@ -144,7 +148,7 @@ def resolve_flaresolverr_source_dir(env: Mapping[str, str] | None = None) -> Pat
 
 
 def resolve_flaresolverr_env_file(env: Mapping[str, str] | None = None) -> Path | None:
-    active_env = env or os.environ
+    active_env = _active_env(env)
     configured = str(active_env.get(FLARESOLVERR_ENV_FILE_ENV_VAR, "")).strip()
     if not configured:
         return None
@@ -152,12 +156,12 @@ def resolve_flaresolverr_env_file(env: Mapping[str, str] | None = None) -> Path 
 
 
 def resolve_flaresolverr_url(env: Mapping[str, str] | None = None) -> str:
-    active_env = env or os.environ
+    active_env = _active_env(env)
     return str(active_env.get(FLARESOLVERR_URL_ENV_VAR, "")).strip() or DEFAULT_FLARESOLVERR_URL
 
 
 def configured_int_env(name: str, env: Mapping[str, str] | None = None) -> int | None:
-    active_env = env or os.environ
+    active_env = _active_env(env)
     raw = str(active_env.get(name, "")).strip()
     if not raw:
         return None

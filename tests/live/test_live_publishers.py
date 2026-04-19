@@ -91,20 +91,12 @@ class LivePublisherTests(unittest.TestCase):
 
     def test_wiley_doi_live_fulltext(self) -> None:
         self._require_env(*WILEY_SAMPLE.required_env)
-        wiley_env = {
-            **self.env,
-            "FLARESOLVERR_URL": "",
-            "FLARESOLVERR_ENV_FILE": "",
-            "FLARESOLVERR_SOURCE_DIR": "",
-            "FLARESOLVERR_MIN_INTERVAL_SECONDS": "",
-            "FLARESOLVERR_MAX_REQUESTS_PER_HOUR": "",
-            "FLARESOLVERR_MAX_REQUESTS_PER_DAY": "",
-        }
+        self._require_flaresolverr()
         article = fetch_article(
             WILEY_SAMPLE.doi,
             allow_html_fallback=False,
             transport=HttpTransport(),
-            env=wiley_env,
+            env=self.env,
         )
 
         self._assert_matches_sample(article, WILEY_SAMPLE)

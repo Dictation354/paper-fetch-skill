@@ -20,6 +20,7 @@ from ..utils import (
     choose_public_landing_page_url,
     empty_asset_results,
     first_non_empty,
+    normalize_text,
     sanitize_filename,
     save_payload,
     strip_html_tags,
@@ -37,6 +38,12 @@ from ._flaresolverr import (
     fetch_html_with_flaresolverr,
     load_runtime_config,
     probe_runtime_status,
+)
+from ._html_availability import (
+    assess_html_fulltext_availability,
+    assess_plain_text_fulltext_availability,
+    assess_structured_article_fulltext_availability,
+    availability_failure_message,
 )
 from .base import (
     ProviderClient,
@@ -119,14 +126,6 @@ def elsevier_asset_priority(asset_kind: str, asset_type: str, category: str | No
 def build_elsevier_object_url(attachment_eid: str) -> str:
     encoded_eid = urllib.parse.quote(attachment_eid.strip(), safe="")
     return f"https://api.elsevier.com/content/object/eid/{encoded_eid}?httpAccept=%2A%2F%2A"
-
-
-def _article_has_body_sections(article: Any) -> bool:
-    return any(
-        str(getattr(section, "kind", "") or "").lower() not in {"abstract", "references", "diagnostics"}
-        and bool(str(getattr(section, "text", "") or "").strip())
-        for section in list(getattr(article, "sections", []) or [])
-    )
 
 
 def extract_elsevier_asset_references(xml_body: bytes) -> list[dict[str, Any]]:
@@ -419,15 +418,24 @@ class ElsevierClient(ProviderClient):
 
     def _official_payload_is_usable(self, metadata: ProviderMetadata, raw_payload: RawFulltextPayload) -> bool:
         article = self.to_article_model(metadata, raw_payload)
-        if not article.quality.has_fulltext or not _article_has_body_sections(article):
-            return False
+        title = normalize_text(str(metadata.get("title") or getattr(getattr(article, "metadata", None), "title", None) or ""))
+        if is_xml_content_type(raw_payload.content_type):
+            diagnostics = assess_structured_article_fulltext_availability(article, title=title or None)
+            raw_payload.metadata["availability_diagnostics"] = diagnostics.to_dict()
+            return diagnostics.accepted
         if raw_payload.content_type.startswith("text/") and not is_xml_content_type(raw_payload.content_type):
             try:
                 markdown_text = raw_payload.body.decode("utf-8", errors="replace")
             except Exception:
                 return False
-            return html_generic.has_sufficient_article_body(markdown_text, metadata)
-        return True
+            diagnostics = assess_plain_text_fulltext_availability(markdown_text, metadata, title=title or None)
+            raw_payload.metadata["availability_diagnostics"] = diagnostics.to_dict()
+            return diagnostics.accepted
+        raw_payload.metadata["availability_diagnostics"] = assess_structured_article_fulltext_availability(
+            article,
+            title=title or None,
+        ).to_dict()
+        return False
 
     def _finalize_browser_failure(
         self,
@@ -573,8 +581,9 @@ class ElsevierClient(ProviderClient):
         try:
             runtime = load_runtime_config(self.env, provider=self.name, doi=normalized_doi)
             ensure_runtime_ready(runtime)
+            html_candidates = self._browser_html_candidates(normalized_doi, metadata)
             html_result = fetch_html_with_flaresolverr(
-                self._browser_html_candidates(normalized_doi, metadata),
+                html_candidates,
                 publisher=self.name,
                 config=runtime,
             )
@@ -585,7 +594,17 @@ class ElsevierClient(ProviderClient):
             markdown_text = html_generic.clean_markdown(
                 html_generic.extract_article_markdown(html_result.html, html_result.final_url)
             )
-            if html_generic.has_sufficient_article_body(markdown_text, merged_metadata):
+            diagnostics = assess_html_fulltext_availability(
+                markdown_text,
+                merged_metadata,
+                provider=self.name,
+                html_text=html_result.html,
+                title=str(merged_metadata.get("title") or ""),
+                requested_url=html_candidates[0] if html_candidates else None,
+                final_url=html_result.final_url,
+                response_status=html_result.response_status,
+            )
+            if diagnostics.accepted:
                 return RawFulltextPayload(
                     provider="elsevier_browser",
                     source_url=html_result.final_url,
@@ -596,6 +615,7 @@ class ElsevierClient(ProviderClient):
                         "reason": "Downloaded full text from the Elsevier browser fallback HTML route.",
                         "merged_metadata": merged_metadata,
                         "markdown_text": markdown_text,
+                        "availability_diagnostics": diagnostics.to_dict(),
                         "warnings": warnings,
                         "source_trail": [
                             *source_trail,
@@ -605,8 +625,8 @@ class ElsevierClient(ProviderClient):
                     },
                     needs_local_copy=False,
                 )
-            html_failure_reason = "insufficient_body"
-            html_failure_message = "Elsevier HTML extraction did not produce enough article body text."
+            html_failure_reason = diagnostics.reason
+            html_failure_message = availability_failure_message(diagnostics)
         except FlareSolverrFailure as exc:
             html_failure_reason = exc.kind
             html_failure_message = exc.message

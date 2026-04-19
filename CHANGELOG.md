@@ -2,6 +2,28 @@
 
 All notable public changes to `paper-fetch-skill` are documented in this file.
 
+## 2026-04-19
+
+### Changed
+
+- Moved shared HTML full-text diagnostics into [`src/paper_fetch/providers/_html_availability.py`](src/paper_fetch/providers/_html_availability.py) and switched `html_generic`, `elsevier`, `springer`, FlareSolverr, and PDF fallback helpers to import the shared availability/access-signal layers directly instead of reaching through `_science_pnas_html.py`.
+- Added internal `PublisherProfile` plumbing in [`src/paper_fetch/providers/_science_pnas_profiles.py`](src/paper_fetch/providers/_science_pnas_profiles.py) so browser-workflow candidate builders, noise-profile selection, and provider-specific postprocess hooks live outside `_science_pnas_html.py`.
+- Removed the `_article_markdown_document.py` compatibility wrapper; direct Elsevier document assembly now lives only in [`src/paper_fetch/providers/_article_markdown_elsevier_document.py`](src/paper_fetch/providers/_article_markdown_elsevier_document.py), while [`src/paper_fetch/providers/_article_markdown.py`](src/paper_fetch/providers/_article_markdown.py) remains the intentional aggregate entrypoint.
+- Split the oversized `tests/unit/test_science_pnas_html.py` coverage into focused candidate, availability, markdown, and postprocess test files, while keeping `detect_html_block()` coverage in `tests/unit/test_html_access_signals.py`.
+- Promoted the geography report/export/group scripts plus their supporting modules and tests into tracked repo-local internal tooling without adding new CLI install surfaces or MCP tools.
+
+### Docs
+
+- Updated README, provider docs, and backlog notes to describe geography report/export/group as live-only internal tooling behind `PAPER_FETCH_RUN_LIVE=1`.
+
+### Validation
+
+- `pytest tests/unit/test_science_pnas_candidates.py tests/unit/test_html_availability.py tests/unit/test_science_pnas_markdown.py tests/unit/test_science_pnas_postprocess.py tests/unit/test_html_access_signals.py tests/unit/test_elsevier_markdown.py -q`
+- `pytest tests/unit/test_geography_live.py tests/unit/test_geography_issue_artifacts.py -q`
+- `python3 scripts/run_geography_live_report.py --help`
+- `python3 scripts/export_geography_issue_artifacts.py --help`
+- `python3 scripts/group_geography_issue_artifacts.py --help`
+
 ## 2026-04-16
 
 ### Added

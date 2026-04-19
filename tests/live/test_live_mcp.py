@@ -146,14 +146,7 @@ class LiveMcpServerTests(unittest.IsolatedAsyncioTestCase):
             sample=WILEY_SAMPLE,
             expected_log_prefix="official_provider_",
             args={"modes": ["metadata"], "strategy": {"allow_html_fallback": False}},
-            env_override={
-                "FLARESOLVERR_URL": "",
-                "FLARESOLVERR_ENV_FILE": "",
-                "FLARESOLVERR_SOURCE_DIR": "",
-                "FLARESOLVERR_MIN_INTERVAL_SECONDS": "",
-                "FLARESOLVERR_MAX_REQUESTS_PER_HOUR": "",
-                "FLARESOLVERR_MAX_REQUESTS_PER_DAY": "",
-            },
+            needs_flaresolverr=True,
         )
 
     async def test_science_doi_live_via_mcp_reports_progress_and_logs(self) -> None:
