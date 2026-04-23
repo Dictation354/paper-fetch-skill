@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, replace
 from pathlib import Path
 from typing import Any, Mapping
 
 from ..http import RequestFailure
-from ..models import AssetProfile
+from ..models import ArticleModel, AssetProfile
+from ..tracing import TraceEvent, source_trail_from_trace, trace_from_markers
 from ..utils import empty_asset_results
 
 
@@ -33,14 +34,217 @@ class ProviderFailure(Exception):
         self.source_trail = [str(item) for item in (source_trail or []) if str(item).strip()]
 
 
-@dataclass
+@dataclass(frozen=True)
+class ProviderContent:
+    route_kind: str
+    source_url: str
+    content_type: str
+    body: bytes
+    markdown_text: str | None = None
+    merged_metadata: dict[str, Any] | None = None
+    diagnostics: dict[str, Any] = field(default_factory=dict)
+    reason: str | None = None
+    fetcher: str | None = None
+    browser_context_seed: dict[str, Any] = field(default_factory=dict)
+    suggested_filename: str | None = None
+    html_failure_reason: str | None = None
+    html_failure_message: str | None = None
+    extracted_assets: list[dict[str, Any]] = field(default_factory=list)
+    needs_local_copy: bool = False
+
+
+@dataclass(frozen=True)
+class ProviderArtifacts:
+    assets: list[dict[str, Any]] = field(default_factory=list)
+    asset_failures: list[dict[str, Any]] = field(default_factory=list)
+    allow_related_assets: bool = True
+    text_only: bool = False
+    skip_warning: str | None = None
+    skip_trace: list[TraceEvent] = field(default_factory=list)
+
+
+@dataclass(frozen=True)
+class ProviderFetchResult:
+    provider: str
+    article: ArticleModel
+    content: ProviderContent | None = None
+    warnings: list[str] = field(default_factory=list)
+    trace: list[TraceEvent] = field(default_factory=list)
+    artifacts: ProviderArtifacts = field(default_factory=ProviderArtifacts)
+
+
+def _coerce_provider_content(
+    *,
+    source_url: str,
+    content_type: str,
+    body: bytes,
+    merged_metadata: Mapping[str, Any] | None,
+    metadata: Mapping[str, Any] | None,
+    content: ProviderContent | None,
+) -> ProviderContent | None:
+    if content is not None:
+        return content
+    legacy = dict(metadata or {})
+    route_kind = str(legacy.get("route") or "").strip()
+    markdown_text = legacy.get("markdown_text")
+    reason = legacy.get("reason")
+    diagnostics = legacy.get("availability_diagnostics")
+    fetcher = legacy.get("html_fetcher")
+    browser_context_seed = legacy.get("browser_context_seed")
+    suggested_filename = legacy.get("suggested_filename")
+    html_failure_reason = legacy.get("html_failure_reason")
+    html_failure_message = legacy.get("html_failure_message")
+    extracted_assets = legacy.get("extracted_assets")
+    merged = merged_metadata or legacy.get("merged_metadata")
+    diagnostics_payload: dict[str, Any] = {}
+    if isinstance(diagnostics, Mapping):
+        diagnostics_payload["availability_diagnostics"] = dict(diagnostics)
+    if "extraction" in legacy:
+        diagnostics_payload["extraction"] = legacy["extraction"]
+    if not any(
+        (
+            route_kind,
+            markdown_text,
+            reason,
+            diagnostics_payload,
+            fetcher,
+            browser_context_seed,
+            suggested_filename,
+            html_failure_reason,
+            html_failure_message,
+            extracted_assets,
+            merged,
+        )
+    ):
+        return None
+    return ProviderContent(
+        route_kind=route_kind,
+        source_url=source_url,
+        content_type=content_type,
+        body=body,
+        markdown_text=str(markdown_text) if markdown_text is not None else None,
+        merged_metadata=dict(merged) if isinstance(merged, Mapping) else None,
+        diagnostics=diagnostics_payload,
+        reason=str(reason) if reason is not None else None,
+        fetcher=str(fetcher) if fetcher is not None else None,
+        browser_context_seed=dict(browser_context_seed) if isinstance(browser_context_seed, Mapping) else {},
+        suggested_filename=str(suggested_filename) if suggested_filename is not None else None,
+        html_failure_reason=str(html_failure_reason) if html_failure_reason is not None else None,
+        html_failure_message=str(html_failure_message) if html_failure_message is not None else None,
+        extracted_assets=[
+            dict(item)
+            for item in (extracted_assets or [])
+            if isinstance(item, Mapping)
+        ],
+    )
+
+
+def _extra_legacy_metadata(metadata: Mapping[str, Any] | None) -> dict[str, Any]:
+    legacy = dict(metadata or {})
+    consumed = {
+        "route",
+        "reason",
+        "markdown_text",
+        "merged_metadata",
+        "availability_diagnostics",
+        "html_fetcher",
+        "browser_context_seed",
+        "suggested_filename",
+        "html_failure_reason",
+        "html_failure_message",
+        "extracted_assets",
+        "warnings",
+        "source_trail",
+    }
+    return {key: value for key, value in legacy.items() if key not in consumed}
+
+
+@dataclass(init=False)
 class RawFulltextPayload:
     provider: str
     source_url: str
     content_type: str
     body: bytes
-    metadata: dict[str, Any] = field(default_factory=dict)
+    content: ProviderContent | None = None
+    warnings: list[str] = field(default_factory=list)
+    trace: list[TraceEvent] = field(default_factory=list)
+    merged_metadata: dict[str, Any] | None = None
     needs_local_copy: bool = False
+    _legacy_metadata: dict[str, Any] = field(default_factory=dict, repr=False)
+
+    def __init__(
+        self,
+        provider: str,
+        source_url: str,
+        content_type: str,
+        body: bytes,
+        *,
+        content: ProviderContent | None = None,
+        warnings: list[str] | None = None,
+        trace: list[TraceEvent] | None = None,
+        merged_metadata: Mapping[str, Any] | None = None,
+        needs_local_copy: bool = False,
+        metadata: Mapping[str, Any] | None = None,
+    ) -> None:
+        legacy_metadata = dict(metadata or {})
+        derived_trace = list(trace or trace_from_markers(legacy_metadata.get("source_trail") or []))
+        derived_warnings = [str(item) for item in (warnings or legacy_metadata.get("warnings") or []) if str(item).strip()]
+        merged = merged_metadata or legacy_metadata.get("merged_metadata")
+        self.provider = provider
+        self.source_url = source_url
+        self.content_type = content_type
+        self.body = body
+        self.content = _coerce_provider_content(
+            source_url=source_url,
+            content_type=content_type,
+            body=body,
+            merged_metadata=merged,
+            metadata=legacy_metadata,
+            content=content,
+        )
+        self.warnings = derived_warnings
+        self.trace = derived_trace
+        self.merged_metadata = dict(merged) if isinstance(merged, Mapping) else None
+        self.needs_local_copy = needs_local_copy
+        self._legacy_metadata = _extra_legacy_metadata(legacy_metadata)
+
+    @property
+    def metadata(self) -> dict[str, Any]:
+        content = self.content
+        payload: dict[str, Any] = dict(self._legacy_metadata)
+        if content is not None:
+            if content.route_kind:
+                payload["route"] = content.route_kind
+            if content.reason:
+                payload["reason"] = content.reason
+            if content.markdown_text is not None:
+                payload["markdown_text"] = content.markdown_text
+            if content.merged_metadata is not None:
+                payload["merged_metadata"] = dict(content.merged_metadata)
+            if content.diagnostics:
+                payload["availability_diagnostics"] = dict(content.diagnostics.get("availability_diagnostics") or content.diagnostics)
+                for key, value in content.diagnostics.items():
+                    if key not in {"availability_diagnostics"} and key not in payload:
+                        payload[key] = value
+            if content.fetcher:
+                payload["html_fetcher"] = content.fetcher
+            if content.browser_context_seed:
+                payload["browser_context_seed"] = dict(content.browser_context_seed)
+            if content.suggested_filename:
+                payload["suggested_filename"] = content.suggested_filename
+            if content.html_failure_reason:
+                payload["html_failure_reason"] = content.html_failure_reason
+            if content.html_failure_message:
+                payload["html_failure_message"] = content.html_failure_message
+            if content.extracted_assets:
+                payload["extracted_assets"] = list(content.extracted_assets)
+        if self.merged_metadata is not None and "merged_metadata" not in payload:
+            payload["merged_metadata"] = dict(self.merged_metadata)
+        if self.warnings:
+            payload["warnings"] = list(self.warnings)
+        if self.trace:
+            payload["source_trail"] = source_trail_from_trace(self.trace)
+        return payload
 
 
 @dataclass(frozen=True)
@@ -233,6 +437,73 @@ class ProviderClient:
 
     def fetch_metadata(self, query: Mapping[str, str | None]) -> dict[str, Any]:
         raise ProviderFailure("not_supported", f"{self.name} metadata retrieval is not available.")
+
+    def fetch_result(
+        self,
+        doi: str,
+        metadata: Mapping[str, Any],
+        output_dir: Path | None,
+        *,
+        asset_profile: AssetProfile = "none",
+    ) -> ProviderFetchResult:
+        raw_payload = self.fetch_raw_fulltext(doi, metadata)
+        content = raw_payload.content
+        if content is not None and content.needs_local_copy != raw_payload.needs_local_copy:
+            content = replace(content, needs_local_copy=raw_payload.needs_local_copy)
+            raw_payload.content = content
+        artifact_policy = self.describe_artifacts(raw_payload)
+        downloaded_assets: list[Mapping[str, Any]] = []
+        asset_failures: list[Mapping[str, Any]] = []
+        warnings = list(raw_payload.warnings)
+        trace = list(raw_payload.trace)
+        if output_dir is not None and asset_profile != "none" and artifact_policy.allow_related_assets:
+            try:
+                asset_results = self.download_related_assets(
+                    doi,
+                    metadata,
+                    raw_payload,
+                    output_dir,
+                    asset_profile=asset_profile,
+                )
+                downloaded_assets = list(asset_results.get("assets") or [])
+                asset_failures = list(asset_results.get("asset_failures") or [])
+            except ProviderFailure as exc:
+                warnings.append(f"{self.name.replace('_', ' ').title()} related assets could not be downloaded: {exc.message}")
+                trace.extend(trace_from_markers([f"download:{self.name}_assets_failed"]))
+            except (RequestFailure, OSError) as exc:
+                warnings.append(f"{self.name.replace('_', ' ').title()} related assets could not be downloaded: {exc}")
+                trace.extend(trace_from_markers([f"download:{self.name}_assets_failed"]))
+        article = self.to_article_model(
+            metadata,
+            raw_payload,
+            downloaded_assets=downloaded_assets,
+            asset_failures=asset_failures,
+        )
+        artifacts = self.describe_artifacts(
+            raw_payload,
+            downloaded_assets=downloaded_assets,
+            asset_failures=asset_failures,
+        )
+        return ProviderFetchResult(
+            provider=raw_payload.provider or self.name,
+            article=article,
+            content=content,
+            warnings=warnings,
+            trace=list(trace or trace_from_markers(article.quality.source_trail)),
+            artifacts=artifacts,
+        )
+
+    def describe_artifacts(
+        self,
+        raw_payload: RawFulltextPayload,
+        *,
+        downloaded_assets: list[Mapping[str, Any]] | None = None,
+        asset_failures: list[Mapping[str, Any]] | None = None,
+    ) -> ProviderArtifacts:
+        return ProviderArtifacts(
+            assets=[dict(item) for item in (downloaded_assets or [])],
+            asset_failures=[dict(item) for item in (asset_failures or [])],
+        )
 
     def fetch_raw_fulltext(self, doi: str, metadata: Mapping[str, Any]) -> RawFulltextPayload:
         raise ProviderFailure("not_supported", f"{self.name} raw full-text retrieval is not available.")

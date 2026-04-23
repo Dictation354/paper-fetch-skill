@@ -106,8 +106,8 @@ class GeographyLiveTests(unittest.TestCase):
                 authors=["Author"],
                 abstract=(
                     "Short opening abstract paragraph.\n\n"
-                    f"{repeated_paragraph}\n\n"
-                    "A third paragraph keeps the abstract unusually long for this synthetic test."
+                    + "\n\n".join([repeated_paragraph] * 14)
+                    + "\n\nA third paragraph keeps the abstract unusually long for this synthetic test."
                 ),
             ),
             sections=[Section(heading="Results", level=2, kind="body", text=f"{repeated_paragraph} Additional body text.")],
@@ -152,6 +152,86 @@ class GeographyLiveTests(unittest.TestCase):
                 body_text=body_text,
             )
         )
+
+    def test_report_result_uses_primary_wiley_abstract_instead_of_total_bilingual_budget(self) -> None:
+        english_abstract = (
+            "This primary abstract summarizes the study design, disturbance gradient, satellite observations, "
+            "and regional implications without reproducing the body text. "
+            * 8
+        ).strip()
+        portuguese_abstract = (
+            "Este resumo paralelo descreve o mesmo estudo em portugues e nao deve inflar a regra de issue "
+            "quando o resumo primario continua em tamanho normal. "
+            * 8
+        ).strip()
+        envelope = make_envelope(
+            provider="wiley",
+            doi="10.1111/gcb.16386",
+            source="wiley_browser",
+            metadata=Metadata(
+                title="Bilingual Wiley Example",
+                authors=["Author"],
+                abstract=f"{english_abstract}\n\n{portuguese_abstract}",
+            ),
+            sections=[
+                Section(heading="Abstract", level=2, kind="abstract", text=english_abstract),
+                Section(heading="Resumo", level=2, kind="abstract", text=portuguese_abstract),
+                Section(
+                    heading="Main Text",
+                    level=2,
+                    kind="body",
+                    text=("Body paragraphs discuss methods, results, and discussion in a distinct narrative. " * 40).strip(),
+                ),
+            ],
+            references=[],
+            source_trail=["fulltext:wiley_html_ok", "fulltext:wiley_article_ok"],
+            breakdown=TokenEstimateBreakdown(abstract=980, body=700, refs=0),
+        )
+
+        result = build_report_result(make_sample("wiley", envelope.doi or ""), envelope, elapsed_seconds=0.2)
+
+        self.assertNotIn("abstract_inflated", result.issue_flags)
+        self.assertNotIn("abstract_body_overlap", result.issue_flags)
+
+    def test_report_result_ignores_pnas_significance_when_canonical_abstract_exists(self) -> None:
+        significance = (
+            "This significance statement is intentionally long and should not become the primary abstract for "
+            "geography issue detection even when metadata.abstract points at it. "
+            * 10
+        ).strip()
+        canonical_abstract = (
+            "This canonical abstract focuses on the core finding and remains short enough to stay below the "
+            "inflation threshold when evaluated on its own. "
+            * 7
+        ).strip()
+        envelope = make_envelope(
+            provider="pnas",
+            doi="10.1073/pnas.example-significance",
+            source="pnas",
+            metadata=Metadata(
+                title="PNAS Significance Example",
+                authors=["Author"],
+                abstract=significance,
+            ),
+            sections=[
+                Section(heading="Significance", level=2, kind="abstract", text=significance),
+                Section(heading="Abstract", level=2, kind="abstract", text=canonical_abstract),
+                Section(
+                    heading="Results",
+                    level=2,
+                    kind="body",
+                    text=("Results paragraphs remain distinct from the abstract and significance blocks. " * 45).strip(),
+                ),
+            ],
+            references=[],
+            source_trail=["fulltext:pnas_html_ok", "fulltext:pnas_article_ok"],
+            breakdown=TokenEstimateBreakdown(abstract=1040, body=800, refs=0),
+        )
+
+        result = build_report_result(make_sample("pnas", envelope.doi or ""), envelope, elapsed_seconds=0.2)
+
+        self.assertNotIn("abstract_inflated", result.issue_flags)
+        self.assertNotIn("abstract_body_overlap", result.issue_flags)
 
     def test_report_result_flags_empty_authors_when_not_briefing_like(self) -> None:
         envelope = make_envelope(

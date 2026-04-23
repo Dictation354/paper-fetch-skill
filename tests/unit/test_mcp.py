@@ -21,9 +21,11 @@ from paper_fetch.mcp.server import build_server
 from paper_fetch.models import (
     ArticleModel,
     Asset,
+    EXTRACTION_REVISION,
     FetchEnvelope,
     Metadata,
     Quality,
+    QUALITY_FLAG_CACHED_WITH_CURRENT_REVISION,
     RenderOptions,
     Section,
     TokenEstimateBreakdown,
@@ -70,6 +72,7 @@ def sample_envelope(*, modes: set[str], doi: str = "10.1000/example") -> FetchEn
         source_trail=["source:ok"],
         token_estimate=article.quality.token_estimate,
         token_estimate_breakdown=article.quality.token_estimate_breakdown,
+        quality=article.quality,
         article=article if "article" in modes else None,
         markdown="# Example Article\n\nExample body.\n" if "markdown" in modes else None,
         metadata=article.metadata if "metadata" in modes else None,
@@ -123,14 +126,14 @@ def create_cached_fetch_envelope(
     doi: str,
     *,
     modes: list[str] | None = None,
+    extraction_revision: int = EXTRACTION_REVISION,
 ) -> None:
     request = {
         "modes": list(modes or ["article", "markdown"]),
         "strategy": {
-            "allow_html_fallback": True,
             "allow_metadata_only_fallback": True,
             "preferred_providers": None,
-            "asset_profile": "none",
+            "asset_profile": None,
         },
         "include_refs": None,
         "max_tokens": "full_text",
@@ -142,6 +145,7 @@ def create_cached_fetch_envelope(
         json.dumps(
             {
                 "version": mcp_tools._FETCH_ENVELOPE_CACHE_VERSION,
+                "extraction_revision": extraction_revision,
                 "request": request,
                 "payload": payload,
             },
@@ -274,14 +278,13 @@ class McpToolTests(unittest.TestCase):
         self.assertEqual(captured["modes"], {"article", "markdown"})
         self.assertEqual(captured["download_dir"], default_download_dir)
         self.assertEqual(captured["env"], runtime_env)
-        self.assertEqual(captured["render"], RenderOptions(include_refs=None, asset_profile="none", max_tokens="full_text"))
+        self.assertEqual(captured["render"], RenderOptions(include_refs=None, asset_profile=None, max_tokens="full_text"))
         self.assertEqual(
             captured["strategy"],
             FetchStrategy(
-                allow_html_fallback=True,
                 allow_metadata_only_fallback=True,
                 preferred_providers=None,
-                asset_profile="none",
+                asset_profile=None,
             ),
         )
 
@@ -368,6 +371,7 @@ class McpToolTests(unittest.TestCase):
 
         self.assertEqual(payload["doi"], "10.1000/example")
         self.assertEqual(payload["markdown"], "# Example Article\n\nExample body.\n")
+        self.assertIn(QUALITY_FLAG_CACHED_WITH_CURRENT_REVISION, payload["quality"]["flags"])
         mocked_fetch.assert_not_called()
 
     def test_fetch_paper_payload_prefer_cache_falls_back_on_mode_mismatch(self) -> None:
@@ -430,7 +434,43 @@ class McpToolTests(unittest.TestCase):
             payload["article"]["quality"]["token_estimate_breakdown"],
             {"abstract": 4, "body": 4, "refs": 0},
         )
+        self.assertEqual(payload["quality"]["extraction_revision"], EXTRACTION_REVISION)
+        self.assertIn(QUALITY_FLAG_CACHED_WITH_CURRENT_REVISION, payload["quality"]["flags"])
         mocked_fetch.assert_not_called()
+
+    def test_fetch_paper_payload_prefer_cache_misses_when_revision_differs(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            download_dir = Path(tmpdir)
+            create_cached_fetch_envelope(
+                download_dir,
+                "10.1000/example",
+                modes=["markdown"],
+                extraction_revision=EXTRACTION_REVISION - 1,
+            )
+
+            with (
+                mock.patch.object(mcp_tools, "build_runtime_env", return_value={}),
+                mock.patch.object(
+                    mcp_tools,
+                    "service_resolve_paper",
+                    return_value=sample_resolved_query("10.1000/example"),
+                ),
+                mock.patch.object(
+                    mcp_tools,
+                    "service_fetch_paper",
+                    return_value=sample_envelope(modes={"markdown"}, doi="10.1000/example"),
+                ) as mocked_fetch,
+            ):
+                payload = mcp_tools.fetch_paper_payload(
+                    query="10.1000/example",
+                    modes=["markdown"],
+                    prefer_cache=True,
+                    download_dir=download_dir,
+                )
+
+        self.assertEqual(payload["doi"], "10.1000/example")
+        self.assertNotIn(QUALITY_FLAG_CACHED_WITH_CURRENT_REVISION, payload["quality"]["flags"])
+        mocked_fetch.assert_called_once()
 
     def test_fetch_paper_payload_accepts_full_text_and_asset_profile_strategy(self) -> None:
         captured: dict[str, object] = {}
@@ -483,6 +523,7 @@ class McpToolTests(unittest.TestCase):
             mock.patch.object(mcp_tools, "resolve_mcp_download_dir", return_value=Path("/tmp/downloads")),
             mock.patch.object(mcp_tools, "service_fetch_paper", side_effect=fake_fetch_paper),
             mock.patch.object(mcp_tools, "refresh_cache_index_for_doi"),
+            mock.patch.object(mcp_tools, "_write_cached_fetch_envelope"),
         ):
             mcp_tools.fetch_paper_payload(
                 query="10.1000/example",
@@ -515,6 +556,8 @@ class McpToolTests(unittest.TestCase):
         self.assertEqual(payload["warnings"], ["example warning"])
         self.assertEqual(payload["source_trail"], ["source:ok"])
         self.assertEqual(payload["token_estimate_breakdown"], {"abstract": 32, "body": 96, "refs": 24})
+        self.assertEqual(payload["quality"]["extraction_revision"], EXTRACTION_REVISION)
+        self.assertEqual(payload["quality"]["confidence"], "medium")
         self.assertEqual(payload["article"], None)
         self.assertIsNotNone(payload["markdown"])
         self.assertEqual(payload["metadata"], None)
@@ -537,6 +580,7 @@ class McpToolTests(unittest.TestCase):
         self.assertEqual(payload["markdown"], None)
         self.assertEqual(payload["metadata"]["title"], "Example Article")
         self.assertEqual(payload["token_estimate_breakdown"], {"abstract": 32, "body": 96, "refs": 24})
+        self.assertEqual(payload["quality"]["body_metrics"]["figure_count"], 0)
 
     def test_fetch_paper_tool_returns_ambiguous_error_payload(self) -> None:
         error = PaperFetchFailure(
@@ -1058,6 +1102,39 @@ class McpToolTests(unittest.TestCase):
 
         self.assertFalse(result.isError)
         self.assertEqual(result.structuredContent["article"], None)
+        self.assertEqual([content.type for content in result.content], ["text", "text", "image"])
+
+    def test_build_fetch_tool_result_uses_provider_default_asset_profile_for_inline_images(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            figure_path = Path(tmpdir) / "figure-1.png"
+            write_binary(figure_path, size=32)
+
+            article = sample_article()
+            article.source = "science"
+            article.assets = [
+                Asset(kind="figure", heading="Figure 1", caption="Body figure", path=str(figure_path), section="body"),
+            ]
+            envelope = FetchEnvelope(
+                doi=article.doi,
+                source="science",
+                has_fulltext=True,
+                warnings=[],
+                source_trail=["source:ok"],
+                token_estimate=article.quality.token_estimate,
+                token_estimate_breakdown=article.quality.token_estimate_breakdown,
+                article=article,
+                markdown="# Example Article\n\nExample body.\n",
+                metadata=None,
+            )
+            request = mcp_tools.FetchPaperRequest(
+                query="10.1000/example",
+                modes=["markdown"],
+                strategy={"inline_image_budget": {"max_images": 1}},
+            )
+
+            result = mcp_tools.build_fetch_tool_result(envelope, request)
+
+        self.assertFalse(result.isError)
         self.assertEqual([content.type for content in result.content], ["text", "text", "image"])
 
     def test_resolve_paper_tool_serializes_resolved_query(self) -> None:

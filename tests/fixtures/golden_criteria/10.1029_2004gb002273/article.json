@@ -1,0 +1,661 @@
+{
+  "doi": "10.1029/2004gb002273",
+  "source": "wiley_browser",
+  "metadata": {
+    "title": "Terrestrial mechanisms of interannual CO<sub>2</sub> variability",
+    "authors": [
+      "N. Zeng",
+      "A. Mariotti",
+      "P. Wetzel"
+    ],
+    "abstract": "[1]The interannual variability of atmospheric CO<sub>2</sub> growth rate shows remarkable correlation with the El Niño Southern Oscillation (ENSO). Here we present results from mechanistically based terrestrial carbon cycle model VEgetation-Global-Atmosphere-Soil (VEGAS), forced by observed climate fields such as precipitation and temperature. Land is found to explain most of the interannual CO<sub>2</sub> variability with a magnitude of about 5 PgC yr<sup>−1</sup>. The simulated land-atmosphere flux has a detrended correlation of 0.53 (0.6 at the 2–7 year ENSO band) with the CO<sub>2</sub> growth rate observed at Mauna Loa from 1965 to 2000. We also present the total ocean flux from the Hamburg Ocean Carbon Cycle Model (HAMOCC) which shows ocean-atmosphere flux variation of about 1 PgC yr<sup>−1</sup>, and it is largely out of phase with land flux. On land, much of the change comes from the tropical regions such as the Amazon and Indonesia where ENSO related climate anomalies are in the same direction across much of the tropics. The subcontinental variations over North America and Eurasia are comparable to the tropics but the total interannual variability is about 1 PgC yr<sup>−1</sup> due to the cancellation from the subregions. This has implication for flux measurement network distribution. The tropical dominance also results from a “conspiracy” between climate and plant/soil physiology, as precipitation and temperature changes drive opposite changes in net primary production (NPP) and heterotrophic respiration (R<sub>*h*</sub>), both contributing to land-atmosphere flux changes in the same direction. However, NPP contributes to about three fourths of the total tropical interannual variation and the rest is from heterotrophic respiration; thus precipitation appears to be a more important factor than temperature on the interannual timescales as tropical wet and dry regimes control vegetation growth. Fire, largely driven by drought, also contributes significantly to the interannual CO<sub>2</sub> variability at a rate of about 1 PgC yr<sup>−1</sup>, and it is not totally in phase with NPP or R<sub>*h*</sub>. The robust variability in tropical fluxes agree well with atmospheric inverse modeling results. Even over North America and Eurasia, where ENSO teleconnection is less robust, the fluxes show general agreement with inversion results, an encouraging sign for fruitful carbon data assimilation.",
+    "journal": "Global Biogeochemical Cycles",
+    "published": "2005-3",
+    "keywords": [],
+    "license_urls": [
+      "http://onlinelibrary.wiley.com/termsAndConditions#vor"
+    ],
+    "landing_page_url": "https://agupubs.onlinelibrary.wiley.com/doi/10.1029/2004GB002273"
+  },
+  "sections": [
+    {
+      "heading": "Abstract",
+      "level": 2,
+      "kind": "abstract",
+      "text": "[1]The interannual variability of atmospheric CO<sub>2</sub> growth rate shows remarkable correlation with the El Niño Southern Oscillation (ENSO). Here we present results from mechanistically based terrestrial carbon cycle model VEgetation-Global-Atmosphere-Soil (VEGAS), forced by observed climate fields such as precipitation and temperature. Land is found to explain most of the interannual CO<sub>2</sub> variability with a magnitude of about 5 PgC yr<sup>−1</sup>. The simulated land-atmosphere flux has a detrended correlation of 0.53 (0.6 at the 2–7 year ENSO band) with the CO<sub>2</sub> growth rate observed at Mauna Loa from 1965 to 2000. We also present the total ocean flux from the Hamburg Ocean Carbon Cycle Model (HAMOCC) which shows ocean-atmosphere flux variation of about 1 PgC yr<sup>−1</sup>, and it is largely out of phase with land flux. On land, much of the change comes from the tropical regions such as the Amazon and Indonesia where ENSO related climate anomalies are in the same direction across much of the tropics. The subcontinental variations over North America and Eurasia are comparable to the tropics but the total interannual variability is about 1 PgC yr<sup>−1</sup> due to the cancellation from the subregions. This has implication for flux measurement network distribution. The tropical dominance also results from a “conspiracy” between climate and plant/soil physiology, as precipitation and temperature changes drive opposite changes in net primary production (NPP) and heterotrophic respiration (R<sub>*h*</sub>), both contributing to land-atmosphere flux changes in the same direction. However, NPP contributes to about three fourths of the total tropical interannual variation and the rest is from heterotrophic respiration; thus precipitation appears to be a more important factor than temperature on the interannual timescales as tropical wet and dry regimes control vegetation growth. Fire, largely driven by drought, also contributes significantly to the interannual CO<sub>2</sub> variability at a rate of about 1 PgC yr<sup>−1</sup>, and it is not totally in phase with NPP or R<sub>*h*</sub>. The robust variability in tropical fluxes agree well with atmospheric inverse modeling results. Even over North America and Eurasia, where ENSO teleconnection is less robust, the fluxes show general agreement with inversion results, an encouraging sign for fruitful carbon data assimilation."
+    },
+    {
+      "heading": "1. Introduction",
+      "level": 2,
+      "kind": "body",
+      "text": "[2]The observed atmospheric CO<sub>2</sub> growth rate consists of a large interannual variability superimposed on a gradual increase due to human fossil fuel carbon release and land use change (Figure 1) [*Conway et al.*, 1994; *Keeling et al.*, 1995; *Houghton*, 2000; *Marland et al.*, 2001; *Prentice et al.*, 2001]. In particular, the interannual CO<sub>2</sub> variability shows a high correlation with the El Niño Southern Oscillation (ENSO). The CO<sub>2</sub> growth rate measured at Mauna Loa has a correlation of 0.54 with the negative Southern Oscillation Index (SOI) at a lag of 5 months (Figure 2). The interannual variability amplitude is about 5 PgC yr<sup>−1</sup>. Such variability is a major source of uncertainty in our knowledge of the “missing” carbon sink (about 2 PgC yr<sup>−1</sup> [*Dai and Fung*, 1993; *Prentice et al.*, 2001]).\n\n![Figure 1](/home/dictation/paper-fetch-skill/md_for_lc_body/10.1029_2004gb002273/10.1029_2004gb002273_assets/gbc1137-fig-0001.png)\n\n**Figure 1.** Anthropogenic CO<sub>2</sub> emission and atmospheric CO<sub>2</sub> growth rate (monthly from January 1965 to June 2000 with seasonal cycle removed) at Mauna Loa, Hawaii, in PgC yr<sup>−1</sup>. Data are from GLOBALVIEW-CO2 (2001). Also plotted below these is the negative Southern Oscillation Index (-SOI; in mbar) which is an indicator of the tropical ENSO phenomenon.\n\n![Figure 2](/home/dictation/paper-fetch-skill/md_for_lc_body/10.1029_2004gb002273/10.1029_2004gb002273_assets/gbc1137-fig-0002.png)\n\n**Figure 2.** Lagged correlation between the observed CO<sub>2</sub> growth rate and the negative Southern Oscillation Index (-SOI, solid circles), compared to the autocorrelation of SOI, for the period. CO<sub>2</sub> at Mauna Loa correlates with -SOI at 0.54 at about 5 months lag.\n\n[3]The interannual CO<sub>2</sub> variability is mostly caused by climate-driven variations in oceanic and terrestrial carbon sources and sinks because other factors such as fossil fuel emission and land use change on longer timescales. In order to influence the carbon sources and sinks, ENSO anomalies have to cascade through a host of processes, especially on land, such as land precipitation and temperature response through teleconnection patterns, soil hydrology, and plant and soil physiology. Thus the high correlation between CO<sub>2</sub> and ENSO is remarkable, as correlation often degrades down the chain of causal links.\n\n[4]When the relation between CO<sub>2</sub> and ENSO was first noted [*Bacastow*, 1976], much of the focus was to explain the CO<sub>2</sub> variability based on oceanic changes. In particular, the equatorial Pacific Ocean has been identified as a major region of CO<sub>2</sub> flux change. Although initially it was thought to have enhanced outgassing, it has now been shown to produce up to 0.5 PgC yr<sup>−1</sup> reduction in the outgassing during El Niño years, largely due to the reduced upwelling of dissolved inorganic carbon from the cold waters below [*Feely*, 1987; *Winguth et al.*, 1994; *Francey et al.*, 1995; *Feely et al.*, 2002]. Recent studies based on a variety of methods including pCO<sub>2</sub> measurements, forward ocean modeling, and atmospheric inversion found relatively modest oceanic contribution [*Winguth et al.*, 1994; *Ciais et al.*, 1995; *Nakazawa et al.*, 1997; *Lee et al.*, 1998; *Feely et al.*, 2002; *Le Quéré et al.*, 2000, 2003; *Bousquet et al.*, 2000; *Roedenbeck et al.*, 2003; *Wetzel et al.*, 2005].\n\n[5]In contrast to the general agreement on oceanic fluxes, recent land carbon cycle research has produced widely differing results [e.g., *Kaduk and Heimann*, 1994; *Knorr*, 2000; *Prentice et al.*, 2000; *Jones et al.*, 2001; *McGuire et al.*, 2001; *Dargaville et al.*, 2002; *Schaefer et al.*, 2002] (see also below). The degree to which these results explain the amplitude and phasing of observed atmospheric CO<sub>2</sub> changes varies greatly, and the exact partitioning between terrestrial and oceanic contributions remains uncertain. For instance, the interannual amplitude from four models analyzed by *Dargaville et al.* [2002] differs by a factor of 2 to 3, and the phasing also differs significantly compared to each other or to inversion results. Even higher uncertainties exist when more detailed spatial patterns are considered such as the relative contributions from the tropics versus high latitudes, North America versus Eurasia, and monsoon regions versus subtropical savanna regions. Additional and important uncertainties come from anthropogenic processes such as reforestation and nitrogen deposition which may interfere with “natural” interannual variability which would be occurring in their absence.\n\n[6]The physical and biological mechanisms of such changes are not very well known. Some terrestrial carbon modeling and data analysis has suggested that ENSO related temperature variation is a dominant factor [*Kindermann et al.*, 1996; *Braswell et al.*, 1997; *Gerard et al.*, 1999], but the strength of respiration and soil decomposition rate dependence on temperature is highly uncertain on global scales and is model dependent [*Trumbore et al.*, 1996; *Liski et al.*, 1999; *Kirschbaum*, 2000; *Giardina and Ryan*, 2000; *Barrett*, 2002; *Melillo et al.*, 2002]. Thus this sensitivity depends largely on a parameterization not very well constrained. Others found a major contribution from precipitation through its impact on soil moisture and subsequently NPP [*Craig*, 1998; *Tian et al.*, 1998; *Foley et al.*, 2002; *Nemani et al.*, 2003], while yet others found more comparable contributions or more complicated regional dependence [*Jones et al.*, 2001; *Cao and Prince*, 2002]. A less studied factor is change in solar radiation which could also play an important role, such as during the post-Pinatubo period [*Knorr*, 2000; *Roderick et al.*, 2001; *Gu et al.*, 2003; *Reichenau and Esser*, 2003] and possibly on decadal timescales [*Nemani et al.*, 2003], but its relative importance and pathway have been a matter of controversy [*Angert et al.*, 2004]. Fire may also play an important role because drought induced by climate anomalies is a major driver of fire occurrence [*Keeling et al.*, 1995; *Page et al.*, 2002; *Langenfelds et al.*, 2002; *van der Werf et al.*, 2004], which may be further enhanced by human interventions, as man-made fires tend to happen under dry conditions.\n\n[7]Here we use a terrestrial carbon cycle model forced by observed climate variability to study the mechanisms underlying the interannual atmospheric CO<sub>2</sub> variability, focusing on the spatial and temporal patterns of the variation in carbon sources and sinks, and how physical climate anomalies interact with biochemistry to produce the observed changes. We also present a glimpse of total ocean flux from an ocean carbon model with the details discussed by *Wetzel et al.* [2005]. Our analysis focuses on land as it is the major source of interannual variability as well as the larger source of uncertainty."
+    },
+    {
+      "heading": "2. Methodology",
+      "level": 2,
+      "kind": "body",
+      "text": "[8]The terrestrial carbon model VEgetation-Global- Atmosphere-Soil (VEGAS) [*Zeng*, 2003] (see also Appendix A) is coupled to the physical land surface model Simple-Land (SLand [*Zeng et al.*, 2000a]). The land model was forced by the observed land precipitation and temperature of *New et al.* [2000], updated by T. D. Mitchell et al. (A comprehensive set of high-resolution grids of monthly climate for Europe and the globe: The observed record (1901–2000) and 16 scenarios (2001–2100), submitted to *Journal of Climate*, 2004) to cover the period of. The seasonal climatologies of radiation, humidity, and wind speed are used so that the potential CO<sub>2</sub> variability related to these, in particular, the change in radiation, is not studied here. Atmospheric CO<sub>2</sub> for photosynthesis was held at constant preindustrial value, as the greenhouse effect variation on interannual timescale is very small. The Hamburg Ocean Carbon Cycle Model (HAMOCC [*Six and Maier-Reimer*, 1996] (see also results from the most recent version 5 of *Wetzel et al.* [2005]) was forced by a physical ocean model which is in turn forced by the near-surface atmospheric fields from the NCEP/NCAR reanalysis [*Kalnay et al.*, 1996]. This indirect approach may lead to some uncertainties as the physical model may not best represent the actual ocean variabilities.\n\n[9]The land model was run at 2.5° × 2.5° resolution using 1901 climate forcing repeatedly until the carbon pools reach equilibrium with the climate. This state was then used as the initial condition for the 1901–2000 run. Figure 3 shows the annual mean fields averaged for 1965–2000 of NPP, total land, vegetation, and soil carbon pools. While NPP follows closely precipitation in the tropics, temperature and radiation are also important for high-latitude productivity. The simulated NPP is similar to the average of model results from the Potsdam NPP Model Intercomparison project [*Cramer et al.*, 1999] both in terms of the spatial pattern and range. Vegetation carbon is high in the tropical and midlatitude moist regions, but soil carbon pools are dominated by higher-latitude cold regions because of the slow soil decomposition rate there. The global total gross primary production (GPP) is 122 PgC yr<sup>−1</sup>, NPP is 58 PgC yr<sup>−1</sup>, vegetation carbon pool is 550 PgC, and soil carbon is 1850 PgC, within the range of observationally based estimates.\n\n![Figure 3](/home/dictation/paper-fetch-skill/md_for_lc_body/10.1029_2004gb002273/10.1029_2004gb002273_assets/gbc1137-fig-0003.png)\n\n**Figure 3.** Spatial distribution of model simulated annual mean NPP averaged for (kg m<sup>−2</sup> yr<sup>−1</sup>); total land carbon consists of vegetation and soil carbon (kg m<sup>−2</sup>).\n\n[10]Most of the analysis here focuses on the period 1965–2000 when noninterrupted CO<sub>2</sub> observations from Mauna Loa are available (Figure 1), and the seasonal cycles have been removed by a 12-month running mean filter because the focus here is the interannual variability. Ideally, the surface-atmosphere flux should be compared with global total CO<sub>2</sub> growth rate, but only the Mauna Loa CO<sub>2</sub> time series spans several decades, and it has been shown that the Mauna Loa data can be used as a proxy of global CO<sub>2</sub>, especially on interannual and longer timescales which are substantially longer than CO<sub>2</sub> mixing time in the atmosphere [*Gammon et al.*, 1985]. The slight trend in the CO<sub>2</sub> data is mostly due to the increasing anthropogenic emission (Figure 1), and it does not have a major impact on the interannual focus here."
+    },
+    {
+      "heading": "3. Global Total and Spatial Patterns",
+      "level": 2,
+      "kind": "body",
+      "text": "[11]Figure 4 shows the model simulated global total land to atmosphere carbon flux. The range of interannual variations is from −6 to 2 PgC yr<sup>−1</sup>. In particular, land was a large carbon source of 2 PgC yr<sup>−1</sup> to the atmosphere during the El Niño event, followed by a 2.5 PgC yr<sup>−1</sup> sink during the ensuing La Niña event. Overall, the model land-atmosphere flux agrees well with the CO<sub>2</sub> growth rate observed at Mauna Loa both in terms of interannual amplitude and phasing, with a correlation of 0.53 after the trends are removed. The correlation is higher at 0.6 on ENSO timescales after a band-pass filter of 2–7 years is applied to the data. This is because the correlation on decadal timescale is significantly lower, so that after removing the lower frequencies, the interannual correlation becomes higher. We also compared the model flux with total land-atmosphere flux from the inversion of *Bousquet et al.* [2000] for 1980–1998, and the result is very similar to the comparison with Mauna Loa CO<sub>2</sub> growth here. The fast subseasonal variations in the CO<sub>2</sub> growth rate are likely due to influence of synoptic atmospheric circulation at a single measuring station. The modeled land-atmosphere flux has a correlation of 0.58 with the negative SOI index at 3 months lag.\n\n![Figure 4](/home/dictation/paper-fetch-skill/md_for_lc_body/10.1029_2004gb002273/10.1029_2004gb002273_assets/gbc1137-fig-0004.png)\n\n**Figure 4.** Monthly carbon flux from land to the atmosphere from January 1965 to June 2000 (labeled on the left in PgC yr<sup>−1</sup>), simulated using the terrestrial carbon model VEGAS forced by the observed precipitation and temperature, compared to CO<sub>2</sub> growth rate observed at Mauna Loa, Hawaii (labeled on the right). Seasonal cycle has been removed from both using 12-month running mean. The observed CO<sub>2</sub> growth rate has higher values because it also contains the anthropogenic emission signal, and note the different scale for CO<sub>2</sub> growth rate on the right. The correlation between the two is 0.53 after removing the trends.\n\n[12]Most noticeable differences are, 1969–1970, and to a lesser extent, 1982–1983. The discrepancies during 1991–1993 and 1982–1983 have been attributed to volcanic aerosol effects, but the issue is still a matter of debate [*Jones and Cox*, 2001; *Lucht et al.*, 2002; *Gu et al.*, 2003; *Krakauer and Randerson*, 2003; *Angert et al.*, 2004]. In particular, *Jones and Cox* [2001] and *Lucht et al.* [2002] were able to explain part of the unusual flux anomalies during the 1991–1993 and 1982–1983 periods using the cooling caused by Pinatubo and El Chichon volcanic aerosols. Our model does not reproduce the full amplitude and phasing of these changes, despite the fact that the volcanic cooling is included in the temperature forcing data. One source of difference is that Jones and Cox used a coupled carbon-climate model which produced regional climate anomalies somewhat different from the observations used in our model (despite the general agreement globally), while Lucht et al. studied only the contribution from the boreal regions. Our results here are compared to observations in greater details.\n\n[13]If precipitation and temperature change cannot explain the early CO<sub>2</sub> drawdown during the Pinatubo period as our model results suggest, one is forced to turn to other mechanisms. One such possibility is enhanced diffuse light due to the large volcanic aerosol loading [*Roderick et al.*, 2001; *Gu et al.*, 2003]. However, the degree to which this can explain the CO<sub>2</sub> change is not clear [*Angert et al.*, 2004], and tree ring study does not appear to support enhanced growth after historical volcanic eruptions [*Krakauer and Randerson*, 2003].\n\n[14]While this work focuses on terrestrial sources and sinks, ocean also plays a nonnegligible role. In order to put the land flux in perspective, Figure 5 shows the global total ocean-atmosphere carbon flux from the Hamburg Ocean Carbon Cycle Model (HAMOCC) driven by a physical ocean model. The variability in the physical ocean model comes from the NCEP/NCAR reanalysis forcings of wind and other fields [*Kalnay et al.*, 1996]. The interannual variability of oceanic flux has an amplitude of close to 1 PgC yr<sup>−1</sup>, compared to 5 PgC yr<sup>−1</sup> for land. Such variability is similar to other ocean models [*Le Quéré et al.*, 2003]. Interestingly, the ocean and land fluxes are largely out of phase. For instance, from 1997 to 1998 as the El Niño becomes stronger, oceanic flux decreased while land flux increased. During the transitions such as the 1996–1997 transition to El Niño and early 1998 transition to La Niña, ocean anomalies appear somewhat earlier because ENSO signal first appears in the equatorial Pacific and Indian oceans and land flux anomalies have a delayed response to the climate and hydrological changes (section 4, Figure 9). This was suggested by the atmospheric inverse study of *Rayner et al.* [1999]. However, this lead-lag tendency is subtle enough such that ocean flux anomalies are nearly out of phase with land fluxes so that the total contribution from land and ocean has slightly smaller amplitude compared to land flux alone.\n\n![Figure 5](/home/dictation/paper-fetch-skill/md_for_lc_body/10.1029_2004gb002273/10.1029_2004gb002273_assets/gbc1137-fig-0005.png)\n\n**Figure 5.** Land-atmosphere carbon flux modeled by VEGAS, ocean-atmosphere carbon flux modeled by HAMOCC, and the total surface to atmosphere flux (land+ocean) in PgC yr<sup>−1</sup>.\n\n[15]In order to see both the spatial and temporal variabilities, a multivariate empirical orthogonal function (MEOF) analysis was conducted for the combined land-atmosphere carbon flux (modeled) and the forcing fields of precipitation and temperature (Figure 6). The first MEOF is closely related to ENSO both in terms of temporal evolution (principal component or PC) and spatial patterns (Figure 6, left). During an El Niño event (the positive phase of ENSO), the tropics generally have reduced rainfall [*Ropelewski and Halpert*, 1987] such as over the Amazon, Indonesia, Australia, Southern Africa, and parts of the Asian monsoon region. These regions also have higher temperature due to reduced evaporative cooling. As a result, both precipitation and temperature changes lead to release of land carbon into the atmosphere.\n\n![Figure 6](/home/dictation/paper-fetch-skill/md_for_lc_body/10.1029_2004gb002273/10.1029_2004gb002273_assets/gbc1137-fig-0006.png)\n\n**Figure 6.** Time evolution (principal components or PC) and spatial patterns of the first two MEOF from a detrended multivariate empirical orthogonal function (MEOF) analysis of modeled land-atmosphere carbon flux, observed precipitation, and temperature. Plotted together with PC1 is the Southern Oscillation Index (SOI, green line). The spatial patterns of MEOF1 of precipitation and temperature are ENSO-like, while MEOF2 temperature is similar to multidecadal surface warming pattern.\n\n[16]At middle to high latitudes, large regional anomalies also exist such as the positive fluxes over Scandinavia and to its east, and the negative anomalies across southern Europe and central Asia. At these latitudes, precipitation and temperature have a less straightforward relation than in the tropics. In North America, large spatial variations occur from northwestern to southeastern United States as well as from Alaska to Canada. When summed over a continent such as North America, the subcontinental variations tend to cancel each other so that the total contribution from the continent is small compared to tropical regions. Further details of these mechanisms are discussed in section 4.\n\n[17]The El Niño event in 1997–1998 was the largest in the twentieth century; Figure 7 shows a tropical-wide release of carbon into the atmosphere such as over the Amazon, Indonesia, and Eastern Australia. In the extratropics, major sinks are located along the east and west coasts of North America and the southern Europe and Black Sea region, while many other regions are mild sources.\n\n![Figure 7](/home/dictation/paper-fetch-skill/md_for_lc_body/10.1029_2004gb002273/10.1029_2004gb002273_assets/gbc1137-fig-0007.png)\n\n**Figure 7.** Carbon flux anomalies during the El Niño period (relative to the 10-year means of 1990–1999, in kg m<sup>−2</sup> yr<sup>−1</sup>).\n\n[18]It is interesting to compare this particular event with the MEOF1 pattern in Figure 6 which depicts long-term spatially coherent variability dominated by ENSO. The tropical patterns such as over South America are largely similar, with notable exception in southern Africa where 1997–1998 has a negative anomaly while the MEOF1 pattern shows strong positive flux. Extratropics shows larger differences especially over North America, but the sink anomalies over southern Europe–central Asia and the tripole pattern over East Asia appear to be more consistent. Thus, farther away from the tropics, the teleconnection of ENSO influence becomes weaker, and the response in carbon cycle also becomes less robust.\n\n[19]The second MEOF (Figure 6, right) depicts multidecadal variation that is largely a signature of the twentieth century global temperature change. This linkage can be seen in the warming of the 1940s, cooling in the 1960s and subsequent warming since the 1970s [*Hansen et al.*, 1996; *Stott et al.*, 2000]. An overall warming caused tropical and midlatitude carbon release as plant respiration and soil decomposition increase. Interestingly, the strong warming at high latitude, especially over Siberia, leads to a carbon sink due to enhanced vegetation growth because these cold regions are strongly temperature limited [*Zhou et al.*, 2001; *Lucht et al.*, 2002]. Precipitation of MEOF2 also appears important in various regions, such as over the Europe-Mediterranean-central Asian region where a North Atlantic Oscillation (NAO) related pattern [*Mariotti et al.*, 2002] is partly responsible for the positive carbon flux.\n\n[20]An implication of these results is that the variability of carbon sources and sinks has multiple spatial and temporal scales. Because the spatial variations are typically subcontinental, atmospheric inversions with continental resolution return aggregated results due to cancellation of different regions. On the other hand, these spatial patterns are coherent and large scale, reflecting the characteristic climate anomaly patterns; thus subcontinental observational network such as the FLUXNET, if reasonably distributed, will be able to capture much of these climate related changes in carbon sources and sinks."
+    },
+    {
+      "heading": "4. Regional Contributions",
+      "level": 2,
+      "kind": "body",
+      "text": "[21]Figure 8 shows the global total land to atmosphere flux and the contributions from a few selected regions: the whole tropics from 20°S to 20°N, the Amazon, Northern Hemisphere extratropics (north of 20°N), North America, and Eurasia. The land-atmosphere flux is dominated by contribution from the tropics with an interannual amplitude of about 5 PgC yr<sup>−1</sup>. The Amazon region alone contributes about half of the total tropical flux (more than 2 PgC yr<sup>−1</sup>). The Amazon thus contributes a disproportionately large fraction to the total flux (its total area is less than one third of the tropical land). The Northern Hemisphere extratropics consists of North America and Eurasia, it contributes a small fraction of the total variability, and it has only a weak correlation with the total flux which follows ENSO closely. We now take a closer look at the processes responsible for these changes.\n\n![Figure 8](/home/dictation/paper-fetch-skill/md_for_lc_body/10.1029_2004gb002273/10.1029_2004gb002273_assets/gbc1137-fig-0008.png)\n\n**Figure 8.** Interannual variability of land-atmosphere carbon fluxes from various regions: global total (black), the tropics between 20°N and 20°S (green), the Amazon (yellow), Northern Hemisphere north of 20°N (red), North America north of 20°N (blue), and Eurasia north of 20°N (purple), in PgC yr<sup>−1</sup>. The tropics accounts for half of the climatological total and most of the interannual variability, while the Northern Hemisphere contributes to somewhat less than half of the total and a smaller interannual variability. Note that these are the actual fluxes, while Figures 9 and 11 plot anomalies relative to 1965–2000 means."
+    },
+    {
+      "heading": "4.1. Tropics",
+      "level": 3,
+      "kind": "body",
+      "text": "[22] The dominance of the tropics can be seen clearly in Figure 9a as most of the global total land-atmosphere carbon flux can be explained by the tropical contribution. To understand the origin of this tropical contribution, total land to atmosphere flux Fta is split into net primary production (NPP: gross primary production GPP minus plant respiration Ra) and heterotrophic respiration (Rh: soil to atmosphere flux),\n\nFta is sometimes referred to as net carbon exchange (NCE) or net biome exchange (NBE), and we do not consider the contribution from anthropogenic effects in our model. In general, NPP and Rh vary in the opposite direction such that they contribute to Fta in the same direction (Figure 9b). However, the amplitude of Rh is smaller than NPP. For instance, from the El Niño to La Niña, NPP increased by 4 PgC yr−1 while Rh dropped by 1.7 PgC yr−1. Thus Rh contributes to less than one third of the total Fta change while NPP contributes the remainder.\n\n[23]The change in NPP and R<sub>*h*</sub> can be understood using Figures 9c–9f. Leaf area index (LAI) (Figure 9e), an indicator of leaf biomass, correlates closely with GPP with slight lag because part of the assimilated carbon through GPP is converted into leaf biomass almost immediately. Autotrophic respiration R<sub>*a*</sub>(vegetation to atmosphere carbon flux) follows GPP and LAI with a lag of a few months as the vegetation carbon anomalies gets respired.\n\n![Figure 9](/home/dictation/paper-fetch-skill/md_for_lc_body/10.1029_2004gb002273/10.1029_2004gb002273_assets/gbc1137-fig-0009.png)\n\n**Figure 9.** Tropical contribution and mechanisms: (a) tropical carbon flux (green) compared to global total (black) in PgC yr<sup>−1</sup>; (b) NPP (green) and heterotrophic respiration (R<sub>*h*</sub>, red); (c) precipitation (green, mm d<sup>−1</sup> labeled on the left) and temperature (red, Celsius labeled on the right), which are anticorrelated with temperature lagging by about 1 season; (d) precipitation (black, mm d<sup>−1</sup> labeled on the left) and GPP (green, PgC yr<sup>−1</sup> labeled on the right); (e) LAI (black; dimensionless labeled on the left), GPP (green), and R<sub>*a*</sub>(red) (in PgC yr<sup>−1</sup>, labeled on the right); and (f) temperature (black, Celcius labeled on the left) and R<sub>*h*</sub>(red, PgC yr<sup>−1</sup> labeled on the right). These are all anomalies relative to the 1965–2000 means so that the fluxes in Figure 9a are vertically shifted compared to Figure 8.\n\n[24]The change in GPP follows precipitation (Figure 9d) closely with a lag of about one season because soil moisture responds to precipitation with a delay [*Zeng*, 1999] which determines the photosynthesis rate. Soil respiration R<sub>*h*</sub> correlates very well with temperature (Figure 9f). Interestingly, R<sub>*h*</sub> appears to lead rather than lag temperature (albeit only slightly), which could be due to factors other than temperature such as soil decomposition rate dependence on soil moisture which may lead temperature because precipitation leads temperature (Figure 9c). Alternatively, an increased turnover from litterfall in response to early precipitation and growth can also lead to an early increase in respiration [*Gu et al.*, 2004].\n\n[25]The fact that precipitation and temperature are anticorrelated (Figure 9c) is not a coincidence and has fundamental importance for the tropical flux. In the tropics where thermodynamics and the hydrological cycle dominates surface energy balance, a decrease in precipitation leads to drier land surface and less evapotranspiration, thus less evaporative cooling and higher temperature, and vice versa [*Zeng and Neelin*, 1999]. During El Niño, this thermodynamic effect tends to outweigh the direct tropical warming due to atmospheric dynamics which is nonetheless in the same direction. On one hand, decreased precipitation during an El Niño leads to lower soil moisture, and thus lower GPP and NPP (less carbon uptake); on the other hand, warmer temperature leads to more respiration carbon loss, both leading to carbon loss to the atmosphere. Thus the anticorrelation between precipitation and temperature “conspire” with plant and soil physiology to produce the large carbon release from the tropical land area during an El Niño event. This is further enhanced by the fact that during such an event, most of the tropical land has reduced rainfall such as over the Amazon, Indonesia, eastern Australia, and southern Africa (Figure 6); thus they all contribute to increased atmospheric CO<sub>2</sub> during an El Niño. These mechanisms are further illustrated in Figure 10. In contrast, higher latitudes behave differently in many of these aspects, to which we shift our attention now.\n\n![Figure 10](/home/dictation/paper-fetch-skill/md_for_lc_body/10.1029_2004gb002273/10.1029_2004gb002273_assets/gbc1137-fig-0010.png)\n\n**Figure 10.** Mechanisms of the tropical dominance and the high correlation between ENSO and CO<sub>2</sub> growth rate. During an El Niño event such as 1997–1998, climate anomalies in most of the tropical land regions change in the same direction, and the anti-correlation between precipitation and temperature “conspire” with plant and soil physiology to produce the large carbon release from the tropical land area."
+    },
+    {
+      "heading": "4.2. Northern Hemisphere Extratropics",
+      "level": 3,
+      "kind": "body",
+      "text": "[26]The contribution from the Northern Hemisphere extratropics (north of 20°N; Figure 11a) is relatively small compared to the total land-atmosphere carbon flux which is dominated by the tropics. The temporal variation also shows somewhat less coherent ENSO signal, but nonetheless largely changes in the same direction as the tropics with a delay of a few months. The Northern Hemisphere contribution is small despite the large land area because of a cancellation from different subcontinental regions as discussed in section 3 (Figure 6). Second, at middle to high latitudes where precipitation is mostly in the form of large-scale condensation as a result of dynamic baroclinic instability, high temperature leads to high relative humidity and often more rainfall [*Zeng et al.*, 2000b]. This positive correlation in precipitation and temperature (Figure 11c), together with their respective influence on plant growth and respiration, leads to positive correlation between NPP and R<sub>*h*</sub>(Figure 11b); thus they partially compensate each other (equation (1)). As a result of these largely compensating factors, higher latitude contribution to interannual CO<sub>2</sub> variability as a whole is significantly smaller than the tropics, despite that the anomalies may be large on subcontinental scales (Figure 6). Interestingly, unlike in the tropics where R<sub>*h*</sub> is much smaller than NPP, at high latitudes they have comparable sizes.\n\n![Figure 11](/home/dictation/paper-fetch-skill/md_for_lc_body/10.1029_2004gb002273/10.1029_2004gb002273_assets/gbc1137-fig-0011.png)\n\n**Figure 11.** Northern Hemisphere land contribution and mechanisms: (a) Northern Hemisphere extratropics (north of 20°N) flux anomalies (green) compared to global total (black) in PgC yr<sup>−1</sup>; (b) NPP (green) and heterotrophic respiration (red); and (c) Precipitation (green, mm d<sup>−1</sup> labeled on the left) and temperature (red, Celsius labeled on the right). The correlation between precipitation and temperature gives rise to largely covarying NPP and R<sub>*h*</sub> which partially cancel each other, leading to a relatively small contribution to the global total carbon flux.\n\n[27]The Northern Hemisphere extratropics consists of North America and Eurasia. The interannual amplitude is about 1 PgC y<sup>−1</sup> for both regions (Figure 12). These variabilities compare favorably with the inverse modeling results from 1988 to 1998 [*Bousquet et al.*, 2000], but the inverse modeling shows somewhat larger amplitude in North America. They also show general agreement with the inversion of *Roedenbeck et al.* [2003, Figure 5], although similarly large differences also exist between the two inversions, especially over Eurasia. The convergence between the forward modeling approach and inverse model results in these regions with relatively weak ENSO signal suggesting a certain confidence in the results. Such convergence also lends optimism to carbon data assimilation.\n\n![Figure 12](/home/dictation/paper-fetch-skill/md_for_lc_body/10.1029_2004gb002273/10.1029_2004gb002273_assets/gbc1137-fig-0012.png)\n\n**Figure 12.** Model carbon fluxes (PgC yr<sup>−1</sup>) from North America and Eurasia from 1987 to 1998 compared to those from the atmospheric inversion of *Bousquet et al.* [2000]."
+    },
+    {
+      "heading": "5. Contribution From Fire",
+      "level": 2,
+      "kind": "body",
+      "text": "[28]Figure 13 shows the contribution to land-atmosphere carbon flux from fire. The total fire contribution is about 4 PgC yr<sup>−1</sup>, consistent with observational estimates [*Andreae*, 1991]. Note that this is the directly burned carbon flux due to fire, and an even larger indirect part goes into the fast soil carbon pool after fire and is included in soil decomposition in our bookkeeping approach [*van der Werf et al.*, 2003]. When divided regionally, the tropics again has a large contribution of about 2 PgC yr<sup>−1</sup> while the Northern Hemisphere contributes about 1.5 PgC yr<sup>−1</sup>, with the remainder from the Southern Hemisphere.\n\n![Figure 13](/home/dictation/paper-fetch-skill/md_for_lc_body/10.1029_2004gb002273/10.1029_2004gb002273_assets/gbc1137-fig-0013.png)\n\n**Figure 13.** Carbon fluxes directly burned by fire from various regions: global total (black line), tropics (green), Amazon (yellow), Northern Hemisphere extratropics (red), North America (blue), and Eurasia (purple), in PgC yr<sup>−1</sup>. The seasonal cycle has been removed. The tropics accounts for most of the total interannual variability, while the Northern Hemisphere also has significant but less variability.\n\n[29]The amplitude of interannual fire carbon flux variability is about 1 PgC yr<sup>−1</sup>, or about 20% of the total land-atmosphere flux anomaly. This also comes mostly from the tropics, where large wet and dry episodes control the soil wetness and fire regimes. Of the tropical contribution, the Amazon basin alone accounts for 30% to 40% of the climatological and interannual values. The variation in the Northern Hemisphere does not show a simple correlation with the tropical signal, with an interannual amplitude of about 0.5 PgC yr<sup>−1</sup>. However, during, Northern Hemisphere appears to have equally large fire flux with more than 1 year lag from the tropical flux.\n\n[30]A question of considerable interest is how important carbon flux variability is relative to normal heterotrophic respiration. Figure 14 shows the interannual anomalies in global total R<sub>*h*</sub>, R<sub>*a*</sub>, and fire carbon flux *C*<sub>*Fire*</sub>. In our bookkeeping approach, the burned aboveground biomass (live leaf+wood) is lumped into R<sub>*a*</sub>, while the burned fast soil carbon (mostly litterfall) is lumped into R<sub>*h*</sub>, with the aboveground contribution dominant. The interannual variability of fire flux can be as large as 1 PgC yr<sup>−1</sup>, about half of the R<sub>*h*</sub> or R<sub>*a*</sub>. While R<sub>*h*</sub> and R<sub>*a*</sub> tend to covary due to the common influence from temperature, fire flux is often not in phase. Thus although fire contribution can be highly significant, especially compared to the R<sub>*a*</sub>, the larger part of R<sub>*h*</sub> and R<sub>*a*</sub> variabilities still come from normal respiration. Obviously this is an aspect sensitive to model parameterization and needs to be further studied.\n\n![Figure 14](/home/dictation/paper-fetch-skill/md_for_lc_body/10.1029_2004gb002273/10.1029_2004gb002273_assets/gbc1137-fig-0014.png)\n\n**Figure 14.** Anomalies of global carbon fluxes relative to 1980–2000 mean due to heterotrophic respiration (R<sub>*h*</sub>), autotrophic respiration (R<sub>*a*</sub>), and direct fire (*C*<sub>*fire*</sub>), in PgC yr<sup>−1</sup>.\n\n[31]Thus our simulated fire flux is less than the estimate of *Page et al.* [2002], who found a contribution of 0.81 to 2.57 PgC yr<sup>−1</sup> from Indonesia in 1997 alone, while our tropical total fire flux is about 2 PgC yr<sup>−1</sup> and 2.5 PgC yr<sup>−1</sup> during 1997–1998 with major contribution from the Amazon. However, human drained peatland fire was a major factor in their study, while our model does not include anthropogenic effect. Our amplitude is also less than the estimate of *van der Werf et al.* [2004] where fire contribution accounts for about 65% of the total flux anomaly during El Niño, while ours is about 20%. Since van der Werf et al. used satellite observations of fire counts while we considered climate variability only, we may have again missed possible human-induced fire contribution which could enhance natural anomalies. However, the different methods and models used may still be the major reason for the differences, as many processes such as the estimate of fuel load and burned area are still poorly constrained.\n\n[32]Our result is more in line with *Langenfelds et al.* [2002], who estimated 0.8–3.7 PgC additional (relative to normal year) fire C flux for the 1997/1998 El Niño period, while our model predicts about 1 PgC. Apart from uncertainties in model parameterization, our model does not consider anthropogenic impact on fire which tends to enhance fire extremes. The large range in their estimate is on one hand due to the difficulty in distinguishing flux contribution of the imbalance in photosynthesis and respiration from that of fire, and on the other hand due to the uncertain CH<sub>4</sub>/CO<sub>2</sub> or H<sub>2</sub>/CO<sub>2</sub> ratios from biomass burning."
+    },
+    {
+      "heading": "6. Conclusions",
+      "level": 2,
+      "kind": "body",
+      "text": "[33]The high-precision atmospheric CO<sub>2</sub> measurements at Mauna Loa and other places indicate large interannual variability of CO<sub>2</sub> growth rate on the order of 5 PgC yr<sup>−1</sup> that can be attributed to terrestrial and oceanic sources and sinks. We have used terrestrial and ocean carbon cycle models forced by observed climate variability to study the mechanisms underlying the interannual atmospheric CO<sub>2</sub> variability.\n\n[34]In agreement with some recent studies, we found that most of the interannual variability in the observed CO<sub>2</sub> growth rate can be explained by climate forced changes in the terrestrial biosphere with an interannual amplitude of PgC yr<sup>−1</sup>. Ocean-atmosphere flux has an interannual variability of 1 PgC yr<sup>−1</sup>, and it is largely out of phase with terrestrial flux.\n\n[35]Most of the land-atmosphere flux variability comes from the tropics where ENSO related climate anomalies impact the hydrological cycle and energy balance in a coherent fashion. The tropical dominance and high correlation with ENSO can be attributed to two major factors using El Niño warm event as example with La Niña largely opposite sign:\n\n[36]1. The first factor is the spatial coherence of climate anomalies. During an El Niño event, most of the tropics experiences reduction of rainfall and higher temperature as the result of shifting atmospheric circulation, such as over the Amazon, Indonesia, southeastern Asia, eastern Australia, and Africa. These coherent changes lead to carbon release from all these regions.\n\n[37]2. The second factor is a “conspiracy” between climate anomalies and plant/soil physiology. A reduction in tropical rainfall leads to higher temperature due to less evaporative cooling; then reduced moisture lowers plant productivity NPP (less carbon uptake), and higher temperature increases heterotrophic respiration R<sub>*h*</sub>(more carbon release), thus leading to additive carbon release to the atmosphere.\n\n[38]In both respects, extratropics behave differently: The large subcontinental spatial variations lead to cancellation from different regions, and the positive correlation between precipitation and temperature there gives rise to additional cancellation from positively correlated NPP and R<sub>*h*</sub>. An additional factor is that at high-latitude temperature-limited regions, higher temperature means more growth which adds to the complexity in extratropics, but the overall effects of all these still lead to large cancellations.\n\n[39]Of the contributions from NPP and R<sub>*h*</sub> in the tropics, NPP contributes to about three fourths of the total flux in response to change in precipitation, thus supporting the notion that precipitation has a larger effect than temperature as NPP mostly responds to precipitation and R<sub>*h*</sub> responds mostly to temperature. This is partly because tropical and subtropical regions are dominated by wet and dry climate regimes which control plant growth. Another factor which might have contributed to the smaller contribution from R<sub>*h*</sub> is that drier soil reduces its respiration rate during an El Niño, thus partially offsetting the higher temperature induced increase. It is somewhat surprising that in the tropical rain forests such as at the heart of the Amazon basin, changes in NPP are still very large despite the nonlinear saturation behavior at high soil moisture in these regions. One factor not considered in our modeling is the change in solar radiation, as less precipitation means less cloud and more solar radiation which would counteract effects due to precipitation change [*Potter et al.*, 2003; *Nemani et al.*, 2003]. This is further complicated by the role of diffuse sunlight which could potentially explain part of the anomalous behavior during the volcanic periods such as [*Roderick et al.*, 2001; *Gu et al.*, 2003; *Reichenau and Esser*, 2003], but a satisfactory explanation remains elusive [*Krakauer and Randerson*, 2003; *Angert et al.*, 2004]. Outside the tropics, NPP and R<sub>*h*</sub> appear to have more comparable amplitude.\n\n[40]Carbon flux from directly burned biomass and soil carbon by fire is about 4 PgC yr<sup>−1</sup>, and varies on interannual timescale of about 1 PgC yr<sup>−1</sup>, about 20% of the total interannual variability. Again such variability mostly comes from the tropics in response to drought conditions. Midlatitude fire flux varies typically less than 0.5 PgC yr<sup>−1</sup>, but can be significantly larger such as during. Although midlatitude flux shows some relation with ENSO, it is not statistically significant.\n\n[41]Not surprisingly, the total tropical carbon flux agrees very well with inverse modeling results. Further partitioning at continental scale agrees reasonably well, especially over the Amazon. The continental scale partitioning of Northern Hemisphere extratropics into Eurasia and North America shows general agreement with the inversion results of *Bousquet et al.* [2000] and *Roedenbeck et al.* [2003], but our amplitude is somewhat smaller. Similar conclusions were reached by *Peylin et al.* [2005], who used similar methodology but with different models and focuses. Such agreement is encouraging, as it has been more difficult to achieve in the past because of the less-than-robust ENSO teleconnection to midlatitude regions, and it indicates a convergence in the understanding of continental scale interannual CO<sub>2</sub> sources and sinks that can pave the way for fruitful carbon data assimilation.\n\n[42]It has been our hope that the study of interannual variability will help us to understand the future of the carbon cycle under climate change [*Cox et al.*, 2000; *Friedlingstein et al.*, 2001; *Zeng et al.*, 2004]. The analysis here cautions against simplistic extrapolation of the results, as interannual and longer multidecadal variabilities may differ significantly in their mechanisms and spatial patterns. Further observational and modeling work is strongly needed for both interannual and longer-term changes in the carbon cycle."
+    }
+  ],
+  "references": [
+    {
+      "raw": "10.7551/mitpress/3286.003.0003",
+      "doi": "10.7551/mitpress/3286.003.0003",
+      "title": null,
+      "year": "1991"
+    },
+    {
+      "raw": "10.1029/2004GL019760",
+      "doi": "10.1029/2004gl019760",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/261116a0",
+      "doi": "10.1038/261116a0",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1029/2002GB001860",
+      "doi": "10.1029/2002gb001860",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1126/science.290.5495.1342",
+      "doi": "10.1126/science.290.5495.1342",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1126/science.278.5339.870",
+      "doi": "10.1126/science.278.5339.870",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1029/2001GB001426",
+      "doi": "10.1029/2001gb001426",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1029/94JD02847",
+      "doi": "10.1029/94jd02847",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1007/s004420050468",
+      "doi": "10.1007/s004420050468",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1029/94JD01951",
+      "doi": "10.1029/94jd01951",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/35041539",
+      "doi": "10.1038/35041539",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Craig S.(1998) The response of terrestrial carbon exchange and atmospheric CO2concentrations to El Niño SST forcing Rep. CM‐94 39 pp. Stockholm Univ. Stockholm Sweden.",
+      "doi": null,
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Cramer W. D. W.Kicklighter A.Bondeau B.MooreIII G.Churlina B.Nemry A.Ruimy A. L.Schloss andthe participants of the Potsdam NPP Model Intercomparison(1999) Comparing global models of terrestrial net primary productivity (NPP): Overview and key results Global Change Biol.5 Suppl. 1 1–15.",
+      "doi": "10.1046/j.1365-2486.1999.00009.x",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1029/93GB01165",
+      "doi": "10.1029/93gb01165",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1029/JC092iC06p06545",
+      "doi": "10.1029/jc092ic06p06545",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1016/S0967-0645(02)00044-9",
+      "doi": "10.1016/s0967-0645(02)00044-9",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1029/2002GB001872",
+      "doi": "10.1029/2002gb001872",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/373326a0",
+      "doi": "10.1038/373326a0",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1029/2000GL012015",
+      "doi": "10.1029/2000gl012015",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1029/1998GL900269",
+      "doi": "10.1029/1998gl900269",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/35009076",
+      "doi": "10.1038/35009076",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1126/science.1078366",
+      "doi": "10.1126/science.1078366",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1029/2003GB002119",
+      "doi": "10.1029/2003gb002119",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1029/96GL01040",
+      "doi": "10.1029/96gl01040",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1029/2000JD900041",
+      "doi": "10.1029/2000jd900041",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1029/2000GB001281",
+      "doi": "10.1029/2000gb001281",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1175/1520-0442(2001)014 2.0.CO;2",
+      "doi": "10.1175/1520-0442(2001)014<4113:tccrte>2.0.co;2",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1016/0304-3800(94)90022-1",
+      "doi": "10.1016/0304-3800(94)90022-1",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1175/1520-0477(1996)077 2.0.CO;2",
+      "doi": "10.1175/1520-0477(1996)077<0437:tnyrp>2.0.co;2",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/375666a0",
+      "doi": "10.1038/375666a0",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1029/96GB02349",
+      "doi": "10.1029/96gb02349",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1023/A:1006238902976",
+      "doi": "10.1023/a:1006238902976",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1046/j.1365-2699.2000.00159.x",
+      "doi": "10.1046/j.1365-2699.2000.00159.x",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1029/2003GB002076",
+      "doi": "10.1029/2003gb002076",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1029/2001GB001466",
+      "doi": "10.1029/2001gb001466",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/24139",
+      "doi": "10.1038/24139",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1029/1999GB900049",
+      "doi": "10.1029/1999gb900049",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Two decades of ocean CO2 sink and variability",
+      "doi": "10.3402/tellusb.v55i2.16719",
+      "title": "Two decades of ocean CO2 sink and variability",
+      "year": "2003"
+    },
+    {
+      "raw": "CO2 emissions from soil in response to climatic warming are overestimated—The decomposition of old soil organic matter is tolerant of temperature",
+      "doi": null,
+      "title": "CO2 emissions from soil in response to climatic warming are overestimated—The decomposition of old soil organic matter is tolerant of temperature",
+      "year": "1999"
+    },
+    {
+      "raw": "10.1126/science.1071828",
+      "doi": "10.1126/science.1071828",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1175/1520-0442(2002)015 2.0.CO;2",
+      "doi": "10.1175/1520-0442(2002)015<1674:thcitm>2.0.co;2",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1029/2000GB001298",
+      "doi": "10.1029/2000gb001298",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1126/science.1074153",
+      "doi": "10.1126/science.1074153",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1029/96JD02720",
+      "doi": "10.1029/96jd02720",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1126/science.1082750",
+      "doi": "10.1126/science.1082750",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1175/1520-0442(2000)013 2.0.CO;2",
+      "doi": "10.1175/1520-0442(2000)013<2217:rtcstc>2.0.co;2",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/nature01131",
+      "doi": "10.1038/nature01131",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1029/2003GB002214",
+      "doi": "10.1029/2003gb002214",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1029/2002JD002979",
+      "doi": "10.1029/2002jd002979",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1890/1051-0761(2000)010[1553:TCBOTT]2.0.CO;2",
+      "doi": "10.1890/1051-0761(2000)010[1553:tcbott]2.0.co;2",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1029/1999GL900008",
+      "doi": "10.1029/1999gl900008",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1029/2002GB002025",
+      "doi": "10.1029/2002gb002025",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1007/s004420100760",
+      "doi": "10.1007/s004420100760",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.5194/acp-3-1919-2003",
+      "doi": "10.5194/acp-3-1919-2003",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1175/1520-0493(1987)115 2.0.CO;2",
+      "doi": "10.1175/1520-0493(1987)115<1606:garspp>2.0.co;2",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1029/2002GB001928",
+      "doi": "10.1029/2002gb001928",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1029/96GB02561",
+      "doi": "10.1029/96gb02561",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1126/science.290.5499.2133",
+      "doi": "10.1126/science.290.5499.2133",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/25328",
+      "doi": "10.1038/25328",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1126/science.272.5260.393",
+      "doi": "10.1126/science.272.5260.393",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1046/j.1365-2486.2003.00604.x",
+      "doi": "10.1046/j.1365-2486.2003.00604.x",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1126/science.1090753",
+      "doi": "10.1126/science.1090753",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1029/2004GB002339",
+      "doi": "10.1029/2004gb002339",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1029/93GB03134",
+      "doi": "10.1029/93gb03134",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1029/1998JD200088",
+      "doi": "10.1029/1998jd200088",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1007/BF02915395",
+      "doi": "10.1007/bf02915395",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1175/1520-0442(1999)012 2.0.CO;2",
+      "doi": "10.1175/1520-0442(1999)012<0857:alaitf>2.0.co;2",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1175/1520-0469(2000)057 2.0.CO;2",
+      "doi": "10.1175/1520-0469(2000)057<1767:aqetcm>2.0.co;2",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1016/S0022-1694(00)00140-2",
+      "doi": "10.1016/s0022-1694(00)00140-2",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1029/2004GL020904",
+      "doi": "10.1029/2004gl020904",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1029/2000JD000115",
+      "doi": "10.1029/2000jd000115",
+      "title": null,
+      "year": null
+    }
+  ],
+  "assets": [
+    {
+      "kind": "figure",
+      "heading": "Figure 1 Open in figure viewer PowerPoint Anthropogenic CO 2 emission and atmosp",
+      "caption": "Figure 1 Open in figure viewer PowerPoint Anthropogenic CO 2 emission and atmospheric CO 2 growth rate (monthly from January 1965 to June 2000 with seasonal cycle removed) at Mauna Loa, Hawaii, in PgC yr −1 . Data are from GLOBALVIEW-CO2 (2001). Also plotted below these is the negative Southern Oscillation Index (-SOI; in mbar) which is an indicator of the tropical ENSO phenomenon.",
+      "url": null,
+      "path": "/home/dictation/paper-fetch-skill/md_for_lc_body/10.1029_2004gb002273/10.1029_2004gb002273_assets/gbc1137-fig-0001.png",
+      "section": "body"
+    },
+    {
+      "kind": "figure",
+      "heading": "Figure 2 Open in figure viewer PowerPoint Lagged correlation between the observe",
+      "caption": "Figure 2 Open in figure viewer PowerPoint Lagged correlation between the observed CO 2 growth rate and the negative Southern Oscillation Index (-SOI, solid circles), compared to the autocorrelation of SOI, for the period 1965–2000. CO 2 at Mauna Loa correlates with -SOI at 0.54 at about 5 months lag.",
+      "url": null,
+      "path": "/home/dictation/paper-fetch-skill/md_for_lc_body/10.1029_2004gb002273/10.1029_2004gb002273_assets/gbc1137-fig-0002.png",
+      "section": "body"
+    },
+    {
+      "kind": "figure",
+      "heading": "Figure 3 Open in figure viewer PowerPoint Spatial distribution of model simulate",
+      "caption": "Figure 3 Open in figure viewer PowerPoint Spatial distribution of model simulated annual mean NPP averaged for 1965–2000 (kg m −2 yr −1 ); total land carbon consists of vegetation and soil carbon (kg m −2 ).",
+      "url": null,
+      "path": "/home/dictation/paper-fetch-skill/md_for_lc_body/10.1029_2004gb002273/10.1029_2004gb002273_assets/gbc1137-fig-0003.png",
+      "section": "body"
+    },
+    {
+      "kind": "figure",
+      "heading": "Figure 4 Open in figure viewer PowerPoint Monthly carbon flux from land to the a",
+      "caption": "Figure 4 Open in figure viewer PowerPoint Monthly carbon flux from land to the atmosphere from January 1965 to June 2000 (labeled on the left in PgC yr −1 ), simulated using the terrestrial carbon model VEGAS forced by the observed precipitation and temperature, compared to CO 2 growth rate observed at Mauna Loa, Hawaii (labeled on the right). Seasonal cycle has been removed from both using 12-month running mean. The observed CO 2 growth rate has higher values because it also contains the anthropogenic emission signal, and note the different scale for CO 2 growth rate on the right. The correlation between the two is 0.53 after removing the trends.",
+      "url": null,
+      "path": "/home/dictation/paper-fetch-skill/md_for_lc_body/10.1029_2004gb002273/10.1029_2004gb002273_assets/gbc1137-fig-0004.png",
+      "section": "body"
+    },
+    {
+      "kind": "figure",
+      "heading": "Figure 5 Open in figure viewer PowerPoint Land-atmosphere carbon flux modeled by",
+      "caption": "Figure 5 Open in figure viewer PowerPoint Land-atmosphere carbon flux modeled by VEGAS, ocean-atmosphere carbon flux modeled by HAMOCC, and the total surface to atmosphere flux (land+ocean) in PgC yr −1 .",
+      "url": null,
+      "path": "/home/dictation/paper-fetch-skill/md_for_lc_body/10.1029_2004gb002273/10.1029_2004gb002273_assets/gbc1137-fig-0005.png",
+      "section": "body"
+    },
+    {
+      "kind": "figure",
+      "heading": "Figure 6 Open in figure viewer PowerPoint Time evolution (principal components o",
+      "caption": "Figure 6 Open in figure viewer PowerPoint Time evolution (principal components or PC) and spatial patterns of the first two MEOF from a detrended multivariate empirical orthogonal function (MEOF) analysis of modeled land-atmosphere carbon flux, observed precipitation, and temperature. Plotted together with PC1 is the Southern Oscillation Index (SOI, green line). The spatial patterns of MEOF1 of precipitation and temperature are ENSO-like, while MEOF2 temperature is similar to multidecadal surface warming pattern.",
+      "url": null,
+      "path": "/home/dictation/paper-fetch-skill/md_for_lc_body/10.1029_2004gb002273/10.1029_2004gb002273_assets/gbc1137-fig-0006.png",
+      "section": "body"
+    },
+    {
+      "kind": "figure",
+      "heading": "Figure 7 Open in figure viewer PowerPoint Carbon flux anomalies during the 1997–",
+      "caption": "Figure 7 Open in figure viewer PowerPoint Carbon flux anomalies during the 1997–1998 El Niño period (relative to the 10-year means of 1990–1999, in kg m −2 yr −1 ).",
+      "url": null,
+      "path": "/home/dictation/paper-fetch-skill/md_for_lc_body/10.1029_2004gb002273/10.1029_2004gb002273_assets/gbc1137-fig-0007.png",
+      "section": "body"
+    },
+    {
+      "kind": "figure",
+      "heading": "Figure 8 Open in figure viewer PowerPoint Interannual variability of land-atmosp",
+      "caption": "Figure 8 Open in figure viewer PowerPoint Interannual variability of land-atmosphere carbon fluxes from various regions: global total (black), the tropics between 20°N and 20°S (green), the Amazon (yellow), Northern Hemisphere north of 20°N (red), North America north of 20°N (blue), and Eurasia north of 20°N (purple), in PgC yr −1 . The tropics accounts for half of the climatological total and most of the interannual variability, while the Northern Hemisphere contributes to somewhat less than half of the total and a smaller interannual variability. Note that these are the actual fluxes, while Figures 9 and 11 plot anomalies relative to 1965–2000 means.",
+      "url": null,
+      "path": "/home/dictation/paper-fetch-skill/md_for_lc_body/10.1029_2004gb002273/10.1029_2004gb002273_assets/gbc1137-fig-0008.png",
+      "section": "body"
+    },
+    {
+      "kind": "figure",
+      "heading": "Figure 9 Open in figure viewer PowerPoint Tropical contribution and mechanisms:",
+      "caption": "Figure 9 Open in figure viewer PowerPoint Tropical contribution and mechanisms: (a) tropical carbon flux (green) compared to global total (black) in PgC yr −1 ; (b) NPP (green) and heterotrophic respiration (R h , red); (c) precipitation (green, mm d −1 labeled on the left) and temperature (red, Celsius labeled on the right), which are anticorrelated with temperature lagging by about 1 season; (d) precipitation (black, mm d −1 labeled on the left) and GPP (green, PgC yr −1 labeled on the right); (e) LAI (black; dimensionless labeled on the left), GPP (green), and R a (red) (in PgC yr −1 , labeled on the right); and (f) temperature (black, Celcius labeled on the left) and R h (red, PgC yr −1 labeled on the right). These are all anomalies relative to the 1965–2000 means so that the fluxes in Figure 9a are vertically shifted compared to Figure 8 .",
+      "url": null,
+      "path": "/home/dictation/paper-fetch-skill/md_for_lc_body/10.1029_2004gb002273/10.1029_2004gb002273_assets/gbc1137-fig-0009.png",
+      "section": "body"
+    },
+    {
+      "kind": "figure",
+      "heading": "Figure 10 Open in figure viewer PowerPoint Mechanisms of the tropical dominance",
+      "caption": "Figure 10 Open in figure viewer PowerPoint Mechanisms of the tropical dominance and the high correlation between ENSO and CO 2 growth rate. During an El Niño event such as 1997–1998, climate anomalies in most of the tropical land regions change in the same direction, and the anti-correlation between precipitation and temperature “conspire” with plant and soil physiology to produce the large carbon release from the tropical land area.",
+      "url": null,
+      "path": "/home/dictation/paper-fetch-skill/md_for_lc_body/10.1029_2004gb002273/10.1029_2004gb002273_assets/gbc1137-fig-0010.png",
+      "section": "body"
+    },
+    {
+      "kind": "figure",
+      "heading": "Figure 11 Open in figure viewer PowerPoint Northern Hemisphere land contribution",
+      "caption": "Figure 11 Open in figure viewer PowerPoint Northern Hemisphere land contribution and mechanisms: (a) Northern Hemisphere extratropics (north of 20°N) flux anomalies (green) compared to global total (black) in PgC yr −1 ; (b) NPP (green) and heterotrophic respiration (red); and (c) Precipitation (green, mm d −1 labeled on the left) and temperature (red, Celsius labeled on the right). The correlation between precipitation and temperature gives rise to largely covarying NPP and R h which partially cancel each other, leading to a relatively small contribution to the global total carbon flux.",
+      "url": null,
+      "path": "/home/dictation/paper-fetch-skill/md_for_lc_body/10.1029_2004gb002273/10.1029_2004gb002273_assets/gbc1137-fig-0011.png",
+      "section": "body"
+    },
+    {
+      "kind": "figure",
+      "heading": "Figure 12 Open in figure viewer PowerPoint Model carbon fluxes (PgC yr −1 ) from",
+      "caption": "Figure 12 Open in figure viewer PowerPoint Model carbon fluxes (PgC yr −1 ) from North America and Eurasia from 1987 to 1998 compared to those from the atmospheric inversion of Bousquet et al. [2000] .",
+      "url": null,
+      "path": "/home/dictation/paper-fetch-skill/md_for_lc_body/10.1029_2004gb002273/10.1029_2004gb002273_assets/gbc1137-fig-0012.png",
+      "section": "body"
+    },
+    {
+      "kind": "figure",
+      "heading": "Figure 13 Open in figure viewer PowerPoint Carbon fluxes directly burned by fire",
+      "caption": "Figure 13 Open in figure viewer PowerPoint Carbon fluxes directly burned by fire from various regions: global total (black line), tropics (green), Amazon (yellow), Northern Hemisphere extratropics (red), North America (blue), and Eurasia (purple), in PgC yr −1 . The seasonal cycle has been removed. The tropics accounts for most of the total interannual variability, while the Northern Hemisphere also has significant but less variability.",
+      "url": null,
+      "path": "/home/dictation/paper-fetch-skill/md_for_lc_body/10.1029_2004gb002273/10.1029_2004gb002273_assets/gbc1137-fig-0013.png",
+      "section": "body"
+    },
+    {
+      "kind": "figure",
+      "heading": "Figure 14 Open in figure viewer PowerPoint Anomalies of global carbon fluxes rel",
+      "caption": "Figure 14 Open in figure viewer PowerPoint Anomalies of global carbon fluxes relative to 1980–2000 mean due to heterotrophic respiration (R h ), autotrophic respiration (R a ), and direct fire ( C fire ), in PgC yr −1 .",
+      "url": null,
+      "path": "/home/dictation/paper-fetch-skill/md_for_lc_body/10.1029_2004gb002273/10.1029_2004gb002273_assets/gbc1137-fig-0014.png",
+      "section": "body"
+    }
+  ],
+  "quality": {
+    "has_fulltext": true,
+    "token_estimate": 10866,
+    "content_kind": "fulltext",
+    "has_abstract": true,
+    "warnings": [],
+    "source_trail": [
+      "fulltext:wiley_html_ok"
+    ],
+    "trace": [
+      {
+        "stage": "fulltext",
+        "component": "wiley_html",
+        "outcome": "ok",
+        "code": null,
+        "message": null
+      }
+    ],
+    "token_estimate_breakdown": {
+      "abstract": 610,
+      "body": 10256,
+      "refs": 561
+    },
+    "confidence": "high",
+    "flags": [],
+    "body_metrics": {
+      "char_count": 40954,
+      "word_count": 6660,
+      "body_block_count": 8,
+      "body_heading_count": 8,
+      "body_to_abstract_ratio": 16.946564885496183,
+      "explicit_body_container": true,
+      "post_abstract_body_run": true,
+      "figure_count": 15
+    },
+    "semantic_losses": {
+      "table_fallback_count": 0,
+      "table_lossy_count": 0,
+      "formula_fallback_count": 0,
+      "formula_missing_count": 0
+    },
+    "extraction_revision": 2
+  }
+}

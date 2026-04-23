@@ -2,17 +2,26 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 import re
 import xml.etree.ElementTree as ET
 
 from ..formula.convert import convert_mathml_element_to_latex
-from ._article_markdown_common import (
+from ._article_markdown_xml import (
     child_text,
     first_descendant,
     normalize_compact_text,
-    render_inline_text,
+    render_literal_inline_text,
     xml_local_name,
 )
+
+
+@dataclass
+class FormulaRenderResult:
+    lines: list[str]
+    fallback_kind: str | None = None
+    note: str | None = None
+    label: str | None = None
 
 
 def render_tex_math(element: ET.Element | None) -> str:
@@ -174,26 +183,62 @@ def render_inline_formula(element: ET.Element | None) -> str:
 
 
 def render_display_formula(element: ET.Element | None) -> list[str]:
+    return render_display_formula_result(element).lines
+
+
+def render_display_formula_result(element: ET.Element | None) -> FormulaRenderResult:
     if element is None:
-        return []
+        return FormulaRenderResult(lines=[])
 
     label = child_text(element, "label")
     if not label:
-        label = render_inline_text(first_descendant(element, "label"))
+        label = render_literal_inline_text(first_descendant(element, "label"))
     math_node = first_descendant(element, "math")
     tex_node = first_descendant(element, "tex-math")
+    fallback_kind: str | None = None
+    note: str | None = None
     if math_node is not None:
         expression = render_external_mathml_expression(math_node, display_mode=True)
-    elif tex_node is not None:
-        expression = render_tex_math(tex_node)
+        if not expression:
+            expression = render_mathml_expression(math_node)
+            if expression:
+                fallback_kind = "fallback"
+                note = "Formula used the internal MathML fallback renderer."
     else:
-        expression = normalize_compact_text(render_inline_text(element, skip_local_names={"label"}))
+        expression = ""
+    if not expression and tex_node is not None:
+        expression = render_tex_math(tex_node)
+        if expression:
+            fallback_kind = "fallback"
+            note = "Formula used the publisher tex-math fallback."
+    if not expression:
+        expression = normalize_compact_text(render_literal_inline_text(element, skip_local_names={"label"}))
+        if expression:
+            fallback_kind = "fallback"
+            note = "Formula used normalized literal text fallback."
 
     if not expression:
-        return []
+        placeholder_label = normalize_compact_text(label)
+        expression = (
+            f"[Formula unavailable: {placeholder_label}]"
+            if placeholder_label
+            else "[Formula unavailable]"
+        )
+        fallback_kind = "missing"
+        note = "Formula could not be converted; an explicit placeholder was inserted."
 
     lines: list[str] = []
     if label:
         lines.extend([label, ""])
-    lines.extend(["$$", expression, "$$", ""])
-    return lines
+    if fallback_kind == "missing":
+        lines.extend([expression, ""])
+    else:
+        lines.extend(["$$", expression, "$$", ""])
+    if note and label:
+        note = f"{normalize_compact_text(label)}: {note}"
+    return FormulaRenderResult(
+        lines=lines,
+        fallback_kind=fallback_kind,
+        note=note,
+        label=normalize_compact_text(label),
+    )

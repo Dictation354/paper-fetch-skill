@@ -9,9 +9,10 @@ from pathlib import Path
 from mcp.client.session import ClientSession
 from mcp.client.stdio import StdioServerParameters, stdio_client
 
-from paper_fetch.config import build_runtime_env, resolve_flaresolverr_source_dir, resolve_flaresolverr_url
+from paper_fetch.config import resolve_flaresolverr_source_dir, resolve_flaresolverr_url
 from paper_fetch.providers._flaresolverr import health_check
 from paper_fetch.providers.base import ProviderFailure
+from tests.live._runtime_env import build_isolated_live_env
 from tests.provider_benchmark_samples import provider_benchmark_sample, source_trail_matches
 from tests.paths import REPO_ROOT, SRC_DIR
 
@@ -25,11 +26,19 @@ PNAS_SAMPLE = provider_benchmark_sample("pnas")
 
 
 class LiveMcpServerTests(unittest.IsolatedAsyncioTestCase):
+    runtime_env_tempdir: tempfile.TemporaryDirectory | None = None
+
     @classmethod
     def setUpClass(cls) -> None:
         if not RUN_LIVE:
             raise unittest.SkipTest("Set PAPER_FETCH_RUN_LIVE=1 to run live MCP smoke tests.")
-        cls.env = build_runtime_env()
+        cls.env, cls.runtime_env_tempdir = build_isolated_live_env()
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        runtime_env_tempdir = getattr(cls, "runtime_env_tempdir", None)
+        if runtime_env_tempdir is not None:
+            runtime_env_tempdir.cleanup()
 
     def _require_env(self, *keys: str) -> None:
         missing = [key for key in keys if not self.env.get(key, "").strip()]
@@ -131,21 +140,21 @@ class LiveMcpServerTests(unittest.IsolatedAsyncioTestCase):
         await self._assert_live_fetch(
             sample=ELSEVIER_SAMPLE,
             expected_log_prefix="official_provider_",
-            args={"modes": ["metadata"], "strategy": {"allow_html_fallback": False}},
+            args={"modes": ["metadata"], "strategy": {}},
         )
 
     async def test_springer_doi_live_via_mcp_reports_progress_and_logs(self) -> None:
         await self._assert_live_fetch(
             sample=SPRINGER_SAMPLE,
             expected_log_prefix="official_provider_",
-            args={"modes": ["metadata"], "strategy": {"allow_html_fallback": False}},
+            args={"modes": ["metadata"], "strategy": {}},
         )
 
     async def test_wiley_doi_live_via_mcp_reports_progress_and_logs(self) -> None:
         await self._assert_live_fetch(
             sample=WILEY_SAMPLE,
             expected_log_prefix="official_provider_",
-            args={"modes": ["metadata"], "strategy": {"allow_html_fallback": False}},
+            args={"modes": ["metadata"], "strategy": {}},
             needs_flaresolverr=True,
         )
 
@@ -153,7 +162,7 @@ class LiveMcpServerTests(unittest.IsolatedAsyncioTestCase):
         await self._assert_live_fetch(
             sample=SCIENCE_SAMPLE,
             expected_log_prefix="official_provider_",
-            args={"modes": ["metadata"], "strategy": {"allow_html_fallback": False}},
+            args={"modes": ["metadata"], "strategy": {}},
             needs_flaresolverr=True,
         )
 
@@ -161,7 +170,7 @@ class LiveMcpServerTests(unittest.IsolatedAsyncioTestCase):
         await self._assert_live_fetch(
             sample=PNAS_SAMPLE,
             expected_log_prefix="official_provider_",
-            args={"modes": ["metadata"], "strategy": {"allow_html_fallback": False}},
+            args={"modes": ["metadata"], "strategy": {}},
             needs_flaresolverr=True,
         )
 

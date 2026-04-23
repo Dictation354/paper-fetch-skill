@@ -46,7 +46,8 @@
 
 1. [`architecture/target-architecture.md`](architecture/target-architecture.md)
 2. [`providers.md`](providers.md)
-3. [`architecture/probe-semantics.md`](architecture/probe-semantics.md)
+3. [`extraction-rules.md`](extraction-rules.md)
+4. [`architecture/probe-semantics.md`](architecture/probe-semantics.md)
 
 ## 文档分工
 
@@ -54,10 +55,12 @@
   - 首页。讲项目定位、核心能力、业务主线、快速开始和关键限制。
 - [`providers.md`](providers.md)
   - 讲 provider 能力矩阵、路由规则、默认输出、环境变量、缓存和限速。
+- [`extraction-rules.md`](extraction-rules.md)
+  - 讲当前提取 / 组装 / 渲染规则、真实样本证据和对应测试，不负责运行时路由和部署说明。
 - [`deployment.md`](deployment.md)
   - 讲安装、配置入口、MCP 注册、更新和最小验证。
 - [`flaresolverr.md`](flaresolverr.md)
-  - 讲 Elsevier browser fallback 与 Wiley / Science / PNAS 的 repo-local 浏览器工作流。
+  - 讲 Wiley / Science / PNAS 的 repo-local 浏览器工作流。
 - [`architecture/target-architecture.md`](architecture/target-architecture.md)
   - 讲当前系统分层、端到端业务流程、数据契约和扩展点。
 - [`architecture/probe-semantics.md`](architecture/probe-semantics.md)
@@ -74,13 +77,13 @@
 ### `preferred_providers`
 
 - `FetchStrategy` 中的 provider allow-list。
-- 限制最终允许使用的 provider-owned fulltext 或 generic HTML 路径。
+- 限制最终允许使用的五家 provider fulltext 主链或 `crossref` metadata 路径。
 - 不阻止系统内部用 `crossref` 做路由判断。
 
 ### `source`
 
 - 公开给调用方的粗粒度结果来源。
-- 例如 `elsevier_xml`、`elsevier_browser`、`springer_html`、`wiley_browser`、`science`、`pnas`、`html_fallback`、`crossref_meta`、`metadata_only`。
+- 例如 `elsevier_xml`、`elsevier_pdf`、`springer_html`、`wiley_browser`、`science`、`pnas`、`crossref_meta`、`metadata_only`。
 
 ### `source_trail`
 
@@ -96,7 +99,7 @@
 ### `strategy`
 
 - `fetch_paper()` 的抓取策略轴。
-- 负责控制 `allow_html_fallback`、`allow_metadata_only_fallback`、`preferred_providers`、`asset_profile` 等行为。
+- 负责控制 `allow_metadata_only_fallback`、`preferred_providers`、`asset_profile` 等行为。
 
 ### `asset_profile`
 

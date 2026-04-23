@@ -6,10 +6,11 @@ from pathlib import Path
 from unittest import mock
 
 from paper_fetch import service as paper_fetch
-from paper_fetch.providers import _flaresolverr, elsevier as elsevier_provider
+from paper_fetch.providers import elsevier as elsevier_provider
 from paper_fetch.providers.base import RawFulltextPayload
+from paper_fetch.tracing import trace_from_markers
 
-from ._paper_fetch_support import StubHtmlClient, StubProvider, fetch_paper_model, sample_article, sample_html_article
+from ._paper_fetch_support import StubProvider, fetch_paper_model, fulltext_pdf_bytes, sample_article, sample_html_article
 
 
 def _article_factory_with_source(source: str):
@@ -25,23 +26,45 @@ def _article_factory_with_source(source: str):
     return factory
 
 
-class ProviderManagedFallbackServiceTests(unittest.TestCase):
-    def _runtime_config(self, tmpdir: str, provider: str, doi: str) -> _flaresolverr.FlareSolverrRuntimeConfig:
-        tmp = Path(tmpdir)
-        return _flaresolverr.FlareSolverrRuntimeConfig(
-            provider=provider,
-            doi=doi,
-            url="http://127.0.0.1:8191/v1",
-            env_file=tmp / ".env.flaresolverr",
-            source_dir=tmp / "vendor" / "flaresolverr",
-            artifact_dir=tmp / "artifacts",
-            headless=True,
-            min_interval_seconds=20,
-            max_requests_per_hour=30,
-            max_requests_per_day=200,
-            rate_limit_file=tmp / "rate_limits.json",
-        )
+def _abstract_only_article_factory(source: str):
+    def factory(metadata, raw_payload, *, downloaded_assets=None, asset_failures=None):
+        article = sample_html_article()
+        article.source = source
+        article.doi = str(metadata.get("doi") or article.doi)
+        article.metadata.title = str(metadata.get("title") or article.metadata.title)
+        article.metadata.abstract = "Provider abstract only."
+        article.sections = []
+        article.quality.content_kind = "abstract_only"
+        article.quality.has_fulltext = False
+        article.quality.has_abstract = True
+        article.quality.source_trail = list(raw_payload.metadata.get("source_trail") or [])
+        article.quality.trace = trace_from_markers(article.quality.source_trail)
+        article.quality.warnings = list(raw_payload.metadata.get("warnings") or [])
+        return article
 
+    return factory
+
+
+def _metadata_only_article_factory(source: str):
+    def factory(metadata, raw_payload, *, downloaded_assets=None, asset_failures=None):
+        article = sample_html_article()
+        article.source = source
+        article.doi = str(metadata.get("doi") or article.doi)
+        article.metadata.title = str(metadata.get("title") or article.metadata.title)
+        article.metadata.abstract = None
+        article.sections = []
+        article.quality.content_kind = "metadata_only"
+        article.quality.has_fulltext = False
+        article.quality.has_abstract = False
+        article.quality.source_trail = list(raw_payload.metadata.get("source_trail") or [])
+        article.quality.trace = trace_from_markers(article.quality.source_trail)
+        article.quality.warnings = list(raw_payload.metadata.get("warnings") or [])
+        return article
+
+    return factory
+
+
+class ProviderManagedFallbackServiceTests(unittest.TestCase):
     def test_elsevier_provider_failure_skips_generic_html_fallback(self) -> None:
         resolved = paper_fetch.ResolvedQuery(
             query="10.1016/test",
@@ -76,7 +99,6 @@ class ProviderManagedFallbackServiceTests(unittest.TestCase):
                         }
                     ),
                 },
-                html_client=StubHtmlClient(article=sample_html_article()),
             )
         finally:
             paper_fetch.resolve_paper = original_resolve
@@ -85,11 +107,11 @@ class ProviderManagedFallbackServiceTests(unittest.TestCase):
         self.assertIn("fallback:elsevier_html_managed_by_provider", article.quality.source_trail)
         self.assertNotIn("fallback:html_ok", article.quality.source_trail)
 
-    def test_elsevier_html_challenge_returns_metadata_only_without_generic_html_fallback(self) -> None:
+    def test_elsevier_xml_unusable_then_pdf_success_returns_fulltext_without_generic_html_fallback(self) -> None:
         resolved = paper_fetch.ResolvedQuery(
-            query="10.1016/test-challenge",
+            query="10.1016/test-pdf-success",
             query_kind="doi",
-            doi="10.1016/test-challenge",
+            doi="10.1016/test-pdf-success",
             landing_url="https://www.sciencedirect.com/science/article/pii/S0034425725000525",
             provider_hint="elsevier",
             confidence=1.0,
@@ -97,7 +119,7 @@ class ProviderManagedFallbackServiceTests(unittest.TestCase):
         metadata = {
             "provider": "crossref",
             "official_provider": False,
-            "doi": "10.1016/test-challenge",
+            "doi": "10.1016/test-pdf-success",
             "title": "Elsevier Metadata",
             "landing_page_url": resolved.landing_url,
             "authors": ["Alice Example"],
@@ -105,7 +127,88 @@ class ProviderManagedFallbackServiceTests(unittest.TestCase):
             "fulltext_links": [],
             "references": [],
         }
-        official_payload = RawFulltextPayload(
+        xml_payload = RawFulltextPayload(
+            provider="elsevier",
+            source_url="https://api.elsevier.com/content/article/doi/example",
+            content_type="text/xml",
+            body=b"<xml />",
+            metadata={"route": "official", "reason": "Downloaded full text from the official Elsevier API."},
+        )
+        pdf_payload = RawFulltextPayload(
+            provider="elsevier",
+            source_url="https://api.elsevier.com/content/article/doi/example.pdf",
+            content_type="application/pdf",
+            body=fulltext_pdf_bytes(),
+            metadata={
+                "route": "pdf_fallback",
+                "reason": "Downloaded full text from the official Elsevier API PDF fallback.",
+                "markdown_text": "# Elsevier PDF Article\n\n## Results\n\n" + ("Body text " * 80),
+            },
+            needs_local_copy=True,
+        )
+        client = elsevier_provider.ElsevierClient(transport=mock.Mock(), env={"ELSEVIER_API_KEY": "secret"})
+        original_resolve = paper_fetch.resolve_paper
+        try:
+            paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
+            with (
+                mock.patch.object(
+                    client,
+                    "fetch_metadata",
+                    return_value={
+                        "provider": "elsevier",
+                        "official_provider": True,
+                        "doi": resolved.doi,
+                        "title": "Elsevier Metadata",
+                        "landing_page_url": resolved.landing_url,
+                        "publisher": "Elsevier",
+                        "fulltext_links": [],
+                        "references": [],
+                    },
+                ),
+                mock.patch.object(client, "_fetch_official_xml_payload", return_value=xml_payload),
+                mock.patch.object(client, "_official_payload_is_usable", return_value=False),
+                mock.patch.object(client, "_fetch_official_pdf_payload", return_value=pdf_payload),
+            ):
+                article = fetch_paper_model(
+                    "10.1016/test-pdf-success",
+                    allow_downloads=False,
+                    clients={
+                        "elsevier": client,
+                        "crossref": StubProvider(metadata=metadata),
+                    },
+                )
+        finally:
+            paper_fetch.resolve_paper = original_resolve
+
+        self.assertEqual(article.source, "elsevier_pdf")
+        self.assertTrue(article.quality.has_fulltext)
+        self.assertIn("fulltext:elsevier_xml_fail", article.quality.source_trail)
+        self.assertIn("fulltext:elsevier_pdf_api_ok", article.quality.source_trail)
+        self.assertIn("fulltext:elsevier_pdf_fallback_ok", article.quality.source_trail)
+        self.assertNotIn("fallback:html_ok", article.quality.source_trail)
+        self.assertNotIn("fulltext:elsevier_html_fail", article.quality.source_trail)
+
+    def test_elsevier_xml_and_pdf_failures_return_metadata_only_without_generic_html_fallback(self) -> None:
+        resolved = paper_fetch.ResolvedQuery(
+            query="10.1016/test-pdf-fail",
+            query_kind="doi",
+            doi="10.1016/test-pdf-fail",
+            landing_url="https://www.sciencedirect.com/science/article/pii/S0034425725000525",
+            provider_hint="elsevier",
+            confidence=1.0,
+        )
+        metadata = {
+            "provider": "crossref",
+            "official_provider": False,
+            "doi": "10.1016/test-pdf-fail",
+            "title": "Elsevier Metadata",
+            "landing_page_url": resolved.landing_url,
+            "authors": ["Alice Example"],
+            "abstract": "Fallback abstract",
+            "fulltext_links": [],
+            "references": [],
+        }
+        xml_payload = RawFulltextPayload(
             provider="elsevier",
             source_url="https://api.elsevier.com/content/article/doi/example",
             content_type="text/xml",
@@ -116,153 +219,51 @@ class ProviderManagedFallbackServiceTests(unittest.TestCase):
         original_resolve = paper_fetch.resolve_paper
         try:
             paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
-            with tempfile.TemporaryDirectory() as tmpdir:
-                runtime = self._runtime_config(tmpdir, "elsevier", resolved.doi)
-                with (
-                    mock.patch.object(
-                        client,
-                        "fetch_metadata",
-                        return_value={
-                            "provider": "elsevier",
-                            "official_provider": True,
-                            "doi": resolved.doi,
-                            "title": "Elsevier Metadata",
-                            "landing_page_url": resolved.landing_url,
-                            "publisher": "Elsevier",
-                            "fulltext_links": [],
-                            "references": [],
-                        },
+            with (
+                mock.patch.object(
+                    client,
+                    "fetch_metadata",
+                    return_value={
+                        "provider": "elsevier",
+                        "official_provider": True,
+                        "doi": resolved.doi,
+                        "title": "Elsevier Metadata",
+                        "landing_page_url": resolved.landing_url,
+                        "publisher": "Elsevier",
+                        "fulltext_links": [],
+                        "references": [],
+                    },
+                ),
+                mock.patch.object(client, "_fetch_official_xml_payload", return_value=xml_payload),
+                mock.patch.object(client, "_official_payload_is_usable", return_value=False),
+                mock.patch.object(
+                    client,
+                    "_fetch_official_pdf_payload",
+                    side_effect=paper_fetch.ProviderFailure(
+                        "no_result",
+                        "Elsevier official PDF representation is not available.",
                     ),
-                    mock.patch.object(client, "_fetch_official_payload", return_value=official_payload),
-                    mock.patch.object(client, "_official_payload_is_usable", return_value=False),
-                    mock.patch.object(elsevier_provider, "load_runtime_config", return_value=runtime),
-                    mock.patch.object(elsevier_provider, "ensure_runtime_ready"),
-                    mock.patch.object(
-                        elsevier_provider,
-                        "fetch_html_with_flaresolverr",
-                        side_effect=_flaresolverr.FlareSolverrFailure(
-                            "cloudflare_challenge",
-                            "Encountered a challenge page.",
-                        ),
-                    ),
-                ):
-                    article = fetch_paper_model(
-                        "10.1016/test-challenge",
-                        allow_downloads=False,
-                        clients={
-                            "elsevier": client,
-                            "crossref": StubProvider(metadata=metadata),
-                        },
-                        html_client=StubHtmlClient(article=sample_html_article()),
-                    )
+                ),
+            ):
+                article = fetch_paper_model(
+                    "10.1016/test-pdf-fail",
+                    allow_downloads=False,
+                    clients={
+                        "elsevier": client,
+                        "crossref": StubProvider(metadata=metadata),
+                    },
+                )
         finally:
             paper_fetch.resolve_paper = original_resolve
 
         self.assertEqual(article.source, "crossref_meta")
         self.assertFalse(article.quality.has_fulltext)
-        self.assertIn("fulltext:elsevier_html_fail", article.quality.source_trail)
+        self.assertIn("fulltext:elsevier_xml_fail", article.quality.source_trail)
+        self.assertIn("fulltext:elsevier_pdf_api_fail", article.quality.source_trail)
         self.assertIn("fallback:elsevier_html_managed_by_provider", article.quality.source_trail)
         self.assertIn("fallback:metadata_only", article.quality.source_trail)
         self.assertNotIn("fallback:html_ok", article.quality.source_trail)
-        self.assertNotIn("fulltext:elsevier_pdf_fallback_ok", article.quality.source_trail)
-
-    def test_elsevier_insufficient_html_returns_metadata_only_without_generic_html_fallback(self) -> None:
-        resolved = paper_fetch.ResolvedQuery(
-            query="10.1016/test-short-html",
-            query_kind="doi",
-            doi="10.1016/test-short-html",
-            landing_url="https://www.sciencedirect.com/science/article/pii/S0034425725000525",
-            provider_hint="elsevier",
-            confidence=1.0,
-        )
-        metadata = {
-            "provider": "crossref",
-            "official_provider": False,
-            "doi": "10.1016/test-short-html",
-            "title": "Elsevier Metadata",
-            "landing_page_url": resolved.landing_url,
-            "authors": ["Alice Example"],
-            "abstract": "Fallback abstract",
-            "fulltext_links": [],
-            "references": [],
-        }
-        official_payload = RawFulltextPayload(
-            provider="elsevier",
-            source_url="https://api.elsevier.com/content/article/doi/example",
-            content_type="text/xml",
-            body=b"<xml />",
-            metadata={"route": "official", "reason": "Downloaded full text from the official Elsevier API."},
-        )
-        html = (
-            "<html><head>"
-            '<meta name="citation_title" content="Elsevier Short HTML Article" />'
-            '<meta name="citation_doi" content="10.1016/test-short-html" />'
-            "</head><body><article><h1>Elsevier Short HTML Article</h1></article></body></html>"
-        )
-        client = elsevier_provider.ElsevierClient(transport=mock.Mock(), env={"ELSEVIER_API_KEY": "secret"})
-        original_resolve = paper_fetch.resolve_paper
-        try:
-            paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
-            with tempfile.TemporaryDirectory() as tmpdir:
-                runtime = self._runtime_config(tmpdir, "elsevier", resolved.doi)
-                with (
-                    mock.patch.object(
-                        client,
-                        "fetch_metadata",
-                        return_value={
-                            "provider": "elsevier",
-                            "official_provider": True,
-                            "doi": resolved.doi,
-                            "title": "Elsevier Metadata",
-                            "landing_page_url": resolved.landing_url,
-                            "publisher": "Elsevier",
-                            "fulltext_links": [],
-                            "references": [],
-                        },
-                    ),
-                    mock.patch.object(client, "_fetch_official_payload", return_value=official_payload),
-                    mock.patch.object(client, "_official_payload_is_usable", return_value=False),
-                    mock.patch.object(elsevier_provider, "load_runtime_config", return_value=runtime),
-                    mock.patch.object(elsevier_provider, "ensure_runtime_ready"),
-                    mock.patch.object(
-                        elsevier_provider,
-                        "fetch_html_with_flaresolverr",
-                        return_value=_flaresolverr.FetchedPublisherHtml(
-                            source_url=resolved.landing_url,
-                            final_url=resolved.landing_url,
-                            html=html,
-                            response_status=200,
-                            response_headers={"content-type": "text/html"},
-                            title="Elsevier Short HTML Article",
-                            summary="Elsevier summary",
-                            browser_context_seed={},
-                        ),
-                    ),
-                    mock.patch.object(
-                        elsevier_provider.html_generic,
-                        "extract_article_markdown",
-                        return_value="# Elsevier Short HTML Article\n\nShort abstract only.",
-                    ),
-                ):
-                    article = fetch_paper_model(
-                        "10.1016/test-short-html",
-                        allow_downloads=False,
-                        clients={
-                            "elsevier": client,
-                            "crossref": StubProvider(metadata=metadata),
-                        },
-                        html_client=StubHtmlClient(article=sample_html_article()),
-                    )
-        finally:
-            paper_fetch.resolve_paper = original_resolve
-
-        self.assertEqual(article.source, "crossref_meta")
-        self.assertFalse(article.quality.has_fulltext)
-        self.assertIn("fulltext:elsevier_html_fail", article.quality.source_trail)
-        self.assertIn("fallback:elsevier_html_managed_by_provider", article.quality.source_trail)
-        self.assertIn("fallback:metadata_only", article.quality.source_trail)
-        self.assertNotIn("fallback:html_ok", article.quality.source_trail)
-        self.assertNotIn("fulltext:elsevier_pdf_fallback_ok", article.quality.source_trail)
+        self.assertNotIn("fulltext:elsevier_html_fail", article.quality.source_trail)
 
     def test_springer_provider_failure_skips_generic_html_fallback(self) -> None:
         resolved = paper_fetch.ResolvedQuery(
@@ -298,7 +299,6 @@ class ProviderManagedFallbackServiceTests(unittest.TestCase):
                         }
                     ),
                 },
-                html_client=StubHtmlClient(article=sample_html_article()),
             )
         finally:
             paper_fetch.resolve_paper = original_resolve
@@ -307,11 +307,138 @@ class ProviderManagedFallbackServiceTests(unittest.TestCase):
         self.assertIn("fallback:springer_html_managed_by_provider", article.quality.source_trail)
         self.assertNotIn("fallback:html_ok", article.quality.source_trail)
 
-    def test_elsevier_browser_route_skips_asset_downloads_with_warning(self) -> None:
+    def test_provider_managed_abstract_only_results_return_provider_article_directly(self) -> None:
+        provider_cases = {
+            "springer": ("springer_html", "10.1038/test-abstract", "https://www.nature.com/articles/test-abstract"),
+            "wiley": ("wiley_browser", "10.1111/test-abstract", "https://onlinelibrary.wiley.com/doi/full/10.1111/test-abstract"),
+            "science": ("science", "10.1126/science.test-abstract", "https://www.science.org/doi/full/10.1126/science.test-abstract"),
+            "pnas": ("pnas", "10.1073/pnas.test-abstract", "https://www.pnas.org/doi/full/10.1073/pnas.test-abstract"),
+        }
+
+        for provider_name, (source_name, doi, landing_url) in provider_cases.items():
+            with self.subTest(provider=provider_name):
+                resolved = paper_fetch.ResolvedQuery(
+                    query=doi,
+                    query_kind="doi",
+                    doi=doi,
+                    landing_url=landing_url,
+                    provider_hint=provider_name,
+                    confidence=1.0,
+                )
+                metadata = {
+                    "provider": "crossref",
+                    "official_provider": False,
+                    "doi": resolved.doi,
+                    "title": f"{provider_name.title()} Metadata",
+                    "landing_page_url": resolved.landing_url,
+                    "authors": ["Alice Example"],
+                    "abstract": "Crossref abstract",
+                    "fulltext_links": [],
+                    "references": [],
+                }
+                raw_payload = RawFulltextPayload(
+                    provider=provider_name,
+                    source_url=resolved.landing_url,
+                    content_type="text/html",
+                    body=b"<html></html>",
+                    metadata={
+                        "route": "html",
+                        "source_trail": [f"fulltext:{provider_name}_abstract_only"],
+                        "warnings": ["Provider abstract-only warning."],
+                    },
+                )
+                original_resolve = paper_fetch.resolve_paper
+                try:
+                    paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
+                    article = fetch_paper_model(
+                        resolved.doi or "",
+                        allow_downloads=False,
+                        clients={
+                            provider_name: StubProvider(
+                                metadata=paper_fetch.ProviderFailure("not_supported", "No official metadata."),
+                                raw_payload=raw_payload,
+                                article_factory=_abstract_only_article_factory(source_name),
+                            ),
+                            "crossref": StubProvider(metadata=metadata),
+                        },
+                    )
+                finally:
+                    paper_fetch.resolve_paper = original_resolve
+
+                self.assertEqual(article.source, source_name)
+                self.assertEqual(article.quality.content_kind, "abstract_only")
+                self.assertIn(f"fulltext:{provider_name}_abstract_only", article.quality.source_trail)
+                self.assertNotIn("fallback:metadata_only", article.quality.source_trail)
+                self.assertNotIn(f"fallback:{provider_name}_html_managed_by_provider", article.quality.source_trail)
+
+    def test_provider_managed_metadata_only_results_still_fall_back_to_crossref_metadata(self) -> None:
+        provider_cases = {
+            "springer": ("springer_html", "10.1038/test-metadata", "https://www.nature.com/articles/test-metadata"),
+            "wiley": ("wiley_browser", "10.1111/test-metadata", "https://onlinelibrary.wiley.com/doi/full/10.1111/test-metadata"),
+            "science": ("science", "10.1126/science.test-metadata", "https://www.science.org/doi/full/10.1126/science.test-metadata"),
+            "pnas": ("pnas", "10.1073/pnas.test-metadata", "https://www.pnas.org/doi/full/10.1073/pnas.test-metadata"),
+        }
+
+        for provider_name, (source_name, doi, landing_url) in provider_cases.items():
+            with self.subTest(provider=provider_name):
+                resolved = paper_fetch.ResolvedQuery(
+                    query=doi,
+                    query_kind="doi",
+                    doi=doi,
+                    landing_url=landing_url,
+                    provider_hint=provider_name,
+                    confidence=1.0,
+                )
+                metadata = {
+                    "provider": "crossref",
+                    "official_provider": False,
+                    "doi": resolved.doi,
+                    "title": f"{provider_name.title()} Metadata",
+                    "landing_page_url": resolved.landing_url,
+                    "authors": ["Alice Example"],
+                    "abstract": "Crossref abstract",
+                    "fulltext_links": [],
+                    "references": [],
+                }
+                raw_payload = RawFulltextPayload(
+                    provider=provider_name,
+                    source_url=resolved.landing_url,
+                    content_type="text/html",
+                    body=b"<html></html>",
+                    metadata={
+                        "route": "html",
+                        "source_trail": [f"fulltext:{provider_name}_html_fail"],
+                        "warnings": ["Provider metadata-only warning."],
+                    },
+                )
+                original_resolve = paper_fetch.resolve_paper
+                try:
+                    paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
+                    article = fetch_paper_model(
+                        resolved.doi or "",
+                        allow_downloads=False,
+                        clients={
+                            provider_name: StubProvider(
+                                metadata=paper_fetch.ProviderFailure("not_supported", "No official metadata."),
+                                raw_payload=raw_payload,
+                                article_factory=_metadata_only_article_factory(source_name),
+                            ),
+                            "crossref": StubProvider(metadata=metadata),
+                        },
+                    )
+                finally:
+                    paper_fetch.resolve_paper = original_resolve
+
+                self.assertEqual(article.source, "crossref_meta")
+                self.assertEqual(article.quality.content_kind, "abstract_only")
+                self.assertIn(f"fallback:{provider_name}_html_managed_by_provider", article.quality.source_trail)
+                self.assertIn("fallback:metadata_only", article.quality.source_trail)
+
+    def test_elsevier_pdf_route_skips_asset_downloads_with_warning(self) -> None:
         resolved = paper_fetch.ResolvedQuery(
-            query="10.1016/test-browser",
+            query="10.1016/test-pdf-assets",
             query_kind="doi",
-            doi="10.1016/test-browser",
+            doi="10.1016/test-pdf-assets",
             landing_url="https://www.sciencedirect.com/science/article/pii/S0034425725000525",
             provider_hint="elsevier",
             confidence=1.0,
@@ -319,40 +446,44 @@ class ProviderManagedFallbackServiceTests(unittest.TestCase):
         metadata = {
             "provider": "crossref",
             "official_provider": False,
-            "doi": "10.1016/test-browser",
-            "title": "Elsevier Browser Article",
+            "doi": "10.1016/test-pdf-assets",
+            "title": "Elsevier PDF Article",
             "landing_page_url": resolved.landing_url,
             "authors": ["Alice Example"],
             "fulltext_links": [],
             "references": [],
         }
         raw_payload = RawFulltextPayload(
-            provider="elsevier_browser",
-            source_url=resolved.landing_url,
-            content_type="text/html",
-            body=b"<html></html>",
+            provider="elsevier",
+            source_url=f"{resolved.landing_url}.pdf",
+            content_type="application/pdf",
+            body=fulltext_pdf_bytes(),
             metadata={
-                "route": "html",
-                "markdown_text": "# Elsevier Browser Article\n\n## Results\n\n" + ("Body text " * 80),
-                "source_trail": ["fulltext:elsevier_xml_fail", "fulltext:elsevier_html_ok"],
+                "route": "pdf_fallback",
+                "markdown_text": "# Elsevier PDF Article\n\n## Results\n\n" + ("Body text " * 80),
+                "source_trail": [
+                    "fulltext:elsevier_xml_fail",
+                    "fulltext:elsevier_pdf_api_ok",
+                    "fulltext:elsevier_pdf_fallback_ok",
+                ],
             },
-            needs_local_copy=False,
+            needs_local_copy=True,
         )
         original_resolve = paper_fetch.resolve_paper
         try:
             paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
             with tempfile.TemporaryDirectory() as tmpdir:
                 article = fetch_paper_model(
-                    "10.1016/test-browser",
+                    "10.1016/test-pdf-assets",
                     asset_profile="body",
                     output_dir=Path(tmpdir),
                     clients={
                         "elsevier": StubProvider(
                             metadata=paper_fetch.ProviderFailure("not_supported", "No official metadata."),
                             raw_payload=raw_payload,
-                            article_factory=_article_factory_with_source("elsevier_browser"),
+                            article_factory=_article_factory_with_source("elsevier_pdf"),
                             related_asset_factory=lambda *args, **kwargs: (_ for _ in ()).throw(
-                                AssertionError("Elsevier browser route should skip asset downloads.")
+                                AssertionError("Elsevier PDF fallback should skip asset downloads.")
                             ),
                         ),
                         "crossref": StubProvider(metadata=metadata),
@@ -361,9 +492,9 @@ class ProviderManagedFallbackServiceTests(unittest.TestCase):
         finally:
             paper_fetch.resolve_paper = original_resolve
 
-        self.assertEqual(article.source, "elsevier_browser")
+        self.assertEqual(article.source, "elsevier_pdf")
         self.assertIn("download:elsevier_assets_skipped_text_only", article.quality.source_trail)
-        self.assertTrue(any("Elsevier browser fallback currently returns text-only" in warning for warning in article.quality.warnings))
+        self.assertTrue(any("Elsevier PDF fallback currently returns text-only" in warning for warning in article.quality.warnings))
 
     def test_springer_pdf_route_skips_asset_downloads_with_warning(self) -> None:
         resolved = paper_fetch.ResolvedQuery(

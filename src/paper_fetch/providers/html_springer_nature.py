@@ -7,13 +7,15 @@ import urllib.parse
 from typing import Any
 
 from ..models import normalize_text
-from ._html_citations import clean_citation_markers
+from ._html_citations import clean_citation_markers, normalize_inline_citation_markdown
+from ._html_semantics import identity_category, node_identity_text
 from ._html_section_markdown import (
     extract_section_title,
     normalize_section_title,
-    render_clean_text_from_html,
+    render_heading_text_from_html,
     render_container_markdown,
     render_section_markdown,
+    section_has_direct_renderable_content,
 )
 from .html_noise import clean_markdown, count_words
 
@@ -99,7 +101,20 @@ def select_springer_nature_article_root(root: Any):
 def select_nature_abstract_section(body: Any):
     if BeautifulSoup is None or body is None:
         return None
-    for section in body.find_all("section", recursive=False):
+    direct_children = [child for child in body.find_all(["section", "div"], recursive=False) if isinstance(child, Tag)]
+    for section in direct_children:
+        if identity_category(node_identity_text(section)) == "abstract":
+            return section
+    for section in direct_children:
+        if any(section.select_one(selector) is not None for selector in SPRINGER_NATURE_SECTION_CONTENT_SELECTORS):
+            if identity_category(node_identity_text(section)) == "abstract":
+                return section
+            label_text = normalize_text(
+                str((getattr(section, "attrs", None) or {}).get("data-title") or (getattr(section, "attrs", None) or {}).get("aria-labelledby") or "")
+            )
+            if "abstract" in label_text.lower():
+                return section
+    for section in direct_children:
         if normalize_section_title(extract_section_title(section)) == "abstract":
             return section
     return None
@@ -108,6 +123,14 @@ def select_nature_abstract_section(body: Any):
 def clean_springer_nature_text_fragment(text: str) -> str:
     cleaned = clean_citation_markers(normalize_text(text))
     return normalize_text(cleaned)
+
+
+def _normalized_nature_section_heading(section: Any) -> str:
+    title = extract_section_title(section)
+    normalized = normalize_section_title(title)
+    if normalized == "online methods":
+        return "Methods"
+    return title
 
 
 def extract_springer_nature_markdown(html_text: str, source_url: str) -> str:
@@ -121,7 +144,7 @@ def extract_springer_nature_markdown(html_text: str, source_url: str) -> str:
 
     lines: list[str] = []
     title_node = article.select_one("h1")
-    title_text = render_clean_text_from_html(title_node)
+    title_text = render_heading_text_from_html(title_node)
     if title_text:
         lines.extend([f"# {title_text}", ""])
 
@@ -140,10 +163,25 @@ def extract_springer_nature_markdown(html_text: str, source_url: str) -> str:
         sections = main.find_all("section", recursive=False) if main is not None else []
         if sections:
             for section in sections:
+                heading = _normalized_nature_section_heading(section)
+                if normalize_section_title(heading) == "main" and not section_has_direct_renderable_content(
+                    section,
+                    section_content_selectors=SPRINGER_NATURE_SECTION_CONTENT_SELECTORS,
+                ):
+                    content_root = section.select_one("div.c-article-section__content") or section
+                    render_container_markdown(
+                        content_root,
+                        lines,
+                        level=2,
+                        skip_first_heading=extract_section_title(section) or None,
+                        section_content_selectors=SPRINGER_NATURE_SECTION_CONTENT_SELECTORS,
+                    )
+                    continue
                 render_section_markdown(
                     section,
                     lines,
                     level=2,
+                    force_heading=heading or None,
                     section_content_selectors=SPRINGER_NATURE_SECTION_CONTENT_SELECTORS,
                 )
         elif main is not None:
@@ -173,7 +211,8 @@ def postprocess_springer_nature_markdown(markdown_text: str) -> str:
         markdown_text,
         unwrap_inline_links=True,
         normalize_labels=True,
-        drop_figure_lines=True,
+        drop_figure_lines=False,
     )
     cleaned = re.sub(r"(?m)^\s*[-*]\s*$", "", cleaned)
+    cleaned = normalize_inline_citation_markdown(cleaned)
     return clean_markdown(cleaned, noise_profile="springer_nature")

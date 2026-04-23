@@ -1,14 +1,16 @@
 from __future__ import annotations
 
 import os
+import tempfile
 import unittest
 from pathlib import Path
 
-from paper_fetch.config import build_runtime_env, resolve_flaresolverr_source_dir, resolve_flaresolverr_url
+from paper_fetch.config import resolve_flaresolverr_source_dir, resolve_flaresolverr_url
 from paper_fetch.http import HttpTransport
 from paper_fetch.providers.base import ProviderFailure
 from paper_fetch.providers._flaresolverr import health_check
 from paper_fetch.service import FetchStrategy, fetch_paper
+from tests.live._runtime_env import build_isolated_live_env
 from tests.provider_benchmark_samples import provider_benchmark_sample, source_trail_matches
 
 
@@ -22,7 +24,6 @@ def fetch_article(query: str, *, transport: HttpTransport, env: dict[str, str]):
         query,
         modes={"article"},
         strategy=FetchStrategy(
-            allow_html_fallback=False,
             allow_metadata_only_fallback=True,
         ),
         download_dir=None,
@@ -35,12 +36,19 @@ def fetch_article(query: str, *, transport: HttpTransport, env: dict[str, str]):
 
 class LiveSciencePnasTests(unittest.TestCase):
     needs_flaresolverr = True
+    runtime_env_tempdir: tempfile.TemporaryDirectory | None = None
 
     @classmethod
     def setUpClass(cls) -> None:
         if not RUN_LIVE:
             raise unittest.SkipTest("Set PAPER_FETCH_RUN_LIVE=1 to run live Science / PNAS smoke tests.")
-        cls.env = build_runtime_env()
+        cls.env, cls.runtime_env_tempdir = build_isolated_live_env()
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        runtime_env_tempdir = getattr(cls, "runtime_env_tempdir", None)
+        if runtime_env_tempdir is not None:
+            runtime_env_tempdir.cleanup()
 
     def _require_env(self, *keys: str) -> None:
         missing = [key for key in keys if not self.env.get(key, "").strip()]

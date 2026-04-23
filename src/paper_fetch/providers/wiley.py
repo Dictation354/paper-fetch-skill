@@ -5,12 +5,15 @@ from __future__ import annotations
 import urllib.parse
 from typing import Any, Mapping
 
+from ..metadata_types import ProviderMetadata
 from ..http import DEFAULT_FULLTEXT_TIMEOUT_SECONDS, RequestFailure
+from ..tracing import trace_from_markers
 from ..utils import normalize_text
-from . import _science_pnas
+from . import _science_pnas, _wiley_html
 from ._pdf_fallback import PdfFallbackFailure, fetch_pdf_over_http
 from ._pdf_common import PdfFetchResult, filename_from_headers, looks_like_pdf_payload, pdf_fetch_result_from_bytes
 from .base import (
+    ProviderContent,
     ProviderFailure,
     ProviderStatusResult,
     RawFulltextPayload,
@@ -123,6 +126,42 @@ class WileyClient(_science_pnas.BrowserWorkflowClient):
             ],
         )
 
+    def html_candidates(self, doi: str, metadata: ProviderMetadata) -> list[str]:
+        landing_page_url = str(metadata.get("landing_page_url") or "") or None
+        return _wiley_html.build_html_candidates(doi, landing_page_url)
+
+    def pdf_candidates(self, doi: str, metadata: ProviderMetadata) -> list[str]:
+        return _wiley_html.build_pdf_candidates(doi, _science_pnas.extract_pdf_url_from_crossref(metadata))
+
+    def extract_markdown(
+        self,
+        html_text: str,
+        final_url: str,
+        *,
+        metadata: ProviderMetadata,
+    ) -> tuple[str, dict[str, Any]]:
+        return _wiley_html.extract_markdown(html_text, final_url, metadata=metadata)
+
+    def to_article_model(
+        self,
+        metadata: ProviderMetadata,
+        raw_payload: RawFulltextPayload,
+        *,
+        downloaded_assets: list[Mapping[str, Any]] | None = None,
+        asset_failures: list[Mapping[str, Any]] | None = None,
+    ):
+        return _science_pnas.browser_workflow_article_from_payload(
+            self,
+            _science_pnas.merge_provider_owned_authors(
+                metadata,
+                raw_payload,
+                fallback_extractor=_wiley_html.extract_authors,
+            ),
+            raw_payload,
+            downloaded_assets=downloaded_assets,
+            asset_failures=asset_failures,
+        )
+
     def fetch_raw_fulltext(self, doi: str, metadata: Mapping[str, Any]) -> RawFulltextPayload:
         bootstrap = _science_pnas.bootstrap_browser_workflow(self, doi, metadata, allow_runtime_failure=True)
         if bootstrap.html_payload is not None:
@@ -152,19 +191,24 @@ class WileyClient(_science_pnas.BrowserWorkflowClient):
                     source_url=pdf_result.final_url,
                     content_type="application/pdf",
                     body=pdf_result.pdf_bytes,
-                    metadata={
-                        "route": "pdf_fallback",
-                        "markdown_text": pdf_result.markdown_text,
-                        "warnings": warnings,
-                        "html_failure_reason": bootstrap.html_failure_reason,
-                        "html_failure_message": bootstrap.html_failure_message,
-                        "source_trail": [
+                    content=ProviderContent(
+                        route_kind="pdf_fallback",
+                        source_url=pdf_result.final_url,
+                        content_type="application/pdf",
+                        body=pdf_result.pdf_bytes,
+                        markdown_text=pdf_result.markdown_text,
+                        html_failure_reason=bootstrap.html_failure_reason,
+                        html_failure_message=bootstrap.html_failure_message,
+                        suggested_filename=pdf_result.suggested_filename,
+                    ),
+                    warnings=list(warnings),
+                    trace=trace_from_markers(
+                        [
                             f"fulltext:{self.name}_html_fail",
                             f"fulltext:{self.name}_pdf_api_ok",
                             f"fulltext:{self.name}_pdf_fallback_ok",
-                        ],
-                        "suggested_filename": pdf_result.suggested_filename,
-                    },
+                        ]
+                    ),
                     needs_local_copy=True,
                 )
             except PdfFallbackFailure as exc:

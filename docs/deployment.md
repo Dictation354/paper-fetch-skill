@@ -10,10 +10,10 @@
 这份文档不解决：
 
 - provider 差异、路由规则和限速语义
-- Elsevier browser fallback / Wiley / Science / PNAS 的详细运维步骤
+- Wiley / Science / PNAS 的详细运维步骤
 - 架构实现细节
 
-provider 与环境变量说明见 [`providers.md`](providers.md)，Elsevier browser fallback / Wiley / Science / PNAS 运维说明见 [`flaresolverr.md`](flaresolverr.md)。
+provider 与环境变量说明见 [`providers.md`](providers.md)，Wiley / Science / PNAS 运维说明见 [`flaresolverr.md`](flaresolverr.md)。
 
 ## 1. 安装 Python 包
 
@@ -81,11 +81,13 @@ paper-fetch-install-formula-tools
 - `paper-fetch-install-formula-tools` 会把工具装到用户数据目录，更适合部署环境
 - `./install-formula-tools.sh` 会把工具装到当前仓库的 `./.formula-tools/`
 
-## 4. Elsevier Browser Fallback / Wiley / Science / PNAS 接入入口
+## 4. Elsevier / Wiley / Science / PNAS 接入入口
 
-`elsevier` browser fallback、`wiley`、`science`、`pnas` 不是“装完 wheel 就自动可用”的浏览器路径。
+`elsevier` 现在不再依赖 FlareSolverr 浏览器链路；它只需要官方 API 凭据，并走 `官方 XML/API -> 官方 API PDF fallback -> metadata-only`。
 
-如果你要启用它们，至少还需要：
+`wiley`、`science`、`pnas` 仍然不是“装完 wheel 就自动可用”的浏览器路径。
+
+如果你要启用后面三家的浏览器链路，至少还需要：
 
 - 准备 repo-local `vendor/flaresolverr/`
 - 设置 `FLARESOLVERR_ENV_FILE`
@@ -94,7 +96,7 @@ paper-fetch-install-formula-tools
 补充：
 
 - `wiley` / `science` / `pnas` 还需要 Playwright Chromium，因为它们仍有 seeded-browser PDF/ePDF fallback
-- `elsevier` 现在只走 `官方 XML/API -> FlareSolverr HTML -> metadata-only`
+- `elsevier` 只需要 `ELSEVIER_API_KEY`
 - `wiley` 现在走 `FlareSolverr HTML -> Wiley TDM API PDF -> seeded-browser publisher PDF/ePDF -> metadata-only`
 
 最常见入口是：
@@ -196,11 +198,11 @@ python3 -m pip install .
 paper-fetch --query "10.1186/1471-2105-11-421"
 ```
 
-如果你在仓库源码目录里做 repo-local 验证，推荐显式带上 `PYTHONPATH=src`：
+如果你在仓库源码目录里做 repo-local 验证，推荐显式带上 `PYTHONPATH=src`。默认 `pytest` 只覆盖 `tests/unit` + `tests/integration` 并启用多进程并行；`tests/live` 需要显式指定路径并串行运行：
 
 ```bash
-PYTHONPATH=src python3 -m unittest -q tests.unit.test_cli tests.unit.test_service tests.unit.test_mcp
-PYTHONPATH=src python3 -m unittest discover -s tests -q
+PYTHONPATH=src pytest tests/unit/test_cli.py tests/unit/test_service.py tests/unit/test_mcp.py
+PYTHONPATH=src pytest
 ```
 
 如果你要额外验证 `wiley` / `science` / `pnas` live 路径，请先按 [`flaresolverr.md`](flaresolverr.md) 准备环境，再运行对应 live 测试。

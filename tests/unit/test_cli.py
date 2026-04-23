@@ -273,6 +273,135 @@ class CliTests(unittest.TestCase):
             self.assertIn("[Backup](10.1016_test_assets/figure-1.png.backup)", rewritten)
             self.assertIn(f"Body mentions {figure_path} and {supplementary_path}.", rewritten)
 
+    def test_rewrite_markdown_asset_links_rewrites_inline_section_images_without_touching_plain_text_paths(self) -> None:
+        article = sample_article()
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            output_dir = Path(tmpdir) / "downloads"
+            output_dir.mkdir(parents=True)
+            asset_dir = output_dir / "10.1016_test_assets"
+            asset_dir.mkdir()
+            figure_path = asset_dir / "figure-1.png"
+            figure_path.write_bytes(b"figure")
+            article.sections[0].text = "\n".join(
+                [
+                    "Body mentions the original path in prose:",
+                    str(figure_path),
+                    "",
+                    f"![Figure 1]({figure_path})",
+                    "",
+                    "**Figure 1.** Inline caption text.",
+                ]
+            )
+            article.assets = [
+                Asset(kind="figure", heading="Figure 1", caption="Inline caption text.", path=str(figure_path), section="body")
+            ]
+            envelope = paper_fetch.build_fetch_envelope(
+                article,
+                modes={"article", "markdown"},
+                render=RenderOptions(asset_profile="body"),
+            )
+
+            rewritten = paper_fetch_cli.rewrite_markdown_asset_links(
+                envelope.markdown or "",
+                envelope,
+                target_path=output_dir / "article.md",
+                render=RenderOptions(asset_profile="body"),
+            )
+
+            self.assertIn("![Figure 1](10.1016_test_assets/figure-1.png)", rewritten)
+            self.assertIn(str(figure_path), rewritten)
+            self.assertEqual(rewritten.count(str(figure_path)), 1)
+
+    def test_rewrite_markdown_asset_links_maps_remote_figure_urls_to_downloaded_local_assets(self) -> None:
+        article = sample_article()
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            output_dir = Path(tmpdir) / "downloads"
+            output_dir.mkdir(parents=True)
+            asset_dir = output_dir / "10.1073_pnas.1219683110_assets"
+            asset_dir.mkdir()
+            figure_path = asset_dir / "pnas.1219683110fig03.jpeg"
+            figure_path.write_bytes(b"figure")
+            article.sections[0].text = "\n".join(
+                [
+                    "Remote image before local rewrite:",
+                    "![Figure 3](https://www.pnas.org/cms/10.1073/pnas.1219683110/asset/example/assets/graphic/pnas.1219683110fig03.jpeg)",
+                    "",
+                    "**Figure 3.** Inline caption text.",
+                ]
+            )
+            article.assets = [
+                Asset(
+                    kind="figure",
+                    heading="Figure 3",
+                    caption="Inline caption text.",
+                    path=str(figure_path),
+                    section="body",
+                )
+            ]
+            envelope = paper_fetch.build_fetch_envelope(
+                article,
+                modes={"article", "markdown"},
+                render=RenderOptions(asset_profile="body"),
+            )
+
+            rewritten = paper_fetch_cli.rewrite_markdown_asset_links(
+                envelope.markdown or "",
+                envelope,
+                target_path=output_dir / "article.md",
+                render=RenderOptions(asset_profile="body"),
+            )
+
+            self.assertIn("![Figure 3](10.1073_pnas.1219683110_assets/pnas.1219683110fig03.jpeg)", rewritten)
+            self.assertNotIn("https://www.pnas.org/cms/10.1073/pnas.1219683110/asset/example", rewritten)
+
+    def test_rewrite_markdown_asset_links_rewrites_repo_relative_local_paths_against_output_file(self) -> None:
+        article = sample_article()
+
+        with tempfile.TemporaryDirectory(dir=Path.cwd()) as tmpdir:
+            repo_root = Path(tmpdir)
+            output_dir = repo_root / "scratch_outputs" / "10.1073_pnas.1219683110"
+            output_dir.mkdir(parents=True)
+            asset_dir = output_dir / "10.1073_pnas.1219683110_assets"
+            asset_dir.mkdir()
+            figure_path = asset_dir / "pnas.1219683110fig01.jpeg"
+            figure_path.write_bytes(b"figure")
+            repo_relative_path = figure_path.relative_to(Path.cwd())
+
+            article.sections[0].text = "\n".join(
+                [
+                    "Repo-relative image before local rewrite:",
+                    f"![Figure 1]({repo_relative_path.as_posix()})",
+                    "",
+                    "**Figure 1.** Inline caption text.",
+                ]
+            )
+            article.assets = [
+                Asset(
+                    kind="figure",
+                    heading="Figure 1",
+                    caption="Inline caption text.",
+                    path=repo_relative_path.as_posix(),
+                    section="body",
+                )
+            ]
+            envelope = paper_fetch.build_fetch_envelope(
+                article,
+                modes={"article", "markdown"},
+                render=RenderOptions(asset_profile="body"),
+            )
+
+            rewritten = paper_fetch_cli.rewrite_markdown_asset_links(
+                envelope.markdown or "",
+                envelope,
+                target_path=output_dir / "10.1073_pnas.1219683110.md",
+                render=RenderOptions(asset_profile="body"),
+            )
+
+            self.assertIn("![Figure 1](10.1073_pnas.1219683110_assets/pnas.1219683110fig01.jpeg)", rewritten)
+            self.assertNotIn(f"![Figure 1]({repo_relative_path.as_posix()})", rewritten)
+
     def test_main_rewrites_local_asset_links_for_both_output_file(self) -> None:
         article = sample_article()
 
@@ -324,7 +453,7 @@ class CliTests(unittest.TestCase):
             self.assertIn("![Figure 1](10.1016_test_assets/figure-1.png)", payload["markdown"])
             self.assertNotIn(str(figure_path), payload["markdown"])
 
-    def test_main_defaults_to_full_text_and_asset_profile_none(self) -> None:
+    def test_main_defaults_to_full_text_and_provider_default_asset_profile(self) -> None:
         article = sample_article()
         captured: dict[str, object] = {}
 
@@ -350,14 +479,13 @@ class CliTests(unittest.TestCase):
 
         self.assertEqual(exit_code, 0)
         self.assertEqual(stderr.getvalue(), "")
-        self.assertEqual(captured["render"], RenderOptions(include_refs=None, asset_profile="none", max_tokens="full_text"))
+        self.assertEqual(captured["render"], RenderOptions(include_refs=None, asset_profile=None, max_tokens="full_text"))
         self.assertEqual(
             captured["strategy"],
             paper_fetch.FetchStrategy(
-                allow_html_fallback=True,
                 allow_metadata_only_fallback=True,
                 preferred_providers=None,
-                asset_profile="none",
+                asset_profile=None,
             ),
         )
 

@@ -12,10 +12,18 @@ SRC_DIR = REPO_ROOT / "src"
 if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
-from paper_fetch.geography_issue_artifacts import default_issue_artifact_output_dir, export_geography_issue_artifacts
+
+def _load_issue_artifact_exports():
+    from paper_fetch.geography_issue_artifacts import (
+        default_issue_artifact_output_dir,
+        export_geography_issue_artifacts,
+    )
+
+    return default_issue_artifact_output_dir, export_geography_issue_artifacts
 
 
 def build_parser() -> argparse.ArgumentParser:
+    default_issue_artifact_output_dir, _ = _load_issue_artifact_exports()
     parser = argparse.ArgumentParser(description="Export issue-flagged geography live artifacts without MCP.")
     parser.add_argument(
         "--report-json",
@@ -42,6 +50,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main() -> int:
+    _, export_geography_issue_artifacts = _load_issue_artifact_exports()
     parser = build_parser()
     args = parser.parse_args()
     summary = export_geography_issue_artifacts(

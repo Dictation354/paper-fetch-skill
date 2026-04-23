@@ -79,51 +79,19 @@ class ProviderStatusTests(unittest.TestCase):
 
         self.assertEqual(result.status, "not_configured")
         self.assertFalse(result.available)
-        self.assertIn("ELSEVIER_API_KEY", result.missing_env)
-        self.assertIn("FLARESOLVERR_ENV_FILE", result.missing_env)
+        self.assertEqual(result.missing_env, ["ELSEVIER_API_KEY"])
+        self.assertEqual(len(result.checks), 1)
         self.assertEqual(result.checks[0].name, "fulltext_api")
         self.assertEqual(result.checks[0].status, "not_configured")
 
-    def test_elsevier_status_is_partial_when_api_is_ready_but_browser_fallback_is_not(self) -> None:
+    def test_elsevier_status_is_ready_when_api_is_configured(self) -> None:
         result = ElsevierClient(DummyTransport(), {"ELSEVIER_API_KEY": "secret"}).probe_status()
-        checks = {check.name: check for check in result.checks}
-
-        self.assertEqual(result.status, "partial")
-        self.assertTrue(result.available)
-        self.assertEqual(checks["fulltext_api"].status, "ok")
-        self.assertEqual(checks["runtime_env"].status, "not_configured")
-        self.assertIn("FLARESOLVERR_ENV_FILE", result.missing_env)
-
-    def test_elsevier_status_is_partial_when_browser_fallback_is_ready_but_api_is_not(self) -> None:
-        with tempfile.TemporaryDirectory() as tmpdir:
-            env = self._browser_env(tmpdir, provider="elsevier", create_env_file=True, create_workflow=True)
-            with mock.patch.object(_flaresolverr, "health_check", return_value=None):
-                result = ElsevierClient(DummyTransport(), env).probe_status()
-        checks = {check.name: check for check in result.checks}
-
-        self.assertEqual(result.status, "partial")
-        self.assertTrue(result.available)
-        self.assertEqual(checks["fulltext_api"].status, "not_configured")
-        self.assertEqual(checks["runtime_env"].status, "ok")
-        self.assertEqual(checks["repo_local_workflow"].status, "ok")
-        self.assertEqual(checks["flaresolverr_health"].status, "ok")
-        self.assertEqual(checks["rate_limit_window"].status, "ok")
-        self.assertIn("ELSEVIER_API_KEY", result.missing_env)
-
-    def test_elsevier_status_is_ready_when_api_and_browser_fallback_are_ready(self) -> None:
-        with tempfile.TemporaryDirectory() as tmpdir:
-            env = {
-                **self._browser_env(tmpdir, provider="elsevier", create_env_file=True, create_workflow=True),
-                "ELSEVIER_API_KEY": "secret",
-            }
-            with mock.patch.object(_flaresolverr, "health_check", return_value=None):
-                result = ElsevierClient(DummyTransport(), env).probe_status()
-        checks = {check.name: check for check in result.checks}
-
         self.assertEqual(result.status, "ready")
         self.assertTrue(result.available)
-        self.assertEqual(checks["fulltext_api"].status, "ok")
-        self.assertTrue(all(check.status == "ok" for check in result.checks))
+        self.assertEqual(result.missing_env, [])
+        self.assertEqual(len(result.checks), 1)
+        self.assertEqual(result.checks[0].name, "fulltext_api")
+        self.assertEqual(result.checks[0].status, "ok")
 
     def test_springer_direct_html_route_is_ready_without_env(self) -> None:
         result = SpringerClient(DummyTransport(), {}).probe_status()

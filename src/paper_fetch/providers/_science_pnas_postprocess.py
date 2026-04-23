@@ -2,13 +2,15 @@
 
 from __future__ import annotations
 
+import os
 import re
+import urllib.parse
 from typing import Any, Callable, Mapping
 
 from ..models import normalize_markdown_text
 from ..utils import normalize_text
-from ._html_availability import BACK_MATTER_TOKENS, _heading_category, _normalize_heading, node_identity_text
-from ._html_citations import clean_citation_markers
+from ._html_structure import BACK_MATTER_TOKENS, heading_category, node_identity_text, normalize_heading
+from ._html_citations import clean_citation_markers, normalize_inline_citation_markdown
 from ._html_tables import inject_inline_table_blocks as _shared_inject_inline_table_blocks
 
 try:
@@ -18,8 +20,11 @@ except ImportError:  # pragma: no cover - dependency is declared in pyproject
     Tag = None
 
 FIGURE_LABEL_PATTERN = re.compile(r"\bfig(?:ure)?\.?\s*(\d+[A-Za-z]?)\b", flags=re.IGNORECASE)
-MARKDOWN_FIGURE_BLOCK_PATTERN = re.compile(r"^\*\*(Figure\s+\d+[A-Za-z]?\.?)\*\*(?:\s+.*)?$", flags=re.IGNORECASE)
+FIGURE_BASENAME_PATTERN = re.compile(r"(?:^|[^a-z])fig(?:ure)?[_-]?0*(\d+[A-Za-z]?)(?=$|[^a-z0-9])", flags=re.IGNORECASE)
+SHORT_FIGURE_BASENAME_PATTERN = re.compile(r"(?:^|[^a-z])f[_-]?0*(\d+[A-Za-z]?)(?=$|[^a-z0-9])", flags=re.IGNORECASE)
+MARKDOWN_FIGURE_BLOCK_PATTERN = re.compile(r"^\*\*(Figure\s+\d+[A-Za-z]?\.?)\*\*(?:[\s\S]*)$", flags=re.IGNORECASE)
 MARKDOWN_IMAGE_BLOCK_PATTERN = re.compile(r"^!\[([^\]]*)\]\(([^)]+)\)$")
+NUMBERED_SECTION_HEADING_PATTERN = re.compile(r"^\d+(?:\.\d+)*\s+\S")
 
 
 def _soup_root(node: Tag | None) -> BeautifulSoup | None:
@@ -46,19 +51,53 @@ def _append_text_block(parent: Tag, text: str, *, tag_name: str = "p", soup: Bea
     parent.append(block)
 
 
+def _heading_nodes(container: Tag) -> list[Tag]:
+    return [node for node in container.find_all(re.compile(r"^h[1-6]$")) if isinstance(node, Tag)]
+
+
+def _is_frontmatter_wiley_abbreviations_heading(container: Tag, heading: Tag) -> bool:
+    headings = _heading_nodes(container)
+    try:
+        heading_index = headings.index(heading)
+    except ValueError:
+        return False
+
+    abstract_index = next(
+        (index for index, node in enumerate(headings) if normalize_heading(_short_text(node)) == "abstract"),
+        None,
+    )
+    first_numbered_body_index = next(
+        (
+            index
+            for index, node in enumerate(headings)
+            if NUMBERED_SECTION_HEADING_PATTERN.match(normalize_heading(_short_text(node)))
+        ),
+        None,
+    )
+    return (
+        abstract_index is not None
+        and first_numbered_body_index is not None
+        and abstract_index < heading_index < first_numbered_body_index
+    )
+
+
 def move_wiley_abbreviations_to_end(container: Tag) -> None:
     soup = _soup_root(container)
     if soup is None:
         return
-    headings = [
-        node
-        for node in container.find_all(re.compile(r"^h[1-6]$"))
-        if _normalize_heading(_short_text(node)) == "abbreviations"
-    ]
-    if not headings:
+
+    heading = next(
+        (
+            node
+            for node in _heading_nodes(container)
+            if normalize_heading(_short_text(node)) == "abbreviations"
+            and _is_frontmatter_wiley_abbreviations_heading(container, node)
+        ),
+        None,
+    )
+    if heading is None:
         return
 
-    heading = headings[0]
     parent = heading.parent if isinstance(heading.parent, Tag) else None
     if parent is None:
         return
@@ -104,7 +143,7 @@ def move_wiley_abbreviations_to_end(container: Tag) -> None:
         child_heading_text = _short_text(child_heading) if isinstance(child_heading, Tag) else ""
         if (
             any(token in node_identity_text(child) for token in BACK_MATTER_TOKENS)
-            or _heading_category("h2", child_heading_text) == "references_or_back_matter"
+            or heading_category("h2", child_heading_text) == "references_or_back_matter"
         ):
             insert_before = child
             break
@@ -163,6 +202,30 @@ def _canonical_figure_label(text: str) -> str | None:
     return f"figure {match.group(1).lower()}"
 
 
+def _canonical_figure_label_from_asset(asset: Mapping[str, Any]) -> str | None:
+    for field in ("heading",):
+        candidate = _canonical_figure_label(str(asset.get(field) or ""))
+        if candidate:
+            return candidate
+
+    for field in ("full_size_url", "url", "preview_url", "source_url", "original_url", "path"):
+        raw_value = normalize_text(str(asset.get(field) or ""))
+        if not raw_value:
+            continue
+        parsed_path = urllib.parse.urlparse(raw_value).path or raw_value
+        basename = normalize_text(os.path.basename(urllib.parse.unquote(parsed_path))).lower()
+        if not basename:
+            continue
+        match = FIGURE_BASENAME_PATTERN.search(basename) or SHORT_FIGURE_BASENAME_PATTERN.search(basename)
+        if match:
+            return f"figure {match.group(1).lower()}"
+    for field in ("caption",):
+        candidate = _canonical_figure_label(str(asset.get(field) or ""))
+        if candidate:
+            return candidate
+    return None
+
+
 def _inline_figure_markdown_entries(
     figure_assets: list[Mapping[str, Any]] | None,
 ) -> list[dict[str, str]]:
@@ -190,11 +253,7 @@ def _inline_figure_markdown_entries(
             {
                 "url": url,
                 "heading": normalize_text(str(asset.get("heading") or "Figure")) or "Figure",
-                "label_key": _canonical_figure_label(
-                    normalize_text(str(asset.get("heading") or ""))
-                    or normalize_text(str(asset.get("caption") or ""))
-                )
-                or "",
+                "label_key": _canonical_figure_label_from_asset(asset) or "",
                 "aliases": "\n".join(aliases),
             }
         )
@@ -323,8 +382,10 @@ def normalize_browser_workflow_markdown(
     *,
     markdown_postprocess: Callable[[str], str] | None = None,
 ) -> str:
+    # Shared cleanup runs for every browser-workflow publisher before any
+    # provider-specific markdown hook, such as Science citation italic repair.
     normalized = normalize_equation_markdown_blocks(markdown_text)
     normalized = clean_citation_markers(normalized)
     if markdown_postprocess is not None:
         normalized = markdown_postprocess(normalized)
-    return normalized
+    return normalize_inline_citation_markdown(normalized)

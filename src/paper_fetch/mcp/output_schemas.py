@@ -81,6 +81,32 @@ class TokenEstimateBreakdownOutput(TypedDict, total=False):
     refs: int
 
 
+class BodyMetricsOutput(TypedDict, total=False):
+    char_count: int
+    word_count: int
+    body_block_count: int
+    body_heading_count: int
+    body_to_abstract_ratio: float
+    explicit_body_container: bool
+    post_abstract_body_run: bool
+    figure_count: int
+
+
+class SemanticLossesOutput(TypedDict, total=False):
+    table_fallback_count: int
+    table_lossy_count: int
+    formula_fallback_count: int
+    formula_missing_count: int
+
+
+class TraceEventOutput(TypedDict, total=False):
+    stage: str
+    component: str
+    outcome: str
+    code: str | None
+    message: str | None
+
+
 class QualityOutput(TypedDict, total=False):
     has_fulltext: bool
     content_kind: str
@@ -89,6 +115,12 @@ class QualityOutput(TypedDict, total=False):
     token_estimate_breakdown: TokenEstimateBreakdownOutput
     warnings: list[str]
     source_trail: list[str]
+    trace: list[TraceEventOutput]
+    confidence: str
+    flags: list[str]
+    body_metrics: BodyMetricsOutput
+    semantic_losses: SemanticLossesOutput
+    extraction_revision: int
 
 
 class ArticleOutput(TypedDict, total=False):
@@ -109,8 +141,10 @@ class FetchPaperOutput(ErrorPayloadOutput, total=False):
     has_abstract: bool
     warnings: list[str]
     source_trail: list[str]
+    trace: list[TraceEventOutput]
     token_estimate: int
     token_estimate_breakdown: TokenEstimateBreakdownOutput
+    quality: QualityOutput
     article: ArticleOutput | None
     markdown: str | None
     metadata: MetadataOutput | None
@@ -161,6 +195,7 @@ class BatchCheckItemOutput(ErrorPayloadOutput, total=False):
     has_abstract: bool | None
     warnings: list[str]
     source_trail: list[str]
+    trace: list[TraceEventOutput]
     token_estimate: int | None
     token_estimate_breakdown: TokenEstimateBreakdownOutput | None
     probe_state: str | None

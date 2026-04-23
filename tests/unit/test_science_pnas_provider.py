@@ -1,20 +1,50 @@
 from __future__ import annotations
 
+import json
 import tempfile
+import urllib.parse
 import unittest
 from pathlib import Path
+from typing import Mapping
 from unittest import mock
 
+from paper_fetch.geography_live import collect_issue_flags
 from paper_fetch.http import RequestFailure
 from paper_fetch.providers import html_assets
-from paper_fetch.providers import _flaresolverr, _science_pnas, pnas as pnas_provider, science as science_provider
+from paper_fetch.providers import (
+    _flaresolverr,
+    _science_pnas,
+    pnas as pnas_provider,
+    science as science_provider,
+    wiley as wiley_provider,
+)
+from paper_fetch.providers._html_availability import assess_html_fulltext_availability
 from paper_fetch.providers.base import RawFulltextPayload
+from tests.block_fixtures import block_asset
+from tests.golden_criteria import golden_criteria_asset, golden_criteria_dir_for_doi
 from tests.provider_benchmark_samples import provider_benchmark_sample
-from tests.unit._paper_fetch_support import fulltext_pdf_bytes
+from tests.unit._paper_fetch_support import build_envelope, fulltext_pdf_bytes
 
 
 SCIENCE_SAMPLE = provider_benchmark_sample("science")
 PNAS_SAMPLE = provider_benchmark_sample("pnas")
+WILEY_REGRESSION_FIXTURE = golden_criteria_asset("10.1111/gcb.16998", "original.html")
+PNAS_REGRESSION_FIXTURE = golden_criteria_asset("10.1073/pnas.2309123120", "original.html")
+PNAS_COMMENTARY_FIXTURE = golden_criteria_asset("10.1073/pnas.2317456120", "commentary.html")
+SCIENCE_FRONTMATTER_REGRESSION_FIXTURE = golden_criteria_asset("10.1126/science.abp8622", "original.html")
+SCIENCE_DATALAYER_AUTHOR_FIXTURE = golden_criteria_asset("10.1126/science.adp0212", "original.html")
+SCIENCE_PAYWALL_SAMPLE_RAW = block_asset("10.1126/science.aeg3511", "raw.html")
+SCIENCE_PAYWALL_SAMPLE_MARKDOWN = block_asset("10.1126/science.aeg3511", "extracted.md")
+SCIENCE_FULLTEXT_FALLBACK_MARKDOWN = golden_criteria_asset("10.1126/science.aeg3511", "extracted.md")
+SCIENCE_ADL6155_ROOT_CAUSE_FIXTURE = golden_criteria_asset("10.1126/sciadv.adl6155", "original.html")
+SCIENCE_ADL6155_METADATA = golden_criteria_asset("10.1126/sciadv.adl6155", "article.json")
+SCIENCE_ADL6155_ASSET_DIR = golden_criteria_dir_for_doi("10.1126/sciadv.adl6155") / "body_assets"
+PNAS_PAYWALL_SAMPLE_RAW = block_asset("10.1073/pnas.2509692123", "raw.html")
+PNAS_PAYWALL_SAMPLE_MARKDOWN = block_asset("10.1073/pnas.2509692123", "extracted.md")
+PNAS_FULLTEXT_FALLBACK_MARKDOWN = golden_criteria_asset("10.1073/pnas.2406303121", "extracted.md")
+WILEY_2004GB002273_ROOT_CAUSE_FIXTURE = golden_criteria_asset("10.1029/2004GB002273", "original.html")
+WILEY_2004GB002273_METADATA = golden_criteria_asset("10.1029/2004GB002273", "article.json")
+WILEY_2004GB002273_ASSET_DIR = golden_criteria_dir_for_doi("10.1029/2004GB002273") / "body_assets"
 
 
 class AssetTransport:
@@ -58,6 +88,45 @@ class AssetTransport:
 
 
 class SciencePnasProviderTests(unittest.TestCase):
+    def _metadata_from_golden_criteria(self, article_path: Path, doi: str) -> dict[str, object]:
+        article_payload = json.loads(article_path.read_text(encoding="utf-8"))
+        metadata = dict(article_payload.get("metadata") or {})
+        metadata["doi"] = doi
+        metadata["references"] = list(article_payload.get("references") or [])
+        return metadata
+
+    def _map_local_assets_by_basename(
+        self,
+        extracted_assets: list[dict[str, object]],
+        *,
+        asset_dir: Path,
+    ) -> list[dict[str, object]]:
+        local_by_name = {
+            path.name: str(path.resolve())
+            for path in asset_dir.iterdir()
+            if path.is_file()
+        }
+        downloaded_assets: list[dict[str, object]] = []
+        for asset in extracted_assets:
+            candidate_names: list[str] = []
+            for field in ("full_size_url", "url", "preview_url", "figure_page_url", "source_url"):
+                raw_value = str(asset.get(field) or "").strip()
+                if not raw_value:
+                    continue
+                parsed = urllib.parse.urlparse(raw_value if not raw_value.startswith("//") else f"https:{raw_value}")
+                basename = Path(urllib.parse.unquote(parsed.path)).name
+                if basename:
+                    candidate_names.append(basename)
+                    if "." not in basename:
+                        candidate_names.append(f"{basename}.html")
+            local_path = next((local_by_name[name] for name in candidate_names if name in local_by_name), None)
+            if not local_path:
+                continue
+            downloaded_asset = dict(asset)
+            downloaded_asset["path"] = local_path
+            downloaded_assets.append(downloaded_asset)
+        return downloaded_assets
+
     def _runtime_config(self, tmpdir: str, provider: str, doi: str) -> _flaresolverr.FlareSolverrRuntimeConfig:
         tmp = Path(tmpdir)
         return _flaresolverr.FlareSolverrRuntimeConfig(
@@ -73,6 +142,84 @@ class SciencePnasProviderTests(unittest.TestCase):
             max_requests_per_day=200,
             rate_limit_file=tmp / "rate_limits.json",
         )
+
+    def _build_browser_html_raw_payload(
+        self,
+        client,
+        *,
+        html: str,
+        landing_url: str,
+        extraction_metadata: Mapping[str, object],
+        source_trail: list[str] | None = None,
+    ) -> tuple[str, dict[str, object], RawFulltextPayload]:
+        markdown_text, extraction = client.extract_markdown(
+            html,
+            landing_url,
+            metadata=extraction_metadata,
+        )
+        raw_payload = RawFulltextPayload(
+            provider=client.name,
+            source_url=landing_url,
+            content_type="text/html",
+            body=html.encode("utf-8"),
+            metadata={
+                "route": "html",
+                "markdown_text": markdown_text,
+                "source_trail": list(source_trail or [f"fulltext:{client.name}_html_ok"]),
+                "extraction": extraction,
+            },
+        )
+        return markdown_text, extraction, raw_payload
+
+    def _build_browser_fixture_article(
+        self,
+        client,
+        *,
+        html: str,
+        landing_url: str,
+        article_metadata: Mapping[str, object],
+        extraction_metadata: Mapping[str, object] | None = None,
+        downloaded_assets: list[dict[str, object]] | None = None,
+        asset_failures: list[dict[str, object]] | None = None,
+        source_trail: list[str] | None = None,
+    ):
+        _, extraction, raw_payload = self._build_browser_html_raw_payload(
+            client,
+            html=html,
+            landing_url=landing_url,
+            extraction_metadata=extraction_metadata or article_metadata,
+            source_trail=source_trail,
+        )
+        article = client.to_article_model(
+            dict(article_metadata),
+            raw_payload,
+            downloaded_assets=downloaded_assets,
+            asset_failures=asset_failures,
+        )
+        return article, extraction, raw_payload
+
+    def _assert_issue_flag_absent(self, provider: str, article, flag: str, *, status: str = "fulltext") -> None:
+        self.assertNotIn(flag, collect_issue_flags(provider, build_envelope(article), status=status))
+
+    def _assert_provider_owned_author_case(
+        self,
+        *,
+        client,
+        html_fixture: Path,
+        doi: str,
+        title: str,
+        landing_url: str,
+        expected_authors: list[str],
+    ) -> None:
+        article, _, _ = self._build_browser_fixture_article(
+            client,
+            html=html_fixture.read_text(encoding="utf-8"),
+            landing_url=landing_url,
+            article_metadata={"doi": doi, "title": title, "authors": []},
+            extraction_metadata={"doi": doi, "title": title},
+        )
+        self.assertEqual(article.metadata.authors[: len(expected_authors)], expected_authors)
+        self._assert_issue_flag_absent(client.name, article, "empty_authors")
 
     def test_science_provider_prefers_html_route(self) -> None:
         client = science_provider.ScienceClient(transport=None, env={})
@@ -203,6 +350,270 @@ class SciencePnasProviderTests(unittest.TestCase):
         self.assertIn("Lead body paragraph", article.sections[0].text)
         self.assertEqual(article.sections[1].heading, "Results")
 
+    def test_provider_owned_html_signals_populate_final_article_authors(self) -> None:
+        cases = (
+            {
+                "provider": "science",
+                "client": science_provider.ScienceClient(transport=None, env={}),
+                "html_fixture": SCIENCE_DATALAYER_AUTHOR_FIXTURE,
+                "doi": "10.1126/science.adp0212",
+                "title": "Anthropogenic amplification of precipitation variability over the past century",
+                "landing_url": "https://www.science.org/doi/full/10.1126/science.adp0212",
+                "expected_authors": ["Wenxia Zhang", "Tianjun Zhou", "Peili Wu"],
+            },
+            {
+                "provider": "wiley",
+                "client": wiley_provider.WileyClient(transport=None, env={}),
+                "html_fixture": WILEY_REGRESSION_FIXTURE,
+                "doi": "10.1111/gcb.16998",
+                "title": "Drought thresholds that impact vegetation reveal the divergent responses of vegetation growth to drought across China",
+                "landing_url": "https://onlinelibrary.wiley.com/doi/10.1111/gcb.16998",
+                "expected_authors": ["Mingze Sun", "Xiangyi Li", "Hao Xu"],
+            },
+            {
+                "provider": "pnas",
+                "client": pnas_provider.PnasClient(transport=None, env={}),
+                "html_fixture": PNAS_REGRESSION_FIXTURE,
+                "doi": "10.1073/pnas.2309123120",
+                "title": "Amazon deforestation causes strong regional warming",
+                "landing_url": "https://www.pnas.org/doi/full/10.1073/pnas.2309123120",
+                "expected_authors": ["Edward W. Butt", "Jessica C. A. Baker", "Francisco G. Silva Bezerra"],
+            },
+        )
+
+        for case in cases:
+            with self.subTest(provider=case["provider"], doi=case["doi"]):
+                self._assert_provider_owned_author_case(
+                    client=case["client"],
+                    html_fixture=case["html_fixture"],
+                    doi=case["doi"],
+                    title=case["title"],
+                    landing_url=case["landing_url"],
+                    expected_authors=case["expected_authors"],
+                )
+
+    def test_science_provider_falls_back_to_dom_authors_when_datalayer_is_missing(self) -> None:
+        client = science_provider.ScienceClient(transport=None, env={})
+        doi = "10.1126/science.test-dom-authors"
+        title = "Science DOM Author Fallback"
+        landing_url = f"https://www.science.org/doi/full/{doi}"
+        html = """
+        <html>
+          <body>
+            <main class="article__fulltext">
+              <article class="article-view">
+                <h1>Science DOM Author Fallback</h1>
+                <div class="contributors">
+                  <div property="author">
+                    <span property="givenName">Jamie</span>
+                    <span property="familyName">Farrell</span>
+                    <a href="https://orcid.org/0000-0000-0000-0001">https://orcid.org/0000-0000-0000-0001</a>
+                  </div>
+                  <div property="author"><span property="name">Taylor Example</span></div>
+                  <div property="author">Jordan Example <a href="https://orcid.org/0000-0000-0000-0002">ORCID</a></div>
+                  <div property="author">+12 authors</div>
+                  <div property="author">Authors Info &amp; Affiliations</div>
+                </div>
+                <div id="abstracts">
+                  <div class="core-container">
+                    <section id="abstract" role="doc-abstract">
+                      <h2>Abstract</h2>
+                      <div role="paragraph">This abstract is long enough to remain stable in the final Science article model.</div>
+                    </section>
+                  </div>
+                </div>
+                <section class="article__body" data-extent="bodymatter" property="articleBody">
+                  <h2>Results</h2>
+                  <p>This body paragraph is long enough to satisfy availability checks and verify DOM author fallback.</p>
+                  <p>This second body paragraph keeps the sample deterministic and clearly separated from the abstract.</p>
+                </section>
+              </article>
+            </main>
+          </body>
+        </html>
+        """
+        markdown_text, extraction = client.extract_markdown(
+            html,
+            landing_url,
+            metadata={"doi": doi, "title": title},
+        )
+        raw_payload = RawFulltextPayload(
+            provider="science",
+            source_url=landing_url,
+            content_type="text/html",
+            body=html.encode("utf-8"),
+            metadata={
+                "route": "html",
+                "markdown_text": markdown_text,
+                "source_trail": ["fulltext:science_html_ok"],
+                "extraction": extraction,
+            },
+        )
+
+        article = client.to_article_model(
+            {"doi": doi, "title": title},
+            raw_payload,
+        )
+
+        self.assertEqual(article.metadata.authors, ["Jamie Farrell", "Taylor Example", "Jordan Example"])
+
+    def test_pnas_provider_renders_headingless_commentary_without_synthetic_title_section(self) -> None:
+        client = pnas_provider.PnasClient(transport=None, env={})
+        doi = "10.1073/pnas.2317456120"
+        title = "Amazon deforestation implications in local/regional climate change"
+        landing_url = f"https://www.pnas.org/doi/full/{doi}"
+        article, _, _ = self._build_browser_fixture_article(
+            client,
+            html=PNAS_COMMENTARY_FIXTURE.read_text(encoding="utf-8"),
+            landing_url=landing_url,
+            article_metadata={"doi": doi, "title": title, "authors": []},
+            extraction_metadata={"doi": doi, "title": title},
+        )
+        rendered = article.to_ai_markdown(max_tokens="full_text")
+
+        self.assertIsNone(article.metadata.abstract)
+        self.assertEqual(article.metadata.authors, ["Paulo Artaxo"])
+        self.assertEqual(article.sections[0].heading, "")
+        self.assertEqual(article.sections[0].kind, "body")
+        self.assertIn("# Amazon deforestation implications in local/regional climate change", rendered)
+        self.assertNotIn("## Amazon deforestation implications in local/regional climate change", rendered)
+        self.assertNotIn("## Full Text", rendered)
+
+    def test_science_provider_keeps_frontmatter_sections_but_only_one_abstract_in_final_article(self) -> None:
+        client = science_provider.ScienceClient(transport=None, env={})
+        doi = "10.1126/science.abp8622"
+        title = "The drivers and impacts of Amazon forest degradation"
+        landing_url = f"https://www.science.org/doi/full/{doi}"
+        article, _, _ = self._build_browser_fixture_article(
+            client,
+            html=SCIENCE_FRONTMATTER_REGRESSION_FIXTURE.read_text(encoding="utf-8"),
+            landing_url=landing_url,
+            article_metadata={"doi": doi, "title": title},
+        )
+        rendered = article.to_ai_markdown(max_tokens="full_text")
+
+        self.assertEqual(article.metadata.authors[:3], ["David M. Lapola", "Patricia Pinho", "Jos Barlow"])
+        self.assertGreater(len(article.metadata.authors), 3)
+        self.assertIn("Policies to tackle degradation", article.metadata.abstract or "")
+        self.assertEqual([section.heading for section in article.sections if section.kind == "abstract"], ["Abstract"])
+        self.assertEqual(
+            [section.heading for section in article.sections[:4]],
+            ["Abstract", "Losing the Amazon", "Structured Abstract", "Main Text"],
+        )
+        self.assertEqual(article.sections[1].kind, "body")
+        self.assertEqual(article.sections[2].kind, "body")
+        self.assertEqual(rendered.count("## Abstract"), 1)
+        self.assertIn("## Losing the Amazon", rendered)
+        self.assertIn("## Structured Abstract", rendered)
+        self._assert_issue_flag_absent("science", article, "abstract_inflated")
+        self._assert_issue_flag_absent("science", article, "empty_authors")
+
+    def test_science_provider_replay_for_adl6155_keeps_materials_and_methods_wrapper_heading(self) -> None:
+        client = science_provider.ScienceClient(transport=None, env={})
+        doi = "10.1126/sciadv.adl6155"
+        landing_url = f"https://www.science.org/doi/{doi}"
+        html = SCIENCE_ADL6155_ROOT_CAUSE_FIXTURE.read_text(encoding="utf-8")
+        metadata = self._metadata_from_golden_criteria(SCIENCE_ADL6155_METADATA, doi)
+        metadata.setdefault("title", "A two-fold increase of carbon cycle sensitivity to tropical temperature variations")
+        metadata.setdefault("landing_page_url", landing_url)
+
+        extracted_assets = html_assets.extract_html_assets(html, landing_url, asset_profile="body")
+        downloaded_assets = self._map_local_assets_by_basename(
+            extracted_assets,
+            asset_dir=SCIENCE_ADL6155_ASSET_DIR,
+        )
+        self.assertEqual(len(downloaded_assets), len(extracted_assets))
+
+        article, _, _ = self._build_browser_fixture_article(
+            client,
+            html=html,
+            landing_url=landing_url,
+            article_metadata=metadata,
+            downloaded_assets=downloaded_assets,
+        )
+        rendered = article.to_ai_markdown(asset_profile="body", max_tokens="full_text")
+
+        self.assertIn("## MATERIALS AND METHODS", rendered)
+        self.assertIn("### Experimental design", rendered)
+        self.assertLess(rendered.index("## MATERIALS AND METHODS"), rendered.index("### Experimental design"))
+
+    def test_wiley_provider_deduplicates_near_matching_abstract_in_final_article_render(self) -> None:
+        client = wiley_provider.WileyClient(transport=None, env={})
+        doi = "10.1111/gcb.16998"
+        title = "Drought thresholds that impact vegetation reveal the divergent responses of vegetation growth to drought across China"
+        landing_url = f"https://onlinelibrary.wiley.com/doi/{doi}"
+        html = WILEY_REGRESSION_FIXTURE.read_text(encoding="utf-8")
+        _, extraction, raw_payload = self._build_browser_html_raw_payload(
+            client,
+            html=html,
+            landing_url=landing_url,
+            extraction_metadata={"doi": doi, "title": title},
+        )
+
+        article = client.to_article_model(
+            {"doi": doi, "title": title, "abstract": extraction.get("abstract_text")},
+            raw_payload,
+        )
+        rendered = article.to_ai_markdown(max_tokens="full_text")
+
+        self.assertEqual(rendered.count("## Abstract"), 1)
+        self.assertEqual(len([section for section in article.sections if section.kind == "abstract"]), 1)
+        self._assert_issue_flag_absent("wiley", article, "abstract_inflated")
+
+    def test_wiley_provider_replay_for_2004gb002273_body_assets_avoid_trailing_figures_noise(self) -> None:
+        client = wiley_provider.WileyClient(transport=None, env={})
+        doi = "10.1029/2004GB002273"
+        landing_url = "https://agupubs.onlinelibrary.wiley.com/doi/10.1029/2004GB002273"
+        html = WILEY_2004GB002273_ROOT_CAUSE_FIXTURE.read_text(encoding="utf-8")
+        metadata = self._metadata_from_golden_criteria(WILEY_2004GB002273_METADATA, doi)
+        metadata.setdefault("title", "Terrestrial mechanisms of interannual CO2 variability")
+        metadata.setdefault("landing_page_url", landing_url)
+
+        extracted_assets = html_assets.extract_html_assets(html, landing_url, asset_profile="body")
+        downloaded_assets = self._map_local_assets_by_basename(
+            extracted_assets,
+            asset_dir=WILEY_2004GB002273_ASSET_DIR,
+        )
+        self.assertEqual(len(downloaded_assets), len(extracted_assets))
+
+        article, _, _ = self._build_browser_fixture_article(
+            client,
+            html=html,
+            landing_url=landing_url,
+            article_metadata=metadata,
+            downloaded_assets=downloaded_assets,
+        )
+        rendered = article.to_ai_markdown(asset_profile="body", max_tokens="full_text")
+
+        self.assertNotIn("\n## Figures\n", rendered)
+        self.assertNotIn("Open in figure viewer", rendered)
+        self.assertNotIn("PowerPoint", rendered)
+
+    def test_pnas_provider_keeps_frontmatter_once_and_filters_collateral_noise_in_final_render(self) -> None:
+        client = pnas_provider.PnasClient(transport=None, env={})
+        doi = "10.1073/pnas.2309123120"
+        title = "Amazon deforestation causes strong regional warming"
+        landing_url = f"https://www.pnas.org/doi/full/{doi}"
+        html = PNAS_REGRESSION_FIXTURE.read_text(encoding="utf-8")
+        _, extraction, raw_payload = self._build_browser_html_raw_payload(
+            client,
+            html=html,
+            landing_url=landing_url,
+            extraction_metadata={"doi": doi, "title": title},
+        )
+        article = client.to_article_model(
+            {"doi": doi, "title": title, "abstract": extraction.get("abstract_text")},
+            raw_payload,
+        )
+        rendered = article.to_ai_markdown(max_tokens="full_text")
+
+        self.assertEqual(rendered.count("## Significance"), 1)
+        self.assertEqual(rendered.count("## Abstract"), 1)
+        self.assertNotIn("community water fluoridation", rendered.lower())
+        self.assertNotIn("tattoo ink", rendered.lower())
+        self.assertNotIn("negative social ties", rendered.lower())
+        self.assertNotIn("sign up for pnas alerts", rendered.lower())
+
     def test_science_provider_falls_back_to_pdf_with_browser_seed(self) -> None:
         client = science_provider.ScienceClient(transport=None, env={})
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -317,6 +728,294 @@ class SciencePnasProviderTests(unittest.TestCase):
         self.assertEqual(raw_payload.metadata["route"], "html")
         self.assertEqual(article.source, "pnas")
         self.assertIn("fulltext:pnas_html_ok", article.quality.source_trail)
+
+    def test_pnas_provider_fetch_result_recovers_pdf_when_html_article_is_abstract_only(self) -> None:
+        client = pnas_provider.PnasClient(transport=None, env={})
+        doi = "10.1073/pnas.2509692123"
+        title = "A discrete serotonergic circuit involved in the generation of tinnitus behavior"
+        landing_url = f"https://www.pnas.org/doi/full/{doi}"
+        html_payload = RawFulltextPayload(
+            provider="pnas",
+            source_url=landing_url,
+            content_type="text/html",
+            body=PNAS_PAYWALL_SAMPLE_RAW.read_bytes(),
+            metadata={
+                "route": "html",
+                "markdown_text": PNAS_PAYWALL_SAMPLE_MARKDOWN.read_text(encoding="utf-8"),
+                "source_trail": ["fulltext:pnas_html_ok"],
+                "browser_context_seed": {
+                    "browser_cookies": [{"name": "cf_clearance", "value": "secret", "domain": ".pnas.org", "path": "/"}],
+                    "browser_user_agent": "Mozilla/5.0",
+                },
+            },
+        )
+        pdf_payload = RawFulltextPayload(
+            provider="pnas",
+            source_url=f"https://www.pnas.org/doi/pdf/{doi}",
+            content_type="application/pdf",
+            body=fulltext_pdf_bytes(),
+            metadata={
+                "route": "pdf_fallback",
+                "markdown_text": PNAS_FULLTEXT_FALLBACK_MARKDOWN.read_text(encoding="utf-8"),
+                "source_trail": [
+                    "fulltext:pnas_html_ok",
+                    "fulltext:pnas_abstract_only",
+                    "fulltext:pnas_pdf_fallback_ok",
+                ],
+                "suggested_filename": "archive.pdf",
+            },
+        )
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            runtime = self._runtime_config(tmpdir, "pnas", doi)
+            with (
+                mock.patch.object(client, "fetch_raw_fulltext", return_value=html_payload),
+                mock.patch.object(_science_pnas, "load_runtime_config", return_value=runtime),
+                mock.patch.object(_science_pnas, "ensure_runtime_ready"),
+                mock.patch.object(_science_pnas, "fetch_seeded_browser_pdf_payload", return_value=pdf_payload) as mocked_pdf,
+            ):
+                result = client.fetch_result(
+                    doi,
+                    {"doi": doi, "title": title, "landing_page_url": landing_url},
+                    None,
+                )
+
+        mocked_pdf.assert_called_once()
+        self.assertEqual(result.article.quality.content_kind, "fulltext")
+        self.assertIn("fulltext:pnas_html_ok", result.article.quality.source_trail)
+        self.assertIn("fulltext:pnas_abstract_only", result.article.quality.source_trail)
+        self.assertIn("fulltext:pnas_pdf_fallback_ok", result.article.quality.source_trail)
+        self.assertTrue(
+            any(
+                "attempting PDF fallback" in warning
+                for warning in mocked_pdf.call_args.kwargs["warnings"]
+            )
+        )
+
+    def test_science_provider_fetch_result_recovers_pdf_for_paywall_sample_markdown(self) -> None:
+        client = science_provider.ScienceClient(transport=None, env={})
+        doi = "10.1126/science.aeg3511"
+        title = "Magma plumbing beneath Yellowstone"
+        landing_url = f"https://www.science.org/doi/full/{doi}"
+        markdown_text = SCIENCE_PAYWALL_SAMPLE_MARKDOWN.read_text(encoding="utf-8")
+        html_text = SCIENCE_PAYWALL_SAMPLE_RAW.read_text(encoding="utf-8")
+        diagnostics = assess_html_fulltext_availability(
+            markdown_text,
+            {
+                "title": title,
+                "doi": doi,
+                "abstract": markdown_text.split("## Access the full article", 1)[0].split("## Abstract", 1)[1].strip(),
+            },
+            provider="science",
+            html_text=html_text,
+            title=title,
+            final_url=landing_url,
+        )
+        html_payload = RawFulltextPayload(
+            provider="science",
+            source_url=landing_url,
+            content_type="text/html",
+            body=SCIENCE_PAYWALL_SAMPLE_RAW.read_bytes(),
+            metadata={
+                "route": "html",
+                "markdown_text": markdown_text,
+                "source_trail": ["fulltext:science_html_ok"],
+                "availability_diagnostics": diagnostics.to_dict(),
+                "browser_context_seed": {
+                    "browser_cookies": [{"name": "cf_clearance", "value": "secret", "domain": ".science.org", "path": "/"}],
+                    "browser_user_agent": "Mozilla/5.0",
+                },
+            },
+        )
+        pdf_payload = RawFulltextPayload(
+            provider="science",
+            source_url=f"https://www.science.org/doi/epdf/{doi}",
+            content_type="application/pdf",
+            body=fulltext_pdf_bytes(),
+            metadata={
+                "route": "pdf_fallback",
+                "markdown_text": SCIENCE_FULLTEXT_FALLBACK_MARKDOWN.read_text(encoding="utf-8"),
+                "source_trail": [
+                    "fulltext:science_html_ok",
+                    "fulltext:science_abstract_only",
+                    "fulltext:science_pdf_fallback_ok",
+                ],
+                "suggested_filename": "science-paywall.pdf",
+            },
+        )
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            runtime = self._runtime_config(tmpdir, "science", doi)
+            with (
+                mock.patch.object(client, "fetch_raw_fulltext", return_value=html_payload),
+                mock.patch.object(_science_pnas, "load_runtime_config", return_value=runtime),
+                mock.patch.object(_science_pnas, "ensure_runtime_ready"),
+                mock.patch.object(_science_pnas, "fetch_seeded_browser_pdf_payload", return_value=pdf_payload) as mocked_pdf,
+            ):
+                result = client.fetch_result(
+                    doi,
+                    {"doi": doi, "title": title, "landing_page_url": landing_url},
+                    None,
+                )
+
+        mocked_pdf.assert_called_once()
+        self.assertEqual(result.article.quality.content_kind, "fulltext")
+        self.assertIn("fulltext:science_html_ok", result.article.quality.source_trail)
+        self.assertIn("fulltext:science_abstract_only", result.article.quality.source_trail)
+        self.assertIn("fulltext:science_pdf_fallback_ok", result.article.quality.source_trail)
+
+    def test_pnas_provider_fetch_result_returns_abstract_only_when_pdf_recovery_fails(self) -> None:
+        client = pnas_provider.PnasClient(transport=None, env={})
+        doi = "10.1073/pnas.2509692123"
+        title = "A discrete serotonergic circuit involved in the generation of tinnitus behavior"
+        landing_url = f"https://www.pnas.org/doi/full/{doi}"
+        html_payload = RawFulltextPayload(
+            provider="pnas",
+            source_url=landing_url,
+            content_type="text/html",
+            body=PNAS_PAYWALL_SAMPLE_RAW.read_bytes(),
+            metadata={
+                "route": "html",
+                "markdown_text": PNAS_PAYWALL_SAMPLE_MARKDOWN.read_text(encoding="utf-8"),
+                "source_trail": ["fulltext:pnas_html_ok"],
+                "browser_context_seed": {
+                    "browser_cookies": [{"name": "cf_clearance", "value": "secret", "domain": ".pnas.org", "path": "/"}],
+                    "browser_user_agent": "Mozilla/5.0",
+                },
+            },
+        )
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            runtime = self._runtime_config(tmpdir, "pnas", doi)
+            with (
+                mock.patch.object(client, "fetch_raw_fulltext", return_value=html_payload),
+                mock.patch.object(_science_pnas, "load_runtime_config", return_value=runtime),
+                mock.patch.object(_science_pnas, "ensure_runtime_ready"),
+                mock.patch.object(
+                    _science_pnas,
+                    "fetch_seeded_browser_pdf_payload",
+                    side_effect=_science_pnas.PdfFallbackFailure("pdf_download_failed", "PNAS PDF fallback failed."),
+                ),
+            ):
+                result = client.fetch_result(
+                    doi,
+                    {"doi": doi, "title": title, "landing_page_url": landing_url},
+                    None,
+                )
+
+        self.assertEqual(result.article.source, "pnas")
+        self.assertEqual(result.article.quality.content_kind, "abstract_only")
+        self.assertIn("fulltext:pnas_html_ok", result.article.quality.source_trail)
+        self.assertIn("fulltext:pnas_abstract_only", result.article.quality.source_trail)
+        self.assertNotIn("fulltext:pnas_pdf_fallback_ok", result.article.quality.source_trail)
+        self.assertTrue(any("returning abstract-only content" in warning for warning in result.article.quality.warnings))
+
+    def test_science_provider_fetch_result_returns_abstract_only_when_pdf_recovery_fails(self) -> None:
+        client = science_provider.ScienceClient(transport=None, env={})
+        doi = "10.1126/science.aeg3511"
+        title = "Magma plumbing beneath Yellowstone"
+        landing_url = f"https://www.science.org/doi/full/{doi}"
+        html_text = SCIENCE_PAYWALL_SAMPLE_RAW.read_text(encoding="utf-8")
+        markdown_text = SCIENCE_PAYWALL_SAMPLE_MARKDOWN.read_text(encoding="utf-8")
+        diagnostics = assess_html_fulltext_availability(
+            markdown_text,
+            {
+                "title": title,
+                "doi": doi,
+                "abstract": markdown_text.split("## Access the full article", 1)[0].split("## Abstract", 1)[1].strip(),
+            },
+            provider="science",
+            html_text=html_text,
+            title=title,
+            final_url=landing_url,
+        )
+        html_payload = RawFulltextPayload(
+            provider="science",
+            source_url=landing_url,
+            content_type="text/html",
+            body=SCIENCE_PAYWALL_SAMPLE_RAW.read_bytes(),
+            metadata={
+                "route": "html",
+                "markdown_text": markdown_text,
+                "source_trail": ["fulltext:science_html_ok"],
+                "availability_diagnostics": diagnostics.to_dict(),
+                "browser_context_seed": {
+                    "browser_cookies": [{"name": "cf_clearance", "value": "secret", "domain": ".science.org", "path": "/"}],
+                    "browser_user_agent": "Mozilla/5.0",
+                },
+            },
+        )
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            runtime = self._runtime_config(tmpdir, "science", doi)
+            with (
+                mock.patch.object(client, "fetch_raw_fulltext", return_value=html_payload),
+                mock.patch.object(_science_pnas, "load_runtime_config", return_value=runtime),
+                mock.patch.object(_science_pnas, "ensure_runtime_ready"),
+                mock.patch.object(
+                    _science_pnas,
+                    "fetch_seeded_browser_pdf_payload",
+                    side_effect=_science_pnas.PdfFallbackFailure("pdf_download_failed", "Science PDF fallback failed."),
+                ),
+            ):
+                result = client.fetch_result(
+                    doi,
+                    {"doi": doi, "title": title, "landing_page_url": landing_url},
+                    None,
+                )
+
+        self.assertEqual(result.article.source, "science")
+        self.assertEqual(result.article.quality.content_kind, "abstract_only")
+        self.assertIn("fulltext:science_html_ok", result.article.quality.source_trail)
+        self.assertIn("fulltext:science_abstract_only", result.article.quality.source_trail)
+        self.assertNotIn("fulltext:science_pdf_fallback_ok", result.article.quality.source_trail)
+        self.assertTrue(any("returning abstract-only content" in warning for warning in result.article.quality.warnings))
+
+    def test_wiley_provider_fetch_result_returns_abstract_only_when_pdf_recovery_fails(self) -> None:
+        client = wiley_provider.WileyClient(transport=None, env={})
+        doi = "10.1111/gcb.16998"
+        title = "Wiley Abstract Only Example"
+        landing_url = f"https://onlinelibrary.wiley.com/doi/full/{doi}"
+        html_payload = RawFulltextPayload(
+            provider="wiley",
+            source_url=landing_url,
+            content_type="text/html",
+            body=b"<html></html>",
+            metadata={
+                "route": "html",
+                "markdown_text": f"# {title}\n\n## Abstract\n\nWiley abstract only.",
+                "source_trail": ["fulltext:wiley_html_ok"],
+                "browser_context_seed": {
+                    "browser_cookies": [{"name": "cf_clearance", "value": "secret", "domain": ".wiley.com", "path": "/"}],
+                    "browser_user_agent": "Mozilla/5.0",
+                },
+            },
+        )
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            runtime = self._runtime_config(tmpdir, "wiley", doi)
+            with (
+                mock.patch.object(client, "fetch_raw_fulltext", return_value=html_payload),
+                mock.patch.object(_science_pnas, "load_runtime_config", return_value=runtime),
+                mock.patch.object(_science_pnas, "ensure_runtime_ready"),
+                mock.patch.object(
+                    _science_pnas,
+                    "fetch_seeded_browser_pdf_payload",
+                    side_effect=_science_pnas.PdfFallbackFailure("pdf_download_failed", "Wiley PDF fallback failed."),
+                ),
+            ):
+                result = client.fetch_result(
+                    doi,
+                    {"doi": doi, "title": title, "landing_page_url": landing_url},
+                    None,
+                )
+
+        self.assertEqual(result.article.source, "wiley_browser")
+        self.assertEqual(result.article.quality.content_kind, "abstract_only")
+        self.assertIn("fulltext:wiley_html_ok", result.article.quality.source_trail)
+        self.assertIn("fulltext:wiley_abstract_only", result.article.quality.source_trail)
+        self.assertNotIn("fulltext:wiley_pdf_fallback_ok", result.article.quality.source_trail)
+        self.assertTrue(any("returning abstract-only content" in warning for warning in result.article.quality.warnings))
 
     def test_pnas_provider_falls_back_to_pdf_with_browser_seed(self) -> None:
         client = pnas_provider.PnasClient(transport=None, env={})

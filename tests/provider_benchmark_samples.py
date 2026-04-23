@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from tests.golden_criteria import doi_to_fixture_slug
+
 
 @dataclass(frozen=True)
 class ProviderBenchmarkSample:
@@ -20,6 +22,10 @@ class ProviderBenchmarkSample:
     resolve_url: str | None = None
 
 
+def golden_criteria_fixture(doi: str, filename: str) -> str:
+    return f"golden_criteria/{doi_to_fixture_slug(doi)}/{filename}"
+
+
 PROVIDER_BENCHMARK_SAMPLES: dict[str, ProviderBenchmarkSample] = {
     "elsevier": ProviderBenchmarkSample(
         provider="elsevier",
@@ -31,7 +37,7 @@ PROVIDER_BENCHMARK_SAMPLES: dict[str, ProviderBenchmarkSample] = {
         accepted_live_source_trail_groups=(("fulltext:elsevier_article_ok",),),
         required_env=("ELSEVIER_API_KEY", "CROSSREF_MAILTO"),
         fallback_dois=("10.1016/j.rse.2026.115369",),
-        fixture_name="elsevier_10.1016_j.rse.2025.114648.xml",
+        fixture_name=golden_criteria_fixture("10.1016/j.rse.2025.114648", "original.xml"),
         fixture_kind="xml",
         resolve_url="https://linkinghub.elsevier.com/retrieve/pii/S0034425725000525",
     ),
@@ -44,7 +50,7 @@ PROVIDER_BENCHMARK_SAMPLES: dict[str, ProviderBenchmarkSample] = {
         expected_source="springer_html",
         accepted_live_source_trail_groups=(("fulltext:springer_html_ok",),),
         required_env=("CROSSREF_MAILTO",),
-        fixture_name="nature_d41586_023_01829_w.html",
+        fixture_name=golden_criteria_fixture("10.1038/d41586-023-01829-w", "original.html"),
         fixture_kind="html",
     ),
     "science": ProviderBenchmarkSample(
@@ -63,7 +69,7 @@ PROVIDER_BENCHMARK_SAMPLES: dict[str, ProviderBenchmarkSample] = {
             "FLARESOLVERR_MAX_REQUESTS_PER_DAY",
         ),
         requires_flaresolverr=True,
-        fixture_name="science_10.1126_science.ady3136.html",
+        fixture_name=golden_criteria_fixture("10.1126/science.ady3136", "original.html"),
         fixture_kind="html",
     ),
     "wiley": ProviderBenchmarkSample(
@@ -82,7 +88,7 @@ PROVIDER_BENCHMARK_SAMPLES: dict[str, ProviderBenchmarkSample] = {
             "FLARESOLVERR_MAX_REQUESTS_PER_DAY",
         ),
         requires_flaresolverr=True,
-        fixture_name="wiley_10.1111_gcb.16414.html",
+        fixture_name=golden_criteria_fixture("10.1111/gcb.16414", "original.html"),
         fixture_kind="html",
     ),
     "pnas": ProviderBenchmarkSample(
@@ -101,7 +107,7 @@ PROVIDER_BENCHMARK_SAMPLES: dict[str, ProviderBenchmarkSample] = {
             "FLARESOLVERR_MAX_REQUESTS_PER_DAY",
         ),
         requires_flaresolverr=True,
-        fixture_name="pnas_10.1073_pnas.2406303121.html",
+        fixture_name=golden_criteria_fixture("10.1073/pnas.2406303121", "original.html"),
         fixture_kind="html",
     ),
 }
@@ -109,17 +115,17 @@ PROVIDER_BENCHMARK_SAMPLES: dict[str, ProviderBenchmarkSample] = {
 
 WILEY_PDF_FALLBACK_SAMPLE = ProviderBenchmarkSample(
     provider="wiley",
-    doi="10.1111/cas.16117",
+    doi="10.1111/cas.16395",
     year=2024,
-    title="Cell cycle heterogeneity and plasticity of colorectal cancer stem cells",
-    landing_url="https://onlinelibrary.wiley.com/doi/10.1111/cas.16117",
+    title="Current status and future direction of cancer research using artificial intelligence for clinical application",
+    landing_url="https://onlinelibrary.wiley.com/doi/full/10.1111/cas.16395",
     expected_source="wiley_browser",
     accepted_live_source_trail_groups=(
         ("fulltext:wiley_pdf_api_ok", "fulltext:wiley_pdf_fallback_ok"),
         ("fulltext:wiley_pdf_browser_ok", "fulltext:wiley_pdf_fallback_ok"),
     ),
     required_env=("CROSSREF_MAILTO", "WILEY_TDM_CLIENT_TOKEN"),
-    fixture_name="wiley_10.1111_cas.16117.md",
+    fixture_name=golden_criteria_fixture("10.1111/cas.16395", "extracted.md"),
     fixture_kind="markdown",
 )
 

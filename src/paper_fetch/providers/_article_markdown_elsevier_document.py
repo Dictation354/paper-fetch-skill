@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any, Mapping
 import xml.etree.ElementTree as ET
 
+from ..models import SemanticLosses
 from ._article_markdown_common import (
     child_text,
     collect_conversion_notes,
@@ -17,6 +18,7 @@ from ._article_markdown_common import (
     path_relative_to,
     render_figure_block,
     render_table_block,
+    xml_local_name,
 )
 from ._article_markdown_elsevier import (
     elsevier_figure_registry,
@@ -24,6 +26,7 @@ from ._article_markdown_elsevier import (
     elsevier_table_registry,
     render_elsevier_blocks,
 )
+from ..utils import dedupe_authors
 
 
 @dataclass
@@ -33,6 +36,7 @@ class ArticleStructure:
     journal_title: str
     published: str
     landing_page: str
+    authors: list[str]
     xml_path: Path
     abstract_lines: list[str]
     body_lines: list[str]
@@ -40,8 +44,46 @@ class ArticleStructure:
     table_entries: list[dict[str, Any]]
     supplement_entries: list[dict[str, str]]
     conversion_notes: list[str]
+    semantic_losses: SemanticLosses
     used_figure_keys: set[str]
     used_table_keys: set[str]
+
+
+def _iter_elements_by_local_name(root: ET.Element, local_name: str) -> list[ET.Element]:
+    return [
+        element
+        for element in root.iter()
+        if isinstance(element.tag, str) and xml_local_name(element.tag) == local_name
+    ]
+
+
+def _extract_author_name(author_node: ET.Element) -> str:
+    given_name = normalize_text(child_text(author_node, "given-name"))
+    surname = normalize_text(child_text(author_node, "surname"))
+    if given_name or surname:
+        return normalize_text(" ".join(item for item in (given_name, surname) if item))
+    indexed_name = normalize_text(child_text(author_node, "indexed-name"))
+    if indexed_name:
+        return indexed_name
+    return normalize_text(child_text(author_node, "collaboration"))
+
+
+def extract_article_authors(root: ET.Element) -> list[str]:
+    authors: list[str] = []
+    for author_group in _iter_elements_by_local_name(root, "author-group"):
+        for child in list(author_group):
+            if not isinstance(child.tag, str):
+                continue
+            local_name = xml_local_name(child.tag)
+            if local_name == "author":
+                author_name = _extract_author_name(child)
+                if author_name:
+                    authors.append(author_name)
+            elif local_name == "collaboration":
+                collaboration_name = normalize_text("".join(child.itertext()))
+                if collaboration_name:
+                    authors.append(collaboration_name)
+    return dedupe_authors(authors)
 
 
 def build_article_structure(
@@ -62,13 +104,19 @@ def build_article_structure(
     journal_title = normalize_text(str(metadata.get("journal_title") or ""))
     published = normalize_text(str(metadata.get("published") or ""))
     landing_page = normalize_text(str(metadata.get("landing_page_url") or ""))
+    authors = extract_article_authors(root)
 
     used_figure_keys: set[str] = set()
     used_table_keys: set[str] = set()
+    formula_renders = []
     if provider == "elsevier":
         abstract_node = first_descendant(root, "abstract")
         body_node = first_descendant(root, "body")
-        abstract_lines = render_elsevier_blocks(abstract_node, heading_level=3)
+        abstract_lines = render_elsevier_blocks(
+            abstract_node,
+            heading_level=3,
+            formula_renders=formula_renders,
+        )
         if not abstract_lines:
             fallback_abstract = normalize_text(
                 str(metadata.get("abstract") or child_text(first_descendant(root, "coredata"), "description"))
@@ -85,18 +133,29 @@ def build_article_structure(
             used_figure_keys=used_figure_keys,
             table_lookup=table_lookup,
             used_table_keys=used_table_keys,
+            formula_renders=formula_renders,
         )
         supplement_entries = elsevier_supplement_entries(root, assets, xml_path.with_suffix(".md"))
     else:
         return None
 
-    conversion_notes = collect_conversion_notes(table_entries=table_entries)
+    semantic_losses = SemanticLosses(
+        table_fallback_count=sum(1 for entry in table_entries if normalize_text(str(entry.get("kind") or "")) == "fallback"),
+        table_lossy_count=sum(1 for entry in table_entries if normalize_text(str(entry.get("lossy_message") or ""))),
+        formula_fallback_count=sum(1 for result in formula_renders if getattr(result, "fallback_kind", None) == "fallback"),
+        formula_missing_count=sum(1 for result in formula_renders if getattr(result, "fallback_kind", None) == "missing"),
+    )
+    conversion_notes = collect_conversion_notes(
+        table_entries=table_entries,
+        formula_notes=[str(result.note) for result in formula_renders if normalize_text(str(result.note or ""))],
+    )
     return ArticleStructure(
         title=title,
         doi=doi,
         journal_title=journal_title,
         published=published,
         landing_page=landing_page,
+        authors=authors,
         xml_path=xml_path,
         abstract_lines=abstract_lines,
         body_lines=body_lines,
@@ -104,6 +163,7 @@ def build_article_structure(
         table_entries=table_entries,
         supplement_entries=supplement_entries,
         conversion_notes=conversion_notes,
+        semantic_losses=semantic_losses,
         used_figure_keys=used_figure_keys,
         used_table_keys=used_table_keys,
     )
@@ -148,7 +208,8 @@ def build_markdown_document(
         lines.extend(structure.abstract_lines)
 
     if structure.body_lines:
-        lines.extend(["## Full Text", ""])
+        if lines and normalize_text(lines[-1]):
+            lines.append("")
         lines.extend(structure.body_lines)
 
     remaining_figure_entries = [

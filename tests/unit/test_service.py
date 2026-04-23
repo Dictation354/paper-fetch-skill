@@ -7,14 +7,13 @@ from pathlib import Path
 
 from paper_fetch import service as paper_fetch
 from paper_fetch.http import HttpTransport, RequestFailure
-from paper_fetch.providers import html_generic, pnas as pnas_provider, science as science_provider
+from paper_fetch.providers import _springer_html as springer_html_helper, pnas as pnas_provider, science as science_provider
 from paper_fetch.providers.base import RawFulltextPayload
 from paper_fetch.providers.wiley import WileyClient
 from paper_fetch.utils import choose_public_landing_page_url
 
 from ._paper_fetch_support import (
     FixtureHtmlTransport,
-    StubHtmlClient,
     StubProvider,
     fetch_paper_model,
     fulltext_pdf_bytes,
@@ -33,6 +32,193 @@ class RecordCaptureHandler(logging.Handler):
 
 
 class ServiceTests(unittest.TestCase):
+    def test_fetch_paper_omitted_asset_profile_defaults_to_body_for_scoped_html_providers(self) -> None:
+        cases = [
+            ("springer", "10.1007/test", "https://www.nature.com/articles/example"),
+            ("wiley", "10.1111/test", "https://example.test/wiley"),
+            ("science", "10.1126/science.test", "https://www.science.org/doi/full/10.1126/science.test"),
+            ("pnas", "10.1073/pnas.test", "https://www.pnas.org/doi/10.1073/pnas.test"),
+        ]
+        original_resolve = paper_fetch.resolve_paper
+        try:
+            for provider_name, doi, landing_url in cases:
+                with self.subTest(provider=provider_name):
+                    related_asset_calls: list[str] = []
+                    resolved = paper_fetch.ResolvedQuery(
+                        query=doi,
+                        query_kind="doi",
+                        doi=doi,
+                        landing_url=landing_url,
+                        provider_hint=provider_name,
+                        confidence=1.0,
+                    )
+                    paper_fetch.resolve_paper = lambda *args, _resolved=resolved, **kwargs: _resolved
+                    with tempfile.TemporaryDirectory() as tmpdir:
+                        envelope = paper_fetch.fetch_paper(
+                            doi,
+                            modes={"article"},
+                            strategy=paper_fetch.FetchStrategy(),
+                            download_dir=Path(tmpdir),
+                            clients={
+                                provider_name: StubProvider(
+                                    raw_payload=RawFulltextPayload(
+                                        provider=provider_name,
+                                        source_url=landing_url,
+                                        content_type="text/html",
+                                        body=b"<html></html>",
+                                        metadata={
+                                            "route": "html",
+                                            "markdown_text": "# Example Article\n\n## Results\n\n" + ("Body text " * 80),
+                                            "source_trail": [f"fulltext:{provider_name}_html_ok"],
+                                        },
+                                    ),
+                                    article=sample_article(),
+                                    related_asset_factory=lambda *args, **kwargs: (
+                                        related_asset_calls.append(kwargs["asset_profile"]) or {"assets": [], "asset_failures": []}
+                                    ),
+                                ),
+                                "crossref": StubProvider(
+                                    metadata={
+                                        "provider": "crossref",
+                                        "official_provider": False,
+                                        "doi": doi,
+                                        "title": "Example Article",
+                                        "landing_page_url": landing_url,
+                                        "authors": ["Alice Example"],
+                                        "fulltext_links": [],
+                                        "references": [],
+                                    }
+                                ),
+                            },
+                        )
+
+                    self.assertIsNotNone(envelope.article)
+                    self.assertEqual(related_asset_calls, ["body"])
+        finally:
+            paper_fetch.resolve_paper = original_resolve
+
+    def test_fetch_paper_explicit_asset_profile_none_disables_scoped_provider_asset_downloads(self) -> None:
+        resolved = paper_fetch.ResolvedQuery(
+            query="10.1126/science.test",
+            query_kind="doi",
+            doi="10.1126/science.test",
+            landing_url="https://www.science.org/doi/full/10.1126/science.test",
+            provider_hint="science",
+            confidence=1.0,
+        )
+        original_resolve = paper_fetch.resolve_paper
+        try:
+            paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
+            with tempfile.TemporaryDirectory() as tmpdir:
+                envelope = paper_fetch.fetch_paper(
+                    resolved.query,
+                    modes={"article"},
+                    strategy=paper_fetch.FetchStrategy(asset_profile="none"),
+                    download_dir=Path(tmpdir),
+                    clients={
+                        "science": StubProvider(
+                            raw_payload=RawFulltextPayload(
+                                provider="science",
+                                source_url=resolved.landing_url,
+                                content_type="text/html",
+                                body=b"<html></html>",
+                                metadata={
+                                    "route": "html",
+                                    "markdown_text": "# Example Article\n\n## Results\n\n" + ("Body text " * 80),
+                                    "source_trail": ["fulltext:science_html_ok"],
+                                },
+                            ),
+                            article=sample_article(),
+                            related_asset_factory=lambda *args, **kwargs: (_ for _ in ()).throw(
+                                AssertionError("asset downloads should stay disabled when asset_profile='none'")
+                            ),
+                        ),
+                        "crossref": StubProvider(
+                            metadata={
+                                "provider": "crossref",
+                                "official_provider": False,
+                                "doi": resolved.doi,
+                                "title": "Example Article",
+                                "landing_page_url": resolved.landing_url,
+                                "authors": ["Alice Example"],
+                                "fulltext_links": [],
+                                "references": [],
+                            }
+                        ),
+                    },
+                )
+        finally:
+            paper_fetch.resolve_paper = original_resolve
+
+        self.assertIn("download:science_assets_skipped_profile_none", envelope.source_trail)
+
+    def test_fetch_paper_warns_when_scoped_provider_falls_back_to_preview_images(self) -> None:
+        resolved = paper_fetch.ResolvedQuery(
+            query="10.1126/science.preview",
+            query_kind="doi",
+            doi="10.1126/science.preview",
+            landing_url="https://www.science.org/doi/full/10.1126/science.preview",
+            provider_hint="science",
+            confidence=1.0,
+        )
+        original_resolve = paper_fetch.resolve_paper
+        try:
+            paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
+            with tempfile.TemporaryDirectory() as tmpdir:
+                preview_path = Path(tmpdir) / "figure-preview.png"
+                preview_path.write_bytes(b"preview")
+                envelope = paper_fetch.fetch_paper(
+                    resolved.query,
+                    modes={"article"},
+                    strategy=paper_fetch.FetchStrategy(),
+                    download_dir=Path(tmpdir),
+                    clients={
+                        "science": StubProvider(
+                            raw_payload=RawFulltextPayload(
+                                provider="science",
+                                source_url=resolved.landing_url,
+                                content_type="text/html",
+                                body=b"<html></html>",
+                                metadata={
+                                    "route": "html",
+                                    "markdown_text": "# Example Article\n\n## Results\n\n" + ("Body text " * 80),
+                                    "source_trail": ["fulltext:science_html_ok"],
+                                },
+                            ),
+                            article=sample_article(),
+                            related_assets={
+                                "assets": [
+                                    {
+                                        "kind": "figure",
+                                        "heading": "Figure 1",
+                                        "caption": "Preview figure",
+                                        "path": str(preview_path),
+                                        "section": "body",
+                                        "download_tier": "preview",
+                                    }
+                                ],
+                                "asset_failures": [],
+                            },
+                        ),
+                        "crossref": StubProvider(
+                            metadata={
+                                "provider": "crossref",
+                                "official_provider": False,
+                                "doi": resolved.doi,
+                                "title": "Example Article",
+                                "landing_page_url": resolved.landing_url,
+                                "authors": ["Alice Example"],
+                                "fulltext_links": [],
+                                "references": [],
+                            }
+                        ),
+                    },
+                )
+        finally:
+            paper_fetch.resolve_paper = original_resolve
+
+        self.assertTrue(any("fell back to preview images" in warning for warning in envelope.warnings))
+
     def test_probe_has_fulltext_uses_crossref_license_signal(self) -> None:
         resolved = paper_fetch.ResolvedQuery(
             query="10.1000/license",
@@ -271,7 +457,6 @@ class ServiceTests(unittest.TestCase):
                         }
                     ),
                 },
-                html_client=StubHtmlClient(error=paper_fetch.ProviderFailure("no_result", "HTML should not be used.")),
             )
         finally:
             paper_fetch.resolve_paper = original_resolve
@@ -332,7 +517,6 @@ class ServiceTests(unittest.TestCase):
                         }
                     ),
                 },
-                html_client=StubHtmlClient(error=paper_fetch.ProviderFailure("no_result", "HTML should not be used.")),
             )
         finally:
             paper_fetch.resolve_paper = original_resolve
@@ -417,7 +601,6 @@ class ServiceTests(unittest.TestCase):
                         }
                     ),
                 },
-                html_client=StubHtmlClient(error=paper_fetch.ProviderFailure("no_result", "HTML should not be used.")),
             )
         finally:
             paper_fetch.resolve_paper = original_resolve
@@ -502,7 +685,6 @@ class ServiceTests(unittest.TestCase):
                             }
                         ),
                     },
-                    html_client=StubHtmlClient(error=paper_fetch.ProviderFailure("no_result", "HTML should not be used.")),
                 )
                 asset_dir = Path(tmpdir) / "10.1016_test_assets"
                 self.assertTrue((asset_dir / "figure-1.png").exists())
@@ -571,7 +753,6 @@ class ServiceTests(unittest.TestCase):
                             }
                         ),
                     },
-                    html_client=StubHtmlClient(error=paper_fetch.ProviderFailure("no_result", "HTML should not be used.")),
                 )
         finally:
             paper_fetch.resolve_paper = original_resolve
@@ -636,7 +817,6 @@ class ServiceTests(unittest.TestCase):
                             }
                         ),
                     },
-                    html_client=StubHtmlClient(error=paper_fetch.ProviderFailure("no_result", "HTML should not be used.")),
                 )
         finally:
             paper_fetch.resolve_paper = original_resolve
@@ -694,7 +874,6 @@ class ServiceTests(unittest.TestCase):
                             }
                         ),
                     },
-                    html_client=StubHtmlClient(error=paper_fetch.ProviderFailure("no_result", "HTML should not be used.")),
                 )
         finally:
             paper_fetch.resolve_paper = original_resolve
@@ -754,7 +933,6 @@ class ServiceTests(unittest.TestCase):
                             }
                         ),
                     },
-                    html_client=StubHtmlClient(error=paper_fetch.ProviderFailure("no_result", "HTML should not be used.")),
                 )
         finally:
             paper_fetch.resolve_paper = original_resolve
@@ -815,7 +993,6 @@ class ServiceTests(unittest.TestCase):
                                 }
                             ),
                         },
-                        html_client=StubHtmlClient(error=paper_fetch.ProviderFailure("no_result", "HTML should not be used.")),
                     )
         finally:
             paper_fetch.resolve_paper = original_resolve
@@ -925,7 +1102,6 @@ class ServiceTests(unittest.TestCase):
                 "10.1006/jaer.1996.0085",
                 modes={"article"},
                 strategy=paper_fetch.FetchStrategy(
-                    allow_html_fallback=False,
                     preferred_providers=["elsevier"],
                 ),
                 clients={
@@ -960,7 +1136,6 @@ class ServiceTests(unittest.TestCase):
                         }
                     ),
                 },
-                html_client=StubHtmlClient(error=paper_fetch.ProviderFailure("no_result", "HTML should not be used.")),
             ).article
         finally:
             paper_fetch.resolve_paper = original_resolve
@@ -987,7 +1162,6 @@ class ServiceTests(unittest.TestCase):
             paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
             article = fetch_paper_model(
                 "10.1006/jaer.1996.0085",
-                allow_html_fallback=False,
                 clients={
                     "elsevier": StubProvider(
                         metadata=paper_fetch.ProviderFailure("no_result", "Elsevier metadata probe missed."),
@@ -1012,7 +1186,6 @@ class ServiceTests(unittest.TestCase):
                         }
                     ),
                 },
-                html_client=StubHtmlClient(error=paper_fetch.ProviderFailure("no_result", "HTML should not be used.")),
             )
         finally:
             paper_fetch.resolve_paper = original_resolve
@@ -1039,7 +1212,6 @@ class ServiceTests(unittest.TestCase):
                 "10.1016/test",
                 modes={"article"},
                 strategy=paper_fetch.FetchStrategy(
-                    allow_html_fallback=False,
                     preferred_providers=["crossref"],
                 ),
                 clients={
@@ -1073,7 +1245,6 @@ class ServiceTests(unittest.TestCase):
                         }
                     ),
                 },
-                html_client=StubHtmlClient(error=paper_fetch.ProviderFailure("no_result", "HTML should not be used.")),
             )
         finally:
             paper_fetch.resolve_paper = original_resolve
@@ -1139,8 +1310,10 @@ class ServiceTests(unittest.TestCase):
                 "has_abstract",
                 "warnings",
                 "source_trail",
+                "trace",
                 "token_estimate",
                 "token_estimate_breakdown",
+                "quality",
                 "article",
                 "markdown",
                 "metadata",
@@ -1244,7 +1417,7 @@ class ServiceTests(unittest.TestCase):
         self.assertIsNotNone(with_metadata.metadata)
         self.assertEqual(with_metadata.metadata.title, with_metadata.article.metadata.title)
 
-    def test_fetch_paper_html_abstract_only_falls_through_to_metadata_only(self) -> None:
+    def test_fetch_paper_non_provider_landing_page_returns_metadata_only_without_generic_html_attempt(self) -> None:
         resolved = paper_fetch.ResolvedQuery(
             query="10.1000/test",
             query_kind="doi",
@@ -1272,60 +1445,15 @@ class ServiceTests(unittest.TestCase):
                         }
                     )
                 },
-                html_client=StubHtmlClient(error=paper_fetch.ProviderFailure("abstract_only", "HTML only exposed abstract-level content.")),
             )
         finally:
             paper_fetch.resolve_paper = original_resolve
 
         self.assertEqual(article.source, "crossref_meta")
         self.assertEqual(article.quality.content_kind, "abstract_only")
-        self.assertIn("fallback:html_attempt", article.quality.source_trail)
-        self.assertIn("fallback:html_abstract_only", article.quality.source_trail)
         self.assertIn("fallback:metadata_only", article.quality.source_trail)
-
-    def test_fetch_paper_html_abstract_only_article_result_also_falls_through_to_metadata_only(self) -> None:
-        resolved = paper_fetch.ResolvedQuery(
-            query="10.1000/test",
-            query_kind="doi",
-            doi="10.1000/test",
-            landing_url="https://example.test/article-abstract",
-            provider_hint=None,
-            confidence=1.0,
-        )
-        abstract_only_article = sample_html_article()
-        abstract_only_article.sections = []
-        abstract_only_article.quality.content_kind = "abstract_only"
-        abstract_only_article.quality.has_fulltext = False
-        abstract_only_article.quality.has_abstract = True
-        original_resolve = paper_fetch.resolve_paper
-        try:
-            paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
-            article = fetch_paper_model(
-                "10.1000/test",
-                clients={
-                    "crossref": StubProvider(
-                        metadata={
-                            "provider": "crossref",
-                            "official_provider": False,
-                            "doi": "10.1000/test",
-                            "title": "Abstract Only Article",
-                            "abstract": "Crossref abstract",
-                            "landing_page_url": "https://example.test/article-abstract",
-                            "fulltext_links": [],
-                            "references": [],
-                        }
-                    )
-                },
-                html_client=StubHtmlClient(article=abstract_only_article),
-            )
-        finally:
-            paper_fetch.resolve_paper = original_resolve
-
-        self.assertEqual(article.source, "crossref_meta")
-        self.assertEqual(article.quality.content_kind, "abstract_only")
-        self.assertIn("fallback:html_attempt", article.quality.source_trail)
-        self.assertIn("fallback:html_abstract_only", article.quality.source_trail)
-        self.assertIn("fallback:metadata_only", article.quality.source_trail)
+        self.assertNotIn("fallback:html_attempt", article.quality.source_trail)
+        self.assertNotIn("fallback:html_abstract_only", article.quality.source_trail)
 
     def test_fetch_paper_raises_when_metadata_only_fallback_is_disabled(self) -> None:
         resolved = paper_fetch.ResolvedQuery(
@@ -1344,7 +1472,6 @@ class ServiceTests(unittest.TestCase):
                     "10.1016/test",
                     modes={"article"},
                     strategy=paper_fetch.FetchStrategy(
-                        allow_html_fallback=False,
                         allow_metadata_only_fallback=False,
                     ),
                     clients={
@@ -1373,7 +1500,6 @@ class ServiceTests(unittest.TestCase):
                             }
                         ),
                     },
-                    html_client=StubHtmlClient(error=paper_fetch.ProviderFailure("no_result", "HTML should not be used.")),
                 )
         finally:
             paper_fetch.resolve_paper = original_resolve
@@ -1392,7 +1518,6 @@ class ServiceTests(unittest.TestCase):
             paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
             article = fetch_paper_model(
                 "10.1016/test",
-                allow_html_fallback=False,
                 clients={
                     "elsevier": StubProvider(
                         metadata={
@@ -1424,7 +1549,6 @@ class ServiceTests(unittest.TestCase):
                         }
                     ),
                 },
-                html_client=StubHtmlClient(error=paper_fetch.ProviderFailure("no_result", "HTML should not be used.")),
             )
         finally:
             paper_fetch.resolve_paper = original_resolve
@@ -1543,7 +1667,6 @@ class ServiceTests(unittest.TestCase):
                             }
                         ),
                     },
-                    html_client=StubHtmlClient(error=paper_fetch.ProviderFailure("no_result", "HTML should not be used.")),
                 )
                 downloaded = Path(tmpdir) / "10.1111_test.pdf"
                 self.assertTrue(downloaded.exists())
@@ -1648,7 +1771,6 @@ class ServiceTests(unittest.TestCase):
                             }
                         ),
                     },
-                    html_client=StubHtmlClient(error=paper_fetch.ProviderFailure("no_result", "HTML should not be used.")),
                 )
                 downloaded = Path(tmpdir) / "10.1016_test.pdf"
                 self.assertTrue(downloaded.exists())
@@ -1716,7 +1838,6 @@ class ServiceTests(unittest.TestCase):
                             }
                         ),
                     },
-                    html_client=StubHtmlClient(error=paper_fetch.ProviderFailure("no_result", "HTML should not be used.")),
                 )
                 downloaded = Path(tmpdir) / "10.1111_test.pdf"
                 self.assertFalse(downloaded.exists())
@@ -1761,7 +1882,6 @@ class ServiceTests(unittest.TestCase):
                         }
                     ),
                 },
-                html_client=StubHtmlClient(article=sample_html_article()),
             )
         finally:
             paper_fetch.resolve_paper = original_resolve
@@ -1827,10 +1947,10 @@ class ServiceTests(unittest.TestCase):
             }
         )
         original_resolve = paper_fetch.resolve_paper
-        original_extract = html_generic.extract_article_markdown
+        original_extract = springer_html_helper.extract_article_markdown
         try:
             paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
-            html_generic.extract_article_markdown = lambda html, url: "\n".join(
+            springer_html_helper.extract_article_markdown = lambda html, url: "\n".join(
                 [
                     "# HTML Springer Article",
                     "",
@@ -1839,6 +1959,8 @@ class ServiceTests(unittest.TestCase):
                     "",
                     "## Results",
                     ("More important body text for HTML fallback. " * 30).strip(),
+                    "",
+                    "**Figure 1.** Figure showing a woodland canopy.",
                 ]
             )
             with tempfile.TemporaryDirectory() as tmpdir:
@@ -1873,11 +1995,12 @@ class ServiceTests(unittest.TestCase):
                 self.assertTrue(asset_path.exists())
                 self.assertEqual(asset_path.parent.name, "10.1007_test_assets")
                 self.assertEqual(asset_path.read_bytes(), full_bytes)
-                self.assertIn("![Figure showing a woodland canopy.]", markdown)
+                self.assertIn("![Figure 1](", markdown)
                 self.assertIn(str(asset_path), markdown)
+                self.assertNotIn("## Figures", markdown)
         finally:
             paper_fetch.resolve_paper = original_resolve
-            html_generic.extract_article_markdown = original_extract
+            springer_html_helper.extract_article_markdown = original_extract
 
         self.assertIn("fulltext:springer_html_ok", article.quality.source_trail)
         self.assertIn("download:springer_assets_saved_profile_body", article.quality.source_trail)
@@ -1896,7 +2019,6 @@ class ServiceTests(unittest.TestCase):
             paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
             article = fetch_paper_model(
                 "10.1111/test",
-                allow_html_fallback=False,
                 allow_downloads=False,
                 clients={
                     "wiley": StubProvider(
@@ -1917,7 +2039,6 @@ class ServiceTests(unittest.TestCase):
                         }
                     ),
                 },
-                html_client=StubHtmlClient(error=paper_fetch.ProviderFailure("no_result", "HTML should not be used.")),
             )
         finally:
             paper_fetch.resolve_paper = original_resolve
@@ -1963,7 +2084,6 @@ class ServiceTests(unittest.TestCase):
                         }
                     ),
                 },
-                html_client=StubHtmlClient(article=sample_html_article()),
             )
         finally:
             paper_fetch.resolve_paper = original_resolve
@@ -2038,7 +2158,6 @@ class ServiceTests(unittest.TestCase):
                             }
                         ),
                     },
-                    html_client=StubHtmlClient(error=paper_fetch.ProviderFailure("no_result", "HTML should not be used.")),
                 )
         finally:
             paper_fetch.resolve_paper = original_resolve
@@ -2113,7 +2232,6 @@ class ServiceTests(unittest.TestCase):
                             }
                         ),
                     },
-                    html_client=StubHtmlClient(error=paper_fetch.ProviderFailure("no_result", "HTML should not be used.")),
                 )
         finally:
             paper_fetch.resolve_paper = original_resolve
@@ -2196,7 +2314,6 @@ class ServiceTests(unittest.TestCase):
                             }
                         ),
                     },
-                    html_client=StubHtmlClient(error=paper_fetch.ProviderFailure("no_result", "HTML should not be used.")),
                 )
         finally:
             paper_fetch.resolve_paper = original_resolve
@@ -2317,9 +2434,6 @@ class ServiceTests(unittest.TestCase):
                                     }
                                 ),
                             },
-                            html_client=StubHtmlClient(
-                                error=paper_fetch.ProviderFailure("no_result", "HTML should not be used.")
-                            ),
                         )
 
                     self.assertEqual(envelope.source, case["expected_source"])
@@ -2394,7 +2508,6 @@ class ServiceTests(unittest.TestCase):
                                     }
                                 ),
                             },
-                            html_client=StubHtmlClient(error=paper_fetch.ProviderFailure("no_result", "HTML should not be used.")),
                         )
 
                     self.assertEqual(article.source, expected_source)

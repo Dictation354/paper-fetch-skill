@@ -1,17 +1,21 @@
 from __future__ import annotations
 
 from pathlib import Path
+from dataclasses import replace
 
 import fitz
 
 from paper_fetch import service as paper_fetch
-from paper_fetch.http import HttpTransport
+from paper_fetch.http import HttpTransport, RequestFailure
 from paper_fetch.models import ArticleModel, FetchEnvelope, Metadata, Quality, RenderOptions, Section, TokenEstimateBreakdown
-from paper_fetch.providers import html_generic
+from paper_fetch.providers.base import ProviderArtifacts, ProviderFailure, ProviderFetchResult
+from paper_fetch.tracing import trace_from_markers
 from paper_fetch.utils import empty_asset_results
 
 
 class StubProvider:
+    name = "provider"
+
     def __init__(
         self,
         metadata=None,
@@ -61,16 +65,91 @@ class StubProvider:
             return self._related_assets
         return empty_asset_results()
 
+    def fetch_result(self, doi, metadata, output_dir, *, asset_profile="none"):
+        raw_payload = self.fetch_raw_fulltext(doi, metadata)
+        content = getattr(raw_payload, "content", None)
+        if content is not None and getattr(raw_payload, "needs_local_copy", False) and not content.needs_local_copy:
+            content = replace(content, needs_local_copy=True)
+            raw_payload.content = content
+        route = str(raw_payload.metadata.get("route") or "").strip().lower()
+        provider_name = str(raw_payload.provider or self.name or "provider").strip().lower()
+        downloaded_assets = []
+        asset_failures = []
+        skip_warning = None
+        skip_trace = []
+        allow_related_assets = True
+        if provider_name.startswith("elsevier") and route == "pdf_fallback":
+            allow_related_assets = False
+            skip_warning = (
+                "Elsevier PDF fallback currently returns text-only full text; "
+                "figure and supplementary asset downloads are not implemented yet."
+            )
+            skip_trace = trace_from_markers(["download:elsevier_assets_skipped_text_only"])
+        elif provider_name == "springer" and route == "pdf_fallback":
+            allow_related_assets = False
+            skip_warning = (
+                "Springer PDF fallback currently returns text-only full text; "
+                "figure and supplementary asset downloads are not implemented yet."
+            )
+            skip_trace = trace_from_markers(["download:springer_assets_skipped_text_only"])
+        elif provider_name in {"wiley", "science", "pnas"} and route == "pdf_fallback":
+            allow_related_assets = False
+            provider_label = "PNAS" if provider_name == "pnas" else provider_name.title()
+            skip_warning = (
+                f"{provider_label} PDF fallback currently returns text-only full text; "
+                "figure and supplementary asset downloads are not implemented yet."
+            )
+            skip_trace = trace_from_markers([f"download:{provider_name}_assets_skipped_text_only"])
+        elif output_dir is not None and asset_profile != "none":
+            try:
+                asset_results = self.download_related_assets(
+                    doi,
+                    metadata,
+                    raw_payload,
+                    output_dir,
+                    asset_profile=asset_profile,
+                )
+                downloaded_assets = list(asset_results.get("assets") or [])
+                asset_failures = list(asset_results.get("asset_failures") or [])
+            except (ProviderFailure, RequestFailure, OSError) as exc:
+                article = self.to_article_model(
+                    metadata,
+                    raw_payload,
+                    downloaded_assets=[],
+                    asset_failures=[],
+                )
+                article.quality.warnings.append(f"{provider_name.replace('_', ' ').title()} related assets could not be downloaded: {exc}")
+                article.quality.source_trail.append(f"download:{provider_name}_assets_failed")
+                return ProviderFetchResult(
+                    provider=provider_name or "provider",
+                    article=article,
+                    content=content,
+                    warnings=list(getattr(raw_payload, "warnings", []) or []),
+                    trace=list(getattr(raw_payload, "trace", []) or []),
+                    artifacts=ProviderArtifacts(),
+                )
 
-class StubHtmlClient:
-    def __init__(self, article=None, error=None):
-        self.article = article
-        self.error = error
-
-    def fetch_article_model(self, landing_url, *, metadata=None, expected_doi=None, download_dir=None, asset_profile="none"):
-        if self.error:
-            raise self.error
-        return self.article
+        article = self.to_article_model(
+            metadata,
+            raw_payload,
+            downloaded_assets=downloaded_assets,
+            asset_failures=asset_failures,
+        )
+        return ProviderFetchResult(
+            provider=provider_name or "provider",
+            article=article,
+            content=content,
+            warnings=list(getattr(raw_payload, "warnings", []) or []),
+            trace=list(getattr(raw_payload, "trace", []) or []),
+            artifacts=ProviderArtifacts(
+                assets=[dict(item) for item in downloaded_assets],
+                asset_failures=[dict(item) for item in asset_failures],
+                allow_related_assets=allow_related_assets,
+                text_only=not allow_related_assets,
+                skip_warning=skip_warning,
+                skip_trace=skip_trace,
+            ),
+        )
 
 
 class FixtureHtmlTransport(HttpTransport):
@@ -93,7 +172,7 @@ class FixtureHtmlTransport(HttpTransport):
         transient_backoff_base_seconds=0.5,
     ):
         if url not in self.responses:
-            raise html_generic.RequestFailure(404, f"Missing fixture response for {url}")
+            raise RequestFailure(404, f"Missing fixture response for {url}")
         response = dict(self.responses[url])
         response.setdefault("status_code", 200)
         response.setdefault("headers", {})
@@ -111,12 +190,10 @@ def build_envelope(article: ArticleModel, *, include_markdown: bool = True) -> F
 def fetch_paper_model(
     query: str,
     *,
-    allow_html_fallback: bool = True,
     allow_downloads: bool = True,
     asset_profile: str = "none",
     output_dir: Path | None = None,
     clients=None,
-    html_client=None,
     transport=None,
     env=None,
 ) -> ArticleModel:
@@ -124,13 +201,11 @@ def fetch_paper_model(
         query,
         modes={"article"},
         strategy=paper_fetch.FetchStrategy(
-            allow_html_fallback=allow_html_fallback,
             allow_metadata_only_fallback=True,
             asset_profile=asset_profile,
         ),
         download_dir=output_dir if allow_downloads else None,
         clients=clients,
-        html_client=html_client,
         transport=transport,
         env=env,
     )
@@ -166,7 +241,7 @@ def sample_article() -> paper_fetch.ArticleModel:
 
 def sample_html_article() -> paper_fetch.ArticleModel:
     article = sample_article()
-    article.source = "html_generic"
+    article.source = "springer_html"
     return article
 
 

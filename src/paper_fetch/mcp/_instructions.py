@@ -4,8 +4,7 @@ from __future__ import annotations
 
 DEFAULT_FETCH_VALUES: tuple[tuple[str, str], ...] = (
     ("modes", '["article", "markdown"]'),
-    ("strategy.asset_profile", '"none"'),
-    ("strategy.allow_html_fallback", "true"),
+    ("strategy.asset_profile", "null (provider default)"),
     ("strategy.allow_metadata_only_fallback", "true"),
     ("include_refs", "null"),
     ("max_tokens", '"full_text"'),
@@ -21,12 +20,12 @@ SKILL_ENVIRONMENT_VARIABLES: tuple[tuple[str, str], ...] = (
     ("ELSEVIER_API_KEY", "Required for official Elsevier full-text access."),
     ("ELSEVIER_INSTTOKEN", "Optional institution token for Elsevier entitlement."),
     ("WILEY_TDM_CLIENT_TOKEN", "Optional Wiley Text and Data Mining client token for the official Wiley PDF lane; browser PDF/ePDF fallback can still run without it when the local runtime is ready."),
-    ("FLARESOLVERR_URL", "Optional override for the local Elsevier/Wiley/Science/PNAS FlareSolverr endpoint; defaults to http://127.0.0.1:8191/v1."),
-    ("FLARESOLVERR_ENV_FILE", "Required for Elsevier browser fallback and Wiley/Science/PNAS; points at a repo-local vendor/flaresolverr preset file."),
+    ("FLARESOLVERR_URL", "Optional override for the local Wiley/Science/PNAS FlareSolverr endpoint; defaults to http://127.0.0.1:8191/v1."),
+    ("FLARESOLVERR_ENV_FILE", "Required for Wiley/Science/PNAS; points at a repo-local vendor/flaresolverr preset file."),
     ("FLARESOLVERR_SOURCE_DIR", "Optional override for the repo-local vendor/flaresolverr directory."),
-    ("FLARESOLVERR_MIN_INTERVAL_SECONDS", "Required local minimum spacing between Elsevier browser fallback and Wiley/Science/PNAS requests."),
-    ("FLARESOLVERR_MAX_REQUESTS_PER_HOUR", "Required local hourly cap for Elsevier browser fallback and Wiley/Science/PNAS requests."),
-    ("FLARESOLVERR_MAX_REQUESTS_PER_DAY", "Required local daily cap for Elsevier browser fallback and Wiley/Science/PNAS requests."),
+    ("FLARESOLVERR_MIN_INTERVAL_SECONDS", "Required local minimum spacing between Wiley/Science/PNAS requests."),
+    ("FLARESOLVERR_MAX_REQUESTS_PER_HOUR", "Required local hourly cap for Wiley/Science/PNAS requests."),
+    ("FLARESOLVERR_MAX_REQUESTS_PER_DAY", "Required local daily cap for Wiley/Science/PNAS requests."),
     ("PAPER_FETCH_DOWNLOAD_DIR", "Overrides the default CLI/MCP download directory."),
     ("PAPER_FETCH_RUN_LIVE", "Test-only flag for live publisher integration checks."),
 )
@@ -73,16 +72,16 @@ def server_instructions() -> str:
         "for cache-first single-paper summaries and bibliography triage workflows. "
         "All MCP tools now publish JSON output schemas for clients that support tool-result "
         "validation and autocomplete. "
-        "Defaults: modes=['article','markdown'], strategy.asset_profile='none', "
-        "strategy.allow_html_fallback=true, strategy.allow_metadata_only_fallback=true, "
+        "Defaults: modes=['article','markdown'], strategy.asset_profile omitted (provider default), "
+        "strategy.allow_metadata_only_fallback=true, "
         "include_refs=null, max_tokens='full_text'. In full_text mode include_refs=null "
         "behaves like 'all'. When asset_profile is body/all, optional "
         "strategy.inline_image_budget can tune the default inline ImageContent caps of "
         "3 figures, 2 MiB each, and 8 MiB total. `provider_hint` and "
-        "`preferred_providers` may include `elsevier`, `wiley`, `science`, or `pnas`. "
-        "`elsevier` keeps an official XML/API route first and may then fall back to "
-        "repo-local FlareSolverr HTML before degrading to metadata-only, publishing "
-        "`elsevier_xml` or `elsevier_browser`. `springer` keeps a provider-managed direct HTML route "
+        "`preferred_providers` may include `elsevier`, `springer`, `wiley`, `science`, `pnas`, or `crossref`. "
+        "`elsevier` keeps an official XML route first and may then fall back to the "
+        "official Elsevier API PDF lane before degrading to metadata-only, publishing "
+        "`elsevier_xml` on XML success and `elsevier_pdf` on PDF fallback success. `springer` keeps a provider-managed direct HTML route "
         "with direct HTTP PDF fallback and publishes `springer_html`. `wiley` keeps "
         "the repo-local FlareSolverr HTML route, may then use the official Wiley "
         "TDM API PDF lane when `WILEY_TDM_CLIENT_TOKEN` is configured, and may still "
@@ -90,7 +89,7 @@ def server_instructions() -> str:
         "`wiley_browser`. `science` "
         "and `pnas` require repo-local FlareSolverr plus "
         "explicit local rate-limit env vars and keep their existing public source names. "
-        "Elsevier browser fallback currently returns text-only markdown even when "
+        "Elsevier PDF fallback currently returns text-only markdown even when "
         "`asset_profile` is `body` or `all`. Wiley/Science/PNAS support "
         "`asset_profile=body|all` on successful FlareSolverr HTML routes and "
         "prefer full-size/original figures before falling back to previews, while "
@@ -108,24 +107,24 @@ def fetch_tool_description() -> str:
         "article/markdown/metadata payloads. "
         "The MCP tool also publishes an output schema for clients that support structured "
         "result validation. "
-        "Defaults: modes=['article','markdown'], strategy.asset_profile='none', "
-        "strategy.allow_html_fallback=true, strategy.allow_metadata_only_fallback=true, "
+        "Defaults: modes=['article','markdown'], strategy.asset_profile omitted (provider default), "
+        "strategy.allow_metadata_only_fallback=true, "
         "include_refs=null, max_tokens='full_text', prefer_cache=false. Set "
         "prefer_cache=true to try a local cached FetchEnvelope sidecar before hitting the "
         "network. Use strategy.asset_profile='body' or 'all' to include local assets. "
         "With body/all profiles, key local figures may be returned as ImageContent "
         "alongside the JSON result; strategy.inline_image_budget can override the default "
         "caps of 3 figures, 2 MiB each, and 8 MiB total, and any resulting zero disables "
-        "inline images. `elsevier` keeps an official XML/API route and may fall back to "
-        "repo-local FlareSolverr HTML before degrading to metadata-only, publishing "
-        "`elsevier_xml` or `elsevier_browser`. `springer` uses provider-managed direct HTML and direct "
+        "inline images. `elsevier` keeps an official XML route and may fall back to "
+        "the official Elsevier API PDF lane before degrading to metadata-only, publishing "
+        "`elsevier_xml` on XML success and `elsevier_pdf` on PDF fallback success. `springer` uses provider-managed direct HTML and direct "
         "HTTP PDF fallback while keeping public source `springer_html`. `wiley` keeps "
         "repo-local FlareSolverr HTML first, may then use the official Wiley TDM "
         "API PDF lane when `WILEY_TDM_CLIENT_TOKEN` is configured, and may still "
         "continue into seeded-browser publisher PDF/ePDF fallback while publishing "
         "source `wiley_browser` on success. `science` and `pnas` routes use "
         "provider-managed FlareSolverr HTML plus seeded-browser publisher PDF/ePDF repo-local "
-        "workflows and keep their existing public source names. Elsevier browser "
+        "workflows and keep their existing public source names. Elsevier PDF "
         "fallback keeps body/all requests text-only, Wiley/Science/PNAS support "
         "body/all assets on successful FlareSolverr HTML routes while keeping "
         "PDF/ePDF fallback text-only, and Springer PDF fallback is also text-only "

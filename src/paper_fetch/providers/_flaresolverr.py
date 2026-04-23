@@ -57,7 +57,6 @@ DEFAULT_FLARESOLVERR_MAX_TIMEOUT_MS = 120000
 logger = logging.getLogger("paper_fetch.providers.flaresolverr")
 
 _BROWSER_WORKFLOW_LABELS = {
-    "elsevier": "Elsevier browser fallback",
     "wiley": "Wiley browser workflow",
     "science": "Science browser workflow",
     "pnas": "PNAS browser workflow",

@@ -13,10 +13,15 @@ from typing import Any, Mapping, Sequence
 
 from .config import build_runtime_env, resolve_repo_root
 from .http import HttpTransport
-from .models import FetchEnvelope, TokenEstimateBreakdown, filtered_body_sections
-from .providers.html_generic import HtmlGenericClient
+from .models import (
+    LEADING_ABSTRACT_CONTEXT_HEADINGS,
+    FetchEnvelope,
+    TokenEstimateBreakdown,
+    estimate_tokens,
+    filtered_body_sections,
+    strip_markdown_images,
+)
 from .providers.registry import build_clients
-from .publisher_identity import normalize_doi
 from .service import FetchStrategy, PaperFetchFailure, fetch_paper
 from .utils import normalize_text
 
@@ -30,7 +35,7 @@ GEOGRAPHY_RESULT_STATUSES = (
     "error",
 )
 EXPECTED_FULLTEXT_SOURCES_BY_PROVIDER = {
-    "elsevier": frozenset({"elsevier_xml", "elsevier_browser"}),
+    "elsevier": frozenset({"elsevier_xml", "elsevier_pdf"}),
     "springer": frozenset({"springer_html"}),
     "wiley": frozenset({"wiley_browser"}),
     "science": frozenset({"science"}),
@@ -53,6 +58,7 @@ ABSTRACT_INFLATED_WITH_OVERLAP_CHAR_THRESHOLD = 2600
 OVERLAP_SINGLE_CHUNK_MIN_CHARS = 240
 OVERLAP_MULTI_CHUNK_MIN_CHARS = 160
 OVERLAP_MULTI_CHUNK_MATCHES = 2
+PRIMARY_ABSTRACT_HEADINGS = frozenset({"abstract", "structured abstract", "summary"})
 
 
 @dataclass(frozen=True)
@@ -286,7 +292,6 @@ def run_geography_live_report(
     active_env = build_runtime_env(env)
     active_transport = transport if transport is not None else HttpTransport()
     client_registry = build_clients(active_transport, active_env)
-    html_client = HtmlGenericClient(active_transport, active_env)
     results: list[GeographyReportResult] = []
 
     for sample in scheduled_samples:
@@ -296,12 +301,10 @@ def run_geography_live_report(
                 sample.doi,
                 modes={"article", "markdown"},
                 strategy=FetchStrategy(
-                    allow_html_fallback=False,
                     allow_metadata_only_fallback=True,
                 ),
                 download_dir=None,
                 clients=client_registry,
-                html_client=html_client,
                 transport=active_transport,
                 env=active_env,
             )
@@ -396,7 +399,6 @@ def classify_result_status(provider: str, envelope: FetchEnvelope) -> tuple[str,
     if (
         f"fulltext:{provider}_fail" in source_trail
         or f"fulltext:{provider}_not_usable" in source_trail
-        or "fallback:html_fail" in source_trail
     ):
         return "no_result", "no_result"
     return "metadata_only", None
@@ -413,18 +415,72 @@ def detect_error_message(status: str, envelope: FetchEnvelope) -> str | None:
     return None
 
 
+def normalize_issue_heading(value: Any) -> str:
+    return normalize_text(value).lower().strip(" :")
+
+
+def normalize_issue_section_text(value: Any) -> str:
+    return strip_markdown_images(str(value or ""))
+
+
+def issue_abstract_sections(article: Any) -> list[Any]:
+    return [
+        section
+        for section in (getattr(article, "sections", []) or [])
+        if normalize_text(getattr(section, "kind", "")).lower() == "abstract"
+        and normalize_issue_section_text(getattr(section, "text", ""))
+    ]
+
+
+def is_issue_primary_abstract_heading(heading: str) -> bool:
+    return normalize_issue_heading(heading) in PRIMARY_ABSTRACT_HEADINGS
+
+
+def is_leading_abstract_context_heading(heading: str) -> bool:
+    return normalize_issue_heading(heading) in LEADING_ABSTRACT_CONTEXT_HEADINGS
+
+
+def metadata_matches_leading_abstract_context(metadata_abstract: str, abstract_sections: Sequence[Any]) -> bool:
+    normalized_metadata = normalize_issue_section_text(metadata_abstract)
+    if not normalized_metadata:
+        return False
+    return any(
+        is_leading_abstract_context_heading(getattr(section, "heading", ""))
+        and normalize_issue_section_text(getattr(section, "text", "")) == normalized_metadata
+        for section in abstract_sections
+    )
+
+
+def resolve_issue_primary_abstract(article: Any) -> str:
+    if article is None:
+        return ""
+    abstract_candidates = issue_abstract_sections(article)
+    for section in abstract_candidates:
+        if is_issue_primary_abstract_heading(getattr(section, "heading", "")):
+            return normalize_issue_section_text(getattr(section, "text", ""))
+
+    metadata = getattr(article, "metadata", None)
+    metadata_abstract = normalize_issue_section_text(getattr(metadata, "abstract", None))
+    if metadata_abstract and not metadata_matches_leading_abstract_context(metadata_abstract, abstract_candidates):
+        return metadata_abstract
+
+    for section in abstract_candidates:
+        if not is_leading_abstract_context_heading(getattr(section, "heading", "")):
+            return normalize_issue_section_text(getattr(section, "text", ""))
+    return metadata_abstract
+
+
 def collect_issue_flags(provider: str, envelope: FetchEnvelope, *, status: str) -> list[str]:
     issue_flags: list[str] = []
     article = envelope.article
     metadata = getattr(article, "metadata", None)
-    raw_abstract_text = getattr(metadata, "abstract", None)
-    abstract_text = normalize_text(raw_abstract_text)
+    abstract_text = resolve_issue_primary_abstract(article)
     body_sections = filtered_body_sections(getattr(article, "sections", []) or []) if article is not None else []
     body_text = "\n\n".join(normalize_text(section.text) for section in body_sections if normalize_text(section.text))
 
     if abstract_text and status == "fulltext":
-        abstract_tokens = int(getattr(envelope.token_estimate_breakdown, "abstract", 0) or 0)
-        overlap_detected = bool(body_text) and has_abstract_body_overlap(raw_abstract_text or abstract_text, body_text)
+        abstract_tokens = estimate_tokens(abstract_text)
+        overlap_detected = bool(body_text) and has_abstract_body_overlap(abstract_text, body_text)
         if has_inflated_abstract(
             abstract_text,
             abstract_tokens=abstract_tokens,

@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<full-text-retrieval-response xmlns="http://www.elsevier.com/xml/svapi/article/dtd" xmlns:ce="http://www.elsevier.com/xml/common/dtd">
+  <coredata>
+    <dc:title xmlns:dc="http://purl.org/dc/elements/1.1/">Community pharmacy counseling in multilingual care</dc:title>
+  </coredata>
+  <abstract>
+    <ce:section xml:lang="en">
+      <ce:section-title>Abstract</ce:section-title>
+      <ce:para>The English abstract for this Elsevier XML fixture summarizes the intervention, the patient counseling workflow, and the multilingual communication setting.</ce:para>
+    </ce:section>
+    <ce:section xml:lang="es">
+      <ce:section-title>Resumen</ce:section-title>
+      <ce:para>El resumen en espanol debe conservarse como una segunda seccion de abstract y no como una seccion de resultados o discusion.</ce:para>
+    </ce:section>
+  </abstract>
+  <body>
+    <ce:sections>
+      <ce:section>
+        <ce:section-title>Results</ce:section-title>
+        <ce:para>The body section records how counseling consistency changed after multilingual patient materials were introduced across the study clinics.</ce:para>
+        <ce:para>A second results paragraph keeps the fixture safely above abstract-only thresholds and confirms that the XML body remains separate from the bilingual abstract container.</ce:para>
+      </ce:section>
+    </ce:sections>
+  </body>
+</full-text-retrieval-response>

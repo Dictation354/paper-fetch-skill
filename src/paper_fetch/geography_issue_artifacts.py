@@ -157,7 +157,6 @@ def export_issue_row(
             doi,
             modes={"article", "markdown"},
             strategy=FetchStrategy(
-                allow_html_fallback=False,
                 allow_metadata_only_fallback=True,
             ),
             render=RenderOptions(include_refs="all", asset_profile="none", max_tokens="full_text"),

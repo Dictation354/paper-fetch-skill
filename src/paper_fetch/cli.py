@@ -4,50 +4,15 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import sys
-import urllib.parse
-from dataclasses import replace
 from pathlib import Path
 
 from .config import build_runtime_env, resolve_cli_download_dir
-from .models import ArticleModel, FetchEnvelope, RenderOptions
+from .models import FetchEnvelope, RenderOptions
 from .providers.base import ProviderFailure
 from .service import FetchStrategy, PaperFetchFailure, fetch_paper
 from .utils import extend_unique, sanitize_filename
-
-ASSET_LINK_PLACEHOLDER_PREFIX = "paper-fetch-asset://"
-
-
-def _relative_asset_link(value: str | None, *, target_path: Path) -> str | None:
-    original = str(value or "").strip()
-    if not original or original.startswith(("http://", "https://", "//")):
-        return None
-    source_path = Path(original)
-    if not source_path.is_absolute():
-        return None
-    relative = Path(os.path.relpath(source_path, start=target_path.parent))
-    return urllib.parse.quote(relative.as_posix(), safe="/._-")
-
-
-def _article_with_placeholder_asset_links(article: ArticleModel, *, target_path: Path) -> tuple[ArticleModel, dict[str, str]]:
-    replacements: dict[str, str] = {}
-    rewritten_assets = []
-    placeholder_index = 0
-    for asset in article.assets:
-        placeholder_asset = asset
-        relative_path = _relative_asset_link(asset.path, target_path=target_path)
-        rewrite_field = "path"
-        if relative_path is None:
-            relative_path = _relative_asset_link(asset.url, target_path=target_path)
-            rewrite_field = "url"
-        if relative_path is not None:
-            placeholder = f"{ASSET_LINK_PLACEHOLDER_PREFIX}{placeholder_index}"
-            placeholder_index += 1
-            replacements[placeholder] = relative_path
-            placeholder_asset = replace(asset, **{rewrite_field: placeholder})
-        rewritten_assets.append(placeholder_asset)
-    return replace(article, assets=rewritten_assets), replacements
+from .workflow.rendering import rewrite_markdown_asset_links as rewrite_markdown_asset_links_for_target
 
 
 def rewrite_markdown_asset_links(
@@ -57,21 +22,12 @@ def rewrite_markdown_asset_links(
     target_path: Path,
     render: RenderOptions,
 ) -> str:
-    if not markdown or envelope.article is None:
-        return markdown
-
-    article_with_placeholders, replacements = _article_with_placeholder_asset_links(envelope.article, target_path=target_path)
-    if not replacements:
-        return markdown
-
-    rewritten = article_with_placeholders.to_ai_markdown(
-        include_refs=render.include_refs,
-        asset_profile=render.asset_profile or "none",
-        max_tokens=render.max_tokens,
+    return rewrite_markdown_asset_links_for_target(
+        markdown,
+        envelope,
+        target_path=target_path,
+        render=render,
     )
-    for placeholder, relative_path in replacements.items():
-        rewritten = rewritten.replace(placeholder, relative_path)
-    return rewritten
 
 
 def save_markdown_to_disk(envelope: FetchEnvelope, *, output_dir: Path, render: RenderOptions) -> None:
@@ -193,9 +149,8 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument("--include-refs", choices=("none", "top10", "all"), default=None)
-    parser.add_argument("--asset-profile", choices=("none", "body", "all"), default="none")
+    parser.add_argument("--asset-profile", choices=("none", "body", "all"), default=None)
     parser.add_argument("--max-tokens", type=parse_max_tokens, default="full_text")
-    parser.add_argument("--no-html-fallback", action="store_true")
     return parser
 
 
@@ -216,7 +171,6 @@ def main() -> int:
             args.query,
             modes=modes,
             strategy=FetchStrategy(
-                allow_html_fallback=not args.no_html_fallback,
                 allow_metadata_only_fallback=True,
                 asset_profile=args.asset_profile,
             ),

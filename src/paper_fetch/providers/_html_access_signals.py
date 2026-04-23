@@ -20,9 +20,10 @@ CHALLENGE_PATTERNS = (
     "attention required",
     "cloudflare",
 )
-PAYWALL_PATTERNS = (
+ACCESS_GATE_PATTERN_MAP = {
     "check access",
     "purchase access",
+    "purchase digital access to this article",
     "institutional access",
     "log in to your account",
     "login to your account",
@@ -30,7 +31,14 @@ PAYWALL_PATTERNS = (
     "access through your institution",
     "rent or buy",
     "purchase this article",
-)
+    "access the full article",
+    "get full access to this article",
+    "access this article",
+    "buy article pdf",
+    "buy now",
+    "view all access options to continue reading this article",
+}
+PAYWALL_PATTERNS = tuple(ACCESS_GATE_PATTERN_MAP)
 NOT_FOUND_PATTERNS = (
     "doi not found",
     "page not found",
@@ -69,6 +77,17 @@ def html_failure_message(reason: str) -> str:
     return FAILURE_MESSAGES.get(reason, "The full-text route was not usable.")
 
 
+def matched_access_gate_patterns(text: str) -> list[str]:
+    normalized = normalize_text(text).lower()
+    if not normalized:
+        return []
+    return [pattern for pattern in ACCESS_GATE_PATTERN_MAP if pattern in normalized]
+
+
+def contains_access_gate_text(text: str) -> bool:
+    return bool(matched_access_gate_patterns(text))
+
+
 def detect_html_access_signals(
     title: str,
     text: str,
@@ -91,7 +110,7 @@ def detect_html_access_signals(
         signals.append("publisher_access_denied")
     if explicit_no_access:
         signals.append("publisher_access_denied")
-    if include_paywall_text and any(pattern in combined for pattern in PAYWALL_PATTERNS):
+    if include_paywall_text and contains_access_gate_text(combined):
         signals.append("publisher_paywall")
     return list(dict.fromkeys(signals))
 

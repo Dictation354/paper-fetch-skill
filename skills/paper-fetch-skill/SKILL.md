@@ -38,7 +38,7 @@ Use this skill when an agent needs the contents or full-text availability of one
 - `fetch_paper(...)`: returns one stable JSON payload with top-level provenance plus optional `article`, `markdown`, and `metadata` fields.
 - `fetch_paper(...)`: top-level `token_estimate_breakdown={abstract,body,refs}` helps decide when to tighten `include_refs` or retry with a smaller numeric `max_tokens`.
 - `fetch_paper(...)`: supporting MCP clients also see an `outputSchema`; `progress` and structured log notifications may arrive while `fetch_paper`, `batch_check`, or `batch_resolve` runs.
-- `fetch_paper(...)`: recommended defaults are `modes=["article", "markdown"]`, `strategy.asset_profile="none"`, `strategy.allow_html_fallback=true`, `strategy.allow_metadata_only_fallback=true`, `include_refs=null`, `max_tokens="full_text"`, and `prefer_cache=false`.
+- `fetch_paper(...)`: recommended defaults are `modes=["article", "markdown"]`, `strategy.asset_profile=null (provider default)`, `strategy.allow_metadata_only_fallback=true`, `include_refs=null`, `max_tokens="full_text"`, and `prefer_cache=false`.
 - `fetch_paper(...)`: `include_refs=null` behaves like `all` when `max_tokens="full_text"`.
 - `fetch_paper(...)`: When `max_tokens` is a positive integer, `include_refs=null` behaves like `top10`.
 - `fetch_paper(...)`: `prefer_cache=true` tries a local cached FetchEnvelope sidecar before hitting the network.

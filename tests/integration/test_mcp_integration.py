@@ -45,7 +45,7 @@ SERVER_SCRIPT = textwrap.dedent(
             title="Example Article",
         )
 
-    def fake_fetch(query, *, modes=None, strategy=None, render=None, download_dir=None, clients=None, html_client=None, transport=None, env=None):
+    def fake_fetch(query, *, modes=None, strategy=None, render=None, download_dir=None, clients=None, transport=None, env=None):
         figure_path = None
         if download_dir is not None:
             output_dir = Path(download_dir)

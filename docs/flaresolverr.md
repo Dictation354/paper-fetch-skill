@@ -1,8 +1,8 @@
-# Elsevier Browser Fallback / Wiley / Science / PNAS FlareSolverr 工作流
+# Wiley / Science / PNAS FlareSolverr 工作流
 
 这份文档解决：
 
-- `elsevier` browser fallback 与 `wiley` / `science` / `pnas` 的 repo-local 运行边界
+- `wiley` / `science` / `pnas` 的 repo-local 运行边界
 - 必填变量与 preset 选择
 - 一次性准备、启动、检查、停止
 - smoke 命令与常见失败排障
@@ -17,15 +17,14 @@
 
 ## 范围与边界
 
-`elsevier` browser fallback 与 `wiley` / `science` / `pnas` 当前遵循这些边界：
+`wiley` / `science` / `pnas` 当前遵循这些边界：
 
 - 它们是公开 provider 名字，可能出现在 `provider_hint`、`preferred_providers` 中
 - metadata 仍由 `crossref` 提供
-- `elsevier` 的浏览器链路是 `FlareSolverr HTML -> metadata-only`，前面仍有官方 XML/API 主链
 - `wiley` 的正文链路是 provider 自管的 `FlareSolverr HTML -> Wiley TDM API PDF -> seeded-browser publisher PDF/ePDF -> metadata-only`
 - `science` / `pnas` 的正文链路仍是 provider 自管的 `FlareSolverr HTML -> seeded-browser publisher PDF/ePDF -> metadata-only`
 - `wiley` / `science` / `pnas` 共用同一套 provider-owned 浏览器 bootstrap 与 browser-PDF executor，不再保留单独的 Science path harness
-- `source` 公开可能是 `elsevier_browser`、`wiley_browser`、`science` 或 `pnas`
+- `source` 公开可能是 `wiley_browser`、`science` 或 `pnas`
 - `asset_profile=body|all` 当前都会降级成 text-only
 - 这条链路只保证在当前仓库 checkout 中运行
 - 站点 ToS、robots、授权与合规风险由操作者自行承担
@@ -52,7 +51,7 @@ export FLARESOLVERR_SOURCE_DIR="$PWD/vendor/flaresolverr"
 
 - `FLARESOLVERR_ENV_FILE` 必填，不会自动猜 preset
 - 三条限速变量也必填，未配置时 provider 直接拒绝运行
-- 默认限速账本会同时影响 `elsevier` browser fallback 与 `wiley` / `science` / `pnas`
+- 默认限速账本会同时影响 `wiley` / `science` / `pnas`
 
 ## preset 选择
 
@@ -80,7 +79,7 @@ export FLARESOLVERR_SOURCE_DIR="$PWD/vendor/flaresolverr"
 - `wiley` / `science` / `pnas` 所需的 Playwright Chromium
 - `headless` preset 所需的 `Xvfb` 检查
 
-如果你只想手动准备 Elsevier browser fallback / Wiley / Science / PNAS 依赖：
+如果你只想手动准备 Wiley / Science / PNAS 依赖：
 
 ```bash
 bash ./vendor/flaresolverr/setup_flaresolverr_source.sh
@@ -134,7 +133,7 @@ curl --noproxy '*' -fsS -X POST http://127.0.0.1:8191/v1 \
 Wiley 样例：
 
 ```bash
-PYTHONPATH=src python3 -m paper_fetch.cli --query "10.1002/adma.202310123"
+PYTHONPATH=src python3 -m paper_fetch.cli --query "10.1002/adma.202310122"
 ```
 
 Science HTML 成功样例：
@@ -157,7 +156,7 @@ FLARESOLVERR_ENV_FILE="$PWD/vendor/flaresolverr/.env.flaresolverr-source-headles
 FLARESOLVERR_MIN_INTERVAL_SECONDS=20 \
 FLARESOLVERR_MAX_REQUESTS_PER_HOUR=30 \
 FLARESOLVERR_MAX_REQUESTS_PER_DAY=200 \
-PYTHONPATH=src python3 -m unittest tests.live.test_live_science_pnas -q
+PYTHONPATH=src pytest -n 0 tests/live/test_live_science_pnas.py
 ```
 
 ## 常见失败与排障
@@ -180,14 +179,13 @@ PYTHONPATH=src python3 -m unittest tests.live.test_live_science_pnas -q
 
 - 对 `wiley` 来说，这可能是 `FlareSolverr HTML -> Wiley TDM API PDF`，也可能继续进入 seeded-browser publisher PDF/ePDF
 - 对 `science` / `pnas` 来说，这可能是 `FlareSolverr HTML -> seeded-browser publisher PDF/ePDF` 的正常路径
-- 对 `elsevier` 来说，HTML 失败后会直接降级 metadata-only，不再继续 PDF fallback
 - 最终成功与否以结果为准
 - 细节看 `source_trail`
 
 ### `asset_profile=body|all` 仍没有图
 
 - 这是当前实现约束
-- `elsevier` browser fallback 与 `wiley` / `science` / `pnas` v1 只承诺正文 Markdown，不承诺资产下载
+- `wiley` / `science` / `pnas` v1 只承诺正文 Markdown，不承诺资产下载
 
 ## 相关文档
 

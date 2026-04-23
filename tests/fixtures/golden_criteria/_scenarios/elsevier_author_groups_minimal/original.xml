@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<full-text-retrieval-response
+  xmlns="http://www.elsevier.com/xml/svapi/article/dtd"
+  xmlns:ce="http://www.elsevier.com/xml/common/dtd"
+>
+  <ce:author-group id="ag1">
+    <ce:author id="au1">
+      <ce:given-name>Jane</ce:given-name>
+      <ce:surname>Doe</ce:surname>
+    </ce:author>
+    <ce:author id="au2">
+      <ce:indexed-name>Smith, J.</ce:indexed-name>
+    </ce:author>
+    <ce:collaboration>Open Climate Consortium</ce:collaboration>
+  </ce:author-group>
+  <abstract>
+    <ce:para>
+      This compact fixture preserves the Elsevier XML structure needed to verify author-group extraction and final
+      article metadata assembly.
+    </ce:para>
+  </abstract>
+  <body>
+    <ce:sections>
+      <ce:section>
+        <ce:section-title>Results</ce:section-title>
+        <ce:para>
+          The body section remains long enough for structured availability checks while keeping the regression sample
+          small and deterministic.
+        </ce:para>
+      </ce:section>
+    </ce:sections>
+  </body>
+</full-text-retrieval-response>

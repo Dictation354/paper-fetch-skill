@@ -22,6 +22,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
+  "pytest-xdist>=3.6,<4",
   "ruff>=0.8,<1",
 ]
 
@@ -42,3 +43,10 @@ where = ["src"]
 [tool.ruff]
 target-version = "py311"
 src = ["src", "tests"]
+
+[tool.pytest.ini_options]
+addopts = "-n auto"
+testpaths = [
+  "tests/unit",
+  "tests/integration",
+]

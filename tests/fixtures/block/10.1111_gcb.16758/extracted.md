@@ -1,0 +1,5 @@
+# Spring phenology rather than climate dominates the trends in peak of growing season in the Northern Hemisphere
+
+## Abstract
+
+Shifts in plant phenology regulate ecosystem structure and function, which feeds back to the climate system. However, drivers for the peak of growing season (POS) in seasonal dynamics of terrestrial ecosystems remain unclear. Here, spatial–temporal patterns of POS dynamics were analyzed by solar-induced chlorophyll fluorescence (SIF) and vegetation index in the Northern Hemisphere over the past two decades from 2001 to 2020. Overall, a slow advanced POS was observed in the Northern Hemisphere, while a delayed POS distributed mainly in northeastern North America. Trends of POS were driven by the start of growing season (SOS) rather than pre-POS climate both at hemisphere and biome scale. The effect of SOS on the trends in POS was the strongest in shrublands while the weakest in evergreen broad-leaved forest. These findings highlight the crucial role of biological rhythms rather than climatic factors in exploring seasonal carbon dynamics and global carbon balance.

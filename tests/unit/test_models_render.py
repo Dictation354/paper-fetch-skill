@@ -6,8 +6,11 @@ from paper_fetch import service as paper_fetch
 from paper_fetch.models import (
     Asset,
     ArticleModel,
+    EXTRACTION_REVISION,
     Metadata,
     Quality,
+    QUALITY_FLAG_ACCESS_GATE_DETECTED,
+    QUALITY_FLAG_WEAK_BODY_STRUCTURE,
     Reference,
     RenderOptions,
     Section,
@@ -108,6 +111,19 @@ class ModelsRenderTests(unittest.TestCase):
         self.assertIn("## References (3 total, showing 3)", markdown)
         self.assertIn("- Reference 3", markdown)
 
+    def test_to_ai_markdown_preserves_numbered_reference_lines(self) -> None:
+        article = sample_article()
+        article.references = [
+            Reference(raw="1. Numbered reference one"),
+            Reference(raw="2. Numbered reference two"),
+        ]
+
+        markdown = article.to_ai_markdown()
+
+        self.assertIn("1. Numbered reference one", markdown)
+        self.assertIn("2. Numbered reference two", markdown)
+        self.assertNotIn("- 1. Numbered reference one", markdown)
+
     def test_to_ai_markdown_full_text_respects_explicit_include_refs(self) -> None:
         article = sample_article()
         article.references = [Reference(raw=f"Reference {index}") for index in range(1, 13)]
@@ -169,6 +185,106 @@ class ModelsRenderTests(unittest.TestCase):
         self.assertIn("- Figure 1: Overview figure.", markdown)
         self.assertNotIn("![Figure 1]", markdown)
 
+    def test_to_ai_markdown_suppresses_trailing_figures_for_body_figures_already_inline(self) -> None:
+        article = sample_article()
+        article.sections = [
+            Section(
+                heading="Results",
+                level=2,
+                kind="body",
+                text="\n".join(
+                    [
+                        "Body text lives here.",
+                        "",
+                        "![Figure 1](/tmp/figure-1.png)",
+                        "",
+                        "**Figure 1.** Inline caption text.",
+                    ]
+                ),
+            )
+        ]
+        article.assets = [
+            Asset(kind="figure", heading="Figure 1", caption="Inline caption text.", path="/tmp/figure-1.png", section="body"),
+            Asset(kind="figure", heading="Figure A1", caption="Appendix figure.", path="/tmp/figure-a1.png", section="appendix"),
+        ]
+
+        markdown = article.to_ai_markdown(asset_profile="body", max_tokens="full_text")
+
+        self.assertIn("![Figure 1](/tmp/figure-1.png)", markdown)
+        self.assertNotIn("## Figures", markdown)
+        self.assertNotIn("- Figure 1: Inline caption text.", markdown)
+        self.assertNotIn("Figure A1", markdown)
+
+    def test_to_ai_markdown_keeps_unmatched_body_figures_in_trailing_fallback_block(self) -> None:
+        article = sample_article()
+        article.sections = [
+            Section(
+                heading="Results",
+                level=2,
+                kind="body",
+                text="\n".join(
+                    [
+                        "Body text lives here.",
+                        "",
+                        "![Figure 1](/tmp/figure-1.png)",
+                        "",
+                        "**Figure 1.** Inline caption text.",
+                    ]
+                ),
+            )
+        ]
+        article.assets = [
+            Asset(kind="figure", heading="Figure 1", caption="Inline caption text.", path="/tmp/figure-1.png", section="body"),
+            Asset(kind="figure", heading="Figure 2", caption="Unmatched caption text.", path="/tmp/figure-2.png", section="body"),
+        ]
+
+        markdown = article.to_ai_markdown(asset_profile="body", max_tokens="full_text")
+
+        self.assertIn("![Figure 1](/tmp/figure-1.png)", markdown)
+        self.assertIn("## Figures", markdown)
+        self.assertNotIn("- Figure 1: Inline caption text.", markdown)
+        self.assertIn("![Figure 2](/tmp/figure-2.png)", markdown)
+
+    def test_to_ai_markdown_skips_table_like_pseudo_figures_from_trailing_figures_block(self) -> None:
+        article = sample_article()
+        article.sections = [
+            Section(
+                heading="Results",
+                level=2,
+                kind="body",
+                text="\n".join(
+                    [
+                        "Body text lives here.",
+                        "",
+                        "![Figure 1](/tmp/figure-1.png)",
+                        "",
+                        "**Figure 1.** Inline caption text.",
+                        "",
+                        "**Table 1.** Inline table caption.",
+                        "",
+                        "| col_a | col_b |",
+                        "| --- | --- |",
+                        "| 1 | 2 |",
+                    ]
+                ),
+            )
+        ]
+        article.assets = [
+            Asset(kind="figure", heading="Figure 1", caption="Inline caption text.", path="/tmp/figure-1.png", section="body"),
+            Asset(
+                kind="figure",
+                heading="Table 1 Performance summary",
+                caption="Table 1 Performance summary",
+                section="body",
+            ),
+        ]
+
+        markdown = article.to_ai_markdown(asset_profile="body", max_tokens="full_text")
+
+        self.assertIn("![Figure 1](/tmp/figure-1.png)", markdown)
+        self.assertIn("**Table 1.** Inline table caption.", markdown)
+        self.assertNotIn("## Figures", markdown)
+
     def test_build_fetch_envelope_default_markdown_uses_captions_only_and_no_supplementary_links(self) -> None:
         article = sample_article()
         article.assets = [
@@ -182,10 +298,12 @@ class ModelsRenderTests(unittest.TestCase):
         self.assertIn("- Figure 1: Overview figure.", envelope.markdown)
         self.assertNotIn("![Figure 1](downloads/figure-1.png)", envelope.markdown)
         self.assertNotIn("[Supplementary Data](downloads/supplement.csv)", envelope.markdown)
+        self.assertEqual(envelope.quality.extraction_revision, EXTRACTION_REVISION)
+        self.assertEqual(envelope.quality.content_kind, article.quality.content_kind)
 
     def test_article_from_markdown_preserves_code_fences_and_ascii_tables(self) -> None:
         article = article_from_markdown(
-            source="html_generic",
+            source="springer_html",
             metadata={"title": "Structured Article"},
             doi="10.1000/test",
             markdown_text="\n".join(
@@ -213,7 +331,7 @@ class ModelsRenderTests(unittest.TestCase):
 
     def test_article_from_markdown_normalizes_blank_asset_fields_to_none(self) -> None:
         article = article_from_markdown(
-            source="html_generic",
+            source="springer_html",
             metadata={"title": "Structured Article"},
             doi="10.1000/test",
             markdown_text="## Results\n\nBody text",
@@ -247,6 +365,8 @@ class ModelsRenderTests(unittest.TestCase):
         self.assertEqual(article.quality.token_estimate_breakdown.body, 0)
         self.assertEqual(article.quality.token_estimate_breakdown.refs, estimate_tokens("Reference 1\nReference 2"))
         self.assertEqual(article.quality.token_estimate, estimate_tokens("Abstract summary text."))
+        self.assertEqual(article.quality.confidence, "low")
+        self.assertEqual(article.quality.extraction_revision, EXTRACTION_REVISION)
 
     def test_article_from_structure_populates_token_breakdown(self) -> None:
         article = article_from_structure(
@@ -271,7 +391,7 @@ class ModelsRenderTests(unittest.TestCase):
 
     def test_article_from_markdown_populates_token_breakdown(self) -> None:
         article = article_from_markdown(
-            source="html_generic",
+            source="springer_html",
             metadata={"title": "Markdown Article", "references": ["Reference 1", "Reference 2"]},
             doi="10.1000/markdown",
             markdown_text="# Markdown Article\n\n## Abstract\n\nShort abstract.\n\n## Results\n\nBody text lives here.",
@@ -285,9 +405,54 @@ class ModelsRenderTests(unittest.TestCase):
             estimate_tokens("Short abstract.") + estimate_tokens("Body text lives here."),
         )
 
+    def test_article_from_markdown_prefixes_reference_labels_from_metadata(self) -> None:
+        article = article_from_markdown(
+            source="springer_html",
+            metadata={
+                "title": "Markdown Article",
+                "references": [
+                    {"label": "1", "raw": "First numbered reference."},
+                    {"label": "2.", "raw": "Second numbered reference."},
+                ],
+            },
+            doi="10.1000/markdown-labeled-refs",
+            markdown_text="# Markdown Article\n\n## Results\n\nBody text lives here.",
+        )
+
+        self.assertEqual([reference.raw for reference in article.references], ["1. First numbered reference.", "2. Second numbered reference."])
+
+    def test_article_from_markdown_skips_parsed_abstract_sections_when_explicit_abstracts_exist(self) -> None:
+        article = article_from_markdown(
+            source="springer_html",
+            metadata={"title": "Nature Article"},
+            doi="10.1000/nature-abstract",
+            markdown_text=(
+                "# Nature Article\n\n"
+                "## Abstract\n\n"
+                "Large interannual variations in the measured growth rate of atmospheric carbon dioxide (CO2) "
+                "originate primarily from fluctuations in carbon uptake by land ecosystems.\n\n"
+                "## Results\n\n"
+                "Body text lives here."
+            ),
+            abstract_sections=[
+                {
+                    "heading": "Abstract",
+                    "text": (
+                        "Large interannual variations in the measured growth rate of atmospheric carbon dioxide "
+                        "(CO 2 ) originate primarily from fluctuations in carbon uptake by land ecosystems 1 , 2 ."
+                    ),
+                }
+            ],
+        )
+
+        self.assertEqual([section.heading for section in article.sections if section.kind == "abstract"], ["Abstract"])
+        rendered = article.to_ai_markdown(max_tokens="full_text")
+        self.assertEqual(rendered.count("## Abstract"), 1)
+        self.assertIn("## Results", rendered)
+
     def test_article_from_markdown_keeps_data_availability_without_counting_it_as_fulltext(self) -> None:
         article = article_from_markdown(
-            source="html_generic",
+            source="springer_html",
             metadata={"title": "Markdown Article"},
             doi="10.1000/data-availability",
             markdown_text=(
@@ -300,9 +465,9 @@ class ModelsRenderTests(unittest.TestCase):
         )
 
         self.assertEqual(article.quality.content_kind, "abstract_only")
-        self.assertEqual(len(article.sections), 1)
-        self.assertEqual(article.sections[0].kind, "data_availability")
+        self.assertEqual([section.kind for section in article.sections], ["abstract", "data_availability"])
         rendered = article.to_ai_markdown(max_tokens="full_text")
+        self.assertIn("## Abstract", rendered)
         self.assertIn("## Data Availability", rendered)
         self.assertIn("The data are available from the corresponding author", rendered)
 
@@ -333,9 +498,9 @@ class ModelsRenderTests(unittest.TestCase):
             estimate_tokens("Body text lives here.\n\n**Figure 1.** Figure caption text."),
         )
 
-    def test_article_from_markdown_moves_abstract_into_metadata_and_excludes_abstract_sections(self) -> None:
+    def test_article_from_markdown_moves_abstract_into_metadata_and_preserves_abstract_sections(self) -> None:
         article = article_from_markdown(
-            source="html_generic",
+            source="springer_html",
             metadata={"title": "Markdown Article"},
             doi="10.1000/markdown",
             markdown_text="# Markdown Article\n\n## Abstract\n\nShort abstract.\n\n## Results\n\nBody text lives here.",
@@ -344,7 +509,67 @@ class ModelsRenderTests(unittest.TestCase):
         self.assertEqual(article.metadata.abstract, "Short abstract.")
         self.assertEqual(article.quality.content_kind, "fulltext")
         self.assertTrue(article.quality.has_abstract)
-        self.assertFalse(any(section.kind == "abstract" for section in article.sections))
+        self.assertEqual(article.sections[0].kind, "abstract")
+        self.assertEqual(article.sections[0].heading, "Abstract")
+        self.assertEqual(article.sections[0].text, "Short abstract.")
+        self.assertEqual(article.sections[1].heading, "Results")
+        self.assertEqual(article.quality.confidence, "medium")
+        self.assertIn(QUALITY_FLAG_WEAK_BODY_STRUCTURE, article.quality.flags)
+
+    def test_article_from_markdown_keeps_headingless_body_flat_without_synthetic_heading(self) -> None:
+        article = article_from_markdown(
+            source="springer_html",
+            metadata={"title": "Headingless Article"},
+            doi="10.1000/headingless-markdown",
+            markdown_text=(
+                "# Headingless Article\n\n"
+                "This article starts directly with body prose and never introduces a body subsection heading.\n\n"
+                "A second paragraph keeps the body long enough to behave like real article text."
+            ),
+        )
+
+        self.assertEqual(len(article.sections), 1)
+        self.assertEqual(article.sections[0].heading, "")
+        self.assertEqual(article.sections[0].kind, "body")
+        self.assertEqual(article.quality.content_kind, "fulltext")
+        self.assertEqual(
+            article.quality.token_estimate_breakdown.body,
+            estimate_tokens(article.sections[0].text),
+        )
+        rendered = article.to_ai_markdown(max_tokens="full_text")
+        self.assertIn("# Headingless Article", rendered)
+        self.assertNotIn("## Headingless Article", rendered)
+        self.assertNotIn("## Full Text", rendered)
+
+    def test_article_from_structure_keeps_headingless_body_flat_without_synthetic_heading(self) -> None:
+        article = article_from_structure(
+            source="elsevier_xml",
+            metadata={"title": "Structured Headingless"},
+            doi="10.1000/headingless-structure",
+            abstract_lines=[],
+            body_lines=[
+                "This XML-derived article starts directly with body prose.",
+                "",
+                "A second paragraph keeps the structured body stable without requiring a fake heading.",
+            ],
+            figure_entries=[],
+            table_entries=[],
+            supplement_entries=[],
+            conversion_notes=[],
+        )
+
+        self.assertEqual(len(article.sections), 1)
+        self.assertEqual(article.sections[0].heading, "")
+        self.assertEqual(article.sections[0].kind, "body")
+        self.assertEqual(article.quality.content_kind, "fulltext")
+        self.assertEqual(
+            article.quality.token_estimate_breakdown.body,
+            estimate_tokens(article.sections[0].text),
+        )
+        rendered = article.to_ai_markdown(max_tokens="full_text")
+        self.assertIn("# Structured Headingless", rendered)
+        self.assertNotIn("## Structured Headingless", rendered)
+        self.assertNotIn("## Full Text", rendered)
 
     def test_article_from_markdown_splits_leading_inline_abstract_from_main_text(self) -> None:
         article = article_from_markdown(
@@ -379,6 +604,400 @@ class ModelsRenderTests(unittest.TestCase):
         self.assertEqual(article.metadata.abstract, "Only the abstract is available in this markdown sample.")
         self.assertEqual(article.sections, [])
         self.assertEqual(article.quality.content_kind, "abstract_only")
+        self.assertEqual(article.quality.confidence, "low")
+
+    def test_article_from_markdown_downgrades_when_provider_diagnostics_explicitly_reject_body(self) -> None:
+        article = article_from_markdown(
+            source="springer_html",
+            metadata={"title": "Diagnostic Article", "abstract": "Short abstract."},
+            doi="10.1000/diagnostic",
+            markdown_text=(
+                "# Diagnostic Article\n\n"
+                "## Abstract\n\n"
+                "Short abstract.\n\n"
+                "## Results\n\n"
+                "Teaser paragraph that should not survive an explicit access-gated downgrade."
+            ),
+            availability_diagnostics={
+                "accepted": False,
+                "reason": "publisher_paywall",
+                "content_kind": "abstract_only",
+                "hard_negative_signals": ["publisher_paywall"],
+                "soft_positive_signals": ["citation_abstract_html_url"],
+                "body_metrics": {
+                    "char_count": 74,
+                    "word_count": 12,
+                    "body_block_count": 1,
+                    "body_heading_count": 1,
+                    "body_to_abstract_ratio": 1.0,
+                    "explicit_body_container": False,
+                    "post_abstract_body_run": False,
+                },
+                "figure_count": 0,
+            },
+            allow_downgrade_from_diagnostics=True,
+        )
+
+        self.assertEqual(article.quality.content_kind, "abstract_only")
+        self.assertEqual([section.kind for section in article.sections], ["abstract"])
+        self.assertEqual(article.quality.confidence, "low")
+        self.assertIn(QUALITY_FLAG_ACCESS_GATE_DETECTED, article.quality.flags)
+
+    def test_article_from_markdown_downgrades_when_blocking_fallback_signals_are_present(self) -> None:
+        article = article_from_markdown(
+            source="wiley_browser",
+            metadata={"title": "Blocking Article", "abstract": "Short abstract."},
+            doi="10.1000/blocking",
+            markdown_text=(
+                "# Blocking Article\n\n"
+                "## Abstract\n\n"
+                "Short abstract.\n\n"
+                "## Results\n\n"
+                "This teaser paragraph should not survive a blocking-fallback downgrade."
+            ),
+            availability_diagnostics={
+                "accepted": False,
+                "reason": "abstract_only",
+                "content_kind": "abstract_only",
+                "blocking_fallback_signals": ["wiley_access_no", "wiley_format_viewed_abstract"],
+                "hard_negative_signals": [],
+                "soft_positive_signals": ["selected_article_container"],
+                "body_metrics": {
+                    "char_count": 67,
+                    "word_count": 10,
+                    "body_block_count": 1,
+                    "body_heading_count": 1,
+                    "body_to_abstract_ratio": 1.0,
+                    "explicit_body_container": False,
+                    "post_abstract_body_run": False,
+                },
+                "figure_count": 0,
+            },
+            allow_downgrade_from_diagnostics=True,
+        )
+
+        self.assertEqual(article.quality.content_kind, "abstract_only")
+        self.assertEqual([section.kind for section in article.sections], ["abstract"])
+        self.assertIn(QUALITY_FLAG_ACCESS_GATE_DETECTED, article.quality.flags)
+
+    def test_article_from_markdown_does_not_treat_positive_access_signals_as_access_gate(self) -> None:
+        article = article_from_markdown(
+            source="science",
+            metadata={"title": "Accessible Science Article", "abstract": "Short abstract."},
+            doi="10.1000/science-access-positive",
+            markdown_text=(
+                "# Accessible Science Article\n\n"
+                "## Abstract\n\n"
+                "Short abstract.\n\n"
+                "## Results\n\n"
+                + ("Body text " * 120)
+            ),
+            availability_diagnostics={
+                "accepted": True,
+                "reason": "body_sufficient",
+                "content_kind": "fulltext",
+                "hard_negative_signals": [],
+                "soft_positive_signals": ["selected_article_container"],
+                "strong_positive_signals": [
+                    "body_sufficient",
+                    "explicit_body_container",
+                    "post_abstract_body_run",
+                    "aaas_user_entitled",
+                    "aaas_user_access_yes",
+                ],
+                "body_metrics": {
+                    "char_count": 1400,
+                    "word_count": 240,
+                    "body_block_count": 1,
+                    "body_heading_count": 1,
+                    "body_to_abstract_ratio": 20.0,
+                    "explicit_body_container": True,
+                    "post_abstract_body_run": True,
+                },
+                "figure_count": 1,
+            },
+            allow_downgrade_from_diagnostics=True,
+        )
+
+        self.assertEqual(article.quality.content_kind, "fulltext")
+        self.assertEqual(article.quality.confidence, "high")
+        self.assertNotIn(QUALITY_FLAG_ACCESS_GATE_DETECTED, article.quality.flags)
+
+    def test_article_from_markdown_merges_sparse_provider_body_metrics_with_article_structure(self) -> None:
+        article = article_from_markdown(
+            source="elsevier_xml",
+            metadata={"title": "Structured Elsevier Article", "abstract": "Short abstract."},
+            doi="10.1000/elsevier-metrics-merge",
+            markdown_text=(
+                "# Structured Elsevier Article\n\n"
+                "## Introduction\n\n"
+                + ("Intro text " * 80)
+                + "\n\n## Results\n\n"
+                + ("Results text " * 80)
+            ),
+            assets=[
+                {
+                    "kind": "figure",
+                    "heading": "Figure 1",
+                    "caption": "Example figure.",
+                    "section": "body",
+                }
+            ],
+            availability_diagnostics={
+                "accepted": True,
+                "reason": "body_sufficient",
+                "content_kind": "fulltext",
+                "hard_negative_signals": [],
+                "soft_positive_signals": [],
+                "strong_positive_signals": ["body_sufficient"],
+                "body_metrics": {
+                    "char_count": 19,
+                    "word_count": 2,
+                    "body_block_count": 0,
+                    "body_heading_count": 0,
+                    "body_to_abstract_ratio": 0.1,
+                    "explicit_body_container": False,
+                    "post_abstract_body_run": False,
+                },
+                "figure_count": 0,
+            },
+            allow_downgrade_from_diagnostics=True,
+        )
+
+        self.assertEqual(article.quality.content_kind, "fulltext")
+        self.assertEqual(article.quality.confidence, "high")
+        self.assertNotIn(QUALITY_FLAG_WEAK_BODY_STRUCTURE, article.quality.flags)
+        self.assertEqual(article.quality.body_metrics.body_block_count, 2)
+        self.assertEqual(article.quality.body_metrics.body_heading_count, 2)
+        self.assertEqual(article.quality.body_metrics.figure_count, 1)
+        self.assertGreater(article.quality.body_metrics.word_count, 100)
+
+    def test_article_from_markdown_preserves_explicit_multilingual_abstract_sections(self) -> None:
+        article = article_from_markdown(
+            source="wiley_browser",
+            metadata={"title": "Markdown Article"},
+            doi="10.1000/multilingual-abstract",
+            markdown_text=(
+                "# Markdown Article\n\n"
+                "## Results\n\n"
+                "Body text lives here with enough prose to remain classified as main text."
+            ),
+            abstract_sections=[
+                {
+                    "heading": "Abstract",
+                    "text": "English abstract text remains available as the primary abstract.",
+                    "language": "en",
+                    "kind": "abstract",
+                    "order": 0,
+                },
+                {
+                    "heading": "Resumo",
+                    "text": "Resumo em portugues permanece como uma segunda secao de resumo.",
+                    "language": "pt",
+                    "kind": "abstract",
+                    "order": 1,
+                },
+            ],
+        )
+
+        self.assertEqual(article.metadata.abstract, "English abstract text remains available as the primary abstract.")
+        self.assertEqual([section.heading for section in article.sections[:2]], ["Abstract", "Resumo"])
+        self.assertTrue(all(section.kind == "abstract" for section in article.sections[:2]))
+        rendered = article.to_ai_markdown(max_tokens="full_text")
+        self.assertIn("## Abstract", rendered)
+        self.assertIn("## Resumo", rendered)
+        self.assertIn("## Results", rendered)
+
+    def test_article_from_markdown_uses_section_hints_for_nonliteral_data_availability(self) -> None:
+        article = article_from_markdown(
+            source="springer_html",
+            metadata={"title": "Markdown Article"},
+            doi="10.1000/section-hints",
+            markdown_text=(
+                "# Markdown Article\n\n"
+                "## Availability Statement\n\n"
+                "Data are archived in a public repository.\n\n"
+                "## Results\n\n"
+                "Body text lives here with enough prose to remain classified as main text."
+            ),
+            section_hints=[
+                {
+                    "heading": "Availability Statement",
+                    "level": 2,
+                    "kind": "data_availability",
+                    "order": 0,
+                },
+                {
+                    "heading": "Results",
+                    "level": 2,
+                    "kind": "body",
+                    "order": 1,
+                },
+            ],
+        )
+
+        self.assertEqual([section.kind for section in article.sections], ["data_availability", "body"])
+        self.assertEqual(article.quality.content_kind, "fulltext")
+
+    def test_article_from_markdown_keeps_heading_fallback_without_section_hints(self) -> None:
+        article = article_from_markdown(
+            source="springer_html",
+            metadata={"title": "Markdown Article"},
+            doi="10.1000/section-hints-fallback",
+            markdown_text=(
+                "# Markdown Article\n\n"
+                "## Availability Statement\n\n"
+                "Data are archived in a public repository."
+            ),
+        )
+
+        self.assertEqual(len(article.sections), 1)
+        self.assertEqual(article.sections[0].heading, "Availability Statement")
+        self.assertEqual(article.sections[0].kind, "body")
+
+    def test_article_from_markdown_does_not_duplicate_explicit_abstract_when_section_hints_are_present(self) -> None:
+        article = article_from_markdown(
+            source="springer_html",
+            metadata={"title": "Markdown Article"},
+            doi="10.1000/section-hints-abstract",
+            markdown_text=(
+                "# Markdown Article\n\n"
+                "## Abstract\n\n"
+                "Explicit abstract block should not duplicate.\n\n"
+                "## Results\n\n"
+                "Body text lives here with enough prose to remain classified as main text."
+            ),
+            abstract_sections=[
+                {
+                    "heading": "Abstract",
+                    "text": "Explicit abstract block should not duplicate.",
+                    "kind": "abstract",
+                    "order": 0,
+                }
+            ],
+            section_hints=[
+                {
+                    "heading": "Results",
+                    "level": 2,
+                    "kind": "body",
+                    "order": 0,
+                }
+            ],
+        )
+
+        self.assertEqual([section.heading for section in article.sections], ["Abstract", "Results"])
+        self.assertEqual(len([section for section in article.sections if section.kind == "abstract"]), 1)
+        self.assertEqual(article.metadata.abstract, "Explicit abstract block should not duplicate.")
+
+    def test_article_from_markdown_deduplicates_near_matching_explicit_abstract_sections(self) -> None:
+        base_abstract = (
+            "Identifying droughts and accurately evaluating drought impacts on vegetation growth are crucial to understanding "
+            "the terrestrial carbon balance across China. However, few studies have identified the critical drought thresholds "
+            "that impact China's vegetation growth, leading to large uncertainty in assessing the ecological consequences of "
+            "droughts. In this study, we utilize gridded surface soil moisture data and satellite-observed normalized difference "
+            "vegetation index (NDVI) to assess vegetation response to droughts in China during 2001-2018. Based on the nonlinear "
+            "relationship between changing drought stress and the coincident anomalies of NDVI during the growing season, we derive "
+            "the spatial patterns of satellite-based drought thresholds."
+        )
+        explicit_abstract = base_abstract + (
+            " Additional supporting context keeps the abstract long enough to trigger near-duplicate matching without changing the "
+            "heading or the overall meaning of the section."
+            * 8
+        )
+        parsed_abstract = explicit_abstract.replace(" during 2001-2018.", " during.")
+        article = article_from_markdown(
+            source="wiley_browser",
+            metadata={"title": "Markdown Article"},
+            doi="10.1000/near-duplicate-abstract",
+            markdown_text=(
+                "# Markdown Article\n\n"
+                "## Abstract\n\n"
+                f"{parsed_abstract}\n\n"
+                "## Results\n\n"
+                "Body text lives here with enough prose to remain classified as main text."
+            ),
+            abstract_sections=[
+                {
+                    "heading": "Abstract",
+                    "text": explicit_abstract,
+                    "kind": "abstract",
+                    "order": 0,
+                }
+            ],
+            section_hints=[
+                {
+                    "heading": "Results",
+                    "level": 2,
+                    "kind": "body",
+                    "order": 0,
+                }
+            ],
+        )
+
+        self.assertEqual([section.heading for section in article.sections], ["Abstract", "Results"])
+        self.assertEqual(len([section for section in article.sections if section.kind == "abstract"]), 1)
+        self.assertEqual(article.metadata.abstract, explicit_abstract)
+
+    def test_article_from_markdown_promotes_repeated_methods_summary_to_methods(self) -> None:
+        abstract_methods_summary = (
+            "To estimate the interannual sensitivity of CGR to tropical MAT (), we use atmospheric CGR from the two longest "
+            "atmospheric records at Mauna Loa and South Pole 31, gridded MAT from the CRU 16 and from Global Historical Climate "
+            "Network data 19, annual precipitation from CRU and from the Global Precipitation Climatology Centre 20, solar "
+            "radiation data from CRU-NCEP and ref. 21, and cloud fraction from CRU over vegetated areas (Methods) in the tropics. "
+            "The value of was calculated as the regression coefficient of temperature in a multilinear regression of CGR variations "
+            "against variations in temperature, precipitation and solar radiation over a running time window (ranging from 20 to 25 yr)."
+        )
+        body_methods_summary = (
+            "To estimate the interannual sensitivity of CGR to tropical MAT (), we use atmospheric CGR from the two longest "
+            "atmospheric records at Mauna Loa and South Pole, gridded MAT from the CRU and from Global Historical Climate Network "
+            "data, annual precipitation from CRU and from the Global Precipitation Climatology Centre, solar radiation data from "
+            "CRU-NCEP and ref. 21, and cloud fraction from CRU over vegetated areas (Methods) in the tropics. The value of was "
+            "calculated as the regression coefficient of temperature in a multilinear regression of CGR variations against "
+            "variations in temperature, precipitation and solar radiation over a running time window (ranging from 20 to 25 yr)."
+        )
+        article = article_from_markdown(
+            source="springer_html",
+            metadata={"title": "Markdown Article"},
+            doi="10.1000/methods-summary",
+            markdown_text=(
+                "# Markdown Article\n\n"
+                "## Main\n\n"
+                "Body text lives here with enough prose to remain classified as main text.\n\n"
+                "## Methods Summary\n\n"
+                f"{body_methods_summary}\n\n"
+                "### Atmospheric CO2 concentration\n\n"
+                "Detailed methods continue here."
+            ),
+            abstract_sections=[
+                {
+                    "heading": "Abstract",
+                    "text": "Short abstract summary.",
+                    "kind": "abstract",
+                    "order": 0,
+                },
+                {
+                    "heading": "Methods Summary",
+                    "text": abstract_methods_summary,
+                    "kind": "abstract",
+                    "order": 1,
+                },
+            ],
+        )
+
+        self.assertEqual(
+            [section.heading for section in article.sections],
+            ["Abstract", "Methods Summary", "Main", "Methods", "Atmospheric CO2 concentration"],
+        )
+        methods_section = article.sections[3]
+        self.assertEqual(methods_section.heading, "Methods")
+        self.assertEqual(methods_section.text, "")
+
+        markdown = article.to_ai_markdown(max_tokens="full_text")
+
+        self.assertEqual(markdown.count("## Methods Summary"), 1)
+        self.assertIn("## Methods\n\n### Atmospheric CO2 concentration", markdown)
+        self.assertIn("### Atmospheric CO2 concentration", markdown)
+        self.assertNotIn(body_methods_summary, markdown)
 
     def test_metadata_abstract_strips_redundant_heading_prefix(self) -> None:
         article = metadata_only_article(
@@ -398,14 +1017,15 @@ class ModelsRenderTests(unittest.TestCase):
 
     def test_article_from_markdown_classifies_abstract_only_when_no_body_sections_remain(self) -> None:
         article = article_from_markdown(
-            source="html_generic",
+            source="springer_html",
             metadata={"title": "Markdown Article"},
             doi="10.1000/markdown",
             markdown_text="# Markdown Article\n\n## Abstract\n\nShort abstract.",
         )
 
         self.assertEqual(article.metadata.abstract, "Short abstract.")
-        self.assertEqual(article.sections, [])
+        self.assertEqual(len(article.sections), 1)
+        self.assertEqual(article.sections[0].kind, "abstract")
         self.assertEqual(article.quality.content_kind, "abstract_only")
         self.assertFalse(article.quality.has_fulltext)
         self.assertTrue(article.quality.has_abstract)

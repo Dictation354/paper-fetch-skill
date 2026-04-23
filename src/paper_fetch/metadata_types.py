@@ -13,6 +13,7 @@ class FulltextLink(TypedDict, total=False):
 
 
 class ReferenceMetadata(TypedDict, total=False):
+    label: str | None
     raw: str
     doi: str | None
     title: str | None

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import copy
+from dataclasses import dataclass
 import re
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -21,7 +22,7 @@ from ._article_markdown_common import (
     render_inline_text,
     xml_local_name,
 )
-from ._article_markdown_math import render_display_formula
+from ._article_markdown_math import FormulaRenderResult, render_display_formula_result
 from ._elsevier_xml_rules import (
     ELSEVIER_IMAGE_ASSET_TYPES,
     get_elsevier_element_rule,
@@ -30,6 +31,13 @@ from ._elsevier_xml_rules import (
 )
 
 ELSEVIER_BLOCK_LOCAL_NAMES = {"display", "figure", "table", "e-component", "formula"}
+
+
+@dataclass
+class ElsevierTableRenderResult:
+    rows: list[list[str]]
+    lossy: bool = False
+    note: str | None = None
 
 
 def collect_elsevier_table_rows(parent: ET.Element | None) -> list[list[str]]:
@@ -57,6 +65,142 @@ def elsevier_table_has_spans(table: ET.Element) -> bool:
         if node.get("namest") or node.get("nameend") or node.get("morerows"):
             return True
     return False
+
+
+def _elsevier_table_rows_in_order(tgroup: ET.Element | None) -> tuple[list[ET.Element], list[ET.Element]]:
+    header_rows: list[ET.Element] = []
+    body_rows: list[ET.Element] = []
+    if tgroup is None:
+        return header_rows, body_rows
+    thead = first_child(tgroup, "thead")
+    tbody = first_child(tgroup, "tbody")
+    if thead is not None:
+        header_rows.extend(
+            child
+            for child in list(thead)
+            if isinstance(child.tag, str) and xml_local_name(child.tag) == "row"
+        )
+    if tbody is not None:
+        body_rows.extend(
+            child
+            for child in list(tbody)
+            if isinstance(child.tag, str) and xml_local_name(child.tag) == "row"
+        )
+    if not header_rows and not body_rows:
+        body_rows.extend(
+            child
+            for child in list(tgroup)
+            if isinstance(child.tag, str) and xml_local_name(child.tag) == "row"
+        )
+    return header_rows, body_rows
+
+
+def _elsevier_table_column_map(tgroup: ET.Element | None) -> tuple[int, dict[str, int]]:
+    if tgroup is None:
+        return 0, {}
+    columns: list[str] = []
+    for child in list(tgroup):
+        if not isinstance(child.tag, str) or xml_local_name(child.tag) != "colspec":
+            continue
+        colname = normalize_text(child.get("colname"))
+        if colname:
+            columns.append(colname)
+    cols_attr = int(normalize_text(tgroup.get("cols")) or 0)
+    col_count = max(cols_attr, len(columns))
+    return col_count, {name: index for index, name in enumerate(columns)}
+
+
+def render_elsevier_table_result(table: ET.Element | None) -> ElsevierTableRenderResult:
+    if table is None:
+        return ElsevierTableRenderResult(rows=[])
+
+    tgroup = first_child(table, "tgroup")
+    if tgroup is None:
+        tgroup = first_descendant(table, "tgroup")
+    header_row_nodes, body_row_nodes = _elsevier_table_rows_in_order(tgroup)
+    row_nodes = [*header_row_nodes, *body_row_nodes]
+    if not row_nodes:
+        return ElsevierTableRenderResult(rows=[])
+
+    col_count, col_index_by_name = _elsevier_table_column_map(tgroup)
+    if col_count <= 0:
+        col_count = max(
+            len(
+                [
+                    entry
+                    for entry in list(row)
+                    if isinstance(entry.tag, str) and xml_local_name(entry.tag) == "entry"
+                ]
+            )
+            for row in row_nodes
+        )
+    if col_count <= 0:
+        return ElsevierTableRenderResult(rows=[])
+
+    active_rowspans = [0] * col_count
+    rendered_rows: list[list[str]] = []
+    lossy = False
+
+    for row in row_nodes:
+        rendered = [None] * col_count
+        for index in range(col_count):
+            if active_rowspans[index] > 0:
+                rendered[index] = ""
+                active_rowspans[index] -= 1
+
+        cursor = 0
+        entries = [
+            entry
+            for entry in list(row)
+            if isinstance(entry.tag, str) and xml_local_name(entry.tag) == "entry"
+        ]
+        if not entries:
+            continue
+
+        for entry in entries:
+            while cursor < col_count and rendered[cursor] is not None:
+                cursor += 1
+            start_idx = cursor
+            named_start = normalize_text(entry.get("namest"))
+            named_end = normalize_text(entry.get("nameend"))
+            if named_start:
+                if named_start not in col_index_by_name:
+                    return ElsevierTableRenderResult(rows=[])
+                start_idx = col_index_by_name[named_start]
+            if start_idx >= col_count:
+                return ElsevierTableRenderResult(rows=[])
+            end_idx = start_idx
+            if named_end:
+                if named_end not in col_index_by_name:
+                    return ElsevierTableRenderResult(rows=[])
+                end_idx = col_index_by_name[named_end]
+            if end_idx < start_idx or end_idx >= col_count:
+                return ElsevierTableRenderResult(rows=[])
+            if any(rendered[index] is not None for index in range(start_idx, end_idx + 1)):
+                return ElsevierTableRenderResult(rows=[])
+
+            rowspan = int(normalize_text(entry.get("morerows")) or 0) + 1
+            colspan = end_idx - start_idx + 1
+            if rowspan > 1 or colspan > 1:
+                lossy = True
+
+            text = normalize_table_cell_text(render_inline_text(entry))
+            rendered[start_idx] = text
+            for index in range(start_idx + 1, end_idx + 1):
+                rendered[index] = ""
+            if rowspan > 1:
+                for index in range(start_idx, end_idx + 1):
+                    active_rowspans[index] = max(active_rowspans[index], rowspan - 1)
+            cursor = end_idx + 1
+
+        rendered_rows.append([cell if cell is not None else "" for cell in rendered])
+
+    if not rendered_rows:
+        return ElsevierTableRenderResult(rows=[])
+    note = None
+    if lossy:
+        note = "Merged table spans were flattened into rectangular Markdown cells; rowspan/colspan fidelity was reduced."
+    return ElsevierTableRenderResult(rows=rendered_rows, lossy=lossy, note=note)
 
 
 def resolve_elsevier_asset_link(markdown_path: Path, asset: Mapping[str, Any] | None) -> str:
@@ -92,38 +236,7 @@ def resolve_elsevier_table_key(table: ET.Element | None) -> str:
 
 
 def render_elsevier_table_rows(table: ET.Element | None) -> list[list[str]]:
-    if table is None:
-        return []
-    if elsevier_table_has_spans(table):
-        return []
-
-    tgroup = first_child(table, "tgroup")
-    if tgroup is None:
-        tgroup = first_descendant(table, "tgroup")
-    header_rows = collect_elsevier_table_rows(first_child(tgroup, "thead"))
-    body_rows = collect_elsevier_table_rows(first_child(tgroup, "tbody"))
-    if not header_rows and tgroup is not None:
-        for child in list(tgroup):
-            if not isinstance(child.tag, str) or xml_local_name(child.tag) != "row":
-                continue
-            row_cells = [
-                normalize_table_cell_text(render_inline_text(entry))
-                for entry in list(child)
-                if isinstance(entry.tag, str) and xml_local_name(entry.tag) == "entry"
-            ]
-            if row_cells:
-                body_rows.append(row_cells)
-
-    header = header_rows[0] if header_rows else (body_rows.pop(0) if body_rows else [])
-    if not header:
-        return []
-
-    column_count = max(len(header), *(len(row) for row in body_rows), 1)
-
-    def pad_row(row: list[str]) -> list[str]:
-        return row + [""] * (column_count - len(row))
-
-    return [pad_row(header), *(pad_row(row) for row in body_rows)]
+    return render_elsevier_table_result(table).rows
 
 
 def extract_elsevier_table_footnotes(table: ET.Element) -> list[str]:
@@ -356,6 +469,7 @@ def render_elsevier_display_block(
     used_figure_keys: set[str],
     table_lookup: Mapping[str, Mapping[str, Any]],
     used_table_keys: set[str],
+    formula_renders: list[FormulaRenderResult] | None = None,
     inside_appendix: bool = False,
 ) -> list[str]:
     display_kind = classify_elsevier_display_block(element)
@@ -384,7 +498,10 @@ def render_elsevier_display_block(
     if display_kind == "supplementary":
         return []
     if display_kind == "formula":
-        return render_display_formula(element)
+        result = render_display_formula_result(element)
+        if formula_renders is not None and result.lines:
+            formula_renders.append(result)
+        return result.lines
     return []
 
 
@@ -397,6 +514,7 @@ def render_elsevier_blocks(
     used_figure_keys: set[str] | None = None,
     table_lookup: Mapping[str, Mapping[str, Any]] | None = None,
     used_table_keys: set[str] | None = None,
+    formula_renders: list[FormulaRenderResult] | None = None,
     inside_appendix: bool = False,
 ) -> list[str]:
     if parent is None:
@@ -426,6 +544,7 @@ def render_elsevier_blocks(
                 used_figure_keys=used_keys,
                 table_lookup=table_entries,
                 used_table_keys=used_table_entries,
+                formula_renders=formula_renders,
                 inside_appendix=inside_appendix,
             )
             normalized_title = normalize_text(title)
@@ -444,6 +563,7 @@ def render_elsevier_blocks(
                     used_figure_keys=used_keys,
                     table_lookup=table_entries,
                     used_table_keys=used_table_entries,
+                    formula_renders=formula_renders,
                     inside_appendix=inside_appendix or local_name in {"appendices", "appendix"},
                 )
             )
@@ -506,6 +626,7 @@ def render_elsevier_blocks(
                             used_figure_keys=used_keys,
                             table_lookup=table_entries,
                             used_table_keys=used_table_entries,
+                            formula_renders=formula_renders,
                             inside_appendix=inside_appendix,
                         )
                     )
@@ -525,7 +646,10 @@ def render_elsevier_blocks(
                         inside_appendix=inside_appendix,
                     )
                 elif nested_rule.handler == "formula":
-                    lines.extend(render_display_formula(nested))
+                    result = render_display_formula_result(nested)
+                    if formula_renders is not None and result.lines:
+                        formula_renders.append(result)
+                    lines.extend(result.lines)
             continue
 
         if rule.handler == "display":
@@ -536,6 +660,7 @@ def render_elsevier_blocks(
                     used_figure_keys=used_keys,
                     table_lookup=table_entries,
                     used_table_keys=used_table_entries,
+                    formula_renders=formula_renders,
                     inside_appendix=inside_appendix,
                 )
             )
@@ -561,7 +686,10 @@ def render_elsevier_blocks(
             continue
 
         if rule.handler == "formula":
-            lines.extend(render_display_formula(child))
+            result = render_display_formula_result(child)
+            if formula_renders is not None and result.lines:
+                formula_renders.append(result)
+            lines.extend(result.lines)
     return lines
 
 
@@ -619,7 +747,8 @@ def elsevier_table_registry(
         label = child_text(table, "label") or fallback_table_heading(table_id)
         caption = render_inline_text(first_child(table, "caption"))
         footnotes = extract_elsevier_table_footnotes(table)
-        rows = render_elsevier_table_rows(table)
+        table_result = render_elsevier_table_result(table)
+        rows = table_result.rows
         asset = table_assets.get(locator) or table_assets.get(table_id)
         link = resolve_elsevier_asset_link(markdown_path, asset)
         if link and link in used_links:
@@ -637,6 +766,9 @@ def elsevier_table_registry(
                 "footnotes": footnotes,
                 "link": link,
             }
+            if table_result.lossy:
+                entry["lossy_message"] = table_result.note
+                entry["conversion_notes"] = [table_result.note] if table_result.note else []
         elif link:
             entry = {
                 "key": table_key or link,
@@ -646,6 +778,9 @@ def elsevier_table_registry(
                 "footnotes": footnotes,
                 "link": link,
                 "fallback_message": "Table content could not be fully converted to Markdown; the original table image is retained below.",
+                "conversion_notes": [
+                    "Table content could not be fully converted to Markdown; the original table image is retained below."
+                ],
             }
         else:
             entry = {
@@ -656,6 +791,9 @@ def elsevier_table_registry(
                 "footnotes": footnotes,
                 "link": "",
                 "fallback_message": "Table content could not be fully converted to Markdown; no original table image was available.",
+                "conversion_notes": [
+                    "Table content could not be fully converted to Markdown; no original table image was available."
+                ],
             }
 
         entry["section"] = (

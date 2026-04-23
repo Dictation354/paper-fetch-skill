@@ -9,6 +9,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 
 from ..models import RenderOptions, normalize_text
 from ..service import FetchStrategy
+from ..workflow.types import ALLOWED_PREFERRED_PROVIDERS
 from ..utils import dedupe_authors
 
 ALLOWED_INCLUDE_REFS = {"none", "top10", "all"}
@@ -158,10 +159,9 @@ def _normalize_query_list(value: Any) -> list[str]:
 class FetchStrategyInput(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    allow_html_fallback: bool = True
     allow_metadata_only_fallback: bool = True
     preferred_providers: list[str] | None = None
-    asset_profile: str = "none"
+    asset_profile: str | None = None
     inline_image_budget: InlineImageBudgetInput | None = None
 
     @field_validator("preferred_providers", mode="before")
@@ -183,11 +183,22 @@ class FetchStrategyInput(BaseModel):
             provider = normalize_text(str(item)).lower()
             if provider and provider not in normalized:
                 normalized.append(provider)
+        invalid = [provider for provider in normalized if provider not in ALLOWED_PREFERRED_PROVIDERS]
+        if invalid:
+            raise ValueError(
+                "unsupported preferred_providers values: "
+                + ", ".join(invalid)
+                + ". Expected one or more of: "
+                + ", ".join(sorted(ALLOWED_PREFERRED_PROVIDERS))
+                + "."
+            )
         return normalized or None
 
     @field_validator("asset_profile")
     @classmethod
-    def normalize_asset_profile(cls, value: str) -> str:
+    def normalize_asset_profile(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
         normalized = normalize_text(value).lower()
         if normalized not in ALLOWED_ASSET_PROFILES:
             raise ValueError(
@@ -197,7 +208,6 @@ class FetchStrategyInput(BaseModel):
 
     def to_service_strategy(self) -> FetchStrategy:
         return FetchStrategy(
-            allow_html_fallback=self.allow_html_fallback,
             allow_metadata_only_fallback=self.allow_metadata_only_fallback,
             preferred_providers=list(self.preferred_providers) if self.preferred_providers is not None else None,
             asset_profile=self.asset_profile,

@@ -13,7 +13,15 @@ SRC_DIR = REPO_ROOT / "src"
 if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
-from paper_fetch.geography_live import GEOGRAPHY_PROVIDER_ORDER, default_report_paths, run_geography_live_report
+
+def _load_geography_live_exports():
+    from paper_fetch.geography_live import (
+        GEOGRAPHY_PROVIDER_ORDER,
+        default_report_paths,
+        run_geography_live_report,
+    )
+
+    return GEOGRAPHY_PROVIDER_ORDER, default_report_paths, run_geography_live_report
 
 
 def all_geography_samples():
@@ -27,6 +35,7 @@ def all_geography_samples():
 
 
 def build_parser() -> argparse.ArgumentParser:
+    GEOGRAPHY_PROVIDER_ORDER, default_report_paths, _ = _load_geography_live_exports()
     json_path, markdown_path = default_report_paths()
     parser = argparse.ArgumentParser(description="Run the geography live-only publisher report without MCP.")
     parser.add_argument(
@@ -60,6 +69,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main() -> int:
+    _, _, run_geography_live_report = _load_geography_live_exports()
     parser = build_parser()
     args = parser.parse_args()
 

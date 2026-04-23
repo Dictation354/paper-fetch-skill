@@ -15,7 +15,6 @@ Useful options:
 - `--save-markdown`
 - `--include-refs none|top10|all`
 - `--max-tokens 8000`
-- `--no-html-fallback`
 
 Output contract:
 

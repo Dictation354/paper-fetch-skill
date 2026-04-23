@@ -1,0 +1,1768 @@
+{
+  "samples": {
+    "10.1007_s10584-011-0143-4": {
+      "doi": "10.1007/s10584-011-0143-4",
+      "publisher": "springer",
+      "source_url": "https://link.springer.com/article/10.1007/s10584-011-0143-4",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "assets": {
+        "article.html": "tests/fixtures/golden_criteria/10.1007_s10584-011-0143-4/article.html",
+        "table1.html": "tests/fixtures/golden_criteria/10.1007_s10584-011-0143-4/table1.html"
+      },
+      "fixture_family": "golden"
+    },
+    "10.1007_s13158-025-00473-x": {
+      "doi": "10.1007/s13158-025-00473-x",
+      "publisher": "springer",
+      "source_url": "https://link.springer.com/article/10.1007/s13158-025-00473-x",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "assets": {
+        "bilingual.html": "tests/fixtures/golden_criteria/10.1007_s13158-025-00473-x/bilingual.html"
+      },
+      "fixture_family": "golden"
+    },
+    "10.1016_S1575-1813(18)30261-4": {
+      "doi": "10.1016/S1575-1813(18)30261-4",
+      "publisher": "elsevier",
+      "source_url": "https://www.sciencedirect.com/science/article/pii/S1575181318302614",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "assets": {
+        "bilingual.xml": "tests/fixtures/golden_criteria/10.1016_S1575-1813(18)30261-4/bilingual.xml"
+      },
+      "fixture_family": "golden"
+    },
+    "10.1016_j.agrformet.2024.109975": {
+      "doi": "10.1016/j.agrformet.2024.109975",
+      "publisher": "elsevier",
+      "source_url": "/content/article/doi/10.1016%2Fj.agrformet.2024.109975?view=FULL",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "assets": {
+        "expected.json": "tests/fixtures/golden_criteria/10.1016_j.agrformet.2024.109975/expected.json",
+        "original.xml": "tests/fixtures/golden_criteria/10.1016_j.agrformet.2024.109975/original.xml"
+      },
+      "fixture_family": "golden",
+      "title": "Optimal representation of spring phenology on photosynthetic productivity across the northern hemisphere forests",
+      "landing_url": "https://linkinghub.elsevier.com/retrieve/pii/S016819232400090X",
+      "route_kind": "official",
+      "content_type": "text/xml;charset=UTF-8"
+    },
+    "10.1016_j.jhydrol.2021.126210": {
+      "doi": "10.1016/j.jhydrol.2021.126210",
+      "publisher": "elsevier",
+      "source_url": "/content/article/doi/10.1016%2Fj.jhydrol.2021.126210?view=FULL",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "assets": {
+        "expected.json": "tests/fixtures/golden_criteria/10.1016_j.jhydrol.2021.126210/expected.json",
+        "original.xml": "tests/fixtures/golden_criteria/10.1016_j.jhydrol.2021.126210/original.xml"
+      },
+      "fixture_family": "golden",
+      "title": "The interactions between hydrological drought evolution and precipitation-streamflow relationship",
+      "landing_url": "https://linkinghub.elsevier.com/retrieve/pii/S0022169421002572",
+      "route_kind": "official",
+      "content_type": "text/xml;charset=UTF-8"
+    },
+    "10.1016_j.rse.2026.115369": {
+      "doi": "10.1016/j.rse.2026.115369",
+      "publisher": "elsevier",
+      "source_url": "https://doi.org/10.1016/j.rse.2026.115369",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "assets": {
+        "original.xml": "tests/fixtures/golden_criteria/10.1016_j.rse.2026.115369/original.xml"
+      },
+      "fixture_family": "golden"
+    },
+    "10.1029_2004gb002273": {
+      "doi": "10.1029/2004GB002273",
+      "publisher": "wiley",
+      "source_url": "https://agupubs.onlinelibrary.wiley.com/doi/10.1029/2004GB002273",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "assets": {
+        "article.json": "tests/fixtures/golden_criteria/10.1029_2004gb002273/article.json",
+        "original.html": "tests/fixtures/golden_criteria/10.1029_2004gb002273/original.html"
+      },
+      "fixture_family": "golden"
+    },
+    "10.1038_nature12915": {
+      "doi": "10.1038/nature12915",
+      "publisher": "springer",
+      "source_url": "https://www.nature.com/articles/nature12915",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "assets": {
+        "original.html": "tests/fixtures/golden_criteria/10.1038_nature12915/original.html"
+      },
+      "fixture_family": "golden"
+    },
+    "10.1038_nature13376": {
+      "doi": "10.1038/nature13376",
+      "publisher": "springer",
+      "source_url": "https://www.nature.com/articles/nature13376",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "assets": {
+        "original.html": "tests/fixtures/golden_criteria/10.1038_nature13376/original.html"
+      },
+      "fixture_family": "golden"
+    },
+    "10.1038_s41561-022-00983-6": {
+      "doi": "10.1038/s41561-022-00983-6",
+      "publisher": "springer",
+      "source_url": "https://www.nature.com/articles/s41561-022-00983-6?error=cookies_not_supported&code=878a739c-666d-4c3e-a11b-e874a338eba9",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "assets": {
+        "expected.json": "tests/fixtures/golden_criteria/10.1038_s41561-022-00983-6/expected.json",
+        "original.html": "tests/fixtures/golden_criteria/10.1038_s41561-022-00983-6/original.html"
+      },
+      "fixture_family": "golden",
+      "title": "Ozone depletion over the Arctic affects spring climate in the Northern Hemisphere",
+      "landing_url": "https://www.nature.com/articles/s41561-022-00983-6",
+      "route_kind": "html",
+      "content_type": "text/html; charset=\"UTF-8\""
+    },
+    "10.1038_s43247-024-01295-w": {
+      "doi": "10.1038/s43247-024-01295-w",
+      "publisher": "springer",
+      "source_url": "https://www.nature.com/articles/s43247-024-01295-w?error=cookies_not_supported&code=7f269c99-5e6f-461f-a869-d74c8cfb969e",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "assets": {
+        "expected.json": "tests/fixtures/golden_criteria/10.1038_s43247-024-01295-w/expected.json",
+        "original.html": "tests/fixtures/golden_criteria/10.1038_s43247-024-01295-w/original.html",
+        "table1.html": "tests/fixtures/golden_criteria/10.1038_s43247-024-01295-w/table1.html"
+      },
+      "fixture_family": "golden",
+      "title": "Hydrological drought forecasts using precipitation data depend on catchment properties and human activities",
+      "landing_url": "https://www.nature.com/articles/s43247-024-01295-w",
+      "route_kind": "html",
+      "content_type": "text/html; charset=\"UTF-8\""
+    },
+    "10.1038_s44221-022-00024-x": {
+      "doi": "10.1038/s44221-022-00024-x",
+      "publisher": "springer",
+      "source_url": "https://www.nature.com/articles/s44221-022-00024-x?error=cookies_not_supported&code=fd4a58ff-1e9c-4ce3-b7dd-de227a9ca384",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "assets": {
+        "expected.json": "tests/fixtures/golden_criteria/10.1038_s44221-022-00024-x/expected.json",
+        "original.html": "tests/fixtures/golden_criteria/10.1038_s44221-022-00024-x/original.html"
+      },
+      "fixture_family": "golden",
+      "title": "How Australia's Millennium drought induced hydrological shifts",
+      "landing_url": "https://www.nature.com/articles/s44221-022-00024-x",
+      "route_kind": "html",
+      "content_type": "text/html; charset=\"UTF-8\""
+    },
+    "10.1073_pnas.2309123120": {
+      "doi": "10.1073/pnas.2309123120",
+      "publisher": "pnas",
+      "source_url": "https://www.pnas.org/doi/10.1073/pnas.2309123120",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "assets": {
+        "expected.json": "tests/fixtures/golden_criteria/10.1073_pnas.2309123120/expected.json",
+        "extracted.md": "tests/fixtures/golden_criteria/10.1073_pnas.2309123120/extracted.md",
+        "original.html": "tests/fixtures/golden_criteria/10.1073_pnas.2309123120/original.html"
+      },
+      "fixture_family": "golden",
+      "title": "Amazon deforestation causes strong regional warming",
+      "landing_url": "https://pnas.org/doi/10.1073/pnas.2309123120",
+      "route_kind": "html",
+      "content_type": "text/html"
+    },
+    "10.1073_pnas.2317456120": {
+      "doi": "10.1073/pnas.2317456120",
+      "publisher": "pnas",
+      "source_url": "https://www.pnas.org/doi/10.1073/pnas.2317456120",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "assets": {
+        "commentary.html": "tests/fixtures/golden_criteria/10.1073_pnas.2317456120/commentary.html",
+        "expected.json": "tests/fixtures/golden_criteria/10.1073_pnas.2317456120/expected.json",
+        "original.html": "tests/fixtures/golden_criteria/10.1073_pnas.2317456120/original.html"
+      },
+      "fixture_family": "golden",
+      "title": "Amazon deforestation implications in local/regional climate change",
+      "landing_url": "https://pnas.org/doi/10.1073/pnas.2317456120",
+      "route_kind": "html",
+      "content_type": "text/html"
+    },
+    "10.1073_pnas.2406303121": {
+      "doi": "10.1073/pnas.2406303121",
+      "publisher": "pnas",
+      "source_url": "https://www.pnas.org/doi/full/10.1073/pnas.2406303121",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "assets": {
+        "abstract.html": "tests/fixtures/golden_criteria/10.1073_pnas.2406303121/abstract.html",
+        "extracted.md": "tests/fixtures/golden_criteria/10.1073_pnas.2406303121/extracted.md",
+        "original.html": "tests/fixtures/golden_criteria/10.1073_pnas.2406303121/original.html"
+      },
+      "fixture_family": "golden"
+    },
+    "10.1080_19455224.2025.2547671": {
+      "doi": "10.1080/19455224.2025.2547671",
+      "publisher": "tandf",
+      "source_url": "https://www.tandfonline.com/doi/full/10.1080/19455224.2025.2547671",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "assets": {
+        "bilingual.html": "tests/fixtures/golden_criteria/10.1080_19455224.2025.2547671/bilingual.html"
+      },
+      "fixture_family": "golden"
+    },
+    "10.1111_cas.16395": {
+      "doi": "10.1111/cas.16395",
+      "publisher": "wiley",
+      "source_url": "https://onlinelibrary.wiley.com/doi/full/10.1111/cas.16395",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "assets": {
+        "extracted.md": "tests/fixtures/golden_criteria/10.1111_cas.16395/extracted.md",
+        "original.html": "tests/fixtures/golden_criteria/10.1111_cas.16395/original.html"
+      },
+      "fixture_family": "golden"
+    },
+    "10.1111_gcb.16386": {
+      "doi": "10.1111/gcb.16386",
+      "publisher": "wiley",
+      "source_url": "https://onlinelibrary.wiley.com/doi/10.1111/gcb.16386",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "assets": {
+        "bilingual.html": "tests/fixtures/golden_criteria/10.1111_gcb.16386/bilingual.html",
+        "expected.json": "tests/fixtures/golden_criteria/10.1111_gcb.16386/expected.json",
+        "original.html": "tests/fixtures/golden_criteria/10.1111_gcb.16386/original.html"
+      },
+      "fixture_family": "golden",
+      "title": "10.1111/gcb.16386",
+      "landing_url": "https://onlinelibrary.wiley.com/doi/10.1111/gcb.16386",
+      "route_kind": "html",
+      "content_type": "text/html"
+    },
+    "10.1111_gcb.16414": {
+      "doi": "10.1111/gcb.16414",
+      "publisher": "wiley",
+      "source_url": "https://onlinelibrary.wiley.com/doi/full/10.1111/gcb.16414",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "assets": {
+        "expected.json": "tests/fixtures/golden_criteria/10.1111_gcb.16414/expected.json",
+        "extracted.md": "tests/fixtures/golden_criteria/10.1111_gcb.16414/extracted.md",
+        "original.html": "tests/fixtures/golden_criteria/10.1111_gcb.16414/original.html"
+      },
+      "fixture_family": "golden",
+      "title": "Contrasting temperature effects on the velocity of early- versus late-stage vegetation green-up in the Northern Hemisphere",
+      "landing_url": "https://onlinelibrary.wiley.com/doi/10.1111/gcb.16414",
+      "route_kind": "html",
+      "content_type": "text/html"
+    },
+    "10.1111_gcb.16455": {
+      "doi": "10.1111/gcb.16455",
+      "publisher": "wiley",
+      "source_url": "https://onlinelibrary.wiley.com/doi/10.1111/gcb.16455",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "assets": {
+        "expected.json": "tests/fixtures/golden_criteria/10.1111_gcb.16455/expected.json",
+        "original.html": "tests/fixtures/golden_criteria/10.1111_gcb.16455/original.html"
+      },
+      "fixture_family": "golden",
+      "title": "Tropical surface temperature response to vegetation cover changes and the role of drylands",
+      "landing_url": "https://onlinelibrary.wiley.com/doi/10.1111/gcb.16455",
+      "route_kind": "html",
+      "content_type": "text/html"
+    },
+    "10.1111_gcb.16998": {
+      "doi": "10.1111/gcb.16998",
+      "publisher": "wiley",
+      "source_url": "https://onlinelibrary.wiley.com/doi/10.1111/gcb.16998",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "assets": {
+        "expected.json": "tests/fixtures/golden_criteria/10.1111_gcb.16998/expected.json",
+        "original.html": "tests/fixtures/golden_criteria/10.1111_gcb.16998/original.html"
+      },
+      "fixture_family": "golden",
+      "title": "Drought thresholds that impact vegetation reveal the divergent responses of vegetation growth to drought across China",
+      "landing_url": "https://onlinelibrary.wiley.com/doi/10.1111/gcb.16998",
+      "route_kind": "html",
+      "content_type": "text/html"
+    },
+    "10.1126_sciadv.abf8021": {
+      "doi": "10.1126/sciadv.abf8021",
+      "publisher": "science",
+      "source_url": "https://www.science.org/doi/10.1126/sciadv.abf8021",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "assets": {
+        "expected.json": "tests/fixtures/golden_criteria/10.1126_sciadv.abf8021/expected.json",
+        "original.html": "tests/fixtures/golden_criteria/10.1126_sciadv.abf8021/original.html"
+      },
+      "fixture_family": "golden",
+      "title": "Increasing precipitation variability on daily-to-multiyear time scales in a warmer world",
+      "landing_url": "https://www.science.org/doi/10.1126/sciadv.abf8021",
+      "route_kind": "html",
+      "content_type": "text/html"
+    },
+    "10.1126_sciadv.abg9690": {
+      "doi": "10.1126/sciadv.abg9690",
+      "publisher": "science",
+      "source_url": "https://www.science.org/doi/10.1126/sciadv.abg9690",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "assets": {
+        "expected.json": "tests/fixtures/golden_criteria/10.1126_sciadv.abg9690/expected.json",
+        "original.html": "tests/fixtures/golden_criteria/10.1126_sciadv.abg9690/original.html"
+      },
+      "fixture_family": "golden",
+      "title": "Greenhouse warming intensifies north tropical Atlantic climate variability",
+      "landing_url": "https://www.science.org/doi/10.1126/sciadv.abg9690",
+      "route_kind": "html",
+      "content_type": "text/html"
+    },
+    "10.1126_sciadv.adl6155": {
+      "doi": "10.1126/sciadv.adl6155",
+      "publisher": "science",
+      "source_url": "https://www.science.org/doi/full/10.1126/sciadv.adl6155",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "assets": {
+        "article.json": "tests/fixtures/golden_criteria/10.1126_sciadv.adl6155/article.json",
+        "original.html": "tests/fixtures/golden_criteria/10.1126_sciadv.adl6155/original.html"
+      },
+      "fixture_family": "golden"
+    },
+    "10.1126_sciadv.adm9732": {
+      "doi": "10.1126/sciadv.adm9732",
+      "publisher": "science",
+      "source_url": "https://www.science.org/doi/10.1126/sciadv.adm9732",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "assets": {
+        "expected.json": "tests/fixtures/golden_criteria/10.1126_sciadv.adm9732/expected.json",
+        "original.html": "tests/fixtures/golden_criteria/10.1126_sciadv.adm9732/original.html"
+      },
+      "fixture_family": "golden",
+      "title": "Disturbance amplifies sensitivity of dryland productivity to precipitation variability",
+      "landing_url": "https://www.science.org/doi/10.1126/sciadv.adm9732",
+      "route_kind": "html",
+      "content_type": "text/html"
+    },
+    "10.1126_science.abp8622": {
+      "doi": "10.1126/science.abp8622",
+      "publisher": "science",
+      "source_url": "https://www.science.org/doi/10.1126/science.abp8622",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "assets": {
+        "expected.json": "tests/fixtures/golden_criteria/10.1126_science.abp8622/expected.json",
+        "original.html": "tests/fixtures/golden_criteria/10.1126_science.abp8622/original.html"
+      },
+      "fixture_family": "golden",
+      "title": "The drivers and impacts of Amazon forest degradation",
+      "landing_url": "https://www.science.org/doi/10.1126/science.abp8622",
+      "route_kind": "html",
+      "content_type": "text/html"
+    },
+    "10.1126_science.adp0212": {
+      "doi": "10.1126/science.adp0212",
+      "publisher": "science",
+      "source_url": "https://www.science.org/doi/10.1126/science.adp0212",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "assets": {
+        "expected.json": "tests/fixtures/golden_criteria/10.1126_science.adp0212/expected.json",
+        "extracted.md": "tests/fixtures/golden_criteria/10.1126_science.adp0212/extracted.md",
+        "original.html": "tests/fixtures/golden_criteria/10.1126_science.adp0212/original.html"
+      },
+      "fixture_family": "golden",
+      "title": "Anthropogenic amplification of precipitation variability over the past century",
+      "landing_url": "https://www.science.org/doi/10.1126/science.adp0212",
+      "route_kind": "html",
+      "content_type": "text/html"
+    },
+    "10.1126_science.ady3136": {
+      "doi": "10.1126/science.ady3136",
+      "publisher": "science",
+      "source_url": "https://www.science.org/doi/full/10.1126/science.ady3136",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "assets": {
+        "extracted.md": "tests/fixtures/golden_criteria/10.1126_science.ady3136/extracted.md",
+        "original.html": "tests/fixtures/golden_criteria/10.1126_science.ady3136/original.html"
+      },
+      "fixture_family": "golden"
+    },
+    "10.1126_science.aeg3511": {
+      "doi": "10.1126/science.aeg3511",
+      "publisher": "science",
+      "source_url": "https://www.science.org/doi/full/10.1126/science.aeg3511",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "assets": {
+        "expected.json": "tests/fixtures/golden_criteria/10.1126_science.aeg3511/expected.json",
+        "extracted.md": "tests/fixtures/golden_criteria/10.1126_science.aeg3511/extracted.md",
+        "original.html": "tests/fixtures/golden_criteria/10.1126_science.aeg3511/original.html"
+      },
+      "fixture_family": "golden",
+      "title": "Magma plumbing beneath Yellowstone",
+      "landing_url": "https://www.science.org/doi/10.1126/science.aeg3511",
+      "route_kind": "html",
+      "content_type": "text/html"
+    },
+    "10.1345_aph.1M379": {
+      "doi": "10.1345/aph.1M379",
+      "publisher": "sage",
+      "source_url": "https://journals.sagepub.com/doi/full/10.1345/aph.1M379",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "assets": {
+        "bilingual.html": "tests/fixtures/golden_criteria/10.1345_aph.1M379/bilingual.html"
+      },
+      "fixture_family": "golden"
+    },
+    "scenario_elsevier_author_groups_minimal": {
+      "doi": "scenario:elsevier_author_groups_minimal",
+      "publisher": "elsevier",
+      "source_url": "scenario://elsevier_author_groups_minimal",
+      "origin_kind": "contract_scenario",
+      "usage_kind": "content",
+      "assets": {
+        "original.xml": "tests/fixtures/golden_criteria/_scenarios/elsevier_author_groups_minimal/original.xml"
+      },
+      "fixture_family": "scenario"
+    },
+    "10.1016_j.agrformet.2024.110321": {
+      "doi": "10.1016/j.agrformet.2024.110321",
+      "publisher": "elsevier",
+      "title": "Land-atmosphere feedback exacerbated the mega heatwave and drought over the Yangtze River Basin of China during summer 2022",
+      "source_url": "/content/article/doi/10.1016%2Fj.agrformet.2024.110321?view=FULL",
+      "landing_url": "https://linkinghub.elsevier.com/retrieve/pii/S0168192324004349",
+      "route_kind": "official",
+      "content_type": "text/xml;charset=UTF-8",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "fixture_family": "golden",
+      "assets": {
+        "expected.json": "tests/fixtures/golden_criteria/10.1016_j.agrformet.2024.110321/expected.json",
+        "original.xml": "tests/fixtures/golden_criteria/10.1016_j.agrformet.2024.110321/original.xml"
+      }
+    },
+    "10.1016_j.ecolind.2023.110326": {
+      "doi": "10.1016/j.ecolind.2023.110326",
+      "publisher": "elsevier",
+      "title": "Climate warming-induced phenology changes dominate vegetation productivity in Northern Hemisphere ecosystems",
+      "source_url": "/content/article/doi/10.1016%2Fj.ecolind.2023.110326?view=FULL",
+      "landing_url": "https://linkinghub.elsevier.com/retrieve/pii/S1470160X23004685",
+      "route_kind": "official",
+      "content_type": "text/xml;charset=UTF-8",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "fixture_family": "golden",
+      "assets": {
+        "expected.json": "tests/fixtures/golden_criteria/10.1016_j.ecolind.2023.110326/expected.json",
+        "original.xml": "tests/fixtures/golden_criteria/10.1016_j.ecolind.2023.110326/original.xml"
+      }
+    },
+    "10.1016_j.ecolind.2024.112140": {
+      "doi": "10.1016/j.ecolind.2024.112140",
+      "publisher": "elsevier",
+      "title": "The variability in sensitivity of vegetation greenness to climate change across Eurasia",
+      "source_url": "/content/article/doi/10.1016%2Fj.ecolind.2024.112140?view=FULL",
+      "landing_url": "https://linkinghub.elsevier.com/retrieve/pii/S1470160X24005971",
+      "route_kind": "official",
+      "content_type": "text/xml;charset=UTF-8",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "fixture_family": "golden",
+      "assets": {
+        "expected.json": "tests/fixtures/golden_criteria/10.1016_j.ecolind.2024.112140/expected.json",
+        "original.xml": "tests/fixtures/golden_criteria/10.1016_j.ecolind.2024.112140/original.xml"
+      }
+    },
+    "10.1016_j.jhydrol.2023.130125": {
+      "doi": "10.1016/j.jhydrol.2023.130125",
+      "publisher": "elsevier",
+      "title": "An evaluation of the response of vegetation greenness, moisture, fluorescence, and temperature-based remote sensing indicators to drought stress",
+      "source_url": "/content/article/doi/10.1016%2Fj.jhydrol.2023.130125?view=FULL",
+      "landing_url": "https://linkinghub.elsevier.com/retrieve/pii/S0022169423010673",
+      "route_kind": "official",
+      "content_type": "text/xml;charset=UTF-8",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "fixture_family": "golden",
+      "assets": {
+        "expected.json": "tests/fixtures/golden_criteria/10.1016_j.jhydrol.2023.130125/expected.json",
+        "original.xml": "tests/fixtures/golden_criteria/10.1016_j.jhydrol.2023.130125/original.xml"
+      }
+    },
+    "10.1016_j.rse.2024.114346": {
+      "doi": "10.1016/j.rse.2024.114346",
+      "publisher": "elsevier",
+      "title": "Patterns and Trends in Northern Hemisphere River Ice Phenology from 2000 to 2021",
+      "source_url": "/content/article/doi/10.1016%2Fj.rse.2024.114346?view=FULL",
+      "landing_url": "https://linkinghub.elsevier.com/retrieve/pii/S003442572400364X",
+      "route_kind": "official",
+      "content_type": "text/xml;charset=UTF-8",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "fixture_family": "golden",
+      "assets": {
+        "expected.json": "tests/fixtures/golden_criteria/10.1016_j.rse.2024.114346/expected.json",
+        "original.xml": "tests/fixtures/golden_criteria/10.1016_j.rse.2024.114346/original.xml"
+      }
+    },
+    "10.1016_j.rse.2025.114648": {
+      "doi": "10.1016/j.rse.2025.114648",
+      "publisher": "elsevier",
+      "title": "Seasonality of vegetation greenness in Southeast Asia unveiled by geostationary satellite observations",
+      "source_url": "/content/article/doi/10.1016%2Fj.rse.2025.114648?view=FULL",
+      "landing_url": "https://linkinghub.elsevier.com/retrieve/pii/S0034425725000525",
+      "route_kind": "official",
+      "content_type": "text/xml;charset=UTF-8",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "fixture_family": "golden",
+      "assets": {
+        "expected.json": "tests/fixtures/golden_criteria/10.1016_j.rse.2025.114648/expected.json",
+        "original.xml": "tests/fixtures/golden_criteria/10.1016_j.rse.2025.114648/original.xml"
+      }
+    },
+    "10.1016_j.scitotenv.2022.158109": {
+      "doi": "10.1016/j.scitotenv.2022.158109",
+      "publisher": "elsevier",
+      "title": "Land-atmosphere coupling speeds up flash drought onset",
+      "source_url": "/content/article/doi/10.1016%2Fj.scitotenv.2022.158109?view=FULL",
+      "landing_url": "https://linkinghub.elsevier.com/retrieve/pii/S0048969722052081",
+      "route_kind": "official",
+      "content_type": "text/xml;charset=UTF-8",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "fixture_family": "golden",
+      "assets": {
+        "expected.json": "tests/fixtures/golden_criteria/10.1016_j.scitotenv.2022.158109/expected.json",
+        "original.xml": "tests/fixtures/golden_criteria/10.1016_j.scitotenv.2022.158109/original.xml"
+      }
+    },
+    "10.1016_j.scitotenv.2022.158499": {
+      "doi": "10.1016/j.scitotenv.2022.158499",
+      "publisher": "elsevier",
+      "title": "Assessing the impact of drought-land cover change on global vegetation greenness and productivity",
+      "source_url": "/content/article/doi/10.1016%2Fj.scitotenv.2022.158499?view=FULL",
+      "landing_url": "https://linkinghub.elsevier.com/retrieve/pii/S004896972205598X",
+      "route_kind": "official",
+      "content_type": "text/xml;charset=UTF-8",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "fixture_family": "golden",
+      "assets": {
+        "expected.json": "tests/fixtures/golden_criteria/10.1016_j.scitotenv.2022.158499/expected.json",
+        "original.xml": "tests/fixtures/golden_criteria/10.1016_j.scitotenv.2022.158499/original.xml"
+      }
+    },
+    "10.1038_s41467-022-30729-2": {
+      "doi": "10.1038/s41467-022-30729-2",
+      "publisher": "springer",
+      "title": "The timing of unprecedented hydrological drought under climate change",
+      "source_url": "https://www.nature.com/articles/s41467-022-30729-2?error=cookies_not_supported&code=25e21ede-f852-4acd-a8a6-ae7d0b3ab002",
+      "landing_url": "https://www.nature.com/articles/s41467-022-30729-2",
+      "route_kind": "html",
+      "content_type": "text/html; charset=\"UTF-8\"",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "fixture_family": "golden",
+      "assets": {
+        "expected.json": "tests/fixtures/golden_criteria/10.1038_s41467-022-30729-2/expected.json",
+        "original.html": "tests/fixtures/golden_criteria/10.1038_s41467-022-30729-2/original.html"
+      }
+    },
+    "10.1038_s41558-022-01584-2": {
+      "doi": "10.1038/s41558-022-01584-2",
+      "publisher": "springer",
+      "title": "Widespread spring phenology effects on drought recovery of Northern Hemisphere ecosystems",
+      "source_url": "https://www.nature.com/articles/s41558-022-01584-2?error=cookies_not_supported&code=469bc604-3e9f-4bd3-a263-b81a5ef66bc6",
+      "landing_url": "https://www.nature.com/articles/s41558-022-01584-2",
+      "route_kind": "html",
+      "content_type": "text/html; charset=\"UTF-8\"",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "fixture_family": "golden",
+      "assets": {
+        "expected.json": "tests/fixtures/golden_criteria/10.1038_s41558-022-01584-2/expected.json",
+        "original.html": "tests/fixtures/golden_criteria/10.1038_s41558-022-01584-2/original.html"
+      }
+    },
+    "10.1038_s41561-022-00912-7": {
+      "doi": "10.1038/s41561-022-00912-7",
+      "publisher": "springer",
+      "title": "Drought self-propagation in drylands due to land-atmosphere feedbacks",
+      "source_url": "https://www.nature.com/articles/s41561-022-00912-7?error=cookies_not_supported&code=8bd4e815-f1ef-42f5-b359-ac6504182eb6",
+      "landing_url": "https://www.nature.com/articles/s41561-022-00912-7",
+      "route_kind": "html",
+      "content_type": "text/html; charset=\"UTF-8\"",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "fixture_family": "golden",
+      "assets": {
+        "expected.json": "tests/fixtures/golden_criteria/10.1038_s41561-022-00912-7/expected.json",
+        "original.html": "tests/fixtures/golden_criteria/10.1038_s41561-022-00912-7/original.html"
+      }
+    },
+    "10.1038_s41561-022-00974-7": {
+      "doi": "10.1038/s41561-022-00974-7",
+      "publisher": "springer",
+      "title": "Springtime arctic ozone depletion forces northern hemisphere climate anomalies",
+      "source_url": "https://www.nature.com/articles/s41561-022-00974-7?error=cookies_not_supported&code=2d22bdf5-5eee-4d9a-b904-a7a8dd3754e9",
+      "landing_url": "https://www.nature.com/articles/s41561-022-00974-7",
+      "route_kind": "html",
+      "content_type": "text/html; charset=\"UTF-8\"",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "fixture_family": "golden",
+      "assets": {
+        "expected.json": "tests/fixtures/golden_criteria/10.1038_s41561-022-00974-7/expected.json",
+        "original.html": "tests/fixtures/golden_criteria/10.1038_s41561-022-00974-7/original.html"
+      }
+    },
+    "10.1038_s41612-021-00218-2": {
+      "doi": "10.1038/s41612-021-00218-2",
+      "publisher": "springer",
+      "title": "Northern Hemisphere drought risk in a warming climate",
+      "source_url": "https://www.nature.com/articles/s41612-021-00218-2?error=cookies_not_supported&code=c757a944-9b8c-44d6-bf90-b70e477c0d4c",
+      "landing_url": "https://www.nature.com/articles/s41612-021-00218-2",
+      "route_kind": "html",
+      "content_type": "text/html; charset=\"UTF-8\"",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "fixture_family": "golden",
+      "assets": {
+        "expected.json": "tests/fixtures/golden_criteria/10.1038_s41612-021-00218-2/expected.json",
+        "original.html": "tests/fixtures/golden_criteria/10.1038_s41612-021-00218-2/original.html"
+      }
+    },
+    "10.1038_s43247-024-01270-5": {
+      "doi": "10.1038/s43247-024-01270-5",
+      "publisher": "springer",
+      "title": "Earlier spring greening in Northern Hemisphere terrestrial biomes enhanced net ecosystem productivity in summer",
+      "source_url": "https://www.nature.com/articles/s43247-024-01270-5?error=cookies_not_supported&code=cadcc321-0498-4ff7-95a8-0b010aebe341",
+      "landing_url": "https://www.nature.com/articles/s43247-024-01270-5",
+      "route_kind": "html",
+      "content_type": "text/html; charset=\"UTF-8\"",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "fixture_family": "golden",
+      "assets": {
+        "expected.json": "tests/fixtures/golden_criteria/10.1038_s43247-024-01270-5/expected.json",
+        "original.html": "tests/fixtures/golden_criteria/10.1038_s43247-024-01270-5/original.html"
+      }
+    },
+    "10.1038_s43247-024-01885-8": {
+      "doi": "10.1038/s43247-024-01885-8",
+      "publisher": "springer",
+      "title": "Embedding machine-learnt sub-grid variability improves climate model precipitation patterns",
+      "source_url": "https://www.nature.com/articles/s43247-024-01885-8?error=cookies_not_supported&code=f799b99f-ff4a-48bd-aa7d-01443cd48778",
+      "landing_url": "https://www.nature.com/articles/s43247-024-01885-8",
+      "route_kind": "html",
+      "content_type": "text/html; charset=\"UTF-8\"",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "fixture_family": "golden",
+      "assets": {
+        "expected.json": "tests/fixtures/golden_criteria/10.1038_s43247-024-01885-8/expected.json",
+        "original.html": "tests/fixtures/golden_criteria/10.1038_s43247-024-01885-8/original.html"
+      }
+    },
+    "10.1073_pnas.1915921117": {
+      "doi": "10.1073/pnas.1915921117",
+      "publisher": "pnas",
+      "title": "Global snow drought hot spots and characteristics",
+      "source_url": "https://www.pnas.org/doi/full/10.1073/pnas.1915921117",
+      "landing_url": "https://pnas.org/doi/full/10.1073/pnas.1915921117",
+      "route_kind": "html",
+      "content_type": "text/html",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "fixture_family": "golden",
+      "assets": {
+        "expected.json": "tests/fixtures/golden_criteria/10.1073_pnas.1915921117/expected.json",
+        "original.html": "tests/fixtures/golden_criteria/10.1073_pnas.1915921117/original.html"
+      }
+    },
+    "10.1073_pnas.2208095119": {
+      "doi": "10.1073/pnas.2208095119",
+      "publisher": "pnas",
+      "title": "The importance of internal climate variability in climate impact projections",
+      "source_url": "https://www.pnas.org/doi/10.1073/pnas.2208095119",
+      "landing_url": "https://pnas.org/doi/10.1073/pnas.2208095119",
+      "route_kind": "html",
+      "content_type": "text/html",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "fixture_family": "golden",
+      "assets": {
+        "expected.json": "tests/fixtures/golden_criteria/10.1073_pnas.2208095119/expected.json",
+        "original.html": "tests/fixtures/golden_criteria/10.1073_pnas.2208095119/original.html"
+      }
+    },
+    "10.1073_pnas.2305050120": {
+      "doi": "10.1073/pnas.2305050120",
+      "publisher": "pnas",
+      "title": "10.1073/pnas.2305050120",
+      "source_url": "https://www.pnas.org/doi/10.1073/pnas.2305050120",
+      "landing_url": "https://pnas.org/doi/10.1073/pnas.2305050120",
+      "route_kind": "html",
+      "content_type": "text/html",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "fixture_family": "golden",
+      "assets": {
+        "expected.json": "tests/fixtures/golden_criteria/10.1073_pnas.2305050120/expected.json",
+        "original.html": "tests/fixtures/golden_criteria/10.1073_pnas.2305050120/original.html"
+      }
+    },
+    "10.1073_pnas.2310157121": {
+      "doi": "10.1073/pnas.2310157121",
+      "publisher": "pnas",
+      "title": "A large net carbon loss attributed to anthropogenic and natural disturbances in the Amazon Arc of Deforestation",
+      "source_url": "https://www.pnas.org/doi/10.1073/pnas.2310157121",
+      "landing_url": "https://pnas.org/doi/10.1073/pnas.2310157121",
+      "route_kind": "html",
+      "content_type": "text/html",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "fixture_family": "golden",
+      "assets": {
+        "expected.json": "tests/fixtures/golden_criteria/10.1073_pnas.2310157121/expected.json",
+        "original.html": "tests/fixtures/golden_criteria/10.1073_pnas.2310157121/original.html"
+      }
+    },
+    "10.1073_pnas.2314265121": {
+      "doi": "10.1073/pnas.2314265121",
+      "publisher": "pnas",
+      "title": "Weaker land-atmosphere coupling in global storm-resolving simulation",
+      "source_url": "https://www.pnas.org/doi/10.1073/pnas.2314265121",
+      "landing_url": "https://pnas.org/doi/10.1073/pnas.2314265121",
+      "route_kind": "html",
+      "content_type": "text/html",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "fixture_family": "golden",
+      "assets": {
+        "expected.json": "tests/fixtures/golden_criteria/10.1073_pnas.2314265121/expected.json",
+        "original.html": "tests/fixtures/golden_criteria/10.1073_pnas.2314265121/original.html"
+      }
+    },
+    "10.1073_pnas.2322622121": {
+      "doi": "10.1073/pnas.2322622121",
+      "publisher": "pnas",
+      "title": "Partitioning the drivers of Antarctic glacier mass balance (2003-2020) using satellite observations and a regional climate model",
+      "source_url": "https://www.pnas.org/doi/10.1073/pnas.2322622121",
+      "landing_url": "https://pnas.org/doi/10.1073/pnas.2322622121",
+      "route_kind": "html",
+      "content_type": "text/html",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "fixture_family": "golden",
+      "assets": {
+        "expected.json": "tests/fixtures/golden_criteria/10.1073_pnas.2322622121/expected.json",
+        "original.html": "tests/fixtures/golden_criteria/10.1073_pnas.2322622121/original.html"
+      }
+    },
+    "10.1073_pnas.2402656121": {
+      "doi": "10.1073/pnas.2402656121",
+      "publisher": "pnas",
+      "title": "US Corn Belt enhances regional precipitation recycling",
+      "source_url": "https://www.pnas.org/doi/10.1073/pnas.2402656121",
+      "landing_url": "https://pnas.org/doi/10.1073/pnas.2402656121",
+      "route_kind": "html",
+      "content_type": "text/html",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "fixture_family": "golden",
+      "assets": {
+        "expected.json": "tests/fixtures/golden_criteria/10.1073_pnas.2402656121/expected.json",
+        "original.html": "tests/fixtures/golden_criteria/10.1073_pnas.2402656121/original.html"
+      }
+    },
+    "10.1073_pnas.2410294121": {
+      "doi": "10.1073/pnas.2410294121",
+      "publisher": "pnas",
+      "title": "Surging compound drought-heatwaves underrated in global soils",
+      "source_url": "https://www.pnas.org/doi/10.1073/pnas.2410294121",
+      "landing_url": "https://pnas.org/doi/10.1073/pnas.2410294121",
+      "route_kind": "html",
+      "content_type": "text/html",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "fixture_family": "golden",
+      "assets": {
+        "expected.json": "tests/fixtures/golden_criteria/10.1073_pnas.2410294121/expected.json",
+        "original.html": "tests/fixtures/golden_criteria/10.1073_pnas.2410294121/original.html"
+      }
+    },
+    "10.1111_gcb.15322": {
+      "doi": "10.1111/gcb.15322",
+      "publisher": "wiley",
+      "title": "Accelerated rate of vegetation green-up related to warming at northern high latitudes",
+      "source_url": "https://onlinelibrary.wiley.com/doi/10.1111/gcb.15322",
+      "landing_url": "https://onlinelibrary.wiley.com/doi/10.1111/gcb.15322",
+      "route_kind": "html",
+      "content_type": "text/html",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "fixture_family": "golden",
+      "assets": {
+        "expected.json": "tests/fixtures/golden_criteria/10.1111_gcb.15322/expected.json",
+        "original.html": "tests/fixtures/golden_criteria/10.1111_gcb.15322/original.html"
+      }
+    },
+    "10.1111_gcb.16011": {
+      "doi": "10.1111/gcb.16011",
+      "publisher": "wiley",
+      "title": "Vegetation green-up date is more sensitive to permafrost degradation than climate change in spring across the northern permafrost region",
+      "source_url": "https://onlinelibrary.wiley.com/doi/10.1111/gcb.16011",
+      "landing_url": "https://onlinelibrary.wiley.com/doi/10.1111/gcb.16011",
+      "route_kind": "html",
+      "content_type": "text/html",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "fixture_family": "golden",
+      "assets": {
+        "expected.json": "tests/fixtures/golden_criteria/10.1111_gcb.16011/expected.json",
+        "original.html": "tests/fixtures/golden_criteria/10.1111_gcb.16011/original.html"
+      }
+    },
+    "10.1111_gcb.16561": {
+      "doi": "10.1111/gcb.16561",
+      "publisher": "wiley",
+      "title": "Climate-driven vegetation greening further reduces water availability in drylands",
+      "source_url": "https://onlinelibrary.wiley.com/doi/10.1111/gcb.16561",
+      "landing_url": "https://onlinelibrary.wiley.com/doi/10.1111/gcb.16561",
+      "route_kind": "html",
+      "content_type": "text/html",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "fixture_family": "golden",
+      "assets": {
+        "expected.json": "tests/fixtures/golden_criteria/10.1111_gcb.16561/expected.json",
+        "original.html": "tests/fixtures/golden_criteria/10.1111_gcb.16561/original.html"
+      }
+    },
+    "10.1111_gcb.16745": {
+      "doi": "10.1111/gcb.16745",
+      "publisher": "wiley",
+      "title": "Contrasting ecosystem vegetation response in global drylands under drying and wetting conditions",
+      "source_url": "https://onlinelibrary.wiley.com/doi/10.1111/gcb.16745",
+      "landing_url": "https://onlinelibrary.wiley.com/doi/10.1111/gcb.16745",
+      "route_kind": "html",
+      "content_type": "text/html",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "fixture_family": "golden",
+      "assets": {
+        "expected.json": "tests/fixtures/golden_criteria/10.1111_gcb.16745/expected.json",
+        "original.html": "tests/fixtures/golden_criteria/10.1111_gcb.16745/original.html"
+      }
+    },
+    "10.1111_gcb.16758": {
+      "doi": "10.1111/gcb.16758",
+      "publisher": "wiley",
+      "title": "Spring phenology rather than climate dominates the trends in peak of growing season in the Northern Hemisphere",
+      "source_url": "https://onlinelibrary.wiley.com/doi/10.1111/gcb.16758",
+      "landing_url": "https://onlinelibrary.wiley.com/doi/10.1111/gcb.16758",
+      "route_kind": "html",
+      "content_type": "text/html",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "fixture_family": "golden",
+      "assets": {
+        "expected.json": "tests/fixtures/golden_criteria/10.1111_gcb.16758/expected.json",
+        "original.html": "tests/fixtures/golden_criteria/10.1111_gcb.16758/original.html"
+      }
+    },
+    "10.1111_gcb.17141": {
+      "doi": "10.1111/gcb.17141",
+      "publisher": "wiley",
+      "title": "Declining coupling between vegetation and drought over the past three decades",
+      "source_url": "https://onlinelibrary.wiley.com/doi/10.1111/gcb.17141",
+      "landing_url": "https://onlinelibrary.wiley.com/doi/10.1111/gcb.17141",
+      "route_kind": "html",
+      "content_type": "text/html",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "fixture_family": "golden",
+      "assets": {
+        "expected.json": "tests/fixtures/golden_criteria/10.1111_gcb.17141/expected.json",
+        "original.html": "tests/fixtures/golden_criteria/10.1111_gcb.17141/original.html"
+      }
+    },
+    "10.1126_sciadv.aax6869": {
+      "doi": "10.1126/sciadv.aax6869",
+      "publisher": "science",
+      "title": "Strong future increases in Arctic precipitation variability linked to poleward moisture transport",
+      "source_url": "https://www.science.org/doi/10.1126/sciadv.aax6869",
+      "landing_url": "https://www.science.org/doi/10.1126/sciadv.aax6869",
+      "route_kind": "html",
+      "content_type": "text/html",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "fixture_family": "golden",
+      "assets": {
+        "expected.json": "tests/fixtures/golden_criteria/10.1126_sciadv.aax6869/expected.json",
+        "original.html": "tests/fixtures/golden_criteria/10.1126_sciadv.aax6869/original.html"
+      }
+    },
+    "10.1126_sciadv.abj3309": {
+      "doi": "10.1126/sciadv.abj3309",
+      "publisher": "science",
+      "title": "Projections of future forest degradation and CO2 emissions for the Brazilian Amazon",
+      "source_url": "https://www.science.org/doi/10.1126/sciadv.abj3309",
+      "landing_url": "https://www.science.org/doi/10.1126/sciadv.abj3309",
+      "route_kind": "html",
+      "content_type": "text/html",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "fixture_family": "golden",
+      "assets": {
+        "expected.json": "tests/fixtures/golden_criteria/10.1126_sciadv.abj3309/expected.json",
+        "original.html": "tests/fixtures/golden_criteria/10.1126_sciadv.abj3309/original.html"
+      }
+    },
+    "10.1126_science.abb3021": {
+      "doi": "10.1126/science.abb3021",
+      "publisher": "science",
+      "title": "Long-term forest degradation surpasses deforestation in the Brazilian Amazon",
+      "source_url": "https://www.science.org/doi/10.1126/science.abb3021",
+      "landing_url": "https://www.science.org/doi/10.1126/science.abb3021",
+      "route_kind": "html",
+      "content_type": "text/html",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "fixture_family": "golden",
+      "assets": {
+        "expected.json": "tests/fixtures/golden_criteria/10.1126_science.abb3021/expected.json",
+        "original.html": "tests/fixtures/golden_criteria/10.1126_science.abb3021/original.html"
+      }
+    },
+    "10.1126_science.ade0347": {
+      "doi": "10.1126/science.ade0347",
+      "publisher": "science",
+      "title": "Magma accumulation at depths of prior rhyolite storage beneath Yellowstone Caldera",
+      "source_url": "https://www.science.org/doi/10.1126/science.ade0347",
+      "landing_url": "https://www.science.org/doi/10.1126/science.ade0347",
+      "route_kind": "html",
+      "content_type": "text/html",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "fixture_family": "golden",
+      "assets": {
+        "expected.json": "tests/fixtures/golden_criteria/10.1126_science.ade0347/expected.json",
+        "original.html": "tests/fixtures/golden_criteria/10.1126_science.ade0347/original.html"
+      }
+    },
+    "10.1007_s00382-018-4286-0__block": {
+      "doi": "10.1007/s00382-018-4286-0",
+      "publisher": "springer",
+      "title": "Does global warming amplify interannual climate variability?",
+      "source_url": "https://link.springer.com/article/10.1007/s00382-018-4286-0",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "fixture_family": "block",
+      "assets": {
+        "extracted.md": "tests/fixtures/block/10.1007_s00382-018-4286-0/extracted.md",
+        "raw.html": "tests/fixtures/block/10.1007_s00382-018-4286-0/raw.html"
+      }
+    },
+    "10.1007_s11430-021-9892-6__block": {
+      "doi": "10.1007/s11430-021-9892-6",
+      "publisher": "springer",
+      "title": "Estimation of China’s terrestrial ecosystem carbon sink: Methods, progress and prospects",
+      "source_url": "https://link.springer.com/article/10.1007/s11430-021-9892-6",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "fixture_family": "block",
+      "assets": {
+        "extracted.md": "tests/fixtures/block/10.1007_s11430-021-9892-6/extracted.md",
+        "raw.html": "tests/fixtures/block/10.1007_s11430-021-9892-6/raw.html"
+      }
+    },
+    "10.1007_s12652-019-01399-8__block": {
+      "doi": "10.1007/s12652-019-01399-8",
+      "publisher": "springer",
+      "title": "Sentiment analysis and text categorization of cancer medical records with LSTM",
+      "source_url": "https://link.springer.com/article/10.1007/s12652-019-01399-8",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "fixture_family": "block",
+      "assets": {
+        "extracted.md": "tests/fixtures/block/10.1007_s12652-019-01399-8/extracted.md",
+        "raw.html": "tests/fixtures/block/10.1007_s12652-019-01399-8/raw.html"
+      }
+    },
+    "10.1007_s13351-020-9829-8__block": {
+      "doi": "10.1007/s13351-020-9829-8",
+      "publisher": "springer",
+      "title": "Causes and Changes of Drought in China: Research Progress and Prospects",
+      "source_url": "https://link.springer.com/article/10.1007/s13351-020-9829-8",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "fixture_family": "block",
+      "assets": {
+        "extracted.md": "tests/fixtures/block/10.1007_s13351-020-9829-8/extracted.md",
+        "raw.html": "tests/fixtures/block/10.1007_s13351-020-9829-8/raw.html"
+      }
+    },
+    "10.1073_pnas.2509692123__block": {
+      "doi": "10.1073/pnas.2509692123",
+      "publisher": "pnas",
+      "title": "A discrete serotonergic circuit involved in the generation of tinnitus behavior",
+      "source_url": "https://www.pnas.org/doi/full/10.1073/pnas.2509692123",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "fixture_family": "block",
+      "assets": {
+        "extracted.md": "tests/fixtures/block/10.1073_pnas.2509692123/extracted.md",
+        "raw.html": "tests/fixtures/block/10.1073_pnas.2509692123/raw.html"
+      }
+    },
+    "10.1073_pnas.2523032123__block": {
+      "doi": "10.1073/pnas.2523032123",
+      "publisher": "pnas",
+      "title": "Simple biological controllers drive the evolution of soft modes",
+      "source_url": "https://www.pnas.org/doi/abs/10.1073/pnas.2523032123",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "fixture_family": "block",
+      "assets": {
+        "extracted.md": "tests/fixtures/block/10.1073_pnas.2523032123/extracted.md",
+        "raw.html": "tests/fixtures/block/10.1073_pnas.2523032123/raw.html"
+      }
+    },
+    "10.1073_pnas.2534432123__block": {
+      "doi": "10.1073/pnas.2534432123",
+      "publisher": "pnas",
+      "title": "The intestinal microbiota impacts nutritional immunity and resistance to *Acinetobacter baumannii* pneumonia",
+      "source_url": "https://www.pnas.org/doi/abs/10.1073/pnas.2534432123?__cf_chl_tk=2JD97eZZ5s5jUC7L2so0V3lR.Yd3R1iUQWiacuY1pc8-1776825642-1.0.1.1-ff1tcpmID9tVjsyn5QLkJFWB1BW5CMMgKHyhoFb7lXk",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "fixture_family": "block",
+      "assets": {
+        "extracted.md": "tests/fixtures/block/10.1073_pnas.2534432123/extracted.md",
+        "raw.html": "tests/fixtures/block/10.1073_pnas.2534432123/raw.html"
+      }
+    },
+    "10.1073_pnas.2607267123__block": {
+      "doi": "10.1073/pnas.2607267123",
+      "publisher": "pnas",
+      "title": "Reconfigurable hydrogel interfaces for soft brain electrodes",
+      "source_url": "https://www.pnas.org/doi/full/10.1073/pnas.2607267123",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "fixture_family": "block",
+      "assets": {
+        "extracted.md": "tests/fixtures/block/10.1073_pnas.2607267123/extracted.md",
+        "raw.html": "tests/fixtures/block/10.1073_pnas.2607267123/raw.html"
+      }
+    },
+    "10.1111_gcb.16386__block": {
+      "doi": "10.1111/gcb.16386",
+      "publisher": "wiley",
+      "title": "Cerrado deforestation threatens regional climate and water availability for agriculture and ecosystems",
+      "source_url": "https://onlinelibrary.wiley.com/doi/abs/10.1111/gcb.16386",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "fixture_family": "block",
+      "assets": {
+        "extracted.md": "tests/fixtures/block/10.1111_gcb.16386/extracted.md",
+        "raw.html": "tests/fixtures/block/10.1111_gcb.16386/raw.html"
+      }
+    },
+    "10.1111_gcb.16414__block": {
+      "doi": "10.1111/gcb.16414",
+      "publisher": "wiley",
+      "title": "Contrasting temperature effects on the velocity of early- versus late-stage vegetation green-up in the Northern Hemisphere",
+      "source_url": "https://onlinelibrary.wiley.com/doi/abs/10.1111/gcb.16414",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "fixture_family": "block",
+      "assets": {
+        "extracted.md": "tests/fixtures/block/10.1111_gcb.16414/extracted.md",
+        "raw.html": "tests/fixtures/block/10.1111_gcb.16414/raw.html"
+      }
+    },
+    "10.1111_gcb.16758__block": {
+      "doi": "10.1111/gcb.16758",
+      "publisher": "wiley",
+      "title": "Spring phenology rather than climate dominates the trends in peak of growing season in the Northern Hemisphere",
+      "source_url": "https://onlinelibrary.wiley.com/doi/10.1111/gcb.16758",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "fixture_family": "block",
+      "assets": {
+        "extracted.md": "tests/fixtures/block/10.1111_gcb.16758/extracted.md",
+        "raw.html": "tests/fixtures/block/10.1111_gcb.16758/raw.html"
+      }
+    },
+    "10.1111_gcb.16998__block": {
+      "doi": "10.1111/gcb.16998",
+      "publisher": "wiley",
+      "title": "Drought thresholds that impact vegetation reveal the divergent responses of vegetation growth to drought across China",
+      "source_url": "https://onlinelibrary.wiley.com/doi/10.1111/gcb.16998",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "fixture_family": "block",
+      "assets": {
+        "extracted.md": "tests/fixtures/block/10.1111_gcb.16998/extracted.md",
+        "raw.html": "tests/fixtures/block/10.1111_gcb.16998/raw.html"
+      }
+    },
+    "10.1126_science.167.3914.61__block": {
+      "doi": "10.1126/science.167.3914.61",
+      "publisher": "science",
+      "title": "Cockroach Leg Regeneration: Effects of Ecdysterone in vitro",
+      "source_url": "https://www.science.org/doi/full/10.1126/science.167.3914.61",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "fixture_family": "block",
+      "assets": {
+        "raw.html": "tests/fixtures/block/10.1126_science.167.3914.61/raw.html"
+      }
+    },
+    "10.1126_science.6985744__block": {
+      "doi": "10.1126/science.6985744",
+      "publisher": "science",
+      "title": "Riddle of the Nobel Debate",
+      "source_url": "https://www.science.org/doi/10.1126/science.6985744",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "fixture_family": "block",
+      "assets": {
+        "extracted.md": "tests/fixtures/block/10.1126_science.6985744/extracted.md",
+        "raw.html": "tests/fixtures/block/10.1126_science.6985744/raw.html"
+      }
+    },
+    "10.1126_science.7809609__block": {
+      "doi": "10.1126/science.7809609",
+      "publisher": "science",
+      "title": "Single Cells as Biosensors for Chemical Separations",
+      "source_url": "https://www.science.org/doi/full/10.1126/science.7809609",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "fixture_family": "block",
+      "assets": {
+        "raw.html": "tests/fixtures/block/10.1126_science.7809609/raw.html"
+      }
+    },
+    "10.1126_science.aeg3511__block": {
+      "doi": "10.1126/science.aeg3511",
+      "publisher": "science",
+      "title": "Magma plumbing beneath Yellowstone",
+      "source_url": "https://www.science.org/doi/full/10.1126/science.aeg3511",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "fixture_family": "block",
+      "assets": {
+        "extracted.md": "tests/fixtures/block/10.1126_science.aeg3511/extracted.md",
+        "raw.html": "tests/fixtures/block/10.1126_science.aeg3511/raw.html"
+      }
+    }
+  },
+  "tests": [
+    {
+      "test": "tests/unit/test_html_shared_helpers.py::test_parse_html_metadata_does_not_treat_generic_description_as_abstract",
+      "anchors": [
+        "rule-generic-metadata-boundaries"
+      ],
+      "samples": []
+    },
+    {
+      "test": "tests/unit/test_html_shared_helpers.py::test_parse_html_metadata_uses_redirect_stub_lookup_title",
+      "anchors": [
+        "rule-generic-metadata-boundaries"
+      ],
+      "samples": []
+    },
+    {
+      "test": "tests/unit/test_elsevier_markdown.py::test_build_article_structure_extracts_authors_from_author_groups",
+      "anchors": [
+        "rule-provider-owned-authors"
+      ],
+      "samples": [
+        "scenario_elsevier_author_groups_minimal"
+      ]
+    },
+    {
+      "test": "tests/unit/test_elsevier_markdown.py::test_elsevier_formula_rendering_contracts",
+      "anchors": [
+        "rule-elsevier-formula-rendering"
+      ],
+      "samples": [
+        "10.1016_j.agrformet.2024.109975"
+      ]
+    },
+    {
+      "test": "tests/unit/test_elsevier_markdown.py::test_supplementary_display_is_omitted_from_body_and_listed_with_caption",
+      "anchors": [
+        "rule-elsevier-supplementary-materials"
+      ],
+      "samples": []
+    },
+    {
+      "test": "tests/unit/test_elsevier_markdown.py::test_split_inline_variable_subscripts_are_rejoined_in_paragraphs",
+      "anchors": [
+        "rule-preserve-inline-semantics-in-body-and-tables"
+      ],
+      "samples": []
+    },
+    {
+      "test": "tests/unit/test_elsevier_markdown.py::test_graphical_abstract_assets_do_not_appear_in_additional_figures",
+      "anchors": [
+        "rule-elsevier-graphical-abstract"
+      ],
+      "samples": []
+    },
+    {
+      "test": "tests/unit/test_elsevier_markdown.py::test_elsevier_table_placement_contracts",
+      "anchors": [
+        "rule-elsevier-table-placement"
+      ],
+      "samples": [
+        "10.1016_j.jhydrol.2021.126210"
+      ]
+    },
+    {
+      "test": "tests/unit/test_elsevier_markdown.py::test_xml_multilingual_abstract_preserves_parallel_abstract_sections",
+      "anchors": [
+        "rule-keep-parallel-multilingual-abstracts"
+      ],
+      "samples": []
+    },
+    {
+      "test": "tests/unit/test_elsevier_markdown.py::test_xml_non_english_only_article_is_preserved",
+      "anchors": [
+        "rule-keep-parallel-multilingual-abstracts"
+      ],
+      "samples": []
+    },
+    {
+      "test": "tests/unit/test_elsevier_markdown.py::test_elsevier_appendix_context_contracts",
+      "anchors": [
+        "rule-elsevier-appendix-context"
+      ],
+      "samples": [
+        "10.1016_j.rse.2026.115369"
+      ]
+    },
+    {
+      "test": "tests/unit/test_science_pnas_markdown.py::test_science_fixture_markdown_omits_frontmatter_and_collateral_noise",
+      "anchors": [
+        "rule-filter-publisher-ui-noise"
+      ],
+      "samples": [
+        "10.1126_science.ady3136"
+      ]
+    },
+    {
+      "test": "tests/unit/test_science_pnas_markdown.py::test_science_fixture_keeps_data_availability_but_filters_teaser_figure",
+      "anchors": [
+        "rule-keep-data-availability-once"
+      ],
+      "samples": [
+        "10.1126_science.ady3136"
+      ]
+    },
+    {
+      "test": "tests/unit/test_science_pnas_markdown.py::test_pnas_abstract_fixture_is_rejected",
+      "anchors": [
+        "rule-html-availability-contract"
+      ],
+      "samples": [
+        "10.1073_pnas.2406303121"
+      ]
+    },
+    {
+      "test": "tests/unit/test_science_pnas_markdown.py::test_pnas_full_fixture_omits_real_page_collateral_noise",
+      "anchors": [
+        "rule-filter-publisher-ui-noise"
+      ],
+      "samples": [
+        "10.1073_pnas.2406303121"
+      ]
+    },
+    {
+      "test": "tests/unit/test_science_pnas_markdown.py::test_pnas_full_fixture_keeps_data_availability_and_renders_table_markdown",
+      "anchors": [
+        "rule-keep-data-availability-once",
+        "rule-preserve-inline-semantics-in-body-and-tables"
+      ],
+      "samples": [
+        "10.1073_pnas.2406303121"
+      ]
+    },
+    {
+      "test": "tests/unit/test_science_pnas_markdown.py::test_pnas_collateral_data_availability_fixture_is_not_duplicated",
+      "anchors": [
+        "rule-keep-data-availability-once"
+      ],
+      "samples": [
+        "10.1073_pnas.2309123120"
+      ]
+    },
+    {
+      "test": "tests/unit/test_science_pnas_markdown.py::test_wiley_full_fixture_extracts_body_sections_from_real_html",
+      "anchors": [
+        "rule-keep-semantic-parent-heading",
+        "rule-preserve-inline-semantics-in-body-and-tables"
+      ],
+      "samples": [
+        "10.1111_gcb.16414"
+      ]
+    },
+    {
+      "test": "tests/unit/test_science_pnas_markdown.py::test_wiley_full_fixture_omits_real_page_collateral_noise",
+      "anchors": [
+        "rule-filter-publisher-ui-noise"
+      ],
+      "samples": [
+        "10.1111_gcb.16414"
+      ]
+    },
+    {
+      "test": "tests/unit/test_science_pnas_markdown.py::test_wiley_full_fixture_keeps_data_availability_but_filters_other_back_matter",
+      "anchors": [
+        "rule-keep-data-availability-once"
+      ],
+      "samples": [
+        "10.1111_gcb.16414"
+      ]
+    },
+    {
+      "test": "tests/unit/test_science_pnas_markdown.py::test_science_perspective_fixture_extracts_fulltext_without_section_headings",
+      "anchors": [
+        "rule-keep-headingless-body-flat"
+      ],
+      "samples": [
+        "10.1126_science.aeg3511"
+      ]
+    },
+    {
+      "test": "tests/unit/test_science_pnas_markdown.py::test_science_adp0212_fixture_splits_display_equations_and_caption_sentences",
+      "anchors": [
+        "rule-readable-equation-caption-spacing"
+      ],
+      "samples": [
+        "10.1126_science.adp0212"
+      ]
+    },
+    {
+      "test": "tests/unit/test_science_pnas_postprocess.py::test_wiley_real_fixture_filters_frontmatter_and_viewer_noise",
+      "anchors": [
+        "rule-filter-publisher-ui-noise"
+      ],
+      "samples": [
+        "10.1111_gcb.16414"
+      ]
+    },
+    {
+      "test": "tests/unit/test_science_pnas_postprocess.py::test_wiley_real_fixture_appends_abbreviations_after_body_content",
+      "anchors": [
+        "rule-wiley-abbreviations-trailing"
+      ],
+      "samples": [
+        "10.1111_cas.16395"
+      ]
+    },
+    {
+      "test": "tests/unit/test_science_pnas_postprocess.py::test_wiley_real_fixture_keeps_methods_subcontent_in_body",
+      "anchors": [
+        "rule-keep-semantic-parent-heading"
+      ],
+      "samples": [
+        "10.1111_gcb.16455"
+      ]
+    },
+    {
+      "test": "tests/unit/test_science_pnas_postprocess.py::test_pnas_real_fixture_keeps_significance_and_abstract_before_main_text",
+      "anchors": [
+        "rule-stable-frontmatter-order"
+      ],
+      "samples": [
+        "10.1073_pnas.2406303121"
+      ]
+    },
+    {
+      "test": "tests/unit/test_science_pnas_postprocess.py::test_pnas_real_fixture_preserves_figures_equations_and_heading_trimming",
+      "anchors": [
+        "rule-readable-equation-caption-spacing"
+      ],
+      "samples": [
+        "10.1073_pnas.2406303121"
+      ]
+    },
+    {
+      "test": "tests/unit/test_science_pnas_postprocess.py::test_pnas_real_fixture_renders_table_and_inline_cell_formatting",
+      "anchors": [
+        "rule-preserve-inline-semantics-in-body-and-tables"
+      ],
+      "samples": [
+        "10.1073_pnas.2406303121"
+      ]
+    },
+    {
+      "test": "tests/unit/test_science_pnas_postprocess.py::test_pnas_real_commentary_keeps_headingless_body_flat",
+      "anchors": [
+        "rule-keep-headingless-body-flat"
+      ],
+      "samples": [
+        "10.1073_pnas.2317456120"
+      ]
+    },
+    {
+      "test": "tests/unit/test_science_pnas_postprocess.py::test_science_real_fixture_keeps_formula_and_figure_caption_spacing",
+      "anchors": [
+        "rule-readable-equation-caption-spacing"
+      ],
+      "samples": [
+        "10.1126_science.adp0212"
+      ]
+    },
+    {
+      "test": "tests/unit/test_science_pnas_postprocess.py::test_shared_equation_normalization_handles_real_science_and_pnas_fixtures",
+      "anchors": [
+        "rule-readable-equation-caption-spacing"
+      ],
+      "samples": [
+        "10.1126_sciadv.abf8021",
+        "10.1126_sciadv.abg9690",
+        "10.1126_sciadv.adm9732",
+        "10.1073_pnas.2406303121"
+      ]
+    },
+    {
+      "test": "tests/unit/test_science_pnas_postprocess.py::test_science_real_frontmatter_fixture_preserves_structured_summaries_and_main_text",
+      "anchors": [
+        "rule-stable-frontmatter-order",
+        "rule-preserve-subscripts-in-headings"
+      ],
+      "samples": [
+        "10.1126_science.abp8622"
+      ]
+    },
+    {
+      "test": "tests/unit/test_science_pnas_postprocess.py::test_rewrite_inline_figure_links_prefers_local_paths_for_existing_science_image_blocks",
+      "anchors": [
+        "rule-rewrite-inline-figure-links"
+      ],
+      "samples": []
+    },
+    {
+      "test": "tests/unit/test_science_pnas_postprocess.py::test_rewrite_inline_figure_links_is_data_driven_for_non_legacy_publisher",
+      "anchors": [
+        "rule-rewrite-inline-figure-links"
+      ],
+      "samples": []
+    },
+    {
+      "test": "tests/unit/test_science_pnas_postprocess.py::test_rewrite_inline_figure_links_ignores_cross_references_in_asset_captions",
+      "anchors": [
+        "rule-rewrite-inline-figure-links"
+      ],
+      "samples": []
+    },
+    {
+      "test": "tests/unit/test_science_pnas_provider.py::test_science_provider_rewrites_inline_figure_links_to_downloaded_local_assets",
+      "anchors": [
+        "rule-rewrite-inline-figure-links"
+      ],
+      "samples": []
+    },
+    {
+      "test": "tests/unit/test_science_pnas_provider.py::test_science_provider_uses_extracted_dom_abstract_and_restores_lead_body_text",
+      "anchors": [
+        "rule-provider-owned-authors"
+      ],
+      "samples": []
+    },
+    {
+      "test": "tests/unit/test_science_pnas_provider.py::test_provider_owned_html_signals_populate_final_article_authors",
+      "anchors": [
+        "rule-provider-owned-authors"
+      ],
+      "samples": [
+        "10.1126_science.adp0212",
+        "10.1111_gcb.16998",
+        "10.1073_pnas.2309123120"
+      ]
+    },
+    {
+      "test": "tests/unit/test_science_pnas_provider.py::test_science_provider_falls_back_to_dom_authors_when_datalayer_is_missing",
+      "anchors": [
+        "rule-provider-owned-authors"
+      ],
+      "samples": [
+        "10.1126_science.adp0212"
+      ]
+    },
+    {
+      "test": "tests/unit/test_science_pnas_provider.py::test_pnas_provider_renders_headingless_commentary_without_synthetic_title_section",
+      "anchors": [
+        "rule-keep-headingless-body-flat"
+      ],
+      "samples": [
+        "10.1073_pnas.2317456120"
+      ]
+    },
+    {
+      "test": "tests/unit/test_science_pnas_provider.py::test_science_provider_keeps_frontmatter_sections_but_only_one_abstract_in_final_article",
+      "anchors": [
+        "rule-stable-frontmatter-order"
+      ],
+      "samples": [
+        "10.1126_science.abp8622"
+      ]
+    },
+    {
+      "test": "tests/unit/test_science_pnas_provider.py::test_science_provider_replay_for_adl6155_keeps_materials_and_methods_wrapper_heading",
+      "anchors": [
+        "rule-keep-semantic-parent-heading"
+      ],
+      "samples": [
+        "10.1126_sciadv.adl6155"
+      ]
+    },
+    {
+      "test": "tests/unit/test_science_pnas_provider.py::test_wiley_provider_deduplicates_near_matching_abstract_in_final_article_render",
+      "anchors": [
+        "rule-stable-frontmatter-order"
+      ],
+      "samples": [
+        "10.1111_gcb.16998"
+      ]
+    },
+    {
+      "test": "tests/unit/test_science_pnas_provider.py::test_wiley_provider_replay_for_2004gb002273_body_assets_avoid_trailing_figures_noise",
+      "anchors": [
+        "rule-no-trailing-figures-appendix",
+        "rule-filter-publisher-ui-noise"
+      ],
+      "samples": [
+        "10.1029_2004gb002273"
+      ]
+    },
+    {
+      "test": "tests/unit/test_science_pnas_provider.py::test_pnas_provider_keeps_frontmatter_once_and_filters_collateral_noise_in_final_render",
+      "anchors": [
+        "rule-filter-publisher-ui-noise",
+        "rule-stable-frontmatter-order"
+      ],
+      "samples": [
+        "10.1073_pnas.2309123120"
+      ]
+    },
+    {
+      "test": "tests/unit/test_springer_html_regressions.py::test_springer_paywall_article_markdown_strips_preview_sentence",
+      "anchors": [
+        "rule-filter-publisher-ui-noise"
+      ],
+      "samples": [
+        "10.1007_s00382-018-4286-0__block"
+      ]
+    },
+    {
+      "test": "tests/unit/test_springer_html_regressions.py::test_springernature_fulltext_markdown_strips_ai_alt_disclaimer",
+      "anchors": [
+        "rule-filter-publisher-ui-noise"
+      ],
+      "samples": [
+        "10.1038_s44221-022-00024-x"
+      ]
+    },
+    {
+      "test": "tests/unit/test_springer_html_regressions.py::test_old_nature_fixture_keeps_single_methods_summary_and_methods_sections",
+      "anchors": [
+        "rule-springer-methods-summary"
+      ],
+      "samples": [
+        "10.1038_nature12915"
+      ]
+    },
+    {
+      "test": "tests/unit/test_springer_html_regressions.py::test_old_nature_downloaded_body_figures_inline_without_trailing_figures_block",
+      "anchors": [
+        "rule-no-trailing-figures-appendix"
+      ],
+      "samples": [
+        "10.1038_nature13376"
+      ]
+    },
+    {
+      "test": "tests/unit/test_springer_html_regressions.py::test_new_nature_downloaded_body_figures_inline_without_trailing_figures_block",
+      "anchors": [
+        "rule-no-trailing-figures-appendix"
+      ],
+      "samples": [
+        "10.1038_s41561-022-00983-6"
+      ]
+    },
+    {
+      "test": "tests/unit/test_springer_html_regressions.py::test_springer_markdown_preserves_subscripts_in_section_headings",
+      "anchors": [
+        "rule-preserve-subscripts-in-headings"
+      ],
+      "samples": []
+    },
+    {
+      "test": "tests/unit/test_springer_html_regressions.py::test_springer_markdown_ignores_ai_alt_text_when_caption_exists",
+      "anchors": [
+        "rule-springer-caption-precedence"
+      ],
+      "samples": []
+    },
+    {
+      "test": "tests/unit/test_springer_html_tables.py::test_render_table_markdown_handles_real_springer_classic_table_page",
+      "anchors": [
+        "rule-springer-inline-table"
+      ],
+      "samples": [
+        "10.1007_s10584-011-0143-4"
+      ]
+    },
+    {
+      "test": "tests/unit/test_springer_html_tables.py::test_springer_html_injects_real_nature_inline_table_page_with_flattened_headers",
+      "anchors": [
+        "rule-springer-inline-table"
+      ],
+      "samples": [
+        "10.1038_s43247-024-01295-w"
+      ]
+    },
+    {
+      "test": "tests/unit/test_springer_html_tables.py::test_springer_html_keeps_article_success_when_inline_table_page_has_no_table",
+      "anchors": [
+        "rule-springer-inline-table"
+      ],
+      "samples": [
+        "10.1007_s10584-011-0143-4"
+      ]
+    },
+    {
+      "test": "tests/unit/test_html_availability.py::test_assess_html_rejects_science_paywall_sample_with_abstract",
+      "anchors": [
+        "rule-html-availability-contract"
+      ],
+      "samples": [
+        "10.1126_science.aeg3511__block"
+      ]
+    },
+    {
+      "test": "tests/unit/test_html_availability.py::test_assess_html_accepts_science_entitled_fulltext_fixture",
+      "anchors": [
+        "rule-html-availability-contract"
+      ],
+      "samples": [
+        "10.1126_science.aeg3511"
+      ]
+    },
+    {
+      "test": "tests/unit/test_html_availability.py::test_assess_html_rejects_springer_paywall_samples_without_promoting_ancillary_sections",
+      "anchors": [
+        "rule-html-availability-contract"
+      ],
+      "samples": [
+        "10.1007_s00382-018-4286-0__block",
+        "10.1007_s11430-021-9892-6__block",
+        "10.1007_s12652-019-01399-8__block",
+        "10.1007_s13351-020-9829-8__block"
+      ]
+    },
+    {
+      "test": "tests/unit/test_html_availability.py::test_assess_html_rejects_wiley_paywall_metadata_with_abstract",
+      "anchors": [
+        "rule-html-availability-contract"
+      ],
+      "samples": [
+        "10.1111_gcb.16414__block"
+      ]
+    },
+    {
+      "test": "tests/unit/test_html_availability.py::test_assess_html_accepts_wiley_fulltext_fixture_despite_login_chrome",
+      "anchors": [
+        "rule-html-availability-contract"
+      ],
+      "samples": [
+        "10.1111_gcb.16998"
+      ]
+    },
+    {
+      "test": "tests/unit/test_html_availability.py::test_assess_html_rejects_pnas_paywall_metadata_with_abstract",
+      "anchors": [
+        "rule-html-availability-contract"
+      ],
+      "samples": [
+        "10.1073_pnas.2509692123__block"
+      ]
+    },
+    {
+      "test": "tests/unit/test_html_availability.py::test_assess_html_accepts_pnas_fulltext_fixture_despite_institutional_login_chrome",
+      "anchors": [
+        "rule-html-availability-contract"
+      ],
+      "samples": [
+        "10.1073_pnas.2309123120"
+      ]
+    },
+    {
+      "test": "tests/unit/test_regression_samples.py::test_wiley_bilingual_fixture_preserves_parallel_abstract_sections",
+      "anchors": [
+        "rule-keep-parallel-multilingual-abstracts"
+      ],
+      "samples": [
+        "10.1111_gcb.16386"
+      ]
+    },
+    {
+      "test": "tests/unit/test_regression_samples.py::test_springer_bilingual_fixture_preserves_parallel_abstract_sections",
+      "anchors": [
+        "rule-keep-parallel-multilingual-abstracts"
+      ],
+      "samples": [
+        "10.1007_s13158-025-00473-x"
+      ]
+    },
+    {
+      "test": "tests/unit/test_regression_samples.py::test_elsevier_bilingual_fixture_preserves_parallel_abstract_sections",
+      "anchors": [
+        "rule-keep-parallel-multilingual-abstracts"
+      ],
+      "samples": [
+        "10.1016_S1575-1813(18)30261-4"
+      ]
+    },
+    {
+      "test": "tests/unit/test_regression_samples.py::test_sage_bilingual_fixture_preserves_parallel_abstract_sections",
+      "anchors": [
+        "rule-keep-parallel-multilingual-abstracts"
+      ],
+      "samples": [
+        "10.1345_aph.1M379"
+      ]
+    },
+    {
+      "test": "tests/unit/test_regression_samples.py::test_tandf_bilingual_fixture_preserves_parallel_abstract_sections",
+      "anchors": [
+        "rule-keep-parallel-multilingual-abstracts"
+      ],
+      "samples": [
+        "10.1080_19455224.2025.2547671"
+      ]
+    }
+  ]
+}

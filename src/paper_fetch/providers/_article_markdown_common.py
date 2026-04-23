@@ -9,6 +9,13 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Any, Mapping
 
+from ._article_markdown_xml import (
+    child_text,
+    first_child,
+    first_descendant,
+    normalize_compact_text,
+    xml_local_name,
+)
 from ..utils import normalize_text, sanitize_filename
 
 XLINK_HREF = "{http://www.w3.org/1999/xlink}href"
@@ -17,13 +24,31 @@ INLINE_SPLIT_SUBSCRIPT_PATTERN = re.compile(
     r"\*(?P<base>[A-Za-zΑ-Ωα-ω])\*\s*\n\s*(?:\*(?P<italic_sub>[A-Za-z0-9]+)\*|(?P<plain_sub>[A-Za-z0-9]{1,6}))"
 )
 
-
-def xml_local_name(tag: str) -> str:
-    return tag.rsplit("}", 1)[-1] if "}" in tag else tag
-
-
-def normalize_compact_text(value: str | None) -> str:
-    return re.sub(r"\s+", " ", value or "").strip()
+__all__ = [
+    "XLINK_HREF",
+    "XLINK_TITLE",
+    "add_figure_once",
+    "add_table_once",
+    "child_text",
+    "collect_conversion_notes",
+    "fallback_figure_heading",
+    "fallback_table_heading",
+    "first_child",
+    "first_descendant",
+    "make_markdown_path",
+    "normalize_compact_text",
+    "normalize_inline_markup_text",
+    "normalize_lines",
+    "normalize_table_cell_text",
+    "normalize_text",
+    "path_relative_to",
+    "render_figure_block",
+    "render_image_table_block",
+    "render_inline_text",
+    "render_structured_table_block",
+    "render_table_block",
+    "xml_local_name",
+]
 
 
 def normalize_inline_markup_text(value: str | None) -> str:
@@ -104,26 +129,6 @@ def render_inline_text(element: ET.Element | None, *, skip_local_names: set[str]
 
     visit(element)
     return normalize_inline_markup_text("".join(parts))
-
-
-def first_child(element: ET.Element | None, local_name: str) -> ET.Element | None:
-    if element is None:
-        return None
-    for child in list(element):
-        if isinstance(child.tag, str) and xml_local_name(child.tag) == local_name:
-            return child
-    return None
-
-
-def child_text(element: ET.Element | None, local_name: str) -> str:
-    return render_inline_text(first_child(element, local_name))
-
-
-def first_descendant(element: ET.Element, local_name: str) -> ET.Element | None:
-    for node in element.iter():
-        if isinstance(node.tag, str) and xml_local_name(node.tag) == local_name:
-            return node
-    return None
 
 
 def path_relative_to(base_dir: Path, target_path: str | Path) -> str:
@@ -239,23 +244,44 @@ def render_table_block(entry: Mapping[str, Any]) -> list[str]:
     return render_image_table_block(entry)
 
 
-def collect_conversion_notes(*, table_entries: list[Mapping[str, Any]] | None = None) -> list[str]:
+def collect_conversion_notes(
+    *,
+    table_entries: list[Mapping[str, Any]] | None = None,
+    formula_notes: list[str] | None = None,
+) -> list[str]:
     notes: list[str] = []
     seen: set[tuple[str, str]] = set()
 
     for entry in table_entries or []:
-        message = normalize_text(str(entry.get("fallback_message") or ""))
-        if not message:
-            continue
         heading = normalize_text(str(entry.get("heading") or ""))
-        key = (heading, message)
+        messages = [
+            normalize_text(str(message))
+            for message in [
+                *(entry.get("conversion_notes") or []),
+                entry.get("lossy_message"),
+                entry.get("fallback_message"),
+            ]
+            if normalize_text(str(message))
+        ]
+        for message in messages:
+            key = (heading, message)
+            if key in seen:
+                continue
+            seen.add(key)
+            if heading:
+                notes.append(f"- {heading}: {message}")
+            else:
+                notes.append(f"- {message}")
+
+    for note in formula_notes or []:
+        normalized = normalize_text(note)
+        if not normalized:
+            continue
+        key = ("", normalized)
         if key in seen:
             continue
         seen.add(key)
-        if heading:
-            notes.append(f"- {heading}: {message}")
-        else:
-            notes.append(f"- {message}")
+        notes.append(f"- {normalized}")
 
     return notes
 

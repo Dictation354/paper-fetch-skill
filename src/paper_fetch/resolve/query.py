@@ -12,13 +12,13 @@ from difflib import SequenceMatcher
 from typing import Any, Mapping
 
 from ..config import build_runtime_env, build_user_agent
+from ..errors import ProviderFailure
+from ..extraction.html import decode_html, parse_html_metadata
 from ..html_lookup import is_usable_html_lookup_title
 from ..http import HttpTransport, RequestFailure
 from ..metadata_types import CrossrefMetadata
-from ..providers.base import ProviderFailure
-from ..providers.crossref import CrossrefClient
-from ..providers.html_generic import decode_html, parse_html_metadata
 from ..publisher_identity import extract_doi, infer_provider_from_signals, normalize_doi
+from .crossref import CrossrefLookupClient
 CONFIDENT_SCORE_MIN = 0.90
 CONFIDENT_MARGIN_MIN = 0.05
 MIN_HTML_TITLE_LOOKUP_CHARS = 24
@@ -110,7 +110,7 @@ def resolve_query(
 
     active_transport = transport or HttpTransport()
     active_env = env or build_runtime_env()
-    crossref = CrossrefClient(active_transport, active_env)
+    crossref = CrossrefLookupClient(active_transport, active_env)
 
     if is_url(normalized_query):
         direct_doi = extract_doi(normalized_query)

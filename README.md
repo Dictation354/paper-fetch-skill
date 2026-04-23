@@ -18,7 +18,7 @@
 这份首页不展开：
 
 - 各 provider 的全部配置细节
-- Elsevier browser fallback / Wiley / Science / PNAS 的运维步骤
+- Wiley / Science / PNAS 的运维步骤
 - 架构演进背景和探针语义细节
 
 这些内容分别在 [`docs/providers.md`](docs/providers.md)、[`docs/flaresolverr.md`](docs/flaresolverr.md)、[`docs/architecture/target-architecture.md`](docs/architecture/target-architecture.md) 和 [`docs/architecture/probe-semantics.md`](docs/architecture/probe-semantics.md) 中定义。
@@ -51,8 +51,7 @@
 -> 用 Crossref / provider metadata 建立路由信号
 -> 合并元数据
 -> 尝试 provider 全文主链
--> 失败时尝试 generic HTML fallback 或 provider 内部 fallback
--> 再失败时降级为 metadata-only
+-> 失败时降级为 metadata-only
 -> 输出 FetchEnvelope / Markdown / 本地缓存 / MCP 结果
 ```
 
@@ -61,10 +60,10 @@
 1. `resolve_paper()` 先把原始输入解析成 `ResolvedQuery`。
 2. 路由优先级固定是 `domain > publisher > DOI fallback`。
 3. `crossref` 既可能是公开来源 `source="crossref_meta"`，也可能只是内部 routing signal。
-4. `elsevier` 固定走 `官方 XML/API -> FlareSolverr HTML -> metadata-only`。
-5. `springer` 固定走 `direct HTML -> direct HTTP PDF -> metadata-only`，不再回到通用 `html_generic` fallback。
+4. `elsevier` 固定走 `官方 XML/API -> 官方 API PDF fallback -> metadata-only`。
+5. `springer` 固定走 `direct HTML -> direct HTTP PDF -> metadata-only`。
 6. `wiley` 走 provider 自管 `FlareSolverr HTML -> Wiley TDM API PDF -> metadata-only`，`science` / `pnas` 继续走 `FlareSolverr HTML -> seeded-browser PDF -> metadata-only`。
-7. 普通 provider 或未命中 provider 自管 HTML 路径的场景，才会根据 `strategy.allow_html_fallback` 进入通用 `html_generic` fallback。
+7. 未命中这五家 provider 的 URL / landing page 不再尝试通用 HTML 正文提取，只会继续做 DOI / Crossref metadata 解析，并在允许时返回 metadata-only。
 8. 最终统一输出 `FetchEnvelope`，其中会显式给出：
    - `source`
    - `has_fulltext`
@@ -119,8 +118,9 @@ python3 -m paper_fetch.mcp.server
 
 这些是最值得先记住的默认行为：
 
-- `asset_profile="none"`
-  - 默认不下载 figure、表格原图和 supplementary 到本地。
+- `asset_profile=null (provider default)`
+  - 默认不显式指定资产策略，由 provider/source 决定。
+  - 目前 `springer` / `wiley` / `science` / `pnas` 的 HTML 成功路径默认等价于 `body`；其余默认等价于 `none`。
 - `max_tokens="full_text"`
   - 默认尽量返回完整 abstract、正文和 references。
 - `include_refs=null`
@@ -150,7 +150,7 @@ python3 -m paper_fetch.mcp.server
 
 其中：
 
-- `elsevier` 保留官方 API/XML 主链，并在需要时走 repo-local FlareSolverr HTML fallback；公开来源可能是 `elsevier_xml` 或 `elsevier_browser`。
+- `elsevier` 保留官方 API/XML 主链，并在 XML 不可用时直接走官方 API PDF fallback；XML 成功时公开为 `elsevier_xml`，PDF fallback 成功时公开为 `elsevier_pdf`。
 - `springer` 使用 provider 自管 `direct HTML -> direct HTTP PDF` 主链，公开来源统一为 `springer_html`。
 - `wiley` 使用 repo-local FlareSolverr HTML + Wiley TDM API PDF fallback；`science`、`pnas` 继续使用 repo-local FlareSolverr + Playwright seeded-browser 工作流。
 - `wiley` 公开来源为 `wiley_browser`；`science`、`pnas` 继续保持原有 public source。
@@ -218,13 +218,12 @@ CLI 退出码固定为：
 - `3`：`no_access`
 - `4`：`rate_limited`
 
-## Elsevier Browser Fallback / Wiley / Science / PNAS 边界
+## Wiley / Science / PNAS 边界
 
-`elsevier` browser fallback、`wiley`、`science`、`pnas` 的运行边界和 `springer` 不一样：
+`wiley`、`science`、`pnas` 的运行边界和 `springer` 不一样：
 
 - metadata 仍来自 `crossref`
 - 全文链路由 provider 自己管理
-- `elsevier` 的浏览器链路是 `FlareSolverr HTML -> metadata-only`，前面仍有官方 XML/API 主链
 - `wiley` 的主路径是 `FlareSolverr HTML -> Wiley TDM API PDF -> metadata-only`
 - `science` / `pnas` 的主路径是 `FlareSolverr HTML -> seeded-browser PDF -> metadata-only`
 - `wiley` / `science` / `pnas` 的 HTML 成功路径支持 `none/body/all` 资产下载；PDF/ePDF fallback 仍是 text-only
@@ -242,7 +241,7 @@ CLI 退出码固定为：
 - [`docs/deployment.md`](docs/deployment.md)
   - 安装、配置、MCP 注册、更新和最小验证步骤。
 - [`docs/flaresolverr.md`](docs/flaresolverr.md)
-  - Elsevier browser fallback 与 Wiley / Science / PNAS 的 repo-local 浏览器工作流。
+  - Wiley / Science / PNAS 的 repo-local 浏览器工作流。
 - [`docs/architecture/target-architecture.md`](docs/architecture/target-architecture.md)
   - 当前架构分层、端到端业务流程、数据契约与扩展点。
 - [`docs/architecture/probe-semantics.md`](docs/architecture/probe-semantics.md)
@@ -250,11 +249,19 @@ CLI 退出码固定为：
 
 ## Repo-local 验收
 
-如果你在仓库源码目录里做本地验证，推荐显式带上 `PYTHONPATH=src`：
+如果你在仓库源码目录里做本地验证，推荐显式带上 `PYTHONPATH=src`。默认 `pytest` 现在只覆盖 `tests/unit` + `tests/integration`，并通过 `xdist` 走多进程并行；`tests/live` 需要显式指定路径并串行运行：
 
 ```bash
-PYTHONPATH=src python3 -m unittest -q tests.unit.test_cli tests.unit.test_service tests.unit.test_mcp
-PYTHONPATH=src python3 -m unittest discover -s tests -q
+PYTHONPATH=src pytest tests/unit/test_cli.py tests/unit/test_service.py tests/unit/test_mcp.py
+PYTHONPATH=src pytest
+```
+
+默认 `pytest` 会跑默认离线快集；`tests/integration/test_golden_corpus.py` 现在会对 50 篇 canonical golden corpus 先跑一轮轻量 provider 契约检查，再对 5 篇代表性真实文献跑主路径回归，并继续跳过 50 篇的全文精确重放。
+
+如果需要显式跑完整 50 篇 golden corpus 扩展回归，单独执行：
+
+```bash
+PAPER_FETCH_RUN_FULL_GOLDEN=1 PYTHONPATH=src pytest tests/integration/test_golden_corpus.py
 ```
 
 如果要验收 `wiley` / `science` / `pnas` live 路径，再补充：
@@ -265,7 +272,7 @@ FLARESOLVERR_ENV_FILE="$PWD/vendor/flaresolverr/.env.flaresolverr-source-headles
 FLARESOLVERR_MIN_INTERVAL_SECONDS=20 \
 FLARESOLVERR_MAX_REQUESTS_PER_HOUR=30 \
 FLARESOLVERR_MAX_REQUESTS_PER_DAY=200 \
-PYTHONPATH=src python3 -m unittest tests.live.test_live_science_pnas -q
+PYTHONPATH=src pytest -n 0 tests/live/test_live_science_pnas.py
 ```
 
 如果要跑自然地理五出版商的 live-only 全链路报告，直接走当前项目提取链路，不经过 MCP：

@@ -10,17 +10,17 @@
 这份文档不解决：
 
 - agent runtime 的安装与 MCP 注册
-- Elsevier browser fallback / Wiley / Science / PNAS 的具体启动脚本与运维排障
+- Wiley / Science / PNAS 的具体启动脚本与运维排障
 - 架构分层和数据契约的完整背景
 
-部署入口见 [`deployment.md`](deployment.md)，Elsevier browser fallback / Wiley / Science / PNAS 运维细节见 [`flaresolverr.md`](flaresolverr.md)，架构说明见 [`architecture/target-architecture.md`](architecture/target-architecture.md)。
+部署入口见 [`deployment.md`](deployment.md)，Wiley / Science / PNAS 运维细节见 [`flaresolverr.md`](flaresolverr.md)，架构说明见 [`architecture/target-architecture.md`](architecture/target-architecture.md)。
 
 ## Provider 能力矩阵
 
 | Provider | 元数据 | 全文主路径 | 资产下载 | Markdown 能力 | 备注 |
 | --- | --- | --- | --- | --- | --- |
 | `crossref` | 支持 | 不负责 publisher fulltext | 不支持 | 不适用 | 负责 resolve、routing signal、metadata merge 与 metadata-only fallback |
-| `elsevier` | 官方 API | `官方 XML/API -> FlareSolverr HTML` | XML 路线支持 `none` / `body` / `all`；browser fallback 当前 text-only | 强 | 公开来源可能是 `elsevier_xml` 或 `elsevier_browser` |
+| `elsevier` | 官方 API | `官方 XML/API -> 官方 API PDF fallback` | XML 路线支持 `none` / `body` / `all`；PDF fallback 当前 text-only | 强 | XML 成功时公开为 `elsevier_xml`；PDF fallback 成功时公开为 `elsevier_pdf` |
 | `springer` | 依赖 Crossref merge | `direct HTML -> direct HTTP PDF` | HTML 路线支持 `none` / `body` / `all`；PDF fallback 当前 text-only | 强 | `nature.com` 继续挂在 `springer` provider / `springer_html` source 下 |
 | `wiley` | 依赖 Crossref merge | `FlareSolverr HTML -> Wiley TDM API PDF -> seeded-browser publisher PDF/ePDF` | HTML 路线支持 `none` / `body` / `all`；PDF/ePDF fallback 当前 text-only | 中 | HTML 依赖 repo-local FlareSolverr；`WILEY_TDM_CLIENT_TOKEN` 是官方快速 PDF lane；browser PDF/ePDF 需要 Playwright Chromium |
 | `science` | 依赖 Crossref | `FlareSolverr HTML -> seeded-browser publisher PDF/ePDF` | HTML 路线支持 `none` / `body` / `all`；PDF/ePDF fallback 当前 text-only | 中 | 与 `wiley` 共用浏览器工作流基座；AAAS access gate / entitlement 不满足时会停在 provider 内部并降级 `metadata_only` |
@@ -72,7 +72,7 @@ domain > publisher > DOI fallback
 
 ### `preferred_providers` 的语义
 
-- 它严格限制最终允许进入的 provider-owned fulltext / generic HTML 路径。
+- 它严格限制最终允许进入的五家 provider fulltext 主链或 `crossref` metadata 路径。
 - 它不阻止系统内部调用 `crossref` 做路由判断。
 - 如果显式设为 `["crossref"]`，行为会收敛成 Crossref-only。
 - 当前可显式指定的 provider 名包括：
@@ -91,7 +91,6 @@ domain > publisher > DOI fallback
 resolve
 -> metadata / routing
 -> provider fulltext
--> generic HTML fallback 或 provider 内部 fallback
 -> metadata-only fallback
 ```
 
@@ -111,9 +110,9 @@ resolve
 ### 3. provider 全文主路径
 
 - `elsevier`
-  - 固定顺序是 `官方 XML/API -> FlareSolverr HTML -> metadata-only`。
+  - 固定顺序是 `官方 XML/API -> 官方 API PDF fallback -> metadata-only`。
   - XML/API 成功时公开 `source="elsevier_xml"`。
-  - 浏览器 HTML 成功时公开 `source="elsevier_browser"`。
+  - 官方 PDF fallback 成功时公开 `source="elsevier_pdf"`。
 - `springer`
   - 固定顺序是 `direct HTML -> direct HTTP PDF -> metadata-only`。
   - 优先抓取 publisher landing HTML，不足正文时再走 direct HTTP PDF。
@@ -135,28 +134,19 @@ resolve
   - 较老文献常见 HTML 只到摘要页，此时 provider 会继续尝试 publisher PDF/ePDF fallback。
   - 成功时公开 `source="pnas"`。
 
-### 4. 通用 `html_generic` fallback
+### 4. metadata-only fallback
 
-通用 HTML fallback 仍然存在，但只服务“非 provider-owned HTML 路径”的场景，例如：
+如果命中了 `elsevier`、`springer`、`wiley`、`science`、`pnas` 之一：
 
-- 未命中 provider 自管 HTML 主链时的网页提取
+- 系统只会走该 provider 自己管理的 HTML/PDF waterfall
+- provider 主链失败后直接进入 metadata-only fallback
 
-它不再参与这些 provider 的 fulltext 主链或失败回退：
+如果没有命中这五家 provider：
 
-- `elsevier`
-- `springer`
-- `wiley`
-- `science`
-- `pnas`
-
-对这些 provider 来说：
-
-- `elsevier` 会先在 provider 内部做 HTML fallback，再决定是否 metadata-only
-- `springer` 会先在 provider 内部做 direct HTTP PDF fallback，再决定是否 metadata-only
-- `wiley` 先在 provider 内部做 Wiley TDM API PDF，再尝试 seeded-browser publisher PDF/ePDF fallback，最后才决定是否 metadata-only
-- `science` / `pnas` 先在 provider 内部做 seeded-browser publisher PDF/ePDF fallback，再决定是否 metadata-only
-
-### 5. metadata-only fallback
+- 系统仍会继续做 DOI / Crossref metadata 解析
+- 不再尝试任何通用 HTML 正文提取
+- `strategy.allow_metadata_only_fallback=true` 时返回 metadata + abstract
+- 否则直接抛错
 
 如果正文不可得，而 `strategy.allow_metadata_only_fallback=true`：
 
@@ -173,13 +163,14 @@ resolve
 
 - metadata 仍主要来自 `crossref`
 - fulltext 主路径由 provider 自己控制
-- 不回到通用 `html_generic` fallback
+- 主链失败后直接进入 metadata-only fallback
 
 但它们的 fulltext 形态不同：
 
 - `elsevier`
-  - provider 自管 `官方 XML/API -> FlareSolverr HTML`
-  - 成功轨迹会组合 `fulltext:elsevier_xml_fail`、`fulltext:elsevier_html_ok|fail`
+  - provider 自管 `官方 XML/API -> 官方 API PDF fallback`
+  - 进入 PDF lane 时会组合 `fulltext:elsevier_xml_fail`、`fulltext:elsevier_pdf_api_ok`、`fulltext:elsevier_pdf_fallback_ok`
+  - PDF lane 失败时会带 `fulltext:elsevier_pdf_api_fail`
 - `springer`
   - provider 自管 `direct HTML -> direct HTTP PDF`
   - 成功轨迹是 `fulltext:springer_html_*`，PDF fallback 成功时会带 `fulltext:springer_pdf_fallback_ok`
@@ -198,22 +189,26 @@ resolve
 
 因此：
 
-- `strategy.allow_html_fallback=false` 不会关闭它们自己的 provider 主路径
-- 对 `elsevier` 来说，它不会关闭内部 FlareSolverr HTML fallback
-- 对 `springer` 来说，它不会关闭 direct HTML 主路径
-- 对 `wiley` 来说，它不会关闭内部 `FlareSolverr HTML -> Wiley TDM API PDF -> seeded-browser publisher PDF/ePDF`
-- 对 `science` / `pnas` 来说，它不会关闭内部 `FlareSolverr HTML -> seeded-browser publisher PDF/ePDF`
+- 不再存在 public HTML fallback 开关
+- 对 `elsevier` 来说，系统始终按内部 `官方 XML/API -> 官方 API PDF fallback` waterfall 执行
+- 对 `springer` 来说，系统始终按内部 `direct HTML -> direct HTTP PDF` waterfall 执行
+- 对 `wiley` 来说，系统始终按内部 `FlareSolverr HTML -> Wiley TDM API PDF -> seeded-browser publisher PDF/ePDF` waterfall 执行
+- 对 `science` / `pnas` 来说，系统始终按内部 `FlareSolverr HTML -> seeded-browser publisher PDF/ePDF` waterfall 执行
 
 ## 默认输出策略
 
 CLI、Python API、MCP 当前统一采用这些默认值：
 
-- `asset_profile="none"`
+- `asset_profile=null (provider default)`
 - `max_tokens="full_text"`
 - `include_refs=null`
 
 ### `asset_profile`
 
+- `null` / omitted
+  - 使用 provider default
+  - `springer` / `wiley` / `science` / `pnas` 默认等价于 `body`
+  - 其他默认等价于 `none`
 - `none`
   - 不下载资产
   - Markdown 保留 figure caption
@@ -225,9 +220,9 @@ CLI、Python API、MCP 当前统一采用这些默认值：
 - `all`
   - 下载当前 provider 已识别的全部相关资产
 
-对 `elsevier` browser fallback、`springer` PDF fallback、`wiley` / `science` / `pnas` 而言：
+对 `elsevier` PDF fallback、`springer` PDF fallback、`wiley` / `science` / `pnas` 而言：
 
-- `elsevier` browser fallback 仍会把 `asset_profile=body|all` 降级成 text-only
+- `elsevier` PDF fallback 仍会把 `asset_profile=body|all` 降级成 text-only
 - `springer` PDF fallback 仍会把 `asset_profile=body|all` 降级成 text-only
 - `wiley` / `science` / `pnas` 的 `FlareSolverr HTML` 成功路径支持资产下载；figure 会优先尝试 full-size/original，必要时回退 preview
 - `wiley` / `science` / `pnas` 的 PDF/ePDF fallback 仍是 text-only
@@ -248,7 +243,7 @@ CLI、Python API、MCP 当前统一采用这些默认值：
 这些字段最适合拿来判断结果质量和来源：
 
 - `source`
-  - 粗粒度公开来源，如 `elsevier_xml`、`elsevier_browser`、`springer_html`、`wiley_browser`、`science`、`pnas`、`html_fallback`、`crossref_meta`、`metadata_only`
+  - 粗粒度公开来源，如 `elsevier_xml`、`elsevier_pdf`、`springer_html`、`wiley_browser`、`science`、`pnas`、`crossref_meta`、`metadata_only`
 - `has_fulltext`
   - 最终抓取瀑布后的 verdict
 - `warnings`
@@ -322,7 +317,7 @@ Springer direct HTML / direct HTTP PDF 路线当前没有额外必填 publisher 
 - `provider_status()` 中会稳定表现为本地 `html_route` 已就绪
 - 不再需要任何 Springer publisher 凭证
 
-### Elsevier browser fallback / Wiley / Science / PNAS
+### Wiley / Science / PNAS
 
 #### `FLARESOLVERR_URL`
 
@@ -342,17 +337,17 @@ Springer direct HTML / direct HTTP PDF 路线当前没有额外必填 publisher 
 #### `FLARESOLVERR_MIN_INTERVAL_SECONDS`
 
 - 必填。
-- Elsevier browser fallback / Wiley / Science / PNAS 本地最小请求间隔。
+- Wiley / Science / PNAS 本地最小请求间隔。
 
 #### `FLARESOLVERR_MAX_REQUESTS_PER_HOUR`
 
 - 必填。
-- Elsevier browser fallback / Wiley / Science / PNAS 每小时上限。
+- Wiley / Science / PNAS 每小时上限。
 
 #### `FLARESOLVERR_MAX_REQUESTS_PER_DAY`
 
 - 必填。
-- Elsevier browser fallback / Wiley / Science / PNAS 每日上限。
+- Wiley / Science / PNAS 每日上限。
 
 更具体的启动与排障步骤见 [`flaresolverr.md`](flaresolverr.md)。
 
@@ -383,7 +378,7 @@ Springer direct HTML / direct HTTP PDF 路线当前没有额外必填 publisher 
 当前 provider 语义大致是：
 
 - `elsevier`
-  - 同时检查 API key 与 browser fallback runtime，就绪度可能表现为 `ready` / `partial` / `not_configured`。
+  - 只检查官方全文 API key；`ELSEVIER_API_KEY` 配好即 `ready`，否则 `not_configured`。
 - `springer`
   - 返回本地 direct HTML route 就绪状态；不依赖 FlareSolverr。
 - `wiley`

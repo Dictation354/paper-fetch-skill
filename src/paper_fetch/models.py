@@ -7,30 +7,46 @@ import math
 import re
 from collections.abc import Sequence
 from dataclasses import asdict, dataclass, field
+from difflib import SequenceMatcher
 from typing import Any, Literal, Mapping
 
+from .providers._html_citations import normalize_inline_citation_markdown
 from .publisher_identity import normalize_doi
+from .tracing import TraceEvent, source_trail_from_trace, trace_from_markers
 from .utils import normalize_text, safe_text
 
 SourceKind = Literal[
     "elsevier_xml",
-    "elsevier_browser",
+    "elsevier_pdf",
     "springer_html",
     "wiley_browser",
     "science",
     "pnas",
-    "html_generic",
     "crossref_meta",
 ]
 OutputMode = Literal["article", "markdown", "metadata"]
 AssetProfile = Literal["none", "body", "all"]
 MaxTokensMode = int | Literal["full_text"]
 ContentKind = Literal["fulltext", "abstract_only", "metadata_only"]
+QualityConfidence = Literal["high", "medium", "low"]
 MARKDOWN_FENCE_PATTERN = re.compile(r"^\s*(```+|~~~+)")
 MARKDOWN_TABLE_RULE_PATTERN = re.compile(r"^\s*[-+:| ]{3,}\s*$")
 MARKDOWN_LIST_MARKER_PATTERN = re.compile(r"^(\s{0,3}(?:[-*+]|\d+[.)])\s+)(.*)$")
 TRUNCATION_WARNING = "Output truncated to satisfy token budget."
 BODY_SECTION_EXCLUDED_KINDS = frozenset({"abstract", "references", "supplementary", "diagnostics", "data_availability"})
+SECTION_HINT_KINDS = frozenset({"body", "data_availability", "references"})
+ABSTRACT_SECTION_HEADINGS = frozenset(
+    {
+        "abstract",
+        "structured abstract",
+        "summary",
+        "resumo",
+        "resumen",
+        "resume",
+        "résumé",
+        "zusammenfassung",
+    }
+)
 DATA_AVAILABILITY_SECTION_HEADINGS = frozenset(
     {
         "data availability",
@@ -38,6 +54,13 @@ DATA_AVAILABILITY_SECTION_HEADINGS = frozenset(
         "data, materials, and software availability",
         "data, code, and materials availability",
         "availability of data and materials",
+    }
+)
+PRESERVE_EMPTY_PARENT_SECTION_HEADINGS = frozenset(
+    {
+        "methods",
+        "materials and methods",
+        "methodology",
     }
 )
 
@@ -64,10 +87,59 @@ SECTION_PRIORITY = {
     "references": 6,
 }
 LEADING_ABSTRACT_CONTEXT_HEADINGS = frozenset({"significance", "significance statement"})
+ABSTRACT_NEAR_DUPLICATE_SIMILARITY_THRESHOLD = 0.995
+ABSTRACT_NEAR_DUPLICATE_MAX_LENGTH_DELTA = 64
+BODY_ABSTRACT_PARAGRAPH_NEAR_DUPLICATE_SIMILARITY_THRESHOLD = 0.989
+BODY_ABSTRACT_PARAGRAPH_NEAR_DUPLICATE_MAX_LENGTH_DELTA = 64
 ABSTRACT_PREFIX_PATTERN = re.compile(r"^(?:[Aa]bstract|[Ss]ummary)\b[:.\-\s]+(?=[A-Z])")
 INLINE_HTML_TAG_PATTERN = re.compile(r"</?(?:sub|sup|br)\b[^>]*>", flags=re.IGNORECASE)
 INLINE_MARKDOWN_ABSTRACT_PREFIX_PATTERN = re.compile(r"^\*\*(?:Abstract|Summary)\.?\*\*\s*", re.IGNORECASE)
 MARKDOWN_ABSTRACT_PREFIX_PATTERN = re.compile(r"^(?:\*\*|__)(?:[Aa]bstract|[Ss]ummary)\.?(?:\*\*|__)\s*")
+MARKDOWN_IMAGE_URL_PATTERN = re.compile(r"!\[[^\]]*\]\(([^)]+)\)")
+TABLE_LIKE_FIGURE_ASSET_PATTERN = re.compile(
+    r"^(?:(?:extended data|supplementary)\s+)?table\s+\d+[A-Za-z]?\b",
+    flags=re.IGNORECASE,
+)
+NUMBERED_REFERENCE_PATTERN = re.compile(r"^\s*(?:\[\d+[A-Za-z]?\]|\d+[A-Za-z]?[.)])\s+")
+EXTRACTION_REVISION = 2
+QUALITY_FLAG_ACCESS_GATE_DETECTED = "access_gate_detected"
+QUALITY_FLAG_INSUFFICIENT_BODY = "insufficient_body"
+QUALITY_FLAG_WEAK_BODY_STRUCTURE = "weak_body_structure"
+QUALITY_FLAG_TABLE_FALLBACK_PRESENT = "table_fallback_present"
+QUALITY_FLAG_TABLE_LOSSY_PRESENT = "table_lossy_present"
+QUALITY_FLAG_FORMULA_FALLBACK_PRESENT = "formula_fallback_present"
+QUALITY_FLAG_FORMULA_MISSING_PRESENT = "formula_missing_present"
+QUALITY_FLAG_CACHED_WITH_CURRENT_REVISION = "cached_with_current_revision"
+_QUALITY_ACCESS_SIGNAL_TOKENS = frozenset(
+    {
+        "publisher_paywall",
+        "access",
+        "redirect",
+        "no_access",
+        "abstract_page",
+        "citation_abstract",
+        "wt_abstract",
+        "preview",
+        "limited",
+        "teaser",
+        "denied",
+        "subscription",
+    }
+)
+_QUALITY_DOWNGRADE_REASONS = frozenset(
+    {
+        "publisher_paywall",
+        "insufficient_body",
+        "abstract_only",
+        "no_access",
+        "redirected_to_abstract",
+        "access_page_url",
+        "final_url_matches_citation_abstract_html_url",
+        "data_article_access_abstract",
+        "wt_abstract_page_type",
+        "citation_abstract_html_url",
+    }
+)
 
 
 def normalize_markdown_text(value: str | None) -> str:
@@ -195,6 +267,13 @@ def asset_link(asset: "Asset") -> str:
     return normalize_text(asset.path or asset.url)
 
 
+def is_table_like_figure_asset(asset: "Asset") -> bool:
+    for candidate in (asset.heading, asset.caption):
+        if TABLE_LIKE_FIGURE_ASSET_PATTERN.match(normalize_text(candidate)):
+            return True
+    return False
+
+
 def local_asset_link(value: Any) -> str | None:
     normalized = safe_text(value)
     if not normalized:
@@ -231,11 +310,16 @@ def section_kind_for_heading(heading: str) -> str:
         return "references"
     if normalized in {"supplementary materials", "supplementary information"}:
         return "supplementary"
-    if normalized in DATA_AVAILABILITY_SECTION_HEADINGS:
-        return "data_availability"
     if normalized in {"conversion notes"}:
         return "diagnostics"
-    if normalized in {"abstract"}:
+    from .providers._html_semantics import heading_category as html_heading_category
+
+    category = html_heading_category("h2", heading)
+    if category == "data_availability":
+        return "data_availability"
+    if category == "references_or_back_matter":
+        return "references"
+    if category == "abstract":
         return "abstract"
     return "body"
 
@@ -268,6 +352,25 @@ class Section:
     level: int
     kind: str
     text: str
+
+
+@dataclass(frozen=True)
+class SectionHint:
+    heading: str
+    level: int
+    kind: str
+    order: int = 0
+    language: str | None = None
+    source_selector: str | None = None
+
+
+@dataclass(frozen=True)
+class ExtractedAbstractBlock:
+    heading: str
+    text: str
+    language: str | None = None
+    kind: str = "abstract"
+    order: int = 0
 
 
 @dataclass
@@ -315,7 +418,7 @@ def build_token_estimate_breakdown(
     sections: Sequence["Section"],
     references: Sequence["Reference"],
 ) -> TokenEstimateBreakdown:
-    abstract = estimate_tokens(abstract_text or "")
+    abstract = estimate_tokens(combine_abstract_text(abstract_text=abstract_text, sections=sections) or "")
     body = estimate_tokens(
         "\n\n".join(
             strip_markdown_images(section.text)
@@ -325,6 +428,78 @@ def build_token_estimate_breakdown(
     )
     refs = estimate_tokens("\n".join(normalize_text(reference.raw) for reference in references if normalize_text(reference.raw)))
     return TokenEstimateBreakdown(abstract=abstract, body=body, refs=refs)
+
+
+@dataclass
+class BodyQualityMetrics:
+    char_count: int = 0
+    word_count: int = 0
+    body_block_count: int = 0
+    body_heading_count: int = 0
+    body_to_abstract_ratio: float = 0.0
+    explicit_body_container: bool = False
+    post_abstract_body_run: bool = False
+    figure_count: int = 0
+
+
+@dataclass
+class SemanticLosses:
+    table_fallback_count: int = 0
+    table_lossy_count: int = 0
+    formula_fallback_count: int = 0
+    formula_missing_count: int = 0
+
+
+def coerce_body_quality_metrics(
+    value: BodyQualityMetrics | Mapping[str, Any] | None,
+    *,
+    figure_count: int | None = None,
+) -> BodyQualityMetrics:
+    if isinstance(value, BodyQualityMetrics):
+        metrics = BodyQualityMetrics(
+            char_count=int(value.char_count or 0),
+            word_count=int(value.word_count or 0),
+            body_block_count=int(value.body_block_count or 0),
+            body_heading_count=int(value.body_heading_count or 0),
+            body_to_abstract_ratio=float(value.body_to_abstract_ratio or 0.0),
+            explicit_body_container=bool(value.explicit_body_container),
+            post_abstract_body_run=bool(value.post_abstract_body_run),
+            figure_count=int(value.figure_count or 0),
+        )
+    elif isinstance(value, Mapping):
+        metrics = BodyQualityMetrics(
+            char_count=int(value.get("char_count") or 0),
+            word_count=int(value.get("word_count") or 0),
+            body_block_count=int(value.get("body_block_count") or 0),
+            body_heading_count=int(value.get("body_heading_count") or 0),
+            body_to_abstract_ratio=float(value.get("body_to_abstract_ratio") or 0.0),
+            explicit_body_container=bool(value.get("explicit_body_container")),
+            post_abstract_body_run=bool(value.get("post_abstract_body_run")),
+            figure_count=int(value.get("figure_count") or 0),
+        )
+    else:
+        metrics = BodyQualityMetrics()
+    if figure_count is not None:
+        metrics.figure_count = int(figure_count or 0)
+    return metrics
+
+
+def coerce_semantic_losses(value: SemanticLosses | Mapping[str, Any] | None) -> SemanticLosses:
+    if isinstance(value, SemanticLosses):
+        return SemanticLosses(
+            table_fallback_count=int(value.table_fallback_count or 0),
+            table_lossy_count=int(value.table_lossy_count or 0),
+            formula_fallback_count=int(value.formula_fallback_count or 0),
+            formula_missing_count=int(value.formula_missing_count or 0),
+        )
+    if isinstance(value, Mapping):
+        return SemanticLosses(
+            table_fallback_count=int(value.get("table_fallback_count") or 0),
+            table_lossy_count=int(value.get("table_lossy_count") or 0),
+            formula_fallback_count=int(value.get("formula_fallback_count") or 0),
+            formula_missing_count=int(value.get("formula_missing_count") or 0),
+        )
+    return SemanticLosses()
 
 
 def _normalized_text_field(value: Any) -> str:
@@ -340,10 +515,72 @@ def filtered_body_sections(sections: Sequence["Section"]) -> list["Section"]:
     ]
 
 
+def renderable_body_sections(sections: Sequence["Section"]) -> list["Section"]:
+    renderable: list[Section] = []
+    section_list = list(sections)
+    for index, section in enumerate(section_list):
+        kind = _normalized_text_field(getattr(section, "kind", None)).lower()
+        if kind in BODY_SECTION_EXCLUDED_KINDS:
+            continue
+        if strip_markdown_images(_normalized_text_field(getattr(section, "text", None))):
+            renderable.append(section)
+            continue
+        if kind != "body" or not _normalized_text_field(getattr(section, "heading", None)):
+            continue
+        for follower in section_list[index + 1 :]:
+            follower_kind = _normalized_text_field(getattr(follower, "kind", None)).lower()
+            if follower_kind in BODY_SECTION_EXCLUDED_KINDS:
+                continue
+            if not strip_markdown_images(_normalized_text_field(getattr(follower, "text", None))):
+                continue
+            if int(getattr(follower, "level", 0) or 0) > int(getattr(section, "level", 0) or 0):
+                renderable.append(section)
+            break
+    return renderable
+
+
+def abstract_sections(sections: Sequence["Section"]) -> list["Section"]:
+    return [
+        section
+        for section in sections
+        if strip_markdown_images(_normalized_text_field(getattr(section, "text", None)))
+        and _normalized_text_field(getattr(section, "kind", None)).lower() == "abstract"
+    ]
+
+
+def first_abstract_text(*, abstract_text: str | None, sections: Sequence["Section"]) -> str:
+    section_abstract = next(
+        (
+            strip_markdown_images(section.text)
+            for section in abstract_sections(sections)
+            if strip_markdown_images(section.text)
+        ),
+        "",
+    )
+    if section_abstract:
+        return section_abstract
+    return normalize_text(abstract_text)
+
+
+def combine_abstract_text(*, abstract_text: str | None, sections: Sequence["Section"]) -> str:
+    texts: list[str] = []
+    seen: set[str] = set()
+    for candidate in [normalize_text(abstract_text), *[strip_markdown_images(section.text) for section in abstract_sections(sections)]]:
+        normalized_candidate = normalize_text(candidate)
+        if not normalized_candidate:
+            continue
+        canonical_candidate = _canonical_match_text(normalized_candidate)
+        if canonical_candidate in seen:
+            continue
+        texts.append(normalized_candidate)
+        seen.add(canonical_candidate)
+    return "\n\n".join(texts)
+
+
 def classify_content(*, sections: Sequence["Section"], abstract_text: str | None) -> ContentKind:
     if filtered_body_sections(sections):
         return "fulltext"
-    if normalize_text(abstract_text):
+    if normalize_text(abstract_text) or abstract_sections(sections):
         return "abstract_only"
     return "metadata_only"
 
@@ -365,28 +602,353 @@ def classify_article_content(article: "ArticleModel") -> ContentKind:
     return classify_content(sections=sections, abstract_text=abstract_text)
 
 
+def _dedupe_strings(values: Sequence[str] | None) -> list[str]:
+    return list(dict.fromkeys(normalize_text(value) for value in (values or []) if normalize_text(value)))
+
+
+def _word_count(text: str) -> int:
+    normalized = normalize_text(text)
+    if not normalized:
+        return 0
+    return len(re.findall(r"\w+", normalized, flags=re.UNICODE))
+
+
+def _article_body_quality_metrics(article: "ArticleModel") -> BodyQualityMetrics:
+    body_sections = filtered_body_sections(article.sections)
+    body_chunks = [strip_markdown_images(section.text) for section in body_sections if strip_markdown_images(section.text)]
+    body_text = normalize_text("\n\n".join(body_chunks))
+    abstract_text = first_abstract_text(abstract_text=article.metadata.abstract, sections=article.sections)
+    abstract_word_count = _word_count(abstract_text)
+    word_count = _word_count(body_text)
+    body_to_abstract_ratio = (
+        word_count / max(abstract_word_count, 1)
+        if abstract_word_count
+        else (float(word_count) if word_count else 0.0)
+    )
+    figure_count = len(
+        [
+            asset
+            for asset in article.assets
+            if normalize_text(asset.kind).lower() == "figure" and normalize_text(asset.section).lower() != "supplementary"
+        ]
+    )
+    return BodyQualityMetrics(
+        char_count=len(body_text),
+        word_count=word_count,
+        body_block_count=len(body_sections),
+        body_heading_count=len([section for section in body_sections if normalize_text(section.heading)]),
+        body_to_abstract_ratio=body_to_abstract_ratio,
+        explicit_body_container=False,
+        post_abstract_body_run=False,
+        figure_count=figure_count,
+    )
+
+
+def _quality_body_metrics(
+    article: "ArticleModel",
+    *,
+    availability_diagnostics: Mapping[str, Any] | None,
+) -> BodyQualityMetrics:
+    article_metrics = _article_body_quality_metrics(article)
+    if not isinstance(availability_diagnostics, Mapping):
+        return article_metrics
+    diagnostics_metrics = coerce_body_quality_metrics(
+        availability_diagnostics.get("body_metrics") if isinstance(availability_diagnostics.get("body_metrics"), Mapping) else None,
+        figure_count=int(availability_diagnostics.get("figure_count") or 0),
+    )
+    has_article_metrics = any(
+        (
+            article_metrics.char_count,
+            article_metrics.word_count,
+            article_metrics.body_block_count,
+            article_metrics.body_heading_count,
+            article_metrics.figure_count,
+        )
+    )
+    if not has_article_metrics:
+        return diagnostics_metrics
+    return BodyQualityMetrics(
+        char_count=article_metrics.char_count,
+        word_count=article_metrics.word_count,
+        body_block_count=article_metrics.body_block_count,
+        body_heading_count=article_metrics.body_heading_count,
+        body_to_abstract_ratio=article_metrics.body_to_abstract_ratio,
+        explicit_body_container=article_metrics.explicit_body_container or diagnostics_metrics.explicit_body_container,
+        post_abstract_body_run=article_metrics.post_abstract_body_run or diagnostics_metrics.post_abstract_body_run,
+        figure_count=max(article_metrics.figure_count, diagnostics_metrics.figure_count),
+    )
+
+
+def _diagnostic_signals(value: Mapping[str, Any] | None) -> list[str]:
+    if not isinstance(value, Mapping):
+        return []
+    signals = [
+        normalize_text(value.get("reason")).lower(),
+        *[normalize_text(item).lower() for item in value.get("blocking_fallback_signals") or []],
+        *[normalize_text(item).lower() for item in value.get("hard_negative_signals") or []],
+        *[normalize_text(item).lower() for item in value.get("soft_positive_signals") or []],
+        *[normalize_text(item).lower() for item in value.get("strong_positive_signals") or []],
+    ]
+    return [signal for signal in signals if signal]
+
+
+def _diagnostic_access_gate_signals(value: Mapping[str, Any] | None) -> list[str]:
+    if not isinstance(value, Mapping):
+        return []
+    signals = [
+        normalize_text(value.get("reason")).lower(),
+        *[normalize_text(item).lower() for item in value.get("blocking_fallback_signals") or []],
+        *[normalize_text(item).lower() for item in value.get("hard_negative_signals") or []],
+    ]
+    if value.get("accepted") is False:
+        signals.extend(
+            normalize_text(item).lower()
+            for item in value.get("soft_positive_signals") or []
+        )
+    return [signal for signal in signals if signal]
+
+
+def _diagnostics_access_gate_detected(value: Mapping[str, Any] | None) -> bool:
+    if isinstance(value, Mapping) and [item for item in value.get("blocking_fallback_signals") or [] if normalize_text(item)]:
+        return True
+    for signal in _diagnostic_access_gate_signals(value):
+        if any(token in signal for token in _QUALITY_ACCESS_SIGNAL_TOKENS):
+            return True
+    return False
+
+
+def _has_weak_body_structure(metrics: BodyQualityMetrics) -> bool:
+    if metrics.word_count <= 0 and metrics.char_count <= 0:
+        return False
+    if metrics.explicit_body_container or metrics.post_abstract_body_run:
+        return False
+    if metrics.body_block_count >= 2 and metrics.body_heading_count >= 1:
+        return False
+    return True
+
+
+def _diagnostics_require_downgrade(
+    diagnostics: Mapping[str, Any] | None,
+    *,
+    body_metrics: BodyQualityMetrics,
+) -> bool:
+    if not isinstance(diagnostics, Mapping):
+        return False
+    if [item for item in diagnostics.get("blocking_fallback_signals") or [] if normalize_text(item)]:
+        return True
+    if diagnostics.get("accepted") is not False:
+        return False
+    reason = normalize_text(diagnostics.get("reason")).lower()
+    if reason in _QUALITY_DOWNGRADE_REASONS:
+        return True
+    if _diagnostics_access_gate_detected(diagnostics):
+        return True
+    if reason == QUALITY_FLAG_INSUFFICIENT_BODY and body_metrics.word_count <= 40:
+        return True
+    return False
+
+
+def _clone_quality(quality: "Quality") -> "Quality":
+    return Quality(
+        has_fulltext=quality.has_fulltext,
+        token_estimate=quality.token_estimate,
+        content_kind=quality.content_kind,
+        has_abstract=quality.has_abstract,
+        warnings=list(quality.warnings),
+        source_trail=list(quality.source_trail),
+        trace=list(quality.trace),
+        token_estimate_breakdown=coerce_token_estimate_breakdown(quality.token_estimate_breakdown),
+        confidence=quality.confidence,
+        flags=list(quality.flags),
+        body_metrics=coerce_body_quality_metrics(quality.body_metrics),
+        semantic_losses=coerce_semantic_losses(quality.semantic_losses),
+        extraction_revision=quality.extraction_revision,
+    )
+
+
+def _refresh_article_quality(
+    article: "ArticleModel",
+    *,
+    explicit_content_kind: ContentKind | None = None,
+    recompute_tokens: bool = True,
+) -> None:
+    abstract_text = first_abstract_text(abstract_text=article.metadata.abstract, sections=article.sections)
+    if abstract_text and not normalize_text(article.metadata.abstract):
+        article.metadata.abstract = abstract_text
+    if recompute_tokens or article.quality.token_estimate_breakdown == TokenEstimateBreakdown():
+        token_estimate_breakdown = build_token_estimate_breakdown(
+            abstract_text=article.metadata.abstract,
+            sections=article.sections,
+            references=article.references,
+        )
+        article.quality.token_estimate_breakdown = token_estimate_breakdown
+    token_estimate_breakdown = article.quality.token_estimate_breakdown
+    if recompute_tokens or article.quality.token_estimate <= 0:
+        article.quality.token_estimate = token_estimate_breakdown.abstract + token_estimate_breakdown.body
+    content_kind = explicit_content_kind or classify_content(sections=article.sections, abstract_text=article.metadata.abstract)
+    article.quality.content_kind = content_kind
+    article.quality.has_abstract = bool(first_abstract_text(abstract_text=article.metadata.abstract, sections=article.sections))
+    article.quality.has_fulltext = content_kind == "fulltext"
+
+
+def _downgrade_article(article: "ArticleModel", *, target_kind: ContentKind) -> None:
+    if target_kind == "metadata_only":
+        article.sections = []
+        article.assets = []
+        _refresh_article_quality(article, explicit_content_kind="metadata_only")
+        return
+    article.sections = [
+        section
+        for section in article.sections
+        if normalize_text(section.kind).lower() == "abstract"
+    ]
+    article.assets = []
+    if not first_abstract_text(abstract_text=article.metadata.abstract, sections=article.sections):
+        article.sections = []
+        _refresh_article_quality(article, explicit_content_kind="metadata_only")
+        return
+    _refresh_article_quality(article, explicit_content_kind="abstract_only")
+
+
+def _semantic_loss_warning_messages(losses: SemanticLosses) -> list[str]:
+    warnings: list[str] = []
+    if losses.table_fallback_count:
+        warnings.append("Some tables could only be retained as original-resource fallbacks; structured table data may be incomplete.")
+    if losses.table_lossy_count:
+        warnings.append("Some tables were flattened lossily for Markdown output; merged-cell structure was not preserved exactly.")
+    if losses.formula_fallback_count:
+        warnings.append("Some formulas required degraded fallback rendering.")
+    if losses.formula_missing_count:
+        warnings.append("Some formulas could not be converted faithfully and were replaced with explicit placeholders.")
+    return warnings
+
+
+def _resolve_quality_confidence(
+    *,
+    content_kind: ContentKind,
+    flags: Sequence[str],
+    semantic_losses: SemanticLosses,
+    diagnostics: Mapping[str, Any] | None,
+) -> QualityConfidence:
+    normalized_flags = set(_dedupe_strings(flags))
+    hard_negative = bool(
+        isinstance(diagnostics, Mapping)
+        and [normalize_text(item) for item in diagnostics.get("hard_negative_signals") or [] if normalize_text(item)]
+    )
+    if (
+        content_kind != "fulltext"
+        or hard_negative
+        or QUALITY_FLAG_ACCESS_GATE_DETECTED in normalized_flags
+        or QUALITY_FLAG_INSUFFICIENT_BODY in normalized_flags
+    ):
+        return "low"
+    if (
+        QUALITY_FLAG_WEAK_BODY_STRUCTURE in normalized_flags
+        or semantic_losses.table_fallback_count > 0
+        or semantic_losses.table_lossy_count > 0
+        or semantic_losses.formula_fallback_count > 0
+        or semantic_losses.formula_missing_count > 0
+    ):
+        return "medium"
+    return "high"
+
+
+def apply_quality_assessment(
+    article: "ArticleModel",
+    *,
+    availability_diagnostics: Mapping[str, Any] | None = None,
+    semantic_losses: SemanticLosses | Mapping[str, Any] | None = None,
+    extra_flags: Sequence[str] | None = None,
+    allow_downgrade_from_diagnostics: bool = False,
+    cached_with_current_revision: bool = False,
+    recompute_tokens: bool = True,
+) -> "ArticleModel":
+    losses = coerce_semantic_losses(semantic_losses)
+    body_metrics = _quality_body_metrics(article, availability_diagnostics=availability_diagnostics)
+    flags = _dedupe_strings(extra_flags)
+    reason = normalize_text((availability_diagnostics or {}).get("reason") if isinstance(availability_diagnostics, Mapping) else "").lower()
+
+    if _diagnostics_access_gate_detected(availability_diagnostics):
+        flags.append(QUALITY_FLAG_ACCESS_GATE_DETECTED)
+    if reason == "insufficient_body":
+        flags.append(QUALITY_FLAG_INSUFFICIENT_BODY)
+    if article.quality.content_kind == "fulltext" and _has_weak_body_structure(body_metrics):
+        flags.append(QUALITY_FLAG_WEAK_BODY_STRUCTURE)
+    if losses.table_fallback_count > 0:
+        flags.append(QUALITY_FLAG_TABLE_FALLBACK_PRESENT)
+    if losses.table_lossy_count > 0:
+        flags.append(QUALITY_FLAG_TABLE_LOSSY_PRESENT)
+    if losses.formula_fallback_count > 0:
+        flags.append(QUALITY_FLAG_FORMULA_FALLBACK_PRESENT)
+    if losses.formula_missing_count > 0:
+        flags.append(QUALITY_FLAG_FORMULA_MISSING_PRESENT)
+    if cached_with_current_revision:
+        flags.append(QUALITY_FLAG_CACHED_WITH_CURRENT_REVISION)
+
+    if allow_downgrade_from_diagnostics and _diagnostics_require_downgrade(
+        availability_diagnostics,
+        body_metrics=body_metrics,
+    ):
+        target_kind = normalize_text((availability_diagnostics or {}).get("content_kind") if isinstance(availability_diagnostics, Mapping) else "").lower()
+        if target_kind not in {"abstract_only", "metadata_only"}:
+            target_kind = "abstract_only" if first_abstract_text(abstract_text=article.metadata.abstract, sections=article.sections) else "metadata_only"
+        _downgrade_article(article, target_kind=target_kind)
+    else:
+        _refresh_article_quality(article, recompute_tokens=recompute_tokens)
+
+    article.quality.flags = _dedupe_strings(flags)
+    article.quality.body_metrics = body_metrics
+    article.quality.semantic_losses = losses
+    article.quality.extraction_revision = EXTRACTION_REVISION
+    article.quality.confidence = _resolve_quality_confidence(
+        content_kind=article.quality.content_kind,
+        flags=article.quality.flags,
+        semantic_losses=losses,
+        diagnostics=availability_diagnostics,
+    )
+    article.quality.warnings = _dedupe_strings([*article.quality.warnings, *_semantic_loss_warning_messages(losses)])
+    return article
+
+
 @dataclass
 class Quality:
-    has_fulltext: bool
-    token_estimate: int
+    has_fulltext: bool = False
+    token_estimate: int = 0
     content_kind: ContentKind = "metadata_only"
     has_abstract: bool = False
     warnings: list[str] = field(default_factory=list)
     source_trail: list[str] = field(default_factory=list)
+    trace: list[TraceEvent] = field(default_factory=list)
     token_estimate_breakdown: TokenEstimateBreakdown = field(default_factory=TokenEstimateBreakdown)
+    confidence: QualityConfidence = "low"
+    flags: list[str] = field(default_factory=list)
+    body_metrics: BodyQualityMetrics = field(default_factory=BodyQualityMetrics)
+    semantic_losses: SemanticLosses = field(default_factory=SemanticLosses)
+    extraction_revision: int = EXTRACTION_REVISION
 
     def __post_init__(self) -> None:
+        self.warnings = _dedupe_strings(self.warnings)
+        self.source_trail = _dedupe_strings(self.source_trail)
+        self.flags = _dedupe_strings(self.flags)
+        self.body_metrics = coerce_body_quality_metrics(self.body_metrics)
+        self.semantic_losses = coerce_semantic_losses(self.semantic_losses)
+        self.token_estimate_breakdown = coerce_token_estimate_breakdown(self.token_estimate_breakdown)
+        self.extraction_revision = int(self.extraction_revision or EXTRACTION_REVISION)
+        if self.trace and not self.source_trail:
+            self.source_trail = source_trail_from_trace(self.trace)
+        elif self.source_trail and not self.trace:
+            self.trace = trace_from_markers(self.source_trail)
         if self.content_kind == "fulltext":
             self.has_fulltext = True
-            return
-        if self.content_kind == "abstract_only":
+        elif self.content_kind == "abstract_only":
             self.has_fulltext = False
             self.has_abstract = True
-            return
-        if self.has_fulltext:
+        elif self.has_fulltext:
             self.content_kind = "fulltext"
         elif self.has_abstract:
             self.content_kind = "abstract_only"
+        if self.content_kind != "fulltext" and self.confidence == "high":
+            self.confidence = "low"
 
 
 @dataclass(frozen=True)
@@ -407,6 +969,7 @@ class RenderedBlock:
 class _MarkdownRenderPlan:
     token_budget: float
     abstract_text: str
+    abstract_sections: tuple["Section", ...]
     level_shift: int
     include_figures: str
     reference_count: int
@@ -448,8 +1011,10 @@ class FetchEnvelope:
     has_abstract: bool = False
     warnings: list[str] = field(default_factory=list)
     source_trail: list[str] = field(default_factory=list)
+    trace: list[TraceEvent] = field(default_factory=list)
     token_estimate: int = 0
     token_estimate_breakdown: TokenEstimateBreakdown = field(default_factory=TokenEstimateBreakdown)
+    quality: Quality = field(default_factory=Quality)
     article: "ArticleModel | None" = None
     markdown: str | None = None
     metadata: Metadata | None = None
@@ -461,17 +1026,42 @@ class FetchEnvelope:
         return json.dumps(self.to_dict(), ensure_ascii=False, indent=2)
 
     def __post_init__(self) -> None:
+        if self.article is not None:
+            self.quality = _clone_quality(self.article.quality)
+        if self.trace and not self.source_trail:
+            self.source_trail = source_trail_from_trace(self.trace)
+        elif self.source_trail and not self.trace:
+            self.trace = trace_from_markers(self.source_trail)
         if self.content_kind == "fulltext":
             self.has_fulltext = True
-            return
-        if self.content_kind == "abstract_only":
+        elif self.content_kind == "abstract_only":
             self.has_fulltext = False
             self.has_abstract = True
-            return
-        if self.has_fulltext:
+        elif self.has_fulltext:
             self.content_kind = "fulltext"
         elif self.has_abstract:
             self.content_kind = "abstract_only"
+        self.quality.has_fulltext = self.quality.has_fulltext or self.has_fulltext
+        if self.content_kind != "metadata_only":
+            self.quality.content_kind = self.content_kind
+        self.quality.has_abstract = self.quality.has_abstract or self.has_abstract
+        self.quality.warnings = _dedupe_strings([*self.quality.warnings, *self.warnings])
+        self.quality.source_trail = _dedupe_strings([*self.quality.source_trail, *self.source_trail])
+        self.quality.trace = list(self.quality.trace or self.trace)
+        if self.trace and not self.quality.trace:
+            self.quality.trace = list(self.trace)
+        if self.token_estimate and not self.quality.token_estimate:
+            self.quality.token_estimate = self.token_estimate
+        if self.token_estimate_breakdown != TokenEstimateBreakdown() and self.quality.token_estimate_breakdown == TokenEstimateBreakdown():
+            self.quality.token_estimate_breakdown = coerce_token_estimate_breakdown(self.token_estimate_breakdown)
+        self.has_fulltext = self.quality.has_fulltext
+        self.content_kind = self.quality.content_kind
+        self.has_abstract = self.quality.has_abstract
+        self.warnings = list(self.quality.warnings)
+        self.source_trail = list(self.quality.source_trail)
+        self.trace = list(self.quality.trace)
+        self.token_estimate = self.quality.token_estimate
+        self.token_estimate_breakdown = self.quality.token_estimate_breakdown
 
 
 @dataclass
@@ -491,24 +1081,21 @@ class ArticleModel:
         return json.dumps(self.to_dict(), ensure_ascii=False, indent=2)
 
     def __post_init__(self) -> None:
-        abstract_text = normalize_text(self.metadata.abstract)
+        abstract_text = first_abstract_text(abstract_text=self.metadata.abstract, sections=self.sections)
         if not abstract_text:
-            abstract_text = normalize_text(
-                next(
-                    (
-                        section.text
-                        for section in self.sections
-                        if normalize_text(section.kind).lower() == "abstract" and normalize_text(section.text)
-                    ),
-                    "",
-                )
-            )
-            if abstract_text:
-                self.metadata.abstract = abstract_text
+            abstract_text = ""
+        if abstract_text and not normalize_text(self.metadata.abstract):
+            self.metadata.abstract = abstract_text
         content_kind = classify_content(sections=self.sections, abstract_text=abstract_text)
         self.quality.content_kind = content_kind
         self.quality.has_abstract = bool(abstract_text)
         self.quality.has_fulltext = content_kind == "fulltext"
+        apply_quality_assessment(
+            self,
+            semantic_losses=self.quality.semantic_losses,
+            extra_flags=self.quality.flags,
+            recompute_tokens=False,
+        )
 
     def to_ai_markdown(
         self,
@@ -546,12 +1133,21 @@ class ArticleModel:
             context=context,
             preserve_source_order=True,
         )
-        _append_abstract_with_budget(
-            lines,
-            abstract_text=render_plan.abstract_text,
-            context=context,
-            as_section=bool(render_plan.lead_sections),
-        )
+        if render_plan.abstract_sections:
+            _append_sections_with_budget(
+                lines,
+                sections=render_plan.abstract_sections,
+                level_shift=render_plan.level_shift,
+                context=context,
+                preserve_source_order=True,
+            )
+        else:
+            _append_abstract_with_budget(
+                lines,
+                abstract_text=render_plan.abstract_text,
+                context=context,
+                as_section=bool(render_plan.lead_sections),
+            )
         _append_sections_with_budget(
             lines,
             sections=render_plan.body_sections + render_plan.retained_sections,
@@ -668,23 +1264,27 @@ def _build_markdown_render_plan(
         include_supplementary,
         asset_profile=asset_profile,
     )
-    body_sections = tuple(filtered_body_sections(article.sections))
+    body_sections = tuple(renderable_body_sections(article.sections))
+    rendered_abstract_sections = tuple(abstract_sections(article.sections))
     lead_sections, remaining_body_sections = split_leading_abstract_context_sections(body_sections)
     retained_sections = tuple(
         section
         for section in article.sections
         if strip_markdown_images(section.text) and normalize_text(section.kind).lower() == "data_availability"
     )
+    figure_assets = selected_figure_assets(article.assets, asset_profile=asset_profile)
+    figure_assets = filter_inline_body_figure_assets(figure_assets, sections=body_sections)
     return _MarkdownRenderPlan(
         token_budget=token_budget,
-        abstract_text=normalize_text(article.metadata.abstract),
+        abstract_text=first_abstract_text(abstract_text=article.metadata.abstract, sections=article.sections),
+        abstract_sections=rendered_abstract_sections,
         level_shift=compute_level_shift(body_sections or retained_sections),
         include_figures=effective_include_figures,
         reference_count=resolve_reference_limit(effective_include_refs, len(article.references)),
         lead_sections=lead_sections,
         body_sections=remaining_body_sections,
         retained_sections=retained_sections,
-        figure_assets=tuple(selected_figure_assets(article.assets, asset_profile=asset_profile)),
+        figure_assets=tuple(figure_assets),
         table_assets=tuple(selected_table_assets(article.assets, asset_profile=asset_profile)),
         supplementary_assets=tuple(
             selected_supplementary_assets(
@@ -798,6 +1398,40 @@ def selected_figure_assets(assets: list[Asset], *, asset_profile: AssetProfile) 
     return figure_assets
 
 
+def _inline_markdown_image_urls(sections: Sequence["Section"]) -> set[str]:
+    urls: set[str] = set()
+    for section in sections:
+        for match in MARKDOWN_IMAGE_URL_PATTERN.finditer(section.text or ""):
+            candidate = normalize_text(match.group(1)).strip("<>")
+            if candidate:
+                urls.add(candidate)
+    return urls
+
+
+def filter_inline_body_figure_assets(
+    assets: Sequence[Asset],
+    *,
+    sections: Sequence["Section"],
+) -> list[Asset]:
+    inline_urls = _inline_markdown_image_urls(sections)
+    if not inline_urls:
+        return list(assets)
+
+    remaining: list[Asset] = []
+    for asset in assets:
+        if not asset_in_body(asset):
+            remaining.append(asset)
+            continue
+        asset_urls = {
+            normalize_text(asset.path).strip("<>"),
+            normalize_text(asset.url).strip("<>"),
+        }
+        if any(candidate and candidate in inline_urls for candidate in asset_urls):
+            continue
+        remaining.append(asset)
+    return remaining
+
+
 def selected_table_assets(assets: list[Asset], *, asset_profile: AssetProfile) -> list[Asset]:
     table_assets = [asset for asset in assets if asset.kind == "table"]
     if asset_profile == "none":
@@ -880,6 +1514,13 @@ def append_asset_block_with_budget(
     context.remaining_budget = remaining_after_header
 
 
+def _render_reference_line(reference_raw: str) -> str:
+    normalized = normalize_text(reference_raw)
+    if NUMBERED_REFERENCE_PATTERN.match(normalized):
+        return normalized
+    return f"- {normalized}"
+
+
 def append_reference_block(
     lines: list[str],
     *,
@@ -891,7 +1532,7 @@ def append_reference_block(
         return
     lines.extend([f"## References ({total_references} total, showing {shown_references})", ""])
     for reference in references:
-        lines.append(f"- {reference.raw}")
+        lines.append(_render_reference_line(reference.raw))
     lines.append("")
 
 
@@ -913,14 +1554,14 @@ def append_reference_block_with_budget(
     selected_references: list[RenderedBlock] = []
     remaining_after_header = context.remaining_budget - header_block.token_estimate
     for reference in references:
-        candidate_block = build_rendered_block([f"- {reference.raw}"])
+        candidate_block = build_rendered_block([_render_reference_line(reference.raw)])
         if candidate_block.token_estimate <= remaining_after_header:
             selected_references.append(candidate_block)
             remaining_after_header -= candidate_block.token_estimate
             continue
         if not math.isinf(remaining_after_header) and remaining_after_header > 16:
             truncated_reference = truncate_text_to_tokens(reference.raw, max(8, int(remaining_after_header - 2)))
-            truncated_block = build_rendered_block([f"- {truncated_reference}"])
+            truncated_block = build_rendered_block([_render_reference_line(truncated_reference)])
             if truncated_block.token_estimate <= remaining_after_header:
                 selected_references.append(truncated_block)
                 remaining_after_header -= truncated_block.token_estimate
@@ -943,6 +1584,8 @@ def render_figure_asset_groups(assets: list[Asset], *, include_figures: str) -> 
 
     item_groups: list[RenderedBlock] = []
     for asset in assets:
+        if is_table_like_figure_asset(asset):
+            continue
         heading = normalize_text(asset.heading) or "Figure"
         caption = normalize_text(asset.caption)
         link = asset_link(asset)
@@ -992,16 +1635,31 @@ def render_supplementary_asset_groups(assets: list[Asset]) -> list[RenderedBlock
 
 
 def render_heading(section: Section, *, level_shift: int = 0) -> str:
+    if not normalize_text(section.heading):
+        return ""
     level = max(2, min(section.level - level_shift, 6))
     return f"{'#' * level} {section.heading}"
 
 
 def render_section(section: Section, *, level_shift: int = 0) -> str:
-    return f"{render_heading(section, level_shift=level_shift)}\n\n{section.text}".strip()
+    heading = render_heading(section, level_shift=level_shift)
+    if not heading:
+        return section.text.strip()
+    return f"{heading}\n\n{section.text}".strip()
 
 
 def render_section_block(section: Section, *, level_shift: int = 0) -> RenderedBlock:
     heading = render_heading(section, level_shift=level_shift)
+    if not heading:
+        return build_rendered_block(
+            [section.text, ""],
+            normalized_text=normalize_markdown_text(section.text),
+        )
+    if not normalize_text(section.text):
+        return build_rendered_block(
+            [heading, ""],
+            normalized_text=normalize_markdown_text(heading),
+        )
     return build_rendered_block(
         [heading, section.text, ""],
         normalized_text=normalize_markdown_text(f"{heading}\n\n{section.text}".strip()),
@@ -1025,29 +1683,103 @@ def compute_level_shift(sections: Sequence[Section]) -> int:
     return max(0, min(body_levels) - 2)
 
 
+def _normalize_section_hint_heading(value: str) -> str:
+    return normalize_text(value).lower().strip(" :")
+
+
+def _coerce_section_hints(
+    section_hints: Sequence[SectionHint | Mapping[str, Any]] | None,
+) -> list[SectionHint]:
+    coerced: list[SectionHint] = []
+    for index, hint in enumerate(section_hints or []):
+        if isinstance(hint, SectionHint):
+            candidate = hint
+        elif isinstance(hint, Mapping):
+            heading = normalize_text(hint.get("heading"))
+            kind = normalize_text(hint.get("kind")).lower()
+            if not heading or kind not in SECTION_HINT_KINDS:
+                continue
+            raw_level = hint.get("level")
+            raw_order = hint.get("order")
+            candidate = SectionHint(
+                heading=heading,
+                level=int(raw_level) if isinstance(raw_level, int) or str(raw_level).isdigit() else 2,
+                kind=kind,
+                order=int(raw_order) if isinstance(raw_order, int) or str(raw_order).isdigit() else index,
+                language=normalize_text(hint.get("language")) or None,
+                source_selector=normalize_text(hint.get("source_selector")) or None,
+            )
+        else:
+            continue
+        if not normalize_text(candidate.heading) or normalize_text(candidate.kind).lower() not in SECTION_HINT_KINDS:
+            continue
+        coerced.append(candidate)
+    coerced.sort(key=lambda item: item.order)
+    return coerced
+
+
+def _match_next_section_hint(
+    section_hints: Sequence[SectionHint],
+    hint_index: int,
+    heading: str,
+) -> tuple[SectionHint | None, int]:
+    heading_key = _normalize_section_hint_heading(heading)
+    if not heading_key:
+        return None, hint_index
+    for index in range(hint_index, len(section_hints)):
+        if _normalize_section_hint_heading(section_hints[index].heading) == heading_key:
+            return section_hints[index], index + 1
+    return None, hint_index
+
+
 def lines_to_sections(
     lines: list[str],
     *,
     fallback_heading: str = "Full Text",
     preserve_images: bool = False,
+    section_hints: Sequence[SectionHint | Mapping[str, Any]] | None = None,
 ) -> list[Section]:
     sections: list[Section] = []
     current_heading = fallback_heading
     current_level = 2
     buffer: list[str] = []
+    coerced_section_hints = _coerce_section_hints(section_hints)
+    section_hint_index = 0
+
+    def append_empty_section(heading: str, level: int) -> None:
+        nonlocal section_hint_index
+        matched_hint, section_hint_index = _match_next_section_hint(
+            coerced_section_hints,
+            section_hint_index,
+            heading,
+        )
+        sections.append(
+            Section(
+                heading=heading,
+                level=level,
+                kind=matched_hint.kind if matched_hint is not None else section_kind_for_heading(heading),
+                text="",
+            )
+        )
 
     def flush() -> None:
+        nonlocal section_hint_index
         if not buffer:
             return
         raw_text = "\n".join(buffer)
         text = normalize_markdown_text(raw_text) if preserve_images else strip_markdown_images(raw_text)
         if not text:
             return
+        matched_hint, section_hint_index = _match_next_section_hint(
+            coerced_section_hints,
+            section_hint_index,
+            current_heading,
+        )
         sections.append(
             Section(
                 heading=current_heading,
                 level=current_level,
-                kind=section_kind_for_heading(current_heading),
+                kind=matched_hint.kind if matched_hint is not None else section_kind_for_heading(current_heading),
                 text=text,
             )
         )
@@ -1055,15 +1787,246 @@ def lines_to_sections(
     for line in lines:
         stripped = line.strip()
         if stripped.startswith("#"):
+            next_level = len(stripped) - len(stripped.lstrip("#"))
+            if (
+                not buffer
+                and normalize_text(current_heading).lower() in PRESERVE_EMPTY_PARENT_SECTION_HEADINGS
+                and normalize_text(current_heading)
+                and next_level > current_level
+            ):
+                append_empty_section(current_heading, current_level)
             flush()
             buffer = []
-            current_level = len(stripped) - len(stripped.lstrip("#"))
+            current_level = next_level
             current_heading = stripped[current_level:].strip() or fallback_heading
             continue
         if stripped or buffer:
             buffer.append(line.rstrip())
     flush()
     return sections
+
+
+def _canonical_match_text(value: str) -> str:
+    return re.sub(r"[\W_]+", "", normalize_text(value).lower(), flags=re.UNICODE)
+
+
+def _coerce_explicit_abstract_blocks(
+    abstract_blocks: Sequence[ExtractedAbstractBlock | Mapping[str, Any] | Section] | None,
+) -> list[ExtractedAbstractBlock]:
+    coerced: list[ExtractedAbstractBlock] = []
+    for index, block in enumerate(abstract_blocks or []):
+        if isinstance(block, ExtractedAbstractBlock):
+            candidate = block
+        elif isinstance(block, Section):
+            candidate = ExtractedAbstractBlock(
+                heading=normalize_text(block.heading) or "Abstract",
+                text=normalize_markdown_text(block.text),
+                kind="abstract",
+                order=index,
+            )
+        elif isinstance(block, Mapping):
+            candidate = ExtractedAbstractBlock(
+                heading=normalize_text(block.get("heading")) or "Abstract",
+                text=normalize_markdown_text(str(block.get("text") or "")),
+                language=normalize_text(block.get("language")) or None,
+                kind=normalize_text(block.get("kind")) or "abstract",
+                order=int(block.get("order") or index),
+            )
+        else:
+            continue
+        if not normalize_text(candidate.text):
+            continue
+        coerced.append(candidate)
+    coerced.sort(key=lambda item: item.order)
+    deduped: list[ExtractedAbstractBlock] = []
+    for block in coerced:
+        candidate_heading = _canonical_match_text(block.heading)
+        candidate_text = _canonical_match_text(block.text)
+        if any(
+            candidate_heading == _canonical_match_text(existing.heading)
+            and _is_near_duplicate_abstract_text(
+                candidate_text,
+                _canonical_match_text(existing.text),
+            )
+            for existing in deduped
+        ):
+            continue
+        deduped.append(block)
+    return deduped
+
+
+def _abstract_sections_from_blocks(
+    abstract_blocks: Sequence[ExtractedAbstractBlock | Mapping[str, Any] | Section] | None,
+) -> list[Section]:
+    sections: list[Section] = []
+    for block in _coerce_explicit_abstract_blocks(abstract_blocks):
+        sections.append(
+            Section(
+                heading=normalize_text(block.heading) or "Abstract",
+                level=2,
+                kind="abstract",
+                text=normalize_markdown_text(block.text),
+            )
+        )
+    return sections
+
+
+def _abstract_sections_from_lines(abstract_lines: Sequence[str]) -> list[Section]:
+    normalized_lines = [line.rstrip() for line in abstract_lines]
+    sections = lines_to_sections(list(normalized_lines), fallback_heading="Abstract")
+    if sections:
+        return [
+            Section(
+                heading=normalize_text(section.heading) or "Abstract",
+                level=section.level,
+                kind="abstract",
+                text=section.text,
+            )
+            for section in sections
+            if normalize_text(section.text)
+        ]
+    fallback_text = strip_markdown_images("\n".join(normalized_lines))
+    if not fallback_text:
+        return []
+    return [Section(heading="Abstract", level=2, kind="abstract", text=fallback_text)]
+
+
+def _is_near_duplicate_abstract_text(left: str, right: str) -> bool:
+    if not left or not right:
+        return False
+    if left == right:
+        return True
+    if abs(len(left) - len(right)) > ABSTRACT_NEAR_DUPLICATE_MAX_LENGTH_DELTA:
+        return False
+    return (
+        SequenceMatcher(None, left, right).ratio()
+        >= ABSTRACT_NEAR_DUPLICATE_SIMILARITY_THRESHOLD
+    )
+
+
+def _abstract_sections_match(left: Section, right: Section) -> bool:
+    left_heading = _canonical_match_text(left.heading)
+    right_heading = _canonical_match_text(right.heading)
+    if not left_heading or left_heading != right_heading:
+        return False
+    left_text = _canonical_match_text(strip_markdown_images(left.text))
+    right_text = _canonical_match_text(strip_markdown_images(right.text))
+    if not left_text or not right_text:
+        return False
+    return _is_near_duplicate_abstract_text(left_text, right_text)
+
+
+def _is_near_duplicate_body_abstract_paragraph(left: str, right: str) -> bool:
+    left_text = normalize_text(strip_markdown_images(left))
+    right_text = normalize_text(strip_markdown_images(right))
+    if not left_text or not right_text:
+        return False
+    if _canonical_match_text(left_text) == _canonical_match_text(right_text):
+        return True
+    if abs(len(left_text) - len(right_text)) > BODY_ABSTRACT_PARAGRAPH_NEAR_DUPLICATE_MAX_LENGTH_DELTA:
+        return False
+    return (
+        SequenceMatcher(None, left_text, right_text).ratio()
+        >= BODY_ABSTRACT_PARAGRAPH_NEAR_DUPLICATE_SIMILARITY_THRESHOLD
+    )
+
+
+def _section_matches_explicit_abstract(
+    section: Section,
+    explicit_abstract_sections: Sequence[Section],
+) -> bool:
+    if not explicit_abstract_sections:
+        return False
+    section_text = _canonical_match_text(strip_markdown_images(section.text))
+    if not section_text:
+        return False
+    is_abstract_section = normalize_text(section.kind).lower() == "abstract"
+    for candidate in explicit_abstract_sections:
+        candidate_text = _canonical_match_text(strip_markdown_images(candidate.text))
+        if section_text == candidate_text:
+            return True
+        if is_abstract_section and _abstract_sections_match(section, candidate):
+            return True
+    return False
+
+
+def _strip_leading_explicit_abstract_paragraphs(
+    section: Section,
+    explicit_abstract_sections: Sequence[Section],
+) -> Section | None:
+    if not explicit_abstract_sections or normalize_text(section.kind).lower() != "body":
+        return section
+
+    abstract_paragraphs = [
+        normalize_text(strip_markdown_images(paragraph))
+        for candidate in explicit_abstract_sections
+        for paragraph in re.split(r"\n\s*\n", candidate.text)
+        if normalize_text(strip_markdown_images(paragraph))
+    ]
+    if not abstract_paragraphs:
+        return section
+
+    paragraphs = [
+        paragraph.strip()
+        for paragraph in re.split(r"\n\s*\n", section.text)
+        if normalize_text(strip_markdown_images(paragraph))
+    ]
+    leading_index = 0
+    while leading_index < len(paragraphs):
+        if not any(
+            _is_near_duplicate_body_abstract_paragraph(paragraphs[leading_index], candidate)
+            for candidate in abstract_paragraphs
+        ):
+            break
+        leading_index += 1
+    if leading_index == 0:
+        return section
+    remaining_text = normalize_markdown_text("\n\n".join(paragraphs[leading_index:]))
+    if not remaining_text:
+        return None
+    return Section(
+        heading=section.heading,
+        level=section.level,
+        kind=section.kind,
+        text=remaining_text,
+    )
+
+
+def _promote_stripped_methods_summary_section(
+    original_section: Section,
+    stripped_section: Section | None,
+) -> Section | None:
+    if normalize_text(original_section.kind).lower() != "body":
+        return stripped_section
+    if normalize_text(original_section.heading).lower() != "methods summary":
+        return stripped_section
+    if stripped_section is None:
+        return Section(
+            heading="Methods",
+            level=original_section.level,
+            kind=original_section.kind,
+            text="",
+        )
+    if stripped_section.text == original_section.text:
+        return stripped_section
+    return Section(
+        heading="Methods",
+        level=stripped_section.level,
+        kind=stripped_section.kind,
+        text=stripped_section.text,
+    )
+
+
+def _normalize_inline_citations_in_section(section: Section) -> Section:
+    normalized_text = normalize_inline_citation_markdown(section.text)
+    if normalized_text == section.text:
+        return section
+    return Section(
+        heading=section.heading,
+        level=section.level,
+        kind=section.kind,
+        text=normalized_text,
+    )
 
 
 def split_leading_inline_abstract(sections: Sequence[Section]) -> tuple[str | None, list[Section]]:
@@ -1091,7 +2054,7 @@ def split_leading_inline_abstract(sections: Sequence[Section]) -> tuple[str | No
     if remaining_text:
         replacement_heading = (
             "Main Text"
-            if first.level <= 1 or normalize_text(first.heading).lower() == "full text"
+            if first.level <= 1 or normalize_text(first.heading).lower() in {"", "full text"}
             else first.heading
         )
         remaining_sections[0] = Section(
@@ -1137,6 +2100,32 @@ def normalize_inline_html_text(value: Any) -> str:
     return text.strip()
 
 
+def strip_leading_markdown_title_heading(markdown_text: str, *, title: str | None) -> str:
+    normalized_markdown = normalize_markdown_text(markdown_text)
+    normalized_title = normalize_text(title)
+    if not normalized_markdown or not normalized_title:
+        return normalized_markdown
+
+    lines = normalized_markdown.splitlines()
+    line_index = 0
+    while line_index < len(lines) and not normalize_text(lines[line_index]):
+        line_index += 1
+    if line_index >= len(lines):
+        return normalized_markdown
+
+    match = re.match(r"^(#+)\s*(.*?)\s*$", lines[line_index].strip())
+    if match is None or len(match.group(1)) != 1:
+        return normalized_markdown
+    heading_text = normalize_text(match.group(2))
+    if _canonical_match_text(heading_text) != _canonical_match_text(normalized_title):
+        return normalized_markdown
+
+    trimmed_lines = list(lines[:line_index]) + list(lines[line_index + 1 :])
+    while line_index < len(trimmed_lines) and not normalize_text(trimmed_lines[line_index]):
+        trimmed_lines.pop(line_index)
+    return normalize_markdown_text("\n".join(trimmed_lines))
+
+
 def build_metadata(metadata: Mapping[str, Any]) -> Metadata:
     return Metadata(
         title=normalize_inline_html_text(metadata.get("title")) or None,
@@ -1165,16 +2154,18 @@ def metadata_only_article(
     doi: str | None = None,
     warnings: list[str] | None = None,
     source_trail: list[str] | None = None,
+    trace: list[TraceEvent] | None = None,
 ) -> ArticleModel:
     article_metadata = build_metadata(metadata)
     references = build_references(metadata.get("references"))
+    effective_trace = list(trace or trace_from_markers(source_trail))
     token_estimate_breakdown = build_token_estimate_breakdown(
         abstract_text=article_metadata.abstract,
         sections=[],
         references=references,
     )
     token_estimate = token_estimate_breakdown.abstract + token_estimate_breakdown.body
-    return ArticleModel(
+    article = ArticleModel(
         doi=doi or safe_text(metadata.get("doi")) or None,
         source=source,
         metadata=article_metadata,
@@ -1186,10 +2177,12 @@ def metadata_only_article(
             token_estimate=token_estimate,
             has_abstract=bool(article_metadata.abstract),
             warnings=list(warnings or []),
-            source_trail=list(source_trail or []),
+            source_trail=list(source_trail or source_trail_from_trace(effective_trace)),
+            trace=effective_trace,
             token_estimate_breakdown=token_estimate_breakdown,
         ),
     )
+    return apply_quality_assessment(article)
 
 
 def build_references(raw_references: Any) -> list[Reference]:
@@ -1198,7 +2191,7 @@ def build_references(raw_references: Any) -> list[Reference]:
         return references
     for item in raw_references:
         if isinstance(item, Mapping):
-            raw = safe_text(item.get("raw") or item.get("unstructured") or item.get("title"))
+            raw = _normalized_reference_raw(item)
             if not raw:
                 continue
             references.append(
@@ -1216,12 +2209,27 @@ def build_references(raw_references: Any) -> list[Reference]:
     return references
 
 
+def _normalized_reference_raw(item: Mapping[str, Any]) -> str:
+    raw = safe_text(item.get("raw") or item.get("unstructured") or item.get("title"))
+    label = safe_text(item.get("label") or item.get("index") or item.get("number"))
+    if not raw:
+        return ""
+    if not label or NUMBERED_REFERENCE_PATTERN.match(raw):
+        return raw
+    if label[-1] in {".", ")"}:
+        return f"{label} {raw}"
+    if label.isdigit():
+        return f"{label}. {raw}"
+    return f"[{label}] {raw}"
+
+
 def article_from_structure(
     *,
     source: SourceKind,
     metadata: Mapping[str, Any],
     doi: str | None,
     abstract_lines: list[str],
+    abstract_sections: Sequence[ExtractedAbstractBlock | Mapping[str, Any] | Section] | None = None,
     body_lines: list[str],
     figure_entries: list[Mapping[str, Any]],
     table_entries: list[Mapping[str, Any]],
@@ -1230,13 +2238,22 @@ def article_from_structure(
     references: list[Reference] | None = None,
     warnings: list[str] | None = None,
     source_trail: list[str] | None = None,
+    trace: list[TraceEvent] | None = None,
+    availability_diagnostics: Mapping[str, Any] | None = None,
+    semantic_losses: SemanticLosses | Mapping[str, Any] | None = None,
+    quality_flags: Sequence[str] | None = None,
+    allow_downgrade_from_diagnostics: bool = False,
 ) -> ArticleModel:
     article_metadata = build_metadata(metadata)
-    abstract_text = strip_markdown_images("\n".join(abstract_lines))
-    if abstract_text and not article_metadata.abstract:
+    effective_trace = list(trace or trace_from_markers(source_trail))
+    explicit_abstract_sections = _abstract_sections_from_blocks(abstract_sections) or _abstract_sections_from_lines(abstract_lines)
+    abstract_text = first_abstract_text(abstract_text=None, sections=explicit_abstract_sections)
+    if abstract_text and not normalize_text(article_metadata.abstract):
+        article_metadata.abstract = abstract_text
+    elif abstract_text:
         article_metadata.abstract = abstract_text
 
-    sections = lines_to_sections(body_lines)
+    sections = [*explicit_abstract_sections, *lines_to_sections(body_lines, fallback_heading="")]
     if conversion_notes:
         sections.append(
             Section(
@@ -1291,7 +2308,7 @@ def article_from_structure(
     token_estimate = token_estimate_breakdown.abstract + token_estimate_breakdown.body
 
     content_kind = classify_content(sections=sections, abstract_text=article_metadata.abstract)
-    return ArticleModel(
+    article = ArticleModel(
         doi=doi or safe_text(metadata.get("doi")) or None,
         source=source,
         metadata=article_metadata,
@@ -1304,9 +2321,23 @@ def article_from_structure(
             content_kind=content_kind,
             has_abstract=bool(article_metadata.abstract),
             warnings=list(warnings or []),
-            source_trail=list(source_trail or []),
+            source_trail=list(source_trail or source_trail_from_trace(effective_trace)),
+            trace=effective_trace,
             token_estimate_breakdown=token_estimate_breakdown,
         ),
+    )
+    diagnostics_payload = availability_diagnostics
+    has_provider_diagnostics = diagnostics_payload is not None
+    if diagnostics_payload is None:
+        from .providers._html_availability import assess_structured_article_fulltext_availability
+
+        diagnostics_payload = assess_structured_article_fulltext_availability(article, title=article_metadata.title).to_dict()
+    return apply_quality_assessment(
+        article,
+        availability_diagnostics=diagnostics_payload,
+        semantic_losses=semantic_losses,
+        extra_flags=quality_flags,
+        allow_downgrade_from_diagnostics=allow_downgrade_from_diagnostics and has_provider_diagnostics,
     )
 
 
@@ -1316,25 +2347,53 @@ def article_from_markdown(
     metadata: Mapping[str, Any],
     doi: str | None,
     markdown_text: str,
+    abstract_sections: Sequence[ExtractedAbstractBlock | Mapping[str, Any] | Section] | None = None,
+    section_hints: Sequence[SectionHint | Mapping[str, Any]] | None = None,
     assets: list[Mapping[str, Any]] | None = None,
     warnings: list[str] | None = None,
     source_trail: list[str] | None = None,
+    trace: list[TraceEvent] | None = None,
+    availability_diagnostics: Mapping[str, Any] | None = None,
+    semantic_losses: SemanticLosses | Mapping[str, Any] | None = None,
+    quality_flags: Sequence[str] | None = None,
+    allow_downgrade_from_diagnostics: bool = False,
 ) -> ArticleModel:
     article_metadata = build_metadata(metadata)
-    normalized = normalize_markdown_text(markdown_text)
-    parsed_sections = lines_to_sections(normalized.splitlines(), preserve_images=True)
-    extracted_abstract = None
-    sections: list[Section] = []
+    effective_trace = list(trace or trace_from_markers(source_trail))
+    normalized = normalize_inline_citation_markdown(
+        strip_leading_markdown_title_heading(markdown_text, title=article_metadata.title)
+    )
+    parsed_sections = lines_to_sections(
+        normalized.splitlines(),
+        fallback_heading="",
+        preserve_images=True,
+        section_hints=section_hints,
+    )
+    parsed_sections = [_normalize_inline_citations_in_section(section) for section in parsed_sections]
+    explicit_abstract_sections = [
+        _normalize_inline_citations_in_section(section)
+        for section in _abstract_sections_from_blocks(abstract_sections)
+    ]
+    sections = list(explicit_abstract_sections)
+    extracted_abstract = first_abstract_text(abstract_text=None, sections=explicit_abstract_sections)
     for section in parsed_sections:
-        if section.kind == "abstract":
-            if not extracted_abstract:
-                extracted_abstract = strip_markdown_images(section.text)
+        if explicit_abstract_sections and normalize_text(section.kind).lower() == "abstract":
             continue
+        if _section_matches_explicit_abstract(section, explicit_abstract_sections):
+            continue
+        original_section = section
+        section = _strip_leading_explicit_abstract_paragraphs(section, explicit_abstract_sections)
+        section = _promote_stripped_methods_summary_section(original_section, section)
+        if section is None:
+            continue
+        section = _normalize_inline_citations_in_section(section)
+        if section.kind == "abstract" and not extracted_abstract:
+            extracted_abstract = strip_markdown_images(section.text)
         sections.append(section)
     inline_abstract, sections = split_leading_inline_abstract(sections)
-    if inline_abstract and not extracted_abstract:
-        extracted_abstract = inline_abstract
-    article_metadata.abstract = extracted_abstract or article_metadata.abstract
+    if inline_abstract:
+        extracted_abstract = normalize_inline_citation_markdown(inline_abstract)
+    article_metadata.abstract = normalize_inline_citation_markdown(extracted_abstract or article_metadata.abstract) or None
     normalized_assets = [
         Asset(
             kind=safe_text(item.get("kind") or item.get("asset_type") or "asset") or "asset",
@@ -1354,7 +2413,7 @@ def article_from_markdown(
     )
     token_estimate = token_estimate_breakdown.abstract + token_estimate_breakdown.body
     content_kind = classify_content(sections=sections, abstract_text=article_metadata.abstract)
-    return ArticleModel(
+    article = ArticleModel(
         doi=doi or safe_text(metadata.get("doi")) or None,
         source=source,
         metadata=article_metadata,
@@ -1367,7 +2426,26 @@ def article_from_markdown(
             content_kind=content_kind,
             has_abstract=bool(article_metadata.abstract),
             warnings=list(warnings or []),
-            source_trail=list(source_trail or []),
+            source_trail=list(source_trail or source_trail_from_trace(effective_trace)),
+            trace=effective_trace,
             token_estimate_breakdown=token_estimate_breakdown,
         ),
+    )
+    diagnostics_payload = availability_diagnostics
+    has_provider_diagnostics = diagnostics_payload is not None
+    if diagnostics_payload is None:
+        from .providers._html_availability import assess_plain_text_fulltext_availability
+
+        diagnostics_payload = assess_plain_text_fulltext_availability(
+            normalized,
+            article_metadata.__dict__,
+            title=article_metadata.title,
+            section_hints=section_hints,
+        ).to_dict()
+    return apply_quality_assessment(
+        article,
+        availability_diagnostics=diagnostics_payload,
+        semantic_losses=semantic_losses,
+        extra_flags=quality_flags,
+        allow_downgrade_from_diagnostics=allow_downgrade_from_diagnostics and has_provider_diagnostics,
     )

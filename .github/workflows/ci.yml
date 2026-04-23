@@ -10,6 +10,11 @@ on:
         required: false
         default: false
         type: boolean
+      run_full_golden:
+        description: "Run full 50-fixture golden corpus regression"
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   lint:
@@ -44,13 +49,13 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install package
+      - name: Install test dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install .
+          python -m pip install -e ".[dev]"
 
       - name: Run unit suite
-        run: python -m unittest discover -s tests/unit -t . -q
+        run: pytest tests/unit
 
   integration:
     runs-on: ubuntu-latest
@@ -64,13 +69,36 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install package
+      - name: Install test dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install .
+          python -m pip install -e ".[dev]"
 
       - name: Run integration suite
-        run: PYTHONPATH=src python -m unittest discover -s tests/integration -q
+        run: pytest tests/integration
+
+  full-golden:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_full_golden }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Install test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+
+      - name: Run full golden corpus regression
+        env:
+          PAPER_FETCH_RUN_FULL_GOLDEN: "1"
+      run: pytest tests/integration/test_golden_corpus.py
 
   live-mcp:
     if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_live_mcp }}
@@ -85,10 +113,10 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install package
+      - name: Install test dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install .
+          python -m pip install -e ".[dev]"
 
       - name: Run live MCP suite when secrets are available
         shell: bash
@@ -111,4 +139,4 @@ jobs:
             exit 0
           fi
 
-          PYTHONPATH=src python -m unittest tests.live.test_live_mcp -q
+          pytest -n 0 tests/live/test_live_mcp.py

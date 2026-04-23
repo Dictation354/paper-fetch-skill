@@ -95,21 +95,55 @@ Date: 2026-04-16
 - 实际抓取逻辑
 - provider 配置
 
-### 4. Service 层
+### 4. Service Facade 层
 
 入口：`src/paper_fetch/service.py`
 
-这是整个系统的业务主脑。
+当前 `service.py` 只保留公共入口与兼容导出：
+
+- 暴露 `FetchStrategy`、`PaperFetchFailure`
+- 暴露 `resolve_paper()`、`probe_has_fulltext()`、`fetch_paper()`
+- 兼容测试与外层调用方需要的 helper re-export
+
+不再负责：
+
+- provider route 细节判断
+- `raw_payload.metadata[...]` 这种 magic key 协议
+- 通用 HTML 提取细节
+
+### 5. Workflow 编排层
+
+入口：`src/paper_fetch/workflow/`
+
+这是新的业务编排主脑，明确拆成 5 个子职责：
+
+- `resolution`
+  - 负责 resolve、歧义处理、DOI 归一化
+- `metadata`
+  - 负责 Crossref / publisher metadata merge
+- `routing`
+  - 负责 provider 候选、probe、fallback eligibility
+- `fulltext`
+  - 负责 provider 主链与 metadata-only fallback
+- `rendering`
+  - 负责 `FetchEnvelope`、`source_trail` 派生、最终结果组装
+
+### 6. Extraction 层
+
+入口：`src/paper_fetch/extraction/html/`
 
 职责：
 
-- resolve 查询
-- 计算 routing signal
-- 拉取并合并 metadata
-- 执行 provider 主链 / generic HTML / metadata-only 回退瀑布
-- 统一构造 `FetchEnvelope`
+- 暴露通用 HTML 解析与 metadata 提取接口
+- 暴露 provider 可复用的 shared extraction helpers
+- 为 resolve 层提供纯 extraction 依赖边界
 
-### 5. Provider 层
+关键约束：
+
+- `resolve/query.py` 不再 import `providers.*`
+- HTML parsing / markdown extraction 不应再通过 provider 模块向上泄漏
+
+### 7. Provider 层
 
 入口：`src/paper_fetch/providers/`
 
@@ -118,8 +152,15 @@ Date: 2026-04-16
 - 各 provider 的 metadata / fulltext / asset 下载适配
 - provider 自身格式到 `ArticleModel` 的转换
 - provider 本地可用性诊断
+- 返回 typed provider result，而不是依赖无类型 metadata 口袋回传内部状态
 
-### 6. Transport / Cache 层
+当前固定契约包括：
+
+- `ProviderContent`
+- `ProviderArtifacts`
+- `ProviderFetchResult`
+
+### 8. Transport / Cache 层
 
 入口：`src/paper_fetch/http.py`
 
@@ -137,13 +178,13 @@ Date: 2026-04-16
 统一主线如下：
 
 ```text
-resolve
--> routing signal
--> metadata merge
--> provider fulltext
--> generic HTML fallback 或 provider 内部 fallback
--> metadata-only fallback
--> render / envelope / cache / MCP 暴露
+service facade
+-> workflow.resolution
+-> workflow.routing
+-> workflow.metadata
+-> workflow.fulltext
+-> workflow.rendering
+-> CLI / MCP / cache
 ```
 
 ### 1. resolve
@@ -186,7 +227,7 @@ domain > publisher > DOI fallback
 
 ### 3. metadata merge
 
-service 会尽可能拿到两类元数据：
+workflow 会尽可能拿到两类元数据：
 
 - Crossref metadata
 - publisher metadata
@@ -206,12 +247,12 @@ service 会尽可能拿到两类元数据：
 
 ### 4. provider fulltext
 
-如果选中了 provider，service 会先尝试 provider 主路径。
+如果选中了 provider，workflow.fulltext 会先尝试 provider 主路径。
 
 典型行为：
 
 - `elsevier`
-  - 继续走 `官方 XML/API -> FlareSolverr HTML`
+  - 继续走 `官方 XML/API -> 官方 API PDF fallback`
 - `springer`
   - 走 provider 自管 `direct HTML -> direct HTTP PDF`
 - `wiley`
@@ -222,29 +263,19 @@ service 会尽可能拿到两类元数据：
 
 如果正文足够可用，流程在这里结束。
 
-### 5. generic HTML fallback 与 provider 内部 fallback
+### 5. metadata-only fallback
 
-通用 `html_generic` fallback 只服务“非 provider-owned HTML 路径”的场景，前提是：
+如果命中了 `elsevier`、`springer`、`wiley`、`science`、`pnas` 五家 provider 之一：
 
-- `strategy.allow_html_fallback=true`
-- 允许的 provider 集合没有排除 HTML alias
+- workflow.fulltext 只执行该 provider 自己管理的 HTML/PDF waterfall
+- provider 返回 `None` 后直接进入 metadata-only fallback
 
-关键例外：
+如果没有命中这五家 provider：
 
-- `elsevier`
-  - 官方 API/XML 失败后不走通用 `html_generic`
-  - 而是 provider 自己管理 `FlareSolverr HTML -> metadata-only`
-- `springer`
-  - direct HTML 由 provider 内部管理
-  - 失败后先尝试 direct HTTP PDF，再决定是否 metadata-only
-- `wiley`
-  - 不走通用 `html_generic`
-  - 而是 provider 自己管理 `FlareSolverr HTML -> Wiley TDM API PDF -> seeded-browser publisher PDF/ePDF -> metadata-only`
-- `science` / `pnas`
-  - 不走通用 `html_generic`
-  - 而是 provider 自己管理 `FlareSolverr HTML -> seeded-browser publisher PDF/ePDF -> metadata-only`
-
-### 6. metadata-only fallback
+- 系统仍允许 DOI / Crossref metadata 解析
+- 不再尝试任何通用 HTML 正文提取
+- `strategy.allow_metadata_only_fallback=true` 时返回 metadata-only 结果
+- 否则抛 `PaperFetchFailure`
 
 如果正文仍不可得，并且 `strategy.allow_metadata_only_fallback=true`：
 
@@ -257,7 +288,15 @@ service 会尽可能拿到两类元数据：
 
 ### 7. render / envelope / cache / MCP 暴露
 
-拿到最终 `ArticleModel` 后，service 会构造 `FetchEnvelope`。
+拿到最终 `ArticleModel` 后，workflow.rendering 会构造 `FetchEnvelope`。
+
+当前对外结果新增：
+
+- `trace: list[TraceEvent]`
+- `source_trail`
+  - 作为兼容字段保留，但由 `trace` 统一派生
+- `warnings`
+  - 只在最终结果层聚合，不再由 service/provider/CLI 多层共享可变列表
 
 随后：
 
@@ -286,7 +325,6 @@ service 会尽可能拿到两类元数据：
 
 当前最重要的字段：
 
-- `allow_html_fallback`
 - `allow_metadata_only_fallback`
 - `preferred_providers`
 - `asset_profile`
@@ -345,7 +383,7 @@ service 会尽可能拿到两类元数据：
 这些 provider 的 HTML 逻辑由 provider 内部管理，因此：
 
 - 通用 HTML fallback 开关不会关闭它们自己的主路径
-- `elsevier` 成功时公开为 `elsevier_xml` 或 `elsevier_browser`
+- `elsevier` 成功时公开为 `elsevier_xml` 或 `elsevier_pdf`
 - `springer` 成功时公开为 `springer_html`
 - `wiley` 成功时公开为 `wiley_browser`
 - `science` / `pnas` 仍然公开为 `science` / `pnas`

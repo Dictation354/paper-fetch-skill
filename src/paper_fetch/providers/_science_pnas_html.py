@@ -12,34 +12,51 @@ from dataclasses import asdict, dataclass, field
 from typing import Any, Mapping
 
 from ..metadata_types import ProviderMetadata
-from ..models import classify_article_content, filtered_body_sections, normalize_markdown_text
+from ..models import normalize_markdown_text
 from ..utils import normalize_text
 from ._article_markdown_math import render_external_mathml_expression
 from ._html_access_signals import (
     CHALLENGE_PATTERNS,
-    NOT_FOUND_PATTERNS,
     PAYWALL_PATTERNS,
     SciencePnasHtmlFailure as _SharedSciencePnasHtmlFailure,
     detect_html_access_signals,
     detect_html_block as _shared_detect_html_block,
-    html_failure_message as _shared_html_failure_message,
     summarize_html as _shared_summarize_html,
 )
 from ._html_availability import (
-    FulltextAvailabilityDiagnostics as _SharedFulltextAvailabilityDiagnostics,
-    StructuredBodyAnalysis as _SharedStructuredBodyAnalysis,
     assess_html_fulltext_availability as _shared_assess_html_fulltext_availability,
     assess_plain_text_fulltext_availability as _shared_assess_plain_text_fulltext_availability,
     assess_structured_article_fulltext_availability as _shared_assess_structured_article_fulltext_availability,
     availability_failure_message as _shared_availability_failure_message,
 )
-from ._html_citations import clean_citation_markers
+from ._html_semantics import (
+    ABSTRACT_ATTR_TOKENS as ABSTRACT_TOKENS,
+    ANCILLARY_TOKENS,
+    BACK_MATTER_TOKENS,
+    BODY_CONTAINER_TOKENS,
+    DATA_AVAILABILITY_TOKENS,
+    classify_html_paragraph as _shared_classify_html_paragraph,
+    collect_html_section_hints,
+    container_has_explicit_body_container as _shared_container_has_explicit_body_container,
+    heading_category,
+    iter_html_blocks as _shared_iter_html_blocks,
+    looks_like_explicit_body_container as _shared_looks_like_explicit_body_container,
+    node_identity_text as _shared_node_identity_text,
+    node_source_selector as _shared_node_source_selector,
+    normalize_heading,
+    ancestor_identity_text as _shared_ancestor_identity_text,
+)
+from ._html_citations import is_citation_link, make_numeric_citation_sentinel, numeric_citation_payload
 from ._html_tables import (
     inject_inline_table_blocks as _shared_inject_inline_table_blocks,
     render_table_inline_text as _shared_render_table_inline_text,
     render_table_markdown as _shared_render_table_markdown,
     table_headers_and_data as _shared_table_headers_and_data,
     table_placeholder as _shared_table_placeholder,
+)
+from ._language_filter import (
+    collect_html_abstract_blocks as _shared_collect_html_abstract_blocks,
+    html_node_language_hint as _shared_html_node_language_hint,
 )
 from ._science_pnas_postprocess import (
     normalize_browser_workflow_markdown as _shared_normalize_browser_workflow_markdown,
@@ -103,6 +120,9 @@ SITE_RULE_OVERRIDES: dict[str, dict[str, Any]] = {
             ".article__access",
             ".article__footer",
             ".article__reference-links",
+            ".core-collateral",
+            ".card",
+            ".signup-alert-ad",
         ],
         "drop_keywords": {
             "tab-nav",
@@ -206,117 +226,6 @@ DEFAULT_SITE_RULE: dict[str, Any] = {
         "Share",
         "Cite",
     },
-}
-BODY_CONTAINER_TOKENS = (
-    "articlebody",
-    "article-body",
-    "article_body",
-    "bodymatter",
-    "fulltext",
-    "full-text",
-)
-ABSTRACT_TOKENS = (
-    "abstract",
-    "structured-abstract",
-    "structured_abstract",
-    "editor-abstract",
-    "summary",
-    "key-points",
-    "highlights",
-)
-BACK_MATTER_TOKENS = (
-    "reference",
-    "bibliograph",
-    "acknowledg",
-    "supplement",
-    "supporting-information",
-    "supporting_information",
-    "funding",
-    "author-contribution",
-    "conflict",
-    "disclosure",
-    "ethics",
-)
-DATA_AVAILABILITY_TOKENS = (
-    "data-availability",
-    "data_availability",
-)
-ANCILLARY_TOKENS = (
-    "related",
-    "recommend",
-    "metric",
-    "share",
-    "social",
-    "toolbar",
-    "breadcrumb",
-    "access",
-    "cookie",
-    "banner",
-    "promo",
-    "figure-pop",
-    "viewer",
-    "citation",
-    "permissions",
-    "eletter",
-    "signup",
-)
-ABSTRACT_HEADINGS = {
-    "abstract",
-    "structured abstract",
-}
-FRONT_MATTER_HEADINGS = {
-    "editor's summary",
-    "editor’s summary",
-    "summary",
-    "key points",
-    "highlights",
-    "graphical abstract",
-}
-BACK_MATTER_HEADINGS = (
-    "references",
-    "references and notes",
-    "acknowledgments",
-    "supplementary materials",
-    "supplementary material",
-    "supplementary information",
-    "supporting information",
-    "notes",
-    "author contributions",
-    "funding",
-    "ethics",
-    "conflict of interest",
-    "conflicts of interest",
-    "competing interests",
-    "disclosures",
-)
-DATA_AVAILABILITY_HEADINGS = (
-    "data availability",
-    "data availability statement",
-    "data, materials, and software availability",
-    "data, code, and materials availability",
-    "availability of data and materials",
-)
-ANCILLARY_HEADINGS = {
-    "recommended",
-    "related content",
-    "related articles",
-    "metrics",
-    "view options",
-    "authors",
-    "affiliations",
-    "author information",
-    "information & authors",
-    "information and authors",
-    "citations",
-    "submission history",
-    "license information",
-    "cite as",
-    "export citation",
-    "cited by",
-    "citing literature",
-    "figures",
-    "tables",
-    "media",
 }
 NARRATIVE_ARTICLE_TYPE_TOKENS = {
     "perspective",
@@ -504,7 +413,7 @@ def _contains_pattern(text: str, patterns: tuple[str, ...]) -> bool:
 
 
 def _normalize_heading(text: str) -> str:
-    return normalize_text(text).lower().strip(" :")
+    return normalize_heading(text)
 
 
 def _sentence_count(text: str) -> int:
@@ -523,18 +432,7 @@ def _is_substantial_prose(text: str) -> bool:
 
 
 def _looks_like_explicit_body_container(node: Tag | None) -> bool:
-    if node is None:
-        return False
-    attrs = getattr(node, "attrs", None) or {}
-    values: list[str] = [normalize_text(node.name or "")]
-    for key in ("id", "property", "itemprop", "data-type", "role", "aria-label"):
-        value = attrs.get(key)
-        if value:
-            values.append(str(value))
-    for class_name in attrs.get("class", []):
-        values.append(str(class_name))
-    identity = " ".join(values).lower()
-    return any(token in identity for token in BODY_CONTAINER_TOKENS)
+    return _shared_looks_like_explicit_body_container(node)
 
 
 def _normalized_page_text(html_text: str) -> str:
@@ -597,22 +495,7 @@ def _final_url_looks_like_access_page(final_url: str | None) -> bool:
 
 
 def _heading_category(node_name: str, text: str, *, title: str | None = None) -> str:
-    if normalize_text(node_name or "").lower() == "h1":
-        return "front_matter"
-    normalized = _normalize_heading(text)
-    if title and normalized == _normalize_heading(title):
-        return "front_matter"
-    if normalized in ABSTRACT_HEADINGS or normalized.startswith("abstract"):
-        return "abstract"
-    if normalized in FRONT_MATTER_HEADINGS:
-        return "front_matter"
-    if any(normalized.startswith(token) for token in DATA_AVAILABILITY_HEADINGS):
-        return "data_availability"
-    if any(normalized.startswith(token) for token in BACK_MATTER_HEADINGS):
-        return "references_or_back_matter"
-    if normalized in ANCILLARY_HEADINGS:
-        return "ancillary"
-    return "body_heading"
+    return heading_category(node_name, text, title=title)
 
 
 def _detect_html_hard_negative_signals_impl(
@@ -689,6 +572,40 @@ def score_container(node: Tag) -> float:
     return score
 
 
+def _is_page_level_container(node: Tag | None) -> bool:
+    if not isinstance(node, Tag):
+        return False
+    return normalize_text(node.name or "").lower() in {"html", "body"}
+
+
+def _direct_child_tags(node: Tag) -> list[Tag]:
+    return [child for child in node.find_all(recursive=False) if isinstance(child, Tag)]
+
+
+def _class_tokens(node: Tag) -> set[str]:
+    raw_value = (getattr(node, "attrs", None) or {}).get("class")
+    if isinstance(raw_value, (list, tuple, set)):
+        return {normalize_text(str(item)).lower() for item in raw_value if normalize_text(str(item))}
+    normalized = normalize_text(str(raw_value or "")).lower()
+    return {normalized} if normalized else set()
+
+
+def _refine_selected_container(node: Tag, *, publisher: str) -> Tag:
+    profile = _publisher_profile(publisher)
+    if profile.refine_selected_container is None:
+        return node
+    refined = profile.refine_selected_container(
+        node,
+        direct_child_tags=_direct_child_tags,
+        class_tokens=_class_tokens,
+        container_completeness_score=_container_completeness_score,
+        score_container=score_container,
+    )
+    if isinstance(refined, Tag):
+        return refined
+    return node
+
+
 def select_best_container(soup: BeautifulSoup, publisher: str):
     selectors = _site_rule(publisher)["candidate_selectors"]
     candidates: list[tuple[float, Tag]] = []
@@ -712,19 +629,32 @@ def select_best_container(soup: BeautifulSoup, publisher: str):
     if not candidates:
         return None
     candidates.sort(key=lambda item: item[0], reverse=True)
-    return _prefer_complete_ancestor(candidates[0][1])
+    preferred = _refine_selected_container(_prefer_complete_ancestor(candidates[0][1]), publisher=publisher)
+    if not _is_page_level_container(preferred):
+        return preferred
+
+    alternative_nodes: list[Tag] = []
+    for _, node in candidates:
+        alternative = _refine_selected_container(_prefer_complete_ancestor(node), publisher=publisher)
+        if _is_page_level_container(alternative):
+            continue
+        alternative_nodes.append(alternative)
+
+    if not alternative_nodes:
+        return preferred
+
+    best_alternative = max(
+        alternative_nodes,
+        key=lambda node: (
+            _container_completeness_score(node),
+            score_container(node),
+        ),
+    )
+    return best_alternative
 
 
 def node_identity_text(node: Tag) -> str:
-    attrs = getattr(node, "attrs", None) or {}
-    values: list[str] = []
-    for key in ("id", "role", "property", "itemprop", "data-type", "aria-label"):
-        value = attrs.get(key)
-        if value:
-            values.append(str(value))
-    for class_name in attrs.get("class", []):
-        values.append(str(class_name))
-    return " ".join(values).lower()
+    return _shared_node_identity_text(node)
 
 
 def should_drop_node(node: Tag, publisher: str) -> bool:
@@ -776,6 +706,37 @@ def _normalize_table_inline_text(value: str) -> str:
     return text.strip()
 
 
+def _has_explicit_bibliography_marker(node: Tag) -> bool:
+    attrs = getattr(node, "attrs", None) or {}
+    if "citation-ref" in attrs:
+        return True
+    if normalize_text(str(attrs.get("data-test") or "")).lower() == "citation-ref":
+        return True
+    if normalize_text(str(attrs.get("role") or "")).lower() == "doc-biblioref":
+        return True
+    if normalize_text(str(attrs.get("data-xml-rid") or "")):
+        return True
+    class_tokens = _class_tokens(node)
+    return bool({"biblink", "to-citation"} & class_tokens)
+
+
+def _numeric_citation_payload_from_inline_node(node: Any) -> str | None:
+    if not isinstance(node, Tag):
+        return None
+    text = normalize_text(node.get_text(" ", strip=True))
+    payload = numeric_citation_payload(text)
+    if payload is None:
+        return None
+    href = normalize_text(str(node.get("href") or ""))
+    if node.name == "a" and (_has_explicit_bibliography_marker(node) or is_citation_link(href, text)):
+        return payload
+    if node.name in {"sup", "i", "em"}:
+        anchors = [match for match in node.find_all("a") if isinstance(match, Tag)]
+        if anchors and all(_numeric_citation_payload_from_inline_node(anchor) for anchor in anchors):
+            return payload
+    return None
+
+
 def _wrap_table_text_fragment(text: str, marker: str | None) -> str:
     value = text.replace("\xa0", " ")
     has_leading_space = bool(value[:1].isspace())
@@ -809,7 +770,12 @@ def _render_table_inline_node(node: Any, *, text_style: str | None = None) -> st
             continue
 
         name = normalize_text(child.name or "").lower()
-        if name in {"i", "em"}:
+        payload = _numeric_citation_payload_from_inline_node(child)
+        if payload is not None:
+            parts.append(make_numeric_citation_sentinel(payload) or "")
+        elif name == "a":
+            parts.append(_render_table_inline_node(child, text_style=text_style))
+        elif name in {"i", "em"}:
             parts.append(_render_table_inline_node(child, text_style="*"))
         elif name in {"b", "strong"}:
             parts.append(_render_table_inline_node(child, text_style="**"))
@@ -853,6 +819,11 @@ def _render_non_table_inline_fragment(node: Any, *, text_style: str | None = Non
         return ""
 
     name = normalize_text(node.name or "").lower()
+    payload = _numeric_citation_payload_from_inline_node(node)
+    if payload is not None:
+        return make_numeric_citation_sentinel(payload) or ""
+    if name == "a":
+        return _render_non_table_inline_node(node, text_style=text_style)
     if name in {"i", "em"}:
         return _render_non_table_inline_node(node, text_style="*")
     if name in {"b", "strong"}:
@@ -992,7 +963,36 @@ def _drop_promotional_blocks(container: Tag, publisher: str) -> None:
             _promotional_parent(node).decompose()
 
 
+def _structural_abstract_nodes(container: Tag) -> list[Tag]:
+    abstract_roots: list[Tag] = []
+    if normalize_text(((getattr(container, "attrs", None) or {}).get("id") or "")).lower() == "abstracts":
+        abstract_roots.append(container)
+    try:
+        abstract_roots.extend([node for node in container.select("#abstracts") if isinstance(node, Tag)])
+    except Exception:
+        pass
+
+    sections: list[Tag] = []
+    seen: set[int] = set()
+    for root in abstract_roots:
+        search_parents = [child for child in _direct_child_tags(root) if "core-container" in _class_tokens(child)] or [root]
+        for parent in search_parents:
+            for child in _direct_child_tags(parent):
+                if normalize_text(child.name or "").lower() != "section":
+                    continue
+                if normalize_text(child.get("role") or "").lower() != "doc-abstract":
+                    continue
+                if id(child) in seen:
+                    continue
+                seen.add(id(child))
+                sections.append(child)
+    return sections
+
+
 def _abstract_nodes(container: Tag) -> list[Tag]:
+    structural_nodes = _structural_abstract_nodes(container)
+    if structural_nodes:
+        return structural_nodes
     nodes: list[Tag] = []
     for selector in CONTENT_ABSTRACT_SELECTORS:
         try:
@@ -1003,6 +1003,49 @@ def _abstract_nodes(container: Tag) -> list[Tag]:
             if isinstance(match, Tag):
                 nodes.append(match)
     return _dedupe_top_level_nodes(nodes)
+
+
+def _node_language_hint(node: Tag) -> str | None:
+    return _shared_html_node_language_hint(node, allow_soft_hints=True)
+
+
+def _abstract_section_payloads(container: Tag) -> list[dict[str, Any]]:
+    structural_nodes = _structural_abstract_nodes(container)
+    if structural_nodes:
+        payloads: list[dict[str, Any]] = []
+        seen: set[tuple[str, str]] = set()
+        for order, node in enumerate(structural_nodes):
+            heading = _short_text(node.find(re.compile(r"^h[1-6]$"))) or "Abstract"
+            text = normalize_text("\n\n".join(_abstract_block_texts(node)))
+            if not text:
+                continue
+            key = (_normalize_heading(heading), normalize_text(text))
+            if key in seen:
+                continue
+            seen.add(key)
+            payloads.append(
+                {
+                    "heading": normalize_text(heading) or "Abstract",
+                    "text": text,
+                    "language": _node_language_hint(node),
+                    "kind": "abstract",
+                    "order": order,
+                    "source_selector": _shared_node_source_selector(node) or None,
+                }
+            )
+        return payloads
+    return [
+        payload
+        for payload in _shared_collect_html_abstract_blocks(container)
+        if normalize_text(payload.get("text"))
+    ]
+
+
+def _drop_abstract_sections_from_body_container(container: Tag, publisher: str) -> None:
+    if publisher != "wiley":
+        return
+    for node in _abstract_nodes(container):
+        node.decompose()
 
 
 def _normalize_abstract_blocks(container: Tag) -> None:
@@ -1034,6 +1077,29 @@ def _markdown_has_abstract_heading(markdown_text: str) -> bool:
     return False
 
 
+def _ensure_body_markdown_heading(markdown_text: str, *, title: str | None = None) -> str:
+    blocks = [normalize_markdown_text(block) for block in re.split(r"\n\s*\n", markdown_text) if normalize_text(block)]
+    if not blocks:
+        return normalize_markdown_text(markdown_text)
+
+    normalized_title = _normalize_heading(title or "")
+    first_heading = _markdown_heading_info(blocks[0])
+    if first_heading is None:
+        return clean_markdown(f"## Main Text\n\n{markdown_text}", noise_profile=None)
+
+    _, heading_text = first_heading
+    if normalized_title and _normalize_heading(heading_text) == normalized_title:
+        if len(blocks) < 2:
+            return normalize_markdown_text(markdown_text)
+        second_heading = _markdown_heading_info(blocks[1])
+        if second_heading is None:
+            return clean_markdown(
+                "\n\n".join([blocks[0], "## Main Text", *blocks[1:]]),
+                noise_profile=None,
+            )
+    return normalize_markdown_text(markdown_text)
+
+
 def _abstract_block_texts(node: Tag) -> list[str]:
     heading = node.find(re.compile(r"^h[1-6]$"))
     texts: list[str] = []
@@ -1060,20 +1126,21 @@ def _abstract_block_texts(node: Tag) -> list[str]:
 
 
 def _missing_abstract_markdown(container: Tag, markdown_text: str, *, publisher: str) -> str:
-    if _markdown_has_abstract_heading(markdown_text):
-        return ""
-
     existing_normalized = normalize_text(markdown_text)
+    leading_semantic_text = _leading_semantic_markdown_text(markdown_text)
+    if publisher == "pnas" and _markdown_has_heading(markdown_text, "significance") and _markdown_has_heading(
+        markdown_text,
+        "abstract",
+    ):
+        return ""
     abstract_blocks: list[str] = []
-    for node in _abstract_nodes(container):
-        heading = node.find(re.compile(r"^h[1-6]$"))
-        heading_text = normalize_text(_short_text(heading) or "Abstract") or "Abstract"
-        body_parts = _abstract_block_texts(node)
-        if not body_parts:
-            continue
-        body_text = "\n\n".join(part for part in body_parts if part)
+    for payload in _abstract_section_payloads(container):
+        heading_text = normalize_text(payload.get("heading")) or "Abstract"
+        body_text = normalize_text(payload.get("text"))
         normalized_body_text = normalize_text(body_text)
         if normalized_body_text and normalized_body_text in existing_normalized:
+            continue
+        if _semantic_text_matches(body_text, leading_semantic_text):
             continue
         abstract_blocks.append(f"## {heading_text}\n\n{body_text}")
 
@@ -1600,75 +1667,6 @@ def _normalize_figure_blocks(container: Tag) -> None:
         node.replace_with(block)
 
 
-def _move_wiley_abbreviations_to_end(container: Tag) -> None:
-    soup = _soup_root(container)
-    if soup is None:
-        return
-    headings = [
-        node
-        for node in container.find_all(re.compile(r"^h[1-6]$"))
-        if _normalize_heading(_short_text(node)) == "abbreviations"
-    ]
-    if not headings:
-        return
-
-    heading = headings[0]
-    parent = heading.parent if isinstance(heading.parent, Tag) else None
-    if parent is None:
-        return
-    glossary = heading.find_next_sibling()
-    if not isinstance(glossary, Tag) or "list-paired" not in node_identity_text(glossary):
-        return
-
-    appendix = soup.new_tag("section")
-    appendix["class"] = ["article-section__content", "article-section__appendix"]
-    appendix_heading = soup.new_tag("h2")
-    appendix_heading.string = "Abbreviations"
-    appendix.append(appendix_heading)
-    glossary_pairs: list[tuple[str, str]] = []
-    for row in glossary.select("tr"):
-        if not isinstance(row, Tag):
-            continue
-        cells = [cell for cell in row.find_all(["th", "td"], recursive=False) if isinstance(cell, Tag)]
-        if len(cells) < 2:
-            cells = [cell for cell in row.find_all(["th", "td"]) if isinstance(cell, Tag)]
-        if len(cells) < 2:
-            continue
-        term = _short_text(cells[0])
-        expansion = _short_text(cells[1])
-        if term and expansion:
-            glossary_pairs.append((term, expansion))
-    if glossary_pairs:
-        for term, expansion in glossary_pairs:
-            _append_text_block(appendix, f"{term}: {expansion}", soup=soup)
-        glossary.decompose()
-    else:
-        appendix.append(glossary.extract())
-
-    target_parent = parent if parent.parent is not None else container
-    heading.extract()
-    if not _short_text(parent):
-        parent.decompose()
-
-    insert_before: Tag | None = None
-    for child in target_parent.find_all(recursive=False):
-        if child is appendix or not isinstance(child, Tag):
-            continue
-        child_heading = child.find(re.compile(r"^h[1-6]$"))
-        child_heading_text = _short_text(child_heading) if isinstance(child_heading, Tag) else ""
-        if (
-            any(token in node_identity_text(child) for token in BACK_MATTER_TOKENS)
-            or _heading_category("h2", child_heading_text) == "references_or_back_matter"
-        ):
-            insert_before = child
-            break
-
-    if insert_before is not None:
-        insert_before.insert_before(appendix)
-    else:
-        target_parent.append(appendix)
-
-
 def _normalize_special_blocks(container: Tag, publisher: str) -> list[dict[str, str]]:
     _drop_promotional_blocks(container, publisher)
     _normalize_abstract_blocks(container)
@@ -1701,17 +1699,7 @@ def extract_page_title(soup: BeautifulSoup) -> str | None:
 
 
 def _ancestor_identity_text(node: Tag | None) -> str:
-    if node is None:
-        return ""
-    values: list[str] = []
-    current = node
-    depth = 0
-    while current is not None and depth < 6:
-        values.append(node_identity_text(current))
-        parent = current.parent
-        current = parent if isinstance(parent, Tag) else None
-        depth += 1
-    return " ".join(value for value in values if value).lower()
+    return _shared_ancestor_identity_text(node)
 
 
 def _looks_like_front_matter_paragraph(text: str, *, title: str | None = None) -> bool:
@@ -1840,6 +1828,8 @@ def _prefer_complete_ancestor(node: Tag) -> Tag:
     current = node.parent if isinstance(node.parent, Tag) else None
     depth = 0
     while isinstance(current, Tag) and depth < 8:
+        if normalize_text(current.name or "").lower() == "html":
+            break
         current_key = (_container_completeness_score(current), score_container(current))
         if current_key > best_key:
             best = current
@@ -1898,12 +1888,23 @@ def _select_data_availability_nodes(container: Tag, body_nodes: list[Tag]) -> li
     )
 
 
-def _select_content_nodes(container: Tag) -> list[Tag]:
-    selected: list[Tag] = []
-    title_node = container.find("h1")
-    if isinstance(title_node, Tag):
-        selected.append(title_node)
+def _select_content_nodes(container: Tag, *, publisher: str | None = None) -> list[Tag]:
+    profile = _publisher_profile(publisher)
+    if profile.select_content_nodes is not None:
+        provider_nodes = profile.select_content_nodes(
+            container,
+            structural_abstract_nodes=_structural_abstract_nodes,
+            nodes_from_selectors=_nodes_from_selectors,
+            content_abstract_selectors=CONTENT_ABSTRACT_SELECTORS,
+            content_body_selectors=CONTENT_BODY_SELECTORS,
+            select_data_availability_nodes=_select_data_availability_nodes,
+            dedupe_top_level_nodes=_dedupe_top_level_nodes,
+            is_tag=lambda node: isinstance(node, Tag),
+        )
+        if provider_nodes:
+            return provider_nodes
 
+    selected: list[Tag] = []
     abstract_nodes = _nodes_from_selectors(container, CONTENT_ABSTRACT_SELECTORS)
     body_nodes = _nodes_from_selectors(container, CONTENT_BODY_SELECTORS)
     data_availability_nodes = _select_data_availability_nodes(container, body_nodes)
@@ -1914,8 +1915,8 @@ def _select_content_nodes(container: Tag) -> list[Tag]:
     return _dedupe_top_level_nodes(selected)
 
 
-def _content_fragment_html(container: Tag) -> str:
-    content_nodes = _select_content_nodes(container)
+def _content_fragment_html(container: Tag, *, publisher: str | None = None) -> str:
+    content_nodes = _select_content_nodes(container, publisher=publisher)
     if not content_nodes:
         return str(container)
     return "<div>" + "".join(str(node) for node in content_nodes) + "</div>"
@@ -1947,8 +1948,8 @@ def _inline_figure_markdown_entries(
         if not url:
             continue
         aliases: list[str] = []
-        for field in ("full_size_url", "url", "preview_url", "source_url", "original_url", "path"):
-            candidate = normalize_text(str(asset.get(field) or ""))
+        for asset_field in ("full_size_url", "url", "preview_url", "source_url", "original_url", "path"):
+            candidate = normalize_text(str(asset.get(asset_field) or ""))
             if candidate and candidate not in aliases:
                 aliases.append(candidate)
         entries.append(
@@ -2103,15 +2104,82 @@ def _inject_inline_table_blocks(
 
 
 def _known_abstract_block_texts(container: Tag) -> list[str]:
+    return _abstract_block_texts_from_payloads(_abstract_section_payloads(container))
+
+
+def _abstract_block_texts_from_payloads(payloads: list[Mapping[str, Any]] | None) -> list[str]:
     texts: list[str] = []
     seen: set[str] = set()
-    for node in _abstract_nodes(container):
-        for block in _abstract_block_texts(node):
-            normalized = normalize_text(normalize_markdown_text(block))
-            if normalized and normalized not in seen:
-                texts.append(normalized)
-                seen.add(normalized)
+    for payload in payloads or []:
+        normalized = normalize_text(normalize_markdown_text(str(payload.get("text") or "")))
+        if normalized and normalized not in seen:
+            texts.append(normalized)
+            seen.add(normalized)
     return texts
+
+
+def _semantic_match_text(value: str) -> str:
+    normalized = normalize_text(normalize_markdown_text(str(value or ""))).lower()
+    if not normalized:
+        return ""
+    return " ".join(re.findall(r"\w+", normalized, flags=re.UNICODE))
+
+
+def _shared_prefix_word_count(left_words: list[str], right_words: list[str]) -> int:
+    count = 0
+    for left_word, right_word in zip(left_words, right_words):
+        if left_word != right_word:
+            break
+        count += 1
+    return count
+
+
+def _semantic_text_matches(left: str, right: str) -> bool:
+    left_text = _semantic_match_text(left)
+    right_text = _semantic_match_text(right)
+    if not left_text or not right_text:
+        return False
+    if left_text == right_text or left_text in right_text or right_text in left_text:
+        return True
+
+    left_words = left_text.split()
+    right_words = right_text.split()
+    shared_prefix_words = _shared_prefix_word_count(left_words, right_words)
+    required_prefix_words = min(24, max(12, min(len(left_words), len(right_words)) // 3))
+    return shared_prefix_words >= required_prefix_words
+
+
+def _leading_semantic_markdown_text(markdown_text: str, *, limit: int = 6) -> str:
+    leading_blocks: list[str] = []
+    for block in re.split(r"\n\s*\n", markdown_text):
+        normalized_block = normalize_text(block)
+        if not normalized_block:
+            continue
+        heading_info = _markdown_heading_info(block)
+        if heading_info is not None:
+            continue
+        if _looks_like_markdown_auxiliary_block(normalized_block):
+            continue
+        if not _is_substantial_prose(normalized_block):
+            continue
+        leading_blocks.append(block)
+        if len(leading_blocks) >= limit:
+            break
+    return "\n\n".join(leading_blocks)
+
+
+def _markdown_has_heading(markdown_text: str, heading_text: str) -> bool:
+    normalized_target = _normalize_heading(heading_text)
+    if not normalized_target:
+        return False
+    for block in re.split(r"\n\s*\n", markdown_text):
+        heading_info = _markdown_heading_info(block)
+        if heading_info is None:
+            continue
+        _, current_heading = heading_info
+        if _normalize_heading(current_heading) == normalized_target:
+            return True
+    return False
 
 
 def _block_matches_known_abstract_text(block: str, abstract_block_texts: list[str]) -> bool:
@@ -2123,47 +2191,9 @@ def _block_matches_known_abstract_text(block: str, abstract_block_texts: list[st
             continue
         if normalized_block == known or normalized_block in known or known in normalized_block:
             return True
+        if _semantic_text_matches(block, known):
+            return True
     return False
-
-
-def _normalize_equation_markdown_blocks(markdown_text: str) -> str:
-    text = re.sub(r"(\S)(\*\*Equation\s+\d+[A-Za-z]?\.\*\*)", r"\1\n\n\2", markdown_text)
-    text = re.sub(r"(?<=\S)(\$\$)", r"\n\n\1", text)
-
-    def normalize_display_math(match: re.Match[str]) -> str:
-        body = match.group(1).strip()
-        return f"$$\n{body}\n$$"
-
-    text = re.sub(r"\$\$\s*(.+?)\s*\$\$", normalize_display_math, text, flags=re.DOTALL)
-    return re.sub(r"(?<=\$\$)(?=[^\s\n])", "\n\n", text)
-
-
-def _merge_science_citation_italics(markdown_text: str) -> str:
-    token_pattern = r"(?:\d+[A-Za-z]*|[A-Za-z]+\d+[A-Za-z0-9]*)"
-    patterns = (
-        re.compile(rf"\*(?P<left>{token_pattern})\*\*(?P<sep>[–,;])\*\s*\*(?P<right>{token_pattern})\*"),
-        re.compile(rf"\*(?P<left>{token_pattern})\*(?P<sep>\s*[–,;]\s*)\*(?P<right>{token_pattern})\*"),
-    )
-
-    def render_separator(separator_text: str) -> str:
-        separator = normalize_text(separator_text)
-        if separator in {",", ";"}:
-            return f"{separator} "
-        return separator
-
-    merged = markdown_text
-    changed = True
-    while changed:
-        changed = False
-        for pattern in patterns:
-            merged, replacements = pattern.subn(
-                lambda match: (
-                    f"*{match.group('left')}{render_separator(match.group('sep'))}{match.group('right')}*"
-                ),
-                merged,
-            )
-            changed = changed or replacements > 0
-    return merged
 
 
 def _normalize_browser_workflow_markdown(markdown_text: str, *, publisher: str) -> str:
@@ -2194,6 +2224,7 @@ def _postprocess_browser_workflow_markdown(
     in_abstract = False
     in_back_matter = False
     in_data_availability = False
+    abstract_prose_blocks_seen = 0
 
     for block in blocks:
         heading_info = _markdown_heading_info(block)
@@ -2208,6 +2239,7 @@ def _postprocess_browser_workflow_markdown(
                 in_abstract = False
                 in_back_matter = False
                 in_data_availability = False
+                abstract_prose_blocks_seen = 0
                 continue
 
             category = _heading_category(f"h{min(level, 6)}", heading_text, title=normalized_title or None)
@@ -2216,6 +2248,7 @@ def _postprocess_browser_workflow_markdown(
                 in_abstract = False
                 in_back_matter = False
                 in_data_availability = False
+                abstract_prose_blocks_seen = 0
                 continue
             if category in {"references_or_back_matter", "ancillary"}:
                 if category == "ancillary" and started_content:
@@ -2224,6 +2257,7 @@ def _postprocess_browser_workflow_markdown(
                 in_abstract = False
                 in_back_matter = category == "references_or_back_matter"
                 in_data_availability = False
+                abstract_prose_blocks_seen = 0
                 continue
             if category == "abstract":
                 if not title_kept and normalized_title:
@@ -2235,6 +2269,7 @@ def _postprocess_browser_workflow_markdown(
                 in_abstract = True
                 in_back_matter = False
                 in_data_availability = False
+                abstract_prose_blocks_seen = 0
                 continue
             if category == "data_availability":
                 if not title_kept and normalized_title:
@@ -2247,6 +2282,7 @@ def _postprocess_browser_workflow_markdown(
                 in_abstract = False
                 in_back_matter = False
                 in_data_availability = True
+                abstract_prose_blocks_seen = 0
                 continue
             if category == "body_heading":
                 if not title_kept and normalized_title:
@@ -2259,6 +2295,7 @@ def _postprocess_browser_workflow_markdown(
                 in_abstract = False
                 in_back_matter = False
                 in_data_availability = False
+                abstract_prose_blocks_seen = 0
                 continue
 
         normalized_block = normalize_text(block)
@@ -2278,14 +2315,25 @@ def _postprocess_browser_workflow_markdown(
                 and not is_auxiliary_block
                 and not _block_matches_known_abstract_text(block, known_abstract_blocks)
             ):
+                if publisher == "science" and abstract_prose_blocks_seen == 0:
+                    if not title_kept and normalized_title:
+                        kept.insert(0, f"# {normalized_title}")
+                        title_kept = True
+                    kept.append(block)
+                    started_content = True
+                    abstract_prose_blocks_seen += 1
+                    continue
                 kept.append("## Main Text")
                 in_abstract = False
+                abstract_prose_blocks_seen = 0
             else:
                 if not title_kept and normalized_title:
                     kept.insert(0, f"# {normalized_title}")
                     title_kept = True
                 kept.append(block)
                 started_content = True
+                if _is_substantial_prose(normalized_block) and not is_auxiliary_block:
+                    abstract_prose_blocks_seen += 1
                 continue
         if in_back_matter:
             continue
@@ -2333,53 +2381,11 @@ def _postprocess_browser_workflow_markdown(
 
 
 def _container_has_explicit_body_container(container: Tag) -> bool:
-    if _looks_like_explicit_body_container(container):
-        return True
-    return any(_looks_like_explicit_body_container(node) for node in container.find_all(True))
+    return _shared_container_has_explicit_body_container(container)
 
 
 def _iter_html_blocks(container: Tag) -> list[dict[str, Any]]:
-    blocks: list[dict[str, Any]] = []
-    seen_markers: set[int] = set()
-    if _looks_like_explicit_body_container(container):
-        blocks.append({"kind": "marker", "node": container, "text": ""})
-        seen_markers.add(id(container))
-
-    for node in container.find_all(True):
-        if id(node) in seen_markers:
-            continue
-        if _looks_like_explicit_body_container(node):
-            blocks.append({"kind": "marker", "node": node, "text": ""})
-            seen_markers.add(id(node))
-            continue
-
-        name = normalize_text(node.name or "").lower()
-        if not name:
-            continue
-        if name in {"h1", "h2", "h3", "h4", "h5", "h6"}:
-            text = normalize_text(node.get_text(" ", strip=True))
-            if text:
-                blocks.append({"kind": "heading", "node": node, "text": text})
-            continue
-        if name in {"figure", "table", "figcaption"}:
-            text = normalize_text(node.get_text(" ", strip=True))
-            blocks.append({"kind": "figure_or_table", "node": node, "text": text})
-            continue
-        if name == "p":
-            text = normalize_text(node.get_text(" ", strip=True))
-            if text:
-                blocks.append({"kind": "paragraph", "node": node, "text": text})
-            continue
-        if name == "div" and normalize_text(str((getattr(node, "attrs", None) or {}).get("role") or "")).lower() == "paragraph":
-            text = normalize_text(node.get_text(" ", strip=True))
-            if text:
-                blocks.append({"kind": "paragraph", "node": node, "text": text})
-            continue
-        if name == "li":
-            text = normalize_text(node.get_text(" ", strip=True))
-            if text:
-                blocks.append({"kind": "paragraph", "node": node, "text": text})
-    return blocks
+    return _shared_iter_html_blocks(container)
 
 
 def _classify_html_paragraph(
@@ -2391,30 +2397,17 @@ def _classify_html_paragraph(
     in_abstract: bool = False,
     in_data_availability: bool = False,
 ) -> str:
-    if in_back_matter:
-        return "references_or_back_matter"
-    if in_abstract:
-        return "abstract"
-    if in_data_availability:
-        return "data_availability"
-
-    identity = _ancestor_identity_text(node)
-    lowered = normalize_text(text).lower()
-    if any(token in identity for token in BACK_MATTER_TOKENS):
-        return "references_or_back_matter"
-    if any(token in identity for token in DATA_AVAILABILITY_TOKENS):
-        return "data_availability"
-    if any(token in identity for token in ABSTRACT_TOKENS):
-        return "abstract"
-    if any(token in identity for token in ANCILLARY_TOKENS):
-        return "ancillary"
-    if _looks_like_access_gate_text(lowered):
-        return "ancillary"
-    if _looks_like_front_matter_paragraph(text, title=title):
-        return "front_matter"
-    if _is_substantial_prose(text):
-        return "body_paragraph"
-    return "ancillary"
+    return _shared_classify_html_paragraph(
+        node,
+        text,
+        title=title,
+        in_back_matter=in_back_matter,
+        in_abstract=in_abstract,
+        in_data_availability=in_data_availability,
+        looks_like_front_matter_paragraph=lambda value: _looks_like_front_matter_paragraph(value, title=title),
+        is_substantial_prose=_is_substantial_prose,
+        looks_like_access_gate_text=_looks_like_access_gate_text,
+    )
 
 
 def _run_candidate_barrier(kind: str) -> bool:
@@ -2436,11 +2429,11 @@ def _analyze_html_structure(
         return analysis, None, None
 
     soup = BeautifulSoup(html_text, choose_parser())
-    container = select_best_container(soup, provider or "html_generic")
+    container = select_best_container(soup, provider or "shared")
     if container is None:
         return analysis, None, None
 
-    clean_container(container, provider or "html_generic")
+    clean_container(container, provider or "shared")
     analysis.explicit_body_container = _container_has_explicit_body_container(container)
     container_text = normalize_text(container.get_text(" ", strip=True))
     page_text = _normalized_page_text(html_text)
@@ -2777,6 +2770,7 @@ def assess_html_fulltext_availability(
     final_url: str | None = None,
     container_tag: str | None = None,
     container_text_length: int | None = None,
+    section_hints: Any = None,
 ) -> FulltextAvailabilityDiagnostics:
     return _shared_assess_html_fulltext_availability(
         markdown_text,
@@ -2789,6 +2783,7 @@ def assess_html_fulltext_availability(
         final_url=final_url,
         container_tag=container_tag,
         container_text_length=container_text_length,
+        section_hints=section_hints,
     )
 
 
@@ -2797,11 +2792,13 @@ def assess_plain_text_fulltext_availability(
     metadata: Mapping[str, Any] | None,
     *,
     title: str | None = None,
+    section_hints: Any = None,
 ) -> FulltextAvailabilityDiagnostics:
     return _shared_assess_plain_text_fulltext_availability(
         markdown_text,
         metadata,
         title=title,
+        section_hints=section_hints,
     )
 
 
@@ -2839,11 +2836,19 @@ def extract_browser_workflow_markdown(
     _normalize_abstract_blocks(asset_container)
     _drop_front_matter_teaser_figures(asset_container, publisher)
     _drop_table_blocks(asset_container)
-    figure_assets = extract_figure_assets(_content_fragment_html(asset_container), source_url)
+    figure_assets = extract_figure_assets(_content_fragment_html(asset_container, publisher=publisher), source_url)
 
-    abstract_block_texts = _known_abstract_block_texts(container)
     table_entries = _normalize_special_blocks(container, publisher)
-    container_html = _content_fragment_html(container)
+    abstract_sections = _abstract_section_payloads(container)
+    abstract_block_texts = _abstract_block_texts_from_payloads(abstract_sections)
+    body_container = copy.deepcopy(container)
+    _drop_abstract_sections_from_body_container(body_container, publisher)
+    section_hints = collect_html_section_hints(
+        body_container,
+        title=title,
+        language_hint_resolver=_node_language_hint,
+    )
+    container_html = _content_fragment_html(body_container, publisher=publisher)
     noise_profile = _noise_profile_for_publisher(publisher)
     markdown = clean_markdown(
         extract_article_markdown(
@@ -2854,6 +2859,8 @@ def extract_browser_workflow_markdown(
         ),
         noise_profile=noise_profile,
     )
+    if abstract_sections:
+        markdown = _ensure_body_markdown_heading(markdown, title=title)
     abstract_markdown = _missing_abstract_markdown(container, markdown, publisher=publisher)
     if abstract_markdown:
         markdown = clean_markdown(f"{abstract_markdown}\n\n{markdown}", noise_profile=noise_profile)
@@ -2881,17 +2888,30 @@ def extract_browser_workflow_markdown(
         final_url=source_url,
         container_tag=container.name,
         container_text_length=len(" ".join(container.stripped_strings)),
+        section_hints=section_hints,
     )
     if not diagnostics.accepted:
         raise SciencePnasHtmlFailure(diagnostics.reason, availability_failure_message(diagnostics))
 
-    return markdown, {
+    extraction_payload = {
         "title": title,
-        "abstract_text": "\n\n".join(abstract_block_texts) if abstract_block_texts else None,
+        "abstract_text": normalize_text(abstract_sections[0]["text"]) if abstract_sections else ("\n\n".join(abstract_block_texts) if abstract_block_texts else None),
+        "abstract_sections": abstract_sections,
+        "section_hints": section_hints,
         "container_tag": container.name,
         "container_text_length": len(" ".join(container.stripped_strings)),
         "availability_diagnostics": diagnostics.to_dict(),
     }
+    profile = _publisher_profile(publisher)
+    if profile.finalize_extraction is not None:
+        markdown, extraction_payload = profile.finalize_extraction(
+            html_text,
+            source_url,
+            markdown,
+            extraction_payload,
+            metadata=metadata,
+        )
+    return markdown, extraction_payload
 
 
 def extract_science_pnas_markdown(
