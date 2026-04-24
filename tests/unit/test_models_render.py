@@ -98,6 +98,19 @@ class ModelsRenderTests(unittest.TestCase):
         self.assertNotIn("Figure A1", markdown)
         self.assertNotIn("## Supplementary Materials", markdown)
 
+    def test_to_ai_markdown_skips_inline_assets_and_labels_additional_tables(self) -> None:
+        article = sample_article()
+        article.assets = [
+            Asset(kind="table", heading="Table 1", caption="Inline table.", path="downloads/table-1.png", section="body", render_state="inline"),
+            Asset(kind="table", heading="Table 2", caption="Floating table.", path="downloads/table-2.png", section="body", render_state="appendix"),
+        ]
+
+        markdown = article.to_ai_markdown(asset_profile="body")
+
+        self.assertNotIn("Table 1", markdown)
+        self.assertIn("## Additional Tables", markdown)
+        self.assertIn("![Table 2](downloads/table-2.png)", markdown)
+
     def test_to_ai_markdown_full_text_defaults_to_all_references(self) -> None:
         article = sample_article()
         article.references = [
@@ -214,6 +227,41 @@ class ModelsRenderTests(unittest.TestCase):
         self.assertNotIn("## Figures", markdown)
         self.assertNotIn("- Figure 1: Inline caption text.", markdown)
         self.assertNotIn("Figure A1", markdown)
+
+    def test_to_ai_markdown_suppresses_trailing_figures_for_inline_relative_asset_suffix(self) -> None:
+        article = sample_article()
+        article.sections = [
+            Section(
+                heading="Results",
+                level=2,
+                kind="body",
+                text="\n".join(
+                    [
+                        "Science body text lives here.",
+                        "",
+                        "![Figure 1](body_assets/aax6869-f1.jpeg)",
+                        "",
+                        "**Figure 1.** Inline science caption text.",
+                    ]
+                ),
+            )
+        ]
+        article.assets = [
+            Asset(
+                kind="figure",
+                heading="Figure 1",
+                caption="Inline science caption text.",
+                path="/tmp/paper-fetch/10.1126_sciadv.aax6869/body_assets/aax6869-f1.jpeg",
+                section="body",
+            ),
+        ]
+
+        markdown = article.to_ai_markdown(asset_profile="body", max_tokens="full_text")
+
+        self.assertEqual(markdown.count("![Figure 1]"), 1)
+        self.assertIn("![Figure 1](body_assets/aax6869-f1.jpeg)", markdown)
+        self.assertNotIn("## Figures", markdown)
+        self.assertNotIn("- Figure 1: Inline science caption text.", markdown)
 
     def test_to_ai_markdown_keeps_unmatched_body_figures_in_trailing_fallback_block(self) -> None:
         article = sample_article()

@@ -41,6 +41,32 @@ class FormulaConversionTests(unittest.TestCase):
         self.assertEqual(len(samples), 1)
         self.assertEqual(samples[0].raw_mathml, '<math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi></math>')
 
+    def test_normalize_latex_repairs_identifier_escaped_underscores(self) -> None:
+        normalized = formula_conversion.normalize_latex(
+            r"\text{M\textbackslash\_NDVI}_{i} + \text{M\textbackslash\_VSDI}_{\text{wet},i}"
+        )
+
+        self.assertNotIn(r"textbackslash\_", normalized)
+        self.assertIn(r"\text{M\_NDVI}_{i}", normalized)
+        self.assertIn(r"\text{M\_VSDI}_{\text{wet},i}", normalized)
+
+    def test_normalize_latex_does_not_globally_replace_textbackslash(self) -> None:
+        normalized = formula_conversion.normalize_latex(r"\text{\textbackslash\_NDVI}")
+
+        self.assertEqual(normalized, r"\text{\textbackslash\_NDVI}")
+
+    def test_normalize_latex_rewrites_upgreek_macros(self) -> None:
+        normalized = formula_conversion.normalize_latex(r"\updelta Q + \upDelta P + \updeltaQ")
+
+        self.assertEqual(normalized, r"\delta Q + \Delta P + \updeltaQ")
+
+    def test_normalize_latex_rewrites_mspace_for_katex(self) -> None:
+        normalized = formula_conversion.normalize_latex(
+            r"\mspace{6mu}x + \mspace{ -1.5 mu }y + \mspace{2pt}z"
+        )
+
+        self.assertEqual(normalized, r"\mkern6mu x + \mkern-1.5mu y + \mspace{2pt}z")
+
     def test_default_texmath_falls_back_to_mathml_to_latex(self) -> None:
         raw_mathml = '<math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi></math>'
         original_texmath = formula_conversion.convert_with_texmath

@@ -77,8 +77,9 @@
 ### `preferred_providers`
 
 - `FetchStrategy` 中的 provider allow-list。
-- 限制最终允许使用的五家 provider fulltext 主链或 `crossref` metadata 路径。
-- 不阻止系统内部用 `crossref` 做路由判断。
+- 限制五家 provider fulltext 主链的候选范围。
+- 不阻止系统内部用 `crossref` 做路由判断或 metadata-only fallback。
+- 显式设为 `["crossref"]` 时会跳过 publisher fulltext probe，收敛成 Crossref-only / metadata-only。
 
 ### `source`
 
@@ -100,6 +101,7 @@
 
 - `fetch_paper()` 的抓取策略轴。
 - 负责控制 `allow_metadata_only_fallback`、`preferred_providers`、`asset_profile` 等行为。
+- MCP 的 `strategy.inline_image_budget` 只控制工具响应里附带的 inline `ImageContent` 上限，不参与 provider 抓取决策。
 
 ### `asset_profile`
 
@@ -107,6 +109,25 @@
 - `none`：不下载资产。
 - `body`：正文 figure 和正文表格原图。
 - `all`：当前 provider 可识别的全部相关资产。
+
+### `render_state`
+
+- `article.assets[*]` 上的资产渲染状态。
+- `inline` 表示资产已经在正文中消费，文末不会重复追加。
+- `appendix` 表示未被正文消费，可进入 `Figures` / `Tables` 或 `Additional Figures` / `Additional Tables`。
+- `suppressed` 表示资产被显式抑制，不进入用户可见附录。
+
+### `download_tier`
+
+- `article.assets[*]` 上的资产下载层级诊断。
+- 常见值包括 `full_size`、`preview`、`playwright_canvas_fallback`。
+- `preview` 不是天然错误；当宽高满足阈值且 `source_trail` 有 preview accepted 轨迹时，是可接受降级。
+
+### `semantic_losses`
+
+- `ArticleModel.quality` 下的语义降级计数。
+- `table_layout_degraded_count` 表示 Markdown 版式降级，但单元格语义仍保留。
+- `table_semantic_loss_count` 才表示表格语义内容发生丢失。
 
 ### `max_tokens`
 
@@ -118,6 +139,7 @@
 
 - 抓取时的落盘目录。
 - 可覆盖默认下载目录，也会影响 MCP scoped cache resources。
+- 未显式设置时，CLI / MCP 优先使用用户数据目录下的 `paper-fetch/downloads`；CLI 创建失败才退回 `live-downloads`。
 
 ## 一句话阅读建议
 

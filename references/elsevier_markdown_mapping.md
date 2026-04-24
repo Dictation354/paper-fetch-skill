@@ -1,7 +1,7 @@
 # Elsevier XML to Markdown Mapping
 
 This project renders Elsevier full text from the official Article Retrieval XML.
-The rules are centralized in [`scripts/elsevier_xml_rules.py`](../scripts/elsevier_xml_rules.py).
+Element and asset classification rules live in [`src/paper_fetch/providers/_elsevier_xml_rules.py`](../src/paper_fetch/providers/_elsevier_xml_rules.py), and Markdown rendering lives in [`src/paper_fetch/providers/_article_markdown_elsevier.py`](../src/paper_fetch/providers/_article_markdown_elsevier.py).
 
 ## Basis
 
@@ -19,11 +19,12 @@ The rules are centralized in [`scripts/elsevier_xml_rules.py`](../scripts/elsevi
   2. table
   3. supplementary `e-component`
   4. formula / MathML / `tex-math`
-- `ce:figure`: render linked local image if a body or appendix image asset exists
-- `ce:table`: render Markdown table from `tgroup/thead/tbody`
+- `ce:figure`: render linked local image near the figure anchor or caption when a body or appendix image asset exists
+- `ce:table`: render Markdown table from `tgroup/thead/tbody`; row/column spans are semantically expanded into rectangular cells with a conversion note
 - `ce:e-component`: omit from body Markdown, collect into `## Supplementary Materials`
 - `ce:formula`, `mml:math`, `ce:tex-math`: render as display math
 - `ce:inline-formula`: render inline math
+- `ce:bibliography` / `ce:bib-reference`: build structured numbered references before falling back to metadata references
 
 ## Ignored Sections
 
@@ -44,5 +45,8 @@ These section titles are intentionally omitted from body Markdown:
 
 - Appendix figures stay in appendix context even if the body text mentions `Fig. A1`.
 - `Supplementary data` placeholder displays are not treated as formulas.
-- `Additional Figures` only contains still-unused body figures.
-- Complex Elsevier tables with row/column spans fall back to a short omission notice instead of producing broken Markdown.
+- `Additional Figures` / `Additional Tables` only contain still-unused body assets.
+- Assets already rendered inline are marked as consumed by the article model and must not be appended again at the end.
+- Complex Elsevier tables with row/column spans keep a readable Markdown table plus conversion note. The quality signal is `table_layout_degraded` when layout fidelity is reduced but cell semantics are still present; reserve semantic-loss flags for actual content loss.
+- Formula output goes through shared LaTeX normalization after backend conversion. Publisher-specific `\updelta`-style upright Greek macros become standard KaTeX macros, and `\mspace{Nmu}` becomes `\mkernNmu`.
+- References extracted from XML should keep original order and numbering. Missing DOI/page/year fields are left missing rather than invented.

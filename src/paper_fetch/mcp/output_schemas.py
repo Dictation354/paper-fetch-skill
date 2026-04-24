@@ -73,6 +73,15 @@ class AssetOutput(TypedDict, total=False):
     url: str | None
     path: str | None
     section: str | None
+    render_state: str | None
+    anchor_key: str | None
+    download_tier: str | None
+    download_url: str | None
+    original_url: str | None
+    content_type: str | None
+    downloaded_bytes: int | None
+    width: int | None
+    height: int | None
 
 
 class TokenEstimateBreakdownOutput(TypedDict, total=False):
@@ -95,6 +104,8 @@ class BodyMetricsOutput(TypedDict, total=False):
 class SemanticLossesOutput(TypedDict, total=False):
     table_fallback_count: int
     table_lossy_count: int
+    table_layout_degraded_count: int
+    table_semantic_loss_count: int
     formula_fallback_count: int
     formula_missing_count: int
 

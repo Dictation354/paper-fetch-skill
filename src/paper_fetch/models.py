@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import math
 import re
+import urllib.parse
 from collections.abc import Sequence
 from dataclasses import asdict, dataclass, field
 from difflib import SequenceMatcher
@@ -107,6 +108,8 @@ QUALITY_FLAG_INSUFFICIENT_BODY = "insufficient_body"
 QUALITY_FLAG_WEAK_BODY_STRUCTURE = "weak_body_structure"
 QUALITY_FLAG_TABLE_FALLBACK_PRESENT = "table_fallback_present"
 QUALITY_FLAG_TABLE_LOSSY_PRESENT = "table_lossy_present"
+QUALITY_FLAG_TABLE_LAYOUT_DEGRADED = "table_layout_degraded"
+QUALITY_FLAG_TABLE_SEMANTIC_LOSS = "table_semantic_loss"
 QUALITY_FLAG_FORMULA_FALLBACK_PRESENT = "formula_fallback_present"
 QUALITY_FLAG_FORMULA_MISSING_PRESENT = "formula_missing_present"
 QUALITY_FLAG_CACHED_WITH_CURRENT_REVISION = "cached_with_current_revision"
@@ -283,6 +286,42 @@ def local_asset_link(value: Any) -> str | None:
     return normalized
 
 
+def _optional_int(value: Any) -> int | None:
+    try:
+        integer = int(value)
+    except (TypeError, ValueError):
+        return None
+    return integer if integer >= 0 else None
+
+
+def _asset_from_entry(
+    entry: Mapping[str, Any],
+    *,
+    kind: str,
+    heading_fallback: str,
+    render_state: str | None = None,
+) -> "Asset":
+    link = entry.get("link")
+    url = local_asset_link(link if link is not None else entry.get("url") or entry.get("source_url"))
+    return Asset(
+        kind=kind,
+        heading=safe_text(entry.get("heading") or heading_fallback) or heading_fallback,
+        caption=safe_text(entry.get("caption")) or None,
+        url=url,
+        path=safe_text(entry.get("path")) or None,
+        section=safe_text(entry.get("section")) or None,
+        render_state=safe_text(entry.get("render_state") or render_state) or None,
+        anchor_key=safe_text(entry.get("anchor_key") or entry.get("key")) or None,
+        download_tier=safe_text(entry.get("download_tier")) or None,
+        download_url=safe_text(entry.get("download_url")) or None,
+        original_url=safe_text(entry.get("original_url") or entry.get("preview_url") or entry.get("source_url")) or None,
+        content_type=safe_text(entry.get("content_type")) or None,
+        downloaded_bytes=_optional_int(entry.get("downloaded_bytes")),
+        width=_optional_int(entry.get("width")),
+        height=_optional_int(entry.get("height")),
+    )
+
+
 def truncate_text_to_tokens(text: str, token_budget: int) -> str:
     if token_budget <= 0:
         return ""
@@ -389,6 +428,15 @@ class Asset:
     url: str | None = None
     path: str | None = None
     section: str | None = None
+    render_state: str | None = None
+    anchor_key: str | None = None
+    download_tier: str | None = None
+    download_url: str | None = None
+    original_url: str | None = None
+    content_type: str | None = None
+    downloaded_bytes: int | None = None
+    width: int | None = None
+    height: int | None = None
 
 
 @dataclass
@@ -446,6 +494,8 @@ class BodyQualityMetrics:
 class SemanticLosses:
     table_fallback_count: int = 0
     table_lossy_count: int = 0
+    table_layout_degraded_count: int = 0
+    table_semantic_loss_count: int = 0
     formula_fallback_count: int = 0
     formula_missing_count: int = 0
 
@@ -489,13 +539,18 @@ def coerce_semantic_losses(value: SemanticLosses | Mapping[str, Any] | None) -> 
         return SemanticLosses(
             table_fallback_count=int(value.table_fallback_count or 0),
             table_lossy_count=int(value.table_lossy_count or 0),
+            table_layout_degraded_count=int(value.table_layout_degraded_count or 0),
+            table_semantic_loss_count=int(value.table_semantic_loss_count or 0),
             formula_fallback_count=int(value.formula_fallback_count or 0),
             formula_missing_count=int(value.formula_missing_count or 0),
         )
     if isinstance(value, Mapping):
+        legacy_lossy_count = int(value.get("table_lossy_count") or 0)
         return SemanticLosses(
             table_fallback_count=int(value.get("table_fallback_count") or 0),
-            table_lossy_count=int(value.get("table_lossy_count") or 0),
+            table_lossy_count=legacy_lossy_count,
+            table_layout_degraded_count=int(value.get("table_layout_degraded_count") or 0),
+            table_semantic_loss_count=int(value.get("table_semantic_loss_count") or legacy_lossy_count or 0),
             formula_fallback_count=int(value.get("formula_fallback_count") or 0),
             formula_missing_count=int(value.get("formula_missing_count") or 0),
         )
@@ -814,7 +869,9 @@ def _semantic_loss_warning_messages(losses: SemanticLosses) -> list[str]:
     warnings: list[str] = []
     if losses.table_fallback_count:
         warnings.append("Some tables could only be retained as original-resource fallbacks; structured table data may be incomplete.")
-    if losses.table_lossy_count:
+    if losses.table_semantic_loss_count or losses.table_lossy_count:
+        warnings.append("Some tables lost semantic content during Markdown conversion.")
+    if losses.table_layout_degraded_count:
         warnings.append("Some tables were flattened lossily for Markdown output; merged-cell structure was not preserved exactly.")
     if losses.formula_fallback_count:
         warnings.append("Some formulas required degraded fallback rendering.")
@@ -845,6 +902,7 @@ def _resolve_quality_confidence(
     if (
         QUALITY_FLAG_WEAK_BODY_STRUCTURE in normalized_flags
         or semantic_losses.table_fallback_count > 0
+        or semantic_losses.table_semantic_loss_count > 0
         or semantic_losses.table_lossy_count > 0
         or semantic_losses.formula_fallback_count > 0
         or semantic_losses.formula_missing_count > 0
@@ -876,6 +934,10 @@ def apply_quality_assessment(
         flags.append(QUALITY_FLAG_WEAK_BODY_STRUCTURE)
     if losses.table_fallback_count > 0:
         flags.append(QUALITY_FLAG_TABLE_FALLBACK_PRESENT)
+    if losses.table_layout_degraded_count > 0:
+        flags.append(QUALITY_FLAG_TABLE_LAYOUT_DEGRADED)
+    if losses.table_semantic_loss_count > 0 or losses.table_lossy_count > 0:
+        flags.append(QUALITY_FLAG_TABLE_SEMANTIC_LOSS)
     if losses.table_lossy_count > 0:
         flags.append(QUALITY_FLAG_TABLE_LOSSY_PRESENT)
     if losses.formula_fallback_count > 0:
@@ -1157,13 +1219,13 @@ class ArticleModel:
 
         append_asset_block_with_budget(
             lines,
-            heading="Figures",
+            heading=asset_block_heading("Figures", render_plan.figure_assets),
             item_groups=render_figure_asset_groups(list(render_plan.figure_assets), include_figures=render_plan.include_figures),
             context=context,
         )
         append_asset_block_with_budget(
             lines,
-            heading="Tables",
+            heading=asset_block_heading("Tables", render_plan.table_assets),
             item_groups=render_table_asset_groups(list(render_plan.table_assets)),
             context=context,
         )
@@ -1387,12 +1449,20 @@ def normalize_asset_section(asset: Asset) -> str:
     return normalized or "body"
 
 
+def normalize_asset_render_state(asset: Asset) -> str:
+    return normalize_text(asset.render_state).lower()
+
+
+def asset_is_appendable(asset: Asset) -> bool:
+    return normalize_asset_render_state(asset) not in {"inline", "suppressed"}
+
+
 def asset_in_body(asset: Asset) -> bool:
     return normalize_asset_section(asset) not in {"appendix", "supplementary"}
 
 
 def selected_figure_assets(assets: list[Asset], *, asset_profile: AssetProfile) -> list[Asset]:
-    figure_assets = [asset for asset in assets if asset.kind == "figure"]
+    figure_assets = [asset for asset in assets if asset.kind == "figure" and asset_is_appendable(asset)]
     if asset_profile == "body":
         return [asset for asset in figure_assets if asset_in_body(asset)]
     return figure_assets
@@ -1408,6 +1478,41 @@ def _inline_markdown_image_urls(sections: Sequence["Section"]) -> set[str]:
     return urls
 
 
+def _image_reference_candidates(value: str | None) -> set[str]:
+    normalized = normalize_text(value).strip("<>")
+    if not normalized:
+        return set()
+
+    parsed = urllib.parse.urlsplit(normalized)
+    path = parsed.path or normalized
+    candidates = {normalized, path, urllib.parse.unquote(normalized), urllib.parse.unquote(path)}
+    cleaned: set[str] = set()
+    for candidate in candidates:
+        text = normalize_text(candidate).replace("\\", "/")
+        text = re.sub(r"/+", "/", text).strip()
+        text = text.removeprefix("./")
+        if text:
+            cleaned.add(text)
+            cleaned.add(text.lstrip("/"))
+    return cleaned
+
+
+def _image_reference_basename(value: str) -> str:
+    return value.rstrip("/").rsplit("/", 1)[-1]
+
+
+def _image_references_match(left: set[str], right: set[str]) -> bool:
+    if left & right:
+        return True
+    for left_item in left:
+        for right_item in right:
+            if left_item.endswith(f"/{right_item}") or right_item.endswith(f"/{left_item}"):
+                return True
+    left_basenames = {_image_reference_basename(item) for item in left if _image_reference_basename(item)}
+    right_basenames = {_image_reference_basename(item) for item in right if _image_reference_basename(item)}
+    return bool(left_basenames & right_basenames)
+
+
 def filter_inline_body_figure_assets(
     assets: Sequence[Asset],
     *,
@@ -1416,24 +1521,26 @@ def filter_inline_body_figure_assets(
     inline_urls = _inline_markdown_image_urls(sections)
     if not inline_urls:
         return list(assets)
+    inline_candidates = [_image_reference_candidates(url) for url in inline_urls]
 
     remaining: list[Asset] = []
     for asset in assets:
         if not asset_in_body(asset):
             remaining.append(asset)
             continue
-        asset_urls = {
-            normalize_text(asset.path).strip("<>"),
-            normalize_text(asset.url).strip("<>"),
-        }
-        if any(candidate and candidate in inline_urls for candidate in asset_urls):
+        asset_candidates = _image_reference_candidates(asset.path) | _image_reference_candidates(asset.url)
+        if asset_candidates and any(
+            _image_references_match(asset_candidates, inline_candidate)
+            for inline_candidate in inline_candidates
+            if inline_candidate
+        ):
             continue
         remaining.append(asset)
     return remaining
 
 
 def selected_table_assets(assets: list[Asset], *, asset_profile: AssetProfile) -> list[Asset]:
-    table_assets = [asset for asset in assets if asset.kind == "table"]
+    table_assets = [asset for asset in assets if asset.kind == "table" and asset_is_appendable(asset)]
     if asset_profile == "none":
         return []
     if asset_profile == "body":
@@ -1512,6 +1619,12 @@ def append_asset_block_with_budget(
         lines.extend(group.lines)
     lines.append("")
     context.remaining_budget = remaining_after_header
+
+
+def asset_block_heading(default_heading: str, assets: Sequence[Asset]) -> str:
+    if assets and all(normalize_asset_render_state(asset) == "appendix" for asset in assets):
+        return f"Additional {default_heading}"
+    return default_heading
 
 
 def _render_reference_line(reference_raw: str) -> str:
@@ -2212,6 +2325,17 @@ def build_references(raw_references: Any) -> list[Reference]:
 def _normalized_reference_raw(item: Mapping[str, Any]) -> str:
     raw = safe_text(item.get("raw") or item.get("unstructured") or item.get("title"))
     label = safe_text(item.get("label") or item.get("index") or item.get("number"))
+    title = safe_text(item.get("title") or item.get("article-title"))
+    author_values = item.get("authors") or item.get("author") or item.get("creators")
+    if isinstance(author_values, str):
+        authors = [safe_text(author_values)]
+    elif isinstance(author_values, Sequence) and not isinstance(author_values, (bytes, bytearray)):
+        authors = [safe_text(value) for value in author_values if safe_text(value)]
+    else:
+        authors = []
+    author_text = ", ".join(authors[:6])
+    if title and author_text and (not raw or raw == title):
+        raw = f"{author_text}. {title}"
     if not raw:
         return ""
     if not label or NUMBERED_REFERENCE_PATTERN.match(raw):
@@ -2242,6 +2366,8 @@ def article_from_structure(
     availability_diagnostics: Mapping[str, Any] | None = None,
     semantic_losses: SemanticLosses | Mapping[str, Any] | None = None,
     quality_flags: Sequence[str] | None = None,
+    inline_figure_keys: Sequence[str] | None = None,
+    inline_table_keys: Sequence[str] | None = None,
     allow_downgrade_from_diagnostics: bool = False,
 ) -> ArticleModel:
     article_metadata = build_metadata(metadata)
@@ -2253,7 +2379,7 @@ def article_from_structure(
     elif abstract_text:
         article_metadata.abstract = abstract_text
 
-    sections = [*explicit_abstract_sections, *lines_to_sections(body_lines, fallback_heading="")]
+    sections = [*explicit_abstract_sections, *lines_to_sections(body_lines, fallback_heading="", preserve_images=True)]
     if conversion_notes:
         sections.append(
             Section(
@@ -2265,39 +2391,16 @@ def article_from_structure(
         )
 
     assets: list[Asset] = []
+    consumed_figure_keys = {normalize_text(key) for key in inline_figure_keys or [] if normalize_text(key)}
+    consumed_table_keys = {normalize_text(key) for key in inline_table_keys or [] if normalize_text(key)}
     for entry in figure_entries:
-        assets.append(
-            Asset(
-                kind="figure",
-                heading=safe_text(entry.get("heading") or "Figure") or "Figure",
-                caption=safe_text(entry.get("caption")) or None,
-                url=local_asset_link(entry.get("link")),
-                path=safe_text(entry.get("path")) or None,
-                section=safe_text(entry.get("section")) or None,
-            )
-        )
+        key = normalize_text(entry.get("key"))
+        assets.append(_asset_from_entry(entry, kind="figure", heading_fallback="Figure", render_state="inline" if key in consumed_figure_keys else "appendix"))
     for entry in table_entries:
-        assets.append(
-            Asset(
-                kind="table",
-                heading=safe_text(entry.get("heading") or "Table") or "Table",
-                caption=safe_text(entry.get("caption")) or None,
-                url=local_asset_link(entry.get("link")),
-                path=safe_text(entry.get("path")) or None,
-                section=safe_text(entry.get("section")) or None,
-            )
-        )
+        key = normalize_text(entry.get("key"))
+        assets.append(_asset_from_entry(entry, kind="table", heading_fallback="Table", render_state="inline" if key in consumed_table_keys else "appendix"))
     for entry in supplement_entries:
-        assets.append(
-            Asset(
-                kind="supplementary",
-                heading=safe_text(entry.get("heading") or "Supplementary Material") or "Supplementary Material",
-                caption=safe_text(entry.get("caption")) or None,
-                url=local_asset_link(entry.get("link")),
-                path=safe_text(entry.get("path")) or None,
-                section=safe_text(entry.get("section")) or None,
-            )
-        )
+        assets.append(_asset_from_entry(entry, kind="supplementary", heading_fallback="Supplementary Material"))
 
     normalized_references = list(references or build_references(metadata.get("references")))
     token_estimate_breakdown = build_token_estimate_breakdown(
@@ -2395,13 +2498,10 @@ def article_from_markdown(
         extracted_abstract = normalize_inline_citation_markdown(inline_abstract)
     article_metadata.abstract = normalize_inline_citation_markdown(extracted_abstract or article_metadata.abstract) or None
     normalized_assets = [
-        Asset(
+        _asset_from_entry(
+            item,
             kind=safe_text(item.get("kind") or item.get("asset_type") or "asset") or "asset",
-            heading=safe_text(item.get("heading") or "Asset") or "Asset",
-            caption=safe_text(item.get("caption")) or None,
-            url=local_asset_link(item.get("url") or item.get("source_url")),
-            path=safe_text(item.get("path")) or None,
-            section=safe_text(item.get("section")) or None,
+            heading_fallback="Asset",
         )
         for item in (assets or [])
     ]

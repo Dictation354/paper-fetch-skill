@@ -21,8 +21,8 @@
 1. resolve 查询
 2. 获取 metadata
 3. 尝试官方 provider 全文路径
-4. 必要时走 HTML fallback 或 provider 内部 fallback
-5. 必要时降级为 metadata-only
+4. 必要时走 provider 自管 HTML/PDF fallback
+5. 必要时降级为 provider `abstract_only` 或 metadata-only
 
 这很适合作为最终答案，但它不便宜。
 
@@ -141,7 +141,7 @@ has_fulltext(query)
    - 有 license、link 或 `citation_pdf_url`，不代表正文此刻一定可访问。
 2. Elsevier 探针和真实全文路径未必完全同构
    - metadata probe 成功，不等于 fulltext endpoint 一定成功。
-3. HTML 与 PDF fallback 可能在 probe 阶段根本没被执行
+3. provider 自管 HTML/PDF fallback 可能在 probe 阶段根本没被执行
    - 最终抓取能成功，probe 仍可能只给 `unknown`。
 4. 强行追求完全一致会让 probe 退化成完整抓取
    - 那就失去了 probe 的意义。

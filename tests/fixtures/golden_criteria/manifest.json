@@ -32,7 +32,10 @@
       "assets": {
         "bilingual.xml": "tests/fixtures/golden_criteria/10.1016_S1575-1813(18)30261-4/bilingual.xml"
       },
-      "fixture_family": "golden"
+      "fixture_family": "golden",
+      "expected_live_status": "metadata_only",
+      "expected_review_status": "skipped",
+      "out_of_scope_reason": "Intentional invalid DOI used to verify blocked/metadata-only handling."
     },
     "10.1016_j.agrformet.2024.109975": {
       "doi": "10.1016/j.agrformet.2024.109975",
@@ -216,7 +219,10 @@
       "assets": {
         "bilingual.html": "tests/fixtures/golden_criteria/10.1080_19455224.2025.2547671/bilingual.html"
       },
-      "fixture_family": "golden"
+      "fixture_family": "golden",
+      "expected_live_status": "skipped_unsupported_provider",
+      "expected_review_status": "skipped",
+      "out_of_scope_reason": "Provider support for TandF is intentionally out of scope for this live review run."
     },
     "10.1111_cas.16395": {
       "doi": "10.1111/cas.16395",
@@ -427,7 +433,10 @@
       "assets": {
         "bilingual.html": "tests/fixtures/golden_criteria/10.1345_aph.1M379/bilingual.html"
       },
-      "fixture_family": "golden"
+      "fixture_family": "golden",
+      "expected_live_status": "skipped_unsupported_provider",
+      "expected_review_status": "skipped",
+      "out_of_scope_reason": "Provider support for Sage is intentionally out of scope for this live review run."
     },
     "scenario_elsevier_author_groups_minimal": {
       "doi": "scenario:elsevier_author_groups_minimal",

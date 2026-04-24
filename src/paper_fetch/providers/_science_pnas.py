@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
+import base64
 import logging
 from dataclasses import dataclass, field, replace
 from typing import Any, Callable, Mapping
 
 from ..config import build_user_agent
-from ..extraction.html import decode_html, download_figure_assets, extract_html_assets
+from ..extraction.html import decode_html
 from ..http import RequestFailure
 from ..metadata_types import ProviderMetadata
 from ..models import AssetProfile, article_from_markdown, metadata_only_article
@@ -31,6 +32,7 @@ from ._science_pnas_profiles import (
     preferred_html_candidate_from_landing_page,
 )
 from .base import ProviderArtifacts, ProviderClient, ProviderContent, ProviderFailure, ProviderFetchResult, RawFulltextPayload
+from .html_assets import download_figure_assets, extract_html_assets
 
 logger = logging.getLogger("paper_fetch.providers.browser_workflow")
 
@@ -85,6 +87,163 @@ def _choose_playwright_seed_url(*candidates: str | None) -> str | None:
         if not _looks_like_pdf_navigation_url(candidate):
             return candidate
     return normalized_candidates[0] if normalized_candidates else None
+
+
+def _image_magic_type(body: bytes | bytearray | None) -> str:
+    payload = bytes(body or b"")
+    if payload.startswith(b"\xff\xd8\xff"):
+        return "image/jpeg"
+    if payload.startswith(b"\x89PNG\r\n\x1a\n"):
+        return "image/png"
+    if payload.startswith((b"GIF87a", b"GIF89a")):
+        return "image/gif"
+    if len(payload) >= 12 and payload[:4] == b"RIFF" and payload[8:12] == b"WEBP":
+        return "image/webp"
+    return ""
+
+
+def _decode_canvas_data_url(data_url: str) -> tuple[str, bytes] | None:
+    prefix, separator, payload = normalize_text(data_url).partition(",")
+    if not separator or not prefix.lower().startswith("data:image/") or ";base64" not in prefix.lower():
+        return None
+    try:
+        body = base64.b64decode(payload, validate=True)
+    except Exception:
+        return None
+    content_type = prefix[5:].split(";", 1)[0].lower()
+    magic_type = _image_magic_type(body)
+    if not magic_type:
+        return None
+    if content_type not in {"image/jpeg", "image/png", "image/gif", "image/webp"}:
+        content_type = magic_type
+    return content_type, body
+
+
+def fetch_image_document_with_playwright(
+    image_url: str,
+    *,
+    browser_cookies: list[dict[str, Any]] | None = None,
+    browser_user_agent: str | None = None,
+    headless: bool = True,
+    seed_urls: list[str] | None = None,
+    min_width: int = 80,
+    min_height: int = 80,
+) -> dict[str, Any] | None:
+    normalized_url = normalize_text(image_url)
+    if not normalized_url:
+        return None
+    try:
+        from playwright.sync_api import sync_playwright
+    except Exception:
+        return None
+
+    active_user_agent = browser_user_agent or build_user_agent({})
+    try:
+        with sync_playwright() as playwright:
+            browser = playwright.chromium.launch(headless=headless)
+            context = browser.new_context(
+                user_agent=active_user_agent,
+                locale="en-US",
+                viewport={"width": 1440, "height": 1600},
+            )
+            try:
+                if browser_cookies:
+                    try:
+                        context.add_cookies(browser_cookies)
+                    except Exception:
+                        pass
+                page = context.new_page()
+                for seed_url in [normalize_text(url) for url in seed_urls or [] if normalize_text(url)]:
+                    try:
+                        page.goto(seed_url, wait_until="domcontentloaded", timeout=30000)
+                    except Exception:
+                        continue
+
+                for _attempt in range(2):
+                    try:
+                        page.goto(normalized_url, wait_until="domcontentloaded", timeout=60000)
+                        page.wait_for_function(
+                            """
+                            ([minWidth, minHeight]) => {
+                              const images = Array.from(document.images || []);
+                              return images.some((image) =>
+                                image.complete
+                                && image.naturalWidth >= minWidth
+                                && image.naturalHeight >= minHeight
+                              );
+                            }
+                            """,
+                            [min_width, min_height],
+                            timeout=45000,
+                        )
+                        break
+                    except Exception:
+                        try:
+                            page.wait_for_timeout(1500)
+                        except Exception:
+                            pass
+                else:
+                    return None
+
+                dimensions = page.evaluate(
+                    """
+                    ([minWidth, minHeight]) => {
+                      const images = Array.from(document.images || [])
+                        .filter((image) => image.complete && image.naturalWidth >= minWidth && image.naturalHeight >= minHeight)
+                        .sort((left, right) => (right.naturalWidth * right.naturalHeight) - (left.naturalWidth * left.naturalHeight));
+                      const image = images[0];
+                      if (!image) {
+                        return null;
+                      }
+                      return {width: image.naturalWidth, height: image.naturalHeight, src: image.currentSrc || image.src || ''};
+                    }
+                    """,
+                    [min_width, min_height],
+                )
+                if not isinstance(dimensions, Mapping):
+                    return None
+                width = int(dimensions.get("width") or 0)
+                height = int(dimensions.get("height") or 0)
+                if width < min_width or height < min_height:
+                    return None
+                document_content_type = normalize_text(str(page.evaluate("() => document.contentType") or "")).lower()
+                preferred_type = "image/png" if "png" in document_content_type else "image/jpeg"
+                data_url = page.evaluate(
+                    """
+                    ([preferredType, minWidth, minHeight]) => {
+                      const images = Array.from(document.images || [])
+                        .filter((image) => image.complete && image.naturalWidth >= minWidth && image.naturalHeight >= minHeight)
+                        .sort((left, right) => (right.naturalWidth * right.naturalHeight) - (left.naturalWidth * left.naturalHeight));
+                      const image = images[0];
+                      if (!image) {
+                        return '';
+                      }
+                      const canvas = document.createElement('canvas');
+                      canvas.width = image.naturalWidth;
+                      canvas.height = image.naturalHeight;
+                      const ctx = canvas.getContext('2d');
+                      ctx.drawImage(image, 0, 0);
+                      return canvas.toDataURL(preferredType, 0.95);
+                    }
+                    """,
+                    [preferred_type, min_width, min_height],
+                )
+                decoded = _decode_canvas_data_url(str(data_url or ""))
+                if decoded is None:
+                    return None
+                content_type, body = decoded
+                return {
+                    "status_code": 200,
+                    "headers": {"content-type": content_type},
+                    "body": body,
+                    "url": normalize_text(str(dimensions.get("src") or "")) or normalize_text(page.url) or normalized_url,
+                    "dimensions": {"width": width, "height": height},
+                }
+            finally:
+                context.close()
+                browser.close()
+    except Exception:
+        return None
 
 
 def _leading_body_after_abstract(
@@ -707,6 +866,26 @@ class BrowserWorkflowClient(ProviderClient):
             )
             return html_result.html, html_result.final_url
 
+        active_seed_urls = [
+            normalized
+            for normalized in [
+                raw_payload.source_url,
+                normalize_text(str(browser_context_seed.get("browser_final_url") or "")),
+            ]
+            if normalized
+        ]
+
+        def image_document_fetcher(image_url: str, _asset: Mapping[str, Any]) -> dict[str, Any] | None:
+            if self.name not in {"science", "pnas"}:
+                return None
+            return fetch_image_document_with_playwright(
+                image_url,
+                browser_cookies=list(browser_context_seed.get("browser_cookies") or []),
+                browser_user_agent=browser_context_seed.get("browser_user_agent") or self.user_agent,
+                headless=runtime.headless,
+                seed_urls=active_seed_urls,
+            )
+
         article_id = (
             normalized_doi
             or normalize_text(str(metadata.get("title") or ""))
@@ -722,6 +901,7 @@ class BrowserWorkflowClient(ProviderClient):
             figure_page_fetcher=figure_page_fetcher,
             browser_context_seed=browser_context_seed,
             seed_urls=[raw_payload.source_url],
+            image_document_fetcher=image_document_fetcher if self.name in {"science", "pnas"} else None,
         )
 
     def to_article_model(

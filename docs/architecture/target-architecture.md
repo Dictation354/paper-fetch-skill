@@ -74,6 +74,11 @@ Date: 2026-04-16
 - 把 service 结果序列化成 JSON-safe payload
 - 管理 cache resources、progress、structured log、cancellation
 
+实现边界：
+
+- stdio transport 由 MCP 层包装成后台 stdin reader + async stream pump，避免同步 stdin 阻塞事件循环。
+- `fetch_paper` 和批量工具会把阻塞抓取工作放到 worker thread，并在 MCP 事件循环里继续处理 progress、structured log 和 cancellation。
+
 不负责：
 
 - provider 路由决策
@@ -124,7 +129,7 @@ Date: 2026-04-16
 - `routing`
   - 负责 provider 候选、probe、fallback eligibility
 - `fulltext`
-  - 负责 provider 主链与 metadata-only fallback
+  - 负责 provider 主链与 abstract-only / metadata-only fallback
 - `rendering`
   - 负责 `FetchEnvelope`、`source_trail` 派生、最终结果组装
 
@@ -180,8 +185,7 @@ Date: 2026-04-16
 ```text
 service facade
 -> workflow.resolution
--> workflow.routing
--> workflow.metadata
+-> workflow.metadata (uses workflow.routing for route signals and probes)
 -> workflow.fulltext
 -> workflow.rendering
 -> CLI / MCP / cache
@@ -256,19 +260,22 @@ workflow 会尽可能拿到两类元数据：
 - `springer`
   - 走 provider 自管 `direct HTML -> direct HTTP PDF`
 - `wiley`
-  - 走 provider 自管浏览器工作流 `FlareSolverr HTML -> Wiley TDM API PDF -> seeded-browser publisher PDF/ePDF`
+  - 走 provider 自管混合工作流 `FlareSolverr HTML -> Wiley TDM API PDF -> seeded-browser publisher PDF/ePDF`
+  - HTML 与 seeded-browser PDF/ePDF 共用浏览器工作流基座；`WILEY_TDM_CLIENT_TOKEN` 可让官方 TDM API PDF lane 在 browser runtime 不可用时单独尝试
 - `science` / `pnas`
-  - 与 `wiley` 共用浏览器工作流基座
+  - 走 provider 自管浏览器工作流 `FlareSolverr HTML -> seeded-browser publisher PDF/ePDF`
+  - 与 `wiley` 的 HTML / browser PDF/ePDF 路径共用浏览器工作流基座
   - 当前只剩 provider-owned 单栈；不再保留额外的 Science-only live harness 或第二套 browser-PDF 实现
 
 如果正文足够可用，流程在这里结束。
 
-### 5. metadata-only fallback
+### 5. abstract-only / metadata-only fallback
 
 如果命中了 `elsevier`、`springer`、`wiley`、`science`、`pnas` 五家 provider 之一：
 
 - workflow.fulltext 只执行该 provider 自己管理的 HTML/PDF waterfall
 - provider 返回 `None` 后直接进入 metadata-only fallback
+- `springer` / `wiley` / `science` / `pnas` 如果只能确认摘要级内容，会直接返回 provider `abstract_only` 结果
 
 如果没有命中这五家 provider：
 
@@ -277,16 +284,17 @@ workflow 会尽可能拿到两类元数据：
 - `strategy.allow_metadata_only_fallback=true` 时返回 metadata-only 结果
 - 否则抛 `PaperFetchFailure`
 
-如果正文仍不可得，并且 `strategy.allow_metadata_only_fallback=true`：
+如果没有可返回的 provider `fulltext` / `abstract_only` 结果，并且 `strategy.allow_metadata_only_fallback=true`：
 
-- service 返回 metadata-only 文章
+- service 返回 metadata fallback 文章
 - `has_fulltext=false`
 - `warnings` 中明确提示已降级
 - `source_trail` 中带 `fallback:metadata_only`
+- public `source` 通常表现为 `metadata_only`；如果 metadata 中有摘要，质量层 `content_kind` 可能是 `abstract_only`
 
 如果关闭这个开关，则抛 `PaperFetchFailure`。
 
-### 7. render / envelope / cache / MCP 暴露
+### 6. render / envelope / cache / MCP 暴露
 
 拿到最终 `ArticleModel` 后，workflow.rendering 会构造 `FetchEnvelope`。
 
@@ -294,9 +302,9 @@ workflow 会尽可能拿到两类元数据：
 
 - `trace: list[TraceEvent]`
 - `source_trail`
-  - 作为兼容字段保留，但由 `trace` 统一派生
+  - 作为兼容字段保留，并与 `trace` 保持同步；旧路径仍可能先写 marker 再转换成 trace
 - `warnings`
-  - 只在最终结果层聚合，不再由 service/provider/CLI 多层共享可变列表
+  - provider、workflow、CLI / MCP 可能在各自阶段追加，最终聚合到 `ArticleModel.quality` 与 `FetchEnvelope`
 
 随后：
 
@@ -353,6 +361,20 @@ workflow 会尽可能拿到两类元数据：
 - `markdown`
 - `metadata`
 
+### `ArticleModel`
+
+作用：
+
+- 表达 provider 已经转换好的文章正文、资产、references 和质量诊断。
+- 统一负责最终 Markdown 渲染中的 token budget、资产附录、references 输出和质量 warnings。
+
+当前重要边界：
+
+- `assets[*].render_state` 决定资产是否可追加到尾部附录；`inline` / `suppressed` 不追加，`appendix` 可追加。
+- 正文已内联图片会按 URL、相对路径、后缀和 basename 与资产做等价比较，避免重复渲染。
+- `assets[*].download_tier`、`download_url`、`content_type`、`downloaded_bytes`、`width`、`height` 是下载诊断，不应被下游丢弃。
+- `quality.semantic_losses.table_layout_degraded_count` 表示版式降级，`table_semantic_loss_count` 才表示语义内容丢失。
+
 ### `provider_status`
 
 作用：
@@ -382,7 +404,7 @@ workflow 会尽可能拿到两类元数据：
 
 这些 provider 的 HTML 逻辑由 provider 内部管理，因此：
 
-- 通用 HTML fallback 开关不会关闭它们自己的主路径
+- 不存在 public HTML fallback 开关；是否尝试这些主路径由 provider 路由和 `preferred_providers` 控制
 - `elsevier` 成功时公开为 `elsevier_xml` 或 `elsevier_pdf`
 - `springer` 成功时公开为 `springer_html`
 - `wiley` 成功时公开为 `wiley_browser`
@@ -392,7 +414,8 @@ workflow 会尽可能拿到两类元数据：
 ### `crossref` 既可能是 source，也可能只是 signal
 
 - 作为 signal 时，用来路由，不代表最终结果来自 Crossref
-- 作为 source 时，才会对外表现成 `crossref_meta` 或 metadata-only 路径
+- 作为底层文章来源时，`ArticleModel.source` 可表现成 `crossref_meta`
+- 如果 fulltext 失败后走 metadata fallback，`FetchEnvelope.source` 会映射为 `metadata_only`
 
 ### `warnings` 与 `source_trail` 都是契约的一部分
 
@@ -407,9 +430,12 @@ workflow 会尽可能拿到两类元数据：
 
 常见内容包括：
 
-- metadata-only 降级
+- abstract-only / metadata-only 降级
 - HTML / provider fallback 提示
 - 资产部分下载失败
+- preview 资产可接受降级或不可接受 fallback
+- 表格版式降级 / 语义丢失
+- 公式 fallback / missing
 - token 截断
 
 ### `source_trail`

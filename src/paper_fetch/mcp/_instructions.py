@@ -21,11 +21,11 @@ SKILL_ENVIRONMENT_VARIABLES: tuple[tuple[str, str], ...] = (
     ("ELSEVIER_INSTTOKEN", "Optional institution token for Elsevier entitlement."),
     ("WILEY_TDM_CLIENT_TOKEN", "Optional Wiley Text and Data Mining client token for the official Wiley PDF lane; browser PDF/ePDF fallback can still run without it when the local runtime is ready."),
     ("FLARESOLVERR_URL", "Optional override for the local Wiley/Science/PNAS FlareSolverr endpoint; defaults to http://127.0.0.1:8191/v1."),
-    ("FLARESOLVERR_ENV_FILE", "Required for Wiley/Science/PNAS; points at a repo-local vendor/flaresolverr preset file."),
+    ("FLARESOLVERR_ENV_FILE", "Required for Science/PNAS and for Wiley HTML/browser PDF routes; points at a repo-local vendor/flaresolverr preset file."),
     ("FLARESOLVERR_SOURCE_DIR", "Optional override for the repo-local vendor/flaresolverr directory."),
-    ("FLARESOLVERR_MIN_INTERVAL_SECONDS", "Required local minimum spacing between Wiley/Science/PNAS requests."),
-    ("FLARESOLVERR_MAX_REQUESTS_PER_HOUR", "Required local hourly cap for Wiley/Science/PNAS requests."),
-    ("FLARESOLVERR_MAX_REQUESTS_PER_DAY", "Required local daily cap for Wiley/Science/PNAS requests."),
+    ("FLARESOLVERR_MIN_INTERVAL_SECONDS", "Required local minimum spacing for Wiley/Science/PNAS browser requests."),
+    ("FLARESOLVERR_MAX_REQUESTS_PER_HOUR", "Required local hourly cap for Wiley/Science/PNAS browser requests."),
+    ("FLARESOLVERR_MAX_REQUESTS_PER_DAY", "Required local daily cap for Wiley/Science/PNAS browser requests."),
     ("PAPER_FETCH_DOWNLOAD_DIR", "Overrides the default CLI/MCP download directory."),
     ("PAPER_FETCH_RUN_LIVE", "Test-only flag for live publisher integration checks."),
 )
@@ -56,9 +56,9 @@ def format_error_contract_markdown() -> str:
     lines = []
     for status, description in ERROR_CONTRACT:
         lines.append(f"- `{status}`: {description}")
-    lines.append("- These fields appear in both MCP `structuredContent` and CLI stderr JSON.")
+    lines.append("- These fields appear in MCP `structuredContent` and in CLI stderr JSON for runtime fetch failures.")
     lines.append("- MCP error payloads may also include `missing_env=[...]` when credentials or required env vars are known.")
-    lines.append("- CLI exit codes remain `ambiguous=2`, `no_access=3`, `rate_limited=4`.")
+    lines.append("- CLI runtime fetch exit codes remain `ambiguous=2`, `no_access=3`, `rate_limited=4`; argparse validation errors also exit `2` but are not ambiguity results.")
     return "\n".join(lines)
 
 
@@ -110,8 +110,9 @@ def fetch_tool_description() -> str:
         "Defaults: modes=['article','markdown'], strategy.asset_profile omitted (provider default), "
         "strategy.allow_metadata_only_fallback=true, "
         "include_refs=null, max_tokens='full_text', prefer_cache=false. Set "
-        "prefer_cache=true to try a local cached FetchEnvelope sidecar before hitting the "
-        "network. Use strategy.asset_profile='body' or 'all' to include local assets. "
+        "prefer_cache=true to resolve the query to a DOI, then try a matching local cached "
+        "FetchEnvelope sidecar before running the full fetch waterfall. Use "
+        "strategy.asset_profile='body' or 'all' to include local assets. "
         "With body/all profiles, key local figures may be returned as ImageContent "
         "alongside the JSON result; strategy.inline_image_budget can override the default "
         "caps of 3 figures, 2 MiB each, and 8 MiB total, and any resulting zero disables "

@@ -39,6 +39,19 @@ SPRINGER_NATURE_ROOT_SELECTORS = (
     "div.c-article-body",
 )
 SPRINGER_NATURE_SECTION_CONTENT_SELECTORS = ("div.c-article-section__content",)
+SPRINGER_NATURE_CHROME_TEXTS = {
+    "aims and scope",
+    "save article",
+    "submit manuscript",
+    "view saved research",
+}
+SPRINGER_NATURE_CHROME_ATTR_TOKENS = (
+    "article-actions",
+    "article-metrics",
+    "saved-research",
+    "save-article",
+    "submit-manuscript",
+)
 
 
 def is_springer_nature_url(url: str) -> bool:
@@ -98,6 +111,29 @@ def select_springer_nature_article_root(root: Any):
     return best_candidate
 
 
+def _prune_springer_nature_chrome(root: Any) -> None:
+    if BeautifulSoup is None or not isinstance(root, Tag):
+        return
+    for node in list(root.find_all(True)):
+        if not isinstance(node, Tag):
+            continue
+        text = normalize_text(node.get_text(" ", strip=True))
+        lowered = text.lower()
+        if lowered in SPRINGER_NATURE_CHROME_TEXTS:
+            node.decompose()
+            continue
+        attrs = getattr(node, "attrs", None) or {}
+        attr_parts: list[str] = []
+        for value in attrs.values():
+            if isinstance(value, (list, tuple, set)):
+                attr_parts.extend(normalize_text(str(item)).lower() for item in value)
+            else:
+                attr_parts.append(normalize_text(str(value)).lower())
+        attr_blob = " ".join(part for part in attr_parts if part)
+        if any(token in attr_blob for token in SPRINGER_NATURE_CHROME_ATTR_TOKENS) and count_words(text) <= 80:
+            node.decompose()
+
+
 def select_nature_abstract_section(body: Any):
     if BeautifulSoup is None or body is None:
         return None
@@ -133,6 +169,20 @@ def _normalized_nature_section_heading(section: Any) -> str:
     return title
 
 
+def _remove_duplicate_title_headings(markdown_text: str, title_text: str) -> str:
+    title = normalize_text(title_text)
+    if not markdown_text or not title:
+        return markdown_text
+    lines: list[str] = []
+    title_key = normalize_section_title(title)
+    for line in markdown_text.splitlines():
+        match = re.match(r"^(#{2,6})\s+(.+?)\s*$", line)
+        if match and normalize_section_title(match.group(2)) == title_key:
+            continue
+        lines.append(line)
+    return "\n".join(lines)
+
+
 def extract_springer_nature_markdown(html_text: str, source_url: str) -> str:
     if BeautifulSoup is None or not is_springer_nature_url(source_url):
         return ""
@@ -141,6 +191,7 @@ def extract_springer_nature_markdown(html_text: str, source_url: str) -> str:
     article = select_springer_nature_article_root(soup) or soup.select_one("article") or soup.select_one("main")
     if article is None:
         return ""
+    _prune_springer_nature_chrome(article)
 
     lines: list[str] = []
     title_node = article.select_one("h1")
@@ -200,7 +251,7 @@ def extract_springer_nature_markdown(html_text: str, source_url: str) -> str:
             section_content_selectors=SPRINGER_NATURE_SECTION_CONTENT_SELECTORS,
         )
 
-    rendered = clean_markdown("\n".join(lines), noise_profile="springer_nature")
+    rendered = clean_markdown(_remove_duplicate_title_headings("\n".join(lines), title_text), noise_profile="springer_nature")
     return postprocess_springer_nature_markdown(rendered)
 
 

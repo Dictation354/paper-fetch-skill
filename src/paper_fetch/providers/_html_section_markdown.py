@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
+from ..formula.convert import normalize_latex_macros
 from ..models import normalize_text
 from ._html_citations import is_citation_link, make_numeric_citation_sentinel, numeric_citation_payload
 from .html_noise import HTML_BLOCK_TAGS, HTML_DROP_TAGS, should_drop_html_element
@@ -81,6 +82,43 @@ def _render_heading_inline_fragment(node: Any, *, text_style: str | None = None)
     return _render_heading_inline_node(node, text_style=text_style)
 
 
+def _visible_inline_edge(text: str, *, last: bool) -> str:
+    normalized = re.sub(r"</?(?:sub|sup)>", "", text)
+    normalized = re.sub(r"[*_`]+", "", normalized).strip()
+    if not normalized:
+        return ""
+    return normalized[-1] if last else normalized[0]
+
+
+def _needs_inline_fragment_space(left: str, right: str) -> bool:
+    if not left or not right:
+        return False
+    if left[-1:].isspace() or right[:1].isspace():
+        return False
+    if right.startswith(("<sub>", "<sup>", "</sub>", "</sup>")):
+        return False
+    if left.endswith(("<br>", "<sub>", "<sup>")):
+        return False
+    left_edge = _visible_inline_edge(left, last=True)
+    right_edge = _visible_inline_edge(right, last=False)
+    if not left_edge or not right_edge:
+        return False
+    if left_edge in HTML_NO_SPACE_AFTER_CHARS or right_edge in HTML_NO_SPACE_BEFORE_CHARS:
+        return False
+    return right_edge.isalnum() or right_edge in {"*", "_", "<"}
+
+
+def _join_inline_fragments(parts: list[str]) -> str:
+    if not parts:
+        return ""
+    joined = parts[0]
+    for part in parts[1:]:
+        if _needs_inline_fragment_space(joined, part):
+            joined += " "
+        joined += part
+    return joined
+
+
 def _render_heading_inline_node(node: Any, *, text_style: str | None = None) -> str:
     if node is None:
         return ""
@@ -94,7 +132,7 @@ def _render_heading_inline_node(node: Any, *, text_style: str | None = None) -> 
         rendered = _render_heading_inline_fragment(child, text_style=text_style)
         if rendered:
             parts.append(rendered)
-    return _normalize_inline_text("".join(parts))
+    return _normalize_inline_text(_join_inline_fragments(parts))
 
 
 def render_heading_text_from_html(node: Any) -> str:
@@ -214,7 +252,6 @@ def render_container_markdown(
             heading_text = render_heading_text_from_html(child)
             if (
                 skip_first_heading
-                and not skipped_heading
                 and normalize_section_title(heading_text) == normalize_section_title(skip_first_heading)
             ):
                 skipped_heading = True
@@ -247,12 +284,11 @@ def render_container_markdown(
                 lines.extend([text, ""])
             continue
         if child.name in {"div", "article", "main"}:
-            next_skip = skip_first_heading if not skipped_heading else None
             render_container_markdown(
                 child,
                 lines,
                 level=level,
-                skip_first_heading=next_skip,
+                skip_first_heading=skip_first_heading,
                 section_content_selectors=section_content_selectors,
             )
             continue
@@ -426,6 +462,8 @@ def render_clean_html_node(node: Any) -> str:
         return ""
     if node.name in HTML_DROP_TAGS:
         return ""
+    if _is_mathjax_tex_node(node):
+        return normalize_latex_macros(node.get_text("", strip=False).strip())
     if node.name == "br":
         return "\n"
     if node.name == "a":
@@ -469,6 +507,17 @@ def render_clean_children(node: Any) -> str:
         text += rendered
         previous_child = child
     return text
+
+
+def _is_mathjax_tex_node(node: Any) -> bool:
+    if not isinstance(node, Tag):
+        return False
+    classes = getattr(node, "attrs", {}).get("class") or []
+    if isinstance(classes, str):
+        class_values = classes.split()
+    else:
+        class_values = [str(value) for value in classes]
+    return "mathjax-tex" in class_values
 
 
 def needs_space_between(left: str, right: str, previous_child: Any, child: Any) -> bool:

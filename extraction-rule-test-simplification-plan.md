@@ -1,4 +1,6 @@
-# Extraction Rule Test Simplification Plan
+# Extraction Rule Test Simplification Plan（历史归档）
+
+> 归档说明：本文档保留测试简化计划和当时的统计数据，不再作为当前测试数量、文件布局或验收结果的事实来源。当前提取规则以 [`docs/extraction-rules.md`](docs/extraction-rules.md)、`tests/unit/`、`tests/integration/` 和代码为准。
 
 ## Summary
 

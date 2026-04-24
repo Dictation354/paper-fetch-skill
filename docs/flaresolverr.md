@@ -21,17 +21,19 @@
 
 - 它们是公开 provider 名字，可能出现在 `provider_hint`、`preferred_providers` 中
 - metadata 仍由 `crossref` 提供
-- `wiley` 的正文链路是 provider 自管的 `FlareSolverr HTML -> Wiley TDM API PDF -> seeded-browser publisher PDF/ePDF -> metadata-only`
-- `science` / `pnas` 的正文链路仍是 provider 自管的 `FlareSolverr HTML -> seeded-browser publisher PDF/ePDF -> metadata-only`
-- `wiley` / `science` / `pnas` 共用同一套 provider-owned 浏览器 bootstrap 与 browser-PDF executor，不再保留单独的 Science path harness
+- `wiley` 的正文链路是 provider 自管的 `FlareSolverr HTML -> Wiley TDM API PDF -> seeded-browser publisher PDF/ePDF -> abstract-only / metadata-only`
+- `science` / `pnas` 的正文链路仍是 provider 自管的 `FlareSolverr HTML -> seeded-browser publisher PDF/ePDF -> abstract-only / metadata-only`
+- `wiley` 的 `WILEY_TDM_CLIENT_TOKEN` 只启用官方 TDM API PDF lane；这条 lane 可以在本地 browser runtime 不可用时单独尝试，但不会下载 HTML 资产
+- `wiley` 的 HTML / browser PDF/ePDF 路径与 `science` / `pnas` 共用同一套 provider-owned 浏览器 bootstrap 与 browser-PDF executor，不再保留单独的 Science path harness
 - `source` 公开可能是 `wiley_browser`、`science` 或 `pnas`
-- `asset_profile=body|all` 当前都会降级成 text-only
+- `FlareSolverr HTML` 成功路径支持 `asset_profile=body|all` 的正文资产下载；PDF/ePDF fallback 仍是 text-only
+- Science / PNAS CMS 图片会优先尝试 full-size/original，普通 HTTP 被 challenge 或返回非图片时可用 Playwright 顶层 image document + canvas 导出保留可视内容；只有尺寸达标的 preview 才作为可接受降级
 - 这条链路只保证在当前仓库 checkout 中运行
 - 站点 ToS、robots、授权与合规风险由操作者自行承担
 
 ## 必填环境变量
 
-最小必填配置：
+FlareSolverr / seeded-browser 路径的最小必填配置：
 
 ```bash
 export FLARESOLVERR_ENV_FILE="$PWD/vendor/flaresolverr/.env.flaresolverr-source-headless"
@@ -49,8 +51,10 @@ export FLARESOLVERR_SOURCE_DIR="$PWD/vendor/flaresolverr"
 
 说明：
 
-- `FLARESOLVERR_ENV_FILE` 必填，不会自动猜 preset
-- 三条限速变量也必填，未配置时 provider 直接拒绝运行
+- `science` / `pnas` 必须走这组 browser 配置
+- `wiley` 的 HTML 与 seeded-browser PDF/ePDF 路径也必须走这组配置；只配置 `WILEY_TDM_CLIENT_TOKEN` 时只能尝试官方 TDM API PDF lane
+- `FLARESOLVERR_ENV_FILE` 不会自动猜 preset
+- 三条限速变量对 browser 路径必填，未配置时 browser provider 直接拒绝运行
 - 默认限速账本会同时影响 `wiley` / `science` / `pnas`
 
 ## preset 选择
@@ -156,7 +160,9 @@ FLARESOLVERR_ENV_FILE="$PWD/vendor/flaresolverr/.env.flaresolverr-source-headles
 FLARESOLVERR_MIN_INTERVAL_SECONDS=20 \
 FLARESOLVERR_MAX_REQUESTS_PER_HOUR=30 \
 FLARESOLVERR_MAX_REQUESTS_PER_DAY=200 \
-PYTHONPATH=src pytest -n 0 tests/live/test_live_science_pnas.py
+PYTHONPATH=src pytest -n 0 \
+  tests/live/test_live_publishers.py::LivePublisherTests::test_wiley_doi_live_fulltext \
+  tests/live/test_live_science_pnas.py
 ```
 
 ## 常见失败与排障
@@ -182,10 +188,12 @@ PYTHONPATH=src pytest -n 0 tests/live/test_live_science_pnas.py
 - 最终成功与否以结果为准
 - 细节看 `source_trail`
 
-### `asset_profile=body|all` 仍没有图
+### `asset_profile=body|all` 仍没有图或只有 preview
 
-- 这是当前实现约束
-- `wiley` / `science` / `pnas` v1 只承诺正文 Markdown，不承诺资产下载
+- 先看 `source_trail` 和 `warnings`，区分 `download:*_asset_failures`、`download:*_assets_preview_fallback`、`download:*_assets_preview_accepted` 等轨迹
+- `download_tier=preview` 本身只是诊断标签；当 source trail 带 `download:*_assets_preview_accepted` 且资产尺寸达标时，不应直接当作下载失败
+- 如果 direct image URL 返回 `403`、`cf-mitigated: challenge` 或 `text/html`，Science / PNAS 会尝试 Playwright canvas fallback；仍失败时才按资产下载问题处理
+- PDF/ePDF fallback 仍是 text-only；只有 HTML 成功路径承诺尝试正文资产下载
 
 ## 相关文档
 

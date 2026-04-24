@@ -2,47 +2,54 @@
 
 This file is a historical design sketch for routing heuristics. It is not loaded by the runtime, and it is not the source of truth for current provider routing.
 
-Current runtime behavior lives in `src/paper_fetch/publisher_identity.py` plus the resolve/service flow that uses those conservative DOI and publisher-name inferences.
+Current runtime behavior lives in `src/paper_fetch/publisher_identity.py` and `src/paper_fetch/workflow/routing.py`, then flows through `workflow.metadata` and `workflow.fulltext`.
 
-## Goal
+## Current Runtime Shape
 
-Choose the most appropriate metadata lookup provider with this fixed priority:
+Current runtime routing is conservative and signal-based:
 
-1. Supported official publisher API
-2. `Crossref` fallback
+1. URL / landing-page domain signal
+2. Crossref publisher-name signal
+3. DOI-prefix fallback signal
 
-## Supported Official Providers
+Crossref is always allowed to contribute metadata and route signals. It is not a generic full-text downloader.
 
-Current v1 support is limited to:
+## Supported Provider Routes
+
+Current runtime provider routing recognizes:
 
 - `springer`
 - `elsevier`
 - `wiley`
+- `science`
+- `pnas`
 
-If a journal belongs to a publisher with another official API, do not infer support until that provider is explicitly added to both `api_notes.md` and the router logic.
+If a journal belongs to another publisher, do not infer full-text support until that provider is explicitly added to both `api_notes.md` and the router logic.
 
 ## Decision Order
 
-1. Parse `doi`, `journal_title`, and `article_title`.
-2. Normalize `journal_title`.
-3. Optionally match the normalized title against a curated journal list.
-4. If the matched record declares a supported `official_provider`, choose it.
-5. If there is no matched record, try a conservative DOI-prefix inference for supported publishers.
-6. If there is still no supported official route, choose `crossref`.
-7. If the chosen official provider fails because of `no_access`, `no_result`, or `error`, fall back to `crossref`.
+1. Resolve the query to a DOI / title / landing URL candidate.
+2. Fetch Crossref metadata when a DOI is available.
+3. Build official provider candidates in `domain > publisher > DOI fallback` order.
+4. Run the lightweight route probe for candidates.
+   - `elsevier` may perform a metadata probe.
+   - `springer`, `wiley`, `science`, and `pnas` route probes are conservative `unknown` signals.
+5. Select the first positive probe, otherwise the first unknown probe, otherwise the first negative probe.
+6. If no official provider candidate is selected but Crossref metadata exists, use `crossref` as the metadata source.
+7. Full-text retrieval then runs only the selected provider's own waterfall. If it cannot produce usable full text, provider-managed `abstract_only` may be returned when available; otherwise the workflow returns metadata fallback when `allow_metadata_only_fallback=true`. That fallback publishes `FetchEnvelope.source="metadata_only"`; the underlying article source may still be `crossref_meta`, and its quality `content_kind` may be `abstract_only` when an abstract is present.
 
 ## Conflict Policy
 
-Input precedence is fixed:
+Signal precedence is fixed:
 
-1. `doi`
-2. `journal_title`
-3. `article_title`
+1. landing-page / URL domain
+2. publisher name
+3. DOI prefix
 
-When DOI-derived routing conflicts with the journal-list match, keep the DOI route and explain the override in `reason`.
+Earlier signals win. DOI-prefix inference is intentionally a fallback, not an override.
 
 ## Failure Semantics
 
-`fallback_used` is `true` only when the router first chooses an official provider and then degrades to `crossref`.
+Current public traces represent this through `source_trail`, for example `route:signal_*`, `route:provider_selected_*`, `fulltext:*`, and `fallback:metadata_only`.
 
-If the router chooses `crossref` directly because there is no supported official path, `fallback_used` stays `false`.
+If the router chooses `crossref` directly because there is no supported official path, Crossref remains a metadata-only source. If an official provider is selected and later cannot provide full text, the workflow returns provider-managed `abstract_only` when available, otherwise uses metadata fallback rather than trying a separate generic full-text route.

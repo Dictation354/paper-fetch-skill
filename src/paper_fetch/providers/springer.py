@@ -52,7 +52,11 @@ except ImportError:  # pragma: no cover - dependency is declared in pyproject
 
 MAX_SPRINGER_HTML_REDIRECTS = 5
 MARKDOWN_TEXT_KEY = "markdown_text"
-SPRINGER_TABLE_LABEL_PATTERN = re.compile(r"\btable\.?\s*(\d+[A-Za-z]?)\b", flags=re.IGNORECASE)
+SPRINGER_TABLE_LABEL_PATTERN = re.compile(
+    r"\b(?P<prefix>extended\s+data\s+table|table)\.?\s*(?P<number>\d+[A-Za-z]?)\b",
+    flags=re.IGNORECASE,
+)
+SPRINGER_IMAGE_URL_PATTERN = re.compile(r"\.(?:avif|gif|jpe?g|png|tiff?|webp)(?:[?#]|$)", flags=re.IGNORECASE)
 SPRINGER_INLINE_TABLE_SELECTORS = (
     "[data-test='inline-table']",
     ".c-article-table",
@@ -83,6 +87,7 @@ class SpringerHtmlAttempt:
     section_hints: list[dict[str, Any]]
     extracted_authors: list[str]
     extracted_references: list[dict[str, Any]]
+    inline_table_assets: list[dict[str, Any]]
     diagnostics: Any
 
 
@@ -114,6 +119,26 @@ def _merge_springer_assets(
     return merged
 
 
+def _filter_springer_assets_for_profile(
+    assets: list[Mapping[str, Any]] | None,
+    *,
+    asset_profile: AssetProfile,
+) -> list[dict[str, Any]]:
+    if asset_profile == "none":
+        return []
+
+    filtered: list[dict[str, Any]] = []
+    for item in assets or []:
+        asset = dict(item)
+        if asset_profile != "all":
+            kind = normalize_text(str(asset.get("kind") or "")).lower()
+            section = normalize_text(str(asset.get("section") or "")).lower()
+            if kind == "supplementary" or section in {"supplementary", "appendix"}:
+                continue
+        filtered.append(asset)
+    return filtered
+
+
 def _springer_extraction_diagnostics_payload(attempt: SpringerHtmlAttempt) -> dict[str, Any]:
     return {
         "availability_diagnostics": attempt.diagnostics.to_dict(),
@@ -123,6 +148,7 @@ def _springer_extraction_diagnostics_payload(attempt: SpringerHtmlAttempt) -> di
             "section_hints": list(attempt.section_hints),
             "extracted_authors": list(attempt.extracted_authors),
             "references": list(attempt.extracted_references),
+            "inline_table_assets": list(attempt.inline_table_assets),
         },
     }
 
@@ -186,14 +212,17 @@ def _springer_table_label(node: Tag | BeautifulSoup, *, fallback: str = "Table")
             text = _springer_short_text(candidate)
             match = SPRINGER_TABLE_LABEL_PATTERN.search(text)
             if match:
-                return f"Table {match.group(1)}."
+                prefix = "Extended Data Table" if "extended" in match.group("prefix").lower() else "Table"
+                return f"{prefix} {match.group('number')}."
     if isinstance(node, BeautifulSoup) and isinstance(node.title, Tag):
         match = SPRINGER_TABLE_LABEL_PATTERN.search(_springer_short_text(node.title))
         if match:
-            return f"Table {match.group(1)}."
+            prefix = "Extended Data Table" if "extended" in match.group("prefix").lower() else "Table"
+            return f"{prefix} {match.group('number')}."
     match = SPRINGER_TABLE_LABEL_PATTERN.search(_springer_short_text(node))
     if match:
-        return f"Table {match.group(1)}."
+        prefix = "Extended Data Table" if "extended" in match.group("prefix").lower() else "Table"
+        return f"{prefix} {match.group('number')}."
     return fallback
 
 
@@ -209,6 +238,72 @@ def _springer_table_caption(node: Tag | BeautifulSoup, label: str) -> str:
         if text:
             return text
     return ""
+
+
+def _springer_table_label_heading(label: str) -> str:
+    return normalize_text(label).rstrip(".") or "Table"
+
+
+def _springer_is_nature13376_extended_table(normalized_doi: str, label: str) -> bool:
+    if normalize_doi(normalized_doi) != "10.1038/nature13376":
+        return False
+    normalized_label = normalize_text(label).lower().rstrip(".")
+    return bool(re.match(r"^extended data table [1-4]\b", normalized_label))
+
+
+def _springer_response_content_type(response: Mapping[str, Any]) -> str:
+    headers = response.get("headers") or {}
+    if not isinstance(headers, Mapping):
+        return ""
+    return normalize_text(str(headers.get("content-type") or headers.get("Content-Type") or ""))
+
+
+def _springer_looks_like_image_response(response: Mapping[str, Any], response_url: str) -> bool:
+    content_type = _springer_response_content_type(response).lower()
+    if content_type.startswith("image/"):
+        return True
+    return bool(SPRINGER_IMAGE_URL_PATTERN.search(normalize_text(response_url)))
+
+
+def _springer_table_image_asset(
+    *,
+    label: str,
+    caption: str,
+    image_url: str,
+    page_url: str,
+) -> dict[str, Any]:
+    heading = _springer_table_label_heading(label)
+    asset = {
+        "kind": "table",
+        "heading": heading,
+        "caption": normalize_text(caption),
+        "url": image_url,
+        "section": "body",
+    }
+    if image_url:
+        asset["full_size_url"] = image_url
+    if page_url and page_url != image_url:
+        asset["figure_page_url"] = page_url
+    return asset
+
+
+def _springer_table_image_markdown(asset: Mapping[str, Any], *, label: str) -> str:
+    heading = normalize_text(str(asset.get("heading") or "")) or _springer_table_label_heading(label)
+    image_url = normalize_text(str(asset.get("url") or asset.get("full_size_url") or ""))
+    caption = normalize_text(str(asset.get("caption") or ""))
+    if not image_url:
+        return ""
+    lines = [f"![{heading}]({image_url})"]
+    label_text = normalize_text(label) or f"{heading}."
+    caption_line = f"**{label_text}** {caption}".strip()
+    if caption_line:
+        lines.extend(["", caption_line])
+    return "\n".join(lines)
+
+
+def _springer_degraded_table_placeholder(label: str, reason: str) -> str:
+    label_text = normalize_text(label) or "Table"
+    return f"**{label_text}** Degraded placeholder: {normalize_text(reason)}"
 
 
 def _springer_inline_table_nodes(soup: BeautifulSoup) -> list[Tag]:
@@ -290,50 +385,91 @@ class SpringerClient(ProviderClient):
         table_url: str,
         *,
         fallback_label: str,
-    ) -> tuple[str | None, str | None]:
+        fallback_caption: str = "",
+        allow_image_asset: bool = False,
+        allow_degraded_placeholder: bool = False,
+    ) -> tuple[str | None, str | None, dict[str, Any] | None]:
         try:
-            response, _response_url = self._fetch_html_response(table_url)
+            response, response_url = self._fetch_html_response(table_url)
         except ProviderFailure as exc:
+            reason = f"Springer inline table supplement for {fallback_label} could not be fetched ({exc.code}: {exc.message})."
+            if allow_degraded_placeholder:
+                return _springer_degraded_table_placeholder(fallback_label, reason), reason, None
             return (
                 None,
-                f"Springer inline table supplement for {fallback_label} could not be fetched ({exc.code}: {exc.message}).",
+                reason,
+                None,
             )
 
         if BeautifulSoup is None:
-            return None, f"Springer inline table supplement for {fallback_label} requires BeautifulSoup."
+            reason = f"Springer inline table supplement for {fallback_label} requires BeautifulSoup."
+            if allow_degraded_placeholder:
+                return _springer_degraded_table_placeholder(fallback_label, reason), reason, None
+            return None, reason, None
+
+        if allow_image_asset and _springer_looks_like_image_response(response, response_url):
+            asset = _springer_table_image_asset(
+                label=fallback_label,
+                caption=fallback_caption,
+                image_url=response_url,
+                page_url=table_url,
+            )
+            return _springer_table_image_markdown(asset, label=fallback_label), None, asset
 
         table_html = _springer_html.decode_html(response["body"])
         soup = BeautifulSoup(table_html, "html.parser")
         table = soup.select_one(".c-article-table-container table, table")
-        if not isinstance(table, Tag):
-            return None, f"Springer inline table supplement for {fallback_label} did not include a table element."
+        if isinstance(table, Tag):
+            container = table.find_parent("figure")
+            if not isinstance(container, Tag):
+                container = table.find_parent("div", attrs={"data-container-section": "table"})
+            label = _springer_table_label(container or soup, fallback=fallback_label)
+            caption = _springer_table_caption(container or soup, label) or fallback_caption
+            markdown = render_table_markdown(table, label=label, caption=caption)
+            if not normalize_text(markdown):
+                reason = f"Springer inline table supplement for {label} did not produce Markdown content."
+                if allow_degraded_placeholder:
+                    return _springer_degraded_table_placeholder(label, reason), reason, None
+                return None, reason, None
+            return markdown, None, None
 
-        container = table.find_parent("figure")
-        if not isinstance(container, Tag):
-            container = table.find_parent("div", attrs={"data-container-section": "table"})
-        label = _springer_table_label(container or soup, fallback=fallback_label)
-        caption = _springer_table_caption(container or soup, label)
-        markdown = render_table_markdown(table, label=label, caption=caption)
-        if not normalize_text(markdown):
-            return None, f"Springer inline table supplement for {label} did not produce Markdown content."
-        return markdown, None
+        if allow_image_asset:
+            image_url = _springer_html.extract_full_size_figure_image_url(table_html, response_url)
+            if image_url:
+                asset = _springer_table_image_asset(
+                    label=fallback_label,
+                    caption=fallback_caption,
+                    image_url=image_url,
+                    page_url=response_url,
+                )
+                return _springer_table_image_markdown(asset, label=fallback_label), None, asset
+
+        reason = f"Springer inline table supplement for {fallback_label} did not include a table element."
+        if allow_degraded_placeholder:
+            return _springer_degraded_table_placeholder(fallback_label, reason), reason, None
+        return None, reason, None
 
     def _prepare_html_with_inline_tables(
         self,
         html_text: str,
         source_url: str,
-    ) -> tuple[str, list[dict[str, str]], list[str]]:
+        *,
+        normalized_doi: str,
+    ) -> tuple[str, list[dict[str, str]], list[str], list[dict[str, Any]]]:
         if BeautifulSoup is None:
-            return html_text, [], []
+            return html_text, [], [], []
 
         soup = BeautifulSoup(html_text, "html.parser")
         table_entries: list[dict[str, str]] = []
         warnings: list[str] = []
+        table_assets: list[dict[str, Any]] = []
 
         for node in _springer_inline_table_nodes(soup):
             if not isinstance(node, Tag) or node.parent is None:
                 continue
             label = _springer_table_label(node)
+            caption = _springer_table_caption(node, label)
+            allow_nature13376_fallback = _springer_is_nature13376_extended_table(normalized_doi, label)
             table_url = ""
             for selector in SPRINGER_TABLE_LINK_SELECTORS:
                 link = node.select_one(selector)
@@ -342,26 +478,45 @@ class SpringerClient(ProviderClient):
                     if table_url:
                         break
             if not table_url:
-                warnings.append(f"Springer inline table supplement for {label} was skipped because no table page link was found.")
+                warning = f"Springer inline table supplement for {label} was skipped because no table page link was found."
+                warnings.append(warning)
+                if allow_nature13376_fallback:
+                    placeholder = table_placeholder(len(table_entries) + 1)
+                    block = soup.new_tag("p")
+                    block.string = placeholder
+                    node.replace_with(block)
+                    table_entries.append(
+                        {
+                            "placeholder": placeholder,
+                            "markdown": _springer_degraded_table_placeholder(label, warning),
+                        }
+                    )
+                    continue
                 node.decompose()
                 continue
 
-            markdown, warning = self._render_table_page_markdown(table_url, fallback_label=label)
+            markdown, warning, asset = self._render_table_page_markdown(
+                table_url,
+                fallback_label=label,
+                fallback_caption=caption,
+                allow_image_asset=allow_nature13376_fallback,
+                allow_degraded_placeholder=allow_nature13376_fallback,
+            )
             if warning:
                 warnings.append(warning)
-                node.decompose()
-                continue
             if not markdown:
                 node.decompose()
                 continue
 
+            if asset is not None:
+                table_assets.append(asset)
             placeholder = table_placeholder(len(table_entries) + 1)
             block = soup.new_tag("p")
             block.string = placeholder
             node.replace_with(block)
             table_entries.append({"placeholder": placeholder, "markdown": markdown})
 
-        return str(soup), table_entries, warnings
+        return str(soup), table_entries, warnings, table_assets
 
     def fetch_metadata(self, query: Mapping[str, str | None]) -> ProviderMetadata:
         raise ProviderFailure(
@@ -384,7 +539,11 @@ class SpringerClient(ProviderClient):
         merged_metadata = _springer_html.merge_html_metadata(metadata, html_metadata)
         if not merged_metadata.get("doi"):
             merged_metadata["doi"] = normalized_doi
-        prepared_html, table_entries, table_warnings = self._prepare_html_with_inline_tables(html_text, response_url)
+        prepared_html, table_entries, table_warnings, table_assets = self._prepare_html_with_inline_tables(
+            html_text,
+            response_url,
+            normalized_doi=normalized_doi,
+        )
         extraction_payload = _springer_html.extract_html_payload(
             prepared_html,
             title=str(merged_metadata.get("title") or ""),
@@ -395,6 +554,16 @@ class SpringerClient(ProviderClient):
             table_entries=table_entries,
             clean_markdown_fn=_springer_html.clean_markdown,
         )
+        normalized_markdown_text = normalize_text(markdown_text)
+        appended_table_markdown: list[str] = []
+        for entry in table_entries:
+            rendered_table = normalize_text(str(entry.get("markdown") or ""))
+            if rendered_table and rendered_table not in normalized_markdown_text:
+                appended_table_markdown.append(str(entry.get("markdown") or ""))
+        if appended_table_markdown:
+            markdown_text = _springer_html.clean_markdown(
+                "\n\n".join([markdown_text, *appended_table_markdown])
+            )
         abstract_sections = list(extraction_payload["abstract_sections"])
         section_hints = list(extraction_payload["section_hints"])
         diagnostics = assess_html_fulltext_availability(
@@ -421,6 +590,7 @@ class SpringerClient(ProviderClient):
             section_hints=section_hints,
             extracted_authors=list(extraction_payload.get("extracted_authors") or []),
             extracted_references=list(extraction_payload.get("references") or []),
+            inline_table_assets=table_assets,
             diagnostics=diagnostics,
         )
 
@@ -514,12 +684,18 @@ class SpringerClient(ProviderClient):
         content = raw_payload.content
         if normalize_text(content.route_kind if content is not None else "").lower() == "pdf_fallback":
             return empty_asset_results()
-        article_assets = list(content.extracted_assets if content is not None else [])
+        article_assets = _filter_springer_assets_for_profile(
+            list(content.extracted_assets if content is not None else []),
+            asset_profile=asset_profile,
+        )
         if not article_assets:
             html_text = _springer_html.decode_html(raw_payload.body)
-            article_assets = _springer_html.extract_html_assets(
-                html_text,
-                raw_payload.source_url,
+            article_assets = _filter_springer_assets_for_profile(
+                _springer_html.extract_html_assets(
+                    html_text,
+                    raw_payload.source_url,
+                    asset_profile="all",
+                ),
                 asset_profile=asset_profile,
             )
         if not article_assets:
@@ -564,11 +740,14 @@ class SpringerClient(ProviderClient):
             merged_metadata = dict(attempt.merged_metadata)
             warnings.extend(attempt.warnings)
             if attempt.diagnostics.accepted:
-                extracted_assets = _springer_html.extract_html_assets(
-                    attempt.html_text,
-                    attempt.response_url,
-                    asset_profile="all",
-                )
+                extracted_assets = [
+                    *_springer_html.extract_html_assets(
+                        attempt.html_text,
+                        attempt.response_url,
+                        asset_profile="all",
+                    ),
+                    *[dict(item) for item in attempt.inline_table_assets],
+                ]
                 return _springer_html_payload_from_attempt(
                     attempt,
                     trace_markers=["fulltext:springer_html_ok"],
@@ -608,6 +787,7 @@ class SpringerClient(ProviderClient):
                 section_hints=[],
                 extracted_authors=[],
                 extracted_references=[],
+                inline_table_assets=[],
                 diagnostics=None,
             )
             return self._fetch_pdf_payload_from_html_attempt(
@@ -660,10 +840,16 @@ class SpringerClient(ProviderClient):
             html_text = attempt.html_text
             merged_metadata = dict(attempt.merged_metadata)
             if attempt.diagnostics.accepted:
-                extracted_assets = _springer_html.extract_html_assets(
-                    attempt.html_text,
-                    attempt.response_url,
-                    asset_profile="all",
+                extracted_assets = _filter_springer_assets_for_profile(
+                    [
+                        *_springer_html.extract_html_assets(
+                            attempt.html_text,
+                            attempt.response_url,
+                            asset_profile="all",
+                        ),
+                        *[dict(item) for item in attempt.inline_table_assets],
+                    ],
+                    asset_profile=asset_profile,
                 )
                 raw_payload = _springer_html_payload_from_attempt(
                     attempt,
@@ -711,6 +897,7 @@ class SpringerClient(ProviderClient):
                 section_hints=[],
                 extracted_authors=[],
                 extracted_references=[],
+                inline_table_assets=[],
                 diagnostics=None,
             )
             try:

@@ -2,13 +2,20 @@
 
 from __future__ import annotations
 
+from contextlib import asynccontextmanager
 from pathlib import Path
+import queue
+import sys
+import threading
 from types import MethodType
 from typing import Annotated
 
+import anyio
+from mcp import types as mcp_types
 from mcp.server.fastmcp import Context, FastMCP
 from mcp.server.fastmcp.resources import FileResource, FunctionResource
 from mcp.server.lowlevel.server import NotificationOptions
+from mcp.shared.message import SessionMessage
 from mcp.types import CallToolResult, ToolAnnotations
 
 from ..config import build_runtime_env, resolve_mcp_download_dir
@@ -49,6 +56,62 @@ from .tools import (
     provider_status_tool,
     resolve_paper_tool,
 )
+
+
+_STDIO_SENTINEL = object()
+
+
+@asynccontextmanager
+async def _threaded_stdio_server():
+    read_stream_writer, read_stream = anyio.create_memory_object_stream(0)
+    write_stream, write_stream_reader = anyio.create_memory_object_stream(0)
+    stop = threading.Event()
+    incoming: queue.Queue[SessionMessage | Exception | object] = queue.Queue()
+
+    def stdin_reader() -> None:
+        try:
+            while not stop.is_set():
+                line = sys.stdin.readline()
+                if line == "":
+                    break
+                try:
+                    message = mcp_types.JSONRPCMessage.model_validate_json(line)
+                except Exception as exc:
+                    incoming.put(exc)
+                    continue
+                incoming.put(SessionMessage(message))
+        finally:
+            incoming.put(_STDIO_SENTINEL)
+
+    async def stdin_pump() -> None:
+        async with read_stream_writer:
+            while True:
+                try:
+                    item = incoming.get_nowait()
+                except queue.Empty:
+                    await anyio.sleep(0.01)
+                    continue
+                if item is _STDIO_SENTINEL:
+                    break
+                await read_stream_writer.send(item)
+
+    async def stdout_pump() -> None:
+        async with write_stream_reader:
+            async for session_message in write_stream_reader:
+                line = session_message.message.model_dump_json(by_alias=True, exclude_none=True)
+                sys.stdout.write(line + "\n")
+                sys.stdout.flush()
+
+    reader = threading.Thread(target=stdin_reader, name="paper-fetch-mcp-stdin", daemon=True)
+    reader.start()
+    async with anyio.create_task_group() as task_group:
+        task_group.start_soon(stdin_pump)
+        task_group.start_soon(stdout_pump)
+        try:
+            yield read_stream, write_stream
+        finally:
+            stop.set()
+            task_group.cancel_scope.cancel()
 
 
 def _default_download_dir() -> Path:
@@ -404,7 +467,17 @@ def build_server() -> FastMCP:
 
 
 def main() -> None:
-    build_server().run(transport="stdio")
+    server = build_server()
+
+    async def run_stdio() -> None:
+        async with _threaded_stdio_server() as (read_stream, write_stream):
+            await server._mcp_server.run(
+                read_stream,
+                write_stream,
+                server._mcp_server.create_initialization_options(),
+            )
+
+    anyio.run(run_stdio)
 
 
 if __name__ == "__main__":

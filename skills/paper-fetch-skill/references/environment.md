@@ -1,13 +1,22 @@
 # Environment
 
+- `PAPER_FETCH_ENV_FILE`: Optional path to an explicit environment file. The default user config file is outside the repo; repo-local config files are not auto-loaded.
+- `PAPER_FETCH_SKILL_USER_AGENT`: Optional custom HTTP `User-Agent`; defaults to `paper-fetch-skill/0.2`.
+- `CROSSREF_MAILTO`: Recommended contact email for Crossref polite pool requests.
 - `ELSEVIER_API_KEY`: Required for official Elsevier full-text access.
 - `ELSEVIER_INSTTOKEN`: Optional institution token for Elsevier entitlement.
+- `ELSEVIER_AUTHTOKEN`: Optional Elsevier bearer token credential.
+- `ELSEVIER_CLICKTHROUGH_TOKEN`: Optional Elsevier clickthrough credential.
 - `WILEY_TDM_CLIENT_TOKEN`: Optional Wiley Text and Data Mining client token for the official Wiley PDF lane; browser PDF/ePDF fallback can still run without it when the local runtime is ready.
 - `FLARESOLVERR_URL`: Optional override for the local Wiley/Science/PNAS FlareSolverr endpoint; defaults to `http://127.0.0.1:8191/v1`.
-- `FLARESOLVERR_ENV_FILE`: Required for Wiley/Science/PNAS; points at a repo-local `vendor/flaresolverr` preset file.
+- `FLARESOLVERR_ENV_FILE`: Required for Science/PNAS and for Wiley HTML/browser PDF routes; points at a repo-local `vendor/flaresolverr` preset file. Wiley's TDM API PDF lane can run with `WILEY_TDM_CLIENT_TOKEN` without browser readiness.
 - `FLARESOLVERR_SOURCE_DIR`: Optional override for the repo-local `vendor/flaresolverr` directory.
-- `FLARESOLVERR_MIN_INTERVAL_SECONDS`: Required local minimum spacing between Wiley/Science/PNAS requests.
-- `FLARESOLVERR_MAX_REQUESTS_PER_HOUR`: Required local hourly cap for Wiley/Science/PNAS requests.
-- `FLARESOLVERR_MAX_REQUESTS_PER_DAY`: Required local daily cap for Wiley/Science/PNAS requests.
-- `PAPER_FETCH_DOWNLOAD_DIR`: Overrides the default CLI/MCP download directory.
+- `FLARESOLVERR_MIN_INTERVAL_SECONDS`: Required local minimum spacing for Wiley/Science/PNAS browser requests.
+- `FLARESOLVERR_MAX_REQUESTS_PER_HOUR`: Required local hourly cap for Wiley/Science/PNAS browser requests.
+- `FLARESOLVERR_MAX_REQUESTS_PER_DAY`: Required local daily cap for Wiley/Science/PNAS browser requests.
+- `PAPER_FETCH_DOWNLOAD_DIR`: Overrides the default CLI/MCP download directory; otherwise downloads use the user data directory, with CLI falling back to `live-downloads` only if that directory cannot be created.
+- `XDG_DATA_HOME`: Changes the user data base used for default downloads and formula tools.
+- `PAPER_FETCH_FORMULA_TOOLS_DIR`: Overrides the directory used to find optional formula backends.
 - `PAPER_FETCH_RUN_LIVE`: Test-only flag for live publisher integration checks.
+- Formula backend env such as `MATHML_CONVERTER_BACKEND`, `TEXMATH_BIN`, `MATHML_TO_LATEX_NODE_BIN`, and `MATHML_TO_LATEX_SCRIPT` only affects MathML-to-LaTeX conversion backends. The default backend is `texmath`; when not explicitly selected, `texmath` failure falls back to `mathml-to-latex`. Shared LaTeX normalization for common publisher macros runs independently of these variables.
+- Advanced `mml2tex` support exists behind `MATHML_CONVERTER_BACKEND=mml2tex` plus `MML2TEX_*` Java/XSLT env vars; the default installer does not prepare that toolchain.

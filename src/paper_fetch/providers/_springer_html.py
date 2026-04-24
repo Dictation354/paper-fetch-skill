@@ -61,6 +61,10 @@ SPRINGER_PREVIEW_SENTENCE_PATTERN = re.compile(
 SPRINGER_PREVIEW_MARKDOWN_LINE_PATTERN = re.compile(
     r"(?im)^[ \t>*-]*this is a preview of subscription content[,.!;:]*\s*$\n?",
 )
+SPRINGER_FIGURE_TRAILING_LINK_PATTERN = re.compile(
+    r"\b(?:PowerPoint slide|Full size image)\b.*$",
+    flags=re.IGNORECASE,
+)
 SPRINGER_AI_ALT_DISCLAIMER_ID_TOKEN = "ai-alt-disclaimer"
 SPRINGER_AI_ALT_DISCLAIMER_TEXT = "The alternative text for this image may have been generated using AI."
 SPRINGER_ARTICLE_JSONLD_TYPES = frozenset(
@@ -291,6 +295,11 @@ def _clean_springer_preview_fragment(text: str) -> str:
     return clean_springer_nature_text_fragment(cleaned)
 
 
+def _clean_springer_asset_caption(text: str) -> str:
+    cleaned = SPRINGER_FIGURE_TRAILING_LINK_PATTERN.sub("", normalize_text(text or ""))
+    return normalize_text(cleaned)
+
+
 def _clean_springer_preview_markdown(markdown_text: str) -> str:
     if not markdown_text:
         return ""
@@ -502,7 +511,7 @@ def _springer_figure_caption(node: Any, soup: Any) -> str:
         return ""
     figcaption = node.find("figcaption")
     if isinstance(figcaption, Tag):
-        caption = normalize_text(figcaption.get_text(" ", strip=True))
+        caption = _clean_springer_asset_caption(figcaption.get_text(" ", strip=True))
         if caption:
             return caption
     image = node.find("img")
@@ -511,7 +520,7 @@ def _springer_figure_caption(node: Any, soup: Any) -> str:
         if described_by:
             described_node = soup.find(id=described_by)
             if isinstance(described_node, Tag):
-                caption = normalize_text(described_node.get_text(" ", strip=True))
+                caption = _clean_springer_asset_caption(described_node.get_text(" ", strip=True))
                 if caption:
                     return caption
     for context in (node, node.parent if isinstance(node.parent, Tag) else None):
@@ -520,7 +529,7 @@ def _springer_figure_caption(node: Any, soup: Any) -> str:
         for selector in SPRINGER_FIGURE_DESCRIPTION_SELECTORS:
             description = context.select_one(selector)
             if isinstance(description, Tag):
-                caption = normalize_text(description.get_text(" ", strip=True))
+                caption = _clean_springer_asset_caption(description.get_text(" ", strip=True))
                 if caption:
                     return caption
     return ""

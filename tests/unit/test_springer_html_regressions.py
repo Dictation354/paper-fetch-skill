@@ -128,7 +128,14 @@ class SpringerHtmlRegressionTests(unittest.TestCase):
         self.assertEqual(len(merged), 1)
         self.assertEqual(merged[0]["path"], "/tmp/example-figure-1.png")
 
-    def _build_article_from_html(self, html_path: Path, source_url: str, *, doi: str):
+    def _build_article_from_html(
+        self,
+        html_path: Path,
+        source_url: str,
+        *,
+        doi: str,
+        fake_downloaded_assets: bool = False,
+    ):
         html_text = html_path.read_text(encoding="utf-8", errors="ignore")
         base_metadata = {
             "doi": doi,
@@ -181,13 +188,19 @@ class SpringerHtmlRegressionTests(unittest.TestCase):
                         "abstract_sections": abstract_sections,
                         "section_hints": list(extraction_payload["section_hints"]),
                         "extracted_authors": list(extraction_payload.get("extracted_authors") or []),
+                        "references": list(extraction_payload.get("references") or []),
                     },
                 },
             ),
             trace=trace_from_markers(["fulltext:springer_html_ok"]),
             merged_metadata=merged_metadata,
         )
-        article = springer_provider.SpringerClient(HttpTransport(), {}).to_article_model(merged_metadata, raw_payload)
+        downloaded_assets = self._fake_downloaded_assets(extracted_assets) if fake_downloaded_assets else None
+        article = springer_provider.SpringerClient(HttpTransport(), {}).to_article_model(
+            merged_metadata,
+            raw_payload,
+            downloaded_assets=downloaded_assets,
+        )
         return article, extraction_payload, diagnostics, extracted_assets
 
     def _fake_downloaded_assets(self, assets: list[dict[str, str]]) -> list[dict[str, str]]:
@@ -283,6 +296,11 @@ class SpringerHtmlRegressionTests(unittest.TestCase):
         self.assertEqual(article.quality.content_kind, "fulltext")
         self.assertEqual([section.get("heading") for section in extraction_payload["abstract_sections"]], ["Abstract"])
         self.assertEqual(len(extracted_assets), 3)
+        self.assertNotIn("PowerPoint slide", markdown_text)
+        self.assertNotIn("Full size image", markdown_text)
+        for asset in extracted_assets:
+            self.assertNotIn("PowerPoint slide", str(asset.get("caption") or ""))
+            self.assertNotIn("Full size image", str(asset.get("caption") or ""))
         self.assertEqual(len(re.findall(r"(?m)^## Methods Summary\s*$", markdown_text)), 1)
         self.assertEqual(len(re.findall(r"(?m)^## Methods\s*$", markdown_text)), 1)
         self.assertIn("## Methods\n", article.to_ai_markdown(asset_profile="body", max_tokens="full_text"))
@@ -356,6 +374,11 @@ class SpringerHtmlRegressionTests(unittest.TestCase):
 
         self.assertIn("![Figure 1](/tmp/fake-springer-figure-1.png)", markdown)
         self.assertNotIn("\n## Figures\n", markdown)
+        self.assertNotIn("PowerPoint slide", extraction_payload["markdown_text"])
+        self.assertNotIn("Full size image", extraction_payload["markdown_text"])
+        for asset in extracted_assets:
+            self.assertNotIn("PowerPoint slide", str(asset.get("caption") or ""))
+            self.assertNotIn("Full size image", str(asset.get("caption") or ""))
 
     def test_new_nature_downloaded_body_figures_inline_without_trailing_figures_block(self) -> None:
         sample = golden_criteria_sample_for_doi("10.1038/s41561-022-00983-6")
@@ -425,6 +448,25 @@ class SpringerHtmlRegressionTests(unittest.TestCase):
         self.assertIn("![Figure 1](/tmp/fake-springer-figure-1.png)", markdown)
         self.assertNotIn("\n## Figures\n", markdown)
 
+    def test_drought_self_propagation_fixture_has_no_trailing_figures_block(self) -> None:
+        sample = golden_criteria_sample_for_doi("10.1038/s41561-022-00912-7")
+        doi = str(sample["doi"])
+        source_url = str(sample["source_url"])
+        article, extraction_payload, diagnostics, _ = self._build_article_from_html(
+            golden_criteria_asset(doi, "original.html"),
+            source_url,
+            doi=doi,
+            fake_downloaded_assets=True,
+        )
+
+        markdown = article.to_ai_markdown(asset_profile="body", max_tokens="full_text")
+
+        self.assertEqual(diagnostics.content_kind, "fulltext")
+        self.assertIn("**Figure 1.**", extraction_payload["markdown_text"])
+        self.assertIn("![Figure 1](/tmp/fake-springer-figure-1.png)", markdown)
+        self.assertNotIn("\n## Figures\n", markdown)
+        self.assertLess(markdown.index("![Figure 4]"), markdown.index("## References"))
+
     def test_springer_markdown_preserves_subscripts_in_section_headings(self) -> None:
         html = """
         <html>
@@ -451,6 +493,91 @@ class SpringerHtmlRegressionTests(unittest.TestCase):
 
         self.assertIn("## Fossil fuel CO<sub>2</sub> emissions", markdown)
         self.assertNotIn("## Fossil fuel CO 2 emissions", markdown)
+
+    def test_springer_markdown_spaces_numbered_inline_heading_spans(self) -> None:
+        html = """
+        <html>
+          <body>
+            <article>
+              <h1>Numbered Heading Example</h1>
+              <section>
+                <h2><span>1</span><span>Introduction</span></h2>
+                <p>Introductory body paragraph.</p>
+                <section>
+                  <h3><span>3.1</span><span>Glaciers</span></h3>
+                  <p>Glacier body paragraph.</p>
+                </section>
+              </section>
+            </article>
+          </body>
+        </html>
+        """
+
+        markdown = html_springer_nature.extract_springer_nature_markdown(
+            html,
+            "https://link.springer.com/article/10.1007/example",
+        )
+
+        self.assertIn("## 1 Introduction", markdown)
+        self.assertIn("### 3.1 Glaciers", markdown)
+        self.assertNotIn("## 1Introduction", markdown)
+        self.assertNotIn("### 3.1Glaciers", markdown)
+
+    def test_springer_mathjax_tex_normalizes_upgreek_macros(self) -> None:
+        html = r"""
+        <html>
+          <body>
+            <article>
+              <h1>Math Example</h1>
+              <div class="c-article-body">
+                <div class="main-content">
+                  <section data-title="Methods">
+                    <h2 class="c-article-section__title">Methods</h2>
+                    <div class="c-article-section__content">
+                      <p>Inline <span class="mathjax-tex">\(\alpha _{i,t} = \updelta Q_{i,t}/E_{i,t}\)</span>.</p>
+                      <div class="c-article-equation">
+                        <div class="c-article-equation__content">
+                          <span class="mathjax-tex">
+                            $$\updelta Q_{i,t} = \alpha _{i,t}E_{{\mathrm{p}}(i,t)}S_{i,t}$$
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </section>
+                </div>
+              </div>
+            </article>
+          </body>
+        </html>
+        """
+
+        markdown = html_springer_nature.extract_springer_nature_markdown(
+            html,
+            "https://www.nature.com/articles/s41561-022-00912-7",
+        )
+
+        self.assertIn(r"\(\alpha _{i,t} = \delta Q_{i,t}/E_{i,t}\)", markdown)
+        self.assertIn(r"$$\delta Q_{i,t} = \alpha _{i,t}E_{{\mathrm{p}}(i,t)}S_{i,t}$$", markdown)
+        self.assertNotIn(r"\updelta", markdown)
+
+    def test_springer_bilingual_fixture_enters_body_without_duplicate_title_or_cta(self) -> None:
+        html = golden_criteria_asset("10.1007/s13158-025-00473-x", "bilingual.html").read_text(
+            encoding="utf-8",
+            errors="ignore",
+        )
+
+        markdown = _springer_html.extract_html_payload(
+            html,
+            "https://link.springer.com/article/10.1007/s13158-025-00473-x",
+            title="Multilingual summaries in restoration field studies",
+        )["markdown_text"]
+
+        self.assertIn("## Resumen", markdown)
+        self.assertIn("## Results", markdown)
+        self.assertLess(markdown.index("## Resumen"), markdown.index("## Results"))
+        self.assertEqual(markdown.count("# Multilingual summaries in restoration field studies"), 1)
+        for chrome in ("Save article", "View saved research", "Aims and scope", "Submit manuscript"):
+            self.assertNotIn(chrome, markdown)
 
     def test_springer_markdown_ignores_ai_alt_text_when_caption_exists(self) -> None:
         html = r"""

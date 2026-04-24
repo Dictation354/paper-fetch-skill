@@ -50,6 +50,8 @@ FULL_SIZE_URL_TOKENS = (
     "highres",
 )
 PREVIEW_URL_TOKENS = ("/thumb/", "/thumbnail/", "thumbnail", "/small/", "/preview/")
+ACCEPTABLE_PREVIEW_MIN_WIDTH = 300
+ACCEPTABLE_PREVIEW_MIN_HEIGHT = 200
 FIGURE_PAGE_HINTS = (
     "full size image",
     "view figure",
@@ -69,6 +71,159 @@ SUPPLEMENTARY_TEXT_TOKENS = (
 SUPPLEMENTARY_FILE_TOKENS = (".pdf", ".csv", ".xlsx", ".xls", ".zip")
 
 FigurePageFetcher = Callable[[str], tuple[str, str] | None]
+ImageDocumentFetcher = Callable[[str, Mapping[str, Any]], dict[str, Any] | None]
+
+
+def _response_header(response: Mapping[str, Any], name: str) -> str:
+    headers = response.get("headers") or {}
+    if not isinstance(headers, Mapping):
+        return ""
+    lowered = name.lower()
+    for key, value in headers.items():
+        if str(key).lower() == lowered:
+            return normalize_text(str(value or ""))
+    return ""
+
+
+def _image_magic_type(body: bytes | bytearray | None) -> str:
+    payload = bytes(body or b"")
+    if payload.startswith(b"\xff\xd8\xff"):
+        return "image/jpeg"
+    if payload.startswith(b"\x89PNG\r\n\x1a\n"):
+        return "image/png"
+    if payload.startswith((b"GIF87a", b"GIF89a")):
+        return "image/gif"
+    if len(payload) >= 12 and payload[:4] == b"RIFF" and payload[8:12] == b"WEBP":
+        return "image/webp"
+    return ""
+
+
+def _image_dimensions(body: bytes | bytearray | None) -> tuple[int, int] | None:
+    payload = bytes(body or b"")
+    if len(payload) < 10:
+        return None
+    if payload.startswith(b"\x89PNG\r\n\x1a\n") and len(payload) >= 24:
+        return int.from_bytes(payload[16:20], "big"), int.from_bytes(payload[20:24], "big")
+    if payload.startswith((b"GIF87a", b"GIF89a")) and len(payload) >= 10:
+        return int.from_bytes(payload[6:8], "little"), int.from_bytes(payload[8:10], "little")
+    if payload.startswith(b"\xff\xd8\xff"):
+        index = 2
+        while index + 9 < len(payload):
+            if payload[index] != 0xFF:
+                index += 1
+                continue
+            marker = payload[index + 1]
+            index += 2
+            if marker in {0xD8, 0xD9}:
+                continue
+            if index + 2 > len(payload):
+                break
+            segment_length = int.from_bytes(payload[index:index + 2], "big")
+            if segment_length < 2 or index + segment_length > len(payload):
+                break
+            if marker in {0xC0, 0xC1, 0xC2, 0xC3, 0xC5, 0xC6, 0xC7, 0xC9, 0xCA, 0xCB, 0xCD, 0xCE, 0xCF}:
+                if segment_length >= 7:
+                    height = int.from_bytes(payload[index + 3:index + 5], "big")
+                    width = int.from_bytes(payload[index + 5:index + 7], "big")
+                    return width, height
+                break
+            index += segment_length
+    if len(payload) >= 30 and payload[:4] == b"RIFF" and payload[8:12] == b"WEBP":
+        chunk = payload[12:16]
+        if chunk == b"VP8 " and len(payload) >= 30:
+            width = int.from_bytes(payload[26:28], "little") & 0x3FFF
+            height = int.from_bytes(payload[28:30], "little") & 0x3FFF
+            return width, height
+        if chunk == b"VP8L" and len(payload) >= 25:
+            bits = int.from_bytes(payload[21:25], "little")
+            return (bits & 0x3FFF) + 1, ((bits >> 14) & 0x3FFF) + 1
+        if chunk == b"VP8X" and len(payload) >= 30:
+            width = int.from_bytes(payload[24:27] + b"\x00", "little") + 1
+            height = int.from_bytes(payload[27:30] + b"\x00", "little") + 1
+            return width, height
+    return None
+
+
+def _response_dimensions(response: Mapping[str, Any]) -> tuple[int, int] | None:
+    dimensions = response.get("dimensions")
+    if isinstance(dimensions, Mapping):
+        try:
+            width = int(dimensions.get("width") or 0)
+            height = int(dimensions.get("height") or 0)
+        except (TypeError, ValueError):
+            width = height = 0
+        if width > 0 and height > 0:
+            return width, height
+    return _image_dimensions(response.get("body", b""))
+
+
+def preview_dimensions_are_acceptable(width: int | None, height: int | None) -> bool:
+    return int(width or 0) >= ACCEPTABLE_PREVIEW_MIN_WIDTH and int(height or 0) >= ACCEPTABLE_PREVIEW_MIN_HEIGHT
+
+
+def _looks_like_image_payload(content_type: str | None, body: bytes | bytearray | None, source_url: str | None) -> bool:
+    normalized_content_type = normalize_text(content_type).split(";", 1)[0].lower()
+    if normalized_content_type.startswith("image/"):
+        return True
+    if normalized_content_type:
+        return False
+    if _image_magic_type(body):
+        return True
+    return bool(re.search(r"\.(?:avif|gif|jpe?g|png|tiff?|webp)(?:[?#]|$)", normalize_text(source_url), re.IGNORECASE))
+
+
+def _requires_image_payload(asset: Mapping[str, Any]) -> bool:
+    kind = normalize_text(str(asset.get("kind") or "")).lower()
+    section = normalize_text(str(asset.get("section") or "")).lower()
+    return kind in {"figure", "table"} and section != "supplementary"
+
+
+def _fetch_image_document_fallback(
+    fetcher: ImageDocumentFetcher | None,
+    candidate_url: str,
+    asset: Mapping[str, Any],
+) -> dict[str, Any] | None:
+    if fetcher is None or not _requires_image_payload(asset):
+        return None
+    try:
+        response = fetcher(candidate_url, asset)
+    except Exception:
+        return None
+    if not response:
+        return None
+    body = response.get("body", b"")
+    if not isinstance(body, (bytes, bytearray)):
+        return None
+    content_type = _response_header(response, "content-type")
+    final_url = normalize_text(str(response.get("url") or candidate_url))
+    if not _looks_like_image_payload(content_type, body, final_url):
+        return None
+    return dict(response)
+
+
+def _is_preview_candidate(candidate_url: str, *, preview_url: str, full_size_url: str) -> bool:
+    normalized_candidate = normalize_text(candidate_url)
+    if not normalized_candidate or not preview_url:
+        return False
+    return (
+        normalized_candidate == preview_url
+        and normalized_candidate != full_size_url
+        and not looks_like_full_size_asset_url(normalized_candidate.lower())
+    )
+
+
+def _preview_upgrade_targets(candidate_url: str, asset: Mapping[str, Any]) -> list[str]:
+    targets: list[str] = []
+    for value in (
+        asset.get("figure_page_url"),
+        asset.get("full_size_url"),
+        asset.get("download_url"),
+        candidate_url,
+    ):
+        normalized = normalize_text(str(value or ""))
+        if normalized and normalized not in targets:
+            targets.append(normalized)
+    return targets
 
 
 def _build_cookie_seeded_opener(
@@ -223,10 +378,25 @@ def _first_url_from_srcset(value: str | None) -> str:
     srcset = normalize_text(value)
     if not srcset:
         return ""
-    first = srcset.split(",", 1)[0].strip()
-    if not first:
-        return ""
-    return first.split()[0].strip()
+    best_url = ""
+    best_score = -1.0
+    for raw_part in srcset.split(","):
+        part = raw_part.strip()
+        if not part:
+            continue
+        pieces = part.split()
+        url = pieces[0].strip()
+        score = 0.0
+        for descriptor in pieces[1:]:
+            match = re.match(r"^([0-9]+(?:\.[0-9]+)?)(w|x)$", descriptor.strip().lower())
+            if not match:
+                continue
+            multiplier = 1000.0 if match.group(2) == "x" else 1.0
+            score = max(score, float(match.group(1)) * multiplier)
+        if score >= best_score:
+            best_url = url
+            best_score = score
+    return best_url
 
 
 def _soup_attr_url(tag: Any, *attrs: str) -> str:
@@ -661,6 +831,7 @@ def download_figure_assets(
     browser_context_seed: Mapping[str, Any] | None = None,
     seed_urls: list[str] | None = None,
     candidate_builder: Callable[..., list[str]] | None = None,
+    image_document_fetcher: ImageDocumentFetcher | None = None,
 ) -> dict[str, list[dict[str, Any]]]:
     if output_dir is None or asset_profile == "none" or not assets:
         return empty_asset_results()
@@ -686,6 +857,7 @@ def download_figure_assets(
 
         response = None
         source_url = ""
+        download_tier_override = ""
         last_failure: dict[str, Any] | None = None
         active_user_agent = normalize_text(str((browser_context_seed or {}).get("browser_user_agent") or "")) or user_agent
         browser_cookies = list((browser_context_seed or {}).get("browser_cookies") or [])
@@ -742,6 +914,39 @@ def download_figure_assets(
                         retry_on_transient=True,
                     )
                 )
+                body = response.get("body", b"")
+                content_type = _response_header(response, "content-type")
+                final_url = normalize_text(str(response.get("url") or candidate_url))
+                if _requires_image_payload(asset) and not _looks_like_image_payload(content_type, body, final_url):
+                    last_failure = {
+                        "kind": asset.get("kind", "figure"),
+                        "heading": asset.get("heading", "Figure"),
+                        "caption": asset.get("caption", ""),
+                        "source_url": candidate_url,
+                        "status": response.get("status_code"),
+                        "reason": f"Asset candidate did not return image content (content-type: {content_type or 'unknown'}).",
+                        "section": asset.get("section") or "body",
+                    }
+                    fallback_response = _fetch_image_document_fallback(image_document_fetcher, candidate_url, asset)
+                    if fallback_response is not None:
+                        response = fallback_response
+                        source_url = candidate_url
+                        download_tier_override = "playwright_canvas_fallback"
+                        break
+                    response = None
+                    continue
+                if _requires_image_payload(asset) and _is_preview_candidate(candidate_url, preview_url=preview_url, full_size_url=full_size_url):
+                    for upgrade_target in _preview_upgrade_targets(candidate_url, asset):
+                        if upgrade_target == candidate_url:
+                            continue
+                        fallback_response = _fetch_image_document_fallback(image_document_fetcher, upgrade_target, asset)
+                        if fallback_response is not None:
+                            response = fallback_response
+                            source_url = upgrade_target
+                            download_tier_override = "playwright_canvas_fallback"
+                            break
+                    if download_tier_override:
+                        break
                 source_url = candidate_url
                 break
             except RequestFailure as exc:
@@ -754,6 +959,12 @@ def download_figure_assets(
                     "reason": str(exc),
                     "section": asset.get("section") or "body",
                 }
+                fallback_response = _fetch_image_document_fallback(image_document_fetcher, candidate_url, asset)
+                if fallback_response is not None:
+                    response = fallback_response
+                    source_url = candidate_url
+                    download_tier_override = "playwright_canvas_fallback"
+                    break
                 continue
 
         if response is None:
@@ -761,31 +972,41 @@ def download_figure_assets(
                 failures.append(last_failure)
             continue
 
-        content_type = response["headers"].get("content-type")
-        output_path = build_asset_output_path(asset_dir, source_url, content_type, response["url"], used_names)
-        downloads.append(
-            {
-                "kind": asset.get("kind", "figure"),
-                "heading": asset.get("heading", "Figure"),
-                "caption": asset.get("caption", ""),
-                "original_url": preview_url,
-                "figure_page_url": asset.get("figure_page_url", ""),
-                "download_url": source_url,
-                "download_tier": (
-                    "preview"
-                    if preview_url
-                    and source_url == preview_url
-                    and source_url != full_size_url
-                    and not looks_like_full_size_asset_url(source_url.lower())
-                    else "full_size"
-                ),
-                "source_url": response["url"],
-                "content_type": content_type,
-                "path": save_payload(output_path, response["body"]),
-                "downloaded_bytes": len(response["body"]),
-                "section": asset.get("section") or "body",
-            }
+        content_type = _response_header(response, "content-type")
+        dimensions = _response_dimensions(response) or (0, 0)
+        width, height = dimensions
+        download_tier = (
+            download_tier_override
+            or (
+                "preview"
+                if preview_url
+                and source_url == preview_url
+                and source_url != full_size_url
+                and not looks_like_full_size_asset_url(source_url.lower())
+                else "full_size"
+            )
         )
+        output_path = build_asset_output_path(asset_dir, source_url, content_type, response["url"], used_names)
+        download = {
+            "kind": asset.get("kind", "figure"),
+            "heading": asset.get("heading", "Figure"),
+            "caption": asset.get("caption", ""),
+            "original_url": preview_url,
+            "figure_page_url": asset.get("figure_page_url", ""),
+            "download_url": source_url,
+            "download_tier": download_tier,
+            "source_url": response["url"],
+            "content_type": content_type,
+            "path": save_payload(output_path, response["body"]),
+            "downloaded_bytes": len(response["body"]),
+            "section": asset.get("section") or "body",
+        }
+        if width > 0 and height > 0:
+            download["width"] = width
+            download["height"] = height
+        if download_tier == "preview" and preview_dimensions_are_acceptable(width, height):
+            download["preview_accepted"] = True
+        downloads.append(download)
 
     return {
         "assets": downloads,

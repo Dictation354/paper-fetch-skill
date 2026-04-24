@@ -7,10 +7,12 @@ from pathlib import Path
 from typing import Any, Mapping
 import xml.etree.ElementTree as ET
 
-from ..models import SemanticLosses
+from ..models import Reference, SemanticLosses
+from ..publisher_identity import extract_doi, normalize_doi
 from ._article_markdown_common import (
     child_text,
     collect_conversion_notes,
+    first_child,
     first_descendant,
     make_markdown_path,
     normalize_lines,
@@ -44,6 +46,7 @@ class ArticleStructure:
     table_entries: list[dict[str, Any]]
     supplement_entries: list[dict[str, str]]
     conversion_notes: list[str]
+    references: list[Reference]
     semantic_losses: SemanticLosses
     used_figure_keys: set[str]
     used_table_keys: set[str]
@@ -86,6 +89,131 @@ def extract_article_authors(root: ET.Element) -> list[str]:
     return dedupe_authors(authors)
 
 
+def _child_text(element: ET.Element | None, local_name: str) -> str:
+    return normalize_text(child_text(element, local_name))
+
+
+def _first_descendant_text(element: ET.Element | None, local_name: str) -> str:
+    node = first_descendant(element, local_name)
+    return normalize_text("".join(node.itertext())) if node is not None else ""
+
+
+def _extract_reference_authors(contribution: ET.Element | None) -> list[str]:
+    authors_node = first_child(contribution, "authors")
+    if authors_node is None:
+        return []
+
+    authors: list[str] = []
+    for child in list(authors_node):
+        if not isinstance(child.tag, str):
+            continue
+        local_name = xml_local_name(child.tag)
+        if local_name == "author":
+            author_name = _extract_author_name(child)
+            if author_name:
+                authors.append(author_name)
+            continue
+        if local_name == "collaboration":
+            collaboration_name = normalize_text("".join(child.itertext()))
+            if collaboration_name:
+                authors.append(collaboration_name)
+    return dedupe_authors(authors)
+
+
+def _extract_reference_title(contribution: ET.Element | None) -> str:
+    title_node = first_child(contribution, "title")
+    return _child_text(title_node, "maintitle") or _first_descendant_text(contribution, "maintitle")
+
+
+def _extract_reference_source(host: ET.Element | None) -> str:
+    series_node = first_descendant(host, "series")
+    title_node = first_child(series_node, "title")
+    return _child_text(title_node, "maintitle") or _first_descendant_text(host, "maintitle")
+
+
+def _format_reference_body(
+    *,
+    authors: list[str],
+    title: str,
+    source: str,
+    volume: str,
+    issue: str,
+    year: str,
+    first_page: str,
+    last_page: str,
+    doi: str,
+    source_text: str,
+) -> str:
+    parts: list[str] = []
+    if authors:
+        parts.append(", ".join(authors))
+    if year:
+        parts.append(year)
+    if title:
+        parts.append(title)
+
+    publication = source
+    if volume:
+        publication = f"{publication}, {volume}" if publication else volume
+    if issue:
+        publication = f"{publication}({issue})" if publication else f"({issue})"
+    pages = ""
+    if first_page and last_page:
+        pages = f"{first_page}-{last_page}"
+    elif first_page:
+        pages = first_page
+    if pages:
+        publication = f"{publication}: {pages}" if publication else pages
+    if publication:
+        parts.append(publication)
+    if doi:
+        parts.append(doi)
+
+    body = ". ".join(part.rstrip(".") for part in parts if part).strip()
+    return body or source_text
+
+
+def extract_elsevier_references(root: ET.Element) -> list[Reference]:
+    references: list[Reference] = []
+    for index, bib_reference in enumerate(_iter_elements_by_local_name(root, "bib-reference"), start=1):
+        label = _child_text(bib_reference, "label")
+        sb_reference = first_child(bib_reference, "reference")
+        if sb_reference is None:
+            sb_reference = first_descendant(bib_reference, "reference")
+        contribution = first_child(sb_reference, "contribution")
+        host = first_child(sb_reference, "host")
+        source_text = _child_text(bib_reference, "source-text")
+        doi = normalize_doi(_first_descendant_text(sb_reference, "doi")) or (extract_doi(source_text) or "")
+        title = _extract_reference_title(contribution)
+        year = _first_descendant_text(host, "date")
+        body = _format_reference_body(
+            authors=_extract_reference_authors(contribution),
+            title=title,
+            source=_extract_reference_source(host),
+            volume=_first_descendant_text(host, "volume-nr"),
+            issue=_first_descendant_text(host, "issue-nr"),
+            year=year,
+            first_page=_first_descendant_text(host, "first-page"),
+            last_page=_first_descendant_text(host, "last-page"),
+            doi=doi,
+            source_text=source_text,
+        )
+        if not body:
+            continue
+        raw = f"{index}. {body}"
+        if label and not body.startswith(label):
+            raw = f"{raw} [{label}]"
+        references.append(
+            Reference(
+                raw=raw,
+                doi=doi or None,
+                title=title or None,
+                year=year or None,
+            )
+        )
+    return references
+
+
 def build_article_structure(
     *,
     provider: str,
@@ -105,6 +233,7 @@ def build_article_structure(
     published = normalize_text(str(metadata.get("published") or ""))
     landing_page = normalize_text(str(metadata.get("landing_page_url") or ""))
     authors = extract_article_authors(root)
+    references: list[Reference] = []
 
     used_figure_keys: set[str] = set()
     used_table_keys: set[str] = set()
@@ -136,12 +265,13 @@ def build_article_structure(
             formula_renders=formula_renders,
         )
         supplement_entries = elsevier_supplement_entries(root, assets, xml_path.with_suffix(".md"))
+        references = extract_elsevier_references(root)
     else:
         return None
 
     semantic_losses = SemanticLosses(
         table_fallback_count=sum(1 for entry in table_entries if normalize_text(str(entry.get("kind") or "")) == "fallback"),
-        table_lossy_count=sum(1 for entry in table_entries if normalize_text(str(entry.get("lossy_message") or ""))),
+        table_layout_degraded_count=sum(1 for entry in table_entries if normalize_text(str(entry.get("lossy_message") or ""))),
         formula_fallback_count=sum(1 for result in formula_renders if getattr(result, "fallback_kind", None) == "fallback"),
         formula_missing_count=sum(1 for result in formula_renders if getattr(result, "fallback_kind", None) == "missing"),
     )
@@ -163,6 +293,7 @@ def build_article_structure(
         table_entries=table_entries,
         supplement_entries=supplement_entries,
         conversion_notes=conversion_notes,
+        references=references,
         semantic_losses=semantic_losses,
         used_figure_keys=used_figure_keys,
         used_table_keys=used_table_keys,

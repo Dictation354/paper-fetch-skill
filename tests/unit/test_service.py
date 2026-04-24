@@ -219,6 +219,77 @@ class ServiceTests(unittest.TestCase):
 
         self.assertTrue(any("fell back to preview images" in warning for warning in envelope.warnings))
 
+    def test_fetch_paper_accepts_preview_images_with_sufficient_dimensions(self) -> None:
+        resolved = paper_fetch.ResolvedQuery(
+            query="10.1126/science.preview.accepted",
+            query_kind="doi",
+            doi="10.1126/science.preview.accepted",
+            landing_url="https://www.science.org/doi/full/10.1126/science.preview.accepted",
+            provider_hint="science",
+            confidence=1.0,
+        )
+        original_resolve = paper_fetch.resolve_paper
+        try:
+            paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
+            with tempfile.TemporaryDirectory() as tmpdir:
+                preview_path = Path(tmpdir) / "figure-preview.png"
+                preview_path.write_bytes(b"preview")
+                envelope = paper_fetch.fetch_paper(
+                    resolved.query,
+                    modes={"article"},
+                    strategy=paper_fetch.FetchStrategy(),
+                    download_dir=Path(tmpdir),
+                    clients={
+                        "science": StubProvider(
+                            raw_payload=RawFulltextPayload(
+                                provider="science",
+                                source_url=resolved.landing_url,
+                                content_type="text/html",
+                                body=b"<html></html>",
+                                metadata={
+                                    "route": "html",
+                                    "markdown_text": "# Example Article\n\n## Results\n\n" + ("Body text " * 80),
+                                    "source_trail": ["fulltext:science_html_ok"],
+                                },
+                            ),
+                            article=sample_article(),
+                            related_assets={
+                                "assets": [
+                                    {
+                                        "kind": "figure",
+                                        "heading": "Figure 1",
+                                        "caption": "Accepted preview figure",
+                                        "path": str(preview_path),
+                                        "section": "body",
+                                        "download_tier": "preview",
+                                        "width": 640,
+                                        "height": 480,
+                                    }
+                                ],
+                                "asset_failures": [],
+                            },
+                        ),
+                        "crossref": StubProvider(
+                            metadata={
+                                "provider": "crossref",
+                                "official_provider": False,
+                                "doi": resolved.doi,
+                                "title": "Example Article",
+                                "landing_page_url": resolved.landing_url,
+                                "authors": ["Alice Example"],
+                                "fulltext_links": [],
+                                "references": [],
+                            }
+                        ),
+                    },
+                )
+        finally:
+            paper_fetch.resolve_paper = original_resolve
+
+        self.assertIn("download:science_assets_preview_accepted", envelope.source_trail)
+        self.assertNotIn("download:science_assets_preview_fallback", envelope.source_trail)
+        self.assertTrue(any("used preview images" in warning for warning in envelope.warnings))
+
     def test_probe_has_fulltext_uses_crossref_license_signal(self) -> None:
         resolved = paper_fetch.ResolvedQuery(
             query="10.1000/license",

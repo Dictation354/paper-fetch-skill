@@ -47,6 +47,10 @@ WILEY_2004GB002273_METADATA = golden_criteria_asset("10.1029/2004GB002273", "art
 WILEY_2004GB002273_ASSET_DIR = golden_criteria_dir_for_doi("10.1029/2004GB002273") / "body_assets"
 
 
+def png_header(width: int, height: int) -> bytes:
+    return b"\x89PNG\r\n\x1a\n" + b"\x00\x00\x00\rIHDR" + width.to_bytes(4, "big") + height.to_bytes(4, "big")
+
+
 class AssetTransport:
     def __init__(self, responses: dict[tuple[str, str], dict[str, object] | Exception]) -> None:
         self.responses = responses
@@ -1225,6 +1229,7 @@ class SciencePnasProviderTests(unittest.TestCase):
                 ) as mocked_fetch,
                 mock.patch.object(html_assets, "_build_cookie_seeded_opener", return_value=object()),
                 mock.patch.object(html_assets, "_request_with_opener", side_effect=fake_request_with_opener),
+                mock.patch.object(_science_pnas, "fetch_image_document_with_playwright", return_value=None),
                 ):
                 result = client.download_related_assets(
                     PNAS_SAMPLE.doi,
@@ -1243,6 +1248,256 @@ class SciencePnasProviderTests(unittest.TestCase):
         self.assertEqual(len(result["assets"]), 1)
         self.assertEqual(result["asset_failures"], [])
         self.assertEqual(saved_bytes, b"preview-image")
+
+    def test_pnas_provider_download_related_assets_uses_playwright_canvas_before_preview(self) -> None:
+        figure_page_url = "https://www.pnas.org/figures/figure-1"
+        preview_url = "https://www.pnas.org/images/preview/figure1.png"
+        full_size_url = "https://www.pnas.org/images/original/figure1.png"
+        html = f"""
+<article>
+  <figure>
+    <a href="{figure_page_url}">View figure</a>
+    <img src="{preview_url}" alt="Preview figure" />
+    <figcaption>Figure 1 caption</figcaption>
+  </figure>
+</article>
+"""
+        transport = AssetTransport({})
+        client = pnas_provider.PnasClient(transport=transport, env={})
+        request_calls: list[str] = []
+        initial_seed = {
+            "browser_cookies": [{"name": "cf_clearance", "value": "secret", "domain": ".pnas.org", "path": "/"}],
+            "browser_user_agent": "Mozilla/5.0",
+            "browser_final_url": PNAS_SAMPLE.landing_url,
+        }
+
+        def fake_request_with_opener(_opener, url, *, headers, timeout):
+            request_calls.append(url)
+            if url == full_size_url:
+                return {
+                    "status_code": 200,
+                    "headers": {"content-type": "text/html", "cf-mitigated": "challenge"},
+                    "body": b"<html><body>Chrome image viewer wrapper</body></html>",
+                    "url": url,
+                }
+            raise AssertionError(f"Preview should not be attempted after canvas fallback: {url}")
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            runtime = self._runtime_config(tmpdir, "pnas", PNAS_SAMPLE.doi)
+            raw_payload = RawFulltextPayload(
+                provider="pnas",
+                source_url=PNAS_SAMPLE.landing_url,
+                content_type="text/html",
+                body=html.encode("utf-8"),
+                metadata={
+                    "route": "html",
+                    "markdown_text": f"# {PNAS_SAMPLE.title}\n\n## Results\n\n" + ("Body text " * 120),
+                    "browser_context_seed": initial_seed,
+                },
+            )
+            with (
+                mock.patch.object(_science_pnas, "load_runtime_config", return_value=runtime),
+                mock.patch.object(_science_pnas, "ensure_runtime_ready"),
+                mock.patch.object(
+                    _science_pnas,
+                    "fetch_html_with_flaresolverr",
+                    return_value=_flaresolverr.FetchedPublisherHtml(
+                        source_url=figure_page_url,
+                        final_url=figure_page_url,
+                        html=(
+                            "<html><head>"
+                            f"<meta property='og:image' content='{full_size_url}' />"
+                            "</head><body></body></html>"
+                        ),
+                        response_status=200,
+                        response_headers={"content-type": "text/html"},
+                        title="Figure page",
+                        summary="Figure page summary",
+                        browser_context_seed=initial_seed,
+                    ),
+                ),
+                mock.patch.object(html_assets, "_build_cookie_seeded_opener", return_value=object()),
+                mock.patch.object(html_assets, "_request_with_opener", side_effect=fake_request_with_opener),
+                mock.patch.object(
+                    _science_pnas,
+                    "fetch_image_document_with_playwright",
+                    return_value={
+                        "status_code": 200,
+                        "headers": {"content-type": "image/jpeg"},
+                        "body": b"\xff\xd8\xffcanvas-image",
+                        "url": full_size_url,
+                        "dimensions": {"width": 1200, "height": 800},
+                    },
+                ) as mocked_canvas,
+            ):
+                result = client.download_related_assets(
+                    PNAS_SAMPLE.doi,
+                    {"doi": PNAS_SAMPLE.doi, "title": PNAS_SAMPLE.title},
+                    raw_payload,
+                    Path(tmpdir),
+                    asset_profile="body",
+                )
+                saved_path = Path(result["assets"][0]["path"])
+                saved_bytes = saved_path.read_bytes()
+
+        self.assertEqual(request_calls, [full_size_url])
+        mocked_canvas.assert_called_once()
+        self.assertEqual(mocked_canvas.call_args.args[0], full_size_url)
+        self.assertEqual(len(result["assets"]), 1)
+        self.assertEqual(result["asset_failures"], [])
+        self.assertEqual(result["assets"][0]["download_tier"], "playwright_canvas_fallback")
+        self.assertEqual(saved_bytes, b"\xff\xd8\xffcanvas-image")
+
+    def test_science_provider_records_preview_dimensions_and_acceptance(self) -> None:
+        preview_url = "https://www.science.org/images/preview/figure1.png"
+        html = f"""
+<article>
+  <figure>
+    <img src="{preview_url}" alt="Preview figure" />
+    <figcaption>Figure 1 caption</figcaption>
+  </figure>
+</article>
+"""
+        image_body = png_header(640, 480)
+        transport = AssetTransport(
+            {
+                ("GET", preview_url): {
+                    "status_code": 200,
+                    "headers": {"content-type": "image/png"},
+                    "body": image_body,
+                    "url": preview_url,
+                }
+            }
+        )
+        client = science_provider.ScienceClient(transport=transport, env={})
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            runtime = self._runtime_config(tmpdir, "science", SCIENCE_SAMPLE.doi)
+            raw_payload = RawFulltextPayload(
+                provider="science",
+                source_url=SCIENCE_SAMPLE.landing_url,
+                content_type="text/html",
+                body=html.encode("utf-8"),
+                metadata={
+                    "route": "html",
+                    "markdown_text": f"# {SCIENCE_SAMPLE.title}\n\n## Results\n\n" + ("Body text " * 120),
+                    "browser_context_seed": {},
+                },
+            )
+            with (
+                mock.patch.object(_science_pnas, "load_runtime_config", return_value=runtime),
+                mock.patch.object(_science_pnas, "ensure_runtime_ready"),
+                mock.patch.object(_science_pnas, "fetch_html_with_flaresolverr") as mocked_fetch,
+                mock.patch.object(html_assets, "_build_cookie_seeded_opener", return_value=None),
+                mock.patch.object(_science_pnas, "fetch_image_document_with_playwright", return_value=None),
+            ):
+                result = client.download_related_assets(
+                    SCIENCE_SAMPLE.doi,
+                    {"doi": SCIENCE_SAMPLE.doi, "title": SCIENCE_SAMPLE.title},
+                    raw_payload,
+                    Path(tmpdir),
+                    asset_profile="body",
+                )
+
+        mocked_fetch.assert_not_called()
+        self.assertEqual(len(result["assets"]), 1)
+        self.assertEqual(result["assets"][0]["download_tier"], "preview")
+        self.assertEqual(result["assets"][0]["width"], 640)
+        self.assertEqual(result["assets"][0]["height"], 480)
+        self.assertTrue(result["assets"][0]["preview_accepted"])
+
+    def test_pnas_provider_tries_canvas_upgrade_before_accepting_successful_preview(self) -> None:
+        figure_page_url = "https://www.pnas.org/figures/figure-1"
+        preview_url = "https://www.pnas.org/images/preview/figure1.png"
+        html = f"""
+<article>
+  <figure>
+    <a href="{figure_page_url}">View figure</a>
+    <img src="{preview_url}" alt="Preview figure" />
+    <figcaption>Figure 1 caption</figcaption>
+  </figure>
+</article>
+"""
+        transport = AssetTransport({})
+        client = pnas_provider.PnasClient(transport=transport, env={})
+        request_calls: list[str] = []
+        seed = {
+            "browser_cookies": [{"name": "cf_clearance", "value": "secret", "domain": ".pnas.org", "path": "/"}],
+            "browser_user_agent": "Mozilla/5.0",
+            "browser_final_url": PNAS_SAMPLE.landing_url,
+        }
+
+        def fake_request_with_opener(_opener, url, *, headers, timeout):
+            request_calls.append(url)
+            if url == preview_url:
+                return {
+                    "status_code": 200,
+                    "headers": {"content-type": "image/png"},
+                    "body": png_header(320, 240),
+                    "url": url,
+                }
+            raise AssertionError(f"Unexpected opener request for {url}")
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            runtime = self._runtime_config(tmpdir, "pnas", PNAS_SAMPLE.doi)
+            raw_payload = RawFulltextPayload(
+                provider="pnas",
+                source_url=PNAS_SAMPLE.landing_url,
+                content_type="text/html",
+                body=html.encode("utf-8"),
+                metadata={
+                    "route": "html",
+                    "markdown_text": f"# {PNAS_SAMPLE.title}\n\n## Results\n\n" + ("Body text " * 120),
+                    "browser_context_seed": seed,
+                },
+            )
+            with (
+                mock.patch.object(_science_pnas, "load_runtime_config", return_value=runtime),
+                mock.patch.object(_science_pnas, "ensure_runtime_ready"),
+                mock.patch.object(
+                    _science_pnas,
+                    "fetch_html_with_flaresolverr",
+                    return_value=_flaresolverr.FetchedPublisherHtml(
+                        source_url=figure_page_url,
+                        final_url=figure_page_url,
+                        html="<html><body><p>Figure page without direct full-size URL.</p></body></html>",
+                        response_status=200,
+                        response_headers={"content-type": "text/html"},
+                        title="Figure page",
+                        summary="Figure page summary",
+                        browser_context_seed=seed,
+                    ),
+                ),
+                mock.patch.object(html_assets, "_build_cookie_seeded_opener", return_value=object()),
+                mock.patch.object(html_assets, "_request_with_opener", side_effect=fake_request_with_opener),
+                mock.patch.object(
+                    _science_pnas,
+                    "fetch_image_document_with_playwright",
+                    return_value={
+                        "status_code": 200,
+                        "headers": {"content-type": "image/jpeg"},
+                        "body": b"\xff\xd8\xffupgraded-image",
+                        "url": "https://www.pnas.org/images/original/figure1.jpg",
+                        "dimensions": {"width": 1200, "height": 800},
+                    },
+                ) as mocked_canvas,
+            ):
+                result = client.download_related_assets(
+                    PNAS_SAMPLE.doi,
+                    {"doi": PNAS_SAMPLE.doi, "title": PNAS_SAMPLE.title},
+                    raw_payload,
+                    Path(tmpdir),
+                    asset_profile="body",
+                )
+                saved_bytes = Path(result["assets"][0]["path"]).read_bytes()
+
+        self.assertEqual(request_calls, [preview_url])
+        mocked_canvas.assert_called_once()
+        self.assertEqual(mocked_canvas.call_args.args[0], figure_page_url)
+        self.assertEqual(result["assets"][0]["download_tier"], "playwright_canvas_fallback")
+        self.assertEqual(result["assets"][0]["width"], 1200)
+        self.assertEqual(result["assets"][0]["height"], 800)
+        self.assertEqual(saved_bytes, b"\xff\xd8\xffupgraded-image")
 
 
 if __name__ == "__main__":

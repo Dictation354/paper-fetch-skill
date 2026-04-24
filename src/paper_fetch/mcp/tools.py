@@ -9,6 +9,7 @@ import json
 import logging
 import mimetypes
 from pathlib import Path
+import queue
 import threading
 from typing import Any, Callable, Mapping, Sequence
 
@@ -75,6 +76,27 @@ _LOG_LEVEL_BY_RECORD_LEVEL = {
     logging.ERROR: "error",
     logging.CRITICAL: "critical",
 }
+
+
+async def _run_blocking_call(func: Callable[..., Any], /, *args: Any, **kwargs: Any) -> Any:
+    results: queue.Queue[tuple[bool, Any]] = queue.Queue(maxsize=1)
+
+    def invoke() -> Any:
+        try:
+            results.put((True, func(*args, **kwargs)))
+        except BaseException as exc:
+            results.put((False, exc))
+
+    threading.Thread(target=invoke, daemon=True).start()
+    while True:
+        try:
+            success, value = results.get_nowait()
+            break
+        except queue.Empty:
+            await asyncio.sleep(0.01)
+    if success:
+        return value
+    raise value
 
 
 def _dump_payload(payload: Mapping[str, Any]) -> str:
@@ -310,6 +332,15 @@ def _article_from_payload(value: Mapping[str, Any] | None) -> ArticleModel | Non
                 url=normalize_text(entry.get("url")) or None,
                 path=normalize_text(entry.get("path")) or None,
                 section=normalize_text(entry.get("section")) or None,
+                render_state=normalize_text(entry.get("render_state")) or None,
+                anchor_key=normalize_text(entry.get("anchor_key")) or None,
+                download_tier=normalize_text(entry.get("download_tier")) or None,
+                download_url=normalize_text(entry.get("download_url")) or None,
+                original_url=normalize_text(entry.get("original_url")) or None,
+                content_type=normalize_text(entry.get("content_type")) or None,
+                downloaded_bytes=int(entry.get("downloaded_bytes")) if str(entry.get("downloaded_bytes") or "").isdigit() else None,
+                width=int(entry.get("width")) if str(entry.get("width") or "").isdigit() else None,
+                height=int(entry.get("height")) if str(entry.get("height") or "").isdigit() else None,
             )
             for entry in value.get("assets") or []
             if isinstance(entry, Mapping)
@@ -1213,7 +1244,7 @@ async def fetch_paper_tool_async(
         loop = asyncio.get_running_loop()
         bridge = PaperFetchLogBridge(ctx=ctx, loop=loop) if ctx is not None else None
         if bridge is None:
-            envelope = await asyncio.to_thread(
+            envelope = await _run_blocking_call(
                 _fetch_paper_envelope,
                 request,
                 env=env,
@@ -1223,7 +1254,7 @@ async def fetch_paper_tool_async(
             )
         else:
             with bridge:
-                envelope = await asyncio.to_thread(
+                envelope = await _run_blocking_call(
                     _fetch_paper_envelope,
                     request,
                     env=env,
@@ -1372,7 +1403,7 @@ async def _run_batch_async(
     next_index = 0
 
     def launch(index: int) -> None:
-        task = asyncio.create_task(asyncio.to_thread(process_item, queries[index]))
+        task = asyncio.create_task(_run_blocking_call(process_item, queries[index]))
         pending[task] = (index, queries[index])
 
     while next_index < len(queries) and len(pending) < max_workers:

@@ -168,6 +168,15 @@ def fake_service_fetch_with_cached_downloads(query, *, modes=None, download_dir=
     return sample_envelope(modes=set(modes or []), doi=query)
 
 
+async def wait_for_threading_event(event: threading.Event, timeout: float) -> bool:
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        if event.is_set():
+            return True
+        await asyncio.sleep(0.01)
+    return event.is_set()
+
+
 class FakeSession:
     def __init__(self) -> None:
         self.messages: list[dict[str, object]] = []
@@ -437,6 +446,44 @@ class McpToolTests(unittest.TestCase):
         self.assertEqual(payload["quality"]["extraction_revision"], EXTRACTION_REVISION)
         self.assertIn(QUALITY_FLAG_CACHED_WITH_CURRENT_REVISION, payload["quality"]["flags"])
         mocked_fetch.assert_not_called()
+
+    def test_article_payload_preserves_asset_download_diagnostics(self) -> None:
+        article = mcp_tools._article_from_payload(
+            {
+                "doi": "10.1000/assets",
+                "source": "science",
+                "metadata": {"title": "Asset Diagnostics", "authors": ["Alice Example"]},
+                "sections": [{"heading": "Results", "level": 2, "kind": "body", "text": "Body text."}],
+                "assets": [
+                    {
+                        "kind": "figure",
+                        "heading": "Figure 1",
+                        "caption": "Preview figure.",
+                        "path": "downloads/figure-1.png",
+                        "section": "body",
+                        "render_state": "appendix",
+                        "anchor_key": "F1",
+                        "download_tier": "preview",
+                        "download_url": "https://example.test/figure-preview.png",
+                        "original_url": "https://example.test/figure-original.png",
+                        "content_type": "image/png",
+                        "downloaded_bytes": 128,
+                        "width": 640,
+                        "height": 480,
+                    }
+                ],
+            }
+        )
+
+        self.assertIsNotNone(article)
+        assert article is not None
+        asset = article.assets[0]
+        self.assertEqual(asset.render_state, "appendix")
+        self.assertEqual(asset.anchor_key, "F1")
+        self.assertEqual(asset.download_tier, "preview")
+        self.assertEqual(asset.download_url, "https://example.test/figure-preview.png")
+        self.assertEqual(asset.width, 640)
+        self.assertEqual(asset.height, 480)
 
     def test_fetch_paper_payload_prefer_cache_misses_when_revision_differs(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -1341,11 +1388,11 @@ class McpAsyncToolTests(unittest.IsolatedAsyncioTestCase):
 
         with mock.patch.object(mcp_tools, "_fetch_paper_envelope", side_effect=fake_fetch_envelope):
             task = asyncio.create_task(mcp_tools.fetch_paper_tool_async(query="10.1000/example"))
-            await asyncio.to_thread(started.wait, 1.0)
+            await wait_for_threading_event(started, 1.0)
             task.cancel()
             with self.assertRaises(asyncio.CancelledError):
                 await task
-            await asyncio.to_thread(cancelled_seen.wait, 1.0)
+            await wait_for_threading_event(cancelled_seen, 1.0)
 
         self.assertTrue(cancelled_seen.is_set())
 

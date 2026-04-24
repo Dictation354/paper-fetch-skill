@@ -21,7 +21,7 @@ from ..utils import normalize_text, sanitize_filename
 XLINK_HREF = "{http://www.w3.org/1999/xlink}href"
 XLINK_TITLE = "{http://www.w3.org/1999/xlink}title"
 INLINE_SPLIT_SUBSCRIPT_PATTERN = re.compile(
-    r"\*(?P<base>[A-Za-zΑ-Ωα-ω])\*\s*\n\s*(?:\*(?P<italic_sub>[A-Za-z0-9]+)\*|(?P<plain_sub>[A-Za-z0-9]{1,6}))"
+    r"\*(?P<base>[A-Za-zΑ-Ωα-ω]{1,8})\*\s*\n\s*(?:\*(?P<italic_sub>[A-Za-z0-9]+)\*|(?P<plain_sub>[A-Za-z0-9]{1,6}))"
 )
 
 __all__ = [
@@ -66,6 +66,9 @@ def normalize_inline_markup_text(value: str | None) -> str:
     text = re.sub(r"(</(?:sub|sup)>)\s*\n\s*", r"\1 ", text, flags=re.IGNORECASE)
     text = re.sub(r"(</(?:sub|sup)>)(?=[A-Za-z0-9])", r"\1 ", text, flags=re.IGNORECASE)
     text = re.sub(r"(</(?:sub|sup)>)\s+([,.;:%\]\}\+\)])", r"\1\2", text, flags=re.IGNORECASE)
+    text = re.sub(r"\s*\n\s*([,.;:%\]\}\)])", r"\1", text)
+    text = re.sub(r"([(\[{])\s*\n\s*", r"\1", text)
+    text = re.sub(r"(?<=[A-Za-z0-9>])\s*\n\s*(?=[A-Za-z0-9*_<])", " ", text)
     return text.strip()
 
 
@@ -254,15 +257,17 @@ def collect_conversion_notes(
 
     for entry in table_entries or []:
         heading = normalize_text(str(entry.get("heading") or ""))
-        messages = [
-            normalize_text(str(message))
-            for message in [
-                *(entry.get("conversion_notes") or []),
-                entry.get("lossy_message"),
-                entry.get("fallback_message"),
-            ]
-            if normalize_text(str(message))
-        ]
+        messages = []
+        for message in [
+            *(entry.get("conversion_notes") or []),
+            entry.get("lossy_message"),
+            entry.get("fallback_message"),
+        ]:
+            if message is None:
+                continue
+            normalized_message = normalize_text(str(message))
+            if normalized_message:
+                messages.append(normalized_message)
         for message in messages:
             key = (heading, message)
             if key in seen:

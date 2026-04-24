@@ -137,16 +137,19 @@ def render_elsevier_table_result(table: ET.Element | None) -> ElsevierTableRende
     if col_count <= 0:
         return ElsevierTableRenderResult(rows=[])
 
-    active_rowspans = [0] * col_count
+    active_rowspans: list[dict[str, Any] | None] = [None] * col_count
     rendered_rows: list[list[str]] = []
     lossy = False
 
     for row in row_nodes:
         rendered = [None] * col_count
         for index in range(col_count):
-            if active_rowspans[index] > 0:
-                rendered[index] = ""
-                active_rowspans[index] -= 1
+            active_span = active_rowspans[index]
+            if active_span is not None and int(active_span.get("remaining") or 0) > 0:
+                rendered[index] = str(active_span.get("text") or "")
+                active_span["remaining"] = int(active_span.get("remaining") or 0) - 1
+                if int(active_span.get("remaining") or 0) <= 0:
+                    active_rowspans[index] = None
 
         cursor = 0
         entries = [
@@ -187,10 +190,13 @@ def render_elsevier_table_result(table: ET.Element | None) -> ElsevierTableRende
             text = normalize_table_cell_text(render_inline_text(entry))
             rendered[start_idx] = text
             for index in range(start_idx + 1, end_idx + 1):
-                rendered[index] = ""
+                rendered[index] = text
             if rowspan > 1:
                 for index in range(start_idx, end_idx + 1):
-                    active_rowspans[index] = max(active_rowspans[index], rowspan - 1)
+                    active_rowspans[index] = {
+                        "remaining": max(int((active_rowspans[index] or {}).get("remaining") or 0), rowspan - 1),
+                        "text": text,
+                    }
             cursor = end_idx + 1
 
         rendered_rows.append([cell if cell is not None else "" for cell in rendered])
@@ -199,7 +205,10 @@ def render_elsevier_table_result(table: ET.Element | None) -> ElsevierTableRende
         return ElsevierTableRenderResult(rows=[])
     note = None
     if lossy:
-        note = "Merged table spans were flattened into rectangular Markdown cells; rowspan/colspan fidelity was reduced."
+        note = (
+            "Merged table spans were semantically expanded into rectangular Markdown cells; "
+            "rowspan/colspan layout fidelity was reduced."
+        )
     return ElsevierTableRenderResult(rows=rendered_rows, lossy=lossy, note=note)
 
 

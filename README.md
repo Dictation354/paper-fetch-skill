@@ -51,7 +51,7 @@
 -> 用 Crossref / provider metadata 建立路由信号
 -> 合并元数据
 -> 尝试 provider 全文主链
--> 失败时降级为 metadata-only
+-> 失败时降级为 abstract-only 或 metadata-only
 -> 输出 FetchEnvelope / Markdown / 本地缓存 / MCP 结果
 ```
 
@@ -61,8 +61,8 @@
 2. 路由优先级固定是 `domain > publisher > DOI fallback`。
 3. `crossref` 既可能是公开来源 `source="crossref_meta"`，也可能只是内部 routing signal。
 4. `elsevier` 固定走 `官方 XML/API -> 官方 API PDF fallback -> metadata-only`。
-5. `springer` 固定走 `direct HTML -> direct HTTP PDF -> metadata-only`。
-6. `wiley` 走 provider 自管 `FlareSolverr HTML -> Wiley TDM API PDF -> metadata-only`，`science` / `pnas` 继续走 `FlareSolverr HTML -> seeded-browser PDF -> metadata-only`。
+5. `springer` 固定走 `direct HTML -> direct HTTP PDF -> abstract-only / metadata-only`。
+6. `wiley` 走 provider 自管 `FlareSolverr HTML -> Wiley TDM API PDF -> seeded-browser publisher PDF/ePDF -> abstract-only / metadata-only`，`science` / `pnas` 继续走 `FlareSolverr HTML -> seeded-browser publisher PDF/ePDF -> abstract-only / metadata-only`。
 7. 未命中这五家 provider 的 URL / landing page 不再尝试通用 HTML 正文提取，只会继续做 DOI / Crossref metadata 解析，并在允许时返回 metadata-only。
 8. 最终统一输出 `FetchEnvelope`，其中会显式给出：
    - `source`
@@ -121,6 +121,8 @@ python3 -m paper_fetch.mcp.server
 - `asset_profile=null (provider default)`
   - 默认不显式指定资产策略，由 provider/source 决定。
   - 目前 `springer` / `wiley` / `science` / `pnas` 的 HTML 成功路径默认等价于 `body`；其余默认等价于 `none`。
+  - `article.assets[*]` 会保留下载诊断字段，例如 `render_state`、`download_tier`、`download_url`、`content_type`、`downloaded_bytes`、`width`、`height`。
+  - 正文已经内联消费过的 figure / table 会标记为 `render_state="inline"`，不会再在文末重复追加。
 - `max_tokens="full_text"`
   - 默认尽量返回完整 abstract、正文和 references。
 - `include_refs=null`
@@ -128,14 +130,21 @@ python3 -m paper_fetch.mcp.server
   - 在数值 token budget 模式下默认等价于 `top10`。
 - `fetch_paper()` 的 MCP 默认 `modes=["article", "markdown"]`
   - 同时返回结构化结果和 AI 直接可读的 Markdown。
+  - `strategy` 可包含 `allow_metadata_only_fallback`、`preferred_providers`、`asset_profile`，以及 MCP-only 的 `inline_image_budget`。
+  - 当 `asset_profile` 实际为 `body` 或 `all` 时，MCP 可能额外返回少量 `ImageContent`；默认上限为 `3` 张、单张 `2 MiB`、总计 `8 MiB`，任一上限为 `0` 时禁用。
 - `has_fulltext()`
   - 是廉价 probe，不等同于最终 `fetch_paper().has_fulltext`。
 - `wiley` / `science` / `pnas`
-  - 当前只保证在仓库 checkout + `vendor/flaresolverr/` 工作流里可用。
+  - `science` / `pnas` 依赖仓库 checkout + `vendor/flaresolverr/` 工作流。
+  - `wiley` 的 HTML 与 seeded-browser PDF/ePDF 路径也依赖这套工作流；但配置 `WILEY_TDM_CLIENT_TOKEN` 时，官方 TDM API PDF lane 可以在本地浏览器运行时不可用时单独尝试。
   - `FlareSolverr HTML` 成功路径支持 `asset_profile=body|all`；会优先尝试 full-size/original figure，必要时回退 preview。
+  - Science / PNAS 图片直链若返回 challenge HTML 或浏览器图片壳，会尝试 Playwright image document / canvas fallback；preview 图只有尺寸达标时才作为可接受降级。
   - `PDF/ePDF fallback` 仍是 text-only，不阻塞正文成功。
-- metadata-only fallback
-  - 默认允许。正文不可用时，系统会返回 metadata + abstract，并显式带 warning。
+- 公式 Markdown
+  - MathML 转 LaTeX 和 Springer/Nature raw MathJax TeX 都会经过轻量 normalize。
+  - 目前会把 `\updelta` 这类 upright Greek 宏改成 KaTeX 常用宏，并把 `\mspace{Nmu}` 改成 KaTeX 可解析的 `\mkernNmu`。
+- abstract-only / metadata-only 降级
+  - 默认允许。正文不可用时，系统会返回 provider 摘要级结果或 metadata + abstract，并显式带 warning。
 
 ## 支持的 provider 概览
 
@@ -152,7 +161,7 @@ python3 -m paper_fetch.mcp.server
 
 - `elsevier` 保留官方 API/XML 主链，并在 XML 不可用时直接走官方 API PDF fallback；XML 成功时公开为 `elsevier_xml`，PDF fallback 成功时公开为 `elsevier_pdf`。
 - `springer` 使用 provider 自管 `direct HTML -> direct HTTP PDF` 主链，公开来源统一为 `springer_html`。
-- `wiley` 使用 repo-local FlareSolverr HTML + Wiley TDM API PDF fallback；`science`、`pnas` 继续使用 repo-local FlareSolverr + Playwright seeded-browser 工作流。
+- `wiley` 使用 repo-local FlareSolverr HTML + Wiley TDM API PDF + seeded-browser publisher PDF/ePDF fallback；`science`、`pnas` 继续使用 repo-local FlareSolverr + Playwright seeded-browser publisher PDF/ePDF 工作流。
 - `wiley` 公开来源为 `wiley_browser`；`science`、`pnas` 继续保持原有 public source。
 - `crossref` 负责 metadata、题名检索、路由信号和 metadata-only 结果，不承担 publisher fulltext。
 
@@ -164,12 +173,14 @@ python3 -m paper_fetch.mcp.server
 
 - `resolve_paper(query | title, authors, year)`
 - `has_fulltext(query)`
-- `fetch_paper(query, modes, strategy, include_refs, max_tokens, prefer_cache, download_dir)`
+- `fetch_paper(query, modes, strategy, include_refs, max_tokens, prefer_cache, download_dir)`；`strategy` 支持 `allow_metadata_only_fallback`、`preferred_providers`、`asset_profile` 和 `inline_image_budget`
 - `provider_status()`
 - `list_cached(download_dir)`
 - `get_cached(doi, download_dir)`
 - `batch_resolve(queries, concurrency)`
-- `batch_check(queries, mode, concurrency)`
+- `batch_check(queries, mode, concurrency)`，其中 `mode` 为 `metadata` 或 `article`
+
+批量工具每次最多接收 `50` 条 query，`concurrency` 默认 `1`，允许范围是 `1..8`。
 
 还提供两个 prompt 模板：
 
@@ -210,7 +221,7 @@ paper-fetch --query "10.1016/j.rse.2025.114648" --max-tokens 12000
 paper-fetch --query "10.1016/j.rse.2025.114648" --no-download
 ```
 
-CLI 退出码固定为：
+CLI 抓取期错误的退出码为：
 
 - `0`：成功
 - `1`：其他失败
@@ -218,17 +229,20 @@ CLI 退出码固定为：
 - `3`：`no_access`
 - `4`：`rate_limited`
 
+命令行参数解析错误仍沿用 `argparse` 的标准行为，也会以 `2` 退出，但不表示论文解析歧义。
+
 ## Wiley / Science / PNAS 边界
 
 `wiley`、`science`、`pnas` 的运行边界和 `springer` 不一样：
 
 - metadata 仍来自 `crossref`
 - 全文链路由 provider 自己管理
-- `wiley` 的主路径是 `FlareSolverr HTML -> Wiley TDM API PDF -> metadata-only`
-- `science` / `pnas` 的主路径是 `FlareSolverr HTML -> seeded-browser PDF -> metadata-only`
+- `wiley` 的主路径是 `FlareSolverr HTML -> Wiley TDM API PDF -> seeded-browser publisher PDF/ePDF -> abstract-only / metadata-only`
+- `science` / `pnas` 的主路径是 `FlareSolverr HTML -> seeded-browser publisher PDF/ePDF -> abstract-only / metadata-only`
 - `wiley` / `science` / `pnas` 的 HTML 成功路径支持 `none/body/all` 资产下载；PDF/ePDF fallback 仍是 text-only
-- 依赖 repo-local `vendor/flaresolverr/`
-- 需要显式配置 `FLARESOLVERR_ENV_FILE` 和本地限速变量
+- `science` / `pnas` 必须依赖 repo-local `vendor/flaresolverr/`
+- `wiley` 的 HTML 与 seeded-browser PDF/ePDF 路径依赖 repo-local `vendor/flaresolverr/`；`WILEY_TDM_CLIENT_TOKEN` 只启用官方 TDM API PDF lane
+- browser 路径需要显式配置 `FLARESOLVERR_ENV_FILE` 和本地限速变量
 
 准备和排障细节见 [`docs/flaresolverr.md`](docs/flaresolverr.md)。
 
@@ -272,7 +286,9 @@ FLARESOLVERR_ENV_FILE="$PWD/vendor/flaresolverr/.env.flaresolverr-source-headles
 FLARESOLVERR_MIN_INTERVAL_SECONDS=20 \
 FLARESOLVERR_MAX_REQUESTS_PER_HOUR=30 \
 FLARESOLVERR_MAX_REQUESTS_PER_DAY=200 \
-PYTHONPATH=src pytest -n 0 tests/live/test_live_science_pnas.py
+PYTHONPATH=src pytest -n 0 \
+  tests/live/test_live_publishers.py::LivePublisherTests::test_wiley_doi_live_fulltext \
+  tests/live/test_live_science_pnas.py
 ```
 
 如果要跑自然地理五出版商的 live-only 全链路报告，直接走当前项目提取链路，不经过 MCP：
@@ -300,7 +316,7 @@ live-downloads/reports/geography-live-report.json
 live-downloads/reports/geography-live-report.md
 ```
 
-自然地理 live 样本清单维护在 [`tests/live/geography_samples.py`](tests/live/geography_samples.py)，默认每家 publisher 尝试前 `10` 条、后 `2` 条作为备用候选。对应的 live 测试入口是 [`tests/live/test_live_geography_publishers.py`](tests/live/test_live_geography_publishers.py)。
+自然地理 live 样本清单维护在 [`tests/live/geography_samples.py`](tests/live/geography_samples.py)，默认每家 publisher 尝试前 `10` 条。对应的 live 测试入口是 [`tests/live/test_live_geography_publishers.py`](tests/live/test_live_geography_publishers.py)。
 默认调度会在保持各 provider 内部 DOI 顺序不变的前提下做跨 provider 轮转，尽量减少 `wiley` / `science` / `pnas` 被本地最小间隔护栏连续打成 `rate_limited`。
 
 如果需要把 issue 样本导出成独立工件目录，或按问题类型生成分组视图，也继续走 repo-local 脚本：

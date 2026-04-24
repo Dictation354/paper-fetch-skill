@@ -42,6 +42,56 @@ DEFAULT_TIMEOUT_SECONDS = 5.0
 MATHML_NS = "http://www.w3.org/1998/Math/MathML"
 ET.register_namespace("", MATHML_NS)
 
+UPGREEK_LATEX_ALIASES = {
+    "upalpha": "alpha",
+    "upbeta": "beta",
+    "upgamma": "gamma",
+    "updelta": "delta",
+    "upepsilon": "epsilon",
+    "upvarepsilon": "varepsilon",
+    "upzeta": "zeta",
+    "upeta": "eta",
+    "uptheta": "theta",
+    "upvartheta": "vartheta",
+    "upiota": "iota",
+    "upkappa": "kappa",
+    "uplambda": "lambda",
+    "upmu": "mu",
+    "upnu": "nu",
+    "upxi": "xi",
+    "uppi": "pi",
+    "upvarpi": "varpi",
+    "uprho": "rho",
+    "upvarrho": "varrho",
+    "upsigma": "sigma",
+    "upvarsigma": "varsigma",
+    "uptau": "tau",
+    "upupsilon": "upsilon",
+    "upphi": "phi",
+    "upvarphi": "varphi",
+    "upchi": "chi",
+    "uppsi": "psi",
+    "upomega": "omega",
+    "upGamma": "Gamma",
+    "upDelta": "Delta",
+    "upTheta": "Theta",
+    "upLambda": "Lambda",
+    "upXi": "Xi",
+    "upPi": "Pi",
+    "upSigma": "Sigma",
+    "upUpsilon": "Upsilon",
+    "upPhi": "Phi",
+    "upPsi": "Psi",
+    "upOmega": "Omega",
+}
+UPGREEK_LATEX_ALIAS_NAMES = "|".join(
+    re.escape(name) for name in sorted(UPGREEK_LATEX_ALIASES, key=len, reverse=True)
+)
+UPGREEK_LATEX_ALIAS_PATTERN = re.compile(r"\\(" + UPGREEK_LATEX_ALIAS_NAMES + r")(?![A-Za-z])")
+LATEX_MSPACE_MU_PATTERN = re.compile(
+    r"\\mspace\s*\{\s*([+-]?(?:\d+(?:\.\d*)?|\.\d+))\s*mu\s*\}"
+)
+
 
 @dataclass(slots=True)
 class FormulaConversionResult:
@@ -80,6 +130,23 @@ def stringify_mathml(element: ET.Element | str | None) -> str:
     return ET.tostring(element, encoding="unicode").strip()
 
 
+def normalize_latex_macros(value: str | None) -> str:
+    text = value or ""
+    if not text:
+        return ""
+
+    def replace_alias(match: re.Match[str]) -> str:
+        return "\\" + UPGREEK_LATEX_ALIASES[match.group(1)]
+
+    def replace_mspace(match: re.Match[str]) -> str:
+        following = match.string[match.end() : match.end() + 1]
+        suffix = " " if following and following.isalnum() else ""
+        return rf"\mkern{match.group(1)}mu{suffix}"
+
+    text = UPGREEK_LATEX_ALIAS_PATTERN.sub(replace_alias, text)
+    return LATEX_MSPACE_MU_PATTERN.sub(replace_mspace, text)
+
+
 def normalize_latex(value: str | None) -> str:
     text = (value or "").strip()
     if not text:
@@ -91,6 +158,8 @@ def normalize_latex(value: str | None) -> str:
         text = match.group(1).strip() if match else text
     text = text.replace("\n", " ")
     text = re.sub(r"\s+", " ", text)
+    text = re.sub(r"(?<=[A-Za-z0-9])\\textbackslash\\_(?=[A-Za-z0-9])", r"\\_", text)
+    text = normalize_latex_macros(text)
     text = re.sub(r"^\$(.+)\$$", r"\1", text)
     return text.strip()
 

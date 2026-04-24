@@ -8,6 +8,7 @@ from unittest import mock
 
 from paper_fetch.http import DEFAULT_FULLTEXT_TIMEOUT_SECONDS, DEFAULT_TIMEOUT_SECONDS, RequestFailure
 from paper_fetch.providers import _flaresolverr, _science_pnas, html_assets
+from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
 from paper_fetch.providers.crossref import CrossrefClient
 from paper_fetch.providers.elsevier import ElsevierClient, filter_elsevier_asset_references
 from paper_fetch.providers.springer import SpringerClient
@@ -394,6 +395,67 @@ class ProviderRequestOptionsTests(unittest.TestCase):
             self.assertEqual(len(result["assets"]), 1)
             self.assertEqual(result["asset_failures"], [])
             self.assertEqual(Path(result["assets"][0]["path"]).read_bytes(), b"preview-image")
+
+    def test_springer_body_asset_profile_ignores_supplementary_download_pdf_links(self) -> None:
+        figure_url = "https://media.springernature.com/full/example-figure-1.png"
+        transport = RecordingTransport(
+            {
+                ("GET", figure_url): {
+                    "status_code": 200,
+                    "headers": {"content-type": "image/png"},
+                    "body": b"springer-figure-1",
+                    "url": figure_url,
+                }
+            }
+        )
+        client = SpringerClient(transport, {})
+        raw_payload = RawFulltextPayload(
+            provider="springer",
+            source_url="https://link.springer.com/article/10.1000/example",
+            content_type="text/html",
+            body=b"<html></html>",
+            content=ProviderContent(
+                route_kind="html",
+                source_url="https://link.springer.com/article/10.1000/example",
+                content_type="text/html",
+                body=b"<html></html>",
+                extracted_assets=[
+                    {
+                        "kind": "figure",
+                        "heading": "Figure 1",
+                        "caption": "Body figure",
+                        "url": figure_url,
+                        "section": "body",
+                    },
+                    {
+                        "kind": "supplementary",
+                        "heading": "Download PDF",
+                        "caption": "",
+                        "url": "https://link.springer.com/content/pdf/10.1000/example.pdf",
+                        "section": "supplementary",
+                    },
+                ],
+                merged_metadata={"doi": "10.1000/example"},
+            ),
+            merged_metadata={"doi": "10.1000/example"},
+        )
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            result = client.download_related_assets(
+                "10.1000/example",
+                {"doi": "10.1000/example", "title": "Example"},
+                raw_payload,
+                Path(tmpdir),
+                asset_profile="body",
+            )
+            saved_path = Path(result["assets"][0]["path"])
+            saved_bytes = saved_path.read_bytes()
+
+        self.assertEqual([call["url"] for call in transport.calls], [figure_url])
+        self.assertEqual(len(result["assets"]), 1)
+        self.assertEqual(result["assets"][0]["kind"], "figure")
+        self.assertEqual(result["asset_failures"], [])
+        self.assertEqual(saved_bytes, b"springer-figure-1")
 
     def test_elsevier_body_asset_profile_excludes_appendix_and_supplementary(self) -> None:
         references = [

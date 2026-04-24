@@ -144,8 +144,8 @@ def build_parser() -> argparse.ArgumentParser:
             "Also write the rendered AI Markdown full text to disk (defaults to PAPER_FETCH_DOWNLOAD_DIR "
             "or the user data downloads directory, "
             "overridable via --output-dir). Only writes when full text was actually retrieved. "
-            "For Wiley the Markdown is produced from PDF text extraction and may be lower fidelity "
-            "than Elsevier XML or publisher-managed HTML."
+            "For Wiley the preferred Markdown route is provider-managed HTML; TDM or browser PDF/ePDF "
+            "fallbacks may be lower fidelity than Elsevier XML or publisher-managed HTML."
         ),
     )
     parser.add_argument("--include-refs", choices=("none", "top10", "all"), default=None)

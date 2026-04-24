@@ -14,11 +14,12 @@ Useful options:
 - `--no-download`
 - `--save-markdown`
 - `--include-refs none|top10|all`
-- `--max-tokens 8000`
+- `--asset-profile none|body|all`
+- `--max-tokens full_text|<positive-int>` (default `full_text`)
 
 Output contract:
 
 - `--format markdown`: prints AI-friendly Markdown.
 - `--format json`: prints `ArticleModel` JSON.
 - `--format both`: prints `{"article": ..., "markdown": ...}`.
-- On failure, `stderr` is always JSON.
+- Runtime fetch failures from `PaperFetchFailure` or `ProviderFailure` write JSON to `stderr`; argument parsing errors still use argparse's standard stderr format.

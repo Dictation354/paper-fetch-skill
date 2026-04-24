@@ -32,6 +32,19 @@ from .types import FetchStrategy, PaperFetchFailure
 
 logger = logging.getLogger("paper_fetch.service")
 PROVIDER_MANAGED_ABSTRACT_ONLY_PROVIDERS = {"springer", "wiley", "science", "pnas"}
+ACCEPTABLE_PREVIEW_MIN_WIDTH = 300
+ACCEPTABLE_PREVIEW_MIN_HEIGHT = 200
+
+
+def _preview_asset_accepted(asset: Mapping[str, Any]) -> bool:
+    if bool(asset.get("preview_accepted")):
+        return True
+    try:
+        width = int(asset.get("width") or 0)
+        height = int(asset.get("height") or 0)
+    except (TypeError, ValueError):
+        return False
+    return width >= ACCEPTABLE_PREVIEW_MIN_WIDTH and height >= ACCEPTABLE_PREVIEW_MIN_HEIGHT
 
 
 def build_metadata_only_result(
@@ -196,11 +209,24 @@ def _apply_provider_artifacts(
         return
     if artifacts.assets:
         extend_unique(source_trail, [f"download:{provider_name}_assets_saved_profile_{asset_profile}"])
-        preview_fallback_count = sum(
-            1
+        preview_assets = [
+            asset
             for asset in artifacts.assets
             if normalize_text(asset.get("download_tier")).lower() == "preview"
-        )
+        ]
+        preview_accepted_count = sum(1 for asset in preview_assets if _preview_asset_accepted(asset))
+        preview_fallback_count = len(preview_assets) - preview_accepted_count
+        if preview_accepted_count:
+            extend_unique(
+                warnings,
+                [
+                    (
+                        f"{provider_name.replace('_', ' ').title()} figure downloads used preview images for "
+                        f"{preview_accepted_count} asset(s), but their saved dimensions met the acceptance threshold."
+                    )
+                ],
+            )
+            extend_unique(source_trail, [f"download:{provider_name}_assets_preview_accepted"])
         if preview_fallback_count:
             extend_unique(
                 warnings,

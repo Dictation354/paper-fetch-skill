@@ -760,9 +760,12 @@ class ElsevierClient(ProviderClient):
                     table_entries=structure.table_entries,
                     supplement_entries=structure.supplement_entries,
                     conversion_notes=structure.conversion_notes,
+                    references=structure.references,
                     semantic_losses=structure.semantic_losses,
                     warnings=warnings,
                     trace=trace,
+                    inline_figure_keys=sorted(structure.used_figure_keys),
+                    inline_table_keys=sorted(structure.used_table_keys),
                 )
         if raw_payload.content_type.startswith("text/"):
             try:

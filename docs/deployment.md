@@ -60,6 +60,8 @@ PAPER_FETCH_ENV_FILE=/path/to/.env
 
 主抓取链路不依赖外部公式后端；只有当你希望公式转换效果更好时，才需要这一步。
 
+即使没有安装外部公式后端，运行时仍会对已经拿到的 LaTeX 做轻量 normalize，例如把 `\updelta` 这类 upright Greek 宏改成 KaTeX 常用宏，并把 `\mspace{Nmu}` 改成 `\mkernNmu`。外部后端只影响 MathML 到 LaTeX 的转换能力，不是这些 normalize 规则的开关。
+
 ### 已安装环境
 
 如果你已经 `pip install .`，推荐直接执行：
@@ -79,7 +81,9 @@ paper-fetch-install-formula-tools
 补充说明：
 
 - `paper-fetch-install-formula-tools` 会把工具装到用户数据目录，更适合部署环境
-- `./install-formula-tools.sh` 会把工具装到当前仓库的 `./.formula-tools/`
+- `./install-formula-tools.sh` 会把工具装到当前仓库的 `./.formula-tools/`，并默认顺手准备 repo-local FlareSolverr 与 Playwright Chromium
+- 如果只想安装公式工具，可给仓库脚本加 `--skip-flaresolverr-setup --skip-playwright-install`
+- 运行时可用 `PAPER_FETCH_FORMULA_TOOLS_DIR` 覆盖公式工具查找目录；默认会考虑 repo-local `.formula-tools` 和用户数据目录下的 `formula-tools`
 
 ## 4. Elsevier / Wiley / Science / PNAS 接入入口
 
@@ -97,7 +101,8 @@ paper-fetch-install-formula-tools
 
 - `wiley` / `science` / `pnas` 还需要 Playwright Chromium，因为它们仍有 seeded-browser PDF/ePDF fallback
 - `elsevier` 只需要 `ELSEVIER_API_KEY`
-- `wiley` 现在走 `FlareSolverr HTML -> Wiley TDM API PDF -> seeded-browser publisher PDF/ePDF -> metadata-only`
+- 如果只想启用 `wiley` 的官方 TDM API PDF lane，可以只配置 `WILEY_TDM_CLIENT_TOKEN`；这不会启用 HTML 资产下载或 seeded-browser PDF/ePDF fallback
+- `wiley` 现在走 `FlareSolverr HTML -> Wiley TDM API PDF -> seeded-browser publisher PDF/ePDF -> abstract-only / metadata-only`
 
 最常见入口是：
 

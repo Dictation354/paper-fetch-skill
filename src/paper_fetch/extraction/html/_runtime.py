@@ -68,9 +68,14 @@ HTML_DROP_SELECTORS = (
 )
 HTML_EXACT_NOISE_TEXTS = {
     "advertisement",
+    "aims and scope",
     "download pdf",
+    "rights and permissions",
+    "save article",
+    "submit manuscript",
     "view all journals",
     "view author publications",
+    "view saved research",
     "search author on:",
     "search author on: pubmed google scholar",
     "get shareable link",
@@ -99,6 +104,7 @@ MARKDOWN_PREFIX_NOISE_TEXTS = HTML_PREFIX_NOISE_TEXTS + (
     "access provided by",
     "buy article",
     "view access options",
+    "you have full access to this",
 )
 MARKDOWN_SHORT_NOISE_TOKENS = (
     "sign in",
