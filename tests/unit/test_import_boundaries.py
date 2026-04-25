@@ -10,6 +10,7 @@ PAPER_FETCH_ROOT = SRC_DIR / "paper_fetch"
 BOUNDARY_PATHS = [
     PAPER_FETCH_ROOT / "models.py",
     *sorted((PAPER_FETCH_ROOT / "extraction" / "html").glob("*.py")),
+    *sorted((PAPER_FETCH_ROOT / "quality").glob("*.py")),
 ]
 FORBIDDEN_PREFIX = "paper_fetch.providers._"
 
@@ -45,7 +46,7 @@ def _forbidden_provider_private_imports(path: Path) -> list[str]:
 
 
 class ImportBoundaryTests(unittest.TestCase):
-    def test_core_and_extraction_html_do_not_import_provider_private_helpers(self) -> None:
+    def test_core_extraction_html_and_quality_do_not_import_provider_private_helpers(self) -> None:
         offenders: list[str] = []
         for path in BOUNDARY_PATHS:
             offenders.extend(_forbidden_provider_private_imports(path))

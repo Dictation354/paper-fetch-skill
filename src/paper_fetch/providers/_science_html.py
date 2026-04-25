@@ -6,13 +6,17 @@ import json
 import re
 from typing import Any, Mapping
 
+from ..quality.html_profiles import (
+    SCIENCE_NOISE_PROFILE,
+    SCIENCE_SITE_RULE_OVERRIDES,
+    science_blocking_fallback_signals,
+    science_positive_signals,
+)
 from ..utils import dedupe_authors, normalize_text
 from ._html_references import extract_numbered_references_from_html
 
 from ._browser_workflow_shared import (
     build_base_urls,
-    default_positive_signals,
-    dedupe_signals,
     preferred_html_candidate_from_landing_page,
 )
 
@@ -24,31 +28,8 @@ except ImportError:  # pragma: no cover - dependency is declared in pyproject
 
 HOSTS: tuple[str, ...] = ("www.science.org", "science.org")
 BASE_HOSTS: tuple[str, ...] = HOSTS
-NOISE_PROFILE = "generic"
-SITE_RULE_OVERRIDES: dict[str, Any] = {
-    "candidate_selectors": [
-        ".article__fulltext",
-        ".article-view",
-    ],
-    "remove_selectors": [
-        "header .social-share",
-        ".jump-to-nav",
-        ".article-access-info",
-        ".references-tab",
-        ".permissions",
-        ".issue-item__citation",
-        ".article-header__access",
-        "#article_collateral_menu",
-        "#core-collateral-fulltext-options",
-        "#core-collateral-metrics",
-        "#core-collateral-share",
-        "#core-collateral-media",
-        "#core-collateral-figures",
-        "#core-collateral-tables",
-    ],
-    "drop_keywords": {"advert", "tab-nav", "jump-to"},
-    "drop_text": {"Permissions"},
-}
+NOISE_PROFILE = SCIENCE_NOISE_PROFILE
+SITE_RULE_OVERRIDES: dict[str, Any] = SCIENCE_SITE_RULE_OVERRIDES
 AAAS_DATALAYER_PATTERN = re.compile(r"AAASdataLayer=(\{.*?\});(?:if\(|</script>)", flags=re.DOTALL)
 SCIENCE_AUTHOR_COUNT_PATTERN = re.compile(r"^\+\s*\d+\s+authors?$", flags=re.IGNORECASE)
 SCIENCE_STRUCTURED_SUBHEADING_PATTERN = re.compile(r"(?m)^###\s+([A-Z][A-Z0-9 /-]*)\s*$")
@@ -73,30 +54,7 @@ def _load_aaas_datalayer(html_text: str) -> Mapping[str, Any] | None:
 
 
 def blocking_fallback_signals(html_text: str) -> list[str]:
-    payload = _load_aaas_datalayer(html_text)
-    if payload is None:
-        return []
-    page = payload.get("page")
-    page_info = page.get("pageInfo", {}) if isinstance(page, Mapping) else {}
-    user = payload.get("user", {}) if isinstance(payload.get("user"), Mapping) else {}
-    signals: list[str] = []
-
-    page_type = normalize_text(page_info.get("pageType")).lower()
-    if page_type == "journal-article-denial":
-        signals.append("aaas_page_type_denial")
-    if page_type == "journal-article-abstract":
-        signals.append("aaas_page_type_abstract")
-
-    view_type = normalize_text(page_info.get("viewType")).lower()
-    if view_type == "abs":
-        signals.append("aaas_view_abs")
-
-    user_entitled = normalize_text(user.get("entitled")).lower()
-    user_access = normalize_text(user.get("access")).lower()
-    if user_entitled == "false" and user_access != "yes":
-        signals.append("aaas_entitlement_denied")
-
-    return dedupe_signals(signals)
+    return science_blocking_fallback_signals(html_text)
 
 
 def _normalized_author_tokens(value: str | None) -> list[str]:
@@ -326,27 +284,7 @@ def build_pdf_candidates(doi: str, crossref_pdf_url: str | None) -> list[str]:
 
 
 def positive_signals(html_text: str) -> tuple[list[str], list[str], list[str]]:
-    strong, soft, abstract_only = default_positive_signals(html_text)
-    payload = _load_aaas_datalayer(html_text)
-    if payload is None:
-        return strong, soft, abstract_only
-    page_info = payload.get("page", {}).get("pageInfo", {}) if isinstance(payload.get("page"), Mapping) else {}
-    user = payload.get("user", {}) if isinstance(payload.get("user"), Mapping) else {}
-    if str(page_info.get("pageType") or "").strip().lower() == "journal-article-full-text":
-        soft.append("aaas_page_type_full_text")
-    if "abstract" in str(page_info.get("pageType") or "").strip().lower():
-        abstract_only.append("aaas_page_type_abstract")
-    if str(page_info.get("viewType") or "").strip().lower() == "full":
-        soft.append("aaas_view_full")
-    if "abstract" in str(page_info.get("viewType") or "").strip().lower():
-        abstract_only.append("aaas_view_abstract")
-    if str(user.get("entitled") or "").strip().lower() == "true":
-        strong.append("aaas_user_entitled")
-    if str(user.get("access") or "").strip().lower() == "yes":
-        strong.append("aaas_user_access_yes")
-    if str(page_info.get("articleType") or "").strip():
-        soft.append("aaas_article_type_present")
-    return dedupe_signals(strong), dedupe_signals(soft), dedupe_signals(abstract_only)
+    return science_positive_signals(html_text)
 
 
 def markdown_postprocess(markdown_text: str) -> str:

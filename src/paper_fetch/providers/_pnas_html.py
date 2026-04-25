@@ -2,14 +2,18 @@
 
 from __future__ import annotations
 
-import json
 import re
 from typing import Any, Mapping
 
+from ..quality.html_profiles import (
+    PNAS_NOISE_PROFILE,
+    PNAS_SITE_RULE_OVERRIDES,
+    pnas_blocking_fallback_signals,
+    pnas_positive_signals,
+)
 from ..utils import dedupe_authors, normalize_text
 from ._browser_workflow_shared import (
     build_base_urls,
-    default_positive_signals,
     preferred_html_candidate_from_landing_page,
 )
 from ._html_references import extract_numbered_references_from_html
@@ -22,23 +26,8 @@ except ImportError:  # pragma: no cover - dependency is declared in pyproject
 
 HOSTS: tuple[str, ...] = ("www.pnas.org", "pnas.org")
 BASE_HOSTS: tuple[str, ...] = HOSTS
-NOISE_PROFILE = "pnas"
-SITE_RULE_OVERRIDES: dict[str, Any] = {
-    "candidate_selectors": [
-        ".article__fulltext",
-        ".core-container",
-        ".article-content",
-    ],
-    "remove_selectors": [
-        ".article__access",
-        ".article__footer",
-        ".article__reference-links",
-        ".core-collateral",
-        ".card",
-        ".signup-alert-ad",
-    ],
-    "drop_keywords": {"tab-nav"},
-}
+NOISE_PROFILE = PNAS_NOISE_PROFILE
+SITE_RULE_OVERRIDES: dict[str, Any] = PNAS_SITE_RULE_OVERRIDES
 PNAS_AUTHOR_COUNT_PATTERN = re.compile(r"^\+\s*\d+\s+authors?$", flags=re.IGNORECASE)
 PNAS_IGNORED_AUTHOR_TEXT = {
     "authors info & affiliations",
@@ -47,33 +36,8 @@ PNAS_IGNORED_AUTHOR_TEXT = {
     "collapse all",
     "orcid",
 }
-PNAS_DATALAYER_PATTERN = re.compile(r"PNASdataLayer\s*=(\{.*?\});", flags=re.DOTALL)
-
-
-def _load_pnas_datalayer(html_text: str) -> Mapping[str, Any] | None:
-    match = PNAS_DATALAYER_PATTERN.search(html_text)
-    if not match:
-        return None
-    try:
-        payload = json.loads(match.group(1))
-    except json.JSONDecodeError:
-        return None
-    return payload if isinstance(payload, Mapping) else None
-
-
 def blocking_fallback_signals(html_text: str) -> list[str]:
-    payload = _load_pnas_datalayer(html_text)
-    if payload is None:
-        return []
-    page = payload.get("page", {}) if isinstance(payload.get("page"), Mapping) else {}
-    attributes = page.get("attributes", {}) if isinstance(page.get("attributes"), Mapping) else {}
-    user = payload.get("user", {}) if isinstance(payload.get("user"), Mapping) else {}
-    access_type = normalize_text(attributes.get("accessType")).lower()
-    free_access = normalize_text(attributes.get("freeAccess")).lower()
-    user_access = normalize_text(user.get("access")).lower()
-    if access_type == "paywall" and free_access == "no" and user_access == "no":
-        return ["pnas_paywall_no_access"]
-    return []
+    return pnas_blocking_fallback_signals(html_text)
 
 
 def _looks_like_author_name(text: str) -> bool:
@@ -191,7 +155,7 @@ def build_pdf_candidates(doi: str, crossref_pdf_url: str | None) -> list[str]:
 
 
 def positive_signals(html_text: str) -> tuple[list[str], list[str], list[str]]:
-    return default_positive_signals(html_text)
+    return pnas_positive_signals(html_text)
 
 
 def select_content_nodes(

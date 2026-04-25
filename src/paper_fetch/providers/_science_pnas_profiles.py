@@ -6,76 +6,15 @@ import copy
 from dataclasses import dataclass, field
 from typing import Any, Callable, Mapping
 
+from ..quality import html_profiles as _html_profiles
 from ..utils import normalize_text
 from . import _pnas_html, _science_html, _wiley_html
 from ._browser_workflow_shared import (
-    default_positive_signals,
     extract_pdf_url_from_crossref,
-    looks_like_abstract_redirect,
     preferred_html_candidate_from_landing_page as _preferred_html_candidate_from_landing_page,
 )
-DEFAULT_SITE_RULE: dict[str, Any] = {
-    "candidate_selectors": [
-        "article",
-        "main article",
-        "[role='main'] article",
-        "[itemprop='articleBody']",
-        "[property='articleBody']",
-        "[itemprop='mainEntity']",
-        ".article",
-        ".article__body",
-        ".article__content",
-        ".article-body",
-        ".main-content",
-        "#main-content",
-        "main",
-        "[role='main']",
-        "body",
-    ],
-    "remove_selectors": [
-        "script",
-        "style",
-        "noscript",
-        "iframe",
-        "svg",
-        ".social-share",
-        ".article-tools",
-        ".article-metrics",
-        ".metrics-widget",
-        ".recommended-articles",
-        ".related-content",
-        ".breadcrumbs",
-        ".toc",
-        ".tab__nav",
-        ".accessDenialWidget",
-        ".cookie-banner",
-        ".cookie-consent",
-    ],
-    "drop_keywords": {
-        "metrics",
-        "metric",
-        "share",
-        "social",
-        "recommend",
-        "related",
-        "toolbar",
-        "breadcrumb",
-        "download",
-        "cookie",
-        "promo",
-        "banner",
-        "citation-tool",
-        "nav",
-        "access-widget",
-        "rightslink",
-    },
-    "drop_text": {
-        "Check for updates",
-        "View Metrics",
-        "Share",
-        "Cite",
-    },
-}
+DEFAULT_SITE_RULE = _html_profiles.DEFAULT_SITE_RULE
+looks_like_abstract_redirect = _html_profiles.looks_like_abstract_redirect
 
 __all__ = [
     "DEFAULT_SITE_RULE",
@@ -100,7 +39,7 @@ class PublisherProfile:
     hosts: tuple[str, ...]
     noise_profile: str = "generic"
     site_rule_overrides: Mapping[str, Any] = field(default_factory=dict)
-    positive_signals: Callable[[str], tuple[list[str], list[str], list[str]]] = default_positive_signals
+    positive_signals: Callable[[str], tuple[list[str], list[str], list[str]]] = _html_profiles.default_positive_signals
     blocking_fallback_signals: Callable[[str], list[str]] = lambda _html_text: []
     markdown_postprocess: Callable[[str], str] | None = None
     dom_postprocess: Callable[[Any], None] | None = None
@@ -140,13 +79,14 @@ def publisher_profile(publisher: str | None) -> PublisherProfile:
     module = _PUBLISHER_MODULES.get(normalized)
     if module is None:
         return GENERIC_PROFILE
+    availability_profile = _html_profiles.availability_profile_for_publisher(normalized)
     return PublisherProfile(
         name=normalized,
         hosts=tuple(getattr(module, "HOSTS", ())),
-        noise_profile=normalize_text(getattr(module, "NOISE_PROFILE", "generic")) or "generic",
-        site_rule_overrides=copy.deepcopy(getattr(module, "SITE_RULE_OVERRIDES", {})),
-        positive_signals=getattr(module, "positive_signals", default_positive_signals),
-        blocking_fallback_signals=getattr(module, "blocking_fallback_signals", lambda _html_text: []),
+        noise_profile=normalize_text(availability_profile.noise_profile) or "generic",
+        site_rule_overrides=copy.deepcopy(availability_profile.site_rule_overrides),
+        positive_signals=availability_profile.positive_signals,
+        blocking_fallback_signals=availability_profile.blocking_fallback_signals,
         markdown_postprocess=getattr(module, "markdown_postprocess", None),
         dom_postprocess=getattr(module, "dom_postprocess", None),
         refine_selected_container=getattr(module, "refine_selected_container", None),
@@ -156,22 +96,11 @@ def publisher_profile(publisher: str | None) -> PublisherProfile:
 
 
 def site_rule_for_publisher(publisher: str | None) -> dict[str, Any]:
-    profile = publisher_profile(publisher)
-    merged = copy.deepcopy(DEFAULT_SITE_RULE)
-    for key, value in profile.site_rule_overrides.items():
-        default_value = merged.get(key)
-        if isinstance(default_value, list):
-            merged[key] = [*default_value, *[item for item in value if item not in default_value]]
-            continue
-        if isinstance(default_value, set):
-            merged[key] = set(default_value) | set(value)
-            continue
-        merged[key] = copy.deepcopy(value)
-    return merged
+    return _html_profiles.site_rule_for_publisher(publisher)
 
 
 def noise_profile_for_publisher(publisher: str | None) -> str:
-    return publisher_profile(publisher).noise_profile
+    return _html_profiles.noise_profile_for_publisher(publisher)
 
 
 def build_html_candidates(publisher: str, doi: str, landing_page_url: str | None = None) -> list[str]:
@@ -192,11 +121,11 @@ def provider_positive_signals(
     publisher: str | None,
     html_text: str,
 ) -> tuple[list[str], list[str], list[str]]:
-    return publisher_profile(publisher).positive_signals(html_text)
+    return _html_profiles.provider_positive_signals(publisher, html_text)
 
 
 def provider_blocking_fallback_signals(
     publisher: str | None,
     html_text: str,
 ) -> list[str]:
-    return list(publisher_profile(publisher).blocking_fallback_signals(html_text))
+    return _html_profiles.provider_blocking_fallback_signals(publisher, html_text)

@@ -27,6 +27,12 @@ from ..extraction.html.semantics import (
 )
 from ..models import classify_article_content, filtered_body_sections
 from ..utils import normalize_text
+from .html_profiles import (
+    looks_like_abstract_redirect,
+    provider_blocking_fallback_signals,
+    provider_positive_signals,
+    site_rule_for_publisher,
+)
 
 try:
     from bs4 import BeautifulSoup, Tag
@@ -54,32 +60,6 @@ ARTICLE_TYPE_FRONT_MATTER_PREFIXES = (
     "case report",
     "letter to the editor",
 )
-
-
-def looks_like_abstract_redirect(requested_url: str | None, final_url: str | None) -> bool:
-    from ..providers._science_pnas_profiles import looks_like_abstract_redirect as _looks_like_abstract_redirect
-
-    return _looks_like_abstract_redirect(requested_url, final_url)
-
-
-def provider_blocking_fallback_signals(provider: str | None, html_text: str) -> list[str]:
-    from ..providers._science_pnas_profiles import (
-        provider_blocking_fallback_signals as _provider_blocking_fallback_signals,
-    )
-
-    return _provider_blocking_fallback_signals(provider, html_text)
-
-
-def provider_positive_signals(provider: str | None, html_text: str) -> tuple[list[str], list[str], list[str]]:
-    from ..providers._science_pnas_profiles import provider_positive_signals as _provider_positive_signals
-
-    return _provider_positive_signals(provider, html_text)
-
-
-def site_rule_for_publisher(publisher: str | None) -> dict[str, Any]:
-    from ..providers._science_pnas_profiles import site_rule_for_publisher as _site_rule_for_publisher
-
-    return _site_rule_for_publisher(publisher)
 
 
 @dataclass

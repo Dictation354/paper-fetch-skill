@@ -2,14 +2,18 @@
 
 from __future__ import annotations
 
-import json
 import re
 from typing import Any, Mapping
 
+from ..quality.html_profiles import (
+    WILEY_NOISE_PROFILE,
+    WILEY_SITE_RULE_OVERRIDES,
+    wiley_blocking_fallback_signals,
+    wiley_positive_signals,
+)
 from ..utils import dedupe_authors, normalize_text
 from ._browser_workflow_shared import (
     build_base_urls,
-    default_positive_signals,
     preferred_html_candidate_from_landing_page,
 )
 from ._html_references import extract_numbered_references_from_html
@@ -22,22 +26,8 @@ except ImportError:  # pragma: no cover - dependency is declared in pyproject
 
 HOSTS: tuple[str, ...] = ("onlinelibrary.wiley.com", "wiley.com", "www.wiley.com")
 BASE_HOSTS: tuple[str, ...] = ("onlinelibrary.wiley.com",)
-NOISE_PROFILE = "generic"
-SITE_RULE_OVERRIDES: dict[str, Any] = {
-    "candidate_selectors": [
-        ".article-section__content",
-        ".issue-item__body",
-        ".epub-section",
-        ".doi-access",
-    ],
-    "remove_selectors": [
-        ".citation-tools",
-        ".epub-reference",
-        ".article-section__tableofcontents",
-        ".publicationHistory",
-    ],
-    "drop_text": {"Recommended articles"},
-}
+NOISE_PROFILE = WILEY_NOISE_PROFILE
+SITE_RULE_OVERRIDES: dict[str, Any] = WILEY_SITE_RULE_OVERRIDES
 WILEY_IGNORED_AUTHOR_TEXT = {
     "orcid",
     "search for more papers by this author",
@@ -48,39 +38,8 @@ WILEY_AUTHOR_SELECTOR_CANDIDATES = (
     ".accordion-tabbed a.author-name",
     ".accordion-tabbed p.author-name",
 )
-WILEY_DATALAYER_PATTERN = re.compile(r"window\.adobeDataLayer\.push\((\{.*?\})\);", flags=re.DOTALL)
-
-
-def _load_wiley_datalayer(html_text: str) -> Mapping[str, Any] | None:
-    for match in WILEY_DATALAYER_PATTERN.finditer(html_text):
-        try:
-            payload = json.loads(match.group(1))
-        except json.JSONDecodeError:
-            continue
-        if not isinstance(payload, Mapping):
-            continue
-        if isinstance(payload.get("content"), Mapping) or isinstance(payload.get("page"), Mapping):
-            return payload
-    return None
-
-
 def blocking_fallback_signals(html_text: str) -> list[str]:
-    payload = _load_wiley_datalayer(html_text)
-    if payload is None:
-        return []
-    content = payload.get("content", {}) if isinstance(payload.get("content"), Mapping) else {}
-    item = content.get("item", {}) if isinstance(content.get("item"), Mapping) else {}
-    page = payload.get("page", {}) if isinstance(payload.get("page"), Mapping) else {}
-    signals: list[str] = []
-
-    if normalize_text(item.get("access")).lower() == "no":
-        signals.append("wiley_access_no")
-    if normalize_text(item.get("format-viewed") or item.get("format_viewed")).lower() == "abstract":
-        signals.append("wiley_format_viewed_abstract")
-    if normalize_text(page.get("tertiary-section") or page.get("tertiary_section")).lower() == "abs":
-        signals.append("wiley_page_tertiary_abs")
-
-    return list(dict.fromkeys(signals))
+    return wiley_blocking_fallback_signals(html_text)
 
 
 def _looks_like_author_name(text: str) -> bool:
@@ -197,7 +156,7 @@ def build_pdf_candidates(doi: str, crossref_pdf_url: str | None) -> list[str]:
 
 
 def positive_signals(html_text: str) -> tuple[list[str], list[str], list[str]]:
-    return default_positive_signals(html_text)
+    return wiley_positive_signals(html_text)
 
 
 def dom_postprocess(container: Any) -> None:

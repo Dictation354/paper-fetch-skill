@@ -5,40 +5,15 @@ from __future__ import annotations
 import urllib.parse
 from typing import Any, Mapping
 
+from ..quality import html_profiles as _html_profiles
 from ..utils import normalize_text
 
-HTML_STRONG_FULLTEXT_MARKERS = (
-    'property="articleBody"',
-    "property='articleBody'",
-    'itemprop="articleBody"',
-    "itemprop='articleBody'",
-)
-HTML_STRUCTURE_MARKERS = (
-    'data-article-access="full"',
-    "data-article-access='full'",
-    'data-article-access-type="full"',
-    "data-article-access-type='full'",
-    'id="bodymatter"',
-    "id='bodymatter'",
-)
+HTML_STRONG_FULLTEXT_MARKERS = _html_profiles.HTML_STRONG_FULLTEXT_MARKERS
+HTML_STRUCTURE_MARKERS = _html_profiles.HTML_STRUCTURE_MARKERS
 PDF_URL_TOKENS = ("/doi/pdf/", "/doi/pdfdirect/", "/doi/epdf/", "/fullpdf", ".pdf", "download=true")
-
-
-def dedupe_signals(values: list[str]) -> list[str]:
-    return list(dict.fromkeys(value for value in values if value))
-
-
-def default_positive_signals(html_text: str) -> tuple[list[str], list[str], list[str]]:
-    strong: list[str] = []
-    soft: list[str] = []
-    lowered = html_text.lower()
-    if any(marker in lowered for marker in HTML_STRONG_FULLTEXT_MARKERS):
-        strong.append("article_body_marker")
-    if any(marker in lowered for marker in HTML_STRUCTURE_MARKERS):
-        soft.append("article_body_structure_marker")
-    if "<article" in lowered:
-        soft.append("article_tag_present")
-    return dedupe_signals(strong), dedupe_signals(soft), []
+dedupe_signals = _html_profiles.dedupe_signals
+default_positive_signals = _html_profiles.default_positive_signals
+looks_like_abstract_redirect = _html_profiles.looks_like_abstract_redirect
 
 
 def preferred_html_candidate_from_landing_page(
@@ -96,11 +71,3 @@ def extract_pdf_url_from_crossref(metadata: Mapping[str, Any]) -> str | None:
         ).lower() == "application/pdf":
             return url
     return None
-
-
-def looks_like_abstract_redirect(requested_url: str, final_url: str | None) -> bool:
-    if not final_url:
-        return False
-    requested = requested_url.lower()
-    final = final_url.lower()
-    return "/doi/full/" in requested and "/doi/abs/" in final and requested != final
