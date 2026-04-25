@@ -13,6 +13,7 @@ _build_cookie_seeded_opener = _asset_impl._build_cookie_seeded_opener
 _request_with_opener = _asset_impl._request_with_opener
 
 extract_figure_assets = _asset_impl.extract_figure_assets
+extract_formula_assets = _asset_impl.extract_formula_assets
 extract_full_size_figure_image_url = _asset_impl.extract_full_size_figure_image_url
 extract_html_assets = _asset_impl.extract_html_assets
 extract_supplementary_assets = _asset_impl.extract_supplementary_assets
@@ -32,3 +33,6 @@ def download_figure_assets(*args, **kwargs):
     finally:
         _asset_impl._build_cookie_seeded_opener = original_build_opener
         _asset_impl._request_with_opener = original_request
+
+
+download_figure_assets_with_image_document_fetcher = _asset_impl.download_figure_assets_with_image_document_fetcher

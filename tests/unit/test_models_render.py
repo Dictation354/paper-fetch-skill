@@ -398,6 +398,119 @@ class ModelsRenderTests(unittest.TestCase):
         self.assertIsNone(article.assets[0].path)
         self.assertIsNone(article.assets[0].url)
 
+    def test_article_from_markdown_preserves_empty_body_parent_headings(self) -> None:
+        article = article_from_markdown(
+            source="springer_html",
+            metadata={"title": "Structured Article"},
+            doi="10.1000/empty-parent",
+            markdown_text=(
+                "# Structured Article\n\n"
+                "## Results\n\n"
+                "### Primary outcome\n\n"
+                "The primary outcome text is renderable."
+            ),
+        )
+
+        self.assertEqual([section.heading for section in article.sections], ["Results", "Primary outcome"])
+        rendered = article.to_ai_markdown(max_tokens="full_text")
+        self.assertIn("## Results\n\n### Primary outcome", rendered)
+
+    def test_front_matter_unescapes_structured_metadata_strings(self) -> None:
+        article = article_from_markdown(
+            source="springer_html",
+            metadata={
+                "title": "Hydrology &amp; Ecology",
+                "authors": ["Jane &amp; John"],
+                "journal": "Communications Earth &amp; Environment",
+            },
+            doi="10.1000/entities",
+            markdown_text="## Results\n\nBody text lives here.",
+        )
+
+        rendered = article.to_ai_markdown(max_tokens="full_text")
+        self.assertIn('title: "Hydrology & Ecology"', rendered)
+        self.assertIn('authors: "Jane & John"', rendered)
+        self.assertIn('journal: "Communications Earth & Environment"', rendered)
+        self.assertNotIn("&amp;", rendered)
+
+    def test_normalize_markdown_text_separates_adjacent_block_images(self) -> None:
+        normalized = normalize_markdown_text(
+            "### Vocabulary Development![Figure 1](figure-1.png)\n"
+            "Body text![Figure 2](figure-2.png)\n"
+            "$$![Figure 3](figure-3.png)"
+        )
+
+        self.assertIn("### Vocabulary Development\n\n![Figure 1](figure-1.png)", normalized)
+        self.assertIn("Body text\n\n![Figure 2](figure-2.png)", normalized)
+        self.assertIn("$$\n\n![Figure 3](figure-3.png)", normalized)
+        self.assertNotIn("Development![Figure", normalized)
+
+    def test_to_ai_markdown_separates_adjacent_section_images_after_asset_rewrites(self) -> None:
+        article = sample_article()
+        article.sections = [
+            Section(
+                heading="Results",
+                level=2,
+                kind="body",
+                text="**Figure 1.** Caption text.![Figure 2](/tmp/figure-2.png)",
+            )
+        ]
+        article.assets = [
+            Asset(kind="figure", heading="Figure 2", path="/tmp/figure-2.png", section="body"),
+        ]
+
+        rendered = article.to_ai_markdown(asset_profile="body", max_tokens="full_text")
+
+        self.assertIn("**Figure 1.** Caption text.\n\n![Figure 2](/tmp/figure-2.png)", rendered)
+        self.assertNotIn("text.![Figure", rendered)
+
+    def test_article_from_markdown_rewrites_inline_asset_urls_to_downloaded_paths(self) -> None:
+        article = article_from_markdown(
+            source="springer_html",
+            metadata={"title": "Structured Article"},
+            doi="10.1000/asset-rewrite",
+            markdown_text=(
+                "## Results\n\n"
+                "The rendered equation is ![Formula](https://media.example.test/math/IEq1_HTML.jpg)."
+            ),
+            assets=[
+                {
+                    "kind": "formula",
+                    "heading": "Formula 1",
+                    "url": "https://media.example.test/math/IEq1_HTML.jpg",
+                    "path": "/tmp/downloads/IEq1_HTML.jpg",
+                }
+            ],
+        )
+
+        self.assertIn("![Formula](/tmp/downloads/IEq1_HTML.jpg)", article.sections[0].text)
+        self.assertNotIn("https://media.example.test/math/IEq1_HTML.jpg", article.sections[0].text)
+
+    def test_article_from_markdown_normalizes_after_inline_asset_url_rewrite(self) -> None:
+        article = article_from_markdown(
+            source="springer_html",
+            metadata={"title": "Structured Article"},
+            doi="10.1000/asset-rewrite-boundary",
+            markdown_text=(
+                "## Results\n\n"
+                "### Vocabulary Development![Figure 1](https://media.example.test/Fig1_HTML.png)"
+            ),
+            assets=[
+                {
+                    "kind": "figure",
+                    "heading": "Figure 1",
+                    "url": "https://media.example.test/Fig1_HTML.png",
+                    "path": "/tmp/downloads/Fig1_HTML.png",
+                }
+            ],
+        )
+
+        rendered_sections = "\n".join(
+            f"{section.heading}\n{section.text}" for section in article.sections
+        )
+        self.assertIn("Vocabulary Development\n![Figure 1](/tmp/downloads/Fig1_HTML.png)", rendered_sections)
+        self.assertNotIn("Development![Figure", rendered_sections)
+
     def test_metadata_only_article_populates_token_breakdown(self) -> None:
         article = metadata_only_article(
             source="crossref_meta",

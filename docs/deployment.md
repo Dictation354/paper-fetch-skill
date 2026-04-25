@@ -99,7 +99,7 @@ paper-fetch-install-formula-tools
 
 补充：
 
-- `wiley` / `science` / `pnas` 还需要 Playwright Chromium，因为它们仍有 seeded-browser PDF/ePDF fallback
+- `wiley` / `science` / `pnas` 还需要 Playwright Chromium，因为 HTML 正文图片资产下载和 seeded-browser PDF/ePDF fallback 都会使用 browser context
 - `elsevier` 只需要 `ELSEVIER_API_KEY`
 - 如果只想启用 `wiley` 的官方 TDM API PDF lane，可以只配置 `WILEY_TDM_CLIENT_TOKEN`；这不会启用 HTML 资产下载或 seeded-browser PDF/ePDF fallback
 - `wiley` 现在走 `FlareSolverr HTML -> Wiley TDM API PDF -> seeded-browser publisher PDF/ePDF -> abstract-only / metadata-only`

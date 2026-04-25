@@ -122,7 +122,7 @@ python3 -m paper_fetch.mcp.server
   - 默认不显式指定资产策略，由 provider/source 决定。
   - 目前 `springer` / `wiley` / `science` / `pnas` 的 HTML 成功路径默认等价于 `body`；其余默认等价于 `none`。
   - `article.assets[*]` 会保留下载诊断字段，例如 `render_state`、`download_tier`、`download_url`、`content_type`、`downloaded_bytes`、`width`、`height`。
-  - 正文已经内联消费过的 figure / table 会标记为 `render_state="inline"`，不会再在文末重复追加。
+  - 正文已经内联消费过的 figure / table / formula image 会标记为 `render_state="inline"`，不会再在文末重复追加。
 - `max_tokens="full_text"`
   - 默认尽量返回完整 abstract、正文和 references。
 - `include_refs=null`
@@ -137,12 +137,16 @@ python3 -m paper_fetch.mcp.server
 - `wiley` / `science` / `pnas`
   - `science` / `pnas` 依赖仓库 checkout + `vendor/flaresolverr/` 工作流。
   - `wiley` 的 HTML 与 seeded-browser PDF/ePDF 路径也依赖这套工作流；但配置 `WILEY_TDM_CLIENT_TOKEN` 时，官方 TDM API PDF lane 可以在本地浏览器运行时不可用时单独尝试。
-  - `FlareSolverr HTML` 成功路径支持 `asset_profile=body|all`；会优先尝试 full-size/original figure，必要时回退 preview。
-  - Science / PNAS 图片直链若返回 challenge HTML 或浏览器图片壳，会尝试 Playwright image document / canvas fallback；preview 图只有尺寸达标时才作为可接受降级。
+  - `FlareSolverr HTML` 成功路径支持 `asset_profile=body|all`；正文 figure / table / formula 图片会复用同一个 seeded Playwright browser context 下载。
+  - 候选顺序仍优先 full-size/original，full-size 全部失败后才回退 preview；preview 也通过同一个 browser context 获取，目标 provider 不再输出 `download_tier="playwright_canvas_fallback"`。
   - `PDF/ePDF fallback` 仍是 text-only，不阻塞正文成功。
 - 公式 Markdown
   - MathML 转 LaTeX 和 Springer/Nature raw MathJax TeX 都会经过轻量 normalize。
+  - HTML 中无法转换成 LaTeX 的公式图片 fallback 会保留为 `![Formula](...)`，下载成功后会像 figure/table 一样改写成本地路径。
   - 目前会把 `\updelta` 这类 upright Greek 宏改成 KaTeX 常用宏，并把 `\mspace{Nmu}` 改成 KaTeX 可解析的 `\mkernNmu`。
+- Markdown 清洗
+  - 已下载资产会在文章组装阶段改写远程图片链接，之后再做节解析和图片块边界归一化，避免标题、正文、公式和 `![...]` 粘连。
+  - 结构化 metadata 会在 front matter 中解开 HTML entity，例如 `&amp;` 会渲染成 `&`。
 - abstract-only / metadata-only 降级
   - 默认允许。正文不可用时，系统会返回 provider 摘要级结果或 metadata + abstract，并显式带 warning。
 
@@ -197,7 +201,7 @@ MCP 细节和部署入口见 [`docs/deployment.md`](docs/deployment.md)。
 paper-fetch --query "10.1186/1471-2105-11-421"
 ```
 
-抓正文图和正文表格原图：
+抓正文图、正文表格原图和可识别的公式图片：
 
 ```bash
 paper-fetch --query "10.1016/j.rse.2025.114648" --asset-profile body
@@ -240,6 +244,7 @@ CLI 抓取期错误的退出码为：
 - `wiley` 的主路径是 `FlareSolverr HTML -> Wiley TDM API PDF -> seeded-browser publisher PDF/ePDF -> abstract-only / metadata-only`
 - `science` / `pnas` 的主路径是 `FlareSolverr HTML -> seeded-browser publisher PDF/ePDF -> abstract-only / metadata-only`
 - `wiley` / `science` / `pnas` 的 HTML 成功路径支持 `none/body/all` 资产下载；PDF/ePDF fallback 仍是 text-only
+- `wiley` / `science` / `pnas` 的正文 figure / table / formula 图片资产下载以 shared Playwright browser context 为主链路；每次下载 attempt 只创建一次 context/page，并在多图之间复用
 - `science` / `pnas` 必须依赖 repo-local `vendor/flaresolverr/`
 - `wiley` 的 HTML 与 seeded-browser PDF/ePDF 路径依赖 repo-local `vendor/flaresolverr/`；`WILEY_TDM_CLIENT_TOKEN` 只启用官方 TDM API PDF lane
 - browser 路径需要显式配置 `FLARESOLVERR_ENV_FILE` 和本地限速变量

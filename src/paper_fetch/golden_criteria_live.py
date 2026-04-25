@@ -481,7 +481,20 @@ def issue_categories_for_result(
     if envelope is not None:
         trail_blob = " ".join(envelope.source_trail).lower()
         warning_blob = " ".join(envelope.warnings).lower()
-        if "asset_failures" in trail_blob or "assets_preview_fallback" in trail_blob or "partially downloaded" in warning_blob:
+        preview_fallback_assets = [
+            asset
+            for asset in list((envelope.article.assets if envelope.article is not None else []) or [])
+            if normalize_text(getattr(asset, "download_tier", None)).lower() == "preview"
+        ]
+        preview_fallback_has_non_formula_asset = any(
+            normalize_text(getattr(asset, "kind", None)).lower() != "formula"
+            for asset in preview_fallback_assets
+        )
+        if (
+            "asset_failures" in trail_blob
+            or "partially downloaded" in warning_blob
+            or ("assets_preview_fallback" in trail_blob and (not preview_fallback_assets or preview_fallback_has_non_formula_asset))
+        ):
             categories.append("asset_download_failure")
         for flag in envelope.quality.flags:
             category = QUALITY_FLAG_CATEGORY_MAP.get(normalize_text(flag).lower())

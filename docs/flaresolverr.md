@@ -27,7 +27,8 @@
 - `wiley` 的 HTML / browser PDF/ePDF 路径与 `science` / `pnas` 共用同一套 provider-owned 浏览器 bootstrap 与 browser-PDF executor，不再保留单独的 Science path harness
 - `source` 公开可能是 `wiley_browser`、`science` 或 `pnas`
 - `FlareSolverr HTML` 成功路径支持 `asset_profile=body|all` 的正文资产下载；PDF/ePDF fallback 仍是 text-only
-- Science / PNAS CMS 图片会优先尝试 full-size/original，普通 HTTP 被 challenge 或返回非图片时可用 Playwright 顶层 image document + canvas 导出保留可视内容；只有尺寸达标的 preview 才作为可接受降级
+- `wiley` / `science` / `pnas` 的正文 figure / table / formula 图片资产下载以 shared Playwright browser context 为主链路；每次 download attempt 创建一次 context/page，多图复用同一个 seeded browser context
+- 图片候选仍优先 full-size/original，全部失败后才尝试 preview；preview 也通过同一个 browser context 下载，目标 provider 不再使用 `playwright_canvas_fallback` tier
 - 这条链路只保证在当前仓库 checkout 中运行
 - 站点 ToS、robots、授权与合规风险由操作者自行承担
 
@@ -192,7 +193,8 @@ PYTHONPATH=src pytest -n 0 \
 
 - 先看 `source_trail` 和 `warnings`，区分 `download:*_asset_failures`、`download:*_assets_preview_fallback`、`download:*_assets_preview_accepted` 等轨迹
 - `download_tier=preview` 本身只是诊断标签；当 source trail 带 `download:*_assets_preview_accepted` 且资产尺寸达标时，不应直接当作下载失败
-- 如果 direct image URL 返回 `403`、`cf-mitigated: challenge` 或 `text/html`，Science / PNAS 会尝试 Playwright canvas fallback；仍失败时才按资产下载问题处理
+- formula-only preview fallback 不自动算 live review 的 `asset_download_failure`；figure/table preview fallback 仍需要 accepted 轨迹或其它证据才能降噪
+- `wiley` / `science` / `pnas` 不再先走普通 HTTP 直连；full-size 与 preview 候选都会通过 seeded Playwright browser context 获取。若刷新 FlareSolverr seed 后仍失败，才按资产下载问题处理
 - PDF/ePDF fallback 仍是 text-only；只有 HTML 成功路径承诺尝试正文资产下载
 
 ## 相关文档

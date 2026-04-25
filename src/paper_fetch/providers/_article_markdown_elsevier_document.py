@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Mapping
+import re
 import xml.etree.ElementTree as ET
 
 from ..models import Reference, SemanticLosses
@@ -173,6 +174,32 @@ def _format_reference_body(
     return body or source_text
 
 
+def _raw_reference_text(bib_reference: ET.Element, *, label: str) -> str:
+    text = normalize_text(" ".join(bib_reference.itertext()))
+    if not text:
+        return ""
+    if label:
+        label_text = normalize_text(label).strip("[](). ")
+        if label_text:
+            text = normalize_text(re.sub(rf"^\[?\s*{re.escape(label_text)}\s*\]?\.?\s*", "", text))
+    return text
+
+
+def _reference_body_is_doi_only(body: str, doi: str) -> bool:
+    normalized_body = normalize_text(body).lower().rstrip(".,;")
+    normalized_doi = normalize_doi(doi).lower().rstrip(".,;")
+    if not normalized_body or not normalized_doi:
+        return False
+    return normalized_body in {normalized_doi, f"https://doi.org/{normalized_doi}", f"doi: {normalized_doi}"}
+
+
+def _reference_label_is_numeric_counter(label: str, index: int) -> bool:
+    normalized = normalize_text(label).strip("[](). ")
+    if not normalized:
+        return False
+    return normalized == str(index) or bool(re.fullmatch(r"\d+[A-Za-z]?", normalized))
+
+
 def extract_elsevier_references(root: ET.Element) -> list[Reference]:
     references: list[Reference] = []
     for index, bib_reference in enumerate(_iter_elements_by_local_name(root, "bib-reference"), start=1):
@@ -183,6 +210,7 @@ def extract_elsevier_references(root: ET.Element) -> list[Reference]:
         contribution = first_child(sb_reference, "contribution")
         host = first_child(sb_reference, "host")
         source_text = _child_text(bib_reference, "source-text")
+        fallback_text = source_text or _raw_reference_text(bib_reference, label=label)
         doi = normalize_doi(_first_descendant_text(sb_reference, "doi")) or (extract_doi(source_text) or "")
         title = _extract_reference_title(contribution)
         year = _first_descendant_text(host, "date")
@@ -196,12 +224,14 @@ def extract_elsevier_references(root: ET.Element) -> list[Reference]:
             first_page=_first_descendant_text(host, "first-page"),
             last_page=_first_descendant_text(host, "last-page"),
             doi=doi,
-            source_text=source_text,
+            source_text=fallback_text,
         )
+        if fallback_text and _reference_body_is_doi_only(body, doi):
+            body = fallback_text
         if not body:
-            continue
+            body = "[Reference text unavailable]"
         raw = f"{index}. {body}"
-        if label and not body.startswith(label):
+        if label and not _reference_label_is_numeric_counter(label, index) and not body.startswith(label):
             raw = f"{raw} [{label}]"
         references.append(
             Reference(

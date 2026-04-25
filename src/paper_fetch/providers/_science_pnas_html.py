@@ -284,6 +284,14 @@ PROMO_BLOCK_TOKENS = (
 FIGURE_LABEL_PATTERN = re.compile(r"\bfig(?:ure)?\.?\s*(\d+[A-Za-z]?)\b", flags=re.IGNORECASE)
 TABLE_LABEL_PATTERN = re.compile(r"\btable\.?\s*(\d+[A-Za-z]?)\b", flags=re.IGNORECASE)
 EQUATION_NUMBER_PATTERN = re.compile(r"(\d+[A-Za-z]?)")
+FORMULA_IMAGE_URL_PATTERN = re.compile(r"(?:^|[-_/])(?:math|ieq)[-_]?\d|_IEq\d|math-\d|equation", flags=re.IGNORECASE)
+FORMULA_CONTAINER_TOKENS = (
+    "inline-equation",
+    "display-equation",
+    "disp-formula",
+    "display-formula",
+    "fallback__mathequation",
+)
 MARKDOWN_FIGURE_BLOCK_PATTERN = re.compile(r"^\*\*(Figure\s+\d+[A-Za-z]?\.?)\*\*(?:\s+.*)?$", flags=re.IGNORECASE)
 MARKDOWN_IMAGE_BLOCK_PATTERN = re.compile(r"^!\[([^\]]*)\]\(([^)]+)\)$")
 CONTENT_ABSTRACT_SELECTORS = (
@@ -822,6 +830,8 @@ def _render_non_table_inline_fragment(node: Any, *, text_style: str | None = Non
     payload = _numeric_citation_payload_from_inline_node(node)
     if payload is not None:
         return make_numeric_citation_sentinel(payload) or ""
+    if name == "img" and _looks_like_formula_image_node(node):
+        return _formula_image_markdown(node)
     if name == "a":
         return _render_non_table_inline_node(node, text_style=text_style)
     if name in {"i", "em"}:
@@ -1178,9 +1188,87 @@ def _latex_from_math_node(node: Tag, *, display_mode: bool) -> str:
     return _short_text(node)
 
 
+def _formula_image_url_from_node(node: Tag) -> str:
+    def _candidate_urls(tag: Tag | None) -> list[str]:
+        if not isinstance(tag, Tag):
+            return []
+        urls: list[str] = []
+        for attr in (
+            "data-altimg",
+            "data-alt-image",
+            "data-original",
+            "data-full-size",
+            "data-hi-res-src",
+            "data-src",
+            "src",
+            "data-lazy-src",
+            "location",
+        ):
+            candidate = normalize_text(str(tag.get(attr) or ""))
+            if candidate and not candidate.lower().startswith("urn:"):
+                urls.append(candidate)
+        for attr in ("srcset", "data-srcset"):
+            raw_srcset = normalize_text(str(tag.get(attr) or ""))
+            if raw_srcset:
+                urls.append(raw_srcset.split(",", 1)[0].strip().split(" ", 1)[0])
+        return urls
+
+    tags_to_check: list[Tag] = [node]
+    tags_to_check.extend(tag for tag in node.find_all(True) if isinstance(tag, Tag))
+
+    previous = node.previous_sibling
+    while previous is not None:
+        if isinstance(previous, Tag):
+            tags_to_check.append(previous)
+            break
+        previous = previous.previous_sibling
+
+    following = node.next_sibling
+    while following is not None:
+        if isinstance(following, Tag):
+            tags_to_check.append(following)
+            break
+        following = following.next_sibling
+
+    for tag in tags_to_check:
+        for candidate in _candidate_urls(tag):
+            return candidate
+    return ""
+
+
+def _looks_like_formula_image_node(node: Tag) -> bool:
+    if not isinstance(node, Tag) or normalize_text(node.name or "").lower() != "img":
+        return False
+    url = _formula_image_url_from_node(node)
+    if not url:
+        return False
+    identity = _ancestor_identity_text(node)
+    alt_blob = " ".join(
+        normalize_text(str(node.get(attr) or "")).lower()
+        for attr in ("alt", "title", "aria-label")
+    )
+    return (
+        bool(FORMULA_IMAGE_URL_PATTERN.search(url))
+        or bool(FORMULA_IMAGE_URL_PATTERN.search(alt_blob))
+        or any(token in identity for token in FORMULA_CONTAINER_TOKENS)
+    )
+
+
+def _formula_image_markdown(node: Tag) -> str:
+    url = _formula_image_url_from_node(node)
+    return f"![Formula]({url})" if url else ""
+
+
 def _display_formula_nodes(container: Tag) -> list[Tag]:
     nodes: list[Tag] = []
-    for selector in (".display-formula", ".disp-formula", "math[display='block']", "div[role='math']"):
+    for selector in (
+        ".display-formula",
+        ".disp-formula",
+        ".display-equation",
+        ".inline-equation",
+        "math[display='block']",
+        "div[role='math']",
+    ):
         try:
             matches = container.select(selector)
         except Exception:
@@ -1201,6 +1289,9 @@ def _equation_label(node: Tag) -> str:
             candidates.append(_short_text(candidate))
     node_id = normalize_text(str((getattr(node, "attrs", None) or {}).get("id") or ""))
     if node_id:
+        id_match = re.search(r"(?:^|[-_])(?:disp|eq|equation)[-_]?0*([0-9]+[A-Za-z]?)$", node_id, flags=re.IGNORECASE)
+        if id_match:
+            return f"Equation {id_match.group(1)}."
         candidates.append(node_id)
     for text in candidates:
         match = EQUATION_NUMBER_PATTERN.search(text)
@@ -1211,14 +1302,19 @@ def _equation_label(node: Tag) -> str:
 
 def _display_formula_replacement(node: Tag, soup: BeautifulSoup) -> Tag | None:
     latex = _latex_from_math_node(node, display_mode=True)
-    if not latex:
-        return None
     replacement = soup.new_tag("div")
     label = _equation_label(node)
     if label:
         _append_text_block(replacement, f"**{label}**", soup=soup)
-    for line in ("$$", latex, "$$"):
-        _append_text_block(replacement, line, soup=soup)
+    if latex:
+        for line in ("$$", latex, "$$"):
+            _append_text_block(replacement, line, soup=soup)
+        return replacement
+    image_markdown = _formula_image_markdown(node)
+    if image_markdown:
+        _append_text_block(replacement, image_markdown, soup=soup)
+        return replacement
+    _append_text_block(replacement, "[Formula unavailable]", soup=soup)
     return replacement
 
 
@@ -1263,10 +1359,10 @@ def _split_paragraph_display_formula_blocks(parent: Tag, soup: BeautifulSoup) ->
         if formula_node is None:
             pending_children.append(child)
             continue
+        replacement = _display_formula_replacement(formula_node, soup)
         if pending_children:
             _insert_split_paragraph(parent, pending_children, soup)
             pending_children = []
-        replacement = _display_formula_replacement(formula_node, soup)
         if replacement is not None:
             parent.insert_before(replacement)
     if pending_children:
@@ -1327,6 +1423,15 @@ def _normalize_inline_math_nodes(container: Tag) -> None:
         if not latex:
             continue
         _inline_math_replacement_target(math_node).replace_with(f"${latex}$")
+
+
+def _normalize_inline_formula_image_nodes(container: Tag) -> None:
+    for image in list(container.find_all("img")):
+        if not isinstance(image, Tag) or image.parent is None:
+            continue
+        if not _looks_like_formula_image_node(image):
+            continue
+        image.replace_with(_formula_image_markdown(image))
 
 
 def _caption_label(node: Tag, *, kind: str) -> str:
@@ -1673,6 +1778,7 @@ def _normalize_special_blocks(container: Tag, publisher: str) -> list[dict[str, 
     _drop_front_matter_teaser_figures(container, publisher)
     _normalize_display_formula_blocks(container)
     _normalize_inline_math_nodes(container)
+    _normalize_inline_formula_image_nodes(container)
     table_entries = _normalize_table_blocks(container)
     _normalize_figure_blocks(container)
     _normalize_non_table_inline_blocks(container)

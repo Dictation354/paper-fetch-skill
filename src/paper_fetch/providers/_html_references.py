@@ -21,11 +21,26 @@ NUMBERED_BIBLIOGRAPHY_SELECTORS = (
     "section[data-title='References'] li[data-counter]",
     "section[data-title='References'] ol > li",
     "section[data-title='References and Notes'] ol > li",
+    "section.article-section__references li[data-bib-id]",
+    "li[data-bib-id]",
 )
 REFERENCE_CONTENT_SELECTORS = (
     ".c-article-references__text",
     ".citation-content",
+    ".citation",
+    ".reference",
     "p",
+)
+REFERENCE_NOISE_SELECTORS = (
+    ".extra-links",
+    ".getFTR",
+    ".citedBySection",
+    ".related-links",
+    ".reference-links",
+    ".article__reference-links",
+    "[aria-hidden='true']",
+    ".visually-hidden",
+    ".sr-only",
 )
 
 
@@ -49,6 +64,8 @@ def _reference_label(node: Any, *, fallback_index: int) -> str | None:
     parent = node.parent if isinstance(getattr(node, "parent", None), Tag) else None
     if isinstance(parent, Tag) and normalize_text(parent.name).lower() == "ol":
         return f"{fallback_index}."
+    if normalize_text(str(node.get("data-bib-id") or "")):
+        return f"{fallback_index}."
     return None
 
 
@@ -66,8 +83,17 @@ def _reference_text(node: Any) -> str:
     content_node = _reference_content_node(node)
     if Tag is None or not isinstance(content_node, Tag):
         return ""
-    text = normalize_text(content_node.get_text(" ", strip=True))
-    text = re.sub(r"\b(?:Article|ADS|Crossref|PubMed|Web of Science|Google Scholar|CAS)\b\s*$", "", text)
+    active_node = content_node
+    if BeautifulSoup is not None:
+        clone_soup = BeautifulSoup(str(content_node), "html.parser")
+        clone = clone_soup.find()
+        if isinstance(clone, Tag):
+            for selector in REFERENCE_NOISE_SELECTORS:
+                for match in clone.select(selector):
+                    match.decompose()
+            active_node = clone
+    text = normalize_text(active_node.get_text(" ", strip=True))
+    text = re.sub(r"\b(?:Article|ADS|Crossref|PubMed|Web of Science|Google Scholar|CAS)\b(?:\s*\|?\s*)*$", "", text)
     return normalize_text(text)
 
 

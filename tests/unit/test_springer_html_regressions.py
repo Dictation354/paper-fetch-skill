@@ -295,10 +295,13 @@ class SpringerHtmlRegressionTests(unittest.TestCase):
         self.assertEqual(diagnostics.content_kind, "fulltext")
         self.assertEqual(article.quality.content_kind, "fulltext")
         self.assertEqual([section.get("heading") for section in extraction_payload["abstract_sections"]], ["Abstract"])
-        self.assertEqual(len(extracted_assets), 3)
+        figure_assets = [asset for asset in extracted_assets if normalize_text(asset.get("kind")).lower() == "figure"]
+        formula_assets = [asset for asset in extracted_assets if normalize_text(asset.get("kind")).lower() == "formula"]
+        self.assertEqual(len(figure_assets), 3)
+        self.assertGreater(len(formula_assets), 0)
         self.assertNotIn("PowerPoint slide", markdown_text)
         self.assertNotIn("Full size image", markdown_text)
-        for asset in extracted_assets:
+        for asset in figure_assets:
             self.assertNotIn("PowerPoint slide", str(asset.get("caption") or ""))
             self.assertNotIn("Full size image", str(asset.get("caption") or ""))
         self.assertEqual(len(re.findall(r"(?m)^## Methods Summary\s*$", markdown_text)), 1)
@@ -309,6 +312,16 @@ class SpringerHtmlRegressionTests(unittest.TestCase):
         methods_summary_index = markdown_text.find("## Methods Summary")
         self.assertGreaterEqual(figure_index, 0)
         self.assertGreater(methods_summary_index, figure_index)
+
+    def test_old_nature_fixture_preserves_inline_equation_images(self) -> None:
+        html_path = golden_criteria_asset("10.1038/nature13376", "original.html")
+        markdown_text = _springer_html.extract_html_payload(
+            html_path.read_text(encoding="utf-8", errors="ignore"),
+            "https://www.nature.com/articles/nature13376",
+        )["markdown_text"]
+
+        self.assertIn("![Formula](//media.springernature.com/", markdown_text)
+        self.assertIn("_IEq1_HTML.jpg", markdown_text)
 
     def test_old_nature_downloaded_body_figures_inline_without_trailing_figures_block(self) -> None:
         html_path = golden_criteria_asset("10.1038/nature13376", "original.html")

@@ -2,6 +2,29 @@
 
 All notable public changes to `paper-fetch-skill` are documented in this file.
 
+## 2026-04-25
+
+### Changed
+
+- Promoted the Wiley / Science / PNAS HTML asset downloader to a shared Playwright primary path. Figure, table, and formula image candidates now reuse one seeded browser context per download attempt instead of trying direct HTTP first.
+- Kept full-size/original candidates ahead of preview candidates, but now fetches both tiers through the same shared browser context. Target-provider downloads report `download_tier="full_size"` or `download_tier="preview"` rather than `playwright_canvas_fallback`.
+- Preserved the FlareSolverr seed refresh retry for partial asset failures, while keeping the generic HTTP-first asset downloader unchanged for non-target providers such as Springer.
+- Expanded HTML formula handling so Wiley, Science / PNAS shared HTML, and Springer / Nature paths preserve MathML when possible and retain formula image fallbacks as `![Formula](...)` assets when MathML is absent or unusable.
+- Normalized final Markdown after asset-link rewrites so downloaded figure / table / formula links replace remote URLs before section parsing, block images are separated from adjacent headings/text/math fences, and empty body parent headings remain visible.
+- Hardened structured metadata and references: front matter unescapes HTML entities, Elsevier XML references no longer skip sparse bibliography entries, and Wiley / Springer-style HTML references remove link chrome while preferring visible citation text over DOI-only snippets.
+- Tightened Springer / Nature HTML cleanup by pruning more article chrome and license sections, preserving scientific back matter outside the main body, extracting formula image assets, and emitting explicit table-body-unavailable placeholders when table-page parsing fails.
+- Adjusted golden-criteria live issue classification so formula-only preview fallback is not treated as an asset-download failure, while non-formula preview fallback still remains an asset issue unless explicitly accepted.
+
+### Docs
+
+- Updated README, provider, FlareSolverr, extraction-rule, deployment, architecture, and schema notes to describe the shared Playwright primary asset path, formula image preservation, Markdown asset-link rewrites, reference fallback behavior, and target-provider `download_tier` semantics.
+
+### Validation
+
+- `pytest tests/unit/test_science_pnas_provider.py tests/unit/test_provider_waterfalls.py tests/unit/test_provider_request_options.py tests/unit/test_html_shared_helpers.py -q`
+- `pytest tests/unit/test_elsevier_markdown.py tests/unit/test_golden_criteria_live.py tests/unit/test_models_render.py tests/unit/test_science_pnas_markdown.py tests/unit/test_springer_html_regressions.py -q`
+- Live smoke: Wiley `10.1111/gcb.16455` downloaded 5/5 full-size body figures, Science `10.1126/science.ady3136` downloaded 6/6 full-size body figures, and PNAS `10.1073/pnas.2406303121` downloaded 4/4 full-size body figures; all local files had image magic bytes, dimensions, and Markdown links rewritten to local paths.
+
 ## 2026-04-19
 
 ### Changed

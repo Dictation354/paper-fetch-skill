@@ -107,7 +107,7 @@
 
 - 资产下载层级。
 - `none`：不下载资产。
-- `body`：正文 figure 和正文表格原图。
+- `body`：正文 figure、正文表格原图和可识别的公式图片。
 - `all`：当前 provider 可识别的全部相关资产。
 
 ### `render_state`
@@ -120,8 +120,9 @@
 ### `download_tier`
 
 - `article.assets[*]` 上的资产下载层级诊断。
-- 常见值包括 `full_size`、`preview`、`playwright_canvas_fallback`。
+- 常见值包括 `full_size`、`preview`。旧的通用 HTTP-first 路径仍可能保留 `playwright_canvas_fallback` 诊断，但 `wiley` / `science` / `pnas` 的 HTML 资产主链路不再输出这个 tier。
 - `preview` 不是天然错误；当宽高满足阈值且 `source_trail` 有 preview accepted 轨迹时，是可接受降级。
+- live review 中，只有公式图片发生 preview fallback 时不自动归为 `asset_download_failure`；figure/table preview fallback 仍需要 accepted 轨迹或其它证据才能降噪。
 
 ### `semantic_losses`
 

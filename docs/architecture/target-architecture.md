@@ -1,6 +1,6 @@
 # Paper Fetch Skill 当前架构与业务流程
 
-Date: 2026-04-16
+Date: 2026-04-25
 
 ## 状态说明
 
@@ -267,6 +267,8 @@ workflow 会尽可能拿到两类元数据：
   - 与 `wiley` 的 HTML / browser PDF/ePDF 路径共用浏览器工作流基座
   - 当前只剩 provider-owned 单栈；不再保留额外的 Science-only live harness 或第二套 browser-PDF 实现
 
+`wiley` / `science` / `pnas` 的 HTML 正文图片资产下载也属于这套 provider-owned browser workflow：figure / table / formula 图片候选复用同一个 seeded Playwright browser context，先尝试 full-size/original，全部失败后再用同一 context 尝试 preview。通用 HTTP-first 资产下载仍保留给非目标 provider。
+
 如果正文足够可用，流程在这里结束。
 
 ### 5. abstract-only / metadata-only fallback
@@ -372,6 +374,8 @@ workflow 会尽可能拿到两类元数据：
 
 - `assets[*].render_state` 决定资产是否可追加到尾部附录；`inline` / `suppressed` 不追加，`appendix` 可追加。
 - 正文已内联图片会按 URL、相对路径、后缀和 basename 与资产做等价比较，避免重复渲染。
+- 文章组装会先用已下载资产把正文里的远程 figure / table / formula image 链接改写成本地路径，再做 Markdown 图片块边界归一化，避免图片和标题、正文句子或 display math 粘连。
+- 结构化 metadata 在进入 front matter 前会解开 HTML entity，避免 `&amp;` 这类站点编码泄漏到标题、作者、期刊或摘要。
 - `assets[*].download_tier`、`download_url`、`content_type`、`downloaded_bytes`、`width`、`height` 是下载诊断，不应被下游丢弃。
 - `quality.semantic_losses.table_layout_degraded_count` 表示版式降级，`table_semantic_loss_count` 才表示语义内容丢失。
 
@@ -434,6 +438,7 @@ workflow 会尽可能拿到两类元数据：
 - HTML / provider fallback 提示
 - 资产部分下载失败
 - preview 资产可接受降级或不可接受 fallback
+- formula-only preview fallback
 - 表格版式降级 / 语义丢失
 - 公式 fallback / missing
 - token 截断

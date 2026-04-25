@@ -318,6 +318,52 @@ class GoldenCriteriaLiveTests(unittest.TestCase):
 
         self.assertNotIn("asset_download_failure", categories)
 
+    def test_formula_only_preview_fallback_is_not_an_asset_issue(self) -> None:
+        article = sample_article()
+        article.assets = [
+            Asset(
+                kind="formula",
+                heading="Formula 1",
+                path="/tmp/formula-1.png",
+                download_tier="preview",
+            )
+        ]
+        envelope = build_envelope(article)
+        envelope.source_trail = [
+            "download:wiley_assets_saved_profile_body",
+            "download:wiley_assets_preview_fallback",
+        ]
+        envelope.warnings = [
+            "Wiley figure downloads fell back to preview images for 1 asset(s) because full-size/original downloads were unavailable."
+        ]
+
+        categories = issue_categories_for_result(status="fulltext", envelope=envelope)
+
+        self.assertNotIn("asset_download_failure", categories)
+
+    def test_non_formula_preview_fallback_remains_an_asset_issue(self) -> None:
+        article = sample_article()
+        article.assets = [
+            Asset(
+                kind="figure",
+                heading="Figure 1",
+                path="/tmp/figure-1.png",
+                download_tier="preview",
+            )
+        ]
+        envelope = build_envelope(article)
+        envelope.source_trail = [
+            "download:wiley_assets_saved_profile_body",
+            "download:wiley_assets_preview_fallback",
+        ]
+        envelope.warnings = [
+            "Wiley figure downloads fell back to preview images for 1 asset(s) because full-size/original downloads were unavailable."
+        ]
+
+        categories = issue_categories_for_result(status="fulltext", envelope=envelope)
+
+        self.assertIn("asset_download_failure", categories)
+
     def test_review_template_marks_accepted_science_preview_as_non_issue(self) -> None:
         result = GoldenCriteriaLiveResult(
             sample_id="10.1126_science.accepted_preview",

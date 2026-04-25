@@ -9,7 +9,6 @@ from typing import Mapping
 from unittest import mock
 
 from paper_fetch.geography_live import collect_issue_flags
-from paper_fetch.http import RequestFailure
 from paper_fetch.providers import html_assets
 from paper_fetch.providers import (
     _flaresolverr,
@@ -578,7 +577,9 @@ class SciencePnasProviderTests(unittest.TestCase):
             extracted_assets,
             asset_dir=WILEY_2004GB002273_ASSET_DIR,
         )
-        self.assertEqual(len(downloaded_assets), len(extracted_assets))
+        extracted_figures = [asset for asset in extracted_assets if asset.get("kind") == "figure"]
+        downloaded_figures = [asset for asset in downloaded_assets if asset.get("kind") == "figure"]
+        self.assertEqual(len(downloaded_figures), len(extracted_figures))
 
         article, _, _ = self._build_browser_fixture_article(
             client,
@@ -1106,17 +1107,17 @@ class SciencePnasProviderTests(unittest.TestCase):
   <a href="https://www.science.org/supp/appendix.pdf">Supplementary Information</a>
 </article>
 """
-        transport = AssetTransport(
-            {
-                ("GET", "https://www.science.org/images/large/figure1.png"): {
-                    "status_code": 200,
-                    "headers": {"content-type": "image/png"},
-                    "body": b"figure-1",
-                    "url": "https://www.science.org/images/large/figure1.png",
-                }
+        figure_url = "https://www.science.org/images/large/figure1.png"
+        transport = AssetTransport({})
+        client = science_provider.ScienceClient(transport=transport, env={})
+        shared_fetcher = mock.Mock(
+            return_value={
+                "status_code": 200,
+                "headers": {"content-type": "image/png"},
+                "body": b"figure-1",
+                "url": figure_url,
             }
         )
-        client = science_provider.ScienceClient(transport=transport, env={})
         with tempfile.TemporaryDirectory() as tmpdir:
             runtime = self._runtime_config(tmpdir, "science", SCIENCE_SAMPLE.doi)
             raw_payload = RawFulltextPayload(
@@ -1134,7 +1135,13 @@ class SciencePnasProviderTests(unittest.TestCase):
                 mock.patch.object(_science_pnas, "load_runtime_config", return_value=runtime),
                 mock.patch.object(_science_pnas, "ensure_runtime_ready"),
                 mock.patch.object(_science_pnas, "fetch_html_with_flaresolverr") as mocked_fetch,
-                mock.patch.object(html_assets, "_build_cookie_seeded_opener", return_value=None),
+                mock.patch.object(html_assets, "_build_cookie_seeded_opener") as mocked_opener,
+                mock.patch.object(html_assets, "_request_with_opener") as mocked_request,
+                mock.patch.object(
+                    _science_pnas,
+                    "_build_shared_playwright_image_fetcher",
+                    return_value=shared_fetcher,
+                ) as mocked_builder,
             ):
                 result = client.download_related_assets(
                     SCIENCE_SAMPLE.doi,
@@ -1147,9 +1154,15 @@ class SciencePnasProviderTests(unittest.TestCase):
                 saved_bytes = saved_path.read_bytes()
 
         mocked_fetch.assert_not_called()
-        self.assertEqual([call["url"] for call in transport.calls], ["https://www.science.org/images/large/figure1.png"])
+        mocked_builder.assert_called_once()
+        mocked_opener.assert_not_called()
+        mocked_request.assert_not_called()
+        self.assertEqual(transport.calls, [])
+        shared_fetcher.assert_called_once()
+        self.assertEqual(shared_fetcher.call_args.args[0], figure_url)
         self.assertEqual(len(result["assets"]), 1)
         self.assertEqual(result["assets"][0]["kind"], "figure")
+        self.assertEqual(result["assets"][0]["download_tier"], "full_size")
         self.assertEqual(result["asset_failures"], [])
         self.assertEqual(saved_bytes, b"figure-1")
 
@@ -1168,7 +1181,6 @@ class SciencePnasProviderTests(unittest.TestCase):
 """
         transport = AssetTransport({})
         client = pnas_provider.PnasClient(transport=transport, env={})
-        request_calls: list[dict[str, object]] = []
         initial_seed = {
             "browser_cookies": [{"name": "cf_clearance", "value": "secret", "domain": ".pnas.org", "path": "/"}],
             "browser_user_agent": "Mozilla/5.0",
@@ -1179,19 +1191,17 @@ class SciencePnasProviderTests(unittest.TestCase):
             "browser_user_agent": "Mozilla/5.0",
             "browser_final_url": figure_page_url,
         }
-
-        def fake_request_with_opener(_opener, url, *, headers, timeout):
-            request_calls.append({"url": url, "headers": dict(headers), "timeout": timeout})
-            if url == full_size_url:
-                raise RequestFailure(403, "Forbidden", url=url)
-            if url == preview_url:
-                return {
+        shared_fetcher = mock.Mock(
+            side_effect=[
+                None,
+                {
                     "status_code": 200,
                     "headers": {"content-type": "image/png"},
                     "body": b"preview-image",
-                    "url": url,
-                }
-            raise AssertionError(f"Unexpected opener request for {url}")
+                    "url": preview_url,
+                },
+            ],
+        )
 
         with tempfile.TemporaryDirectory() as tmpdir:
             runtime = self._runtime_config(tmpdir, "pnas", PNAS_SAMPLE.doi)
@@ -1227,10 +1237,14 @@ class SciencePnasProviderTests(unittest.TestCase):
                         browser_context_seed=warmed_seed,
                     ),
                 ) as mocked_fetch,
-                mock.patch.object(html_assets, "_build_cookie_seeded_opener", return_value=object()),
-                mock.patch.object(html_assets, "_request_with_opener", side_effect=fake_request_with_opener),
-                mock.patch.object(_science_pnas, "fetch_image_document_with_playwright", return_value=None),
-                ):
+                mock.patch.object(html_assets, "_build_cookie_seeded_opener") as mocked_opener,
+                mock.patch.object(html_assets, "_request_with_opener") as mocked_request,
+                mock.patch.object(
+                    _science_pnas,
+                    "_build_shared_playwright_image_fetcher",
+                    return_value=shared_fetcher,
+                ) as mocked_builder,
+            ):
                 result = client.download_related_assets(
                     PNAS_SAMPLE.doi,
                     {"doi": PNAS_SAMPLE.doi, "title": PNAS_SAMPLE.title},
@@ -1243,13 +1257,17 @@ class SciencePnasProviderTests(unittest.TestCase):
 
         mocked_fetch.assert_called_once()
         self.assertEqual(mocked_fetch.call_args.args[0], [figure_page_url])
-        self.assertEqual([call["url"] for call in request_calls], [full_size_url, preview_url])
-        self.assertIn("sessionid=warm", str(request_calls[0]["headers"].get("Cookie") or ""))
+        mocked_builder.assert_called_once()
+        mocked_opener.assert_not_called()
+        mocked_request.assert_not_called()
+        self.assertEqual(transport.calls, [])
+        self.assertEqual([call.args[0] for call in shared_fetcher.call_args_list], [full_size_url, preview_url])
         self.assertEqual(len(result["assets"]), 1)
         self.assertEqual(result["asset_failures"], [])
+        self.assertEqual(result["assets"][0]["download_tier"], "preview")
         self.assertEqual(saved_bytes, b"preview-image")
 
-    def test_pnas_provider_download_related_assets_uses_playwright_canvas_before_preview(self) -> None:
+    def test_pnas_provider_download_related_assets_uses_shared_playwright_primary_path_before_preview(self) -> None:
         figure_page_url = "https://www.pnas.org/figures/figure-1"
         preview_url = "https://www.pnas.org/images/preview/figure1.png"
         full_size_url = "https://www.pnas.org/images/original/figure1.png"
@@ -1264,23 +1282,20 @@ class SciencePnasProviderTests(unittest.TestCase):
 """
         transport = AssetTransport({})
         client = pnas_provider.PnasClient(transport=transport, env={})
-        request_calls: list[str] = []
         initial_seed = {
             "browser_cookies": [{"name": "cf_clearance", "value": "secret", "domain": ".pnas.org", "path": "/"}],
             "browser_user_agent": "Mozilla/5.0",
             "browser_final_url": PNAS_SAMPLE.landing_url,
         }
-
-        def fake_request_with_opener(_opener, url, *, headers, timeout):
-            request_calls.append(url)
-            if url == full_size_url:
-                return {
-                    "status_code": 200,
-                    "headers": {"content-type": "text/html", "cf-mitigated": "challenge"},
-                    "body": b"<html><body>Chrome image viewer wrapper</body></html>",
-                    "url": url,
-                }
-            raise AssertionError(f"Preview should not be attempted after canvas fallback: {url}")
+        shared_fetcher = mock.Mock(
+            return_value={
+                "status_code": 200,
+                "headers": {"content-type": "image/jpeg"},
+                "body": b"\xff\xd8\xffprimary-image",
+                "url": full_size_url,
+                "dimensions": {"width": 1200, "height": 800},
+            },
+        )
 
         with tempfile.TemporaryDirectory() as tmpdir:
             runtime = self._runtime_config(tmpdir, "pnas", PNAS_SAMPLE.doi)
@@ -1316,19 +1331,13 @@ class SciencePnasProviderTests(unittest.TestCase):
                         browser_context_seed=initial_seed,
                     ),
                 ),
-                mock.patch.object(html_assets, "_build_cookie_seeded_opener", return_value=object()),
-                mock.patch.object(html_assets, "_request_with_opener", side_effect=fake_request_with_opener),
+                mock.patch.object(html_assets, "_build_cookie_seeded_opener") as mocked_opener,
+                mock.patch.object(html_assets, "_request_with_opener") as mocked_request,
                 mock.patch.object(
                     _science_pnas,
-                    "fetch_image_document_with_playwright",
-                    return_value={
-                        "status_code": 200,
-                        "headers": {"content-type": "image/jpeg"},
-                        "body": b"\xff\xd8\xffcanvas-image",
-                        "url": full_size_url,
-                        "dimensions": {"width": 1200, "height": 800},
-                    },
-                ) as mocked_canvas,
+                    "_build_shared_playwright_image_fetcher",
+                    return_value=shared_fetcher,
+                ) as mocked_builder,
             ):
                 result = client.download_related_assets(
                     PNAS_SAMPLE.doi,
@@ -1340,13 +1349,16 @@ class SciencePnasProviderTests(unittest.TestCase):
                 saved_path = Path(result["assets"][0]["path"])
                 saved_bytes = saved_path.read_bytes()
 
-        self.assertEqual(request_calls, [full_size_url])
-        mocked_canvas.assert_called_once()
-        self.assertEqual(mocked_canvas.call_args.args[0], full_size_url)
+        mocked_builder.assert_called_once()
+        mocked_opener.assert_not_called()
+        mocked_request.assert_not_called()
+        self.assertEqual(transport.calls, [])
+        shared_fetcher.assert_called_once()
+        self.assertEqual(shared_fetcher.call_args.args[0], full_size_url)
         self.assertEqual(len(result["assets"]), 1)
         self.assertEqual(result["asset_failures"], [])
-        self.assertEqual(result["assets"][0]["download_tier"], "playwright_canvas_fallback")
-        self.assertEqual(saved_bytes, b"\xff\xd8\xffcanvas-image")
+        self.assertEqual(result["assets"][0]["download_tier"], "full_size")
+        self.assertEqual(saved_bytes, b"\xff\xd8\xffprimary-image")
 
     def test_science_provider_records_preview_dimensions_and_acceptance(self) -> None:
         preview_url = "https://www.science.org/images/preview/figure1.png"
@@ -1359,17 +1371,16 @@ class SciencePnasProviderTests(unittest.TestCase):
 </article>
 """
         image_body = png_header(640, 480)
-        transport = AssetTransport(
-            {
-                ("GET", preview_url): {
-                    "status_code": 200,
-                    "headers": {"content-type": "image/png"},
-                    "body": image_body,
-                    "url": preview_url,
-                }
+        transport = AssetTransport({})
+        client = science_provider.ScienceClient(transport=transport, env={})
+        shared_fetcher = mock.Mock(
+            return_value={
+                "status_code": 200,
+                "headers": {"content-type": "image/png"},
+                "body": image_body,
+                "url": preview_url,
             }
         )
-        client = science_provider.ScienceClient(transport=transport, env={})
 
         with tempfile.TemporaryDirectory() as tmpdir:
             runtime = self._runtime_config(tmpdir, "science", SCIENCE_SAMPLE.doi)
@@ -1388,8 +1399,13 @@ class SciencePnasProviderTests(unittest.TestCase):
                 mock.patch.object(_science_pnas, "load_runtime_config", return_value=runtime),
                 mock.patch.object(_science_pnas, "ensure_runtime_ready"),
                 mock.patch.object(_science_pnas, "fetch_html_with_flaresolverr") as mocked_fetch,
-                mock.patch.object(html_assets, "_build_cookie_seeded_opener", return_value=None),
-                mock.patch.object(_science_pnas, "fetch_image_document_with_playwright", return_value=None),
+                mock.patch.object(html_assets, "_build_cookie_seeded_opener") as mocked_opener,
+                mock.patch.object(html_assets, "_request_with_opener") as mocked_request,
+                mock.patch.object(
+                    _science_pnas,
+                    "_build_shared_playwright_image_fetcher",
+                    return_value=shared_fetcher,
+                ) as mocked_builder,
             ):
                 result = client.download_related_assets(
                     SCIENCE_SAMPLE.doi,
@@ -1400,13 +1416,90 @@ class SciencePnasProviderTests(unittest.TestCase):
                 )
 
         mocked_fetch.assert_not_called()
+        mocked_builder.assert_called_once()
+        mocked_opener.assert_not_called()
+        mocked_request.assert_not_called()
+        self.assertEqual(transport.calls, [])
+        shared_fetcher.assert_called_once()
+        self.assertEqual(shared_fetcher.call_args.args[0], preview_url)
         self.assertEqual(len(result["assets"]), 1)
         self.assertEqual(result["assets"][0]["download_tier"], "preview")
         self.assertEqual(result["assets"][0]["width"], 640)
         self.assertEqual(result["assets"][0]["height"], 480)
         self.assertTrue(result["assets"][0]["preview_accepted"])
 
-    def test_pnas_provider_tries_canvas_upgrade_before_accepting_successful_preview(self) -> None:
+    def test_science_provider_records_asset_failure_when_shared_playwright_preview_fails(self) -> None:
+        preview_url = "https://www.science.org/images/preview/figure1.png"
+        html = f"""
+<article>
+  <figure>
+    <img src="{preview_url}" alt="Preview figure" />
+    <figcaption>Figure 1 caption</figcaption>
+  </figure>
+</article>
+"""
+        transport = AssetTransport({})
+        client = science_provider.ScienceClient(transport=transport, env={})
+        seed = {
+            "browser_cookies": [{"name": "cf_clearance", "value": "initial", "domain": ".science.org", "path": "/"}],
+            "browser_user_agent": "Mozilla/5.0",
+            "browser_final_url": SCIENCE_SAMPLE.landing_url,
+        }
+        refreshed_seed = {
+            "browser_cookies": [{"name": "cf_clearance", "value": "refreshed", "domain": ".science.org", "path": "/"}],
+            "browser_user_agent": "Mozilla/5.0",
+            "browser_final_url": SCIENCE_SAMPLE.landing_url,
+        }
+        first_fetcher = mock.Mock(return_value=None)
+        retry_fetcher = mock.Mock(return_value=None)
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            runtime = self._runtime_config(tmpdir, "science", SCIENCE_SAMPLE.doi)
+            raw_payload = RawFulltextPayload(
+                provider="science",
+                source_url=SCIENCE_SAMPLE.landing_url,
+                content_type="text/html",
+                body=html.encode("utf-8"),
+                metadata={
+                    "route": "html",
+                    "markdown_text": f"# {SCIENCE_SAMPLE.title}\n\n## Results\n\n" + ("Body text " * 120),
+                    "browser_context_seed": seed,
+                },
+            )
+            with (
+                mock.patch.object(_science_pnas, "load_runtime_config", return_value=runtime),
+                mock.patch.object(_science_pnas, "ensure_runtime_ready"),
+                mock.patch.object(
+                    _science_pnas,
+                    "warm_browser_context_with_flaresolverr",
+                    return_value=refreshed_seed,
+                ) as mocked_warm,
+                mock.patch.object(html_assets, "_build_cookie_seeded_opener") as mocked_opener,
+                mock.patch.object(html_assets, "_request_with_opener") as mocked_request,
+                mock.patch.object(
+                    _science_pnas,
+                    "_build_shared_playwright_image_fetcher",
+                    side_effect=[first_fetcher, retry_fetcher],
+                ) as mocked_builder,
+            ):
+                result = client.download_related_assets(
+                    SCIENCE_SAMPLE.doi,
+                    {"doi": SCIENCE_SAMPLE.doi, "title": SCIENCE_SAMPLE.title},
+                    raw_payload,
+                    Path(tmpdir),
+                    asset_profile="body",
+                )
+
+        self.assertEqual(mocked_builder.call_count, 2)
+        mocked_warm.assert_called_once()
+        mocked_opener.assert_not_called()
+        mocked_request.assert_not_called()
+        self.assertEqual(transport.calls, [])
+        self.assertEqual(result["assets"], [])
+        self.assertEqual(len(result["asset_failures"]), 1)
+        self.assertEqual(result["asset_failures"][0]["source_url"], preview_url)
+
+    def test_pnas_provider_downloads_preview_through_shared_playwright_when_no_full_size_candidate(self) -> None:
         figure_page_url = "https://www.pnas.org/figures/figure-1"
         preview_url = "https://www.pnas.org/images/preview/figure1.png"
         html = f"""
@@ -1420,23 +1513,19 @@ class SciencePnasProviderTests(unittest.TestCase):
 """
         transport = AssetTransport({})
         client = pnas_provider.PnasClient(transport=transport, env={})
-        request_calls: list[str] = []
         seed = {
             "browser_cookies": [{"name": "cf_clearance", "value": "secret", "domain": ".pnas.org", "path": "/"}],
             "browser_user_agent": "Mozilla/5.0",
             "browser_final_url": PNAS_SAMPLE.landing_url,
         }
-
-        def fake_request_with_opener(_opener, url, *, headers, timeout):
-            request_calls.append(url)
-            if url == preview_url:
-                return {
-                    "status_code": 200,
-                    "headers": {"content-type": "image/png"},
-                    "body": png_header(320, 240),
-                    "url": url,
-                }
-            raise AssertionError(f"Unexpected opener request for {url}")
+        shared_fetcher = mock.Mock(
+            return_value={
+                "status_code": 200,
+                "headers": {"content-type": "image/png"},
+                "body": png_header(320, 240),
+                "url": preview_url,
+            }
+        )
 
         with tempfile.TemporaryDirectory() as tmpdir:
             runtime = self._runtime_config(tmpdir, "pnas", PNAS_SAMPLE.doi)
@@ -1468,19 +1557,13 @@ class SciencePnasProviderTests(unittest.TestCase):
                         browser_context_seed=seed,
                     ),
                 ),
-                mock.patch.object(html_assets, "_build_cookie_seeded_opener", return_value=object()),
-                mock.patch.object(html_assets, "_request_with_opener", side_effect=fake_request_with_opener),
+                mock.patch.object(html_assets, "_build_cookie_seeded_opener") as mocked_opener,
+                mock.patch.object(html_assets, "_request_with_opener") as mocked_request,
                 mock.patch.object(
                     _science_pnas,
-                    "fetch_image_document_with_playwright",
-                    return_value={
-                        "status_code": 200,
-                        "headers": {"content-type": "image/jpeg"},
-                        "body": b"\xff\xd8\xffupgraded-image",
-                        "url": "https://www.pnas.org/images/original/figure1.jpg",
-                        "dimensions": {"width": 1200, "height": 800},
-                    },
-                ) as mocked_canvas,
+                    "_build_shared_playwright_image_fetcher",
+                    return_value=shared_fetcher,
+                ) as mocked_builder,
             ):
                 result = client.download_related_assets(
                     PNAS_SAMPLE.doi,
@@ -1491,13 +1574,246 @@ class SciencePnasProviderTests(unittest.TestCase):
                 )
                 saved_bytes = Path(result["assets"][0]["path"]).read_bytes()
 
-        self.assertEqual(request_calls, [preview_url])
-        mocked_canvas.assert_called_once()
-        self.assertEqual(mocked_canvas.call_args.args[0], figure_page_url)
-        self.assertEqual(result["assets"][0]["download_tier"], "playwright_canvas_fallback")
-        self.assertEqual(result["assets"][0]["width"], 1200)
-        self.assertEqual(result["assets"][0]["height"], 800)
-        self.assertEqual(saved_bytes, b"\xff\xd8\xffupgraded-image")
+        mocked_builder.assert_called_once()
+        mocked_opener.assert_not_called()
+        mocked_request.assert_not_called()
+        self.assertEqual(transport.calls, [])
+        shared_fetcher.assert_called_once()
+        self.assertEqual(shared_fetcher.call_args.args[0], preview_url)
+        self.assertEqual(result["assets"][0]["download_tier"], "preview")
+        self.assertEqual(result["assets"][0]["width"], 320)
+        self.assertEqual(result["assets"][0]["height"], 240)
+        self.assertEqual(saved_bytes, png_header(320, 240))
+
+    def test_browser_workflow_download_related_assets_retries_after_partial_failures(self) -> None:
+        figure_url = "https://www.pnas.org/images/large/figure1.png"
+        html = f"""
+<article>
+  <figure>
+    <img src="{figure_url}" alt="Figure 1" />
+    <figcaption>Figure 1 caption</figcaption>
+  </figure>
+</article>
+"""
+        client = pnas_provider.PnasClient(transport=AssetTransport({}), env={})
+        initial_seed = {
+            "browser_cookies": [{"name": "cf_clearance", "value": "initial", "domain": ".pnas.org", "path": "/"}],
+            "browser_user_agent": "Mozilla/5.0",
+            "browser_final_url": PNAS_SAMPLE.landing_url,
+        }
+        refreshed_seed = {
+            "browser_cookies": [{"name": "cf_clearance", "value": "refreshed", "domain": ".pnas.org", "path": "/"}],
+            "browser_user_agent": "Mozilla/5.0",
+            "browser_final_url": PNAS_SAMPLE.landing_url,
+        }
+        failing_fetcher = mock.Mock(return_value=None)
+        successful_fetcher = mock.Mock(
+            return_value={
+                "status_code": 200,
+                "headers": {"content-type": "image/png"},
+                "body": png_header(640, 480),
+                "url": figure_url,
+                "dimensions": {"width": 640, "height": 480},
+            }
+        )
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            runtime = self._runtime_config(tmpdir, "pnas", PNAS_SAMPLE.doi)
+            raw_payload = RawFulltextPayload(
+                provider="pnas",
+                source_url=PNAS_SAMPLE.landing_url,
+                content_type="text/html",
+                body=html.encode("utf-8"),
+                metadata={
+                    "route": "html",
+                    "markdown_text": f"# {PNAS_SAMPLE.title}\n\n## Results\n\n" + ("Body text " * 120),
+                    "browser_context_seed": initial_seed,
+                },
+            )
+            with (
+                mock.patch.object(_science_pnas, "load_runtime_config", return_value=runtime),
+                mock.patch.object(_science_pnas, "ensure_runtime_ready"),
+                mock.patch.object(
+                    _science_pnas,
+                    "warm_browser_context_with_flaresolverr",
+                    return_value=refreshed_seed,
+                ) as mocked_warm,
+                mock.patch.object(
+                    _science_pnas,
+                    "_build_shared_playwright_image_fetcher",
+                    side_effect=[failing_fetcher, successful_fetcher],
+                ) as mocked_builder,
+            ):
+                result = client.download_related_assets(
+                    PNAS_SAMPLE.doi,
+                    {"doi": PNAS_SAMPLE.doi, "title": PNAS_SAMPLE.title},
+                    raw_payload,
+                    Path(tmpdir),
+                    asset_profile="body",
+                )
+
+        self.assertEqual(mocked_builder.call_count, 2)
+        mocked_warm.assert_called_once()
+        self.assertEqual(
+            mocked_builder.call_args_list[1].kwargs["browser_context_seed_getter"]()["browser_cookies"][0]["value"],
+            "refreshed",
+        )
+        failing_fetcher.assert_called_once()
+        successful_fetcher.assert_called_once()
+        self.assertEqual(len(result["assets"]), 1)
+        self.assertEqual(result["asset_failures"], [])
+        self.assertEqual(result["assets"][0]["download_url"], figure_url)
+
+    def test_wiley_provider_download_related_assets_uses_shared_playwright_primary_path(self) -> None:
+        full_size_url = "https://onlinelibrary.wiley.com/cms/asset/full/figure1.jpg"
+        html = f"""
+<article>
+  <figure>
+    <img src="{full_size_url}" alt="Figure 1" />
+    <figcaption>Figure 1 caption</figcaption>
+  </figure>
+</article>
+"""
+        client = wiley_provider.WileyClient(transport=AssetTransport({}), env={})
+        seed = {
+            "browser_cookies": [{"name": "cf_clearance", "value": "secret", "domain": ".wiley.com", "path": "/"}],
+            "browser_user_agent": "Mozilla/5.0",
+            "browser_final_url": "https://onlinelibrary.wiley.com/doi/10.1111/gcb.16011",
+        }
+        shared_fetcher = mock.Mock(
+            return_value={
+                "status_code": 200,
+                "headers": {"content-type": "image/jpeg"},
+                "body": b"\xff\xd8\xffprimary-image",
+                "url": full_size_url,
+                "dimensions": {"width": 1400, "height": 900},
+            },
+        )
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            runtime = self._runtime_config(tmpdir, "wiley", "10.1111/gcb.16011")
+            raw_payload = RawFulltextPayload(
+                provider="wiley",
+                source_url="https://onlinelibrary.wiley.com/doi/10.1111/gcb.16011",
+                content_type="text/html",
+                body=html.encode("utf-8"),
+                metadata={
+                    "route": "html",
+                    "markdown_text": "# Title\n\n## Results\n\n" + ("Body text " * 120),
+                    "browser_context_seed": seed,
+                },
+            )
+            with (
+                mock.patch.object(_science_pnas, "load_runtime_config", return_value=runtime),
+                mock.patch.object(_science_pnas, "ensure_runtime_ready"),
+                mock.patch.object(html_assets, "_build_cookie_seeded_opener") as mocked_opener,
+                mock.patch.object(html_assets, "_request_with_opener") as mocked_request,
+                mock.patch.object(
+                    _science_pnas,
+                    "_build_shared_playwright_image_fetcher",
+                    return_value=shared_fetcher,
+                ) as mocked_builder,
+            ):
+                result = client.download_related_assets(
+                    "10.1111/gcb.16011",
+                    {"doi": "10.1111/gcb.16011", "title": "Title"},
+                    raw_payload,
+                    Path(tmpdir),
+                    asset_profile="body",
+                )
+                saved_bytes = Path(result["assets"][0]["path"]).read_bytes()
+
+        mocked_builder.assert_called_once()
+        mocked_opener.assert_not_called()
+        mocked_request.assert_not_called()
+        shared_fetcher.assert_called_once()
+        self.assertEqual(shared_fetcher.call_args.args[0], full_size_url)
+        self.assertEqual(len(result["assets"]), 1)
+        self.assertEqual(result["asset_failures"], [])
+        self.assertEqual(result["assets"][0]["download_tier"], "full_size")
+        self.assertEqual(saved_bytes, b"\xff\xd8\xffprimary-image")
+
+    def test_wiley_provider_download_related_assets_reuses_shared_playwright_fetcher_across_assets(self) -> None:
+        first_url = "https://onlinelibrary.wiley.com/cms/asset/full/figure1.jpg"
+        second_url = "https://onlinelibrary.wiley.com/cms/asset/full/figure2.jpg"
+        html = f"""
+<article>
+  <figure>
+    <img src="{first_url}" alt="Figure 1" />
+    <figcaption>Figure 1 caption</figcaption>
+  </figure>
+  <figure>
+    <img src="{second_url}" alt="Figure 2" />
+    <figcaption>Figure 2 caption</figcaption>
+  </figure>
+</article>
+"""
+        client = wiley_provider.WileyClient(transport=AssetTransport({}), env={})
+        seed = {
+            "browser_cookies": [{"name": "cf_clearance", "value": "secret", "domain": ".wiley.com", "path": "/"}],
+            "browser_user_agent": "Mozilla/5.0",
+            "browser_final_url": "https://onlinelibrary.wiley.com/doi/10.1111/gcb.16011",
+        }
+        shared_fetcher = mock.Mock(
+            side_effect=[
+                {
+                    "status_code": 200,
+                    "headers": {"content-type": "image/jpeg"},
+                    "body": b"\xff\xd8\xfffigure-one",
+                    "url": first_url,
+                    "dimensions": {"width": 1200, "height": 800},
+                },
+                {
+                    "status_code": 200,
+                    "headers": {"content-type": "image/jpeg"},
+                    "body": b"\xff\xd8\xfffigure-two",
+                    "url": second_url,
+                    "dimensions": {"width": 1400, "height": 900},
+                },
+            ],
+        )
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            runtime = self._runtime_config(tmpdir, "wiley", "10.1111/gcb.16011")
+            raw_payload = RawFulltextPayload(
+                provider="wiley",
+                source_url="https://onlinelibrary.wiley.com/doi/10.1111/gcb.16011",
+                content_type="text/html",
+                body=html.encode("utf-8"),
+                metadata={
+                    "route": "html",
+                    "markdown_text": "# Title\n\n## Results\n\n" + ("Body text " * 120),
+                    "browser_context_seed": seed,
+                },
+            )
+            with (
+                mock.patch.object(_science_pnas, "load_runtime_config", return_value=runtime),
+                mock.patch.object(_science_pnas, "ensure_runtime_ready"),
+                mock.patch.object(html_assets, "_build_cookie_seeded_opener") as mocked_opener,
+                mock.patch.object(html_assets, "_request_with_opener") as mocked_request,
+                mock.patch.object(
+                    _science_pnas,
+                    "_build_shared_playwright_image_fetcher",
+                    return_value=shared_fetcher,
+                ) as mocked_builder,
+            ):
+                result = client.download_related_assets(
+                    "10.1111/gcb.16011",
+                    {"doi": "10.1111/gcb.16011", "title": "Title"},
+                    raw_payload,
+                    Path(tmpdir),
+                    asset_profile="body",
+                )
+
+        mocked_builder.assert_called_once()
+        mocked_opener.assert_not_called()
+        mocked_request.assert_not_called()
+        self.assertEqual(len(result["assets"]), 2)
+        self.assertEqual(result["asset_failures"], [])
+        self.assertEqual(shared_fetcher.call_count, 2)
+        self.assertEqual(shared_fetcher.call_args_list[0].args[0], first_url)
+        self.assertEqual(shared_fetcher.call_args_list[1].args[0], second_url)
+        shared_fetcher.close.assert_called_once()
 
 
 if __name__ == "__main__":

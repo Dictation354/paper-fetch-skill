@@ -14,6 +14,7 @@ from ..extraction.html._assets import (
     FigurePageFetcher,
     download_figure_assets as download_generic_figure_assets,
     extract_figure_assets as extract_generic_figure_assets,
+    extract_formula_assets as extract_generic_formula_assets,
     extract_supplementary_assets as extract_generic_supplementary_assets,
     looks_like_full_size_asset_url,
 )
@@ -801,6 +802,7 @@ def extract_html_assets(
     asset_profile,
 ) -> list[dict[str, str]]:
     assets = extract_figure_assets(html_text, source_url)
+    assets.extend(extract_generic_formula_assets(html_text, source_url))
     if asset_profile == "all":
         assets.extend(extract_supplementary_assets(html_text, source_url))
     return assets

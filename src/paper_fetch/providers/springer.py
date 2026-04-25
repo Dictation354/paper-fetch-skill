@@ -303,7 +303,7 @@ def _springer_table_image_markdown(asset: Mapping[str, Any], *, label: str) -> s
 
 def _springer_degraded_table_placeholder(label: str, reason: str) -> str:
     label_text = normalize_text(label) or "Table"
-    return f"**{label_text}** Degraded placeholder: {normalize_text(reason)}"
+    return f"**{label_text}** [Table body unavailable: {normalize_text(reason)}]"
 
 
 def _springer_inline_table_nodes(soup: BeautifulSoup) -> list[Tag]:
@@ -500,7 +500,7 @@ class SpringerClient(ProviderClient):
                 fallback_label=label,
                 fallback_caption=caption,
                 allow_image_asset=allow_nature13376_fallback,
-                allow_degraded_placeholder=allow_nature13376_fallback,
+                allow_degraded_placeholder=True,
             )
             if warning:
                 warnings.append(warning)

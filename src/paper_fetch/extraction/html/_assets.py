@@ -69,6 +69,17 @@ SUPPLEMENTARY_TEXT_TOKENS = (
     "supporting information",
 )
 SUPPLEMENTARY_FILE_TOKENS = (".pdf", ".csv", ".xlsx", ".xls", ".zip")
+FORMULA_IMAGE_URL_PATTERN = re.compile(
+    r"(?:^|[-_/])(?:math|ieq)[-_]?\d|_IEq\d|math-\d|equation",
+    flags=re.IGNORECASE,
+)
+FORMULA_ANCESTOR_TOKENS = (
+    "inline-equation",
+    "display-equation",
+    "disp-formula",
+    "display-formula",
+    "fallback__mathequation",
+)
 
 FigurePageFetcher = Callable[[str], tuple[str, str] | None]
 ImageDocumentFetcher = Callable[[str, Mapping[str, Any]], dict[str, Any] | None]
@@ -175,7 +186,7 @@ def _looks_like_image_payload(content_type: str | None, body: bytes | bytearray 
 def _requires_image_payload(asset: Mapping[str, Any]) -> bool:
     kind = normalize_text(str(asset.get("kind") or "")).lower()
     section = normalize_text(str(asset.get("section") or "")).lower()
-    return kind in {"figure", "table"} and section != "supplementary"
+    return kind in {"figure", "table", "formula"} and section != "supplementary"
 
 
 def _fetch_image_document_fallback(
@@ -413,6 +424,62 @@ def _soup_attr_url(tag: Any, *attrs: str) -> str:
         if candidate:
             return candidate
     return ""
+
+
+def _tag_identity_text(tag: Any) -> str:
+    if Tag is None or not isinstance(tag, Tag):
+        return ""
+    parts = [normalize_text(str(tag.name or ""))]
+    attrs = getattr(tag, "attrs", None) or {}
+    for key in ("id", "class", "role", "data-test", "data-type"):
+        value = attrs.get(key)
+        if isinstance(value, (list, tuple, set)):
+            parts.extend(normalize_text(str(item)) for item in value)
+        else:
+            parts.append(normalize_text(str(value or "")))
+    return " ".join(part.lower() for part in parts if part)
+
+
+def _formula_ancestor_identity(tag: Any) -> str:
+    parts: list[str] = []
+    current = tag
+    depth = 0
+    while Tag is not None and isinstance(current, Tag) and depth < 6:
+        parts.append(_tag_identity_text(current))
+        current = current.parent if isinstance(getattr(current, "parent", None), Tag) else None
+        depth += 1
+    return " ".join(part for part in parts if part)
+
+
+def _looks_like_formula_image(tag: Any, url: str) -> bool:
+    if Tag is None or not isinstance(tag, Tag):
+        return False
+    identity = _formula_ancestor_identity(tag)
+    alt_blob = " ".join(
+        normalize_text(str(tag.get(attr) or "")).lower()
+        for attr in ("alt", "title", "aria-label")
+    )
+    url_blob = normalize_text(url).lower()
+    return (
+        bool(FORMULA_IMAGE_URL_PATTERN.search(url_blob))
+        or bool(FORMULA_IMAGE_URL_PATTERN.search(alt_blob))
+        or any(token in identity for token in FORMULA_ANCESTOR_TOKENS)
+    )
+
+
+def _formula_heading_for_image(tag: Any, index: int) -> str:
+    if Tag is None or not isinstance(tag, Tag):
+        return f"Formula {index}"
+    current = tag
+    depth = 0
+    while isinstance(current, Tag) and depth < 6:
+        identity = _tag_identity_text(current)
+        candidate_id = normalize_text(str((getattr(current, "attrs", None) or {}).get("id") or ""))
+        if candidate_id and any(token in identity for token in FORMULA_ANCESTOR_TOKENS):
+            return candidate_id
+        current = current.parent if isinstance(getattr(current, "parent", None), Tag) else None
+        depth += 1
+    return f"Formula {index}"
 
 
 def looks_like_full_size_asset_url(url: str | None) -> bool:
@@ -675,6 +742,43 @@ def extract_figure_assets(html_text: str, source_url: str) -> list[dict[str, str
     return assets
 
 
+def extract_formula_assets(html_text: str, source_url: str) -> list[dict[str, str]]:
+    if BeautifulSoup is None:
+        return []
+
+    soup = BeautifulSoup(html_text, "html.parser")
+    assets: list[dict[str, str]] = []
+    seen: set[str] = set()
+    for image in soup.find_all("img"):
+        if not isinstance(image, Tag):
+            continue
+        url = _soup_attr_url(
+            image,
+            *FULL_SIZE_IMAGE_ATTRS,
+            *PREVIEW_IMAGE_ATTRS,
+            "srcset",
+            "data-srcset",
+        )
+        if not url or not _looks_like_formula_image(image, url):
+            continue
+        absolute_url = urllib.parse.urljoin(source_url, url)
+        if not absolute_url or absolute_url in seen:
+            continue
+        seen.add(absolute_url)
+        heading = _formula_heading_for_image(image, len(assets) + 1)
+        assets.append(
+            {
+                "kind": "formula",
+                "heading": heading,
+                "caption": "",
+                "url": absolute_url,
+                "preview_url": absolute_url,
+                "section": "body",
+            }
+        )
+    return assets
+
+
 def extract_supplementary_assets(html_text: str, source_url: str) -> list[dict[str, str]]:
     if BeautifulSoup is None:
         return []
@@ -703,6 +807,7 @@ def extract_html_assets(
     asset_profile: AssetProfile,
 ) -> list[dict[str, str]]:
     assets = extract_figure_assets(html_text, source_url)
+    assets.extend(extract_formula_assets(html_text, source_url))
     if asset_profile == "all":
         assets.extend(extract_supplementary_assets(html_text, source_url))
     return assets
@@ -812,7 +917,7 @@ def resolve_figure_download_url(
 
 
 def html_asset_identity_key(asset: Mapping[str, Any]) -> str:
-    for field in ("figure_page_url", "original_url", "url", "source_url", "path"):
+    for field in ("figure_page_url", "original_url", "download_url", "full_size_url", "preview_url", "url", "source_url", "path"):
         candidate = normalize_text(str(asset.get(field) or ""))
         if candidate:
             return candidate
@@ -985,6 +1090,115 @@ def download_figure_assets(
                 and not looks_like_full_size_asset_url(source_url.lower())
                 else "full_size"
             )
+        )
+        output_path = build_asset_output_path(asset_dir, source_url, content_type, response["url"], used_names)
+        download = {
+            "kind": asset.get("kind", "figure"),
+            "heading": asset.get("heading", "Figure"),
+            "caption": asset.get("caption", ""),
+            "original_url": preview_url,
+            "figure_page_url": asset.get("figure_page_url", ""),
+            "download_url": source_url,
+            "download_tier": download_tier,
+            "source_url": response["url"],
+            "content_type": content_type,
+            "path": save_payload(output_path, response["body"]),
+            "downloaded_bytes": len(response["body"]),
+            "section": asset.get("section") or "body",
+        }
+        if width > 0 and height > 0:
+            download["width"] = width
+            download["height"] = height
+        if download_tier == "preview" and preview_dimensions_are_acceptable(width, height):
+            download["preview_accepted"] = True
+        downloads.append(download)
+
+    return {
+        "assets": downloads,
+        "asset_failures": failures,
+    }
+
+
+def download_figure_assets_with_image_document_fetcher(
+    transport: HttpTransport,
+    *,
+    article_id: str,
+    assets: list[dict[str, str]],
+    output_dir: Path | None,
+    user_agent: str,
+    asset_profile: AssetProfile = "all",
+    figure_page_fetcher: FigurePageFetcher | None = None,
+    candidate_builder: Callable[..., list[str]] | None = None,
+    image_document_fetcher: ImageDocumentFetcher | None = None,
+) -> dict[str, list[dict[str, Any]]]:
+    if output_dir is None or asset_profile == "none" or not assets:
+        return empty_asset_results()
+
+    asset_dir = output_dir / f"{sanitize_filename(article_id)}_assets"
+    asset_dir.mkdir(parents=True, exist_ok=True)
+    used_names: set[str] = set()
+    downloads: list[dict[str, Any]] = []
+    failures: list[dict[str, Any]] = []
+    active_candidate_builder = candidate_builder or figure_download_candidates
+
+    for asset in assets:
+        if not _requires_image_payload(asset):
+            continue
+        preview_url = normalize_text(str(asset.get("preview_url") or asset.get("url") or ""))
+        full_size_url = normalize_text(str(asset.get("full_size_url") or ""))
+        candidate_urls = active_candidate_builder(
+            transport,
+            asset=asset,
+            user_agent=user_agent,
+            figure_page_fetcher=figure_page_fetcher,
+        )
+        if not candidate_urls:
+            continue
+
+        response = None
+        source_url = ""
+        last_failure: dict[str, Any] | None = None
+        for candidate_url in candidate_urls:
+            parsed = urllib.parse.urlparse(candidate_url)
+            if parsed.scheme not in {"http", "https"}:
+                last_failure = {
+                    "kind": asset.get("kind", "figure"),
+                    "heading": asset.get("heading", "Figure"),
+                    "caption": asset.get("caption", ""),
+                    "source_url": candidate_url,
+                    "reason": f"Unsupported asset URL scheme for {candidate_url}",
+                    "section": asset.get("section") or "body",
+                }
+                continue
+
+            response = _fetch_image_document_fallback(image_document_fetcher, candidate_url, asset)
+            if response is not None:
+                source_url = candidate_url
+                break
+            last_failure = {
+                "kind": asset.get("kind", "figure"),
+                "heading": asset.get("heading", "Figure"),
+                "caption": asset.get("caption", ""),
+                "source_url": candidate_url,
+                "reason": f"Asset candidate did not return image content for {candidate_url}.",
+                "section": asset.get("section") or "body",
+            }
+
+        if response is None:
+            if last_failure is not None:
+                failures.append(last_failure)
+            continue
+
+        content_type = _response_header(response, "content-type")
+        dimensions = _response_dimensions(response) or (0, 0)
+        width, height = dimensions
+        download_tier = (
+            "preview"
+            if preview_url
+            and source_url == preview_url
+            and source_url != full_size_url
+            and not looks_like_full_size_asset_url(source_url.lower())
+            else "full_size"
         )
         output_path = build_asset_output_path(asset_dir, source_url, content_type, response["url"], used_names)
         download = {

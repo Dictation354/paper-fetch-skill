@@ -2,6 +2,9 @@ from __future__ import annotations
 
 import unittest
 
+from bs4 import BeautifulSoup
+
+from paper_fetch.providers import _science_pnas_html
 from paper_fetch.providers._html_references import extract_numbered_references_from_html
 from paper_fetch.providers._science_pnas_html import SciencePnasHtmlFailure, extract_science_pnas_markdown
 from tests.golden_criteria import golden_criteria_asset
@@ -226,6 +229,87 @@ class SciencePnasMarkdownTests(unittest.TestCase):
         self.assertIn("## DATA AVAILABILITY STATEMENT", markdown)
         self.assertNotIn("## CONFLICT OF INTEREST", markdown)
         self.assertNotIn("## Supporting Information", markdown)
+
+    def test_wiley_formula_image_fallbacks_are_preserved(self) -> None:
+        markdown, _ = self._extract_fixture_markdown(
+            golden_criteria_asset("10.1111/gcb.15322", "original.html"),
+            "https://onlinelibrary.wiley.com/doi/full/10.1111/gcb.15322",
+            "wiley",
+            "10.1111/gcb.15322",
+        )
+
+        self.assertIn("**Equation 1.**", markdown)
+        self.assertIn("![Formula](/cms/asset/", markdown)
+        self.assertIn("gcb15322-math-0001.png", markdown)
+        self.assertNotIn("**Equation 1.**![Formula]", markdown)
+
+    def test_wiley_inline_mathml_with_fallback_span_does_not_emit_placeholder(self) -> None:
+        soup = BeautifulSoup(
+            """
+            <div class="article-section__content">
+              <p>
+                Intro text.
+                <span class="fallback__mathEquation" data-altimg="/cms/asset/example-math-0002.png"></span>
+                <math display="inline">
+                  <semantics>
+                    <mrow><mi>β</mi></mrow>
+                  </semantics>
+                </math>
+                <sub>FVC</sub>
+                represents the linear effect of FVC on d(LST)/dt.
+              </p>
+            </div>
+            """,
+            "html.parser",
+        )
+
+        container = soup.select_one(".article-section__content")
+        self.assertIsNotNone(container)
+        _science_pnas_html._normalize_display_formula_blocks(container)
+        _science_pnas_html._normalize_inline_math_nodes(container)
+        _science_pnas_html._normalize_non_table_inline_blocks(container)
+
+        rendered = str(container)
+        self.assertNotIn("[Formula unavailable]", rendered)
+        self.assertIn("$\\beta$", rendered)
+        self.assertIn("represents the linear effect of FVC on d(LST)/dt.", rendered)
+
+    def test_wiley_display_formula_can_fall_back_to_alt_image_span(self) -> None:
+        soup = BeautifulSoup(
+            """
+            <div class="article-section__content">
+              <p>
+                <span class="fallback__mathEquation" data-altimg="/cms/asset/example-math-0001.png"></span>
+                <math display="block">
+                  <semantics>
+                    <mrow />
+                  </semantics>
+                </math>
+              </p>
+            </div>
+            """,
+            "html.parser",
+        )
+
+        container = soup.select_one(".article-section__content")
+        self.assertIsNotNone(container)
+        _science_pnas_html._normalize_display_formula_blocks(container)
+
+        rendered = str(container)
+        self.assertNotIn("[Formula unavailable]", rendered)
+        self.assertIn("![Formula](/cms/asset/example-math-0001.png)", rendered)
+
+    def test_wiley_references_use_visible_citation_text_not_doi_only(self) -> None:
+        html = golden_criteria_asset("10.1111/gcb.15322", "original.html").read_text(encoding="utf-8")
+
+        references = extract_numbered_references_from_html(html)
+
+        self.assertGreater(len(references), 20)
+        self.assertIn("Atkinson", references[0]["raw"])
+        self.assertIn("Inter-comparison of four models", references[0]["raw"])
+        self.assertIn("Remote Sensing of Environment", references[0]["raw"])
+        self.assertNotEqual(references[0]["raw"], references[0]["doi"])
+        self.assertNotIn("Google Scholar", references[0]["raw"])
 
     def test_wiley_fixture_renders_rule_table_as_markdown_table(self) -> None:
         markdown, _ = self._extract_fixture_markdown(

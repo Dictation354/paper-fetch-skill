@@ -141,6 +141,35 @@ class ElsevierMarkdownTests(unittest.TestCase):
         self.assertIn("1. A. Anav, P. Friedlingstein", rendered)
         self.assertNotIn("- Spatiotemporal patterns of terrestrial gross primary production: a review", rendered)
 
+    def test_elsevier_references_fall_back_without_skipping_bib_entries(self) -> None:
+        root = ET.fromstring(
+            """
+<root>
+  <bib-reference id="bib1">
+    <label>1</label>
+    <reference>
+      <contribution><title><maintitle>Structured title</maintitle></title></contribution>
+      <host><sourcetitle>Structured Journal</sourcetitle><date>2024</date></host>
+    </reference>
+  </bib-reference>
+  <bib-reference id="bib2">
+    <label>2</label>
+    <source-text>Raw fallback reference text for the second citation.</source-text>
+  </bib-reference>
+  <bib-reference id="bib3">
+    <label>3</label>
+  </bib-reference>
+</root>
+"""
+        )
+
+        references = elsevier_document.extract_elsevier_references(root)
+
+        self.assertEqual(len(references), 3)
+        self.assertTrue(references[0].raw.startswith("1. 2024. Structured title"))
+        self.assertEqual(references[1].raw, "2. Raw fallback reference text for the second citation.")
+        self.assertEqual(references[2].raw, "3. [Reference text unavailable]")
+
     def test_article_from_structure_preserves_inline_elsevier_figures(self) -> None:
         xml_body = b"""<?xml version="1.0"?>
 <full-text-retrieval-response xmlns="http://www.elsevier.com/xml/svapi/article/dtd" xmlns:ce="http://www.elsevier.com/xml/common/dtd">

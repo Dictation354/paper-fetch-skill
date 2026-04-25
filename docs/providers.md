@@ -220,6 +220,7 @@ CLI、Python API、MCP 当前统一采用这些默认值：
 - `body`
   - 下载正文 figure
   - 下载正文表格原图
+  - 下载可识别的正文公式图片 fallback
   - 不包含 supplementary
 - `all`
   - 下载当前 provider 已识别的全部相关资产
@@ -229,7 +230,8 @@ CLI、Python API、MCP 当前统一采用这些默认值：
 
 - `elsevier` PDF fallback 仍会把 `asset_profile=body|all` 降级成 text-only
 - `springer` PDF fallback 仍会把 `asset_profile=body|all` 降级成 text-only
-- `wiley` / `science` / `pnas` 的 `FlareSolverr HTML` 成功路径支持资产下载；figure 会优先尝试 full-size/original，直接请求被 challenge 或返回非图片时可走 Playwright image-document / canvas fallback，最后才按尺寸阈值接受 preview
+- `wiley` / `science` / `pnas` 的 `FlareSolverr HTML` 成功路径支持正文 figure / table / formula 图片资产下载；这些 provider 以 shared Playwright browser context 为主链路，不再先走普通 HTTP 直连
+- `wiley` / `science` / `pnas` 的图片候选仍优先 full-size/original；full-size 候选全部失败后才尝试 preview，preview 也通过同一个 seeded browser context 下载
 - `wiley` / `science` / `pnas` 的 PDF/ePDF fallback 仍是 text-only
 
 ### 资产去重与诊断
@@ -237,9 +239,11 @@ CLI、Python API、MCP 当前统一采用这些默认值：
 - `render_state="inline"` 的资产表示正文已经渲染过，不会进入文末 `Figures` / `Tables`。
 - `render_state="appendix"` 的资产仍可进入尾部兜底块；当同类资产全是 appendix 状态时，标题会显示为 `Additional Figures` / `Additional Tables`。
 - 正文 Markdown 图片链接和资产路径会按 URL、路径、相对 `body_assets/...` 后缀和 basename 做等价比较，避免正文图在尾部重复。
+- 文章组装阶段也会用 `article.assets[*]` 把正文里的远程 figure / table / formula image 链接改写为已下载本地路径，再做 Markdown 图片块边界归一化，避免图片和标题、正文句子或公式块粘连。
 - 下载资产会保留 `download_tier`、`download_url`、`original_url`、`content_type`、`downloaded_bytes`、`width`、`height`。
-- `download_tier="playwright_canvas_fallback"` 表示普通 HTTP 没拿到真实图片，但浏览器 image document / canvas 导出保留了可视图片。
+- `wiley` / `science` / `pnas` 的 HTML 资产主链路只应输出 `download_tier="full_size"` 或 `download_tier="preview"`；旧的 `playwright_canvas_fallback` tier 只可能来自仍保留 HTTP-first 语义的通用下载路径。
 - `download_tier="preview"` 只有在宽高满足当前阈值 `300x200` 时才会标记为可接受 preview；否则仍会进入 preview fallback / asset issue 诊断。
+- live review 中，公式图片是公式语义的 fallback，因此 formula-only preview fallback 不自动归类为 `asset_download_failure`；figure/table preview fallback 仍按资产问题处理，除非已有 accepted 诊断。
 
 ### `include_refs`
 
@@ -275,7 +279,9 @@ CLI、Python API、MCP 当前统一采用这些默认值：
 
 - 公式输出会在公共公式 normalize 层处理 publisher-specific LaTeX 宏。
 - `\updelta` 等 upright Greek 宏会改写成普通 KaTeX 可渲染宏；`\mspace{Nmu}` 会改写成 `\mkernNmu`，其它单位不改。
-- Elsevier XML references 优先从结构化 bibliography 构建，保留编号、作者、题名、来源、页码、年份和 DOI；Crossref references 只作为兜底。
+- HTML 公式如果能从 MathML 转成 LaTeX，会按行内或 display 语境渲染；如果只有站点提供的公式图片 fallback，会保留为 `![Formula](...)` 并进入资产下载/改写流程。
+- HTML references 会去除 publisher 链接 chrome，如 `Google Scholar`、`Crossref`、相关链接和隐藏文本，并优先保留用户可见 citation body。
+- Elsevier XML references 优先从结构化 bibliography 构建，保留编号、作者、题名、来源、页码、年份和 DOI；缺字段时保留原始 citation text 或显式 `[Reference text unavailable]` 占位，Crossref references 只作为兜底。
 
 ## 配置文件与环境变量入口
 

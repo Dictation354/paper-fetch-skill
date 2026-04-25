@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import re
+import xml.etree.ElementTree as ET
 from typing import Any
 
 from ..formula.convert import normalize_latex_macros
 from ..models import normalize_text
+from ._article_markdown_math import render_external_mathml_expression, render_mathml_expression
 from ._html_citations import is_citation_link, make_numeric_citation_sentinel, numeric_citation_payload
 from .html_noise import HTML_BLOCK_TAGS, HTML_DROP_TAGS, should_drop_html_element
 
@@ -28,6 +30,14 @@ FIGURE_DESCRIPTION_SELECTORS = (
     "figcaption",
     ".c-article-section__figure-description",
     ".figure__caption-text",
+)
+FORMULA_IMAGE_URL_PATTERN = re.compile(r"(?:^|[-_/])(?:math|ieq)[-_]?\d|_IEq\d|math-\d|equation", flags=re.IGNORECASE)
+FORMULA_CONTAINER_TOKENS = (
+    "inline-equation",
+    "display-equation",
+    "disp-formula",
+    "display-formula",
+    "fallback__mathequation",
 )
 
 
@@ -311,6 +321,118 @@ def _node_attr_text(node: Any) -> str:
     return " ".join(part.lower() for part in parts if part)
 
 
+def _ancestor_attr_text(node: Any, *, max_depth: int = 6) -> str:
+    parts: list[str] = []
+    current = node
+    depth = 0
+    while isinstance(current, Tag) and depth < max_depth:
+        parts.append(_node_attr_text(current))
+        current = current.parent if isinstance(getattr(current, "parent", None), Tag) else None
+        depth += 1
+    return " ".join(part for part in parts if part)
+
+
+def _is_formula_container(node: Any) -> bool:
+    if not isinstance(node, Tag):
+        return False
+    identity = _node_attr_text(node)
+    role = normalize_text(str((getattr(node, "attrs", None) or {}).get("role") or "")).lower()
+    return role == "math" or any(token in identity for token in FORMULA_CONTAINER_TOKENS)
+
+
+def _is_display_formula_node(node: Any) -> bool:
+    if not isinstance(node, Tag):
+        return False
+    attrs = getattr(node, "attrs", None) or {}
+    if normalize_text(str(attrs.get("display") or "")).lower() == "block":
+        return True
+    identity = _ancestor_attr_text(node)
+    return any(token in identity for token in ("display-equation", "disp-formula", "display-formula")) or normalize_text(
+        str(attrs.get("role") or "")
+    ).lower() == "math"
+
+
+def _first_formula_image_url(node: Any) -> str:
+    if not isinstance(node, Tag):
+        return ""
+    images = [node] if normalize_text(node.name or "").lower() == "img" else list(node.find_all("img"))
+    for image in images:
+        if not isinstance(image, Tag):
+            continue
+        for attr in ("data-original", "data-full-size", "data-hi-res-src", "data-src", "src", "data-lazy-src"):
+            candidate = normalize_text(str(image.get(attr) or ""))
+            if candidate:
+                return candidate
+    return ""
+
+
+def _is_formula_image_node(node: Any) -> bool:
+    if not isinstance(node, Tag) or normalize_text(node.name or "").lower() != "img":
+        return False
+    url = _first_formula_image_url(node)
+    if not url:
+        return False
+    identity = _ancestor_attr_text(node)
+    alt_blob = " ".join(
+        normalize_text(str(node.get(attr) or "")).lower()
+        for attr in ("alt", "title", "aria-label")
+    )
+    return (
+        bool(FORMULA_IMAGE_URL_PATTERN.search(url))
+        or bool(FORMULA_IMAGE_URL_PATTERN.search(alt_blob))
+        or any(token in identity for token in FORMULA_CONTAINER_TOKENS)
+    )
+
+
+def _render_formula_image_node(node: Any) -> str:
+    url = _first_formula_image_url(node)
+    if not url:
+        return ""
+    return f"![Formula]({url})"
+
+
+def _mathml_element_from_html_node(node: Any) -> ET.Element | None:
+    if not isinstance(node, Tag):
+        return None
+    math_node = node if normalize_text(node.name or "").lower() == "math" else node.find("math")
+    if not isinstance(math_node, Tag):
+        return None
+    raw_mathml = str(math_node)
+    try:
+        return ET.fromstring(raw_mathml)
+    except ET.ParseError:
+        try:
+            return ET.fromstring(raw_mathml.replace("&nbsp;", " "))
+        except ET.ParseError:
+            return None
+
+
+def _render_mathml_node(node: Any) -> str:
+    element = _mathml_element_from_html_node(node)
+    if element is None:
+        return ""
+    display_mode = _is_display_formula_node(node)
+    expression = normalize_text(render_external_mathml_expression(element, display_mode=display_mode))
+    if not expression:
+        expression = normalize_text(render_mathml_expression(element))
+    if not expression:
+        return ""
+    return f"\n\n$$\n{expression}\n$$\n\n" if display_mode else f"${expression}$"
+
+
+def _render_formula_container(node: Any) -> str:
+    mathml = _render_mathml_node(node)
+    if mathml:
+        return mathml
+    image_url = _first_formula_image_url(node)
+    if image_url:
+        rendered = f"![Formula]({image_url})"
+        return f"\n\n{rendered}\n\n" if _is_display_formula_node(node) else rendered
+    if _is_formula_container(node):
+        return "[Formula unavailable]"
+    return ""
+
+
 def _is_figure_container(node: Any) -> bool:
     if not isinstance(node, Tag):
         return False
@@ -447,6 +569,7 @@ def _numeric_citation_payload_from_html(node: Any) -> str | None:
 
 def render_clean_text_from_html(node: Any) -> str:
     rendered = render_clean_html_node(node)
+    rendered = re.sub(r"(?<=[^\s])(!\[)", r" \1", rendered)
     rendered = re.sub(r"[ \t\r\f\v]+", " ", rendered)
     rendered = re.sub(r" *\n *", "\n", rendered)
     rendered = re.sub(r"\n{3,}", "\n\n", rendered)
@@ -464,6 +587,14 @@ def render_clean_html_node(node: Any) -> str:
         return ""
     if _is_mathjax_tex_node(node):
         return normalize_latex_macros(node.get_text("", strip=False).strip())
+    if normalize_text(node.name or "").lower() == "math":
+        return _render_mathml_node(node)
+    if _is_formula_image_node(node):
+        return _render_formula_image_node(node)
+    if _is_formula_container(node):
+        rendered_formula = _render_formula_container(node)
+        if rendered_formula:
+            return rendered_formula
     if node.name == "br":
         return "\n"
     if node.name == "a":
@@ -525,6 +656,8 @@ def needs_space_between(left: str, right: str, previous_child: Any, child: Any) 
         return False
     if left[-1].isspace() or right[0].isspace():
         return False
+    if right.startswith("!["):
+        return True
     if is_tight_inline_node(previous_child) or is_tight_inline_node(child):
         return False
 

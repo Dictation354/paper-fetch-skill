@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import html
 import json
 import math
 import re
@@ -97,6 +98,15 @@ INLINE_HTML_TAG_PATTERN = re.compile(r"</?(?:sub|sup|br)\b[^>]*>", flags=re.IGNO
 INLINE_MARKDOWN_ABSTRACT_PREFIX_PATTERN = re.compile(r"^\*\*(?:Abstract|Summary)\.?\*\*\s*", re.IGNORECASE)
 MARKDOWN_ABSTRACT_PREFIX_PATTERN = re.compile(r"^(?:\*\*|__)(?:[Aa]bstract|[Ss]ummary)\.?(?:\*\*|__)\s*")
 MARKDOWN_IMAGE_URL_PATTERN = re.compile(r"!\[[^\]]*\]\(([^)]+)\)")
+MARKDOWN_IMAGE_LINK_PATTERN = re.compile(r"!\[([^\]]*)\]\(([^)]+)\)")
+MARKDOWN_BLOCK_IMAGE_ALT_PATTERN = re.compile(
+    r"^\s*(?:fig(?:ure)?\.?|(?:extended data|supplementary)?\s*table|supplementary\s+fig(?:ure)?\.?)\b",
+    flags=re.IGNORECASE,
+)
+MARKDOWN_STANDALONE_IMAGE_ALT_PATTERN = re.compile(
+    r"^\s*(?:fig(?:ure)?\.?|(?:extended data|supplementary)?\s*table|supplementary\s+fig(?:ure)?\.?|formula|equation)\b",
+    flags=re.IGNORECASE,
+)
 TABLE_LIKE_FIGURE_ASSET_PATTERN = re.compile(
     r"^(?:(?:extended data|supplementary)\s+)?table\s+\d+[A-Za-z]?\b",
     flags=re.IGNORECASE,
@@ -173,7 +183,95 @@ def normalize_markdown_text(value: str | None) -> str:
         blank_run += 1
 
     normalized = "\n".join(normalized_lines).strip()
-    return _collapse_display_math_padding(normalized)
+    normalized = _collapse_display_math_padding(normalized)
+    return _normalize_markdown_image_block_boundaries(normalized)
+
+
+def _is_block_markdown_image_alt(alt_text: str) -> bool:
+    return bool(MARKDOWN_BLOCK_IMAGE_ALT_PATTERN.match(normalize_text(alt_text)))
+
+
+def _is_standalone_markdown_image_alt(alt_text: str) -> bool:
+    return bool(MARKDOWN_STANDALONE_IMAGE_ALT_PATTERN.match(normalize_text(alt_text)))
+
+
+def _is_standalone_markdown_image_line(line: str) -> bool:
+    match = MARKDOWN_IMAGE_LINK_PATTERN.fullmatch(line.strip())
+    return bool(match and _is_standalone_markdown_image_alt(match.group(1)))
+
+
+def _split_markdown_image_adjacency_line(line: str) -> list[str]:
+    matches = list(MARKDOWN_IMAGE_LINK_PATTERN.finditer(line))
+    if not matches:
+        return [line]
+
+    stripped = line.strip()
+    if MARKDOWN_IMAGE_LINK_PATTERN.fullmatch(stripped):
+        return [line]
+
+    split_required = False
+    for match in matches:
+        prefix = line[: match.start()]
+        suffix = line[match.end() :]
+        if _is_block_markdown_image_alt(match.group(1)):
+            split_required = True
+            break
+        if (
+            _is_standalone_markdown_image_alt(match.group(1))
+            and re.search(r"\b(?:equation|formula)\b", normalize_text(prefix), flags=re.IGNORECASE)
+            and not normalize_text(suffix)
+        ):
+            split_required = True
+            break
+        if normalize_text(prefix).endswith("$$") or normalize_text(suffix).startswith("$$"):
+            split_required = True
+            break
+    if not split_required:
+        return [line]
+
+    pieces: list[str] = []
+    cursor = 0
+    for match in matches:
+        prefix = line[cursor : match.start()]
+        if normalize_text(prefix):
+            pieces.append(prefix.rstrip())
+        pieces.append(match.group(0))
+        cursor = match.end()
+    suffix = line[cursor:]
+    if normalize_text(suffix):
+        pieces.append(suffix.strip())
+    return pieces or [line]
+
+
+def _normalize_markdown_image_block_boundaries(text: str) -> str:
+    if not text:
+        return ""
+
+    split_lines: list[str] = []
+    in_fence = False
+    for line in text.splitlines():
+        if MARKDOWN_FENCE_PATTERN.match(line):
+            split_lines.append(line.strip())
+            in_fence = not in_fence
+            continue
+        if in_fence:
+            split_lines.append(line)
+            continue
+        split_lines.extend(_split_markdown_image_adjacency_line(line))
+
+    bounded_lines: list[str] = []
+    for index, line in enumerate(split_lines):
+        if _is_standalone_markdown_image_line(line):
+            if bounded_lines and bounded_lines[-1].strip():
+                bounded_lines.append("")
+            bounded_lines.append(line.strip())
+            next_line = split_lines[index + 1] if index + 1 < len(split_lines) else ""
+            if normalize_text(next_line):
+                bounded_lines.append("")
+            continue
+        bounded_lines.append(line)
+
+    return "\n".join(bounded_lines).strip()
 
 
 def _collapse_display_math_padding(text: str) -> str:
@@ -303,6 +401,22 @@ def _asset_from_entry(
 ) -> "Asset":
     link = entry.get("link")
     url = local_asset_link(link if link is not None else entry.get("url") or entry.get("source_url"))
+    original_url = next(
+        (
+            safe_text(entry.get(field))
+            for field in (
+                "original_url",
+                "preview_url",
+                "source_url",
+                "download_url",
+                "full_size_url",
+                "url",
+                "link",
+            )
+            if safe_text(entry.get(field)) and not local_asset_link(entry.get(field))
+        ),
+        "",
+    )
     return Asset(
         kind=kind,
         heading=safe_text(entry.get("heading") or heading_fallback) or heading_fallback,
@@ -314,7 +428,7 @@ def _asset_from_entry(
         anchor_key=safe_text(entry.get("anchor_key") or entry.get("key")) or None,
         download_tier=safe_text(entry.get("download_tier")) or None,
         download_url=safe_text(entry.get("download_url")) or None,
-        original_url=safe_text(entry.get("original_url") or entry.get("preview_url") or entry.get("source_url")) or None,
+        original_url=original_url or None,
         content_type=safe_text(entry.get("content_type")) or None,
         downloaded_bytes=_optional_int(entry.get("downloaded_bytes")),
         width=_optional_int(entry.get("width")),
@@ -361,6 +475,15 @@ def section_kind_for_heading(heading: str) -> str:
     if category == "abstract":
         return "abstract"
     return "body"
+
+
+def _should_preserve_empty_parent_section(heading: str, current_level: int, next_level: int) -> bool:
+    if next_level <= current_level:
+        return False
+    normalized = normalize_text(heading)
+    if not normalized:
+        return False
+    return section_kind_for_heading(normalized) == "body"
 
 
 def section_priority(section: "Section") -> int:
@@ -1291,9 +1414,10 @@ def _build_article_header_block(article: "ArticleModel") -> RenderedBlock:
         ("published", article.metadata.published),
     )
     for key, value in front_matter_fields:
-        normalized_value = normalize_text(value)
+        normalized_value = normalize_inline_html_text(value)
         if normalized_value:
             lines.append(f'{key}: "{normalized_value.replace(chr(34), chr(39))}"')
+    display_title = normalize_inline_html_text(article.metadata.title) or "Untitled Article"
     lines.extend(
         [
             f'source: "{article.source}"',
@@ -1303,7 +1427,7 @@ def _build_article_header_block(article: "ArticleModel") -> RenderedBlock:
             f"token_estimate: {article.quality.token_estimate}",
             "---",
             "",
-            f"# {article.metadata.title or 'Untitled Article'}",
+            f"# {display_title}",
             "",
         ]
     )
@@ -1511,6 +1635,57 @@ def _image_references_match(left: set[str], right: set[str]) -> bool:
     left_basenames = {_image_reference_basename(item) for item in left if _image_reference_basename(item)}
     right_basenames = {_image_reference_basename(item) for item in right if _image_reference_basename(item)}
     return bool(left_basenames & right_basenames)
+
+
+def _asset_link_field(asset: Asset | Mapping[str, Any], field: str) -> str | None:
+    if isinstance(asset, Asset):
+        return getattr(asset, field, None)
+    return safe_text(asset.get(field)) or None
+
+
+def _asset_markdown_reference_candidates(asset: Asset | Mapping[str, Any]) -> set[str]:
+    candidates: set[str] = set()
+    for field in (
+        "path",
+        "url",
+        "original_url",
+        "download_url",
+        "source_url",
+        "preview_url",
+        "full_size_url",
+        "link",
+    ):
+        candidates |= _image_reference_candidates(_asset_link_field(asset, field))
+    return candidates
+
+
+def rewrite_markdown_asset_links(markdown_text: str, assets: Sequence[Asset | Mapping[str, Any]] | None) -> str:
+    if not markdown_text or not assets:
+        return markdown_text
+
+    indexed_assets: list[tuple[str, set[str]]] = []
+    for asset in assets:
+        replacement_path = safe_text(_asset_link_field(asset, "path"))
+        if not replacement_path:
+            continue
+        candidates = _asset_markdown_reference_candidates(asset)
+        if candidates:
+            indexed_assets.append((replacement_path, candidates))
+
+    if not indexed_assets:
+        return markdown_text
+
+    def replace(match: re.Match[str]) -> str:
+        inline_url = normalize_text(match.group(2)).strip("<>")
+        inline_candidates = _image_reference_candidates(inline_url)
+        if not inline_candidates:
+            return match.group(0)
+        for replacement_path, asset_candidates in indexed_assets:
+            if _image_references_match(asset_candidates, inline_candidates):
+                return f"![{match.group(1)}]({replacement_path})"
+        return match.group(0)
+
+    return MARKDOWN_IMAGE_LINK_PATTERN.sub(replace, markdown_text)
 
 
 def filter_inline_body_figure_assets(
@@ -1764,18 +1939,21 @@ def render_section(section: Section, *, level_shift: int = 0) -> str:
 def render_section_block(section: Section, *, level_shift: int = 0) -> RenderedBlock:
     heading = render_heading(section, level_shift=level_shift)
     if not heading:
+        normalized_text = normalize_markdown_text(section.text)
         return build_rendered_block(
-            [section.text, ""],
-            normalized_text=normalize_markdown_text(section.text),
+            [*normalized_text.splitlines(), ""],
+            normalized_text=normalized_text,
         )
     if not normalize_text(section.text):
+        normalized_text = normalize_markdown_text(heading)
         return build_rendered_block(
-            [heading, ""],
-            normalized_text=normalize_markdown_text(heading),
+            [*normalized_text.splitlines(), ""],
+            normalized_text=normalized_text,
         )
+    normalized_text = normalize_markdown_text(f"{heading}\n\n{section.text}".strip())
     return build_rendered_block(
-        [heading, section.text, ""],
-        normalized_text=normalize_markdown_text(f"{heading}\n\n{section.text}".strip()),
+        [*normalized_text.splitlines(), ""],
+        normalized_text=normalized_text,
     )
 
 
@@ -1901,12 +2079,7 @@ def lines_to_sections(
         stripped = line.strip()
         if stripped.startswith("#"):
             next_level = len(stripped) - len(stripped.lstrip("#"))
-            if (
-                not buffer
-                and normalize_text(current_heading).lower() in PRESERVE_EMPTY_PARENT_SECTION_HEADINGS
-                and normalize_text(current_heading)
-                and next_level > current_level
-            ):
+            if not buffer and _should_preserve_empty_parent_section(current_heading, current_level, next_level):
                 append_empty_section(current_heading, current_level)
             flush()
             buffer = []
@@ -2183,15 +2356,15 @@ def split_leading_inline_abstract(sections: Sequence[Section]) -> tuple[str | No
 
 def normalize_authors(value: Any) -> list[str]:
     if isinstance(value, list):
-        return [safe_text(item) for item in value if safe_text(item)]
+        return [normalize_inline_html_text(item) for item in value if normalize_inline_html_text(item)]
     if isinstance(value, str):
-        parts = [safe_text(part) for part in re.split(r"\s*;\s*|\s*,\s*", value)]
+        parts = [normalize_inline_html_text(part) for part in re.split(r"\s*;\s*|\s*,\s*", value)]
         return [part for part in parts if part]
     return []
 
 
 def normalize_abstract_text(value: Any) -> str:
-    text = safe_text(value)
+    text = normalize_inline_html_text(value)
     if not text:
         return ""
     text = MARKDOWN_ABSTRACT_PREFIX_PATTERN.sub("", text, count=1).lstrip()
@@ -2199,8 +2372,10 @@ def normalize_abstract_text(value: Any) -> str:
 
 
 def normalize_inline_html_text(value: Any) -> str:
-    text = safe_text(value)
-    if not text or not INLINE_HTML_TAG_PATTERN.search(text):
+    text = html.unescape(safe_text(value))
+    if not text:
+        return ""
+    if not INLINE_HTML_TAG_PATTERN.search(text):
         return text
     text = re.sub(r"\s*\n\s*", " ", text)
     text = re.sub(r"\s*(<br\s*/?>)\s*", r"\1", text, flags=re.IGNORECASE)
@@ -2244,12 +2419,12 @@ def build_metadata(metadata: Mapping[str, Any]) -> Metadata:
         title=normalize_inline_html_text(metadata.get("title")) or None,
         authors=normalize_authors(metadata.get("authors")),
         abstract=normalize_abstract_text(metadata.get("abstract")) or None,
-        journal=safe_text(metadata.get("journal_title") or metadata.get("journal")) or None,
-        published=safe_text(metadata.get("published")) or None,
+        journal=normalize_inline_html_text(metadata.get("journal_title") or metadata.get("journal")) or None,
+        published=normalize_inline_html_text(metadata.get("published")) or None,
         keywords=[
-            safe_text(item)
+            normalize_inline_html_text(item)
             for item in (metadata.get("keywords") or [])
-            if safe_text(item)
+            if normalize_inline_html_text(item)
         ],
         license_urls=[
             safe_text(item)
@@ -2463,9 +2638,19 @@ def article_from_markdown(
 ) -> ArticleModel:
     article_metadata = build_metadata(metadata)
     effective_trace = list(trace or trace_from_markers(source_trail))
+    normalized_assets = [
+        _asset_from_entry(
+            item,
+            kind=safe_text(item.get("kind") or item.get("asset_type") or "asset") or "asset",
+            heading_fallback="Asset",
+        )
+        for item in (assets or [])
+    ]
     normalized = normalize_inline_citation_markdown(
         strip_leading_markdown_title_heading(markdown_text, title=article_metadata.title)
     )
+    normalized = rewrite_markdown_asset_links(normalized, normalized_assets)
+    normalized = normalize_markdown_text(normalized)
     parsed_sections = lines_to_sections(
         normalized.splitlines(),
         fallback_heading="",
@@ -2497,14 +2682,6 @@ def article_from_markdown(
     if inline_abstract:
         extracted_abstract = normalize_inline_citation_markdown(inline_abstract)
     article_metadata.abstract = normalize_inline_citation_markdown(extracted_abstract or article_metadata.abstract) or None
-    normalized_assets = [
-        _asset_from_entry(
-            item,
-            kind=safe_text(item.get("kind") or item.get("asset_type") or "asset") or "asset",
-            heading_fallback="Asset",
-        )
-        for item in (assets or [])
-    ]
     references = build_references(metadata.get("references"))
     token_estimate_breakdown = build_token_estimate_breakdown(
         abstract_text=article_metadata.abstract,

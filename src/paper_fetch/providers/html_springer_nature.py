@@ -45,6 +45,31 @@ SPRINGER_NATURE_CHROME_TEXTS = {
     "submit manuscript",
     "view saved research",
 }
+SPRINGER_NATURE_CHROME_SECTION_TITLES = {
+    "about this article",
+    "article information",
+    "author information",
+    "authors and affiliations",
+    "cite this article",
+    "rights and permissions",
+    "reprints and permissions",
+}
+SPRINGER_NATURE_SCIENTIFIC_BACK_MATTER_TITLES = {
+    "acknowledgements",
+    "acknowledgments",
+    "additional information",
+    "author contributions",
+    "competing interests",
+    "data availability",
+    "ethics declarations",
+    "funding",
+    "supplementary information",
+}
+SPRINGER_NATURE_LICENSE_TOKENS = (
+    "creative commons",
+    "this article is licensed under",
+    "the images or other third party material in this article",
+)
 SPRINGER_NATURE_CHROME_ATTR_TOKENS = (
     "article-actions",
     "article-metrics",
@@ -111,15 +136,50 @@ def select_springer_nature_article_root(root: Any):
     return best_candidate
 
 
+def _section_title_key(node: Any) -> str:
+    if not isinstance(node, Tag):
+        return ""
+    attrs = getattr(node, "attrs", None) or {}
+    for key in ("data-title", "aria-label"):
+        value = normalize_text(str(attrs.get(key) or ""))
+        if value:
+            return normalize_section_title(value)
+    for child in node.find_all(re.compile(r"^h[1-6]$"), recursive=False):
+        if isinstance(child, Tag):
+            return normalize_section_title(render_heading_text_from_html(child))
+    if normalize_text(node.name or "").lower() == "section":
+        return normalize_section_title(extract_section_title(node))
+    return ""
+
+
+def _is_descendant_of(node: Any, ancestor: Any) -> bool:
+    current = node
+    while isinstance(current, Tag):
+        if current is ancestor:
+            return True
+        current = current.parent if isinstance(getattr(current, "parent", None), Tag) else None
+    return False
+
+
 def _prune_springer_nature_chrome(root: Any) -> None:
     if BeautifulSoup is None or not isinstance(root, Tag):
         return
     for node in list(root.find_all(True)):
         if not isinstance(node, Tag):
             continue
+        title_key = _section_title_key(node)
+        if title_key in SPRINGER_NATURE_CHROME_SECTION_TITLES:
+            node.decompose()
+            continue
         text = normalize_text(node.get_text(" ", strip=True))
         lowered = text.lower()
         if lowered in SPRINGER_NATURE_CHROME_TEXTS:
+            node.decompose()
+            continue
+        if normalize_section_title(extract_section_title(node)) == "open access":
+            node.decompose()
+            continue
+        if any(token in lowered for token in SPRINGER_NATURE_LICENSE_TOKENS) and count_words(text) <= 180:
             node.decompose()
             continue
         attrs = getattr(node, "attrs", None) or {}
@@ -132,6 +192,26 @@ def _prune_springer_nature_chrome(root: Any) -> None:
         attr_blob = " ".join(part for part in attr_parts if part)
         if any(token in attr_blob for token in SPRINGER_NATURE_CHROME_ATTR_TOKENS) and count_words(text) <= 80:
             node.decompose()
+
+
+def _render_scientific_back_matter_sections(article: Any, main: Any, lines: list[str]) -> None:
+    if not isinstance(article, Tag) or not isinstance(main, Tag) or article is main:
+        return
+    seen: set[int] = set()
+    for section in article.find_all("section"):
+        if not isinstance(section, Tag) or id(section) in seen or _is_descendant_of(section, main):
+            continue
+        seen.add(id(section))
+        title_key = _section_title_key(section)
+        if title_key not in SPRINGER_NATURE_SCIENTIFIC_BACK_MATTER_TITLES:
+            continue
+        render_section_markdown(
+            section,
+            lines,
+            level=2,
+            force_heading=extract_section_title(section) or normalize_text(str(section.get("data-title") or "")) or None,
+            section_content_selectors=SPRINGER_NATURE_SECTION_CONTENT_SELECTORS,
+        )
 
 
 def select_nature_abstract_section(body: Any):
@@ -243,13 +323,16 @@ def extract_springer_nature_markdown(html_text: str, source_url: str) -> str:
                 section_content_selectors=SPRINGER_NATURE_SECTION_CONTENT_SELECTORS,
             )
     else:
+        body = article.select_one("div.c-article-body") or article
+        main = body.select_one("div.main-content") or body
         render_container_markdown(
-            article,
+            main,
             lines,
             level=2,
             skip_first_heading=title_text or None,
             section_content_selectors=SPRINGER_NATURE_SECTION_CONTENT_SELECTORS,
         )
+        _render_scientific_back_matter_sections(article, main, lines)
 
     rendered = clean_markdown(_remove_duplicate_title_headings("\n".join(lines), title_text), noise_profile="springer_nature")
     return postprocess_springer_nature_markdown(rendered)

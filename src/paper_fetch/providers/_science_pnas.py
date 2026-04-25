@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import base64
 import logging
+import time
 from dataclasses import dataclass, field, replace
 from typing import Any, Callable, Mapping
 
@@ -32,7 +33,13 @@ from ._science_pnas_profiles import (
     preferred_html_candidate_from_landing_page,
 )
 from .base import ProviderArtifacts, ProviderClient, ProviderContent, ProviderFailure, ProviderFetchResult, RawFulltextPayload
-from .html_assets import download_figure_assets, extract_html_assets
+from .html_assets import (
+    download_figure_assets_with_image_document_fetcher,
+    extract_full_size_figure_image_url,
+    extract_html_assets,
+    html_asset_identity_key,
+    looks_like_full_size_asset_url,
+)
 
 logger = logging.getLogger("paper_fetch.providers.browser_workflow")
 
@@ -102,21 +109,377 @@ def _image_magic_type(body: bytes | bytearray | None) -> str:
     return ""
 
 
-def _decode_canvas_data_url(data_url: str) -> tuple[str, bytes] | None:
-    prefix, separator, payload = normalize_text(data_url).partition(",")
-    if not separator or not prefix.lower().startswith("data:image/") or ";base64" not in prefix.lower():
+def _decode_base64_bytes(payload: str | None) -> bytes | None:
+    normalized = normalize_text(payload)
+    if not normalized:
         return None
     try:
-        body = base64.b64decode(payload, validate=True)
+        return base64.b64decode(normalized, validate=True)
     except Exception:
         return None
-    content_type = prefix[5:].split(";", 1)[0].lower()
+
+
+def _normalized_response_headers(headers: Mapping[str, Any] | None) -> dict[str, str]:
+    if not isinstance(headers, Mapping):
+        return {}
+    return {
+        normalize_text(str(key)).lower(): str(value)
+        for key, value in headers.items()
+        if normalize_text(str(key))
+    }
+
+
+def _looks_like_image_response_payload(
+    content_type: str | None,
+    body: bytes | bytearray | None,
+    source_url: str | None,
+) -> bool:
+    normalized_content_type = normalize_text(content_type).split(";", 1)[0].lower()
     magic_type = _image_magic_type(body)
-    if not magic_type:
+    if normalized_content_type.startswith("image/"):
+        return bool(magic_type)
+    if magic_type:
+        return True
+    return False
+
+
+class _SharedPlaywrightImageDocumentFetcher:
+    def __init__(
+        self,
+        *,
+        browser_context_seed_getter: Callable[[], Mapping[str, Any] | None],
+        seed_urls_getter: Callable[[], list[str]],
+        browser_user_agent: str | None = None,
+        headless: bool = True,
+        min_width: int = 80,
+        min_height: int = 80,
+    ) -> None:
+        self._browser_context_seed_getter = browser_context_seed_getter
+        self._seed_urls_getter = seed_urls_getter
+        self._browser_user_agent = browser_user_agent
+        self._headless = headless
+        self._min_width = min_width
+        self._min_height = min_height
+        self._playwright_manager = None
+        self._browser = None
+        self._context = None
+        self._page = None
+        self._warmed_seed_urls: set[str] = set()
+
+    def __call__(self, image_url: str, _asset: Mapping[str, Any]) -> dict[str, Any] | None:
+        normalized_url = normalize_text(image_url)
+        if not normalized_url:
+            return None
+        page = self._ensure_page()
+        if page is None:
+            return None
+
+        self._sync_context_cookies()
+        self._warm_seed_urls(force=False)
+        for attempt in range(2):
+            result = self._fetch_with_page(normalized_url)
+            if result is not None:
+                return result
+            if attempt == 0:
+                self._sync_context_cookies()
+                self._warm_seed_urls(force=True)
         return None
-    if content_type not in {"image/jpeg", "image/png", "image/gif", "image/webp"}:
-        content_type = magic_type
-    return content_type, body
+
+    def close(self) -> None:
+        if self._page is not None:
+            try:
+                self._page.close()
+            except Exception:
+                pass
+            self._page = None
+        if self._context is not None:
+            try:
+                self._context.close()
+            except Exception:
+                pass
+            self._context = None
+        if self._browser is not None:
+            try:
+                self._browser.close()
+            except Exception:
+                pass
+            self._browser = None
+        if self._playwright_manager is not None:
+            try:
+                self._playwright_manager.stop()
+            except Exception:
+                pass
+            self._playwright_manager = None
+
+    def _current_seed(self) -> Mapping[str, Any]:
+        seed = self._browser_context_seed_getter()
+        return seed if isinstance(seed, Mapping) else {}
+
+    def _ensure_page(self):
+        if self._page is not None:
+            return self._page
+        try:
+            from playwright.sync_api import sync_playwright
+        except Exception:
+            return None
+
+        active_user_agent = (
+            normalize_text(self._current_seed().get("browser_user_agent"))
+            or normalize_text(self._browser_user_agent)
+            or build_user_agent({})
+        )
+        try:
+            self._playwright_manager = sync_playwright().start()
+            self._browser = self._playwright_manager.chromium.launch(headless=self._headless)
+            self._context = self._browser.new_context(
+                user_agent=active_user_agent,
+                locale="en-US",
+                viewport={"width": 1440, "height": 1600},
+            )
+            self._sync_context_cookies()
+            self._page = self._context.new_page()
+        except Exception:
+            self.close()
+            return None
+        return self._page
+
+    def _sync_context_cookies(self) -> None:
+        if self._context is None:
+            return
+        cookies = list(self._current_seed().get("browser_cookies") or [])
+        if not cookies:
+            return
+        try:
+            self._context.add_cookies(cookies)
+        except Exception:
+            pass
+
+    def _seed_urls(self) -> list[str]:
+        seen: set[str] = set()
+        ordered: list[str] = []
+        for candidate in self._seed_urls_getter() or []:
+            normalized = normalize_text(candidate)
+            if normalized and normalized not in seen:
+                seen.add(normalized)
+                ordered.append(normalized)
+        return ordered
+
+    def _warm_seed_urls(self, *, force: bool) -> None:
+        page = self._page
+        if page is None:
+            return
+        for seed_url in self._seed_urls():
+            if not force and seed_url in self._warmed_seed_urls:
+                continue
+            try:
+                page.goto(seed_url, wait_until="domcontentloaded", timeout=30000)
+                self._warmed_seed_urls.add(seed_url)
+            except Exception:
+                continue
+
+    def _fetch_with_page(self, image_url: str) -> dict[str, Any] | None:
+        page = self._page
+        if page is None:
+            return None
+        request_payload = self._payload_from_context_request(image_url)
+        if request_payload is not None:
+            return request_payload
+
+        fetched_payload = self._payload_from_page_fetch_url(page, image_url)
+        if fetched_payload is not None:
+            return fetched_payload
+
+        navigation_response = None
+        try:
+            navigation_response = page.goto(image_url, wait_until="domcontentloaded", timeout=60000)
+        except Exception:
+            navigation_response = None
+
+        direct_payload = self._payload_from_navigation_response(navigation_response, fallback_url=image_url)
+        if direct_payload is not None:
+            return direct_payload
+
+        image_info = self._wait_for_primary_image(page)
+        if image_info is None:
+            return None
+
+        return self._payload_from_page_fetch(page, image_info)
+
+    def _payload_from_context_request(self, image_url: str) -> dict[str, Any] | None:
+        if self._context is None:
+            return None
+        try:
+            response = self._context.request.get(
+                image_url,
+                headers={"Accept": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8"},
+                timeout=60000,
+            )
+        except Exception:
+            return None
+        return self._payload_from_response_body(response, fallback_url=image_url)
+
+    def _payload_from_navigation_response(self, response: Any, *, fallback_url: str) -> dict[str, Any] | None:
+        if response is None:
+            return None
+        return self._payload_from_response_body(response, fallback_url=fallback_url)
+
+    def _payload_from_response_body(self, response: Any, *, fallback_url: str) -> dict[str, Any] | None:
+        try:
+            headers = _normalized_response_headers(response.all_headers())
+        except Exception:
+            headers = _normalized_response_headers(getattr(response, "headers", {}) or {})
+        content_type = headers.get("content-type", "")
+        final_url = normalize_text(getattr(response, "url", "") or "") or fallback_url
+        try:
+            body = response.body()
+        except Exception:
+            body = b""
+        if not isinstance(body, (bytes, bytearray)) or not body:
+            return None
+        if not _looks_like_image_response_payload(content_type, body, final_url):
+            return None
+        payload: dict[str, Any] = {
+            "status_code": int(getattr(response, "status", 200) or 200),
+            "headers": headers,
+            "body": bytes(body),
+            "url": final_url,
+        }
+        return payload
+
+    def _wait_for_primary_image(self, page: Any) -> dict[str, Any] | None:
+        deadline = time.monotonic() + 15.0
+        while time.monotonic() < deadline:
+            try:
+                image_info = page.evaluate(
+                    """
+                    ([minWidth, minHeight]) => {
+                      const images = Array.from(document.images || []);
+                      const best = images
+                        .filter((image) =>
+                          image.complete
+                          && image.naturalWidth >= minWidth
+                          && image.naturalHeight >= minHeight
+                        )
+                        .sort((left, right) => (right.naturalWidth * right.naturalHeight) - (left.naturalWidth * left.naturalHeight))[0];
+                      if (!best) {
+                        return {
+                          ready: false,
+                          imageCount: images.length,
+                          title: document.title || '',
+                          contentType: document.contentType || '',
+                        };
+                      }
+                      return {
+                        ready: true,
+                        src: best.currentSrc || best.src || '',
+                        width: best.naturalWidth || 0,
+                        height: best.naturalHeight || 0,
+                        imageCount: images.length,
+                        title: document.title || '',
+                        contentType: document.contentType || '',
+                      };
+                    }
+                    """,
+                    [self._min_width, self._min_height],
+                )
+            except Exception:
+                return None
+            if isinstance(image_info, Mapping) and image_info.get("ready"):
+                return dict(image_info)
+            try:
+                page.wait_for_timeout(500)
+            except Exception:
+                break
+        return None
+
+    def _payload_from_page_fetch_url(
+        self,
+        page: Any,
+        image_url: str,
+        *,
+        dimensions: Mapping[str, Any] | None = None,
+    ) -> dict[str, Any] | None:
+        image_src = normalize_text(str(image_url or ""))
+        if not image_src:
+            return None
+        try:
+            fetched = page.evaluate(
+                """
+                async (imageSrc) => {
+                  const bytesToBase64 = (bytes) => {
+                    let binary = '';
+                    const chunkSize = 0x8000;
+                    for (let index = 0; index < bytes.length; index += chunkSize) {
+                      const chunk = bytes.subarray(index, index + chunkSize);
+                      binary += String.fromCharCode(...chunk);
+                    }
+                    return btoa(binary);
+                  };
+                  try {
+                    const response = await fetch(imageSrc, {
+                      credentials: 'include',
+                      cache: 'force-cache',
+                    });
+                    const buffer = await response.arrayBuffer();
+                    const bytes = new Uint8Array(buffer);
+                    return {
+                      ok: response.ok,
+                      status: response.status,
+                      url: response.url || imageSrc,
+                      contentType: response.headers.get('content-type') || '',
+                      bodyB64: bytesToBase64(bytes),
+                    };
+                  } catch (error) {
+                    return { ok: false, error: String(error || '') };
+                  }
+                }
+                """,
+                image_src,
+            )
+        except Exception:
+            return None
+        if not isinstance(fetched, Mapping):
+            return None
+        body = _decode_base64_bytes(str(fetched.get("bodyB64") or ""))
+        final_url = normalize_text(str(fetched.get("url") or "")) or image_src
+        content_type = normalize_text(str(fetched.get("contentType") or ""))
+        if body is None or not _looks_like_image_response_payload(content_type, body, final_url):
+            return None
+        return {
+            "status_code": int(fetched.get("status") or 200),
+            "headers": {"content-type": content_type},
+            "body": body,
+            "url": final_url,
+            "dimensions": {
+                "width": int((dimensions or {}).get("width") or 0),
+                "height": int((dimensions or {}).get("height") or 0),
+            },
+        }
+
+    def _payload_from_page_fetch(self, page: Any, image_info: Mapping[str, Any]) -> dict[str, Any] | None:
+        return self._payload_from_page_fetch_url(
+            page,
+            normalize_text(str(image_info.get("src") or "")),
+            dimensions=image_info,
+        )
+
+def _build_shared_playwright_image_fetcher(
+    *,
+    browser_context_seed_getter: Callable[[], Mapping[str, Any] | None],
+    seed_urls_getter: Callable[[], list[str]],
+    browser_user_agent: str | None = None,
+    headless: bool = True,
+    min_width: int = 80,
+    min_height: int = 80,
+) -> _SharedPlaywrightImageDocumentFetcher:
+    return _SharedPlaywrightImageDocumentFetcher(
+        browser_context_seed_getter=browser_context_seed_getter,
+        seed_urls_getter=seed_urls_getter,
+        browser_user_agent=browser_user_agent,
+        headless=headless,
+        min_width=min_width,
+        min_height=min_height,
+    )
 
 
 def fetch_image_document_with_playwright(
@@ -132,118 +495,27 @@ def fetch_image_document_with_playwright(
     normalized_url = normalize_text(image_url)
     if not normalized_url:
         return None
+    fetcher = _build_shared_playwright_image_fetcher(
+        browser_context_seed_getter=lambda: {
+            "browser_cookies": list(browser_cookies or []),
+            "browser_user_agent": browser_user_agent,
+            "browser_final_url": next(
+                (normalize_text(candidate) for candidate in reversed(seed_urls or []) if normalize_text(candidate)),
+                None,
+            ),
+        },
+        seed_urls_getter=lambda: [normalize_text(url) for url in seed_urls or [] if normalize_text(url)],
+        browser_user_agent=browser_user_agent,
+        headless=headless,
+        min_width=min_width,
+        min_height=min_height,
+    )
     try:
-        from playwright.sync_api import sync_playwright
+        return fetcher(normalized_url, {})
     except Exception:
         return None
-
-    active_user_agent = browser_user_agent or build_user_agent({})
-    try:
-        with sync_playwright() as playwright:
-            browser = playwright.chromium.launch(headless=headless)
-            context = browser.new_context(
-                user_agent=active_user_agent,
-                locale="en-US",
-                viewport={"width": 1440, "height": 1600},
-            )
-            try:
-                if browser_cookies:
-                    try:
-                        context.add_cookies(browser_cookies)
-                    except Exception:
-                        pass
-                page = context.new_page()
-                for seed_url in [normalize_text(url) for url in seed_urls or [] if normalize_text(url)]:
-                    try:
-                        page.goto(seed_url, wait_until="domcontentloaded", timeout=30000)
-                    except Exception:
-                        continue
-
-                for _attempt in range(2):
-                    try:
-                        page.goto(normalized_url, wait_until="domcontentloaded", timeout=60000)
-                        page.wait_for_function(
-                            """
-                            ([minWidth, minHeight]) => {
-                              const images = Array.from(document.images || []);
-                              return images.some((image) =>
-                                image.complete
-                                && image.naturalWidth >= minWidth
-                                && image.naturalHeight >= minHeight
-                              );
-                            }
-                            """,
-                            [min_width, min_height],
-                            timeout=45000,
-                        )
-                        break
-                    except Exception:
-                        try:
-                            page.wait_for_timeout(1500)
-                        except Exception:
-                            pass
-                else:
-                    return None
-
-                dimensions = page.evaluate(
-                    """
-                    ([minWidth, minHeight]) => {
-                      const images = Array.from(document.images || [])
-                        .filter((image) => image.complete && image.naturalWidth >= minWidth && image.naturalHeight >= minHeight)
-                        .sort((left, right) => (right.naturalWidth * right.naturalHeight) - (left.naturalWidth * left.naturalHeight));
-                      const image = images[0];
-                      if (!image) {
-                        return null;
-                      }
-                      return {width: image.naturalWidth, height: image.naturalHeight, src: image.currentSrc || image.src || ''};
-                    }
-                    """,
-                    [min_width, min_height],
-                )
-                if not isinstance(dimensions, Mapping):
-                    return None
-                width = int(dimensions.get("width") or 0)
-                height = int(dimensions.get("height") or 0)
-                if width < min_width or height < min_height:
-                    return None
-                document_content_type = normalize_text(str(page.evaluate("() => document.contentType") or "")).lower()
-                preferred_type = "image/png" if "png" in document_content_type else "image/jpeg"
-                data_url = page.evaluate(
-                    """
-                    ([preferredType, minWidth, minHeight]) => {
-                      const images = Array.from(document.images || [])
-                        .filter((image) => image.complete && image.naturalWidth >= minWidth && image.naturalHeight >= minHeight)
-                        .sort((left, right) => (right.naturalWidth * right.naturalHeight) - (left.naturalWidth * left.naturalHeight));
-                      const image = images[0];
-                      if (!image) {
-                        return '';
-                      }
-                      const canvas = document.createElement('canvas');
-                      canvas.width = image.naturalWidth;
-                      canvas.height = image.naturalHeight;
-                      const ctx = canvas.getContext('2d');
-                      ctx.drawImage(image, 0, 0);
-                      return canvas.toDataURL(preferredType, 0.95);
-                    }
-                    """,
-                    [preferred_type, min_width, min_height],
-                )
-                decoded = _decode_canvas_data_url(str(data_url or ""))
-                if decoded is None:
-                    return None
-                content_type, body = decoded
-                return {
-                    "status_code": 200,
-                    "headers": {"content-type": content_type},
-                    "body": body,
-                    "url": normalize_text(str(dimensions.get("src") or "")) or normalize_text(page.url) or normalized_url,
-                    "dimensions": {"width": width, "height": height},
-                }
-            finally:
-                context.close()
-                browser.close()
-    except Exception:
-        return None
+    finally:
+        fetcher.close()
 
 
 def _leading_body_after_abstract(
@@ -276,6 +548,108 @@ def _prepend_leading_body_markdown(markdown_text: str, lead_body: str | None) ->
         if len(parts) == 2:
             return f"{parts[0]}\n\n{main_text_block}\n\n{parts[1]}".strip()
     return f"{main_text_block}\n\n{stripped_markdown}".strip()
+
+
+def _download_asset_result_key(asset: Mapping[str, Any]) -> str:
+    key = normalize_text(html_asset_identity_key(asset))
+    if key:
+        return key
+    parts = [
+        normalize_text(str(asset.get("kind") or "")),
+        normalize_text(str(asset.get("heading") or "")),
+        normalize_text(str(asset.get("caption") or "")),
+        normalize_text(str(asset.get("download_url") or "")),
+        normalize_text(str(asset.get("source_url") or "")),
+    ]
+    return "|".join(part for part in parts if part)
+
+
+def _download_asset_match_tokens(asset: Mapping[str, Any]) -> set[str]:
+    tokens = {
+        normalize_text(str(asset.get(field) or ""))
+        for field in (
+            "heading",
+            "caption",
+            "url",
+            "download_url",
+            "original_url",
+            "source_url",
+            "figure_page_url",
+        )
+    }
+    return {token for token in tokens if token}
+
+
+def _browser_workflow_image_download_candidates(
+    _transport,
+    *,
+    asset: Mapping[str, Any],
+    user_agent: str,
+    figure_page_fetcher: Callable[[str], tuple[str, str] | None] | None = None,
+) -> list[str]:
+    del user_agent
+    direct_full_size_url = normalize_text(str(asset.get("full_size_url") or ""))
+    primary_url = normalize_text(str(asset.get("url") or ""))
+    preview_url = normalize_text(str(asset.get("preview_url") or "")) or primary_url
+    candidates: list[str] = []
+
+    if direct_full_size_url:
+        candidates.append(direct_full_size_url)
+
+    figure_page_url = normalize_text(str(asset.get("figure_page_url") or ""))
+    if figure_page_url and figure_page_fetcher is not None:
+        try:
+            page_result = figure_page_fetcher(figure_page_url)
+        except Exception:
+            page_result = None
+        if page_result is not None:
+            page_html, page_url = page_result
+            full_size_url = extract_full_size_figure_image_url(page_html, page_url)
+            if full_size_url:
+                candidates.append(full_size_url)
+
+    if primary_url and looks_like_full_size_asset_url(primary_url):
+        candidates.append(primary_url)
+    if preview_url:
+        candidates.append(preview_url)
+
+    deduped: list[str] = []
+    seen: set[str] = set()
+    for candidate in candidates:
+        if candidate and candidate not in seen:
+            seen.add(candidate)
+            deduped.append(candidate)
+    return deduped
+
+
+def _merge_download_attempt_results(
+    initial: Mapping[str, Any],
+    retry: Mapping[str, Any],
+) -> dict[str, list[dict[str, Any]]]:
+    downloads_by_key: dict[str, dict[str, Any]] = {}
+    for result in (initial, retry):
+        for asset in list(result.get("assets") or []):
+            key = _download_asset_result_key(asset)
+            downloads_by_key[key or str(len(downloads_by_key))] = dict(asset)
+
+    merged_downloads = list(downloads_by_key.values())
+    resolved_tokens = set().union(*(_download_asset_match_tokens(asset) for asset in merged_downloads)) if merged_downloads else set()
+    failure_candidates = list(retry.get("asset_failures") or []) or list(initial.get("asset_failures") or [])
+    unresolved_failures = []
+    for failure in failure_candidates:
+        failure_tokens = {
+            normalize_text(str(failure.get(field) or ""))
+            for field in ("heading", "caption", "source_url")
+        }
+        failure_tokens = {token for token in failure_tokens if token}
+        if failure_tokens and failure_tokens & resolved_tokens:
+            continue
+        unresolved_failures.append(dict(failure))
+
+    return {
+        "assets": merged_downloads,
+        "asset_failures": unresolved_failures,
+    }
 
 
 def _normalized_authors(values: Any) -> list[str]:
@@ -852,57 +1226,82 @@ class BrowserWorkflowClient(ProviderClient):
         ensure_runtime_ready(runtime)
         browser_context_seed = merge_browser_context_seeds(content.browser_context_seed if content is not None else None)
 
-        def figure_page_fetcher(figure_page_url: str) -> tuple[str, str] | None:
-            try:
-                html_result = fetch_html_with_flaresolverr(
-                    [figure_page_url],
-                    publisher=self.name,
-                    config=runtime,
-                )
-            except FlareSolverrFailure:
-                return None
-            browser_context_seed.update(
-                merge_browser_context_seeds(browser_context_seed, html_result.browser_context_seed)
-            )
-            return html_result.html, html_result.final_url
-
-        active_seed_urls = [
-            normalized
-            for normalized in [
-                raw_payload.source_url,
-                normalize_text(str(browser_context_seed.get("browser_final_url") or "")),
-            ]
-            if normalized
-        ]
-
-        def image_document_fetcher(image_url: str, _asset: Mapping[str, Any]) -> dict[str, Any] | None:
-            if self.name not in {"science", "pnas"}:
-                return None
-            return fetch_image_document_with_playwright(
-                image_url,
-                browser_cookies=list(browser_context_seed.get("browser_cookies") or []),
-                browser_user_agent=browser_context_seed.get("browser_user_agent") or self.user_agent,
-                headless=runtime.headless,
-                seed_urls=active_seed_urls,
-            )
-
         article_id = (
             normalized_doi
             or normalize_text(str(metadata.get("title") or ""))
             or raw_payload.source_url
         )
-        return download_figure_assets(
-            self.transport,
-            article_id=article_id,
-            assets=article_assets,
-            output_dir=output_dir,
-            user_agent=self.user_agent,
-            asset_profile=asset_profile,
-            figure_page_fetcher=figure_page_fetcher,
+
+        def seed_urls_for(current_seed: Mapping[str, Any]) -> list[str]:
+            return [
+                normalized
+                for normalized in [
+                    raw_payload.source_url,
+                    normalize_text(str(current_seed.get("browser_final_url") or "")),
+                ]
+                if normalized
+            ]
+
+        def image_document_fetcher_for(
+            current_seed: Mapping[str, Any],
+            attempt_seed: Mapping[str, Any],
+        ) -> Callable[[str, Mapping[str, Any]], dict[str, Any] | None] | None:
+            if self.name not in {"science", "pnas", "wiley"}:
+                return None
+            return _build_shared_playwright_image_fetcher(
+                browser_context_seed_getter=lambda: attempt_seed,
+                seed_urls_getter=lambda: seed_urls_for(attempt_seed),
+                browser_user_agent=current_seed.get("browser_user_agent") or self.user_agent,
+                headless=runtime.headless,
+            )
+
+        def run_download_attempt(current_seed: Mapping[str, Any]) -> dict[str, list[dict[str, Any]]]:
+            attempt_seed = merge_browser_context_seeds(current_seed)
+
+            def figure_page_fetcher(figure_page_url: str) -> tuple[str, str] | None:
+                try:
+                    html_result = fetch_html_with_flaresolverr(
+                        [figure_page_url],
+                        publisher=self.name,
+                        config=runtime,
+                    )
+                except FlareSolverrFailure:
+                    return None
+                attempt_seed.update(
+                    merge_browser_context_seeds(attempt_seed, html_result.browser_context_seed)
+                )
+                return html_result.html, html_result.final_url
+
+            image_document_fetcher = image_document_fetcher_for(attempt_seed, attempt_seed)
+            try:
+                return download_figure_assets_with_image_document_fetcher(
+                    self.transport,
+                    article_id=article_id,
+                    assets=article_assets,
+                    output_dir=output_dir,
+                    user_agent=self.user_agent,
+                    asset_profile=asset_profile,
+                    figure_page_fetcher=figure_page_fetcher,
+                    candidate_builder=_browser_workflow_image_download_candidates,
+                    image_document_fetcher=image_document_fetcher,
+                )
+            finally:
+                close_fetcher = getattr(image_document_fetcher, "close", None)
+                if callable(close_fetcher):
+                    close_fetcher()
+
+        initial_result = run_download_attempt(browser_context_seed)
+        if not initial_result.get("asset_failures"):
+            return initial_result
+
+        refreshed_seed = warm_browser_context_with_flaresolverr(
+            seed_urls_for(browser_context_seed),
+            publisher=self.name,
+            config=runtime,
             browser_context_seed=browser_context_seed,
-            seed_urls=[raw_payload.source_url],
-            image_document_fetcher=image_document_fetcher if self.name in {"science", "pnas"} else None,
         )
+        retry_result = run_download_attempt(refreshed_seed)
+        return _merge_download_attempt_results(initial_result, retry_result)
 
     def to_article_model(
         self,
