@@ -73,6 +73,16 @@ class ProviderFetchResult:
     artifacts: ProviderArtifacts = field(default_factory=ProviderArtifacts)
 
 
+@dataclass
+class PreparedFetchResultPayload:
+    raw_payload: RawFulltextPayload
+    provisional_article: ArticleModel | None = None
+    finalize_warnings: list[str] = field(default_factory=list)
+    result_warnings: list[str] | None = None
+    result_trace: list[TraceEvent] | None = None
+    context: dict[str, Any] = field(default_factory=dict)
+
+
 def _coerce_provider_content(
     *,
     source_url: str,
@@ -446,17 +456,31 @@ class ProviderClient:
         *,
         asset_profile: AssetProfile = "none",
     ) -> ProviderFetchResult:
-        raw_payload = self.fetch_raw_fulltext(doi, metadata)
+        prepared = self.prepare_fetch_result_payload(doi, metadata, asset_profile=asset_profile)
+        prepared.raw_payload = self._sync_fetch_result_content_local_copy(prepared.raw_payload)
+        prepared = self.maybe_recover_fetch_result_payload(
+            doi,
+            metadata,
+            prepared,
+            asset_profile=asset_profile,
+        )
+        prepared.raw_payload = self._sync_fetch_result_content_local_copy(prepared.raw_payload)
+        raw_payload = prepared.raw_payload
         content = raw_payload.content
-        if content is not None and content.needs_local_copy != raw_payload.needs_local_copy:
-            content = replace(content, needs_local_copy=raw_payload.needs_local_copy)
-            raw_payload.content = content
         artifact_policy = self.describe_artifacts(raw_payload)
         downloaded_assets: list[Mapping[str, Any]] = []
         asset_failures: list[Mapping[str, Any]] = []
-        warnings = list(raw_payload.warnings)
-        trace = list(raw_payload.trace)
-        if output_dir is not None and asset_profile != "none" and artifact_policy.allow_related_assets:
+        warnings = list(prepared.result_warnings if prepared.result_warnings is not None else raw_payload.warnings)
+        trace = list(prepared.result_trace if prepared.result_trace is not None else raw_payload.trace)
+        if (
+            output_dir is not None
+            and asset_profile != "none"
+            and artifact_policy.allow_related_assets
+            and self.should_download_related_assets_for_result(
+                raw_payload,
+                provisional_article=prepared.provisional_article,
+            )
+        ):
             try:
                 asset_results = self.download_related_assets(
                     doi,
@@ -468,16 +492,25 @@ class ProviderClient:
                 downloaded_assets = list(asset_results.get("assets") or [])
                 asset_failures = list(asset_results.get("asset_failures") or [])
             except ProviderFailure as exc:
-                warnings.append(f"{self.name.replace('_', ' ').title()} related assets could not be downloaded: {exc.message}")
+                warnings.append(self.asset_download_failure_warning(exc))
                 trace.extend(trace_from_markers([f"download:{self.name}_assets_failed"]))
             except (RequestFailure, OSError) as exc:
-                warnings.append(f"{self.name.replace('_', ' ').title()} related assets could not be downloaded: {exc}")
+                warnings.append(self.asset_download_failure_warning(exc))
                 trace.extend(trace_from_markers([f"download:{self.name}_assets_failed"]))
-        article = self.to_article_model(
-            metadata,
-            raw_payload,
-            downloaded_assets=downloaded_assets,
-            asset_failures=asset_failures,
+        if prepared.provisional_article is not None and not downloaded_assets and not asset_failures:
+            article = prepared.provisional_article
+        else:
+            article = self.to_article_model(
+                metadata,
+                raw_payload,
+                downloaded_assets=downloaded_assets,
+                asset_failures=asset_failures,
+            )
+        article = self.finalize_fetch_result_article(
+            article,
+            raw_payload=raw_payload,
+            provisional_article=prepared.provisional_article,
+            finalize_warnings=prepared.finalize_warnings,
         )
         artifacts = self.describe_artifacts(
             raw_payload,
@@ -492,6 +525,53 @@ class ProviderClient:
             trace=list(trace or trace_from_markers(article.quality.source_trail)),
             artifacts=artifacts,
         )
+
+    def _sync_fetch_result_content_local_copy(self, raw_payload: RawFulltextPayload) -> RawFulltextPayload:
+        content = raw_payload.content
+        if content is not None and content.needs_local_copy != raw_payload.needs_local_copy:
+            raw_payload.content = replace(content, needs_local_copy=raw_payload.needs_local_copy)
+        return raw_payload
+
+    def prepare_fetch_result_payload(
+        self,
+        doi: str,
+        metadata: Mapping[str, Any],
+        *,
+        asset_profile: AssetProfile = "none",
+    ) -> PreparedFetchResultPayload:
+        return PreparedFetchResultPayload(raw_payload=self.fetch_raw_fulltext(doi, metadata))
+
+    def maybe_recover_fetch_result_payload(
+        self,
+        doi: str,
+        metadata: Mapping[str, Any],
+        prepared: PreparedFetchResultPayload,
+        *,
+        asset_profile: AssetProfile = "none",
+    ) -> PreparedFetchResultPayload:
+        return prepared
+
+    def should_download_related_assets_for_result(
+        self,
+        raw_payload: RawFulltextPayload,
+        *,
+        provisional_article: ArticleModel | None = None,
+    ) -> bool:
+        return True
+
+    def finalize_fetch_result_article(
+        self,
+        article: ArticleModel,
+        *,
+        raw_payload: RawFulltextPayload,
+        provisional_article: ArticleModel | None = None,
+        finalize_warnings: list[str] | None = None,
+    ) -> ArticleModel:
+        return article
+
+    def asset_download_failure_warning(self, exc: ProviderFailure | RequestFailure | OSError) -> str:
+        message = exc.message if isinstance(exc, ProviderFailure) else str(exc)
+        return f"{self.name.replace('_', ' ').title()} related assets could not be downloaded: {message}"
 
     def describe_artifacts(
         self,

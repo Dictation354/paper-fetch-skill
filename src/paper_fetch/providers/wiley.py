@@ -7,11 +7,11 @@ from typing import Any, Mapping
 
 from ..metadata_types import ProviderMetadata
 from ..http import DEFAULT_FULLTEXT_TIMEOUT_SECONDS, RequestFailure
-from ..tracing import trace_from_markers
 from ..utils import normalize_text
 from . import _science_pnas, _wiley_html
 from ._pdf_fallback import PdfFallbackFailure, fetch_pdf_over_http
 from ._pdf_common import PdfFetchResult, filename_from_headers, looks_like_pdf_payload, pdf_fetch_result_from_bytes
+from ._waterfall import ProviderWaterfallStep, ProviderWaterfallState, run_provider_waterfall
 from .base import (
     ProviderContent,
     ProviderFailure,
@@ -167,16 +167,26 @@ class WileyClient(_science_pnas.BrowserWorkflowClient):
         if bootstrap.html_payload is not None:
             return bootstrap.html_payload
 
-        warnings = bootstrap.warnings
-        warnings.append(
+        initial_warnings = [
+            *bootstrap.warnings,
             (
                 f"{self.name} HTML route was not usable "
                 f"({bootstrap.html_failure_reason or 'html_failed'}); attempting Wiley TDM API PDF fallback."
+            ),
+        ]
+        if bootstrap.runtime is None and bootstrap.runtime_failure is not None:
+            initial_warnings.append(
+                f"Wiley browser PDF/ePDF fallback was not attempted because {bootstrap.runtime_failure.message}"
             )
-        )
 
-        api_failure_message: str | None = None
-        if self.tdm_client_token:
+        def run_tdm_api(_state: ProviderWaterfallState) -> RawFulltextPayload:
+            if not self.tdm_client_token:
+                raise ProviderFailure(
+                    "not_configured",
+                    f"Wiley TDM API PDF fallback is not configured because {WILEY_TDM_CLIENT_TOKEN_ENV_VAR} is missing.",
+                    missing_env=[WILEY_TDM_CLIENT_TOKEN_ENV_VAR],
+                )
+
             api_url = self._tdm_api_url(bootstrap.normalized_doi)
             try:
                 pdf_result = _fetch_wiley_tdm_pdf_result(
@@ -185,45 +195,39 @@ class WileyClient(_science_pnas.BrowserWorkflowClient):
                     headers=self._tdm_api_headers(),
                     artifact_dir=(bootstrap.runtime.artifact_dir / "pdf_api_fallback") if bootstrap.runtime is not None else None,
                 )
-                warnings.append("Full text was extracted from the Wiley TDM API PDF fallback after the HTML path was not usable.")
-                return RawFulltextPayload(
-                    provider=self.name,
+            except PdfFallbackFailure as exc:
+                raise ProviderFailure("no_result", exc.message) from exc
+
+            return RawFulltextPayload(
+                provider=self.name,
+                source_url=pdf_result.final_url,
+                content_type="application/pdf",
+                body=pdf_result.pdf_bytes,
+                content=ProviderContent(
+                    route_kind="pdf_fallback",
                     source_url=pdf_result.final_url,
                     content_type="application/pdf",
                     body=pdf_result.pdf_bytes,
-                    content=ProviderContent(
-                        route_kind="pdf_fallback",
-                        source_url=pdf_result.final_url,
-                        content_type="application/pdf",
-                        body=pdf_result.pdf_bytes,
-                        markdown_text=pdf_result.markdown_text,
-                        html_failure_reason=bootstrap.html_failure_reason,
-                        html_failure_message=bootstrap.html_failure_message,
-                        suggested_filename=pdf_result.suggested_filename,
-                    ),
-                    warnings=list(warnings),
-                    trace=trace_from_markers(
-                        [
-                            f"fulltext:{self.name}_html_fail",
-                            f"fulltext:{self.name}_pdf_api_ok",
-                            f"fulltext:{self.name}_pdf_fallback_ok",
-                        ]
-                    ),
-                    needs_local_copy=True,
-                )
-            except PdfFallbackFailure as exc:
-                api_failure_message = exc.message
-                warnings.append(
-                    f"Wiley TDM API PDF fallback was not usable ({exc.message}); attempting publisher PDF/ePDF fallback."
-                )
-        else:
-            api_failure_message = (
-                f"Wiley TDM API PDF fallback is not configured because {WILEY_TDM_CLIENT_TOKEN_ENV_VAR} is missing."
+                    markdown_text=pdf_result.markdown_text,
+                    html_failure_reason=bootstrap.html_failure_reason,
+                    html_failure_message=bootstrap.html_failure_message,
+                    suggested_filename=pdf_result.suggested_filename,
+                ),
+                needs_local_copy=True,
             )
-            warnings.append(f"{api_failure_message} Attempting publisher PDF/ePDF fallback.")
 
-        browser_pdf_failure_message: str | None = None
-        if bootstrap.runtime is not None:
+        def tdm_failure_warning(failure: ProviderFailure, _state: ProviderWaterfallState) -> str:
+            if failure.code == "not_configured":
+                return f"{failure.message} Attempting publisher PDF/ePDF fallback."
+            return f"Wiley TDM API PDF fallback was not usable ({failure.message}); attempting publisher PDF/ePDF fallback."
+
+        def run_browser_pdf(_state: ProviderWaterfallState) -> RawFulltextPayload:
+            if bootstrap.runtime is None:
+                raise ProviderFailure(
+                    "not_configured",
+                    bootstrap.runtime_failure.message if bootstrap.runtime_failure is not None else "Wiley browser runtime is not configured.",
+                    missing_env=bootstrap.runtime_failure.missing_env if bootstrap.runtime_failure is not None else [],
+                )
             try:
                 return _science_pnas.fetch_seeded_browser_pdf_payload(
                     provider=self.name,
@@ -235,45 +239,77 @@ class WileyClient(_science_pnas.BrowserWorkflowClient):
                     browser_context_seed=bootstrap.browser_context_seed,
                     html_failure_reason=bootstrap.html_failure_reason,
                     html_failure_message=bootstrap.html_failure_message,
-                    warnings=warnings,
-                    success_source_trail=[
-                        f"fulltext:{self.name}_html_fail",
-                        f"fulltext:{self.name}_pdf_browser_ok",
-                        f"fulltext:{self.name}_pdf_fallback_ok",
-                    ],
+                    warnings=[],
+                    success_source_trail=[],
                     success_warning=(
                         "Full text was extracted from the Wiley publisher PDF/ePDF fallback after the HTML path was not usable."
                     ),
                     artifact_subdir="browser_pdf_fallback",
                 )
             except PdfFallbackFailure as exc:
-                browser_pdf_failure_message = exc.message
-                warnings.append(f"Wiley publisher PDF/ePDF fallback was not usable ({exc.message}).")
-        elif bootstrap.runtime_failure is not None:
-            browser_pdf_failure_message = bootstrap.runtime_failure.message
-            warnings.append(
-                f"Wiley browser PDF/ePDF fallback was not attempted because {bootstrap.runtime_failure.message}"
+                raise ProviderFailure("no_result", exc.message) from exc
+
+        def final_failure(state: ProviderWaterfallState) -> ProviderFailure:
+            api_failure = next((failure for label, failure in state.failures if label == "pdf_api"), None)
+            browser_failure = next((failure for label, failure in state.failures if label == "browser_pdf"), None)
+            failure_parts = [f"HTML failure: {bootstrap.html_failure_message or 'wiley HTML route failed.'}"]
+            if api_failure is not None:
+                failure_parts.append(f"Wiley API PDF failure: {api_failure.message}")
+            if browser_failure is not None:
+                failure_parts.append(f"Wiley browser PDF failure: {browser_failure.message}")
+            elif bootstrap.runtime is None and bootstrap.runtime_failure is not None:
+                failure_parts.append(f"Wiley browser PDF failure: {bootstrap.runtime_failure.message}")
+
+            missing_env: list[str] = []
+            if bootstrap.runtime is None and bootstrap.runtime_failure is not None:
+                missing_env.extend(bootstrap.runtime_failure.missing_env)
+            if bootstrap.runtime is None and not self.tdm_client_token and WILEY_TDM_CLIENT_TOKEN_ENV_VAR not in missing_env:
+                missing_env.append(WILEY_TDM_CLIENT_TOKEN_ENV_VAR)
+
+            return ProviderFailure(
+                "not_configured" if bootstrap.runtime is None and not self.tdm_client_token else "no_result",
+                f"{self.name} full text could not be retrieved. " + " ".join(failure_parts),
+                missing_env=missing_env,
+                warnings=state.warnings,
+                source_trail=[
+                    f"fulltext:{self.name}_html_fail",
+                    f"fulltext:{self.name}_pdf_api_fail",
+                    *([f"fulltext:{self.name}_pdf_browser_fail"] if bootstrap.runtime is not None else []),
+                ],
             )
 
-        failure_parts = [f"HTML failure: {bootstrap.html_failure_message or 'wiley HTML route failed.'}"]
-        if api_failure_message:
-            failure_parts.append(f"Wiley API PDF failure: {api_failure_message}")
-        if browser_pdf_failure_message:
-            failure_parts.append(f"Wiley browser PDF failure: {browser_pdf_failure_message}")
-        missing_env: list[str] = []
-        if bootstrap.runtime is None and bootstrap.runtime_failure is not None:
-            missing_env.extend(bootstrap.runtime_failure.missing_env)
-        if bootstrap.runtime is None and not self.tdm_client_token and WILEY_TDM_CLIENT_TOKEN_ENV_VAR not in missing_env:
-            missing_env.append(WILEY_TDM_CLIENT_TOKEN_ENV_VAR)
+        steps = [
+            ProviderWaterfallStep(
+                label="pdf_api",
+                run=run_tdm_api,
+                failure_marker=f"fulltext:{self.name}_pdf_api_fail",
+                success_markers=(
+                    f"fulltext:{self.name}_pdf_api_ok",
+                    f"fulltext:{self.name}_pdf_fallback_ok",
+                ),
+                continue_codes=("no_result", "not_configured"),
+                failure_warning=tdm_failure_warning,
+                success_warning="Full text was extracted from the Wiley TDM API PDF fallback after the HTML path was not usable.",
+            )
+        ]
+        if bootstrap.runtime is not None:
+            steps.append(
+                ProviderWaterfallStep(
+                    label="browser_pdf",
+                    run=run_browser_pdf,
+                    failure_marker=f"fulltext:{self.name}_pdf_browser_fail",
+                    success_markers=(
+                        f"fulltext:{self.name}_pdf_browser_ok",
+                        f"fulltext:{self.name}_pdf_fallback_ok",
+                    ),
+                    failure_warning=lambda failure, _state: f"Wiley publisher PDF/ePDF fallback was not usable ({failure.message}).",
+                    include_failure_trail_on_success=False,
+                )
+            )
 
-        raise ProviderFailure(
-            "not_configured" if bootstrap.runtime is None and not self.tdm_client_token else "no_result",
-            f"{self.name} full text could not be retrieved. " + " ".join(failure_parts),
-            missing_env=missing_env,
-            warnings=warnings,
-            source_trail=[
-                f"fulltext:{self.name}_html_fail",
-                f"fulltext:{self.name}_pdf_api_fail",
-                *([f"fulltext:{self.name}_pdf_browser_fail"] if bootstrap.runtime is not None else []),
-            ],
+        return run_provider_waterfall(
+            steps,
+            initial_warnings=initial_warnings,
+            initial_source_trail=[f"fulltext:{self.name}_html_fail"],
+            final_failure_factory=final_failure,
         )

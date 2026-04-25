@@ -49,12 +49,36 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Set up Haskell toolchain for formula tests
+        id: setup-haskell
+        uses: haskell-actions/setup@v2.9.1
+        with:
+          ghc-version: "9.8.4"
+          cabal-version: "latest"
+
+      - name: Restore formula tool cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ steps.setup-haskell.outputs.cabal-store }}
+            .formula-tools
+          key: ${{ runner.os }}-formula-tools-${{ steps.setup-haskell.outputs.ghc-version }}-${{ hashFiles('src/paper_fetch/formula/install.py', 'src/paper_fetch/resources/formula/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-formula-tools-${{ steps.setup-haskell.outputs.ghc-version }}-
+
       - name: Install test dependencies
         run: |
           python -m pip install --upgrade pip
           python -m pip install -e ".[dev]"
 
+      - name: Install formula test backend
+        run: |
+          python -m paper_fetch.formula.install --target-dir "$PWD/.formula-tools" --no-node
+          ./.formula-tools/bin/texmath --help >/dev/null
+
       - name: Run unit suite
+        env:
+          PAPER_FETCH_FORMULA_TOOLS_DIR: ${{ github.workspace }}/.formula-tools
         run: pytest tests/unit
 
   integration:
@@ -90,14 +114,37 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Set up Haskell toolchain for formula tests
+        id: setup-haskell
+        uses: haskell-actions/setup@v2.9.1
+        with:
+          ghc-version: "9.8.4"
+          cabal-version: "latest"
+
+      - name: Restore formula tool cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ steps.setup-haskell.outputs.cabal-store }}
+            .formula-tools
+          key: ${{ runner.os }}-formula-tools-${{ steps.setup-haskell.outputs.ghc-version }}-${{ hashFiles('src/paper_fetch/formula/install.py', 'src/paper_fetch/resources/formula/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-formula-tools-${{ steps.setup-haskell.outputs.ghc-version }}-
+
       - name: Install test dependencies
         run: |
           python -m pip install --upgrade pip
           python -m pip install -e ".[dev]"
 
+      - name: Install formula test backend
+        run: |
+          python -m paper_fetch.formula.install --target-dir "$PWD/.formula-tools" --no-node
+          ./.formula-tools/bin/texmath --help >/dev/null
+
       - name: Run full golden corpus regression
         env:
           PAPER_FETCH_RUN_FULL_GOLDEN: "1"
+          PAPER_FETCH_FORMULA_TOOLS_DIR: ${{ github.workspace }}/.formula-tools
         run: pytest tests/integration/test_golden_corpus.py
 
   live-mcp:

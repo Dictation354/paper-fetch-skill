@@ -170,6 +170,8 @@ resolve
 - metadata 先尽量来自 Crossref；只有 `elsevier` 可能用 publisher metadata probe 作为 primary 覆盖 / 补充
 - fulltext 主路径由 provider 自己控制
 - 主链不可用时不走通用 HTML；不可用 / `None` 结果进入 metadata-only fallback，provider-managed `abstract_only` 结果可直接返回
+- XML / HTML / PDF / TDM / browser PDF fallback 的顺序由内部 `paper_fetch.providers._waterfall` runner 编排；各 provider step 仍保留自己的 payload 结构、warning 文案和 `fulltext:*` source trail marker
+- `ProviderClient.fetch_result` 负责通用 raw payload、本地副本标记、资产下载、warning/trace 和 artifact 组装；Browser workflow 与 Springer 只通过 hook 处理 abstract-only 后 PDF recovery 或 provider-managed abstract-only 返回
 
 但它们的 fulltext 形态不同：
 

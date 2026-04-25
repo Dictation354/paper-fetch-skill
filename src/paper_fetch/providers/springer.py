@@ -29,13 +29,14 @@ from ._html_tables import inject_inline_table_blocks, render_table_markdown, tab
 from .html_assets import html_asset_identity_key
 from ._pdf_candidates import build_springer_pdf_candidates
 from ._pdf_fallback import PdfFetchFailure, fetch_pdf_over_http
+from ._waterfall import ProviderWaterfallStep, ProviderWaterfallState, run_provider_waterfall
 from ..quality.html_availability import assess_html_fulltext_availability, availability_failure_message
 from .base import (
+    PreparedFetchResultPayload,
     ProviderArtifacts,
     ProviderClient,
     ProviderContent,
     ProviderFailure,
-    ProviderFetchResult,
     ProviderStatusResult,
     RawFulltextPayload,
     build_provider_status_check,
@@ -52,6 +53,7 @@ except ImportError:  # pragma: no cover - dependency is declared in pyproject
 
 MAX_SPRINGER_HTML_REDIRECTS = 5
 MARKDOWN_TEXT_KEY = "markdown_text"
+SPRINGER_FETCH_RESULT_WARNINGS_KEY = "springer_fetch_result_warnings"
 SPRINGER_TABLE_LABEL_PATTERN = re.compile(
     r"\b(?P<prefix>extended\s+data\s+table|table)\.?\s*(?P<number>\d+[A-Za-z]?)\b",
     flags=re.IGNORECASE,
@@ -726,19 +728,20 @@ class SpringerClient(ProviderClient):
             metadata.get("landing_page_url"),
             f"https://doi.org/{urllib.parse.quote(normalized_doi, safe='')}",
         )
-        warnings: list[str] = []
-        response_url = landing_url
-        html_text: str | None = None
-        merged_metadata = dict(metadata)
-        html_failure: ProviderFailure | None = None
-        attempt: SpringerHtmlAttempt | None = None
+        context: dict[str, Any] = {
+            "landing_url": landing_url,
+            "response_url": landing_url,
+            "html_text": "",
+            "merged_metadata": dict(metadata),
+            "attempt": None,
+        }
 
-        try:
+        def run_html(_state: ProviderWaterfallState) -> RawFulltextPayload:
             attempt = self._prepare_html_attempt(doi, metadata)
-            response_url = attempt.response_url
-            html_text = attempt.html_text
-            merged_metadata = dict(attempt.merged_metadata)
-            warnings.extend(attempt.warnings)
+            context["attempt"] = attempt
+            context["response_url"] = attempt.response_url
+            context["html_text"] = attempt.html_text
+            context["merged_metadata"] = dict(attempt.merged_metadata)
             if attempt.diagnostics.accepted:
                 extracted_assets = [
                     *_springer_html.extract_html_assets(
@@ -754,33 +757,21 @@ class SpringerClient(ProviderClient):
                     reason="Downloaded full text from the Springer landing page HTML.",
                     extracted_assets=extracted_assets,
                 )
-            html_failure = ProviderFailure(
+            raise ProviderFailure(
                 "no_result",
                 availability_failure_message(attempt.diagnostics),
-                source_trail=["fulltext:springer_html_fail"],
-            )
-        except ProviderFailure as exc:
-            html_failure = ProviderFailure(
-                exc.code,
-                exc.message,
-                retry_after_seconds=exc.retry_after_seconds,
-                missing_env=exc.missing_env,
-                warnings=exc.warnings,
-                source_trail=[*exc.source_trail, "fulltext:springer_html_fail"],
+                warnings=attempt.warnings,
             )
 
-        assert html_failure is not None
-        warnings.extend(html_failure.warnings)
-        warnings.append(f"Springer HTML route was not usable ({html_failure.message}); attempting PDF fallback.")
-
-        try:
-            pdf_attempt = attempt or SpringerHtmlAttempt(
+        def run_pdf(state: ProviderWaterfallState) -> RawFulltextPayload:
+            html_failure = state.failures[-1][1] if state.failures else ProviderFailure("no_result", "Springer HTML route failed.")
+            attempt = context["attempt"] or SpringerHtmlAttempt(
                 normalized_doi=normalized_doi,
                 landing_url=landing_url,
                 response={"headers": {}, "body": b""},
-                response_url=response_url,
-                html_text=html_text or "",
-                merged_metadata=dict(merged_metadata),
+                response_url=str(context.get("response_url") or landing_url),
+                html_text=str(context.get("html_text") or ""),
+                merged_metadata=dict(context.get("merged_metadata") or metadata),
                 warnings=[],
                 markdown_text="",
                 abstract_sections=[],
@@ -790,31 +781,46 @@ class SpringerClient(ProviderClient):
                 inline_table_assets=[],
                 diagnostics=None,
             )
-            return self._fetch_pdf_payload_from_html_attempt(
-                pdf_attempt,
-                html_failure_message=html_failure.message,
-                warnings=warnings,
-            )
-        except PdfFetchFailure as exc:
-            pdf_failure = ProviderFailure(
-                "no_result",
-                (
-                    "Springer full text could not be retrieved via HTML or PDF fallback. "
-                    f"HTML failure: {html_failure.message} PDF failure: {exc.message}"
-                ),
-                warnings=warnings,
-                source_trail=["fulltext:springer_html_fail"],
-            )
-            raise combine_provider_failures([("html", html_failure), ("pdf", pdf_failure)]) from exc
+            try:
+                return self._fetch_pdf_payload_from_html_attempt(
+                    attempt,
+                    html_failure_message=html_failure.message,
+                    warnings=[],
+                )
+            except PdfFetchFailure as exc:
+                raise ProviderFailure(
+                    "no_result",
+                    (
+                        "Springer full text could not be retrieved via HTML or PDF fallback. "
+                        f"HTML failure: {html_failure.message} PDF failure: {exc.message}"
+                    ),
+                ) from exc
 
-    def fetch_result(
+        return run_provider_waterfall(
+            [
+                ProviderWaterfallStep(
+                    label="html",
+                    run=run_html,
+                    failure_marker="fulltext:springer_html_fail",
+                    failure_warning=lambda failure, _state: (
+                        f"Springer HTML route was not usable ({failure.message}); attempting PDF fallback."
+                    ),
+                ),
+                ProviderWaterfallStep(
+                    label="pdf",
+                    run=run_pdf,
+                    success_markers=("fulltext:springer_pdf_fallback_ok",),
+                ),
+            ],
+        )
+
+    def prepare_fetch_result_payload(
         self,
         doi: str,
         metadata: Mapping[str, Any],
-        output_dir,
         *,
         asset_profile: AssetProfile = "none",
-    ) -> ProviderFetchResult:
+    ) -> PreparedFetchResultPayload:
         normalized_doi = normalize_doi(doi)
         if not normalized_doi:
             raise ProviderFailure("not_supported", "Springer direct HTML retrieval requires a DOI.")
@@ -828,7 +834,6 @@ class SpringerClient(ProviderClient):
         html_text: str | None = None
         merged_metadata = dict(metadata)
         html_failure: ProviderFailure | None = None
-        raw_payload: RawFulltextPayload | None = None
         provisional_payload: RawFulltextPayload | None = None
         provisional_article = None
         attempt: SpringerHtmlAttempt | None = None
@@ -857,6 +862,7 @@ class SpringerClient(ProviderClient):
                     reason="Downloaded full text from the Springer landing page HTML.",
                     extracted_assets=extracted_assets,
                 )
+                return PreparedFetchResultPayload(raw_payload=raw_payload)
             else:
                 html_failure = ProviderFailure(
                     "no_result",
@@ -880,114 +886,125 @@ class SpringerClient(ProviderClient):
             )
             warnings.extend(html_failure.warnings)
 
-        if raw_payload is None:
-            assert html_failure is not None
-            warnings.extend(html_failure.warnings)
-            warnings.append(f"Springer HTML route was not usable ({html_failure.message}); attempting PDF fallback.")
-            pdf_attempt = attempt or SpringerHtmlAttempt(
-                normalized_doi=normalized_doi,
-                landing_url=landing_url,
-                response={"headers": {}, "body": b""},
-                response_url=response_url,
-                html_text=html_text or "",
+        assert html_failure is not None
+        fallback_attempt = attempt or SpringerHtmlAttempt(
+            normalized_doi=normalized_doi,
+            landing_url=landing_url,
+            response={"headers": {}, "body": b""},
+            response_url=response_url,
+            html_text=html_text or "",
+            merged_metadata=dict(merged_metadata),
+            warnings=[],
+            markdown_text="",
+            abstract_sections=[],
+            section_hints=[],
+            extracted_authors=[],
+            extracted_references=[],
+            inline_table_assets=[],
+            diagnostics=None,
+        )
+        return PreparedFetchResultPayload(
+            raw_payload=provisional_payload
+            or RawFulltextPayload(
+                provider="springer",
+                source_url=response_url,
+                content_type="text/html",
+                body=(html_text or "").encode("utf-8"),
+                content=ProviderContent(
+                    route_kind="html",
+                    source_url=response_url,
+                    content_type="text/html",
+                    body=(html_text or "").encode("utf-8"),
+                    merged_metadata=dict(merged_metadata),
+                    reason="Springer HTML route was not usable.",
+                ),
+                trace=trace_from_markers(["fulltext:springer_html_fail"]),
                 merged_metadata=dict(merged_metadata),
-                warnings=[],
-                markdown_text="",
-                abstract_sections=[],
-                section_hints=[],
-                extracted_authors=[],
-                extracted_references=[],
-                inline_table_assets=[],
-                diagnostics=None,
+            ),
+            provisional_article=provisional_article,
+            context={
+                "html_failure": html_failure,
+                SPRINGER_FETCH_RESULT_WARNINGS_KEY: warnings,
+                "pdf_attempt": fallback_attempt,
+            },
+        )
+
+    def maybe_recover_fetch_result_payload(
+        self,
+        doi: str,
+        metadata: Mapping[str, Any],
+        prepared: PreparedFetchResultPayload,
+        *,
+        asset_profile: AssetProfile = "none",
+    ) -> PreparedFetchResultPayload:
+        html_failure = prepared.context.get("html_failure")
+        if not isinstance(html_failure, ProviderFailure):
+            return prepared
+
+        warnings = list(prepared.context.get(SPRINGER_FETCH_RESULT_WARNINGS_KEY) or [])
+        warnings.extend(html_failure.warnings)
+        warnings.append(f"Springer HTML route was not usable ({html_failure.message}); attempting PDF fallback.")
+        pdf_attempt = prepared.context.get("pdf_attempt")
+        if not isinstance(pdf_attempt, SpringerHtmlAttempt):
+            return prepared
+
+        try:
+            recovered_payload = self._fetch_pdf_payload_from_html_attempt(
+                pdf_attempt,
+                html_failure_message=html_failure.message,
+                warnings=warnings,
             )
-            try:
-                raw_payload = self._fetch_pdf_payload_from_html_attempt(
-                    pdf_attempt,
-                    html_failure_message=html_failure.message,
-                    warnings=warnings,
+        except PdfFetchFailure as exc:
+            if prepared.provisional_article is not None:
+                failure_warning = (
+                    "Springer full text could not be retrieved via HTML or PDF fallback. "
+                    f"HTML failure: {html_failure.message} PDF failure: {exc.message}"
                 )
-            except PdfFetchFailure as exc:
-                if provisional_article is not None:
-                    failure_warning = (
-                        "Springer full text could not be retrieved via HTML or PDF fallback. "
-                        f"HTML failure: {html_failure.message} PDF failure: {exc.message}"
+                extend_unique(warnings, [failure_warning])
+                provisional_article = prepared.provisional_article
+                if provisional_article.quality.content_kind == "abstract_only":
+                    provisional_article = _finalize_springer_abstract_only_article(
+                        provisional_article,
+                        warnings=[
+                            *warnings,
+                            (
+                                "Springer HTML route only exposed abstract-level content after markdown extraction, "
+                                "and PDF fallback did not return usable full text; returning abstract-only content."
+                            ),
+                        ],
                     )
-                    extend_unique(warnings, [failure_warning])
-                    if provisional_article.quality.content_kind == "abstract_only":
-                        provisional_article = _finalize_springer_abstract_only_article(
-                            provisional_article,
-                            warnings=[
-                                *warnings,
-                                (
-                                    "Springer HTML route only exposed abstract-level content after markdown extraction, "
-                                    "and PDF fallback did not return usable full text; returning abstract-only content."
-                                ),
-                            ],
-                        )
-                    else:
-                        extend_unique(provisional_article.quality.warnings, warnings)
-                    return ProviderFetchResult(
-                        provider="springer",
-                        article=provisional_article,
-                        content=provisional_payload.content if provisional_payload is not None else None,
-                        warnings=list(provisional_article.quality.warnings),
-                        trace=list(provisional_article.quality.trace),
-                        artifacts=ProviderArtifacts(),
-                    )
-                pdf_failure = ProviderFailure(
-                    "no_result",
-                    (
-                        "Springer full text could not be retrieved via HTML or PDF fallback. "
-                        f"HTML failure: {html_failure.message} PDF failure: {exc.message}"
-                    ),
-                    warnings=warnings,
-                    source_trail=["fulltext:springer_html_fail"],
+                else:
+                    extend_unique(provisional_article.quality.warnings, warnings)
+                return PreparedFetchResultPayload(
+                    raw_payload=prepared.raw_payload,
+                    provisional_article=provisional_article,
+                    result_warnings=list(provisional_article.quality.warnings),
+                    result_trace=list(provisional_article.quality.trace),
                 )
-                raise combine_provider_failures([("html", html_failure), ("pdf", pdf_failure)]) from exc
+            pdf_failure = ProviderFailure(
+                "no_result",
+                (
+                    "Springer full text could not be retrieved via HTML or PDF fallback. "
+                    f"HTML failure: {html_failure.message} PDF failure: {exc.message}"
+                ),
+                warnings=warnings,
+                source_trail=["fulltext:springer_html_fail"],
+            )
+            raise combine_provider_failures([("html", html_failure), ("pdf", pdf_failure)]) from exc
 
-        content = raw_payload.content
-        artifact_policy = self.describe_artifacts(raw_payload)
-        downloaded_assets: list[Mapping[str, Any]] = []
-        asset_failures: list[Mapping[str, Any]] = []
-        result_warnings = list(raw_payload.warnings)
-        result_trace = list(raw_payload.trace)
-        if output_dir is not None and asset_profile != "none" and artifact_policy.allow_related_assets:
-            try:
-                asset_results = self.download_related_assets(
-                    normalized_doi,
-                    metadata,
-                    raw_payload,
-                    output_dir,
-                    asset_profile=asset_profile,
-                )
-                downloaded_assets = list(asset_results.get("assets") or [])
-                asset_failures = list(asset_results.get("asset_failures") or [])
-            except ProviderFailure as exc:
-                result_warnings.append(f"Springer related assets could not be downloaded: {exc.message}")
-                result_trace.extend(trace_from_markers(["download:springer_assets_failed"]))
-            except (RequestFailure, OSError) as exc:
-                result_warnings.append(f"Springer related assets could not be downloaded: {exc}")
-                result_trace.extend(trace_from_markers(["download:springer_assets_failed"]))
+        return PreparedFetchResultPayload(raw_payload=recovered_payload)
 
-        article = self.to_article_model(
-            metadata,
-            raw_payload,
-            downloaded_assets=downloaded_assets,
-            asset_failures=asset_failures,
-        )
-        artifacts = self.describe_artifacts(
-            raw_payload,
-            downloaded_assets=downloaded_assets,
-            asset_failures=asset_failures,
-        )
-        return ProviderFetchResult(
-            provider=raw_payload.provider or self.name,
-            article=article,
-            content=content,
-            warnings=result_warnings,
-            trace=list(result_trace or trace_from_markers(article.quality.source_trail)),
-            artifacts=artifacts,
-        )
+    def should_download_related_assets_for_result(
+        self,
+        raw_payload: RawFulltextPayload,
+        *,
+        provisional_article=None,
+    ) -> bool:
+        return provisional_article is None or provisional_article.quality.content_kind == "fulltext"
+
+    def asset_download_failure_warning(self, exc: ProviderFailure | RequestFailure | OSError) -> str:
+        message = exc.message if isinstance(exc, ProviderFailure) else str(exc)
+        return f"Springer related assets could not be downloaded: {message}"
 
     def to_article_model(
         self,

@@ -40,6 +40,7 @@ from ._pdf_common import (
     looks_like_pdf_payload,
     pdf_fetch_result_from_bytes,
 )
+from ._waterfall import ProviderWaterfallStep, ProviderWaterfallState, run_provider_waterfall
 from ..quality.html_availability import (
     assess_plain_text_fulltext_availability,
     assess_structured_article_fulltext_availability,
@@ -52,7 +53,6 @@ from .base import (
     ProviderStatusResult,
     RawFulltextPayload,
     build_provider_status_check,
-    combine_provider_failures,
     map_request_failure,
     summarize_capability_status,
 )
@@ -516,23 +516,6 @@ class ElsevierClient(ProviderClient):
             raw_payload.content = replace(raw_payload.content, diagnostics=diagnostics_payload)
         return False
 
-    def _failure_with_source_marker(
-        self,
-        failure: ProviderFailure,
-        marker: str,
-    ) -> ProviderFailure:
-        source_trail = list(failure.source_trail)
-        if marker not in source_trail:
-            source_trail.append(marker)
-        return ProviderFailure(
-            failure.code,
-            failure.message,
-            retry_after_seconds=failure.retry_after_seconds,
-            missing_env=failure.missing_env,
-            warnings=failure.warnings,
-            source_trail=source_trail,
-        )
-
     def fetch_metadata(self, query: Mapping[str, str | None]) -> ProviderMetadata:
         doi = normalize_doi(query.get("doi"))
         if not doi:
@@ -638,62 +621,41 @@ class ElsevierClient(ProviderClient):
         normalized_doi = normalize_doi(doi)
         if not normalized_doi:
             raise ProviderFailure("not_supported", "Elsevier full-text retrieval requires a DOI.")
-        xml_failure: ProviderFailure | None = None
-        warnings: list[str] = []
-        try:
+
+        def run_xml(_state: ProviderWaterfallState) -> RawFulltextPayload:
             xml_payload = self._fetch_official_xml_payload(normalized_doi)
-        except ProviderFailure as exc:
-            xml_failure = self._failure_with_source_marker(exc, "fulltext:elsevier_xml_fail")
-            if xml_failure.code != "no_result":
-                raise xml_failure
-            warnings.extend(xml_failure.warnings)
-            warnings.append(
-                f"Elsevier official XML route was not usable ({xml_failure.message}); attempting official PDF fallback."
-            )
-        else:
             if self._official_payload_is_usable(metadata, xml_payload):
                 return xml_payload
-            xml_failure = ProviderFailure(
+            raise ProviderFailure(
                 "no_result",
                 "Elsevier official XML response did not produce enough article body text.",
-                source_trail=["fulltext:elsevier_xml_fail"],
-            )
-            warnings.append(
-                "Elsevier official XML response did not produce enough article body text; attempting official PDF fallback."
             )
 
-        assert xml_failure is not None
-        try:
-            pdf_payload = self._fetch_official_pdf_payload(normalized_doi)
-        except ProviderFailure as exc:
-            pdf_failure = self._failure_with_source_marker(exc, "fulltext:elsevier_pdf_api_fail")
-            pdf_failure = ProviderFailure(
-                pdf_failure.code,
-                pdf_failure.message,
-                retry_after_seconds=pdf_failure.retry_after_seconds,
-                missing_env=pdf_failure.missing_env,
-                warnings=[*warnings, *pdf_failure.warnings],
-                source_trail=pdf_failure.source_trail,
-            )
-            raise combine_provider_failures(
-                [
-                    ("xml", xml_failure),
-                    ("pdf", pdf_failure),
-                ]
-            )
+        def xml_failure_warning(failure: ProviderFailure, _state: ProviderWaterfallState) -> str:
+            if failure.message == "Elsevier official XML response did not produce enough article body text.":
+                return "Elsevier official XML response did not produce enough article body text; attempting official PDF fallback."
+            return f"Elsevier official XML route was not usable ({failure.message}); attempting official PDF fallback."
 
-        pdf_payload.warnings = [
-            *warnings,
-            "Full text was extracted from the Elsevier API PDF fallback after the XML route was not usable.",
-        ]
-        pdf_payload.trace = trace_from_markers(
+        return run_provider_waterfall(
             [
-                *xml_failure.source_trail,
-                "fulltext:elsevier_pdf_api_ok",
-                "fulltext:elsevier_pdf_fallback_ok",
-            ]
+                ProviderWaterfallStep(
+                    label="xml",
+                    run=run_xml,
+                    failure_marker="fulltext:elsevier_xml_fail",
+                    failure_warning=xml_failure_warning,
+                ),
+                ProviderWaterfallStep(
+                    label="pdf",
+                    run=lambda _state: self._fetch_official_pdf_payload(normalized_doi),
+                    failure_marker="fulltext:elsevier_pdf_api_fail",
+                    success_markers=(
+                        "fulltext:elsevier_pdf_api_ok",
+                        "fulltext:elsevier_pdf_fallback_ok",
+                    ),
+                    success_warning="Full text was extracted from the Elsevier API PDF fallback after the XML route was not usable.",
+                ),
+            ],
         )
-        return pdf_payload
 
     def to_article_model(
         self,

@@ -4,11 +4,8 @@ from __future__ import annotations
 
 import copy
 import importlib.util
-import json
 import re
-import urllib.parse
 import xml.etree.ElementTree as ET
-from dataclasses import asdict, dataclass, field
 from typing import Any, Mapping
 
 from ..metadata_types import ProviderMetadata
@@ -22,11 +19,8 @@ from ..extraction.html.semantics import (
     BACK_MATTER_TOKENS,
     BODY_CONTAINER_TOKENS,
     DATA_AVAILABILITY_TOKENS,
-    classify_html_paragraph as _shared_classify_html_paragraph,
     collect_html_section_hints,
-    container_has_explicit_body_container as _shared_container_has_explicit_body_container,
     heading_category,
-    iter_html_blocks as _shared_iter_html_blocks,
     looks_like_explicit_body_container as _shared_looks_like_explicit_body_container,
     node_identity_text as _shared_node_identity_text,
     node_source_selector as _shared_node_source_selector,
@@ -44,6 +38,7 @@ from ..extraction.html.signals import (
 from ..markdown.citations import is_citation_link, make_numeric_citation_sentinel, numeric_citation_payload
 from ..models import normalize_markdown_text
 from ..quality.html_availability import (
+    FulltextAvailabilityDiagnostics,
     assess_html_fulltext_availability as _shared_assess_html_fulltext_availability,
     assess_plain_text_fulltext_availability as _shared_assess_plain_text_fulltext_availability,
     assess_structured_article_fulltext_availability as _shared_assess_structured_article_fulltext_availability,
@@ -69,7 +64,6 @@ from ._science_pnas_profiles import (
     looks_like_abstract_redirect as _profile_looks_like_abstract_redirect,
     noise_profile_for_publisher as _profile_noise_profile_for_publisher,
     preferred_html_candidate_from_landing_page as _profile_preferred_html_candidate_from_landing_page,
-    provider_positive_signals as _profile_positive_signals,
     publisher_profile as _publisher_profile,
     site_rule_for_publisher as _profile_site_rule_for_publisher,
 )
@@ -86,162 +80,8 @@ clean_markdown = _html_noise.clean_markdown
 extract_article_markdown = _html_noise.extract_article_markdown
 body_metrics = _html_noise.body_metrics
 has_sufficient_article_body = _html_noise.has_sufficient_article_body
-SITE_RULE_OVERRIDES: dict[str, dict[str, Any]] = {
-    "science": {
-        "candidate_selectors": [
-            ".article__fulltext",
-            ".article-view",
-        ],
-        "remove_selectors": [
-            "header .social-share",
-            ".jump-to-nav",
-            ".article-access-info",
-            ".references-tab",
-            ".permissions",
-            ".issue-item__citation",
-            ".article-header__access",
-        ],
-        "drop_keywords": {
-            "advert",
-            "tab-nav",
-            "jump-to",
-        },
-        "drop_text": {
-            "Permissions",
-        },
-    },
-    "pnas": {
-        "candidate_selectors": [
-            ".article__fulltext",
-            ".core-container",
-            ".article-content",
-        ],
-        "remove_selectors": [
-            ".article__access",
-            ".article__footer",
-            ".article__reference-links",
-            ".core-collateral",
-            ".card",
-            ".signup-alert-ad",
-        ],
-        "drop_keywords": {
-            "tab-nav",
-        },
-    },
-    "wiley": {
-        "candidate_selectors": [
-            ".article-section__content",
-            ".issue-item__body",
-            ".epub-section",
-            ".doi-access",
-        ],
-        "remove_selectors": [
-            ".citation-tools",
-            ".epub-reference",
-            ".article-section__tableofcontents",
-            ".publicationHistory",
-        ],
-        "drop_text": {
-            "Recommended articles",
-        },
-    },
-}
-PUBLISHER_HOSTS: dict[str, tuple[str, ...]] = {
-    "science": ("science.org", "www.science.org"),
-    "pnas": ("pnas.org", "www.pnas.org"),
-    "wiley": ("onlinelibrary.wiley.com", "wiley.com", "www.wiley.com"),
-}
-PDF_URL_TOKENS = ("/doi/pdf/", "/doi/pdfdirect/", "/doi/epdf/", "/fullpdf", ".pdf", "download=true")
-AAAS_DATALAYER_PATTERN = re.compile(r"AAASdataLayer=(\{.*?\});(?:if\(|</script>)", flags=re.DOTALL)
-HTML_FULLTEXT_MARKERS = (
-    'property="articleBody"',
-    "property='articleBody'",
-    'itemprop="articleBody"',
-    "itemprop='articleBody'",
-    'data-article-access="full"',
-    "data-article-access='full'",
-    'data-article-access-type="full"',
-    "data-article-access-type='full'",
-    'id="bodymatter"',
-    "id='bodymatter'",
-)
-DEFAULT_SITE_RULE: dict[str, Any] = {
-    "candidate_selectors": [
-        "article",
-        "main article",
-        "[role='main'] article",
-        "[itemprop='articleBody']",
-        "[property='articleBody']",
-        "[itemprop='mainEntity']",
-        ".article",
-        ".article__body",
-        ".article__content",
-        ".article-body",
-        ".main-content",
-        "#main-content",
-        "main",
-        "[role='main']",
-        "body",
-    ],
-    "remove_selectors": [
-        "script",
-        "style",
-        "noscript",
-        "iframe",
-        "svg",
-        ".social-share",
-        ".article-tools",
-        ".article-metrics",
-        ".metrics-widget",
-        ".recommended-articles",
-        ".related-content",
-        ".breadcrumbs",
-        ".toc",
-        ".tab__nav",
-        ".accessDenialWidget",
-        ".cookie-banner",
-        ".cookie-consent",
-    ],
-    "drop_keywords": {
-        "metrics",
-        "metric",
-        "share",
-        "social",
-        "recommend",
-        "related",
-        "toolbar",
-        "breadcrumb",
-        "download",
-        "cookie",
-        "promo",
-        "banner",
-        "citation-tool",
-        "nav",
-        "access-widget",
-        "rightslink",
-    },
-    "drop_text": {
-        "Check for updates",
-        "View Metrics",
-        "Share",
-        "Cite",
-    },
-}
-NARRATIVE_ARTICLE_TYPE_TOKENS = {
-    "perspective",
-    "review",
-    "editorial",
-    "commentary",
-    "article-commentary",
-}
 BODY_PARAGRAPH_MIN_CHARS = 80
-NARRATIVE_BODY_RUN_MIN_CHARS = 400
 SENTENCE_PATTERN = re.compile(r"[.!?。！？]+")
-ARTICLE_TYPE_META_PATTERN = re.compile(
-    r"<meta[^>]+(?:name|property)=['\"](?:citation_article_type|dc\.type|prism\.section|article:section)['\"][^>]+content=['\"]([^'\"]+)['\"]",
-    flags=re.IGNORECASE,
-)
-DATA_TYPE_PATTERN = re.compile(r"data-type=['\"]([^'\"]+)['\"]", flags=re.IGNORECASE)
 FRONT_MATTER_LINE_PATTERNS = (
     re.compile(r"^doi:\s*", flags=re.IGNORECASE),
     re.compile(r"^(vol\.?|volume)\b", flags=re.IGNORECASE),
@@ -323,41 +163,8 @@ CONTENT_DATA_AVAILABILITY_SELECTORS = (
 )
 
 
-@dataclass
-class StructuredBodyAnalysis:
-    explicit_body_container: bool = False
-    post_abstract_body_run: bool = False
-    narrative_article_type: bool = False
-    paywall_text_outside_body_ignored: bool = False
-    body_run_paragraph_count: int = 0
-    body_run_char_count: int = 0
-    body_paragraph_count: int = 0
-    body_candidate_text: str = ""
-    paywall_gate_detected: bool = False
-    page_has_paywall_text: bool = False
-    container_has_paywall_text: bool = False
-
-
 class SciencePnasHtmlFailure(_SharedSciencePnasHtmlFailure):
     pass
-
-
-@dataclass
-class FulltextAvailabilityDiagnostics:
-    accepted: bool
-    reason: str
-    content_kind: str
-    hard_negative_signals: list[str] = field(default_factory=list)
-    strong_positive_signals: list[str] = field(default_factory=list)
-    soft_positive_signals: list[str] = field(default_factory=list)
-    body_metrics: dict[str, Any] = field(default_factory=dict)
-    figure_count: int = 0
-    title: str | None = None
-    container_tag: str | None = None
-    container_text_length: int | None = None
-
-    def to_dict(self) -> dict[str, Any]:
-        return asdict(self)
 
 
 def preferred_html_candidate_from_landing_page(
@@ -366,29 +173,6 @@ def preferred_html_candidate_from_landing_page(
     landing_page_url: str | None,
 ) -> str | None:
     return _profile_preferred_html_candidate_from_landing_page(publisher, doi, landing_page_url)
-
-
-def _publisher_base_urls(publisher: str, landing_page_url: str | None = None) -> list[str]:
-    preferred = normalize_text(landing_page_url)
-    base_urls: list[str] = []
-    if preferred:
-        parsed = urllib.parse.urlparse(preferred)
-        hostname = normalize_text(parsed.hostname or "").lower()
-        if parsed.scheme in {"http", "https"} and hostname:
-            if any(hostname == token or hostname.endswith(f".{token}") for token in PUBLISHER_HOSTS.get(publisher, ())):
-                base_urls.append(f"{parsed.scheme}://{hostname}")
-
-    if publisher == "science":
-        candidates = ["https://www.science.org", "https://science.org"]
-    elif publisher == "pnas":
-        candidates = ["https://www.pnas.org", "https://pnas.org"]
-    else:
-        candidates = ["https://onlinelibrary.wiley.com"]
-
-    for candidate in candidates:
-        if candidate not in base_urls:
-            base_urls.append(candidate)
-    return base_urls
 
 
 def build_html_candidates(publisher: str, doi: str, landing_page_url: str | None = None) -> list[str]:
@@ -415,11 +199,6 @@ def _site_rule(publisher: str | None) -> dict[str, Any]:
     return _profile_site_rule_for_publisher(publisher)
 
 
-def _contains_pattern(text: str, patterns: tuple[str, ...]) -> bool:
-    lowered = normalize_text(text).lower()
-    return any(pattern in lowered for pattern in patterns)
-
-
 def _normalize_heading(text: str) -> str:
     return normalize_heading(text)
 
@@ -441,65 +220,6 @@ def _is_substantial_prose(text: str) -> bool:
 
 def _looks_like_explicit_body_container(node: Tag | None) -> bool:
     return _shared_looks_like_explicit_body_container(node)
-
-
-def _normalized_page_text(html_text: str) -> str:
-    if BeautifulSoup is None:
-        return normalize_text(re.sub(r"<[^>]+>", " ", html_text))
-    soup = BeautifulSoup(html_text, choose_parser())
-    return normalize_text(" ".join(soup.stripped_strings))
-
-
-def _extract_article_type(
-    metadata: Mapping[str, Any] | None,
-    *,
-    provider: str | None = None,
-    html_text: str | None = None,
-) -> str | None:
-    for key in (
-        "article_type",
-        "type",
-        "publication_type",
-        "document_type",
-        "content_type",
-        "dc_type",
-        "nlm_article_type",
-    ):
-        value = normalize_text(str((metadata or {}).get(key) or ""))
-        if value:
-            return value
-
-    if html_text:
-        if provider == "science":
-            payload = _parse_aaas_datalayer(html_text)
-            if isinstance(payload, Mapping):
-                page = payload.get("page") if isinstance(payload.get("page"), Mapping) else {}
-                page_info = page.get("pageInfo") if isinstance(page, Mapping) and isinstance(page.get("pageInfo"), Mapping) else {}
-                article_type = normalize_text(str(page_info.get("articleType") or page_info.get("nlmArticleType") or ""))
-                if article_type:
-                    return article_type
-        for pattern in (ARTICLE_TYPE_META_PATTERN, DATA_TYPE_PATTERN):
-            match = pattern.search(html_text)
-            if match:
-                value = normalize_text(match.group(1))
-                if value:
-                    return value
-    return None
-
-
-def _is_narrative_article_type(article_type: str | None) -> bool:
-    normalized = normalize_text(article_type or "").lower()
-    return any(token in normalized for token in NARRATIVE_ARTICLE_TYPE_TOKENS)
-
-
-def _final_url_looks_like_access_page(final_url: str | None) -> bool:
-    normalized = normalize_text(final_url or "").lower()
-    if not normalized:
-        return False
-    return any(
-        token in normalized
-        for token in ("/abstract", "/summary", "/doi/abs/", "/article/access", "/access", "/article-abstract")
-    )
 
 
 def _heading_category(node_name: str, text: str, *, title: str | None = None) -> str:
@@ -2486,382 +2206,8 @@ def _postprocess_browser_workflow_markdown(
     )
 
 
-def _container_has_explicit_body_container(container: Tag) -> bool:
-    return _shared_container_has_explicit_body_container(container)
-
-
-def _iter_html_blocks(container: Tag) -> list[dict[str, Any]]:
-    return _shared_iter_html_blocks(container)
-
-
-def _classify_html_paragraph(
-    node: Tag,
-    text: str,
-    *,
-    title: str | None = None,
-    in_back_matter: bool = False,
-    in_abstract: bool = False,
-    in_data_availability: bool = False,
-) -> str:
-    return _shared_classify_html_paragraph(
-        node,
-        text,
-        title=title,
-        in_back_matter=in_back_matter,
-        in_abstract=in_abstract,
-        in_data_availability=in_data_availability,
-        looks_like_front_matter_paragraph=lambda value: _looks_like_front_matter_paragraph(value, title=title),
-        is_substantial_prose=_is_substantial_prose,
-        looks_like_access_gate_text=_looks_like_access_gate_text,
-    )
-
-
-def _run_candidate_barrier(kind: str) -> bool:
-    return kind in {"front_matter", "abstract", "references_or_back_matter", "ancillary", "data_availability"}
-
-
-def _analyze_html_structure(
-    html_text: str,
-    *,
-    provider: str | None,
-    title: str | None,
-    metadata: Mapping[str, Any] | None,
-    final_url: str | None,
-) -> tuple[StructuredBodyAnalysis, str | None, int | None]:
-    analysis = StructuredBodyAnalysis(
-        narrative_article_type=_is_narrative_article_type(_extract_article_type(metadata, provider=provider, html_text=html_text))
-    )
-    if BeautifulSoup is None:
-        return analysis, None, None
-
-    soup = BeautifulSoup(html_text, choose_parser())
-    container = select_best_container(soup, provider or "shared")
-    if container is None:
-        return analysis, None, None
-
-    clean_container(container, provider or "shared")
-    analysis.explicit_body_container = _container_has_explicit_body_container(container)
-    container_text = normalize_text(container.get_text(" ", strip=True))
-    page_text = _normalized_page_text(html_text)
-    analysis.page_has_paywall_text = _contains_pattern(page_text, PAYWALL_PATTERNS)
-    analysis.container_has_paywall_text = _contains_pattern(container_text, PAYWALL_PATTERNS)
-
-    blocks = _iter_html_blocks(container)
-    body_chunks: list[str] = []
-    in_abstract = False
-    in_back_matter = False
-    in_data_availability = False
-    abstract_seen = False
-    body_heading_after_abstract = False
-    current_run_paragraphs = 0
-    current_run_chars = 0
-
-    for block in blocks:
-        if block["kind"] == "marker":
-            analysis.explicit_body_container = True
-            continue
-
-        node = block["node"]
-        text = block["text"]
-        if block["kind"] == "heading":
-            category = _heading_category(normalize_text(node.name or "").lower(), text, title=title)
-        elif block["kind"] == "figure_or_table":
-            category = "figure_or_table"
-        else:
-            category = _classify_html_paragraph(
-                node,
-                text,
-                title=title,
-                in_back_matter=in_back_matter,
-                in_abstract=in_abstract,
-                in_data_availability=in_data_availability,
-            )
-
-        if category == "abstract":
-            abstract_seen = True
-            in_abstract = True
-            in_back_matter = False
-            in_data_availability = False
-            if current_run_paragraphs:
-                current_run_paragraphs = 0
-                current_run_chars = 0
-            continue
-        if category == "references_or_back_matter":
-            in_back_matter = True
-            in_abstract = False
-            in_data_availability = False
-            if current_run_paragraphs:
-                current_run_paragraphs = 0
-                current_run_chars = 0
-            continue
-        if category == "data_availability":
-            in_data_availability = True
-            in_abstract = False
-            in_back_matter = False
-            if current_run_paragraphs:
-                current_run_paragraphs = 0
-                current_run_chars = 0
-            continue
-        if category == "front_matter":
-            in_abstract = False
-            in_data_availability = False
-            if current_run_paragraphs:
-                current_run_paragraphs = 0
-                current_run_chars = 0
-            continue
-        if category == "ancillary":
-            in_data_availability = False
-            if current_run_paragraphs:
-                current_run_paragraphs = 0
-                current_run_chars = 0
-            continue
-        if category == "body_heading":
-            in_abstract = False
-            in_back_matter = False
-            in_data_availability = False
-            if abstract_seen:
-                body_heading_after_abstract = True
-            continue
-        if category == "figure_or_table":
-            continue
-        if category != "body_paragraph":
-            if _run_candidate_barrier(category):
-                current_run_paragraphs = 0
-                current_run_chars = 0
-            continue
-
-        in_abstract = False
-        in_back_matter = False
-        in_data_availability = False
-        analysis.body_paragraph_count += 1
-        body_chunks.append(text)
-        current_run_paragraphs += 1
-        current_run_chars += len(normalize_text(text))
-        analysis.body_run_paragraph_count = max(analysis.body_run_paragraph_count, current_run_paragraphs)
-        analysis.body_run_char_count = max(analysis.body_run_char_count, current_run_chars)
-        if abstract_seen and body_heading_after_abstract:
-            analysis.post_abstract_body_run = True
-
-    analysis.body_candidate_text = "\n\n".join(body_chunks)
-    analysis.paywall_text_outside_body_ignored = (
-        analysis.page_has_paywall_text and not analysis.container_has_paywall_text and analysis.body_paragraph_count > 0
-    )
-    analysis.paywall_gate_detected = (
-        analysis.body_paragraph_count == 0
-        and (analysis.container_has_paywall_text or _final_url_looks_like_access_page(final_url))
-    )
-    return analysis, container.name, len(" ".join(container.stripped_strings))
-
-
-def _analyze_markdown_structure(
-    markdown_text: str,
-    *,
-    metadata: Mapping[str, Any] | None,
-    title: str | None,
-) -> StructuredBodyAnalysis:
-    analysis = StructuredBodyAnalysis(
-        narrative_article_type=_is_narrative_article_type(_extract_article_type(metadata))
-    )
-    blocks = [normalize_text(block) for block in re.split(r"\n\s*\n", markdown_text) if normalize_text(block)]
-    in_abstract = False
-    in_back_matter = False
-    in_data_availability = False
-    abstract_seen = False
-    body_heading_after_abstract = False
-    current_run_paragraphs = 0
-    current_run_chars = 0
-    body_chunks: list[str] = []
-
-    for block in blocks:
-        stripped = block.strip()
-        if stripped.startswith("#"):
-            match = re.match(r"^(#+)\s*(.*)$", stripped)
-            heading = normalize_text(match.group(2) if match else stripped)
-            level = len(match.group(1)) if match else 2
-            category = _heading_category(f"h{min(level, 6)}", heading, title=title)
-        else:
-            category = "body_paragraph" if _is_substantial_prose(block) and not _looks_like_front_matter_paragraph(block, title=title) else "front_matter"
-            if in_back_matter:
-                category = "references_or_back_matter"
-            elif in_data_availability:
-                category = "data_availability"
-            elif in_abstract:
-                category = "abstract"
-            elif _looks_like_access_gate_text(block):
-                category = "ancillary"
-
-        if category == "abstract":
-            abstract_seen = True
-            in_abstract = True
-            in_back_matter = False
-            in_data_availability = False
-            current_run_paragraphs = 0
-            current_run_chars = 0
-            continue
-        if category == "references_or_back_matter":
-            in_back_matter = True
-            in_abstract = False
-            in_data_availability = False
-            current_run_paragraphs = 0
-            current_run_chars = 0
-            continue
-        if category == "data_availability":
-            in_data_availability = True
-            in_abstract = False
-            in_back_matter = False
-            current_run_paragraphs = 0
-            current_run_chars = 0
-            continue
-        if category == "front_matter":
-            in_data_availability = False
-            if current_run_paragraphs:
-                current_run_paragraphs = 0
-                current_run_chars = 0
-            continue
-        if category == "ancillary":
-            in_data_availability = False
-            if current_run_paragraphs:
-                current_run_paragraphs = 0
-                current_run_chars = 0
-            continue
-        if category == "body_heading":
-            in_abstract = False
-            in_back_matter = False
-            in_data_availability = False
-            if abstract_seen:
-                body_heading_after_abstract = True
-            continue
-        if category != "body_paragraph":
-            continue
-
-        in_abstract = False
-        in_back_matter = False
-        in_data_availability = False
-        analysis.body_paragraph_count += 1
-        body_chunks.append(block)
-        current_run_paragraphs += 1
-        current_run_chars += len(normalize_text(block))
-        analysis.body_run_paragraph_count = max(analysis.body_run_paragraph_count, current_run_paragraphs)
-        analysis.body_run_char_count = max(analysis.body_run_char_count, current_run_chars)
-        if abstract_seen and body_heading_after_abstract:
-            analysis.post_abstract_body_run = True
-
-    analysis.body_candidate_text = "\n\n".join(body_chunks)
-    return analysis
-
-
-def _structure_accepts_fulltext(analysis: StructuredBodyAnalysis) -> bool:
-    if analysis.explicit_body_container and analysis.body_paragraph_count >= 1:
-        return True
-    if analysis.post_abstract_body_run:
-        return True
-    if analysis.body_run_paragraph_count >= 3:
-        return True
-    if analysis.narrative_article_type and (
-        analysis.body_run_paragraph_count >= 2
-        or (analysis.explicit_body_container and analysis.body_run_char_count >= NARRATIVE_BODY_RUN_MIN_CHARS)
-    ):
-        return True
-    return False
-
-
 def availability_failure_message(diagnostics: FulltextAvailabilityDiagnostics) -> str:
     return _shared_availability_failure_message(diagnostics)
-
-
-def _dedupe_signals(values: list[str]) -> list[str]:
-    return list(dict.fromkeys(value for value in values if value))
-
-
-def _diagnostics_content_kind(*, body_ok: bool, has_abstract: bool) -> str:
-    if body_ok:
-        return "fulltext"
-    if has_abstract:
-        return "abstract_only"
-    return "metadata_only"
-
-
-def _normalized_text_field(value: Any) -> str:
-    return normalize_text(value) if isinstance(value, str) else ""
-
-
-def _dom_access_hints(
-    html_text: str,
-    *,
-    final_url: str | None,
-    metadata: Mapping[str, Any] | None,
-) -> tuple[list[str], list[str]]:
-    hard_negative_signals: list[str] = []
-    abstract_only_hints: list[str] = []
-    if BeautifulSoup is None:
-        if _final_url_looks_like_access_page(final_url):
-            abstract_only_hints.append("access_page_url")
-        return _dedupe_signals(hard_negative_signals), _dedupe_signals(abstract_only_hints)
-
-    soup = BeautifulSoup(html_text, choose_parser())
-    if soup.select_one(".accessDenialWidget"):
-        hard_negative_signals.append("publisher_paywall")
-    if _final_url_looks_like_access_page(final_url):
-        abstract_only_hints.append("access_page_url")
-    for node in soup.select("[data-article-access], [data-article-access-type]"):
-        attrs = getattr(node, "attrs", None) or {}
-        values = [
-            normalize_text(str(attrs.get("data-article-access") or "")),
-            normalize_text(str(attrs.get("data-article-access-type") or "")),
-        ]
-        joined = " ".join(value.lower() for value in values if value)
-        if any(token in joined for token in {"abstract", "summary", "preview", "teaser", "limited"}):
-            abstract_only_hints.append("data_article_access_abstract")
-        if any(token in joined for token in {"denied", "subscription", "restricted", "paywall"}):
-            hard_negative_signals.append("publisher_paywall")
-    for node in soup.select("[itemprop='isAccessibleForFree']"):
-        value = normalize_text(str((getattr(node, "attrs", None) or {}).get("content") or node.get_text(" ", strip=True))).lower()
-        if value in {"false", "0", "no"}:
-            hard_negative_signals.append("publisher_paywall")
-    wt_node = soup.select_one("meta[name='WT.z_cg_type']")
-    if wt_node is not None:
-        wt_value = normalize_text(str((getattr(wt_node, "attrs", None) or {}).get("content") or "")).lower()
-        if "abstract" in wt_value or "summary" in wt_value:
-            abstract_only_hints.append("wt_abstract_page_type")
-    citation_abstract_url = normalize_text(str((metadata or {}).get("citation_abstract_html_url") or ""))
-    citation_fulltext_url = normalize_text(str((metadata or {}).get("citation_fulltext_html_url") or ""))
-    normalized_final_url = normalize_text(final_url or "")
-    if citation_abstract_url:
-        abstract_only_hints.append("citation_abstract_html_url")
-        if normalized_final_url and normalized_final_url == citation_abstract_url:
-            abstract_only_hints.append("final_url_matches_citation_abstract_html_url")
-    if citation_fulltext_url and normalized_final_url and normalized_final_url == citation_fulltext_url:
-        hard_negative_signals = [signal for signal in hard_negative_signals if signal != "publisher_paywall"]
-    return _dedupe_signals(hard_negative_signals), _dedupe_signals(abstract_only_hints)
-
-
-def _count_figures_from_html(html_text: str) -> int:
-    lowered = html_text.lower()
-    if BeautifulSoup is None:
-        return lowered.count("<figure")
-    soup = BeautifulSoup(html_text, choose_parser())
-    figure_count = len(soup.find_all("figure"))
-    if figure_count:
-        return figure_count
-    return len(soup.select(".figure, .figure-wrap, [data-open='viewer']"))
-
-
-def _parse_aaas_datalayer(html_text: str) -> Mapping[str, Any] | None:
-    match = AAAS_DATALAYER_PATTERN.search(html_text)
-    if not match:
-        return None
-    try:
-        payload = json.loads(match.group(1))
-    except json.JSONDecodeError:
-        return None
-    return payload if isinstance(payload, Mapping) else None
-
-
-def _provider_positive_signals(
-    provider: str | None,
-    html_text: str,
-) -> tuple[list[str], list[str], list[str]]:
-    return _profile_positive_signals(provider, html_text)
 
 
 def assess_html_fulltext_availability(

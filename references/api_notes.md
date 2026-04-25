@@ -1,6 +1,6 @@
 # Publisher Route Notes
 
-This file is a human-maintained route reference for v1. Runtime behavior is authoritative in `src/paper_fetch/providers/`, `src/paper_fetch/publisher_identity.py`, and `src/paper_fetch/workflow/`. Elsevier is the primary structured XML/API full-text route; Wiley additionally has an optional TDM API PDF lane. Springer, Wiley HTML/browser PDF, Science, and PNAS are provider-managed routes with the constraints below.
+This file is a human-maintained route reference for v1. Runtime behavior is authoritative in `src/paper_fetch/providers/`, `src/paper_fetch/publisher_identity.py`, and `src/paper_fetch/workflow/`. Provider fallback order is now composed through the internal `_waterfall` runner, while provider steps keep their own payloads, warnings, and source markers. Elsevier is the primary structured XML/API full-text route; Wiley additionally has an optional TDM API PDF lane. Springer, Wiley HTML/browser PDF, Science, and PNAS are provider-managed routes with the constraints below.
 
 ## Elsevier
 

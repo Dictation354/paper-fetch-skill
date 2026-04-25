@@ -11,7 +11,6 @@ from typing import Any, Callable, Mapping
 from ..config import build_user_agent
 from ..extraction.html import decode_html
 from ..extraction.html.signals import SciencePnasHtmlFailure
-from ..http import RequestFailure
 from ..metadata_types import ProviderMetadata
 from ..models import AssetProfile, article_from_markdown, metadata_only_article
 from ..publisher_identity import normalize_doi
@@ -32,7 +31,8 @@ from ._science_pnas_profiles import (
     extract_pdf_url_from_crossref,
     preferred_html_candidate_from_landing_page,
 )
-from .base import ProviderArtifacts, ProviderClient, ProviderContent, ProviderFailure, ProviderFetchResult, RawFulltextPayload
+from ._waterfall import ProviderWaterfallStep, run_provider_waterfall
+from .base import PreparedFetchResultPayload, ProviderArtifacts, ProviderClient, ProviderContent, ProviderFailure, RawFulltextPayload
 from .html_assets import (
     download_figure_assets_with_image_document_fetcher,
     extract_full_size_figure_image_url,
@@ -1063,135 +1063,108 @@ class BrowserWorkflowClient(ProviderClient):
                 source_trail=[f"fulltext:{self.name}_html_fail"],
             )
 
-        bootstrap.warnings.append(
-            (
-                f"{self.name} HTML route was not usable "
-                f"({bootstrap.html_failure_reason or 'html_failed'}); attempting PDF fallback."
-            )
+        initial_warning = (
+            f"{self.name} HTML route was not usable "
+            f"({bootstrap.html_failure_reason or 'html_failed'}); attempting PDF fallback."
         )
 
-        try:
-            return fetch_seeded_browser_pdf_payload(
-                provider=self.name,
-                runtime=bootstrap.runtime,
-                pdf_candidates=bootstrap.pdf_candidates,
-                html_candidates=bootstrap.html_candidates,
-                landing_page_url=bootstrap.landing_page_url,
-                user_agent=self.user_agent,
-                browser_context_seed=bootstrap.browser_context_seed,
-                html_failure_reason=bootstrap.html_failure_reason,
-                html_failure_message=bootstrap.html_failure_message,
-                warnings=bootstrap.warnings,
-                success_source_trail=[
-                    f"fulltext:{self.name}_html_fail",
-                    f"fulltext:{self.name}_pdf_fallback_ok",
-                ],
-            )
-        except PdfFallbackFailure as exc:
-            reason = bootstrap.html_failure_message or f"{self.name} HTML route failed."
-            raise ProviderFailure(
-                "no_result",
-                (
-                    f"{self.name} full text could not be retrieved via HTML or PDF fallback. "
-                    f"HTML failure: {reason} PDF failure: {exc.message}"
-                ),
-            ) from exc
+        def run_pdf_fallback(_state) -> RawFulltextPayload:
+            try:
+                return fetch_seeded_browser_pdf_payload(
+                    provider=self.name,
+                    runtime=bootstrap.runtime,
+                    pdf_candidates=bootstrap.pdf_candidates,
+                    html_candidates=bootstrap.html_candidates,
+                    landing_page_url=bootstrap.landing_page_url,
+                    user_agent=self.user_agent,
+                    browser_context_seed=bootstrap.browser_context_seed,
+                    html_failure_reason=bootstrap.html_failure_reason,
+                    html_failure_message=bootstrap.html_failure_message,
+                    warnings=[],
+                    success_source_trail=[],
+                )
+            except PdfFallbackFailure as exc:
+                reason = bootstrap.html_failure_message or f"{self.name} HTML route failed."
+                raise ProviderFailure(
+                    "no_result",
+                    (
+                        f"{self.name} full text could not be retrieved via HTML or PDF fallback. "
+                        f"HTML failure: {reason} PDF failure: {exc.message}"
+                    ),
+                ) from exc
 
-    def fetch_result(
+        return run_provider_waterfall(
+            [
+                ProviderWaterfallStep(
+                    label="pdf",
+                    run=run_pdf_fallback,
+                    success_markers=(f"fulltext:{self.name}_pdf_fallback_ok",),
+                )
+            ],
+            initial_warnings=[*bootstrap.warnings, initial_warning],
+            initial_source_trail=[f"fulltext:{self.name}_html_fail"],
+        )
+
+    def maybe_recover_fetch_result_payload(
         self,
         doi: str,
         metadata: Mapping[str, Any],
-        output_dir,
+        prepared: PreparedFetchResultPayload,
         *,
         asset_profile: AssetProfile = "none",
-    ) -> ProviderFetchResult:
-        raw_payload = self.fetch_raw_fulltext(doi, metadata)
+    ) -> PreparedFetchResultPayload:
+        raw_payload = prepared.raw_payload
         content = raw_payload.content
-        if content is not None and content.needs_local_copy != raw_payload.needs_local_copy:
-            content = replace(content, needs_local_copy=raw_payload.needs_local_copy)
-            raw_payload.content = content
+        if content is None or normalize_text(content.route_kind).lower() != "html":
+            return prepared
 
-        provisional_article = None
-        abstract_only_result_warnings: list[str] = []
-        if content is not None and normalize_text(content.route_kind).lower() == "html":
-            provisional_article = self.to_article_model(metadata, raw_payload)
-            if provisional_article.quality.content_kind == "abstract_only" and self.allow_pdf_fallback_after_html_failure(
-                html_failure_reason="abstract_only",
-                html_failure_message=f"{self.name} HTML route only exposed abstract-level content after markdown extraction.",
-            ):
-                try:
-                    recovered_payload = self._recover_pdf_payload_from_abstract_only_html(doi, metadata, raw_payload)
-                except (ProviderFailure, PdfFallbackFailure):
-                    provider_label = "PNAS" if self.name == "pnas" else self.name
-                    abstract_only_result_warnings.append(
-                        (
-                            f"{provider_label} HTML route only exposed abstract-level content after markdown extraction, "
-                            "and PDF fallback did not return usable full text; returning abstract-only content."
-                        )
-                    )
-                else:
-                    raw_payload = recovered_payload
-                    content = raw_payload.content
-                    if content is not None and content.needs_local_copy != raw_payload.needs_local_copy:
-                        content = replace(content, needs_local_copy=raw_payload.needs_local_copy)
-                        raw_payload.content = content
-                    provisional_article = None
+        provisional_article = self.to_article_model(metadata, raw_payload)
+        prepared.provisional_article = provisional_article
+        if provisional_article.quality.content_kind != "abstract_only":
+            return prepared
 
-        artifact_policy = self.describe_artifacts(raw_payload)
-        downloaded_assets: list[Mapping[str, Any]] = []
-        asset_failures: list[Mapping[str, Any]] = []
-        warnings = list(raw_payload.warnings)
-        trace = list(raw_payload.trace)
-        if (
-            output_dir is not None
-            and asset_profile != "none"
-            and artifact_policy.allow_related_assets
-            and (provisional_article is None or provisional_article.quality.content_kind == "fulltext")
+        if not self.allow_pdf_fallback_after_html_failure(
+            html_failure_reason="abstract_only",
+            html_failure_message=f"{self.name} HTML route only exposed abstract-level content after markdown extraction.",
         ):
-            try:
-                asset_results = self.download_related_assets(
-                    doi,
-                    metadata,
-                    raw_payload,
-                    output_dir,
-                    asset_profile=asset_profile,
-                )
-                downloaded_assets = list(asset_results.get("assets") or [])
-                asset_failures = list(asset_results.get("asset_failures") or [])
-            except ProviderFailure as exc:
-                warnings.append(f"{self.name.replace('_', ' ').title()} related assets could not be downloaded: {exc.message}")
-                trace.extend(trace_from_markers([f"download:{self.name}_assets_failed"]))
-            except (RequestFailure, OSError) as exc:
-                warnings.append(f"{self.name.replace('_', ' ').title()} related assets could not be downloaded: {exc}")
-                trace.extend(trace_from_markers([f"download:{self.name}_assets_failed"]))
+            return prepared
 
-        if provisional_article is not None and not downloaded_assets and not asset_failures:
-            article = provisional_article
-        else:
-            article = self.to_article_model(
-                metadata,
-                raw_payload,
-                downloaded_assets=downloaded_assets,
-                asset_failures=asset_failures,
+        try:
+            recovered_payload = self._recover_pdf_payload_from_abstract_only_html(doi, metadata, raw_payload)
+        except (ProviderFailure, PdfFallbackFailure):
+            provider_label = "PNAS" if self.name == "pnas" else self.name
+            prepared.finalize_warnings.append(
+                (
+                    f"{provider_label} HTML route only exposed abstract-level content after markdown extraction, "
+                    "and PDF fallback did not return usable full text; returning abstract-only content."
+                )
             )
-        if article.quality.content_kind == "abstract_only":
-            article = _finalize_abstract_only_provider_article(
-                self.name,
-                article,
-                warnings=abstract_only_result_warnings,
-            )
-        artifacts = self.describe_artifacts(
-            raw_payload,
-            downloaded_assets=downloaded_assets,
-            asset_failures=asset_failures,
-        )
-        return ProviderFetchResult(
-            provider=raw_payload.provider or self.name,
-            article=article,
-            content=content,
-            warnings=warnings,
-            trace=list(trace or trace_from_markers(article.quality.source_trail)),
-            artifacts=artifacts,
+            return prepared
+
+        return PreparedFetchResultPayload(raw_payload=recovered_payload)
+
+    def should_download_related_assets_for_result(
+        self,
+        raw_payload: RawFulltextPayload,
+        *,
+        provisional_article=None,
+    ) -> bool:
+        return provisional_article is None or provisional_article.quality.content_kind == "fulltext"
+
+    def finalize_fetch_result_article(
+        self,
+        article,
+        *,
+        raw_payload: RawFulltextPayload,
+        provisional_article=None,
+        finalize_warnings: list[str] | None = None,
+    ):
+        if article.quality.content_kind != "abstract_only":
+            return article
+        return _finalize_abstract_only_provider_article(
+            self.name,
+            article,
+            warnings=list(finalize_warnings or []),
         )
 
     def download_related_assets(
