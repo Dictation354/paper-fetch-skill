@@ -1645,7 +1645,7 @@ def _asset_link_field(asset: Asset | Mapping[str, Any], field: str) -> str | Non
 
 def _asset_markdown_reference_candidates(asset: Asset | Mapping[str, Any]) -> set[str]:
     candidates: set[str] = set()
-    for field in (
+    for asset_field in (
         "path",
         "url",
         "original_url",
@@ -1655,7 +1655,7 @@ def _asset_markdown_reference_candidates(asset: Asset | Mapping[str, Any]) -> se
         "full_size_url",
         "link",
     ):
-        candidates |= _image_reference_candidates(_asset_link_field(asset, field))
+        candidates |= _image_reference_candidates(_asset_link_field(asset, asset_field))
     return candidates
 
 

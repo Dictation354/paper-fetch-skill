@@ -237,7 +237,6 @@ def render_container_markdown(
     if BeautifulSoup is None or node is None:
         return
 
-    skipped_heading = False
     for child in node.children:
         if isinstance(child, NavigableString):
             text = normalize_text(str(child))
@@ -264,9 +263,7 @@ def render_container_markdown(
                 skip_first_heading
                 and normalize_section_title(heading_text) == normalize_section_title(skip_first_heading)
             ):
-                skipped_heading = True
                 continue
-            skipped_heading = True
             if heading_text:
                 lines.extend([f"{'#' * max(2, min(level, 6))} {heading_text}", ""])
             continue

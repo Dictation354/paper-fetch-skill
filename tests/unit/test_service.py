@@ -18,7 +18,6 @@ from ._paper_fetch_support import (
     fetch_paper_model,
     fulltext_pdf_bytes,
     sample_article,
-    sample_html_article,
 )
 
 
