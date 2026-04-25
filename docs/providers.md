@@ -55,6 +55,8 @@ domain > publisher > DOI fallback
 - `DOI fallback`
   - 在前两类信号都不够时，才使用 DOI 前缀兜底。
 
+这些 provider 身份与能力配置统一来自 `paper_fetch.provider_catalog.PROVIDER_CATALOG`。Catalog 固定记录 provider 名称、展示名、official 标记、domain / DOI prefix / publisher alias、默认 asset 策略、probe 能力、abstract-only 策略、client factory 路径和 MCP status 顺序；`publisher_identity`、workflow routing、默认 asset profile、registry 与 provider status 列表都从这里派生。
+
 ### `provider_hint` 的含义
 
 - `resolve_paper().provider_hint` 表示“当前最可信的 provider 提示”。

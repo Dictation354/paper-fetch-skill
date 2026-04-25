@@ -35,6 +35,7 @@ from ..models import (
     coerce_semantic_losses,
     coerce_token_estimate_breakdown,
 )
+from ..provider_catalog import provider_status_order
 from ..providers.base import ProviderFailure, ProviderStatusResult, build_provider_status_check
 from ..providers.registry import build_clients
 from ..service import PaperFetchFailure, fetch_paper as service_fetch_paper
@@ -68,7 +69,7 @@ _FETCH_ENVELOPE_CACHE_VERSION = 2
 _FETCH_ENVELOPE_EXTRACTION_REVISION = EXTRACTION_REVISION
 _FETCH_PROGRESS_TOTAL = 4
 _FETCH_LOGGER_NAMES = ("paper_fetch.service", "paper_fetch.http")
-_PROVIDER_STATUS_ORDER = ("crossref", "elsevier", "springer", "wiley", "science", "pnas")
+_PROVIDER_STATUS_ORDER = provider_status_order()
 _LOG_LEVEL_BY_RECORD_LEVEL = {
     logging.DEBUG: "debug",
     logging.INFO: "info",

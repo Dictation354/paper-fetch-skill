@@ -8,9 +8,9 @@ import urllib.parse
 from typing import Any, Callable, Mapping
 
 from ..models import normalize_markdown_text
+from ..extraction.html.semantics import BACK_MATTER_TOKENS, heading_category, node_identity_text, normalize_heading
+from ..markdown.citations import clean_citation_markers, normalize_inline_citation_markdown
 from ..utils import normalize_text
-from ._html_structure import BACK_MATTER_TOKENS, heading_category, node_identity_text, normalize_heading
-from ._html_citations import clean_citation_markers, normalize_inline_citation_markdown
 from ._html_tables import inject_inline_table_blocks as _shared_inject_inline_table_blocks
 
 try:

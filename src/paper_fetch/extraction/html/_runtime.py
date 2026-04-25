@@ -6,12 +6,12 @@ import re
 from html.parser import HTMLParser
 from typing import Any, Mapping
 
+from ...extraction.html.language import collect_html_abstract_blocks, html_node_language_hint
+from ...extraction.html.semantics import HTML_SECTION_HINT_KINDS, collect_html_section_hints
+from ...extraction.html.signals import contains_access_gate_text
 from ...models import normalize_markdown_text, normalize_text
 from ...publisher_identity import normalize_doi
-from ...providers._html_access_signals import contains_access_gate_text
-from ...providers._html_semantics import HTML_SECTION_HINT_KINDS, collect_html_section_hints
 from ...publisher_identity import extract_doi as extract_doi_from_text
-from ...providers._language_filter import collect_html_abstract_blocks, html_node_language_hint
 
 try:
     import trafilatura

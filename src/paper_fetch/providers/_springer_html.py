@@ -25,9 +25,9 @@ from ..extraction.html._runtime import (
     extract_article_markdown_from_cleaned_html,
     prune_html_tree,
 )
+from ..extraction.html.language import collect_html_abstract_blocks, html_node_language_hint
+from ..extraction.html.semantics import collect_html_section_hints
 from ..utils import dedupe_authors, normalize_text
-from ._html_semantics import collect_html_section_hints
-from ._language_filter import collect_html_abstract_blocks, html_node_language_hint
 from ._html_references import extract_numbered_references_from_html
 from .html_springer_nature import (
     clean_springer_nature_text_fragment,

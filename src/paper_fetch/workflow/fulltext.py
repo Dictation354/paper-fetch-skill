@@ -11,6 +11,7 @@ from ..config import build_runtime_env
 from ..http import HttpTransport
 from ..logging_utils import emit_structured_log
 from ..models import ArticleModel, AssetProfile, metadata_only_article
+from ..provider_catalog import provider_managed_abstract_only_names
 from ..providers.base import ProviderArtifacts, ProviderFailure, ProviderFetchResult
 from ..providers.registry import build_clients
 from ..tracing import trace_from_markers
@@ -31,7 +32,7 @@ from .shared import source_trail_for_failure
 from .types import FetchStrategy, PaperFetchFailure
 
 logger = logging.getLogger("paper_fetch.service")
-PROVIDER_MANAGED_ABSTRACT_ONLY_PROVIDERS = {"springer", "wiley", "science", "pnas"}
+PROVIDER_MANAGED_ABSTRACT_ONLY_PROVIDERS = provider_managed_abstract_only_names()
 ACCEPTABLE_PREVIEW_MIN_WIDTH = 300
 ACCEPTABLE_PREVIEW_MIN_HEIGHT = 200
 

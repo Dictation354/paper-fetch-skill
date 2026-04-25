@@ -12,24 +12,11 @@ from dataclasses import asdict, dataclass, field
 from typing import Any, Mapping
 
 from ..metadata_types import ProviderMetadata
-from ..models import normalize_markdown_text
-from ..utils import normalize_text
-from ._article_markdown_math import render_external_mathml_expression
-from ._html_access_signals import (
-    CHALLENGE_PATTERNS,
-    PAYWALL_PATTERNS,
-    SciencePnasHtmlFailure as _SharedSciencePnasHtmlFailure,
-    detect_html_access_signals,
-    detect_html_block as _shared_detect_html_block,
-    summarize_html as _shared_summarize_html,
+from ..extraction.html.language import (
+    collect_html_abstract_blocks as _shared_collect_html_abstract_blocks,
+    html_node_language_hint as _shared_html_node_language_hint,
 )
-from ._html_availability import (
-    assess_html_fulltext_availability as _shared_assess_html_fulltext_availability,
-    assess_plain_text_fulltext_availability as _shared_assess_plain_text_fulltext_availability,
-    assess_structured_article_fulltext_availability as _shared_assess_structured_article_fulltext_availability,
-    availability_failure_message as _shared_availability_failure_message,
-)
-from ._html_semantics import (
+from ..extraction.html.semantics import (
     ABSTRACT_ATTR_TOKENS as ABSTRACT_TOKENS,
     ANCILLARY_TOKENS,
     BACK_MATTER_TOKENS,
@@ -46,17 +33,30 @@ from ._html_semantics import (
     normalize_heading,
     ancestor_identity_text as _shared_ancestor_identity_text,
 )
-from ._html_citations import is_citation_link, make_numeric_citation_sentinel, numeric_citation_payload
+from ..extraction.html.signals import (
+    CHALLENGE_PATTERNS,
+    PAYWALL_PATTERNS,
+    SciencePnasHtmlFailure as _SharedSciencePnasHtmlFailure,
+    detect_html_access_signals,
+    detect_html_block as _shared_detect_html_block,
+    summarize_html as _shared_summarize_html,
+)
+from ..markdown.citations import is_citation_link, make_numeric_citation_sentinel, numeric_citation_payload
+from ..models import normalize_markdown_text
+from ..quality.html_availability import (
+    assess_html_fulltext_availability as _shared_assess_html_fulltext_availability,
+    assess_plain_text_fulltext_availability as _shared_assess_plain_text_fulltext_availability,
+    assess_structured_article_fulltext_availability as _shared_assess_structured_article_fulltext_availability,
+    availability_failure_message as _shared_availability_failure_message,
+)
+from ..utils import normalize_text
+from ._article_markdown_math import render_external_mathml_expression
 from ._html_tables import (
     inject_inline_table_blocks as _shared_inject_inline_table_blocks,
     render_table_inline_text as _shared_render_table_inline_text,
     render_table_markdown as _shared_render_table_markdown,
     table_headers_and_data as _shared_table_headers_and_data,
     table_placeholder as _shared_table_placeholder,
-)
-from ._language_filter import (
-    collect_html_abstract_blocks as _shared_collect_html_abstract_blocks,
-    html_node_language_hint as _shared_html_node_language_hint,
 )
 from ._science_pnas_postprocess import (
     normalize_browser_workflow_markdown as _shared_normalize_browser_workflow_markdown,

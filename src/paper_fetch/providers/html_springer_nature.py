@@ -7,8 +7,8 @@ import urllib.parse
 from typing import Any
 
 from ..models import normalize_text
-from ._html_citations import clean_citation_markers, normalize_inline_citation_markdown
-from ._html_semantics import identity_category, node_identity_text
+from ..extraction.html.semantics import identity_category, node_identity_text
+from ..markdown.citations import clean_citation_markers, normalize_inline_citation_markdown
 from ._html_section_markdown import (
     extract_section_title,
     normalize_section_title,

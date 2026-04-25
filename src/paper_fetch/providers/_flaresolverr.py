@@ -29,6 +29,8 @@ from ..config import (
     resolve_flaresolverr_url,
     resolve_user_data_dir,
 )
+from ..extraction.html.signals import detect_html_block, summarize_html
+from ..quality.html_availability import choose_parser, extract_page_title
 from ..utils import normalize_text, sanitize_filename
 from .base import (
     ProviderFailure,
@@ -36,8 +38,6 @@ from .base import (
     build_provider_status_check,
     provider_status_check_from_failure,
 )
-from ._html_access_signals import detect_html_block, summarize_html
-from ._html_availability import choose_parser, extract_page_title
 from ._science_pnas_profiles import looks_like_abstract_redirect
 
 try:

@@ -10,9 +10,9 @@ from pathlib import Path
 from typing import Any, Mapping
 
 from ..http import DEFAULT_FULLTEXT_TIMEOUT_SECONDS, HttpTransport, RequestFailure
+from ..extraction.html.signals import detect_html_block, summarize_html
 from ..utils import normalize_text
 from ._pdf_candidates import extract_pdf_candidate_urls_from_html
-from ._html_access_signals import detect_html_block, summarize_html
 from ._pdf_common import (
     PdfFetchFailure,
     PdfFetchResult,

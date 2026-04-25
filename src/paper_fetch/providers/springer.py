@@ -29,7 +29,7 @@ from ._html_tables import inject_inline_table_blocks, render_table_markdown, tab
 from .html_assets import html_asset_identity_key
 from ._pdf_candidates import build_springer_pdf_candidates
 from ._pdf_fallback import PdfFetchFailure, fetch_pdf_over_http
-from ._html_availability import assess_html_fulltext_availability, availability_failure_message
+from ..quality.html_availability import assess_html_fulltext_availability, availability_failure_message
 from .base import (
     ProviderArtifacts,
     ProviderClient,

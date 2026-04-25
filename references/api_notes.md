@@ -34,7 +34,7 @@ This file is a human-maintained route reference for v1. Runtime behavior is auth
   - Preferred landing URL comes from merged metadata; if missing, the runtime resolves `https://doi.org/{doi}` and follows the final landing page.
   - HTML extraction is provider-owned and reuses the existing HTML parsing stack internally.
   - Springer / Nature HTML cleanup removes site chrome such as save actions, aims/scope blocks, duplicate title headings, preview notices, and figure download-control text.
-  - Nature / Springer inline table pages are injected back into the body; known image-only Extended Data Tables can be retained as table image assets or explicit degraded placeholders.
+  - Nature / Springer inline table pages are injected back into the body; known image-only Extended Data Tables can be retained as table image assets or explicit `[Table body unavailable: ...]` placeholders.
   - Raw `span.mathjax-tex` content is normalized through the shared LaTeX macro normalizer before Markdown rendering.
 - Route when:
   - The landing-page domain or Crossref publisher-name signal maps to `springer`, or

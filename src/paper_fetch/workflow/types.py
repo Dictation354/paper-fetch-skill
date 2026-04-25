@@ -6,25 +6,33 @@ from dataclasses import dataclass
 from typing import Any
 
 from ..models import AssetProfile
+from ..provider_catalog import (
+    SOURCE_PROVIDER_MAP,
+    default_asset_profile_for_provider,
+    default_asset_profile_for_source,
+    provider_names,
+)
 from ..utils import normalize_text
 
-HTML_BODY_ASSET_DEFAULT_PROVIDERS = frozenset({"springer", "wiley", "science", "pnas"})
-HTML_BODY_ASSET_DEFAULT_SOURCES = frozenset({"springer_html", "wiley_browser", "science", "pnas"})
-ALLOWED_PREFERRED_PROVIDERS = frozenset({"elsevier", "springer", "wiley", "science", "pnas", "crossref"})
+HTML_BODY_ASSET_DEFAULT_PROVIDERS = frozenset(
+    provider for provider in provider_names() if default_asset_profile_for_provider(provider) == "body"
+)
+HTML_BODY_ASSET_DEFAULT_SOURCES = frozenset(
+    source
+    for source in SOURCE_PROVIDER_MAP
+    if default_asset_profile_for_source(source) == "body"
+)
+ALLOWED_PREFERRED_PROVIDERS = frozenset(provider_names())
 
 
 def provider_default_asset_profile(provider_name: str | None) -> AssetProfile:
     normalized = normalize_text(provider_name).lower()
-    if normalized in HTML_BODY_ASSET_DEFAULT_PROVIDERS:
-        return "body"
-    return "none"
+    return default_asset_profile_for_provider(normalized)
 
 
 def source_default_asset_profile(source_name: str | None) -> AssetProfile:
     normalized = normalize_text(source_name).lower()
-    if normalized in HTML_BODY_ASSET_DEFAULT_SOURCES:
-        return "body"
-    return "none"
+    return default_asset_profile_for_source(normalized)
 
 
 def effective_asset_profile(

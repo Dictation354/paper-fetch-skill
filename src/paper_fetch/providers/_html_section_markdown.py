@@ -9,7 +9,7 @@ from typing import Any
 from ..formula.convert import normalize_latex_macros
 from ..models import normalize_text
 from ._article_markdown_math import render_external_mathml_expression, render_mathml_expression
-from ._html_citations import is_citation_link, make_numeric_citation_sentinel, numeric_citation_payload
+from ..markdown.citations import is_citation_link, make_numeric_citation_sentinel, numeric_citation_payload
 from .html_noise import HTML_BLOCK_TAGS, HTML_DROP_TAGS, should_drop_html_element
 
 try:

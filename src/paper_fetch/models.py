@@ -12,7 +12,7 @@ from dataclasses import asdict, dataclass, field
 from difflib import SequenceMatcher
 from typing import Any, Literal, Mapping
 
-from .providers._html_citations import normalize_inline_citation_markdown
+from .markdown.citations import normalize_inline_citation_markdown
 from .publisher_identity import normalize_doi
 from .tracing import TraceEvent, source_trail_from_trace, trace_from_markers
 from .utils import normalize_text, safe_text
@@ -465,7 +465,7 @@ def section_kind_for_heading(heading: str) -> str:
         return "supplementary"
     if normalized in {"conversion notes"}:
         return "diagnostics"
-    from .providers._html_semantics import heading_category as html_heading_category
+    from .extraction.html.semantics import heading_category as html_heading_category
 
     category = html_heading_category("h2", heading)
     if category == "data_availability":
@@ -2607,7 +2607,7 @@ def article_from_structure(
     diagnostics_payload = availability_diagnostics
     has_provider_diagnostics = diagnostics_payload is not None
     if diagnostics_payload is None:
-        from .providers._html_availability import assess_structured_article_fulltext_availability
+        from .quality.html_availability import assess_structured_article_fulltext_availability
 
         diagnostics_payload = assess_structured_article_fulltext_availability(article, title=article_metadata.title).to_dict()
     return apply_quality_assessment(
@@ -2711,7 +2711,7 @@ def article_from_markdown(
     diagnostics_payload = availability_diagnostics
     has_provider_diagnostics = diagnostics_payload is not None
     if diagnostics_payload is None:
-        from .providers._html_availability import assess_plain_text_fulltext_availability
+        from .quality.html_availability import assess_plain_text_fulltext_availability
 
         diagnostics_payload = assess_plain_text_fulltext_availability(
             normalized,

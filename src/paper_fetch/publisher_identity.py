@@ -7,49 +7,21 @@ import urllib.parse
 import unicodedata
 
 from .normalize_journal_name import normalize_journal_name
+from .provider_catalog import (
+    PROVIDER_CATALOG,
+    doi_prefix_provider_map,
+    provider_display_names,
+    url_provider_tokens,
+)
 
-PROVIDER_DISPLAY_NAMES = {
-    "springer": "Springer",
-    "elsevier": "Elsevier",
-    "wiley": "Wiley",
-    "science": "Science",
-    "pnas": "PNAS",
-    "crossref": "Crossref",
-}
+PROVIDER_DISPLAY_NAMES = provider_display_names()
 PUBLISHER_PROVIDER_MAP = {
-    "springer": "springer",
-    "springer nature": "springer",
-    "springer science and business media llc": "springer",
-    "elsevier": "elsevier",
-    "elsevier bv": "elsevier",
-    "elsevier ltd": "elsevier",
-    "elsevier masson sas": "elsevier",
-    "wiley": "wiley",
-    "wiley blackwell": "wiley",
-    "john wiley and sons": "wiley",
-    "john wiley sons": "wiley",
-    "american association for the advancement of science": "science",
-    "aaas": "science",
-    "proceedings of the national academy of sciences": "pnas",
-    "proceedings of the national academy of sciences of the united states of america": "pnas",
+    normalize_journal_name(alias): spec.name
+    for spec in PROVIDER_CATALOG.values()
+    for alias in spec.publisher_aliases
 }
-DOI_PREFIX_PROVIDER_MAP = {
-    "10.1038/": "springer",
-    "10.1007/": "springer",
-    "10.1186/": "springer",
-    "10.1016/": "elsevier",
-    "10.1002/": "wiley",
-    "10.1111/": "wiley",
-    "10.1126/": "science",
-    "10.1073/": "pnas",
-}
-URL_PROVIDER_TOKENS = {
-    "elsevier": ("sciencedirect.com", "elsevier.com"),
-    "springer": ("springer.com", "springernature.com", "nature.com", "biomedcentral.com"),
-    "wiley": ("wiley.com", "onlinelibrary.wiley.com"),
-    "science": ("science.org",),
-    "pnas": ("pnas.org",),
-}
+DOI_PREFIX_PROVIDER_MAP = doi_prefix_provider_map()
+URL_PROVIDER_TOKENS = url_provider_tokens()
 DOI_PATTERN = re.compile(r"10\.\d{4,9}/[^\s\"'<>]+", flags=re.IGNORECASE)
 DOI_DASH_TRANSLATION = str.maketrans(
     {

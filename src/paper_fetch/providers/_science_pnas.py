@@ -10,6 +10,7 @@ from typing import Any, Callable, Mapping
 
 from ..config import build_user_agent
 from ..extraction.html import decode_html
+from ..extraction.html.signals import SciencePnasHtmlFailure
 from ..http import RequestFailure
 from ..metadata_types import ProviderMetadata
 from ..models import AssetProfile, article_from_markdown, metadata_only_article
@@ -26,7 +27,6 @@ from ._flaresolverr import (
     warm_browser_context_with_flaresolverr,
 )
 from ._pdf_fallback import PdfFallbackFailure, fetch_pdf_with_playwright
-from ._html_access_signals import SciencePnasHtmlFailure
 from ._science_pnas_html import extract_science_pnas_markdown, rewrite_inline_figure_links
 from ._science_pnas_profiles import (
     extract_pdf_url_from_crossref,

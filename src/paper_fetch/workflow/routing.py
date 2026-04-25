@@ -8,6 +8,7 @@ from ..config import build_runtime_env, build_user_agent
 from ..extraction.html import decode_html, parse_html_metadata
 from ..http import HttpTransport, RequestFailure
 from ..metadata_types import ProviderMetadata
+from ..provider_catalog import official_provider_names
 from ..providers.base import ProviderFailure
 from ..providers.registry import build_clients
 from ..publisher_identity import (
@@ -21,7 +22,7 @@ from ..utils import choose_public_landing_page_url, extend_unique, normalize_tex
 from .resolution import resolve_paper
 from .types import FetchStrategy, HasFulltextProbeResult, PaperFetchFailure, RouteProbeResult
 
-OFFICIAL_PROVIDER_NAMES = ("elsevier", "springer", "wiley", "science", "pnas")
+OFFICIAL_PROVIDER_NAMES = official_provider_names()
 
 
 def provider_allowed(provider_name: str | None, strategy: FetchStrategy) -> bool:

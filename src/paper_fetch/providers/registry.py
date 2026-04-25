@@ -2,17 +2,21 @@
 
 from __future__ import annotations
 
+import importlib
 from typing import Mapping
 
 from ..config import build_runtime_env
 from ..http import HttpTransport
+from ..provider_catalog import ordered_provider_specs
 from .base import ProviderClient
-from .crossref import CrossrefClient
-from .elsevier import ElsevierClient
-from .pnas import PnasClient
-from .science import ScienceClient
-from .springer import SpringerClient
-from .wiley import WileyClient
+
+
+def _client_factory(factory_path: str):
+    module_path, _, attribute = factory_path.partition(":")
+    if not module_path or not attribute:
+        raise ValueError(f"Invalid provider client factory path: {factory_path!r}")
+    module = importlib.import_module(module_path)
+    return getattr(module, attribute)
 
 
 def build_clients(
@@ -21,11 +25,8 @@ def build_clients(
 ) -> dict[str, ProviderClient]:
     active_transport = transport if transport is not None else HttpTransport()
     active_env = env if env is not None else build_runtime_env()
-    return {
-        "crossref": CrossrefClient(active_transport, active_env),
-        "elsevier": ElsevierClient(active_transport, active_env),
-        "pnas": PnasClient(active_transport, active_env),
-        "science": ScienceClient(active_transport, active_env),
-        "springer": SpringerClient(active_transport, active_env),
-        "wiley": WileyClient(active_transport, active_env),
-    }
+    clients: dict[str, ProviderClient] = {}
+    for spec in ordered_provider_specs():
+        factory = _client_factory(spec.client_factory_path)
+        clients[spec.name] = factory(active_transport, active_env)
+    return clients

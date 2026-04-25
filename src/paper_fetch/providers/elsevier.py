@@ -40,7 +40,7 @@ from ._pdf_common import (
     looks_like_pdf_payload,
     pdf_fetch_result_from_bytes,
 )
-from ._html_availability import (
+from ..quality.html_availability import (
     assess_plain_text_fulltext_availability,
     assess_structured_article_fulltext_availability,
 )

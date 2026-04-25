@@ -242,7 +242,7 @@ class SpringerHtmlTableTests(unittest.TestCase):
                 and (asset.get("url") or asset.get("path"))
                 for asset in extracted_assets
             )
-            has_degraded_placeholder = f"**{label}.** Degraded placeholder:" in markdown
+            has_degraded_placeholder = f"**{label}.** [Table body unavailable:" in markdown
             self.assertTrue(
                 has_markdown_table or has_image_asset or has_degraded_placeholder,
                 f"{label} was not rendered as a table, image asset, or degraded placeholder",
@@ -250,7 +250,7 @@ class SpringerHtmlTableTests(unittest.TestCase):
         self.assertIn(f"![Extended Data Table 1]({table_1_image_url})", markdown)
         self.assertIn("**Extended Data Table 1.** Global summary of annual NEE", markdown)
         self.assertIn(f"![Extended Data Table 2]({table_2_image_url})", markdown)
-        self.assertIn("**Extended Data Table 3.** Degraded placeholder:", markdown)
+        self.assertIn("**Extended Data Table 3.** [Table body unavailable:", markdown)
         self.assertIn("**Extended Data Table 4.** CMIP5 model summary", markdown)
         self.assertIn(table_1_image_url, [asset.get("url") for asset in extracted_assets])
 
