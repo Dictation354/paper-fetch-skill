@@ -14,6 +14,14 @@ except ImportError:  # pragma: no cover - dependency is declared in pyproject
 
 PDF_LINK_TEXT_TOKENS = ("pdf", "download pdf", "full text pdf", "view pdf")
 PDF_HREF_TOKENS = (".pdf", "/pdf", "/epdf", "/pdfdirect", "/pdfft", "download=true")
+BROWSER_WORKFLOW_PDF_URL_TOKENS = (
+    "/doi/pdf/",
+    "/doi/pdfdirect/",
+    "/doi/epdf/",
+    "/fullpdf",
+    ".pdf",
+    "download=true",
+)
 SPRINGER_HOST_TOKENS = ("springer.com", "springernature.com", "nature.com", "biomedcentral.com")
 
 
@@ -59,6 +67,24 @@ def extract_pdf_url_from_metadata_links(metadata: Mapping[str, Any]) -> str | No
             continue
         content_type = normalize_text(str(item.get("content_type") or "")).lower()
         if any(token in url.lower() for token in PDF_HREF_TOKENS) or content_type == "application/pdf":
+            return url
+    return None
+
+
+def looks_like_browser_workflow_pdf_url(url: str | None) -> bool:
+    normalized = normalize_text(url).lower()
+    return bool(normalized) and any(token in normalized for token in BROWSER_WORKFLOW_PDF_URL_TOKENS)
+
+
+def extract_pdf_url_from_crossref(metadata: Mapping[str, Any]) -> str | None:
+    for item in metadata.get("fulltext_links") or []:
+        if not isinstance(item, Mapping):
+            continue
+        url = normalize_text(str(item.get("url") or ""))
+        if not url:
+            continue
+        content_type = normalize_text(str(item.get("content_type") or "")).lower()
+        if looks_like_browser_workflow_pdf_url(url) or content_type == "application/pdf":
             return url
     return None
 

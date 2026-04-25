@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import unittest
 
+from paper_fetch.providers import _pnas_html, _science_html, _science_pnas, _wiley_html, browser_workflow
 from paper_fetch.providers._science_pnas_profiles import (
     build_html_candidates,
     build_pdf_candidates,
@@ -9,6 +10,10 @@ from paper_fetch.providers._science_pnas_profiles import (
     preferred_html_candidate_from_landing_page,
     site_rule_for_publisher,
 )
+from paper_fetch.providers.base import RawFulltextPayload
+from paper_fetch.providers.pnas import PnasClient
+from paper_fetch.providers.science import ScienceClient
+from paper_fetch.providers.wiley import WileyClient
 from tests.provider_benchmark_samples import provider_benchmark_sample
 
 
@@ -89,6 +94,31 @@ class SciencePnasCandidateTests(unittest.TestCase):
             ],
         )
 
+    def test_provider_profiles_match_candidate_builder_priority(self) -> None:
+        crossref_pdf_url = f"http://onlinelibrary.wiley.com/wol1/doi/{WILEY_SAMPLE.doi}/fullpdf"
+        cases = (
+            ("science", ScienceClient(None, {}), SCIENCE_SAMPLE.doi, None),
+            ("pnas", PnasClient(None, {}), PNAS_SAMPLE.doi, None),
+            ("wiley", WileyClient(None, {}), WILEY_SAMPLE.doi, crossref_pdf_url),
+        )
+
+        for provider, client, doi, pdf_url in cases:
+            with self.subTest(provider=provider):
+                metadata = {
+                    "doi": doi,
+                    "fulltext_links": (
+                        [{"url": pdf_url, "content_type": "unspecified"}]
+                        if pdf_url
+                        else []
+                    ),
+                }
+                self.assertEqual(client.profile.name, provider)
+                self.assertEqual(client.html_candidates(doi, metadata), build_html_candidates(provider, doi))
+                self.assertEqual(
+                    client.pdf_candidates(doi, metadata),
+                    build_pdf_candidates(provider, doi, pdf_url),
+                )
+
     def test_extract_pdf_url_from_crossref_recognizes_wiley_fullpdf_links(self) -> None:
         crossref_pdf_url = extract_pdf_url_from_crossref(
             {
@@ -115,6 +145,75 @@ class SciencePnasCandidateTests(unittest.TestCase):
                 f"https://onlinelibrary.wiley.com/wol1/doi/{WILEY_SAMPLE.doi}/fullpdf",
             ],
         )
+
+    def test_science_pnas_compat_module_forwards_monkeypatches(self) -> None:
+        original = browser_workflow.load_runtime_config
+        sentinel = object()
+        try:
+            _science_pnas.load_runtime_config = sentinel
+            self.assertIs(browser_workflow.load_runtime_config, sentinel)
+            self.assertIs(_science_pnas.BrowserWorkflowClient, browser_workflow.BrowserWorkflowClient)
+            self.assertIs(_science_pnas.ProviderBrowserProfile, browser_workflow.ProviderBrowserProfile)
+        finally:
+            _science_pnas.load_runtime_config = original
+
+    def test_provider_profile_article_source_label_and_hooks(self) -> None:
+        cases = (
+            (ScienceClient(None, {}), None, "Science", _science_html.extract_markdown),
+            (PnasClient(None, {}), None, "PNAS", _pnas_html.extract_markdown),
+            (WileyClient(None, {}), "wiley_browser", "Wiley", _wiley_html.extract_markdown),
+        )
+
+        for client, article_source_name, label, extractor in cases:
+            with self.subTest(provider=client.name):
+                self.assertEqual(client.profile.article_source_name, article_source_name)
+                self.assertEqual(client.article_source(), article_source_name or client.name)
+                self.assertEqual(client.provider_label(), label)
+                self.assertIs(client.profile.extract_markdown, extractor)
+                self.assertTrue(client.profile.shared_playwright_image_fetcher)
+
+    def test_shared_author_helpers_preserve_provider_strategies(self) -> None:
+        science_html = """
+        <html><script>AAASdataLayer={"page":{"pageInfo":{"author":"Ada Lovelace|Grace Hopper"}}};</script></html>
+        """
+        pnas_html = """
+        <html><head>
+          <meta name="citation_author" content="Edward Example" />
+          <meta name="dc.creator" content="Dana Creator" />
+        </head><body></body></html>
+        """
+        wiley_html = """
+        <html><head>
+          <meta name="citation_author" content="Meta Author" />
+        </head><body>
+          <a class="author-name"><span>DOM Author</span></a>
+        </body></html>
+        """
+
+        self.assertEqual(_science_html.extract_authors(science_html), ["Ada Lovelace", "Grace Hopper"])
+        self.assertEqual(_pnas_html.extract_authors(pnas_html), ["Edward Example", "Dana Creator"])
+        self.assertEqual(_wiley_html.extract_authors(wiley_html), ["Meta Author"])
+
+    def test_profile_author_fallback_populates_article_metadata(self) -> None:
+        client = ScienceClient(None, {})
+        html = """
+        <html><script>AAASdataLayer={"page":{"pageInfo":{"author":"Ada Lovelace|Grace Hopper"}}};</script></html>
+        """
+        raw_payload = RawFulltextPayload(
+            provider="science",
+            source_url="https://www.science.org/doi/full/10.1126/example",
+            content_type="text/html",
+            body=html.encode("utf-8"),
+            metadata={
+                "route": "html",
+                "markdown_text": "# Example\n\n## Results\n\n" + ("Body text " * 120),
+                "source_trail": ["fulltext:science_html_ok"],
+            },
+        )
+
+        article = client.to_article_model({"doi": "10.1126/example", "title": "Example"}, raw_payload)
+
+        self.assertEqual(article.metadata.authors, ["Ada Lovelace", "Grace Hopper"])
 
     def test_html_candidates_prioritize_matching_landing_page_url(self) -> None:
         candidates = build_html_candidates(

@@ -6,6 +6,7 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 ### Changed
 
+- Promoted the Wiley / Science / PNAS browser workflow runtime to [`src/paper_fetch/providers/browser_workflow.py`](src/paper_fetch/providers/browser_workflow.py). Science, PNAS, and Wiley now declare `ProviderBrowserProfile` objects for URL candidates, Markdown extraction, author fallback, public source, labels, and browser asset behavior; `_science_pnas.py` remains a compatibility alias.
 - Promoted the Wiley / Science / PNAS HTML asset downloader to a shared Playwright primary path. Figure, table, and formula image candidates now reuse one seeded browser context per download attempt instead of trying direct HTTP first.
 - Kept full-size/original candidates ahead of preview candidates, but now fetches both tiers through the same shared browser context. Target-provider downloads report `download_tier="full_size"` or `download_tier="preview"` rather than `playwright_canvas_fallback`.
 - Preserved the FlareSolverr seed refresh retry for partial asset failures, while keeping the generic HTTP-first asset downloader unchanged for non-target providers such as Springer.

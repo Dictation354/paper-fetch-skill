@@ -2,47 +2,24 @@
 
 from __future__ import annotations
 
-from typing import Any, Mapping
-
-from ..metadata_types import ProviderMetadata
-from . import _pnas_html, _science_pnas
+from . import _pnas_html, browser_workflow
 
 
-class PnasClient(_science_pnas.BrowserWorkflowClient):
-    name = "pnas"
+PNAS_BROWSER_PROFILE = browser_workflow.ProviderBrowserProfile(
+    name="pnas",
+    article_source_name=None,
+    label="PNAS",
+    hosts=_pnas_html.HOSTS,
+    base_hosts=_pnas_html.BASE_HOSTS,
+    html_path_templates=_pnas_html.HTML_PATH_TEMPLATES,
+    pdf_path_templates=_pnas_html.PDF_PATH_TEMPLATES,
+    crossref_pdf_position=_pnas_html.CROSSREF_PDF_POSITION,
+    extract_markdown=_pnas_html.extract_markdown,
+    fallback_author_extractor=_pnas_html.extract_authors,
+    shared_playwright_image_fetcher=True,
+)
 
-    def html_candidates(self, doi: str, metadata: ProviderMetadata) -> list[str]:
-        landing_page_url = str(metadata.get("landing_page_url") or "") or None
-        return _pnas_html.build_html_candidates(doi, landing_page_url)
 
-    def pdf_candidates(self, doi: str, metadata: ProviderMetadata) -> list[str]:
-        return _pnas_html.build_pdf_candidates(doi, _science_pnas.extract_pdf_url_from_crossref(metadata))
-
-    def extract_markdown(
-        self,
-        html_text: str,
-        final_url: str,
-        *,
-        metadata: ProviderMetadata,
-    ) -> tuple[str, dict[str, Any]]:
-        return _pnas_html.extract_markdown(html_text, final_url, metadata=metadata)
-
-    def to_article_model(
-        self,
-        metadata: ProviderMetadata,
-        raw_payload,
-        *,
-        downloaded_assets: list[Mapping[str, Any]] | None = None,
-        asset_failures: list[Mapping[str, Any]] | None = None,
-    ):
-        return _science_pnas.browser_workflow_article_from_payload(
-            self,
-            _science_pnas.merge_provider_owned_authors(
-                metadata,
-                raw_payload,
-                fallback_extractor=_pnas_html.extract_authors,
-            ),
-            raw_payload,
-            downloaded_assets=downloaded_assets,
-            asset_failures=asset_failures,
-        )
+class PnasClient(browser_workflow.BrowserWorkflowClient):
+    name = PNAS_BROWSER_PROFILE.name
+    profile = PNAS_BROWSER_PROFILE

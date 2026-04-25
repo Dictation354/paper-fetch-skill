@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import re
 from typing import Any, Mapping
 
@@ -13,21 +12,23 @@ from ..quality.html_profiles import (
     science_positive_signals,
 )
 from ..utils import dedupe_authors, normalize_text
+from ._browser_workflow_authors import (
+    extract_property_authors,
+    load_json_assignment,
+    normalized_author_tokens,
+)
 from ._html_references import extract_numbered_references_from_html
 
 from ._browser_workflow_shared import (
-    build_base_urls,
-    preferred_html_candidate_from_landing_page,
+    build_browser_workflow_html_candidates,
+    build_browser_workflow_pdf_candidates,
 )
-
-try:
-    from bs4 import BeautifulSoup, Tag
-except ImportError:  # pragma: no cover - dependency is declared in pyproject
-    BeautifulSoup = None
-    Tag = None
 
 HOSTS: tuple[str, ...] = ("www.science.org", "science.org")
 BASE_HOSTS: tuple[str, ...] = HOSTS
+HTML_PATH_TEMPLATES: tuple[str, ...] = ("/doi/full/{doi}", "/doi/{doi}")
+PDF_PATH_TEMPLATES: tuple[str, ...] = ("/doi/epdf/{doi}", "/doi/pdf/{doi}", "/doi/pdf/{doi}?download=true")
+CROSSREF_PDF_POSITION = 0
 NOISE_PROFILE = SCIENCE_NOISE_PROFILE
 SITE_RULE_OVERRIDES: dict[str, Any] = SCIENCE_SITE_RULE_OVERRIDES
 AAAS_DATALAYER_PATTERN = re.compile(r"AAASdataLayer=(\{.*?\});(?:if\(|</script>)", flags=re.DOTALL)
@@ -36,6 +37,7 @@ SCIENCE_STRUCTURED_SUBHEADING_PATTERN = re.compile(r"(?m)^###\s+([A-Z][A-Z0-9 /-
 SCIENCE_IGNORED_AUTHOR_TEXT = {
     "authors info & affiliations",
     "fewer",
+    "orcid",
     "view all articles by this author",
 }
 SCIENCE_CANONICAL_ABSTRACT_HEADING = "abstract"
@@ -43,14 +45,7 @@ SCIENCE_STRUCTURED_ABSTRACT_HEADING = "structured abstract"
 
 
 def _load_aaas_datalayer(html_text: str) -> Mapping[str, Any] | None:
-    match = AAAS_DATALAYER_PATTERN.search(html_text)
-    if not match:
-        return None
-    try:
-        payload = json.loads(match.group(1))
-    except json.JSONDecodeError:
-        return None
-    return payload if isinstance(payload, Mapping) else None
+    return load_json_assignment(html_text, AAAS_DATALAYER_PATTERN)
 
 
 def blocking_fallback_signals(html_text: str) -> list[str]:
@@ -58,29 +53,7 @@ def blocking_fallback_signals(html_text: str) -> list[str]:
 
 
 def _normalized_author_tokens(value: str | None) -> list[str]:
-    return [
-        normalize_text(token)
-        for token in str(value or "").split("|")
-        if normalize_text(token)
-    ]
-
-
-def _is_ignored_author_text(text: str) -> bool:
-    normalized = normalize_text(text).lower()
-    if not normalized:
-        return True
-    if normalized in SCIENCE_IGNORED_AUTHOR_TEXT:
-        return True
-    if normalized == "orcid":
-        return True
-    if SCIENCE_AUTHOR_COUNT_PATTERN.fullmatch(normalized):
-        return True
-    return normalized.startswith("http://") or normalized.startswith("https://") or "orcid.org" in normalized
-
-
-def _looks_like_author_name(text: str) -> bool:
-    normalized = normalize_text(text)
-    return bool(normalized) and any(character.isalpha() for character in normalized)
+    return normalized_author_tokens(value)
 
 
 def _extract_datalayer_authors(html_text: str) -> list[str]:
@@ -97,39 +70,12 @@ def _extract_datalayer_authors(html_text: str) -> list[str]:
 
 
 def _extract_dom_authors(html_text: str) -> list[str]:
-    if BeautifulSoup is None:
-        return []
-    soup = BeautifulSoup(html_text, "html.parser")
-    authors: list[str] = []
-    for node in soup.select(".contributors [property='author']"):
-        if Tag is not None and not isinstance(node, Tag):
-            continue
-        given_node = node.select_one("[property='givenName']")
-        family_node = node.select_one("[property='familyName']")
-        name = normalize_text(
-            " ".join(
-                item
-                for item in (
-                    given_node.get_text(" ", strip=True) if given_node else "",
-                    family_node.get_text(" ", strip=True) if family_node else "",
-                )
-                if normalize_text(item)
-            )
-        )
-        if not name:
-            name_node = node.select_one("[property='name']")
-            if name_node is not None:
-                name = normalize_text(name_node.get_text(" ", strip=True))
-        if not name:
-            fragments = [
-                fragment
-                for fragment in (normalize_text(item) for item in node.stripped_strings)
-                if fragment and not _is_ignored_author_text(fragment)
-            ]
-            name = normalize_text(" ".join(fragments))
-        if _looks_like_author_name(name):
-            authors.append(name)
-    return dedupe_authors(authors)
+    return extract_property_authors(
+        html_text,
+        selectors=".contributors [property='author']",
+        ignored_text=SCIENCE_IGNORED_AUTHOR_TEXT,
+        count_pattern=SCIENCE_AUTHOR_COUNT_PATTERN,
+    )
 
 
 def extract_authors(html_text: str) -> list[str]:
@@ -252,35 +198,25 @@ def _flatten_structured_abstract_markdown(markdown_text: str) -> str:
 
 
 def build_html_candidates(doi: str, landing_page_url: str | None = None) -> list[str]:
-    path_templates = ("/doi/full/{doi}", "/doi/{doi}")
-    candidates: list[str] = []
-    preferred_candidate = preferred_html_candidate_from_landing_page(
+    return build_browser_workflow_html_candidates(
         doi,
         landing_page_url,
         hosts=HOSTS,
+        base_hosts=BASE_HOSTS,
+        path_templates=HTML_PATH_TEMPLATES,
     )
-    if preferred_candidate:
-        candidates.append(preferred_candidate)
-    for base in build_base_urls(hosts=HOSTS, base_hosts=BASE_HOSTS, landing_page_url=landing_page_url):
-        for template in path_templates:
-            candidate = f"{base}{template.format(doi=doi)}"
-            if candidate not in candidates:
-                candidates.append(candidate)
-    return candidates
 
 
 def build_pdf_candidates(doi: str, crossref_pdf_url: str | None) -> list[str]:
-    candidates: list[str] = []
-
-    def append(candidate: str | None) -> None:
-        if candidate and candidate not in candidates:
-            candidates.append(candidate)
-
-    append(crossref_pdf_url)
-    for base in build_base_urls(hosts=HOSTS, base_hosts=BASE_HOSTS, landing_page_url=crossref_pdf_url):
-        for template in ("/doi/epdf/{doi}", "/doi/pdf/{doi}", "/doi/pdf/{doi}?download=true"):
-            append(f"{base}{template.format(doi=doi)}")
-    return candidates
+    return build_browser_workflow_pdf_candidates(
+        doi,
+        crossref_pdf_url,
+        hosts=HOSTS,
+        base_hosts=BASE_HOSTS,
+        path_templates=PDF_PATH_TEMPLATES,
+        crossref_pdf_position=CROSSREF_PDF_POSITION,
+        base_seed_url=crossref_pdf_url,
+    )
 
 
 def positive_signals(html_text: str) -> tuple[list[str], list[str], list[str]]:
@@ -321,9 +257,9 @@ def extract_markdown(
     *,
     metadata: Mapping[str, Any] | None = None,
 ) -> tuple[str, dict[str, Any]]:
-    from . import _science_pnas
+    from . import browser_workflow
 
-    return _science_pnas.extract_science_pnas_markdown(
+    return browser_workflow.extract_science_pnas_markdown(
         html_text,
         source_url,
         "science",

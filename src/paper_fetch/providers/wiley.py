@@ -5,10 +5,9 @@ from __future__ import annotations
 import urllib.parse
 from typing import Any, Mapping
 
-from ..metadata_types import ProviderMetadata
 from ..http import DEFAULT_FULLTEXT_TIMEOUT_SECONDS, RequestFailure
 from ..utils import normalize_text
-from . import _science_pnas, _wiley_html
+from . import _wiley_html, browser_workflow
 from ._pdf_fallback import PdfFallbackFailure, fetch_pdf_over_http
 from ._pdf_common import PdfFetchResult, filename_from_headers, looks_like_pdf_payload, pdf_fetch_result_from_bytes
 from ._waterfall import ProviderWaterfallStep, ProviderWaterfallState, run_provider_waterfall
@@ -23,6 +22,20 @@ from .base import (
 
 WILEY_TDM_CLIENT_TOKEN_ENV_VAR = "WILEY_TDM_CLIENT_TOKEN"
 WILEY_TDM_API_URL_TEMPLATE = "https://api.wiley.com/onlinelibrary/tdm/v1/articles/{doi}"
+
+WILEY_BROWSER_PROFILE = browser_workflow.ProviderBrowserProfile(
+    name="wiley",
+    article_source_name="wiley_browser",
+    label="Wiley",
+    hosts=_wiley_html.HOSTS,
+    base_hosts=_wiley_html.BASE_HOSTS,
+    html_path_templates=_wiley_html.HTML_PATH_TEMPLATES,
+    pdf_path_templates=_wiley_html.PDF_PATH_TEMPLATES,
+    crossref_pdf_position=_wiley_html.CROSSREF_PDF_POSITION,
+    extract_markdown=_wiley_html.extract_markdown,
+    fallback_author_extractor=_wiley_html.extract_authors,
+    shared_playwright_image_fetcher=True,
+)
 
 
 def _fetch_wiley_tdm_pdf_result(
@@ -79,9 +92,9 @@ def _fetch_wiley_tdm_pdf_result(
     )
 
 
-class WileyClient(_science_pnas.BrowserWorkflowClient):
-    name = "wiley"
-    article_source_name = "wiley_browser"
+class WileyClient(browser_workflow.BrowserWorkflowClient):
+    name = WILEY_BROWSER_PROFILE.name
+    profile = WILEY_BROWSER_PROFILE
 
     def __init__(self, transport, env: Mapping[str, str]) -> None:
         super().__init__(transport, env)
@@ -97,7 +110,7 @@ class WileyClient(_science_pnas.BrowserWorkflowClient):
         }
 
     def probe_status(self) -> ProviderStatusResult:
-        browser_status = _science_pnas.probe_runtime_status(self.env, provider=self.name)
+        browser_status = browser_workflow.probe_runtime_status(self.env, provider=self.name)
         token_configured = bool(self.tdm_client_token)
         browser_ready = bool(browser_status.checks) and all(check.status == "ok" for check in browser_status.checks)
         return summarize_capability_status(
@@ -126,44 +139,8 @@ class WileyClient(_science_pnas.BrowserWorkflowClient):
             ],
         )
 
-    def html_candidates(self, doi: str, metadata: ProviderMetadata) -> list[str]:
-        landing_page_url = str(metadata.get("landing_page_url") or "") or None
-        return _wiley_html.build_html_candidates(doi, landing_page_url)
-
-    def pdf_candidates(self, doi: str, metadata: ProviderMetadata) -> list[str]:
-        return _wiley_html.build_pdf_candidates(doi, _science_pnas.extract_pdf_url_from_crossref(metadata))
-
-    def extract_markdown(
-        self,
-        html_text: str,
-        final_url: str,
-        *,
-        metadata: ProviderMetadata,
-    ) -> tuple[str, dict[str, Any]]:
-        return _wiley_html.extract_markdown(html_text, final_url, metadata=metadata)
-
-    def to_article_model(
-        self,
-        metadata: ProviderMetadata,
-        raw_payload: RawFulltextPayload,
-        *,
-        downloaded_assets: list[Mapping[str, Any]] | None = None,
-        asset_failures: list[Mapping[str, Any]] | None = None,
-    ):
-        return _science_pnas.browser_workflow_article_from_payload(
-            self,
-            _science_pnas.merge_provider_owned_authors(
-                metadata,
-                raw_payload,
-                fallback_extractor=_wiley_html.extract_authors,
-            ),
-            raw_payload,
-            downloaded_assets=downloaded_assets,
-            asset_failures=asset_failures,
-        )
-
     def fetch_raw_fulltext(self, doi: str, metadata: Mapping[str, Any]) -> RawFulltextPayload:
-        bootstrap = _science_pnas.bootstrap_browser_workflow(self, doi, metadata, allow_runtime_failure=True)
+        bootstrap = browser_workflow.bootstrap_browser_workflow(self, doi, metadata, allow_runtime_failure=True)
         if bootstrap.html_payload is not None:
             return bootstrap.html_payload
 
@@ -229,7 +206,7 @@ class WileyClient(_science_pnas.BrowserWorkflowClient):
                     missing_env=bootstrap.runtime_failure.missing_env if bootstrap.runtime_failure is not None else [],
                 )
             try:
-                return _science_pnas.fetch_seeded_browser_pdf_payload(
+                return browser_workflow.fetch_seeded_browser_pdf_payload(
                     provider=self.name,
                     runtime=bootstrap.runtime,
                     pdf_candidates=bootstrap.pdf_candidates,

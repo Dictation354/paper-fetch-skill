@@ -30,7 +30,7 @@
 
 - 这张矩阵描述的是“当前代码里已经实现的 provider-owned waterfall”，不是“任意 DOI、任意运行环境都必然能拿到 publisher 全文”的承诺。
 - 尤其 `wiley` / `science` / `pnas` 的浏览器与 PDF/ePDF 路径，仍受 publisher 访问权限、paywall/challenge 与本地限速护栏影响。
-- `wiley` 的 HTML / browser PDF/ePDF 路径与 `science` / `pnas` 现在只保留一套 provider-owned 浏览器栈：共享 `_science_pnas` bootstrap、共享 `_pdf_fallback` browser-PDF executor，不再存在单独的 Science path harness。
+- `wiley` 的 HTML / browser PDF/ePDF 路径与 `science` / `pnas` 现在只保留一套 provider-owned 浏览器栈：canonical runtime 是 `paper_fetch.providers.browser_workflow`，旧 `_science_pnas` 只作为兼容 alias 保留；browser-PDF executor 继续共享 `_pdf_fallback`，不再存在单独的 Science path harness。
 - 2020+ live / regression 基准样本集中维护在 [`../tests/provider_benchmark_samples.py`](../tests/provider_benchmark_samples.py)。
 - 自然地理学 live-only 候选集中维护在 [`../tests/live/geography_samples.py`](../tests/live/geography_samples.py)，默认每家尝试前 `10` 条，并通过 [`../scripts/run_geography_live_report.py`](../scripts/run_geography_live_report.py) 产出 JSON/Markdown 报告。
 - `geography` live runner 默认按 provider 轮转执行，保持单家样本顺序不变，同时尽量避免浏览器型 publisher 被本地最小间隔窗口连续判成 `rate_limited`。

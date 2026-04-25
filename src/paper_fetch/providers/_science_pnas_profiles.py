@@ -10,6 +10,8 @@ from ..quality import html_profiles as _html_profiles
 from ..utils import normalize_text
 from . import _pnas_html, _science_html, _wiley_html
 from ._browser_workflow_shared import (
+    build_browser_workflow_html_candidates,
+    build_browser_workflow_pdf_candidates,
     extract_pdf_url_from_crossref,
     preferred_html_candidate_from_landing_page as _preferred_html_candidate_from_landing_page,
 )
@@ -107,14 +109,29 @@ def build_html_candidates(publisher: str, doi: str, landing_page_url: str | None
     module = _PUBLISHER_MODULES.get(normalize_text(publisher).lower())
     if module is None:
         raise ValueError(f"Unsupported browser-workflow HTML publisher: {publisher!r}")
-    return list(module.build_html_candidates(doi, landing_page_url))
+    return build_browser_workflow_html_candidates(
+        doi,
+        landing_page_url,
+        hosts=tuple(getattr(module, "HOSTS", ())),
+        base_hosts=tuple(getattr(module, "BASE_HOSTS", ())),
+        path_templates=tuple(getattr(module, "HTML_PATH_TEMPLATES", ())),
+    )
 
 
 def build_pdf_candidates(publisher: str, doi: str, crossref_pdf_url: str | None) -> list[str]:
     module = _PUBLISHER_MODULES.get(normalize_text(publisher).lower())
     if module is None:
         raise ValueError(f"Unsupported browser-workflow PDF publisher: {publisher!r}")
-    return list(module.build_pdf_candidates(doi, crossref_pdf_url))
+    crossref_pdf_position = int(getattr(module, "CROSSREF_PDF_POSITION", 0))
+    return build_browser_workflow_pdf_candidates(
+        doi,
+        crossref_pdf_url,
+        hosts=tuple(getattr(module, "HOSTS", ())),
+        base_hosts=tuple(getattr(module, "BASE_HOSTS", ())),
+        path_templates=tuple(getattr(module, "PDF_PATH_TEMPLATES", ())),
+        crossref_pdf_position=crossref_pdf_position,
+        base_seed_url=crossref_pdf_url if crossref_pdf_position == 0 else None,
+    )
 
 
 def provider_positive_signals(
