@@ -206,6 +206,16 @@ class PublisherWaterfallTests(unittest.TestCase):
         self.assertIn("fulltext:elsevier_pdf_api_ok", article.quality.source_trail)
         self.assertIn("fulltext:elsevier_pdf_fallback_ok", article.quality.source_trail)
         self.assertNotIn("fulltext:elsevier_html_ok", article.quality.source_trail)
+        self.assertTrue(
+            any(
+                "Elsevier official XML response did not produce enough article body text" in item
+                for item in raw_payload.warnings
+            )
+        )
+        self.assertIn(
+            "Full text was extracted from the Elsevier API PDF fallback after the XML route was not usable.",
+            raw_payload.warnings,
+        )
 
     def test_elsevier_xml_transport_failures_can_use_official_pdf_fallback(self) -> None:
         doi = "10.1016/test-old-paper"
@@ -266,6 +276,17 @@ class PublisherWaterfallTests(unittest.TestCase):
                 self.assertEqual(
                     [str(call["headers"].get("Accept") or "") for call in transport.calls],
                     ["text/xml", "application/pdf"],
+                )
+                self.assertEqual(
+                    [str(call["url"]) for call in transport.calls],
+                    [
+                        "https://api.elsevier.com/content/article/doi/10.1016%2Ftest-old-paper",
+                        "https://api.elsevier.com/content/article/doi/10.1016%2Ftest-old-paper",
+                    ],
+                )
+                self.assertEqual(
+                    [call["query"] for call in transport.calls],
+                    [{"view": "FULL"}, {"view": "FULL"}],
                 )
 
     def test_elsevier_xml_and_pdf_failures_are_combined_without_html_markers(self) -> None:
@@ -592,6 +613,13 @@ class PublisherWaterfallTests(unittest.TestCase):
         self.assertEqual(article.source, "springer_html")
         self.assertIn("fulltext:springer_html_fail", article.quality.source_trail)
         self.assertIn("fulltext:springer_pdf_fallback_ok", article.quality.source_trail)
+        self.assertTrue(
+            any("Springer HTML route was not usable" in item for item in raw_payload.warnings)
+        )
+        self.assertIn(
+            "Full text was extracted from PDF fallback after the Springer HTML path was not usable.",
+            raw_payload.warnings,
+        )
 
     def test_springer_fetch_result_returns_abstract_only_when_pdf_fallback_fails(self) -> None:
         doi = SPRINGER_SAMPLE.doi

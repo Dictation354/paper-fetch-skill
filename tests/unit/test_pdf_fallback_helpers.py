@@ -86,6 +86,38 @@ class PdfFallbackHelperTests(unittest.TestCase):
         self.assertIn("https://www.nature.com/articles/example.pdf", springer_candidates)
         self.assertIn("https://link.springer.com/content/pdf/10.1038%2Fexample.pdf", springer_candidates)
 
+    def test_springer_pdf_candidates_preserve_snapshot_order(self) -> None:
+        candidates = _pdf_candidates.build_springer_pdf_candidates(
+            "10.1038/example",
+            {
+                "landing_page_url": "https://www.nature.com/articles/example",
+                "fulltext_links": [
+                    {
+                        "url": "https://metadata.example/article.pdf",
+                        "content_type": "application/pdf",
+                    }
+                ],
+            },
+            html_text="""
+            <html><head>
+              <meta name="citation_pdf_url" content="/articles/example.pdf" />
+            </head><body>
+              <a href="/content/pdf/10.1038/example.pdf">Download PDF</a>
+            </body></html>
+            """,
+            source_url="https://www.nature.com/articles/example",
+        )
+
+        self.assertEqual(
+            candidates,
+            [
+                "https://metadata.example/article.pdf",
+                "https://www.nature.com/articles/example.pdf",
+                "https://www.nature.com/content/pdf/10.1038/example.pdf",
+                "https://link.springer.com/content/pdf/10.1038%2Fexample.pdf",
+            ],
+        )
+
     def test_fetch_pdf_over_http_skips_non_pdf_payloads(self) -> None:
         first_url = "https://example.org/not-pdf"
         second_url = "https://example.org/article.pdf"

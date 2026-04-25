@@ -100,6 +100,53 @@ class ProviderWaterfallRunnerTests(unittest.TestCase):
         )
 
 
+class RawFulltextPayloadLegacyCompatibilityTests(unittest.TestCase):
+    def test_legacy_metadata_keys_are_coerced_to_structured_payload_fields(self) -> None:
+        payload = RawFulltextPayload(
+            provider="template",
+            source_url="https://example.test/article",
+            content_type="text/html",
+            body=b"<html></html>",
+            metadata={
+                "route": "html",
+                "reason": "legacy reason",
+                "markdown_text": "# Legacy\n\nBody text",
+                "merged_metadata": {"title": "Merged Legacy Title"},
+                "availability_diagnostics": {"accepted": True, "reason": "body_sufficient"},
+                "html_fetcher": "flaresolverr",
+                "browser_context_seed": {"browser_final_url": "https://example.test/final"},
+                "suggested_filename": "legacy.html",
+                "html_failure_reason": "abstract_only",
+                "html_failure_message": "HTML exposed only abstract content.",
+                "extracted_assets": [{"kind": "figure", "url": "https://example.test/f1.png"}],
+                "warnings": ["legacy warning"],
+                "source_trail": ["fulltext:template_html_ok"],
+                "custom_passthrough": "kept",
+            },
+        )
+
+        self.assertIsNotNone(payload.content)
+        content = payload.content
+        assert content is not None
+        self.assertEqual(content.route_kind, "html")
+        self.assertEqual(content.reason, "legacy reason")
+        self.assertEqual(content.markdown_text, "# Legacy\n\nBody text")
+        self.assertEqual(content.merged_metadata, {"title": "Merged Legacy Title"})
+        self.assertEqual(
+            content.diagnostics,
+            {"availability_diagnostics": {"accepted": True, "reason": "body_sufficient"}},
+        )
+        self.assertEqual(content.fetcher, "flaresolverr")
+        self.assertEqual(content.browser_context_seed, {"browser_final_url": "https://example.test/final"})
+        self.assertEqual(content.suggested_filename, "legacy.html")
+        self.assertEqual(content.html_failure_reason, "abstract_only")
+        self.assertEqual(content.html_failure_message, "HTML exposed only abstract content.")
+        self.assertEqual(content.extracted_assets, [{"kind": "figure", "url": "https://example.test/f1.png"}])
+        self.assertEqual(payload.warnings, ["legacy warning"])
+        self.assertEqual(payload.metadata["source_trail"], ["fulltext:template_html_ok"])
+        self.assertEqual(payload.metadata["custom_passthrough"], "kept")
+
+
 class _TemplateClient(ProviderClient):
     name = "template"
 

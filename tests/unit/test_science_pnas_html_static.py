@@ -7,6 +7,41 @@ from tests.paths import SRC_DIR
 
 
 SCIENCE_PNAS_HTML = SRC_DIR / "paper_fetch" / "providers" / "_science_pnas_html.py"
+EXPECTED_COMPATIBILITY_SYMBOLS = {
+    "SciencePnasHtmlFailure",
+    "assess_html_fulltext_availability",
+    "assess_plain_text_fulltext_availability",
+    "assess_structured_article_fulltext_availability",
+    "availability_failure_message",
+    "body_metrics",
+    "build_html_candidates",
+    "build_pdf_candidates",
+    "clean_markdown",
+    "detect_html_block",
+    "extract_article_markdown",
+    "extract_browser_workflow_markdown",
+    "extract_pdf_url_from_crossref",
+    "extract_science_pnas_markdown",
+    "has_sufficient_article_body",
+    "looks_like_abstract_redirect",
+    "preferred_html_candidate_from_landing_page",
+    "rewrite_inline_figure_links",
+    "summarize_html",
+}
+
+
+def _top_level_defined_names(tree: ast.Module) -> set[str]:
+    names: set[str] = set()
+    for node in tree.body:
+        if isinstance(node, (ast.ClassDef, ast.FunctionDef)):
+            names.add(node.name)
+        elif isinstance(node, ast.Assign):
+            for target in node.targets:
+                if isinstance(target, ast.Name):
+                    names.add(target.id)
+        elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
+            names.add(node.target.id)
+    return names
 
 
 class SciencePnasHtmlStaticTests(unittest.TestCase):
@@ -46,6 +81,13 @@ class SciencePnasHtmlStaticTests(unittest.TestCase):
             }
             & function_names
         )
+
+    def test_browser_html_compatibility_surface_is_explicit(self) -> None:
+        tree = ast.parse(SCIENCE_PNAS_HTML.read_text(encoding="utf-8"))
+
+        missing_symbols = EXPECTED_COMPATIBILITY_SYMBOLS - _top_level_defined_names(tree)
+
+        self.assertEqual(missing_symbols, set())
 
 
 if __name__ == "__main__":
