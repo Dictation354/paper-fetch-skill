@@ -35,7 +35,7 @@ from ..models import (
     coerce_semantic_losses,
     coerce_token_estimate_breakdown,
 )
-from ..provider_catalog import provider_status_order
+from ..provider_catalog import is_official_provider, provider_status_order
 from ..providers.base import ProviderFailure, ProviderStatusResult, build_provider_status_check
 from ..providers.registry import build_clients
 from ..service import PaperFetchFailure, fetch_paper as service_fetch_paper
@@ -648,7 +648,7 @@ def provider_status_payload(
             results.append(
                 _provider_status_error_payload(
                     provider_name,
-                    official_provider=provider_name != "crossref",
+                    official_provider=is_official_provider(provider_name),
                     message=f"{provider_name} is not registered in the provider client registry.",
                 )
             )
@@ -659,7 +659,7 @@ def provider_status_payload(
             results.append(
                 _provider_status_error_payload(
                     provider_name,
-                    official_provider=bool(getattr(client, "official_provider", provider_name != "crossref")),
+                    official_provider=bool(getattr(client, "official_provider", is_official_provider(provider_name))),
                     message=f"Provider diagnostics failed unexpectedly: {error}",
                 )
             )

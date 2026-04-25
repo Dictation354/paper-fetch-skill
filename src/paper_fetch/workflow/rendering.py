@@ -8,19 +8,10 @@ import urllib.parse
 from pathlib import Path
 
 from ..models import ArticleModel, FetchEnvelope, OutputMode, RenderOptions
+from ..provider_catalog import known_article_source_names
 from ..tracing import merge_trace, source_trail_from_trace, trace_from_markers
 from ..utils import extend_unique
 from .types import effective_asset_profile
-
-PUBLIC_SOURCE_BY_ARTICLE_SOURCE = {
-    "elsevier_xml": "elsevier_xml",
-    "elsevier_pdf": "elsevier_pdf",
-    "springer_html": "springer_html",
-    "wiley_browser": "wiley_browser",
-    "science": "science",
-    "pnas": "pnas",
-    "crossref_meta": "crossref_meta",
-}
 
 
 def finalize_article(
@@ -39,7 +30,9 @@ def finalize_article(
 def public_source_for_article(article: ArticleModel) -> str:
     if "fallback:metadata_only" in article.quality.source_trail:
         return "metadata_only"
-    return PUBLIC_SOURCE_BY_ARTICLE_SOURCE.get(article.source, article.source)
+    if article.source in known_article_source_names():
+        return article.source
+    return article.source
 
 
 def relative_asset_link(value: str | None, *, target_path: Path) -> str | None:

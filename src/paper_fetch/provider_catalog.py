@@ -138,6 +138,12 @@ def provider_status_order() -> tuple[str, ...]:
     return provider_names()
 
 
+def is_official_provider(provider_name: str | None) -> bool:
+    normalized = str(provider_name or "").strip().lower()
+    spec = PROVIDER_CATALOG.get(normalized)
+    return bool(spec and spec.official)
+
+
 def provider_managed_abstract_only_names() -> frozenset[str]:
     return frozenset(
         spec.name
@@ -156,9 +162,17 @@ def default_asset_profile_for_provider(provider_name: str | None) -> AssetDefaul
     return spec.asset_default if spec is not None else "none"
 
 
-def default_asset_profile_for_source(source_name: str | None) -> AssetDefault:
+def provider_for_source(source_name: str | None) -> str | None:
     normalized = str(source_name or "").strip().lower()
-    provider_name = SOURCE_PROVIDER_MAP.get(normalized)
+    return SOURCE_PROVIDER_MAP.get(normalized)
+
+
+def known_article_source_names() -> frozenset[str]:
+    return frozenset(SOURCE_PROVIDER_MAP)
+
+
+def default_asset_profile_for_source(source_name: str | None) -> AssetDefault:
+    provider_name = provider_for_source(source_name)
     return default_asset_profile_for_provider(provider_name)
 
 

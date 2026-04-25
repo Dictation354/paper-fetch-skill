@@ -8,7 +8,10 @@ from paper_fetch.provider_catalog import (
     SOURCE_PROVIDER_MAP,
     default_asset_profile_for_provider,
     default_asset_profile_for_source,
+    is_official_provider,
+    known_article_source_names,
     official_provider_names,
+    provider_for_source,
     provider_managed_abstract_only_names,
     provider_status_order,
 )
@@ -56,6 +59,15 @@ class ProviderCatalogTests(unittest.TestCase):
             },
         )
 
+    def test_is_official_provider_follows_catalog(self) -> None:
+        for name, spec in PROVIDER_CATALOG.items():
+            self.assertEqual(is_official_provider(name), spec.official)
+
+        self.assertTrue(is_official_provider(" Elsevier "))
+        self.assertFalse(is_official_provider("crossref"))
+        self.assertFalse(is_official_provider("unknown"))
+        self.assertFalse(is_official_provider(None))
+
     def test_source_asset_defaults_follow_provider_catalog(self) -> None:
         for source, provider in SOURCE_PROVIDER_MAP.items():
             self.assertEqual(
@@ -63,6 +75,17 @@ class ProviderCatalogTests(unittest.TestCase):
                 default_asset_profile_for_provider(provider),
             )
         self.assertEqual(default_asset_profile_for_source("unknown_source"), "none")
+
+    def test_provider_for_source_follows_source_provider_map(self) -> None:
+        for source, provider in SOURCE_PROVIDER_MAP.items():
+            self.assertEqual(provider_for_source(source), provider)
+
+        self.assertEqual(provider_for_source(" Elsevier_XML "), "elsevier")
+        self.assertIsNone(provider_for_source("unknown_source"))
+        self.assertIsNone(provider_for_source(None))
+
+    def test_known_article_source_names_include_all_source_keys(self) -> None:
+        self.assertEqual(known_article_source_names(), frozenset(SOURCE_PROVIDER_MAP))
 
     def test_catalog_preserves_publisher_doi_domain_inference(self) -> None:
         self.assertEqual(publisher_identity.infer_provider_from_doi("10.1038/nphys1170"), "springer")

@@ -11,7 +11,7 @@ from ..config import build_runtime_env
 from ..http import HttpTransport
 from ..logging_utils import emit_structured_log
 from ..models import ArticleModel, AssetProfile, metadata_only_article
-from ..provider_catalog import provider_managed_abstract_only_names
+from ..provider_catalog import is_official_provider, provider_managed_abstract_only_names
 from ..providers.base import ProviderArtifacts, ProviderFailure, ProviderFetchResult
 from ..providers.registry import build_clients
 from ..tracing import trace_from_markers
@@ -444,7 +444,7 @@ def fetch_article(
     if article is not None:
         return article
 
-    if provider_name in {"elsevier", "springer", "wiley", "science", "pnas"}:
+    if is_official_provider(provider_name):
         extend_unique(source_trail, [f"fallback:{provider_name}_html_managed_by_provider"])
 
     return _fallback_to_metadata_only(
