@@ -46,6 +46,13 @@ from .html_assets import (
 
 logger = logging.getLogger("paper_fetch.providers.browser_workflow")
 
+_IMAGE_DOCUMENT_FETCH_TIMEOUT_MS = 15000
+_CLOUDFLARE_CHALLENGE_TITLE_TOKENS = (
+    "just a moment",
+    "attention required",
+    "checking your browser",
+)
+
 __all__ = [
     "BrowserWorkflowBootstrapResult",
     "BrowserWorkflowClient",
@@ -165,6 +172,11 @@ def _looks_like_image_response_payload(
     if magic_type:
         return True
     return False
+
+
+def _looks_like_cloudflare_challenge_title(title: str | None) -> bool:
+    normalized = normalize_text(title).lower()
+    return bool(normalized and any(token in normalized for token in _CLOUDFLARE_CHALLENGE_TITLE_TOKENS))
 
 
 class _SharedPlaywrightImageDocumentFetcher:
@@ -410,6 +422,10 @@ class _SharedPlaywrightImageDocumentFetcher:
                 return None
             if isinstance(image_info, Mapping) and image_info.get("ready"):
                 return dict(image_info)
+            if isinstance(image_info, Mapping) and _looks_like_cloudflare_challenge_title(
+                str(image_info.get("title") or "")
+            ):
+                return None
             try:
                 page.wait_for_timeout(500)
             except Exception:
@@ -429,7 +445,7 @@ class _SharedPlaywrightImageDocumentFetcher:
         try:
             fetched = page.evaluate(
                 """
-                async (imageSrc) => {
+                async ([imageSrc, timeoutMs]) => {
                   const bytesToBase64 = (bytes) => {
                     let binary = '';
                     const chunkSize = 0x8000;
@@ -439,26 +455,51 @@ class _SharedPlaywrightImageDocumentFetcher:
                     }
                     return btoa(binary);
                   };
+                  const controller = new AbortController();
+                  const timer = setTimeout(() => controller.abort(), timeoutMs);
                   try {
                     const response = await fetch(imageSrc, {
                       credentials: 'include',
-                      cache: 'force-cache',
+                      cache: 'no-store',
+                      signal: controller.signal,
                     });
+                    const contentType = response.headers.get('content-type') || '';
+                    const normalizedContentType = contentType.split(';', 1)[0].trim().toLowerCase();
+                    if (
+                      normalizedContentType
+                      && !normalizedContentType.startsWith('image/')
+                      && normalizedContentType !== 'application/octet-stream'
+                    ) {
+                      return {
+                        ok: response.ok,
+                        status: response.status,
+                        url: response.url || imageSrc,
+                        contentType,
+                        nonImage: true,
+                        title: document.title || '',
+                      };
+                    }
                     const buffer = await response.arrayBuffer();
                     const bytes = new Uint8Array(buffer);
                     return {
                       ok: response.ok,
                       status: response.status,
                       url: response.url || imageSrc,
-                      contentType: response.headers.get('content-type') || '',
+                      contentType,
                       bodyB64: bytesToBase64(bytes),
                     };
                   } catch (error) {
-                    return { ok: false, error: String(error || '') };
+                    return {
+                      ok: false,
+                      error: String((error && (error.name || error.message)) || error || ''),
+                      timedOut: error && error.name === 'AbortError',
+                    };
+                  } finally {
+                    clearTimeout(timer);
                   }
                 }
                 """,
-                image_src,
+                [image_src, _IMAGE_DOCUMENT_FETCH_TIMEOUT_MS],
             )
         except Exception:
             return None

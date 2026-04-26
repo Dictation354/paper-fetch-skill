@@ -1,7 +1,7 @@
 {
   "name": "paper-fetch-skill-formula-tools",
   "private": true,
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Auxiliary Node tools for MathML to LaTeX evaluation",
   "license": "UNLICENSED",
   "dependencies": {

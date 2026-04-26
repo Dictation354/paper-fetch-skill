@@ -2,6 +2,23 @@
 
 All notable public changes to `paper-fetch-skill` are documented in this file.
 
+## 1.0.0 - 2026-04-26
+
+### Changed
+
+- Released the package as `1.0.0` and updated the default `paper-fetch-skill/1.0` User-Agent.
+- Hardened Wiley / Science / PNAS seeded Playwright image fetching so Cloudflare challenge pages and non-image responses fail quickly instead of stalling a live review.
+
+### Docs
+
+- Documented the short-timeout behavior for seeded Playwright image fetches in the FlareSolverr workflow notes.
+
+### Validation
+
+- `PYTHONPATH=src python3 -m pytest -n 0 tests/unit/test_provider_request_options.py`
+- `PYTHONPATH=src python3 -m pytest -n 0 tests/unit/test_science_pnas_provider.py -k 'download_related_assets or image'`
+- Live smoke: Wiley `10.1111/gcb.16414`, Science `10.1126/science.ady3136`, and PNAS `10.1073/pnas.2406303121` produced full-text Markdown with full-size body images using the WSLg FlareSolverr preset.
+
 ## 2026-04-25
 
 ### Changed

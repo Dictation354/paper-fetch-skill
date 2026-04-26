@@ -60,6 +60,20 @@ class RecordingTransport:
         return response
 
 
+class _FakeImagePage:
+    def __init__(self, result: dict[str, object]) -> None:
+        self.result = result
+        self.evaluate_calls: list[tuple[str, object]] = []
+        self.wait_for_timeout_calls: list[int] = []
+
+    def evaluate(self, script, arg):
+        self.evaluate_calls.append((script, arg))
+        return self.result
+
+    def wait_for_timeout(self, milliseconds: int) -> None:
+        self.wait_for_timeout_calls.append(milliseconds)
+
+
 class ProviderRequestOptionsTests(unittest.TestCase):
     def test_crossref_metadata_uses_default_timeout_and_rate_limit_retry(self) -> None:
         transport = RecordingTransport(
@@ -384,6 +398,43 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         facade_opener_builder.assert_called_once()
         facade_requester.assert_called_once()
         self.assertEqual(result["assets"][0]["downloaded_bytes"], len(b"facade-image"))
+
+    def test_playwright_image_page_fetch_is_abortable_and_does_not_cache_challenge_pages(self) -> None:
+        page = _FakeImagePage({"ok": False, "error": "AbortError", "timedOut": True})
+        fetcher = browser_workflow._SharedPlaywrightImageDocumentFetcher(
+            browser_context_seed_getter=lambda: {},
+            seed_urls_getter=lambda: [],
+        )
+
+        result = fetcher._payload_from_page_fetch_url(page, "https://example.test/cdn/figure.jpg")
+
+        self.assertIsNone(result)
+        script, arg = page.evaluate_calls[0]
+        self.assertIn("AbortController", script)
+        self.assertIn("cache: 'no-store'", script)
+        self.assertEqual(
+            arg,
+            ["https://example.test/cdn/figure.jpg", browser_workflow._IMAGE_DOCUMENT_FETCH_TIMEOUT_MS],
+        )
+
+    def test_playwright_image_wait_stops_immediately_on_cloudflare_challenge_title(self) -> None:
+        page = _FakeImagePage(
+            {
+                "ready": False,
+                "imageCount": 0,
+                "title": "Just a moment...",
+                "contentType": "text/html",
+            }
+        )
+        fetcher = browser_workflow._SharedPlaywrightImageDocumentFetcher(
+            browser_context_seed_getter=lambda: {},
+            seed_urls_getter=lambda: [],
+        )
+
+        result = fetcher._wait_for_primary_image(page)
+
+        self.assertIsNone(result)
+        self.assertEqual(page.wait_for_timeout_calls, [])
 
     def test_html_asset_download_uses_figure_page_full_size_before_preview(self) -> None:
         transport = RecordingTransport(

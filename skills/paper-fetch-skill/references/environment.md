@@ -1,7 +1,7 @@
 # Environment
 
 - `PAPER_FETCH_ENV_FILE`: Optional path to an explicit environment file. The default user config file is resolved with `platformdirs` and is outside the repo; repo-local config files are not auto-loaded.
-- `PAPER_FETCH_SKILL_USER_AGENT`: Optional custom HTTP `User-Agent`; defaults to `paper-fetch-skill/0.2`.
+- `PAPER_FETCH_SKILL_USER_AGENT`: Optional custom HTTP `User-Agent`; defaults to `paper-fetch-skill/1.0`.
 - `CROSSREF_MAILTO`: Recommended contact email for Crossref polite pool requests.
 - `ELSEVIER_API_KEY`: Required for official Elsevier full-text access.
 - `ELSEVIER_INSTTOKEN`: Optional institution token for Elsevier entitlement.

@@ -197,6 +197,7 @@ PYTHONPATH=src pytest -n 0 \
 - `download_tier=preview` 本身只是诊断标签；当 source trail 带 `download:*_assets_preview_accepted` 且资产尺寸达标时，不应直接当作下载失败
 - formula-only preview fallback 不自动算 live review 的 `asset_download_failure`；figure/table preview fallback 仍需要 accepted 轨迹或其它证据才能降噪
 - `wiley` / `science` / `pnas` 不再先走普通 HTTP 直连；full-size 与 preview 候选都会通过 seeded Playwright browser context 获取。若刷新 FlareSolverr seed 后仍失败，才按资产下载问题处理
+- seeded Playwright 图片获取里的页面内 `fetch()` 带有短超时；如果候选图实际落到 Cloudflare `Just a moment...` 等非图片页面，会快速失败并进入下一候选或刷新 seed 重试，而不是长期卡住整个 live review
 - PDF/ePDF fallback 仍是 text-only；只有 HTML 成功路径承诺尝试正文资产下载
 
 ## 相关文档
