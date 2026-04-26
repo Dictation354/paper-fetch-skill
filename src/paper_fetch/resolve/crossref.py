@@ -1,7 +1,7 @@
-"""Resolve-layer adapter around the Crossref metadata client."""
+"""Resolve-layer adapter around the Crossref metadata lookup client."""
 
 from __future__ import annotations
 
-from ..providers.crossref import CrossrefClient as CrossrefLookupClient
+from ..metadata.crossref import CrossrefLookupClient
 
 __all__ = ["CrossrefLookupClient"]
