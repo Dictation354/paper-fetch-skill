@@ -6,6 +6,8 @@ import re
 import urllib.parse
 import unicodedata
 
+import idutils
+
 from .normalize_journal_name import normalize_journal_name
 from .provider_catalog import (
     PROVIDER_CATALOG,
@@ -37,15 +39,31 @@ DOI_DASH_TRANSLATION = str.maketrans(
 )
 
 
-def normalize_doi(doi: str | None) -> str:
-    if not doi:
-        return ""
+def _clean_doi_value(doi: str) -> str:
     value = unicodedata.normalize("NFKC", doi).strip().lower().translate(DOI_DASH_TRANSLATION)
     value = re.sub(r"^https?://(dx\.)?doi\.org/", "", value)
     value = re.sub(r"^doi:\s*", "", value)
     value = re.sub(r"\s+", "", value)
-    value = value.rstrip(").,;")
-    return value
+    return value.rstrip(").,;")
+
+
+def _idutils_normalized_doi(value: str) -> str:
+    if not value:
+        return ""
+    try:
+        if not idutils.is_doi(value):
+            return ""
+        normalized = idutils.normalize_doi(value)
+    except Exception:
+        return ""
+    return _clean_doi_value(str(normalized or ""))
+
+
+def normalize_doi(doi: str | None) -> str:
+    if not doi:
+        return ""
+    value = _clean_doi_value(doi)
+    return _idutils_normalized_doi(value) or value
 
 
 def extract_doi(text: str | None) -> str | None:

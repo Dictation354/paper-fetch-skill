@@ -8,8 +8,9 @@ import json
 import re
 import urllib.parse
 from dataclasses import asdict, dataclass, field
-from difflib import SequenceMatcher
 from typing import Any, Mapping
+
+from rapidfuzz import fuzz
 
 from ..config import build_runtime_env, build_user_agent
 from ..errors import ProviderFailure
@@ -57,7 +58,7 @@ def token_jaccard_score(left: str, right: str) -> float:
 
 
 def sequence_ratio(left: str, right: str) -> float:
-    return SequenceMatcher(None, normalize_title(left), normalize_title(right)).ratio()
+    return fuzz.ratio(normalize_title(left), normalize_title(right)) / 100
 
 
 def candidate_score(query: str, candidate_title: str) -> float:
