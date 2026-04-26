@@ -301,7 +301,7 @@ CLI / MCP
 
 - 已通过 provider candidate、request options、waterfall 和 Science/PNAS provider 测试确认 canonical runtime 行为。
 
-### P1：Browser provider URL candidate builders 重复
+### P1（已修复）：Browser provider URL/PDF candidate builders 已 profile 化
 
 涉及文件：
 
@@ -312,24 +312,14 @@ CLI / MCP
 
 现状：
 
-- Science、PNAS、Wiley 都执行：
-  - preferred landing URL
-  - base host generation
-  - path templates
-  - ordered dedupe
-- PDF candidate builders 也高度相似，只是模板顺序和 Crossref PDF 位置不同。
+- 已新增 `ProviderBrowserProfile`，Science、PNAS、Wiley 的 `hosts`、`base_hosts`、`html_path_templates`、`pdf_path_templates` 和 `crossref_pdf_position` 均由 profile 声明。
+- HTML/PDF candidate 生成已收敛到 `_browser_workflow_shared.build_browser_workflow_html_candidates()` 与 `build_browser_workflow_pdf_candidates()`。
+- provider-owned `_science_html.py`、`_pnas_html.py`、`_wiley_html.py` 仍保留薄入口，用于 provider-specific 测试、golden corpus 和 profile 声明，不再各自维护完整候选生成算法。
 
-建议：
+修复状态：
 
-- 增加配置驱动 builder：
-  - `build_provider_html_candidates(profile, doi, landing_page_url)`
-  - `build_provider_pdf_candidates(profile, doi, crossref_pdf_url)`
-- 将差异放进 profile 字段：
-  - `html_path_templates`
-  - `pdf_path_templates`
-  - `crossref_pdf_position`
-  - `hosts`
-  - `base_hosts`
+- Phase 3 已完成 profile-driven browser workflow；Phase 8 已删除旧 `_science_pnas.py` compat module。
+- Candidate ordering 继续由 provider candidate tests 和 golden corpus 保护。
 
 风险：
 
@@ -339,7 +329,7 @@ CLI / MCP
 
 - 为每个 provider 增加 candidate ordering snapshot 测试。
 
-### P1：Crossref PDF link 提取重复
+### P1（已修复）：Crossref PDF link 提取重复
 
 涉及文件：
 
@@ -348,12 +338,12 @@ CLI / MCP
 
 现状：
 
-- 两个模块都从 Crossref `fulltext_links` 里判断 PDF URL，使用 URL token 和 content type。
+- Crossref PDF URL 判断已集中到 `_pdf_candidates.extract_pdf_url_from_metadata_links()`。
+- Browser workflow 的 PDF candidate path 通过 `_pdf_candidates.build_pdf_candidates()` 和 `_browser_workflow_shared.build_browser_workflow_pdf_candidates()` 复用统一判断，不再维护另一套 Crossref PDF link 提取逻辑。
 
-建议：
+修复状态：
 
-- 让 `_pdf_candidates.extract_pdf_url_from_metadata_links()` 成为唯一实现。
-- Browser workflow 直接复用该函数。
+- Phase 3 已完成；相关行为由 Science/PNAS/Wiley candidate ordering tests 覆盖。
 
 风险：
 
@@ -457,7 +447,7 @@ CLI / MCP
 
 - 用 AAAS、PNAS、Wiley script 样本做单元测试。
 
-### P2：Markdown inline normalization 重复
+### P2（已修复）：Markdown inline normalization 重复
 
 涉及文件：
 
@@ -468,18 +458,13 @@ CLI / MCP
 
 现状：
 
-- 多个模块分别处理 sub/sup、换行、标点、Markdown emphasis 附近的 inline text normalization。
-- 规则轻微漂移会造成难以排查的 Markdown 差异。
+- 已新增 `extraction/html/inline.py`，统一 HTML body、heading、table cell 的 `sub`/`sup`、空白和标点贴合规则。
+- HTML section renderer、table renderer、Science/PNAS browser HTML pipeline 已复用该 helper。
+- XML inline text 仍由 XML markdown renderer 的既有路径处理，不与 HTML policy 强行合并。
 
-建议：
+修复状态：
 
-- 增加共享 inline normalization helper，并用 policy 区分：
-  - XML inline text
-  - HTML body text
-  - HTML heading text
-  - table cell text
-  - citation-aware text
-- renderer-specific 行为通过 policy 参数表达，而不是复制 regex。
+- Phase 4 已完成；`tests/unit/test_html_shared_helpers.py` 和 provider Markdown/golden tests 覆盖关键空白与 inline formatting 行为。
 
 风险：
 
@@ -489,7 +474,7 @@ CLI / MCP
 
 - 覆盖 sub/sup punctuation、inline formula、italic/bold、citation sentinel、table cell。
 
-### P2：Section taxonomy 分散
+### P2（已修复）：Section taxonomy 分散
 
 涉及文件：
 
@@ -500,18 +485,13 @@ CLI / MCP
 
 现状：
 
-- abstract/front matter/back matter/data availability/ancillary heading 集合分散定义。
-- DOM 分类和 Markdown block 过滤维护了相近但不完全相同的 taxonomy。
+- Section taxonomy 已集中到 `extraction/html/semantics.py`。
+- DOM heading 分类与 Markdown heading 解析/分类共用 canonical heading sets。
+- Science structured abstract、PNAS significance、Wiley abbreviations、Springer/Nature section conventions 仍通过 provider-specific hook 或 fixture-protected rules 表达。
 
-建议：
+修复状态：
 
-- 增加共享 section taxonomy：
-  - heading sets
-  - identity token sets
-  - section kind enum/literals
-  - DOM heading classifier
-  - Markdown heading classifier
-- 允许 provider profile 扩展 Science structured abstract、PNAS significance、Wiley abbreviations、Springer/Nature section conventions。
+- Phase 4 已完成；`extraction/html/_runtime.py` 和 `_science_pnas_html.py` 不再维护本地 Markdown heading 集合。
 
 风险：
 
@@ -521,7 +501,7 @@ CLI / MCP
 
 - 覆盖 abstract-only detection、data availability retention、references removal、narrative article types。
 
-### P2：Table rendering 应单一来源
+### P2（已修复）：Table rendering 应单一来源
 
 涉及文件：
 
@@ -532,17 +512,13 @@ CLI / MCP
 
 现状：
 
-- 已有共享 `_html_tables.py`，但 `_science_pnas_html.py` 仍保留旧 table analysis/rendering。
-- Springer 的 inline table supplement fetch 是 provider-specific，应保留。
+- Table matrix、rowspan/colspan、header flatten 和 Markdown table rendering 已收敛到 `providers/_html_tables.py`。
+- `_science_pnas_html.py` 不再保留旧 table analysis/rendering 本地实现。
+- Springer 的 inline table supplement retrieval 仍是 provider-specific，但渲染使用共享 table 路径。
 
-建议：
+修复状态：
 
-- 让 `_html_tables.py` 成为唯一 table matrix/rendering 实现。
-- 增加注入点：
-  - inline citation renderer
-  - table caption extraction policy
-  - degraded/fallback placeholder text
-- Springer 保留 table supplement retrieval，但最终渲染使用共享代码。
+- Phase 4 已完成；Springer table tests、Science/PNAS table tests 和 golden criteria 覆盖复杂表格行为。
 
 风险：
 
@@ -552,7 +528,7 @@ CLI / MCP
 
 - 运行 Springer table tests、Science/PNAS table tests、含复杂表格的 golden criteria。
 
-### P2：Figure link injection 存在两套策略
+### P2（已修复）：Figure link injection 存在两套策略
 
 涉及文件：
 
@@ -563,17 +539,12 @@ CLI / MCP
 
 现状：
 
-- 抽取阶段 figure link 插入和下载后 `rewrite_inline_figure_links()` 使用不同匹配逻辑。
+- Figure link matching 已新增 `extraction/html/figure_links.py`。
+- 抽取阶段 injection 与 post-download `rewrite_inline_figure_links()` 共用 figure label normalization、caption matching、URL/path alias matching 和 downloaded `path` 优先级。
 
-建议：
+修复状态：
 
-- 引入共享 `FigureLinker` 或 helper：
-  - label normalization
-  - caption matching
-  - URL alias matching
-  - downloaded asset path preference
-  - publisher profile options
-- 抽取阶段和 asset 下载后都复用它。
+- Phase 4 已完成；provider asset rewrite tests 和 golden fixture 检查继续保护 Science、PNAS、Wiley、Springer 的差异。
 
 风险：
 
@@ -584,7 +555,7 @@ CLI / MCP
 - 每个 provider 的 asset rewrite 测试。
 - Golden fixture 检查相对 asset link。
 
-### P2：Formula detection 规则重复
+### P2（已修复）：Formula detection 规则重复
 
 涉及文件：
 
@@ -595,18 +566,13 @@ CLI / MCP
 
 现状：
 
-- Formula image URL regex 和 formula container tokens 重复。
-- MathML 渲染已有部分共享，但 HTML formula discovery 分散。
-
-建议：
-
-- 增加共享 `html_formula_rules.py`：
-  - formula image URL pattern
-  - formula ancestor/container tokens
-  - candidate image attributes
-  - MathML extraction helper
-  - display vs inline classifier
+- HTML formula discovery 已集中到 `extraction/html/formula_rules.py`。
+- Formula image URL pattern、container tokens、candidate attrs、MathML extraction、display formula 判断和 formula image detection 已由 HTML section renderer、Science/PNAS HTML pipeline 和 asset extraction 复用。
 - XML formula rendering 继续留在 `_article_markdown_math.py`。
+
+修复状态：
+
+- Phase 4 已完成；Science、Wiley、Springer、Elsevier XML 的 formula conversion 和 HTML Markdown 测试覆盖关键行为。
 
 风险：
 
@@ -616,7 +582,7 @@ CLI / MCP
 
 - 运行 Science、Wiley、Springer、Elsevier XML 的 formula conversion 和 HTML Markdown 测试。
 
-### P2：Springer/Nature noise profile 有误导性
+### P2（已修复）：Springer/Nature noise profile 有误导性
 
 涉及文件：
 
@@ -625,12 +591,12 @@ CLI / MCP
 
 现状：
 
-- Springer/Nature 代码传递或暗示 `springer_nature` noise profile，但 runtime 只识别 generic 和 pnas-specific promo tokens，未知值会回退 generic。
+- `springer_nature` noise profile 已在 `extraction/html/_runtime.py` 注册。
+- profile 只包含已有 Springer/Nature fixture 或单元测试保护的 promo/noise tokens，不再静默回退 generic。
 
-建议：
+修复状态：
 
-- 要么注册真实 `springer_nature` profile，要么停止传递该名称。
-- 只有在有具体额外 tokens/selectors 且有测试保护时，才注册新 profile。
+- Phase 4 已完成；Springer/Nature extraction tests 覆盖 rights/permissions、related content、back matter 等噪声路径。
 
 风险：
 
@@ -720,7 +686,7 @@ CLI / MCP
 
 - 运行 resolve query tests 和 Crossref provider metadata tests。
 
-### P3：Artifact 与 cache policy 分散在 workflow、CLI、MCP
+### P3（已修复）：Artifact 与 cache policy 分散在 workflow、CLI、MCP
 
 涉及文件：
 
@@ -731,12 +697,13 @@ CLI / MCP
 
 现状：
 
-- Provider payload saving、Markdown saving、fetch envelope cache、MCP resource handling 分散在不同层。
+- 已新增 `ArtifactStore` / `DownloadPolicy` / `FetchCache`。
+- Workflow 通过 `ArtifactStore` 管理 provider PDF/binary local copy、Springer HTML copy 和 asset warning/source-trail 诊断。
+- MCP fetch-envelope sidecar load/write、cache request match、revision 校验和 cache index refresh 已下沉到 `mcp.fetch_cache.FetchCache`。
 
-建议：
+修复状态：
 
-- 增加 `ArtifactStore`、`DownloadPolicy`、`FetchCache`。
-- Workflow 只产出 artifact intents 和 article result；adapter 决定如何写文件。
+- Phase 6 已完成；CLI output、MCP、cache 和 provider artifact 行为由对应 unit tests 覆盖。
 
 风险：
 
@@ -746,7 +713,7 @@ CLI / MCP
 
 - CLI output tests、MCP integration tests、cache index tests。
 
-### P3：HTML asset compatibility facade 使用隐藏全局修改
+### P3（已修复）：HTML asset compatibility facade 使用隐藏全局修改
 
 涉及文件：
 
@@ -755,15 +722,13 @@ CLI / MCP
 
 现状：
 
-- Compatibility facade 临时 monkey-patch `_asset_impl` 内部函数。
+- `providers/html_assets.py` 不再临时 monkey-patch `extraction.html._assets` 内部函数。
+- `download_figure_assets()` 显式支持 `cookie_opener_builder`、`opener_requester`、`image_document_fetcher` 等依赖注入。
+- Browser workflow 通过 shared Playwright image document fetcher 注入 publisher-owned asset 下载路径。
 
-建议：
+修复状态：
 
-- 改成显式依赖注入：
-  - `opener_factory`
-  - `request_fn`
-  - `image_document_fetcher`
-  - `figure_page_fetcher`
+- Phase 6 已完成；asset downloader tests 和 provider request option tests 覆盖显式注入路径。
 
 风险：
 
@@ -772,6 +737,17 @@ CLI / MCP
 验证：
 
 - Asset downloader tests 和并行测试。
+
+## 剩余后续 Backlog（收敛版）
+
+除本小节外，前文 P0-P3 中标为“已修复”的条目都应视为历史问题记录，不再代表当前待办。当前仍值得单独推进的后续项收敛为：
+
+1. 统一 landing HTML fetch / metadata probe：抽出可复用 `fetch_landing_html(...)`，让 resolve、routing probe 和 Springer 共享解码、HTML metadata、final URL 与 redirect 诊断，但保留 Springer 的 provider-specific redirect policy。
+2. 收尾 HTML 作者抽取共享层：在现有 `_browser_workflow_authors.py` 基础上，继续合并 Springer 与 browser providers 之间的 meta/schema/person/selector 规则，同时保留 provider-specific ignore phrase、datalayer/json-ld 优先级。
+3. 统一 script JSON / datalayer parsing：抽出 JavaScript assignment、function call、push payload 的 JSON 提取 helper，provider 模块只保留对象路径解析和字段选择。
+4. 明确 provider typing 边界：为 metadata/fulltext/status/asset 能力引入 `typing.Protocol`，减少 workflow 对具体 base class、`Any` 和运行时 `hasattr` 的依赖。
+5. 拆清 Crossref HTTP client 边界：将 Crossref lookup 底层 HTTP client 从 `providers/crossref.py` 下沉到 `clients/` 或 `metadata/` 层，让 provider 和 resolve 共同依赖同一底层 client。
+6. 单独评估剩余可选 package 替换：`urllib3.util.Retry`、FlareSolverr 多进程 rate limiter、image type/dimensions 包、`idutils` 和 `rapidfuzz` 都需要行为标定后再推进，不能和 provider routing 或 Markdown extraction 混在同一改动里。
 
 ## 可用成熟 Package 替代机会
 
@@ -795,16 +771,15 @@ CLI / MCP
 
 - 当前实现有结构化日志、取消检查、最大等待时间和 `RequestFailure` 形状，这些都必须保留。
 
-### `.env` 与平台目录
+### `.env` 与平台目录（已完成核心替换）
 
 现状：
 
-- `src/paper_fetch/config.py` 手写 `.env` 解析和 XDG 路径。
+- Phase 7 已用 `python-dotenv` 和 `platformdirs` 替换手写 `.env` 解析与默认用户 config/data 目录生成。
+- 仍保留 `PAPER_FETCH_DOWNLOAD_DIR` 优先、`XDG_DATA_HOME` 覆盖 data base、process/base env 最高优先级等既有行为。
 
 候选：
 
-- `python-dotenv`
-- `platformdirs`
 - 可选 `pydantic-settings`
 
 收益：
@@ -815,15 +790,12 @@ CLI / MCP
 
 - 必须保持现有环境变量优先级。
 
-### 内存 HTTP Cache
+### 内存 HTTP Cache（已完成核心替换）
 
 现状：
 
-- `src/paper_fetch/http.py` 自实现 TTL LRU，并统计 total body bytes。
-
-候选：
-
-- `cachetools.TTLCache`
+- Phase 7 已用 `cachetools.TTLCache` 替换 `OrderedDict + expires_at` 的内存 GET cache。
+- textual-only、敏感 header/query 脱敏、TTL、entry capacity、单响应 body 上限和 total body bytes 上限仍由项目 wrapper 保留。
 
 收益：
 
@@ -833,16 +805,16 @@ CLI / MCP
 
 - 当前 total-body-byte limit、敏感 header/query 脱敏 cache key 仍需要 wrapper。
 
-### MCP / 文件 Cache
+### MCP / 文件 Cache（已完成 filelock 保护）
 
 现状：
 
-- `src/paper_fetch/mcp/cache_index.py` 手写 JSON index、扫描和去重。
+- Phase 7 已用 `filelock` 保护 MCP cache index read-modify-write 和 fetch-envelope sidecar 写入。
+- index JSON shape、fetch-envelope sidecar version、resource URI 和 scoped cache 行为继续保持兼容。
 
 候选：
 
 - `diskcache`
-- 如果保留 JSON 兼容，可加 `filelock`
 
 收益：
 
