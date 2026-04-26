@@ -270,9 +270,10 @@ CLI 抓取期错误的退出码为：
 
 ## Repo-local 验收
 
-如果你在仓库源码目录里做本地验证，推荐显式带上 `PYTHONPATH=src`。默认 `pytest` 现在只覆盖 `tests/unit` + `tests/integration`，并通过 `xdist` 走多进程并行；`tests/live` 需要显式指定路径并串行运行：
+如果你在仓库源码目录里做本地验证，先安装测试依赖，并推荐显式带上 `PYTHONPATH=src`。默认 `pytest` 现在只覆盖 `tests/unit` + `tests/integration`，并通过 `xdist` 走多进程并行；`tests/live` 需要显式指定路径并串行运行：
 
 ```bash
+python3 -m pip install '.[dev]'
 PYTHONPATH=src pytest tests/unit/test_cli.py tests/unit/test_service.py tests/unit/test_mcp.py
 PYTHONPATH=src pytest
 ```

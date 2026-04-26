@@ -30,6 +30,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
+  "PyYAML>=6,<7",
   "pytest-xdist>=3.6,<4",
   "ruff>=0.8,<1",
 ]

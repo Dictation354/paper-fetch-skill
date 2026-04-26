@@ -1,6 +1,6 @@
 ---
 name: paper-fetch-skill
-description: Use when: fetch one known paper by DOI, URL, or title, or verify a citation list of identifiable papers. Not for: topic surveys, literature discovery, or recommendation-only requests.
+description: "Use when: fetch one known paper by DOI, URL, or title, or verify a citation list of identifiable papers. Not for: topic surveys, literature discovery, or recommendation-only requests."
 ---
 
 # Paper Fetch Skill

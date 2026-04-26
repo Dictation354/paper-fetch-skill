@@ -8,6 +8,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
+import yaml
+
 from paper_fetch.mcp._instructions import DEFAULT_FETCH_NOTES, DEFAULT_FETCH_VALUES, ERROR_CONTRACT, SKILL_ENVIRONMENT_VARIABLES
 from tests.paths import REPO_ROOT, SKILL_DIR
 
@@ -70,6 +72,16 @@ def assert_skill_bundle_matches_repo(testcase: unittest.TestCase, installed_root
 
 
 class StaticSkillTests(unittest.TestCase):
+    def test_static_skill_frontmatter_is_valid_yaml(self) -> None:
+        text = STATIC_SKILL_PATH.read_text(encoding="utf-8")
+        self.assertTrue(text.startswith("---\n"))
+        frontmatter = text.split("---\n", 2)[1]
+
+        metadata = yaml.safe_load(frontmatter)
+
+        self.assertEqual(metadata["name"], "paper-fetch-skill")
+        self.assertIn("description", metadata)
+
     def test_static_skill_entrypoint_stays_thin_and_points_at_references(self) -> None:
         text = STATIC_SKILL_PATH.read_text(encoding="utf-8")
 
