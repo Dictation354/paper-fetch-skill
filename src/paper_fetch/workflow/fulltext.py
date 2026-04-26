@@ -14,7 +14,7 @@ from ..logging_utils import emit_structured_log
 from ..models import ArticleModel, AssetProfile, metadata_only_article
 from ..provider_catalog import is_official_provider, provider_managed_abstract_only_names
 from ..providers.base import ProviderArtifacts, ProviderFailure, ProviderFetchResult
-from ..providers.protocols import FulltextProvider, RawFulltextProvider
+from ..providers.protocols import AssetProvider, FulltextProvider, RawFulltextProvider
 from ..runtime import RUNTIME_UNSET, RuntimeContext, resolve_runtime_context
 from ..tracing import trace_from_markers
 from ..utils import (
@@ -129,7 +129,7 @@ def _provider_fetch_result(
     raw_payload = provider_client.fetch_raw_fulltext(doi, metadata)
     downloaded_assets: list[Mapping[str, Any]] = []
     asset_failures: list[Mapping[str, Any]] = []
-    if download_dir is not None and asset_profile != "none":
+    if download_dir is not None and asset_profile != "none" and isinstance(provider_client, AssetProvider):
         asset_results = provider_client.download_related_assets(
             doi,
             metadata,
@@ -146,7 +146,7 @@ def _provider_fetch_result(
         asset_failures=asset_failures,
     )
     return ProviderFetchResult(
-        provider=safe_text(provider_client.name) or "provider",
+        provider=safe_text(getattr(provider_client, "name", "")) or safe_text(raw_payload.provider) or "provider",
         article=article,
         content=getattr(raw_payload, "content", None),
         warnings=list(getattr(raw_payload, "warnings", []) or []),

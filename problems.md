@@ -353,7 +353,7 @@ CLI / MCP
 
 - 覆盖 `application/pdf`、`/doi/pdf/`、`/doi/pdfdirect/`、`/doi/epdf/`、`/fullpdf`、`.pdf`、`download=true`。
 
-### P1：Landing HTML fetch 和 metadata probe 重复
+### P1（已修复）：Landing HTML fetch 和 metadata probe 重复
 
 涉及文件：
 
@@ -363,8 +363,9 @@ CLI / MCP
 
 现状：
 
-- 多处执行相似 HTML GET，配置类似 Accept/User-Agent，再解析 HTML metadata。
-- Springer 有定制 redirect 处理，应保留 provider-specific redirect 限制。
+- 已新增 `paper_fetch.extraction.html.landing.fetch_landing_html()`。
+- Resolve URL 解析、routing landing probe 和 Springer HTML 获取共享 HTML fetch、decode、metadata extraction、final URL、status/header 返回结构。
+- Springer 仍保留自己的 redirect policy、headers 和 provider-specific failure mapping。
 
 建议：
 
@@ -381,9 +382,9 @@ CLI / MCP
 
 验证：
 
-- 增加 redirect 和 HTML metadata fixture 测试。
+- 已运行 resolve query、provider waterfall 和 Springer HTML regression tests。
 
-### P1：HTML 作者抽取规则重复
+### P1（已修复）：HTML 作者抽取规则重复
 
 涉及文件：
 
@@ -394,12 +395,9 @@ CLI / MCP
 
 现状：
 
-- 以下逻辑重复：
-  - 判断是否像作者名
-  - 忽略 ORCID/URL/email
-  - 读取 meta `citation_author`
-  - 读取 schema.org `givenName` + `familyName`
-  - provider selector
+- `_browser_workflow_authors.py` 现在是 HTML author helper owner。
+- Meta author、schema/person author、selector DOM author 和通用 reject rules 已共享。
+- Science/PNAS/Wiley/Springer 只保留 provider-specific selector、ignore phrase、priority order 与 datalayer/json-ld hook。
 
 建议：
 
@@ -417,9 +415,9 @@ CLI / MCP
 
 验证：
 
-- 各 provider 作者抽取测试和 golden metadata 检查。
+- 已运行 Science/PNAS provider、Springer HTML regression 和 golden corpus tests。
 
-### P1：Script JSON / Datalayer 解析重复
+### P1（已修复）：Script JSON / Datalayer 解析重复
 
 涉及文件：
 
@@ -429,7 +427,9 @@ CLI / MCP
 
 现状：
 
-- 各 provider 都用 regex 抓 JavaScript JSON assignment 或 push payload，再调用 `json.loads`。
+- 已新增 `paper_fetch.providers._script_json`。
+- JavaScript assignment、function call、script JSON 和 balanced JSON payload 抽取共享同一套 `json.loads` error handling。
+- Provider 模块只保留对象路径解析和 provider-specific fallback。
 
 建议：
 
@@ -445,7 +445,7 @@ CLI / MCP
 
 验证：
 
-- 用 AAAS、PNAS、Wiley script 样本做单元测试。
+- 已运行 Science/PNAS provider、Markdown 和 candidate script JSON tests。
 
 ### P2（已修复）：Markdown inline normalization 重复
 
@@ -630,7 +630,7 @@ CLI / MCP
 
 - 运行 provider fetch result template、waterfall、service 和 regression sample 测试。
 
-### P3：Provider interface 依赖具体基类和运行时判断
+### P3（已修复）：Provider interface 依赖具体基类和运行时判断
 
 涉及文件：
 
@@ -639,8 +639,9 @@ CLI / MCP
 
 现状：
 
-- `ProviderClient` 是带默认方法的基类，默认方法抛 `ProviderFailure`。
-- Workflow 仍使用 `Any` 和 `hasattr(fetch_result)` 之类运行时判断。
+- 已新增 `paper_fetch.providers.protocols`，定义 `MetadataProvider`、`FulltextProvider`、`RawFulltextProvider`、`StatusProvider` 和 `AssetProvider`。
+- `workflow.fulltext`、`workflow.metadata`、`workflow.routing`、`runtime` 和 `service` 已用 capability protocol / `object` 边界替代关键 `Any` 与具体 base-class 依赖。
+- `ProviderClient` 保留为 convenience base class；registry 返回对象和 runtime 行为不变。
 
 建议：
 
@@ -658,9 +659,9 @@ CLI / MCP
 
 验证：
 
-- 不需要专门类型测试，但运行时 provider 测试应保持通过。
+- 已运行 provider catalog、provider waterfall、service provider fallback 和 service tests。
 
-### P3：Crossref lookup 同时服务 provider 和 resolution，却位于 providers 下
+### P3（已修复）：Crossref lookup 同时服务 provider 和 resolution，却位于 providers 下
 
 涉及文件：
 
@@ -670,8 +671,10 @@ CLI / MCP
 
 现状：
 
-- Resolve 层间接复用 provider Crossref client。
-- provider 与 metadata client 边界不清晰。
+- 已新增 `paper_fetch.metadata.crossref.CrossrefLookupClient` 作为底层 Crossref HTTP lookup owner。
+- `providers/crossref.py` 变为 provider adapter，继续暴露 `CrossrefClient` public import path。
+- `resolve/crossref.py` 改为导出底层 lookup client，不再从 provider 层 re-export。
+- Crossref request headers、`mailto`、rate-limit retry、metadata normalization 和 error mapping 语义保持不变。
 
 建议：
 
@@ -684,7 +687,7 @@ CLI / MCP
 
 验证：
 
-- 运行 resolve query tests 和 Crossref provider metadata tests。
+- 已运行 resolve query、provider request options、provider status 和 service tests。
 
 ### P3（已修复）：Artifact 与 cache policy 分散在 workflow、CLI、MCP
 
@@ -738,26 +741,27 @@ CLI / MCP
 
 - Asset downloader tests 和并行测试。
 
-## 剩余后续 Backlog（收敛版）
+## 剩余后续 Backlog（收敛版，已完成）
 
-除本小节外，前文 P0-P3 中标为“已修复”的条目都应视为历史问题记录，不再代表当前待办。当前仍值得单独推进的后续项收敛为：
+除本小节外，前文 P0-P3 中标为“已修复”的条目都应视为历史问题记录，不再代表当前待办。2026-04-26 已完成最后一轮 backlog 收尾：
 
-1. 统一 landing HTML fetch / metadata probe：抽出可复用 `fetch_landing_html(...)`，让 resolve、routing probe 和 Springer 共享解码、HTML metadata、final URL 与 redirect 诊断，但保留 Springer 的 provider-specific redirect policy。
-2. 收尾 HTML 作者抽取共享层：在现有 `_browser_workflow_authors.py` 基础上，继续合并 Springer 与 browser providers 之间的 meta/schema/person/selector 规则，同时保留 provider-specific ignore phrase、datalayer/json-ld 优先级。
-3. 统一 script JSON / datalayer parsing：抽出 JavaScript assignment、function call、push payload 的 JSON 提取 helper，provider 模块只保留对象路径解析和字段选择。
-4. 明确 provider typing 边界：为 metadata/fulltext/status/asset 能力引入 `typing.Protocol`，减少 workflow 对具体 base class、`Any` 和运行时 `hasattr` 的依赖。
-5. 拆清 Crossref HTTP client 边界：将 Crossref lookup 底层 HTTP client 从 `providers/crossref.py` 下沉到 `clients/` 或 `metadata/` 层，让 provider 和 resolve 共同依赖同一底层 client。
-6. 单独评估剩余可选 package 替换：`urllib3.util.Retry`、FlareSolverr 多进程 rate limiter、image type/dimensions 包、`idutils` 和 `rapidfuzz` 都需要行为标定后再推进，不能和 provider routing 或 Markdown extraction 混在同一改动里。
+1. Landing HTML fetch / metadata probe 已统一到 `paper_fetch.extraction.html.landing.fetch_landing_html()`；Springer redirect 与 failure mapping 保持 provider-owned。
+2. HTML 作者抽取共享层已收敛到 `_browser_workflow_authors.py`；provider 模块只保留选择器、忽略短语和优先级差异。
+3. Script JSON / datalayer parsing 已收敛到 `paper_fetch.providers._script_json`。
+4. Provider typing 边界已由 `paper_fetch.providers.protocols` 明确，`ProviderClient` 继续作为 convenience base class。
+5. Crossref lookup 底层 client 已拆到 `paper_fetch.metadata.crossref.CrossrefLookupClient`，provider adapter 和 resolve 共同复用。
+6. 可选 package 替换已按等价目标完成：HTTP retry 使用 `urllib3.util.Retry`，FlareSolverr rate-limit JSON read-modify-write 使用 `filelock`，图片 MIME/尺寸使用 `filetype` + `imagesize`，DOI/标题匹配使用 `idutils` + `rapidfuzz`。
 
 ## 可用成熟 Package 替代机会
 
-这些替换是可选项，应在架构边界更清晰后推进，不建议优先于模块解耦。
+这些替换曾作为可选项记录；在 provider routing、Markdown extraction 和 cache sidecar 语义已由测试锁定后，已按等价替换目标逐项完成。
 
-### HTTP Retry
+### HTTP Retry（已完成）
 
 现状：
 
-- `src/paper_fetch/http.py` 使用 `urllib3.PoolManager`，但关闭 urllib3 自带 retry，手写 429/5xx/timeout retry。
+- `src/paper_fetch/http.py` 仍用本地 request loop 保留 public request options、structured logs、cancel checks、`Retry-After` 最大等待和 `RequestFailure` shape。
+- Transient / 429 retry policy 已改用 `urllib3.util.Retry` 表达；cache key、body size limit 和 textual-only cache 行为不变。
 
 候选：
 
@@ -824,11 +828,12 @@ CLI / MCP
 
 - 需要保持现有 MCP resource URI 兼容。
 
-### FlareSolverr Rate Limiting
+### FlareSolverr Rate Limiting（已完成）
 
 现状：
 
-- `src/paper_fetch/providers/_flaresolverr.py` 用 JSON 文件记录窗口计数，只用进程内锁保护。
+- `src/paper_fetch/providers/_flaresolverr.py` 仍用原 JSON 文件记录 provider 粒度窗口计数。
+- `enforce_rate_limits()` 的 JSON read-modify-write 已用现有 `filelock` 增加跨进程锁；JSON shape、错误消息、`retry_after_seconds` 和 `probe_rate_limit_window()` 只读语义不变。
 
 候选：
 
@@ -844,11 +849,13 @@ CLI / MCP
 
 - 现有 provider 粒度错误消息和限流策略需要映射。
 
-### Image Type And Dimensions
+### Image Type And Dimensions（已完成）
 
 现状：
 
-- `src/paper_fetch/extraction/html/_assets.py` 手写 JPEG/PNG/GIF/WebP magic 和尺寸解析。
+- 已新增 `paper_fetch.extraction.image_payloads`。
+- 图片 MIME 识别使用 `filetype`；JPEG/PNG/GIF/WebP 尺寸读取使用 `imagesize`。
+- 不能识别时仍返回原有 empty/unknown 行为，不引入 Pillow；preview acceptance threshold 和 asset warning/source-trail 语义不变。
 
 候选：
 
@@ -863,12 +870,12 @@ CLI / MCP
 
 - 依赖体积可能不值得；当前只支持少数格式时自实现也可接受。
 
-### DOI 与标题相似度
+### DOI 与标题相似度（已完成）
 
 现状：
 
-- `src/paper_fetch/publisher_identity.py` 使用自定义 DOI regex/normalize。
-- `src/paper_fetch/resolve/query.py` 使用 token Jaccard + `SequenceMatcher`。
+- `src/paper_fetch/publisher_identity.py` 保留原宽松 DOI cleanup，再用 `idutils` 做校验/规范化辅助；失败时回退原 cleanup 结果，不收紧召回。
+- `src/paper_fetch/resolve/query.py` 保留 token Jaccard 权重、confidence threshold 和 ambiguity margin，只把 `SequenceMatcher` ratio component 替换为 `rapidfuzz.fuzz.ratio`。
 
 候选：
 

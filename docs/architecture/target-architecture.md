@@ -129,7 +129,7 @@ Date: 2026-04-26
 - `resolution`
   - 负责 resolve、歧义处理、DOI 归一化
 - `metadata`
-  - 负责 Crossref / publisher metadata merge
+  - 负责 Crossref / publisher metadata merge；底层 Crossref HTTP lookup owner 是 `paper_fetch.metadata.crossref.CrossrefLookupClient`
 - `routing`
   - 负责 provider 候选、probe、fallback eligibility
 - `fulltext`
@@ -148,12 +148,16 @@ Date: 2026-04-26
 - 暴露通用 HTML 解析与 metadata 提取接口
 - 暴露 provider 可复用的 shared extraction helpers
 - 为 resolve 层提供纯 extraction 依赖边界
+- 通过 `paper_fetch.extraction.html.landing.fetch_landing_html()` 统一 DOI/URL landing HTML fetch、decode、metadata extraction、final URL、status/header 返回结构
+- 通过 `paper_fetch.extraction.image_payloads` 统一图片 MIME 与 JPEG/PNG/GIF/WebP 尺寸识别
 
 关键约束：
 
 - `resolve/query.py` 不再 import `providers.*`
 - HTML parsing / markdown extraction 不应再通过 provider 模块向上泄漏
 - provider-neutral HTML access signals、section semantics、language filtering 已固定在 `paper_fetch.extraction.html.signals`、`paper_fetch.extraction.html.semantics`、`paper_fetch.extraction.html.language`
+- landing fetch helper 是 provider-neutral；Springer 仍在 provider 层定义自己的 redirect policy、headers 和 failure mapping，只复用 fetch/decode/metadata extraction
+- 图片 payload helper 使用 `filetype` 做 MIME 识别，使用 `imagesize` 做 JPEG/PNG/GIF/WebP 尺寸读取；识别失败时继续表现为 unknown
 - HTML-derived citation cleanup 位于 `paper_fetch.markdown.citations`
 - HTML / Markdown full-text availability verdict 位于 `paper_fetch.quality.html_availability`
 - 旧的 `paper_fetch.providers._html_access_signals`、`_html_availability`、`_html_citations`、`_html_semantics` 与 `_language_filter` 兼容转发入口已移除；测试和新代码必须直接使用上述 canonical owner
@@ -175,9 +179,13 @@ Date: 2026-04-26
 - `ProviderArtifacts`
 - `ProviderFetchResult`
 
+能力边界通过 `paper_fetch.providers.protocols` 表达：`MetadataProvider`、`FulltextProvider`、`RawFulltextProvider`、`StatusProvider` 和 `AssetProvider` 用于 workflow typing；`ProviderClient` 仍是 provider 可继承的 convenience base class，不是 registry/runtime 的唯一抽象边界。
+
 `RawFulltextPayload.metadata` 只保留为只读兼容导出：`route`、`markdown_text`、`warnings`、`source_trail`、diagnostics、browser seed 等结构化字段必须由 `ProviderContent`、`warnings`、`trace`、`merged_metadata` 等 typed fields 传入。构造 `RawFulltextPayload(metadata={...})` 不再把 legacy magic keys 注入结构化字段，只允许非结构化 passthrough metadata 留在导出里。
 
 Provider 身份与能力配置统一来自 `paper_fetch.provider_catalog.PROVIDER_CATALOG`。新增 provider 时，应先补 `ProviderSpec`，再接入 provider client；routing、默认资产策略、MCP status 顺序和 registry 都从 catalog 派生。
+
+Crossref 的 provider adapter 位于 `paper_fetch.providers.crossref.CrossrefClient`，继续保留 public import path；resolve 与 provider adapter 共同依赖 `paper_fetch.metadata.crossref.CrossrefLookupClient`，避免 resolution 层反向复用 provider 层。
 
 架构测试会阻止已删除的 legacy surface 回流：provider-neutral 层不得 import `paper_fetch.providers._*`，测试不得重新 import 旧 `_html_*`、`_language_filter` 或 `_science_pnas` compatibility modules，provider catalog 仍是 provider 身份、状态顺序和 registry client factory 的单一事实来源。
 
@@ -204,6 +212,8 @@ Provider 身份与能力配置统一来自 `paper_fetch.provider_catalog.PROVIDE
 - 有限短重试
 - 协作式取消检查
 
+`HttpTransport` 仍以本地 request loop 保持 public request options、structured logs、cancel checks、`Retry-After` 最大等待和 `RequestFailure` 形状；瞬时错误与 429 retry policy 由 `urllib3.util.Retry` 表达。缓存 key、textual-only cache 和 body size limit 不变。
+
 ## 端到端业务流程
 
 统一主线如下：
@@ -226,6 +236,8 @@ service facade
 - DOI
 - URL
 - 标题
+
+DOI cleanup 保留现有宽松输入清理，再用 `idutils` 做 DOI 校验/规范化辅助；失败时保留清理结果，不收紧召回。标题候选评分继续使用 token Jaccard 权重、confidence threshold 和 ambiguity margin，只把字符串 ratio component 换成 `rapidfuzz.fuzz.ratio`。
 
 它会产出这些关键信息：
 
@@ -408,6 +420,7 @@ workflow 会尽可能拿到两类元数据：
 - 文章组装会先用已下载资产把正文里的远程 figure / table / formula image 链接改写成本地路径，再做 Markdown 图片块边界归一化，避免图片和标题、正文句子或 display math 粘连。
 - 结构化 metadata 在进入 front matter 前会解开 HTML entity，避免 `&amp;` 这类站点编码泄漏到标题、作者、期刊或摘要。
 - `assets[*].download_tier`、`download_url`、`content_type`、`downloaded_bytes`、`width`、`height` 是下载诊断，不应被下游丢弃。
+- 图片 payload MIME/尺寸来自 `filetype` / `imagesize` helper；不能识别时继续不写入宽高，preview acceptance threshold 仍是既有策略。
 - `quality.semantic_losses.table_layout_degraded_count` 表示版式降级，`table_semantic_loss_count` 才表示语义内容丢失。
 
 ### `provider_status`
@@ -516,8 +529,8 @@ MCP 层会把缓存暴露成 resources：
 应该主要改：
 
 - `src/paper_fetch/providers/`
-- `src/paper_fetch/providers/registry.py`
-- 必要时更新 `publisher_identity.py`
+- `src/paper_fetch/provider_catalog.py`
+- 必要时更新 provider-specific extraction / metadata adapter
 
 不应该把 provider 逻辑塞进 CLI 或 MCP 层。
 

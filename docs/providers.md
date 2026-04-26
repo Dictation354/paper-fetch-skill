@@ -74,6 +74,8 @@ domain > publisher > DOI fallback
    - 当调用方显式收敛到 Crossref-only 且没有进入 metadata fallback 时，底层文章来源可保持 `crossref_meta`。
    - 当 fulltext waterfall 失败并进入 metadata fallback 时，`FetchEnvelope.source` 会公开表现为 `metadata_only`；底层 `ArticleModel.source` 仍可能是 `crossref_meta`。
 
+实现边界上，Crossref HTTP lookup 的底层 owner 是 `paper_fetch.metadata.crossref.CrossrefLookupClient`；`paper_fetch.providers.crossref.CrossrefClient` 只是 provider adapter，并继续保留 public import path。
+
 ### `preferred_providers` 的语义
 
 - 它限制最终允许进入的五家 provider fulltext 主链候选。
@@ -103,6 +105,7 @@ resolve
 - 输入可以是 DOI、URL 或标题。
 - 标题查询会走 Crossref 候选打分。
 - 如果标题候选不够确定，会返回 `ambiguous`，而不是直接抓取错误论文。
+- DOI cleanup 保留原宽松规则，再用 `idutils` 做校验/规范化辅助；标题候选仍用 token Jaccard 权重、既有 confidence threshold 和 ambiguity margin，字符串 ratio component 由 `rapidfuzz.fuzz.ratio` 提供。
 
 ### 2. metadata 与路由
 
@@ -245,6 +248,7 @@ CLI、Python API、MCP 当前统一采用这些默认值：
 - 正文 Markdown 图片链接和资产路径会按 URL、路径、相对 `body_assets/...` 后缀和 basename 做等价比较，避免正文图在尾部重复。
 - 文章组装阶段也会用 `article.assets[*]` 把正文里的远程 figure / table / formula image 链接改写为已下载本地路径，再做 Markdown 图片块边界归一化，避免图片和标题、正文句子或公式块粘连。
 - 下载资产会保留 `download_tier`、`download_url`、`original_url`、`content_type`、`downloaded_bytes`、`width`、`height`。
+- 图片 payload MIME 识别由 `filetype` 负责，JPEG/PNG/GIF/WebP 尺寸读取由 `imagesize` 负责；无法识别时仍按 unknown/空宽高处理，不引入 Pillow。
 - `wiley` / `science` / `pnas` 的 HTML 资产主链路只应输出 `download_tier="full_size"` 或 `download_tier="preview"`；旧的 `playwright_canvas_fallback` tier 只可能来自仍保留 HTTP-first 语义的通用下载路径。
 - `download_tier="preview"` 只有在宽高满足当前阈值 `300x200` 时才会标记为可接受 preview；否则仍会进入 preview fallback / asset issue 诊断。
 - live review 中，公式图片是公式语义的 fallback，因此 formula-only preview fallback 不自动归类为 `asset_download_failure`；figure/table preview fallback 仍按资产问题处理，除非已有 accepted 诊断。
@@ -454,6 +458,7 @@ Springer direct HTML / direct HTTP PDF 路线当前没有额外必填 publisher 
 - 对 `5xx` 和 timeout 级网络错误做有限短重试
 - `429` 只按 `Retry-After` 处理，不混进瞬时错误重试
 - 底层使用 `urllib3.PoolManager` 复用连接
+- Retry policy 使用 `urllib3.util.Retry` 表达；本地 wrapper 继续保留 public request options、structured logs、cancel checks、最大等待时间和 `RequestFailure` 形状
 
 ### `provider_status()`
 

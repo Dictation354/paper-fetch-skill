@@ -18,8 +18,6 @@ from .base import (
 
 @runtime_checkable
 class MetadataProvider(Protocol):
-    name: str
-
     def fetch_metadata(self, query: Mapping[str, str | None]) -> dict[str, Any]:
         ...
 
@@ -35,8 +33,6 @@ class StatusProvider(Protocol):
 
 @runtime_checkable
 class AssetProvider(Protocol):
-    name: str
-
     def download_related_assets(
         self,
         doi: str,
@@ -53,7 +49,7 @@ class AssetProvider(Protocol):
 
 
 @runtime_checkable
-class RawFulltextProvider(AssetProvider, Protocol):
+class RawFulltextProvider(Protocol):
     def fetch_raw_fulltext(self, doi: str, metadata: Mapping[str, Any]) -> RawFulltextPayload:
         ...
 
@@ -70,8 +66,6 @@ class RawFulltextProvider(AssetProvider, Protocol):
 
 @runtime_checkable
 class FulltextProvider(Protocol):
-    name: str
-
     def fetch_result(
         self,
         doi: str,

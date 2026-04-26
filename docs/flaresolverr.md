@@ -57,6 +57,7 @@ export FLARESOLVERR_SOURCE_DIR="$PWD/vendor/flaresolverr"
 - `FLARESOLVERR_ENV_FILE` 不会自动猜 preset
 - 三条限速变量对 browser 路径必填，未配置时 browser provider 直接拒绝运行
 - 默认限速账本会同时影响 `wiley` / `science` / `pnas`
+- 限速账本仍是 `<user-data>/paper-fetch/publisher_browser_rate_limits.json`，写入时用同目录 `.lock` 文件通过 `filelock` 保护跨进程 read-modify-write；JSON shape、provider 粒度、错误消息和 `retry_after_seconds` 不变
 
 ## preset 选择
 
@@ -181,6 +182,7 @@ PYTHONPATH=src pytest -n 0 \
 
 - 命中了本地限速账本
 - 需要等待账本窗口恢复，而不是继续重试
+- 多个 CLI / MCP 进程同时运行时会共用同一个 JSON 账本和 file lock，避免并发写入丢失窗口事件
 
 ### HTML 失败但 provider 最终成功
 
