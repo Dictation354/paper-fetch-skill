@@ -20,7 +20,7 @@ class RuntimeContext:
 
     env: Mapping[str, str] | None = None
     transport: HttpTransport | None = None
-    clients: Mapping[str, Any] | None = None
+    clients: Mapping[str, object] | None = None
     download_dir: Path | None = None
     cancel_check: Callable[[], bool] | None = None
     artifact_store: ArtifactStore | None = None
@@ -35,7 +35,7 @@ class RuntimeContext:
         elif self.download_dir is None:
             self.download_dir = self.artifact_store.download_dir
 
-    def get_clients(self) -> Mapping[str, Any]:
+    def get_clients(self) -> Mapping[str, object]:
         if self.clients is None:
             from .providers.registry import build_clients
 
@@ -50,7 +50,7 @@ def resolve_runtime_context(
     *,
     env: Mapping[str, str] | None | object = RUNTIME_UNSET,
     transport: HttpTransport | None | object = RUNTIME_UNSET,
-    clients: Mapping[str, Any] | None | object = RUNTIME_UNSET,
+    clients: Mapping[str, object] | None | object = RUNTIME_UNSET,
     download_dir: Path | None | object = RUNTIME_UNSET,
     cancel_check: Callable[[], bool] | None | object = RUNTIME_UNSET,
     artifact_store: ArtifactStore | None | object = RUNTIME_UNSET,

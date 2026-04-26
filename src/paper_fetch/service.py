@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Mapping
 
 from .http import HttpTransport
 from .models import FetchEnvelope, OutputMode, RenderOptions
@@ -43,7 +43,7 @@ def probe_has_fulltext(
     *,
     transport: HttpTransport | None | object = RUNTIME_UNSET,
     env: Mapping[str, str] | None | object = RUNTIME_UNSET,
-    clients: Mapping[str, Any] | None | object = RUNTIME_UNSET,
+    clients: Mapping[str, object] | None | object = RUNTIME_UNSET,
     context: RuntimeContext | None = None,
 ) -> HasFulltextProbeResult:
     runtime = resolve_runtime_context(context, env=env, transport=transport, clients=clients)
@@ -64,7 +64,7 @@ def fetch_paper(
     strategy: FetchStrategy | None = None,
     render: RenderOptions | None = None,
     download_dir: Path | None | object = RUNTIME_UNSET,
-    clients: Mapping[str, Any] | None | object = RUNTIME_UNSET,
+    clients: Mapping[str, object] | None | object = RUNTIME_UNSET,
     transport: HttpTransport | None | object = RUNTIME_UNSET,
     env: Mapping[str, str] | None | object = RUNTIME_UNSET,
     context: RuntimeContext | None = None,

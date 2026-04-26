@@ -10,6 +10,7 @@ from ..http import HttpTransport, RequestFailure
 from ..metadata_types import ProviderMetadata
 from ..provider_catalog import official_provider_names
 from ..providers.base import ProviderFailure
+from ..providers.protocols import MetadataProvider
 from ..runtime import RUNTIME_UNSET, RuntimeContext, resolve_runtime_context
 from ..publisher_identity import (
     infer_provider_from_doi,
@@ -124,12 +125,12 @@ def probe_official_provider(
     provider_name: str,
     *,
     doi: str,
-    clients: Mapping[str, Any],
+    clients: Mapping[str, object],
 ) -> RouteProbeResult:
     if provider_name != "elsevier":
         return RouteProbeResult(provider=provider_name, state="unknown")
     client = clients.get(provider_name)
-    if client is None:
+    if not isinstance(client, MetadataProvider):
         return RouteProbeResult(provider=provider_name, state="unknown")
     try:
         metadata = client.fetch_metadata({"doi": doi})
@@ -153,7 +154,7 @@ def probe_has_fulltext(
     *,
     transport: HttpTransport | None | object = RUNTIME_UNSET,
     env: Mapping[str, str] | None | object = RUNTIME_UNSET,
-    clients: Mapping[str, Any] | None | object = RUNTIME_UNSET,
+    clients: Mapping[str, object] | None | object = RUNTIME_UNSET,
     context: RuntimeContext | None = None,
     resolve_paper_fn=None,
 ) -> HasFulltextProbeResult:
@@ -179,7 +180,7 @@ def probe_has_fulltext(
     crossref_metadata: ProviderMetadata | None = None
     crossref_client = client_registry.get("crossref")
 
-    if doi and crossref_client is not None:
+    if doi and isinstance(crossref_client, MetadataProvider):
         try:
             crossref_metadata = cast(ProviderMetadata, dict(crossref_client.fetch_metadata({"doi": doi})))
             title = normalize_text(crossref_metadata.get("title")) or title
@@ -201,7 +202,7 @@ def probe_has_fulltext(
             if provider_name != "elsevier":
                 continue
             client = client_registry.get(provider_name)
-            if client is None:
+            if not isinstance(client, MetadataProvider):
                 continue
             try:
                 metadata = client.fetch_metadata({"doi": doi})

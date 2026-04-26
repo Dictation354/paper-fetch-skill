@@ -14,6 +14,7 @@ from ..logging_utils import emit_structured_log
 from ..models import ArticleModel, AssetProfile, metadata_only_article
 from ..provider_catalog import is_official_provider, provider_managed_abstract_only_names
 from ..providers.base import ProviderArtifacts, ProviderFailure, ProviderFetchResult
+from ..providers.protocols import FulltextProvider, RawFulltextProvider
 from ..runtime import RUNTIME_UNSET, RuntimeContext, resolve_runtime_context
 from ..tracing import trace_from_markers
 from ..utils import (
@@ -98,7 +99,7 @@ def maybe_save_provider_html_payload(
 
 
 def _provider_fetch_result(
-    provider_client: Any,
+    provider_client: FulltextProvider | RawFulltextProvider,
     *,
     doi: str,
     metadata: Mapping[str, Any],
@@ -106,7 +107,7 @@ def _provider_fetch_result(
     asset_profile: AssetProfile,
 ) -> ProviderFetchResult:
     download_dir = artifact_store.download_dir
-    if hasattr(provider_client, "fetch_result"):
+    if isinstance(provider_client, FulltextProvider):
         fetch_result = provider_client.fetch_result
         try:
             parameters = inspect.signature(fetch_result).parameters
@@ -121,6 +122,9 @@ def _provider_fetch_result(
                 artifact_store=artifact_store,
             )
         return fetch_result(doi, metadata, download_dir, asset_profile=asset_profile)
+
+    if not isinstance(provider_client, RawFulltextProvider):
+        raise ProviderFailure("not_supported", "Provider does not implement raw full-text retrieval.")
 
     raw_payload = provider_client.fetch_raw_fulltext(doi, metadata)
     downloaded_assets: list[Mapping[str, Any]] = []
@@ -142,7 +146,7 @@ def _provider_fetch_result(
         asset_failures=asset_failures,
     )
     return ProviderFetchResult(
-        provider=safe_text(getattr(provider_client, "name", "")) or "provider",
+        provider=safe_text(provider_client.name) or "provider",
         article=article,
         content=getattr(raw_payload, "content", None),
         warnings=list(getattr(raw_payload, "warnings", []) or []),
@@ -179,7 +183,7 @@ def _try_official_provider(
     provider_name: str | None,
     strategy: FetchStrategy,
     artifact_store: ArtifactStore,
-    clients: Mapping[str, Any],
+    clients: Mapping[str, object],
     warnings: list[str],
     source_trail: list[str],
 ) -> ArticleModel | None:
@@ -190,7 +194,7 @@ def _try_official_provider(
         return None
 
     provider_client = clients.get(provider_name)
-    if provider_client is None:
+    if not isinstance(provider_client, (FulltextProvider, RawFulltextProvider)):
         return None
     resolved_asset_profile = strategy.effective_asset_profile_for_provider(provider_name)
 
@@ -322,7 +326,7 @@ def fetch_article(
     *,
     strategy: FetchStrategy,
     download_dir: Path | None | object = RUNTIME_UNSET,
-    clients: Mapping[str, Any] | None | object = RUNTIME_UNSET,
+    clients: Mapping[str, object] | None | object = RUNTIME_UNSET,
     transport: HttpTransport | None | object = RUNTIME_UNSET,
     env: Mapping[str, str] | None | object = RUNTIME_UNSET,
     context: RuntimeContext | None = None,

@@ -6,6 +6,7 @@ from typing import Any, Mapping, cast
 
 from ..metadata_types import ProviderMetadata
 from ..providers.base import ProviderFailure
+from ..providers.protocols import MetadataProvider
 from ..utils import choose_public_landing_page_url, dedupe_authors, extend_unique, normalize_text, safe_text
 from .routing import (
     build_official_provider_candidates,
@@ -102,7 +103,7 @@ def metadata_from_resolution(resolved) -> ProviderMetadata:
 def fetch_metadata_for_resolved_query(
     resolved,
     *,
-    clients: Mapping[str, Any],
+    clients: Mapping[str, object],
     strategy: FetchStrategy,
 ) -> tuple[ProviderMetadata, str | None, list[str]]:
     official_metadata: ProviderMetadata | None = None
@@ -113,7 +114,7 @@ def fetch_metadata_for_resolved_query(
     crossref_is_public_source = crossref_allowed_as_source(strategy)
     crossref_client = clients.get("crossref")
 
-    if resolved.doi and crossref_client is not None:
+    if resolved.doi and isinstance(crossref_client, MetadataProvider):
         try:
             routing_metadata = cast(ProviderMetadata, dict(crossref_client.fetch_metadata({"doi": resolved.doi})))
             if routing_metadata:
