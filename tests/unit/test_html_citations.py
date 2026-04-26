@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import unittest
 
-from paper_fetch.providers._html_citations import (
+from paper_fetch.markdown.citations import (
     clean_citation_markers,
     is_citation_link,
     is_citation_text,

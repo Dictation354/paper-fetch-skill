@@ -29,7 +29,7 @@ TARGETED_CYCLE_PATHS = [
     PROVIDERS_DIR / "_pdf_candidates.py",
     PROVIDERS_DIR / "_html_section_markdown.py",
     PROVIDERS_DIR / "html_noise.py",
-    PROVIDERS_DIR / "_html_availability.py",
+    PAPER_FETCH_SRC / "quality" / "html_availability.py",
     PROVIDERS_DIR / "_science_pnas_profiles.py",
     PROVIDERS_DIR / "_science_pnas_postprocess.py",
     PROVIDERS_DIR / "_article_markdown_common.py",

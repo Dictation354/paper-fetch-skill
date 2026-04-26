@@ -6,7 +6,7 @@ from types import SimpleNamespace
 from paper_fetch.extraction.html._metadata import parse_html_metadata
 from paper_fetch.extraction.html._runtime import body_metrics
 from paper_fetch.providers import _pnas_html, _science_html, _springer_html, _wiley_html
-from paper_fetch.providers._html_availability import (
+from paper_fetch.quality.html_availability import (
     assess_html_fulltext_availability,
     assess_plain_text_fulltext_availability,
     assess_structured_article_fulltext_availability,

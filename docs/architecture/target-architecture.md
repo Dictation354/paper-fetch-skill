@@ -156,7 +156,7 @@ Date: 2026-04-25
 - provider-neutral HTML access signals、section semantics、language filtering 已固定在 `paper_fetch.extraction.html.signals`、`paper_fetch.extraction.html.semantics`、`paper_fetch.extraction.html.language`
 - HTML-derived citation cleanup 位于 `paper_fetch.markdown.citations`
 - HTML / Markdown full-text availability verdict 位于 `paper_fetch.quality.html_availability`
-- 旧的 `paper_fetch.providers._html_*` / `_language_filter` 只作为兼容转发层保留；核心模型层和 extraction 层不应再依赖它们
+- 旧的 `paper_fetch.providers._html_access_signals`、`_html_availability`、`_html_citations`、`_html_semantics` 与 `_language_filter` 兼容转发入口已移除；测试和新代码必须直接使用上述 canonical owner
 
 ### 7. Provider 层
 

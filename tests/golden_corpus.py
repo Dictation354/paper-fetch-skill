@@ -21,7 +21,7 @@ from paper_fetch.providers import (
     springer as springer_provider,
     wiley as wiley_provider,
 )
-from paper_fetch.providers._html_availability import assess_html_fulltext_availability
+from paper_fetch.quality.html_availability import assess_html_fulltext_availability
 from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
 from paper_fetch.tracing import trace_from_markers
 from paper_fetch.utils import normalize_text

@@ -9,8 +9,8 @@ from bs4 import BeautifulSoup
 
 from paper_fetch.http import HttpTransport
 from paper_fetch.providers import _springer_html, html_springer_nature, springer as springer_provider
-from paper_fetch.providers._html_availability import assess_html_fulltext_availability
-from paper_fetch.providers._html_citations import normalize_inline_citation_markdown
+from paper_fetch.markdown.citations import normalize_inline_citation_markdown
+from paper_fetch.quality.html_availability import assess_html_fulltext_availability
 from paper_fetch.providers._html_references import extract_numbered_references_from_html
 from paper_fetch.providers._html_section_markdown import render_clean_text_from_html
 from paper_fetch.providers.base import ProviderContent, RawFulltextPayload

@@ -3,7 +3,7 @@ from __future__ import annotations
 import unittest
 
 from paper_fetch.extraction.html._metadata import parse_html_metadata
-from paper_fetch.providers._html_availability import assess_html_fulltext_availability
+from paper_fetch.quality.html_availability import assess_html_fulltext_availability
 from tests.block_fixtures import iter_block_samples
 
 

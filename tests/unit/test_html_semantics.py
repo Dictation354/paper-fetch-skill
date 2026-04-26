@@ -4,7 +4,7 @@ import unittest
 
 from bs4 import BeautifulSoup
 
-from paper_fetch.providers._html_semantics import (
+from paper_fetch.extraction.html.semantics import (
     heading_category,
     identity_category,
     looks_like_explicit_body_container,

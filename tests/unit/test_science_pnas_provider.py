@@ -17,7 +17,7 @@ from paper_fetch.providers import (
     science as science_provider,
     wiley as wiley_provider,
 )
-from paper_fetch.providers._html_availability import assess_html_fulltext_availability
+from paper_fetch.quality.html_availability import assess_html_fulltext_availability
 from paper_fetch.providers.base import RawFulltextPayload
 from tests.block_fixtures import block_asset
 from tests.golden_criteria import golden_criteria_asset, golden_criteria_dir_for_doi

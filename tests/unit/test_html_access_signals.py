@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import unittest
 
-from paper_fetch.providers._html_access_signals import (
+from paper_fetch.extraction.html.signals import (
     detect_html_access_signals,
     detect_html_block,
     html_failure_message,
