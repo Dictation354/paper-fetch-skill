@@ -1150,32 +1150,39 @@ pytest
 未进入本阶段的后续事项：
 
 - Phase 3 后续可继续清理 browser workflow 命名和 profile 边界，但不与 Markdown rule consolidation 混在同一阶段。
-- Phase 5 的 provider waterfall/fetch result template 清理未在本阶段继续推进。
+- Phase 5 的 provider waterfall/fetch result template 清理已在后续阶段完成。
 - Phase 6 的 runtime context、artifact/cache policy、asset downloader 依赖注入仍按原计划后置。
 
-### Phase 5：Provider Waterfall 与 Fetch Result Template
+### Phase 5（已完成）：Provider Waterfall 与 Fetch Result Template
 
 目标：
 
 - 减少 provider fallback 编排和 result assembly 重复。
+- 保持 provider 行为、warning/source-trail 诊断语义和 public artifact 输出稳定。
 
 范围：
 
 - Provider 行为保持不变。
 
-任务：
+完成项：
 
-1. 增加 waterfall step abstraction，先迁移 Elsevier，因为 XML/PDF step 边界清晰。
-2. 迁移 Springer HTML/PDF。
-3. 迁移 BrowserWorkflow HTML/PDF。
-4. 迁移 Wiley HTML/TDM/browser PDF。
-5. 将 `ProviderClient.fetch_result` 改成 hook-based template method。
-6. BrowserWorkflow 和 Springer 只覆盖 abstract-only recovery hook。
+1. 新增 `src/paper_fetch/providers/_waterfall.py`，提供 `ProviderWaterfallStep`、`ProviderWaterfallState` 和 `run_provider_waterfall`，统一按 step 顺序执行、累积 warnings、保留失败 label、组合失败并写入 source markers。
+2. Elsevier、Springer、BrowserWorkflow（Science / PNAS 的 HTML/browser PDF 路径）和 Wiley（HTML/TDM/browser PDF）已迁移到 waterfall runner；各 provider step 仍保留自己的 payload、warning 文案、错误映射和 `fulltext:*` source trail marker。
+3. `ProviderClient.fetch_result` 已改为 hook-based template method，统一 raw payload、本地副本同步、asset 下载、warning/trace 合并、`to_article_model`、artifact 组装。
+4. BrowserWorkflow 与 Springer 不再复制完整 `fetch_result` 尾部流程，只通过 hook 处理 abstract-only 后 PDF recovery、provider-managed abstract-only finalize 和 provider-specific asset warning。
+5. Warning/source-trail 行为由 `tests/unit/test_provider_fetch_result_template.py`、`tests/unit/test_provider_waterfalls.py` 和 `tests/unit/test_science_pnas_provider.py` 锁定。
 
 退出标准：
 
-- Provider-specific class 不再复制完整 `fetch_result` routine。
-- Warning/source-trail 行为有测试覆盖并保持稳定。
+- Provider-specific class 不再复制完整 `fetch_result` routine：已完成。
+- Warning/source-trail 行为有测试覆盖并保持稳定：已完成。
+
+收尾验证：
+
+```bash
+pytest tests/unit/test_provider_fetch_result_template.py tests/unit/test_provider_waterfalls.py tests/unit/test_science_pnas_provider.py -q
+pytest
+```
 
 风险：
 
