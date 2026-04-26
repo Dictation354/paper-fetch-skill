@@ -72,6 +72,19 @@ class FetchCommonTests(unittest.TestCase):
             self.assertEqual(target.read_bytes(), b"old")
             self.assertFalse((Path(tmpdir) / "article.pdf.part").exists())
 
+    def test_build_asset_output_path_prefers_content_type_over_url_suffix(self) -> None:
+        with TemporaryDirectory() as tmpdir:
+            output_path = utils.build_asset_output_path(
+                Path(tmpdir),
+                "https://example.test/figure.jpg",
+                "image/webp",
+                "https://example.test/figure.jpg",
+                set(),
+            )
+
+        self.assertEqual(output_path.suffix, ".webp")
+        self.assertEqual(output_path.name, "figure.webp")
+
 
 if __name__ == "__main__":
     unittest.main()

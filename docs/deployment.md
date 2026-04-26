@@ -114,6 +114,7 @@ python -m paper_fetch.formula.install --target-dir "$PWD/.formula-tools" --no-no
 - `elsevier` 只需要 `ELSEVIER_API_KEY`
 - 如果只想启用 `wiley` 的官方 TDM API PDF lane，可以只配置 `WILEY_TDM_CLIENT_TOKEN`；这不会启用 HTML 资产下载或 seeded-browser PDF/ePDF fallback
 - `wiley` 现在走 `FlareSolverr HTML -> Wiley TDM API PDF -> seeded-browser publisher PDF/ePDF -> abstract-only / metadata-only`
+- `FLARESOLVERR_MIN_INTERVAL_SECONDS` 在代码层有 `5` 秒下限；更小的配置会自动提升到 `5`
 
 最常见入口是：
 

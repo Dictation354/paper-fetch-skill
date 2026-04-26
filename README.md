@@ -249,7 +249,7 @@ CLI 抓取期错误的退出码为：
 - `wiley` / `science` / `pnas` 的正文 figure / table / formula 图片资产下载以 shared Playwright browser context 为主链路；每次下载 attempt 只创建一次 context/page，并在多图之间复用
 - `science` / `pnas` 必须依赖 repo-local `vendor/flaresolverr/`
 - `wiley` 的 HTML 与 seeded-browser PDF/ePDF 路径依赖 repo-local `vendor/flaresolverr/`；`WILEY_TDM_CLIENT_TOKEN` 只启用官方 TDM API PDF lane
-- browser 路径需要显式配置 `FLARESOLVERR_ENV_FILE` 和本地限速变量
+- browser 路径需要显式配置 `FLARESOLVERR_ENV_FILE` 和本地限速变量；其中 `FLARESOLVERR_MIN_INTERVAL_SECONDS` 在代码层最低为 `5` 秒
 
 准备和排障细节见 [`docs/flaresolverr.md`](docs/flaresolverr.md)。
 

@@ -26,6 +26,7 @@ pip-wheel-metadata/
 # Secrets and local data
 .env
 live-downloads/
+.paper-fetch/
 problems.md
 agent-surface-plan.md
 docs/pm-dev-overview.local.md

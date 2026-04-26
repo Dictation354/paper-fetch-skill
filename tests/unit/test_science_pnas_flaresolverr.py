@@ -173,6 +173,27 @@ class SciencePnasFlareSolverrTests(unittest.TestCase):
         self.assertEqual(ctx.exception.code, "not_configured")
         self.assertIn("FLARESOLVERR_MIN_INTERVAL_SECONDS", ctx.exception.message)
 
+    def test_load_runtime_config_clamps_min_interval_to_code_floor(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            env_file = tmp / ".env.flaresolverr"
+            env_file.write_text('HEADLESS="true"\n', encoding="utf-8")
+
+            config = _flaresolverr.load_runtime_config(
+                {
+                    "FLARESOLVERR_ENV_FILE": str(env_file),
+                    "FLARESOLVERR_SOURCE_DIR": str(tmp / "vendor" / "flaresolverr"),
+                    "FLARESOLVERR_MIN_INTERVAL_SECONDS": "1",
+                    "FLARESOLVERR_MAX_REQUESTS_PER_HOUR": "300",
+                    "FLARESOLVERR_MAX_REQUESTS_PER_DAY": "2000",
+                    "XDG_DATA_HOME": str(tmp),
+                },
+                provider="wiley",
+                doi="10.1111/test",
+            )
+
+        self.assertEqual(config.min_interval_seconds, 5)
+
     def test_health_check_accepts_ok_payload(self) -> None:
         with mock.patch.object(_flaresolverr, "post_to_flaresolverr", return_value={"status": "ok"}):
             _flaresolverr.health_check("http://127.0.0.1:8191/v1")

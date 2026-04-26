@@ -1461,6 +1461,31 @@ class SciencePnasProviderTests(unittest.TestCase):
         }
         first_fetcher = mock.Mock(return_value=None)
         retry_fetcher = mock.Mock(return_value=None)
+        first_fetcher.failure_for = mock.Mock(
+            return_value={
+                "status": 403,
+                "content_type": "text/html; charset=UTF-8",
+                "title_snippet": "Just a moment...",
+                "body_snippet": "Just a moment...",
+                "reason": "cloudflare_challenge",
+            }
+        )
+        retry_fetcher.failure_for = mock.Mock(
+            return_value={
+                "status": 403,
+                "content_type": "text/html; charset=UTF-8",
+                "title_snippet": "Just a moment...",
+                "body_snippet": "Just a moment...",
+                "reason": "cloudflare_challenge",
+                "recovery_attempts": [
+                    {
+                        "status": "failed",
+                        "url": SCIENCE_SAMPLE.landing_url,
+                        "reason": "cloudflare_challenge",
+                    }
+                ],
+            }
+        )
 
         with tempfile.TemporaryDirectory() as tmpdir:
             runtime = self._runtime_config(tmpdir, "science", SCIENCE_SAMPLE.doi)
@@ -1505,6 +1530,68 @@ class SciencePnasProviderTests(unittest.TestCase):
         self.assertEqual(result["assets"], [])
         self.assertEqual(len(result["asset_failures"]), 1)
         self.assertEqual(result["asset_failures"][0]["source_url"], preview_url)
+        self.assertEqual(result["asset_failures"][0]["status"], 403)
+        self.assertEqual(result["asset_failures"][0]["title_snippet"], "Just a moment...")
+        self.assertEqual(result["asset_failures"][0]["reason"], "cloudflare_challenge")
+        self.assertEqual(result["asset_failures"][0]["recovery_attempts"][0]["status"], "failed")
+
+    def test_shared_playwright_image_fetcher_recovers_after_cloudflare_challenge(self) -> None:
+        image_url = "https://onlinelibrary.wiley.com/cms/asset/full/figure1.jpg"
+        figure_page_url = "https://onlinelibrary.wiley.com/doi/figure/10.1111/example"
+        challenge_recovery = mock.Mock(
+            return_value={
+                "status": "ok",
+                "url": figure_page_url,
+                "title_snippet": "Figure page",
+            }
+        )
+        fetcher = browser_workflow._build_shared_playwright_image_fetcher(
+            browser_context_seed_getter=lambda: {
+                "browser_cookies": [{"name": "cf_clearance", "value": "seed", "domain": ".wiley.com", "path": "/"}],
+                "browser_user_agent": "Mozilla/5.0",
+                "browser_final_url": figure_page_url,
+            },
+            seed_urls_getter=lambda: [figure_page_url],
+            browser_user_agent="Mozilla/5.0",
+            challenge_recovery=challenge_recovery,
+        )
+        fetcher._ensure_page = mock.Mock(return_value=object())
+        fetcher._sync_context_cookies = mock.Mock()
+        fetcher._warm_seed_urls = mock.Mock()
+
+        def side_effect(current_url: str):
+            if fetcher.failure_for(current_url) is None:
+                fetcher._record_failure(
+                    current_url,
+                    status=403,
+                    content_type="text/html; charset=UTF-8",
+                    title_snippet="Just a moment...",
+                    body_snippet="Just a moment...",
+                    reason="cloudflare_challenge",
+                )
+                return None
+            return {
+                "status_code": 200,
+                "headers": {"content-type": "image/jpeg"},
+                "body": b"\xff\xd8\xffrecovered-image",
+                "url": current_url,
+            }
+
+        fetcher._fetch_with_page = mock.Mock(side_effect=side_effect)
+
+        try:
+            result = fetcher(image_url, {"figure_page_url": figure_page_url})
+        finally:
+            fetcher.close()
+
+        self.assertIsNotNone(result)
+        assert result is not None
+        challenge_recovery.assert_called_once()
+        self.assertEqual(challenge_recovery.call_args.args[0], image_url)
+        self.assertEqual(challenge_recovery.call_args.args[2]["status"], 403)
+        self.assertEqual(fetcher._warm_seed_urls.call_args_list[0].kwargs["force"], False)
+        self.assertEqual(fetcher._warm_seed_urls.call_args_list[1].kwargs["force"], True)
+        self.assertEqual(result["url"], image_url)
 
     def test_pnas_provider_downloads_preview_through_shared_playwright_when_no_full_size_candidate(self) -> None:
         figure_page_url = "https://www.pnas.org/figures/figure-1"

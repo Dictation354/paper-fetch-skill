@@ -19,6 +19,7 @@ from ..models import (
     Section,
     TokenEstimateBreakdown,
     build_token_estimate_breakdown,
+    coerce_asset_failure_diagnostics,
     coerce_body_quality_metrics,
     coerce_semantic_losses,
     coerce_token_estimate_breakdown,
@@ -154,6 +155,7 @@ def quality_from_payload(value: Mapping[str, Any] | None) -> Quality:
         semantic_losses=coerce_semantic_losses(
             payload.get("semantic_losses") if isinstance(payload.get("semantic_losses"), Mapping) else None
         ),
+        asset_failures=coerce_asset_failure_diagnostics(payload.get("asset_failures")),
         extraction_revision=int(payload.get("extraction_revision") or FETCH_ENVELOPE_EXTRACTION_REVISION),
     )
 

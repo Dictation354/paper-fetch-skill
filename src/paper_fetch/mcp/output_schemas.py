@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from typing_extensions import TypedDict
 
 
@@ -118,6 +120,21 @@ class TraceEventOutput(TypedDict, total=False):
     message: str | None
 
 
+class AssetFailureOutput(TypedDict, total=False):
+    kind: str
+    heading: str
+    caption: str | None
+    source_url: str
+    section: str | None
+    status: int | None
+    content_type: str | None
+    final_url: str | None
+    title_snippet: str | None
+    body_snippet: str | None
+    reason: str
+    recovery_attempts: list[dict[str, Any]]
+
+
 class QualityOutput(TypedDict, total=False):
     has_fulltext: bool
     content_kind: str
@@ -131,6 +148,7 @@ class QualityOutput(TypedDict, total=False):
     flags: list[str]
     body_metrics: BodyMetricsOutput
     semantic_losses: SemanticLossesOutput
+    asset_failures: list[AssetFailureOutput]
     extraction_revision: int
 
 

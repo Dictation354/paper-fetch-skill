@@ -11,7 +11,7 @@
 - `FLARESOLVERR_URL`: Optional override for the local Wiley/Science/PNAS FlareSolverr endpoint; defaults to `http://127.0.0.1:8191/v1`.
 - `FLARESOLVERR_ENV_FILE`: Required for Science/PNAS and for Wiley HTML/browser PDF routes; points at a repo-local `vendor/flaresolverr` preset file. Wiley's TDM API PDF lane can run with `WILEY_TDM_CLIENT_TOKEN` without browser readiness.
 - `FLARESOLVERR_SOURCE_DIR`: Optional override for the repo-local `vendor/flaresolverr` directory.
-- `FLARESOLVERR_MIN_INTERVAL_SECONDS`: Required local minimum spacing for Wiley/Science/PNAS browser requests.
+- `FLARESOLVERR_MIN_INTERVAL_SECONDS`: Required local minimum spacing for Wiley/Science/PNAS browser requests. Values below `5` are clamped up to `5` seconds in code.
 - `FLARESOLVERR_MAX_REQUESTS_PER_HOUR`: Required local hourly cap for Wiley/Science/PNAS browser requests.
 - `FLARESOLVERR_MAX_REQUESTS_PER_DAY`: Required local daily cap for Wiley/Science/PNAS browser requests.
 - `PAPER_FETCH_DOWNLOAD_DIR`: Overrides the default CLI/MCP download directory; otherwise downloads use the user data directory, with CLI falling back to `live-downloads` only if that directory cannot be created.

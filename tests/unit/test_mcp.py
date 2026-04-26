@@ -488,6 +488,44 @@ class McpToolTests(unittest.TestCase):
         self.assertEqual(asset.width, 640)
         self.assertEqual(asset.height, 480)
 
+    def test_fetch_envelope_payload_preserves_quality_asset_failures(self) -> None:
+        request = mcp_tools.FetchPaperRequest(query="10.1000/example", modes=["article"])
+        envelope = sample_envelope(modes={"article"}, doi="10.1000/example")
+        assert envelope.article is not None
+        envelope.article.quality.asset_failures = [
+            {
+                "kind": "figure",
+                "heading": "Figure 1",
+                "source_url": "https://example.test/figure-1.png",
+                "status": 403,
+                "content_type": "text/html; charset=UTF-8",
+                "title_snippet": "Just a moment...",
+                "body_snippet": "Just a moment... Please enable JavaScript and Cookies.",
+                "reason": "cloudflare_challenge",
+                "recovery_attempts": [
+                    {
+                        "status": "failed",
+                        "url": "https://example.test/figure-page",
+                        "reason": "cloudflare_challenge",
+                    }
+                ],
+            }
+        ]
+        envelope.quality = envelope.article.quality
+
+        payload = mcp_tools._payload_from_envelope(envelope, request)
+        round_trip = mcp_tools._envelope_from_payload(payload)
+
+        self.assertEqual(payload["quality"]["asset_failures"][0]["status"], 403)
+        self.assertEqual(payload["quality"]["asset_failures"][0]["reason"], "cloudflare_challenge")
+        self.assertIsNotNone(round_trip)
+        assert round_trip is not None
+        self.assertEqual(round_trip.quality.asset_failures[0]["title_snippet"], "Just a moment...")
+        self.assertEqual(
+            round_trip.quality.asset_failures[0]["recovery_attempts"][0]["status"],
+            "failed",
+        )
+
     def test_fetch_paper_payload_prefer_cache_misses_when_revision_differs(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             download_dir = Path(tmpdir)

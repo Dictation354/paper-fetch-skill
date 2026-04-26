@@ -248,6 +248,7 @@ CLI、Python API、MCP 当前统一采用这些默认值：
 - 正文 Markdown 图片链接和资产路径会按 URL、路径、相对 `body_assets/...` 后缀和 basename 做等价比较，避免正文图在尾部重复。
 - 文章组装阶段也会用 `article.assets[*]` 把正文里的远程 figure / table / formula image 链接改写为已下载本地路径，再做 Markdown 图片块边界归一化，避免图片和标题、正文句子或公式块粘连。
 - 下载资产会保留 `download_tier`、`download_url`、`original_url`、`content_type`、`downloaded_bytes`、`width`、`height`。
+- 下载失败的资产会保留到 `article.quality.asset_failures` 与顶层 `quality.asset_failures`，可见 `status`、`content_type`、`title_snippet`、`body_snippet`、`reason` 以及 asset-level recovery 轨迹。
 - 图片 payload MIME 识别由 `filetype` 负责，JPEG/PNG/GIF/WebP 尺寸读取由 `imagesize` 负责；无法识别时仍按 unknown/空宽高处理，不引入 Pillow。
 - `wiley` / `science` / `pnas` 的 HTML 资产主链路只应输出 `download_tier="full_size"` 或 `download_tier="preview"`；旧的 `playwright_canvas_fallback` tier 只可能来自仍保留 HTTP-first 语义的通用下载路径。
 - `download_tier="preview"` 只有在宽高满足当前阈值 `300x200` 时才会标记为可接受 preview；否则仍会进入 preview fallback / asset issue 诊断。
@@ -283,6 +284,8 @@ CLI、Python API、MCP 当前统一采用这些默认值：
   - 对下载资产保留 `render_state`、`anchor_key`、`download_tier`、`download_url`、`original_url`、`content_type`、`downloaded_bytes`、`width`、`height` 等诊断字段
 - `article.quality.semantic_losses`
   - 表格现在区分 `table_layout_degraded_count` 和 `table_semantic_loss_count`；前者表示 Markdown 版式降级，后者才表示语义内容丢失
+- `article.quality.asset_failures`
+  - 对失败资产保留 `status`、`content_type`、`title_snippet`、`body_snippet`、`reason` 与 `recovery_attempts`
 
 ### Markdown 与语义 normalize
 
@@ -426,6 +429,7 @@ Springer direct HTML / direct HTTP PDF 路线当前没有额外必填 publisher 
 
 - browser 路径必填。
 - Wiley / Science / PNAS 本地最小请求间隔。
+- 代码层最低为 `5` 秒；更小的配置会被提升到 `5` 秒。
 
 #### `FLARESOLVERR_MAX_REQUESTS_PER_HOUR`
 

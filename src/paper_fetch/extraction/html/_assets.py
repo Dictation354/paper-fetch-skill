@@ -157,6 +157,20 @@ def _fetch_image_document_fallback(
     return dict(response)
 
 
+def _image_document_fetch_failure(
+    fetcher: ImageDocumentFetcher | None,
+    candidate_url: str,
+) -> dict[str, Any]:
+    reporter = getattr(fetcher, "failure_for", None)
+    if not callable(reporter):
+        return {}
+    try:
+        failure = reporter(candidate_url)
+    except Exception:
+        return {}
+    return dict(failure) if isinstance(failure, Mapping) else {}
+
+
 def _is_preview_candidate(candidate_url: str, *, preview_url: str, full_size_url: str) -> bool:
     normalized_candidate = normalize_text(candidate_url)
     if not normalized_candidate or not preview_url:
@@ -1074,6 +1088,7 @@ def download_figure_assets_with_image_document_fetcher(
             if response is not None:
                 source_url = candidate_url
                 break
+            fetch_failure = _image_document_fetch_failure(image_document_fetcher, candidate_url)
             last_failure = {
                 "kind": asset.get("kind", "figure"),
                 "heading": asset.get("heading", "Figure"),
@@ -1081,6 +1096,7 @@ def download_figure_assets_with_image_document_fetcher(
                 "source_url": candidate_url,
                 "reason": f"Asset candidate did not return image content for {candidate_url}.",
                 "section": asset.get("section") or "body",
+                **fetch_failure,
             }
 
         if response is None:

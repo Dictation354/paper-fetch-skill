@@ -54,6 +54,7 @@ CLOUDFLARE_COOKIE_NAMES = {
 DEFAULT_FLARESOLVERR_WAIT_SECONDS = 8
 DEFAULT_FLARESOLVERR_WARM_WAIT_SECONDS = 1
 DEFAULT_FLARESOLVERR_MAX_TIMEOUT_MS = 120000
+MIN_BROWSER_REQUEST_INTERVAL_SECONDS = 5
 
 logger = logging.getLogger("paper_fetch.providers.flaresolverr")
 
@@ -134,6 +135,12 @@ def _browser_workflow_label(provider: str) -> str:
     return _BROWSER_WORKFLOW_LABELS.get(provider, f"{provider} browser workflow")
 
 
+def _effective_min_interval_seconds(value: int | None) -> int | None:
+    if value is None:
+        return None
+    return max(MIN_BROWSER_REQUEST_INTERVAL_SECONDS, int(value))
+
+
 def load_runtime_config(env: Mapping[str, str], *, provider: str, doi: str) -> FlareSolverrRuntimeConfig:
     source_dir = resolve_flaresolverr_source_dir(env)
     env_file = resolve_flaresolverr_env_file(env)
@@ -154,7 +161,9 @@ def load_runtime_config(env: Mapping[str, str], *, provider: str, doi: str) -> F
             missing_env=["FLARESOLVERR_ENV_FILE"],
         )
 
-    min_interval_seconds = configured_int_env(FLARESOLVERR_MIN_INTERVAL_SECONDS_ENV_VAR, env)
+    min_interval_seconds = _effective_min_interval_seconds(
+        configured_int_env(FLARESOLVERR_MIN_INTERVAL_SECONDS_ENV_VAR, env)
+    )
     max_requests_per_hour = configured_int_env(FLARESOLVERR_MAX_REQUESTS_PER_HOUR_ENV_VAR, env)
     max_requests_per_day = configured_int_env(FLARESOLVERR_MAX_REQUESTS_PER_DAY_ENV_VAR, env)
     missing = [

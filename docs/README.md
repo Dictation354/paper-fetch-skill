@@ -130,6 +130,11 @@
 - `table_layout_degraded_count` 表示 Markdown 版式降级，但单元格语义仍保留。
 - `table_semantic_loss_count` 才表示表格语义内容发生丢失。
 
+### `asset_failures`
+
+- `ArticleModel.quality.asset_failures` 与顶层 `quality.asset_failures` 下的失败资产诊断。
+- 会保留 `status`、`content_type`、`title_snippet`、`body_snippet`、`reason`，以及 asset-level challenge recovery 的 `recovery_attempts`。
+
 ### `max_tokens`
 
 - 渲染预算。

@@ -56,6 +56,7 @@ export FLARESOLVERR_SOURCE_DIR="$PWD/vendor/flaresolverr"
 - `wiley` 的 HTML 与 seeded-browser PDF/ePDF 路径也必须走这组配置；只配置 `WILEY_TDM_CLIENT_TOKEN` 时只能尝试官方 TDM API PDF lane
 - `FLARESOLVERR_ENV_FILE` 不会自动猜 preset
 - 三条限速变量对 browser 路径必填，未配置时 browser provider 直接拒绝运行
+- `FLARESOLVERR_MIN_INTERVAL_SECONDS` 在代码层有 `5` 秒下限；更小的配置会自动提升到 `5`
 - 默认限速账本会同时影响 `wiley` / `science` / `pnas`
 - 限速账本仍是 `<user-data>/paper-fetch/publisher_browser_rate_limits.json`，写入时用同目录 `.lock` 文件通过 `filelock` 保护跨进程 read-modify-write；JSON shape、provider 粒度、错误消息和 `retry_after_seconds` 不变
 
@@ -198,6 +199,7 @@ PYTHONPATH=src pytest -n 0 \
 - formula-only preview fallback 不自动算 live review 的 `asset_download_failure`；figure/table preview fallback 仍需要 accepted 轨迹或其它证据才能降噪
 - `wiley` / `science` / `pnas` 不再先走普通 HTTP 直连；full-size 与 preview 候选都会通过 seeded Playwright browser context 获取。若刷新 FlareSolverr seed 后仍失败，才按资产下载问题处理
 - seeded Playwright 图片获取里的页面内 `fetch()` 带有短超时；如果候选图实际落到 Cloudflare `Just a moment...` 等非图片页面，会快速失败并进入下一候选或刷新 seed 重试，而不是长期卡住整个 live review
+- 如果最终仍失败，失败详情会保留在 `article.quality.asset_failures` 和顶层 `quality.asset_failures`：包括 `status`、`content_type`、`title_snippet`、`body_snippet`、以及 asset-level FlareSolverr recovery 的 `recovery_attempts`
 - PDF/ePDF fallback 仍是 text-only；只有 HTML 成功路径承诺尝试正文资产下载
 
 ## 相关文档

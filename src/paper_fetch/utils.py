@@ -187,6 +187,13 @@ def extension_from_content_type(content_type: str | None, source_url: str | None
         "application/jats+xml": ".xml",
         "application/json": ".json",
         "text/html": ".html",
+        "image/jpeg": ".jpg",
+        "image/png": ".png",
+        "image/gif": ".gif",
+        "image/webp": ".webp",
+        "image/avif": ".avif",
+        "image/tiff": ".tiff",
+        "image/svg+xml": ".svg",
     }
     if normalized in known:
         return known[normalized]
@@ -252,7 +259,12 @@ def build_asset_output_path(
             break
 
     stem = sanitize_filename(Path(candidate_name).stem or "asset")
-    suffix = Path(candidate_name).suffix or extension_from_content_type(content_type, source_url or source_href)
+    detected_suffix = extension_from_content_type(content_type)
+    suffix = (
+        detected_suffix
+        if detected_suffix != ".bin"
+        else (Path(candidate_name).suffix or extension_from_content_type(content_type, source_url or source_href))
+    )
     filename = f"{stem}{suffix}"
 
     counter = 2

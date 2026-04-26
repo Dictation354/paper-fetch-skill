@@ -784,6 +784,33 @@ def _dedupe_strings(values: Sequence[str] | None) -> list[str]:
     return list(dict.fromkeys(normalize_text(value) for value in (values or []) if normalize_text(value)))
 
 
+def _coerce_diagnostic_value(value: Any) -> Any:
+    if value is None or isinstance(value, (bool, int, float)):
+        return value
+    if isinstance(value, Mapping):
+        return {
+            normalize_text(str(key)): _coerce_diagnostic_value(item)
+            for key, item in value.items()
+            if normalize_text(str(key))
+        }
+    if isinstance(value, Sequence) and not isinstance(value, (str, bytes, bytearray)):
+        return [_coerce_diagnostic_value(item) for item in value]
+    return normalize_text(str(value))
+
+
+def coerce_asset_failure_diagnostics(value: Any) -> list[dict[str, Any]]:
+    if not isinstance(value, Sequence) or isinstance(value, (str, bytes, bytearray)):
+        return []
+    failures: list[dict[str, Any]] = []
+    for item in value:
+        if not isinstance(item, Mapping):
+            continue
+        normalized = _coerce_diagnostic_value(item)
+        if isinstance(normalized, dict) and normalized:
+            failures.append(normalized)
+    return failures
+
+
 def _word_count(text: str) -> int:
     normalized = normalize_text(text)
     if not normalized:
@@ -940,6 +967,7 @@ def _clone_quality(quality: "Quality") -> "Quality":
         flags=list(quality.flags),
         body_metrics=coerce_body_quality_metrics(quality.body_metrics),
         semantic_losses=coerce_semantic_losses(quality.semantic_losses),
+        asset_failures=coerce_asset_failure_diagnostics(quality.asset_failures),
         extraction_revision=quality.extraction_revision,
     )
 
@@ -1109,6 +1137,7 @@ class Quality:
     flags: list[str] = field(default_factory=list)
     body_metrics: BodyQualityMetrics = field(default_factory=BodyQualityMetrics)
     semantic_losses: SemanticLosses = field(default_factory=SemanticLosses)
+    asset_failures: list[dict[str, Any]] = field(default_factory=list)
     extraction_revision: int = EXTRACTION_REVISION
 
     def __post_init__(self) -> None:
@@ -1117,6 +1146,7 @@ class Quality:
         self.flags = _dedupe_strings(self.flags)
         self.body_metrics = coerce_body_quality_metrics(self.body_metrics)
         self.semantic_losses = coerce_semantic_losses(self.semantic_losses)
+        self.asset_failures = coerce_asset_failure_diagnostics(self.asset_failures)
         self.token_estimate_breakdown = coerce_token_estimate_breakdown(self.token_estimate_breakdown)
         self.extraction_revision = int(self.extraction_revision or EXTRACTION_REVISION)
         if self.trace and not self.source_trail:

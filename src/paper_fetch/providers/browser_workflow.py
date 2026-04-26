@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import base64
+import html as html_lib
 import logging
+import re
 import time
 from dataclasses import dataclass, field, replace
 from typing import Any, Callable, Mapping
@@ -13,7 +15,7 @@ from ..extraction.html import decode_html
 from ..extraction.image_payloads import image_mime_type_from_bytes
 from ..extraction.html.signals import SciencePnasHtmlFailure
 from ..metadata_types import ProviderMetadata
-from ..models import AssetProfile, article_from_markdown, metadata_only_article
+from ..models import AssetProfile, article_from_markdown, coerce_asset_failure_diagnostics, metadata_only_article
 from ..publisher_identity import normalize_doi
 from ..tracing import merge_trace, source_trail_from_trace, trace_from_markers
 from ..utils import dedupe_authors, empty_asset_results, extend_unique, normalize_text
@@ -179,6 +181,64 @@ def _looks_like_cloudflare_challenge_title(title: str | None) -> bool:
     return bool(normalized and any(token in normalized for token in _CLOUDFLARE_CHALLENGE_TITLE_TOKENS))
 
 
+def _html_text_snippet(body: bytes | bytearray | None, *, limit: int = 240) -> str:
+    if not isinstance(body, (bytes, bytearray)) or not body:
+        return ""
+    try:
+        decoded = bytes(body[:4096]).decode("utf-8", errors="replace")
+    except Exception:
+        return ""
+    text = re.sub(r"<[^>]+>", " ", decoded)
+    return normalize_text(html_lib.unescape(text))[:limit]
+
+
+def _html_title_snippet(body: bytes | bytearray | None, *, limit: int = 160) -> str:
+    if not isinstance(body, (bytes, bytearray)) or not body:
+        return ""
+    try:
+        decoded = bytes(body[:8192]).decode("utf-8", errors="replace")
+    except Exception:
+        return ""
+    match = re.search(r"<title\b[^>]*>(.*?)</title>", decoded, flags=re.IGNORECASE | re.DOTALL)
+    if not match:
+        return ""
+    return normalize_text(html_lib.unescape(re.sub(r"<[^>]+>", " ", match.group(1))))[:limit]
+
+
+def _looks_like_cloudflare_challenge_failure(failure: Mapping[str, Any] | None) -> bool:
+    if not isinstance(failure, Mapping):
+        return False
+    reason = normalize_text(str(failure.get("reason") or "")).lower()
+    title = normalize_text(str(failure.get("title_snippet") or failure.get("title") or "")).lower()
+    body = normalize_text(str(failure.get("body_snippet") or "")).lower()
+    return (
+        reason == "cloudflare_challenge"
+        or _looks_like_cloudflare_challenge_title(title)
+        or any(token in body for token in _CLOUDFLARE_CHALLENGE_TITLE_TOKENS)
+    )
+
+
+def _compact_failure_diagnostic(values: Mapping[str, Any]) -> dict[str, Any]:
+    diagnostic: dict[str, Any] = {}
+    for key, value in values.items():
+        if value is None:
+            continue
+        if isinstance(value, str):
+            normalized = normalize_text(value)
+            if normalized:
+                diagnostic[key] = normalized
+            continue
+        if isinstance(value, (bool, int, float)):
+            diagnostic[key] = value
+            continue
+        if isinstance(value, list) and value:
+            diagnostic[key] = value
+            continue
+        if isinstance(value, Mapping) and value:
+            diagnostic[key] = dict(value)
+    return diagnostic
+
+
 class _SharedPlaywrightImageDocumentFetcher:
     def __init__(
         self,
@@ -189,6 +249,7 @@ class _SharedPlaywrightImageDocumentFetcher:
         headless: bool = True,
         min_width: int = 80,
         min_height: int = 80,
+        challenge_recovery: Callable[[str, Mapping[str, Any], Mapping[str, Any]], Mapping[str, Any] | None] | None = None,
     ) -> None:
         self._browser_context_seed_getter = browser_context_seed_getter
         self._seed_urls_getter = seed_urls_getter
@@ -196,11 +257,14 @@ class _SharedPlaywrightImageDocumentFetcher:
         self._headless = headless
         self._min_width = min_width
         self._min_height = min_height
+        self._challenge_recovery = challenge_recovery
         self._playwright_manager = None
         self._browser = None
         self._context = None
         self._page = None
         self._warmed_seed_urls: set[str] = set()
+        self._last_failure_by_url: dict[str, dict[str, Any]] = {}
+        self._recovery_attempts_by_url: dict[str, list[dict[str, Any]]] = {}
 
     def __call__(self, image_url: str, _asset: Mapping[str, Any]) -> dict[str, Any] | None:
         normalized_url = normalize_text(image_url)
@@ -212,14 +276,29 @@ class _SharedPlaywrightImageDocumentFetcher:
 
         self._sync_context_cookies()
         self._warm_seed_urls(force=False)
-        for attempt in range(2):
+        recovered_from_challenge = False
+        for attempt in range(3):
             result = self._fetch_with_page(normalized_url)
             if result is not None:
                 return result
+            failure = self.failure_for(normalized_url)
+            if (
+                not recovered_from_challenge
+                and _looks_like_cloudflare_challenge_failure(failure)
+                and self._attempt_challenge_recovery(normalized_url, _asset, failure or {})
+            ):
+                recovered_from_challenge = True
+                continue
             if attempt == 0:
                 self._sync_context_cookies()
                 self._warm_seed_urls(force=True)
+                continue
+            break
         return None
+
+    def failure_for(self, image_url: str) -> dict[str, Any] | None:
+        diagnostic = self._last_failure_by_url.get(normalize_text(image_url))
+        return dict(diagnostic) if diagnostic else None
 
     def close(self) -> None:
         if self._page is not None:
@@ -313,6 +392,74 @@ class _SharedPlaywrightImageDocumentFetcher:
             except Exception:
                 continue
 
+    def _record_failure(self, image_url: str, **values: Any) -> None:
+        normalized_url = normalize_text(image_url)
+        if not normalized_url:
+            return
+        diagnostic = _compact_failure_diagnostic({"source_url": normalized_url, **values})
+        recovery_attempts = self._recovery_attempts_by_url.get(normalized_url) or []
+        if recovery_attempts:
+            diagnostic["recovery_attempts"] = list(recovery_attempts)
+        if diagnostic:
+            self._last_failure_by_url[normalized_url] = diagnostic
+
+    def _record_response_failure(
+        self,
+        image_url: str,
+        *,
+        status: int | None,
+        content_type: str,
+        final_url: str,
+        body: bytes | bytearray | None,
+        title: str | None = None,
+        reason: str = "non_image_response",
+    ) -> None:
+        title_snippet = normalize_text(title)[:160] or _html_title_snippet(body)
+        body_snippet = _html_text_snippet(body)
+        failure_reason = (
+            "cloudflare_challenge"
+            if _looks_like_cloudflare_challenge_title(title_snippet)
+            or any(token in body_snippet.lower() for token in _CLOUDFLARE_CHALLENGE_TITLE_TOKENS)
+            else reason
+        )
+        self._record_failure(
+            image_url,
+            status=status,
+            content_type=content_type,
+            final_url=final_url,
+            title_snippet=title_snippet,
+            body_snippet=body_snippet,
+            reason=failure_reason,
+        )
+
+    def _attempt_challenge_recovery(
+        self,
+        image_url: str,
+        asset: Mapping[str, Any],
+        failure: Mapping[str, Any],
+    ) -> bool:
+        if self._challenge_recovery is None:
+            return False
+        try:
+            recovery = self._challenge_recovery(image_url, asset, failure)
+        except Exception as exc:
+            recovery = {
+                "status": "error",
+                "reason": normalize_text(str(exc)) or exc.__class__.__name__,
+            }
+        if not isinstance(recovery, Mapping):
+            return False
+        compact = _compact_failure_diagnostic(recovery)
+        if compact:
+            self._recovery_attempts_by_url.setdefault(image_url, []).append(compact)
+            previous = self.failure_for(image_url) or {}
+            self._record_failure(image_url, **previous)
+        if normalize_text(str(recovery.get("status") or "")).lower() != "ok":
+            return False
+        self._sync_context_cookies()
+        self._warm_seed_urls(force=True)
+        return True
+
     def _fetch_with_page(self, image_url: str) -> dict[str, Any] | None:
         page = self._page
         if page is None:
@@ -335,7 +482,7 @@ class _SharedPlaywrightImageDocumentFetcher:
         if direct_payload is not None:
             return direct_payload
 
-        image_info = self._wait_for_primary_image(page)
+        image_info = self._wait_for_primary_image(page, image_url)
         if image_info is None:
             return None
 
@@ -352,27 +499,42 @@ class _SharedPlaywrightImageDocumentFetcher:
             )
         except Exception:
             return None
-        return self._payload_from_response_body(response, fallback_url=image_url)
+        return self._payload_from_response_body(response, fallback_url=image_url, attempted_url=image_url)
 
     def _payload_from_navigation_response(self, response: Any, *, fallback_url: str) -> dict[str, Any] | None:
         if response is None:
             return None
-        return self._payload_from_response_body(response, fallback_url=fallback_url)
+        return self._payload_from_response_body(response, fallback_url=fallback_url, attempted_url=fallback_url)
 
-    def _payload_from_response_body(self, response: Any, *, fallback_url: str) -> dict[str, Any] | None:
+    def _payload_from_response_body(self, response: Any, *, fallback_url: str, attempted_url: str) -> dict[str, Any] | None:
         try:
             headers = _normalized_response_headers(response.all_headers())
         except Exception:
             headers = _normalized_response_headers(getattr(response, "headers", {}) or {})
         content_type = headers.get("content-type", "")
         final_url = normalize_text(getattr(response, "url", "") or "") or fallback_url
+        status = int(getattr(response, "status", 0) or 0) or None
         try:
             body = response.body()
         except Exception:
             body = b""
         if not isinstance(body, (bytes, bytearray)) or not body:
+            self._record_failure(
+                attempted_url,
+                status=status,
+                content_type=content_type,
+                final_url=final_url,
+                reason="empty_response_body",
+            )
             return None
         if not _looks_like_image_response_payload(content_type, body, final_url):
+            self._record_response_failure(
+                attempted_url,
+                status=status,
+                content_type=content_type,
+                final_url=final_url,
+                body=body,
+            )
             return None
         payload: dict[str, Any] = {
             "status_code": int(getattr(response, "status", 200) or 200),
@@ -382,7 +544,7 @@ class _SharedPlaywrightImageDocumentFetcher:
         }
         return payload
 
-    def _wait_for_primary_image(self, page: Any) -> dict[str, Any] | None:
+    def _wait_for_primary_image(self, page: Any, image_url: str) -> dict[str, Any] | None:
         deadline = time.monotonic() + 15.0
         while time.monotonic() < deadline:
             try:
@@ -425,6 +587,13 @@ class _SharedPlaywrightImageDocumentFetcher:
             if isinstance(image_info, Mapping) and _looks_like_cloudflare_challenge_title(
                 str(image_info.get("title") or "")
             ):
+                self._record_failure(
+                    image_url,
+                    content_type=normalize_text(str(image_info.get("contentType") or "")),
+                    final_url=normalize_text(str(getattr(page, "url", "") or image_url)),
+                    title_snippet=normalize_text(str(image_info.get("title") or ""))[:160],
+                    reason="cloudflare_challenge",
+                )
                 return None
             try:
                 page.wait_for_timeout(500)
@@ -457,6 +626,10 @@ class _SharedPlaywrightImageDocumentFetcher:
                   };
                   const controller = new AbortController();
                   const timer = setTimeout(() => controller.abort(), timeoutMs);
+                  const titleFromHtml = (text) => {
+                    const match = String(text || '').match(/<title\\b[^>]*>([\\s\\S]*?)<\\/title>/i);
+                    return match ? match[1].replace(/<[^>]+>/g, ' ').trim() : '';
+                  };
                   try {
                     const response = await fetch(imageSrc, {
                       credentials: 'include',
@@ -470,13 +643,18 @@ class _SharedPlaywrightImageDocumentFetcher:
                       && !normalizedContentType.startsWith('image/')
                       && normalizedContentType !== 'application/octet-stream'
                     ) {
+                      let bodySnippet = '';
+                      try {
+                        bodySnippet = (await response.clone().text()).slice(0, 500);
+                      } catch (error) {}
                       return {
                         ok: response.ok,
                         status: response.status,
                         url: response.url || imageSrc,
                         contentType,
                         nonImage: true,
-                        title: document.title || '',
+                        title: titleFromHtml(bodySnippet) || document.title || '',
+                        bodySnippet,
                       };
                     }
                     const buffer = await response.arrayBuffer();
@@ -509,6 +687,18 @@ class _SharedPlaywrightImageDocumentFetcher:
         final_url = normalize_text(str(fetched.get("url") or "")) or image_src
         content_type = normalize_text(str(fetched.get("contentType") or ""))
         if body is None or not _looks_like_image_response_payload(content_type, body, final_url):
+            fallback_body = body
+            if fallback_body is None:
+                fallback_body = str(fetched.get("bodySnippet") or "").encode("utf-8", errors="replace")
+            self._record_response_failure(
+                image_src,
+                status=int(fetched.get("status") or 0) or None,
+                content_type=content_type,
+                final_url=final_url,
+                body=fallback_body,
+                title=normalize_text(str(fetched.get("title") or "")),
+                reason="non_image_response" if fetched.get("nonImage") else "fetch_failed",
+            )
             return None
         return {
             "status_code": int(fetched.get("status") or 200),
@@ -536,6 +726,7 @@ def _build_shared_playwright_image_fetcher(
     headless: bool = True,
     min_width: int = 80,
     min_height: int = 80,
+    challenge_recovery: Callable[[str, Mapping[str, Any], Mapping[str, Any]], Mapping[str, Any] | None] | None = None,
 ) -> _SharedPlaywrightImageDocumentFetcher:
     return _SharedPlaywrightImageDocumentFetcher(
         browser_context_seed_getter=browser_context_seed_getter,
@@ -544,6 +735,7 @@ def _build_shared_playwright_image_fetcher(
         headless=headless,
         min_width=min_width,
         min_height=min_height,
+        challenge_recovery=challenge_recovery,
     )
 
 
@@ -990,7 +1182,7 @@ def browser_workflow_article_from_payload(
         else None
     )
 
-    return article_from_markdown(
+    article = article_from_markdown(
         source=source,
         metadata=article_metadata,
         doi=doi or None,
@@ -1003,6 +1195,8 @@ def browser_workflow_article_from_payload(
         availability_diagnostics=availability_diagnostics,
         allow_downgrade_from_diagnostics=True,
     )
+    article.quality.asset_failures = coerce_asset_failure_diagnostics(asset_failures)
+    return article
 
 
 def _finalize_abstract_only_provider_article(
@@ -1310,9 +1504,74 @@ class BrowserWorkflowClient(ProviderClient):
                 if normalized
             ]
 
+        def asset_recovery_urls(image_url: str, asset: Mapping[str, Any]) -> list[str]:
+            seen: set[str] = set()
+            ordered: list[str] = []
+            for candidate in [
+                image_url,
+                normalize_text(str(asset.get("figure_page_url") or "")),
+            ]:
+                normalized = normalize_text(candidate)
+                if normalized and normalized not in seen:
+                    seen.add(normalized)
+                    ordered.append(normalized)
+            return ordered
+
+        def asset_challenge_recovery_for(
+            attempt_seed: dict[str, Any],
+        ) -> Callable[[str, Mapping[str, Any], Mapping[str, Any]], Mapping[str, Any] | None]:
+            def recover(image_url: str, asset: Mapping[str, Any], failure: Mapping[str, Any]) -> Mapping[str, Any]:
+                attempts: list[dict[str, Any]] = []
+                for recovery_url in asset_recovery_urls(image_url, asset):
+                    try:
+                        html_result = fetch_html_with_flaresolverr(
+                            [recovery_url],
+                            publisher=self.name,
+                            config=runtime,
+                        )
+                    except FlareSolverrFailure as exc:
+                        if exc.browser_context_seed:
+                            attempt_seed.update(
+                                merge_browser_context_seeds(attempt_seed, exc.browser_context_seed)
+                            )
+                        attempts.append(
+                            _compact_failure_diagnostic(
+                                {
+                                    "url": recovery_url,
+                                    "status": "failed",
+                                    "reason": exc.kind,
+                                    "message": exc.message,
+                                }
+                            )
+                        )
+                        continue
+                    attempt_seed.update(
+                        merge_browser_context_seeds(attempt_seed, html_result.browser_context_seed)
+                    )
+                    return _compact_failure_diagnostic(
+                        {
+                            "status": "ok",
+                            "url": recovery_url,
+                            "final_url": html_result.final_url,
+                            "response_status": html_result.response_status,
+                            "content_type": html_result.response_headers.get("content-type"),
+                            "title_snippet": (html_result.title or "")[:160],
+                            "attempts": attempts,
+                        }
+                    )
+                return _compact_failure_diagnostic(
+                    {
+                        "status": "failed",
+                        "reason": failure.get("reason"),
+                        "attempts": attempts,
+                    }
+                )
+
+            return recover
+
         def image_document_fetcher_for(
             current_seed: Mapping[str, Any],
-            attempt_seed: Mapping[str, Any],
+            attempt_seed: dict[str, Any],
         ) -> Callable[[str, Mapping[str, Any]], dict[str, Any] | None] | None:
             profile = self.profile
             if profile is None or not profile.shared_playwright_image_fetcher:
@@ -1322,6 +1581,7 @@ class BrowserWorkflowClient(ProviderClient):
                 seed_urls_getter=lambda: seed_urls_for(attempt_seed),
                 browser_user_agent=current_seed.get("browser_user_agent") or self.user_agent,
                 headless=runtime.headless,
+                challenge_recovery=asset_challenge_recovery_for(attempt_seed),
             )
 
         def run_download_attempt(current_seed: Mapping[str, Any]) -> dict[str, list[dict[str, Any]]]:
