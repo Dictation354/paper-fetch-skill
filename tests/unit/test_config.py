@@ -10,6 +10,33 @@ from paper_fetch import config
 
 
 class ConfigTests(unittest.TestCase):
+    def test_load_env_file_uses_dotenv_syntax_without_interpolation(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            env_file = Path(tmpdir) / ".env"
+            env_file.write_text(
+                "\n".join(
+                    [
+                        "# comment",
+                        'export EXPORTED="two words"',
+                        "SINGLE='literal # value'",
+                        "COMMENTED=ok # inline comment",
+                        "EMPTY=",
+                        "NO_INTERPOLATION=${EXPORTED}",
+                        "BARE_KEY",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+
+            values = config.load_env_file(env_file)
+
+        self.assertEqual(values["EXPORTED"], "two words")
+        self.assertEqual(values["SINGLE"], "literal # value")
+        self.assertEqual(values["COMMENTED"], "ok")
+        self.assertEqual(values["EMPTY"], "")
+        self.assertEqual(values["NO_INTERPOLATION"], "${EXPORTED}")
+        self.assertNotIn("BARE_KEY", values)
+
     def test_build_runtime_env_prefers_process_env_then_explicit_file_then_user_config(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             tmp = Path(tmpdir)
@@ -32,6 +59,26 @@ class ConfigTests(unittest.TestCase):
         self.assertEqual(env["PROCESS_ONLY"], "process")
         self.assertEqual(env["EXPLICIT_ONLY"], "explicit")
         self.assertEqual(env["USER_ONLY"], "user")
+
+    def test_build_runtime_env_explicit_arg_overrides_env_var_file(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            user_env = tmp / "user.env"
+            configured_env = tmp / "configured.env"
+            explicit_env = tmp / "explicit.env"
+            user_env.write_text("SHARED=user\n", encoding="utf-8")
+            configured_env.write_text("SHARED=configured\nCONFIGURED_ONLY=1\n", encoding="utf-8")
+            explicit_env.write_text("SHARED=explicit\nEXPLICIT_ONLY=1\n", encoding="utf-8")
+
+            with mock.patch.object(config, "DEFAULT_USER_ENV_FILE", user_env):
+                env = config.build_runtime_env(
+                    {config.ENV_FILE_ENV_VAR: str(configured_env)},
+                    env_file=explicit_env,
+                )
+
+        self.assertEqual(env["SHARED"], "explicit")
+        self.assertEqual(env["CONFIGURED_ONLY"], "1")
+        self.assertEqual(env["EXPLICIT_ONLY"], "1")
 
     def test_user_env_file_is_the_default_runtime_baseline(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -97,6 +144,19 @@ class ConfigTests(unittest.TestCase):
             self.assertTrue(expected.exists())
 
         self.assertEqual(resolved, expected)
+
+    def test_user_data_dir_uses_platform_default_unless_xdg_overrides_it(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            platform_default = tmp / "platform-data"
+            xdg_home = tmp / "xdg-data"
+
+            with mock.patch.object(config, "DEFAULT_USER_DATA_DIR", platform_default):
+                self.assertEqual(config.resolve_user_data_dir({}), platform_default)
+                self.assertEqual(
+                    config.resolve_user_data_dir({config.XDG_DATA_HOME_ENV_VAR: str(xdg_home)}),
+                    xdg_home / "paper-fetch",
+                )
 
     def test_cli_download_dir_falls_back_to_cwd_when_default_user_data_dir_cannot_be_created(self) -> None:
         preferred_root = Path("/tmp/paper-fetch-test-user-data")

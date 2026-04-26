@@ -11,6 +11,8 @@ from pathlib import Path
 from unittest import mock
 
 from paper_fetch.mcp.cache_index import (
+    LOCK_DIRNAME,
+    cache_lock_dir,
     cache_scope_id,
     scoped_cache_index_resource_uri,
     scoped_cached_resource_uri_prefix,
@@ -528,9 +530,12 @@ class McpToolTests(unittest.TestCase):
 
             FetchCache(download_dir).write_fetch_envelope(envelope, request)
             entries = mcp_tools.list_cached_payload(download_dir=download_dir)["entries"]
+            lock_dir_exists = cache_lock_dir(download_dir).is_dir()
 
         self.assertEqual([entry["kind"] for entry in entries], ["fetch_envelope"])
         self.assertEqual(entries[0]["doi"], "10.1000/example")
+        self.assertTrue(lock_dir_exists)
+        self.assertFalse(any(LOCK_DIRNAME in str(entry.get("path") or "") for entry in entries))
 
     def test_fetch_paper_payload_accepts_full_text_and_asset_profile_strategy(self) -> None:
         captured: dict[str, object] = {}

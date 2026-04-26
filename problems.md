@@ -1225,7 +1225,7 @@ pytest tests/unit/test_cli.py tests/unit/test_provider_waterfalls.py tests/unit/
 pytest
 ```
 
-### Phase 7：引入成熟 Package
+### Phase 7（已完成）：引入成熟 Package
 
 目标：
 
@@ -1233,17 +1233,14 @@ pytest
 
 范围：
 
-- 可选依赖逐个引入。
+- 低风险基础设施替换；不重标定标题匹配、DOI routing 或图片资产语义。
 
-建议顺序：
+完成项：
 
-1. `platformdirs`：用户 config/data directory。
-2. `python-dotenv` 或 `pydantic-settings`：`.env` 解析。
-3. `cachetools`：内存 TTL cache，前提是能保留 total-byte accounting。
-4. `diskcache` 或 `filelock`：MCP cache/index 并发。
-5. `filetype` + `imagesize` 或 `Pillow`：image type/dimensions。
-6. `rapidfuzz`：标题匹配，并重新标定阈值。
-7. `idutils`：仅在能保持宽松 routing 行为时用于 DOI validation。
+1. 新增 `platformdirs>=4,<5`，默认用户 config/data 目录改由 `user_config_path()` / `user_data_path()` 生成；继续保留 `PAPER_FETCH_DOWNLOAD_DIR` 优先、`XDG_DATA_HOME` 覆盖 data base、CLI 创建失败回退 `live-downloads` 的行为。
+2. 新增 `python-dotenv>=1.2,<2`，用 `dotenv_values(..., interpolate=False)` 替换手写 `.env` parser；继续不隐式加载 repo-local `.env`，process/base env 最高优先级，bare key 跳过，空值保留。
+3. 新增 `cachetools>=6,<7`，用 `TTLCache` 替换 `OrderedDict + expires_at` 的 HTTP GET 内存缓存；继续保留 textual-only、敏感 header/query 脱敏、TTL、entry capacity、单响应 body 上限和 total body bytes 上限。
+4. 新增 `filelock>=3.20,<4`，用隐藏 `.paper-fetch-locks/` 下的 lock file 保护 MCP cache index read-modify-write 和 fetch-envelope sidecar 写入；继续保留 index JSON shape、fetch-envelope sidecar version、resource URI 和 scoped cache 行为。
 
 退出标准：
 
@@ -1253,6 +1250,21 @@ pytest
 风险：
 
 - 单个 package 风险低到中，但依赖膨胀是真实成本。
+
+本阶段验证：
+
+```bash
+pip install -e .[dev]
+ruff check src tests
+pytest tests/unit/test_config.py tests/unit/test_http_cache.py tests/unit/test_mcp.py -q
+pytest
+```
+
+延后项：
+
+- `rapidfuzz`：会影响标题匹配阈值，需要单独标定。
+- `idutils`：会影响当前宽松 DOI/routing 行为，需要单独兼容评估。
+- `filetype` + `imagesize` 或 `Pillow`：会改变图片类型/尺寸解析语义，需要结合资产 fixture 单独推进。
 
 ### Phase 8：移除 Legacy Surface 并完成架构收尾
 

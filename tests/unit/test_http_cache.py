@@ -97,6 +97,50 @@ class HttpTransportCacheTests(unittest.TestCase):
         self.assertEqual(first["body"], b"ok")
         self.assertEqual(second["body"], b"ok")
 
+    def test_cached_get_expires_after_ttl(self) -> None:
+        now = 100.0
+        call_count = 0
+
+        def fake_monotonic() -> float:
+            return now
+
+        def fake_urlopen(request, timeout=20):
+            nonlocal call_count
+            call_count += 1
+            return FakeHTTPResponse(f"ok-{call_count}".encode("utf-8"), request.full_url)
+
+        with mock.patch.object(http_module.time, "monotonic", side_effect=fake_monotonic):
+            transport = http_module.HttpTransport(cache_ttl=1, cache_capacity=128)
+            with mock.patch.object(transport, "_perform_request", side_effect=fake_urlopen):
+                first = transport.request("GET", "https://example.test/article", headers={"Accept": "text/plain"})
+                now = 100.5
+                second = transport.request("GET", "https://example.test/article", headers={"Accept": "text/plain"})
+                now = 101.1
+                third = transport.request("GET", "https://example.test/article", headers={"Accept": "text/plain"})
+
+        self.assertEqual(first["body"], b"ok-1")
+        self.assertEqual(second["body"], b"ok-1")
+        self.assertEqual(third["body"], b"ok-2")
+        self.assertEqual(call_count, 2)
+
+    def test_cache_capacity_evicts_least_recently_used_entry(self) -> None:
+        transport = http_module.HttpTransport(cache_ttl=30, cache_capacity=2, max_total_cache_bytes=0)
+        call_count = 0
+
+        def fake_urlopen(request, timeout=20):
+            nonlocal call_count
+            call_count += 1
+            return FakeHTTPResponse(request.full_url.encode("utf-8"), request.full_url)
+
+        with mock.patch.object(transport, "_perform_request", side_effect=fake_urlopen):
+            transport.request("GET", "https://example.test/one", headers={"Accept": "text/plain"})
+            transport.request("GET", "https://example.test/two", headers={"Accept": "text/plain"})
+            transport.request("GET", "https://example.test/three", headers={"Accept": "text/plain"})
+            transport.request("GET", "https://example.test/one", headers={"Accept": "text/plain"})
+
+        self.assertEqual(call_count, 4)
+        self.assertEqual(len(transport._cache), 2)
+
     def test_cache_key_redacts_sensitive_query_params_and_header_values(self) -> None:
         transport = http_module.HttpTransport(cache_ttl=30, cache_capacity=128)
         call_count = 0

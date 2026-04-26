@@ -1,6 +1,6 @@
 # Environment
 
-- `PAPER_FETCH_ENV_FILE`: Optional path to an explicit environment file. The default user config file is outside the repo; repo-local config files are not auto-loaded.
+- `PAPER_FETCH_ENV_FILE`: Optional path to an explicit environment file. The default user config file is resolved with `platformdirs` and is outside the repo; repo-local config files are not auto-loaded.
 - `PAPER_FETCH_SKILL_USER_AGENT`: Optional custom HTTP `User-Agent`; defaults to `paper-fetch-skill/0.2`.
 - `CROSSREF_MAILTO`: Recommended contact email for Crossref polite pool requests.
 - `ELSEVIER_API_KEY`: Required for official Elsevier full-text access.
@@ -15,7 +15,7 @@
 - `FLARESOLVERR_MAX_REQUESTS_PER_HOUR`: Required local hourly cap for Wiley/Science/PNAS browser requests.
 - `FLARESOLVERR_MAX_REQUESTS_PER_DAY`: Required local daily cap for Wiley/Science/PNAS browser requests.
 - `PAPER_FETCH_DOWNLOAD_DIR`: Overrides the default CLI/MCP download directory; otherwise downloads use the user data directory, with CLI falling back to `live-downloads` only if that directory cannot be created.
-- `XDG_DATA_HOME`: Changes the user data base used for default downloads and formula tools.
+- `XDG_DATA_HOME`: Changes the user data base used for default downloads and formula tools; otherwise the platform default from `platformdirs` is used.
 - `PAPER_FETCH_FORMULA_TOOLS_DIR`: Overrides the directory used to find optional formula backends.
 - `PAPER_FETCH_RUN_LIVE`: Test-only flag for live publisher integration checks.
 - Formula backend env such as `MATHML_CONVERTER_BACKEND`, `TEXMATH_BIN`, `MATHML_TO_LATEX_NODE_BIN`, and `MATHML_TO_LATEX_SCRIPT` only affects MathML-to-LaTeX conversion backends. The default backend is `texmath`; when not explicitly selected, `texmath` failure falls back to `mathml-to-latex`. Shared LaTeX normalization for common publisher macros runs independently of these variables.

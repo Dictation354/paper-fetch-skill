@@ -296,6 +296,8 @@ CLI、Python API、MCP 当前统一采用这些默认值：
 ~/.config/paper-fetch/.env
 ```
 
+该默认位置由 `platformdirs` 解析；上面是常见 Linux/XDG 布局。仓库内 `.env` 不会自动加载。
+
 如果你在开发场景里要使用仓库外的某个配置文件，显式设置：
 
 ```bash
@@ -323,6 +325,7 @@ PAPER_FETCH_ENV_FILE=/path/to/.env
 
 - 在未配置 `PAPER_FETCH_DOWNLOAD_DIR` 时，用来推导用户数据目录。
 - CLI / MCP 的用户数据下载目录会落在 `<XDG_DATA_HOME>/paper-fetch/downloads`。
+- 未设置时使用 `platformdirs` 提供的平台默认用户数据目录。
 - CLI 只有在用户数据下载目录创建失败时才回退仓库相对的 `live-downloads`。
 
 ### 公式后端

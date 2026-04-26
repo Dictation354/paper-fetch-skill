@@ -8,9 +8,13 @@ from hashlib import sha1
 from pathlib import Path
 from typing import Any
 
+from filelock import FileLock
+
 from ..utils import sanitize_filename
 
 INDEX_FILENAME = ".paper-fetch-mcp-cache.json"
+LOCK_DIRNAME = ".paper-fetch-locks"
+INDEX_LOCK_FILENAME = "cache-index.lock"
 INDEX_VERSION = 1
 CACHE_INDEX_RESOURCE_URI = "resource://paper-fetch/cache-index"
 CACHED_RESOURCE_URI_PREFIX = "resource://paper-fetch/cached/"
@@ -29,6 +33,24 @@ _TEXT_MIME_TYPES = {
 
 def cache_index_path(download_dir: Path) -> Path:
     return download_dir / INDEX_FILENAME
+
+
+def cache_lock_dir(download_dir: Path) -> Path:
+    return download_dir / LOCK_DIRNAME
+
+
+def cache_index_lock_path(download_dir: Path) -> Path:
+    return cache_lock_dir(download_dir) / INDEX_LOCK_FILENAME
+
+
+def fetch_envelope_lock_path(download_dir: Path, doi: str) -> Path:
+    digest = sha1(str(doi or "").encode("utf-8", errors="ignore")).hexdigest()[:16]
+    return cache_lock_dir(download_dir) / f"fetch-envelope-{digest}.lock"
+
+
+def cache_file_lock(path: Path) -> FileLock:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    return FileLock(str(path))
 
 
 def cached_resource_uri(entry_id: str) -> str:
@@ -108,7 +130,7 @@ def _dedupe_entries(entries: list[dict[str, Any]]) -> list[dict[str, Any]]:
     )
 
 
-def _write_index(download_dir: Path, entries: list[dict[str, Any]]) -> None:
+def _write_index_unlocked(download_dir: Path, entries: list[dict[str, Any]]) -> None:
     index_path = cache_index_path(download_dir)
     if not download_dir.exists():
         return
@@ -119,6 +141,13 @@ def _write_index(download_dir: Path, entries: list[dict[str, Any]]) -> None:
     tmp_path = index_path.with_suffix(index_path.suffix + ".part")
     tmp_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
     tmp_path.replace(index_path)
+
+
+def _write_index(download_dir: Path, entries: list[dict[str, Any]]) -> None:
+    if not download_dir.exists():
+        return
+    with cache_file_lock(cache_index_lock_path(download_dir)):
+        _write_index_unlocked(download_dir, entries)
 
 
 def _normalize_existing_entry(download_dir: Path, raw: Any) -> dict[str, Any] | None:
@@ -137,7 +166,7 @@ def _normalize_existing_entry(download_dir: Path, raw: Any) -> dict[str, Any] | 
     return _build_entry(doi=doi, kind=kind, path=path)
 
 
-def list_cache_entries(download_dir: Path) -> list[dict[str, Any]]:
+def _list_cache_entries_unlocked(download_dir: Path) -> list[dict[str, Any]]:
     index_path = cache_index_path(download_dir)
     if not index_path.exists():
         return []
@@ -156,8 +185,15 @@ def list_cache_entries(download_dir: Path) -> list[dict[str, Any]]:
         entries.append(entry)
     deduped = _dedupe_entries(entries)
     if changed or deduped != list(raw_entries or []):
-        _write_index(download_dir, deduped)
+        _write_index_unlocked(download_dir, deduped)
     return deduped
+
+
+def list_cache_entries(download_dir: Path) -> list[dict[str, Any]]:
+    if not cache_index_path(download_dir).exists():
+        return []
+    with cache_file_lock(cache_index_lock_path(download_dir)):
+        return _list_cache_entries_unlocked(download_dir)
 
 
 def scan_cached_files(download_dir: Path, doi: str) -> list[dict[str, Any]]:
@@ -187,14 +223,17 @@ def scan_cached_files(download_dir: Path, doi: str) -> list[dict[str, Any]]:
 
 def refresh_cache_index_for_doi(download_dir: Path, doi: str) -> list[dict[str, Any]]:
     normalized_doi = str(doi or "").strip()
-    existing = list_cache_entries(download_dir)
-    retained = [entry for entry in existing if entry.get("doi") != normalized_doi]
-    refreshed = scan_cached_files(download_dir, normalized_doi)
-    merged = _dedupe_entries(retained + refreshed)
-    index_exists = cache_index_path(download_dir).exists()
-    if merged or index_exists:
-        _write_index(download_dir, merged)
-    return refreshed
+    if not normalized_doi or not download_dir.exists():
+        return []
+    with cache_file_lock(cache_index_lock_path(download_dir)):
+        existing = _list_cache_entries_unlocked(download_dir)
+        retained = [entry for entry in existing if entry.get("doi") != normalized_doi]
+        refreshed = scan_cached_files(download_dir, normalized_doi)
+        merged = _dedupe_entries(retained + refreshed)
+        index_exists = cache_index_path(download_dir).exists()
+        if merged or index_exists:
+            _write_index_unlocked(download_dir, merged)
+        return refreshed
 
 
 def find_cached_entry(download_dir: Path, entry_id: str) -> dict[str, Any] | None:

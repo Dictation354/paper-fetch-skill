@@ -6,10 +6,14 @@ import os
 from pathlib import Path
 from typing import Mapping
 
-DEFAULT_USER_CONFIG_DIR = Path.home() / ".config" / "paper-fetch"
+from dotenv import dotenv_values
+from platformdirs import user_config_path, user_data_path
+
+APP_NAME = "paper-fetch"
+DEFAULT_USER_CONFIG_DIR = user_config_path(APP_NAME, appauthor=False)
 DEFAULT_USER_ENV_FILE = DEFAULT_USER_CONFIG_DIR / ".env"
-DEFAULT_XDG_DATA_HOME = Path.home() / ".local" / "share"
-DEFAULT_USER_DATA_DIR = DEFAULT_XDG_DATA_HOME / "paper-fetch"
+DEFAULT_USER_DATA_DIR = user_data_path(APP_NAME, appauthor=False)
+DEFAULT_XDG_DATA_HOME = DEFAULT_USER_DATA_DIR.parent
 DEFAULT_MCP_DOWNLOAD_DIR = DEFAULT_USER_DATA_DIR / "downloads"
 DEFAULT_CLI_DOWNLOAD_DIR = Path("live-downloads")
 DEFAULT_REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -30,30 +34,14 @@ FLARESOLVERR_MAX_REQUESTS_PER_DAY_ENV_VAR = "FLARESOLVERR_MAX_REQUESTS_PER_DAY"
 
 
 def load_env_file(path: Path) -> dict[str, str]:
-    """Parse a simple .env file without external dependencies."""
-    values: dict[str, str] = {}
     if not path.exists():
-        return values
+        return {}
 
-    for raw_line in path.read_text(encoding="utf-8").splitlines():
-        line = raw_line.strip()
-        if not line or line.startswith("#"):
-            continue
-        if line.startswith("export "):
-            line = line[7:].strip()
-        if "=" not in line:
-            continue
-
-        key, value = line.split("=", 1)
-        key = key.strip()
-        value = value.strip()
-        if not key:
-            continue
-        if value.startswith(("'", '"')) and value.endswith(("'", '"')) and len(value) >= 2:
-            value = value[1:-1]
-        values[key] = value
-
-    return values
+    return {
+        str(key): value
+        for key, value in dotenv_values(path, interpolate=False).items()
+        if key and value is not None
+    }
 
 
 def normalize_env_file_path(value: str | os.PathLike[str] | None) -> Path | None:
@@ -114,8 +102,9 @@ def _configured_download_dir(env: Mapping[str, str] | None = None) -> Path | Non
 def resolve_user_data_dir(env: Mapping[str, str] | None = None) -> Path:
     active_env = _active_env(env)
     configured = str(active_env.get(XDG_DATA_HOME_ENV_VAR, "")).strip()
-    base_dir = Path(configured).expanduser() if configured else DEFAULT_XDG_DATA_HOME
-    return base_dir / "paper-fetch"
+    if configured:
+        return Path(configured).expanduser() / APP_NAME
+    return DEFAULT_USER_DATA_DIR
 
 
 def resolve_cli_download_dir(env: Mapping[str, str] | None = None) -> Path:

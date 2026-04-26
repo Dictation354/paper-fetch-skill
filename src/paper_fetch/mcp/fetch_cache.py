@@ -27,6 +27,8 @@ from ..tracing import TraceEvent, trace_event
 from ..utils import normalize_text, sanitize_filename
 from ..workflow.types import PaperFetchFailure
 from .cache_index import (
+    cache_file_lock,
+    fetch_envelope_lock_path,
     list_cache_entries,
     preferred_cached_entries,
     refresh_cache_index_for_doi,
@@ -327,7 +329,9 @@ class FetchCache:
         if cached_entry is None:
             return None
         try:
-            cache_payload = json.loads(Path(str(cached_entry["path"])).read_text(encoding="utf-8"))
+            cache_path = Path(str(cached_entry["path"]))
+            with cache_file_lock(fetch_envelope_lock_path(self.download_dir, doi)):
+                cache_payload = json.loads(cache_path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError, KeyError):
             return None
         if not isinstance(cache_payload, Mapping):
@@ -360,9 +364,10 @@ class FetchCache:
             "request": request_cache_payload(request),
             "payload": payload_from_envelope(envelope, request),
         }
-        tmp_path = cache_path.with_suffix(cache_path.suffix + ".part")
-        tmp_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
-        tmp_path.replace(cache_path)
+        with cache_file_lock(fetch_envelope_lock_path(self.download_dir, doi)):
+            tmp_path = cache_path.with_suffix(cache_path.suffix + ".part")
+            tmp_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+            tmp_path.replace(cache_path)
         self._refresh_cache_index_for_doi(self.download_dir, doi)
 
     def refresh_for_doi(self, doi: str) -> list[dict[str, Any]]:

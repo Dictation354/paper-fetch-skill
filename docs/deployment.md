@@ -46,7 +46,7 @@ cp .env.example ~/.config/paper-fetch/.env
 
 补充说明：
 
-- 运行时默认读取 `~/.config/paper-fetch/.env`
+- 运行时默认读取 `platformdirs` 解析出的用户配置目录下的 `.env`；常见 Linux/XDG 布局为 `~/.config/paper-fetch/.env`
 - 仓库内的 `.env` 不会自动加载
 - 如果要显式指定配置文件，请设置：
 

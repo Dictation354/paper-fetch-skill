@@ -12,12 +12,12 @@ import time
 import urllib.error
 import urllib.parse
 from contextlib import nullcontext
-from collections import OrderedDict
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
 from typing import Any, Callable, Iterator, Mapping
 
+from cachetools import TTLCache
 import urllib3
 
 from .logging_utils import emit_structured_log
@@ -66,6 +66,7 @@ SENSITIVE_QUERY_PARAM_NAMES = {
 }
 REDACTED_CACHE_VALUE = "***"
 logger = logging.getLogger("paper_fetch.http")
+_CacheKey = tuple[str, str, tuple[tuple[str, str], ...]]
 
 
 class RequestFailure(Exception):
@@ -119,7 +120,13 @@ class HttpTransport:
         self.max_total_cache_bytes = max(0, int(max_total_cache_bytes))
         self.max_response_bytes = max(0, int(max_response_bytes))
         self._cancel_check = cancel_check
-        self._cache: OrderedDict[tuple[str, str, tuple[tuple[str, str], ...]], tuple[float, dict[str, Any]]] = OrderedDict()
+        cache_maxsize = self.max_total_cache_bytes if self.max_total_cache_bytes > 0 else float("inf")
+        self._cache: TTLCache[_CacheKey, dict[str, Any]] = TTLCache(
+            maxsize=cache_maxsize,
+            ttl=max(1, self.cache_ttl),
+            timer=time.monotonic,
+            getsizeof=self._cache_body_size,
+        )
         self._cache_body_bytes = 0
         self._cache_lock = threading.RLock()
         self._host_locks: dict[str, threading.Lock] = {}
@@ -151,7 +158,7 @@ class HttpTransport:
         method: str,
         url: str,
         headers: Mapping[str, str],
-    ) -> tuple[str, str, tuple[tuple[str, str], ...]] | None:
+    ) -> _CacheKey | None:
         if method.upper() != "GET" or self.cache_ttl <= 0 or self.cache_capacity <= 0:
             return None
         normalized_headers = tuple(
@@ -181,24 +188,23 @@ class HttpTransport:
 
     def _load_cached_response(
         self,
-        cache_key: tuple[str, str, tuple[tuple[str, str], ...]] | None,
+        cache_key: _CacheKey | None,
     ) -> dict[str, Any] | None:
         if cache_key is None:
             return None
         with self._cache_lock:
-            cached_entry = self._cache.get(cache_key)
-            if cached_entry is None:
+            self._cache.expire()
+            try:
+                response = self._cache[cache_key]
+            except KeyError:
+                self._sync_cache_body_bytes()
                 return None
-            expires_at, response = cached_entry
-            if expires_at <= time.monotonic():
-                self._discard_cache_entry(cache_key)
-                return None
-            self._cache.move_to_end(cache_key)
+            self._sync_cache_body_bytes()
             return self._clone_response(response)
 
     def _store_cached_response(
         self,
-        cache_key: tuple[str, str, tuple[tuple[str, str], ...]] | None,
+        cache_key: _CacheKey | None,
         response: Mapping[str, Any],
     ) -> None:
         if cache_key is None or not self._is_cacheable_response(response):
@@ -208,14 +214,15 @@ class HttpTransport:
         if self.max_total_cache_bytes > 0 and body_size > self.max_total_cache_bytes:
             return
         with self._cache_lock:
-            self._discard_cache_entry(cache_key)
-            self._cache[cache_key] = (time.monotonic() + self.cache_ttl, cloned_response)
-            self._cache_body_bytes += body_size
-            self._cache.move_to_end(cache_key)
-            while len(self._cache) > self.cache_capacity or (
-                self.max_total_cache_bytes > 0 and self._cache_body_bytes > self.max_total_cache_bytes
-            ):
-                self._discard_cache_entry(next(iter(self._cache)))
+            self._cache.expire()
+            self._cache.pop(cache_key, None)
+            try:
+                self._cache[cache_key] = cloned_response
+            except ValueError:
+                self._sync_cache_body_bytes()
+                return
+            self._enforce_cache_capacity()
+            self._sync_cache_body_bytes()
 
     def _is_cacheable_response(self, response: Mapping[str, Any]) -> bool:
         if self.max_cacheable_body_bytes <= 0:
@@ -230,15 +237,16 @@ class HttpTransport:
         body = response.get("body", b"")
         return len(body) if isinstance(body, (bytes, bytearray)) else 0
 
-    def _discard_cache_entry(
-        self,
-        cache_key: tuple[str, str, tuple[tuple[str, str], ...]],
-    ) -> None:
-        cached_entry = self._cache.pop(cache_key, None)
-        if cached_entry is None:
-            return
-        _expires_at, response = cached_entry
-        self._cache_body_bytes = max(0, self._cache_body_bytes - self._cache_body_size(response))
+    def _enforce_cache_capacity(self) -> None:
+        while len(self._cache) > self.cache_capacity:
+            self._cache.popitem()
+
+    def _sync_cache_body_bytes(self) -> None:
+        self._cache_body_bytes = int(self._cache.currsize)
+
+    def _discard_cache_entry(self, cache_key: _CacheKey) -> None:
+        self._cache.pop(cache_key, None)
+        self._sync_cache_body_bytes()
 
     def _perform_request(self, request: _PreparedRequest, *, timeout: int) -> Any:
         return self._pool.request(

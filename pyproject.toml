@@ -10,7 +10,11 @@ readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
   "beautifulsoup4>=4.14,<5",
+  "cachetools>=6,<7",
+  "filelock>=3.20,<4",
   "mcp>=1.27,<2",
+  "platformdirs>=4,<5",
+  "python-dotenv>=1.2,<2",
   "trafilatura>=2.0,<3",
   "lxml>=6,<7",
   "playwright>=1.47,<2",
