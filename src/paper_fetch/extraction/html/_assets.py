@@ -14,6 +14,7 @@ from typing import Any, Callable, Mapping
 from ...http import DEFAULT_FULLTEXT_TIMEOUT_SECONDS, HttpTransport, RequestFailure
 from ...models import AssetProfile, normalize_text
 from ...utils import build_asset_output_path, empty_asset_results, sanitize_filename, save_payload
+from ..image_payloads import image_dimensions_from_bytes, image_mime_type_from_bytes
 from ._metadata import parse_html_metadata
 from .formula_rules import (
     FORMULA_IMAGE_ATTRS,
@@ -92,62 +93,11 @@ def _response_header(response: Mapping[str, Any], name: str) -> str:
 
 
 def _image_magic_type(body: bytes | bytearray | None) -> str:
-    payload = bytes(body or b"")
-    if payload.startswith(b"\xff\xd8\xff"):
-        return "image/jpeg"
-    if payload.startswith(b"\x89PNG\r\n\x1a\n"):
-        return "image/png"
-    if payload.startswith((b"GIF87a", b"GIF89a")):
-        return "image/gif"
-    if len(payload) >= 12 and payload[:4] == b"RIFF" and payload[8:12] == b"WEBP":
-        return "image/webp"
-    return ""
+    return image_mime_type_from_bytes(body)
 
 
 def _image_dimensions(body: bytes | bytearray | None) -> tuple[int, int] | None:
-    payload = bytes(body or b"")
-    if len(payload) < 10:
-        return None
-    if payload.startswith(b"\x89PNG\r\n\x1a\n") and len(payload) >= 24:
-        return int.from_bytes(payload[16:20], "big"), int.from_bytes(payload[20:24], "big")
-    if payload.startswith((b"GIF87a", b"GIF89a")) and len(payload) >= 10:
-        return int.from_bytes(payload[6:8], "little"), int.from_bytes(payload[8:10], "little")
-    if payload.startswith(b"\xff\xd8\xff"):
-        index = 2
-        while index + 9 < len(payload):
-            if payload[index] != 0xFF:
-                index += 1
-                continue
-            marker = payload[index + 1]
-            index += 2
-            if marker in {0xD8, 0xD9}:
-                continue
-            if index + 2 > len(payload):
-                break
-            segment_length = int.from_bytes(payload[index:index + 2], "big")
-            if segment_length < 2 or index + segment_length > len(payload):
-                break
-            if marker in {0xC0, 0xC1, 0xC2, 0xC3, 0xC5, 0xC6, 0xC7, 0xC9, 0xCA, 0xCB, 0xCD, 0xCE, 0xCF}:
-                if segment_length >= 7:
-                    height = int.from_bytes(payload[index + 3:index + 5], "big")
-                    width = int.from_bytes(payload[index + 5:index + 7], "big")
-                    return width, height
-                break
-            index += segment_length
-    if len(payload) >= 30 and payload[:4] == b"RIFF" and payload[8:12] == b"WEBP":
-        chunk = payload[12:16]
-        if chunk == b"VP8 " and len(payload) >= 30:
-            width = int.from_bytes(payload[26:28], "little") & 0x3FFF
-            height = int.from_bytes(payload[28:30], "little") & 0x3FFF
-            return width, height
-        if chunk == b"VP8L" and len(payload) >= 25:
-            bits = int.from_bytes(payload[21:25], "little")
-            return (bits & 0x3FFF) + 1, ((bits >> 14) & 0x3FFF) + 1
-        if chunk == b"VP8X" and len(payload) >= 30:
-            width = int.from_bytes(payload[24:27] + b"\x00", "little") + 1
-            height = int.from_bytes(payload[27:30] + b"\x00", "little") + 1
-            return width, height
-    return None
+    return image_dimensions_from_bytes(body)
 
 
 def _response_dimensions(response: Mapping[str, Any]) -> tuple[int, int] | None:

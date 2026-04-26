@@ -11,7 +11,9 @@ requires-python = ">=3.11"
 dependencies = [
   "beautifulsoup4>=4.14,<5",
   "cachetools>=6,<7",
+  "filetype>=1.2,<2",
   "filelock>=3.20,<4",
+  "imagesize>=1.4,<2",
   "mcp>=1.27,<2",
   "platformdirs>=4,<5",
   "python-dotenv>=1.2,<2",

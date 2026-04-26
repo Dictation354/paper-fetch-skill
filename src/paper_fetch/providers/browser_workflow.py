@@ -10,6 +10,7 @@ from typing import Any, Callable, Mapping
 
 from ..config import build_user_agent
 from ..extraction.html import decode_html
+from ..extraction.image_payloads import image_mime_type_from_bytes
 from ..extraction.html.signals import SciencePnasHtmlFailure
 from ..metadata_types import ProviderMetadata
 from ..models import AssetProfile, article_from_markdown, metadata_only_article
@@ -129,16 +130,7 @@ def _choose_playwright_seed_url(*candidates: str | None) -> str | None:
 
 
 def _image_magic_type(body: bytes | bytearray | None) -> str:
-    payload = bytes(body or b"")
-    if payload.startswith(b"\xff\xd8\xff"):
-        return "image/jpeg"
-    if payload.startswith(b"\x89PNG\r\n\x1a\n"):
-        return "image/png"
-    if payload.startswith((b"GIF87a", b"GIF89a")):
-        return "image/gif"
-    if len(payload) >= 12 and payload[:4] == b"RIFF" and payload[8:12] == b"WEBP":
-        return "image/webp"
-    return ""
+    return image_mime_type_from_bytes(body)
 
 
 def _decode_base64_bytes(payload: str | None) -> bytes | None:
