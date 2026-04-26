@@ -51,7 +51,6 @@ __all__ = [
     "FlareSolverrFailure",
     "PdfFallbackFailure",
     "ProviderBrowserProfile",
-    "SciencePnasClient",
     "SciencePnasHtmlFailure",
     "bootstrap_browser_workflow",
     "browser_workflow_article_from_payload",
@@ -1388,7 +1387,3 @@ class BrowserWorkflowClient(ProviderClient):
             ),
             skip_trace=trace_from_markers([f"download:{self.name}_assets_skipped_text_only"]),
         )
-
-
-class SciencePnasClient(BrowserWorkflowClient):
-    """Backward-compatible alias for existing tests and imports."""

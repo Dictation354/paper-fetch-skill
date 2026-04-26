@@ -154,6 +154,9 @@ class SciencePnasCandidateTests(unittest.TestCase):
                 self.assertIsInstance(client, browser_workflow.BrowserWorkflowClient)
                 self.assertIsInstance(client.profile, browser_workflow.ProviderBrowserProfile)
 
+    def test_science_pnas_client_alias_is_removed(self) -> None:
+        self.assertFalse(hasattr(browser_workflow, "SciencePnasClient"))
+
     def test_provider_profile_article_source_label_and_hooks(self) -> None:
         cases = (
             (ScienceClient(None, {}), None, "Science", _science_html.extract_markdown),
