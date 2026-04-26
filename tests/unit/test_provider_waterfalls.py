@@ -7,7 +7,7 @@ from unittest import mock
 
 from paper_fetch.http import RequestFailure
 from paper_fetch.providers import _flaresolverr, browser_workflow, elsevier as elsevier_provider, springer as springer_provider, wiley as wiley_provider
-from paper_fetch.providers.base import ProviderFailure, RawFulltextPayload
+from paper_fetch.providers.base import ProviderContent, ProviderFailure, RawFulltextPayload
 from tests.golden_criteria import golden_criteria_scenario_asset
 from tests.provider_benchmark_samples import WILEY_PDF_FALLBACK_SAMPLE, provider_benchmark_sample
 from tests.paths import FIXTURE_DIR
@@ -50,7 +50,13 @@ class PublisherWaterfallTests(unittest.TestCase):
             source_url="https://api.elsevier.com/content/article/doi/10.1016%2Fj.rse.2025.114648",
             content_type="text/xml",
             body=xml_body,
-            metadata={"route": "official", "reason": "Downloaded full text from the official Elsevier API."},
+            content=ProviderContent(
+                route_kind="official",
+                source_url="https://api.elsevier.com/content/article/doi/10.1016%2Fj.rse.2025.114648",
+                content_type="text/xml",
+                body=xml_body,
+                reason="Downloaded full text from the official Elsevier API.",
+            ),
         )
         client = elsevier_provider.ElsevierClient(transport=mock.Mock(), env={"ELSEVIER_API_KEY": "secret"})
 
@@ -79,7 +85,13 @@ class PublisherWaterfallTests(unittest.TestCase):
             source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest-authors",
             content_type="text/xml",
             body=xml_body,
-            metadata={"route": "official", "reason": "Downloaded full text from the official Elsevier API."},
+            content=ProviderContent(
+                route_kind="official",
+                source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest-authors",
+                content_type="text/xml",
+                body=xml_body,
+                reason="Downloaded full text from the official Elsevier API.",
+            ),
         )
         client = elsevier_provider.ElsevierClient(transport=mock.Mock(), env={"ELSEVIER_API_KEY": "secret"})
 
@@ -101,7 +113,13 @@ class PublisherWaterfallTests(unittest.TestCase):
             source_url="https://api.elsevier.com/content/article/doi/example",
             content_type="text/xml",
             body=xml_body,
-            metadata={"route": "official", "reason": "Downloaded full text from the official Elsevier API."},
+            content=ProviderContent(
+                route_kind="official",
+                source_url="https://api.elsevier.com/content/article/doi/example",
+                content_type="text/xml",
+                body=xml_body,
+                reason="Downloaded full text from the official Elsevier API.",
+            ),
         )
         client = elsevier_provider.ElsevierClient(transport=mock.Mock(), env={"ELSEVIER_API_KEY": "secret"})
 
@@ -119,7 +137,13 @@ class PublisherWaterfallTests(unittest.TestCase):
             source_url="https://api.elsevier.com/content/article/doi/example",
             content_type="text/plain",
             body=("# Example Article\n\n## Results\n\n" + ("Body text " * 120)).encode("utf-8"),
-            metadata={"route": "official", "reason": "Downloaded full text from the official Elsevier API."},
+            content=ProviderContent(
+                route_kind="official",
+                source_url="https://api.elsevier.com/content/article/doi/example",
+                content_type="text/plain",
+                body=("# Example Article\n\n## Results\n\n" + ("Body text " * 120)).encode("utf-8"),
+                reason="Downloaded full text from the official Elsevier API.",
+            ),
         )
         client = elsevier_provider.ElsevierClient(transport=mock.Mock(), env={"ELSEVIER_API_KEY": "secret"})
 
@@ -140,7 +164,13 @@ class PublisherWaterfallTests(unittest.TestCase):
             source_url="https://api.elsevier.com/content/article/doi/example",
             content_type="text/xml",
             body=b"<xml />",
-            metadata={"route": "official", "reason": "Downloaded full text from the official Elsevier API."},
+            content=ProviderContent(
+                route_kind="official",
+                source_url="https://api.elsevier.com/content/article/doi/example",
+                content_type="text/xml",
+                body=b"<xml />",
+                reason="Downloaded full text from the official Elsevier API.",
+            ),
         )
         fake_article = mock.Mock()
         fake_article.quality = mock.Mock(has_fulltext=True)
@@ -174,18 +204,27 @@ class PublisherWaterfallTests(unittest.TestCase):
             source_url="https://api.elsevier.com/content/article/doi/example",
             content_type="text/xml",
             body=b"<xml />",
-            metadata={"route": "official", "reason": "Downloaded full text from the official Elsevier API."},
+            content=ProviderContent(
+                route_kind="official",
+                source_url="https://api.elsevier.com/content/article/doi/example",
+                content_type="text/xml",
+                body=b"<xml />",
+                reason="Downloaded full text from the official Elsevier API.",
+            ),
         )
         pdf_payload = RawFulltextPayload(
             provider="elsevier",
             source_url="https://api.elsevier.com/content/article/doi/example.pdf",
             content_type="application/pdf",
             body=fulltext_pdf_bytes(),
-            metadata={
-                "route": "pdf_fallback",
-                "reason": "Downloaded full text from the official Elsevier API PDF fallback.",
-                "markdown_text": f"# {ELSEVIER_SAMPLE.title}\n\n## Results\n\n" + ("Body text " * 120),
-            },
+            content=ProviderContent(
+                route_kind="pdf_fallback",
+                source_url="https://api.elsevier.com/content/article/doi/example.pdf",
+                content_type="application/pdf",
+                body=fulltext_pdf_bytes(),
+                reason="Downloaded full text from the official Elsevier API PDF fallback.",
+                markdown_text=f"# {ELSEVIER_SAMPLE.title}\n\n## Results\n\n" + ("Body text " * 120),
+            ),
             needs_local_copy=True,
         )
         client = elsevier_provider.ElsevierClient(transport=mock.Mock(), env={"ELSEVIER_API_KEY": "secret"})

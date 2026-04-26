@@ -12,6 +12,7 @@ from paper_fetch.http import HttpTransport, RequestFailure
 from paper_fetch.providers import _springer_html as springer_html_helper, pnas as pnas_provider, science as science_provider
 from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
 from paper_fetch.providers.wiley import WileyClient
+from paper_fetch.tracing import trace_from_markers
 from paper_fetch.utils import choose_public_landing_page_url
 
 from ._paper_fetch_support import (
@@ -30,6 +31,39 @@ class RecordCaptureHandler(logging.Handler):
 
     def emit(self, record: logging.LogRecord) -> None:
         self.records.append(record)
+
+
+def _typed_payload(
+    *,
+    provider: str,
+    source_url: str,
+    content_type: str,
+    body: bytes,
+    route_kind: str,
+    markdown_text: str | None = None,
+    reason: str | None = None,
+    warnings: list[str] | None = None,
+    source_trail: list[str] | None = None,
+    needs_local_copy: bool = False,
+) -> RawFulltextPayload:
+    return RawFulltextPayload(
+        provider=provider,
+        source_url=source_url,
+        content_type=content_type,
+        body=body,
+        content=ProviderContent(
+            route_kind=route_kind,
+            source_url=source_url,
+            content_type=content_type,
+            body=body,
+            markdown_text=markdown_text,
+            reason=reason,
+            needs_local_copy=needs_local_copy,
+        ),
+        warnings=list(warnings or []),
+        trace=trace_from_markers(list(source_trail or [])),
+        needs_local_copy=needs_local_copy,
+    )
 
 
 class ServiceTests(unittest.TestCase):
@@ -57,16 +91,14 @@ class ServiceTests(unittest.TestCase):
                     transport=runtime_transport,
                     clients={
                         "science": StubProvider(
-                            raw_payload=RawFulltextPayload(
+                            raw_payload=_typed_payload(
                                 provider="science",
                                 source_url=resolved.landing_url,
                                 content_type="text/html",
                                 body=b"<html></html>",
-                                metadata={
-                                    "route": "html",
-                                    "markdown_text": "# Example Article\n\n## Results\n\n" + ("Body text " * 80),
-                                    "source_trail": ["fulltext:science_html_ok"],
-                                },
+                                route_kind="html",
+                                markdown_text="# Example Article\n\n## Results\n\n" + ("Body text " * 80),
+                                source_trail=["fulltext:science_html_ok"],
                             ),
                             article=sample_article(),
                             related_asset_factory=lambda _doi, _metadata, _payload, output_dir, **_kwargs: (
@@ -118,15 +150,13 @@ class ServiceTests(unittest.TestCase):
                     transport=context_transport,
                     clients={
                         "science": StubProvider(
-                            raw_payload=RawFulltextPayload(
+                            raw_payload=_typed_payload(
                                 provider="science",
                                 source_url=resolved.landing_url,
                                 content_type="text/html",
                                 body=b"<html></html>",
-                                metadata={
-                                    "route": "html",
-                                    "markdown_text": "# Context Article\n\n## Results\n\n" + ("Body text " * 80),
-                                },
+                                route_kind="html",
+                                markdown_text="# Context Article\n\n## Results\n\n" + ("Body text " * 80),
                             ),
                             article=sample_article(),
                             related_asset_factory=lambda _doi, _metadata, _payload, output_dir, **_kwargs: (
@@ -147,15 +177,13 @@ class ServiceTests(unittest.TestCase):
                     transport=override_transport,
                     clients={
                         "science": StubProvider(
-                            raw_payload=RawFulltextPayload(
+                            raw_payload=_typed_payload(
                                 provider="science",
                                 source_url=resolved.landing_url,
                                 content_type="text/html",
                                 body=b"<html></html>",
-                                metadata={
-                                    "route": "html",
-                                    "markdown_text": "# Override Article\n\n## Results\n\n" + ("Body text " * 80),
-                                },
+                                route_kind="html",
+                                markdown_text="# Override Article\n\n## Results\n\n" + ("Body text " * 80),
                             ),
                             article=sample_article(),
                             related_asset_factory=lambda _doi, _metadata, _payload, output_dir, **_kwargs: (
@@ -254,16 +282,14 @@ class ServiceTests(unittest.TestCase):
                             download_dir=Path(tmpdir),
                             clients={
                                 provider_name: StubProvider(
-                                    raw_payload=RawFulltextPayload(
+                                    raw_payload=_typed_payload(
                                         provider=provider_name,
                                         source_url=landing_url,
                                         content_type="text/html",
                                         body=b"<html></html>",
-                                        metadata={
-                                            "route": "html",
-                                            "markdown_text": "# Example Article\n\n## Results\n\n" + ("Body text " * 80),
-                                            "source_trail": [f"fulltext:{provider_name}_html_ok"],
-                                        },
+                                        route_kind="html",
+                                        markdown_text="# Example Article\n\n## Results\n\n" + ("Body text " * 80),
+                                        source_trail=[f"fulltext:{provider_name}_html_ok"],
                                     ),
                                     article=sample_article(),
                                     related_asset_factory=lambda *args, **kwargs: (
@@ -310,16 +336,14 @@ class ServiceTests(unittest.TestCase):
                     download_dir=Path(tmpdir),
                     clients={
                         "science": StubProvider(
-                            raw_payload=RawFulltextPayload(
+                            raw_payload=_typed_payload(
                                 provider="science",
                                 source_url=resolved.landing_url,
                                 content_type="text/html",
                                 body=b"<html></html>",
-                                metadata={
-                                    "route": "html",
-                                    "markdown_text": "# Example Article\n\n## Results\n\n" + ("Body text " * 80),
-                                    "source_trail": ["fulltext:science_html_ok"],
-                                },
+                                route_kind="html",
+                                markdown_text="# Example Article\n\n## Results\n\n" + ("Body text " * 80),
+                                source_trail=["fulltext:science_html_ok"],
                             ),
                             article=sample_article(),
                             related_asset_factory=lambda *args, **kwargs: (_ for _ in ()).throw(
@@ -367,16 +391,14 @@ class ServiceTests(unittest.TestCase):
                     download_dir=Path(tmpdir),
                     clients={
                         "science": StubProvider(
-                            raw_payload=RawFulltextPayload(
+                            raw_payload=_typed_payload(
                                 provider="science",
                                 source_url=resolved.landing_url,
                                 content_type="text/html",
                                 body=b"<html></html>",
-                                metadata={
-                                    "route": "html",
-                                    "markdown_text": "# Example Article\n\n## Results\n\n" + ("Body text " * 80),
-                                    "source_trail": ["fulltext:science_html_ok"],
-                                },
+                                route_kind="html",
+                                markdown_text="# Example Article\n\n## Results\n\n" + ("Body text " * 80),
+                                source_trail=["fulltext:science_html_ok"],
                             ),
                             article=sample_article(),
                             related_assets={
@@ -434,16 +456,14 @@ class ServiceTests(unittest.TestCase):
                     download_dir=Path(tmpdir),
                     clients={
                         "science": StubProvider(
-                            raw_payload=RawFulltextPayload(
+                            raw_payload=_typed_payload(
                                 provider="science",
                                 source_url=resolved.landing_url,
                                 content_type="text/html",
                                 body=b"<html></html>",
-                                metadata={
-                                    "route": "html",
-                                    "markdown_text": "# Example Article\n\n## Results\n\n" + ("Body text " * 80),
-                                    "source_trail": ["fulltext:science_html_ok"],
-                                },
+                                route_kind="html",
+                                markdown_text="# Example Article\n\n## Results\n\n" + ("Body text " * 80),
+                                source_trail=["fulltext:science_html_ok"],
                             ),
                             article=sample_article(),
                             related_assets={
@@ -908,12 +928,13 @@ class ServiceTests(unittest.TestCase):
             }
 
         original_resolve = paper_fetch.resolve_paper
-        raw_payload = RawFulltextPayload(
+        raw_payload = _typed_payload(
             provider="elsevier",
             source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest",
             content_type="text/xml",
             body=b"<xml/>",
-            metadata={"reason": "Downloaded full text from the official Elsevier API."},
+            route_kind="official",
+            reason="Downloaded full text from the official Elsevier API.",
         )
         try:
             paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
@@ -957,7 +978,13 @@ class ServiceTests(unittest.TestCase):
             paper_fetch.resolve_paper = original_resolve
 
         self.assertIn("download:elsevier_assets_saved_profile_all", article.quality.source_trail)
-        self.assertEqual(raw_payload.metadata, {"reason": "Downloaded full text from the official Elsevier API."})
+        self.assertEqual(
+            raw_payload.metadata,
+            {
+                "route": "official",
+                "reason": "Downloaded full text from the official Elsevier API.",
+            },
+        )
 
     def test_fetch_paper_model_skips_related_asset_downloads_when_no_download_is_set(self) -> None:
         resolved = paper_fetch.ResolvedQuery(
@@ -1888,31 +1915,29 @@ class ServiceTests(unittest.TestCase):
                     clients={
                         "wiley": StubProvider(
                             metadata=paper_fetch.ProviderFailure("not_supported", "No official metadata."),
-                            raw_payload=RawFulltextPayload(
+                            raw_payload=_typed_payload(
                                 provider="wiley",
                                 source_url="https://example.test/wiley.pdf",
                                 content_type="application/pdf",
                                 body=fulltext_pdf_bytes(),
-                                metadata={
-                                    "reason": "Downloaded full text from the Wiley TDM API PDF fallback.",
-                                    "route": "pdf_fallback",
-                                    "markdown_text": (
-                                        "# Wiley PDF Article\n\n## Introduction\n\n"
-                                        + ("Introduction text " * 60)
-                                        + "\n\n## Methods\n\n"
-                                        + ("Methods text " * 60)
-                                        + "\n\n## Results\n\n"
-                                        + ("Results text " * 60)
-                                    ),
-                                    "warnings": [
-                                        "Full text was extracted from the Wiley TDM API PDF fallback after the HTML path was not usable."
-                                    ],
-                                    "source_trail": [
-                                        "fulltext:wiley_html_fail",
-                                        "fulltext:wiley_pdf_api_ok",
-                                        "fulltext:wiley_pdf_fallback_ok",
-                                    ],
-                                },
+                                route_kind="pdf_fallback",
+                                reason="Downloaded full text from the Wiley TDM API PDF fallback.",
+                                markdown_text=(
+                                    "# Wiley PDF Article\n\n## Introduction\n\n"
+                                    + ("Introduction text " * 60)
+                                    + "\n\n## Methods\n\n"
+                                    + ("Methods text " * 60)
+                                    + "\n\n## Results\n\n"
+                                    + ("Results text " * 60)
+                                ),
+                                warnings=[
+                                    "Full text was extracted from the Wiley TDM API PDF fallback after the HTML path was not usable."
+                                ],
+                                source_trail=[
+                                    "fulltext:wiley_html_fail",
+                                    "fulltext:wiley_pdf_api_ok",
+                                    "fulltext:wiley_pdf_fallback_ok",
+                                ],
                                 needs_local_copy=True,
                             ),
                             article_factory=WileyClient(HttpTransport(), {}).to_article_model,
@@ -1953,25 +1978,23 @@ class ServiceTests(unittest.TestCase):
                 "title": "Wiley PDF Article",
                 "authors": ["Alice Example"],
             },
-            RawFulltextPayload(
+            _typed_payload(
                 provider="wiley",
                 source_url="https://example.test/wiley.pdf",
                 content_type="application/pdf",
                 body=fulltext_pdf_bytes(),
-                metadata={
-                    "route": "pdf_fallback",
-                    "markdown_text": (
-                        "# Wiley PDF Article\n\n## Introduction\n\n"
-                        + ("Introduction text " * 60)
-                        + "\n\n## Methods\n\n"
-                        + ("Methods text " * 60)
-                        + "\n\n## Results\n\n"
-                        + ("Results text " * 60)
-                        + "\n\n## Discussion\n\n"
-                        + ("Discussion text " * 60)
-                    ),
-                    "source_trail": ["fulltext:wiley_pdf_api_ok", "fulltext:wiley_pdf_fallback_ok"],
-                },
+                route_kind="pdf_fallback",
+                markdown_text=(
+                    "# Wiley PDF Article\n\n## Introduction\n\n"
+                    + ("Introduction text " * 60)
+                    + "\n\n## Methods\n\n"
+                    + ("Methods text " * 60)
+                    + "\n\n## Results\n\n"
+                    + ("Results text " * 60)
+                    + "\n\n## Discussion\n\n"
+                    + ("Discussion text " * 60)
+                ),
+                source_trail=["fulltext:wiley_pdf_api_ok", "fulltext:wiley_pdf_fallback_ok"],
             ),
         )
 
@@ -2013,12 +2036,13 @@ class ServiceTests(unittest.TestCase):
                                 "fulltext_links": [],
                                 "references": [],
                             },
-                            raw_payload=RawFulltextPayload(
+                            raw_payload=_typed_payload(
                                 provider="custompdf",
                                 source_url="https://example.test/custom.pdf",
                                 content_type="application/pdf",
                                 body=fulltext_pdf_bytes(),
-                                metadata={"reason": "Downloaded full text from a custom PDF endpoint."},
+                                route_kind="",
+                                reason="Downloaded full text from a custom PDF endpoint.",
                                 needs_local_copy=True,
                             ),
                             article=official_article,
@@ -2064,26 +2088,24 @@ class ServiceTests(unittest.TestCase):
                     clients={
                         "wiley": StubProvider(
                             metadata=paper_fetch.ProviderFailure("not_supported", "No official metadata."),
-                            raw_payload=RawFulltextPayload(
+                            raw_payload=_typed_payload(
                                 provider="wiley",
                                 source_url="https://example.test/wiley.pdf",
                                 content_type="application/pdf",
                                 body=fulltext_pdf_bytes(),
-                                metadata={
-                                    "reason": "Downloaded full text from the Wiley TDM API PDF fallback.",
-                                    "route": "pdf_fallback",
-                                    "markdown_text": (
-                                        "# Wiley PDF Article\n\n## Introduction\n\n"
-                                        + ("Introduction text " * 60)
-                                        + "\n\n## Results\n\n"
-                                        + ("Results text " * 60)
-                                    ),
-                                    "source_trail": [
-                                        "fulltext:wiley_html_fail",
-                                        "fulltext:wiley_pdf_api_ok",
-                                        "fulltext:wiley_pdf_fallback_ok",
-                                    ],
-                                },
+                                route_kind="pdf_fallback",
+                                reason="Downloaded full text from the Wiley TDM API PDF fallback.",
+                                markdown_text=(
+                                    "# Wiley PDF Article\n\n## Introduction\n\n"
+                                    + ("Introduction text " * 60)
+                                    + "\n\n## Results\n\n"
+                                    + ("Results text " * 60)
+                                ),
+                                source_trail=[
+                                    "fulltext:wiley_html_fail",
+                                    "fulltext:wiley_pdf_api_ok",
+                                    "fulltext:wiley_pdf_fallback_ok",
+                                ],
                                 needs_local_copy=True,
                             ),
                             article_factory=WileyClient(HttpTransport(), {}).to_article_model,
@@ -2380,17 +2402,14 @@ class ServiceTests(unittest.TestCase):
                     clients={
                         "science": StubProvider(
                             metadata=paper_fetch.ProviderFailure("not_supported", "Science metadata probe is route-only."),
-                            raw_payload=RawFulltextPayload(
+                            raw_payload=_typed_payload(
                                 provider="science",
                                 source_url=resolved.landing_url,
                                 content_type="text/html",
                                 body=b"<html />",
-                                metadata={
-                                    "route": "html",
-                                    "markdown_text": "# Science Example\n\n## Results\n\n" + ("Body text " * 80),
-                                    "source_trail": ["fulltext:science_html_ok"],
-                                    "warnings": [],
-                                },
+                                route_kind="html",
+                                markdown_text="# Science Example\n\n## Results\n\n" + ("Body text " * 80),
+                                source_trail=["fulltext:science_html_ok"],
                             ),
                             article_factory=science_provider.ScienceClient(HttpTransport(), {}).to_article_model,
                             related_assets={
@@ -2456,17 +2475,14 @@ class ServiceTests(unittest.TestCase):
                     clients={
                         "wiley": StubProvider(
                             metadata=paper_fetch.ProviderFailure("not_supported", "No official metadata."),
-                            raw_payload=RawFulltextPayload(
+                            raw_payload=_typed_payload(
                                 provider="wiley",
                                 source_url=resolved.landing_url,
                                 content_type="text/html",
                                 body=b"<html></html>",
-                                metadata={
-                                    "route": "html",
-                                    "markdown_text": "# Wiley HTML Article\n\n## Results\n\n" + ("Body text " * 80),
-                                    "warnings": [],
-                                    "source_trail": ["fulltext:wiley_html_ok"],
-                                },
+                                route_kind="html",
+                                markdown_text="# Wiley HTML Article\n\n## Results\n\n" + ("Body text " * 80),
+                                source_trail=["fulltext:wiley_html_ok"],
                             ),
                             article_factory=WileyClient(HttpTransport(), {}).to_article_model,
                             related_assets={
@@ -2530,17 +2546,14 @@ class ServiceTests(unittest.TestCase):
                     clients={
                         "pnas": StubProvider(
                             metadata=paper_fetch.ProviderFailure("not_supported", "PNAS metadata probe is route-only."),
-                            raw_payload=RawFulltextPayload(
+                            raw_payload=_typed_payload(
                                 provider="pnas",
                                 source_url=resolved.landing_url,
                                 content_type="text/html",
                                 body=b"<html></html>",
-                                metadata={
-                                    "route": "html",
-                                    "markdown_text": "# PNAS HTML Article\n\n## Results\n\n" + ("Body text " * 80),
-                                    "warnings": [],
-                                    "source_trail": ["fulltext:pnas_html_ok"],
-                                },
+                                route_kind="html",
+                                markdown_text="# PNAS HTML Article\n\n## Results\n\n" + ("Body text " * 80),
+                                source_trail=["fulltext:pnas_html_ok"],
                             ),
                             article_factory=pnas_provider.PnasClient(HttpTransport(), {}).to_article_model,
                             related_assets={
@@ -2650,25 +2663,22 @@ class ServiceTests(unittest.TestCase):
                                         "not_supported",
                                         "Browser-workflow provider metadata is route-only.",
                                     ),
-                                    raw_payload=RawFulltextPayload(
+                                    raw_payload=_typed_payload(
                                         provider=case["provider_name"],
                                         source_url=case["landing_url"],
                                         content_type="text/html",
                                         body=b"<html></html>",
-                                        metadata={
-                                            "route": "html",
-                                            "markdown_text": "\n\n".join(
-                                                [
-                                                    f"# {case['title']}",
-                                                    "## Results",
-                                                    ("Body text " * 80).strip(),
-                                                    f"![Figure 1]({case['remote_url']})",
-                                                    "**Figure 1.** Caption body for the browser HTML figure.",
-                                                ]
-                                            ),
-                                            "warnings": [],
-                                            "source_trail": [f"fulltext:{case['provider_name']}_html_ok"],
-                                        },
+                                        route_kind="html",
+                                        markdown_text="\n\n".join(
+                                            [
+                                                f"# {case['title']}",
+                                                "## Results",
+                                                ("Body text " * 80).strip(),
+                                                f"![Figure 1]({case['remote_url']})",
+                                                "**Figure 1.** Caption body for the browser HTML figure.",
+                                            ]
+                                        ),
+                                        source_trail=[f"fulltext:{case['provider_name']}_html_ok"],
                                     ),
                                     article_factory=case["article_factory"],
                                     related_assets={
@@ -2736,22 +2746,20 @@ class ServiceTests(unittest.TestCase):
                             clients={
                                 provider_name: StubProvider(
                                     metadata=paper_fetch.ProviderFailure("not_supported", "Route-only provider metadata."),
-                                    raw_payload=RawFulltextPayload(
+                                    raw_payload=_typed_payload(
                                         provider=provider_name,
                                         source_url=f"{landing_url}.pdf",
                                         content_type="application/pdf",
                                         body=fulltext_pdf_bytes(),
-                                        metadata={
-                                            "route": "pdf_fallback",
-                                            "markdown_text": f"# {provider_name.title()} PDF Article\n\n## Results\n\n" + ("Body text " * 80),
-                                            "warnings": [
-                                                "Full text was extracted from PDF fallback after the HTML path was not usable."
-                                            ],
-                                            "source_trail": [
-                                                f"fulltext:{provider_name}_html_fail",
-                                                f"fulltext:{provider_name}_pdf_fallback_ok",
-                                            ],
-                                        },
+                                        route_kind="pdf_fallback",
+                                        markdown_text=f"# {provider_name.title()} PDF Article\n\n## Results\n\n" + ("Body text " * 80),
+                                        warnings=[
+                                            "Full text was extracted from PDF fallback after the HTML path was not usable."
+                                        ],
+                                        source_trail=[
+                                            f"fulltext:{provider_name}_html_fail",
+                                            f"fulltext:{provider_name}_pdf_fallback_ok",
+                                        ],
                                         needs_local_copy=True,
                                     ),
                                     article_factory=article_factory,

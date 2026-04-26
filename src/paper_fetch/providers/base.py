@@ -84,90 +84,27 @@ class PreparedFetchResultPayload:
     context: dict[str, Any] = field(default_factory=dict)
 
 
-def _coerce_provider_content(
-    *,
-    source_url: str,
-    content_type: str,
-    body: bytes,
-    merged_metadata: Mapping[str, Any] | None,
-    metadata: Mapping[str, Any] | None,
-    content: ProviderContent | None,
-) -> ProviderContent | None:
-    if content is not None:
-        return content
-    legacy = dict(metadata or {})
-    route_kind = str(legacy.get("route") or "").strip()
-    markdown_text = legacy.get("markdown_text")
-    reason = legacy.get("reason")
-    diagnostics = legacy.get("availability_diagnostics")
-    fetcher = legacy.get("html_fetcher")
-    browser_context_seed = legacy.get("browser_context_seed")
-    suggested_filename = legacy.get("suggested_filename")
-    html_failure_reason = legacy.get("html_failure_reason")
-    html_failure_message = legacy.get("html_failure_message")
-    extracted_assets = legacy.get("extracted_assets")
-    merged = merged_metadata or legacy.get("merged_metadata")
-    diagnostics_payload: dict[str, Any] = {}
-    if isinstance(diagnostics, Mapping):
-        diagnostics_payload["availability_diagnostics"] = dict(diagnostics)
-    if "extraction" in legacy:
-        diagnostics_payload["extraction"] = legacy["extraction"]
-    if not any(
-        (
-            route_kind,
-            markdown_text,
-            reason,
-            diagnostics_payload,
-            fetcher,
-            browser_context_seed,
-            suggested_filename,
-            html_failure_reason,
-            html_failure_message,
-            extracted_assets,
-            merged,
-        )
-    ):
-        return None
-    return ProviderContent(
-        route_kind=route_kind,
-        source_url=source_url,
-        content_type=content_type,
-        body=body,
-        markdown_text=str(markdown_text) if markdown_text is not None else None,
-        merged_metadata=dict(merged) if isinstance(merged, Mapping) else None,
-        diagnostics=diagnostics_payload,
-        reason=str(reason) if reason is not None else None,
-        fetcher=str(fetcher) if fetcher is not None else None,
-        browser_context_seed=dict(browser_context_seed) if isinstance(browser_context_seed, Mapping) else {},
-        suggested_filename=str(suggested_filename) if suggested_filename is not None else None,
-        html_failure_reason=str(html_failure_reason) if html_failure_reason is not None else None,
-        html_failure_message=str(html_failure_message) if html_failure_message is not None else None,
-        extracted_assets=[
-            dict(item)
-            for item in (extracted_assets or [])
-            if isinstance(item, Mapping)
-        ],
-    )
+STRUCTURED_METADATA_KEYS = {
+    "route",
+    "reason",
+    "markdown_text",
+    "merged_metadata",
+    "availability_diagnostics",
+    "extraction",
+    "html_fetcher",
+    "browser_context_seed",
+    "suggested_filename",
+    "html_failure_reason",
+    "html_failure_message",
+    "extracted_assets",
+    "warnings",
+    "source_trail",
+}
 
 
-def _extra_legacy_metadata(metadata: Mapping[str, Any] | None) -> dict[str, Any]:
+def _passthrough_metadata(metadata: Mapping[str, Any] | None) -> dict[str, Any]:
     legacy = dict(metadata or {})
-    consumed = {
-        "route",
-        "reason",
-        "markdown_text",
-        "merged_metadata",
-        "availability_diagnostics",
-        "html_fetcher",
-        "browser_context_seed",
-        "suggested_filename",
-        "html_failure_reason",
-        "html_failure_message",
-        "extracted_assets",
-        "warnings",
-        "source_trail",
-    }
-    return {key: value for key, value in legacy.items() if key not in consumed}
+    return {key: value for key, value in legacy.items() if key not in STRUCTURED_METADATA_KEYS}
 
 
 @dataclass(init=False)
@@ -197,27 +134,16 @@ class RawFulltextPayload:
         needs_local_copy: bool = False,
         metadata: Mapping[str, Any] | None = None,
     ) -> None:
-        legacy_metadata = dict(metadata or {})
-        derived_trace = list(trace or trace_from_markers(legacy_metadata.get("source_trail") or []))
-        derived_warnings = [str(item) for item in (warnings or legacy_metadata.get("warnings") or []) if str(item).strip()]
-        merged = merged_metadata or legacy_metadata.get("merged_metadata")
         self.provider = provider
         self.source_url = source_url
         self.content_type = content_type
         self.body = body
-        self.content = _coerce_provider_content(
-            source_url=source_url,
-            content_type=content_type,
-            body=body,
-            merged_metadata=merged,
-            metadata=legacy_metadata,
-            content=content,
-        )
-        self.warnings = derived_warnings
-        self.trace = derived_trace
-        self.merged_metadata = dict(merged) if isinstance(merged, Mapping) else None
+        self.content = content
+        self.warnings = [str(item) for item in (warnings or []) if str(item).strip()]
+        self.trace = list(trace or [])
+        self.merged_metadata = dict(merged_metadata) if isinstance(merged_metadata, Mapping) else None
         self.needs_local_copy = needs_local_copy
-        self._legacy_metadata = _extra_legacy_metadata(legacy_metadata)
+        self._legacy_metadata = _passthrough_metadata(metadata)
 
     @property
     def metadata(self) -> dict[str, Any]:

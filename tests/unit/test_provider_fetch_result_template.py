@@ -14,6 +14,7 @@ from paper_fetch.providers.base import (
     ProviderContent,
     RawFulltextPayload,
 )
+from paper_fetch.tracing import trace_from_markers
 
 
 def _payload(*, source_url: str = "https://example.test/article", markers: list[str] | None = None) -> RawFulltextPayload:
@@ -30,7 +31,7 @@ def _payload(*, source_url: str = "https://example.test/article", markers: list[
             body=body,
             markdown_text="# Template Article\n\n## Results\n\n" + ("Body text " * 80),
         ),
-        metadata={"source_trail": list(markers or ["fulltext:template_html_ok"])},
+        trace=trace_from_markers(list(markers or ["fulltext:template_html_ok"])),
     )
 
 
@@ -101,8 +102,8 @@ class ProviderWaterfallRunnerTests(unittest.TestCase):
         )
 
 
-class RawFulltextPayloadLegacyCompatibilityTests(unittest.TestCase):
-    def test_legacy_metadata_keys_are_coerced_to_structured_payload_fields(self) -> None:
+class RawFulltextPayloadMetadataCompatibilityTests(unittest.TestCase):
+    def test_metadata_magic_keys_are_not_ingested_as_structured_payload_fields(self) -> None:
         payload = RawFulltextPayload(
             provider="template",
             source_url="https://example.test/article",
@@ -126,24 +127,68 @@ class RawFulltextPayloadLegacyCompatibilityTests(unittest.TestCase):
             },
         )
 
-        self.assertIsNotNone(payload.content)
-        content = payload.content
-        assert content is not None
-        self.assertEqual(content.route_kind, "html")
-        self.assertEqual(content.reason, "legacy reason")
-        self.assertEqual(content.markdown_text, "# Legacy\n\nBody text")
-        self.assertEqual(content.merged_metadata, {"title": "Merged Legacy Title"})
-        self.assertEqual(
-            content.diagnostics,
-            {"availability_diagnostics": {"accepted": True, "reason": "body_sufficient"}},
+        self.assertIsNone(payload.content)
+        self.assertEqual(payload.warnings, [])
+        self.assertEqual(payload.trace, [])
+        self.assertIsNone(payload.merged_metadata)
+        for key in (
+            "route",
+            "reason",
+            "markdown_text",
+            "merged_metadata",
+            "availability_diagnostics",
+            "html_fetcher",
+            "browser_context_seed",
+            "suggested_filename",
+            "html_failure_reason",
+            "html_failure_message",
+            "extracted_assets",
+            "warnings",
+            "source_trail",
+        ):
+            self.assertNotIn(key, payload.metadata)
+        self.assertEqual(payload.metadata["custom_passthrough"], "kept")
+
+    def test_metadata_export_is_derived_from_typed_payload_fields(self) -> None:
+        body = b"<html></html>"
+        payload = RawFulltextPayload(
+            provider="template",
+            source_url="https://example.test/article",
+            content_type="text/html",
+            body=body,
+            content=ProviderContent(
+                route_kind="html",
+                source_url="https://example.test/article",
+                content_type="text/html",
+                body=body,
+                markdown_text="# Typed\n\nBody text",
+                merged_metadata={"title": "Merged Typed Title"},
+                diagnostics={"availability_diagnostics": {"accepted": True, "reason": "body_sufficient"}},
+                reason="typed reason",
+                fetcher="flaresolverr",
+                browser_context_seed={"browser_final_url": "https://example.test/final"},
+                suggested_filename="typed.html",
+                html_failure_reason="abstract_only",
+                html_failure_message="HTML exposed only abstract content.",
+                extracted_assets=[{"kind": "figure", "url": "https://example.test/f1.png"}],
+            ),
+            warnings=["typed warning"],
+            trace=trace_from_markers(["fulltext:template_html_ok"]),
+            metadata={"custom_passthrough": "kept"},
         )
-        self.assertEqual(content.fetcher, "flaresolverr")
-        self.assertEqual(content.browser_context_seed, {"browser_final_url": "https://example.test/final"})
-        self.assertEqual(content.suggested_filename, "legacy.html")
-        self.assertEqual(content.html_failure_reason, "abstract_only")
-        self.assertEqual(content.html_failure_message, "HTML exposed only abstract content.")
-        self.assertEqual(content.extracted_assets, [{"kind": "figure", "url": "https://example.test/f1.png"}])
-        self.assertEqual(payload.warnings, ["legacy warning"])
+
+        self.assertEqual(payload.metadata["route"], "html")
+        self.assertEqual(payload.metadata["reason"], "typed reason")
+        self.assertEqual(payload.metadata["markdown_text"], "# Typed\n\nBody text")
+        self.assertEqual(payload.metadata["merged_metadata"], {"title": "Merged Typed Title"})
+        self.assertEqual(payload.metadata["availability_diagnostics"], {"accepted": True, "reason": "body_sufficient"})
+        self.assertEqual(payload.metadata["html_fetcher"], "flaresolverr")
+        self.assertEqual(payload.metadata["browser_context_seed"], {"browser_final_url": "https://example.test/final"})
+        self.assertEqual(payload.metadata["suggested_filename"], "typed.html")
+        self.assertEqual(payload.metadata["html_failure_reason"], "abstract_only")
+        self.assertEqual(payload.metadata["html_failure_message"], "HTML exposed only abstract content.")
+        self.assertEqual(payload.metadata["extracted_assets"], [{"kind": "figure", "url": "https://example.test/f1.png"}])
+        self.assertEqual(payload.metadata["warnings"], ["typed warning"])
         self.assertEqual(payload.metadata["source_trail"], ["fulltext:template_html_ok"])
         self.assertEqual(payload.metadata["custom_passthrough"], "kept")
 

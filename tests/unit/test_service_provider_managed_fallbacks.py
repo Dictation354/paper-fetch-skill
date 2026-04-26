@@ -7,7 +7,7 @@ from unittest import mock
 
 from paper_fetch import service as paper_fetch
 from paper_fetch.providers import elsevier as elsevier_provider
-from paper_fetch.providers.base import RawFulltextPayload
+from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
 from paper_fetch.tracing import trace_from_markers
 
 from ._paper_fetch_support import StubProvider, fetch_paper_model, fulltext_pdf_bytes, sample_article, sample_html_article
@@ -132,18 +132,27 @@ class ProviderManagedFallbackServiceTests(unittest.TestCase):
             source_url="https://api.elsevier.com/content/article/doi/example",
             content_type="text/xml",
             body=b"<xml />",
-            metadata={"route": "official", "reason": "Downloaded full text from the official Elsevier API."},
+            content=ProviderContent(
+                route_kind="official",
+                source_url="https://api.elsevier.com/content/article/doi/example",
+                content_type="text/xml",
+                body=b"<xml />",
+                reason="Downloaded full text from the official Elsevier API.",
+            ),
         )
         pdf_payload = RawFulltextPayload(
             provider="elsevier",
             source_url="https://api.elsevier.com/content/article/doi/example.pdf",
             content_type="application/pdf",
             body=fulltext_pdf_bytes(),
-            metadata={
-                "route": "pdf_fallback",
-                "reason": "Downloaded full text from the official Elsevier API PDF fallback.",
-                "markdown_text": "# Elsevier PDF Article\n\n## Results\n\n" + ("Body text " * 80),
-            },
+            content=ProviderContent(
+                route_kind="pdf_fallback",
+                source_url="https://api.elsevier.com/content/article/doi/example.pdf",
+                content_type="application/pdf",
+                body=fulltext_pdf_bytes(),
+                reason="Downloaded full text from the official Elsevier API PDF fallback.",
+                markdown_text="# Elsevier PDF Article\n\n## Results\n\n" + ("Body text " * 80),
+            ),
             needs_local_copy=True,
         )
         client = elsevier_provider.ElsevierClient(transport=mock.Mock(), env={"ELSEVIER_API_KEY": "secret"})
@@ -213,7 +222,13 @@ class ProviderManagedFallbackServiceTests(unittest.TestCase):
             source_url="https://api.elsevier.com/content/article/doi/example",
             content_type="text/xml",
             body=b"<xml />",
-            metadata={"route": "official", "reason": "Downloaded full text from the official Elsevier API."},
+            content=ProviderContent(
+                route_kind="official",
+                source_url="https://api.elsevier.com/content/article/doi/example",
+                content_type="text/xml",
+                body=b"<xml />",
+                reason="Downloaded full text from the official Elsevier API.",
+            ),
         )
         client = elsevier_provider.ElsevierClient(transport=mock.Mock(), env={"ELSEVIER_API_KEY": "secret"})
         original_resolve = paper_fetch.resolve_paper
@@ -341,11 +356,14 @@ class ProviderManagedFallbackServiceTests(unittest.TestCase):
                     source_url=resolved.landing_url,
                     content_type="text/html",
                     body=b"<html></html>",
-                    metadata={
-                        "route": "html",
-                        "source_trail": [f"fulltext:{provider_name}_abstract_only"],
-                        "warnings": ["Provider abstract-only warning."],
-                    },
+                    content=ProviderContent(
+                        route_kind="html",
+                        source_url=resolved.landing_url,
+                        content_type="text/html",
+                        body=b"<html></html>",
+                    ),
+                    warnings=["Provider abstract-only warning."],
+                    trace=trace_from_markers([f"fulltext:{provider_name}_abstract_only"]),
                 )
                 original_resolve = paper_fetch.resolve_paper
                 try:
@@ -405,11 +423,14 @@ class ProviderManagedFallbackServiceTests(unittest.TestCase):
                     source_url=resolved.landing_url,
                     content_type="text/html",
                     body=b"<html></html>",
-                    metadata={
-                        "route": "html",
-                        "source_trail": [f"fulltext:{provider_name}_html_fail"],
-                        "warnings": ["Provider metadata-only warning."],
-                    },
+                    content=ProviderContent(
+                        route_kind="html",
+                        source_url=resolved.landing_url,
+                        content_type="text/html",
+                        body=b"<html></html>",
+                    ),
+                    warnings=["Provider metadata-only warning."],
+                    trace=trace_from_markers([f"fulltext:{provider_name}_html_fail"]),
                 )
                 original_resolve = paper_fetch.resolve_paper
                 try:
@@ -458,15 +479,20 @@ class ProviderManagedFallbackServiceTests(unittest.TestCase):
             source_url=f"{resolved.landing_url}.pdf",
             content_type="application/pdf",
             body=fulltext_pdf_bytes(),
-            metadata={
-                "route": "pdf_fallback",
-                "markdown_text": "# Elsevier PDF Article\n\n## Results\n\n" + ("Body text " * 80),
-                "source_trail": [
+            content=ProviderContent(
+                route_kind="pdf_fallback",
+                source_url=f"{resolved.landing_url}.pdf",
+                content_type="application/pdf",
+                body=fulltext_pdf_bytes(),
+                markdown_text="# Elsevier PDF Article\n\n## Results\n\n" + ("Body text " * 80),
+            ),
+            trace=trace_from_markers(
+                [
                     "fulltext:elsevier_xml_fail",
                     "fulltext:elsevier_pdf_api_ok",
                     "fulltext:elsevier_pdf_fallback_ok",
-                ],
-            },
+                ]
+            ),
             needs_local_copy=True,
         )
         original_resolve = paper_fetch.resolve_paper
@@ -520,11 +546,14 @@ class ProviderManagedFallbackServiceTests(unittest.TestCase):
             source_url=f"{resolved.landing_url}.pdf",
             content_type="application/pdf",
             body=b"%PDF-1.7 fake",
-            metadata={
-                "route": "pdf_fallback",
-                "markdown_text": "# Nature PDF Article\n\n## Results\n\n" + ("Body text " * 80),
-                "source_trail": ["fulltext:springer_html_fail", "fulltext:springer_pdf_fallback_ok"],
-            },
+            content=ProviderContent(
+                route_kind="pdf_fallback",
+                source_url=f"{resolved.landing_url}.pdf",
+                content_type="application/pdf",
+                body=b"%PDF-1.7 fake",
+                markdown_text="# Nature PDF Article\n\n## Results\n\n" + ("Body text " * 80),
+            ),
+            trace=trace_from_markers(["fulltext:springer_html_fail", "fulltext:springer_pdf_fallback_ok"]),
             needs_local_copy=True,
         )
         original_resolve = paper_fetch.resolve_paper

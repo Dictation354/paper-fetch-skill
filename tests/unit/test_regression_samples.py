@@ -534,11 +534,14 @@ class RegressionSampleTests(unittest.TestCase):
             source_url=SCIENCE_SAMPLE.landing_url,
             content_type="text/html",
             body=science_html.encode("utf-8"),
-            metadata={
-                "route": "html",
-                "markdown_text": markdown_text,
-                "source_trail": ["fulltext:science_html_ok"],
-            },
+            content=ProviderContent(
+                route_kind="html",
+                source_url=SCIENCE_SAMPLE.landing_url,
+                content_type="text/html",
+                body=science_html.encode("utf-8"),
+                markdown_text=markdown_text,
+            ),
+            trace=trace_from_markers(["fulltext:science_html_ok"]),
         )
 
         article = self._fetch_replayed_provider_article(
@@ -638,15 +641,20 @@ class RegressionSampleTests(unittest.TestCase):
             source_url=f"https://api.wiley.com/onlinelibrary/tdm/v1/articles/{WILEY_PDF_FALLBACK_SAMPLE.doi}",
             content_type="application/pdf",
             body=b"%PDF-1.4\n",
-            metadata={
-                "route": "pdf_fallback",
-                "markdown_text": markdown_text,
-                "source_trail": [
+            content=ProviderContent(
+                route_kind="pdf_fallback",
+                source_url=f"https://api.wiley.com/onlinelibrary/tdm/v1/articles/{WILEY_PDF_FALLBACK_SAMPLE.doi}",
+                content_type="application/pdf",
+                body=b"%PDF-1.4\n",
+                markdown_text=markdown_text,
+            ),
+            trace=trace_from_markers(
+                [
                     "fulltext:wiley_html_fail",
                     "fulltext:wiley_pdf_api_ok",
                     "fulltext:wiley_pdf_fallback_ok",
-                ],
-            },
+                ]
+            ),
             needs_local_copy=True,
         )
 
