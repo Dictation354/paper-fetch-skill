@@ -6,7 +6,8 @@ from bs4 import BeautifulSoup
 
 from paper_fetch.providers import _science_pnas_html
 from paper_fetch.providers._html_references import extract_numbered_references_from_html
-from paper_fetch.providers._science_pnas_html import SciencePnasHtmlFailure, extract_science_pnas_markdown
+from paper_fetch.extraction.html.signals import SciencePnasHtmlFailure
+from paper_fetch.providers._science_pnas_html import extract_science_pnas_markdown
 from tests.golden_criteria import golden_criteria_asset
 from tests.provider_benchmark_samples import provider_benchmark_sample
 from tests.paths import FIXTURE_DIR

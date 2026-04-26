@@ -7,25 +7,24 @@ from tests.paths import SRC_DIR
 
 
 SCIENCE_PNAS_HTML = SRC_DIR / "paper_fetch" / "providers" / "_science_pnas_html.py"
-EXPECTED_COMPATIBILITY_SYMBOLS = {
+EXPECTED_EXTRACTION_ENTRYPOINTS = {
+    "extract_browser_workflow_markdown",
+    "extract_science_pnas_markdown",
+    "rewrite_inline_figure_links",
+}
+FORBIDDEN_DEAD_COMPATIBILITY_WRAPPERS = {
     "SciencePnasHtmlFailure",
     "assess_html_fulltext_availability",
     "assess_plain_text_fulltext_availability",
     "assess_structured_article_fulltext_availability",
     "availability_failure_message",
-    "body_metrics",
     "build_html_candidates",
     "build_pdf_candidates",
-    "clean_markdown",
     "detect_html_block",
-    "extract_article_markdown",
-    "extract_browser_workflow_markdown",
+    "detect_html_hard_negative_signals",
     "extract_pdf_url_from_crossref",
-    "extract_science_pnas_markdown",
-    "has_sufficient_article_body",
     "looks_like_abstract_redirect",
     "preferred_html_candidate_from_landing_page",
-    "rewrite_inline_figure_links",
     "summarize_html",
 }
 
@@ -82,12 +81,15 @@ class SciencePnasHtmlStaticTests(unittest.TestCase):
             & function_names
         )
 
-    def test_browser_html_compatibility_surface_is_explicit(self) -> None:
+    def test_browser_html_module_keeps_only_real_extraction_entrypoints(self) -> None:
         tree = ast.parse(SCIENCE_PNAS_HTML.read_text(encoding="utf-8"))
+        defined_names = _top_level_defined_names(tree)
 
-        missing_symbols = EXPECTED_COMPATIBILITY_SYMBOLS - _top_level_defined_names(tree)
+        missing_symbols = EXPECTED_EXTRACTION_ENTRYPOINTS - defined_names
+        forbidden_symbols = FORBIDDEN_DEAD_COMPATIBILITY_WRAPPERS & defined_names
 
         self.assertEqual(missing_symbols, set())
+        self.assertEqual(forbidden_symbols, set())
 
 
 if __name__ == "__main__":

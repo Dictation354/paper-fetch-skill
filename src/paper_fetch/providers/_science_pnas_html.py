@@ -39,18 +39,12 @@ from ..extraction.html.semantics import (
 from ..extraction.html.signals import (
     CHALLENGE_PATTERNS,
     PAYWALL_PATTERNS,
-    SciencePnasHtmlFailure as _SharedSciencePnasHtmlFailure,
-    detect_html_access_signals,
-    detect_html_block as _shared_detect_html_block,
-    summarize_html as _shared_summarize_html,
+    SciencePnasHtmlFailure,
 )
 from ..markdown.citations import is_citation_link, make_numeric_citation_sentinel, numeric_citation_payload
 from ..models import normalize_markdown_text
 from ..quality.html_availability import (
-    FulltextAvailabilityDiagnostics,
     assess_html_fulltext_availability as _shared_assess_html_fulltext_availability,
-    assess_plain_text_fulltext_availability as _shared_assess_plain_text_fulltext_availability,
-    assess_structured_article_fulltext_availability as _shared_assess_structured_article_fulltext_availability,
     availability_failure_message as _shared_availability_failure_message,
 )
 from ..utils import normalize_text
@@ -77,12 +71,7 @@ from ._science_pnas_postprocess import (
     rewrite_inline_figure_links as _shared_rewrite_inline_figure_links,
 )
 from ._science_pnas_profiles import (
-    build_html_candidates as _profile_build_html_candidates,
-    build_pdf_candidates as _profile_build_pdf_candidates,
-    extract_pdf_url_from_crossref as _profile_extract_pdf_url_from_crossref,
-    looks_like_abstract_redirect as _profile_looks_like_abstract_redirect,
     noise_profile_for_publisher as _profile_noise_profile_for_publisher,
-    preferred_html_candidate_from_landing_page as _profile_preferred_html_candidate_from_landing_page,
     publisher_profile as _publisher_profile,
     site_rule_for_publisher as _profile_site_rule_for_publisher,
 )
@@ -172,34 +161,6 @@ CONTENT_DATA_AVAILABILITY_SELECTORS = (
 )
 
 
-class SciencePnasHtmlFailure(_SharedSciencePnasHtmlFailure):
-    pass
-
-
-def preferred_html_candidate_from_landing_page(
-    publisher: str,
-    doi: str,
-    landing_page_url: str | None,
-) -> str | None:
-    return _profile_preferred_html_candidate_from_landing_page(publisher, doi, landing_page_url)
-
-
-def build_html_candidates(publisher: str, doi: str, landing_page_url: str | None = None) -> list[str]:
-    return _profile_build_html_candidates(publisher, doi, landing_page_url)
-
-
-def build_pdf_candidates(publisher: str, doi: str, crossref_pdf_url: str | None) -> list[str]:
-    return _profile_build_pdf_candidates(publisher, doi, crossref_pdf_url)
-
-
-def extract_pdf_url_from_crossref(metadata: Mapping[str, Any]) -> str | None:
-    return _profile_extract_pdf_url_from_crossref(metadata)
-
-
-def looks_like_abstract_redirect(requested_url: str, final_url: str | None) -> bool:
-    return _profile_looks_like_abstract_redirect(requested_url, final_url)
-
-
 def _noise_profile_for_publisher(publisher: str | None) -> str:
     return _profile_noise_profile_for_publisher(publisher)
 
@@ -233,56 +194,6 @@ def _looks_like_explicit_body_container(node: Tag | None) -> bool:
 
 def _heading_category(node_name: str, text: str, *, title: str | None = None) -> str:
     return heading_category(node_name, text, title=title)
-
-
-def _detect_html_hard_negative_signals_impl(
-    title: str,
-    text: str,
-    response_status: int | None,
-    *,
-    requested_url: str | None = None,
-    final_url: str | None = None,
-    include_paywall_text: bool = True,
-    provider_metadata: Mapping[str, Any] | None = None,
-) -> list[str]:
-    redirected_to_abstract = bool(requested_url and looks_like_abstract_redirect(requested_url, final_url))
-    return detect_html_access_signals(
-        title,
-        text,
-        response_status,
-        redirected_to_abstract=redirected_to_abstract,
-        include_paywall_text=include_paywall_text,
-        explicit_no_access=bool(provider_metadata and provider_metadata.get("explicit_no_access")),
-    )
-
-
-def detect_html_hard_negative_signals(
-    title: str,
-    text: str,
-    response_status: int | None,
-    *,
-    requested_url: str | None = None,
-    final_url: str | None = None,
-) -> list[str]:
-    return _detect_html_hard_negative_signals_impl(
-        title,
-        text,
-        response_status,
-        requested_url=requested_url,
-        final_url=final_url,
-        include_paywall_text=True,
-    )
-
-
-def detect_html_block(title: str, text: str, response_status: int | None) -> SciencePnasHtmlFailure | None:
-    failure = _shared_detect_html_block(title, text, response_status)
-    if failure is None:
-        return None
-    return SciencePnasHtmlFailure(failure.reason, failure.message)
-
-
-def summarize_html(html_text: str, limit: int = 1000) -> str:
-    return _shared_summarize_html(html_text, limit=limit)
 
 
 def choose_parser() -> str:
@@ -1820,62 +1731,6 @@ def _postprocess_browser_workflow_markdown(
     )
 
 
-def availability_failure_message(diagnostics: FulltextAvailabilityDiagnostics) -> str:
-    return _shared_availability_failure_message(diagnostics)
-
-
-def assess_html_fulltext_availability(
-    markdown_text: str,
-    metadata: Mapping[str, Any] | None,
-    *,
-    provider: str | None = None,
-    html_text: str | None = None,
-    title: str | None = None,
-    response_status: int | None = None,
-    requested_url: str | None = None,
-    final_url: str | None = None,
-    container_tag: str | None = None,
-    container_text_length: int | None = None,
-    section_hints: Any = None,
-) -> FulltextAvailabilityDiagnostics:
-    return _shared_assess_html_fulltext_availability(
-        markdown_text,
-        metadata,
-        provider=provider,
-        html_text=html_text,
-        title=title,
-        response_status=response_status,
-        requested_url=requested_url,
-        final_url=final_url,
-        container_tag=container_tag,
-        container_text_length=container_text_length,
-        section_hints=section_hints,
-    )
-
-
-def assess_plain_text_fulltext_availability(
-    markdown_text: str,
-    metadata: Mapping[str, Any] | None,
-    *,
-    title: str | None = None,
-    section_hints: Any = None,
-) -> FulltextAvailabilityDiagnostics:
-    return _shared_assess_plain_text_fulltext_availability(
-        markdown_text,
-        metadata,
-        title=title,
-        section_hints=section_hints,
-    )
-
-
-def assess_structured_article_fulltext_availability(
-    article: Any,
-    *,
-    title: str | None = None,
-) -> FulltextAvailabilityDiagnostics:
-    return _shared_assess_structured_article_fulltext_availability(article, title=title)
-
-
 def extract_browser_workflow_markdown(
     html_text: str,
     source_url: str,
@@ -1945,7 +1800,7 @@ def extract_browser_workflow_markdown(
     quality_metadata = dict(metadata or {})
     if title and not quality_metadata.get("title"):
         quality_metadata["title"] = title
-    diagnostics = assess_html_fulltext_availability(
+    diagnostics = _shared_assess_html_fulltext_availability(
         markdown,
         quality_metadata,
         provider=publisher,
@@ -1957,7 +1812,7 @@ def extract_browser_workflow_markdown(
         section_hints=section_hints,
     )
     if not diagnostics.accepted:
-        raise SciencePnasHtmlFailure(diagnostics.reason, availability_failure_message(diagnostics))
+        raise SciencePnasHtmlFailure(diagnostics.reason, _shared_availability_failure_message(diagnostics))
 
     extraction_payload = {
         "title": title,
