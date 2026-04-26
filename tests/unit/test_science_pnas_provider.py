@@ -12,7 +12,7 @@ from paper_fetch.geography_live import collect_issue_flags
 from paper_fetch.providers import html_assets
 from paper_fetch.providers import (
     _flaresolverr,
-    _science_pnas,
+    browser_workflow,
     pnas as pnas_provider,
     science as science_provider,
     wiley as wiley_provider,
@@ -229,10 +229,10 @@ class SciencePnasProviderTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             runtime = self._runtime_config(tmpdir, "science", SCIENCE_SAMPLE.doi)
             with (
-                mock.patch.object(_science_pnas, "load_runtime_config", return_value=runtime),
-                mock.patch.object(_science_pnas, "ensure_runtime_ready"),
+                mock.patch.object(browser_workflow, "load_runtime_config", return_value=runtime),
+                mock.patch.object(browser_workflow, "ensure_runtime_ready"),
                 mock.patch.object(
-                    _science_pnas,
+                    browser_workflow,
                     "fetch_html_with_flaresolverr",
                     return_value=_flaresolverr.FetchedPublisherHtml(
                         source_url=SCIENCE_SAMPLE.landing_url,
@@ -246,11 +246,11 @@ class SciencePnasProviderTests(unittest.TestCase):
                     ),
                 ),
                 mock.patch.object(
-                    _science_pnas,
+                    browser_workflow,
                     "extract_science_pnas_markdown",
                     return_value=(f"# {SCIENCE_SAMPLE.title}\n\n## Discussion\n\n" + ("Body text " * 120), {"title": SCIENCE_SAMPLE.title}),
                 ),
-                mock.patch.object(_science_pnas, "fetch_pdf_with_playwright") as mocked_pdf,
+                mock.patch.object(browser_workflow, "fetch_pdf_with_playwright") as mocked_pdf,
             ):
                 raw_payload = client.fetch_raw_fulltext(
                     SCIENCE_SAMPLE.doi,
@@ -632,10 +632,10 @@ class SciencePnasProviderTests(unittest.TestCase):
                 "browser_user_agent": "Mozilla/5.0",
             }
             with (
-                mock.patch.object(_science_pnas, "load_runtime_config", return_value=runtime),
-                mock.patch.object(_science_pnas, "ensure_runtime_ready"),
+                mock.patch.object(browser_workflow, "load_runtime_config", return_value=runtime),
+                mock.patch.object(browser_workflow, "ensure_runtime_ready"),
                 mock.patch.object(
-                    _science_pnas,
+                    browser_workflow,
                     "fetch_html_with_flaresolverr",
                     side_effect=_flaresolverr.FlareSolverrFailure(
                         "redirected_to_abstract",
@@ -644,7 +644,7 @@ class SciencePnasProviderTests(unittest.TestCase):
                     ),
                 ),
                 mock.patch.object(
-                    _science_pnas,
+                    browser_workflow,
                     "warm_browser_context_with_flaresolverr",
                     return_value={
                         "browser_cookies": [seed["browser_cookies"][0], preflight_seed["browser_cookies"][0]],
@@ -653,7 +653,7 @@ class SciencePnasProviderTests(unittest.TestCase):
                     },
                 ) as mocked_warm,
                 mock.patch.object(
-                    _science_pnas,
+                    browser_workflow,
                     "fetch_pdf_with_playwright",
                     return_value=mock.Mock(
                         source_url=f"https://www.science.org/doi/epdf/{SCIENCE_SAMPLE.doi}",
@@ -697,10 +697,10 @@ class SciencePnasProviderTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             runtime = self._runtime_config(tmpdir, "pnas", PNAS_SAMPLE.doi)
             with (
-                mock.patch.object(_science_pnas, "load_runtime_config", return_value=runtime),
-                mock.patch.object(_science_pnas, "ensure_runtime_ready"),
+                mock.patch.object(browser_workflow, "load_runtime_config", return_value=runtime),
+                mock.patch.object(browser_workflow, "ensure_runtime_ready"),
                 mock.patch.object(
-                    _science_pnas,
+                    browser_workflow,
                     "fetch_html_with_flaresolverr",
                     return_value=_flaresolverr.FetchedPublisherHtml(
                         source_url=PNAS_SAMPLE.landing_url,
@@ -714,11 +714,11 @@ class SciencePnasProviderTests(unittest.TestCase):
                     ),
                 ),
                 mock.patch.object(
-                    _science_pnas,
+                    browser_workflow,
                     "extract_science_pnas_markdown",
                     return_value=(f"# {PNAS_SAMPLE.title}\n\n## Results\n\n" + ("Body text " * 120), {"title": PNAS_SAMPLE.title}),
                 ),
-                mock.patch.object(_science_pnas, "fetch_pdf_with_playwright") as mocked_pdf,
+                mock.patch.object(browser_workflow, "fetch_pdf_with_playwright") as mocked_pdf,
             ):
                 raw_payload = client.fetch_raw_fulltext(
                     PNAS_SAMPLE.doi,
@@ -775,9 +775,9 @@ class SciencePnasProviderTests(unittest.TestCase):
             runtime = self._runtime_config(tmpdir, "pnas", doi)
             with (
                 mock.patch.object(client, "fetch_raw_fulltext", return_value=html_payload),
-                mock.patch.object(_science_pnas, "load_runtime_config", return_value=runtime),
-                mock.patch.object(_science_pnas, "ensure_runtime_ready"),
-                mock.patch.object(_science_pnas, "fetch_seeded_browser_pdf_payload", return_value=pdf_payload) as mocked_pdf,
+                mock.patch.object(browser_workflow, "load_runtime_config", return_value=runtime),
+                mock.patch.object(browser_workflow, "ensure_runtime_ready"),
+                mock.patch.object(browser_workflow, "fetch_seeded_browser_pdf_payload", return_value=pdf_payload) as mocked_pdf,
             ):
                 result = client.fetch_result(
                     doi,
@@ -853,9 +853,9 @@ class SciencePnasProviderTests(unittest.TestCase):
             runtime = self._runtime_config(tmpdir, "science", doi)
             with (
                 mock.patch.object(client, "fetch_raw_fulltext", return_value=html_payload),
-                mock.patch.object(_science_pnas, "load_runtime_config", return_value=runtime),
-                mock.patch.object(_science_pnas, "ensure_runtime_ready"),
-                mock.patch.object(_science_pnas, "fetch_seeded_browser_pdf_payload", return_value=pdf_payload) as mocked_pdf,
+                mock.patch.object(browser_workflow, "load_runtime_config", return_value=runtime),
+                mock.patch.object(browser_workflow, "ensure_runtime_ready"),
+                mock.patch.object(browser_workflow, "fetch_seeded_browser_pdf_payload", return_value=pdf_payload) as mocked_pdf,
             ):
                 result = client.fetch_result(
                     doi,
@@ -894,12 +894,12 @@ class SciencePnasProviderTests(unittest.TestCase):
             runtime = self._runtime_config(tmpdir, "pnas", doi)
             with (
                 mock.patch.object(client, "fetch_raw_fulltext", return_value=html_payload),
-                mock.patch.object(_science_pnas, "load_runtime_config", return_value=runtime),
-                mock.patch.object(_science_pnas, "ensure_runtime_ready"),
+                mock.patch.object(browser_workflow, "load_runtime_config", return_value=runtime),
+                mock.patch.object(browser_workflow, "ensure_runtime_ready"),
                 mock.patch.object(
-                    _science_pnas,
+                    browser_workflow,
                     "fetch_seeded_browser_pdf_payload",
-                    side_effect=_science_pnas.PdfFallbackFailure("pdf_download_failed", "PNAS PDF fallback failed."),
+                    side_effect=browser_workflow.PdfFallbackFailure("pdf_download_failed", "PNAS PDF fallback failed."),
                 ),
             ):
                 result = client.fetch_result(
@@ -955,12 +955,12 @@ class SciencePnasProviderTests(unittest.TestCase):
             runtime = self._runtime_config(tmpdir, "science", doi)
             with (
                 mock.patch.object(client, "fetch_raw_fulltext", return_value=html_payload),
-                mock.patch.object(_science_pnas, "load_runtime_config", return_value=runtime),
-                mock.patch.object(_science_pnas, "ensure_runtime_ready"),
+                mock.patch.object(browser_workflow, "load_runtime_config", return_value=runtime),
+                mock.patch.object(browser_workflow, "ensure_runtime_ready"),
                 mock.patch.object(
-                    _science_pnas,
+                    browser_workflow,
                     "fetch_seeded_browser_pdf_payload",
-                    side_effect=_science_pnas.PdfFallbackFailure("pdf_download_failed", "Science PDF fallback failed."),
+                    side_effect=browser_workflow.PdfFallbackFailure("pdf_download_failed", "Science PDF fallback failed."),
                 ),
             ):
                 result = client.fetch_result(
@@ -1001,12 +1001,12 @@ class SciencePnasProviderTests(unittest.TestCase):
             runtime = self._runtime_config(tmpdir, "wiley", doi)
             with (
                 mock.patch.object(client, "fetch_raw_fulltext", return_value=html_payload),
-                mock.patch.object(_science_pnas, "load_runtime_config", return_value=runtime),
-                mock.patch.object(_science_pnas, "ensure_runtime_ready"),
+                mock.patch.object(browser_workflow, "load_runtime_config", return_value=runtime),
+                mock.patch.object(browser_workflow, "ensure_runtime_ready"),
                 mock.patch.object(
-                    _science_pnas,
+                    browser_workflow,
                     "fetch_seeded_browser_pdf_payload",
-                    side_effect=_science_pnas.PdfFallbackFailure("pdf_download_failed", "Wiley PDF fallback failed."),
+                    side_effect=browser_workflow.PdfFallbackFailure("pdf_download_failed", "Wiley PDF fallback failed."),
                 ),
             ):
                 result = client.fetch_result(
@@ -1035,10 +1035,10 @@ class SciencePnasProviderTests(unittest.TestCase):
                 "browser_user_agent": "Mozilla/5.0",
             }
             with (
-                mock.patch.object(_science_pnas, "load_runtime_config", return_value=runtime),
-                mock.patch.object(_science_pnas, "ensure_runtime_ready"),
+                mock.patch.object(browser_workflow, "load_runtime_config", return_value=runtime),
+                mock.patch.object(browser_workflow, "ensure_runtime_ready"),
                 mock.patch.object(
-                    _science_pnas,
+                    browser_workflow,
                     "fetch_html_with_flaresolverr",
                     side_effect=_flaresolverr.FlareSolverrFailure(
                         "redirected_to_abstract",
@@ -1047,7 +1047,7 @@ class SciencePnasProviderTests(unittest.TestCase):
                     ),
                 ),
                 mock.patch.object(
-                    _science_pnas,
+                    browser_workflow,
                     "warm_browser_context_with_flaresolverr",
                     return_value={
                         "browser_cookies": [seed["browser_cookies"][0], preflight_seed["browser_cookies"][0]],
@@ -1056,7 +1056,7 @@ class SciencePnasProviderTests(unittest.TestCase):
                     },
                 ) as mocked_warm,
                 mock.patch.object(
-                    _science_pnas,
+                    browser_workflow,
                     "fetch_pdf_with_playwright",
                     return_value=mock.Mock(
                         source_url=f"https://www.pnas.org/doi/pdf/{PNAS_SAMPLE.doi}",
@@ -1132,13 +1132,13 @@ class SciencePnasProviderTests(unittest.TestCase):
                 },
             )
             with (
-                mock.patch.object(_science_pnas, "load_runtime_config", return_value=runtime),
-                mock.patch.object(_science_pnas, "ensure_runtime_ready"),
-                mock.patch.object(_science_pnas, "fetch_html_with_flaresolverr") as mocked_fetch,
+                mock.patch.object(browser_workflow, "load_runtime_config", return_value=runtime),
+                mock.patch.object(browser_workflow, "ensure_runtime_ready"),
+                mock.patch.object(browser_workflow, "fetch_html_with_flaresolverr") as mocked_fetch,
                 mock.patch.object(html_assets, "_build_cookie_seeded_opener") as mocked_opener,
                 mock.patch.object(html_assets, "_request_with_opener") as mocked_request,
                 mock.patch.object(
-                    _science_pnas,
+                    browser_workflow,
                     "_build_shared_playwright_image_fetcher",
                     return_value=shared_fetcher,
                 ) as mocked_builder,
@@ -1217,10 +1217,10 @@ class SciencePnasProviderTests(unittest.TestCase):
                 },
             )
             with (
-                mock.patch.object(_science_pnas, "load_runtime_config", return_value=runtime),
-                mock.patch.object(_science_pnas, "ensure_runtime_ready"),
+                mock.patch.object(browser_workflow, "load_runtime_config", return_value=runtime),
+                mock.patch.object(browser_workflow, "ensure_runtime_ready"),
                 mock.patch.object(
-                    _science_pnas,
+                    browser_workflow,
                     "fetch_html_with_flaresolverr",
                     return_value=_flaresolverr.FetchedPublisherHtml(
                         source_url=figure_page_url,
@@ -1240,7 +1240,7 @@ class SciencePnasProviderTests(unittest.TestCase):
                 mock.patch.object(html_assets, "_build_cookie_seeded_opener") as mocked_opener,
                 mock.patch.object(html_assets, "_request_with_opener") as mocked_request,
                 mock.patch.object(
-                    _science_pnas,
+                    browser_workflow,
                     "_build_shared_playwright_image_fetcher",
                     return_value=shared_fetcher,
                 ) as mocked_builder,
@@ -1311,10 +1311,10 @@ class SciencePnasProviderTests(unittest.TestCase):
                 },
             )
             with (
-                mock.patch.object(_science_pnas, "load_runtime_config", return_value=runtime),
-                mock.patch.object(_science_pnas, "ensure_runtime_ready"),
+                mock.patch.object(browser_workflow, "load_runtime_config", return_value=runtime),
+                mock.patch.object(browser_workflow, "ensure_runtime_ready"),
                 mock.patch.object(
-                    _science_pnas,
+                    browser_workflow,
                     "fetch_html_with_flaresolverr",
                     return_value=_flaresolverr.FetchedPublisherHtml(
                         source_url=figure_page_url,
@@ -1334,7 +1334,7 @@ class SciencePnasProviderTests(unittest.TestCase):
                 mock.patch.object(html_assets, "_build_cookie_seeded_opener") as mocked_opener,
                 mock.patch.object(html_assets, "_request_with_opener") as mocked_request,
                 mock.patch.object(
-                    _science_pnas,
+                    browser_workflow,
                     "_build_shared_playwright_image_fetcher",
                     return_value=shared_fetcher,
                 ) as mocked_builder,
@@ -1396,13 +1396,13 @@ class SciencePnasProviderTests(unittest.TestCase):
                 },
             )
             with (
-                mock.patch.object(_science_pnas, "load_runtime_config", return_value=runtime),
-                mock.patch.object(_science_pnas, "ensure_runtime_ready"),
-                mock.patch.object(_science_pnas, "fetch_html_with_flaresolverr") as mocked_fetch,
+                mock.patch.object(browser_workflow, "load_runtime_config", return_value=runtime),
+                mock.patch.object(browser_workflow, "ensure_runtime_ready"),
+                mock.patch.object(browser_workflow, "fetch_html_with_flaresolverr") as mocked_fetch,
                 mock.patch.object(html_assets, "_build_cookie_seeded_opener") as mocked_opener,
                 mock.patch.object(html_assets, "_request_with_opener") as mocked_request,
                 mock.patch.object(
-                    _science_pnas,
+                    browser_workflow,
                     "_build_shared_playwright_image_fetcher",
                     return_value=shared_fetcher,
                 ) as mocked_builder,
@@ -1467,17 +1467,17 @@ class SciencePnasProviderTests(unittest.TestCase):
                 },
             )
             with (
-                mock.patch.object(_science_pnas, "load_runtime_config", return_value=runtime),
-                mock.patch.object(_science_pnas, "ensure_runtime_ready"),
+                mock.patch.object(browser_workflow, "load_runtime_config", return_value=runtime),
+                mock.patch.object(browser_workflow, "ensure_runtime_ready"),
                 mock.patch.object(
-                    _science_pnas,
+                    browser_workflow,
                     "warm_browser_context_with_flaresolverr",
                     return_value=refreshed_seed,
                 ) as mocked_warm,
                 mock.patch.object(html_assets, "_build_cookie_seeded_opener") as mocked_opener,
                 mock.patch.object(html_assets, "_request_with_opener") as mocked_request,
                 mock.patch.object(
-                    _science_pnas,
+                    browser_workflow,
                     "_build_shared_playwright_image_fetcher",
                     side_effect=[first_fetcher, retry_fetcher],
                 ) as mocked_builder,
@@ -1541,10 +1541,10 @@ class SciencePnasProviderTests(unittest.TestCase):
                 },
             )
             with (
-                mock.patch.object(_science_pnas, "load_runtime_config", return_value=runtime),
-                mock.patch.object(_science_pnas, "ensure_runtime_ready"),
+                mock.patch.object(browser_workflow, "load_runtime_config", return_value=runtime),
+                mock.patch.object(browser_workflow, "ensure_runtime_ready"),
                 mock.patch.object(
-                    _science_pnas,
+                    browser_workflow,
                     "fetch_html_with_flaresolverr",
                     return_value=_flaresolverr.FetchedPublisherHtml(
                         source_url=figure_page_url,
@@ -1560,7 +1560,7 @@ class SciencePnasProviderTests(unittest.TestCase):
                 mock.patch.object(html_assets, "_build_cookie_seeded_opener") as mocked_opener,
                 mock.patch.object(html_assets, "_request_with_opener") as mocked_request,
                 mock.patch.object(
-                    _science_pnas,
+                    browser_workflow,
                     "_build_shared_playwright_image_fetcher",
                     return_value=shared_fetcher,
                 ) as mocked_builder,
@@ -1631,15 +1631,15 @@ class SciencePnasProviderTests(unittest.TestCase):
                 },
             )
             with (
-                mock.patch.object(_science_pnas, "load_runtime_config", return_value=runtime),
-                mock.patch.object(_science_pnas, "ensure_runtime_ready"),
+                mock.patch.object(browser_workflow, "load_runtime_config", return_value=runtime),
+                mock.patch.object(browser_workflow, "ensure_runtime_ready"),
                 mock.patch.object(
-                    _science_pnas,
+                    browser_workflow,
                     "warm_browser_context_with_flaresolverr",
                     return_value=refreshed_seed,
                 ) as mocked_warm,
                 mock.patch.object(
-                    _science_pnas,
+                    browser_workflow,
                     "_build_shared_playwright_image_fetcher",
                     side_effect=[failing_fetcher, successful_fetcher],
                 ) as mocked_builder,
@@ -1704,12 +1704,12 @@ class SciencePnasProviderTests(unittest.TestCase):
                 },
             )
             with (
-                mock.patch.object(_science_pnas, "load_runtime_config", return_value=runtime),
-                mock.patch.object(_science_pnas, "ensure_runtime_ready"),
+                mock.patch.object(browser_workflow, "load_runtime_config", return_value=runtime),
+                mock.patch.object(browser_workflow, "ensure_runtime_ready"),
                 mock.patch.object(html_assets, "_build_cookie_seeded_opener") as mocked_opener,
                 mock.patch.object(html_assets, "_request_with_opener") as mocked_request,
                 mock.patch.object(
-                    _science_pnas,
+                    browser_workflow,
                     "_build_shared_playwright_image_fetcher",
                     return_value=shared_fetcher,
                 ) as mocked_builder,
@@ -1787,12 +1787,12 @@ class SciencePnasProviderTests(unittest.TestCase):
                 },
             )
             with (
-                mock.patch.object(_science_pnas, "load_runtime_config", return_value=runtime),
-                mock.patch.object(_science_pnas, "ensure_runtime_ready"),
+                mock.patch.object(browser_workflow, "load_runtime_config", return_value=runtime),
+                mock.patch.object(browser_workflow, "ensure_runtime_ready"),
                 mock.patch.object(html_assets, "_build_cookie_seeded_opener") as mocked_opener,
                 mock.patch.object(html_assets, "_request_with_opener") as mocked_request,
                 mock.patch.object(
-                    _science_pnas,
+                    browser_workflow,
                     "_build_shared_playwright_image_fetcher",
                     return_value=shared_fetcher,
                 ) as mocked_builder,

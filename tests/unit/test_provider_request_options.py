@@ -8,7 +8,7 @@ from unittest import mock
 
 from paper_fetch.http import DEFAULT_FULLTEXT_TIMEOUT_SECONDS, DEFAULT_TIMEOUT_SECONDS, RequestFailure
 from paper_fetch.extraction.html import _assets as asset_impl
-from paper_fetch.providers import _flaresolverr, _science_pnas, html_assets
+from paper_fetch.providers import _flaresolverr, browser_workflow, html_assets
 from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
 from paper_fetch.providers.crossref import CrossrefClient
 from paper_fetch.providers.elsevier import ElsevierClient, filter_elsevier_asset_references
@@ -210,10 +210,10 @@ class ProviderRequestOptionsTests(unittest.TestCase):
 
         client = WileyClient(transport=None, env={})
         with (
-            mock.patch.object(_science_pnas, "load_runtime_config", return_value=runtime),
-            mock.patch.object(_science_pnas, "ensure_runtime_ready"),
+            mock.patch.object(browser_workflow, "load_runtime_config", return_value=runtime),
+            mock.patch.object(browser_workflow, "ensure_runtime_ready"),
             mock.patch.object(
-                _science_pnas,
+                browser_workflow,
                 "fetch_html_with_flaresolverr",
                 return_value=_flaresolverr.FetchedPublisherHtml(
                     source_url="https://onlinelibrary.wiley.com/doi/full/10.1002/ece3.9361",
@@ -227,11 +227,11 @@ class ProviderRequestOptionsTests(unittest.TestCase):
                 ),
             ),
             mock.patch.object(
-                _science_pnas,
+                browser_workflow,
                 "extract_science_pnas_markdown",
                 return_value=("# Example Wiley Article\n\n## Results\n\n" + ("Body text " * 120), {"title": "Example"}),
             ),
-            mock.patch.object(_science_pnas, "fetch_pdf_with_playwright") as mocked_pdf,
+            mock.patch.object(browser_workflow, "fetch_pdf_with_playwright") as mocked_pdf,
         ):
             payload = client.fetch_raw_fulltext(
                 doi,

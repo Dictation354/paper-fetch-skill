@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import unittest
 
-from paper_fetch.providers import _pnas_html, _science_html, _science_pnas, _wiley_html, browser_workflow
+from paper_fetch.providers import _pnas_html, _science_html, _wiley_html, browser_workflow
 from paper_fetch.providers._science_pnas_profiles import (
     build_html_candidates,
     build_pdf_candidates,
@@ -146,16 +146,13 @@ class SciencePnasCandidateTests(unittest.TestCase):
             ],
         )
 
-    def test_science_pnas_compat_module_forwards_monkeypatches(self) -> None:
-        original = browser_workflow.load_runtime_config
-        sentinel = object()
-        try:
-            _science_pnas.load_runtime_config = sentinel
-            self.assertIs(browser_workflow.load_runtime_config, sentinel)
-            self.assertIs(_science_pnas.BrowserWorkflowClient, browser_workflow.BrowserWorkflowClient)
-            self.assertIs(_science_pnas.ProviderBrowserProfile, browser_workflow.ProviderBrowserProfile)
-        finally:
-            _science_pnas.load_runtime_config = original
+    def test_provider_clients_use_canonical_browser_workflow_runtime(self) -> None:
+        clients = (ScienceClient(None, {}), PnasClient(None, {}), WileyClient(None, {}))
+
+        for client in clients:
+            with self.subTest(provider=client.name):
+                self.assertIsInstance(client, browser_workflow.BrowserWorkflowClient)
+                self.assertIsInstance(client.profile, browser_workflow.ProviderBrowserProfile)
 
     def test_provider_profile_article_source_label_and_hooks(self) -> None:
         cases = (

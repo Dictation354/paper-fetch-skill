@@ -6,7 +6,7 @@ from pathlib import Path
 from unittest import mock
 
 from paper_fetch.http import RequestFailure
-from paper_fetch.providers import _flaresolverr, _science_pnas, elsevier as elsevier_provider, springer as springer_provider, wiley as wiley_provider
+from paper_fetch.providers import _flaresolverr, browser_workflow, elsevier as elsevier_provider, springer as springer_provider, wiley as wiley_provider
 from paper_fetch.providers.base import ProviderFailure, RawFulltextPayload
 from tests.golden_criteria import golden_criteria_scenario_asset
 from tests.provider_benchmark_samples import WILEY_PDF_FALLBACK_SAMPLE, provider_benchmark_sample
@@ -780,10 +780,10 @@ class PublisherWaterfallTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             runtime = self._runtime_config(tmpdir, "wiley", doi)
             with (
-                mock.patch.object(_science_pnas, "load_runtime_config", return_value=runtime),
-                mock.patch.object(_science_pnas, "ensure_runtime_ready"),
+                mock.patch.object(browser_workflow, "load_runtime_config", return_value=runtime),
+                mock.patch.object(browser_workflow, "ensure_runtime_ready"),
                 mock.patch.object(
-                    _science_pnas,
+                    browser_workflow,
                     "fetch_html_with_flaresolverr",
                     return_value=_flaresolverr.FetchedPublisherHtml(
                         source_url=WILEY_SAMPLE.landing_url,
@@ -797,12 +797,12 @@ class PublisherWaterfallTests(unittest.TestCase):
                     ),
                 ),
                 mock.patch.object(
-                    _science_pnas,
+                    browser_workflow,
                     "extract_science_pnas_markdown",
                     return_value=(f"# {WILEY_SAMPLE.title}\n\n## Results\n\n" + ("Body text " * 120), {"title": WILEY_SAMPLE.title}),
                 ),
                 mock.patch.object(wiley_provider, "_fetch_wiley_tdm_pdf_result") as mocked_api,
-                mock.patch.object(_science_pnas, "fetch_pdf_with_playwright") as mocked_browser_pdf,
+                mock.patch.object(browser_workflow, "fetch_pdf_with_playwright") as mocked_browser_pdf,
             ):
                 raw_payload = client.fetch_raw_fulltext(doi, metadata)
                 article = client.to_article_model(metadata, raw_payload)
@@ -828,12 +828,12 @@ class PublisherWaterfallTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             runtime = self._runtime_config(tmpdir, "wiley", doi)
             with (
-                mock.patch.object(_science_pnas, "load_runtime_config", return_value=runtime),
-                mock.patch.object(_science_pnas, "ensure_runtime_ready"),
+                mock.patch.object(browser_workflow, "load_runtime_config", return_value=runtime),
+                mock.patch.object(browser_workflow, "ensure_runtime_ready"),
                 mock.patch.object(
-                    _science_pnas,
+                    browser_workflow,
                     "fetch_html_with_flaresolverr",
-                    side_effect=_science_pnas.SciencePnasHtmlFailure(
+                    side_effect=browser_workflow.SciencePnasHtmlFailure(
                         "insufficient_fulltext",
                         "HTML content does not look like a complete full-text article.",
                     ),
@@ -849,7 +849,7 @@ class PublisherWaterfallTests(unittest.TestCase):
                         suggested_filename="article.pdf",
                     ),
                 ) as mocked_api,
-                mock.patch.object(_science_pnas, "fetch_pdf_with_playwright") as mocked_browser_pdf,
+                mock.patch.object(browser_workflow, "fetch_pdf_with_playwright") as mocked_browser_pdf,
             ):
                 raw_payload = client.fetch_raw_fulltext(doi, metadata)
                 article = client.to_article_model(metadata, raw_payload)
@@ -875,12 +875,12 @@ class PublisherWaterfallTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             runtime = self._runtime_config(tmpdir, "wiley", doi)
             with (
-                mock.patch.object(_science_pnas, "load_runtime_config", return_value=runtime),
-                mock.patch.object(_science_pnas, "ensure_runtime_ready"),
+                mock.patch.object(browser_workflow, "load_runtime_config", return_value=runtime),
+                mock.patch.object(browser_workflow, "ensure_runtime_ready"),
                 mock.patch.object(
-                    _science_pnas,
+                    browser_workflow,
                     "fetch_html_with_flaresolverr",
-                    side_effect=_science_pnas.FlareSolverrFailure(
+                    side_effect=browser_workflow.FlareSolverrFailure(
                         "redirected_to_abstract",
                         "HTML redirected to abstract.",
                         browser_context_seed={
@@ -893,7 +893,7 @@ class PublisherWaterfallTests(unittest.TestCase):
                     ),
                 ),
                 mock.patch.object(
-                    _science_pnas,
+                    browser_workflow,
                     "warm_browser_context_with_flaresolverr",
                     return_value={
                         "browser_cookies": [
@@ -906,7 +906,7 @@ class PublisherWaterfallTests(unittest.TestCase):
                 ) as mocked_warm,
                 mock.patch.object(wiley_provider, "_fetch_wiley_tdm_pdf_result") as mocked_api,
                 mock.patch.object(
-                    _science_pnas,
+                    browser_workflow,
                     "fetch_pdf_with_playwright",
                     return_value=mock.Mock(
                         source_url=f"https://onlinelibrary.wiley.com/doi/epdf/{doi}",
@@ -953,12 +953,12 @@ class PublisherWaterfallTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             runtime = self._runtime_config(tmpdir, "wiley", doi)
             with (
-                mock.patch.object(_science_pnas, "load_runtime_config", return_value=runtime),
-                mock.patch.object(_science_pnas, "ensure_runtime_ready"),
+                mock.patch.object(browser_workflow, "load_runtime_config", return_value=runtime),
+                mock.patch.object(browser_workflow, "ensure_runtime_ready"),
                 mock.patch.object(
-                    _science_pnas,
+                    browser_workflow,
                     "fetch_html_with_flaresolverr",
-                    side_effect=_science_pnas.FlareSolverrFailure(
+                    side_effect=browser_workflow.FlareSolverrFailure(
                         "redirected_to_abstract",
                         "HTML redirected to abstract.",
                         browser_context_seed={
@@ -979,7 +979,7 @@ class PublisherWaterfallTests(unittest.TestCase):
                     ),
                 ) as mocked_api,
                 mock.patch.object(
-                    _science_pnas,
+                    browser_workflow,
                     "warm_browser_context_with_flaresolverr",
                     return_value={
                         "browser_cookies": [
@@ -991,7 +991,7 @@ class PublisherWaterfallTests(unittest.TestCase):
                     },
                 ) as mocked_warm,
                 mock.patch.object(
-                    _science_pnas,
+                    browser_workflow,
                     "fetch_pdf_with_playwright",
                     return_value=mock.Mock(
                         source_url=f"https://onlinelibrary.wiley.com/doi/epdf/{doi}",
@@ -1029,12 +1029,12 @@ class PublisherWaterfallTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             runtime = self._runtime_config(tmpdir, "wiley", doi)
             with (
-                mock.patch.object(_science_pnas, "load_runtime_config", return_value=runtime),
-                mock.patch.object(_science_pnas, "ensure_runtime_ready"),
+                mock.patch.object(browser_workflow, "load_runtime_config", return_value=runtime),
+                mock.patch.object(browser_workflow, "ensure_runtime_ready"),
                 mock.patch.object(
-                    _science_pnas,
+                    browser_workflow,
                     "fetch_html_with_flaresolverr",
-                    side_effect=_science_pnas.SciencePnasHtmlFailure(
+                    side_effect=browser_workflow.SciencePnasHtmlFailure(
                         "insufficient_fulltext",
                         "HTML content does not look like a complete full-text article.",
                     ),
@@ -1048,7 +1048,7 @@ class PublisherWaterfallTests(unittest.TestCase):
                     ),
                 ) as mocked_api,
                 mock.patch.object(
-                    _science_pnas,
+                    browser_workflow,
                     "warm_browser_context_with_flaresolverr",
                     return_value={
                         "browser_cookies": [{"name": "sessionid", "value": "warm", "domain": ".wiley.com", "path": "/"}],
@@ -1057,9 +1057,9 @@ class PublisherWaterfallTests(unittest.TestCase):
                     },
                 ),
                 mock.patch.object(
-                    _science_pnas,
+                    browser_workflow,
                     "fetch_pdf_with_playwright",
-                    side_effect=_science_pnas.PdfFallbackFailure(
+                    side_effect=browser_workflow.PdfFallbackFailure(
                         "download_not_triggered",
                         "Browser PDF download was not triggered.",
                     ),
@@ -1091,7 +1091,7 @@ class PublisherWaterfallTests(unittest.TestCase):
 
         with (
             mock.patch.object(
-                _science_pnas,
+                browser_workflow,
                 "load_runtime_config",
                 side_effect=ProviderFailure(
                     "not_configured",

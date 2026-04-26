@@ -289,7 +289,7 @@ workflow 会尽可能拿到两类元数据：
   - 与 `wiley` 的 HTML / browser PDF/ePDF 路径共用浏览器工作流基座
   - 当前只剩 provider-owned 单栈；不再保留额外的 Science-only live harness 或第二套 browser-PDF 实现
 
-`paper_fetch.providers.browser_workflow` 是 Wiley / Science / PNAS 的 canonical browser workflow runtime：它通过 `ProviderBrowserProfile` 承载 provider 名称、公开 source、host 与 URL template、Crossref PDF 插入位置、Markdown extractor、作者 fallback 和 shared Playwright image fetcher 策略。旧的 `_science_pnas` 模块只保留为兼容 alias，后续新代码不应再把它当实现入口。
+`paper_fetch.providers.browser_workflow` 是 Wiley / Science / PNAS 的 canonical browser workflow runtime：它通过 `ProviderBrowserProfile` 承载 provider 名称、公开 source、host 与 URL template、Crossref PDF 插入位置、Markdown extractor、作者 fallback 和 shared Playwright image fetcher 策略。旧的 `_science_pnas` 兼容模块已移除，测试和新代码都应直接 patch 或 import canonical runtime。
 
 `wiley` / `science` / `pnas` 的 HTML 正文图片资产下载也属于这套 provider-owned browser workflow：figure / table / formula 图片候选复用同一个 seeded Playwright browser context，先尝试 full-size/original，全部失败后再用同一 context 尝试 preview。通用 HTTP-first 资产下载仍保留给非目标 provider。
 
