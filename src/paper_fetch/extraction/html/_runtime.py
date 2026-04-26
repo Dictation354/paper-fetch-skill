@@ -7,7 +7,12 @@ from html.parser import HTMLParser
 from typing import Any, Mapping
 
 from ...extraction.html.language import collect_html_abstract_blocks, html_node_language_hint
-from ...extraction.html.semantics import HTML_SECTION_HINT_KINDS, collect_html_section_hints
+from ...extraction.html.semantics import (
+    HTML_SECTION_HINT_KINDS,
+    collect_html_section_hints,
+    markdown_heading_category,
+    parse_markdown_heading,
+)
 from ...extraction.html.signals import contains_access_gate_text
 from ...models import normalize_markdown_text, normalize_text
 from ...publisher_identity import normalize_doi
@@ -120,7 +125,13 @@ PROFILE_MARKDOWN_PROMO_TOKENS = {
     "pnas": (
         "sign up for pnas alerts",
         "get alerts for new articles, or get an alert when an article is cited",
-    )
+    ),
+    "springer_nature": (
+        "sign up for alerts",
+        "download citation",
+        "reprints and permissions",
+        "similar content being viewed by others",
+    ),
 }
 DEFAULT_NOISE_PROFILE = "generic"
 HTML_BODY_MIN_CHARS = 800
@@ -130,56 +141,6 @@ HTML_SINGLE_BLOCK_MIN_WORDS = 90
 HTML_CJK_MIN_CHARS = 120
 HTML_SINGLE_BLOCK_MIN_CJK_CHARS = 180
 HTML_CJK_MIN_RATIO = 0.20
-MARKDOWN_ABSTRACT_HEADINGS = {
-    "abstract",
-    "structured abstract",
-    "summary",
-    "resumo",
-    "resumen",
-    "resume",
-    "résumé",
-    "zusammenfassung",
-}
-MARKDOWN_AUXILIARY_HEADINGS = {
-    "abbreviations",
-    "access the full article",
-    "get full access to this article",
-    "purchase digital access to this article",
-    "access this article",
-    "buy article pdf",
-    "buy now",
-    "check access",
-}
-MARKDOWN_FRONT_MATTER_HEADINGS = {
-    "editor's summary",
-    "editor’s summary",
-    "summary",
-    "keywords",
-    "key points",
-    "about this article",
-    "author notes",
-    "authors",
-    "article information",
-    "highlights",
-    "graphical abstract",
-}
-MARKDOWN_BACK_MATTER_HEADINGS = (
-    "references",
-    "references and notes",
-    "bibliography",
-    "acknowledgments",
-    "supplementary materials",
-    "supplementary material",
-    "supplementary information",
-    "supporting information",
-    "notes",
-    "data availability",
-    "author contributions",
-    "funding",
-    "ethics",
-    "competing interests",
-    "disclosures",
-)
 ARTICLE_TYPE_FRONT_MATTER_PREFIXES = (
     "regular paper",
     "research article",
@@ -529,13 +490,8 @@ def _split_markdown_blocks(markdown_text: str) -> list[str]:
 
 
 def _heading_text(block: str) -> str | None:
-    stripped = block.strip()
-    if not stripped.startswith("#"):
-        return None
-    match = re.match(r"^(#+)\s*(.*)$", stripped)
-    if not match:
-        return None
-    return normalize_text(match.group(2))
+    heading_info = parse_markdown_heading(block)
+    return heading_info[1] if heading_info is not None else None
 
 
 def _normalize_section_hint_heading(text: str) -> str:
@@ -575,14 +531,6 @@ def _match_next_section_hint(section_hints: list[dict[str, Any]], hint_index: in
         if section_hints[index]["heading_key"] == heading_key:
             return section_hints[index], index + 1
     return None, hint_index
-
-
-def _category_for_section_hint_kind(kind: str) -> str:
-    if kind == "data_availability":
-        return "data_availability"
-    if kind == "references":
-        return "references_or_back_matter"
-    return "body_heading"
 
 
 def _strip_title_heading(markdown_text: str, title: str) -> str:
@@ -698,17 +646,11 @@ def _filtered_body_blocks(
             matched_hint, next_hint_index = _match_next_section_hint(coerced_section_hints, section_hint_index, heading)
             if matched_hint is not None:
                 section_hint_index = next_hint_index
-                category = _category_for_section_hint_kind(matched_hint["kind"])
-            elif normalized_heading in MARKDOWN_ABSTRACT_HEADINGS or normalized_heading.startswith("abstract"):
-                category = "abstract"
-            elif normalized_heading in MARKDOWN_AUXILIARY_HEADINGS:
-                category = "auxiliary"
-            elif normalized_heading in MARKDOWN_FRONT_MATTER_HEADINGS:
-                category = "front_matter"
-            elif any(normalized_heading.startswith(token) for token in MARKDOWN_BACK_MATTER_HEADINGS):
-                category = "references_or_back_matter"
-            else:
-                category = "body_heading"
+            category = markdown_heading_category(
+                heading,
+                title=title or None,
+                section_hint_kind=matched_hint["kind"] if matched_hint is not None else None,
+            )
             if category == "abstract":
                 in_abstract = True
                 in_back_matter = False

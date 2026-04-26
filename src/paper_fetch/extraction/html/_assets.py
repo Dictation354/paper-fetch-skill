@@ -15,6 +15,13 @@ from ...http import DEFAULT_FULLTEXT_TIMEOUT_SECONDS, HttpTransport, RequestFail
 from ...models import AssetProfile, normalize_text
 from ...utils import build_asset_output_path, empty_asset_results, sanitize_filename, save_payload
 from ._metadata import parse_html_metadata
+from .formula_rules import (
+    FORMULA_IMAGE_ATTRS,
+    FORMULA_IMAGE_SRCSET_ATTRS,
+    formula_heading_for_image,
+    formula_image_url_from_node,
+    looks_like_formula_image,
+)
 from ._runtime import decode_html
 
 try:
@@ -69,18 +76,6 @@ SUPPLEMENTARY_TEXT_TOKENS = (
     "supporting information",
 )
 SUPPLEMENTARY_FILE_TOKENS = (".pdf", ".csv", ".xlsx", ".xls", ".zip")
-FORMULA_IMAGE_URL_PATTERN = re.compile(
-    r"(?:^|[-_/])(?:math|ieq)[-_]?\d|_IEq\d|math-\d|equation",
-    flags=re.IGNORECASE,
-)
-FORMULA_ANCESTOR_TOKENS = (
-    "inline-equation",
-    "display-equation",
-    "disp-formula",
-    "display-formula",
-    "fallback__mathequation",
-)
-
 FigurePageFetcher = Callable[[str], tuple[str, str] | None]
 ImageDocumentFetcher = Callable[[str, Mapping[str, Any]], dict[str, Any] | None]
 
@@ -426,60 +421,12 @@ def _soup_attr_url(tag: Any, *attrs: str) -> str:
     return ""
 
 
-def _tag_identity_text(tag: Any) -> str:
-    if Tag is None or not isinstance(tag, Tag):
-        return ""
-    parts = [normalize_text(str(tag.name or ""))]
-    attrs = getattr(tag, "attrs", None) or {}
-    for key in ("id", "class", "role", "data-test", "data-type"):
-        value = attrs.get(key)
-        if isinstance(value, (list, tuple, set)):
-            parts.extend(normalize_text(str(item)) for item in value)
-        else:
-            parts.append(normalize_text(str(value or "")))
-    return " ".join(part.lower() for part in parts if part)
-
-
-def _formula_ancestor_identity(tag: Any) -> str:
-    parts: list[str] = []
-    current = tag
-    depth = 0
-    while Tag is not None and isinstance(current, Tag) and depth < 6:
-        parts.append(_tag_identity_text(current))
-        current = current.parent if isinstance(getattr(current, "parent", None), Tag) else None
-        depth += 1
-    return " ".join(part for part in parts if part)
-
-
 def _looks_like_formula_image(tag: Any, url: str) -> bool:
-    if Tag is None or not isinstance(tag, Tag):
-        return False
-    identity = _formula_ancestor_identity(tag)
-    alt_blob = " ".join(
-        normalize_text(str(tag.get(attr) or "")).lower()
-        for attr in ("alt", "title", "aria-label")
-    )
-    url_blob = normalize_text(url).lower()
-    return (
-        bool(FORMULA_IMAGE_URL_PATTERN.search(url_blob))
-        or bool(FORMULA_IMAGE_URL_PATTERN.search(alt_blob))
-        or any(token in identity for token in FORMULA_ANCESTOR_TOKENS)
-    )
+    return looks_like_formula_image(tag, url)
 
 
 def _formula_heading_for_image(tag: Any, index: int) -> str:
-    if Tag is None or not isinstance(tag, Tag):
-        return f"Formula {index}"
-    current = tag
-    depth = 0
-    while isinstance(current, Tag) and depth < 6:
-        identity = _tag_identity_text(current)
-        candidate_id = normalize_text(str((getattr(current, "attrs", None) or {}).get("id") or ""))
-        if candidate_id and any(token in identity for token in FORMULA_ANCESTOR_TOKENS):
-            return candidate_id
-        current = current.parent if isinstance(getattr(current, "parent", None), Tag) else None
-        depth += 1
-    return f"Formula {index}"
+    return formula_heading_for_image(tag, index)
 
 
 def looks_like_full_size_asset_url(url: str | None) -> bool:
@@ -752,12 +699,10 @@ def extract_formula_assets(html_text: str, source_url: str) -> list[dict[str, st
     for image in soup.find_all("img"):
         if not isinstance(image, Tag):
             continue
-        url = _soup_attr_url(
+        url = formula_image_url_from_node(image) or _soup_attr_url(
             image,
-            *FULL_SIZE_IMAGE_ATTRS,
-            *PREVIEW_IMAGE_ATTRS,
-            "srcset",
-            "data-srcset",
+            *FORMULA_IMAGE_ATTRS,
+            *FORMULA_IMAGE_SRCSET_ATTRS,
         )
         if not url or not _looks_like_formula_image(image, url):
             continue

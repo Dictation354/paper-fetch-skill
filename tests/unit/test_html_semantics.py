@@ -8,6 +8,8 @@ from paper_fetch.providers._html_semantics import (
     heading_category,
     identity_category,
     looks_like_explicit_body_container,
+    markdown_heading_category,
+    parse_markdown_heading,
 )
 
 
@@ -41,6 +43,15 @@ class HtmlSemanticsTests(unittest.TestCase):
     def test_looks_like_explicit_body_container_uses_shared_identity_rules(self) -> None:
         soup = BeautifulSoup("<section property='articleBody'>Body</section>", "html.parser")
         self.assertTrue(looks_like_explicit_body_container(soup.section))
+
+    def test_markdown_heading_taxonomy_maps_article_sections(self) -> None:
+        self.assertEqual(parse_markdown_heading("### Data Availability"), (3, "Data Availability"))
+        self.assertEqual(markdown_heading_category("Abstract"), "abstract")
+        self.assertEqual(markdown_heading_category("Editor's Summary"), "front_matter")
+        self.assertEqual(markdown_heading_category("Data Availability"), "data_availability")
+        self.assertEqual(markdown_heading_category("References"), "references_or_back_matter")
+        self.assertEqual(markdown_heading_category("Rights and permissions"), "auxiliary")
+        self.assertEqual(markdown_heading_category("Results"), "body_heading")
 
 
 if __name__ == "__main__":

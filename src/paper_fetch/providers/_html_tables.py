@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 from typing import Any, Callable, Mapping
 
+from ..extraction.html.inline import normalize_html_inline_text, wrap_html_inline_text_fragment
 from ..models import normalize_markdown_text
 from ..utils import normalize_text
 
@@ -21,32 +22,11 @@ CleanMarkdownFn = Callable[[str], str]
 
 
 def normalize_table_inline_text(value: str) -> str:
-    text = value.replace("\xa0", " ")
-    text = re.sub(r"[ \t\r\f\v]+", " ", text)
-    text = re.sub(r"\s*\n\s*", " ", text)
-    text = re.sub(r"\s*(<br>)\s*", r"\1", text)
-    text = re.sub(r"<(sub|sup)>\s+", r"<\1>", text)
-    text = re.sub(r"\s+</(sub|sup)>", r"</\1>", text)
-    text = re.sub(r"\s+(<(?:sub|sup)>)", r"\1", text)
-    text = re.sub(r"(</sub>)\s+\(", r"\1(", text)
-    text = re.sub(r"(</(?:sub|sup)>)\s+([,.;:%\]\}])", r"\1\2", text)
-    return text.strip()
+    return normalize_html_inline_text(value, policy="table_cell")
 
 
 def wrap_table_text_fragment(text: str, marker: str | None) -> str:
-    value = text.replace("\xa0", " ")
-    has_leading_space = bool(value[:1].isspace())
-    has_trailing_space = bool(value[-1:].isspace())
-    normalized = re.sub(r"\s+", " ", value).strip()
-    if not normalized:
-        return ""
-    if marker:
-        normalized = f"{marker}{normalized}{marker}"
-    if has_leading_space:
-        normalized = f" {normalized}"
-    if has_trailing_space:
-        normalized = f"{normalized} "
-    return normalized
+    return wrap_html_inline_text_fragment(text, marker)
 
 
 def render_table_inline_node(node: Any, *, text_style: str | None = None) -> str:

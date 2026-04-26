@@ -1125,6 +1125,34 @@ pytest tests/unit/test_elsevier_markdown.py
 pytest tests/integration/test_golden_corpus.py
 ```
 
+完成状态（2026-04-26）：
+
+- Phase 4 已完成；本阶段只合并 Markdown/HTML extraction 规则，不主动改变抽取输出语义。
+- Table rendering 已收敛到 `providers/_html_tables.py`：`_science_pnas_html.py` 不再保留 table cell、rowspan/colspan matrix、header flatten、Markdown table 渲染的本地实现，相关私有入口改为薄委托。
+- Inline text normalization 已新增 `extraction/html/inline.py`，统一 body、heading、table cell 的空白、`sub`/`sup` 和标点贴合规则；HTML section renderer、table renderer、Science/PNAS browser HTML pipeline 均改为复用该 helper。
+- Section taxonomy 已集中到 `extraction/html/semantics.py`：DOM heading 分类与 Markdown heading 解析/分类共用 canonical heading sets，`extraction/html/_runtime.py` 和 `_science_pnas_html.py` 不再维护本地 Markdown heading 集合或解析逻辑。
+- Formula discovery 已新增 `extraction/html/formula_rules.py`，统一 formula image URL pattern、container tokens、image candidate attrs、MathML extraction、display formula 判断和 formula image detection；`_html_section_markdown.py`、`_science_pnas_html.py`、`extraction/html/_assets.py` 已复用该模块。
+- Figure link matching 已新增 `extraction/html/figure_links.py`，统一 figure label normalization、asset URL/path alias matching、downloaded `path` 优先级；extraction-time injection 与 post-download rewrite 现在共用同一实现。
+- Availability/site rules 已确认继续由 `quality/html_availability.py` 与 `quality/html_profiles.py` 单一承载；本阶段只补充 Markdown/table/formula/figure/taxonomy/noise 相关测试。
+- `springer_nature` noise profile 已在 `extraction/html/_runtime.py` 注册，不再静默回退 generic；只加入了有 Springer/Nature fixture 或单元测试保护的 promo tokens。
+- Phase 0 明确测试的 `_science_pnas_html.py` compatibility surface 保持不变；provider-private public wrappers 仍保留。
+
+本阶段验证：
+
+```bash
+ruff check
+pytest tests/unit/test_html_shared_helpers.py tests/unit/test_html_semantics.py tests/unit/test_science_pnas_postprocess.py tests/unit/test_science_pnas_postprocess_units.py tests/unit/test_science_pnas_markdown.py tests/unit/test_springer_html_regressions.py tests/unit/test_springer_html_tables.py
+pytest tests/unit/test_elsevier_markdown.py
+pytest tests/integration/test_golden_corpus.py
+pytest
+```
+
+未进入本阶段的后续事项：
+
+- Phase 3 后续可继续清理 browser workflow 命名和 profile 边界，但不与 Markdown rule consolidation 混在同一阶段。
+- Phase 5 的 provider waterfall/fetch result template 清理未在本阶段继续推进。
+- Phase 6 的 runtime context、artifact/cache policy、asset downloader 依赖注入仍按原计划后置。
+
 ### Phase 5：Provider Waterfall 与 Fetch Result Template
 
 目标：

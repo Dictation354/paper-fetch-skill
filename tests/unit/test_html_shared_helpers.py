@@ -2,9 +2,18 @@ from __future__ import annotations
 
 import unittest
 
+from bs4 import BeautifulSoup
+
 from paper_fetch.extraction.html import _assets as html_assets
 from paper_fetch.extraction.html import _metadata as html_metadata
 from paper_fetch.extraction.html import _runtime as html_runtime
+from paper_fetch.extraction.html.formula_rules import (
+    formula_image_url_from_node,
+    is_display_formula_node,
+    looks_like_formula_image,
+    mathml_element_from_html_node,
+)
+from paper_fetch.extraction.html.inline import normalize_html_inline_text
 from paper_fetch.http import HttpTransport
 
 
@@ -205,3 +214,67 @@ Important body text.
 
         self.assertIn("Sign up for PNAS alerts.", generic_cleaned)
         self.assertNotIn("Sign up for PNAS alerts.", pnas_cleaned)
+
+    def test_inline_normalization_is_shared_for_body_heading_and_table_text(self) -> None:
+        raw_text = "CO <sub> 2 </sub> emission </sup> +"
+
+        self.assertEqual(normalize_html_inline_text("CO <sub> 2 </sub> emissions"), "CO<sub>2</sub> emissions")
+        self.assertEqual(normalize_html_inline_text("m <sup> -2 </sup> )", policy="body"), "m<sup>-2</sup>)")
+        self.assertEqual(
+            normalize_html_inline_text("m <sup> -2 </sup> )", policy="table_cell"),
+            "m<sup>-2</sup> )",
+        )
+        self.assertEqual(normalize_html_inline_text(raw_text, policy="heading"), "CO<sub>2</sub> emission</sup>+")
+
+    def test_formula_rules_detect_mathml_display_and_formula_image_urls(self) -> None:
+        soup = BeautifulSoup(
+            """
+<div class="display-equation" id="eq1">
+  <math display="block"><mi>x</mi><mo>=</mo><mn>1</mn></math>
+</div>
+<span class="inline-equation"><img data-altimg="/article/math-0001.png" alt="Equation image" /></span>
+""",
+            "html.parser",
+        )
+        display = soup.select_one(".display-equation")
+        image = soup.find("img")
+
+        self.assertTrue(is_display_formula_node(display))
+        self.assertIsNotNone(mathml_element_from_html_node(display))
+        self.assertEqual(formula_image_url_from_node(image), "/article/math-0001.png")
+        self.assertTrue(looks_like_formula_image(image))
+
+    def test_extract_formula_assets_reuses_shared_formula_rules(self) -> None:
+        html = """
+<html>
+  <body>
+    <div class="display-equation" id="Eq1">
+      <img data-altimg="/asset/equation-1.png" alt="Formula" />
+    </div>
+  </body>
+</html>
+"""
+
+        assets = html_assets.extract_formula_assets(html, "https://example.test/article")
+
+        self.assertEqual(len(assets), 1)
+        self.assertEqual(assets[0]["kind"], "formula")
+        self.assertEqual(assets[0]["heading"], "Eq1")
+        self.assertEqual(assets[0]["url"], "https://example.test/asset/equation-1.png")
+
+    def test_clean_markdown_registers_springer_nature_profile(self) -> None:
+        markdown = """
+# Article
+
+Sign up for alerts
+
+## Results
+
+Important body text.
+"""
+
+        generic_cleaned = html_runtime.clean_markdown(markdown)
+        springer_cleaned = html_runtime.clean_markdown(markdown, noise_profile="springer_nature")
+
+        self.assertIn("Sign up for alerts", generic_cleaned)
+        self.assertNotIn("Sign up for alerts", springer_cleaned)

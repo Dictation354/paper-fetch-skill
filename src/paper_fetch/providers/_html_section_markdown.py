@@ -3,9 +3,21 @@
 from __future__ import annotations
 
 import re
-import xml.etree.ElementTree as ET
 from typing import Any
 
+from ..extraction.html.formula_rules import (
+    formula_image_url_from_node,
+    is_display_formula_node,
+    is_formula_container,
+    looks_like_formula_image,
+    mathml_element_from_html_node,
+)
+from ..extraction.html.inline import (
+    join_inline_fragments,
+    needs_space_between_inline_text,
+    normalize_html_inline_text,
+    wrap_html_inline_text_fragment,
+)
 from ..formula.convert import normalize_latex_macros
 from ..models import normalize_text
 from ._article_markdown_math import render_external_mathml_expression, render_mathml_expression
@@ -21,8 +33,6 @@ except ImportError:  # pragma: no cover - exercised implicitly when dependency i
 
 HEADING_TAG_PATTERN = re.compile(r"^h[1-6]$")
 HTML_TIGHT_INLINE_TAGS = {"sub", "sup"}
-HTML_NO_SPACE_AFTER_CHARS = set("([{/+-–—−")
-HTML_NO_SPACE_BEFORE_CHARS = set(")]},.;:!?%/+-–—−")
 FIGURE_LABEL_PATTERN = re.compile(r"^\s*(?:fig(?:ure)?\.?)\s*(\d+[A-Za-z]?)\s*[:.]?\s*(.*)$", flags=re.IGNORECASE)
 FIGURE_ID_PATTERN = re.compile(r"(?:^|[-_ ])figure[-_ ]?(\d+[A-Za-z]?)$", flags=re.IGNORECASE)
 FIGURE_TRAILING_LINK_PATTERN = re.compile(r"\b(?:PowerPoint slide|Full size image)\b.*$", flags=re.IGNORECASE)
@@ -31,43 +41,13 @@ FIGURE_DESCRIPTION_SELECTORS = (
     ".c-article-section__figure-description",
     ".figure__caption-text",
 )
-FORMULA_IMAGE_URL_PATTERN = re.compile(r"(?:^|[-_/])(?:math|ieq)[-_]?\d|_IEq\d|math-\d|equation", flags=re.IGNORECASE)
-FORMULA_CONTAINER_TOKENS = (
-    "inline-equation",
-    "display-equation",
-    "disp-formula",
-    "display-formula",
-    "fallback__mathequation",
-)
-
 
 def _normalize_inline_text(text: str) -> str:
-    normalized = text.replace("\xa0", " ")
-    normalized = re.sub(r"[ \t\r\f\v]+", " ", normalized)
-    normalized = re.sub(r"\s*\n\s*", " ", normalized)
-    normalized = re.sub(r"\s*(<br>)\s*", r"\1", normalized)
-    normalized = re.sub(r"<(sub|sup)>\s+", r"<\1>", normalized)
-    normalized = re.sub(r"\s+</(sub|sup)>", r"</\1>", normalized)
-    normalized = re.sub(r"\s+(<(?:sub|sup)>)", r"\1", normalized)
-    normalized = re.sub(r"(</sub>)\s+\(", r"\1(", normalized)
-    normalized = re.sub(r"(</(?:sub|sup)>)\s+([,.;:%\]\}\+\)])", r"\1\2", normalized)
-    return normalized.strip()
+    return normalize_html_inline_text(text, policy="heading")
 
 
 def _wrap_inline_text_fragment(text: str, marker: str | None = None) -> str:
-    value = text.replace("\xa0", " ")
-    has_leading_space = bool(value[:1].isspace())
-    has_trailing_space = bool(value[-1:].isspace())
-    normalized = re.sub(r"\s+", " ", value).strip()
-    if not normalized:
-        return ""
-    if marker:
-        normalized = f"{marker}{normalized}{marker}"
-    if has_leading_space:
-        normalized = f" {normalized}"
-    if has_trailing_space:
-        normalized = f"{normalized} "
-    return normalized
+    return wrap_html_inline_text_fragment(text, marker)
 
 
 def _render_heading_inline_fragment(node: Any, *, text_style: str | None = None) -> str:
@@ -92,43 +72,6 @@ def _render_heading_inline_fragment(node: Any, *, text_style: str | None = None)
     return _render_heading_inline_node(node, text_style=text_style)
 
 
-def _visible_inline_edge(text: str, *, last: bool) -> str:
-    normalized = re.sub(r"</?(?:sub|sup)>", "", text)
-    normalized = re.sub(r"[*_`]+", "", normalized).strip()
-    if not normalized:
-        return ""
-    return normalized[-1] if last else normalized[0]
-
-
-def _needs_inline_fragment_space(left: str, right: str) -> bool:
-    if not left or not right:
-        return False
-    if left[-1:].isspace() or right[:1].isspace():
-        return False
-    if right.startswith(("<sub>", "<sup>", "</sub>", "</sup>")):
-        return False
-    if left.endswith(("<br>", "<sub>", "<sup>")):
-        return False
-    left_edge = _visible_inline_edge(left, last=True)
-    right_edge = _visible_inline_edge(right, last=False)
-    if not left_edge or not right_edge:
-        return False
-    if left_edge in HTML_NO_SPACE_AFTER_CHARS or right_edge in HTML_NO_SPACE_BEFORE_CHARS:
-        return False
-    return right_edge.isalnum() or right_edge in {"*", "_", "<"}
-
-
-def _join_inline_fragments(parts: list[str]) -> str:
-    if not parts:
-        return ""
-    joined = parts[0]
-    for part in parts[1:]:
-        if _needs_inline_fragment_space(joined, part):
-            joined += " "
-        joined += part
-    return joined
-
-
 def _render_heading_inline_node(node: Any, *, text_style: str | None = None) -> str:
     if node is None:
         return ""
@@ -142,7 +85,7 @@ def _render_heading_inline_node(node: Any, *, text_style: str | None = None) -> 
         rendered = _render_heading_inline_fragment(child, text_style=text_style)
         if rendered:
             parts.append(rendered)
-    return _normalize_inline_text(_join_inline_fragments(parts))
+    return _normalize_inline_text(join_inline_fragments(parts))
 
 
 def render_heading_text_from_html(node: Any) -> str:
@@ -318,67 +261,20 @@ def _node_attr_text(node: Any) -> str:
     return " ".join(part.lower() for part in parts if part)
 
 
-def _ancestor_attr_text(node: Any, *, max_depth: int = 6) -> str:
-    parts: list[str] = []
-    current = node
-    depth = 0
-    while isinstance(current, Tag) and depth < max_depth:
-        parts.append(_node_attr_text(current))
-        current = current.parent if isinstance(getattr(current, "parent", None), Tag) else None
-        depth += 1
-    return " ".join(part for part in parts if part)
-
-
 def _is_formula_container(node: Any) -> bool:
-    if not isinstance(node, Tag):
-        return False
-    identity = _node_attr_text(node)
-    role = normalize_text(str((getattr(node, "attrs", None) or {}).get("role") or "")).lower()
-    return role == "math" or any(token in identity for token in FORMULA_CONTAINER_TOKENS)
+    return is_formula_container(node)
 
 
 def _is_display_formula_node(node: Any) -> bool:
-    if not isinstance(node, Tag):
-        return False
-    attrs = getattr(node, "attrs", None) or {}
-    if normalize_text(str(attrs.get("display") or "")).lower() == "block":
-        return True
-    identity = _ancestor_attr_text(node)
-    return any(token in identity for token in ("display-equation", "disp-formula", "display-formula")) or normalize_text(
-        str(attrs.get("role") or "")
-    ).lower() == "math"
+    return is_display_formula_node(node)
 
 
 def _first_formula_image_url(node: Any) -> str:
-    if not isinstance(node, Tag):
-        return ""
-    images = [node] if normalize_text(node.name or "").lower() == "img" else list(node.find_all("img"))
-    for image in images:
-        if not isinstance(image, Tag):
-            continue
-        for attr in ("data-original", "data-full-size", "data-hi-res-src", "data-src", "src", "data-lazy-src"):
-            candidate = normalize_text(str(image.get(attr) or ""))
-            if candidate:
-                return candidate
-    return ""
+    return formula_image_url_from_node(node)
 
 
 def _is_formula_image_node(node: Any) -> bool:
-    if not isinstance(node, Tag) or normalize_text(node.name or "").lower() != "img":
-        return False
-    url = _first_formula_image_url(node)
-    if not url:
-        return False
-    identity = _ancestor_attr_text(node)
-    alt_blob = " ".join(
-        normalize_text(str(node.get(attr) or "")).lower()
-        for attr in ("alt", "title", "aria-label")
-    )
-    return (
-        bool(FORMULA_IMAGE_URL_PATTERN.search(url))
-        or bool(FORMULA_IMAGE_URL_PATTERN.search(alt_blob))
-        or any(token in identity for token in FORMULA_CONTAINER_TOKENS)
-    )
+    return looks_like_formula_image(node)
 
 
 def _render_formula_image_node(node: Any) -> str:
@@ -388,24 +284,8 @@ def _render_formula_image_node(node: Any) -> str:
     return f"![Formula]({url})"
 
 
-def _mathml_element_from_html_node(node: Any) -> ET.Element | None:
-    if not isinstance(node, Tag):
-        return None
-    math_node = node if normalize_text(node.name or "").lower() == "math" else node.find("math")
-    if not isinstance(math_node, Tag):
-        return None
-    raw_mathml = str(math_node)
-    try:
-        return ET.fromstring(raw_mathml)
-    except ET.ParseError:
-        try:
-            return ET.fromstring(raw_mathml.replace("&nbsp;", " "))
-        except ET.ParseError:
-            return None
-
-
 def _render_mathml_node(node: Any) -> str:
-    element = _mathml_element_from_html_node(node)
+    element = mathml_element_from_html_node(node)
     if element is None:
         return ""
     display_mode = _is_display_formula_node(node)
@@ -649,39 +529,14 @@ def _is_mathjax_tex_node(node: Any) -> bool:
 
 
 def needs_space_between(left: str, right: str, previous_child: Any, child: Any) -> bool:
-    if not left or not right:
-        return False
-    if left[-1].isspace() or right[0].isspace():
-        return False
-    if right.startswith("!["):
-        return True
-    if is_tight_inline_node(previous_child) or is_tight_inline_node(child):
-        return False
-
-    left_char = last_significant_char(left)
-    right_char = first_significant_char(right)
-    if not left_char or not right_char:
-        return False
-    if left_char in HTML_NO_SPACE_AFTER_CHARS:
-        return False
-    if right_char in HTML_NO_SPACE_BEFORE_CHARS:
-        return False
-    return left_char.isalnum() and right_char.isalnum()
+    return needs_space_between_inline_text(
+        left,
+        right,
+        previous_is_tight=is_tight_inline_node(previous_child),
+        current_is_tight=is_tight_inline_node(child),
+        right_is_markdown_image=right.startswith("!["),
+    )
 
 
 def is_tight_inline_node(node: Any) -> bool:
     return isinstance(node, Tag) and node.name in HTML_TIGHT_INLINE_TAGS
-
-
-def last_significant_char(text: str) -> str:
-    for char in reversed(text):
-        if not char.isspace():
-            return char
-    return ""
-
-
-def first_significant_char(text: str) -> str:
-    for char in text:
-        if not char.isspace():
-            return char
-    return ""

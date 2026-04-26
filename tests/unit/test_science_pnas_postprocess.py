@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import unittest
 
+from paper_fetch.providers import _science_pnas_postprocess
 from paper_fetch.providers._science_pnas_html import extract_science_pnas_markdown, rewrite_inline_figure_links
 from tests.golden_criteria import golden_criteria_asset
 
@@ -323,6 +324,35 @@ class SciencePnasPostprocessTests(unittest.TestCase):
         self.assertEqual(rewritten.count("![Figure 1](downloads/pnas.example.fig01.jpeg)"), 1)
         self.assertEqual(rewritten.count("![Figure 4](downloads/pnas.example.fig04.jpeg)"), 1)
         self.assertNotIn("![Figure 1](downloads/pnas.example.fig04.jpeg)", rewritten)
+
+    def test_figure_link_injection_and_rewrite_share_path_preference(self) -> None:
+        markdown = "\n\n".join(
+            [
+                "# Figure Link Example",
+                "## Results",
+                "**Figure 3.** Caption body.",
+            ]
+        )
+        figure_assets = [
+            {
+                "kind": "figure",
+                "heading": "Figure 3",
+                "caption": "Caption body.",
+                "url": "https://example.test/figure3.png",
+                "path": "downloads/figure3.png",
+                "section": "body",
+            }
+        ]
+
+        rewritten = rewrite_inline_figure_links(markdown, figure_assets=figure_assets, publisher="science")
+        injected = _science_pnas_postprocess.inject_inline_figure_links(
+            markdown,
+            figure_assets=figure_assets,
+            clean_markdown_fn=lambda value: value,
+        )
+
+        self.assertEqual(rewritten, injected)
+        self.assertIn("![Figure 3](downloads/figure3.png)", rewritten)
 
 
 if __name__ == "__main__":

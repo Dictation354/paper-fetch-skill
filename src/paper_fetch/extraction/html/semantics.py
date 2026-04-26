@@ -112,6 +112,63 @@ ANCILLARY_HEADINGS = frozenset(
         "publisher’s note",
     }
 )
+MARKDOWN_ABSTRACT_HEADINGS = frozenset(
+    {
+        "abstract",
+        "structured abstract",
+        "summary",
+        "resumo",
+        "resumen",
+        "resume",
+        "résumé",
+        "zusammenfassung",
+    }
+)
+MARKDOWN_AUXILIARY_HEADINGS = frozenset(
+    {
+        "abbreviations",
+        "access the full article",
+        "get full access to this article",
+        "purchase digital access to this article",
+        "access this article",
+        "buy article pdf",
+        "buy now",
+        "check access",
+    }
+)
+MARKDOWN_FRONT_MATTER_HEADINGS = frozenset(
+    {
+        "editor's summary",
+        "editor’s summary",
+        "summary",
+        "keywords",
+        "key points",
+        "about this article",
+        "author notes",
+        "authors",
+        "article information",
+        "highlights",
+        "graphical abstract",
+    }
+)
+MARKDOWN_BACK_MATTER_HEADINGS = frozenset(
+    {
+        "references",
+        "references and notes",
+        "bibliography",
+        "acknowledgments",
+        "supplementary materials",
+        "supplementary material",
+        "supplementary information",
+        "supporting information",
+        "notes",
+        "author contributions",
+        "funding",
+        "ethics",
+        "competing interests",
+        "disclosures",
+    }
+)
 BODY_CONTAINER_TOKENS = (
     "articlebody",
     "article-body",
@@ -288,6 +345,55 @@ def section_hint_kind_for_category(category: str) -> str | None:
     if category == "references_or_back_matter":
         return "references"
     return None
+
+
+def category_for_section_hint_kind(kind: str) -> str:
+    if kind == "data_availability":
+        return "data_availability"
+    if kind == "references":
+        return "references_or_back_matter"
+    return "body_heading"
+
+
+def parse_markdown_heading(block: str) -> tuple[int, str] | None:
+    stripped = block.strip()
+    if not stripped.startswith("#"):
+        return None
+    match = re.match(r"^(#+)\s*(.*)$", stripped)
+    if not match:
+        return None
+    return len(match.group(1)), normalize_text(match.group(2))
+
+
+def markdown_heading_category(
+    heading: str,
+    *,
+    title: str | None = None,
+    section_hint_kind: str | None = None,
+) -> str:
+    if section_hint_kind:
+        return category_for_section_hint_kind(section_hint_kind)
+
+    normalized = normalize_heading(heading)
+    if not normalized:
+        return "body_heading"
+    if title and normalized == normalize_heading(title):
+        return "front_matter"
+    if normalized in MARKDOWN_ABSTRACT_HEADINGS or normalized.startswith("abstract"):
+        return "abstract"
+    if normalized in MARKDOWN_AUXILIARY_HEADINGS:
+        return "auxiliary"
+    if normalized in MARKDOWN_FRONT_MATTER_HEADINGS:
+        return "front_matter"
+    if any(normalized.startswith(token) for token in DATA_AVAILABILITY_HEADINGS):
+        return "data_availability"
+    if any(normalized.startswith(token) for token in MARKDOWN_BACK_MATTER_HEADINGS):
+        return "references_or_back_matter"
+
+    dom_category = heading_category("h2", heading, title=title)
+    if dom_category == "ancillary":
+        return "auxiliary"
+    return dom_category
 
 
 def container_has_explicit_body_container(container: Any) -> bool:
