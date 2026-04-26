@@ -19,6 +19,7 @@ from typing import Any, Callable, Iterator, Mapping
 
 from cachetools import TTLCache
 import urllib3
+from urllib3.util import Retry
 
 from .logging_utils import emit_structured_log
 
@@ -32,6 +33,7 @@ DEFAULT_MAX_RESPONSE_BYTES = 32 * 1024 * 1024
 DEFAULT_MAX_COMPRESSED_BODY_MULTIPLIER = 8
 DEFAULT_TRANSIENT_RETRIES = 2
 DEFAULT_TRANSIENT_BACKOFF_BASE_SECONDS = 0.5
+TRANSIENT_HTTP_STATUS_CODES = frozenset(range(500, 600))
 
 TEXTUAL_CONTENT_TYPES = (
     "text/",
@@ -259,6 +261,52 @@ class HttpTransport:
             redirect=True,
         )
 
+    def _build_rate_limit_retry_policy(
+        self,
+        *,
+        enabled: bool,
+        retries: int,
+    ) -> Retry:
+        total = max(0, int(retries)) if enabled else 0
+        return Retry(
+            total=total,
+            status=total,
+            allowed_methods=None,
+            status_forcelist={429},
+            respect_retry_after_header=True,
+            raise_on_status=False,
+        )
+
+    def _build_transient_retry_policy(
+        self,
+        *,
+        enabled: bool,
+        retries: int,
+        backoff_base_seconds: float,
+    ) -> Retry:
+        total = max(0, int(retries)) if enabled else 0
+        return Retry(
+            total=total,
+            connect=total,
+            read=total,
+            status=total,
+            other=total,
+            allowed_methods=None,
+            status_forcelist=TRANSIENT_HTTP_STATUS_CODES,
+            backoff_factor=max(0.0, float(backoff_base_seconds)),
+            respect_retry_after_header=False,
+            raise_on_status=False,
+        )
+
+    def _retry_remaining(self, policy: Retry) -> int:
+        return max(0, int(policy.total or 0))
+
+    def _consume_retry(self, policy: Retry) -> Retry:
+        return policy.new(total=max(0, self._retry_remaining(policy) - 1))
+
+    def _transient_backoff_seconds(self, policy: Retry, attempts_made: int) -> float:
+        return max(0.0, float(policy.backoff_factor)) * (2**attempts_made)
+
     def _handle_http_failure(
         self,
         *,
@@ -270,24 +318,21 @@ class HttpTransport:
         headers_map: Mapping[str, str],
         request_started_at: float,
         attempt: int,
-        retry_on_rate_limit: bool,
-        attempts_remaining: int,
+        rate_limit_policy: Retry,
         max_rate_limit_wait_seconds: int,
-        retry_on_transient: bool,
-        transient_attempts_remaining: int,
+        transient_policy: Retry,
         transient_attempts_made: int,
-        transient_backoff_base_seconds: float,
-    ) -> tuple[bool, int, int, int]:
+    ) -> tuple[bool, Retry, Retry, int]:
         retry_after_seconds = parse_retry_after_seconds(headers_map.get("retry-after"))
         rate_limit_wait_seconds = retry_after_seconds
         if rate_limit_wait_seconds is None:
-            fallback_wait_seconds = max(0.0, transient_backoff_base_seconds)
+            fallback_wait_seconds = max(0.0, float(transient_policy.backoff_factor))
             if fallback_wait_seconds <= max_rate_limit_wait_seconds:
                 rate_limit_wait_seconds = fallback_wait_seconds
         if (
             status_code == 429
-            and retry_on_rate_limit
-            and attempts_remaining > 0
+            and self._retry_remaining(rate_limit_policy) > 0
+            and rate_limit_policy.is_retry(method.upper(), status_code, retry_after_seconds is not None)
             and rate_limit_wait_seconds is not None
             and rate_limit_wait_seconds <= max_rate_limit_wait_seconds
         ):
@@ -303,10 +348,13 @@ class HttpTransport:
                 attempt=attempt,
                 reason="rate_limit",
             )
-            attempts_remaining -= 1
+            rate_limit_policy = self._consume_retry(rate_limit_policy)
             time.sleep(max(0.0, rate_limit_wait_seconds))
-            return True, attempts_remaining, transient_attempts_remaining, transient_attempts_made
-        if retry_on_transient and transient_attempts_remaining > 0 and is_transient_http_status(status_code):
+            return True, rate_limit_policy, transient_policy, transient_attempts_made
+        if (
+            self._retry_remaining(transient_policy) > 0
+            and transient_policy.is_retry(method.upper(), status_code, retry_after_seconds is not None)
+        ):
             emit_structured_log(
                 logger,
                 logging.DEBUG,
@@ -319,10 +367,10 @@ class HttpTransport:
                 attempt=attempt,
                 reason="transient_http",
             )
-            transient_attempts_remaining -= 1
-            time.sleep(transient_backoff_base_seconds * (2**transient_attempts_made))
+            transient_policy = self._consume_retry(transient_policy)
+            time.sleep(self._transient_backoff_seconds(transient_policy, transient_attempts_made))
             transient_attempts_made += 1
-            return True, attempts_remaining, transient_attempts_remaining, transient_attempts_made
+            return True, rate_limit_policy, transient_policy, transient_attempts_made
         emit_structured_log(
             logger,
             logging.DEBUG,
@@ -385,10 +433,17 @@ class HttpTransport:
         if cached_response is not None:
             return cached_response
         self._check_cancelled()
-        attempts_remaining = max(0, int(rate_limit_retries))
-        transient_attempts_remaining = max(0, int(transient_retries))
-        transient_attempts_made = 0
         transient_backoff_base_seconds = max(0.0, float(transient_backoff_base_seconds))
+        rate_limit_policy = self._build_rate_limit_retry_policy(
+            enabled=retry_on_rate_limit,
+            retries=rate_limit_retries,
+        )
+        transient_policy = self._build_transient_retry_policy(
+            enabled=retry_on_transient,
+            retries=transient_retries,
+            backoff_base_seconds=transient_backoff_base_seconds,
+        )
+        transient_attempts_made = 0
         attempt = 0
         host_lock = self._host_lock_for_url(url)
         with host_lock if host_lock is not None else nullcontext():
@@ -424,8 +479,8 @@ class HttpTransport:
                     if int(response.status) >= 400:
                         (
                             should_retry,
-                            attempts_remaining,
-                            transient_attempts_remaining,
+                            rate_limit_policy,
+                            transient_policy,
                             transient_attempts_made,
                         ) = self._handle_http_failure(
                             method=method,
@@ -436,13 +491,10 @@ class HttpTransport:
                             headers_map=headers_map,
                             request_started_at=request_started_at,
                             attempt=attempt,
-                            retry_on_rate_limit=retry_on_rate_limit,
-                            attempts_remaining=attempts_remaining,
+                            rate_limit_policy=rate_limit_policy,
                             max_rate_limit_wait_seconds=max_rate_limit_wait_seconds,
-                            retry_on_transient=retry_on_transient,
-                            transient_attempts_remaining=transient_attempts_remaining,
+                            transient_policy=transient_policy,
                             transient_attempts_made=transient_attempts_made,
-                            transient_backoff_base_seconds=transient_backoff_base_seconds,
                         )
                         if should_retry:
                             continue
@@ -476,8 +528,8 @@ class HttpTransport:
                         )
                         (
                             should_retry,
-                            attempts_remaining,
-                            transient_attempts_remaining,
+                            rate_limit_policy,
+                            transient_policy,
                             transient_attempts_made,
                         ) = self._handle_http_failure(
                             method=method,
@@ -488,20 +540,17 @@ class HttpTransport:
                             headers_map=headers_map,
                             request_started_at=request_started_at,
                             attempt=attempt,
-                            retry_on_rate_limit=retry_on_rate_limit,
-                            attempts_remaining=attempts_remaining,
+                            rate_limit_policy=rate_limit_policy,
                             max_rate_limit_wait_seconds=max_rate_limit_wait_seconds,
-                            retry_on_transient=retry_on_transient,
-                            transient_attempts_remaining=transient_attempts_remaining,
+                            transient_policy=transient_policy,
                             transient_attempts_made=transient_attempts_made,
-                            transient_backoff_base_seconds=transient_backoff_base_seconds,
                         )
                         if should_retry:
                             continue
                     finally:
                         exc.close()
                 except (urllib3.exceptions.HTTPError, urllib.error.URLError) as exc:
-                    if retry_on_transient and transient_attempts_remaining > 0 and is_timeout_network_error(exc):
+                    if self._retry_remaining(transient_policy) > 0 and is_timeout_network_error(exc):
                         emit_structured_log(
                             logger,
                             logging.DEBUG,
@@ -514,8 +563,8 @@ class HttpTransport:
                             attempt=attempt,
                             reason="pool_timeout",
                         )
-                        transient_attempts_remaining -= 1
-                        time.sleep(transient_backoff_base_seconds * (2**transient_attempts_made))
+                        transient_policy = self._consume_retry(transient_policy)
+                        time.sleep(self._transient_backoff_seconds(transient_policy, transient_attempts_made))
                         transient_attempts_made += 1
                         continue
                     emit_structured_log(
@@ -535,7 +584,7 @@ class HttpTransport:
                         url=redact_url_for_cache(url),
                     ) from exc
                 except (socket.timeout, TimeoutError) as exc:
-                    if retry_on_transient and transient_attempts_remaining > 0:
+                    if self._retry_remaining(transient_policy) > 0:
                         emit_structured_log(
                             logger,
                             logging.DEBUG,
@@ -548,8 +597,8 @@ class HttpTransport:
                             attempt=attempt,
                             reason="timeout",
                         )
-                        transient_attempts_remaining -= 1
-                        time.sleep(transient_backoff_base_seconds * (2**transient_attempts_made))
+                        transient_policy = self._consume_retry(transient_policy)
+                        time.sleep(self._transient_backoff_seconds(transient_policy, transient_attempts_made))
                         transient_attempts_made += 1
                         continue
                     emit_structured_log(
