@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Any, Mapping
 
 import urllib3
+from filelock import FileLock
 
 from ..config import (
     FLARESOLVERR_MAX_REQUESTS_PER_DAY_ENV_VAR,
@@ -261,6 +262,11 @@ def _load_rate_limit_state(
     return data_path, state, recorded, last_request_at, hourly, now
 
 
+def _rate_limit_file_lock(data_path: Path) -> FileLock:
+    data_path.parent.mkdir(parents=True, exist_ok=True)
+    return FileLock(str(data_path.with_name(f"{data_path.name}.lock")))
+
+
 def _raise_if_rate_limited(
     config: FlareSolverrRuntimeConfig,
     *,
@@ -298,29 +304,29 @@ def _raise_if_rate_limited(
 def enforce_rate_limits(config: FlareSolverrRuntimeConfig) -> None:
     with _RATE_LIMIT_LOCK:
         data_path = config.rate_limit_file
-        data_path.parent.mkdir(parents=True, exist_ok=True)
-        data_path, state, recorded, last_request_at, hourly, now = _load_rate_limit_state(config)
-        _raise_if_rate_limited(
-            config,
-            recorded=recorded,
-            last_request_at=last_request_at,
-            hourly=hourly,
-            now=now,
-        )
+        with _rate_limit_file_lock(data_path):
+            data_path, state, recorded, last_request_at, hourly, now = _load_rate_limit_state(config)
+            _raise_if_rate_limited(
+                config,
+                recorded=recorded,
+                last_request_at=last_request_at,
+                hourly=hourly,
+                now=now,
+            )
 
-        recorded.append(now)
-        state[config.provider] = {
-            "last_request_at": now,
-            "events": recorded,
-        }
-        fd, temp_path = tempfile.mkstemp(prefix="publisher_browser_rate_limits_", suffix=".json")
-        temp_file = Path(temp_path)
-        try:
-            os.close(fd)
-            temp_file.write_text(json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
-            temp_file.replace(data_path)
-        finally:
-            temp_file.unlink(missing_ok=True)
+            recorded.append(now)
+            state[config.provider] = {
+                "last_request_at": now,
+                "events": recorded,
+            }
+            fd, temp_path = tempfile.mkstemp(prefix="publisher_browser_rate_limits_", suffix=".json")
+            temp_file = Path(temp_path)
+            try:
+                os.close(fd)
+                temp_file.write_text(json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
+                temp_file.replace(data_path)
+            finally:
+                temp_file.unlink(missing_ok=True)
 
 
 def probe_rate_limit_window(config: FlareSolverrRuntimeConfig) -> dict[str, Any]:
