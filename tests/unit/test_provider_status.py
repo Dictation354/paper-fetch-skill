@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-import json
 import tempfile
-import time
 import unittest
 from pathlib import Path
 from unittest import mock
@@ -55,14 +53,8 @@ class ProviderStatusTests(unittest.TestCase):
         return {
             "FLARESOLVERR_ENV_FILE": str(env_file),
             "FLARESOLVERR_SOURCE_DIR": str(source_dir),
-            "FLARESOLVERR_MIN_INTERVAL_SECONDS": "60",
-            "FLARESOLVERR_MAX_REQUESTS_PER_HOUR": "1",
-            "FLARESOLVERR_MAX_REQUESTS_PER_DAY": "20",
             "XDG_DATA_HOME": str(tmp / "xdg"),
         }
-
-    def _rate_limit_file(self, env: dict[str, str]) -> Path:
-        return Path(env["XDG_DATA_HOME"]) / "paper-fetch" / "publisher_browser_rate_limits.json"
 
     def test_crossref_without_mailto_is_ready_with_note(self) -> None:
         result = CrossrefClient(DummyTransport(), {}).probe_status()
@@ -114,7 +106,6 @@ class ProviderStatusTests(unittest.TestCase):
         self.assertEqual(checks["runtime_env"].status, "not_configured")
         self.assertEqual(checks["repo_local_workflow"].status, "not_configured")
         self.assertEqual(checks["flaresolverr_health"].status, "not_configured")
-        self.assertEqual(checks["rate_limit_window"].status, "not_configured")
         self.assertEqual(checks["tdm_api_token"].status, "not_configured")
 
     def test_wiley_status_is_partial_when_only_tdm_token_is_configured(self) -> None:
@@ -139,7 +130,6 @@ class ProviderStatusTests(unittest.TestCase):
         self.assertEqual(checks["runtime_env"].status, "ok")
         self.assertEqual(checks["repo_local_workflow"].status, "ok")
         self.assertEqual(checks["flaresolverr_health"].status, "ok")
-        self.assertEqual(checks["rate_limit_window"].status, "ok")
         self.assertEqual(checks["tdm_api_token"].status, "ok")
         self.assertNotIn(WILEY_TDM_CLIENT_TOKEN_ENV_VAR, result.missing_env)
 
@@ -169,7 +159,6 @@ class ProviderStatusTests(unittest.TestCase):
                 self.assertEqual(checks["runtime_env"].status, "not_configured")
                 self.assertEqual(checks["repo_local_workflow"].status, "not_configured")
                 self.assertEqual(checks["flaresolverr_health"].status, "not_configured")
-                self.assertEqual(checks["rate_limit_window"].status, "not_configured")
 
     def test_browser_workflow_providers_missing_repo_local_workflow_are_not_configured(self) -> None:
         for provider in ("science", "pnas"):
@@ -182,7 +171,6 @@ class ProviderStatusTests(unittest.TestCase):
                 self.assertEqual(checks["runtime_env"].status, "ok")
                 self.assertEqual(checks["repo_local_workflow"].status, "not_configured")
                 self.assertEqual(checks["flaresolverr_health"].status, "not_configured")
-                self.assertEqual(checks["rate_limit_window"].status, "not_configured")
 
     def test_browser_workflow_providers_health_failures_are_reported(self) -> None:
         for provider in ("science", "pnas"):
@@ -200,31 +188,24 @@ class ProviderStatusTests(unittest.TestCase):
                 self.assertEqual(checks["runtime_env"].status, "ok")
                 self.assertEqual(checks["repo_local_workflow"].status, "ok")
                 self.assertEqual(checks["flaresolverr_health"].status, "not_configured")
-                self.assertEqual(checks["rate_limit_window"].status, "not_configured")
 
-    def test_browser_workflow_providers_rate_limits_are_reported_without_mutation(self) -> None:
+    def test_browser_workflow_providers_ignore_legacy_rate_limit_env(self) -> None:
         for provider in ("science", "pnas"):
             with self.subTest(provider=provider), tempfile.TemporaryDirectory() as tmpdir:
-                env = self._browser_env(tmpdir, provider=provider, create_env_file=True, create_workflow=True)
-                rate_limit_file = self._rate_limit_file(env)
-                rate_limit_file.parent.mkdir(parents=True, exist_ok=True)
-                original_payload = {
-                    provider: {
-                        "last_request_at": time.time(),
-                        "events": [time.time()],
-                    }
+                env = {
+                    **self._browser_env(tmpdir, provider=provider, create_env_file=True, create_workflow=True),
+                    "FLARESOLVERR_MIN_INTERVAL_SECONDS": "60",
+                    "FLARESOLVERR_MAX_REQUESTS_PER_HOUR": "1",
+                    "FLARESOLVERR_MAX_REQUESTS_PER_DAY": "20",
                 }
-                rate_limit_file.write_text(json.dumps(original_payload, ensure_ascii=False, indent=2), encoding="utf-8")
 
                 with mock.patch.object(_flaresolverr, "health_check", return_value=None):
                     result = self._browser_client(provider, env).probe_status()
 
-                self.assertEqual(result.status, "rate_limited")
-                self.assertFalse(result.available)
+                self.assertEqual(result.status, "ready")
+                self.assertTrue(result.available)
                 checks = {check.name: check for check in result.checks}
-                self.assertEqual(checks["rate_limit_window"].status, "rate_limited")
-                current_payload = json.loads(rate_limit_file.read_text(encoding="utf-8"))
-                self.assertEqual(current_payload, original_payload)
+                self.assertNotIn("rate_limit_window", checks)
 
     def test_browser_workflow_providers_ready_status_checks_all_pass(self) -> None:
         for provider in ("science", "pnas"):

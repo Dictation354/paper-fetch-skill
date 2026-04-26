@@ -24,10 +24,6 @@ class SciencePnasFlareSolverrTests(unittest.TestCase):
             source_dir=Path(tmpdir),
             artifact_dir=Path(tmpdir) / "artifacts",
             headless=True,
-            min_interval_seconds=0,
-            max_requests_per_hour=0,
-            max_requests_per_day=0,
-            rate_limit_file=Path(tmpdir) / "rate_limits.json",
         )
 
     def _html_response(
@@ -153,27 +149,26 @@ class SciencePnasFlareSolverrTests(unittest.TestCase):
         )
         self.assertEqual(warmed["browser_final_url"], "https://onlinelibrary.wiley.com/doi/10.1111/test")
 
-    def test_load_runtime_config_requires_explicit_rate_limits(self) -> None:
+    def test_load_runtime_config_does_not_require_rate_limit_env(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             tmp = Path(tmpdir)
             env_file = tmp / ".env.flaresolverr"
             env_file.write_text('HEADLESS="true"\n', encoding="utf-8")
 
-            with self.assertRaises(_flaresolverr.ProviderFailure) as ctx:
-                _flaresolverr.load_runtime_config(
-                    {
-                        "FLARESOLVERR_ENV_FILE": str(env_file),
-                        "FLARESOLVERR_SOURCE_DIR": str(tmp / "vendor" / "flaresolverr"),
-                        "XDG_DATA_HOME": str(tmp),
-                    },
-                    provider="science",
-                    doi="10.1126/science.ady3136",
-                )
+            config = _flaresolverr.load_runtime_config(
+                {
+                    "FLARESOLVERR_ENV_FILE": str(env_file),
+                    "FLARESOLVERR_SOURCE_DIR": str(tmp / "vendor" / "flaresolverr"),
+                    "XDG_DATA_HOME": str(tmp),
+                },
+                provider="science",
+                doi="10.1126/science.ady3136",
+            )
 
-        self.assertEqual(ctx.exception.code, "not_configured")
-        self.assertIn("FLARESOLVERR_MIN_INTERVAL_SECONDS", ctx.exception.message)
+        self.assertEqual(config.provider, "science")
+        self.assertFalse(hasattr(config, "min_interval_seconds"))
 
-    def test_load_runtime_config_clamps_min_interval_to_code_floor(self) -> None:
+    def test_load_runtime_config_ignores_legacy_rate_limit_env(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             tmp = Path(tmpdir)
             env_file = tmp / ".env.flaresolverr"
@@ -192,7 +187,8 @@ class SciencePnasFlareSolverrTests(unittest.TestCase):
                 doi="10.1111/test",
             )
 
-        self.assertEqual(config.min_interval_seconds, 5)
+        self.assertEqual(config.provider, "wiley")
+        self.assertFalse(hasattr(config, "max_requests_per_hour"))
 
     def test_health_check_accepts_ok_payload(self) -> None:
         with mock.patch.object(_flaresolverr, "post_to_flaresolverr", return_value={"status": "ok"}):

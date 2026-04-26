@@ -216,10 +216,6 @@ class ProviderRequestOptionsTests(unittest.TestCase):
             source_dir=Path("/tmp/vendor/flaresolverr"),
             artifact_dir=Path("/tmp/artifacts"),
             headless=True,
-            min_interval_seconds=20,
-            max_requests_per_hour=30,
-            max_requests_per_day=200,
-            rate_limit_file=Path("/tmp/rate_limits.json"),
         )
 
         client = WileyClient(transport=None, env={})
@@ -431,7 +427,7 @@ class ProviderRequestOptionsTests(unittest.TestCase):
             seed_urls_getter=lambda: [],
         )
 
-        result = fetcher._wait_for_primary_image(page)
+        result = fetcher._wait_for_primary_image(page, "https://example.test/cdn/figure.jpg")
 
         self.assertIsNone(result)
         self.assertEqual(page.wait_for_timeout_calls, [])

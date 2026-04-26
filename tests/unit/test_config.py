@@ -60,6 +60,33 @@ class ConfigTests(unittest.TestCase):
         self.assertEqual(env["EXPLICIT_ONLY"], "explicit")
         self.assertEqual(env["USER_ONLY"], "user")
 
+    def test_build_runtime_env_drops_legacy_flaresolverr_rate_limit_env(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            user_env = tmp / "user.env"
+            user_env.write_text(
+                "\n".join(
+                    [
+                        "FLARESOLVERR_MIN_INTERVAL_SECONDS=20",
+                        "FLARESOLVERR_MAX_REQUESTS_PER_HOUR=30",
+                        "FLARESOLVERR_MAX_REQUESTS_PER_DAY=200",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+
+            with mock.patch.object(config, "DEFAULT_USER_ENV_FILE", user_env):
+                env = config.build_runtime_env(
+                    {
+                        "FLARESOLVERR_MIN_INTERVAL_SECONDS": "5",
+                        "FLARESOLVERR_MAX_REQUESTS_PER_HOUR": "300",
+                        "FLARESOLVERR_MAX_REQUESTS_PER_DAY": "2000",
+                    }
+                )
+
+        for name in config.LEGACY_FLARESOLVERR_RATE_LIMIT_ENV_VARS:
+            self.assertNotIn(name, env)
+
     def test_build_runtime_env_explicit_arg_overrides_env_var_file(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             tmp = Path(tmpdir)

@@ -106,7 +106,6 @@ python -m paper_fetch.formula.install --target-dir "$PWD/.formula-tools" --no-no
 
 - 准备 repo-local `vendor/flaresolverr/`
 - 设置 `FLARESOLVERR_ENV_FILE`
-- 设置三条本地限速变量
 
 补充：
 
@@ -114,7 +113,7 @@ python -m paper_fetch.formula.install --target-dir "$PWD/.formula-tools" --no-no
 - `elsevier` 只需要 `ELSEVIER_API_KEY`
 - 如果只想启用 `wiley` 的官方 TDM API PDF lane，可以只配置 `WILEY_TDM_CLIENT_TOKEN`；这不会启用 HTML 资产下载或 seeded-browser PDF/ePDF fallback
 - `wiley` 现在走 `FlareSolverr HTML -> Wiley TDM API PDF -> seeded-browser publisher PDF/ePDF -> abstract-only / metadata-only`
-- `FLARESOLVERR_MIN_INTERVAL_SECONDS` 在代码层有 `5` 秒下限；更小的配置会自动提升到 `5`
+- 本地 FlareSolverr 限速变量与账本已移除；browser workflow 不再读取 `FLARESOLVERR_MIN_INTERVAL_SECONDS`、`FLARESOLVERR_MAX_REQUESTS_PER_HOUR` 或 `FLARESOLVERR_MAX_REQUESTS_PER_DAY`
 
 最常见入口是：
 
@@ -126,9 +125,6 @@ python -m paper_fetch.formula.install --target-dir "$PWD/.formula-tools" --no-no
 
 ```bash
 export FLARESOLVERR_ENV_FILE="$PWD/vendor/flaresolverr/.env.flaresolverr-source-headless"
-export FLARESOLVERR_MIN_INTERVAL_SECONDS=20
-export FLARESOLVERR_MAX_REQUESTS_PER_HOUR=30
-export FLARESOLVERR_MAX_REQUESTS_PER_DAY=200
 ```
 
 完整启动、检查和排障步骤见 [`flaresolverr.md`](flaresolverr.md)。
@@ -147,6 +143,7 @@ python3 -m pip install .
 - 安装当前包
 - 复制静态 skill bundle
 - 在显式传入 `--register-mcp` 时注册 `paper-fetch` MCP server
+- 在 WSL 下默认通过 `scripts/run-codex-paper-fetch-mcp.sh` 启动 MCP，优先使用 `vendor/flaresolverr/.env.flaresolverr-source-wslg`，拿不到 WSLg 图形环境时回退到 headless preset
 
 常用选项：
 
@@ -183,6 +180,18 @@ paper-fetch-mcp
 ```bash
 python3 -m paper_fetch.mcp.server
 ```
+
+如果你是在 WSL 下给 Codex 挂宿主 MCP，推荐直接用：
+
+```bash
+./scripts/run-codex-paper-fetch-mcp.sh
+```
+
+这个包装脚本会：
+
+- 在 WSL 下补齐缺失的 `XDG_RUNTIME_DIR`
+- 优先选 `vendor/flaresolverr/.env.flaresolverr-source-wslg`
+- 如果 WSLg 不可用，则回退到 `vendor/flaresolverr/.env.flaresolverr-source-headless`
 
 如果配置文件不在进程环境里，额外设置：
 

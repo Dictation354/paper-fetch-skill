@@ -28,9 +28,11 @@ XDG_DATA_HOME_ENV_VAR = "XDG_DATA_HOME"
 FLARESOLVERR_URL_ENV_VAR = "FLARESOLVERR_URL"
 FLARESOLVERR_ENV_FILE_ENV_VAR = "FLARESOLVERR_ENV_FILE"
 FLARESOLVERR_SOURCE_DIR_ENV_VAR = "FLARESOLVERR_SOURCE_DIR"
-FLARESOLVERR_MIN_INTERVAL_SECONDS_ENV_VAR = "FLARESOLVERR_MIN_INTERVAL_SECONDS"
-FLARESOLVERR_MAX_REQUESTS_PER_HOUR_ENV_VAR = "FLARESOLVERR_MAX_REQUESTS_PER_HOUR"
-FLARESOLVERR_MAX_REQUESTS_PER_DAY_ENV_VAR = "FLARESOLVERR_MAX_REQUESTS_PER_DAY"
+LEGACY_FLARESOLVERR_RATE_LIMIT_ENV_VARS = (
+    "FLARESOLVERR_MIN_INTERVAL_SECONDS",
+    "FLARESOLVERR_MAX_REQUESTS_PER_HOUR",
+    "FLARESOLVERR_MAX_REQUESTS_PER_DAY",
+)
 
 
 def load_env_file(path: Path) -> dict[str, str]:
@@ -80,6 +82,8 @@ def build_runtime_env(
     for candidate in candidates:
         merged.update(load_env_file(candidate))
     merged.update(process_env)
+    for name in LEGACY_FLARESOLVERR_RATE_LIMIT_ENV_VARS:
+        merged.pop(name, None)
     return merged
 
 
@@ -147,11 +151,3 @@ def resolve_flaresolverr_env_file(env: Mapping[str, str] | None = None) -> Path 
 def resolve_flaresolverr_url(env: Mapping[str, str] | None = None) -> str:
     active_env = _active_env(env)
     return str(active_env.get(FLARESOLVERR_URL_ENV_VAR, "")).strip() or DEFAULT_FLARESOLVERR_URL
-
-
-def configured_int_env(name: str, env: Mapping[str, str] | None = None) -> int | None:
-    active_env = _active_env(env)
-    raw = str(active_env.get(name, "")).strip()
-    if not raw:
-        return None
-    return int(raw)

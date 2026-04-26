@@ -29,11 +29,11 @@
 说明：
 
 - 这张矩阵描述的是“当前代码里已经实现的 provider-owned waterfall”，不是“任意 DOI、任意运行环境都必然能拿到 publisher 全文”的承诺。
-- 尤其 `wiley` / `science` / `pnas` 的浏览器与 PDF/ePDF 路径，仍受 publisher 访问权限、paywall/challenge 与本地限速护栏影响。
+- 尤其 `wiley` / `science` / `pnas` 的浏览器与 PDF/ePDF 路径，仍受 publisher 访问权限、paywall/challenge 与远端站点行为影响。
 - `wiley` 的 HTML / browser PDF/ePDF 路径与 `science` / `pnas` 现在只保留一套 provider-owned 浏览器栈：canonical runtime 是 `paper_fetch.providers.browser_workflow`；旧 `_science_pnas` 兼容 alias 已移除，browser-PDF executor 继续共享 `_pdf_fallback`，不再存在单独的 Science path harness。
 - 2020+ live / regression 基准样本集中维护在 [`../tests/provider_benchmark_samples.py`](../tests/provider_benchmark_samples.py)。
 - 自然地理学 live-only 候选集中维护在 [`../tests/live/geography_samples.py`](../tests/live/geography_samples.py)，默认每家尝试前 `10` 条，并通过 [`../scripts/run_geography_live_report.py`](../scripts/run_geography_live_report.py) 产出 JSON/Markdown 报告。
-- `geography` live runner 默认按 provider 轮转执行，保持单家样本顺序不变，同时尽量避免浏览器型 publisher 被本地最小间隔窗口连续判成 `rate_limited`。
+- `geography` live runner 默认按 provider 轮转执行，保持单家样本顺序不变。
 - `run_geography_live_report.py`、`export_geography_issue_artifacts.py`、`group_geography_issue_artifacts.py` 都属于 repo-local internal tooling：不新增 console script，不作为 MCP surface，对外产品面不变。
 - geography live/report/export/group 仍受 `PAPER_FETCH_RUN_LIVE=1` 的 opt-in 边界保护；未启用 live 环境时，对应测试应稳定 skip。
 - golden criteria live review 产物写入 `live-downloads/golden-criteria-review/`，由 [`../scripts/run_golden_criteria_live_review.py`](../scripts/run_golden_criteria_live_review.py) 生成；`10.1016/S1575-1813(18)30261-4` 这类预期 metadata-only 样本，以及当前不支持的 TandF / Sage 样本，应通过 manifest 的 expected outcome 标记为 `skipped`，不进入 provider bug 修复队列。
@@ -425,21 +425,7 @@ Springer direct HTML / direct HTTP PDF 路线当前没有额外必填 publisher 
 - 可选。
 - 覆盖 repo-local FlareSolverr workflow 根目录。
 
-#### `FLARESOLVERR_MIN_INTERVAL_SECONDS`
-
-- browser 路径必填。
-- Wiley / Science / PNAS 本地最小请求间隔。
-- 代码层最低为 `5` 秒；更小的配置会被提升到 `5` 秒。
-
-#### `FLARESOLVERR_MAX_REQUESTS_PER_HOUR`
-
-- browser 路径必填。
-- Wiley / Science / PNAS 每小时上限。
-
-#### `FLARESOLVERR_MAX_REQUESTS_PER_DAY`
-
-- browser 路径必填。
-- Wiley / Science / PNAS 每日上限。
+本地 FlareSolverr 限速变量与账本已移除；browser workflow 不再读取 `FLARESOLVERR_MIN_INTERVAL_SECONDS`、`FLARESOLVERR_MAX_REQUESTS_PER_HOUR` 或 `FLARESOLVERR_MAX_REQUESTS_PER_DAY`。
 
 更具体的启动与排障步骤见 [`flaresolverr.md`](flaresolverr.md)。
 
@@ -475,8 +461,8 @@ Springer direct HTML / direct HTTP PDF 路线当前没有额外必填 publisher 
 - `springer`
   - 返回本地 direct HTML route 就绪状态；不依赖 FlareSolverr。
 - `wiley`
-  - 统一检查 `runtime_env`、`repo_local_workflow`、`flaresolverr_health`、`rate_limit_window`，以及可选的 `tdm_api_token`。
+  - 统一检查 `runtime_env`、`repo_local_workflow`、`flaresolverr_health`，以及可选的 `tdm_api_token`。
   - browser runtime ready 时，即使 `WILEY_TDM_CLIENT_TOKEN` 缺失，也应表现为 `ready`。
   - browser runtime 未配置但 `WILEY_TDM_CLIENT_TOKEN` 已配置时，通常表现为 `partial`，仍可尝试官方 TDM API PDF lane；如果 browser 检查本身报 `error`，provider 状态仍会反映该错误。
 - `science` / `pnas`
-  - 统一检查 `runtime_env`、`repo_local_workflow`、`flaresolverr_health`、`rate_limit_window`。
+  - 统一检查 `runtime_env`、`repo_local_workflow`、`flaresolverr_health`。

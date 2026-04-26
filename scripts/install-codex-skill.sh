@@ -45,6 +45,10 @@ register_mcp() {
 
     local python_bin
     python_bin="$(python3 -c 'import sys; print(sys.executable)')"
+    local launcher
+    launcher="$REPO_DIR/scripts/run-codex-paper-fetch-mcp.sh"
+    [ -f "$launcher" ] || die "Missing Codex MCP launcher at $launcher"
+    chmod +x "$launcher"
 
     if [ -n "$MCP_ENV_FILE" ] && [ ! -f "$MCP_ENV_FILE" ]; then
         warn "MCP env file $MCP_ENV_FILE does not exist yet; registration will still point to it."
@@ -54,10 +58,11 @@ register_mcp() {
     codex mcp remove "$MCP_NAME" >/dev/null 2>&1 || true
 
     local args=(mcp add)
+    args+=(--env "PAPER_FETCH_MCP_PYTHON_BIN=$python_bin")
     if [ -n "$MCP_ENV_FILE" ]; then
         args+=(--env "PAPER_FETCH_ENV_FILE=$MCP_ENV_FILE")
     fi
-    args+=("$MCP_NAME" -- "$python_bin" -m paper_fetch.mcp.server)
+    args+=("$MCP_NAME" -- "$launcher")
     codex "${args[@]}"
 }
 
@@ -150,6 +155,7 @@ echo "Next steps:"
 echo "  1. Restart Codex so it rescans installed skills."
 if [ "$REGISTER_MCP" = "1" ]; then
     echo "  2. Codex MCP server '$MCP_NAME' is registered and will launch via the current python3 environment."
+    echo "     On WSL it now uses the repo launcher, which prefers the WSLg FlareSolverr preset and falls back to headless."
 else
     echo "  2. If you want MCP tools too, rerun with --register-mcp or register a stdio server that runs 'paper-fetch-mcp'."
 fi

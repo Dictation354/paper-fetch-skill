@@ -31,10 +31,6 @@ class PublisherWaterfallTests(unittest.TestCase):
             source_dir=tmp / "vendor" / "flaresolverr",
             artifact_dir=tmp / "artifacts",
             headless=True,
-            min_interval_seconds=20,
-            max_requests_per_hour=30,
-            max_requests_per_day=200,
-            rate_limit_file=tmp / "rate_limits.json",
         )
 
     def test_elsevier_official_xml_success_keeps_elsevier_xml_source(self) -> None:

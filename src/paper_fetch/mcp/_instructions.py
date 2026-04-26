@@ -23,9 +23,6 @@ SKILL_ENVIRONMENT_VARIABLES: tuple[tuple[str, str], ...] = (
     ("FLARESOLVERR_URL", "Optional override for the local Wiley/Science/PNAS FlareSolverr endpoint; defaults to http://127.0.0.1:8191/v1."),
     ("FLARESOLVERR_ENV_FILE", "Required for Science/PNAS and for Wiley HTML/browser PDF routes; points at a repo-local vendor/flaresolverr preset file."),
     ("FLARESOLVERR_SOURCE_DIR", "Optional override for the repo-local vendor/flaresolverr directory."),
-    ("FLARESOLVERR_MIN_INTERVAL_SECONDS", "Required local minimum spacing for Wiley/Science/PNAS browser requests. Values below 5 are clamped up to 5 seconds in code."),
-    ("FLARESOLVERR_MAX_REQUESTS_PER_HOUR", "Required local hourly cap for Wiley/Science/PNAS browser requests."),
-    ("FLARESOLVERR_MAX_REQUESTS_PER_DAY", "Required local daily cap for Wiley/Science/PNAS browser requests."),
     ("PAPER_FETCH_DOWNLOAD_DIR", "Overrides the default CLI/MCP download directory."),
     ("PAPER_FETCH_RUN_LIVE", "Test-only flag for live publisher integration checks."),
 )

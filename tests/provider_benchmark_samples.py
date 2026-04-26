@@ -64,9 +64,6 @@ PROVIDER_BENCHMARK_SAMPLES: dict[str, ProviderBenchmarkSample] = {
         required_env=(
             "CROSSREF_MAILTO",
             "FLARESOLVERR_ENV_FILE",
-            "FLARESOLVERR_MIN_INTERVAL_SECONDS",
-            "FLARESOLVERR_MAX_REQUESTS_PER_HOUR",
-            "FLARESOLVERR_MAX_REQUESTS_PER_DAY",
         ),
         requires_flaresolverr=True,
         fixture_name=golden_criteria_fixture("10.1126/science.ady3136", "original.html"),
@@ -83,9 +80,6 @@ PROVIDER_BENCHMARK_SAMPLES: dict[str, ProviderBenchmarkSample] = {
         required_env=(
             "CROSSREF_MAILTO",
             "FLARESOLVERR_ENV_FILE",
-            "FLARESOLVERR_MIN_INTERVAL_SECONDS",
-            "FLARESOLVERR_MAX_REQUESTS_PER_HOUR",
-            "FLARESOLVERR_MAX_REQUESTS_PER_DAY",
         ),
         requires_flaresolverr=True,
         fixture_name=golden_criteria_fixture("10.1111/gcb.16414", "original.html"),
@@ -102,9 +96,6 @@ PROVIDER_BENCHMARK_SAMPLES: dict[str, ProviderBenchmarkSample] = {
         required_env=(
             "CROSSREF_MAILTO",
             "FLARESOLVERR_ENV_FILE",
-            "FLARESOLVERR_MIN_INTERVAL_SECONDS",
-            "FLARESOLVERR_MAX_REQUESTS_PER_HOUR",
-            "FLARESOLVERR_MAX_REQUESTS_PER_DAY",
         ),
         requires_flaresolverr=True,
         fixture_name=golden_criteria_fixture("10.1073/pnas.2406303121", "original.html"),

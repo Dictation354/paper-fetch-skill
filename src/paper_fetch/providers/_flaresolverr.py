@@ -6,9 +6,6 @@ import atexit
 import base64
 import json
 import logging
-import math
-import os
-import tempfile
 import threading
 import time
 import uuid
@@ -17,13 +14,8 @@ from pathlib import Path
 from typing import Any, Mapping
 
 import urllib3
-from filelock import FileLock
 
 from ..config import (
-    FLARESOLVERR_MAX_REQUESTS_PER_DAY_ENV_VAR,
-    FLARESOLVERR_MAX_REQUESTS_PER_HOUR_ENV_VAR,
-    FLARESOLVERR_MIN_INTERVAL_SECONDS_ENV_VAR,
-    configured_int_env,
     load_env_file,
     resolve_flaresolverr_env_file,
     resolve_flaresolverr_source_dir,
@@ -54,7 +46,6 @@ CLOUDFLARE_COOKIE_NAMES = {
 DEFAULT_FLARESOLVERR_WAIT_SECONDS = 8
 DEFAULT_FLARESOLVERR_WARM_WAIT_SECONDS = 1
 DEFAULT_FLARESOLVERR_MAX_TIMEOUT_MS = 120000
-MIN_BROWSER_REQUEST_INTERVAL_SECONDS = 5
 
 logger = logging.getLogger("paper_fetch.providers.flaresolverr")
 
@@ -76,7 +67,6 @@ class FlareSolverrSessionState:
 _SESSION_REGISTRY: dict[tuple[str, str], FlareSolverrSessionState] = {}
 _SESSION_LOCKS: dict[tuple[str, str], threading.RLock] = {}
 _SESSION_REGISTRY_LOCK = threading.RLock()
-_RATE_LIMIT_LOCK = threading.RLock()
 
 
 @dataclass(frozen=True)
@@ -88,10 +78,6 @@ class FlareSolverrRuntimeConfig:
     source_dir: Path
     artifact_dir: Path
     headless: bool
-    min_interval_seconds: int
-    max_requests_per_hour: int
-    max_requests_per_day: int
-    rate_limit_file: Path
     required_files: tuple[str, ...] = field(
         default=(
             "setup_flaresolverr_source.sh",
@@ -135,12 +121,6 @@ def _browser_workflow_label(provider: str) -> str:
     return _BROWSER_WORKFLOW_LABELS.get(provider, f"{provider} browser workflow")
 
 
-def _effective_min_interval_seconds(value: int | None) -> int | None:
-    if value is None:
-        return None
-    return max(MIN_BROWSER_REQUEST_INTERVAL_SECONDS, int(value))
-
-
 def load_runtime_config(env: Mapping[str, str], *, provider: str, doi: str) -> FlareSolverrRuntimeConfig:
     source_dir = resolve_flaresolverr_source_dir(env)
     env_file = resolve_flaresolverr_env_file(env)
@@ -161,31 +141,9 @@ def load_runtime_config(env: Mapping[str, str], *, provider: str, doi: str) -> F
             missing_env=["FLARESOLVERR_ENV_FILE"],
         )
 
-    min_interval_seconds = _effective_min_interval_seconds(
-        configured_int_env(FLARESOLVERR_MIN_INTERVAL_SECONDS_ENV_VAR, env)
-    )
-    max_requests_per_hour = configured_int_env(FLARESOLVERR_MAX_REQUESTS_PER_HOUR_ENV_VAR, env)
-    max_requests_per_day = configured_int_env(FLARESOLVERR_MAX_REQUESTS_PER_DAY_ENV_VAR, env)
-    missing = [
-        name
-        for name, value in (
-            (FLARESOLVERR_MIN_INTERVAL_SECONDS_ENV_VAR, min_interval_seconds),
-            (FLARESOLVERR_MAX_REQUESTS_PER_HOUR_ENV_VAR, max_requests_per_hour),
-            (FLARESOLVERR_MAX_REQUESTS_PER_DAY_ENV_VAR, max_requests_per_day),
-        )
-        if value is None
-    ]
-    if missing:
-        raise ProviderFailure(
-            "not_configured",
-            f"{workflow_label} requires explicit local rate-limit settings: " + ", ".join(missing),
-            missing_env=missing,
-        )
-
     env_values = load_env_file(env_file)
     headless = normalize_text(env_values.get("HEADLESS", "true")).lower() != "false"
     artifact_dir = resolve_user_data_dir(env) / "publisher-browser-artifacts" / provider / sanitize_filename(doi)
-    rate_limit_file = resolve_user_data_dir(env) / "publisher_browser_rate_limits.json"
     return FlareSolverrRuntimeConfig(
         provider=provider,
         doi=doi,
@@ -194,10 +152,6 @@ def load_runtime_config(env: Mapping[str, str], *, provider: str, doi: str) -> F
         source_dir=source_dir,
         artifact_dir=artifact_dir,
         headless=headless,
-        min_interval_seconds=int(min_interval_seconds or 0),
-        max_requests_per_hour=int(max_requests_per_hour or 0),
-        max_requests_per_day=int(max_requests_per_day or 0),
-        rate_limit_file=rate_limit_file,
     )
 
 
@@ -249,113 +203,6 @@ def health_check(url: str) -> None:
         )
 
 
-def _load_rate_limit_state(
-    config: FlareSolverrRuntimeConfig,
-) -> tuple[Path, dict[str, Any], list[float], float, list[float], float]:
-    data_path = config.rate_limit_file
-    state: dict[str, Any] = {}
-    if data_path.exists():
-        try:
-            state = json.loads(data_path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError):
-            state = {}
-
-    provider_state = state.get(config.provider)
-    if not isinstance(provider_state, dict):
-        provider_state = {}
-    now = time.time()
-    recorded = [float(item) for item in provider_state.get("events", []) or [] if isinstance(item, (int, float))]
-    recorded = [item for item in recorded if now - item < 86400]
-    last_request_at = float(provider_state.get("last_request_at") or 0.0)
-    hourly = [item for item in recorded if now - item < 3600]
-    return data_path, state, recorded, last_request_at, hourly, now
-
-
-def _rate_limit_file_lock(data_path: Path) -> FileLock:
-    data_path.parent.mkdir(parents=True, exist_ok=True)
-    return FileLock(str(data_path.with_name(f"{data_path.name}.lock")))
-
-
-def _raise_if_rate_limited(
-    config: FlareSolverrRuntimeConfig,
-    *,
-    recorded: list[float],
-    last_request_at: float,
-    hourly: list[float],
-    now: float,
-) -> None:
-    if last_request_at and config.min_interval_seconds > 0 and (now - last_request_at) < config.min_interval_seconds:
-        retry_after = max(1, math.ceil(config.min_interval_seconds - (now - last_request_at)))
-        raise ProviderFailure(
-            "rate_limited",
-            (
-                f"{config.provider} requests must be spaced by at least {config.min_interval_seconds} seconds. "
-                f"Retry in about {retry_after} seconds."
-            ),
-            retry_after_seconds=retry_after,
-        )
-    if config.max_requests_per_hour > 0 and len(hourly) >= config.max_requests_per_hour:
-        retry_after = max(1, math.ceil(3600 - (now - min(hourly))))
-        raise ProviderFailure(
-            "rate_limited",
-            f"{config.provider} hourly request cap reached ({config.max_requests_per_hour}/hour).",
-            retry_after_seconds=retry_after,
-        )
-    if config.max_requests_per_day > 0 and len(recorded) >= config.max_requests_per_day:
-        retry_after = max(1, math.ceil(86400 - (now - min(recorded))))
-        raise ProviderFailure(
-            "rate_limited",
-            f"{config.provider} daily request cap reached ({config.max_requests_per_day}/day).",
-            retry_after_seconds=retry_after,
-        )
-
-
-def enforce_rate_limits(config: FlareSolverrRuntimeConfig) -> None:
-    with _RATE_LIMIT_LOCK:
-        data_path = config.rate_limit_file
-        with _rate_limit_file_lock(data_path):
-            data_path, state, recorded, last_request_at, hourly, now = _load_rate_limit_state(config)
-            _raise_if_rate_limited(
-                config,
-                recorded=recorded,
-                last_request_at=last_request_at,
-                hourly=hourly,
-                now=now,
-            )
-
-            recorded.append(now)
-            state[config.provider] = {
-                "last_request_at": now,
-                "events": recorded,
-            }
-            fd, temp_path = tempfile.mkstemp(prefix="publisher_browser_rate_limits_", suffix=".json")
-            temp_file = Path(temp_path)
-            try:
-                os.close(fd)
-                temp_file.write_text(json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
-                temp_file.replace(data_path)
-            finally:
-                temp_file.unlink(missing_ok=True)
-
-
-def probe_rate_limit_window(config: FlareSolverrRuntimeConfig) -> dict[str, Any]:
-    with _RATE_LIMIT_LOCK:
-        data_path, _state, recorded, last_request_at, hourly, now = _load_rate_limit_state(config)
-        _raise_if_rate_limited(
-            config,
-            recorded=recorded,
-            last_request_at=last_request_at,
-            hourly=hourly,
-            now=now,
-        )
-        return {
-            "rate_limit_file": str(data_path),
-            "last_request_at": last_request_at or None,
-            "requests_last_hour": len(hourly),
-            "requests_last_day": len(recorded),
-        }
-
-
 def _runtime_probe_details(env: Mapping[str, str]) -> dict[str, Any]:
     env_file = resolve_flaresolverr_env_file(env)
     source_dir = resolve_flaresolverr_source_dir(env)
@@ -363,9 +210,6 @@ def _runtime_probe_details(env: Mapping[str, str]) -> dict[str, Any]:
         "url": resolve_flaresolverr_url(env),
         "env_file": str(env_file) if env_file is not None else None,
         "source_dir": str(source_dir),
-        "min_interval_seconds": configured_int_env(FLARESOLVERR_MIN_INTERVAL_SECONDS_ENV_VAR, env),
-        "max_requests_per_hour": configured_int_env(FLARESOLVERR_MAX_REQUESTS_PER_HOUR_ENV_VAR, env),
-        "max_requests_per_day": configured_int_env(FLARESOLVERR_MAX_REQUESTS_PER_DAY_ENV_VAR, env),
         "headless": None,
     }
     if env_file is not None and env_file.exists():
@@ -400,9 +244,6 @@ def probe_runtime_status(
             "env_file": str(config.env_file),
             "source_dir": str(config.source_dir),
             "headless": config.headless,
-            "min_interval_seconds": config.min_interval_seconds,
-            "max_requests_per_hour": config.max_requests_per_hour,
-            "max_requests_per_day": config.max_requests_per_day,
         }
         checks.append(
             build_provider_status_check(
@@ -434,13 +275,6 @@ def probe_runtime_status(
                 "flaresolverr_health",
                 "Skipped because runtime_env is not configured.",
                 details={"url": runtime_details.get("url")},
-            )
-        )
-        checks.append(
-            _skipped_status_check(
-                "rate_limit_window",
-                "Skipped because runtime_env is not configured.",
-                details=runtime_details,
             )
         )
     else:
@@ -483,7 +317,6 @@ def probe_runtime_status(
                 )
             )
 
-        health_ok = False
         if not workflow_ok:
             checks.append(
                 _skipped_status_check(
@@ -492,17 +325,9 @@ def probe_runtime_status(
                     details={"url": config.url},
                 )
             )
-            checks.append(
-                _skipped_status_check(
-                    "rate_limit_window",
-                    "Skipped because repo_local_workflow is not ready.",
-                    details=runtime_details,
-                )
-            )
         else:
             try:
                 health_check(config.url)
-                health_ok = True
                 checks.append(
                     build_provider_status_check(
                         "flaresolverr_health",
@@ -516,42 +341,6 @@ def probe_runtime_status(
             except Exception as exc:
                 checks.append(build_provider_status_check("flaresolverr_health", "error", str(exc), details={"url": config.url}))
 
-            if not health_ok:
-                checks.append(
-                    _skipped_status_check(
-                        "rate_limit_window",
-                        "Skipped because flaresolverr_health did not pass.",
-                        details=runtime_details,
-                    )
-                )
-            else:
-                rate_limit_details = {
-                    "rate_limit_file": str(config.rate_limit_file),
-                    "min_interval_seconds": config.min_interval_seconds,
-                    "max_requests_per_hour": config.max_requests_per_hour,
-                    "max_requests_per_day": config.max_requests_per_day,
-                }
-                try:
-                    rate_limit_details.update(probe_rate_limit_window(config))
-                    checks.append(
-                        build_provider_status_check(
-                            "rate_limit_window",
-                            "ok",
-                            "Local browser-workflow rate-limit window allows a new request.",
-                            details=rate_limit_details,
-                        )
-                    )
-                except ProviderFailure as exc:
-                    checks.append(
-                        provider_status_check_from_failure(
-                            "rate_limit_window",
-                            exc,
-                            details=rate_limit_details,
-                        )
-                    )
-                except Exception as exc:
-                    checks.append(build_provider_status_check("rate_limit_window", "error", str(exc), details=rate_limit_details))
-
     missing_env: list[str] = []
     for check in checks:
         for name in check.missing_env:
@@ -560,14 +349,6 @@ def probe_runtime_status(
 
     if any(check.status == "error" for check in checks):
         status = "error"
-    elif (
-        len(checks) == 4
-        and checks[0].status == "ok"
-        and checks[1].status == "ok"
-        and checks[2].status == "ok"
-        and checks[3].status == "rate_limited"
-    ):
-        status = "rate_limited"
     elif all(check.status == "ok" for check in checks):
         status = "ready"
     else:
@@ -1022,7 +803,6 @@ def fetch_html_with_flaresolverr(
     session_lock = _session_lock_for(config)
 
     with session_lock:
-        enforce_rate_limits(config)
         session_state = _acquire_registered_session(config, pool=pool)
 
         for url in candidate_urls:

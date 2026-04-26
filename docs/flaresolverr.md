@@ -38,9 +38,6 @@ FlareSolverr / seeded-browser 路径的最小必填配置：
 
 ```bash
 export FLARESOLVERR_ENV_FILE="$PWD/vendor/flaresolverr/.env.flaresolverr-source-headless"
-export FLARESOLVERR_MIN_INTERVAL_SECONDS=20
-export FLARESOLVERR_MAX_REQUESTS_PER_HOUR=30
-export FLARESOLVERR_MAX_REQUESTS_PER_DAY=200
 ```
 
 可选变量：
@@ -55,10 +52,7 @@ export FLARESOLVERR_SOURCE_DIR="$PWD/vendor/flaresolverr"
 - `science` / `pnas` 必须走这组 browser 配置
 - `wiley` 的 HTML 与 seeded-browser PDF/ePDF 路径也必须走这组配置；只配置 `WILEY_TDM_CLIENT_TOKEN` 时只能尝试官方 TDM API PDF lane
 - `FLARESOLVERR_ENV_FILE` 不会自动猜 preset
-- 三条限速变量对 browser 路径必填，未配置时 browser provider 直接拒绝运行
-- `FLARESOLVERR_MIN_INTERVAL_SECONDS` 在代码层有 `5` 秒下限；更小的配置会自动提升到 `5`
-- 默认限速账本会同时影响 `wiley` / `science` / `pnas`
-- 限速账本仍是 `<user-data>/paper-fetch/publisher_browser_rate_limits.json`，写入时用同目录 `.lock` 文件通过 `filelock` 保护跨进程 read-modify-write；JSON shape、provider 粒度、错误消息和 `retry_after_seconds` 不变
+- 本地 FlareSolverr 限速变量与账本已移除；browser workflow 不再读取 `FLARESOLVERR_MIN_INTERVAL_SECONDS`、`FLARESOLVERR_MAX_REQUESTS_PER_HOUR` 或 `FLARESOLVERR_MAX_REQUESTS_PER_DAY`
 
 ## preset 选择
 
@@ -160,9 +154,6 @@ PYTHONPATH=src python3 -m paper_fetch.cli --query "10.1073/pnas.81.23.7500"
 ```bash
 PAPER_FETCH_RUN_LIVE=1 \
 FLARESOLVERR_ENV_FILE="$PWD/vendor/flaresolverr/.env.flaresolverr-source-headless" \
-FLARESOLVERR_MIN_INTERVAL_SECONDS=20 \
-FLARESOLVERR_MAX_REQUESTS_PER_HOUR=30 \
-FLARESOLVERR_MAX_REQUESTS_PER_DAY=200 \
 PYTHONPATH=src pytest -n 0 \
   tests/live/test_live_publishers.py::LivePublisherTests::test_wiley_doi_live_fulltext \
   tests/live/test_live_science_pnas.py
@@ -178,12 +169,6 @@ PYTHONPATH=src pytest -n 0 \
 - preset 文件不存在
 - `vendor/flaresolverr/` 缺失
 - 本地 FlareSolverr 服务没启动
-
-### `rate_limited`
-
-- 命中了本地限速账本
-- 需要等待账本窗口恢复，而不是继续重试
-- 多个 CLI / MCP 进程同时运行时会共用同一个 JSON 账本和 file lock，避免并发写入丢失窗口事件
 
 ### HTML 失败但 provider 最终成功
 

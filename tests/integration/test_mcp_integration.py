@@ -185,7 +185,6 @@ SERVER_SCRIPT = textwrap.dedent(
                         ),
                         build_provider_status_check("repo_local_workflow", "not_configured", "Skipped because runtime_env is not configured."),
                         build_provider_status_check("flaresolverr_health", "not_configured", "Skipped because runtime_env is not configured."),
-                        build_provider_status_check("rate_limit_window", "not_configured", "Skipped because runtime_env is not configured."),
                     ],
                 )
             ),
@@ -205,7 +204,6 @@ SERVER_SCRIPT = textwrap.dedent(
                         ),
                         build_provider_status_check("repo_local_workflow", "not_configured", "Skipped because runtime_env is not configured."),
                         build_provider_status_check("flaresolverr_health", "not_configured", "Skipped because runtime_env is not configured."),
-                        build_provider_status_check("rate_limit_window", "not_configured", "Skipped because runtime_env is not configured."),
                     ],
                 )
             ),
@@ -219,7 +217,6 @@ SERVER_SCRIPT = textwrap.dedent(
                         build_provider_status_check("runtime_env", "ok", "pnas runtime environment is configured."),
                         build_provider_status_check("repo_local_workflow", "ok", "Repo-local FlareSolverr workflow files are available."),
                         build_provider_status_check("flaresolverr_health", "ok", "Local FlareSolverr health check passed."),
-                        build_provider_status_check("rate_limit_window", "ok", "Local Science/PNAS rate-limit window allows a new request."),
                     ],
                 )
             ),

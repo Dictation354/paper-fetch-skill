@@ -112,6 +112,14 @@ paper-fetch-mcp
 python3 -m paper_fetch.mcp.server
 ```
 
+如果你在 WSL 里把它挂到 Codex，优先用仓库自带的启动包装脚本：
+
+```bash
+./scripts/run-codex-paper-fetch-mcp.sh
+```
+
+这个脚本会优先选择 `vendor/flaresolverr/.env.flaresolverr-source-wslg`，并在拿不到 WSLg 图形环境时回退到 headless preset。
+
 如果要把 skill 和 MCP 注册到常见 agent runtime，直接看 [`docs/deployment.md`](docs/deployment.md)。
 
 ## 默认值与关键限制
@@ -249,7 +257,7 @@ CLI 抓取期错误的退出码为：
 - `wiley` / `science` / `pnas` 的正文 figure / table / formula 图片资产下载以 shared Playwright browser context 为主链路；每次下载 attempt 只创建一次 context/page，并在多图之间复用
 - `science` / `pnas` 必须依赖 repo-local `vendor/flaresolverr/`
 - `wiley` 的 HTML 与 seeded-browser PDF/ePDF 路径依赖 repo-local `vendor/flaresolverr/`；`WILEY_TDM_CLIENT_TOKEN` 只启用官方 TDM API PDF lane
-- browser 路径需要显式配置 `FLARESOLVERR_ENV_FILE` 和本地限速变量；其中 `FLARESOLVERR_MIN_INTERVAL_SECONDS` 在代码层最低为 `5` 秒
+- browser 路径需要显式配置 `FLARESOLVERR_ENV_FILE`；本地 FlareSolverr 限速变量与账本已移除
 
 准备和排障细节见 [`docs/flaresolverr.md`](docs/flaresolverr.md)。
 
@@ -291,9 +299,6 @@ PAPER_FETCH_RUN_FULL_GOLDEN=1 PYTHONPATH=src pytest tests/integration/test_golde
 ```bash
 PAPER_FETCH_RUN_LIVE=1 \
 FLARESOLVERR_ENV_FILE="$PWD/vendor/flaresolverr/.env.flaresolverr-source-headless" \
-FLARESOLVERR_MIN_INTERVAL_SECONDS=20 \
-FLARESOLVERR_MAX_REQUESTS_PER_HOUR=30 \
-FLARESOLVERR_MAX_REQUESTS_PER_DAY=200 \
 PYTHONPATH=src pytest -n 0 \
   tests/live/test_live_publishers.py::LivePublisherTests::test_wiley_doi_live_fulltext \
   tests/live/test_live_science_pnas.py
@@ -304,9 +309,6 @@ PYTHONPATH=src pytest -n 0 \
 ```bash
 PAPER_FETCH_RUN_LIVE=1 \
 FLARESOLVERR_ENV_FILE="$PWD/vendor/flaresolverr/.env.flaresolverr-source-headless" \
-FLARESOLVERR_MIN_INTERVAL_SECONDS=20 \
-FLARESOLVERR_MAX_REQUESTS_PER_HOUR=30 \
-FLARESOLVERR_MAX_REQUESTS_PER_DAY=200 \
 PYTHONPATH=src python3 scripts/run_geography_live_report.py
 ```
 
@@ -325,7 +327,6 @@ live-downloads/reports/geography-live-report.md
 ```
 
 自然地理 live 样本清单维护在 [`tests/live/geography_samples.py`](tests/live/geography_samples.py)，默认每家 publisher 尝试前 `10` 条。对应的 live 测试入口是 [`tests/live/test_live_geography_publishers.py`](tests/live/test_live_geography_publishers.py)。
-默认调度会在保持各 provider 内部 DOI 顺序不变的前提下做跨 provider 轮转，尽量减少 `wiley` / `science` / `pnas` 被本地最小间隔护栏连续打成 `rate_limited`。
 
 如果需要把 issue 样本导出成独立工件目录，或按问题类型生成分组视图，也继续走 repo-local 脚本：
 
