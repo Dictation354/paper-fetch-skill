@@ -1,6 +1,6 @@
 # Paper Fetch Skill 当前架构与业务流程
 
-Date: 2026-04-25
+Date: 2026-04-26
 
 ## 状态说明
 
@@ -178,6 +178,8 @@ Date: 2026-04-25
 `RawFulltextPayload.metadata` 只保留为只读兼容导出：`route`、`markdown_text`、`warnings`、`source_trail`、diagnostics、browser seed 等结构化字段必须由 `ProviderContent`、`warnings`、`trace`、`merged_metadata` 等 typed fields 传入。构造 `RawFulltextPayload(metadata={...})` 不再把 legacy magic keys 注入结构化字段，只允许非结构化 passthrough metadata 留在导出里。
 
 Provider 身份与能力配置统一来自 `paper_fetch.provider_catalog.PROVIDER_CATALOG`。新增 provider 时，应先补 `ProviderSpec`，再接入 provider client；routing、默认资产策略、MCP status 顺序和 registry 都从 catalog 派生。
+
+架构测试会阻止已删除的 legacy surface 回流：provider-neutral 层不得 import `paper_fetch.providers._*`，测试不得重新 import 旧 `_html_*`、`_language_filter` 或 `_science_pnas` compatibility modules，provider catalog 仍是 provider 身份、状态顺序和 registry client factory 的单一事实来源。
 
 ### 8. Runtime / Artifact / Cache 边界
 

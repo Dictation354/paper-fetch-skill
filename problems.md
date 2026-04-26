@@ -1,6 +1,6 @@
 # Paper Fetch 重构问题清单与修订计划
 
-日期：2026-04-25
+日期：2026-04-26
 
 本文档记录对本项目进行只读分析后的结论。分析范围包括模块优化、模块间解耦、Markdown 提取规则合并、出版社/provider 复用，以及可用成熟 package 替代自实现逻辑的机会。
 
@@ -24,7 +24,7 @@ CLI / MCP
 
 1. 将 provider 无关的 HTML 语义、引用处理、语言过滤、可用性评估从 `providers/` 迁到 `extraction/html`、`quality` 或 `markdown` 等中立模块。
 2. 引入集中式 `ProviderSpec` / `ProviderCatalog`，统一 provider 名称、DOI/domain/publisher 路由、默认 asset 策略、abstract-only 策略和 probe 能力。
-3. 瘦身 `_science_pnas_html.py`；旧 site rule、availability 常量和本地诊断数据类已删除，抽取入口保留兼容 wrapper。
+3. 瘦身 `_science_pnas_html.py`；旧 site rule、availability 常量、本地诊断数据类和 dead compatibility wrappers 已删除，抽取入口只保留真实实现。
 4. 抽取 provider waterfall runner，复用 XML/HTML/PDF/TDM/browser fallback 编排。
 5. 将 Science/PNAS/Wiley 等 browser workflow 差异收敛到 profile：hosts、URL templates、selectors、access signals、作者抽取策略和后处理。
 
@@ -37,9 +37,9 @@ CLI / MCP
 - `src/paper_fetch/providers/base.py`：provider payload/result/error/status 契约。
 - `src/paper_fetch/providers/elsevier.py`：Elsevier API XML/PDF 路线和资产下载。
 - `src/paper_fetch/providers/springer.py`：Springer direct HTML/PDF 路线和 inline table 处理。
-- `src/paper_fetch/providers/_science_pnas.py`：实际是通用 browser workflow，目前命名仍带 Science/PNAS，但被 Science、PNAS、Wiley 共用。
-- `src/paper_fetch/providers/_science_pnas_html.py`：体量很大的 browser workflow HTML 抽取模块，含多处遗留重复规则。
-- `src/paper_fetch/extraction/html/*`：provider-neutral HTML runtime/metadata/assets，但仍 import provider 私有 helper。
+- `src/paper_fetch/providers/browser_workflow.py`：Science、PNAS、Wiley 共用的 canonical browser workflow runtime。
+- `src/paper_fetch/providers/_science_pnas_html.py`：browser workflow HTML 抽取与后处理实现，旧 compatibility wrapper 已清理。
+- `src/paper_fetch/extraction/html/*`：provider-neutral HTML runtime/metadata/assets，不再 import provider 私有 helper。
 - `src/paper_fetch/models.py`：核心文章模型、渲染、质量判断和部分 HTML/availability 逻辑。
 
 高变更风险大文件：
@@ -58,15 +58,17 @@ CLI / MCP
 
 - `src/paper_fetch/models.py`
 - `src/paper_fetch/extraction/html/_runtime.py`
-- `src/paper_fetch/providers/_html_citations.py`
-- `src/paper_fetch/providers/_html_semantics.py`
-- `src/paper_fetch/providers/_html_availability.py`
-- `src/paper_fetch/providers/_language_filter.py`
+- 已删除的 legacy provider-private helper：
+  - `src/paper_fetch/providers/_html_access_signals.py`
+  - `src/paper_fetch/providers/_html_citations.py`
+  - `src/paper_fetch/providers/_html_semantics.py`
+  - `src/paper_fetch/providers/_html_availability.py`
+  - `src/paper_fetch/providers/_language_filter.py`
 
 现状：
 
-- `models.py` 直接或懒加载引用 provider 私有 helper，用于 citation normalization、section semantics、availability assessment。
-- `extraction/html/_runtime.py` 标称 provider-neutral，但 import 了 `providers._html_access_signals`、`providers._html_semantics`、`providers._language_filter`。
+- 迁移前，`models.py` 直接或懒加载引用 provider 私有 helper，用于 citation normalization、section semantics、availability assessment。
+- 迁移前，`extraction/html/_runtime.py` 标称 provider-neutral，但 import 了 `providers._html_access_signals`、`providers._html_semantics`、`providers._language_filter`。
 
 影响：
 
@@ -90,8 +92,8 @@ CLI / MCP
 - 已新增 `paper_fetch.extraction.html.signals`、`paper_fetch.extraction.html.semantics`、`paper_fetch.extraction.html.language`、`paper_fetch.markdown.citations`、`paper_fetch.quality.html_availability`。
 - 已新增 `paper_fetch.quality.html_profiles`，承载 HTML availability site rules、Science/PNAS/Wiley positive/blocking signals、abstract redirect 判断和相关 datalayer 解析。
 - `models.py`、`extraction/html/*.py` 与 `quality/*.py` 已改为依赖这些中立模块，不再 import `paper_fetch.providers._*`。
-- `quality/html_availability.py` 不再懒加载 `providers/_science_pnas_profiles.py`；旧 provider-private profile 和 provider HTML 模块保留兼容 symbol，并委托到中立 profile 模块。
-- 旧 `providers/_html_*` 与 `providers/_language_filter.py` 保留为兼容 re-export，避免破坏现有私有导入。
+- `quality/html_availability.py` 不再懒加载 `providers/_science_pnas_profiles.py`；availability profile 由 `paper_fetch.quality.html_profiles` 单一承载。
+- 旧 `providers/_html_access_signals.py`、`providers/_html_availability.py`、`providers/_html_citations.py`、`providers/_html_semantics.py` 与 `providers/_language_filter.py` 兼容 re-export 已在 Phase 8 删除；测试和新代码必须直接 import canonical owner。
 - 已增加 import-boundary 测试覆盖 `models.py`、`extraction/html/*.py` 和 `quality/*.py` 的依赖方向。
 
 风险：
@@ -161,7 +163,7 @@ CLI / MCP
 - `src/paper_fetch/providers/_science_pnas_html.py`
 - `src/paper_fetch/providers/_science_pnas_profiles.py`
 - `src/paper_fetch/providers/_browser_workflow_shared.py`
-- `src/paper_fetch/providers/_html_availability.py`
+- `src/paper_fetch/quality/html_availability.py`
 - `src/paper_fetch/providers/_html_tables.py`
 - `src/paper_fetch/providers/_science_pnas_postprocess.py`
 
@@ -169,12 +171,13 @@ CLI / MCP
 
 - 已删除 `_science_pnas_html.py` 中重复的 `SITE_RULE_OVERRIDES`、`PUBLISHER_HOSTS`、`PDF_URL_TOKENS`、`DEFAULT_SITE_RULE`、`HTML_FULLTEXT_MARKERS`。
 - 已删除本地重复 availability 分析结构和死代码，如 `StructuredBodyAnalysis`、`FulltextAvailabilityDiagnostics`、`_analyze_html_structure`、`_analyze_markdown_structure`、`_structure_accepts_fulltext`、`_dom_access_hints`。
-- `_science_pnas_html.py` 仍保留 browser HTML 抽取编排、table / figure / formula 处理和兼容 wrapper；site rules / URL tokens / positive signals / availability 由 profile/shared/quality 模块提供。
+- `_science_pnas_html.py` 仍保留 browser HTML 抽取编排、table / figure / formula 处理和真实抽取入口；site rules / URL tokens / positive signals / availability 由 profile/shared/quality 模块提供。
+- 未被生产代码和测试直接使用的 compatibility wrappers、重复 availability owner 和本地诊断 wrapper 已在 Phase 8 删除。
 
 建议：
 
 - 让 `_science_pnas_profiles.py` 和 `_browser_workflow_shared.py` 成为 site rules、hosts、URL tokens、positive signals 的唯一事实来源。
-- `_science_pnas_html.py` 只保留抽取编排和仍被测试直接 import 的兼容 wrapper。
+- `_science_pnas_html.py` 只保留抽取编排、真实 postprocess helper 和仍由 provider/browser workflow 使用的入口。
 - 确认无 public import 依赖后，迁移或删除重复 availability/table 代码。
 
 风险：
@@ -192,7 +195,7 @@ CLI / MCP
 
 - `src/paper_fetch/providers/elsevier.py`
 - `src/paper_fetch/providers/springer.py`
-- `src/paper_fetch/providers/_science_pnas.py`
+- `src/paper_fetch/providers/browser_workflow.py`
 - `src/paper_fetch/providers/wiley.py`
 
 现状：
@@ -228,7 +231,7 @@ CLI / MCP
 涉及文件：
 
 - `src/paper_fetch/providers/base.py`
-- `src/paper_fetch/providers/_science_pnas.py`
+- `src/paper_fetch/providers/browser_workflow.py`
 - `src/paper_fetch/providers/springer.py`
 
 现状：
@@ -262,11 +265,11 @@ CLI / MCP
 
 - 运行 `test_service_provider_managed_fallbacks`、`test_provider_waterfalls`、provider asset tests、PDF fallback tests。
 
-### P1：Browser workflow 命名和 provider profile 边界混乱
+### P1（已修复）：Browser workflow 命名和 provider profile 边界混乱
 
 涉及文件：
 
-- `src/paper_fetch/providers/_science_pnas.py`
+- `src/paper_fetch/providers/browser_workflow.py`
 - `src/paper_fetch/providers/science.py`
 - `src/paper_fetch/providers/pnas.py`
 - `src/paper_fetch/providers/wiley.py`
@@ -274,8 +277,8 @@ CLI / MCP
 
 现状：
 
-- `_science_pnas.py` 实际是通用 browser workflow，但名称仍绑定 Science/PNAS。
-- 内部仍有 `self.name in {"science", "pnas", "wiley"}`、PNAS 文案等 name-specific 分支。
+- `providers/browser_workflow.py` 是 canonical browser workflow runtime，Science、PNAS、Wiley 通过 `ProviderBrowserProfile` 声明差异。
+- 旧 `_science_pnas.py` compatibility module 和 `SciencePnasClient` alias 已在 Phase 8 删除。
 
 建议：
 
@@ -296,7 +299,7 @@ CLI / MCP
 
 验证：
 
-- 临时保留 compatibility alias，确保现有测试/import 不断。
+- 已通过 provider candidate、request options、waterfall 和 Science/PNAS provider 测试确认 canonical runtime 行为。
 
 ### P1：Browser provider URL candidate builders 重复
 
@@ -492,7 +495,7 @@ CLI / MCP
 
 - `src/paper_fetch/models.py`
 - `src/paper_fetch/extraction/html/_runtime.py`
-- `src/paper_fetch/providers/_html_semantics.py`
+- `src/paper_fetch/extraction/html/semantics.py`
 - `src/paper_fetch/providers/_science_pnas_html.py`
 
 现状：
@@ -637,7 +640,7 @@ CLI / MCP
 
 - Springer/Nature extraction tests 覆盖 rights/permissions、related content、back matter。
 
-### P3：Provider payload legacy 协议仍隐式存在
+### P3（已修复）：Provider payload legacy 协议仍隐式存在
 
 涉及文件：
 
@@ -645,14 +648,13 @@ CLI / MCP
 
 现状：
 
-- `RawFulltextPayload` 仍接受 legacy `metadata` magic keys，并转成 `ProviderContent`。
-- 兼容性保留了，但 provider/workflow 契约不够显式。
+- `RawFulltextPayload` 不再接受 legacy `metadata` magic keys 注入结构化字段；`ProviderContent`、`warnings`、`trace`、`merged_metadata` 等 typed fields 是唯一输入契约。
+- `metadata` property 只作为只读兼容导出，由 typed fields 和非结构化 passthrough metadata 生成。
 
 建议：
 
-- 近期重构中保留兼容。
-- 增加 deprecation comment 和测试，明确记录当前接受哪些 legacy keys。
-- 后续要求 provider 直接返回 `ProviderFetchResult`、`ProviderContent`、`ProviderArtifacts`。
+- Provider 和测试 fixture 已显式传入 `ProviderFetchResult`、`ProviderContent`、`ProviderArtifacts`、`warnings` 与 `trace`。
+- 已增加测试确认 `metadata={route, reason, markdown_text, warnings, source_trail, ...}` 不再被 ingestion。
 
 风险：
 
@@ -660,7 +662,7 @@ CLI / MCP
 
 验证：
 
-- 移除前先保留兼容性测试。
+- 运行 provider fetch result template、waterfall、service 和 regression sample 测试。
 
 ### P3：Provider interface 依赖具体基类和运行时判断
 
@@ -962,11 +964,11 @@ pytest tests/unit/test_science_pnas_markdown.py tests/unit/test_springer_html_re
 完成状态（2026-04-26）：
 
 - Phase 0 已完成；本阶段不修改业务功能，只补齐重构前的行为基线和兼容护栏。
-- 已有 `tests/unit/test_import_boundaries.py` 记录 `models.py`、`extraction/html/*.py`、`quality/*.py` 不得依赖 `paper_fetch.providers._*` 的目标 layering。
+- 已有 `tests/unit/test_import_boundaries.py` 记录 `models.py`、`markdown/*.py`、`extraction/html/*.py`、`quality/*.py` 不得依赖 `paper_fetch.providers._*` 的目标 layering。
 - Provider URL/PDF candidate ordering 已有 snapshot 覆盖 Science、PNAS、Wiley；本次补齐 Springer PDF candidate ordering，并在 Elsevier fallback 测试中锁定 XML -> PDF API route 的请求顺序、URL 和 `view=FULL` query。
 - Waterfall warning/source-trail 行为已补齐断言：Elsevier XML 不可用后进入 PDF fallback 时保留 XML fail、PDF API ok、PDF fallback ok marker，并记录 fallback warning；Springer HTML 不可用后进入 PDF fallback 时保留 HTML fail、PDF fallback ok marker，并记录 fallback warning。
-- `_science_pnas_html.py` 的 compatibility surface 已显式测试，包括 browser workflow 入口、figure link rewrite、profile candidate wrapper、availability wrapper、HTML block detection 和 legacy html-noise re-export，后续删减需要有意更新测试。
-- `RawFulltextPayload.metadata` legacy magic-key ingestion 已由测试标注：`route`、`reason`、`markdown_text`、`merged_metadata`、availability diagnostics、HTML fetcher、browser seed、failure reason/message、extracted assets、warnings、source trail 仍会被转换到结构化字段，同时保留未知 passthrough metadata。
+- `_science_pnas_html.py` 的 compatibility surface 曾在 Phase 0 显式测试；Phase 8 已有意删去 profile candidate、availability、HTML block detection 等未使用 wrapper，仅保留 browser workflow 入口、figure link rewrite 和真实抽取/postprocess helper。
+- `RawFulltextPayload.metadata` legacy magic-key ingestion 曾在 Phase 0 显式测试；Phase 8 已移除 ingestion，`metadata` 现在只从 typed fields 导出兼容视图，并保留未知 passthrough metadata。
 
 本次验证：
 
@@ -986,7 +988,7 @@ pytest
 
 范围：
 
-- 只做 import move 和兼容 facade。
+- 只做 import move 和临时兼容 facade。
 - 不改变行为。
 
 任务：
@@ -1002,14 +1004,15 @@ pytest
 - HTML access signals、semantics、language filtering、citation normalization 和 availability assessment 已迁到 provider-neutral 模块。
 - 已补齐 availability profile 边界：新增 `paper_fetch.quality.html_profiles`，`quality/html_availability.py` 不再依赖 `providers/_science_pnas_profiles.py`。
 - Science/PNAS/Wiley 的 availability site rules、positive signals、blocking fallback signals 和 AAAS/PNAS/Wiley datalayer 解析由 `quality/html_profiles.py` 统一承载；`providers/_science_pnas_profiles.py`、`providers/_science_html.py`、`providers/_pnas_html.py`、`providers/_wiley_html.py` 保留兼容 facade。
-- Import-boundary 测试已扩展到 `quality/*.py`，防止中立 quality 层重新 import `paper_fetch.providers._*`。
+- Import-boundary 测试已扩展到 `markdown/*.py` 与 `quality/*.py`，防止中立 markdown / quality / extraction 层重新 import `paper_fetch.providers._*`。
+- Phase 8 已删除临时 provider-private `_html_*` / `_language_filter` facade。
 
 退出标准：
 
 - `models.py` 不再 import `paper_fetch.providers._*`。
 - `extraction/html/_runtime.py` 不再 import provider-private helper。
 - `quality/*.py` 不再 import provider-private helper。
-- 兼容 facade 仍保证现有测试通过。
+- 已删除旧 provider-private helper facade；测试和生产代码都直接使用 canonical owner。
 
 验证：
 
@@ -1055,7 +1058,7 @@ pytest
 范围：
 
 - 概念上拆出 browser workflow。
-- 暂时保留旧 import 兼容。
+- 迁移时曾暂时保留旧 import 兼容；Phase 8 后已移除。
 
 任务：
 
@@ -1068,7 +1071,7 @@ pytest
 
 退出标准：
 
-- `_science_pnas.py` 变为兼容 wrapper，或只保留真正共享的 legacy name。
+- 通用 browser workflow 由 `providers/browser_workflow.py` 承载，不再保留 `_science_pnas.py` legacy name。
 - Science/PNAS/Wiley provider 模块主要声明 profile 和 provider-specific hook。
 
 风险：
@@ -1077,7 +1080,7 @@ pytest
 
 本地执行记录（2026-04-25）：
 
-- Phase 3 已完成：新增 `src/paper_fetch/providers/browser_workflow.py` 作为 canonical runtime，`_science_pnas.py` 改为兼容 alias。
+- Phase 3 已完成：新增 `src/paper_fetch/providers/browser_workflow.py` 作为 canonical runtime；Phase 8 已删除 `_science_pnas.py` 兼容 alias。
 - Science、PNAS、Wiley 已改为 `ProviderBrowserProfile` 驱动，保留现有 public source、fallback marker、MCP payload shape 和 URL candidate 顺序。
 - Crossref PDF URL 判断已集中到 `_pdf_candidates.py`，HTML/PDF candidate builder 已收敛到 `_browser_workflow_shared.py`。
 - 作者抽取的共享 helper 已抽到 `_browser_workflow_authors.py`，当前覆盖 Science datalayer、PNAS meta fallback、Wiley meta-first 行为。
@@ -1097,7 +1100,7 @@ pytest
 任务：
 
 1. 删除或 re-export `_science_pnas_html.py` 中重复 site rules。
-2. 让 `_html_availability.py` 或迁移后的中立模块成为唯一 availability 实现。
+2. 让迁移后的中立模块成为唯一 availability 实现。
 3. 将 table rendering 收敛到 `_html_tables.py`。
 4. 增加共享 inline text normalization policies，覆盖 XML、HTML body、heading、table cell。
 5. 增加共享 section taxonomy 和 provider profile extensions。
@@ -1135,7 +1138,7 @@ pytest tests/integration/test_golden_corpus.py
 - Figure link matching 已新增 `extraction/html/figure_links.py`，统一 figure label normalization、asset URL/path alias matching、downloaded `path` 优先级；extraction-time injection 与 post-download rewrite 现在共用同一实现。
 - Availability/site rules 已确认继续由 `quality/html_availability.py` 与 `quality/html_profiles.py` 单一承载；本阶段只补充 Markdown/table/formula/figure/taxonomy/noise 相关测试。
 - `springer_nature` noise profile 已在 `extraction/html/_runtime.py` 注册，不再静默回退 generic；只加入了有 Springer/Nature fixture 或单元测试保护的 promo tokens。
-- Phase 0 明确测试的 `_science_pnas_html.py` compatibility surface 保持不变；provider-private public wrappers 仍保留。
+- Phase 0 明确测试的 `_science_pnas_html.py` compatibility surface 已在 Phase 8 有意收紧；provider-private dead wrappers 不再保留。
 
 本阶段验证：
 
@@ -1266,7 +1269,7 @@ pytest
 - `idutils`：会影响当前宽松 DOI/routing 行为，需要单独兼容评估。
 - `filetype` + `imagesize` 或 `Pillow`：会改变图片类型/尺寸解析语义，需要结合资产 fixture 单独推进。
 
-### Phase 8：移除 Legacy Surface 并完成架构收尾
+### Phase 8（已完成）：移除 Legacy Surface 并完成架构收尾
 
 目标：
 
@@ -1274,11 +1277,20 @@ pytest
 
 任务：
 
-1. 移除 legacy `RawFulltextPayload.metadata` magic-key ingestion，或限制在测试中。
+1. 移除 legacy `RawFulltextPayload.metadata` magic-key ingestion。
 2. 移除旧 provider-private helper 路径下的 compatibility wrappers。
-3. 只有在无 public/test usage 时，移除 `SciencePnasClient` alias。
+3. 移除无 public/test usage 的 `SciencePnasClient` alias。
 4. 删除 `_science_pnas_html.py` 未使用的重复常量和 dead wrappers。
 5. 更新 architecture 文档和 import-boundary 测试，反映最终 layering。
+
+完成状态（2026-04-26）：
+
+- 旧 provider-private HTML helper 入口已删除：`providers/_html_access_signals.py`、`providers/_html_availability.py`、`providers/_html_citations.py`、`providers/_html_semantics.py`、`providers/_language_filter.py` 不再作为 compatibility re-export 存在；canonical owner 分别是 `extraction.html.signals`、`quality.html_availability`、`markdown.citations`、`extraction.html.semantics`、`extraction.html.language`。
+- 旧 `_science_pnas.py` compat module 已删除；Science、PNAS、Wiley 测试和 provider client 均直接使用 `paper_fetch.providers.browser_workflow` runtime。
+- `SciencePnasClient` alias 已删除；真实 provider client 为 `BrowserWorkflowClient` 子类及 `ScienceClient`、`PnasClient`、`WileyClient`。
+- `RawFulltextPayload.metadata` 不再 ingestion legacy magic keys；结构化字段必须显式传入 typed fields，`metadata` property 只导出只读兼容视图。
+- `_science_pnas_html.py` 已删除未使用 dead wrappers、重复 availability wrapper 和本地诊断兼容类；保留真实 HTML extraction、postprocess 和 figure rewrite 入口。
+- Architecture/import-boundary 测试已补强：禁止测试重新 import 已删除 compatibility modules，禁止 provider-neutral 层依赖 provider-private helpers，并继续用 provider catalog 测试守住 provider identity 单一事实来源。
 
 退出标准：
 
@@ -1287,6 +1299,13 @@ pytest
 - Browser workflow 由 profile 驱动。
 - Markdown 规则族各有单一 owner。
 - 完整 unit/integration suite 通过。
+
+最终验证：
+
+```bash
+ruff check src tests
+pytest
+```
 
 ## 建议执行顺序
 
@@ -1300,7 +1319,7 @@ pytest
 6. Phase 5：waterfall 和 fetch result template。
 7. Phase 6：runtime/artifact/cache 边界。
 8. Phase 7：成熟 package。
-9. Phase 8：移除兼容层。
+9. Phase 8：移除兼容层。（已完成）
 
 这个顺序能让风险最高的 Markdown 行为修改排在测试和模块边界更清晰之后。
 
@@ -1314,12 +1333,12 @@ pytest
 - Runtime context 修改 + MCP cache format 修改。
 - DOI normalization 修改 + Crossref query scoring 修改。
 
-## 最小首个 PR 建议
+## 最小首个 PR 建议（历史记录）
 
 第一个小实现 PR 可以是：
 
 1. 增加 import-boundary tests，记录目标依赖方向。
-2. 将 `_html_citations`、`_html_semantics`、`_html_access_signals`、`_language_filter` 移到中立模块，并保留 compatibility re-export。
+2. 将 `_html_citations`、`_html_semantics`、`_html_access_signals`、`_language_filter` 移到中立模块；Phase 8 后 compatibility re-export 已删除。
 3. 更新 `models.py` 和 `extraction/html/_runtime.py` import。
 4. 不改变行为。
 

@@ -2,11 +2,11 @@ from __future__ import annotations
 
 import ast
 import os
+import re
 import subprocess
 import sys
 import unittest
 from pathlib import Path
-import re
 
 from tests.paths import REPO_ROOT, SKILL_DIR, SRC_DIR, TESTS_ROOT
 
@@ -15,6 +15,14 @@ PAPER_FETCH_SRC = SRC_DIR / "paper_fetch"
 SERVICE_PATH = PAPER_FETCH_SRC / "service.py"
 RESOLVE_QUERY_PATH = PAPER_FETCH_SRC / "resolve" / "query.py"
 PROVIDERS_DIR = PAPER_FETCH_SRC / "providers"
+REMOVED_PROVIDER_COMPATIBILITY_MODULE_FILES = [
+    PROVIDERS_DIR / "_html_access_signals.py",
+    PROVIDERS_DIR / "_html_availability.py",
+    PROVIDERS_DIR / "_html_citations.py",
+    PROVIDERS_DIR / "_html_semantics.py",
+    PROVIDERS_DIR / "_language_filter.py",
+    PROVIDERS_DIR / "_science_pnas.py",
+]
 SPRINGER_PROVIDER_PATH = PROVIDERS_DIR / "springer.py"
 ELSEVIER_PROVIDER_PATH = PROVIDERS_DIR / "elsevier.py"
 MAGIC_KEY_PATTERN = re.compile(r'\[(?:\"|\')(route|markdown_text|warnings|source_trail)(?:\"|\')\]|get\((?:\"|\')(route|markdown_text|warnings|source_trail)(?:\"|\')')
@@ -199,6 +207,14 @@ class ArchitectureCloseoutTests(unittest.TestCase):
     def test_repo_hygiene_guards_against_old_script_package_and_tracked_benchmarks(self) -> None:
         self.assertFalse((REPO_ROOT / "scripts" / "__init__.py").exists())
         self.assertFalse((REPO_ROOT / "references" / "formula_backend_report.json").exists())
+
+    def test_removed_provider_compatibility_modules_stay_deleted(self) -> None:
+        offenders = [
+            path.relative_to(REPO_ROOT).as_posix()
+            for path in REMOVED_PROVIDER_COMPATIBILITY_MODULE_FILES
+            if path.exists()
+        ]
+        self.assertEqual(offenders, [], "\n".join(offenders))
 
     def test_architecture_doc_defers_public_history_to_changelog(self) -> None:
         text = ARCHITECTURE_DOC.read_text(encoding="utf-8")

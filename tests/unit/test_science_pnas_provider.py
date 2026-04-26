@@ -18,7 +18,8 @@ from paper_fetch.providers import (
     wiley as wiley_provider,
 )
 from paper_fetch.quality.html_availability import assess_html_fulltext_availability
-from paper_fetch.providers.base import RawFulltextPayload
+from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
+from paper_fetch.tracing import trace_from_markers
 from tests.block_fixtures import block_asset
 from tests.golden_criteria import golden_criteria_asset, golden_criteria_dir_for_doi
 from tests.provider_benchmark_samples import provider_benchmark_sample
@@ -48,6 +49,44 @@ WILEY_2004GB002273_ASSET_DIR = golden_criteria_dir_for_doi("10.1029/2004GB002273
 
 def png_header(width: int, height: int) -> bytes:
     return b"\x89PNG\r\n\x1a\n" + b"\x00\x00\x00\rIHDR" + width.to_bytes(4, "big") + height.to_bytes(4, "big")
+
+
+def _typed_raw_payload(
+    *,
+    provider: str,
+    source_url: str,
+    content_type: str,
+    body: bytes,
+    route: str,
+    markdown_text: str | None = None,
+    source_trail: list[str] | None = None,
+    extraction: Mapping[str, object] | None = None,
+    availability_diagnostics: Mapping[str, object] | None = None,
+    browser_context_seed: Mapping[str, object] | None = None,
+    suggested_filename: str | None = None,
+) -> RawFulltextPayload:
+    diagnostics: dict[str, object] = {}
+    if extraction is not None:
+        diagnostics["extraction"] = dict(extraction)
+    if availability_diagnostics is not None:
+        diagnostics["availability_diagnostics"] = dict(availability_diagnostics)
+    return RawFulltextPayload(
+        provider=provider,
+        source_url=source_url,
+        content_type=content_type,
+        body=body,
+        content=ProviderContent(
+            route_kind=route,
+            source_url=source_url,
+            content_type=content_type,
+            body=body,
+            markdown_text=markdown_text,
+            diagnostics=diagnostics,
+            browser_context_seed=dict(browser_context_seed or {}),
+            suggested_filename=suggested_filename,
+        ),
+        trace=trace_from_markers(source_trail or []),
+    )
 
 
 class AssetTransport:
@@ -160,17 +199,15 @@ class SciencePnasProviderTests(unittest.TestCase):
             landing_url,
             metadata=extraction_metadata,
         )
-        raw_payload = RawFulltextPayload(
+        raw_payload = _typed_raw_payload(
             provider=client.name,
             source_url=landing_url,
             content_type="text/html",
             body=html.encode("utf-8"),
-            metadata={
-                "route": "html",
-                "markdown_text": markdown_text,
-                "source_trail": list(source_trail or [f"fulltext:{client.name}_html_ok"]),
-                "extraction": extraction,
-            },
+            route="html",
+            markdown_text=markdown_text,
+            source_trail=list(source_trail or [f"fulltext:{client.name}_html_ok"]),
+            extraction=extraction,
         )
         return markdown_text, extraction, raw_payload
 
@@ -271,24 +308,22 @@ class SciencePnasProviderTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             asset_path = Path(tmpdir) / "science-figure-1.png"
             asset_path.write_bytes(b"science-figure")
-            raw_payload = RawFulltextPayload(
+            raw_payload = _typed_raw_payload(
                 provider="science",
                 source_url=SCIENCE_SAMPLE.landing_url,
                 content_type="text/html",
                 body=b"<html></html>",
-                metadata={
-                    "route": "html",
-                    "markdown_text": "\n\n".join(
-                        [
-                            f"# {SCIENCE_SAMPLE.title}",
-                            "## Results",
-                            ("Body text " * 80).strip(),
-                            "![Figure 1](https://www.science.org/images/figure-1.jpg)",
-                            "**Figure 1.** Caption body for the science figure.",
-                        ]
-                    ),
-                    "source_trail": ["fulltext:science_html_ok"],
-                },
+                route="html",
+                markdown_text="\n\n".join(
+                    [
+                        f"# {SCIENCE_SAMPLE.title}",
+                        "## Results",
+                        ("Body text " * 80).strip(),
+                        "![Figure 1](https://www.science.org/images/figure-1.jpg)",
+                        "**Figure 1.** Caption body for the science figure.",
+                    ]
+                ),
+                source_trail=["fulltext:science_html_ok"],
             )
 
             article = client.to_article_model(
@@ -317,25 +352,23 @@ class SciencePnasProviderTests(unittest.TestCase):
 
     def test_science_provider_uses_extracted_dom_abstract_and_restores_lead_body_text(self) -> None:
         client = science_provider.ScienceClient(transport=None, env={})
-        raw_payload = RawFulltextPayload(
+        raw_payload = _typed_raw_payload(
             provider="science",
             source_url=SCIENCE_SAMPLE.landing_url,
             content_type="text/html",
             body=b"<html></html>",
-            metadata={
-                "route": "html",
-                "markdown_text": "\n\n".join(
-                    [
-                        f"# {SCIENCE_SAMPLE.title}",
-                        "## Results",
-                        "Results body paragraph.",
-                    ]
-                ),
-                "source_trail": ["fulltext:science_html_ok"],
-                "extraction": {
-                    "title": SCIENCE_SAMPLE.title,
-                    "abstract_text": "Short DOM abstract.",
-                },
+            route="html",
+            markdown_text="\n\n".join(
+                [
+                    f"# {SCIENCE_SAMPLE.title}",
+                    "## Results",
+                    "Results body paragraph.",
+                ]
+            ),
+            source_trail=["fulltext:science_html_ok"],
+            extraction={
+                "title": SCIENCE_SAMPLE.title,
+                "abstract_text": "Short DOM abstract.",
             },
         )
 
@@ -440,17 +473,15 @@ class SciencePnasProviderTests(unittest.TestCase):
             landing_url,
             metadata={"doi": doi, "title": title},
         )
-        raw_payload = RawFulltextPayload(
+        raw_payload = _typed_raw_payload(
             provider="science",
             source_url=landing_url,
             content_type="text/html",
             body=html.encode("utf-8"),
-            metadata={
-                "route": "html",
-                "markdown_text": markdown_text,
-                "source_trail": ["fulltext:science_html_ok"],
-                "extraction": extraction,
-            },
+            route="html",
+            markdown_text=markdown_text,
+            source_trail=["fulltext:science_html_ok"],
+            extraction=extraction,
         )
 
         article = client.to_article_model(
@@ -739,36 +770,32 @@ class SciencePnasProviderTests(unittest.TestCase):
         doi = "10.1073/pnas.2509692123"
         title = "A discrete serotonergic circuit involved in the generation of tinnitus behavior"
         landing_url = f"https://www.pnas.org/doi/full/{doi}"
-        html_payload = RawFulltextPayload(
+        html_payload = _typed_raw_payload(
             provider="pnas",
             source_url=landing_url,
             content_type="text/html",
             body=PNAS_PAYWALL_SAMPLE_RAW.read_bytes(),
-            metadata={
-                "route": "html",
-                "markdown_text": PNAS_PAYWALL_SAMPLE_MARKDOWN.read_text(encoding="utf-8"),
-                "source_trail": ["fulltext:pnas_html_ok"],
-                "browser_context_seed": {
-                    "browser_cookies": [{"name": "cf_clearance", "value": "secret", "domain": ".pnas.org", "path": "/"}],
-                    "browser_user_agent": "Mozilla/5.0",
-                },
+            route="html",
+            markdown_text=PNAS_PAYWALL_SAMPLE_MARKDOWN.read_text(encoding="utf-8"),
+            source_trail=["fulltext:pnas_html_ok"],
+            browser_context_seed={
+                "browser_cookies": [{"name": "cf_clearance", "value": "secret", "domain": ".pnas.org", "path": "/"}],
+                "browser_user_agent": "Mozilla/5.0",
             },
         )
-        pdf_payload = RawFulltextPayload(
+        pdf_payload = _typed_raw_payload(
             provider="pnas",
             source_url=f"https://www.pnas.org/doi/pdf/{doi}",
             content_type="application/pdf",
             body=fulltext_pdf_bytes(),
-            metadata={
-                "route": "pdf_fallback",
-                "markdown_text": PNAS_FULLTEXT_FALLBACK_MARKDOWN.read_text(encoding="utf-8"),
-                "source_trail": [
-                    "fulltext:pnas_html_ok",
-                    "fulltext:pnas_abstract_only",
-                    "fulltext:pnas_pdf_fallback_ok",
-                ],
-                "suggested_filename": "archive.pdf",
-            },
+            route="pdf_fallback",
+            markdown_text=PNAS_FULLTEXT_FALLBACK_MARKDOWN.read_text(encoding="utf-8"),
+            source_trail=[
+                "fulltext:pnas_html_ok",
+                "fulltext:pnas_abstract_only",
+                "fulltext:pnas_pdf_fallback_ok",
+            ],
+            suggested_filename="archive.pdf",
         )
 
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -816,37 +843,33 @@ class SciencePnasProviderTests(unittest.TestCase):
             title=title,
             final_url=landing_url,
         )
-        html_payload = RawFulltextPayload(
+        html_payload = _typed_raw_payload(
             provider="science",
             source_url=landing_url,
             content_type="text/html",
             body=SCIENCE_PAYWALL_SAMPLE_RAW.read_bytes(),
-            metadata={
-                "route": "html",
-                "markdown_text": markdown_text,
-                "source_trail": ["fulltext:science_html_ok"],
-                "availability_diagnostics": diagnostics.to_dict(),
-                "browser_context_seed": {
-                    "browser_cookies": [{"name": "cf_clearance", "value": "secret", "domain": ".science.org", "path": "/"}],
-                    "browser_user_agent": "Mozilla/5.0",
-                },
+            route="html",
+            markdown_text=markdown_text,
+            source_trail=["fulltext:science_html_ok"],
+            availability_diagnostics=diagnostics.to_dict(),
+            browser_context_seed={
+                "browser_cookies": [{"name": "cf_clearance", "value": "secret", "domain": ".science.org", "path": "/"}],
+                "browser_user_agent": "Mozilla/5.0",
             },
         )
-        pdf_payload = RawFulltextPayload(
+        pdf_payload = _typed_raw_payload(
             provider="science",
             source_url=f"https://www.science.org/doi/epdf/{doi}",
             content_type="application/pdf",
             body=fulltext_pdf_bytes(),
-            metadata={
-                "route": "pdf_fallback",
-                "markdown_text": SCIENCE_FULLTEXT_FALLBACK_MARKDOWN.read_text(encoding="utf-8"),
-                "source_trail": [
-                    "fulltext:science_html_ok",
-                    "fulltext:science_abstract_only",
-                    "fulltext:science_pdf_fallback_ok",
-                ],
-                "suggested_filename": "science-paywall.pdf",
-            },
+            route="pdf_fallback",
+            markdown_text=SCIENCE_FULLTEXT_FALLBACK_MARKDOWN.read_text(encoding="utf-8"),
+            source_trail=[
+                "fulltext:science_html_ok",
+                "fulltext:science_abstract_only",
+                "fulltext:science_pdf_fallback_ok",
+            ],
+            suggested_filename="science-paywall.pdf",
         )
 
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -874,19 +897,17 @@ class SciencePnasProviderTests(unittest.TestCase):
         doi = "10.1073/pnas.2509692123"
         title = "A discrete serotonergic circuit involved in the generation of tinnitus behavior"
         landing_url = f"https://www.pnas.org/doi/full/{doi}"
-        html_payload = RawFulltextPayload(
+        html_payload = _typed_raw_payload(
             provider="pnas",
             source_url=landing_url,
             content_type="text/html",
             body=PNAS_PAYWALL_SAMPLE_RAW.read_bytes(),
-            metadata={
-                "route": "html",
-                "markdown_text": PNAS_PAYWALL_SAMPLE_MARKDOWN.read_text(encoding="utf-8"),
-                "source_trail": ["fulltext:pnas_html_ok"],
-                "browser_context_seed": {
-                    "browser_cookies": [{"name": "cf_clearance", "value": "secret", "domain": ".pnas.org", "path": "/"}],
-                    "browser_user_agent": "Mozilla/5.0",
-                },
+            route="html",
+            markdown_text=PNAS_PAYWALL_SAMPLE_MARKDOWN.read_text(encoding="utf-8"),
+            source_trail=["fulltext:pnas_html_ok"],
+            browser_context_seed={
+                "browser_cookies": [{"name": "cf_clearance", "value": "secret", "domain": ".pnas.org", "path": "/"}],
+                "browser_user_agent": "Mozilla/5.0",
             },
         )
 
@@ -934,20 +955,18 @@ class SciencePnasProviderTests(unittest.TestCase):
             title=title,
             final_url=landing_url,
         )
-        html_payload = RawFulltextPayload(
+        html_payload = _typed_raw_payload(
             provider="science",
             source_url=landing_url,
             content_type="text/html",
             body=SCIENCE_PAYWALL_SAMPLE_RAW.read_bytes(),
-            metadata={
-                "route": "html",
-                "markdown_text": markdown_text,
-                "source_trail": ["fulltext:science_html_ok"],
-                "availability_diagnostics": diagnostics.to_dict(),
-                "browser_context_seed": {
-                    "browser_cookies": [{"name": "cf_clearance", "value": "secret", "domain": ".science.org", "path": "/"}],
-                    "browser_user_agent": "Mozilla/5.0",
-                },
+            route="html",
+            markdown_text=markdown_text,
+            source_trail=["fulltext:science_html_ok"],
+            availability_diagnostics=diagnostics.to_dict(),
+            browser_context_seed={
+                "browser_cookies": [{"name": "cf_clearance", "value": "secret", "domain": ".science.org", "path": "/"}],
+                "browser_user_agent": "Mozilla/5.0",
             },
         )
 
@@ -981,19 +1000,17 @@ class SciencePnasProviderTests(unittest.TestCase):
         doi = "10.1111/gcb.16998"
         title = "Wiley Abstract Only Example"
         landing_url = f"https://onlinelibrary.wiley.com/doi/full/{doi}"
-        html_payload = RawFulltextPayload(
+        html_payload = _typed_raw_payload(
             provider="wiley",
             source_url=landing_url,
             content_type="text/html",
             body=b"<html></html>",
-            metadata={
-                "route": "html",
-                "markdown_text": f"# {title}\n\n## Abstract\n\nWiley abstract only.",
-                "source_trail": ["fulltext:wiley_html_ok"],
-                "browser_context_seed": {
-                    "browser_cookies": [{"name": "cf_clearance", "value": "secret", "domain": ".wiley.com", "path": "/"}],
-                    "browser_user_agent": "Mozilla/5.0",
-                },
+            route="html",
+            markdown_text=f"# {title}\n\n## Abstract\n\nWiley abstract only.",
+            source_trail=["fulltext:wiley_html_ok"],
+            browser_context_seed={
+                "browser_cookies": [{"name": "cf_clearance", "value": "secret", "domain": ".wiley.com", "path": "/"}],
+                "browser_user_agent": "Mozilla/5.0",
             },
         )
 
@@ -1120,16 +1137,14 @@ class SciencePnasProviderTests(unittest.TestCase):
         )
         with tempfile.TemporaryDirectory() as tmpdir:
             runtime = self._runtime_config(tmpdir, "science", SCIENCE_SAMPLE.doi)
-            raw_payload = RawFulltextPayload(
+            raw_payload = _typed_raw_payload(
                 provider="science",
                 source_url=SCIENCE_SAMPLE.landing_url,
                 content_type="text/html",
                 body=html.encode("utf-8"),
-                metadata={
-                    "route": "html",
-                    "markdown_text": f"# {SCIENCE_SAMPLE.title}\n\n## Results\n\n" + ("Body text " * 120),
-                    "browser_context_seed": {},
-                },
+                route="html",
+                markdown_text=f"# {SCIENCE_SAMPLE.title}\n\n## Results\n\n" + ("Body text " * 120),
+                browser_context_seed={},
             )
             with (
                 mock.patch.object(browser_workflow, "load_runtime_config", return_value=runtime),
@@ -1205,16 +1220,14 @@ class SciencePnasProviderTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmpdir:
             runtime = self._runtime_config(tmpdir, "pnas", PNAS_SAMPLE.doi)
-            raw_payload = RawFulltextPayload(
+            raw_payload = _typed_raw_payload(
                 provider="pnas",
                 source_url=PNAS_SAMPLE.landing_url,
                 content_type="text/html",
                 body=html.encode("utf-8"),
-                metadata={
-                    "route": "html",
-                    "markdown_text": f"# {PNAS_SAMPLE.title}\n\n## Results\n\n" + ("Body text " * 120),
-                    "browser_context_seed": initial_seed,
-                },
+                route="html",
+                markdown_text=f"# {PNAS_SAMPLE.title}\n\n## Results\n\n" + ("Body text " * 120),
+                browser_context_seed=initial_seed,
             )
             with (
                 mock.patch.object(browser_workflow, "load_runtime_config", return_value=runtime),
@@ -1299,16 +1312,14 @@ class SciencePnasProviderTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmpdir:
             runtime = self._runtime_config(tmpdir, "pnas", PNAS_SAMPLE.doi)
-            raw_payload = RawFulltextPayload(
+            raw_payload = _typed_raw_payload(
                 provider="pnas",
                 source_url=PNAS_SAMPLE.landing_url,
                 content_type="text/html",
                 body=html.encode("utf-8"),
-                metadata={
-                    "route": "html",
-                    "markdown_text": f"# {PNAS_SAMPLE.title}\n\n## Results\n\n" + ("Body text " * 120),
-                    "browser_context_seed": initial_seed,
-                },
+                route="html",
+                markdown_text=f"# {PNAS_SAMPLE.title}\n\n## Results\n\n" + ("Body text " * 120),
+                browser_context_seed=initial_seed,
             )
             with (
                 mock.patch.object(browser_workflow, "load_runtime_config", return_value=runtime),
@@ -1384,16 +1395,14 @@ class SciencePnasProviderTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmpdir:
             runtime = self._runtime_config(tmpdir, "science", SCIENCE_SAMPLE.doi)
-            raw_payload = RawFulltextPayload(
+            raw_payload = _typed_raw_payload(
                 provider="science",
                 source_url=SCIENCE_SAMPLE.landing_url,
                 content_type="text/html",
                 body=html.encode("utf-8"),
-                metadata={
-                    "route": "html",
-                    "markdown_text": f"# {SCIENCE_SAMPLE.title}\n\n## Results\n\n" + ("Body text " * 120),
-                    "browser_context_seed": {},
-                },
+                route="html",
+                markdown_text=f"# {SCIENCE_SAMPLE.title}\n\n## Results\n\n" + ("Body text " * 120),
+                browser_context_seed={},
             )
             with (
                 mock.patch.object(browser_workflow, "load_runtime_config", return_value=runtime),
@@ -1455,16 +1464,14 @@ class SciencePnasProviderTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmpdir:
             runtime = self._runtime_config(tmpdir, "science", SCIENCE_SAMPLE.doi)
-            raw_payload = RawFulltextPayload(
+            raw_payload = _typed_raw_payload(
                 provider="science",
                 source_url=SCIENCE_SAMPLE.landing_url,
                 content_type="text/html",
                 body=html.encode("utf-8"),
-                metadata={
-                    "route": "html",
-                    "markdown_text": f"# {SCIENCE_SAMPLE.title}\n\n## Results\n\n" + ("Body text " * 120),
-                    "browser_context_seed": seed,
-                },
+                route="html",
+                markdown_text=f"# {SCIENCE_SAMPLE.title}\n\n## Results\n\n" + ("Body text " * 120),
+                browser_context_seed=seed,
             )
             with (
                 mock.patch.object(browser_workflow, "load_runtime_config", return_value=runtime),
@@ -1529,16 +1536,14 @@ class SciencePnasProviderTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmpdir:
             runtime = self._runtime_config(tmpdir, "pnas", PNAS_SAMPLE.doi)
-            raw_payload = RawFulltextPayload(
+            raw_payload = _typed_raw_payload(
                 provider="pnas",
                 source_url=PNAS_SAMPLE.landing_url,
                 content_type="text/html",
                 body=html.encode("utf-8"),
-                metadata={
-                    "route": "html",
-                    "markdown_text": f"# {PNAS_SAMPLE.title}\n\n## Results\n\n" + ("Body text " * 120),
-                    "browser_context_seed": seed,
-                },
+                route="html",
+                markdown_text=f"# {PNAS_SAMPLE.title}\n\n## Results\n\n" + ("Body text " * 120),
+                browser_context_seed=seed,
             )
             with (
                 mock.patch.object(browser_workflow, "load_runtime_config", return_value=runtime),
@@ -1619,16 +1624,14 @@ class SciencePnasProviderTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmpdir:
             runtime = self._runtime_config(tmpdir, "pnas", PNAS_SAMPLE.doi)
-            raw_payload = RawFulltextPayload(
+            raw_payload = _typed_raw_payload(
                 provider="pnas",
                 source_url=PNAS_SAMPLE.landing_url,
                 content_type="text/html",
                 body=html.encode("utf-8"),
-                metadata={
-                    "route": "html",
-                    "markdown_text": f"# {PNAS_SAMPLE.title}\n\n## Results\n\n" + ("Body text " * 120),
-                    "browser_context_seed": initial_seed,
-                },
+                route="html",
+                markdown_text=f"# {PNAS_SAMPLE.title}\n\n## Results\n\n" + ("Body text " * 120),
+                browser_context_seed=initial_seed,
             )
             with (
                 mock.patch.object(browser_workflow, "load_runtime_config", return_value=runtime),
@@ -1692,16 +1695,14 @@ class SciencePnasProviderTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmpdir:
             runtime = self._runtime_config(tmpdir, "wiley", "10.1111/gcb.16011")
-            raw_payload = RawFulltextPayload(
+            raw_payload = _typed_raw_payload(
                 provider="wiley",
                 source_url="https://onlinelibrary.wiley.com/doi/10.1111/gcb.16011",
                 content_type="text/html",
                 body=html.encode("utf-8"),
-                metadata={
-                    "route": "html",
-                    "markdown_text": "# Title\n\n## Results\n\n" + ("Body text " * 120),
-                    "browser_context_seed": seed,
-                },
+                route="html",
+                markdown_text="# Title\n\n## Results\n\n" + ("Body text " * 120),
+                browser_context_seed=seed,
             )
             with (
                 mock.patch.object(browser_workflow, "load_runtime_config", return_value=runtime),
@@ -1775,16 +1776,14 @@ class SciencePnasProviderTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmpdir:
             runtime = self._runtime_config(tmpdir, "wiley", "10.1111/gcb.16011")
-            raw_payload = RawFulltextPayload(
+            raw_payload = _typed_raw_payload(
                 provider="wiley",
                 source_url="https://onlinelibrary.wiley.com/doi/10.1111/gcb.16011",
                 content_type="text/html",
                 body=html.encode("utf-8"),
-                metadata={
-                    "route": "html",
-                    "markdown_text": "# Title\n\n## Results\n\n" + ("Body text " * 120),
-                    "browser_context_seed": seed,
-                },
+                route="html",
+                markdown_text="# Title\n\n## Results\n\n" + ("Body text " * 120),
+                browser_context_seed=seed,
             )
             with (
                 mock.patch.object(browser_workflow, "load_runtime_config", return_value=runtime),
