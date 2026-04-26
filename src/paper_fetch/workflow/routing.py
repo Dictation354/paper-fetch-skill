@@ -4,13 +4,13 @@ from __future__ import annotations
 
 from typing import Any, Mapping, cast
 
-from ..config import build_runtime_env, build_user_agent
+from ..config import build_user_agent
 from ..extraction.html import decode_html, parse_html_metadata
 from ..http import HttpTransport, RequestFailure
 from ..metadata_types import ProviderMetadata
 from ..provider_catalog import official_provider_names
 from ..providers.base import ProviderFailure
-from ..providers.registry import build_clients
+from ..runtime import RUNTIME_UNSET, RuntimeContext, resolve_runtime_context
 from ..publisher_identity import (
     infer_provider_from_doi,
     infer_provider_from_publisher,
@@ -150,14 +150,18 @@ def select_route_probe(probes: list[RouteProbeResult]) -> RouteProbeResult | Non
 def probe_has_fulltext(
     query: str,
     *,
-    transport: HttpTransport | None = None,
-    env: Mapping[str, str] | None = None,
-    clients: Mapping[str, Any] | None = None,
+    transport: HttpTransport | None | object = RUNTIME_UNSET,
+    env: Mapping[str, str] | None | object = RUNTIME_UNSET,
+    clients: Mapping[str, Any] | None | object = RUNTIME_UNSET,
+    context: RuntimeContext | None = None,
     resolve_paper_fn=None,
 ) -> HasFulltextProbeResult:
-    active_env = env or build_runtime_env()
-    active_transport = transport or HttpTransport()
-    client_registry = dict(clients or build_clients(active_transport, active_env))
+    runtime = resolve_runtime_context(context, env=env, transport=transport, clients=clients)
+    assert runtime.env is not None
+    assert runtime.transport is not None
+    active_env = runtime.env
+    active_transport = runtime.transport
+    client_registry = dict(runtime.get_clients())
     resolver = resolve_paper_fn or resolve_paper
     resolved = resolver(query, transport=active_transport, env=active_env)
     if resolved.candidates and not resolved.doi:

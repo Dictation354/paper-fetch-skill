@@ -2,27 +2,23 @@
 
 from __future__ import annotations
 
+import inspect
 import logging
 from pathlib import Path
 import time
 from typing import Any, Mapping
 
-from ..config import build_runtime_env
+from ..artifacts import ArtifactStore
 from ..http import HttpTransport
 from ..logging_utils import emit_structured_log
 from ..models import ArticleModel, AssetProfile, metadata_only_article
 from ..provider_catalog import is_official_provider, provider_managed_abstract_only_names
 from ..providers.base import ProviderArtifacts, ProviderFailure, ProviderFetchResult
-from ..providers.registry import build_clients
+from ..runtime import RUNTIME_UNSET, RuntimeContext, resolve_runtime_context
 from ..tracing import trace_from_markers
 from ..utils import (
-    build_output_path,
-    extension_from_content_type,
     extend_unique,
-    normalize_text,
     safe_text,
-    sanitize_filename,
-    save_payload,
 )
 from .metadata import fetch_metadata_for_resolved_query
 from .rendering import finalize_article
@@ -33,19 +29,6 @@ from .types import FetchStrategy, PaperFetchFailure
 
 logger = logging.getLogger("paper_fetch.service")
 PROVIDER_MANAGED_ABSTRACT_ONLY_PROVIDERS = provider_managed_abstract_only_names()
-ACCEPTABLE_PREVIEW_MIN_WIDTH = 300
-ACCEPTABLE_PREVIEW_MIN_HEIGHT = 200
-
-
-def _preview_asset_accepted(asset: Mapping[str, Any]) -> bool:
-    if bool(asset.get("preview_accepted")):
-        return True
-    try:
-        width = int(asset.get("width") or 0)
-        height = int(asset.get("height") or 0)
-    except (TypeError, ValueError):
-        return False
-    return width >= ACCEPTABLE_PREVIEW_MIN_WIDTH and height >= ACCEPTABLE_PREVIEW_MIN_HEIGHT
 
 
 def build_metadata_only_result(
@@ -74,31 +57,12 @@ def maybe_save_provider_payload(
     doi: str | None,
     metadata: Mapping[str, Any],
 ) -> tuple[list[str], list[str]]:
-    if content is None or not content.needs_local_copy:
-        return [], []
-    provider_slug = safe_text(provider_name or "provider").lower().replace(" ", "_") or "provider"
-    provider_label = provider_slug.replace("_", " ").title()
-    if download_dir is None:
-        return [f"{provider_label} official PDF/binary was not written to disk because --no-download was set."], [
-            f"download:{provider_slug}_skipped"
-        ]
-    saved_path = save_payload(
-        build_output_path(
-            download_dir,
-            doi,
-            safe_text(metadata.get("title")),
-            content.content_type,
-            content.source_url,
-        ),
-        content.body,
+    return ArtifactStore.from_download_dir(download_dir).save_provider_payload(
+        provider_name,
+        content=content,
+        doi=doi,
+        metadata=metadata,
     )
-    if saved_path:
-        return [f"{provider_label} official full text was downloaded as PDF/binary to {saved_path}."], [
-            f"download:{provider_slug}_saved"
-        ]
-    return [f"{provider_label} official full text was available only as PDF/binary and could not be written to disk."], [
-        f"download:{provider_slug}_save_failed"
-    ]
 
 
 def _provider_html_output_path(
@@ -109,21 +73,12 @@ def _provider_html_output_path(
     doi: str | None,
     metadata: Mapping[str, Any],
 ) -> Path | None:
-    if content is None or download_dir is None:
-        return None
-    if normalize_text(provider_name).lower() != "springer":
-        return None
-    if normalize_text(content.route_kind).lower() != "html":
-        return None
-
-    extension = extension_from_content_type(content.content_type, content.source_url).lower()
-    if extension not in {".html", ".htm"}:
-        return None
-
-    article_slug = sanitize_filename(doi or safe_text(metadata.get("title")) or "article")
-    if download_dir.name == article_slug:
-        return download_dir / f"original{extension}"
-    return download_dir / f"{article_slug}_original{extension}"
+    return ArtifactStore.from_download_dir(download_dir).provider_html_output_path(
+        provider_name,
+        content=content,
+        doi=doi,
+        metadata=metadata,
+    )
 
 
 def maybe_save_provider_html_payload(
@@ -134,17 +89,12 @@ def maybe_save_provider_html_payload(
     doi: str | None,
     metadata: Mapping[str, Any],
 ) -> tuple[list[str], list[str]]:
-    output_path = _provider_html_output_path(
+    return ArtifactStore.from_download_dir(download_dir).save_provider_html_payload(
         provider_name,
         content=content,
-        download_dir=download_dir,
         doi=doi,
         metadata=metadata,
     )
-    if output_path is None or content is None:
-        return [], []
-    save_payload(output_path, content.body)
-    return [], [f"download:{normalize_text(provider_name).lower()}_html_saved"]
 
 
 def _provider_fetch_result(
@@ -152,11 +102,25 @@ def _provider_fetch_result(
     *,
     doi: str,
     metadata: Mapping[str, Any],
-    download_dir: Path | None,
+    artifact_store: ArtifactStore,
     asset_profile: AssetProfile,
 ) -> ProviderFetchResult:
+    download_dir = artifact_store.download_dir
     if hasattr(provider_client, "fetch_result"):
-        return provider_client.fetch_result(doi, metadata, download_dir, asset_profile=asset_profile)
+        fetch_result = provider_client.fetch_result
+        try:
+            parameters = inspect.signature(fetch_result).parameters
+        except (TypeError, ValueError):
+            parameters = {}
+        if "artifact_store" in parameters:
+            return fetch_result(
+                doi,
+                metadata,
+                download_dir,
+                asset_profile=asset_profile,
+                artifact_store=artifact_store,
+            )
+        return fetch_result(doi, metadata, download_dir, asset_profile=asset_profile)
 
     raw_payload = provider_client.fetch_raw_fulltext(doi, metadata)
     downloaded_assets: list[Mapping[str, Any]] = []
@@ -199,52 +163,13 @@ def _apply_provider_artifacts(
     warnings: list[str],
     source_trail: list[str],
 ) -> None:
-    if download_dir is None:
-        return
-    if asset_profile == "none":
-        extend_unique(source_trail, [f"download:{provider_name}_assets_skipped_profile_none"])
-        return
-    if artifacts.skip_warning:
-        extend_unique(warnings, [artifacts.skip_warning])
-        extend_unique(source_trail, [event.marker() for event in artifacts.skip_trace if event.marker()])
-        return
-    if artifacts.assets:
-        extend_unique(source_trail, [f"download:{provider_name}_assets_saved_profile_{asset_profile}"])
-        preview_assets = [
-            asset
-            for asset in artifacts.assets
-            if normalize_text(asset.get("download_tier")).lower() == "preview"
-        ]
-        preview_accepted_count = sum(1 for asset in preview_assets if _preview_asset_accepted(asset))
-        preview_fallback_count = len(preview_assets) - preview_accepted_count
-        if preview_accepted_count:
-            extend_unique(
-                warnings,
-                [
-                    (
-                        f"{provider_name.replace('_', ' ').title()} figure downloads used preview images for "
-                        f"{preview_accepted_count} asset(s), but their saved dimensions met the acceptance threshold."
-                    )
-                ],
-            )
-            extend_unique(source_trail, [f"download:{provider_name}_assets_preview_accepted"])
-        if preview_fallback_count:
-            extend_unique(
-                warnings,
-                [
-                    (
-                        f"{provider_name.replace('_', ' ').title()} figure downloads fell back to preview images for "
-                        f"{preview_fallback_count} asset(s) because full-size/original downloads were unavailable."
-                    )
-                ],
-            )
-            extend_unique(source_trail, [f"download:{provider_name}_assets_preview_fallback"])
-    if artifacts.asset_failures:
-        extend_unique(
-            warnings,
-            [f"{provider_name.replace('_', ' ').title()} related assets were only partially downloaded ({len(artifacts.asset_failures)} failed)."],
-        )
-        extend_unique(source_trail, [f"download:{provider_name}_asset_failures"])
+    ArtifactStore.from_download_dir(download_dir).apply_provider_artifacts(
+        provider_name=provider_name,
+        artifacts=artifacts,
+        asset_profile=asset_profile,
+        warnings=warnings,
+        source_trail=source_trail,
+    )
 
 
 def _try_official_provider(
@@ -253,7 +178,7 @@ def _try_official_provider(
     metadata: Mapping[str, Any],
     provider_name: str | None,
     strategy: FetchStrategy,
-    download_dir: Path | None,
+    artifact_store: ArtifactStore,
     clients: Mapping[str, Any],
     warnings: list[str],
     source_trail: list[str],
@@ -286,32 +211,29 @@ def _try_official_provider(
             provider_client,
             doi=doi,
             metadata=metadata,
-            download_dir=download_dir,
+            artifact_store=artifact_store,
             asset_profile=resolved_asset_profile,
         )
         extend_unique(warnings, provider_result.warnings)
-        download_warnings, download_trail = maybe_save_provider_payload(
+        download_warnings, download_trail = artifact_store.save_provider_payload(
             provider_result.provider or provider_name,
             content=provider_result.content,
-            download_dir=download_dir,
             doi=doi,
             metadata=metadata,
         )
         extend_unique(warnings, download_warnings)
         extend_unique(source_trail, download_trail)
-        html_download_warnings, html_download_trail = maybe_save_provider_html_payload(
+        html_download_warnings, html_download_trail = artifact_store.save_provider_html_payload(
             provider_result.provider or provider_name,
             content=provider_result.content,
-            download_dir=download_dir,
             doi=doi,
             metadata=metadata,
         )
         extend_unique(warnings, html_download_warnings)
         extend_unique(source_trail, html_download_trail)
-        _apply_provider_artifacts(
+        artifact_store.apply_provider_artifacts(
             provider_name=provider_name,
             artifacts=provider_result.artifacts,
-            download_dir=download_dir,
             asset_profile=resolved_asset_profile,
             warnings=warnings,
             source_trail=source_trail,
@@ -399,15 +321,26 @@ def fetch_article(
     query: str,
     *,
     strategy: FetchStrategy,
-    download_dir: Path | None,
-    clients: Mapping[str, Any] | None = None,
-    transport: HttpTransport | None = None,
-    env: Mapping[str, str] | None = None,
+    download_dir: Path | None | object = RUNTIME_UNSET,
+    clients: Mapping[str, Any] | None | object = RUNTIME_UNSET,
+    transport: HttpTransport | None | object = RUNTIME_UNSET,
+    env: Mapping[str, str] | None | object = RUNTIME_UNSET,
+    context: RuntimeContext | None = None,
     resolve_paper_fn=None,
 ) -> ArticleModel:
-    active_env = env or build_runtime_env()
-    active_transport = transport or HttpTransport()
-    client_registry = dict(clients or build_clients(active_transport, active_env))
+    runtime = resolve_runtime_context(
+        context,
+        env=env,
+        transport=transport,
+        clients=clients,
+        download_dir=download_dir,
+    )
+    assert runtime.env is not None
+    assert runtime.transport is not None
+    assert runtime.artifact_store is not None
+    active_env = runtime.env
+    active_transport = runtime.transport
+    client_registry = dict(runtime.get_clients())
     resolver = resolve_paper_fn or resolve_paper
     resolved = resolver(query, transport=active_transport, env=active_env)
     source_trail: list[str] = [f"resolve:{resolved.query_kind}"]
@@ -436,7 +369,7 @@ def fetch_article(
         metadata=metadata,
         provider_name=provider_name,
         strategy=strategy,
-        download_dir=download_dir,
+        artifact_store=runtime.artifact_store,
         clients=client_registry,
         warnings=warnings,
         source_trail=source_trail,

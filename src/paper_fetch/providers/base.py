@@ -6,6 +6,7 @@ from dataclasses import asdict, dataclass, field, replace
 from pathlib import Path
 from typing import Any, Mapping
 
+from ..artifacts import ArtifactStore
 from ..http import RequestFailure
 from ..models import ArticleModel, AssetProfile
 from ..tracing import TraceEvent, source_trail_from_trace, trace_from_markers
@@ -455,7 +456,10 @@ class ProviderClient:
         output_dir: Path | None,
         *,
         asset_profile: AssetProfile = "none",
+        artifact_store: ArtifactStore | None = None,
     ) -> ProviderFetchResult:
+        active_artifact_store = artifact_store or ArtifactStore.from_download_dir(output_dir)
+        asset_output_dir = active_artifact_store.download_dir
         prepared = self.prepare_fetch_result_payload(doi, metadata, asset_profile=asset_profile)
         prepared.raw_payload = self._sync_fetch_result_content_local_copy(prepared.raw_payload)
         prepared = self.maybe_recover_fetch_result_payload(
@@ -473,7 +477,7 @@ class ProviderClient:
         warnings = list(prepared.result_warnings if prepared.result_warnings is not None else raw_payload.warnings)
         trace = list(prepared.result_trace if prepared.result_trace is not None else raw_payload.trace)
         if (
-            output_dir is not None
+            asset_output_dir is not None
             and asset_profile != "none"
             and artifact_policy.allow_related_assets
             and self.should_download_related_assets_for_result(
@@ -486,7 +490,7 @@ class ProviderClient:
                     doi,
                     metadata,
                     raw_payload,
-                    output_dir,
+                    asset_output_dir,
                     asset_profile=asset_profile,
                 )
                 downloaded_assets = list(asset_results.get("assets") or [])

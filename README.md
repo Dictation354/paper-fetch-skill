@@ -184,6 +184,8 @@ python3 -m paper_fetch.mcp.server
 - `batch_resolve(queries, concurrency)`
 - `batch_check(queries, mode, concurrency)`，其中 `mode` 为 `metadata` 或 `article`
 
+`download_dir` 相关 provider artifact 落盘由 `RuntimeContext` / `ArtifactStore` 管理；`prefer_cache=true` 的 fetch-envelope sidecar 复用与 scoped cache resources 由 `FetchCache` 管理，外部参数和 resource URI 保持稳定。
+
 批量工具每次最多接收 `50` 条 query，`concurrency` 默认 `1`，允许范围是 `1..8`。
 
 还提供两个 prompt 模板：

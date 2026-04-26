@@ -5,6 +5,7 @@ import unittest
 from pathlib import Path
 from typing import Mapping
 
+from paper_fetch.artifacts import ArtifactStore
 from paper_fetch.models import article_from_markdown
 from paper_fetch.providers._waterfall import ProviderWaterfallStep, run_provider_waterfall
 from paper_fetch.providers.base import (
@@ -191,6 +192,28 @@ class ProviderFetchResultTemplateTests(unittest.TestCase):
 
         self.assertIn("custom asset warning: asset backend failed", result.warnings)
         self.assertIn("download:template_assets_failed", [event.marker() for event in result.trace if event.marker()])
+
+    def test_base_fetch_result_uses_artifact_store_download_dir_when_supplied(self) -> None:
+        client = _TemplateClient()
+        output_dirs: list[Path | None] = []
+
+        def fake_download_related_assets(doi, metadata, raw_payload, output_dir, *, asset_profile="all"):
+            output_dirs.append(output_dir)
+            return {"assets": [], "asset_failures": []}
+
+        client.download_related_assets = fake_download_related_assets
+        with tempfile.TemporaryDirectory() as legacy_tmpdir, tempfile.TemporaryDirectory() as artifact_tmpdir:
+            artifact_dir = Path(artifact_tmpdir)
+            result = client.fetch_result(
+                "10.5555/template",
+                {"doi": "10.5555/template", "title": "Template Article"},
+                Path(legacy_tmpdir),
+                asset_profile="all",
+                artifact_store=ArtifactStore.from_download_dir(artifact_dir),
+            )
+
+        self.assertEqual(output_dirs, [artifact_dir])
+        self.assertEqual(result.provider, "template")
 
 
 if __name__ == "__main__":

@@ -24,15 +24,9 @@ resolve_figure_download_url = _asset_impl.resolve_figure_download_url
 
 
 def download_figure_assets(*args, **kwargs):
-    original_build_opener = _asset_impl._build_cookie_seeded_opener
-    original_request = _asset_impl._request_with_opener
-    try:
-        _asset_impl._build_cookie_seeded_opener = _build_cookie_seeded_opener
-        _asset_impl._request_with_opener = _request_with_opener
-        return _asset_impl.download_figure_assets(*args, **kwargs)
-    finally:
-        _asset_impl._build_cookie_seeded_opener = original_build_opener
-        _asset_impl._request_with_opener = original_request
+    kwargs.setdefault("cookie_opener_builder", _build_cookie_seeded_opener)
+    kwargs.setdefault("opener_requester", _request_with_opener)
+    return _asset_impl.download_figure_assets(*args, **kwargs)
 
 
 download_figure_assets_with_image_document_fetcher = _asset_impl.download_figure_assets_with_image_document_fetcher

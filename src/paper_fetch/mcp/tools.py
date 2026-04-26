@@ -19,36 +19,37 @@ from pydantic import ValidationError
 
 from ..config import build_runtime_env, resolve_mcp_download_dir
 from ..http import HttpTransport, RequestCancelledError
-from ..models import (
-    ArticleModel,
-    Asset,
-    EXTRACTION_REVISION,
-    FetchEnvelope,
-    Metadata,
-    Quality,
-    QUALITY_FLAG_CACHED_WITH_CURRENT_REVISION,
-    Reference,
-    Section,
-    TokenEstimateBreakdown,
-    build_token_estimate_breakdown,
-    coerce_body_quality_metrics,
-    coerce_semantic_losses,
-    coerce_token_estimate_breakdown,
-)
+from ..models import ArticleModel, Asset, FetchEnvelope
 from ..provider_catalog import is_official_provider, provider_status_order
 from ..providers.base import ProviderFailure, ProviderStatusResult, build_provider_status_check
 from ..providers.registry import build_clients
+from ..runtime import RuntimeContext
 from ..service import PaperFetchFailure, fetch_paper as service_fetch_paper
 from ..service import probe_has_fulltext as service_probe_has_fulltext
 from ..service import resolve_paper as service_resolve_paper
-from ..tracing import TraceEvent, trace_event
-from ..utils import extend_unique, normalize_text, sanitize_filename
+from ..utils import extend_unique, normalize_text
 from ..workflow.types import effective_asset_profile
 from .cache_index import (
     find_cached_entry,
     list_cache_entries,
     preferred_cached_entries,
     refresh_cache_index_for_doi,
+)
+from .fetch_cache import (
+    FETCH_ENVELOPE_CACHE_VERSION as _FETCH_ENVELOPE_CACHE_VERSION,
+    FETCH_ENVELOPE_EXTRACTION_REVISION as _FETCH_ENVELOPE_EXTRACTION_REVISION,
+    FetchCache,
+    article_from_payload as _article_from_payload,
+    cached_payload_satisfies_request as _cached_payload_satisfies_request,
+    cached_request_matches as _cached_request_matches,
+    envelope_from_payload as _envelope_from_payload,
+    fetch_envelope_cache_path,
+    mark_envelope_cached_with_current_revision as _mark_envelope_cached_with_current_revision,
+    metadata_from_payload as _metadata_from_payload,
+    payload_from_envelope as _payload_from_envelope,
+    quality_from_payload as _quality_from_payload,
+    request_cache_payload as _request_cache_payload,
+    trace_from_payload as _trace_from_payload,
 )
 from .schemas import (
     BatchCheckRequest,
@@ -65,11 +66,23 @@ _BATCH_CHECK_MODES = {
     "article": ["article"],
     "metadata": ["metadata"],
 }
-_FETCH_ENVELOPE_CACHE_VERSION = 2
-_FETCH_ENVELOPE_EXTRACTION_REVISION = EXTRACTION_REVISION
 _FETCH_PROGRESS_TOTAL = 4
 _FETCH_LOGGER_NAMES = ("paper_fetch.service", "paper_fetch.http")
 _PROVIDER_STATUS_ORDER = provider_status_order()
+_CACHE_COMPAT_SYMBOLS = (
+    _FETCH_ENVELOPE_CACHE_VERSION,
+    _FETCH_ENVELOPE_EXTRACTION_REVISION,
+    _article_from_payload,
+    _cached_payload_satisfies_request,
+    _cached_request_matches,
+    _envelope_from_payload,
+    _mark_envelope_cached_with_current_revision,
+    _metadata_from_payload,
+    _payload_from_envelope,
+    _quality_from_payload,
+    _request_cache_payload,
+    _trace_from_payload,
+)
 _LOG_LEVEL_BY_RECORD_LEVEL = {
     logging.DEBUG: "debug",
     logging.INFO: "info",
@@ -174,239 +187,6 @@ def _service_modes_for_fetch_request(
     return requested_modes
 
 
-def _fetch_envelope_cache_path(download_dir: Path, doi: str) -> Path:
-    return download_dir / f"{sanitize_filename(doi)}.fetch-envelope.json"
-
-
-def _request_cache_payload(request: FetchPaperRequest) -> dict[str, Any]:
-    return {
-        "modes": list(request.modes),
-        "strategy": request.strategy.cache_request_payload(),
-        "include_refs": request.include_refs,
-        "max_tokens": request.max_tokens,
-    }
-
-
-def _cached_request_matches(
-    cached_request: Mapping[str, Any],
-    request: FetchPaperRequest,
-) -> bool:
-    cached_modes = {str(item) for item in cached_request.get("modes") or []}
-    if not request.requested_modes().issubset(cached_modes):
-        return False
-    if cached_request.get("strategy") != request.strategy.cache_request_payload():
-        return False
-    if cached_request.get("include_refs") != request.include_refs:
-        return False
-    return cached_request.get("max_tokens") == request.max_tokens
-
-
-def _cached_payload_satisfies_request(payload: Mapping[str, Any], request: FetchPaperRequest) -> bool:
-    requested_modes = request.requested_modes()
-    if "article" in requested_modes and payload.get("article") is None:
-        return False
-    if "markdown" in requested_modes and payload.get("markdown") is None:
-        return False
-    if "metadata" in requested_modes and payload.get("metadata") is None:
-        return False
-    return True
-
-
-def _metadata_from_payload(value: Mapping[str, Any] | None) -> Metadata | None:
-    if value is None:
-        return None
-    return Metadata(
-        title=normalize_text(value.get("title")) or None,
-        authors=[normalize_text(item) for item in value.get("authors") or [] if normalize_text(item)],
-        abstract=normalize_text(value.get("abstract")) or None,
-        journal=normalize_text(value.get("journal")) or None,
-        published=normalize_text(value.get("published")) or None,
-        keywords=[normalize_text(item) for item in value.get("keywords") or [] if normalize_text(item)],
-        license_urls=[normalize_text(item) for item in value.get("license_urls") or [] if normalize_text(item)],
-        landing_page_url=normalize_text(value.get("landing_page_url")) or None,
-    )
-
-
-def _derived_breakdown(
-    *,
-    metadata: Metadata | None,
-    sections: Sequence[Section],
-    references: Sequence[Reference],
-) -> TokenEstimateBreakdown:
-    return build_token_estimate_breakdown(
-        abstract_text=metadata.abstract if metadata is not None else None,
-        sections=sections,
-        references=references,
-    )
-
-
-def _trace_from_payload(value: Any) -> list[TraceEvent]:
-    if not isinstance(value, list):
-        return []
-    trace: list[TraceEvent] = []
-    for entry in value:
-        if not isinstance(entry, Mapping):
-            continue
-        trace.append(
-            trace_event(
-                normalize_text(entry.get("stage")) or "trace",
-                normalize_text(entry.get("component")) or "unknown",
-                normalize_text(entry.get("outcome")) or "info",
-                code=normalize_text(entry.get("code")) or None,
-                message=normalize_text(entry.get("message")) or None,
-            )
-        )
-    return trace
-
-
-def _dedupe_quality_flags(values: Sequence[str] | None) -> list[str]:
-    return list(dict.fromkeys(normalize_text(item) for item in (values or []) if normalize_text(item)))
-
-
-def _quality_from_payload(value: Mapping[str, Any] | None) -> Quality:
-    payload = value or {}
-    return Quality(
-        has_fulltext=bool(payload.get("has_fulltext")),
-        content_kind=normalize_text(payload.get("content_kind")) or "metadata_only",
-        has_abstract=bool(payload.get("has_abstract")),
-        token_estimate=int(payload.get("token_estimate") or 0),
-        warnings=[normalize_text(item) for item in payload.get("warnings") or [] if normalize_text(item)],
-        source_trail=[normalize_text(item) for item in payload.get("source_trail") or [] if normalize_text(item)],
-        trace=_trace_from_payload(payload.get("trace")),
-        token_estimate_breakdown=coerce_token_estimate_breakdown(payload.get("token_estimate_breakdown")),
-        confidence=normalize_text(payload.get("confidence")) or "low",
-        flags=_dedupe_quality_flags(payload.get("flags") or []),
-        body_metrics=coerce_body_quality_metrics(
-            payload.get("body_metrics") if isinstance(payload.get("body_metrics"), Mapping) else None
-        ),
-        semantic_losses=coerce_semantic_losses(
-            payload.get("semantic_losses") if isinstance(payload.get("semantic_losses"), Mapping) else None
-        ),
-        extraction_revision=int(payload.get("extraction_revision") or _FETCH_ENVELOPE_EXTRACTION_REVISION),
-    )
-
-
-def _article_from_payload(value: Mapping[str, Any] | None) -> ArticleModel | None:
-    if value is None:
-        return None
-    metadata = _metadata_from_payload(value.get("metadata"))
-    if metadata is None:
-        return None
-    sections = [
-        Section(
-            heading=normalize_text(entry.get("heading")) or "",
-            level=int(entry.get("level") or 0),
-            kind=normalize_text(entry.get("kind")) or "body",
-            text=normalize_text(entry.get("text")) or "",
-        )
-        for entry in value.get("sections") or []
-        if isinstance(entry, Mapping)
-    ]
-    references = [
-        Reference(
-            raw=normalize_text(entry.get("raw")) or "",
-            doi=normalize_text(entry.get("doi")) or None,
-            title=normalize_text(entry.get("title")) or None,
-            year=normalize_text(entry.get("year")) or None,
-        )
-        for entry in value.get("references") or []
-        if isinstance(entry, Mapping) and normalize_text(entry.get("raw"))
-    ]
-    quality = _quality_from_payload(value.get("quality") if isinstance(value.get("quality"), Mapping) else None)
-    if quality.token_estimate_breakdown == TokenEstimateBreakdown():
-        quality.token_estimate_breakdown = _derived_breakdown(
-            metadata=metadata,
-            sections=sections,
-            references=references,
-        )
-    return ArticleModel(
-        doi=normalize_text(value.get("doi")) or None,
-        source=normalize_text(value.get("source")) or "crossref_meta",
-        metadata=metadata,
-        sections=sections,
-        references=references,
-        assets=[
-            Asset(
-                kind=normalize_text(entry.get("kind")) or "",
-                heading=normalize_text(entry.get("heading")) or "",
-                caption=normalize_text(entry.get("caption")) or None,
-                url=normalize_text(entry.get("url")) or None,
-                path=normalize_text(entry.get("path")) or None,
-                section=normalize_text(entry.get("section")) or None,
-                render_state=normalize_text(entry.get("render_state")) or None,
-                anchor_key=normalize_text(entry.get("anchor_key")) or None,
-                download_tier=normalize_text(entry.get("download_tier")) or None,
-                download_url=normalize_text(entry.get("download_url")) or None,
-                original_url=normalize_text(entry.get("original_url")) or None,
-                content_type=normalize_text(entry.get("content_type")) or None,
-                downloaded_bytes=int(entry.get("downloaded_bytes")) if str(entry.get("downloaded_bytes") or "").isdigit() else None,
-                width=int(entry.get("width")) if str(entry.get("width") or "").isdigit() else None,
-                height=int(entry.get("height")) if str(entry.get("height") or "").isdigit() else None,
-            )
-            for entry in value.get("assets") or []
-            if isinstance(entry, Mapping)
-        ],
-        quality=quality,
-    )
-
-
-def _envelope_from_payload(payload: Mapping[str, Any]) -> FetchEnvelope:
-    article = _article_from_payload(payload.get("article") if isinstance(payload.get("article"), Mapping) else None)
-    metadata = _metadata_from_payload(payload.get("metadata") if isinstance(payload.get("metadata"), Mapping) else None)
-    breakdown = coerce_token_estimate_breakdown(payload.get("token_estimate_breakdown"))
-    quality_payload = payload.get("quality") if isinstance(payload.get("quality"), Mapping) else None
-    quality = _quality_from_payload(quality_payload)
-    if breakdown == TokenEstimateBreakdown():
-        if article is not None:
-            breakdown = article.quality.token_estimate_breakdown
-        elif metadata is not None:
-            breakdown = _derived_breakdown(metadata=metadata, sections=[], references=[])
-    if quality.token_estimate_breakdown == TokenEstimateBreakdown():
-        quality.token_estimate_breakdown = breakdown
-    if quality.token_estimate == 0:
-        quality.token_estimate = int(payload.get("token_estimate") or 0)
-    if article is not None and not quality.flags and quality_payload is None:
-        quality = article.quality
-    return FetchEnvelope(
-        doi=normalize_text(payload.get("doi")) or None,
-        source=normalize_text(payload.get("source")) or "metadata_only",
-        has_fulltext=bool(payload.get("has_fulltext")),
-        content_kind=normalize_text(payload.get("content_kind")) or "metadata_only",
-        has_abstract=bool(payload.get("has_abstract")),
-        warnings=[normalize_text(item) for item in payload.get("warnings") or [] if normalize_text(item)],
-        source_trail=[normalize_text(item) for item in payload.get("source_trail") or [] if normalize_text(item)],
-        trace=_trace_from_payload(payload.get("trace")),
-        token_estimate=int(payload.get("token_estimate") or 0),
-        token_estimate_breakdown=breakdown,
-        quality=quality,
-        article=article,
-        markdown=payload.get("markdown"),
-        metadata=metadata,
-    )
-
-
-def _mark_envelope_cached_with_current_revision(envelope: FetchEnvelope) -> FetchEnvelope:
-    envelope.quality.flags = _dedupe_quality_flags([*envelope.quality.flags, QUALITY_FLAG_CACHED_WITH_CURRENT_REVISION])
-    envelope.quality.extraction_revision = _FETCH_ENVELOPE_EXTRACTION_REVISION
-    envelope.warnings = list(envelope.quality.warnings)
-    envelope.source_trail = list(envelope.quality.source_trail)
-    envelope.trace = list(envelope.quality.trace)
-    envelope.token_estimate = envelope.quality.token_estimate
-    envelope.token_estimate_breakdown = envelope.quality.token_estimate_breakdown
-    if envelope.article is not None:
-        envelope.article.quality.flags = _dedupe_quality_flags(
-            [*envelope.article.quality.flags, QUALITY_FLAG_CACHED_WITH_CURRENT_REVISION]
-        )
-        envelope.article.quality.extraction_revision = _FETCH_ENVELOPE_EXTRACTION_REVISION
-        envelope.quality = envelope.article.quality
-        envelope.warnings = list(envelope.article.quality.warnings)
-        envelope.source_trail = list(envelope.article.quality.source_trail)
-        envelope.trace = list(envelope.article.quality.trace)
-        envelope.token_estimate = envelope.article.quality.token_estimate
-        envelope.token_estimate_breakdown = envelope.article.quality.token_estimate_breakdown
-    return envelope
-
-
 def _load_cached_fetch_envelope(
     request: FetchPaperRequest,
     *,
@@ -414,48 +194,15 @@ def _load_cached_fetch_envelope(
     transport: HttpTransport | None,
     env: Mapping[str, str],
 ) -> FetchEnvelope | None:
-    if not request.prefer_cache or download_dir is None:
-        return None
-    resolved = service_resolve_paper(request.query, transport=transport, env=env)
-    if resolved.candidates and not resolved.doi:
-        raise PaperFetchFailure(
-            "ambiguous",
-            "Query resolution is ambiguous; choose one of the DOI candidates.",
-            candidates=resolved.candidates,
-        )
-    doi = normalize_text(resolved.doi)
-    if not doi:
-        return None
-    entries = refresh_cache_index_for_doi(download_dir, doi)
-    cached_entry = next(
-        (
-            entry
-            for entry in sorted(entries, key=lambda item: float(item.get("mtime") or 0.0), reverse=True)
-            if entry.get("kind") == "fetch_envelope"
-        ),
-        None,
+    return FetchCache(
+        download_dir,
+        refresh_cache_index_for_doi_fn=refresh_cache_index_for_doi,
+    ).load_fetch_envelope(
+        request,
+        resolve_paper_fn=service_resolve_paper,
+        transport=transport,
+        env=env,
     )
-    if cached_entry is None:
-        return None
-    try:
-        cache_payload = json.loads(Path(str(cached_entry["path"])).read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError, KeyError):
-        return None
-    if not isinstance(cache_payload, Mapping):
-        return None
-    if cache_payload.get("version") != _FETCH_ENVELOPE_CACHE_VERSION:
-        return None
-    if cache_payload.get("extraction_revision") != _FETCH_ENVELOPE_EXTRACTION_REVISION:
-        return None
-    cached_request = cache_payload.get("request")
-    payload = cache_payload.get("payload")
-    if not isinstance(cached_request, Mapping) or not isinstance(payload, Mapping):
-        return None
-    if not _cached_request_matches(cached_request, request):
-        return None
-    if not _cached_payload_satisfies_request(payload, request):
-        return None
-    return _mark_envelope_cached_with_current_revision(_envelope_from_payload(payload))
 
 
 def _write_cached_fetch_envelope(
@@ -463,20 +210,10 @@ def _write_cached_fetch_envelope(
     envelope: FetchEnvelope,
     request: FetchPaperRequest,
 ) -> None:
-    doi = normalize_text(envelope.doi)
-    if not doi:
-        return
-    download_dir.mkdir(parents=True, exist_ok=True)
-    cache_path = _fetch_envelope_cache_path(download_dir, doi)
-    payload = {
-        "version": _FETCH_ENVELOPE_CACHE_VERSION,
-        "extraction_revision": _FETCH_ENVELOPE_EXTRACTION_REVISION,
-        "request": _request_cache_payload(request),
-        "payload": _payload_from_envelope(envelope, request),
-    }
-    tmp_path = cache_path.with_suffix(cache_path.suffix + ".part")
-    tmp_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
-    tmp_path.replace(cache_path)
+    FetchCache(
+        download_dir,
+        refresh_cache_index_for_doi_fn=refresh_cache_index_for_doi,
+    ).write_fetch_envelope(envelope, request)
 
 
 def _fetch_paper_envelope(
@@ -489,10 +226,16 @@ def _fetch_paper_envelope(
 ) -> FetchEnvelope:
     runtime_env = build_runtime_env(env)
     effective_download_dir = _resolve_download_dir(runtime_env, download_dir)
+    runtime_context = RuntimeContext(
+        env=runtime_env,
+        transport=transport,
+        download_dir=effective_download_dir,
+        fetch_cache=FetchCache(effective_download_dir),
+    )
     cached_envelope = _load_cached_fetch_envelope(
         request,
         download_dir=effective_download_dir,
-        transport=transport,
+        transport=runtime_context.transport,
         env=runtime_env,
     )
     if cached_envelope is not None:
@@ -503,20 +246,16 @@ def _fetch_paper_envelope(
         strategy=request.strategy.to_service_strategy(),
         render=request.to_render_options(),
         download_dir=effective_download_dir,
-        transport=transport,
+        transport=runtime_context.transport,
         env=runtime_env,
     )
     if effective_download_dir is not None and envelope.doi:
         _write_cached_fetch_envelope(effective_download_dir, envelope, request)
-        refresh_cache_index_for_doi(effective_download_dir, envelope.doi)
     return envelope
 
 
-def _payload_from_envelope(envelope: FetchEnvelope, request: FetchPaperRequest) -> dict[str, Any]:
-    payload = envelope.to_dict()
-    if "article" not in request.requested_modes():
-        payload["article"] = None
-    return payload
+def _fetch_envelope_cache_path(download_dir: Path, doi: str) -> Path:
+    return fetch_envelope_cache_path(download_dir, doi)
 
 
 def resolve_paper_payload(
@@ -585,12 +324,10 @@ def list_cached_payload(
 ) -> dict[str, Any]:
     runtime_env = build_runtime_env(env)
     effective_download_dir = _resolve_download_dir(runtime_env, download_dir)
-    if effective_download_dir is None:
-        return {"download_dir": None, "entries": []}
-    return {
-        "download_dir": str(effective_download_dir),
-        "entries": list_cache_entries(effective_download_dir),
-    }
+    return FetchCache(
+        effective_download_dir,
+        list_cache_entries_fn=list_cache_entries,
+    ).list_payload()
 
 
 def get_cached_payload(
@@ -602,18 +339,11 @@ def get_cached_payload(
     request = ResolvePaperRequest(query=doi)
     runtime_env = build_runtime_env(env)
     effective_download_dir = _resolve_download_dir(runtime_env, download_dir)
-    if effective_download_dir is None:
-        entries: list[dict[str, Any]] = []
-    else:
-        entries = refresh_cache_index_for_doi(effective_download_dir, request.composed_query())
-    preferred = preferred_cached_entries(entries)
-    return {
-        "status": "hit" if entries else "miss",
-        "doi": request.composed_query(),
-        "download_dir": str(effective_download_dir) if effective_download_dir is not None else None,
-        "entries": entries,
-        "preferred": preferred,
-    }
+    return FetchCache(
+        effective_download_dir,
+        refresh_cache_index_for_doi_fn=refresh_cache_index_for_doi,
+        preferred_cached_entries_fn=preferred_cached_entries,
+    ).get_payload(request.composed_query())
 
 
 def _provider_status_error_payload(
@@ -1240,7 +970,8 @@ async def fetch_paper_tool_async(
 
     await _report_progress(ctx, 1, _FETCH_PROGRESS_TOTAL, "Fetching paper content")
     cancelled = threading.Event()
-    transport = HttpTransport(cancel_check=cancelled.is_set)
+    runtime_context = RuntimeContext(env=build_runtime_env(env), cancel_check=cancelled.is_set)
+    transport = runtime_context.transport
     try:
         loop = asyncio.get_running_loop()
         bridge = PaperFetchLogBridge(ctx=ctx, loop=loop) if ctx is not None else None
@@ -1248,7 +979,7 @@ async def fetch_paper_tool_async(
             envelope = await _run_blocking_call(
                 _fetch_paper_envelope,
                 request,
-                env=env,
+                env=runtime_context.env,
                 download_dir=download_dir,
                 transport=transport,
                 include_article_for_assets=True,
@@ -1258,7 +989,7 @@ async def fetch_paper_tool_async(
                 envelope = await _run_blocking_call(
                     _fetch_paper_envelope,
                     request,
-                    env=env,
+                    env=runtime_context.env,
                     download_dir=download_dir,
                     transport=transport,
                     include_article_for_assets=True,

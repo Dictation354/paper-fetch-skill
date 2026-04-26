@@ -17,6 +17,7 @@ from paper_fetch.mcp.cache_index import (
 )
 from paper_fetch.mcp import server as mcp_server
 from paper_fetch.mcp import tools as mcp_tools
+from paper_fetch.mcp.fetch_cache import FetchCache
 from paper_fetch.mcp.server import build_server
 from paper_fetch.models import (
     ArticleModel,
@@ -518,6 +519,18 @@ class McpToolTests(unittest.TestCase):
         self.assertEqual(payload["doi"], "10.1000/example")
         self.assertNotIn(QUALITY_FLAG_CACHED_WITH_CURRENT_REVISION, payload["quality"]["flags"])
         mocked_fetch.assert_called_once()
+
+    def test_fetch_cache_write_refreshes_index_with_scoped_entries(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            download_dir = Path(tmpdir)
+            request = mcp_tools.FetchPaperRequest(query="10.1000/example", modes=["markdown"])
+            envelope = sample_envelope(modes={"markdown"}, doi="10.1000/example")
+
+            FetchCache(download_dir).write_fetch_envelope(envelope, request)
+            entries = mcp_tools.list_cached_payload(download_dir=download_dir)["entries"]
+
+        self.assertEqual([entry["kind"] for entry in entries], ["fetch_envelope"])
+        self.assertEqual(entries[0]["doi"], "10.1000/example")
 
     def test_fetch_paper_payload_accepts_full_text_and_asset_profile_strategy(self) -> None:
         captured: dict[str, object] = {}

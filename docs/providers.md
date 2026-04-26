@@ -257,6 +257,7 @@ CLI、Python API、MCP 当前统一采用这些默认值：
 ### 下载行为
 
 - `--no-download` 或 `download_dir=None` 优先级最高
+- Provider payload、Springer HTML local copy 和 asset 诊断统一由 `ArtifactStore` 应用，保留既有 warning 与 `download:*` source trail marker
 - 即使 `asset_profile` 是 `body` / `all`，也不会落盘
 - 没有本地文件时，Markdown 会自动退回 captions-only 或不展示本地资源链接
 

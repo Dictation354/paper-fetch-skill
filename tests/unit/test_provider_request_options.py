@@ -7,6 +7,7 @@ from pathlib import Path
 from unittest import mock
 
 from paper_fetch.http import DEFAULT_FULLTEXT_TIMEOUT_SECONDS, DEFAULT_TIMEOUT_SECONDS, RequestFailure
+from paper_fetch.extraction.html import _assets as asset_impl
 from paper_fetch.providers import _flaresolverr, _science_pnas, html_assets
 from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
 from paper_fetch.providers.crossref import CrossrefClient
@@ -281,6 +282,108 @@ class ProviderRequestOptionsTests(unittest.TestCase):
             self.assertEqual([call["url"] for call in transport.calls], ["https://example.test/images/large/figure1.png"])
             self.assertEqual(len(result["assets"]), 1)
             self.assertEqual(Path(result["assets"][0]["path"]).read_bytes(), b"large-image")
+
+    def test_html_asset_download_accepts_explicit_cookie_opener_injection(self) -> None:
+        transport = RecordingTransport({})
+        opener = object()
+        opener_builder = mock.Mock(return_value=opener)
+        opener_requester = mock.Mock(
+            return_value={
+                "status_code": 200,
+                "headers": {"content-type": "image/png"},
+                "body": b"injected-image",
+                "url": "https://example.test/images/figure1.png",
+            }
+        )
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            result = asset_impl.download_figure_assets(
+                transport,
+                article_id="10.1000/example",
+                assets=[
+                    {
+                        "kind": "figure",
+                        "heading": "Figure 1",
+                        "caption": "Injected opener",
+                        "url": "https://example.test/images/figure1.png",
+                        "section": "body",
+                    }
+                ],
+                output_dir=Path(tmpdir),
+                user_agent="unit-test",
+                asset_profile="body",
+                browser_context_seed={
+                    "browser_final_url": "https://example.test/article",
+                    "browser_cookies": [
+                        {
+                            "name": "session",
+                            "value": "abc",
+                            "domain": "example.test",
+                            "path": "/",
+                        }
+                    ],
+                },
+                candidate_builder=lambda *_args, **_kwargs: ["https://example.test/images/figure1.png"],
+                cookie_opener_builder=opener_builder,
+                opener_requester=opener_requester,
+            )
+
+        opener_builder.assert_called_once()
+        opener_requester.assert_called_once()
+        self.assertEqual(transport.calls, [])
+        self.assertEqual(result["assets"][0]["downloaded_bytes"], len(b"injected-image"))
+
+    def test_html_asset_facade_passes_patchable_hooks_without_mutating_asset_impl_globals(self) -> None:
+        transport = RecordingTransport({})
+        impl_opener_builder = mock.Mock(return_value=object())
+        facade_opener_builder = mock.Mock(return_value=object())
+        facade_requester = mock.Mock(
+            return_value={
+                "status_code": 200,
+                "headers": {"content-type": "image/png"},
+                "body": b"facade-image",
+                "url": "https://example.test/images/figure1.png",
+            }
+        )
+
+        with (
+            tempfile.TemporaryDirectory() as tmpdir,
+            mock.patch.object(asset_impl, "_build_cookie_seeded_opener", impl_opener_builder),
+            mock.patch.object(html_assets, "_build_cookie_seeded_opener", facade_opener_builder),
+            mock.patch.object(html_assets, "_request_with_opener", facade_requester),
+        ):
+            result = html_assets.download_figure_assets(
+                transport,
+                article_id="10.1000/example",
+                assets=[
+                    {
+                        "kind": "figure",
+                        "heading": "Figure 1",
+                        "caption": "Facade opener",
+                        "url": "https://example.test/images/figure1.png",
+                        "section": "body",
+                    }
+                ],
+                output_dir=Path(tmpdir),
+                user_agent="unit-test",
+                asset_profile="body",
+                browser_context_seed={
+                    "browser_cookies": [
+                        {
+                            "name": "session",
+                            "value": "abc",
+                            "domain": "example.test",
+                            "path": "/",
+                        }
+                    ],
+                },
+                candidate_builder=lambda *_args, **_kwargs: ["https://example.test/images/figure1.png"],
+            )
+
+        impl_opener_builder.assert_not_called()
+        facade_opener_builder.assert_called_once()
+        facade_requester.assert_called_once()
+        self.assertEqual(result["assets"][0]["downloaded_bytes"], len(b"facade-image"))
 
     def test_html_asset_download_uses_figure_page_full_size_before_preview(self) -> None:
         transport = RecordingTransport(

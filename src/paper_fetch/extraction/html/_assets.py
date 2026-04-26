@@ -882,6 +882,8 @@ def download_figure_assets(
     seed_urls: list[str] | None = None,
     candidate_builder: Callable[..., list[str]] | None = None,
     image_document_fetcher: ImageDocumentFetcher | None = None,
+    cookie_opener_builder: Callable[..., urllib.request.OpenerDirector | None] | None = None,
+    opener_requester: Callable[..., dict[str, Any]] | None = None,
 ) -> dict[str, list[dict[str, Any]]]:
     if output_dir is None or asset_profile == "none" or not assets:
         return empty_asset_results()
@@ -892,6 +894,8 @@ def download_figure_assets(
     downloads: list[dict[str, Any]] = []
     failures: list[dict[str, Any]] = []
     active_candidate_builder = candidate_builder or figure_download_candidates
+    active_cookie_opener_builder = cookie_opener_builder or _build_cookie_seeded_opener
+    active_opener_requester = opener_requester or _request_with_opener
 
     for asset in assets:
         preview_url = normalize_text(str(asset.get("preview_url") or asset.get("url") or ""))
@@ -935,7 +939,7 @@ def download_figure_assets(
             try:
                 request_headers = {"User-Agent": active_user_agent, "Accept": "*/*"}
                 opener = (
-                    _build_cookie_seeded_opener(
+                    active_cookie_opener_builder(
                         active_seed_urls,
                         headers=request_headers,
                         timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
@@ -948,7 +952,7 @@ def download_figure_assets(
                 if cookie_header:
                     request_headers["Cookie"] = cookie_header
                 response = (
-                    _request_with_opener(
+                    active_opener_requester(
                         opener,
                         candidate_url,
                         headers=request_headers,

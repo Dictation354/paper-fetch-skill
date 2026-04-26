@@ -1151,7 +1151,7 @@ pytest
 
 - Phase 3 后续可继续清理 browser workflow 命名和 profile 边界，但不与 Markdown rule consolidation 混在同一阶段。
 - Phase 5 的 provider waterfall/fetch result template 清理已在后续阶段完成。
-- Phase 6 的 runtime context、artifact/cache policy、asset downloader 依赖注入仍按原计划后置。
+- Phase 6 的 runtime context、artifact/cache policy、asset downloader 依赖注入已在后续阶段完成。
 
 ### Phase 5（已完成）：Provider Waterfall 与 Fetch Result Template
 
@@ -1188,7 +1188,7 @@ pytest
 
 - 中到高。Diagnostics 对用户排查问题很重要。
 
-### Phase 6：Runtime Context、Artifacts、Cache 边界
+### Phase 6（已完成）：Runtime Context、Artifacts、Cache 边界
 
 目标：
 
@@ -1198,22 +1198,32 @@ pytest
 
 - 引入新对象，同时保留旧函数签名兼容。
 
-任务：
+完成项：
 
-1. 增加 `RuntimeContext(env, transport, clients, download_dir, cancel_check)`。
-2. 让 service/workflow 支持 context，同时保留现有 keyword 参数兼容。
-3. 增加 `ArtifactStore` / `DownloadPolicy`，集中 payload 和 asset 保存。
-4. 增加 `FetchCache` abstraction，用于 MCP cache index 和 fetch-envelope reuse。
-5. 移除 `providers/html_assets.py` 中隐藏 monkey-patching，改为显式依赖注入。
+1. 新增 `RuntimeContext`，集中持有 `env`、`transport`、`clients`、`download_dir`、`cancel_check`、`artifact_store` 和 MCP 可选 `fetch_cache`。
+2. `service.fetch_paper()`、`service.probe_has_fulltext()`、`workflow.fulltext.fetch_article()`、`workflow.routing.probe_has_fulltext()` 均支持 `context=`；旧 `env`、`transport`、`clients`、`download_dir` keyword 保留，显式 keyword 覆盖 context。
+3. 新增 `ArtifactStore` / `DownloadPolicy`，集中 provider PDF/binary local copy、Springer HTML `original.html` copy 和 asset warning/source-trail 诊断；保留既有 `download:*` marker 与 warning 文案。
+4. `ProviderClient.fetch_result()` 增加可选 `artifact_store=`，旧 `output_dir` 位置参数保持兼容；未传 `artifact_store` 时按旧行为从 `output_dir` 构造默认 store。
+5. 新增 `mcp.fetch_cache.FetchCache`，封装 fetch-envelope sidecar load/write、cache request match、revision 校验和 cache index refresh；保留 `_FETCH_ENVELOPE_CACHE_VERSION = 2`、`EXTRACTION_REVISION` 校验、sidecar shape、resource URI 与 scoped cache 行为。
+6. `providers/html_assets.py` 不再临时改写 `extraction.html._assets` 全局函数；`download_figure_assets()` 显式传入 `cookie_opener_builder` 与 `opener_requester`，测试仍可 patch facade 上的兼容函数。
+7. MCP async `fetch_paper` 使用 `RuntimeContext(cancel_check=...)` 创建 cancel-aware `HttpTransport`，progress/log bridge 行为保持不变。
 
 退出标准：
 
-- Workflow 更少处理文件路径和写盘策略。
-- MCP 和 CLI 输出行为隔离在 adapter-like component 后。
+- Workflow 不再直接拼写 provider payload / Springer HTML 输出路径，改由 `ArtifactStore` 管理。
+- MCP `tools.py` 只保留 request validation、service 调用、tool result 组装和兼容 wrapper，fetch-envelope sidecar 逻辑下沉到 `FetchCache`。
 
 风险：
 
 - 中等。路径、resource URI、cache 兼容性是用户可见行为。
+
+本阶段验证：
+
+```bash
+pytest tests/unit/test_service.py tests/unit/test_provider_fetch_result_template.py tests/unit/test_provider_request_options.py tests/unit/test_mcp.py -q
+pytest tests/unit/test_cli.py tests/unit/test_provider_waterfalls.py tests/unit/test_science_pnas_provider.py -q
+pytest
+```
 
 ### Phase 7：引入成熟 Package
 

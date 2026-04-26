@@ -72,12 +72,14 @@ Date: 2026-04-25
 - 暴露 MCP tools、prompts 与 resources
 - 校验工具参数
 - 把 service 结果序列化成 JSON-safe payload
-- 管理 cache resources、progress、structured log、cancellation
+- 通过 `FetchCache` 管理 fetch-envelope sidecar / cache resources
+- 管理 progress、structured log、cancellation
 
 实现边界：
 
 - stdio transport 由 MCP 层包装成后台 stdin reader + async stream pump，避免同步 stdin 阻塞事件循环。
 - `fetch_paper` 和批量工具会把阻塞抓取工作放到 worker thread，并在 MCP 事件循环里继续处理 progress、structured log 和 cancellation。
+- async `fetch_paper` 用 `RuntimeContext(cancel_check=...)` 创建 cancel-aware `HttpTransport`，service/workflow 只消费 transport，不直接依赖 MCP cancellation 机制。
 
 不负责：
 
@@ -107,6 +109,7 @@ Date: 2026-04-25
 当前 `service.py` 只保留公共入口与兼容导出：
 
 - 暴露 `FetchStrategy`、`PaperFetchFailure`
+- 暴露 `RuntimeContext`
 - 暴露 `resolve_paper()`、`probe_has_fulltext()`、`fetch_paper()`
 - 兼容测试与外层调用方需要的 helper re-export
 
@@ -115,6 +118,7 @@ Date: 2026-04-25
 - provider route 细节判断
 - `raw_payload.metadata[...]` 这种 magic key 协议
 - 通用 HTML 提取细节
+- provider payload、Springer HTML 或 MCP sidecar cache 的具体写盘策略
 
 ### 5. Workflow 编排层
 
@@ -129,9 +133,11 @@ Date: 2026-04-25
 - `routing`
   - 负责 provider 候选、probe、fallback eligibility
 - `fulltext`
-  - 负责 provider 主链与 abstract-only / metadata-only fallback
+  - 负责 provider 主链与 abstract-only / metadata-only fallback，并通过 `ArtifactStore` 应用 provider artifact 写盘策略与诊断
 - `rendering`
   - 负责 `FetchEnvelope`、`source_trail` 派生、最终结果组装
+
+`RuntimeContext` 是 service/workflow 的显式运行时依赖容器，持有 `env`、`transport`、`clients`、`download_dir`、`cancel_check`、`artifact_store` 和 adapter 可选 `fetch_cache`。旧 keyword 参数仍可直接传入；当 `context` 与旧 keyword 同时存在时，显式旧 keyword 覆盖 context，保证 CLI/MCP 与既有测试调用兼容。
 
 ### 6. Extraction 层
 
@@ -171,7 +177,17 @@ Date: 2026-04-25
 
 Provider 身份与能力配置统一来自 `paper_fetch.provider_catalog.PROVIDER_CATALOG`。新增 provider 时，应先补 `ProviderSpec`，再接入 provider client；routing、默认资产策略、MCP status 顺序和 registry 都从 catalog 派生。
 
-### 8. Transport / Cache 层
+### 8. Runtime / Artifact / Cache 边界
+
+入口：`src/paper_fetch/runtime.py`、`src/paper_fetch/artifacts.py`、`src/paper_fetch/mcp/fetch_cache.py`
+
+职责：
+
+- `RuntimeContext` 显式承载 env、transport、clients、download_dir、cancel_check 等运行时依赖。
+- `ArtifactStore` / `DownloadPolicy` 管理 provider PDF/binary local copy、Springer HTML `original.html` copy，以及 provider asset warning/source-trail 诊断。
+- `FetchCache` 管理 MCP fetch-envelope sidecar reuse/write 和 cache index refresh；sidecar version、`EXTRACTION_REVISION` 校验、resource URI 与 scoped cache resource 语义保持稳定。
+
+### 9. Transport 层
 
 入口：`src/paper_fetch/http.py`
 
@@ -277,7 +293,7 @@ workflow 会尽可能拿到两类元数据：
 
 `wiley` / `science` / `pnas` 的 HTML 正文图片资产下载也属于这套 provider-owned browser workflow：figure / table / formula 图片候选复用同一个 seeded Playwright browser context，先尝试 full-size/original，全部失败后再用同一 context 尝试 preview。通用 HTTP-first 资产下载仍保留给非目标 provider。
 
-这些 provider-owned waterfall 由 `paper_fetch.providers._waterfall` 做轻量编排：runner 只负责按 step 顺序执行、累积 warnings、保留失败 label、组合失败并写入成功/失败 source markers；每个 provider 自己定义 XML、HTML、TDM、PDF 或 browser PDF step 的 payload 和错误映射。`ProviderClient.fetch_result` 是 template-method：base 统一完成 raw payload、local-copy flag、related assets、`to_article_model`、artifacts 和 trace/warning 尾部组装，Browser workflow / Springer 只覆盖 abstract-only recovery 与 provider-managed abstract-only finalize。
+这些 provider-owned waterfall 由 `paper_fetch.providers._waterfall` 做轻量编排：runner 只负责按 step 顺序执行、累积 warnings、保留失败 label、组合失败并写入成功/失败 source markers；每个 provider 自己定义 XML、HTML、TDM、PDF 或 browser PDF step 的 payload 和错误映射。`ProviderClient.fetch_result` 是 template-method：base 统一完成 raw payload、local-copy flag、related assets、`to_article_model`、artifacts 和 trace/warning 尾部组装，Browser workflow / Springer 只覆盖 abstract-only recovery 与 provider-managed abstract-only finalize。`fetch_result` 保留旧 `output_dir` 位置参数，同时接受 `artifact_store=`；未传时会从 `output_dir` 构造默认 store。
 
 如果正文足够可用，流程在这里结束。
 
@@ -320,8 +336,9 @@ workflow 会尽可能拿到两类元数据：
 
 随后：
 
-- CLI 决定是否写文件、是否改写相对资源链接
-- MCP 决定是否写 cache sidecar、是否暴露 resources、是否附带 inline images
+- `ArtifactStore` 已在 workflow 阶段处理 provider payload、Springer HTML copy 和 provider asset 诊断
+- CLI 仍决定是否写 Markdown 文件、是否改写相对资源链接
+- MCP 通过 `FetchCache` 决定是否复用/写入 fetch-envelope sidecar、是否暴露 resources、是否附带 inline images
 
 ## 数据契约与角色边界
 
@@ -486,7 +503,7 @@ MCP 层会把缓存暴露成 resources：
 - 默认共享缓存条目
 - 显式 `download_dir` 时的 scoped cache resources
 
-这让 host 不需要重复抓取相同论文。
+`FetchCache` 负责匹配 `prefer_cache=true` 的请求：先 resolve DOI，再按 request modes、strategy、`include_refs`、`max_tokens`、sidecar version 和 `EXTRACTION_REVISION` 复用本地 fetch-envelope。资源 URI、sidecar JSON shape 和 scoped download_dir entries 保持兼容，让 host 不需要重复抓取相同论文。
 
 ## 扩展点：新增能力时应改哪一层
 

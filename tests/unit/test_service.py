@@ -6,9 +6,11 @@ import unittest
 from pathlib import Path
 
 from paper_fetch import service as paper_fetch
+from paper_fetch.artifacts import ArtifactStore
+from paper_fetch.runtime import RuntimeContext
 from paper_fetch.http import HttpTransport, RequestFailure
 from paper_fetch.providers import _springer_html as springer_html_helper, pnas as pnas_provider, science as science_provider
-from paper_fetch.providers.base import RawFulltextPayload
+from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
 from paper_fetch.providers.wiley import WileyClient
 from paper_fetch.utils import choose_public_landing_page_url
 
@@ -31,6 +33,198 @@ class RecordCaptureHandler(logging.Handler):
 
 
 class ServiceTests(unittest.TestCase):
+    def test_fetch_paper_uses_runtime_context_dependencies_when_legacy_keywords_are_omitted(self) -> None:
+        resolved = paper_fetch.ResolvedQuery(
+            query="10.1126/science.context",
+            query_kind="doi",
+            doi="10.1126/science.context",
+            landing_url="https://www.science.org/doi/full/10.1126/science.context",
+            provider_hint="science",
+            confidence=1.0,
+        )
+        captured: dict[str, object] = {}
+        asset_output_dirs: list[Path | None] = []
+        runtime_transport = HttpTransport()
+        runtime_env = {"CROSSREF_MAILTO": "runtime@example.test"}
+        original_resolve = paper_fetch.resolve_paper
+        try:
+            paper_fetch.resolve_paper = lambda query, *, transport=None, env=None: (
+                captured.update({"transport": transport, "env": env}) or resolved
+            )
+            with tempfile.TemporaryDirectory() as tmpdir:
+                context = RuntimeContext(
+                    env=runtime_env,
+                    transport=runtime_transport,
+                    clients={
+                        "science": StubProvider(
+                            raw_payload=RawFulltextPayload(
+                                provider="science",
+                                source_url=resolved.landing_url,
+                                content_type="text/html",
+                                body=b"<html></html>",
+                                metadata={
+                                    "route": "html",
+                                    "markdown_text": "# Example Article\n\n## Results\n\n" + ("Body text " * 80),
+                                    "source_trail": ["fulltext:science_html_ok"],
+                                },
+                            ),
+                            article=sample_article(),
+                            related_asset_factory=lambda _doi, _metadata, _payload, output_dir, **_kwargs: (
+                                asset_output_dirs.append(output_dir) or {"assets": [], "asset_failures": []}
+                            ),
+                        )
+                    },
+                    download_dir=Path(tmpdir),
+                )
+
+                envelope = paper_fetch.fetch_paper(
+                    resolved.query,
+                    modes={"article"},
+                    strategy=paper_fetch.FetchStrategy(asset_profile="body"),
+                    context=context,
+                )
+        finally:
+            paper_fetch.resolve_paper = original_resolve
+
+        self.assertIsNotNone(envelope.article)
+        self.assertIs(captured["transport"], runtime_transport)
+        self.assertEqual(captured["env"], runtime_env)
+        self.assertEqual(asset_output_dirs, [context.download_dir])
+
+    def test_fetch_paper_legacy_keywords_override_runtime_context(self) -> None:
+        resolved = paper_fetch.ResolvedQuery(
+            query="10.1126/science.override",
+            query_kind="doi",
+            doi="10.1126/science.override",
+            landing_url="https://www.science.org/doi/full/10.1126/science.override",
+            provider_hint="science",
+            confidence=1.0,
+        )
+        captured: dict[str, object] = {}
+        context_asset_dirs: list[Path | None] = []
+        override_asset_dirs: list[Path | None] = []
+        context_transport = HttpTransport()
+        override_transport = HttpTransport()
+        context_env = {"CROSSREF_MAILTO": "context@example.test"}
+        override_env = {"CROSSREF_MAILTO": "override@example.test"}
+        original_resolve = paper_fetch.resolve_paper
+        try:
+            paper_fetch.resolve_paper = lambda query, *, transport=None, env=None: (
+                captured.update({"transport": transport, "env": env}) or resolved
+            )
+            with tempfile.TemporaryDirectory() as context_tmpdir, tempfile.TemporaryDirectory() as override_tmpdir:
+                context = RuntimeContext(
+                    env=context_env,
+                    transport=context_transport,
+                    clients={
+                        "science": StubProvider(
+                            raw_payload=RawFulltextPayload(
+                                provider="science",
+                                source_url=resolved.landing_url,
+                                content_type="text/html",
+                                body=b"<html></html>",
+                                metadata={
+                                    "route": "html",
+                                    "markdown_text": "# Context Article\n\n## Results\n\n" + ("Body text " * 80),
+                                },
+                            ),
+                            article=sample_article(),
+                            related_asset_factory=lambda _doi, _metadata, _payload, output_dir, **_kwargs: (
+                                context_asset_dirs.append(output_dir) or {"assets": [], "asset_failures": []}
+                            ),
+                        )
+                    },
+                    download_dir=Path(context_tmpdir),
+                )
+                override_dir = Path(override_tmpdir)
+
+                envelope = paper_fetch.fetch_paper(
+                    resolved.query,
+                    modes={"article"},
+                    strategy=paper_fetch.FetchStrategy(asset_profile="body"),
+                    context=context,
+                    env=override_env,
+                    transport=override_transport,
+                    clients={
+                        "science": StubProvider(
+                            raw_payload=RawFulltextPayload(
+                                provider="science",
+                                source_url=resolved.landing_url,
+                                content_type="text/html",
+                                body=b"<html></html>",
+                                metadata={
+                                    "route": "html",
+                                    "markdown_text": "# Override Article\n\n## Results\n\n" + ("Body text " * 80),
+                                },
+                            ),
+                            article=sample_article(),
+                            related_asset_factory=lambda _doi, _metadata, _payload, output_dir, **_kwargs: (
+                                override_asset_dirs.append(output_dir) or {"assets": [], "asset_failures": []}
+                            ),
+                        )
+                    },
+                    download_dir=override_dir,
+                )
+        finally:
+            paper_fetch.resolve_paper = original_resolve
+
+        self.assertIsNotNone(envelope.article)
+        self.assertIs(captured["transport"], override_transport)
+        self.assertEqual(captured["env"], override_env)
+        self.assertEqual(context_asset_dirs, [])
+        self.assertEqual(override_asset_dirs, [override_dir])
+
+    def test_artifact_store_preserves_provider_payload_and_springer_html_markers(self) -> None:
+        pdf_content = ProviderContent(
+            route_kind="pdf_fallback",
+            source_url="https://example.test/article.pdf",
+            content_type="application/pdf",
+            body=fulltext_pdf_bytes(),
+            needs_local_copy=True,
+        )
+        html_content = ProviderContent(
+            route_kind="html",
+            source_url="https://www.nature.com/articles/example",
+            content_type="text/html; charset=utf-8",
+            body=b"<html><body>Springer article</body></html>",
+        )
+
+        skipped_warnings, skipped_trail = ArtifactStore.from_download_dir(None).save_provider_payload(
+            "wiley",
+            content=pdf_content,
+            doi="10.1111/example",
+            metadata={"title": "Example Article"},
+        )
+        self.assertEqual(
+            skipped_warnings,
+            ["Wiley official PDF/binary was not written to disk because --no-download was set."],
+        )
+        self.assertEqual(skipped_trail, ["download:wiley_skipped"])
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            store = ArtifactStore.from_download_dir(Path(tmpdir))
+            saved_warnings, saved_trail = store.save_provider_payload(
+                "wiley",
+                content=pdf_content,
+                doi="10.1111/example",
+                metadata={"title": "Example Article"},
+            )
+            html_warnings, html_trail = store.save_provider_html_payload(
+                "springer",
+                content=html_content,
+                doi="10.1007/example",
+                metadata={"title": "Springer Example"},
+            )
+
+            saved_paths = list(Path(tmpdir).glob("*"))
+
+        self.assertEqual(saved_trail, ["download:wiley_saved"])
+        self.assertTrue(any("Wiley official full text was downloaded as PDF/binary to" in item for item in saved_warnings))
+        self.assertEqual(html_warnings, [])
+        self.assertEqual(html_trail, ["download:springer_html_saved"])
+        self.assertTrue(any(path.name.endswith(".pdf") for path in saved_paths))
+        self.assertTrue(any(path.name.endswith("_original.html") for path in saved_paths))
+
     def test_fetch_paper_omitted_asset_profile_defaults_to_body_for_scoped_html_providers(self) -> None:
         cases = [
             ("springer", "10.1007/test", "https://www.nature.com/articles/example"),

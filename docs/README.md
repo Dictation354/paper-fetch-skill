@@ -140,6 +140,7 @@
 
 - 抓取时的落盘目录。
 - 可覆盖默认下载目录，也会影响 MCP scoped cache resources。
+- Provider PDF/binary、Springer `original.html` 和 asset 诊断由 `RuntimeContext` / `ArtifactStore` 应用；MCP fetch-envelope sidecar 和 cache index 由 `FetchCache` 管理。
 - 未显式设置时，CLI / MCP 优先使用用户数据目录下的 `paper-fetch/downloads`；CLI 创建失败才退回 `live-downloads`。
 
 ## 一句话阅读建议
