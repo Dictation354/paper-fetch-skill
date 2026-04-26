@@ -14,10 +14,10 @@ from ..quality.html_profiles import (
 from ..utils import dedupe_authors, normalize_text
 from ._browser_workflow_authors import (
     extract_property_authors,
-    load_json_assignment,
     normalized_author_tokens,
 )
 from ._html_references import extract_numbered_references_from_html
+from ._script_json import extract_assignment_json
 
 from ._browser_workflow_shared import (
     build_browser_workflow_html_candidates,
@@ -31,7 +31,7 @@ PDF_PATH_TEMPLATES: tuple[str, ...] = ("/doi/epdf/{doi}", "/doi/pdf/{doi}", "/do
 CROSSREF_PDF_POSITION = 0
 NOISE_PROFILE = SCIENCE_NOISE_PROFILE
 SITE_RULE_OVERRIDES: dict[str, Any] = SCIENCE_SITE_RULE_OVERRIDES
-AAAS_DATALAYER_PATTERN = re.compile(r"AAASdataLayer=(\{.*?\});(?:if\(|</script>)", flags=re.DOTALL)
+AAAS_DATALAYER_PATTERN = re.compile(r"\bAAASdataLayer\s*=")
 SCIENCE_AUTHOR_COUNT_PATTERN = re.compile(r"^\+\s*\d+\s+authors?$", flags=re.IGNORECASE)
 SCIENCE_STRUCTURED_SUBHEADING_PATTERN = re.compile(r"(?m)^###\s+([A-Z][A-Z0-9 /-]*)\s*$")
 SCIENCE_IGNORED_AUTHOR_TEXT = {
@@ -45,7 +45,8 @@ SCIENCE_STRUCTURED_ABSTRACT_HEADING = "structured abstract"
 
 
 def _load_aaas_datalayer(html_text: str) -> Mapping[str, Any] | None:
-    return load_json_assignment(html_text, AAAS_DATALAYER_PATTERN)
+    payload = extract_assignment_json(html_text, AAAS_DATALAYER_PATTERN)
+    return payload if isinstance(payload, Mapping) else None
 
 
 def blocking_fallback_signals(html_text: str) -> list[str]:

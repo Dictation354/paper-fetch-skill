@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import unittest
 
-from paper_fetch.providers import _pnas_html, _science_html, _wiley_html, browser_workflow
+from paper_fetch.providers import _pnas_html, _science_html, _script_json, _wiley_html, browser_workflow
 from paper_fetch.providers._science_pnas_profiles import (
     build_html_candidates,
     build_pdf_candidates,
@@ -193,6 +193,20 @@ class SciencePnasCandidateTests(unittest.TestCase):
         self.assertEqual(_science_html.extract_authors(science_html), ["Ada Lovelace", "Grace Hopper"])
         self.assertEqual(_pnas_html.extract_authors(pnas_html), ["Edward Example", "Dana Creator"])
         self.assertEqual(_wiley_html.extract_authors(wiley_html), ["Meta Author"])
+
+    def test_script_json_helpers_extract_balanced_payloads(self) -> None:
+        html = """
+        <html><script>
+          AAASdataLayer = {"page":{"pageInfo":{"author":"Ada Lovelace|Grace Hopper","note":"};if("}}};
+          dataLayer.push({"event":"article","authors":["Ada Lovelace"]});
+        </script></html>
+        """
+
+        self.assertEqual(_science_html.extract_authors(html), ["Ada Lovelace", "Grace Hopper"])
+        self.assertEqual(
+            _script_json.extract_function_call_json(html, "dataLayer.push"),
+            {"event": "article", "authors": ["Ada Lovelace"]},
+        )
 
     def test_profile_author_fallback_populates_article_metadata(self) -> None:
         client = ScienceClient(None, {})

@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-import json
-import re
 from typing import Any, Callable, Mapping, Pattern
 
 from ..utils import dedupe_authors, normalize_text
+from ._script_json import extract_assignment_json, extract_script_json
 
 try:
     from bs4 import BeautifulSoup, Tag
@@ -16,13 +15,7 @@ except ImportError:  # pragma: no cover - dependency is declared in pyproject
 
 
 def load_json_assignment(html_text: str, pattern: Pattern[str]) -> Mapping[str, Any] | None:
-    match = pattern.search(html_text)
-    if not match:
-        return None
-    try:
-        payload = json.loads(match.group(1))
-    except json.JSONDecodeError:
-        return None
+    payload = extract_assignment_json(html_text, pattern)
     return payload if isinstance(payload, Mapping) else None
 
 
@@ -163,18 +156,8 @@ def extract_jsonld_authors(
 ) -> list[str]:
     if BeautifulSoup is None:
         return []
-    soup = BeautifulSoup(html_text, "html.parser")
     authors: list[str] = []
-    for script in soup.find_all("script", attrs={"type": re.compile(r"ld\+json", flags=re.IGNORECASE)}):
-        if Tag is not None and not isinstance(script, Tag):
-            continue
-        payload_text = script.string if script.string is not None else script.get_text()
-        if not normalize_text(payload_text):
-            continue
-        try:
-            payload = json.loads(payload_text)
-        except json.JSONDecodeError:
-            continue
+    for payload in extract_script_json(html_text, type_pattern="ld+json"):
         for node in iter_jsonld_nodes(payload):
             if not (jsonld_types(node) & article_types):
                 continue
