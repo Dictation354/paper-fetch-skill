@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any, Mapping, cast
 
 from ..config import build_user_agent
-from ..extraction.html import decode_html, parse_html_metadata
+from ..extraction.html.landing import fetch_landing_html
 from ..http import HttpTransport, RequestFailure
 from ..metadata_types import ProviderMetadata
 from ..provider_catalog import official_provider_names
@@ -103,16 +103,17 @@ def _landing_page_citation_pdf_probe(
     transport: HttpTransport,
     env: Mapping[str, str],
 ) -> tuple[bool, str | None]:
-    response = transport.request(
-        "GET",
+    landing_fetch = fetch_landing_html(
         landing_url,
+        transport=transport,
         headers={
             "Accept": "text/html,application/xhtml+xml",
             "User-Agent": build_user_agent(env),
         },
+        max_redirects=0,
         retry_on_transient=True,
     )
-    html_metadata = parse_html_metadata(decode_html(response["body"]), response["url"])
+    html_metadata = landing_fetch.metadata
     raw_meta = html_metadata.get("raw_meta") or {}
     citation_pdf_values = raw_meta.get("citation_pdf_url") if isinstance(raw_meta, Mapping) else None
     has_citation_pdf_url = any(normalize_text(item) for item in (citation_pdf_values or []))

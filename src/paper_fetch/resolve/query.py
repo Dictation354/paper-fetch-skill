@@ -13,7 +13,7 @@ from typing import Any, Mapping
 
 from ..config import build_runtime_env, build_user_agent
 from ..errors import ProviderFailure
-from ..extraction.html import decode_html, parse_html_metadata
+from ..extraction.html.landing import fetch_landing_html
 from ..html_lookup import is_usable_html_lookup_title
 from ..http import HttpTransport, RequestFailure
 from ..metadata_types import CrossrefMetadata
@@ -120,24 +120,14 @@ def resolve_query(
         }
         current_url = normalized_query
         try:
-            response = active_transport.request(
-                "GET",
+            landing_fetch = fetch_landing_html(
                 current_url,
+                transport=active_transport,
                 headers=request_headers,
+                max_redirects=MAX_URL_REDIRECTS,
+                redirect_base="current_url",
                 retry_on_transient=True,
             )
-            for _ in range(MAX_URL_REDIRECTS):
-                status_code = int(response.get("status_code") or 0)
-                redirect_location = str((response.get("headers") or {}).get("location") or "").strip()
-                if status_code not in {301, 302, 303, 307, 308} or not redirect_location:
-                    break
-                current_url = urllib.parse.urljoin(current_url, redirect_location)
-                response = active_transport.request(
-                    "GET",
-                    current_url,
-                    headers=request_headers,
-                    retry_on_transient=True,
-                )
         except RequestFailure as exc:
             if direct_doi:
                 provider_hint = infer_provider_from_signals(
@@ -153,8 +143,8 @@ def resolve_query(
                     confidence=1.0,
                 )
             raise ProviderFailure("error", f"Failed to fetch landing page: {exc}") from exc
-        response_url = urllib.parse.urljoin(current_url, str(response.get("url") or "").strip() or current_url)
-        html_metadata = parse_html_metadata(decode_html(response["body"]), response_url)
+        response_url = landing_fetch.final_url
+        html_metadata = landing_fetch.metadata
         landing_url = urllib.parse.urljoin(
             response_url,
             str(html_metadata.get("landing_page_url") or response_url).strip() or response_url,

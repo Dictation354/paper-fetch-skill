@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any, Mapping
 
 from ..config import build_user_agent
+from ..extraction.html.landing import LandingHtmlFetchResult, LandingRedirectLimitExceeded, fetch_landing_html
 from ..http import DEFAULT_FULLTEXT_TIMEOUT_SECONDS, HttpTransport, RequestFailure, build_text_preview
 from ..metadata_types import ProviderMetadata
 from ..models import AssetProfile, article_from_markdown, metadata_only_article
@@ -351,36 +352,29 @@ class SpringerClient(ProviderClient):
             "User-Agent": self.user_agent,
         }
 
-    def _fetch_html_response(self, landing_url: str) -> tuple[dict[str, Any], str]:
-        current_url = landing_url
+    def _fetch_html_landing(self, landing_url: str) -> LandingHtmlFetchResult:
         try:
-            response = self.transport.request(
-                "GET",
-                current_url,
+            return fetch_landing_html(
+                landing_url,
+                transport=self.transport,
                 headers=self._headers(),
                 timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
+                max_redirects=MAX_SPRINGER_HTML_REDIRECTS,
+                metadata_parser=_springer_html.parse_html_metadata,
+                raise_on_redirect_limit=True,
                 retry_on_transient=True,
             )
-            for _ in range(MAX_SPRINGER_HTML_REDIRECTS):
-                response_url = urllib.parse.urljoin(current_url, str(response.get("url") or "").strip() or current_url)
-                status_code = int(response.get("status_code") or 0)
-                redirect_location = str((response.get("headers") or {}).get("location") or "").strip()
-                if status_code not in {301, 302, 303, 307, 308} or not redirect_location:
-                    return response, response_url
-                current_url = urllib.parse.urljoin(response_url, redirect_location)
-                response = self.transport.request(
-                    "GET",
-                    current_url,
-                    headers=self._headers(),
-                    timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
-                    retry_on_transient=True,
-                )
+        except LandingRedirectLimitExceeded as exc:
+            raise ProviderFailure(
+                "error",
+                f"Springer direct HTML retrieval exceeded {MAX_SPRINGER_HTML_REDIRECTS} redirects.",
+            ) from exc
         except RequestFailure as exc:
             raise map_request_failure(exc) from exc
-        raise ProviderFailure(
-            "error",
-            f"Springer direct HTML retrieval exceeded {MAX_SPRINGER_HTML_REDIRECTS} redirects.",
-        )
+
+    def _fetch_html_response(self, landing_url: str) -> tuple[dict[str, Any], str]:
+        landing_fetch = self._fetch_html_landing(landing_url)
+        return dict(landing_fetch.response), landing_fetch.final_url
 
     def _render_table_page_markdown(
         self,
