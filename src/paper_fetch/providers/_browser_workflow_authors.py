@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 from typing import Any, Callable, Mapping, Pattern
 
 from ..utils import dedupe_authors, normalize_text
@@ -58,6 +59,127 @@ def is_ignored_author_text(
     if reject_email and ("@" in normalized or normalized.startswith("mailto:")):
         return True
     return any(normalized.startswith(prefix) for prefix in reject_affiliation_prefixes)
+
+
+def jsonld_types(node: Mapping[str, Any]) -> set[str]:
+    raw_types = node.get("@type")
+    if isinstance(raw_types, str):
+        values = [raw_types]
+    elif isinstance(raw_types, list):
+        values = [item for item in raw_types if isinstance(item, str)]
+    else:
+        values = []
+    return {normalize_text(value).lower() for value in values if normalize_text(value)}
+
+
+def iter_jsonld_nodes(payload: Any) -> list[Mapping[str, Any]]:
+    nodes: list[Mapping[str, Any]] = []
+    queue: list[Any] = [payload]
+    while queue:
+        current = queue.pop(0)
+        if isinstance(current, list):
+            queue.extend(current)
+            continue
+        if not isinstance(current, Mapping):
+            continue
+        nodes.append(current)
+        graph = current.get("@graph")
+        if isinstance(graph, list):
+            queue.extend(graph)
+        elif isinstance(graph, Mapping):
+            queue.append(graph)
+    return nodes
+
+
+def _schema_name_from_mapping(value: Mapping[str, Any]) -> str:
+    direct_name = normalize_text(str(value.get("name") or ""))
+    if direct_name:
+        return direct_name
+    return normalize_text(
+        " ".join(
+            part
+            for part in (
+                normalize_text(str(value.get("givenName") or "")),
+                normalize_text(str(value.get("familyName") or "")),
+            )
+            if part
+        )
+    )
+
+
+def _schema_author_names(value: Any) -> list[str]:
+    if isinstance(value, list):
+        authors: list[str] = []
+        for item in value:
+            authors.extend(_schema_author_names(item))
+        return authors
+    if isinstance(value, Mapping):
+        candidate = _schema_name_from_mapping(value)
+    else:
+        candidate = normalize_text(str(value or ""))
+    return [candidate] if looks_like_author_name(candidate) else []
+
+
+def _expand_path_value(value: Any) -> list[Any]:
+    if isinstance(value, list):
+        return list(value)
+    if value is None:
+        return []
+    return [value]
+
+
+def _values_at_schema_path(node: Mapping[str, Any], path: str) -> list[Any]:
+    values: list[Any] = [node]
+    for key in path.split("."):
+        next_values: list[Any] = []
+        for value in values:
+            if isinstance(value, Mapping):
+                next_values.extend(_expand_path_value(value.get(key)))
+            elif isinstance(value, list):
+                for item in value:
+                    if isinstance(item, Mapping):
+                        next_values.extend(_expand_path_value(item.get(key)))
+        values = next_values
+    return values
+
+
+def extract_schema_author_names(
+    node: Mapping[str, Any],
+    *,
+    author_paths: tuple[str, ...] = ("author",),
+) -> list[str]:
+    authors: list[str] = []
+    for path in author_paths:
+        for value in _values_at_schema_path(node, path):
+            authors.extend(_schema_author_names(value))
+    return dedupe_authors(authors)
+
+
+def extract_jsonld_authors(
+    html_text: str,
+    *,
+    article_types: set[str] | frozenset[str],
+    author_paths: tuple[str, ...] = ("author",),
+) -> list[str]:
+    if BeautifulSoup is None:
+        return []
+    soup = BeautifulSoup(html_text, "html.parser")
+    authors: list[str] = []
+    for script in soup.find_all("script", attrs={"type": re.compile(r"ld\+json", flags=re.IGNORECASE)}):
+        if Tag is not None and not isinstance(script, Tag):
+            continue
+        payload_text = script.string if script.string is not None else script.get_text()
+        if not normalize_text(payload_text):
+            continue
+        try:
+            payload = json.loads(payload_text)
+        except json.JSONDecodeError:
+            continue
+        for node in iter_jsonld_nodes(payload):
+            if not (jsonld_types(node) & article_types):
+                continue
+            authors.extend(extract_schema_author_names(node, author_paths=author_paths))
+    return dedupe_authors(authors)
 
 
 def extract_meta_authors(html_text: str, *, keys: set[str]) -> list[str]:
@@ -132,6 +254,7 @@ def extract_selector_authors(
     selectors: tuple[str, ...],
     ignored_text: set[str],
     node_text: Callable[[Any], str],
+    count_pattern: Pattern[str] | None = None,
     reject_email: bool = False,
     reject_affiliation_prefixes: tuple[str, ...] = (),
 ) -> list[str]:
@@ -151,6 +274,7 @@ def extract_selector_authors(
             if is_ignored_author_text(
                 candidate,
                 ignored_text=ignored_text,
+                count_pattern=count_pattern,
                 reject_email=reject_email,
                 reject_affiliation_prefixes=reject_affiliation_prefixes,
             ):

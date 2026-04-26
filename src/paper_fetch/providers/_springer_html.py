@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import re
 import urllib.parse
 from typing import Any, Mapping
@@ -28,6 +27,12 @@ from ..extraction.html._runtime import (
 from ..extraction.html.language import collect_html_abstract_blocks, html_node_language_hint
 from ..extraction.html.semantics import collect_html_section_hints
 from ..utils import dedupe_authors, normalize_text
+from ._browser_workflow_authors import (
+    extract_jsonld_authors as extract_common_jsonld_authors,
+    extract_meta_authors as extract_common_meta_authors,
+    extract_selector_authors as extract_common_selector_authors,
+    looks_like_author_name,
+)
 from ._html_references import extract_numbered_references_from_html
 from .html_springer_nature import (
     clean_springer_nature_text_fragment,
@@ -100,26 +105,6 @@ def decode_html(body: bytes) -> str:
     return _decode_html(body)
 
 
-def _looks_like_author_name(text: str) -> bool:
-    normalized = normalize_text(text)
-    return bool(normalized) and any(character.isalpha() for character in normalized)
-
-
-def _is_ignored_author_text(text: str) -> bool:
-    normalized = normalize_text(text).lower()
-    if not normalized:
-        return True
-    if normalized in SPRINGER_IGNORED_AUTHOR_TEXT:
-        return True
-    if normalized.startswith(("http://", "https://")) or "orcid.org" in normalized:
-        return True
-    if normalized.startswith("author information"):
-        return True
-    if "@" in normalized or normalized.startswith("mailto:"):
-        return True
-    return False
-
-
 def _looks_like_collective_author_text(text: str) -> bool:
     normalized = normalize_text(text).lower()
     if not normalized:
@@ -136,7 +121,7 @@ def _normalize_display_author_name(name: str) -> str:
     left, right = [part.strip() for part in normalized.split(",", 1)]
     if not left or not right:
         return normalized
-    if not (_looks_like_author_name(left) and _looks_like_author_name(right)):
+    if not (looks_like_author_name(left) and looks_like_author_name(right)):
         return normalized
     if _looks_like_collective_author_text(left) or _looks_like_collective_author_text(right):
         return normalized
@@ -152,118 +137,39 @@ def normalize_display_authors(authors: list[str]) -> list[str]:
 
 
 def _extract_meta_authors(html_text: str) -> list[str]:
-    if BeautifulSoup is None:
-        return []
-    soup = BeautifulSoup(html_text, "html.parser")
-    authors: list[str] = []
-    for meta in soup.find_all("meta"):
-        if Tag is not None and not isinstance(meta, Tag):
-            continue
-        key = normalize_text(str(meta.get("name") or meta.get("property") or "")).lower()
-        if key != "citation_author":
-            continue
-        candidate = normalize_text(str(meta.get("content") or ""))
-        if _looks_like_author_name(candidate):
-            authors.append(candidate)
-    return _normalize_display_authors(authors)
-
-
-def _jsonld_types(node: Mapping[str, Any]) -> set[str]:
-    raw_types = node.get("@type")
-    if isinstance(raw_types, str):
-        values = [raw_types]
-    elif isinstance(raw_types, list):
-        values = [item for item in raw_types if isinstance(item, str)]
-    else:
-        values = []
-    return {normalize_text(value).lower() for value in values if normalize_text(value)}
-
-
-def _iter_jsonld_nodes(payload: Any) -> list[Mapping[str, Any]]:
-    nodes: list[Mapping[str, Any]] = []
-    queue: list[Any] = [payload]
-    while queue:
-        current = queue.pop(0)
-        if isinstance(current, list):
-            queue.extend(current)
-            continue
-        if not isinstance(current, Mapping):
-            continue
-        nodes.append(current)
-        graph = current.get("@graph")
-        if isinstance(graph, list):
-            queue.extend(graph)
-        elif isinstance(graph, Mapping):
-            queue.append(graph)
-    return nodes
-
-
-def _jsonld_author_candidates(node: Mapping[str, Any]) -> list[str]:
-    candidates: list[str] = []
-    main_entity = node.get("mainEntity")
-    entities = [main_entity] if isinstance(main_entity, Mapping) else list(main_entity or []) if isinstance(main_entity, list) else []
-    for entity in entities:
-        if not isinstance(entity, Mapping):
-            continue
-        author_blob = entity.get("author")
-        author_nodes = [author_blob] if isinstance(author_blob, Mapping) else list(author_blob or []) if isinstance(author_blob, list) else []
-        for author_node in author_nodes:
-            if isinstance(author_node, Mapping):
-                candidate = normalize_text(str(author_node.get("name") or ""))
-            else:
-                candidate = normalize_text(str(author_node or ""))
-            if _looks_like_author_name(candidate):
-                candidates.append(candidate)
-    return candidates
+    return _normalize_display_authors(extract_common_meta_authors(html_text, keys={"citation_author"}))
 
 
 def _extract_jsonld_authors(html_text: str) -> list[str]:
-    if BeautifulSoup is None:
-        return []
-    soup = BeautifulSoup(html_text, "html.parser")
-    authors: list[str] = []
-    for script in soup.find_all("script", attrs={"type": re.compile(r"ld\+json", flags=re.IGNORECASE)}):
-        if Tag is not None and not isinstance(script, Tag):
-            continue
-        payload_text = script.string if script.string is not None else script.get_text()
-        if not normalize_text(payload_text):
-            continue
-        try:
-            payload = json.loads(payload_text)
-        except json.JSONDecodeError:
-            continue
-        for node in _iter_jsonld_nodes(payload):
-            if not (_jsonld_types(node) & SPRINGER_ARTICLE_JSONLD_TYPES):
-                continue
-            authors.extend(_jsonld_author_candidates(node))
-    return _normalize_display_authors(authors)
+    return _normalize_display_authors(
+        extract_common_jsonld_authors(
+            html_text,
+            article_types=SPRINGER_ARTICLE_JSONLD_TYPES,
+            author_paths=("mainEntity.author",),
+        )
+    )
+
+
+def _node_author_text(node: Any) -> str:
+    return normalize_text(node.get_text(" ", strip=True)) if Tag is not None and isinstance(node, Tag) else ""
 
 
 def _extract_dom_authors(html_text: str) -> list[str]:
-    if BeautifulSoup is None:
-        return []
-    soup = BeautifulSoup(html_text, "html.parser")
-    authors: list[str] = []
-    selectors = (
-        "[data-test='author-name']",
-        ".c-article-author-list [itemprop='name']",
-        ".c-article-author-list li",
-        ".authors__name",
+    return _normalize_display_authors(
+        extract_common_selector_authors(
+            html_text,
+            selectors=(
+                "[data-test='author-name']",
+                ".c-article-author-list [itemprop='name']",
+                ".c-article-author-list li",
+                ".authors__name",
+            ),
+            ignored_text=SPRINGER_IGNORED_AUTHOR_TEXT,
+            node_text=_node_author_text,
+            reject_email=True,
+            reject_affiliation_prefixes=("author information",),
+        )
     )
-    seen_nodes: set[int] = set()
-    for selector in selectors:
-        for node in soup.select(selector):
-            if Tag is not None and not isinstance(node, Tag):
-                continue
-            if id(node) in seen_nodes:
-                continue
-            seen_nodes.add(id(node))
-            candidate = normalize_text(node.get_text(" ", strip=True))
-            if _is_ignored_author_text(candidate):
-                continue
-            if _looks_like_author_name(candidate):
-                authors.append(candidate)
-    return _normalize_display_authors(authors)
 
 
 def extract_authors(html_text: str) -> list[str]:
