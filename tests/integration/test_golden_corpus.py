@@ -48,10 +48,10 @@ class GoldenCorpusTests(unittest.TestCase):
     def test_golden_corpus_is_balanced_across_publishers(self) -> None:
         fixtures = iter_golden_corpus_fixtures()
 
-        self.assertEqual(len(fixtures), 50)
+        self.assertEqual(len(fixtures), 51)
         self.assertEqual(
             Counter(fixture.provider for fixture in fixtures),
-            Counter({"elsevier": 10, "pnas": 10, "science": 10, "springer": 10, "wiley": 10}),
+            Counter({"elsevier": 10, "pnas": 10, "science": 10, "springer": 11, "wiley": 10}),
         )
 
     def test_golden_corpus_lightweight_contracts_hold_across_full_corpus(self) -> None:
@@ -115,7 +115,7 @@ class GoldenCorpusTests(unittest.TestCase):
 
     @unittest.skipUnless(
         os.environ.get(FULL_GOLDEN_ENV) == "1",
-        f"Set {FULL_GOLDEN_ENV}=1 to run full 50-fixture golden corpus regression.",
+        f"Set {FULL_GOLDEN_ENV}=1 to run full 51-fixture golden corpus regression.",
     )
     def test_golden_corpus_expected_summaries_match_current_extractors(self) -> None:
         for fixture in iter_golden_corpus_fixtures():

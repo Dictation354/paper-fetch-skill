@@ -114,6 +114,22 @@
       },
       "fixture_family": "golden"
     },
+    "10.1038_s41586-020-1941-5": {
+      "doi": "10.1038/s41586-020-1941-5",
+      "publisher": "springer",
+      "source_url": "https://www.nature.com/articles/s41586-020-1941-5",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "assets": {
+        "expected.json": "tests/fixtures/golden_criteria/10.1038_s41586-020-1941-5/expected.json",
+        "original.html": "tests/fixtures/golden_criteria/10.1038_s41586-020-1941-5/original.html"
+      },
+      "fixture_family": "golden",
+      "title": "Forest age and water yield",
+      "landing_url": "https://www.nature.com/articles/s41586-020-1941-5",
+      "route_kind": "html",
+      "content_type": "text/html; charset=\"UTF-8\""
+    },
     "10.1038_s41561-022-00983-6": {
       "doi": "10.1038/s41561-022-00983-6",
       "publisher": "springer",

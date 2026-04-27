@@ -375,6 +375,12 @@ class SpringerHtmlRegressionTests(unittest.TestCase):
         formula_assets = [asset for asset in extracted_assets if normalize_text(asset.get("kind")).lower() == "formula"]
         self.assertEqual(len(figure_assets), 3)
         self.assertGreater(len(formula_assets), 0)
+        self.assertIn("_Equ1_HTML.jpg", markdown_text)
+        self.assertIn("_Equ2_HTML.jpg", markdown_text)
+        self.assertIn("![Formula](//media.springernature.com/", markdown_text)
+        self.assertTrue(any("_Equ1_HTML.jpg" in normalize_text(asset.get("url")) for asset in formula_assets))
+        self.assertTrue(any("_Equ2_HTML.jpg" in normalize_text(asset.get("url")) for asset in formula_assets))
+        self.assertFalse(any("Fig1_HTML" in normalize_text(asset.get("url")) for asset in formula_assets))
         self.assertNotIn("PowerPoint slide", markdown_text)
         self.assertNotIn("Full size image", markdown_text)
         for asset in figure_assets:
@@ -536,6 +542,28 @@ class SpringerHtmlRegressionTests(unittest.TestCase):
         self.assertIn("**Figure 1.**", extraction_payload["markdown_text"])
         self.assertIn("![Figure 1](/tmp/fake-springer-figure-1.png)", markdown)
         self.assertNotIn("\n## Figures\n", markdown)
+
+    def test_nature_matters_arising_fixture_keeps_main_content_before_reporting_summary(self) -> None:
+        sample = golden_criteria_sample_for_doi("10.1038/s41586-020-1941-5")
+        doi = str(sample["doi"])
+        source_url = str(sample["source_url"])
+        title = str(sample["title"])
+        html_text = golden_criteria_asset(doi, "original.html").read_text(encoding="utf-8", errors="ignore")
+
+        extraction_payload = _springer_html.extract_html_payload(
+            html_text,
+            source_url,
+            title=title,
+        )
+        markdown_text = extraction_payload["markdown_text"]
+
+        self.assertIn("Planting and removal of forest affect average streamflow", markdown_text)
+        self.assertIn("The record length of the studies used by Evaristo and McDonnell", markdown_text)
+        self.assertIn("## Data availability", markdown_text)
+        self.assertIn("Five-year-average water yield observations", markdown_text)
+        self.assertIn("## Reporting summary", markdown_text)
+        self.assertLess(markdown_text.index("Planting and removal"), markdown_text.index("## Reporting summary"))
+        self.assertEqual(markdown_text.count("## Data availability"), 1)
 
     def test_drought_self_propagation_fixture_has_no_trailing_figures_block(self) -> None:
         sample = golden_criteria_sample_for_doi("10.1038/s41561-022-00912-7")

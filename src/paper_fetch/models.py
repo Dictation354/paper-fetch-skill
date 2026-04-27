@@ -489,6 +489,8 @@ def section_kind_for_heading(heading: str) -> str:
         return "references"
     if category == "abstract":
         return "abstract"
+    if category == "ancillary":
+        return "diagnostics"
     return "body"
 
 
@@ -2326,10 +2328,14 @@ def _strip_leading_explicit_abstract_paragraphs(
 def _promote_stripped_methods_summary_section(
     original_section: Section,
     stripped_section: Section | None,
+    *,
+    normalize_methods_summary: bool,
 ) -> Section | None:
     if normalize_text(original_section.kind).lower() != "body":
         return stripped_section
     if normalize_text(original_section.heading).lower() != "methods summary":
+        return stripped_section
+    if not normalize_methods_summary:
         return stripped_section
     if stripped_section is None:
         return Section(
@@ -2346,6 +2352,47 @@ def _promote_stripped_methods_summary_section(
         kind=stripped_section.kind,
         text=stripped_section.text,
     )
+
+
+def _coerced_section_hint_headings_and_sources(
+    section_hints: Sequence[SectionHint | Mapping[str, Any]] | None,
+) -> tuple[set[str], str]:
+    headings: set[str] = set()
+    sources: list[str] = []
+    for hint in _coerce_section_hints(section_hints):
+        normalized_heading = normalize_text(hint.heading).lower()
+        if normalized_heading:
+            headings.add(normalized_heading)
+        source_selector = normalize_text(hint.source_selector).lower()
+        if source_selector:
+            sources.append(source_selector)
+    return headings, " ".join(sources)
+
+
+def _has_old_nature_methods_summary_structure(
+    parsed_sections: Sequence[Section],
+    section_hints: Sequence[SectionHint | Mapping[str, Any]] | None,
+) -> bool:
+    parsed_headings = {normalize_text(section.heading).lower() for section in parsed_sections if normalize_text(section.heading)}
+    if "methods summary" not in parsed_headings:
+        return False
+    if "online methods" in parsed_headings:
+        return True
+
+    hint_headings, hint_source_blob = _coerced_section_hint_headings_and_sources(section_hints)
+    if "methods summary" in hint_headings and "online methods" in hint_headings:
+        return True
+    if "methods summary" in hint_headings and any(
+        token in hint_source_blob
+        for token in (
+            "online-methods",
+            "online_methods",
+            "methods-summary",
+            "methods_summary",
+        )
+    ):
+        return True
+    return False
 
 
 def _normalize_inline_citations_in_section(section: Section) -> Section:
@@ -2703,6 +2750,7 @@ def article_from_markdown(
         section_hints=section_hints,
     )
     parsed_sections = [_normalize_inline_citations_in_section(section) for section in parsed_sections]
+    normalize_methods_summary = _has_old_nature_methods_summary_structure(parsed_sections, section_hints)
     explicit_abstract_sections = [
         _normalize_inline_citations_in_section(section)
         for section in _abstract_sections_from_blocks(abstract_sections)
@@ -2716,7 +2764,11 @@ def article_from_markdown(
             continue
         original_section = section
         section = _strip_leading_explicit_abstract_paragraphs(section, explicit_abstract_sections)
-        section = _promote_stripped_methods_summary_section(original_section, section)
+        section = _promote_stripped_methods_summary_section(
+            original_section,
+            section,
+            normalize_methods_summary=normalize_methods_summary,
+        )
         if section is None:
             continue
         section = _normalize_inline_citations_in_section(section)

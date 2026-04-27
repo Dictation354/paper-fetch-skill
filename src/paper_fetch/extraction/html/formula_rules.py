@@ -14,7 +14,7 @@ except ImportError:  # pragma: no cover - dependency is declared in pyproject
     Tag = None
 
 FORMULA_IMAGE_URL_PATTERN = re.compile(
-    r"(?:^|[-_/])(?:math|ieq)[-_]?\d|_IEq\d|math-\d|equation",
+    r"(?:^|[-_/])(?:math|ieq|equ)[-_]?\d|_(?:IEq|Equ)\d|math-\d|equation",
     flags=re.IGNORECASE,
 )
 FORMULA_CONTAINER_TOKENS = (
@@ -23,6 +23,8 @@ FORMULA_CONTAINER_TOKENS = (
     "disp-formula",
     "display-formula",
     "fallback__mathequation",
+    "c-article-equation",
+    "c-article-equation__content",
 )
 FORMULA_IMAGE_ATTRS = (
     "data-altimg",
@@ -49,6 +51,8 @@ DISPLAY_FORMULA_SELECTORS = (
     ".disp-formula",
     ".display-equation",
     ".inline-equation",
+    ".c-article-equation",
+    ".c-article-equation__content",
     "math[display='block']",
     "div[role='math']",
 )
@@ -119,9 +123,16 @@ def is_display_formula_node(node: Any) -> bool:
     if normalize_text(str(attrs.get("display") or "")).lower() == "block":
         return True
     identity = formula_ancestor_identity_text(node)
-    return any(token in identity for token in ("display-equation", "disp-formula", "display-formula")) or normalize_text(
-        str(attrs.get("role") or "")
-    ).lower() == "math"
+    return any(
+        token in identity
+        for token in (
+            "display-equation",
+            "disp-formula",
+            "display-formula",
+            "c-article-equation",
+            "c-article-equation__content",
+        )
+    ) or normalize_text(str(attrs.get("role") or "")).lower() == "math"
 
 
 def _candidate_urls(tag: Any) -> list[str]:

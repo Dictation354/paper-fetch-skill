@@ -21,6 +21,8 @@ from paper_fetch.models import (
     metadata_only_article,
     normalize_markdown_text,
 )
+from paper_fetch.providers import _springer_html
+from tests.golden_criteria import golden_criteria_asset
 
 from ._paper_fetch_support import sample_article
 
@@ -1152,65 +1154,65 @@ class ModelsRenderTests(unittest.TestCase):
         self.assertEqual(article.metadata.abstract, explicit_abstract)
 
     def test_article_from_markdown_promotes_repeated_methods_summary_to_methods(self) -> None:
-        abstract_methods_summary = (
-            "To estimate the interannual sensitivity of CGR to tropical MAT (), we use atmospheric CGR from the two longest "
-            "atmospheric records at Mauna Loa and South Pole 31, gridded MAT from the CRU 16 and from Global Historical Climate "
-            "Network data 19, annual precipitation from CRU and from the Global Precipitation Climatology Centre 20, solar "
-            "radiation data from CRU-NCEP and ref. 21, and cloud fraction from CRU over vegetated areas (Methods) in the tropics. "
-            "The value of was calculated as the regression coefficient of temperature in a multilinear regression of CGR variations "
-            "against variations in temperature, precipitation and solar radiation over a running time window (ranging from 20 to 25 yr)."
+        html = golden_criteria_asset("10.1038/nature12915", "original.html").read_text(
+            encoding="utf-8",
+            errors="ignore",
         )
-        body_methods_summary = (
-            "To estimate the interannual sensitivity of CGR to tropical MAT (), we use atmospheric CGR from the two longest "
-            "atmospheric records at Mauna Loa and South Pole, gridded MAT from the CRU and from Global Historical Climate Network "
-            "data, annual precipitation from CRU and from the Global Precipitation Climatology Centre, solar radiation data from "
-            "CRU-NCEP and ref. 21, and cloud fraction from CRU over vegetated areas (Methods) in the tropics. The value of was "
-            "calculated as the regression coefficient of temperature in a multilinear regression of CGR variations against "
-            "variations in temperature, precipitation and solar radiation over a running time window (ranging from 20 to 25 yr)."
+        extraction_payload = _springer_html.extract_html_payload(
+            html,
+            "https://www.nature.com/articles/nature12915",
         )
         article = article_from_markdown(
             source="springer_html",
-            metadata={"title": "Markdown Article"},
-            doi="10.1000/methods-summary",
-            markdown_text=(
-                "# Markdown Article\n\n"
-                "## Main\n\n"
-                "Body text lives here with enough prose to remain classified as main text.\n\n"
-                "## Methods Summary\n\n"
-                f"{body_methods_summary}\n\n"
-                "### Atmospheric CO2 concentration\n\n"
-                "Detailed methods continue here."
-            ),
-            abstract_sections=[
-                {
-                    "heading": "Abstract",
-                    "text": "Short abstract summary.",
-                    "kind": "abstract",
-                    "order": 0,
-                },
-                {
-                    "heading": "Methods Summary",
-                    "text": abstract_methods_summary,
-                    "kind": "abstract",
-                    "order": 1,
-                },
-            ],
+            metadata={"title": "Accelerated increase in vegetation carbon sequestration in tropical forests"},
+            doi="10.1038/nature12915",
+            markdown_text=extraction_payload["markdown_text"],
+            abstract_sections=extraction_payload["abstract_sections"],
+            section_hints=extraction_payload["section_hints"],
         )
 
-        self.assertEqual(
-            [section.heading for section in article.sections],
-            ["Abstract", "Methods Summary", "Main", "Methods", "Atmospheric CO2 concentration"],
-        )
-        methods_section = article.sections[3]
-        self.assertEqual(methods_section.heading, "Methods")
+        methods_sections = [
+            section
+            for section in article.sections
+            if section.heading in {"Methods Summary", "Methods", "Online Methods"}
+        ]
+        self.assertEqual([section.heading for section in methods_sections], ["Methods Summary", "Methods"])
+        methods_section = methods_sections[1]
         self.assertEqual(methods_section.text, "")
 
         markdown = article.to_ai_markdown(max_tokens="full_text")
 
         self.assertEqual(markdown.count("## Methods Summary"), 1)
-        self.assertIn("## Methods\n\n### Atmospheric CO2 concentration", markdown)
-        self.assertIn("### Atmospheric CO2 concentration", markdown)
-        self.assertNotIn(body_methods_summary, markdown)
+        self.assertEqual(markdown.count("\n## Methods\n"), 1)
+        self.assertNotIn("## Online Methods", markdown)
+
+    def test_article_from_real_nature_markdown_keeps_methods_summary_without_structure_hints(self) -> None:
+        html = golden_criteria_asset("10.1038/nature12915", "original.html").read_text(
+            encoding="utf-8",
+            errors="ignore",
+        )
+        extraction_payload = _springer_html.extract_html_payload(
+            html,
+            "https://www.nature.com/articles/nature12915",
+        )
+        article = article_from_markdown(
+            source="springer_html",
+            metadata={"title": "Accelerated increase in vegetation carbon sequestration in tropical forests"},
+            doi="10.1038/nature12915",
+            markdown_text=extraction_payload["markdown_text"],
+            abstract_sections=extraction_payload["abstract_sections"],
+        )
+
+        methods_headings = [
+            section.heading
+            for section in article.sections
+            if section.heading in {"Methods Summary", "Methods", "Online Methods"}
+        ]
+        self.assertEqual(methods_headings, ["Methods Summary", "Methods"])
+        markdown = article.to_ai_markdown(max_tokens="full_text")
+
+        self.assertIn("## Methods Summary", markdown)
+        self.assertNotIn("## Online Methods", markdown)
 
     def test_metadata_abstract_strips_redundant_heading_prefix(self) -> None:
         article = metadata_only_article(

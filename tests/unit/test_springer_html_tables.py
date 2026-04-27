@@ -27,6 +27,10 @@ OLD_NATURE_DOI = "10.1038/nature13376"
 OLD_NATURE_TITLE = "Contribution of semi-arid ecosystems to interannual variability of the global carbon cycle"
 OLD_NATURE_LANDING_URL = "https://www.nature.com/articles/nature13376"
 OLD_NATURE_ARTICLE_FIXTURE = golden_criteria_asset(OLD_NATURE_DOI, "original.html")
+GENERIC_EXTENDED_TABLE_DOI = "10.1038/s41586-020-1941-5"
+GENERIC_EXTENDED_TABLE_TITLE = "Forest age and water yield"
+GENERIC_EXTENDED_TABLE_LANDING_URL = "https://www.nature.com/articles/s41586-020-1941-5"
+GENERIC_EXTENDED_TABLE_URL = f"{GENERIC_EXTENDED_TABLE_LANDING_URL}/tables/1"
 
 
 class FakeTransport:
@@ -62,6 +66,59 @@ class FakeTransport:
 
 
 class SpringerHtmlTableTests(unittest.TestCase):
+    def _article_with_inline_table(self, *, label: str, caption: str, table_href: str) -> bytes:
+        label_text = label.rstrip(".")
+        body_text = (
+            "Planting and removal of forest affect average streamflow, but there is ongoing debate "
+            "about how this long-term difference between precipitation and evapotranspiration is "
+            "modulated by forest age, local conditions, and record length across catchments."
+        )
+        return f"""
+        <html>
+          <head>
+            <title>{GENERIC_EXTENDED_TABLE_TITLE}</title>
+            <meta name="citation_title" content="{GENERIC_EXTENDED_TABLE_TITLE}" />
+            <meta name="citation_doi" content="{GENERIC_EXTENDED_TABLE_DOI}" />
+            <meta name="citation_author" content="Adriaan J. Teuling" />
+          </head>
+          <body>
+            <article>
+              <h1>{GENERIC_EXTENDED_TABLE_TITLE}</h1>
+              <div class="c-article-body">
+                <div class="main-content">
+                  <div class="c-article-section__content"><p>{body_text}</p></div>
+                  <section data-title="Extended data figures and tables">
+                    <div class="c-article-section">
+                      <h2 class="c-article-section__title">Extended data figures and tables</h2>
+                      <div class="c-article-section__content">
+                        <div class="c-article-table" data-test="inline-table" data-container-section="table">
+                          <figure>
+                            <figcaption class="c-article-table__figcaption">
+                              <b data-test="table-caption">{label_text} {caption}</b>
+                            </figcaption>
+                            <a data-test="table-link" href="{table_href}">Full size table</a>
+                          </figure>
+                        </div>
+                      </div>
+                    </div>
+                  </section>
+                </div>
+              </div>
+            </article>
+          </body>
+        </html>
+        """.encode()
+
+    def _prepare_generic_extended_table_attempt(self, responses: dict[str, dict[str, object] | Exception]):
+        metadata = {
+            "doi": GENERIC_EXTENDED_TABLE_DOI,
+            "title": GENERIC_EXTENDED_TABLE_TITLE,
+            "landing_page_url": GENERIC_EXTENDED_TABLE_LANDING_URL,
+            "fulltext_links": [],
+        }
+        client = springer_provider.SpringerClient(transport=FakeTransport(responses), env={})
+        return client._prepare_html_attempt(GENERIC_EXTENDED_TABLE_DOI, metadata)
+
     def test_springer_classic_fixture_strips_chrome_and_spaces_numbered_headings(self) -> None:
         html = SPRINGER_CLASSIC_ARTICLE_FIXTURE.read_text(encoding="utf-8", errors="ignore")
 
@@ -158,14 +215,102 @@ class SpringerHtmlTableTests(unittest.TestCase):
         raw_payload = client.fetch_raw_fulltext(SPRINGER_CLASSIC_DOI, metadata)
         article = client.to_article_model(metadata, raw_payload)
         markdown = raw_payload.metadata["markdown_text"]
+        extracted_assets = list(raw_payload.content.extracted_assets if raw_payload.content is not None else [])
 
         self.assertEqual(article.source, "springer_html")
         self.assertNotIn("PAPER_FETCH_TABLE_PLACEHOLDER", markdown)
         self.assertNotRegex(markdown, r"\|\s*Parameter\s*\|\s*Description\s*\|")
+        self.assertIn("**Table 1.** [Table body unavailable:", markdown)
+        self.assertFalse(any(asset.get("kind") == "table" for asset in extracted_assets))
         self.assertTrue(
             any("did not include a table element" in warning for warning in article.quality.warnings),
             article.quality.warnings,
         )
+
+    def test_generic_extended_data_table_image_response_renders_table_asset(self) -> None:
+        table_image_url = "https://media.springernature.com/full/table-1.png"
+        responses = {
+            GENERIC_EXTENDED_TABLE_LANDING_URL: {
+                "headers": {"content-type": "text/html; charset=utf-8"},
+                "body": self._article_with_inline_table(
+                    label="Extended Data Table 1",
+                    caption="Observed water yield at long-term lysimeter stations",
+                    table_href="/articles/s41586-020-1941-5/tables/1",
+                ),
+                "url": GENERIC_EXTENDED_TABLE_LANDING_URL,
+                "status_code": 200,
+            },
+            GENERIC_EXTENDED_TABLE_URL: {
+                "headers": {"content-type": "image/png"},
+                "body": b"table-image",
+                "url": table_image_url,
+                "status_code": 200,
+            },
+        }
+
+        attempt = self._prepare_generic_extended_table_attempt(responses)
+
+        self.assertIn(f"![Extended Data Table 1]({table_image_url})", attempt.markdown_text)
+        self.assertIn("**Extended Data Table 1.** Observed water yield at long-term lysimeter stations", attempt.markdown_text)
+        self.assertEqual(len(attempt.inline_table_assets), 1)
+        self.assertEqual(attempt.inline_table_assets[0].get("kind"), "table")
+        self.assertEqual(attempt.inline_table_assets[0].get("heading"), "Extended Data Table 1")
+        self.assertEqual(attempt.inline_table_assets[0].get("url"), table_image_url)
+
+    def test_generic_extended_data_table_html_image_fallback_renders_table_asset(self) -> None:
+        table_image_url = "https://media.springernature.com/full/table-1-from-html.png"
+        responses = {
+            GENERIC_EXTENDED_TABLE_LANDING_URL: {
+                "headers": {"content-type": "text/html; charset=utf-8"},
+                "body": self._article_with_inline_table(
+                    label="Extended Data Table 1",
+                    caption="Observed water yield at long-term lysimeter stations",
+                    table_href="/articles/s41586-020-1941-5/tables/1",
+                ),
+                "url": GENERIC_EXTENDED_TABLE_LANDING_URL,
+                "status_code": 200,
+            },
+            GENERIC_EXTENDED_TABLE_URL: {
+                "headers": {"content-type": "text/html; charset=utf-8"},
+                "body": f"<html><head><meta property='og:image' content='{table_image_url}'></head><body></body></html>".encode(),
+                "url": GENERIC_EXTENDED_TABLE_URL,
+                "status_code": 200,
+            },
+        }
+
+        attempt = self._prepare_generic_extended_table_attempt(responses)
+
+        self.assertIn(f"![Extended Data Table 1]({table_image_url})", attempt.markdown_text)
+        self.assertEqual(len(attempt.inline_table_assets), 1)
+        self.assertEqual(attempt.inline_table_assets[0].get("kind"), "table")
+        self.assertEqual(attempt.inline_table_assets[0].get("caption"), "Observed water yield at long-term lysimeter stations")
+
+    def test_regular_table_does_not_use_image_asset_fallback(self) -> None:
+        table_image_url = "https://media.springernature.com/full/table-1.png"
+        responses = {
+            GENERIC_EXTENDED_TABLE_LANDING_URL: {
+                "headers": {"content-type": "text/html; charset=utf-8"},
+                "body": self._article_with_inline_table(
+                    label="Table 1",
+                    caption="Observed water yield at long-term lysimeter stations",
+                    table_href="/articles/s41586-020-1941-5/tables/1",
+                ),
+                "url": GENERIC_EXTENDED_TABLE_LANDING_URL,
+                "status_code": 200,
+            },
+            GENERIC_EXTENDED_TABLE_URL: {
+                "headers": {"content-type": "text/html; charset=utf-8"},
+                "body": f"<html><body><img src='{table_image_url}'></body></html>".encode(),
+                "url": GENERIC_EXTENDED_TABLE_URL,
+                "status_code": 200,
+            },
+        }
+
+        attempt = self._prepare_generic_extended_table_attempt(responses)
+
+        self.assertIn("**Table 1.** [Table body unavailable:", attempt.markdown_text)
+        self.assertNotIn(f"![Table 1]({table_image_url})", attempt.markdown_text)
+        self.assertEqual(attempt.inline_table_assets, [])
 
     def test_old_nature_extended_data_tables_render_table_image_or_degraded_placeholder(self) -> None:
         metadata = {

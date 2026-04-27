@@ -4,6 +4,7 @@ import unittest
 
 from bs4 import BeautifulSoup
 
+from paper_fetch.extraction.html._runtime import body_metrics
 from paper_fetch.providers import _science_pnas_html
 from paper_fetch.providers._html_references import extract_numbered_references_from_html
 from paper_fetch.extraction.html.signals import SciencePnasHtmlFailure
@@ -243,6 +244,48 @@ class SciencePnasMarkdownTests(unittest.TestCase):
         self.assertIn("![Formula](/cms/asset/", markdown)
         self.assertIn("gcb15322-math-0001.png", markdown)
         self.assertNotIn("**Equation 1.**![Formula]", markdown)
+
+    def test_wiley_real_fixture_does_not_count_research_funding_as_body(self) -> None:
+        fixture_path = golden_criteria_asset("10.1111/gcb.15322", "original.html")
+        html = fixture_path.read_text(encoding="utf-8", errors="ignore")
+        self.assertIn("research funding", html.casefold())
+
+        markdown, info = self._extract_fixture_markdown(
+            fixture_path,
+            "https://onlinelibrary.wiley.com/doi/full/10.1111/gcb.15322",
+            "wiley",
+            "10.1111/gcb.15322",
+        )
+        metrics = body_metrics(
+            markdown,
+            {"doi": "10.1111/gcb.15322"},
+            section_hints=info.get("section_hints"),
+            noise_profile="wiley",
+        )
+
+        self.assertNotIn("research funding", markdown.casefold())
+        self.assertNotIn("research funding", metrics["text"].casefold())
+
+    def test_science_real_fixture_does_not_leak_competing_interests_modal(self) -> None:
+        fixture_path = golden_criteria_asset("10.1126/sciadv.abg9690", "original.html")
+        html = fixture_path.read_text(encoding="utf-8", errors="ignore")
+        self.assertIn("statement of competing interests", html.casefold())
+
+        markdown, info = self._extract_fixture_markdown(
+            fixture_path,
+            "https://www.science.org/doi/10.1126/sciadv.abg9690",
+            "science",
+            "10.1126/sciadv.abg9690",
+        )
+        metrics = body_metrics(
+            markdown,
+            {"doi": "10.1126/sciadv.abg9690"},
+            section_hints=info.get("section_hints"),
+            noise_profile="science",
+        )
+
+        self.assertNotIn("statement of competing interests", markdown.casefold())
+        self.assertNotIn("statement of competing interests", metrics["text"].casefold())
 
     def test_wiley_inline_mathml_with_fallback_span_does_not_emit_placeholder(self) -> None:
         soup = BeautifulSoup(

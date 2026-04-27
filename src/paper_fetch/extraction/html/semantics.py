@@ -64,7 +64,9 @@ BACK_MATTER_HEADINGS = frozenset(
         "references",
         "references and notes",
         "bibliography",
+        "acknowledgements",
         "acknowledgments",
+        "electronic supplementary material",
         "supplementary material",
         "supplementary materials",
         "supplementary information",
@@ -72,10 +74,12 @@ BACK_MATTER_HEADINGS = frozenset(
         "notes",
         "author contributions",
         "funding",
+        "research funding",
         "ethics",
         "conflict of interest",
         "conflicts of interest",
         "competing interests",
+        "statement of competing interests",
         "disclosures",
     }
 )
@@ -103,6 +107,7 @@ ANCILLARY_HEADINGS = frozenset(
         "tables",
         "media",
         "share",
+        "permissions",
         "eletters",
         "access the full article",
         "get full access to this article",
@@ -118,6 +123,7 @@ ANCILLARY_HEADINGS = frozenset(
         "subscribe and save",
         "publisher's note",
         "publisher’s note",
+        "open access",
     }
 )
 MARKDOWN_ABSTRACT_HEADINGS = frozenset(
@@ -142,6 +148,10 @@ MARKDOWN_AUXILIARY_HEADINGS = frozenset(
         "buy article pdf",
         "buy now",
         "check access",
+        "open access",
+        "permissions",
+        "rights and permissions",
+        "reprints and permissions",
     }
 )
 MARKDOWN_FRONT_MATTER_HEADINGS = frozenset(
@@ -164,7 +174,9 @@ MARKDOWN_BACK_MATTER_HEADINGS = frozenset(
         "references",
         "references and notes",
         "bibliography",
+        "acknowledgements",
         "acknowledgments",
+        "electronic supplementary material",
         "supplementary materials",
         "supplementary material",
         "supplementary information",
@@ -172,8 +184,12 @@ MARKDOWN_BACK_MATTER_HEADINGS = frozenset(
         "notes",
         "author contributions",
         "funding",
+        "research funding",
         "ethics",
+        "conflict of interest",
+        "conflicts of interest",
         "competing interests",
+        "statement of competing interests",
         "disclosures",
     }
 )

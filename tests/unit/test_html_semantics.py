@@ -11,6 +11,17 @@ from paper_fetch.extraction.html.semantics import (
     markdown_heading_category,
     parse_markdown_heading,
 )
+from tests.block_fixtures import block_asset
+from tests.golden_criteria import golden_criteria_asset
+
+
+def _fixture_heading(path, phrase: str) -> tuple[str, str]:
+    soup = BeautifulSoup(path.read_text(encoding="utf-8", errors="ignore"), "html.parser")
+    for tag in soup.find_all(["h1", "h2", "h3", "h4", "h5"]):
+        text = " ".join(tag.stripped_strings)
+        if phrase.casefold() in text.casefold():
+            return str(tag.name), text
+    raise AssertionError(f"Heading containing {phrase!r} was not found in {path}")
 
 
 class HtmlSemanticsTests(unittest.TestCase):
@@ -21,7 +32,24 @@ class HtmlSemanticsTests(unittest.TestCase):
         self.assertEqual(heading_category("h2", "Software availability statement"), "code_availability")
         self.assertEqual(heading_category("h2", "Data, code, and materials availability"), "data_availability")
         self.assertEqual(heading_category("h2", "References"), "references_or_back_matter")
+        back_matter_fixture_headings = (
+            (golden_criteria_asset("10.1038/nature13376", "original.html"), "Acknowledgements"),
+            (golden_criteria_asset("10.1111/gcb.15322", "original.html"), "Research funding"),
+            (golden_criteria_asset("10.1126/sciadv.abg9690", "original.html"), "Statement of Competing Interests"),
+            (block_asset("10.1007/s00382-018-4286-0", "raw.html"), "Electronic supplementary material"),
+        )
+        for path, phrase in back_matter_fixture_headings:
+            tag_name, text = _fixture_heading(path, phrase)
+            with self.subTest(heading=text):
+                self.assertEqual(heading_category(tag_name, text), "references_or_back_matter")
         self.assertEqual(heading_category("h2", "Metrics"), "ancillary")
+        for path, phrase in (
+            (golden_criteria_asset("10.1126/sciadv.abg9690", "original.html"), "Permissions"),
+            (golden_criteria_asset("10.1007/s10584-011-0143-4", "article.html"), "Open Access"),
+        ):
+            tag_name, text = _fixture_heading(path, phrase)
+            with self.subTest(heading=text):
+                self.assertEqual(heading_category(tag_name, text), "ancillary")
         self.assertEqual(heading_category("h2", "Corresponding author"), "ancillary")
         self.assertEqual(heading_category("h2", "Additional information"), "ancillary")
         self.assertEqual(heading_category("h2", "Rights and permissions"), "ancillary")
@@ -58,7 +86,23 @@ class HtmlSemanticsTests(unittest.TestCase):
         self.assertEqual(markdown_heading_category("Code Availability"), "code_availability")
         self.assertEqual(markdown_heading_category("Data, Materials, and Software Availability"), "data_availability")
         self.assertEqual(markdown_heading_category("References"), "references_or_back_matter")
+        for path, phrase in (
+            (golden_criteria_asset("10.1038/nature13376", "original.html"), "Acknowledgements"),
+            (golden_criteria_asset("10.1111/gcb.15322", "original.html"), "Research funding"),
+            (golden_criteria_asset("10.1126/sciadv.abg9690", "original.html"), "Statement of Competing Interests"),
+            (block_asset("10.1007/s00382-018-4286-0", "raw.html"), "Electronic supplementary material"),
+        ):
+            _tag_name, text = _fixture_heading(path, phrase)
+            with self.subTest(heading=text):
+                self.assertEqual(markdown_heading_category(text), "references_or_back_matter")
         self.assertEqual(markdown_heading_category("Rights and permissions"), "auxiliary")
+        for path, phrase in (
+            (golden_criteria_asset("10.1126/sciadv.abg9690", "original.html"), "Permissions"),
+            (golden_criteria_asset("10.1007/s10584-011-0143-4", "article.html"), "Open Access"),
+        ):
+            _tag_name, text = _fixture_heading(path, phrase)
+            with self.subTest(heading=text):
+                self.assertEqual(markdown_heading_category(text), "auxiliary")
         self.assertEqual(markdown_heading_category("Results"), "body_heading")
 
 

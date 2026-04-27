@@ -291,9 +291,9 @@ PYTHONPATH=src pytest tests/unit/test_cli.py tests/unit/test_service.py tests/un
 PYTHONPATH=src pytest
 ```
 
-默认 `pytest` 会跑默认离线快集；`tests/integration/test_golden_corpus.py` 现在会对 50 篇 canonical golden corpus 先跑一轮轻量 provider 契约检查，再对 5 篇代表性真实文献跑主路径回归，并继续跳过 50 篇的全文精确重放。
+默认 `pytest` 会跑默认离线快集；`tests/integration/test_golden_corpus.py` 现在会对 51 篇 canonical golden corpus 先跑一轮轻量 provider 契约检查，再对 5 篇代表性真实文献跑主路径回归，并继续跳过 51 篇的全文精确重放。
 
-如果需要显式跑完整 50 篇 golden corpus 扩展回归，单独执行：
+如果需要显式跑完整 51 篇 golden corpus 扩展回归，单独执行：
 
 ```bash
 PAPER_FETCH_RUN_FULL_GOLDEN=1 PYTHONPATH=src pytest tests/integration/test_golden_corpus.py

@@ -638,6 +638,65 @@ class HtmlAvailabilityTests(unittest.TestCase):
         self.assertEqual(metrics["char_count"], 0)
         self.assertEqual(metrics["body_block_count"], 0)
 
+    def test_body_metrics_excludes_real_structural_back_matter_and_chrome_headings(self) -> None:
+        real_fixture_cases = (
+            {
+                "doi": "10.1111/gcb.15322",
+                "raw_phrase": "research funding",
+                "provider": "wiley",
+                "source_url": "https://onlinelibrary.wiley.com/doi/full/10.1111/gcb.15322",
+                "extractor": _wiley_html.extract_markdown,
+            },
+            {
+                "doi": "10.1126/sciadv.abg9690",
+                "raw_phrase": "statement of competing interests",
+                "provider": "science",
+                "source_url": "https://www.science.org/doi/10.1126/sciadv.abg9690",
+                "extractor": _science_html.extract_markdown,
+            },
+        )
+        for case in real_fixture_cases:
+            with self.subTest(doi=case["doi"]):
+                html = golden_criteria_asset(case["doi"], "original.html").read_text(encoding="utf-8", errors="ignore")
+                self.assertIn(case["raw_phrase"], html.casefold())
+                markdown, info = case["extractor"](
+                    html,
+                    case["source_url"],
+                    metadata={"doi": case["doi"]},
+                )
+                metrics = body_metrics(
+                    markdown,
+                    {"doi": case["doi"]},
+                    section_hints=info.get("section_hints"),
+                    noise_profile=case["provider"],
+                )
+
+                self.assertNotIn(case["raw_phrase"], markdown.casefold())
+                self.assertNotIn(case["raw_phrase"], metrics["text"].casefold())
+
+        nature_html = golden_criteria_asset("10.1038/nature13376", "original.html").read_text(
+            encoding="utf-8",
+            errors="ignore",
+        )
+        nature_html_text = nature_html.casefold()
+        self.assertTrue("acknowledgements" in nature_html_text)
+        self.assertTrue("rights and permissions" in nature_html_text)
+        self.assertTrue("open access" in nature_html_text)
+        nature_payload = _springer_html.extract_html_payload(
+            nature_html,
+            "https://www.nature.com/articles/nature13376",
+        )
+        nature_metrics = body_metrics(
+            nature_payload["markdown_text"],
+            {"doi": "10.1038/nature13376"},
+            section_hints=nature_payload["section_hints"],
+            noise_profile="springer_nature",
+        )
+
+        self.assertNotIn("acknowledgements", nature_metrics["text"].casefold())
+        self.assertNotIn("rights and permissions", nature_payload["markdown_text"].casefold())
+        self.assertNotIn("open access", nature_payload["markdown_text"].casefold())
+
     def test_assess_plain_text_excludes_nonliteral_data_availability_when_section_hints_are_present(self) -> None:
         markdown = (
             "# Example Article\n\n"

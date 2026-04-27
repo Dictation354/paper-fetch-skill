@@ -51,6 +51,8 @@ SPRINGER_NATURE_CHROME_SECTION_TITLES = {
     "author information",
     "authors and affiliations",
     "cite this article",
+    "open access",
+    "permissions",
     "rights and permissions",
     "reprints and permissions",
 }
@@ -265,6 +267,59 @@ def _normalized_nature_section_heading(section: Any) -> str:
     return title
 
 
+def _is_renderable_nature_body_div(node: Any) -> bool:
+    if not isinstance(node, Tag) or normalize_text(node.name or "").lower() != "div":
+        return False
+    classes = getattr(node, "attrs", {}).get("class") or []
+    if isinstance(classes, str):
+        class_values = classes.split()
+    else:
+        class_values = [str(value) for value in classes]
+    if "c-article-section__content" in class_values:
+        return True
+    return section_has_direct_renderable_content(
+        node,
+        section_content_selectors=SPRINGER_NATURE_SECTION_CONTENT_SELECTORS,
+    )
+
+
+def _render_nature_main_child_markdown(child: Any, lines: list[str]) -> bool:
+    if not isinstance(child, Tag):
+        return False
+    if child.name == "section":
+        heading = _normalized_nature_section_heading(child)
+        if normalize_section_title(heading) == "main" and not section_has_direct_renderable_content(
+            child,
+            section_content_selectors=SPRINGER_NATURE_SECTION_CONTENT_SELECTORS,
+        ):
+            content_root = child.select_one("div.c-article-section__content") or child
+            render_container_markdown(
+                content_root,
+                lines,
+                level=2,
+                skip_first_heading=extract_section_title(child) or None,
+                section_content_selectors=SPRINGER_NATURE_SECTION_CONTENT_SELECTORS,
+            )
+            return True
+        render_section_markdown(
+            child,
+            lines,
+            level=2,
+            force_heading=heading or None,
+            section_content_selectors=SPRINGER_NATURE_SECTION_CONTENT_SELECTORS,
+        )
+        return True
+    if _is_renderable_nature_body_div(child):
+        render_container_markdown(
+            child,
+            lines,
+            level=2,
+            section_content_selectors=SPRINGER_NATURE_SECTION_CONTENT_SELECTORS,
+        )
+        return True
+    return False
+
+
 def _remove_duplicate_title_headings(markdown_text: str, title_text: str) -> str:
     title = normalize_text(title_text)
     if not markdown_text or not title:
@@ -307,31 +362,14 @@ def extract_springer_nature_markdown(html_text: str, source_url: str) -> str:
                 force_heading="Abstract",
                 section_content_selectors=SPRINGER_NATURE_SECTION_CONTENT_SELECTORS,
             )
-        sections = main.find_all("section", recursive=False) if main is not None else []
-        if sections:
-            for section in sections:
-                heading = _normalized_nature_section_heading(section)
-                if normalize_section_title(heading) == "main" and not section_has_direct_renderable_content(
-                    section,
-                    section_content_selectors=SPRINGER_NATURE_SECTION_CONTENT_SELECTORS,
-                ):
-                    content_root = section.select_one("div.c-article-section__content") or section
-                    render_container_markdown(
-                        content_root,
-                        lines,
-                        level=2,
-                        skip_first_heading=extract_section_title(section) or None,
-                        section_content_selectors=SPRINGER_NATURE_SECTION_CONTENT_SELECTORS,
-                    )
+        rendered_main_children = 0
+        if main is not None:
+            for child in main.children:
+                if abstract_section is not None and child is abstract_section:
                     continue
-                render_section_markdown(
-                    section,
-                    lines,
-                    level=2,
-                    force_heading=heading or None,
-                    section_content_selectors=SPRINGER_NATURE_SECTION_CONTENT_SELECTORS,
-                )
-        elif main is not None:
+                if _render_nature_main_child_markdown(child, lines):
+                    rendered_main_children += 1
+        if main is not None and rendered_main_children == 0:
             render_container_markdown(
                 main,
                 lines,

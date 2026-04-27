@@ -176,15 +176,31 @@ def _metadata_only_envelope(doi: str) -> FetchEnvelope:
 
 
 class GoldenCriteriaLiveTests(unittest.TestCase):
-    def test_manifest_loader_selects_63_golden_samples_and_classifies_provider_support(self) -> None:
-        samples = iter_golden_criteria_samples(load_manifest())
+    def test_manifest_loader_selects_golden_samples_and_classifies_provider_support(self) -> None:
+        manifest = load_manifest()
+        samples = iter_golden_criteria_samples(manifest)
+        manifest_golden_samples = [
+            sample
+            for sample in manifest["samples"].values()
+            if str(sample.get("fixture_family") or "golden") == "golden"
+        ]
+        expected_supported = [
+            sample
+            for sample in manifest_golden_samples
+            if str(sample.get("publisher") or "").lower() in SUPPORTED_PROVIDERS
+        ]
+        expected_unsupported_providers = {
+            str(sample.get("publisher") or "").lower()
+            for sample in manifest_golden_samples
+            if str(sample.get("publisher") or "").lower() not in SUPPORTED_PROVIDERS
+        }
 
-        self.assertEqual(len(samples), 63)
+        self.assertEqual(len(samples), len(manifest_golden_samples))
         supported = [sample for sample in samples if sample.supported]
         unsupported = [sample for sample in samples if not sample.supported]
 
-        self.assertEqual(len(supported), 61)
-        self.assertEqual({sample.provider for sample in unsupported}, {"sage", "tandf"})
+        self.assertEqual(len(supported), len(expected_supported))
+        self.assertEqual({sample.provider for sample in unsupported}, expected_unsupported_providers)
         self.assertTrue(all(sample.provider in SUPPORTED_PROVIDERS for sample in supported))
 
     def test_runner_writes_reports_and_covers_live_statuses(self) -> None:

@@ -120,6 +120,14 @@ MARKDOWN_SHORT_NOISE_TOKENS = (
     "check access",
     "buy now",
 )
+MARKDOWN_CHROME_SECTION_HEADINGS = frozenset(
+    {
+        "open access",
+        "permissions",
+        "rights and permissions",
+        "reprints and permissions",
+    }
+)
 MARKDOWN_PROMO_TOKENS: tuple[str, ...] = ()
 PROFILE_MARKDOWN_PROMO_TOKENS = {
     "pnas": (
@@ -457,9 +465,29 @@ def extract_article_markdown_from_cleaned_html(
     return clean_markdown("\n".join(parser.lines), noise_profile=active_noise_profile)
 
 
+def _strip_markdown_chrome_sections(markdown_text: str) -> str:
+    lines: list[str] = []
+    skip_level: int | None = None
+    for raw_line in markdown_text.splitlines():
+        heading_info = parse_markdown_heading(raw_line)
+        if heading_info is not None:
+            level, heading = heading_info
+            if skip_level is not None and level <= skip_level:
+                skip_level = None
+            normalized_heading = normalize_text(heading).lower().strip(" :")
+            if normalized_heading in MARKDOWN_CHROME_SECTION_HEADINGS:
+                skip_level = level
+                continue
+        if skip_level is not None:
+            continue
+        lines.append(raw_line)
+    return "\n".join(lines)
+
+
 def clean_markdown(markdown_text: str, *, noise_profile: str | None = None) -> str:
     active_noise_profile = _normalize_noise_profile(noise_profile)
     markdown_promo_tokens = _markdown_promo_tokens(active_noise_profile)
+    markdown_text = _strip_markdown_chrome_sections(markdown_text)
     cleaned_lines: list[str] = []
     for raw_line in markdown_text.splitlines():
         line = re.sub(r"\(\s*refs?\.\s*\)", "", raw_line, flags=re.IGNORECASE).rstrip()

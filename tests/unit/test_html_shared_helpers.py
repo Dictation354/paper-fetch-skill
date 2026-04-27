@@ -11,10 +11,11 @@ from paper_fetch.extraction.html.formula_rules import (
     formula_image_url_from_node,
     is_display_formula_node,
     looks_like_formula_image,
-    mathml_element_from_html_node,
 )
 from paper_fetch.extraction.html.inline import normalize_html_inline_text
 from paper_fetch.http import HttpTransport
+from paper_fetch.providers import _springer_html
+from tests.golden_criteria import golden_criteria_asset
 
 
 class SharedHtmlHelperTests(unittest.TestCase):
@@ -271,6 +272,37 @@ Important body text.
         self.assertIn("Sign up for PNAS alerts.", generic_cleaned)
         self.assertNotIn("Sign up for PNAS alerts.", pnas_cleaned)
 
+    def test_real_nature_fixture_keeps_source_data_without_chrome_sections(self) -> None:
+        source_data_html = golden_criteria_asset("10.1038/s41561-022-00912-7", "original.html").read_text(
+            encoding="utf-8",
+            errors="ignore",
+        )
+        self.assertTrue("source data fig." in source_data_html.casefold())
+
+        source_data_markdown = _springer_html.extract_html_payload(
+            source_data_html,
+            "https://www.nature.com/articles/s41561-022-00912-7",
+        )["markdown_text"]
+
+        self.assertIn("Source data", source_data_markdown)
+
+        chrome_html = golden_criteria_asset("10.1038/nature13376", "original.html").read_text(
+            encoding="utf-8",
+            errors="ignore",
+        )
+        chrome_html_text = chrome_html.casefold()
+        self.assertTrue("rights and permissions" in chrome_html_text)
+        self.assertTrue("open access" in chrome_html_text)
+
+        chrome_markdown = _springer_html.extract_html_payload(
+            chrome_html,
+            "https://www.nature.com/articles/nature13376",
+        )["markdown_text"]
+
+        self.assertNotIn("## Permissions", chrome_markdown)
+        self.assertNotIn("## Open Access", chrome_markdown)
+        self.assertNotIn("## Rights and permissions", chrome_markdown)
+
     def test_inline_normalization_is_shared_for_body_heading_and_table_text(self) -> None:
         raw_text = "CO <sub> 2 </sub> emission </sup> +"
 
@@ -282,41 +314,42 @@ Important body text.
         )
         self.assertEqual(normalize_html_inline_text(raw_text, policy="heading"), "CO<sub>2</sub> emission</sup>+")
 
-    def test_formula_rules_detect_mathml_display_and_formula_image_urls(self) -> None:
-        soup = BeautifulSoup(
-            """
-<div class="display-equation" id="eq1">
-  <math display="block"><mi>x</mi><mo>=</mo><mn>1</mn></math>
-</div>
-<span class="inline-equation"><img data-altimg="/article/math-0001.png" alt="Equation image" /></span>
-""",
-            "html.parser",
+    def test_formula_rules_detect_real_formula_image_urls(self) -> None:
+        wiley_html = golden_criteria_asset("10.1111/gcb.15322", "original.html").read_text(
+            encoding="utf-8",
+            errors="ignore",
         )
-        display = soup.select_one(".display-equation")
-        image = soup.find("img")
+        nature_html = golden_criteria_asset("10.1038/nature12915", "original.html").read_text(
+            encoding="utf-8",
+            errors="ignore",
+        )
+        wiley_soup = BeautifulSoup(wiley_html, "html.parser")
+        nature_soup = BeautifulSoup(nature_html, "html.parser")
+        image = wiley_soup.select_one(".inline-equation img")
+        nature_display = nature_soup.select_one(".c-article-equation")
+        nature_image = nature_soup.select_one("img[src*='_Equ1_HTML']")
+        figure_image = nature_soup.select_one("img[src*='Fig1_HTML']")
 
-        self.assertTrue(is_display_formula_node(display))
-        self.assertIsNotNone(mathml_element_from_html_node(display))
-        self.assertEqual(formula_image_url_from_node(image), "/article/math-0001.png")
+        self.assertIn("gcb15322-math-0001.png", formula_image_url_from_node(image))
         self.assertTrue(looks_like_formula_image(image))
+        self.assertTrue(is_display_formula_node(nature_display))
+        self.assertIn("_Equ1_HTML.jpg", formula_image_url_from_node(nature_image))
+        self.assertTrue(looks_like_formula_image(nature_image))
+        self.assertFalse(looks_like_formula_image(figure_image))
 
     def test_extract_formula_assets_reuses_shared_formula_rules(self) -> None:
-        html = """
-<html>
-  <body>
-    <div class="display-equation" id="Eq1">
-      <img data-altimg="/asset/equation-1.png" alt="Formula" />
-    </div>
-  </body>
-</html>
-"""
+        html = golden_criteria_asset("10.1038/nature12915", "original.html").read_text(
+            encoding="utf-8",
+            errors="ignore",
+        )
 
-        assets = html_assets.extract_formula_assets(html, "https://example.test/article")
+        assets = html_assets.extract_formula_assets(html, "https://www.nature.com/articles/nature12915")
 
-        self.assertEqual(len(assets), 1)
-        self.assertEqual(assets[0]["kind"], "formula")
-        self.assertEqual(assets[0]["heading"], "Eq1")
-        self.assertEqual(assets[0]["url"], "https://example.test/asset/equation-1.png")
+        self.assertGreaterEqual(len(assets), 2)
+        self.assertTrue(all(asset["kind"] == "formula" for asset in assets))
+        self.assertTrue(any(asset["heading"] == "Equ1" and "_Equ1_HTML.jpg" in asset["url"] for asset in assets))
+        self.assertTrue(any(asset["heading"] == "Equ2" and "_Equ2_HTML.jpg" in asset["url"] for asset in assets))
+        self.assertFalse(any("Fig1_HTML" in asset["url"] for asset in assets))
 
     def test_clean_markdown_registers_springer_nature_profile(self) -> None:
         markdown = """

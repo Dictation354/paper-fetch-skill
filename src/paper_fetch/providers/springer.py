@@ -249,11 +249,22 @@ def _springer_table_label_heading(label: str) -> str:
     return normalize_text(label).rstrip(".") or "Table"
 
 
-def _springer_is_nature13376_extended_table(normalized_doi: str, label: str) -> bool:
-    if normalize_doi(normalized_doi) != "10.1038/nature13376":
-        return False
+def _springer_extended_data_table_number(label: str) -> str:
     normalized_label = normalize_text(label).lower().rstrip(".")
-    return bool(re.match(r"^extended data table [1-4]\b", normalized_label))
+    match = re.match(r"^extended\s+data\s+table\s+(\d+[a-z]?)\b", normalized_label)
+    return match.group(1) if match else ""
+
+
+def _springer_table_page_number(table_url: str) -> str:
+    path = urllib.parse.urlparse(table_url).path
+    match = re.search(r"/tables/(\d+[A-Za-z]?)(?:/)?$", path)
+    return match.group(1).lower() if match else ""
+
+
+def _springer_allows_extended_data_table_image_fallback(label: str, table_url: str) -> bool:
+    label_number = _springer_extended_data_table_number(label)
+    table_page_number = _springer_table_page_number(table_url)
+    return bool(label_number and table_page_number and label_number == table_page_number)
 
 
 def _springer_response_content_type(response: Mapping[str, Any]) -> str:
@@ -451,8 +462,6 @@ class SpringerClient(ProviderClient):
         self,
         html_text: str,
         source_url: str,
-        *,
-        normalized_doi: str,
     ) -> tuple[str, list[dict[str, str]], list[str], list[dict[str, Any]]]:
         if BeautifulSoup is None:
             return html_text, [], [], []
@@ -467,7 +476,6 @@ class SpringerClient(ProviderClient):
                 continue
             label = _springer_table_label(node)
             caption = _springer_table_caption(node, label)
-            allow_nature13376_fallback = _springer_is_nature13376_extended_table(normalized_doi, label)
             table_url = ""
             for selector in SPRINGER_TABLE_LINK_SELECTORS:
                 link = node.select_one(selector)
@@ -478,26 +486,15 @@ class SpringerClient(ProviderClient):
             if not table_url:
                 warning = f"Springer inline table supplement for {label} was skipped because no table page link was found."
                 warnings.append(warning)
-                if allow_nature13376_fallback:
-                    placeholder = table_placeholder(len(table_entries) + 1)
-                    block = soup.new_tag("p")
-                    block.string = placeholder
-                    node.replace_with(block)
-                    table_entries.append(
-                        {
-                            "placeholder": placeholder,
-                            "markdown": _springer_degraded_table_placeholder(label, warning),
-                        }
-                    )
-                    continue
                 node.decompose()
                 continue
 
+            allow_image_fallback = _springer_allows_extended_data_table_image_fallback(label, table_url)
             markdown, warning, asset = self._render_table_page_markdown(
                 table_url,
                 fallback_label=label,
                 fallback_caption=caption,
-                allow_image_asset=allow_nature13376_fallback,
+                allow_image_asset=allow_image_fallback,
                 allow_degraded_placeholder=True,
             )
             if warning:
@@ -540,7 +537,6 @@ class SpringerClient(ProviderClient):
         prepared_html, table_entries, table_warnings, table_assets = self._prepare_html_with_inline_tables(
             html_text,
             response_url,
-            normalized_doi=normalized_doi,
         )
         extraction_payload = _springer_html.extract_html_payload(
             prepared_html,
