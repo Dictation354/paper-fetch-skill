@@ -42,6 +42,11 @@ The explicit WSLg preset in this directory is `.env.flaresolverr-source-wslg`.
 That preset uses `HEADLESS=false`, so it does not rely on `Xvfb`.
 On this host, that explicit WSLg preset remains the verified local path.
 
+The setup script restores the official FlareSolverr tag, then applies the repo-local
+`patches/return-image-payload.patch` extension and commits it inside the working
+clone. This keeps `run_flaresolverr_source.sh` in clean-source mode while adding
+the `returnImagePayload` request option used by paper-fetch asset downloads.
+
 ## Main Chain
 
 The scripts now default to the headless preset, but the verified chain on this host still uses the explicit WSLg preset:

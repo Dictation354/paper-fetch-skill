@@ -8,7 +8,7 @@ from pathlib import Path
 from paper_fetch.providers import _article_markdown as article_markdown
 from paper_fetch.providers._article_markdown_common import render_inline_text
 from paper_fetch.providers import _article_markdown_elsevier_document as elsevier_document
-from paper_fetch.models import article_from_structure
+from paper_fetch.models import article_from_markdown, article_from_structure
 from tests.golden_criteria import golden_criteria_asset, golden_criteria_scenario_asset
 
 
@@ -689,6 +689,20 @@ refers to the tie.</ce:para>
         self.assertIn("## Additional Tables", markdown)
         self.assertIn("Floating table.", markdown)
         self.assertIn("| A | B |", markdown)
+
+    def test_elsevier_golden_fixture_classifies_data_and_code_availability_sections(self) -> None:
+        doi = "10.1016/j.rse.2025.114648"
+        markdown = _render_elsevier_golden_markdown(doi)
+        article = article_from_markdown(
+            source="elsevier_xml",
+            metadata={"title": f"Elsevier Golden Fixture {doi}"},
+            doi=doi,
+            markdown_text=markdown,
+        )
+
+        section_pairs = [(section.heading, section.kind) for section in article.sections]
+        self.assertIn(("Data availability", "data_availability"), section_pairs)
+        self.assertIn(("Code availability", "code_availability"), section_pairs)
 
     def test_elsevier_table_placement_contracts(self) -> None:
         cases = [

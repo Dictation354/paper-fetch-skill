@@ -35,8 +35,11 @@ MARKDOWN_FENCE_PATTERN = re.compile(r"^\s*(```+|~~~+)")
 MARKDOWN_TABLE_RULE_PATTERN = re.compile(r"^\s*[-+:| ]{3,}\s*$")
 MARKDOWN_LIST_MARKER_PATTERN = re.compile(r"^(\s{0,3}(?:[-*+]|\d+[.)])\s+)(.*)$")
 TRUNCATION_WARNING = "Output truncated to satisfy token budget."
-BODY_SECTION_EXCLUDED_KINDS = frozenset({"abstract", "references", "supplementary", "diagnostics", "data_availability"})
-SECTION_HINT_KINDS = frozenset({"body", "data_availability", "references"})
+BODY_SECTION_EXCLUDED_KINDS = frozenset(
+    {"abstract", "references", "supplementary", "diagnostics", "data_availability", "code_availability"}
+)
+SECTION_HINT_KINDS = frozenset({"body", "data_availability", "code_availability", "references"})
+RETAINED_NON_BODY_SECTION_KINDS = frozenset({"data_availability", "code_availability"})
 ABSTRACT_SECTION_HEADINGS = frozenset(
     {
         "abstract",
@@ -56,6 +59,14 @@ DATA_AVAILABILITY_SECTION_HEADINGS = frozenset(
         "data, materials, and software availability",
         "data, code, and materials availability",
         "availability of data and materials",
+    }
+)
+CODE_AVAILABILITY_SECTION_HEADINGS = frozenset(
+    {
+        "code availability",
+        "code availability statement",
+        "software availability",
+        "software availability statement",
     }
 )
 PRESERVE_EMPTY_PARENT_SECTION_HEADINGS = frozenset(
@@ -86,6 +97,10 @@ SECTION_PRIORITY = {
     "data, materials, and software availability": 6,
     "data, code, and materials availability": 6,
     "availability of data and materials": 6,
+    "code availability": 6,
+    "code availability statement": 6,
+    "software availability": 6,
+    "software availability statement": 6,
     "references": 6,
 }
 LEADING_ABSTRACT_CONTEXT_HEADINGS = frozenset({"significance", "significance statement"})
@@ -468,8 +483,8 @@ def section_kind_for_heading(heading: str) -> str:
     from .extraction.html.semantics import heading_category as html_heading_category
 
     category = html_heading_category("h2", heading)
-    if category == "data_availability":
-        return "data_availability"
+    if category in {"data_availability", "code_availability"}:
+        return category
     if category == "references_or_back_matter":
         return "references"
     if category == "abstract":
@@ -1486,7 +1501,7 @@ def _build_markdown_render_plan(
     retained_sections = tuple(
         section
         for section in article.sections
-        if strip_markdown_images(section.text) and normalize_text(section.kind).lower() == "data_availability"
+        if strip_markdown_images(section.text) and normalize_text(section.kind).lower() in RETAINED_NON_BODY_SECTION_KINDS
     )
     figure_assets = selected_figure_assets(article.assets, asset_profile=asset_profile)
     figure_assets = filter_inline_body_figure_assets(figure_assets, sections=body_sections)

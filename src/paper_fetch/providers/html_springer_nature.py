@@ -7,7 +7,7 @@ import urllib.parse
 from typing import Any
 
 from ..models import normalize_text
-from ..extraction.html.semantics import identity_category, node_identity_text
+from ..extraction.html.semantics import heading_category, identity_category, node_identity_text
 from ..markdown.citations import clean_citation_markers, normalize_inline_citation_markdown
 from ._html_section_markdown import (
     extract_section_title,
@@ -60,7 +60,6 @@ SPRINGER_NATURE_SCIENTIFIC_BACK_MATTER_TITLES = {
     "additional information",
     "author contributions",
     "competing interests",
-    "data availability",
     "ethics declarations",
     "funding",
     "supplementary information",
@@ -161,6 +160,14 @@ def _is_descendant_of(node: Any, ancestor: Any) -> bool:
     return False
 
 
+def _is_availability_section_title(title_key: str) -> bool:
+    return heading_category("h2", title_key) in {"data_availability", "code_availability"}
+
+
+def _is_scientific_back_matter_title(title_key: str) -> bool:
+    return title_key in SPRINGER_NATURE_SCIENTIFIC_BACK_MATTER_TITLES or _is_availability_section_title(title_key)
+
+
 def _prune_springer_nature_chrome(root: Any) -> None:
     if BeautifulSoup is None or not isinstance(root, Tag):
         return
@@ -194,7 +201,13 @@ def _prune_springer_nature_chrome(root: Any) -> None:
             node.decompose()
 
 
-def _render_scientific_back_matter_sections(article: Any, main: Any, lines: list[str]) -> None:
+def _render_scientific_back_matter_sections(
+    article: Any,
+    main: Any,
+    lines: list[str],
+    *,
+    availability_only: bool = False,
+) -> None:
     if not isinstance(article, Tag) or not isinstance(main, Tag) or article is main:
         return
     seen: set[int] = set()
@@ -203,7 +216,10 @@ def _render_scientific_back_matter_sections(article: Any, main: Any, lines: list
             continue
         seen.add(id(section))
         title_key = _section_title_key(section)
-        if title_key not in SPRINGER_NATURE_SCIENTIFIC_BACK_MATTER_TITLES:
+        if availability_only:
+            if not _is_availability_section_title(title_key):
+                continue
+        elif not _is_scientific_back_matter_title(title_key):
             continue
         render_section_markdown(
             section,
@@ -322,6 +338,7 @@ def extract_springer_nature_markdown(html_text: str, source_url: str) -> str:
                 level=2,
                 section_content_selectors=SPRINGER_NATURE_SECTION_CONTENT_SELECTORS,
             )
+        _render_scientific_back_matter_sections(article, main, lines, availability_only=True)
     else:
         body = article.select_one("div.c-article-body") or article
         main = body.select_one("div.main-content") or body

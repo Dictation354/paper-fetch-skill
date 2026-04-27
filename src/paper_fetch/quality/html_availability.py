@@ -323,7 +323,14 @@ def _looks_like_access_gate_text(text: str) -> bool:
 
 
 def _run_candidate_barrier(kind: str) -> bool:
-    return kind in {"front_matter", "abstract", "references_or_back_matter", "ancillary", "data_availability"}
+    return kind in {
+        "front_matter",
+        "abstract",
+        "references_or_back_matter",
+        "ancillary",
+        "data_availability",
+        "code_availability",
+    }
 
 
 def _normalize_section_hint_heading(text: str) -> str:
@@ -367,6 +374,8 @@ def _match_next_section_hint(section_hints: list[dict[str, Any]], hint_index: in
 def _category_for_section_hint_kind(kind: str) -> str:
     if kind == "data_availability":
         return "data_availability"
+    if kind == "code_availability":
+        return "code_availability"
     if kind == "references":
         return "references_or_back_matter"
     return "body_heading"
@@ -466,7 +475,7 @@ def _analyze_html_structure(
                 current_run_paragraphs = 0
                 current_run_chars = 0
             continue
-        if category == "data_availability":
+        if category in {"data_availability", "code_availability"}:
             in_data_availability = True
             in_abstract = False
             in_back_matter = False
@@ -610,7 +619,7 @@ def _analyze_markdown_structure(
             current_run_paragraphs = 0
             current_run_chars = 0
             continue
-        if category == "data_availability":
+        if category in {"data_availability", "code_availability"}:
             in_data_availability = True
             in_abstract = False
             in_back_matter = False

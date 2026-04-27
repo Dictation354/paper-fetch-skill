@@ -48,16 +48,16 @@ This file is a human-maintained route reference for v1. Runtime behavior is auth
 - Runtime status: supported via provider-managed HTML plus an optional Wiley TDM API PDF lane.
 - Current implementation:
   - Metadata comes from Crossref merge and landing-page signals.
-  - Full text uses provider-managed `FlareSolverr HTML -> Wiley TDM API PDF -> seeded-browser publisher PDF/ePDF -> abstract-only / metadata-only`.
+  - Full text uses provider-managed `FlareSolverr HTML -> seeded-browser publisher PDF/ePDF -> Wiley TDM API PDF -> abstract-only / metadata-only`.
   - Candidate URLs prefer Crossref or landing-page URLs and fall back to DOI resolution when needed.
-  - HTML is fetched through repo-local FlareSolverr; the optional Wiley TDM API lane uses `WILEY_TDM_CLIENT_TOKEN`; publisher PDF/ePDF fallback uses Playwright.
+  - HTML is fetched through repo-local FlareSolverr; publisher PDF/ePDF fallback uses Playwright; the optional Wiley TDM API lane uses `WILEY_TDM_CLIENT_TOKEN`.
 - Route when:
   - The landing-page domain or Crossref publisher-name signal maps to `wiley`, or
   - The DOI uses a strongly indicative Wiley prefix such as `10.1002/` or `10.1111/`.
 - Common constraints:
   - The HTML and browser PDF/ePDF paths depend on repo-local FlareSolverr readiness and explicit local rate-limit settings.
   - The Wiley TDM API PDF lane is optional; if no token is configured, the runtime can still attempt browser PDF/ePDF when the local runtime is ready.
-  - If `WILEY_TDM_CLIENT_TOKEN` is configured, the TDM API PDF lane can still be attempted when the local browser runtime is not ready.
+  - If `WILEY_TDM_CLIENT_TOKEN` is configured, the TDM API PDF lane can still be attempted after browser PDF/ePDF fallback failure or when the local browser runtime is not ready.
 
 ## Science / PNAS
 
@@ -66,7 +66,8 @@ This file is a human-maintained route reference for v1. Runtime behavior is auth
   - Metadata comes from Crossref merge and landing-page signals.
   - Full text uses provider-managed `FlareSolverr HTML -> seeded-browser publisher PDF/ePDF -> abstract-only / metadata-only`.
   - HTML is fetched through repo-local FlareSolverr; publisher PDF/ePDF fallback uses Playwright.
-  - HTML asset downloads prefer full-size/original images. If direct image fetch returns challenge HTML or a browser image shell, Science / PNAS may use Playwright image-document canvas export before accepting preview fallback.
+  - HTML asset downloads prefer full-size/original images. Browser-workflow providers now cache repeated figure-page / image-candidate URLs per download attempt and fetch image payloads with fixed limited parallelism before writing files in input order.
+  - If direct image fetch returns challenge HTML or a browser image shell, Science / PNAS may use Playwright image-document canvas export before accepting preview fallback; FlareSolverr recovery only accepts `solution.imagePayload`, not screenshot cropping.
   - Preview images are only treated as acceptable degradation when saved dimensions meet the runtime threshold; otherwise they remain asset-download issues in warnings/source trail.
 - Common constraints:
   - The runtime does not use publisher APIs for these providers.

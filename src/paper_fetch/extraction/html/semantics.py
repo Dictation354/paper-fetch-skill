@@ -51,6 +51,14 @@ DATA_AVAILABILITY_HEADINGS = frozenset(
         "availability of data and materials",
     }
 )
+CODE_AVAILABILITY_HEADINGS = frozenset(
+    {
+        "code availability",
+        "code availability statement",
+        "software availability",
+        "software availability statement",
+    }
+)
 BACK_MATTER_HEADINGS = frozenset(
     {
         "references",
@@ -189,6 +197,24 @@ ABSTRACT_ATTR_TOKENS = (
 DATA_AVAILABILITY_TOKENS = (
     "data-availability",
     "data_availability",
+    "data-code-availability",
+    "data_code_availability",
+    "data-code-materials-availability",
+    "data_code_materials_availability",
+    "data-and-code-availability",
+    "data_and_code_availability",
+    "data-software-availability",
+    "data_software_availability",
+    "data-and-software-availability",
+    "data_and_software_availability",
+    "data-materials-software-availability",
+    "data_materials_software_availability",
+)
+CODE_AVAILABILITY_TOKENS = (
+    "code-availability",
+    "code_availability",
+    "software-availability",
+    "software_availability",
 )
 BACK_MATTER_TOKENS = (
     "reference",
@@ -243,7 +269,7 @@ IDENTITY_ATTR_KEYS = (
     "aria-labelledby",
 )
 SECTION_HEADING_PATTERN = re.compile(r"^h([1-6])$")
-HTML_SECTION_HINT_KINDS = frozenset({"body", "data_availability", "references"})
+HTML_SECTION_HINT_KINDS = frozenset({"body", "data_availability", "code_availability", "references"})
 
 
 def normalize_heading(text: str) -> str:
@@ -281,6 +307,8 @@ def identity_category(identity_text: str) -> str:
         return ""
     if any(token in normalized for token in DATA_AVAILABILITY_TOKENS):
         return "data_availability"
+    if any(token in normalized for token in CODE_AVAILABILITY_TOKENS):
+        return "code_availability"
     if any(token in normalized for token in BACK_MATTER_TOKENS):
         return "references_or_back_matter"
     if any(token in normalized for token in ABSTRACT_ATTR_TOKENS):
@@ -310,6 +338,8 @@ def heading_category(node_name: str, text: str, *, title: str | None = None) -> 
         return "abstract"
     if any(normalized.startswith(token) for token in DATA_AVAILABILITY_HEADINGS):
         return "data_availability"
+    if any(normalized.startswith(token) for token in CODE_AVAILABILITY_HEADINGS):
+        return "code_availability"
     if any(normalized.startswith(token) for token in BACK_MATTER_HEADINGS):
         return "references_or_back_matter"
     if any(normalized.startswith(token) for token in ANCILLARY_HEADINGS):
@@ -342,6 +372,8 @@ def section_hint_kind_for_category(category: str) -> str | None:
         return "body"
     if category == "data_availability":
         return "data_availability"
+    if category == "code_availability":
+        return "code_availability"
     if category == "references_or_back_matter":
         return "references"
     return None
@@ -350,6 +382,8 @@ def section_hint_kind_for_category(category: str) -> str | None:
 def category_for_section_hint_kind(kind: str) -> str:
     if kind == "data_availability":
         return "data_availability"
+    if kind == "code_availability":
+        return "code_availability"
     if kind == "references":
         return "references_or_back_matter"
     return "body_heading"
@@ -387,6 +421,8 @@ def markdown_heading_category(
         return "front_matter"
     if any(normalized.startswith(token) for token in DATA_AVAILABILITY_HEADINGS):
         return "data_availability"
+    if any(normalized.startswith(token) for token in CODE_AVAILABILITY_HEADINGS):
+        return "code_availability"
     if any(normalized.startswith(token) for token in MARKDOWN_BACK_MATTER_HEADINGS):
         return "references_or_back_matter"
 
@@ -458,6 +494,7 @@ def classify_html_paragraph(
     in_front_matter: bool = False,
     in_abstract: bool = False,
     in_data_availability: bool = False,
+    in_code_availability: bool = False,
     looks_like_front_matter_paragraph: Callable[[str], bool] | None = None,
     is_substantial_prose: Callable[[str], bool] | None = None,
     looks_like_access_gate_text: Callable[[str], bool] | None = None,
@@ -470,9 +507,11 @@ def classify_html_paragraph(
         return "abstract"
     if in_data_availability:
         return "data_availability"
+    if in_code_availability:
+        return "code_availability"
 
     identity_kind = identity_category(ancestor_identity_text(node))
-    if identity_kind in {"references_or_back_matter", "data_availability", "abstract", "ancillary"}:
+    if identity_kind in {"references_or_back_matter", "data_availability", "code_availability", "abstract", "ancillary"}:
         return identity_kind
     lowered = normalize_text(text).lower()
     if looks_like_access_gate_text is not None and looks_like_access_gate_text(lowered):
@@ -503,7 +542,7 @@ def collect_html_section_hints(
         if category in {"body_heading", "front_matter"}:
             container = node.parent if isinstance(getattr(node, "parent", None), Tag) else node
             container_kind = identity_category(ancestor_identity_text(container))
-            if container_kind in {"abstract", "data_availability", "references_or_back_matter", "ancillary"}:
+            if container_kind in {"abstract", "data_availability", "code_availability", "references_or_back_matter", "ancillary"}:
                 category = container_kind
         kind = section_hint_kind_for_category(category)
         if kind is None:

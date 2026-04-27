@@ -12,9 +12,11 @@ from ..extraction.html._assets import (
     PREVIEW_IMAGE_ATTRS,
     FigurePageFetcher,
     download_figure_assets as download_generic_figure_assets,
+    download_supplementary_assets as download_generic_supplementary_assets,
     extract_figure_assets as extract_generic_figure_assets,
     extract_formula_assets as extract_generic_formula_assets,
     extract_supplementary_assets as extract_generic_supplementary_assets,
+    split_body_and_supplementary_assets,
     looks_like_full_size_asset_url,
 )
 from ..extraction.html._metadata import merge_html_metadata as merge_generic_html_metadata
@@ -390,6 +392,34 @@ def extract_html_payload(
     }
 
 
+def extract_asset_html_scopes(
+    html_text: str,
+    source_url: str,
+    *,
+    title: str | None = None,
+) -> tuple[str, str]:
+    cleaned_html, active_root = _normalized_root_html(html_text)
+    if active_root is None:
+        extraction_sidecars = extract_html_extraction_sidecars(html_text, source_url, title=title)
+        cleaned_html = str(extraction_sidecars["cleaned_html"] or "")
+        return cleaned_html, cleaned_html
+
+    article_root = select_springer_nature_article_root(active_root) or active_root
+    if isinstance(article_root, Tag):
+        body_root = (
+            article_root.select_one("div.c-article-body div.main-content")
+            or article_root.select_one("div.c-article-body")
+            or article_root.select_one("div.main-content")
+            or article_root
+        )
+    else:
+        body_root = active_root
+
+    supplementary_html = str(article_root) if isinstance(article_root, Tag) else cleaned_html
+    body_html = str(body_root) if isinstance(body_root, Tag) else supplementary_html
+    return body_html, supplementary_html
+
+
 def _first_url_from_srcset(value: str | None) -> str:
     srcset = normalize_text(value)
     if not srcset:
@@ -707,10 +737,25 @@ def extract_html_assets(
     *,
     asset_profile,
 ) -> list[dict[str, str]]:
-    assets = extract_figure_assets(html_text, source_url)
-    assets.extend(extract_generic_formula_assets(html_text, source_url))
+    return extract_scoped_html_assets(
+        html_text,
+        source_url,
+        asset_profile=asset_profile,
+        supplementary_html_text=html_text,
+    )
+
+
+def extract_scoped_html_assets(
+    body_html_text: str,
+    source_url: str,
+    *,
+    asset_profile,
+    supplementary_html_text: str | None = None,
+) -> list[dict[str, str]]:
+    assets = extract_figure_assets(body_html_text, source_url)
+    assets.extend(extract_generic_formula_assets(body_html_text, source_url))
     if asset_profile == "all":
-        assets.extend(extract_supplementary_assets(html_text, source_url))
+        assets.extend(extract_supplementary_assets(supplementary_html_text or body_html_text, source_url))
     return assets
 
 
@@ -781,10 +826,11 @@ def download_figure_assets(
     browser_context_seed: Mapping[str, Any] | None = None,
     seed_urls: list[str] | None = None,
 ):
-    return download_generic_figure_assets(
+    body_assets, supplementary_assets = split_body_and_supplementary_assets(assets)
+    body_result = download_generic_figure_assets(
         transport,
         article_id=article_id,
-        assets=assets,
+        assets=body_assets,
         output_dir=output_dir,
         user_agent=user_agent,
         asset_profile=asset_profile,
@@ -793,3 +839,23 @@ def download_figure_assets(
         seed_urls=seed_urls,
         candidate_builder=figure_download_candidates,
     )
+    supplementary_result = download_generic_supplementary_assets(
+        transport,
+        article_id=article_id,
+        assets=supplementary_assets,
+        output_dir=output_dir,
+        user_agent=user_agent,
+        asset_profile=asset_profile,
+        browser_context_seed=browser_context_seed,
+        seed_urls=seed_urls,
+    )
+    return {
+        "assets": [
+            *list(body_result.get("assets") or []),
+            *list(supplementary_result.get("assets") or []),
+        ],
+        "asset_failures": [
+            *list(body_result.get("asset_failures") or []),
+            *list(supplementary_result.get("asset_failures") or []),
+        ],
+    }

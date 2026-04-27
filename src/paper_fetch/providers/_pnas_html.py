@@ -96,7 +96,7 @@ def select_content_nodes(
     nodes_from_selectors,
     content_abstract_selectors,
     content_body_selectors,
-    select_data_availability_nodes,
+    select_availability_nodes,
     dedupe_top_level_nodes,
     is_tag,
 ) -> list[Any]:
@@ -120,10 +120,10 @@ def select_content_nodes(
 
     selected: list[Any] = []
     abstract_nodes = structural_abstract_nodes(container) or nodes_from_selectors(container, content_abstract_selectors)
-    data_availability_nodes = select_data_availability_nodes(container, body_nodes)
+    availability_nodes = select_availability_nodes(container, body_nodes)
     selected.extend(abstract_nodes)
     selected.extend(body_nodes)
-    selected.extend(data_availability_nodes)
+    selected.extend(availability_nodes)
     return dedupe_top_level_nodes(selected)
 
 

@@ -20,6 +20,7 @@ dist/
 pip-wheel-metadata/
 
 # Project-local agent installs
+.codex
 .codex/
 .claude/
 
@@ -27,6 +28,7 @@ pip-wheel-metadata/
 .env
 live-downloads/
 .paper-fetch/
+.paper-fetch-runs/
 problems.md
 agent-surface-plan.md
 docs/pm-dev-overview.local.md

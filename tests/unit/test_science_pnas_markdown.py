@@ -585,6 +585,42 @@ class SciencePnasMarkdownTests(unittest.TestCase):
             [("Results", "body"), ("Availability Statement", "data_availability")],
         )
 
+    def test_browser_workflow_returns_section_hints_for_structural_code_availability(self) -> None:
+        html = """
+        <html>
+          <body>
+            <article>
+              <h1>Science Browser Workflow Example</h1>
+              <section class="abstract" lang="en">
+                <h2>Abstract</h2>
+                <p>English abstract sentence one. English abstract sentence two.</p>
+              </section>
+              <section class="article__body">
+                <h2>Results</h2>
+                <p>This results paragraph is long enough to satisfy browser-workflow availability checks and should remain in the extracted markdown output.</p>
+              </section>
+              <section id="code-availability">
+                <h2>Availability Statement</h2>
+                <p>Analysis code is archived in a public repository.</p>
+              </section>
+            </article>
+          </body>
+        </html>
+        """
+
+        markdown, info = extract_science_pnas_markdown(
+            html,
+            "https://www.science.org/doi/full/10.1126/test-browser-code-section-hints",
+            "science",
+            metadata={"doi": "10.1126/test-browser-code-section-hints"},
+        )
+
+        self.assertIn("## Availability Statement", markdown)
+        self.assertEqual(
+            [(item["heading"], item["kind"]) for item in info["section_hints"]],
+            [("Results", "body"), ("Availability Statement", "code_availability")],
+        )
+
     def test_browser_workflow_keeps_non_english_article_when_no_parallel_language_variant_exists(self) -> None:
         html = """
         <html>

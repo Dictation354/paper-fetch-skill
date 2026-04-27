@@ -632,6 +632,27 @@ class ModelsRenderTests(unittest.TestCase):
         self.assertIn("## Data Availability", rendered)
         self.assertIn("The data are available from the corresponding author", rendered)
 
+    def test_article_from_markdown_keeps_code_availability_without_counting_it_as_fulltext(self) -> None:
+        article = article_from_markdown(
+            source="springer_html",
+            metadata={"title": "Markdown Article"},
+            doi="10.1000/code-availability",
+            markdown_text=(
+                "# Markdown Article\n\n"
+                "## Abstract\n\n"
+                "Short abstract.\n\n"
+                "## Code Availability\n\n"
+                "The analysis code is archived in a public repository."
+            ),
+        )
+
+        self.assertEqual(article.quality.content_kind, "abstract_only")
+        self.assertEqual([section.kind for section in article.sections], ["abstract", "code_availability"])
+        rendered = article.to_ai_markdown(max_tokens="full_text")
+        self.assertIn("## Abstract", rendered)
+        self.assertIn("## Code Availability", rendered)
+        self.assertIn("The analysis code is archived", rendered)
+
     def test_article_from_markdown_preserves_inline_figure_links_without_counting_them_as_body_text(self) -> None:
         article = article_from_markdown(
             source="pnas",
@@ -998,6 +1019,37 @@ class ModelsRenderTests(unittest.TestCase):
         )
 
         self.assertEqual([section.kind for section in article.sections], ["data_availability", "body"])
+        self.assertEqual(article.quality.content_kind, "fulltext")
+
+    def test_article_from_markdown_uses_section_hints_for_nonliteral_code_availability(self) -> None:
+        article = article_from_markdown(
+            source="springer_html",
+            metadata={"title": "Markdown Article"},
+            doi="10.1000/code-section-hints",
+            markdown_text=(
+                "# Markdown Article\n\n"
+                "## Availability Statement\n\n"
+                "Analysis code is archived in a public repository.\n\n"
+                "## Results\n\n"
+                "Body text lives here with enough prose to remain classified as main text."
+            ),
+            section_hints=[
+                {
+                    "heading": "Availability Statement",
+                    "level": 2,
+                    "kind": "code_availability",
+                    "order": 0,
+                },
+                {
+                    "heading": "Results",
+                    "level": 2,
+                    "kind": "body",
+                    "order": 1,
+                },
+            ],
+        )
+
+        self.assertEqual([section.kind for section in article.sections], ["code_availability", "body"])
         self.assertEqual(article.quality.content_kind, "fulltext")
 
     def test_article_from_markdown_keeps_heading_fallback_without_section_hints(self) -> None:

@@ -21,14 +21,16 @@
 
 - 它们是公开 provider 名字，可能出现在 `provider_hint`、`preferred_providers` 中
 - metadata 仍由 `crossref` 提供
-- `wiley` 的正文链路是 provider 自管的 `FlareSolverr HTML -> Wiley TDM API PDF -> seeded-browser publisher PDF/ePDF -> abstract-only / metadata-only`
+- `wiley` 的正文链路是 provider 自管的 `FlareSolverr HTML -> seeded-browser publisher PDF/ePDF -> Wiley TDM API PDF -> abstract-only / metadata-only`
 - `science` / `pnas` 的正文链路仍是 provider 自管的 `FlareSolverr HTML -> seeded-browser publisher PDF/ePDF -> abstract-only / metadata-only`
-- `wiley` 的 `WILEY_TDM_CLIENT_TOKEN` 只启用官方 TDM API PDF lane；这条 lane 可以在本地 browser runtime 不可用时单独尝试，但不会下载 HTML 资产
+- `wiley` 的 `WILEY_TDM_CLIENT_TOKEN` 只启用官方 TDM API PDF lane；这条 lane 会在 browser PDF/ePDF fallback 失败或本地 browser runtime 不可用时继续尝试，但不会下载 HTML 资产
 - `wiley` 的 HTML / browser PDF/ePDF 路径与 `science` / `pnas` 共用同一套 provider-owned 浏览器 bootstrap 与 browser-PDF executor，不再保留单独的 Science path harness
 - `source` 公开可能是 `wiley_browser`、`science` 或 `pnas`
 - `FlareSolverr HTML` 成功路径支持 `asset_profile=body|all` 的正文资产下载；PDF/ePDF fallback 仍是 text-only
 - `wiley` / `science` / `pnas` 的正文 figure / table / formula 图片资产下载以 shared Playwright browser context 为主链路；每次 download attempt 创建一次 context/page，多图复用同一个 seeded browser context
 - 图片候选仍优先 full-size/original，全部失败后才尝试 preview；preview 也通过同一个 browser context 下载，目标 provider 不再使用 `playwright_canvas_fallback` tier
+- 正文图片下载在单次 attempt 内会对 figure page 和图片候选 URL 做缓存，并以固定并发上限 `3` 拉取 payload；文件写入仍按资产原顺序完成
+- 当图片 URL 在 Playwright `fetch()` 下返回 Cloudflare challenge HTML，但 FlareSolverr/Selenium 已能显示图片文档时，仓库本地 FlareSolverr patch 会返回 `solution.imagePayload`，下载器只接受这份浏览器导出的 PNG；`imagePayload` 缺失或无效时会记录明确失败原因，不再退回截图裁剪
 - 这条链路只保证在当前仓库 checkout 中运行
 - 站点 ToS、robots、授权与合规风险由操作者自行承担
 

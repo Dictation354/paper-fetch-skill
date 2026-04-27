@@ -6,8 +6,8 @@
     "body": true,
     "figures": false,
     "references": false,
-    "data_availability": false,
-    "code_availability": false
+    "data_availability": true,
+    "code_availability": true
   },
   "counts": {
     "sections": 14,

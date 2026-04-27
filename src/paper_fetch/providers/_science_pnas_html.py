@@ -26,6 +26,7 @@ from ..extraction.html.semantics import (
     ANCILLARY_TOKENS,
     BACK_MATTER_TOKENS,
     BODY_CONTAINER_TOKENS,
+    CODE_AVAILABILITY_TOKENS,
     DATA_AVAILABILITY_TOKENS,
     collect_html_section_hints,
     heading_category,
@@ -152,12 +153,22 @@ CONTENT_BODY_SELECTORS = (
     ".article__fulltext",
     ".epub-section",
 )
-CONTENT_DATA_AVAILABILITY_SELECTORS = (
+CONTENT_AVAILABILITY_SELECTORS = (
     "#data-availability",
+    "#code-availability",
+    "#software-availability",
     "section[id*='data-availability']",
+    "section[id*='code-availability']",
+    "section[id*='software-availability']",
     "section[class*='data-availability']",
+    "section[class*='code-availability']",
+    "section[class*='software-availability']",
     "div[id*='data-availability']",
+    "div[id*='code-availability']",
+    "div[id*='software-availability']",
     "div[class*='data-availability']",
+    "div[class*='code-availability']",
+    "div[class*='software-availability']",
 )
 
 
@@ -1329,18 +1340,23 @@ def _nodes_from_selectors(container: Tag, selectors: tuple[str, ...]) -> list[Ta
     return _dedupe_top_level_nodes(nodes)
 
 
-def _data_availability_node_score(node: Tag) -> int:
+def _availability_node_score(node: Tag) -> int:
     score = 0
     identity = _ancestor_identity_text(node)
     node_id = normalize_text(str((getattr(node, "attrs", None) or {}).get("id") or "")).lower()
-    if node_id == "data-availability":
+    if node_id in {"data-availability", "code-availability", "software-availability"}:
         score += 120
     if normalize_text(node.name or "").lower() == "section":
         score += 10
     if any(token in identity for token in BODY_CONTAINER_TOKENS):
         score += 40
-    if any(token in identity for token in DATA_AVAILABILITY_TOKENS):
+    if any(token in identity for token in DATA_AVAILABILITY_TOKENS + CODE_AVAILABILITY_TOKENS):
         score += 20
+    heading = node.find(re.compile(r"^h[1-6]$"))
+    if isinstance(heading, Tag):
+        heading_kind = _heading_category(normalize_text(heading.name or "").lower(), heading.get_text(" ", strip=True))
+        if heading_kind in {"data_availability", "code_availability"}:
+            score += 40
     if any(token in identity for token in ANCILLARY_TOKENS):
         score -= 60
     if any(token in identity for token in ("collateral", "tabpanel", "tab-panel", "tab_panel", "info-panel", "info_panel")):
@@ -1348,15 +1364,15 @@ def _data_availability_node_score(node: Tag) -> int:
     return score
 
 
-def _select_data_availability_nodes(container: Tag, body_nodes: list[Tag]) -> list[Tag]:
+def _select_availability_nodes(container: Tag, body_nodes: list[Tag]) -> list[Tag]:
     chosen_by_text: dict[str, tuple[int, int, Tag]] = {}
-    for index, node in enumerate(_nodes_from_selectors(container, CONTENT_DATA_AVAILABILITY_SELECTORS)):
+    for index, node in enumerate(_nodes_from_selectors(container, CONTENT_AVAILABILITY_SELECTORS)):
         if any(_is_descendant(node, body_node) for body_node in body_nodes):
             continue
         text_key = normalize_text(node.get_text(" ", strip=True)).lower()
         if not text_key:
             continue
-        candidate = (_data_availability_node_score(node), index, node)
+        candidate = (_availability_node_score(node), index, node)
         current = chosen_by_text.get(text_key)
         if current is None or candidate[0] > current[0]:
             chosen_by_text[text_key] = candidate
@@ -1374,7 +1390,7 @@ def _select_content_nodes(container: Tag, *, publisher: str | None = None) -> li
             nodes_from_selectors=_nodes_from_selectors,
             content_abstract_selectors=CONTENT_ABSTRACT_SELECTORS,
             content_body_selectors=CONTENT_BODY_SELECTORS,
-            select_data_availability_nodes=_select_data_availability_nodes,
+            select_availability_nodes=_select_availability_nodes,
             dedupe_top_level_nodes=_dedupe_top_level_nodes,
             is_tag=lambda node: isinstance(node, Tag),
         )
@@ -1384,10 +1400,10 @@ def _select_content_nodes(container: Tag, *, publisher: str | None = None) -> li
     selected: list[Tag] = []
     abstract_nodes = _nodes_from_selectors(container, CONTENT_ABSTRACT_SELECTORS)
     body_nodes = _nodes_from_selectors(container, CONTENT_BODY_SELECTORS)
-    data_availability_nodes = _select_data_availability_nodes(container, body_nodes)
+    availability_nodes = _select_availability_nodes(container, body_nodes)
     selected.extend(abstract_nodes)
     selected.extend(body_nodes)
-    selected.extend(data_availability_nodes)
+    selected.extend(availability_nodes)
 
     return _dedupe_top_level_nodes(selected)
 
@@ -1622,7 +1638,7 @@ def _postprocess_browser_workflow_markdown(
                 in_data_availability = False
                 abstract_prose_blocks_seen = 0
                 continue
-            if category == "data_availability":
+            if category in {"data_availability", "code_availability"}:
                 if not title_kept and normalized_title:
                     kept.insert(0, f"# {normalized_title}")
                     title_kept = True
@@ -1833,6 +1849,37 @@ def extract_browser_workflow_markdown(
             metadata=metadata,
         )
     return markdown, extraction_payload
+
+
+def extract_browser_workflow_asset_html_scopes(
+    html_text: str,
+    source_url: str,
+    publisher: str,
+) -> tuple[str, str]:
+    del source_url
+    if BeautifulSoup is None:
+        raise SciencePnasHtmlFailure("missing_bs4", "BeautifulSoup is required for browser-workflow HTML asset extraction.")
+
+    soup = BeautifulSoup(html_text, choose_parser())
+    container = select_best_container(soup, publisher)
+    if container is None:
+        raise SciencePnasHtmlFailure(
+            "article_container_not_found",
+            "Could not identify the main article container in publisher HTML.",
+        )
+
+    clean_container(container, publisher)
+
+    supplementary_container = copy.deepcopy(container)
+    body_container = copy.deepcopy(container)
+    _normalize_abstract_blocks(body_container)
+    _drop_front_matter_teaser_figures(body_container, publisher)
+    _drop_abstract_sections_from_body_container(body_container, publisher)
+
+    return (
+        _content_fragment_html(body_container, publisher=publisher),
+        _content_fragment_html(supplementary_container, publisher=publisher),
+    )
 
 
 def extract_science_pnas_markdown(

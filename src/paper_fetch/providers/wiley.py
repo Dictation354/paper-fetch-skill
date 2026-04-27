@@ -144,13 +144,17 @@ class WileyClient(browser_workflow.BrowserWorkflowClient):
         if bootstrap.html_payload is not None:
             return bootstrap.html_payload
 
-        initial_warnings = [
-            *bootstrap.warnings,
-            (
+        initial_warnings = [*bootstrap.warnings]
+        if bootstrap.runtime is not None:
+            initial_warnings.append(
+                f"{self.name} HTML route was not usable "
+                f"({bootstrap.html_failure_reason or 'html_failed'}); attempting Wiley publisher PDF/ePDF fallback."
+            )
+        else:
+            initial_warnings.append(
                 f"{self.name} HTML route was not usable "
                 f"({bootstrap.html_failure_reason or 'html_failed'}); attempting Wiley TDM API PDF fallback."
-            ),
-        ]
+            )
         if bootstrap.runtime is None and bootstrap.runtime_failure is not None:
             initial_warnings.append(
                 f"Wiley browser PDF/ePDF fallback was not attempted because {bootstrap.runtime_failure.message}"
@@ -193,11 +197,6 @@ class WileyClient(browser_workflow.BrowserWorkflowClient):
                 needs_local_copy=True,
             )
 
-        def tdm_failure_warning(failure: ProviderFailure, _state: ProviderWaterfallState) -> str:
-            if failure.code == "not_configured":
-                return f"{failure.message} Attempting publisher PDF/ePDF fallback."
-            return f"Wiley TDM API PDF fallback was not usable ({failure.message}); attempting publisher PDF/ePDF fallback."
-
         def run_browser_pdf(_state: ProviderWaterfallState) -> RawFulltextPayload:
             if bootstrap.runtime is None:
                 raise ProviderFailure(
@@ -226,16 +225,29 @@ class WileyClient(browser_workflow.BrowserWorkflowClient):
             except PdfFallbackFailure as exc:
                 raise ProviderFailure("no_result", exc.message) from exc
 
+        def browser_failure_warning(failure: ProviderFailure, _state: ProviderWaterfallState) -> str:
+            if self.tdm_client_token:
+                return (
+                    f"Wiley publisher PDF/ePDF fallback was not usable ({failure.message}); "
+                    "attempting Wiley TDM API PDF fallback."
+                )
+            return f"Wiley publisher PDF/ePDF fallback was not usable ({failure.message})."
+
+        def tdm_failure_warning(failure: ProviderFailure, _state: ProviderWaterfallState) -> str:
+            if failure.code == "not_configured":
+                return failure.message
+            return f"Wiley TDM API PDF fallback was not usable ({failure.message})."
+
         def final_failure(state: ProviderWaterfallState) -> ProviderFailure:
             api_failure = next((failure for label, failure in state.failures if label == "pdf_api"), None)
             browser_failure = next((failure for label, failure in state.failures if label == "browser_pdf"), None)
             failure_parts = [f"HTML failure: {bootstrap.html_failure_message or 'wiley HTML route failed.'}"]
-            if api_failure is not None:
-                failure_parts.append(f"Wiley API PDF failure: {api_failure.message}")
             if browser_failure is not None:
                 failure_parts.append(f"Wiley browser PDF failure: {browser_failure.message}")
             elif bootstrap.runtime is None and bootstrap.runtime_failure is not None:
                 failure_parts.append(f"Wiley browser PDF failure: {bootstrap.runtime_failure.message}")
+            if api_failure is not None:
+                failure_parts.append(f"Wiley API PDF failure: {api_failure.message}")
 
             missing_env: list[str] = []
             if bootstrap.runtime is None and bootstrap.runtime_failure is not None:
@@ -250,12 +262,26 @@ class WileyClient(browser_workflow.BrowserWorkflowClient):
                 warnings=state.warnings,
                 source_trail=[
                     f"fulltext:{self.name}_html_fail",
-                    f"fulltext:{self.name}_pdf_api_fail",
                     *([f"fulltext:{self.name}_pdf_browser_fail"] if bootstrap.runtime is not None else []),
+                    f"fulltext:{self.name}_pdf_api_fail",
                 ],
             )
 
-        steps = [
+        steps = []
+        if bootstrap.runtime is not None:
+            steps.append(
+                ProviderWaterfallStep(
+                    label="browser_pdf",
+                    run=run_browser_pdf,
+                    failure_marker=f"fulltext:{self.name}_pdf_browser_fail",
+                    success_markers=(
+                        f"fulltext:{self.name}_pdf_browser_ok",
+                        f"fulltext:{self.name}_pdf_fallback_ok",
+                    ),
+                    failure_warning=browser_failure_warning,
+                )
+            )
+        steps.append(
             ProviderWaterfallStep(
                 label="pdf_api",
                 run=run_tdm_api,
@@ -268,21 +294,7 @@ class WileyClient(browser_workflow.BrowserWorkflowClient):
                 failure_warning=tdm_failure_warning,
                 success_warning="Full text was extracted from the Wiley TDM API PDF fallback after the HTML path was not usable.",
             )
-        ]
-        if bootstrap.runtime is not None:
-            steps.append(
-                ProviderWaterfallStep(
-                    label="browser_pdf",
-                    run=run_browser_pdf,
-                    failure_marker=f"fulltext:{self.name}_pdf_browser_fail",
-                    success_markers=(
-                        f"fulltext:{self.name}_pdf_browser_ok",
-                        f"fulltext:{self.name}_pdf_fallback_ok",
-                    ),
-                    failure_warning=lambda failure, _state: f"Wiley publisher PDF/ePDF fallback was not usable ({failure.message}).",
-                    include_failure_trail_on_success=False,
-                )
-            )
+        )
 
         return run_provider_waterfall(
             steps,

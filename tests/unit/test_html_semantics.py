@@ -17,6 +17,9 @@ class HtmlSemanticsTests(unittest.TestCase):
     def test_heading_category_maps_canonical_headings(self) -> None:
         self.assertEqual(heading_category("h2", "Abstract"), "abstract")
         self.assertEqual(heading_category("h2", "Data availability statement"), "data_availability")
+        self.assertEqual(heading_category("h2", "Code availability"), "code_availability")
+        self.assertEqual(heading_category("h2", "Software availability statement"), "code_availability")
+        self.assertEqual(heading_category("h2", "Data, code, and materials availability"), "data_availability")
         self.assertEqual(heading_category("h2", "References"), "references_or_back_matter")
         self.assertEqual(heading_category("h2", "Metrics"), "ancillary")
         self.assertEqual(heading_category("h2", "Corresponding author"), "ancillary")
@@ -31,6 +34,9 @@ class HtmlSemanticsTests(unittest.TestCase):
     def test_identity_category_maps_canonical_tokens(self) -> None:
         self.assertEqual(identity_category("section property articleBody"), "body")
         self.assertEqual(identity_category("section id data-availability"), "data_availability")
+        self.assertEqual(identity_category("section id data-code-availability"), "data_availability")
+        self.assertEqual(identity_category("section id code-availability"), "code_availability")
+        self.assertEqual(identity_category("section class software-availability"), "code_availability")
         self.assertEqual(identity_category("ol class references-list"), "references_or_back_matter")
         self.assertEqual(identity_category("aside class share-toolbar"), "ancillary")
         self.assertEqual(identity_category("section id rightslink-section"), "ancillary")
@@ -49,6 +55,8 @@ class HtmlSemanticsTests(unittest.TestCase):
         self.assertEqual(markdown_heading_category("Abstract"), "abstract")
         self.assertEqual(markdown_heading_category("Editor's Summary"), "front_matter")
         self.assertEqual(markdown_heading_category("Data Availability"), "data_availability")
+        self.assertEqual(markdown_heading_category("Code Availability"), "code_availability")
+        self.assertEqual(markdown_heading_category("Data, Materials, and Software Availability"), "data_availability")
         self.assertEqual(markdown_heading_category("References"), "references_or_back_matter")
         self.assertEqual(markdown_heading_category("Rights and permissions"), "auxiliary")
         self.assertEqual(markdown_heading_category("Results"), "body_heading")

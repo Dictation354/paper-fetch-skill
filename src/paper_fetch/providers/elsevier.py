@@ -45,6 +45,7 @@ from ..quality.html_availability import (
     assess_plain_text_fulltext_availability,
     assess_structured_article_fulltext_availability,
 )
+from .html_assets import download_supplementary_assets as download_generic_supplementary_assets
 from .base import (
     ProviderArtifacts,
     ProviderClient,
@@ -234,6 +235,24 @@ def filter_elsevier_asset_references(
     return list(references)
 
 
+def elsevier_asset_result_kind(asset_type: str | None) -> str:
+    normalized = normalize_text(asset_type).lower()
+    if normalized == "table_asset":
+        return "table"
+    if normalized == "supplementary":
+        return "supplementary"
+    return "figure"
+
+
+def elsevier_asset_result_section(asset_type: str | None) -> str:
+    normalized = normalize_text(asset_type).lower()
+    if normalized == "supplementary":
+        return "supplementary"
+    if normalized == "appendix_image":
+        return "appendix"
+    return "body"
+
+
 def download_elsevier_related_assets(
     transport: HttpTransport,
     *,
@@ -252,6 +271,8 @@ def download_elsevier_related_assets(
     )
     if not references:
         return empty_asset_results()
+    body_references = [reference for reference in references if reference.get("asset_type") != "supplementary"]
+    supplementary_references = [reference for reference in references if reference.get("asset_type") == "supplementary"]
 
     asset_dir = output_dir / f"{sanitize_filename(doi)}_assets"
     asset_dir.mkdir(parents=True, exist_ok=True)
@@ -259,7 +280,7 @@ def download_elsevier_related_assets(
     downloads: list[dict[str, Any]] = []
     failures: list[dict[str, Any]] = []
 
-    for reference in references:
+    for reference in body_references:
         try:
             response = transport.request(
                 "GET",
@@ -272,17 +293,20 @@ def download_elsevier_related_assets(
         except RequestFailure as exc:
             failures.append(
                 {
+                    "kind": elsevier_asset_result_kind(reference.get("asset_type")),
                     "asset_type": reference["asset_type"],
                     "source_kind": reference["source_kind"],
                     "source_ref": reference["source_ref"],
                     "source_url": reference["source_url"],
                     "status": exc.status_code,
                     "reason": str(exc),
+                    "section": elsevier_asset_result_section(reference.get("asset_type")),
                 }
             )
             continue
 
         content_type = response["headers"].get("content-type", reference.get("content_type"))
+        asset_type = reference.get("asset_type")
         output_path = build_asset_output_path(
             asset_dir,
             reference.get("filename_hint"),
@@ -292,15 +316,52 @@ def download_elsevier_related_assets(
         )
         downloads.append(
             {
-                "asset_type": reference["asset_type"],
+                "kind": elsevier_asset_result_kind(asset_type),
+                "heading": reference.get("filename_hint") or reference.get("source_ref") or "Asset",
+                "caption": "",
+                "asset_type": asset_type,
                 "source_kind": reference["source_kind"],
                 "source_ref": reference["source_ref"],
+                "download_url": reference["source_url"],
                 "source_url": response["url"],
                 "content_type": content_type,
                 "path": save_payload(output_path, response["body"]),
                 "downloaded_bytes": len(response["body"]),
+                "section": elsevier_asset_result_section(asset_type),
+                "download_tier": "object_reference",
             }
         )
+
+    supplementary_result = download_generic_supplementary_assets(
+        transport,
+        article_id=doi,
+        assets=[
+            {
+                "kind": "supplementary",
+                "heading": reference.get("filename_hint") or reference.get("source_ref") or "Supplementary Material",
+                "caption": "",
+                "section": "supplementary",
+                "url": reference.get("source_url"),
+                "download_url": reference.get("source_url"),
+                "source_url": reference.get("source_url"),
+                "content_type": reference.get("content_type"),
+                "filename_hint": reference.get("filename_hint"),
+                "asset_type": reference.get("asset_type"),
+                "source_kind": reference.get("source_kind"),
+                "source_ref": reference.get("source_ref"),
+                "attachment_type": reference.get("attachment_type"),
+                "object_type": reference.get("object_type"),
+                "category": reference.get("category"),
+            }
+            for reference in supplementary_references
+        ],
+        output_dir=output_dir,
+        user_agent=headers.get("User-Agent", ""),
+        asset_profile=asset_profile,
+        headers=headers,
+    )
+    downloads.extend(list(supplementary_result.get("assets") or []))
+    failures.extend(list(supplementary_result.get("asset_failures") or []))
 
     return {
         "assets": downloads,

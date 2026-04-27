@@ -99,6 +99,8 @@ class FetchedPublisherHtml:
     title: str | None
     summary: str
     browser_context_seed: Mapping[str, Any]
+    screenshot_b64: str | None = None
+    image_payload: Mapping[str, Any] | None = None
 
 
 class FlareSolverrFailure(Exception):
@@ -792,6 +794,7 @@ def fetch_html_with_flaresolverr(
     wait_seconds: int = DEFAULT_FLARESOLVERR_WAIT_SECONDS,
     warm_wait_seconds: int = DEFAULT_FLARESOLVERR_WARM_WAIT_SECONDS,
     max_timeout_ms: int = DEFAULT_FLARESOLVERR_MAX_TIMEOUT_MS,
+    return_image_payload: bool = False,
 ) -> FetchedPublisherHtml:
     if not candidate_urls:
         raise FlareSolverrFailure("empty_html_attempts", "No publisher HTML candidates were attempted.")
@@ -838,6 +841,8 @@ def fetch_html_with_flaresolverr(
                     "waitInSeconds": effective_wait_seconds,
                     "maxTimeout": max_timeout_ms,
                 }
+                if return_image_payload:
+                    request_payload["returnImagePayload"] = True
                 try:
                     request_response = post_to_flaresolverr(
                         config.url,
@@ -940,6 +945,8 @@ def fetch_html_with_flaresolverr(
                     title=title,
                     summary=summary,
                     browser_context_seed=browser_context_seed,
+                    screenshot_b64=solution.get("screenshot") if isinstance(solution.get("screenshot"), str) else None,
+                    image_payload=solution.get("imagePayload") if isinstance(solution.get("imagePayload"), dict) else None,
                 )
 
     if last_failure is None and latest_browser_context_seed is not None:

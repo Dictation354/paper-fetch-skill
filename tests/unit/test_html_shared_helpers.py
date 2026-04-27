@@ -113,6 +113,44 @@ class SharedHtmlHelperTests(unittest.TestCase):
         self.assertEqual(assets[0]["heading"], "Supplementary Data")
         self.assertEqual(assets[0]["url"], "https://example.test/supplement.pdf")
 
+    def test_extract_scoped_html_assets_uses_separate_body_and_supplementary_scopes(self) -> None:
+        body_html = """
+<html>
+  <body>
+    <figure>
+      <img src="/fig1.png" alt="Overview figure" />
+      <figcaption>Figure 1. Overview figure.</figcaption>
+    </figure>
+  </body>
+</html>
+"""
+        supplementary_html = """
+<html>
+  <body>
+    <a href="/supplement.pdf">Supplementary Data</a>
+  </body>
+</html>
+"""
+
+        assets = html_assets.extract_scoped_html_assets(
+            body_html,
+            "https://example.test/article",
+            asset_profile="all",
+            supplementary_html_text=supplementary_html,
+        )
+
+        self.assertEqual(
+            [(asset["kind"], asset["section"]) for asset in assets],
+            [("figure", "body"), ("supplementary", "supplementary")],
+        )
+
+    def test_supplementary_response_block_reason_detects_challenge_html(self) -> None:
+        body = b"<html><head><title>Just a moment...</title></head><body>Checking your browser before accessing</body></html>"
+
+        reason = html_assets.supplementary_response_block_reason("text/html; charset=utf-8", body)
+
+        self.assertEqual(reason, "cloudflare_challenge")
+
     def test_figure_download_candidates_prefers_figure_page_full_size_url(self) -> None:
         candidates = html_assets.figure_download_candidates(
             HttpTransport(),
@@ -171,6 +209,24 @@ class SharedHtmlHelperTests(unittest.TestCase):
         self.assertEqual(len(hints), 1)
         self.assertEqual(hints[0]["heading"], "Availability Statement")
         self.assertEqual(hints[0]["kind"], "data_availability")
+
+    def test_extract_html_section_hints_reads_structural_code_availability(self) -> None:
+        html = """
+<html>
+  <body>
+    <section id="code-availability">
+      <h2>Availability Statement</h2>
+      <p>Analysis code is archived in a public repository.</p>
+    </section>
+  </body>
+</html>
+"""
+
+        hints = html_runtime.extract_html_section_hints(html)
+
+        self.assertEqual(len(hints), 1)
+        self.assertEqual(hints[0]["heading"], "Availability Statement")
+        self.assertEqual(hints[0]["kind"], "code_availability")
 
     def test_extract_article_markdown_preserves_data_availability_section(self) -> None:
         html = """

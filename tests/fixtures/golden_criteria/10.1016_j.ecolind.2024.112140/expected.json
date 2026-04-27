@@ -6,7 +6,7 @@
     "body": true,
     "figures": false,
     "references": false,
-    "data_availability": false,
+    "data_availability": true,
     "code_availability": false
   },
   "counts": {

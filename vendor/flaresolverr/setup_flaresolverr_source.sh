@@ -45,6 +45,16 @@ fi
 
 flaresolverr_source_ensure_chrome_link
 
+RETURN_IMAGE_PAYLOAD_PATCH="${ROOT_DIR}/patches/return-image-payload.patch"
+if [[ -f "${RETURN_IMAGE_PAYLOAD_PATCH}" ]]; then
+  git -C "${FLARESOLVERR_REPO_DIR}" apply "${RETURN_IMAGE_PAYLOAD_PATCH}"
+  git -C "${FLARESOLVERR_REPO_DIR}" add src/dtos.py src/flaresolverr_service.py
+  git -C "${FLARESOLVERR_REPO_DIR}" \
+    -c user.name="paper-fetch-skill" \
+    -c user.email="paper-fetch-skill@example.invalid" \
+    commit -m "Add repo-local image payload export" >/dev/null
+fi
+
 echo
 echo "FlareSolverr source workflow is prepared."
 echo "Repo: ${FLARESOLVERR_REPO_DIR}"

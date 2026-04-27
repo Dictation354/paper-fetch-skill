@@ -62,7 +62,7 @@
 3. `crossref` 既可能是公开来源 `source="crossref_meta"`，也可能只是内部 routing signal。
 4. `elsevier` 固定走 `官方 XML/API -> 官方 API PDF fallback -> metadata-only`。
 5. `springer` 固定走 `direct HTML -> direct HTTP PDF -> abstract-only / metadata-only`。
-6. `wiley` 走 provider 自管 `FlareSolverr HTML -> Wiley TDM API PDF -> seeded-browser publisher PDF/ePDF -> abstract-only / metadata-only`，`science` / `pnas` 继续走 `FlareSolverr HTML -> seeded-browser publisher PDF/ePDF -> abstract-only / metadata-only`。
+6. `wiley` 走 provider 自管 `FlareSolverr HTML -> seeded-browser publisher PDF/ePDF -> Wiley TDM API PDF -> abstract-only / metadata-only`，`science` / `pnas` 继续走 `FlareSolverr HTML -> seeded-browser publisher PDF/ePDF -> abstract-only / metadata-only`。
 7. 未命中这五家 provider 的 URL / landing page 不再尝试通用 HTML 正文提取，只会继续做 DOI / Crossref metadata 解析，并在允许时返回 metadata-only。
 8. 最终统一输出 `FetchEnvelope`，其中会显式给出：
    - `source`
@@ -131,6 +131,8 @@ python3 -m paper_fetch.mcp.server
   - 目前 `springer` / `wiley` / `science` / `pnas` 的 HTML 成功路径默认等价于 `body`；其余默认等价于 `none`。
   - `article.assets[*]` 会保留下载诊断字段，例如 `render_state`、`download_tier`、`download_url`、`content_type`、`downloaded_bytes`、`width`、`height`。
   - 正文已经内联消费过的 figure / table / formula image 会标记为 `render_state="inline"`，不会再在文末重复追加。
+  - `body` 现在明确表示：只下载 provider-cleaned 正文 fragment 中的 figure / table image / formula image 资产，不扫整页 raw HTML。
+  - `all` 会在 `body` 基础上额外下载 supplementary 文件附件；supplementary 走独立文件下载链路，不参与 MCP inline `ImageContent`，代码层不额外设置单文件或总大小上限。
 - `max_tokens="full_text"`
   - 默认尽量返回完整 abstract、正文和 references。
 - `include_refs=null`
@@ -144,9 +146,12 @@ python3 -m paper_fetch.mcp.server
   - 是廉价 probe，不等同于最终 `fetch_paper().has_fulltext`。
 - `wiley` / `science` / `pnas`
   - `science` / `pnas` 依赖仓库 checkout + `vendor/flaresolverr/` 工作流。
-  - `wiley` 的 HTML 与 seeded-browser PDF/ePDF 路径也依赖这套工作流；但配置 `WILEY_TDM_CLIENT_TOKEN` 时，官方 TDM API PDF lane 可以在本地浏览器运行时不可用时单独尝试。
-  - `FlareSolverr HTML` 成功路径支持 `asset_profile=body|all`；正文 figure / table / formula 图片会复用同一个 seeded Playwright browser context 下载。
+  - `wiley` 的 HTML 与 seeded-browser PDF/ePDF 路径也依赖这套工作流；配置 `WILEY_TDM_CLIENT_TOKEN` 后，官方 TDM API PDF lane 会在 browser PDF/ePDF fallback 失败或本地浏览器运行时不可用时继续尝试。
+  - `FlareSolverr HTML` 成功路径支持 `asset_profile=body|all`；正文 figure / table / formula 图片会复用同一个 seeded Playwright browser context 下载，supplementary 文件只在 `all` 下单独下载。
   - 候选顺序仍优先 full-size/original，full-size 全部失败后才回退 preview；preview 也通过同一个 browser context 获取，目标 provider 不再输出 `download_tier="playwright_canvas_fallback"`。
+  - 正文图片下载会在单次 download attempt 内做有限并行和 URL 级缓存：重复的 figure page / 图片候选只抓一次，最终仍按输入资产顺序稳定落盘。
+  - 如果浏览器页面已经显示目标图片，但页面内 `fetch()` 被 Cloudflare challenge 返回 HTML 拦截，下载器只接受 FlareSolverr/Selenium 返回的 `solution.imagePayload` 作为浏览器像素恢复结果；不再回退 FlareSolverr 图片文档截图裁剪，并继续按原候选记录为 `full_size` 或 `preview`。
+  - supplementary 文件如果先拿到 challenge/login HTML，会先记录诊断，再用 FlareSolverr 刷新 article/附件 seed，随后通过 Playwright context request 重试；成功时记录 `download_tier="supplementary_file"`。
   - `PDF/ePDF fallback` 仍是 text-only，不阻塞正文成功。
 - 公式 Markdown
   - MathML 转 LaTeX 和 Springer/Nature raw MathJax TeX 都会经过轻量 normalize。
@@ -251,7 +256,7 @@ CLI 抓取期错误的退出码为：
 
 - metadata 仍来自 `crossref`
 - 全文链路由 provider 自己管理
-- `wiley` 的主路径是 `FlareSolverr HTML -> Wiley TDM API PDF -> seeded-browser publisher PDF/ePDF -> abstract-only / metadata-only`
+- `wiley` 的主路径是 `FlareSolverr HTML -> seeded-browser publisher PDF/ePDF -> Wiley TDM API PDF -> abstract-only / metadata-only`
 - `science` / `pnas` 的主路径是 `FlareSolverr HTML -> seeded-browser publisher PDF/ePDF -> abstract-only / metadata-only`
 - `wiley` / `science` / `pnas` 的 HTML 成功路径支持 `none/body/all` 资产下载；PDF/ePDF fallback 仍是 text-only
 - `wiley` / `science` / `pnas` 的正文 figure / table / formula 图片资产下载以 shared Playwright browser context 为主链路；每次下载 attempt 只创建一次 context/page，并在多图之间复用

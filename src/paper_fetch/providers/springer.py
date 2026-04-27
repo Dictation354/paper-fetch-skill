@@ -92,6 +92,8 @@ class SpringerHtmlAttempt:
     extracted_references: list[dict[str, Any]]
     inline_table_assets: list[dict[str, Any]]
     diagnostics: Any
+    asset_body_html: str = ""
+    asset_supplementary_html: str = ""
 
 
 def _merge_springer_assets(
@@ -588,6 +590,8 @@ class SpringerClient(ProviderClient):
             extracted_references=list(extraction_payload.get("references") or []),
             inline_table_assets=table_assets,
             diagnostics=diagnostics,
+            asset_body_html=str(extraction_payload.get("cleaned_html") or ""),
+            asset_supplementary_html=str(extraction_payload.get("cleaned_html") or ""),
         )
 
     def _fetch_pdf_payload_from_html_attempt(
@@ -686,11 +690,18 @@ class SpringerClient(ProviderClient):
         )
         if not article_assets:
             html_text = _springer_html.decode_html(raw_payload.body)
+            title = normalize_text(str((content.merged_metadata or {}).get("title") if content is not None and content.merged_metadata else metadata.get("title") or ""))
+            body_asset_html, supplementary_asset_html = _springer_html.extract_asset_html_scopes(
+                html_text,
+                raw_payload.source_url,
+                title=title or None,
+            )
             article_assets = _filter_springer_assets_for_profile(
-                _springer_html.extract_html_assets(
-                    html_text,
+                _springer_html.extract_scoped_html_assets(
+                    body_asset_html,
                     raw_payload.source_url,
                     asset_profile="all",
+                    supplementary_html_text=supplementary_asset_html,
                 ),
                 asset_profile=asset_profile,
             )
@@ -738,10 +749,11 @@ class SpringerClient(ProviderClient):
             context["merged_metadata"] = dict(attempt.merged_metadata)
             if attempt.diagnostics.accepted:
                 extracted_assets = [
-                    *_springer_html.extract_html_assets(
-                        attempt.html_text,
+                    *_springer_html.extract_scoped_html_assets(
+                        attempt.asset_body_html,
                         attempt.response_url,
                         asset_profile="all",
+                        supplementary_html_text=attempt.asset_supplementary_html,
                     ),
                     *[dict(item) for item in attempt.inline_table_assets],
                 ]
@@ -841,10 +853,11 @@ class SpringerClient(ProviderClient):
             if attempt.diagnostics.accepted:
                 extracted_assets = _filter_springer_assets_for_profile(
                     [
-                        *_springer_html.extract_html_assets(
-                            attempt.html_text,
+                        *_springer_html.extract_scoped_html_assets(
+                            attempt.asset_body_html,
                             attempt.response_url,
                             asset_profile="all",
+                            supplementary_html_text=attempt.asset_supplementary_html,
                         ),
                         *[dict(item) for item in attempt.inline_table_assets],
                     ],

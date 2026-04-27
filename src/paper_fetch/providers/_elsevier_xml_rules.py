@@ -45,6 +45,11 @@ ELSEVIER_ELEMENT_RULES: dict[str, ElsevierElementRule] = {
         handler="section",
         markdown_behavior="render abstract subsection heading and recurse",
     ),
+    "data-availability": ElsevierElementRule(
+        category="structure",
+        handler="section",
+        markdown_behavior="render heading from section-title/title and recurse",
+    ),
     "para": ElsevierElementRule(
         category="text",
         handler="paragraph",

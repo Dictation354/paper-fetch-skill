@@ -680,7 +680,7 @@ def _filtered_body_blocks(
                 in_data_availability = False
                 in_auxiliary = False
                 continue
-            if category == "data_availability":
+            if category in {"data_availability", "code_availability"}:
                 in_abstract = False
                 in_back_matter = False
                 in_front_matter = False

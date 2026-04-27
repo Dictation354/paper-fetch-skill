@@ -22,7 +22,7 @@
 | `crossref` | 支持 | 不负责 publisher fulltext | 不支持 | 不适用 | 负责 resolve、routing signal、metadata merge 与 metadata-only fallback |
 | `elsevier` | 官方 API | `官方 XML/API -> 官方 API PDF fallback` | XML 路线支持 `none` / `body` / `all`；PDF fallback 当前 text-only | 强 | XML 成功时公开为 `elsevier_xml`；PDF fallback 成功时公开为 `elsevier_pdf` |
 | `springer` | 依赖 Crossref merge | `direct HTML -> direct HTTP PDF` | HTML 路线支持 `none` / `body` / `all`；PDF fallback 当前 text-only | 强 | `nature.com` 继续挂在 `springer` provider / `springer_html` source 下；必要时可返回 provider `abstract_only` |
-| `wiley` | 依赖 Crossref merge | `FlareSolverr HTML -> Wiley TDM API PDF -> seeded-browser publisher PDF/ePDF` | HTML 路线支持 `none` / `body` / `all`；PDF/ePDF fallback 当前 text-only | 中 | HTML 与 browser PDF/ePDF 依赖 repo-local FlareSolverr；`WILEY_TDM_CLIENT_TOKEN` 可在 browser runtime 不可用时单独启用官方 TDM PDF lane；必要时可返回 provider `abstract_only` |
+| `wiley` | 依赖 Crossref merge | `FlareSolverr HTML -> seeded-browser publisher PDF/ePDF -> Wiley TDM API PDF` | HTML 路线支持 `none` / `body` / `all`；PDF/ePDF fallback 当前 text-only | 中 | HTML 与 browser PDF/ePDF 依赖 repo-local FlareSolverr；`WILEY_TDM_CLIENT_TOKEN` 可在 browser PDF/ePDF fallback 失败或 browser runtime 不可用时继续尝试官方 TDM PDF lane；必要时可返回 provider `abstract_only` |
 | `science` | 依赖 Crossref | `FlareSolverr HTML -> seeded-browser publisher PDF/ePDF` | HTML 路线支持 `none` / `body` / `all`；PDF/ePDF fallback 当前 text-only | 中 | 与 `wiley` 的 HTML / browser PDF/ePDF 路径共用浏览器工作流基座；AAAS access gate / entitlement 不满足时会停在 provider 内部并降级 `abstract_only` / `metadata_only` |
 | `pnas` | 依赖 Crossref | `FlareSolverr HTML -> seeded-browser publisher PDF/ePDF` | HTML 路线支持 `none` / `body` / `all`；PDF/ePDF fallback 当前 text-only | 中 | 与 `wiley` 的 HTML / browser PDF/ePDF 路径共用浏览器工作流基座；较老文献常见 HTML 仅摘要，再继续走 provider 内部 PDF/ePDF fallback，必要时可返回 `abstract_only` |
 
@@ -127,8 +127,8 @@ resolve
   - 成功时公开 `source="springer_html"`。
 - `wiley`
   - 使用 provider 自管 HTML + 官方 API PDF + publisher PDF/ePDF waterfall。
-  - 固定顺序是 `FlareSolverr HTML -> Wiley TDM API PDF -> seeded-browser publisher PDF/ePDF -> abstract-only / metadata-only`。
-  - `WILEY_TDM_CLIENT_TOKEN` 是官方 TDM API PDF lane；缺失时仍可继续尝试 browser PDF/ePDF，配置后也可以在 browser runtime 不可用时单独尝试 TDM PDF。
+  - 固定顺序是 `FlareSolverr HTML -> seeded-browser publisher PDF/ePDF -> Wiley TDM API PDF -> abstract-only / metadata-only`。
+  - `WILEY_TDM_CLIENT_TOKEN` 是官方 TDM API PDF lane；缺失时仍可继续尝试 browser PDF/ePDF，配置后会在 browser PDF/ePDF fallback 失败或 browser runtime 不可用时继续尝试 TDM PDF。
   - 成功时公开 `source="wiley_browser"`。
 - `science`
   - 固定顺序是 `FlareSolverr HTML -> seeded-browser publisher PDF/ePDF -> abstract-only / metadata-only`。
@@ -203,7 +203,7 @@ resolve
 - 不再存在 public HTML fallback 开关
 - 对 `elsevier` 来说，系统始终按内部 `官方 XML/API -> 官方 API PDF fallback` waterfall 执行
 - 对 `springer` 来说，系统始终按内部 `direct HTML -> direct HTTP PDF` waterfall 执行
-- 对 `wiley` 来说，系统始终按内部 `FlareSolverr HTML -> Wiley TDM API PDF -> seeded-browser publisher PDF/ePDF` waterfall 执行
+- 对 `wiley` 来说，系统始终按内部 `FlareSolverr HTML -> seeded-browser publisher PDF/ePDF -> Wiley TDM API PDF` waterfall 执行
 - 对 `science` / `pnas` 来说，系统始终按内部 `FlareSolverr HTML -> seeded-browser publisher PDF/ePDF` waterfall 执行
 
 ## 默认输出策略
@@ -225,12 +225,13 @@ CLI、Python API、MCP 当前统一采用这些默认值：
   - Markdown 保留 figure caption
   - 不输出 supplementary 链接
 - `body`
-  - 下载正文 figure
+  - 只从 provider-cleaned 正文 fragment 下载正文 figure
   - 下载正文表格原图
   - 下载可识别的正文公式图片 fallback
   - 不包含 supplementary
 - `all`
   - 下载当前 provider 已识别的全部相关资产
+  - 在 `body` 基础上额外下载 supplementary 文件附件
   - 包含 appendix / supplementary 等非正文资产；正文已经内联消费的图表仍会通过 `render_state` 从尾部重复附录中过滤
 
 对 `elsevier` PDF fallback、`springer` PDF fallback、`wiley` / `science` / `pnas` 而言：
@@ -238,8 +239,11 @@ CLI、Python API、MCP 当前统一采用这些默认值：
 - `elsevier` PDF fallback 仍会把 `asset_profile=body|all` 降级成 text-only
 - `springer` PDF fallback 仍会把 `asset_profile=body|all` 降级成 text-only
 - `wiley` / `science` / `pnas` 的 `FlareSolverr HTML` 成功路径支持正文 figure / table / formula 图片资产下载；这些 provider 以 shared Playwright browser context 为主链路，不再先走普通 HTTP 直连
+- `wiley` / `science` / `pnas` 的 `asset_profile=all` 会把 supplementary 从正文图片链路拆开，作为独立文件附件下载；代码层不额外限制 supplementary 文件大小
 - `wiley` / `science` / `pnas` 的图片候选仍优先 full-size/original；full-size 候选全部失败后才尝试 preview，preview 也通过同一个 seeded browser context 下载
 - `wiley` / `science` / `pnas` 的 PDF/ePDF fallback 仍是 text-only
+- `springer` HTML 成功路径也按相同语义处理：正文图片只从 cleaned body/content scope 抽取，`all` 额外下载 supplementary 文件；PDF fallback 仍是 text-only
+- `elsevier` XML 成功路径下，`body` 继续只下载 `image` / `table_asset`，`all` 会额外下载 `supplementary` references，并统一映射到 `kind="supplementary"` / `section="supplementary"` / `download_tier="supplementary_file"`
 
 ### 资产去重与诊断
 
@@ -250,7 +254,9 @@ CLI、Python API、MCP 当前统一采用这些默认值：
 - 下载资产会保留 `download_tier`、`download_url`、`original_url`、`content_type`、`downloaded_bytes`、`width`、`height`。
 - 下载失败的资产会保留到 `article.quality.asset_failures` 与顶层 `quality.asset_failures`，可见 `status`、`content_type`、`title_snippet`、`body_snippet`、`reason` 以及 asset-level recovery 轨迹。
 - 图片 payload MIME 识别由 `filetype` 负责，JPEG/PNG/GIF/WebP 尺寸读取由 `imagesize` 负责；无法识别时仍按 unknown/空宽高处理，不引入 Pillow。
-- `wiley` / `science` / `pnas` 的 HTML 资产主链路只应输出 `download_tier="full_size"` 或 `download_tier="preview"`；旧的 `playwright_canvas_fallback` tier 只可能来自仍保留 HTTP-first 语义的通用下载路径。
+- `wiley` / `science` / `pnas` 的正文图片主链路只应输出 `download_tier="full_size"` 或 `download_tier="preview"`；supplementary 文件链路输出 `download_tier="supplementary_file"`；旧的 `playwright_canvas_fallback` tier 只可能来自仍保留 HTTP-first 语义的旧通用图片下载路径。
+- `wiley` / `science` / `pnas` 的正文图片下载在单次 attempt 内会缓存重复的 figure page / 图片候选 URL，并用固定并发上限 `3` 拉取 payload；最终输出顺序仍与输入资产顺序一致。
+- supplementary 文件下载失败时，`article.quality.asset_failures` 会保留 `status`、`content_type`、`title_snippet`、`body_snippet`、`reason` 和 recovery 轨迹，便于区分 Cloudflare challenge / login HTML / 普通网络失败。
 - `download_tier="preview"` 只有在宽高满足当前阈值 `300x200` 时才会标记为可接受 preview；否则仍会进入 preview fallback / asset issue 诊断。
 - live review 中，公式图片是公式语义的 fallback，因此 formula-only preview fallback 不自动归类为 `asset_download_failure`；figure/table preview fallback 仍按资产问题处理，除非已有 accepted 诊断。
 

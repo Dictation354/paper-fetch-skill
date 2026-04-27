@@ -61,6 +61,10 @@ def _iter_elements_by_local_name(root: ET.Element, local_name: str) -> list[ET.E
     ]
 
 
+def _contains_element(root: ET.Element | None, target: ET.Element) -> bool:
+    return root is not None and any(element is target for element in root.iter())
+
+
 def _extract_author_name(author_node: ET.Element) -> str:
     given_name = normalize_text(child_text(author_node, "given-name"))
     surname = normalize_text(child_text(author_node, "surname"))
@@ -294,6 +298,26 @@ def build_article_structure(
             used_table_keys=used_table_keys,
             formula_renders=formula_renders,
         )
+        head_availability_lines: list[str] = []
+        for availability_node in _iter_elements_by_local_name(root, "data-availability"):
+            if _contains_element(body_node, availability_node):
+                continue
+            availability_title = child_text(availability_node, "section-title") or child_text(availability_node, "title")
+            availability_body_lines = render_elsevier_blocks(
+                availability_node,
+                heading_level=4,
+                figure_lookup=figure_lookup,
+                figure_entries=figure_entries,
+                used_figure_keys=used_figure_keys,
+                table_lookup=table_lookup,
+                used_table_keys=used_table_keys,
+                formula_renders=formula_renders,
+            )
+            normalized_availability_title = normalize_text(availability_title)
+            if normalized_availability_title and availability_body_lines:
+                head_availability_lines.extend([f"### {normalized_availability_title}", ""])
+            head_availability_lines.extend(availability_body_lines)
+        body_lines.extend(head_availability_lines)
         supplement_entries = elsevier_supplement_entries(root, assets, xml_path.with_suffix(".md"))
         references = extract_elsevier_references(root)
     else:

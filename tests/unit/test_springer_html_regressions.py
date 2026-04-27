@@ -256,6 +256,82 @@ class SpringerHtmlRegressionTests(unittest.TestCase):
             article.to_ai_markdown(max_tokens="full_text"),
         )
 
+    def test_nature_fixture_keeps_data_and_code_availability_sections(self) -> None:
+        doi = "10.1038/s43247-024-01885-8"
+        article, extraction_payload, diagnostics, _ = self._build_article_from_html(
+            golden_criteria_asset(doi, "original.html"),
+            "https://www.nature.com/articles/s43247-024-01885-8",
+            doi=doi,
+        )
+
+        rendered = article.to_ai_markdown(max_tokens="full_text")
+        section_pairs = [(section.heading, section.kind) for section in article.sections]
+        hint_pairs = [(item["heading"], item["kind"]) for item in extraction_payload["section_hints"]]
+
+        self.assertEqual(diagnostics.content_kind, "fulltext")
+        self.assertIn("## Data availability", rendered)
+        self.assertIn("## Code availability", rendered)
+        self.assertIn(("Data availability", "data_availability"), section_pairs)
+        self.assertIn(("Code availability", "code_availability"), section_pairs)
+        self.assertIn(("Data availability", "data_availability"), hint_pairs)
+        self.assertIn(("Code availability", "code_availability"), hint_pairs)
+
+    def test_extract_asset_html_scopes_limit_body_assets_to_main_content(self) -> None:
+        source_url = "https://www.nature.com/articles/example"
+        html_text = """
+<html>
+  <body>
+    <article>
+      <h1>Example Article</h1>
+      <div class="c-article-body">
+        <div class="main-content">
+          <section data-title="Results">
+            <figure>
+              <img src="https://media.springernature.com/full/body-figure.png" alt="Body figure" />
+              <figcaption>Figure 1. Body figure.</figcaption>
+            </figure>
+          </section>
+        </div>
+      </div>
+      <section data-title="Supplementary information">
+        <a href="https://static-content.springer.com/esm/supplement.pdf">Supplementary Information</a>
+        <figure>
+          <img src="https://media.springernature.com/full/supp-figure.png" alt="Supplementary figure" />
+          <figcaption>Supplementary Fig. 1.</figcaption>
+        </figure>
+      </section>
+    </article>
+  </body>
+</html>
+"""
+
+        body_html, supplementary_html = _springer_html.extract_asset_html_scopes(
+            html_text,
+            source_url,
+            title="Example Article",
+        )
+        body_assets = _springer_html.extract_scoped_html_assets(
+            body_html,
+            source_url,
+            asset_profile="body",
+            supplementary_html_text=supplementary_html,
+        )
+        all_assets = _springer_html.extract_scoped_html_assets(
+            body_html,
+            source_url,
+            asset_profile="all",
+            supplementary_html_text=supplementary_html,
+        )
+
+        self.assertEqual(
+            [asset.get("url") for asset in body_assets if normalize_text(asset.get("kind")).lower() == "figure"],
+            ["https://media.springernature.com/full/body-figure.png"],
+        )
+        self.assertEqual(
+            [asset.get("kind") for asset in all_assets],
+            ["figure", "supplementary"],
+        )
+
     def test_springer_html_route_saves_original_html_in_article_dir(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             download_dir = Path(tmpdir) / "10.1038_nature12915"

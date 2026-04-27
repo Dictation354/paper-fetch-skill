@@ -298,8 +298,8 @@ workflow 会尽可能拿到两类元数据：
 - `springer`
   - 走 provider 自管 `direct HTML -> direct HTTP PDF`
 - `wiley`
-  - 走 provider 自管混合工作流 `FlareSolverr HTML -> Wiley TDM API PDF -> seeded-browser publisher PDF/ePDF`
-  - HTML 与 seeded-browser PDF/ePDF 共用浏览器工作流基座；`WILEY_TDM_CLIENT_TOKEN` 可让官方 TDM API PDF lane 在 browser runtime 不可用时单独尝试
+  - 走 provider 自管混合工作流 `FlareSolverr HTML -> seeded-browser publisher PDF/ePDF -> Wiley TDM API PDF`
+  - HTML 与 seeded-browser PDF/ePDF 共用浏览器工作流基座；`WILEY_TDM_CLIENT_TOKEN` 可让官方 TDM API PDF lane 在 browser PDF/ePDF fallback 失败或 browser runtime 不可用时继续尝试
 - `science` / `pnas`
   - 走 provider 自管浏览器工作流 `FlareSolverr HTML -> seeded-browser publisher PDF/ePDF`
   - 与 `wiley` 的 HTML / browser PDF/ePDF 路径共用浏览器工作流基座
