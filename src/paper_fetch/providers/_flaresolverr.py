@@ -795,6 +795,7 @@ def fetch_html_with_flaresolverr(
     warm_wait_seconds: int = DEFAULT_FLARESOLVERR_WARM_WAIT_SECONDS,
     max_timeout_ms: int = DEFAULT_FLARESOLVERR_MAX_TIMEOUT_MS,
     return_image_payload: bool = False,
+    return_screenshot: bool = False,
 ) -> FetchedPublisherHtml:
     if not candidate_urls:
         raise FlareSolverrFailure("empty_html_attempts", "No publisher HTML candidates were attempted.")
@@ -837,7 +838,7 @@ def fetch_html_with_flaresolverr(
                     "cmd": "request.get",
                     "url": url,
                     "session": session_state.session_id,
-                    "returnScreenshot": True,
+                    "returnScreenshot": bool(return_screenshot),
                     "waitInSeconds": effective_wait_seconds,
                     "maxTimeout": max_timeout_ms,
                 }

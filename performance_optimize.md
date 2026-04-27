@@ -21,11 +21,14 @@
 - 生产代码中的 BeautifulSoup parser 选择已统一到 `paper_fetch.extraction.html.parsing.choose_parser()`。
 - `_provider_fetch_result` 的 `inspect.signature` 判断已按 provider 类型缓存。
 - `scripts/benchmark_formula_converters.py` 现在输出 `cold_start`、`cache_hit`，以及 `mathml-to-latex` 的 `worker` 路径对比。
+- PNAS HTML 主链路新增 direct Playwright preflight：`domcontentloaded` 后直接抽取，阻断 image/font/stylesheet/media；成功时标记 `html_fetcher=playwright_direct` 并跳过 FlareSolverr，失败时保持原 FlareSolverr/PDF 回退语义。
+- FlareSolverr HTML 请求默认不再要求 `returnScreenshot`；challenge/failure 时仍保留 HTML 与 response JSON 诊断，图片恢复链路继续只依赖 `solution.imagePayload`。
 
 仍未完成：
 
 - `probe/fulltext` 层的 PDF 候选预取尚未做；XML/HTML route 与 PDF fallback 仍保持 waterfall 串行语义。
 - `texmath` 常驻 worker 尚未启用，仍需可靠协议探测和 benchmark 证明。
+- Science 仍稳定依赖 FlareSolverr HTML；是否能低于 30s 需要以 live 连跑结果为准，不应通过强制 30s timeout 牺牲成功率。
 
 ## 1. 公式转换：最大的可见瓶颈
 

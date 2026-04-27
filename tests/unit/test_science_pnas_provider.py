@@ -724,6 +724,11 @@ class SciencePnasProviderTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             runtime = self._runtime_config(tmpdir, "pnas", PNAS_SAMPLE.doi)
             with (
+                mock.patch.object(
+                    browser_workflow,
+                    "fetch_html_with_direct_playwright",
+                    side_effect=browser_workflow.SciencePnasHtmlFailure("playwright_direct_failed", "Direct preflight failed."),
+                ),
                 mock.patch.object(browser_workflow, "load_runtime_config", return_value=runtime),
                 mock.patch.object(browser_workflow, "ensure_runtime_ready"),
                 mock.patch.object(
@@ -760,6 +765,91 @@ class SciencePnasProviderTests(unittest.TestCase):
         self.assertEqual(raw_payload.metadata["route"], "html")
         self.assertEqual(article.source, "pnas")
         self.assertIn("fulltext:pnas_html_ok", article.quality.source_trail)
+
+    def test_pnas_direct_playwright_html_preflight_skips_flaresolverr(self) -> None:
+        client = pnas_provider.PnasClient(transport=None, env={})
+        seed = {
+            "browser_cookies": [{"name": "sessionid", "value": "direct", "domain": ".pnas.org", "path": "/"}],
+            "browser_user_agent": "Mozilla/5.0",
+            "browser_final_url": PNAS_SAMPLE.landing_url,
+        }
+        with (
+            mock.patch.object(
+                browser_workflow,
+                "fetch_html_with_direct_playwright",
+                return_value=_flaresolverr.FetchedPublisherHtml(
+                    source_url=PNAS_SAMPLE.landing_url,
+                    final_url=PNAS_SAMPLE.landing_url,
+                    html="<html><body><main>PNAS direct full text</main></body></html>",
+                    response_status=200,
+                    response_headers={"content-type": "text/html"},
+                    title=PNAS_SAMPLE.title,
+                    summary="PNAS direct full text",
+                    browser_context_seed=seed,
+                ),
+            ) as mocked_direct,
+            mock.patch.object(browser_workflow, "load_runtime_config") as mocked_runtime,
+            mock.patch.object(browser_workflow, "fetch_html_with_flaresolverr") as mocked_flaresolverr,
+            mock.patch.object(
+                browser_workflow,
+                "extract_science_pnas_markdown",
+                return_value=(f"# {PNAS_SAMPLE.title}\n\n## Results\n\n" + ("Body text " * 120), {"title": PNAS_SAMPLE.title}),
+            ),
+        ):
+            raw_payload = client.fetch_raw_fulltext(
+                PNAS_SAMPLE.doi,
+                {"doi": PNAS_SAMPLE.doi, "title": PNAS_SAMPLE.title},
+            )
+
+        mocked_direct.assert_called_once()
+        mocked_runtime.assert_not_called()
+        mocked_flaresolverr.assert_not_called()
+        self.assertEqual(raw_payload.metadata["route"], "html")
+        self.assertEqual(raw_payload.metadata["html_fetcher"], "playwright_direct")
+        self.assertEqual(raw_payload.metadata["browser_context_seed"], seed)
+        self.assertIn("fulltext:pnas_html_ok", raw_payload.metadata["source_trail"])
+
+    def test_pnas_direct_playwright_html_preflight_falls_back_to_flaresolverr(self) -> None:
+        client = pnas_provider.PnasClient(transport=None, env={})
+        with tempfile.TemporaryDirectory() as tmpdir:
+            runtime = self._runtime_config(tmpdir, "pnas", PNAS_SAMPLE.doi)
+            with (
+                mock.patch.object(
+                    browser_workflow,
+                    "fetch_html_with_direct_playwright",
+                    side_effect=browser_workflow.SciencePnasHtmlFailure("insufficient_body", "Direct body was not sufficient."),
+                ) as mocked_direct,
+                mock.patch.object(browser_workflow, "load_runtime_config", return_value=runtime) as mocked_runtime,
+                mock.patch.object(browser_workflow, "ensure_runtime_ready"),
+                mock.patch.object(
+                    browser_workflow,
+                    "fetch_html_with_flaresolverr",
+                    return_value=_flaresolverr.FetchedPublisherHtml(
+                        source_url=PNAS_SAMPLE.landing_url,
+                        final_url=PNAS_SAMPLE.landing_url,
+                        html="<html></html>",
+                        response_status=200,
+                        response_headers={"content-type": "text/html"},
+                        title=PNAS_SAMPLE.title,
+                        summary="Example summary",
+                        browser_context_seed={},
+                    ),
+                ) as mocked_flaresolverr,
+                mock.patch.object(
+                    browser_workflow,
+                    "extract_science_pnas_markdown",
+                    return_value=(f"# {PNAS_SAMPLE.title}\n\n## Results\n\n" + ("Body text " * 120), {"title": PNAS_SAMPLE.title}),
+                ),
+            ):
+                raw_payload = client.fetch_raw_fulltext(
+                    PNAS_SAMPLE.doi,
+                    {"doi": PNAS_SAMPLE.doi, "title": PNAS_SAMPLE.title},
+                )
+
+        mocked_direct.assert_called_once()
+        mocked_runtime.assert_called_once()
+        mocked_flaresolverr.assert_called_once()
+        self.assertEqual(raw_payload.metadata["html_fetcher"], "flaresolverr")
 
     def test_pnas_provider_fetch_result_recovers_pdf_when_html_article_is_abstract_only(self) -> None:
         client = pnas_provider.PnasClient(transport=None, env={})
@@ -1048,6 +1138,11 @@ class SciencePnasProviderTests(unittest.TestCase):
                 "browser_user_agent": "Mozilla/5.0",
             }
             with (
+                mock.patch.object(
+                    browser_workflow,
+                    "fetch_html_with_direct_playwright",
+                    side_effect=browser_workflow.SciencePnasHtmlFailure("playwright_direct_failed", "Direct preflight failed."),
+                ),
                 mock.patch.object(browser_workflow, "load_runtime_config", return_value=runtime),
                 mock.patch.object(browser_workflow, "ensure_runtime_ready"),
                 mock.patch.object(

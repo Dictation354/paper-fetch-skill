@@ -227,6 +227,7 @@ class SciencePnasFlareSolverrTests(unittest.TestCase):
         self.assertEqual(second.final_url, "https://www.science.org/doi/full/10.1126/science.aeg3511")
         self.assertEqual([payload["session"] for payload in request_payloads], [created_sessions[0], created_sessions[0]])
         self.assertEqual([payload["waitInSeconds"] for payload in request_payloads], [8, 1])
+        self.assertEqual([payload["returnScreenshot"] for payload in request_payloads], [False, False])
 
     def test_fetch_html_with_flaresolverr_retries_warm_challenge_with_cold_wait(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

@@ -17,6 +17,7 @@ PNAS_BROWSER_PROFILE = browser_workflow.ProviderBrowserProfile(
     extract_markdown=_pnas_html.extract_markdown,
     fallback_author_extractor=_pnas_html.extract_authors,
     shared_playwright_image_fetcher=True,
+    direct_playwright_html_preflight=True,
 )
 
 

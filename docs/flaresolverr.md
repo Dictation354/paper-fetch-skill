@@ -22,11 +22,13 @@
 - 它们是公开 provider 名字，可能出现在 `provider_hint`、`preferred_providers` 中
 - metadata 仍由 `crossref` 提供
 - `wiley` 的正文链路是 provider 自管的 `FlareSolverr HTML -> seeded-browser publisher PDF/ePDF -> Wiley TDM API PDF -> abstract-only / metadata-only`
-- `science` / `pnas` 的正文链路仍是 provider 自管的 `FlareSolverr HTML -> seeded-browser publisher PDF/ePDF -> abstract-only / metadata-only`
+- `science` 的正文链路仍是 provider 自管的 `FlareSolverr HTML -> seeded-browser publisher PDF/ePDF -> abstract-only / metadata-only`
+- `pnas` 的正文链路会先做一次 direct Playwright HTML preflight；成功时跳过 FlareSolverr，失败、challenge、正文不足或抽取失败时继续走 `FlareSolverr HTML -> seeded-browser publisher PDF/ePDF -> abstract-only / metadata-only`
 - `wiley` 的 `WILEY_TDM_CLIENT_TOKEN` 只启用官方 TDM API PDF lane；这条 lane 会在 browser PDF/ePDF fallback 失败或本地 browser runtime 不可用时继续尝试，但不会下载 HTML 资产
 - `wiley` 的 HTML / browser PDF/ePDF 路径与 `science` / `pnas` 共用同一套 provider-owned 浏览器 bootstrap 与 browser-PDF executor，不再保留单独的 Science path harness
 - `source` 公开可能是 `wiley_browser`、`science` 或 `pnas`
 - `FlareSolverr HTML` 成功路径支持 `asset_profile=body|all` 的正文资产下载；PDF/ePDF fallback 仍是 text-only
+- FlareSolverr HTML 请求默认不要求 screenshot，减少 response payload；failure artifact 仍会保留 HTML 与 response JSON，图片恢复仍只接受 `solution.imagePayload`
 - `wiley` / `science` / `pnas` 的正文 figure / table / formula 图片资产下载以 shared Playwright browser context 为主链路；每次 download attempt 创建一次 context/page，多图复用同一个 seeded browser context
 - 图片候选仍优先 full-size/original，全部失败后才尝试 preview；preview 也通过同一个 browser context 下载，目标 provider 不再使用 `playwright_canvas_fallback` tier
 - 正文图片下载在单次 attempt 内会对 figure page 和图片候选 URL 做缓存，并以固定并发上限 `3` 拉取 payload；文件写入仍按资产原顺序完成
@@ -175,7 +177,8 @@ PYTHONPATH=src pytest -n 0 \
 ### HTML 失败但 provider 最终成功
 
 - 对 `wiley` 来说，这可能是 `FlareSolverr HTML -> Wiley TDM API PDF`，也可能继续进入 seeded-browser publisher PDF/ePDF
-- 对 `science` / `pnas` 来说，这可能是 `FlareSolverr HTML -> seeded-browser publisher PDF/ePDF` 的正常路径
+- 对 `science` 来说，这可能是 `FlareSolverr HTML -> seeded-browser publisher PDF/ePDF` 的正常路径
+- 对 `pnas` 来说，这可能是 direct Playwright preflight 失败后继续 `FlareSolverr HTML -> seeded-browser publisher PDF/ePDF` 的正常路径
 - 最终成功与否以结果为准
 - 细节看 `source_trail`
 

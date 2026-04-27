@@ -15,7 +15,7 @@ from typing import Any, Callable, Mapping
 from ..config import build_user_agent
 from ..extraction.html import decode_html
 from ..extraction.image_payloads import image_mime_type_from_bytes
-from ..extraction.html.signals import SciencePnasHtmlFailure
+from ..extraction.html.signals import SciencePnasHtmlFailure, detect_html_block, summarize_html
 from ..logging_utils import emit_structured_log
 from ..metadata_types import ProviderMetadata
 from ..models import AssetProfile, article_from_markdown, coerce_asset_failure_diagnostics, metadata_only_article
@@ -61,6 +61,8 @@ from .html_assets import (
 logger = logging.getLogger("paper_fetch.providers.browser_workflow")
 
 _IMAGE_DOCUMENT_FETCH_TIMEOUT_MS = 15000
+_DIRECT_PLAYWRIGHT_HTML_TIMEOUT_MS = 15000
+_DIRECT_PLAYWRIGHT_HTML_BLOCKED_RESOURCE_TYPES = {"image", "font", "stylesheet", "media"}
 _CLOUDFLARE_CHALLENGE_TITLE_TOKENS = (
     "just a moment",
     "attention required",
@@ -200,6 +202,7 @@ __all__ = [
     "ensure_runtime_ready",
     "extract_pdf_url_from_crossref",
     "extract_science_pnas_markdown",
+    "fetch_html_with_direct_playwright",
     "fetch_html_with_flaresolverr",
     "fetch_seeded_browser_pdf_payload",
     "load_runtime_config",
@@ -240,6 +243,7 @@ class ProviderBrowserProfile:
     extract_markdown: Callable[..., tuple[str, dict[str, Any]]]
     fallback_author_extractor: Callable[[str], list[str]] | None
     shared_playwright_image_fetcher: bool
+    direct_playwright_html_preflight: bool = False
 
 
 def preferred_html_candidate_from_landing_page(
@@ -1819,6 +1823,184 @@ def _cached_browser_workflow_assets(
     return context.get_or_set_parse_cache(key, extract_assets, copy_value=True)
 
 
+def _response_headers(response: Any) -> dict[str, str]:
+    if response is None:
+        return {}
+    try:
+        return _normalized_response_headers(response.all_headers())
+    except Exception:
+        return _normalized_response_headers(getattr(response, "headers", {}) or {})
+
+
+def _response_status(response: Any) -> int | None:
+    if response is None:
+        return None
+    try:
+        return int(getattr(response, "status", 0) or 0) or None
+    except (TypeError, ValueError):
+        return None
+
+
+def _direct_playwright_browser_context_seed(context: Any, *, final_url: str, user_agent: str) -> dict[str, Any]:
+    try:
+        cookies = context.cookies()
+    except Exception:
+        cookies = []
+    return {
+        "browser_cookies": list(cookies or []),
+        "browser_user_agent": normalize_text(user_agent) or None,
+        "browser_final_url": final_url,
+    }
+
+
+def fetch_html_with_direct_playwright(
+    candidate_urls: list[str],
+    *,
+    publisher: str,
+    user_agent: str,
+    headless: bool = True,
+    timeout_ms: int = _DIRECT_PLAYWRIGHT_HTML_TIMEOUT_MS,
+) -> FetchedPublisherHtml:
+    if not candidate_urls:
+        raise SciencePnasHtmlFailure("empty_html_attempts", "No publisher HTML candidates were attempted.")
+    try:
+        from playwright.sync_api import sync_playwright
+    except Exception as exc:
+        raise SciencePnasHtmlFailure(
+            "playwright_unavailable",
+            f"Playwright is not available for direct {publisher} HTML preflight: {exc}",
+        ) from exc
+
+    last_failure: SciencePnasHtmlFailure | None = None
+    manager = None
+    browser = None
+    context = None
+    page = None
+    try:
+        manager = sync_playwright().start()
+        browser = manager.chromium.launch(headless=headless)
+        context = browser.new_context(
+            user_agent=normalize_text(user_agent) or build_user_agent({}),
+            locale="en-US",
+            viewport={"width": 1440, "height": 1600},
+        )
+        page = context.new_page()
+
+        def route_handler(route: Any) -> None:
+            try:
+                resource_type = normalize_text(str(route.request.resource_type or "")).lower()
+                if resource_type in _DIRECT_PLAYWRIGHT_HTML_BLOCKED_RESOURCE_TYPES:
+                    route.abort()
+                    return
+                route.continue_()
+            except Exception:
+                try:
+                    route.continue_()
+                except Exception:
+                    pass
+
+        try:
+            page.route("**/*", route_handler)
+        except Exception:
+            pass
+
+        for url in candidate_urls:
+            normalized_url = normalize_text(url)
+            if not normalized_url:
+                continue
+            try:
+                response = page.goto(normalized_url, wait_until="domcontentloaded", timeout=timeout_ms)
+                final_url = normalize_text(str(getattr(page, "url", "") or "")) or normalized_url
+                html_text = page.content()
+                title = normalize_text(str(page.title() or "")) or None
+            except Exception as exc:
+                last_failure = SciencePnasHtmlFailure(
+                    "playwright_direct_failed",
+                    normalize_text(str(exc)) or f"Direct {publisher} Playwright HTML preflight failed.",
+                )
+                continue
+
+            status = _response_status(response)
+            headers = _response_headers(response)
+            summary = summarize_html(html_text)
+            detected = detect_html_block(title or "", summary, status)
+            if detected is not None:
+                last_failure = detected
+                continue
+            if not normalize_text(html_text):
+                last_failure = SciencePnasHtmlFailure(
+                    "empty_html_response",
+                    f"Direct {publisher} Playwright HTML preflight returned empty HTML.",
+                )
+                continue
+            return FetchedPublisherHtml(
+                source_url=normalized_url,
+                final_url=final_url,
+                html=html_text,
+                response_status=status,
+                response_headers=headers,
+                title=title,
+                summary=summary,
+                browser_context_seed=_direct_playwright_browser_context_seed(
+                    context,
+                    final_url=final_url,
+                    user_agent=normalize_text(user_agent) or build_user_agent({}),
+                ),
+            )
+    finally:
+        for value in (page, context, browser):
+            if value is None:
+                continue
+            try:
+                value.close()
+            except Exception:
+                pass
+        if manager is not None:
+            try:
+                manager.stop()
+            except Exception:
+                pass
+
+    if last_failure is not None:
+        raise last_failure
+    raise SciencePnasHtmlFailure("empty_html_attempts", "No publisher HTML candidates were attempted.")
+
+
+def _browser_workflow_html_payload(
+    client: "BrowserWorkflowClient",
+    html_result: FetchedPublisherHtml,
+    *,
+    markdown_text: str,
+    extraction: Mapping[str, Any],
+    fetcher: str,
+    warnings: list[str] | None = None,
+) -> RawFulltextPayload:
+    html_bytes = html_result.html.encode("utf-8")
+    return RawFulltextPayload(
+        provider=client.name,
+        source_url=html_result.final_url,
+        content_type="text/html",
+        body=html_bytes,
+        content=ProviderContent(
+            route_kind="html",
+            source_url=html_result.final_url,
+            content_type="text/html",
+            body=html_bytes,
+            markdown_text=markdown_text,
+            diagnostics={
+                "extraction": dict(extraction),
+                "availability_diagnostics": extraction.get("availability_diagnostics"),
+                "html_fetcher": fetcher,
+            },
+            fetcher=fetcher,
+            browser_context_seed=dict(html_result.browser_context_seed or {}),
+        ),
+        warnings=list(warnings or []),
+        trace=trace_from_markers([f"fulltext:{client.name}_html_ok"]),
+        needs_local_copy=False,
+    )
+
+
 def bootstrap_browser_workflow(
     client: "BrowserWorkflowClient",
     doi: str,
@@ -1858,6 +2040,46 @@ def bootstrap_browser_workflow(
         len(html_candidates),
     )
 
+    if profile.direct_playwright_html_preflight:
+        try:
+            html_result = fetch_html_with_direct_playwright(
+                html_candidates,
+                publisher=client.name,
+                user_agent=client.user_agent,
+            )
+            result.browser_context_seed = html_result.browser_context_seed
+            markdown_text, extraction = _cached_browser_workflow_markdown(
+                client,
+                html_result.html,
+                html_result.final_url,
+                metadata=metadata,
+                context=context,
+            )
+            result.html_payload = _browser_workflow_html_payload(
+                client,
+                html_result,
+                markdown_text=markdown_text,
+                extraction=extraction,
+                fetcher="playwright_direct",
+                warnings=result.warnings,
+            )
+            return result
+        except SciencePnasHtmlFailure as exc:
+            logger.debug(
+                "browser_workflow_direct_html_preflight provider=%s doi=%s action=fallback reason=%s message=%s",
+                client.name,
+                normalized_doi,
+                exc.reason,
+                exc.message,
+            )
+        except Exception as exc:
+            logger.debug(
+                "browser_workflow_direct_html_preflight provider=%s doi=%s action=fallback error=%s",
+                client.name,
+                normalized_doi,
+                normalize_text(str(exc)) or exc.__class__.__name__,
+            )
+
     try:
         result.runtime = load_runtime_config(client.env, provider=client.name, doi=normalized_doi)
         ensure_runtime_ready(result.runtime)
@@ -1879,27 +2101,13 @@ def bootstrap_browser_workflow(
             metadata=metadata,
             context=context,
         )
-        result.html_payload = RawFulltextPayload(
-            provider=client.name,
-            source_url=html_result.final_url,
-            content_type="text/html",
-            body=html_result.html.encode("utf-8"),
-            content=ProviderContent(
-                route_kind="html",
-                source_url=html_result.final_url,
-                content_type="text/html",
-                body=html_result.html.encode("utf-8"),
-                markdown_text=markdown_text,
-                diagnostics={
-                    "extraction": extraction,
-                    "availability_diagnostics": extraction.get("availability_diagnostics"),
-                },
-                fetcher="flaresolverr",
-                browser_context_seed=dict(result.browser_context_seed or {}),
-            ),
-            warnings=list(result.warnings),
-            trace=trace_from_markers([f"fulltext:{client.name}_html_ok"]),
-            needs_local_copy=False,
+        result.html_payload = _browser_workflow_html_payload(
+            client,
+            html_result,
+            markdown_text=markdown_text,
+            extraction=extraction,
+            fetcher="flaresolverr",
+            warnings=result.warnings,
         )
         return result
     except FlareSolverrFailure as exc:
