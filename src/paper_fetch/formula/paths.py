@@ -11,6 +11,7 @@ from ..config import resolve_user_data_dir
 
 FORMULA_TOOLS_DIR_ENV_VAR = "PAPER_FETCH_FORMULA_TOOLS_DIR"
 FORMULA_NODE_SCRIPT_NAME = "mathml_to_latex_cli.mjs"
+FORMULA_NODE_WORKER_SCRIPT_NAME = "mathml_to_latex_worker.mjs"
 BUNDLED_FORMULA_RESOURCES_PACKAGE = "paper_fetch.resources.formula"
 
 
@@ -80,6 +81,27 @@ def mathml_to_latex_script_candidates(env: Mapping[str, str] | None = None) -> l
     root = repo_root()
     if root is not None:
         repo_script = root / "scripts" / FORMULA_NODE_SCRIPT_NAME
+        if repo_script not in candidates:
+            candidates.append(repo_script)
+
+    return candidates
+
+
+def mathml_to_latex_worker_script_candidates(env: Mapping[str, str] | None = None) -> list[Path]:
+    active_env = env or os.environ
+    candidates: list[Path] = []
+
+    configured = normalize_optional_path(active_env.get("MATHML_TO_LATEX_WORKER_SCRIPT"))
+    if configured is not None:
+        candidates.append(configured)
+
+    for candidate in formula_tools_subpaths(FORMULA_NODE_WORKER_SCRIPT_NAME, active_env):
+        if candidate not in candidates:
+            candidates.append(candidate)
+
+    root = repo_root()
+    if root is not None:
+        repo_script = root / "scripts" / FORMULA_NODE_WORKER_SCRIPT_NAME
         if repo_script not in candidates:
             candidates.append(repo_script)
 

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Mapping, cast
 
 from ..config import build_user_agent
@@ -180,56 +181,114 @@ def probe_has_fulltext(
     crossref_metadata: ProviderMetadata | None = None
     crossref_client = client_registry.get("crossref")
 
-    if doi and isinstance(crossref_client, MetadataProvider):
-        try:
-            crossref_metadata = cast(ProviderMetadata, dict(crossref_client.fetch_metadata({"doi": doi})))
-            title = normalize_text(crossref_metadata.get("title")) or title
-            if crossref_metadata.get("license_urls"):
-                extend_unique(evidence, ["crossref_license"])
-            if crossref_metadata.get("fulltext_links"):
-                extend_unique(evidence, ["crossref_fulltext_link"])
-        except ProviderFailure as exc:
-            if _is_unknown_has_fulltext_probe_failure(exc):
-                extend_unique(warnings, [_probe_warning("Crossref metadata probe unavailable", exc.message)])
-
+    strategy = FetchStrategy()
+    initial_elsevier_probe = False
     if doi:
-        strategy = FetchStrategy()
-        for provider_name, _signal in build_official_provider_candidates(
-            resolved,
-            routing_metadata=crossref_metadata,
-            strategy=strategy,
-        ):
-            if provider_name != "elsevier":
-                continue
-            client = client_registry.get(provider_name)
-            if not isinstance(client, MetadataProvider):
-                continue
+        initial_elsevier_probe = any(
+            provider_name == "elsevier"
+            for provider_name, _signal in build_official_provider_candidates(
+                resolved,
+                routing_metadata=None,
+                strategy=strategy,
+            )
+        )
+
+    def fetch_crossref_metadata() -> ProviderMetadata | None:
+        if not doi or not isinstance(crossref_client, MetadataProvider):
+            return None
+        return cast(ProviderMetadata, dict(crossref_client.fetch_metadata({"doi": doi})))
+
+    def fetch_elsevier_metadata() -> ProviderMetadata | None:
+        if not doi:
+            return None
+        client = client_registry.get("elsevier")
+        if not isinstance(client, MetadataProvider):
+            return None
+        metadata = client.fetch_metadata({"doi": doi})
+        return cast(ProviderMetadata, dict(metadata)) if metadata else None
+
+    def fetch_landing_probe(landing_url: str) -> tuple[bool, str | None]:
+        return _landing_page_citation_pdf_probe(
+            landing_url,
+            transport=active_transport,
+            env=active_env,
+        )
+
+    landing_probe_by_url: dict[str, tuple[bool, str | None]] = {}
+    landing_probe_errors: dict[str, RequestFailure] = {}
+    elsevier_metadata: ProviderMetadata | None = None
+    elsevier_error: ProviderFailure | None = None
+    crossref_error: ProviderFailure | None = None
+    initial_landing_url = choose_public_landing_page_url(resolved.landing_url)
+
+    with ThreadPoolExecutor(max_workers=3) as executor:
+        crossref_future = executor.submit(fetch_crossref_metadata) if doi and isinstance(crossref_client, MetadataProvider) else None
+        elsevier_future = executor.submit(fetch_elsevier_metadata) if initial_elsevier_probe else None
+        landing_future = executor.submit(fetch_landing_probe, initial_landing_url) if initial_landing_url else None
+
+        if crossref_future is not None:
             try:
-                metadata = client.fetch_metadata({"doi": doi})
-                if metadata:
-                    extend_unique(evidence, [f"provider_probe:{provider_name}"])
-                    title = normalize_text((metadata or {}).get("title")) or title
-                    break
+                crossref_metadata = crossref_future.result()
             except ProviderFailure as exc:
-                if _is_unknown_has_fulltext_probe_failure(exc):
-                    extend_unique(warnings, [_probe_warning(f"{provider_name} metadata probe unavailable", exc.message)])
+                crossref_error = exc
+        if elsevier_future is not None:
+            try:
+                elsevier_metadata = elsevier_future.result()
+            except ProviderFailure as exc:
+                elsevier_error = exc
+        if landing_future is not None and initial_landing_url:
+            try:
+                landing_probe_by_url[initial_landing_url] = landing_future.result()
+            except RequestFailure as exc:
+                landing_probe_errors[initial_landing_url] = exc
+
+    if crossref_metadata:
+        title = normalize_text(crossref_metadata.get("title")) or title
+        if crossref_metadata.get("license_urls"):
+            extend_unique(evidence, ["crossref_license"])
+        if crossref_metadata.get("fulltext_links"):
+            extend_unique(evidence, ["crossref_fulltext_link"])
+    elif crossref_error is not None and _is_unknown_has_fulltext_probe_failure(crossref_error):
+        extend_unique(warnings, [_probe_warning("Crossref metadata probe unavailable", crossref_error.message)])
+
+    needs_elsevier_probe = False
+    if doi and elsevier_metadata is None and elsevier_error is None:
+        needs_elsevier_probe = any(
+            provider_name == "elsevier"
+            for provider_name, _signal in build_official_provider_candidates(
+                resolved,
+                routing_metadata=crossref_metadata,
+                strategy=strategy,
+            )
+        )
+    if needs_elsevier_probe:
+        try:
+            elsevier_metadata = fetch_elsevier_metadata()
+        except ProviderFailure as exc:
+            elsevier_error = exc
+    if elsevier_metadata:
+        extend_unique(evidence, ["provider_probe:elsevier"])
+        title = normalize_text((elsevier_metadata or {}).get("title")) or title
+    elif elsevier_error is not None and _is_unknown_has_fulltext_probe_failure(elsevier_error):
+        extend_unique(warnings, [_probe_warning("elsevier metadata probe unavailable", elsevier_error.message)])
 
     landing_url = choose_public_landing_page_url(
         resolved.landing_url,
         (crossref_metadata or {}).get("landing_page_url"),
     )
     if landing_url:
-        try:
-            has_citation_pdf_url, landing_title = _landing_page_citation_pdf_probe(
-                landing_url,
-                transport=active_transport,
-                env=active_env,
-            )
+        if landing_url not in landing_probe_by_url and landing_url not in landing_probe_errors:
+            try:
+                landing_probe_by_url[landing_url] = fetch_landing_probe(landing_url)
+            except RequestFailure as exc:
+                landing_probe_errors[landing_url] = exc
+        if landing_url in landing_probe_by_url:
+            has_citation_pdf_url, landing_title = landing_probe_by_url[landing_url]
             if has_citation_pdf_url:
                 extend_unique(evidence, ["landing_page_citation_pdf_url"])
             title = landing_title or title
-        except RequestFailure as exc:
-            extend_unique(warnings, [_probe_warning("Landing-page metadata probe unavailable", str(exc))])
+        elif landing_url in landing_probe_errors:
+            extend_unique(warnings, [_probe_warning("Landing-page metadata probe unavailable", str(landing_probe_errors[landing_url]))])
 
     state = "likely_yes" if evidence else "unknown"
     return HasFulltextProbeResult(

@@ -6,6 +6,7 @@ import re
 import urllib.parse
 from typing import Any
 
+from ..extraction.html.parsing import choose_parser
 from ..models import normalize_text
 from ..extraction.html.semantics import heading_category, identity_category, node_identity_text
 from ..markdown.citations import clean_citation_markers, normalize_inline_citation_markdown
@@ -338,7 +339,7 @@ def extract_springer_nature_markdown(html_text: str, source_url: str) -> str:
     if BeautifulSoup is None or not is_springer_nature_url(source_url):
         return ""
 
-    soup = BeautifulSoup(html_text, "html.parser")
+    soup = BeautifulSoup(html_text, choose_parser())
     article = select_springer_nature_article_root(soup) or soup.select_one("article") or soup.select_one("main")
     if article is None:
         return ""

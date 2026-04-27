@@ -10,10 +10,12 @@ from typing import Any, Mapping
 
 from ..config import build_user_agent
 from ..extraction.html.landing import LandingHtmlFetchResult, LandingRedirectLimitExceeded, fetch_landing_html
+from ..extraction.html.parsing import choose_parser
 from ..http import DEFAULT_FULLTEXT_TIMEOUT_SECONDS, HttpTransport, RequestFailure, build_text_preview
 from ..metadata_types import ProviderMetadata
 from ..models import AssetProfile, article_from_markdown, metadata_only_article
 from ..publisher_identity import normalize_doi
+from ..runtime import RuntimeContext
 from ..tracing import merge_trace, source_trail_from_trace, trace_from_markers
 from ..utils import (
     build_output_path,
@@ -156,6 +158,61 @@ def _springer_extraction_diagnostics_payload(attempt: SpringerHtmlAttempt) -> di
             "inline_table_assets": list(attempt.inline_table_assets),
         },
     }
+
+
+def _cached_springer_html_payload(
+    context: RuntimeContext,
+    html_text: str,
+    source_url: str,
+    *,
+    title: str | None = None,
+) -> dict[str, Any]:
+    key = context.build_parse_cache_key(
+        provider="springer",
+        role="html_payload",
+        source=source_url,
+        body=html_text,
+        parser=f"BeautifulSoup:{choose_parser()}",
+        config={"title": title or ""},
+    )
+    return context.get_or_set_parse_cache(
+        key,
+        lambda: _springer_html.extract_html_payload(
+            html_text,
+            title=title,
+            source_url=source_url,
+        ),
+        copy_value=True,
+    )
+
+
+def _cached_springer_scoped_assets(
+    context: RuntimeContext,
+    body_html: str,
+    source_url: str,
+    *,
+    supplementary_html_text: str | None,
+    asset_profile: AssetProfile,
+) -> list[dict[str, Any]]:
+    cache_body = "\n<!-- supplementary -->\n".join([body_html, supplementary_html_text or ""])
+    key = context.build_parse_cache_key(
+        provider="springer",
+        role="html_assets",
+        source=source_url,
+        body=cache_body,
+        parser=f"BeautifulSoup:{choose_parser()}",
+        config={"asset_profile": asset_profile},
+    )
+    return context.get_or_set_parse_cache(
+        key,
+        lambda: _springer_html.extract_scoped_html_assets(
+            body_html,
+            source_url,
+            asset_profile=asset_profile,
+            supplementary_html_text=supplementary_html_text,
+        ),
+        copy_value=True,
+    )
 
 
 def _springer_html_payload_from_attempt(
@@ -343,6 +400,7 @@ class SpringerClient(ProviderClient):
 
     def __init__(self, transport: HttpTransport, env: Mapping[str, str]) -> None:
         self.transport = transport
+        self.env = dict(env)
         self.user_agent = build_user_agent(env)
 
     def probe_status(self) -> ProviderStatusResult:
@@ -426,7 +484,7 @@ class SpringerClient(ProviderClient):
             return _springer_table_image_markdown(asset, label=fallback_label), None, asset
 
         table_html = _springer_html.decode_html(response["body"])
-        soup = BeautifulSoup(table_html, "html.parser")
+        soup = BeautifulSoup(table_html, choose_parser())
         table = soup.select_one(".c-article-table-container table, table")
         if isinstance(table, Tag):
             container = table.find_parent("figure")
@@ -466,7 +524,7 @@ class SpringerClient(ProviderClient):
         if BeautifulSoup is None:
             return html_text, [], [], []
 
-        soup = BeautifulSoup(html_text, "html.parser")
+        soup = BeautifulSoup(html_text, choose_parser())
         table_entries: list[dict[str, str]] = []
         warnings: list[str] = []
         table_assets: list[dict[str, Any]] = []
@@ -519,7 +577,13 @@ class SpringerClient(ProviderClient):
             "Springer publisher metadata is taken from Crossref; the runtime does not use Springer publisher endpoints.",
         )
 
-    def _prepare_html_attempt(self, doi: str, metadata: ProviderMetadata) -> SpringerHtmlAttempt:
+    def _prepare_html_attempt(
+        self,
+        doi: str,
+        metadata: ProviderMetadata,
+        *,
+        context: RuntimeContext,
+    ) -> SpringerHtmlAttempt:
         normalized_doi = normalize_doi(doi)
         if not normalized_doi:
             raise ProviderFailure("not_supported", "Springer direct HTML retrieval requires a DOI.")
@@ -538,10 +602,11 @@ class SpringerClient(ProviderClient):
             html_text,
             response_url,
         )
-        extraction_payload = _springer_html.extract_html_payload(
+        extraction_payload = _cached_springer_html_payload(
+            context,
             prepared_html,
+            response_url,
             title=str(merged_metadata.get("title") or ""),
-            source_url=response_url,
         )
         markdown_text = inject_inline_table_blocks(
             extraction_payload[MARKDOWN_TEXT_KEY],
@@ -645,11 +710,12 @@ class SpringerClient(ProviderClient):
         )
 
     def fetch_fulltext(self, doi: str, metadata: ProviderMetadata, output_dir: Path | None) -> dict[str, Any]:
-        payload = self.fetch_raw_fulltext(doi, metadata)
+        context = RuntimeContext(env=self.env, transport=self.transport, download_dir=output_dir)
+        payload = self.fetch_raw_fulltext(doi, metadata, context=context)
         normalized_doi = normalize_doi(doi)
         output_path = build_output_path(output_dir, normalized_doi, metadata.get("title"), payload.content_type, payload.source_url)
         saved_path = save_payload(output_path, payload.body)
-        asset_results = self.download_related_assets(normalized_doi, metadata, payload, output_dir)
+        asset_results = self.download_related_assets(normalized_doi, metadata, payload, output_dir, context=context)
         markdown_path = None
         return {
             "attempted": True,
@@ -674,7 +740,9 @@ class SpringerClient(ProviderClient):
         output_dir: Path | None,
         *,
         asset_profile: AssetProfile = "all",
+        context: RuntimeContext | None = None,
     ) -> dict[str, list[dict[str, Any]]]:
+        context = self._runtime_context(context, output_dir=output_dir)
         if output_dir is None or asset_profile == "none":
             return empty_asset_results()
         content = raw_payload.content
@@ -687,17 +755,19 @@ class SpringerClient(ProviderClient):
         if not article_assets:
             html_text = _springer_html.decode_html(raw_payload.body)
             title = normalize_text(str((content.merged_metadata or {}).get("title") if content is not None and content.merged_metadata else metadata.get("title") or ""))
-            body_asset_html, supplementary_asset_html = _springer_html.extract_asset_html_scopes(
+            extraction_payload = _cached_springer_html_payload(
+                context,
                 html_text,
                 raw_payload.source_url,
                 title=title or None,
             )
             article_assets = _filter_springer_assets_for_profile(
-                _springer_html.extract_scoped_html_assets(
-                    body_asset_html,
+                _cached_springer_scoped_assets(
+                    context,
+                    str(extraction_payload.get("cleaned_html") or ""),
                     raw_payload.source_url,
                     asset_profile="all",
-                    supplementary_html_text=supplementary_asset_html,
+                    supplementary_html_text=str(extraction_payload.get("cleaned_html") or ""),
                 ),
                 asset_profile=asset_profile,
             )
@@ -720,7 +790,14 @@ class SpringerClient(ProviderClient):
             asset_profile=asset_profile,
         )
 
-    def fetch_raw_fulltext(self, doi: str, metadata: ProviderMetadata) -> RawFulltextPayload:
+    def fetch_raw_fulltext(
+        self,
+        doi: str,
+        metadata: ProviderMetadata,
+        *,
+        context: RuntimeContext | None = None,
+    ) -> RawFulltextPayload:
+        runtime_context = self._runtime_context(context)
         normalized_doi = normalize_doi(doi)
         if not normalized_doi:
             raise ProviderFailure("not_supported", "Springer direct HTML retrieval requires a DOI.")
@@ -729,7 +806,7 @@ class SpringerClient(ProviderClient):
             metadata.get("landing_page_url"),
             f"https://doi.org/{urllib.parse.quote(normalized_doi, safe='')}",
         )
-        context: dict[str, Any] = {
+        attempt_context: dict[str, Any] = {
             "landing_url": landing_url,
             "response_url": landing_url,
             "html_text": "",
@@ -738,14 +815,15 @@ class SpringerClient(ProviderClient):
         }
 
         def run_html(_state: ProviderWaterfallState) -> RawFulltextPayload:
-            attempt = self._prepare_html_attempt(doi, metadata)
-            context["attempt"] = attempt
-            context["response_url"] = attempt.response_url
-            context["html_text"] = attempt.html_text
-            context["merged_metadata"] = dict(attempt.merged_metadata)
+            attempt = self._prepare_html_attempt(doi, metadata, context=runtime_context)
+            attempt_context["attempt"] = attempt
+            attempt_context["response_url"] = attempt.response_url
+            attempt_context["html_text"] = attempt.html_text
+            attempt_context["merged_metadata"] = dict(attempt.merged_metadata)
             if attempt.diagnostics.accepted:
                 extracted_assets = [
-                    *_springer_html.extract_scoped_html_assets(
+                    *_cached_springer_scoped_assets(
+                        runtime_context,
                         attempt.asset_body_html,
                         attempt.response_url,
                         asset_profile="all",
@@ -767,13 +845,13 @@ class SpringerClient(ProviderClient):
 
         def run_pdf(state: ProviderWaterfallState) -> RawFulltextPayload:
             html_failure = state.failures[-1][1] if state.failures else ProviderFailure("no_result", "Springer HTML route failed.")
-            attempt = context["attempt"] or SpringerHtmlAttempt(
+            attempt = attempt_context["attempt"] or SpringerHtmlAttempt(
                 normalized_doi=normalized_doi,
                 landing_url=landing_url,
                 response={"headers": {}, "body": b""},
-                response_url=str(context.get("response_url") or landing_url),
-                html_text=str(context.get("html_text") or ""),
-                merged_metadata=dict(context.get("merged_metadata") or metadata),
+                response_url=str(attempt_context.get("response_url") or landing_url),
+                html_text=str(attempt_context.get("html_text") or ""),
+                merged_metadata=dict(attempt_context.get("merged_metadata") or metadata),
                 warnings=[],
                 markdown_text="",
                 abstract_sections=[],
@@ -822,7 +900,9 @@ class SpringerClient(ProviderClient):
         metadata: Mapping[str, Any],
         *,
         asset_profile: AssetProfile = "none",
+        context: RuntimeContext | None = None,
     ) -> PreparedFetchResultPayload:
+        context = self._runtime_context(context)
         normalized_doi = normalize_doi(doi)
         if not normalized_doi:
             raise ProviderFailure("not_supported", "Springer direct HTML retrieval requires a DOI.")
@@ -841,7 +921,7 @@ class SpringerClient(ProviderClient):
         attempt: SpringerHtmlAttempt | None = None
 
         try:
-            attempt = self._prepare_html_attempt(doi, metadata)
+            attempt = self._prepare_html_attempt(doi, metadata, context=context)
             warnings.extend(attempt.warnings)
             response_url = attempt.response_url
             html_text = attempt.html_text
@@ -849,7 +929,8 @@ class SpringerClient(ProviderClient):
             if attempt.diagnostics.accepted:
                 extracted_assets = _filter_springer_assets_for_profile(
                     [
-                        *_springer_html.extract_scoped_html_assets(
+                        *_cached_springer_scoped_assets(
+                            context,
                             attempt.asset_body_html,
                             attempt.response_url,
                             asset_profile="all",
@@ -877,7 +958,7 @@ class SpringerClient(ProviderClient):
                     trace_markers=["fulltext:springer_html_fail"],
                     reason="Springer HTML route only exposed abstract-level content after markdown extraction.",
                 )
-                provisional_article = self.to_article_model(metadata, provisional_payload)
+                provisional_article = self.to_article_model(metadata, provisional_payload, context=context)
         except ProviderFailure as exc:
             html_failure = ProviderFailure(
                 exc.code,
@@ -939,7 +1020,9 @@ class SpringerClient(ProviderClient):
         prepared: PreparedFetchResultPayload,
         *,
         asset_profile: AssetProfile = "none",
+        context: RuntimeContext | None = None,
     ) -> PreparedFetchResultPayload:
+        context = self._runtime_context(context)
         html_failure = prepared.context.get("html_failure")
         if not isinstance(html_failure, ProviderFailure):
             return prepared
@@ -1016,7 +1099,9 @@ class SpringerClient(ProviderClient):
         *,
         downloaded_assets: list[Mapping[str, Any]] | None = None,
         asset_failures: list[Mapping[str, Any]] | None = None,
+        context: RuntimeContext | None = None,
     ):
+        context = self._runtime_context(context)
         content = raw_payload.content
         merged_metadata = content.merged_metadata if content is not None else raw_payload.merged_metadata
         article_metadata = merged_metadata if isinstance(merged_metadata, Mapping) else metadata
@@ -1028,6 +1113,16 @@ class SpringerClient(ProviderClient):
         extracted_assets = list(content.extracted_assets if content is not None else [])
         assets = _merge_springer_assets(extracted_assets, list(downloaded_assets or []))
         extraction_payload = content.diagnostics.get("extraction") if content is not None else None
+        if not isinstance(extraction_payload, Mapping) and "html" in normalize_text(raw_payload.content_type).lower():
+            html_text = bytes(raw_payload.body or b"").decode("utf-8", errors="replace")
+            extraction_payload = _cached_springer_html_payload(
+                context,
+                html_text,
+                raw_payload.source_url,
+                title=str(article_metadata.get("title") or metadata.get("title") or "") or None,
+            )
+            if not markdown_text:
+                markdown_text = str(extraction_payload.get(MARKDOWN_TEXT_KEY) or "").strip()
         abstract_sections = (
             list(extraction_payload.get("abstract_sections") or [])
             if isinstance(extraction_payload, Mapping)

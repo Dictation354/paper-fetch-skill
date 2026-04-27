@@ -6,6 +6,7 @@ import json
 import re
 from typing import Any, Pattern
 
+from ..extraction.html.parsing import choose_parser
 from ..utils import normalize_text
 
 try:
@@ -119,7 +120,7 @@ def extract_script_json(
 ) -> list[Any]:
     if BeautifulSoup is None:
         return []
-    soup = BeautifulSoup(html_text, "html.parser")
+    soup = BeautifulSoup(html_text, choose_parser())
     payloads: list[Any] = []
     for script in soup.find_all("script"):
         if Tag is not None and not isinstance(script, Tag):

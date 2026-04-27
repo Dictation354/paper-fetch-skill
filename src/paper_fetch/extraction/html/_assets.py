@@ -24,6 +24,7 @@ from .formula_rules import (
     formula_image_url_from_node,
     looks_like_formula_image,
 )
+from .parsing import choose_parser
 from ._runtime import decode_html
 
 try:
@@ -778,7 +779,7 @@ def _extract_figure_assets_with_soup(html_text: str, source_url: str) -> list[di
     if BeautifulSoup is None:
         return []
 
-    soup = BeautifulSoup(html_text, "html.parser")
+    soup = BeautifulSoup(html_text, choose_parser())
     candidates: list[Any] = []
     seen_nodes: set[int] = set()
 
@@ -845,7 +846,7 @@ def extract_formula_assets(html_text: str, source_url: str) -> list[dict[str, st
     if BeautifulSoup is None:
         return []
 
-    soup = BeautifulSoup(html_text, "html.parser")
+    soup = BeautifulSoup(html_text, choose_parser())
     assets: list[dict[str, str]] = []
     seen: set[str] = set()
     for image in soup.find_all("img"):
@@ -880,7 +881,7 @@ def extract_supplementary_assets(html_text: str, source_url: str) -> list[dict[s
     if BeautifulSoup is None:
         return []
 
-    soup = BeautifulSoup(html_text, "html.parser")
+    soup = BeautifulSoup(html_text, choose_parser())
     assets_by_key: dict[tuple[str, str, str], dict[str, str]] = {}
     for anchor in soup.find_all("a", href=True):
         asset = _supplementary_asset_from_anchor(anchor, source_url)
@@ -938,7 +939,7 @@ def extract_full_size_figure_image_url(html_text: str, source_url: str) -> str |
     if BeautifulSoup is None:
         return None
 
-    soup = BeautifulSoup(html_text, "html.parser")
+    soup = BeautifulSoup(html_text, choose_parser())
     fallback_candidate = None
     seen: set[str] = set()
     for tag in soup.find_all(["img", "source"]):
@@ -1172,6 +1173,126 @@ def _supplementary_download_headers(
     return request_headers
 
 
+def _resolve_supplementary_asset_download(
+    *,
+    asset: Mapping[str, Any],
+    headers: Mapping[str, str] | None,
+    user_agent: str,
+    browser_context_seed: Mapping[str, Any] | None,
+    browser_cookies: list[dict[str, Any]],
+    active_seed_urls: list[str],
+    file_document_fetcher: FileDocumentFetcher | None,
+    cookie_opener_builder: Callable[..., urllib.request.OpenerDirector | None],
+    opener_requester: Callable[..., dict[str, Any]],
+) -> dict[str, Any]:
+    candidate_urls = _supplementary_candidate_urls(asset)
+    if not candidate_urls:
+        return {
+            "asset": dict(asset),
+            "response": None,
+            "source_url": "",
+            "failure": _supplementary_failure(
+                asset,
+                "",
+                reason="Supplementary asset did not include a downloadable URL.",
+            ),
+        }
+
+    response = None
+    source_url = ""
+    last_failure: dict[str, Any] | None = None
+    for candidate_url in candidate_urls:
+        parsed = urllib.parse.urlparse(candidate_url)
+        if parsed.scheme not in {"http", "https"}:
+            last_failure = _supplementary_failure(
+                asset,
+                candidate_url,
+                reason=f"Unsupported supplementary URL scheme for {candidate_url}",
+            )
+            continue
+
+        request_headers = _supplementary_download_headers(
+            headers=headers,
+            user_agent=user_agent,
+            browser_context_seed=browser_context_seed,
+        )
+        cookie_header = _cookie_header_for_url(browser_cookies, candidate_url)
+        if cookie_header:
+            request_headers["Cookie"] = cookie_header
+
+        try:
+            opener = cookie_opener_builder(
+                active_seed_urls,
+                headers=request_headers,
+                timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
+                browser_cookies=browser_cookies,
+            )
+            if opener is None:
+                opener = urllib.request.build_opener()
+            response = opener_requester(
+                opener,
+                candidate_url,
+                headers=request_headers,
+                timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
+            )
+        except RequestFailure as exc:
+            content_type = _response_header({"headers": exc.headers}, "content-type")
+            last_failure = _supplementary_failure(
+                asset,
+                candidate_url,
+                status=exc.status_code,
+                content_type=content_type,
+                final_url=exc.url,
+                body=exc.body,
+                reason=supplementary_response_block_reason(content_type, exc.body) or str(exc),
+            )
+            fallback_response = _fetch_file_document_fallback(file_document_fetcher, candidate_url, asset)
+            if fallback_response is not None:
+                response = fallback_response
+                source_url = candidate_url
+                break
+            fetch_failure = _file_document_fetch_failure(file_document_fetcher, candidate_url)
+            if fetch_failure:
+                last_failure.update(fetch_failure)
+            response = None
+            continue
+
+        body = response.get("body", b"")
+        content_type = _response_header(response, "content-type")
+        final_url = normalize_text(str(response.get("url") or candidate_url))
+        block_reason = supplementary_response_block_reason(content_type, body)
+        if block_reason:
+            last_failure = _supplementary_failure(
+                asset,
+                candidate_url,
+                status=response.get("status_code"),
+                content_type=content_type,
+                final_url=final_url,
+                body=body,
+                reason=block_reason,
+            )
+            fallback_response = _fetch_file_document_fallback(file_document_fetcher, candidate_url, asset)
+            if fallback_response is not None:
+                response = fallback_response
+                source_url = candidate_url
+                break
+            fetch_failure = _file_document_fetch_failure(file_document_fetcher, candidate_url)
+            if fetch_failure:
+                last_failure.update(fetch_failure)
+            response = None
+            continue
+
+        source_url = candidate_url
+        break
+
+    return {
+        "asset": dict(asset),
+        "response": response,
+        "source_url": source_url,
+        "failure": last_failure,
+    }
+
+
 def download_supplementary_assets(
     transport: HttpTransport,
     *,
@@ -1212,108 +1333,51 @@ def download_supplementary_assets(
         if normalized
     ]
 
-    for asset in supplementary_assets:
-        candidate_urls = _supplementary_candidate_urls(asset)
-        if not candidate_urls:
-            failures.append(
-                _supplementary_failure(
-                    asset,
-                    "",
-                    reason="Supplementary asset did not include a downloadable URL.",
-                )
-            )
-            continue
-
-        response = None
-        source_url = ""
-        last_failure: dict[str, Any] | None = None
-        for candidate_url in candidate_urls:
-            parsed = urllib.parse.urlparse(candidate_url)
-            if parsed.scheme not in {"http", "https"}:
-                last_failure = _supplementary_failure(
-                    asset,
-                    candidate_url,
-                    reason=f"Unsupported supplementary URL scheme for {candidate_url}",
-                )
-                continue
-
-            request_headers = _supplementary_download_headers(
+    resolved_results: list[dict[str, Any]] = []
+    max_workers = min(4, len(supplementary_assets))
+    if max_workers <= 1:
+        resolved_results = [
+            _resolve_supplementary_asset_download(
+                asset=asset,
                 headers=headers,
                 user_agent=user_agent,
                 browser_context_seed=browser_context_seed,
+                browser_cookies=browser_cookies,
+                active_seed_urls=active_seed_urls,
+                file_document_fetcher=file_document_fetcher,
+                cookie_opener_builder=active_cookie_opener_builder,
+                opener_requester=active_opener_requester,
             )
-            cookie_header = _cookie_header_for_url(browser_cookies, candidate_url)
-            if cookie_header:
-                request_headers["Cookie"] = cookie_header
-
-            try:
-                opener = active_cookie_opener_builder(
-                    active_seed_urls,
-                    headers=request_headers,
-                    timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
+            for asset in supplementary_assets
+        ]
+    else:
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            futures = [
+                executor.submit(
+                    _resolve_supplementary_asset_download,
+                    asset=asset,
+                    headers=headers,
+                    user_agent=user_agent,
+                    browser_context_seed=browser_context_seed,
                     browser_cookies=browser_cookies,
+                    active_seed_urls=active_seed_urls,
+                    file_document_fetcher=file_document_fetcher,
+                    cookie_opener_builder=active_cookie_opener_builder,
+                    opener_requester=active_opener_requester,
                 )
-                if opener is None:
-                    opener = urllib.request.build_opener()
-                response = active_opener_requester(
-                    opener,
-                    candidate_url,
-                    headers=request_headers,
-                    timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
-                )
-            except RequestFailure as exc:
-                content_type = _response_header({"headers": exc.headers}, "content-type")
-                last_failure = _supplementary_failure(
-                    asset,
-                    candidate_url,
-                    status=exc.status_code,
-                    content_type=content_type,
-                    final_url=exc.url,
-                    body=exc.body,
-                    reason=supplementary_response_block_reason(content_type, exc.body) or str(exc),
-                )
-                fallback_response = _fetch_file_document_fallback(file_document_fetcher, candidate_url, asset)
-                if fallback_response is not None:
-                    response = fallback_response
-                    source_url = candidate_url
-                    break
-                fetch_failure = _file_document_fetch_failure(file_document_fetcher, candidate_url)
-                if fetch_failure:
-                    last_failure.update(fetch_failure)
-                response = None
-                continue
+                for asset in supplementary_assets
+            ]
+            resolved_results = [future.result() for future in futures]
 
-            body = response.get("body", b"")
-            content_type = _response_header(response, "content-type")
-            final_url = normalize_text(str(response.get("url") or candidate_url))
-            block_reason = supplementary_response_block_reason(content_type, body)
-            if block_reason:
-                last_failure = _supplementary_failure(
-                    asset,
-                    candidate_url,
-                    status=response.get("status_code"),
-                    content_type=content_type,
-                    final_url=final_url,
-                    body=body,
-                    reason=block_reason,
-                )
-                fallback_response = _fetch_file_document_fallback(file_document_fetcher, candidate_url, asset)
-                if fallback_response is not None:
-                    response = fallback_response
-                    source_url = candidate_url
-                    break
-                fetch_failure = _file_document_fetch_failure(file_document_fetcher, candidate_url)
-                if fetch_failure:
-                    last_failure.update(fetch_failure)
-                response = None
-                continue
-
-            source_url = candidate_url
-            break
+    for resolved in resolved_results:
+        asset = dict(resolved.get("asset") or {})
+        response = resolved.get("response")
+        source_url = normalize_text(str(resolved.get("source_url") or ""))
+        last_failure = resolved.get("failure") if isinstance(resolved.get("failure"), Mapping) else None
 
         if response is None:
             if last_failure is not None:
-                failures.append(last_failure)
+                failures.append(dict(last_failure))
             continue
 
         body = response.get("body", b"")
@@ -1370,6 +1434,165 @@ def download_supplementary_assets(
     }
 
 
+def _resolve_figure_asset_download(
+    *,
+    transport: HttpTransport,
+    asset: Mapping[str, Any],
+    user_agent: str,
+    browser_context_seed: Mapping[str, Any] | None,
+    seed_urls: list[str] | None,
+    figure_page_fetcher: FigurePageFetcher | None,
+    candidate_builder: Callable[..., list[str]],
+    image_document_fetcher: ImageDocumentFetcher | None,
+    cookie_opener_builder: Callable[..., urllib.request.OpenerDirector | None],
+    opener_requester: Callable[..., dict[str, Any]],
+) -> dict[str, Any]:
+    preview_url = normalize_text(str(asset.get("preview_url") or asset.get("url") or ""))
+    full_size_url = normalize_text(str(asset.get("full_size_url") or ""))
+    candidate_urls = candidate_builder(
+        transport,
+        asset=asset,
+        user_agent=user_agent,
+        figure_page_fetcher=figure_page_fetcher,
+    )
+    if not candidate_urls:
+        return {
+            "asset": dict(asset),
+            "preview_url": preview_url,
+            "full_size_url": full_size_url,
+            "response": None,
+            "source_url": "",
+            "download_tier_override": "",
+            "failure": None,
+        }
+
+    response = None
+    source_url = ""
+    download_tier_override = ""
+    last_failure: dict[str, Any] | None = None
+    active_user_agent = normalize_text(str((browser_context_seed or {}).get("browser_user_agent") or "")) or user_agent
+    browser_cookies = list((browser_context_seed or {}).get("browser_cookies") or [])
+    active_seed_urls = [
+        normalized
+        for normalized in [
+            *[normalize_text(item) for item in seed_urls or []],
+            normalize_text(str((browser_context_seed or {}).get("browser_final_url") or "")),
+        ]
+        if normalized
+    ]
+    for candidate_url in candidate_urls:
+        parsed = urllib.parse.urlparse(candidate_url)
+        if parsed.scheme not in {"http", "https"}:
+            last_failure = {
+                "kind": asset.get("kind", "figure"),
+                "heading": asset.get("heading", "Figure"),
+                "caption": asset.get("caption", ""),
+                "source_url": candidate_url,
+                "reason": f"Unsupported asset URL scheme for {candidate_url}",
+                "section": asset.get("section") or "body",
+            }
+            continue
+
+        try:
+            request_headers = {"User-Agent": active_user_agent, "Accept": "*/*"}
+            opener = (
+                cookie_opener_builder(
+                    active_seed_urls,
+                    headers=request_headers,
+                    timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
+                    browser_cookies=browser_cookies,
+                )
+                if browser_cookies
+                else None
+            )
+            cookie_header = _cookie_header_for_url(browser_cookies, candidate_url)
+            if cookie_header:
+                request_headers["Cookie"] = cookie_header
+            response = (
+                opener_requester(
+                    opener,
+                    candidate_url,
+                    headers=request_headers,
+                    timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
+                )
+                if opener is not None
+                else transport.request(
+                    "GET",
+                    candidate_url,
+                    headers=request_headers,
+                    timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
+                    retry_on_rate_limit=True,
+                    retry_on_transient=True,
+                )
+            )
+            body = response.get("body", b"")
+            content_type = _response_header(response, "content-type")
+            final_url = normalize_text(str(response.get("url") or candidate_url))
+            if _requires_image_payload(asset) and not _looks_like_image_payload(content_type, body, final_url):
+                last_failure = {
+                    "kind": asset.get("kind", "figure"),
+                    "heading": asset.get("heading", "Figure"),
+                    "caption": asset.get("caption", ""),
+                    "source_url": candidate_url,
+                    "status": response.get("status_code"),
+                    "reason": f"Asset candidate did not return image content (content-type: {content_type or 'unknown'}).",
+                    "section": asset.get("section") or "body",
+                }
+                fallback_response = _fetch_image_document_fallback(image_document_fetcher, candidate_url, asset)
+                if fallback_response is not None:
+                    response = fallback_response
+                    source_url = candidate_url
+                    download_tier_override = "playwright_canvas_fallback"
+                    break
+                response = None
+                continue
+            if _requires_image_payload(asset) and _is_preview_candidate(
+                candidate_url,
+                preview_url=preview_url,
+                full_size_url=full_size_url,
+            ):
+                for upgrade_target in _preview_upgrade_targets(candidate_url, asset):
+                    if upgrade_target == candidate_url:
+                        continue
+                    fallback_response = _fetch_image_document_fallback(image_document_fetcher, upgrade_target, asset)
+                    if fallback_response is not None:
+                        response = fallback_response
+                        source_url = upgrade_target
+                        download_tier_override = "playwright_canvas_fallback"
+                        break
+                if download_tier_override:
+                    break
+            source_url = candidate_url
+            break
+        except RequestFailure as exc:
+            last_failure = {
+                "kind": asset.get("kind", "figure"),
+                "heading": asset.get("heading", "Figure"),
+                "caption": asset.get("caption", ""),
+                "source_url": candidate_url,
+                "status": exc.status_code,
+                "reason": str(exc),
+                "section": asset.get("section") or "body",
+            }
+            fallback_response = _fetch_image_document_fallback(image_document_fetcher, candidate_url, asset)
+            if fallback_response is not None:
+                response = fallback_response
+                source_url = candidate_url
+                download_tier_override = "playwright_canvas_fallback"
+                break
+            continue
+
+    return {
+        "asset": dict(asset),
+        "preview_url": preview_url,
+        "full_size_url": full_size_url,
+        "response": response,
+        "source_url": source_url,
+        "download_tier_override": download_tier_override,
+        "failure": last_failure,
+    }
+
+
 def download_figure_assets(
     transport: HttpTransport,
     *,
@@ -1398,133 +1621,55 @@ def download_figure_assets(
     active_cookie_opener_builder = cookie_opener_builder or _build_cookie_seeded_opener
     active_opener_requester = opener_requester or _request_with_opener
 
-    for asset in assets:
-        preview_url = normalize_text(str(asset.get("preview_url") or asset.get("url") or ""))
-        full_size_url = normalize_text(str(asset.get("full_size_url") or ""))
-        candidate_urls = active_candidate_builder(
-            transport,
-            asset=asset,
-            user_agent=user_agent,
-            figure_page_fetcher=figure_page_fetcher,
-        )
-        if not candidate_urls:
-            continue
-
-        response = None
-        source_url = ""
-        download_tier_override = ""
-        last_failure: dict[str, Any] | None = None
-        active_user_agent = normalize_text(str((browser_context_seed or {}).get("browser_user_agent") or "")) or user_agent
-        browser_cookies = list((browser_context_seed or {}).get("browser_cookies") or [])
-        active_seed_urls = [
-            normalized
-            for normalized in [
-                *[normalize_text(item) for item in seed_urls or []],
-                normalize_text(str((browser_context_seed or {}).get("browser_final_url") or "")),
-            ]
-            if normalized
+    max_workers = min(4, len(assets))
+    if max_workers <= 1:
+        resolved_results = [
+            _resolve_figure_asset_download(
+                transport=transport,
+                asset=asset,
+                user_agent=user_agent,
+                browser_context_seed=browser_context_seed,
+                seed_urls=seed_urls,
+                figure_page_fetcher=figure_page_fetcher,
+                candidate_builder=active_candidate_builder,
+                image_document_fetcher=image_document_fetcher,
+                cookie_opener_builder=active_cookie_opener_builder,
+                opener_requester=active_opener_requester,
+            )
+            for asset in assets
         ]
-        for candidate_url in candidate_urls:
-            parsed = urllib.parse.urlparse(candidate_url)
-            if parsed.scheme not in {"http", "https"}:
-                last_failure = {
-                    "kind": asset.get("kind", "figure"),
-                    "heading": asset.get("heading", "Figure"),
-                    "caption": asset.get("caption", ""),
-                    "source_url": candidate_url,
-                    "reason": f"Unsupported asset URL scheme for {candidate_url}",
-                    "section": asset.get("section") or "body",
-                }
-                continue
+    else:
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            futures = [
+                executor.submit(
+                    _resolve_figure_asset_download,
+                    transport=transport,
+                    asset=asset,
+                    user_agent=user_agent,
+                    browser_context_seed=browser_context_seed,
+                    seed_urls=seed_urls,
+                    figure_page_fetcher=figure_page_fetcher,
+                    candidate_builder=active_candidate_builder,
+                    image_document_fetcher=image_document_fetcher,
+                    cookie_opener_builder=active_cookie_opener_builder,
+                    opener_requester=active_opener_requester,
+                )
+                for asset in assets
+            ]
+            resolved_results = [future.result() for future in futures]
 
-            try:
-                request_headers = {"User-Agent": active_user_agent, "Accept": "*/*"}
-                opener = (
-                    active_cookie_opener_builder(
-                        active_seed_urls,
-                        headers=request_headers,
-                        timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
-                        browser_cookies=browser_cookies,
-                    )
-                    if browser_cookies
-                    else None
-                )
-                cookie_header = _cookie_header_for_url(browser_cookies, candidate_url)
-                if cookie_header:
-                    request_headers["Cookie"] = cookie_header
-                response = (
-                    active_opener_requester(
-                        opener,
-                        candidate_url,
-                        headers=request_headers,
-                        timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
-                    )
-                    if opener is not None
-                    else transport.request(
-                        "GET",
-                        candidate_url,
-                        headers=request_headers,
-                        timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
-                        retry_on_rate_limit=True,
-                        retry_on_transient=True,
-                    )
-                )
-                body = response.get("body", b"")
-                content_type = _response_header(response, "content-type")
-                final_url = normalize_text(str(response.get("url") or candidate_url))
-                if _requires_image_payload(asset) and not _looks_like_image_payload(content_type, body, final_url):
-                    last_failure = {
-                        "kind": asset.get("kind", "figure"),
-                        "heading": asset.get("heading", "Figure"),
-                        "caption": asset.get("caption", ""),
-                        "source_url": candidate_url,
-                        "status": response.get("status_code"),
-                        "reason": f"Asset candidate did not return image content (content-type: {content_type or 'unknown'}).",
-                        "section": asset.get("section") or "body",
-                    }
-                    fallback_response = _fetch_image_document_fallback(image_document_fetcher, candidate_url, asset)
-                    if fallback_response is not None:
-                        response = fallback_response
-                        source_url = candidate_url
-                        download_tier_override = "playwright_canvas_fallback"
-                        break
-                    response = None
-                    continue
-                if _requires_image_payload(asset) and _is_preview_candidate(candidate_url, preview_url=preview_url, full_size_url=full_size_url):
-                    for upgrade_target in _preview_upgrade_targets(candidate_url, asset):
-                        if upgrade_target == candidate_url:
-                            continue
-                        fallback_response = _fetch_image_document_fallback(image_document_fetcher, upgrade_target, asset)
-                        if fallback_response is not None:
-                            response = fallback_response
-                            source_url = upgrade_target
-                            download_tier_override = "playwright_canvas_fallback"
-                            break
-                    if download_tier_override:
-                        break
-                source_url = candidate_url
-                break
-            except RequestFailure as exc:
-                last_failure = {
-                    "kind": asset.get("kind", "figure"),
-                    "heading": asset.get("heading", "Figure"),
-                    "caption": asset.get("caption", ""),
-                    "source_url": candidate_url,
-                    "status": exc.status_code,
-                    "reason": str(exc),
-                    "section": asset.get("section") or "body",
-                }
-                fallback_response = _fetch_image_document_fallback(image_document_fetcher, candidate_url, asset)
-                if fallback_response is not None:
-                    response = fallback_response
-                    source_url = candidate_url
-                    download_tier_override = "playwright_canvas_fallback"
-                    break
-                continue
+    for resolved in resolved_results:
+        asset = dict(resolved.get("asset") or {})
+        preview_url = normalize_text(str(resolved.get("preview_url") or ""))
+        full_size_url = normalize_text(str(resolved.get("full_size_url") or ""))
+        response = resolved.get("response")
+        source_url = normalize_text(str(resolved.get("source_url") or ""))
+        download_tier_override = normalize_text(str(resolved.get("download_tier_override") or ""))
+        last_failure = resolved.get("failure") if isinstance(resolved.get("failure"), Mapping) else None
 
         if response is None:
             if last_failure is not None:
-                failures.append(last_failure)
+                failures.append(dict(last_failure))
             continue
 
         content_type = _response_header(response, "content-type")
@@ -1593,7 +1738,7 @@ def download_figure_assets_with_image_document_fetcher(
     work_items = [(index, asset) for index, asset in enumerate(assets) if _requires_image_payload(asset)]
     resolved_by_index: dict[int, dict[str, Any] | None] = {}
     if work_items:
-        max_workers = min(3, len(work_items))
+        max_workers = min(4, len(work_items))
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             future_by_index = {
                 index: executor.submit(

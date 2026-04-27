@@ -10,6 +10,8 @@ import unittest
 import urllib.error
 import urllib.parse
 import warnings
+import tempfile
+from pathlib import Path
 from unittest import mock
 
 from paper_fetch import http as http_module
@@ -739,8 +741,8 @@ class HttpTransportCacheTests(unittest.TestCase):
         self.assertLessEqual(len(transport._cache), 4)
         self.assertTrue(call_count >= len({*urls}))
 
-    def test_same_host_requests_are_serialized_while_different_hosts_can_overlap(self) -> None:
-        transport = http_module.HttpTransport(cache_ttl=0, cache_capacity=0)
+    def test_same_host_requests_obey_configured_concurrency_limit(self) -> None:
+        transport = http_module.HttpTransport(cache_ttl=0, cache_capacity=0, per_host_concurrency=2)
         active_by_host: dict[str, int] = {}
         max_active_by_host: dict[str, int] = {}
         global_active = 0
@@ -770,14 +772,81 @@ class HttpTransportCacheTests(unittest.TestCase):
         urls = [
             "https://same.test/one",
             "https://same.test/two",
-            "https://other.test/three",
+            "https://same.test/three",
+            "https://other.test/four",
         ]
         with mock.patch.object(transport, "_perform_request", side_effect=fake_urlopen):
-            with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
                 list(executor.map(lambda url: transport.request("GET", url, headers={"Accept": "text/plain"}), urls))
 
-        self.assertEqual(max_active_by_host["same.test"], 1)
+        self.assertEqual(max_active_by_host["same.test"], 2)
         self.assertGreaterEqual(max_global_active, 2)
+
+    def test_disk_textual_get_cache_is_reused_by_new_transport(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            first_transport = http_module.HttpTransport(
+                cache_ttl=30,
+                cache_capacity=128,
+                disk_cache_dir=Path(tmpdir),
+            )
+            second_transport = http_module.HttpTransport(
+                cache_ttl=30,
+                cache_capacity=128,
+                disk_cache_dir=Path(tmpdir),
+            )
+
+            def fake_urlopen(request, timeout=20):
+                return FakeHTTPResponse(
+                    b"cached body",
+                    request.full_url,
+                    headers={"content-type": "text/plain", "etag": '"v1"'},
+                )
+
+            with mock.patch.object(first_transport, "_perform_request", side_effect=fake_urlopen):
+                first = first_transport.request("GET", "https://example.test/article", headers={"Accept": "text/plain"})
+            with mock.patch.object(second_transport, "_perform_request") as mocked_request:
+                second = second_transport.request("GET", "https://example.test/article", headers={"Accept": "text/plain"})
+
+        self.assertEqual(first["body"], b"cached body")
+        self.assertEqual(second["body"], b"cached body")
+        mocked_request.assert_not_called()
+
+    def test_stale_disk_cache_uses_conditional_get_and_304_body(self) -> None:
+        captured_headers: list[dict[str, str]] = []
+        with tempfile.TemporaryDirectory() as tmpdir:
+            first_transport = http_module.HttpTransport(
+                cache_ttl=30,
+                cache_capacity=128,
+                disk_cache_dir=Path(tmpdir),
+                metadata_cache_ttl=30,
+            )
+            stale_transport = http_module.HttpTransport(
+                cache_ttl=30,
+                cache_capacity=128,
+                disk_cache_dir=Path(tmpdir),
+                metadata_cache_ttl=0,
+            )
+
+            def first_response(request, timeout=20):
+                return FakeHTTPResponse(
+                    b"cached body",
+                    request.full_url,
+                    headers={"content-type": "text/plain", "etag": '"v1"', "last-modified": "Mon, 01 Jan 2024 00:00:00 GMT"},
+                )
+
+            def not_modified(request, timeout=20):
+                captured_headers.append(dict(request.headers))
+                return FakeHTTPResponse(b"", request.full_url, status=304, headers={"content-type": "text/plain", "etag": '"v1"'})
+
+            with mock.patch.object(first_transport, "_perform_request", side_effect=first_response):
+                first_transport.request("GET", "https://example.test/article", headers={"Accept": "text/plain"})
+            with mock.patch.object(stale_transport, "_perform_request", side_effect=not_modified):
+                response = stale_transport.request("GET", "https://example.test/article", headers={"Accept": "text/plain"})
+
+        lowered = lower_header_map(captured_headers[0])
+        self.assertEqual(lowered["if-none-match"], '"v1"')
+        self.assertEqual(lowered["if-modified-since"], "Mon, 01 Jan 2024 00:00:00 GMT")
+        self.assertEqual(response["body"], b"cached body")
 
     def test_map_request_failure_returns_rate_limited_provider_failure(self) -> None:
         failure = http_module.RequestFailure(

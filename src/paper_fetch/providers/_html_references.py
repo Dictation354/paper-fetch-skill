@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
+from ..extraction.html.parsing import choose_parser
 from ..utils import normalize_text
 
 try:
@@ -85,7 +86,7 @@ def _reference_text(node: Any) -> str:
         return ""
     active_node = content_node
     if BeautifulSoup is not None:
-        clone_soup = BeautifulSoup(str(content_node), "html.parser")
+        clone_soup = BeautifulSoup(str(content_node), choose_parser())
         clone = clone_soup.find()
         if isinstance(clone, Tag):
             for selector in REFERENCE_NOISE_SELECTORS:
@@ -133,7 +134,7 @@ def extract_numbered_references_from_html(html_text: str) -> list[dict[str, str 
     if BeautifulSoup is None or not normalize_text(html_text):
         return []
 
-    soup = BeautifulSoup(html_text, "html.parser")
+    soup = BeautifulSoup(html_text, choose_parser())
     references: list[dict[str, str | None]] = []
     seen: set[tuple[str, str]] = set()
 

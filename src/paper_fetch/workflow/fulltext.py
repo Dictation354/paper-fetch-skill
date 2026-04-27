@@ -6,6 +6,7 @@ import inspect
 import logging
 from pathlib import Path
 import time
+from functools import lru_cache
 from typing import Any, Mapping
 
 from ..artifacts import ArtifactStore
@@ -30,6 +31,19 @@ from .types import FetchStrategy, PaperFetchFailure
 
 logger = logging.getLogger("paper_fetch.service")
 PROVIDER_MANAGED_ABSTRACT_ONLY_PROVIDERS = provider_managed_abstract_only_names()
+
+
+@lru_cache(maxsize=128)
+def _fetch_result_accepts_artifact_store(fetch_result_type: type, fetch_result_name: str) -> bool:
+    del fetch_result_name
+    fetch_result = getattr(fetch_result_type, "fetch_result", None)
+    if fetch_result is None:
+        return False
+    try:
+        parameters = inspect.signature(fetch_result).parameters
+    except (TypeError, ValueError):
+        return False
+    return "artifact_store" in parameters
 
 
 def build_metadata_only_result(
@@ -105,28 +119,26 @@ def _provider_fetch_result(
     metadata: Mapping[str, Any],
     artifact_store: ArtifactStore,
     asset_profile: AssetProfile,
+    context: RuntimeContext,
 ) -> ProviderFetchResult:
     download_dir = artifact_store.download_dir
     if isinstance(provider_client, FulltextProvider):
         fetch_result = provider_client.fetch_result
-        try:
-            parameters = inspect.signature(fetch_result).parameters
-        except (TypeError, ValueError):
-            parameters = {}
-        if "artifact_store" in parameters:
+        if _fetch_result_accepts_artifact_store(type(provider_client), getattr(fetch_result, "__name__", "fetch_result")):
             return fetch_result(
                 doi,
                 metadata,
                 download_dir,
                 asset_profile=asset_profile,
                 artifact_store=artifact_store,
+                context=context,
             )
-        return fetch_result(doi, metadata, download_dir, asset_profile=asset_profile)
+        return fetch_result(doi, metadata, download_dir, asset_profile=asset_profile, context=context)
 
     if not isinstance(provider_client, RawFulltextProvider):
         raise ProviderFailure("not_supported", "Provider does not implement raw full-text retrieval.")
 
-    raw_payload = provider_client.fetch_raw_fulltext(doi, metadata)
+    raw_payload = provider_client.fetch_raw_fulltext(doi, metadata, context=context)
     downloaded_assets: list[Mapping[str, Any]] = []
     asset_failures: list[Mapping[str, Any]] = []
     if download_dir is not None and asset_profile != "none" and isinstance(provider_client, AssetProvider):
@@ -136,6 +148,7 @@ def _provider_fetch_result(
             raw_payload,
             download_dir,
             asset_profile=asset_profile,
+            context=context,
         )
         downloaded_assets = list(asset_results.get("assets") or [])
         asset_failures = list(asset_results.get("asset_failures") or [])
@@ -144,6 +157,7 @@ def _provider_fetch_result(
         raw_payload,
         downloaded_assets=downloaded_assets,
         asset_failures=asset_failures,
+        context=context,
     )
     return ProviderFetchResult(
         provider=safe_text(getattr(provider_client, "name", "")) or safe_text(raw_payload.provider) or "provider",
@@ -183,6 +197,7 @@ def _try_official_provider(
     provider_name: str | None,
     strategy: FetchStrategy,
     artifact_store: ArtifactStore,
+    context: RuntimeContext,
     clients: Mapping[str, object],
     warnings: list[str],
     source_trail: list[str],
@@ -217,6 +232,7 @@ def _try_official_provider(
             metadata=metadata,
             artifact_store=artifact_store,
             asset_profile=resolved_asset_profile,
+            context=context,
         )
         extend_unique(warnings, provider_result.warnings)
         download_warnings, download_trail = artifact_store.save_provider_payload(
@@ -374,6 +390,7 @@ def fetch_article(
         provider_name=provider_name,
         strategy=strategy,
         artifact_store=runtime.artifact_store,
+        context=runtime,
         clients=client_registry,
         warnings=warnings,
         source_trail=source_trail,

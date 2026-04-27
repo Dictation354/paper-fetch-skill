@@ -7,6 +7,7 @@ from html.parser import HTMLParser
 from typing import Any, Mapping
 
 from ...extraction.html.language import collect_html_abstract_blocks, html_node_language_hint
+from ...extraction.html.parsing import choose_parser
 from ...extraction.html.semantics import (
     HTML_SECTION_HINT_KINDS,
     collect_html_section_hints,
@@ -356,12 +357,12 @@ def prepare_html_extraction_tree(html_text: str, *, noise_profile: str | None = 
     if BeautifulSoup is None:
         return html_text, None
 
-    soup = BeautifulSoup(html_text, "html.parser")
+    soup = BeautifulSoup(html_text, choose_parser())
     root = select_html_content_root(soup)
     if root is None:
         root = soup.body or soup
 
-    candidate_soup = BeautifulSoup(str(root), "html.parser")
+    candidate_soup = BeautifulSoup(str(root), choose_parser())
     active_root = candidate_soup.body or candidate_soup
     prune_html_tree(active_root, noise_profile=noise_profile)
     return str(active_root), active_root

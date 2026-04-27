@@ -216,6 +216,49 @@ def _write_cached_fetch_envelope(
     ).write_fetch_envelope(envelope, request)
 
 
+def _call_service_resolve_paper(query: str, *, context: RuntimeContext) -> Any:
+    try:
+        return service_resolve_paper(query, context=context)
+    except TypeError as exc:
+        if "context" not in str(exc):
+            raise
+        return service_resolve_paper(query, transport=context.transport, env=context.env)
+
+
+def _call_service_probe_has_fulltext(query: str, *, context: RuntimeContext) -> Any:
+    try:
+        return service_probe_has_fulltext(query, context=context)
+    except TypeError as exc:
+        if "context" not in str(exc):
+            raise
+        return service_probe_has_fulltext(query, transport=context.transport, env=context.env)
+
+
+def _call_service_fetch_paper(
+    query: str,
+    *,
+    modes: set[str],
+    strategy,
+    render,
+    download_dir: Path | None,
+    context: RuntimeContext,
+) -> FetchEnvelope:
+    legacy_kwargs = {
+        "modes": modes,
+        "strategy": strategy,
+        "render": render,
+        "download_dir": download_dir,
+        "transport": context.transport,
+        "env": context.env,
+    }
+    try:
+        return service_fetch_paper(query, context=context, **legacy_kwargs)
+    except TypeError as exc:
+        if "context" not in str(exc):
+            raise
+        return service_fetch_paper(query, **legacy_kwargs)
+
+
 def _fetch_paper_envelope(
     request: FetchPaperRequest,
     *,
@@ -223,31 +266,33 @@ def _fetch_paper_envelope(
     download_dir: Path | None | object,
     transport: HttpTransport | None,
     include_article_for_assets: bool,
+    context: RuntimeContext | None = None,
 ) -> FetchEnvelope:
-    runtime_env = build_runtime_env(env)
+    runtime_env = dict(context.env) if context is not None and context.env is not None else build_runtime_env(env)
     effective_download_dir = _resolve_download_dir(runtime_env, download_dir)
     runtime_context = RuntimeContext(
         env=runtime_env,
-        transport=transport,
+        transport=(context.transport if context is not None else transport),
+        clients=(context.clients if context is not None else None),
         download_dir=effective_download_dir,
+        cancel_check=(context.cancel_check if context is not None else None),
         fetch_cache=FetchCache(effective_download_dir),
     )
     cached_envelope = _load_cached_fetch_envelope(
         request,
         download_dir=effective_download_dir,
         transport=runtime_context.transport,
-        env=runtime_env,
+        env=runtime_context.env or runtime_env,
     )
     if cached_envelope is not None:
         return cached_envelope
-    envelope = service_fetch_paper(
+    envelope = _call_service_fetch_paper(
         request.query,
         modes=_service_modes_for_fetch_request(request, include_article_for_assets=include_article_for_assets),
         strategy=request.strategy.to_service_strategy(),
         render=request.to_render_options(),
         download_dir=effective_download_dir,
-        transport=runtime_context.transport,
-        env=runtime_env,
+        context=runtime_context,
     )
     if effective_download_dir is not None and envelope.doi:
         _write_cached_fetch_envelope(effective_download_dir, envelope, request)
@@ -266,10 +311,11 @@ def resolve_paper_payload(
     year: int | None = None,
     env: Mapping[str, str] | None = None,
     transport: HttpTransport | None = None,
+    context: RuntimeContext | None = None,
 ) -> dict[str, Any]:
     request = ResolvePaperRequest(query=query, title=title, authors=authors, year=year)
-    runtime_env = build_runtime_env(env)
-    resolved = service_resolve_paper(request.composed_query(), transport=transport, env=runtime_env)
+    runtime_context = context or RuntimeContext(env=build_runtime_env(env), transport=transport)
+    resolved = _call_service_resolve_paper(request.composed_query(), context=runtime_context)
     return resolved.to_dict()
 
 
@@ -278,10 +324,11 @@ def has_fulltext_payload(
     query: str,
     env: Mapping[str, str] | None = None,
     transport: HttpTransport | None = None,
+    context: RuntimeContext | None = None,
 ) -> dict[str, Any]:
     request = HasFulltextRequest(query=query)
-    runtime_env = build_runtime_env(env)
-    probe_result = service_probe_has_fulltext(request.query, transport=transport, env=runtime_env)
+    runtime_context = context or RuntimeContext(env=build_runtime_env(env), transport=transport)
+    probe_result = _call_service_probe_has_fulltext(request.query, context=runtime_context)
     payload = probe_result.to_dict()
     payload.pop("title", None)
     return payload
@@ -298,6 +345,7 @@ def fetch_paper_payload(
     env: Mapping[str, str] | None = None,
     download_dir: Path | None | object = _MCP_DEFAULT_DOWNLOAD_DIR,
     transport: HttpTransport | None = None,
+    context: RuntimeContext | None = None,
 ) -> dict[str, Any]:
     request = FetchPaperRequest(
         query=query,
@@ -313,6 +361,7 @@ def fetch_paper_payload(
         download_dir=download_dir,
         transport=transport,
         include_article_for_assets=False,
+        context=context,
     )
     return _payload_from_envelope(envelope, request)
 
@@ -405,11 +454,11 @@ def batch_resolve_payload(
 ) -> dict[str, Any]:
     request = BatchResolveRequest(queries=queries, concurrency=concurrency)
     runtime_env = build_runtime_env(env)
-    transport = HttpTransport()
+    runtime_context = RuntimeContext(env=runtime_env)
     results, abort_reason = _run_batch_sync(
         queries=request.queries,
         concurrency=request.concurrency,
-        process_item=lambda query: resolve_paper_payload(query=query, env=runtime_env, transport=transport),
+        process_item=lambda query: resolve_paper_payload(query=query, context=runtime_context),
     )
 
     return {
@@ -471,7 +520,8 @@ def batch_check_payload(
 ) -> dict[str, Any]:
     request = BatchCheckRequest(queries=queries, mode=mode, concurrency=concurrency)
     runtime_env = build_runtime_env(env)
-    transport = HttpTransport()
+    runtime_context = RuntimeContext(env=runtime_env, download_dir=None)
+    runtime_context.get_clients()
     requested_modes = _BATCH_CHECK_MODES[request.mode]
     results, abort_reason = _run_batch_sync(
         queries=request.queries,
@@ -479,8 +529,7 @@ def batch_check_payload(
         process_item=lambda query: _run_batch_check_item(
             query,
             mode=request.mode,
-            env=runtime_env,
-            transport=transport,
+            context=runtime_context,
             requested_modes=requested_modes,
         ),
     )
@@ -497,19 +546,17 @@ def _run_batch_check_item(
     query: str,
     *,
     mode: str,
-    env: Mapping[str, str],
-    transport: HttpTransport,
+    context: RuntimeContext,
     requested_modes: list[str],
 ) -> dict[str, Any]:
     if mode == "metadata":
-        payload = service_probe_has_fulltext(query, transport=transport, env=env).to_dict()
+        payload = _call_service_probe_has_fulltext(query, context=context).to_dict()
     else:
         payload = fetch_paper_payload(
             query=query,
             modes=requested_modes,
-            env=env,
             download_dir=None,
-            transport=transport,
+            context=context,
         )
     return _batch_check_success_payload(query, payload, mode=mode)
 
@@ -1023,7 +1070,7 @@ async def batch_resolve_tool_async(
 
     runtime_env = build_runtime_env(env)
     cancelled = threading.Event()
-    transport = HttpTransport(cancel_check=cancelled.is_set)
+    runtime_context = RuntimeContext(env=runtime_env, cancel_check=cancelled.is_set)
     loop = asyncio.get_running_loop()
     bridge = PaperFetchLogBridge(ctx=ctx, loop=loop) if ctx is not None else None
 
@@ -1033,7 +1080,7 @@ async def batch_resolve_tool_async(
         results, abort_reason = await _run_batch_async(
             queries=request.queries,
             concurrency=request.concurrency,
-            process_item=lambda query: resolve_paper_payload(query=query, env=runtime_env, transport=transport),
+            process_item=lambda query: resolve_paper_payload(query=query, context=runtime_context),
             ctx=ctx,
             progress_prefix="Resolved",
         )
@@ -1076,7 +1123,8 @@ async def batch_check_tool_async(
 
     runtime_env = build_runtime_env(env)
     cancelled = threading.Event()
-    transport = HttpTransport(cancel_check=cancelled.is_set)
+    runtime_context = RuntimeContext(env=runtime_env, download_dir=None, cancel_check=cancelled.is_set)
+    runtime_context.get_clients()
     requested_modes = _BATCH_CHECK_MODES[request.mode]
     loop = asyncio.get_running_loop()
     bridge = PaperFetchLogBridge(ctx=ctx, loop=loop) if ctx is not None else None
@@ -1090,8 +1138,7 @@ async def batch_check_tool_async(
             process_item=lambda query: _run_batch_check_item(
                 query,
                 mode=request.mode,
-                env=runtime_env,
-                transport=transport,
+                context=runtime_context,
                 requested_modes=requested_modes,
             ),
             ctx=ctx,

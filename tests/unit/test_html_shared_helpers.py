@@ -1,6 +1,10 @@
 from __future__ import annotations
 
+import tempfile
+import threading
+import time
 import unittest
+from pathlib import Path
 
 from bs4 import BeautifulSoup
 
@@ -16,6 +20,31 @@ from paper_fetch.extraction.html.inline import normalize_html_inline_text
 from paper_fetch.http import HttpTransport
 from paper_fetch.providers import _springer_html
 from tests.golden_criteria import golden_criteria_asset
+
+
+class _DelayedAssetTransport(HttpTransport):
+    def __init__(self, delays: dict[str, float]) -> None:
+        self.delays = delays
+        self.active = 0
+        self.max_active = 0
+        self.lock = threading.Lock()
+
+    def request(self, method, url, **kwargs):
+        del method, kwargs
+        with self.lock:
+            self.active += 1
+            self.max_active = max(self.max_active, self.active)
+        try:
+            time.sleep(self.delays.get(url, 0.0))
+            return {
+                "status_code": 200,
+                "headers": {"content-type": "image/png"},
+                "body": f"payload:{url}".encode("utf-8"),
+                "url": url,
+            }
+        finally:
+            with self.lock:
+                self.active -= 1
 
 
 class SharedHtmlHelperTests(unittest.TestCase):
@@ -173,6 +202,71 @@ class SharedHtmlHelperTests(unittest.TestCase):
         )
 
         self.assertEqual(candidates[0], "https://example.test/full.png")
+
+    def test_download_figure_assets_resolves_http_candidates_in_parallel_but_writes_in_order(self) -> None:
+        urls = [f"https://example.test/fig{i}.png" for i in range(4)]
+        transport = _DelayedAssetTransport({url: 0.05 for url in urls})
+        assets = [
+            {"kind": "figure", "heading": f"Figure {index}", "caption": "", "url": url, "section": "body"}
+            for index, url in enumerate(urls)
+        ]
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            result = html_assets.download_figure_assets(
+                transport,
+                article_id="10.5555/parallel",
+                assets=assets,
+                output_dir=Path(tmpdir),
+                user_agent="paper-fetch-test",
+                asset_profile="all",
+            )
+
+        self.assertGreater(transport.max_active, 1)
+        self.assertEqual([asset["heading"] for asset in result["assets"]], [asset["heading"] for asset in assets])
+        self.assertEqual(result["asset_failures"], [])
+
+    def test_download_supplementary_assets_resolves_files_in_parallel_but_writes_in_order(self) -> None:
+        urls = [f"https://example.test/supp{i}.pdf" for i in range(4)]
+        state = {"active": 0, "max_active": 0}
+        lock = threading.Lock()
+
+        def opener_requester(opener, url, **kwargs):
+            del opener, kwargs
+            with lock:
+                state["active"] += 1
+                state["max_active"] = max(state["max_active"], state["active"])
+            try:
+                time.sleep(0.05)
+                return {
+                    "status_code": 200,
+                    "headers": {"content-type": "application/pdf"},
+                    "body": f"payload:{url}".encode("utf-8"),
+                    "url": url,
+                }
+            finally:
+                with lock:
+                    state["active"] -= 1
+
+        assets = [
+            {"kind": "supplementary", "heading": f"Supplement {index}", "url": url, "section": "supplementary"}
+            for index, url in enumerate(urls)
+        ]
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            result = html_assets.download_supplementary_assets(
+                HttpTransport(),
+                article_id="10.5555/parallel",
+                assets=assets,
+                output_dir=Path(tmpdir),
+                user_agent="paper-fetch-test",
+                asset_profile="all",
+                cookie_opener_builder=lambda *args, **kwargs: object(),
+                opener_requester=opener_requester,
+            )
+
+        self.assertGreater(state["max_active"], 1)
+        self.assertEqual([asset["heading"] for asset in result["assets"]], [asset["heading"] for asset in assets])
+        self.assertEqual(result["asset_failures"], [])
 
     def test_clean_html_for_extraction_removes_noise_but_keeps_sections(self) -> None:
         html = """

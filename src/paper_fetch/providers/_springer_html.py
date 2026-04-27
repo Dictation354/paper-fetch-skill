@@ -27,6 +27,7 @@ from ..extraction.html._runtime import (
     prune_html_tree,
 )
 from ..extraction.html.language import collect_html_abstract_blocks, html_node_language_hint
+from ..extraction.html.parsing import choose_parser
 from ..extraction.html.semantics import collect_html_section_hints
 from ..utils import dedupe_authors, normalize_text
 from ._browser_workflow_authors import (
@@ -303,11 +304,11 @@ def _remove_springer_ai_alt_disclaimers(root: Any) -> None:
 def _normalized_root_html(html_text: str) -> tuple[str, Any]:
     if BeautifulSoup is None:
         return html_text, None
-    soup = BeautifulSoup(html_text, "html.parser")
+    soup = BeautifulSoup(html_text, choose_parser())
     root = select_springer_nature_article_root(soup) or soup.select_one("article") or soup.select_one("main")
     if root is None:
         root = soup.body or soup
-    candidate_soup = BeautifulSoup(str(root), "html.parser")
+    candidate_soup = BeautifulSoup(str(root), choose_parser())
     active_root = candidate_soup.body or candidate_soup
     prune_html_tree(active_root)
     _remove_springer_ai_alt_disclaimers(active_root)
@@ -583,7 +584,7 @@ def extract_full_size_figure_image_url(html_text: str, source_url: str) -> str |
                     return candidate
     if BeautifulSoup is None:
         return None
-    soup = BeautifulSoup(html_text, "html.parser")
+    soup = BeautifulSoup(html_text, choose_parser())
     fallback_candidate = None
     promoted_candidate = None
     seen: set[str] = set()
@@ -615,7 +616,7 @@ def extract_full_size_figure_image_url(html_text: str, source_url: str) -> str |
 def extract_figure_assets(html_text: str, source_url: str) -> list[dict[str, str]]:
     if BeautifulSoup is None:
         return extract_generic_figure_assets(html_text, source_url)
-    soup = BeautifulSoup(html_text, "html.parser")
+    soup = BeautifulSoup(html_text, choose_parser())
     candidates: list[Any] = []
     seen_nodes: set[int] = set()
     for node in soup.find_all("figure"):
@@ -698,7 +699,7 @@ def extract_figure_assets(html_text: str, source_url: str) -> list[dict[str, str
 def extract_supplementary_assets(html_text: str, source_url: str) -> list[dict[str, str]]:
     if BeautifulSoup is None:
         return extract_generic_supplementary_assets(html_text, source_url)
-    soup = BeautifulSoup(html_text, "html.parser")
+    soup = BeautifulSoup(html_text, choose_parser())
     assets: list[dict[str, str]] = []
     seen: set[str] = set()
     for anchor in soup.find_all("a", href=True):

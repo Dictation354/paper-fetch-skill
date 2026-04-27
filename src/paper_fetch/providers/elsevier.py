@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import replace
 import json
 import urllib.parse
@@ -15,6 +16,7 @@ from ..http import DEFAULT_FULLTEXT_TIMEOUT_SECONDS, HttpTransport, RequestFailu
 from ..metadata_types import ProviderMetadata
 from ..models import AssetProfile, article_from_markdown, article_from_structure, metadata_only_article
 from ..publisher_identity import normalize_doi
+from ..runtime import RuntimeContext
 from ..tracing import trace_from_markers
 from ..utils import (
     build_asset_output_path,
@@ -130,10 +132,48 @@ def build_elsevier_object_url(attachment_eid: str) -> str:
     return f"https://api.elsevier.com/content/object/eid/{encoded_eid}?httpAccept=%2A%2F%2A"
 
 
-def extract_elsevier_asset_references(xml_body: bytes) -> list[dict[str, Any]]:
-    try:
-        root = ET.fromstring(xml_body)
-    except ET.ParseError:
+def elsevier_xml_root_from_payload(
+    xml_body: bytes,
+    *,
+    context: RuntimeContext | None = None,
+    source_url: str | None = None,
+) -> ET.Element | None:
+    if context is None:
+        try:
+            return ET.fromstring(xml_body)
+        except ET.ParseError:
+            return None
+
+    key = context.build_parse_cache_key(
+        provider="elsevier",
+        role="xml_root",
+        source=source_url,
+        body=xml_body,
+        parser="xml.etree.ElementTree",
+    )
+
+    def parse_root() -> ET.Element | None:
+        try:
+            return ET.fromstring(xml_body)
+        except ET.ParseError:
+            return None
+
+    return context.get_or_set_parse_cache(key, parse_root, copy_value=False)
+
+
+def extract_elsevier_asset_references(
+    xml_body: bytes,
+    *,
+    context: RuntimeContext | None = None,
+    source_url: str | None = None,
+    xml_root: ET.Element | None = None,
+) -> list[dict[str, Any]]:
+    root = xml_root if xml_root is not None else elsevier_xml_root_from_payload(
+        xml_body,
+        context=context,
+        source_url=source_url,
+    )
+    if root is None:
         return []
 
     references_by_key: dict[tuple[str, str], tuple[int, dict[str, Any]]] = {}
@@ -261,12 +301,14 @@ def download_elsevier_related_assets(
     output_dir: Path | None,
     headers: Mapping[str, str],
     asset_profile: AssetProfile = "all",
+    context: RuntimeContext | None = None,
+    source_url: str | None = None,
 ) -> dict[str, list[dict[str, Any]]]:
     if output_dir is None:
         return empty_asset_results()
 
     references = filter_elsevier_asset_references(
-        extract_elsevier_asset_references(xml_body),
+        extract_elsevier_asset_references(xml_body, context=context, source_url=source_url),
         asset_profile=asset_profile,
     )
     if not references:
@@ -280,7 +322,9 @@ def download_elsevier_related_assets(
     downloads: list[dict[str, Any]] = []
     failures: list[dict[str, Any]] = []
 
-    for reference in body_references:
+    def fetch_body_reference(
+        reference: Mapping[str, Any],
+    ) -> tuple[Mapping[str, Any], dict[str, Any] | None, dict[str, Any] | None]:
         try:
             response = transport.request(
                 "GET",
@@ -291,19 +335,30 @@ def download_elsevier_related_assets(
                 retry_on_transient=True,
             )
         except RequestFailure as exc:
-            failures.append(
-                {
-                    "kind": elsevier_asset_result_kind(reference.get("asset_type")),
-                    "asset_type": reference["asset_type"],
-                    "source_kind": reference["source_kind"],
-                    "source_ref": reference["source_ref"],
-                    "source_url": reference["source_url"],
-                    "status": exc.status_code,
-                    "reason": str(exc),
-                    "section": elsevier_asset_result_section(reference.get("asset_type")),
-                }
-            )
+            return reference, None, {
+                "kind": elsevier_asset_result_kind(reference.get("asset_type")),
+                "asset_type": reference["asset_type"],
+                "source_kind": reference["source_kind"],
+                "source_ref": reference["source_ref"],
+                "source_url": reference["source_url"],
+                "status": exc.status_code,
+                "reason": str(exc),
+                "section": elsevier_asset_result_section(reference.get("asset_type")),
+            }
+        return reference, dict(response), None
+
+    resolved_body_results: list[tuple[Mapping[str, Any], dict[str, Any] | None, dict[str, Any] | None]] = []
+    if body_references:
+        with ThreadPoolExecutor(max_workers=min(4, len(body_references))) as executor:
+            futures = [executor.submit(fetch_body_reference, reference) for reference in body_references]
+            for future in futures:
+                resolved_body_results.append(future.result())
+
+    for reference, response, failure in resolved_body_results:
+        if failure is not None:
+            failures.append(failure)
             continue
+        assert response is not None
 
         content_type = response["headers"].get("content-type", reference.get("content_type"))
         asset_type = reference.get("asset_type")
@@ -547,8 +602,15 @@ class ElsevierClient(ProviderClient):
             needs_local_copy=True,
         )
 
-    def _official_payload_is_usable(self, metadata: ProviderMetadata, raw_payload: RawFulltextPayload) -> bool:
-        article = self.to_article_model(metadata, raw_payload)
+    def _official_payload_is_usable(
+        self,
+        metadata: ProviderMetadata,
+        raw_payload: RawFulltextPayload,
+        *,
+        context: RuntimeContext | None = None,
+    ) -> bool:
+        context = self._runtime_context(context)
+        article = self.to_article_model(metadata, raw_payload, context=context)
         title = normalize_text(str(metadata.get("title") or getattr(getattr(article, "metadata", None), "title", None) or ""))
         if is_xml_content_type(raw_payload.content_type):
             diagnostics = assess_structured_article_fulltext_availability(article, title=title or None)
@@ -627,11 +689,12 @@ class ElsevierClient(ProviderClient):
         return metadata
 
     def fetch_fulltext(self, doi: str, metadata: ProviderMetadata, output_dir: Path | None) -> dict[str, Any]:
-        payload = self.fetch_raw_fulltext(doi, metadata)
+        context = RuntimeContext(env=self.env, transport=self.transport, download_dir=output_dir)
+        payload = self.fetch_raw_fulltext(doi, metadata, context=context)
         normalized_doi = normalize_doi(doi)
         output_path = build_output_path(output_dir, normalized_doi, metadata.get("title"), payload.content_type, payload.source_url)
         saved_path = save_payload(output_path, payload.body)
-        asset_results = self.download_related_assets(normalized_doi, metadata, payload, output_dir)
+        asset_results = self.download_related_assets(normalized_doi, metadata, payload, output_dir, context=context)
         markdown_path = None
         if is_xml_content_type(payload.content_type):
             markdown_path = write_article_markdown(
@@ -641,6 +704,11 @@ class ElsevierClient(ProviderClient):
                 output_dir=output_dir,
                 xml_path=saved_path,
                 assets=asset_results["assets"],
+                xml_root=elsevier_xml_root_from_payload(
+                    payload.body,
+                    context=context,
+                    source_url=payload.source_url,
+                ),
             )
         return {
             "attempted": True,
@@ -665,7 +733,9 @@ class ElsevierClient(ProviderClient):
         output_dir: Path | None,
         *,
         asset_profile: AssetProfile = "all",
+        context: RuntimeContext | None = None,
     ) -> dict[str, list[dict[str, Any]]]:
+        context = self._runtime_context(context, output_dir=output_dir)
         normalized_doi = normalize_doi(doi)
         if not normalized_doi or not is_xml_content_type(raw_payload.content_type):
             return empty_asset_results()
@@ -676,16 +746,25 @@ class ElsevierClient(ProviderClient):
             output_dir=output_dir,
             headers=self._base_headers("*/*"),
             asset_profile=asset_profile,
+            context=context,
+            source_url=raw_payload.source_url,
         )
 
-    def fetch_raw_fulltext(self, doi: str, metadata: ProviderMetadata) -> RawFulltextPayload:
+    def fetch_raw_fulltext(
+        self,
+        doi: str,
+        metadata: ProviderMetadata,
+        *,
+        context: RuntimeContext | None = None,
+    ) -> RawFulltextPayload:
+        context = self._runtime_context(context)
         normalized_doi = normalize_doi(doi)
         if not normalized_doi:
             raise ProviderFailure("not_supported", "Elsevier full-text retrieval requires a DOI.")
 
         def run_xml(_state: ProviderWaterfallState) -> RawFulltextPayload:
             xml_payload = self._fetch_official_xml_payload(normalized_doi)
-            if self._official_payload_is_usable(metadata, xml_payload):
+            if self._official_payload_is_usable(metadata, xml_payload, context=context):
                 return xml_payload
             raise ProviderFailure(
                 "no_result",
@@ -725,7 +804,9 @@ class ElsevierClient(ProviderClient):
         *,
         downloaded_assets: list[Mapping[str, Any]] | None = None,
         asset_failures: list[Mapping[str, Any]] | None = None,
+        context: RuntimeContext | None = None,
     ):
+        context = self._runtime_context(context)
         content = raw_payload.content
         route = normalize_text(content.route_kind if content is not None else "").lower()
         merged_metadata = content.merged_metadata if content is not None else raw_payload.merged_metadata
@@ -755,7 +836,21 @@ class ElsevierClient(ProviderClient):
             )
 
         if is_xml_content_type(raw_payload.content_type):
-            pseudo_assets = downloaded_assets if downloaded_assets else extract_elsevier_asset_references(raw_payload.body)
+            xml_root = elsevier_xml_root_from_payload(
+                raw_payload.body,
+                context=context,
+                source_url=raw_payload.source_url,
+            )
+            pseudo_assets = (
+                downloaded_assets
+                if downloaded_assets
+                else extract_elsevier_asset_references(
+                    raw_payload.body,
+                    context=context,
+                    source_url=raw_payload.source_url,
+                    xml_root=xml_root,
+                )
+            )
             xml_path = Path(f"{sanitize_filename(doi or str(metadata.get('title') or 'article'))}.xml")
             structure = build_article_structure(
                 provider="elsevier",
@@ -763,6 +858,7 @@ class ElsevierClient(ProviderClient):
                 xml_body=raw_payload.body,
                 xml_path=xml_path,
                 assets=pseudo_assets,
+                xml_root=xml_root,
             )
             if structure is not None:
                 xml_article_metadata = dict(article_metadata)

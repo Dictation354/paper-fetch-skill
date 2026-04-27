@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import copy
-import importlib.util
 import re
 from typing import Any, Mapping
 
@@ -21,6 +20,7 @@ from ..extraction.html.language import (
     collect_html_abstract_blocks as _shared_collect_html_abstract_blocks,
     html_node_language_hint as _shared_html_node_language_hint,
 )
+from ..extraction.html.parsing import choose_parser
 from ..extraction.html.semantics import (
     ABSTRACT_ATTR_TOKENS as ABSTRACT_TOKENS,
     ANCILLARY_TOKENS,
@@ -205,10 +205,6 @@ def _looks_like_explicit_body_container(node: Tag | None) -> bool:
 
 def _heading_category(node_name: str, text: str, *, title: str | None = None) -> str:
     return heading_category(node_name, text, title=title)
-
-
-def choose_parser() -> str:
-    return "lxml" if importlib.util.find_spec("lxml") is not None else "html.parser"
 
 
 def score_container(node: Tag) -> float:

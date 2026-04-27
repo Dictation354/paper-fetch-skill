@@ -20,6 +20,7 @@ from ..logging_utils import emit_structured_log
 from ..metadata_types import ProviderMetadata
 from ..models import AssetProfile, article_from_markdown, coerce_asset_failure_diagnostics, metadata_only_article
 from ..publisher_identity import normalize_doi
+from ..runtime import RuntimeContext
 from ..tracing import merge_trace, source_trail_from_trace, trace_from_markers
 from ..utils import dedupe_authors, empty_asset_results, extend_unique, normalize_text
 from ._flaresolverr import (
@@ -1753,13 +1754,80 @@ def merge_provider_owned_authors(
     return article_metadata
 
 
+def _cached_browser_workflow_markdown(
+    client: "BrowserWorkflowClient",
+    html_text: str,
+    final_url: str,
+    *,
+    metadata: ProviderMetadata | Mapping[str, Any],
+    context: RuntimeContext,
+) -> tuple[str, dict[str, Any]]:
+    key = context.build_parse_cache_key(
+        provider=client.name,
+        role="browser_workflow_markdown",
+        source=final_url,
+        body=html_text,
+        parser="BeautifulSoup:browser_workflow",
+        config={
+            "publisher": client.name,
+            "doi": normalize_text(str(metadata.get("doi") or "")),
+            "title": normalize_text(str(metadata.get("title") or "")),
+        },
+    )
+    markdown_text, extraction = context.get_or_set_parse_cache(
+        key,
+        lambda: client.extract_markdown(
+            html_text,
+            final_url,
+            metadata=metadata,
+        ),
+        copy_value=True,
+    )
+    return str(markdown_text or ""), dict(extraction or {})
+
+
+def _cached_browser_workflow_assets(
+    client: "BrowserWorkflowClient",
+    html_text: str,
+    source_url: str,
+    *,
+    asset_profile: AssetProfile,
+    context: RuntimeContext,
+) -> list[dict[str, Any]]:
+    key = context.build_parse_cache_key(
+        provider=client.name,
+        role="browser_workflow_assets",
+        source=source_url,
+        body=html_text,
+        parser="BeautifulSoup:browser_workflow_assets",
+        config={"publisher": client.name, "asset_profile": asset_profile},
+    )
+
+    def extract_assets() -> list[dict[str, Any]]:
+        body_asset_html, supplementary_asset_html = extract_browser_workflow_asset_html_scopes(
+            html_text,
+            source_url,
+            client.name,
+        )
+        return extract_scoped_html_assets(
+            body_asset_html,
+            source_url,
+            asset_profile=asset_profile,
+            supplementary_html_text=supplementary_asset_html,
+        )
+
+    return context.get_or_set_parse_cache(key, extract_assets, copy_value=True)
+
+
 def bootstrap_browser_workflow(
     client: "BrowserWorkflowClient",
     doi: str,
     metadata: ProviderMetadata,
     *,
     allow_runtime_failure: bool = False,
+    context: RuntimeContext | None = None,
 ) -> BrowserWorkflowBootstrapResult:
+    context = client._runtime_context(context)
     normalized_doi = normalize_doi(doi)
     if not normalized_doi:
         raise ProviderFailure("not_supported", f"{client.name} full-text retrieval requires a DOI.")
@@ -1804,10 +1872,12 @@ def bootstrap_browser_workflow(
     try:
         html_result = fetch_html_with_flaresolverr(html_candidates, publisher=client.name, config=result.runtime)
         result.browser_context_seed = html_result.browser_context_seed
-        markdown_text, extraction = client.extract_markdown(
+        markdown_text, extraction = _cached_browser_workflow_markdown(
+            client,
             html_result.html,
             html_result.final_url,
             metadata=metadata,
+            context=context,
         )
         result.html_payload = RawFulltextPayload(
             provider=client.name,
@@ -1910,7 +1980,9 @@ def browser_workflow_article_from_payload(
     *,
     downloaded_assets: list[Mapping[str, Any]] | None = None,
     asset_failures: list[Mapping[str, Any]] | None = None,
+    context: RuntimeContext | None = None,
 ):
+    context = client._runtime_context(context)
     content = raw_payload.content
     markdown_text = str((content.markdown_text if content is not None else "") or "").strip()
     warnings = list(raw_payload.warnings)
@@ -1924,10 +1996,12 @@ def browser_workflow_article_from_payload(
         html_text = bytes(raw_payload.body or b"").decode("utf-8", errors="replace").strip()
         if html_text:
             try:
-                markdown_text, extraction = client.extract_markdown(
+                markdown_text, extraction = _cached_browser_workflow_markdown(
+                    client,
                     html_text,
                     raw_payload.source_url or str(metadata.get("landing_page_url") or ""),
                     metadata=metadata,
+                    context=context,
                 )
             except SciencePnasHtmlFailure as exc:
                 warnings.append(f"{client.name} HTML content was not usable ({exc.message}).")
@@ -2145,8 +2219,15 @@ class BrowserWorkflowClient(ProviderClient):
         profile = self.require_profile()
         return profile.extract_markdown(html_text, final_url, metadata=metadata)
 
-    def fetch_raw_fulltext(self, doi: str, metadata: ProviderMetadata) -> RawFulltextPayload:
-        bootstrap = bootstrap_browser_workflow(self, doi, metadata)
+    def fetch_raw_fulltext(
+        self,
+        doi: str,
+        metadata: ProviderMetadata,
+        *,
+        context: RuntimeContext | None = None,
+    ) -> RawFulltextPayload:
+        context = self._runtime_context(context)
+        bootstrap = bootstrap_browser_workflow(self, doi, metadata, context=context)
         if bootstrap.html_payload is not None:
             return bootstrap.html_payload
 
@@ -2214,13 +2295,15 @@ class BrowserWorkflowClient(ProviderClient):
         prepared: PreparedFetchResultPayload,
         *,
         asset_profile: AssetProfile = "none",
+        context: RuntimeContext | None = None,
     ) -> PreparedFetchResultPayload:
+        context = self._runtime_context(context)
         raw_payload = prepared.raw_payload
         content = raw_payload.content
         if content is None or normalize_text(content.route_kind).lower() != "html":
             return prepared
 
-        provisional_article = self.to_article_model(metadata, raw_payload)
+        provisional_article = self.to_article_model(metadata, raw_payload, context=context)
         prepared.provisional_article = provisional_article
         if provisional_article.quality.content_kind != "abstract_only":
             return prepared
@@ -2277,7 +2360,9 @@ class BrowserWorkflowClient(ProviderClient):
         output_dir,
         *,
         asset_profile: AssetProfile = "all",
+        context: RuntimeContext | None = None,
     ) -> dict[str, list[dict[str, Any]]]:
+        context = self._runtime_context(context, output_dir=output_dir)
         if output_dir is None or asset_profile == "none":
             return empty_asset_results()
         content = raw_payload.content
@@ -2286,19 +2371,15 @@ class BrowserWorkflowClient(ProviderClient):
 
         html_text = decode_html(raw_payload.body)
         try:
-            body_asset_html, supplementary_asset_html = extract_browser_workflow_asset_html_scopes(
+            article_assets = _cached_browser_workflow_assets(
+                self,
                 html_text,
                 raw_payload.source_url,
-                self.name,
+                asset_profile=asset_profile,
+                context=context,
             )
         except SciencePnasHtmlFailure:
             return empty_asset_results()
-        article_assets = extract_scoped_html_assets(
-            body_asset_html,
-            raw_payload.source_url,
-            asset_profile=asset_profile,
-            supplementary_html_text=supplementary_asset_html,
-        )
         if not article_assets:
             return empty_asset_results()
         body_assets, supplementary_assets = split_body_and_supplementary_assets(article_assets)
@@ -2592,7 +2673,9 @@ class BrowserWorkflowClient(ProviderClient):
         *,
         downloaded_assets: list[Mapping[str, Any]] | None = None,
         asset_failures: list[Mapping[str, Any]] | None = None,
+        context: RuntimeContext | None = None,
     ):
+        context = self._runtime_context(context)
         profile = self.require_profile()
         return browser_workflow_article_from_payload(
             self,
@@ -2604,6 +2687,7 @@ class BrowserWorkflowClient(ProviderClient):
             raw_payload,
             downloaded_assets=downloaded_assets,
             asset_failures=asset_failures,
+            context=context,
         )
 
     def describe_artifacts(

@@ -244,6 +244,8 @@ CLI、Python API、MCP 当前统一采用这些默认值：
 - `wiley` / `science` / `pnas` 的 PDF/ePDF fallback 仍是 text-only
 - `springer` HTML 成功路径也按相同语义处理：正文图片只从 cleaned body/content scope 抽取，`all` 额外下载 supplementary 文件；PDF fallback 仍是 text-only
 - `elsevier` XML 成功路径下，`body` 继续只下载 `image` / `table_asset`，`all` 会额外下载 `supplementary` references，并统一映射到 `kind="supplementary"` / `section="supplementary"` / `download_tier="supplementary_file"`
+- 通用 HTML figure 与 supplementary 下载会先并行解析网络响应，再按原 asset 顺序串行写文件；输出顺序、文件名去重和 fallback 候选顺序保持稳定。Elsevier XML object references 也使用同样的“网络并发、写入串行”约束。
+- 同一次 provider fetch 内会复用 `RuntimeContext.parse_cache`：Elsevier XML root、Springer HTML extraction、Wiley/Science/PNAS browser-workflow Markdown extraction 和 HTML asset extraction 不跨阶段重复解析同一份 payload。
 
 ### 资产去重与诊断
 
@@ -255,7 +257,7 @@ CLI、Python API、MCP 当前统一采用这些默认值：
 - 下载失败的资产会保留到 `article.quality.asset_failures` 与顶层 `quality.asset_failures`，可见 `status`、`content_type`、`title_snippet`、`body_snippet`、`reason` 以及 asset-level recovery 轨迹。
 - 图片 payload MIME 识别由 `filetype` 负责，JPEG/PNG/GIF/WebP 尺寸读取由 `imagesize` 负责；无法识别时仍按 unknown/空宽高处理，不引入 Pillow。
 - `wiley` / `science` / `pnas` 的正文图片主链路只应输出 `download_tier="full_size"` 或 `download_tier="preview"`；supplementary 文件链路输出 `download_tier="supplementary_file"`；旧的 `playwright_canvas_fallback` tier 只可能来自仍保留 HTTP-first 语义的旧通用图片下载路径。
-- `wiley` / `science` / `pnas` 的正文图片下载在单次 attempt 内会缓存重复的 figure page / 图片候选 URL，并用固定并发上限 `3` 拉取 payload；最终输出顺序仍与输入资产顺序一致。
+- `wiley` / `science` / `pnas` 的正文图片下载在单次 attempt 内会缓存重复的 figure page / 图片候选 URL，并用固定并发上限 `4` 拉取 payload；最终输出顺序仍与输入资产顺序一致。
 - supplementary 文件下载失败时，`article.quality.asset_failures` 会保留 `status`、`content_type`、`title_snippet`、`body_snippet`、`reason` 和 recovery 轨迹，便于区分 Cloudflare challenge / login HTML / 普通网络失败。
 - `download_tier="preview"` 只有在宽高满足当前阈值 `300x200` 时才会标记为可接受 preview；否则仍会进入 preview fallback / asset issue 诊断。
 - live review 中，公式图片是公式语义的 fallback，因此 formula-only preview fallback 不自动归类为 `asset_download_failure`；figure/table preview fallback 仍按资产问题处理，除非已有 accepted 诊断。
@@ -372,6 +374,23 @@ PAPER_FETCH_ENV_FILE=/path/to/.env
 - 可选。
 - 指定 `mathml-to-latex` wrapper 脚本；未配置时会查找公式工具目录、打包资源和仓库脚本。
 
+#### `MATHML_TO_LATEX_WORKER`
+
+- 可选。
+- 默认启用；设为 `0` / `false` / `no` / `off` 时禁用常驻 Node worker，回到每次调用 wrapper CLI。
+- worker 使用 JSONL stdin/stdout 协议，失败或超时时会回退到单次 CLI。
+
+#### `MATHML_TO_LATEX_WORKER_SCRIPT`
+
+- 可选。
+- 指定 `mathml-to-latex` worker 脚本；未配置时会查找公式工具目录、打包资源和仓库 `scripts/mathml_to_latex_worker.mjs`。
+
+#### `MATHML_CONVERSION_CACHE_SIZE`
+
+- 可选。
+- 公式转换 LRU 大小；默认 `1024`，设为 `0` 可禁用结果缓存。
+- 缓存 key 包含 backend、原始 MathML、display mode 和关键 converter 配置。
+
 #### `MML2TEX_*`
 
 - 高级可选。
@@ -437,14 +456,25 @@ Springer direct HTML / direct HTTP PDF 路线当前没有额外必填 publisher 
 
 ## 运行时护栏
 
-### 进程内 HTTP 缓存
+### HTTP 连接池与缓存
 
-`HttpTransport` 带短 TTL 的进程内 GET 缓存：
+`HttpTransport` 带短 TTL 的进程内 GET 缓存和可选磁盘 textual GET 缓存：
 
 - 同一 DOI 的重复 Crossref / metadata 请求可直接命中缓存
 - 只有小体积文本响应会入缓存
 - PDF 和其他大体积二进制正文不会缓存
 - 缓存 key 会脱敏 `api_key`、token、`mailto` 等敏感字段
+- `RuntimeContext(download_dir=...)` 会默认启用磁盘 textual GET 缓存，位置是 `<download_dir>/.paper-fetch-http-cache/`
+- 磁盘缓存支持 `ETag` / `Last-Modified` 条件请求；stale 条目收到 `304` 时复用本地 body
+- `PAPER_FETCH_HTTP_DISK_CACHE_DIR` 可显式指定磁盘 HTTP 缓存目录
+- `PAPER_FETCH_HTTP_DISK_CACHE=1` 且未设置下载目录时，会使用用户数据目录下的 `http-cache`
+- `PAPER_FETCH_HTTP_METADATA_CACHE_TTL` 控制磁盘缓存 freshness 秒数，默认与进程内 TTL 一致
+
+连接池与同 host 并发默认较保守：
+
+- `PAPER_FETCH_HTTP_POOL_NUM_POOLS`：默认 `16`
+- `PAPER_FETCH_HTTP_POOL_MAXSIZE`：默认 `4`
+- `PAPER_FETCH_HTTP_PER_HOST_CONCURRENCY`：默认 `4`
 
 ### HTTP 重试与大小限制
 

@@ -10,7 +10,12 @@ import tempfile
 from pathlib import Path
 from typing import Sequence
 
-from .paths import FORMULA_NODE_SCRIPT_NAME, bundled_formula_resources, default_user_formula_tools_dir
+from .paths import (
+    FORMULA_NODE_SCRIPT_NAME,
+    FORMULA_NODE_WORKER_SCRIPT_NAME,
+    bundled_formula_resources,
+    default_user_formula_tools_dir,
+)
 
 
 def log(message: str) -> None:
@@ -59,7 +64,7 @@ def have_working_texmath(path: Path) -> bool:
 def stage_bundled_node_workspace(target_dir: Path) -> Path:
     target_dir.mkdir(parents=True, exist_ok=True)
     resource_root = bundled_formula_resources()
-    for name in (FORMULA_NODE_SCRIPT_NAME, "package.json", "package-lock.json"):
+    for name in (FORMULA_NODE_SCRIPT_NAME, FORMULA_NODE_WORKER_SCRIPT_NAME, "package.json", "package-lock.json"):
         resource = resource_root.joinpath(name)
         payload = resource.read_bytes()
         destination = target_dir / name

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import importlib.util
 import re
 from dataclasses import asdict, dataclass, field
 from typing import Any, Mapping
@@ -14,6 +13,7 @@ from ..extraction.html.signals import (
     html_failure_message,
     matched_access_gate_patterns,
 )
+from ..extraction.html.parsing import choose_parser
 from ..extraction.html.semantics import (
     BACK_MATTER_TOKENS,
     HTML_SECTION_HINT_KINDS,
@@ -95,10 +95,6 @@ class FulltextAvailabilityDiagnostics:
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
-
-
-def choose_parser() -> str:
-    return "lxml" if importlib.util.find_spec("lxml") is not None else "html.parser"
 
 
 def extract_page_title(soup: BeautifulSoup) -> str | None:

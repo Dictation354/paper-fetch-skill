@@ -8,6 +8,7 @@ from typing import Any, Mapping, Protocol, runtime_checkable
 from ..artifacts import ArtifactStore
 from ..http import RequestFailure
 from ..models import ArticleModel, AssetProfile
+from ..runtime import RuntimeContext
 from .base import (
     ProviderFailure,
     ProviderFetchResult,
@@ -41,6 +42,7 @@ class AssetProvider(Protocol):
         output_dir: Path | None,
         *,
         asset_profile: AssetProfile = "all",
+        context: RuntimeContext | None = None,
     ) -> dict[str, list[dict[str, Any]]]:
         ...
 
@@ -50,7 +52,13 @@ class AssetProvider(Protocol):
 
 @runtime_checkable
 class RawFulltextProvider(Protocol):
-    def fetch_raw_fulltext(self, doi: str, metadata: Mapping[str, Any]) -> RawFulltextPayload:
+    def fetch_raw_fulltext(
+        self,
+        doi: str,
+        metadata: Mapping[str, Any],
+        *,
+        context: RuntimeContext | None = None,
+    ) -> RawFulltextPayload:
         ...
 
     def to_article_model(
@@ -60,6 +68,7 @@ class RawFulltextProvider(Protocol):
         *,
         downloaded_assets: list[Mapping[str, Any]] | None = None,
         asset_failures: list[Mapping[str, Any]] | None = None,
+        context: RuntimeContext | None = None,
     ) -> ArticleModel:
         ...
 
@@ -74,5 +83,6 @@ class FulltextProvider(Protocol):
         *,
         asset_profile: AssetProfile = "none",
         artifact_store: ArtifactStore | None = None,
+        context: RuntimeContext | None = None,
     ) -> ProviderFetchResult:
         ...

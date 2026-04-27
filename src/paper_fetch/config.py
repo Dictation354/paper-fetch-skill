@@ -25,6 +25,12 @@ USER_AGENT_ENV_VAR = "PAPER_FETCH_SKILL_USER_AGENT"
 ENV_FILE_ENV_VAR = "PAPER_FETCH_ENV_FILE"
 DOWNLOAD_DIR_ENV_VAR = "PAPER_FETCH_DOWNLOAD_DIR"
 XDG_DATA_HOME_ENV_VAR = "XDG_DATA_HOME"
+HTTP_POOL_NUM_POOLS_ENV_VAR = "PAPER_FETCH_HTTP_POOL_NUM_POOLS"
+HTTP_POOL_MAXSIZE_ENV_VAR = "PAPER_FETCH_HTTP_POOL_MAXSIZE"
+HTTP_PER_HOST_CONCURRENCY_ENV_VAR = "PAPER_FETCH_HTTP_PER_HOST_CONCURRENCY"
+HTTP_DISK_CACHE_DIR_ENV_VAR = "PAPER_FETCH_HTTP_DISK_CACHE_DIR"
+HTTP_DISK_CACHE_ENV_VAR = "PAPER_FETCH_HTTP_DISK_CACHE"
+HTTP_METADATA_CACHE_TTL_ENV_VAR = "PAPER_FETCH_HTTP_METADATA_CACHE_TTL"
 FLARESOLVERR_URL_ENV_VAR = "FLARESOLVERR_URL"
 FLARESOLVERR_ENV_FILE_ENV_VAR = "FLARESOLVERR_ENV_FILE"
 FLARESOLVERR_SOURCE_DIR_ENV_VAR = "FLARESOLVERR_SOURCE_DIR"
@@ -151,3 +157,38 @@ def resolve_flaresolverr_env_file(env: Mapping[str, str] | None = None) -> Path 
 def resolve_flaresolverr_url(env: Mapping[str, str] | None = None) -> str:
     active_env = _active_env(env)
     return str(active_env.get(FLARESOLVERR_URL_ENV_VAR, "")).strip() or DEFAULT_FLARESOLVERR_URL
+
+
+def parse_positive_int_env(
+    env: Mapping[str, str],
+    name: str,
+    *,
+    default: int,
+) -> int:
+    raw_value = str(env.get(name, "")).strip()
+    if not raw_value:
+        return default
+    try:
+        return max(1, int(raw_value))
+    except ValueError:
+        return default
+
+
+def parse_nonnegative_int_env(
+    env: Mapping[str, str],
+    name: str,
+    *,
+    default: int,
+) -> int:
+    raw_value = str(env.get(name, "")).strip()
+    if not raw_value:
+        return default
+    try:
+        return max(0, int(raw_value))
+    except ValueError:
+        return default
+
+
+def env_flag_enabled(env: Mapping[str, str], name: str) -> bool:
+    value = str(env.get(name, "")).strip().lower()
+    return value in {"1", "true", "yes", "on"}

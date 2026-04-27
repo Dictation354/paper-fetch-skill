@@ -7,6 +7,7 @@ from bs4 import BeautifulSoup
 
 from paper_fetch.providers import _springer_html, springer as springer_provider
 from paper_fetch.providers._html_tables import render_table_markdown
+from paper_fetch.runtime import RuntimeContext
 from tests.golden_criteria import golden_criteria_asset
 
 
@@ -116,8 +117,13 @@ class SpringerHtmlTableTests(unittest.TestCase):
             "landing_page_url": GENERIC_EXTENDED_TABLE_LANDING_URL,
             "fulltext_links": [],
         }
-        client = springer_provider.SpringerClient(transport=FakeTransport(responses), env={})
-        return client._prepare_html_attempt(GENERIC_EXTENDED_TABLE_DOI, metadata)
+        transport = FakeTransport(responses)
+        client = springer_provider.SpringerClient(transport=transport, env={})
+        return client._prepare_html_attempt(
+            GENERIC_EXTENDED_TABLE_DOI,
+            metadata,
+            context=RuntimeContext(env={}, transport=transport),
+        )
 
     def test_springer_classic_fixture_strips_chrome_and_spaces_numbered_headings(self) -> None:
         html = SPRINGER_CLASSIC_ARTICLE_FIXTURE.read_text(encoding="utf-8", errors="ignore")

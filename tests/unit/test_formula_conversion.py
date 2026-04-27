@@ -3,12 +3,16 @@ from __future__ import annotations
 import tempfile
 import unittest
 import xml.etree.ElementTree as ET
+import subprocess
 from pathlib import Path
 
 from paper_fetch.formula import convert as formula_conversion
 
 
 class FormulaConversionTests(unittest.TestCase):
+    def tearDown(self) -> None:
+        formula_conversion.clear_conversion_cache()
+
     def test_stringify_mathml_omits_tail_text(self) -> None:
         root = ET.fromstring('<root><math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi></math> trailing</root>')
         math_node = list(root)[0]
@@ -97,6 +101,90 @@ class FormulaConversionTests(unittest.TestCase):
             formula_conversion.convert_with_mathml_to_latex = original_mathml
 
         self.assertEqual(result.backend, "mathml-to-latex")
+        self.assertEqual(result.status, "ok")
+        self.assertEqual(result.latex, "x")
+
+    def test_conversion_cache_reuses_result_for_same_backend_payload_and_config(self) -> None:
+        raw_mathml = '<math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi></math>'
+        calls = 0
+        original_texmath = formula_conversion.convert_with_texmath
+        try:
+            def fake_texmath(*args, **kwargs):
+                nonlocal calls
+                calls += 1
+                return formula_conversion.FormulaConversionResult(
+                    backend="texmath",
+                    status="ok",
+                    latex="x",
+                    raw_mathml=raw_mathml,
+                    error=None,
+                    duration_ms=7,
+                    display_mode=False,
+                )
+
+            formula_conversion.convert_with_texmath = fake_texmath
+
+            first = formula_conversion.convert_mathml_string(raw_mathml, display_mode=False, env={}, backend="texmath")
+            second = formula_conversion.convert_mathml_string(raw_mathml, display_mode=False, env={}, backend="texmath")
+        finally:
+            formula_conversion.convert_with_texmath = original_texmath
+
+        self.assertEqual(calls, 1)
+        self.assertEqual(first.latex, "x")
+        self.assertEqual(second.latex, "x")
+        self.assertEqual(second.duration_ms, 0)
+
+    def test_mathml_to_latex_worker_success_avoids_cli_process(self) -> None:
+        raw_mathml = '<math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi></math>'
+        original_command = formula_conversion._resolve_mathml_to_latex_command
+        original_worker_command = formula_conversion._resolve_mathml_to_latex_worker_command
+        original_worker_for = formula_conversion._mathml_worker_for
+        original_run_command = formula_conversion._run_command
+
+        class FakeWorker:
+            def convert(self, _raw_mathml, *, timeout_seconds):
+                return "x"
+
+        try:
+            formula_conversion._resolve_mathml_to_latex_command = lambda _env: ("node", "/tmp/cli.mjs", None, None)
+            formula_conversion._resolve_mathml_to_latex_worker_command = lambda _env: ("node", "/tmp/worker.mjs", None, None)
+            formula_conversion._mathml_worker_for = lambda **_kwargs: FakeWorker()
+            formula_conversion._run_command = lambda *args, **kwargs: (_ for _ in ()).throw(AssertionError("CLI fallback should not run"))
+
+            result = formula_conversion.convert_with_mathml_to_latex(raw_mathml, display_mode=False, env={})
+        finally:
+            formula_conversion._resolve_mathml_to_latex_command = original_command
+            formula_conversion._resolve_mathml_to_latex_worker_command = original_worker_command
+            formula_conversion._mathml_worker_for = original_worker_for
+            formula_conversion._run_command = original_run_command
+
+        self.assertEqual(result.status, "ok")
+        self.assertEqual(result.latex, "x")
+
+    def test_mathml_to_latex_worker_failure_falls_back_to_cli(self) -> None:
+        raw_mathml = '<math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi></math>'
+        original_command = formula_conversion._resolve_mathml_to_latex_command
+        original_worker_command = formula_conversion._resolve_mathml_to_latex_worker_command
+        original_worker_for = formula_conversion._mathml_worker_for
+        original_run_command = formula_conversion._run_command
+
+        class FailingWorker:
+            def convert(self, _raw_mathml, *, timeout_seconds):
+                raise RuntimeError("worker crashed")
+
+        try:
+            formula_conversion._resolve_mathml_to_latex_command = lambda _env: ("node", "/tmp/cli.mjs", None, None)
+            formula_conversion._resolve_mathml_to_latex_worker_command = lambda _env: ("node", "/tmp/worker.mjs", None, None)
+            formula_conversion._mathml_worker_for = lambda **_kwargs: FailingWorker()
+            formula_conversion._run_command = lambda *args, **kwargs: subprocess.CompletedProcess(args[0], 0, "x", "")
+
+            result = formula_conversion.convert_with_mathml_to_latex(raw_mathml, display_mode=False, env={})
+        finally:
+            formula_conversion._resolve_mathml_to_latex_command = original_command
+            formula_conversion._resolve_mathml_to_latex_worker_command = original_worker_command
+            formula_conversion._mathml_worker_for = original_worker_for
+            formula_conversion._run_command = original_run_command
+
         self.assertEqual(result.status, "ok")
         self.assertEqual(result.latex, "x")
 

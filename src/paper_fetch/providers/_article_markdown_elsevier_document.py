@@ -255,11 +255,15 @@ def build_article_structure(
     xml_body: bytes,
     xml_path: Path,
     assets: list[dict[str, Any]],
+    xml_root: ET.Element | None = None,
 ) -> ArticleStructure | None:
-    try:
-        root = ET.fromstring(xml_body)
-    except ET.ParseError:
-        return None
+    if xml_root is None:
+        try:
+            root = ET.fromstring(xml_body)
+        except ET.ParseError:
+            return None
+    else:
+        root = xml_root
 
     title = normalize_text(str(metadata.get("title") or "")) or "Untitled Article"
     doi = normalize_text(str(metadata.get("doi") or ""))
@@ -361,6 +365,7 @@ def build_markdown_document(
     xml_body: bytes,
     xml_path: Path,
     assets: list[dict[str, Any]],
+    xml_root: ET.Element | None = None,
 ) -> str | None:
     if provider != "elsevier":
         return None
@@ -371,6 +376,7 @@ def build_markdown_document(
         xml_body=xml_body,
         xml_path=xml_path,
         assets=assets,
+        xml_root=xml_root,
     )
     if structure is None:
         return None
@@ -443,6 +449,7 @@ def write_article_markdown(
     output_dir: Path | None,
     xml_path: str | None,
     assets: list[dict[str, Any]] | None = None,
+    xml_root: ET.Element | None = None,
 ) -> str | None:
     if output_dir is None or not xml_path:
         return None
@@ -455,6 +462,7 @@ def write_article_markdown(
         xml_body=xml_body,
         xml_path=xml_output_path,
         assets=list(assets or []),
+        xml_root=xml_root,
     )
     if document is None:
         return None

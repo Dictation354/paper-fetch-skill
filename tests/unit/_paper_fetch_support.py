@@ -41,12 +41,14 @@ class StubProvider:
             raise self._metadata
         return self._metadata
 
-    def fetch_raw_fulltext(self, doi, metadata):
+    def fetch_raw_fulltext(self, doi, metadata, *, context=None):
+        del context
         if self._raw_error:
             raise self._raw_error
         return self._raw_payload
 
-    def to_article_model(self, metadata, raw_payload, *, downloaded_assets=None, asset_failures=None):
+    def to_article_model(self, metadata, raw_payload, *, downloaded_assets=None, asset_failures=None, context=None):
+        del context
         if self._article_factory is not None:
             return self._article_factory(
                 metadata,
@@ -56,7 +58,8 @@ class StubProvider:
             )
         return self._article
 
-    def download_related_assets(self, doi, metadata, raw_payload, output_dir, *, asset_profile="all"):
+    def download_related_assets(self, doi, metadata, raw_payload, output_dir, *, asset_profile="all", context=None):
+        del context
         if self._related_asset_error:
             raise self._related_asset_error
         if self._related_asset_factory is not None:
@@ -65,8 +68,9 @@ class StubProvider:
             return self._related_assets
         return empty_asset_results()
 
-    def fetch_result(self, doi, metadata, output_dir, *, asset_profile="none"):
-        raw_payload = self.fetch_raw_fulltext(doi, metadata)
+    def fetch_result(self, doi, metadata, output_dir, *, asset_profile="none", artifact_store=None, context=None):
+        del artifact_store
+        raw_payload = self.fetch_raw_fulltext(doi, metadata, context=context)
         content = getattr(raw_payload, "content", None)
         if content is not None and getattr(raw_payload, "needs_local_copy", False) and not content.needs_local_copy:
             content = replace(content, needs_local_copy=True)
@@ -108,6 +112,7 @@ class StubProvider:
                     raw_payload,
                     output_dir,
                     asset_profile=asset_profile,
+                    context=context,
                 )
                 downloaded_assets = list(asset_results.get("assets") or [])
                 asset_failures = list(asset_results.get("asset_failures") or [])
@@ -117,6 +122,7 @@ class StubProvider:
                     raw_payload,
                     downloaded_assets=[],
                     asset_failures=[],
+                    context=context,
                 )
                 article.quality.warnings.append(f"{provider_name.replace('_', ' ').title()} related assets could not be downloaded: {exc}")
                 article.quality.source_trail.append(f"download:{provider_name}_assets_failed")
@@ -134,6 +140,7 @@ class StubProvider:
             raw_payload,
             downloaded_assets=downloaded_assets,
             asset_failures=asset_failures,
+            context=context,
         )
         return ProviderFetchResult(
             provider=provider_name or "provider",

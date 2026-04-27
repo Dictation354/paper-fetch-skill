@@ -5,6 +5,7 @@ from __future__ import annotations
 import urllib.parse
 from typing import Any, Mapping
 
+from ..extraction.html.parsing import choose_parser
 from ..utils import normalize_text
 
 try:
@@ -94,7 +95,7 @@ def extract_pdf_candidate_urls_from_html(html_text: str, source_url: str) -> lis
     if BeautifulSoup is None:
         return candidates
 
-    soup = BeautifulSoup(html_text, "html.parser")
+    soup = BeautifulSoup(html_text, choose_parser())
 
     for meta in soup.find_all("meta"):
         content = normalize_text(meta.get("content"))

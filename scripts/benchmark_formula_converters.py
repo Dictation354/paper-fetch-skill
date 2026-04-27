@@ -13,6 +13,8 @@ from typing import Any
 
 from paper_fetch.formula.convert import (
     BENCHMARK_BACKENDS,
+    BACKEND_MATHML_TO_LATEX,
+    clear_conversion_cache,
     collect_formula_samples,
     convert_mathml_string,
 )
@@ -48,15 +50,18 @@ def validate_latex(latex: str, *, display_mode: bool, env: dict[str, str]) -> tu
 def build_summary(results: list[dict[str, Any]]) -> dict[str, Any]:
     grouped: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for item in results:
-        grouped[item["backend"]].append(item)
+        grouped[f"{item['backend']}:{item['run_kind']}"].append(item)
 
     summary: dict[str, Any] = {}
-    for backend, items in grouped.items():
+    for group_key, items in grouped.items():
         total = len(items)
         converted = sum(1 for item in items if item["status"] == "ok")
         validated = sum(1 for item in items if item["validation_status"] == "ok")
         avg_duration = round(sum(item["duration_ms"] for item in items) / total, 2) if total else 0
-        summary[backend] = {
+        backend, _, run_kind = group_key.partition(":")
+        summary[group_key] = {
+            "backend": backend,
+            "run_kind": run_kind,
             "total": total,
             "converted": converted,
             "validated": validated,
@@ -78,8 +83,13 @@ def build_summary(results: list[dict[str, Any]]) -> dict[str, Any]:
 
 
 def choose_winner(summary: dict[str, Any]) -> str | None:
+    cold_summary = {
+        key: value
+        for key, value in summary.items()
+        if value.get("run_kind") == "cold_start"
+    }
     ranked = sorted(
-        summary.items(),
+        (cold_summary or summary).items(),
         key=lambda item: (
             item[1]["validation_rate"],
             item[1]["conversion_rate"],
@@ -89,6 +99,35 @@ def choose_winner(summary: dict[str, Any]) -> str | None:
         reverse=True,
     )
     return ranked[0][0] if ranked else None
+
+
+def conversion_env_for(env: dict[str, str], *, backend: str, run_kind: str) -> dict[str, str]:
+    runtime_env = dict(env)
+    if run_kind == "cache_hit":
+        runtime_env.setdefault("MATHML_CONVERSION_CACHE_SIZE", "1024")
+        return runtime_env
+    runtime_env["MATHML_CONVERSION_CACHE_SIZE"] = "0"
+    if backend == BACKEND_MATHML_TO_LATEX:
+        runtime_env["MATHML_TO_LATEX_WORKER"] = "1" if run_kind == "worker" else "0"
+    return runtime_env
+
+
+def run_conversion(sample, *, backend: str, run_kind: str, env: dict[str, str]):
+    runtime_env = conversion_env_for(env, backend=backend, run_kind=run_kind)
+    if run_kind == "cache_hit":
+        clear_conversion_cache()
+        convert_mathml_string(
+            sample.raw_mathml,
+            display_mode=sample.display_mode,
+            env=runtime_env,
+            backend=backend,
+        )
+    return convert_mathml_string(
+        sample.raw_mathml,
+        display_mode=sample.display_mode,
+        env=runtime_env,
+        backend=backend,
+    )
 
 
 def parse_args() -> argparse.Namespace:
@@ -123,32 +162,32 @@ def main() -> int:
 
     for sample in samples:
         for backend in BENCHMARK_BACKENDS:
-            conversion = convert_mathml_string(
-                sample.raw_mathml,
-                display_mode=sample.display_mode,
-                env=env,
-                backend=backend,
-            )
-            validation_status = "skipped"
-            validation_error = None
-            if conversion.status == "ok" and conversion.latex:
-                valid, validation_error = validate_latex(conversion.latex, display_mode=sample.display_mode, env=env)
-                validation_status = "ok" if valid else "failed"
-            results.append(
-                {
-                    "sample_id": sample.sample_id,
-                    "source_path": sample.source_path,
-                    "source_provider": sample.source_provider,
-                    "display_mode": sample.display_mode,
-                    "backend": backend,
-                    "status": conversion.status,
-                    "latex": conversion.latex,
-                    "error": conversion.error,
-                    "duration_ms": conversion.duration_ms,
-                    "validation_status": validation_status,
-                    "validation_error": validation_error,
-                }
-            )
+            run_kinds = ["cold_start", "cache_hit"]
+            if backend == BACKEND_MATHML_TO_LATEX:
+                run_kinds.append("worker")
+            for run_kind in run_kinds:
+                conversion = run_conversion(sample, backend=backend, run_kind=run_kind, env=env)
+                validation_status = "skipped"
+                validation_error = None
+                if conversion.status == "ok" and conversion.latex:
+                    valid, validation_error = validate_latex(conversion.latex, display_mode=sample.display_mode, env=env)
+                    validation_status = "ok" if valid else "failed"
+                results.append(
+                    {
+                        "sample_id": sample.sample_id,
+                        "source_path": sample.source_path,
+                        "source_provider": sample.source_provider,
+                        "display_mode": sample.display_mode,
+                        "backend": backend,
+                        "run_kind": run_kind,
+                        "status": conversion.status,
+                        "latex": conversion.latex,
+                        "error": conversion.error,
+                        "duration_ms": conversion.duration_ms,
+                        "validation_status": validation_status,
+                        "validation_error": validation_error,
+                    }
+                )
 
     summary = build_summary(results)
     winner = choose_winner(summary)

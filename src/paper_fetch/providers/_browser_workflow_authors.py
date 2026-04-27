@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Callable, Mapping, Pattern
 
+from ..extraction.html.parsing import choose_parser
 from ..utils import dedupe_authors, normalize_text
 from ._script_json import extract_assignment_json, extract_script_json
 
@@ -168,7 +169,7 @@ def extract_jsonld_authors(
 def extract_meta_authors(html_text: str, *, keys: set[str]) -> list[str]:
     if BeautifulSoup is None:
         return []
-    soup = BeautifulSoup(html_text, "html.parser")
+    soup = BeautifulSoup(html_text, choose_parser())
     authors: list[str] = []
     for meta in soup.find_all("meta"):
         if Tag is not None and not isinstance(meta, Tag):
@@ -192,7 +193,7 @@ def extract_property_authors(
 ) -> list[str]:
     if BeautifulSoup is None:
         return []
-    soup = BeautifulSoup(html_text, "html.parser")
+    soup = BeautifulSoup(html_text, choose_parser())
     authors: list[str] = []
     for node in soup.select(selectors):
         if Tag is not None and not isinstance(node, Tag):
@@ -243,7 +244,7 @@ def extract_selector_authors(
 ) -> list[str]:
     if BeautifulSoup is None:
         return []
-    soup = BeautifulSoup(html_text, "html.parser")
+    soup = BeautifulSoup(html_text, choose_parser())
     authors: list[str] = []
     seen_nodes: set[int] = set()
     for selector in selectors:

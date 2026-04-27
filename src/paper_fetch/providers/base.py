@@ -9,6 +9,7 @@ from typing import Any, Mapping
 from ..artifacts import ArtifactStore
 from ..http import RequestFailure
 from ..models import ArticleModel, AssetProfile
+from ..runtime import RuntimeContext
 from ..tracing import TraceEvent, source_trail_from_trace, trace_from_markers
 from ..utils import empty_asset_results
 
@@ -383,16 +384,19 @@ class ProviderClient:
         *,
         asset_profile: AssetProfile = "none",
         artifact_store: ArtifactStore | None = None,
+        context: RuntimeContext | None = None,
     ) -> ProviderFetchResult:
+        context = self._runtime_context(context, output_dir=output_dir)
         active_artifact_store = artifact_store or ArtifactStore.from_download_dir(output_dir)
         asset_output_dir = active_artifact_store.download_dir
-        prepared = self.prepare_fetch_result_payload(doi, metadata, asset_profile=asset_profile)
+        prepared = self.prepare_fetch_result_payload(doi, metadata, asset_profile=asset_profile, context=context)
         prepared.raw_payload = self._sync_fetch_result_content_local_copy(prepared.raw_payload)
         prepared = self.maybe_recover_fetch_result_payload(
             doi,
             metadata,
             prepared,
             asset_profile=asset_profile,
+            context=context,
         )
         prepared.raw_payload = self._sync_fetch_result_content_local_copy(prepared.raw_payload)
         raw_payload = prepared.raw_payload
@@ -418,6 +422,7 @@ class ProviderClient:
                     raw_payload,
                     asset_output_dir,
                     asset_profile=asset_profile,
+                    context=context,
                 )
                 downloaded_assets = list(asset_results.get("assets") or [])
                 asset_failures = list(asset_results.get("asset_failures") or [])
@@ -435,6 +440,7 @@ class ProviderClient:
                 raw_payload,
                 downloaded_assets=downloaded_assets,
                 asset_failures=asset_failures,
+                context=context,
             )
         article = self.finalize_fetch_result_article(
             article,
@@ -456,6 +462,15 @@ class ProviderClient:
             artifacts=artifacts,
         )
 
+    def _runtime_context(self, context: RuntimeContext | None, *, output_dir: Path | None = None) -> RuntimeContext:
+        if context is not None:
+            return context
+        return RuntimeContext(
+            env=getattr(self, "env", {}) or {},
+            transport=getattr(self, "transport", None),
+            download_dir=output_dir,
+        )
+
     def _sync_fetch_result_content_local_copy(self, raw_payload: RawFulltextPayload) -> RawFulltextPayload:
         content = raw_payload.content
         if content is not None and content.needs_local_copy != raw_payload.needs_local_copy:
@@ -468,8 +483,10 @@ class ProviderClient:
         metadata: Mapping[str, Any],
         *,
         asset_profile: AssetProfile = "none",
+        context: RuntimeContext | None = None,
     ) -> PreparedFetchResultPayload:
-        return PreparedFetchResultPayload(raw_payload=self.fetch_raw_fulltext(doi, metadata))
+        context = self._runtime_context(context)
+        return PreparedFetchResultPayload(raw_payload=self.fetch_raw_fulltext(doi, metadata, context=context))
 
     def maybe_recover_fetch_result_payload(
         self,
@@ -478,7 +495,9 @@ class ProviderClient:
         prepared: PreparedFetchResultPayload,
         *,
         asset_profile: AssetProfile = "none",
+        context: RuntimeContext | None = None,
     ) -> PreparedFetchResultPayload:
+        del context
         return prepared
 
     def should_download_related_assets_for_result(
@@ -515,7 +534,14 @@ class ProviderClient:
             asset_failures=[dict(item) for item in (asset_failures or [])],
         )
 
-    def fetch_raw_fulltext(self, doi: str, metadata: Mapping[str, Any]) -> RawFulltextPayload:
+    def fetch_raw_fulltext(
+        self,
+        doi: str,
+        metadata: Mapping[str, Any],
+        *,
+        context: RuntimeContext | None = None,
+    ) -> RawFulltextPayload:
+        del context
         raise ProviderFailure("not_supported", f"{self.name} raw full-text retrieval is not available.")
 
     def fetch_fulltext(self, doi: str, metadata: Mapping[str, Any], output_dir: Path | None) -> dict[str, Any]:
@@ -528,7 +554,9 @@ class ProviderClient:
         *,
         downloaded_assets: list[Mapping[str, Any]] | None = None,
         asset_failures: list[Mapping[str, Any]] | None = None,
+        context: RuntimeContext | None = None,
     ):
+        del context
         raise ProviderFailure("not_supported", f"{self.name} article conversion is not available.")
 
     def download_related_assets(
@@ -539,7 +567,9 @@ class ProviderClient:
         output_dir: Path | None,
         *,
         asset_profile: AssetProfile = "all",
+        context: RuntimeContext | None = None,
     ) -> dict[str, list[dict[str, Any]]]:
+        del context
         return empty_asset_results()
 
     def probe_status(self) -> ProviderStatusResult:

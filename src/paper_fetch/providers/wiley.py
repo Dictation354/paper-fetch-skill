@@ -6,6 +6,7 @@ import urllib.parse
 from typing import Any, Mapping
 
 from ..http import DEFAULT_FULLTEXT_TIMEOUT_SECONDS, RequestFailure
+from ..runtime import RuntimeContext
 from ..utils import normalize_text
 from . import _wiley_html, browser_workflow
 from ._pdf_fallback import PdfFallbackFailure, fetch_pdf_over_http
@@ -139,8 +140,21 @@ class WileyClient(browser_workflow.BrowserWorkflowClient):
             ],
         )
 
-    def fetch_raw_fulltext(self, doi: str, metadata: Mapping[str, Any]) -> RawFulltextPayload:
-        bootstrap = browser_workflow.bootstrap_browser_workflow(self, doi, metadata, allow_runtime_failure=True)
+    def fetch_raw_fulltext(
+        self,
+        doi: str,
+        metadata: Mapping[str, Any],
+        *,
+        context: RuntimeContext | None = None,
+    ) -> RawFulltextPayload:
+        context = self._runtime_context(context)
+        bootstrap = browser_workflow.bootstrap_browser_workflow(
+            self,
+            doi,
+            metadata,
+            allow_runtime_failure=True,
+            context=context,
+        )
         if bootstrap.html_payload is not None:
             return bootstrap.html_payload
 

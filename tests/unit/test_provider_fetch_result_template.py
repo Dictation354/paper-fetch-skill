@@ -14,6 +14,7 @@ from paper_fetch.providers.base import (
     ProviderContent,
     RawFulltextPayload,
 )
+from paper_fetch.runtime import RuntimeContext
 from paper_fetch.tracing import trace_from_markers
 
 
@@ -196,7 +197,8 @@ class RawFulltextPayloadMetadataCompatibilityTests(unittest.TestCase):
 class _TemplateClient(ProviderClient):
     name = "template"
 
-    def fetch_raw_fulltext(self, doi: str, metadata: Mapping[str, object]) -> RawFulltextPayload:
+    def fetch_raw_fulltext(self, doi: str, metadata: Mapping[str, object], *, context=None) -> RawFulltextPayload:
+        del context
         return _payload()
 
     def to_article_model(
@@ -206,7 +208,9 @@ class _TemplateClient(ProviderClient):
         *,
         downloaded_assets=None,
         asset_failures=None,
+        context=None,
     ):
+        del context
         return article_from_markdown(
             source="template",
             metadata=metadata,
@@ -216,7 +220,8 @@ class _TemplateClient(ProviderClient):
             trace=list(raw_payload.trace),
         )
 
-    def download_related_assets(self, doi, metadata, raw_payload, output_dir, *, asset_profile="all"):
+    def download_related_assets(self, doi, metadata, raw_payload, output_dir, *, asset_profile="all", context=None):
+        del context
         raise ProviderFailure("error", "asset backend failed")
 
     def asset_download_failure_warning(self, exc):
@@ -225,6 +230,22 @@ class _TemplateClient(ProviderClient):
 
 
 class ProviderFetchResultTemplateTests(unittest.TestCase):
+    def test_runtime_parse_cache_returns_copies_for_mutable_payloads(self) -> None:
+        context = RuntimeContext(env={})
+        key = context.build_parse_cache_key(
+            provider="template",
+            role="html_payload",
+            source="https://example.test/article",
+            body="<article>body</article>",
+            parser="BeautifulSoup:html.parser",
+        )
+        context.set_parse_cache(key, {"authors": ["Alice Example"]})
+
+        cached = context.get_parse_cache(key)
+        cached["authors"].append("Mutation")
+
+        self.assertEqual(context.get_parse_cache(key), {"authors": ["Alice Example"]})
+
     def test_base_fetch_result_uses_asset_failure_warning_hook(self) -> None:
         client = _TemplateClient()
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -238,11 +259,54 @@ class ProviderFetchResultTemplateTests(unittest.TestCase):
         self.assertIn("custom asset warning: asset backend failed", result.warnings)
         self.assertIn("download:template_assets_failed", [event.marker() for event in result.trace if event.marker()])
 
+    def test_base_fetch_result_passes_same_runtime_context_to_all_provider_hooks(self) -> None:
+        seen: list[object] = []
+
+        class ContextRecordingClient(_TemplateClient):
+            def fetch_raw_fulltext(self, doi, metadata, *, context=None):
+                seen.append(context)
+                return super().fetch_raw_fulltext(doi, metadata, context=context)
+
+            def download_related_assets(self, doi, metadata, raw_payload, output_dir, *, asset_profile="all", context=None):
+                seen.append(context)
+                return {"assets": [], "asset_failures": []}
+
+            def to_article_model(
+                self,
+                metadata,
+                raw_payload,
+                *,
+                downloaded_assets=None,
+                asset_failures=None,
+                context=None,
+            ):
+                seen.append(context)
+                return super().to_article_model(
+                    metadata,
+                    raw_payload,
+                    downloaded_assets=downloaded_assets,
+                    asset_failures=asset_failures,
+                    context=context,
+                )
+
+        runtime_context = RuntimeContext(env={})
+        with tempfile.TemporaryDirectory() as tmpdir:
+            ContextRecordingClient().fetch_result(
+                "10.5555/template",
+                {"doi": "10.5555/template", "title": "Template Article"},
+                Path(tmpdir),
+                asset_profile="all",
+                context=runtime_context,
+            )
+
+        self.assertEqual(seen, [runtime_context, runtime_context, runtime_context])
+
     def test_base_fetch_result_uses_artifact_store_download_dir_when_supplied(self) -> None:
         client = _TemplateClient()
         output_dirs: list[Path | None] = []
 
-        def fake_download_related_assets(doi, metadata, raw_payload, output_dir, *, asset_profile="all"):
+        def fake_download_related_assets(doi, metadata, raw_payload, output_dir, *, asset_profile="all", context=None):
+            del context
             output_dirs.append(output_dir)
             return {"assets": [], "asset_failures": []}
 

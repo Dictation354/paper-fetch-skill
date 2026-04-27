@@ -71,12 +71,14 @@ class ProviderStub:
             raise self._metadata
         return self._metadata
 
-    def fetch_raw_fulltext(self, doi, metadata):
+    def fetch_raw_fulltext(self, doi, metadata, *, context=None):
+        del context
         if self._raw_error:
             raise self._raw_error
         return self._raw_payload
 
-    def to_article_model(self, metadata, raw_payload, *, downloaded_assets=None, asset_failures=None):
+    def to_article_model(self, metadata, raw_payload, *, downloaded_assets=None, asset_failures=None, context=None):
+        del context
         if self._article_factory is None:
             raise AssertionError("article_factory must be provided for raw full-text tests.")
         return self._article_factory(

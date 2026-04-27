@@ -10,6 +10,6 @@ To do list
 
 mdpi：playwright+html
 copernicus：xml
-
+ametsoc：html
 
 知识库建立：摘要的批量生产

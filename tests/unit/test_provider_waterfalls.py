@@ -8,6 +8,7 @@ from unittest import mock
 from paper_fetch.http import RequestFailure
 from paper_fetch.providers import _flaresolverr, browser_workflow, elsevier as elsevier_provider, springer as springer_provider, wiley as wiley_provider
 from paper_fetch.providers.base import ProviderContent, ProviderFailure, RawFulltextPayload
+from paper_fetch.runtime import RuntimeContext
 from tests.golden_criteria import golden_criteria_scenario_asset
 from tests.provider_benchmark_samples import WILEY_PDF_FALLBACK_SAMPLE, provider_benchmark_sample
 from tests.paths import FIXTURE_DIR
@@ -95,6 +96,40 @@ class PublisherWaterfallTests(unittest.TestCase):
 
         self.assertEqual(article.source, "elsevier_xml")
         self.assertEqual(article.metadata.authors, ["Jane Doe", "Smith, J.", "Open Climate Consortium"])
+
+    def test_elsevier_xml_root_is_reused_across_asset_and_article_conversion(self) -> None:
+        metadata = {
+            "doi": "10.1016/test-authors",
+            "title": "Elsevier Author Example",
+            "landing_page_url": "https://example.test/article",
+        }
+        xml_body = golden_criteria_scenario_asset("elsevier_author_groups_minimal", "original.xml").read_bytes()
+        raw_payload = RawFulltextPayload(
+            provider="elsevier",
+            source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest-authors",
+            content_type="text/xml",
+            body=xml_body,
+            content=ProviderContent(
+                route_kind="official",
+                source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest-authors",
+                content_type="text/xml",
+                body=xml_body,
+                reason="Downloaded full text from the official Elsevier API.",
+            ),
+        )
+        context = RuntimeContext(env={"ELSEVIER_API_KEY": "secret"}, transport=mock.Mock())
+        client = elsevier_provider.ElsevierClient(transport=mock.Mock(), env={"ELSEVIER_API_KEY": "secret"})
+
+        with mock.patch.object(elsevier_provider.ET, "fromstring", wraps=elsevier_provider.ET.fromstring) as fromstring:
+            elsevier_provider.extract_elsevier_asset_references(
+                raw_payload.body,
+                context=context,
+                source_url=raw_payload.source_url,
+            )
+            article = client.to_article_model(metadata, raw_payload, context=context)
+
+        self.assertEqual(fromstring.call_count, 1)
+        self.assertEqual(article.source, "elsevier_xml")
 
     def test_elsevier_official_xml_usable_records_structured_diagnostics(self) -> None:
         doi = ELSEVIER_SAMPLE.doi

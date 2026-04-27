@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Mapping, cast
 
 from ..metadata_types import ProviderMetadata
@@ -114,19 +115,53 @@ def fetch_metadata_for_resolved_query(
     crossref_is_public_source = crossref_allowed_as_source(strategy)
     crossref_client = clients.get("crossref")
 
-    if resolved.doi and isinstance(crossref_client, MetadataProvider):
-        try:
-            routing_metadata = cast(ProviderMetadata, dict(crossref_client.fetch_metadata({"doi": resolved.doi})))
-            if routing_metadata:
-                crossref_metadata = routing_metadata
-                if crossref_is_public_source:
-                    source_trail.append("metadata:crossref_ok")
-                else:
-                    source_trail.append("route:crossref_signal_ok")
-        except ProviderFailure as exc:
-            routing_metadata = None
-            if crossref_is_public_source:
-                source_trail.append(source_trail_for_failure("metadata", "crossref", exc))
+    initial_probe_candidates = (
+        build_official_provider_candidates(resolved, routing_metadata=None, strategy=strategy)
+        if resolved.doi
+        else []
+    )
+    crossref_result: ProviderMetadata | None = None
+    crossref_failure: ProviderFailure | None = None
+    initial_probe_results: dict[str, Any] = {}
+
+    def fetch_crossref_metadata() -> ProviderMetadata | None:
+        if not resolved.doi or not isinstance(crossref_client, MetadataProvider):
+            return None
+        return cast(ProviderMetadata, dict(crossref_client.fetch_metadata({"doi": resolved.doi})))
+
+    def run_probe(candidate_provider: str):
+        assert resolved.doi is not None
+        return probe_official_provider(candidate_provider, doi=resolved.doi, clients=clients)
+
+    if resolved.doi and (isinstance(crossref_client, MetadataProvider) or initial_probe_candidates):
+        max_workers = 1 + len(initial_probe_candidates)
+        with ThreadPoolExecutor(max_workers=max(1, max_workers)) as executor:
+            crossref_future = (
+                executor.submit(fetch_crossref_metadata)
+                if isinstance(crossref_client, MetadataProvider)
+                else None
+            )
+            probe_futures = {
+                candidate_provider: executor.submit(run_probe, candidate_provider)
+                for candidate_provider, _signal in initial_probe_candidates
+            }
+            if crossref_future is not None:
+                try:
+                    crossref_result = crossref_future.result()
+                except ProviderFailure as exc:
+                    crossref_failure = exc
+            for candidate_provider, future in probe_futures.items():
+                initial_probe_results[candidate_provider] = future.result()
+
+    if crossref_result:
+        routing_metadata = crossref_result
+        crossref_metadata = routing_metadata
+        if crossref_is_public_source:
+            source_trail.append("metadata:crossref_ok")
+        else:
+            source_trail.append("route:crossref_signal_ok")
+    elif crossref_failure is not None and crossref_is_public_source:
+        source_trail.append(source_trail_for_failure("metadata", "crossref", crossref_failure))
 
     extend_unique(
         source_trail,
@@ -147,7 +182,9 @@ def fetch_metadata_for_resolved_query(
             routing_metadata=routing_metadata,
             strategy=strategy,
         ):
-            probe = probe_official_provider(candidate_provider, doi=resolved.doi, clients=clients)
+            probe = initial_probe_results.get(candidate_provider)
+            if probe is None:
+                probe = probe_official_provider(candidate_provider, doi=resolved.doi, clients=clients)
             probes.append(probe)
             source_trail.append(f"route:probe_{candidate_provider}_{probe.state}")
             if probe.state == "positive":

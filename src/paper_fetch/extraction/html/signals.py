@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-import importlib.util
 import re
 
 from ...utils import normalize_text
+from .parsing import choose_parser
 
 try:
     from bs4 import BeautifulSoup
@@ -68,8 +68,7 @@ class SciencePnasHtmlFailure(Exception):
 def summarize_html(html_text: str, limit: int = 1000) -> str:
     if BeautifulSoup is None:
         return normalize_text(re.sub(r"<[^>]+>", " ", html_text))[:limit]
-    parser = "lxml" if importlib.util.find_spec("lxml") is not None else "html.parser"
-    soup = BeautifulSoup(html_text, parser)
+    soup = BeautifulSoup(html_text, choose_parser())
     return " ".join(soup.stripped_strings)[:limit]
 
 
