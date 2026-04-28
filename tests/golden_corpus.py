@@ -15,6 +15,7 @@ from paper_fetch.providers import (
     _science_html,
     _springer_html,
     _wiley_html,
+    _science_pnas_profiles,
     elsevier as elsevier_provider,
     pnas as pnas_provider,
     science as science_provider,
@@ -278,21 +279,22 @@ def lightweight_positive_summary_from_fixture(fixture: GoldenCorpusFixture) -> d
             "science": (
                 _science_html.extract_authors,
                 _science_html.blocking_fallback_signals,
-                _science_html.build_html_candidates,
             ),
             "pnas": (
                 _pnas_html.extract_authors,
                 _pnas_html.blocking_fallback_signals,
-                _pnas_html.build_html_candidates,
             ),
             "wiley": (
                 _wiley_html.extract_authors,
                 _wiley_html.blocking_fallback_signals,
-                _wiley_html.build_html_candidates,
             ),
         }
-        extract_authors, blocking_fallback_signals, build_html_candidates = browser_helpers[fixture.provider]
-        candidate_urls = build_html_candidates(fixture.doi, fixture.landing_url)
+        extract_authors, blocking_fallback_signals = browser_helpers[fixture.provider]
+        candidate_urls = _science_pnas_profiles.build_html_candidates(
+            fixture.provider,
+            fixture.doi,
+            fixture.landing_url,
+        )
         return {
             "doi": normalize_doi(str(metadata.get("doi") or fixture.doi)),
             "has": {

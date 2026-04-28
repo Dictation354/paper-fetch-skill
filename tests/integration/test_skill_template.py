@@ -47,6 +47,10 @@ def copy_installer_fixture(repo_dir: Path) -> None:
     (repo_dir / "scripts").mkdir(parents=True, exist_ok=True)
     shutil.copy2(REPO_ROOT / "scripts" / "install-claude-skill.sh", repo_dir / "scripts" / "install-claude-skill.sh")
     shutil.copy2(REPO_ROOT / "scripts" / "install-codex-skill.sh", repo_dir / "scripts" / "install-codex-skill.sh")
+    shutil.copy2(
+        REPO_ROOT / "scripts" / "run-codex-paper-fetch-mcp.sh",
+        repo_dir / "scripts" / "run-codex-paper-fetch-mcp.sh",
+    )
     shutil.copytree(STATIC_SKILL_DIR, repo_dir / "skills" / "paper-fetch-skill", dirs_exist_ok=True)
     shutil.copy2(REPO_ROOT / "pyproject.toml", repo_dir / "pyproject.toml")
 
@@ -224,11 +228,10 @@ class InstallerSmokeTests(unittest.TestCase):
 
         log_text = log_path.read_text(encoding="utf-8")
         self.assertIn("codex mcp remove paper-fetch", log_text)
-        self.assertIn(
-            "codex mcp add --env PAPER_FETCH_ENV_FILE=/tmp/paper-fetch.env paper-fetch --",
-            log_text,
-        )
-        self.assertIn("-m paper_fetch.mcp.server", log_text)
+        self.assertIn("codex mcp add --env PAPER_FETCH_MCP_PYTHON_BIN=", log_text)
+        self.assertIn("--env PAPER_FETCH_ENV_FILE=/tmp/paper-fetch.env", log_text)
+        self.assertIn("paper-fetch --", log_text)
+        self.assertIn("scripts/run-codex-paper-fetch-mcp.sh", log_text)
 
     def test_claude_installer_does_not_auto_bind_repo_env_for_mcp_registration(self) -> None:
         _, _, log_path = self.run_installer(
@@ -251,7 +254,9 @@ class InstallerSmokeTests(unittest.TestCase):
         )
 
         log_text = log_path.read_text(encoding="utf-8")
-        self.assertIn("codex mcp add paper-fetch --", log_text)
+        self.assertIn("codex mcp add --env PAPER_FETCH_MCP_PYTHON_BIN=", log_text)
+        self.assertIn("paper-fetch --", log_text)
+        self.assertIn("scripts/run-codex-paper-fetch-mcp.sh", log_text)
         self.assertNotIn("PAPER_FETCH_ENV_FILE=", log_text)
 
 

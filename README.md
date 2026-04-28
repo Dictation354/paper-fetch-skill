@@ -118,7 +118,7 @@ python3 -m paper_fetch.mcp.server
 ./scripts/run-codex-paper-fetch-mcp.sh
 ```
 
-这个脚本会优先选择 `vendor/flaresolverr/.env.flaresolverr-source-wslg`，并在拿不到 WSLg 图形环境时回退到 headless preset。
+这个脚本会优先选择 `vendor/flaresolverr/.env.flaresolverr-source-wslg`，并在拿不到 WSLg 图形环境时回退到 headless preset。`./scripts/install-codex-skill.sh --register-mcp` 会注册这个 launcher，并通过 `PAPER_FETCH_MCP_PYTHON_BIN` 固定当前 `python3` 解释器。
 
 如果要把 skill 和 MCP 注册到常见 agent runtime，直接看 [`docs/deployment.md`](docs/deployment.md)。
 

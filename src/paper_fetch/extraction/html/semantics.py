@@ -10,7 +10,6 @@ from ..section_hints import (
     SECTION_HINT_KINDS as HTML_SECTION_HINT_KINDS,
     coerce_section_hint_dicts,
     match_next_section_hint,
-    normalize_section_hint_heading,
 )
 from .signals import contains_access_gate_text
 

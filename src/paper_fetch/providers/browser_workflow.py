@@ -39,15 +39,10 @@ from ._browser_workflow_fetchers import (
     _compact_failure_diagnostic,
     _flaresolverr_image_document_payload,
     _flaresolverr_image_payload_failure_reason,
-    fetch_image_document_with_playwright,
 )
 from ._browser_workflow_html_extraction import (
-    _DIRECT_PLAYWRIGHT_HTML_TIMEOUT_MS,
-    _FAST_FLARESOLVERR_HTML_WAIT_SECONDS,
-    _FAST_FLARESOLVERR_HTML_WARM_WAIT_SECONDS,
     _browser_workflow_html_payload,
     _cached_browser_workflow_markdown,
-    extract_browser_workflow_asset_html_scopes,
     extract_science_pnas_markdown,
     fetch_html_with_direct_playwright,
     rewrite_inline_figure_links,
@@ -76,6 +71,8 @@ __all__ = [
     "BrowserWorkflowBootstrapResult",
     "BrowserWorkflowClient",
     "FlareSolverrFailure",
+    "_IMAGE_DOCUMENT_FETCH_TIMEOUT_MS",
+    "_SharedPlaywrightImageDocumentFetcher",
     "PdfFallbackFailure",
     "ProviderBrowserProfile",
     "SciencePnasHtmlFailure",
@@ -95,6 +92,7 @@ __all__ = [
     "preferred_html_candidate_from_landing_page",
     "probe_runtime_status",
     "rewrite_inline_figure_links",
+    "time",
     "warm_browser_context_with_flaresolverr",
 ]
 

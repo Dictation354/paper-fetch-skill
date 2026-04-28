@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Callable, Mapping
+from typing import TYPE_CHECKING, Any, Callable, Mapping
 
 from ..config import build_user_agent
 from ..extraction.html.signals import SciencePnasHtmlFailure, detect_html_block, summarize_html
@@ -29,6 +29,9 @@ from .base import ProviderContent, RawFulltextPayload
 from .html_assets import extract_scoped_html_assets
 
 logger = logging.getLogger("paper_fetch.providers.browser_workflow")
+
+if TYPE_CHECKING:
+    from .browser_workflow import BrowserWorkflowClient
 
 _DIRECT_PLAYWRIGHT_HTML_TIMEOUT_MS = 15000
 _FAST_FLARESOLVERR_HTML_WAIT_SECONDS = 0
