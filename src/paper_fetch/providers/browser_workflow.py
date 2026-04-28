@@ -24,6 +24,8 @@ from ..runtime import RuntimeContext
 from ..tracing import merge_trace, source_trail_from_trace, trace_from_markers
 from ..utils import dedupe_authors, empty_asset_results, extend_unique, normalize_text
 from ._flaresolverr import (
+    DEFAULT_FLARESOLVERR_WAIT_SECONDS,
+    DEFAULT_FLARESOLVERR_WARM_WAIT_SECONDS,
     FetchedPublisherHtml,
     FlareSolverrFailure,
     ensure_runtime_ready,
@@ -62,12 +64,24 @@ logger = logging.getLogger("paper_fetch.providers.browser_workflow")
 
 _IMAGE_DOCUMENT_FETCH_TIMEOUT_MS = 15000
 _DIRECT_PLAYWRIGHT_HTML_TIMEOUT_MS = 15000
+_FAST_FLARESOLVERR_HTML_WAIT_SECONDS = 0
+_FAST_FLARESOLVERR_HTML_WARM_WAIT_SECONDS = 0
 _DIRECT_PLAYWRIGHT_HTML_BLOCKED_RESOURCE_TYPES = {"image", "font", "stylesheet", "media"}
 _CLOUDFLARE_CHALLENGE_TITLE_TOKENS = (
     "just a moment",
     "attention required",
     "checking your browser",
 )
+_FAST_FLARESOLVERR_RETRY_KINDS = {
+    "cloudflare_challenge",
+    "publisher_access_denied",
+    "publisher_paywall",
+    "redirected_to_abstract",
+    "abstract_only",
+    "insufficient_body",
+    "structured_article_not_fulltext",
+    "structured_missing_body_sections",
+}
 _LOADED_IMAGE_CANVAS_EXPORT_SCRIPT = """
 ([targetUrl, minWidth, minHeight]) => {
   const bytesToBase64 = (bytes) => {
@@ -2001,6 +2015,95 @@ def _browser_workflow_html_payload(
     )
 
 
+def _fetch_flaresolverr_html_payload(
+    client: "BrowserWorkflowClient",
+    html_candidates: list[str],
+    *,
+    runtime,
+    metadata: ProviderMetadata,
+    context: RuntimeContext,
+    warnings: list[str] | None = None,
+    disable_media: bool = False,
+    wait_seconds: int = DEFAULT_FLARESOLVERR_WAIT_SECONDS,
+    warm_wait_seconds: int = DEFAULT_FLARESOLVERR_WARM_WAIT_SECONDS,
+) -> tuple[FetchedPublisherHtml, RawFulltextPayload]:
+    html_result = fetch_html_with_flaresolverr(
+        html_candidates,
+        publisher=client.name,
+        config=runtime,
+        wait_seconds=wait_seconds,
+        warm_wait_seconds=warm_wait_seconds,
+        disable_media=disable_media,
+    )
+    markdown_text, extraction = _cached_browser_workflow_markdown(
+        client,
+        html_result.html,
+        html_result.final_url,
+        metadata=metadata,
+        context=context,
+    )
+    return html_result, _browser_workflow_html_payload(
+        client,
+        html_result,
+        markdown_text=markdown_text,
+        extraction=extraction,
+        fetcher="flaresolverr",
+        warnings=warnings,
+    )
+
+
+def _should_retry_fast_flaresolverr_failure(exc: Exception) -> bool:
+    if isinstance(exc, FlareSolverrFailure):
+        return exc.kind in _FAST_FLARESOLVERR_RETRY_KINDS
+    if isinstance(exc, SciencePnasHtmlFailure):
+        return True
+    return False
+
+
+def _fetch_flaresolverr_html_payload_with_fast_path(
+    client: "BrowserWorkflowClient",
+    html_candidates: list[str],
+    *,
+    runtime,
+    metadata: ProviderMetadata,
+    context: RuntimeContext,
+    warnings: list[str] | None = None,
+) -> tuple[FetchedPublisherHtml, RawFulltextPayload]:
+    try:
+        return _fetch_flaresolverr_html_payload(
+            client,
+            html_candidates,
+            runtime=runtime,
+            metadata=metadata,
+            context=context,
+            warnings=warnings,
+            disable_media=True,
+            wait_seconds=_FAST_FLARESOLVERR_HTML_WAIT_SECONDS,
+            warm_wait_seconds=_FAST_FLARESOLVERR_HTML_WARM_WAIT_SECONDS,
+        )
+    except (FlareSolverrFailure, SciencePnasHtmlFailure) as exc:
+        if not _should_retry_fast_flaresolverr_failure(exc):
+            raise
+        logger.debug(
+            "browser_workflow_flaresolverr_fast_path provider=%s action=fallback reason=%s message=%s",
+            client.name,
+            getattr(exc, "kind", None) or getattr(exc, "reason", None) or exc.__class__.__name__,
+            getattr(exc, "message", None) or normalize_text(str(exc)),
+        )
+
+    return _fetch_flaresolverr_html_payload(
+        client,
+        html_candidates,
+        runtime=runtime,
+        metadata=metadata,
+        context=context,
+        warnings=warnings,
+        disable_media=False,
+        wait_seconds=DEFAULT_FLARESOLVERR_WAIT_SECONDS,
+        warm_wait_seconds=DEFAULT_FLARESOLVERR_WARM_WAIT_SECONDS,
+    )
+
+
 def bootstrap_browser_workflow(
     client: "BrowserWorkflowClient",
     doi: str,
@@ -2092,23 +2195,16 @@ def bootstrap_browser_workflow(
         return result
 
     try:
-        html_result = fetch_html_with_flaresolverr(html_candidates, publisher=client.name, config=result.runtime)
-        result.browser_context_seed = html_result.browser_context_seed
-        markdown_text, extraction = _cached_browser_workflow_markdown(
+        html_result, html_payload = _fetch_flaresolverr_html_payload_with_fast_path(
             client,
-            html_result.html,
-            html_result.final_url,
+            html_candidates,
+            runtime=result.runtime,
             metadata=metadata,
             context=context,
-        )
-        result.html_payload = _browser_workflow_html_payload(
-            client,
-            html_result,
-            markdown_text=markdown_text,
-            extraction=extraction,
-            fetcher="flaresolverr",
             warnings=result.warnings,
         )
+        result.browser_context_seed = html_result.browser_context_seed
+        result.html_payload = html_payload
         return result
     except FlareSolverrFailure as exc:
         result.browser_context_seed = exc.browser_context_seed or result.browser_context_seed

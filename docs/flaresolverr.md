@@ -28,10 +28,12 @@
 - `wiley` 的 HTML / browser PDF/ePDF 路径与 `science` / `pnas` 共用同一套 provider-owned 浏览器 bootstrap 与 browser-PDF executor，不再保留单独的 Science path harness
 - `source` 公开可能是 `wiley_browser`、`science` 或 `pnas`
 - `FlareSolverr HTML` 成功路径支持 `asset_profile=body|all` 的正文资产下载；PDF/ePDF fallback 仍是 text-only
+- 正文 `FlareSolverr HTML` 首次请求使用快速路径：`waitInSeconds=0` 并传 `disableMedia=true`，如果遇到 challenge、访问拦截、摘要重定向、HTML 抽取失败或正文不足，会立刻用原保守参数重试一次
 - FlareSolverr HTML 请求默认不要求 screenshot，减少 response payload；failure artifact 仍会保留 HTML 与 response JSON，图片恢复仍只接受 `solution.imagePayload`
 - `wiley` / `science` / `pnas` 的正文 figure / table / formula 图片资产下载以 shared Playwright browser context 为主链路；每次 download attempt 创建一次 context/page，多图复用同一个 seeded browser context
 - 图片候选仍优先 full-size/original，全部失败后才尝试 preview；preview 也通过同一个 browser context 下载，目标 provider 不再使用 `playwright_canvas_fallback` tier
 - 正文图片下载在单次 attempt 内会对 figure page 和图片候选 URL 做缓存，并以固定并发上限 `3` 拉取 payload；文件写入仍按资产原顺序完成
+- 图片恢复、正文图片/附件下载、figure page HTML 发现路径不启用 `disableMedia=true`，避免阻断目标图片资源和 full-size URL 发现
 - 当图片 URL 在 Playwright `fetch()` 下返回 Cloudflare challenge HTML，但 FlareSolverr/Selenium 已能显示图片文档时，仓库本地 FlareSolverr patch 会返回 `solution.imagePayload`，下载器只接受这份浏览器导出的 PNG；`imagePayload` 缺失或无效时会记录明确失败原因，不再退回截图裁剪
 - 这条链路只保证在当前仓库 checkout 中运行
 - 站点 ToS、robots、授权与合规风险由操作者自行承担

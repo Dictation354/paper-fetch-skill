@@ -128,17 +128,19 @@ resolve
 - `wiley`
   - 使用 provider 自管 HTML + 官方 API PDF + publisher PDF/ePDF waterfall。
   - 固定顺序是 `FlareSolverr HTML -> seeded-browser publisher PDF/ePDF -> Wiley TDM API PDF -> abstract-only / metadata-only`。
+  - FlareSolverr HTML 正文首轮使用 `waitInSeconds=0` + `disableMedia=true` 的快速路径；challenge、访问拦截、摘要页或正文抽取不足时回退到原保守等待参数。
   - `WILEY_TDM_CLIENT_TOKEN` 是官方 TDM API PDF lane；缺失时仍可继续尝试 browser PDF/ePDF，配置后会在 browser PDF/ePDF fallback 失败或 browser runtime 不可用时继续尝试 TDM PDF。
   - 成功时公开 `source="wiley_browser"`。
 - `science`
   - 固定顺序是 `FlareSolverr HTML -> seeded-browser publisher PDF/ePDF -> abstract-only / metadata-only`。
   - 与 `wiley` 的 HTML / browser PDF/ePDF 路径共享同一套浏览器工作流基座。
+  - FlareSolverr HTML 正文首轮使用同一快速路径，并在 challenge、访问拦截、摘要页或正文抽取不足时保守重试。
   - 如果落到 AAAS 的 `Check access` / paywall 页面，应优先解读为 `institution not entitled / no access`，而不是 generic HTML fallback 缺失。
   - 成功时公开 `source="science"`。
 - `pnas`
   - 固定顺序是 `direct Playwright HTML preflight -> FlareSolverr HTML -> seeded-browser publisher PDF/ePDF -> abstract-only / metadata-only`。
   - direct Playwright preflight 使用 `domcontentloaded` 并阻断 image/font/stylesheet/media；成功 payload 会标记 `html_fetcher="playwright_direct"`。
-  - preflight 失败、遇到 challenge、正文不足或抽取失败时不改变旧语义，继续走 FlareSolverr HTML；FlareSolverr 成功 payload 标记 `html_fetcher="flaresolverr"`。
+  - preflight 失败、遇到 challenge、正文不足或抽取失败时不改变旧语义，继续走 FlareSolverr HTML；FlareSolverr HTML 自身先尝试快速路径，再在失败或抽取不足时保守重试；成功 payload 标记 `html_fetcher="flaresolverr"`。
   - 较老文献常见 HTML 只到摘要页，此时 provider 会继续尝试 publisher PDF/ePDF fallback。
   - 成功时公开 `source="pnas"`。
 

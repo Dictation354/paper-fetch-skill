@@ -194,6 +194,59 @@ class SciencePnasFlareSolverrTests(unittest.TestCase):
         with mock.patch.object(_flaresolverr, "post_to_flaresolverr", return_value={"status": "ok"}):
             _flaresolverr.health_check("http://127.0.0.1:8191/v1")
 
+    def test_fetch_html_with_flaresolverr_can_disable_media_for_fast_html(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config = self._runtime_config(tmpdir, "science", "10.1126/science.ady3136")
+            request_payloads: list[dict[str, object]] = []
+
+            def fake_post(_base_url: str, payload: dict[str, object], **_kwargs: object) -> dict[str, object]:
+                if payload["cmd"] == "sessions.create":
+                    return {"status": "ok"}
+                if payload["cmd"] == "request.get":
+                    request_payloads.append(dict(payload))
+                    return self._html_response(str(payload["url"]))
+                raise AssertionError(f"Unexpected FlareSolverr payload: {payload}")
+
+            with mock.patch.object(_flaresolverr, "post_to_flaresolverr", side_effect=fake_post):
+                _flaresolverr.fetch_html_with_flaresolverr(
+                    ["https://www.science.org/doi/full/10.1126/science.ady3136"],
+                    publisher="science",
+                    config=config,
+                    wait_seconds=0,
+                    warm_wait_seconds=0,
+                    disable_media=True,
+                )
+
+        self.assertEqual(len(request_payloads), 1)
+        self.assertEqual(request_payloads[0]["waitInSeconds"], 0)
+        self.assertIs(request_payloads[0]["disableMedia"], True)
+
+    def test_fetch_html_with_flaresolverr_does_not_disable_media_for_image_payload(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config = self._runtime_config(tmpdir, "science", "10.1126/science.ady3136")
+            request_payloads: list[dict[str, object]] = []
+
+            def fake_post(_base_url: str, payload: dict[str, object], **_kwargs: object) -> dict[str, object]:
+                if payload["cmd"] == "sessions.create":
+                    return {"status": "ok"}
+                if payload["cmd"] == "request.get":
+                    request_payloads.append(dict(payload))
+                    return self._html_response(str(payload["url"]))
+                raise AssertionError(f"Unexpected FlareSolverr payload: {payload}")
+
+            with mock.patch.object(_flaresolverr, "post_to_flaresolverr", side_effect=fake_post):
+                _flaresolverr.fetch_html_with_flaresolverr(
+                    ["https://www.science.org/doi/full/10.1126/science.ady3136"],
+                    publisher="science",
+                    config=config,
+                    return_image_payload=True,
+                    disable_media=True,
+                )
+
+        self.assertEqual(len(request_payloads), 1)
+        self.assertIs(request_payloads[0]["returnImagePayload"], True)
+        self.assertNotIn("disableMedia", request_payloads[0])
+
     def test_fetch_html_with_flaresolverr_reuses_session_across_dois(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             config_one = self._runtime_config(tmpdir, "science", "10.1126/science.ady3136")

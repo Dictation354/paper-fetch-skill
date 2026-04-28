@@ -2,6 +2,13 @@
 
 All notable public changes to `paper-fetch-skill` are documented in this file.
 
+## Unreleased
+
+### Changed
+
+- 为 Wiley / Science / PNAS 正文抓取增加 FlareSolverr HTML 快速首轮：主 HTML 请求使用 `waitInSeconds=0` 和 `disableMedia=true`，遇到 challenge、访问拦截、摘要重定向或正文抽取不足时自动回退到原保守等待策略。
+- 图片恢复、正文/附件资产下载、figure-page HTML 发现继续走允许媒体资源的路径，避免 `disableMedia` 阻断 full-size 图片发现与下载。
+
 ## 1.0.0 - 2026-04-26
 
 ### Changed

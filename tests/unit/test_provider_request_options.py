@@ -267,6 +267,128 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         self.assertEqual(payload.metadata["route"], "html")
         self.assertEqual(payload.content_type, "text/html")
 
+    def test_browser_workflow_flaresolverr_fast_path_uses_conservative_fallback_after_challenge(self) -> None:
+        doi = "10.1002/ece3.9361"
+        runtime = _flaresolverr.FlareSolverrRuntimeConfig(
+            provider="wiley",
+            doi=doi,
+            url="http://127.0.0.1:8191/v1",
+            env_file=Path("/tmp/.env.flaresolverr"),
+            source_dir=Path("/tmp/vendor/flaresolverr"),
+            artifact_dir=Path("/tmp/artifacts"),
+            headless=True,
+        )
+        fallback_html = _flaresolverr.FetchedPublisherHtml(
+            source_url="https://onlinelibrary.wiley.com/doi/full/10.1002/ece3.9361",
+            final_url="https://onlinelibrary.wiley.com/doi/full/10.1002/ece3.9361",
+            html="<html><article>Fallback full text</article></html>",
+            response_status=200,
+            response_headers={"content-type": "text/html"},
+            title="Example Wiley Article",
+            summary="Fallback full text",
+            browser_context_seed={},
+        )
+
+        client = WileyClient(transport=None, env={})
+        with (
+            mock.patch.object(browser_workflow, "load_runtime_config", return_value=runtime),
+            mock.patch.object(browser_workflow, "ensure_runtime_ready"),
+            mock.patch.object(
+                browser_workflow,
+                "fetch_html_with_flaresolverr",
+                side_effect=[
+                    browser_workflow.FlareSolverrFailure(
+                        "cloudflare_challenge",
+                        "Encountered a challenge page.",
+                    ),
+                    fallback_html,
+                ],
+            ) as mocked_fetch,
+            mock.patch.object(
+                browser_workflow,
+                "extract_science_pnas_markdown",
+                return_value=("# Example Wiley Article\n\n## Results\n\n" + ("Body text " * 120), {"title": "Example"}),
+            ),
+        ):
+            payload = client.fetch_raw_fulltext(
+                doi,
+                {"doi": doi, "landing_page_url": "https://onlinelibrary.wiley.com/doi/full/10.1002/ece3.9361"},
+            )
+
+        self.assertEqual(mocked_fetch.call_count, 2)
+        self.assertEqual(mocked_fetch.call_args_list[0].kwargs["wait_seconds"], 0)
+        self.assertEqual(mocked_fetch.call_args_list[0].kwargs["warm_wait_seconds"], 0)
+        self.assertIs(mocked_fetch.call_args_list[0].kwargs["disable_media"], True)
+        self.assertEqual(mocked_fetch.call_args_list[1].kwargs["wait_seconds"], 8)
+        self.assertEqual(mocked_fetch.call_args_list[1].kwargs["warm_wait_seconds"], 1)
+        self.assertIs(mocked_fetch.call_args_list[1].kwargs["disable_media"], False)
+        self.assertEqual(payload.metadata["html_fetcher"], "flaresolverr")
+        self.assertIn("fulltext:wiley_html_ok", payload.metadata["source_trail"])
+
+    def test_browser_workflow_flaresolverr_fast_path_falls_back_after_insufficient_body(self) -> None:
+        doi = "10.1002/ece3.9361"
+        runtime = _flaresolverr.FlareSolverrRuntimeConfig(
+            provider="wiley",
+            doi=doi,
+            url="http://127.0.0.1:8191/v1",
+            env_file=Path("/tmp/.env.flaresolverr"),
+            source_dir=Path("/tmp/vendor/flaresolverr"),
+            artifact_dir=Path("/tmp/artifacts"),
+            headless=True,
+        )
+        fast_html = _flaresolverr.FetchedPublisherHtml(
+            source_url="https://onlinelibrary.wiley.com/doi/full/10.1002/ece3.9361",
+            final_url="https://onlinelibrary.wiley.com/doi/full/10.1002/ece3.9361",
+            html="<html><article>Abstract only</article></html>",
+            response_status=200,
+            response_headers={"content-type": "text/html"},
+            title="Example Wiley Article",
+            summary="Abstract only",
+            browser_context_seed={},
+        )
+        fallback_html = _flaresolverr.FetchedPublisherHtml(
+            source_url="https://onlinelibrary.wiley.com/doi/full/10.1002/ece3.9361",
+            final_url="https://onlinelibrary.wiley.com/doi/full/10.1002/ece3.9361",
+            html="<html><article>Fallback full text</article></html>",
+            response_status=200,
+            response_headers={"content-type": "text/html"},
+            title="Example Wiley Article",
+            summary="Fallback full text",
+            browser_context_seed={},
+        )
+
+        client = WileyClient(transport=None, env={})
+        with (
+            mock.patch.object(browser_workflow, "load_runtime_config", return_value=runtime),
+            mock.patch.object(browser_workflow, "ensure_runtime_ready"),
+            mock.patch.object(
+                browser_workflow,
+                "fetch_html_with_flaresolverr",
+                side_effect=[fast_html, fallback_html],
+            ) as mocked_fetch,
+            mock.patch.object(
+                browser_workflow,
+                "extract_science_pnas_markdown",
+                side_effect=[
+                    browser_workflow.SciencePnasHtmlFailure(
+                        "insufficient_body",
+                        "HTML extraction did not produce enough article body text.",
+                    ),
+                    ("# Example Wiley Article\n\n## Results\n\n" + ("Body text " * 120), {"title": "Example"}),
+                ],
+            ),
+        ):
+            payload = client.fetch_raw_fulltext(
+                doi,
+                {"doi": doi, "landing_page_url": "https://onlinelibrary.wiley.com/doi/full/10.1002/ece3.9361"},
+            )
+
+        self.assertEqual(mocked_fetch.call_count, 2)
+        self.assertIs(mocked_fetch.call_args_list[0].kwargs["disable_media"], True)
+        self.assertIs(mocked_fetch.call_args_list[1].kwargs["disable_media"], False)
+        self.assertEqual(payload.metadata["html_fetcher"], "flaresolverr")
+        self.assertEqual(payload.content_type, "text/html")
+
     def test_html_asset_download_prefers_direct_full_size_url_before_preview(self) -> None:
         transport = RecordingTransport(
             {

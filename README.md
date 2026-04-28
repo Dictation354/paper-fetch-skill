@@ -148,6 +148,7 @@ python3 -m paper_fetch.mcp.server
   - `science` / `pnas` 依赖仓库 checkout + `vendor/flaresolverr/` 工作流。
   - `wiley` 的 HTML 与 seeded-browser PDF/ePDF 路径也依赖这套工作流；配置 `WILEY_TDM_CLIENT_TOKEN` 后，官方 TDM API PDF lane 会在 browser PDF/ePDF fallback 失败或本地浏览器运行时不可用时继续尝试。
   - `FlareSolverr HTML` 成功路径支持 `asset_profile=body|all`；正文 figure / table / formula 图片会复用同一个 seeded Playwright browser context 下载，supplementary 文件只在 `all` 下单独下载。
+  - 正文 HTML 首轮 FlareSolverr 请求会用 `waitInSeconds=0` + `disableMedia=true` 快速路径；challenge、访问拦截、摘要页或正文抽取不足时自动用原保守等待策略重试，图片恢复和 figure-page 发现不禁用媒体资源。
   - 候选顺序仍优先 full-size/original，full-size 全部失败后才回退 preview；preview 也通过同一个 browser context 获取，目标 provider 不再输出 `download_tier="playwright_canvas_fallback"`。
   - 正文图片下载会在单次 download attempt 内做有限并行和 URL 级缓存：重复的 figure page / 图片候选只抓一次，最终仍按输入资产顺序稳定落盘。
   - 如果浏览器页面已经显示目标图片，但页面内 `fetch()` 被 Cloudflare challenge 返回 HTML 拦截，下载器只接受 FlareSolverr/Selenium 返回的 `solution.imagePayload` 作为浏览器像素恢复结果；不再回退 FlareSolverr 图片文档截图裁剪，并继续按原候选记录为 `full_size` 或 `preview`。

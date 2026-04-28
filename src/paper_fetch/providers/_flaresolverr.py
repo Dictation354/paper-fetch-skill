@@ -796,6 +796,7 @@ def fetch_html_with_flaresolverr(
     max_timeout_ms: int = DEFAULT_FLARESOLVERR_MAX_TIMEOUT_MS,
     return_image_payload: bool = False,
     return_screenshot: bool = False,
+    disable_media: bool = False,
 ) -> FetchedPublisherHtml:
     if not candidate_urls:
         raise FlareSolverrFailure("empty_html_attempts", "No publisher HTML candidates were attempted.")
@@ -842,6 +843,8 @@ def fetch_html_with_flaresolverr(
                     "waitInSeconds": effective_wait_seconds,
                     "maxTimeout": max_timeout_ms,
                 }
+                if disable_media and not return_image_payload:
+                    request_payload["disableMedia"] = True
                 if return_image_payload:
                     request_payload["returnImagePayload"] = True
                 try:
