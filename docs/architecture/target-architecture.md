@@ -158,6 +158,7 @@ Date: 2026-04-27
 - provider-neutral HTML access signals、section semantics、language filtering 已固定在 `paper_fetch.extraction.html.signals`、`paper_fetch.extraction.html.semantics`、`paper_fetch.extraction.html.language`
 - landing fetch helper 是 provider-neutral；Springer 仍在 provider 层定义自己的 redirect policy、headers 和 failure mapping，只复用 fetch/decode/metadata extraction
 - 图片 payload helper 使用 `filetype` 做 MIME 识别，使用 `imagesize` 做 JPEG/PNG/GIF/WebP 尺寸读取；识别失败时继续表现为 unknown
+- HTML table matrix 展开、rowspan/colspan 处理、Markdown table 渲染和列表降级位于 `paper_fetch.extraction.html.tables`；provider 层只负责传入 publisher table 节点和注入位置
 - HTML-derived citation cleanup 位于 `paper_fetch.markdown.citations`
 - HTML / Markdown full-text availability verdict 位于 `paper_fetch.quality.html_availability`
 - HTML container scoring / selection / cleanup 也位于 `paper_fetch.quality.html_availability`；provider-owned browser workflow 只能通过 selection policy 传入评分 profile、完整祖先优先、页面级 container 避让与 provider refine hook

@@ -7,9 +7,9 @@ from typing import Any, Callable, Mapping
 
 from ..extraction.html.figure_links import inject_inline_figure_links as _shared_inject_inline_figure_links
 from ..extraction.html.semantics import BACK_MATTER_TOKENS, heading_category, node_identity_text, normalize_heading
+from ..extraction.html.tables import inject_inline_table_blocks as _shared_inject_inline_table_blocks
 from ..markdown.citations import clean_citation_markers, normalize_inline_citation_markdown
 from ..utils import normalize_text
-from ._html_tables import inject_inline_table_blocks as _shared_inject_inline_table_blocks
 
 try:
     from bs4 import BeautifulSoup, Tag

@@ -57,6 +57,7 @@
   - 讲 provider 能力矩阵、路由规则、默认输出、环境变量、缓存和限速。
 - [`extraction-rules.md`](extraction-rules.md)
   - 讲当前提取 / 组装 / 渲染规则、真实样本证据和对应测试，不负责运行时路由和部署说明。
+  - 修改后运行 `python3 scripts/validate_extraction_rules.py` 校验 anchor、Owner、fixture、测试名、manifest 引用和未挂规则 fixture 清单。
 - [`deployment.md`](deployment.md)
   - 讲安装、配置入口、MCP 注册、更新和最小验证。
 - [`flaresolverr.md`](flaresolverr.md)

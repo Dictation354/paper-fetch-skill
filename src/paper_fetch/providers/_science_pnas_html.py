@@ -40,21 +40,7 @@ from ..extraction.html.signals import (
     PAYWALL_PATTERNS,
     SciencePnasHtmlFailure,
 )
-from ..markdown.citations import is_citation_link, make_numeric_citation_sentinel, numeric_citation_payload
-from ..models import normalize_markdown_text
-from ..quality.html_availability import (
-    HTML_CONTAINER_BROWSER_WORKFLOW_FALLBACK_TAGS,
-    HTML_CONTAINER_DROP_BROWSER_WORKFLOW,
-    HTML_CONTAINER_SCORE_BROWSER_WORKFLOW,
-    HtmlContainerSelectionPolicy,
-    assess_html_fulltext_availability,
-    availability_failure_message,
-    clean_container,
-    select_best_container,
-)
-from ..utils import normalize_text
-from ._article_markdown_math import render_external_mathml_expression
-from ._html_tables import (
+from ..extraction.html.tables import (
     escape_markdown_table_cell,
     expanded_table_matrix,
     flatten_table_header_rows,
@@ -71,6 +57,20 @@ from ._html_tables import (
     table_rows,
     wrap_table_text_fragment,
 )
+from ..markdown.citations import is_citation_link, make_numeric_citation_sentinel, numeric_citation_payload
+from ..models import normalize_markdown_text
+from ..quality.html_availability import (
+    HTML_CONTAINER_BROWSER_WORKFLOW_FALLBACK_TAGS,
+    HTML_CONTAINER_DROP_BROWSER_WORKFLOW,
+    HTML_CONTAINER_SCORE_BROWSER_WORKFLOW,
+    HtmlContainerSelectionPolicy,
+    assess_html_fulltext_availability,
+    availability_failure_message,
+    clean_container,
+    select_best_container,
+)
+from ..utils import normalize_text
+from ._article_markdown_math import render_external_mathml_expression
 from . import _science_pnas_postprocess
 from ._science_pnas_postprocess import (
     normalize_browser_workflow_markdown,

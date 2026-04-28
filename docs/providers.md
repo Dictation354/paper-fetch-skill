@@ -282,6 +282,14 @@ CLI、Python API、MCP 当前统一采用这些默认值：
 - 即使 `asset_profile` 是 `body` / `all`，也不会落盘
 - 没有本地文件时，Markdown 会自动退回 captions-only 或不展示本地资源链接
 
+<a id="springer-原始-html-artifact"></a>
+### Springer 原始 HTML artifact
+
+- 当 Springer 抓取链拿到 publisher article HTML 时，`ArtifactStore` 会把可信的原始正文 HTML 单独落盘。
+- 如果 `download_dir` 本身就是 DOI slug 文章目录，文件名是 `original.html`；否则文件名是 `<doi_slug>_original.html`。
+- `*_assets/` 目录仍可以包含 figure page、table page、redirect page 或辅助 HTML；这些文件不能被当成可信的正文原文源文件。
+- 该行为由 [`../tests/unit/test_springer_html_regressions.py`](../tests/unit/test_springer_html_regressions.py) 中的 `test_springer_html_route_saves_original_html_in_article_dir` 锁定。
+
 ## 公开输出里最重要的字段
 
 这些字段最适合拿来判断结果质量和来源：

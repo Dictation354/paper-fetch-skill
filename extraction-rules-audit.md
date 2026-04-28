@@ -4,6 +4,61 @@
 
 > 第一轮审计聚焦于"重复 / 被取代"（§1–§6），第二轮审计补充结构性、命名、边界和耦合问题（§7–§23），第三轮审计聚焦规则与代码/测试的一致性、覆盖盲点与演进可维护性（§24–§40）。
 
+## 落地结论（2026-04-28）
+
+对 40 条审计项与当前 `docs/extraction-rules.md`、`scripts/validate_extraction_rules.py`、`tests/integration/test_extraction_rules_doc.py`、`docs/providers.md`、`.github/workflows/ci.yml` 的核对结论。
+
+### 已解决
+
+- **第一轮 §1–§6**
+  - §1：`rule-preserve-subscripts-in-headings` 已合并到 `rule-preserve-inline-semantics-in-body-and-tables`，旧 anchor 保留为重定向。
+  - §2：`rule-provider-owned-authors` 边界已把摘要去重交给 `rule-stable-frontmatter-order`。
+  - §3：`rule-springer-access-hint-disclaimer` 已加 anchor，被 `rule-filter-publisher-ui-noise` 边界 link 引用；`rule-springer-caption-precedence` 边界也 link 到 `rule-filter-publisher-ui-noise`。
+  - §4：原 line 479 落盘规则已迁出到 `providers.md#springer-原始-html-artifact`，留 `rule-springer-original-html-artifact` 重定向。
+  - §5：Elsevier / Science / PNAS 共享规则的链接文本已统一为完整标题"已下载的正文图片和公式图片要改写成正文附近的本地链接"。
+  - §6：caption precedence / access hint 通过 anchor link 互相引用，未在其他 provider 节复制。
+- **第二轮**
+  - §7：两条无 anchor 规则（落盘、access hint）已分别加 anchor。
+  - §8 / §22：Springer / Elsevier / Wiley 共享规则列表已补齐，由 `validate_provider_shared_lists` 自动校验。
+  - §10：4 条多职责规则已拆分。`rule-elsevier-table-placement` → `rule-elsevier-inline-figure-table-placement` / `rule-elsevier-consumed-figure-table-dedup` / `rule-elsevier-complex-table-span-degradation`；`rule-image-download-tier-diagnostics` → `rule-image-download-validates-real-images` / `rule-asset-download-diagnostic-fields` / `rule-browser-primary-image-download-path`；`rule-keep-data-availability-once` → 该规则 + `rule-availability-section-kind-mapping` / `rule-availability-excluded-from-body-metrics` / `rule-section-hints-normalize-availability`；`rule-elsevier-formula-rendering` 中的 LaTeX 后处理拆出为 generic `rule-formula-latex-normalization`。
+  - §12：受控阶段清单已写入"规则怎么读"段。
+  - §15：Fixture 反向索引表已落到文档末尾。
+  - §16 / §37：测试列表按 `Owner（generic/provider/models/cli）` 与 `Provider 覆盖` / `Service / live review 覆盖` 分组。
+  - §17：边界中"那条规则管"全部改为 anchor link。
+- **第三轮**
+  - §28：Elsevier 节"不适用 / 部分适用说明"显式列出 `rule-html-availability-contract`、`rule-filter-publisher-ui-noise`、`rule-preserve-formula-image-fallbacks`、`rule-browser-primary-image-download-path`。
+  - §29：顶部加"修订日期：2026-04-28"，并加"合并、退役和重定向"段约定旧 anchor 保留方式。
+  - §30：前言与 `providers.md` / `architecture/target-architecture.md` 双向链接。
+  - §32：LaTeX normalization 已提升为 generic `rule-formula-latex-normalization`。
+  - §33：Science / PNAS 节顶部已声明"当前 provider 的用户可见行为约束全部归入共享规则；本节暂不维护 specific 规则"。
+  - §34：`_scenarios/` 使用条件写入 Fixture 使用约定；`rule-provider-owned-authors` 已显式标注 Elsevier author groups 为 contract scenario。
+  - §35：已补阶段流水图；`artifact-storage` 明确为旁路诊断 / 落盘阶段。
+  - §38 / §39：加"维护工作流"和"新增规则 checklist"，覆盖新增、拆分、fixture、provider 共享列表、校验脚本的完整生命周期。
+  - §40：`scripts/validate_extraction_rules.py` 实现 anchor 唯一性、anchor link 有效性、fixture 路径与 canonical root 校验、测试名存在性、manifest anchor 校验、provider 共享规则列表、Owner 字段、单测试风险标记、manifest sample 反向索引 / 未挂规则清单校验；通过 `tests/integration/test_extraction_rules_doc.py` 和 `.github/workflows/ci.yml` 接入 CI。当前脚本运行 PASS。
+- **本轮收口项**
+  - §9：新增 `rule-springer-main-content-direct-children`，`rule-nature-main-content-direct-children` 保留为重定向。
+  - §10（残留）：`rule-springer-chrome-heading-normalization` 已拆分为 `rule-springer-article-root-chrome-pruning` 和 `rule-springer-numbered-heading-spacing`，旧 anchor 保留为重定向。
+  - §11 / §21 / §36：`rule-html-availability-contract` 和 `rule-section-hints-normalize-availability` 的模块解耦合约迁到 `Owner：` 和 `architecture/target-architecture.md` 链接，规则正文只保留用户可见行为。
+  - §13：所有非重定向规则均补 `Owner：`，并由校验脚本强制。
+  - §14：已补"无稳定 DOI 样本规则汇总表"。
+  - §20：单 provider 样本规则已在边界说明中标注当前证据边界；不为凑覆盖强行新增 fixture。
+  - §24：单测试规则已补"测试覆盖度低"风险标记，并由校验脚本强制。
+  - §27：未直接挂规则的 manifest sample 已列入"未直接挂规则 fixture 清单/用途说明"，暂不删除 fixture。
+  - §31：共享 table helper 已提升到 `paper_fetch.extraction.html.tables`；`paper_fetch.providers._html_tables` 仅保留薄 re-export 兼容层，文档 owner 改为新路径。
+
+### 有意不在本轮处理
+
+- §18 / §23：长标题精简、命名行为化属于 cosmetic，不影响审计闭环，本轮不做。
+- §19：模板巡检结论保持"通过"，无需修改。
+- §25：不脚本化追踪全部 silent guarantee；当前用规则 `Owner：`、manifest anchors、测试名存在性和 integration 校验做低维护成本约束。
+- §26：不移动 generic 测试到 `tests/unit/generic/`；用规则文档里的 `Owner（generic/provider/models/cli）` 分组和校验脚本避免无行为收益的大规模路径 churn。
+
+### 未提交项
+
+当前工作树仍未提交；本轮不执行 `git commit`。截至本次收口，`scripts/validate_extraction_rules.py`、`src/paper_fetch/extraction/html/tables.py`、`tests/integration/test_extraction_rules_doc.py` 为 untracked；`.github/workflows/ci.yml`、`docs/README.md`、`docs/architecture/target-architecture.md`、`docs/extraction-rules.md`、`docs/providers.md`、`extraction-rules-audit.md`、`src/paper_fetch/providers/_html_tables.py`、`src/paper_fetch/providers/_science_pnas_html.py`、`src/paper_fetch/providers/_science_pnas_postprocess.py`、`src/paper_fetch/providers/springer.py`、`tests/unit/test_springer_html_tables.py` 有未提交修改。
+
+---
+
 ## 1. 明显重复：上下标规则一分为二（建议合并）
 
 - **`rule-preserve-subscripts-in-headings`**（line 177）"标题和节标题里的上下标不能被打平成普通文本"

@@ -6,7 +6,7 @@ import unittest
 from bs4 import BeautifulSoup
 
 from paper_fetch.providers import _springer_html, springer as springer_provider
-from paper_fetch.providers._html_tables import render_table_markdown
+from paper_fetch.extraction.html.tables import render_table_markdown
 from paper_fetch.runtime import RuntimeContext
 from tests.golden_criteria import golden_criteria_asset
 

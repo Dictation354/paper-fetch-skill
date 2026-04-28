@@ -11,6 +11,7 @@ from typing import Any, Mapping
 from ..config import build_user_agent, resolve_asset_download_concurrency
 from ..extraction.html.landing import LandingHtmlFetchResult, LandingRedirectLimitExceeded, fetch_landing_html
 from ..extraction.html.parsing import choose_parser
+from ..extraction.html.tables import inject_inline_table_blocks, render_table_markdown, table_placeholder
 from ..http import DEFAULT_FULLTEXT_TIMEOUT_SECONDS, HttpTransport, RequestFailure, build_text_preview
 from ..metadata_types import ProviderMetadata
 from ..models import AssetProfile, article_from_markdown, metadata_only_article
@@ -28,7 +29,6 @@ from ..utils import (
 )
 from . import _springer_html
 from ._science_pnas_html import rewrite_inline_figure_links
-from ._html_tables import inject_inline_table_blocks, render_table_markdown, table_placeholder
 from .html_assets import html_asset_identity_key
 from ._pdf_candidates import build_springer_pdf_candidates
 from ._pdf_fallback import PdfFetchFailure, fetch_pdf_over_http
