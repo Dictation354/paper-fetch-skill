@@ -90,6 +90,7 @@ extract_article_markdown = _html_noise.extract_article_markdown
 body_metrics = _html_noise.body_metrics
 has_sufficient_article_body = _html_noise.has_sufficient_article_body
 BODY_PARAGRAPH_MIN_CHARS = 80
+HEADING_TAG_PATTERN = re.compile(r"^h[1-6]$")
 SENTENCE_PATTERN = re.compile(r"[.!?。！？]+")
 FRONT_MATTER_LINE_PATTERNS = (
     re.compile(r"^doi:\s*", flags=re.IGNORECASE),
@@ -211,7 +212,7 @@ def score_container(node: Tag) -> float:
     text = " ".join(node.stripped_strings)
     text_length = len(text)
     paragraph_count = len(node.find_all("p"))
-    heading_count = len(node.find_all(re.compile(r"^h[1-6]$")))
+    heading_count = len(node.find_all(HEADING_TAG_PATTERN))
     link_count = len(node.find_all("a"))
     score = text_length / 120.0
     score += paragraph_count * 6.0
@@ -604,7 +605,7 @@ def _abstract_section_payloads(container: Tag) -> list[dict[str, Any]]:
         payloads: list[dict[str, Any]] = []
         seen: set[tuple[str, str]] = set()
         for order, node in enumerate(structural_nodes):
-            heading = _short_text(node.find(re.compile(r"^h[1-6]$"))) or "Abstract"
+            heading = _short_text(node.find(HEADING_TAG_PATTERN)) or "Abstract"
             text = normalize_text("\n\n".join(_abstract_block_texts(node)))
             if not text:
                 continue
@@ -644,7 +645,7 @@ def _normalize_abstract_blocks(container: Tag) -> None:
     for node in _abstract_nodes(container):
         if node.name not in {"section", "div"}:
             node.name = "section"
-        heading = node.find(re.compile(r"^h[1-6]$"))
+        heading = node.find(HEADING_TAG_PATTERN)
         if isinstance(heading, Tag):
             heading.name = "h2"
             if not _normalize_heading(_short_text(heading)):
@@ -690,7 +691,7 @@ def _ensure_body_markdown_heading(markdown_text: str, *, title: str | None = Non
 
 
 def _abstract_block_texts(node: Tag) -> list[str]:
-    heading = node.find(re.compile(r"^h[1-6]$"))
+    heading = node.find(HEADING_TAG_PATTERN)
     texts: list[str] = []
     seen: set[str] = set()
 
@@ -1348,7 +1349,7 @@ def _availability_node_score(node: Tag) -> int:
         score += 40
     if any(token in identity for token in DATA_AVAILABILITY_TOKENS + CODE_AVAILABILITY_TOKENS):
         score += 20
-    heading = node.find(re.compile(r"^h[1-6]$"))
+    heading = node.find(HEADING_TAG_PATTERN)
     if isinstance(heading, Tag):
         heading_kind = _heading_category(normalize_text(heading.name or "").lower(), heading.get_text(" ", strip=True))
         if heading_kind in {"data_availability", "code_availability"}:

@@ -212,6 +212,14 @@ class GoldenCriteriaLiveTests(unittest.TestCase):
 
             def fake_fetch(query, **kwargs):
                 if query == "10.1016/fulltext":
+                    runtime_context = kwargs.get("context")
+                    if runtime_context is not None:
+                        runtime_context.accumulate_stage_timing("asset_seconds", elapsed=0.125)
+                        runtime_context.accumulate_stage_timing("formula_seconds", elapsed=0.25)
+                        transport = getattr(runtime_context, "transport", None)
+                        increment = getattr(transport, "_increment_cache_stat", None)
+                        if callable(increment):
+                            increment("miss")
                     article = sample_article()
                     article.doi = query
                     article.assets = [
@@ -257,6 +265,20 @@ class GoldenCriteriaLiveTests(unittest.TestCase):
             self.assertTrue((output_root / "report.md").exists())
             self.assertTrue((output_root / "provider-status.json").exists())
             self.assertTrue((output_root / "manifest-snapshot.json").exists())
+            fulltext_result = next(result for result in report.results if result.sample_id == "elsevier_fulltext")
+            self.assertIn("fetch_seconds", fulltext_result.stage_timings)
+            self.assertIn("materialize_seconds", fulltext_result.stage_timings)
+            self.assertIn("total_seconds", fulltext_result.stage_timings)
+            self.assertIn("resolve_seconds", fulltext_result.stage_timings)
+            self.assertIn("metadata_seconds", fulltext_result.stage_timings)
+            self.assertIn("fulltext_seconds", fulltext_result.stage_timings)
+            self.assertIn("asset_seconds", fulltext_result.stage_timings)
+            self.assertIn("formula_seconds", fulltext_result.stage_timings)
+            self.assertIn("render_seconds", fulltext_result.stage_timings)
+            self.assertEqual(fulltext_result.stage_timings["asset_seconds"], 0.125)
+            self.assertEqual(fulltext_result.stage_timings["formula_seconds"], 0.25)
+            self.assertEqual(fulltext_result.http_cache_stats["miss"], 1)
+            self.assertEqual(fulltext_result.elapsed_seconds, fulltext_result.stage_timings["total_seconds"])
 
             sample_dir = output_root / "elsevier_fulltext"
             self.assertTrue((sample_dir / "fetch-envelope.json").exists())
@@ -275,8 +297,17 @@ class GoldenCriteriaLiveTests(unittest.TestCase):
 
             report_markdown = (output_root / "report.md").read_text(encoding="utf-8")
             self.assertIn("## Coverage Overview", report_markdown)
+            self.assertIn("| Sample | Provider | DOI | Status | Content | Source | Assets | Seconds | Resolve | Metadata | Fulltext | Asset | Formula | Render | Fetch | Materialize | Review | Issues |", report_markdown)
             self.assertIn("## Recurring Issue Groups", report_markdown)
             self.assertIn("## Prioritized Solutions", report_markdown)
+            report_json = json.loads((output_root / "report.json").read_text(encoding="utf-8"))
+            first_result = next(item for item in report_json["results"] if item["sample_id"] == "elsevier_fulltext")
+            self.assertIn("stage_timings", first_result)
+            self.assertIn("elapsed_seconds", first_result)
+            self.assertIn("http_cache_stats", first_result)
+            self.assertEqual(first_result["stage_timings"]["asset_seconds"], 0.125)
+            self.assertEqual(first_result["stage_timings"]["formula_seconds"], 0.25)
+            self.assertEqual(first_result["http_cache_stats"]["miss"], 1)
 
     def test_materialize_fetch_artifacts_normalizes_body_assets_and_links(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

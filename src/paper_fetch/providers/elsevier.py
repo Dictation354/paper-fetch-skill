@@ -11,7 +11,7 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Any, Mapping
 
-from ..config import build_user_agent
+from ..config import build_user_agent, resolve_asset_download_concurrency
 from ..http import DEFAULT_FULLTEXT_TIMEOUT_SECONDS, HttpTransport, RequestFailure, build_text_preview, is_xml_content_type
 from ..metadata_types import ProviderMetadata
 from ..models import AssetProfile, article_from_markdown, article_from_structure, metadata_only_article
@@ -303,6 +303,7 @@ def download_elsevier_related_assets(
     asset_profile: AssetProfile = "all",
     context: RuntimeContext | None = None,
     source_url: str | None = None,
+    asset_download_concurrency: int | None = None,
 ) -> dict[str, list[dict[str, Any]]]:
     if output_dir is None:
         return empty_asset_results()
@@ -315,6 +316,13 @@ def download_elsevier_related_assets(
         return empty_asset_results()
     body_references = [reference for reference in references if reference.get("asset_type") != "supplementary"]
     supplementary_references = [reference for reference in references if reference.get("asset_type") == "supplementary"]
+    if asset_download_concurrency is not None:
+        try:
+            active_asset_download_concurrency = max(1, int(asset_download_concurrency))
+        except (TypeError, ValueError):
+            active_asset_download_concurrency = resolve_asset_download_concurrency(context.env if context is not None else None)
+    else:
+        active_asset_download_concurrency = resolve_asset_download_concurrency(context.env if context is not None else None)
 
     asset_dir = output_dir / f"{sanitize_filename(doi)}_assets"
     asset_dir.mkdir(parents=True, exist_ok=True)
@@ -349,7 +357,7 @@ def download_elsevier_related_assets(
 
     resolved_body_results: list[tuple[Mapping[str, Any], dict[str, Any] | None, dict[str, Any] | None]] = []
     if body_references:
-        with ThreadPoolExecutor(max_workers=min(4, len(body_references))) as executor:
+        with ThreadPoolExecutor(max_workers=min(active_asset_download_concurrency, len(body_references))) as executor:
             futures = [executor.submit(fetch_body_reference, reference) for reference in body_references]
             for future in futures:
                 resolved_body_results.append(future.result())
@@ -414,6 +422,7 @@ def download_elsevier_related_assets(
         user_agent=headers.get("User-Agent", ""),
         asset_profile=asset_profile,
         headers=headers,
+        asset_download_concurrency=active_asset_download_concurrency,
     )
     downloads.extend(list(supplementary_result.get("assets") or []))
     failures.extend(list(supplementary_result.get("asset_failures") or []))

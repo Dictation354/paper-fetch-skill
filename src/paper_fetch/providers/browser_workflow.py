@@ -12,7 +12,7 @@ from concurrent.futures import Future
 from dataclasses import dataclass, field, replace
 from typing import Any, Callable, Mapping
 
-from ..config import build_user_agent
+from ..config import build_user_agent, resolve_asset_download_concurrency
 from ..extraction.html import decode_html
 from ..extraction.image_payloads import image_mime_type_from_bytes
 from ..extraction.html.signals import SciencePnasHtmlFailure, detect_html_block, summarize_html
@@ -493,6 +493,40 @@ def _payload_from_flaresolverr_image_payload(
     }
 
 
+def _new_playwright_context(
+    *,
+    runtime_context: RuntimeContext | None,
+    headless: bool,
+    user_agent: str,
+) -> tuple[Any | None, Any | None, Any]:
+    context_kwargs = {
+        "user_agent": user_agent,
+        "locale": "en-US",
+        "viewport": {"width": 1440, "height": 1600},
+    }
+    if runtime_context is not None:
+        return None, None, runtime_context.new_playwright_context(headless=headless, **context_kwargs)
+
+    from playwright.sync_api import sync_playwright
+
+    manager = sync_playwright().start()
+    browser = None
+    try:
+        browser = manager.chromium.launch(headless=headless)
+        return manager, browser, browser.new_context(**context_kwargs)
+    except Exception:
+        if browser is not None:
+            try:
+                browser.close()
+            except Exception:
+                pass
+        try:
+            manager.stop()
+        except Exception:
+            pass
+        raise
+
+
 class _SharedPlaywrightImageDocumentFetcher:
     def __init__(
         self,
@@ -504,6 +538,7 @@ class _SharedPlaywrightImageDocumentFetcher:
         min_width: int = 80,
         min_height: int = 80,
         challenge_recovery: Callable[[str, Mapping[str, Any], Mapping[str, Any]], Mapping[str, Any] | None] | None = None,
+        runtime_context: RuntimeContext | None = None,
     ) -> None:
         self._browser_context_seed_getter = browser_context_seed_getter
         self._seed_urls_getter = seed_urls_getter
@@ -512,6 +547,7 @@ class _SharedPlaywrightImageDocumentFetcher:
         self._min_width = min_width
         self._min_height = min_height
         self._challenge_recovery = challenge_recovery
+        self._runtime_context = runtime_context
         self._playwright_manager = None
         self._browser = None
         self._context = None
@@ -591,10 +627,6 @@ class _SharedPlaywrightImageDocumentFetcher:
     def _ensure_page(self):
         if self._page is not None:
             return self._page
-        try:
-            from playwright.sync_api import sync_playwright
-        except Exception:
-            return None
 
         active_user_agent = (
             normalize_text(self._current_seed().get("browser_user_agent"))
@@ -602,12 +634,10 @@ class _SharedPlaywrightImageDocumentFetcher:
             or build_user_agent({})
         )
         try:
-            self._playwright_manager = sync_playwright().start()
-            self._browser = self._playwright_manager.chromium.launch(headless=self._headless)
-            self._context = self._browser.new_context(
+            self._playwright_manager, self._browser, self._context = _new_playwright_context(
+                runtime_context=self._runtime_context,
+                headless=self._headless,
                 user_agent=active_user_agent,
-                locale="en-US",
-                viewport={"width": 1440, "height": 1600},
             )
             self._sync_context_cookies()
             self._page = self._context.new_page()
@@ -1068,6 +1098,7 @@ class _ThreadLocalSharedPlaywrightImageDocumentFetcher:
         min_width: int = 80,
         min_height: int = 80,
         challenge_recovery: Callable[[str, Mapping[str, Any], Mapping[str, Any]], Mapping[str, Any] | None] | None = None,
+        runtime_context: RuntimeContext | None = None,
     ) -> None:
         self._browser_context_seed_getter = browser_context_seed_getter
         self._seed_urls_getter = seed_urls_getter
@@ -1076,6 +1107,7 @@ class _ThreadLocalSharedPlaywrightImageDocumentFetcher:
         self._min_width = min_width
         self._min_height = min_height
         self._challenge_recovery = challenge_recovery
+        self._runtime_context = runtime_context
         self._thread_local = threading.local()
         self._lock = threading.Lock()
         self._fetchers: list[_SharedPlaywrightImageDocumentFetcher] = []
@@ -1092,6 +1124,7 @@ class _ThreadLocalSharedPlaywrightImageDocumentFetcher:
             min_width=self._min_width,
             min_height=self._min_height,
             challenge_recovery=self._challenge_recovery,
+            runtime_context=self._runtime_context,
         )
         self._thread_local.fetcher = fetcher
         with self._lock:
@@ -1280,12 +1313,14 @@ class _SharedPlaywrightFileDocumentFetcher:
         browser_user_agent: str | None = None,
         headless: bool = True,
         challenge_recovery: Callable[[str, Mapping[str, Any], Mapping[str, Any]], Mapping[str, Any] | None] | None = None,
+        runtime_context: RuntimeContext | None = None,
     ) -> None:
         self._browser_context_seed_getter = browser_context_seed_getter
         self._seed_urls_getter = seed_urls_getter
         self._browser_user_agent = browser_user_agent
         self._headless = headless
         self._challenge_recovery = challenge_recovery
+        self._runtime_context = runtime_context
         self._playwright_manager = None
         self._browser = None
         self._context = None
@@ -1360,10 +1395,6 @@ class _SharedPlaywrightFileDocumentFetcher:
     def _ensure_context(self):
         if self._context is not None:
             return self._context
-        try:
-            from playwright.sync_api import sync_playwright
-        except Exception:
-            return None
 
         active_user_agent = (
             normalize_text(self._current_seed().get("browser_user_agent"))
@@ -1371,12 +1402,10 @@ class _SharedPlaywrightFileDocumentFetcher:
             or build_user_agent({})
         )
         try:
-            self._playwright_manager = sync_playwright().start()
-            self._browser = self._playwright_manager.chromium.launch(headless=self._headless)
-            self._context = self._browser.new_context(
+            self._playwright_manager, self._browser, self._context = _new_playwright_context(
+                runtime_context=self._runtime_context,
+                headless=self._headless,
                 user_agent=active_user_agent,
-                locale="en-US",
-                viewport={"width": 1440, "height": 1600},
             )
             self._sync_context_cookies()
             self._page = self._context.new_page()
@@ -1542,6 +1571,7 @@ def _build_shared_playwright_image_fetcher(
     min_width: int = 80,
     min_height: int = 80,
     challenge_recovery: Callable[[str, Mapping[str, Any], Mapping[str, Any]], Mapping[str, Any] | None] | None = None,
+    runtime_context: RuntimeContext | None = None,
 ) -> _ThreadLocalSharedPlaywrightImageDocumentFetcher:
     return _ThreadLocalSharedPlaywrightImageDocumentFetcher(
         browser_context_seed_getter=browser_context_seed_getter,
@@ -1551,6 +1581,7 @@ def _build_shared_playwright_image_fetcher(
         min_width=min_width,
         min_height=min_height,
         challenge_recovery=challenge_recovery,
+        runtime_context=runtime_context,
     )
 
 
@@ -1561,6 +1592,7 @@ def _build_shared_playwright_file_fetcher(
     browser_user_agent: str | None = None,
     headless: bool = True,
     challenge_recovery: Callable[[str, Mapping[str, Any], Mapping[str, Any]], Mapping[str, Any] | None] | None = None,
+    runtime_context: RuntimeContext | None = None,
 ) -> _SharedPlaywrightFileDocumentFetcher:
     return _SharedPlaywrightFileDocumentFetcher(
         browser_context_seed_getter=browser_context_seed_getter,
@@ -1568,6 +1600,7 @@ def _build_shared_playwright_file_fetcher(
         browser_user_agent=browser_user_agent,
         headless=headless,
         challenge_recovery=challenge_recovery,
+        runtime_context=runtime_context,
     )
 
 
@@ -1874,6 +1907,7 @@ def fetch_html_with_direct_playwright(
     user_agent: str,
     headless: bool = True,
     timeout_ms: int = _DIRECT_PLAYWRIGHT_HTML_TIMEOUT_MS,
+    context: RuntimeContext | None = None,
 ) -> FetchedPublisherHtml:
     if not candidate_urls:
         raise SciencePnasHtmlFailure("empty_html_attempts", "No publisher HTML candidates were attempted.")
@@ -1888,17 +1922,21 @@ def fetch_html_with_direct_playwright(
     last_failure: SciencePnasHtmlFailure | None = None
     manager = None
     browser = None
-    context = None
+    browser_context = None
     page = None
     try:
-        manager = sync_playwright().start()
-        browser = manager.chromium.launch(headless=headless)
-        context = browser.new_context(
-            user_agent=normalize_text(user_agent) or build_user_agent({}),
-            locale="en-US",
-            viewport={"width": 1440, "height": 1600},
-        )
-        page = context.new_page()
+        context_kwargs = {
+            "user_agent": normalize_text(user_agent) or build_user_agent({}),
+            "locale": "en-US",
+            "viewport": {"width": 1440, "height": 1600},
+        }
+        if context is not None:
+            browser_context = context.new_playwright_context(headless=headless, **context_kwargs)
+        else:
+            manager = sync_playwright().start()
+            browser = manager.chromium.launch(headless=headless)
+            browser_context = browser.new_context(**context_kwargs)
+        page = browser_context.new_page()
 
         def route_handler(route: Any) -> None:
             try:
@@ -1956,13 +1994,13 @@ def fetch_html_with_direct_playwright(
                 title=title,
                 summary=summary,
                 browser_context_seed=_direct_playwright_browser_context_seed(
-                    context,
+                    browser_context,
                     final_url=final_url,
                     user_agent=normalize_text(user_agent) or build_user_agent({}),
                 ),
             )
     finally:
-        for value in (page, context, browser):
+        for value in (page, browser_context, browser):
             if value is None:
                 continue
             try:
@@ -2149,6 +2187,7 @@ def bootstrap_browser_workflow(
                 html_candidates,
                 publisher=client.name,
                 user_agent=client.user_agent,
+                context=context,
             )
             result.browser_context_seed = html_result.browser_context_seed
             markdown_text, extraction = _cached_browser_workflow_markdown(
@@ -2232,6 +2271,7 @@ def fetch_seeded_browser_pdf_payload(
     success_source_trail: list[str] | None = None,
     success_warning: str = "Full text was extracted from PDF fallback after the HTML path was not usable.",
     artifact_subdir: str = "pdf_fallback",
+    context: RuntimeContext | None = None,
 ) -> RawFulltextPayload:
     pdf_browser_context_seed = warm_browser_context_with_flaresolverr(
         pdf_candidates,
@@ -2252,6 +2292,7 @@ def fetch_seeded_browser_pdf_payload(
         browser_user_agent=pdf_browser_context_seed.get("browser_user_agent") or user_agent,
         headless=runtime.headless,
         seed_urls=[seed_url] if seed_url else None,
+        context=context,
     )
     payload_warnings = [str(item) for item in warnings or [] if str(item).strip()]
     if success_warning:
@@ -2456,6 +2497,8 @@ class BrowserWorkflowClient(ProviderClient):
         doi: str,
         metadata: ProviderMetadata,
         raw_payload: RawFulltextPayload,
+        *,
+        context: RuntimeContext | None = None,
     ) -> RawFulltextPayload:
         normalized_doi = normalize_doi(doi)
         if not normalized_doi:
@@ -2487,6 +2530,7 @@ class BrowserWorkflowClient(ProviderClient):
                 f"fulltext:{self.name}_abstract_only",
                 f"fulltext:{self.name}_pdf_fallback_ok",
             ],
+            context=context,
         )
 
     def html_candidates(self, doi: str, metadata: ProviderMetadata) -> list[str]:
@@ -2569,6 +2613,7 @@ class BrowserWorkflowClient(ProviderClient):
                     html_failure_message=bootstrap.html_failure_message,
                     warnings=[],
                     success_source_trail=[],
+                    context=context,
                 )
             except PdfFallbackFailure as exc:
                 reason = bootstrap.html_failure_message or f"{self.name} HTML route failed."
@@ -2619,7 +2664,12 @@ class BrowserWorkflowClient(ProviderClient):
             return prepared
 
         try:
-            recovered_payload = self._recover_pdf_payload_from_abstract_only_html(doi, metadata, raw_payload)
+            recovered_payload = self._recover_pdf_payload_from_abstract_only_html(
+                doi,
+                metadata,
+                raw_payload,
+                context=context,
+            )
         except (ProviderFailure, PdfFallbackFailure):
             provider_label = self.provider_label()
             prepared.finalize_warnings.append(
@@ -2687,6 +2737,7 @@ class BrowserWorkflowClient(ProviderClient):
         if not article_assets:
             return empty_asset_results()
         body_assets, supplementary_assets = split_body_and_supplementary_assets(article_assets)
+        asset_download_concurrency = resolve_asset_download_concurrency(context.env)
 
         normalized_doi = normalize_doi(str(metadata.get("doi") or doi or ""))
         if not normalized_doi:
@@ -2875,6 +2926,7 @@ class BrowserWorkflowClient(ProviderClient):
                 browser_user_agent=current_seed.get("browser_user_agent") or self.user_agent,
                 headless=runtime.headless,
                 challenge_recovery=asset_challenge_recovery_for(attempt_seed, attempt_seed_lock),
+                runtime_context=context,
             )
             return _MemoizedImageDocumentFetcher(fetcher)
 
@@ -2894,6 +2946,7 @@ class BrowserWorkflowClient(ProviderClient):
                 browser_user_agent=current_seed.get("browser_user_agent") or self.user_agent,
                 headless=runtime.headless,
                 challenge_recovery=supplementary_challenge_recovery_for(attempt_seed, attempt_seed_lock),
+                runtime_context=context,
             )
 
         def run_download_attempt(current_seed: Mapping[str, Any]) -> dict[str, list[dict[str, Any]]]:
@@ -2929,6 +2982,7 @@ class BrowserWorkflowClient(ProviderClient):
                     figure_page_fetcher=figure_page_fetcher,
                     candidate_builder=_browser_workflow_image_download_candidates,
                     image_document_fetcher=image_document_fetcher,
+                    asset_download_concurrency=asset_download_concurrency,
                 )
                 supplementary_result = download_supplementary_assets(
                     self.transport,
@@ -2940,6 +2994,7 @@ class BrowserWorkflowClient(ProviderClient):
                     browser_context_seed=attempt_seed,
                     seed_urls=seed_urls_for(attempt_seed),
                     file_document_fetcher=file_document_fetcher,
+                    asset_download_concurrency=asset_download_concurrency,
                 )
                 return {
                     "assets": [

@@ -18,6 +18,16 @@ except ImportError:  # pragma: no cover - dependency is declared in pyproject
     Tag = None
 
 NUMBERED_SECTION_HEADING_PATTERN = re.compile(r"^\d+(?:\.\d+)*\s+\S")
+HEADING_TAG_PATTERN = re.compile(r"^h[1-6]$")
+EQUATION_HEADING_JOIN_PATTERN = re.compile(r"(\S)(\*\*Equation\s+\d+[A-Za-z]?\.\*\*)")
+DISPLAY_MATH_OPEN_PATTERN = re.compile(r"(?<=\S)(\$\$)")
+DISPLAY_MATH_BLOCK_PATTERN = re.compile(r"\$\$\s*(.+?)\s*\$\$", flags=re.DOTALL)
+DISPLAY_MATH_TRAILING_PATTERN = re.compile(r"(?<=\$\$)(?=[^\s\n])")
+SCIENCE_CITATION_TOKEN_PATTERN = r"(?:\d+[A-Za-z]*|[A-Za-z]+\d+[A-Za-z0-9]*)"
+SCIENCE_CITATION_ITALIC_PATTERNS = (
+    re.compile(rf"\*(?P<left>{SCIENCE_CITATION_TOKEN_PATTERN})\*\*(?P<sep>[–,;])\*\s*\*(?P<right>{SCIENCE_CITATION_TOKEN_PATTERN})\*"),
+    re.compile(rf"\*(?P<left>{SCIENCE_CITATION_TOKEN_PATTERN})\*(?P<sep>\s*[–,;]\s*)\*(?P<right>{SCIENCE_CITATION_TOKEN_PATTERN})\*"),
+)
 
 
 def _soup_root(node: Tag | None) -> BeautifulSoup | None:
@@ -45,24 +55,29 @@ def _append_text_block(parent: Tag, text: str, *, tag_name: str = "p", soup: Bea
 
 
 def _heading_nodes(container: Tag) -> list[Tag]:
-    return [node for node in container.find_all(re.compile(r"^h[1-6]$")) if isinstance(node, Tag)]
+    return [node for node in container.find_all(HEADING_TAG_PATTERN) if isinstance(node, Tag)]
 
 
-def _is_frontmatter_wiley_abbreviations_heading(container: Tag, heading: Tag) -> bool:
-    headings = _heading_nodes(container)
+def _is_frontmatter_wiley_abbreviations_heading(
+    container: Tag,
+    heading: Tag,
+    *,
+    headings: list[Tag] | None = None,
+) -> bool:
+    active_headings = headings if headings is not None else _heading_nodes(container)
     try:
-        heading_index = headings.index(heading)
+        heading_index = active_headings.index(heading)
     except ValueError:
         return False
 
     abstract_index = next(
-        (index for index, node in enumerate(headings) if normalize_heading(_short_text(node)) == "abstract"),
+        (index for index, node in enumerate(active_headings) if normalize_heading(_short_text(node)) == "abstract"),
         None,
     )
     first_numbered_body_index = next(
         (
             index
-            for index, node in enumerate(headings)
+            for index, node in enumerate(active_headings)
             if NUMBERED_SECTION_HEADING_PATTERN.match(normalize_heading(_short_text(node)))
         ),
         None,
@@ -79,12 +94,13 @@ def move_wiley_abbreviations_to_end(container: Tag) -> None:
     if soup is None:
         return
 
+    headings = _heading_nodes(container)
     heading = next(
         (
             node
-            for node in _heading_nodes(container)
+            for node in headings
             if normalize_heading(_short_text(node)) == "abbreviations"
-            and _is_frontmatter_wiley_abbreviations_heading(container, node)
+            and _is_frontmatter_wiley_abbreviations_heading(container, node, headings=headings)
         ),
         None,
     )
@@ -132,7 +148,7 @@ def move_wiley_abbreviations_to_end(container: Tag) -> None:
     for child in target_parent.find_all(recursive=False):
         if child is appendix or not isinstance(child, Tag):
             continue
-        child_heading = child.find(re.compile(r"^h[1-6]$"))
+        child_heading = child.find(HEADING_TAG_PATTERN)
         child_heading_text = _short_text(child_heading) if isinstance(child_heading, Tag) else ""
         if (
             any(token in node_identity_text(child) for token in BACK_MATTER_TOKENS)
@@ -148,24 +164,18 @@ def move_wiley_abbreviations_to_end(container: Tag) -> None:
 
 
 def normalize_equation_markdown_blocks(markdown_text: str) -> str:
-    text = re.sub(r"(\S)(\*\*Equation\s+\d+[A-Za-z]?\.\*\*)", r"\1\n\n\2", markdown_text)
-    text = re.sub(r"(?<=\S)(\$\$)", r"\n\n\1", text)
+    text = EQUATION_HEADING_JOIN_PATTERN.sub(r"\1\n\n\2", markdown_text)
+    text = DISPLAY_MATH_OPEN_PATTERN.sub(r"\n\n\1", text)
 
     def normalize_display_math(match: re.Match[str]) -> str:
         body = match.group(1).strip()
         return f"$$\n{body}\n$$"
 
-    text = re.sub(r"\$\$\s*(.+?)\s*\$\$", normalize_display_math, text, flags=re.DOTALL)
-    return re.sub(r"(?<=\$\$)(?=[^\s\n])", "\n\n", text)
+    text = DISPLAY_MATH_BLOCK_PATTERN.sub(normalize_display_math, text)
+    return DISPLAY_MATH_TRAILING_PATTERN.sub("\n\n", text)
 
 
 def merge_science_citation_italics(markdown_text: str) -> str:
-    token_pattern = r"(?:\d+[A-Za-z]*|[A-Za-z]+\d+[A-Za-z0-9]*)"
-    patterns = (
-        re.compile(rf"\*(?P<left>{token_pattern})\*\*(?P<sep>[–,;])\*\s*\*(?P<right>{token_pattern})\*"),
-        re.compile(rf"\*(?P<left>{token_pattern})\*(?P<sep>\s*[–,;]\s*)\*(?P<right>{token_pattern})\*"),
-    )
-
     def render_separator(separator_text: str) -> str:
         separator = normalize_text(separator_text)
         if separator in {",", ";"}:
@@ -176,7 +186,7 @@ def merge_science_citation_italics(markdown_text: str) -> str:
     changed = True
     while changed:
         changed = False
-        for pattern in patterns:
+        for pattern in SCIENCE_CITATION_ITALIC_PATTERNS:
             merged, replacements = pattern.subn(
                 lambda match: f"*{match.group('left')}{render_separator(match.group('sep'))}{match.group('right')}*",
                 merged,

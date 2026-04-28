@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 from pathlib import Path
+import time
 from typing import Mapping
 
+from .formula.convert import formula_timing_collector
 from .http import HttpTransport
 from .models import FetchEnvelope, OutputMode, RenderOptions
 from .providers.base import ProviderFailure
@@ -46,15 +48,20 @@ def probe_has_fulltext(
     clients: Mapping[str, object] | None | object = RUNTIME_UNSET,
     context: RuntimeContext | None = None,
 ) -> HasFulltextProbeResult:
+    owns_runtime = context is None
     runtime = resolve_runtime_context(context, env=env, transport=transport, clients=clients)
-    return workflow_probe_has_fulltext(
-        query,
-        transport=runtime.transport,
-        env=runtime.env,
-        clients=runtime.clients,
-        context=runtime,
-        resolve_paper_fn=resolve_paper,
-    )
+    try:
+        return workflow_probe_has_fulltext(
+            query,
+            transport=runtime.transport,
+            env=runtime.env,
+            clients=runtime.clients,
+            context=runtime,
+            resolve_paper_fn=resolve_paper,
+        )
+    finally:
+        if owns_runtime:
+            runtime.close()
 
 
 def fetch_paper(
@@ -69,6 +76,7 @@ def fetch_paper(
     env: Mapping[str, str] | None | object = RUNTIME_UNSET,
     context: RuntimeContext | None = None,
 ) -> FetchEnvelope:
+    owns_runtime = context is None
     runtime = resolve_runtime_context(
         context,
         env=env,
@@ -76,22 +84,32 @@ def fetch_paper(
         clients=clients,
         download_dir=download_dir,
     )
-    requested_modes = set(modes or DEFAULT_OUTPUT_MODES)
-    active_strategy = strategy or FetchStrategy()
-    active_render = render or RenderOptions()
-    resolved_render = RenderOptions(
-        include_refs=active_render.include_refs,
-        asset_profile=(
-            active_render.asset_profile
-            if active_render.asset_profile is not None
-            else active_strategy.asset_profile
-        ),
-        max_tokens=active_render.max_tokens,
-    )
-    article = fetch_article(
-        query,
-        strategy=active_strategy,
-        context=runtime,
-        resolve_paper_fn=resolve_paper,
-    )
-    return build_fetch_envelope(article, modes=requested_modes, render=resolved_render)
+    try:
+        requested_modes = set(modes or DEFAULT_OUTPUT_MODES)
+        active_strategy = strategy or FetchStrategy()
+        active_render = render or RenderOptions()
+        resolved_render = RenderOptions(
+            include_refs=active_render.include_refs,
+            asset_profile=(
+                active_render.asset_profile
+                if active_render.asset_profile is not None
+                else active_strategy.asset_profile
+            ),
+            max_tokens=active_render.max_tokens,
+        )
+        with formula_timing_collector(
+            lambda seconds: runtime.accumulate_stage_timing("formula_seconds", elapsed=seconds)
+        ):
+            article = fetch_article(
+                query,
+                strategy=active_strategy,
+                context=runtime,
+                resolve_paper_fn=resolve_paper,
+            )
+            render_started_at = time.monotonic()
+            envelope = build_fetch_envelope(article, modes=requested_modes, render=resolved_render)
+            runtime.record_stage_timing("render_seconds", render_started_at)
+        return envelope
+    finally:
+        if owns_runtime:
+            runtime.close()

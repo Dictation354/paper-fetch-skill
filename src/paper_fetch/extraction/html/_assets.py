@@ -12,6 +12,7 @@ from html.parser import HTMLParser
 from pathlib import Path
 from typing import Any, Callable, Mapping
 
+from ...config import DEFAULT_ASSET_DOWNLOAD_CONCURRENCY
 from ...http import DEFAULT_FULLTEXT_TIMEOUT_SECONDS, HttpTransport, RequestFailure
 from ...models import AssetProfile, normalize_text
 from ...utils import build_asset_output_path, empty_asset_results, sanitize_filename, save_payload
@@ -100,6 +101,16 @@ _CLOUDFLARE_CHALLENGE_TOKENS = (
     "attention required",
     "checking your browser",
 )
+
+
+def _asset_download_worker_count(total: int, configured_concurrency: int | None) -> int:
+    if total <= 0:
+        return 0
+    try:
+        concurrency = int(configured_concurrency or DEFAULT_ASSET_DOWNLOAD_CONCURRENCY)
+    except (TypeError, ValueError):
+        concurrency = DEFAULT_ASSET_DOWNLOAD_CONCURRENCY
+    return min(max(1, concurrency), total)
 SUPPLEMENTARY_BLOCKING_TITLE_TOKENS = (
     "just a moment",
     "attention required",
@@ -1307,6 +1318,7 @@ def download_supplementary_assets(
     file_document_fetcher: FileDocumentFetcher | None = None,
     cookie_opener_builder: Callable[..., urllib.request.OpenerDirector | None] | None = None,
     opener_requester: Callable[..., dict[str, Any]] | None = None,
+    asset_download_concurrency: int | None = None,
 ) -> dict[str, list[dict[str, Any]]]:
     del transport
     if output_dir is None or asset_profile != "all" or not assets:
@@ -1334,7 +1346,7 @@ def download_supplementary_assets(
     ]
 
     resolved_results: list[dict[str, Any]] = []
-    max_workers = min(4, len(supplementary_assets))
+    max_workers = _asset_download_worker_count(len(supplementary_assets), asset_download_concurrency)
     if max_workers <= 1:
         resolved_results = [
             _resolve_supplementary_asset_download(
@@ -1608,6 +1620,7 @@ def download_figure_assets(
     image_document_fetcher: ImageDocumentFetcher | None = None,
     cookie_opener_builder: Callable[..., urllib.request.OpenerDirector | None] | None = None,
     opener_requester: Callable[..., dict[str, Any]] | None = None,
+    asset_download_concurrency: int | None = None,
 ) -> dict[str, list[dict[str, Any]]]:
     if output_dir is None or asset_profile == "none" or not assets:
         return empty_asset_results()
@@ -1621,7 +1634,7 @@ def download_figure_assets(
     active_cookie_opener_builder = cookie_opener_builder or _build_cookie_seeded_opener
     active_opener_requester = opener_requester or _request_with_opener
 
-    max_workers = min(4, len(assets))
+    max_workers = _asset_download_worker_count(len(assets), asset_download_concurrency)
     if max_workers <= 1:
         resolved_results = [
             _resolve_figure_asset_download(
@@ -1725,6 +1738,7 @@ def download_figure_assets_with_image_document_fetcher(
     figure_page_fetcher: FigurePageFetcher | None = None,
     candidate_builder: Callable[..., list[str]] | None = None,
     image_document_fetcher: ImageDocumentFetcher | None = None,
+    asset_download_concurrency: int | None = None,
 ) -> dict[str, list[dict[str, Any]]]:
     if output_dir is None or asset_profile == "none" or not assets:
         return empty_asset_results()
@@ -1738,7 +1752,7 @@ def download_figure_assets_with_image_document_fetcher(
     work_items = [(index, asset) for index, asset in enumerate(assets) if _requires_image_payload(asset)]
     resolved_by_index: dict[int, dict[str, Any] | None] = {}
     if work_items:
-        max_workers = min(4, len(work_items))
+        max_workers = _asset_download_worker_count(len(work_items), asset_download_concurrency)
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             future_by_index = {
                 index: executor.submit(

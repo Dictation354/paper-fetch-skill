@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor
+from dataclasses import dataclass
 from typing import Any, Mapping, cast
+import urllib.parse
 
 from ..config import build_user_agent
 from ..extraction.html.landing import fetch_landing_html
@@ -25,6 +27,14 @@ from .resolution import resolve_paper
 from .types import FetchStrategy, HasFulltextProbeResult, PaperFetchFailure, RouteProbeResult
 
 OFFICIAL_PROVIDER_NAMES = official_provider_names()
+_CACHE_MISSING = object()
+
+
+@dataclass(frozen=True)
+class LandingPageCitationPdfProbeResult:
+    has_citation_pdf_url: bool
+    title: str | None
+    citation_pdf_urls: list[str]
 
 
 def provider_allowed(provider_name: str | None, strategy: FetchStrategy) -> bool:
@@ -104,7 +114,7 @@ def _landing_page_citation_pdf_probe(
     *,
     transport: HttpTransport,
     env: Mapping[str, str],
-) -> tuple[bool, str | None]:
+) -> LandingPageCitationPdfProbeResult:
     landing_fetch = fetch_landing_html(
         landing_url,
         transport=transport,
@@ -118,8 +128,131 @@ def _landing_page_citation_pdf_probe(
     html_metadata = landing_fetch.metadata
     raw_meta = html_metadata.get("raw_meta") or {}
     citation_pdf_values = raw_meta.get("citation_pdf_url") if isinstance(raw_meta, Mapping) else None
-    has_citation_pdf_url = any(normalize_text(item) for item in (citation_pdf_values or []))
-    return has_citation_pdf_url, normalize_text(html_metadata.get("title"))
+    citation_pdf_urls = [
+        urllib.parse.urljoin(landing_fetch.final_url, normalized)
+        for normalized in [normalize_text(item) for item in (citation_pdf_values or [])]
+        if normalized
+    ]
+    return LandingPageCitationPdfProbeResult(
+        has_citation_pdf_url=bool(citation_pdf_urls),
+        title=normalize_text(html_metadata.get("title")),
+        citation_pdf_urls=list(dict.fromkeys(citation_pdf_urls)),
+    )
+
+
+def _session_cache_key_resolved_query(query: str) -> tuple[str, str]:
+    return ("resolved_query", normalize_text(query) or str(query))
+
+
+def _session_cache_key_crossref_metadata(doi: str) -> tuple[str, str, str]:
+    return ("metadata", "crossref", normalize_doi(doi) or doi)
+
+
+def _session_cache_key_provider_metadata_probe(provider_name: str, doi: str) -> tuple[str, str, str]:
+    return ("metadata_probe", normalize_text(provider_name).lower(), normalize_doi(doi) or doi)
+
+
+def _session_cache_key_landing_citation_pdf_probe(landing_url: str) -> tuple[str, str]:
+    return ("landing_page_citation_pdf_probe", normalize_text(landing_url) or landing_url)
+
+
+def resolve_query_with_session_cache(
+    query: str,
+    *,
+    resolver,
+    transport: HttpTransport,
+    env: Mapping[str, str],
+    context: RuntimeContext,
+):
+    cache_key = _session_cache_key_resolved_query(query)
+    return context.get_or_set_session_cache(
+        cache_key,
+        lambda: resolver(query, transport=transport, env=env),
+        copy_value=True,
+    )
+
+
+def fetch_crossref_metadata_with_session_cache(
+    doi: str | None,
+    crossref_client: object,
+    *,
+    context: RuntimeContext | None = None,
+) -> ProviderMetadata | None:
+    if not doi or not isinstance(crossref_client, MetadataProvider):
+        return None
+    normalized_doi = normalize_doi(doi) or doi
+    cache_key = _session_cache_key_crossref_metadata(normalized_doi)
+    if context is not None:
+        cached = context.get_session_cache(cache_key, default=_CACHE_MISSING)
+        if cached is not _CACHE_MISSING:
+            return cast(ProviderMetadata, cached)
+    metadata = cast(ProviderMetadata, dict(crossref_client.fetch_metadata({"doi": normalized_doi})))
+    if metadata and context is not None:
+        context.set_session_cache(cache_key, metadata)
+    return metadata
+
+
+def fetch_provider_metadata_probe_with_session_cache(
+    provider_name: str,
+    doi: str | None,
+    *,
+    clients: Mapping[str, object],
+    context: RuntimeContext | None = None,
+) -> ProviderMetadata | None:
+    if not doi:
+        return None
+    client = clients.get(provider_name)
+    if not isinstance(client, MetadataProvider):
+        return None
+    normalized_doi = normalize_doi(doi) or doi
+    cache_key = _session_cache_key_provider_metadata_probe(provider_name, normalized_doi)
+    if context is not None:
+        cached = context.get_session_cache(cache_key, default=_CACHE_MISSING)
+        if cached is not _CACHE_MISSING:
+            return cast(ProviderMetadata, cached)
+    metadata = client.fetch_metadata({"doi": normalized_doi})
+    result = cast(ProviderMetadata, dict(metadata)) if metadata else None
+    if result and context is not None:
+        context.set_session_cache(cache_key, result)
+    return result
+
+
+def landing_page_citation_pdf_probe_with_session_cache(
+    landing_url: str,
+    *,
+    transport: HttpTransport,
+    env: Mapping[str, str],
+    context: RuntimeContext | None = None,
+) -> LandingPageCitationPdfProbeResult:
+    cache_key = _session_cache_key_landing_citation_pdf_probe(landing_url)
+    if context is not None:
+        cached = context.get_session_cache(cache_key, default=_CACHE_MISSING)
+        if cached is not _CACHE_MISSING:
+            return cast(LandingPageCitationPdfProbeResult, cached)
+    result = _landing_page_citation_pdf_probe(
+        landing_url,
+        transport=transport,
+        env=env,
+    )
+    if result and context is not None:
+        context.set_session_cache(cache_key, result)
+    return result
+
+
+def get_cached_landing_page_citation_pdf_probe(
+    landing_url: str | None,
+    *,
+    context: RuntimeContext | None,
+) -> LandingPageCitationPdfProbeResult | None:
+    if context is None or not landing_url:
+        return None
+    cached = context.get_session_cache(
+        _session_cache_key_landing_citation_pdf_probe(landing_url),
+        default=_CACHE_MISSING,
+    )
+    if cached is _CACHE_MISSING:
+        return None
+    return cast(LandingPageCitationPdfProbeResult, cached)
 
 
 def probe_official_provider(
@@ -127,14 +260,19 @@ def probe_official_provider(
     *,
     doi: str,
     clients: Mapping[str, object],
+    context: RuntimeContext | None = None,
 ) -> RouteProbeResult:
     if provider_name != "elsevier":
         return RouteProbeResult(provider=provider_name, state="unknown")
-    client = clients.get(provider_name)
-    if not isinstance(client, MetadataProvider):
+    if not isinstance(clients.get(provider_name), MetadataProvider):
         return RouteProbeResult(provider=provider_name, state="unknown")
     try:
-        metadata = client.fetch_metadata({"doi": doi})
+        metadata = fetch_provider_metadata_probe_with_session_cache(
+            provider_name,
+            doi,
+            clients=clients,
+            context=context,
+        )
     except ProviderFailure as exc:
         return RouteProbeResult(provider=provider_name, state=classify_probe_state(exc))
     if metadata:
@@ -166,7 +304,13 @@ def probe_has_fulltext(
     active_transport = runtime.transport
     client_registry = dict(runtime.get_clients())
     resolver = resolve_paper_fn or resolve_paper
-    resolved = resolver(query, transport=active_transport, env=active_env)
+    resolved = resolve_query_with_session_cache(
+        query,
+        resolver=resolver,
+        transport=active_transport,
+        env=active_env,
+        context=runtime,
+    )
     if resolved.candidates and not resolved.doi:
         raise PaperFetchFailure(
             "ambiguous",
@@ -194,27 +338,25 @@ def probe_has_fulltext(
         )
 
     def fetch_crossref_metadata() -> ProviderMetadata | None:
-        if not doi or not isinstance(crossref_client, MetadataProvider):
-            return None
-        return cast(ProviderMetadata, dict(crossref_client.fetch_metadata({"doi": doi})))
+        return fetch_crossref_metadata_with_session_cache(doi, crossref_client, context=runtime)
 
     def fetch_elsevier_metadata() -> ProviderMetadata | None:
-        if not doi:
-            return None
-        client = client_registry.get("elsevier")
-        if not isinstance(client, MetadataProvider):
-            return None
-        metadata = client.fetch_metadata({"doi": doi})
-        return cast(ProviderMetadata, dict(metadata)) if metadata else None
+        return fetch_provider_metadata_probe_with_session_cache(
+            "elsevier",
+            doi,
+            clients=client_registry,
+            context=runtime,
+        )
 
-    def fetch_landing_probe(landing_url: str) -> tuple[bool, str | None]:
-        return _landing_page_citation_pdf_probe(
+    def fetch_landing_probe(landing_url: str) -> LandingPageCitationPdfProbeResult:
+        return landing_page_citation_pdf_probe_with_session_cache(
             landing_url,
             transport=active_transport,
             env=active_env,
+            context=runtime,
         )
 
-    landing_probe_by_url: dict[str, tuple[bool, str | None]] = {}
+    landing_probe_by_url: dict[str, LandingPageCitationPdfProbeResult] = {}
     landing_probe_errors: dict[str, RequestFailure] = {}
     elsevier_metadata: ProviderMetadata | None = None
     elsevier_error: ProviderFailure | None = None
@@ -283,10 +425,10 @@ def probe_has_fulltext(
             except RequestFailure as exc:
                 landing_probe_errors[landing_url] = exc
         if landing_url in landing_probe_by_url:
-            has_citation_pdf_url, landing_title = landing_probe_by_url[landing_url]
-            if has_citation_pdf_url:
+            landing_probe = landing_probe_by_url[landing_url]
+            if landing_probe.has_citation_pdf_url:
                 extend_unique(evidence, ["landing_page_citation_pdf_url"])
-            title = landing_title or title
+            title = landing_probe.title or title
         elif landing_url in landing_probe_errors:
             extend_unique(warnings, [_probe_warning("Landing-page metadata probe unavailable", str(landing_probe_errors[landing_url]))])
 

@@ -32,6 +32,11 @@ except ImportError:  # pragma: no cover - exercised implicitly when dependency i
     Tag = None
 
 HEADING_TAG_PATTERN = re.compile(r"^h[1-6]$")
+SECTION_TITLE_NON_ALNUM_PATTERN = re.compile(r"[^a-z0-9]+")
+INLINE_IMAGE_SPACING_PATTERN = re.compile(r"(?<=[^\s])(!\[)")
+INLINE_WHITESPACE_PATTERN = re.compile(r"[ \t\r\f\v]+")
+LINE_EDGE_WHITESPACE_PATTERN = re.compile(r" *\n *")
+MARKDOWN_BLANK_RUN_PATTERN = re.compile(r"\n{3,}")
 HTML_TIGHT_INLINE_TAGS = {"sub", "sup"}
 FIGURE_LABEL_PATTERN = re.compile(r"^\s*(?:fig(?:ure)?\.?)\s*(\d+[A-Za-z]?)\s*[:.]?\s*(.*)$", flags=re.IGNORECASE)
 FIGURE_ID_PATTERN = re.compile(r"(?:^|[-_ ])figure[-_ ]?(\d+[A-Za-z]?)$", flags=re.IGNORECASE)
@@ -102,7 +107,7 @@ def extract_section_title(section: Any) -> str:
 
 
 def normalize_section_title(title: str) -> str:
-    return re.sub(r"[^a-z0-9]+", " ", title.lower()).strip()
+    return SECTION_TITLE_NON_ALNUM_PATTERN.sub(" ", title.lower()).strip()
 
 
 def _select_first(node: Any, selectors: tuple[str, ...]) -> Any:
@@ -446,10 +451,10 @@ def _numeric_citation_payload_from_html(node: Any) -> str | None:
 
 def render_clean_text_from_html(node: Any) -> str:
     rendered = render_clean_html_node(node)
-    rendered = re.sub(r"(?<=[^\s])(!\[)", r" \1", rendered)
-    rendered = re.sub(r"[ \t\r\f\v]+", " ", rendered)
-    rendered = re.sub(r" *\n *", "\n", rendered)
-    rendered = re.sub(r"\n{3,}", "\n\n", rendered)
+    rendered = INLINE_IMAGE_SPACING_PATTERN.sub(r" \1", rendered)
+    rendered = INLINE_WHITESPACE_PATTERN.sub(" ", rendered)
+    rendered = LINE_EDGE_WHITESPACE_PATTERN.sub("\n", rendered)
+    rendered = MARKDOWN_BLANK_RUN_PATTERN.sub("\n\n", rendered)
     return normalize_text(rendered)
 
 

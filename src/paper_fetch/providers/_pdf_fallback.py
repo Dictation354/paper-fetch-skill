@@ -11,6 +11,7 @@ from typing import Any, Mapping
 
 from ..http import DEFAULT_FULLTEXT_TIMEOUT_SECONDS, HttpTransport, RequestFailure
 from ..extraction.html.signals import detect_html_block, summarize_html
+from ..runtime import RuntimeContext
 from ..utils import normalize_text
 from ._pdf_candidates import extract_pdf_candidate_urls_from_html
 from ._pdf_common import (
@@ -177,6 +178,7 @@ def fetch_pdf_with_playwright(
     headless: bool = True,
     storage_state_path: Path | None = None,
     seed_urls: list[str] | None = None,
+    context: RuntimeContext | None = None,
 ) -> PdfFallbackResult:
     if not candidate_urls:
         raise PdfFallbackFailure("empty_pdf_attempts", "No PDF fallback candidates were attempted.")
@@ -196,7 +198,7 @@ def fetch_pdf_with_playwright(
     if browser_cookies:
         try:
             return fetch_pdf_over_http(
-                HttpTransport(),
+                context.transport if context is not None and context.transport is not None else HttpTransport(),
                 candidate_urls,
                 headers={"User-Agent": active_user_agent},
                 timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
@@ -206,134 +208,154 @@ def fetch_pdf_with_playwright(
         except PdfFallbackFailure as exc:
             last_failure = exc
 
-    with sync_playwright() as playwright:
-        browser = playwright.chromium.launch(headless=headless)
-        context_kwargs: dict[str, Any] = {
-            "user_agent": active_user_agent,
-            "locale": "en-US",
-            "viewport": {"width": 1440, "height": 1600},
-            "accept_downloads": True,
-        }
-        if storage_state_path is not None:
-            sanitized_storage_state_path = sanitize_storage_state(storage_state_path)
-            context_kwargs["storage_state"] = str(sanitized_storage_state_path)
-        context = browser.new_context(**context_kwargs)
+    context_kwargs: dict[str, Any] = {
+        "user_agent": active_user_agent,
+        "locale": "en-US",
+        "viewport": {"width": 1440, "height": 1600},
+        "accept_downloads": True,
+    }
+    if storage_state_path is not None:
+        sanitized_storage_state_path = sanitize_storage_state(storage_state_path)
+        context_kwargs["storage_state"] = str(sanitized_storage_state_path)
 
-        try:
-            if browser_cookies:
-                try:
-                    context.add_cookies(browser_cookies)
-                except Exception as exc:
-                    raise PdfFallbackFailure(
-                        "invalid_browser_context_seed",
-                        f"Failed to seed browser-context PDF fallback with cookies: {exc}",
-                    ) from exc
+    manager = None
+    browser = None
+    browser_context = None
+    try:
+        if context is not None:
+            browser_context = context.new_playwright_context(headless=headless, **context_kwargs)
+        else:
+            manager = sync_playwright().start()
+            browser = manager.chromium.launch(headless=headless)
+            browser_context = browser.new_context(**context_kwargs)
 
-            page = context.new_page()
-            for seed_url in [normalize_text(url) for url in seed_urls or [] if normalize_text(url)]:
-                try:
-                    page.goto(seed_url, wait_until="domcontentloaded", timeout=60000)
-                except Exception:
-                    continue
-            for url in candidate_urls:
-                initial_response = None
-                try:
-                    with page.expect_download(timeout=30000) as download_info:
-                        try:
-                            initial_response = page.goto(url, wait_until="domcontentloaded", timeout=60000)
-                        except PlaywrightError as exc:
-                            if "Download is starting" not in str(exc):
-                                raise
-                    download = download_info.value
-                except PlaywrightTimeoutError:
-                    response = initial_response
-                    if response is None:
-                        try:
-                            response = page.goto(url, wait_until="domcontentloaded", timeout=60000)
-                        except Exception:
-                            response = None
-                    if response is not None:
-                        try:
-                            pdf_result = _response_to_pdf_result(
-                                response,
-                                artifact_dir=artifact_dir,
-                                source_url=url,
-                                final_url=page.url,
-                            )
-                            if pdf_result is not None:
-                                return pdf_result
-                        except PdfFallbackFailure as exc:
-                            last_failure = exc
-                            continue
-                    title = normalize_text(page.title())
-                    html = page.content()
-                    current_url = normalize_text(page.url)
-                    html_base_url = current_url
-                    parsed_current_url = urllib.parse.urlparse(current_url)
-                    if parsed_current_url.scheme not in {"http", "https"} or not normalize_text(parsed_current_url.netloc):
-                        html_base_url = url
-                    discovered = extract_pdf_candidate_urls_from_html(html, html_base_url)
-                    http_retry_candidates: list[str] = []
-                    for candidate in [urllib.parse.urljoin(html_base_url or "", url), *discovered]:
-                        normalized_candidate = normalize_text(candidate)
-                        if normalized_candidate and normalized_candidate not in http_retry_candidates:
-                            http_retry_candidates.append(normalized_candidate)
-                    if http_retry_candidates:
-                        try:
-                            context_cookies = context.cookies()
-                        except Exception:
-                            context_cookies = list(browser_cookies or [])
-                        http_headers = {"User-Agent": active_user_agent}
-                        referer = normalize_text(html_base_url)
-                        if referer:
-                            http_headers["Referer"] = referer
-                        try:
-                            return fetch_pdf_over_http(
-                                HttpTransport(),
-                                http_retry_candidates,
-                                headers=http_headers,
-                                timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
-                                artifact_dir=artifact_dir,
-                                browser_cookies=context_cookies,
-                            )
-                        except PdfFallbackFailure as exc:
-                            last_failure = exc
-                    summary = summarize_html(html)
-                    detected = detect_html_block(title, summary, None)
-                    (artifact_dir / "pdf.failure.html").write_text(html, encoding="utf-8")
+        if browser_cookies:
+            try:
+                browser_context.add_cookies(browser_cookies)
+            except Exception as exc:
+                raise PdfFallbackFailure(
+                    "invalid_browser_context_seed",
+                    f"Failed to seed browser-context PDF fallback with cookies: {exc}",
+                ) from exc
+
+        page = browser_context.new_page()
+        for seed_url in [normalize_text(url) for url in seed_urls or [] if normalize_text(url)]:
+            try:
+                page.goto(seed_url, wait_until="domcontentloaded", timeout=60000)
+            except Exception:
+                continue
+        for url in candidate_urls:
+            initial_response = None
+            try:
+                with page.expect_download(timeout=30000) as download_info:
                     try:
-                        page.screenshot(path=str(artifact_dir / "pdf.failure.png"), full_page=True)
+                        initial_response = page.goto(url, wait_until="domcontentloaded", timeout=60000)
+                    except PlaywrightError as exc:
+                        if "Download is starting" not in str(exc):
+                            raise
+                download = download_info.value
+            except PlaywrightTimeoutError:
+                response = initial_response
+                if response is None:
+                    try:
+                        response = page.goto(url, wait_until="domcontentloaded", timeout=60000)
                     except Exception:
-                        pass
-                    last_failure = PdfFallbackFailure(
-                        detected.reason if detected is not None else "pdf_download_not_triggered",
-                        detected.message if detected is not None else "Browser context did not trigger a PDF download.",
-                        details={"source_url": url, "final_url": page.url},
-                    )
-                    continue
-                except Exception as exc:
-                    last_failure = PdfFallbackFailure(
-                        "pdf_download_failed",
-                        f"Failed to trigger PDF fallback download: {exc}",
-                        details={"source_url": url},
-                    )
-                    continue
-
+                        response = None
+                if response is not None:
+                    try:
+                        pdf_result = _response_to_pdf_result(
+                            response,
+                            artifact_dir=artifact_dir,
+                            source_url=url,
+                            final_url=page.url,
+                        )
+                        if pdf_result is not None:
+                            return pdf_result
+                    except PdfFallbackFailure as exc:
+                        last_failure = exc
+                        continue
+                title = normalize_text(page.title())
+                html = page.content()
+                current_url = normalize_text(page.url)
+                html_base_url = current_url
+                parsed_current_url = urllib.parse.urlparse(current_url)
+                if parsed_current_url.scheme not in {"http", "https"} or not normalize_text(parsed_current_url.netloc):
+                    html_base_url = url
+                discovered = extract_pdf_candidate_urls_from_html(html, html_base_url)
+                http_retry_candidates: list[str] = []
+                for candidate in [urllib.parse.urljoin(html_base_url or "", url), *discovered]:
+                    normalized_candidate = normalize_text(candidate)
+                    if normalized_candidate and normalized_candidate not in http_retry_candidates:
+                        http_retry_candidates.append(normalized_candidate)
+                if http_retry_candidates:
+                    try:
+                        context_cookies = browser_context.cookies()
+                    except Exception:
+                        context_cookies = list(browser_cookies or [])
+                    http_headers = {"User-Agent": active_user_agent}
+                    referer = normalize_text(html_base_url)
+                    if referer:
+                        http_headers["Referer"] = referer
+                    try:
+                        return fetch_pdf_over_http(
+                            context.transport if context is not None and context.transport is not None else HttpTransport(),
+                            http_retry_candidates,
+                            headers=http_headers,
+                            timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
+                            artifact_dir=artifact_dir,
+                            browser_cookies=context_cookies,
+                        )
+                    except PdfFallbackFailure as exc:
+                        last_failure = exc
+                summary = summarize_html(html)
+                detected = detect_html_block(title, summary, None)
+                (artifact_dir / "pdf.failure.html").write_text(html, encoding="utf-8")
                 try:
-                    return _download_to_pdf_result(
-                        download,
-                        artifact_dir=artifact_dir,
-                        source_url=url,
-                        final_url=page.url,
-                    )
-                except PdfFallbackFailure as exc:
-                    last_failure = exc
-                    continue
-        finally:
-            context.close()
-            browser.close()
-            if sanitized_storage_state_path is not None:
-                sanitized_storage_state_path.unlink(missing_ok=True)
+                    page.screenshot(path=str(artifact_dir / "pdf.failure.png"), full_page=True)
+                except Exception:
+                    pass
+                last_failure = PdfFallbackFailure(
+                    detected.reason if detected is not None else "pdf_download_not_triggered",
+                    detected.message if detected is not None else "Browser context did not trigger a PDF download.",
+                    details={"source_url": url, "final_url": page.url},
+                )
+                continue
+            except Exception as exc:
+                last_failure = PdfFallbackFailure(
+                    "pdf_download_failed",
+                    f"Failed to trigger PDF fallback download: {exc}",
+                    details={"source_url": url},
+                )
+                continue
+
+            try:
+                return _download_to_pdf_result(
+                    download,
+                    artifact_dir=artifact_dir,
+                    source_url=url,
+                    final_url=page.url,
+                )
+            except PdfFallbackFailure as exc:
+                last_failure = exc
+                continue
+    finally:
+        if browser_context is not None:
+            try:
+                browser_context.close()
+            except Exception:
+                pass
+        if browser is not None:
+            try:
+                browser.close()
+            except Exception:
+                pass
+        if manager is not None:
+            try:
+                manager.stop()
+            except Exception:
+                pass
+        if sanitized_storage_state_path is not None:
+            sanitized_storage_state_path.unlink(missing_ok=True)
 
     if last_failure is None:
         last_failure = PdfFallbackFailure("empty_pdf_attempts", "No PDF fallback candidates were attempted.")

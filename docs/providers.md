@@ -24,7 +24,7 @@
 | `springer` | 依赖 Crossref merge | `direct HTML -> direct HTTP PDF` | HTML 路线支持 `none` / `body` / `all`；PDF fallback 当前 text-only | 强 | `nature.com` 继续挂在 `springer` provider / `springer_html` source 下；必要时可返回 provider `abstract_only` |
 | `wiley` | 依赖 Crossref merge | `FlareSolverr HTML -> seeded-browser publisher PDF/ePDF -> Wiley TDM API PDF` | HTML 路线支持 `none` / `body` / `all`；PDF/ePDF fallback 当前 text-only | 中 | HTML 与 browser PDF/ePDF 依赖 repo-local FlareSolverr；`WILEY_TDM_CLIENT_TOKEN` 可在 browser PDF/ePDF fallback 失败或 browser runtime 不可用时继续尝试官方 TDM PDF lane；必要时可返回 provider `abstract_only` |
 | `science` | 依赖 Crossref | `FlareSolverr HTML -> seeded-browser publisher PDF/ePDF` | HTML 路线支持 `none` / `body` / `all`；PDF/ePDF fallback 当前 text-only | 中 | 与 `wiley` 的 HTML / browser PDF/ePDF 路径共用浏览器工作流基座；AAAS access gate / entitlement 不满足时会停在 provider 内部并降级 `abstract_only` / `metadata_only` |
-| `pnas` | 依赖 Crossref | `direct Playwright HTML preflight -> FlareSolverr HTML -> seeded-browser publisher PDF/ePDF` | HTML 路线支持 `none` / `body` / `all`；PDF/ePDF fallback 当前 text-only | 中 | PNAS 会先尝试轻量 Playwright 直取 HTML，成功时跳过 FlareSolverr；失败、challenge、正文不足或抽取失败时保持原 FlareSolverr/PDF 瀑布；较老文献常见 HTML 仅摘要，再继续走 provider 内部 PDF/ePDF fallback，必要时可返回 `abstract_only` |
+| `pnas` | 依赖 Crossref | `direct Playwright HTML preflight -> FlareSolverr HTML -> seeded-browser publisher PDF/ePDF` | HTML 路线支持 `none` / `body` / `all`；PDF/ePDF fallback 当前 text-only | 中 | direct Playwright preflight 成功时跳过 FlareSolverr；失败、challenge、正文不足或抽取失败时保持原 FlareSolverr/PDF 瀑布；较老文献常见 HTML 仅摘要，再继续走 provider 内部 PDF/ePDF fallback，必要时可返回 `abstract_only` |
 
 说明：
 
@@ -36,7 +36,7 @@
 - `geography` live runner 默认按 provider 轮转执行，保持单家样本顺序不变。
 - `run_geography_live_report.py`、`export_geography_issue_artifacts.py`、`group_geography_issue_artifacts.py` 都属于 repo-local internal tooling：不新增 console script，不作为 MCP surface，对外产品面不变。
 - geography live/report/export/group 仍受 `PAPER_FETCH_RUN_LIVE=1` 的 opt-in 边界保护；未启用 live 环境时，对应测试应稳定 skip。
-- golden criteria live review 产物写入 `live-downloads/golden-criteria-review/`，由 [`../scripts/run_golden_criteria_live_review.py`](../scripts/run_golden_criteria_live_review.py) 生成；`10.1016/S1575-1813(18)30261-4` 这类预期 metadata-only 样本，以及当前不支持的 TandF / Sage 样本，应通过 manifest 的 expected outcome 标记为 `skipped`，不进入 provider bug 修复队列。
+- golden criteria live review 产物写入 `live-downloads/golden-criteria-review/`，由 [`../scripts/run_golden_criteria_live_review.py`](../scripts/run_golden_criteria_live_review.py) 生成；每条结果保留兼容的 `elapsed_seconds`，并新增 `stage_timings.fetch_seconds` / `materialize_seconds` / `total_seconds` / `resolve_seconds` / `metadata_seconds` / `fulltext_seconds` / `asset_seconds` / `formula_seconds` / `render_seconds`，同时在 `http_cache_stats` 中记录该 sample 相对执行前的 cache delta。`10.1016/S1575-1813(18)30261-4` 这类预期 metadata-only 样本，以及当前不支持的 TandF / Sage 样本，应通过 manifest 的 expected outcome 标记为 `skipped`，不进入 provider bug 修复队列。
 
 ## 路由规则
 
@@ -128,12 +128,14 @@ resolve
 - `wiley`
   - 使用 provider 自管 HTML + 官方 API PDF + publisher PDF/ePDF waterfall。
   - 固定顺序是 `FlareSolverr HTML -> seeded-browser publisher PDF/ePDF -> Wiley TDM API PDF -> abstract-only / metadata-only`。
+  - 不做 direct Playwright HTML preflight，避免低成功率路径增加固定开销。
   - FlareSolverr HTML 正文首轮使用 `waitInSeconds=0` + `disableMedia=true` 的快速路径；challenge、访问拦截、摘要页或正文抽取不足时回退到原保守等待参数。
   - `WILEY_TDM_CLIENT_TOKEN` 是官方 TDM API PDF lane；缺失时仍可继续尝试 browser PDF/ePDF，配置后会在 browser PDF/ePDF fallback 失败或 browser runtime 不可用时继续尝试 TDM PDF。
   - 成功时公开 `source="wiley_browser"`。
 - `science`
   - 固定顺序是 `FlareSolverr HTML -> seeded-browser publisher PDF/ePDF -> abstract-only / metadata-only`。
   - 与 `wiley` 的 HTML / browser PDF/ePDF 路径共享同一套浏览器工作流基座。
+  - 不做 direct Playwright HTML preflight，避免低成功率路径增加固定开销。
   - FlareSolverr HTML 正文首轮使用同一快速路径，并在 challenge、访问拦截、摘要页或正文抽取不足时保守重试。
   - 如果落到 AAAS 的 `Check access` / paywall 页面，应优先解读为 `institution not entitled / no access`，而不是 generic HTML fallback 缺失。
   - 成功时公开 `source="science"`。
@@ -189,7 +191,7 @@ resolve
   - provider 自管 `direct HTML -> direct HTTP PDF`
   - 成功轨迹是 `fulltext:springer_html_*`，PDF fallback 成功时会带 `fulltext:springer_pdf_fallback_ok`
 - `wiley`
-  - provider 自管 HTML + Wiley TDM API PDF + seeded-browser publisher PDF/ePDF waterfall
+  - provider 自管 FlareSolverr HTML + Wiley TDM API PDF + seeded-browser publisher PDF/ePDF waterfall
   - 成功轨迹是 `fulltext:wiley_html_*` / `fulltext:wiley_pdf_api_ok` / `fulltext:wiley_pdf_browser_ok` / `fulltext:wiley_pdf_fallback_ok`
   - 失败时若 API lane 未产出 PDF，会保留 `fulltext:wiley_pdf_api_fail`；若 browser PDF/ePDF lane 已实际尝试但失败，会再带 `fulltext:wiley_pdf_browser_fail`
 - `science`
@@ -248,8 +250,10 @@ CLI、Python API、MCP 当前统一采用这些默认值：
 - `wiley` / `science` / `pnas` 的 PDF/ePDF fallback 仍是 text-only
 - `springer` HTML 成功路径也按相同语义处理：正文图片只从 cleaned body/content scope 抽取，`all` 额外下载 supplementary 文件；PDF fallback 仍是 text-only
 - `elsevier` XML 成功路径下，`body` 继续只下载 `image` / `table_asset`，`all` 会额外下载 `supplementary` references，并统一映射到 `kind="supplementary"` / `section="supplementary"` / `download_tier="supplementary_file"`
-- 通用 HTML figure 与 supplementary 下载会先并行解析网络响应，再按原 asset 顺序串行写文件；输出顺序、文件名去重和 fallback 候选顺序保持稳定。Elsevier XML object references 也使用同样的“网络并发、写入串行”约束。
+- 通用 HTML figure 与 supplementary 下载会先并行解析网络响应，再按原 asset 顺序串行写文件；输出顺序、文件名去重和 fallback 候选顺序保持稳定。Elsevier XML object references 也使用同样的“网络并发、写入串行”约束。并发 worker 上限由 `PAPER_FETCH_ASSET_DOWNLOAD_CONCURRENCY` 控制，默认 `4`、最小 `1`。
 - 同一次 provider fetch 内会复用 `RuntimeContext.parse_cache`：Elsevier XML root、Springer HTML extraction、Wiley/Science/PNAS browser-workflow Markdown extraction 和 HTML asset extraction 不跨阶段重复解析同一份 payload。
+- 同一个 `RuntimeContext` 生命周期内还会复用 `session_cache`：`has_fulltext` 与后续 `fetch_paper` 可共享 query resolution、Crossref DOI metadata、Elsevier metadata probe 和 landing page `citation_pdf_url` probe；fetch 阶段命中 landing probe 时会把 citation PDF URL 合并到 metadata `fulltext_links`。
+- 同一个 `RuntimeContext` 内会 lazy 复用 Playwright Chromium browser；PNAS direct HTML preflight、正文图片/文件 fetcher 与 PDF/ePDF fallback 仍按阶段创建独立 browser context/page，避免 cookie、route handler 和下载设置互相污染。
 
 ### 资产去重与诊断
 
@@ -472,13 +476,15 @@ Springer direct HTML / direct HTTP PDF 路线当前没有额外必填 publisher 
 - 磁盘缓存支持 `ETag` / `Last-Modified` 条件请求；stale 条目收到 `304` 时复用本地 body
 - `PAPER_FETCH_HTTP_DISK_CACHE_DIR` 可显式指定磁盘 HTTP 缓存目录
 - `PAPER_FETCH_HTTP_DISK_CACHE=1` 且未设置下载目录时，会使用用户数据目录下的 `http-cache`
-- `PAPER_FETCH_HTTP_METADATA_CACHE_TTL` 控制磁盘缓存 freshness 秒数，默认与进程内 TTL 一致
+- `PAPER_FETCH_HTTP_METADATA_CACHE_TTL` 控制磁盘缓存 freshness 秒数，默认 `86400`（1 day）；普通进程内 GET TTL 仍默认 `30` 秒
+- `HttpTransport.cache_stats_snapshot()` 返回线程安全的累计计数：`memory_hit`、`disk_fresh_hit`、`disk_stale_revalidate`、`disk_304_refresh`、`miss`、`store`、`bypass`；golden criteria live review 的 sample 结果写入相对执行前的 delta，最终汇总日志保留累计快照
 
 连接池与同 host 并发默认较保守：
 
 - `PAPER_FETCH_HTTP_POOL_NUM_POOLS`：默认 `16`
 - `PAPER_FETCH_HTTP_POOL_MAXSIZE`：默认 `4`
 - `PAPER_FETCH_HTTP_PER_HOST_CONCURRENCY`：默认 `4`
+- `PAPER_FETCH_ASSET_DOWNLOAD_CONCURRENCY`：默认 `4`，最小 `1`，控制 HTML / browser workflow / Elsevier body asset 下载 worker 上限
 
 ### HTTP 重试与大小限制
 

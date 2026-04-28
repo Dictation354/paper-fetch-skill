@@ -134,6 +134,50 @@ class FormulaConversionTests(unittest.TestCase):
         self.assertEqual(second.latex, "x")
         self.assertEqual(second.duration_ms, 0)
 
+    def test_formula_timing_collector_records_uncached_and_cache_hit_calls(self) -> None:
+        raw_mathml = '<math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi></math>'
+        durations: list[float] = []
+        original_texmath = formula_conversion.convert_with_texmath
+        original_monotonic = formula_conversion.time.monotonic
+        monotonic_values = iter([10.0, 10.125, 20.0, 20.05])
+        try:
+            formula_conversion.time.monotonic = lambda: next(monotonic_values)
+
+            def fake_texmath(*args, **kwargs):
+                return formula_conversion.FormulaConversionResult(
+                    backend="texmath",
+                    status="ok",
+                    latex="x",
+                    raw_mathml=raw_mathml,
+                    error=None,
+                    duration_ms=7,
+                    display_mode=False,
+                )
+
+            formula_conversion.convert_with_texmath = fake_texmath
+
+            with formula_conversion.formula_timing_collector(durations.append):
+                first = formula_conversion.convert_mathml_string(
+                    raw_mathml,
+                    display_mode=False,
+                    env={},
+                    backend="texmath",
+                )
+                second = formula_conversion.convert_mathml_string(
+                    raw_mathml,
+                    display_mode=False,
+                    env={},
+                    backend="texmath",
+                )
+        finally:
+            formula_conversion.convert_with_texmath = original_texmath
+            formula_conversion.time.monotonic = original_monotonic
+
+        self.assertEqual(first.status, "ok")
+        self.assertEqual(second.status, "ok")
+        self.assertEqual(second.duration_ms, 0)
+        self.assertEqual([round(duration, 3) for duration in durations], [0.125, 0.05])
+
     def test_mathml_to_latex_worker_success_avoids_cli_process(self) -> None:
         raw_mathml = '<math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi></math>'
         original_command = formula_conversion._resolve_mathml_to_latex_command

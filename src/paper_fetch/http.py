@@ -31,6 +31,7 @@ from .logging_utils import emit_structured_log
 DEFAULT_TIMEOUT_SECONDS = 20
 DEFAULT_FULLTEXT_TIMEOUT_SECONDS = 90
 DEFAULT_CACHE_TTL_SECONDS = 30
+DEFAULT_METADATA_CACHE_TTL_SECONDS = 86400
 DEFAULT_CACHE_CAPACITY = 128
 DEFAULT_MAX_CACHEABLE_BODY_BYTES = 1024 * 1024
 DEFAULT_MAX_TOTAL_CACHE_BYTES = 16 * 1024 * 1024
@@ -43,6 +44,15 @@ DEFAULT_POOL_MAXSIZE = 4
 DEFAULT_PER_HOST_CONCURRENCY = 4
 DISK_CACHE_VERSION = 1
 TRANSIENT_HTTP_STATUS_CODES = frozenset(range(500, 600))
+CACHE_STAT_KEYS = (
+    "memory_hit",
+    "disk_fresh_hit",
+    "disk_stale_revalidate",
+    "disk_304_refresh",
+    "miss",
+    "store",
+    "bypass",
+)
 
 TEXTUAL_CONTENT_TYPES = (
     "text/",
@@ -150,6 +160,8 @@ class HttpTransport:
         )
         self._cache_body_bytes = 0
         self._cache_lock = threading.RLock()
+        self._cache_stats_lock = threading.Lock()
+        self._cache_stats = {key: 0 for key in CACHE_STAT_KEYS}
         self._host_semaphores: dict[str, threading.BoundedSemaphore] = {}
         self._host_semaphores_lock = threading.Lock()
         self._pool = urllib3.PoolManager(
@@ -157,6 +169,16 @@ class HttpTransport:
             maxsize=self.pool_maxsize,
             block=True,
         )
+
+    def _increment_cache_stat(self, name: str, amount: int = 1) -> None:
+        if name not in self._cache_stats:
+            return
+        with self._cache_stats_lock:
+            self._cache_stats[name] += max(0, int(amount))
+
+    def cache_stats_snapshot(self) -> dict[str, int]:
+        with self._cache_stats_lock:
+            return dict(self._cache_stats)
 
     def _host_semaphore_for_url(self, url: str) -> threading.BoundedSemaphore | None:
         hostname = urllib.parse.urlparse(url).hostname
@@ -231,13 +253,13 @@ class HttpTransport:
         self,
         cache_key: _CacheKey | None,
         response: Mapping[str, Any],
-    ) -> None:
+    ) -> bool:
         if cache_key is None or not self._is_cacheable_response(response):
-            return
+            return False
         cloned_response = self._clone_response(response)
         body_size = self._cache_body_size(cloned_response)
         if self.max_total_cache_bytes > 0 and body_size > self.max_total_cache_bytes:
-            return
+            return False
         with self._cache_lock:
             self._cache.expire()
             self._cache.pop(cache_key, None)
@@ -245,9 +267,10 @@ class HttpTransport:
                 self._cache[cache_key] = cloned_response
             except ValueError:
                 self._sync_cache_body_bytes()
-                return
+                return False
             self._enforce_cache_capacity()
             self._sync_cache_body_bytes()
+        return True
 
     def _disk_cache_path(self, cache_key: _CacheKey) -> Path | None:
         if self.disk_cache_dir is None:
@@ -288,15 +311,15 @@ class HttpTransport:
         self,
         cache_key: _CacheKey | None,
         response: Mapping[str, Any],
-    ) -> None:
+    ) -> bool:
         if cache_key is None or self.disk_cache_dir is None or not self._is_cacheable_response(response):
-            return
+            return False
         cache_path = self._disk_cache_path(cache_key)
         if cache_path is None:
-            return
+            return False
         body = response.get("body", b"")
         if not isinstance(body, (bytes, bytearray)):
-            return
+            return False
         payload = {
             "version": DISK_CACHE_VERSION,
             "stored_at": time.time(),
@@ -311,7 +334,8 @@ class HttpTransport:
             tmp_path.write_text(json.dumps(payload, ensure_ascii=True, sort_keys=True), encoding="utf-8")
             tmp_path.replace(cache_path)
         except OSError:
-            return
+            return False
+        return True
 
     def _conditional_headers_from_cached_response(self, response: Mapping[str, Any]) -> dict[str, str]:
         headers = {str(key).lower(): str(value) for key, value in dict(response.get("headers") or {}).items()}
@@ -541,19 +565,27 @@ class HttpTransport:
         if not any(str(key).lower() == "accept-encoding" for key in request_headers):
             request_headers["Accept-Encoding"] = "gzip"
         cache_key = self._build_cache_key(method, url, request_headers)
+        if cache_key is None:
+            self._increment_cache_stat("bypass")
         cached_response = self._load_cached_response(cache_key)
         if cached_response is not None:
+            self._increment_cache_stat("memory_hit")
             return cached_response
         disk_cache_entry = self._load_disk_cached_entry(cache_key)
         stale_disk_response: dict[str, Any] | None = None
         if disk_cache_entry is not None:
             disk_response = self._clone_response(disk_cache_entry["response"])
             if disk_cache_entry["fresh"]:
-                self._store_cached_response(cache_key, disk_response)
+                self._increment_cache_stat("disk_fresh_hit")
+                if self._store_cached_response(cache_key, disk_response):
+                    self._increment_cache_stat("store")
                 return disk_response
             stale_disk_response = disk_response
+            self._increment_cache_stat("disk_stale_revalidate")
             for header_name, header_value in self._conditional_headers_from_cached_response(disk_response).items():
                 request_headers.setdefault(header_name, header_value)
+        elif cache_key is not None:
+            self._increment_cache_stat("miss")
         self._check_cancelled()
         transient_backoff_base_seconds = max(0.0, float(transient_backoff_base_seconds))
         rate_limit_policy = self._build_rate_limit_retry_policy(
@@ -614,8 +646,11 @@ class HttpTransport:
                             elapsed_ms=round((time.monotonic() - request_started_at) * 1000, 3),
                             attempt=attempt,
                         )
-                        self._store_cached_response(cache_key, response_payload)
-                        self._store_disk_cached_response(cache_key, response_payload)
+                        self._increment_cache_stat("disk_304_refresh")
+                        stored = self._store_cached_response(cache_key, response_payload)
+                        stored = self._store_disk_cached_response(cache_key, response_payload) or stored
+                        if stored:
+                            self._increment_cache_stat("store")
                         return response_payload
                     if int(response.status) >= 400:
                         (
@@ -655,8 +690,10 @@ class HttpTransport:
                         elapsed_ms=round((time.monotonic() - request_started_at) * 1000, 3),
                         attempt=attempt,
                     )
-                    self._store_cached_response(cache_key, response_payload)
-                    self._store_disk_cached_response(cache_key, response_payload)
+                    stored = self._store_cached_response(cache_key, response_payload)
+                    stored = self._store_disk_cached_response(cache_key, response_payload) or stored
+                    if stored:
+                        self._increment_cache_stat("store")
                     return response_payload
                 except urllib.error.HTTPError as exc:
                     try:
@@ -913,7 +950,11 @@ def is_textual_content_type(content_type: str | None) -> bool:
     normalized = (content_type or "").split(";", 1)[0].strip().lower()
     if not normalized:
         return False
-    return any(normalized.startswith(prefix) or normalized == prefix for prefix in TEXTUAL_CONTENT_TYPES) or normalized.endswith("+xml")
+    return (
+        any(normalized.startswith(prefix) or normalized == prefix for prefix in TEXTUAL_CONTENT_TYPES)
+        or normalized.endswith("+xml")
+        or normalized.endswith("+json")
+    )
 
 
 def build_text_preview(body: bytes, content_type: str | None) -> str | None:

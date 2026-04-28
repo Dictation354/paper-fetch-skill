@@ -25,12 +25,16 @@ from ..utils import (
 from .metadata import fetch_metadata_for_resolved_query
 from .rendering import finalize_article
 from .resolution import resolve_paper
-from .routing import provider_allowed
+from .routing import provider_allowed, resolve_query_with_session_cache
 from .shared import source_trail_for_failure
 from .types import FetchStrategy, PaperFetchFailure
 
 logger = logging.getLogger("paper_fetch.service")
 PROVIDER_MANAGED_ABSTRACT_ONLY_PROVIDERS = provider_managed_abstract_only_names()
+
+
+def _record_stage_timing(context: RuntimeContext, name: str, started_at: float) -> None:
+    context.record_stage_timing(name, started_at)
 
 
 @lru_cache(maxsize=128)
@@ -142,14 +146,18 @@ def _provider_fetch_result(
     downloaded_assets: list[Mapping[str, Any]] = []
     asset_failures: list[Mapping[str, Any]] = []
     if download_dir is not None and asset_profile != "none" and isinstance(provider_client, AssetProvider):
-        asset_results = provider_client.download_related_assets(
-            doi,
-            metadata,
-            raw_payload,
-            download_dir,
-            asset_profile=asset_profile,
-            context=context,
-        )
+        asset_started_at = time.monotonic()
+        try:
+            asset_results = provider_client.download_related_assets(
+                doi,
+                metadata,
+                raw_payload,
+                download_dir,
+                asset_profile=asset_profile,
+                context=context,
+            )
+        finally:
+            context.accumulate_stage_timing("asset_seconds", started_at=asset_started_at)
         downloaded_assets = list(asset_results.get("assets") or [])
         asset_failures = list(asset_results.get("asset_failures") or [])
     article = provider_client.to_article_model(
@@ -348,6 +356,7 @@ def fetch_article(
     context: RuntimeContext | None = None,
     resolve_paper_fn=None,
 ) -> ArticleModel:
+    owns_runtime = context is None
     runtime = resolve_runtime_context(
         context,
         env=env,
@@ -358,53 +367,70 @@ def fetch_article(
     assert runtime.env is not None
     assert runtime.transport is not None
     assert runtime.artifact_store is not None
-    active_env = runtime.env
-    active_transport = runtime.transport
-    client_registry = dict(runtime.get_clients())
-    resolver = resolve_paper_fn or resolve_paper
-    resolved = resolver(query, transport=active_transport, env=active_env)
-    source_trail: list[str] = [f"resolve:{resolved.query_kind}"]
-    if resolved.doi:
-        source_trail.append("resolve:doi_selected")
-    if resolved.candidates and not resolved.doi:
-        raise PaperFetchFailure(
-            "ambiguous",
-            "Query resolution is ambiguous; choose one of the DOI candidates.",
-            candidates=resolved.candidates,
+    try:
+        active_env = runtime.env
+        active_transport = runtime.transport
+        client_registry = dict(runtime.get_clients())
+        resolver = resolve_paper_fn or resolve_paper
+        resolve_started_at = time.monotonic()
+        resolved = resolve_query_with_session_cache(
+            query,
+            resolver=resolver,
+            transport=active_transport,
+            env=active_env,
+            context=runtime,
         )
+        _record_stage_timing(runtime, "resolve_seconds", resolve_started_at)
+        source_trail: list[str] = [f"resolve:{resolved.query_kind}"]
+        if resolved.doi:
+            source_trail.append("resolve:doi_selected")
+        if resolved.candidates and not resolved.doi:
+            raise PaperFetchFailure(
+                "ambiguous",
+                "Query resolution is ambiguous; choose one of the DOI candidates.",
+                candidates=resolved.candidates,
+            )
 
-    metadata, provider_name, metadata_trail = fetch_metadata_for_resolved_query(
-        resolved,
-        clients=client_registry,
-        strategy=strategy,
-    )
-    extend_unique(source_trail, metadata_trail)
-    from ..publisher_identity import normalize_doi
+        metadata_started_at = time.monotonic()
+        metadata, provider_name, metadata_trail = fetch_metadata_for_resolved_query(
+            resolved,
+            clients=client_registry,
+            strategy=strategy,
+            context=runtime,
+        )
+        _record_stage_timing(runtime, "metadata_seconds", metadata_started_at)
+        extend_unique(source_trail, metadata_trail)
+        from ..publisher_identity import normalize_doi
 
-    doi = normalize_doi(safe_text(metadata.get("doi") or resolved.doi)) or None
-    warnings: list[str] = []
+        doi = normalize_doi(safe_text(metadata.get("doi") or resolved.doi)) or None
+        warnings: list[str] = []
 
-    article = _try_official_provider(
-        doi=doi,
-        metadata=metadata,
-        provider_name=provider_name,
-        strategy=strategy,
-        artifact_store=runtime.artifact_store,
-        context=runtime,
-        clients=client_registry,
-        warnings=warnings,
-        source_trail=source_trail,
-    )
-    if article is not None:
-        return article
+        fulltext_started_at = time.monotonic()
+        article = _try_official_provider(
+            doi=doi,
+            metadata=metadata,
+            provider_name=provider_name,
+            strategy=strategy,
+            artifact_store=runtime.artifact_store,
+            context=runtime,
+            clients=client_registry,
+            warnings=warnings,
+            source_trail=source_trail,
+        )
+        _record_stage_timing(runtime, "fulltext_seconds", fulltext_started_at)
+        if article is not None:
+            return article
 
-    if is_official_provider(provider_name):
-        extend_unique(source_trail, [f"fallback:{provider_name}_html_managed_by_provider"])
+        if is_official_provider(provider_name):
+            extend_unique(source_trail, [f"fallback:{provider_name}_html_managed_by_provider"])
 
-    return _fallback_to_metadata_only(
-        metadata=metadata,
-        resolved=resolved,
-        strategy=strategy,
-        warnings=warnings,
-        source_trail=source_trail,
-    )
+        return _fallback_to_metadata_only(
+            metadata=metadata,
+            resolved=resolved,
+            strategy=strategy,
+            warnings=warnings,
+            source_trail=source_trail,
+        )
+    finally:
+        if owns_runtime:
+            runtime.close()

@@ -278,25 +278,28 @@ def _fetch_paper_envelope(
         cancel_check=(context.cancel_check if context is not None else None),
         fetch_cache=FetchCache(effective_download_dir),
     )
-    cached_envelope = _load_cached_fetch_envelope(
-        request,
-        download_dir=effective_download_dir,
-        transport=runtime_context.transport,
-        env=runtime_context.env or runtime_env,
-    )
-    if cached_envelope is not None:
-        return cached_envelope
-    envelope = _call_service_fetch_paper(
-        request.query,
-        modes=_service_modes_for_fetch_request(request, include_article_for_assets=include_article_for_assets),
-        strategy=request.strategy.to_service_strategy(),
-        render=request.to_render_options(),
-        download_dir=effective_download_dir,
-        context=runtime_context,
-    )
-    if effective_download_dir is not None and envelope.doi:
-        _write_cached_fetch_envelope(effective_download_dir, envelope, request)
-    return envelope
+    try:
+        cached_envelope = _load_cached_fetch_envelope(
+            request,
+            download_dir=effective_download_dir,
+            transport=runtime_context.transport,
+            env=runtime_context.env or runtime_env,
+        )
+        if cached_envelope is not None:
+            return cached_envelope
+        envelope = _call_service_fetch_paper(
+            request.query,
+            modes=_service_modes_for_fetch_request(request, include_article_for_assets=include_article_for_assets),
+            strategy=request.strategy.to_service_strategy(),
+            render=request.to_render_options(),
+            download_dir=effective_download_dir,
+            context=runtime_context,
+        )
+        if effective_download_dir is not None and envelope.doi:
+            _write_cached_fetch_envelope(effective_download_dir, envelope, request)
+        return envelope
+    finally:
+        runtime_context.close()
 
 
 def _fetch_envelope_cache_path(download_dir: Path, doi: str) -> Path:

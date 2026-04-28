@@ -113,6 +113,7 @@ INLINE_HTML_TAG_PATTERN = re.compile(r"</?(?:sub|sup|br)\b[^>]*>", flags=re.IGNO
 INLINE_MARKDOWN_ABSTRACT_PREFIX_PATTERN = re.compile(r"^\*\*(?:Abstract|Summary)\.?\*\*\s*", re.IGNORECASE)
 MARKDOWN_ABSTRACT_PREFIX_PATTERN = re.compile(r"^(?:\*\*|__)(?:[Aa]bstract|[Ss]ummary)\.?(?:\*\*|__)\s*")
 MARKDOWN_IMAGE_URL_PATTERN = re.compile(r"!\[[^\]]*\]\(([^)]+)\)")
+MARKDOWN_IMAGE_PATTERN = re.compile(r"!\[[^\]]*\]\([^)]+\)")
 MARKDOWN_IMAGE_LINK_PATTERN = re.compile(r"!\[([^\]]*)\]\(([^)]+)\)")
 MARKDOWN_BLOCK_IMAGE_ALT_PATTERN = re.compile(
     r"^\s*(?:fig(?:ure)?\.?|(?:extended data|supplementary)?\s*table|supplementary\s+fig(?:ure)?\.?)\b",
@@ -127,6 +128,17 @@ TABLE_LIKE_FIGURE_ASSET_PATTERN = re.compile(
     flags=re.IGNORECASE,
 )
 NUMBERED_REFERENCE_PATTERN = re.compile(r"^\s*(?:\[\d+[A-Za-z]?\]|\d+[A-Za-z]?[.)])\s+")
+INLINE_WHITESPACE_PATTERN = re.compile(r"[ \t\r\f\v]+")
+SLASH_RUN_PATTERN = re.compile(r"/+")
+CANONICAL_MATCH_NON_WORD_PATTERN = re.compile(r"[\W_]+", flags=re.UNICODE)
+INLINE_HTML_NEWLINE_WHITESPACE_PATTERN = re.compile(r"\s*\n\s*")
+INLINE_HTML_BR_WHITESPACE_PATTERN = re.compile(r"\s*(<br\s*/?>)\s*", flags=re.IGNORECASE)
+INLINE_HTML_OPEN_SUBSUP_WHITESPACE_PATTERN = re.compile(r"\s*<(sub|sup)>\s*", flags=re.IGNORECASE)
+INLINE_HTML_CLOSE_SUBSUP_WHITESPACE_PATTERN = re.compile(r"\s+</(sub|sup)>", flags=re.IGNORECASE)
+INLINE_HTML_BEFORE_SUBSUP_PATTERN = re.compile(r"\s+(<(?:sub|sup)>)", flags=re.IGNORECASE)
+INLINE_HTML_AFTER_SUBSUP_NEWLINE_PATTERN = re.compile(r"(</(?:sub|sup)>)\s*\n\s*", flags=re.IGNORECASE)
+INLINE_HTML_AFTER_SUBSUP_WORD_PATTERN = re.compile(r"(</(?:sub|sup)>)(?=[A-Za-z0-9])", flags=re.IGNORECASE)
+INLINE_HTML_AFTER_SUBSUP_PUNCT_PATTERN = re.compile(r"(</(?:sub|sup)>)\s+([,.;:%\]\}\+\)])", flags=re.IGNORECASE)
 EXTRACTION_REVISION = 2
 QUALITY_FLAG_ACCESS_GATE_DETECTED = "access_gate_detected"
 QUALITY_FLAG_INSUFFICIENT_BODY = "insufficient_body"
@@ -352,12 +364,12 @@ def normalize_markdown_prose_line(line: str) -> str:
     list_match = MARKDOWN_LIST_MARKER_PATTERN.match(expanded)
     if list_match:
         marker, body = list_match.groups()
-        body = re.sub(r"[ \t\r\f\v]+", " ", body).strip()
+        body = INLINE_WHITESPACE_PATTERN.sub(" ", body).strip()
         return f"{marker}{body}" if body else marker.rstrip()
 
     leading_match = re.match(r"^\s*", expanded)
     leading = leading_match.group(0) if leading_match else ""
-    body = re.sub(r"[ \t\r\f\v]+", " ", expanded[len(leading):]).strip()
+    body = INLINE_WHITESPACE_PATTERN.sub(" ", expanded[len(leading):]).strip()
     if not body:
         return ""
     return f"{leading}{body}" if leading else body
@@ -375,7 +387,7 @@ def estimate_normalized_tokens(text: str) -> int:
 
 
 def strip_markdown_images(text: str) -> str:
-    stripped = re.sub(r"!\[[^\]]*\]\([^)]+\)", "", text)
+    stripped = MARKDOWN_IMAGE_PATTERN.sub("", text)
     return normalize_markdown_text(stripped)
 
 
@@ -1660,7 +1672,7 @@ def _image_reference_candidates(value: str | None) -> set[str]:
     cleaned: set[str] = set()
     for candidate in candidates:
         text = normalize_text(candidate).replace("\\", "/")
-        text = re.sub(r"/+", "/", text).strip()
+        text = SLASH_RUN_PATTERN.sub("/", text).strip()
         text = text.removeprefix("./")
         if text:
             cleaned.add(text)
@@ -2140,7 +2152,7 @@ def lines_to_sections(
 
 
 def _canonical_match_text(value: str) -> str:
-    return re.sub(r"[\W_]+", "", normalize_text(value).lower(), flags=re.UNICODE)
+    return CANONICAL_MATCH_NON_WORD_PATTERN.sub("", normalize_text(value).lower())
 
 
 def _coerce_explicit_abstract_blocks(
@@ -2469,14 +2481,14 @@ def normalize_inline_html_text(value: Any) -> str:
         return ""
     if not INLINE_HTML_TAG_PATTERN.search(text):
         return text
-    text = re.sub(r"\s*\n\s*", " ", text)
-    text = re.sub(r"\s*(<br\s*/?>)\s*", r"\1", text, flags=re.IGNORECASE)
-    text = re.sub(r"\s*<(sub|sup)>\s*", r"<\1>", text, flags=re.IGNORECASE)
-    text = re.sub(r"\s+</(sub|sup)>", r"</\1>", text, flags=re.IGNORECASE)
-    text = re.sub(r"\s+(<(?:sub|sup)>)", r"\1", text, flags=re.IGNORECASE)
-    text = re.sub(r"(</(?:sub|sup)>)\s*\n\s*", r"\1 ", text, flags=re.IGNORECASE)
-    text = re.sub(r"(</(?:sub|sup)>)(?=[A-Za-z0-9])", r"\1 ", text, flags=re.IGNORECASE)
-    text = re.sub(r"(</(?:sub|sup)>)\s+([,.;:%\]\}\+\)])", r"\1\2", text, flags=re.IGNORECASE)
+    text = INLINE_HTML_NEWLINE_WHITESPACE_PATTERN.sub(" ", text)
+    text = INLINE_HTML_BR_WHITESPACE_PATTERN.sub(r"\1", text)
+    text = INLINE_HTML_OPEN_SUBSUP_WHITESPACE_PATTERN.sub(r"<\1>", text)
+    text = INLINE_HTML_CLOSE_SUBSUP_WHITESPACE_PATTERN.sub(r"</\1>", text)
+    text = INLINE_HTML_BEFORE_SUBSUP_PATTERN.sub(r"\1", text)
+    text = INLINE_HTML_AFTER_SUBSUP_NEWLINE_PATTERN.sub(r"\1 ", text)
+    text = INLINE_HTML_AFTER_SUBSUP_WORD_PATTERN.sub(r"\1 ", text)
+    text = INLINE_HTML_AFTER_SUBSUP_PUNCT_PATTERN.sub(r"\1\2", text)
     return text.strip()
 
 

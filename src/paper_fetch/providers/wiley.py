@@ -235,6 +235,7 @@ class WileyClient(browser_workflow.BrowserWorkflowClient):
                         "Full text was extracted from the Wiley publisher PDF/ePDF fallback after the HTML path was not usable."
                     ),
                     artifact_subdir="browser_pdf_fallback",
+                    context=context,
                 )
             except PdfFallbackFailure as exc:
                 raise ProviderFailure("no_result", exc.message) from exc

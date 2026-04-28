@@ -109,7 +109,7 @@ python -m paper_fetch.formula.install --target-dir "$PWD/.formula-tools" --no-no
 
 补充：
 
-- `wiley` / `science` / `pnas` 还需要 Playwright Chromium，因为 HTML 正文图片资产下载和 seeded-browser PDF/ePDF fallback 都会使用 browser context
+- `wiley` / `science` / `pnas` 还需要 Playwright Chromium，因为 PNAS direct HTML preflight、HTML 正文图片资产下载和 seeded-browser PDF/ePDF fallback 都会使用 browser context
 - `elsevier` 只需要 `ELSEVIER_API_KEY`
 - 如果只想启用 `wiley` 的官方 TDM API PDF lane，可以只配置 `WILEY_TDM_CLIENT_TOKEN`；这不会启用 HTML 资产下载或 seeded-browser PDF/ePDF fallback
 - `wiley` 现在走 `FlareSolverr HTML -> seeded-browser publisher PDF/ePDF -> Wiley TDM API PDF -> abstract-only / metadata-only`

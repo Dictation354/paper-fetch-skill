@@ -8,10 +8,13 @@ from typing import Any, Mapping, cast
 from ..metadata_types import ProviderMetadata
 from ..providers.base import ProviderFailure
 from ..providers.protocols import MetadataProvider
+from ..runtime import RuntimeContext
 from ..utils import choose_public_landing_page_url, dedupe_authors, extend_unique, normalize_text, safe_text
 from .routing import (
     build_official_provider_candidates,
     crossref_allowed_as_source,
+    fetch_crossref_metadata_with_session_cache,
+    get_cached_landing_page_citation_pdf_probe,
     provider_allowed,
     probe_official_provider,
     route_signal_markers,
@@ -101,11 +104,58 @@ def metadata_from_resolution(resolved) -> ProviderMetadata:
     }
 
 
+def _citation_pdf_link(url: str) -> dict[str, Any]:
+    return {
+        "url": url,
+        "content_type": "application/pdf",
+        "content_version": None,
+        "intended_application": "full_text",
+    }
+
+
+def _merge_cached_landing_probe_links(
+    metadata: ProviderMetadata,
+    resolved,
+    *,
+    context: RuntimeContext | None,
+) -> ProviderMetadata:
+    if context is None:
+        return metadata
+    landing_urls = [
+        choose_public_landing_page_url(resolved.landing_url),
+        choose_public_landing_page_url(safe_text(metadata.get("landing_page_url"))),
+    ]
+    citation_pdf_urls: list[str] = []
+    for landing_url in landing_urls:
+        probe = get_cached_landing_page_citation_pdf_probe(landing_url, context=context)
+        if probe is None:
+            continue
+        extend_unique(citation_pdf_urls, probe.citation_pdf_urls)
+    if not citation_pdf_urls:
+        return metadata
+
+    merged = dict(metadata)
+    fulltext_links = list(merged.get("fulltext_links") or [])
+    seen_urls = {
+        normalize_text(item.get("url"))
+        for item in fulltext_links
+        if isinstance(item, Mapping) and normalize_text(item.get("url"))
+    }
+    for url in citation_pdf_urls:
+        normalized_url = normalize_text(url)
+        if normalized_url and normalized_url not in seen_urls:
+            seen_urls.add(normalized_url)
+            fulltext_links.append(_citation_pdf_link(normalized_url))
+    merged["fulltext_links"] = fulltext_links
+    return cast(ProviderMetadata, merged)
+
+
 def fetch_metadata_for_resolved_query(
     resolved,
     *,
     clients: Mapping[str, object],
     strategy: FetchStrategy,
+    context: RuntimeContext | None = None,
 ) -> tuple[ProviderMetadata, str | None, list[str]]:
     official_metadata: ProviderMetadata | None = None
     crossref_metadata: ProviderMetadata | None = None
@@ -125,13 +175,15 @@ def fetch_metadata_for_resolved_query(
     initial_probe_results: dict[str, Any] = {}
 
     def fetch_crossref_metadata() -> ProviderMetadata | None:
-        if not resolved.doi or not isinstance(crossref_client, MetadataProvider):
-            return None
-        return cast(ProviderMetadata, dict(crossref_client.fetch_metadata({"doi": resolved.doi})))
+        return fetch_crossref_metadata_with_session_cache(
+            resolved.doi,
+            crossref_client,
+            context=context,
+        )
 
     def run_probe(candidate_provider: str):
         assert resolved.doi is not None
-        return probe_official_provider(candidate_provider, doi=resolved.doi, clients=clients)
+        return probe_official_provider(candidate_provider, doi=resolved.doi, clients=clients, context=context)
 
     if resolved.doi and (isinstance(crossref_client, MetadataProvider) or initial_probe_candidates):
         max_workers = 1 + len(initial_probe_candidates)
@@ -184,7 +236,7 @@ def fetch_metadata_for_resolved_query(
         ):
             probe = initial_probe_results.get(candidate_provider)
             if probe is None:
-                probe = probe_official_provider(candidate_provider, doi=resolved.doi, clients=clients)
+                probe = probe_official_provider(candidate_provider, doi=resolved.doi, clients=clients, context=context)
             probes.append(probe)
             source_trail.append(f"route:probe_{candidate_provider}_{probe.state}")
             if probe.state == "positive":
@@ -209,7 +261,9 @@ def fetch_metadata_for_resolved_query(
         metadata["official_provider"] = (official_metadata or crossref_metadata or {}).get("official_provider")
         if not metadata.get("landing_page_url"):
             metadata["landing_page_url"] = resolved.landing_url
+        metadata = _merge_cached_landing_probe_links(metadata, resolved, context=context)
         return metadata, provider_name, source_trail
 
     source_trail.append("metadata:resolution_only")
-    return metadata_from_resolution(resolved), provider_name, source_trail
+    metadata = _merge_cached_landing_probe_links(metadata_from_resolution(resolved), resolved, context=context)
+    return metadata, provider_name, source_trail

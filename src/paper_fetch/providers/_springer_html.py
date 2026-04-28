@@ -826,6 +826,7 @@ def download_figure_assets(
     figure_page_fetcher: FigurePageFetcher | None = None,
     browser_context_seed: Mapping[str, Any] | None = None,
     seed_urls: list[str] | None = None,
+    asset_download_concurrency: int | None = None,
 ):
     body_assets, supplementary_assets = split_body_and_supplementary_assets(assets)
     body_result = download_generic_figure_assets(
@@ -839,6 +840,7 @@ def download_figure_assets(
         browser_context_seed=browser_context_seed,
         seed_urls=seed_urls,
         candidate_builder=figure_download_candidates,
+        asset_download_concurrency=asset_download_concurrency,
     )
     supplementary_result = download_generic_supplementary_assets(
         transport,
@@ -849,6 +851,7 @@ def download_figure_assets(
         asset_profile=asset_profile,
         browser_context_seed=browser_context_seed,
         seed_urls=seed_urls,
+        asset_download_concurrency=asset_download_concurrency,
     )
     return {
         "assets": [

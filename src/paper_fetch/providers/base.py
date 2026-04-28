@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field, replace
 from pathlib import Path
+import time
 from typing import Any, Mapping
 
 from ..artifacts import ArtifactStore
@@ -416,14 +417,18 @@ class ProviderClient:
             )
         ):
             try:
-                asset_results = self.download_related_assets(
-                    doi,
-                    metadata,
-                    raw_payload,
-                    asset_output_dir,
-                    asset_profile=asset_profile,
-                    context=context,
-                )
+                asset_started_at = time.monotonic()
+                try:
+                    asset_results = self.download_related_assets(
+                        doi,
+                        metadata,
+                        raw_payload,
+                        asset_output_dir,
+                        asset_profile=asset_profile,
+                        context=context,
+                    )
+                finally:
+                    context.accumulate_stage_timing("asset_seconds", started_at=asset_started_at)
                 downloaded_assets = list(asset_results.get("assets") or [])
                 asset_failures = list(asset_results.get("asset_failures") or [])
             except ProviderFailure as exc:

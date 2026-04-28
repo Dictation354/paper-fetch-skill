@@ -31,6 +31,8 @@ HTTP_PER_HOST_CONCURRENCY_ENV_VAR = "PAPER_FETCH_HTTP_PER_HOST_CONCURRENCY"
 HTTP_DISK_CACHE_DIR_ENV_VAR = "PAPER_FETCH_HTTP_DISK_CACHE_DIR"
 HTTP_DISK_CACHE_ENV_VAR = "PAPER_FETCH_HTTP_DISK_CACHE"
 HTTP_METADATA_CACHE_TTL_ENV_VAR = "PAPER_FETCH_HTTP_METADATA_CACHE_TTL"
+ASSET_DOWNLOAD_CONCURRENCY_ENV_VAR = "PAPER_FETCH_ASSET_DOWNLOAD_CONCURRENCY"
+DEFAULT_ASSET_DOWNLOAD_CONCURRENCY = 4
 FLARESOLVERR_URL_ENV_VAR = "FLARESOLVERR_URL"
 FLARESOLVERR_ENV_FILE_ENV_VAR = "FLARESOLVERR_ENV_FILE"
 FLARESOLVERR_SOURCE_DIR_ENV_VAR = "FLARESOLVERR_SOURCE_DIR"
@@ -187,6 +189,14 @@ def parse_nonnegative_int_env(
         return max(0, int(raw_value))
     except ValueError:
         return default
+
+
+def resolve_asset_download_concurrency(env: Mapping[str, str] | None = None) -> int:
+    return parse_positive_int_env(
+        _active_env(env),
+        ASSET_DOWNLOAD_CONCURRENCY_ENV_VAR,
+        default=DEFAULT_ASSET_DOWNLOAD_CONCURRENCY,
+    )
 
 
 def env_flag_enabled(env: Mapping[str, str], name: str) -> bool:

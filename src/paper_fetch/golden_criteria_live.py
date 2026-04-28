@@ -5,7 +5,9 @@ from __future__ import annotations
 from collections import Counter, defaultdict
 from dataclasses import asdict, dataclass, field, replace
 from datetime import datetime, timezone
+import inspect
 import json
+import logging
 from pathlib import Path
 import re
 import shutil
@@ -14,13 +16,16 @@ from typing import Any, Callable, Mapping, Sequence
 
 from .config import build_runtime_env, resolve_repo_root
 from .http import HttpTransport
+from .logging_utils import emit_structured_log
 from .models import Asset, FetchEnvelope, RenderOptions
 from .geography_live import is_authorless_briefing_like
 from .providers.registry import build_clients
+from .runtime import RuntimeContext
 from .service import FetchStrategy, PaperFetchFailure, fetch_paper
 from .utils import normalize_text, sanitize_filename
 from .workflow.rendering import rewrite_markdown_asset_links
 
+logger = logging.getLogger("paper_fetch.golden_criteria_live")
 
 SUPPORTED_PROVIDERS = ("elsevier", "springer", "wiley", "science", "pnas")
 UNSUPPORTED_PROVIDER_STATUS = "skipped_unsupported_provider"
@@ -135,6 +140,8 @@ class GoldenCriteriaLiveResult:
     review_status: str
     issue_categories: list[str]
     elapsed_seconds: float
+    stage_timings: dict[str, float] = field(default_factory=dict)
+    http_cache_stats: dict[str, int] = field(default_factory=dict)
     error_code: str | None = None
     error_message: str | None = None
     expected_outcome: bool = False
@@ -246,16 +253,27 @@ class GoldenCriteriaLiveReport:
                 "",
                 "## Sample Results",
                 "",
-                "| Sample | Provider | DOI | Status | Content | Source | Assets | Review | Issues |",
-                "| --- | --- | --- | --- | --- | --- | ---: | --- | --- |",
+                "| Sample | Provider | DOI | Status | Content | Source | Assets | Seconds | Resolve | Metadata | Fulltext | Asset | Formula | Render | Fetch | Materialize | Review | Issues |",
+                "| --- | --- | --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- |",
             ]
         )
         for result in self.results:
             issues = ", ".join(f"`{item}`" for item in result.issue_categories) or "-"
             sample_link = f"[{result.sample_id}]({Path(result.sample_output_dir).name}/review.md)"
+            resolve_seconds = result.stage_timings.get("resolve_seconds", 0.0)
+            metadata_seconds = result.stage_timings.get("metadata_seconds", 0.0)
+            fulltext_seconds = result.stage_timings.get("fulltext_seconds", 0.0)
+            asset_seconds = result.stage_timings.get("asset_seconds", 0.0)
+            formula_seconds = result.stage_timings.get("formula_seconds", 0.0)
+            render_seconds = result.stage_timings.get("render_seconds", 0.0)
+            fetch_seconds = result.stage_timings.get("fetch_seconds", 0.0)
+            materialize_seconds = result.stage_timings.get("materialize_seconds", 0.0)
             lines.append(
                 f"| {sample_link} | `{result.provider}` | `{result.doi}` | `{result.status}` | "
                 f"`{result.content_kind or '-'}` | `{result.source or '-'}` | {result.asset_count} | "
+                f"{result.elapsed_seconds:.3f} | {resolve_seconds:.3f} | {metadata_seconds:.3f} | "
+                f"{fulltext_seconds:.3f} | {asset_seconds:.3f} | {formula_seconds:.3f} | "
+                f"{render_seconds:.3f} | {fetch_seconds:.3f} | {materialize_seconds:.3f} | "
                 f"`{result.review_status}` | {issues} |"
             )
 
@@ -642,6 +660,84 @@ def collect_asset_diagnostics(article: Any) -> list[dict[str, Any]]:
     return diagnostics
 
 
+def _stage_timings(
+    *,
+    fetch_seconds: float = 0.0,
+    materialize_seconds: float = 0.0,
+    total_seconds: float = 0.0,
+    runtime_stage_timings: Mapping[str, Any] | None = None,
+) -> dict[str, float]:
+    timings = {
+        "fetch_seconds": round(max(0.0, fetch_seconds), 3),
+        "materialize_seconds": round(max(0.0, materialize_seconds), 3),
+        "total_seconds": round(max(0.0, total_seconds), 3),
+    }
+    for key in (
+        "resolve_seconds",
+        "metadata_seconds",
+        "fulltext_seconds",
+        "asset_seconds",
+        "formula_seconds",
+        "render_seconds",
+    ):
+        try:
+            value = float((runtime_stage_timings or {}).get(key, 0.0))
+        except (TypeError, ValueError):
+            value = 0.0
+        timings[key] = round(max(0.0, value), 3)
+    return timings
+
+
+def _callable_accepts_keyword(function: Callable[..., Any], keyword: str) -> bool:
+    try:
+        parameters = inspect.signature(function).parameters
+    except (TypeError, ValueError):
+        return False
+    return keyword in parameters or any(
+        parameter.kind == inspect.Parameter.VAR_KEYWORD
+        for parameter in parameters.values()
+    )
+
+
+def _transport_cache_stats(transport: HttpTransport) -> dict[str, int]:
+    snapshot = getattr(transport, "cache_stats_snapshot", None)
+    if not callable(snapshot):
+        return {}
+    return snapshot()
+
+
+def _cache_stats_delta(before: Mapping[str, Any] | None, after: Mapping[str, Any] | None) -> dict[str, int]:
+    keys = sorted(set((before or {}).keys()) | set((after or {}).keys()))
+    delta: dict[str, int] = {}
+    for key in keys:
+        try:
+            before_value = int((before or {}).get(key, 0))
+        except (TypeError, ValueError):
+            before_value = 0
+        try:
+            after_value = int((after or {}).get(key, 0))
+        except (TypeError, ValueError):
+            after_value = 0
+        delta[str(key)] = max(0, after_value - before_value)
+    return delta
+
+
+def _emit_sample_result_log(result: GoldenCriteriaLiveResult) -> None:
+    emit_structured_log(
+        logger,
+        logging.DEBUG,
+        "golden_criteria_live_sample_result",
+        sample_id=result.sample_id,
+        provider=result.provider,
+        doi=result.doi,
+        status=result.status,
+        review_status=result.review_status,
+        elapsed_seconds=result.elapsed_seconds,
+        stage_timings=dict(result.stage_timings),
+        http_cache_stats=dict(result.http_cache_stats),
+    )
+
+
 def render_asset_diagnostics(asset_diagnostics: Sequence[Mapping[str, Any]]) -> str:
     rows: list[str] = []
     for asset in asset_diagnostics:
@@ -707,6 +803,9 @@ def render_review_template(result: GoldenCriteriaLiveResult) -> str:
         f"- content_kind: {result.content_kind or '-'}\n"
         f"- source: {result.source or '-'}\n"
         f"- asset_count: {result.asset_count}\n\n"
+        f"- elapsed_seconds: {result.elapsed_seconds:.3f}\n"
+        f"- stage_timings: {json.dumps(result.stage_timings, ensure_ascii=False, sort_keys=True)}\n\n"
+        f"- http_cache_stats: {json.dumps(result.http_cache_stats, ensure_ascii=False, sort_keys=True)}\n\n"
         f"- expected_outcome: {str(result.expected_outcome).lower()}\n"
         f"- out_of_scope_reason: {result.out_of_scope_reason or '-'}\n\n"
         "## what_is_wrong\n\n"
@@ -782,6 +881,8 @@ def result_with_review_summary(
         review_status=review.review_status,
         issue_categories=list(review.issue_categories),
         elapsed_seconds=result.elapsed_seconds,
+        stage_timings=dict(result.stage_timings),
+        http_cache_stats=dict(result.http_cache_stats),
         error_code=result.error_code,
         error_message=result.error_message,
         expected_outcome=result.expected_outcome,
@@ -811,6 +912,7 @@ def skipped_result(sample: GoldenCriteriaLiveSample, sample_dir: Path) -> Golden
         review_status=review_status_for(UNSUPPORTED_PROVIDER_STATUS, categories),
         issue_categories=categories,
         elapsed_seconds=0.0,
+        stage_timings=_stage_timings(),
         error_code=UNSUPPORTED_PROVIDER_STATUS,
         error_message=f"Unsupported provider: {sample.provider}",
     )
@@ -841,6 +943,7 @@ def precheck_blocked_result(
         review_status=review_status_for(status, categories),
         issue_categories=categories,
         elapsed_seconds=0.0,
+        stage_timings=_stage_timings(),
         error_code=status,
         error_message=message,
     )
@@ -873,26 +976,53 @@ def fetch_sample_result(
     clients: Mapping[str, Any],
 ) -> GoldenCriteriaLiveResult:
     started_at = time.monotonic()
+    cache_stats_before = _transport_cache_stats(transport)
+    fetch_seconds = 0.0
+    materialize_seconds = 0.0
+    runtime_context = RuntimeContext(
+        env=env,
+        transport=transport,
+        clients=clients,
+        download_dir=sample_dir,
+    )
     try:
-        envelope = fetch_paper_fn(
-            sample.doi,
-            modes={"article", "markdown"},
-            strategy=FetchStrategy(
+        fetch_started_at = time.monotonic()
+        fetch_kwargs: dict[str, Any] = {
+            "modes": {"article", "markdown"},
+            "strategy": FetchStrategy(
                 allow_metadata_only_fallback=True,
                 asset_profile="body",
             ),
-            render=render,
-            download_dir=sample_dir,
-            clients=clients,
-            transport=transport,
-            env=env,
-        )
-        elapsed_seconds = round(time.monotonic() - started_at, 3)
+            "render": render,
+        }
+        if _callable_accepts_keyword(fetch_paper_fn, "context"):
+            fetch_kwargs["context"] = runtime_context
+        else:
+            fetch_kwargs.update(
+                {
+                    "download_dir": sample_dir,
+                    "clients": clients,
+                    "transport": transport,
+                    "env": env,
+                }
+            )
+        envelope = fetch_paper_fn(sample.doi, **fetch_kwargs)
+        fetch_seconds = time.monotonic() - fetch_started_at
+        materialize_started_at = time.monotonic()
         asset_count = materialize_fetch_artifacts(envelope=envelope, sample_dir=sample_dir, render=render)
+        materialize_seconds = time.monotonic() - materialize_started_at
+        elapsed_seconds = round(time.monotonic() - started_at, 3)
+        timings = _stage_timings(
+            fetch_seconds=fetch_seconds,
+            materialize_seconds=materialize_seconds,
+            total_seconds=elapsed_seconds,
+            runtime_stage_timings=runtime_context.stage_timings,
+        )
         asset_diagnostics = collect_asset_diagnostics(envelope.article)
         status, error_code, error_message = classify_envelope_status(sample, envelope)
         categories = issue_categories_for_result(status=status, envelope=envelope)
-        return GoldenCriteriaLiveResult(
+        http_cache_stats = _cache_stats_delta(cache_stats_before, _transport_cache_stats(transport))
+        result = GoldenCriteriaLiveResult(
             sample_id=sample.sample_id,
             provider=sample.provider,
             doi=sample.doi,
@@ -908,15 +1038,26 @@ def fetch_sample_result(
             review_status=review_status_for(status, categories),
             issue_categories=categories,
             elapsed_seconds=elapsed_seconds,
+            stage_timings=timings,
+            http_cache_stats=http_cache_stats,
             error_code=error_code,
             error_message=error_message,
             asset_diagnostics=asset_diagnostics,
         )
+        _emit_sample_result_log(result)
+        return result
     except PaperFetchFailure as exc:
         elapsed_seconds = round(time.monotonic() - started_at, 3)
+        timings = _stage_timings(
+            fetch_seconds=fetch_seconds or elapsed_seconds,
+            materialize_seconds=materialize_seconds,
+            total_seconds=elapsed_seconds,
+            runtime_stage_timings=runtime_context.stage_timings,
+        )
         status = exc.status if exc.status in {"not_configured", "rate_limited"} else "blocked_live_fetch"
         categories = issue_categories_for_result(status=status)
-        return GoldenCriteriaLiveResult(
+        http_cache_stats = _cache_stats_delta(cache_stats_before, _transport_cache_stats(transport))
+        result = GoldenCriteriaLiveResult(
             sample_id=sample.sample_id,
             provider=sample.provider,
             doi=sample.doi,
@@ -932,13 +1073,24 @@ def fetch_sample_result(
             review_status=review_status_for(status, categories),
             issue_categories=categories,
             elapsed_seconds=elapsed_seconds,
+            stage_timings=timings,
+            http_cache_stats=http_cache_stats,
             error_code=exc.status,
             error_message=exc.reason,
         )
+        _emit_sample_result_log(result)
+        return result
     except Exception as exc:  # pragma: no cover - defensive live path
         elapsed_seconds = round(time.monotonic() - started_at, 3)
+        timings = _stage_timings(
+            fetch_seconds=fetch_seconds or elapsed_seconds,
+            materialize_seconds=materialize_seconds,
+            total_seconds=elapsed_seconds,
+            runtime_stage_timings=runtime_context.stage_timings,
+        )
         categories = issue_categories_for_result(status="blocked_live_fetch")
-        return GoldenCriteriaLiveResult(
+        http_cache_stats = _cache_stats_delta(cache_stats_before, _transport_cache_stats(transport))
+        result = GoldenCriteriaLiveResult(
             sample_id=sample.sample_id,
             provider=sample.provider,
             doi=sample.doi,
@@ -954,9 +1106,15 @@ def fetch_sample_result(
             review_status="blocked",
             issue_categories=categories,
             elapsed_seconds=elapsed_seconds,
+            stage_timings=timings,
+            http_cache_stats=http_cache_stats,
             error_code=exc.__class__.__name__,
             error_message=str(exc),
         )
+        _emit_sample_result_log(result)
+        return result
+    finally:
+        runtime_context.close()
 
 
 def build_provider_summaries(results: Sequence[GoldenCriteriaLiveResult]) -> list[ProviderReviewSummary]:
@@ -1129,4 +1287,14 @@ def run_golden_criteria_live_review(
     )
     report.write_json(output_root / "report.json")
     report.write_markdown(output_root / "report.md")
+    emit_structured_log(
+        logger,
+        logging.INFO,
+        "golden_criteria_live_review_result",
+        output_dir=str(output_root),
+        total_samples=report.total_samples,
+        supported_samples=report.supported_samples,
+        skipped_samples=report.skipped_samples,
+        http_cache_stats=_transport_cache_stats(active_transport),
+    )
     return report

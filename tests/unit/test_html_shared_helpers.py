@@ -225,6 +225,28 @@ class SharedHtmlHelperTests(unittest.TestCase):
         self.assertEqual([asset["heading"] for asset in result["assets"]], [asset["heading"] for asset in assets])
         self.assertEqual(result["asset_failures"], [])
 
+    def test_download_figure_assets_respects_explicit_concurrency_limit(self) -> None:
+        urls = [f"https://example.test/serial-fig{i}.png" for i in range(3)]
+        transport = _DelayedAssetTransport({url: 0.01 for url in urls})
+        assets = [
+            {"kind": "figure", "heading": f"Figure {index}", "caption": "", "url": url, "section": "body"}
+            for index, url in enumerate(urls)
+        ]
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            result = html_assets.download_figure_assets(
+                transport,
+                article_id="10.5555/serial",
+                assets=assets,
+                output_dir=Path(tmpdir),
+                user_agent="paper-fetch-test",
+                asset_profile="all",
+                asset_download_concurrency=1,
+            )
+
+        self.assertEqual(transport.max_active, 1)
+        self.assertEqual([asset["heading"] for asset in result["assets"]], [asset["heading"] for asset in assets])
+
     def test_download_supplementary_assets_resolves_files_in_parallel_but_writes_in_order(self) -> None:
         urls = [f"https://example.test/supp{i}.pdf" for i in range(4)]
         state = {"active": 0, "max_active": 0}
@@ -267,6 +289,49 @@ class SharedHtmlHelperTests(unittest.TestCase):
         self.assertGreater(state["max_active"], 1)
         self.assertEqual([asset["heading"] for asset in result["assets"]], [asset["heading"] for asset in assets])
         self.assertEqual(result["asset_failures"], [])
+
+    def test_download_supplementary_assets_respects_explicit_concurrency_limit(self) -> None:
+        urls = [f"https://example.test/serial-supp{i}.pdf" for i in range(3)]
+        state = {"active": 0, "max_active": 0}
+        lock = threading.Lock()
+
+        def opener_requester(opener, url, **kwargs):
+            del opener, kwargs
+            with lock:
+                state["active"] += 1
+                state["max_active"] = max(state["max_active"], state["active"])
+            try:
+                time.sleep(0.01)
+                return {
+                    "status_code": 200,
+                    "headers": {"content-type": "application/pdf"},
+                    "body": f"payload:{url}".encode("utf-8"),
+                    "url": url,
+                }
+            finally:
+                with lock:
+                    state["active"] -= 1
+
+        assets = [
+            {"kind": "supplementary", "heading": f"Supplement {index}", "url": url, "section": "supplementary"}
+            for index, url in enumerate(urls)
+        ]
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            result = html_assets.download_supplementary_assets(
+                HttpTransport(),
+                article_id="10.5555/serial",
+                assets=assets,
+                output_dir=Path(tmpdir),
+                user_agent="paper-fetch-test",
+                asset_profile="all",
+                cookie_opener_builder=lambda *args, **kwargs: object(),
+                opener_requester=opener_requester,
+                asset_download_concurrency=1,
+            )
+
+        self.assertEqual(state["max_active"], 1)
+        self.assertEqual([asset["heading"] for asset in result["assets"]], [asset["heading"] for asset in assets])
 
     def test_clean_html_for_extraction_removes_noise_but_keeps_sections(self) -> None:
         html = """

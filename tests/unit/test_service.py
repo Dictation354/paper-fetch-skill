@@ -5,15 +5,17 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from paper_fetch import runtime as runtime_module
 from paper_fetch import service as paper_fetch
 from paper_fetch.artifacts import ArtifactStore
 from paper_fetch.runtime import RuntimeContext
 from paper_fetch.http import HttpTransport, RequestFailure
 from paper_fetch.providers import _springer_html as springer_html_helper, pnas as pnas_provider, science as science_provider
-from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
+from paper_fetch.providers.base import ProviderClient, ProviderContent, RawFulltextPayload
 from paper_fetch.providers.wiley import WileyClient
 from paper_fetch.tracing import trace_from_markers
 from paper_fetch.utils import choose_public_landing_page_url
+from paper_fetch.workflow.fulltext import _provider_fetch_result
 
 from ._paper_fetch_support import (
     FixtureHtmlTransport,
@@ -67,6 +69,199 @@ def _typed_payload(
 
 
 class ServiceTests(unittest.TestCase):
+    def test_probe_then_fetch_reuses_crossref_metadata_in_same_runtime_context(self) -> None:
+        resolved = paper_fetch.ResolvedQuery(
+            query="10.1126/science.cache",
+            query_kind="doi",
+            doi="10.1126/science.cache",
+            landing_url="https://www.science.org/doi/full/10.1126/science.cache",
+            provider_hint="science",
+            confidence=1.0,
+        )
+        crossref = StubProvider(
+            metadata={
+                "provider": "crossref",
+                "official_provider": False,
+                "doi": resolved.doi,
+                "title": "Cached Crossref Article",
+                "publisher": "American Association for the Advancement of Science",
+                "landing_page_url": resolved.landing_url,
+                "license_urls": ["https://license.example/science-cache"],
+                "fulltext_links": [],
+                "references": [],
+            }
+        )
+        crossref_calls = {"count": 0}
+        original_fetch_metadata = crossref.fetch_metadata
+
+        def counted_fetch_metadata(query):
+            crossref_calls["count"] += 1
+            return original_fetch_metadata(query)
+
+        crossref.fetch_metadata = counted_fetch_metadata
+        original_resolve = paper_fetch.resolve_paper
+        try:
+            paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
+            context = RuntimeContext(
+                env={},
+                clients={
+                    "crossref": crossref,
+                    "science": StubProvider(
+                        raw_payload=_typed_payload(
+                            provider="science",
+                            source_url=resolved.landing_url,
+                            content_type="text/html",
+                            body=b"<html></html>",
+                            route_kind="html",
+                            markdown_text="# Example Article\n\n## Results\n\n" + ("Body text " * 80),
+                            source_trail=["fulltext:science_html_ok"],
+                        ),
+                        article=sample_article(),
+                    ),
+                },
+            )
+
+            probe = paper_fetch.probe_has_fulltext(resolved.query, context=context)
+            envelope = paper_fetch.fetch_paper(
+                resolved.query,
+                modes={"article"},
+                strategy=paper_fetch.FetchStrategy(asset_profile="none"),
+                context=context,
+            )
+        finally:
+            paper_fetch.resolve_paper = original_resolve
+
+        self.assertEqual(probe.evidence, ["crossref_license"])
+        self.assertIsNotNone(envelope.article)
+        self.assertEqual(crossref_calls["count"], 1)
+
+    def test_landing_citation_pdf_probe_is_reused_by_fetch_metadata_links(self) -> None:
+        landing_url = "https://example.test/article"
+        resolved = paper_fetch.ResolvedQuery(
+            query=landing_url,
+            query_kind="url",
+            doi="10.1126/science.landing",
+            landing_url=landing_url,
+            provider_hint="science",
+            confidence=1.0,
+        )
+        captured_metadata: list[dict[str, object]] = []
+        original_resolve = paper_fetch.resolve_paper
+        try:
+            paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
+            context = RuntimeContext(
+                env={"PAPER_FETCH_SKILL_USER_AGENT": "unit-test"},
+                transport=FixtureHtmlTransport(
+                    {
+                        landing_url: {
+                            "body": (
+                                b"<html><head>"
+                                b"<meta name='citation_title' content='Landing Cache Article' />"
+                                b"<meta name='citation_pdf_url' content='/article.pdf' />"
+                                b"</head><body></body></html>"
+                            )
+                        }
+                    }
+                ),
+                clients={
+                    "science": StubProvider(
+                        raw_payload=_typed_payload(
+                            provider="science",
+                            source_url=landing_url,
+                            content_type="text/html",
+                            body=b"<html></html>",
+                            route_kind="html",
+                            markdown_text="# Example Article\n\n## Results\n\n" + ("Body text " * 80),
+                            source_trail=["fulltext:science_html_ok"],
+                        ),
+                        article_factory=lambda metadata, raw_payload, **kwargs: (
+                            captured_metadata.append(dict(metadata)) or sample_article()
+                        ),
+                    )
+                },
+            )
+
+            probe = paper_fetch.probe_has_fulltext(landing_url, context=context)
+            envelope = paper_fetch.fetch_paper(
+                landing_url,
+                modes={"article"},
+                strategy=paper_fetch.FetchStrategy(asset_profile="none"),
+                context=context,
+            )
+        finally:
+            paper_fetch.resolve_paper = original_resolve
+
+        self.assertEqual(probe.evidence, ["landing_page_citation_pdf_url"])
+        self.assertIsNotNone(envelope.article)
+        links = captured_metadata[0]["fulltext_links"]
+        self.assertIn(
+            {
+                "url": "https://example.test/article.pdf",
+                "content_type": "application/pdf",
+                "content_version": None,
+                "intended_application": "full_text",
+            },
+            links,
+        )
+
+    def test_session_cache_does_not_cross_runtime_contexts_or_contextless_calls(self) -> None:
+        resolved = paper_fetch.ResolvedQuery(
+            query="10.1126/science.cache-isolated",
+            query_kind="doi",
+            doi="10.1126/science.cache-isolated",
+            landing_url="https://www.science.org/doi/full/10.1126/science.cache-isolated",
+            provider_hint="science",
+            confidence=1.0,
+        )
+
+        def counting_crossref(counter: dict[str, int]) -> StubProvider:
+            provider = StubProvider(
+                metadata={
+                    "provider": "crossref",
+                    "official_provider": False,
+                    "doi": resolved.doi,
+                    "title": "Isolated Crossref Article",
+                    "publisher": "American Association for the Advancement of Science",
+                    "landing_page_url": resolved.landing_url,
+                    "license_urls": ["https://license.example/science-cache-isolated"],
+                    "fulltext_links": [],
+                    "references": [],
+                }
+            )
+            original_fetch_metadata = provider.fetch_metadata
+
+            def counted_fetch_metadata(query):
+                counter["count"] += 1
+                return original_fetch_metadata(query)
+
+            provider.fetch_metadata = counted_fetch_metadata
+            return provider
+
+        original_resolve = paper_fetch.resolve_paper
+        try:
+            paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
+            different_context_counter = {"count": 0}
+            first_context = RuntimeContext(env={}, clients={"crossref": counting_crossref(different_context_counter)})
+            second_context = RuntimeContext(env={}, clients={"crossref": counting_crossref(different_context_counter)})
+
+            paper_fetch.probe_has_fulltext(resolved.query, context=first_context)
+            paper_fetch.probe_has_fulltext(resolved.query, context=second_context)
+
+            contextless_counter = {"count": 0}
+            paper_fetch.probe_has_fulltext(
+                resolved.query,
+                clients={"crossref": counting_crossref(contextless_counter)},
+            )
+            paper_fetch.probe_has_fulltext(
+                resolved.query,
+                clients={"crossref": counting_crossref(contextless_counter)},
+            )
+        finally:
+            paper_fetch.resolve_paper = original_resolve
+
+        self.assertEqual(different_context_counter["count"], 2)
+        self.assertEqual(contextless_counter["count"], 2)
+
     def test_fetch_paper_uses_runtime_context_dependencies_when_legacy_keywords_are_omitted(self) -> None:
         resolved = paper_fetch.ResolvedQuery(
             query="10.1126/science.context",
@@ -122,6 +317,119 @@ class ServiceTests(unittest.TestCase):
         self.assertIs(captured["transport"], runtime_transport)
         self.assertEqual(captured["env"], runtime_env)
         self.assertEqual(asset_output_dirs, [context.download_dir])
+
+    def test_provider_client_fetch_result_accumulates_asset_timing(self) -> None:
+        class TimedProvider(ProviderClient):
+            name = "timed"
+
+            def fetch_raw_fulltext(self, doi, metadata, *, context=None):
+                return _typed_payload(
+                    provider="timed",
+                    source_url="https://example.test/article",
+                    content_type="text/xml",
+                    body=b"<xml/>",
+                    route_kind="official",
+                )
+
+            def to_article_model(
+                self,
+                metadata,
+                raw_payload,
+                *,
+                downloaded_assets=None,
+                asset_failures=None,
+                context=None,
+            ):
+                return sample_article()
+
+            def download_related_assets(
+                self,
+                doi,
+                metadata,
+                raw_payload,
+                output_dir,
+                *,
+                asset_profile="all",
+                context=None,
+            ):
+                return {"assets": [], "asset_failures": []}
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            context = RuntimeContext(env={}, download_dir=Path(tmpdir))
+            original_monotonic = runtime_module.time.monotonic
+            monotonic_values = iter([100.0, 100.2])
+            try:
+                runtime_module.time.monotonic = lambda: next(monotonic_values)
+                TimedProvider().fetch_result(
+                    "10.1000/timed",
+                    {"title": "Timed"},
+                    Path(tmpdir),
+                    asset_profile="body",
+                    context=context,
+                )
+            finally:
+                runtime_module.time.monotonic = original_monotonic
+
+        self.assertEqual(context.stage_timings["asset_seconds"], 0.2)
+
+    def test_raw_fulltext_provider_branch_accumulates_asset_timing(self) -> None:
+        class RawTimedProvider:
+            name = "raw_timed"
+
+            def fetch_raw_fulltext(self, doi, metadata, *, context=None):
+                return _typed_payload(
+                    provider="raw_timed",
+                    source_url="https://example.test/article",
+                    content_type="text/xml",
+                    body=b"<xml/>",
+                    route_kind="official",
+                )
+
+            def to_article_model(
+                self,
+                metadata,
+                raw_payload,
+                *,
+                downloaded_assets=None,
+                asset_failures=None,
+                context=None,
+            ):
+                return sample_article()
+
+            def download_related_assets(
+                self,
+                doi,
+                metadata,
+                raw_payload,
+                output_dir,
+                *,
+                asset_profile="all",
+                context=None,
+            ):
+                return {"assets": [], "asset_failures": []}
+
+            def asset_download_failure_warning(self, exc):
+                return str(exc)
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            context = RuntimeContext(env={}, download_dir=Path(tmpdir))
+            artifact_store = ArtifactStore.from_download_dir(Path(tmpdir))
+            original_monotonic = runtime_module.time.monotonic
+            monotonic_values = iter([200.0, 200.3])
+            try:
+                runtime_module.time.monotonic = lambda: next(monotonic_values)
+                _provider_fetch_result(
+                    RawTimedProvider(),
+                    doi="10.1000/raw-timed",
+                    metadata={"title": "Raw Timed"},
+                    artifact_store=artifact_store,
+                    asset_profile="body",
+                    context=context,
+                )
+            finally:
+                runtime_module.time.monotonic = original_monotonic
+
+        self.assertEqual(context.stage_timings["asset_seconds"], 0.3)
 
     def test_fetch_paper_legacy_keywords_override_runtime_context(self) -> None:
         resolved = paper_fetch.ResolvedQuery(

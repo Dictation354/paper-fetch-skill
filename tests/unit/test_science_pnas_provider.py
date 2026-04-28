@@ -264,6 +264,7 @@ class SciencePnasProviderTests(unittest.TestCase):
             with (
                 mock.patch.object(browser_workflow, "load_runtime_config", return_value=runtime),
                 mock.patch.object(browser_workflow, "ensure_runtime_ready"),
+                mock.patch.object(browser_workflow, "fetch_html_with_direct_playwright") as mocked_direct,
                 mock.patch.object(
                     browser_workflow,
                     "fetch_html_with_flaresolverr",
@@ -295,6 +296,7 @@ class SciencePnasProviderTests(unittest.TestCase):
                 )
 
         mocked_pdf.assert_not_called()
+        mocked_direct.assert_not_called()
         self.assertEqual(raw_payload.metadata["route"], "html")
         self.assertEqual(article.source, "science")
         self.assertIn("fulltext:science_html_ok", article.quality.source_trail)

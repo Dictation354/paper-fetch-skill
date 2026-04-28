@@ -16,6 +16,7 @@ from unittest import mock
 
 from paper_fetch import http as http_module
 from paper_fetch.providers import base as provider_base
+from paper_fetch.runtime import RuntimeContext
 import urllib3
 
 warnings.filterwarnings(
@@ -82,6 +83,57 @@ class RecordCaptureHandler(logging.Handler):
 
 
 class HttpTransportCacheTests(unittest.TestCase):
+    def test_runtime_metadata_cache_ttl_defaults_to_one_day_and_allows_env_override(self) -> None:
+        default_context = RuntimeContext(env={})
+        disabled_context = RuntimeContext(env={"PAPER_FETCH_HTTP_METADATA_CACHE_TTL": "0"})
+        short_context = RuntimeContext(env={"PAPER_FETCH_HTTP_METADATA_CACHE_TTL": "30"})
+
+        self.assertEqual(default_context.transport.metadata_cache_ttl, 86400)
+        self.assertEqual(disabled_context.transport.metadata_cache_ttl, 0)
+        self.assertEqual(short_context.transport.metadata_cache_ttl, 30)
+
+    def test_disk_cache_key_redacts_crossref_mailto_query_param(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            first_transport = http_module.HttpTransport(
+                cache_ttl=30,
+                cache_capacity=128,
+                disk_cache_dir=Path(tmpdir),
+            )
+            second_transport = http_module.HttpTransport(
+                cache_ttl=30,
+                cache_capacity=128,
+                disk_cache_dir=Path(tmpdir),
+            )
+
+            def fake_urlopen(request, timeout=20):
+                return FakeHTTPResponse(
+                    b'{"message":{"DOI":"10.1234/example"}}',
+                    request.full_url,
+                    headers={"content-type": "application/vnd.crossref-api-message+json"},
+                )
+
+            with mock.patch.object(first_transport, "_perform_request", side_effect=fake_urlopen):
+                first_transport.request(
+                    "GET",
+                    "https://api.crossref.org/works/10.1234%2Fexample",
+                    headers={"Accept": "application/json"},
+                    query={"mailto": "alice@example.test"},
+                )
+            with mock.patch.object(second_transport, "_perform_request") as mocked_request:
+                response = second_transport.request(
+                    "GET",
+                    "https://api.crossref.org/works/10.1234%2Fexample",
+                    headers={"Accept": "application/json"},
+                    query={"mailto": "bob@example.test"},
+                )
+
+        self.assertEqual(response["body"], b'{"message":{"DOI":"10.1234/example"}}')
+        mocked_request.assert_not_called()
+
+    def test_vendor_json_and_xml_content_types_are_cacheable_textual_payloads(self) -> None:
+        self.assertTrue(http_module.is_textual_content_type("application/vnd.crossref-api-message+json"))
+        self.assertTrue(http_module.is_textual_content_type("application/vnd.crossref.unixsd+xml"))
+
     def test_get_requests_hit_in_memory_cache_for_same_url_and_headers(self) -> None:
         transport = http_module.HttpTransport(cache_ttl=30, cache_capacity=128)
         call_count = 0
@@ -98,6 +150,23 @@ class HttpTransportCacheTests(unittest.TestCase):
         self.assertEqual(call_count, 1)
         self.assertEqual(first["body"], b"ok")
         self.assertEqual(second["body"], b"ok")
+
+    def test_cache_stats_track_memory_hit_miss_store_and_bypass(self) -> None:
+        transport = http_module.HttpTransport(cache_ttl=30, cache_capacity=128)
+
+        def fake_urlopen(request, timeout=20):
+            return FakeHTTPResponse(b"ok", request.full_url, headers={"content-type": "text/plain"})
+
+        with mock.patch.object(transport, "_perform_request", side_effect=fake_urlopen):
+            transport.request("GET", "https://example.test/article", headers={"Accept": "text/plain"})
+            transport.request("GET", "https://example.test/article", headers={"Accept": "text/plain"})
+            transport.request("POST", "https://example.test/article", headers={"Accept": "text/plain"})
+
+        stats = transport.cache_stats_snapshot()
+        self.assertEqual(stats["miss"], 1)
+        self.assertEqual(stats["memory_hit"], 1)
+        self.assertEqual(stats["store"], 1)
+        self.assertEqual(stats["bypass"], 1)
 
     def test_cached_get_expires_after_ttl(self) -> None:
         now = 100.0
@@ -809,6 +878,7 @@ class HttpTransportCacheTests(unittest.TestCase):
 
         self.assertEqual(first["body"], b"cached body")
         self.assertEqual(second["body"], b"cached body")
+        self.assertEqual(second_transport.cache_stats_snapshot()["disk_fresh_hit"], 1)
         mocked_request.assert_not_called()
 
     def test_stale_disk_cache_uses_conditional_get_and_304_body(self) -> None:
@@ -847,6 +917,9 @@ class HttpTransportCacheTests(unittest.TestCase):
         self.assertEqual(lowered["if-none-match"], '"v1"')
         self.assertEqual(lowered["if-modified-since"], "Mon, 01 Jan 2024 00:00:00 GMT")
         self.assertEqual(response["body"], b"cached body")
+        stats = stale_transport.cache_stats_snapshot()
+        self.assertEqual(stats["disk_stale_revalidate"], 1)
+        self.assertEqual(stats["disk_304_refresh"], 1)
 
     def test_map_request_failure_returns_rate_limited_provider_failure(self) -> None:
         failure = http_module.RequestFailure(

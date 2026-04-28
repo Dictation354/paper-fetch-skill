@@ -17,6 +17,7 @@ from paper_fetch.providers.crossref import CrossrefClient
 from paper_fetch.providers.elsevier import ElsevierClient, download_elsevier_related_assets, filter_elsevier_asset_references
 from paper_fetch.providers.springer import SpringerClient
 from paper_fetch.providers.wiley import WileyClient
+from paper_fetch.runtime import RuntimeContext
 
 
 class RecordingTransport:
@@ -636,6 +637,59 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         self.assertEqual(asset["downloaded_bytes"], len(b"%PDF-1.7 supplementary"))
         self.assertEqual(result["asset_failures"], [])
 
+    def test_elsevier_body_asset_download_uses_runtime_asset_concurrency_env(self) -> None:
+        urls = [f"https://api.elsevier.com/content/object/eid/fig{index}" for index in range(3)]
+        xml_body = (
+            b"<?xml version='1.0'?><full-text-retrieval-response>"
+            + b"".join(
+                (
+                    f"<object type='IMAGE-HIGH-RES' mimetype='image/png' ref='fig{index}'>"
+                    f"{url}</object>"
+                ).encode("utf-8")
+                for index, url in enumerate(urls)
+            )
+            + b"</full-text-retrieval-response>"
+        )
+        state = {"active": 0, "max_active": 0}
+        lock = threading.Lock()
+
+        class DelayedRecordingTransport(RecordingTransport):
+            def request(self, method, url, **kwargs):
+                with lock:
+                    state["active"] += 1
+                    state["max_active"] = max(state["max_active"], state["active"])
+                try:
+                    time.sleep(0.01)
+                    return {
+                        "status_code": 200,
+                        "headers": {"content-type": "image/png"},
+                        "body": f"payload:{url}".encode("utf-8"),
+                        "url": url,
+                    }
+                finally:
+                    with lock:
+                        state["active"] -= 1
+
+        transport = DelayedRecordingTransport({})
+        context = RuntimeContext(
+            env={"PAPER_FETCH_ASSET_DOWNLOAD_CONCURRENCY": "1"},
+            transport=transport,
+        )
+        with tempfile.TemporaryDirectory() as tmpdir:
+            result = download_elsevier_related_assets(
+                transport,
+                doi="10.1016/test",
+                xml_body=xml_body,
+                output_dir=Path(tmpdir),
+                headers={"User-Agent": "unit-test", "X-ELS-APIKey": "secret"},
+                asset_profile="body",
+                context=context,
+            )
+
+        self.assertEqual(state["max_active"], 1)
+        self.assertEqual([asset["download_url"] for asset in result["assets"]], urls)
+        self.assertEqual(result["asset_failures"], [])
+
     def test_playwright_image_page_fetch_is_abortable_and_does_not_cache_challenge_pages(self) -> None:
         page = _FakeImagePage({"ok": False, "error": "AbortError", "timedOut": True})
         fetcher = browser_workflow._SharedPlaywrightImageDocumentFetcher(
@@ -961,6 +1015,71 @@ class ProviderRequestOptionsTests(unittest.TestCase):
 
         self.assertGreaterEqual(fetcher.max_active, 2)
         self.assertEqual([asset["heading"] for asset in result["assets"]], ["Figure 1", "Figure 2", "Figure 3"])
+
+    def test_browser_workflow_asset_downloads_pass_runtime_asset_concurrency_env(self) -> None:
+        doi = "10.1126/science.assets"
+        runtime = _flaresolverr.FlareSolverrRuntimeConfig(
+            provider="science",
+            doi=doi,
+            url="http://127.0.0.1:8191/v1",
+            env_file=Path("/tmp/.env.flaresolverr"),
+            source_dir=Path("/tmp/vendor/flaresolverr"),
+            artifact_dir=Path("/tmp/artifacts"),
+            headless=True,
+        )
+        raw_payload = RawFulltextPayload(
+            provider="science",
+            source_url="https://www.science.org/doi/full/10.1126/science.assets",
+            content_type="text/html",
+            body=b"<html></html>",
+            content=ProviderContent(
+                route_kind="html",
+                source_url="https://www.science.org/doi/full/10.1126/science.assets",
+                content_type="text/html",
+                body=b"<html></html>",
+                browser_context_seed={"browser_final_url": "https://www.science.org/doi/full/10.1126/science.assets"},
+            ),
+        )
+        client = browser_workflow.BrowserWorkflowClient(RecordingTransport({}), {})
+        client.name = "science"
+
+        with (
+            tempfile.TemporaryDirectory() as tmpdir,
+            mock.patch.object(browser_workflow, "load_runtime_config", return_value=runtime),
+            mock.patch.object(browser_workflow, "ensure_runtime_ready"),
+            mock.patch.object(
+                browser_workflow,
+                "_cached_browser_workflow_assets",
+                return_value=[
+                    {
+                        "kind": "figure",
+                        "heading": "Figure 1",
+                        "url": "https://example.test/figure.png",
+                        "section": "body",
+                    },
+                    {
+                        "kind": "supplementary",
+                        "heading": "Supplement 1",
+                        "url": "https://example.test/supplement.pdf",
+                        "section": "supplementary",
+                    },
+                ],
+            ),
+            mock.patch.object(browser_workflow, "download_figure_assets_with_image_document_fetcher", return_value={"assets": [], "asset_failures": []}) as mocked_figures,
+            mock.patch.object(browser_workflow, "download_supplementary_assets", return_value={"assets": [], "asset_failures": []}) as mocked_supplementary,
+        ):
+            result = client.download_related_assets(
+                doi,
+                {"doi": doi, "title": "Asset Concurrency"},
+                raw_payload,
+                Path(tmpdir),
+                asset_profile="body",
+                context=RuntimeContext(env={"PAPER_FETCH_ASSET_DOWNLOAD_CONCURRENCY": "6"}),
+            )
+
+        self.assertEqual(result, {"assets": [], "asset_failures": []})
+        self.assertEqual(mocked_figures.call_args.kwargs["asset_download_concurrency"], 6)
+        self.assertEqual(mocked_supplementary.call_args.kwargs["asset_download_concurrency"], 6)
 
     def test_shared_playwright_file_fetcher_recovers_after_cloudflare_challenge(self) -> None:
         file_url = "https://example.test/supplement.pdf"

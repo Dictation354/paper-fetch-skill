@@ -149,6 +149,11 @@
 - Provider PDF/binary、Springer `original.html` 和 asset 诊断由 `RuntimeContext` / `ArtifactStore` 应用；MCP fetch-envelope sidecar 和 cache index 由 `FetchCache` 管理。
 - 未显式设置时，CLI / MCP 优先使用用户数据目录下的 `paper-fetch/downloads`；CLI 创建失败才退回 `live-downloads`。
 
+### Live review timings
+
+- golden criteria live review 的 `stage_timings` 包含 `fetch_seconds`、`materialize_seconds`、`total_seconds`、`resolve_seconds`、`metadata_seconds`、`fulltext_seconds`、`asset_seconds`、`formula_seconds`、`render_seconds`。
+- 每个 sample 的 `http_cache_stats` 表示该 sample 执行前后差值；最终汇总日志仍可查看 `HttpTransport.cache_stats_snapshot()` 的累计快照。
+
 ## 一句话阅读建议
 
 - 想快速上手：先看首页。

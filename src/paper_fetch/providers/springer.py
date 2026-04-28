@@ -8,7 +8,7 @@ import urllib.parse
 from pathlib import Path
 from typing import Any, Mapping
 
-from ..config import build_user_agent
+from ..config import build_user_agent, resolve_asset_download_concurrency
 from ..extraction.html.landing import LandingHtmlFetchResult, LandingRedirectLimitExceeded, fetch_landing_html
 from ..extraction.html.parsing import choose_parser
 from ..http import DEFAULT_FULLTEXT_TIMEOUT_SECONDS, HttpTransport, RequestFailure, build_text_preview
@@ -788,6 +788,7 @@ class SpringerClient(ProviderClient):
             output_dir=output_dir,
             user_agent=self.user_agent,
             asset_profile=asset_profile,
+            asset_download_concurrency=resolve_asset_download_concurrency(context.env),
         )
 
     def fetch_raw_fulltext(

@@ -62,7 +62,7 @@
 3. `crossref` 既可能是公开来源 `source="crossref_meta"`，也可能只是内部 routing signal。
 4. `elsevier` 固定走 `官方 XML/API -> 官方 API PDF fallback -> metadata-only`。
 5. `springer` 固定走 `direct HTML -> direct HTTP PDF -> abstract-only / metadata-only`。
-6. `wiley` 走 provider 自管 `FlareSolverr HTML -> seeded-browser publisher PDF/ePDF -> Wiley TDM API PDF -> abstract-only / metadata-only`，`science` / `pnas` 继续走 `FlareSolverr HTML -> seeded-browser publisher PDF/ePDF -> abstract-only / metadata-only`。
+6. `pnas` 先尝试 `direct Playwright HTML preflight`，失败后继续 `FlareSolverr HTML -> seeded-browser publisher PDF/ePDF -> abstract-only / metadata-only`；`wiley` 从 `FlareSolverr HTML -> seeded-browser publisher PDF/ePDF -> Wiley TDM API PDF -> abstract-only / metadata-only` 开始，`science` 从 `FlareSolverr HTML -> seeded-browser publisher PDF/ePDF -> abstract-only / metadata-only` 开始。
 7. 未命中这五家 provider 的 URL / landing page 不再尝试通用 HTML 正文提取，只会继续做 DOI / Crossref metadata 解析，并在允许时返回 metadata-only。
 8. 最终统一输出 `FetchEnvelope`，其中会显式给出：
    - `source`
@@ -147,6 +147,7 @@ python3 -m paper_fetch.mcp.server
 - `wiley` / `science` / `pnas`
   - `science` / `pnas` 依赖仓库 checkout + `vendor/flaresolverr/` 工作流。
   - `wiley` 的 HTML 与 seeded-browser PDF/ePDF 路径也依赖这套工作流；配置 `WILEY_TDM_CLIENT_TOKEN` 后，官方 TDM API PDF lane 会在 browser PDF/ePDF fallback 失败或本地浏览器运行时不可用时继续尝试。
+  - 仅 `pnas` 正文 HTML 会先尝试 direct Playwright preflight；成功时标记 `html_fetcher="playwright_direct"` 并跳过 FlareSolverr，失败时保持原 FlareSolverr / PDF 回退语义。`wiley` / `science` 从 FlareSolverr HTML 开始。
   - `FlareSolverr HTML` 成功路径支持 `asset_profile=body|all`；正文 figure / table / formula 图片会复用同一个 seeded Playwright browser context 下载，supplementary 文件只在 `all` 下单独下载。
   - 正文 HTML 首轮 FlareSolverr 请求会用 `waitInSeconds=0` + `disableMedia=true` 快速路径；challenge、访问拦截、摘要页或正文抽取不足时自动用原保守等待策略重试，图片恢复和 figure-page 发现不禁用媒体资源。
   - 候选顺序仍优先 full-size/original，full-size 全部失败后才回退 preview；preview 也通过同一个 browser context 获取，目标 provider 不再输出 `download_tier="playwright_canvas_fallback"`。
@@ -179,7 +180,7 @@ python3 -m paper_fetch.mcp.server
 
 - `elsevier` 保留官方 API/XML 主链，并在 XML 不可用时直接走官方 API PDF fallback；XML 成功时公开为 `elsevier_xml`，PDF fallback 成功时公开为 `elsevier_pdf`。
 - `springer` 使用 provider 自管 `direct HTML -> direct HTTP PDF` 主链，公开来源统一为 `springer_html`。
-- `wiley` 使用 repo-local FlareSolverr HTML + Wiley TDM API PDF + seeded-browser publisher PDF/ePDF fallback；`science`、`pnas` 继续使用 repo-local FlareSolverr + Playwright seeded-browser publisher PDF/ePDF 工作流。
+- `pnas` 先尝试 direct Playwright HTML preflight；`wiley` / `science` 从 repo-local FlareSolverr HTML 开始。三者后续都可继续使用 Playwright seeded-browser publisher PDF/ePDF 工作流，`wiley` 还可在后续 fallback 中使用 Wiley TDM API PDF。
 - `wiley` 公开来源为 `wiley_browser`；`science`、`pnas` 继续保持原有 public source。
 - `crossref` 负责 metadata、题名检索、路由信号和 metadata-only 结果，不承担 publisher fulltext。
 
@@ -199,6 +200,12 @@ python3 -m paper_fetch.mcp.server
 - `batch_check(queries, mode, concurrency)`，其中 `mode` 为 `metadata` 或 `article`
 
 `download_dir` 相关 provider artifact 落盘由 `RuntimeContext` / `ArtifactStore` 管理；`prefer_cache=true` 的 fetch-envelope sidecar 复用与 scoped cache resources 由 `FetchCache` 管理，外部参数和 resource URI 保持稳定。
+
+同一个 `RuntimeContext` 生命周期内会复用 session 级浅缓存：`has_fulltext` 与后续 `fetch_paper` 可共享 query resolution、Crossref DOI metadata、Elsevier metadata probe，以及 landing page `citation_pdf_url` probe；命中的 citation PDF URL 会并入 fetch 阶段 metadata `fulltext_links`。
+
+HTTP textual disk cache 的 metadata freshness 默认 `86400` 秒；`PAPER_FETCH_HTTP_METADATA_CACHE_TTL` 可覆盖，普通进程内 GET TTL 仍默认 `30` 秒。
+
+golden criteria live review 的 `stage_timings` 会保留 `fetch_seconds`、`materialize_seconds`、`total_seconds`、`resolve_seconds`、`metadata_seconds`、`fulltext_seconds`、`asset_seconds`、`formula_seconds`、`render_seconds`；每个 sample 的 `http_cache_stats` 是该 sample 的 cache delta。
 
 批量工具每次最多接收 `50` 条 query，`concurrency` 默认 `1`，允许范围是 `1..8`。
 
@@ -257,10 +264,10 @@ CLI 抓取期错误的退出码为：
 
 - metadata 仍来自 `crossref`
 - 全文链路由 provider 自己管理
-- `wiley` 的主路径是 `FlareSolverr HTML -> seeded-browser publisher PDF/ePDF -> Wiley TDM API PDF -> abstract-only / metadata-only`
-- `science` / `pnas` 的主路径是 `FlareSolverr HTML -> seeded-browser publisher PDF/ePDF -> abstract-only / metadata-only`
+- `pnas` 的主路径会先做 `direct Playwright HTML preflight`；失败后继续 `FlareSolverr HTML -> seeded-browser publisher PDF/ePDF -> abstract-only / metadata-only`。`wiley` 从 `FlareSolverr HTML -> seeded-browser publisher PDF/ePDF -> Wiley TDM API PDF -> abstract-only / metadata-only` 开始，`science` 从 `FlareSolverr HTML -> seeded-browser publisher PDF/ePDF -> abstract-only / metadata-only` 开始
 - `wiley` / `science` / `pnas` 的 HTML 成功路径支持 `none/body/all` 资产下载；PDF/ePDF fallback 仍是 text-only
-- `wiley` / `science` / `pnas` 的正文 figure / table / formula 图片资产下载以 shared Playwright browser context 为主链路；每次下载 attempt 只创建一次 context/page，并在多图之间复用
+- `wiley` / `science` / `pnas` 的正文 figure / table / formula 图片资产下载以 shared Playwright browser context 为主链路；同一个 `RuntimeContext` 会 lazy 复用 Chromium browser，每次下载 attempt 仍只创建隔离 context/page，并在多图之间复用
+- 资产下载 worker 上限由 `PAPER_FETCH_ASSET_DOWNLOAD_CONCURRENCY` 控制，默认 `4`、最小 `1`；调高时需要自行评估 publisher 限速
 - `science` / `pnas` 必须依赖 repo-local `vendor/flaresolverr/`
 - `wiley` 的 HTML 与 seeded-browser PDF/ePDF 路径依赖 repo-local `vendor/flaresolverr/`；`WILEY_TDM_CLIENT_TOKEN` 只启用官方 TDM API PDF lane
 - browser 路径需要显式配置 `FLARESOLVERR_ENV_FILE`；本地 FlareSolverr 限速变量与账本已移除
