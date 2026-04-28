@@ -33,6 +33,8 @@ TARGETED_CYCLE_PATHS = [
     PROVIDERS_DIR / "html_springer_nature.py",
     PROVIDERS_DIR / "browser_workflow.py",
     PROVIDERS_DIR / "_browser_workflow_authors.py",
+    PROVIDERS_DIR / "_browser_workflow_fetchers.py",
+    PROVIDERS_DIR / "_browser_workflow_html_extraction.py",
     PROVIDERS_DIR / "_browser_workflow_shared.py",
     PROVIDERS_DIR / "_pdf_candidates.py",
     PROVIDERS_DIR / "_html_section_markdown.py",

@@ -160,6 +160,8 @@ Date: 2026-04-27
 - 图片 payload helper 使用 `filetype` 做 MIME 识别，使用 `imagesize` 做 JPEG/PNG/GIF/WebP 尺寸读取；识别失败时继续表现为 unknown
 - HTML-derived citation cleanup 位于 `paper_fetch.markdown.citations`
 - HTML / Markdown full-text availability verdict 位于 `paper_fetch.quality.html_availability`
+- HTML container scoring / selection / cleanup 也位于 `paper_fetch.quality.html_availability`；provider-owned browser workflow 只能通过 selection policy 传入评分 profile、完整祖先优先、页面级 container 避让与 provider refine hook
+- section hint heading key、dict/object coercion 与顺序匹配位于 `paper_fetch.extraction.section_hints`，HTML semantics 层复用该实现；`models.SectionHint` 只是 dataclass 适配层
 - 旧的 `paper_fetch.providers._html_access_signals`、`_html_availability`、`_html_citations`、`_html_semantics` 与 `_language_filter` 兼容转发入口已移除；测试和新代码必须直接使用上述 canonical owner
 
 ### 7. Provider 层
@@ -312,7 +314,7 @@ workflow 会尽可能拿到两类元数据：
   - 与 `wiley` / `science` 的 HTML / browser PDF/ePDF 路径共用浏览器工作流基座
   - 当前只剩 provider-owned 单栈；不再保留额外的 Science-only live harness 或第二套 browser-PDF 实现
 
-`paper_fetch.providers.browser_workflow` 是 Wiley / Science / PNAS 的 canonical browser workflow runtime：它通过 `ProviderBrowserProfile` 承载 provider 名称、公开 source、host 与 URL template、Crossref PDF 插入位置、Markdown extractor、作者 fallback 和 shared Playwright image fetcher 策略。旧的 `_science_pnas` 兼容模块已移除，测试和新代码都应直接 patch 或 import canonical runtime。
+`paper_fetch.providers.browser_workflow` 是 Wiley / Science / PNAS 的 canonical browser workflow facade：它保留 `ProviderBrowserProfile`、`BrowserWorkflowClient`、bootstrap、seeded-browser PDF fallback、article conversion 和 related asset download orchestration。底层职责拆到两个内部模块：`_browser_workflow_fetchers.py` 承载 shared Playwright image/file fetcher、memoized fetcher、Playwright context 创建和图片 payload/失败诊断 helper；`_browser_workflow_html_extraction.py` 承载 direct Playwright HTML preflight、FlareSolverr HTML payload 构造、Markdown/assets parse-cache helper 和 HTML payload helper。facade 继续 re-export 测试和 provider 已依赖的 patch 点（例如 `fetch_html_with_flaresolverr`、`fetch_html_with_direct_playwright`、`extract_science_pnas_markdown` 与 shared Playwright fetcher 构造器），新代码不应把这两个内部模块当作稳定公开 API。旧的 `_science_pnas` 兼容模块已移除，测试和新代码都应直接 patch 或 import canonical runtime。
 
 `wiley` / `science` / `pnas` 的 HTML 正文图片资产下载也属于这套 provider-owned browser workflow：figure / table / formula 图片候选复用同一个 seeded Playwright browser context，先尝试 full-size/original，全部失败后再用同一 context 尝试 preview。PNAS direct Playwright HTML preflight 和 PDF/ePDF fallback 同样通过 `RuntimeContext` 复用 browser。通用 HTTP-first 资产下载仍保留给非目标 provider，并把网络解析阶段放入 bounded worker pool；文件写入与文件名去重仍按原 asset 顺序串行执行。
 

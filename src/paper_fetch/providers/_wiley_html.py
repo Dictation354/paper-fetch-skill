@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from functools import partial
 from typing import Any, Mapping
 
 from ..quality.html_profiles import (
@@ -12,11 +13,7 @@ from ..quality.html_profiles import (
     wiley_positive_signals,
 )
 from ..utils import normalize_text
-from ._browser_workflow_authors import extract_meta_authors, extract_selector_authors
-from ._browser_workflow_shared import (
-    build_browser_workflow_html_candidates,
-    build_browser_workflow_pdf_candidates,
-)
+from ._browser_workflow_authors import AuthorExtractionPipeline, extract_meta_authors, extract_selector_authors
 from ._html_references import extract_numbered_references_from_html
 
 try:
@@ -52,10 +49,6 @@ def blocking_fallback_signals(html_text: str) -> list[str]:
     return wiley_blocking_fallback_signals(html_text)
 
 
-def _extract_meta_authors(html_text: str) -> list[str]:
-    return extract_meta_authors(html_text, keys={"citation_author"})
-
-
 def _node_author_text(node: Any) -> str:
     if Tag is None or not isinstance(node, Tag):
         return ""
@@ -83,32 +76,14 @@ def _extract_dom_authors(html_text: str) -> list[str]:
     )
 
 
+_AUTHOR_EXTRACTION_PIPELINE = AuthorExtractionPipeline(
+    partial(extract_meta_authors, keys={"citation_author"}),
+    _extract_dom_authors,
+)
+
+
 def extract_authors(html_text: str) -> list[str]:
-    meta_authors = _extract_meta_authors(html_text)
-    if meta_authors:
-        return meta_authors
-    return _extract_dom_authors(html_text)
-
-
-def build_html_candidates(doi: str, landing_page_url: str | None = None) -> list[str]:
-    return build_browser_workflow_html_candidates(
-        doi,
-        landing_page_url,
-        hosts=HOSTS,
-        base_hosts=BASE_HOSTS,
-        path_templates=HTML_PATH_TEMPLATES,
-    )
-
-
-def build_pdf_candidates(doi: str, crossref_pdf_url: str | None) -> list[str]:
-    return build_browser_workflow_pdf_candidates(
-        doi,
-        crossref_pdf_url,
-        hosts=HOSTS,
-        base_hosts=BASE_HOSTS,
-        path_templates=PDF_PATH_TEMPLATES,
-        crossref_pdf_position=CROSSREF_PDF_POSITION,
-    )
+    return _AUTHOR_EXTRACTION_PIPELINE(html_text)
 
 
 def positive_signals(html_text: str) -> tuple[list[str], list[str], list[str]]:
@@ -168,22 +143,6 @@ def refine_selected_container(
 
     best_candidate = max(article_candidates, key=candidate_key)
     return best_candidate if candidate_key(best_candidate) > candidate_key(node) else node
-
-
-def extract_markdown(
-    html_text: str,
-    source_url: str,
-    *,
-    metadata: Mapping[str, Any] | None = None,
-) -> tuple[str, dict[str, Any]]:
-    from . import browser_workflow
-
-    return browser_workflow.extract_science_pnas_markdown(
-        html_text,
-        source_url,
-        "wiley",
-        metadata=metadata,
-    )
 
 
 def finalize_extraction(

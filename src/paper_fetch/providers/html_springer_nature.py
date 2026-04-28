@@ -8,11 +8,15 @@ from typing import Any
 
 from ..extraction.html.parsing import choose_parser
 from ..models import normalize_text
-from ..extraction.html.semantics import heading_category, identity_category, node_identity_text
+from ..extraction.html.semantics import (
+    heading_category,
+    identity_category,
+    node_identity_text,
+    normalize_section_title,
+)
 from ..markdown.citations import clean_citation_markers, normalize_inline_citation_markdown
 from ._html_section_markdown import (
     extract_section_title,
-    normalize_section_title,
     render_heading_text_from_html,
     render_container_markdown,
     render_section_markdown,

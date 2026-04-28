@@ -159,24 +159,33 @@ class SciencePnasCandidateTests(unittest.TestCase):
 
     def test_provider_profile_article_source_label_and_hooks(self) -> None:
         cases = (
-            (ScienceClient(None, {}), None, "Science", _science_html.extract_markdown),
-            (PnasClient(None, {}), None, "PNAS", _pnas_html.extract_markdown),
-            (WileyClient(None, {}), "wiley_browser", "Wiley", _wiley_html.extract_markdown),
+            (ScienceClient(None, {}), None, "Science", "science"),
+            (PnasClient(None, {}), None, "PNAS", "pnas"),
+            (WileyClient(None, {}), "wiley_browser", "Wiley", "wiley"),
         )
 
-        for client, article_source_name, label, extractor in cases:
+        for client, article_source_name, label, markdown_publisher in cases:
             with self.subTest(provider=client.name):
                 self.assertEqual(client.profile.article_source_name, article_source_name)
                 self.assertEqual(client.article_source(), article_source_name or client.name)
                 self.assertEqual(client.provider_label(), label)
-                self.assertIs(client.profile.extract_markdown, extractor)
+                self.assertEqual(client.profile.markdown_publisher, markdown_publisher)
                 self.assertTrue(client.profile.shared_playwright_image_fetcher)
 
     def test_shared_author_helpers_preserve_provider_strategies(self) -> None:
         science_html = """
-        <html><script>AAASdataLayer={"page":{"pageInfo":{"author":"Ada Lovelace|Grace Hopper"}}};</script></html>
+        <html><script>AAASdataLayer={"page":{"pageInfo":{"author":"Ada Lovelace|Grace Hopper"}}};</script>
+        <body><div class="contributors"><div property="author"><span property="name">DOM Science</span></div></div></body></html>
         """
         pnas_html = """
+        <html><head>
+          <meta name="citation_author" content="Edward Example" />
+          <meta name="dc.creator" content="Dana Creator" />
+        </head><body>
+          <div class="contributors"><div property="author"><span property="name">PNAS DOM</span></div></div>
+        </body></html>
+        """
+        pnas_meta_only_html = """
         <html><head>
           <meta name="citation_author" content="Edward Example" />
           <meta name="dc.creator" content="Dana Creator" />
@@ -191,7 +200,8 @@ class SciencePnasCandidateTests(unittest.TestCase):
         """
 
         self.assertEqual(_science_html.extract_authors(science_html), ["Ada Lovelace", "Grace Hopper"])
-        self.assertEqual(_pnas_html.extract_authors(pnas_html), ["Edward Example", "Dana Creator"])
+        self.assertEqual(_pnas_html.extract_authors(pnas_html), ["PNAS DOM"])
+        self.assertEqual(_pnas_html.extract_authors(pnas_meta_only_html), ["Edward Example", "Dana Creator"])
         self.assertEqual(_wiley_html.extract_authors(wiley_html), ["Meta Author"])
 
     def test_script_json_helpers_extract_balanced_payloads(self) -> None:

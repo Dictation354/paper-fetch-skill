@@ -33,7 +33,7 @@ WILEY_BROWSER_PROFILE = browser_workflow.ProviderBrowserProfile(
     html_path_templates=_wiley_html.HTML_PATH_TEMPLATES,
     pdf_path_templates=_wiley_html.PDF_PATH_TEMPLATES,
     crossref_pdf_position=_wiley_html.CROSSREF_PDF_POSITION,
-    extract_markdown=_wiley_html.extract_markdown,
+    markdown_publisher="wiley",
     fallback_author_extractor=_wiley_html.extract_authors,
     shared_playwright_image_fetcher=True,
 )

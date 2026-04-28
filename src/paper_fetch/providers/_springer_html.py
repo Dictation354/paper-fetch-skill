@@ -31,6 +31,7 @@ from ..extraction.html.parsing import choose_parser
 from ..extraction.html.semantics import collect_html_section_hints
 from ..utils import dedupe_authors, normalize_text
 from ._browser_workflow_authors import (
+    AuthorExtractionPipeline,
     extract_jsonld_authors as extract_common_jsonld_authors,
     extract_meta_authors as extract_common_meta_authors,
     extract_selector_authors as extract_common_selector_authors,
@@ -175,14 +176,15 @@ def _extract_dom_authors(html_text: str) -> list[str]:
     )
 
 
+_AUTHOR_EXTRACTION_PIPELINE = AuthorExtractionPipeline(
+    _extract_meta_authors,
+    _extract_jsonld_authors,
+    _extract_dom_authors,
+)
+
+
 def extract_authors(html_text: str) -> list[str]:
-    meta_authors = _extract_meta_authors(html_text)
-    if meta_authors:
-        return meta_authors
-    jsonld_authors = _extract_jsonld_authors(html_text)
-    if jsonld_authors:
-        return jsonld_authors
-    return _extract_dom_authors(html_text)
+    return _AUTHOR_EXTRACTION_PIPELINE(html_text)
 
 
 def parse_html_metadata(html_text: str, source_url: str):

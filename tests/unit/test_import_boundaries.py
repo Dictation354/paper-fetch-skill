@@ -22,6 +22,7 @@ REMOVED_PROVIDER_COMPATIBILITY_MODULES = frozenset(
         "paper_fetch.providers._html_semantics",
         "paper_fetch.providers._language_filter",
         "paper_fetch.providers._science_pnas",
+        "paper_fetch.resolve.crossref",
     }
 )
 

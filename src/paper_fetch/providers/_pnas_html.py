@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from functools import partial
 from typing import Any, Mapping
 
 from ..quality.html_profiles import (
@@ -12,12 +13,9 @@ from ..quality.html_profiles import (
     pnas_positive_signals,
 )
 from ._browser_workflow_authors import (
+    AuthorExtractionPipeline,
     extract_meta_authors,
     extract_property_authors,
-)
-from ._browser_workflow_shared import (
-    build_browser_workflow_html_candidates,
-    build_browser_workflow_pdf_candidates,
 )
 from ._html_references import extract_numbered_references_from_html
 
@@ -52,37 +50,14 @@ def _extract_dom_authors(html_text: str) -> list[str]:
     )
 
 
-def _extract_meta_authors(html_text: str) -> list[str]:
-    return extract_meta_authors(html_text, keys={"citation_author", "dc.creator"})
+_AUTHOR_EXTRACTION_PIPELINE = AuthorExtractionPipeline(
+    _extract_dom_authors,
+    partial(extract_meta_authors, keys={"citation_author", "dc.creator"}),
+)
 
 
 def extract_authors(html_text: str) -> list[str]:
-    dom_authors = _extract_dom_authors(html_text)
-    if dom_authors:
-        return dom_authors
-    return _extract_meta_authors(html_text)
-
-
-def build_html_candidates(doi: str, landing_page_url: str | None = None) -> list[str]:
-    return build_browser_workflow_html_candidates(
-        doi,
-        landing_page_url,
-        hosts=HOSTS,
-        base_hosts=BASE_HOSTS,
-        path_templates=HTML_PATH_TEMPLATES,
-    )
-
-
-def build_pdf_candidates(doi: str, crossref_pdf_url: str | None) -> list[str]:
-    return build_browser_workflow_pdf_candidates(
-        doi,
-        crossref_pdf_url,
-        hosts=HOSTS,
-        base_hosts=BASE_HOSTS,
-        path_templates=PDF_PATH_TEMPLATES,
-        crossref_pdf_position=CROSSREF_PDF_POSITION,
-        base_seed_url=crossref_pdf_url,
-    )
+    return _AUTHOR_EXTRACTION_PIPELINE(html_text)
 
 
 def positive_signals(html_text: str) -> tuple[list[str], list[str], list[str]]:
@@ -125,22 +100,6 @@ def select_content_nodes(
     selected.extend(body_nodes)
     selected.extend(availability_nodes)
     return dedupe_top_level_nodes(selected)
-
-
-def extract_markdown(
-    html_text: str,
-    source_url: str,
-    *,
-    metadata: Mapping[str, Any] | None = None,
-) -> tuple[str, dict[str, Any]]:
-    from . import browser_workflow
-
-    return browser_workflow.extract_science_pnas_markdown(
-        html_text,
-        source_url,
-        "pnas",
-        metadata=metadata,
-    )
 
 
 def finalize_extraction(

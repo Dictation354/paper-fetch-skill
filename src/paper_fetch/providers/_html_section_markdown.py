@@ -18,6 +18,7 @@ from ..extraction.html.inline import (
     normalize_html_inline_text,
     wrap_html_inline_text_fragment,
 )
+from ..extraction.html.semantics import normalize_section_title
 from ..formula.convert import normalize_latex_macros
 from ..models import normalize_text
 from ._article_markdown_math import render_external_mathml_expression, render_mathml_expression
@@ -32,7 +33,6 @@ except ImportError:  # pragma: no cover - exercised implicitly when dependency i
     Tag = None
 
 HEADING_TAG_PATTERN = re.compile(r"^h[1-6]$")
-SECTION_TITLE_NON_ALNUM_PATTERN = re.compile(r"[^a-z0-9]+")
 INLINE_IMAGE_SPACING_PATTERN = re.compile(r"(?<=[^\s])(!\[)")
 INLINE_WHITESPACE_PATTERN = re.compile(r"[ \t\r\f\v]+")
 LINE_EDGE_WHITESPACE_PATTERN = re.compile(r" *\n *")
@@ -104,10 +104,6 @@ def extract_section_title(section: Any) -> str:
     if heading is None:
         return ""
     return render_heading_text_from_html(heading)
-
-
-def normalize_section_title(title: str) -> str:
-    return SECTION_TITLE_NON_ALNUM_PATTERN.sub(" ", title.lower()).strip()
 
 
 def _select_first(node: Any, selectors: tuple[str, ...]) -> Any:

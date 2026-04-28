@@ -13,16 +13,12 @@ from ..quality.html_profiles import (
 )
 from ..utils import dedupe_authors, normalize_text
 from ._browser_workflow_authors import (
+    AuthorExtractionPipeline,
     extract_property_authors,
     normalized_author_tokens,
 )
 from ._html_references import extract_numbered_references_from_html
 from ._script_json import extract_assignment_json
-
-from ._browser_workflow_shared import (
-    build_browser_workflow_html_candidates,
-    build_browser_workflow_pdf_candidates,
-)
 
 HOSTS: tuple[str, ...] = ("www.science.org", "science.org")
 BASE_HOSTS: tuple[str, ...] = HOSTS
@@ -79,11 +75,14 @@ def _extract_dom_authors(html_text: str) -> list[str]:
     )
 
 
+_AUTHOR_EXTRACTION_PIPELINE = AuthorExtractionPipeline(
+    _extract_datalayer_authors,
+    _extract_dom_authors,
+)
+
+
 def extract_authors(html_text: str) -> list[str]:
-    datalayer_authors = _extract_datalayer_authors(html_text)
-    if datalayer_authors:
-        return datalayer_authors
-    return _extract_dom_authors(html_text)
+    return _AUTHOR_EXTRACTION_PIPELINE(html_text)
 
 
 def _normalize_science_heading(value: Any) -> str:
@@ -198,28 +197,6 @@ def _flatten_structured_abstract_markdown(markdown_text: str) -> str:
     return markdown_text[:match.end()] + flattened + markdown_text[block_end:]
 
 
-def build_html_candidates(doi: str, landing_page_url: str | None = None) -> list[str]:
-    return build_browser_workflow_html_candidates(
-        doi,
-        landing_page_url,
-        hosts=HOSTS,
-        base_hosts=BASE_HOSTS,
-        path_templates=HTML_PATH_TEMPLATES,
-    )
-
-
-def build_pdf_candidates(doi: str, crossref_pdf_url: str | None) -> list[str]:
-    return build_browser_workflow_pdf_candidates(
-        doi,
-        crossref_pdf_url,
-        hosts=HOSTS,
-        base_hosts=BASE_HOSTS,
-        path_templates=PDF_PATH_TEMPLATES,
-        crossref_pdf_position=CROSSREF_PDF_POSITION,
-        base_seed_url=crossref_pdf_url,
-    )
-
-
 def positive_signals(html_text: str) -> tuple[list[str], list[str], list[str]]:
     return science_positive_signals(html_text)
 
@@ -250,19 +227,3 @@ def finalize_extraction(
     if needs_frontmatter_flatten:
         markdown_text = _flatten_structured_abstract_markdown(markdown_text)
     return markdown_text, finalized
-
-
-def extract_markdown(
-    html_text: str,
-    source_url: str,
-    *,
-    metadata: Mapping[str, Any] | None = None,
-) -> tuple[str, dict[str, Any]]:
-    from . import browser_workflow
-
-    return browser_workflow.extract_science_pnas_markdown(
-        html_text,
-        source_url,
-        "science",
-        metadata=metadata,
-    )

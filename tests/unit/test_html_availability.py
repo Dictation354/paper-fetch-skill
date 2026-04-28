@@ -5,7 +5,7 @@ from types import SimpleNamespace
 
 from paper_fetch.extraction.html._metadata import parse_html_metadata
 from paper_fetch.extraction.html._runtime import body_metrics
-from paper_fetch.providers import _pnas_html, _science_html, _springer_html, _wiley_html
+from paper_fetch.providers import _springer_html, browser_workflow
 from paper_fetch.quality.html_availability import (
     assess_html_fulltext_availability,
     assess_plain_text_fulltext_availability,
@@ -92,7 +92,7 @@ BROWSER_WORKFLOW_ACCEPT_CASES = {
         "provider": "science",
         "fixture": SCIENCE_ENTITLED_FIXTURE,
         "final_url": "https://www.science.org/doi/full/10.1126/science.aeg3511",
-        "extractor": _science_html.extract_markdown,
+        "extractor": "science",
         "fallback_title": "Magma plumbing beneath Yellowstone",
     },
     "wiley": {
@@ -100,7 +100,7 @@ BROWSER_WORKFLOW_ACCEPT_CASES = {
         "provider": "wiley",
         "fixture": WILEY_ENTITLED_FIXTURE,
         "final_url": "https://onlinelibrary.wiley.com/doi/full/10.1111/gcb.16998",
-        "extractor": _wiley_html.extract_markdown,
+        "extractor": "wiley",
         "fallback_title": "Drought thresholds that impact vegetation reveal the divergent responses of vegetation growth to drought across China",
     },
     "pnas": {
@@ -108,10 +108,25 @@ BROWSER_WORKFLOW_ACCEPT_CASES = {
         "provider": "pnas",
         "fixture": PNAS_ENTITLED_FIXTURE,
         "final_url": "https://www.pnas.org/doi/full/10.1073/pnas.2309123120",
-        "extractor": _pnas_html.extract_markdown,
+        "extractor": "pnas",
         "fallback_title": "Amazon deforestation causes strong regional warming",
     },
 }
+
+
+def _extract_browser_workflow_markdown(
+    publisher: str,
+    html_text: str,
+    source_url: str,
+    *,
+    metadata: dict[str, str] | None = None,
+):
+    return browser_workflow.extract_science_pnas_markdown(
+        html_text,
+        source_url,
+        publisher,
+        metadata=metadata,
+    )
 
 
 
@@ -138,7 +153,8 @@ class HtmlAvailabilityTests(unittest.TestCase):
     def _assert_accepted_browser_workflow_case(self, case_name: str) -> None:
         case = BROWSER_WORKFLOW_ACCEPT_CASES[case_name]
         html = case["fixture"].read_text(encoding="utf-8")
-        markdown, info = case["extractor"](
+        markdown, info = _extract_browser_workflow_markdown(
+            case["extractor"],
             html,
             case["final_url"],
             metadata={"doi": case["doi"]},
@@ -645,21 +661,22 @@ class HtmlAvailabilityTests(unittest.TestCase):
                 "raw_phrase": "research funding",
                 "provider": "wiley",
                 "source_url": "https://onlinelibrary.wiley.com/doi/full/10.1111/gcb.15322",
-                "extractor": _wiley_html.extract_markdown,
+                "extractor": "wiley",
             },
             {
                 "doi": "10.1126/sciadv.abg9690",
                 "raw_phrase": "statement of competing interests",
                 "provider": "science",
                 "source_url": "https://www.science.org/doi/10.1126/sciadv.abg9690",
-                "extractor": _science_html.extract_markdown,
+                "extractor": "science",
             },
         )
         for case in real_fixture_cases:
             with self.subTest(doi=case["doi"]):
                 html = golden_criteria_asset(case["doi"], "original.html").read_text(encoding="utf-8", errors="ignore")
                 self.assertIn(case["raw_phrase"], html.casefold())
-                markdown, info = case["extractor"](
+                markdown, info = _extract_browser_workflow_markdown(
+                    case["extractor"],
                     html,
                     case["source_url"],
                     metadata={"doi": case["doi"]},

@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import re
 from dataclasses import asdict, dataclass, field
-from typing import Any, Mapping
+from typing import Any, Callable, Mapping
 
 from ..extraction.html._runtime import body_metrics, has_sufficient_article_body
 from ..extraction.html.signals import (
+    CHALLENGE_PATTERNS,
     contains_access_gate_text,
     detect_html_access_signals,
     html_failure_message,
@@ -16,12 +17,13 @@ from ..extraction.html.signals import (
 from ..extraction.html.parsing import choose_parser
 from ..extraction.html.semantics import (
     BACK_MATTER_TOKENS,
-    HTML_SECTION_HINT_KINDS,
     classify_html_paragraph,
+    coerce_html_section_hints,
     container_has_explicit_body_container,
     heading_category,
     iter_html_blocks,
     looks_like_explicit_body_container,
+    match_next_html_section_hint,
     node_identity_text,
     normalize_heading,
 )
@@ -60,6 +62,36 @@ ARTICLE_TYPE_FRONT_MATTER_PREFIXES = (
     "case report",
     "letter to the editor",
 )
+HTML_CONTAINER_SCORE_AVAILABILITY = "availability"
+HTML_CONTAINER_SCORE_BROWSER_WORKFLOW = "browser_workflow"
+HTML_CONTAINER_DROP_AVAILABILITY = "availability"
+HTML_CONTAINER_DROP_BROWSER_WORKFLOW = "browser_workflow"
+HTML_CONTAINER_BROWSER_WORKFLOW_FALLBACK_TAGS = ("article", "main", "body")
+HTML_CONTAINER_BODY_SELECTORS = (
+    "#bodymatter",
+    "[data-extent='bodymatter']",
+    "[property='articleBody']",
+    "[itemprop='articleBody']",
+    ".article__body",
+    ".article-body",
+    ".article__content",
+    ".article-section__content",
+    ".article__fulltext",
+    ".epub-section",
+)
+HEADING_TAG_PATTERN = re.compile(r"^h[1-6]$")
+
+
+@dataclass(frozen=True)
+class HtmlContainerSelectionPolicy:
+    score_profile: str = HTML_CONTAINER_SCORE_AVAILABILITY
+    drop_profile: str = HTML_CONTAINER_DROP_AVAILABILITY
+    fallback_tags: tuple[str, ...] = ()
+    prefer_complete_ancestor: bool = False
+    avoid_page_level_container: bool = False
+    body_selectors: tuple[str, ...] = HTML_CONTAINER_BODY_SELECTORS
+    abstract_node_finder: Callable[[Tag], list[Tag]] | None = None
+    refine_selected_container: Callable[..., Any] | None = None
 
 
 @dataclass
@@ -219,7 +251,51 @@ def detect_html_hard_negative_signals(
     )
 
 
-def score_container(node: Tag) -> float:
+def _direct_child_tags(node: Tag) -> list[Tag]:
+    return [child for child in node.find_all(recursive=False) if isinstance(child, Tag)]
+
+
+def _class_tokens(node: Tag) -> set[str]:
+    raw_value = (getattr(node, "attrs", None) or {}).get("class")
+    if isinstance(raw_value, (list, tuple, set)):
+        return {normalize_text(str(item)).lower() for item in raw_value if normalize_text(str(item))}
+    normalized = normalize_text(str(raw_value or "")).lower()
+    return {normalized} if normalized else set()
+
+
+def _has_selector_descendant(node: Tag, selectors: tuple[str, ...]) -> bool:
+    for selector in selectors:
+        try:
+            if node.select_one(selector) is not None:
+                return True
+        except Exception:
+            continue
+    return False
+
+
+def _browser_workflow_score_container(node: Tag) -> float:
+    text = " ".join(node.stripped_strings)
+    text_length = len(text)
+    paragraph_count = len(node.find_all("p"))
+    heading_count = len(node.find_all(HEADING_TAG_PATTERN))
+    link_count = len(node.find_all("a"))
+    score = text_length / 120.0
+    score += paragraph_count * 6.0
+    score += heading_count * 12.0
+    score -= max(0, link_count - paragraph_count * 2) * 1.5
+    lowered = text.lower()
+    if any(pattern in lowered for pattern in CHALLENGE_PATTERNS):
+        score -= 500
+    if "abstract" in lowered:
+        score += 20
+    if "references" in lowered:
+        score += 20
+    return score
+
+
+def score_container(node: Tag, *, score_profile: str = HTML_CONTAINER_SCORE_AVAILABILITY) -> float:
+    if score_profile == HTML_CONTAINER_SCORE_BROWSER_WORKFLOW:
+        return _browser_workflow_score_container(node)
     text_length = len(normalize_text(node.get_text(" ", strip=True)))
     heading_count = len(node.find_all(re.compile(r"^h[1-6]$")))
     paragraph_count = len([child for child in node.find_all(["p", "div", "section", "article"]) if normalize_text(child.get_text(" ", strip=True))])
@@ -233,7 +309,109 @@ def score_container(node: Tag) -> float:
     return float(text_length + heading_count * 200 + paragraph_count * 40 + figure_count * 20 + identity_bonus)
 
 
-def select_best_container(soup: BeautifulSoup, publisher: str):
+def container_completeness_score(
+    node: Tag,
+    *,
+    abstract_node_finder: Callable[[Tag], list[Tag]] | None = None,
+    body_selectors: tuple[str, ...] = HTML_CONTAINER_BODY_SELECTORS,
+) -> int:
+    score = 0
+    if isinstance(node.find("h1"), Tag) or normalize_text(node.name or "").lower() == "h1":
+        score += 40
+    if abstract_node_finder is not None:
+        try:
+            if abstract_node_finder(node):
+                score += 40
+        except Exception:
+            pass
+    if looks_like_explicit_body_container(node) or _has_selector_descendant(node, body_selectors):
+        score += 40
+    if normalize_text(node.name or "").lower() == "article":
+        score += 10
+    if normalize_text(node.name or "").lower() == "main":
+        score += 5
+    return score
+
+
+def prefer_complete_ancestor(
+    node: Tag,
+    *,
+    score_profile: str = HTML_CONTAINER_SCORE_BROWSER_WORKFLOW,
+    abstract_node_finder: Callable[[Tag], list[Tag]] | None = None,
+    body_selectors: tuple[str, ...] = HTML_CONTAINER_BODY_SELECTORS,
+) -> Tag:
+    best = node
+    best_key = (
+        container_completeness_score(
+            node,
+            abstract_node_finder=abstract_node_finder,
+            body_selectors=body_selectors,
+        ),
+        score_container(node, score_profile=score_profile),
+    )
+    current = node.parent if isinstance(node.parent, Tag) else None
+    depth = 0
+    while isinstance(current, Tag) and depth < 8:
+        if normalize_text(current.name or "").lower() == "html":
+            break
+        current_key = (
+            container_completeness_score(
+                current,
+                abstract_node_finder=abstract_node_finder,
+                body_selectors=body_selectors,
+            ),
+            score_container(current, score_profile=score_profile),
+        )
+        if current_key > best_key:
+            best = current
+            best_key = current_key
+        current = current.parent if isinstance(current.parent, Tag) else None
+        depth += 1
+    return best
+
+
+def _is_page_level_container(node: Tag | None) -> bool:
+    if not isinstance(node, Tag):
+        return False
+    return normalize_text(node.name or "").lower() in {"html", "body"}
+
+
+def _refine_selected_container(node: Tag, policy: HtmlContainerSelectionPolicy) -> Tag:
+    refined_node = (
+        prefer_complete_ancestor(
+            node,
+            score_profile=policy.score_profile,
+            abstract_node_finder=policy.abstract_node_finder,
+            body_selectors=policy.body_selectors,
+        )
+        if policy.prefer_complete_ancestor
+        else node
+    )
+    if policy.refine_selected_container is None:
+        return refined_node
+    refined = policy.refine_selected_container(
+        refined_node,
+        direct_child_tags=_direct_child_tags,
+        class_tokens=_class_tokens,
+        container_completeness_score=lambda candidate: container_completeness_score(
+            candidate,
+            abstract_node_finder=policy.abstract_node_finder,
+            body_selectors=policy.body_selectors,
+        ),
+        score_container=lambda candidate: score_container(candidate, score_profile=policy.score_profile),
+    )
+    if isinstance(refined, Tag):
+        return refined
+    return refined_node
+
+
+def select_best_container(
+    soup: BeautifulSoup,
+    publisher: str,
+    *,
+    policy: HtmlContainerSelectionPolicy | None = None,
+):
+    active_policy = policy or HtmlContainerSelectionPolicy()
     selectors = site_rule_for_publisher(publisher)["candidate_selectors"]
     candidates: list[Tag] = []
     seen: set[int] = set()
@@ -248,12 +426,71 @@ def select_best_container(soup: BeautifulSoup, publisher: str):
             seen.add(id(match))
             candidates.append(match)
     if not candidates:
+        for node in soup.find_all(active_policy.fallback_tags):
+            if not isinstance(node, Tag) or id(node) in seen:
+                continue
+            seen.add(id(node))
+            candidates.append(node)
+    if not candidates:
         body = soup.body
         return body if isinstance(body, Tag) else None
-    return max(candidates, key=score_container)
+
+    candidates.sort(
+        key=lambda node: score_container(node, score_profile=active_policy.score_profile),
+        reverse=True,
+    )
+    preferred = _refine_selected_container(candidates[0], active_policy)
+    if not active_policy.avoid_page_level_container or not _is_page_level_container(preferred):
+        return preferred
+
+    alternative_nodes: list[Tag] = []
+    for node in candidates:
+        alternative = _refine_selected_container(node, active_policy)
+        if _is_page_level_container(alternative):
+            continue
+        alternative_nodes.append(alternative)
+    if not alternative_nodes:
+        return preferred
+    return max(
+        alternative_nodes,
+        key=lambda node: (
+            container_completeness_score(
+                node,
+                abstract_node_finder=active_policy.abstract_node_finder,
+                body_selectors=active_policy.body_selectors,
+            ),
+            score_container(node, score_profile=active_policy.score_profile),
+        ),
+    )
 
 
-def should_drop_node(node: Tag, publisher: str) -> bool:
+def _should_drop_browser_workflow_node(node: Tag, publisher: str) -> bool:
+    if node.name in {"script", "style", "noscript", "svg", "iframe", "button", "input", "form"}:
+        return True
+
+    identity = node_identity_text(node)
+    text = normalize_text(node.get_text(" ", strip=True))
+    if contains_access_gate_text(text):
+        return False
+    short_text = len(text) <= 200
+    for keyword in site_rule_for_publisher(publisher)["drop_keywords"]:
+        if keyword in identity and short_text:
+            return True
+    if short_text and text in site_rule_for_publisher(publisher)["drop_text"]:
+        return True
+    if short_text and any(pattern in text.lower() for pattern in {"share this", "view metrics", "article metrics"}):
+        return True
+    return False
+
+
+def should_drop_node(
+    node: Tag,
+    publisher: str,
+    *,
+    drop_profile: str = HTML_CONTAINER_DROP_AVAILABILITY,
+) -> bool:
+    if drop_profile == HTML_CONTAINER_DROP_BROWSER_WORKFLOW:
+        return _should_drop_browser_workflow_node(node, publisher)
     rule = site_rule_for_publisher(publisher)
     identity = node_identity_text(node)
     text = normalize_text(node.get_text(" ", strip=True))
@@ -269,7 +506,12 @@ def should_drop_node(node: Tag, publisher: str) -> bool:
         return False
 
 
-def clean_container(container: Tag, publisher: str) -> Tag:
+def clean_container(
+    container: Tag,
+    publisher: str,
+    *,
+    drop_profile: str = HTML_CONTAINER_DROP_AVAILABILITY,
+) -> Tag:
     for selector in site_rule_for_publisher(publisher)["remove_selectors"]:
         try:
             for node in list(container.select(selector)):
@@ -278,7 +520,7 @@ def clean_container(container: Tag, publisher: str) -> Tag:
         except Exception:
             continue
     for node in list(container.find_all(True)):
-        if should_drop_node(node, publisher):
+        if should_drop_node(node, publisher, drop_profile=drop_profile):
             node.decompose()
     return container
 
@@ -327,44 +569,6 @@ def _run_candidate_barrier(kind: str) -> bool:
         "data_availability",
         "code_availability",
     }
-
-
-def _normalize_section_hint_heading(text: str) -> str:
-    return normalize_text(text).lower().strip(" :")
-
-
-def _coerce_section_hints(section_hints: Any) -> list[dict[str, Any]]:
-    hints: list[dict[str, Any]] = []
-    for index, hint in enumerate(section_hints or []):
-        if isinstance(hint, Mapping):
-            heading = normalize_text(hint.get("heading"))
-            kind = normalize_text(hint.get("kind")).lower()
-            order = hint.get("order")
-        else:
-            heading = normalize_text(getattr(hint, "heading", None))
-            kind = normalize_text(getattr(hint, "kind", None)).lower()
-            order = getattr(hint, "order", None)
-        if not heading or kind not in HTML_SECTION_HINT_KINDS:
-            continue
-        hints.append(
-            {
-                "heading_key": _normalize_section_hint_heading(heading),
-                "kind": kind,
-                "order": int(order) if isinstance(order, int) or str(order).isdigit() else index,
-            }
-        )
-    hints.sort(key=lambda item: item["order"])
-    return hints
-
-
-def _match_next_section_hint(section_hints: list[dict[str, Any]], hint_index: int, heading: str) -> tuple[dict[str, Any] | None, int]:
-    heading_key = _normalize_section_hint_heading(heading)
-    if not heading_key:
-        return None, hint_index
-    for index in range(hint_index, len(section_hints)):
-        if section_hints[index]["heading_key"] == heading_key:
-            return section_hints[index], index + 1
-    return None, hint_index
 
 
 def _category_for_section_hint_kind(kind: str) -> str:
@@ -549,7 +753,7 @@ def _analyze_markdown_structure(
     )
     blocks = [normalize_text(block) for block in re.split(r"\n\s*\n", markdown_text) if normalize_text(block)]
     normalized_title_heading = normalize_heading(title or "")
-    coerced_section_hints = _coerce_section_hints(section_hints)
+    coerced_section_hints = coerce_html_section_hints(section_hints)
     in_abstract = False
     in_back_matter = False
     in_front_matter = False
@@ -577,7 +781,7 @@ def _analyze_markdown_structure(
                 current_run_paragraphs = 0
                 current_run_chars = 0
                 continue
-            matched_hint, next_hint_index = _match_next_section_hint(coerced_section_hints, section_hint_index, heading)
+            matched_hint, next_hint_index = match_next_html_section_hint(coerced_section_hints, section_hint_index, heading)
             if matched_hint is not None:
                 section_hint_index = next_hint_index
                 category = _category_for_section_hint_kind(matched_hint["kind"])

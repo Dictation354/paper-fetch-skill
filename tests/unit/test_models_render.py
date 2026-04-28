@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import unittest
+from types import SimpleNamespace
 
 from paper_fetch import service as paper_fetch
 from paper_fetch.models import (
@@ -14,6 +15,7 @@ from paper_fetch.models import (
     Reference,
     RenderOptions,
     Section,
+    SectionHint,
     TokenEstimateBreakdown,
     article_from_markdown,
     article_from_structure,
@@ -1022,6 +1024,37 @@ class ModelsRenderTests(unittest.TestCase):
 
         self.assertEqual([section.kind for section in article.sections], ["data_availability", "body"])
         self.assertEqual(article.quality.content_kind, "fulltext")
+
+    def test_article_from_markdown_coerces_dict_object_and_section_hint_in_declared_order(self) -> None:
+        article = article_from_markdown(
+            source="springer_html",
+            metadata={"title": "Markdown Article"},
+            doi="10.1000/mixed-section-hints",
+            markdown_text=(
+                "# Markdown Article\n\n"
+                "## Results\n\n"
+                "Body text lives here with enough prose to remain classified as main text.\n\n"
+                "## Data archive\n\n"
+                "Data are archived in a public repository.\n\n"
+                "## Code archive\n\n"
+                "Analysis code is archived in a public repository."
+            ),
+            section_hints=[
+                SimpleNamespace(heading="Code archive", level=2, kind="code_availability", order=2),
+                {"heading": "Ignored", "level": 2, "kind": "supplementary", "order": 3},
+                {"heading": "Data archive:", "level": 2, "kind": "data_availability", "order": 1},
+                SectionHint(heading="Results", level=2, kind="body", order=0),
+            ],
+        )
+
+        self.assertEqual(
+            [(section.heading, section.kind) for section in article.sections],
+            [
+                ("Results", "body"),
+                ("Data archive", "data_availability"),
+                ("Code archive", "code_availability"),
+            ],
+        )
 
     def test_article_from_markdown_uses_section_hints_for_nonliteral_code_availability(self) -> None:
         article = article_from_markdown(

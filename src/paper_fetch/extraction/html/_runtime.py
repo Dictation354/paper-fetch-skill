@@ -9,9 +9,10 @@ from typing import Any, Mapping
 from ...extraction.html.language import collect_html_abstract_blocks, html_node_language_hint
 from ...extraction.html.parsing import choose_parser
 from ...extraction.html.semantics import (
-    HTML_SECTION_HINT_KINDS,
     collect_html_section_hints,
+    coerce_html_section_hints,
     markdown_heading_category,
+    match_next_html_section_hint,
     parse_markdown_heading,
 )
 from ...extraction.html.signals import contains_access_gate_text
@@ -523,45 +524,6 @@ def _heading_text(block: str) -> str | None:
     return heading_info[1] if heading_info is not None else None
 
 
-def _normalize_section_hint_heading(text: str) -> str:
-    return normalize_text(text).lower().strip(" :")
-
-
-def _coerce_section_hints(section_hints: Any) -> list[dict[str, Any]]:
-    hints: list[dict[str, Any]] = []
-    for index, hint in enumerate(section_hints or []):
-        if isinstance(hint, Mapping):
-            heading = normalize_text(hint.get("heading"))
-            kind = normalize_text(hint.get("kind")).lower()
-            order = hint.get("order")
-        else:
-            heading = normalize_text(getattr(hint, "heading", None))
-            kind = normalize_text(getattr(hint, "kind", None)).lower()
-            order = getattr(hint, "order", None)
-        if not heading or kind not in HTML_SECTION_HINT_KINDS:
-            continue
-        hints.append(
-            {
-                "heading": heading,
-                "heading_key": _normalize_section_hint_heading(heading),
-                "kind": kind,
-                "order": int(order) if isinstance(order, int) or str(order).isdigit() else index,
-            }
-        )
-    hints.sort(key=lambda item: item["order"])
-    return hints
-
-
-def _match_next_section_hint(section_hints: list[dict[str, Any]], hint_index: int, heading: str) -> tuple[dict[str, Any] | None, int]:
-    heading_key = _normalize_section_hint_heading(heading)
-    if not heading_key:
-        return None, hint_index
-    for index in range(hint_index, len(section_hints)):
-        if section_hints[index]["heading_key"] == heading_key:
-            return section_hints[index], index + 1
-    return None, hint_index
-
-
 def _strip_title_heading(markdown_text: str, title: str) -> str:
     normalized_title = normalize_text(title)
     if not normalized_title:
@@ -652,7 +614,7 @@ def _filtered_body_blocks(
     abstract = normalize_text(str(metadata.get("abstract") or ""))
     abstract_canonical = _canonical_text(abstract)
     blocks = _split_markdown_blocks(candidate)
-    coerced_section_hints = _coerce_section_hints(section_hints)
+    coerced_section_hints = coerce_html_section_hints(section_hints)
     filtered_blocks: list[str] = []
     abstract_blocks: list[str] = []
     body_heading_count = 0
@@ -672,7 +634,7 @@ def _filtered_body_blocks(
             normalized_heading = normalize_text(heading).lower().strip(" :")
             if title and normalized_heading == normalize_text(title).lower():
                 continue
-            matched_hint, next_hint_index = _match_next_section_hint(coerced_section_hints, section_hint_index, heading)
+            matched_hint, next_hint_index = match_next_html_section_hint(coerced_section_hints, section_hint_index, heading)
             if matched_hint is not None:
                 section_hint_index = next_hint_index
             category = markdown_heading_category(

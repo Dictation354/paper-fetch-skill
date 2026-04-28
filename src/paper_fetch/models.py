@@ -12,6 +12,12 @@ from dataclasses import asdict, dataclass, field
 from difflib import SequenceMatcher
 from typing import Any, Literal, Mapping
 
+from .extraction.section_hints import (
+    SECTION_HINT_KINDS,
+    coerce_section_hint_dicts,
+    match_next_section_hint,
+    normalize_section_hint_heading,
+)
 from .markdown.citations import normalize_inline_citation_markdown
 from .publisher_identity import normalize_doi
 from .tracing import TraceEvent, source_trail_from_trace, trace_from_markers
@@ -38,7 +44,6 @@ TRUNCATION_WARNING = "Output truncated to satisfy token budget."
 BODY_SECTION_EXCLUDED_KINDS = frozenset(
     {"abstract", "references", "supplementary", "diagnostics", "data_availability", "code_availability"}
 )
-SECTION_HINT_KINDS = frozenset({"body", "data_availability", "code_availability", "references"})
 RETAINED_NON_BODY_SECTION_KINDS = frozenset({"data_availability", "code_availability"})
 ABSTRACT_SECTION_HEADINGS = frozenset(
     {
@@ -2033,39 +2038,20 @@ def compute_level_shift(sections: Sequence[Section]) -> int:
     return max(0, min(body_levels) - 2)
 
 
-def _normalize_section_hint_heading(value: str) -> str:
-    return normalize_text(value).lower().strip(" :")
-
-
 def _coerce_section_hints(
     section_hints: Sequence[SectionHint | Mapping[str, Any]] | None,
 ) -> list[SectionHint]:
-    coerced: list[SectionHint] = []
-    for index, hint in enumerate(section_hints or []):
-        if isinstance(hint, SectionHint):
-            candidate = hint
-        elif isinstance(hint, Mapping):
-            heading = normalize_text(hint.get("heading"))
-            kind = normalize_text(hint.get("kind")).lower()
-            if not heading or kind not in SECTION_HINT_KINDS:
-                continue
-            raw_level = hint.get("level")
-            raw_order = hint.get("order")
-            candidate = SectionHint(
-                heading=heading,
-                level=int(raw_level) if isinstance(raw_level, int) or str(raw_level).isdigit() else 2,
-                kind=kind,
-                order=int(raw_order) if isinstance(raw_order, int) or str(raw_order).isdigit() else index,
-                language=normalize_text(hint.get("language")) or None,
-                source_selector=normalize_text(hint.get("source_selector")) or None,
-            )
-        else:
-            continue
-        if not normalize_text(candidate.heading) or normalize_text(candidate.kind).lower() not in SECTION_HINT_KINDS:
-            continue
-        coerced.append(candidate)
-    coerced.sort(key=lambda item: item.order)
-    return coerced
+    return [
+        SectionHint(
+            heading=hint["heading"],
+            level=int(hint["level"]),
+            kind=hint["kind"],
+            order=int(hint["order"]),
+            language=normalize_text(hint.get("language")) or None,
+            source_selector=normalize_text(hint.get("source_selector")) or None,
+        )
+        for hint in coerce_section_hint_dicts(section_hints, allowed_kinds=SECTION_HINT_KINDS)
+    ]
 
 
 def _match_next_section_hint(
@@ -2073,13 +2059,18 @@ def _match_next_section_hint(
     hint_index: int,
     heading: str,
 ) -> tuple[SectionHint | None, int]:
-    heading_key = _normalize_section_hint_heading(heading)
-    if not heading_key:
-        return None, hint_index
-    for index in range(hint_index, len(section_hints)):
-        if _normalize_section_hint_heading(section_hints[index].heading) == heading_key:
-            return section_hints[index], index + 1
-    return None, hint_index
+    matched, next_index = match_next_section_hint(
+        [
+            {
+                "heading": hint.heading,
+                "heading_key": normalize_section_hint_heading(hint.heading),
+            }
+            for hint in section_hints
+        ],
+        hint_index,
+        heading,
+    )
+    return (section_hints[next_index - 1], next_index) if matched is not None else (None, next_index)
 
 
 def lines_to_sections(
@@ -2372,7 +2363,7 @@ def _coerced_section_hint_headings_and_sources(
     headings: set[str] = set()
     sources: list[str] = []
     for hint in _coerce_section_hints(section_hints):
-        normalized_heading = normalize_text(hint.heading).lower()
+        normalized_heading = normalize_section_hint_heading(hint.heading)
         if normalized_heading:
             headings.add(normalized_heading)
         source_selector = normalize_text(hint.source_selector).lower()

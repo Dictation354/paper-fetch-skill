@@ -15,6 +15,18 @@ except ImportError:  # pragma: no cover - dependency is declared in pyproject
     Tag = None
 
 
+class AuthorExtractionPipeline:
+    def __init__(self, *extractors: Callable[[str], list[str]]) -> None:
+        self.extractors = tuple(extractors)
+
+    def __call__(self, html_text: str) -> list[str]:
+        for extractor in self.extractors:
+            authors = dedupe_authors(extractor(html_text))
+            if authors:
+                return authors
+        return []
+
+
 def load_json_assignment(html_text: str, pattern: Pattern[str]) -> Mapping[str, Any] | None:
     payload = extract_assignment_json(html_text, pattern)
     return payload if isinstance(payload, Mapping) else None

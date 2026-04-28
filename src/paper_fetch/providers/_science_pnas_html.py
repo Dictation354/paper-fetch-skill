@@ -7,18 +7,18 @@ import re
 from typing import Any, Mapping
 
 from ..metadata_types import ProviderMetadata
-from ..extraction.html.figure_links import inject_inline_figure_links as _shared_inject_inline_figure_links
+from ..extraction.html.figure_links import inject_inline_figure_links
 from ..extraction.html.formula_rules import (
-    display_formula_nodes as _shared_display_formula_nodes,
-    formula_image_url_from_node as _shared_formula_image_url_from_node,
-    is_display_formula_node as _shared_is_display_formula_node,
-    looks_like_formula_image as _shared_looks_like_formula_image,
-    mathml_element_from_html_node as _shared_mathml_element_from_html_node,
+    display_formula_nodes,
+    formula_image_url_from_node,
+    is_display_formula_node,
+    looks_like_formula_image,
+    mathml_element_from_html_node,
 )
 from ..extraction.html.inline import normalize_html_inline_text
 from ..extraction.html.language import (
-    collect_html_abstract_blocks as _shared_collect_html_abstract_blocks,
-    html_node_language_hint as _shared_html_node_language_hint,
+    collect_html_abstract_blocks,
+    html_node_language_hint,
 )
 from ..extraction.html.parsing import choose_parser
 from ..extraction.html.semantics import (
@@ -28,53 +28,56 @@ from ..extraction.html.semantics import (
     BODY_CONTAINER_TOKENS,
     CODE_AVAILABILITY_TOKENS,
     DATA_AVAILABILITY_TOKENS,
+    ancestor_identity_text,
     collect_html_section_hints,
     heading_category,
-    looks_like_explicit_body_container as _shared_looks_like_explicit_body_container,
-    node_identity_text as _shared_node_identity_text,
-    node_source_selector as _shared_node_source_selector,
+    node_identity_text,
+    node_source_selector,
     normalize_heading,
     parse_markdown_heading,
-    ancestor_identity_text as _shared_ancestor_identity_text,
 )
 from ..extraction.html.signals import (
-    CHALLENGE_PATTERNS,
     PAYWALL_PATTERNS,
     SciencePnasHtmlFailure,
 )
 from ..markdown.citations import is_citation_link, make_numeric_citation_sentinel, numeric_citation_payload
 from ..models import normalize_markdown_text
 from ..quality.html_availability import (
-    assess_html_fulltext_availability as _shared_assess_html_fulltext_availability,
-    availability_failure_message as _shared_availability_failure_message,
+    HTML_CONTAINER_BROWSER_WORKFLOW_FALLBACK_TAGS,
+    HTML_CONTAINER_DROP_BROWSER_WORKFLOW,
+    HTML_CONTAINER_SCORE_BROWSER_WORKFLOW,
+    HtmlContainerSelectionPolicy,
+    assess_html_fulltext_availability,
+    availability_failure_message,
+    clean_container,
+    select_best_container,
 )
 from ..utils import normalize_text
 from ._article_markdown_math import render_external_mathml_expression
 from ._html_tables import (
-    escape_markdown_table_cell as _shared_escape_markdown_table_cell,
-    expanded_table_matrix as _shared_expanded_table_matrix,
-    flatten_table_header_rows as _shared_flatten_table_header_rows,
-    inject_inline_table_blocks as _shared_inject_inline_table_blocks,
-    normalize_table_inline_text as _shared_normalize_table_inline_text,
-    render_aligned_markdown_table as _shared_render_aligned_markdown_table,
-    render_table_inline_node as _shared_render_table_inline_node,
-    render_table_inline_text as _shared_render_table_inline_text,
-    render_table_markdown as _shared_render_table_markdown,
-    table_cell_data as _shared_table_cell_data,
-    table_header_row_count as _shared_table_header_row_count,
-    table_headers_and_data as _shared_table_headers_and_data,
-    table_placeholder as _shared_table_placeholder,
-    table_rows as _shared_table_rows,
-    wrap_table_text_fragment as _shared_wrap_table_text_fragment,
+    escape_markdown_table_cell,
+    expanded_table_matrix,
+    flatten_table_header_rows,
+    inject_inline_table_blocks,
+    normalize_table_inline_text,
+    render_aligned_markdown_table,
+    render_table_inline_node,
+    render_table_inline_text,
+    render_table_markdown,
+    table_cell_data,
+    table_header_row_count,
+    table_headers_and_data,
+    table_placeholder,
+    table_rows,
+    wrap_table_text_fragment,
 )
+from . import _science_pnas_postprocess
 from ._science_pnas_postprocess import (
-    normalize_browser_workflow_markdown as _shared_normalize_browser_workflow_markdown,
-    rewrite_inline_figure_links as _shared_rewrite_inline_figure_links,
+    normalize_browser_workflow_markdown,
 )
 from ._science_pnas_profiles import (
     noise_profile_for_publisher as _profile_noise_profile_for_publisher,
     publisher_profile as _publisher_profile,
-    site_rule_for_publisher as _profile_site_rule_for_publisher,
 )
 from . import html_noise as _html_noise
 
@@ -177,12 +180,18 @@ def _noise_profile_for_publisher(publisher: str | None) -> str:
     return _profile_noise_profile_for_publisher(publisher)
 
 
-def _site_rule(publisher: str | None) -> dict[str, Any]:
-    return _profile_site_rule_for_publisher(publisher)
-
-
-def _normalize_heading(text: str) -> str:
-    return normalize_heading(text)
+def _container_selection_policy(publisher: str) -> HtmlContainerSelectionPolicy:
+    profile = _publisher_profile(publisher)
+    return HtmlContainerSelectionPolicy(
+        score_profile=HTML_CONTAINER_SCORE_BROWSER_WORKFLOW,
+        drop_profile=HTML_CONTAINER_DROP_BROWSER_WORKFLOW,
+        fallback_tags=HTML_CONTAINER_BROWSER_WORKFLOW_FALLBACK_TAGS,
+        prefer_complete_ancestor=True,
+        avoid_page_level_container=True,
+        body_selectors=CONTENT_BODY_SELECTORS,
+        abstract_node_finder=_abstract_nodes,
+        refine_selected_container=profile.refine_selected_container,
+    )
 
 
 def _sentence_count(text: str) -> int:
@@ -200,38 +209,8 @@ def _is_substantial_prose(text: str) -> bool:
     return len(normalized) >= BODY_PARAGRAPH_MIN_CHARS or _sentence_count(normalized) >= 2
 
 
-def _looks_like_explicit_body_container(node: Tag | None) -> bool:
-    return _shared_looks_like_explicit_body_container(node)
-
-
 def _heading_category(node_name: str, text: str, *, title: str | None = None) -> str:
     return heading_category(node_name, text, title=title)
-
-
-def score_container(node: Tag) -> float:
-    text = " ".join(node.stripped_strings)
-    text_length = len(text)
-    paragraph_count = len(node.find_all("p"))
-    heading_count = len(node.find_all(HEADING_TAG_PATTERN))
-    link_count = len(node.find_all("a"))
-    score = text_length / 120.0
-    score += paragraph_count * 6.0
-    score += heading_count * 12.0
-    score -= max(0, link_count - paragraph_count * 2) * 1.5
-    lowered = text.lower()
-    if any(pattern in lowered for pattern in CHALLENGE_PATTERNS):
-        score -= 500
-    if "abstract" in lowered:
-        score += 20
-    if "references" in lowered:
-        score += 20
-    return score
-
-
-def _is_page_level_container(node: Tag | None) -> bool:
-    if not isinstance(node, Tag):
-        return False
-    return normalize_text(node.name or "").lower() in {"html", "body"}
 
 
 def _direct_child_tags(node: Tag) -> list[Tag]:
@@ -245,104 +224,6 @@ def _class_tokens(node: Tag) -> set[str]:
     normalized = normalize_text(str(raw_value or "")).lower()
     return {normalized} if normalized else set()
 
-
-def _refine_selected_container(node: Tag, *, publisher: str) -> Tag:
-    profile = _publisher_profile(publisher)
-    if profile.refine_selected_container is None:
-        return node
-    refined = profile.refine_selected_container(
-        node,
-        direct_child_tags=_direct_child_tags,
-        class_tokens=_class_tokens,
-        container_completeness_score=_container_completeness_score,
-        score_container=score_container,
-    )
-    if isinstance(refined, Tag):
-        return refined
-    return node
-
-
-def select_best_container(soup: BeautifulSoup, publisher: str):
-    selectors = _site_rule(publisher)["candidate_selectors"]
-    candidates: list[tuple[float, Tag]] = []
-    seen: set[int] = set()
-    for selector in selectors:
-        try:
-            nodes = soup.select(selector)
-        except Exception:
-            continue
-        for node in nodes:
-            if id(node) in seen:
-                continue
-            seen.add(id(node))
-            candidates.append((score_container(node), node))
-    if not candidates:
-        for node in soup.find_all(["article", "main", "body"]):
-            if id(node) in seen:
-                continue
-            seen.add(id(node))
-            candidates.append((score_container(node), node))
-    if not candidates:
-        return None
-    candidates.sort(key=lambda item: item[0], reverse=True)
-    preferred = _refine_selected_container(_prefer_complete_ancestor(candidates[0][1]), publisher=publisher)
-    if not _is_page_level_container(preferred):
-        return preferred
-
-    alternative_nodes: list[Tag] = []
-    for _, node in candidates:
-        alternative = _refine_selected_container(_prefer_complete_ancestor(node), publisher=publisher)
-        if _is_page_level_container(alternative):
-            continue
-        alternative_nodes.append(alternative)
-
-    if not alternative_nodes:
-        return preferred
-
-    best_alternative = max(
-        alternative_nodes,
-        key=lambda node: (
-            _container_completeness_score(node),
-            score_container(node),
-        ),
-    )
-    return best_alternative
-
-
-def node_identity_text(node: Tag) -> str:
-    return _shared_node_identity_text(node)
-
-
-def should_drop_node(node: Tag, publisher: str) -> bool:
-    if node.name in {"script", "style", "noscript", "svg", "iframe", "button", "input", "form"}:
-        return True
-
-    identity = node_identity_text(node)
-    text = normalize_text(node.get_text(" ", strip=True))
-    if _looks_like_access_gate_text(text):
-        return False
-    short_text = len(text) <= 200
-    for keyword in _site_rule(publisher)["drop_keywords"]:
-        if keyword in identity and short_text:
-            return True
-    if short_text and text in _site_rule(publisher)["drop_text"]:
-        return True
-    if short_text and any(pattern in text.lower() for pattern in {"share this", "view metrics", "article metrics"}):
-        return True
-    return False
-
-
-def clean_container(container: Tag, publisher: str) -> Tag:
-    for selector in _site_rule(publisher)["remove_selectors"]:
-        for node in list(container.select(selector)):
-            node.decompose()
-
-    for node in list(container.find_all(True)):
-        if should_drop_node(node, publisher):
-            node.decompose()
-    return container
-
-
 def _short_text(node: Tag | None) -> str:
     if node is None:
         return ""
@@ -350,7 +231,7 @@ def _short_text(node: Tag | None) -> str:
 
 
 def _normalize_table_inline_text(value: str) -> str:
-    return _shared_normalize_table_inline_text(value)
+    return normalize_table_inline_text(value)
 
 
 def _has_explicit_bibliography_marker(node: Tag) -> bool:
@@ -385,15 +266,15 @@ def _numeric_citation_payload_from_inline_node(node: Any) -> str | None:
 
 
 def _wrap_table_text_fragment(text: str, marker: str | None) -> str:
-    return _shared_wrap_table_text_fragment(text, marker)
+    return wrap_table_text_fragment(text, marker)
 
 
 def _render_table_inline_node(node: Any, *, text_style: str | None = None) -> str:
-    return _shared_render_table_inline_node(node, text_style=text_style)
+    return render_table_inline_node(node, text_style=text_style)
 
 
 def _render_table_inline_text(node: Any) -> str:
-    return _shared_render_table_inline_text(node)
+    return render_table_inline_text(node)
 
 
 def _normalize_non_table_inline_text(value: str) -> str:
@@ -596,7 +477,7 @@ def _abstract_nodes(container: Tag) -> list[Tag]:
 
 
 def _node_language_hint(node: Tag) -> str | None:
-    return _shared_html_node_language_hint(node, allow_soft_hints=True)
+    return html_node_language_hint(node, allow_soft_hints=True)
 
 
 def _abstract_section_payloads(container: Tag) -> list[dict[str, Any]]:
@@ -609,7 +490,7 @@ def _abstract_section_payloads(container: Tag) -> list[dict[str, Any]]:
             text = normalize_text("\n\n".join(_abstract_block_texts(node)))
             if not text:
                 continue
-            key = (_normalize_heading(heading), normalize_text(text))
+            key = (normalize_heading(heading), normalize_text(text))
             if key in seen:
                 continue
             seen.add(key)
@@ -620,13 +501,13 @@ def _abstract_section_payloads(container: Tag) -> list[dict[str, Any]]:
                     "language": _node_language_hint(node),
                     "kind": "abstract",
                     "order": order,
-                    "source_selector": _shared_node_source_selector(node) or None,
+                    "source_selector": node_source_selector(node) or None,
                 }
             )
         return payloads
     return [
         payload
-        for payload in _shared_collect_html_abstract_blocks(container)
+        for payload in collect_html_abstract_blocks(container)
         if normalize_text(payload.get("text"))
     ]
 
@@ -648,7 +529,7 @@ def _normalize_abstract_blocks(container: Tag) -> None:
         heading = node.find(HEADING_TAG_PATTERN)
         if isinstance(heading, Tag):
             heading.name = "h2"
-            if not _normalize_heading(_short_text(heading)):
+            if not normalize_heading(_short_text(heading)):
                 heading.string = "Abstract"
             continue
         heading = soup.new_tag("h2")
@@ -672,13 +553,13 @@ def _ensure_body_markdown_heading(markdown_text: str, *, title: str | None = Non
     if not blocks:
         return normalize_markdown_text(markdown_text)
 
-    normalized_title = _normalize_heading(title or "")
+    normalized_title = normalize_heading(title or "")
     first_heading = _markdown_heading_info(blocks[0])
     if first_heading is None:
         return clean_markdown(f"## Main Text\n\n{markdown_text}", noise_profile=None)
 
     _, heading_text = first_heading
-    if normalized_title and _normalize_heading(heading_text) == normalized_title:
+    if normalized_title and normalize_heading(heading_text) == normalized_title:
         if len(blocks) < 2:
             return normalize_markdown_text(markdown_text)
         second_heading = _markdown_heading_info(blocks[1])
@@ -743,7 +624,7 @@ def _missing_abstract_markdown(container: Tag, markdown_text: str, *, publisher:
 
 
 def _mathml_element_from_node(node: Tag | None):
-    return _shared_mathml_element_from_html_node(node)
+    return mathml_element_from_html_node(node)
 
 
 def _latex_from_math_node(node: Tag, *, display_mode: bool) -> str:
@@ -756,11 +637,11 @@ def _latex_from_math_node(node: Tag, *, display_mode: bool) -> str:
 
 
 def _formula_image_url_from_node(node: Tag) -> str:
-    return _shared_formula_image_url_from_node(node, include_adjacent=True)
+    return formula_image_url_from_node(node, include_adjacent=True)
 
 
 def _looks_like_formula_image_node(node: Tag) -> bool:
-    return _shared_looks_like_formula_image(node, _formula_image_url_from_node(node))
+    return looks_like_formula_image(node, _formula_image_url_from_node(node))
 
 
 def _formula_image_markdown(node: Tag) -> str:
@@ -770,7 +651,7 @@ def _formula_image_markdown(node: Tag) -> str:
 
 def _display_formula_nodes(container: Tag) -> list[Tag]:
     return _dedupe_top_level_nodes(
-        [node for node in _shared_display_formula_nodes(container) if isinstance(node, Tag)]
+        [node for node in display_formula_nodes(container) if isinstance(node, Tag)]
     )
 
 
@@ -891,7 +772,7 @@ def _normalize_display_formula_blocks(container: Tag) -> None:
 
 
 def _is_display_formula_math(node: Tag) -> bool:
-    return _shared_is_display_formula_node(node)
+    return is_display_formula_node(node)
 
 
 def _inline_math_replacement_target(node: Tag) -> Tag:
@@ -1075,39 +956,39 @@ def _figure_like_nodes(container: Tag) -> list[Tag]:
 
 
 def _table_cell_data(cell: Tag) -> dict[str, Any]:
-    return _shared_table_cell_data(cell, render_inline_text=_render_table_inline_text)
+    return table_cell_data(cell, render_inline_text=_render_table_inline_text)
 
 
 def _table_rows(table: Tag) -> list[list[dict[str, Any]]]:
-    return _shared_table_rows(table, render_inline_text=_render_table_inline_text)
+    return table_rows(table, render_inline_text=_render_table_inline_text)
 
 
 def _table_header_row_count(table: Tag, rows: list[list[dict[str, Any]]]) -> int:
-    return _shared_table_header_row_count(table, rows)
+    return table_header_row_count(table, rows)
 
 
 def _expanded_table_matrix(rows: list[list[dict[str, Any]]]) -> list[list[dict[str, Any]]] | None:
-    return _shared_expanded_table_matrix(rows)
+    return expanded_table_matrix(rows)
 
 
 def _flatten_table_header_rows(rows: list[list[dict[str, Any]]]) -> list[str]:
-    return _shared_flatten_table_header_rows(rows)
+    return flatten_table_header_rows(rows)
 
 
 def _table_headers_and_data(table: Tag) -> tuple[list[str], list[list[dict[str, Any]]], bool]:
-    return _shared_table_headers_and_data(table, render_inline_text=_render_table_inline_text)
+    return table_headers_and_data(table, render_inline_text=_render_table_inline_text)
 
 
 def _escape_markdown_table_cell(text: str) -> str:
-    return _shared_escape_markdown_table_cell(text)
+    return escape_markdown_table_cell(text)
 
 
 def _render_aligned_markdown_table(matrix: list[list[str]]) -> list[str]:
-    return _shared_render_aligned_markdown_table(matrix)
+    return render_aligned_markdown_table(matrix)
 
 
 def _render_table_markdown(table_node: Tag, *, label: str, caption: str) -> str:
-    return _shared_render_table_markdown(
+    return render_table_markdown(
         table_node,
         label=label,
         caption=caption,
@@ -1116,7 +997,7 @@ def _render_table_markdown(table_node: Tag, *, label: str, caption: str) -> str:
 
 
 def _table_placeholder(index: int) -> str:
-    return _shared_table_placeholder(index)
+    return table_placeholder(index)
 
 
 def _normalize_table_blocks(container: Tag) -> list[dict[str, str]]:
@@ -1190,7 +1071,7 @@ def extract_page_title(soup: BeautifulSoup) -> str | None:
 
 
 def _ancestor_identity_text(node: Tag | None) -> str:
-    return _shared_ancestor_identity_text(node)
+    return ancestor_identity_text(node)
 
 
 def _looks_like_front_matter_paragraph(text: str, *, title: str | None = None) -> bool:
@@ -1280,48 +1161,6 @@ def _dedupe_top_level_nodes(nodes: list[Tag]) -> list[Tag]:
         deduped.append(node)
         seen.add(id(node))
     return deduped
-
-
-def _has_selector_descendant(node: Tag, selectors: tuple[str, ...]) -> bool:
-    for selector in selectors:
-        try:
-            if node.select_one(selector) is not None:
-                return True
-        except Exception:
-            continue
-    return False
-
-
-def _container_completeness_score(node: Tag) -> int:
-    score = 0
-    if isinstance(node.find("h1"), Tag) or normalize_text(node.name or "").lower() == "h1":
-        score += 40
-    if _abstract_nodes(node):
-        score += 40
-    if _looks_like_explicit_body_container(node) or _has_selector_descendant(node, CONTENT_BODY_SELECTORS):
-        score += 40
-    if normalize_text(node.name or "").lower() == "article":
-        score += 10
-    if normalize_text(node.name or "").lower() == "main":
-        score += 5
-    return score
-
-
-def _prefer_complete_ancestor(node: Tag) -> Tag:
-    best = node
-    best_key = (_container_completeness_score(node), score_container(node))
-    current = node.parent if isinstance(node.parent, Tag) else None
-    depth = 0
-    while isinstance(current, Tag) and depth < 8:
-        if normalize_text(current.name or "").lower() == "html":
-            break
-        current_key = (_container_completeness_score(current), score_container(current))
-        if current_key > best_key:
-            best = current
-            best_key = current_key
-        current = current.parent if isinstance(current.parent, Tag) else None
-        depth += 1
-    return best
 
 
 def _nodes_from_selectors(container: Tag, selectors: tuple[str, ...]) -> list[Tag]:
@@ -1425,7 +1264,7 @@ def _inject_inline_figure_links(
     figure_assets: list[Mapping[str, Any]] | None,
     publisher: str,
 ) -> str:
-    return _shared_inject_inline_figure_links(
+    return inject_inline_figure_links(
         markdown_text,
         figure_assets=figure_assets,
         clean_markdown_fn=lambda value: clean_markdown(
@@ -1441,7 +1280,7 @@ def rewrite_inline_figure_links(
     figure_assets: list[Mapping[str, Any]] | None,
     publisher: str,
 ) -> str:
-    return _shared_rewrite_inline_figure_links(
+    return _science_pnas_postprocess.rewrite_inline_figure_links(
         markdown_text,
         figure_assets=figure_assets,
         clean_markdown_fn=lambda value: clean_markdown(
@@ -1457,7 +1296,7 @@ def _inject_inline_table_blocks(
     table_entries: list[Mapping[str, str]] | None,
     publisher: str,
 ) -> str:
-    return _shared_inject_inline_table_blocks(
+    return inject_inline_table_blocks(
         markdown_text,
         table_entries=table_entries,
         clean_markdown_fn=lambda value: clean_markdown(
@@ -1533,7 +1372,7 @@ def _leading_semantic_markdown_text(markdown_text: str, *, limit: int = 6) -> st
 
 
 def _markdown_has_heading(markdown_text: str, heading_text: str) -> bool:
-    normalized_target = _normalize_heading(heading_text)
+    normalized_target = normalize_heading(heading_text)
     if not normalized_target:
         return False
     for block in re.split(r"\n\s*\n", markdown_text):
@@ -1541,7 +1380,7 @@ def _markdown_has_heading(markdown_text: str, heading_text: str) -> bool:
         if heading_info is None:
             continue
         _, current_heading = heading_info
-        if _normalize_heading(current_heading) == normalized_target:
+        if normalize_heading(current_heading) == normalized_target:
             return True
     return False
 
@@ -1561,7 +1400,7 @@ def _block_matches_known_abstract_text(block: str, abstract_block_texts: list[st
 
 
 def _normalize_browser_workflow_markdown(markdown_text: str, *, publisher: str) -> str:
-    return _shared_normalize_browser_workflow_markdown(
+    return normalize_browser_workflow_markdown(
         markdown_text,
         markdown_postprocess=_publisher_profile(publisher).markdown_postprocess,
     )
@@ -1594,7 +1433,7 @@ def _postprocess_browser_workflow_markdown(
         heading_info = _markdown_heading_info(block)
         if heading_info is not None:
             level, heading_text = heading_info
-            normalized_heading = _normalize_heading(heading_text)
+            normalized_heading = normalize_heading(heading_text)
             if normalized_title and normalized_heading == normalized_title_lower:
                 if not title_kept:
                     kept.append(f"# {normalized_title}")
@@ -1756,14 +1595,14 @@ def extract_browser_workflow_markdown(
 
     soup = BeautifulSoup(html_text, choose_parser())
     title = extract_page_title(soup)
-    container = select_best_container(soup, publisher)
+    container = select_best_container(soup, publisher, policy=_container_selection_policy(publisher))
     if container is None:
         raise SciencePnasHtmlFailure(
             "article_container_not_found",
             "Could not identify the main article container in publisher HTML.",
         )
 
-    clean_container(container, publisher)
+    clean_container(container, publisher, drop_profile=HTML_CONTAINER_DROP_BROWSER_WORKFLOW)
     from .html_assets import extract_figure_assets
 
     asset_container = copy.deepcopy(container)
@@ -1813,7 +1652,7 @@ def extract_browser_workflow_markdown(
     quality_metadata = dict(metadata or {})
     if title and not quality_metadata.get("title"):
         quality_metadata["title"] = title
-    diagnostics = _shared_assess_html_fulltext_availability(
+    diagnostics = assess_html_fulltext_availability(
         markdown,
         quality_metadata,
         provider=publisher,
@@ -1825,7 +1664,7 @@ def extract_browser_workflow_markdown(
         section_hints=section_hints,
     )
     if not diagnostics.accepted:
-        raise SciencePnasHtmlFailure(diagnostics.reason, _shared_availability_failure_message(diagnostics))
+        raise SciencePnasHtmlFailure(diagnostics.reason, availability_failure_message(diagnostics))
 
     extraction_payload = {
         "title": title,
@@ -1858,14 +1697,14 @@ def extract_browser_workflow_asset_html_scopes(
         raise SciencePnasHtmlFailure("missing_bs4", "BeautifulSoup is required for browser-workflow HTML asset extraction.")
 
     soup = BeautifulSoup(html_text, choose_parser())
-    container = select_best_container(soup, publisher)
+    container = select_best_container(soup, publisher, policy=_container_selection_policy(publisher))
     if container is None:
         raise SciencePnasHtmlFailure(
             "article_container_not_found",
             "Could not identify the main article container in publisher HTML.",
         )
 
-    clean_container(container, publisher)
+    clean_container(container, publisher, drop_profile=HTML_CONTAINER_DROP_BROWSER_WORKFLOW)
 
     supplementary_container = copy.deepcopy(container)
     body_container = copy.deepcopy(container)

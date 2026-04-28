@@ -14,7 +14,7 @@ SCIENCE_BROWSER_PROFILE = browser_workflow.ProviderBrowserProfile(
     html_path_templates=_science_html.HTML_PATH_TEMPLATES,
     pdf_path_templates=_science_html.PDF_PATH_TEMPLATES,
     crossref_pdf_position=_science_html.CROSSREF_PDF_POSITION,
-    extract_markdown=_science_html.extract_markdown,
+    markdown_publisher="science",
     fallback_author_extractor=_science_html.extract_authors,
     shared_playwright_image_fetcher=True,
 )

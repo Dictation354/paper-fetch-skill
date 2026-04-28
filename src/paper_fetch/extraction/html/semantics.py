@@ -6,12 +6,32 @@ import re
 from typing import Any, Callable
 
 from ...utils import normalize_text
+from ..section_hints import (
+    SECTION_HINT_KINDS as HTML_SECTION_HINT_KINDS,
+    coerce_section_hint_dicts,
+    match_next_section_hint,
+    normalize_section_hint_heading,
+)
 from .signals import contains_access_gate_text
 
 try:
     from bs4 import Tag
 except ImportError:  # pragma: no cover - dependency is declared in pyproject
     Tag = None
+
+
+def coerce_html_section_hints(section_hints: Any) -> list[dict[str, Any]]:
+    return coerce_section_hint_dicts(section_hints, allowed_kinds=HTML_SECTION_HINT_KINDS)
+
+
+def match_next_html_section_hint(
+    section_hints: list[dict[str, Any]],
+    hint_index: int,
+    heading: str,
+) -> tuple[dict[str, Any] | None, int]:
+    matched, next_index = match_next_section_hint(section_hints, hint_index, heading)
+    return (dict(matched), next_index) if matched is not None else (None, next_index)
+
 
 ABSTRACT_HEADINGS = frozenset(
     {
@@ -285,11 +305,15 @@ IDENTITY_ATTR_KEYS = (
     "aria-labelledby",
 )
 SECTION_HEADING_PATTERN = re.compile(r"^h([1-6])$")
-HTML_SECTION_HINT_KINDS = frozenset({"body", "data_availability", "code_availability", "references"})
+SECTION_TITLE_NON_ALNUM_PATTERN = re.compile(r"[^a-z0-9]+")
 
 
 def normalize_heading(text: str) -> str:
     return normalize_text(text).lower().rstrip(".: ")
+
+
+def normalize_section_title(title: str) -> str:
+    return SECTION_TITLE_NON_ALNUM_PATTERN.sub(" ", normalize_text(title).lower()).strip()
 
 
 def node_identity_text(node: Any) -> str:

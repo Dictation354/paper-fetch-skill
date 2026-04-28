@@ -7,6 +7,11 @@ from tests.paths import SRC_DIR
 
 
 SCIENCE_PNAS_HTML = SRC_DIR / "paper_fetch" / "providers" / "_science_pnas_html.py"
+PROVIDER_RULE_MODULES = (
+    SRC_DIR / "paper_fetch" / "providers" / "_science_html.py",
+    SRC_DIR / "paper_fetch" / "providers" / "_pnas_html.py",
+    SRC_DIR / "paper_fetch" / "providers" / "_wiley_html.py",
+)
 EXPECTED_EXTRACTION_ENTRYPOINTS = {
     "extract_browser_workflow_markdown",
     "extract_science_pnas_markdown",
@@ -77,6 +82,10 @@ class SciencePnasHtmlStaticTests(unittest.TestCase):
                 "_structure_accepts_fulltext",
                 "_dom_access_hints",
                 "_publisher_base_urls",
+                "score_container",
+                "select_best_container",
+                "should_drop_node",
+                "clean_container",
             }
             & function_names
         )
@@ -90,6 +99,30 @@ class SciencePnasHtmlStaticTests(unittest.TestCase):
 
         self.assertEqual(missing_symbols, set())
         self.assertEqual(forbidden_symbols, set())
+
+    def test_browser_html_module_imports_shared_helpers_without_shared_alias_layer(self) -> None:
+        tree = ast.parse(SCIENCE_PNAS_HTML.read_text(encoding="utf-8"))
+        shared_import_aliases: list[str] = []
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.ImportFrom):
+                continue
+            for alias in node.names:
+                if alias.asname and alias.asname.startswith("_shared_"):
+                    module = node.module or ""
+                    shared_import_aliases.append(f"{module}:{alias.asname}")
+
+        self.assertEqual(shared_import_aliases, [])
+
+    def test_provider_rule_modules_do_not_define_candidate_or_markdown_delegate_wrappers(self) -> None:
+        forbidden = {"build_html_candidates", "build_pdf_candidates", "extract_markdown"}
+        offenders: list[str] = []
+        for path in PROVIDER_RULE_MODULES:
+            tree = ast.parse(path.read_text(encoding="utf-8"))
+            defined = _top_level_defined_names(tree)
+            for name in sorted(forbidden & defined):
+                offenders.append(f"{path.name}:{name}")
+
+        self.assertEqual(offenders, [])
 
 
 if __name__ == "__main__":

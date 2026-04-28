@@ -36,7 +36,6 @@ vendor/flaresolverr/.work/
 vendor/flaresolverr/.venv-flaresolverr/
 vendor/flaresolverr/.flaresolverr/
 vendor/flaresolverr/run_logs/
-AGENTS.md
 
 # Editors / OS
 .vscode/
