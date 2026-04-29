@@ -20,13 +20,13 @@ from ._flaresolverr import (
     FlareSolverrFailure,
     fetch_html_with_flaresolverr,
 )
-from ._science_pnas_html import (
+from .science_pnas import (
     extract_browser_workflow_asset_html_scopes,
     extract_science_pnas_markdown,
     rewrite_inline_figure_links,
 )
 from .base import ProviderContent, RawFulltextPayload
-from .html_assets import extract_scoped_html_assets
+from ..extraction.html.assets import extract_scoped_html_assets
 
 logger = logging.getLogger("paper_fetch.providers.browser_workflow")
 

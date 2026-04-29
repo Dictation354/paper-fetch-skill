@@ -12,7 +12,7 @@ from ..quality.html_profiles import (
     science_positive_signals,
 )
 from ..utils import dedupe_authors, normalize_text
-from ._browser_workflow_authors import (
+from ._html_authors import (
     AuthorExtractionPipeline,
     extract_property_authors,
     normalized_author_tokens,

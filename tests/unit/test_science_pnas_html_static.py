@@ -6,7 +6,10 @@ import unittest
 from tests.paths import SRC_DIR
 
 
-SCIENCE_PNAS_HTML = SRC_DIR / "paper_fetch" / "providers" / "_science_pnas_html.py"
+SCIENCE_PNAS_PACKAGE = SRC_DIR / "paper_fetch" / "providers" / "science_pnas"
+SCIENCE_PNAS_MODULES = tuple(sorted(SCIENCE_PNAS_PACKAGE.glob("*.py")))
+SCIENCE_PNAS_MARKDOWN = SCIENCE_PNAS_PACKAGE / "markdown.py"
+SCIENCE_PNAS_POSTPROCESS = SCIENCE_PNAS_PACKAGE / "postprocess.py"
 PROVIDER_RULE_MODULES = (
     SRC_DIR / "paper_fetch" / "providers" / "_science_html.py",
     SRC_DIR / "paper_fetch" / "providers" / "_pnas_html.py",
@@ -49,19 +52,23 @@ def _top_level_defined_names(tree: ast.Module) -> set[str]:
 
 
 class SciencePnasHtmlStaticTests(unittest.TestCase):
-    def test_browser_html_module_no_longer_defines_duplicate_availability_or_site_rules(self) -> None:
-        tree = ast.parse(SCIENCE_PNAS_HTML.read_text(encoding="utf-8"))
-        class_names = {node.name for node in ast.walk(tree) if isinstance(node, ast.ClassDef)}
+    def test_science_pnas_package_no_longer_defines_duplicate_availability_or_site_rules(self) -> None:
+        class_names: set[str] = set()
         assigned_names: set[str] = set()
-        function_names = {node.name for node in ast.walk(tree) if isinstance(node, ast.FunctionDef)}
+        function_names: set[str] = set()
 
-        for node in ast.walk(tree):
-            if isinstance(node, ast.Assign):
-                for target in node.targets:
-                    if isinstance(target, ast.Name):
-                        assigned_names.add(target.id)
-            elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
-                assigned_names.add(node.target.id)
+        for path in SCIENCE_PNAS_MODULES:
+            tree = ast.parse(path.read_text(encoding="utf-8"))
+            class_names.update(node.name for node in ast.walk(tree) if isinstance(node, ast.ClassDef))
+            function_names.update(node.name for node in ast.walk(tree) if isinstance(node, ast.FunctionDef))
+
+            for node in ast.walk(tree):
+                if isinstance(node, ast.Assign):
+                    for target in node.targets:
+                        if isinstance(target, ast.Name):
+                            assigned_names.add(target.id)
+                elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
+                    assigned_names.add(node.target.id)
 
         self.assertNotIn("StructuredBodyAnalysis", class_names)
         self.assertNotIn("FulltextAvailabilityDiagnostics", class_names)
@@ -90,26 +97,31 @@ class SciencePnasHtmlStaticTests(unittest.TestCase):
             & function_names
         )
 
-    def test_browser_html_module_keeps_only_real_extraction_entrypoints(self) -> None:
-        tree = ast.parse(SCIENCE_PNAS_HTML.read_text(encoding="utf-8"))
-        defined_names = _top_level_defined_names(tree)
+    def test_science_pnas_entrypoints_are_defined_in_split_modules(self) -> None:
+        markdown_tree = ast.parse(SCIENCE_PNAS_MARKDOWN.read_text(encoding="utf-8"))
+        postprocess_tree = ast.parse(SCIENCE_PNAS_POSTPROCESS.read_text(encoding="utf-8"))
+        defined_names = _top_level_defined_names(markdown_tree) | _top_level_defined_names(postprocess_tree)
 
         missing_symbols = EXPECTED_EXTRACTION_ENTRYPOINTS - defined_names
-        forbidden_symbols = FORBIDDEN_DEAD_COMPATIBILITY_WRAPPERS & defined_names
+        forbidden_symbols: set[str] = set()
+        for path in SCIENCE_PNAS_MODULES:
+            tree = ast.parse(path.read_text(encoding="utf-8"))
+            forbidden_symbols |= FORBIDDEN_DEAD_COMPATIBILITY_WRAPPERS & _top_level_defined_names(tree)
 
         self.assertEqual(missing_symbols, set())
         self.assertEqual(forbidden_symbols, set())
 
-    def test_browser_html_module_imports_shared_helpers_without_shared_alias_layer(self) -> None:
-        tree = ast.parse(SCIENCE_PNAS_HTML.read_text(encoding="utf-8"))
+    def test_science_pnas_modules_import_shared_helpers_without_shared_alias_layer(self) -> None:
         shared_import_aliases: list[str] = []
-        for node in ast.walk(tree):
-            if not isinstance(node, ast.ImportFrom):
-                continue
-            for alias in node.names:
-                if alias.asname and alias.asname.startswith("_shared_"):
-                    module = node.module or ""
-                    shared_import_aliases.append(f"{module}:{alias.asname}")
+        for path in SCIENCE_PNAS_MODULES:
+            tree = ast.parse(path.read_text(encoding="utf-8"))
+            for node in ast.walk(tree):
+                if not isinstance(node, ast.ImportFrom):
+                    continue
+                for alias in node.names:
+                    if alias.asname and alias.asname.startswith("_shared_"):
+                        module = node.module or ""
+                        shared_import_aliases.append(f"{path.name}:{module}:{alias.asname}")
 
         self.assertEqual(shared_import_aliases, [])
 

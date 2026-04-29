@@ -8,9 +8,9 @@ from tests.paths import REPO_ROOT, SRC_DIR, TESTS_ROOT
 
 PAPER_FETCH_ROOT = SRC_DIR / "paper_fetch"
 BOUNDARY_PATHS = [
-    PAPER_FETCH_ROOT / "models.py",
+    *sorted((PAPER_FETCH_ROOT / "models").rglob("*.py")),
     *sorted((PAPER_FETCH_ROOT / "markdown").glob("*.py")),
-    *sorted((PAPER_FETCH_ROOT / "extraction" / "html").glob("*.py")),
+    *sorted((PAPER_FETCH_ROOT / "extraction" / "html").rglob("*.py")),
     *sorted((PAPER_FETCH_ROOT / "quality").glob("*.py")),
 ]
 FORBIDDEN_PREFIX = "paper_fetch.providers._"
@@ -25,6 +25,9 @@ REMOVED_PROVIDER_COMPATIBILITY_MODULES = frozenset(
         "paper_fetch.providers._html_text",
         "paper_fetch.providers._language_filter",
         "paper_fetch.providers._science_pnas",
+        "paper_fetch.providers._science_pnas_html",
+        "paper_fetch.providers.html_assets",
+        "paper_fetch.extraction.html._assets",
         "paper_fetch.resolve.crossref",
     }
 )

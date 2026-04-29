@@ -8,7 +8,10 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 - 为 Wiley / Science / PNAS 正文抓取增加 FlareSolverr HTML 快速首轮：主 HTML 请求使用 `waitInSeconds=0` 和 `disableMedia=true`，遇到 challenge、访问拦截、摘要重定向或正文抽取不足时自动回退到原保守等待策略。
 - 图片恢复、正文/附件资产下载、figure-page HTML 发现继续走允许媒体资源的路径，避免 `disableMedia` 阻断 full-size 图片发现与下载。
-- 收敛 HTML availability/container、section hint、browser-workflow Markdown profile、作者 fallback、Crossref resolve 转发和 HTML heading/table helper 的重复实现；canonical owner 分别为 `quality.html_availability`、`extraction.section_hints` / `extraction.html.semantics`、`ProviderBrowserProfile` / `_browser_workflow_authors.py`、`metadata.crossref`。
+- 收敛 HTML availability/container、section hint、browser-workflow Markdown profile、作者 fallback、Crossref resolve 转发和 HTML heading/table helper 的重复实现；canonical owner 分别为 `quality.html_availability`、`extraction.section_hints` / `extraction.html.semantics`、`ProviderBrowserProfile` / `_html_authors.py`、`metadata.crossref`。
+- 将 HTML asset canonical owner 移到 `paper_fetch.extraction.html.assets` 包，删除 `paper_fetch.extraction.html._assets` 与 `paper_fetch.providers.html_assets` 兼容门面；下载 hook 现在从 extraction asset 包或 `paper_fetch.extraction.html.assets.download` patch。
+- 将 `paper_fetch.models` 物化为包，并按 schema、markdown、tokens、quality、render、sections、builders 拆分实现；`from paper_fetch.models import ...` 继续兼容。
+- 将 Science/PNAS browser-workflow HTML 实现物化为 `paper_fetch.providers.science_pnas` 包，删除 `paper_fetch.providers._science_pnas_html` 兼容门面，并抽出 provider HTML asset policy engine 与 Playwright document fetcher 基类。
 
 ## 1.0.0 - 2026-04-26
 

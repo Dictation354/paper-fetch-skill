@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import unittest
 
-from paper_fetch.providers._science_pnas_html import extract_science_pnas_markdown
+from paper_fetch.providers.science_pnas import extract_science_pnas_markdown
 from tests.golden_criteria import golden_criteria_scenario_asset
 
 

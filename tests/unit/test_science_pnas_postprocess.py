@@ -4,7 +4,7 @@ import json
 import unittest
 
 from paper_fetch.providers import _science_pnas_postprocess
-from paper_fetch.providers._science_pnas_html import extract_science_pnas_markdown, rewrite_inline_figure_links
+from paper_fetch.providers.science_pnas import extract_science_pnas_markdown, rewrite_inline_figure_links
 from tests.golden_criteria import golden_criteria_asset, golden_criteria_scenario_asset
 
 

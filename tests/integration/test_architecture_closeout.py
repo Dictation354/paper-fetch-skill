@@ -25,6 +25,9 @@ REMOVED_PROVIDER_COMPATIBILITY_MODULE_FILES = [
     PROVIDERS_DIR / "_html_text.py",
     PROVIDERS_DIR / "_language_filter.py",
     PROVIDERS_DIR / "_science_pnas.py",
+    PROVIDERS_DIR / "_science_pnas_html.py",
+    PROVIDERS_DIR / "html_assets.py",
+    PAPER_FETCH_SRC / "extraction" / "html" / "_assets.py",
 ]
 SPRINGER_PROVIDER_PATH = PROVIDERS_DIR / "springer.py"
 ELSEVIER_PROVIDER_PATH = PROVIDERS_DIR / "elsevier.py"
@@ -32,10 +35,10 @@ MAGIC_KEY_PATTERN = re.compile(r'\[(?:\"|\')(route|markdown_text|warnings|source
 TARGETED_CYCLE_PATHS = [
     PAPER_FETCH_SRC / "extraction" / "html" / "_metadata.py",
     PAPER_FETCH_SRC / "extraction" / "html" / "_runtime.py",
-    PAPER_FETCH_SRC / "extraction" / "html" / "_assets.py",
+    PAPER_FETCH_SRC / "extraction" / "html" / "assets" / "_core.py",
     PROVIDERS_DIR / "html_springer_nature.py",
     PROVIDERS_DIR / "browser_workflow.py",
-    PROVIDERS_DIR / "_browser_workflow_authors.py",
+    PROVIDERS_DIR / "_html_authors.py",
     PROVIDERS_DIR / "_browser_workflow_fetchers.py",
     PROVIDERS_DIR / "_browser_workflow_html_extraction.py",
     PROVIDERS_DIR / "_browser_workflow_shared.py",

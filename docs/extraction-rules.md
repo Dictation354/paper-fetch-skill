@@ -261,7 +261,7 @@ metadata
 - 这条规则约束的是：publisher 自己暴露的作者与摘要信号，一旦已经被识别出来，就要稳定进入最终文章模型；优先使用更结构化的 provider-owned 信号，缺失时再回退到 DOM。
 - 如果违反，用户会看到：作者列表为空、摘要字段丢失，或者 provider 已经识别出的摘要没有写入文章模型。
 - 它对应的阶段是：`metadata`、`provider-html-or-xml-extraction`、`article-assembly`。
-- Owner：`paper_fetch.providers._article_markdown_elsevier` 与 `paper_fetch.providers._browser_workflow_authors`。
+- Owner：`paper_fetch.providers._article_markdown_elsevier` 与 `paper_fetch.providers._html_authors`。
 - 代表性 HTML / XML：
   - [`../tests/fixtures/golden_criteria/10.1126_science.adp0212/original.html`](../tests/fixtures/golden_criteria/10.1126_science.adp0212/original.html)
   - [`../tests/fixtures/golden_criteria/10.1111_gcb.16998/original.html`](../tests/fixtures/golden_criteria/10.1111_gcb.16998/original.html)
@@ -330,7 +330,7 @@ metadata
 - 这条规则约束的是：正文图片下载不能把 Cloudflare challenge HTML、Chrome 图片查看器壳或过小的站点图标当成论文图片保存；preview 图只有尺寸达标并在 source trail 中标记为 accepted 时才能作为可接受降级。
 - 如果违反，用户会看到：正文缺图，或本地图片文件其实是 HTML / 站点图标，后续渲染和 live review 都无法解释失败原因。
 - 它对应的阶段是：`asset-download`、`asset-validation`、`availability-quality`。
-- Owner：`paper_fetch.providers.html_assets` 与 `paper_fetch.providers._browser_workflow_fetchers`。
+- Owner：`paper_fetch.extraction.html.assets` 与 `paper_fetch.providers._browser_workflow_fetchers`。
 - 代表性 HTML / XML：
   - [`../tests/fixtures/golden_criteria/10.1073_pnas.2309123120/original.html`](../tests/fixtures/golden_criteria/10.1073_pnas.2309123120/original.html)
   - [`../tests/fixtures/golden_criteria/10.1126_sciadv.aax6869/original.html`](../tests/fixtures/golden_criteria/10.1126_sciadv.aax6869/original.html)
@@ -437,7 +437,7 @@ metadata
 - 这条规则约束的是：如果页面或 XML 里明确存在并行的多语言摘要块，就要把它们都保留下来；如果只有单语的非英文摘要或正文，也必须原样保留，不能因为语言过滤把整篇文章删空。
 - 如果违反，用户会看到：双语摘要只剩一种语言，或者葡萄牙语、西班牙语这类非英文正文整块消失，看起来像抓取失败。
 - 它对应的阶段是：`provider-html-or-xml-extraction`、`markdown-normalization`、`article-assembly`、`final-rendering`。
-- Owner：`paper_fetch.extraction.html.language` 与 provider abstract extraction adapters（`paper_fetch.providers._science_pnas_html` / `paper_fetch.providers._article_markdown_xml`）。
+- Owner：`paper_fetch.extraction.html.language` 与 provider abstract extraction adapters（`paper_fetch.providers.science_pnas` / `paper_fetch.providers._article_markdown_xml`）。
 - 代表性 HTML / XML：
   - [`../tests/fixtures/golden_criteria/10.1111_gcb.16386/bilingual.html`](../tests/fixtures/golden_criteria/10.1111_gcb.16386/bilingual.html)
   - [`../tests/fixtures/golden_criteria/10.1007_s13158-025-00473-x/bilingual.html`](../tests/fixtures/golden_criteria/10.1007_s13158-025-00473-x/bilingual.html)
@@ -756,7 +756,7 @@ metadata
 - 这条规则约束的是：Springer / Nature HTML 的普通 supplementary 只能从 `Supplementary information`、`Supplementary material(s)`、`Supporting information`、`Electronic supplementary material`、`Extended data`、`Extended data figures and tables` 这些 supplementary-like section 子树里识别；`Source data` 不能再混进普通 supplementary，而是要独立识别并在下载时落到 `source_data/` 子目录。`Peer Review File` / `Peer reviewer reports` 也必须排除。
 - 如果违反，用户会看到：正文或 article chrome 里的普通 PDF/CSV/ZIP 被误当成 supplementary，`Peer Review File` 混入补充材料列表，或者 `Source Data` 和普通 supplementary 重复下载、重复落盘。
 - 它对应的阶段是：`asset-discovery`、`asset-download`、`artifact-storage`。
-- Owner：`paper_fetch.providers._springer_html` 与 `paper_fetch.extraction.html._assets`。
+- Owner：`paper_fetch.providers._springer_html` 与 `paper_fetch.extraction.html.assets`。
 - 代表性 HTML / XML：
   - [`../tests/fixtures/golden_criteria/10.1038_s41561-022-00912-7/original.html`](../tests/fixtures/golden_criteria/10.1038_s41561-022-00912-7/original.html)
   - [`../tests/fixtures/golden_criteria/10.1038_s41558-022-01584-2/original.html`](../tests/fixtures/golden_criteria/10.1038_s41558-022-01584-2/original.html)
@@ -1089,7 +1089,7 @@ metadata
 - 这条规则约束的是：Wiley supplementary 只允许从 `Supporting Information` accordion/content 中提取，并且只接受 `downloadSupplement` 或文件名/参数带 `sup-*` 的真实 supporting file 链接。正文 `<figure>` 里的 `/cms/asset/...fig-*.jpg|png|webp` 只能保留为 figure 资产，不能再被并行归类成 supplementary；`downloadSupplement` 的 `file` / `filename` query 要作为 `filename_hint` 保留，落盘时优先使用真实文件名。
 - 如果违反，用户会看到：`asset_profile=all` 下正文 figure 被重复当作 supplementary 文件下载，`article.assets` 混进一批 `fig-*.jpg/.png` 伪 supplementary；真正的 supporting file 可能落成 `downloadSupplement.bin`，难以辨认。
 - 它对应的阶段是：`asset-discovery`、`provider-html-or-xml-extraction`、`asset-download`、`artifact-storage`。
-- Owner：`paper_fetch.providers._science_pnas_html`、`paper_fetch.providers._wiley_html` 与 `paper_fetch.extraction.html._assets`。
+- Owner：`paper_fetch.providers.science_pnas`、`paper_fetch.providers._wiley_html` 与 `paper_fetch.extraction.html.assets`。
 - 代表性 HTML / XML：
   - [`../tests/fixtures/golden_criteria/10.1111_gcb.16414/original.html`](../tests/fixtures/golden_criteria/10.1111_gcb.16414/original.html)
   - [`../tests/fixtures/golden_criteria/10.1111_gcb.16998/original.html`](../tests/fixtures/golden_criteria/10.1111_gcb.16998/original.html)
@@ -1127,7 +1127,7 @@ metadata
 - 这条规则约束的是：Science / Science Advances / PNAS 的 supplementary 文件只允许从 Atypon article back matter 中的 `Supplementary Material(s)` / `Supporting Information` section 子树识别，并且只保留 publisher `/doi/suppl/.../suppl_file/...` 附件。正文、Data Availability、文章导航、页内锚点或 supplementary section 内引用文献里的普通 `.csv` / `.txt` / `.pdf` / `#supplementary-materials` 链接不能被当作 supplementary。
 - 如果违反，用户会看到：`asset_profile=all` 下正文数据链接或 supplementary references 中的外部 PDF 被错误下载成 supplementary，或者真实 `core-supplementary-materials` 里的 PDF/XLSX 附件被漏掉。
 - 它对应的阶段是：`asset-discovery`、`provider-html-or-xml-extraction`、`asset-download`。
-- Owner：`paper_fetch.providers._science_pnas_html` 与 `paper_fetch.extraction.html._assets`。
+- Owner：`paper_fetch.providers.science_pnas` 与 `paper_fetch.extraction.html.assets`。
 - 代表性 HTML / XML：
   - [`../tests/fixtures/golden_criteria/10.1126_sciadv.adl6155/original.html`](../tests/fixtures/golden_criteria/10.1126_sciadv.adl6155/original.html)
   - [`../tests/fixtures/block/10.1073_pnas.2509692123/raw.html`](../tests/fixtures/block/10.1073_pnas.2509692123/raw.html)

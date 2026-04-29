@@ -3,7 +3,7 @@ from __future__ import annotations
 import unittest
 
 from paper_fetch import service as paper_fetch
-from paper_fetch.extraction.html._assets import extract_html_assets
+from paper_fetch.extraction.html.assets import extract_html_assets
 from paper_fetch.extraction.html._metadata import parse_html_metadata
 from paper_fetch.extraction.html._runtime import (
     clean_markdown,
@@ -18,7 +18,7 @@ from paper_fetch.providers import pnas as pnas_provider
 from paper_fetch.providers import science as science_provider
 from paper_fetch.providers import springer as springer_provider
 from paper_fetch.providers import wiley as wiley_provider
-from paper_fetch.providers._science_pnas_html import extract_science_pnas_markdown
+from paper_fetch.providers.science_pnas import extract_science_pnas_markdown
 from paper_fetch.providers.base import ProviderContent, ProviderFailure, RawFulltextPayload
 from paper_fetch.tracing import trace_from_markers
 from tests.provider_benchmark_samples import (

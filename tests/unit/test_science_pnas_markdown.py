@@ -5,10 +5,10 @@ import unittest
 from bs4 import BeautifulSoup
 
 from paper_fetch.extraction.html._runtime import body_metrics
-from paper_fetch.providers import _science_pnas_html
 from paper_fetch.providers._html_references import extract_numbered_references_from_html
 from paper_fetch.extraction.html.signals import SciencePnasHtmlFailure
-from paper_fetch.providers._science_pnas_html import extract_science_pnas_markdown
+from paper_fetch.providers.science_pnas import extract_science_pnas_markdown
+from paper_fetch.providers.science_pnas import normalization as science_pnas_normalization
 from tests.golden_criteria import golden_criteria_asset
 from tests.provider_benchmark_samples import provider_benchmark_sample
 from tests.paths import FIXTURE_DIR
@@ -310,9 +310,9 @@ class SciencePnasMarkdownTests(unittest.TestCase):
 
         container = soup.select_one(".article-section__content")
         self.assertIsNotNone(container)
-        _science_pnas_html._normalize_display_formula_blocks(container)
-        _science_pnas_html._normalize_inline_math_nodes(container)
-        _science_pnas_html._normalize_non_table_inline_blocks(container)
+        science_pnas_normalization._normalize_display_formula_blocks(container)
+        science_pnas_normalization._normalize_inline_math_nodes(container)
+        science_pnas_normalization._normalize_non_table_inline_blocks(container)
 
         rendered = str(container)
         self.assertNotIn("[Formula unavailable]", rendered)
@@ -338,7 +338,7 @@ class SciencePnasMarkdownTests(unittest.TestCase):
 
         container = soup.select_one(".article-section__content")
         self.assertIsNotNone(container)
-        _science_pnas_html._normalize_display_formula_blocks(container)
+        science_pnas_normalization._normalize_display_formula_blocks(container)
 
         rendered = str(container)
         self.assertNotIn("[Formula unavailable]", rendered)

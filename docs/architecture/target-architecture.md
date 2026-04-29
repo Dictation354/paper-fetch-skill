@@ -160,20 +160,20 @@ Date: 2026-04-28
 | 阶段 token | Canonical module / owner | 规则范围 |
 | --- | --- | --- |
 | `metadata` | `paper_fetch.extraction.html._metadata`、provider metadata adapters、`paper_fetch.metadata.crossref` | 标题、作者、摘要、provider-owned 信号和 redirect stub lookup metadata。 |
-| `provider-html-or-xml-extraction` | `paper_fetch.providers._article_markdown_elsevier_document`、`paper_fetch.providers.html_springer_nature`、`paper_fetch.providers._science_pnas_html`、`paper_fetch.providers._wiley_html` | publisher HTML/XML 到中间结构的提取。 |
+| `provider-html-or-xml-extraction` | `paper_fetch.providers._article_markdown_elsevier_document`、`paper_fetch.providers.html_springer_nature`、`paper_fetch.providers.science_pnas`、`paper_fetch.providers._wiley_html` | publisher HTML/XML 到中间结构的提取。 |
 | `html-cleanup` | `paper_fetch.providers.html_noise`、`paper_fetch.extraction.html.inline`、provider cleanup profiles | 站点 chrome、UI 噪声、caption fallback 和正文清洗。 |
 | `availability-quality` | `paper_fetch.quality.html_availability` | fulltext / abstract-only 判定和正文充分性度量。 |
 | `section-classification` | `paper_fetch.extraction.section_hints`、`paper_fetch.extraction.html.semantics` | section kind、frontmatter、back matter、availability 与 section hints。 |
-| `article-assembly` | `paper_fetch.models.ArticleModel`、`paper_fetch.models.article_from_markdown`、`paper_fetch.models.article_from_structure` | 中间结构合并成 `ArticleModel`。 |
-| `asset-discovery` | `paper_fetch.providers.html_assets`、`paper_fetch.extraction.html.figure_links`、provider asset registries | figure、table、formula、supplementary 等资产候选识别。 |
-| `asset-download` | `paper_fetch.providers._browser_workflow_fetchers`、`paper_fetch.providers.html_assets`、provider asset clients | 资产候选下载和 provider-owned 下载链路。 |
-| `asset-validation` | `paper_fetch.extraction.image_payloads`、`paper_fetch.providers.html_assets`、`paper_fetch.models.Quality` | 真实图片校验、尺寸阈值、preview acceptance 和失败诊断。 |
+| `article-assembly` | `paper_fetch.models`、`paper_fetch.models.builders`、`paper_fetch.models.schema` | 中间结构合并成 `ArticleModel`。 |
+| `asset-discovery` | `paper_fetch.extraction.html.assets`、`paper_fetch.providers._html_asset_engine`、`paper_fetch.extraction.html.figure_links`、provider asset policies | figure、table、formula、supplementary 等资产候选识别。 |
+| `asset-download` | `paper_fetch.extraction.html.assets.download`、`paper_fetch.providers._browser_workflow_fetchers`、provider asset clients | 资产候选下载和 provider-owned 下载链路。 |
+| `asset-validation` | `paper_fetch.extraction.image_payloads`、`paper_fetch.extraction.html.assets`、`paper_fetch.models.Quality` | 真实图片校验、尺寸阈值、preview acceptance 和失败诊断。 |
 | `asset-link-rewrite` | `paper_fetch.extraction.html.figure_links`、CLI / model asset link rewrite helpers | 远程 / 绝对资产链接改写为本地 Markdown 可用链接。 |
 | `table-rendering` | `paper_fetch.extraction.html.tables`、`paper_fetch.providers._article_markdown_elsevier_document` | HTML/XML 表格展平、降级和语义损失标记。 |
 | `formula-rendering` | `paper_fetch.extraction.html.formula_rules`、`paper_fetch.providers._article_markdown_math`、`paper_fetch.formula.convert` | MathML / LaTeX / 公式图片 fallback 渲染。 |
-| `markdown-normalization` | `paper_fetch.models.normalize_markdown_text`、`paper_fetch.providers._science_pnas_postprocess`、`paper_fetch.providers.html_noise` | Markdown 块边界、空白、行内语义和去重。 |
+| `markdown-normalization` | `paper_fetch.models.markdown`、`paper_fetch.providers._science_pnas_postprocess`、`paper_fetch.providers.html_noise` | Markdown 块边界、空白、行内语义和去重。 |
 | `references-rendering` | `paper_fetch.providers._html_references`、`paper_fetch.providers._article_markdown_elsevier_document`、`paper_fetch.markdown.citations` | 参考文献抽取与渲染。 |
-| `final-rendering` | `paper_fetch.models.ArticleModel.to_ai_markdown`、`paper_fetch.mcp.schemas` | 最终 Markdown / MCP payload 输出。 |
+| `final-rendering` | `paper_fetch.models.render`、`paper_fetch.models.ArticleModel.to_ai_markdown`、`paper_fetch.mcp.schemas` | 最终 Markdown / MCP payload 输出。 |
 | `artifact-storage` | `paper_fetch.artifacts.ArtifactStore`、`paper_fetch.mcp.fetch_cache` | 原始 payload、publisher HTML、下载资产和 fetch-envelope sidecar 落盘。 |
 
 关键约束：
@@ -217,7 +217,7 @@ Provider 身份与能力配置统一来自 `paper_fetch.provider_catalog.PROVIDE
 
 Crossref 的 provider adapter 位于 `paper_fetch.providers.crossref.CrossrefClient`，继续保留 public import path；resolve 与 provider adapter 共同依赖 `paper_fetch.metadata.crossref.CrossrefLookupClient`，避免 resolution 层反向复用 provider 层。
 
-架构测试会阻止已删除的 legacy surface 回流：provider-neutral 层不得 import `paper_fetch.providers._*`，测试不得重新 import 旧 `_html_*`、`_language_filter` 或 `_science_pnas` compatibility modules，provider catalog 仍是 provider 身份、状态顺序和 registry client factory 的单一事实来源。
+架构测试会阻止已删除的 legacy surface 回流：provider-neutral 层不得 import `paper_fetch.providers._*`，测试不得重新 import 旧 `_html_*`、`_language_filter`、`_science_pnas`、`_science_pnas_html`、`paper_fetch.extraction.html._assets` 或 `paper_fetch.providers.html_assets` compatibility modules，provider catalog 仍是 provider 身份、状态顺序和 registry client factory 的单一事实来源。
 
 ### 8. Runtime / Artifact / Cache 边界
 
@@ -340,7 +340,7 @@ workflow 会尽可能拿到两类元数据：
   - 与 `wiley` / `science` 的 HTML / browser PDF/ePDF 路径共用浏览器工作流基座
   - 当前只剩 provider-owned 单栈；不再保留额外的 Science-only live harness 或第二套 browser-PDF 实现
 
-`paper_fetch.providers.browser_workflow` 是 Wiley / Science / PNAS 的 canonical browser workflow facade：它保留 `ProviderBrowserProfile`、`BrowserWorkflowClient`、bootstrap、seeded-browser PDF fallback、article conversion 和 related asset download orchestration。底层职责拆到两个内部模块：`_browser_workflow_fetchers.py` 承载 shared Playwright image/file fetcher、memoized fetcher、Playwright context 创建和图片 payload/失败诊断 helper；`_browser_workflow_html_extraction.py` 承载 direct Playwright HTML preflight、FlareSolverr HTML payload 构造、Markdown/assets parse-cache helper 和 HTML payload helper。facade 继续 re-export 测试和 provider 已依赖的 patch 点（例如 `fetch_html_with_flaresolverr`、`fetch_html_with_direct_playwright`、`extract_science_pnas_markdown` 与 shared Playwright fetcher 构造器），新代码不应把这两个内部模块当作稳定公开 API。旧的 `_science_pnas` 兼容模块已移除，测试和新代码都应直接 patch 或 import canonical runtime。
+`paper_fetch.providers.browser_workflow` 是 Wiley / Science / PNAS 的 canonical browser workflow facade：它保留 `ProviderBrowserProfile`、`BrowserWorkflowClient`、bootstrap、seeded-browser PDF fallback、article conversion 和 related asset download orchestration。底层职责拆到三个内部区域：`_browser_workflow_fetchers.py` 承载 `_BasePlaywrightDocumentFetcher`、shared Playwright image/file fetcher、memoized fetcher、Playwright context 创建和图片 payload/失败诊断 helper；`_browser_workflow_html_extraction.py` 承载 direct Playwright HTML preflight、FlareSolverr HTML payload 构造、Markdown/assets parse-cache helper 和 HTML payload helper；`paper_fetch.providers.science_pnas` 承载 Science/PNAS/Wiley browser HTML markdown、asset scopes、normalization 和 postprocess entrypoint。facade 继续 re-export 测试和 provider 已依赖的 patch 点（例如 `fetch_html_with_flaresolverr`、`fetch_html_with_direct_playwright`、`extract_science_pnas_markdown` 与 shared Playwright fetcher 构造器），新代码不应把这些内部模块当作稳定公开 API。旧的 `_science_pnas` 兼容模块已移除，测试和新代码都应直接 patch 或 import canonical runtime。
 
 `wiley` / `science` / `pnas` 的 HTML 正文图片资产下载也属于这套 provider-owned browser workflow：每个 asset download attempt 内，单个 worker 线程会复用自己的 seeded Playwright browser context，先尝试 full-size/original，全部失败后再用同一线程私有 context 尝试 preview；并发 worker 之间不复用 `RuntimeContext` 持有的共享 browser。PNAS direct Playwright HTML preflight 和 PDF/ePDF fallback 同样通过 `RuntimeContext` 复用 browser，但这只适用于非 threaded 的主流程 Playwright 步骤。通用 HTTP-first 资产下载仍保留给非目标 provider，并把网络解析阶段放入 bounded worker pool；文件写入与文件名去重仍按原 asset 顺序串行执行。
 
@@ -583,7 +583,7 @@ MCP 层会把缓存暴露成 resources：
 
 如果是正文渲染或资产展示能力，应优先改：
 
-- `src/paper_fetch/models.py`
+- `src/paper_fetch/models/`
 - provider 到 `ArticleModel` 的转换逻辑
 
 而不是让 CLI 或 MCP 自己拼装业务结果。

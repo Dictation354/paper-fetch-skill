@@ -12,7 +12,7 @@ from ..quality.html_profiles import (
     pnas_blocking_fallback_signals,
     pnas_positive_signals,
 )
-from ._browser_workflow_authors import (
+from ._html_authors import (
     AuthorExtractionPipeline,
     extract_meta_authors,
     extract_property_authors,

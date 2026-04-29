@@ -10,8 +10,9 @@ from pathlib import Path
 from unittest import mock
 
 from paper_fetch.http import DEFAULT_FULLTEXT_TIMEOUT_SECONDS, DEFAULT_TIMEOUT_SECONDS, RequestFailure
-from paper_fetch.extraction.html import _assets as asset_impl
-from paper_fetch.providers import _flaresolverr, browser_workflow, html_assets
+from paper_fetch.extraction.html import assets as html_assets
+from paper_fetch.extraction.html.assets import _core as asset_impl
+from paper_fetch.providers import _flaresolverr, browser_workflow
 from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
 from paper_fetch.providers.crossref import CrossrefClient
 from paper_fetch.providers.elsevier import ElsevierClient, download_elsevier_related_assets, filter_elsevier_asset_references

@@ -7,10 +7,11 @@ import urllib.parse
 from typing import Any, Mapping
 
 from ..extraction.html import decode_html as _decode_html
-from ..extraction.html._assets import (
+from ..extraction.html.assets import (
     FULL_SIZE_IMAGE_ATTRS,
     PREVIEW_IMAGE_ATTRS,
     FigurePageFetcher,
+    _soup_attr_url,
     download_figure_assets as download_generic_figure_assets,
     download_supplementary_assets as download_generic_supplementary_assets,
     extract_figure_assets as extract_generic_figure_assets,
@@ -30,7 +31,8 @@ from ..extraction.html.language import collect_html_abstract_blocks, html_node_l
 from ..extraction.html.parsing import choose_parser
 from ..extraction.html.semantics import collect_html_section_hints, heading_category, normalize_section_title
 from ..utils import dedupe_authors, normalize_text
-from ._browser_workflow_authors import (
+from ._html_asset_engine import HtmlAssetExtractionPolicy, extract_scoped_assets_with_policy
+from ._html_authors import (
     AuthorExtractionPipeline,
     extract_jsonld_authors as extract_common_jsonld_authors,
     extract_meta_authors as extract_common_meta_authors,
@@ -533,29 +535,6 @@ def _extract_asset_html_scope_fragments(cleaned_html: str, active_root: Any) -> 
     return body_html, supplementary_html, source_data_html
 
 
-def _first_url_from_srcset(value: str | None) -> str:
-    srcset = normalize_text(value)
-    if not srcset:
-        return ""
-    first = srcset.split(",", 1)[0].strip()
-    if not first:
-        return ""
-    return first.split()[0].strip()
-
-
-def _soup_attr_url(tag: Any, *attrs: str) -> str:
-    if Tag is None or not isinstance(tag, Tag):
-        return ""
-    for attr in attrs:
-        raw = tag.get(attr)
-        if not raw:
-            continue
-        candidate = _first_url_from_srcset(raw) if attr.endswith("srcset") else normalize_text(str(raw))
-        if candidate:
-            return candidate
-    return ""
-
-
 def _springer_figure_caption(node: Any, soup: Any) -> str:
     if Tag is None or not isinstance(node, Tag):
         return ""
@@ -973,15 +952,20 @@ def extract_scoped_html_assets(
     supplementary_html_text: str | None = None,
     source_data_html_text: str | None = None,
 ) -> list[dict[str, str]]:
-    assets = extract_figure_assets(body_html_text, source_url)
-    assets.extend(extract_generic_formula_assets(body_html_text, source_url))
-    if asset_profile == "all":
-        supplementary_scope_html = body_html_text if supplementary_html_text is None else supplementary_html_text
-        if supplementary_scope_html:
-            assets.extend(extract_supplementary_assets(supplementary_scope_html, source_url))
-        if source_data_html_text:
-            assets.extend(extract_source_data_assets(source_data_html_text, source_url))
-    return _dedupe_springer_supplementary_assets(assets)
+    return extract_scoped_assets_with_policy(
+        body_html_text,
+        source_url,
+        asset_profile=asset_profile,
+        supplementary_html_text=supplementary_html_text,
+        source_data_html_text=source_data_html_text,
+        policy=HtmlAssetExtractionPolicy(
+            figure_extractor=extract_figure_assets,
+            formula_extractor=extract_generic_formula_assets,
+            supplementary_extractor=extract_supplementary_assets,
+            source_data_extractor=extract_source_data_assets,
+            finalizer=_dedupe_springer_supplementary_assets,
+        ),
+    )
 
 
 def figure_download_candidates(

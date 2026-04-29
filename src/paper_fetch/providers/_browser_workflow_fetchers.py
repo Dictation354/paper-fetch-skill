@@ -19,7 +19,7 @@ from ..logging_utils import emit_structured_log
 from ..runtime import RuntimeContext
 from ..utils import normalize_text
 from ._flaresolverr import FetchedPublisherHtml
-from .html_assets import supplementary_response_block_reason
+from ..extraction.html.assets import supplementary_response_block_reason
 
 logger = logging.getLogger("paper_fetch.providers.browser_workflow")
 
@@ -153,6 +153,7 @@ __all__ = [
     "_IMAGE_DOCUMENT_FETCH_TIMEOUT_MS",
     "_MemoizedFigurePageFetcher",
     "_MemoizedImageDocumentFetcher",
+    "_BasePlaywrightDocumentFetcher",
     "_SharedPlaywrightFileDocumentFetcher",
     "_SharedPlaywrightImageDocumentFetcher",
     "_ThreadLocalSharedPlaywrightFileDocumentFetcher",
@@ -395,7 +396,7 @@ def _new_playwright_context(
         raise
 
 
-class _SharedPlaywrightImageDocumentFetcher:
+class _BasePlaywrightDocumentFetcher:
     def __init__(
         self,
         *,
@@ -403,8 +404,6 @@ class _SharedPlaywrightImageDocumentFetcher:
         seed_urls_getter: Callable[[], list[str]],
         browser_user_agent: str | None = None,
         headless: bool = True,
-        min_width: int = 80,
-        min_height: int = 80,
         challenge_recovery: Callable[[str, Mapping[str, Any], Mapping[str, Any]], Mapping[str, Any] | None] | None = None,
         runtime_context: RuntimeContext | None = None,
         use_runtime_shared_browser: bool = True,
@@ -413,8 +412,6 @@ class _SharedPlaywrightImageDocumentFetcher:
         self._seed_urls_getter = seed_urls_getter
         self._browser_user_agent = browser_user_agent
         self._headless = headless
-        self._min_width = min_width
-        self._min_height = min_height
         self._challenge_recovery = challenge_recovery
         self._runtime_context = runtime_context
         self._use_runtime_shared_browser = use_runtime_shared_browser
@@ -425,43 +422,9 @@ class _SharedPlaywrightImageDocumentFetcher:
         self._warmed_seed_urls: set[str] = set()
         self._last_failure_by_url: dict[str, dict[str, Any]] = {}
         self._recovery_attempts_by_url: dict[str, list[dict[str, Any]]] = {}
-        self._recovered_payload_by_url: dict[str, dict[str, Any]] = {}
 
-    def __call__(self, image_url: str, _asset: Mapping[str, Any]) -> dict[str, Any] | None:
-        normalized_url = normalize_text(image_url)
-        if not normalized_url:
-            return None
-        page = self._ensure_page()
-        if page is None:
-            return None
-
-        self._sync_context_cookies()
-        self._warm_seed_urls(force=False)
-        recovered_from_challenge = False
-        for attempt in range(3):
-            result = self._fetch_with_page(normalized_url)
-            if result is not None:
-                return result
-            failure = self.failure_for(normalized_url)
-            if (
-                not recovered_from_challenge
-                and _looks_like_cloudflare_challenge_failure(failure)
-                and self._attempt_challenge_recovery(normalized_url, _asset, failure or {})
-            ):
-                recovered_payload = self._recovered_payload_by_url.get(normalized_url)
-                if recovered_payload is not None:
-                    return dict(recovered_payload)
-                recovered_from_challenge = True
-                continue
-            if attempt == 0:
-                self._sync_context_cookies()
-                self._warm_seed_urls(force=True)
-                continue
-            break
-        return None
-
-    def failure_for(self, image_url: str) -> dict[str, Any] | None:
-        diagnostic = self._last_failure_by_url.get(normalize_text(image_url))
+    def failure_for(self, source_url: str) -> dict[str, Any] | None:
+        diagnostic = self._last_failure_by_url.get(normalize_text(source_url))
         return dict(diagnostic) if diagnostic else None
 
     def close(self) -> None:
@@ -494,9 +457,9 @@ class _SharedPlaywrightImageDocumentFetcher:
         seed = self._browser_context_seed_getter()
         return seed if isinstance(seed, Mapping) else {}
 
-    def _ensure_page(self):
-        if self._page is not None:
-            return self._page
+    def _ensure_context(self):
+        if self._context is not None:
+            return self._context
 
         active_user_agent = (
             normalize_text(self._current_seed().get("browser_user_agent"))
@@ -514,6 +477,13 @@ class _SharedPlaywrightImageDocumentFetcher:
             self._page = self._context.new_page()
         except Exception:
             self.close()
+            return None
+        return self._context
+
+    def _ensure_page(self):
+        if self._page is not None:
+            return self._page
+        if self._ensure_context() is None:
             return None
         return self._page
 
@@ -551,8 +521,8 @@ class _SharedPlaywrightImageDocumentFetcher:
             except Exception:
                 continue
 
-    def _record_failure(self, image_url: str, **values: Any) -> None:
-        normalized_url = normalize_text(image_url)
+    def _record_failure(self, source_url: str, **values: Any) -> None:
+        normalized_url = normalize_text(source_url)
         if not normalized_url:
             return
         diagnostic = _compact_failure_diagnostic({"source_url": normalized_url, **values})
@@ -561,6 +531,104 @@ class _SharedPlaywrightImageDocumentFetcher:
             diagnostic["recovery_attempts"] = list(recovery_attempts)
         if diagnostic:
             self._last_failure_by_url[normalized_url] = diagnostic
+
+    def _record_recovery_payload(self, source_url: str, recovery: Mapping[str, Any]) -> None:
+        del source_url, recovery
+
+    def _recovery_diagnostic(self, recovery: Mapping[str, Any]) -> dict[str, Any]:
+        return _compact_failure_diagnostic(recovery)
+
+    def _attempt_challenge_recovery(
+        self,
+        source_url: str,
+        asset: Mapping[str, Any],
+        failure: Mapping[str, Any],
+    ) -> bool:
+        normalized_url = normalize_text(source_url)
+        if not normalized_url or self._challenge_recovery is None:
+            return False
+        try:
+            recovery = self._challenge_recovery(normalized_url, asset, failure)
+        except Exception as exc:
+            recovery = {
+                "status": "error",
+                "reason": normalize_text(str(exc)) or exc.__class__.__name__,
+            }
+        if not isinstance(recovery, Mapping):
+            return False
+        self._record_recovery_payload(normalized_url, recovery)
+        compact = self._recovery_diagnostic(recovery)
+        if compact:
+            self._recovery_attempts_by_url.setdefault(normalized_url, []).append(compact)
+            previous = self.failure_for(normalized_url) or {}
+            previous.pop("source_url", None)
+            self._record_failure(normalized_url, **previous)
+        if normalize_text(str(recovery.get("status") or "")).lower() != "ok":
+            return False
+        self._sync_context_cookies()
+        self._warm_seed_urls(force=True)
+        return True
+
+
+class _SharedPlaywrightImageDocumentFetcher(_BasePlaywrightDocumentFetcher):
+    def __init__(
+        self,
+        *,
+        browser_context_seed_getter: Callable[[], Mapping[str, Any] | None],
+        seed_urls_getter: Callable[[], list[str]],
+        browser_user_agent: str | None = None,
+        headless: bool = True,
+        min_width: int = 80,
+        min_height: int = 80,
+        challenge_recovery: Callable[[str, Mapping[str, Any], Mapping[str, Any]], Mapping[str, Any] | None] | None = None,
+        runtime_context: RuntimeContext | None = None,
+        use_runtime_shared_browser: bool = True,
+    ) -> None:
+        super().__init__(
+            browser_context_seed_getter=browser_context_seed_getter,
+            seed_urls_getter=seed_urls_getter,
+            browser_user_agent=browser_user_agent,
+            headless=headless,
+            challenge_recovery=challenge_recovery,
+            runtime_context=runtime_context,
+            use_runtime_shared_browser=use_runtime_shared_browser,
+        )
+        self._min_width = min_width
+        self._min_height = min_height
+        self._recovered_payload_by_url: dict[str, dict[str, Any]] = {}
+
+    def __call__(self, image_url: str, _asset: Mapping[str, Any]) -> dict[str, Any] | None:
+        normalized_url = normalize_text(image_url)
+        if not normalized_url:
+            return None
+        page = self._ensure_page()
+        if page is None:
+            return None
+
+        self._sync_context_cookies()
+        self._warm_seed_urls(force=False)
+        recovered_from_challenge = False
+        for attempt in range(3):
+            result = self._fetch_with_page(normalized_url)
+            if result is not None:
+                return result
+            failure = self.failure_for(normalized_url)
+            if (
+                not recovered_from_challenge
+                and _looks_like_cloudflare_challenge_failure(failure)
+                and self._attempt_challenge_recovery(normalized_url, _asset, failure or {})
+            ):
+                recovered_payload = self._recovered_payload_by_url.get(normalized_url)
+                if recovered_payload is not None:
+                    return dict(recovered_payload)
+                recovered_from_challenge = True
+                continue
+            if attempt == 0:
+                self._sync_context_cookies()
+                self._warm_seed_urls(force=True)
+                continue
+            break
+        return None
 
     def _record_response_failure(
         self,
@@ -593,42 +661,19 @@ class _SharedPlaywrightImageDocumentFetcher:
             canvas_error=normalize_text(canvas_error),
         )
 
-    def _attempt_challenge_recovery(
-        self,
-        image_url: str,
-        asset: Mapping[str, Any],
-        failure: Mapping[str, Any],
-    ) -> bool:
-        if self._challenge_recovery is None:
-            return False
-        try:
-            recovery = self._challenge_recovery(image_url, asset, failure)
-        except Exception as exc:
-            recovery = {
-                "status": "error",
-                "reason": normalize_text(str(exc)) or exc.__class__.__name__,
-            }
-        if not isinstance(recovery, Mapping):
-            return False
+    def _record_recovery_payload(self, image_url: str, recovery: Mapping[str, Any]) -> None:
         recovered_payload = _normalized_recovered_image_payload(recovery.get("image_payload"), fallback_url=image_url)
         if recovered_payload is not None:
             self._recovered_payload_by_url[image_url] = recovered_payload
+
+    def _recovery_diagnostic(self, recovery: Mapping[str, Any]) -> dict[str, Any]:
         diagnostic_recovery = {key: value for key, value in recovery.items() if key != "image_payload"}
         if (
             normalize_text(str(diagnostic_recovery.get("status") or "")).lower() != "ok"
             and not normalize_text(str(diagnostic_recovery.get("reason") or ""))
         ):
             diagnostic_recovery["reason"] = "challenge_recovery_failed"
-        compact = _compact_failure_diagnostic(diagnostic_recovery)
-        if compact:
-            self._recovery_attempts_by_url.setdefault(image_url, []).append(compact)
-            previous = self.failure_for(image_url) or {}
-            self._record_failure(image_url, **previous)
-        if normalize_text(str(recovery.get("status") or "")).lower() != "ok":
-            return False
-        self._sync_context_cookies()
-        self._warm_seed_urls(force=True)
-        return True
+        return _compact_failure_diagnostic(diagnostic_recovery)
 
     def _fetch_with_page(self, image_url: str) -> dict[str, Any] | None:
         page = self._page
@@ -1178,7 +1223,7 @@ class _MemoizedFigurePageFetcher:
         return value
 
 
-class _SharedPlaywrightFileDocumentFetcher:
+class _SharedPlaywrightFileDocumentFetcher(_BasePlaywrightDocumentFetcher):
     def __init__(
         self,
         *,
@@ -1190,20 +1235,15 @@ class _SharedPlaywrightFileDocumentFetcher:
         runtime_context: RuntimeContext | None = None,
         use_runtime_shared_browser: bool = True,
     ) -> None:
-        self._browser_context_seed_getter = browser_context_seed_getter
-        self._seed_urls_getter = seed_urls_getter
-        self._browser_user_agent = browser_user_agent
-        self._headless = headless
-        self._challenge_recovery = challenge_recovery
-        self._runtime_context = runtime_context
-        self._use_runtime_shared_browser = use_runtime_shared_browser
-        self._playwright_manager = None
-        self._browser = None
-        self._context = None
-        self._page = None
-        self._warmed_seed_urls: set[str] = set()
-        self._last_failure_by_url: dict[str, dict[str, Any]] = {}
-        self._recovery_attempts_by_url: dict[str, list[dict[str, Any]]] = {}
+        super().__init__(
+            browser_context_seed_getter=browser_context_seed_getter,
+            seed_urls_getter=seed_urls_getter,
+            browser_user_agent=browser_user_agent,
+            headless=headless,
+            challenge_recovery=challenge_recovery,
+            runtime_context=runtime_context,
+            use_runtime_shared_browser=use_runtime_shared_browser,
+        )
 
     def __call__(self, file_url: str, asset: Mapping[str, Any]) -> dict[str, Any] | None:
         normalized_url = normalize_text(file_url)
@@ -1234,108 +1274,6 @@ class _SharedPlaywrightFileDocumentFetcher:
             break
         return None
 
-    def failure_for(self, file_url: str) -> dict[str, Any] | None:
-        diagnostic = self._last_failure_by_url.get(normalize_text(file_url))
-        return dict(diagnostic) if diagnostic else None
-
-    def close(self) -> None:
-        if self._page is not None:
-            try:
-                self._page.close()
-            except Exception:
-                pass
-            self._page = None
-        if self._context is not None:
-            try:
-                self._context.close()
-            except Exception:
-                pass
-            self._context = None
-        if self._browser is not None:
-            try:
-                self._browser.close()
-            except Exception:
-                pass
-            self._browser = None
-        if self._playwright_manager is not None:
-            try:
-                self._playwright_manager.stop()
-            except Exception:
-                pass
-            self._playwright_manager = None
-
-    def _current_seed(self) -> Mapping[str, Any]:
-        seed = self._browser_context_seed_getter()
-        return seed if isinstance(seed, Mapping) else {}
-
-    def _ensure_context(self):
-        if self._context is not None:
-            return self._context
-
-        active_user_agent = (
-            normalize_text(self._current_seed().get("browser_user_agent"))
-            or normalize_text(self._browser_user_agent)
-            or build_user_agent({})
-        )
-        try:
-            self._playwright_manager, self._browser, self._context = _new_playwright_context(
-                runtime_context=self._runtime_context,
-                headless=self._headless,
-                user_agent=active_user_agent,
-                use_runtime_shared_browser=self._use_runtime_shared_browser,
-            )
-            self._sync_context_cookies()
-            self._page = self._context.new_page()
-        except Exception:
-            self.close()
-            return None
-        return self._context
-
-    def _sync_context_cookies(self) -> None:
-        if self._context is None:
-            return
-        cookies = list(self._current_seed().get("browser_cookies") or [])
-        if not cookies:
-            return
-        try:
-            self._context.add_cookies(cookies)
-        except Exception:
-            pass
-
-    def _seed_urls(self) -> list[str]:
-        seen: set[str] = set()
-        ordered: list[str] = []
-        for candidate in self._seed_urls_getter() or []:
-            normalized = normalize_text(candidate)
-            if normalized and normalized not in seen:
-                seen.add(normalized)
-                ordered.append(normalized)
-        return ordered
-
-    def _warm_seed_urls(self, *, force: bool) -> None:
-        page = self._page
-        if page is None:
-            return
-        for seed_url in self._seed_urls():
-            if not force and seed_url in self._warmed_seed_urls:
-                continue
-            try:
-                page.goto(seed_url, wait_until="domcontentloaded", timeout=30000)
-                self._warmed_seed_urls.add(seed_url)
-            except Exception:
-                continue
-
-    def _record_failure(self, file_url: str, **values: Any) -> None:
-        normalized_url = normalize_text(file_url)
-        if not normalized_url:
-            return
-        diagnostic = _compact_failure_diagnostic({"source_url": normalized_url, **values})
-        recovery_attempts = self._recovery_attempts_by_url.get(normalized_url) or []
-        if recovery_attempts:
-            diagnostic["recovery_attempts"] = list(recovery_attempts)
-        if diagnostic:
-            self._last_failure_by_url[normalized_url] = diagnostic
-
     def _record_response_failure(
         self,
         file_url: str,
@@ -1355,34 +1293,6 @@ class _SharedPlaywrightFileDocumentFetcher:
             body_snippet=_html_text_snippet(body),
             reason=reason,
         )
-
-    def _attempt_challenge_recovery(
-        self,
-        file_url: str,
-        asset: Mapping[str, Any],
-        failure: Mapping[str, Any],
-    ) -> bool:
-        if self._challenge_recovery is None:
-            return False
-        try:
-            recovery = self._challenge_recovery(file_url, asset, failure)
-        except Exception as exc:
-            recovery = {
-                "status": "error",
-                "reason": normalize_text(str(exc)) or exc.__class__.__name__,
-            }
-        if not isinstance(recovery, Mapping):
-            return False
-        compact = _compact_failure_diagnostic(recovery)
-        if compact:
-            self._recovery_attempts_by_url.setdefault(file_url, []).append(compact)
-            previous = self.failure_for(file_url) or {}
-            self._record_failure(file_url, **previous)
-        if normalize_text(str(recovery.get("status") or "")).lower() != "ok":
-            return False
-        self._sync_context_cookies()
-        self._warm_seed_urls(force=True)
-        return True
 
     def _fetch_with_context_request(self, file_url: str) -> dict[str, Any] | None:
         if self._context is None:

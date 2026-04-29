@@ -1,4 +1,4 @@
-"""Provider-neutral HTML asset helpers."""
+"""Asset download helpers with patchable browser-cookie hooks."""
 
 from __future__ import annotations
 
@@ -8,99 +8,28 @@ import re
 import urllib.error
 import urllib.parse
 import urllib.request
-from html.parser import HTMLParser
 from pathlib import Path
 from typing import Any, Callable, Mapping
 
-from ...config import DEFAULT_ASSET_DOWNLOAD_CONCURRENCY
-from ...http import DEFAULT_FULLTEXT_TIMEOUT_SECONDS, HttpTransport, RequestFailure
-from ...models import AssetProfile, normalize_text
-from ...utils import build_asset_output_path, empty_asset_results, sanitize_filename, save_payload
-from ..image_payloads import image_dimensions_from_bytes
-from ._metadata import parse_html_metadata
-from .formula_rules import (
-    FORMULA_IMAGE_ATTRS,
-    FORMULA_IMAGE_SRCSET_ATTRS,
-    formula_heading_for_image,
-    formula_image_url_from_node,
-    looks_like_formula_image,
-)
-from .parsing import choose_parser
-from ._runtime import decode_html
-from .shared import (
+from ....config import DEFAULT_ASSET_DOWNLOAD_CONCURRENCY
+from ....http import DEFAULT_FULLTEXT_TIMEOUT_SECONDS, HttpTransport, RequestFailure
+from ....models import AssetProfile, normalize_text
+from ....utils import build_asset_output_path, empty_asset_results, sanitize_filename, save_payload
+from ..shared import (
     html_text_snippet as _html_text_snippet,
     html_title_snippet as _html_title_snippet,
     image_magic_type as _image_magic_type,
 )
+from .dom import (
+    _response_dimensions,
+    _response_header,
+    looks_like_full_size_asset_url,
+    preview_dimensions_are_acceptable,
+    supplementary_response_block_reason,
+)
+from .figures import FigurePageFetcher, figure_download_candidates
+from .identity import html_asset_is_supplementary
 
-try:
-    from bs4 import BeautifulSoup, Tag
-except ImportError:  # pragma: no cover - exercised implicitly when dependency is absent
-    BeautifulSoup = None
-    Tag = None
-
-FULL_SIZE_IMAGE_ATTRS = (
-    "data-original",
-    "data-full-size",
-    "data-fullsize",
-    "data-zoom-src",
-    "data-zoom-image",
-    "data-lg-src",
-    "data-hi-res-src",
-    "data-hires",
-    "data-large-src",
-    "data-image-full",
-    "data-download-url",
-)
-PREVIEW_IMAGE_ATTRS = ("data-src", "src", "data-lazy-src")
-FULL_SIZE_URL_TOKENS = (
-    "/full/",
-    "/large/",
-    "/original/",
-    "/fullsize/",
-    "download=true",
-    "download=1",
-    "hi-res",
-    "hires",
-    "high-res",
-    "highres",
-)
-PREVIEW_URL_TOKENS = ("/thumb/", "/thumbnail/", "thumbnail", "/small/", "/preview/")
-ACCEPTABLE_PREVIEW_MIN_WIDTH = 300
-ACCEPTABLE_PREVIEW_MIN_HEIGHT = 200
-FIGURE_PAGE_HINTS = (
-    "full size image",
-    "view figure",
-    "open in viewer",
-    "view larger",
-    "download figure",
-    "download image",
-    "figure viewer",
-)
-SUPPLEMENTARY_TEXT_TOKENS = (
-    "supplementary",
-    "extended data",
-    "source data",
-    "peer review",
-    "supporting information",
-)
-SUPPLEMENTARY_FILE_TOKENS = (
-    ".pdf",
-    ".csv",
-    ".xlsx",
-    ".xls",
-    ".zip",
-    ".txt",
-    ".json",
-    ".xml",
-    ".jpg",
-    ".jpeg",
-    ".png",
-    ".gif",
-    ".webp",
-    ".tif",
-    ".tiff",
-)
 _CLOUDFLARE_CHALLENGE_TOKENS = (
     "just a moment",
     "attention required",
@@ -108,14 +37,6 @@ _CLOUDFLARE_CHALLENGE_TOKENS = (
 )
 
 
-def _asset_download_worker_count(total: int, configured_concurrency: int | None) -> int:
-    if total <= 0:
-        return 0
-    try:
-        concurrency = int(configured_concurrency or DEFAULT_ASSET_DOWNLOAD_CONCURRENCY)
-    except (TypeError, ValueError):
-        concurrency = DEFAULT_ASSET_DOWNLOAD_CONCURRENCY
-    return min(max(1, concurrency), total)
 SUPPLEMENTARY_BLOCKING_TITLE_TOKENS = (
     "just a moment",
     "attention required",
@@ -126,6 +47,8 @@ SUPPLEMENTARY_BLOCKING_TITLE_TOKENS = (
     "log in",
     "access denied",
 )
+
+
 SUPPLEMENTARY_BLOCKING_BODY_TOKENS = (
     "checking your browser",
     "enable javascript and cookies",
@@ -134,58 +57,22 @@ SUPPLEMENTARY_BLOCKING_BODY_TOKENS = (
     "institutional login",
     "access denied",
 )
-FigurePageFetcher = Callable[[str], tuple[str, str] | None]
+
+
 ImageDocumentFetcher = Callable[[str, Mapping[str, Any]], dict[str, Any] | None]
+
+
 FileDocumentFetcher = Callable[[str, Mapping[str, Any]], dict[str, Any] | None]
 
 
-def _response_header(response: Mapping[str, Any], name: str) -> str:
-    headers = response.get("headers") or {}
-    if not isinstance(headers, Mapping):
-        return ""
-    lowered = name.lower()
-    for key, value in headers.items():
-        if str(key).lower() == lowered:
-            return normalize_text(str(value or ""))
-    return ""
-
-
-def _image_dimensions(body: bytes | bytearray | None) -> tuple[int, int] | None:
-    return image_dimensions_from_bytes(body)
-
-
-def _response_dimensions(response: Mapping[str, Any]) -> tuple[int, int] | None:
-    dimensions = response.get("dimensions")
-    if isinstance(dimensions, Mapping):
-        try:
-            width = int(dimensions.get("width") or 0)
-            height = int(dimensions.get("height") or 0)
-        except (TypeError, ValueError):
-            width = height = 0
-        if width > 0 and height > 0:
-            return width, height
-    return _image_dimensions(response.get("body", b""))
-
-
-def supplementary_response_block_reason(content_type: str | None, body: bytes | bytearray | None) -> str:
-    normalized_content_type = normalize_text(content_type).split(";", 1)[0].lower()
-    if normalized_content_type and "html" not in normalized_content_type:
-        return ""
-    if not isinstance(body, (bytes, bytearray)) or not body:
-        return ""
-    title = _html_title_snippet(body).lower()
-    snippet = _html_text_snippet(body).lower()
-    if any(token in title or token in snippet for token in _CLOUDFLARE_CHALLENGE_TOKENS):
-        return "cloudflare_challenge"
-    if any(token in title for token in SUPPLEMENTARY_BLOCKING_TITLE_TOKENS):
-        return "login_or_access_html"
-    if any(token in snippet for token in SUPPLEMENTARY_BLOCKING_BODY_TOKENS):
-        return "login_or_access_html"
-    return ""
-
-
-def preview_dimensions_are_acceptable(width: int | None, height: int | None) -> bool:
-    return int(width or 0) >= ACCEPTABLE_PREVIEW_MIN_WIDTH and int(height or 0) >= ACCEPTABLE_PREVIEW_MIN_HEIGHT
+def _asset_download_worker_count(total: int, configured_concurrency: int | None) -> int:
+    if total <= 0:
+        return 0
+    try:
+        concurrency = int(configured_concurrency or DEFAULT_ASSET_DOWNLOAD_CONCURRENCY)
+    except (TypeError, ValueError):
+        concurrency = DEFAULT_ASSET_DOWNLOAD_CONCURRENCY
+    return min(max(1, concurrency), total)
 
 
 def _looks_like_image_payload(content_type: str | None, body: bytes | bytearray | None, source_url: str | None) -> bool:
@@ -473,577 +360,6 @@ def _cookie_header_for_url(browser_cookies: list[dict[str, Any]] | None, url: st
         matched_pairs.append(f"{name}={value}")
 
     return "; ".join(matched_pairs) if matched_pairs else None
-
-
-class _FigureParser(HTMLParser):
-    def __init__(self) -> None:
-        super().__init__(convert_charrefs=True)
-        self.assets: list[dict[str, str]] = []
-        self._in_figure = False
-        self._in_figcaption = False
-        self._current_src = ""
-        self._caption_parts: list[str] = []
-
-    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
-        attributes = {key.lower(): (value or "") for key, value in attrs}
-        lowered_tag = tag.lower()
-        if lowered_tag == "figure":
-            self._in_figure = True
-            self._current_src = ""
-            self._caption_parts = []
-        elif self._in_figure and lowered_tag == "img" and not self._current_src:
-            self._current_src = attributes.get("src", "").strip()
-        elif self._in_figure and lowered_tag == "figcaption":
-            self._in_figcaption = True
-
-    def handle_endtag(self, tag: str) -> None:
-        lowered_tag = tag.lower()
-        if lowered_tag == "figcaption":
-            self._in_figcaption = False
-        elif lowered_tag == "figure":
-            caption = normalize_text(" ".join(self._caption_parts))
-            if self._current_src or caption:
-                self.assets.append(
-                    {
-                        "kind": "figure",
-                        "heading": caption[:80] or "Figure",
-                        "caption": caption,
-                        "url": self._current_src,
-                    }
-                )
-            self._in_figure = False
-            self._in_figcaption = False
-            self._current_src = ""
-            self._caption_parts = []
-
-    def handle_data(self, data: str) -> None:
-        if self._in_figcaption and data.strip():
-            self._caption_parts.append(data)
-
-
-def _first_url_from_srcset(value: str | None) -> str:
-    srcset = normalize_text(value)
-    if not srcset:
-        return ""
-    best_url = ""
-    best_score = -1.0
-    for raw_part in srcset.split(","):
-        part = raw_part.strip()
-        if not part:
-            continue
-        pieces = part.split()
-        url = pieces[0].strip()
-        score = 0.0
-        for descriptor in pieces[1:]:
-            match = re.match(r"^([0-9]+(?:\.[0-9]+)?)(w|x)$", descriptor.strip().lower())
-            if not match:
-                continue
-            multiplier = 1000.0 if match.group(2) == "x" else 1.0
-            score = max(score, float(match.group(1)) * multiplier)
-        if score >= best_score:
-            best_url = url
-            best_score = score
-    return best_url
-
-
-def _soup_attr_url(tag: Any, *attrs: str) -> str:
-    if Tag is None or not isinstance(tag, Tag):
-        return ""
-    for attr in attrs:
-        raw = tag.get(attr)
-        if not raw:
-            continue
-        if attr.endswith("srcset"):
-            candidate = _first_url_from_srcset(raw)
-        else:
-            candidate = normalize_text(str(raw))
-        if candidate:
-            return candidate
-    return ""
-
-
-def _looks_like_formula_image(tag: Any, url: str) -> bool:
-    return looks_like_formula_image(tag, url)
-
-
-def _formula_heading_for_image(tag: Any, index: int) -> str:
-    return formula_heading_for_image(tag, index)
-
-
-def looks_like_full_size_asset_url(url: str | None) -> bool:
-    candidate = normalize_text(url).lower()
-    if not candidate:
-        return False
-    if any(token in candidate for token in PREVIEW_URL_TOKENS):
-        return False
-    return any(token in candidate for token in FULL_SIZE_URL_TOKENS)
-
-
-def _collect_tag_attr_urls(tag: Any, source_url: str, *attrs: str) -> list[str]:
-    if Tag is None or not isinstance(tag, Tag):
-        return []
-    urls: list[str] = []
-    for attr in attrs:
-        raw = tag.get(attr)
-        if not raw:
-            continue
-        values = [raw] if not isinstance(raw, list) else raw
-        for value in values:
-            candidate = _first_url_from_srcset(value) if attr.endswith("srcset") else normalize_text(str(value))
-            absolute_candidate = urllib.parse.urljoin(source_url, candidate) if candidate else ""
-            if absolute_candidate and absolute_candidate not in urls:
-                urls.append(absolute_candidate)
-    return urls
-
-
-def _figure_caption_from_soup(node: Any, soup: Any) -> str:
-    if Tag is None or not isinstance(node, Tag):
-        return ""
-
-    figcaption = node.find("figcaption")
-    if isinstance(figcaption, Tag):
-        caption = normalize_text(figcaption.get_text(" ", strip=True))
-        if caption:
-            return caption
-
-    image = node.find("img")
-    if isinstance(image, Tag):
-        described_by = normalize_text(str(image.get("aria-describedby") or ""))
-        if described_by:
-            described_node = soup.find(id=described_by)
-            if isinstance(described_node, Tag):
-                caption = normalize_text(described_node.get_text(" ", strip=True))
-                if caption:
-                    return caption
-    return ""
-
-
-def _figure_page_url_from_soup(node: Any, source_url: str) -> str:
-    if Tag is None or not isinstance(node, Tag):
-        return ""
-
-    contexts: list[Any] = [node]
-    if isinstance(node.parent, Tag):
-        contexts.append(node.parent)
-
-    for context in contexts:
-        for anchor in context.find_all("a", href=True):
-            href = normalize_text(str(anchor.get("href") or ""))
-            text = normalize_text(anchor.get_text(" ", strip=True)).lower()
-            hint_blob = " ".join(
-                [
-                    text,
-                    normalize_text(str(anchor.get("aria-label") or "")).lower(),
-                    normalize_text(str(anchor.get("title") or "")).lower(),
-                ]
-            )
-            if any(token in hint_blob for token in FIGURE_PAGE_HINTS) and href and not href.startswith("#"):
-                return urllib.parse.urljoin(source_url, href)
-    return ""
-
-
-def _figure_full_size_url_from_soup(node: Any, source_url: str) -> str:
-    if Tag is None or not isinstance(node, Tag):
-        return ""
-
-    contexts: list[Any] = [node]
-    if isinstance(node.parent, Tag):
-        contexts.append(node.parent)
-
-    for context in contexts:
-        for tag in [context, *context.find_all(True)]:
-            for candidate in _collect_tag_attr_urls(tag, source_url, *FULL_SIZE_IMAGE_ATTRS):
-                if looks_like_full_size_asset_url(candidate):
-                    return candidate
-
-    for context in contexts:
-        for anchor in context.find_all("a", href=True):
-            href = normalize_text(str(anchor.get("href") or ""))
-            if href.startswith("#"):
-                continue
-            absolute_href = urllib.parse.urljoin(source_url, href)
-            hint_blob = " ".join(
-                [
-                    normalize_text(anchor.get_text(" ", strip=True)).lower(),
-                    normalize_text(str(anchor.get("aria-label") or "")).lower(),
-                    normalize_text(str(anchor.get("title") or "")).lower(),
-                ]
-            )
-            if looks_like_full_size_asset_url(absolute_href) or any(token in hint_blob for token in FIGURE_PAGE_HINTS):
-                return absolute_href
-    return ""
-
-
-def _figure_asset_from_soup_node(node: Any, soup: Any, source_url: str) -> dict[str, str] | None:
-    if Tag is None or not isinstance(node, Tag):
-        return None
-
-    image = node.find("img")
-    source = node.find("source")
-    preview_url = _soup_attr_url(image, *PREVIEW_IMAGE_ATTRS) if image else ""
-    if not preview_url:
-        preview_url = _soup_attr_url(source, "srcset", "data-srcset") if source else ""
-    full_size_url = _figure_full_size_url_from_soup(node, source_url)
-    if not full_size_url and image is not None:
-        full_size_url = _soup_attr_url(image, *FULL_SIZE_IMAGE_ATTRS)
-    if not full_size_url and source is not None:
-        full_size_url = _soup_attr_url(source, *FULL_SIZE_IMAGE_ATTRS)
-    if not full_size_url and looks_like_full_size_asset_url(preview_url):
-        full_size_url = preview_url
-    absolute_preview_url = urllib.parse.urljoin(source_url, preview_url) if preview_url else ""
-    absolute_full_size_url = urllib.parse.urljoin(source_url, full_size_url) if full_size_url else ""
-    figure_page_url = _figure_page_url_from_soup(node, source_url)
-    if (
-        absolute_full_size_url
-        and figure_page_url
-        and absolute_full_size_url == figure_page_url
-        and not looks_like_full_size_asset_url(absolute_full_size_url)
-    ):
-        absolute_full_size_url = ""
-
-    caption = _figure_caption_from_soup(node, soup)
-    alt_text = normalize_text(str(image.get("alt") or "")) if isinstance(image, Tag) else ""
-    heading = caption[:80] or alt_text or "Figure"
-    if not caption and alt_text:
-        caption = alt_text
-
-    if not preview_url and not full_size_url and not caption:
-        return None
-
-    asset: dict[str, str] = {
-        "kind": "figure",
-        "heading": heading,
-        "caption": caption,
-        "url": absolute_full_size_url or absolute_preview_url,
-        "section": "body",
-    }
-    if absolute_preview_url:
-        asset["preview_url"] = absolute_preview_url
-    if absolute_full_size_url:
-        asset["full_size_url"] = absolute_full_size_url
-    if figure_page_url:
-        asset["figure_page_url"] = figure_page_url
-    return asset
-
-
-def _supplementary_anchor_is_supported(anchor: Any) -> bool:
-    if Tag is None or not isinstance(anchor, Tag):
-        return False
-
-    href = normalize_text(str(anchor.get("href") or ""))
-    if not href or href.startswith("#"):
-        return False
-    text = normalize_text(anchor.get_text(" ", strip=True)).lower()
-    data_test = normalize_text(str(anchor.get("data-test") or "")).lower()
-    data_track_action = normalize_text(str(anchor.get("data-track-action") or "")).lower()
-    if data_test == "supp-info-link" or data_track_action == "view supplementary info":
-        return True
-    if any(token in text for token in SUPPLEMENTARY_TEXT_TOKENS):
-        return True
-    lowered_href = href.lower()
-    return any(token in lowered_href for token in SUPPLEMENTARY_FILE_TOKENS)
-
-
-def _supplementary_asset_from_anchor(anchor: Any, source_url: str) -> dict[str, str] | None:
-    if Tag is None or not isinstance(anchor, Tag):
-        return None
-    if not _supplementary_anchor_is_supported(anchor):
-        return None
-
-    href = normalize_text(str(anchor.get("href") or ""))
-    heading = normalize_text(anchor.get_text(" ", strip=True)) or "Supplementary Material"
-    heading = re.sub(r"\s*\(\s*download\s+pdf\s*\)\s*$", "", heading, flags=re.IGNORECASE)
-    absolute_href = urllib.parse.urljoin(source_url, href)
-    return {
-        "kind": "supplementary",
-        "heading": heading,
-        "caption": "",
-        "section": "supplementary",
-        "url": absolute_href,
-    }
-
-
-def _extract_figure_assets_with_soup(html_text: str, source_url: str) -> list[dict[str, str]]:
-    if BeautifulSoup is None:
-        return []
-
-    soup = BeautifulSoup(html_text, choose_parser())
-    candidates: list[Any] = []
-    seen_nodes: set[int] = set()
-
-    for node in soup.find_all("figure"):
-        node_id = id(node)
-        if node_id not in seen_nodes:
-            seen_nodes.add(node_id)
-            candidates.append(node)
-
-    assets_by_key: dict[tuple[str, str, str], dict[str, str]] = {}
-    for node in candidates:
-        asset = _figure_asset_from_soup_node(node, soup, source_url)
-        if asset is None:
-            continue
-        figure_page_url = normalize_text(asset.get("figure_page_url") or "")
-        preview_url = normalize_text(asset.get("url") or "")
-        caption = normalize_text(asset.get("caption") or "")
-        heading = normalize_text(asset.get("heading") or "")
-        key = (figure_page_url or preview_url, preview_url, "figure")
-        existing = assets_by_key.get(key)
-        if existing is None:
-            assets_by_key[key] = asset
-            continue
-
-        existing_caption = normalize_text(existing.get("caption") or "")
-        existing_heading = normalize_text(existing.get("heading") or "")
-        if len(caption) > len(existing_caption):
-            existing["caption"] = caption
-        if len(heading) > len(existing_heading):
-            existing["heading"] = heading
-        if figure_page_url and not normalize_text(existing.get("figure_page_url") or ""):
-            existing["figure_page_url"] = figure_page_url
-        if preview_url and not normalize_text(existing.get("url") or ""):
-            existing["url"] = preview_url
-
-    return list(assets_by_key.values())
-
-
-def extract_figure_assets(html_text: str, source_url: str) -> list[dict[str, str]]:
-    if BeautifulSoup is not None:
-        assets = _extract_figure_assets_with_soup(html_text, source_url)
-        if assets:
-            return assets
-
-    parser = _FigureParser()
-    parser.feed(html_text)
-    parser.close()
-    assets: list[dict[str, str]] = []
-    for item in parser.assets:
-        url = item.get("url", "").strip()
-        assets.append(
-            {
-                "kind": "figure",
-                "heading": item.get("heading", "Figure"),
-                "caption": item.get("caption", ""),
-                "url": urllib.parse.urljoin(source_url, url) if url else "",
-                "section": "body",
-            }
-        )
-    return assets
-
-
-def extract_formula_assets(html_text: str, source_url: str) -> list[dict[str, str]]:
-    if BeautifulSoup is None:
-        return []
-
-    soup = BeautifulSoup(html_text, choose_parser())
-    assets: list[dict[str, str]] = []
-    seen: set[str] = set()
-    for image in soup.find_all("img"):
-        if not isinstance(image, Tag):
-            continue
-        url = formula_image_url_from_node(image) or _soup_attr_url(
-            image,
-            *FORMULA_IMAGE_ATTRS,
-            *FORMULA_IMAGE_SRCSET_ATTRS,
-        )
-        if not url or not _looks_like_formula_image(image, url):
-            continue
-        absolute_url = urllib.parse.urljoin(source_url, url)
-        if not absolute_url or absolute_url in seen:
-            continue
-        seen.add(absolute_url)
-        heading = _formula_heading_for_image(image, len(assets) + 1)
-        assets.append(
-            {
-                "kind": "formula",
-                "heading": heading,
-                "caption": "",
-                "url": absolute_url,
-                "preview_url": absolute_url,
-                "section": "body",
-            }
-        )
-    return assets
-
-
-def extract_supplementary_assets(html_text: str, source_url: str) -> list[dict[str, str]]:
-    if BeautifulSoup is None:
-        return []
-
-    soup = BeautifulSoup(html_text, choose_parser())
-    assets_by_key: dict[tuple[str, str, str], dict[str, str]] = {}
-    for anchor in soup.find_all("a", href=True):
-        asset = _supplementary_asset_from_anchor(anchor, source_url)
-        if asset is None:
-            continue
-        url = normalize_text(asset.get("url") or "")
-        key = (url or normalize_text(asset.get("heading") or ""), "supplementary", normalize_text(asset.get("heading") or ""))
-        existing = assets_by_key.get(key)
-        if existing is None:
-            assets_by_key[key] = asset
-            continue
-        if url and not normalize_text(existing.get("url") or ""):
-            existing["url"] = url
-    return list(assets_by_key.values())
-
-
-def extract_html_assets(
-    html_text: str,
-    source_url: str,
-    *,
-    asset_profile: AssetProfile,
-) -> list[dict[str, str]]:
-    return extract_scoped_html_assets(
-        html_text,
-        source_url,
-        asset_profile=asset_profile,
-        supplementary_html_text=html_text,
-    )
-
-
-def extract_scoped_html_assets(
-    body_html_text: str,
-    source_url: str,
-    *,
-    asset_profile: AssetProfile,
-    supplementary_html_text: str | None = None,
-) -> list[dict[str, str]]:
-    assets = extract_figure_assets(body_html_text, source_url)
-    assets.extend(extract_formula_assets(body_html_text, source_url))
-    if asset_profile == "all":
-        supplementary_scope = body_html_text if supplementary_html_text is None else supplementary_html_text
-        assets.extend(extract_supplementary_assets(supplementary_scope, source_url))
-    return assets
-
-
-def extract_full_size_figure_image_url(html_text: str, source_url: str) -> str | None:
-    metadata = parse_html_metadata(html_text, source_url)
-    raw_meta = metadata.get("raw_meta") if isinstance(metadata, Mapping) else {}
-    if isinstance(raw_meta, Mapping):
-        for key in ("twitter:image", "twitter:image:src", "og:image"):
-            for value in raw_meta.get(key, []):
-                candidate = urllib.parse.urljoin(source_url, normalize_text(str(value or "")))
-                if candidate:
-                    return candidate
-
-    if BeautifulSoup is None:
-        return None
-
-    soup = BeautifulSoup(html_text, choose_parser())
-    fallback_candidate = None
-    seen: set[str] = set()
-    for tag in soup.find_all(["img", "source"]):
-        candidate = _soup_attr_url(
-            tag,
-            *FULL_SIZE_IMAGE_ATTRS,
-            "data-src",
-            "src",
-            "data-lazy-src",
-            "srcset",
-            "data-srcset",
-        )
-        if not candidate:
-            continue
-        absolute_candidate = urllib.parse.urljoin(source_url, candidate)
-        if not absolute_candidate or absolute_candidate in seen:
-            continue
-        seen.add(absolute_candidate)
-        if looks_like_full_size_asset_url(absolute_candidate.lower()):
-            return absolute_candidate
-        if fallback_candidate is None:
-            fallback_candidate = absolute_candidate
-    return fallback_candidate
-
-
-def figure_download_candidates(
-    transport: HttpTransport,
-    *,
-    asset: Mapping[str, Any],
-    user_agent: str,
-    figure_page_fetcher: FigurePageFetcher | None = None,
-) -> list[str]:
-    direct_full_size_url = normalize_text(str(asset.get("full_size_url") or ""))
-    primary_url = normalize_text(str(asset.get("url") or ""))
-    preview_url = normalize_text(str(asset.get("preview_url") or "")) or primary_url
-    candidates: list[str] = []
-
-    if direct_full_size_url:
-        candidates.append(direct_full_size_url)
-    if primary_url and looks_like_full_size_asset_url(primary_url):
-        candidates.append(primary_url)
-
-    figure_page_url = normalize_text(str(asset.get("figure_page_url") or ""))
-    if figure_page_url:
-        try:
-            if figure_page_fetcher is not None:
-                page_result = figure_page_fetcher(figure_page_url)
-                if page_result is None:
-                    raise RequestFailure(None, f"Missing figure-page HTML for {figure_page_url}", url=figure_page_url)
-                page_html, page_url = page_result
-            else:
-                response = transport.request(
-                    "GET",
-                    figure_page_url,
-                    headers={"User-Agent": user_agent, "Accept": "text/html,application/xhtml+xml"},
-                    timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
-                    retry_on_rate_limit=True,
-                    retry_on_transient=True,
-                )
-                page_html = decode_html(response["body"])
-                page_url = str(response["url"] or figure_page_url)
-            full_size_url = extract_full_size_figure_image_url(page_html, page_url)
-            if full_size_url:
-                candidates.append(full_size_url)
-        except RequestFailure:
-            pass
-
-    if preview_url:
-        candidates.append(preview_url)
-
-    deduped: list[str] = []
-    seen: set[str] = set()
-    for candidate in candidates:
-        if candidate and candidate not in seen:
-            seen.add(candidate)
-            deduped.append(candidate)
-    return deduped
-
-
-def resolve_figure_download_url(
-    transport: HttpTransport,
-    *,
-    asset: Mapping[str, Any],
-    user_agent: str,
-) -> str:
-    candidates = figure_download_candidates(transport, asset=asset, user_agent=user_agent)
-    return candidates[0] if candidates else normalize_text(str(asset.get("url") or ""))
-
-
-def html_asset_identity_key(asset: Mapping[str, Any]) -> str:
-    for field in ("figure_page_url", "original_url", "download_url", "full_size_url", "preview_url", "url", "source_url", "path"):
-        candidate = normalize_text(str(asset.get(field) or ""))
-        if candidate:
-            return candidate
-    return ""
-
-
-def html_asset_is_supplementary(asset: Mapping[str, Any]) -> bool:
-    kind = normalize_text(str(asset.get("kind") or asset.get("asset_type") or "")).lower()
-    section = normalize_text(str(asset.get("section") or "")).lower()
-    return kind == "supplementary" or section == "supplementary"
-
-
-def split_body_and_supplementary_assets(
-    assets: list[dict[str, Any]] | list[dict[str, str]],
-) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
-    body_assets: list[dict[str, Any]] = []
-    supplementary_assets: list[dict[str, Any]] = []
-    for item in assets or []:
-        asset = dict(item)
-        if html_asset_is_supplementary(asset):
-            supplementary_assets.append(asset)
-        else:
-            body_assets.append(asset)
-    return body_assets, supplementary_assets
 
 
 def _supplementary_candidate_urls(asset: Mapping[str, Any]) -> list[str]:
@@ -1807,3 +1123,17 @@ def download_figure_assets_with_image_document_fetcher(
         "assets": downloads,
         "asset_failures": failures,
     }
+
+
+__all__ = [
+    "_CLOUDFLARE_CHALLENGE_TOKENS",
+    "SUPPLEMENTARY_BLOCKING_TITLE_TOKENS",
+    "SUPPLEMENTARY_BLOCKING_BODY_TOKENS",
+    "ImageDocumentFetcher",
+    "FileDocumentFetcher",
+    "download_supplementary_assets",
+    "download_figure_assets",
+    "download_figure_assets_with_image_document_fetcher",
+    "_build_cookie_seeded_opener",
+    "_request_with_opener",
+]

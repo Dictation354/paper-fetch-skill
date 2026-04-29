@@ -71,6 +71,8 @@
    - `source_trail`
    - `token_estimate_breakdown`
 
+内部模块边界以 `paper_fetch.models` 包、`paper_fetch.extraction.html.assets` 包和 provider-owned adapter 为准；旧 `paper_fetch.extraction.html._assets`、`paper_fetch.providers.html_assets` 和 `paper_fetch.providers._science_pnas_html` 入口已移除，资产下载和 patchable download hook 都从 extraction asset 包进入，Science/PNAS HTML 逻辑从 `paper_fetch.providers.science_pnas` 进入。
+
 ## 5 分钟上手
 
 安装当前仓库：

@@ -28,8 +28,8 @@ from ..utils import (
     save_payload,
 )
 from . import _springer_html
-from ._science_pnas_html import rewrite_inline_figure_links
-from .html_assets import html_asset_identity_key
+from .science_pnas import rewrite_inline_figure_links
+from ..extraction.html.assets import html_asset_identity_key
 from ._pdf_candidates import build_springer_pdf_candidates
 from ._pdf_fallback import PdfFetchFailure, fetch_pdf_over_http
 from ._waterfall import ProviderWaterfallStep, ProviderWaterfallState, run_provider_waterfall

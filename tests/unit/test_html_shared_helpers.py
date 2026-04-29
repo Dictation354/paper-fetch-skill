@@ -8,7 +8,7 @@ from pathlib import Path
 
 from bs4 import BeautifulSoup
 
-from paper_fetch.extraction.html import _assets as html_assets
+from paper_fetch.extraction.html import assets as html_assets
 from paper_fetch.extraction.html import _metadata as html_metadata
 from paper_fetch.extraction.html import _runtime as html_runtime
 from paper_fetch.extraction.html import shared as html_shared
@@ -19,7 +19,8 @@ from paper_fetch.extraction.html.formula_rules import (
 )
 from paper_fetch.extraction.html.inline import normalize_html_inline_text
 from paper_fetch.http import HttpTransport
-from paper_fetch.providers import _science_pnas_html, _springer_html, _wiley_html
+from paper_fetch.providers import _springer_html, _wiley_html
+from paper_fetch.providers.science_pnas import asset_scopes as science_pnas_asset_scopes
 from tests.block_fixtures import block_asset
 from tests.golden_criteria import golden_criteria_asset, golden_criteria_scenario_asset
 
@@ -235,7 +236,7 @@ class SharedHtmlHelperTests(unittest.TestCase):
 </html>
 """
 
-        body_html, supplementary_html = _science_pnas_html.extract_browser_workflow_asset_html_scopes(
+        body_html, supplementary_html = science_pnas_asset_scopes.extract_browser_workflow_asset_html_scopes(
             html_text,
             source_url,
             "wiley",
@@ -265,7 +266,7 @@ class SharedHtmlHelperTests(unittest.TestCase):
         source_url = "https://onlinelibrary.wiley.com/doi/full/10.1111/gcb.16414"
         html_text = golden_criteria_asset("10.1111/gcb.16414", "original.html").read_text(encoding="utf-8")
 
-        body_html, supplementary_html = _science_pnas_html.extract_browser_workflow_asset_html_scopes(
+        body_html, supplementary_html = science_pnas_asset_scopes.extract_browser_workflow_asset_html_scopes(
             html_text,
             source_url,
             "wiley",
@@ -479,12 +480,12 @@ class SharedHtmlHelperTests(unittest.TestCase):
             errors="ignore",
         )
 
-        body_html, supplementary_html = _science_pnas_html.extract_browser_workflow_asset_html_scopes(
+        body_html, supplementary_html = science_pnas_asset_scopes.extract_browser_workflow_asset_html_scopes(
             html_text,
             source_url,
             "science",
         )
-        assets = _science_pnas_html.extract_scoped_html_assets(
+        assets = science_pnas_asset_scopes.extract_scoped_html_assets(
             body_html,
             source_url,
             asset_profile="all",
@@ -510,12 +511,12 @@ class SharedHtmlHelperTests(unittest.TestCase):
             errors="ignore",
         )
 
-        body_html, supplementary_html = _science_pnas_html.extract_browser_workflow_asset_html_scopes(
+        body_html, supplementary_html = science_pnas_asset_scopes.extract_browser_workflow_asset_html_scopes(
             html_text,
             source_url,
             "pnas",
         )
-        assets = _science_pnas_html.extract_scoped_html_assets(
+        assets = science_pnas_asset_scopes.extract_scoped_html_assets(
             body_html,
             source_url,
             asset_profile="all",

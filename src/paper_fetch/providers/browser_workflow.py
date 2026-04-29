@@ -56,7 +56,7 @@ from ._browser_workflow_shared import (
 )
 from ._waterfall import ProviderWaterfallStep, run_provider_waterfall
 from .base import PreparedFetchResultPayload, ProviderArtifacts, ProviderClient, ProviderContent, ProviderFailure, RawFulltextPayload
-from .html_assets import (
+from ..extraction.html.assets import (
     download_supplementary_assets,
     download_figure_assets_with_image_document_fetcher,
     extract_full_size_figure_image_url,
@@ -144,9 +144,9 @@ def _cached_browser_workflow_assets(*args, **kwargs):
     if provider_name == "wiley":
         kwargs.setdefault("scoped_asset_extractor", _wiley_html.extract_scoped_html_assets)
     elif provider_name in {"science", "pnas"}:
-        from . import _science_pnas_html
+        from .science_pnas import asset_scopes as science_pnas_asset_scopes
 
-        kwargs.setdefault("scoped_asset_extractor", _science_pnas_html.extract_scoped_html_assets)
+        kwargs.setdefault("scoped_asset_extractor", science_pnas_asset_scopes.extract_scoped_html_assets)
     else:
         kwargs.setdefault("scoped_asset_extractor", extract_scoped_html_assets)
     return _html_extraction._cached_browser_workflow_assets(*args, **kwargs)

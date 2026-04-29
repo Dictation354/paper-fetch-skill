@@ -47,7 +47,7 @@ from ..quality.html_availability import (
     assess_plain_text_fulltext_availability,
     assess_structured_article_fulltext_availability,
 )
-from .html_assets import download_supplementary_assets as download_generic_supplementary_assets
+from ..extraction.html.assets import download_supplementary_assets as download_generic_supplementary_assets
 from .base import (
     ProviderArtifacts,
     ProviderClient,

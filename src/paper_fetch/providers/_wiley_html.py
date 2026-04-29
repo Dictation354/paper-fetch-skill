@@ -7,7 +7,6 @@ import urllib.parse
 from functools import partial
 from typing import Any, Mapping
 
-from ..extraction.html import _assets as _html_asset_impl
 from ..extraction.html.parsing import choose_parser
 from ..quality.html_profiles import (
     WILEY_NOISE_PROFILE,
@@ -16,7 +15,8 @@ from ..quality.html_profiles import (
     wiley_positive_signals,
 )
 from ..utils import normalize_text
-from ._browser_workflow_authors import AuthorExtractionPipeline, extract_meta_authors, extract_selector_authors
+from ._html_authors import AuthorExtractionPipeline, extract_meta_authors, extract_selector_authors
+from ._html_asset_engine import HtmlAssetExtractionPolicy, extract_scoped_assets_with_policy
 from ._html_references import extract_numbered_references_from_html
 
 try:
@@ -294,8 +294,13 @@ def extract_scoped_html_assets(
     asset_profile,
     supplementary_html_text: str | None = None,
 ) -> list[dict[str, str]]:
-    assets = _html_asset_impl.extract_figure_assets(body_html_text, source_url)
-    assets.extend(_html_asset_impl.extract_formula_assets(body_html_text, source_url))
-    if asset_profile == "all":
-        assets.extend(extract_supplementary_assets(supplementary_html_text or "", source_url))
-    return assets
+    return extract_scoped_assets_with_policy(
+        body_html_text,
+        source_url,
+        asset_profile=asset_profile,
+        supplementary_html_text=supplementary_html_text,
+        policy=HtmlAssetExtractionPolicy(
+            supplementary_extractor=extract_supplementary_assets,
+            supplementary_scope_fallback="empty",
+        ),
+    )

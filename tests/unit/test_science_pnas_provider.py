@@ -9,15 +9,15 @@ from typing import Mapping
 from unittest import mock
 
 from paper_fetch.geography_live import collect_issue_flags
-from paper_fetch.providers import html_assets
+from paper_fetch.extraction.html import assets as html_assets
 from paper_fetch.providers import (
     _flaresolverr,
-    _science_pnas_html,
     browser_workflow,
     pnas as pnas_provider,
     science as science_provider,
     wiley as wiley_provider,
 )
+from paper_fetch.providers.science_pnas import asset_scopes as science_pnas_asset_scopes
 from paper_fetch.quality.html_availability import assess_html_fulltext_availability
 from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
 from paper_fetch.tracing import trace_from_markers
@@ -1682,7 +1682,7 @@ class SciencePnasProviderTests(unittest.TestCase):
                 mock.patch.object(browser_workflow, "ensure_runtime_ready"),
                 mock.patch.object(browser_workflow, "fetch_html_with_flaresolverr") as mocked_fetch,
                 mock.patch.object(
-                    _science_pnas_html,
+                    science_pnas_asset_scopes,
                     "extract_scoped_html_assets",
                     return_value=[
                         {

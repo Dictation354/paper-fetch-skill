@@ -1,4 +1,4 @@
-"""Shared author extraction helpers for browser-workflow providers."""
+"""Shared author extraction helpers for provider-owned HTML pages."""
 
 from __future__ import annotations
 
