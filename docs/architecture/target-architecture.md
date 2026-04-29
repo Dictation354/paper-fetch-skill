@@ -235,7 +235,7 @@ Crossref 的 provider adapter 位于 `paper_fetch.providers.crossref.CrossrefCli
 
 ### 9. Transport 层
 
-入口：`src/paper_fetch/http.py`
+入口：`src/paper_fetch/http/__init__.py`
 
 职责：
 
@@ -247,6 +247,8 @@ Crossref 的 provider adapter 位于 `paper_fetch.providers.crossref.CrossrefCli
 - 协作式取消检查
 
 `HttpTransport` 仍以本地 request loop 保持 public request options、structured logs、cancel checks、`Retry-After` 最大等待和 `RequestFailure` 形状；瞬时错误与 429 retry policy 由 `urllib3.util.Retry` 表达。连接池通过 `PoolManager(num_pools, maxsize, block=True)` 配置，同 host 由 bounded semaphore 控制；磁盘 textual GET 缓存使用脱敏 cache key，敏感 query 参数继续折叠复用，敏感 header 则用短 SHA-256 digest 区分不同凭据且不落原文，并在 stale 时带 `ETag` / `Last-Modified` 条件请求。磁盘 textual GET 缓存默认按 `4096` 条、`512 MiB`、`30` 天清理，三项上限都可用环境变量独立关闭或覆盖。`cache_stats_snapshot()` 提供线程安全累计计数；live review 的 sample 结果写入执行前后 delta，最终汇总日志保留累计快照。
+
+`paper_fetch.http` 是兼容 facade，继续导出 `HttpTransport`、`RequestFailure`、`RequestCancelledError`、`DEFAULT_*` 常量、cache/text helper 和旧测试使用的私有 dataclass 名称；生产调用方不直接依赖内部子模块。内部边界为：`http/transport.py` 承载 request loop、PoolManager、同 host semaphore 和 structured log；`http/cache.py` 承载 cache key、敏感 header digest、memory/disk textual GET cache、stats 和 prune；`http/retry.py` 承载 429 / transient retry policy、`Retry-After` 解析和 backoff；`http/body.py` 承载 body 读取、gzip 解压、content-type 判断和 preview；`http/errors.py` 承载异常类型、network error detail 和 HTTP error message。
 
 ## 端到端业务流程
 

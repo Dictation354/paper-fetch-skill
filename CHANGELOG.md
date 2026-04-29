@@ -6,6 +6,7 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 ### Refactor
 
+- Split `paper_fetch.http` from a single module into a package facade plus internal transport, cache, retry, body, and error modules while preserving the existing public import path.
 - Move dev-only `geography_live`, `geography_issue_artifacts`, and `golden_criteria_live*` modules from `paper_fetch.*` to source-tree-only `paper_fetch_devtools.*`; wheels no longer ship those modules, while the existing repo-local script CLIs keep the same behavior.
 
 ### Changed
