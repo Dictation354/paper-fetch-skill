@@ -33,7 +33,7 @@ SERVER_SCRIPT = textwrap.dedent(
     from paper_fetch.utils import sanitize_filename
     import paper_fetch.mcp.tools as tools
 
-    def fake_resolve(query, *, transport=None, env=None):
+    def fake_resolve(query, *, context=None):
         return ResolvedQuery(
             query=query,
             query_kind="doi",
@@ -45,8 +45,9 @@ SERVER_SCRIPT = textwrap.dedent(
             title="Example Article",
         )
 
-    def fake_fetch(query, *, modes=None, strategy=None, render=None, download_dir=None, clients=None, transport=None, env=None):
+    def fake_fetch(query, *, modes=None, strategy=None, render=None, context=None):
         figure_path = None
+        download_dir = context.download_dir if context is not None else None
         if download_dir is not None:
             output_dir = Path(download_dir)
             output_dir.mkdir(parents=True, exist_ok=True)
@@ -107,7 +108,7 @@ SERVER_SCRIPT = textwrap.dedent(
             metadata=article.metadata if "metadata" in requested_modes else None,
         )
 
-    def fake_probe(query, *, transport=None, env=None):
+    def fake_probe(query, *, context=None):
         return HasFulltextProbeResult(
             query=query,
             doi=query if query.startswith("10.") else "10.1000/example",

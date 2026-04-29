@@ -266,7 +266,9 @@ class ProviderRequestOptionsTests(unittest.TestCase):
             )
 
         mocked_pdf.assert_not_called()
-        self.assertEqual(payload.metadata["route"], "html")
+        self.assertIsNotNone(payload.content)
+        assert payload.content is not None
+        self.assertEqual(payload.content.route_kind, "html")
         self.assertEqual(payload.content_type, "text/html")
 
     def test_browser_workflow_flaresolverr_fast_path_uses_conservative_fallback_after_challenge(self) -> None:
@@ -324,8 +326,10 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         self.assertEqual(mocked_fetch.call_args_list[1].kwargs["wait_seconds"], 8)
         self.assertEqual(mocked_fetch.call_args_list[1].kwargs["warm_wait_seconds"], 1)
         self.assertIs(mocked_fetch.call_args_list[1].kwargs["disable_media"], False)
-        self.assertEqual(payload.metadata["html_fetcher"], "flaresolverr")
-        self.assertIn("fulltext:wiley_html_ok", payload.metadata["source_trail"])
+        self.assertIsNotNone(payload.content)
+        assert payload.content is not None
+        self.assertEqual(payload.content.fetcher, "flaresolverr")
+        self.assertIn("fulltext:wiley_html_ok", [event.marker() for event in payload.trace if event.marker()])
 
     def test_browser_workflow_flaresolverr_fast_path_falls_back_after_insufficient_body(self) -> None:
         doi = "10.1002/ece3.9361"
@@ -388,7 +392,9 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         self.assertEqual(mocked_fetch.call_count, 2)
         self.assertIs(mocked_fetch.call_args_list[0].kwargs["disable_media"], True)
         self.assertIs(mocked_fetch.call_args_list[1].kwargs["disable_media"], False)
-        self.assertEqual(payload.metadata["html_fetcher"], "flaresolverr")
+        self.assertIsNotNone(payload.content)
+        assert payload.content is not None
+        self.assertEqual(payload.content.fetcher, "flaresolverr")
         self.assertEqual(payload.content_type, "text/html")
 
     def test_html_asset_download_prefers_direct_full_size_url_before_preview(self) -> None:

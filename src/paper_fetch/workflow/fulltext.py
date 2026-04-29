@@ -2,11 +2,9 @@
 
 from __future__ import annotations
 
-import inspect
 import logging
 from pathlib import Path
 import time
-from functools import lru_cache
 from typing import Any, Mapping
 
 from ..artifacts import ArtifactStore
@@ -35,19 +33,6 @@ PROVIDER_MANAGED_ABSTRACT_ONLY_PROVIDERS = provider_managed_abstract_only_names(
 
 def _record_stage_timing(context: RuntimeContext, name: str, started_at: float) -> None:
     context.record_stage_timing(name, started_at)
-
-
-@lru_cache(maxsize=128)
-def _fetch_result_accepts_artifact_store(fetch_result_type: type, fetch_result_name: str) -> bool:
-    del fetch_result_name
-    fetch_result = getattr(fetch_result_type, "fetch_result", None)
-    if fetch_result is None:
-        return False
-    try:
-        parameters = inspect.signature(fetch_result).parameters
-    except (TypeError, ValueError):
-        return False
-    return "artifact_store" in parameters
 
 
 def build_metadata_only_result(
@@ -127,17 +112,14 @@ def _provider_fetch_result(
 ) -> ProviderFetchResult:
     download_dir = artifact_store.download_dir
     if isinstance(provider_client, FulltextProvider):
-        fetch_result = provider_client.fetch_result
-        if _fetch_result_accepts_artifact_store(type(provider_client), getattr(fetch_result, "__name__", "fetch_result")):
-            return fetch_result(
-                doi,
-                metadata,
-                download_dir,
-                asset_profile=asset_profile,
-                artifact_store=artifact_store,
-                context=context,
-            )
-        return fetch_result(doi, metadata, download_dir, asset_profile=asset_profile, context=context)
+        return provider_client.fetch_result(
+            doi,
+            metadata,
+            download_dir,
+            asset_profile=asset_profile,
+            artifact_store=artifact_store,
+            context=context,
+        )
 
     if not isinstance(provider_client, RawFulltextProvider):
         raise ProviderFailure("not_supported", "Provider does not implement raw full-text retrieval.")

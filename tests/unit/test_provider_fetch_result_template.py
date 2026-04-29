@@ -73,7 +73,7 @@ class ProviderWaterfallRunnerTests(unittest.TestCase):
         self.assertEqual(calls, ["first", "second"])
         self.assertEqual(payload.warnings, ["first warning", "trying pdf", "pdf success"])
         self.assertEqual(
-            payload.metadata["source_trail"],
+            [event.marker() for event in payload.trace if event.marker()],
             ["fulltext:template_html_fail", "fulltext:template_pdf_ok"],
         )
 

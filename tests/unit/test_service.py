@@ -11,7 +11,7 @@ from paper_fetch.artifacts import ArtifactStore
 from paper_fetch.runtime import RuntimeContext
 from paper_fetch.http import HttpTransport, RequestFailure
 from paper_fetch.providers import _springer_html as springer_html_helper, pnas as pnas_provider, science as science_provider
-from paper_fetch.providers.base import ProviderClient, ProviderContent, RawFulltextPayload
+from paper_fetch.providers.base import ProviderClient, ProviderContent, ProviderFetchResult, RawFulltextPayload
 from paper_fetch.providers.wiley import WileyClient
 from paper_fetch.tracing import trace_from_markers
 from paper_fetch.utils import choose_public_landing_page_url
@@ -430,6 +430,43 @@ class ServiceTests(unittest.TestCase):
                 runtime_module.time.monotonic = original_monotonic
 
         self.assertEqual(context.stage_timings["asset_seconds"], 0.3)
+
+    def test_provider_fetch_result_passes_artifact_store_to_fulltext_provider(self) -> None:
+        seen: dict[str, object] = {}
+
+        class RecordingProvider:
+            name = "recording"
+
+            def fetch_result(
+                self,
+                doi,
+                metadata,
+                output_dir,
+                *,
+                asset_profile="none",
+                artifact_store=None,
+                context=None,
+            ):
+                seen["output_dir"] = output_dir
+                seen["artifact_store"] = artifact_store
+                seen["context"] = context
+                return ProviderFetchResult(provider="recording", article=sample_article())
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            artifact_store = ArtifactStore.from_download_dir(Path(tmpdir))
+            context = RuntimeContext(env={}, download_dir=Path(tmpdir))
+            _provider_fetch_result(
+                RecordingProvider(),
+                doi="10.1000/recording",
+                metadata={"title": "Recording"},
+                artifact_store=artifact_store,
+                asset_profile="body",
+                context=context,
+            )
+
+        self.assertEqual(seen["output_dir"], artifact_store.download_dir)
+        self.assertIs(seen["artifact_store"], artifact_store)
+        self.assertIs(seen["context"], context)
 
     def test_fetch_paper_legacy_keywords_override_runtime_context(self) -> None:
         resolved = paper_fetch.ResolvedQuery(
@@ -1287,13 +1324,10 @@ class ServiceTests(unittest.TestCase):
             paper_fetch.resolve_paper = original_resolve
 
         self.assertIn("download:elsevier_assets_saved_profile_all", article.quality.source_trail)
-        self.assertEqual(
-            raw_payload.metadata,
-            {
-                "route": "official",
-                "reason": "Downloaded full text from the official Elsevier API.",
-            },
-        )
+        self.assertIsNotNone(raw_payload.content)
+        assert raw_payload.content is not None
+        self.assertEqual(raw_payload.content.route_kind, "official")
+        self.assertEqual(raw_payload.content.reason, "Downloaded full text from the official Elsevier API.")
 
     def test_fetch_paper_model_skips_related_asset_downloads_when_no_download_is_set(self) -> None:
         resolved = paper_fetch.ResolvedQuery(

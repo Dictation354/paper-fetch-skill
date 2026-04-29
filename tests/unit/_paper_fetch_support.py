@@ -69,13 +69,13 @@ class StubProvider:
         return empty_asset_results()
 
     def fetch_result(self, doi, metadata, output_dir, *, asset_profile="none", artifact_store=None, context=None):
-        del artifact_store
+        active_output_dir = artifact_store.download_dir if artifact_store is not None else output_dir
         raw_payload = self.fetch_raw_fulltext(doi, metadata, context=context)
         content = getattr(raw_payload, "content", None)
         if content is not None and getattr(raw_payload, "needs_local_copy", False) and not content.needs_local_copy:
             content = replace(content, needs_local_copy=True)
             raw_payload.content = content
-        route = str(raw_payload.metadata.get("route") or "").strip().lower()
+        route = str(content.route_kind if content is not None else "").strip().lower()
         provider_name = str(raw_payload.provider or self.name or "provider").strip().lower()
         downloaded_assets = []
         asset_failures = []
@@ -104,13 +104,13 @@ class StubProvider:
                 "figure and supplementary asset downloads are not implemented yet."
             )
             skip_trace = trace_from_markers([f"download:{provider_name}_assets_skipped_text_only"])
-        elif output_dir is not None and asset_profile != "none":
+        elif active_output_dir is not None and asset_profile != "none":
             try:
                 asset_results = self.download_related_assets(
                     doi,
                     metadata,
                     raw_payload,
-                    output_dir,
+                    active_output_dir,
                     asset_profile=asset_profile,
                     context=context,
                 )

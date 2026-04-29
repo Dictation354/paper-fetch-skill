@@ -80,7 +80,7 @@ jobs:
         env:
           PYTHONPATH: ${{ github.workspace }}/src
           PAPER_FETCH_FORMULA_TOOLS_DIR: ${{ github.workspace }}/.formula-tools
-        run: pytest tests/unit tests/devtools
+        run: python -m pytest tests/unit tests/devtools -q
 
   integration:
     runs-on: ubuntu-latest
@@ -103,7 +103,9 @@ jobs:
         run: python scripts/validate_extraction_rules.py
 
       - name: Run integration suite
-        run: pytest tests/integration
+        env:
+          PYTHONPATH: ${{ github.workspace }}/src
+        run: python -m pytest tests/integration -q
 
   package-smoke:
     runs-on: ubuntu-latest

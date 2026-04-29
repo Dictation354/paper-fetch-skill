@@ -21,6 +21,19 @@ WILEY_SAMPLE = provider_benchmark_sample("wiley")
 WILEY_PDF_SAMPLE = WILEY_PDF_FALLBACK_SAMPLE
 
 
+def _payload_route(raw_payload: RawFulltextPayload) -> str | None:
+    return raw_payload.content.route_kind if raw_payload.content is not None else None
+
+
+def _payload_availability_diagnostics(raw_payload: RawFulltextPayload) -> dict[str, object]:
+    assert raw_payload.content is not None
+    return dict(raw_payload.content.diagnostics.get("availability_diagnostics") or {})
+
+
+def _payload_source_trail(raw_payload: RawFulltextPayload) -> list[str]:
+    return [event.marker() for event in raw_payload.trace if event.marker()]
+
+
 class PublisherWaterfallTests(unittest.TestCase):
     def _runtime_config(self, tmpdir: str, provider: str, doi: str) -> _flaresolverr.FlareSolverrRuntimeConfig:
         tmp = Path(tmpdir)
@@ -157,7 +170,7 @@ class PublisherWaterfallTests(unittest.TestCase):
         usable = client._official_payload_is_usable(metadata, raw_payload)
 
         self.assertTrue(usable)
-        diagnostics = raw_payload.metadata["availability_diagnostics"]
+        diagnostics = _payload_availability_diagnostics(raw_payload)
         self.assertEqual(diagnostics["content_kind"], "fulltext")
         self.assertTrue(diagnostics["accepted"])
         self.assertEqual(diagnostics["reason"], "structured_body_sections")
@@ -184,7 +197,7 @@ class PublisherWaterfallTests(unittest.TestCase):
         )
 
         self.assertTrue(usable)
-        diagnostics = raw_payload.metadata["availability_diagnostics"]
+        diagnostics = _payload_availability_diagnostics(raw_payload)
         self.assertEqual(diagnostics["content_kind"], "fulltext")
         self.assertTrue(diagnostics["accepted"])
         self.assertEqual(diagnostics["reason"], "body_sufficient")
@@ -217,7 +230,7 @@ class PublisherWaterfallTests(unittest.TestCase):
             )
 
         self.assertFalse(usable)
-        diagnostics = raw_payload.metadata["availability_diagnostics"]
+        diagnostics = _payload_availability_diagnostics(raw_payload)
         self.assertEqual(diagnostics["content_kind"], "abstract_only")
         self.assertFalse(diagnostics["accepted"])
         self.assertEqual(diagnostics["reason"], "structured_missing_body_sections")
@@ -269,7 +282,7 @@ class PublisherWaterfallTests(unittest.TestCase):
             article = client.to_article_model(metadata, raw_payload)
 
         self.assertEqual(raw_payload.provider, "elsevier")
-        self.assertEqual(raw_payload.metadata["route"], "pdf_fallback")
+        self.assertEqual(_payload_route(raw_payload), "pdf_fallback")
         self.assertEqual(article.source, "elsevier_pdf")
         self.assertTrue(article.quality.has_fulltext)
         self.assertIn("fulltext:elsevier_xml_fail", article.quality.source_trail)
@@ -338,10 +351,10 @@ class PublisherWaterfallTests(unittest.TestCase):
                     raw_payload = client.fetch_raw_fulltext(doi, metadata)
                     article = client.to_article_model(metadata, raw_payload)
 
-                self.assertEqual(raw_payload.metadata["route"], "pdf_fallback")
-                self.assertIn("fulltext:elsevier_xml_fail", raw_payload.metadata["source_trail"])
-                self.assertIn("fulltext:elsevier_pdf_api_ok", raw_payload.metadata["source_trail"])
-                self.assertIn("fulltext:elsevier_pdf_fallback_ok", raw_payload.metadata["source_trail"])
+                self.assertEqual(_payload_route(raw_payload), "pdf_fallback")
+                self.assertIn("fulltext:elsevier_xml_fail", _payload_source_trail(raw_payload))
+                self.assertIn("fulltext:elsevier_pdf_api_ok", _payload_source_trail(raw_payload))
+                self.assertIn("fulltext:elsevier_pdf_fallback_ok", _payload_source_trail(raw_payload))
                 self.assertEqual(article.source, "elsevier_pdf")
                 self.assertEqual(
                     [str(call["headers"].get("Accept") or "") for call in transport.calls],
@@ -425,7 +438,7 @@ class PublisherWaterfallTests(unittest.TestCase):
             article = client.to_article_model(metadata, raw_payload)
 
         mocked_pdf.assert_not_called()
-        self.assertEqual(raw_payload.metadata["route"], "html")
+        self.assertEqual(_payload_route(raw_payload), "html")
         self.assertEqual(article.source, "springer_html")
         self.assertIn("fulltext:springer_html_ok", article.quality.source_trail)
 
@@ -678,7 +691,7 @@ class PublisherWaterfallTests(unittest.TestCase):
 
         mocked_pdf.assert_called_once()
         self.assertEqual(mocked_pdf.call_args.kwargs["seed_urls"], [landing_url])
-        self.assertEqual(raw_payload.metadata["route"], "pdf_fallback")
+        self.assertEqual(_payload_route(raw_payload), "pdf_fallback")
         self.assertTrue(raw_payload.needs_local_copy)
         self.assertEqual(article.source, "springer_html")
         self.assertIn("fulltext:springer_html_fail", article.quality.source_trail)
@@ -881,7 +894,7 @@ class PublisherWaterfallTests(unittest.TestCase):
         mocked_api.assert_not_called()
         mocked_browser_pdf.assert_not_called()
         mocked_direct.assert_not_called()
-        self.assertEqual(raw_payload.metadata["route"], "html")
+        self.assertEqual(_payload_route(raw_payload), "html")
         self.assertEqual(article.source, "wiley_browser")
         self.assertIn("fulltext:wiley_html_ok", article.quality.source_trail)
 
@@ -936,7 +949,7 @@ class PublisherWaterfallTests(unittest.TestCase):
 
         mocked_browser_pdf.assert_called_once()
         mocked_api.assert_not_called()
-        self.assertEqual(raw_payload.metadata["route"], "pdf_fallback")
+        self.assertEqual(_payload_route(raw_payload), "pdf_fallback")
         self.assertEqual(article.source, "wiley_browser")
         self.assertIn("fulltext:wiley_pdf_browser_ok", article.quality.source_trail)
         self.assertIn("fulltext:wiley_pdf_fallback_ok", article.quality.source_trail)
@@ -1002,7 +1015,7 @@ class PublisherWaterfallTests(unittest.TestCase):
         mocked_warm.assert_called_once()
         mocked_api.assert_not_called()
         mocked_browser_pdf.assert_called_once()
-        self.assertEqual(raw_payload.metadata["route"], "pdf_fallback")
+        self.assertEqual(_payload_route(raw_payload), "pdf_fallback")
         self.assertEqual(article.source, "wiley_browser")
         self.assertIn("fulltext:wiley_pdf_browser_ok", article.quality.source_trail)
         self.assertIn("fulltext:wiley_pdf_fallback_ok", article.quality.source_trail)
@@ -1074,7 +1087,7 @@ class PublisherWaterfallTests(unittest.TestCase):
 
         mocked_browser_pdf.assert_called_once()
         mocked_api.assert_called_once()
-        self.assertEqual(raw_payload.metadata["route"], "pdf_fallback")
+        self.assertEqual(_payload_route(raw_payload), "pdf_fallback")
         self.assertEqual(article.source, "wiley_browser")
         self.assertIn("fulltext:wiley_pdf_browser_fail", article.quality.source_trail)
         self.assertIn("fulltext:wiley_pdf_api_ok", article.quality.source_trail)
@@ -1173,7 +1186,7 @@ class PublisherWaterfallTests(unittest.TestCase):
             article = client.to_article_model(metadata, raw_payload)
 
         mocked_api.assert_called_once()
-        self.assertEqual(raw_payload.metadata["route"], "pdf_fallback")
+        self.assertEqual(_payload_route(raw_payload), "pdf_fallback")
         self.assertEqual(article.source, "wiley_browser")
         self.assertIn("fulltext:wiley_pdf_api_ok", article.quality.source_trail)
 

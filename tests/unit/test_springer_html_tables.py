@@ -178,9 +178,10 @@ class SpringerHtmlTableTests(unittest.TestCase):
 
         raw_payload = client.fetch_raw_fulltext(SPRINGER_NATURE_DOI, metadata)
         article = client.to_article_model(metadata, raw_payload)
-        markdown = raw_payload.metadata["markdown_text"]
+        assert raw_payload.content is not None
+        markdown = raw_payload.content.markdown_text or ""
 
-        self.assertEqual(raw_payload.metadata["route"], "html")
+        self.assertEqual(raw_payload.content.route_kind, "html")
         self.assertEqual(article.source, "springer_html")
         self.assertNotIn("PAPER_FETCH_TABLE_PLACEHOLDER", markdown)
         self.assertIn("**Table 1.**", markdown)
@@ -220,7 +221,8 @@ class SpringerHtmlTableTests(unittest.TestCase):
 
         raw_payload = client.fetch_raw_fulltext(SPRINGER_CLASSIC_DOI, metadata)
         article = client.to_article_model(metadata, raw_payload)
-        markdown = raw_payload.metadata["markdown_text"]
+        assert raw_payload.content is not None
+        markdown = raw_payload.content.markdown_text or ""
         extracted_assets = list(raw_payload.content.extracted_assets if raw_payload.content is not None else [])
 
         self.assertEqual(article.source, "springer_html")
@@ -379,7 +381,8 @@ class SpringerHtmlTableTests(unittest.TestCase):
         client = springer_provider.SpringerClient(transport=FakeTransport(responses), env={})
 
         raw_payload = client.fetch_raw_fulltext(OLD_NATURE_DOI, metadata)
-        markdown = raw_payload.metadata["markdown_text"]
+        assert raw_payload.content is not None
+        markdown = raw_payload.content.markdown_text or ""
         extracted_assets = list(raw_payload.content.extracted_assets if raw_payload.content is not None else [])
 
         for number in range(1, 5):

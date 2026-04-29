@@ -19,8 +19,8 @@ def _article_factory_with_source(source: str):
         article.source = source
         article.doi = str(metadata.get("doi") or article.doi)
         article.metadata.title = str(metadata.get("title") or article.metadata.title)
-        article.quality.source_trail = list(raw_payload.metadata.get("source_trail") or [])
-        article.quality.warnings = list(raw_payload.metadata.get("warnings") or [])
+        article.quality.source_trail = [event.marker() for event in raw_payload.trace if event.marker()]
+        article.quality.warnings = list(raw_payload.warnings)
         return article
 
     return factory
@@ -37,9 +37,9 @@ def _abstract_only_article_factory(source: str):
         article.quality.content_kind = "abstract_only"
         article.quality.has_fulltext = False
         article.quality.has_abstract = True
-        article.quality.source_trail = list(raw_payload.metadata.get("source_trail") or [])
+        article.quality.source_trail = [event.marker() for event in raw_payload.trace if event.marker()]
         article.quality.trace = trace_from_markers(article.quality.source_trail)
-        article.quality.warnings = list(raw_payload.metadata.get("warnings") or [])
+        article.quality.warnings = list(raw_payload.warnings)
         return article
 
     return factory
@@ -56,9 +56,9 @@ def _metadata_only_article_factory(source: str):
         article.quality.content_kind = "metadata_only"
         article.quality.has_fulltext = False
         article.quality.has_abstract = False
-        article.quality.source_trail = list(raw_payload.metadata.get("source_trail") or [])
+        article.quality.source_trail = [event.marker() for event in raw_payload.trace if event.marker()]
         article.quality.trace = trace_from_markers(article.quality.source_trail)
-        article.quality.warnings = list(raw_payload.metadata.get("warnings") or [])
+        article.quality.warnings = list(raw_payload.warnings)
         return article
 
     return factory

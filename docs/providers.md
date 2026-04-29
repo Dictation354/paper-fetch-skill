@@ -180,7 +180,7 @@ resolve
 - fulltext 主路径由 provider 自己控制
 - 主链不可用时不走通用 HTML；不可用 / `None` 结果进入 metadata-only fallback，provider-managed `abstract_only` 结果可直接返回
 - XML / HTML / PDF / TDM / browser PDF fallback 的顺序由内部 `paper_fetch.providers._waterfall` runner 编排；各 provider step 仍保留自己的 payload 结构、warning 文案和 `fulltext:*` source trail marker
-- `ProviderClient.fetch_result` 负责通用 raw payload、本地副本标记、资产下载、warning/trace 和 artifact 组装；Browser workflow 与 Springer 只通过 hook 处理 abstract-only 后 PDF recovery 或 provider-managed abstract-only 返回
+- `ProviderClient.fetch_result` 负责通用 raw payload、本地副本标记、资产下载、warning/trace 和 artifact 组装；workflow 内部调用时必须传入 `artifact_store=` 与 `context=`，Browser workflow 与 Springer 只通过 hook 处理 abstract-only 后 PDF recovery 或 provider-managed abstract-only 返回
 
 但它们的 fulltext 形态不同：
 
@@ -257,6 +257,7 @@ CLI、Python API、MCP 当前统一采用这些默认值：
 - 同一次 provider fetch 内会复用 `RuntimeContext.parse_cache`：Elsevier XML root、Springer HTML extraction、Wiley/Science/PNAS browser-workflow Markdown extraction 和 HTML asset extraction 不跨阶段重复解析同一份 payload。
 - 同一个 `RuntimeContext` 生命周期内还会复用 `session_cache`：`has_fulltext` 与后续 `fetch_paper` 可共享 query resolution、Crossref DOI metadata、Elsevier metadata probe 和 landing page `citation_pdf_url` probe；fetch 阶段命中 landing probe 时会把 citation PDF URL 合并到 metadata `fulltext_links`。
 - 同一个 `RuntimeContext` 内会 lazy 复用 Playwright Chromium browser；PNAS direct HTML preflight、正文图片/文件 fetcher 与 PDF/ePDF fallback 仍按阶段创建独立 browser context/page，避免 cookie、route handler 和下载设置互相污染。
+- `RawFulltextPayload.metadata` 只是 legacy/read-only compatibility view；provider 新逻辑应读写 `ProviderContent.route_kind`、`markdown_text`、`diagnostics`、`fetcher`、`browser_context_seed`、`warnings`、`trace` 和 `merged_metadata` 等 typed fields。
 
 ### 资产去重与诊断
 

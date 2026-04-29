@@ -166,7 +166,8 @@ def write_binary(path: Path, size: int = 8) -> None:
     path.write_bytes(b"\x89PNG\r\n" + (b"x" * max(0, size - 6)))
 
 
-def fake_service_fetch_with_cached_downloads(query, *, modes=None, download_dir=None, **kwargs):
+def fake_service_fetch_with_cached_downloads(query, *, modes=None, context=None, **kwargs):
+    download_dir = context.download_dir if context is not None else None
     if download_dir is not None:
         create_cached_downloads(download_dir, query)
     return sample_envelope(modes=set(modes or []), doi=query)
@@ -289,8 +290,8 @@ class McpToolTests(unittest.TestCase):
         self.assertEqual(payload["doi"], "10.1000/example")
         self.assertEqual(captured["query"], "10.1000/example")
         self.assertEqual(captured["modes"], {"article", "markdown"})
-        self.assertEqual(captured["download_dir"], default_download_dir)
-        self.assertEqual(captured["env"], runtime_env)
+        self.assertEqual(captured["context"].download_dir, default_download_dir)
+        self.assertEqual(captured["context"].env, runtime_env)
         self.assertEqual(captured["render"], RenderOptions(include_refs=None, asset_profile=None, max_tokens="full_text"))
         self.assertEqual(
             captured["strategy"],
@@ -321,7 +322,7 @@ class McpToolTests(unittest.TestCase):
             )
 
         mocked_resolve.assert_not_called()
-        self.assertEqual(captured["download_dir"], explicit_download_dir)
+        self.assertEqual(captured["context"].download_dir, explicit_download_dir)
 
     def test_fetch_paper_payload_normalizes_preferred_providers(self) -> None:
         captured: dict[str, object] = {}
@@ -732,7 +733,7 @@ class McpToolTests(unittest.TestCase):
             download_dir = Path(tmpdir)
 
             def fake_fetch_paper(query, **kwargs):
-                create_cached_downloads(kwargs["download_dir"], query)
+                create_cached_downloads(kwargs["context"].download_dir, query)
                 return sample_envelope(modes=kwargs["modes"], doi=query)
 
             with (
@@ -784,9 +785,9 @@ class McpToolTests(unittest.TestCase):
         transport_ids: list[int] = []
         seen_queries: list[str] = []
 
-        def fake_resolve(query, *, transport=None, env=None):
+        def fake_resolve(query, *, context=None):
             seen_queries.append(query)
-            transport_ids.append(id(transport))
+            transport_ids.append(id(context.transport if context is not None else None))
             if query == "second":
                 raise ProviderFailure("rate_limited", "Slow down.")
             return sample_resolved_query(query)
@@ -806,7 +807,7 @@ class McpToolTests(unittest.TestCase):
         lock = threading.Lock()
         barrier = threading.Barrier(2)
 
-        def fake_resolve(query, *, transport=None, env=None):
+        def fake_resolve(query, *, context=None):
             nonlocal active, max_active
             with lock:
                 active += 1
@@ -842,8 +843,8 @@ class McpToolTests(unittest.TestCase):
     def test_batch_check_payload_uses_lightweight_results_and_no_downloads(self) -> None:
         transport_ids: list[int] = []
 
-        def fake_probe(query, *, transport=None, env=None):
-            transport_ids.append(id(transport))
+        def fake_probe(query, *, context=None):
+            transport_ids.append(id(context.transport if context is not None else None))
             return sample_probe_result(query, doi=query, title=f"Title for {query}")
 
         with (
@@ -925,7 +926,7 @@ class McpToolTests(unittest.TestCase):
     def test_resolve_paper_payload_composes_structured_query(self) -> None:
         captured: dict[str, object] = {}
 
-        def fake_resolve(query, *, transport=None, env=None):
+        def fake_resolve(query, *, context=None):
             captured["query"] = query
             return sample_resolved_query(query)
 
@@ -1438,10 +1439,11 @@ class McpAsyncToolTests(unittest.IsolatedAsyncioTestCase):
         started = threading.Event()
         cancelled_seen = threading.Event()
 
-        def fake_resolve(query, *, transport=None, env=None):
+        def fake_resolve(query, *, context=None):
             started.set()
             deadline = time.monotonic() + 1.0
             while time.monotonic() < deadline:
+                transport = context.transport if context is not None else None
                 if transport is not None and transport.cancelled:
                     cancelled_seen.set()
                     raise mcp_tools.RequestCancelledError("Request cancelled.")
@@ -1466,7 +1468,7 @@ class McpAsyncToolTests(unittest.IsolatedAsyncioTestCase):
     async def test_batch_check_tool_async_reports_per_query_progress(self) -> None:
         ctx = FakeContext()
 
-        def fake_probe(query, *, transport=None, env=None):
+        def fake_probe(query, *, context=None):
             logging.getLogger("paper_fetch.http").debug("batch_check_item query=%s status=%s", query, "ok")
             return sample_probe_result(query, doi=query, title=f"Title for {query}")
 
@@ -1503,7 +1505,7 @@ class McpAsyncToolTests(unittest.IsolatedAsyncioTestCase):
     async def test_batch_resolve_tool_async_reports_per_query_progress(self) -> None:
         ctx = FakeContext()
 
-        def fake_resolve(query, *, transport=None, env=None):
+        def fake_resolve(query, *, context=None):
             logging.getLogger("paper_fetch.service").debug("batch_resolve_item query=%s status=%s", query, "ok")
             return sample_resolved_query(query)
 

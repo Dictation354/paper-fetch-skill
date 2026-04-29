@@ -69,8 +69,7 @@ def _load_cached_fetch_envelope(
     request: FetchPaperRequest,
     *,
     download_dir: Path | None,
-    transport: HttpTransport | None,
-    env: Mapping[str, str],
+    context: RuntimeContext,
 ) -> FetchEnvelope | None:
     return FetchCache(
         download_dir,
@@ -78,8 +77,7 @@ def _load_cached_fetch_envelope(
     ).load_fetch_envelope(
         request,
         resolve_paper_fn=service_resolve_paper,
-        transport=transport,
-        env=env,
+        context=context,
     )
 
 
@@ -95,21 +93,11 @@ def _write_cached_fetch_envelope(
 
 
 def _call_service_resolve_paper(query: str, *, context: RuntimeContext) -> Any:
-    try:
-        return service_resolve_paper(query, context=context)
-    except TypeError as exc:
-        if "context" not in str(exc):
-            raise
-        return service_resolve_paper(query, transport=context.transport, env=context.env)
+    return service_resolve_paper(query, context=context)
 
 
 def _call_service_probe_has_fulltext(query: str, *, context: RuntimeContext) -> Any:
-    try:
-        return service_probe_has_fulltext(query, context=context)
-    except TypeError as exc:
-        if "context" not in str(exc):
-            raise
-        return service_probe_has_fulltext(query, transport=context.transport, env=context.env)
+    return service_probe_has_fulltext(query, context=context)
 
 
 def _call_service_fetch_paper(
@@ -118,23 +106,15 @@ def _call_service_fetch_paper(
     modes: set[str],
     strategy,
     render,
-    download_dir: Path | None,
     context: RuntimeContext,
 ) -> FetchEnvelope:
-    legacy_kwargs = {
-        "modes": modes,
-        "strategy": strategy,
-        "render": render,
-        "download_dir": download_dir,
-        "transport": context.transport,
-        "env": context.env,
-    }
-    try:
-        return service_fetch_paper(query, context=context, **legacy_kwargs)
-    except TypeError as exc:
-        if "context" not in str(exc):
-            raise
-        return service_fetch_paper(query, **legacy_kwargs)
+    return service_fetch_paper(
+        query,
+        modes=modes,
+        strategy=strategy,
+        render=render,
+        context=context,
+    )
 
 
 def _fetch_paper_envelope(
@@ -160,8 +140,7 @@ def _fetch_paper_envelope(
         cached_envelope = _load_cached_fetch_envelope(
             request,
             download_dir=effective_download_dir,
-            transport=runtime_context.transport,
-            env=runtime_context.env or runtime_env,
+            context=runtime_context,
         )
         if cached_envelope is not None:
             return cached_envelope
@@ -170,7 +149,6 @@ def _fetch_paper_envelope(
             modes=_service_modes_for_fetch_request(request, include_article_for_assets=include_article_for_assets),
             strategy=request.strategy.to_service_strategy(),
             render=request.to_render_options(),
-            download_dir=effective_download_dir,
             context=runtime_context,
         )
         if effective_download_dir is not None and envelope.doi:

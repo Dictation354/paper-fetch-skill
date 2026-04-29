@@ -94,6 +94,14 @@ def _typed_raw_payload(
     )
 
 
+def _payload_route(raw_payload: RawFulltextPayload) -> str | None:
+    return raw_payload.content.route_kind if raw_payload.content is not None else None
+
+
+def _payload_source_trail(raw_payload: RawFulltextPayload) -> list[str]:
+    return [event.marker() for event in raw_payload.trace if event.marker()]
+
+
 class AssetTransport:
     def __init__(self, responses: dict[tuple[str, str], dict[str, object] | Exception]) -> None:
         self.responses = responses
@@ -302,7 +310,7 @@ class SciencePnasProviderTests(unittest.TestCase):
 
         mocked_pdf.assert_not_called()
         mocked_direct.assert_not_called()
-        self.assertEqual(raw_payload.metadata["route"], "html")
+        self.assertEqual(_payload_route(raw_payload), "html")
         self.assertEqual(article.source, "science")
         self.assertIn("fulltext:science_html_ok", article.quality.source_trail)
 
@@ -719,7 +727,7 @@ class SciencePnasProviderTests(unittest.TestCase):
             f"https://www.science.org/doi/epdf/{SCIENCE_SAMPLE.doi}",
             list(mocked_pdf.call_args.args[0]),
         )
-        self.assertEqual(raw_payload.metadata["route"], "pdf_fallback")
+        self.assertEqual(_payload_route(raw_payload), "pdf_fallback")
         self.assertTrue(raw_payload.needs_local_copy)
         self.assertEqual(article.source, "science")
         self.assertIn("fulltext:science_pdf_fallback_ok", article.quality.source_trail)
@@ -767,7 +775,7 @@ class SciencePnasProviderTests(unittest.TestCase):
                 )
 
         mocked_pdf.assert_not_called()
-        self.assertEqual(raw_payload.metadata["route"], "html")
+        self.assertEqual(_payload_route(raw_payload), "html")
         self.assertEqual(article.source, "pnas")
         self.assertIn("fulltext:pnas_html_ok", article.quality.source_trail)
 
@@ -809,10 +817,12 @@ class SciencePnasProviderTests(unittest.TestCase):
         mocked_direct.assert_called_once()
         mocked_runtime.assert_not_called()
         mocked_flaresolverr.assert_not_called()
-        self.assertEqual(raw_payload.metadata["route"], "html")
-        self.assertEqual(raw_payload.metadata["html_fetcher"], "playwright_direct")
-        self.assertEqual(raw_payload.metadata["browser_context_seed"], seed)
-        self.assertIn("fulltext:pnas_html_ok", raw_payload.metadata["source_trail"])
+        self.assertIsNotNone(raw_payload.content)
+        assert raw_payload.content is not None
+        self.assertEqual(raw_payload.content.route_kind, "html")
+        self.assertEqual(raw_payload.content.fetcher, "playwright_direct")
+        self.assertEqual(raw_payload.content.browser_context_seed, seed)
+        self.assertIn("fulltext:pnas_html_ok", _payload_source_trail(raw_payload))
 
     def test_pnas_direct_playwright_html_preflight_falls_back_to_flaresolverr(self) -> None:
         client = pnas_provider.PnasClient(transport=None, env={})
@@ -854,7 +864,9 @@ class SciencePnasProviderTests(unittest.TestCase):
         mocked_direct.assert_called_once()
         mocked_runtime.assert_called_once()
         mocked_flaresolverr.assert_called_once()
-        self.assertEqual(raw_payload.metadata["html_fetcher"], "flaresolverr")
+        self.assertIsNotNone(raw_payload.content)
+        assert raw_payload.content is not None
+        self.assertEqual(raw_payload.content.fetcher, "flaresolverr")
 
     def test_pnas_provider_fetch_result_recovers_pdf_when_html_article_is_abstract_only(self) -> None:
         client = pnas_provider.PnasClient(transport=None, env={})
@@ -1205,7 +1217,7 @@ class SciencePnasProviderTests(unittest.TestCase):
                 f"https://www.pnas.org/doi/pdf/{PNAS_SAMPLE.doi}",
             ],
         )
-        self.assertEqual(raw_payload.metadata["route"], "pdf_fallback")
+        self.assertEqual(_payload_route(raw_payload), "pdf_fallback")
         self.assertTrue(raw_payload.needs_local_copy)
         self.assertEqual(article.source, "pnas")
         self.assertIn("fulltext:pnas_pdf_fallback_ok", article.quality.source_trail)

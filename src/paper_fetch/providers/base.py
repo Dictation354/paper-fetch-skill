@@ -149,6 +149,8 @@ class RawFulltextPayload:
 
     @property
     def metadata(self) -> dict[str, Any]:
+        """Legacy read-only compatibility view synthesized from typed payload fields."""
+
         content = self.content
         payload: dict[str, Any] = dict(self._legacy_metadata)
         if content is not None:

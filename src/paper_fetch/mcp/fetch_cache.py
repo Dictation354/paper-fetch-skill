@@ -6,7 +6,6 @@ import json
 from pathlib import Path
 from typing import Any, Callable, Mapping, Sequence
 
-from ..http import HttpTransport
 from ..models import (
     ArticleModel,
     Asset,
@@ -24,6 +23,7 @@ from ..models import (
     coerce_semantic_losses,
     coerce_token_estimate_breakdown,
 )
+from ..runtime import RuntimeContext
 from ..tracing import TraceEvent, trace_event
 from ..utils import normalize_text, sanitize_filename
 from ..workflow.types import PaperFetchFailure
@@ -304,12 +304,11 @@ class FetchCache:
         request: FetchPaperRequest,
         *,
         resolve_paper_fn: Callable[..., Any],
-        transport: HttpTransport | None,
-        env: Mapping[str, str],
+        context: RuntimeContext,
     ) -> FetchEnvelope | None:
         if not request.prefer_cache or self.download_dir is None:
             return None
-        resolved = resolve_paper_fn(request.query, transport=transport, env=env)
+        resolved = resolve_paper_fn(request.query, context=context)
         if resolved.candidates and not resolved.doi:
             raise PaperFetchFailure(
                 "ambiguous",
