@@ -30,7 +30,7 @@
 
 - 这张矩阵描述的是“当前代码里已经实现的 provider-owned waterfall”，不是“任意 DOI、任意运行环境都必然能拿到 publisher 全文”的承诺。
 - 尤其 `wiley` / `science` / `pnas` 的浏览器与 PDF/ePDF 路径，仍受 publisher 访问权限、paywall/challenge 与远端站点行为影响。
-- `wiley` 的 HTML / browser PDF/ePDF 路径与 `science` / `pnas` 现在只保留一套 provider-owned 浏览器栈：canonical runtime 是 `paper_fetch.providers.browser_workflow`；旧 `_science_pnas` 兼容 alias 已移除，browser-PDF executor 继续共享 `_pdf_fallback`，不再存在单独的 Science path harness。
+- `wiley` 的 HTML / browser PDF/ePDF 路径与 `science` / `pnas` 现在只保留一套 provider-owned 浏览器栈：canonical runtime 是 `paper_fetch.providers.browser_workflow` 包入口；bootstrap、PDF/ePDF fallback、article assembly、asset retry helper、client 基类和 Playwright fetchers 已拆到 `browser_workflow/` 与 `browser_workflow_fetchers/` 子模块。旧 `_science_pnas` 兼容 alias 已移除，`_browser_workflow_fetchers.py` 仅保留兼容 re-export wrapper，browser-PDF executor 继续共享 `_pdf_fallback`，不再存在单独的 Science path harness。
 - browser-workflow 的 asset download Playwright fallback 在并发 worker 中使用线程私有 browser/context，不复用 `RuntimeContext` 持有的共享 browser；`RuntimeContext` 共享 browser 仍只保留给非 threaded 的主流程 Playwright 场景。
 - 2020+ live / regression 基准样本集中维护在 [`../tests/provider_benchmark_samples.py`](../tests/provider_benchmark_samples.py)。
 - 自然地理学 live-only 候选集中维护在 [`../tests/live/geography_samples.py`](../tests/live/geography_samples.py)，默认每家尝试前 `10` 条，并通过 [`../scripts/run_geography_live_report.py`](../scripts/run_geography_live_report.py) 产出 JSON/Markdown 报告。

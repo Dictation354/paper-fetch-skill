@@ -12,7 +12,7 @@ from ..models import AssetProfile
 from ..runtime import RuntimeContext
 from ..tracing import trace_from_markers
 from ..utils import normalize_text
-from ._browser_workflow_fetchers import _normalized_response_headers
+from .browser_workflow_fetchers import _normalized_response_headers
 from ._flaresolverr import (
     DEFAULT_FLARESOLVERR_WAIT_SECONDS,
     DEFAULT_FLARESOLVERR_WARM_WAIT_SECONDS,

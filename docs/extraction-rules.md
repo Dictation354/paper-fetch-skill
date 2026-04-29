@@ -330,7 +330,7 @@ metadata
 - 这条规则约束的是：正文图片下载不能把 Cloudflare challenge HTML、Chrome 图片查看器壳或过小的站点图标当成论文图片保存；preview 图只有尺寸达标并在 source trail 中标记为 accepted 时才能作为可接受降级。
 - 如果违反，用户会看到：正文缺图，或本地图片文件其实是 HTML / 站点图标，后续渲染和 live review 都无法解释失败原因。
 - 它对应的阶段是：`asset-download`、`asset-validation`、`availability-quality`。
-- Owner：`paper_fetch.extraction.html.assets` 与 `paper_fetch.providers._browser_workflow_fetchers`。
+- Owner：`paper_fetch.extraction.html.assets` 与 `paper_fetch.providers.browser_workflow_fetchers`。
 - 代表性 HTML / XML：
   - [`../tests/fixtures/golden_criteria/10.1073_pnas.2309123120/original.html`](../tests/fixtures/golden_criteria/10.1073_pnas.2309123120/original.html)
   - [`../tests/fixtures/golden_criteria/10.1126_sciadv.aax6869/original.html`](../tests/fixtures/golden_criteria/10.1126_sciadv.aax6869/original.html)
@@ -377,7 +377,7 @@ metadata
 - 这条规则约束的是：使用 browser workflow 的 provider 在下载正文 figure / table / formula 图片时，必须以 shared browser context 作为主链路；每次 download attempt 只创建一次 context/page，多图复用，preview fallback 也通过同一个 context 获取。
 - 如果违反，用户会看到：目标站点明明在浏览器会话里可见图片，系统却因为普通 HTTP challenge 或重复 context 冷启动而稳定缺图。
 - 它对应的阶段是：`asset-download`、`asset-validation`。
-- Owner：`paper_fetch.providers._browser_workflow_fetchers`。
+- Owner：`paper_fetch.providers.browser_workflow_fetchers`。
 - 代表性 HTML / XML：
   - [`../tests/fixtures/golden_criteria/10.1073_pnas.2309123120/original.html`](../tests/fixtures/golden_criteria/10.1073_pnas.2309123120/original.html)
 - 对应测试：
