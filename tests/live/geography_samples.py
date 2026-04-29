@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from paper_fetch.geography_live import GEOGRAPHY_PROVIDER_ORDER, GeographySample
+from paper_fetch_devtools.geography.live import GEOGRAPHY_PROVIDER_ORDER, GeographySample
 
 GEOGRAPHY_TOPIC_TAGS = (
     "climate",

@@ -45,6 +45,8 @@ package-dir = {"" = "src"}
 
 [tool.setuptools.packages.find]
 where = ["src"]
+include = ["paper_fetch*"]
+exclude = ["paper_fetch_devtools*"]
 
 [tool.setuptools.package-data]
 "paper_fetch.resources.formula" = ["*.json", "*.mjs"]
@@ -58,4 +60,5 @@ addopts = "-n auto"
 testpaths = [
   "tests/unit",
   "tests/integration",
+  "tests/devtools",
 ]

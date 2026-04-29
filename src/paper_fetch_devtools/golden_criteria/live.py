@@ -14,18 +14,18 @@ import shutil
 import time
 from typing import Any, Callable, Mapping, Sequence
 
-from .config import build_runtime_env, resolve_repo_root
-from .http import HttpTransport
-from .logging_utils import emit_structured_log
-from .models import Asset, FetchEnvelope, RenderOptions
-from .geography_live import is_authorless_briefing_like
-from .providers.registry import build_clients
-from .runtime import RuntimeContext
-from .service import FetchStrategy, PaperFetchFailure, fetch_paper
-from .utils import normalize_text, sanitize_filename
-from .workflow.rendering import rewrite_markdown_asset_links
+from paper_fetch.config import build_runtime_env, resolve_repo_root
+from paper_fetch.http import HttpTransport
+from paper_fetch.logging_utils import emit_structured_log
+from paper_fetch.models import Asset, FetchEnvelope, RenderOptions
+from paper_fetch.providers.registry import build_clients
+from paper_fetch.quality.issues import is_authorless_briefing_like
+from paper_fetch.runtime import RuntimeContext
+from paper_fetch.service import FetchStrategy, PaperFetchFailure, fetch_paper
+from paper_fetch.utils import normalize_text, sanitize_filename
+from paper_fetch.workflow.rendering import rewrite_markdown_asset_links
 
-logger = logging.getLogger("paper_fetch.golden_criteria_live")
+logger = logging.getLogger("paper_fetch_devtools.golden_criteria.live")
 
 SUPPORTED_PROVIDERS = ("elsevier", "springer", "wiley", "science", "pnas")
 UNSUPPORTED_PROVIDER_STATUS = "skipped_unsupported_provider"

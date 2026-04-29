@@ -286,7 +286,7 @@ python3 -m pip install .
 paper-fetch --query "10.1186/1471-2105-11-421"
 ```
 
-如果你在仓库源码目录里做 repo-local 验证，先安装测试依赖，并推荐显式带上 `PYTHONPATH=src`。默认 `pytest` 只覆盖 `tests/unit` + `tests/integration` 并启用多进程并行；`tests/live` 需要显式指定路径并串行运行：
+如果你在仓库源码目录里做 repo-local 验证，先安装测试依赖，并推荐显式带上 `PYTHONPATH=src`。默认 `pytest` 覆盖 `tests/unit` + `tests/integration` + `tests/devtools` 并启用多进程并行；`tests/live` 需要显式指定路径并串行运行：
 
 ```bash
 python3 -m pip install '.[dev]'

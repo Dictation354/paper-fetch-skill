@@ -342,9 +342,9 @@ metadata
     - [`../tests/unit/test_science_pnas_provider.py`](../tests/unit/test_science_pnas_provider.py) 中的 `test_science_provider_records_asset_failure_when_shared_playwright_preview_fails`
   - Service / live review 覆盖：
     - [`../tests/unit/test_service.py`](../tests/unit/test_service.py) 中的 `test_fetch_paper_accepts_preview_images_with_sufficient_dimensions`
-    - [`../tests/unit/test_golden_criteria_live.py`](../tests/unit/test_golden_criteria_live.py) 中的 `test_science_preview_accepted_is_not_an_asset_issue`
-    - [`../tests/unit/test_golden_criteria_live.py`](../tests/unit/test_golden_criteria_live.py) 中的 `test_formula_only_preview_fallback_is_not_an_asset_issue`
-    - [`../tests/unit/test_golden_criteria_live.py`](../tests/unit/test_golden_criteria_live.py) 中的 `test_non_formula_preview_fallback_remains_an_asset_issue`
+    - [`../tests/devtools/test_golden_criteria_live.py`](../tests/devtools/test_golden_criteria_live.py) 中的 `test_science_preview_accepted_is_not_an_asset_issue`
+    - [`../tests/devtools/test_golden_criteria_live.py`](../tests/devtools/test_golden_criteria_live.py) 中的 `test_formula_only_preview_fallback_is_not_an_asset_issue`
+    - [`../tests/devtools/test_golden_criteria_live.py`](../tests/devtools/test_golden_criteria_live.py) 中的 `test_non_formula_preview_fallback_remains_an_asset_issue`
 - 边界说明：
   - `download_tier="preview"` 不是天然错误；当下载阶段判定 preview 尺寸满足阈值，并在 source trail 中记录 `download:*_assets_preview_accepted` 时，它是诊断标签，不应自动映射为 `asset_download_failure`。
   - formula-only preview fallback 是公式图片语义的降级呈现，不自动归为 `asset_download_failure`；figure/table preview fallback 仍按资产问题处理，除非已有 accepted 诊断。

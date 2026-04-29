@@ -14,7 +14,7 @@ if str(SRC_DIR) not in sys.path:
 
 
 def _load_issue_artifact_exports():
-    from paper_fetch.geography_issue_artifacts import (
+    from paper_fetch_devtools.geography.issue_artifacts import (
         default_issue_artifact_output_dir,
         materialize_issue_type_view,
     )

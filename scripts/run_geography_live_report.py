@@ -15,7 +15,7 @@ if str(SRC_DIR) not in sys.path:
 
 
 def _load_geography_live_exports():
-    from paper_fetch.geography_live import (
+    from paper_fetch_devtools.geography.live import (
         GEOGRAPHY_PROVIDER_ORDER,
         default_report_paths,
         run_geography_live_report,

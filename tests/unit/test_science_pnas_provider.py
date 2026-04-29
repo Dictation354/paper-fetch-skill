@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Mapping
 from unittest import mock
 
-from paper_fetch.geography_live import collect_issue_flags
+from paper_fetch.quality.issues import collect_issue_flags
 from paper_fetch.extraction.html import assets as html_assets
 from paper_fetch.providers import (
     _flaresolverr,

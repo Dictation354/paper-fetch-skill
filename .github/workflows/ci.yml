@@ -78,8 +78,9 @@ jobs:
 
       - name: Run unit suite
         env:
+          PYTHONPATH: ${{ github.workspace }}/src
           PAPER_FETCH_FORMULA_TOOLS_DIR: ${{ github.workspace }}/.formula-tools
-        run: pytest tests/unit
+        run: pytest tests/unit tests/devtools
 
   integration:
     runs-on: ubuntu-latest

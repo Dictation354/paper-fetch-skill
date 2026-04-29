@@ -9,7 +9,7 @@ from typing import Sequence
 
 
 def _load_live_review_exports():
-    from paper_fetch.golden_criteria_live import (
+    from paper_fetch_devtools.golden_criteria.live import (
         SUPPORTED_PROVIDERS,
         load_manifest,
         run_golden_criteria_live_review,

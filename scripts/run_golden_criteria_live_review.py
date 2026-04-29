@@ -11,7 +11,7 @@ SRC_DIR = REPO_ROOT / "src"
 if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
-from paper_fetch.golden_criteria_live_cli import main  # noqa: E402
+from paper_fetch_devtools.golden_criteria.cli import main  # noqa: E402
 
 
 if __name__ == "__main__":

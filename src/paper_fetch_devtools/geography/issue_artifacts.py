@@ -9,12 +9,13 @@ from pathlib import Path
 import time
 from typing import Any, Mapping, Sequence
 
-from .config import build_runtime_env, resolve_repo_root
-from .geography_live import GeographySample, build_report_result
-from .http import HttpTransport
-from .models import RenderOptions
-from .service import FetchStrategy, PaperFetchFailure, fetch_paper
-from .utils import normalize_text, sanitize_filename
+from paper_fetch.config import build_runtime_env, resolve_repo_root
+from paper_fetch.http import HttpTransport
+from paper_fetch.models import RenderOptions
+from paper_fetch.service import FetchStrategy, PaperFetchFailure, fetch_paper
+from paper_fetch.utils import normalize_text, sanitize_filename
+
+from .live import GeographySample, build_report_result
 
 
 @dataclass(frozen=True)

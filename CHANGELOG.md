@@ -4,6 +4,10 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 ## Unreleased
 
+### Refactor
+
+- Move dev-only `geography_live`, `geography_issue_artifacts`, and `golden_criteria_live*` modules from `paper_fetch.*` to source-tree-only `paper_fetch_devtools.*`; wheels no longer ship those modules, while the existing repo-local script CLIs keep the same behavior.
+
 ### Changed
 
 - 为 Wiley / Science / PNAS 正文抓取增加 FlareSolverr HTML 快速首轮：主 HTML 请求使用 `waitInSeconds=0` 和 `disableMedia=true`，遇到 challenge、访问拦截、摘要重定向或正文抽取不足时自动回退到原保守等待策略。

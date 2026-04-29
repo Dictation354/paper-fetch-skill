@@ -2,12 +2,9 @@ from __future__ import annotations
 
 import unittest
 
-from paper_fetch.geography_live import (
+from paper_fetch_devtools.geography.live import (
     GeographySample,
     build_report_result,
-    has_inflated_abstract,
-    has_abstract_body_overlap,
-    reference_doi_requires_normalization,
     schedule_geography_samples,
 )
 from paper_fetch.models import (
@@ -19,6 +16,11 @@ from paper_fetch.models import (
     Section,
     TokenEstimateBreakdown,
     build_references,
+)
+from paper_fetch.quality.issues import (
+    has_abstract_body_overlap,
+    has_inflated_abstract,
+    reference_doi_requires_normalization,
 )
 
 

@@ -6,7 +6,11 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from paper_fetch.geography_live import GEOGRAPHY_PROVIDER_ORDER, GEOGRAPHY_RESULT_STATUSES, run_geography_live_report
+from paper_fetch_devtools.geography.live import (
+    GEOGRAPHY_PROVIDER_ORDER,
+    GEOGRAPHY_RESULT_STATUSES,
+    run_geography_live_report,
+)
 from tests.live.geography_samples import all_geography_samples
 
 

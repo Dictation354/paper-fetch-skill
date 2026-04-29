@@ -5,7 +5,11 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from paper_fetch.geography_issue_artifacts import collect_issue_rows, materialize_issue_type_view, schedule_issue_rows
+from paper_fetch_devtools.geography.issue_artifacts import (
+    collect_issue_rows,
+    materialize_issue_type_view,
+    schedule_issue_rows,
+)
 
 
 class GeographyIssueArtifactsTests(unittest.TestCase):

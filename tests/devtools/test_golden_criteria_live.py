@@ -6,8 +6,8 @@ import unittest
 from datetime import datetime, timezone
 from pathlib import Path
 
-from paper_fetch import golden_criteria_live_cli
-from paper_fetch.golden_criteria_live import (
+from paper_fetch_devtools.golden_criteria import cli as golden_criteria_live_cli
+from paper_fetch_devtools.golden_criteria.live import (
     GoldenCriteriaLiveResult,
     GoldenCriteriaLiveSample,
     ISSUE_CATEGORIES,
@@ -24,7 +24,7 @@ from paper_fetch.golden_criteria_live import (
 from paper_fetch.models import Asset, FetchEnvelope, Metadata, Quality, RenderOptions, Section
 from paper_fetch.service import PaperFetchFailure
 
-from ._paper_fetch_support import build_envelope, sample_article
+from tests.unit._paper_fetch_support import build_envelope, sample_article
 
 
 def _provider_status_payload(**kwargs):
@@ -535,7 +535,7 @@ class GoldenCriteriaLiveTests(unittest.TestCase):
 
 
 def _result(*, status: str, review_status: str, categories: list[str]):
-    from paper_fetch.golden_criteria_live import GoldenCriteriaLiveResult
+    from paper_fetch_devtools.golden_criteria.live import GoldenCriteriaLiveResult
 
     return GoldenCriteriaLiveResult(
         sample_id=f"sample_{review_status}",
