@@ -482,7 +482,7 @@ Springer direct HTML / direct HTTP PDF 路线当前没有额外必填 publisher 
 - 同一 DOI 的重复 Crossref / metadata 请求可直接命中缓存
 - 只有小体积文本响应会入缓存
 - PDF 和其他大体积二进制正文不会缓存
-- 缓存 key 会脱敏 `api_key`、token、`mailto` 等敏感字段
+- 缓存 key 会脱敏 `api_key`、token、`mailto` 等敏感 query 字段；`Authorization`、`X-ELS-APIKey`、Wiley / Elsevier token header 等敏感 header 会用短 SHA-256 digest 区分不同凭据，不把原文写入 cache key、磁盘路径或 structured log
 - `RuntimeContext(download_dir=...)` 会默认启用磁盘 textual GET 缓存，位置是 `<download_dir>/.paper-fetch-http-cache/`
 - 磁盘缓存支持 `ETag` / `Last-Modified` 条件请求；stale 条目收到 `304` 时复用本地 body
 - `PAPER_FETCH_HTTP_DISK_CACHE_DIR` 可显式指定磁盘 HTTP 缓存目录

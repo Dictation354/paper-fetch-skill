@@ -3,6 +3,7 @@ from __future__ import annotations
 import concurrent.futures
 import gzip
 import io
+import json
 import logging
 import socket
 import threading
@@ -212,17 +213,17 @@ class HttpTransportCacheTests(unittest.TestCase):
         self.assertEqual(call_count, 4)
         self.assertEqual(len(transport._cache), 2)
 
-    def test_cache_key_redacts_sensitive_query_params_and_header_values(self) -> None:
+    def test_cache_key_redacts_sensitive_query_params_and_digests_sensitive_header_values(self) -> None:
         transport = http_module.HttpTransport(cache_ttl=30, cache_capacity=128)
         call_count = 0
 
         def fake_urlopen(request, timeout=20):
             nonlocal call_count
             call_count += 1
-            return FakeHTTPResponse(b'{"ok":true}', request.full_url, headers={"content-type": "application/json"})
+            return FakeHTTPResponse(f'{{"call":{call_count}}}'.encode("utf-8"), request.full_url, headers={"content-type": "application/json"})
 
         with mock.patch.object(transport, "_perform_request", side_effect=fake_urlopen):
-            transport.request(
+            first = transport.request(
                 "GET",
                 "https://example.test/article",
                 headers={
@@ -234,7 +235,7 @@ class HttpTransportCacheTests(unittest.TestCase):
                 },
                 query={"api_key": "springer-secret", "mailto": "alice@example.com"},
             )
-            transport.request(
+            second = transport.request(
                 "GET",
                 "https://example.test/article",
                 headers={
@@ -247,20 +248,195 @@ class HttpTransportCacheTests(unittest.TestCase):
                 query={"api_key": "different-secret", "mailto": "bob@example.com"},
             )
 
-        self.assertEqual(call_count, 1)
-        self.assertEqual(len(transport._cache), 1)
+        self.assertEqual(call_count, 2)
+        self.assertEqual(first["body"], b'{"call":1}')
+        self.assertEqual(second["body"], b'{"call":2}')
+        self.assertEqual(len(transport._cache), 2)
+
+        seen_header_values: set[str] = set()
+        for cache_key in transport._cache:
+            _, cached_url, cached_headers = cache_key
+            self.assertNotIn("springer-secret", cached_url)
+            self.assertNotIn("alice@example.com", cached_url)
+            self.assertIn("api_key=%2A%2A%2A", cached_url)
+            self.assertIn("mailto=%2A%2A%2A", cached_url)
+            self.assertIn(("accept", "application/json"), cached_headers)
+            self.assertIn(("accept-language", "en-US"), cached_headers)
+            self.assertNotIn(("user-agent", "UnitTest/1.0"), cached_headers)
+            self.assertFalse(any(key == "x-els-reqid" for key, _ in cached_headers))
+            seen_header_values.update(value for key, value in cached_headers if key == "x-els-apikey")
+
+        self.assertEqual(len(seen_header_values), 2)
+        self.assertTrue(all(value.startswith(http_module.REDACTED_CACHE_HEADER_DIGEST_PREFIX) for value in seen_header_values))
+        self.assertFalse(any(secret in value for value in seen_header_values for secret in ["top-secret", "different-secret"]))
+
+    def test_sensitive_authorization_values_do_not_share_memory_cache(self) -> None:
+        transport = http_module.HttpTransport(cache_ttl=30, cache_capacity=128)
+        call_count = 0
+
+        def fake_urlopen(request, timeout=20):
+            nonlocal call_count
+            call_count += 1
+            return FakeHTTPResponse(
+                f"body-{call_count}".encode("utf-8"),
+                request.full_url,
+                headers={"content-type": "text/plain"},
+            )
+
+        with mock.patch.object(transport, "_perform_request", side_effect=fake_urlopen):
+            first = transport.request(
+                "GET",
+                "https://example.test/article",
+                headers={"Accept": "text/plain", "Authorization": "Bearer first-token"},
+            )
+            second = transport.request(
+                "GET",
+                "https://example.test/article",
+                headers={"Accept": "text/plain", "Authorization": "Bearer second-token"},
+            )
+            first_again = transport.request(
+                "GET",
+                "https://example.test/article",
+                headers={"Accept": "text/plain", "Authorization": "Bearer first-token"},
+            )
+
+        self.assertEqual(call_count, 2)
+        self.assertEqual(first["body"], b"body-1")
+        self.assertEqual(second["body"], b"body-2")
+        self.assertEqual(first_again["body"], b"body-1")
+
+        rendered_keys = json.dumps(list(transport._cache), sort_keys=True)
+        self.assertNotIn("first-token", rendered_keys)
+        self.assertNotIn("second-token", rendered_keys)
+        self.assertNotIn("Bearer", rendered_keys)
+
+    def test_sensitive_header_values_do_not_share_disk_cache_or_leak_to_payload(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            first_transport = http_module.HttpTransport(
+                cache_ttl=30,
+                cache_capacity=128,
+                disk_cache_dir=Path(tmpdir),
+            )
+            second_transport = http_module.HttpTransport(
+                cache_ttl=30,
+                cache_capacity=128,
+                disk_cache_dir=Path(tmpdir),
+            )
+            first_reader = http_module.HttpTransport(
+                cache_ttl=30,
+                cache_capacity=128,
+                disk_cache_dir=Path(tmpdir),
+            )
+            second_reader = http_module.HttpTransport(
+                cache_ttl=30,
+                cache_capacity=128,
+                disk_cache_dir=Path(tmpdir),
+            )
+
+            with mock.patch.object(
+                first_transport,
+                "_perform_request",
+                return_value=FakeHTTPResponse(b"payload-for-first", "https://example.test/article", headers={"content-type": "text/plain"}),
+            ):
+                first_transport.request(
+                    "GET",
+                    "https://example.test/article",
+                    headers={"Accept": "text/plain", "X-ELS-APIKey": "els-first-secret"},
+                )
+            with mock.patch.object(
+                second_transport,
+                "_perform_request",
+                return_value=FakeHTTPResponse(b"payload-for-second", "https://example.test/article", headers={"content-type": "text/plain"}),
+            ):
+                second_transport.request(
+                    "GET",
+                    "https://example.test/article",
+                    headers={"Accept": "text/plain", "X-ELS-APIKey": "els-second-secret"},
+                )
+            with mock.patch.object(first_reader, "_perform_request") as mocked_first_request:
+                first = first_reader.request(
+                    "GET",
+                    "https://example.test/article",
+                    headers={"Accept": "text/plain", "X-ELS-APIKey": "els-first-secret"},
+                )
+            with mock.patch.object(second_reader, "_perform_request") as mocked_second_request:
+                second = second_reader.request(
+                    "GET",
+                    "https://example.test/article",
+                    headers={"Accept": "text/plain", "X-ELS-APIKey": "els-second-secret"},
+                )
+
+            disk_files = list(Path(tmpdir).rglob("*.json"))
+            rendered_paths = "\n".join(str(path) for path in disk_files)
+            rendered_payloads = "\n".join(path.read_text(encoding="utf-8") for path in disk_files)
+
+        self.assertEqual(first["body"], b"payload-for-first")
+        self.assertEqual(second["body"], b"payload-for-second")
+        mocked_first_request.assert_not_called()
+        mocked_second_request.assert_not_called()
+        self.assertEqual(len(disk_files), 2)
+        self.assertNotIn("els-first-secret", rendered_paths)
+        self.assertNotIn("els-second-secret", rendered_paths)
+        self.assertNotIn("els-first-secret", rendered_payloads)
+        self.assertNotIn("els-second-secret", rendered_payloads)
+
+    def test_sensitive_headers_do_not_leak_to_structured_http_logs(self) -> None:
+        transport = http_module.HttpTransport(cache_ttl=30, cache_capacity=128)
+        http_logger = logging.getLogger("paper_fetch.http")
+        original_level = http_logger.level
+        handler = RecordCaptureHandler()
+        http_logger.addHandler(handler)
+        http_logger.setLevel(logging.DEBUG)
+
+        try:
+            with mock.patch.object(
+                transport,
+                "_perform_request",
+                return_value=FakeHTTPResponse(b"ok", "https://example.test/article", headers={"content-type": "text/plain"}),
+            ):
+                transport.request(
+                    "GET",
+                    "https://example.test/article",
+                    headers={"Accept": "text/plain", "Authorization": "Bearer log-secret-token"},
+                )
+        finally:
+            http_logger.removeHandler(handler)
+            http_logger.setLevel(original_level)
+
+        rendered_logs = "\n".join(record.getMessage() for record in handler.records)
+        rendered_payloads = json.dumps(
+            [
+                record.structured_data
+                for record in handler.records
+                if isinstance(getattr(record, "structured_data", None), dict)
+            ],
+            sort_keys=True,
+        )
+        self.assertNotIn("log-secret-token", rendered_logs)
+        self.assertNotIn("Bearer", rendered_logs)
+        self.assertNotIn("log-secret-token", rendered_payloads)
+        self.assertNotIn("Bearer", rendered_payloads)
+
+    def test_cache_key_redacts_sensitive_query_params(self) -> None:
+        transport = http_module.HttpTransport(cache_ttl=30, cache_capacity=128)
+
+        def fake_urlopen(request, timeout=20):
+            return FakeHTTPResponse(b'{"ok":true}', request.full_url, headers={"content-type": "application/json"})
+
+        with mock.patch.object(transport, "_perform_request", side_effect=fake_urlopen):
+            transport.request(
+                "GET",
+                "https://example.test/article",
+                headers={"Accept": "application/json"},
+                query={"api_key": "springer-secret", "mailto": "alice@example.com"},
+            )
 
         cache_key = next(iter(transport._cache))
-        _, cached_url, cached_headers = cache_key
+        _, cached_url, _ = cache_key
         self.assertNotIn("springer-secret", cached_url)
         self.assertNotIn("alice@example.com", cached_url)
         self.assertIn("api_key=%2A%2A%2A", cached_url)
         self.assertIn("mailto=%2A%2A%2A", cached_url)
-        self.assertIn(("accept", "application/json"), cached_headers)
-        self.assertIn(("accept-language", "en-US"), cached_headers)
-        self.assertIn(("x-els-apikey", "***"), cached_headers)
-        self.assertNotIn(("user-agent", "UnitTest/1.0"), cached_headers)
-        self.assertFalse(any(key == "x-els-reqid" for key, _ in cached_headers))
 
     def test_cache_key_distinguishes_accept_language_and_authorization_presence(self) -> None:
         transport = http_module.HttpTransport(cache_ttl=30, cache_capacity=128)

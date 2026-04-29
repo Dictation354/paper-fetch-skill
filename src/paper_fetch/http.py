@@ -86,6 +86,7 @@ SENSITIVE_QUERY_PARAM_NAMES = {
     "mailto",
 }
 REDACTED_CACHE_VALUE = "***"
+REDACTED_CACHE_HEADER_DIGEST_PREFIX = "sha256:"
 logger = logging.getLogger("paper_fetch.http")
 _CacheKey = tuple[str, str, tuple[tuple[str, str], ...]]
 
@@ -220,7 +221,8 @@ class HttpTransport:
     def _normalize_header_value_for_cache(self, key: str, value: str) -> str:
         normalized_key = key.lower()
         if normalized_key in SENSITIVE_CACHE_HEADER_NAMES:
-            return REDACTED_CACHE_VALUE
+            digest = hashlib.sha256(f"{normalized_key}\0{value}".encode("utf-8")).hexdigest()[:16]
+            return f"{REDACTED_CACHE_HEADER_DIGEST_PREFIX}{digest}"
         if normalized_key in UNSTABLE_CACHE_HEADER_NAMES:
             return "<volatile>"
         return value

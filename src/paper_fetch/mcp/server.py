@@ -7,14 +7,12 @@ from pathlib import Path
 import queue
 import sys
 import threading
-from types import MethodType
 from typing import Annotated
 
 import anyio
 from mcp import types as mcp_types
 from mcp.server.fastmcp import Context, FastMCP
 from mcp.server.fastmcp.resources import FileResource, FunctionResource
-from mcp.server.lowlevel.server import NotificationOptions
 from mcp.shared.message import SessionMessage
 from mcp.types import CallToolResult, ToolAnnotations
 
@@ -44,6 +42,7 @@ from .output_schemas import (
 )
 from .prompts import summarize_paper_prompt, verify_citation_list_prompt
 from .schemas import FetchStrategyInput
+from .server_compat import enable_resource_list_changed_capability, resource_registry, run_stdio_server
 from .tools import (
     batch_check_tool_async,
     batch_resolve_tool_async,
@@ -164,7 +163,7 @@ def _sync_cache_resources(
     scope_id: str | None = None,
 ) -> bool:
     entries = list_cache_entries(download_dir)
-    resources = server._resource_manager._resources
+    resources = resource_registry(server)
 
     def default_entry_uri(entry_id: object) -> str:
         return cached_resource_uri(str(entry_id))
@@ -245,27 +244,7 @@ async def _notify_resource_list_changed(ctx: Context | None) -> None:
 
 
 def _enable_resource_list_changed_capability(server: FastMCP) -> None:
-    original_create_initialization_options = server._mcp_server.create_initialization_options
-
-    def create_initialization_options(
-        _mcp_server: object,
-        notification_options: NotificationOptions | None = None,
-        experimental_capabilities: dict[str, dict[str, object]] | None = None,
-    ):
-        merged_notification_options = NotificationOptions(
-            prompts_changed=notification_options.prompts_changed if notification_options is not None else False,
-            resources_changed=True,
-            tools_changed=notification_options.tools_changed if notification_options is not None else False,
-        )
-        return original_create_initialization_options(
-            notification_options=merged_notification_options,
-            experimental_capabilities=experimental_capabilities,
-        )
-
-    server._mcp_server.create_initialization_options = MethodType(
-        create_initialization_options,
-        server._mcp_server,
-    )
+    enable_resource_list_changed_capability(server)
 
 
 def build_server() -> FastMCP:
@@ -471,11 +450,7 @@ def main() -> None:
 
     async def run_stdio() -> None:
         async with _threaded_stdio_server() as (read_stream, write_stream):
-            await server._mcp_server.run(
-                read_stream,
-                write_stream,
-                server._mcp_server.create_initialization_options(),
-            )
+            await run_stdio_server(server, read_stream, write_stream)
 
     anyio.run(run_stdio)
 

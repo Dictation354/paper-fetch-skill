@@ -1434,6 +1434,35 @@ class McpAsyncToolTests(unittest.IsolatedAsyncioTestCase):
 
         self.assertTrue(cancelled_seen.is_set())
 
+    async def test_batch_resolve_tool_async_sets_cancellation_flag_for_worker_transport(self) -> None:
+        started = threading.Event()
+        cancelled_seen = threading.Event()
+
+        def fake_resolve(query, *, transport=None, env=None):
+            started.set()
+            deadline = time.monotonic() + 1.0
+            while time.monotonic() < deadline:
+                if transport is not None and transport.cancelled:
+                    cancelled_seen.set()
+                    raise mcp_tools.RequestCancelledError("Request cancelled.")
+                time.sleep(0.01)
+            return sample_resolved_query(query)
+
+        with mock.patch.object(mcp_tools, "service_resolve_paper", side_effect=fake_resolve):
+            task = asyncio.create_task(
+                mcp_tools.batch_resolve_tool_async(
+                    queries=["10.1000/one", "10.1000/two"],
+                    concurrency=1,
+                )
+            )
+            await wait_for_threading_event(started, 1.0)
+            task.cancel()
+            with self.assertRaises(asyncio.CancelledError):
+                await task
+            await wait_for_threading_event(cancelled_seen, 1.0)
+
+        self.assertTrue(cancelled_seen.is_set())
+
     async def test_batch_check_tool_async_reports_per_query_progress(self) -> None:
         ctx = FakeContext()
 

@@ -18,6 +18,8 @@ htmlcov/
 build/
 dist/
 pip-wheel-metadata/
+rollout-*.jsonl
+*.local.md
 
 # Project-local agent installs
 .codex

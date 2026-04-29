@@ -222,7 +222,7 @@ python3 -m paper_fetch.mcp.server
 
 同一个 `RuntimeContext` 生命周期内会复用 session 级浅缓存：`has_fulltext` 与后续 `fetch_paper` 可共享 query resolution、Crossref DOI metadata、Elsevier metadata probe，以及 landing page `citation_pdf_url` probe；命中的 citation PDF URL 会并入 fetch 阶段 metadata `fulltext_links`。
 
-HTTP textual disk cache 的 metadata freshness 默认 `86400` 秒；`PAPER_FETCH_HTTP_METADATA_CACHE_TTL` 可覆盖，普通进程内 GET TTL 仍默认 `30` 秒。
+HTTP textual disk cache 的 metadata freshness 默认 `86400` 秒；`PAPER_FETCH_HTTP_METADATA_CACHE_TTL` 可覆盖，普通进程内 GET TTL 仍默认 `30` 秒。缓存 key 会继续脱敏敏感 query 参数；`Authorization`、`X-ELS-APIKey` 等敏感 header 使用短 SHA-256 digest 区分缓存，不把 token 原文写入 key、磁盘路径或 structured log。
 
 golden criteria live review 的 `stage_timings` 会保留 `fetch_seconds`、`materialize_seconds`、`total_seconds`、`resolve_seconds`、`metadata_seconds`、`fulltext_seconds`、`asset_seconds`、`formula_seconds`、`render_seconds`；每个 sample 的 `http_cache_stats` 是该 sample 的 cache delta。
 

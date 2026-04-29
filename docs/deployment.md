@@ -157,6 +157,17 @@ python -m paper_fetch.formula.install --target-dir "$PWD/.formula-tools" --no-no
 
 测试步骤应设置 `PAPER_FETCH_FORMULA_TOOLS_DIR=$GITHUB_WORKSPACE/.formula-tools`。这里用 `--no-node` 是为了避免安装失败后静默落到 `mathml-to-latex` fallback；如果 `texmath` 没有装好，CI 会在验证步骤直接失败。
 
+CI 还包含 package smoke job：执行 `python -m build` 生成 sdist / wheel，然后在干净 venv 里安装 wheel，验证 `paper-fetch --help` 可运行，并确认 `paper-fetch-mcp` console script entry point 可以解析和 import。
+
+本地清理构建、测试缓存和 rollout 日志时可以用：
+
+```bash
+scripts/clean-local-artifacts.sh --dry-run
+scripts/clean-local-artifacts.sh --days 7
+```
+
+该脚本只删除 `git check-ignore` 确认为 ignored 的目标；未被 `.gitignore` 覆盖的路径会跳过。
+
 ## 4. Elsevier / Wiley / Science / PNAS 接入入口
 
 `elsevier` 现在不再依赖 FlareSolverr 浏览器链路；它只需要官方 API 凭据，并走 `官方 XML/API -> 官方 API PDF fallback -> metadata-only`。

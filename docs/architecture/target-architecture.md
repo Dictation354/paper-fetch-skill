@@ -78,8 +78,10 @@ Date: 2026-04-28
 实现边界：
 
 - stdio transport 由 MCP 层包装成后台 stdin reader + async stream pump，避免同步 stdin 阻塞事件循环。
-- `fetch_paper` 和批量工具会把阻塞抓取工作放到 worker thread，并在 MCP 事件循环里继续处理 progress、structured log 和 cancellation。
+- `src/paper_fetch/mcp/tools.py` 是兼容 facade；结果封装、structured log bridge、cache payload、fetch payload 和 batch runner 分别拆到 `results.py`、`log_bridge.py`、`cache_payloads.py`、`fetch_tool.py`、`batch.py`。
+- `fetch_paper` 和批量工具会把阻塞抓取工作放到有界 `ThreadPoolExecutor`，并在 MCP 事件循环里继续处理 progress、structured log 和 cancellation；批量工具保持输入顺序、rate limit 后停止提交新任务、已提交任务完成后返回已有结果。
 - async `fetch_paper` 用 `RuntimeContext(cancel_check=...)` 创建 cancel-aware `HttpTransport`，service/workflow 只消费 transport，不直接依赖 MCP cancellation 机制。
+- `server_compat.py` 集中封装 FastMCP private SDK surface（resource registry、initialization options、stdio run），让 SDK 私有字段变化时失败点可读且集中。
 
 不负责：
 
@@ -244,7 +246,7 @@ Crossref 的 provider adapter 位于 `paper_fetch.providers.crossref.CrossrefCli
 - 有限短重试
 - 协作式取消检查
 
-`HttpTransport` 仍以本地 request loop 保持 public request options、structured logs、cancel checks、`Retry-After` 最大等待和 `RequestFailure` 形状；瞬时错误与 429 retry policy 由 `urllib3.util.Retry` 表达。连接池通过 `PoolManager(num_pools, maxsize, block=True)` 配置，同 host 由 bounded semaphore 控制；磁盘 textual GET 缓存使用既有脱敏 cache key，并在 stale 时带 `ETag` / `Last-Modified` 条件请求。`cache_stats_snapshot()` 提供线程安全累计计数；live review 的 sample 结果写入执行前后 delta，最终汇总日志保留累计快照。
+`HttpTransport` 仍以本地 request loop 保持 public request options、structured logs、cancel checks、`Retry-After` 最大等待和 `RequestFailure` 形状；瞬时错误与 429 retry policy 由 `urllib3.util.Retry` 表达。连接池通过 `PoolManager(num_pools, maxsize, block=True)` 配置，同 host 由 bounded semaphore 控制；磁盘 textual GET 缓存使用脱敏 cache key，敏感 query 参数继续折叠复用，敏感 header 则用短 SHA-256 digest 区分不同凭据且不落原文，并在 stale 时带 `ETag` / `Last-Modified` 条件请求。`cache_stats_snapshot()` 提供线程安全累计计数；live review 的 sample 结果写入执行前后 delta，最终汇总日志保留累计快照。
 
 ## 端到端业务流程
 
