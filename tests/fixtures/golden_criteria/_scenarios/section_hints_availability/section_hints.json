@@ -1,0 +1,26 @@
+[
+  {
+    "heading": "Code archive",
+    "level": 2,
+    "kind": "code_availability",
+    "order": 2
+  },
+  {
+    "heading": "Ignored",
+    "level": 2,
+    "kind": "supplementary",
+    "order": 3
+  },
+  {
+    "heading": "Data archive:",
+    "level": 2,
+    "kind": "data_availability",
+    "order": 1
+  },
+  {
+    "heading": "Results",
+    "level": 2,
+    "kind": "body",
+    "order": 0
+  }
+]

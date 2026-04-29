@@ -45,6 +45,8 @@ def write_fake_mcp_cli(path: Path, log_path: Path) -> None:
 
 def copy_installer_fixture(repo_dir: Path) -> None:
     (repo_dir / "scripts").mkdir(parents=True, exist_ok=True)
+    shutil.copy2(REPO_ROOT / "install.sh", repo_dir / "install.sh")
+    shutil.copy2(REPO_ROOT / "install-formula-tools.sh", repo_dir / "install-formula-tools.sh")
     shutil.copy2(REPO_ROOT / "scripts" / "install-claude-skill.sh", repo_dir / "scripts" / "install-claude-skill.sh")
     shutil.copy2(REPO_ROOT / "scripts" / "install-codex-skill.sh", repo_dir / "scripts" / "install-codex-skill.sh")
     shutil.copy2(
@@ -173,6 +175,59 @@ class InstallerSmokeTests(unittest.TestCase):
             text=True,
         )
         return repo_dir, sandbox, log_path
+
+    def test_full_installer_help_smoke(self) -> None:
+        temp_dir = tempfile.TemporaryDirectory()
+        self.addCleanup(temp_dir.cleanup)
+        repo_dir = Path(temp_dir.name) / "repo"
+        copy_installer_fixture(repo_dir)
+
+        result = subprocess.run(
+            ["bash", str(repo_dir / "install.sh"), "--help"],
+            cwd=repo_dir,
+            check=False,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("One-command installer for the full paper-fetch runtime.", result.stdout)
+        self.assertIn("--lite", result.stdout)
+        self.assertIn("--skip-flaresolverr-setup", result.stdout)
+
+    def test_formula_bootstrap_honors_selected_python(self) -> None:
+        temp_dir = tempfile.TemporaryDirectory()
+        self.addCleanup(temp_dir.cleanup)
+        sandbox = Path(temp_dir.name)
+        repo_dir = sandbox / "repo"
+        fake_python = sandbox / "custom-python"
+        log_path = sandbox / "python.log"
+        copy_installer_fixture(repo_dir)
+        write_fake_python(fake_python, log_path)
+
+        env = os.environ.copy()
+        env["PAPER_FETCH_INSTALL_PYTHON_BIN"] = str(fake_python)
+        subprocess.run(
+            [
+                "bash",
+                str(repo_dir / "install-formula-tools.sh"),
+                "--skip-flaresolverr-setup",
+                "--skip-playwright-install",
+                "--no-node",
+            ],
+            cwd=repo_dir,
+            env=env,
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+
+        log_text = log_path.read_text(encoding="utf-8")
+        self.assertIn(f"{fake_python} -m paper_fetch.formula.install", log_text)
+        self.assertIn("--target-dir", log_text)
+        self.assertIn("--no-node", log_text)
 
     def test_claude_installer_copies_static_skill_without_repo_bootstrap_side_effects(self) -> None:
         repo_dir, sandbox, log_path = self.run_installer(script_name="install-claude-skill.sh")

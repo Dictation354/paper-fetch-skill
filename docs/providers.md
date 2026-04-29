@@ -31,6 +31,7 @@
 - 这张矩阵描述的是“当前代码里已经实现的 provider-owned waterfall”，不是“任意 DOI、任意运行环境都必然能拿到 publisher 全文”的承诺。
 - 尤其 `wiley` / `science` / `pnas` 的浏览器与 PDF/ePDF 路径，仍受 publisher 访问权限、paywall/challenge 与远端站点行为影响。
 - `wiley` 的 HTML / browser PDF/ePDF 路径与 `science` / `pnas` 现在只保留一套 provider-owned 浏览器栈：canonical runtime 是 `paper_fetch.providers.browser_workflow`；旧 `_science_pnas` 兼容 alias 已移除，browser-PDF executor 继续共享 `_pdf_fallback`，不再存在单独的 Science path harness。
+- browser-workflow 的 asset download Playwright fallback 在并发 worker 中使用线程私有 browser/context，不复用 `RuntimeContext` 持有的共享 browser；`RuntimeContext` 共享 browser 仍只保留给非 threaded 的主流程 Playwright 场景。
 - 2020+ live / regression 基准样本集中维护在 [`../tests/provider_benchmark_samples.py`](../tests/provider_benchmark_samples.py)。
 - 自然地理学 live-only 候选集中维护在 [`../tests/live/geography_samples.py`](../tests/live/geography_samples.py)，默认每家尝试前 `10` 条，并通过 [`../scripts/run_geography_live_report.py`](../scripts/run_geography_live_report.py) 产出 JSON/Markdown 报告。
 - `geography` live runner 默认按 provider 轮转执行，保持单家样本顺序不变。
@@ -245,10 +246,12 @@ CLI、Python API、MCP 当前统一采用这些默认值：
 - `elsevier` PDF fallback 仍会把 `asset_profile=body|all` 降级成 text-only
 - `springer` PDF fallback 仍会把 `asset_profile=body|all` 降级成 text-only
 - `wiley` / `science` / `pnas` 的 `FlareSolverr HTML` 成功路径支持正文 figure / table / formula 图片资产下载；这些 provider 以 shared Playwright browser context 为主链路，不再先走普通 HTTP 直连
-- `wiley` / `science` / `pnas` 的 `asset_profile=all` 会把 supplementary 从正文图片链路拆开，作为独立文件附件下载；代码层不额外限制 supplementary 文件大小
+- `wiley` / `science` / `pnas` 的 `asset_profile=all` 会把 supplementary 从正文图片链路拆开，作为独立文件附件下载；代码层不额外限制 supplementary 文件大小；首轮失败后只重试失败的原始 asset 子集，不会因为 supplementary 失败重新下载已成功的正文 figure
+- `wiley` 的 supplementary 只从 `Supporting Information` 区块抽取，并且只接受 `downloadSupplement` 或 `sup-*` 这类真实 supporting file 链接；正文 `<figure>` 里的 `/cms/asset/...fig-*.jpg|png|webp` 只保留为 figure 资产；`downloadSupplement` query 里的 `file` / `filename` 会作为真实文件名优先用于落盘
+- `science` / `pnas` 的 supplementary 只从 Atypon 真实 `Supplementary Material(s)` / `Supporting Information` section 子树抽取，并且只保留 publisher `/doi/suppl/.../suppl_file/...` 附件；正文 Data Availability 里的普通数据链接、页内 `#supplementary-materials` 导航或 section 内引用文献 PDF 不会再被当作 supplementary
 - `wiley` / `science` / `pnas` 的图片候选仍优先 full-size/original；full-size 候选全部失败后才尝试 preview，preview 也通过同一个 seeded browser context 下载
 - `wiley` / `science` / `pnas` 的 PDF/ePDF fallback 仍是 text-only
-- `springer` HTML 成功路径也按相同语义处理：正文图片只从 cleaned body/content scope 抽取，`all` 额外下载 supplementary 文件；PDF fallback 仍是 text-only
+- `springer` HTML 成功路径也按相同语义处理：正文图片只从 cleaned body/content scope 抽取；普通 supplementary 只允许来自 `Supplementary information` / `Supplementary material(s)` / `Supporting information` / `Electronic supplementary material` / `Extended data` / `Extended data figures and tables` 这些 section 子树；`Source Data` 会独立识别并在下载时落到 `source_data/` 子目录，`Peer Review File` / `Peer reviewer reports` 不再当作 supplementary；PDF fallback 仍是 text-only
 - `elsevier` XML 成功路径下，`body` 继续只下载 `image` / `table_asset`，`all` 会额外下载 `supplementary` references，并统一映射到 `kind="supplementary"` / `section="supplementary"` / `download_tier="supplementary_file"`
 - 通用 HTML figure 与 supplementary 下载会先并行解析网络响应，再按原 asset 顺序串行写文件；输出顺序、文件名去重和 fallback 候选顺序保持稳定。Elsevier XML object references 也使用同样的“网络并发、写入串行”约束。并发 worker 上限由 `PAPER_FETCH_ASSET_DOWNLOAD_CONCURRENCY` 控制，默认 `4`、最小 `1`。
 - 同一次 provider fetch 内会复用 `RuntimeContext.parse_cache`：Elsevier XML root、Springer HTML extraction、Wiley/Science/PNAS browser-workflow Markdown extraction 和 HTML asset extraction 不跨阶段重复解析同一份 payload。
@@ -265,8 +268,8 @@ CLI、Python API、MCP 当前统一采用这些默认值：
 - 下载失败的资产会保留到 `article.quality.asset_failures` 与顶层 `quality.asset_failures`，可见 `status`、`content_type`、`title_snippet`、`body_snippet`、`reason` 以及 asset-level recovery 轨迹。
 - 图片 payload MIME 识别由 `filetype` 负责，JPEG/PNG/GIF/WebP 尺寸读取由 `imagesize` 负责；无法识别时仍按 unknown/空宽高处理，不引入 Pillow。
 - `wiley` / `science` / `pnas` 的正文图片主链路只应输出 `download_tier="full_size"` 或 `download_tier="preview"`；supplementary 文件链路输出 `download_tier="supplementary_file"`；旧的 `playwright_canvas_fallback` tier 只可能来自仍保留 HTTP-first 语义的旧通用图片下载路径。
-- `wiley` / `science` / `pnas` 的正文图片下载在单次 attempt 内会缓存重复的 figure page / 图片候选 URL，并用固定并发上限 `4` 拉取 payload；最终输出顺序仍与输入资产顺序一致。
-- supplementary 文件下载失败时，`article.quality.asset_failures` 会保留 `status`、`content_type`、`title_snippet`、`body_snippet`、`reason` 和 recovery 轨迹，便于区分 Cloudflare challenge / login HTML / 普通网络失败。
+- `wiley` / `science` / `pnas` 的正文图片下载在单次 attempt 内会缓存重复的 figure page / 图片候选 URL，并按 `PAPER_FETCH_ASSET_DOWNLOAD_CONCURRENCY` 控制的 worker 上限拉取 payload，默认 `4`；最终输出顺序仍与输入资产顺序一致。
+- supplementary 文件下载失败时，`article.quality.asset_failures` 会保留 `status`、`content_type`、`title_snippet`、`body_snippet`、`reason` 和 recovery 轨迹，便于区分 Cloudflare challenge / login HTML / 普通网络失败；浏览器工作流的重试按失败诊断匹配 `heading`、`caption` 和 URL 字段，只重跑失败的 body 或 supplementary 资产。
 - `download_tier="preview"` 只有在宽高满足当前阈值 `300x200` 时才会标记为可接受 preview；否则仍会进入 preview fallback / asset issue 诊断。
 - live review 中，公式图片是公式语义的 fallback，因此 formula-only preview fallback 不自动归类为 `asset_download_failure`；figure/table preview fallback 仍按资产问题处理，除非已有 accepted 诊断。
 

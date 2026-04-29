@@ -150,6 +150,7 @@ class SciencePnasMarkdownTests(unittest.TestCase):
         self.assertEqual(diagnostics["content_kind"], "fulltext")
 
     def test_pnas_full_fixture_omits_real_page_collateral_noise(self) -> None:
+        """rule: rule-filter-publisher-ui-noise"""
         markdown, _ = self._extract_sample_markdown(PNAS_SAMPLE)
 
         self.assertNotIn("Recommended articles", markdown)
@@ -344,16 +345,29 @@ class SciencePnasMarkdownTests(unittest.TestCase):
         self.assertIn("![Formula](/cms/asset/example-math-0001.png)", rendered)
 
     def test_wiley_references_use_visible_citation_text_not_doi_only(self) -> None:
-        html = golden_criteria_asset("10.1111/gcb.15322", "original.html").read_text(encoding="utf-8")
+        """rule: rule-wiley-reference-text"""
+        cases = (
+            (
+                "10.1111/gcb.15322",
+                ("Atkinson", "Inter-comparison of four models", "Remote Sensing of Environment"),
+            ),
+            (
+                "10.1111/gcb.16998",
+                ("AghaKouchak", "Remote sensing of drought", "Reviews of Geophysics"),
+            ),
+        )
 
-        references = extract_numbered_references_from_html(html)
+        for doi, expected_tokens in cases:
+            with self.subTest(doi=doi):
+                html = golden_criteria_asset(doi, "original.html").read_text(encoding="utf-8")
 
-        self.assertGreater(len(references), 20)
-        self.assertIn("Atkinson", references[0]["raw"])
-        self.assertIn("Inter-comparison of four models", references[0]["raw"])
-        self.assertIn("Remote Sensing of Environment", references[0]["raw"])
-        self.assertNotEqual(references[0]["raw"], references[0]["doi"])
-        self.assertNotIn("Google Scholar", references[0]["raw"])
+                references = extract_numbered_references_from_html(html)
+
+                self.assertGreater(len(references), 20)
+                for token in expected_tokens:
+                    self.assertIn(token, references[0]["raw"])
+                self.assertNotEqual(references[0]["raw"], references[0]["doi"])
+                self.assertNotIn("Google Scholar", references[0]["raw"])
 
     def test_wiley_fixture_renders_rule_table_as_markdown_table(self) -> None:
         markdown, _ = self._extract_fixture_markdown(

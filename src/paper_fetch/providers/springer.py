@@ -96,6 +96,7 @@ class SpringerHtmlAttempt:
     diagnostics: Any
     asset_body_html: str = ""
     asset_supplementary_html: str = ""
+    asset_source_data_html: str = ""
 
 
 def _merge_springer_assets(
@@ -192,9 +193,10 @@ def _cached_springer_scoped_assets(
     source_url: str,
     *,
     supplementary_html_text: str | None,
+    source_data_html_text: str | None,
     asset_profile: AssetProfile,
 ) -> list[dict[str, Any]]:
-    cache_body = "\n<!-- supplementary -->\n".join([body_html, supplementary_html_text or ""])
+    cache_body = "\n<!-- scope -->\n".join([body_html, supplementary_html_text or "", source_data_html_text or ""])
     key = context.build_parse_cache_key(
         provider="springer",
         role="html_assets",
@@ -210,6 +212,7 @@ def _cached_springer_scoped_assets(
             source_url,
             asset_profile=asset_profile,
             supplementary_html_text=supplementary_html_text,
+            source_data_html_text=source_data_html_text,
         ),
         copy_value=True,
     )
@@ -608,6 +611,16 @@ class SpringerClient(ProviderClient):
             response_url,
             title=str(merged_metadata.get("title") or ""),
         )
+        asset_body_html, asset_supplementary_html = _springer_html.extract_asset_html_scopes(
+            prepared_html,
+            response_url,
+            title=str(merged_metadata.get("title") or "") or None,
+        )
+        asset_source_data_html = _springer_html.extract_source_data_html_scope(
+            prepared_html,
+            response_url,
+            title=str(merged_metadata.get("title") or "") or None,
+        )
         markdown_text = inject_inline_table_blocks(
             extraction_payload[MARKDOWN_TEXT_KEY],
             table_entries=table_entries,
@@ -651,8 +664,9 @@ class SpringerClient(ProviderClient):
             extracted_references=list(extraction_payload.get("references") or []),
             inline_table_assets=table_assets,
             diagnostics=diagnostics,
-            asset_body_html=str(extraction_payload.get("cleaned_html") or ""),
-            asset_supplementary_html=str(extraction_payload.get("cleaned_html") or ""),
+            asset_body_html=asset_body_html,
+            asset_supplementary_html=asset_supplementary_html,
+            asset_source_data_html=asset_source_data_html,
         )
 
     def _fetch_pdf_payload_from_html_attempt(
@@ -755,8 +769,12 @@ class SpringerClient(ProviderClient):
         if not article_assets:
             html_text = _springer_html.decode_html(raw_payload.body)
             title = normalize_text(str((content.merged_metadata or {}).get("title") if content is not None and content.merged_metadata else metadata.get("title") or ""))
-            extraction_payload = _cached_springer_html_payload(
-                context,
+            asset_body_html, asset_supplementary_html = _springer_html.extract_asset_html_scopes(
+                html_text,
+                raw_payload.source_url,
+                title=title or None,
+            )
+            asset_source_data_html = _springer_html.extract_source_data_html_scope(
                 html_text,
                 raw_payload.source_url,
                 title=title or None,
@@ -764,10 +782,11 @@ class SpringerClient(ProviderClient):
             article_assets = _filter_springer_assets_for_profile(
                 _cached_springer_scoped_assets(
                     context,
-                    str(extraction_payload.get("cleaned_html") or ""),
+                    asset_body_html,
                     raw_payload.source_url,
                     asset_profile="all",
-                    supplementary_html_text=str(extraction_payload.get("cleaned_html") or ""),
+                    supplementary_html_text=asset_supplementary_html,
+                    source_data_html_text=asset_source_data_html,
                 ),
                 asset_profile=asset_profile,
             )
@@ -829,6 +848,7 @@ class SpringerClient(ProviderClient):
                         attempt.response_url,
                         asset_profile="all",
                         supplementary_html_text=attempt.asset_supplementary_html,
+                        source_data_html_text=attempt.asset_source_data_html,
                     ),
                     *[dict(item) for item in attempt.inline_table_assets],
                 ]
@@ -861,6 +881,7 @@ class SpringerClient(ProviderClient):
                 extracted_references=[],
                 inline_table_assets=[],
                 diagnostics=None,
+                asset_source_data_html="",
             )
             try:
                 return self._fetch_pdf_payload_from_html_attempt(
@@ -936,6 +957,7 @@ class SpringerClient(ProviderClient):
                             attempt.response_url,
                             asset_profile="all",
                             supplementary_html_text=attempt.asset_supplementary_html,
+                            source_data_html_text=attempt.asset_source_data_html,
                         ),
                         *[dict(item) for item in attempt.inline_table_assets],
                     ],

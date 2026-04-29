@@ -85,6 +85,19 @@ class FetchCommonTests(unittest.TestCase):
         self.assertEqual(output_path.suffix, ".webp")
         self.assertEqual(output_path.name, "figure.webp")
 
+    def test_build_asset_output_path_prefers_explicit_filename_before_url_path(self) -> None:
+        with TemporaryDirectory() as tmpdir:
+            output_path = utils.build_asset_output_path(
+                Path(tmpdir),
+                "https://onlinelibrary.wiley.com/action/downloadSupplement",
+                "application/octet-stream",
+                "https://onlinelibrary.wiley.com/action/downloadSupplement",
+                set(),
+                preferred_filename="gcb16414-sup-0001-FigureS1.docx",
+            )
+
+        self.assertEqual(output_path.name, "gcb16414-sup-0001-FigureS1.docx")
+
 
 if __name__ == "__main__":
     unittest.main()

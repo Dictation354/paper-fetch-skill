@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<full-text-retrieval-response xmlns="http://www.elsevier.com/xml/svapi/article/dtd" xmlns:ce="http://www.elsevier.com/xml/common/dtd">
+  <body>
+    <ce:sections>
+      <ce:section>
+        <ce:section-title>Results</ce:section-title>
+        <ce:para>Core body text.</ce:para>
+      </ce:section>
+    </ce:sections>
+  </body>
+</full-text-retrieval-response>

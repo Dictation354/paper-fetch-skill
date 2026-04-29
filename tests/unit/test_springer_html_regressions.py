@@ -18,7 +18,11 @@ from paper_fetch.tracing import trace_from_markers
 from paper_fetch.utils import normalize_text
 from paper_fetch.workflow.fulltext import maybe_save_provider_html_payload
 from tests.block_fixtures import block_asset
-from tests.golden_criteria import golden_criteria_asset, golden_criteria_sample_for_doi
+from tests.golden_criteria import (
+    golden_criteria_asset,
+    golden_criteria_sample_for_doi,
+    golden_criteria_scenario_asset,
+)
 
 
 class SpringerHtmlRegressionTests(unittest.TestCase):
@@ -217,6 +221,7 @@ class SpringerHtmlRegressionTests(unittest.TestCase):
         return downloaded_assets
 
     def test_springer_paywall_article_markdown_strips_preview_sentence(self) -> None:
+        """rule: rule-springer-access-hint-disclaimer"""
         doi = "10.1007/s00382-018-4286-0"
         source_url = f"https://link.springer.com/article/{doi}"
         html_path = block_asset(doi, "raw.html")
@@ -257,6 +262,7 @@ class SpringerHtmlRegressionTests(unittest.TestCase):
         )
 
     def test_nature_fixture_keeps_data_and_code_availability_sections(self) -> None:
+        """rule: rule-keep-data-availability-once"""
         doi = "10.1038/s43247-024-01885-8"
         article, extraction_payload, diagnostics, _ = self._build_article_from_html(
             golden_criteria_asset(doi, "original.html"),
@@ -331,6 +337,131 @@ class SpringerHtmlRegressionTests(unittest.TestCase):
             [asset.get("kind") for asset in all_assets],
             ["figure", "supplementary"],
         )
+
+    def test_extract_asset_html_scopes_leave_empty_supplementary_scope_without_supplementary_sections(self) -> None:
+        """rule: rule-springer-supplementary-scope"""
+        source_url = "https://www.nature.com/articles/no-supplementary"
+        html_text = """
+<html>
+  <body>
+    <article>
+      <h1>Example Article</h1>
+      <div class="c-article-body">
+        <div class="main-content">
+          <section data-title="Results">
+            <p>Only body content.</p>
+            <a href="https://example.test/body-only.pdf">Body PDF</a>
+          </section>
+        </div>
+      </div>
+      <section data-title="Rights and permissions">
+        <a href="https://example.test/citation.ris">Download citation</a>
+      </section>
+    </article>
+  </body>
+</html>
+"""
+
+        body_html, supplementary_html = _springer_html.extract_asset_html_scopes(
+            html_text,
+            source_url,
+            title="Example Article",
+        )
+        source_data_html = _springer_html.extract_source_data_html_scope(
+            html_text,
+            source_url,
+            title="Example Article",
+        )
+        all_assets = _springer_html.extract_scoped_html_assets(
+            body_html,
+            source_url,
+            asset_profile="all",
+            supplementary_html_text=supplementary_html,
+            source_data_html_text=source_data_html,
+        )
+
+        self.assertIn("Only body content.", body_html)
+        self.assertEqual(supplementary_html, "")
+        self.assertEqual(source_data_html, "")
+        self.assertFalse(any(asset.get("kind") == "supplementary" for asset in all_assets))
+
+    def test_real_nature_fixture_separates_source_data_from_supplementary_assets(self) -> None:
+        """rule: rule-springer-supplementary-scope"""
+        source_url = "https://www.nature.com/articles/s41561-022-00912-7"
+        html_text = golden_criteria_asset("10.1038/s41561-022-00912-7", "original.html").read_text(encoding="utf-8")
+
+        body_html, supplementary_html = _springer_html.extract_asset_html_scopes(html_text, source_url)
+        source_data_html = _springer_html.extract_source_data_html_scope(html_text, source_url)
+        assets = _springer_html.extract_scoped_html_assets(
+            body_html,
+            source_url,
+            asset_profile="all",
+            supplementary_html_text=supplementary_html,
+            source_data_html_text=source_data_html,
+        )
+
+        supplementary_assets = [
+            asset for asset in assets if asset.get("kind") == "supplementary" and asset.get("asset_kind") != "source_data"
+        ]
+        source_data_assets = [asset for asset in assets if asset.get("asset_kind") == "source_data"]
+
+        self.assertIn("Extended data", supplementary_html)
+        self.assertIn("Supplementary information", supplementary_html)
+        self.assertNotIn("Source data", supplementary_html)
+        self.assertIn("Source data", source_data_html)
+        self.assertTrue(any(asset.get("url", "").endswith("MOESM1_ESM.pdf") for asset in supplementary_assets))
+        self.assertFalse(any("MOESM2_ESM" in asset.get("url", "") for asset in supplementary_assets))
+        self.assertTrue(any(asset.get("url", "").endswith("MOESM2_ESM.zip") for asset in source_data_assets))
+        self.assertTrue(any(asset.get("url", "").endswith("MOESM4_ESM.csv") for asset in source_data_assets))
+
+    def test_real_nature_fixture_resolves_source_data_links_from_extended_data_descriptions(self) -> None:
+        """rule: rule-springer-supplementary-scope"""
+        source_url = "https://www.nature.com/articles/s41558-022-01584-2"
+        html_text = golden_criteria_asset("10.1038/s41558-022-01584-2", "original.html").read_text(encoding="utf-8")
+
+        body_html, supplementary_html = _springer_html.extract_asset_html_scopes(html_text, source_url)
+        source_data_html = _springer_html.extract_source_data_html_scope(html_text, source_url)
+        assets = _springer_html.extract_scoped_html_assets(
+            body_html,
+            source_url,
+            asset_profile="all",
+            supplementary_html_text=supplementary_html,
+            source_data_html_text=source_data_html,
+        )
+
+        supplementary_assets = [
+            asset for asset in assets if asset.get("kind") == "supplementary" and asset.get("asset_kind") != "source_data"
+        ]
+        source_data_assets = [asset for asset in assets if asset.get("asset_kind") == "source_data"]
+
+        self.assertTrue(any(asset.get("url", "").endswith("/figures/5") for asset in supplementary_assets))
+        self.assertTrue(any(asset.get("url", "").endswith("MOESM5_ESM.xlsx") for asset in source_data_assets))
+        self.assertTrue(any(asset.get("url", "").endswith("MOESM13_ESM.xlsx") for asset in source_data_assets))
+        self.assertFalse(any("MOESM5_ESM.xlsx" in asset.get("url", "") for asset in supplementary_assets))
+
+    def test_real_nature_fixture_skips_peer_review_files_from_supplementary_assets(self) -> None:
+        """rule: rule-springer-supplementary-scope"""
+        source_url = "https://www.nature.com/articles/s43247-024-01270-5"
+        html_text = golden_criteria_asset("10.1038/s43247-024-01270-5", "original.html").read_text(encoding="utf-8")
+
+        body_html, supplementary_html = _springer_html.extract_asset_html_scopes(html_text, source_url)
+        source_data_html = _springer_html.extract_source_data_html_scope(html_text, source_url)
+        assets = _springer_html.extract_scoped_html_assets(
+            body_html,
+            source_url,
+            asset_profile="all",
+            supplementary_html_text=supplementary_html,
+            source_data_html_text=source_data_html,
+        )
+
+        supplementary_headings = [
+            normalize_text(str(asset.get("heading") or "")).lower()
+            for asset in assets
+            if asset.get("kind") == "supplementary" and asset.get("asset_kind") != "source_data"
+        ]
+
+        self.assertIn("supplementary information", supplementary_headings)
+        self.assertFalse(any("peer review" in heading for heading in supplementary_headings))
 
     def test_springer_html_route_saves_original_html_in_article_dir(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -544,6 +675,7 @@ class SpringerHtmlRegressionTests(unittest.TestCase):
         self.assertNotIn("\n## Figures\n", markdown)
 
     def test_nature_matters_arising_fixture_keeps_main_content_before_reporting_summary(self) -> None:
+        """rule: rule-springer-main-content-direct-children"""
         sample = golden_criteria_sample_for_doi("10.1038/s41586-020-1941-5")
         doi = str(sample["doi"])
         source_url = str(sample["source_url"])
@@ -564,6 +696,25 @@ class SpringerHtmlRegressionTests(unittest.TestCase):
         self.assertIn("## Reporting summary", markdown_text)
         self.assertLess(markdown_text.index("Planting and removal"), markdown_text.index("## Reporting summary"))
         self.assertEqual(markdown_text.count("## Data availability"), 1)
+
+    def test_springer_main_content_scenario_keeps_direct_child_order(self) -> None:
+        """rule: rule-springer-main-content-direct-children"""
+        html_text = golden_criteria_scenario_asset(
+            "springer_main_content_direct_children", "original.html"
+        ).read_text(encoding="utf-8")
+
+        extraction_payload = _springer_html.extract_html_payload(
+            html_text,
+            "https://www.nature.com/articles/springer-main-content-scenario",
+            title="Springer Main Content Scenario",
+        )
+        markdown_text = extraction_payload["markdown_text"]
+
+        self.assertIn("Direct child paragraph before reporting summary.", markdown_text)
+        self.assertIn("## Data availability", markdown_text)
+        self.assertIn("## Reporting summary", markdown_text)
+        self.assertLess(markdown_text.index("Direct child paragraph"), markdown_text.index("## Reporting summary"))
+        self.assertLess(markdown_text.index("## Data availability"), markdown_text.index("## Reporting summary"))
 
     def test_drought_self_propagation_fixture_has_no_trailing_figures_block(self) -> None:
         sample = golden_criteria_sample_for_doi("10.1038/s41561-022-00912-7")
@@ -612,6 +763,7 @@ class SpringerHtmlRegressionTests(unittest.TestCase):
         self.assertNotIn("## Fossil fuel CO 2 emissions", markdown)
 
     def test_springer_markdown_spaces_numbered_inline_heading_spans(self) -> None:
+        """rule: rule-springer-numbered-heading-spacing"""
         html = """
         <html>
           <body>
@@ -697,6 +849,7 @@ class SpringerHtmlRegressionTests(unittest.TestCase):
             self.assertNotIn(chrome, markdown)
 
     def test_springer_markdown_ignores_ai_alt_text_when_caption_exists(self) -> None:
+        """rule: rule-springer-caption-precedence"""
         html = r"""
         <html>
           <body>

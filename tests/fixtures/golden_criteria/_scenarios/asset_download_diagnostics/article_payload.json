@@ -1,0 +1,36 @@
+{
+  "doi": "10.1000/assets",
+  "source": "science",
+  "metadata": {
+    "title": "Asset Diagnostics",
+    "authors": [
+      "Alice Example"
+    ]
+  },
+  "sections": [
+    {
+      "heading": "Results",
+      "level": 2,
+      "kind": "body",
+      "text": "Body text."
+    }
+  ],
+  "assets": [
+    {
+      "kind": "figure",
+      "heading": "Figure 1",
+      "caption": "Preview figure.",
+      "path": "downloads/figure-1.png",
+      "section": "body",
+      "render_state": "appendix",
+      "anchor_key": "F1",
+      "download_tier": "preview",
+      "download_url": "https://example.test/figure-preview.png",
+      "original_url": "https://example.test/figure-original.png",
+      "content_type": "image/png",
+      "downloaded_bytes": 128,
+      "width": 640,
+      "height": 480
+    }
+  ]
+}

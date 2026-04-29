@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<full-text-retrieval-response xmlns="http://www.elsevier.com/xml/svapi/article/dtd" xmlns:ce="http://www.elsevier.com/xml/common/dtd">
+  <body>
+    <ce:sections>
+      <ce:section>
+        <ce:section-title>Results</ce:section-title>
+        <ce:para>Core body text.</ce:para>
+      </ce:section>
+      <ce:section>
+        <ce:section-title>Supplementary data</ce:section-title>
+        <ce:para>
+          <ce:display>
+            <ce:e-component id="ec1">
+              <ce:label>Supplementary material 1</ce:label>
+              <ce:caption>
+                <ce:simple-para>Extra dataset.</ce:simple-para>
+              </ce:caption>
+              <ce:link locator="mmc1" />
+            </ce:e-component>
+          </ce:display>
+        </ce:para>
+      </ce:section>
+    </ce:sections>
+  </body>
+</full-text-retrieval-response>

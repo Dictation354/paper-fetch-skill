@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import unittest
 from types import SimpleNamespace
 
@@ -24,7 +25,7 @@ from paper_fetch.models import (
     normalize_markdown_text,
 )
 from paper_fetch.providers import _springer_html
-from tests.golden_criteria import golden_criteria_asset
+from tests.golden_criteria import golden_criteria_asset, golden_criteria_scenario_asset
 
 from ._paper_fetch_support import sample_article
 
@@ -103,6 +104,7 @@ class ModelsRenderTests(unittest.TestCase):
         self.assertNotIn("## Supplementary Materials", markdown)
 
     def test_to_ai_markdown_skips_inline_assets_and_labels_additional_tables(self) -> None:
+        """rule: rule-elsevier-consumed-figure-table-dedup"""
         article = sample_article()
         article.assets = [
             Asset(kind="table", heading="Table 1", caption="Inline table.", path="downloads/table-1.png", section="body", render_state="inline"),
@@ -203,6 +205,7 @@ class ModelsRenderTests(unittest.TestCase):
         self.assertNotIn("![Figure 1]", markdown)
 
     def test_to_ai_markdown_suppresses_trailing_figures_for_body_figures_already_inline(self) -> None:
+        """rule: rule-no-trailing-figures-appendix"""
         article = sample_article()
         article.sections = [
             Section(
@@ -403,6 +406,7 @@ class ModelsRenderTests(unittest.TestCase):
         self.assertIsNone(article.assets[0].url)
 
     def test_article_from_markdown_preserves_empty_body_parent_headings(self) -> None:
+        """rule: rule-keep-semantic-parent-heading"""
         article = article_from_markdown(
             source="springer_html",
             metadata={"title": "Structured Article"},
@@ -469,6 +473,7 @@ class ModelsRenderTests(unittest.TestCase):
         self.assertNotIn("text.![Figure", rendered)
 
     def test_article_from_markdown_rewrites_inline_asset_urls_to_downloaded_paths(self) -> None:
+        """rule: rule-preserve-formula-image-fallbacks"""
         article = article_from_markdown(
             source="springer_html",
             metadata={"title": "Structured Article"},
@@ -637,17 +642,15 @@ class ModelsRenderTests(unittest.TestCase):
         self.assertIn("The data are available from the corresponding author", rendered)
 
     def test_article_from_markdown_keeps_code_availability_without_counting_it_as_fulltext(self) -> None:
+        """rule: rule-availability-excluded-from-body-metrics"""
+        markdown_text = golden_criteria_scenario_asset("availability_body_metrics", "code_availability.md").read_text(
+            encoding="utf-8"
+        )
         article = article_from_markdown(
             source="springer_html",
             metadata={"title": "Markdown Article"},
             doi="10.1000/code-availability",
-            markdown_text=(
-                "# Markdown Article\n\n"
-                "## Abstract\n\n"
-                "Short abstract.\n\n"
-                "## Code Availability\n\n"
-                "The analysis code is archived in a public repository."
-            ),
+            markdown_text=markdown_text,
         )
 
         self.assertEqual(article.quality.content_kind, "abstract_only")
@@ -703,6 +706,7 @@ class ModelsRenderTests(unittest.TestCase):
         self.assertIn(QUALITY_FLAG_WEAK_BODY_STRUCTURE, article.quality.flags)
 
     def test_article_from_markdown_keeps_headingless_body_flat_without_synthetic_heading(self) -> None:
+        """rule: rule-keep-headingless-body-flat"""
         article = article_from_markdown(
             source="springer_html",
             metadata={"title": "Headingless Article"},
@@ -959,6 +963,7 @@ class ModelsRenderTests(unittest.TestCase):
         self.assertGreater(article.quality.body_metrics.word_count, 100)
 
     def test_article_from_markdown_preserves_explicit_multilingual_abstract_sections(self) -> None:
+        """rule: rule-keep-parallel-multilingual-abstracts"""
         article = article_from_markdown(
             source="wiley_browser",
             metadata={"title": "Markdown Article"},
@@ -1026,24 +1031,25 @@ class ModelsRenderTests(unittest.TestCase):
         self.assertEqual(article.quality.content_kind, "fulltext")
 
     def test_article_from_markdown_coerces_dict_object_and_section_hint_in_declared_order(self) -> None:
+        """rule: rule-section-hints-normalize-availability"""
+        markdown_text = golden_criteria_scenario_asset("section_hints_availability", "article.md").read_text(
+            encoding="utf-8"
+        )
+        hint_payloads = json.loads(
+            golden_criteria_scenario_asset("section_hints_availability", "section_hints.json").read_text(
+                encoding="utf-8"
+            )
+        )
         article = article_from_markdown(
             source="springer_html",
             metadata={"title": "Markdown Article"},
             doi="10.1000/mixed-section-hints",
-            markdown_text=(
-                "# Markdown Article\n\n"
-                "## Results\n\n"
-                "Body text lives here with enough prose to remain classified as main text.\n\n"
-                "## Data archive\n\n"
-                "Data are archived in a public repository.\n\n"
-                "## Code archive\n\n"
-                "Analysis code is archived in a public repository."
-            ),
+            markdown_text=markdown_text,
             section_hints=[
-                SimpleNamespace(heading="Code archive", level=2, kind="code_availability", order=2),
-                {"heading": "Ignored", "level": 2, "kind": "supplementary", "order": 3},
-                {"heading": "Data archive:", "level": 2, "kind": "data_availability", "order": 1},
-                SectionHint(heading="Results", level=2, kind="body", order=0),
+                SimpleNamespace(**hint_payloads[0]),
+                hint_payloads[1],
+                hint_payloads[2],
+                SectionHint(**hint_payloads[3]),
             ],
         )
 
@@ -1104,6 +1110,7 @@ class ModelsRenderTests(unittest.TestCase):
         self.assertEqual(article.sections[0].kind, "body")
 
     def test_article_from_markdown_does_not_duplicate_explicit_abstract_when_section_hints_are_present(self) -> None:
+        """rule: rule-stable-frontmatter-order"""
         article = article_from_markdown(
             source="springer_html",
             metadata={"title": "Markdown Article"},
@@ -1187,6 +1194,7 @@ class ModelsRenderTests(unittest.TestCase):
         self.assertEqual(article.metadata.abstract, explicit_abstract)
 
     def test_article_from_markdown_promotes_repeated_methods_summary_to_methods(self) -> None:
+        """rule: rule-springer-methods-summary"""
         html = golden_criteria_asset("10.1038/nature12915", "original.html").read_text(
             encoding="utf-8",
             errors="ignore",

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import tempfile
 import unittest
 import xml.etree.ElementTree as ET
@@ -7,6 +8,7 @@ import subprocess
 from pathlib import Path
 
 from paper_fetch.formula import convert as formula_conversion
+from tests.golden_criteria import golden_criteria_scenario_asset
 
 
 class FormulaConversionTests(unittest.TestCase):
@@ -46,13 +48,38 @@ class FormulaConversionTests(unittest.TestCase):
         self.assertEqual(samples[0].raw_mathml, '<math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi></math>')
 
     def test_normalize_latex_repairs_identifier_escaped_underscores(self) -> None:
-        normalized = formula_conversion.normalize_latex(
-            r"\text{M\textbackslash\_NDVI}_{i} + \text{M\textbackslash\_VSDI}_{\text{wet},i}"
+        """rule: rule-formula-latex-normalization"""
+        samples = json.loads(
+            golden_criteria_scenario_asset("formula_latex_normalization", "samples.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        sample = next(item for item in samples if item["name"] == "identifier_escaped_underscores")
+
+        normalized = formula_conversion.normalize_latex(sample["input"])
+
+        for token in sample["must_not_include"]:
+            self.assertNotIn(token, normalized)
+        for token in sample["must_include"]:
+            self.assertIn(token, normalized)
+
+    def test_normalize_latex_scenario_samples_are_katex_compatible(self) -> None:
+        """rule: rule-formula-latex-normalization"""
+        samples = json.loads(
+            golden_criteria_scenario_asset("formula_latex_normalization", "samples.json").read_text(
+                encoding="utf-8"
+            )
         )
 
-        self.assertNotIn(r"textbackslash\_", normalized)
-        self.assertIn(r"\text{M\_NDVI}_{i}", normalized)
-        self.assertIn(r"\text{M\_VSDI}_{\text{wet},i}", normalized)
+        for sample in samples:
+            with self.subTest(sample=sample["name"]):
+                normalized = formula_conversion.normalize_latex(sample["input"])
+                if "expected" in sample:
+                    self.assertEqual(normalized, sample["expected"])
+                for token in sample.get("must_not_include", []):
+                    self.assertNotIn(token, normalized)
+                for token in sample.get("must_include", []):
+                    self.assertIn(token, normalized)
 
     def test_normalize_latex_does_not_globally_replace_textbackslash(self) -> None:
         normalized = formula_conversion.normalize_latex(r"\text{\textbackslash\_NDVI}")

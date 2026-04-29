@@ -14,7 +14,7 @@
 - 单次事故的时间线、排障过程或 root-cause 复盘全文
 - 某篇 DOI 的特殊例外规则
 
-provider 运行时行为见 [`providers.md`](providers.md)，系统分层与业务主线见 [`architecture/target-architecture.md`](architecture/target-architecture.md)。
+provider 运行时行为见 [`providers.md`](providers.md)，系统分层与业务主线见 [`architecture/target-architecture.md`](architecture/target-architecture.md)。受控阶段到 canonical module 的映射见 [`target-architecture.md` 的 Extraction 阶段映射](architecture/target-architecture.md#extraction-stage-module-map)。
 
 ## 规则怎么读
 
@@ -120,18 +120,16 @@ metadata
 
 ### 无稳定 DOI 样本规则汇总表
 
-| 规则 | 当前证据状态 | 后续补样本触发 |
-| --- | --- | --- |
-| [通用元数据边界](#rule-generic-metadata-boundaries) | 最小 DOM metadata 测试；无 DOI 级 replay。 | 出现真实 redirect stub 或站点 description 污染回归。 |
-| [Provider 自有作者与摘要信号](#rule-provider-owned-authors) | DOM abstract 恢复首段分支只有最小测试；主规则已有 Science/Wiley/PNAS/Elsevier 证据。 | 某 provider 的 DOM abstract fallback 需要 replay 锁定。 |
-| [图片和公式图片本地链接改写](#rule-rewrite-inline-figure-links) | 跨阶段链路没有单一 DOI 能覆盖全过程。 | 有完整“远程图 -> 下载资产 -> 相对 Markdown 链接”回放样本。 |
-| [下载资产诊断字段](#rule-asset-download-diagnostic-fields) | 字段保真由 MCP / provider 单元测试锁定。 | 某 provider 诊断字段在真实回放中丢失。 |
-| [表格展平或列表降级](#rule-table-flatten-or-list) | 共享 table helper 的最小表结构测试。 | 新增 publisher 真实复杂表 replay。 |
-| [Availability 不计入正文充分性](#rule-availability-excluded-from-body-metrics) | models 与 provider 组合测试覆盖；无单一样本覆盖全部 body metrics 分支。 | 真实页面只含 availability 却被误判全文。 |
-| [Section hint 适配 availability](#rule-section-hints-normalize-availability) | dict/dataclass/order coercion 由 models 和 browser workflow 测试覆盖。 | 真实 section hints 顺序或形态回归。 |
-| [LaTeX normalization](#rule-formula-latex-normalization) | 公式 normalize 分支由独立转换测试覆盖。 | 真实 MathML 转换产出新 KaTeX 不兼容宏。 |
-| [Elsevier supplementary materials](#rule-elsevier-supplementary-materials) | 当前只有最小 XML 分支测试。 | 真实 Elsevier supplementary display 回归。 |
-| [Elsevier graphical abstract](#rule-elsevier-graphical-abstract) | 当前只有最小资产归类测试。 | 真实 graphical abstract 被误归入 Additional Figures。 |
+| 规则 | 当前证据状态 | 后续补样本触发 | 下一步候选 fixture |
+| --- | --- | --- | --- |
+| [通用元数据边界](#rule-generic-metadata-boundaries) | 无 DOI 级 replay；已有 `_scenarios/generic_metadata_boundaries`。 | 出现真实 redirect stub 或站点 description 污染回归。 | redirect stub HTML，优先 Elsevier linkinghub / ScienceDirect 跳转页。 |
+| [Provider 自有作者与摘要信号](#rule-provider-owned-authors) | DOM abstract 恢复首段分支无 DOI 级 replay；已有 `_scenarios/provider_dom_abstract_fallback`。 | 某 provider 的 DOM abstract fallback 需要 replay 锁定。 | 缺 datalayer / schema.org 但 DOM abstract 可恢复的 provider HTML。 |
+| [图片和公式图片本地链接改写](#rule-rewrite-inline-figure-links) | 跨阶段链路无单一 DOI replay；已有 `_scenarios/inline_figure_link_rewrite`。 | 有完整“远程图 -> 下载资产 -> 相对 Markdown 链接”回放样本。 | 带 `body_assets/` 下载产物和原始远程图 URL 的完整 replay。 |
+| [下载资产诊断字段](#rule-asset-download-diagnostic-fields) | 无 DOI 级 replay；已有 `_scenarios/asset_download_diagnostics`。 | 某 provider 诊断字段在真实回放中丢失。 | 含 accepted preview、失败 snippet 和 content type 的 provider asset replay。 |
+| [表格展平或列表降级](#rule-table-flatten-or-list) | 共享 table helper 无 DOI 级 replay；已有 `_scenarios/table_flatten_or_list`。 | 新增 publisher 真实复杂表 replay。 | 非 Elsevier / Springer 的 rowspan、colspan 或无法展平 table HTML。 |
+| [Availability 不计入正文充分性](#rule-availability-excluded-from-body-metrics) | 无单一样本覆盖全部 body metrics 分支；已有 `_scenarios/availability_body_metrics`。 | 真实页面只含 availability 却被误判全文。 | 只含 Data / Code Availability、正文为空或极短的 HTML replay。 |
+| [Section hint 适配 availability](#rule-section-hints-normalize-availability) | dict/dataclass/order coercion 已有 `_scenarios/section_hints_availability`。 | 真实 section hints 顺序或形态回归。 | provider extraction 产出非 literal heading 但带 section hint 的 replay。 |
+| [LaTeX normalization](#rule-formula-latex-normalization) | normalize 分支无 DOI 级 replay；已有 `_scenarios/formula_latex_normalization`。 | 真实 MathML 转换产出新 KaTeX 不兼容宏。 | 包含 publisher-specific MathML 宏或 mtext 转义的 XML / HTML。 |
 
 ## Generic
 
@@ -143,7 +141,7 @@ metadata
 
 - 这条规则约束的是：只要 HTML 提取链已经识别出一个父节标题，后续的文章组装和最终 markdown 渲染就不能把这个父节标题吃掉，即使正文内容主要落在子节里。
 - 如果违反，用户会看到：正文里直接从子节开始，像是 `Experimental design` 这样的内容突然失去上级章节，文档结构会断层。
-- 它对应的阶段是：文章组装、最终渲染。
+- 它对应的阶段是：`article-assembly`、`final-rendering`。
 - Owner：`paper_fetch.models.ArticleModel` 与 provider section assembly。
 - 代表性 HTML / XML：
   - [`../tests/fixtures/golden_criteria/10.1126_sciadv.adl6155/original.html`](../tests/fixtures/golden_criteria/10.1126_sciadv.adl6155/original.html)
@@ -163,7 +161,7 @@ metadata
 
 - 这条规则约束的是：当 figure 已经以正文内联形式进入最终输出时，`asset_profile='body'` / `asset_profile='all'` 的正文图渲染不能再在文末重复拼一个尾部 `## Figures` 附录。
 - 如果违反，用户会看到：正文已经出现过的 figure 在文末又来一遍，像是“正文 + 附录”重复渲染，结构和阅读顺序都会变差。
-- 它对应的阶段是：资产清洗、最终渲染。
+- 它对应的阶段是：`article-assembly`、`final-rendering`。
 - Owner：`paper_fetch.models.ArticleModel` render state。
 - 代表性 HTML / XML：
   - [`../tests/fixtures/golden_criteria/10.1029_2004gb002273/original.html`](../tests/fixtures/golden_criteria/10.1029_2004gb002273/original.html)
@@ -215,10 +213,12 @@ metadata
 
 - 这条规则约束的是：通用 HTML metadata 抽取只能把真正的论文元数据写进文章模型，不能把站点级 description、标题回显或 redirect stub chrome 误当成摘要；如果页面只是 redirect stub，但里面确实带着可靠 lookup title，也要保留下来供后续解析链使用。
 - 如果违反，用户会看到：标题被重复当成摘要、摘要字段被站点 description 污染，或者 Elsevier redirect stub 只剩 `Redirecting`，导致后续抓取与展示退化。
-- 它对应的阶段是：metadata 抽取、provider 前置清洗。
+- 它对应的阶段是：`metadata`、`html-cleanup`。
 - Owner：`paper_fetch.extraction.html._metadata`。
 - 代表性 HTML / XML：
-  - 当前无稳定 DOI 样本，直接见对应测试。
+  - [`../tests/fixtures/golden_criteria/_scenarios/generic_metadata_boundaries/generic_description.html`](../tests/fixtures/golden_criteria/_scenarios/generic_metadata_boundaries/generic_description.html)
+  - [`../tests/fixtures/golden_criteria/_scenarios/generic_metadata_boundaries/redirect_stub.html`](../tests/fixtures/golden_criteria/_scenarios/generic_metadata_boundaries/redirect_stub.html)
+  - `_scenarios/generic_metadata_boundaries` 是 metadata contract scenario，不是 DOI 级真实 replay。
 - 对应测试：
   - [`../tests/unit/test_html_shared_helpers.py`](../tests/unit/test_html_shared_helpers.py) 中的 `test_parse_html_metadata_does_not_treat_generic_description_as_abstract`
   - [`../tests/unit/test_html_shared_helpers.py`](../tests/unit/test_html_shared_helpers.py) 中的 `test_parse_html_metadata_uses_redirect_stub_lookup_title`
@@ -232,7 +232,7 @@ metadata
 - 这条规则约束的是：availability 判定必须把真正可读的正文 HTML 识别成 fulltext，同时把 access gate、abstract-only 页面和带登录 chrome 的摘要页识别成 abstract-only；不能因为站点噪声、机构登录提示或 ancillary sections 把结果判反。
 - 如果违反，用户会看到：明明只有摘要的页面被当成全文返回，或者本来有正文的页面被误降级成 abstract-only，直接影响最终内容类型和 fallback 行为。
 - 它对应的阶段是：`availability-quality`、`article-assembly`。
-- Owner：`paper_fetch.quality.html_availability`；HTML container 评分、选择、清理的架构边界见 [`architecture/target-architecture.md` 的 Extraction 层](architecture/target-architecture.md#6-extraction-层)。
+- Owner：`paper_fetch.quality.html_availability`；HTML container 评分、选择、清理的架构边界见 [architecture/target-architecture.md 的 Extraction 层](architecture/target-architecture.md#6-extraction-层)。
 - 代表性 HTML / XML：
   - [`../tests/fixtures/block/10.1126_science.aeg3511/raw.html`](../tests/fixtures/block/10.1126_science.aeg3511/raw.html)
   - [`../tests/fixtures/golden_criteria/10.1126_science.aeg3511/original.html`](../tests/fixtures/golden_criteria/10.1126_science.aeg3511/original.html)
@@ -267,8 +267,9 @@ metadata
   - [`../tests/fixtures/golden_criteria/10.1111_gcb.16998/original.html`](../tests/fixtures/golden_criteria/10.1111_gcb.16998/original.html)
   - [`../tests/fixtures/golden_criteria/10.1073_pnas.2309123120/original.html`](../tests/fixtures/golden_criteria/10.1073_pnas.2309123120/original.html)
   - [`../tests/fixtures/golden_criteria/_scenarios/elsevier_author_groups_minimal/original.xml`](../tests/fixtures/golden_criteria/_scenarios/elsevier_author_groups_minimal/original.xml)
+  - [`../tests/fixtures/golden_criteria/_scenarios/provider_dom_abstract_fallback/payload.json`](../tests/fixtures/golden_criteria/_scenarios/provider_dom_abstract_fallback/payload.json)
   - `_scenarios/elsevier_author_groups_minimal` 是最小 contract scenario，不是 DOI 级真实 replay，用于锁住 Elsevier author groups 结构。
-  - 对于“DOM abstract 恢复正文首段”这个更小的场景，当前无稳定 DOI 样本，直接见对应测试。
+  - `_scenarios/provider_dom_abstract_fallback` 锁住“DOM abstract 恢复正文首段”分支；它不是 DOI 级真实 replay。
 - 对应测试：
   - [`../tests/unit/test_elsevier_markdown.py`](../tests/unit/test_elsevier_markdown.py) 中的 `test_build_article_structure_extracts_authors_from_author_groups`
   - [`../tests/unit/test_science_pnas_provider.py`](../tests/unit/test_science_pnas_provider.py) 中的 `test_science_provider_uses_extracted_dom_abstract_and_restores_lead_body_text`
@@ -294,7 +295,9 @@ metadata
 - 它对应的阶段是：`asset-link-rewrite`、`article-assembly`、`markdown-normalization`、`final-rendering`。
 - Owner：`paper_fetch.extraction.html.figure_links`。
 - 代表性 HTML / XML：
-  - 当前没有单一 DOI 样本能完整覆盖“远程图 -> 已下载本地资源 -> 相对 markdown 路径 -> 交叉引用不误绑”的全过程，直接见对应测试。
+  - [`../tests/fixtures/golden_criteria/_scenarios/inline_figure_link_rewrite/article.md`](../tests/fixtures/golden_criteria/_scenarios/inline_figure_link_rewrite/article.md)
+  - [`../tests/fixtures/golden_criteria/_scenarios/inline_figure_link_rewrite/assets.json`](../tests/fixtures/golden_criteria/_scenarios/inline_figure_link_rewrite/assets.json)
+  - `_scenarios/inline_figure_link_rewrite` 覆盖“远程图 -> 已下载本地资源 -> 本地 Markdown 链接 -> 交叉引用不误绑”的 shared contract；它不是 DOI 级真实 replay。
 - 对应测试：
   - Owner（generic）：
     - [`../tests/unit/test_science_pnas_postprocess.py`](../tests/unit/test_science_pnas_postprocess.py) 中的 `test_rewrite_inline_figure_links_prefers_local_paths_for_existing_science_image_blocks`
@@ -352,14 +355,17 @@ metadata
 - 这条规则约束的是：成功或失败的资产下载都要保留足够诊断信息；成功图片记录 `download_tier`、下载 URL、content type、字节数和尺寸，失败资产保留 status、content type、snippet、reason 和 recovery 轨迹。
 - 如果违反，用户会看到：live review 只能笼统报 `asset_download_failure`，看不出是 full-size 被拦截、preview 可接受、supplementary 失败，还是图片真的缺失。
 - 它对应的阶段是：`asset-validation`、`article-assembly`、`final-rendering`。
-- Owner：`paper_fetch.models.ArticleAsset` / `paper_fetch.models.ArticleQuality` 与 `paper_fetch.mcp.schemas`。
+- Owner：`paper_fetch.models.Asset` / `paper_fetch.models.Quality` 与 `paper_fetch.mcp.schemas`。
 - 代表性 HTML / XML：
-  - 当前没有单一 DOI 样本覆盖所有诊断字段，直接见对应测试。
+  - [`../tests/fixtures/golden_criteria/_scenarios/asset_download_diagnostics/article_payload.json`](../tests/fixtures/golden_criteria/_scenarios/asset_download_diagnostics/article_payload.json)
+  - `_scenarios/asset_download_diagnostics` 锁住 MCP / model payload 的成功下载诊断字段；它不是 DOI 级真实 replay。
 - 对应测试：
   - Owner（models / MCP）：
     - [`../tests/unit/test_mcp.py`](../tests/unit/test_mcp.py) 中的 `test_article_payload_preserves_asset_download_diagnostics`
   - Provider 覆盖：
     - [`../tests/unit/test_science_pnas_provider.py`](../tests/unit/test_science_pnas_provider.py) 中的 `test_browser_workflow_download_related_assets_retries_after_partial_failures`
+    - [`../tests/unit/test_science_pnas_provider.py`](../tests/unit/test_science_pnas_provider.py) 中的 `test_browser_workflow_retries_only_failed_supplementary_assets`
+    - [`../tests/unit/test_science_pnas_provider.py`](../tests/unit/test_science_pnas_provider.py) 中的 `test_browser_workflow_retries_only_failed_body_assets`
     - [`../tests/unit/test_science_pnas_provider.py`](../tests/unit/test_science_pnas_provider.py) 中的 `test_science_provider_records_asset_failure_when_shared_playwright_preview_fails`
 - 边界说明：
   - 本规则只要求诊断字段不丢失，不要求所有 provider 使用同一种远端下载实现。
@@ -389,10 +395,11 @@ metadata
 
 - 这条规则约束的是：表格如果只是多级表头、rowspan 这类还能讲清楚结构的复杂度，就要尽量展平成 Markdown 表；如果结构已经复杂到强行展平会误导，就退成清晰的列表说明。
 - 如果违反，用户会看到：要么本来能读懂的表被糟糕地压扁成错列的 Markdown 表，要么复杂表直接丢信息，没有任何可读 fallback。
-- 它对应的阶段是：表格清洗、Markdown 渲染。
+- 它对应的阶段是：`table-rendering`、`markdown-normalization`。
 - Owner：`paper_fetch.extraction.html.tables`。
 - 代表性 HTML / XML：
-  - 当前无稳定 DOI 样本，直接见对应测试。
+  - [`../tests/fixtures/golden_criteria/_scenarios/table_flatten_or_list/complex_table.html`](../tests/fixtures/golden_criteria/_scenarios/table_flatten_or_list/complex_table.html)
+  - `_scenarios/table_flatten_or_list` 锁住无法安全展平时的列表降级；它不是 DOI 级真实 replay。
 - 对应测试：
   - [`../tests/unit/test_science_pnas_postprocess_units.py`](../tests/unit/test_science_pnas_postprocess_units.py) 中的 `test_extract_science_pnas_markdown_flattens_multilevel_table_headers`
   - [`../tests/unit/test_science_pnas_postprocess_units.py`](../tests/unit/test_science_pnas_postprocess_units.py) 中的 `test_extract_science_pnas_markdown_flattens_rowspan_table_body_cells`
@@ -400,13 +407,14 @@ metadata
 - 边界说明：
   - 这条规则不是要求所有表格最终都必须长成 Markdown 表。
   - 当结构已经超出安全展平范围时，退成列表是符合规则的正确结果，不是降级失败。
+  - 共享 table helper 的唯一维护入口是 `paper_fetch.extraction.html.tables`；不得在 provider 层新增 `_html_tables` 兼容 re-export。
 
 <a id="rule-stable-frontmatter-order"></a>
 ### 前言摘要族的顺序与去重必须稳定
 
 - 这条规则约束的是：teaser、`Significance`、`Structured Abstract`、`Abstract` 这类前言摘要块一旦已经被识别出来，就必须在最终 markdown 里按阅读顺序稳定出现，不能重复注回正文；只有在确实需要把前言和正文切开时，才插入一次 `## Main Text`。
 - 如果违反，用户会看到：同一段摘要在前言和正文里各出现一遍，或者 `Significance`、`Structured Abstract`、`Abstract` 顺序错乱，甚至正文开头被摘要块挤占。
-- 它对应的阶段是：HTML 提取、共享 Markdown 规范化、文章组装、最终渲染。
+- 它对应的阶段是：`provider-html-or-xml-extraction`、`markdown-normalization`、`article-assembly`、`final-rendering`。
 - Owner：`paper_fetch.providers._science_pnas_postprocess` 与 `paper_fetch.models.ArticleModel`。
 - 代表性 HTML / XML：
   - [`../tests/fixtures/golden_criteria/10.1126_science.abp8622/original.html`](../tests/fixtures/golden_criteria/10.1126_science.abp8622/original.html)
@@ -428,7 +436,7 @@ metadata
 
 - 这条规则约束的是：如果页面或 XML 里明确存在并行的多语言摘要块，就要把它们都保留下来；如果只有单语的非英文摘要或正文，也必须原样保留，不能因为语言过滤把整篇文章删空。
 - 如果违反，用户会看到：双语摘要只剩一种语言，或者葡萄牙语、西班牙语这类非英文正文整块消失，看起来像抓取失败。
-- 它对应的阶段是：HTML / XML 提取、共享 abstract 归一化、文章组装、最终渲染。
+- 它对应的阶段是：`provider-html-or-xml-extraction`、`markdown-normalization`、`article-assembly`、`final-rendering`。
 - Owner：`paper_fetch.extraction.html.language` 与 provider abstract extraction adapters（`paper_fetch.providers._science_pnas_html` / `paper_fetch.providers._article_markdown_xml`）。
 - 代表性 HTML / XML：
   - [`../tests/fixtures/golden_criteria/10.1111_gcb.16386/bilingual.html`](../tests/fixtures/golden_criteria/10.1111_gcb.16386/bilingual.html)
@@ -500,7 +508,8 @@ metadata
 - 它对应的阶段是：`availability-quality`、`section-classification`、`final-rendering`。
 - Owner：`paper_fetch.quality.html_availability` 与 `paper_fetch.models.ArticleModel` retained section 渲染。
 - 代表性 HTML / XML：
-  - 当前无单一 DOI 样本覆盖全部 body metrics 分支，直接见对应测试。
+  - [`../tests/fixtures/golden_criteria/_scenarios/availability_body_metrics/code_availability.md`](../tests/fixtures/golden_criteria/_scenarios/availability_body_metrics/code_availability.md)
+  - `_scenarios/availability_body_metrics` 锁住只有 abstract + code availability 时仍应判为 abstract-only 且保留 availability；它不是 DOI 级真实 replay。
 - 对应测试：
   - Owner（models）：
     - [`../tests/unit/test_models_render.py`](../tests/unit/test_models_render.py) 中的 `test_article_from_markdown_keeps_data_availability_without_counting_it_as_fulltext`
@@ -519,7 +528,9 @@ metadata
 - 它对应的阶段是：`section-classification`、`article-assembly`。
 - Owner：`paper_fetch.extraction.section_hints`。
 - 代表性 HTML / XML：
-  - 当前无稳定 DOI 样本，直接见对应测试。
+  - [`../tests/fixtures/golden_criteria/_scenarios/section_hints_availability/article.md`](../tests/fixtures/golden_criteria/_scenarios/section_hints_availability/article.md)
+  - [`../tests/fixtures/golden_criteria/_scenarios/section_hints_availability/section_hints.json`](../tests/fixtures/golden_criteria/_scenarios/section_hints_availability/section_hints.json)
+  - `_scenarios/section_hints_availability` 锁住 dict / object / dataclass hint 形态和 declared order；它不是 DOI 级真实 replay。
 - 对应测试：
   - Owner（models / generic）：
     - [`../tests/unit/test_models_render.py`](../tests/unit/test_models_render.py) 中的 `test_article_from_markdown_uses_section_hints_for_nonliteral_data_availability`
@@ -536,7 +547,7 @@ metadata
 
 - 这条规则约束的是：当文章正文本来就直接以连续段落展开、没有可靠的 body heading 时，组装和渲染阶段不能人为包一层重复标题、`## Full Text` 或同义伪节；如果需要区分前言和正文，最多只插入一次 `## Main Text` 作为边界。
 - 如果违反，用户会看到：commentary、perspective 这类文章被套上并不存在的章节壳，或者文章标题又在正文里重复出现一次。
-- 它对应的阶段是：文章组装、最终渲染。
+- 它对应的阶段是：`article-assembly`、`final-rendering`。
 - Owner：`paper_fetch.models.ArticleModel`。
 - 代表性 HTML / XML：
   - [`../tests/fixtures/golden_criteria/10.1126_science.aeg3511/original.html`](../tests/fixtures/golden_criteria/10.1126_science.aeg3511/original.html)
@@ -584,7 +595,7 @@ metadata
 
 - 这条规则约束的是：`**Equation n.**` 和对应的 `$$...$$` display math 之间必须保持稳定的块级换行，公式后的解释句和 figure caption 的后续句子也不能被粘成一整块坏文本。
 - 如果违反，用户会看到：`**Equation 1.**$$`、`$$where *P* is precipitation`、`2020.Time series` 这类明显粘连的坏渲染。
-- 它对应的阶段是：共享 Markdown 后处理、最终渲染。
+- 它对应的阶段是：`markdown-normalization`、`final-rendering`。
 - Owner：`paper_fetch.providers._science_pnas_postprocess`。
 - 代表性 HTML / XML：
   - [`../tests/fixtures/golden_criteria/10.1126_science.adp0212/original.html`](../tests/fixtures/golden_criteria/10.1126_science.adp0212/original.html)
@@ -604,7 +615,7 @@ metadata
 
 - 这条规则约束的是：HTML 中的 MathML、publisher fallback span、inline equation image 和 display equation image 要尽量转成可读公式；如果 MathML 无法转换或公式本来只以图片存在，就保留 `![Formula](...)`，并把它作为 `kind="formula"` 的正文资产候选进入下载和本地链接改写流程。
 - 如果违反，用户会看到：公式静默消失、被渲染成 `[Formula unavailable]` 的假失败，或者正文里残留远程公式图片链接且无法跟下载资产对应。
-- 它对应的阶段是：HTML 清洗、公式渲染、资产抽取、文章组装。
+- 它对应的阶段是：`html-cleanup`、`formula-rendering`、`asset-discovery`、`article-assembly`。
 - Owner：`paper_fetch.extraction.html.formula_rules`。
 - 代表性 HTML / XML：
   - [`../tests/fixtures/golden_criteria/10.1111_gcb.15322/original.html`](../tests/fixtures/golden_criteria/10.1111_gcb.15322/original.html)
@@ -633,13 +644,15 @@ metadata
 - 它对应的阶段是：`formula-rendering`、`markdown-normalization`、`final-rendering`。
 - Owner：`paper_fetch.formula.convert`。
 - 代表性 HTML / XML：
-  - 当前无单一 DOI 样本覆盖所有 LaTeX normalize 分支，直接见对应测试。
+  - [`../tests/fixtures/golden_criteria/_scenarios/formula_latex_normalization/samples.json`](../tests/fixtures/golden_criteria/_scenarios/formula_latex_normalization/samples.json)
+  - `_scenarios/formula_latex_normalization` 锁住 publisher-specific LaTeX normalize 分支；它不是 DOI 级真实 replay。
 - 对应测试：
   - Owner（generic）：
     - [`../tests/unit/test_formula_conversion.py`](../tests/unit/test_formula_conversion.py) 中的 `test_normalize_latex_repairs_identifier_escaped_underscores`
     - [`../tests/unit/test_formula_conversion.py`](../tests/unit/test_formula_conversion.py) 中的 `test_normalize_latex_does_not_globally_replace_textbackslash`
     - [`../tests/unit/test_formula_conversion.py`](../tests/unit/test_formula_conversion.py) 中的 `test_normalize_latex_rewrites_upgreek_macros`
     - [`../tests/unit/test_formula_conversion.py`](../tests/unit/test_formula_conversion.py) 中的 `test_normalize_latex_rewrites_mspace_for_katex`
+    - [`../tests/unit/test_formula_conversion.py`](../tests/unit/test_formula_conversion.py) 中的 `test_normalize_latex_scenario_samples_are_katex_compatible`
 - 边界说明：
   - 这条规则不承诺所有 MathML 都能转换成功；失败占位和 provider-specific inline/display 行为由具体公式渲染规则约束。
   - `\textbackslash\_` 只修复夹在标识符字符之间的窄范围场景，不能全局替换正常文本里的 `\textbackslash`。`\mspace{Nmu}` 只在 `mu` 单位时改写为 `\mkernNmu`，其它单位保留原样。
@@ -654,6 +667,7 @@ metadata
   - [Availability 标题必须映射到稳定 section kind](#rule-availability-section-kind-mapping)
   - [Availability 不计入正文充分性度量](#rule-availability-excluded-from-body-metrics)
   - [正文已内联 figure 时不再重复追加尾部 Figures 附录](#rule-no-trailing-figures-appendix)
+  - [出版社站点 UI 噪声不能泄漏进最终 markdown](#rule-filter-publisher-ui-noise)
   - [正文、标题和表格里的行内语义格式不能被打平或拆裂](#rule-preserve-inline-semantics-in-body-and-tables)
   - [已下载的正文图片和公式图片要改写成正文附近的本地链接](#rule-rewrite-inline-figure-links)
   - [表格能展平就转 Markdown 表，展不平就退成可读列表](#rule-table-flatten-or-list)
@@ -720,11 +734,13 @@ metadata
 - Owner：`paper_fetch.providers.html_springer_nature` 与 `paper_fetch.providers._springer_html`。
 - 代表性 HTML / XML：
   - [`../tests/fixtures/golden_criteria/10.1038_s41586-020-1941-5/original.html`](../tests/fixtures/golden_criteria/10.1038_s41586-020-1941-5/original.html)
-  - 这个样本覆盖 `main-content` 中正文 `div` 位于 `Reporting summary` section 之前的结构。
+  - [`../tests/fixtures/golden_criteria/_scenarios/springer_main_content_direct_children/original.html`](../tests/fixtures/golden_criteria/_scenarios/springer_main_content_direct_children/original.html)
+  - 真实 replay 覆盖 `main-content` 中正文 `div` 位于 `Reporting summary` section 之前的结构；scenario 锁住直接子节点顺序的最小形态。
 - 对应测试：
   - [`../tests/unit/test_springer_html_regressions.py`](../tests/unit/test_springer_html_regressions.py) 中的 `test_nature_matters_arising_fixture_keeps_main_content_before_reporting_summary`
+  - [`../tests/unit/test_springer_html_regressions.py`](../tests/unit/test_springer_html_regressions.py) 中的 `test_springer_main_content_scenario_keeps_direct_child_order`
 - 边界说明：
-  - 测试覆盖度低：当前只有一份 Nature Matters Arising 回放直接锁住该 DOM 形态；同类 Springer / Nature main-content 遍历改动应优先补第二个 fixture。
+  - 当前有一份 Nature Matters Arising replay 和一个最小 scenario；同类 Springer / Nature main-content 遍历改动仍应优先补第二个 DOI 级 fixture。
   - 正文外的 `Data availability` / `Code availability` 仍然允许从 scientific back matter 补回，但已经在正文遍历中出现的 availability 节不能重复输出。
 
 <a id="rule-springer-original-html-artifact"></a>
@@ -733,6 +749,30 @@ metadata
 > 已迁出到 [`providers.md` 的 Springer artifact/storage 说明](providers.md#springer-原始-html-artifact)。
 
 旧 anchor 保留用于历史链接。原始 HTML 文件名和下载目录形态属于 `artifact-storage`，不再作为提取 / 渲染规则维护。
+
+<a id="rule-springer-supplementary-scope"></a>
+### Springer supplementary 只能来自 supplementary-like section，Source Data 必须独立分类落盘
+
+- 这条规则约束的是：Springer / Nature HTML 的普通 supplementary 只能从 `Supplementary information`、`Supplementary material(s)`、`Supporting information`、`Electronic supplementary material`、`Extended data`、`Extended data figures and tables` 这些 supplementary-like section 子树里识别；`Source data` 不能再混进普通 supplementary，而是要独立识别并在下载时落到 `source_data/` 子目录。`Peer Review File` / `Peer reviewer reports` 也必须排除。
+- 如果违反，用户会看到：正文或 article chrome 里的普通 PDF/CSV/ZIP 被误当成 supplementary，`Peer Review File` 混入补充材料列表，或者 `Source Data` 和普通 supplementary 重复下载、重复落盘。
+- 它对应的阶段是：`asset-discovery`、`asset-download`、`artifact-storage`。
+- Owner：`paper_fetch.providers._springer_html` 与 `paper_fetch.extraction.html._assets`。
+- 代表性 HTML / XML：
+  - [`../tests/fixtures/golden_criteria/10.1038_s41561-022-00912-7/original.html`](../tests/fixtures/golden_criteria/10.1038_s41561-022-00912-7/original.html)
+  - [`../tests/fixtures/golden_criteria/10.1038_s41558-022-01584-2/original.html`](../tests/fixtures/golden_criteria/10.1038_s41558-022-01584-2/original.html)
+  - [`../tests/fixtures/golden_criteria/10.1038_s43247-024-01270-5/original.html`](../tests/fixtures/golden_criteria/10.1038_s43247-024-01270-5/original.html)
+  - 这几份 replay 分别覆盖独立 `Source data` section、`Extended data` 描述里的 `Source data` 内链，以及 supplementary section 中的 `Peer Review File` 排除。
+- 对应测试：
+  - [`../tests/unit/test_springer_html_regressions.py`](../tests/unit/test_springer_html_regressions.py) 中的 `test_extract_asset_html_scopes_leave_empty_supplementary_scope_without_supplementary_sections`
+  - [`../tests/unit/test_springer_html_regressions.py`](../tests/unit/test_springer_html_regressions.py) 中的 `test_real_nature_fixture_separates_source_data_from_supplementary_assets`
+  - [`../tests/unit/test_springer_html_regressions.py`](../tests/unit/test_springer_html_regressions.py) 中的 `test_real_nature_fixture_resolves_source_data_links_from_extended_data_descriptions`
+  - [`../tests/unit/test_springer_html_regressions.py`](../tests/unit/test_springer_html_regressions.py) 中的 `test_real_nature_fixture_skips_peer_review_files_from_supplementary_assets`
+  - [`../tests/unit/test_html_shared_helpers.py`](../tests/unit/test_html_shared_helpers.py) 中的 `test_download_supplementary_assets_routes_source_data_into_subdirectory`
+  - [`../tests/unit/test_html_shared_helpers.py`](../tests/unit/test_html_shared_helpers.py) 中的 `test_download_supplementary_assets_with_only_source_data_creates_only_source_data_subdirectory`
+- 边界说明：
+  - 这条规则只约束 Springer / Nature HTML asset discovery，不改变 Wiley / Science / PNAS 的 supplementary 判定范围。
+  - `Extended Data` / `Extended Data Figures and Tables` 里的 figure / table page 链接仍然属于普通 supplementary 范围；只有独立 `Source data` section 或 `Extended data` 项里显式标注 `Source data` 的链接会被归到 source-data。
+  - `Source Data` 的独立分类是内部实现细节；对外资产仍通过既有 supplementary 下载链路返回，只是路径被分流到 `source_data/`。
 
 <a id="rule-springer-access-hint-disclaimer"></a>
 ### 访问提示、预览语和 AI 免责声明不能混进正文
@@ -757,7 +797,7 @@ metadata
 
 - 这条规则约束的是：图已经有正式图题或图注时，渲染链必须优先使用这些正式内容，不能再把站点塞进来的 `data-title`、`alt`、朗读文本、下载入口和展示控件重新拼回图注里。
 - 如果违反，用户会看到：同一张图的标题后面又多出一段重复、破碎或格式错乱的说明，常见表现是残留的 LaTeX、拆开的希腊字母、重复 caption、`PowerPoint slide` 或 `Full size image`。
-- 它对应的阶段是：figure 文本抽取、最终渲染。
+- 它对应的阶段是：`asset-discovery`、`final-rendering`。
 - Owner：`paper_fetch.providers._springer_html` 与 `paper_fetch.providers.html_springer_nature`。
 - 代表性 HTML / XML：
   - [`../tests/fixtures/golden_criteria/10.1038_nature12915/original.html`](../tests/fixtures/golden_criteria/10.1038_nature12915/original.html)
@@ -778,7 +818,7 @@ metadata
 
 - 这条规则约束的是：旧 Nature 文章里如果同时存在 `Methods Summary` 和 `Online Methods` / 旧方法结构证据，最终结构必须归一成“`Methods Summary` 一次、`Methods` 一次”，不能重复堆出两个同义方法章节。
 - 如果违反，用户会看到：文档里出现两个 `Methods Summary`，或者 `Online Methods`、`Methods` 混着出现，方法学结构会看起来像重复拼装。
-- 它对应的阶段是：HTML 结构归一、文章组装、最终渲染。
+- 它对应的阶段是：`provider-html-or-xml-extraction`、`article-assembly`、`final-rendering`。
 - Owner：`paper_fetch.providers._springer_html` 与 `paper_fetch.models.ArticleModel`。
 - 代表性 HTML / XML：
   - [`../tests/fixtures/golden_criteria/10.1038_nature12915/original.html`](../tests/fixtures/golden_criteria/10.1038_nature12915/original.html)
@@ -796,7 +836,7 @@ metadata
 
 - 这条规则约束的是：正文里如果先放了一个 table 占位，后续拿到 table page 时要把真实表格插回原位置；如果 table page 最终没拿到真正的表，也不能把内部占位符直接漏给用户。对于 Springer/Nature inline table 节点，只要 label 是 `Extended Data Table N` 且存在匹配的 `/tables/N` 页面链接，若 table page 实际是图片响应或只能从 HTML 中提取 full-size image，应输出 `kind="table"` 的 table 图片资产；若解析失败，应输出明确的 `[Table body unavailable: ...]` 降级占位。
 - 如果违反，用户会看到：正文里残留像 `PAPER_FETCH_TABLE_PLACEHOLDER` 这样的内部标记，Extended Data Table 直接消失，或者文章因为某个 table page 没拿到表就整体变成异常结果。
-- 它对应的阶段是：HTML 提取、table page 注入、table 图片 fallback、最终渲染。
+- 它对应的阶段是：`provider-html-or-xml-extraction`、`table-rendering`、`asset-discovery`、`final-rendering`。
 - Owner：`paper_fetch.providers.springer` 与 `paper_fetch.extraction.html.tables`。
 - 代表性 HTML / XML：
   - [`../tests/fixtures/golden_criteria/10.1038_s43247-024-01295-w/original.html`](../tests/fixtures/golden_criteria/10.1038_s43247-024-01295-w/original.html)
@@ -846,28 +886,36 @@ metadata
 - 代表性 HTML / XML：
   - [`../tests/fixtures/golden_criteria/10.1016_j.agrformet.2024.109975/original.xml`](../tests/fixtures/golden_criteria/10.1016_j.agrformet.2024.109975/original.xml)
   - [`../tests/fixtures/golden_criteria/10.1016_j.jhydrol.2023.130125/original.xml`](../tests/fixtures/golden_criteria/10.1016_j.jhydrol.2023.130125/original.xml)
-  - 这些 real Elsevier XML 覆盖 display formula 渲染为公式块，以及 inline / display / failure branch 的 XML 主干。
+  - [`../tests/fixtures/golden_criteria/_scenarios/elsevier_formula_inline_display/original.xml`](../tests/fixtures/golden_criteria/_scenarios/elsevier_formula_inline_display/original.xml)
+  - [`../tests/fixtures/golden_criteria/_scenarios/elsevier_formula_missing/original.xml`](../tests/fixtures/golden_criteria/_scenarios/elsevier_formula_missing/original.xml)
+  - real Elsevier XML 覆盖 display formula 渲染为公式块；两个 scenario 分别锁住 inline/display 混排和 conversion failure 占位分支。
 - 对应测试：
-  - [`../tests/unit/test_elsevier_markdown.py`](../tests/unit/test_elsevier_markdown.py) 中的 `test_elsevier_formula_rendering_contracts`
-  - 这个公共测试以 real XML 锁定 display formula 主干，并保留 synthetic 子场景覆盖 inline math 与 formula failure 这两类当前无稳定 DOI 的边界分支。
+  - [`../tests/unit/test_elsevier_markdown.py`](../tests/unit/test_elsevier_markdown.py) 中的 `test_elsevier_real_display_formula_renders_as_formula_block`
+  - [`../tests/unit/test_elsevier_markdown.py`](../tests/unit/test_elsevier_markdown.py) 中的 `test_elsevier_inline_math_symbols_stay_inline`
+  - [`../tests/unit/test_elsevier_markdown.py`](../tests/unit/test_elsevier_markdown.py) 中的 `test_elsevier_formula_placeholder_is_visible_when_conversion_fails`
 - 边界说明：
   - 这条规则不是保证所有 Elsevier MathML 都能被完美转成 LaTeX。
   - 它约束的是“行内和 display 数学不能混渲，失败时不能静默丢失”；公共 LaTeX 宏兼容处理见 [LaTeX normalization 必须产出 KaTeX 可渲染表达](#rule-formula-latex-normalization)。
-  - 测试覆盖度低：当前由一个公共 contract 测试覆盖 real XML 主干和 synthetic 子场景；新增公式分支时应优先拆出第二个 owner 测试或补稳定 DOI 样本。
+  - real XML 目前锁定 display formula 主干；inline math 与 conversion failure 由 scenario XML 锁定，后续如出现稳定 DOI replay，应优先补到本规则。
 
 <a id="rule-elsevier-supplementary-materials"></a>
 ### Supplementary data 不进正文，统一收进 `## Supplementary Materials`
 
 - 这条规则约束的是：`Supplementary data` 这类补充材料显示块不能混进正文叙述里，而是要统一落到文末的 `## Supplementary Materials` 区域，并保留基本的标题和说明。
 - 如果违反，用户会看到：正文突然插进一个补充材料下载入口，或者补充材料完全消失。
-- 它对应的阶段是：XML 提取、资产归类、最终渲染。
+- 它对应的阶段是：`provider-html-or-xml-extraction`、`asset-discovery`、`final-rendering`。
 - Owner：`paper_fetch.providers._article_markdown_elsevier` 与 `paper_fetch.models.ArticleModel`。
 - 代表性 HTML / XML：
-  - 当前无稳定 DOI 样本，直接见对应测试。
+  - [`../tests/fixtures/golden_criteria/10.1016_j.ecolind.2024.112140/original.xml`](../tests/fixtures/golden_criteria/10.1016_j.ecolind.2024.112140/original.xml)
+  - [`../tests/fixtures/golden_criteria/_scenarios/elsevier_supplementary_display/original.xml`](../tests/fixtures/golden_criteria/_scenarios/elsevier_supplementary_display/original.xml)
+  - [`../tests/fixtures/golden_criteria/_scenarios/elsevier_supplementary_asset_only/original.xml`](../tests/fixtures/golden_criteria/_scenarios/elsevier_supplementary_asset_only/original.xml)
+  - real Elsevier XML 覆盖 `ce:e-component` supplementary locator 与下载文件映射；两个 scenario 分别锁住 display 排除正文和无 display 资产兜底。
 - 对应测试：
   - [`../tests/unit/test_elsevier_markdown.py`](../tests/unit/test_elsevier_markdown.py) 中的 `test_supplementary_display_is_omitted_from_body_and_listed_with_caption`
+  - [`../tests/unit/test_elsevier_markdown.py`](../tests/unit/test_elsevier_markdown.py) 中的 `test_supplementary_asset_without_display_is_listed_as_supplementary_material`
+  - [`../tests/unit/test_elsevier_markdown.py`](../tests/unit/test_elsevier_markdown.py) 中的 `test_real_supplementary_e_component_from_golden_xml_is_listed`
 - 边界说明：
-  - 测试覆盖度低：当前只有最小 XML 分支测试直接锁住 supplementary display 的正文排除行为。
+  - real XML 锁住 `ce:e-component` 主干；两个 scenario XML 分别锁住 supplementary display 的正文排除行为，以及无 display 时已下载 supplementary 文件仍进入 Supplementary Materials。
   - 这条规则不是说 supplementary 资产不能下载或不能暴露给用户。
   - 它约束的是“补充材料不属于正文主体”，不是限制 supplementary 元数据的存在。
   - 当 `asset_profile='all'` 时，supplementary 应作为独立文件资产下载并落到 `section="supplementary"` / `download_tier="supplementary_file"`；它不属于正文 figure inline 逻辑，也不会进入 MCP inline `ImageContent`。
@@ -877,16 +925,17 @@ metadata
 
 - 这条规则约束的是：凡是已经处在 appendix 语境里的 figure 和 table，就要继续留在 appendix 里渲染；即使正文提到 `Fig. A1` 或 `Table A1`，也不能把这些 appendix 资产提前到正文区。
 - 如果违反，用户会看到：正文里突然混入 appendix 图表，或者 appendix 内容被拆散后前后顺序错乱。
-- 它对应的阶段是：XML 提取、文章组装、最终渲染。
+- 它对应的阶段是：`provider-html-or-xml-extraction`、`article-assembly`、`final-rendering`。
 - Owner：`paper_fetch.providers._article_markdown_elsevier` 与 `paper_fetch.models.ArticleModel`。
 - 代表性 HTML / XML：
   - [`../tests/fixtures/golden_criteria/10.1016_j.rse.2026.115369/original.xml`](../tests/fixtures/golden_criteria/10.1016_j.rse.2026.115369/original.xml)
   - 这份 real Elsevier XML 同时覆盖 appendix figure、appendix table 和正文中的 appendix 交叉引用。
 - 对应测试：
-  - [`../tests/unit/test_elsevier_markdown.py`](../tests/unit/test_elsevier_markdown.py) 中的 `test_elsevier_appendix_context_contracts`
-  - 这个公共测试内部的 real 子场景分别锁定 appendix figure/table 的渲染位置和正文交叉引用的顺序关系。
+  - [`../tests/unit/test_elsevier_markdown.py`](../tests/unit/test_elsevier_markdown.py) 中的 `test_elsevier_appendix_figure_renders_as_figure_block`
+  - [`../tests/unit/test_elsevier_markdown.py`](../tests/unit/test_elsevier_markdown.py) 中的 `test_elsevier_appendix_reference_keeps_asset_in_appendix`
+  - [`../tests/unit/test_elsevier_markdown.py`](../tests/unit/test_elsevier_markdown.py) 中的 `test_elsevier_appendix_table_renders_as_markdown_table`
 - 边界说明：
-  - 测试覆盖度低：当前由一个公共 contract 测试覆盖 appendix figure、appendix table 和正文交叉引用三个子场景；新增 appendix 形态时应补独立测试。
+  - 当前三个 owner 测试分别锁定 appendix figure、正文交叉引用顺序和 appendix table；新增 appendix 形态时应继续补独立测试。
   - 这条规则不是说正文里不能出现对 appendix 图表的交叉引用文字。
   - 它约束的是 appendix 资产的实际渲染位置和上下文，而不是正文文字是否能提到它们。
 
@@ -939,15 +988,18 @@ metadata
 - 这条规则约束的是：遇到 rowspan / colspan / `namest` / `nameend` / `morerows` 这类复杂结构时，优先输出带 conversion notes 的语义展开 Markdown 表，并把质量标记为 `table_layout_degraded`，不能把“版式无法无损表达”误报成“语义内容丢失”。
 - 如果违反，用户会看到：复杂表直接变成一张图 / 空摘要，或者没有说明地被压扁成错误 Markdown 表，无法被 AI 和用户继续读取。
 - 它对应的阶段是：`table-rendering`、`final-rendering`。
-- Owner：`paper_fetch.providers._article_markdown_elsevier_document` 与 `paper_fetch.models.ArticleQuality`。
+- Owner：`paper_fetch.providers._article_markdown_elsevier_document` 与 `paper_fetch.models.Quality`。
 - 代表性 HTML / XML：
+  - [`../tests/fixtures/golden_criteria/10.1016_j.jhydrol.2021.126210/original.xml`](../tests/fixtures/golden_criteria/10.1016_j.jhydrol.2021.126210/original.xml)
   - [`../tests/fixtures/golden_criteria/10.1016_j.rse.2024.114346/original.xml`](../tests/fixtures/golden_criteria/10.1016_j.rse.2024.114346/original.xml)
-  - 这个样本覆盖 span 表的语义展开和降级标记。
+  - [`../tests/fixtures/golden_criteria/_scenarios/elsevier_complex_table_span/original.xml`](../tests/fixtures/golden_criteria/_scenarios/elsevier_complex_table_span/original.xml)
+  - real Elsevier XML 覆盖 conversion note 和 `table_layout_degraded` 质量标记；scenario XML 锁住 span 表的语义展开细节。
 - 对应测试：
   - Owner（provider）：
     - [`../tests/unit/test_elsevier_markdown.py`](../tests/unit/test_elsevier_markdown.py) 中的 `test_elsevier_complex_table_spans_are_semantically_expanded`
+    - [`../tests/unit/test_elsevier_markdown.py`](../tests/unit/test_elsevier_markdown.py) 中的 `test_elsevier_real_complex_table_records_layout_degradation_quality`
 - 边界说明：
-  - 测试覆盖度低：当前只有一个 real XML owner 测试直接锁住复杂 span 表的降级语义。
+  - 当前用 scenario XML 锁住 span 展平细节，用 real XML 锁住 conversion note 和质量标记。
   - 这条规则不是要求复杂表在 Markdown 里必须零损失复原。
   - 它约束的是“优先给用户可读的表格文本和降级提示”，不是承诺所有单元格跨度都能无损还原。
   - `table_layout_degraded` 表示 Markdown 版式无法表达真实合并单元格；只有行列语义内容真的丢失时，才应升级为 `table_semantic_loss` / `figure_table_loss`。
@@ -957,7 +1009,7 @@ metadata
 
 - 这条规则约束的是：Elsevier XML 里存在 `<ce:bibliography>` / `<ce:bib-reference>` / `<sb:reference>` 时，文章模型的 `references` 必须优先从这些结构化节点构建，保留原始顺序、编号、作者、标题、来源、页码、年份和 DOI；字段缺失时必须回退到 visible raw reference text 或显式 `[Reference text unavailable]`，不能直接跳过 bib 条目。Crossref metadata references 只能作为兜底。
 - 如果违反，用户会看到：参考文献从 `1. A. Anav, P. Friedlingstein...` 退化成没有作者、没有编号的 bullet，如 `- Remote sensing of drought: Progress, challenges and opportunities`，或者 XML 里存在的 bib 条目在最终 references 中消失。
-- 它对应的阶段是：XML bibliography 解析、文章模型组装、References 渲染。
+- 它对应的阶段是：`references-rendering`、`article-assembly`、`final-rendering`。
 - Owner：`paper_fetch.providers._article_markdown_elsevier_document`。
 - 代表性 HTML / XML：
   - [`../tests/fixtures/golden_criteria/10.1016_j.agrformet.2024.109975/original.xml`](../tests/fixtures/golden_criteria/10.1016_j.agrformet.2024.109975/original.xml)
@@ -974,14 +1026,17 @@ metadata
 
 - 这条规则约束的是：graphical abstract 这类站点或期刊 frontmatter 资产不能混进 `## Additional Figures`，即使它们也有图片文件。
 - 如果违反，用户会看到：正文无关的 graphical abstract 和真正的正文 figure 混在同一个附录块里，图列表会被污染。
-- 它对应的阶段是：资产归类、最终渲染。
+- 它对应的阶段是：`asset-discovery`、`final-rendering`。
 - Owner：`paper_fetch.providers._article_markdown_elsevier` 与 `paper_fetch.models.ArticleModel`。
 - 代表性 HTML / XML：
-  - 当前无稳定 DOI 样本，直接见对应测试。
+  - [`../tests/fixtures/golden_criteria/10.1016_j.scitotenv.2022.158499/original.xml`](../tests/fixtures/golden_criteria/10.1016_j.scitotenv.2022.158499/original.xml)
+  - 这份 real Elsevier XML 覆盖 `class="graphical"` abstract figure 与正文 figure 同时存在的场景。
 - 对应测试：
   - [`../tests/unit/test_elsevier_markdown.py`](../tests/unit/test_elsevier_markdown.py) 中的 `test_graphical_abstract_assets_do_not_appear_in_additional_figures`
+  - [`../tests/unit/test_elsevier_markdown.py`](../tests/unit/test_elsevier_markdown.py) 中的 `test_graphical_abstract_only_document_does_not_create_additional_figures`
+  - [`../tests/unit/test_elsevier_markdown.py`](../tests/unit/test_elsevier_markdown.py) 中的 `test_real_graphical_abstract_from_golden_xml_is_excluded_from_figures`
 - 边界说明：
-  - 测试覆盖度低：当前只有最小资产归类测试直接锁住 graphical abstract 不进入正文 figure 附录。
+  - real XML 锁住 Graphical abstract 主干；两个最小资产归类测试分别覆盖“有正文 figure”和“只有 graphical abstract”两种边界。
   - 这条规则不是说 graphical abstract 必须从所有输出里彻底删除。
   - 它约束的是 graphical abstract 不能被误归到正文 figure 附录里。
 
@@ -1014,36 +1069,76 @@ metadata
 
 - 这条规则约束的是：如果 Wiley 页面里存在 `Abbreviations` 区块，它可以作为正文后的辅助节保留，但不能提前到正文主线前面，也不能插进正文章节和正文表格中间打断阅读顺序。
 - 如果违反，用户会看到：文章还没进入主体内容，`Abbreviations` 就先冒出来，或者它把正文叙述和正文表格硬切成两段。
-- 它对应的阶段是：HTML 提取、文章组装、最终渲染。
+- 它对应的阶段是：`provider-html-or-xml-extraction`、`article-assembly`、`final-rendering`。
 - Owner：`paper_fetch.providers._science_pnas_postprocess`。
 - 代表性 HTML / XML：
   - [`../tests/fixtures/golden_criteria/10.1111_cas.16395/original.html`](../tests/fixtures/golden_criteria/10.1111_cas.16395/original.html)
-  - 这个样本能证明 `Abbreviations` 可以保留，但只能放在正文和正文表格之后。
+  - [`../tests/fixtures/golden_criteria/_scenarios/wiley_abbreviations_trailing/original.html`](../tests/fixtures/golden_criteria/_scenarios/wiley_abbreviations_trailing/original.html)
+  - real replay 能证明 `Abbreviations` 可以保留但只能放在正文和正文表格之后；scenario 锁住 frontmatter glossary 移到正文后的最小形态。
 - 对应测试：
   - [`../tests/unit/test_science_pnas_postprocess.py`](../tests/unit/test_science_pnas_postprocess.py) 中的 `test_wiley_real_fixture_appends_abbreviations_after_body_content`
+  - [`../tests/unit/test_science_pnas_postprocess.py`](../tests/unit/test_science_pnas_postprocess.py) 中的 `test_wiley_abbreviations_scenario_moves_frontmatter_glossary_after_body`
 - 边界说明：
-  - 测试覆盖度低：当前只有一份 Wiley replay 直接锁住 abbreviations 的落点。
+  - 当前只有一份 Wiley replay 加一个 scenario；后续若新增真实 Wiley abbreviations 页面，应优先补第二个 DOI 级 fixture。
   - 这条规则不是要求所有 Wiley 文章都必须输出 `Abbreviations`。
   - 它约束的是“存在该区块时的落点”，不是强制生成一个缺失的缩写表。
+
+<a id="rule-wiley-supporting-information-assets"></a>
+### Wiley supplementary 只能来自 Supporting Information 区块，正文 figure 不得误归 supplementary
+
+- 这条规则约束的是：Wiley supplementary 只允许从 `Supporting Information` accordion/content 中提取，并且只接受 `downloadSupplement` 或文件名/参数带 `sup-*` 的真实 supporting file 链接。正文 `<figure>` 里的 `/cms/asset/...fig-*.jpg|png|webp` 只能保留为 figure 资产，不能再被并行归类成 supplementary；`downloadSupplement` 的 `file` / `filename` query 要作为 `filename_hint` 保留，落盘时优先使用真实文件名。
+- 如果违反，用户会看到：`asset_profile=all` 下正文 figure 被重复当作 supplementary 文件下载，`article.assets` 混进一批 `fig-*.jpg/.png` 伪 supplementary；真正的 supporting file 可能落成 `downloadSupplement.bin`，难以辨认。
+- 它对应的阶段是：`asset-discovery`、`provider-html-or-xml-extraction`、`asset-download`、`artifact-storage`。
+- Owner：`paper_fetch.providers._science_pnas_html`、`paper_fetch.providers._wiley_html` 与 `paper_fetch.extraction.html._assets`。
+- 代表性 HTML / XML：
+  - [`../tests/fixtures/golden_criteria/10.1111_gcb.16414/original.html`](../tests/fixtures/golden_criteria/10.1111_gcb.16414/original.html)
+  - [`../tests/fixtures/golden_criteria/10.1111_gcb.16998/original.html`](../tests/fixtures/golden_criteria/10.1111_gcb.16998/original.html)
+  - real Wiley fixture 覆盖正文 figure、supporting cross-reference 与 `Supporting Information` 文件表；第二份 Wiley fixture 锁住同一 DOM 语义在另一篇文章中的稳定性。
+- 对应测试：
+  - [`../tests/unit/test_html_shared_helpers.py`](../tests/unit/test_html_shared_helpers.py) 中的 `test_wiley_asset_scopes_only_collect_supporting_information_downloads`
+  - [`../tests/unit/test_html_shared_helpers.py`](../tests/unit/test_html_shared_helpers.py) 中的 `test_wiley_real_fixture_supporting_information_only_yields_true_supplementary_asset`
+  - [`../tests/unit/test_html_shared_helpers.py`](../tests/unit/test_html_shared_helpers.py) 中的 `test_download_supplementary_assets_uses_wiley_filename_hint_for_octet_stream`
+  - [`../tests/unit/test_html_shared_helpers.py`](../tests/unit/test_html_shared_helpers.py) 中的 `test_wiley_body_figures_are_not_promoted_to_supplementary_without_supporting_information`
+- 边界说明：
+  - 这条规则不是说 Wiley supplementary 不能是图片；只要链接本身是 `downloadSupplement` 或 filename/query 带 `sup-*`，即使最终文件是图像格式，也仍然属于 supplementary 文件。
+  - 它约束的是“supplementary 的来源范围和链接形态”，不是要求正文里所有指向 `Figure S1` 的交叉引用都必须变成下载资产。
 
 <a id="rule-wiley-reference-text"></a>
 ### Wiley 参考文献必须使用可见 citation 文本而不是 DOI-only 或链接 chrome
 
 - 这条规则约束的是：Wiley HTML references 要从可见 citation body 中抽取作者、题名、期刊等文本，删除 `Google Scholar`、`Crossref`、`getFTR` 和隐藏链接区，不能把 DOI-only 链接当成完整 reference。
 - 如果违反，用户会看到：参考文献只剩 DOI，或者每条 reference 后面混进一串站点跳转和检索入口。
-- 它对应的阶段是：HTML references 抽取、站点链接噪声过滤。
+- 它对应的阶段是：`references-rendering`、`html-cleanup`。
 - Owner：`paper_fetch.providers._html_references` 与 `paper_fetch.providers._wiley_html`。
 - 代表性 HTML / XML：
   - [`../tests/fixtures/golden_criteria/10.1111_gcb.15322/original.html`](../tests/fixtures/golden_criteria/10.1111_gcb.15322/original.html)
+  - [`../tests/fixtures/golden_criteria/10.1111_gcb.16998/original.html`](../tests/fixtures/golden_criteria/10.1111_gcb.16998/original.html)
 - 对应测试：
   - [`../tests/unit/test_science_pnas_markdown.py`](../tests/unit/test_science_pnas_markdown.py) 中的 `test_wiley_references_use_visible_citation_text_not_doi_only`
 - 边界说明：
-  - 测试覆盖度低：当前只有一份 Wiley replay 直接锁住可见 citation body 优先级。
+  - 单测试规则：当前用一条参数化测试覆盖两份 Wiley replay，锁住可见 citation body 优先级；新增 Wiley reference DOM 变体时应继续扩充 fixture 参数或拆出独立测试。
   - 这条规则只过滤 publisher reference chrome，不会补全原始 HTML 中没有的 bibliographic 字段。
 
 ## Science
 
-当前 Science provider 的用户可见行为约束全部归入共享规则；本节暂不维护 Science-specific 规则。
+<a id="rule-science-pnas-supplementary-sections"></a>
+### Science / PNAS supplementary 只能来自真实 supplementary section
+
+- 这条规则约束的是：Science / Science Advances / PNAS 的 supplementary 文件只允许从 Atypon article back matter 中的 `Supplementary Material(s)` / `Supporting Information` section 子树识别，并且只保留 publisher `/doi/suppl/.../suppl_file/...` 附件。正文、Data Availability、文章导航、页内锚点或 supplementary section 内引用文献里的普通 `.csv` / `.txt` / `.pdf` / `#supplementary-materials` 链接不能被当作 supplementary。
+- 如果违反，用户会看到：`asset_profile=all` 下正文数据链接或 supplementary references 中的外部 PDF 被错误下载成 supplementary，或者真实 `core-supplementary-materials` 里的 PDF/XLSX 附件被漏掉。
+- 它对应的阶段是：`asset-discovery`、`provider-html-or-xml-extraction`、`asset-download`。
+- Owner：`paper_fetch.providers._science_pnas_html` 与 `paper_fetch.extraction.html._assets`。
+- 代表性 HTML / XML：
+  - [`../tests/fixtures/golden_criteria/10.1126_sciadv.adl6155/original.html`](../tests/fixtures/golden_criteria/10.1126_sciadv.adl6155/original.html)
+  - [`../tests/fixtures/block/10.1073_pnas.2509692123/raw.html`](../tests/fixtures/block/10.1073_pnas.2509692123/raw.html)
+  - Science fixture 覆盖正文 Data Availability 中 `.txt` 数据链接和真实 Supplementary Materials PDF；PNAS fixture 覆盖正文中指向 supplementary section 的页内锚点和真实 Supporting Information PDF/XLSX。
+- 对应测试：
+  - [`../tests/unit/test_html_shared_helpers.py`](../tests/unit/test_html_shared_helpers.py) 中的 `test_extract_scoped_html_assets_empty_supplementary_scope_does_not_scan_body`
+  - [`../tests/unit/test_html_shared_helpers.py`](../tests/unit/test_html_shared_helpers.py) 中的 `test_science_real_fixture_supplementary_comes_only_from_supplementary_section`
+  - [`../tests/unit/test_html_shared_helpers.py`](../tests/unit/test_html_shared_helpers.py) 中的 `test_pnas_real_fixture_supplementary_ignores_body_anchor_to_section`
+- 边界说明：
+  - 这条规则不改变 Science / PNAS 正文图片和公式图片的提取范围；只约束 supplementary 文件发现 scope。
+  - 如果页面没有真实 supplementary section，supplementary scope 应为空，不能回退扫描 body。
 
 - 共享规则另见：
   - [HTML fulltext / abstract-only 判定必须和用户可见访问状态一致](#rule-html-availability-contract)
@@ -1056,6 +1151,7 @@ metadata
   - [Availability 不计入正文充分性度量](#rule-availability-excluded-from-body-metrics)
   - [Section hint 必须稳定适配 availability 节](#rule-section-hints-normalize-availability)
   - [无节标题正文必须保持扁平](#rule-keep-headingless-body-flat)
+  - [出版社站点 UI 噪声不能泄漏进最终 markdown](#rule-filter-publisher-ui-noise)
   - [正文、标题和表格里的行内语义格式不能被打平或拆裂](#rule-preserve-inline-semantics-in-body-and-tables)
   - [正文已内联 figure 时不再重复追加尾部 Figures 附录](#rule-no-trailing-figures-appendix)
   - [已下载的正文图片和公式图片要改写成正文附近的本地链接](#rule-rewrite-inline-figure-links)
@@ -1070,7 +1166,7 @@ metadata
 
 ## PNAS
 
-当前 PNAS provider 的用户可见行为约束全部归入共享规则；本节暂不维护 PNAS-specific 规则。
+PNAS 的 supplementary 资产范围见 [Science / PNAS supplementary 只能来自真实 supplementary section](#rule-science-pnas-supplementary-sections)；其余用户可见行为约束主要归入共享规则。
 
 - 共享规则另见：
   - [HTML fulltext / abstract-only 判定必须和用户可见访问状态一致](#rule-html-availability-contract)
@@ -1102,18 +1198,20 @@ metadata
 | Fixture | 关联规则 |
 | --- | --- |
 | [`../tests/fixtures/block/10.1007_s00382-018-4286-0/raw.html`](../tests/fixtures/block/10.1007_s00382-018-4286-0/raw.html) | [HTML availability](#rule-html-availability-contract), [Springer access hint](#rule-springer-access-hint-disclaimer) |
-| [`../tests/fixtures/block/10.1073_pnas.2509692123/raw.html`](../tests/fixtures/block/10.1073_pnas.2509692123/raw.html) | [HTML availability](#rule-html-availability-contract) |
+| [`../tests/fixtures/block/10.1073_pnas.2509692123/raw.html`](../tests/fixtures/block/10.1073_pnas.2509692123/raw.html) | [HTML availability](#rule-html-availability-contract), [Science / PNAS supplementary sections](#rule-science-pnas-supplementary-sections) |
 | [`../tests/fixtures/block/10.1111_gcb.16414/raw.html`](../tests/fixtures/block/10.1111_gcb.16414/raw.html) | [HTML availability](#rule-html-availability-contract) |
 | [`../tests/fixtures/block/10.1126_science.aeg3511/raw.html`](../tests/fixtures/block/10.1126_science.aeg3511/raw.html) | [HTML availability](#rule-html-availability-contract) |
 | [`../tests/fixtures/golden_criteria/10.1007_s10584-011-0143-4/article.html`](../tests/fixtures/golden_criteria/10.1007_s10584-011-0143-4/article.html) | [Springer chrome](#rule-springer-article-root-chrome-pruning), [Springer numbered heading spacing](#rule-springer-numbered-heading-spacing), [Springer inline table](#rule-springer-inline-table) |
 | [`../tests/fixtures/golden_criteria/10.1007_s13158-025-00473-x/bilingual.html`](../tests/fixtures/golden_criteria/10.1007_s13158-025-00473-x/bilingual.html) | [Multilingual abstracts](#rule-keep-parallel-multilingual-abstracts), [Springer chrome](#rule-springer-article-root-chrome-pruning) |
 | [`../tests/fixtures/golden_criteria/10.1016_S1575-1813(18)30261-4/bilingual.xml`](<../tests/fixtures/golden_criteria/10.1016_S1575-1813(18)30261-4/bilingual.xml>) | [Multilingual abstracts](#rule-keep-parallel-multilingual-abstracts) |
 | [`../tests/fixtures/golden_criteria/10.1016_j.agrformet.2024.109975/original.xml`](../tests/fixtures/golden_criteria/10.1016_j.agrformet.2024.109975/original.xml) | [Elsevier formula rendering](#rule-elsevier-formula-rendering), [Elsevier inline figure/table placement](#rule-elsevier-inline-figure-table-placement), [Elsevier references](#rule-elsevier-xml-references) |
-| [`../tests/fixtures/golden_criteria/10.1016_j.jhydrol.2021.126210/original.xml`](../tests/fixtures/golden_criteria/10.1016_j.jhydrol.2021.126210/original.xml) | [Elsevier inline figure/table placement](#rule-elsevier-inline-figure-table-placement) |
+| [`../tests/fixtures/golden_criteria/10.1016_j.ecolind.2024.112140/original.xml`](../tests/fixtures/golden_criteria/10.1016_j.ecolind.2024.112140/original.xml) | [Elsevier supplementary materials](#rule-elsevier-supplementary-materials) |
+| [`../tests/fixtures/golden_criteria/10.1016_j.jhydrol.2021.126210/original.xml`](../tests/fixtures/golden_criteria/10.1016_j.jhydrol.2021.126210/original.xml) | [Elsevier inline figure/table placement](#rule-elsevier-inline-figure-table-placement), [Elsevier complex span table](#rule-elsevier-complex-table-span-degradation) |
 | [`../tests/fixtures/golden_criteria/10.1016_j.jhydrol.2023.130125/original.xml`](../tests/fixtures/golden_criteria/10.1016_j.jhydrol.2023.130125/original.xml) | [Elsevier formula rendering](#rule-elsevier-formula-rendering), [Elsevier consumed table dedup](#rule-elsevier-consumed-figure-table-dedup) |
 | [`../tests/fixtures/golden_criteria/10.1016_j.rse.2024.114346/original.xml`](../tests/fixtures/golden_criteria/10.1016_j.rse.2024.114346/original.xml) | [Elsevier complex span table](#rule-elsevier-complex-table-span-degradation) |
 | [`../tests/fixtures/golden_criteria/10.1016_j.rse.2025.114648/original.xml`](../tests/fixtures/golden_criteria/10.1016_j.rse.2025.114648/original.xml) | [Availability kind mapping](#rule-availability-section-kind-mapping) |
 | [`../tests/fixtures/golden_criteria/10.1016_j.rse.2026.115369/original.xml`](../tests/fixtures/golden_criteria/10.1016_j.rse.2026.115369/original.xml) | [Elsevier appendix context](#rule-elsevier-appendix-context) |
+| [`../tests/fixtures/golden_criteria/10.1016_j.scitotenv.2022.158499/original.xml`](../tests/fixtures/golden_criteria/10.1016_j.scitotenv.2022.158499/original.xml) | [Elsevier graphical abstract](#rule-elsevier-graphical-abstract) |
 | [`../tests/fixtures/golden_criteria/10.1029_2004gb002273/original.html`](../tests/fixtures/golden_criteria/10.1029_2004gb002273/original.html) | [No trailing figures](#rule-no-trailing-figures-appendix), [Publisher UI noise](#rule-filter-publisher-ui-noise) |
 | [`../tests/fixtures/golden_criteria/10.1038_nature12915/original.html`](../tests/fixtures/golden_criteria/10.1038_nature12915/original.html) | [Formula image fallback](#rule-preserve-formula-image-fallbacks), [Springer caption precedence](#rule-springer-caption-precedence), [Springer methods summary](#rule-springer-methods-summary) |
 | [`../tests/fixtures/golden_criteria/10.1038_nature13376/original.html`](../tests/fixtures/golden_criteria/10.1038_nature13376/original.html) | [No trailing figures](#rule-no-trailing-figures-appendix), [Formula image fallback](#rule-preserve-formula-image-fallbacks), [Springer caption precedence](#rule-springer-caption-precedence), [Springer inline table](#rule-springer-inline-table) |
@@ -1128,14 +1226,33 @@ metadata
 | [`../tests/fixtures/golden_criteria/10.1111_cas.16395/original.html`](../tests/fixtures/golden_criteria/10.1111_cas.16395/original.html) | [Wiley abbreviations](#rule-wiley-abbreviations-trailing) |
 | [`../tests/fixtures/golden_criteria/10.1111_gcb.15322/original.html`](../tests/fixtures/golden_criteria/10.1111_gcb.15322/original.html) | [Formula image fallback](#rule-preserve-formula-image-fallbacks), [Wiley references](#rule-wiley-reference-text) |
 | [`../tests/fixtures/golden_criteria/10.1111_gcb.16386/bilingual.html`](../tests/fixtures/golden_criteria/10.1111_gcb.16386/bilingual.html) | [Multilingual abstracts](#rule-keep-parallel-multilingual-abstracts) |
-| [`../tests/fixtures/golden_criteria/10.1111_gcb.16998/original.html`](../tests/fixtures/golden_criteria/10.1111_gcb.16998/original.html) | [HTML availability](#rule-html-availability-contract), [Provider metadata](#rule-provider-owned-authors) |
+| [`../tests/fixtures/golden_criteria/10.1111_gcb.16414/original.html`](../tests/fixtures/golden_criteria/10.1111_gcb.16414/original.html) | [Wiley supporting information assets](#rule-wiley-supporting-information-assets) |
+| [`../tests/fixtures/golden_criteria/10.1111_gcb.16998/original.html`](../tests/fixtures/golden_criteria/10.1111_gcb.16998/original.html) | [HTML availability](#rule-html-availability-contract), [Provider metadata](#rule-provider-owned-authors), [Wiley references](#rule-wiley-reference-text) |
 | [`../tests/fixtures/golden_criteria/10.1126_sciadv.aax6869/original.html`](../tests/fixtures/golden_criteria/10.1126_sciadv.aax6869/original.html) | [No trailing figures](#rule-no-trailing-figures-appendix), [Image validation](#rule-image-download-validates-real-images) |
-| [`../tests/fixtures/golden_criteria/10.1126_sciadv.adl6155/original.html`](../tests/fixtures/golden_criteria/10.1126_sciadv.adl6155/original.html) | [Semantic parent heading](#rule-keep-semantic-parent-heading) |
+| [`../tests/fixtures/golden_criteria/10.1126_sciadv.adl6155/original.html`](../tests/fixtures/golden_criteria/10.1126_sciadv.adl6155/original.html) | [Semantic parent heading](#rule-keep-semantic-parent-heading), [Science / PNAS supplementary sections](#rule-science-pnas-supplementary-sections) |
 | [`../tests/fixtures/golden_criteria/10.1126_science.abb3021/original.html`](../tests/fixtures/golden_criteria/10.1126_science.abb3021/original.html) | [No trailing figures](#rule-no-trailing-figures-appendix), [Image validation](#rule-image-download-validates-real-images) |
 | [`../tests/fixtures/golden_criteria/10.1126_science.abp8622/original.html`](../tests/fixtures/golden_criteria/10.1126_science.abp8622/original.html) | [Stable frontmatter](#rule-stable-frontmatter-order), [Inline semantics](#rule-preserve-inline-semantics-in-body-and-tables) |
 | [`../tests/fixtures/golden_criteria/10.1126_science.adp0212/original.html`](../tests/fixtures/golden_criteria/10.1126_science.adp0212/original.html) | [Provider metadata](#rule-provider-owned-authors), [Equation spacing](#rule-readable-equation-caption-spacing) |
 | [`../tests/fixtures/golden_criteria/10.1126_science.aeg3511/original.html`](../tests/fixtures/golden_criteria/10.1126_science.aeg3511/original.html) | [Headingless body](#rule-keep-headingless-body-flat) |
+| [`../tests/fixtures/golden_criteria/_scenarios/asset_download_diagnostics/article_payload.json`](../tests/fixtures/golden_criteria/_scenarios/asset_download_diagnostics/article_payload.json) | [Asset diagnostics](#rule-asset-download-diagnostic-fields) |
+| [`../tests/fixtures/golden_criteria/_scenarios/availability_body_metrics/code_availability.md`](../tests/fixtures/golden_criteria/_scenarios/availability_body_metrics/code_availability.md) | [Availability body metrics](#rule-availability-excluded-from-body-metrics) |
 | [`../tests/fixtures/golden_criteria/_scenarios/elsevier_author_groups_minimal/original.xml`](../tests/fixtures/golden_criteria/_scenarios/elsevier_author_groups_minimal/original.xml) | [Provider metadata](#rule-provider-owned-authors) |
+| [`../tests/fixtures/golden_criteria/_scenarios/elsevier_complex_table_span/original.xml`](../tests/fixtures/golden_criteria/_scenarios/elsevier_complex_table_span/original.xml) | [Elsevier complex span table](#rule-elsevier-complex-table-span-degradation) |
+| [`../tests/fixtures/golden_criteria/_scenarios/elsevier_formula_inline_display/original.xml`](../tests/fixtures/golden_criteria/_scenarios/elsevier_formula_inline_display/original.xml) | [Elsevier formula rendering](#rule-elsevier-formula-rendering) |
+| [`../tests/fixtures/golden_criteria/_scenarios/elsevier_formula_missing/original.xml`](../tests/fixtures/golden_criteria/_scenarios/elsevier_formula_missing/original.xml) | [Elsevier formula rendering](#rule-elsevier-formula-rendering) |
+| [`../tests/fixtures/golden_criteria/_scenarios/elsevier_supplementary_asset_only/original.xml`](../tests/fixtures/golden_criteria/_scenarios/elsevier_supplementary_asset_only/original.xml) | [Elsevier supplementary materials](#rule-elsevier-supplementary-materials) |
+| [`../tests/fixtures/golden_criteria/_scenarios/elsevier_supplementary_display/original.xml`](../tests/fixtures/golden_criteria/_scenarios/elsevier_supplementary_display/original.xml) | [Elsevier supplementary materials](#rule-elsevier-supplementary-materials) |
+| [`../tests/fixtures/golden_criteria/_scenarios/formula_latex_normalization/samples.json`](../tests/fixtures/golden_criteria/_scenarios/formula_latex_normalization/samples.json) | [LaTeX normalization](#rule-formula-latex-normalization) |
+| [`../tests/fixtures/golden_criteria/_scenarios/generic_metadata_boundaries/generic_description.html`](../tests/fixtures/golden_criteria/_scenarios/generic_metadata_boundaries/generic_description.html) | [Generic metadata boundaries](#rule-generic-metadata-boundaries) |
+| [`../tests/fixtures/golden_criteria/_scenarios/generic_metadata_boundaries/redirect_stub.html`](../tests/fixtures/golden_criteria/_scenarios/generic_metadata_boundaries/redirect_stub.html) | [Generic metadata boundaries](#rule-generic-metadata-boundaries) |
+| [`../tests/fixtures/golden_criteria/_scenarios/inline_figure_link_rewrite/article.md`](../tests/fixtures/golden_criteria/_scenarios/inline_figure_link_rewrite/article.md) | [Inline figure link rewrite](#rule-rewrite-inline-figure-links) |
+| [`../tests/fixtures/golden_criteria/_scenarios/inline_figure_link_rewrite/assets.json`](../tests/fixtures/golden_criteria/_scenarios/inline_figure_link_rewrite/assets.json) | [Inline figure link rewrite](#rule-rewrite-inline-figure-links) |
+| [`../tests/fixtures/golden_criteria/_scenarios/provider_dom_abstract_fallback/payload.json`](../tests/fixtures/golden_criteria/_scenarios/provider_dom_abstract_fallback/payload.json) | [Provider metadata](#rule-provider-owned-authors) |
+| [`../tests/fixtures/golden_criteria/_scenarios/section_hints_availability/article.md`](../tests/fixtures/golden_criteria/_scenarios/section_hints_availability/article.md) | [Section hints availability](#rule-section-hints-normalize-availability) |
+| [`../tests/fixtures/golden_criteria/_scenarios/section_hints_availability/section_hints.json`](../tests/fixtures/golden_criteria/_scenarios/section_hints_availability/section_hints.json) | [Section hints availability](#rule-section-hints-normalize-availability) |
+| [`../tests/fixtures/golden_criteria/_scenarios/springer_main_content_direct_children/original.html`](../tests/fixtures/golden_criteria/_scenarios/springer_main_content_direct_children/original.html) | [Springer / Nature main-content](#rule-springer-main-content-direct-children) |
+| [`../tests/fixtures/golden_criteria/_scenarios/table_flatten_or_list/complex_table.html`](../tests/fixtures/golden_criteria/_scenarios/table_flatten_or_list/complex_table.html) | [Table flatten/list](#rule-table-flatten-or-list) |
+| [`../tests/fixtures/golden_criteria/_scenarios/wiley_abbreviations_trailing/original.html`](../tests/fixtures/golden_criteria/_scenarios/wiley_abbreviations_trailing/original.html) | [Wiley abbreviations](#rule-wiley-abbreviations-trailing) |
 
 ## 未直接挂规则 fixture 清单
 
@@ -1148,11 +1265,11 @@ metadata
 | block / PNAS | `10.1073_pnas.2523032123__block`, `10.1073_pnas.2534432123__block`, `10.1073_pnas.2607267123__block` | PNAS block corpus 的 provider availability 回归池。 |
 | block / Science | `10.1126_science.167.3914.61__block`, `10.1126_science.6985744__block`, `10.1126_science.7809609__block` | Science block corpus 的历史页面状态回归池。 |
 | block / Wiley | `10.1111_gcb.16386__block`, `10.1111_gcb.16758__block`, `10.1111_gcb.16998__block` | Wiley block corpus 的 access gate / entitlement 回归池。 |
-| golden / Elsevier | `10.1016_j.agrformet.2024.110321`, `10.1016_j.ecolind.2023.110326`, `10.1016_j.ecolind.2024.112140`, `10.1016_j.scitotenv.2022.158109`, `10.1016_j.scitotenv.2022.158499` | Elsevier golden corpus 的 provider breadth 和 expected payload 回归，不直接承载新增规则。 |
-| golden / Springer | `10.1038_s41467-022-30729-2`, `10.1038_s41558-022-01584-2`, `10.1038_s41561-022-00912-7`, `10.1038_s41561-022-00974-7`, `10.1038_s41612-021-00218-2`, `10.1038_s43247-024-01270-5` | Springer / Nature golden corpus 的结构多样性回归池。 |
+| golden / Elsevier | `10.1016_j.agrformet.2024.110321`, `10.1016_j.ecolind.2023.110326`, `10.1016_j.scitotenv.2022.158109` | Elsevier golden corpus 的 provider breadth 和 expected payload 回归，不直接承载新增规则。 |
+| golden / Springer | `10.1038_d41586-022-01795-9`, `10.1038_d41586-023-01829-w`, `10.1038_s41467-022-30729-2`, `10.1038_s41561-022-00974-7`, `10.1038_s41612-021-00218-2` | Springer / Nature golden corpus 的结构多样性回归池。 |
 | golden / PNAS | `10.1073_pnas.1915921117`, `10.1073_pnas.2208095119`, `10.1073_pnas.2305050120`, `10.1073_pnas.2310157121`, `10.1073_pnas.2314265121`, `10.1073_pnas.2317456120`, `10.1073_pnas.2322622121`, `10.1073_pnas.2402656121`, `10.1073_pnas.2410294121` | PNAS golden corpus 的 article-type 和 live review breadth 回归池。 |
 | golden / Science | `10.1126_sciadv.abf8021`, `10.1126_sciadv.abg9690`, `10.1126_sciadv.abj3309`, `10.1126_sciadv.adm9732`, `10.1126_science.ade0347`, `10.1126_science.ady3136` | Science / Science Advances golden corpus 的 article-type 和 expected payload 回归池。 |
-| golden / Wiley | `10.1111_gcb.16011`, `10.1111_gcb.16414`, `10.1111_gcb.16455`, `10.1111_gcb.16561`, `10.1111_gcb.16745`, `10.1111_gcb.16758`, `10.1111_gcb.17141` | Wiley golden corpus 的 article-type、asset 和 expected payload 回归池。 |
+| golden / Wiley | `10.1111_cas.16117`, `10.1111_gcb.16011`, `10.1111_gcb.16455`, `10.1111_gcb.16561`, `10.1111_gcb.16745`, `10.1111_gcb.16758`, `10.1111_gcb.17141` | Wiley golden corpus 的 article-type、asset 和 expected payload 回归池。 |
 | golden / other publishers | `10.1080_19455224.2025.2547671`, `10.1345_aph.1M379` | 非核心 provider 的 multilingual / content regression 样本。 |
 <!-- extraction-rules-unlinked-fixtures:end -->
 

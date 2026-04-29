@@ -62,7 +62,9 @@ if [ "$INSTALL_NODE" != "1" ]; then
 fi
 
 log "Installing formula backends"
-bash "$REPO_DIR/install-formula-tools.sh" "${FORMULA_ARGS[@]}"
+PAPER_FETCH_INSTALL_PYTHON_BIN="$PYTHON_BIN" \
+PYTHON_BIN="$PYTHON_BIN" \
+    bash "$REPO_DIR/install-formula-tools.sh" "${FORMULA_ARGS[@]}"
 
 echo
 echo "Bootstrap complete."

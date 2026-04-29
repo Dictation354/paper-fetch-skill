@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<full-text-retrieval-response xmlns="http://www.elsevier.com/xml/svapi/article/dtd" xmlns:ce="http://www.elsevier.com/xml/common/dtd">
+  <body>
+    <ce:sections>
+      <ce:section>
+        <ce:section-title>Data</ce:section-title>
+        <ce:display>
+          <ce:table id="tbl1">
+            <ce:label>Table 1</ce:label>
+            <ce:caption>Grouped station data.</ce:caption>
+            <ce:tgroup cols="3">
+              <ce:colspec colname="c1" />
+              <ce:colspec colname="c2" />
+              <ce:colspec colname="c3" />
+              <ce:thead>
+                <ce:row>
+                  <ce:entry namest="c1" nameend="c2">Station group</ce:entry>
+                  <ce:entry>Value</ce:entry>
+                </ce:row>
+              </ce:thead>
+              <ce:tbody>
+                <ce:row>
+                  <ce:entry morerows="1">Hydrometric</ce:entry>
+                  <ce:entry>Station A</ce:entry>
+                  <ce:entry>10</ce:entry>
+                </ce:row>
+                <ce:row>
+                  <ce:entry>Station B</ce:entry>
+                  <ce:entry>20</ce:entry>
+                </ce:row>
+              </ce:tbody>
+            </ce:tgroup>
+          </ce:table>
+        </ce:display>
+      </ce:section>
+    </ce:sections>
+  </body>
+</full-text-retrieval-response>

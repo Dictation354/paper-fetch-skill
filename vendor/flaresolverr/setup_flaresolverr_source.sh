@@ -47,12 +47,20 @@ flaresolverr_source_ensure_chrome_link
 
 RETURN_IMAGE_PAYLOAD_PATCH="${ROOT_DIR}/patches/return-image-payload.patch"
 if [[ -f "${RETURN_IMAGE_PAYLOAD_PATCH}" ]]; then
-  git -C "${FLARESOLVERR_REPO_DIR}" apply "${RETURN_IMAGE_PAYLOAD_PATCH}"
-  git -C "${FLARESOLVERR_REPO_DIR}" add src/dtos.py src/flaresolverr_service.py
-  git -C "${FLARESOLVERR_REPO_DIR}" \
-    -c user.name="paper-fetch-skill" \
-    -c user.email="paper-fetch-skill@example.invalid" \
-    commit -m "Add repo-local image payload export" >/dev/null
+  if grep -q "returnImagePayload" "${FLARESOLVERR_REPO_DIR}/src/dtos.py" \
+    && grep -q "imagePayload" "${FLARESOLVERR_REPO_DIR}/src/flaresolverr_service.py"; then
+    echo "FlareSolverr image payload patch is already present."
+  else
+    git -C "${FLARESOLVERR_REPO_DIR}" apply --check "${RETURN_IMAGE_PAYLOAD_PATCH}"
+    git -C "${FLARESOLVERR_REPO_DIR}" apply "${RETURN_IMAGE_PAYLOAD_PATCH}"
+    git -C "${FLARESOLVERR_REPO_DIR}" add src/dtos.py src/flaresolverr_service.py
+    if ! git -C "${FLARESOLVERR_REPO_DIR}" diff --cached --quiet; then
+      git -C "${FLARESOLVERR_REPO_DIR}" \
+        -c user.name="paper-fetch-skill" \
+        -c user.email="paper-fetch-skill@example.invalid" \
+        commit -m "Add repo-local image payload export" >/dev/null
+    fi
+  fi
 fi
 
 echo

@@ -1,0 +1,18 @@
+[
+  {
+    "kind": "figure",
+    "heading": "Primary figure caption",
+    "caption": "Primary figure caption.",
+    "source_url": "https://www.pnas.org/assets/pnas.example.fig01.jpeg",
+    "path": "downloads/pnas.example.fig01.jpeg",
+    "section": "body"
+  },
+  {
+    "kind": "figure",
+    "heading": "Residual carbon flux anomalies",
+    "caption": "Background shading is the same as in Fig. 1.",
+    "source_url": "https://www.pnas.org/assets/pnas.example.fig04.jpeg",
+    "path": "downloads/pnas.example.fig04.jpeg",
+    "section": "body"
+  }
+]

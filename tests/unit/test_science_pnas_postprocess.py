@@ -1,10 +1,11 @@
 from __future__ import annotations
 
+import json
 import unittest
 
 from paper_fetch.providers import _science_pnas_postprocess
 from paper_fetch.providers._science_pnas_html import extract_science_pnas_markdown, rewrite_inline_figure_links
-from tests.golden_criteria import golden_criteria_asset
+from tests.golden_criteria import golden_criteria_asset, golden_criteria_scenario_asset
 
 
 WILEY_FULL_FIXTURE = golden_criteria_asset("10.1111/gcb.16414", "original.html")
@@ -82,6 +83,7 @@ class SciencePnasPostprocessTests(unittest.TestCase):
         self.assertNotIn("PowerPoint", markdown)
 
     def test_wiley_real_fixture_appends_abbreviations_after_body_content(self) -> None:
+        """rule: rule-wiley-abbreviations-trailing"""
         markdown, _ = self._extract_fixture_markdown(
             WILEY_ABBREV_FIXTURE,
             "https://onlinelibrary.wiley.com/doi/full/10.1111/cas.16395",
@@ -94,6 +96,22 @@ class SciencePnasPostprocessTests(unittest.TestCase):
         self.assertIn("AI: artificial intelligence", markdown)
         self.assertIn("LLM: large language model", markdown)
         self.assertIn("**Table 1.** AI-SaMD approved as a medical device in the field of oncology in Japan (as of May 2024).", markdown)
+        self.assertGreater(markdown.index("## Abbreviations"), markdown.index("## 1 INTRODUCTION"))
+        self.assertGreater(markdown.index("## Abbreviations"), markdown.index("**Table 1.**"))
+
+    def test_wiley_abbreviations_scenario_moves_frontmatter_glossary_after_body(self) -> None:
+        """rule: rule-wiley-abbreviations-trailing"""
+        markdown, _ = self._extract_fixture_markdown(
+            golden_criteria_scenario_asset("wiley_abbreviations_trailing", "original.html"),
+            "https://onlinelibrary.wiley.com/doi/full/10.1111/wiley-abbrev-scenario",
+            "wiley",
+            "10.1111/wiley-abbrev-scenario",
+        )
+
+        self.assertIn("## 1 INTRODUCTION", markdown)
+        self.assertIn("**Table 1.** Scenario table.", markdown)
+        self.assertIn("## Abbreviations", markdown)
+        self.assertIn("AI: artificial intelligence", markdown)
         self.assertGreater(markdown.index("## Abbreviations"), markdown.index("## 1 INTRODUCTION"))
         self.assertGreater(markdown.index("## Abbreviations"), markdown.index("**Table 1.**"))
 
@@ -129,6 +147,7 @@ class SciencePnasPostprocessTests(unittest.TestCase):
         self.assertLess(markdown.index("## Main Text"), markdown.index("## Methods"))
 
     def test_pnas_real_fixture_preserves_figures_equations_and_heading_trimming(self) -> None:
+        """rule: rule-readable-equation-caption-spacing"""
         markdown, _ = self._extract_fixture_markdown(
             PNAS_FULL_FIXTURE,
             "https://www.pnas.org/doi/full/10.1073/pnas.2406303121",
@@ -287,37 +306,19 @@ class SciencePnasPostprocessTests(unittest.TestCase):
         )
 
     def test_rewrite_inline_figure_links_ignores_cross_references_in_asset_captions(self) -> None:
-        markdown = "\n\n".join(
-            [
-                "# PNAS Figure Example",
-                "## Results",
-                "![Figure 1](https://www.pnas.org/assets/pnas.example.fig01.jpeg)",
-                "**Figure 1.** Primary figure caption.",
-                "![Figure 4](https://www.pnas.org/assets/pnas.example.fig04.jpeg)",
-                "**Figure 4.** Background shading is the same as in Fig. 1.",
-            ]
+        """rule: rule-rewrite-inline-figure-links"""
+        markdown = golden_criteria_scenario_asset("inline_figure_link_rewrite", "article.md").read_text(
+            encoding="utf-8"
+        )
+        figure_assets = json.loads(
+            golden_criteria_scenario_asset("inline_figure_link_rewrite", "assets.json").read_text(
+                encoding="utf-8"
+            )
         )
 
         rewritten = rewrite_inline_figure_links(
             markdown,
-            figure_assets=[
-                {
-                    "kind": "figure",
-                    "heading": "Primary figure caption",
-                    "caption": "Primary figure caption.",
-                    "source_url": "https://www.pnas.org/assets/pnas.example.fig01.jpeg",
-                    "path": "downloads/pnas.example.fig01.jpeg",
-                    "section": "body",
-                },
-                {
-                    "kind": "figure",
-                    "heading": "Residual carbon flux anomalies",
-                    "caption": "Background shading is the same as in Fig. 1.",
-                    "source_url": "https://www.pnas.org/assets/pnas.example.fig04.jpeg",
-                    "path": "downloads/pnas.example.fig04.jpeg",
-                    "section": "body",
-                },
-            ],
+            figure_assets=figure_assets,
             publisher="pnas",
         )
 

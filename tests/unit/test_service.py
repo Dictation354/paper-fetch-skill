@@ -743,6 +743,7 @@ class ServiceTests(unittest.TestCase):
         self.assertTrue(any("fell back to preview images" in warning for warning in envelope.warnings))
 
     def test_fetch_paper_accepts_preview_images_with_sufficient_dimensions(self) -> None:
+        """rule: rule-image-download-validates-real-images"""
         resolved = paper_fetch.ResolvedQuery(
             query="10.1126/science.preview.accepted",
             query_kind="doi",

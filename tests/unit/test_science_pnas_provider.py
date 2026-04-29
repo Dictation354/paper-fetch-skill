@@ -12,6 +12,7 @@ from paper_fetch.geography_live import collect_issue_flags
 from paper_fetch.providers import html_assets
 from paper_fetch.providers import (
     _flaresolverr,
+    _science_pnas_html,
     browser_workflow,
     pnas as pnas_provider,
     science as science_provider,
@@ -21,7 +22,11 @@ from paper_fetch.quality.html_availability import assess_html_fulltext_availabil
 from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
 from paper_fetch.tracing import trace_from_markers
 from tests.block_fixtures import block_asset
-from tests.golden_criteria import golden_criteria_asset, golden_criteria_dir_for_doi
+from tests.golden_criteria import (
+    golden_criteria_asset,
+    golden_criteria_dir_for_doi,
+    golden_criteria_scenario_asset,
+)
 from tests.provider_benchmark_samples import provider_benchmark_sample
 from tests.unit._paper_fetch_support import build_envelope, fulltext_pdf_bytes
 
@@ -349,32 +354,29 @@ class SciencePnasProviderTests(unittest.TestCase):
         self.assertEqual(article.assets[0].path, str(asset_path))
 
     def test_science_provider_uses_extracted_dom_abstract_and_restores_lead_body_text(self) -> None:
+        """rule: rule-provider-owned-authors"""
+        scenario = json.loads(
+            golden_criteria_scenario_asset("provider_dom_abstract_fallback", "payload.json").read_text(
+                encoding="utf-8"
+            )
+        )
         client = science_provider.ScienceClient(transport=None, env={})
         raw_payload = _typed_raw_payload(
-            provider="science",
-            source_url=SCIENCE_SAMPLE.landing_url,
+            provider=str(scenario["provider"]),
+            source_url=str(scenario["source_url"]),
             content_type="text/html",
-            body=b"<html></html>",
+            body=str(scenario["body_html"]).encode("utf-8"),
             route="html",
-            markdown_text="\n\n".join(
-                [
-                    f"# {SCIENCE_SAMPLE.title}",
-                    "## Results",
-                    "Results body paragraph.",
-                ]
-            ),
+            markdown_text=str(scenario["markdown_text"]),
             source_trail=["fulltext:science_html_ok"],
-            extraction={
-                "title": SCIENCE_SAMPLE.title,
-                "abstract_text": "Short DOM abstract.",
-            },
+            extraction=scenario["extraction"],
         )
 
         article = client.to_article_model(
             {
-                "doi": SCIENCE_SAMPLE.doi,
-                "title": SCIENCE_SAMPLE.title,
-                "abstract": "Short DOM abstract. Lead body paragraph that should not remain in the abstract.",
+                "doi": str(scenario["doi"]),
+                "title": str(scenario["title"]),
+                "abstract": str(scenario["metadata_abstract"]),
             },
             raw_payload,
         )
@@ -385,6 +387,7 @@ class SciencePnasProviderTests(unittest.TestCase):
         self.assertEqual(article.sections[1].heading, "Results")
 
     def test_provider_owned_html_signals_populate_final_article_authors(self) -> None:
+        """rule: rule-provider-owned-authors"""
         cases = (
             {
                 "provider": "science",
@@ -1214,7 +1217,10 @@ class SciencePnasProviderTests(unittest.TestCase):
     <img src="https://www.science.org/images/large/figure1.png" alt="Figure 1 alt" />
     <figcaption>Figure 1 caption</figcaption>
   </figure>
-  <a href="https://www.science.org/supp/appendix.pdf">Supplementary Information</a>
+  <section id="supplementary-materials" class="core-supplementary-materials">
+    <h2>Supplementary Materials</h2>
+    <a href="https://www.science.org/doi/suppl/10.1126/science.sample/suppl_file/appendix.pdf">Download</a>
+  </section>
 </article>
 """
         figure_url = "https://www.science.org/images/large/figure1.png"
@@ -1276,14 +1282,17 @@ class SciencePnasProviderTests(unittest.TestCase):
 
     def test_science_provider_download_related_assets_all_profile_downloads_supplementary_via_file_fetcher(self) -> None:
         figure_url = "https://www.science.org/images/large/figure1.png"
-        supplementary_url = "https://www.science.org/supp/appendix.pdf"
+        supplementary_url = "https://www.science.org/doi/suppl/10.1126/science.sample/suppl_file/appendix.pdf"
         html = f"""
 <article>
   <figure>
     <img src="{figure_url}" alt="Figure 1 alt" />
     <figcaption>Figure 1 caption</figcaption>
   </figure>
-  <a href="{supplementary_url}">Supplementary Information</a>
+  <section id="supplementary-materials" class="core-supplementary-materials">
+    <h2>Supplementary Materials</h2>
+    <a href="{supplementary_url}">Download</a>
+  </section>
 </article>
 """
         transport = AssetTransport({})
@@ -1464,6 +1473,7 @@ class SciencePnasProviderTests(unittest.TestCase):
         self.assertEqual(saved_bytes, b"preview-image")
 
     def test_pnas_provider_download_related_assets_uses_shared_playwright_primary_path_before_preview(self) -> None:
+        """rule: rule-browser-primary-image-download-path"""
         figure_page_url = "https://www.pnas.org/figures/figure-1"
         preview_url = "https://www.pnas.org/images/preview/figure1.png"
         full_size_url = "https://www.pnas.org/images/original/figure1.png"
@@ -1672,7 +1682,7 @@ class SciencePnasProviderTests(unittest.TestCase):
                 mock.patch.object(browser_workflow, "ensure_runtime_ready"),
                 mock.patch.object(browser_workflow, "fetch_html_with_flaresolverr") as mocked_fetch,
                 mock.patch.object(
-                    browser_workflow,
+                    _science_pnas_html,
                     "extract_scoped_html_assets",
                     return_value=[
                         {
@@ -2097,6 +2107,252 @@ class SciencePnasProviderTests(unittest.TestCase):
         self.assertEqual(len(result["assets"]), 1)
         self.assertEqual(result["asset_failures"], [])
         self.assertEqual(result["assets"][0]["download_url"], figure_url)
+
+    def test_browser_workflow_retries_only_failed_supplementary_assets(self) -> None:
+        doi = "10.5555/retry-supplement"
+        article_url = "https://example.test/article"
+        figure_asset = {
+            "kind": "figure",
+            "heading": "Figure 1",
+            "caption": "Figure caption",
+            "url": "https://example.test/figure1.png",
+            "section": "body",
+        }
+        supplementary_asset = {
+            "kind": "supplementary",
+            "heading": "Supplement 1",
+            "url": "https://example.test/supplement.docx",
+            "section": "supplementary",
+        }
+        figure_result = {
+            "assets": [
+                {
+                    "kind": "figure",
+                    "heading": "Figure 1",
+                    "caption": "Figure caption",
+                    "download_url": "https://example.test/figure1.png",
+                    "source_url": "https://example.test/figure1.png",
+                    "section": "body",
+                }
+            ],
+            "asset_failures": [],
+        }
+        supplementary_failure = {
+            "assets": [],
+            "asset_failures": [
+                {
+                    "kind": "supplementary",
+                    "heading": "Supplement 1",
+                    "source_url": "https://example.test/supplement.docx",
+                    "section": "supplementary",
+                    "reason": "cloudflare_challenge",
+                }
+            ],
+        }
+        supplementary_success = {
+            "assets": [
+                {
+                    "kind": "supplementary",
+                    "heading": "Supplement 1",
+                    "download_url": "https://example.test/supplement.docx",
+                    "source_url": "https://example.test/supplement.docx",
+                    "section": "supplementary",
+                    "download_tier": "supplementary_file",
+                }
+            ],
+            "asset_failures": [],
+        }
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            runtime = self._runtime_config(tmpdir, "science", doi)
+            client = browser_workflow.BrowserWorkflowClient(AssetTransport({}), {})
+            client.name = "science"
+            raw_payload = _typed_raw_payload(
+                provider="science",
+                source_url=article_url,
+                content_type="text/html",
+                body=b"<html></html>",
+                route="html",
+                browser_context_seed={"browser_final_url": article_url},
+            )
+            with (
+                mock.patch.object(browser_workflow, "load_runtime_config", return_value=runtime),
+                mock.patch.object(browser_workflow, "ensure_runtime_ready"),
+                mock.patch.object(
+                    browser_workflow,
+                    "_cached_browser_workflow_assets",
+                    return_value=[figure_asset, supplementary_asset],
+                ),
+                mock.patch.object(
+                    browser_workflow,
+                    "warm_browser_context_with_flaresolverr",
+                    return_value={"browser_final_url": article_url},
+                ) as mocked_warm,
+                mock.patch.object(
+                    browser_workflow,
+                    "download_figure_assets_with_image_document_fetcher",
+                    return_value=figure_result,
+                ) as mocked_figures,
+                mock.patch.object(
+                    browser_workflow,
+                    "download_supplementary_assets",
+                    side_effect=[supplementary_failure, supplementary_success],
+                ) as mocked_supplementary,
+            ):
+                result = client.download_related_assets(
+                    doi,
+                    {"doi": doi, "title": "Retry Supplement"},
+                    raw_payload,
+                    Path(tmpdir),
+                    asset_profile="all",
+                )
+
+        mocked_warm.assert_called_once()
+        mocked_figures.assert_called_once()
+        self.assertEqual(mocked_figures.call_args.kwargs["assets"], [figure_asset])
+        self.assertEqual(mocked_supplementary.call_count, 2)
+        self.assertEqual(mocked_supplementary.call_args_list[0].kwargs["assets"], [supplementary_asset])
+        self.assertEqual(mocked_supplementary.call_args_list[1].kwargs["assets"], [supplementary_asset])
+        self.assertEqual(
+            [(asset["kind"], asset["download_url"]) for asset in result["assets"]],
+            [
+                ("figure", "https://example.test/figure1.png"),
+                ("supplementary", "https://example.test/supplement.docx"),
+            ],
+        )
+        self.assertEqual(result["asset_failures"], [])
+
+    def test_browser_workflow_retries_only_failed_body_assets(self) -> None:
+        doi = "10.5555/retry-figure"
+        article_url = "https://example.test/article"
+        first_figure = {
+            "kind": "figure",
+            "heading": "Figure 1",
+            "caption": "Figure caption",
+            "url": "https://example.test/figure1.png",
+            "section": "body",
+        }
+        second_figure = {
+            "kind": "figure",
+            "heading": "Figure 2",
+            "caption": "Second figure caption",
+            "url": "https://example.test/figure2.png",
+            "section": "body",
+        }
+        supplementary_asset = {
+            "kind": "supplementary",
+            "heading": "Supplement 1",
+            "url": "https://example.test/supplement.docx",
+            "section": "supplementary",
+        }
+        initial_body_result = {
+            "assets": [
+                {
+                    "kind": "figure",
+                    "heading": "Figure 2",
+                    "caption": "Second figure caption",
+                    "download_url": "https://example.test/figure2.png",
+                    "source_url": "https://example.test/figure2.png",
+                    "section": "body",
+                }
+            ],
+            "asset_failures": [
+                {
+                    "kind": "figure",
+                    "heading": "Figure 1",
+                    "caption": "Figure caption",
+                    "source_url": "https://example.test/figure1.png",
+                    "section": "body",
+                    "reason": "cloudflare_challenge",
+                }
+            ],
+        }
+        retry_body_result = {
+            "assets": [
+                {
+                    "kind": "figure",
+                    "heading": "Figure 1",
+                    "caption": "Figure caption",
+                    "download_url": "https://example.test/figure1.png",
+                    "source_url": "https://example.test/figure1.png",
+                    "section": "body",
+                }
+            ],
+            "asset_failures": [],
+        }
+        supplementary_result = {
+            "assets": [
+                {
+                    "kind": "supplementary",
+                    "heading": "Supplement 1",
+                    "download_url": "https://example.test/supplement.docx",
+                    "source_url": "https://example.test/supplement.docx",
+                    "section": "supplementary",
+                    "download_tier": "supplementary_file",
+                }
+            ],
+            "asset_failures": [],
+        }
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            runtime = self._runtime_config(tmpdir, "science", doi)
+            client = browser_workflow.BrowserWorkflowClient(AssetTransport({}), {})
+            client.name = "science"
+            raw_payload = _typed_raw_payload(
+                provider="science",
+                source_url=article_url,
+                content_type="text/html",
+                body=b"<html></html>",
+                route="html",
+                browser_context_seed={"browser_final_url": article_url},
+            )
+            with (
+                mock.patch.object(browser_workflow, "load_runtime_config", return_value=runtime),
+                mock.patch.object(browser_workflow, "ensure_runtime_ready"),
+                mock.patch.object(
+                    browser_workflow,
+                    "_cached_browser_workflow_assets",
+                    return_value=[first_figure, second_figure, supplementary_asset],
+                ),
+                mock.patch.object(
+                    browser_workflow,
+                    "warm_browser_context_with_flaresolverr",
+                    return_value={"browser_final_url": article_url},
+                ) as mocked_warm,
+                mock.patch.object(
+                    browser_workflow,
+                    "download_figure_assets_with_image_document_fetcher",
+                    side_effect=[initial_body_result, retry_body_result],
+                ) as mocked_figures,
+                mock.patch.object(
+                    browser_workflow,
+                    "download_supplementary_assets",
+                    return_value=supplementary_result,
+                ) as mocked_supplementary,
+            ):
+                result = client.download_related_assets(
+                    doi,
+                    {"doi": doi, "title": "Retry Figure"},
+                    raw_payload,
+                    Path(tmpdir),
+                    asset_profile="all",
+                )
+
+        mocked_warm.assert_called_once()
+        self.assertEqual(mocked_figures.call_count, 2)
+        self.assertEqual(mocked_figures.call_args_list[0].kwargs["assets"], [first_figure, second_figure])
+        self.assertEqual(mocked_figures.call_args_list[1].kwargs["assets"], [first_figure])
+        mocked_supplementary.assert_called_once()
+        self.assertEqual(mocked_supplementary.call_args.kwargs["assets"], [supplementary_asset])
+        self.assertEqual(
+            sorted((asset["kind"], asset["download_url"]) for asset in result["assets"]),
+            [
+                ("figure", "https://example.test/figure1.png"),
+                ("figure", "https://example.test/figure2.png"),
+                ("supplementary", "https://example.test/supplement.docx"),
+            ],
+        )
+        self.assertEqual(result["asset_failures"], [])
 
     def test_wiley_provider_download_related_assets_uses_shared_playwright_primary_path(self) -> None:
         full_size_url = "https://onlinelibrary.wiley.com/cms/asset/full/figure1.jpg"

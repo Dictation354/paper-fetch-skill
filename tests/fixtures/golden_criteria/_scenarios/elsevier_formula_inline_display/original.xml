@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<full-text-retrieval-response xmlns="http://www.elsevier.com/xml/svapi/article/dtd" xmlns:ce="http://www.elsevier.com/xml/common/dtd" xmlns:mml="http://www.w3.org/1998/Math/MathML">
+  <body>
+    <ce:sections>
+      <ce:section>
+        <ce:section-title>Climate data</ce:section-title>
+        <ce:para>Air temperature (<mml:math><mml:mi>T</mml:mi></mml:math>) and dewpoint temperature (<mml:math><mml:msub><mml:mi>T</mml:mi><mml:mi>d</mml:mi></mml:msub></mml:math>) were used:<ce:display><ce:formula id="fo1"><ce:label>(1)</ce:label><mml:math><mml:mi>VPD</mml:mi><mml:mo>=</mml:mo><mml:mi>T</mml:mi></mml:math></ce:formula></ce:display>where <mml:math><mml:msub><mml:mi>c</mml:mi><mml:mn>1</mml:mn></mml:msub></mml:math> is constant.</ce:para>
+      </ce:section>
+    </ce:sections>
+  </body>
+</full-text-retrieval-response>

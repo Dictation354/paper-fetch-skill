@@ -9,6 +9,7 @@
 set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PYTHON_BIN="${PAPER_FETCH_INSTALL_PYTHON_BIN:-${PYTHON_BIN:-python3}}"
 RUN_FLARESOLVERR_SETUP="true"
 RUN_PLAYWRIGHT_INSTALL="true"
 FORWARDED_ARGS=()
@@ -38,12 +39,12 @@ if [[ "${RUN_FLARESOLVERR_SETUP}" == "true" ]]; then
       echo "Warning: Xvfb was not found. Headless FlareSolverr preset requires the xvfb package." >&2
     fi
   fi
-  bash "${REPO_DIR}/vendor/flaresolverr/setup_flaresolverr_source.sh"
+  PYTHON_BIN="${PYTHON_BIN}" bash "${REPO_DIR}/vendor/flaresolverr/setup_flaresolverr_source.sh"
 fi
 
 if [[ "${RUN_PLAYWRIGHT_INSTALL}" == "true" ]]; then
-  python3 -m playwright install chromium
+  "${PYTHON_BIN}" -m playwright install chromium
 fi
 
-export PYTHONPATH="$REPO_DIR/src${PYTHONPATH:+:$PYTHONPATH}"
-python3 -m paper_fetch.formula.install --target-dir "$REPO_DIR/.formula-tools" "${FORWARDED_ARGS[@]}"
+PYTHONPATH="$REPO_DIR/src${PYTHONPATH:+:$PYTHONPATH}" \
+  "${PYTHON_BIN}" -m paper_fetch.formula.install --target-dir "$REPO_DIR/.formula-tools" "${FORWARDED_ARGS[@]}"

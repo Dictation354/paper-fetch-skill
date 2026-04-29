@@ -37,6 +37,7 @@ from paper_fetch.providers.base import ProviderFailure
 from paper_fetch.resolve.query import ResolvedQuery
 from paper_fetch.service import FetchStrategy, HasFulltextProbeResult, PaperFetchFailure
 from paper_fetch.utils import sanitize_filename
+from tests.golden_criteria import golden_criteria_scenario_asset
 
 
 def sample_article() -> ArticleModel:
@@ -451,32 +452,13 @@ class McpToolTests(unittest.TestCase):
         mocked_fetch.assert_not_called()
 
     def test_article_payload_preserves_asset_download_diagnostics(self) -> None:
-        article = mcp_tools._article_from_payload(
-            {
-                "doi": "10.1000/assets",
-                "source": "science",
-                "metadata": {"title": "Asset Diagnostics", "authors": ["Alice Example"]},
-                "sections": [{"heading": "Results", "level": 2, "kind": "body", "text": "Body text."}],
-                "assets": [
-                    {
-                        "kind": "figure",
-                        "heading": "Figure 1",
-                        "caption": "Preview figure.",
-                        "path": "downloads/figure-1.png",
-                        "section": "body",
-                        "render_state": "appendix",
-                        "anchor_key": "F1",
-                        "download_tier": "preview",
-                        "download_url": "https://example.test/figure-preview.png",
-                        "original_url": "https://example.test/figure-original.png",
-                        "content_type": "image/png",
-                        "downloaded_bytes": 128,
-                        "width": 640,
-                        "height": 480,
-                    }
-                ],
-            }
+        """rule: rule-asset-download-diagnostic-fields"""
+        payload = json.loads(
+            golden_criteria_scenario_asset("asset_download_diagnostics", "article_payload.json").read_text(
+                encoding="utf-8"
+            )
         )
+        article = mcp_tools._article_from_payload(payload)
 
         self.assertIsNotNone(article)
         assert article is not None

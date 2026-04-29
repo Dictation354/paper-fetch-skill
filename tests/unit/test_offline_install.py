@@ -1,0 +1,230 @@
+from __future__ import annotations
+
+import hashlib
+import os
+from pathlib import Path
+import shutil
+import stat
+import subprocess
+import tempfile
+import textwrap
+import unittest
+
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+
+
+def _write_executable(path: Path, content: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(textwrap.dedent(content).lstrip(), encoding="utf-8")
+    path.chmod(path.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+
+
+def _write_file(path: Path, content: str = "") -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(content, encoding="utf-8")
+
+
+def _fake_python_script(version: str) -> str:
+    major, minor, micro = version.split(".")
+    tag = f"cp{major}{minor}"
+    return f"""\
+    #!/usr/bin/env bash
+    set -euo pipefail
+    VERSION="{version}"
+    TAG="{tag}"
+
+    if [[ "${{1:-}}" == "-c" ]]; then
+      code="${{2:-}}"
+      if [[ "$code" == *'join(map(str, sys.version_info[:3]))'* ]]; then
+        echo "$VERSION"
+        exit 0
+      fi
+      if [[ "$code" == *'cp{{sys.version_info.major}}{{sys.version_info.minor}}'* ]]; then
+        echo "$TAG"
+        exit 0
+      fi
+      if [[ "$code" == *'json.load'* && "$code" == *'python_tag'* ]]; then
+        echo "cp311"
+        exit 0
+      fi
+      if [[ "$code" == *'playwright.sync_api'* ]]; then
+        echo "${{PLAYWRIGHT_BROWSERS_PATH}}/chromium-123/chrome-linux/chrome"
+        exit 0
+      fi
+      exit 0
+    fi
+
+    if [[ "${{1:-}}" == "-m" && "${{2:-}}" == "venv" ]]; then
+      venv_dir="$3"
+      mkdir -p "$venv_dir/bin"
+      cp "$0" "$venv_dir/bin/python"
+      chmod +x "$venv_dir/bin/python"
+      cat > "$venv_dir/bin/paper-fetch" <<'SH'
+    #!/usr/bin/env bash
+    if [[ "${1:-}" == "--help" ]]; then
+      exit 0
+    fi
+    exit 0
+    SH
+      chmod +x "$venv_dir/bin/paper-fetch"
+      exit 0
+    fi
+
+    if [[ "${{1:-}}" == "-m" && "${{2:-}}" == "pip" ]]; then
+      exit 0
+    fi
+
+    exit 0
+    """
+
+
+def _write_checksums(root: Path) -> None:
+    lines: list[str] = []
+    for path in sorted(item for item in root.rglob("*") if item.is_file() and item.name != "sha256sums.txt"):
+        digest = hashlib.sha256(path.read_bytes()).hexdigest()
+        relative = path.relative_to(root).as_posix()
+        lines.append(f"{digest}  ./{relative}\n")
+    (root / "sha256sums.txt").write_text("".join(lines), encoding="utf-8")
+
+
+class OfflineInstallTests(unittest.TestCase):
+    def _create_bundle(self, root: Path, *, python_version: str = "3.11.9", include_xvfb: bool = True) -> tuple[Path, Path, Path]:
+        bundle = root / "bundle"
+        bundle.mkdir()
+        shutil.copy2(REPO_ROOT / "install-offline.sh", bundle / "install-offline.sh")
+        (bundle / "install-offline.sh").chmod(0o755)
+
+        _write_file(
+            bundle / "offline-manifest.json",
+            '{"target": {"platform": "linux", "arch": "x86_64", "python_tag": "cp311"}}\n',
+        )
+        _write_file(bundle / ".env.example", 'ELSEVIER_API_KEY=""\n')
+        _write_file(bundle / "dist" / "paper_fetch_skill-1.0.0-py3-none-any.whl")
+        _write_file(bundle / "wheelhouse" / "dependency-1.0.0-py3-none-any.whl")
+        _write_executable(
+            bundle / "ms-playwright" / "chromium-123" / "chrome-linux" / "chrome",
+            "#!/usr/bin/env bash\nexit 0\n",
+        )
+        _write_executable(bundle / "formula-tools" / "bin" / "texmath", "#!/usr/bin/env bash\nexit 0\n")
+
+        flaresolverr = bundle / "vendor" / "flaresolverr"
+        _write_file(flaresolverr / ".env.flaresolverr-source-headless", 'HEADLESS="true"\n')
+        _write_file(flaresolverr / ".env.flaresolverr-source-wslg", 'HEADLESS="false"\n')
+        _write_file(flaresolverr / ".work" / "FlareSolverr" / "src" / "flaresolverr.py")
+        _write_file(flaresolverr / ".work" / "FlareSolverr" / "requirements.txt", "dependency==1.0.0\n")
+        _write_file(flaresolverr / "wheelhouse" / "dependency-1.0.0-py3-none-any.whl")
+        _write_executable(
+            flaresolverr / ".flaresolverr" / "v3.4.6" / "flaresolverr" / "_internal" / "chrome" / "chrome",
+            "#!/usr/bin/env bash\nexit 0\n",
+        )
+        _write_file(
+            flaresolverr / "flaresolverr_source_common.sh",
+            """
+            flaresolverr_source_load_env() { :; }
+            flaresolverr_source_ensure_chrome_link() { :; }
+            """,
+        )
+        for name in (
+            "setup_flaresolverr_source.sh",
+            "start_flaresolverr_source.sh",
+            "run_flaresolverr_source.sh",
+            "stop_flaresolverr_source.sh",
+        ):
+            _write_executable(flaresolverr / name, "#!/usr/bin/env bash\nexit 0\n")
+
+        fake_bin = root / "fake-bin"
+        _write_executable(fake_bin / "python3", _fake_python_script(python_version))
+        if include_xvfb:
+            _write_executable(fake_bin / "Xvfb", "#!/usr/bin/env bash\nexit 0\n")
+
+        _write_checksums(bundle)
+        home = root / "home"
+        home.mkdir()
+        return bundle, fake_bin, home
+
+    def _run_installer(
+        self,
+        bundle: Path,
+        fake_bin: Path,
+        home: Path,
+        *args: str,
+    ) -> subprocess.CompletedProcess[str]:
+        env = os.environ.copy()
+        env["HOME"] = str(home)
+        env["PATH"] = f"{fake_bin}{os.pathsep}{env['PATH']}"
+        env["PAPER_FETCH_OFFLINE_PYTHON_BIN"] = str(fake_bin / "python3")
+        env["PAPER_FETCH_OFFLINE_XVFB_BIN"] = str(fake_bin / "Xvfb")
+        return subprocess.run(
+            [str(bundle / "install-offline.sh"), "--skip-smoke", *args],
+            cwd=bundle,
+            env=env,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=False,
+        )
+
+    def test_default_install_writes_local_env_without_touching_user_config(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            bundle, fake_bin, home = self._create_bundle(Path(tmpdir))
+            user_env = home / ".config" / "paper-fetch" / ".env"
+            _write_file(user_env, 'ELSEVIER_API_KEY="secret"\n')
+
+            result = self._run_installer(bundle, fake_bin, home)
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(user_env.read_text(encoding="utf-8"), 'ELSEVIER_API_KEY="secret"\n')
+            offline_env = (bundle / "offline.env").read_text(encoding="utf-8")
+            self.assertIn("FLARESOLVERR_ENV_FILE=", offline_env)
+            self.assertIn(str(bundle / "ms-playwright"), offline_env)
+            self.assertNotIn(str(home / ".cache" / "ms-playwright"), offline_env)
+
+    def test_user_config_merge_preserves_existing_values(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            bundle, fake_bin, home = self._create_bundle(Path(tmpdir))
+            user_env = home / ".config" / "paper-fetch" / ".env"
+            _write_file(user_env, 'ELSEVIER_API_KEY="secret"\n')
+
+            result = self._run_installer(bundle, fake_bin, home, "--user-config")
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            payload = user_env.read_text(encoding="utf-8")
+            self.assertIn('ELSEVIER_API_KEY="secret"', payload)
+            self.assertIn("# BEGIN paper-fetch offline managed", payload)
+            self.assertIn(str(bundle / "vendor" / "flaresolverr"), payload)
+
+    def test_wrong_python_minor_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            bundle, fake_bin, home = self._create_bundle(Path(tmpdir), python_version="3.12.1")
+
+            result = self._run_installer(bundle, fake_bin, home)
+
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("CPython 3.11.x", result.stderr)
+
+    def test_missing_xvfb_has_clear_headless_diagnostic(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            bundle, fake_bin, home = self._create_bundle(Path(tmpdir), include_xvfb=False)
+
+            result = self._run_installer(bundle, fake_bin, home)
+
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("Xvfb is required", result.stderr)
+
+    def test_repeated_install_keeps_single_managed_block(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            bundle, fake_bin, home = self._create_bundle(Path(tmpdir))
+
+            first = self._run_installer(bundle, fake_bin, home)
+            second = self._run_installer(bundle, fake_bin, home)
+
+            self.assertEqual(first.returncode, 0, first.stderr)
+            self.assertEqual(second.returncode, 0, second.stderr)
+            offline_env = (bundle / "offline.env").read_text(encoding="utf-8")
+            self.assertEqual(offline_env.count("# BEGIN paper-fetch offline managed"), 1)
+            self.assertEqual(offline_env.count("# END paper-fetch offline managed"), 1)
+
+
+if __name__ == "__main__":
+    unittest.main()

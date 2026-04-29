@@ -264,6 +264,7 @@ class SpringerHtmlTableTests(unittest.TestCase):
         self.assertEqual(attempt.inline_table_assets[0].get("url"), table_image_url)
 
     def test_generic_extended_data_table_html_image_fallback_renders_table_asset(self) -> None:
+        """rule: rule-springer-inline-table"""
         table_image_url = "https://media.springernature.com/full/table-1-from-html.png"
         responses = {
             GENERIC_EXTENDED_TABLE_LANDING_URL: {

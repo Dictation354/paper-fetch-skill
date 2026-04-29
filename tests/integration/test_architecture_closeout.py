@@ -21,6 +21,7 @@ REMOVED_PROVIDER_COMPATIBILITY_MODULE_FILES = [
     PROVIDERS_DIR / "_html_availability.py",
     PROVIDERS_DIR / "_html_citations.py",
     PROVIDERS_DIR / "_html_semantics.py",
+    PROVIDERS_DIR / "_html_tables.py",
     PROVIDERS_DIR / "_html_text.py",
     PROVIDERS_DIR / "_language_filter.py",
     PROVIDERS_DIR / "_science_pnas.py",

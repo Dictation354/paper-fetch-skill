@@ -17,6 +17,67 @@ provider 与环境变量说明见 [`providers.md`](providers.md)，Wiley / Scien
 
 ## 1. 安装 Python 包
 
+如果目标是把本仓库的完整本地运行环境一次性准备好，推荐先使用顶层一键安装脚本：
+
+```bash
+./install.sh
+```
+
+默认行为：
+
+- 创建仓库内 `.venv`
+- 安装当前 Python 包
+- 如果存在 `.env.example` 且用户配置文件还不存在，创建 `~/.config/paper-fetch/.env`
+- 安装 Playwright Chromium、repo-local FlareSolverr 和外部公式后端
+
+补充说明：
+
+- 这是在线一键安装入口：用户不需要手动下载浏览器和 FlareSolverr 依赖，但脚本仍会从官方来源拉取这些大型组件
+- 如果只想安装 Python 包和配置骨架，不准备浏览器链路，使用 `./install.sh --lite`
+- 如果要装进当前 `python3` 环境而不是 `.venv`，使用 `./install.sh --system`
+- 如果只想跳过某个重型部分，可使用 `--skip-playwright-install` 或 `--skip-flaresolverr-setup`
+
+### Linux x86_64 离线包
+
+第一版离线包只支持 Linux x86_64 + 系统 CPython 3.11.x。CI artifact 名称为：
+
+```text
+paper-fetch-skill-offline-linux-x86_64-cp311.tar.gz
+```
+
+目标机解压后运行：
+
+```bash
+./install-offline.sh --preset=headless --no-user-config
+source ./activate-offline.sh
+```
+
+离线安装器的约束：
+
+- Python 版本必须是 `3.11.x`；`3.12` 会被拒绝，避免安装 `cp311` wheelhouse 时出现 ABI 不匹配
+- 所有 Python 依赖只来自包内 `wheelhouse/`，安装时设置 `PIP_NO_INDEX=1`
+- Playwright 使用包内 `ms-playwright/`，并设置 `PLAYWRIGHT_BROWSERS_PATH="$INSTALL_ROOT/ms-playwright"`；不会触碰 `~/.cache/ms-playwright`
+- FlareSolverr 使用包内已 patch 的源码快照 `vendor/flaresolverr/.work/FlareSolverr/` 和 `vendor/flaresolverr/wheelhouse/`；目标机不运行 `git clone`、`git fetch` 或 `git apply`
+- 公式工具使用包内 `formula-tools/bin/texmath`；目标机不编译 texmath，也不运行 `npm install`
+- 默认只写包内 `offline.env` 并生成 `activate-offline.sh`；只有显式传 `--user-config` 才会把受标记管理的运行时块合并到 `~/.config/paper-fetch/.env`
+- `--preset=headless` 会在安装阶段检查 `Xvfb`；`--preset=wslg` 会检查 `DISPLAY` 或 `WAYLAND_DISPLAY`
+
+构建离线包：
+
+```bash
+scripts/build-offline-package.sh --output-dir dist
+```
+
+验证离线包：
+
+```bash
+scripts/verify-offline-package.sh dist/paper-fetch-skill-offline-linux-x86_64-cp311.tar.gz
+```
+
+验证脚本会先用 guard 拦截 `curl`、`git`、`npm`、`playwright` 等命令来确认安装器没有在线下载或目标机 patch 动作，然后检查 `paper-fetch --help`、`texmath --help`、包内 Playwright Chromium、`paper_fetch.mcp.tools.provider_status_payload` 和 FlareSolverr `sessions.list`。
+
+### 手动安装
+
 先把包安装到目标环境：
 
 ```bash

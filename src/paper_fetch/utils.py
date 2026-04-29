@@ -248,9 +248,11 @@ def build_asset_output_path(
     content_type: str | None,
     source_url: str | None,
     used_names: set[str],
+    *,
+    preferred_filename: str | None = None,
 ) -> Path:
     candidate_name = ""
-    for value in (source_url, source_href):
+    for value in (preferred_filename, source_url, source_href):
         if not value:
             continue
         name = Path(urllib.parse.urlparse(value).path).name

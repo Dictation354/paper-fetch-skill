@@ -6,6 +6,7 @@ REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PYTHON_BIN="${PAPER_FETCH_MCP_PYTHON_BIN:-python3}"
 WSLG_PRESET="$REPO_DIR/vendor/flaresolverr/.env.flaresolverr-source-wslg"
 HEADLESS_PRESET="$REPO_DIR/vendor/flaresolverr/.env.flaresolverr-source-headless"
+OFFLINE_ENV_FILE="$REPO_DIR/offline.env"
 
 unset_legacy_rate_limit_env() {
     unset FLARESOLVERR_MIN_INTERVAL_SECONDS
@@ -68,8 +69,23 @@ choose_flaresolverr_preset() {
     printf '%s\n' "${FLARESOLVERR_ENV_FILE:-}"
 }
 
+load_offline_env_if_present() {
+    if [ -f "$OFFLINE_ENV_FILE" ] && [ -z "${PAPER_FETCH_ENV_FILE:-}" ]; then
+        export PAPER_FETCH_ENV_FILE="$OFFLINE_ENV_FILE"
+        set -a
+        # shellcheck disable=SC1090
+        source "$OFFLINE_ENV_FILE"
+        set +a
+    fi
+
+    if [ -d "$REPO_DIR/ms-playwright" ] && [ -z "${PLAYWRIGHT_BROWSERS_PATH:-}" ]; then
+        export PLAYWRIGHT_BROWSERS_PATH="$REPO_DIR/ms-playwright"
+    fi
+}
+
 main() {
     local preset
+    load_offline_env_if_present
     unset_legacy_rate_limit_env
     if is_wsl; then
         ensure_wslg_env

@@ -79,6 +79,23 @@
 python3 -m pip install .
 ```
 
+如果你希望一次性准备完整本地运行环境，包括 Playwright Chromium、repo-local FlareSolverr 和外部公式后端，可以直接运行：
+
+```bash
+./install.sh
+```
+
+这个脚本默认创建仓库内 `.venv`，并把大型浏览器组件下载到本地运行目录。它是在线一键安装入口；如果只想安装 Python 包和配置骨架，可以使用 `./install.sh --lite`。
+
+Linux x86_64 离线部署使用 CI 产出的 `paper-fetch-skill-offline-linux-x86_64-cp311.tar.gz`。目标机需要系统 CPython 3.11.x；解压后执行：
+
+```bash
+./install-offline.sh --preset=headless --no-user-config
+source ./activate-offline.sh
+```
+
+离线安装只从包内 `wheelhouse/`、`ms-playwright/`、`formula-tools/` 和已 patch 的 `vendor/flaresolverr/.work/FlareSolverr/` 取资产，不运行 `git clone`、`npm install` 或 `playwright install`。默认只写包内 `offline.env`；只有显式传 `--user-config` 才会向 `~/.config/paper-fetch/.env` 合并受标记管理的离线运行时配置。
+
 最小试跑：
 
 ```bash
@@ -153,7 +170,7 @@ python3 -m paper_fetch.mcp.server
   - 候选顺序仍优先 full-size/original，full-size 全部失败后才回退 preview；preview 也通过同一个 browser context 获取，目标 provider 不再输出 `download_tier="playwright_canvas_fallback"`。
   - 正文图片下载会在单次 download attempt 内做有限并行和 URL 级缓存：重复的 figure page / 图片候选只抓一次，最终仍按输入资产顺序稳定落盘。
   - 如果浏览器页面已经显示目标图片，但页面内 `fetch()` 被 Cloudflare challenge 返回 HTML 拦截，下载器只接受 FlareSolverr/Selenium 返回的 `solution.imagePayload` 作为浏览器像素恢复结果；不再回退 FlareSolverr 图片文档截图裁剪，并继续按原候选记录为 `full_size` 或 `preview`。
-  - supplementary 文件如果先拿到 challenge/login HTML，会先记录诊断，再用 FlareSolverr 刷新 article/附件 seed，随后通过 Playwright context request 重试；成功时记录 `download_tier="supplementary_file"`。
+  - supplementary 文件如果先拿到 challenge/login HTML，会先记录诊断，再用 FlareSolverr 刷新 article/附件 seed，随后只重试失败的 supplementary 文件；成功时记录 `download_tier="supplementary_file"`，Wiley `downloadSupplement` 会优先用 query 里的真实文件名落盘。
   - `PDF/ePDF fallback` 仍是 text-only，不阻塞正文成功。
 - 公式 Markdown
   - MathML 转 LaTeX 和 Springer/Nature raw MathJax TeX 都会经过轻量 normalize。

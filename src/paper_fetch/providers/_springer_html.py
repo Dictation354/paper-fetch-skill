@@ -28,7 +28,7 @@ from ..extraction.html._runtime import (
 )
 from ..extraction.html.language import collect_html_abstract_blocks, html_node_language_hint
 from ..extraction.html.parsing import choose_parser
-from ..extraction.html.semantics import collect_html_section_hints
+from ..extraction.html.semantics import collect_html_section_hints, heading_category, normalize_section_title
 from ..utils import dedupe_authors, normalize_text
 from ._browser_workflow_authors import (
     AuthorExtractionPipeline,
@@ -103,6 +103,26 @@ SPRINGER_COLLECTIVE_AUTHOR_TOKENS = {
     "society",
     "team",
 }
+SPRINGER_SUPPLEMENTARY_SECTION_TITLES = frozenset(
+    {
+        "electronic supplementary material",
+        "supplementary material",
+        "supplementary materials",
+        "supplementary information",
+        "supporting information",
+        "extended data",
+        "extended data figures and tables",
+    }
+)
+SPRINGER_EXTENDED_DATA_SECTION_TITLES = frozenset({"extended data", "extended data figures and tables"})
+SPRINGER_SOURCE_DATA_SECTION_TITLES = frozenset({"source data"})
+SPRINGER_SOURCE_DATA_TITLE_PREFIX = "source data"
+SPRINGER_PEER_REVIEW_TOKENS = (
+    "peer review",
+    "peer reviewer report",
+    "peer reviewer reports",
+    "transparent peer review",
+)
 
 
 def decode_html(body: bytes) -> str:
@@ -405,8 +425,94 @@ def extract_asset_html_scopes(
     if active_root is None:
         extraction_sidecars = extract_html_extraction_sidecars(html_text, source_url, title=title)
         cleaned_html = str(extraction_sidecars["cleaned_html"] or "")
-        return cleaned_html, cleaned_html
+        return cleaned_html, ""
 
+    body_html, supplementary_html, _ = _extract_asset_html_scope_fragments(cleaned_html, active_root)
+    return body_html, supplementary_html
+
+
+def extract_source_data_html_scope(
+    html_text: str,
+    source_url: str,
+    *,
+    title: str | None = None,
+) -> str:
+    cleaned_html, active_root = _normalized_root_html(html_text)
+    if active_root is None:
+        extraction_sidecars = extract_html_extraction_sidecars(html_text, source_url, title=title)
+        return str(extraction_sidecars["cleaned_html"] or "")
+
+    _, _, source_data_html = _extract_asset_html_scope_fragments(cleaned_html, active_root)
+    return source_data_html
+
+
+def _springer_section_title_key(node: Any) -> str:
+    if Tag is None or not isinstance(node, Tag):
+        return ""
+    attrs = getattr(node, "attrs", None) or {}
+    for key in ("data-title", "aria-label"):
+        value = normalize_text(str(attrs.get(key) or ""))
+        if value:
+            return normalize_section_title(value)
+    heading = node.find(re.compile(r"^h[1-6]$"))
+    if isinstance(heading, Tag):
+        return normalize_section_title(heading.get_text(" ", strip=True))
+    return ""
+
+
+def _springer_is_descendant_of(node: Any, ancestor: Any) -> bool:
+    current = node.parent if isinstance(getattr(node, "parent", None), Tag) else None
+    while isinstance(current, Tag):
+        if current is ancestor:
+            return True
+        current = current.parent if isinstance(getattr(current, "parent", None), Tag) else None
+    return False
+
+
+def _springer_is_supplementary_like_section_title(title_key: str) -> bool:
+    normalized_title = normalize_section_title(title_key)
+    if not normalized_title:
+        return False
+    if normalized_title in SPRINGER_EXTENDED_DATA_SECTION_TITLES:
+        return True
+    return (
+        normalized_title in SPRINGER_SUPPLEMENTARY_SECTION_TITLES
+        and heading_category("h2", normalized_title) == "references_or_back_matter"
+    )
+
+
+def _springer_collect_asset_sections(article_root: Any) -> tuple[list[Any], list[Any]]:
+    if Tag is None or not isinstance(article_root, Tag):
+        return [], []
+    supplementary_sections: list[Any] = []
+    source_data_sections: list[Any] = []
+
+    for node in article_root.find_all(["section", "div"]):
+        if not isinstance(node, Tag):
+            continue
+        title_key = _springer_section_title_key(node)
+        if not title_key:
+            continue
+        if any(
+            _springer_is_descendant_of(node, existing)
+            for existing in [*supplementary_sections, *source_data_sections]
+        ):
+            continue
+        if normalize_section_title(title_key) in SPRINGER_SOURCE_DATA_SECTION_TITLES:
+            source_data_sections.append(node)
+            continue
+        if _springer_is_supplementary_like_section_title(title_key):
+            supplementary_sections.append(node)
+
+    return supplementary_sections, source_data_sections
+
+
+def _springer_merge_scope_fragments(nodes: list[Any]) -> str:
+    fragments = [str(node) for node in nodes if isinstance(node, Tag) and normalize_text(str(node))]
+    return "\n".join(fragments)
+
+
+def _extract_asset_html_scope_fragments(cleaned_html: str, active_root: Any) -> tuple[str, str, str]:
     article_root = select_springer_nature_article_root(active_root) or active_root
     if isinstance(article_root, Tag):
         body_root = (
@@ -418,9 +524,13 @@ def extract_asset_html_scopes(
     else:
         body_root = active_root
 
-    supplementary_html = str(article_root) if isinstance(article_root, Tag) else cleaned_html
-    body_html = str(body_root) if isinstance(body_root, Tag) else supplementary_html
-    return body_html, supplementary_html
+    supplementary_sections, source_data_sections = _springer_collect_asset_sections(
+        article_root if isinstance(article_root, Tag) else active_root
+    )
+    body_html = str(body_root) if isinstance(body_root, Tag) else cleaned_html
+    supplementary_html = _springer_merge_scope_fragments(supplementary_sections)
+    source_data_html = _springer_merge_scope_fragments([*supplementary_sections, *source_data_sections])
+    return body_html, supplementary_html, source_data_html
 
 
 def _first_url_from_srcset(value: str | None) -> str:
@@ -701,37 +811,141 @@ def extract_figure_assets(html_text: str, source_url: str) -> list[dict[str, str
 def extract_supplementary_assets(html_text: str, source_url: str) -> list[dict[str, str]]:
     if BeautifulSoup is None:
         return extract_generic_supplementary_assets(html_text, source_url)
-    soup = BeautifulSoup(html_text, choose_parser())
     assets: list[dict[str, str]] = []
-    seen: set[str] = set()
-    for anchor in soup.find_all("a", href=True):
-        if not isinstance(anchor, Tag):
+    for asset in extract_generic_supplementary_assets(html_text, source_url):
+        heading = normalize_text(str(asset.get("heading") or ""))
+        if _springer_asset_is_source_data(heading) or _springer_asset_is_peer_review(heading):
             continue
-        href = normalize_text(str(anchor.get("href") or ""))
-        text = normalize_text(anchor.get_text(" ", strip=True)).lower()
-        if not href or href.startswith("#"):
+        assets.append(dict(asset))
+    return _dedupe_springer_supplementary_assets(assets)
+
+
+def _springer_asset_is_source_data(text: str) -> bool:
+    normalized = normalize_section_title(text)
+    return bool(normalized) and normalized.startswith(SPRINGER_SOURCE_DATA_TITLE_PREFIX)
+
+
+def _springer_asset_is_peer_review(text: str) -> bool:
+    normalized = normalize_section_title(text)
+    return any(token in normalized for token in SPRINGER_PEER_REVIEW_TOKENS)
+
+
+def _mark_source_data_assets(
+    assets: list[dict[str, str]],
+) -> list[dict[str, str]]:
+    marked_assets: list[dict[str, str]] = []
+    for asset in assets:
+        heading = normalize_text(str(asset.get("heading") or ""))
+        if _springer_asset_is_peer_review(heading):
             continue
-        lowered_href = href.lower()
-        if not (
-            any(token in text for token in ("supplementary", "extended data", "source data", "peer review"))
-            or any(token in lowered_href for token in SPRINGER_SUPPLEMENTARY_HOST_TOKENS)
-            or any(token in lowered_href for token in (".pdf", ".csv", ".xlsx", ".zip"))
-        ):
+        marked_asset = dict(asset)
+        marked_asset["kind"] = "supplementary"
+        marked_asset["section"] = "supplementary"
+        marked_asset["asset_kind"] = "source_data"
+        marked_assets.append(marked_asset)
+    return marked_assets
+
+
+def _anchor_text_candidates(anchor: Any) -> list[str]:
+    if Tag is None or not isinstance(anchor, Tag):
+        return []
+    candidates = [
+        normalize_text(anchor.get_text(" ", strip=True)),
+        normalize_text(str(anchor.get("aria-label") or "")),
+        normalize_text(str(anchor.get("title") or "")),
+        normalize_text(str(anchor.get("data-track-label") or "")),
+    ]
+    return [candidate for candidate in candidates if candidate]
+
+
+def _anchor_mentions_source_data(anchor: Any) -> bool:
+    return any(_springer_asset_is_source_data(candidate) for candidate in _anchor_text_candidates(anchor))
+
+
+def _anchor_target_id(anchor: Any) -> str:
+    if Tag is None or not isinstance(anchor, Tag):
+        return ""
+    href = normalize_text(str(anchor.get("href") or ""))
+    if not href:
+        return ""
+    parsed = urllib.parse.urlparse(href)
+    return normalize_text(urllib.parse.unquote(parsed.fragment or ""))
+
+
+def extract_source_data_assets(html_text: str, source_url: str) -> list[dict[str, str]]:
+    if BeautifulSoup is None:
+        return []
+
+    soup = BeautifulSoup(html_text, choose_parser())
+    root = soup.body or soup
+    supplementary_sections, source_data_sections = _springer_collect_asset_sections(root)
+    assets: list[dict[str, str]] = []
+
+    for section in source_data_sections:
+        assets.extend(_mark_source_data_assets(extract_generic_supplementary_assets(str(section), source_url)))
+
+    for section in supplementary_sections:
+        title_key = _springer_section_title_key(section)
+        if normalize_section_title(title_key) not in SPRINGER_EXTENDED_DATA_SECTION_TITLES:
             continue
-        url = urllib.parse.urljoin(source_url, href)
-        if url in seen:
+        for anchor in section.find_all("a", href=True):
+            if not isinstance(anchor, Tag) or not _anchor_mentions_source_data(anchor):
+                continue
+            target_id = _anchor_target_id(anchor)
+            if target_id:
+                target = soup.find(id=target_id)
+                if isinstance(target, Tag):
+                    assets.extend(_mark_source_data_assets(extract_generic_supplementary_assets(str(target), source_url)))
+                continue
+            assets.extend(_mark_source_data_assets(extract_generic_supplementary_assets(str(anchor), source_url)))
+
+    return _dedupe_springer_supplementary_assets(assets)
+
+
+def _springer_asset_identity(asset: Mapping[str, Any]) -> str:
+    for field in ("figure_page_url", "full_size_url", "preview_url", "download_url", "url", "source_url"):
+        candidate = normalize_text(str(asset.get(field) or ""))
+        if candidate:
+            return candidate
+    return normalize_text(str(asset.get("heading") or ""))
+
+
+def _springer_asset_priority(asset: Mapping[str, Any]) -> int:
+    if normalize_text(str(asset.get("asset_kind") or "")).lower() == "source_data":
+        return 20
+    if normalize_text(str(asset.get("kind") or "")).lower() == "supplementary":
+        return 10
+    return 0
+
+
+def _dedupe_springer_supplementary_assets(
+    assets: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    deduped: list[dict[str, Any]] = []
+    by_identity: dict[str, int] = {}
+
+    for item in assets:
+        asset = dict(item)
+        identity = _springer_asset_identity(asset)
+        if not identity:
+            deduped.append(asset)
             continue
-        seen.add(url)
-        assets.append(
-            {
-                "kind": "supplementary",
-                "heading": normalize_text(anchor.get_text(" ", strip=True)) or "Supplementary Material",
-                "caption": "",
-                "section": "supplementary",
-                "url": url,
-            }
-        )
-    return assets or extract_generic_supplementary_assets(html_text, source_url)
+        existing_index = by_identity.get(identity)
+        if existing_index is None:
+            by_identity[identity] = len(deduped)
+            deduped.append(asset)
+            continue
+        existing = deduped[existing_index]
+        if _springer_asset_priority(asset) > _springer_asset_priority(existing):
+            merged = dict(existing)
+            merged.update(asset)
+            deduped[existing_index] = merged
+        else:
+            for key, value in asset.items():
+                if key not in existing or existing[key] in ("", None, [], {}):
+                    existing[key] = value
+
+    return deduped
 
 
 def extract_html_assets(
@@ -740,11 +954,14 @@ def extract_html_assets(
     *,
     asset_profile,
 ) -> list[dict[str, str]]:
+    body_html, supplementary_html = extract_asset_html_scopes(html_text, source_url)
+    source_data_html = extract_source_data_html_scope(html_text, source_url)
     return extract_scoped_html_assets(
-        html_text,
+        body_html,
         source_url,
         asset_profile=asset_profile,
-        supplementary_html_text=html_text,
+        supplementary_html_text=supplementary_html,
+        source_data_html_text=source_data_html,
     )
 
 
@@ -754,12 +971,17 @@ def extract_scoped_html_assets(
     *,
     asset_profile,
     supplementary_html_text: str | None = None,
+    source_data_html_text: str | None = None,
 ) -> list[dict[str, str]]:
     assets = extract_figure_assets(body_html_text, source_url)
     assets.extend(extract_generic_formula_assets(body_html_text, source_url))
     if asset_profile == "all":
-        assets.extend(extract_supplementary_assets(supplementary_html_text or body_html_text, source_url))
-    return assets
+        supplementary_scope_html = body_html_text if supplementary_html_text is None else supplementary_html_text
+        if supplementary_scope_html:
+            assets.extend(extract_supplementary_assets(supplementary_scope_html, source_url))
+        if source_data_html_text:
+            assets.extend(extract_source_data_assets(source_data_html_text, source_url))
+    return _dedupe_springer_supplementary_assets(assets)
 
 
 def figure_download_candidates(

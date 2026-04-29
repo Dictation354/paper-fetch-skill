@@ -1,0 +1,23 @@
+[
+  {
+    "name": "identifier_escaped_underscores",
+    "input": "\\text{M\\textbackslash\\_NDVI}_{i} + \\text{M\\textbackslash\\_VSDI}_{\\text{wet},i}",
+    "must_include": [
+      "\\text{M\\_NDVI}_{i}",
+      "\\text{M\\_VSDI}_{\\text{wet},i}"
+    ],
+    "must_not_include": [
+      "textbackslash\\_"
+    ]
+  },
+  {
+    "name": "upgreek_macros",
+    "input": "\\updelta Q + \\upDelta P + \\updeltaQ",
+    "expected": "\\delta Q + \\Delta P + \\updeltaQ"
+  },
+  {
+    "name": "mspace_mu",
+    "input": "\\mspace{6mu}x + \\mspace{ -1.5 mu }y + \\mspace{2pt}z",
+    "expected": "\\mkern6mu x + \\mkern-1.5mu y + \\mspace{2pt}z"
+  }
+]

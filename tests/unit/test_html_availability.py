@@ -629,6 +629,7 @@ class HtmlAvailabilityTests(unittest.TestCase):
         self._assert_rejected_browser_workflow_case("pnas")
 
     def test_assess_html_accepts_pnas_fulltext_fixture_despite_institutional_login_chrome(self) -> None:
+        """rule: rule-html-availability-contract"""
         self._assert_accepted_browser_workflow_case("pnas")
 
     def test_body_metrics_excludes_nonliteral_data_availability_when_section_hints_are_present(self) -> None:

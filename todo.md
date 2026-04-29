@@ -7,6 +7,8 @@ To do list
 6. 10.1038/s41586-020-1941-5 matters arising有问题（已完成）
 7. mcp调用时是否还是在使用python代码
 8. ams/jp/aps/mdpi/copernicus provider支持
+9. docker 打包加速安装；项目依赖精简
+10. 
 
 mdpi：playwright+html
 copernicus：xml

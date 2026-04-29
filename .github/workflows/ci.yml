@@ -11,7 +11,7 @@ on:
         default: false
         type: boolean
       run_full_golden:
-        description: "Run full 50-fixture golden corpus regression"
+        description: "Run full 51-fixture golden corpus regression"
         required: false
         default: false
         type: boolean
@@ -104,6 +104,55 @@ jobs:
       - name: Run integration suite
         run: pytest tests/integration
 
+  offline-linux-x86-64:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Set up Haskell toolchain for bundled texmath
+        id: setup-haskell
+        uses: haskell-actions/setup@v2.9.1
+        with:
+          ghc-version: "9.8.4"
+          cabal-version: "latest"
+
+      - name: Restore formula tool cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ steps.setup-haskell.outputs.cabal-store }}
+          key: ${{ runner.os }}-offline-formula-tools-${{ steps.setup-haskell.outputs.ghc-version }}-${{ hashFiles('src/paper_fetch/formula/install.py', 'src/paper_fetch/resources/formula/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-offline-formula-tools-${{ steps.setup-haskell.outputs.ghc-version }}-
+
+      - name: Install browser system dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install "playwright>=1.47,<2"
+          python -m playwright install-deps chromium
+          sudo apt-get update
+          sudo apt-get install -y xvfb
+
+      - name: Build offline package
+        run: scripts/build-offline-package.sh --output-dir "$PWD/offline-artifacts"
+
+      - name: Verify offline package
+        run: scripts/verify-offline-package.sh "$PWD/offline-artifacts/paper-fetch-skill-offline-linux-x86_64-cp311.tar.gz"
+
+      - name: Upload offline package
+        uses: actions/upload-artifact@v4
+        with:
+          name: paper-fetch-skill-offline-linux-x86_64-cp311
+          path: offline-artifacts/paper-fetch-skill-offline-linux-x86_64-cp311.tar.gz
+          if-no-files-found: error
+
   full-golden:
     if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_full_golden }}
     runs-on: ubuntu-latest
@@ -174,11 +223,9 @@ jobs:
           PAPER_FETCH_RUN_LIVE: "1"
           CROSSREF_MAILTO: ${{ secrets.CROSSREF_MAILTO }}
           ELSEVIER_API_KEY: ${{ secrets.ELSEVIER_API_KEY }}
-          SPRINGER_META_API_KEY: ${{ secrets.SPRINGER_META_API_KEY }}
-          SPRINGER_OPENACCESS_API_KEY: ${{ secrets.SPRINGER_OPENACCESS_API_KEY }}
         run: |
           missing=()
-          for key in CROSSREF_MAILTO ELSEVIER_API_KEY SPRINGER_META_API_KEY SPRINGER_OPENACCESS_API_KEY; do
+          for key in CROSSREF_MAILTO ELSEVIER_API_KEY; do
             if [ -z "${!key}" ]; then
               missing+=("$key")
             fi

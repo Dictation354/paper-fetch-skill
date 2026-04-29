@@ -17,6 +17,7 @@ from ..publisher_identity import normalize_doi
 from ..runtime import RuntimeContext
 from ..tracing import merge_trace, source_trail_from_trace, trace_from_markers
 from ..utils import dedupe_authors, empty_asset_results, extend_unique, normalize_text
+from . import _wiley_html
 from ._flaresolverr import (
     FlareSolverrFailure,
     ensure_runtime_ready,
@@ -138,7 +139,16 @@ def _fetch_flaresolverr_html_payload_with_fast_path(*args, **kwargs):
 
 
 def _cached_browser_workflow_assets(*args, **kwargs):
-    kwargs.setdefault("scoped_asset_extractor", extract_scoped_html_assets)
+    client = args[0] if args else None
+    provider_name = normalize_text(getattr(client, "name", "")).lower()
+    if provider_name == "wiley":
+        kwargs.setdefault("scoped_asset_extractor", _wiley_html.extract_scoped_html_assets)
+    elif provider_name in {"science", "pnas"}:
+        from . import _science_pnas_html
+
+        kwargs.setdefault("scoped_asset_extractor", _science_pnas_html.extract_scoped_html_assets)
+    else:
+        kwargs.setdefault("scoped_asset_extractor", extract_scoped_html_assets)
     return _html_extraction._cached_browser_workflow_assets(*args, **kwargs)
 
 
@@ -204,6 +214,55 @@ def _download_asset_match_tokens(asset: Mapping[str, Any]) -> set[str]:
     return {token for token in tokens if token}
 
 
+def _download_asset_retry_scope(asset: Mapping[str, Any]) -> str:
+    kind = normalize_text(str(asset.get("kind") or asset.get("asset_type") or "")).lower()
+    section = normalize_text(str(asset.get("section") or "")).lower()
+    if kind == "supplementary" or section == "supplementary":
+        return "supplementary"
+    return "body"
+
+
+def _download_failure_match_tokens(failure: Mapping[str, Any]) -> set[str]:
+    tokens = {
+        normalize_text(str(failure.get(field) or ""))
+        for field in (
+            "heading",
+            "caption",
+            "url",
+            "download_url",
+            "original_url",
+            "source_url",
+            "figure_page_url",
+        )
+    }
+    return {token for token in tokens if token}
+
+
+def _assets_matching_download_failures(
+    assets: list[dict[str, Any]],
+    failures: list[Mapping[str, Any]],
+    *,
+    retry_scope: str,
+) -> list[dict[str, Any]]:
+    failure_token_sets = [
+        _download_failure_match_tokens(failure)
+        for failure in failures
+        if _download_asset_retry_scope(failure) == retry_scope
+    ]
+    failure_token_sets = [tokens for tokens in failure_token_sets if tokens]
+    if not failure_token_sets:
+        return []
+
+    matched_assets: list[dict[str, Any]] = []
+    for asset in assets:
+        if _download_asset_retry_scope(asset) != retry_scope:
+            continue
+        asset_tokens = _download_asset_match_tokens(asset)
+        if asset_tokens and any(asset_tokens & tokens for tokens in failure_token_sets):
+            matched_assets.append(dict(asset))
+    return matched_assets
+
+
 def _browser_workflow_image_download_candidates(
     _transport,
     *,
@@ -261,11 +320,7 @@ def _merge_download_attempt_results(
     failure_candidates = list(retry.get("asset_failures") or []) or list(initial.get("asset_failures") or [])
     unresolved_failures = []
     for failure in failure_candidates:
-        failure_tokens = {
-            normalize_text(str(failure.get(field) or ""))
-            for field in ("heading", "caption", "source_url")
-        }
-        failure_tokens = {token for token in failure_tokens if token}
+        failure_tokens = _download_failure_match_tokens(failure)
         if failure_tokens and failure_tokens & resolved_tokens:
             continue
         unresolved_failures.append(dict(failure))
@@ -1080,12 +1135,15 @@ class BrowserWorkflowClient(ProviderClient):
             current_seed: Mapping[str, Any],
             attempt_seed: dict[str, Any],
             attempt_seed_lock: threading.Lock,
+            attempt_body_assets: list[dict[str, Any]],
         ) -> Callable[[str, Mapping[str, Any]], dict[str, Any] | None] | None:
-            if not body_assets:
+            if not attempt_body_assets:
                 return None
             profile = self.profile
             if profile is None or not profile.shared_playwright_image_fetcher:
                 return None
+            # Asset workers may run in parallel threads, so they must not borrow
+            # the RuntimeContext-owned shared browser/context.
             fetcher = _build_shared_playwright_image_fetcher(
                 browser_context_seed_getter=lambda: attempt_seed,
                 seed_urls_getter=lambda: seed_urls_for(attempt_seed),
@@ -1093,6 +1151,7 @@ class BrowserWorkflowClient(ProviderClient):
                 headless=runtime.headless,
                 challenge_recovery=asset_challenge_recovery_for(attempt_seed, attempt_seed_lock),
                 runtime_context=context,
+                use_runtime_shared_browser=False,
             )
             return _MemoizedImageDocumentFetcher(fetcher)
 
@@ -1100,8 +1159,9 @@ class BrowserWorkflowClient(ProviderClient):
             current_seed: Mapping[str, Any],
             attempt_seed: dict[str, Any],
             attempt_seed_lock: threading.Lock,
+            attempt_supplementary_assets: list[dict[str, Any]],
         ) -> Callable[[str, Mapping[str, Any]], dict[str, Any] | None] | None:
-            if not supplementary_assets:
+            if not attempt_supplementary_assets:
                 return None
             profile = self.profile
             if profile is None or not profile.shared_playwright_image_fetcher:
@@ -1113,9 +1173,16 @@ class BrowserWorkflowClient(ProviderClient):
                 headless=runtime.headless,
                 challenge_recovery=supplementary_challenge_recovery_for(attempt_seed, attempt_seed_lock),
                 runtime_context=context,
+                use_runtime_shared_browser=False,
+                thread_local=True,
             )
 
-        def run_download_attempt(current_seed: Mapping[str, Any]) -> dict[str, list[dict[str, Any]]]:
+        def run_download_attempt(
+            current_seed: Mapping[str, Any],
+            *,
+            attempt_body_assets: list[dict[str, Any]],
+            attempt_supplementary_assets: list[dict[str, Any]],
+        ) -> dict[str, list[dict[str, Any]]]:
             attempt_seed = merge_browser_context_seeds(current_seed)
             attempt_seed_lock = threading.Lock()
 
@@ -1135,32 +1202,50 @@ class BrowserWorkflowClient(ProviderClient):
                 return html_result.html, html_result.final_url
 
             figure_page_fetcher = _MemoizedFigurePageFetcher(raw_figure_page_fetcher)
-            image_document_fetcher = image_document_fetcher_for(attempt_seed, attempt_seed, attempt_seed_lock)
-            file_document_fetcher = file_document_fetcher_for(attempt_seed, attempt_seed, attempt_seed_lock)
+            image_document_fetcher = image_document_fetcher_for(
+                attempt_seed,
+                attempt_seed,
+                attempt_seed_lock,
+                attempt_body_assets,
+            )
+            file_document_fetcher = file_document_fetcher_for(
+                attempt_seed,
+                attempt_seed,
+                attempt_seed_lock,
+                attempt_supplementary_assets,
+            )
             try:
-                body_result = download_figure_assets_with_image_document_fetcher(
-                    self.transport,
-                    article_id=article_id,
-                    assets=body_assets,
-                    output_dir=output_dir,
-                    user_agent=self.user_agent,
-                    asset_profile=asset_profile,
-                    figure_page_fetcher=figure_page_fetcher,
-                    candidate_builder=_browser_workflow_image_download_candidates,
-                    image_document_fetcher=image_document_fetcher,
-                    asset_download_concurrency=asset_download_concurrency,
+                body_result = (
+                    download_figure_assets_with_image_document_fetcher(
+                        self.transport,
+                        article_id=article_id,
+                        assets=attempt_body_assets,
+                        output_dir=output_dir,
+                        user_agent=self.user_agent,
+                        asset_profile=asset_profile,
+                        figure_page_fetcher=figure_page_fetcher,
+                        candidate_builder=_browser_workflow_image_download_candidates,
+                        image_document_fetcher=image_document_fetcher,
+                        asset_download_concurrency=asset_download_concurrency,
+                    )
+                    if attempt_body_assets
+                    else empty_asset_results()
                 )
-                supplementary_result = download_supplementary_assets(
-                    self.transport,
-                    article_id=article_id,
-                    assets=supplementary_assets,
-                    output_dir=output_dir,
-                    user_agent=self.user_agent,
-                    asset_profile=asset_profile,
-                    browser_context_seed=attempt_seed,
-                    seed_urls=seed_urls_for(attempt_seed),
-                    file_document_fetcher=file_document_fetcher,
-                    asset_download_concurrency=asset_download_concurrency,
+                supplementary_result = (
+                    download_supplementary_assets(
+                        self.transport,
+                        article_id=article_id,
+                        assets=attempt_supplementary_assets,
+                        output_dir=output_dir,
+                        user_agent=self.user_agent,
+                        asset_profile=asset_profile,
+                        browser_context_seed=attempt_seed,
+                        seed_urls=seed_urls_for(attempt_seed),
+                        file_document_fetcher=file_document_fetcher,
+                        asset_download_concurrency=asset_download_concurrency,
+                    )
+                    if attempt_supplementary_assets
+                    else empty_asset_results()
                 )
                 return {
                     "assets": [
@@ -1178,8 +1263,26 @@ class BrowserWorkflowClient(ProviderClient):
                     if callable(close_fetcher):
                         close_fetcher()
 
-        initial_result = run_download_attempt(browser_context_seed)
+        initial_result = run_download_attempt(
+            browser_context_seed,
+            attempt_body_assets=body_assets,
+            attempt_supplementary_assets=supplementary_assets,
+        )
         if not initial_result.get("asset_failures"):
+            return initial_result
+
+        initial_failures = list(initial_result.get("asset_failures") or [])
+        failed_body_assets = _assets_matching_download_failures(
+            body_assets,
+            initial_failures,
+            retry_scope="body",
+        )
+        failed_supplementary_assets = _assets_matching_download_failures(
+            supplementary_assets,
+            initial_failures,
+            retry_scope="supplementary",
+        )
+        if not failed_body_assets and not failed_supplementary_assets:
             return initial_result
 
         refreshed_seed = warm_browser_context_with_flaresolverr(
@@ -1188,7 +1291,11 @@ class BrowserWorkflowClient(ProviderClient):
             config=runtime,
             browser_context_seed=browser_context_seed,
         )
-        retry_result = run_download_attempt(refreshed_seed)
+        retry_result = run_download_attempt(
+            refreshed_seed,
+            attempt_body_assets=failed_body_assets,
+            attempt_supplementary_assets=failed_supplementary_assets,
+        )
         return _merge_download_attempt_results(initial_result, retry_result)
 
     def to_article_model(

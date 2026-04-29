@@ -7,6 +7,7 @@ import re
 from typing import Any, Mapping
 
 from ..metadata_types import ProviderMetadata
+from ..extraction.html import _assets as _html_asset_impl
 from ..extraction.html.figure_links import inject_inline_figure_links
 from ..extraction.html.formula_rules import (
     display_formula_nodes,
@@ -78,7 +79,7 @@ from ..quality.html_availability import (
 )
 from ..utils import normalize_text
 from ._article_markdown_math import render_external_mathml_expression
-from . import _science_pnas_postprocess
+from . import _science_pnas_postprocess, _wiley_html
 from ._science_pnas_postprocess import (
     normalize_browser_workflow_markdown,
 )
@@ -181,6 +182,19 @@ CONTENT_AVAILABILITY_SELECTORS = (
     "div[class*='code-availability']",
     "div[class*='software-availability']",
 )
+SCIENCE_PNAS_SUPPLEMENTARY_SECTION_SELECTORS = (
+    "section#supplementary-materials",
+    "section.core-supplementary-materials",
+    "section[id*='supplementary']",
+    "section[class*='supplementary']",
+    "section[aria-labelledby*='supplementary']",
+)
+SCIENCE_PNAS_SUPPLEMENTARY_HEADING_KEYS = {
+    "supplementary material",
+    "supplementary materials",
+    "supplementary information",
+    "supporting information",
+}
 
 
 def _noise_profile_for_publisher(publisher: str | None) -> str:
@@ -490,6 +504,124 @@ def _drop_abstract_sections_from_body_container(container: Tag, publisher: str) 
         return
     for node in _abstract_nodes(container):
         node.decompose()
+
+
+def _extract_wiley_asset_html_scopes(
+    body_container: Tag,
+    supplementary_container: Tag,
+) -> tuple[str, str]:
+    for node in list(_wiley_html.find_supporting_information_sections(body_container)):
+        node.decompose()
+
+    supplementary_fragments = [
+        _content_fragment_html(node, publisher="wiley")
+        for node in _wiley_html.find_supporting_information_sections(supplementary_container)
+    ]
+    supplementary_html = "\n".join(
+        fragment for fragment in supplementary_fragments if normalize_text(fragment)
+    )
+    return _content_fragment_html(body_container, publisher="wiley"), supplementary_html
+
+
+def _science_pnas_supplementary_heading_key(node: Tag) -> str:
+    heading = node.find(HEADING_TAG_PATTERN)
+    if not isinstance(heading, Tag):
+        return ""
+    return normalize_heading(_short_text(heading))
+
+
+def _is_science_pnas_supplementary_section(node: Any) -> bool:
+    if Tag is None or not isinstance(node, Tag):
+        return False
+    if normalize_text(node.name or "").lower() != "section":
+        return False
+
+    heading_key = _science_pnas_supplementary_heading_key(node)
+    if heading_key in SCIENCE_PNAS_SUPPLEMENTARY_HEADING_KEYS:
+        return True
+
+    identity = node_identity_text(node).lower()
+    return any(
+        token in identity
+        for token in (
+            "core-supplementary-materials",
+            "supplementary-materials",
+            "supplemental-materials",
+        )
+    )
+
+
+def _science_pnas_supplementary_sections(container: Tag) -> list[Tag]:
+    candidates: list[Tag] = []
+    seen: set[int] = set()
+    for selector in SCIENCE_PNAS_SUPPLEMENTARY_SECTION_SELECTORS:
+        try:
+            matches = container.select(selector)
+        except Exception:
+            continue
+        for match in matches:
+            if not isinstance(match, Tag) or not _is_science_pnas_supplementary_section(match):
+                continue
+            match_id = id(match)
+            if match_id in seen:
+                continue
+            seen.add(match_id)
+            candidates.append(match)
+
+    for section in container.find_all("section"):
+        if not isinstance(section, Tag) or not _is_science_pnas_supplementary_section(section):
+            continue
+        section_id = id(section)
+        if section_id in seen:
+            continue
+        seen.add(section_id)
+        candidates.append(section)
+    return _dedupe_top_level_nodes(candidates)
+
+
+def _extract_science_pnas_asset_html_scopes(
+    body_container: Tag,
+    supplementary_container: Tag,
+    *,
+    publisher: str,
+) -> tuple[str, str]:
+    for node in list(_science_pnas_supplementary_sections(body_container)):
+        node.decompose()
+
+    supplementary_html = "\n".join(
+        str(node)
+        for node in _science_pnas_supplementary_sections(supplementary_container)
+        if normalize_text(node.get_text(" ", strip=True))
+    )
+    return _content_fragment_html(body_container, publisher=publisher), supplementary_html
+
+
+def _science_pnas_supplementary_asset_is_supported(asset: Mapping[str, Any]) -> bool:
+    url = normalize_text(str(asset.get("url") or "")).lower()
+    return "/doi/suppl/" in url and "/suppl_file/" in url
+
+
+def extract_supplementary_assets(html_text: str, source_url: str) -> list[dict[str, str]]:
+    return [
+        asset
+        for asset in _html_asset_impl.extract_supplementary_assets(html_text, source_url)
+        if _science_pnas_supplementary_asset_is_supported(asset)
+    ]
+
+
+def extract_scoped_html_assets(
+    body_html_text: str,
+    source_url: str,
+    *,
+    asset_profile,
+    supplementary_html_text: str | None = None,
+) -> list[dict[str, str]]:
+    assets = _html_asset_impl.extract_figure_assets(body_html_text, source_url)
+    assets.extend(_html_asset_impl.extract_formula_assets(body_html_text, source_url))
+    if asset_profile == "all":
+        supplementary_scope = body_html_text if supplementary_html_text is None else supplementary_html_text
+        assets.extend(extract_supplementary_assets(supplementary_scope, source_url))
+    return assets
 
 
 def _normalize_abstract_blocks(container: Tag) -> None:
@@ -1684,6 +1816,15 @@ def extract_browser_workflow_asset_html_scopes(
     _normalize_abstract_blocks(body_container)
     _drop_front_matter_teaser_figures(body_container, publisher)
     _drop_abstract_sections_from_body_container(body_container, publisher)
+
+    if publisher == "wiley":
+        return _extract_wiley_asset_html_scopes(body_container, supplementary_container)
+    if publisher in {"science", "pnas"}:
+        return _extract_science_pnas_asset_html_scopes(
+            body_container,
+            supplementary_container,
+            publisher=publisher,
+        )
 
     return (
         _content_fragment_html(body_container, publisher=publisher),

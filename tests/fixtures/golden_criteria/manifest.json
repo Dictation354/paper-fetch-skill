@@ -92,6 +92,28 @@
       },
       "fixture_family": "golden"
     },
+    "10.1038_d41586-022-01795-9": {
+      "doi": "10.1038/d41586-022-01795-9",
+      "publisher": "springer",
+      "source_url": "https://www.nature.com/articles/d41586-022-01795-9",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "assets": {
+        "original.html": "tests/fixtures/golden_criteria/10.1038_d41586-022-01795-9/original.html"
+      },
+      "fixture_family": "golden"
+    },
+    "10.1038_d41586-023-01829-w": {
+      "doi": "10.1038/d41586-023-01829-w",
+      "publisher": "springer",
+      "source_url": "https://www.nature.com/articles/d41586-023-01829-w",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "assets": {
+        "original.html": "tests/fixtures/golden_criteria/10.1038_d41586-023-01829-w/original.html"
+      },
+      "fixture_family": "golden"
+    },
     "10.1038_nature12915": {
       "doi": "10.1038/nature12915",
       "publisher": "springer",
@@ -239,6 +261,17 @@
       "expected_live_status": "skipped_unsupported_provider",
       "expected_review_status": "skipped",
       "out_of_scope_reason": "Provider support for TandF is intentionally out of scope for this live review run."
+    },
+    "10.1111_cas.16117": {
+      "doi": "10.1111/cas.16117",
+      "publisher": "wiley",
+      "source_url": "https://onlinelibrary.wiley.com/doi/10.1111/cas.16117",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "assets": {
+        "extracted.md": "tests/fixtures/golden_criteria/10.1111_cas.16117/extracted.md"
+      },
+      "fixture_family": "golden"
     },
     "10.1111_cas.16395": {
       "doi": "10.1111/cas.16395",
@@ -462,6 +495,174 @@
       "usage_kind": "content",
       "assets": {
         "original.xml": "tests/fixtures/golden_criteria/_scenarios/elsevier_author_groups_minimal/original.xml"
+      },
+      "fixture_family": "scenario"
+    },
+    "scenario_generic_metadata_boundaries": {
+      "doi": "scenario:generic_metadata_boundaries",
+      "publisher": "generic",
+      "source_url": "scenario://generic_metadata_boundaries",
+      "origin_kind": "contract_scenario",
+      "usage_kind": "content",
+      "assets": {
+        "generic_description.html": "tests/fixtures/golden_criteria/_scenarios/generic_metadata_boundaries/generic_description.html",
+        "redirect_stub.html": "tests/fixtures/golden_criteria/_scenarios/generic_metadata_boundaries/redirect_stub.html"
+      },
+      "fixture_family": "scenario"
+    },
+    "scenario_provider_dom_abstract_fallback": {
+      "doi": "scenario:provider_dom_abstract_fallback",
+      "publisher": "science",
+      "source_url": "scenario://provider_dom_abstract_fallback",
+      "origin_kind": "contract_scenario",
+      "usage_kind": "content",
+      "assets": {
+        "payload.json": "tests/fixtures/golden_criteria/_scenarios/provider_dom_abstract_fallback/payload.json"
+      },
+      "fixture_family": "scenario"
+    },
+    "scenario_inline_figure_link_rewrite": {
+      "doi": "scenario:inline_figure_link_rewrite",
+      "publisher": "generic",
+      "source_url": "scenario://inline_figure_link_rewrite",
+      "origin_kind": "contract_scenario",
+      "usage_kind": "content",
+      "assets": {
+        "article.md": "tests/fixtures/golden_criteria/_scenarios/inline_figure_link_rewrite/article.md",
+        "assets.json": "tests/fixtures/golden_criteria/_scenarios/inline_figure_link_rewrite/assets.json"
+      },
+      "fixture_family": "scenario"
+    },
+    "scenario_asset_download_diagnostics": {
+      "doi": "scenario:asset_download_diagnostics",
+      "publisher": "mcp",
+      "source_url": "scenario://asset_download_diagnostics",
+      "origin_kind": "contract_scenario",
+      "usage_kind": "content",
+      "assets": {
+        "article_payload.json": "tests/fixtures/golden_criteria/_scenarios/asset_download_diagnostics/article_payload.json"
+      },
+      "fixture_family": "scenario"
+    },
+    "scenario_table_flatten_or_list": {
+      "doi": "scenario:table_flatten_or_list",
+      "publisher": "generic",
+      "source_url": "scenario://table_flatten_or_list",
+      "origin_kind": "contract_scenario",
+      "usage_kind": "content",
+      "assets": {
+        "complex_table.html": "tests/fixtures/golden_criteria/_scenarios/table_flatten_or_list/complex_table.html"
+      },
+      "fixture_family": "scenario"
+    },
+    "scenario_availability_body_metrics": {
+      "doi": "scenario:availability_body_metrics",
+      "publisher": "models",
+      "source_url": "scenario://availability_body_metrics",
+      "origin_kind": "contract_scenario",
+      "usage_kind": "content",
+      "assets": {
+        "code_availability.md": "tests/fixtures/golden_criteria/_scenarios/availability_body_metrics/code_availability.md"
+      },
+      "fixture_family": "scenario"
+    },
+    "scenario_section_hints_availability": {
+      "doi": "scenario:section_hints_availability",
+      "publisher": "models",
+      "source_url": "scenario://section_hints_availability",
+      "origin_kind": "contract_scenario",
+      "usage_kind": "content",
+      "assets": {
+        "article.md": "tests/fixtures/golden_criteria/_scenarios/section_hints_availability/article.md",
+        "section_hints.json": "tests/fixtures/golden_criteria/_scenarios/section_hints_availability/section_hints.json"
+      },
+      "fixture_family": "scenario"
+    },
+    "scenario_formula_latex_normalization": {
+      "doi": "scenario:formula_latex_normalization",
+      "publisher": "generic",
+      "source_url": "scenario://formula_latex_normalization",
+      "origin_kind": "contract_scenario",
+      "usage_kind": "content",
+      "assets": {
+        "samples.json": "tests/fixtures/golden_criteria/_scenarios/formula_latex_normalization/samples.json"
+      },
+      "fixture_family": "scenario"
+    },
+    "scenario_elsevier_formula_inline_display": {
+      "doi": "scenario:elsevier_formula_inline_display",
+      "publisher": "elsevier",
+      "source_url": "scenario://elsevier_formula_inline_display",
+      "origin_kind": "contract_scenario",
+      "usage_kind": "content",
+      "assets": {
+        "original.xml": "tests/fixtures/golden_criteria/_scenarios/elsevier_formula_inline_display/original.xml"
+      },
+      "fixture_family": "scenario"
+    },
+    "scenario_elsevier_formula_missing": {
+      "doi": "scenario:elsevier_formula_missing",
+      "publisher": "elsevier",
+      "source_url": "scenario://elsevier_formula_missing",
+      "origin_kind": "contract_scenario",
+      "usage_kind": "content",
+      "assets": {
+        "original.xml": "tests/fixtures/golden_criteria/_scenarios/elsevier_formula_missing/original.xml"
+      },
+      "fixture_family": "scenario"
+    },
+    "scenario_elsevier_supplementary_display": {
+      "doi": "scenario:elsevier_supplementary_display",
+      "publisher": "elsevier",
+      "source_url": "scenario://elsevier_supplementary_display",
+      "origin_kind": "contract_scenario",
+      "usage_kind": "content",
+      "assets": {
+        "original.xml": "tests/fixtures/golden_criteria/_scenarios/elsevier_supplementary_display/original.xml"
+      },
+      "fixture_family": "scenario"
+    },
+    "scenario_elsevier_supplementary_asset_only": {
+      "doi": "scenario:elsevier_supplementary_asset_only",
+      "publisher": "elsevier",
+      "source_url": "scenario://elsevier_supplementary_asset_only",
+      "origin_kind": "contract_scenario",
+      "usage_kind": "content",
+      "assets": {
+        "original.xml": "tests/fixtures/golden_criteria/_scenarios/elsevier_supplementary_asset_only/original.xml"
+      },
+      "fixture_family": "scenario"
+    },
+    "scenario_elsevier_complex_table_span": {
+      "doi": "scenario:elsevier_complex_table_span",
+      "publisher": "elsevier",
+      "source_url": "scenario://elsevier_complex_table_span",
+      "origin_kind": "contract_scenario",
+      "usage_kind": "content",
+      "assets": {
+        "original.xml": "tests/fixtures/golden_criteria/_scenarios/elsevier_complex_table_span/original.xml"
+      },
+      "fixture_family": "scenario"
+    },
+    "scenario_springer_main_content_direct_children": {
+      "doi": "scenario:springer_main_content_direct_children",
+      "publisher": "springer",
+      "source_url": "scenario://springer_main_content_direct_children",
+      "origin_kind": "contract_scenario",
+      "usage_kind": "content",
+      "assets": {
+        "original.html": "tests/fixtures/golden_criteria/_scenarios/springer_main_content_direct_children/original.html"
+      },
+      "fixture_family": "scenario"
+    },
+    "scenario_wiley_abbreviations_trailing": {
+      "doi": "scenario:wiley_abbreviations_trailing",
+      "publisher": "wiley",
+      "source_url": "scenario://wiley_abbreviations_trailing",
+      "origin_kind": "contract_scenario",
+      "usage_kind": "content",
+      "assets": {
+        "original.html": "tests/fixtures/golden_criteria/_scenarios/wiley_abbreviations_trailing/original.html"
       },
       "fixture_family": "scenario"
     },
@@ -1206,14 +1407,18 @@
       "anchors": [
         "rule-generic-metadata-boundaries"
       ],
-      "samples": []
+      "samples": [
+        "scenario_generic_metadata_boundaries"
+      ]
     },
     {
       "test": "tests/unit/test_html_shared_helpers.py::test_parse_html_metadata_uses_redirect_stub_lookup_title",
       "anchors": [
         "rule-generic-metadata-boundaries"
       ],
-      "samples": []
+      "samples": [
+        "scenario_generic_metadata_boundaries"
+      ]
     },
     {
       "test": "tests/unit/test_elsevier_markdown.py::test_build_article_structure_extracts_authors_from_author_groups",
@@ -1225,7 +1430,7 @@
       ]
     },
     {
-      "test": "tests/unit/test_elsevier_markdown.py::test_elsevier_formula_rendering_contracts",
+      "test": "tests/unit/test_elsevier_markdown.py::test_elsevier_real_display_formula_renders_as_formula_block",
       "anchors": [
         "rule-elsevier-formula-rendering"
       ],
@@ -1234,11 +1439,49 @@
       ]
     },
     {
+      "test": "tests/unit/test_elsevier_markdown.py::test_elsevier_inline_math_symbols_stay_inline",
+      "anchors": [
+        "rule-elsevier-formula-rendering"
+      ],
+      "samples": [
+        "scenario_elsevier_formula_inline_display"
+      ]
+    },
+    {
+      "test": "tests/unit/test_elsevier_markdown.py::test_elsevier_formula_placeholder_is_visible_when_conversion_fails",
+      "anchors": [
+        "rule-elsevier-formula-rendering"
+      ],
+      "samples": [
+        "scenario_elsevier_formula_missing"
+      ]
+    },
+    {
       "test": "tests/unit/test_elsevier_markdown.py::test_supplementary_display_is_omitted_from_body_and_listed_with_caption",
       "anchors": [
         "rule-elsevier-supplementary-materials"
       ],
-      "samples": []
+      "samples": [
+        "scenario_elsevier_supplementary_display"
+      ]
+    },
+    {
+      "test": "tests/unit/test_elsevier_markdown.py::test_supplementary_asset_without_display_is_listed_as_supplementary_material",
+      "anchors": [
+        "rule-elsevier-supplementary-materials"
+      ],
+      "samples": [
+        "scenario_elsevier_supplementary_asset_only"
+      ]
+    },
+    {
+      "test": "tests/unit/test_elsevier_markdown.py::test_real_supplementary_e_component_from_golden_xml_is_listed",
+      "anchors": [
+        "rule-elsevier-supplementary-materials"
+      ],
+      "samples": [
+        "10.1016_j.ecolind.2024.112140"
+      ]
     },
     {
       "test": "tests/unit/test_elsevier_markdown.py::test_split_inline_variable_subscripts_are_rejoined_in_paragraphs",
@@ -1253,6 +1496,40 @@
         "rule-elsevier-graphical-abstract"
       ],
       "samples": []
+    },
+    {
+      "test": "tests/unit/test_elsevier_markdown.py::test_graphical_abstract_only_document_does_not_create_additional_figures",
+      "anchors": [
+        "rule-elsevier-graphical-abstract"
+      ],
+      "samples": []
+    },
+    {
+      "test": "tests/unit/test_elsevier_markdown.py::test_real_graphical_abstract_from_golden_xml_is_excluded_from_figures",
+      "anchors": [
+        "rule-elsevier-graphical-abstract"
+      ],
+      "samples": [
+        "10.1016_j.scitotenv.2022.158499"
+      ]
+    },
+    {
+      "test": "tests/unit/test_elsevier_markdown.py::test_elsevier_complex_table_spans_are_semantically_expanded",
+      "anchors": [
+        "rule-elsevier-complex-table-span-degradation"
+      ],
+      "samples": [
+        "scenario_elsevier_complex_table_span"
+      ]
+    },
+    {
+      "test": "tests/unit/test_elsevier_markdown.py::test_elsevier_real_complex_table_records_layout_degradation_quality",
+      "anchors": [
+        "rule-elsevier-complex-table-span-degradation"
+      ],
+      "samples": [
+        "10.1016_j.jhydrol.2021.126210"
+      ]
     },
     {
       "test": "tests/unit/test_elsevier_markdown.py::test_elsevier_table_placement_contracts",
@@ -1278,7 +1555,25 @@
       "samples": []
     },
     {
-      "test": "tests/unit/test_elsevier_markdown.py::test_elsevier_appendix_context_contracts",
+      "test": "tests/unit/test_elsevier_markdown.py::test_elsevier_appendix_figure_renders_as_figure_block",
+      "anchors": [
+        "rule-elsevier-appendix-context"
+      ],
+      "samples": [
+        "10.1016_j.rse.2026.115369"
+      ]
+    },
+    {
+      "test": "tests/unit/test_elsevier_markdown.py::test_elsevier_appendix_reference_keeps_asset_in_appendix",
+      "anchors": [
+        "rule-elsevier-appendix-context"
+      ],
+      "samples": [
+        "10.1016_j.rse.2026.115369"
+      ]
+    },
+    {
+      "test": "tests/unit/test_elsevier_markdown.py::test_elsevier_appendix_table_renders_as_markdown_table",
       "anchors": [
         "rule-elsevier-appendix-context"
       ],
@@ -1370,6 +1665,16 @@
       ]
     },
     {
+      "test": "tests/unit/test_science_pnas_markdown.py::test_wiley_references_use_visible_citation_text_not_doi_only",
+      "anchors": [
+        "rule-wiley-reference-text"
+      ],
+      "samples": [
+        "10.1111_gcb.15322",
+        "10.1111_gcb.16998"
+      ]
+    },
+    {
       "test": "tests/unit/test_science_pnas_markdown.py::test_science_perspective_fixture_extracts_fulltext_without_section_headings",
       "anchors": [
         "rule-keep-headingless-body-flat"
@@ -1403,6 +1708,15 @@
       ],
       "samples": [
         "10.1111_cas.16395"
+      ]
+    },
+    {
+      "test": "tests/unit/test_science_pnas_postprocess.py::test_wiley_abbreviations_scenario_moves_frontmatter_glossary_after_body",
+      "anchors": [
+        "rule-wiley-abbreviations-trailing"
+      ],
+      "samples": [
+        "scenario_wiley_abbreviations_trailing"
       ]
     },
     {
@@ -1500,7 +1814,9 @@
       "anchors": [
         "rule-rewrite-inline-figure-links"
       ],
-      "samples": []
+      "samples": [
+        "scenario_inline_figure_link_rewrite"
+      ]
     },
     {
       "test": "tests/unit/test_science_pnas_provider.py::test_science_provider_rewrites_inline_figure_links_to_downloaded_local_assets",
@@ -1514,7 +1830,9 @@
       "anchors": [
         "rule-provider-owned-authors"
       ],
-      "samples": []
+      "samples": [
+        "scenario_provider_dom_abstract_fallback"
+      ]
     },
     {
       "test": "tests/unit/test_science_pnas_provider.py::test_provider_owned_html_signals_populate_final_article_authors",
@@ -1652,6 +1970,24 @@
       "samples": []
     },
     {
+      "test": "tests/unit/test_springer_html_regressions.py::test_nature_matters_arising_fixture_keeps_main_content_before_reporting_summary",
+      "anchors": [
+        "rule-springer-main-content-direct-children"
+      ],
+      "samples": [
+        "10.1038_s41586-020-1941-5"
+      ]
+    },
+    {
+      "test": "tests/unit/test_springer_html_regressions.py::test_springer_main_content_scenario_keeps_direct_child_order",
+      "anchors": [
+        "rule-springer-main-content-direct-children"
+      ],
+      "samples": [
+        "scenario_springer_main_content_direct_children"
+      ]
+    },
+    {
       "test": "tests/unit/test_springer_html_tables.py::test_render_table_markdown_handles_real_springer_classic_table_page",
       "anchors": [
         "rule-springer-inline-table"
@@ -1742,6 +2078,60 @@
       ],
       "samples": [
         "10.1073_pnas.2309123120"
+      ]
+    },
+    {
+      "test": "tests/unit/test_mcp.py::test_article_payload_preserves_asset_download_diagnostics",
+      "anchors": [
+        "rule-asset-download-diagnostic-fields"
+      ],
+      "samples": [
+        "scenario_asset_download_diagnostics"
+      ]
+    },
+    {
+      "test": "tests/unit/test_science_pnas_postprocess_units.py::test_extract_science_pnas_markdown_falls_back_complex_table_to_bullets",
+      "anchors": [
+        "rule-table-flatten-or-list"
+      ],
+      "samples": [
+        "scenario_table_flatten_or_list"
+      ]
+    },
+    {
+      "test": "tests/unit/test_models_render.py::test_article_from_markdown_keeps_code_availability_without_counting_it_as_fulltext",
+      "anchors": [
+        "rule-availability-excluded-from-body-metrics"
+      ],
+      "samples": [
+        "scenario_availability_body_metrics"
+      ]
+    },
+    {
+      "test": "tests/unit/test_models_render.py::test_article_from_markdown_coerces_dict_object_and_section_hint_in_declared_order",
+      "anchors": [
+        "rule-section-hints-normalize-availability"
+      ],
+      "samples": [
+        "scenario_section_hints_availability"
+      ]
+    },
+    {
+      "test": "tests/unit/test_formula_conversion.py::test_normalize_latex_repairs_identifier_escaped_underscores",
+      "anchors": [
+        "rule-formula-latex-normalization"
+      ],
+      "samples": [
+        "scenario_formula_latex_normalization"
+      ]
+    },
+    {
+      "test": "tests/unit/test_formula_conversion.py::test_normalize_latex_scenario_samples_are_katex_compatible",
+      "anchors": [
+        "rule-formula-latex-normalization"
+      ],
+      "samples": [
+        "scenario_formula_latex_normalization"
       ]
     },
     {

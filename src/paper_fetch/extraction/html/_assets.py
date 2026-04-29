@@ -910,7 +910,8 @@ def extract_scoped_html_assets(
     assets = extract_figure_assets(body_html_text, source_url)
     assets.extend(extract_formula_assets(body_html_text, source_url))
     if asset_profile == "all":
-        assets.extend(extract_supplementary_assets(supplementary_html_text or body_html_text, source_url))
+        supplementary_scope = body_html_text if supplementary_html_text is None else supplementary_html_text
+        assets.extend(extract_supplementary_assets(supplementary_scope, source_url))
     return assets
 
 
@@ -1307,7 +1308,7 @@ def download_supplementary_assets(
 
     asset_dir = output_dir / f"{sanitize_filename(article_id)}_assets"
     asset_dir.mkdir(parents=True, exist_ok=True)
-    used_names: set[str] = set()
+    used_names_by_dir: dict[Path, set[str]] = {}
     downloads: list[dict[str, Any]] = []
     failures: list[dict[str, Any]] = []
     active_cookie_opener_builder = cookie_opener_builder or _build_cookie_seeded_opener
@@ -1384,12 +1385,17 @@ def download_supplementary_assets(
             continue
 
         content_type = _response_header(response, "content-type")
+        target_asset_dir = asset_dir
+        if normalize_text(str(asset.get("asset_kind") or "")).lower() == "source_data":
+            target_asset_dir = asset_dir / "source_data"
+            target_asset_dir.mkdir(parents=True, exist_ok=True)
         output_path = build_asset_output_path(
-            asset_dir,
-            asset.get("filename_hint") or source_url,
+            target_asset_dir,
+            source_url,
             content_type,
             response.get("url") or source_url,
-            used_names,
+            used_names_by_dir.setdefault(target_asset_dir, set()),
+            preferred_filename=normalize_text(str(asset.get("filename_hint") or "")) or None,
         )
         download = {
             "kind": "supplementary",

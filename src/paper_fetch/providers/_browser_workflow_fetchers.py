@@ -155,6 +155,7 @@ __all__ = [
     "_MemoizedImageDocumentFetcher",
     "_SharedPlaywrightFileDocumentFetcher",
     "_SharedPlaywrightImageDocumentFetcher",
+    "_ThreadLocalSharedPlaywrightFileDocumentFetcher",
     "_ThreadLocalSharedPlaywrightImageDocumentFetcher",
     "_build_shared_playwright_file_fetcher",
     "_build_shared_playwright_image_fetcher",
@@ -364,13 +365,14 @@ def _new_playwright_context(
     runtime_context: RuntimeContext | None,
     headless: bool,
     user_agent: str,
+    use_runtime_shared_browser: bool = True,
 ) -> tuple[Any | None, Any | None, Any]:
     context_kwargs = {
         "user_agent": user_agent,
         "locale": "en-US",
         "viewport": {"width": 1440, "height": 1600},
     }
-    if runtime_context is not None:
+    if runtime_context is not None and use_runtime_shared_browser:
         return None, None, runtime_context.new_playwright_context(headless=headless, **context_kwargs)
 
     from playwright.sync_api import sync_playwright
@@ -405,6 +407,7 @@ class _SharedPlaywrightImageDocumentFetcher:
         min_height: int = 80,
         challenge_recovery: Callable[[str, Mapping[str, Any], Mapping[str, Any]], Mapping[str, Any] | None] | None = None,
         runtime_context: RuntimeContext | None = None,
+        use_runtime_shared_browser: bool = True,
     ) -> None:
         self._browser_context_seed_getter = browser_context_seed_getter
         self._seed_urls_getter = seed_urls_getter
@@ -414,6 +417,7 @@ class _SharedPlaywrightImageDocumentFetcher:
         self._min_height = min_height
         self._challenge_recovery = challenge_recovery
         self._runtime_context = runtime_context
+        self._use_runtime_shared_browser = use_runtime_shared_browser
         self._playwright_manager = None
         self._browser = None
         self._context = None
@@ -504,6 +508,7 @@ class _SharedPlaywrightImageDocumentFetcher:
                 runtime_context=self._runtime_context,
                 headless=self._headless,
                 user_agent=active_user_agent,
+                use_runtime_shared_browser=self._use_runtime_shared_browser,
             )
             self._sync_context_cookies()
             self._page = self._context.new_page()
@@ -965,6 +970,7 @@ class _ThreadLocalSharedPlaywrightImageDocumentFetcher:
         min_height: int = 80,
         challenge_recovery: Callable[[str, Mapping[str, Any], Mapping[str, Any]], Mapping[str, Any] | None] | None = None,
         runtime_context: RuntimeContext | None = None,
+        use_runtime_shared_browser: bool = True,
     ) -> None:
         self._browser_context_seed_getter = browser_context_seed_getter
         self._seed_urls_getter = seed_urls_getter
@@ -974,6 +980,7 @@ class _ThreadLocalSharedPlaywrightImageDocumentFetcher:
         self._min_height = min_height
         self._challenge_recovery = challenge_recovery
         self._runtime_context = runtime_context
+        self._use_runtime_shared_browser = use_runtime_shared_browser
         self._thread_local = threading.local()
         self._lock = threading.Lock()
         self._fetchers: list[_SharedPlaywrightImageDocumentFetcher] = []
@@ -991,6 +998,7 @@ class _ThreadLocalSharedPlaywrightImageDocumentFetcher:
             min_height=self._min_height,
             challenge_recovery=self._challenge_recovery,
             runtime_context=self._runtime_context,
+            use_runtime_shared_browser=self._use_runtime_shared_browser,
         )
         self._thread_local.fetcher = fetcher
         with self._lock:
@@ -1180,6 +1188,7 @@ class _SharedPlaywrightFileDocumentFetcher:
         headless: bool = True,
         challenge_recovery: Callable[[str, Mapping[str, Any], Mapping[str, Any]], Mapping[str, Any] | None] | None = None,
         runtime_context: RuntimeContext | None = None,
+        use_runtime_shared_browser: bool = True,
     ) -> None:
         self._browser_context_seed_getter = browser_context_seed_getter
         self._seed_urls_getter = seed_urls_getter
@@ -1187,6 +1196,7 @@ class _SharedPlaywrightFileDocumentFetcher:
         self._headless = headless
         self._challenge_recovery = challenge_recovery
         self._runtime_context = runtime_context
+        self._use_runtime_shared_browser = use_runtime_shared_browser
         self._playwright_manager = None
         self._browser = None
         self._context = None
@@ -1272,6 +1282,7 @@ class _SharedPlaywrightFileDocumentFetcher:
                 runtime_context=self._runtime_context,
                 headless=self._headless,
                 user_agent=active_user_agent,
+                use_runtime_shared_browser=self._use_runtime_shared_browser,
             )
             self._sync_context_cookies()
             self._page = self._context.new_page()
@@ -1428,6 +1439,70 @@ class _SharedPlaywrightFileDocumentFetcher:
         }
 
 
+class _ThreadLocalSharedPlaywrightFileDocumentFetcher:
+    def __init__(
+        self,
+        *,
+        browser_context_seed_getter: Callable[[], Mapping[str, Any] | None],
+        seed_urls_getter: Callable[[], list[str]],
+        browser_user_agent: str | None = None,
+        headless: bool = True,
+        challenge_recovery: Callable[[str, Mapping[str, Any], Mapping[str, Any]], Mapping[str, Any] | None] | None = None,
+        runtime_context: RuntimeContext | None = None,
+        use_runtime_shared_browser: bool = True,
+    ) -> None:
+        self._browser_context_seed_getter = browser_context_seed_getter
+        self._seed_urls_getter = seed_urls_getter
+        self._browser_user_agent = browser_user_agent
+        self._headless = headless
+        self._challenge_recovery = challenge_recovery
+        self._runtime_context = runtime_context
+        self._use_runtime_shared_browser = use_runtime_shared_browser
+        self._thread_local = threading.local()
+        self._lock = threading.Lock()
+        self._fetchers: list[_SharedPlaywrightFileDocumentFetcher] = []
+
+    def _get_fetcher(self) -> _SharedPlaywrightFileDocumentFetcher:
+        fetcher = getattr(self._thread_local, "fetcher", None)
+        if isinstance(fetcher, _SharedPlaywrightFileDocumentFetcher):
+            return fetcher
+        fetcher = _SharedPlaywrightFileDocumentFetcher(
+            browser_context_seed_getter=self._browser_context_seed_getter,
+            seed_urls_getter=self._seed_urls_getter,
+            browser_user_agent=self._browser_user_agent,
+            headless=self._headless,
+            challenge_recovery=self._challenge_recovery,
+            runtime_context=self._runtime_context,
+            use_runtime_shared_browser=self._use_runtime_shared_browser,
+        )
+        self._thread_local.fetcher = fetcher
+        with self._lock:
+            self._fetchers.append(fetcher)
+        emit_structured_log(
+            logger,
+            logging.DEBUG,
+            "browser_workflow_file_fetcher_thread_created",
+            thread=threading.current_thread().name,
+        )
+        return fetcher
+
+    def __call__(self, file_url: str, asset: Mapping[str, Any]) -> dict[str, Any] | None:
+        return self._get_fetcher()(file_url, asset)
+
+    def failure_for(self, file_url: str) -> dict[str, Any] | None:
+        fetcher = getattr(self._thread_local, "fetcher", None)
+        if not isinstance(fetcher, _SharedPlaywrightFileDocumentFetcher):
+            return None
+        return fetcher.failure_for(file_url)
+
+    def close(self) -> None:
+        with self._lock:
+            fetchers = list(self._fetchers)
+            self._fetchers.clear()
+        for fetcher in fetchers:
+            fetcher.close()
+
+
 def _build_shared_playwright_image_fetcher(
     *,
     browser_context_seed_getter: Callable[[], Mapping[str, Any] | None],
@@ -1438,6 +1513,7 @@ def _build_shared_playwright_image_fetcher(
     min_height: int = 80,
     challenge_recovery: Callable[[str, Mapping[str, Any], Mapping[str, Any]], Mapping[str, Any] | None] | None = None,
     runtime_context: RuntimeContext | None = None,
+    use_runtime_shared_browser: bool = True,
 ) -> _ThreadLocalSharedPlaywrightImageDocumentFetcher:
     return _ThreadLocalSharedPlaywrightImageDocumentFetcher(
         browser_context_seed_getter=browser_context_seed_getter,
@@ -1448,6 +1524,7 @@ def _build_shared_playwright_image_fetcher(
         min_height=min_height,
         challenge_recovery=challenge_recovery,
         runtime_context=runtime_context,
+        use_runtime_shared_browser=use_runtime_shared_browser,
     )
 
 
@@ -1459,14 +1536,19 @@ def _build_shared_playwright_file_fetcher(
     headless: bool = True,
     challenge_recovery: Callable[[str, Mapping[str, Any], Mapping[str, Any]], Mapping[str, Any] | None] | None = None,
     runtime_context: RuntimeContext | None = None,
-) -> _SharedPlaywrightFileDocumentFetcher:
-    return _SharedPlaywrightFileDocumentFetcher(
+    use_runtime_shared_browser: bool = True,
+    thread_local: bool = False,
+) -> _ThreadLocalSharedPlaywrightFileDocumentFetcher | _SharedPlaywrightFileDocumentFetcher:
+    fetcher_cls: type[_ThreadLocalSharedPlaywrightFileDocumentFetcher] | type[_SharedPlaywrightFileDocumentFetcher]
+    fetcher_cls = _ThreadLocalSharedPlaywrightFileDocumentFetcher if thread_local else _SharedPlaywrightFileDocumentFetcher
+    return fetcher_cls(
         browser_context_seed_getter=browser_context_seed_getter,
         seed_urls_getter=seed_urls_getter,
         browser_user_agent=browser_user_agent,
         headless=headless,
         challenge_recovery=challenge_recovery,
         runtime_context=runtime_context,
+        use_runtime_shared_browser=use_runtime_shared_browser,
     )
 
 

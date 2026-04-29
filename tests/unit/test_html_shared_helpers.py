@@ -19,8 +19,9 @@ from paper_fetch.extraction.html.formula_rules import (
 )
 from paper_fetch.extraction.html.inline import normalize_html_inline_text
 from paper_fetch.http import HttpTransport
-from paper_fetch.providers import _springer_html
-from tests.golden_criteria import golden_criteria_asset
+from paper_fetch.providers import _science_pnas_html, _springer_html, _wiley_html
+from tests.block_fixtures import block_asset
+from tests.golden_criteria import golden_criteria_asset, golden_criteria_scenario_asset
 
 
 class _DelayedAssetTransport(HttpTransport):
@@ -105,36 +106,20 @@ class SharedHtmlHelperTests(unittest.TestCase):
         self.assertEqual(metadata["published"], "2026-01-15")
 
     def test_parse_html_metadata_does_not_treat_generic_description_as_abstract(self) -> None:
-        html = """
-<html>
-  <head>
-    <meta name="citation_title" content="Amazon deforestation implications in local/regional climate change" />
-    <meta name="dc.Description" content="Amazon deforestation implications in local/regional climate change" />
-    <meta name="Description" content="Amazon deforestation implications in local/regional climate change" />
-    <meta property="og:description" content="Amazon deforestation implications in local/regional climate change" />
-  </head>
-</html>
-"""
+        """rule: rule-generic-metadata-boundaries"""
+        html = golden_criteria_scenario_asset("generic_metadata_boundaries", "generic_description.html").read_text(
+            encoding="utf-8"
+        )
 
         metadata = html_metadata.parse_html_metadata(html, "https://www.pnas.org/doi/full/10.1073/pnas.2317456120")
 
         self.assertIsNone(metadata["abstract"])
 
     def test_parse_html_metadata_uses_redirect_stub_lookup_title(self) -> None:
-        html = """
-<html>
-  <head>
-    <title>Redirecting</title>
-    <meta http-equiv="refresh" content="2; url='/retrieve/articleSelectSinglePerm'" />
-  </head>
-  <body>
-    <input type="hidden" name="redirectURL" value="https%3A%2F%2Fwww.sciencedirect.com%2Fscience%2Farticle%2Fpii%2FS0034425725000525" />
-    <script>
-      siteCatalyst.pageDataLoad({ articleName : 'Stub Article Title', identifierValue : 'S0034425725000525' });
-    </script>
-  </body>
-</html>
-"""
+        """rule: rule-generic-metadata-boundaries"""
+        html = golden_criteria_scenario_asset("generic_metadata_boundaries", "redirect_stub.html").read_text(
+            encoding="utf-8"
+        )
 
         metadata = html_metadata.parse_html_metadata(html, "https://linkinghub.elsevier.com/retrieve/pii/S0034425725000525")
 
@@ -206,6 +191,347 @@ class SharedHtmlHelperTests(unittest.TestCase):
         self.assertEqual(
             [(asset["kind"], asset["section"]) for asset in assets],
             [("figure", "body"), ("supplementary", "supplementary")],
+        )
+
+    def test_wiley_asset_scopes_only_collect_supporting_information_downloads(self) -> None:
+        """rule: rule-wiley-supporting-information-assets"""
+        source_url = "https://onlinelibrary.wiley.com/doi/full/10.1111/example"
+        html_text = """
+<html>
+  <body>
+    <article lang="en">
+      <section class="article-section article-section__full">
+        <section class="article-section__content">
+          <figure class="figure" id="example-fig-0001">
+            <a href="/cms/asset/full/example-fig-0001.jpg">
+              <img src="/cms/asset/preview/example-fig-0001.png" data-lg-src="/cms/asset/full/example-fig-0001.jpg" alt="Example figure" />
+            </a>
+            <figcaption>Figure 1. Example figure.</figcaption>
+          </figure>
+        </section>
+      </section>
+      <section class="article-section article-section__supporting" data-suppl="/doi/suppl/10.1111/example?onlyLog=true">
+        <div class="accordion article-accordion">
+          <h2>
+            <a class="accordion__control" role="button" aria-controls="example-supInfo-0001" aria-expanded="false">
+              <div tabindex="0" class="section__title" id="support-information-section"><span>Supporting Information</span></div>
+            </a>
+          </h2>
+          <div class="accordion__content" role="region" aria-labelledby="support-information-section" id="example-supInfo-0001">
+            <table class="support-info__table table article-section__table">
+              <tbody>
+                <tr>
+                  <td headers="article-filename">
+                    <a href="/action/downloadSupplement?doi=10.1111%2Fexample&amp;file=example-sup-0001-DataS1.docx">example-sup-0001-DataS1.docx</a>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </article>
+  </body>
+</html>
+"""
+
+        body_html, supplementary_html = _science_pnas_html.extract_browser_workflow_asset_html_scopes(
+            html_text,
+            source_url,
+            "wiley",
+        )
+        assets = _wiley_html.extract_scoped_html_assets(
+            body_html,
+            source_url,
+            asset_profile="all",
+            supplementary_html_text=supplementary_html,
+        )
+
+        self.assertIn("downloadSupplement", supplementary_html)
+        self.assertNotIn("downloadSupplement", body_html)
+        self.assertEqual(
+            [(asset["kind"], asset["section"]) for asset in assets],
+            [("figure", "body"), ("supplementary", "supplementary")],
+        )
+        self.assertEqual(
+            assets[1]["url"],
+            "https://onlinelibrary.wiley.com/action/downloadSupplement?doi=10.1111%2Fexample&file=example-sup-0001-DataS1.docx",
+        )
+        self.assertEqual(assets[1]["filename_hint"], "example-sup-0001-DataS1.docx")
+        self.assertFalse(any("fig-0001" in asset.get("url", "") for asset in assets if asset["kind"] == "supplementary"))
+
+    def test_wiley_real_fixture_supporting_information_only_yields_true_supplementary_asset(self) -> None:
+        """rule: rule-wiley-supporting-information-assets"""
+        source_url = "https://onlinelibrary.wiley.com/doi/full/10.1111/gcb.16414"
+        html_text = golden_criteria_asset("10.1111/gcb.16414", "original.html").read_text(encoding="utf-8")
+
+        body_html, supplementary_html = _science_pnas_html.extract_browser_workflow_asset_html_scopes(
+            html_text,
+            source_url,
+            "wiley",
+        )
+        assets = _wiley_html.extract_scoped_html_assets(
+            body_html,
+            source_url,
+            asset_profile="all",
+            supplementary_html_text=supplementary_html,
+        )
+        figure_assets = [asset for asset in assets if asset["kind"] == "figure"]
+        supplementary_assets = [asset for asset in assets if asset["kind"] == "supplementary"]
+
+        self.assertEqual(
+            [asset["heading"] for asset in supplementary_assets],
+            ["gcb16414-sup-0001-FigureS1.docx"],
+        )
+        self.assertEqual(
+            [asset["url"] for asset in supplementary_assets],
+            [
+                "https://onlinelibrary.wiley.com/action/downloadSupplement?doi=10.1111%2Fgcb.16414&file=gcb16414-sup-0001-FigureS1.docx"
+            ],
+        )
+        self.assertEqual(
+            [asset["filename_hint"] for asset in supplementary_assets],
+            ["gcb16414-sup-0001-FigureS1.docx"],
+        )
+        self.assertTrue(any("gcb16414-fig-0001-m.jpg" in asset.get("url", "") for asset in figure_assets))
+        self.assertFalse(any("gcb16414-fig-" in asset.get("url", "") for asset in supplementary_assets))
+        self.assertNotIn("gcb16414-sup-0001-FigureS1.docx", body_html)
+
+    def test_download_supplementary_assets_uses_wiley_filename_hint_for_octet_stream(self) -> None:
+        supplement_url = (
+            "https://onlinelibrary.wiley.com/action/downloadSupplement?"
+            "doi=10.1111%2Fgcb.16414&file=gcb16414-sup-0001-FigureS1.docx"
+        )
+
+        def opener_requester(opener, url, **kwargs):
+            del opener, kwargs
+            self.assertEqual(url, supplement_url)
+            return {
+                "status_code": 200,
+                "headers": {"content-type": "application/octet-stream"},
+                "body": b"supplementary-docx",
+                "url": "https://onlinelibrary.wiley.com/action/downloadSupplement",
+            }
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            result = html_assets.download_supplementary_assets(
+                HttpTransport(),
+                article_id="10.1111/gcb.16414",
+                assets=[
+                    {
+                        "kind": "supplementary",
+                        "heading": "gcb16414-sup-0001-FigureS1.docx",
+                        "url": supplement_url,
+                        "section": "supplementary",
+                        "filename_hint": "gcb16414-sup-0001-FigureS1.docx",
+                    }
+                ],
+                output_dir=Path(tmpdir),
+                user_agent="paper-fetch-test",
+                asset_profile="all",
+                cookie_opener_builder=lambda *args, **kwargs: object(),
+                opener_requester=opener_requester,
+            )
+
+        self.assertEqual(result["asset_failures"], [])
+        self.assertEqual(Path(result["assets"][0]["path"]).name, "gcb16414-sup-0001-FigureS1.docx")
+
+    def test_download_supplementary_assets_routes_source_data_into_subdirectory(self) -> None:
+        """rule: rule-springer-supplementary-scope"""
+        responses = {
+            "https://example.test/supplement.pdf": {
+                "status_code": 200,
+                "headers": {"content-type": "application/pdf"},
+                "body": b"supplementary-pdf",
+                "url": "https://example.test/supplement.pdf",
+            },
+            "https://example.test/source-data.csv": {
+                "status_code": 200,
+                "headers": {"content-type": "text/plain"},
+                "body": b"source-data",
+                "url": "https://example.test/source-data.csv",
+            },
+        }
+
+        def opener_requester(opener, url, **kwargs):
+            del opener, kwargs
+            return responses[url]
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            result = html_assets.download_supplementary_assets(
+                HttpTransport(),
+                article_id="10.1000/example",
+                assets=[
+                    {
+                        "kind": "supplementary",
+                        "heading": "Supplementary Information",
+                        "url": "https://example.test/supplement.pdf",
+                        "section": "supplementary",
+                    },
+                    {
+                        "kind": "supplementary",
+                        "heading": "Source Data Fig. 1",
+                        "url": "https://example.test/source-data.csv",
+                        "section": "supplementary",
+                        "asset_kind": "source_data",
+                    },
+                ],
+                output_dir=Path(tmpdir),
+                user_agent="paper-fetch-test",
+                asset_profile="all",
+                cookie_opener_builder=lambda *args, **kwargs: object(),
+                opener_requester=opener_requester,
+            )
+
+            asset_paths = [Path(asset["path"]) for asset in result["assets"]]
+
+            self.assertEqual(result["asset_failures"], [])
+            self.assertEqual(asset_paths[0].parent.name, "10.1000_example_assets")
+            self.assertEqual(asset_paths[1].parent.name, "source_data")
+            self.assertEqual(asset_paths[1].parent.parent.name, "10.1000_example_assets")
+
+    def test_download_supplementary_assets_with_only_source_data_creates_only_source_data_subdirectory(self) -> None:
+        """rule: rule-springer-supplementary-scope"""
+        def opener_requester(opener, url, **kwargs):
+            del opener, kwargs
+            return {
+                "status_code": 200,
+                "headers": {"content-type": "text/csv"},
+                "body": b"source-data-only",
+                "url": url,
+            }
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            output_dir = Path(tmpdir)
+            result = html_assets.download_supplementary_assets(
+                HttpTransport(),
+                article_id="10.1000/source-only",
+                assets=[
+                    {
+                        "kind": "supplementary",
+                        "heading": "Source Data Fig. 1",
+                        "url": "https://example.test/source-data-only.csv",
+                        "section": "supplementary",
+                        "asset_kind": "source_data",
+                    }
+                ],
+                output_dir=output_dir,
+                user_agent="paper-fetch-test",
+                asset_profile="all",
+                cookie_opener_builder=lambda *args, **kwargs: object(),
+                opener_requester=opener_requester,
+            )
+
+            asset_root = output_dir / "10.1000_source-only_assets"
+            root_entries = sorted(path.name for path in asset_root.iterdir())
+
+            self.assertEqual(result["asset_failures"], [])
+            self.assertEqual(Path(result["assets"][0]["path"]).parent.name, "source_data")
+            self.assertEqual(root_entries, ["source_data"])
+
+    def test_wiley_body_figures_are_not_promoted_to_supplementary_without_supporting_information(self) -> None:
+        """rule: rule-wiley-supporting-information-assets"""
+        body_html = """
+<section class="article-section__content">
+  <figure class="figure" id="example-fig-0001">
+    <a href="/cms/asset/full/example-fig-0001.jpg">
+      <img src="/cms/asset/preview/example-fig-0001.png" data-lg-src="/cms/asset/full/example-fig-0001.jpg" alt="Example figure" />
+    </a>
+    <figcaption>Figure 1. Example figure.</figcaption>
+  </figure>
+</section>
+"""
+
+        assets = _wiley_html.extract_scoped_html_assets(
+            body_html,
+            "https://onlinelibrary.wiley.com/doi/full/10.1111/example",
+            asset_profile="all",
+            supplementary_html_text="",
+        )
+
+        self.assertEqual([asset["kind"] for asset in assets], ["figure"])
+        self.assertFalse(any(asset["kind"] == "supplementary" for asset in assets))
+
+    def test_extract_scoped_html_assets_empty_supplementary_scope_does_not_scan_body(self) -> None:
+        """rule: rule-science-pnas-supplementary-sections"""
+        body_html = """
+<html>
+  <body>
+    <a href="https://example.test/data.csv">Data file, not supplementary material.</a>
+  </body>
+</html>
+"""
+
+        assets = html_assets.extract_scoped_html_assets(
+            body_html,
+            "https://example.test/article",
+            asset_profile="all",
+            supplementary_html_text="",
+        )
+
+        self.assertFalse(any(asset["kind"] == "supplementary" for asset in assets))
+
+    def test_science_real_fixture_supplementary_comes_only_from_supplementary_section(self) -> None:
+        """rule: rule-science-pnas-supplementary-sections"""
+        source_url = "https://www.science.org/doi/full/10.1126/sciadv.adl6155"
+        html_text = golden_criteria_asset("10.1126/sciadv.adl6155", "original.html").read_text(
+            encoding="utf-8",
+            errors="ignore",
+        )
+
+        body_html, supplementary_html = _science_pnas_html.extract_browser_workflow_asset_html_scopes(
+            html_text,
+            source_url,
+            "science",
+        )
+        assets = _science_pnas_html.extract_scoped_html_assets(
+            body_html,
+            source_url,
+            asset_profile="all",
+            supplementary_html_text=supplementary_html,
+        )
+        supplementary_assets = [asset for asset in assets if asset["kind"] == "supplementary"]
+
+        self.assertIn("co2_gr_mlo.txt", body_html)
+        self.assertNotIn("co2_gr_mlo.txt", supplementary_html)
+        self.assertIn("sciadv.adl6155_sm.pdf", supplementary_html)
+        self.assertEqual(
+            [asset["url"] for asset in supplementary_assets],
+            [
+                "https://www.science.org/doi/suppl/10.1126/sciadv.adl6155/suppl_file/sciadv.adl6155_sm.pdf"
+            ],
+        )
+
+    def test_pnas_real_fixture_supplementary_ignores_body_anchor_to_section(self) -> None:
+        """rule: rule-science-pnas-supplementary-sections"""
+        source_url = "https://www.pnas.org/doi/full/10.1073/pnas.2509692123"
+        html_text = block_asset("10.1073/pnas.2509692123", "raw.html").read_text(
+            encoding="utf-8",
+            errors="ignore",
+        )
+
+        body_html, supplementary_html = _science_pnas_html.extract_browser_workflow_asset_html_scopes(
+            html_text,
+            source_url,
+            "pnas",
+        )
+        assets = _science_pnas_html.extract_scoped_html_assets(
+            body_html,
+            source_url,
+            asset_profile="all",
+            supplementary_html_text=supplementary_html,
+        )
+        supplementary_assets = [asset for asset in assets if asset["kind"] == "supplementary"]
+
+        self.assertIn("#supplementary-materials", body_html)
+        self.assertNotIn("#supplementary-materials", supplementary_html)
+        self.assertIn("pnas.2509692123.sapp.pdf", supplementary_html)
+        self.assertEqual(
+            [asset["url"] for asset in supplementary_assets],
+            [
+                "https://www.pnas.org/doi/suppl/10.1073/pnas.2509692123/suppl_file/pnas.2509692123.sapp.pdf",
+                "https://www.pnas.org/doi/suppl/10.1073/pnas.2509692123/suppl_file/pnas.2509692123.sd01.xlsx",
+            ],
         )
 
     def test_supplementary_response_block_reason_detects_challenge_html(self) -> None:
@@ -497,6 +823,7 @@ Important body text.
         self.assertNotIn("## Rights and permissions", chrome_markdown)
 
     def test_inline_normalization_is_shared_for_body_heading_and_table_text(self) -> None:
+        """rule: rule-preserve-inline-semantics-in-body-and-tables"""
         raw_text = "CO <sub> 2 </sub> emission </sup> +"
 
         self.assertEqual(normalize_html_inline_text("CO <sub> 2 </sub> emissions"), "CO<sub>2</sub> emissions")
@@ -508,6 +835,7 @@ Important body text.
         self.assertEqual(normalize_html_inline_text(raw_text, policy="heading"), "CO<sub>2</sub> emission</sup>+")
 
     def test_formula_rules_detect_real_formula_image_urls(self) -> None:
+        """rule: rule-preserve-formula-image-fallbacks"""
         wiley_html = golden_criteria_asset("10.1111/gcb.15322", "original.html").read_text(
             encoding="utf-8",
             errors="ignore",
@@ -545,6 +873,7 @@ Important body text.
         self.assertFalse(any("Fig1_HTML" in asset["url"] for asset in assets))
 
     def test_clean_markdown_registers_springer_nature_profile(self) -> None:
+        """rule: rule-springer-article-root-chrome-pruning"""
         markdown = """
 # Article
 

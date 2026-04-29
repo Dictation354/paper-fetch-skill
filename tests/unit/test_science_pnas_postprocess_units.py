@@ -3,6 +3,7 @@ from __future__ import annotations
 import unittest
 
 from paper_fetch.providers._science_pnas_html import extract_science_pnas_markdown
+from tests.golden_criteria import golden_criteria_scenario_asset
 
 
 class SciencePnasPostprocessUnitTests(unittest.TestCase):
@@ -174,38 +175,10 @@ class SciencePnasPostprocessUnitTests(unittest.TestCase):
         )
 
     def test_extract_science_pnas_markdown_falls_back_complex_table_to_bullets(self) -> None:
-        html = """
-        <html><body>
-        <article>
-          <h1>Complex Table Example</h1>
-          <section role="doc-abstract">
-            <h2>Abstract</h2>
-            <p>Short abstract with two sentences. It should be retained as a distinct abstract section.</p>
-          </section>
-          <section property="articleBody">
-            <h2>Results</h2>
-            <p>This body paragraph introduces the complex table and keeps the synthetic example above the full-text threshold. It includes a second sentence for narrative structure.</p>
-            <div class="article-table-content">
-              <header class="article-table-caption">
-                <span class="table-caption__label">TABLE 1.</span>
-                Complex grouped values.
-              </header>
-              <div class="article-table-content-wrapper">
-                <table class="table article-section__table">
-                  <thead>
-                    <tr><th>Group</th><th colspan="2">Values</th></tr>
-                  </thead>
-                  <tbody>
-                    <tr><td>Group A</td><td>Alpha / Beta</td></tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-            <p>This trailing body paragraph confirms the complex table remains in place after markdown postprocessing.</p>
-          </section>
-        </article>
-        </body></html>
-        """
+        """rule: rule-table-flatten-or-list"""
+        html = golden_criteria_scenario_asset("table_flatten_or_list", "complex_table.html").read_text(
+            encoding="utf-8"
+        )
 
         markdown, _ = extract_science_pnas_markdown(
             html,

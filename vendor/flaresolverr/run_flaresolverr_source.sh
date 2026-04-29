@@ -8,8 +8,8 @@ ENV_FILE="${1:-$ROOT_DIR/.env.flaresolverr-source-headless}"
 source "${ROOT_DIR}/flaresolverr_source_common.sh"
 flaresolverr_source_load_env "${ENV_FILE}"
 
-if [[ ! -d "${FLARESOLVERR_REPO_DIR}/.git" ]]; then
-  echo "Missing repo clone: ${FLARESOLVERR_REPO_DIR}" >&2
+if [[ ! -f "${FLARESOLVERR_REPO_DIR}/src/flaresolverr.py" ]]; then
+  echo "Missing FlareSolverr source snapshot: ${FLARESOLVERR_REPO_DIR}" >&2
   exit 1
 fi
 
@@ -35,13 +35,26 @@ if [[ "${HEADLESS}" == "true" ]]; then
     echo "  bash ${ROOT_DIR}/run_flaresolverr_source.sh ${ROOT_DIR}/.env.flaresolverr-source-wslg" >&2
     exit 1
   fi
+else
+  if [[ -z "${DISPLAY:-}" && -z "${WAYLAND_DISPLAY:-}" ]]; then
+    echo "DISPLAY or WAYLAND_DISPLAY is required when HEADLESS=false." >&2
+    exit 1
+  fi
 fi
 
-tracked_changes="$(git -C "${FLARESOLVERR_REPO_DIR}" status --porcelain --untracked-files=no)"
-if [[ -n "${tracked_changes}" ]]; then
-  echo "Tracked source changes detected; rerun setup_flaresolverr_source.sh to restore official source mode." >&2
-  printf '%s\n' "${tracked_changes}" >&2
+if ! grep -q "returnImagePayload" "${FLARESOLVERR_REPO_DIR}/src/dtos.py" \
+  || ! grep -q "imagePayload" "${FLARESOLVERR_REPO_DIR}/src/flaresolverr_service.py"; then
+  echo "FlareSolverr source snapshot is missing the paper-fetch image payload patch." >&2
   exit 1
+fi
+
+if [[ -d "${FLARESOLVERR_REPO_DIR}/.git" ]]; then
+  tracked_changes="$(git -C "${FLARESOLVERR_REPO_DIR}" status --porcelain --untracked-files=no)"
+  if [[ -n "${tracked_changes}" ]]; then
+    echo "Tracked source changes detected; rerun setup_flaresolverr_source.sh to restore official source mode." >&2
+    printf '%s\n' "${tracked_changes}" >&2
+    exit 1
+  fi
 fi
 
 flaresolverr_source_ensure_chrome_link

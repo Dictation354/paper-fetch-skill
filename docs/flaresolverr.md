@@ -33,7 +33,7 @@
 - `wiley` / `science` / `pnas` 的正文 figure / table / formula 图片资产下载以 shared Playwright browser context 为主链路；同一个 `RuntimeContext` 会 lazy 复用 Chromium browser，每次 download attempt 仍创建隔离 context/page，多图复用同一个 seeded browser context
 - 资产下载 worker 上限由 `PAPER_FETCH_ASSET_DOWNLOAD_CONCURRENCY` 控制，默认 `4`、最小 `1`
 - 图片候选仍优先 full-size/original，全部失败后才尝试 preview；preview 也通过同一个 browser context 下载，目标 provider 不再使用 `playwright_canvas_fallback` tier
-- 正文图片下载在单次 attempt 内会对 figure page 和图片候选 URL 做缓存，并以固定并发上限 `3` 拉取 payload；文件写入仍按资产原顺序完成
+- 正文图片下载在单次 attempt 内会对 figure page 和图片候选 URL 做缓存，并按 `PAPER_FETCH_ASSET_DOWNLOAD_CONCURRENCY` 控制的 worker 上限拉取 payload，默认 `4`；文件写入仍按资产原顺序完成
 - 图片恢复、正文图片/附件下载、figure page HTML 发现路径不启用 `disableMedia=true`，避免阻断目标图片资源和 full-size URL 发现
 - 当图片 URL 在 Playwright `fetch()` 下返回 Cloudflare challenge HTML，但 FlareSolverr/Selenium 已能显示图片文档时，仓库本地 FlareSolverr patch 会返回 `solution.imagePayload`，下载器只接受这份浏览器导出的 PNG；`imagePayload` 缺失或无效时会记录明确失败原因，不再退回截图裁剪
 - 这条链路只保证在当前仓库 checkout 中运行
@@ -92,6 +92,8 @@ export FLARESOLVERR_SOURCE_DIR="$PWD/vendor/flaresolverr"
 ```bash
 bash ./vendor/flaresolverr/setup_flaresolverr_source.sh
 ```
+
+在线源码工作流会在本地 checkout 上应用 `vendor/flaresolverr/patches/return-image-payload.patch`。离线包不会在目标机执行这一步；CI 会先生成已 patch 的 `vendor/flaresolverr/.work/FlareSolverr/` 源码快照和 `vendor/flaresolverr/wheelhouse/`，目标机只创建 venv 并从 wheelhouse 安装依赖。
 
 如果你还要启用 `wiley` / `science` / `pnas` 的 seeded-browser PDF/ePDF fallback，再补：
 

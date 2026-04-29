@@ -1,0 +1,13 @@
+{
+  "provider": "science",
+  "source_url": "https://www.science.org/doi/full/10.1126/science.dom-abstract",
+  "doi": "10.1126/science.dom-abstract",
+  "title": "Science DOM Abstract Scenario",
+  "metadata_abstract": "Short DOM abstract. Lead body paragraph that should not remain in the abstract.",
+  "body_html": "<html></html>",
+  "markdown_text": "# Science DOM Abstract Scenario\n\n## Results\n\nResults body paragraph.",
+  "extraction": {
+    "title": "Science DOM Abstract Scenario",
+    "abstract_text": "Short DOM abstract."
+  }
+}
