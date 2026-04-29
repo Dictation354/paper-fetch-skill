@@ -5,6 +5,11 @@ from __future__ import annotations
 import re
 from typing import Any, Callable, Mapping
 
+from ..extraction.html.shared import (
+    append_text_block as _append_text_block,
+    short_text as _short_text,
+    soup_root as _soup_root,
+)
 from ..extraction.html.figure_links import inject_inline_figure_links as _shared_inject_inline_figure_links
 from ..extraction.html.semantics import BACK_MATTER_TOKENS, heading_category, node_identity_text, normalize_heading
 from ..extraction.html.tables import inject_inline_table_blocks as _shared_inject_inline_table_blocks
@@ -28,30 +33,6 @@ SCIENCE_CITATION_ITALIC_PATTERNS = (
     re.compile(rf"\*(?P<left>{SCIENCE_CITATION_TOKEN_PATTERN})\*\*(?P<sep>[–,;])\*\s*\*(?P<right>{SCIENCE_CITATION_TOKEN_PATTERN})\*"),
     re.compile(rf"\*(?P<left>{SCIENCE_CITATION_TOKEN_PATTERN})\*(?P<sep>\s*[–,;]\s*)\*(?P<right>{SCIENCE_CITATION_TOKEN_PATTERN})\*"),
 )
-
-
-def _soup_root(node: Tag | None) -> BeautifulSoup | None:
-    current = node
-    while current is not None:
-        if isinstance(current, BeautifulSoup):
-            return current
-        current = current.parent if isinstance(current.parent, Tag) or isinstance(current.parent, BeautifulSoup) else None
-    return None
-
-
-def _short_text(node: Tag | None) -> str:
-    if node is None:
-        return ""
-    return normalize_text(node.get_text(" ", strip=True))
-
-
-def _append_text_block(parent: Tag, text: str, *, tag_name: str = "p", soup: BeautifulSoup | None = None) -> None:
-    root = soup or _soup_root(parent)
-    if root is None:
-        return
-    block = root.new_tag(tag_name)
-    block.string = normalize_text(text)
-    parent.append(block)
 
 
 def _heading_nodes(container: Tag) -> list[Tag]:

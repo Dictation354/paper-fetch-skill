@@ -89,7 +89,6 @@ __all__ = [
     "load_runtime_config",
     "merge_browser_context_seeds",
     "merge_provider_owned_authors",
-    "preferred_html_candidate_from_landing_page",
     "probe_runtime_status",
     "rewrite_inline_figure_links",
     "time",
@@ -126,18 +125,6 @@ class ProviderBrowserProfile:
     fallback_author_extractor: Callable[[str], list[str]] | None
     shared_playwright_image_fetcher: bool
     direct_playwright_html_preflight: bool = False
-
-
-def preferred_html_candidate_from_landing_page(
-    publisher: str,
-    doi: str,
-    landing_page_url: str | None,
-) -> str | None:
-    """Backward-compatible provider-name wrapper for legacy imports."""
-
-    from ._science_pnas_profiles import preferred_html_candidate_from_landing_page as legacy_preferred
-
-    return legacy_preferred(publisher, doi, landing_page_url)
 
 
 def _fetch_flaresolverr_html_payload(*args, **kwargs):

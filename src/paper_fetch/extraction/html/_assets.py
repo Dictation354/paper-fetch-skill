@@ -16,7 +16,7 @@ from ...config import DEFAULT_ASSET_DOWNLOAD_CONCURRENCY
 from ...http import DEFAULT_FULLTEXT_TIMEOUT_SECONDS, HttpTransport, RequestFailure
 from ...models import AssetProfile, normalize_text
 from ...utils import build_asset_output_path, empty_asset_results, sanitize_filename, save_payload
-from ..image_payloads import image_dimensions_from_bytes, image_mime_type_from_bytes
+from ..image_payloads import image_dimensions_from_bytes
 from ._metadata import parse_html_metadata
 from .formula_rules import (
     FORMULA_IMAGE_ATTRS,
@@ -27,6 +27,11 @@ from .formula_rules import (
 )
 from .parsing import choose_parser
 from ._runtime import decode_html
+from .shared import (
+    html_text_snippet as _html_text_snippet,
+    html_title_snippet as _html_title_snippet,
+    image_magic_type as _image_magic_type,
+)
 
 try:
     from bs4 import BeautifulSoup, Tag
@@ -145,10 +150,6 @@ def _response_header(response: Mapping[str, Any], name: str) -> str:
     return ""
 
 
-def _image_magic_type(body: bytes | bytearray | None) -> str:
-    return image_mime_type_from_bytes(body)
-
-
 def _image_dimensions(body: bytes | bytearray | None) -> tuple[int, int] | None:
     return image_dimensions_from_bytes(body)
 
@@ -164,30 +165,6 @@ def _response_dimensions(response: Mapping[str, Any]) -> tuple[int, int] | None:
         if width > 0 and height > 0:
             return width, height
     return _image_dimensions(response.get("body", b""))
-
-
-def _html_text_snippet(body: bytes | bytearray | None, *, limit: int = 240) -> str:
-    if not isinstance(body, (bytes, bytearray)) or not body:
-        return ""
-    try:
-        decoded = bytes(body[:4096]).decode("utf-8", errors="replace")
-    except Exception:
-        return ""
-    text = re.sub(r"<[^>]+>", " ", decoded)
-    return normalize_text(text)[:limit]
-
-
-def _html_title_snippet(body: bytes | bytearray | None, *, limit: int = 160) -> str:
-    if not isinstance(body, (bytes, bytearray)) or not body:
-        return ""
-    try:
-        decoded = bytes(body[:8192]).decode("utf-8", errors="replace")
-    except Exception:
-        return ""
-    match = re.search(r"<title\b[^>]*>(.*?)</title>", decoded, flags=re.IGNORECASE | re.DOTALL)
-    if not match:
-        return ""
-    return normalize_text(re.sub(r"<[^>]+>", " ", match.group(1)))[:limit]
 
 
 def supplementary_response_block_reason(content_type: str | None, body: bytes | bytearray | None) -> str:

@@ -5,9 +5,9 @@ import unittest
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-from paper_fetch.providers import _article_markdown as article_markdown
 from paper_fetch.providers._article_markdown_common import render_inline_text
 from paper_fetch.providers import _article_markdown_elsevier_document as elsevier_document
+from paper_fetch.providers import _article_markdown_math as article_markdown_math
 from paper_fetch.models import article_from_markdown, article_from_structure
 from tests.golden_criteria import golden_criteria_asset, golden_criteria_scenario_asset
 
@@ -40,7 +40,7 @@ def build_elsevier_markdown(
                 asset_path.write_bytes(b"fake")
                 prepared["path"] = str(asset_path)
             prepared_assets.append(prepared)
-        markdown_path = article_markdown.write_article_markdown(
+        markdown_path = elsevier_document.write_article_markdown(
             provider="elsevier",
             metadata=article_metadata,
             xml_body=xml_body,
@@ -77,14 +77,11 @@ def _render_elsevier_golden_markdown(
 
 
 class ElsevierMarkdownTests(unittest.TestCase):
-    def test_article_markdown_facade_exports_expected_helpers(self) -> None:
-        self.assertTrue(callable(article_markdown.render_mathml_expression))
-        self.assertTrue(callable(article_markdown.build_article_structure))
-        self.assertTrue(callable(article_markdown.write_article_markdown))
-
     def test_elsevier_document_module_remains_importable(self) -> None:
+        self.assertTrue(callable(elsevier_document.build_article_structure))
         self.assertTrue(callable(elsevier_document.build_markdown_document))
         self.assertTrue(callable(elsevier_document.write_article_markdown))
+        self.assertTrue(callable(article_markdown_math.render_mathml_expression))
 
     def test_build_article_structure_extracts_authors_from_author_groups(self) -> None:
         xml_body = golden_criteria_scenario_asset("elsevier_author_groups_minimal", "original.xml").read_bytes()
@@ -247,7 +244,7 @@ class ElsevierMarkdownTests(unittest.TestCase):
 """
         )
 
-        expression = article_markdown.render_mathml_expression(math_node)
+        expression = article_markdown_math.render_mathml_expression(math_node)
 
         self.assertEqual(expression, "{NDVI_{d - w}}_{cli}")
 

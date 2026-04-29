@@ -31,7 +31,6 @@ __all__ = [
     "add_table_once",
     "child_text",
     "collect_conversion_notes",
-    "fallback_figure_heading",
     "fallback_table_heading",
     "first_child",
     "first_descendant",
@@ -141,16 +140,6 @@ def path_relative_to(base_dir: Path, target_path: str | Path) -> str:
 
 def make_markdown_path(output_dir: Path, doi: str, title: str | None) -> Path:
     return output_dir / f"{sanitize_filename(doi or title or 'article')}.md"
-
-
-def fallback_figure_heading(raw_value: str | None) -> str:
-    normalized = normalize_text(raw_value)
-    if not normalized:
-        return "Figure"
-    match = re.fullmatch(r"fig(?:ure)?[_\s-]*([0-9]+)", normalized, flags=re.IGNORECASE)
-    if match:
-        return f"Figure {match.group(1)}"
-    return normalized
 
 
 def fallback_table_heading(raw_value: str | None) -> str:

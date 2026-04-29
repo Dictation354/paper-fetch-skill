@@ -11,6 +11,7 @@ from bs4 import BeautifulSoup
 from paper_fetch.extraction.html import _assets as html_assets
 from paper_fetch.extraction.html import _metadata as html_metadata
 from paper_fetch.extraction.html import _runtime as html_runtime
+from paper_fetch.extraction.html import shared as html_shared
 from paper_fetch.extraction.html.formula_rules import (
     formula_image_url_from_node,
     is_display_formula_node,
@@ -48,6 +49,39 @@ class _DelayedAssetTransport(HttpTransport):
 
 
 class SharedHtmlHelperTests(unittest.TestCase):
+    def test_shared_dom_helpers_normalize_common_tag_operations(self) -> None:
+        soup = BeautifulSoup(
+            """
+<article class=" core-container  article ">
+  <p>First <b>paragraph</b></p>
+  <div><span>Nested</span></div>
+</article>
+""",
+            "html.parser",
+        )
+        article = soup.find("article")
+        assert article is not None
+
+        children = html_shared.direct_child_tags(article)
+
+        self.assertEqual([child.name for child in children], ["p", "div"])
+        self.assertEqual(html_shared.class_tokens(article), {"core-container", "article"})
+        self.assertEqual(html_shared.short_text(article.find("p")), "First paragraph")
+        self.assertIs(html_shared.soup_root(article), soup)
+
+        html_shared.append_text_block(article, "Appended text", tag_name="aside")
+
+        appended = article.find("aside")
+        self.assertIsNotNone(appended)
+        self.assertEqual(appended.get_text(strip=True), "Appended text")
+
+    def test_shared_payload_helpers_unescape_html_snippets_and_detect_images(self) -> None:
+        body = b"<html><head><title>Sign&nbsp;in</title></head><body>A &amp; B</body></html>"
+
+        self.assertEqual(html_shared.html_title_snippet(body), "Sign in")
+        self.assertEqual(html_shared.html_text_snippet(body), "Sign in A & B")
+        self.assertEqual(html_shared.image_magic_type(b"\x89PNG\r\n\x1a\npayload"), "image/png")
+
     def test_parse_html_metadata_reads_citation_fields(self) -> None:
         html = """
 <html>

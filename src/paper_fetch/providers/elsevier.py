@@ -30,7 +30,7 @@ from ..utils import (
     save_payload,
     strip_html_tags,
 )
-from ._article_markdown import build_article_structure, write_article_markdown
+from ._article_markdown_elsevier_document import build_article_structure, write_article_markdown
 from ._elsevier_xml_rules import (
     ELSEVIER_IMAGE_ASSET_TYPES,
     classify_elsevier_asset_kind,

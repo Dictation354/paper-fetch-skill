@@ -40,6 +40,13 @@ from ..extraction.html.signals import (
     PAYWALL_PATTERNS,
     SciencePnasHtmlFailure,
 )
+from ..extraction.html.shared import (
+    append_text_block as _append_text_block,
+    class_tokens as _class_tokens,
+    direct_child_tags as _direct_child_tags,
+    short_text as _short_text,
+    soup_root as _soup_root,
+)
 from ..extraction.html.tables import (
     escape_markdown_table_cell,
     expanded_table_matrix,
@@ -213,23 +220,6 @@ def _heading_category(node_name: str, text: str, *, title: str | None = None) ->
     return heading_category(node_name, text, title=title)
 
 
-def _direct_child_tags(node: Tag) -> list[Tag]:
-    return [child for child in node.find_all(recursive=False) if isinstance(child, Tag)]
-
-
-def _class_tokens(node: Tag) -> set[str]:
-    raw_value = (getattr(node, "attrs", None) or {}).get("class")
-    if isinstance(raw_value, (list, tuple, set)):
-        return {normalize_text(str(item)).lower() for item in raw_value if normalize_text(str(item))}
-    normalized = normalize_text(str(raw_value or "")).lower()
-    return {normalized} if normalized else set()
-
-def _short_text(node: Tag | None) -> str:
-    if node is None:
-        return ""
-    return normalize_text(node.get_text(" ", strip=True))
-
-
 def _normalize_table_inline_text(value: str) -> str:
     return normalize_table_inline_text(value)
 
@@ -388,23 +378,6 @@ def _normalize_non_table_inline_blocks(container: Tag) -> None:
             continue
         node.clear()
         node.append(rendered)
-
-
-def _soup_root(node: Tag | None) -> BeautifulSoup | None:
-    current: Any = node
-    while current is not None and not isinstance(current, BeautifulSoup):
-        parent = current.parent if isinstance(getattr(current, "parent", None), (Tag, BeautifulSoup)) else None
-        current = parent
-    return current if isinstance(current, BeautifulSoup) else None
-
-
-def _append_text_block(parent: Tag, text: str, *, tag_name: str = "p", soup: BeautifulSoup | None = None) -> None:
-    soup = soup or _soup_root(parent)
-    if soup is None:
-        return
-    block = soup.new_tag(tag_name)
-    block.string = text
-    parent.append(block)
 
 
 def _promotional_parent(node: Tag) -> Tag:

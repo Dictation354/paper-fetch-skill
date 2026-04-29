@@ -27,6 +27,10 @@ from ..extraction.html.semantics import (
     node_identity_text,
     normalize_heading,
 )
+from ..extraction.html.shared import (
+    class_tokens as _class_tokens,
+    direct_child_tags as _direct_child_tags,
+)
 from ..models import classify_article_content, filtered_body_sections
 from ..utils import normalize_text
 from .html_profiles import (
@@ -249,18 +253,6 @@ def detect_html_hard_negative_signals(
         final_url=final_url,
         include_paywall_text=True,
     )
-
-
-def _direct_child_tags(node: Tag) -> list[Tag]:
-    return [child for child in node.find_all(recursive=False) if isinstance(child, Tag)]
-
-
-def _class_tokens(node: Tag) -> set[str]:
-    raw_value = (getattr(node, "attrs", None) or {}).get("class")
-    if isinstance(raw_value, (list, tuple, set)):
-        return {normalize_text(str(item)).lower() for item in raw_value if normalize_text(str(item))}
-    normalized = normalize_text(str(raw_value or "")).lower()
-    return {normalized} if normalized else set()
 
 
 def _has_selector_descendant(node: Tag, selectors: tuple[str, ...]) -> bool:

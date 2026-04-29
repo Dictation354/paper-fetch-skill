@@ -3,16 +3,18 @@
 from __future__ import annotations
 
 import base64
-import html as html_lib
 import logging
-import re
 import threading
 import time
 from concurrent.futures import Future
 from typing import Any, Callable, Mapping
 
 from ..config import build_user_agent
-from ..extraction.image_payloads import image_mime_type_from_bytes
+from ..extraction.html.shared import (
+    html_text_snippet as _html_text_snippet,
+    html_title_snippet as _html_title_snippet,
+    image_magic_type as _image_magic_type,
+)
 from ..logging_utils import emit_structured_log
 from ..runtime import RuntimeContext
 from ..utils import normalize_text
@@ -179,10 +181,6 @@ def _choose_playwright_seed_url(*candidates: str | None) -> str | None:
     return normalized_candidates[0] if normalized_candidates else None
 
 
-def _image_magic_type(body: bytes | bytearray | None) -> str:
-    return image_mime_type_from_bytes(body)
-
-
 def _decode_base64_bytes(payload: str | None) -> bytes | None:
     normalized = normalize_text(payload)
     if not normalized:
@@ -220,30 +218,6 @@ def _looks_like_image_response_payload(
 def _looks_like_cloudflare_challenge_title(title: str | None) -> bool:
     normalized = normalize_text(title).lower()
     return bool(normalized and any(token in normalized for token in _CLOUDFLARE_CHALLENGE_TITLE_TOKENS))
-
-
-def _html_text_snippet(body: bytes | bytearray | None, *, limit: int = 240) -> str:
-    if not isinstance(body, (bytes, bytearray)) or not body:
-        return ""
-    try:
-        decoded = bytes(body[:4096]).decode("utf-8", errors="replace")
-    except Exception:
-        return ""
-    text = re.sub(r"<[^>]+>", " ", decoded)
-    return normalize_text(html_lib.unescape(text))[:limit]
-
-
-def _html_title_snippet(body: bytes | bytearray | None, *, limit: int = 160) -> str:
-    if not isinstance(body, (bytes, bytearray)) or not body:
-        return ""
-    try:
-        decoded = bytes(body[:8192]).decode("utf-8", errors="replace")
-    except Exception:
-        return ""
-    match = re.search(r"<title\b[^>]*>(.*?)</title>", decoded, flags=re.IGNORECASE | re.DOTALL)
-    if not match:
-        return ""
-    return normalize_text(html_lib.unescape(re.sub(r"<[^>]+>", " ", match.group(1))))[:limit]
 
 
 def _looks_like_cloudflare_challenge_failure(failure: Mapping[str, Any] | None) -> bool:

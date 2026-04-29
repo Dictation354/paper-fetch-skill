@@ -156,6 +156,7 @@ class SciencePnasCandidateTests(unittest.TestCase):
 
     def test_science_pnas_client_alias_is_removed(self) -> None:
         self.assertFalse(hasattr(browser_workflow, "SciencePnasClient"))
+        self.assertFalse(hasattr(browser_workflow, "preferred_html_candidate_from_landing_page"))
 
     def test_provider_profile_article_source_label_and_hooks(self) -> None:
         cases = (

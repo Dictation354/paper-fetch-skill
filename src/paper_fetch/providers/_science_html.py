@@ -49,10 +49,6 @@ def blocking_fallback_signals(html_text: str) -> list[str]:
     return science_blocking_fallback_signals(html_text)
 
 
-def _normalized_author_tokens(value: str | None) -> list[str]:
-    return normalized_author_tokens(value)
-
-
 def _extract_datalayer_authors(html_text: str) -> list[str]:
     payload = _load_aaas_datalayer(html_text)
     if payload is None:
@@ -63,7 +59,7 @@ def _extract_datalayer_authors(html_text: str) -> list[str]:
     page_info = page.get("pageInfo")
     if not isinstance(page_info, Mapping):
         return []
-    return dedupe_authors(_normalized_author_tokens(page_info.get("author")))
+    return dedupe_authors(normalized_author_tokens(page_info.get("author")))
 
 
 def _extract_dom_authors(html_text: str) -> list[str]:

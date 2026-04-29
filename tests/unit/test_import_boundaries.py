@@ -16,10 +16,12 @@ BOUNDARY_PATHS = [
 FORBIDDEN_PREFIX = "paper_fetch.providers._"
 REMOVED_PROVIDER_COMPATIBILITY_MODULES = frozenset(
     {
+        "paper_fetch.providers._article_markdown",
         "paper_fetch.providers._html_access_signals",
         "paper_fetch.providers._html_availability",
         "paper_fetch.providers._html_citations",
         "paper_fetch.providers._html_semantics",
+        "paper_fetch.providers._html_text",
         "paper_fetch.providers._language_filter",
         "paper_fetch.providers._science_pnas",
         "paper_fetch.resolve.crossref",
