@@ -489,6 +489,9 @@ Springer direct HTML / direct HTTP PDF 路线当前没有额外必填 publisher 
 - `PAPER_FETCH_HTTP_DISK_CACHE_DIR` 可显式指定磁盘 HTTP 缓存目录
 - `PAPER_FETCH_HTTP_DISK_CACHE=1` 且未设置下载目录时，会使用用户数据目录下的 `http-cache`
 - `PAPER_FETCH_HTTP_METADATA_CACHE_TTL` 控制磁盘缓存 freshness 秒数，默认 `86400`（1 day）；普通进程内 GET TTL 仍默认 `30` 秒
+- `PAPER_FETCH_HTTP_DISK_CACHE_MAX_ENTRIES` 控制磁盘 textual GET cache 最大条目数，默认 `4096`；设为 `0` 表示不限制条目数
+- `PAPER_FETCH_HTTP_DISK_CACHE_MAX_BYTES` 控制磁盘 textual GET cache 最大总字节数，默认 `536870912`（512 MiB）；设为 `0` 表示不限制总大小
+- `PAPER_FETCH_HTTP_DISK_CACHE_MAX_AGE_DAYS` 控制磁盘 textual GET cache 最大保留天数，默认 `30`；设为 `0` 表示不按年龄清理
 - `HttpTransport.cache_stats_snapshot()` 返回线程安全的累计计数：`memory_hit`、`disk_fresh_hit`、`disk_stale_revalidate`、`disk_304_refresh`、`miss`、`store`、`bypass`；golden criteria live review 的 sample 结果写入相对执行前的 delta，最终汇总日志保留累计快照
 
 连接池与同 host 并发默认较保守：

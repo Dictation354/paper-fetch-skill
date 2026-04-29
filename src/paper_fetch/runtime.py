@@ -15,6 +15,9 @@ from .artifacts import ArtifactStore
 from .config import (
     HTTP_DISK_CACHE_DIR_ENV_VAR,
     HTTP_DISK_CACHE_ENV_VAR,
+    HTTP_DISK_CACHE_MAX_AGE_DAYS_ENV_VAR,
+    HTTP_DISK_CACHE_MAX_BYTES_ENV_VAR,
+    HTTP_DISK_CACHE_MAX_ENTRIES_ENV_VAR,
     HTTP_METADATA_CACHE_TTL_ENV_VAR,
     HTTP_PER_HOST_CONCURRENCY_ENV_VAR,
     HTTP_POOL_MAXSIZE_ENV_VAR,
@@ -30,6 +33,9 @@ from .http import (
     DEFAULT_PER_HOST_CONCURRENCY,
     DEFAULT_POOL_MAXSIZE,
     DEFAULT_POOL_NUM_POOLS,
+    DEFAULT_DISK_CACHE_MAX_AGE_DAYS,
+    DEFAULT_DISK_CACHE_MAX_BYTES,
+    DEFAULT_DISK_CACHE_MAX_ENTRIES,
     HttpTransport,
 )
 
@@ -60,6 +66,11 @@ def build_http_transport_for_context(
         HTTP_METADATA_CACHE_TTL_ENV_VAR,
         default=DEFAULT_METADATA_CACHE_TTL_SECONDS,
     )
+    disk_cache_max_age_days = parse_nonnegative_int_env(
+        env,
+        HTTP_DISK_CACHE_MAX_AGE_DAYS_ENV_VAR,
+        default=DEFAULT_DISK_CACHE_MAX_AGE_DAYS,
+    )
     return HttpTransport(
         pool_num_pools=parse_positive_int_env(env, HTTP_POOL_NUM_POOLS_ENV_VAR, default=DEFAULT_POOL_NUM_POOLS),
         pool_maxsize=parse_positive_int_env(env, HTTP_POOL_MAXSIZE_ENV_VAR, default=DEFAULT_POOL_MAXSIZE),
@@ -70,6 +81,17 @@ def build_http_transport_for_context(
         ),
         metadata_cache_ttl=metadata_cache_ttl,
         disk_cache_dir=_transport_disk_cache_dir(env, download_dir),
+        disk_cache_max_entries=parse_nonnegative_int_env(
+            env,
+            HTTP_DISK_CACHE_MAX_ENTRIES_ENV_VAR,
+            default=DEFAULT_DISK_CACHE_MAX_ENTRIES,
+        ),
+        disk_cache_max_bytes=parse_nonnegative_int_env(
+            env,
+            HTTP_DISK_CACHE_MAX_BYTES_ENV_VAR,
+            default=DEFAULT_DISK_CACHE_MAX_BYTES,
+        ),
+        disk_cache_max_age_seconds=disk_cache_max_age_days * 24 * 60 * 60,
         cancel_check=cancel_check,
     )
 

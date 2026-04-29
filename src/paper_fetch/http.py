@@ -35,6 +35,10 @@ DEFAULT_METADATA_CACHE_TTL_SECONDS = 86400
 DEFAULT_CACHE_CAPACITY = 128
 DEFAULT_MAX_CACHEABLE_BODY_BYTES = 1024 * 1024
 DEFAULT_MAX_TOTAL_CACHE_BYTES = 16 * 1024 * 1024
+DEFAULT_DISK_CACHE_MAX_ENTRIES = 4096
+DEFAULT_DISK_CACHE_MAX_BYTES = 512 * 1024 * 1024
+DEFAULT_DISK_CACHE_MAX_AGE_DAYS = 30
+DEFAULT_DISK_CACHE_MAX_AGE_SECONDS = DEFAULT_DISK_CACHE_MAX_AGE_DAYS * 24 * 60 * 60
 DEFAULT_MAX_RESPONSE_BYTES = 32 * 1024 * 1024
 DEFAULT_MAX_COMPRESSED_BODY_MULTIPLIER = 8
 DEFAULT_TRANSIENT_RETRIES = 2
@@ -43,6 +47,7 @@ DEFAULT_POOL_NUM_POOLS = 16
 DEFAULT_POOL_MAXSIZE = 4
 DEFAULT_PER_HOST_CONCURRENCY = 4
 DISK_CACHE_VERSION = 1
+DISK_CACHE_ROOT_NAME = "http-text-get"
 TRANSIENT_HTTP_STATUS_CODES = frozenset(range(500, 600))
 CACHE_STAT_KEYS = (
     "memory_hit",
@@ -123,6 +128,13 @@ class _PreparedRequest:
     headers: Mapping[str, str]
 
 
+@dataclass(frozen=True)
+class _DiskCacheEntry:
+    path: Path
+    size: int
+    stored_at: float
+
+
 class HttpTransport:
     """Minimal HTTP transport with short-lived in-memory caching."""
 
@@ -139,6 +151,9 @@ class HttpTransport:
         pool_maxsize: int | None = None,
         per_host_concurrency: int | None = None,
         disk_cache_dir: str | os.PathLike[str] | None = None,
+        disk_cache_max_entries: int | None = None,
+        disk_cache_max_bytes: int | None = None,
+        disk_cache_max_age_seconds: int | None = None,
         cancel_check: Callable[[], bool] | None = None,
     ) -> None:
         self.cache_ttl = max(0, int(cache_ttl))
@@ -151,6 +166,22 @@ class HttpTransport:
         self.pool_maxsize = max(1, int(pool_maxsize or DEFAULT_POOL_MAXSIZE))
         self.per_host_concurrency = max(1, int(per_host_concurrency or DEFAULT_PER_HOST_CONCURRENCY))
         self.disk_cache_dir = Path(disk_cache_dir).expanduser() if disk_cache_dir else None
+        self.disk_cache_max_entries = max(
+            0,
+            int(disk_cache_max_entries if disk_cache_max_entries is not None else DEFAULT_DISK_CACHE_MAX_ENTRIES),
+        )
+        self.disk_cache_max_bytes = max(
+            0,
+            int(disk_cache_max_bytes if disk_cache_max_bytes is not None else DEFAULT_DISK_CACHE_MAX_BYTES),
+        )
+        self.disk_cache_max_age_seconds = max(
+            0,
+            int(
+                disk_cache_max_age_seconds
+                if disk_cache_max_age_seconds is not None
+                else DEFAULT_DISK_CACHE_MAX_AGE_SECONDS
+            ),
+        )
         self._cancel_check = cancel_check
         cache_maxsize = self.max_total_cache_bytes if self.max_total_cache_bytes > 0 else float("inf")
         self._cache: TTLCache[_CacheKey, dict[str, Any]] = TTLCache(
@@ -163,6 +194,7 @@ class HttpTransport:
         self._cache_lock = threading.RLock()
         self._cache_stats_lock = threading.Lock()
         self._cache_stats = {key: 0 for key in CACHE_STAT_KEYS}
+        self._disk_cache_lock = threading.RLock()
         self._host_semaphores: dict[str, threading.BoundedSemaphore] = {}
         self._host_semaphores_lock = threading.Lock()
         self._pool = urllib3.PoolManager(
@@ -279,7 +311,86 @@ class HttpTransport:
             return None
         encoded_key = json.dumps(cache_key, ensure_ascii=True, sort_keys=True, separators=(",", ":")).encode("utf-8")
         digest = hashlib.sha256(encoded_key).hexdigest()
-        return self.disk_cache_dir / "http-text-get" / digest[:2] / f"{digest}.json"
+        return self._disk_cache_root() / digest[:2] / f"{digest}.json"
+
+    def _disk_cache_root(self) -> Path:
+        assert self.disk_cache_dir is not None
+        return self.disk_cache_dir / DISK_CACHE_ROOT_NAME
+
+    def _unlink_disk_cache_path(self, path: Path) -> None:
+        try:
+            path.unlink()
+        except FileNotFoundError:
+            return
+        except OSError:
+            return
+        try:
+            path.parent.rmdir()
+        except OSError:
+            pass
+
+    def _disk_cache_entry_from_path(self, path: Path) -> _DiskCacheEntry | None:
+        try:
+            stat_result = path.stat()
+        except OSError:
+            return None
+        stored_at = float(stat_result.st_mtime)
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+            stored_at = float(payload.get("stored_at") or stored_at)
+        except (OSError, ValueError, TypeError, json.JSONDecodeError):
+            pass
+        return _DiskCacheEntry(path=path, size=max(0, int(stat_result.st_size)), stored_at=stored_at)
+
+    def _iter_disk_cache_entries(self) -> list[_DiskCacheEntry]:
+        if self.disk_cache_dir is None:
+            return []
+        root = self._disk_cache_root()
+        if not root.exists():
+            return []
+        entries: list[_DiskCacheEntry] = []
+        try:
+            paths = sorted(root.rglob("*.json"))
+        except OSError:
+            return []
+        for path in paths:
+            entry = self._disk_cache_entry_from_path(path)
+            if entry is not None:
+                entries.append(entry)
+        return entries
+
+    def _prune_disk_cache(self) -> None:
+        if self.disk_cache_dir is None:
+            return
+        if (
+            self.disk_cache_max_entries <= 0
+            and self.disk_cache_max_bytes <= 0
+            and self.disk_cache_max_age_seconds <= 0
+        ):
+            return
+        with self._disk_cache_lock:
+            now = time.time()
+            entries = self._iter_disk_cache_entries()
+            survivors: list[_DiskCacheEntry] = []
+            for entry in entries:
+                if self.disk_cache_max_age_seconds > 0 and now - entry.stored_at > self.disk_cache_max_age_seconds:
+                    self._unlink_disk_cache_path(entry.path)
+                else:
+                    survivors.append(entry)
+
+            survivors.sort(key=lambda item: (item.stored_at, str(item.path)))
+            if self.disk_cache_max_entries > 0 and len(survivors) > self.disk_cache_max_entries:
+                remove_count = len(survivors) - self.disk_cache_max_entries
+                for entry in survivors[:remove_count]:
+                    self._unlink_disk_cache_path(entry.path)
+                survivors = survivors[remove_count:]
+
+            if self.disk_cache_max_bytes > 0:
+                total_bytes = sum(entry.size for entry in survivors)
+                while survivors and total_bytes > self.disk_cache_max_bytes:
+                    entry = survivors.pop(0)
+                    total_bytes -= entry.size
+                    self._unlink_disk_cache_path(entry.path)
 
     def _load_disk_cached_entry(self, cache_key: _CacheKey | None) -> dict[str, Any] | None:
         if cache_key is None:
@@ -287,22 +398,26 @@ class HttpTransport:
         cache_path = self._disk_cache_path(cache_key)
         if cache_path is None:
             return None
-        try:
-            payload = json.loads(cache_path.read_text(encoding="utf-8"))
-            if payload.get("version") != DISK_CACHE_VERSION:
+        with self._disk_cache_lock:
+            try:
+                payload = json.loads(cache_path.read_text(encoding="utf-8"))
+                if payload.get("version") != DISK_CACHE_VERSION:
+                    return None
+                body = base64.b64decode(str(payload.get("body_b64") or ""), validate=True)
+                response = {
+                    "status_code": int(payload.get("status_code") or 200),
+                    "headers": {str(key).lower(): str(value) for key, value in dict(payload.get("headers") or {}).items()},
+                    "body": body,
+                    "url": str(payload.get("url") or ""),
+                }
+                if not self._is_cacheable_response(response):
+                    return None
+                stored_at = float(payload.get("stored_at") or 0.0)
+            except (OSError, ValueError, TypeError, json.JSONDecodeError):
                 return None
-            body = base64.b64decode(str(payload.get("body_b64") or ""), validate=True)
-            response = {
-                "status_code": int(payload.get("status_code") or 200),
-                "headers": {str(key).lower(): str(value) for key, value in dict(payload.get("headers") or {}).items()},
-                "body": body,
-                "url": str(payload.get("url") or ""),
-            }
-            if not self._is_cacheable_response(response):
+            if self.disk_cache_max_age_seconds > 0 and time.time() - stored_at > self.disk_cache_max_age_seconds:
+                self._unlink_disk_cache_path(cache_path)
                 return None
-            stored_at = float(payload.get("stored_at") or 0.0)
-        except (OSError, ValueError, TypeError, json.JSONDecodeError):
-            return None
         return {
             "response": response,
             "stored_at": stored_at,
@@ -330,14 +445,16 @@ class HttpTransport:
             "url": str(response.get("url") or ""),
             "body_b64": base64.b64encode(bytes(body)).decode("ascii"),
         }
-        try:
-            cache_path.parent.mkdir(parents=True, exist_ok=True)
-            tmp_path = cache_path.with_suffix(cache_path.suffix + f".{os.getpid()}.{threading.get_ident()}.tmp")
-            tmp_path.write_text(json.dumps(payload, ensure_ascii=True, sort_keys=True), encoding="utf-8")
-            tmp_path.replace(cache_path)
-        except OSError:
-            return False
-        return True
+        with self._disk_cache_lock:
+            try:
+                cache_path.parent.mkdir(parents=True, exist_ok=True)
+                tmp_path = cache_path.with_suffix(cache_path.suffix + f".{os.getpid()}.{threading.get_ident()}.tmp")
+                tmp_path.write_text(json.dumps(payload, ensure_ascii=True, sort_keys=True), encoding="utf-8")
+                tmp_path.replace(cache_path)
+            except OSError:
+                return False
+            self._prune_disk_cache()
+            return cache_path.exists()
 
     def _conditional_headers_from_cached_response(self, response: Mapping[str, Any]) -> dict[str, str]:
         headers = {str(key).lower(): str(value) for key, value in dict(response.get("headers") or {}).items()}
