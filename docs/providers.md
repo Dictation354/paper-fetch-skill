@@ -162,6 +162,12 @@ resolve
 - `strategy.allow_metadata_only_fallback=true` 时返回 metadata + abstract
 - 否则直接抛错
 
+如果 provider 主链已经拿到 fulltext HTML：
+
+- provider fetch result 组装层会在构造 `ArticleModel` 前自动触发 HTML -> Markdown
+- `springer`、`wiley`、`science`、`pnas` 会优先复用各自 provider 专用的 HTML 解析器
+- 通用 HTML 转换只作为“已确认 fulltext HTML 但 provider 没有提供 Markdown”的兜底，不会变成任意 URL 的全文 fallback
+
 如果没有可返回的 provider `abstract_only` 结果，而 `strategy.allow_metadata_only_fallback=true`：
 
 - 返回 metadata + abstract
@@ -220,6 +226,10 @@ CLI、Python API、MCP 当前统一采用这些默认值：
 - `asset_profile=null (provider default)`
 - `max_tokens="full_text"`
 - `include_refs=null`
+- MCP `modes=["article", "markdown"]`
+- MCP `prefer_cache=false`
+- MCP `no_download=false`
+- MCP `save_markdown=false`
 
 ### `asset_profile`
 
@@ -286,6 +296,9 @@ CLI、Python API、MCP 当前统一采用这些默认值：
 - Provider payload、Springer HTML local copy 和 asset 诊断统一由 `ArtifactStore` 应用，保留既有 warning 与 `download:*` source trail marker
 - 即使 `asset_profile` 是 `body` / `all`，也不会落盘
 - 没有本地文件时，Markdown 会自动退回 captions-only 或不展示本地资源链接
+- MCP `no_download=true` 会让 service/provider 阶段使用 `RuntimeContext(download_dir=None)`，因此不会写 provider payload、PDF、HTML、资产或 fetch-envelope sidecar；`prefer_cache=true` 仍可显式读取已存在的 fetch-envelope sidecar。
+- MCP `save_markdown=true` 是独立的 Markdown 保存步骤：成功时写 `.md` 并返回 `saved_markdown_path`，追加 `download:markdown_saved`；没有 fulltext Markdown 时不写文件，追加 `download:markdown_skipped_no_fulltext`。
+- `no_download=true` 与 `save_markdown=true` 同时使用时，只允许 Markdown 保存步骤落盘；provider payload、资产和 fetch-envelope sidecar 仍保持关闭。
 
 <a id="springer-原始-html-artifact"></a>
 ### Springer 原始 HTML artifact

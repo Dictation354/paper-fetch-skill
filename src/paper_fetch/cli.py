@@ -12,50 +12,17 @@ from .models import FetchEnvelope, RenderOptions
 from .providers.base import ProviderFailure
 from .runtime import RuntimeContext
 from .service import FetchStrategy, PaperFetchFailure, fetch_paper
-from .utils import extend_unique, sanitize_filename
-from .workflow.rendering import rewrite_markdown_asset_links as rewrite_markdown_asset_links_for_target
+from .workflow.rendering import rewrite_markdown_asset_links
+from .workflow.rendering import save_markdown_to_disk as save_markdown_to_disk_for_target
 
 
-def rewrite_markdown_asset_links(
-    markdown: str,
-    envelope: FetchEnvelope,
-    *,
-    target_path: Path,
-    render: RenderOptions,
-) -> str:
-    return rewrite_markdown_asset_links_for_target(
-        markdown,
+def save_markdown_to_disk(envelope: FetchEnvelope, *, output_dir: Path, render: RenderOptions) -> Path | None:
+    return save_markdown_to_disk_for_target(
         envelope,
-        target_path=target_path,
+        output_dir=output_dir,
         render=render,
+        request_label="--save-markdown",
     )
-
-
-def save_markdown_to_disk(envelope: FetchEnvelope, *, output_dir: Path, render: RenderOptions) -> None:
-    has_usable_fulltext = bool(envelope.content_kind == "fulltext" and envelope.markdown and envelope.article)
-    if not has_usable_fulltext:
-        extend_unique(
-            envelope.warnings,
-            ["--save-markdown was set but full text was not available; nothing written to disk."],
-        )
-        extend_unique(envelope.source_trail, ["download:markdown_skipped_no_fulltext"])
-        if envelope.article is not None:
-            extend_unique(envelope.article.quality.warnings, envelope.warnings)
-            extend_unique(envelope.article.quality.source_trail, envelope.source_trail)
-        return
-
-    output_dir.mkdir(parents=True, exist_ok=True)
-    base = sanitize_filename(envelope.doi or envelope.article.metadata.title or "article")
-    target = output_dir / f"{base}.md"
-    target.write_text(
-        rewrite_markdown_asset_links(envelope.markdown or "", envelope, target_path=target, render=render),
-        encoding="utf-8",
-    )
-    extend_unique(envelope.warnings, [f"Markdown full text was saved to {target}."])
-    extend_unique(envelope.source_trail, ["download:markdown_saved"])
-    if envelope.article is not None:
-        extend_unique(envelope.article.quality.warnings, [f"Markdown full text was saved to {target}."])
-        extend_unique(envelope.article.quality.source_trail, ["download:markdown_saved"])
 
 
 def serialize_envelope(envelope: FetchEnvelope, *, output_format: str, markdown_override: str | None = None) -> str:

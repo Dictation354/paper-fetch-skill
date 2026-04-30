@@ -891,6 +891,22 @@ class SpringerClient(ProviderClient):
             ],
         )
 
+    def html_to_markdown(
+        self,
+        html_text: str,
+        source_url: str,
+        *,
+        metadata: Mapping[str, Any],
+        context: RuntimeContext,
+    ) -> tuple[str, Mapping[str, Any]]:
+        extraction_payload = _cached_springer_html_payload(
+            context,
+            html_text,
+            source_url,
+            title=str(metadata.get("title") or "") or None,
+        )
+        return str(extraction_payload.get(MARKDOWN_TEXT_KEY) or ""), extraction_payload
+
     def prepare_fetch_result_payload(
         self,
         doi: str,

@@ -27,7 +27,7 @@ Use this skill when an agent needs the contents or full-text availability of one
 4. For bibliography or citation-list tasks, call `batch_check(queries, mode, concurrency)` before per-paper full fetches.
 5. Call `has_fulltext(query)` when you only need a cheap readability probe.
 6. Call `provider_status()` before the first fetch when provider credentials or Wiley / Science / PNAS local runtime readiness may matter.
-7. Call `fetch_paper(query, modes, strategy, include_refs, max_tokens, prefer_cache, download_dir)` when you need AI-friendly Markdown, structured article data, or metadata.
+7. Call `fetch_paper(query, modes, strategy, include_refs, max_tokens, prefer_cache, no_download, save_markdown, markdown_output_dir, markdown_filename, download_dir)` when you need AI-friendly Markdown, structured article data, or metadata.
 8. Do not conclude "unreadable" just because there is no local PDF or cached text file.
 9. If full text is unavailable, continue with the returned abstract-only or metadata-only result and tell the user they are working from metadata or abstract only.
 
@@ -38,10 +38,11 @@ Use this skill when an agent needs the contents or full-text availability of one
 - `fetch_paper(...)`: returns one stable JSON payload with top-level provenance plus optional `article`, `markdown`, and `metadata` fields.
 - `fetch_paper(...)`: top-level `token_estimate_breakdown={abstract,body,refs}` helps decide when to tighten `include_refs` or retry with a smaller numeric `max_tokens`.
 - `fetch_paper(...)`: supporting MCP clients also see an `outputSchema`; `progress` and structured log notifications may arrive while `fetch_paper`, `batch_check`, or `batch_resolve` runs.
-- `fetch_paper(...)`: recommended defaults are `modes=["article", "markdown"]`, `strategy.asset_profile=null (provider default)`, `strategy.allow_metadata_only_fallback=true`, `include_refs=null`, `max_tokens="full_text"`, and `prefer_cache=false`.
+- `fetch_paper(...)`: recommended defaults are `modes=["article", "markdown"]`, `strategy.asset_profile=null (provider default)`, `strategy.allow_metadata_only_fallback=true`, `include_refs=null`, `max_tokens="full_text"`, `prefer_cache=false`, `no_download=false`, `save_markdown=false`, `markdown_output_dir=null`, and `markdown_filename=null`.
 - `fetch_paper(...)`: `include_refs=null` behaves like `all` when `max_tokens="full_text"`.
 - `fetch_paper(...)`: When `max_tokens` is a positive integer, `include_refs=null` behaves like `top10`.
 - `fetch_paper(...)`: `prefer_cache=true` resolves the query to a DOI, then tries a matching local FetchEnvelope sidecar before running the full fetch waterfall.
+- `fetch_paper(...)`: `no_download=true` avoids provider payload/asset/fetch-envelope sidecar writes; `save_markdown=true` writes rendered full-text Markdown and returns `saved_markdown_path` when successful.
 - `fetch_paper(...)`: when you pass `download_dir`, the MCP server can also expose scoped cache resources for that isolated directory during the current session.
 - `fetch_paper(...)`, `list_cached()`, and `get_cached()`: hosts that support MCP resource-list notifications may receive `resources/list_changed` when cache resource URIs are added or removed.
 - `fetch_paper(...)`: `strategy.asset_profile="body"` or `all` may also emit a few key local figures as `ImageContent`.

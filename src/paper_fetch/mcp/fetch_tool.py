@@ -23,6 +23,7 @@ from ..service import fetch_paper as _service_fetch_paper
 from ..service import probe_has_fulltext as _service_probe_has_fulltext
 from ..service import resolve_paper as _service_resolve_paper
 from ..utils import extend_unique, normalize_text
+from ..workflow.rendering import save_markdown_to_disk
 from ..workflow.types import effective_asset_profile
 from .batch import report_progress, run_blocking_call
 from .cache_index import refresh_cache_index_for_doi as _refresh_cache_index_for_doi
@@ -63,6 +64,54 @@ def _service_modes_for_fetch_request(
         requested_modes = set(requested_modes)
         requested_modes.add("article")
     return requested_modes
+
+
+def _needs_download_dir_for_fetch(request: FetchPaperRequest) -> bool:
+    return not request.no_download or request.prefer_cache
+
+
+def _markdown_output_dir_for_fetch_request(
+    request: FetchPaperRequest,
+    *,
+    runtime_env: Mapping[str, str],
+    download_dir: Path | None | object,
+) -> Path:
+    if request.markdown_output_dir is not None:
+        return Path(request.markdown_output_dir).expanduser()
+    resolved_download_dir = _resolve_download_dir(runtime_env, download_dir)
+    if resolved_download_dir is not None:
+        return resolved_download_dir
+    return _resolve_download_dir(runtime_env, _MCP_DEFAULT_DOWNLOAD_DIR) or Path.cwd()
+
+
+def _save_markdown_for_fetch_request(
+    envelope: FetchEnvelope,
+    request: FetchPaperRequest,
+    *,
+    env: Mapping[str, str] | None,
+    download_dir: Path | None | object,
+    context: RuntimeContext | None = None,
+) -> Path | None:
+    if not request.save_markdown:
+        return None
+    runtime_env = dict(context.env) if context is not None and context.env is not None else build_runtime_env(env)
+    markdown_output_path = _markdown_output_dir_for_fetch_request(
+        request,
+        runtime_env=runtime_env,
+        download_dir=download_dir,
+    )
+    saved_path = save_markdown_to_disk(
+        envelope,
+        output_dir=markdown_output_path,
+        render=request.to_render_options(),
+        markdown_filename=request.markdown_filename,
+    )
+    if saved_path is not None and envelope.doi:
+        FetchCache(
+            saved_path.parent,
+            refresh_cache_index_for_doi_fn=refresh_cache_index_for_doi,
+        ).refresh_for_doi(envelope.doi)
+    return saved_path
 
 
 def _load_cached_fetch_envelope(
@@ -127,19 +176,22 @@ def _fetch_paper_envelope(
     context: RuntimeContext | None = None,
 ) -> FetchEnvelope:
     runtime_env = dict(context.env) if context is not None and context.env is not None else build_runtime_env(env)
-    effective_download_dir = _resolve_download_dir(runtime_env, download_dir)
+    cache_download_dir = (
+        _resolve_download_dir(runtime_env, download_dir) if _needs_download_dir_for_fetch(request) else None
+    )
+    service_download_dir = None if request.no_download else cache_download_dir
     runtime_context = RuntimeContext(
         env=runtime_env,
         transport=(context.transport if context is not None else transport),
         clients=(context.clients if context is not None else None),
-        download_dir=effective_download_dir,
+        download_dir=service_download_dir,
         cancel_check=(context.cancel_check if context is not None else None),
-        fetch_cache=FetchCache(effective_download_dir),
+        fetch_cache=FetchCache(service_download_dir),
     )
     try:
         cached_envelope = _load_cached_fetch_envelope(
             request,
-            download_dir=effective_download_dir,
+            download_dir=cache_download_dir,
             context=runtime_context,
         )
         if cached_envelope is not None:
@@ -151,8 +203,8 @@ def _fetch_paper_envelope(
             render=request.to_render_options(),
             context=runtime_context,
         )
-        if effective_download_dir is not None and envelope.doi:
-            _write_cached_fetch_envelope(effective_download_dir, envelope, request)
+        if not request.no_download and service_download_dir is not None and envelope.doi:
+            _write_cached_fetch_envelope(service_download_dir, envelope, request)
         return envelope
     finally:
         runtime_context.close()
@@ -201,6 +253,10 @@ def fetch_paper_payload(
     include_refs: str | None = None,
     max_tokens: int | str = "full_text",
     prefer_cache: bool = False,
+    no_download: bool = False,
+    save_markdown: bool = False,
+    markdown_output_dir: str | None = None,
+    markdown_filename: str | None = None,
     env: Mapping[str, str] | None = None,
     download_dir: Path | None | object = _MCP_DEFAULT_DOWNLOAD_DIR,
     transport: HttpTransport | None = None,
@@ -213,6 +269,10 @@ def fetch_paper_payload(
         include_refs=include_refs,
         max_tokens=max_tokens,
         prefer_cache=prefer_cache,
+        no_download=no_download,
+        save_markdown=save_markdown,
+        markdown_output_dir=markdown_output_dir,
+        markdown_filename=markdown_filename,
     )
     envelope = _fetch_paper_envelope(
         request,
@@ -222,7 +282,17 @@ def fetch_paper_payload(
         include_article_for_assets=False,
         context=context,
     )
-    return _payload_from_envelope(envelope, request)
+    saved_markdown_path = _save_markdown_for_fetch_request(
+        envelope,
+        request,
+        env=env,
+        download_dir=download_dir,
+        context=context,
+    )
+    payload = _payload_from_envelope(envelope, request)
+    if saved_markdown_path is not None:
+        payload["saved_markdown_path"] = str(saved_markdown_path)
+    return payload
 
 
 def _provider_status_error_payload(
@@ -366,8 +436,15 @@ def _inline_image_contents(
     return contents, warnings
 
 
-def build_fetch_tool_result(envelope: FetchEnvelope, request: FetchPaperRequest) -> CallToolResult:
+def build_fetch_tool_result(
+    envelope: FetchEnvelope,
+    request: FetchPaperRequest,
+    *,
+    saved_markdown_path: Path | None = None,
+) -> CallToolResult:
     payload = _payload_from_envelope(envelope, request)
+    if saved_markdown_path is not None:
+        payload["saved_markdown_path"] = str(saved_markdown_path)
     extra_content: list[TextContent | ImageContent] = []
 
     resolved_asset_profile = effective_asset_profile(
@@ -434,6 +511,10 @@ def fetch_paper_tool(
     include_refs: str | None = None,
     max_tokens: int | str = "full_text",
     prefer_cache: bool = False,
+    no_download: bool = False,
+    save_markdown: bool = False,
+    markdown_output_dir: str | None = None,
+    markdown_filename: str | None = None,
     env: Mapping[str, str] | None = None,
     download_dir: Path | None | object = _MCP_DEFAULT_DOWNLOAD_DIR,
 ) -> CallToolResult:
@@ -445,6 +526,10 @@ def fetch_paper_tool(
             include_refs=include_refs,
             max_tokens=max_tokens,
             prefer_cache=prefer_cache,
+            no_download=no_download,
+            save_markdown=save_markdown,
+            markdown_output_dir=markdown_output_dir,
+            markdown_filename=markdown_filename,
         )
         envelope = _fetch_paper_envelope(
             request,
@@ -453,7 +538,13 @@ def fetch_paper_tool(
             transport=None,
             include_article_for_assets=True,
         )
-        return build_fetch_tool_result(envelope, request)
+        saved_markdown_path = _save_markdown_for_fetch_request(
+            envelope,
+            request,
+            env=env,
+            download_dir=download_dir,
+        )
+        return build_fetch_tool_result(envelope, request, saved_markdown_path=saved_markdown_path)
     except Exception as error:
         return _tool_result(error_payload_from_exception(error), is_error=True)
 
@@ -476,6 +567,10 @@ async def fetch_paper_tool_async(
     include_refs: str | None = None,
     max_tokens: int | str = "full_text",
     prefer_cache: bool = False,
+    no_download: bool = False,
+    save_markdown: bool = False,
+    markdown_output_dir: str | None = None,
+    markdown_filename: str | None = None,
     env: Mapping[str, str] | None = None,
     download_dir: Path | None | object = _MCP_DEFAULT_DOWNLOAD_DIR,
     ctx: Context | None = None,
@@ -489,6 +584,10 @@ async def fetch_paper_tool_async(
             include_refs=include_refs,
             max_tokens=max_tokens,
             prefer_cache=prefer_cache,
+            no_download=no_download,
+            save_markdown=save_markdown,
+            markdown_output_dir=markdown_output_dir,
+            markdown_filename=markdown_filename,
         )
     except Exception as error:
         await report_progress(ctx, _FETCH_PROGRESS_TOTAL, _FETCH_PROGRESS_TOTAL, "fetch_paper failed")
@@ -525,7 +624,14 @@ async def fetch_paper_tool_async(
                     cancel_event=cancelled,
                 )
         await report_progress(ctx, 3, _FETCH_PROGRESS_TOTAL, "Shaping MCP result")
-        result = build_fetch_tool_result(envelope, request)
+        saved_markdown_path = _save_markdown_for_fetch_request(
+            envelope,
+            request,
+            env=runtime_context.env,
+            download_dir=download_dir,
+            context=runtime_context,
+        )
+        result = build_fetch_tool_result(envelope, request, saved_markdown_path=saved_markdown_path)
         await report_progress(ctx, _FETCH_PROGRESS_TOTAL, _FETCH_PROGRESS_TOTAL, "fetch_paper complete")
         return result
     except asyncio.CancelledError:

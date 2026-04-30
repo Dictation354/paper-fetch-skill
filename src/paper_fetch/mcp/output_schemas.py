@@ -177,6 +177,7 @@ class FetchPaperOutput(ErrorPayloadOutput, total=False):
     article: ArticleOutput | None
     markdown: str | None
     metadata: MetadataOutput | None
+    saved_markdown_path: str | None
 
 
 class CacheEntryOutput(TypedDict, total=False):

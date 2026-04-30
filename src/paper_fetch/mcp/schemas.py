@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
@@ -230,6 +231,10 @@ class FetchPaperRequest(BaseModel):
     include_refs: str | None = None
     max_tokens: int | str = "full_text"
     prefer_cache: bool = False
+    no_download: bool = False
+    save_markdown: bool = False
+    markdown_output_dir: str | None = None
+    markdown_filename: str | None = None
 
     @field_validator("query")
     @classmethod
@@ -269,6 +274,23 @@ class FetchPaperRequest(BaseModel):
     def default_strategy_when_null(cls, value: Any) -> Any:
         return {} if value is None else value
 
+    @field_validator("markdown_output_dir", "markdown_filename", mode="before")
+    @classmethod
+    def normalize_optional_string(cls, value: Any) -> str | None:
+        if value is None:
+            return None
+        normalized = str(value).strip()
+        return normalized or None
+
+    @field_validator("markdown_filename")
+    @classmethod
+    def validate_markdown_filename(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        if Path(value).name != value:
+            raise ValueError("markdown_filename must be a file name, not a path.")
+        return value
+
     @field_validator("include_refs")
     @classmethod
     def normalize_include_refs(cls, value: str | None) -> str | None:
@@ -297,7 +319,10 @@ class FetchPaperRequest(BaseModel):
         return value
 
     def requested_modes(self) -> set[str]:
-        return set(self.modes)
+        requested = set(self.modes)
+        if self.save_markdown:
+            requested.update({"article", "markdown"})
+        return requested
 
     def to_render_options(self) -> RenderOptions:
         return RenderOptions(

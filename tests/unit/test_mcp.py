@@ -324,6 +324,144 @@ class McpToolTests(unittest.TestCase):
         mocked_resolve.assert_not_called()
         self.assertEqual(captured["context"].download_dir, explicit_download_dir)
 
+    def test_fetch_paper_payload_prefer_cache_defaults_false_and_does_not_read_sidecar(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            download_dir = Path(tmpdir)
+            create_cached_fetch_envelope(download_dir, "10.1000/example", modes=["markdown"])
+
+            with (
+                mock.patch.object(mcp_tools, "build_runtime_env", return_value={}),
+                mock.patch.object(mcp_tools, "service_resolve_paper") as mocked_resolve,
+                mock.patch.object(
+                    mcp_tools,
+                    "service_fetch_paper",
+                    return_value=sample_envelope(modes={"markdown"}, doi="10.1000/example"),
+                ) as mocked_fetch,
+            ):
+                payload = mcp_tools.fetch_paper_payload(
+                    query="10.1000/example",
+                    modes=["markdown"],
+                    download_dir=download_dir,
+                )
+
+        self.assertEqual(payload["doi"], "10.1000/example")
+        mocked_resolve.assert_not_called()
+        mocked_fetch.assert_called_once()
+
+    def test_fetch_paper_payload_no_download_passes_none_download_dir_and_skips_sidecar_write(self) -> None:
+        captured: dict[str, object] = {}
+
+        def fake_fetch_paper(query, **kwargs):
+            captured.update(kwargs)
+            return sample_envelope(modes=kwargs["modes"], doi=query)
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            download_dir = Path(tmpdir) / "downloads"
+            with (
+                mock.patch.object(mcp_tools, "build_runtime_env", return_value={}),
+                mock.patch.object(mcp_tools, "service_fetch_paper", side_effect=fake_fetch_paper),
+                mock.patch.object(mcp_tools, "refresh_cache_index_for_doi") as mocked_refresh,
+            ):
+                payload = mcp_tools.fetch_paper_payload(
+                    query="10.1000/example",
+                    no_download=True,
+                    download_dir=download_dir,
+                )
+
+            self.assertEqual(payload["doi"], "10.1000/example")
+            self.assertIsNone(captured["context"].download_dir)
+            self.assertFalse(download_dir.exists())
+            mocked_refresh.assert_not_called()
+
+    def test_fetch_paper_payload_save_markdown_writes_file_and_returns_path(self) -> None:
+        captured: dict[str, object] = {}
+
+        def fake_fetch_paper(query, **kwargs):
+            captured.update(kwargs)
+            return sample_envelope(modes=kwargs["modes"], doi=query)
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            download_dir = Path(tmpdir)
+            with (
+                mock.patch.object(mcp_tools, "build_runtime_env", return_value={}),
+                mock.patch.object(mcp_tools, "service_fetch_paper", side_effect=fake_fetch_paper),
+            ):
+                payload = mcp_tools.fetch_paper_payload(
+                    query="10.1000/example",
+                    save_markdown=True,
+                    markdown_filename="custom.md",
+                    download_dir=download_dir,
+                )
+
+            saved_path = download_dir / "custom.md"
+            self.assertEqual(payload["saved_markdown_path"], str(saved_path))
+            self.assertTrue(saved_path.exists())
+            self.assertIn("# Example Article", saved_path.read_text(encoding="utf-8"))
+            self.assertEqual(captured["modes"], {"article", "markdown"})
+            self.assertIn("download:markdown_saved", payload["source_trail"])
+
+    def test_fetch_paper_payload_save_markdown_skips_when_fulltext_markdown_unavailable(self) -> None:
+        envelope = FetchEnvelope(
+            doi="10.1000/example",
+            source="metadata_only",
+            has_fulltext=False,
+            content_kind="metadata_only",
+            warnings=[],
+            source_trail=["fallback:metadata_only"],
+            token_estimate=0,
+            article=None,
+            markdown=None,
+            metadata=Metadata(title="Metadata Only"),
+        )
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            download_dir = Path(tmpdir)
+            with (
+                mock.patch.object(mcp_tools, "build_runtime_env", return_value={}),
+                mock.patch.object(mcp_tools, "service_fetch_paper", return_value=envelope),
+            ):
+                payload = mcp_tools.fetch_paper_payload(
+                    query="10.1000/example",
+                    save_markdown=True,
+                    download_dir=download_dir,
+                )
+
+            self.assertNotIn("saved_markdown_path", payload)
+            self.assertFalse((download_dir / "10.1000_example.md").exists())
+            self.assertIn("download:markdown_skipped_no_fulltext", payload["source_trail"])
+            self.assertTrue(any("nothing written to disk" in warning for warning in payload["warnings"]))
+
+    def test_fetch_paper_payload_no_download_save_markdown_writes_only_markdown_and_index(self) -> None:
+        captured: dict[str, object] = {}
+
+        def fake_fetch_paper(query, **kwargs):
+            captured.update(kwargs)
+            if kwargs["context"].download_dir is not None:
+                create_cached_downloads(kwargs["context"].download_dir, query)
+            return sample_envelope(modes=kwargs["modes"], doi=query)
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            download_dir = Path(tmpdir)
+            with (
+                mock.patch.object(mcp_tools, "build_runtime_env", return_value={}),
+                mock.patch.object(mcp_tools, "service_fetch_paper", side_effect=fake_fetch_paper),
+            ):
+                payload = mcp_tools.fetch_paper_payload(
+                    query="10.1000/example",
+                    no_download=True,
+                    save_markdown=True,
+                    download_dir=download_dir,
+                )
+
+            self.assertIsNone(captured["context"].download_dir)
+            self.assertTrue((download_dir / "10.1000_example.md").exists())
+            self.assertFalse((download_dir / "10.1000_example.fetch-envelope.json").exists())
+            self.assertFalse((download_dir / "10.1000_example.xml").exists())
+            self.assertFalse((download_dir / "10.1000_example_assets").exists())
+            self.assertEqual(payload["saved_markdown_path"], str(download_dir / "10.1000_example.md"))
+            listed = mcp_tools.list_cached_payload(download_dir=download_dir)
+            self.assertEqual([entry["kind"] for entry in listed["entries"]], ["markdown"])
+
     def test_fetch_paper_payload_normalizes_preferred_providers(self) -> None:
         captured: dict[str, object] = {}
 
@@ -360,6 +498,17 @@ class McpToolTests(unittest.TestCase):
 
         self.assertTrue(result.isError)
         self.assertIn("unsupported include_refs value", result.structuredContent["reason"])
+        mocked_fetch.assert_not_called()
+
+    def test_fetch_paper_tool_rejects_invalid_asset_profile_before_service_call(self) -> None:
+        with mock.patch.object(mcp_tools, "service_fetch_paper") as mocked_fetch:
+            result = mcp_tools.fetch_paper_tool(
+                query="10.1000/example",
+                strategy={"asset_profile": "full"},
+            )
+
+        self.assertTrue(result.isError)
+        self.assertIn("unsupported asset_profile value", result.structuredContent["reason"])
         mocked_fetch.assert_not_called()
 
     def test_fetch_paper_payload_prefer_cache_short_circuits_network_when_cached_envelope_matches(self) -> None:
@@ -1258,6 +1407,107 @@ class McpServerTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(ctx.session.resource_list_changed_calls, 1)
         resource_uris = set(server._resource_manager._resources)
         self.assertTrue(any(uri.startswith("resource://paper-fetch/cached/") for uri in resource_uris))
+
+    async def test_fetch_paper_server_skips_resource_sync_when_no_download_without_markdown_save(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            default_dir = Path(tmpdir) / "default"
+            ctx = FakeContext()
+
+            with (
+                mock.patch.object(mcp_server, "build_runtime_env", return_value={}),
+                mock.patch.object(mcp_server, "resolve_mcp_download_dir", return_value=default_dir),
+                mock.patch.object(mcp_tools, "build_runtime_env", return_value={}),
+                mock.patch.object(mcp_tools, "resolve_mcp_download_dir", return_value=default_dir),
+                mock.patch.object(
+                    mcp_tools,
+                    "service_fetch_paper",
+                    return_value=sample_envelope(modes={"article", "markdown"}, doi="10.1000/example"),
+                ),
+            ):
+                server = build_server()
+                result = await server._tool_manager.call_tool(
+                    "fetch_paper",
+                    {"query": "10.1000/example", "no_download": True},
+                    context=ctx,
+                )
+
+        self.assertFalse(result.isError)
+        self.assertEqual(ctx.session.resource_list_changed_calls, 0)
+
+    async def test_fetch_paper_server_syncs_resources_for_no_download_markdown_save(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            default_dir = Path(tmpdir) / "default"
+            isolated_dir = Path(tmpdir) / "isolated"
+            ctx = FakeContext()
+
+            with (
+                mock.patch.object(mcp_server, "build_runtime_env", return_value={}),
+                mock.patch.object(mcp_server, "resolve_mcp_download_dir", return_value=default_dir),
+                mock.patch.object(mcp_tools, "build_runtime_env", return_value={}),
+                mock.patch.object(mcp_tools, "resolve_mcp_download_dir", return_value=default_dir),
+                mock.patch.object(
+                    mcp_tools,
+                    "service_fetch_paper",
+                    return_value=sample_envelope(modes={"article", "markdown"}, doi="10.1000/example"),
+                ),
+            ):
+                server = build_server()
+                result = await server._tool_manager.call_tool(
+                    "fetch_paper",
+                    {
+                        "query": "10.1000/example",
+                        "no_download": True,
+                        "save_markdown": True,
+                        "download_dir": str(isolated_dir),
+                    },
+                    context=ctx,
+                )
+
+        self.assertFalse(result.isError)
+        self.assertEqual(result.structuredContent["saved_markdown_path"], str(isolated_dir / "10.1000_example.md"))
+        self.assertEqual(ctx.session.resource_list_changed_calls, 1)
+        scope_id = cache_scope_id(isolated_dir)
+        resource_uris = set(server._resource_manager._resources)
+        self.assertIn(scoped_cache_index_resource_uri(scope_id), resource_uris)
+        self.assertTrue(any(uri.startswith(scoped_cached_resource_uri_prefix(scope_id)) for uri in resource_uris))
+
+    async def test_fetch_paper_server_no_download_skipped_markdown_save_does_not_sync_resources(self) -> None:
+        envelope = FetchEnvelope(
+            doi="10.1000/example",
+            source="metadata_only",
+            has_fulltext=False,
+            content_kind="metadata_only",
+            article=None,
+            markdown=None,
+            metadata=Metadata(title="Metadata Only"),
+        )
+        with tempfile.TemporaryDirectory() as tmpdir:
+            default_dir = Path(tmpdir) / "default"
+            isolated_dir = Path(tmpdir) / "isolated"
+            ctx = FakeContext()
+
+            with (
+                mock.patch.object(mcp_server, "build_runtime_env", return_value={}),
+                mock.patch.object(mcp_server, "resolve_mcp_download_dir", return_value=default_dir),
+                mock.patch.object(mcp_tools, "build_runtime_env", return_value={}),
+                mock.patch.object(mcp_tools, "resolve_mcp_download_dir", return_value=default_dir),
+                mock.patch.object(mcp_tools, "service_fetch_paper", return_value=envelope),
+            ):
+                server = build_server()
+                result = await server._tool_manager.call_tool(
+                    "fetch_paper",
+                    {
+                        "query": "10.1000/example",
+                        "no_download": True,
+                        "save_markdown": True,
+                        "download_dir": str(isolated_dir),
+                    },
+                    context=ctx,
+                )
+
+        self.assertFalse(result.isError)
+        self.assertNotIn("saved_markdown_path", result.structuredContent)
+        self.assertEqual(ctx.session.resource_list_changed_calls, 0)
 
     async def test_fetch_paper_server_notifies_when_scoped_resources_change(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

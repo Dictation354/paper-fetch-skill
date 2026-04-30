@@ -9,6 +9,10 @@ DEFAULT_FETCH_VALUES: tuple[tuple[str, str], ...] = (
     ("include_refs", "null"),
     ("max_tokens", '"full_text"'),
     ("prefer_cache", "false"),
+    ("no_download", "false"),
+    ("save_markdown", "false"),
+    ("markdown_output_dir", "null"),
+    ("markdown_filename", "null"),
 )
 
 DEFAULT_FETCH_NOTES: tuple[str, ...] = (
@@ -71,7 +75,8 @@ def server_instructions() -> str:
         "validation and autocomplete. "
         "Defaults: modes=['article','markdown'], strategy.asset_profile omitted (provider default), "
         "strategy.allow_metadata_only_fallback=true, "
-        "include_refs=null, max_tokens='full_text'. In full_text mode include_refs=null "
+        "include_refs=null, max_tokens='full_text', prefer_cache=false, no_download=false, "
+        "save_markdown=false. In full_text mode include_refs=null "
         "behaves like 'all'. When asset_profile is body/all, optional "
         "strategy.inline_image_budget can tune the default inline ImageContent caps of "
         "3 figures, 2 MiB each, and 8 MiB total. `provider_hint` and "
@@ -108,10 +113,16 @@ def fetch_tool_description() -> str:
         "result validation. "
         "Defaults: modes=['article','markdown'], strategy.asset_profile omitted (provider default), "
         "strategy.allow_metadata_only_fallback=true, "
-        "include_refs=null, max_tokens='full_text', prefer_cache=false. Set "
+        "include_refs=null, max_tokens='full_text', prefer_cache=false, no_download=false, "
+        "save_markdown=false, markdown_output_dir=null, markdown_filename=null. Set "
         "prefer_cache=true to resolve the query to a DOI, then try a matching local cached "
         "FetchEnvelope sidecar before running the full fetch waterfall. Use "
-        "strategy.asset_profile='body' or 'all' to include local assets. "
+        "no_download=true to avoid writing provider payloads, PDFs, HTML, assets, and "
+        "fetch-envelope sidecars. Set save_markdown=true to write the rendered Markdown "
+        "full text to disk; successful saves return saved_markdown_path, while "
+        "metadata-only or abstract-only results add a warning and "
+        "download:markdown_skipped_no_fulltext. Use strategy.asset_profile='none', "
+        "'body', or 'all' to control local asset downloads. "
         "With body/all profiles, key local figures may be returned as ImageContent "
         "alongside the JSON result; strategy.inline_image_budget can override the default "
         "caps of 3 figures, 2 MiB each, and 8 MiB total, and any resulting zero disables "

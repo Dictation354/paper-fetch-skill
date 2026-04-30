@@ -367,6 +367,8 @@ workflow 会尽可能拿到两类元数据：
 - `strategy.allow_metadata_only_fallback=true` 时返回 metadata-only 结果
 - 否则抛 `PaperFetchFailure`
 
+如果 provider 已经返回 fulltext HTML payload，`ProviderClient.fetch_result()` 会在资产下载和 `ArticleModel` 构造前确保 `content.markdown_text` 已自动生成。provider 可以覆盖 `html_to_markdown()` 使用自己的解析器；默认实现只作为已取得 fulltext HTML 后的兜底转换，不参与未知网页正文发现。
+
 如果没有可返回的 provider `fulltext` / `abstract_only` 结果，并且 `strategy.allow_metadata_only_fallback=true`：
 
 - service 返回 metadata fallback 文章
@@ -560,6 +562,10 @@ MCP 层会把缓存暴露成 resources：
 - 显式 `download_dir` 时的 scoped cache resources
 
 `FetchCache` 负责匹配 `prefer_cache=true` 的请求：先 resolve DOI，再按 request modes、strategy、`include_refs`、`max_tokens`、sidecar version 和 `EXTRACTION_REVISION` 复用本地 fetch-envelope。资源 URI、sidecar JSON shape 和 scoped download_dir entries 保持兼容，让 host 不需要重复抓取相同论文。
+
+`prefer_cache=false` 是 MCP 默认值，因此普通 `fetch_paper` 不会读取本地 fetch-envelope sidecar。`no_download=true` 时，MCP facade 调用 service 前会把运行时下载目录降为 `RuntimeContext(download_dir=None)`，从而关闭 provider payload、PDF、HTML、资产和 fetch-envelope sidecar 写入；如果同时 `save_markdown=true`，只在 facade 的 Markdown 保存步骤落盘，并在结构化 payload 中返回 `saved_markdown_path`。
+
+MCP resource sync 只在 fetch 实际使用下载目录，或 `save_markdown=true` 成功保存 Markdown 后执行；`no_download=true` 且未保存 Markdown 的 fetch 不刷新 cache resources。
 
 ## 扩展点：新增能力时应改哪一层
 

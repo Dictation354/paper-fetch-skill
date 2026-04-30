@@ -46,7 +46,7 @@ def fetch_envelope_cache_path(download_dir: Path, doi: str) -> Path:
 
 def request_cache_payload(request: FetchPaperRequest) -> dict[str, Any]:
     return {
-        "modes": list(request.modes),
+        "modes": sorted(request.requested_modes()),
         "strategy": request.strategy.cache_request_payload(),
         "include_refs": request.include_refs,
         "max_tokens": request.max_tokens,

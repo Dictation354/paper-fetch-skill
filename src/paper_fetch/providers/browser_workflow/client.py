@@ -36,6 +36,9 @@ from .._flaresolverr import (
 )
 from .._pdf_fallback import PdfFallbackFailure
 from .._waterfall import ProviderWaterfallStep, run_provider_waterfall
+from .._browser_workflow_html_extraction import (
+    _cached_browser_workflow_markdown,
+)
 from ..base import (
     PreparedFetchResultPayload,
     ProviderArtifacts,
@@ -311,6 +314,24 @@ class BrowserWorkflowClient(ProviderClient):
             ],
             initial_warnings=[*bootstrap.warnings, initial_warning],
             initial_source_trail=[f"fulltext:{self.name}_html_fail"],
+        )
+
+    def html_to_markdown(
+        self,
+        html_text: str,
+        source_url: str,
+        *,
+        metadata: Mapping[str, Any],
+        context: RuntimeContext,
+    ) -> tuple[str, Mapping[str, Any]]:
+        return _facade_attr(
+            "_cached_browser_workflow_markdown", _cached_browser_workflow_markdown
+        )(
+            self,
+            html_text,
+            source_url,
+            metadata=metadata,
+            context=context,
         )
 
     def maybe_recover_fetch_result_payload(

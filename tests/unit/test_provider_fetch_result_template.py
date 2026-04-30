@@ -230,6 +230,41 @@ class _TemplateClient(ProviderClient):
 
 
 class ProviderFetchResultTemplateTests(unittest.TestCase):
+    def test_base_fetch_result_auto_converts_html_fulltext_to_markdown(self) -> None:
+        body = (
+            "<html><body><article><h1>Auto HTML Article</h1><h2>Results</h2><p>"
+            + ("Automatic conversion works. " * 80)
+            + "</p></article></body></html>"
+        ).encode()
+
+        class HtmlOnlyClient(_TemplateClient):
+            def fetch_raw_fulltext(self, doi, metadata, *, context=None):
+                del context
+                return RawFulltextPayload(
+                    provider="template",
+                    source_url="https://example.test/article",
+                    content_type="text/html",
+                    body=body,
+                    content=ProviderContent(
+                        route_kind="html",
+                        source_url="https://example.test/article",
+                        content_type="text/html",
+                        body=body,
+                    ),
+                    trace=trace_from_markers(["fulltext:template_html_ok"]),
+                )
+
+        result = HtmlOnlyClient().fetch_result(
+            "10.5555/template",
+            {"doi": "10.5555/template", "title": "Auto HTML Article"},
+            None,
+        )
+
+        self.assertIsNotNone(result.content)
+        assert result.content is not None
+        self.assertIn("Automatic conversion works", result.content.markdown_text or "")
+        self.assertIn("Automatic conversion works", result.article.to_ai_markdown())
+
     def test_runtime_parse_cache_returns_copies_for_mutable_payloads(self) -> None:
         context = RuntimeContext(env={})
         key = context.build_parse_cache_key(

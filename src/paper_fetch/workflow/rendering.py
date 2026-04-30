@@ -10,7 +10,7 @@ from pathlib import Path
 from ..models import ArticleModel, FetchEnvelope, OutputMode, RenderOptions
 from ..provider_catalog import known_article_source_names
 from ..tracing import merge_trace, source_trail_from_trace, trace_from_markers
-from ..utils import extend_unique
+from ..utils import extend_unique, normalize_text, sanitize_filename
 from .types import effective_asset_profile
 
 
@@ -114,6 +114,73 @@ def rewrite_markdown_asset_links(
         rewrite_inline_match,
         markdown,
     )
+
+
+def _markdown_filename(envelope: FetchEnvelope, *, markdown_filename: str | None = None) -> str:
+    requested = normalize_text(markdown_filename)
+    if requested:
+        requested_path = Path(requested)
+        if requested_path.name != requested:
+            raise ValueError("markdown_filename must be a file name, not a path.")
+        suffix = requested_path.suffix or ".md"
+        stem = requested_path.stem if requested_path.suffix else requested_path.name
+        return f"{sanitize_filename(stem or 'article')}{suffix}"
+
+    title = None
+    if envelope.article is not None:
+        title = envelope.article.metadata.title
+    if title is None and envelope.metadata is not None:
+        title = envelope.metadata.title
+    return f"{sanitize_filename(envelope.doi or title or 'article')}.md"
+
+
+def _extend_envelope_status(
+    envelope: FetchEnvelope,
+    *,
+    warnings: list[str] | None = None,
+    source_trail: list[str] | None = None,
+) -> None:
+    extend_unique(envelope.warnings, warnings)
+    extend_unique(envelope.source_trail, source_trail)
+    extend_unique(envelope.quality.warnings, warnings)
+    extend_unique(envelope.quality.source_trail, source_trail)
+    if envelope.article is not None:
+        extend_unique(envelope.article.quality.warnings, warnings)
+        extend_unique(envelope.article.quality.source_trail, source_trail)
+
+
+def save_markdown_to_disk(
+    envelope: FetchEnvelope,
+    *,
+    output_dir: Path,
+    render: RenderOptions,
+    markdown_filename: str | None = None,
+    request_label: str = "save_markdown",
+) -> Path | None:
+    has_usable_fulltext = bool(envelope.content_kind == "fulltext" and envelope.markdown and envelope.article)
+    if not has_usable_fulltext:
+        _extend_envelope_status(
+            envelope,
+            warnings=[
+                f"{request_label} was set but full text was not available; nothing written to disk."
+            ],
+            source_trail=["download:markdown_skipped_no_fulltext"],
+        )
+        return None
+
+    output_dir.mkdir(parents=True, exist_ok=True)
+    target = output_dir / _markdown_filename(envelope, markdown_filename=markdown_filename)
+    target.write_text(
+        rewrite_markdown_asset_links(envelope.markdown or "", envelope, target_path=target, render=render),
+        encoding="utf-8",
+    )
+    message = f"Markdown full text was saved to {target}."
+    _extend_envelope_status(
+        envelope,
+        warnings=[message],
+        source_trail=["download:markdown_saved"],
+    )
+    return target
 
 
 def build_fetch_envelope(

@@ -8,11 +8,12 @@ import time
 from typing import Any, Mapping
 
 from ..artifacts import ArtifactStore
+from ..extraction.html import extract_article_markdown
 from ..http import RequestFailure
 from ..models import ArticleModel, AssetProfile
 from ..runtime import RuntimeContext
 from ..tracing import TraceEvent, source_trail_from_trace, trace_from_markers
-from ..utils import empty_asset_results
+from ..utils import empty_asset_results, normalize_text
 
 
 class ProviderFailure(Exception):
@@ -402,6 +403,7 @@ class ProviderClient:
             context=context,
         )
         prepared.raw_payload = self._sync_fetch_result_content_local_copy(prepared.raw_payload)
+        prepared.raw_payload = self.ensure_html_markdown(prepared.raw_payload, metadata, context=context)
         raw_payload = prepared.raw_payload
         content = raw_payload.content
         artifact_policy = self.describe_artifacts(raw_payload)
@@ -482,6 +484,87 @@ class ProviderClient:
         content = raw_payload.content
         if content is not None and content.needs_local_copy != raw_payload.needs_local_copy:
             raw_payload.content = replace(content, needs_local_copy=raw_payload.needs_local_copy)
+        return raw_payload
+
+    def html_to_markdown(
+        self,
+        html_text: str,
+        source_url: str,
+        *,
+        metadata: Mapping[str, Any],
+        context: RuntimeContext,
+    ) -> tuple[str, Mapping[str, Any]]:
+        del metadata, context
+        return extract_article_markdown(html_text, source_url), {
+            "html_to_markdown": {
+                "provider": self.name,
+                "parser": "generic",
+            }
+        }
+
+    def ensure_html_markdown(
+        self,
+        raw_payload: RawFulltextPayload,
+        metadata: Mapping[str, Any],
+        *,
+        context: RuntimeContext,
+    ) -> RawFulltextPayload:
+        content = raw_payload.content
+        content_type = normalize_text(content.content_type if content is not None else raw_payload.content_type).lower()
+        if "html" not in content_type:
+            return raw_payload
+        if content is not None and normalize_text(content.markdown_text):
+            return raw_payload
+
+        html_text = bytes(raw_payload.body or b"").decode("utf-8", errors="replace").strip()
+        if not html_text:
+            return raw_payload
+
+        try:
+            markdown_text, extraction = self.html_to_markdown(
+                html_text,
+                raw_payload.source_url,
+                metadata=metadata,
+                context=context,
+            )
+        except Exception as exc:
+            raw_payload.warnings.append(
+                f"{self.name} HTML-to-Markdown conversion failed after full-text retrieval: {exc}"
+            )
+            return raw_payload
+
+        markdown_text = str(markdown_text or "").strip()
+        if not markdown_text:
+            raw_payload.warnings.append(
+                f"{self.name} HTML-to-Markdown conversion did not produce usable Markdown."
+            )
+            return raw_payload
+
+        diagnostics = dict(content.diagnostics) if content is not None else {}
+        if extraction:
+            extraction_payload = dict(extraction)
+            diagnostics.setdefault("extraction", extraction_payload)
+            availability = extraction_payload.get("availability_diagnostics")
+            if isinstance(availability, Mapping):
+                diagnostics.setdefault("availability_diagnostics", dict(availability))
+        diagnostics.setdefault(
+            "html_to_markdown",
+            {
+                "provider": self.name,
+                "automatic": True,
+            },
+        )
+        html_content = content or ProviderContent(
+            route_kind="html",
+            source_url=raw_payload.source_url,
+            content_type=raw_payload.content_type,
+            body=raw_payload.body,
+        )
+        raw_payload.content = replace(
+            html_content,
+            markdown_text=markdown_text,
+            diagnostics=diagnostics,
+        )
         return raw_payload
 
     def prepare_fetch_result_payload(

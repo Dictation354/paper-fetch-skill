@@ -234,6 +234,33 @@ def _sync_resources_for_download_dir(server: FastMCP, download_dir: Path | None)
     return _sync_cache_resources(server, download_dir=download_dir, scope_id=cache_scope_id(download_dir))
 
 
+def _fetch_resource_sync_dirs(
+    *,
+    parsed_download_dir: Path | None,
+    no_download: bool,
+    save_markdown: bool,
+    markdown_saved: bool,
+    parsed_markdown_output_dir: Path | None,
+) -> list[Path | None]:
+    sync_dirs: list[Path | None] = []
+    if not no_download:
+        sync_dirs.append(parsed_download_dir)
+    if save_markdown and markdown_saved:
+        sync_dirs.append(
+            parsed_markdown_output_dir if parsed_markdown_output_dir is not None else parsed_download_dir
+        )
+
+    deduped: list[Path | None] = []
+    seen: set[str] = set()
+    for item in sync_dirs:
+        key = "<default>" if item is None else str(item.resolve())
+        if key in seen:
+            continue
+        seen.add(key)
+        deduped.append(item)
+    return deduped
+
+
 async def _notify_resource_list_changed(ctx: Context | None) -> None:
     if ctx is None:
         return
@@ -337,10 +364,15 @@ def build_server() -> FastMCP:
         include_refs: str | None = None,
         max_tokens: int | str = "full_text",
         prefer_cache: bool = False,
+        no_download: bool = False,
+        save_markdown: bool = False,
+        markdown_output_dir: str | None = None,
+        markdown_filename: str | None = None,
         download_dir: str | None = None,
         ctx: Context | None = None,
     ) -> Annotated[CallToolResult, FetchPaperOutput]:
         parsed_download_dir = _parse_download_dir(download_dir)
+        parsed_markdown_output_dir = _parse_download_dir(markdown_output_dir)
         tool_kwargs: dict[str, object] = {}
         if parsed_download_dir is not None:
             tool_kwargs["download_dir"] = parsed_download_dir
@@ -351,11 +383,25 @@ def build_server() -> FastMCP:
             include_refs=include_refs,
             max_tokens=max_tokens,
             prefer_cache=prefer_cache,
+            no_download=no_download,
+            save_markdown=save_markdown,
+            markdown_output_dir=(
+                str(parsed_markdown_output_dir) if parsed_markdown_output_dir is not None else None
+            ),
+            markdown_filename=markdown_filename,
             ctx=ctx,
             **tool_kwargs,
         )
         if not result.isError:
-            resources_changed = _sync_resources_for_download_dir(server, parsed_download_dir)
+            resources_changed = False
+            for sync_dir in _fetch_resource_sync_dirs(
+                parsed_download_dir=parsed_download_dir,
+                no_download=no_download,
+                save_markdown=save_markdown,
+                markdown_saved=bool(result.structuredContent.get("saved_markdown_path")),
+                parsed_markdown_output_dir=parsed_markdown_output_dir,
+            ):
+                resources_changed = _sync_resources_for_download_dir(server, sync_dir) or resources_changed
             if resources_changed:
                 await _notify_resource_list_changed(ctx)
         return result

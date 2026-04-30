@@ -66,7 +66,7 @@ Windows 目标机解压 zip 后在 PowerShell 中运行：
 . .\Activate-Offline.ps1
 ```
 
-离线安装器的约束:
+离线安装器的约束：
 
 - Python 版本必须与包名和 `offline-manifest.json` 的 `target.python_tag` 完全匹配；例如 `cp313` 包只能用 CPython `3.13.x` 安装，避免 wheelhouse ABI 不匹配
 - 所有 Python 依赖只来自包内 `wheelhouse/`，安装时设置 `PIP_NO_INDEX=1`
@@ -303,6 +303,12 @@ PAPER_FETCH_ENV_FILE=/path/to/.env
 ```
 
 当前 MCP server 适合挂到支持 stdio MCP 的 host。
+
+常用抓取参数：
+
+- `fetch_paper` 默认返回 `modes=["article", "markdown"]`，`prefer_cache=false`，不会主动读取本地 fetch-envelope sidecar。
+- 需要禁用 provider 下载落盘时传 `no_download=true`；这会关闭 provider payload、PDF、HTML、资产和 fetch-envelope sidecar 写入。
+- 需要把 AI Markdown 同步保存到硬盘时传 `save_markdown=true`；可用 `markdown_output_dir` 和 `markdown_filename` 覆盖保存位置和文件名，成功时返回 `saved_markdown_path`。
 
 ## 8. 更新方式
 

@@ -52,7 +52,7 @@
 ## 文档分工
 
 - [`../README.md`](../README.md)
-  - 首页。讲项目定位、核心能力、业务主线、快速开始和关键限制。
+  - 首页。讲项目动机、核心能力、边界和部署入口。
 - [`providers.md`](providers.md)
   - 讲 provider 能力矩阵、路由规则、默认输出、环境变量、缓存和限速。
 - [`extraction-rules.md`](extraction-rules.md)
@@ -97,6 +97,7 @@
 - `fetch_paper()` 输出轴。
 - 当前支持 `article`、`markdown`、`metadata`。
 - 决定“返回什么”，不决定“如何抓”。
+- MCP 默认 `modes=["article", "markdown"]`，因此默认会返回结构化 article 和 AI 可读 Markdown。
 
 ### `strategy`
 
@@ -151,6 +152,14 @@
 - Python service API 不再接收 `download_dir` / `env` / `transport` / `clients` keyword；外层调用方需要先构造 `RuntimeContext(...)`，再传 `context=`。
 - 未显式设置时，CLI / MCP 优先使用用户数据目录下的 `paper-fetch/downloads`；CLI 创建失败才退回 `live-downloads`。
 - `download_dir` 派生的 HTTP textual disk cache 默认按 `4096` 条、`512 MiB`、`30` 天清理；详见 provider 文档中的 HTTP 缓存环境变量。
+
+### MCP 下载和 Markdown 保存
+
+- `prefer_cache=false` 是默认行为；只有显式传 `prefer_cache=true`，MCP 才会先读取本地 fetch-envelope sidecar。
+- `no_download=true` 会让 provider 抓取阶段使用 `RuntimeContext(download_dir=None)`，不写 provider payload、PDF、HTML、资产或 fetch-envelope sidecar。
+- `save_markdown=true` 会把渲染后的全文 Markdown 写入硬盘，成功时 payload 返回 `saved_markdown_path`，并追加 `download:markdown_saved`。
+- 如果没有 fulltext Markdown，`save_markdown=true` 不写文件，返回 warning 并追加 `download:markdown_skipped_no_fulltext`。
+- `markdown_output_dir` 可覆盖 Markdown 保存目录；未设置时使用 MCP 下载目录。`markdown_filename` 可覆盖文件名；未设置时使用 DOI slug 或标题生成。
 
 ### Live review timings
 
