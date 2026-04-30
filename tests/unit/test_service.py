@@ -2530,8 +2530,8 @@ class ServiceTests(unittest.TestCase):
         figure_page_url = "https://www.nature.com/articles/example/figures/1"
         preview_image_url = "https://media.springernature.com/lw685/springer-static/image/art%3A10.1007%2Ftest/MediaObjects/Fig1.png"
         full_image_url = "https://media.springernature.com/full/springer-static/image/art%3A10.1007%2Ftest/MediaObjects/Fig1.png"
-        preview_bytes = b"preview-image"
-        full_bytes = b"full-size-image"
+        preview_bytes = b"\x89PNG\r\n\x1a\npreview-image"
+        full_bytes = b"\x89PNG\r\n\x1a\nfull-size-image"
         resolved = paper_fetch.ResolvedQuery(
             query="10.1007/test",
             query_kind="doi",

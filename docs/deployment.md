@@ -29,6 +29,7 @@ provider 与环境变量说明见 [`providers.md`](providers.md)，Wiley / Scien
 - 安装当前 Python 包
 - 如果存在 `.env.example` 且用户配置文件还不存在，创建 `~/.config/paper-fetch/.env`
 - 安装 Playwright Chromium、repo-local FlareSolverr 和外部公式后端
+- 安装结束时提示 Elsevier 官方 API key 的申请入口和配置位置；抓取 Elsevier 全文前需要从 <https://dev.elsevier.com/> 申请并设置 `ELSEVIER_API_KEY`
 
 补充说明：
 
@@ -39,7 +40,7 @@ provider 与环境变量说明见 [`providers.md`](providers.md)，Wiley / Scien
 
 ### 离线包
 
-离线包支持 Linux x86_64 和 Windows x86_64，并按 CPython ABI 分别提供 3.11、3.12、3.13、3.14 CI artifact：
+离线包支持 Linux x86_64 和 Windows x86_64，并按 CPython ABI 分别提供 3.11、3.12、3.13、3.14 release asset / CI artifact：
 
 ```text
 paper-fetch-skill-offline-linux-x86_64-cp311.tar.gz
@@ -51,6 +52,13 @@ paper-fetch-skill-offline-windows-x86_64-cp312.zip
 paper-fetch-skill-offline-windows-x86_64-cp313.zip
 paper-fetch-skill-offline-windows-x86_64-cp314.zip
 ```
+
+CI 自动发布规则：
+
+- 推送 `v*` tag 时，CI 会先等待 `lint`、`unit`、`integration`、`package-smoke`、`offline-linux-x86-64` 和 `offline-windows-x86-64` 全部成功，再创建对应 GitHub Release。
+- release job 会下载本次运行产出的 `paper-fetch-skill-offline-*` artifacts，确认上面 8 个文件都存在且没有额外文件，然后把它们作为 release assets 上传。
+- 手动运行 workflow 时，只有在 `v*` tag 上显式设置 `publish_release=true` 才会发布，确保 release tag 和本次构建产物来自同一个 commit。
+- 发布使用 workflow 内置的 `GITHUB_TOKEN`，release job 单独声明 `contents: write` 和 `actions: read` 权限，不需要额外 PAT。
 
 Linux 目标机解压后运行：
 
@@ -77,6 +85,7 @@ Windows zip 内部使用短目录名 `paper-fetch-offline/`，避免 GitHub arti
 - FlareSolverr bundle 只包含运行所需的解压目录，不包含 upstream 原始压缩包
 - Linux 公式工具使用包内 `formula-tools/bin/texmath`，Windows 使用 `formula-tools/bin/texmath.exe`；目标机不编译 texmath，也不运行 `npm install`
 - 默认只写包内 `offline.env` 并生成 `activate-offline.sh`；只有显式传 `--user-config` 才会把受标记管理的运行时块合并到 `~/.config/paper-fetch/.env`
+- 安装结束提示会指向包内 `offline.env`；离线环境抓取 Elsevier 全文前，从 <https://dev.elsevier.com/> 申请 key，并在该文件中填写 `ELSEVIER_API_KEY`
 - `--preset=headless` 会在安装阶段检查 `Xvfb`；`--preset=wslg` 会检查 `DISPLAY` 或 `WAYLAND_DISPLAY`
 - Windows 安装器默认只写包内 `offline.env` 并生成 `Activate-Offline.ps1`；只有显式传 `-UserConfig` 才合并到用户配置。Windows FlareSolverr 使用 `scripts/flaresolverr-up.ps1`、`scripts/flaresolverr-status.ps1` 和 `scripts/flaresolverr-down.ps1`
 
@@ -134,6 +143,12 @@ python3 -m pip install .
 ```bash
 mkdir -p ~/.config/paper-fetch
 cp .env.example ~/.config/paper-fetch/.env
+```
+
+Elsevier 官方 XML/API 和 PDF fallback 至少需要从 <https://dev.elsevier.com/> 申请并配置：
+
+```bash
+ELSEVIER_API_KEY="..."
 ```
 
 补充说明：

@@ -10,6 +10,7 @@ from unittest import mock
 
 from paper_fetch.quality.issues import collect_issue_flags
 from paper_fetch.extraction.html import assets as html_assets
+from paper_fetch.extraction.image_payloads import image_mime_type_from_bytes
 from paper_fetch.providers import (
     _flaresolverr,
     browser_workflow,
@@ -44,6 +45,7 @@ SCIENCE_FULLTEXT_FALLBACK_MARKDOWN = golden_criteria_asset("10.1126/science.aeg3
 SCIENCE_ADL6155_ROOT_CAUSE_FIXTURE = golden_criteria_asset("10.1126/sciadv.adl6155", "original.html")
 SCIENCE_ADL6155_METADATA = golden_criteria_asset("10.1126/sciadv.adl6155", "article.json")
 SCIENCE_ADL6155_ASSET_DIR = golden_criteria_dir_for_doi("10.1126/sciadv.adl6155") / "body_assets"
+SCIENCE_ADZ3492_SVG_ASSET = golden_criteria_dir_for_doi("10.1126/science.adz3492") / "body_assets" / "science.adz3492-f1.svg"
 PNAS_PAYWALL_SAMPLE_RAW = block_asset("10.1073/pnas.2509692123", "raw.html")
 PNAS_PAYWALL_SAMPLE_MARKDOWN = block_asset("10.1073/pnas.2509692123", "extracted.md")
 PNAS_FULLTEXT_FALLBACK_MARKDOWN = golden_criteria_asset("10.1073/pnas.2406303121", "extracted.md")
@@ -1242,7 +1244,7 @@ class SciencePnasProviderTests(unittest.TestCase):
             return_value={
                 "status_code": 200,
                 "headers": {"content-type": "image/png"},
-                "body": b"figure-1",
+                "body": png_header(640, 480),
                 "url": figure_url,
             }
         )
@@ -1290,7 +1292,7 @@ class SciencePnasProviderTests(unittest.TestCase):
         self.assertEqual(result["assets"][0]["kind"], "figure")
         self.assertEqual(result["assets"][0]["download_tier"], "full_size")
         self.assertEqual(result["asset_failures"], [])
-        self.assertEqual(saved_bytes, b"figure-1")
+        self.assertEqual(saved_bytes, png_header(640, 480))
 
     def test_science_provider_download_related_assets_all_profile_downloads_supplementary_via_file_fetcher(self) -> None:
         figure_url = "https://www.science.org/images/large/figure1.png"
@@ -1313,7 +1315,7 @@ class SciencePnasProviderTests(unittest.TestCase):
             return_value={
                 "status_code": 200,
                 "headers": {"content-type": "image/png"},
-                "body": b"figure-1",
+                "body": png_header(640, 480),
                 "url": figure_url,
             }
         )
@@ -1416,7 +1418,7 @@ class SciencePnasProviderTests(unittest.TestCase):
                 {
                     "status_code": 200,
                     "headers": {"content-type": "image/png"},
-                    "body": b"preview-image",
+                    "body": png_header(320, 240),
                     "url": preview_url,
                 },
             ],
@@ -1482,7 +1484,7 @@ class SciencePnasProviderTests(unittest.TestCase):
         self.assertEqual(len(result["assets"]), 1)
         self.assertEqual(result["asset_failures"], [])
         self.assertEqual(result["assets"][0]["download_tier"], "preview")
-        self.assertEqual(saved_bytes, b"preview-image")
+        self.assertEqual(saved_bytes, png_header(320, 240))
 
     def test_pnas_provider_download_related_assets_uses_shared_playwright_primary_path_before_preview(self) -> None:
         """rule: rule-browser-primary-image-download-path"""
@@ -1802,6 +1804,57 @@ class SciencePnasProviderTests(unittest.TestCase):
         self.assertEqual(result["assets"][0]["width"], 640)
         self.assertEqual(result["assets"][0]["height"], 480)
         self.assertTrue(result["assets"][0]["preview_accepted"])
+
+    def test_science_provider_replay_for_adz3492_saves_svg_body_asset(self) -> None:
+        """rule: rule-image-download-validates-real-images"""
+        svg_url = (
+            "https://www.science.org/cms/10.1126/science.adz3492/asset/"
+            "5b0bd6a0-ee3b-43af-aff8-6d8423ba4e21/assets/graphic/science.adz3492-f1.svg"
+        )
+        svg_body = SCIENCE_ADZ3492_SVG_ASSET.read_bytes()
+        self.assertEqual(image_mime_type_from_bytes(svg_body), "image/svg+xml")
+
+        asset = {
+            "kind": "figure",
+            "heading": "Inequalities in final energy consumption",
+            "caption": "Area chart of final energy consumption distribution.",
+            "url": svg_url,
+            "preview_url": svg_url,
+            "section": "body",
+        }
+        fetcher = mock.Mock(
+            return_value={
+                "status_code": 200,
+                "headers": {"content-type": "image/svg+xml"},
+                "body": svg_body,
+                "url": svg_url,
+                "dimensions": {"width": 696, "height": 1069},
+            }
+        )
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            result = html_assets.download_figure_assets_with_image_document_fetcher(
+                AssetTransport({}),
+                article_id="10.1126/science.adz3492",
+                assets=[asset],
+                output_dir=Path(tmpdir),
+                user_agent="test-agent",
+                asset_profile="body",
+                candidate_builder=lambda *_args, **_kwargs: [svg_url],
+                image_document_fetcher=fetcher,
+                asset_download_concurrency=1,
+            )
+
+            self.assertEqual(result["asset_failures"], [])
+            self.assertEqual(len(result["assets"]), 1)
+            downloaded = result["assets"][0]
+            self.assertEqual(downloaded["content_type"], "image/svg+xml")
+            self.assertEqual(downloaded["downloaded_bytes"], len(svg_body))
+            self.assertEqual(downloaded["width"], 696)
+            self.assertEqual(downloaded["height"], 1069)
+            self.assertEqual(Path(downloaded["path"]).suffix, ".svg")
+            self.assertEqual(Path(downloaded["path"]).read_bytes(), svg_body)
+        self.assertEqual(fetcher.call_args.args[0], svg_url)
 
     def test_science_provider_records_asset_failure_when_shared_playwright_preview_fails(self) -> None:
         preview_url = "https://www.science.org/images/preview/figure1.png"

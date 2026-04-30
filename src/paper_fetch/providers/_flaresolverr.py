@@ -17,6 +17,8 @@ from typing import Any, Mapping
 import urllib3
 
 from ..config import (
+    FLARESOLVERR_KEEP_SESSION_ENV_VAR,
+    env_flag_enabled,
     load_env_file,
     resolve_flaresolverr_env_file,
     resolve_flaresolverr_source_dir,
@@ -92,6 +94,7 @@ class FlareSolverrRuntimeConfig:
     source_dir: Path
     artifact_dir: Path
     headless: bool
+    keep_session: bool = False
     required_files: tuple[str, ...] = field(
         default_factory=lambda: _default_flaresolverr_workflow_files()
     )
@@ -168,6 +171,7 @@ def load_runtime_config(env: Mapping[str, str], *, provider: str, doi: str) -> F
         source_dir=source_dir,
         artifact_dir=artifact_dir,
         headless=headless,
+        keep_session=env_flag_enabled(env, FLARESOLVERR_KEEP_SESSION_ENV_VAR),
     )
 
 
@@ -709,6 +713,29 @@ def _evict_registered_session(
     return session_state
 
 
+def _destroy_registered_session_if_current(
+    config: FlareSolverrRuntimeConfig,
+    session_state: FlareSolverrSessionState,
+    *,
+    pool: urllib3.PoolManager,
+    reason: str,
+) -> FlareSolverrSessionState | None:
+    key = _session_registry_key(config)
+    with _SESSION_REGISTRY_LOCK:
+        registered = _SESSION_REGISTRY.get(key)
+        if registered is None or registered.session_id != session_state.session_id:
+            return None
+        _SESSION_REGISTRY.pop(key, None)
+    logger.debug(
+        "flaresolverr_session provider=%s action=destroy reason=%s session_id=%s",
+        config.provider,
+        reason,
+        session_state.session_id,
+    )
+    _destroy_remote_session(config.url, session_state.session_id, pool=pool)
+    return session_state
+
+
 def _wait_seconds_for_session(
     session_state: FlareSolverrSessionState,
     *,
@@ -820,152 +847,160 @@ def fetch_html_with_flaresolverr(
     pool = build_local_service_pool()
     artifact_dir = config.artifact_dir / "flaresolverr"
     session_lock = _session_lock_for(config)
+    session_state: FlareSolverrSessionState | None = None
 
     with session_lock:
-        session_state = _acquire_registered_session(config, pool=pool)
+        try:
+            session_state = _acquire_registered_session(config, pool=pool)
 
-        for url in candidate_urls:
-            challenge_retried = False
-            session_recreated = False
-            force_cold_retry = False
+            for url in candidate_urls:
+                challenge_retried = False
+                session_recreated = False
+                force_cold_retry = False
 
-            while True:
-                if session_state is None:
-                    session_state = _acquire_registered_session(config, pool=pool)
+                while True:
+                    if session_state is None:
+                        session_state = _acquire_registered_session(config, pool=pool)
 
-                effective_wait_seconds = wait_seconds
-                wait_mode = "cold"
-                if not force_cold_retry:
-                    effective_wait_seconds, wait_mode = _wait_seconds_for_session(
-                        session_state,
-                        cold_wait_seconds=wait_seconds,
-                        warm_wait_seconds=warm_wait_seconds,
+                    effective_wait_seconds = wait_seconds
+                    wait_mode = "cold"
+                    if not force_cold_retry:
+                        effective_wait_seconds, wait_mode = _wait_seconds_for_session(
+                            session_state,
+                            cold_wait_seconds=wait_seconds,
+                            warm_wait_seconds=warm_wait_seconds,
+                        )
+                    logger.debug(
+                        "flaresolverr_request provider=%s action=request session_id=%s wait_mode=%s wait_seconds=%s url=%s",
+                        publisher,
+                        session_state.session_id,
+                        wait_mode,
+                        effective_wait_seconds,
+                        url,
                     )
-                logger.debug(
-                    "flaresolverr_request provider=%s action=request session_id=%s wait_mode=%s wait_seconds=%s url=%s",
-                    publisher,
-                    session_state.session_id,
-                    wait_mode,
-                    effective_wait_seconds,
-                    url,
-                )
-                request_payload = {
-                    "cmd": "request.get",
-                    "url": url,
-                    "session": session_state.session_id,
-                    "returnScreenshot": bool(return_screenshot),
-                    "waitInSeconds": effective_wait_seconds,
-                    "maxTimeout": max_timeout_ms,
-                }
-                if disable_media and not return_image_payload:
-                    request_payload["disableMedia"] = True
-                if return_image_payload:
-                    request_payload["returnImagePayload"] = True
-                try:
-                    request_response = post_to_flaresolverr(
-                        config.url,
-                        request_payload,
-                        timeout_seconds=(max_timeout_ms / 1000.0) + 45.0,
-                        pool=pool,
-                    )
-                except FlareSolverrFailure as exc:
-                    last_failure = exc
-                    break
+                    request_payload = {
+                        "cmd": "request.get",
+                        "url": url,
+                        "session": session_state.session_id,
+                        "returnScreenshot": bool(return_screenshot),
+                        "waitInSeconds": effective_wait_seconds,
+                        "maxTimeout": max_timeout_ms,
+                    }
+                    if disable_media and not return_image_payload:
+                        request_payload["disableMedia"] = True
+                    if return_image_payload:
+                        request_payload["returnImagePayload"] = True
+                    try:
+                        request_response = post_to_flaresolverr(
+                            config.url,
+                            request_payload,
+                            timeout_seconds=(max_timeout_ms / 1000.0) + 45.0,
+                            pool=pool,
+                        )
+                    except FlareSolverrFailure as exc:
+                        last_failure = exc
+                        break
 
-                top_level_status = normalize_text(str(request_response.get("status") or "")).lower()
-                if top_level_status and top_level_status != "ok":
-                    message = normalize_text(str(request_response.get("message") or ""))
-                    if is_invalid_session_message(message):
-                        _evict_registered_session(config, pool=pool, reason="invalid_session")
-                        session_state = None
-                        if not session_recreated:
-                            session_recreated = True
-                            session_state = _acquire_registered_session(config, pool=pool, recreate=True)
-                            force_cold_retry = True
-                            continue
+                    top_level_status = normalize_text(str(request_response.get("status") or "")).lower()
+                    if top_level_status and top_level_status != "ok":
+                        message = normalize_text(str(request_response.get("message") or ""))
+                        if is_invalid_session_message(message):
+                            _evict_registered_session(config, pool=pool, reason="invalid_session")
+                            session_state = None
+                            if not session_recreated:
+                                session_recreated = True
+                                session_state = _acquire_registered_session(config, pool=pool, recreate=True)
+                                force_cold_retry = True
+                                continue
+                            last_failure = FlareSolverrFailure(
+                                "flaresolverr_session_invalid",
+                                message or "FlareSolverr session became invalid.",
+                                details={"response": request_response},
+                            )
+                            save_flaresolverr_failure_artifacts(artifact_dir, response_payload=request_response)
+                            break
+                        error_kind = (
+                            "flaresolverr_timeout" if "timeout" in message.lower() else "flaresolverr_request_failed"
+                        )
                         last_failure = FlareSolverrFailure(
-                            "flaresolverr_session_invalid",
-                            message or "FlareSolverr session became invalid.",
+                            error_kind,
+                            message or "FlareSolverr request.get failed.",
                             details={"response": request_response},
                         )
                         save_flaresolverr_failure_artifacts(artifact_dir, response_payload=request_response)
                         break
-                    error_kind = "flaresolverr_timeout" if "timeout" in message.lower() else "flaresolverr_request_failed"
-                    last_failure = FlareSolverrFailure(
-                        error_kind,
-                        message or "FlareSolverr request.get failed.",
-                        details={"response": request_response},
-                    )
-                    save_flaresolverr_failure_artifacts(artifact_dir, response_payload=request_response)
-                    break
 
-                solution = request_response.get("solution") or {}
-                html = str(solution.get("response") or "")
-                final_url = str(solution.get("url") or url)
-                response_status = parse_optional_int(solution.get("status"))
-                response_headers = solution.get("headers") if isinstance(solution.get("headers"), dict) else {}
-                if BeautifulSoup is not None:
-                    title = extract_page_title(BeautifulSoup(html, choose_parser()))
-                else:
-                    title = None
-                summary = summarize_html(html)
-                browser_context_seed = extract_flaresolverr_browser_context_seed(solution)
-                if browser_context_seed.get("browser_cookies") or browser_context_seed.get("browser_user_agent"):
-                    latest_browser_context_seed = browser_context_seed
-                _mark_registered_session_used(config, session_state)
-                force_cold_retry = False
+                    solution = request_response.get("solution") or {}
+                    html = str(solution.get("response") or "")
+                    final_url = str(solution.get("url") or url)
+                    response_status = parse_optional_int(solution.get("status"))
+                    response_headers = solution.get("headers") if isinstance(solution.get("headers"), dict) else {}
+                    if BeautifulSoup is not None:
+                        title = extract_page_title(BeautifulSoup(html, choose_parser()))
+                    else:
+                        title = None
+                    summary = summarize_html(html)
+                    browser_context_seed = extract_flaresolverr_browser_context_seed(solution)
+                    if browser_context_seed.get("browser_cookies") or browser_context_seed.get("browser_user_agent"):
+                        latest_browser_context_seed = browser_context_seed
+                    _mark_registered_session_used(config, session_state)
+                    force_cold_retry = False
 
-                if looks_like_abstract_redirect(url, final_url):
-                    last_failure = FlareSolverrFailure(
-                        "redirected_to_abstract",
-                        "Publisher redirected the full-text URL to an abstract page.",
-                        browser_context_seed=browser_context_seed,
-                    )
-                    save_flaresolverr_failure_artifacts(
-                        artifact_dir,
-                        html=html,
-                        screenshot_b64=solution.get("screenshot"),
-                        response_payload=request_response,
-                    )
-                    break
-
-                detected = detect_html_block(title or "", summary, response_status)
-                if detected is not None:
-                    if detected.reason == "cloudflare_challenge" and wait_mode == "warm" and not challenge_retried:
-                        challenge_retried = True
-                        force_cold_retry = True
-                        logger.debug(
-                            "flaresolverr_request provider=%s action=retry_challenge session_id=%s wait_mode=cold url=%s",
-                            publisher,
-                            session_state.session_id,
-                            url,
+                    if looks_like_abstract_redirect(url, final_url):
+                        last_failure = FlareSolverrFailure(
+                            "redirected_to_abstract",
+                            "Publisher redirected the full-text URL to an abstract page.",
+                            browser_context_seed=browser_context_seed,
                         )
-                        continue
-                    last_failure = FlareSolverrFailure(
-                        detected.reason,
-                        detected.message,
-                        browser_context_seed=browser_context_seed,
-                    )
-                    save_flaresolverr_failure_artifacts(
-                        artifact_dir,
-                        html=html,
-                        screenshot_b64=solution.get("screenshot"),
-                        response_payload=request_response,
-                    )
-                    break
+                        save_flaresolverr_failure_artifacts(
+                            artifact_dir,
+                            html=html,
+                            screenshot_b64=solution.get("screenshot"),
+                            response_payload=request_response,
+                        )
+                        break
 
-                return FetchedPublisherHtml(
-                    source_url=url,
-                    final_url=final_url,
-                    html=html,
-                    response_status=response_status,
-                    response_headers=response_headers,
-                    title=title,
-                    summary=summary,
-                    browser_context_seed=browser_context_seed,
-                    screenshot_b64=solution.get("screenshot") if isinstance(solution.get("screenshot"), str) else None,
-                    image_payload=solution.get("imagePayload") if isinstance(solution.get("imagePayload"), dict) else None,
-                )
+                    detected = detect_html_block(title or "", summary, response_status)
+                    if detected is not None:
+                        if detected.reason == "cloudflare_challenge" and wait_mode == "warm" and not challenge_retried:
+                            challenge_retried = True
+                            force_cold_retry = True
+                            logger.debug(
+                                "flaresolverr_request provider=%s action=retry_challenge session_id=%s "
+                                "wait_mode=cold url=%s",
+                                publisher,
+                                session_state.session_id,
+                                url,
+                            )
+                            continue
+                        last_failure = FlareSolverrFailure(
+                            detected.reason,
+                            detected.message,
+                            browser_context_seed=browser_context_seed,
+                        )
+                        save_flaresolverr_failure_artifacts(
+                            artifact_dir,
+                            html=html,
+                            screenshot_b64=solution.get("screenshot"),
+                            response_payload=request_response,
+                        )
+                        break
+
+                    return FetchedPublisherHtml(
+                        source_url=url,
+                        final_url=final_url,
+                        html=html,
+                        response_status=response_status,
+                        response_headers=response_headers,
+                        title=title,
+                        summary=summary,
+                        browser_context_seed=browser_context_seed,
+                        screenshot_b64=solution.get("screenshot") if isinstance(solution.get("screenshot"), str) else None,
+                        image_payload=solution.get("imagePayload") if isinstance(solution.get("imagePayload"), dict) else None,
+                    )
+        finally:
+            if not config.keep_session and session_state is not None:
+                _destroy_registered_session_if_current(config, session_state, pool=pool, reason="request_complete")
 
     if last_failure is None and latest_browser_context_seed is not None:
         last_failure = FlareSolverrFailure(

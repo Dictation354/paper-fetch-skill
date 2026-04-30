@@ -194,6 +194,13 @@ def extension_from_content_type(content_type: str | None, source_url: str | None
         "image/avif": ".avif",
         "image/tiff": ".tiff",
         "image/svg+xml": ".svg",
+        "image/bmp": ".bmp",
+        "image/x-ms-bmp": ".bmp",
+        "image/vnd.microsoft.icon": ".ico",
+        "image/x-icon": ".ico",
+        "image/apng": ".apng",
+        "image/heic": ".heic",
+        "image/heif": ".heif",
     }
     if normalized in known:
         return known[normalized]

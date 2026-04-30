@@ -68,6 +68,8 @@ paper-fetch --query "10.1186/1471-2105-11-421"
 paper-fetch-mcp
 ```
 
+安装脚本结束时会提示 Elsevier 官方 API 配置入口。抓取 Elsevier 全文前，需要从 <https://dev.elsevier.com/> 申请 key，并在配置文件中填写 `ELSEVIER_API_KEY`。
+
 ### 配置文件
 
 默认配置文件位置：
@@ -81,6 +83,12 @@ paper-fetch-mcp
 ```bash
 mkdir -p ~/.config/paper-fetch
 cp .env.example ~/.config/paper-fetch/.env
+```
+
+其中 Elsevier 官方 XML/API 和 PDF fallback 至少需要从 <https://dev.elsevier.com/> 申请并配置：
+
+```bash
+ELSEVIER_API_KEY="..."
 ```
 
 也可以通过环境变量显式指定：
@@ -105,6 +113,8 @@ paper-fetch-skill-offline-windows-x86_64-cp312.zip
 paper-fetch-skill-offline-windows-x86_64-cp313.zip
 paper-fetch-skill-offline-windows-x86_64-cp314.zip
 ```
+
+推送 `v*` tag 时，GitHub Actions 会等常规验证和全部 Linux / Windows 离线包矩阵成功后，自动创建对应 GitHub Release，并把上述 8 个离线包作为 release assets 上传。也可以从 `v*` tag 手动运行 CI workflow，并设置 `publish_release=true` 重新发布。
 
 选择与目标机 OS 和 Python 版本匹配的包。Linux 解压后执行：
 

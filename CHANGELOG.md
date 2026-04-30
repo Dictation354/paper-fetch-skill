@@ -11,6 +11,10 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 ### Changed
 
+- 安装器结束摘要现在会明确提示 Elsevier 全文抓取需要从 <https://dev.elsevier.com/> 申请并配置 `ELSEVIER_API_KEY`，并指向对应 `.env` 文件。
+- GitHub Actions 在 `v*` tag push 或显式手动发布时，会等常规验证和完整 Linux / Windows 离线包矩阵成功后创建 GitHub Release，并上传全部 8 个离线包 release assets。
+- 扩展正文图片 payload 识别与落盘格式：除现有 PNG/JPEG/GIF/WebP/AVIF/TIFF 外，支持 SVG 文本、BMP、ICO、APNG、HEIC/HEIF 的 MIME/扩展名映射；正文图片保存前会确认 payload 具备图片 magic 或顶层 SVG 文档特征，避免把 challenge HTML 当图片保存。
+- 将 Science `10.1126/science.adz3492` 加入 golden fixture，保留真实 SVG 正文图资产，防止 Science/PNAS SVG 图片落盘路径回归。
 - 为 Wiley / Science / PNAS 正文抓取增加 FlareSolverr HTML 快速首轮：主 HTML 请求使用 `waitInSeconds=0` 和 `disableMedia=true`，遇到 challenge、访问拦截、摘要重定向或正文抽取不足时自动回退到原保守等待策略。
 - 图片恢复、正文/附件资产下载、figure-page HTML 发现继续走允许媒体资源的路径，避免 `disableMedia` 阻断 full-size 图片发现与下载。
 - 收敛 HTML availability/container、section hint、browser-workflow Markdown profile、作者 fallback、Crossref resolve 转发和 HTML heading/table helper 的重复实现；canonical owner 分别为 `quality.html_availability`、`extraction.section_hints` / `extraction.html.semantics`、`ProviderBrowserProfile` / `_html_authors.py`、`metadata.crossref`。

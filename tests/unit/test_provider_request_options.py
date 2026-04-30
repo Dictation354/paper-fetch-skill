@@ -91,6 +91,10 @@ class _FakeQueuedImagePage:
         return self.results.pop(0)
 
 
+def png_body(label: bytes) -> bytes:
+    return b"\x89PNG\r\n\x1a\n" + label
+
+
 class ProviderRequestOptionsTests(unittest.TestCase):
     def test_crossref_metadata_uses_default_timeout_and_rate_limit_retry(self) -> None:
         transport = RecordingTransport(
@@ -403,13 +407,13 @@ class ProviderRequestOptionsTests(unittest.TestCase):
                 ("GET", "https://example.test/images/large/figure1.png"): {
                     "status_code": 200,
                     "headers": {"content-type": "image/png"},
-                    "body": b"large-image",
+                    "body": png_body(b"large-image"),
                     "url": "https://example.test/images/large/figure1.png",
                 },
                 ("GET", "https://example.test/images/preview/figure1.png"): {
                     "status_code": 200,
                     "headers": {"content-type": "image/png"},
-                    "body": b"preview-image",
+                    "body": png_body(b"preview-image"),
                     "url": "https://example.test/images/preview/figure1.png",
                 },
             }
@@ -436,7 +440,7 @@ class ProviderRequestOptionsTests(unittest.TestCase):
 
             self.assertEqual([call["url"] for call in transport.calls], ["https://example.test/images/large/figure1.png"])
             self.assertEqual(len(result["assets"]), 1)
-            self.assertEqual(Path(result["assets"][0]["path"]).read_bytes(), b"large-image")
+            self.assertEqual(Path(result["assets"][0]["path"]).read_bytes(), png_body(b"large-image"))
 
     def test_html_asset_download_accepts_explicit_cookie_opener_injection(self) -> None:
         transport = RecordingTransport({})
@@ -446,7 +450,7 @@ class ProviderRequestOptionsTests(unittest.TestCase):
             return_value={
                 "status_code": 200,
                 "headers": {"content-type": "image/png"},
-                "body": b"injected-image",
+                "body": png_body(b"injected-image"),
                 "url": "https://example.test/images/figure1.png",
             }
         )
@@ -486,7 +490,7 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         opener_builder.assert_called_once()
         opener_requester.assert_called_once()
         self.assertEqual(transport.calls, [])
-        self.assertEqual(result["assets"][0]["downloaded_bytes"], len(b"injected-image"))
+        self.assertEqual(result["assets"][0]["downloaded_bytes"], len(png_body(b"injected-image")))
 
     def test_html_asset_facade_passes_patchable_hooks_without_mutating_asset_impl_globals(self) -> None:
         transport = RecordingTransport({})
@@ -496,7 +500,7 @@ class ProviderRequestOptionsTests(unittest.TestCase):
             return_value={
                 "status_code": 200,
                 "headers": {"content-type": "image/png"},
-                "body": b"facade-image",
+                "body": png_body(b"facade-image"),
                 "url": "https://example.test/images/figure1.png",
             }
         )
@@ -538,7 +542,7 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         impl_opener_builder.assert_not_called()
         facade_opener_builder.assert_called_once()
         facade_requester.assert_called_once()
-        self.assertEqual(result["assets"][0]["downloaded_bytes"], len(b"facade-image"))
+        self.assertEqual(result["assets"][0]["downloaded_bytes"], len(png_body(b"facade-image")))
 
     def test_html_supplementary_download_records_challenge_failure_diagnostics(self) -> None:
         transport = RecordingTransport({})
@@ -921,6 +925,58 @@ class ProviderRequestOptionsTests(unittest.TestCase):
 
         self.assertIsNone(payload)
 
+    def test_flaresolverr_image_document_payload_accepts_svg_payload(self) -> None:
+        svg_body = b"\xef\xbb\xbf\n<?xml version='1.0'?><svg xmlns='http://www.w3.org/2000/svg'></svg>"
+        result = _flaresolverr.FetchedPublisherHtml(
+            source_url="https://example.test/figure.svg",
+            final_url="https://example.test/figure.svg",
+            html=svg_body.decode("utf-8-sig"),
+            response_status=200,
+            response_headers={"content-type": "image/svg+xml"},
+            title="figure.svg",
+            summary="",
+            browser_context_seed={},
+            screenshot_b64=None,
+            image_payload={
+                "status": 200,
+                "url": "https://example.test/figure.svg",
+                "contentType": "image/svg+xml",
+                "bodyB64": base64.b64encode(svg_body).decode("ascii"),
+                "width": 0,
+                "height": 0,
+            },
+        )
+
+        payload = browser_workflow._flaresolverr_image_document_payload(result)
+
+        self.assertIsNotNone(payload)
+        assert payload is not None
+        self.assertEqual(payload["headers"]["content-type"], "image/svg+xml")
+        self.assertEqual(payload["body"], svg_body)
+
+    def test_flaresolverr_image_document_payload_rejects_svg_content_type_with_html_body(self) -> None:
+        result = _flaresolverr.FetchedPublisherHtml(
+            source_url="https://example.test/figure.svg",
+            final_url="https://example.test/figure.svg",
+            html="<html><title>Just a moment...</title></html>",
+            response_status=403,
+            response_headers={"content-type": "text/html"},
+            title="Just a moment...",
+            summary="",
+            browser_context_seed={},
+            screenshot_b64=None,
+            image_payload={
+                "status": 403,
+                "url": "https://example.test/figure.svg",
+                "contentType": "image/svg+xml",
+                "bodyB64": base64.b64encode(b"<html>challenge</html>").decode("ascii"),
+            },
+        )
+
+        payload = browser_workflow._flaresolverr_image_document_payload(result)
+
+        self.assertIsNone(payload)
+
     def test_challenge_recovery_payload_is_not_recorded_in_failure_diagnostics(self) -> None:
         image_body = b"\x89PNG\r\n\x1a\nloaded-image"
         image_url = "https://example.test/cdn/figure.png"
@@ -1022,6 +1078,49 @@ class ProviderRequestOptionsTests(unittest.TestCase):
 
         self.assertGreaterEqual(fetcher.max_active, 2)
         self.assertEqual([asset["heading"] for asset in result["assets"]], ["Figure 1", "Figure 2", "Figure 3"])
+
+    def test_download_figure_assets_with_image_document_fetcher_saves_svg_payload(self) -> None:
+        svg_body = b"<svg xmlns='http://www.w3.org/2000/svg'><path d='M0 0h1v1H0z'/></svg>"
+        image_url = "https://example.test/figure.svg"
+
+        def fetcher(_image_url: str, _asset: dict[str, object]) -> dict[str, object]:
+            return {
+                "status_code": 200,
+                "headers": {"content-type": "image/svg+xml"},
+                "body": svg_body,
+                "url": image_url,
+            }
+
+        assets = [
+            {
+                "kind": "figure",
+                "heading": "Figure SVG",
+                "caption": "Vector figure",
+                "url": image_url,
+                "preview_url": image_url,
+                "section": "body",
+            }
+        ]
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            result = asset_impl.download_figure_assets_with_image_document_fetcher(
+                RecordingTransport({}),
+                article_id="10.1000/example",
+                assets=assets,
+                output_dir=Path(tmpdir),
+                user_agent="unit-test",
+                asset_profile="body",
+                candidate_builder=lambda *_args, **kwargs: [kwargs["asset"]["url"]],
+                image_document_fetcher=fetcher,
+            )
+
+            saved_path = Path(result["assets"][0]["path"])
+            saved_body = saved_path.read_bytes()
+
+        self.assertEqual(len(result["assets"]), 1)
+        self.assertEqual(result["assets"][0]["content_type"], "image/svg+xml")
+        self.assertEqual(saved_path.suffix, ".svg")
+        self.assertEqual(saved_body, svg_body)
 
     def test_browser_workflow_asset_downloads_pass_runtime_asset_concurrency_env(self) -> None:
         doi = "10.1126/science.assets"
@@ -1162,13 +1261,13 @@ class ProviderRequestOptionsTests(unittest.TestCase):
                 ("GET", "https://example.test/images/original/figure1.png"): {
                     "status_code": 200,
                     "headers": {"content-type": "image/png"},
-                    "body": b"original-image",
+                    "body": png_body(b"original-image"),
                     "url": "https://example.test/images/original/figure1.png",
                 },
                 ("GET", "https://example.test/images/preview/figure1.png"): {
                     "status_code": 200,
                     "headers": {"content-type": "image/png"},
-                    "body": b"preview-image",
+                    "body": png_body(b"preview-image"),
                     "url": "https://example.test/images/preview/figure1.png",
                 },
             }
@@ -1200,7 +1299,7 @@ class ProviderRequestOptionsTests(unittest.TestCase):
                     "https://example.test/images/original/figure1.png",
                 ],
             )
-            self.assertEqual(Path(result["assets"][0]["path"]).read_bytes(), b"original-image")
+            self.assertEqual(Path(result["assets"][0]["path"]).read_bytes(), png_body(b"original-image"))
 
     def test_html_asset_download_falls_back_to_preview_when_full_size_fetch_fails(self) -> None:
         transport = RecordingTransport(
@@ -1223,7 +1322,7 @@ class ProviderRequestOptionsTests(unittest.TestCase):
                 ("GET", "https://example.test/images/preview/figure1.png"): {
                     "status_code": 200,
                     "headers": {"content-type": "image/png"},
-                    "body": b"preview-image",
+                    "body": png_body(b"preview-image"),
                     "url": "https://example.test/images/preview/figure1.png",
                 },
             }
@@ -1258,7 +1357,7 @@ class ProviderRequestOptionsTests(unittest.TestCase):
             )
             self.assertEqual(len(result["assets"]), 1)
             self.assertEqual(result["asset_failures"], [])
-            self.assertEqual(Path(result["assets"][0]["path"]).read_bytes(), b"preview-image")
+            self.assertEqual(Path(result["assets"][0]["path"]).read_bytes(), png_body(b"preview-image"))
 
     def test_springer_body_asset_profile_ignores_supplementary_download_pdf_links(self) -> None:
         figure_url = "https://media.springernature.com/full/example-figure-1.png"
@@ -1267,7 +1366,7 @@ class ProviderRequestOptionsTests(unittest.TestCase):
                 ("GET", figure_url): {
                     "status_code": 200,
                     "headers": {"content-type": "image/png"},
-                    "body": b"springer-figure-1",
+                    "body": png_body(b"springer-figure-1"),
                     "url": figure_url,
                 }
             }
@@ -1319,7 +1418,7 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         self.assertEqual(len(result["assets"]), 1)
         self.assertEqual(result["assets"][0]["kind"], "figure")
         self.assertEqual(result["asset_failures"], [])
-        self.assertEqual(saved_bytes, b"springer-figure-1")
+        self.assertEqual(saved_bytes, png_body(b"springer-figure-1"))
 
     def test_elsevier_body_asset_profile_excludes_appendix_and_supplementary(self) -> None:
         references = [

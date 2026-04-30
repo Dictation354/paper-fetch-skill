@@ -257,6 +257,7 @@ class ArchitectureCloseoutTests(unittest.TestCase):
                 "references/cli-fallback.md",
                 "references/environment.md",
                 "references/failure-handling.md",
+                "references/tool-contract.md",
             ],
         )
 

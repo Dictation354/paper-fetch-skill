@@ -5,7 +5,6 @@ from __future__ import annotations
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 import http.cookiejar
-import re
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -182,13 +181,12 @@ def _collect_downloads_from_resolutions(
 
 def _looks_like_image_payload(content_type: str | None, body: bytes | bytearray | None, source_url: str | None) -> bool:
     normalized_content_type = normalize_text(content_type).split(";", 1)[0].lower()
-    if normalized_content_type.startswith("image/"):
-        return True
-    if normalized_content_type:
-        return False
+    del source_url
     if _image_magic_type(body):
         return True
-    return bool(re.search(r"\.(?:avif|gif|jpe?g|png|tiff?|webp)(?:[?#]|$)", normalize_text(source_url), re.IGNORECASE))
+    if normalized_content_type and not normalized_content_type.startswith("image/"):
+        return False
+    return False
 
 
 def _requires_image_payload(asset: Mapping[str, Any]) -> bool:

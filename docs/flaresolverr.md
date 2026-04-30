@@ -35,7 +35,7 @@
 - 图片候选仍优先 full-size/original，全部失败后才尝试 preview；preview 也通过同一个 browser context 下载，目标 provider 不再使用 `playwright_canvas_fallback` tier
 - 正文图片下载在单次 attempt 内会对 figure page 和图片候选 URL 做缓存，并按 `PAPER_FETCH_ASSET_DOWNLOAD_CONCURRENCY` 控制的 worker 上限拉取 payload，默认 `4`；文件写入仍按资产原顺序完成
 - 图片恢复、正文图片/附件下载、figure page HTML 发现路径不启用 `disableMedia=true`，避免阻断目标图片资源和 full-size URL 发现
-- 当图片 URL 在 Playwright `fetch()` 下返回 Cloudflare challenge HTML，但 FlareSolverr/Selenium 已能显示图片文档时，仓库本地 FlareSolverr patch 会返回 `solution.imagePayload`，下载器只接受这份浏览器导出的 PNG；`imagePayload` 缺失或无效时会记录明确失败原因，不再退回截图裁剪
+- 当图片 URL 在 Playwright `fetch()` 下返回 Cloudflare challenge HTML，但 FlareSolverr/Selenium 已能显示图片文档时，仓库本地 FlareSolverr patch 会返回 `solution.imagePayload`。下载器只接受可识别的图片 payload：位图走浏览器 canvas 导出的 PNG，顶层 SVG 文档保存原始 `image/svg+xml`；`imagePayload` 缺失、无效或实际是 challenge HTML 时会记录明确失败原因，不再退回截图裁剪
 - 这条链路只保证在当前仓库 checkout 中运行
 - 站点 ToS、robots、授权与合规风险由操作者自行承担
 
@@ -52,6 +52,8 @@ export FLARESOLVERR_ENV_FILE="$PWD/vendor/flaresolverr/.env.flaresolverr-source-
 ```bash
 export FLARESOLVERR_URL="http://127.0.0.1:8191/v1"
 export FLARESOLVERR_SOURCE_DIR="$PWD/vendor/flaresolverr"
+# 仅在需要跨请求复用 FlareSolverr browser session 时设置
+export PAPER_FETCH_FLARESOLVERR_KEEP_SESSION=1
 ```
 
 说明：
@@ -59,6 +61,8 @@ export FLARESOLVERR_SOURCE_DIR="$PWD/vendor/flaresolverr"
 - `science` / `pnas` 必须走这组 browser 配置
 - `wiley` 的 HTML 与 seeded-browser PDF/ePDF 路径也必须走这组配置；只配置 `WILEY_TDM_CLIENT_TOKEN` 时只能尝试官方 TDM API PDF lane
 - `FLARESOLVERR_ENV_FILE` 不会自动猜 preset
+- 默认每次 `FlareSolverr HTML` 抓取结束后都会调用 `sessions.destroy` 销毁本次 browser session；这只关闭 FlareSolverr 管理的浏览器 session，不会停止本地 FlareSolverr 服务进程
+- 设置 `PAPER_FETCH_FLARESOLVERR_KEEP_SESSION=1` 会恢复跨请求复用 session、cookies 和 warm wait 的行为；这可能让浏览器进程保留到 Python 进程退出的 `atexit` 清理或手动清理
 - 本地 FlareSolverr 限速变量与账本已移除；browser workflow 不再读取 `FLARESOLVERR_MIN_INTERVAL_SECONDS`、`FLARESOLVERR_MAX_REQUESTS_PER_HOUR` 或 `FLARESOLVERR_MAX_REQUESTS_PER_DAY`
 
 ## preset 选择
@@ -129,6 +133,7 @@ sudo apt-get install -y xvfb
 ```
 
 这三个 wrapper 都要求显式传 preset，或者先设置 `FLARESOLVERR_ENV_FILE`。
+抓取完成后的 `sessions.destroy` 只释放 browser session，不会调用这些 wrapper、不会 kill 服务 PID；`flaresolverr-down` 仍然是停止本地 FlareSolverr 服务的入口。
 
 如果你想直接探活控制端口，也可以：
 
@@ -193,7 +198,7 @@ PYTHONPATH=src pytest -n 0 \
 - formula-only preview fallback 不自动算 live review 的 `asset_download_failure`；figure/table preview fallback 仍需要 accepted 轨迹或其它证据才能降噪
 - `wiley` / `science` / `pnas` 不再先走普通 HTTP 直连；full-size 与 preview 候选都会通过 seeded Playwright browser context 获取。若刷新 FlareSolverr seed 后仍失败，才按资产下载问题处理
 - seeded Playwright 图片获取里的页面内 `fetch()` 带有短超时；如果候选图实际落到 Cloudflare `Just a moment...` 等非图片页面，会快速失败并进入下一候选或刷新 seed 重试，而不是长期卡住整个 live review
-- 如果最终仍失败，失败详情会保留在 `article.quality.asset_failures` 和顶层 `quality.asset_failures`：包括 `status`、`content_type`、`title_snippet`、`body_snippet`、以及 asset-level FlareSolverr recovery 的 `recovery_attempts`
+- 如果最终仍失败，失败详情会保留在 `article.quality.asset_failures` 和顶层 `quality.asset_failures`：包括 `status`、`content_type`、`title_snippet`、`body_snippet`、以及 asset-level FlareSolverr recovery 的 `recovery_attempts`。正文图片保存前会用 magic bytes 或顶层 SVG 文本检测确认 payload，避免把 Cloudflare / 登录页 HTML 以图片后缀落盘
 - PDF/ePDF fallback 仍是 text-only；只有 HTML 成功路径承诺尝试正文资产下载
 
 ## 相关文档

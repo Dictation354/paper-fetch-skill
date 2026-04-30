@@ -17,6 +17,7 @@ COPY_ENV_FILE=1
 UPGRADE_PIP=1
 EDITABLE=0
 FORMULA_ARGS=()
+DEFAULT_ENV_FILE=""
 
 log() { printf '\033[1;34m==>\033[0m %s\n' "$*"; }
 warn() { printf '\033[1;33m!!\033[0m %s\n' "$*" >&2; }
@@ -97,12 +98,15 @@ else
     "$PYTHON_BIN" -m pip install --quiet "$REPO_DIR"
 fi
 
-if [ "$COPY_ENV_FILE" = "1" ] && [ -f "$REPO_DIR/.env.example" ]; then
+if [ -f "$REPO_DIR/.env.example" ]; then
     DEFAULT_ENV_FILE="$("$PYTHON_BIN" - <<'PY'
 from paper_fetch.config import DEFAULT_USER_ENV_FILE
 print(DEFAULT_USER_ENV_FILE)
 PY
 )"
+fi
+
+if [ "$COPY_ENV_FILE" = "1" ] && [ -n "$DEFAULT_ENV_FILE" ] && [ -f "$REPO_DIR/.env.example" ]; then
     if [ ! -f "$DEFAULT_ENV_FILE" ]; then
         log "Creating default runtime config at $DEFAULT_ENV_FILE"
         mkdir -p "$(dirname "$DEFAULT_ENV_FILE")"
@@ -127,5 +131,10 @@ if [ "$USE_SYSTEM" = "1" ]; then
 else
     echo "Activate the repo environment with: source $VENV_DIR/bin/activate"
     echo "Or run commands directly from: $VENV_DIR/bin/"
+fi
+if [ -n "$DEFAULT_ENV_FILE" ]; then
+    echo "Elsevier setup: request a key at https://dev.elsevier.com/, then add ELSEVIER_API_KEY=\"...\" to $DEFAULT_ENV_FILE before fetching Elsevier papers."
+else
+    echo "Elsevier setup: request a key at https://dev.elsevier.com/, then add ELSEVIER_API_KEY=\"...\" to your PAPER_FETCH_ENV_FILE or user config before fetching Elsevier papers."
 fi
 echo "Smoke test: $PYTHON_BIN -m paper_fetch.cli --query \"10.1186/1471-2105-11-421\""

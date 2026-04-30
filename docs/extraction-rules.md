@@ -335,10 +335,13 @@ metadata
   - [`../tests/fixtures/golden_criteria/10.1073_pnas.2309123120/original.html`](../tests/fixtures/golden_criteria/10.1073_pnas.2309123120/original.html)
   - [`../tests/fixtures/golden_criteria/10.1126_sciadv.aax6869/original.html`](../tests/fixtures/golden_criteria/10.1126_sciadv.aax6869/original.html)
   - [`../tests/fixtures/golden_criteria/10.1126_science.abb3021/original.html`](../tests/fixtures/golden_criteria/10.1126_science.abb3021/original.html)
-  - 这些样本覆盖 PNAS / Science CMS 图片直接 HTTP 请求被 challenge 或只能拿到站点标记为 preview 的图片时，如何区分真实故障和可接受降级。
+  - [`../tests/fixtures/golden_criteria/10.1126_science.adz3492/original.html`](../tests/fixtures/golden_criteria/10.1126_science.adz3492/original.html)
+  - [`../tests/fixtures/golden_criteria/10.1126_science.adz3492/body_assets/science.adz3492-f1.svg`](../tests/fixtures/golden_criteria/10.1126_science.adz3492/body_assets/science.adz3492-f1.svg)
+  - 这些样本覆盖 PNAS / Science CMS 图片直接 HTTP 请求被 challenge、只能拿到站点标记为 preview 的图片，或 preview 资产是顶层 SVG 文档时，如何区分真实故障和可接受降级。
 - 对应测试：
   - Owner（provider）：
     - [`../tests/unit/test_science_pnas_provider.py`](../tests/unit/test_science_pnas_provider.py) 中的 `test_science_provider_records_preview_dimensions_and_acceptance`
+    - [`../tests/unit/test_science_pnas_provider.py`](../tests/unit/test_science_pnas_provider.py) 中的 `test_science_provider_replay_for_adz3492_saves_svg_body_asset`
     - [`../tests/unit/test_science_pnas_provider.py`](../tests/unit/test_science_pnas_provider.py) 中的 `test_science_provider_records_asset_failure_when_shared_playwright_preview_fails`
   - Service / live review 覆盖：
     - [`../tests/unit/test_service.py`](../tests/unit/test_service.py) 中的 `test_fetch_paper_accepts_preview_images_with_sufficient_dimensions`
@@ -1233,6 +1236,8 @@ PNAS 的 supplementary 资产范围见 [Science / PNAS supplementary 只能来�
 | [`../tests/fixtures/golden_criteria/10.1126_science.abb3021/original.html`](../tests/fixtures/golden_criteria/10.1126_science.abb3021/original.html) | [No trailing figures](#rule-no-trailing-figures-appendix), [Image validation](#rule-image-download-validates-real-images) |
 | [`../tests/fixtures/golden_criteria/10.1126_science.abp8622/original.html`](../tests/fixtures/golden_criteria/10.1126_science.abp8622/original.html) | [Stable frontmatter](#rule-stable-frontmatter-order), [Inline semantics](#rule-preserve-inline-semantics-in-body-and-tables) |
 | [`../tests/fixtures/golden_criteria/10.1126_science.adp0212/original.html`](../tests/fixtures/golden_criteria/10.1126_science.adp0212/original.html) | [Provider metadata](#rule-provider-owned-authors), [Equation spacing](#rule-readable-equation-caption-spacing) |
+| [`../tests/fixtures/golden_criteria/10.1126_science.adz3492/original.html`](../tests/fixtures/golden_criteria/10.1126_science.adz3492/original.html) | [Image validation](#rule-image-download-validates-real-images) |
+| [`../tests/fixtures/golden_criteria/10.1126_science.adz3492/body_assets/science.adz3492-f1.svg`](../tests/fixtures/golden_criteria/10.1126_science.adz3492/body_assets/science.adz3492-f1.svg) | [Image validation](#rule-image-download-validates-real-images) |
 | [`../tests/fixtures/golden_criteria/10.1126_science.aeg3511/original.html`](../tests/fixtures/golden_criteria/10.1126_science.aeg3511/original.html) | [Headingless body](#rule-keep-headingless-body-flat) |
 | [`../tests/fixtures/golden_criteria/_scenarios/asset_download_diagnostics/article_payload.json`](../tests/fixtures/golden_criteria/_scenarios/asset_download_diagnostics/article_payload.json) | [Asset diagnostics](#rule-asset-download-diagnostic-fields) |
 | [`../tests/fixtures/golden_criteria/_scenarios/availability_body_metrics/code_availability.md`](../tests/fixtures/golden_criteria/_scenarios/availability_body_metrics/code_availability.md) | [Availability body metrics](#rule-availability-excluded-from-body-metrics) |

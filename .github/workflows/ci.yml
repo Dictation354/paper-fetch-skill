@@ -15,6 +15,14 @@ on:
         required: false
         default: false
         type: boolean
+      publish_release:
+        description: "Publish GitHub Release with offline packages"
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
 
 jobs:
   lint:
@@ -304,6 +312,76 @@ jobs:
           name: paper-fetch-skill-offline-windows-x86_64-${{ matrix.python-tag }}
           path: offline-artifacts/paper-fetch-skill-offline-windows-x86_64-${{ matrix.python-tag }}.zip
           if-no-files-found: error
+
+  release-offline-packages:
+    needs:
+      - lint
+      - unit
+      - integration
+      - package-smoke
+      - offline-linux-x86-64
+      - offline-windows-x86-64
+    if: >-
+      ${{
+        startsWith(github.ref, 'refs/tags/v') &&
+        (
+          github.event_name == 'push' ||
+          (github.event_name == 'workflow_dispatch' && inputs.publish_release)
+        )
+      }}
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: write
+
+    steps:
+      - name: Download offline packages
+        uses: actions/download-artifact@v4
+        with:
+          pattern: paper-fetch-skill-offline-*
+          path: release-artifacts
+          merge-multiple: true
+
+      - name: Verify release asset set
+        shell: bash
+        run: |
+          set -euo pipefail
+          expected=(
+            paper-fetch-skill-offline-linux-x86_64-cp311.tar.gz
+            paper-fetch-skill-offline-linux-x86_64-cp312.tar.gz
+            paper-fetch-skill-offline-linux-x86_64-cp313.tar.gz
+            paper-fetch-skill-offline-linux-x86_64-cp314.tar.gz
+            paper-fetch-skill-offline-windows-x86_64-cp311.zip
+            paper-fetch-skill-offline-windows-x86_64-cp312.zip
+            paper-fetch-skill-offline-windows-x86_64-cp313.zip
+            paper-fetch-skill-offline-windows-x86_64-cp314.zip
+          )
+
+          for asset in "${expected[@]}"; do
+            if [ ! -f "release-artifacts/$asset" ]; then
+              echo "Missing release asset: $asset" >&2
+              exit 1
+            fi
+          done
+
+          actual_count="$(find release-artifacts -maxdepth 1 -type f | wc -l | tr -d ' ')"
+          if [ "$actual_count" -ne "${#expected[@]}" ]; then
+            echo "Expected ${#expected[@]} release assets, found $actual_count:" >&2
+            find release-artifacts -maxdepth 1 -type f -print | sort >&2
+            exit 1
+          fi
+
+          find release-artifacts -maxdepth 1 -type f -print | sort
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          files: release-artifacts/*
+          fail_on_unmatched_files: true
+          generate_release_notes: true
+          prerelease: ${{ contains(github.ref_name, '-') }}
 
   full-golden:
     if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_full_golden }}

@@ -7,6 +7,7 @@ from pathlib import Path
 from unittest import mock
 
 from paper_fetch import config
+from paper_fetch.providers import _flaresolverr
 
 
 class ConfigTests(unittest.TestCase):
@@ -233,6 +234,43 @@ class ConfigTests(unittest.TestCase):
         self.assertEqual(config.resolve_flaresolverr_source_dir(env), Path("~/custom-flaresolverr").expanduser())
         self.assertEqual(config.resolve_flaresolverr_env_file(env), Path("~/custom-flaresolverr/.env.test").expanduser())
         self.assertEqual(config.resolve_flaresolverr_url(env), "http://127.0.0.1:9000/v1")
+
+    def test_flaresolverr_keep_session_env_defaults_disabled_in_runtime_config(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            env_file = tmp / ".env.flaresolverr"
+            env_file.write_text('HEADLESS="true"\n', encoding="utf-8")
+
+            runtime_config = _flaresolverr.load_runtime_config(
+                {
+                    config.FLARESOLVERR_ENV_FILE_ENV_VAR: str(env_file),
+                    config.FLARESOLVERR_SOURCE_DIR_ENV_VAR: str(tmp / "vendor" / "flaresolverr"),
+                    config.XDG_DATA_HOME_ENV_VAR: str(tmp),
+                },
+                provider="science",
+                doi="10.1126/science.ady3136",
+            )
+
+        self.assertFalse(runtime_config.keep_session)
+
+    def test_flaresolverr_keep_session_env_enables_runtime_config(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            env_file = tmp / ".env.flaresolverr"
+            env_file.write_text('HEADLESS="true"\n', encoding="utf-8")
+
+            runtime_config = _flaresolverr.load_runtime_config(
+                {
+                    config.FLARESOLVERR_ENV_FILE_ENV_VAR: str(env_file),
+                    config.FLARESOLVERR_SOURCE_DIR_ENV_VAR: str(tmp / "vendor" / "flaresolverr"),
+                    config.FLARESOLVERR_KEEP_SESSION_ENV_VAR: "1",
+                    config.XDG_DATA_HOME_ENV_VAR: str(tmp),
+                },
+                provider="science",
+                doi="10.1126/science.ady3136",
+            )
+
+        self.assertTrue(runtime_config.keep_session)
 
 
 if __name__ == "__main__":

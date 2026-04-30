@@ -324,6 +324,7 @@ main() {
   echo "Offline installation complete."
   echo "Activate it with: source $BUNDLE_ROOT/activate-offline.sh"
   echo "FlareSolverr preset: $BUNDLE_ROOT/vendor/flaresolverr/.env.flaresolverr-source-$PRESET"
+  echo "Elsevier setup: request a key at https://dev.elsevier.com/, then add ELSEVIER_API_KEY=\"...\" to $BUNDLE_ROOT/offline.env before fetching Elsevier papers."
 }
 
 main "$@"

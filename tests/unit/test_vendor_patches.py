@@ -57,3 +57,14 @@ class VendorPatchTests(unittest.TestCase):
                 self.assertEqual(new_actual, new_expected)
 
         self.assertGreater(hunk_count, 0)
+
+    def test_return_image_payload_patch_exports_svg_documents(self) -> None:
+        patch_text = RETURN_IMAGE_PAYLOAD_PATCH.read_text(encoding="utf-8")
+
+        self.assertIn("returnImagePayload", patch_text)
+        self.assertIn("imagePayload", patch_text)
+        self.assertIn("documentElement", patch_text)
+        self.assertIn("XMLSerializer", patch_text)
+        self.assertIn("image/svg+xml", patch_text)
+        self.assertIn("html_element = None", patch_text)
+        self.assertIn("if html_element is not None", patch_text)

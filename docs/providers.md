@@ -484,6 +484,13 @@ Springer direct HTML / direct HTTP PDF 路线当前没有额外必填 publisher 
 - 可选。
 - 覆盖 repo-local FlareSolverr workflow 根目录。
 
+#### `PAPER_FETCH_FLARESOLVERR_KEEP_SESSION`
+
+- 可选。
+- 默认未设置时，每次 `FlareSolverr HTML` 抓取结束都会调用 `sessions.destroy` 销毁本次 browser session。
+- 设为 `1` / `true` / `yes` / `on` 时，会跨请求复用 FlareSolverr session、cookies 和 warm wait；这可能让浏览器进程保留到 Python 进程退出的 `atexit` 清理或手动清理。
+- 这个变量只控制 FlareSolverr browser session 生命周期，不停止本地 FlareSolverr 服务；停止服务仍使用 `flaresolverr-down`。
+
 本地 FlareSolverr 限速变量与账本已移除；browser workflow 不再读取 `FLARESOLVERR_MIN_INTERVAL_SECONDS`、`FLARESOLVERR_MAX_REQUESTS_PER_HOUR` 或 `FLARESOLVERR_MAX_REQUESTS_PER_DAY`。
 
 更具体的启动与排障步骤见 [`flaresolverr.md`](flaresolverr.md)。

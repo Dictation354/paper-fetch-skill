@@ -195,6 +195,9 @@ class OfflineInstallTests(unittest.TestCase):
             self.assertIn("FLARESOLVERR_ENV_FILE=", offline_env)
             self.assertIn(str(bundle / "ms-playwright"), offline_env)
             self.assertNotIn(str(home / ".cache" / "ms-playwright"), offline_env)
+            self.assertIn("Elsevier setup: request a key at https://dev.elsevier.com/", result.stdout)
+            self.assertIn('ELSEVIER_API_KEY="..."', result.stdout)
+            self.assertIn(str(bundle / "offline.env"), result.stdout)
 
     def test_user_config_merge_preserves_existing_values(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -286,6 +289,8 @@ class OfflineInstallTests(unittest.TestCase):
         self.assertIn("PAPER_FETCH_FORMULA_TOOLS_DIR", script)
         self.assertIn("PLAYWRIGHT_BROWSERS_PATH", script)
         self.assertIn("FLARESOLVERR_SOURCE_DIR", script)
+        self.assertIn("ELSEVIER_API_KEY", script)
+        self.assertIn("https://dev.elsevier.com/", script)
         self.assertNotIn(".cache/ms-playwright'", script)
 
     def test_windows_installer_smoke_checks_do_not_use_user_playwright_cache(self) -> None:

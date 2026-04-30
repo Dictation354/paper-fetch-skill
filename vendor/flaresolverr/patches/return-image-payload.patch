@@ -22,7 +22,7 @@ diff --git a/src/flaresolverr_service.py b/src/flaresolverr_service.py
 index 82132c6..7d1b1c2 100644
 --- a/src/flaresolverr_service.py
 +++ b/src/flaresolverr_service.py
-@@ -282,6 +282,134 @@ def click_verify(driver: WebDriver):
+@@ -282,6 +282,187 @@ def click_verify(driver: WebDriver):
      time.sleep(2)
  
  
@@ -45,6 +45,59 @@ index 82132c6..7d1b1c2 100644
 +                    return String(value || '');
 +                }
 +            };
++            const svgDimension = (root, name) => {
++                const raw = String((root && root.getAttribute && root.getAttribute(name)) || '').trim();
++                const parsed = Number.parseFloat(raw);
++                if (Number.isFinite(parsed) && parsed > 0) {
++                    return parsed;
++                }
++                try {
++                    const viewBox = root && root.viewBox && root.viewBox.baseVal;
++                    const value = name === 'width' ? viewBox.width : viewBox.height;
++                    if (Number.isFinite(value) && value > 0) {
++                        return value;
++                    }
++                } catch (error) {}
++                try {
++                    const rect = root && root.getBoundingClientRect && root.getBoundingClientRect();
++                    const value = name === 'width' ? rect.width : rect.height;
++                    if (Number.isFinite(value) && value > 0) {
++                        return value;
++                    }
++                } catch (error) {}
++                return 0;
++            };
++            const documentElement = document.documentElement;
++            const isSvgDocument = documentElement
++                && String(documentElement.localName || documentElement.tagName || '').toLowerCase() === 'svg';
++            if (isSvgDocument) {
++                try {
++                    const serializer = new XMLSerializer();
++                    const bodyText = serializer.serializeToString(documentElement);
++                    const encoder = new TextEncoder();
++                    const bodyB64 = bytesToBase64(encoder.encode(bodyText));
++                    if (bodyB64) {
++                        return {
++                            ok: true,
++                            status: 200,
++                            url: normalizeUrl(document.location.href),
++                            contentType: 'image/svg+xml',
++                            bodyB64,
++                            width: svgDimension(documentElement, 'width'),
++                            height: svgDimension(documentElement, 'height'),
++                        };
++                    }
++                } catch (error) {
++                    return {
++                        ok: false,
++                        reason: 'svg_serialization_failed',
++                        error: String((error && (error.name || error.message)) || error || ''),
++                        url: normalizeUrl(document.location.href),
++                        title: document.title || '',
++                        contentType: document.contentType || '',
++                    };
++                }
++            }
 +            const images = Array.from(document.images || []);
 +            const classifyCanvasError = (error) => {
 +                const name = String((error && error.name) || '');
@@ -157,7 +210,44 @@ index 82132c6..7d1b1c2 100644
  def _evil_logic(req: V1RequestBase, driver: WebDriver, method: str) -> ChallengeResolutionT:
      res = ChallengeResolutionT({})
      res.status = STATUS_OK
-@@ -425,6 +485,8 @@ def _evil_logic(req: V1RequestBase, driver: WebDriver, method: str) -> Challenge
+@@ -336,7 +517,10 @@ def _evil_logic(req: V1RequestBase, driver: WebDriver, method: str) -> Challenge
+     # wait for the page
+     if utils.get_config_log_html():
+         logging.debug(f"Response HTML:\n{driver.page_source}")
+-    html_element = driver.find_element(By.TAG_NAME, "html")
++    try:
++        html_element = driver.find_element(By.TAG_NAME, "html")
++    except Exception:
++        html_element = None
+     page_title = driver.title
+ 
+     # find access denied titles
+@@ -392,15 +576,19 @@ def _evil_logic(req: V1RequestBase, driver: WebDriver, method: str) -> Challenge
+                 click_verify(driver)
+ 
+                 # update the html (cloudflare reloads the page every 5 s)
+-                html_element = driver.find_element(By.TAG_NAME, "html")
++                try:
++                    html_element = driver.find_element(By.TAG_NAME, "html")
++                except Exception:
++                    html_element = None
+ 
+         # waits until cloudflare redirection ends
+         logging.debug("Waiting for redirect")
+         # noinspection PyBroadException
+-        try:
+-            WebDriverWait(driver, SHORT_TIMEOUT).until(staleness_of(html_element))
+-        except Exception:
+-            logging.debug("Timeout waiting for redirect")
++        if html_element is not None:
++            try:
++                WebDriverWait(driver, SHORT_TIMEOUT).until(staleness_of(html_element))
++            except Exception:
++                logging.debug("Timeout waiting for redirect")
+ 
+         logging.info("Challenge solved!")
+         res.message = "Challenge solved!"
+@@ -425,6 +613,8 @@ def _evil_logic(req: V1RequestBase, driver: WebDriver, method: str) -> Challenge
  
      if req.returnScreenshot:
          challenge_res.screenshot = driver.get_screenshot_as_base64()

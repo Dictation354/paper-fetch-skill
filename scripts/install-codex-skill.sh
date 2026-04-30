@@ -159,4 +159,5 @@ if [ "$REGISTER_MCP" = "1" ]; then
 else
     echo "  2. If you want MCP tools too, rerun with --register-mcp or register a stdio server that runs 'paper-fetch-mcp'."
 fi
-echo "  3. Re-run this installer after upgrading the repo to install the new package build."
+echo "  3. If you fetch Elsevier papers, request a key at https://dev.elsevier.com/ and set ELSEVIER_API_KEY in ~/.config/paper-fetch/.env or pass --env-file when registering MCP."
+echo "  4. Re-run this installer after upgrading the repo to install the new package build."

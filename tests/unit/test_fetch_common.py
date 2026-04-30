@@ -85,6 +85,22 @@ class FetchCommonTests(unittest.TestCase):
         self.assertEqual(output_path.suffix, ".webp")
         self.assertEqual(output_path.name, "figure.webp")
 
+    def test_extension_from_content_type_maps_web_image_formats(self) -> None:
+        expected = {
+            "image/bmp": ".bmp",
+            "image/x-ms-bmp": ".bmp",
+            "image/vnd.microsoft.icon": ".ico",
+            "image/x-icon": ".ico",
+            "image/apng": ".apng",
+            "image/heic": ".heic",
+            "image/heif": ".heif",
+            "image/svg+xml; charset=utf-8": ".svg",
+        }
+
+        for content_type, suffix in expected.items():
+            with self.subTest(content_type=content_type):
+                self.assertEqual(utils.extension_from_content_type(content_type), suffix)
+
     def test_build_asset_output_path_prefers_explicit_filename_before_url_path(self) -> None:
         with TemporaryDirectory() as tmpdir:
             output_path = utils.build_asset_output_path(

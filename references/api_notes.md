@@ -67,7 +67,7 @@ This file is a human-maintained route reference for v1. Runtime behavior is auth
   - Full text uses provider-managed `FlareSolverr HTML -> seeded-browser publisher PDF/ePDF -> abstract-only / metadata-only`.
   - HTML is fetched through repo-local FlareSolverr; publisher PDF/ePDF fallback uses Playwright.
   - HTML asset downloads prefer full-size/original images. Browser-workflow providers now cache repeated figure-page / image-candidate URLs per download attempt and fetch image payloads with fixed limited parallelism before writing files in input order.
-  - If direct image fetch returns challenge HTML or a browser image shell, Science / PNAS may use Playwright image-document canvas export before accepting preview fallback; FlareSolverr recovery only accepts `solution.imagePayload`, not screenshot cropping.
+  - If direct image fetch returns challenge HTML or a browser image shell, Science / PNAS may use Playwright image-document export before accepting preview fallback; FlareSolverr recovery only accepts recognizable `solution.imagePayload` values, including browser-exported PNG pixels and raw top-level SVG, not screenshot cropping or challenge HTML.
   - Preview images are only treated as acceptable degradation when saved dimensions meet the runtime threshold; otherwise they remain asset-download issues in warnings/source trail.
 - Common constraints:
   - The runtime does not use publisher APIs for these providers.

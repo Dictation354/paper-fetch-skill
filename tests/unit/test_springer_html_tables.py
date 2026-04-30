@@ -250,7 +250,7 @@ class SpringerHtmlTableTests(unittest.TestCase):
             },
             GENERIC_EXTENDED_TABLE_URL: {
                 "headers": {"content-type": "image/png"},
-                "body": b"table-image",
+                "body": b"\x89PNG\r\n\x1a\ntable-image",
                 "url": table_image_url,
                 "status_code": 200,
             },
@@ -349,7 +349,7 @@ class SpringerHtmlTableTests(unittest.TestCase):
             },
             table_1_image_url: {
                 "headers": {"content-type": "image/png"},
-                "body": b"table-one-image",
+                "body": b"\x89PNG\r\n\x1a\ntable-one-image",
                 "url": table_1_image_url,
                 "status_code": 200,
             },

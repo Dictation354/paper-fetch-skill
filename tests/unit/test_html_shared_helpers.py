@@ -42,7 +42,7 @@ class _DelayedAssetTransport(HttpTransport):
             return {
                 "status_code": 200,
                 "headers": {"content-type": "image/png"},
-                "body": f"payload:{url}".encode("utf-8"),
+                "body": b"\x89PNG\r\n\x1a\n" + f"payload:{url}".encode("utf-8"),
                 "url": url,
             }
         finally:

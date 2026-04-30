@@ -48,7 +48,9 @@ extension and commits it inside the working clone. If an existing checkout alrea
 contains the `returnImagePayload` / `imagePayload` extension, setup reuses that
 checkout and preserves tracked local edits. If the extension is missing and
 tracked local edits exist, setup refuses to reset the checkout so custom
-FlareSolverr changes are not lost.
+FlareSolverr changes are not lost. The image payload patch exports bitmap image
+documents through canvas and serializes top-level SVG documents as
+`image/svg+xml`, while callers still reject non-image challenge HTML.
 
 ## Main Chain
 

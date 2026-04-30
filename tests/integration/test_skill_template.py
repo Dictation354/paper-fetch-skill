@@ -96,14 +96,14 @@ class StaticSkillTests(unittest.TestCase):
         self.assertIn("list_cached", text)
         self.assertIn("get_cached", text)
         self.assertIn("batch_check", text)
-        self.assertIn("summarize_paper", text)
-        self.assertIn("verify_citation_list", text)
-        self.assertIn("token_estimate_breakdown", text)
-        self.assertIn("citation list", text)
-        self.assertIn('do not conclude "unreadable" just because there is no local pdf', text.lower())
+        self.assertIn("has_fulltext", text)
+        self.assertIn("provider_status", text)
+        self.assertIn("参考文献列表", text)
+        self.assertIn("不要仅因为本地没有 PDF", text)
         self.assertIn("references/environment.md", text)
         self.assertIn("references/cli-fallback.md", text)
         self.assertIn("references/failure-handling.md", text)
+        self.assertNotIn("## 工具说明", text)
         self.assertLessEqual(len(text.splitlines()), 80)
 
     def test_static_skill_bundle_covers_runtime_contract(self) -> None:
@@ -111,6 +111,11 @@ class StaticSkillTests(unittest.TestCase):
 
         self.assertIn("paper-fetch --query", text)
         self.assertIn("## Error Contract", text)
+        self.assertIn("summarize_paper", text)
+        self.assertIn("verify_citation_list", text)
+        self.assertIn("token_estimate_breakdown", text)
+        self.assertIn("citation list", text)
+        self.assertIn("unreadable", text.lower())
         self.assertNotIn("not thread-safe", text)
         for key, value in DEFAULT_FETCH_VALUES:
             self.assertIn(f"`{key}={value}`", text)
@@ -195,6 +200,45 @@ class InstallerSmokeTests(unittest.TestCase):
         self.assertIn("One-command installer for the full paper-fetch runtime.", result.stdout)
         self.assertIn("--lite", result.stdout)
         self.assertIn("--skip-flaresolverr-setup", result.stdout)
+
+    def test_full_installer_completion_mentions_elsevier_api_key(self) -> None:
+        temp_dir = tempfile.TemporaryDirectory()
+        self.addCleanup(temp_dir.cleanup)
+        sandbox = Path(temp_dir.name)
+        repo_dir = sandbox / "repo"
+        fake_bin_dir = sandbox / "bin"
+        home_dir = sandbox / "home"
+        log_path = sandbox / "python.log"
+        copy_installer_fixture(repo_dir)
+        fake_bin_dir.mkdir(parents=True, exist_ok=True)
+        home_dir.mkdir(parents=True, exist_ok=True)
+        write_fake_python(fake_bin_dir / "python3", log_path)
+
+        env = os.environ.copy()
+        env["PATH"] = f"{fake_bin_dir}{os.pathsep}{env.get('PATH', '')}"
+        env["HOME"] = str(home_dir)
+        result = subprocess.run(
+            ["bash", str(repo_dir / "install.sh"), "--system", "--lite", "--skip-env-file"],
+            cwd=repo_dir,
+            env=env,
+            check=False,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("Installation complete.", result.stdout)
+        self.assertIn("Elsevier setup: request a key at https://dev.elsevier.com/", result.stdout)
+        self.assertIn('ELSEVIER_API_KEY="..."', result.stdout)
+
+    def test_skill_installers_prompt_for_elsevier_api_key(self) -> None:
+        for script_name in ("install-claude-skill.sh", "install-codex-skill.sh"):
+            with self.subTest(script_name=script_name):
+                script = (REPO_ROOT / "scripts" / script_name).read_text(encoding="utf-8")
+                self.assertIn("ELSEVIER_API_KEY", script)
+                self.assertIn("https://dev.elsevier.com/", script)
+                self.assertIn("--env-file", script)
 
     def test_formula_bootstrap_honors_selected_python(self) -> None:
         temp_dir = tempfile.TemporaryDirectory()

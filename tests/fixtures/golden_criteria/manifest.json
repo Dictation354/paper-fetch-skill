@@ -444,6 +444,24 @@
       "route_kind": "html",
       "content_type": "text/html"
     },
+    "10.1126_science.adz3492": {
+      "doi": "10.1126/science.adz3492",
+      "publisher": "science",
+      "source_url": "https://www.science.org/doi/full/10.1126/science.adz3492",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "assets": {
+        "expected.json": "tests/fixtures/golden_criteria/10.1126_science.adz3492/expected.json",
+        "extracted.md": "tests/fixtures/golden_criteria/10.1126_science.adz3492/extracted.md",
+        "original.html": "tests/fixtures/golden_criteria/10.1126_science.adz3492/original.html",
+        "body_assets/science.adz3492-f1.svg": "tests/fixtures/golden_criteria/10.1126_science.adz3492/body_assets/science.adz3492-f1.svg"
+      },
+      "fixture_family": "golden",
+      "title": "New demand goals for energy and climate resilience",
+      "landing_url": "https://www.science.org/doi/10.1126/science.adz3492",
+      "route_kind": "html",
+      "content_type": "text/html"
+    },
     "10.1126_science.ady3136": {
       "doi": "10.1126/science.ady3136",
       "publisher": "science",
@@ -1908,6 +1926,15 @@
       ],
       "samples": [
         "10.1073_pnas.2309123120"
+      ]
+    },
+    {
+      "test": "tests/unit/test_science_pnas_provider.py::test_science_provider_replay_for_adz3492_saves_svg_body_asset",
+      "anchors": [
+        "rule-image-download-validates-real-images"
+      ],
+      "samples": [
+        "10.1126_science.adz3492"
       ]
     },
     {

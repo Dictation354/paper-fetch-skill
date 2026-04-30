@@ -73,38 +73,6 @@ BLOCKING：默认非 BLOCKING，可连续执行抓取与后续处理；但遇到
 14. 不要仅因为本地没有 PDF 或缓存文本文件，就断定“不可读”。
 15. 如果拿不到全文，也要继续利用返回的仅摘要或仅元数据结果，并明确告诉用户当前基于元数据或摘要工作。
 
-## 工具说明
-
-- `resolve_paper(query | title, authors, year)`：在抓取前规范化 DOI、URL 或标题查询，并尽早暴露歧义。
-- `resolve_paper(query | title, authors, year)`：当输入是标题时，把它当成必经步骤；先解析出 DOI 或落地页，再把解析结果交给 `fetch_paper(...)`，不要直接拿标题进抓取。
-- `summarize_paper(query, focus)` 与 `verify_citation_list(citations, mode)`：MCP 提示模板；支持的宿主可直接用它们做单篇总结或参考文献列表分诊。
-- `fetch_paper(...)`：返回一个稳定的 JSON 载荷，顶层包含溯源信息，并按需附带 `article`、`markdown`、`metadata` 字段。
-- `fetch_paper(...)`：顶层 `token_estimate_breakdown={abstract,body,refs}` 可帮助判断是否应收紧 `include_refs`，或使用更小的数值型 `max_tokens` 重试。
-- `fetch_paper(...)`：支持的 MCP 客户端还能看到 `outputSchema`；当 `fetch_paper`、`batch_check` 或 `batch_resolve` 运行时，可能收到 `progress` 和结构化日志通知。
-- `fetch_paper(...)`：推荐默认值为 `modes=["article", "markdown"]`、`strategy.asset_profile=null`（由 provider 决定默认值）、`strategy.allow_metadata_only_fallback=true`、`include_refs=null`、`max_tokens="full_text"`、`prefer_cache=false`、`no_download=false`、`save_markdown=false`、`markdown_output_dir=null`、`markdown_filename=null`。
-- `fetch_paper(...)`：当 `max_tokens="full_text"` 时，`include_refs=null` 的行为等同于 `all`。
-- `fetch_paper(...)`：当 `max_tokens` 是正整数时，`include_refs=null` 的行为等同于 `top10`。
-- `fetch_paper(...)`：`prefer_cache=true` 会先把查询解析为 DOI，再尝试命中本地匹配的 FetchEnvelope sidecar，之后才走完整抓取流程。
-- `fetch_paper(...)`：`no_download=true` 会避免写入 provider 载荷、资源文件和 fetch-envelope sidecar；`save_markdown=true` 会把渲染后的全文 Markdown 写盘，并在成功时返回 `saved_markdown_path`。
-- `fetch_paper(...)`：传入 `download_dir` 时，MCP 服务器还能在当前会话里暴露这个隔离目录对应的缓存资源。
-- `fetch_paper(...)`、`list_cached()` 与 `get_cached()`：支持 MCP 资源列表通知的宿主，可能在缓存资源 URI 增删时收到 `resources/list_changed`。
-- `fetch_paper(...)`：`strategy.asset_profile="body"` 或 `all` 时，可能额外返回少量关键本地图像，作为 `ImageContent` 输出。
-- `fetch_paper(...)`：可选的 `strategy.inline_image_budget={max_images,max_bytes_per_image,max_total_bytes}` 用于调节默认的内联图像上限：`3` 张图、每张 `2 MiB`、总计 `8 MiB`；任一最终值为 `0` 都会禁用内联图像。
-- `fetch_paper(...)`：如果返回了资源，在判断图片缺失前，先检查 `article.assets[*].render_state`、`download_tier`、`content_type`、`downloaded_bytes`、`width` 和 `height`。当尺寸满足阈值且 warning/source trail 表明接受了预览图时，`preview` 级别也可能足够。
-- `fetch_paper(...)`：`article.quality.semantic_losses.table_layout_degraded_count` 表示 Markdown 中表格布局被压平；`table_semantic_loss_count` 才是“表格内容可能真的丢失”的更强信号。
-- `fetch_paper(...)`：在返回 Markdown 之前，公式中的 LaTeX 会先对常见出版商宏（如 `\updelta`、`\mspace{Nmu}`）做规范化处理。
-- `fetch_paper(...)`：`science` 与 `pnas` 需要仓库内的 FlareSolverr/browser 运行时，但不再需要旧的本地限流环境变量。`wiley` 的 HTML 和 seeded-browser PDF/ePDF 使用同一套运行时；若设置了 `WILEY_TDM_CLIENT_TOKEN`，即使浏览器运行时未就绪，也可启用其官方 TDM API PDF 通道。`wiley` 对外公布的 source 名称是 `wiley_browser`；`science` 与 `pnas` 保持现有公开 source 名称。它们在 HTML 成功路径下支持 `asset_profile="body"` / `"all"` 资源下载；PDF/ePDF 回退路径仍然只返回文本。
-- `fetch_paper(...)`：对依赖浏览器运行时的 provider，如果首轮失败且不是明显的配置缺失，可以在确认运行时健康后最多再重试 `2` 次；重试应优先绕过缓存，并在最终失败时把“浏览器链路失败”单独说明给用户。
-- `fetch_paper(...)` 以及批量工具：支持的 MCP 宿主可能会取消进行中的请求；一旦观察到取消信号，worker 会协作式停止继续发起后续网络请求。
-- `has_fulltext(query)`：使用解析结果、Crossref 元数据、剩余的轻量级 Elsevier 元数据探测，以及落地页 HTML meta 做一次低成本探测，而不会触发完整抓取流程。
-- `has_fulltext(query)`：成功载荷格式为 `{query, doi, state, evidence, warnings}`；v1 目前只会主动返回 `likely_yes` 或 `unknown`，`confirmed_yes` 和 `no` 仍保留作未来状态。
-- `provider_status()`：不会调用远程出版商 API，而是返回 `crossref`、`elsevier`、`springer`、`wiley`、`science`、`pnas` 的稳定本地诊断信息。
-- `provider_status()`：provider 级别的 `status` 取值为 `ready`、`partial`、`not_configured`、`rate_limited` 或 `error`；在选择抓取路径前，先查看 `checks=[...]` 了解能力级或运行时级细节。
-- FlareSolverr 启停与状态检查：对 `wiley`、`science`、`pnas`，优先复用仓库现成脚本，例如 `./scripts/flaresolverr-up <preset>` 与 `./scripts/flaresolverr-status <preset>`；先启动、再检查、后抓取。
-- `batch_resolve(queries, concurrency)` 与 `batch_check(queries, mode, concurrency)`：默认 `concurrency=1`；允许范围是 `1..8`；更高值可让不同 host 并发，而共享传输层仍会串行访问同一 host；每次调用最多接收 `50` 个查询。
-- `batch_check(queries, mode, concurrency)`：`mode="metadata"` 会复用低成本探测，仅返回轻量级溯源字段；`mode="article"` 仍会走完整抓取路径，并报告最终的全文判定。
-- 这些只读 MCP 工具现在会暴露 `ToolAnnotations` 提示（`readOnlyHint=true`），因此支持的宿主通常能更顺滑地自动批准；`fetch_paper(...)` 仍然视为可写，因为它可能刷新本地缓存文件。
-
 ## 参考资料
 
 - 当你需要提供方凭证、下载目录行为，或 Wiley / Science / PNAS 运行时要求时，读取 [`references/environment.md`](references/environment.md)。
