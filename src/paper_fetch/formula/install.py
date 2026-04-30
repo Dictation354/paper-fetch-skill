@@ -27,8 +27,21 @@ def warn(message: str) -> None:
     print(f"\033[1;33m!!\033[0m {message}", file=os.sys.stderr)
 
 
+def _temporary_log_path(log_prefix: str) -> Path:
+    fd, log_path = tempfile.mkstemp(prefix=log_prefix, suffix=".log")
+    os.close(fd)
+    return Path(log_path)
+
+
+def _remove_log_file(log_file: Path) -> None:
+    try:
+        log_file.unlink(missing_ok=True)
+    except OSError as exc:
+        warn(f"Could not remove build log {log_file}: {exc}")
+
+
 def _run_with_log(log_prefix: str, args: list[str], *, cwd: Path | None = None) -> bool:
-    log_file = Path(tempfile.mkstemp(prefix=log_prefix, suffix=".log")[1])
+    log_file = _temporary_log_path(log_prefix)
     try:
         with log_file.open("w", encoding="utf-8") as handle:
             process = subprocess.run(
@@ -40,13 +53,13 @@ def _run_with_log(log_prefix: str, args: list[str], *, cwd: Path | None = None) 
                 check=False,
             )
         if process.returncode == 0:
-            log_file.unlink(missing_ok=True)
+            _remove_log_file(log_file)
             return True
         warn(f"{' '.join(args[:2])} failed. Build log: {log_file}")
         return False
     except OSError as exc:
         warn(f"Could not run {' '.join(args)}: {exc}")
-        log_file.unlink(missing_ok=True)
+        _remove_log_file(log_file)
         return False
 
 
