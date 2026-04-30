@@ -56,7 +56,7 @@ class CiReleaseWorkflowTests(unittest.TestCase):
         block = _job_block(workflow, "release-offline-packages")
 
         self.assertIn("actions/download-artifact@v4", block)
-        self.assertIn("pattern: paper-fetch-skill-offline-*", block)
+        self.assertIn("pattern: paper-fetch-skill-*", block)
         self.assertIn("merge-multiple: true", block)
         self.assertIn("softprops/action-gh-release@v2", block)
         self.assertIn("contents: write", block)
@@ -67,12 +67,26 @@ class CiReleaseWorkflowTests(unittest.TestCase):
             "paper-fetch-skill-offline-linux-x86_64-cp312.tar.gz",
             "paper-fetch-skill-offline-linux-x86_64-cp313.tar.gz",
             "paper-fetch-skill-offline-linux-x86_64-cp314.tar.gz",
-            "paper-fetch-skill-offline-windows-x86_64-cp311.zip",
-            "paper-fetch-skill-offline-windows-x86_64-cp312.zip",
-            "paper-fetch-skill-offline-windows-x86_64-cp313.zip",
-            "paper-fetch-skill-offline-windows-x86_64-cp314.zip",
+            "paper-fetch-skill-windows-x86_64-setup.exe",
         ):
             self.assertIn(asset_name, block)
+
+        self.assertIn('if [ "$actual_count" -ne "${#expected[@]}" ]', block)
+
+    def test_windows_offline_job_builds_and_verifies_setup_installer(self) -> None:
+        workflow = CI_WORKFLOW.read_text(encoding="utf-8")
+        block = _job_block(workflow, "offline-windows-x86-64")
+
+        self.assertIn('python-version: "3.13"', block)
+        self.assertNotIn("matrix:", block)
+        self.assertIn("choco install innosetup", block)
+        self.assertIn("paper-fetch-skill-windows-x86_64-setup.exe", block)
+        self.assertIn("/VERYSILENT /SUPPRESSMSGBOXES /NORESTART", block)
+        self.assertIn("runtime/python.exe", block)
+        self.assertIn("bin/paper-fetch.cmd", block)
+        self.assertIn("bin/flaresolverr-up.cmd", block)
+        self.assertIn("codex mcp add", block)
+        self.assertIn("claude mcp add -s user", block)
 
 
 if __name__ == "__main__":

@@ -66,30 +66,83 @@ class OfflinePackageBuildTests(unittest.TestCase):
     def test_windows_default_package_name_uses_detected_python_tag(self) -> None:
         script = BUILD_OFFLINE_PACKAGE_WINDOWS.read_text(encoding="utf-8")
 
-        self.assertIn('paper-fetch-skill-offline-windows-x86_64-$pythonTag', script)
-        self.assertIn("$ArchiveName.zip", script)
-        self.assertIn('$archiveRootName = "paper-fetch-offline"', script)
-        self.assertIn("-RootName $archiveRootName -ArchiveName $PackageName", script)
+        self.assertIn('if ($pythonTag -ne "cp313")', script)
+        self.assertIn('paper-fetch-skill-windows-x86_64-setup', script)
+        self.assertIn("$SetupBaseName.exe", script)
+        self.assertIn("Build-InnoInstaller", script)
+        self.assertNotIn("$ArchiveName.zip", script)
 
-    def test_windows_supported_cpython_tags_are_whitelisted(self) -> None:
+    def test_windows_build_uses_embedded_cpython_313_runtime(self) -> None:
         script = BUILD_OFFLINE_PACKAGE_WINDOWS.read_text(encoding="utf-8")
-        start = script.index("function Test-SupportedPythonTag")
-        end = script.index("function Assert-Target", start)
+        start = script.index("function Add-EmbeddedPythonRuntime")
+        end = script.index("function Install-EmbeddedPythonPackages", start)
         block = script[start:end]
 
-        for tag in ("cp311", "cp312", "cp313", "cp314"):
-            self.assertIn(tag, block)
+        self.assertIn("python-$EmbeddedPythonVersion-embed-amd64.zip", block)
+        self.assertIn("https://www.python.org/ftp/python/$EmbeddedPythonVersion", block)
+        self.assertIn("python313._pth", block)
+        self.assertIn("Lib/site-packages", block)
+        self.assertIn("import site", block)
 
-    def test_windows_manifest_target_fields_are_windows_specific(self) -> None:
+    def test_windows_embedded_runtime_gets_project_and_dependencies(self) -> None:
+        script = BUILD_OFFLINE_PACKAGE_WINDOWS.read_text(encoding="utf-8")
+        start = script.index("function Install-EmbeddedPythonPackages")
+        end = script.index("function Add-FormulaTools", start)
+        block = script[start:end]
+
+        self.assertIn("Lib/site-packages", block)
+        self.assertIn("--no-index", block)
+        self.assertIn("--find-links", block)
+        self.assertIn("--target $sitePackages", block)
+        self.assertIn("PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD", block)
+
+    def test_windows_manifest_target_fields_are_standalone_installer_specific(self) -> None:
         script = BUILD_OFFLINE_PACKAGE_WINDOWS.read_text(encoding="utf-8")
         start = script.index("target = [ordered]@{")
-        end = script.index("entrypoint = ", start)
+        end = script.index("components = [ordered]@{", start)
         block = script[start:end]
 
         self.assertIn('platform = "windows"', block)
         self.assertIn('arch = "x86_64"', block)
         self.assertIn("python_tag = $PythonTag", block)
-        self.assertIn('entrypoint = "install-offline.ps1"', script)
+        self.assertIn("python_runtime", block)
+        self.assertIn('entrypoint = "paper-fetch-skill-windows-x86_64-setup.exe"', script)
+        self.assertIn('runtime = "runtime"', script)
+        self.assertIn('post_install_helper = "scripts/windows-installer-helper.ps1"', script)
+
+    def test_windows_build_writes_cli_and_flaresolverr_wrappers(self) -> None:
+        script = BUILD_OFFLINE_PACKAGE_WINDOWS.read_text(encoding="utf-8")
+        start = script.index("function Write-CmdWrappers")
+        end = script.index("function Add-SkillAgentManifest", start)
+        block = script[start:end]
+
+        self.assertIn("paper-fetch.cmd", block)
+        self.assertIn("paper-fetch-mcp.cmd", block)
+        self.assertIn('foreach ($name in @("up", "down", "status"))', block)
+        self.assertIn("flaresolverr-$name.cmd", block)
+        self.assertIn("runtime\\python.exe", block)
+        self.assertIn("-m paper_fetch.mcp.server", block)
+
+    def test_windows_build_adds_codex_skill_agent_manifest(self) -> None:
+        script = BUILD_OFFLINE_PACKAGE_WINDOWS.read_text(encoding="utf-8")
+        start = script.index("function Add-SkillAgentManifest")
+        end = script.index("function Write-DefaultOfflineEnv", start)
+        block = script[start:end]
+
+        self.assertIn("agents", block)
+        self.assertIn("openai.yaml", block)
+        self.assertIn("Paper Fetch Skill", block)
+
+    def test_windows_inno_installer_script_is_used(self) -> None:
+        script = BUILD_OFFLINE_PACKAGE_WINDOWS.read_text(encoding="utf-8")
+        iss = (REPO_ROOT / "installer" / "paper-fetch-skill.iss").read_text(encoding="utf-8")
+
+        self.assertIn("Find-InnoCompiler", script)
+        self.assertIn("ISCC.exe", script)
+        self.assertIn("/DSourceDir=$Staging", script)
+        self.assertIn("PrivilegesRequired=lowest", iss)
+        self.assertIn(r"DefaultDirName={localappdata}\PaperFetchSkill", iss)
+        self.assertIn("windows-installer-helper.ps1", iss)
 
     def test_windows_flaresolverr_bundle_is_built_from_patched_source(self) -> None:
         script = BUILD_OFFLINE_PACKAGE_WINDOWS.read_text(encoding="utf-8")

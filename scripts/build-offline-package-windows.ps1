@@ -1,7 +1,9 @@
 param(
     [string]$OutputDir,
     [string]$PackageName,
-    [string]$PythonBin = "python"
+    [string]$PythonBin = "python",
+    [string]$EmbeddedPythonVersion = "3.13.13",
+    [string]$InnoCompiler
 )
 
 Set-StrictMode -Version Latest
@@ -41,14 +43,9 @@ function Invoke-Native {
 function Get-PythonTag {
     $tag = & $PythonBin -c "import sys; sys.exit(1) if sys.implementation.name != 'cpython' else None; print(f'cp{sys.version_info.major}{sys.version_info.minor}')"
     if ($LASTEXITCODE -ne 0) {
-        throw "Offline package build requires CPython 3.11, 3.12, 3.13, or 3.14."
+        throw "Windows setup build requires CPython 3.13 x64."
     }
     return $tag.Trim()
-}
-
-function Test-SupportedPythonTag {
-    param([string]$PythonTag)
-    return $PythonTag -in @("cp311", "cp312", "cp313", "cp314")
 }
 
 function Test-RunningOnWindowsPlatform {
@@ -76,15 +73,15 @@ function Get-WindowsProcessorArchitecture {
 function Assert-Target {
     $runningOnWindows = Test-RunningOnWindowsPlatform
     if (-not $runningOnWindows) {
-        throw "Windows offline package build must run on Windows."
+        throw "Windows setup build must run on Windows."
     }
     $arch = Get-WindowsProcessorArchitecture
     if ($arch -ne "AMD64") {
-        throw "Windows offline package build currently targets x86_64 only; detected $arch."
+        throw "Windows setup build currently targets x86_64 only; detected $arch."
     }
     $pythonTag = Get-PythonTag
-    if (-not (Test-SupportedPythonTag $pythonTag)) {
-        throw "Offline package build requires CPython 3.11, 3.12, 3.13, or 3.14; detected $pythonTag."
+    if ($pythonTag -ne "cp313") {
+        throw "Windows setup build uses the CPython 3.13 embeddable runtime; build with CPython 3.13, detected $pythonTag."
     }
     return $pythonTag
 }
@@ -160,6 +157,72 @@ function New-BuildVenv {
     $projectWheel = @(Get-ChildItem -Path (Join-Path $Staging "dist") -Filter "paper_fetch_skill-*.whl")[0].FullName
     Invoke-Native $buildPython -m pip install --no-index --find-links (Join-Path $Staging "wheelhouse") $projectWheel
     return $buildPython
+}
+
+function Add-EmbeddedPythonRuntime {
+    param([string]$Staging)
+
+    $runtime = Join-Path $Staging "runtime"
+    $archive = Join-Path $BuildDir "python-$EmbeddedPythonVersion-embed-amd64.zip"
+    $url = "https://www.python.org/ftp/python/$EmbeddedPythonVersion/python-$EmbeddedPythonVersion-embed-amd64.zip"
+
+    Write-Log "Downloading CPython $EmbeddedPythonVersion embeddable x64 runtime"
+    if (-not (Test-Path -LiteralPath $archive -PathType Leaf)) {
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+        Invoke-WebRequest -Uri $url -OutFile $archive
+    }
+    Remove-Item -Recurse -Force -ErrorAction SilentlyContinue $runtime
+    New-Item -ItemType Directory -Force -Path $runtime | Out-Null
+    Expand-Archive -LiteralPath $archive -DestinationPath $runtime -Force
+
+    $pth = Join-Path $runtime "python313._pth"
+    if (-not (Test-Path -LiteralPath $pth -PathType Leaf)) {
+        throw "Missing embeddable runtime _pth file: $pth"
+    }
+    $lines = New-Object System.Collections.Generic.List[string]
+    $sawSitePackages = $false
+    foreach ($line in Get-Content -LiteralPath $pth) {
+        if ($line.Trim() -eq "Lib/site-packages") {
+            $sawSitePackages = $true
+        }
+        if ($line.Trim() -eq "#import site") {
+            if (-not $sawSitePackages) {
+                $lines.Add("Lib/site-packages")
+                $sawSitePackages = $true
+            }
+            $lines.Add("import site")
+        } elseif ($line.Trim() -ne "import site") {
+            $lines.Add($line)
+        }
+    }
+    if (-not $sawSitePackages) {
+        $lines.Add("Lib/site-packages")
+    }
+    if (-not ($lines -contains "import site")) {
+        $lines.Add("import site")
+    }
+    [System.IO.File]::WriteAllLines($pth, $lines, [System.Text.UTF8Encoding]::new($false))
+}
+
+function Install-EmbeddedPythonPackages {
+    param([string]$Staging)
+
+    $runtime = Join-Path $Staging "runtime"
+    $sitePackages = Join-Path $runtime "Lib/site-packages"
+    $projectWheel = @(Get-ChildItem -Path (Join-Path $Staging "dist") -Filter "paper_fetch_skill-*.whl")[0].FullName
+    New-Item -ItemType Directory -Force -Path $sitePackages | Out-Null
+
+    Write-Log "Installing project and dependencies into embedded runtime"
+    $previousSkip = $env:PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD
+    try {
+        $env:PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD = "1"
+        Invoke-Native $PythonBin -m pip install --no-index --find-links (Join-Path $Staging "wheelhouse") --target $sitePackages $projectWheel
+    } finally {
+        $env:PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD = $previousSkip
+    }
+
+    $runtimePython = Join-Path $runtime "python.exe"
+    Invoke-Native $runtimePython -X utf8 -c "import paper_fetch; import paper_fetch.mcp.server; print('embedded runtime ok')"
 }
 
 function Add-FormulaTools {
@@ -257,6 +320,84 @@ function Add-FlareSolverrBundle {
     }
 }
 
+function Write-CmdWrappers {
+    param([string]$Staging)
+
+    Write-Log "Writing command wrappers"
+    $bin = Join-Path $Staging "bin"
+    New-Item -ItemType Directory -Force -Path $bin | Out-Null
+
+    $paperFetch = @'
+@echo off
+setlocal
+set "PAPER_FETCH_ROOT=%~dp0.."
+if not defined PAPER_FETCH_ENV_FILE set "PAPER_FETCH_ENV_FILE=%PAPER_FETCH_ROOT%\offline.env"
+set "PYTHONUTF8=1"
+set "PYTHONIOENCODING=utf-8"
+"%PAPER_FETCH_ROOT%\runtime\python.exe" -X utf8 -m paper_fetch.cli %*
+exit /b %ERRORLEVEL%
+'@
+    Set-Content -LiteralPath (Join-Path $bin "paper-fetch.cmd") -Value $paperFetch -Encoding ASCII
+
+    $mcp = @'
+@echo off
+setlocal
+set "PAPER_FETCH_ROOT=%~dp0.."
+if not defined PAPER_FETCH_ENV_FILE set "PAPER_FETCH_ENV_FILE=%PAPER_FETCH_ROOT%\offline.env"
+set "PYTHONUTF8=1"
+set "PYTHONIOENCODING=utf-8"
+"%PAPER_FETCH_ROOT%\runtime\python.exe" -X utf8 -m paper_fetch.mcp.server %*
+exit /b %ERRORLEVEL%
+'@
+    Set-Content -LiteralPath (Join-Path $bin "paper-fetch-mcp.cmd") -Value $mcp -Encoding ASCII
+
+    foreach ($name in @("up", "down", "status")) {
+        $scriptName = "flaresolverr-$name.ps1"
+        $wrapper = @"
+@echo off
+setlocal
+set "PAPER_FETCH_ROOT=%~dp0.."
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%PAPER_FETCH_ROOT%\scripts\$scriptName" "%PAPER_FETCH_ROOT%\vendor\flaresolverr\.env.flaresolverr-source-windows" %*
+exit /b %ERRORLEVEL%
+"@
+        Set-Content -LiteralPath (Join-Path $bin "flaresolverr-$name.cmd") -Value $wrapper -Encoding ASCII
+    }
+}
+
+function Add-SkillAgentManifest {
+    param([string]$Staging)
+
+    $agentDir = Join-Path (Join-Path (Join-Path $Staging "skills") "paper-fetch-skill") "agents"
+    New-Item -ItemType Directory -Force -Path $agentDir | Out-Null
+    $content = @'
+interface:
+  display_name: "Paper Fetch Skill"
+  short_description: "Fetch AI-friendly paper text by DOI, URL, or title"
+  default_prompt: "Use $paper-fetch-skill whenever you need the text, readability, or full-text availability of a specific paper or a citation list of identifiable papers."
+'@
+    [System.IO.File]::WriteAllText((Join-Path $agentDir "openai.yaml"), $content, [System.Text.UTF8Encoding]::new($false))
+}
+
+function Write-DefaultOfflineEnv {
+    param([string]$Staging)
+
+    $content = @"
+ELSEVIER_API_KEY=""
+
+# BEGIN paper-fetch offline managed
+PAPER_FETCH_DOWNLOAD_DIR='$($Staging.Replace("\", "/"))/downloads'
+PAPER_FETCH_FORMULA_TOOLS_DIR='$($Staging.Replace("\", "/"))/formula-tools'
+PLAYWRIGHT_BROWSERS_PATH='$($Staging.Replace("\", "/"))/ms-playwright'
+FLARESOLVERR_URL='http://127.0.0.1:8191/v1'
+FLARESOLVERR_ENV_FILE='$($Staging.Replace("\", "/"))/vendor/flaresolverr/.env.flaresolverr-source-windows'
+FLARESOLVERR_SOURCE_DIR='$($Staging.Replace("\", "/"))/vendor/flaresolverr'
+PYTHONUTF8='1'
+PYTHONIOENCODING='utf-8'
+# END paper-fetch offline managed
+"@
+    [System.IO.File]::WriteAllText((Join-Path $Staging "offline.env"), $content, [System.Text.UTF8Encoding]::new($false))
+}
+
 function Write-ManifestAndChecksums {
     param(
         [string]$Staging,
@@ -264,7 +405,7 @@ function Write-ManifestAndChecksums {
         [string]$PythonTag
     )
 
-    Write-Log "Writing manifest and checksums"
+    Write-Log "Writing standalone manifest and checksums"
     $gitRevision = ""
     try {
         $gitRevision = (& git -C $RepoDir rev-parse HEAD).Trim()
@@ -275,8 +416,8 @@ function Write-ManifestAndChecksums {
     $projectWheels = @(Get-ChildItem -Path (Join-Path $Staging "dist") -Filter "paper_fetch_skill-*.whl" | Sort-Object Name)
     $wheelhouse = @(Get-ChildItem -Path (Join-Path $Staging "wheelhouse") -Filter "*.whl")
     $payload = [ordered]@{
-        schema_version = 1
-        name = "paper-fetch-skill-offline"
+        schema_version = 2
+        name = "paper-fetch-skill-windows-setup"
         project = "paper-fetch-skill"
         version = $Version
         built_at_utc = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
@@ -285,10 +426,13 @@ function Write-ManifestAndChecksums {
             platform = "windows"
             arch = "x86_64"
             python_tag = $PythonTag
+            python_runtime = "cpython-$EmbeddedPythonVersion-embed-amd64"
         }
-        entrypoint = "install-offline.ps1"
+        entrypoint = "paper-fetch-skill-windows-x86_64-setup.exe"
         components = [ordered]@{
-            source_snapshot = "."
+            runtime = "runtime"
+            bin = "bin"
+            skills = "skills/paper-fetch-skill"
             project_wheels = @($projectWheels | ForEach-Object { "dist/$($_.Name)" })
             wheelhouse_count = $wheelhouse.Count
             playwright_browsers = "ms-playwright"
@@ -298,6 +442,10 @@ function Write-ManifestAndChecksums {
                 runtime_bundle = "vendor/flaresolverr/.flaresolverr/v3.4.6/flaresolverr"
                 executable = "vendor/flaresolverr/.flaresolverr/v3.4.6/flaresolverr/flaresolverr.exe"
                 patch = "return-image-payload"
+            }
+            installer = [ordered]@{
+                inno_setup = "installer/paper-fetch-skill.iss"
+                post_install_helper = "scripts/windows-installer-helper.ps1"
             }
         }
     }
@@ -314,33 +462,59 @@ function Write-ManifestAndChecksums {
     $checksumLines | Set-Content -LiteralPath (Join-Path $Staging "sha256sums.txt") -Encoding ASCII
 }
 
-function New-ZipArchive {
+function Find-InnoCompiler {
+    if (-not [string]::IsNullOrWhiteSpace($InnoCompiler)) {
+        if (Test-Path -LiteralPath $InnoCompiler -PathType Leaf) {
+            return [System.IO.Path]::GetFullPath($InnoCompiler)
+        }
+        $explicit = Get-Command $InnoCompiler -ErrorAction SilentlyContinue
+        if ($null -ne $explicit) {
+            return $explicit.Source
+        }
+        throw "Could not find Inno Setup compiler at $InnoCompiler."
+    }
+
+    $command = Get-Command ISCC.exe -ErrorAction SilentlyContinue
+    if ($null -ne $command) {
+        return $command.Source
+    }
+    foreach ($candidate in @(
+        (Join-Path ${env:ProgramFiles(x86)} "Inno Setup 6/ISCC.exe"),
+        (Join-Path $env:ProgramFiles "Inno Setup 6/ISCC.exe")
+    )) {
+        if (Test-Path -LiteralPath $candidate -PathType Leaf) {
+            return $candidate
+        }
+    }
+    throw "Inno Setup compiler (ISCC.exe) was not found. Install Inno Setup 6 or pass -InnoCompiler."
+}
+
+function Build-InnoInstaller {
     param(
-        [string]$StagingParent,
-        [string]$RootName,
-        [string]$ArchiveName,
-        [string]$DestinationDir
+        [string]$Staging,
+        [string]$Version,
+        [string]$SetupBaseName
     )
 
-    New-Item -ItemType Directory -Force -Path $DestinationDir | Out-Null
-    $archive = Join-Path $DestinationDir "$ArchiveName.zip"
-    Remove-Item -Force -ErrorAction SilentlyContinue $archive
-    Write-Log "Creating zip archive"
-    Push-Location $StagingParent
-    try {
-        Compress-Archive -LiteralPath $RootName -DestinationPath $archive -Force
-    } finally {
-        Pop-Location
+    $iscc = Find-InnoCompiler
+    $script = Join-Path $RepoDir "installer/paper-fetch-skill.iss"
+    New-Item -ItemType Directory -Force -Path $OutputDir | Out-Null
+    $setupPath = Join-Path $OutputDir "$SetupBaseName.exe"
+    Remove-Item -Force -ErrorAction SilentlyContinue $setupPath
+
+    Write-Log "Building Inno Setup installer"
+    Invoke-Native $iscc "/DSourceDir=$Staging" "/DAppVersion=$Version" "/DOutputDir=$OutputDir" "/DSetupBaseName=$SetupBaseName" $script
+    if (-not (Test-Path -LiteralPath $setupPath -PathType Leaf)) {
+        throw "Missing built installer: $setupPath"
     }
-    Write-Host $archive
+    Write-Host $setupPath
 }
 
 $pythonTag = Assert-Target
 if ([string]::IsNullOrWhiteSpace($PackageName)) {
-    $PackageName = "paper-fetch-skill-offline-windows-x86_64-$pythonTag"
+    $PackageName = "paper-fetch-skill-windows-x86_64-setup"
 }
-$archiveRootName = "paper-fetch-offline"
-$staging = Join-Path $BuildDir $archiveRootName
+$staging = Join-Path $BuildDir "paper-fetch-standalone"
 $version = Get-ProjectVersion
 
 Remove-Item -Recurse -Force -ErrorAction SilentlyContinue $staging
@@ -349,8 +523,13 @@ New-Item -ItemType Directory -Force -Path $BuildDir | Out-Null
 Copy-SourceSnapshot $staging
 Build-ProjectWheelhouse $staging
 $buildPython = New-BuildVenv $staging
+Add-EmbeddedPythonRuntime $staging
+Install-EmbeddedPythonPackages $staging
 Add-FormulaTools -Staging $staging -BuildPython $buildPython
 Add-PlaywrightChromium -Staging $staging -BuildPython $buildPython
 Add-FlareSolverrBundle $staging
+Write-CmdWrappers $staging
+Add-SkillAgentManifest $staging
+Write-DefaultOfflineEnv $staging
 Write-ManifestAndChecksums -Staging $staging -Version $version -PythonTag $pythonTag
-New-ZipArchive -StagingParent $BuildDir -RootName $archiveRootName -ArchiveName $PackageName -DestinationDir $OutputDir
+Build-InnoInstaller -Staging $staging -Version $version -SetupBaseName $PackageName

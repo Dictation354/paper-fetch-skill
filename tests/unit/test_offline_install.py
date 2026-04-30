@@ -13,6 +13,7 @@ import unittest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 WINDOWS_INSTALLER = REPO_ROOT / "install-offline.ps1"
+WINDOWS_INSTALLER_HELPER = REPO_ROOT / "scripts" / "windows-installer-helper.ps1"
 
 
 def _write_executable(path: Path, content: str) -> None:
@@ -269,49 +270,60 @@ class OfflineInstallTests(unittest.TestCase):
             self.assertEqual(offline_env.count("# END paper-fetch offline managed"), 1)
 
     def test_windows_installer_declares_abi_checksum_and_asset_guards(self) -> None:
-        script = WINDOWS_INSTALLER.read_text(encoding="utf-8")
+        script = WINDOWS_INSTALLER_HELPER.read_text(encoding="utf-8")
 
-        self.assertIn("target.python_tag", script)
-        self.assertIn("Get-FileHash", script)
-        self.assertIn("PIP_NO_INDEX", script)
-        self.assertIn("formula-tools/bin/texmath.exe", script)
+        self.assertIn("formula-tools", script)
+        self.assertIn("bin/texmath.exe", script)
         self.assertIn("ms-playwright", script)
-        self.assertIn("flaresolverr.exe", script)
-        self.assertIn("chrome.exe", script)
-        self.assertIn("$NoUserConfig", script)
+        self.assertIn("runtime", script)
+        self.assertIn("python.exe", script)
+        self.assertIn("-X", script)
+        self.assertIn("paper_fetch.mcp.server", script)
 
-    def test_windows_installer_writes_managed_env_and_activation_script(self) -> None:
-        script = WINDOWS_INSTALLER.read_text(encoding="utf-8")
+    def test_windows_installer_writes_managed_env_skills_and_path(self) -> None:
+        script = WINDOWS_INSTALLER_HELPER.read_text(encoding="utf-8")
 
         self.assertIn("# BEGIN paper-fetch offline managed", script)
         self.assertIn("# END paper-fetch offline managed", script)
-        self.assertIn("Activate-Offline.ps1", script)
         self.assertIn("PAPER_FETCH_FORMULA_TOOLS_DIR", script)
         self.assertIn("PLAYWRIGHT_BROWSERS_PATH", script)
         self.assertIn("FLARESOLVERR_SOURCE_DIR", script)
-        self.assertIn("ELSEVIER_API_KEY", script)
-        self.assertIn("https://dev.elsevier.com/", script)
-        self.assertNotIn(".cache/ms-playwright'", script)
+        self.assertIn(".codex", script)
+        self.assertIn(".claude", script)
+        self.assertIn("Add-UserPathEntry", script)
+        self.assertNotIn(".cache/ms-playwright", script)
+
+    def test_windows_installer_helper_registers_codex_and_claude_mcp(self) -> None:
+        script = WINDOWS_INSTALLER_HELPER.read_text(encoding="utf-8")
+
+        self.assertIn("codex", script)
+        self.assertIn('"mcp", "remove", $McpName', script)
+        self.assertIn('"mcp", "add"', script)
+        self.assertIn("Write-CodexConfigToml", script)
+        self.assertIn("[mcp_servers.paper-fetch]", script)
+        self.assertIn("[mcp_servers.paper-fetch.env]", script)
+        self.assertIn("claude", script)
+        self.assertIn('"mcp", "add", "-s", "user"', script)
+        self.assertIn("PYTHONUTF8", script)
+        self.assertIn("PYTHONIOENCODING", script)
 
     def test_windows_installer_smoke_checks_do_not_use_user_playwright_cache(self) -> None:
-        script = WINDOWS_INSTALLER.read_text(encoding="utf-8")
+        script = WINDOWS_INSTALLER_HELPER.read_text(encoding="utf-8")
 
         self.assertIn("provider_status_payload", script)
         self.assertIn("manager.chromium.executable_path", script)
         self.assertIn("assert root in executable.parents", script)
-        self.assertIn("paper-fetch.exe", script)
+        self.assertIn("paper_fetch.mcp.tools", script)
 
-    def test_windows_installer_platform_check_supports_windows_powershell_51(self) -> None:
-        script = WINDOWS_INSTALLER.read_text(encoding="utf-8")
-        start = script.index("function Test-RunningOnWindowsPlatform")
-        end = script.index("function Invoke-PythonText", start)
-        block = script[start:end]
+    def test_windows_uninstaller_removes_managed_skills_path_and_mcp(self) -> None:
+        script = WINDOWS_INSTALLER_HELPER.read_text(encoding="utf-8")
 
-        self.assertIn("PROCESSOR_ARCHITEW6432", block)
-        self.assertIn("PROCESSOR_ARCHITECTURE", block)
-        self.assertIn('if ($arch -ne "AMD64")', block)
-        self.assertNotIn("OSArchitecture", block)
-        self.assertNotIn("RuntimeInformation", block)
+        self.assertIn('"Uninstall"', script)
+        self.assertIn("Remove-Skills", script)
+        self.assertIn("Remove-UserPathEntry", script)
+        self.assertIn("Unregister-CodexMcp", script)
+        self.assertIn("Unregister-ClaudeMcp", script)
+        self.assertIn("Remove-CodexConfigToml", script)
 
 
 if __name__ == "__main__":

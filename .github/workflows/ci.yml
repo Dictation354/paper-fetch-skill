@@ -216,18 +216,6 @@ jobs:
 
   offline-windows-x86-64:
     runs-on: windows-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - python-version: "3.11"
-            python-tag: "cp311"
-          - python-version: "3.12"
-            python-tag: "cp312"
-          - python-version: "3.13"
-            python-tag: "cp313"
-          - python-version: "3.14"
-            python-tag: "cp314"
 
     steps:
       - name: Check out repository
@@ -236,7 +224,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: "3.13"
 
       - name: Set up Haskell toolchain for bundled texmath
         id: setup-haskell
@@ -254,29 +242,48 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-offline-formula-tools-${{ steps.setup-haskell.outputs.ghc-version }}-
 
+      - name: Install Inno Setup
+        shell: pwsh
+        run: choco install innosetup --no-progress -y
+
       - name: Build offline package
         shell: pwsh
         run: ./scripts/build-offline-package-windows.ps1 -OutputDir "$PWD/offline-artifacts"
 
-      - name: Verify offline package
+      - name: Verify setup installer
         shell: pwsh
         run: |
-          $zip = "$PWD/offline-artifacts/paper-fetch-skill-offline-windows-x86_64-${{ matrix.python-tag }}.zip"
-          $extractRoot = Join-Path $env:RUNNER_TEMP "paper-fetch-offline-windows"
-          Remove-Item -Recurse -Force -ErrorAction SilentlyContinue $extractRoot
-          New-Item -ItemType Directory -Force -Path $extractRoot | Out-Null
-          Expand-Archive -LiteralPath $zip -DestinationPath $extractRoot -Force
-          $bundle = Get-ChildItem -Path $extractRoot -Directory | Select-Object -First 1
-          if ($null -eq $bundle) {
-            throw "Could not locate extracted Windows offline bundle."
+          $setup = "$PWD/offline-artifacts/paper-fetch-skill-windows-x86_64-setup.exe"
+          $installRoot = Join-Path $env:RUNNER_TEMP "PaperFetchSkill"
+          $fakeBin = Join-Path $env:RUNNER_TEMP "paper-fetch-fake-hosts"
+          $fakeLog = Join-Path $env:RUNNER_TEMP "paper-fetch-fake-hosts.log"
+          Remove-Item -Recurse -Force -ErrorAction SilentlyContinue $installRoot, $fakeBin
+          Remove-Item -Force -ErrorAction SilentlyContinue $fakeLog
+          New-Item -ItemType Directory -Force -Path $fakeBin | Out-Null
+
+          @'
+          @echo off
+          echo codex %*>>"%PAPER_FETCH_FAKE_CLI_LOG%"
+          exit /b 0
+          '@ | Set-Content -LiteralPath (Join-Path $fakeBin "codex.cmd") -Encoding ASCII
+          @'
+          @echo off
+          echo claude %*>>"%PAPER_FETCH_FAKE_CLI_LOG%"
+          exit /b 0
+          '@ | Set-Content -LiteralPath (Join-Path $fakeBin "claude.cmd") -Encoding ASCII
+
+          $env:PAPER_FETCH_FAKE_CLI_LOG = $fakeLog
+          $env:PATH = "$fakeBin;$env:PATH"
+          & $setup /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /DIR="$installRoot" /LOG="$env:RUNNER_TEMP\paper-fetch-setup.log"
+          if ($LASTEXITCODE -ne 0) {
+            Get-Content "$env:RUNNER_TEMP\paper-fetch-setup.log" -ErrorAction SilentlyContinue
+            throw "Setup installer failed with exit code $LASTEXITCODE"
           }
-          $bundleRoot = $bundle.FullName
 
-          & (Join-Path $bundleRoot "install-offline.ps1") -NoUserConfig
-          . (Join-Path $bundleRoot "Activate-Offline.ps1")
-
-          paper-fetch --help | Out-Null
-          & (Join-Path $bundleRoot "formula-tools/bin/texmath.exe") --help | Out-Null
+          $runtimePython = Join-Path $installRoot "runtime/python.exe"
+          & $runtimePython -X utf8 -c "import paper_fetch; import paper_fetch.mcp.server; from paper_fetch.mcp.tools import provider_status_payload; assert 'providers' in provider_status_payload()"
+          & (Join-Path $installRoot "bin/paper-fetch.cmd") --help | Out-Null
+          & (Join-Path $installRoot "formula-tools/bin/texmath.exe") --help | Out-Null
 
           $playwrightCheck = @'
           from pathlib import Path
@@ -293,24 +300,35 @@ jobs:
           assert executable.is_file(), executable
           assert root in executable.parents, (root, executable)
           '@
-          python -c $playwrightCheck (Join-Path $bundleRoot "ms-playwright")
+          & $runtimePython -X utf8 -c $playwrightCheck (Join-Path $installRoot "ms-playwright")
 
-          $flareEnv = Join-Path $bundleRoot "vendor/flaresolverr/.env.flaresolverr-source-windows"
           try {
-            & (Join-Path $bundleRoot "scripts/flaresolverr-up.ps1") $flareEnv
-            $status = & (Join-Path $bundleRoot "scripts/flaresolverr-status.ps1") $flareEnv | ConvertFrom-Json
+            & (Join-Path $installRoot "bin/flaresolverr-up.cmd")
+            $status = & (Join-Path $installRoot "bin/flaresolverr-status.cmd") | ConvertFrom-Json
             if ($status.status -ne "ok") {
               throw "FlareSolverr sessions.list returned status=$($status.status)"
             }
           } finally {
-            & (Join-Path $bundleRoot "scripts/flaresolverr-down.ps1") $flareEnv
+            & (Join-Path $installRoot "bin/flaresolverr-down.cmd")
+          }
+
+          $log = Get-Content -LiteralPath $fakeLog -Raw
+          foreach ($expected in @(
+            "codex mcp remove paper-fetch",
+            "codex mcp add",
+            "claude mcp remove -s user paper-fetch",
+            "claude mcp add -s user"
+          )) {
+            if ($log -notlike "*$expected*") {
+              throw "Fake host CLI log is missing: $expected`n$log"
+            }
           }
 
       - name: Upload offline package
         uses: actions/upload-artifact@v4
         with:
-          name: paper-fetch-skill-offline-windows-x86_64-${{ matrix.python-tag }}
-          path: offline-artifacts/paper-fetch-skill-offline-windows-x86_64-${{ matrix.python-tag }}.zip
+          name: paper-fetch-skill-windows-x86_64-setup
+          path: offline-artifacts/paper-fetch-skill-windows-x86_64-setup.exe
           if-no-files-found: error
 
   release-offline-packages:
@@ -338,7 +356,7 @@ jobs:
       - name: Download offline packages
         uses: actions/download-artifact@v4
         with:
-          pattern: paper-fetch-skill-offline-*
+          pattern: paper-fetch-skill-*
           path: release-artifacts
           merge-multiple: true
 
@@ -351,10 +369,7 @@ jobs:
             paper-fetch-skill-offline-linux-x86_64-cp312.tar.gz
             paper-fetch-skill-offline-linux-x86_64-cp313.tar.gz
             paper-fetch-skill-offline-linux-x86_64-cp314.tar.gz
-            paper-fetch-skill-offline-windows-x86_64-cp311.zip
-            paper-fetch-skill-offline-windows-x86_64-cp312.zip
-            paper-fetch-skill-offline-windows-x86_64-cp313.zip
-            paper-fetch-skill-offline-windows-x86_64-cp314.zip
+            paper-fetch-skill-windows-x86_64-setup.exe
           )
 
           for asset in "${expected[@]}"; do

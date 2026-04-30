@@ -101,22 +101,19 @@ export PAPER_FETCH_ENV_FILE=/path/to/.env
 
 ### 离线安装
 
-离线包按操作系统和 CPython ABI 区分，例如：
+离线 release asset 包含 4 个 Linux ABI tarball 和 1 个 Windows x86_64 安装器：
 
 ```text
 paper-fetch-skill-offline-linux-x86_64-cp311.tar.gz
 paper-fetch-skill-offline-linux-x86_64-cp312.tar.gz
 paper-fetch-skill-offline-linux-x86_64-cp313.tar.gz
 paper-fetch-skill-offline-linux-x86_64-cp314.tar.gz
-paper-fetch-skill-offline-windows-x86_64-cp311.zip
-paper-fetch-skill-offline-windows-x86_64-cp312.zip
-paper-fetch-skill-offline-windows-x86_64-cp313.zip
-paper-fetch-skill-offline-windows-x86_64-cp314.zip
+paper-fetch-skill-windows-x86_64-setup.exe
 ```
 
-推送 `v*` tag 时，GitHub Actions 会等常规验证和全部 Linux / Windows 离线包矩阵成功后，自动创建对应 GitHub Release，并把上述 8 个离线包作为 release assets 上传。也可以从 `v*` tag 手动运行 CI workflow，并设置 `publish_release=true` 重新发布。
+推送 `v*` tag 时，GitHub Actions 会等常规验证、全部 Linux 离线包和 Windows 安装器成功后，自动创建对应 GitHub Release，并把上述 5 个文件作为 release assets 上传。也可以从 `v*` tag 手动运行 CI workflow，并设置 `publish_release=true` 重新发布。
 
-选择与目标机 OS 和 Python 版本匹配的包。Linux 解压后执行：
+Linux 选择与目标机 Python ABI 匹配的包。解压后执行：
 
 ```bash
 ./install-offline.sh --preset=headless --no-user-config
@@ -129,14 +126,40 @@ WSLg 或桌面显示环境可改用：
 ./install-offline.sh --preset=wslg --no-user-config
 ```
 
-Windows x86_64 目标机需要已有匹配 CPython。Windows zip 内部使用短目录名 `paper-fetch-offline/`，解压后进入该目录，并在 Windows PowerShell 5.1 或 PowerShell 7+ 中执行：
+Windows x86_64 推荐直接运行：
 
 ```powershell
-.\install-offline.ps1 -NoUserConfig
-. .\Activate-Offline.ps1
+.\paper-fetch-skill-windows-x86_64-setup.exe
 ```
 
-离线安装细节见 [`docs/deployment.md`](docs/deployment.md)。
+安装器默认安装到 `%LOCALAPPDATA%\PaperFetchSkill`，不要求管理员权限。安装内容包含 CPython 3.13 x64 embeddable runtime、Python 依赖、Playwright Chromium、formula tools、FlareSolverr runtime、CLI/MCP cmd wrapper、Codex skill 和 Claude Code skill。安装器会把 `bin` 加入用户 PATH，复制 skill，并在检测到 Codex / Claude CLI 时注册 MCP；没有 Claude CLI 时只跳过 Claude MCP 注册，Codex 没有 CLI 时会备份并更新 `%USERPROFILE%\.codex\config.toml`。
+
+安装后新开一个 PowerShell 验证：
+
+```powershell
+paper-fetch --help
+```
+
+如果要启用 Wiley / Science / PNAS 的浏览器路径，启动安装器内置 FlareSolverr：
+
+```powershell
+flaresolverr-up
+flaresolverr-status
+```
+
+停止时运行：
+
+```powershell
+flaresolverr-down
+```
+
+Elsevier 官方 XML/API 和 PDF fallback 仍需要从 <https://dev.elsevier.com/> 申请 key，并写入安装目录下的 `offline.env`：
+
+```powershell
+notepad "$env:LOCALAPPDATA\PaperFetchSkill\offline.env"
+```
+
+修改 Codex / Claude Code skill 或 MCP 配置后需要重启对应 host。Windows 安装器和 legacy 手动排障路径见 [`paper-fetch-windows-cli-mcp-skill-install.md`](paper-fetch-windows-cli-mcp-skill-install.md)，离线安装细节见 [`docs/deployment.md`](docs/deployment.md)。
 
 ### 接入 Codex
 
