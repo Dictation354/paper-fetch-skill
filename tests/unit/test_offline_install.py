@@ -25,9 +25,13 @@ def _write_file(path: Path, content: str = "") -> None:
     path.write_text(content, encoding="utf-8")
 
 
+def _python_tag(version: str) -> str:
+    major, minor, _micro = version.split(".")
+    return f"cp{major}{minor}"
+
+
 def _fake_python_script(version: str) -> str:
-    major, minor, micro = version.split(".")
-    tag = f"cp{major}{minor}"
+    tag = _python_tag(version)
     return f"""\
     #!/usr/bin/env bash
     set -euo pipefail
@@ -45,7 +49,10 @@ def _fake_python_script(version: str) -> str:
         exit 0
       fi
       if [[ "$code" == *'json.load'* && "$code" == *'python_tag'* ]]; then
-        echo "cp311"
+        manifest="${{3:-}}"
+        if [[ -f "$manifest" ]]; then
+          grep -oE '"python_tag"[[:space:]]*:[[:space:]]*"[^"]+"' "$manifest" | head -n 1 | sed -E 's/.*"python_tag"[[:space:]]*:[[:space:]]*"([^"]+)".*/\\1/'
+        fi
         exit 0
       fi
       if [[ "$code" == *'playwright.sync_api'* ]]; then
@@ -89,15 +96,23 @@ def _write_checksums(root: Path) -> None:
 
 
 class OfflineInstallTests(unittest.TestCase):
-    def _create_bundle(self, root: Path, *, python_version: str = "3.11.9", include_xvfb: bool = True) -> tuple[Path, Path, Path]:
+    def _create_bundle(
+        self,
+        root: Path,
+        *,
+        python_version: str = "3.11.9",
+        manifest_python_tag: str | None = None,
+        include_xvfb: bool = True,
+    ) -> tuple[Path, Path, Path]:
         bundle = root / "bundle"
         bundle.mkdir()
         shutil.copy2(REPO_ROOT / "install-offline.sh", bundle / "install-offline.sh")
         (bundle / "install-offline.sh").chmod(0o755)
 
+        manifest_python_tag = manifest_python_tag or _python_tag(python_version)
         _write_file(
             bundle / "offline-manifest.json",
-            '{"target": {"platform": "linux", "arch": "x86_64", "python_tag": "cp311"}}\n',
+            f'{{"target": {{"platform": "linux", "arch": "x86_64", "python_tag": "{manifest_python_tag}"}}}}\n',
         )
         _write_file(bundle / ".env.example", 'ELSEVIER_API_KEY=""\n')
         _write_file(bundle / "dist" / "paper_fetch_skill-1.0.0-py3-none-any.whl")
@@ -194,14 +209,38 @@ class OfflineInstallTests(unittest.TestCase):
             self.assertIn("# BEGIN paper-fetch offline managed", payload)
             self.assertIn(str(bundle / "vendor" / "flaresolverr"), payload)
 
-    def test_wrong_python_minor_is_rejected(self) -> None:
+    def test_matching_manifest_and_interpreter_tags_are_accepted(self) -> None:
+        cases = (
+            ("3.11.9", "cp311"),
+            ("3.12.7", "cp312"),
+            ("3.13.3", "cp313"),
+            ("3.14.0", "cp314"),
+        )
+        for python_version, python_tag in cases:
+            with self.subTest(python_tag=python_tag), tempfile.TemporaryDirectory() as tmpdir:
+                bundle, fake_bin, home = self._create_bundle(
+                    Path(tmpdir),
+                    python_version=python_version,
+                    manifest_python_tag=python_tag,
+                )
+
+                result = self._run_installer(bundle, fake_bin, home)
+
+                self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_mismatched_manifest_and_interpreter_tag_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
-            bundle, fake_bin, home = self._create_bundle(Path(tmpdir), python_version="3.12.1")
+            bundle, fake_bin, home = self._create_bundle(
+                Path(tmpdir),
+                python_version="3.12.1",
+                manifest_python_tag="cp313",
+            )
 
             result = self._run_installer(bundle, fake_bin, home)
 
             self.assertNotEqual(result.returncode, 0)
-            self.assertIn("CPython 3.11.x", result.stderr)
+            self.assertIn("bundle requires CPython cp313", result.stderr)
+            self.assertIn("detected Python 3.12.1 (cp312)", result.stderr)
 
     def test_missing_xvfb_has_clear_headless_diagnostic(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

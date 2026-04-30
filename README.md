@@ -89,7 +89,7 @@ python3 -m pip install .
 
 这个脚本默认创建仓库内 `.venv`，并把大型浏览器组件下载到本地运行目录。它是在线一键安装入口；如果只想安装 Python 包和配置骨架，可以使用 `./install.sh --lite`。
 
-Linux x86_64 离线部署使用 CI 产出的 `paper-fetch-skill-offline-linux-x86_64-cp311.tar.gz`。目标机需要系统 CPython 3.11.x；解压后执行：
+Linux x86_64 离线部署使用 CI 产出的 ABI 专用包：`cp311`、`cp312`、`cp313`、`cp314` 分别对应 CPython 3.11、3.12、3.13、3.14。目标机必须使用与包名 tag 匹配的 CPython，例如 `cp313` 包只能用 CPython 3.13.x；解压后执行：
 
 ```bash
 ./install-offline.sh --preset=headless --no-user-config

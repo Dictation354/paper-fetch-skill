@@ -147,6 +147,18 @@ jobs:
 
   offline-linux-x86-64:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - python-version: "3.11"
+            python-tag: "cp311"
+          - python-version: "3.12"
+            python-tag: "cp312"
+          - python-version: "3.13"
+            python-tag: "cp313"
+          - python-version: "3.14"
+            python-tag: "cp314"
 
     steps:
       - name: Check out repository
@@ -155,7 +167,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: "3.11"
+          python-version: ${{ matrix.python-version }}
 
       - name: Set up Haskell toolchain for bundled texmath
         id: setup-haskell
@@ -185,13 +197,13 @@ jobs:
         run: scripts/build-offline-package.sh --output-dir "$PWD/offline-artifacts"
 
       - name: Verify offline package
-        run: scripts/verify-offline-package.sh "$PWD/offline-artifacts/paper-fetch-skill-offline-linux-x86_64-cp311.tar.gz"
+        run: scripts/verify-offline-package.sh "$PWD/offline-artifacts/paper-fetch-skill-offline-linux-x86_64-${{ matrix.python-tag }}.tar.gz"
 
       - name: Upload offline package
         uses: actions/upload-artifact@v4
         with:
-          name: paper-fetch-skill-offline-linux-x86_64-cp311
-          path: offline-artifacts/paper-fetch-skill-offline-linux-x86_64-cp311.tar.gz
+          name: paper-fetch-skill-offline-linux-x86_64-${{ matrix.python-tag }}
+          path: offline-artifacts/paper-fetch-skill-offline-linux-x86_64-${{ matrix.python-tag }}.tar.gz
           if-no-files-found: error
 
   full-golden:

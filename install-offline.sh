@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Offline installer for the Linux x86_64 CPython 3.11 bundle.
+# Offline installer for the Linux x86_64 CPython ABI-specific bundle.
 
 set -euo pipefail
 
@@ -96,15 +96,14 @@ check_platform() {
 
 check_python() {
   command -v "$PYTHON_BIN" >/dev/null 2>&1 || die "python3 was not found on PATH."
+  require_file "$BUNDLE_ROOT/offline-manifest.json"
 
   local version tag manifest_tag
   version="$("$PYTHON_BIN" -c 'import sys; print(".".join(map(str, sys.version_info[:3])))')"
-  tag="$("$PYTHON_BIN" -c 'import sys; print(f"cp{sys.version_info.major}{sys.version_info.minor}")')"
-  [ "$tag" = "cp311" ] || die "This bundle requires CPython 3.11.x (cp311); detected Python $version ($tag)."
-
-  require_file "$BUNDLE_ROOT/offline-manifest.json"
+  tag="$("$PYTHON_BIN" -c 'import sys; print(f"cp{sys.version_info.major}{sys.version_info.minor}" if sys.implementation.name == "cpython" else sys.implementation.name)')"
   manifest_tag="$("$PYTHON_BIN" -c 'import json, sys; print(json.load(open(sys.argv[1], encoding="utf-8")).get("target", {}).get("python_tag", ""))' "$BUNDLE_ROOT/offline-manifest.json")"
-  [ "$manifest_tag" = "cp311" ] || die "offline-manifest.json is not a cp311 bundle (target.python_tag=$manifest_tag)."
+  [ -n "$manifest_tag" ] || die "offline-manifest.json is missing target.python_tag."
+  [ "$tag" = "$manifest_tag" ] || die "bundle requires CPython $manifest_tag; detected Python $version ($tag)."
 }
 
 verify_checksums() {

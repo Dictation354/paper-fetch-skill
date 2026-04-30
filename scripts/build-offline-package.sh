@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# Build the Linux x86_64 CPython 3.11 offline tarball.
+# Build the Linux x86_64 CPython 3.11-3.14 offline tarball.
 
 set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 BUILD_DIR="${PAPER_FETCH_OFFLINE_BUILD_DIR:-$REPO_DIR/.offline-build}"
 OUTPUT_DIR="$REPO_DIR/dist"
-PACKAGE_NAME="paper-fetch-skill-offline-linux-x86_64-cp311"
+PACKAGE_NAME=""
 PYTHON_BIN="${PYTHON_BIN:-python3}"
 
 log() { printf '\033[1;34m==>\033[0m %s\n' "$*"; }
@@ -17,7 +17,7 @@ usage() {
 Usage:
   scripts/build-offline-package.sh [--output-dir <path>] [--package-name <name>]
 
-Builds a Linux x86_64 CPython 3.11 tar.gz bundle containing:
+Builds a Linux x86_64 CPython 3.11-3.14 tar.gz bundle containing:
   - source snapshot
   - project wheel and Python dependency wheelhouse
   - Playwright Chromium under ms-playwright/
@@ -49,14 +49,36 @@ while (($#)); do
   shift
 done
 
+detect_python_tag() {
+  "$PYTHON_BIN" - <<'PY'
+import sys
+
+if sys.implementation.name != "cpython":
+    raise SystemExit(1)
+
+print(f"cp{sys.version_info.major}{sys.version_info.minor}")
+PY
+}
+
+is_supported_python_tag() {
+  case "$1" in
+    cp311|cp312|cp313|cp314) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
 check_target() {
   [ "$(uname -s)" = "Linux" ] || die "Offline package build currently targets Linux only."
   case "$(uname -m)" in
     x86_64|amd64) ;;
     *) die "Offline package build currently targets x86_64 only." ;;
   esac
-  "$PYTHON_BIN" -c 'import sys; raise SystemExit(0 if sys.version_info[:2] == (3, 11) else 1)' \
-    || die "Offline package build requires CPython 3.11.x."
+  local python_tag
+  python_tag="$(detect_python_tag)" \
+    || die "Offline package build requires CPython 3.11, 3.12, 3.13, or 3.14."
+  is_supported_python_tag "$python_tag" \
+    || die "Offline package build requires CPython 3.11, 3.12, 3.13, or 3.14; detected $python_tag."
+  printf '%s\n' "$python_tag"
 }
 
 project_version() {
@@ -76,6 +98,7 @@ copy_source_snapshot() {
     --exclude='./.ruff_cache' \
     --exclude='./build' \
     --exclude='./dist' \
+    --exclude='./tests' \
     --exclude='./live-downloads' \
     --exclude='./**/__pycache__' \
     --exclude='./*.egg-info' \
@@ -193,18 +216,21 @@ EOF
     | tar -C "$staging/vendor/flaresolverr/.work/FlareSolverr" -xf -
 
   mkdir -p "$staging/vendor/flaresolverr/.flaresolverr/$flare_version"
-  tar -C "$flare_downloads/$flare_version" -cf - . \
+  [ -d "$flare_downloads/$flare_version/flaresolverr" ] \
+    || die "Missing extracted FlareSolverr bundle: $flare_downloads/$flare_version/flaresolverr"
+  tar -C "$flare_downloads/$flare_version" -cf - flaresolverr \
     | tar -C "$staging/vendor/flaresolverr/.flaresolverr/$flare_version" -xf -
 }
 
 write_manifest_and_checksums() {
   local staging="$1"
   local version="$2"
+  local python_tag="$3"
   local git_revision
   git_revision="$(git -C "$REPO_DIR" rev-parse HEAD 2>/dev/null || true)"
 
   log "Writing manifest and checksums"
-  "$PYTHON_BIN" - "$staging" "$version" "$git_revision" <<'PY'
+  "$PYTHON_BIN" - "$staging" "$version" "$git_revision" "$python_tag" <<'PY'
 from __future__ import annotations
 
 import json
@@ -216,6 +242,7 @@ from datetime import UTC, datetime
 staging = Path(sys.argv[1])
 version = sys.argv[2]
 git_revision = sys.argv[3] or None
+python_tag = sys.argv[4]
 
 project_wheels = sorted(path.name for path in (staging / "dist").glob("paper_fetch_skill-*.whl"))
 wheelhouse = sorted(path.name for path in (staging / "wheelhouse").glob("*.whl"))
@@ -231,7 +258,7 @@ payload = {
     "target": {
         "platform": "linux",
         "arch": "x86_64",
-        "python_tag": "cp311",
+        "python_tag": python_tag,
     },
     "entrypoint": "install-offline.sh",
     "components": {
@@ -275,10 +302,11 @@ create_archive() {
 }
 
 main() {
-  local staging="$BUILD_DIR/$PACKAGE_NAME"
-  local version build_python
+  local package_name python_tag staging version build_python
 
-  check_target
+  python_tag="$(check_target)"
+  package_name="${PACKAGE_NAME:-paper-fetch-skill-offline-linux-x86_64-$python_tag}"
+  staging="$BUILD_DIR/$package_name"
   version="$(project_version)"
   rm -rf "$staging"
   mkdir -p "$BUILD_DIR"
@@ -289,8 +317,8 @@ main() {
   bundle_formula_tools "$staging" "$build_python"
   bundle_playwright "$staging" "$build_python"
   prepare_flaresolverr "$staging" "$build_python"
-  write_manifest_and_checksums "$staging" "$version"
-  create_archive "$BUILD_DIR" "$PACKAGE_NAME" "$OUTPUT_DIR"
+  write_manifest_and_checksums "$staging" "$version" "$python_tag"
+  create_archive "$BUILD_DIR" "$package_name" "$OUTPUT_DIR"
 }
 
 main "$@"
