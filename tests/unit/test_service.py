@@ -68,6 +68,78 @@ def _typed_payload(
     )
 
 
+_RUNTIME_ARG_UNSET = object()
+
+
+def _runtime_context_from_args(
+    *,
+    context: RuntimeContext | None = None,
+    env=_RUNTIME_ARG_UNSET,
+    transport=_RUNTIME_ARG_UNSET,
+    clients=_RUNTIME_ARG_UNSET,
+    download_dir=_RUNTIME_ARG_UNSET,
+) -> RuntimeContext | None:
+    runtime_args = {
+        "env": env,
+        "transport": transport,
+        "clients": clients,
+        "download_dir": download_dir,
+    }
+    explicit = {name: value for name, value in runtime_args.items() if value is not _RUNTIME_ARG_UNSET}
+    if context is not None:
+        if explicit:
+            raise TypeError("test helper cannot combine context with runtime keyword arguments")
+        return context
+    if not explicit:
+        return None
+    return RuntimeContext(**explicit)
+
+
+def _fetch_paper(
+    query: str,
+    *,
+    modes=None,
+    strategy=None,
+    render=None,
+    context: RuntimeContext | None = None,
+    env=_RUNTIME_ARG_UNSET,
+    transport=_RUNTIME_ARG_UNSET,
+    clients=_RUNTIME_ARG_UNSET,
+    download_dir=_RUNTIME_ARG_UNSET,
+):
+    runtime_context = _runtime_context_from_args(
+        context=context,
+        env=env,
+        transport=transport,
+        clients=clients,
+        download_dir=download_dir,
+    )
+    return paper_fetch.fetch_paper(
+        query,
+        modes=modes,
+        strategy=strategy,
+        render=render,
+        context=runtime_context,
+    )
+
+
+def _probe_has_fulltext(
+    query: str,
+    *,
+    context: RuntimeContext | None = None,
+    env=_RUNTIME_ARG_UNSET,
+    transport=_RUNTIME_ARG_UNSET,
+    clients=_RUNTIME_ARG_UNSET,
+):
+    runtime_context = _runtime_context_from_args(
+        context=context,
+        env=env,
+        transport=transport,
+        clients=clients,
+    )
+    return paper_fetch.probe_has_fulltext(query, context=runtime_context)
+
+
 class ServiceTests(unittest.TestCase):
     def test_probe_then_fetch_reuses_crossref_metadata_in_same_runtime_context(self) -> None:
         resolved = paper_fetch.ResolvedQuery(
@@ -121,8 +193,8 @@ class ServiceTests(unittest.TestCase):
                 },
             )
 
-            probe = paper_fetch.probe_has_fulltext(resolved.query, context=context)
-            envelope = paper_fetch.fetch_paper(
+            probe = _probe_has_fulltext(resolved.query, context=context)
+            envelope = _fetch_paper(
                 resolved.query,
                 modes={"article"},
                 strategy=paper_fetch.FetchStrategy(asset_profile="none"),
@@ -181,8 +253,8 @@ class ServiceTests(unittest.TestCase):
                 },
             )
 
-            probe = paper_fetch.probe_has_fulltext(landing_url, context=context)
-            envelope = paper_fetch.fetch_paper(
+            probe = _probe_has_fulltext(landing_url, context=context)
+            envelope = _fetch_paper(
                 landing_url,
                 modes={"article"},
                 strategy=paper_fetch.FetchStrategy(asset_profile="none"),
@@ -244,15 +316,15 @@ class ServiceTests(unittest.TestCase):
             first_context = RuntimeContext(env={}, clients={"crossref": counting_crossref(different_context_counter)})
             second_context = RuntimeContext(env={}, clients={"crossref": counting_crossref(different_context_counter)})
 
-            paper_fetch.probe_has_fulltext(resolved.query, context=first_context)
-            paper_fetch.probe_has_fulltext(resolved.query, context=second_context)
+            _probe_has_fulltext(resolved.query, context=first_context)
+            _probe_has_fulltext(resolved.query, context=second_context)
 
             contextless_counter = {"count": 0}
-            paper_fetch.probe_has_fulltext(
+            _probe_has_fulltext(
                 resolved.query,
                 clients={"crossref": counting_crossref(contextless_counter)},
             )
-            paper_fetch.probe_has_fulltext(
+            _probe_has_fulltext(
                 resolved.query,
                 clients={"crossref": counting_crossref(contextless_counter)},
             )
@@ -304,7 +376,7 @@ class ServiceTests(unittest.TestCase):
                     download_dir=Path(tmpdir),
                 )
 
-                envelope = paper_fetch.fetch_paper(
+                envelope = _fetch_paper(
                     resolved.query,
                     modes={"article"},
                     strategy=paper_fetch.FetchStrategy(asset_profile="body"),
@@ -468,84 +540,16 @@ class ServiceTests(unittest.TestCase):
         self.assertIs(seen["artifact_store"], artifact_store)
         self.assertIs(seen["context"], context)
 
-    def test_fetch_paper_legacy_keywords_override_runtime_context(self) -> None:
-        resolved = paper_fetch.ResolvedQuery(
-            query="10.1126/science.override",
-            query_kind="doi",
-            doi="10.1126/science.override",
-            landing_url="https://www.science.org/doi/full/10.1126/science.override",
-            provider_hint="science",
-            confidence=1.0,
-        )
-        captured: dict[str, object] = {}
-        context_asset_dirs: list[Path | None] = []
-        override_asset_dirs: list[Path | None] = []
-        context_transport = HttpTransport()
-        override_transport = HttpTransport()
-        context_env = {"CROSSREF_MAILTO": "context@example.test"}
-        override_env = {"CROSSREF_MAILTO": "override@example.test"}
-        original_resolve = paper_fetch.resolve_paper
-        try:
-            paper_fetch.resolve_paper = lambda query, *, transport=None, env=None: (
-                captured.update({"transport": transport, "env": env}) or resolved
-            )
-            with tempfile.TemporaryDirectory() as context_tmpdir, tempfile.TemporaryDirectory() as override_tmpdir:
-                context = RuntimeContext(
-                    env=context_env,
-                    transport=context_transport,
-                    clients={
-                        "science": StubProvider(
-                            raw_payload=_typed_payload(
-                                provider="science",
-                                source_url=resolved.landing_url,
-                                content_type="text/html",
-                                body=b"<html></html>",
-                                route_kind="html",
-                                markdown_text="# Context Article\n\n## Results\n\n" + ("Body text " * 80),
-                            ),
-                            article=sample_article(),
-                            related_asset_factory=lambda _doi, _metadata, _payload, output_dir, **_kwargs: (
-                                context_asset_dirs.append(output_dir) or {"assets": [], "asset_failures": []}
-                            ),
-                        )
-                    },
-                    download_dir=Path(context_tmpdir),
-                )
-                override_dir = Path(override_tmpdir)
+    def test_fetch_paper_rejects_legacy_runtime_keywords(self) -> None:
+        with self.assertRaises(TypeError):
+            paper_fetch.fetch_paper("10.1126/science.override", clients={})
 
-                envelope = paper_fetch.fetch_paper(
-                    resolved.query,
-                    modes={"article"},
-                    strategy=paper_fetch.FetchStrategy(asset_profile="body"),
-                    context=context,
-                    env=override_env,
-                    transport=override_transport,
-                    clients={
-                        "science": StubProvider(
-                            raw_payload=_typed_payload(
-                                provider="science",
-                                source_url=resolved.landing_url,
-                                content_type="text/html",
-                                body=b"<html></html>",
-                                route_kind="html",
-                                markdown_text="# Override Article\n\n## Results\n\n" + ("Body text " * 80),
-                            ),
-                            article=sample_article(),
-                            related_asset_factory=lambda _doi, _metadata, _payload, output_dir, **_kwargs: (
-                                override_asset_dirs.append(output_dir) or {"assets": [], "asset_failures": []}
-                            ),
-                        )
-                    },
-                    download_dir=override_dir,
-                )
-        finally:
-            paper_fetch.resolve_paper = original_resolve
+        with self.assertRaises(TypeError):
+            paper_fetch.fetch_paper("10.1126/science.override", download_dir=Path("/tmp/paper-fetch-test"))
 
-        self.assertIsNotNone(envelope.article)
-        self.assertIs(captured["transport"], override_transport)
-        self.assertEqual(captured["env"], override_env)
-        self.assertEqual(context_asset_dirs, [])
-        self.assertEqual(override_asset_dirs, [override_dir])
+    def test_probe_has_fulltext_rejects_legacy_runtime_keywords(self) -> None:
+        with self.assertRaises(TypeError):
+            paper_fetch.probe_has_fulltext("10.1126/science.override", clients={})
 
     def test_artifact_store_preserves_provider_payload_and_springer_html_markers(self) -> None:
         pdf_content = ProviderContent(
@@ -620,7 +624,7 @@ class ServiceTests(unittest.TestCase):
                     )
                     paper_fetch.resolve_paper = lambda *args, _resolved=resolved, **kwargs: _resolved
                     with tempfile.TemporaryDirectory() as tmpdir:
-                        envelope = paper_fetch.fetch_paper(
+                        envelope = _fetch_paper(
                             doi,
                             modes={"article"},
                             strategy=paper_fetch.FetchStrategy(),
@@ -674,7 +678,7 @@ class ServiceTests(unittest.TestCase):
         try:
             paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
             with tempfile.TemporaryDirectory() as tmpdir:
-                envelope = paper_fetch.fetch_paper(
+                envelope = _fetch_paper(
                     resolved.query,
                     modes={"article"},
                     strategy=paper_fetch.FetchStrategy(asset_profile="none"),
@@ -729,7 +733,7 @@ class ServiceTests(unittest.TestCase):
             with tempfile.TemporaryDirectory() as tmpdir:
                 preview_path = Path(tmpdir) / "figure-preview.png"
                 preview_path.write_bytes(b"preview")
-                envelope = paper_fetch.fetch_paper(
+                envelope = _fetch_paper(
                     resolved.query,
                     modes={"article"},
                     strategy=paper_fetch.FetchStrategy(),
@@ -795,7 +799,7 @@ class ServiceTests(unittest.TestCase):
             with tempfile.TemporaryDirectory() as tmpdir:
                 preview_path = Path(tmpdir) / "figure-preview.png"
                 preview_path.write_bytes(b"preview")
-                envelope = paper_fetch.fetch_paper(
+                envelope = _fetch_paper(
                     resolved.query,
                     modes={"article"},
                     strategy=paper_fetch.FetchStrategy(),
@@ -859,7 +863,7 @@ class ServiceTests(unittest.TestCase):
         original_resolve = paper_fetch.resolve_paper
         try:
             paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
-            result = paper_fetch.probe_has_fulltext(
+            result = _probe_has_fulltext(
                 "10.1000/license",
                 clients={
                     "crossref": StubProvider(
@@ -893,7 +897,7 @@ class ServiceTests(unittest.TestCase):
         original_resolve = paper_fetch.resolve_paper
         try:
             paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
-            result = paper_fetch.probe_has_fulltext(
+            result = _probe_has_fulltext(
                 "10.1000/fulltext",
                 clients={
                     "crossref": StubProvider(
@@ -924,7 +928,7 @@ class ServiceTests(unittest.TestCase):
         original_resolve = paper_fetch.resolve_paper
         try:
             paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
-            result = paper_fetch.probe_has_fulltext(
+            result = _probe_has_fulltext(
                 "10.1016/test",
                 clients={
                     "crossref": StubProvider(
@@ -969,7 +973,7 @@ class ServiceTests(unittest.TestCase):
         original_resolve = paper_fetch.resolve_paper
         try:
             paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
-            result = paper_fetch.probe_has_fulltext(
+            result = _probe_has_fulltext(
                 "https://example.test/article",
                 transport=FixtureHtmlTransport(
                     {
@@ -1003,7 +1007,7 @@ class ServiceTests(unittest.TestCase):
         original_resolve = paper_fetch.resolve_paper
         try:
             paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
-            result = paper_fetch.probe_has_fulltext(
+            result = _probe_has_fulltext(
                 "10.1007/test",
                 transport=FixtureHtmlTransport(
                     {
@@ -1732,7 +1736,7 @@ class ServiceTests(unittest.TestCase):
         original_resolve = paper_fetch.resolve_paper
         try:
             paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
-            article = paper_fetch.fetch_paper(
+            article = _fetch_paper(
                 "10.1006/jaer.1996.0085",
                 modes={"article"},
                 strategy=paper_fetch.FetchStrategy(
@@ -1842,7 +1846,7 @@ class ServiceTests(unittest.TestCase):
         original_resolve = paper_fetch.resolve_paper
         try:
             paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
-            envelope = paper_fetch.fetch_paper(
+            envelope = _fetch_paper(
                 "10.1016/test",
                 modes={"article"},
                 strategy=paper_fetch.FetchStrategy(
@@ -1903,7 +1907,7 @@ class ServiceTests(unittest.TestCase):
         original_resolve = paper_fetch.resolve_paper
         try:
             paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
-            envelope = paper_fetch.fetch_paper(
+            envelope = _fetch_paper(
                 "10.1111/test",
                 modes={"markdown"},
                 strategy=paper_fetch.FetchStrategy(),
@@ -1972,7 +1976,7 @@ class ServiceTests(unittest.TestCase):
         original_resolve = paper_fetch.resolve_paper
         try:
             paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
-            without_metadata = paper_fetch.fetch_paper(
+            without_metadata = _fetch_paper(
                 "10.1016/test",
                 modes={"article"},
                 strategy=paper_fetch.FetchStrategy(),
@@ -2008,7 +2012,7 @@ class ServiceTests(unittest.TestCase):
                     ),
                 },
             )
-            with_metadata = paper_fetch.fetch_paper(
+            with_metadata = _fetch_paper(
                 "10.1016/test",
                 modes={"article", "metadata"},
                 strategy=paper_fetch.FetchStrategy(),
@@ -2102,7 +2106,7 @@ class ServiceTests(unittest.TestCase):
         try:
             paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
             with self.assertRaises(paper_fetch.PaperFetchFailure):
-                paper_fetch.fetch_paper(
+                _fetch_paper(
                     "10.1016/test",
                     modes={"article"},
                     strategy=paper_fetch.FetchStrategy(
@@ -2737,7 +2741,7 @@ class ServiceTests(unittest.TestCase):
             with tempfile.TemporaryDirectory() as tmpdir:
                 asset_path = Path(tmpdir) / "science-figure.png"
                 asset_path.write_bytes(b"science-figure")
-                envelope = paper_fetch.fetch_paper(
+                envelope = _fetch_paper(
                     "10.1126/science.aeg3511",
                     modes={"article", "markdown"},
                     strategy=paper_fetch.FetchStrategy(asset_profile="body"),
@@ -2995,7 +2999,7 @@ class ServiceTests(unittest.TestCase):
                     with tempfile.TemporaryDirectory() as tmpdir:
                         asset_path = Path(tmpdir) / case["asset_name"]
                         asset_path.write_bytes(f"{case['provider_name']}-figure".encode("utf-8"))
-                        envelope = paper_fetch.fetch_paper(
+                        envelope = _fetch_paper(
                             case["doi"],
                             modes={"article", "markdown"},
                             strategy=paper_fetch.FetchStrategy(asset_profile=case["asset_profile"]),

@@ -551,9 +551,6 @@ class ProviderClient:
         del context
         raise ProviderFailure("not_supported", f"{self.name} raw full-text retrieval is not available.")
 
-    def fetch_fulltext(self, doi: str, metadata: Mapping[str, Any], output_dir: Path | None) -> dict[str, Any]:
-        raise ProviderFailure("not_supported", f"{self.name} full-text retrieval is not available.")
-
     def to_article_model(
         self,
         metadata: Mapping[str, Any],

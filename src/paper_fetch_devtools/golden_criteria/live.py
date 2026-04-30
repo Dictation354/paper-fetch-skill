@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections import Counter, defaultdict
 from dataclasses import asdict, dataclass, field, replace
 from datetime import datetime, timezone
-import inspect
 import json
 import logging
 from pathlib import Path
@@ -688,17 +687,6 @@ def _stage_timings(
     return timings
 
 
-def _callable_accepts_keyword(function: Callable[..., Any], keyword: str) -> bool:
-    try:
-        parameters = inspect.signature(function).parameters
-    except (TypeError, ValueError):
-        return False
-    return keyword in parameters or any(
-        parameter.kind == inspect.Parameter.VAR_KEYWORD
-        for parameter in parameters.values()
-    )
-
-
 def _transport_cache_stats(transport: HttpTransport) -> dict[str, int]:
     snapshot = getattr(transport, "cache_stats_snapshot", None)
     if not callable(snapshot):
@@ -994,18 +982,8 @@ def fetch_sample_result(
                 asset_profile="body",
             ),
             "render": render,
+            "context": runtime_context,
         }
-        if _callable_accepts_keyword(fetch_paper_fn, "context"):
-            fetch_kwargs["context"] = runtime_context
-        else:
-            fetch_kwargs.update(
-                {
-                    "download_dir": sample_dir,
-                    "clients": clients,
-                    "transport": transport,
-                    "env": env,
-                }
-            )
         envelope = fetch_paper_fn(sample.doi, **fetch_kwargs)
         fetch_seconds = time.monotonic() - fetch_started_at
         materialize_started_at = time.monotonic()

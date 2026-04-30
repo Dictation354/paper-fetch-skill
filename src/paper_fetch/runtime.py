@@ -361,51 +361,36 @@ def resolve_runtime_context(
     session_cache: dict[tuple[Hashable, ...], Any] | object = RUNTIME_UNSET,
     stage_timings: dict[str, float] | object = RUNTIME_UNSET,
 ) -> RuntimeContext:
-    """Merge explicit legacy keyword arguments over an optional context."""
+    """Return an explicit context or build one from internal runtime parts."""
 
-    if (
-        context is not None
-        and env is RUNTIME_UNSET
-        and transport is RUNTIME_UNSET
-        and clients is RUNTIME_UNSET
-        and download_dir is RUNTIME_UNSET
-        and cancel_check is RUNTIME_UNSET
-        and artifact_store is RUNTIME_UNSET
-        and fetch_cache is RUNTIME_UNSET
-        and parse_cache is RUNTIME_UNSET
-        and session_cache is RUNTIME_UNSET
-        and stage_timings is RUNTIME_UNSET
-    ):
+    runtime_parts = {
+        "env": env,
+        "transport": transport,
+        "clients": clients,
+        "download_dir": download_dir,
+        "cancel_check": cancel_check,
+        "artifact_store": artifact_store,
+        "fetch_cache": fetch_cache,
+        "parse_cache": parse_cache,
+        "session_cache": session_cache,
+        "stage_timings": stage_timings,
+    }
+    if context is not None:
+        explicit = [name for name, value in runtime_parts.items() if value is not RUNTIME_UNSET]
+        if explicit:
+            joined = ", ".join(explicit)
+            raise TypeError(f"RuntimeContext cannot be combined with runtime keyword arguments: {joined}")
         return context
 
-    active_env = context.env if context is not None and env is RUNTIME_UNSET else env
-    active_transport = context.transport if context is not None and transport is RUNTIME_UNSET else transport
-    active_clients = context.clients if context is not None and clients is RUNTIME_UNSET else clients
-    active_cancel_check = context.cancel_check if context is not None and cancel_check is RUNTIME_UNSET else cancel_check
-    active_download_dir = context.download_dir if context is not None and download_dir is RUNTIME_UNSET else download_dir
-    if context is not None and artifact_store is RUNTIME_UNSET and download_dir is RUNTIME_UNSET:
-        active_artifact_store = context.artifact_store
-    else:
-        active_artifact_store = artifact_store
-    active_fetch_cache = context.fetch_cache if context is not None and fetch_cache is RUNTIME_UNSET else fetch_cache
-    active_parse_cache = context.parse_cache if context is not None and parse_cache is RUNTIME_UNSET else parse_cache
-    active_session_cache = context.session_cache if context is not None and session_cache is RUNTIME_UNSET else session_cache
-    active_stage_timings = context.stage_timings if context is not None and stage_timings is RUNTIME_UNSET else stage_timings
-
-    runtime = RuntimeContext(
-        env=None if active_env is RUNTIME_UNSET else active_env,
-        transport=None if active_transport is RUNTIME_UNSET else active_transport,
-        clients=None if active_clients is RUNTIME_UNSET else active_clients,
-        download_dir=None if active_download_dir is RUNTIME_UNSET else active_download_dir,
-        cancel_check=None if active_cancel_check is RUNTIME_UNSET else active_cancel_check,
-        artifact_store=None if active_artifact_store is RUNTIME_UNSET else active_artifact_store,
-        fetch_cache=None if active_fetch_cache is RUNTIME_UNSET else active_fetch_cache,
-        parse_cache={} if active_parse_cache is RUNTIME_UNSET else active_parse_cache,
-        session_cache={} if active_session_cache is RUNTIME_UNSET else active_session_cache,
-        stage_timings={} if active_stage_timings is RUNTIME_UNSET else active_stage_timings,
+    return RuntimeContext(
+        env=None if env is RUNTIME_UNSET else env,
+        transport=None if transport is RUNTIME_UNSET else transport,
+        clients=None if clients is RUNTIME_UNSET else clients,
+        download_dir=None if download_dir is RUNTIME_UNSET else download_dir,
+        cancel_check=None if cancel_check is RUNTIME_UNSET else cancel_check,
+        artifact_store=None if artifact_store is RUNTIME_UNSET else artifact_store,
+        fetch_cache=None if fetch_cache is RUNTIME_UNSET else fetch_cache,
+        parse_cache={} if parse_cache is RUNTIME_UNSET else parse_cache,
+        session_cache={} if session_cache is RUNTIME_UNSET else session_cache,
+        stage_timings={} if stage_timings is RUNTIME_UNSET else stage_timings,
     )
-    if context is not None and runtime.session_cache is context.session_cache:
-        runtime._session_cache_lock = context._session_cache_lock
-    if context is not None and runtime.stage_timings is context.stage_timings:
-        runtime._stage_timing_lock = context._stage_timing_lock
-    return runtime

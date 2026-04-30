@@ -12,6 +12,7 @@ from typing import Any, Mapping, Sequence
 from paper_fetch.config import build_runtime_env, resolve_repo_root
 from paper_fetch.http import HttpTransport
 from paper_fetch.models import RenderOptions
+from paper_fetch.runtime import RuntimeContext
 from paper_fetch.service import FetchStrategy, PaperFetchFailure, fetch_paper
 from paper_fetch.utils import normalize_text, sanitize_filename
 
@@ -153,6 +154,7 @@ def export_issue_row(
     (entry_dir / "original-issue-row.json").write_text(json.dumps(dict(row), ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
     started_at = time.monotonic()
+    context = RuntimeContext(env=env, transport=transport, download_dir=entry_dir)
     try:
         envelope = fetch_paper(
             doi,
@@ -161,9 +163,7 @@ def export_issue_row(
                 allow_metadata_only_fallback=True,
             ),
             render=RenderOptions(include_refs="all", asset_profile="none", max_tokens="full_text"),
-            download_dir=entry_dir,
-            transport=transport,
-            env=env,
+            context=context,
         )
         elapsed_seconds = round(time.monotonic() - started_at, 3)
         sample = GeographySample(
@@ -243,6 +243,8 @@ def export_issue_row(
             error_code=exc.__class__.__name__,
             error_message=str(exc),
         )
+    finally:
+        context.close()
 
 
 def list_exported_files(entry_dir: Path) -> list[str]:

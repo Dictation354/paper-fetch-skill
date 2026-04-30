@@ -139,7 +139,7 @@ Date: 2026-04-28
 - `rendering`
   - 负责 `FetchEnvelope`、`source_trail` 派生、最终结果组装
 
-`RuntimeContext` 是 service/workflow 的显式运行时依赖容器，持有 `env`、`transport`、`clients`、`download_dir`、`cancel_check`、`artifact_store`、adapter 可选 `fetch_cache`，以及单次 fetch 生命周期内的 `parse_cache`、`session_cache` 和 `stage_timings`。它还按需 lazy 持有共享 Playwright Chromium browser；PNAS direct HTML preflight、browser-workflow 资产 fetcher 与 PDF/ePDF fallback 可复用同一个 browser，但仍按阶段创建隔离 context/page。公开 service API 仍接受旧 keyword 参数；当 `context` 与旧 keyword 同时存在时，显式旧 keyword 覆盖 context，保证 CLI 与既有外部调用兼容。MCP 内部调用 service 时统一传入完整 `RuntimeContext`，不再通过 `TypeError` 探测旧 service 签名。
+`RuntimeContext` 是 service/workflow 的显式运行时依赖容器，持有 `env`、`transport`、`clients`、`download_dir`、`cancel_check`、`artifact_store`、adapter 可选 `fetch_cache`，以及单次 fetch 生命周期内的 `parse_cache`、`session_cache` 和 `stage_timings`。它还按需 lazy 持有共享 Playwright Chromium browser；PNAS direct HTML preflight、browser-workflow 资产 fetcher 与 PDF/ePDF fallback 可复用同一个 browser，但仍按阶段创建隔离 context/page。公开 service API 不再接受旧 `env` / `transport` / `clients` / `download_dir` keyword；调用方必须先构造 `RuntimeContext` 并通过 `context=` 传入。CLI、MCP 与 devtools 都在自己的 facade 层解析外部参数，再调用 service。
 
 ### 6. Extraction 层
 
@@ -211,7 +211,7 @@ Date: 2026-04-28
 
 能力边界通过 `paper_fetch.providers.protocols` 表达：`MetadataProvider`、`FulltextProvider`、`RawFulltextProvider`、`StatusProvider` 和 `AssetProvider` 用于 workflow typing；`ProviderClient` 仍是 provider 可继承的 convenience base class，不是 registry/runtime 的唯一抽象边界。
 
-Provider fulltext 内部链路统一接收同一个 `RuntimeContext`：workflow 调用 `FulltextProvider.fetch_result()` 时必须传入 `artifact_store=` 与 `context=`，不再做运行时签名反射或无 `artifact_store` 分支；`fetch_result` 会把 context 继续传给 raw fulltext、abstract-only recovery、related assets 和 `to_article_model`。这样 Elsevier XML root、Springer HTML extraction payload、Wiley/Science/PNAS browser-workflow Markdown extraction 以及资产抽取结果可以在同一次 fetch 内 memo；browser workflow 也能复用 runtime browser。缓存只保存派生 payload 或只读 XML root，不跨阶段共享可变 BeautifulSoup tree。
+Provider fulltext 内部链路统一接收同一个 `RuntimeContext`：workflow 调用 `FulltextProvider.fetch_result()` 时必须传入 `artifact_store=` 与 `context=`，不再做运行时签名反射或无 `artifact_store` 分支；`fetch_result` 会把 context 继续传给 raw fulltext、abstract-only recovery、related assets 和 `to_article_model`。provider 不再暴露旧 `fetch_fulltext()` dict 入口；需要原始 payload 时使用 `fetch_raw_fulltext()`，需要完整 provider 结果时使用 `fetch_result()`。这样 Elsevier XML root、Springer HTML extraction payload、Wiley/Science/PNAS browser-workflow Markdown extraction 以及资产抽取结果可以在同一次 fetch 内 memo；browser workflow 也能复用 runtime browser。缓存只保存派生 payload 或只读 XML root，不跨阶段共享可变 BeautifulSoup tree。
 
 `RawFulltextPayload.metadata` 只保留为 legacy/read-only compatibility view：`route`、`markdown_text`、`warnings`、`source_trail`、diagnostics、browser seed 等结构化字段必须由 `ProviderContent`、`warnings`、`trace`、`merged_metadata` 等 typed fields 传入。新生产路径不得把结构化字段写入 legacy metadata pocket，也不得通过 `raw_payload.metadata[...]` 读取 typed 状态。构造 `RawFulltextPayload(metadata={...})` 不再把 legacy magic keys 注入结构化字段，只允许非结构化 passthrough metadata 留在导出里。
 
@@ -219,7 +219,7 @@ Provider 身份与能力配置统一来自 `paper_fetch.provider_catalog.PROVIDE
 
 Crossref 的 provider adapter 位于 `paper_fetch.providers.crossref.CrossrefClient`，继续保留 public import path；resolve 与 provider adapter 共同依赖 `paper_fetch.metadata.crossref.CrossrefLookupClient`，避免 resolution 层反向复用 provider 层。
 
-架构测试会阻止已删除的 legacy surface 回流：provider-neutral 层不得 import `paper_fetch.providers._*`，测试不得重新 import 旧 `_html_*`、`_language_filter`、`_science_pnas`、`_science_pnas_html`、`paper_fetch.extraction.html._assets` 或 `paper_fetch.providers.html_assets` compatibility modules，provider catalog 仍是 provider 身份、状态顺序和 registry client factory 的单一事实来源。
+架构测试会阻止已删除的 legacy surface 回流：service 不得重新接收旧 runtime keyword，provider 不得重新定义 `fetch_fulltext()` dict 入口，生产代码不得读取 `raw_payload.metadata[...]` magic keys，provider-neutral 层不得 import `paper_fetch.providers._*`，测试不得重新 import 旧 `_html_*`、`_language_filter`、`_science_pnas`、`_science_pnas_html`、`paper_fetch.extraction.html._assets` 或 `paper_fetch.providers.html_assets` compatibility modules。provider catalog 仍是 provider 身份、状态顺序和 registry client factory 的单一事实来源。
 
 ### 8. Runtime / Artifact / Cache 边界
 
@@ -229,7 +229,7 @@ Crossref 的 provider adapter 位于 `paper_fetch.providers.crossref.CrossrefCli
 
 - `RuntimeContext` 显式承载 env、transport、clients、download_dir、cancel_check 等运行时依赖。
 - `RuntimeContext.parse_cache` 是进程内、单 context 生命周期的解析 memo：key 包含 provider、role、source、body sha256、parser 和配置指纹；dict/list 读取时返回拷贝，XML root 仅作为只读对象复用。
-- MCP `fetch_paper` 和 batch 工具必须复用同一个 `RuntimeContext` 派生出的 env、transport、provider clients、download_dir 与 cancel_check；调用 service 时只传入完整 context，不再向 service 传旧 `transport` / `env` / `download_dir` 回退参数。legacy keyword 兼容只保留在公开 service / CLI 边界。
+- MCP `fetch_paper` 和 batch 工具必须复用同一个 `RuntimeContext` 派生出的 env、transport、provider clients、download_dir 与 cancel_check；调用 service 时只传入完整 context，不再向 service 传旧 `transport` / `env` / `clients` / `download_dir` 回退参数。
 - `ArtifactStore` / `DownloadPolicy` 管理 provider PDF/binary local copy、Springer HTML `original.html` copy，以及 provider asset warning/source-trail 诊断。
 - `FetchCache` 管理 MCP fetch-envelope sidecar reuse/write 和 cache index refresh；sidecar version、`EXTRACTION_REVISION` 校验、resource URI 与 scoped cache resource 语义保持稳定。
 

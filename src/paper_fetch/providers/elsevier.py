@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Any, Mapping
 
 from ..config import build_user_agent, resolve_asset_download_concurrency
-from ..http import DEFAULT_FULLTEXT_TIMEOUT_SECONDS, HttpTransport, RequestFailure, build_text_preview, is_xml_content_type
+from ..http import DEFAULT_FULLTEXT_TIMEOUT_SECONDS, HttpTransport, RequestFailure, is_xml_content_type
 from ..metadata_types import ProviderMetadata
 from ..models import AssetProfile, article_from_markdown, article_from_structure, metadata_only_article
 from ..publisher_identity import normalize_doi
@@ -20,7 +20,6 @@ from ..runtime import RuntimeContext
 from ..tracing import trace_from_markers
 from ..utils import (
     build_asset_output_path,
-    build_output_path,
     choose_public_landing_page_url,
     dedupe_authors,
     empty_asset_results,
@@ -30,7 +29,7 @@ from ..utils import (
     save_payload,
     strip_html_tags,
 )
-from ._article_markdown_elsevier_document import build_article_structure, write_article_markdown
+from ._article_markdown_elsevier_document import build_article_structure
 from ._elsevier_xml_rules import (
     ELSEVIER_IMAGE_ASSET_TYPES,
     classify_elsevier_asset_kind,
@@ -696,43 +695,6 @@ class ElsevierClient(ProviderClient):
         if not metadata["title"]:
             raise ProviderFailure("no_result", "Elsevier metadata payload did not contain a title.")
         return metadata
-
-    def fetch_fulltext(self, doi: str, metadata: ProviderMetadata, output_dir: Path | None) -> dict[str, Any]:
-        context = RuntimeContext(env=self.env, transport=self.transport, download_dir=output_dir)
-        payload = self.fetch_raw_fulltext(doi, metadata, context=context)
-        normalized_doi = normalize_doi(doi)
-        output_path = build_output_path(output_dir, normalized_doi, metadata.get("title"), payload.content_type, payload.source_url)
-        saved_path = save_payload(output_path, payload.body)
-        asset_results = self.download_related_assets(normalized_doi, metadata, payload, output_dir, context=context)
-        markdown_path = None
-        if is_xml_content_type(payload.content_type):
-            markdown_path = write_article_markdown(
-                provider="elsevier",
-                metadata=metadata,
-                xml_body=payload.body,
-                output_dir=output_dir,
-                xml_path=saved_path,
-                assets=asset_results["assets"],
-                xml_root=elsevier_xml_root_from_payload(
-                    payload.body,
-                    context=context,
-                    source_url=payload.source_url,
-                ),
-            )
-        return {
-            "attempted": True,
-            "status": "saved" if output_path else "fetched",
-            "provider": "elsevier",
-            "official_provider": True,
-            "source_url": payload.source_url,
-            "content_type": payload.content_type,
-            "path": saved_path,
-            "markdown_path": markdown_path,
-            "downloaded_bytes": len(payload.body),
-            "content_preview": build_text_preview(payload.body, payload.content_type),
-            "reason": str((payload.content.reason if payload.content is not None else "") or "Downloaded full text from the official Elsevier API."),
-            **asset_results,
-        }
 
     def download_related_assets(
         self,

@@ -109,7 +109,7 @@ class CliTests(unittest.TestCase):
 
             self.assertEqual(exit_code, 0)
             self.assertEqual(stderr.getvalue(), "")
-            self.assertEqual(captured["download_dir"], default_dir)
+            self.assertEqual(captured["context"].download_dir, default_dir)
             self.assertTrue((default_dir / "10.1016_test.md").exists())
 
     def test_save_markdown_to_disk_rewrites_local_asset_links_relative_to_saved_file(self) -> None:
@@ -234,7 +234,7 @@ class CliTests(unittest.TestCase):
             self.assertEqual(stdout.getvalue(), "")
             self.assertEqual(stderr.getvalue(), "")
             self.assertEqual(captured["modes"], {"article", "markdown"})
-            self.assertEqual(captured["download_dir"], output_dir)
+            self.assertEqual(captured["context"].download_dir, output_dir)
             rendered = output_path.read_text(encoding="utf-8")
             self.assertIn("![Figure 1](10.1016_test_assets/figure-1.png)", rendered)
             self.assertNotIn(str(figure_path), rendered)

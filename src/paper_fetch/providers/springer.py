@@ -12,20 +12,18 @@ from ..config import build_user_agent, resolve_asset_download_concurrency
 from ..extraction.html.landing import LandingHtmlFetchResult, LandingRedirectLimitExceeded, fetch_landing_html
 from ..extraction.html.parsing import choose_parser
 from ..extraction.html.tables import inject_inline_table_blocks, render_table_markdown, table_placeholder
-from ..http import DEFAULT_FULLTEXT_TIMEOUT_SECONDS, HttpTransport, RequestFailure, build_text_preview
+from ..http import DEFAULT_FULLTEXT_TIMEOUT_SECONDS, HttpTransport, RequestFailure
 from ..metadata_types import ProviderMetadata
 from ..models import AssetProfile, article_from_markdown, metadata_only_article
 from ..publisher_identity import normalize_doi
 from ..runtime import RuntimeContext
 from ..tracing import merge_trace, source_trail_from_trace, trace_from_markers
 from ..utils import (
-    build_output_path,
     choose_public_landing_page_url,
     dedupe_authors,
     empty_asset_results,
     extend_unique,
     normalize_text,
-    save_payload,
 )
 from . import _springer_html
 from .science_pnas import rewrite_inline_figure_links
@@ -722,29 +720,6 @@ class SpringerClient(ProviderClient):
             merged_metadata=attempt.merged_metadata,
             needs_local_copy=True,
         )
-
-    def fetch_fulltext(self, doi: str, metadata: ProviderMetadata, output_dir: Path | None) -> dict[str, Any]:
-        context = RuntimeContext(env=self.env, transport=self.transport, download_dir=output_dir)
-        payload = self.fetch_raw_fulltext(doi, metadata, context=context)
-        normalized_doi = normalize_doi(doi)
-        output_path = build_output_path(output_dir, normalized_doi, metadata.get("title"), payload.content_type, payload.source_url)
-        saved_path = save_payload(output_path, payload.body)
-        asset_results = self.download_related_assets(normalized_doi, metadata, payload, output_dir, context=context)
-        markdown_path = None
-        return {
-            "attempted": True,
-            "status": "saved" if output_path else "fetched",
-            "provider": "springer",
-            "official_provider": True,
-            "source_url": payload.source_url,
-            "content_type": payload.content_type,
-            "path": saved_path,
-            "markdown_path": markdown_path,
-            "downloaded_bytes": len(payload.body),
-            "content_preview": build_text_preview(payload.body, payload.content_type),
-            "reason": str((payload.content.reason if payload.content is not None else "") or "Downloaded full text from the Springer landing page HTML."),
-            **asset_results,
-        }
 
     def download_related_assets(
         self,

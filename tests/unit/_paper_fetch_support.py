@@ -204,6 +204,12 @@ def fetch_paper_model(
     transport=None,
     env=None,
 ) -> ArticleModel:
+    context = paper_fetch.RuntimeContext(
+        env=env,
+        transport=transport,
+        clients=clients,
+        download_dir=output_dir if allow_downloads else None,
+    )
     envelope = paper_fetch.fetch_paper(
         query,
         modes={"article"},
@@ -211,10 +217,7 @@ def fetch_paper_model(
             allow_metadata_only_fallback=True,
             asset_profile=asset_profile,
         ),
-        download_dir=output_dir if allow_downloads else None,
-        clients=clients,
-        transport=transport,
-        env=env,
+        context=context,
     )
     assert envelope.article is not None
     return envelope.article

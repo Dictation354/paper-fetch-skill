@@ -82,47 +82,32 @@ rollout-*.jsonl
 
 ### 2.1 收束 legacy keyword / context 双路径
 
-当前状态：本轮已收束 MCP/service 内部调用和 provider fulltext 主链；公开 service 入口仍保留旧 keyword 参数兼容。
+当前状态：已完成。公开 service 入口只保留 `query/modes/strategy/render/context` 与 `query/context`，旧 `env` / `transport` / `clients` / `download_dir` keyword 已删除。
 
-- `runtime.resolve_runtime_context()` 文档直接标注“Merge explicit legacy keyword arguments”。
 - 已完成：`mcp/fetch_tool.py` 的 `_call_service_*` 不再捕获 `TypeError` 回退旧签名，统一通过 `RuntimeContext` 调用 service。
 - 已完成：`workflow/fulltext.py` 删除 `_fetch_result_accepts_artifact_store()` 和 `inspect.signature()` 分支，内部 `FulltextProvider.fetch_result()` 调用总是传入 `artifact_store=` 与 `context=`。
 - 已完成：MCP unit/integration fake 已迁到当前 service 签名。
+- 已完成：CLI、devtools、live helper 和测试 helper 在调用 service 前构造 `RuntimeContext`。
+- 已完成：`runtime.resolve_runtime_context()` 不再 merge `context` 与 runtime keyword；两者同时出现会报错，内部 workflow 旧参数只用于无 context 的构造路径。
 
-后续建议：
-
-1. 给公开 service legacy keyword 兼容设一个明确移除版本。
-2. 评估 `runtime.resolve_runtime_context()` 文档是否从 legacy 语言改成 public compatibility 语言。
-
-收益是减少异常控制流、减少动态签名判断，也让类型检查能真正覆盖 service/provider 交界。
+收益是减少异常控制流、减少动态签名判断，也让类型检查能真正覆盖 service/provider 交界。架构测试会防止 service 旧 runtime keyword 回流。
 
 ### 2.2 收束 `RawFulltextPayload.metadata` 兼容口袋
 
-`ProviderContent`、`ProviderArtifacts`、`ProviderFetchResult` 已经是 typed contract，但 `RawFulltextPayload.metadata` 还会把兼容字段导出成 dict。当前 docs 已说明它是只读兼容导出。
+当前状态：已完成。`ProviderContent`、`ProviderArtifacts`、`ProviderFetchResult` 是 typed contract；`RawFulltextPayload.metadata` 只保留只读导出兼容视图。
 
 本轮已完成：
 
 1. 生产 workflow 与重点 provider/service/MCP 测试迁到 typed fields：`ProviderContent.route_kind`、`markdown_text`、`diagnostics`、`fetcher`、`browser_context_seed`、`warnings`、`trace`。
 2. `RawFulltextPayload.metadata` property 已标注为 legacy read-only compatibility view，并集中保留 compatibility test 覆盖合成 shape。
 3. 测试 helper 不再通过 `metadata["route"]` 判定 artifact policy。
-
-后续建议：
-
-1. 新测试继续只断言 typed fields，避免新增对 `raw_payload.metadata[...]` 的依赖。
-2. 可补架构测试，防止生产路径重新读取 legacy metadata magic keys。
+4. 架构测试禁止生产代码重新读取 `raw_payload.metadata[...]` / `raw_payload.metadata.get(...)` magic keys；仅 `providers/base.py` 的导出视图和专门 compatibility unit tests 保留旧 shape 断言。
 
 风险主要是旧测试和第三方脚本；可通过一个版本周期的文档说明缓冲。
 
 ### 2.3 `fetch_fulltext()` dict 旧接口下线
 
-`ProviderClient` 仍保留 `fetch_fulltext()`，`elsevier.py` 和 `springer.py` 也有旧 dict 结果入口，但主链已经走 `fetch_result()` template-method。
-
-当前状态：本轮确认 CLI/MCP/service 主链不依赖 `fetch_fulltext()` dict 接口，公开方法暂不删除。
-
-后续建议：
-
-- 将 provider 旧接口改为测试专用或显式 deprecated。
-- 迁移测试到 `fetch_result()` / `fetch_raw_fulltext()`。
+当前状态：已完成。`ProviderClient`、`ElsevierClient` 和 `SpringerClient` 的 `fetch_fulltext()` dict 入口已删除，provider fulltext 只通过 `fetch_result()`、`fetch_raw_fulltext()` 和 typed payload helper 暴露。
 
 这能减少 provider 需要维护的返回形状数量。
 

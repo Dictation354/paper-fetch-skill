@@ -148,6 +148,7 @@
 - 抓取时的落盘目录。
 - 可覆盖默认下载目录，也会影响 MCP scoped cache resources。
 - Provider PDF/binary、Springer `original.html` 和 asset 诊断由 `RuntimeContext` / `ArtifactStore` 应用；MCP 内部通过 `RuntimeContext` 调用 service，fetch-envelope sidecar 和 cache index 由 `FetchCache` 管理。
+- Python service API 不再接收 `download_dir` / `env` / `transport` / `clients` keyword；外层调用方需要先构造 `RuntimeContext(...)`，再传 `context=`。
 - 未显式设置时，CLI / MCP 优先使用用户数据目录下的 `paper-fetch/downloads`；CLI 创建失败才退回 `live-downloads`。
 - `download_dir` 派生的 HTTP textual disk cache 默认按 `4096` 条、`512 MiB`、`30` 天清理；详见 provider 文档中的 HTTP 缓存环境变量。
 

@@ -31,7 +31,36 @@ REMOVED_PROVIDER_COMPATIBILITY_MODULE_FILES = [
 ]
 SPRINGER_PROVIDER_PATH = PROVIDERS_DIR / "springer.py"
 ELSEVIER_PROVIDER_PATH = PROVIDERS_DIR / "elsevier.py"
-MAGIC_KEY_PATTERN = re.compile(r'\[(?:\"|\')(route|markdown_text|warnings|source_trail)(?:\"|\')\]|get\((?:\"|\')(route|markdown_text|warnings|source_trail)(?:\"|\')')
+PROVIDER_MAGIC_METADATA_KEYS = (
+    "route",
+    "reason",
+    "markdown_text",
+    "merged_metadata",
+    "availability_diagnostics",
+    "extraction",
+    "html_fetcher",
+    "browser_context_seed",
+    "suggested_filename",
+    "html_failure_reason",
+    "html_failure_message",
+    "extracted_assets",
+    "warnings",
+    "source_trail",
+)
+MAGIC_KEY_PATTERN = re.compile(
+    r'\[(?:\"|\')('
+    + "|".join(PROVIDER_MAGIC_METADATA_KEYS)
+    + r')(?:\"|\')\]|get\((?:\"|\')('
+    + "|".join(PROVIDER_MAGIC_METADATA_KEYS)
+    + r')(?:\"|\')'
+)
+RAW_PAYLOAD_METADATA_MAGIC_PATTERN = re.compile(
+    r'\b(?:raw_payload|payload)\.metadata(?:\[(?:\"|\')('
+    + "|".join(PROVIDER_MAGIC_METADATA_KEYS)
+    + r')(?:\"|\')\]|\.get\((?:\"|\')('
+    + "|".join(PROVIDER_MAGIC_METADATA_KEYS)
+    + r')(?:\"|\'))'
+)
 TARGETED_CYCLE_PATHS = [
     PAPER_FETCH_SRC / "extraction" / "html" / "_metadata.py",
     PAPER_FETCH_SRC / "extraction" / "html" / "_runtime.py",
@@ -181,6 +210,14 @@ def top_level_internal_imports(path: Path) -> list[str]:
     return imports
 
 
+def keyword_only_parameters(path: Path, function_name: str) -> list[str]:
+    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+    for node in tree.body:
+        if isinstance(node, ast.FunctionDef) and node.name == function_name:
+            return [arg.arg for arg in node.args.kwonlyargs]
+    raise AssertionError(f"{function_name} not found in {path}")
+
+
 def has_cycle(graph: dict[str, set[str]]) -> bool:
     visited: set[str] = set()
     active: set[str] = set()
@@ -247,6 +284,20 @@ class ArchitectureCloseoutTests(unittest.TestCase):
         text = SERVICE_PATH.read_text(encoding="utf-8")
         self.assertNotRegex(text, MAGIC_KEY_PATTERN)
 
+    def test_public_service_api_no_longer_accepts_legacy_runtime_keywords(self) -> None:
+        self.assertEqual(keyword_only_parameters(SERVICE_PATH, "probe_has_fulltext"), ["context"])
+        self.assertEqual(
+            keyword_only_parameters(SERVICE_PATH, "fetch_paper"),
+            ["modes", "strategy", "render", "context"],
+        )
+
+    def test_provider_fetch_fulltext_dict_compatibility_entrypoints_stay_deleted(self) -> None:
+        offenders: list[str] = []
+        for path in sorted(PROVIDERS_DIR.rglob("*.py")):
+            if "def fetch_fulltext" in path.read_text(encoding="utf-8"):
+                offenders.append(path.relative_to(REPO_ROOT).as_posix())
+        self.assertEqual(offenders, [])
+
     def test_resolve_query_stays_outside_provider_implementations(self) -> None:
         imports = top_level_internal_imports(RESOLVE_QUERY_PATH)
         disallowed = [name for name in imports if name.startswith("paper_fetch.providers")]
@@ -258,8 +309,19 @@ class ArchitectureCloseoutTests(unittest.TestCase):
             if path.name == "base.py":
                 continue
             text = path.read_text(encoding="utf-8")
-            if MAGIC_KEY_PATTERN.search(text):
+            if RAW_PAYLOAD_METADATA_MAGIC_PATTERN.search(text):
                 offenders.append(path.relative_to(REPO_ROOT).as_posix())
+        self.assertEqual(offenders, [])
+
+    def test_production_code_does_not_read_raw_payload_metadata_magic_keys(self) -> None:
+        offenders: list[str] = []
+        for path in sorted(PAPER_FETCH_SRC.rglob("*.py")):
+            if path == PROVIDERS_DIR / "base.py":
+                continue
+            text = path.read_text(encoding="utf-8")
+            match = RAW_PAYLOAD_METADATA_MAGIC_PATTERN.search(text)
+            if match:
+                offenders.append(f"{path.relative_to(REPO_ROOT).as_posix()}:{text[:match.start()].count(chr(10)) + 1}")
         self.assertEqual(offenders, [])
 
     def test_targeted_static_import_graph_is_cycle_free(self) -> None:

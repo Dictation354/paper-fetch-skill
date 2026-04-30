@@ -18,6 +18,7 @@ from paper_fetch.models import (
 )
 from paper_fetch.providers.registry import build_clients
 from paper_fetch.quality.issues import collect_issue_flags
+from paper_fetch.runtime import RuntimeContext
 from paper_fetch.service import FetchStrategy, PaperFetchFailure, fetch_paper
 
 GEOGRAPHY_PROVIDER_ORDER = ("elsevier", "springer", "wiley", "science", "pnas")
@@ -267,6 +268,12 @@ def run_geography_live_report(
 
     for sample in scheduled_samples:
         started_at = time.monotonic()
+        context = RuntimeContext(
+            env=active_env,
+            transport=active_transport,
+            clients=client_registry,
+            download_dir=None,
+        )
         try:
             envelope = fetch_paper(
                 sample.doi,
@@ -274,10 +281,7 @@ def run_geography_live_report(
                 strategy=FetchStrategy(
                     allow_metadata_only_fallback=True,
                 ),
-                download_dir=None,
-                clients=client_registry,
-                transport=active_transport,
-                env=active_env,
+                context=context,
             )
             elapsed_seconds = round(time.monotonic() - started_at, 3)
             results.append(build_report_result(sample, envelope, elapsed_seconds=elapsed_seconds))
@@ -319,6 +323,8 @@ def run_geography_live_report(
                     issue_flags=[],
                 )
             )
+        finally:
+            context.close()
 
     report_providers = [item for item in GEOGRAPHY_PROVIDER_ORDER if any(result.provider == item for result in results)]
     return GeographyLiveReport(

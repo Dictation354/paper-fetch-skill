@@ -10,6 +10,7 @@ from pathlib import Path
 from .config import build_runtime_env, resolve_cli_download_dir
 from .models import FetchEnvelope, RenderOptions
 from .providers.base import ProviderFailure
+from .runtime import RuntimeContext
 from .service import FetchStrategy, PaperFetchFailure, fetch_paper
 from .utils import extend_unique, sanitize_filename
 from .workflow.rendering import rewrite_markdown_asset_links as rewrite_markdown_asset_links_for_target
@@ -167,17 +168,23 @@ def main() -> int:
             asset_profile=args.asset_profile,
             max_tokens=args.max_tokens,
         )
-        envelope = fetch_paper(
-            args.query,
-            modes=modes,
-            strategy=FetchStrategy(
-                allow_metadata_only_fallback=True,
-                asset_profile=args.asset_profile,
-            ),
-            render=render_options,
-            download_dir=None if args.no_download else output_dir,
+        context = RuntimeContext(
             env=runtime_env,
+            download_dir=None if args.no_download else output_dir,
         )
+        try:
+            envelope = fetch_paper(
+                args.query,
+                modes=modes,
+                strategy=FetchStrategy(
+                    allow_metadata_only_fallback=True,
+                    asset_profile=args.asset_profile,
+                ),
+                render=render_options,
+                context=context,
+            )
+        finally:
+            context.close()
         if args.save_markdown:
             save_markdown_to_disk(envelope, output_dir=output_dir, render=render_options)
         markdown_override = (

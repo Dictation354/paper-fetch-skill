@@ -220,6 +220,8 @@ python3 -m paper_fetch.mcp.server
 
 `download_dir` 相关 provider artifact 落盘由 `RuntimeContext` / `ArtifactStore` 管理；`prefer_cache=true` 的 fetch-envelope sidecar 复用与 scoped cache resources 由 `FetchCache` 管理，外部参数和 resource URI 保持稳定。
 
+Python service API 只接收显式 `RuntimeContext`：需要自定义 `env`、`transport`、`clients` 或 `download_dir` 时，先构造 `RuntimeContext(...)`，再调用 `fetch_paper(..., context=context)` 或 `probe_has_fulltext(..., context=context)`。
+
 同一个 `RuntimeContext` 生命周期内会复用 session 级浅缓存：`has_fulltext` 与后续 `fetch_paper` 可共享 query resolution、Crossref DOI metadata、Elsevier metadata probe，以及 landing page `citation_pdf_url` probe；命中的 citation PDF URL 会并入 fetch 阶段 metadata `fulltext_links`。
 
 HTTP textual disk cache 的 metadata freshness 默认 `86400` 秒；`PAPER_FETCH_HTTP_METADATA_CACHE_TTL` 可覆盖，普通进程内 GET TTL 仍默认 `30` 秒。磁盘缓存默认限制为 `4096` 个条目、`512 MiB`、`30` 天，可通过 `PAPER_FETCH_HTTP_DISK_CACHE_MAX_ENTRIES`、`PAPER_FETCH_HTTP_DISK_CACHE_MAX_BYTES`、`PAPER_FETCH_HTTP_DISK_CACHE_MAX_AGE_DAYS` 覆盖；设置为 `0` 表示关闭对应上限。缓存 key 会继续脱敏敏感 query 参数；`Authorization`、`X-ELS-APIKey` 等敏感 header 使用短 SHA-256 digest 区分缓存，不把 token 原文写入 key、磁盘路径或 structured log。

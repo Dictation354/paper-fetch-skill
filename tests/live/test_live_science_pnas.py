@@ -9,6 +9,7 @@ from paper_fetch.config import resolve_flaresolverr_source_dir, resolve_flaresol
 from paper_fetch.http import HttpTransport
 from paper_fetch.providers.base import ProviderFailure
 from paper_fetch.providers._flaresolverr import health_check
+from paper_fetch.runtime import RuntimeContext
 from paper_fetch.service import FetchStrategy, fetch_paper
 from tests.live._runtime_env import build_isolated_live_env
 from tests.provider_benchmark_samples import provider_benchmark_sample, source_trail_matches
@@ -20,16 +21,18 @@ PNAS_SAMPLE = provider_benchmark_sample("pnas")
 
 
 def fetch_article(query: str, *, transport: HttpTransport, env: dict[str, str]):
-    envelope = fetch_paper(
-        query,
-        modes={"article"},
-        strategy=FetchStrategy(
-            allow_metadata_only_fallback=True,
-        ),
-        download_dir=None,
-        transport=transport,
-        env=env,
-    )
+    context = RuntimeContext(env=env, transport=transport, download_dir=None)
+    try:
+        envelope = fetch_paper(
+            query,
+            modes={"article"},
+            strategy=FetchStrategy(
+                allow_metadata_only_fallback=True,
+            ),
+            context=context,
+        )
+    finally:
+        context.close()
     assert envelope.article is not None
     return envelope.article
 

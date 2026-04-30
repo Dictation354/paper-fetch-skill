@@ -2,17 +2,14 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 import time
-from typing import Mapping
 
 from .formula.convert import formula_timing_collector
-from .http import HttpTransport
 from .models import FetchEnvelope, OutputMode, RenderOptions
 from .providers.base import ProviderFailure
 from .providers.registry import build_clients
 from .resolve.query import ResolvedQuery
-from .runtime import RUNTIME_UNSET, RuntimeContext, resolve_runtime_context
+from .runtime import RuntimeContext
 from .workflow.fulltext import fetch_article
 from .workflow.metadata import fetch_metadata_for_resolved_query, merge_primary_secondary_metadata
 from .workflow.rendering import build_fetch_envelope
@@ -43,19 +40,13 @@ __all__ = [
 def probe_has_fulltext(
     query: str,
     *,
-    transport: HttpTransport | None | object = RUNTIME_UNSET,
-    env: Mapping[str, str] | None | object = RUNTIME_UNSET,
-    clients: Mapping[str, object] | None | object = RUNTIME_UNSET,
     context: RuntimeContext | None = None,
 ) -> HasFulltextProbeResult:
     owns_runtime = context is None
-    runtime = resolve_runtime_context(context, env=env, transport=transport, clients=clients)
+    runtime = context or RuntimeContext()
     try:
         return workflow_probe_has_fulltext(
             query,
-            transport=runtime.transport,
-            env=runtime.env,
-            clients=runtime.clients,
             context=runtime,
             resolve_paper_fn=resolve_paper,
         )
@@ -70,20 +61,10 @@ def fetch_paper(
     modes: set[OutputMode] | None = None,
     strategy: FetchStrategy | None = None,
     render: RenderOptions | None = None,
-    download_dir: Path | None | object = RUNTIME_UNSET,
-    clients: Mapping[str, object] | None | object = RUNTIME_UNSET,
-    transport: HttpTransport | None | object = RUNTIME_UNSET,
-    env: Mapping[str, str] | None | object = RUNTIME_UNSET,
     context: RuntimeContext | None = None,
 ) -> FetchEnvelope:
     owns_runtime = context is None
-    runtime = resolve_runtime_context(
-        context,
-        env=env,
-        transport=transport,
-        clients=clients,
-        download_dir=download_dir,
-    )
+    runtime = context or RuntimeContext()
     try:
         requested_modes = set(modes or DEFAULT_OUTPUT_MODES)
         active_strategy = strategy or FetchStrategy()

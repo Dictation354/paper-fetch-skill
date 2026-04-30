@@ -90,6 +90,9 @@ class ProviderStub:
 
 
 def fetch_article(query: str, **kwargs):
+    runtime_keys = {key: kwargs.pop(key) for key in ("clients", "transport", "env", "download_dir") if key in kwargs}
+    if runtime_keys:
+        kwargs["context"] = paper_fetch.RuntimeContext(**runtime_keys)
     envelope = paper_fetch.fetch_paper(query, modes={"article"}, **kwargs)
     assert envelope.article is not None
     return envelope.article
