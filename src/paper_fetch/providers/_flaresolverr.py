@@ -6,6 +6,7 @@ import atexit
 import base64
 import json
 import logging
+import platform
 import threading
 import time
 import uuid
@@ -55,6 +56,19 @@ _BROWSER_WORKFLOW_LABELS = {
     "pnas": "PNAS browser workflow",
 }
 
+_POSIX_FLARESOLVERR_WORKFLOW_FILES = (
+    "setup_flaresolverr_source.sh",
+    "start_flaresolverr_source.sh",
+    "run_flaresolverr_source.sh",
+    "stop_flaresolverr_source.sh",
+    "flaresolverr_source_common.sh",
+)
+_WINDOWS_FLARESOLVERR_WORKFLOW_FILES = (
+    "start_flaresolverr_source.ps1",
+    "stop_flaresolverr_source.ps1",
+    "flaresolverr_source_common.ps1",
+)
+
 
 @dataclass
 class FlareSolverrSessionState:
@@ -79,13 +93,7 @@ class FlareSolverrRuntimeConfig:
     artifact_dir: Path
     headless: bool
     required_files: tuple[str, ...] = field(
-        default=(
-            "setup_flaresolverr_source.sh",
-            "start_flaresolverr_source.sh",
-            "run_flaresolverr_source.sh",
-            "stop_flaresolverr_source.sh",
-            "flaresolverr_source_common.sh",
-        )
+        default_factory=lambda: _default_flaresolverr_workflow_files()
     )
 
 
@@ -121,6 +129,12 @@ class FlareSolverrFailure(Exception):
 
 def _browser_workflow_label(provider: str) -> str:
     return _BROWSER_WORKFLOW_LABELS.get(provider, f"{provider} browser workflow")
+
+
+def _default_flaresolverr_workflow_files() -> tuple[str, ...]:
+    if platform.system().lower() == "windows":
+        return _WINDOWS_FLARESOLVERR_WORKFLOW_FILES
+    return _POSIX_FLARESOLVERR_WORKFLOW_FILES
 
 
 def load_runtime_config(env: Mapping[str, str], *, provider: str, doi: str) -> FlareSolverrRuntimeConfig:
@@ -262,7 +276,7 @@ def probe_runtime_status(
 
     repo_details = {
         "source_dir": runtime_details.get("source_dir"),
-        "required_files": list(config.required_files) if config is not None else list(FlareSolverrRuntimeConfig.__dataclass_fields__["required_files"].default),
+        "required_files": list(config.required_files) if config is not None else list(_default_flaresolverr_workflow_files()),
     }
     if config is None:
         checks.append(

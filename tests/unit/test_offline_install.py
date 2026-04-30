@@ -12,6 +12,7 @@ import unittest
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+WINDOWS_INSTALLER = REPO_ROOT / "install-offline.ps1"
 
 
 def _write_executable(path: Path, content: str) -> None:
@@ -263,6 +264,37 @@ class OfflineInstallTests(unittest.TestCase):
             offline_env = (bundle / "offline.env").read_text(encoding="utf-8")
             self.assertEqual(offline_env.count("# BEGIN paper-fetch offline managed"), 1)
             self.assertEqual(offline_env.count("# END paper-fetch offline managed"), 1)
+
+    def test_windows_installer_declares_abi_checksum_and_asset_guards(self) -> None:
+        script = WINDOWS_INSTALLER.read_text(encoding="utf-8")
+
+        self.assertIn("target.python_tag", script)
+        self.assertIn("Get-FileHash", script)
+        self.assertIn("PIP_NO_INDEX", script)
+        self.assertIn("formula-tools/bin/texmath.exe", script)
+        self.assertIn("ms-playwright", script)
+        self.assertIn("flaresolverr.exe", script)
+        self.assertIn("chrome.exe", script)
+        self.assertIn("$NoUserConfig", script)
+
+    def test_windows_installer_writes_managed_env_and_activation_script(self) -> None:
+        script = WINDOWS_INSTALLER.read_text(encoding="utf-8")
+
+        self.assertIn("# BEGIN paper-fetch offline managed", script)
+        self.assertIn("# END paper-fetch offline managed", script)
+        self.assertIn("Activate-Offline.ps1", script)
+        self.assertIn("PAPER_FETCH_FORMULA_TOOLS_DIR", script)
+        self.assertIn("PLAYWRIGHT_BROWSERS_PATH", script)
+        self.assertIn("FLARESOLVERR_SOURCE_DIR", script)
+        self.assertNotIn(".cache/ms-playwright'", script)
+
+    def test_windows_installer_smoke_checks_do_not_use_user_playwright_cache(self) -> None:
+        script = WINDOWS_INSTALLER.read_text(encoding="utf-8")
+
+        self.assertIn("provider_status_payload", script)
+        self.assertIn("manager.chromium.executable_path", script)
+        self.assertIn("assert root in executable.parents", script)
+        self.assertIn("paper-fetch.exe", script)
 
 
 if __name__ == "__main__":

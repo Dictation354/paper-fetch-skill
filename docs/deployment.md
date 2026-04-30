@@ -37,35 +37,48 @@ provider 与环境变量说明见 [`providers.md`](providers.md)，Wiley / Scien
 - 如果要装进当前 `python3` 环境而不是 `.venv`，使用 `./install.sh --system`
 - 如果只想跳过某个重型部分，可使用 `--skip-playwright-install` 或 `--skip-flaresolverr-setup`
 
-### Linux x86_64 离线包
+### 离线包
 
-离线包支持 Linux x86_64，并按 CPython ABI 分别提供 3.11、3.12、3.13、3.14 四组 CI artifact：
+离线包支持 Linux x86_64 和 Windows x86_64，并按 CPython ABI 分别提供 3.11、3.12、3.13、3.14 CI artifact：
 
 ```text
 paper-fetch-skill-offline-linux-x86_64-cp311.tar.gz
 paper-fetch-skill-offline-linux-x86_64-cp312.tar.gz
 paper-fetch-skill-offline-linux-x86_64-cp313.tar.gz
 paper-fetch-skill-offline-linux-x86_64-cp314.tar.gz
+paper-fetch-skill-offline-windows-x86_64-cp311.zip
+paper-fetch-skill-offline-windows-x86_64-cp312.zip
+paper-fetch-skill-offline-windows-x86_64-cp313.zip
+paper-fetch-skill-offline-windows-x86_64-cp314.zip
 ```
 
-目标机解压后运行：
+Linux 目标机解压后运行：
 
 ```bash
 ./install-offline.sh --preset=headless --no-user-config
 source ./activate-offline.sh
 ```
 
-离线安装器的约束：
+Windows 目标机解压 zip 后在 PowerShell 中运行：
+
+```powershell
+.\install-offline.ps1 -NoUserConfig
+. .\Activate-Offline.ps1
+```
+
+离线安装器的约束:
 
 - Python 版本必须与包名和 `offline-manifest.json` 的 `target.python_tag` 完全匹配；例如 `cp313` 包只能用 CPython `3.13.x` 安装，避免 wheelhouse ABI 不匹配
 - 所有 Python 依赖只来自包内 `wheelhouse/`，安装时设置 `PIP_NO_INDEX=1`
 - Playwright 使用包内 `ms-playwright/`，并设置 `PLAYWRIGHT_BROWSERS_PATH="$INSTALL_ROOT/ms-playwright"`；不会触碰 `~/.cache/ms-playwright`
 - 包内源码快照不包含 `tests/` 目录；离线安装目标是运行已打包工具，不在目标机执行项目测试
-- FlareSolverr 使用包内已 patch 的源码快照 `vendor/flaresolverr/.work/FlareSolverr/`、`vendor/flaresolverr/wheelhouse/` 和已解压的运行 bundle；CI 构建阶段会把 `func-timeout` 这类 source-only 依赖预构建成 wheel，目标机不运行 `git clone`、`git fetch`、`git apply` 或 Python wheel 构建
-- FlareSolverr bundle 只包含运行所需的解压目录 `vendor/flaresolverr/.flaresolverr/v3.4.6/flaresolverr/`，不包含 upstream 原始 `flaresolverr_linux_x64.tar.gz`
-- 公式工具使用包内 `formula-tools/bin/texmath`；目标机不编译 texmath，也不运行 `npm install`
+- Linux FlareSolverr 使用包内已 patch 的源码快照 `vendor/flaresolverr/.work/FlareSolverr/`、`vendor/flaresolverr/wheelhouse/` 和已解压的运行 bundle；CI 构建阶段会把 `func-timeout` 这类 source-only 依赖预构建成 wheel，目标机不运行 `git clone`、`git fetch`、`git apply` 或 Python wheel 构建
+- Windows FlareSolverr 使用 CI 中由本项目 patch 后源码运行 upstream `src/build_package.py` 生成的 `flaresolverr_windows_x64.zip`，离线包只纳入解压后的 `vendor/flaresolverr/.flaresolverr/v3.4.6/flaresolverr/` 运行目录；目标机不运行 Python FlareSolverr venv、`git clone` 或 patch 步骤
+- FlareSolverr bundle 只包含运行所需的解压目录，不包含 upstream 原始压缩包
+- Linux 公式工具使用包内 `formula-tools/bin/texmath`，Windows 使用 `formula-tools/bin/texmath.exe`；目标机不编译 texmath，也不运行 `npm install`
 - 默认只写包内 `offline.env` 并生成 `activate-offline.sh`；只有显式传 `--user-config` 才会把受标记管理的运行时块合并到 `~/.config/paper-fetch/.env`
 - `--preset=headless` 会在安装阶段检查 `Xvfb`；`--preset=wslg` 会检查 `DISPLAY` 或 `WAYLAND_DISPLAY`
+- Windows 安装器默认只写包内 `offline.env` 并生成 `Activate-Offline.ps1`；只有显式传 `-UserConfig` 才合并到用户配置。Windows FlareSolverr 使用 `scripts/flaresolverr-up.ps1`、`scripts/flaresolverr-status.ps1` 和 `scripts/flaresolverr-down.ps1`
 
 构建离线包：
 
@@ -73,7 +86,13 @@ source ./activate-offline.sh
 scripts/build-offline-package.sh --output-dir dist
 ```
 
-构建脚本会从当前 `PYTHON_BIN` 推导包名 tag；例如 `PYTHON_BIN=python3.13` 会默认生成 `paper-fetch-skill-offline-linux-x86_64-cp313.tar.gz`。
+Windows 构建在 PowerShell 中执行：
+
+```powershell
+.\scripts\build-offline-package-windows.ps1 -OutputDir dist
+```
+
+构建脚本会从当前 Python 推导包名 tag；例如 `PYTHON_BIN=python3.13 scripts/build-offline-package.sh` 会默认生成 `paper-fetch-skill-offline-linux-x86_64-cp313.tar.gz`，Windows `python3.13` 环境会默认生成 `paper-fetch-skill-offline-windows-x86_64-cp313.zip`。
 
 验证离线包：
 
@@ -84,6 +103,8 @@ scripts/verify-offline-package.sh dist/paper-fetch-skill-offline-linux-x86_64-cp
 上面的验证路径按实际构建出的 `cp311`、`cp312`、`cp313` 或 `cp314` 包名替换。
 
 验证脚本会先用 guard 拦截 `curl`、`git`、`npm`、`playwright` 等命令来确认安装器没有在线下载或目标机 patch 动作，然后检查 `paper-fetch --help`、`texmath --help`、包内 Playwright Chromium、`paper_fetch.mcp.tools.provider_status_payload` 和 FlareSolverr `sessions.list`。
+
+Windows CI 在 `offline-windows-x86-64` job 中执行等价验证：`install-offline.ps1 -NoUserConfig`、`. .\Activate-Offline.ps1`、`paper-fetch --help`、`texmath.exe --help`、包内 Playwright Chromium 路径检查，以及启动包内 FlareSolverr 后调用 `sessions.list`。
 
 ### 手动安装
 

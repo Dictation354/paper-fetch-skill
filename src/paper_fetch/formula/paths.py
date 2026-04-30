@@ -10,6 +10,7 @@ from typing import Mapping
 from ..config import resolve_user_data_dir
 
 FORMULA_TOOLS_DIR_ENV_VAR = "PAPER_FETCH_FORMULA_TOOLS_DIR"
+TEXMATH_EXECUTABLE_NAMES = ("texmath", "texmath.exe")
 FORMULA_NODE_SCRIPT_NAME = "mathml_to_latex_cli.mjs"
 FORMULA_NODE_WORKER_SCRIPT_NAME = "mathml_to_latex_worker.mjs"
 BUNDLED_FORMULA_RESOURCES_PACKAGE = "paper_fetch.resources.formula"
@@ -64,6 +65,15 @@ def formula_tools_search_dirs(env: Mapping[str, str] | None = None) -> list[Path
 def formula_tools_subpaths(relative_path: str | Path, env: Mapping[str, str] | None = None) -> list[Path]:
     relative = Path(relative_path)
     return [root / relative for root in formula_tools_search_dirs(env)]
+
+
+def texmath_binary_candidates(env: Mapping[str, str] | None = None) -> list[Path]:
+    candidates: list[Path] = []
+    for name in TEXMATH_EXECUTABLE_NAMES:
+        for candidate in formula_tools_subpaths(Path("bin") / name, env):
+            if candidate not in candidates:
+                candidates.append(candidate)
+    return candidates
 
 
 def mathml_to_latex_script_candidates(env: Mapping[str, str] | None = None) -> list[Path]:

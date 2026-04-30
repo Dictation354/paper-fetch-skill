@@ -27,6 +27,7 @@ from .paths import (
     formula_tools_subpaths,
     mathml_to_latex_script_candidates,
     mathml_to_latex_worker_script_candidates,
+    texmath_binary_candidates,
 )
 
 BACKEND_AUTO = "auto"
@@ -59,6 +60,7 @@ _CONVERSION_CACHE: LRUCache[tuple[object, ...], FormulaConversionResult] | None 
 _CONVERSION_CACHE_LOCK = threading.RLock()
 _MATHML_WORKERS: dict[tuple[str, str], "MathMLToLatexWorker"] = {}
 _MATHML_WORKERS_LOCK = threading.Lock()
+_PERSISTENT_MATHML_WORKER_SUPPORTED = os.name != "nt"
 _FORMULA_TIMING_COLLECTOR: ContextVar[Callable[[float], None] | None] = ContextVar(
     "paper_fetch_formula_timing_collector",
     default=None,
@@ -358,6 +360,8 @@ def classpath_entries_exist(value: str | None) -> bool:
 
 
 def _worker_enabled(env: Mapping[str, str]) -> bool:
+    if not _PERSISTENT_MATHML_WORKER_SUPPORTED:
+        return False
     return _env_config_value(env, "MATHML_TO_LATEX_WORKER").lower() not in {"0", "false", "no", "off"}
 
 
@@ -535,7 +539,7 @@ def convert_with_texmath(
     runtime_env = dict(env or os.environ)
     texmath_bin = (
         runtime_env.get("TEXMATH_BIN", "").strip()
-        or first_existing_path_cached(formula_tools_subpaths(Path("bin") / "texmath", runtime_env))
+        or first_existing_path_cached(texmath_binary_candidates(runtime_env))
         or "texmath"
     )
     started_at = time.monotonic()

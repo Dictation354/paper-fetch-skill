@@ -89,14 +89,21 @@ python3 -m pip install .
 
 这个脚本默认创建仓库内 `.venv`，并把大型浏览器组件下载到本地运行目录。它是在线一键安装入口；如果只想安装 Python 包和配置骨架，可以使用 `./install.sh --lite`。
 
-Linux x86_64 离线部署使用 CI 产出的 ABI 专用包：`cp311`、`cp312`、`cp313`、`cp314` 分别对应 CPython 3.11、3.12、3.13、3.14。目标机必须使用与包名 tag 匹配的 CPython，例如 `cp313` 包只能用 CPython 3.13.x；解压后执行：
+Linux 和 Windows x86_64 离线部署使用 CI 产出的 ABI 专用包：`cp311`、`cp312`、`cp313`、`cp314` 分别对应 CPython 3.11、3.12、3.13、3.14。目标机必须使用与包名 tag 匹配的 CPython，例如 `paper-fetch-skill-offline-windows-x86_64-cp313.zip` 只能用 CPython 3.13.x；Linux 解压后执行：
 
 ```bash
 ./install-offline.sh --preset=headless --no-user-config
 source ./activate-offline.sh
 ```
 
-离线安装只从包内 `wheelhouse/`、`ms-playwright/`、`formula-tools/` 和已 patch 的 `vendor/flaresolverr/.work/FlareSolverr/` 取资产，不运行 `git clone`、`npm install` 或 `playwright install`。默认只写包内 `offline.env`；只有显式传 `--user-config` 才会向 `~/.config/paper-fetch/.env` 合并受标记管理的离线运行时配置。
+Windows x86_64 解压 zip 后在 PowerShell 中执行：
+
+```powershell
+.\install-offline.ps1 -NoUserConfig
+. .\Activate-Offline.ps1
+```
+
+Linux 离线安装只从包内 `wheelhouse/`、`ms-playwright/`、`formula-tools/` 和已 patch 的 `vendor/flaresolverr/.work/FlareSolverr/` 取资产；Windows 离线安装只从包内 `wheelhouse/`、`ms-playwright/`、`formula-tools/bin/texmath.exe` 和已解压的 `vendor/flaresolverr/.flaresolverr/v3.4.6/flaresolverr/` 取资产。目标机不运行 `git clone`、`npm install` 或 `playwright install`。默认只写包内 `offline.env`；只有显式传 `--user-config` / `-UserConfig` 才会向用户配置合并受标记管理的离线运行时配置。
 
 最小试跑：
 

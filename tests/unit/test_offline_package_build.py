@@ -6,6 +6,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 BUILD_OFFLINE_PACKAGE = REPO_ROOT / "scripts" / "build-offline-package.sh"
+BUILD_OFFLINE_PACKAGE_WINDOWS = REPO_ROOT / "scripts" / "build-offline-package-windows.ps1"
 
 
 class OfflinePackageBuildTests(unittest.TestCase):
@@ -61,6 +62,41 @@ class OfflinePackageBuildTests(unittest.TestCase):
         self.assertIn('tar -C "$flare_downloads/$flare_version" -cf - flaresolverr', block)
         self.assertNotIn('tar -C "$flare_downloads/$flare_version" -cf - .', block)
         self.assertNotIn("flaresolverr_linux_x64.tar.gz", block)
+
+    def test_windows_default_package_name_uses_detected_python_tag(self) -> None:
+        script = BUILD_OFFLINE_PACKAGE_WINDOWS.read_text(encoding="utf-8")
+
+        self.assertIn('paper-fetch-skill-offline-windows-x86_64-$pythonTag', script)
+        self.assertIn("$Name.zip", script)
+
+    def test_windows_supported_cpython_tags_are_whitelisted(self) -> None:
+        script = BUILD_OFFLINE_PACKAGE_WINDOWS.read_text(encoding="utf-8")
+        start = script.index("function Test-SupportedPythonTag")
+        end = script.index("function Assert-Target", start)
+        block = script[start:end]
+
+        for tag in ("cp311", "cp312", "cp313", "cp314"):
+            self.assertIn(tag, block)
+
+    def test_windows_manifest_target_fields_are_windows_specific(self) -> None:
+        script = BUILD_OFFLINE_PACKAGE_WINDOWS.read_text(encoding="utf-8")
+        start = script.index("target = [ordered]@{")
+        end = script.index("entrypoint = ", start)
+        block = script[start:end]
+
+        self.assertIn('platform = "windows"', block)
+        self.assertIn('arch = "x86_64"', block)
+        self.assertIn("python_tag = $PythonTag", block)
+        self.assertIn('entrypoint = "install-offline.ps1"', script)
+
+    def test_windows_flaresolverr_bundle_is_built_from_patched_source(self) -> None:
+        script = BUILD_OFFLINE_PACKAGE_WINDOWS.read_text(encoding="utf-8")
+
+        self.assertIn("git clone --depth 1 --branch $flareVersion", script)
+        self.assertIn("return-image-payload.patch", script)
+        self.assertIn(".\\build_package.py", script)
+        self.assertIn("flaresolverr_windows_x64.zip", script)
+        self.assertIn("Expand-Archive", script)
 
 
 if __name__ == "__main__":

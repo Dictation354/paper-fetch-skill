@@ -206,6 +206,105 @@ jobs:
           path: offline-artifacts/paper-fetch-skill-offline-linux-x86_64-${{ matrix.python-tag }}.tar.gz
           if-no-files-found: error
 
+  offline-windows-x86-64:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - python-version: "3.11"
+            python-tag: "cp311"
+          - python-version: "3.12"
+            python-tag: "cp312"
+          - python-version: "3.13"
+            python-tag: "cp313"
+          - python-version: "3.14"
+            python-tag: "cp314"
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Set up Haskell toolchain for bundled texmath
+        id: setup-haskell
+        uses: haskell-actions/setup@v2.9.1
+        with:
+          ghc-version: "9.8.4"
+          cabal-version: "latest"
+
+      - name: Restore formula tool cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ steps.setup-haskell.outputs.cabal-store }}
+          key: ${{ runner.os }}-offline-formula-tools-${{ steps.setup-haskell.outputs.ghc-version }}-${{ hashFiles('src/paper_fetch/formula/install.py', 'src/paper_fetch/resources/formula/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-offline-formula-tools-${{ steps.setup-haskell.outputs.ghc-version }}-
+
+      - name: Build offline package
+        shell: pwsh
+        run: ./scripts/build-offline-package-windows.ps1 -OutputDir "$PWD/offline-artifacts"
+
+      - name: Verify offline package
+        shell: pwsh
+        run: |
+          $zip = "$PWD/offline-artifacts/paper-fetch-skill-offline-windows-x86_64-${{ matrix.python-tag }}.zip"
+          $extractRoot = Join-Path $env:RUNNER_TEMP "paper-fetch-offline-windows"
+          Remove-Item -Recurse -Force -ErrorAction SilentlyContinue $extractRoot
+          New-Item -ItemType Directory -Force -Path $extractRoot | Out-Null
+          Expand-Archive -LiteralPath $zip -DestinationPath $extractRoot -Force
+          $bundle = Get-ChildItem -Path $extractRoot -Directory | Select-Object -First 1
+          if ($null -eq $bundle) {
+            throw "Could not locate extracted Windows offline bundle."
+          }
+          $bundleRoot = $bundle.FullName
+
+          & (Join-Path $bundleRoot "install-offline.ps1") -NoUserConfig
+          . (Join-Path $bundleRoot "Activate-Offline.ps1")
+
+          paper-fetch --help | Out-Null
+          & (Join-Path $bundleRoot "formula-tools/bin/texmath.exe") --help | Out-Null
+
+          $playwrightCheck = @'
+          from pathlib import Path
+          import sys
+          from playwright.sync_api import sync_playwright
+
+          root = Path(sys.argv[1]).resolve()
+          manager = sync_playwright().start()
+          try:
+              executable = Path(manager.chromium.executable_path).resolve()
+          finally:
+              manager.stop()
+
+          assert executable.is_file(), executable
+          assert root in executable.parents, (root, executable)
+          '@
+          python -c $playwrightCheck (Join-Path $bundleRoot "ms-playwright")
+
+          $flareEnv = Join-Path $bundleRoot "vendor/flaresolverr/.env.flaresolverr-source-windows"
+          try {
+            & (Join-Path $bundleRoot "scripts/flaresolverr-up.ps1") $flareEnv
+            $status = & (Join-Path $bundleRoot "scripts/flaresolverr-status.ps1") $flareEnv | ConvertFrom-Json
+            if ($status.status -ne "ok") {
+              throw "FlareSolverr sessions.list returned status=$($status.status)"
+            }
+          } finally {
+            & (Join-Path $bundleRoot "scripts/flaresolverr-down.ps1") $flareEnv
+          }
+
+      - name: Upload offline package
+        uses: actions/upload-artifact@v4
+        with:
+          name: paper-fetch-skill-offline-windows-x86_64-${{ matrix.python-tag }}
+          path: offline-artifacts/paper-fetch-skill-offline-windows-x86_64-${{ matrix.python-tag }}.zip
+          if-no-files-found: error
+
   full-golden:
     if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_full_golden }}
     runs-on: ubuntu-latest

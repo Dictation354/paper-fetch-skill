@@ -22,8 +22,19 @@ class FormulaInstallTests(unittest.TestCase):
             formula_install.stage_bundled_node_workspace(target_dir)
 
             self.assertTrue((target_dir / "mathml_to_latex_cli.mjs").exists())
+            self.assertTrue((target_dir / "mathml_to_latex_worker.mjs").exists())
             self.assertTrue((target_dir / "package.json").exists())
             self.assertTrue((target_dir / "package-lock.json").exists())
+
+    def test_texmath_target_path_uses_exe_on_windows(self) -> None:
+        target_dir = Path("tools")
+        expected = target_dir / "bin" / "texmath.exe"
+        original_os_name = formula_install.os.name
+        try:
+            formula_install.os.name = "nt"
+            self.assertEqual(formula_install.texmath_target_path(target_dir), expected)
+        finally:
+            formula_install.os.name = original_os_name
 
     def test_formula_tools_search_dirs_include_explicit_override_and_user_dir(self) -> None:
         env = {"PAPER_FETCH_FORMULA_TOOLS_DIR": "~/custom-formula-tools", "XDG_DATA_HOME": "/tmp/pf-xdg"}

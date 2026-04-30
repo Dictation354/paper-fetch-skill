@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import json
+import os
 import tempfile
 import unittest
 import xml.etree.ElementTree as ET
 import subprocess
+import stat
 from pathlib import Path
 
 from paper_fetch.formula import convert as formula_conversion
@@ -255,6 +257,55 @@ class FormulaConversionTests(unittest.TestCase):
             formula_conversion._resolve_mathml_to_latex_worker_command = original_worker_command
             formula_conversion._mathml_worker_for = original_worker_for
             formula_conversion._run_command = original_run_command
+
+        self.assertEqual(result.status, "ok")
+        self.assertEqual(result.latex, "x")
+
+    def test_mathml_to_latex_worker_is_disabled_on_windows(self) -> None:
+        raw_mathml = '<math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi></math>'
+        original_supported = formula_conversion._PERSISTENT_MATHML_WORKER_SUPPORTED
+        original_command = formula_conversion._resolve_mathml_to_latex_command
+        original_worker_for = formula_conversion._mathml_worker_for
+        original_run_command = formula_conversion._run_command
+        try:
+            formula_conversion._PERSISTENT_MATHML_WORKER_SUPPORTED = False
+            formula_conversion._resolve_mathml_to_latex_command = lambda _env: ("node", "/tmp/cli.mjs", None, None)
+            formula_conversion._mathml_worker_for = lambda **_kwargs: (_ for _ in ()).throw(
+                AssertionError("Windows must use CLI fallback instead of the persistent worker")
+            )
+            formula_conversion._run_command = lambda *args, **kwargs: subprocess.CompletedProcess(args[0], 0, "x", "")
+
+            result = formula_conversion.convert_with_mathml_to_latex(
+                raw_mathml,
+                display_mode=False,
+                env={"MATHML_TO_LATEX_WORKER": "1"},
+            )
+        finally:
+            formula_conversion._PERSISTENT_MATHML_WORKER_SUPPORTED = original_supported
+            formula_conversion._resolve_mathml_to_latex_command = original_command
+            formula_conversion._mathml_worker_for = original_worker_for
+            formula_conversion._run_command = original_run_command
+
+        self.assertEqual(result.status, "ok")
+        self.assertEqual(result.latex, "x")
+
+    def test_texmath_exe_under_formula_tools_is_discovered(self) -> None:
+        raw_mathml = '<math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi></math>'
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tools_dir = Path(tmpdir) / "formula-tools"
+            texmath = tools_dir / "bin" / "texmath.exe"
+            texmath.parent.mkdir(parents=True)
+            texmath.write_text("#!/usr/bin/env bash\nprintf 'x\\n'\n", encoding="utf-8")
+            texmath.chmod(texmath.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+
+            result = formula_conversion.convert_with_texmath(
+                raw_mathml,
+                display_mode=False,
+                env={
+                    "PAPER_FETCH_FORMULA_TOOLS_DIR": str(tools_dir),
+                    "PATH": os.environ.get("PATH", ""),
+                },
+            )
 
         self.assertEqual(result.status, "ok")
         self.assertEqual(result.latex, "x")

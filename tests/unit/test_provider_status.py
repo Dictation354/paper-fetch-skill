@@ -218,6 +218,36 @@ class ProviderStatusTests(unittest.TestCase):
                 self.assertTrue(result.available)
                 self.assertTrue(all(check.status == "ok" for check in result.checks))
 
+    def test_windows_browser_workflow_checks_powershell_files(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            env_file = tmp / ".env.science"
+            env_file.write_text('HEADLESS="true"\n', encoding="utf-8")
+            source_dir = tmp / "vendor" / "flaresolverr"
+            source_dir.mkdir(parents=True)
+            for name in (
+                "start_flaresolverr_source.ps1",
+                "stop_flaresolverr_source.ps1",
+                "flaresolverr_source_common.ps1",
+            ):
+                (source_dir / name).write_text("# powershell\n", encoding="utf-8")
+            env = {
+                "FLARESOLVERR_ENV_FILE": str(env_file),
+                "FLARESOLVERR_SOURCE_DIR": str(source_dir),
+                "XDG_DATA_HOME": str(tmp / "xdg"),
+            }
+
+            with (
+                mock.patch.object(_flaresolverr.platform, "system", return_value="Windows"),
+                mock.patch.object(_flaresolverr, "health_check", return_value=None),
+            ):
+                result = ScienceClient(DummyTransport(), env).probe_status()
+
+        checks = {check.name: check for check in result.checks}
+        self.assertEqual(result.status, "ready")
+        self.assertEqual(checks["repo_local_workflow"].status, "ok")
+        self.assertIn("start_flaresolverr_source.ps1", checks["repo_local_workflow"].details["required_files"])
+
 
 if __name__ == "__main__":
     unittest.main()

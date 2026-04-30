@@ -15,6 +15,7 @@ from .paths import (
     FORMULA_NODE_WORKER_SCRIPT_NAME,
     bundled_formula_resources,
     default_user_formula_tools_dir,
+    TEXMATH_EXECUTABLE_NAMES,
 )
 
 
@@ -61,6 +62,11 @@ def have_working_texmath(path: Path) -> bool:
     return process.returncode == 0
 
 
+def texmath_target_path(target_dir: Path) -> Path:
+    name = "texmath.exe" if os.name == "nt" else "texmath"
+    return target_dir / "bin" / name
+
+
 def stage_bundled_node_workspace(target_dir: Path) -> Path:
     target_dir.mkdir(parents=True, exist_ok=True)
     resource_root = bundled_formula_resources()
@@ -75,17 +81,23 @@ def stage_bundled_node_workspace(target_dir: Path) -> Path:
 
 
 def reuse_texmath_from_path(target_dir: Path) -> bool:
-    system_texmath = shutil.which("texmath")
+    system_texmath = next(
+        (candidate for name in TEXMATH_EXECUTABLE_NAMES if (candidate := shutil.which(name))),
+        None,
+    )
     if not system_texmath:
         return False
     source = Path(system_texmath)
     if not have_working_texmath(source):
         return False
-    target = target_dir / "bin" / "texmath"
+    target = texmath_target_path(target_dir)
     target.parent.mkdir(parents=True, exist_ok=True)
     if target != source:
         target.unlink(missing_ok=True)
-        target.symlink_to(source)
+        if os.name == "nt":
+            shutil.copy2(source, target)
+        else:
+            target.symlink_to(source)
     log(f"Using existing texmath at {source}")
     return True
 
@@ -131,7 +143,7 @@ def install_texmath_with_stack(target_dir: Path) -> bool:
 
 
 def ensure_texmath(target_dir: Path) -> bool:
-    target = target_dir / "bin" / "texmath"
+    target = texmath_target_path(target_dir)
     if have_working_texmath(target):
         log(f"Formula backend ready: texmath ({target})")
         return True
