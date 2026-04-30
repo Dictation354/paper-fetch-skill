@@ -65,10 +65,10 @@ function ConvertFrom-DotenvValue {
 }
 
 function Check-Platform {
-    $isWindows = [System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform(
+    $runningOnWindows = [System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform(
         [System.Runtime.InteropServices.OSPlatform]::Windows
     )
-    if (-not $isWindows) {
+    if (-not $runningOnWindows) {
         Fail "This offline bundle supports Windows only."
     }
     $arch = [System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture

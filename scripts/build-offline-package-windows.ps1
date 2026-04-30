@@ -51,10 +51,10 @@ function Test-SupportedPythonTag {
 }
 
 function Assert-Target {
-    $isWindows = [System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform(
+    $runningOnWindows = [System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform(
         [System.Runtime.InteropServices.OSPlatform]::Windows
     )
-    if (-not $isWindows) {
+    if (-not $runningOnWindows) {
         throw "Windows offline package build must run on Windows."
     }
     $arch = [System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture
