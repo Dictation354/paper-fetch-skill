@@ -182,9 +182,8 @@ EOF
 
   log "Bundling FlareSolverr dependency wheelhouse"
   mkdir -p "$staging/vendor/flaresolverr/wheelhouse"
-  "$PYTHON_BIN" -m pip download \
-    --dest "$staging/vendor/flaresolverr/wheelhouse" \
-    --only-binary=:all: \
+  "$PYTHON_BIN" -m pip wheel \
+    --wheel-dir "$staging/vendor/flaresolverr/wheelhouse" \
     -r "$flare_repo/requirements.txt"
 
   log "Copying patched FlareSolverr source snapshot"

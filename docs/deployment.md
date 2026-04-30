@@ -57,7 +57,7 @@ source ./activate-offline.sh
 - Python 版本必须是 `3.11.x`；`3.12` 会被拒绝，避免安装 `cp311` wheelhouse 时出现 ABI 不匹配
 - 所有 Python 依赖只来自包内 `wheelhouse/`，安装时设置 `PIP_NO_INDEX=1`
 - Playwright 使用包内 `ms-playwright/`，并设置 `PLAYWRIGHT_BROWSERS_PATH="$INSTALL_ROOT/ms-playwright"`；不会触碰 `~/.cache/ms-playwright`
-- FlareSolverr 使用包内已 patch 的源码快照 `vendor/flaresolverr/.work/FlareSolverr/` 和 `vendor/flaresolverr/wheelhouse/`；目标机不运行 `git clone`、`git fetch` 或 `git apply`
+- FlareSolverr 使用包内已 patch 的源码快照 `vendor/flaresolverr/.work/FlareSolverr/` 和 `vendor/flaresolverr/wheelhouse/`；CI 构建阶段会把 `func-timeout` 这类 source-only 依赖预构建成 wheel，目标机不运行 `git clone`、`git fetch`、`git apply` 或 Python wheel 构建
 - 公式工具使用包内 `formula-tools/bin/texmath`；目标机不编译 texmath，也不运行 `npm install`
 - 默认只写包内 `offline.env` 并生成 `activate-offline.sh`；只有显式传 `--user-config` 才会把受标记管理的运行时块合并到 `~/.config/paper-fetch/.env`
 - `--preset=headless` 会在安装阶段检查 `Xvfb`；`--preset=wslg` 会检查 `DISPLAY` 或 `WAYLAND_DISPLAY`
