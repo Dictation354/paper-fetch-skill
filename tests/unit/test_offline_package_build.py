@@ -98,6 +98,15 @@ class OfflinePackageBuildTests(unittest.TestCase):
         self.assertIn("flaresolverr_windows_x64.zip", script)
         self.assertIn("Expand-Archive", script)
 
+    def test_windows_native_command_output_does_not_pollute_return_values(self) -> None:
+        script = BUILD_OFFLINE_PACKAGE_WINDOWS.read_text(encoding="utf-8")
+        start = script.index("function Invoke-Native")
+        end = script.index("function Get-PythonTag", start)
+        block = script[start:end]
+
+        self.assertIn("| ForEach-Object { Write-Host $_ }", block)
+        self.assertIn("$exitCode = $LASTEXITCODE", block)
+
 
 if __name__ == "__main__":
     unittest.main()
