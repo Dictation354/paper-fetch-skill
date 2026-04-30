@@ -119,7 +119,7 @@ WSLg 或桌面显示环境可改用：
 ./install-offline.sh --preset=wslg --no-user-config
 ```
 
-Windows x86_64 目标机需要已有匹配 CPython，解压 zip 后在 Windows PowerShell 5.1 或 PowerShell 7+ 中执行：
+Windows x86_64 目标机需要已有匹配 CPython。Windows zip 内部使用短目录名 `paper-fetch-offline/`，解压后进入该目录，并在 Windows PowerShell 5.1 或 PowerShell 7+ 中执行：
 
 ```powershell
 .\install-offline.ps1 -NoUserConfig

@@ -317,17 +317,18 @@ function Write-ManifestAndChecksums {
 function New-ZipArchive {
     param(
         [string]$StagingParent,
-        [string]$Name,
+        [string]$RootName,
+        [string]$ArchiveName,
         [string]$DestinationDir
     )
 
     New-Item -ItemType Directory -Force -Path $DestinationDir | Out-Null
-    $archive = Join-Path $DestinationDir "$Name.zip"
+    $archive = Join-Path $DestinationDir "$ArchiveName.zip"
     Remove-Item -Force -ErrorAction SilentlyContinue $archive
     Write-Log "Creating zip archive"
     Push-Location $StagingParent
     try {
-        Compress-Archive -Path $Name -DestinationPath $archive -Force
+        Compress-Archive -LiteralPath $RootName -DestinationPath $archive -Force
     } finally {
         Pop-Location
     }
@@ -338,7 +339,8 @@ $pythonTag = Assert-Target
 if ([string]::IsNullOrWhiteSpace($PackageName)) {
     $PackageName = "paper-fetch-skill-offline-windows-x86_64-$pythonTag"
 }
-$staging = Join-Path $BuildDir $PackageName
+$archiveRootName = "paper-fetch-offline"
+$staging = Join-Path $BuildDir $archiveRootName
 $version = Get-ProjectVersion
 
 Remove-Item -Recurse -Force -ErrorAction SilentlyContinue $staging
@@ -351,4 +353,4 @@ Add-FormulaTools -Staging $staging -BuildPython $buildPython
 Add-PlaywrightChromium -Staging $staging -BuildPython $buildPython
 Add-FlareSolverrBundle $staging
 Write-ManifestAndChecksums -Staging $staging -Version $version -PythonTag $pythonTag
-New-ZipArchive -StagingParent $BuildDir -Name $PackageName -DestinationDir $OutputDir
+New-ZipArchive -StagingParent $BuildDir -RootName $archiveRootName -ArchiveName $PackageName -DestinationDir $OutputDir

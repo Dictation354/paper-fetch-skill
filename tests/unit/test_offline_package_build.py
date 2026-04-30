@@ -67,7 +67,9 @@ class OfflinePackageBuildTests(unittest.TestCase):
         script = BUILD_OFFLINE_PACKAGE_WINDOWS.read_text(encoding="utf-8")
 
         self.assertIn('paper-fetch-skill-offline-windows-x86_64-$pythonTag', script)
-        self.assertIn("$Name.zip", script)
+        self.assertIn("$ArchiveName.zip", script)
+        self.assertIn('$archiveRootName = "paper-fetch-offline"', script)
+        self.assertIn("-RootName $archiveRootName -ArchiveName $PackageName", script)
 
     def test_windows_supported_cpython_tags_are_whitelisted(self) -> None:
         script = BUILD_OFFLINE_PACKAGE_WINDOWS.read_text(encoding="utf-8")

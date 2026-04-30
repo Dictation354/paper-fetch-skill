@@ -59,7 +59,7 @@ Linux 目标机解压后运行：
 source ./activate-offline.sh
 ```
 
-Windows 目标机解压 zip 后在 Windows PowerShell 5.1 或 PowerShell 7+ 中运行：
+Windows zip 内部使用短目录名 `paper-fetch-offline/`，避免 GitHub artifact 默认解压目录和包名重复后触发 Windows 传统路径长度限制。目标机解压 zip 后进入该目录，并在 Windows PowerShell 5.1 或 PowerShell 7+ 中运行：
 
 ```powershell
 .\install-offline.ps1 -NoUserConfig
@@ -93,6 +93,7 @@ Windows 构建在 PowerShell 中执行：
 ```
 
 构建脚本会从当前 Python 推导包名 tag；例如 `PYTHON_BIN=python3.13 scripts/build-offline-package.sh` 会默认生成 `paper-fetch-skill-offline-linux-x86_64-cp313.tar.gz`，Windows `python3.13` 环境会默认生成 `paper-fetch-skill-offline-windows-x86_64-cp313.zip`。
+Windows zip 的文件名保留完整平台和 ABI tag，zip 内部顶层目录固定为较短的 `paper-fetch-offline/`。
 
 验证离线包：
 
