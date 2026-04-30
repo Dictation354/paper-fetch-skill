@@ -8,18 +8,56 @@ PYTHON_BIN="${PYTHON_BIN:-python3}"
 # shellcheck disable=SC1091
 source "${ROOT_DIR}/flaresolverr_source_common.sh"
 flaresolverr_source_load_env "${ENV_FILE}"
+PATCH_BRANCH_NAME="paper-fetch/${FLARESOLVERR_RELEASE_VERSION}"
 
 mkdir -p "${FLARESOLVERR_DOWNLOAD_DIR}" "${ROOT_DIR}/run_logs"
+
+source_has_image_payload_patch() {
+  grep -q "returnImagePayload" "${FLARESOLVERR_REPO_DIR}/src/dtos.py" 2>/dev/null \
+    && grep -q "imagePayload" "${FLARESOLVERR_REPO_DIR}/src/flaresolverr_service.py" 2>/dev/null
+}
+
+tracked_source_changes() {
+  git -C "${FLARESOLVERR_REPO_DIR}" status --porcelain --untracked-files=no
+}
+
+ensure_patched_checkout_branch() {
+  if git -C "${FLARESOLVERR_REPO_DIR}" symbolic-ref -q HEAD >/dev/null; then
+    return
+  fi
+  if git -C "${FLARESOLVERR_REPO_DIR}" show-ref --verify --quiet "refs/heads/${PATCH_BRANCH_NAME}"; then
+    return
+  fi
+  git -C "${FLARESOLVERR_REPO_DIR}" branch "${PATCH_BRANCH_NAME}" HEAD
+  git -C "${FLARESOLVERR_REPO_DIR}" checkout "${PATCH_BRANCH_NAME}" >/dev/null
+}
 
 if [[ ! -d "${FLARESOLVERR_REPO_DIR}/.git" ]]; then
   mkdir -p "$(dirname "${FLARESOLVERR_REPO_DIR}")"
   git clone --depth 1 --branch "${FLARESOLVERR_RELEASE_VERSION}" \
     https://github.com/FlareSolverr/FlareSolverr.git \
     "${FLARESOLVERR_REPO_DIR}"
+  git -C "${FLARESOLVERR_REPO_DIR}" checkout -B "${PATCH_BRANCH_NAME}" >/dev/null
 else
-  git -C "${FLARESOLVERR_REPO_DIR}" fetch --depth 1 origin \
-    "refs/tags/${FLARESOLVERR_RELEASE_VERSION}:refs/tags/${FLARESOLVERR_RELEASE_VERSION}"
-  git -C "${FLARESOLVERR_REPO_DIR}" checkout --force "${FLARESOLVERR_RELEASE_VERSION}"
+  if source_has_image_payload_patch; then
+    ensure_patched_checkout_branch
+    echo "Reusing existing patched FlareSolverr source checkout: ${FLARESOLVERR_REPO_DIR}"
+  else
+    source_changes="$(tracked_source_changes)"
+    if [[ -n "${source_changes}" ]]; then
+      echo "Existing FlareSolverr checkout has tracked local changes and is missing the paper-fetch image payload patch." >&2
+      echo "Refusing to reset it. Commit or stash those changes, or point FLARESOLVERR_REPO_DIR at a clean checkout." >&2
+      printf '%s\n' "${source_changes}" >&2
+      exit 1
+    fi
+    git -C "${FLARESOLVERR_REPO_DIR}" fetch --depth 1 origin \
+      "refs/tags/${FLARESOLVERR_RELEASE_VERSION}:refs/tags/${FLARESOLVERR_RELEASE_VERSION}"
+    if git -C "${FLARESOLVERR_REPO_DIR}" show-ref --verify --quiet "refs/heads/${PATCH_BRANCH_NAME}"; then
+      git -C "${FLARESOLVERR_REPO_DIR}" checkout "${PATCH_BRANCH_NAME}" >/dev/null
+    else
+      git -C "${FLARESOLVERR_REPO_DIR}" checkout -B "${PATCH_BRANCH_NAME}" "${FLARESOLVERR_RELEASE_VERSION}" >/dev/null
+    fi
+  fi
 fi
 
 if [[ ! -d "${FLARESOLVERR_VENV_DIR}" ]]; then
@@ -47,8 +85,7 @@ flaresolverr_source_ensure_chrome_link
 
 RETURN_IMAGE_PAYLOAD_PATCH="${ROOT_DIR}/patches/return-image-payload.patch"
 if [[ -f "${RETURN_IMAGE_PAYLOAD_PATCH}" ]]; then
-  if grep -q "returnImagePayload" "${FLARESOLVERR_REPO_DIR}/src/dtos.py" \
-    && grep -q "imagePayload" "${FLARESOLVERR_REPO_DIR}/src/flaresolverr_service.py"; then
+  if source_has_image_payload_patch; then
     echo "FlareSolverr image payload patch is already present."
   else
     git -C "${FLARESOLVERR_REPO_DIR}" apply --check "${RETURN_IMAGE_PAYLOAD_PATCH}"

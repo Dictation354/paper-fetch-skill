@@ -51,9 +51,8 @@ fi
 if [[ -d "${FLARESOLVERR_REPO_DIR}/.git" ]]; then
   tracked_changes="$(git -C "${FLARESOLVERR_REPO_DIR}" status --porcelain --untracked-files=no)"
   if [[ -n "${tracked_changes}" ]]; then
-    echo "Tracked source changes detected; rerun setup_flaresolverr_source.sh to restore official source mode." >&2
+    echo "Running FlareSolverr with tracked local source changes:" >&2
     printf '%s\n' "${tracked_changes}" >&2
-    exit 1
   fi
 fi
 

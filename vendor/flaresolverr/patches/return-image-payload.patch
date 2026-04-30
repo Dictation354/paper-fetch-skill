@@ -22,7 +22,7 @@ diff --git a/src/flaresolverr_service.py b/src/flaresolverr_service.py
 index 82132c6..7d1b1c2 100644
 --- a/src/flaresolverr_service.py
 +++ b/src/flaresolverr_service.py
-@@ -282,6 +282,66 @@ def click_verify(driver: WebDriver):
+@@ -282,6 +282,134 @@ def click_verify(driver: WebDriver):
      time.sleep(2)
  
  

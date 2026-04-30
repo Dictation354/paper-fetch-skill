@@ -93,7 +93,7 @@ export FLARESOLVERR_SOURCE_DIR="$PWD/vendor/flaresolverr"
 bash ./vendor/flaresolverr/setup_flaresolverr_source.sh
 ```
 
-在线源码工作流会在本地 checkout 上应用 `vendor/flaresolverr/patches/return-image-payload.patch`。离线包不会在目标机执行这一步；CI 会先生成已 patch 的 `vendor/flaresolverr/.work/FlareSolverr/` 源码快照和 `vendor/flaresolverr/wheelhouse/`，目标机只创建 venv 并从 wheelhouse 安装依赖。
+在线源码工作流会在本地 checkout 上应用 `vendor/flaresolverr/patches/return-image-payload.patch`。这个 patch 文件必须保持有效的 unified diff hunk 计数，unit suite 会先校验 patch 结构，避免离线包构建阶段才暴露格式错误。setup 如果发现现有 checkout 已经带有 `returnImagePayload` / `imagePayload` 扩展，会直接复用当前源码并保留本地 tracked 改动，不再强制切回 upstream tag；如果扩展缺失且 checkout 已有 tracked 改动，则会拒绝重置并要求先 commit / stash。离线包不会在目标机执行这一步；CI 会先生成已 patch 的 `vendor/flaresolverr/.work/FlareSolverr/` 源码快照和 `vendor/flaresolverr/wheelhouse/`，目标机只创建 venv 并从 wheelhouse 安装依赖。
 
 如果你还要启用 `wiley` / `science` / `pnas` 的 seeded-browser PDF/ePDF fallback，再补：
 

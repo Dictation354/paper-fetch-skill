@@ -42,10 +42,13 @@ The explicit WSLg preset in this directory is `.env.flaresolverr-source-wslg`.
 That preset uses `HEADLESS=false`, so it does not rely on `Xvfb`.
 On this host, that explicit WSLg preset remains the verified local path.
 
-The setup script restores the official FlareSolverr tag, then applies the repo-local
-`patches/return-image-payload.patch` extension and commits it inside the working
-clone. This keeps `run_flaresolverr_source.sh` in clean-source mode while adding
-the `returnImagePayload` request option used by paper-fetch asset downloads.
+The setup script creates or reuses a repo-local branch for the official
+FlareSolverr tag, then applies the repo-local `patches/return-image-payload.patch`
+extension and commits it inside the working clone. If an existing checkout already
+contains the `returnImagePayload` / `imagePayload` extension, setup reuses that
+checkout and preserves tracked local edits. If the extension is missing and
+tracked local edits exist, setup refuses to reset the checkout so custom
+FlareSolverr changes are not lost.
 
 ## Main Chain
 
