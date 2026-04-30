@@ -59,7 +59,7 @@ Linux 目标机解压后运行：
 source ./activate-offline.sh
 ```
 
-Windows 目标机解压 zip 后在 PowerShell 中运行：
+Windows 目标机解压 zip 后在 Windows PowerShell 5.1 或 PowerShell 7+ 中运行：
 
 ```powershell
 .\install-offline.ps1 -NoUserConfig

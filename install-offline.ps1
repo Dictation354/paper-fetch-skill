@@ -64,15 +64,35 @@ function ConvertFrom-DotenvValue {
     return $trimmed
 }
 
+function Test-RunningOnWindowsPlatform {
+    if ($PSVersionTable.PSEdition -eq "Desktop") {
+        return $true
+    }
+    $windowsVariable = Get-Variable -Name IsWindows -ErrorAction SilentlyContinue
+    if ($null -ne $windowsVariable) {
+        return [bool]$windowsVariable.Value
+    }
+    return [System.Environment]::OSVersion.Platform -eq [System.PlatformID]::Win32NT
+}
+
+function Get-WindowsProcessorArchitecture {
+    $arch = $env:PROCESSOR_ARCHITEW6432
+    if ([string]::IsNullOrWhiteSpace($arch)) {
+        $arch = $env:PROCESSOR_ARCHITECTURE
+    }
+    if ([string]::IsNullOrWhiteSpace($arch)) {
+        return "unknown"
+    }
+    return $arch
+}
+
 function Check-Platform {
-    $runningOnWindows = [System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform(
-        [System.Runtime.InteropServices.OSPlatform]::Windows
-    )
+    $runningOnWindows = Test-RunningOnWindowsPlatform
     if (-not $runningOnWindows) {
         Fail "This offline bundle supports Windows only."
     }
-    $arch = [System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture
-    if ($arch -ne [System.Runtime.InteropServices.Architecture]::X64) {
+    $arch = Get-WindowsProcessorArchitecture
+    if ($arch -ne "AMD64") {
         Fail "This offline bundle supports x86_64 only; detected $arch."
     }
 }

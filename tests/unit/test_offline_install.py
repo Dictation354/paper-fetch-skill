@@ -296,6 +296,18 @@ class OfflineInstallTests(unittest.TestCase):
         self.assertIn("assert root in executable.parents", script)
         self.assertIn("paper-fetch.exe", script)
 
+    def test_windows_installer_platform_check_supports_windows_powershell_51(self) -> None:
+        script = WINDOWS_INSTALLER.read_text(encoding="utf-8")
+        start = script.index("function Test-RunningOnWindowsPlatform")
+        end = script.index("function Invoke-PythonText", start)
+        block = script[start:end]
+
+        self.assertIn("PROCESSOR_ARCHITEW6432", block)
+        self.assertIn("PROCESSOR_ARCHITECTURE", block)
+        self.assertIn('if ($arch -ne "AMD64")', block)
+        self.assertNotIn("OSArchitecture", block)
+        self.assertNotIn("RuntimeInformation", block)
+
 
 if __name__ == "__main__":
     unittest.main()

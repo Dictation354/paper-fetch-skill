@@ -107,6 +107,18 @@ class OfflinePackageBuildTests(unittest.TestCase):
         self.assertIn("| ForEach-Object { Write-Host $_ }", block)
         self.assertIn("$exitCode = $LASTEXITCODE", block)
 
+    def test_windows_build_platform_check_supports_windows_powershell_51(self) -> None:
+        script = BUILD_OFFLINE_PACKAGE_WINDOWS.read_text(encoding="utf-8")
+        start = script.index("function Test-RunningOnWindowsPlatform")
+        end = script.index("function Assert-Target", start)
+        block = script[start:end]
+
+        self.assertIn("PROCESSOR_ARCHITEW6432", block)
+        self.assertIn("PROCESSOR_ARCHITECTURE", block)
+        self.assertIn('if ($arch -ne "AMD64")', script)
+        self.assertNotIn("OSArchitecture", block)
+        self.assertNotIn("RuntimeInformation", block)
+
 
 if __name__ == "__main__":
     unittest.main()
