@@ -2,26 +2,25 @@
 
 `paper-fetch-skill` 面向已经确定的论文：给定 DOI、论文落地页 URL 或标题，尽量抓取可读正文、结构化元数据和 Markdown，并把结果暴露给命令行、MCP host 和 agent skill 使用。
 
-## 为什么需要这个项目
+## 🙁 AI agent 读论文的痛点
 
-AI agent 读论文时经常会卡在同一类问题上：
+1. 你有权限获取全文，但AI 没有权限，AI 只能读到摘要。
+2. PDF无法正确解析文字、图片，agent理解效果不如markdown。
+3. 文章html有很多无关的网页信息，给agent造成语义负担。
+4. 文章html中的图片 agent 读不到。
 
-- 你有权限获取全文，但AI 没有权限，AI 只能读到摘要。
-- PDF无法正确解析文字、图片，agent理解效果不如markdown。
-- 文章html有很多无关的网页信息，给agent造成语义负担。
-- 文章html中的图片 agent 读不到。
 
-这个项目把这些问题收敛到一个工具层：
-- 当你有全文获取权限时，让AI也能获取全文，而不仅是摘要。
-- 输入n篇已知论文，抓取 AI 更容易理解的 markdown 版本，为后续知识库构建做好干净的数据基础。
+## 😍 这个项目做什么
 
-## 这个项目做什么
+✅这个项目把这些问题收敛到一个工具层：
+1. 当你有全文获取权限时，让AI也能获取全文，而不仅是摘要。
+2. 输入n篇已知论文，抓取 AI 更容易理解的 markdown 版本，为后续知识库构建做好干净的数据基础。
 
-项目提供三个主要入口：
+✅项目提供三个主要入口：
 
-- `paper-fetch`：命令行工具，适合手动大规模快速抓取文献。
-- `paper-fetch-mcp`：stdio MCP server，适合接入 Codex、Claude Code 等支持 MCP 的 host。
-- `skills/paper-fetch-skill/`：静态 agent skill，告诉 agent 什么时候应该调用论文抓取工具。
+1. `paper-fetch`：命令行工具，适合手动大规模快速抓取文献。
+2. `paper-fetch-mcp`：stdio MCP server，适合接入 Codex、Claude Code 等支持 MCP 的 host。
+3. `skills/paper-fetch-skill/`：静态 agent skill，告诉 agent 什么时候应该调用论文抓取工具。
 
 核心能力：
 
@@ -36,7 +35,7 @@ AI agent 读论文时经常会卡在同一类问题上：
 - 不绕过付费墙或访问授权；可用性取决于 provider、凭据和本机运行环境。
 - Wiley、Science、PNAS 的浏览器路径需要额外运行时组件，详见 [`docs/flaresolverr.md`](docs/flaresolverr.md)。
 
-## 如何部署
+## 快速安装
 
 ### 离线安装（推荐）
 
