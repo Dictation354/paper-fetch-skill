@@ -97,7 +97,7 @@ source ./activate-offline.sh
 
 - Linux Python 版本必须与包名和 `offline-manifest.json` 的 `target.python_tag` 完全匹配；例如 `cp313` 包只能用 CPython `3.13.x` 安装，避免 wheelhouse ABI 不匹配
 - Windows 安装器固定使用包内 CPython 3.13 x64 embeddable runtime；目标机不需要预装 Python
-- Linux 所有 Python 依赖只来自包内 `wheelhouse/`，安装时设置 `PIP_NO_INDEX=1`；Windows 构建阶段用 wheelhouse 把项目和依赖安装进 `runtime/Lib/site-packages`
+- Linux 所有 Python 依赖只来自包内 `wheelhouse/`，安装时设置 `PIP_NO_INDEX=1`；Windows 构建阶段用 staging 中的 `dist/` 和 `wheelhouse/` 把项目和依赖安装进 `runtime/Lib/site-packages`，随后在写入 manifest、checksums 和 Inno Setup 打包前删除这两个构建期目录，最终安装器不包含它们
 - Playwright 使用包内 `ms-playwright/`，并设置 `PLAYWRIGHT_BROWSERS_PATH="$INSTALL_ROOT/ms-playwright"`；不会触碰 `~/.cache/ms-playwright`
 - 包内源码快照不包含 `tests/` 目录；离线安装目标是运行已打包工具，不在目标机执行项目测试
 - Linux FlareSolverr 使用包内已 patch 的源码快照 `vendor/flaresolverr/.work/FlareSolverr/`、`vendor/flaresolverr/wheelhouse/` 和已解压的运行 bundle；CI 构建阶段会把 `func-timeout` 这类 source-only 依赖预构建成 wheel，目标机不运行 `git clone`、`git fetch`、`git apply` 或 Python wheel 构建
@@ -123,7 +123,7 @@ Windows 构建在 PowerShell 中执行：
 .\scripts\build-offline-package-windows.ps1 -OutputDir dist
 ```
 
-Linux 构建脚本会从当前 Python 推导包名 tag；例如 `PYTHON_BIN=python3.13 scripts/build-offline-package.sh` 会默认生成 `paper-fetch-skill-offline-linux-x86_64-cp313.tar.gz`。Windows 构建必须在 CPython 3.13 x64 上运行，会下载官方 CPython 3.13 embeddable x64 runtime、生成 standalone staging，并通过 Inno Setup 生成 `paper-fetch-skill-windows-x86_64-setup.exe`。
+Linux 构建脚本会从当前 Python 推导包名 tag；例如 `PYTHON_BIN=python3.13 scripts/build-offline-package.sh` 会默认生成 `paper-fetch-skill-offline-linux-x86_64-cp313.tar.gz`。Windows 构建必须在 CPython 3.13 x64 上运行，会下载官方 CPython 3.13 embeddable x64 runtime、生成 standalone staging，把 Python 包安装进 embedded runtime 后清理 staging 中的 wheel 构建产物，并通过 Inno Setup 生成 `paper-fetch-skill-windows-x86_64-setup.exe`。
 
 验证离线包：
 

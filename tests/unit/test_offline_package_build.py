@@ -107,7 +107,7 @@ class OfflinePackageBuildTests(unittest.TestCase):
     def test_windows_embedded_runtime_gets_project_and_dependencies(self) -> None:
         script = BUILD_OFFLINE_PACKAGE_WINDOWS.read_text(encoding="utf-8")
         start = script.index("function Install-EmbeddedPythonPackages")
-        end = script.index("function Add-FormulaTools", start)
+        end = script.index("function Remove-BuildOnlyArtifacts", start)
         block = script[start:end]
 
         self.assertIn("Lib/site-packages", block)
@@ -115,6 +115,36 @@ class OfflinePackageBuildTests(unittest.TestCase):
         self.assertIn("--find-links", block)
         self.assertIn("--target $sitePackages", block)
         self.assertIn("PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD", block)
+
+    def test_windows_build_removes_build_only_dist_and_wheelhouse_after_runtime_install(self) -> None:
+        script = BUILD_OFFLINE_PACKAGE_WINDOWS.read_text(encoding="utf-8")
+        start = script.index("function Remove-BuildOnlyArtifacts")
+        end = script.index("function Add-FormulaTools", start)
+        block = script[start:end]
+
+        self.assertIn('Join-Path $Staging "wheelhouse"', block)
+        self.assertIn('Join-Path $Staging "dist"', block)
+        self.assertIn("Remove-Item -Recurse -Force", block)
+
+        runtime_install = script.index("\nInstall-EmbeddedPythonPackages $staging")
+        cleanup = script.index("\nRemove-BuildOnlyArtifacts $staging")
+        manifest = script.index("\nWrite-ManifestAndChecksums", cleanup)
+        installer = script.index("\nBuild-InnoInstaller", manifest)
+
+        self.assertLess(runtime_install, cleanup)
+        self.assertLess(cleanup, manifest)
+        self.assertLess(cleanup, installer)
+
+    def test_windows_manifest_keeps_legacy_wheel_fields_without_staging_artifacts(self) -> None:
+        script = BUILD_OFFLINE_PACKAGE_WINDOWS.read_text(encoding="utf-8")
+        start = script.index("function Write-ManifestAndChecksums")
+        end = script.index("function Find-InnoCompiler", start)
+        block = script[start:end]
+
+        self.assertIn("project_wheels = @()", block)
+        self.assertIn("wheelhouse_count = 0", block)
+        self.assertNotIn('Get-ChildItem -Path (Join-Path $Staging "dist")', block)
+        self.assertNotIn('Get-ChildItem -Path (Join-Path $Staging "wheelhouse")', block)
 
     def test_windows_manifest_target_fields_are_standalone_installer_specific(self) -> None:
         script = BUILD_OFFLINE_PACKAGE_WINDOWS.read_text(encoding="utf-8")

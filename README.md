@@ -317,3 +317,13 @@ Claude Code 用户对应执行：
 - [`docs/flaresolverr.md`](docs/flaresolverr.md)：Wiley、Science、PNAS 浏览器路径部署与排障。
 - [`docs/README.md`](docs/README.md)：完整文档导航。
 - [`docs/architecture/target-architecture.md`](docs/architecture/target-architecture.md)：架构边界和维护者视角。
+
+## 免责声明
+
+本项目通过公开可访问的开放获取接口、publisher 路由和用户配置的凭据获取研究论文内容。
+
+- 获取的文献仅供个人学术研究和学习使用，不得用于商业用途。
+- 请遵守所在国家/地区著作权法律法规及所在机构的知识产权政策。
+- 本项目不绕过付费墙或访问授权；可用性取决于 provider、凭据和本机运行环境。
+- 本项目不存储、分发或传播任何文献内容，仅协助用户定位、抓取或转换用户有权访问的论文内容。
+- 使用者应对自身的文献获取和使用行为承担全部责任。

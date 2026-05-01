@@ -225,6 +225,14 @@ function Install-EmbeddedPythonPackages {
     Invoke-Native $runtimePython -X utf8 -c "import paper_fetch; import paper_fetch.mcp.server; print('embedded runtime ok')"
 }
 
+function Remove-BuildOnlyArtifacts {
+    param([string]$Staging)
+
+    Write-Log "Removing build-only wheel artifacts from Windows staging"
+    Remove-Item -Recurse -Force -ErrorAction SilentlyContinue (Join-Path $Staging "wheelhouse")
+    Remove-Item -Recurse -Force -ErrorAction SilentlyContinue (Join-Path $Staging "dist")
+}
+
 function Add-FormulaTools {
     param(
         [string]$Staging,
@@ -413,8 +421,6 @@ function Write-ManifestAndChecksums {
         $gitRevision = $null
     }
 
-    $projectWheels = @(Get-ChildItem -Path (Join-Path $Staging "dist") -Filter "paper_fetch_skill-*.whl" | Sort-Object Name)
-    $wheelhouse = @(Get-ChildItem -Path (Join-Path $Staging "wheelhouse") -Filter "*.whl")
     $payload = [ordered]@{
         schema_version = 2
         name = "paper-fetch-skill-windows-setup"
@@ -433,8 +439,8 @@ function Write-ManifestAndChecksums {
             runtime = "runtime"
             bin = "bin"
             skills = "skills/paper-fetch-skill"
-            project_wheels = @($projectWheels | ForEach-Object { "dist/$($_.Name)" })
-            wheelhouse_count = $wheelhouse.Count
+            project_wheels = @()
+            wheelhouse_count = 0
             playwright_browsers = "ms-playwright"
             formula_tools = "formula-tools"
             flaresolverr = [ordered]@{
@@ -525,6 +531,7 @@ Build-ProjectWheelhouse $staging
 $buildPython = New-BuildVenv $staging
 Add-EmbeddedPythonRuntime $staging
 Install-EmbeddedPythonPackages $staging
+Remove-BuildOnlyArtifacts $staging
 Add-FormulaTools -Staging $staging -BuildPython $buildPython
 Add-PlaywrightChromium -Staging $staging -BuildPython $buildPython
 Add-FlareSolverrBundle $staging
