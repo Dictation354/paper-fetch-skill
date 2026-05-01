@@ -1,6 +1,10 @@
 # Paper Fetch Skill
 
-`paper-fetch-skill` 面向已经确定的论文：给定 DOI、论文落地页 URL 或标题，尽量抓取可读正文、结构化元数据和 Markdown，并把结果暴露给命令行、MCP host 和 agent skill 使用。
+> Fetch papers as agent-ready markdown — DOI/URL/title in, structured full text out. CLI · MCP · Skill.
+
+**Paper Fetch Skill** —— 已知论文的 AI 阅读层。
+你有 DOI、URL 或标题；它返回结构化元数据 + 干净 Markdown 全文 + 图表资源，直接喂给 Codex / Claude Code / 任意 MCP host。
+不绕付费墙，只在你本就有访问权限的地方，把 AI 从「只能读摘要」升级到「读全文」。
 
 ## 🙁 AI agent 读论文的痛点
 
