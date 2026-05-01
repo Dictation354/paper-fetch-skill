@@ -35,6 +35,33 @@
 - 不绕过付费墙或访问授权；可用性取决于 provider、凭据和本机运行环境。
 - Wiley、Science、PNAS 的浏览器路径需要额外运行时组件，详见 [`docs/flaresolverr.md`](docs/flaresolverr.md)。
 
+## 效果展示
+
+agent 安装 skill 后，可以识别 `paper-fetch-skill` 的适用边界，并在抓取前确认是否保存全文和图表资源。
+
+![agent 识别 paper-fetch-skill 能力范围](figures/agent-skill-overview.png)
+
+以下示例来自 `figures/` 中的真实开放抓取产物。
+
+### Nature 示例
+
+- 论文：Towards end-to-end automation of AI research
+- DOI：`10.1038/s41586-026-10265-5`
+- 来源：Springer/Nature HTML full text
+- 许可：[`CC BY 4.0`](https://creativecommons.org/licenses/by/4.0)
+- Markdown 全文：[`towards-end-to-end-automation-of-ai-research.md`](figures/towards-end-to-end-automation-of-ai-research.md)
+
+![Nature 论文抓取结果](figures/nature-oa-fetch-result.png)
+
+### Science Advances 示例
+
+- 论文：Deforestation-induced runoff changes dominated by forest-climate feedbacks
+- DOI：`10.1126/sciadv.adp3964`
+- 来源：Science Advances / Science provider
+- Markdown 全文：[`deforestation-induced-runoff-changes-dominated-by-forest-climate-feedbacks.md`](figures/deforestation-induced-runoff-changes-dominated-by-forest-climate-feedbacks.md)
+
+![Science Advances 论文抓取结果](figures/science-fetch-result.png)
+
 ## 快速安装
 
 ### 离线安装（推荐）

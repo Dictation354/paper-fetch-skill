@@ -31,6 +31,7 @@ rollout-*.jsonl
 live-downloads/
 .paper-fetch/
 .paper-fetch-runs/
+figures/.paper-fetch-mcp-cache.json
 problems.md
 agent-surface-plan.md
 docs/pm-dev-overview.local.md
