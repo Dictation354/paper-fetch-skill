@@ -10,6 +10,8 @@ PRESET="headless"
 MERGE_USER_CONFIG=0
 RUN_SMOKE=1
 UNINSTALL=0
+OFFLINE_ENV_FILE="$BUNDLE_ROOT/offline.env"
+REUSE_ENV_FILE=0
 
 MANAGED_BEGIN="# BEGIN paper-fetch offline managed"
 MANAGED_END="# END paper-fetch offline managed"
@@ -37,17 +39,38 @@ die() { printf '\033[1;31mxx\033[0m %s\n' "$*" >&2; exit 1; }
 usage() {
   cat <<'EOF'
 Usage:
-  ./install-offline.sh [--preset=headless|wslg] [--user-config]
+  ./install-offline.sh [--preset=headless|wslg] [--user-config] [--reuse-env-file <path>]
   ./install-offline.sh --uninstall
 
 Options:
   --preset=headless|wslg  Select the bundled FlareSolverr preset. Default: headless.
   --user-config           Also merge the offline runtime block into ~/.config/paper-fetch/.env.
   --no-user-config        Do not touch ~/.config/paper-fetch/.env. This is the default.
+  --reuse-env-file <path> Use an existing offline.env without modifying it.
   --skip-smoke            Skip local command smoke checks after installation.
   --uninstall             Remove user-level shell, skill, and MCP integration without deleting this bundle.
   -h, --help              Show this help.
 EOF
+}
+
+normalize_path() {
+  local value="$1"
+  case "$value" in
+    "~")
+      [ -n "${HOME:-}" ] || die "HOME is required to expand ~."
+      printf '%s\n' "$HOME"
+      ;;
+    "~/"*)
+      [ -n "${HOME:-}" ] || die "HOME is required to expand ~."
+      printf '%s/%s\n' "$HOME" "${value#~/}"
+      ;;
+    /*)
+      printf '%s\n' "$value"
+      ;;
+    *)
+      printf '%s/%s\n' "$(pwd)" "$value"
+      ;;
+  esac
 }
 
 while (($#)); do
@@ -65,6 +88,16 @@ while (($#)); do
       ;;
     --no-user-config)
       MERGE_USER_CONFIG=0
+      ;;
+    --reuse-env-file=*)
+      OFFLINE_ENV_FILE="$(normalize_path "${1#*=}")"
+      REUSE_ENV_FILE=1
+      ;;
+    --reuse-env-file)
+      shift
+      [ "$#" -gt 0 ] || die "--reuse-env-file requires a path"
+      OFFLINE_ENV_FILE="$(normalize_path "$1")"
+      REUSE_ENV_FILE=1
       ;;
     --skip-smoke)
       RUN_SMOKE=0
@@ -88,6 +121,9 @@ if [ "$UNINSTALL" != "1" ]; then
     headless|wslg) ;;
     *) die "--preset must be headless or wslg" ;;
   esac
+  if [ "$REUSE_ENV_FILE" = "1" ]; then
+    [ -f "$OFFLINE_ENV_FILE" ] || die "Missing reusable offline env file: $OFFLINE_ENV_FILE"
+  fi
 fi
 
 require_file() {
@@ -261,7 +297,7 @@ mcp_env_value() {
   case "$key" in
     PYTHONUTF8) printf '1\n' ;;
     PYTHONIOENCODING) printf 'utf-8\n' ;;
-    PAPER_FETCH_ENV_FILE) printf '%s\n' "$BUNDLE_ROOT/offline.env" ;;
+    PAPER_FETCH_ENV_FILE) printf '%s\n' "$OFFLINE_ENV_FILE" ;;
     PAPER_FETCH_MCP_PYTHON_BIN) mcp_python_bin ;;
     PAPER_FETCH_DOWNLOAD_DIR) printf '%s\n' "$BUNDLE_ROOT/downloads" ;;
     PAPER_FETCH_FORMULA_TOOLS_DIR) printf '%s\n' "$BUNDLE_ROOT/formula-tools" ;;
@@ -320,7 +356,7 @@ select_shell_startup_file() {
 write_posix_shell_block() {
   printf '%s\n' "$MANAGED_BEGIN"
   printf 'export PATH=%s:%s:$PATH\n' "$(quote_env_value "$BUNDLE_ROOT/.venv/bin")" "$(quote_env_value "$BUNDLE_ROOT/formula-tools/bin")"
-  printf 'export PAPER_FETCH_ENV_FILE=%s\n' "$(quote_env_value "$BUNDLE_ROOT/offline.env")"
+  printf 'export PAPER_FETCH_ENV_FILE=%s\n' "$(quote_env_value "$OFFLINE_ENV_FILE")"
   printf 'export PAPER_FETCH_DOWNLOAD_DIR=%s\n' "$(quote_env_value "$BUNDLE_ROOT/downloads")"
   printf 'export PAPER_FETCH_FORMULA_TOOLS_DIR=%s\n' "$(quote_env_value "$BUNDLE_ROOT/formula-tools")"
   printf 'export PLAYWRIGHT_BROWSERS_PATH=%s\n' "$(quote_env_value "$BUNDLE_ROOT/ms-playwright")"
@@ -333,7 +369,7 @@ write_posix_shell_block() {
 write_fish_shell_block() {
   printf '%s\n' "$MANAGED_BEGIN"
   printf 'set -gx PATH %s %s $PATH\n' "$(quote_env_value "$BUNDLE_ROOT/.venv/bin")" "$(quote_env_value "$BUNDLE_ROOT/formula-tools/bin")"
-  printf 'set -gx PAPER_FETCH_ENV_FILE %s\n' "$(quote_env_value "$BUNDLE_ROOT/offline.env")"
+  printf 'set -gx PAPER_FETCH_ENV_FILE %s\n' "$(quote_env_value "$OFFLINE_ENV_FILE")"
   printf 'set -gx PAPER_FETCH_DOWNLOAD_DIR %s\n' "$(quote_env_value "$BUNDLE_ROOT/downloads")"
   printf 'set -gx PAPER_FETCH_FORMULA_TOOLS_DIR %s\n' "$(quote_env_value "$BUNDLE_ROOT/formula-tools")"
   printf 'set -gx PLAYWRIGHT_BROWSERS_PATH %s\n' "$(quote_env_value "$BUNDLE_ROOT/ms-playwright")"
@@ -600,11 +636,15 @@ write_managed_env_file() {
 
 write_activate_script() {
   local target="$BUNDLE_ROOT/activate-offline.sh"
-  cat > "$target" <<EOF
+  local offline_env_literal
+
+  if [ "$REUSE_ENV_FILE" = "1" ]; then
+    offline_env_literal="$(quote_env_value "$OFFLINE_ENV_FILE")"
+    cat > "$target" <<EOF
 #!/usr/bin/env bash
 
 INSTALL_ROOT="\$(cd "\$(dirname "\${BASH_SOURCE[0]}")" && pwd)"
-export PAPER_FETCH_ENV_FILE="\${PAPER_FETCH_ENV_FILE:-\$INSTALL_ROOT/offline.env}"
+export PAPER_FETCH_ENV_FILE=$offline_env_literal
 
 if [ -f "\$PAPER_FETCH_ENV_FILE" ]; then
   set -a
@@ -614,15 +654,42 @@ if [ -f "\$PAPER_FETCH_ENV_FILE" ]; then
 fi
 
 export PATH="\$INSTALL_ROOT/.venv/bin:\$INSTALL_ROOT/formula-tools/bin:\$PATH"
-export PAPER_FETCH_DOWNLOAD_DIR="\${PAPER_FETCH_DOWNLOAD_DIR:-\$INSTALL_ROOT/downloads}"
-export PAPER_FETCH_FORMULA_TOOLS_DIR="\${PAPER_FETCH_FORMULA_TOOLS_DIR:-\$INSTALL_ROOT/formula-tools}"
-export PLAYWRIGHT_BROWSERS_PATH="\${PLAYWRIGHT_BROWSERS_PATH:-\$INSTALL_ROOT/ms-playwright}"
-export FLARESOLVERR_SOURCE_DIR="\${FLARESOLVERR_SOURCE_DIR:-\$INSTALL_ROOT/vendor/flaresolverr}"
-export FLARESOLVERR_ENV_FILE="\${FLARESOLVERR_ENV_FILE:-\$INSTALL_ROOT/vendor/flaresolverr/.env.flaresolverr-source-$PRESET}"
-export FLARESOLVERR_URL="\${FLARESOLVERR_URL:-http://127.0.0.1:8191/v1}"
+export PAPER_FETCH_ENV_FILE=$offline_env_literal
+export PAPER_FETCH_DOWNLOAD_DIR="\$INSTALL_ROOT/downloads"
+export PAPER_FETCH_FORMULA_TOOLS_DIR="\$INSTALL_ROOT/formula-tools"
+export PLAYWRIGHT_BROWSERS_PATH="\$INSTALL_ROOT/ms-playwright"
+export FLARESOLVERR_SOURCE_DIR="\$INSTALL_ROOT/vendor/flaresolverr"
+export FLARESOLVERR_ENV_FILE="\$INSTALL_ROOT/vendor/flaresolverr/.env.flaresolverr-source-$PRESET"
+export FLARESOLVERR_URL="http://127.0.0.1:8191/v1"
 export PYTHONUTF8="\${PYTHONUTF8:-1}"
 export PYTHONIOENCODING="\${PYTHONIOENCODING:-utf-8}"
 EOF
+  else
+    cat > "$target" <<'EOF'
+#!/usr/bin/env bash
+
+INSTALL_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+export PAPER_FETCH_ENV_FILE="${PAPER_FETCH_ENV_FILE:-$INSTALL_ROOT/offline.env}"
+
+if [ -f "$PAPER_FETCH_ENV_FILE" ]; then
+  set -a
+  # shellcheck disable=SC1090
+  source "$PAPER_FETCH_ENV_FILE"
+  set +a
+fi
+
+export PATH="$INSTALL_ROOT/.venv/bin:$INSTALL_ROOT/formula-tools/bin:$PATH"
+export PAPER_FETCH_DOWNLOAD_DIR="${PAPER_FETCH_DOWNLOAD_DIR:-$INSTALL_ROOT/downloads}"
+export PAPER_FETCH_FORMULA_TOOLS_DIR="${PAPER_FETCH_FORMULA_TOOLS_DIR:-$INSTALL_ROOT/formula-tools}"
+export PLAYWRIGHT_BROWSERS_PATH="${PLAYWRIGHT_BROWSERS_PATH:-$INSTALL_ROOT/ms-playwright}"
+export FLARESOLVERR_SOURCE_DIR="${FLARESOLVERR_SOURCE_DIR:-$INSTALL_ROOT/vendor/flaresolverr}"
+export FLARESOLVERR_ENV_FILE="${FLARESOLVERR_ENV_FILE:-$INSTALL_ROOT/vendor/flaresolverr/.env.flaresolverr-source-__PRESET__}"
+export FLARESOLVERR_URL="${FLARESOLVERR_URL:-http://127.0.0.1:8191/v1}"
+export PYTHONUTF8="${PYTHONUTF8:-1}"
+export PYTHONIOENCODING="${PYTHONIOENCODING:-utf-8}"
+EOF
+    sed -i "s|__PRESET__|$PRESET|g" "$target"
+  fi
   chmod +x "$target"
 }
 
@@ -644,8 +711,16 @@ run_smoke_checks() {
   "$BUNDLE_ROOT/.venv/bin/paper-fetch" --help >/dev/null
   "$BUNDLE_ROOT/formula-tools/bin/texmath" --help >/dev/null
   check_playwright_browser
-  PAPER_FETCH_ENV_FILE="$BUNDLE_ROOT/offline.env" \
+  PYTHONUTF8=1 \
+  PYTHONIOENCODING=utf-8 \
+  PAPER_FETCH_ENV_FILE="$OFFLINE_ENV_FILE" \
+  PAPER_FETCH_MCP_PYTHON_BIN="$BUNDLE_ROOT/.venv/bin/python" \
+  PAPER_FETCH_DOWNLOAD_DIR="$BUNDLE_ROOT/downloads" \
+  PAPER_FETCH_FORMULA_TOOLS_DIR="$BUNDLE_ROOT/formula-tools" \
   PLAYWRIGHT_BROWSERS_PATH="$BUNDLE_ROOT/ms-playwright" \
+  FLARESOLVERR_URL="http://127.0.0.1:8191/v1" \
+  FLARESOLVERR_ENV_FILE="$BUNDLE_ROOT/vendor/flaresolverr/.env.flaresolverr-source-$PRESET" \
+  FLARESOLVERR_SOURCE_DIR="$BUNDLE_ROOT/vendor/flaresolverr" \
     "$BUNDLE_ROOT/.venv/bin/python" -c 'from paper_fetch.mcp.tools import provider_status_payload; payload = provider_status_payload(); assert "providers" in payload'
 }
 
@@ -667,8 +742,12 @@ main() {
   install_project_venv "$project_wheel"
   install_flaresolverr_venv
 
-  log "Writing repo-local offline.env"
-  write_managed_env_file "$BUNDLE_ROOT/offline.env"
+  if [ "$REUSE_ENV_FILE" = "1" ]; then
+    log "Reusing offline.env without modifying it: $OFFLINE_ENV_FILE"
+  else
+    log "Writing repo-local offline.env"
+    write_managed_env_file "$OFFLINE_ENV_FILE"
+  fi
   write_activate_script
 
   if [ "$MERGE_USER_CONFIG" = "1" ]; then
@@ -690,7 +769,7 @@ main() {
   echo "Open a new shell, or activate the current one with: source $BUNDLE_ROOT/activate-offline.sh"
   echo "FlareSolverr preset: $BUNDLE_ROOT/vendor/flaresolverr/.env.flaresolverr-source-$PRESET"
   echo "Restart Codex and Claude Code so they rescan skills and MCP registration."
-  echo "Elsevier setup: request a key at https://dev.elsevier.com/, then add ELSEVIER_API_KEY=\"...\" to $BUNDLE_ROOT/offline.env before fetching Elsevier papers."
+  echo "Elsevier setup: request a key at https://dev.elsevier.com/, then add ELSEVIER_API_KEY=\"...\" to $OFFLINE_ENV_FILE before fetching Elsevier papers."
 }
 
 main "$@"

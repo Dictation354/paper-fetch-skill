@@ -385,6 +385,64 @@ class OfflineInstallTests(unittest.TestCase):
             self.assertIn(f'FLARESOLVERR_SOURCE_DIR = "{bundle / "vendor" / "flaresolverr"}"', config)
             self.assertIn("Claude CLI not found; installed the skill and skipped Claude MCP registration", result.stdout)
 
+    def test_reuse_env_file_keeps_file_untouched_and_points_runtime_at_new_bundle(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            bundle, fake_bin, home = self._create_bundle(root)
+            reused_env = root / "shared" / "offline.env"
+            reused_payload = textwrap.dedent(
+                """
+                ELSEVIER_API_KEY="secret"
+
+                # BEGIN paper-fetch offline managed
+                PAPER_FETCH_DOWNLOAD_DIR="/old-bundle/downloads"
+                FLARESOLVERR_SOURCE_DIR="/old-bundle/vendor/flaresolverr"
+                # END paper-fetch offline managed
+                """
+            ).lstrip()
+            _write_file(reused_env, reused_payload)
+
+            result = self._run_installer(bundle, fake_bin, home, "--reuse-env-file", str(reused_env))
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(reused_env.read_text(encoding="utf-8"), reused_payload)
+            self.assertFalse((bundle / "offline.env").exists())
+            self.assertIn(f"Reusing offline.env without modifying it: {reused_env}", result.stdout)
+
+            bashrc = (home / ".bashrc").read_text(encoding="utf-8")
+            self.assertIn(f'export PAPER_FETCH_ENV_FILE="{reused_env}"', bashrc)
+            self.assertIn(f'export PAPER_FETCH_DOWNLOAD_DIR="{bundle / "downloads"}"', bashrc)
+
+            config = (home / ".codex" / "config.toml").read_text(encoding="utf-8")
+            self.assertIn(f'PAPER_FETCH_ENV_FILE = "{reused_env}"', config)
+            self.assertIn(f'PAPER_FETCH_DOWNLOAD_DIR = "{bundle / "downloads"}"', config)
+            self.assertIn(f'FLARESOLVERR_SOURCE_DIR = "{bundle / "vendor" / "flaresolverr"}"', config)
+
+            probe = subprocess.run(
+                [
+                    "bash",
+                    "-lc",
+                    (
+                        f'source "{bundle / "activate-offline.sh"}"; '
+                        'printf "%s\\n%s\\n%s\\n" '
+                        '"$PAPER_FETCH_ENV_FILE" "$PAPER_FETCH_DOWNLOAD_DIR" "$FLARESOLVERR_SOURCE_DIR"'
+                    ),
+                ],
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                check=False,
+            )
+            self.assertEqual(probe.returncode, 0, probe.stderr)
+            self.assertEqual(
+                probe.stdout.splitlines(),
+                [
+                    str(reused_env),
+                    str(bundle / "downloads"),
+                    str(bundle / "vendor" / "flaresolverr"),
+                ],
+            )
+
     def test_codex_config_fallback_replaces_existing_managed_block(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             bundle, fake_bin, home = self._create_bundle(Path(tmpdir))

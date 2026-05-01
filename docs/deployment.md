@@ -67,8 +67,6 @@ WSLg 或桌面显示环境可用 `./install-offline.sh --preset=wslg --no-user-c
 
 Linux MCP 注册行为与 Windows 对齐：检测到 `codex` CLI 时执行 `codex mcp remove/add paper-fetch`，没有 CLI 或注册失败时更新 `~/.codex/config.toml` 中的 `mcp_servers.paper-fetch`；检测到 `claude` CLI 时执行 `claude mcp remove/add -s user paper-fetch`，没有 Claude CLI 时只安装 skill 并跳过 Claude MCP 注册。Codex / Claude Code 需要重启后才会重新扫描 skill 和 MCP 配置。
 
-Linux 卸载用户级集成时运行 `./install-offline.sh --uninstall`。该路径不做 checksum、Python ABI、venv 或 bundle asset 检查，只删除 `~/.codex/skills/paper-fetch-skill`、`~/.claude/skills/paper-fetch-skill`，清理 shell 启动文件和 Codex fallback config 中的 installer managed block，并通过可用的 `codex` / `claude` CLI 移除 MCP；不会删除解压目录、包内 `.venv/`、`offline.env`、`downloads/` 或用户配置目录。
-
 Windows 目标机运行安装器即可：
 
 ```powershell
@@ -76,6 +74,24 @@ Windows 目标机运行安装器即可：
 ```
 
 Windows 安装器默认安装到 `%LOCALAPPDATA%\PaperFetchSkill`，不要求管理员权限。安装器会复制运行组件，写入用户 PATH，复制 Codex / Claude Code skill，并执行基础 smoke check。检测到 `codex` CLI 时会用 `codex mcp remove/add` 注册 MCP；没有 Codex CLI 时会备份并更新 `%USERPROFILE%\.codex\config.toml` 中的 `mcp_servers.paper-fetch`。检测到 `claude` CLI 时会用 `claude mcp remove/add -s user` 注册；没有 Claude CLI 时只安装 skill 并跳过 Claude MCP 注册。
+
+离线更新：
+
+- Windows：下载新版 `paper-fetch-skill-windows-x86_64-setup.exe` 并直接运行。安装路径和 `AppId` 固定，安装器会覆盖程序文件，保留已有 `offline.env` 中用户写入的内容，只替换 `# BEGIN/END paper-fetch offline managed` 运行时块，并重新写入 PATH、skill 和 MCP 注册。
+- Linux：下载与目标机 CPython ABI 匹配的新 tarball，建议解压到新目录。若希望更新时不改动旧 `offline.env`，用 `--reuse-env-file` 指向现有文件；安装脚本不会写入该文件，只会把 shell 启动文件和 Codex fallback config 中的 managed block 替换为新 bundle 的 PATH / MCP runtime 路径。
+
+```bash
+cd /path/to/new-bundle
+./install-offline.sh --preset=headless --no-user-config --reuse-env-file /path/to/old-bundle/offline.env
+source ./activate-offline.sh
+```
+
+被复用的 `offline.env` 可以保留旧 managed block；运行时路径会通过 shell / MCP 进程环境覆盖为新 bundle 路径，避免继续指向旧目录。如果后续要删除旧解压目录，先把 `offline.env` 移到不会被删除的位置，并把 `--reuse-env-file` 指向该位置。更新后重启 Codex / Claude Code。
+
+离线卸载：
+
+- Windows：在“设置 > 应用 > 已安装的应用”中卸载 `Paper Fetch Skill`，或运行 `%LOCALAPPDATA%\PaperFetchSkill\unins000.exe`。如需保留安装目录内 `offline.env` 的 API key，卸载前先备份该文件。卸载器会删除安装目录、安装器复制的 Codex / Claude Code skill、用户 PATH 中的安装目录 `bin`，并移除安装器管理的 MCP 注册；不会删除用户手写的其它 Codex / Claude 配置。
+- Linux：在原离线包解压目录运行 `./install-offline.sh --uninstall`。该路径不做 checksum、Python ABI、venv 或 bundle asset 检查，只删除 `~/.codex/skills/paper-fetch-skill`、`~/.claude/skills/paper-fetch-skill`，清理 shell 启动文件和 Codex fallback config 中的 installer managed block，并通过可用的 `codex` / `claude` CLI 移除 MCP；不会删除解压目录、包内 `.venv/`、`offline.env`、`downloads/` 或用户配置目录。
 
 离线安装约束：
 
@@ -89,11 +105,11 @@ Windows 安装器默认安装到 `%LOCALAPPDATA%\PaperFetchSkill`，不要求管
 - FlareSolverr bundle 只包含运行所需的解压目录，不包含 upstream 原始压缩包
 - Linux 公式工具使用包内 `formula-tools/bin/texmath`，Windows 使用 `formula-tools/bin/texmath.exe`；目标机不编译 texmath，也不运行 `npm install`
 - Linux 默认写包内 `offline.env`、生成 `activate-offline.sh`、复制 `~/.codex/skills/paper-fetch-skill` 和 `~/.claude/skills/paper-fetch-skill`，并把离线 CLI PATH、formula tools PATH、`PAPER_FETCH_ENV_FILE`、`PAPER_FETCH_FORMULA_TOOLS_DIR`、`PLAYWRIGHT_BROWSERS_PATH`、`FLARESOLVERR_SOURCE_DIR`、`FLARESOLVERR_ENV_FILE`、`FLARESOLVERR_URL` 写入当前 shell 对应启动文件；只有显式传 `--user-config` 才会把受标记管理的运行时块合并到 `~/.config/paper-fetch/.env`
+- Linux `--reuse-env-file <path>` 会把 `PAPER_FETCH_ENV_FILE` 指向现有文件且不修改该文件；其它 runtime 路径仍由新 bundle 写入 shell / MCP 环境
 - Linux 写入 shell 启动文件和 Codex fallback config 时会先替换旧的受管理 block，重复安装不会重复追加；不修改 `/etc/profile`
 - Windows 首次安装会写安装目录内 `offline.env`；升级安装会保留用户已有内容，只替换 `# BEGIN/END paper-fetch offline managed` 包围的运行时 block。MCP 注册环境固定指向安装目录内 `offline.env`、`downloads/`、`formula-tools/`、`ms-playwright/` 和 FlareSolverr 路径，并设置 `PYTHONUTF8=1`、`PYTHONIOENCODING=utf-8`
 - Windows GUI 安装完成页会提示 Elsevier API key 申请入口和包内 `offline.env` 位置，并提供可选的 Notepad 打开项；silent 安装不会弹出该提示。离线环境抓取 Elsevier 全文前，从 <https://dev.elsevier.com/> 申请 key，并在该文件中填写 `ELSEVIER_API_KEY`
 - `--preset=headless` 会在安装阶段检查 `Xvfb`；`--preset=wslg` 会检查 `DISPLAY` 或 `WAYLAND_DISPLAY`
-- Windows 卸载器只删除安装目录、安装器复制的 Codex / Claude Code skill、用户 PATH 中的安装目录 `bin`，并移除安装器管理的 MCP 注册；不会删除用户手写的其它配置
 
 构建离线包：
 
@@ -334,6 +350,8 @@ PAPER_FETCH_ENV_FILE=/path/to/.env
 - 需要把 AI Markdown 同步保存到硬盘时传 `save_markdown=true`；可用 `markdown_output_dir` 和 `markdown_filename` 覆盖保存位置和文件名，成功时返回 `saved_markdown_path`。
 
 ## 8. 更新方式
+
+离线 release 包的更新方式见“离线包”小节。本节只针对源码或在线安装环境。
 
 更新当前仓库版本时，进入原来的 Python 环境后重新安装即可：
 
