@@ -10,6 +10,8 @@ $ErrorActionPreference = "Stop"
 
 $SkillName = "paper-fetch-skill"
 $McpName = "paper-fetch"
+$OfflineManagedBegin = "# BEGIN paper-fetch offline managed"
+$OfflineManagedEnd = "# END paper-fetch offline managed"
 $CodexManagedBegin = "# BEGIN paper-fetch installer managed"
 $CodexManagedEnd = "# END paper-fetch installer managed"
 
@@ -92,11 +94,37 @@ function Set-ProcessRuntimeEnv {
     }
 }
 
+function Remove-ManagedEnvBlock {
+    param([string[]]$Lines)
+
+    $result = New-Object System.Collections.Generic.List[string]
+    $skip = $false
+    foreach ($line in $Lines) {
+        if ($line -eq $OfflineManagedBegin) {
+            $skip = $true
+            continue
+        }
+        if ($line -eq $OfflineManagedEnd) {
+            $skip = $false
+            continue
+        }
+        if (-not $skip) {
+            $result.Add($line)
+        }
+    }
+    return $result.ToArray()
+}
+
 function Write-ManagedEnvFile {
     $target = Join-Path $InstallRoot "offline.env"
     $envMap = Get-McpEnv
     $lines = New-Object System.Collections.Generic.List[string]
-    if (Test-Path -LiteralPath (Join-Path $InstallRoot ".env.example")) {
+    if (Test-Path -LiteralPath $target -PathType Leaf) {
+        $existing = Get-Content -LiteralPath $target
+        foreach ($line in (Remove-ManagedEnvBlock $existing)) {
+            $lines.Add($line)
+        }
+    } elseif (Test-Path -LiteralPath (Join-Path $InstallRoot ".env.example") -PathType Leaf) {
         foreach ($line in Get-Content -LiteralPath (Join-Path $InstallRoot ".env.example")) {
             $lines.Add($line)
         }
@@ -104,7 +132,7 @@ function Write-ManagedEnvFile {
         $lines.Add('ELSEVIER_API_KEY=""')
     }
     $lines.Add("")
-    $lines.Add("# BEGIN paper-fetch offline managed")
+    $lines.Add($OfflineManagedBegin)
     foreach ($name in @(
         "PAPER_FETCH_DOWNLOAD_DIR",
         "PAPER_FETCH_FORMULA_TOOLS_DIR",
@@ -122,7 +150,7 @@ function Write-ManagedEnvFile {
             $lines.Add("$name=$(Quote-DotenvValue $value)")
         }
     }
-    $lines.Add("# END paper-fetch offline managed")
+    $lines.Add($OfflineManagedEnd)
     [System.IO.File]::WriteAllLines($target, $lines, [System.Text.UTF8Encoding]::new($false))
 }
 

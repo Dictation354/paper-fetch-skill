@@ -269,6 +269,7 @@ jobs:
           $fakeLog = Join-Path $env:RUNNER_TEMP "paper-fetch-fake-hosts.log"
           Remove-Item -Recurse -Force -ErrorAction SilentlyContinue $installRoot, $fakeBin
           Remove-Item -Force -ErrorAction SilentlyContinue $fakeLog
+          New-Item -ItemType Directory -Force -Path $installRoot | Out-Null
           New-Item -ItemType Directory -Force -Path $fakeBin | Out-Null
 
           @'
@@ -284,6 +285,17 @@ jobs:
 
           $env:PAPER_FETCH_FAKE_CLI_LOG = $fakeLog
           $env:PATH = "$fakeBin;$env:PATH"
+          $preexistingOfflineEnv = @(
+            'ELSEVIER_API_KEY="secret"',
+            'USER_NOTE="keep"',
+            '',
+            '# BEGIN paper-fetch offline managed',
+            "PAPER_FETCH_DOWNLOAD_DIR='C:/old/downloads'",
+            '# END paper-fetch offline managed'
+          ) -join "`n"
+          $preexistingOfflineEnv += "`n"
+          [System.IO.File]::WriteAllText((Join-Path $installRoot "offline.env"), $preexistingOfflineEnv, [System.Text.UTF8Encoding]::new($false))
+
           $setupLog = Join-Path $env:RUNNER_TEMP "paper-fetch-setup.log"
           $setupArgs = @(
             "/VERYSILENT",
@@ -299,6 +311,25 @@ jobs:
           }
 
           $runtimePython = Join-Path $installRoot "runtime/python.exe"
+          $offlineEnv = Get-Content -LiteralPath (Join-Path $installRoot "offline.env") -Raw
+          $offlineEnvRoot = $installRoot.Replace("\", "/")
+          $managedBeginCount = [regex]::Matches($offlineEnv, [regex]::Escape("# BEGIN paper-fetch offline managed")).Count
+          if (-not $offlineEnv.Contains('ELSEVIER_API_KEY="secret"')) {
+            throw "Existing offline.env secret was not preserved.`n$offlineEnv"
+          }
+          if (-not $offlineEnv.Contains('USER_NOTE="keep"')) {
+            throw "Existing offline.env custom content was not preserved.`n$offlineEnv"
+          }
+          if ($managedBeginCount -ne 1) {
+            throw "Expected one managed offline.env block, found $managedBeginCount.`n$offlineEnv"
+          }
+          if ($offlineEnv.Contains("C:/old/downloads")) {
+            throw "Old offline.env managed block was not replaced.`n$offlineEnv"
+          }
+          if (-not $offlineEnv.Contains("$offlineEnvRoot/downloads")) {
+            throw "offline.env managed block does not point at the install root.`n$offlineEnv"
+          }
+
           & $runtimePython -X utf8 -c "import paper_fetch; import paper_fetch.mcp.server; from paper_fetch.mcp.tools import provider_status_payload; assert 'providers' in provider_status_payload()"
           & (Join-Path $installRoot "bin/paper-fetch.cmd") --help | Out-Null
           & (Join-Path $installRoot "formula-tools/bin/texmath.exe") --help | Out-Null

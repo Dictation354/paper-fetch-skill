@@ -37,10 +37,27 @@ ChangesEnvironment=yes
 UninstallDisplayName=Paper Fetch Skill
 
 [Files]
-Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#SourceDir}\*"; DestDir: "{app}"; Excludes: "offline.env"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#SourceDir}\offline.env"; DestDir: "{app}"; Flags: ignoreversion onlyifdoesntexist
 
 [Run]
 Filename: "powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -File ""{app}\scripts\windows-installer-helper.ps1"" -Action Install"; StatusMsg: "Configuring Paper Fetch Skill..."; Flags: runhidden waituntilterminated
+Filename: "notepad.exe"; Parameters: """{app}\offline.env"""; Description: "Open offline.env to set ELSEVIER_API_KEY"; Flags: postinstall skipifsilent unchecked nowait
 
 [UninstallRun]
 Filename: "powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -File ""{app}\scripts\windows-installer-helper.ps1"" -Action Uninstall"; Flags: runhidden waituntilterminated
+
+[Code]
+procedure CurPageChanged(CurPageID: Integer);
+var
+  OfflineEnvPath: String;
+begin
+  if CurPageID = wpFinished then
+  begin
+    OfflineEnvPath := ExpandConstant('{app}\offline.env');
+    WizardForm.FinishedLabel.Caption :=
+      WizardForm.FinishedLabel.Caption + #13#10#13#10 +
+      'Elsevier setup: request an API key at https://dev.elsevier.com/ before fetching Elsevier full text.' + #13#10 +
+      'Then edit ' + OfflineEnvPath + ' and set ELSEVIER_API_KEY="...".';
+  end;
+end;

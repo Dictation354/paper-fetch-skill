@@ -116,6 +116,10 @@ class CiReleaseWorkflowTests(unittest.TestCase):
         self.assertIn("bin/flaresolverr-up.cmd", block)
         self.assertIn("codex mcp add", block)
         self.assertIn("claude mcp add -s user", block)
+        self.assertIn('ELSEVIER_API_KEY="secret"', block)
+        self.assertIn("Existing offline.env secret was not preserved", block)
+        self.assertIn("Old offline.env managed block was not replaced", block)
+        self.assertIn("$managedBeginCount -ne 1", block)
 
 
 if __name__ == "__main__":

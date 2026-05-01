@@ -9,9 +9,26 @@ XVFB_BIN="${PAPER_FETCH_OFFLINE_XVFB_BIN:-Xvfb}"
 PRESET="headless"
 MERGE_USER_CONFIG=0
 RUN_SMOKE=1
+UNINSTALL=0
 
 MANAGED_BEGIN="# BEGIN paper-fetch offline managed"
 MANAGED_END="# END paper-fetch offline managed"
+CODEX_MANAGED_BEGIN="# BEGIN paper-fetch installer managed"
+CODEX_MANAGED_END="# END paper-fetch installer managed"
+SKILL_NAME="paper-fetch-skill"
+MCP_NAME="paper-fetch"
+MCP_ENV_KEYS=(
+  PYTHONUTF8
+  PYTHONIOENCODING
+  PAPER_FETCH_ENV_FILE
+  PAPER_FETCH_MCP_PYTHON_BIN
+  PAPER_FETCH_DOWNLOAD_DIR
+  PAPER_FETCH_FORMULA_TOOLS_DIR
+  PLAYWRIGHT_BROWSERS_PATH
+  FLARESOLVERR_URL
+  FLARESOLVERR_ENV_FILE
+  FLARESOLVERR_SOURCE_DIR
+)
 
 log() { printf '\033[1;34m==>\033[0m %s\n' "$*"; }
 warn() { printf '\033[1;33m!!\033[0m %s\n' "$*" >&2; }
@@ -21,12 +38,14 @@ usage() {
   cat <<'EOF'
 Usage:
   ./install-offline.sh [--preset=headless|wslg] [--user-config]
+  ./install-offline.sh --uninstall
 
 Options:
   --preset=headless|wslg  Select the bundled FlareSolverr preset. Default: headless.
   --user-config           Also merge the offline runtime block into ~/.config/paper-fetch/.env.
   --no-user-config        Do not touch ~/.config/paper-fetch/.env. This is the default.
   --skip-smoke            Skip local command smoke checks after installation.
+  --uninstall             Remove user-level shell, skill, and MCP integration without deleting this bundle.
   -h, --help              Show this help.
 EOF
 }
@@ -50,6 +69,9 @@ while (($#)); do
     --skip-smoke)
       RUN_SMOKE=0
       ;;
+    --uninstall)
+      UNINSTALL=1
+      ;;
     -h|--help)
       usage
       exit 0
@@ -61,10 +83,12 @@ while (($#)); do
   shift
 done
 
-case "$PRESET" in
-  headless|wslg) ;;
-  *) die "--preset must be headless or wslg" ;;
-esac
+if [ "$UNINSTALL" != "1" ]; then
+  case "$PRESET" in
+    headless|wslg) ;;
+    *) die "--preset must be headless or wslg" ;;
+  esac
+fi
 
 require_file() {
   [ -f "$1" ] || die "Missing required bundled file: $1"
@@ -80,6 +104,13 @@ quote_env_value() {
   value="${value//\"/\\\"}"
   value="${value//\$/\\$}"
   value="${value//\`/\\\`}"
+  printf '"%s"' "$value"
+}
+
+quote_toml_value() {
+  local value="$1"
+  value="${value//\\/\\\\}"
+  value="${value//\"/\\\"}"
   printf '"%s"' "$value"
 }
 
@@ -157,6 +188,8 @@ check_bundle_assets() {
     flaresolverr_source_common.sh; do
     require_file "$flaresolverr_dir/$name"
   done
+
+  require_file "$BUNDLE_ROOT/skills/$SKILL_NAME/SKILL.md"
 }
 
 install_project_venv() {
@@ -187,6 +220,9 @@ install_project_venv() {
     --find-links "$BUNDLE_ROOT/wheelhouse" \
     --only-binary=:all: \
     "$project_wheel"
+
+  [ -x "$venv_dir/bin/paper-fetch" ] || die "Installed CLI is missing or not executable: $venv_dir/bin/paper-fetch"
+  [ -x "$venv_dir/bin/paper-fetch-mcp" ] || die "Installed MCP CLI is missing or not executable: $venv_dir/bin/paper-fetch-mcp"
 }
 
 install_flaresolverr_venv() {
@@ -214,6 +250,319 @@ install_flaresolverr_venv() {
   source "$flaresolverr_dir/flaresolverr_source_common.sh"
   flaresolverr_source_load_env "$preset_file"
   flaresolverr_source_ensure_chrome_link
+}
+
+mcp_python_bin() {
+  printf '%s\n' "$BUNDLE_ROOT/.venv/bin/python"
+}
+
+mcp_env_value() {
+  local key="$1"
+  case "$key" in
+    PYTHONUTF8) printf '1\n' ;;
+    PYTHONIOENCODING) printf 'utf-8\n' ;;
+    PAPER_FETCH_ENV_FILE) printf '%s\n' "$BUNDLE_ROOT/offline.env" ;;
+    PAPER_FETCH_MCP_PYTHON_BIN) mcp_python_bin ;;
+    PAPER_FETCH_DOWNLOAD_DIR) printf '%s\n' "$BUNDLE_ROOT/downloads" ;;
+    PAPER_FETCH_FORMULA_TOOLS_DIR) printf '%s\n' "$BUNDLE_ROOT/formula-tools" ;;
+    PLAYWRIGHT_BROWSERS_PATH) printf '%s\n' "$BUNDLE_ROOT/ms-playwright" ;;
+    FLARESOLVERR_URL) printf 'http://127.0.0.1:8191/v1\n' ;;
+    FLARESOLVERR_ENV_FILE) printf '%s\n' "$BUNDLE_ROOT/vendor/flaresolverr/.env.flaresolverr-source-$PRESET" ;;
+    FLARESOLVERR_SOURCE_DIR) printf '%s\n' "$BUNDLE_ROOT/vendor/flaresolverr" ;;
+    *) die "Unknown MCP env key: $key" ;;
+  esac
+}
+
+copy_installed_skill() {
+  local destination="$1"
+  local source="$BUNDLE_ROOT/skills/$SKILL_NAME"
+
+  require_file "$source/SKILL.md"
+  rm -rf "$destination"
+  mkdir -p "$destination"
+  cp -a "$source/." "$destination/"
+}
+
+install_skills() {
+  [ -n "${HOME:-}" ] || die "HOME is required to install Codex and Claude skills."
+
+  local codex_skill="$HOME/.codex/skills/$SKILL_NAME"
+  local claude_skill="$HOME/.claude/skills/$SKILL_NAME"
+
+  log "Installing Codex skill to $codex_skill"
+  copy_installed_skill "$codex_skill"
+  log "Installing Claude Code skill to $claude_skill"
+  copy_installed_skill "$claude_skill"
+}
+
+select_shell_startup_file() {
+  [ -n "${HOME:-}" ] || die "HOME is required to update shell startup files."
+
+  SHELL_STARTUP_STYLE="posix"
+  case "$(basename "${SHELL:-}")" in
+    bash)
+      SHELL_STARTUP_TARGET="$HOME/.bashrc"
+      ;;
+    zsh)
+      SHELL_STARTUP_TARGET="$HOME/.zshrc"
+      ;;
+    fish)
+      SHELL_STARTUP_TARGET="$HOME/.config/fish/conf.d/paper-fetch-offline.fish"
+      SHELL_STARTUP_STYLE="fish"
+      ;;
+    *)
+      SHELL_STARTUP_TARGET="$HOME/.profile"
+      warn "Unrecognized SHELL=${SHELL:-}; writing offline environment to $SHELL_STARTUP_TARGET"
+      ;;
+  esac
+}
+
+write_posix_shell_block() {
+  printf '%s\n' "$MANAGED_BEGIN"
+  printf 'export PATH=%s:%s:$PATH\n' "$(quote_env_value "$BUNDLE_ROOT/.venv/bin")" "$(quote_env_value "$BUNDLE_ROOT/formula-tools/bin")"
+  printf 'export PAPER_FETCH_ENV_FILE=%s\n' "$(quote_env_value "$BUNDLE_ROOT/offline.env")"
+  printf 'export PAPER_FETCH_DOWNLOAD_DIR=%s\n' "$(quote_env_value "$BUNDLE_ROOT/downloads")"
+  printf 'export PAPER_FETCH_FORMULA_TOOLS_DIR=%s\n' "$(quote_env_value "$BUNDLE_ROOT/formula-tools")"
+  printf 'export PLAYWRIGHT_BROWSERS_PATH=%s\n' "$(quote_env_value "$BUNDLE_ROOT/ms-playwright")"
+  printf 'export FLARESOLVERR_SOURCE_DIR=%s\n' "$(quote_env_value "$BUNDLE_ROOT/vendor/flaresolverr")"
+  printf 'export FLARESOLVERR_ENV_FILE=%s\n' "$(quote_env_value "$BUNDLE_ROOT/vendor/flaresolverr/.env.flaresolverr-source-$PRESET")"
+  printf 'export FLARESOLVERR_URL=%s\n' "$(quote_env_value "http://127.0.0.1:8191/v1")"
+  printf '%s\n' "$MANAGED_END"
+}
+
+write_fish_shell_block() {
+  printf '%s\n' "$MANAGED_BEGIN"
+  printf 'set -gx PATH %s %s $PATH\n' "$(quote_env_value "$BUNDLE_ROOT/.venv/bin")" "$(quote_env_value "$BUNDLE_ROOT/formula-tools/bin")"
+  printf 'set -gx PAPER_FETCH_ENV_FILE %s\n' "$(quote_env_value "$BUNDLE_ROOT/offline.env")"
+  printf 'set -gx PAPER_FETCH_DOWNLOAD_DIR %s\n' "$(quote_env_value "$BUNDLE_ROOT/downloads")"
+  printf 'set -gx PAPER_FETCH_FORMULA_TOOLS_DIR %s\n' "$(quote_env_value "$BUNDLE_ROOT/formula-tools")"
+  printf 'set -gx PLAYWRIGHT_BROWSERS_PATH %s\n' "$(quote_env_value "$BUNDLE_ROOT/ms-playwright")"
+  printf 'set -gx FLARESOLVERR_SOURCE_DIR %s\n' "$(quote_env_value "$BUNDLE_ROOT/vendor/flaresolverr")"
+  printf 'set -gx FLARESOLVERR_ENV_FILE %s\n' "$(quote_env_value "$BUNDLE_ROOT/vendor/flaresolverr/.env.flaresolverr-source-$PRESET")"
+  printf 'set -gx FLARESOLVERR_URL %s\n' "$(quote_env_value "http://127.0.0.1:8191/v1")"
+  printf '%s\n' "$MANAGED_END"
+}
+
+write_shell_startup_file() {
+  local tmp mode
+
+  select_shell_startup_file
+  tmp="$(mktemp)"
+  mode=""
+  mkdir -p "$(dirname "$SHELL_STARTUP_TARGET")"
+  if [ -f "$SHELL_STARTUP_TARGET" ]; then
+    mode="$(stat -c '%a' "$SHELL_STARTUP_TARGET" 2>/dev/null || true)"
+    awk -v begin="$MANAGED_BEGIN" -v end="$MANAGED_END" '
+      $0 == begin { skip = 1; next }
+      $0 == end { skip = 0; next }
+      !skip { print }
+    ' "$SHELL_STARTUP_TARGET" > "$tmp"
+  else
+    : > "$tmp"
+  fi
+
+  {
+    printf '\n'
+    if [ "$SHELL_STARTUP_STYLE" = "fish" ]; then
+      write_fish_shell_block
+    else
+      write_posix_shell_block
+    fi
+  } >> "$tmp"
+
+  mv "$tmp" "$SHELL_STARTUP_TARGET"
+  if [ -n "$mode" ]; then
+    chmod "$mode" "$SHELL_STARTUP_TARGET"
+  fi
+  log "Updated shell startup file at $SHELL_STARTUP_TARGET"
+}
+
+write_codex_config_toml() {
+  [ -n "${HOME:-}" ] || die "HOME is required to update Codex MCP config."
+
+  local codex_home="$HOME/.codex"
+  local config_path="$codex_home/config.toml"
+  local tmp key
+  tmp="$(mktemp)"
+  mkdir -p "$codex_home"
+
+  if [ -f "$config_path" ]; then
+    awk -v begin="$CODEX_MANAGED_BEGIN" -v end="$CODEX_MANAGED_END" -v old_begin="$MANAGED_BEGIN" -v old_end="$MANAGED_END" '
+      $0 == begin || $0 == old_begin { skip_block = 1; next }
+      $0 == end || $0 == old_end { skip_block = 0; next }
+      skip_block { next }
+      $0 ~ /^[[:space:]]*\[mcp_servers\.paper-fetch(\..*)?\][[:space:]]*$/ { skip_table = 1; next }
+      skip_table && $0 ~ /^[[:space:]]*\[/ { skip_table = 0 }
+      !skip_table { print }
+    ' "$config_path" > "$tmp"
+  else
+    : > "$tmp"
+  fi
+
+  {
+    printf '\n%s\n' "$CODEX_MANAGED_BEGIN"
+    printf '[mcp_servers.paper-fetch]\n'
+    printf 'command = %s\n' "$(quote_toml_value "$(mcp_python_bin)")"
+    printf 'args = ["-X", "utf8", "-m", "paper_fetch.mcp.server"]\n'
+    printf '\n[mcp_servers.paper-fetch.env]\n'
+    for key in "${MCP_ENV_KEYS[@]}"; do
+      printf '%s = %s\n' "$key" "$(quote_toml_value "$(mcp_env_value "$key")")"
+    done
+    printf '%s\n' "$CODEX_MANAGED_END"
+  } >> "$tmp"
+
+  mv "$tmp" "$config_path"
+  log "Updated Codex MCP config at $config_path"
+}
+
+register_codex_mcp() {
+  local codex_bin key
+  codex_bin="$(command -v codex || true)"
+
+  if [ -n "$codex_bin" ]; then
+    log "Registering Codex MCP server '$MCP_NAME' with Codex CLI"
+    "$codex_bin" mcp remove "$MCP_NAME" >/dev/null 2>&1 || true
+
+    local args=(mcp add)
+    for key in "${MCP_ENV_KEYS[@]}"; do
+      args+=(--env "$key=$(mcp_env_value "$key")")
+    done
+    args+=("$MCP_NAME" -- "$(mcp_python_bin)" -X utf8 -m paper_fetch.mcp.server)
+
+    if "$codex_bin" "${args[@]}"; then
+      return
+    fi
+    warn "Codex CLI MCP registration failed; falling back to $HOME/.codex/config.toml"
+  fi
+
+  write_codex_config_toml
+}
+
+register_claude_mcp() {
+  local claude_bin key
+  claude_bin="$(command -v claude || true)"
+
+  if [ -z "$claude_bin" ]; then
+    log "Claude CLI not found; installed the skill and skipped Claude MCP registration"
+    return
+  fi
+
+  log "Registering Claude MCP server '$MCP_NAME' with Claude CLI"
+  "$claude_bin" mcp remove -s user "$MCP_NAME" >/dev/null 2>&1 || true
+
+  local args=(mcp add -s user)
+  for key in "${MCP_ENV_KEYS[@]}"; do
+    args+=(-e "$key=$(mcp_env_value "$key")")
+  done
+  args+=("$MCP_NAME" -- "$(mcp_python_bin)" -X utf8 -m paper_fetch.mcp.server)
+
+  if ! "$claude_bin" "${args[@]}"; then
+    warn "Claude MCP registration failed and was skipped."
+  fi
+}
+
+remove_managed_block_from_file() {
+  local target="$1"
+  local remove_if_empty="${2:-0}"
+  local tmp mode
+
+  [ -f "$target" ] || return 0
+  tmp="$(mktemp)"
+  mode="$(stat -c '%a' "$target" 2>/dev/null || true)"
+  awk -v begin="$MANAGED_BEGIN" -v end="$MANAGED_END" '
+    $0 == begin { skip = 1; next }
+    $0 == end { skip = 0; next }
+    !skip { print }
+  ' "$target" > "$tmp"
+
+  if [ "$remove_if_empty" = "1" ] && ! grep -q '[^[:space:]]' "$tmp"; then
+    rm -f "$tmp" "$target"
+    log "Removed empty managed file $target"
+    return 0
+  fi
+
+  mv "$tmp" "$target"
+  if [ -n "$mode" ]; then
+    chmod "$mode" "$target"
+  fi
+  log "Removed managed shell block from $target"
+}
+
+remove_shell_startup_blocks() {
+  [ -n "${HOME:-}" ] || die "HOME is required for --uninstall."
+
+  remove_managed_block_from_file "$HOME/.bashrc"
+  remove_managed_block_from_file "$HOME/.zshrc"
+  remove_managed_block_from_file "$HOME/.profile"
+  remove_managed_block_from_file "$HOME/.config/fish/conf.d/paper-fetch-offline.fish" 1
+}
+
+remove_installed_skills() {
+  [ -n "${HOME:-}" ] || die "HOME is required for --uninstall."
+
+  local codex_skill="$HOME/.codex/skills/$SKILL_NAME"
+  local claude_skill="$HOME/.claude/skills/$SKILL_NAME"
+
+  rm -rf "$codex_skill" "$claude_skill"
+  log "Removed Codex skill at $codex_skill"
+  log "Removed Claude Code skill at $claude_skill"
+}
+
+remove_codex_config_toml() {
+  [ -n "${HOME:-}" ] || die "HOME is required for --uninstall."
+
+  local config_path="$HOME/.codex/config.toml"
+  local tmp mode
+  [ -f "$config_path" ] || return 0
+
+  tmp="$(mktemp)"
+  mode="$(stat -c '%a' "$config_path" 2>/dev/null || true)"
+  awk -v begin="$CODEX_MANAGED_BEGIN" -v end="$CODEX_MANAGED_END" -v old_begin="$MANAGED_BEGIN" -v old_end="$MANAGED_END" '
+    $0 == begin || $0 == old_begin { skip_block = 1; next }
+    $0 == end || $0 == old_end { skip_block = 0; next }
+    skip_block { next }
+    $0 ~ /^[[:space:]]*\[mcp_servers\.paper-fetch(\..*)?\][[:space:]]*$/ { skip_table = 1; next }
+    skip_table && $0 ~ /^[[:space:]]*\[/ { skip_table = 0 }
+    !skip_table { print }
+  ' "$config_path" > "$tmp"
+
+  mv "$tmp" "$config_path"
+  if [ -n "$mode" ]; then
+    chmod "$mode" "$config_path"
+  fi
+  log "Removed Codex MCP config from $config_path"
+}
+
+unregister_codex_mcp() {
+  local codex_bin
+  codex_bin="$(command -v codex || true)"
+  if [ -n "$codex_bin" ]; then
+    log "Removing Codex MCP server '$MCP_NAME' with Codex CLI"
+    "$codex_bin" mcp remove "$MCP_NAME" >/dev/null 2>&1 || true
+  fi
+  remove_codex_config_toml
+}
+
+unregister_claude_mcp() {
+  local claude_bin
+  claude_bin="$(command -v claude || true)"
+  if [ -n "$claude_bin" ]; then
+    log "Removing Claude MCP server '$MCP_NAME' with Claude CLI"
+    "$claude_bin" mcp remove -s user "$MCP_NAME" >/dev/null 2>&1 || true
+  else
+    log "Claude CLI not found; skipped Claude MCP removal"
+  fi
+}
+
+uninstall_user_integrations() {
+  remove_installed_skills
+  remove_shell_startup_blocks
+  unregister_codex_mcp
+  unregister_claude_mcp
+
+  echo
+  echo "Offline user-level integration removed."
+  echo "Bundle files were left in place: $BUNDLE_ROOT"
 }
 
 write_managed_env_file() {
@@ -251,23 +600,28 @@ write_managed_env_file() {
 
 write_activate_script() {
   local target="$BUNDLE_ROOT/activate-offline.sh"
-  cat > "$target" <<'EOF'
+  cat > "$target" <<EOF
 #!/usr/bin/env bash
 
-INSTALL_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-export PAPER_FETCH_ENV_FILE="${PAPER_FETCH_ENV_FILE:-$INSTALL_ROOT/offline.env}"
+INSTALL_ROOT="\$(cd "\$(dirname "\${BASH_SOURCE[0]}")" && pwd)"
+export PAPER_FETCH_ENV_FILE="\${PAPER_FETCH_ENV_FILE:-\$INSTALL_ROOT/offline.env}"
 
-if [ -f "$PAPER_FETCH_ENV_FILE" ]; then
+if [ -f "\$PAPER_FETCH_ENV_FILE" ]; then
   set -a
   # shellcheck disable=SC1090
-  source "$PAPER_FETCH_ENV_FILE"
+  source "\$PAPER_FETCH_ENV_FILE"
   set +a
 fi
 
-export PATH="$INSTALL_ROOT/.venv/bin:$INSTALL_ROOT/formula-tools/bin:$PATH"
-export PAPER_FETCH_FORMULA_TOOLS_DIR="${PAPER_FETCH_FORMULA_TOOLS_DIR:-$INSTALL_ROOT/formula-tools}"
-export PLAYWRIGHT_BROWSERS_PATH="${PLAYWRIGHT_BROWSERS_PATH:-$INSTALL_ROOT/ms-playwright}"
-export FLARESOLVERR_SOURCE_DIR="${FLARESOLVERR_SOURCE_DIR:-$INSTALL_ROOT/vendor/flaresolverr}"
+export PATH="\$INSTALL_ROOT/.venv/bin:\$INSTALL_ROOT/formula-tools/bin:\$PATH"
+export PAPER_FETCH_DOWNLOAD_DIR="\${PAPER_FETCH_DOWNLOAD_DIR:-\$INSTALL_ROOT/downloads}"
+export PAPER_FETCH_FORMULA_TOOLS_DIR="\${PAPER_FETCH_FORMULA_TOOLS_DIR:-\$INSTALL_ROOT/formula-tools}"
+export PLAYWRIGHT_BROWSERS_PATH="\${PLAYWRIGHT_BROWSERS_PATH:-\$INSTALL_ROOT/ms-playwright}"
+export FLARESOLVERR_SOURCE_DIR="\${FLARESOLVERR_SOURCE_DIR:-\$INSTALL_ROOT/vendor/flaresolverr}"
+export FLARESOLVERR_ENV_FILE="\${FLARESOLVERR_ENV_FILE:-\$INSTALL_ROOT/vendor/flaresolverr/.env.flaresolverr-source-$PRESET}"
+export FLARESOLVERR_URL="\${FLARESOLVERR_URL:-http://127.0.0.1:8191/v1}"
+export PYTHONUTF8="\${PYTHONUTF8:-1}"
+export PYTHONIOENCODING="\${PYTHONIOENCODING:-utf-8}"
 EOF
   chmod +x "$target"
 }
@@ -298,6 +652,11 @@ run_smoke_checks() {
 main() {
   local project_wheel
 
+  if [ "$UNINSTALL" = "1" ]; then
+    uninstall_user_integrations
+    return 0
+  fi
+
   check_platform
   check_python
   verify_checksums
@@ -318,12 +677,19 @@ main() {
     write_managed_env_file "$HOME/.config/paper-fetch/.env"
   fi
 
+  install_skills
+  write_shell_startup_file
+  register_codex_mcp
+  register_claude_mcp
+
   run_smoke_checks
 
   echo
   echo "Offline installation complete."
-  echo "Activate it with: source $BUNDLE_ROOT/activate-offline.sh"
+  echo "Shell startup file updated: $SHELL_STARTUP_TARGET"
+  echo "Open a new shell, or activate the current one with: source $BUNDLE_ROOT/activate-offline.sh"
   echo "FlareSolverr preset: $BUNDLE_ROOT/vendor/flaresolverr/.env.flaresolverr-source-$PRESET"
+  echo "Restart Codex and Claude Code so they rescan skills and MCP registration."
   echo "Elsevier setup: request a key at https://dev.elsevier.com/, then add ELSEVIER_API_KEY=\"...\" to $BUNDLE_ROOT/offline.env before fetching Elsevier papers."
 }
 

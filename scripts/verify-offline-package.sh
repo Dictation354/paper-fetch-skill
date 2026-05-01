@@ -31,6 +31,9 @@ EXTRACTED_ROOT="$(find "$TMP_ROOT" -mindepth 1 -maxdepth 1 -type d | head -n 1)"
 [ -n "$EXTRACTED_ROOT" ] || die "Could not locate extracted package root."
 
 GUARD_DIR="$(mktemp -d)"
+FAKE_HOME="$TMP_ROOT/home"
+FAKE_CLI_LOG="$TMP_ROOT/mcp-cli.log"
+mkdir -p "$FAKE_HOME"
 for name in curl git npm npx playwright; do
   cat > "$GUARD_DIR/$name" <<'EOF'
 #!/usr/bin/env bash
@@ -39,9 +42,41 @@ exit 97
 EOF
   chmod +x "$GUARD_DIR/$name"
 done
+for name in codex claude; do
+  cat > "$GUARD_DIR/$name" <<'EOF'
+#!/usr/bin/env bash
+{
+  printf '%s' "$(basename "$0")"
+  for arg in "$@"; do
+    printf ' %s' "$arg"
+  done
+  printf '\n'
+} >> "$PAPER_FETCH_FAKE_CLI_LOG"
+exit 0
+EOF
+  chmod +x "$GUARD_DIR/$name"
+done
 
 log "Running installer with network/build command guard"
+export HOME="$FAKE_HOME"
+export SHELL="/bin/bash"
+export PAPER_FETCH_FAKE_CLI_LOG="$FAKE_CLI_LOG"
 PATH="$GUARD_DIR:$PATH" "$EXTRACTED_ROOT/install-offline.sh" --preset=headless --no-user-config
+
+log "Verifying user shell, skill, and MCP registration"
+grep -F -q "export PAPER_FETCH_ENV_FILE=\"$EXTRACTED_ROOT/offline.env\"" "$FAKE_HOME/.bashrc"
+grep -F -q "$EXTRACTED_ROOT/.venv/bin" "$FAKE_HOME/.bashrc"
+grep -F -q "$EXTRACTED_ROOT/formula-tools/bin" "$FAKE_HOME/.bashrc"
+[ -f "$FAKE_HOME/.codex/skills/paper-fetch-skill/SKILL.md" ] || die "Codex skill was not installed."
+[ -f "$FAKE_HOME/.claude/skills/paper-fetch-skill/SKILL.md" ] || die "Claude skill was not installed."
+grep -F -q "codex mcp remove paper-fetch" "$FAKE_CLI_LOG"
+grep -F -q "codex mcp add" "$FAKE_CLI_LOG"
+grep -F -q "claude mcp remove -s user paper-fetch" "$FAKE_CLI_LOG"
+grep -F -q "claude mcp add -s user" "$FAKE_CLI_LOG"
+grep -F -q "PAPER_FETCH_ENV_FILE=$EXTRACTED_ROOT/offline.env" "$FAKE_CLI_LOG"
+grep -F -q "PAPER_FETCH_FORMULA_TOOLS_DIR=$EXTRACTED_ROOT/formula-tools" "$FAKE_CLI_LOG"
+grep -F -q "PLAYWRIGHT_BROWSERS_PATH=$EXTRACTED_ROOT/ms-playwright" "$FAKE_CLI_LOG"
+grep -F -q "FLARESOLVERR_SOURCE_DIR=$EXTRACTED_ROOT/vendor/flaresolverr" "$FAKE_CLI_LOG"
 
 # shellcheck disable=SC1091
 source "$EXTRACTED_ROOT/activate-offline.sh"
@@ -101,5 +136,19 @@ payload = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
 assert payload.get("doi") or payload.get("metadata", {}).get("doi"), payload.keys()
 PY
 fi
+
+log "Verifying user-level uninstall"
+: > "$FAKE_CLI_LOG"
+PATH="$GUARD_DIR:$PATH" "$EXTRACTED_ROOT/install-offline.sh" --uninstall
+[ -f "$FAKE_HOME/.bashrc" ] || die "Bash startup file was removed."
+if grep -F -q "# BEGIN paper-fetch offline managed" "$FAKE_HOME/.bashrc"; then
+  die "Managed shell block was not removed from .bashrc."
+fi
+[ ! -d "$FAKE_HOME/.codex/skills/paper-fetch-skill" ] || die "Codex skill was not removed."
+[ ! -d "$FAKE_HOME/.claude/skills/paper-fetch-skill" ] || die "Claude skill was not removed."
+grep -F -q "codex mcp remove paper-fetch" "$FAKE_CLI_LOG"
+grep -F -q "claude mcp remove -s user paper-fetch" "$FAKE_CLI_LOG"
+[ -f "$EXTRACTED_ROOT/offline.env" ] || die "Uninstall removed offline.env."
+[ -d "$EXTRACTED_ROOT/.venv" ] || die "Uninstall removed package venv."
 
 log "Offline package verification completed"

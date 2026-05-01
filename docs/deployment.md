@@ -61,8 +61,13 @@ Linux 目标机解压后运行：
 
 ```bash
 ./install-offline.sh --preset=headless --no-user-config
-source ./activate-offline.sh
 ```
+
+WSLg 或桌面显示环境可用 `./install-offline.sh --preset=wslg --no-user-config`。Linux 安装脚本会把 CLI / MCP runtime 安装到包内 `.venv/`，复制 Codex / Claude Code skill，写入当前 `$SHELL` 对应的用户 shell 启动文件，并注册 MCP。Bash 写 `~/.bashrc`，Zsh 写 `~/.zshrc`，Fish 写 `~/.config/fish/conf.d/paper-fetch-offline.fish`；无法识别 `$SHELL` 时写 `~/.profile` 并打印提示。安装后新开 shell，或临时执行 `source ./activate-offline.sh`。
+
+Linux MCP 注册行为与 Windows 对齐：检测到 `codex` CLI 时执行 `codex mcp remove/add paper-fetch`，没有 CLI 或注册失败时更新 `~/.codex/config.toml` 中的 `mcp_servers.paper-fetch`；检测到 `claude` CLI 时执行 `claude mcp remove/add -s user paper-fetch`，没有 Claude CLI 时只安装 skill 并跳过 Claude MCP 注册。Codex / Claude Code 需要重启后才会重新扫描 skill 和 MCP 配置。
+
+Linux 卸载用户级集成时运行 `./install-offline.sh --uninstall`。该路径不做 checksum、Python ABI、venv 或 bundle asset 检查，只删除 `~/.codex/skills/paper-fetch-skill`、`~/.claude/skills/paper-fetch-skill`，清理 shell 启动文件和 Codex fallback config 中的 installer managed block，并通过可用的 `codex` / `claude` CLI 移除 MCP；不会删除解压目录、包内 `.venv/`、`offline.env`、`downloads/` 或用户配置目录。
 
 Windows 目标机运行安装器即可：
 
@@ -83,9 +88,10 @@ Windows 安装器默认安装到 `%LOCALAPPDATA%\PaperFetchSkill`，不要求管
 - Windows FlareSolverr 使用 CI 中由本项目 patch 后源码运行 upstream `src/build_package.py` 生成的 `flaresolverr_windows_x64.zip`，安装器只纳入解压后的 `vendor/flaresolverr/.flaresolverr/v3.4.6/flaresolverr/` 运行目录；目标机不运行 Python FlareSolverr venv、`git clone` 或 patch 步骤
 - FlareSolverr bundle 只包含运行所需的解压目录，不包含 upstream 原始压缩包
 - Linux 公式工具使用包内 `formula-tools/bin/texmath`，Windows 使用 `formula-tools/bin/texmath.exe`；目标机不编译 texmath，也不运行 `npm install`
-- Linux 默认只写包内 `offline.env` 并生成 `activate-offline.sh`；只有显式传 `--user-config` 才会把受标记管理的运行时块合并到 `~/.config/paper-fetch/.env`
-- Windows 默认写安装目录内 `offline.env`，MCP 注册环境固定指向安装目录内 `offline.env`、`downloads/`、`formula-tools/`、`ms-playwright/` 和 FlareSolverr 路径，并设置 `PYTHONUTF8=1`、`PYTHONIOENCODING=utf-8`
-- 安装结束提示会指向包内 `offline.env`；离线环境抓取 Elsevier 全文前，从 <https://dev.elsevier.com/> 申请 key，并在该文件中填写 `ELSEVIER_API_KEY`
+- Linux 默认写包内 `offline.env`、生成 `activate-offline.sh`、复制 `~/.codex/skills/paper-fetch-skill` 和 `~/.claude/skills/paper-fetch-skill`，并把离线 CLI PATH、formula tools PATH、`PAPER_FETCH_ENV_FILE`、`PAPER_FETCH_FORMULA_TOOLS_DIR`、`PLAYWRIGHT_BROWSERS_PATH`、`FLARESOLVERR_SOURCE_DIR`、`FLARESOLVERR_ENV_FILE`、`FLARESOLVERR_URL` 写入当前 shell 对应启动文件；只有显式传 `--user-config` 才会把受标记管理的运行时块合并到 `~/.config/paper-fetch/.env`
+- Linux 写入 shell 启动文件和 Codex fallback config 时会先替换旧的受管理 block，重复安装不会重复追加；不修改 `/etc/profile`
+- Windows 首次安装会写安装目录内 `offline.env`；升级安装会保留用户已有内容，只替换 `# BEGIN/END paper-fetch offline managed` 包围的运行时 block。MCP 注册环境固定指向安装目录内 `offline.env`、`downloads/`、`formula-tools/`、`ms-playwright/` 和 FlareSolverr 路径，并设置 `PYTHONUTF8=1`、`PYTHONIOENCODING=utf-8`
+- Windows GUI 安装完成页会提示 Elsevier API key 申请入口和包内 `offline.env` 位置，并提供可选的 Notepad 打开项；silent 安装不会弹出该提示。离线环境抓取 Elsevier 全文前，从 <https://dev.elsevier.com/> 申请 key，并在该文件中填写 `ELSEVIER_API_KEY`
 - `--preset=headless` 会在安装阶段检查 `Xvfb`；`--preset=wslg` 会检查 `DISPLAY` 或 `WAYLAND_DISPLAY`
 - Windows 卸载器只删除安装目录、安装器复制的 Codex / Claude Code skill、用户 PATH 中的安装目录 `bin`，并移除安装器管理的 MCP 注册；不会删除用户手写的其它配置
 
@@ -111,7 +117,7 @@ scripts/verify-offline-package.sh dist/paper-fetch-skill-offline-linux-x86_64-cp
 
 上面的验证路径按实际构建出的 `cp311`、`cp312`、`cp313` 或 `cp314` 包名替换。
 
-验证脚本会先用 guard 拦截 `curl`、`git`、`npm`、`playwright` 等命令来确认安装器没有在线下载或目标机 patch 动作，然后检查 `paper-fetch --help`、`texmath --help`、包内 Playwright Chromium、`paper_fetch.mcp.tools.provider_status_payload` 和 FlareSolverr `sessions.list`。
+验证脚本会先用 guard 拦截 `curl`、`git`、`npm`、`playwright` 等命令来确认安装器没有在线下载或目标机 patch 动作，并使用临时 HOME 和 fake `codex` / `claude` CLI 验证 Linux shell 写入、skill 复制和 MCP remove/add 注册；随后检查 `paper-fetch --help`、`texmath --help`、包内 Playwright Chromium、`paper_fetch.mcp.tools.provider_status_payload` 和 FlareSolverr `sessions.list`，最后执行 `install-offline.sh --uninstall` 验证用户级集成可清理且不删除包内 `offline.env` 或 `.venv/`。
 
 Windows CI 在 `offline-windows-x86-64` job 中执行安装器验证：通过 `Start-Process -Wait -PassThru` silent install 并检查安装器进程退出码，失败时输出安装日志；随后验证 bundled `runtime\python.exe` import 和 `provider_status_payload()`、`bin\paper-fetch.cmd --help`、`texmath.exe --help`、安装目录内 Playwright Chromium 路径检查、启动安装目录内 FlareSolverr 后调用 `sessions.list`，并用 fake `codex` / `claude` CLI 验证 MCP remove/add 命令。
 

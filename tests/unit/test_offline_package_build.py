@@ -7,6 +7,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 BUILD_OFFLINE_PACKAGE = REPO_ROOT / "scripts" / "build-offline-package.sh"
 BUILD_OFFLINE_PACKAGE_WINDOWS = REPO_ROOT / "scripts" / "build-offline-package-windows.ps1"
+VERIFY_OFFLINE_PACKAGE = REPO_ROOT / "scripts" / "verify-offline-package.sh"
 
 
 class OfflinePackageBuildTests(unittest.TestCase):
@@ -62,6 +63,25 @@ class OfflinePackageBuildTests(unittest.TestCase):
         self.assertIn('tar -C "$flare_downloads/$flare_version" -cf - flaresolverr', block)
         self.assertNotIn('tar -C "$flare_downloads/$flare_version" -cf - .', block)
         self.assertNotIn("flaresolverr_linux_x64.tar.gz", block)
+
+    def test_linux_offline_verifier_checks_user_shell_skills_and_mcp_registration(self) -> None:
+        script = VERIFY_OFFLINE_PACKAGE.read_text(encoding="utf-8")
+
+        self.assertIn('FAKE_HOME="$TMP_ROOT/home"', script)
+        self.assertIn('export HOME="$FAKE_HOME"', script)
+        self.assertIn('export SHELL="/bin/bash"', script)
+        self.assertIn('for name in codex claude', script)
+        self.assertIn("PAPER_FETCH_FAKE_CLI_LOG", script)
+        self.assertIn("$FAKE_HOME/.bashrc", script)
+        self.assertIn(".codex/skills/paper-fetch-skill/SKILL.md", script)
+        self.assertIn(".claude/skills/paper-fetch-skill/SKILL.md", script)
+        self.assertIn("codex mcp add", script)
+        self.assertIn("claude mcp add -s user", script)
+        self.assertIn("PAPER_FETCH_ENV_FILE=$EXTRACTED_ROOT/offline.env", script)
+        self.assertIn("PLAYWRIGHT_BROWSERS_PATH=$EXTRACTED_ROOT/ms-playwright", script)
+        self.assertIn('"$EXTRACTED_ROOT/install-offline.sh" --uninstall', script)
+        self.assertIn("Uninstall removed offline.env", script)
+        self.assertIn("Managed shell block was not removed from .bashrc", script)
 
     def test_windows_default_package_name_uses_detected_python_tag(self) -> None:
         script = BUILD_OFFLINE_PACKAGE_WINDOWS.read_text(encoding="utf-8")
@@ -143,6 +163,27 @@ class OfflinePackageBuildTests(unittest.TestCase):
         self.assertIn("PrivilegesRequired=lowest", iss)
         self.assertIn(r"DefaultDirName={localappdata}\PaperFetchSkill", iss)
         self.assertIn("windows-installer-helper.ps1", iss)
+
+    def test_windows_inno_installer_does_not_upgrade_overwrite_existing_offline_env(self) -> None:
+        iss = (REPO_ROOT / "installer" / "paper-fetch-skill.iss").read_text(encoding="utf-8")
+
+        self.assertIn('Source: "{#SourceDir}\\*"; DestDir: "{app}"; Excludes: "offline.env"', iss)
+        self.assertIn(
+            'Source: "{#SourceDir}\\offline.env"; DestDir: "{app}"; Flags: ignoreversion onlyifdoesntexist',
+            iss,
+        )
+
+    def test_windows_inno_installer_prompts_for_elsevier_api_key(self) -> None:
+        iss = (REPO_ROOT / "installer" / "paper-fetch-skill.iss").read_text(encoding="utf-8")
+
+        self.assertIn("wpFinished", iss)
+        self.assertIn("WizardForm.FinishedLabel.Caption", iss)
+        self.assertIn("https://dev.elsevier.com/", iss)
+        self.assertIn('ELSEVIER_API_KEY="..."', iss)
+        self.assertIn('Filename: "notepad.exe"', iss)
+        self.assertIn('Parameters: """{app}\\offline.env"""', iss)
+        self.assertIn("Description: \"Open offline.env to set ELSEVIER_API_KEY\"", iss)
+        self.assertIn("Flags: postinstall skipifsilent unchecked nowait", iss)
 
     def test_windows_flaresolverr_bundle_is_built_from_patched_source(self) -> None:
         script = BUILD_OFFLINE_PACKAGE_WINDOWS.read_text(encoding="utf-8")
