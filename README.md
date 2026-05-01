@@ -2,24 +2,24 @@
 
 `paper-fetch-skill` 面向已经确定的论文：给定 DOI、论文落地页 URL 或标题，尽量抓取可读正文、结构化元数据和 Markdown，并把结果暴露给命令行、MCP host 和 agent skill 使用。
 
-它不是文献发现、选题推荐或自动综述系统。它解决的是一个更窄的问题：当你已经知道要读哪篇论文时，怎样把论文内容稳定地交给 AI agent 使用。
-
-## 为什么做这个项目
+## 为什么需要这个项目
 
 AI agent 读论文时经常会卡在同一类问题上：
 
-- 论文入口不统一：有 DOI、publisher 页面、PDF、摘要页，也可能只有题名。
-- 输出不适合直接喂给模型：网页正文、公式、表格、图片和引用往往混在一起。
-- provider 行为差异大：不同出版社的 HTML、PDF、API、反爬和 fallback 路径都不一样。
-- 本地复用困难：同一篇论文被多次请求时，缺少稳定缓存和可追踪结果。
+- 你有权限获取全文，但AI 没有权限，AI 只能读到摘要。
+- PDF无法正确解析文字、图片，agent理解效果不如markdown。
+- 文章html有很多无关的网页信息，给agent造成语义负担。
+- 文章html中的图片 agent 读不到。
 
-这个项目把这些问题收敛到一个可复用工具层：输入一篇已知论文，输出 AI 更容易消费的结果，并在拿不到全文时明确返回摘要级或 metadata-only 结果，而不是伪装成成功。
+这个项目把这些问题收敛到一个工具层：
+- 当你有全文获取权限时，让AI也能获取全文，而不仅是摘要。
+- 输入n篇已知论文，抓取 AI 更容易理解的 markdown 版本，为后续知识库构建做好干净的数据基础。
 
 ## 这个项目做什么
 
 项目提供三个主要入口：
 
-- `paper-fetch`：命令行工具，适合本地试跑、脚本调用和 smoke test。
+- `paper-fetch`：命令行工具，适合手动大规模快速抓取文献。
 - `paper-fetch-mcp`：stdio MCP server，适合接入 Codex、Claude Code 等支持 MCP 的 host。
 - `skills/paper-fetch-skill/`：静态 agent skill，告诉 agent 什么时候应该调用论文抓取工具。
 
@@ -27,7 +27,6 @@ AI agent 读论文时经常会卡在同一类问题上：
 
 - 支持 DOI、URL 和标题查询。
 - 输出结构化论文元数据、正文 Markdown、引用信息和本地缓存资源。
-- 提供全文可用性检查、批量解析和批量预检。
 - 支持常见 provider 路由，包括 Crossref、Elsevier、Springer、Wiley、Science 和 PNAS。
 - 在无法取得全文时返回带 warning 的 abstract-only 或 metadata-only 结果。
 
@@ -39,7 +38,109 @@ AI agent 读论文时经常会卡在同一类问题上：
 
 ## 如何部署
 
-### 在线安装
+### 离线安装（推荐）
+
+离线 release asset 包含 4 个 Linux ABI tarball 和 1 个 Windows x86_64 安装器：
+
+```text
+paper-fetch-skill-offline-linux-x86_64-cp311.tar.gz
+paper-fetch-skill-offline-linux-x86_64-cp312.tar.gz
+paper-fetch-skill-offline-linux-x86_64-cp313.tar.gz
+paper-fetch-skill-offline-linux-x86_64-cp314.tar.gz
+paper-fetch-skill-windows-x86_64-setup.exe
+```
+
+推送 `v*` tag 时，GitHub Actions 会等常规验证、全部 Linux 离线包和 Windows 安装器成功后，自动创建对应 GitHub Release，并把上述 5 个文件作为 release assets 上传。也可以从 `v*` tag 手动运行 CI workflow，并设置 `publish_release=true` 重新发布。
+
+
+#### **I. Windows x86_64：**
+
+**1.下载安装包**
+
+在 Releases 中下载 
+```text
+paper-fetch-skill-windows-x86_64-setup.exe
+```
+
+**2.本地终端运行安装程序：**
+```powershell
+.\paper-fetch-skill-windows-x86_64-setup.exe
+```
+
+安装器默认安装到 `%LOCALAPPDATA%\PaperFetchSkill`，不要求管理员权限。安装内容包含 CPython 3.13 x64 embeddable runtime、Python 依赖、Playwright Chromium、formula tools、FlareSolverr runtime、CLI/MCP cmd wrapper、Codex skill 和 Claude Code skill。安装器会把 `bin` 加入用户 PATH，复制 skill，并在检测到 Codex / Claude CLI 时注册 MCP；没有 Claude CLI 时只跳过 Claude MCP 注册，Codex 没有 CLI 时会备份并更新 `%USERPROFILE%\.codex\config.toml`。
+
+**3.验证安装成功：**
+
+安装后新开一个 PowerShell 
+
+```powershell
+paper-fetch --help
+```
+如果有输出`usage: cli.py [-h] -（后略）`则安装成功
+
+**4.开启 Wiley / Science / PNAS 获取权限**
+如果要启用 Wiley / Science / PNAS 的浏览器路径，启动安装器内置 FlareSolverr：
+
+```powershell
+flaresolverr-up
+flaresolverr-status
+```
+
+停止时运行：
+
+```powershell
+flaresolverr-down
+```
+
+**5.开启Elsvier获取权限**
+
+Elsevier 官方 XML/API 和 PDF fallback 需要从 <https://dev.elsevier.com/> 申请 key，并写入安装目录下的 `offline.env`：
+
+```powershell
+notepad "$env:LOCALAPPDATA\PaperFetchSkill\offline.env"
+```
+
+**6.刷新 agent 的 skill**
+
+修改 Codex / Claude Code skill 或 MCP 配置后需要重启对应 host。
+
+**7.常见问题**
+
+Windows 安装器和 legacy 手动排障路径见 [`paper-fetch-windows-cli-mcp-skill-install.md`](paper-fetch-windows-cli-mcp-skill-install.md)，离线安装细节见 [`docs/deployment.md`](docs/deployment.md)。
+
+
+#### **II.Linux** 
+
+**1.下载安装包**
+
+检查python版本
+```bash
+python --version
+```
+
+
+在 Releases 中选择与目标机 Python 版本的包下载。
+```text
+paper-fetch-skill-offline-linux-x86_64-cp311.tar.gz
+paper-fetch-skill-offline-linux-x86_64-cp312.tar.gz
+paper-fetch-skill-offline-linux-x86_64-cp313.tar.gz
+paper-fetch-skill-offline-linux-x86_64-cp314.tar.gz
+```
+
+解压后执行：
+
+```bash
+./install-offline.sh --preset=headless --no-user-config
+source ./activate-offline.sh
+```
+
+WSLg 或桌面显示环境可改用：
+
+```bash
+./install-offline.sh --preset=wslg --no-user-config
+```
+
+### 在线安装（可以但不推荐）
 
 在仓库根目录执行：
 
@@ -99,67 +200,6 @@ export PAPER_FETCH_ENV_FILE=/path/to/.env
 
 完整环境变量说明见 [`docs/providers.md`](docs/providers.md)。
 
-### 离线安装
-
-离线 release asset 包含 4 个 Linux ABI tarball 和 1 个 Windows x86_64 安装器：
-
-```text
-paper-fetch-skill-offline-linux-x86_64-cp311.tar.gz
-paper-fetch-skill-offline-linux-x86_64-cp312.tar.gz
-paper-fetch-skill-offline-linux-x86_64-cp313.tar.gz
-paper-fetch-skill-offline-linux-x86_64-cp314.tar.gz
-paper-fetch-skill-windows-x86_64-setup.exe
-```
-
-推送 `v*` tag 时，GitHub Actions 会等常规验证、全部 Linux 离线包和 Windows 安装器成功后，自动创建对应 GitHub Release，并把上述 5 个文件作为 release assets 上传。也可以从 `v*` tag 手动运行 CI workflow，并设置 `publish_release=true` 重新发布。
-
-Linux 选择与目标机 Python ABI 匹配的包。解压后执行：
-
-```bash
-./install-offline.sh --preset=headless --no-user-config
-source ./activate-offline.sh
-```
-
-WSLg 或桌面显示环境可改用：
-
-```bash
-./install-offline.sh --preset=wslg --no-user-config
-```
-
-Windows x86_64 推荐直接运行：
-
-```powershell
-.\paper-fetch-skill-windows-x86_64-setup.exe
-```
-
-安装器默认安装到 `%LOCALAPPDATA%\PaperFetchSkill`，不要求管理员权限。安装内容包含 CPython 3.13 x64 embeddable runtime、Python 依赖、Playwright Chromium、formula tools、FlareSolverr runtime、CLI/MCP cmd wrapper、Codex skill 和 Claude Code skill。安装器会把 `bin` 加入用户 PATH，复制 skill，并在检测到 Codex / Claude CLI 时注册 MCP；没有 Claude CLI 时只跳过 Claude MCP 注册，Codex 没有 CLI 时会备份并更新 `%USERPROFILE%\.codex\config.toml`。
-
-安装后新开一个 PowerShell 验证：
-
-```powershell
-paper-fetch --help
-```
-
-如果要启用 Wiley / Science / PNAS 的浏览器路径，启动安装器内置 FlareSolverr：
-
-```powershell
-flaresolverr-up
-flaresolverr-status
-```
-
-停止时运行：
-
-```powershell
-flaresolverr-down
-```
-
-Elsevier 官方 XML/API 和 PDF fallback 仍需要从 <https://dev.elsevier.com/> 申请 key，并写入安装目录下的 `offline.env`：
-
-```powershell
-notepad "$env:LOCALAPPDATA\PaperFetchSkill\offline.env"
-```
-
-修改 Codex / Claude Code skill 或 MCP 配置后需要重启对应 host。Windows 安装器和 legacy 手动排障路径见 [`paper-fetch-windows-cli-mcp-skill-install.md`](paper-fetch-windows-cli-mcp-skill-install.md)，离线安装细节见 [`docs/deployment.md`](docs/deployment.md)。
 
 ### 接入 Codex
 
