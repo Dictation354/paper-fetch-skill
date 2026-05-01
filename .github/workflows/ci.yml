@@ -218,7 +218,7 @@ jobs:
         run: scripts/verify-offline-package.sh "$PWD/offline-artifacts/paper-fetch-skill-offline-linux-x86_64-${{ matrix.python-tag }}.tar.gz"
 
       - name: Upload offline package
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: paper-fetch-skill-offline-linux-x86_64-${{ matrix.python-tag }}
           path: offline-artifacts/paper-fetch-skill-offline-linux-x86_64-${{ matrix.python-tag }}.tar.gz
@@ -374,7 +374,7 @@ jobs:
           }
 
       - name: Upload offline package
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: paper-fetch-skill-windows-x86_64-setup
           path: offline-artifacts/paper-fetch-skill-windows-x86_64-setup.exe
