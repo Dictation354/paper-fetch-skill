@@ -27,6 +27,28 @@ class CiReleaseWorkflowTests(unittest.TestCase):
         self.assertIn("publish_release:", workflow)
         self.assertIn('description: "Publish GitHub Release with offline packages"', workflow)
 
+    def test_workflow_dispatch_can_run_only_windows_offline_job(self) -> None:
+        workflow = CI_WORKFLOW.read_text(encoding="utf-8")
+
+        self.assertIn("run_offline_windows_only:", workflow)
+        self.assertIn('description: "Run only the Windows offline installer packaging job"', workflow)
+
+        for job_name in (
+            "lint",
+            "unit",
+            "integration",
+            "package-smoke",
+            "offline-linux-x86-64",
+            "release-offline-packages",
+            "full-golden",
+            "live-mcp",
+        ):
+            block = _job_block(workflow, job_name)
+            self.assertIn("!inputs.run_offline_windows_only", block, job_name)
+
+        windows_block = _job_block(workflow, "offline-windows-x86-64")
+        self.assertNotIn("!inputs.run_offline_windows_only", windows_block)
+
     def test_release_job_waits_for_complete_offline_ci(self) -> None:
         workflow = CI_WORKFLOW.read_text(encoding="utf-8")
         block = _job_block(workflow, "release-offline-packages")
@@ -81,7 +103,14 @@ class CiReleaseWorkflowTests(unittest.TestCase):
         self.assertNotIn("matrix:", block)
         self.assertIn("choco install innosetup", block)
         self.assertIn("paper-fetch-skill-windows-x86_64-setup.exe", block)
-        self.assertIn("/VERYSILENT /SUPPRESSMSGBOXES /NORESTART", block)
+        for setup_arg in ("/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART"):
+            self.assertIn(setup_arg, block)
+        self.assertIn("Start-Process -FilePath $setup", block)
+        self.assertIn("-Wait -PassThru", block)
+        self.assertIn("$setupProcess.ExitCode", block)
+        self.assertIn("Get-Content $setupLog", block)
+        self.assertNotIn("& $setup /VERYSILENT", block)
+        self.assertNotIn("$LASTEXITCODE", block)
         self.assertIn("runtime/python.exe", block)
         self.assertIn("bin/paper-fetch.cmd", block)
         self.assertIn("bin/flaresolverr-up.cmd", block)

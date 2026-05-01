@@ -20,12 +20,18 @@ on:
         required: false
         default: false
         type: boolean
+      run_offline_windows_only:
+        description: "Run only the Windows offline installer packaging job"
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
 
 jobs:
   lint:
+    if: ${{ github.event_name != 'workflow_dispatch' || !inputs.run_offline_windows_only }}
     runs-on: ubuntu-latest
 
     steps:
@@ -46,6 +52,7 @@ jobs:
         run: python -m ruff check .
 
   unit:
+    if: ${{ github.event_name != 'workflow_dispatch' || !inputs.run_offline_windows_only }}
     runs-on: ubuntu-latest
 
     steps:
@@ -91,6 +98,7 @@ jobs:
         run: python -m pytest tests/unit tests/devtools -q
 
   integration:
+    if: ${{ github.event_name != 'workflow_dispatch' || !inputs.run_offline_windows_only }}
     runs-on: ubuntu-latest
 
     steps:
@@ -116,6 +124,7 @@ jobs:
         run: python -m pytest tests/integration -q
 
   package-smoke:
+    if: ${{ github.event_name != 'workflow_dispatch' || !inputs.run_offline_windows_only }}
     runs-on: ubuntu-latest
 
     steps:
@@ -154,6 +163,7 @@ jobs:
           PY
 
   offline-linux-x86-64:
+    if: ${{ github.event_name != 'workflow_dispatch' || !inputs.run_offline_windows_only }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -274,10 +284,18 @@ jobs:
 
           $env:PAPER_FETCH_FAKE_CLI_LOG = $fakeLog
           $env:PATH = "$fakeBin;$env:PATH"
-          & $setup /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /DIR="$installRoot" /LOG="$env:RUNNER_TEMP\paper-fetch-setup.log"
-          if ($LASTEXITCODE -ne 0) {
-            Get-Content "$env:RUNNER_TEMP\paper-fetch-setup.log" -ErrorAction SilentlyContinue
-            throw "Setup installer failed with exit code $LASTEXITCODE"
+          $setupLog = Join-Path $env:RUNNER_TEMP "paper-fetch-setup.log"
+          $setupArgs = @(
+            "/VERYSILENT",
+            "/SUPPRESSMSGBOXES",
+            "/NORESTART",
+            "/DIR=`"$installRoot`"",
+            "/LOG=`"$setupLog`""
+          )
+          $setupProcess = Start-Process -FilePath $setup -ArgumentList $setupArgs -Wait -PassThru
+          if ($setupProcess.ExitCode -ne 0) {
+            Get-Content $setupLog -ErrorAction SilentlyContinue
+            throw "Setup installer failed with exit code $($setupProcess.ExitCode)"
           }
 
           $runtimePython = Join-Path $installRoot "runtime/python.exe"
@@ -341,6 +359,7 @@ jobs:
       - offline-windows-x86-64
     if: >-
       ${{
+        !inputs.run_offline_windows_only &&
         startsWith(github.ref, 'refs/tags/v') &&
         (
           github.event_name == 'push' ||
@@ -399,7 +418,7 @@ jobs:
           prerelease: ${{ contains(github.ref_name, '-') }}
 
   full-golden:
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_full_golden }}
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_full_golden && !inputs.run_offline_windows_only }}
     runs-on: ubuntu-latest
 
     steps:
@@ -445,7 +464,7 @@ jobs:
         run: pytest tests/integration/test_golden_corpus.py
 
   live-mcp:
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_live_mcp }}
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_live_mcp && !inputs.run_offline_windows_only }}
     runs-on: ubuntu-latest
 
     steps:

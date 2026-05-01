@@ -113,7 +113,9 @@ scripts/verify-offline-package.sh dist/paper-fetch-skill-offline-linux-x86_64-cp
 
 验证脚本会先用 guard 拦截 `curl`、`git`、`npm`、`playwright` 等命令来确认安装器没有在线下载或目标机 patch 动作，然后检查 `paper-fetch --help`、`texmath --help`、包内 Playwright Chromium、`paper_fetch.mcp.tools.provider_status_payload` 和 FlareSolverr `sessions.list`。
 
-Windows CI 在 `offline-windows-x86-64` job 中执行安装器验证：silent install、bundled `runtime\python.exe` import 和 `provider_status_payload()`、`bin\paper-fetch.cmd --help`、`texmath.exe --help`、安装目录内 Playwright Chromium 路径检查、启动安装目录内 FlareSolverr 后调用 `sessions.list`，并用 fake `codex` / `claude` CLI 验证 MCP remove/add 命令。
+Windows CI 在 `offline-windows-x86-64` job 中执行安装器验证：通过 `Start-Process -Wait -PassThru` silent install 并检查安装器进程退出码，失败时输出安装日志；随后验证 bundled `runtime\python.exe` import 和 `provider_status_payload()`、`bin\paper-fetch.cmd --help`、`texmath.exe --help`、安装目录内 Playwright Chromium 路径检查、启动安装目录内 FlareSolverr 后调用 `sessions.list`，并用 fake `codex` / `claude` CLI 验证 MCP remove/add 命令。
+
+只需要复核 Windows 安装器时，可以手动触发 `CI` workflow 并设置 `run_offline_windows_only=true`；该模式只运行 `offline-windows-x86-64`，其它常规 job 会跳过。
 
 ### 手动安装
 
