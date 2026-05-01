@@ -72,7 +72,7 @@ jobs:
           cabal-version: "latest"
 
       - name: Restore formula tool cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ${{ steps.setup-haskell.outputs.cabal-store }}
@@ -195,7 +195,7 @@ jobs:
           cabal-version: "latest"
 
       - name: Restore formula tool cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ${{ steps.setup-haskell.outputs.cabal-store }}
@@ -244,7 +244,7 @@ jobs:
           cabal-version: "latest"
 
       - name: Restore formula tool cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ${{ steps.setup-haskell.outputs.cabal-store }}
@@ -469,7 +469,7 @@ jobs:
           cabal-version: "latest"
 
       - name: Restore formula tool cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ${{ steps.setup-haskell.outputs.cabal-store }}
