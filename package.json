@@ -6,6 +6,6 @@
   "license": "UNLICENSED",
   "dependencies": {
     "katex": "0.17.0",
-    "mathml-to-latex": "1.5.0"
+    "mathml-to-latex": "1.8.0"
   }
 }
