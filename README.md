@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/dictation354-paper-fetch-skill-badge.png)](https://mseep.ai/app/dictation354-paper-fetch-skill)
+
 # Paper Fetch Skill
 
 > Fetch papers as agent-ready markdown — DOI/URL/title in, structured full text out. CLI · MCP · Skill.
