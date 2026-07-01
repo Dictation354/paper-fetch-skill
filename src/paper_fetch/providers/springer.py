@@ -824,7 +824,11 @@ class SpringerClient(ProviderClient):
             timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
             seed_urls=[attempt.response_url] if attempt.response_url else None,
             asset_profile=effective_asset_profile,
-            asset_output_dir=pdf_asset_output_dir(context, asset_profile=effective_asset_profile),
+            asset_output_dir=pdf_asset_output_dir(
+                context,
+                asset_profile=effective_asset_profile,
+                doi=attempt.normalized_doi,
+            ),
             fetcher=fetch_pdf_over_http,
         ).fetch(pdf_candidates)
         return build_provider_payload(

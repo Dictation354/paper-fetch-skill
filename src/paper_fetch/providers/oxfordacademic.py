@@ -334,7 +334,7 @@ class OxfordAcademicClient(ProviderClient):
                     response,
                     artifact_dir=None,
                     asset_profile=effective_asset_profile,
-                    asset_output_dir=pdf_asset_output_dir(context, asset_profile=effective_asset_profile),
+                    asset_output_dir=pdf_asset_output_dir(context, asset_profile=effective_asset_profile, doi=doi),
                     source_url=candidate,
                     final_url=str(response.get("url") or candidate),
                     not_pdf_message=(

@@ -551,7 +551,7 @@ class FrontiersClient(ProviderClient):
                 headers=default_pdf_headers(self.user_agent, referer=route.landing_url),
                 timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
                 asset_profile=effective_asset_profile,
-                asset_output_dir=pdf_asset_output_dir(context, asset_profile=effective_asset_profile),
+                asset_output_dir=pdf_asset_output_dir(context, asset_profile=effective_asset_profile, doi=doi),
                 fetcher=fetch_pdf_over_http,
             ).fetch([route.pdf_url])
         except PdfFetchFailure as exc:

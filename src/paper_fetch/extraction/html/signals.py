@@ -30,6 +30,8 @@ CHALLENGE_PATTERNS = (
     "radware bot manager",
     "perfdrive",
     "confirm you are a human",
+    "confirm you are human",
+    "complete the security check",
     "h-captcha",
 )
 CLOUDFLARE_CHALLENGE_TITLE_TOKENS = tuple(

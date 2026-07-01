@@ -20,7 +20,7 @@ import urllib.parse
 from ..common_patterns import WORD_TOKEN_PATTERN
 from ..http import PDF_ACCEPT_HEADER, is_pdf_content_type
 from ..models.markdown import replace_markdown_images
-from ..utils import normalize_text
+from ..utils import normalize_text, sanitize_filename
 from .browser_runtime.seed import CLOUDFLARE_COOKIE_NAMES, _CLOUDFLARE_COOKIE_PREFIXES
 
 PdfAssetProfile = Literal["none", "body", "all"]
@@ -149,16 +149,28 @@ def pdf_asset_output_dir(
     context: Any | None,
     *,
     asset_profile: PdfAssetProfile | None = None,
+    doi: str | None = None,
 ) -> Path | None:
     effective_profile = asset_profile or pdf_asset_profile_from_context(context)
     if effective_profile == "none":
         return None
+    normalized_doi = normalize_text(doi)
     artifact_store = getattr(context, "artifact_store", None)
     if artifact_store is not None:
         output_dir = getattr(artifact_store, "asset_download_dir", None)
-        return Path(output_dir) if output_dir is not None else None
+        if output_dir is None:
+            return None
+        output_path = Path(output_dir)
+        if normalized_doi:
+            return output_path / f"{sanitize_filename(normalized_doi)}_assets"
+        return output_path
     output_dir = getattr(context, "download_dir", None)
-    return Path(output_dir) if output_dir is not None else None
+    if output_dir is None:
+        return None
+    output_path = Path(output_dir)
+    if normalized_doi:
+        return output_path / f"{sanitize_filename(normalized_doi)}_assets"
+    return output_path
 
 
 def _pdf_word_count(text: str) -> int:
@@ -319,7 +331,14 @@ def _insufficient_pdf_markdown_failure(
 def _pdf_image_dir(asset_output_dir: Path | None, asset_profile: PdfAssetProfile) -> Path | None:
     if asset_profile == "none" or asset_output_dir is None:
         return None
+    if asset_output_dir.name == "body_assets" or asset_output_dir.name.endswith("_assets"):
+        return asset_output_dir
     return asset_output_dir / "body_assets"
+
+
+def _pdf_image_relative_url(path: Path, image_dir: Path) -> str:
+    prefix = normalize_text(image_dir.name) or "assets"
+    return f"{prefix}/{path.name}"
 
 
 def _resolve_pdf_image_reference(image_url: str, image_dir: Path) -> Path | None:
@@ -360,10 +379,11 @@ def _resolve_pdf_image_reference(image_url: str, image_dir: Path) -> Path | None
 def _pdf_image_asset(
     *,
     path: Path,
+    image_dir: Path,
     heading: str,
     source_url: str | None,
 ) -> dict[str, Any]:
-    relative_url = f"body_assets/{path.name}"
+    relative_url = _pdf_image_relative_url(path, image_dir)
     asset: dict[str, Any] = {
         "kind": "figure",
         "heading": heading,
@@ -417,11 +437,12 @@ def _normalize_pdf_markdown_image_assets(
             assets.append(
                 _pdf_image_asset(
                     path=path,
+                    image_dir=image_dir,
                     heading=heading,
                     source_url=source_url,
                 )
             )
-        return f"![{heading}](body_assets/{path.name})"
+        return f"![{heading}]({_pdf_image_relative_url(path, image_dir)})"
 
     rewritten = replace_markdown_images(markdown_text, replace_image)
     return PdfMarkdownRenderResult(markdown_text=rewritten, assets=assets)

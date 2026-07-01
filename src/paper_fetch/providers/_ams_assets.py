@@ -8,6 +8,7 @@ import urllib.parse
 from typing import Any
 
 from ..common_patterns import TABLE_LABEL_PATTERN
+from ..extraction.html.assets import extract_formula_assets
 from ..extraction.html.parsing import choose_parser
 from ..image_tools import source_image_format_from_payload
 from ..utils import normalize_text
@@ -391,6 +392,10 @@ def _extract_ams_table_assets(html_text: str, source_url: str) -> list[dict[str,
     return assets
 
 
+def _extract_ams_formula_assets(html_text: str, source_url: str) -> list[dict[str, str]]:
+    return extract_formula_assets(html_text, source_url, noise_profile="ams")
+
+
 def extract_asset_html_scopes(
     body_container: Any,
     supplementary_container: Any,
@@ -425,7 +430,11 @@ def scoped_asset_extractor(
     asset_profile,
     supplementary_html_text: str | None = None,
 ) -> list[dict[str, str]]:
-    from .atypon_browser_workflow.asset_scopes import extract_scoped_html_assets
+    from ._html_asset_engine import (
+        HtmlAssetExtractionPolicy,
+        extract_scoped_assets_with_policy,
+    )
+    from .atypon_browser_workflow.asset_scopes import extract_supplementary_assets
 
     download_figure_sources = _extract_ams_download_figure_sources(
         body_html_text,
@@ -434,7 +443,7 @@ def scoped_asset_extractor(
     normalized_body_html = _normalize_ams_asset_html(body_html_text)
     # The Atypon shared extractor owns figures, formulas, and supplementary assets.
     # AMS adds image-only tableWrap screenshots here because they are table surrogates.
-    assets = extract_scoped_html_assets(
+    assets = extract_scoped_assets_with_policy(
         normalized_body_html,
         source_url,
         asset_profile=asset_profile,
@@ -442,6 +451,10 @@ def scoped_asset_extractor(
             _normalize_ams_asset_html(supplementary_html_text)
             if supplementary_html_text is not None
             else None
+        ),
+        policy=HtmlAssetExtractionPolicy(
+            formula_extractor=_extract_ams_formula_assets,
+            supplementary_extractor=extract_supplementary_assets,
         ),
     )
     table_assets = _extract_ams_table_assets(normalized_body_html, source_url)

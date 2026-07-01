@@ -300,7 +300,11 @@ class WileyClient(browser_workflow.BrowserWorkflowClient):
                     if bootstrap.runtime is not None
                     else None,
                     asset_profile=effective_asset_profile,
-                    asset_output_dir=pdf_asset_output_dir(context, asset_profile=effective_asset_profile),
+                    asset_output_dir=pdf_asset_output_dir(
+                        context,
+                        asset_profile=effective_asset_profile,
+                        doi=bootstrap.normalized_doi,
+                    ),
                 )
             except PdfFallbackFailure as exc:
                 raise ProviderFailure(NO_RESULT, exc.message) from exc
@@ -338,6 +342,7 @@ class WileyClient(browser_workflow.BrowserWorkflowClient):
             try:
                 return self.deps.fetch_seeded_browser_pdf_payload(
                     provider=self.name,
+                    doi=bootstrap.normalized_doi,
                     runtime=bootstrap.runtime,
                     pdf_candidates=bootstrap.pdf_candidates,
                     html_candidates=bootstrap.html_candidates,

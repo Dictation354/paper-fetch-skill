@@ -161,14 +161,15 @@ class ArtifactStore:
             ]
         if not self.policy.allows_provider_payload(content):
             return [], []
+        naming_metadata = _payload_naming_metadata(content, metadata)
         output_path = build_output_path(
             self.download_dir,
             doi,
-            safe_text(metadata.get("title")),
+            safe_text(naming_metadata.get("title")),
             content.content_type,
             content.source_url,
-            authors=metadata.get("authors") or None,
-            year=_extract_year(safe_text(metadata.get("published")) or None),
+            authors=naming_metadata.get("authors") or None,
+            year=_extract_year(safe_text(naming_metadata.get("published")) or None),
         )
         if output_path is not None:
             saved_path = self.write_bytes_file(output_path, content.body)
@@ -289,6 +290,17 @@ def _preview_asset_accepted(asset: Mapping[str, Any]) -> bool:
     except (TypeError, ValueError):
         return False
     return preview_dimensions_are_acceptable(width, height)
+
+
+def _payload_naming_metadata(content: Any, metadata: Mapping[str, Any]) -> dict[str, Any]:
+    naming_metadata = dict(metadata)
+    content_metadata = getattr(content, "merged_metadata", None)
+    if not isinstance(content_metadata, Mapping):
+        return naming_metadata
+    for key, value in content_metadata.items():
+        if value not in (None, "", [], {}):
+            naming_metadata[str(key)] = value
+    return naming_metadata
 
 
 def _is_pdf_fallback_content(content: Any) -> bool:

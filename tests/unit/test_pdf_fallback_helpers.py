@@ -748,12 +748,33 @@ class PdfFallbackHelperTests(unittest.TestCase):
         self.assertEqual(calls, [{}])
         self.assertEqual(result.assets, [])
 
-    def test_render_pdf_markdown_result_writes_body_images_for_body_asset_profile(self) -> None:
+    def test_pdf_asset_output_dir_uses_doi_asset_dir_when_available(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            output_dir = Path(tmpdir) / "downloads"
+            context = RuntimeContext(env={}, download_dir=output_dir, artifact_mode="markdown-assets")
+
+            self.assertEqual(
+                _pdf_common.pdf_asset_output_dir(
+                    context,
+                    asset_profile="body",
+                    doi="10.1016/test",
+                ),
+                output_dir / "10.1016_test_assets",
+            )
+            self.assertIsNone(
+                _pdf_common.pdf_asset_output_dir(
+                    context,
+                    asset_profile="none",
+                    doi="10.1016/test",
+                )
+            )
+
+    def test_render_pdf_markdown_result_writes_doi_images_for_body_asset_profile(self) -> None:
         calls: list[dict[str, object]] = []
 
         with tempfile.TemporaryDirectory() as tmpdir:
             output_dir = Path(tmpdir)
-            image_dir = output_dir / "body_assets"
+            image_dir = output_dir / "10.1234_test_assets"
             image_path = image_dir / "paper-0001-00.png"
 
             def fake_to_markdown(path: str, **kwargs) -> str:
@@ -769,18 +790,18 @@ class PdfFallbackHelperTests(unittest.TestCase):
                 result = _pdf_common.render_pdf_markdown_result(
                     Path("paper.pdf"),
                     asset_profile="body",
-                    asset_output_dir=output_dir,
+                    asset_output_dir=image_dir,
                     source_url="https://example.org/paper.pdf",
                 )
 
         self.assertEqual(calls[0]["write_images"], True)
         self.assertEqual(calls[0]["image_path"], str(image_dir))
-        self.assertIn("![Figure 1](body_assets/paper-0001-00.png)", result.markdown_text)
+        self.assertIn("![Figure 1](10.1234_test_assets/paper-0001-00.png)", result.markdown_text)
         self.assertEqual(len(result.assets), 1)
         self.assertEqual(result.assets[0]["kind"], "figure")
         self.assertEqual(result.assets[0]["section"], "body")
         self.assertEqual(result.assets[0]["render_state"], "inline")
-        self.assertEqual(result.assets[0]["url"], "body_assets/paper-0001-00.png")
+        self.assertEqual(result.assets[0]["url"], "10.1234_test_assets/paper-0001-00.png")
         self.assertEqual(result.assets[0]["path"], str(image_path))
 
     def test_pdf_fetch_result_from_bytes_does_not_keep_temp_images_without_asset_output_dir(self) -> None:

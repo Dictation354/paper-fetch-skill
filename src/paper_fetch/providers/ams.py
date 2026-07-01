@@ -14,6 +14,7 @@ from ..extraction.html.provider_rules import (
     DomHooks,
     MarkdownHooks,
     ProviderCleanupRules,
+    ProviderFormulaRules,
     ProviderFrontMatterRules,
     ProviderHtmlRules,
 )
@@ -64,6 +65,10 @@ register_provider_bundle(
                 exact_texts=AMS_FRONT_MATTER_EXACT_TEXTS,
                 contains_tokens=ATYPON_FRONT_MATTER_CONTAINS_TOKENS,
                 publication_keywords=AMS_FRONT_MATTER_PUBLICATION_KEYWORDS,
+            ),
+            formula=ProviderFormulaRules(
+                container_tokens=("formula",),
+                display_selectors=("div.formula",),
             ),
             dom_hooks=DomHooks(
                 before_block_normalization=_ams_html.ams_before_block_normalization,

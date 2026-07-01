@@ -157,6 +157,7 @@ class BrowserWorkflowClient(ProviderClient):
         self.deps.ensure_runtime_ready(runtime)
         return self.deps.fetch_seeded_browser_pdf_payload(
             provider=self.name,
+            doi=normalized_doi,
             runtime=runtime,
             pdf_candidates=self.pdf_candidates(normalized_doi, metadata),
             html_candidates=self.html_candidates(normalized_doi, metadata),
@@ -264,6 +265,7 @@ class BrowserWorkflowClient(ProviderClient):
             try:
                 return self.deps.fetch_seeded_browser_pdf_payload(
                     provider=self.name,
+                    doi=normalize_doi(str(metadata.get("doi") or "")) or doi,
                     runtime=bootstrap.runtime,
                     pdf_candidates=bootstrap.pdf_candidates,
                     html_candidates=bootstrap.html_candidates,

@@ -6,6 +6,18 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 2.7.1 - 2026-07-01
+
+### 变更
+
+- PDF/ePDF fallback 图片导出现在会在有 DOI 时使用与 HTML/XML 资产下载一致的 DOI 归属 `<doi>_assets/` 目录；无 DOI 的内部调用仍保留旧的 `body_assets/` 回退。
+
+### 修复
+
+- AMS 公式图片提取现在会优先读取 lazy `data-image-src` 中的真实 GIF URL，再避开 `Blank.svg` 占位图；纯图片公式会使用出版社真实公式资产渲染和下载。
+- AMS direct HTTP HTML preflight 现在会在解析前跟随 DOI 3xx 跳转到出版社全文页，同时仍拒绝 challenge 页面；公开 AMS 文章可保留在无需浏览器的 `ams_html` 路径，不再误落到 browser/PDF fallback。
+- PDF fallback 源文件落盘命名现在优先使用 provider payload 中合并后的 metadata；arXiv 这类抓取后才补齐标题、作者和年份的路径不再退回 `unknown_unknown_<doi>.pdf`。
+
 ## 2.7.0 - 2026-07-01
 
 ### 新增

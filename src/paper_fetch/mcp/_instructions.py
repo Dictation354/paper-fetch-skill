@@ -161,7 +161,7 @@ def server_instructions() -> str:
         "`frontiers` discovers canonical Frontiers article routes from landing HTML, then uses public JATS XML with direct HTTP PDF fallback, publishing `frontiers_xml` or `frontiers_pdf`. "
         "`oxfordacademic` uses direct HTTP article HTML with direct HTTP PDF fallback, publishing `oxfordacademic_html` or `oxfordacademic_pdf`. "
         "PDF fallback uses shared pymupdf4llm Markdown conversion and, when `asset_profile` is `body` or `all` "
-        "and artifact saving is enabled, saves exported PDF images to `body_assets/`. On successful HTML/XML routes, "
+        "and artifact saving is enabled, saves exported PDF images to `<doi>_assets/`. On successful HTML/XML routes, "
         "`asset_profile='none'` disables local asset downloads but does not remove "
         "remote image links already present in rendered Markdown. "
         "`asset_profile='body'` means provider-cleaned body figure/table/formula assets only, "

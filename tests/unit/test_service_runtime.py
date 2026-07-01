@@ -492,7 +492,9 @@ class ServiceRuntimeTests(unittest.TestCase):
         )
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            store = ArtifactStore.from_download_dir(Path(tmpdir), artifact_mode="markdown-assets")
+            store = ArtifactStore.from_download_dir(
+                Path(tmpdir), artifact_mode="markdown-assets"
+            )
             saved_warnings, saved_trail = store.save_provider_payload(
                 "wiley",
                 content=pdf_content,
@@ -513,6 +515,56 @@ class ServiceRuntimeTests(unittest.TestCase):
         self.assertEqual(html_trail, [])
         self.assertTrue(any(path.name.endswith(".pdf") for path in saved_paths))
         self.assertFalse(any(path.name.endswith("_original.html") for path in saved_paths))
+
+    def test_artifact_store_uses_payload_merged_metadata_for_pdf_payload_filename(self) -> None:
+        pdf_content = ProviderContent(
+            route_kind="pdf_fallback",
+            source_url="https://arxiv.org/pdf/2510.02576",
+            content_type="application/pdf",
+            body=fulltext_pdf_bytes(),
+            merged_metadata={
+                "doi": "10.48550/arxiv.2510.02576",
+                "title": "Deep learning for flash drought forecasting and interpretation",
+                "authors": [
+                    "Qian Zhao",
+                    "Xuwei Tan",
+                    "Xueru Zhang",
+                    "Pierre Gentine",
+                    "Yanlan Liu",
+                ],
+                "published": "2025-10-02",
+            },
+            needs_local_copy=True,
+        )
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            store = ArtifactStore.from_download_dir(
+                Path(tmpdir), artifact_mode="markdown-assets"
+            )
+            saved_warnings, saved_trail = store.save_provider_payload(
+                "arxiv",
+                content=pdf_content,
+                doi="10.48550/arxiv.2510.02576",
+                metadata={
+                    "doi": "10.48550/arxiv.2510.02576",
+                    "journal_title": "arXiv",
+                },
+            )
+            saved_paths = list(Path(tmpdir).iterdir())
+
+        self.assertEqual(saved_trail, ["download:arxiv_saved"])
+        self.assertTrue(
+            any(
+                "arXiv official full text was downloaded as PDF/binary to" in item
+                for item in saved_warnings
+            )
+        )
+        self.assertEqual(
+            [path.name for path in saved_paths],
+            [
+                "Zhao_et_al_2025_Deep_learning_for_flash_drought_forecasting_and_interpretation.pdf"
+            ],
+        )
 
     def test_artifact_store_none_skips_provider_payload_and_assets(self) -> None:
         pdf_content = ProviderContent(

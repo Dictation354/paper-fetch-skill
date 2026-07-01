@@ -269,10 +269,10 @@ paper-fetch-install-image-tools
 - `--output <path>` 把这份格式化结果写到指定文件；显式 `--output -` 表示打印到终端。
 - `--output-dir <dir>` 是默认主输出、Markdown、PDF fallback 来源文件和本地资产的保存目录；CLI 会在抓取前自动创建该目录，未显式传 `--output` 时，主输出会写到 `<doi>.md`、`<doi>.json` 或 `<doi>.both.json`，stdout 不输出正文。
 - `--batch-concurrency <1..8>` 控制批量并发，默认 `1`；`--batch-results <path>` 可覆盖默认的 `<output-dir>/batch-results.jsonl`。
-- `--artifact-mode markdown-assets|all|none` 控制中间产物保留，CLI 默认是 `markdown-assets`：保存 Markdown、按 `--asset-profile` 保存资产，不保留 provider 原始 HTML/XML、fetch-envelope/cache JSON 或 HTTP textual cache；如果正文来自 PDF fallback，仍会保存 PDF 源文件便于溯源。
+- `--artifact-mode markdown-assets|all|none` 控制中间产物保留，CLI 默认是 `markdown-assets`：保存 Markdown、按 `--asset-profile` 保存资产，不保留 provider 原始 HTML/XML、fetch-envelope/cache JSON 或 HTTP textual cache；如果正文来自 PDF fallback，仍会保存 PDF 源文件便于溯源，文件名优先使用 provider 抓取后合并的标题、作者和年份元数据。
 - `--artifact-mode all` 保留完整调试 artifact：provider HTML/PDF、辅助 artifact、HTTP textual cache 等都可落盘。
 - `--artifact-mode none` 不保存 provider artifact 或资产；显式 `--output <path>`、`--save-markdown`，以及未显式 `--output` 时由 `--output-dir` 承接的主输出仍可写文件。`--no-download` 等价于 `--artifact-mode none`。
-- `--asset-profile none|body|all` 控制本地内容资产下载范围，CLI 默认是 `body`：`none` 不下载本地资产但保留 Markdown 中可解析的远程图片链接，`body` 保存正文图片/图表/公式图片，`all` 额外保存补充材料；PDF fallback 在 `body` / `all` 且允许 artifact 落盘时会保存 `pymupdf4llm` 导出的正文图片到 `body_assets/`。
+- `--asset-profile none|body|all` 控制本地内容资产下载范围，CLI 默认是 `body`：`none` 不下载本地资产但保留 Markdown 中可解析的远程图片链接，`body` 保存正文图片/图表/公式图片，`all` 额外保存补充材料；PDF fallback 在 `body` / `all` 且允许 artifact 落盘时会保存 `pymupdf4llm` 导出的正文图片到 `<doi>_assets/`。
 
 完整命令组合、主输出与 artifact 的区别、错误输出和 exit code 见 [`docs/cli.md`](docs/cli.md)。
 

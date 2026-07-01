@@ -31,6 +31,7 @@ def _runtime_storage_state_path(runtime: Any) -> Any | None:
 def fetch_seeded_browser_pdf_payload(
     *,
     provider: str,
+    doi: str | None,
     runtime,
     pdf_candidates: list[str],
     html_candidates: list[str],
@@ -69,7 +70,7 @@ def fetch_seeded_browser_pdf_payload(
         pdf_candidates,
         artifact_dir=runtime.artifact_dir / artifact_subdir,
         asset_profile=pdf_asset_profile_from_context(context),
-        asset_output_dir=pdf_asset_output_dir(context),
+        asset_output_dir=pdf_asset_output_dir(context, doi=doi),
         browser_cookies=list(pdf_context_seed.get("browser_cookies") or []),
         browser_user_agent=pdf_context_seed.get("browser_user_agent")
         or getattr(runtime, "user_agent", None),

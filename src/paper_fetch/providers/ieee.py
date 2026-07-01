@@ -382,7 +382,7 @@ class IeeeClient(ProviderClient):
             else None
         )
         effective_asset_profile = pdf_asset_profile_from_context(context)
-        asset_output_dir = pdf_asset_output_dir(context, asset_profile=effective_asset_profile)
+        asset_output_dir = pdf_asset_output_dir(context, asset_profile=effective_asset_profile, doi=landing_attempt.normalized_doi)
         direct_failure: PdfFetchFailure | None = None
         try:
             pdf_result = PdfFallbackStrategy(

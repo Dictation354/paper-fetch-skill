@@ -354,7 +354,7 @@ class RoyalsocietypublishingClient(ProviderClient):
                 pdf_result = pdf_fetch_result_from_bytes(
                     artifact_dir=None,
                     asset_profile=effective_asset_profile,
-                    asset_output_dir=pdf_asset_output_dir(context, asset_profile=effective_asset_profile),
+                    asset_output_dir=pdf_asset_output_dir(context, asset_profile=effective_asset_profile, doi=doi),
                     source_url=candidate,
                     final_url=final_url,
                     pdf_bytes=pdf_bytes,

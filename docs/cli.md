@@ -124,7 +124,7 @@ paper-fetch --query-file ./queries.txt \
 
 - Markdown artifact：`<doi>.md`
 - 资产目录：`<doi>_assets/`
-- PDF fallback 源文件
+- PDF fallback 源文件，文件名优先使用 provider 抓取后合并的标题、作者和年份元数据
 - provider 原始 HTML/XML/PDF
 - HTTP textual cache：`.paper-fetch-http-cache/`
 - adapter cache 或调试 JSON sidecar
@@ -153,7 +153,7 @@ CLI 默认：
 --asset-profile body
 ```
 
-`--artifact-mode markdown-assets` 保存 Markdown、按 `--asset-profile` 保存本地资产，并保留 PDF fallback 源文件；不会保存 provider 原始 HTML/XML、调试 JSON sidecar 或 HTTP textual cache。
+`--artifact-mode markdown-assets` 保存 Markdown、按 `--asset-profile` 保存本地资产，并保留 PDF fallback 源文件；PDF 源文件名优先使用 provider 抓取后合并的标题、作者和年份元数据。不会保存 provider 原始 HTML/XML、调试 JSON sidecar 或 HTTP textual cache。
 
 `--artifact-mode all` 保留完整调试 artifact，包括 provider HTML/PDF、辅助 artifact、HTTP textual cache 和调试 JSON sidecar 等。
 
@@ -169,7 +169,7 @@ CLI 默认：
 - `body`：默认值，保存正文图片、图表、公式图片等。
 - `all`：在正文资产之外，额外保存可识别的补充材料等相关资产。
 
-PDF fallback 在 `body` / `all` 且 artifact mode 允许资产落盘时，会保存 `pymupdf4llm` 从 PDF 导出的正文图片到 `body_assets/`；`none` 或 `--artifact-mode none` 保持不保存本地图片资产。
+PDF fallback 在 `body` / `all` 且 artifact mode 允许资产落盘时，会保存 `pymupdf4llm` 从 PDF 导出的正文图片到 `<doi>_assets/`；`none` 或 `--artifact-mode none` 保持不保存本地图片资产。
 
 当 artifact mode 或 `--no-download` 禁止资产落盘时，即使 `--asset-profile` 是 `body` 或 `all`，资产也不会保存。
 

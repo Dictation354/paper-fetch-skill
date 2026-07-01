@@ -392,7 +392,7 @@ class PlosClient(ProviderClient):
                 headers=default_pdf_headers(self.user_agent, referer=candidate),
                 timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
                 asset_profile=effective_asset_profile,
-                asset_output_dir=pdf_asset_output_dir(context, asset_profile=effective_asset_profile),
+                asset_output_dir=pdf_asset_output_dir(context, asset_profile=effective_asset_profile, doi=doi),
                 fetcher=fetch_pdf_over_http,
             ).fetch([candidate])
         except PdfFetchFailure as exc:

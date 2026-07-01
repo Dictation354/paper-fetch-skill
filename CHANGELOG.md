@@ -6,6 +6,18 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 2.7.1 - 2026-07-01
+
+### Changed
+
+- PDF/ePDF fallback image exports now use the same DOI-scoped `<doi>_assets/` directory as HTML/XML asset downloads when a DOI is available, while retaining the legacy `body_assets/` fallback for DOI-less internal calls.
+
+### Fixed
+
+- AMS formula image extraction now reads lazy `data-image-src` GIF URLs before `Blank.svg` placeholders, so image-only equations are rendered and downloaded from the real publisher formula assets.
+- AMS direct HTTP HTML preflight now follows DOI 3xx redirects to the publisher full-text page before parsing while still rejecting challenge pages, so public AMS articles can stay on the no-browser `ams_html` path instead of falling through to browser/PDF fallback.
+- PDF fallback source files now prefer merged provider payload metadata for artifact filenames, so arXiv paths that learn title, authors, and year after fetch no longer fall back to `unknown_unknown_<doi>.pdf`.
+
 ## 2.7.0 - 2026-07-01
 
 ### Added

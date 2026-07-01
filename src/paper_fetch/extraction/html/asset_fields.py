@@ -16,7 +16,7 @@ FULL_SIZE_IMAGE_ATTRS = (
     "data-download-url",
 )
 
-PREVIEW_IMAGE_ATTRS = ("data-src", "src", "data-lazy-src")
+PREVIEW_IMAGE_ATTRS = ("data-src", "data-image-src", "src", "data-lazy-src")
 
 DEFAULT_ASSET_URL_FIELDS = (
     "url",

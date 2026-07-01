@@ -797,7 +797,7 @@ class ElsevierClient(ProviderClient):
                 response,
                 artifact_dir=None,
                 asset_profile=effective_asset_profile,
-                asset_output_dir=pdf_asset_output_dir(context, asset_profile=effective_asset_profile),
+                asset_output_dir=pdf_asset_output_dir(context, asset_profile=effective_asset_profile, doi=doi),
                 source_url=url,
                 final_url=final_url,
                 not_pdf_message="Elsevier official PDF fallback did not return a PDF file.",

@@ -270,6 +270,142 @@ class AmsProviderTests(AtyponBrowserWorkflowProviderTestCase):
         self.assertIn("Chrome/", request_headers["User-Agent"])
         self.assertEqual(request_headers["Referer"], AMS_LANDING_URL)
 
+    def test_ams_direct_http_preflight_follows_doi_redirect_without_browser_runtime(
+        self,
+    ) -> None:
+        doi_landing_url = "https://journals.ametsoc.org/doi/10.1175/JCLI-D-23-0738.1"
+        html = (
+            "<html><head><meta name='citation_author' content='Ada Example'></head>"
+            "<body><div id='articleBody'><section id='bodymatter'><h2>Results</h2>"
+            "<p>Body text.</p></section></div></body></html>"
+        )
+        transport = AssetTransport(
+            {
+                ("GET", doi_landing_url): {
+                    "status_code": 301,
+                    "headers": {
+                        "content-type": "text/html; charset=utf-8",
+                        "location": AMS_LANDING_URL,
+                    },
+                    "body": b"<html><body>DOI Resolve</body></html>",
+                    "url": doi_landing_url,
+                },
+                ("GET", AMS_LANDING_URL): {
+                    "status_code": 200,
+                    "headers": {"content-type": "text/html; charset=utf-8"},
+                    "body": html.encode("utf-8"),
+                    "url": AMS_LANDING_URL,
+                },
+            }
+        )
+        metadata = {**self._metadata(), "landing_page_url": doi_landing_url}
+        client = AmsClient(transport=transport, env={})
+        mocked_load_runtime = mock.Mock()
+        mocked_ensure_runtime = mock.Mock()
+        mocked_browser_html = mock.Mock()
+        install_browser_workflow_deps(
+            client,
+            load_runtime_config=mocked_load_runtime,
+            ensure_runtime_ready=mocked_ensure_runtime,
+            fetch_html_with_browser=mocked_browser_html,
+            _cached_browser_workflow_markdown=mock.Mock(
+                return_value=(
+                    f"# {AMS_TITLE}\n\n## Results\n\n" + ("Body text " * 120),
+                    {"title": AMS_TITLE},
+                )
+            ),
+        )
+
+        raw_payload = client.fetch_raw_fulltext(AMS_DOI, metadata)
+
+        self.assertEqual(_payload_route(raw_payload), "html")
+        self.assertEqual(raw_payload.source_url, AMS_LANDING_URL)
+        self.assertEqual(raw_payload.content.fetcher, "direct_http")
+        self.assertEqual(
+            raw_payload.content.browser_context_seed["browser_final_url"],
+            AMS_LANDING_URL,
+        )
+        mocked_load_runtime.assert_not_called()
+        mocked_ensure_runtime.assert_not_called()
+        mocked_browser_html.assert_not_called()
+        self.assertEqual(
+            [call["url"] for call in transport.calls],
+            [doi_landing_url, AMS_LANDING_URL],
+        )
+        self.assertIn("Chrome/", transport.calls[0]["headers"]["User-Agent"])
+        self.assertEqual(transport.calls[0]["headers"]["Referer"], doi_landing_url)
+        self.assertEqual(transport.calls[1]["headers"]["Referer"], doi_landing_url)
+
+    def test_ams_direct_http_preflight_falls_back_when_redirect_reaches_challenge(
+        self,
+    ) -> None:
+        doi_landing_url = "https://journals.ametsoc.org/doi/10.1175/JCLI-D-23-0738.1"
+        challenge_url = "https://journals.ametsoc.org/view/journals/clim/37/24/JCLI-D-23-0738.1.xml"
+        transport = AssetTransport(
+            {
+                ("GET", doi_landing_url): {
+                    "status_code": 301,
+                    "headers": {
+                        "content-type": "text/html; charset=utf-8",
+                        "location": challenge_url,
+                    },
+                    "body": b"<html><body>DOI Resolve</body></html>",
+                    "url": doi_landing_url,
+                },
+                ("GET", challenge_url): {
+                    "status_code": 200,
+                    "headers": {"content-type": "text/html; charset=utf-8"},
+                    "body": (
+                        b"<html><body><h1>Let's confirm you are human</h1>"
+                        b"<p>Complete the security check before continuing.</p></body></html>"
+                    ),
+                    "url": challenge_url,
+                },
+            }
+        )
+        metadata = {**self._metadata(), "landing_page_url": doi_landing_url}
+        client = AmsClient(transport=transport, env={})
+        with tempfile.TemporaryDirectory() as tmpdir:
+            runtime = self._runtime_config(tmpdir, "ams", AMS_DOI)
+            mocked_browser_html = mock.Mock(
+                return_value=browser_runtime.BrowserFetchedHtml(
+                    source_url=AMS_LANDING_URL,
+                    final_url=AMS_LANDING_URL,
+                    html=(
+                        "<html><head><meta name='citation_author' content='Ada Example'></head>"
+                        "<body><article><section id='bodymatter'><h2>Results</h2>"
+                        "<p>Body text.</p></section></article></body></html>"
+                    ),
+                    response_status=200,
+                    response_headers={"content-type": "text/html"},
+                    title=AMS_TITLE,
+                    summary="AMS full text",
+                    browser_context_seed={},
+                )
+            )
+            install_browser_workflow_deps(
+                client,
+                load_runtime_config=mock.Mock(return_value=runtime),
+                ensure_runtime_ready=mock.Mock(),
+                fetch_html_with_browser=mocked_browser_html,
+                extract_atypon_browser_workflow_markdown=mock.Mock(
+                    return_value=(
+                        f"# {AMS_TITLE}\n\n## Results\n\n" + ("Body text " * 120),
+                        {"title": AMS_TITLE},
+                    )
+                ),
+            )
+
+            raw_payload = client.fetch_raw_fulltext(AMS_DOI, metadata)
+
+        self.assertEqual(_payload_route(raw_payload), "html")
+        self.assertNotEqual(raw_payload.content.fetcher, "direct_http")
+        mocked_browser_html.assert_called_once()
+        self.assertEqual(
+            [call["url"] for call in transport.calls],
+            [doi_landing_url, challenge_url],
+        )
+
     def test_ams_direct_http_preflight_falls_back_to_browser_runtime_on_403(
         self,
     ) -> None:
@@ -541,6 +677,81 @@ class AmsProviderTests(AtyponBrowserWorkflowProviderTestCase):
             "https://journals.ametsoc.org/view/journals/clim/37/24/full-JCLI-D-23-0738.1-f1.jpg",
         )
         self.assertNotIn("Blank.svg", assets[0]["url"])
+
+    def test_ams_formula_asset_extractor_uses_lazy_formula_image(self) -> None:
+        html = """
+        <article>
+          <figure>
+            <img
+              data-image-src="/view/journals/hydr/20/1/images/inline-jhm-d-18-0159_1-f1.jpg"
+              src="/skin/site/img/Blank.svg"
+              alt="Fig. 1."
+            />
+            <figcaption><b>Fig. 1.</b> Schematic.</figcaption>
+          </figure>
+          <section>
+            <h2>1. Introduction</h2>
+            <p>
+              This article section contains enough narrative body text for the
+              AMS browser workflow quality gate while keeping the fixture
+              focused on lazy formula image handling. The paragraph describes
+              atmospheric moisture transport, precipitation recycling, regional
+              source attribution, and trajectory-based diagnostics in ordinary
+              prose so that extraction can distinguish it from a gallery shell.
+              The text intentionally continues with additional body content
+              about evaporation, precipitable water, local and external source
+              regions, and hydrologic interpretation before the equation image.
+            </p>
+            <div class="formula" id="e1">
+              <div class="image-wrapper flex flex-col flex-align-start">
+                <img
+                  data-image-src="/view/journals/hydr/20/1/images/inline-jhm-d-18-0159_1-e1.gif"
+                  src="/skin/site/img/Blank.svg"
+                  alt="e1"
+                />
+              </div>
+            </div>
+            <p>
+              The following sentence confirms that normal article prose resumes
+              after the equation and remains separate from the formula image.
+            </p>
+          </section>
+        </article>
+        """
+
+        assets = _ams_html.scoped_asset_extractor(
+            html,
+            "https://journals.ametsoc.org/view/journals/hydr/20/1/jhm-d-18-0159_1.xml",
+            asset_profile="body",
+        )
+        figure_assets = [asset for asset in assets if asset.get("kind") == "figure"]
+        formula_assets = [asset for asset in assets if asset.get("kind") == "formula"]
+
+        self.assertEqual(len(figure_assets), 1)
+        self.assertEqual(len(formula_assets), 1)
+        self.assertEqual(formula_assets[0]["heading"], "e1")
+        self.assertEqual(
+            formula_assets[0]["url"],
+            (
+                "https://journals.ametsoc.org/view/journals/hydr/20/1/images/"
+                "inline-jhm-d-18-0159_1-e1.gif"
+            ),
+        )
+        self.assertNotIn("Blank.svg", formula_assets[0]["url"])
+        self.assertEqual(figure_assets[0]["kind"], "figure")
+
+        markdown, _ = extract_atypon_browser_workflow_markdown(
+            html,
+            "https://journals.ametsoc.org/view/journals/hydr/20/1/jhm-d-18-0159_1.xml",
+            "ams",
+            metadata={"doi": "10.1175/JHM-D-18-0159.1"},
+        )
+
+        self.assertIn(
+            "![Formula](/view/journals/hydr/20/1/images/inline-jhm-d-18-0159_1-e1.gif)",
+            markdown,
+        )
+        self.assertNotIn("![Formula](/skin/site/img/Blank.svg)", markdown)
 
     def test_ams_asset_extractor_prefers_download_figure_source_file(self) -> None:
         html = """

@@ -546,7 +546,11 @@ class CopernicusClient(ProviderClient):
                 headers=self._pdf_headers(referer=attempt.response_url),
                 timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
                 asset_profile=effective_asset_profile,
-                asset_output_dir=pdf_asset_output_dir(context, asset_profile=effective_asset_profile),
+                asset_output_dir=pdf_asset_output_dir(
+                    context,
+                    asset_profile=effective_asset_profile,
+                    doi=attempt.normalized_doi,
+                ),
                 fetcher=fetch_pdf_over_http,
             ).fetch(attempt.pdf_candidates)
         except PdfFetchFailure as exc:
