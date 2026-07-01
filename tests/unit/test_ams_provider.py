@@ -12,6 +12,9 @@ from paper_fetch import config
 from paper_fetch.models import article_from_markdown
 from paper_fetch.providers import _ams_html, browser_runtime, browser_workflow
 from paper_fetch.providers.ams import AmsClient
+from paper_fetch.providers.atypon_browser_workflow.asset_scopes import (
+    extract_browser_workflow_asset_html_scopes,
+)
 from paper_fetch.providers.atypon_browser_workflow.markdown import (
     extract_atypon_browser_workflow_markdown,
 )
@@ -20,9 +23,11 @@ from tests.unit._browser_workflow_deps import install_browser_workflow_deps
 from tests.unit._paper_fetch_support import fulltext_pdf_bytes
 
 from ._atypon_browser_workflow_provider_support import (
+    AssetTransport,
     AtyponBrowserWorkflowProviderTestCase,
     _payload_route,
     _payload_source_trail,
+    _typed_raw_payload,
 )
 
 
@@ -207,6 +212,183 @@ class AmsProviderTests(AtyponBrowserWorkflowProviderTestCase):
         self.assertEqual(article.source, "ams_html")
         self.assertIn("fulltext:ams_html_ok", article.quality.source_trail)
 
+    def test_ams_direct_http_preflight_succeeds_without_browser_runtime(self) -> None:
+        html = (
+            "<html><head><meta name='citation_author' content='Ada Example'></head>"
+            "<body><div id='articleBody'><section id='bodymatter'><h2>Results</h2>"
+            "<p>Body text.</p></section></div></body></html>"
+        )
+        transport = AssetTransport(
+            {
+                ("GET", AMS_LANDING_URL): {
+                    "status_code": 200,
+                    "headers": {"content-type": "text/html; charset=utf-8"},
+                    "body": html.encode("utf-8"),
+                    "url": AMS_LANDING_URL,
+                }
+            }
+        )
+        client = AmsClient(transport=transport, env={})
+        mocked_load_runtime = mock.Mock()
+        mocked_ensure_runtime = mock.Mock()
+        mocked_browser_html = mock.Mock()
+        install_browser_workflow_deps(
+            client,
+            load_runtime_config=mocked_load_runtime,
+            ensure_runtime_ready=mocked_ensure_runtime,
+            fetch_html_with_browser=mocked_browser_html,
+            _cached_browser_workflow_markdown=mock.Mock(
+                return_value=(
+                    f"# {AMS_TITLE}\n\n## Results\n\n" + ("Body text " * 120),
+                    {"title": AMS_TITLE},
+                )
+            ),
+        )
+
+        raw_payload = client.fetch_raw_fulltext(AMS_DOI, self._metadata())
+
+        self.assertEqual(_payload_route(raw_payload), "html")
+        self.assertEqual(raw_payload.source_url, AMS_LANDING_URL)
+        self.assertEqual(raw_payload.content.fetcher, "direct_http")
+        self.assertEqual(
+            raw_payload.content.diagnostics["html_fetcher"],
+            "direct_http",
+        )
+        self.assertEqual(
+            raw_payload.content.browser_context_seed["paper_fetch_html_fetcher"],
+            "direct_http",
+        )
+        self.assertIn(
+            "Chrome/",
+            raw_payload.content.browser_context_seed["browser_user_agent"],
+        )
+        mocked_load_runtime.assert_not_called()
+        mocked_ensure_runtime.assert_not_called()
+        mocked_browser_html.assert_not_called()
+        self.assertEqual(len(transport.calls), 1)
+        request_headers = transport.calls[0]["headers"]
+        self.assertIn("Chrome/", request_headers["User-Agent"])
+        self.assertEqual(request_headers["Referer"], AMS_LANDING_URL)
+
+    def test_ams_direct_http_preflight_falls_back_to_browser_runtime_on_403(
+        self,
+    ) -> None:
+        transport = AssetTransport(
+            {
+                ("GET", AMS_LANDING_URL): {
+                    "status_code": 403,
+                    "headers": {"content-type": "text/html"},
+                    "body": b"<html><title>Forbidden</title></html>",
+                    "url": AMS_LANDING_URL,
+                }
+            }
+        )
+        client = AmsClient(transport=transport, env={})
+        with tempfile.TemporaryDirectory() as tmpdir:
+            runtime = self._runtime_config(tmpdir, "ams", AMS_DOI)
+            mocked_browser_html = mock.Mock(
+                return_value=browser_runtime.BrowserFetchedHtml(
+                    source_url=AMS_LANDING_URL,
+                    final_url=AMS_LANDING_URL,
+                    html=(
+                        "<html><head><meta name='citation_author' content='Ada Example'></head>"
+                        "<body><article><section id='bodymatter'><h2>Results</h2>"
+                        "<p>Body text.</p></section></article></body></html>"
+                    ),
+                    response_status=200,
+                    response_headers={"content-type": "text/html"},
+                    title=AMS_TITLE,
+                    summary="AMS full text",
+                    browser_context_seed={},
+                )
+            )
+            install_browser_workflow_deps(
+                client,
+                load_runtime_config=mock.Mock(return_value=runtime),
+                ensure_runtime_ready=mock.Mock(),
+                fetch_html_with_browser=mocked_browser_html,
+                extract_atypon_browser_workflow_markdown=mock.Mock(
+                    return_value=(
+                        f"# {AMS_TITLE}\n\n## Results\n\n" + ("Body text " * 120),
+                        {"title": AMS_TITLE},
+                    )
+                ),
+            )
+
+            raw_payload = client.fetch_raw_fulltext(AMS_DOI, self._metadata())
+
+        self.assertEqual(_payload_route(raw_payload), "html")
+        self.assertNotEqual(raw_payload.content.fetcher, "direct_http")
+        mocked_browser_html.assert_called_once()
+        self.assertEqual(len(transport.calls), 1)
+
+    def test_ams_direct_http_asset_download_uses_browser_seed_without_runtime(
+        self,
+    ) -> None:
+        browser_user_agent = (
+            "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+            "(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+        )
+        raw_payload = _typed_raw_payload(
+            provider="ams",
+            source_url=AMS_LANDING_URL,
+            content_type="text/html",
+            body=b"<html></html>",
+            route="html",
+            browser_context_seed={
+                "browser_final_url": AMS_LANDING_URL,
+                "browser_user_agent": browser_user_agent,
+                "paper_fetch_html_fetcher": "direct_http",
+            },
+        )
+        client = AmsClient(transport=AssetTransport({}), env={})
+        mocked_load_runtime = mock.Mock()
+        mocked_ensure_runtime = mock.Mock()
+        mocked_image_builder = mock.Mock()
+        mocked_download_assets = mock.Mock(
+            return_value={"assets": [], "asset_failures": []}
+        )
+        install_browser_workflow_deps(
+            client,
+            load_runtime_config=mocked_load_runtime,
+            ensure_runtime_ready=mocked_ensure_runtime,
+            _build_shared_browser_image_fetcher=mocked_image_builder,
+            download_assets=mocked_download_assets,
+        )
+        figure_asset = {
+            "kind": "figure",
+            "heading": "Figure 1",
+            "download_url": "https://journals.ametsoc.org/view/journals/clim/37/24/JCLI-D-23-0738.1-f1.eps",
+            "full_size_url": "https://journals.ametsoc.org/view/journals/clim/37/24/full-JCLI-D-23-0738.1-f1.jpg",
+            "section": "body",
+        }
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            result = client._download_browser_backed_related_assets(
+                AMS_DOI,
+                self._metadata(),
+                raw_payload,
+                Path(tmpdir),
+                asset_profile="body",
+                assets=[figure_asset],
+            )
+
+        self.assertEqual(result, {"assets": [], "asset_failures": []})
+        mocked_load_runtime.assert_not_called()
+        mocked_ensure_runtime.assert_not_called()
+        mocked_image_builder.assert_not_called()
+        mocked_download_assets.assert_called_once()
+        call = mocked_download_assets.call_args
+        self.assertEqual(call.kwargs["headers"], {"Referer": AMS_LANDING_URL})
+        self.assertEqual(
+            call.kwargs["browser_context_seed"]["browser_user_agent"],
+            browser_user_agent,
+        )
+        self.assertEqual(
+            call.kwargs["seed_urls"],
+            [AMS_LANDING_URL],
+        )
+
     def test_ams_pdf_fallback_uses_downloadpdf_crossref_candidate(self) -> None:
         client = AmsClient(transport=None, env={})
         seed = {
@@ -359,6 +541,158 @@ class AmsProviderTests(AtyponBrowserWorkflowProviderTestCase):
             "https://journals.ametsoc.org/view/journals/clim/37/24/full-JCLI-D-23-0738.1-f1.jpg",
         )
         self.assertNotIn("Blank.svg", assets[0]["url"])
+
+    def test_ams_asset_extractor_prefers_download_figure_source_file(self) -> None:
+        html = """
+        <article>
+          <div id="fig2" class="figure">
+            <figure>
+              <div class="figure-image-wrapper">
+                <img
+                  data-image-src="/view/journals/apme/63/12/inline-JAMC-D-24-0048.1-f2.jpg"
+                  src="/skin/site/img/Blank.svg"
+                  alt="Fig. 2."
+                />
+                <pf-box class="figure-popover">
+                  <img
+                    data-image-src="/view/journals/apme/63/12/full-JAMC-D-24-0048.1-f2.jpg"
+                    src="/skin/site/img/Blank.svg"
+                    alt="Fig. 2."
+                  />
+                </pf-box>
+              </div>
+              <div class="figure-text-wrapper">
+                <figcaption>Fig. 2.</figcaption>
+                <p>U-Net model architecture is shown here.</p>
+                <ul>
+                  <li class="download-figure">
+                    <a download="JAMC-D-24-0048.1-f2.eps"
+                       href="/view/journals/apme/63/12/JAMC-D-24-0048.1-f2.eps">Download Figure</a>
+                  </li>
+                  <li class="download-figure">
+                    <a href="#" class="export-figure-ppt"
+                       data-image-uris="/view/journals/apme/63/12/full-JAMC-D-24-0048.1-f2.jpg">
+                       Download figure as PowerPoint slide
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </figure>
+          </div>
+        </article>
+        """
+
+        assets = _ams_html.scoped_asset_extractor(
+            html,
+            AMS_LANDING_URL,
+            asset_profile="body",
+        )
+
+        self.assertEqual(len(assets), 1)
+        self.assertEqual(
+            assets[0]["download_url"],
+            "https://journals.ametsoc.org/view/journals/apme/63/12/JAMC-D-24-0048.1-f2.eps",
+        )
+        self.assertEqual(assets[0]["source_asset_format"], "eps")
+        self.assertEqual(assets[0]["source_filename"], "JAMC-D-24-0048.1-f2.eps")
+        self.assertEqual(
+            assets[0]["full_size_url"],
+            "https://journals.ametsoc.org/view/journals/apme/63/12/full-JAMC-D-24-0048.1-f2.jpg",
+        )
+        self.assertNotEqual(assets[0]["download_url"], "#")
+
+    def test_ams_browser_asset_scope_preserves_download_figure_source_after_cleanup(
+        self,
+    ) -> None:
+        html = """
+        <html>
+          <body>
+            <div id="articleBody">
+              <p>
+                Drought monitoring body text with enough prose to select the
+                article body container for browser workflow asset extraction.
+              </p>
+              <div id="fig2" class="figure">
+                <figure>
+                  <div class="figure-image-wrapper">
+                    <img
+                      data-image-src="/view/journals/apme/63/12/inline-JAMC-D-24-0048.1-f2.jpg"
+                      src="/skin/site/img/Blank.svg"
+                      alt="Fig. 2."
+                    />
+                    <pf-box class="figure-popover">
+                      <img
+                        data-image-src="/view/journals/apme/63/12/full-JAMC-D-24-0048.1-f2.jpg"
+                        src="/skin/site/img/Blank.svg"
+                        alt="Fig. 2."
+                      />
+                    </pf-box>
+                  </div>
+                  <div class="figure-text-wrapper">
+                    <figcaption>Fig. 2.</figcaption>
+                    <p>U-Net model architecture is shown here.</p>
+                    <ul>
+                      <li class="download-figure">
+                        <a download="JAMC-D-24-0048.1-f2.eps"
+                           href="/view/journals/apme/63/12/JAMC-D-24-0048.1-f2.eps">Download Figure</a>
+                      </li>
+                      <li class="download-figure">
+                        <a href="#" class="export-figure-ppt"
+                           data-image-uris="/view/journals/apme/63/12/full-JAMC-D-24-0048.1-f2.jpg">
+                           Download figure as PowerPoint slide
+                        </a>
+                      </li>
+                    </ul>
+                  </div>
+                </figure>
+              </div>
+            </div>
+          </body>
+        </html>
+        """
+
+        body_html, supplementary_html = extract_browser_workflow_asset_html_scopes(
+            html,
+            AMS_LANDING_URL,
+            "ams",
+        )
+        assets = _ams_html.scoped_asset_extractor(
+            body_html,
+            AMS_LANDING_URL,
+            asset_profile="body",
+            supplementary_html_text=supplementary_html,
+        )
+
+        self.assertEqual(len(assets), 1)
+        self.assertEqual(
+            assets[0]["download_url"],
+            "https://journals.ametsoc.org/view/journals/apme/63/12/JAMC-D-24-0048.1-f2.eps",
+        )
+        self.assertEqual(assets[0]["source_asset_format"], "eps")
+        self.assertEqual(assets[0]["source_filename"], "JAMC-D-24-0048.1-f2.eps")
+
+    def test_ams_fixture_extracts_mixed_tiff_and_eps_download_figure_sources(
+        self,
+    ) -> None:
+        doi = "10.1175/jamc-d-24-0048.1"
+        assets = _ams_html.scoped_asset_extractor(
+            _fixture_html(doi),
+            _fixture_source_url(doi),
+            asset_profile="body",
+        )
+        figures = [asset for asset in assets if asset.get("kind") == "figure"]
+
+        figure1 = next(
+            asset for asset in figures if str(asset.get("full_size_url", "")).endswith("-f1.jpg")
+        )
+        figure2 = next(
+            asset for asset in figures if str(asset.get("full_size_url", "")).endswith("-f2.jpg")
+        )
+
+        self.assertTrue(str(figure1.get("download_url", "")).endswith("-f1.tif"))
+        self.assertEqual(figure1.get("source_asset_format"), "tiff")
+        self.assertTrue(str(figure2.get("download_url", "")).endswith("-f2.eps"))
+        self.assertEqual(figure2.get("source_asset_format"), "eps")
 
     def test_ams_tablewrap_image_does_not_duplicate_generic_figure_asset(self) -> None:
         html = """

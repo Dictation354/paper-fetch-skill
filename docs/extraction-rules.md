@@ -524,9 +524,9 @@ metadata
   - 诊断字段不能替代用户可见内容；caption、占位和 warnings 仍由渲染规则决定。
 
 <a id="rule-browser-primary-image-download-path"></a>
-### 浏览器工作流图片下载必须使用 CDP browser connection 主链路
+### 浏览器工作流图片下载必须使用浏览器上下文或浏览器等价请求头
 
-- 这条规则约束的是：使用 browser workflow 的 provider 在下载正文 figure / table / formula 图片时，必须以 `RuntimeContext` / `BrowserContextManager` 管理的 CDP browser connection 作为主链路；同一 runtime 内复用 keyed browser manager，每个阶段或 worker 线程创建隔离的 seeded context/page，preview fallback 也通过同一线程的 context 获取。Atypon/AMS 这类 lazy image 页面里的 `Blank.svg` / `Blank.png` 只允许作为待加载占位信号，不能作为成功正文 asset 保存；当 `download_url` / `full_size_url` 指向真实 `full-*.jpg` 时，下载候选和最终 `source_url` 必须指向真实图片响应。
+- 这条规则约束的是：使用 browser workflow 的 provider 在下载正文 figure / table / formula 图片时，必须以 `RuntimeContext` / `BrowserContextManager` 管理的 CDP browser connection 作为主链路；AMS direct HTTP HTML preflight 成功路径例外，但它的正文图片 HTTP 请求必须继承浏览器 UA 和正文 Referer。同一 runtime 内复用 keyed browser manager，每个阶段或 worker 线程创建隔离的 seeded context/page，preview fallback 也通过同一线程的 context 获取。Atypon/AMS 这类 lazy image 页面里的 `Blank.svg` / `Blank.png` 只允许作为待加载占位信号，不能作为成功正文 asset 保存；当 `download_url` / `full_size_url` 指向真实 `full-*.jpg` 时，下载候选和最终 `source_url` 必须指向真实图片响应。
 - 如果违反，用户会看到：目标站点明明在浏览器会话里可见图片，系统却因为普通 HTTP challenge 或重复 context 冷启动而稳定缺图，或者所有本地图片都变成相同的 `Blank.png` 占位图。
 - 它对应的阶段是：`asset-download`、`asset-validation`。
 - Owner：`paper_fetch.providers.browser_workflow.fetchers`。
@@ -540,8 +540,9 @@ metadata
     - [`../tests/unit/test_atypon_browser_workflow_provider_asset_failures.py`](../tests/unit/test_atypon_browser_workflow_provider_asset_failures.py) 中的 `test_pnas_provider_downloads_preview_through_shared_browser_when_no_full_size_candidate`
     - [`../tests/unit/test_atypon_browser_workflow_provider_retries.py`](../tests/unit/test_atypon_browser_workflow_provider_retries.py) 中的 `test_wiley_provider_download_related_assets_uses_shared_browser_primary_path`
     - [`../tests/unit/test_atypon_browser_workflow_provider_retries.py`](../tests/unit/test_atypon_browser_workflow_provider_retries.py) 中的 `test_wiley_provider_download_related_assets_reuses_shared_browser_fetcher_across_assets`
+    - [`../tests/unit/test_ams_provider.py`](../tests/unit/test_ams_provider.py) 中的 `test_ams_direct_http_asset_download_uses_browser_seed_without_runtime`
 - 边界说明：
-  - 这条规则目前适用于 `wiley`、`science`、`pnas`、`ams`、`annualreviews`、`acs`、`iop`、`aip`、`mdpi` 的 browser workflow HTML 成功路径。
+  - 这条规则目前适用于 `wiley`、`science`、`pnas`、`ams`、`annualreviews`、`acs`、`iop`、`aip`、`mdpi` 的 browser workflow HTML 成功路径；AMS direct HTTP HTML 成功路径不启动 CDP browser，但仍必须传递 browser-equivalent seed。
   - 它不改变 `elsevier` XML、`springer` direct HTML 或 PDF fallback 的下载语义。
 
 <a id="rule-table-flatten-or-list"></a>
@@ -1445,6 +1446,8 @@ PNAS 的 supplementary 资产范围见 [Supplementary discovery 必须来自明�
 ### AMS HTML 必须保留完整正文并把图表图片回填原位
 
 - 这条规则约束的是：AMS browser workflow HTML 要从 `#articleBody` / `.container-fulltext-display` 等完整正文容器抽取正文，保留后部 section、Acknowledgments 和 Data availability；正文中的 figure 与 image-only `.tableWrap` 要在原始位置渲染图片块与 caption；MathJax 渲染层旁边的扁平 fallback 文本不能和结构化公式重复出现；display equation 编号只来自源站明确 label 或 AMS `E...` 公式 id，`UE...` 无编号公式不合成 `Equation n.`；AMS 专用 inline renderer 要在正文和 caption 中保留 MathML、上下标和斜体变量，并保守修复上下标后 prose 括注的空格。
+- AMS 先用 direct HTTP HTML preflight 请求 `journals.ametsoc.org/view/...xml`，请求头必须包含浏览器 UA 和页面 Referer；direct 失败或正文质量门槛不通过时再回退 browser workflow。
+- AMS figure 资产候选必须优先使用源 HTML 的 `Download Figure` EPS/TIFF 链接，并保留网页 full-size JPG/PNG 作为回退；PowerPoint 下载项不是图片资产。EPS/TIFF 下载请求必须继承浏览器 UA/Referer，下载成功后应通过图片转换后端转成 PNG 用于 Markdown，本地同时保留原始源文件和转换元数据。
 - 如果违反，用户会看到：BAMS 正文在 section 2 后提前截断，图表只剩文末附录或只剩 `Table 1.` 文本无图片，`Fig . 1.` 这类标签噪声泄漏，同一公式同时出现 LaTeX 和粘连的可见 fallback 文本，`UE1` 被误渲染成重复的 `Equation 1.`，或者 caption 里出现 `ϕ 2`、正文里出现 `νn` / `</sub>(i.e.` 这类行内语义退化。
 - 它对应的阶段是：`provider-html-or-xml-extraction`、`asset-discovery`、`asset-link-rewrite`、`formula-rendering`、`final-rendering`。
 - Owner：`paper_fetch.providers._ams_html` compatibility facade、canonical `paper_fetch.providers._ams_dom` / `paper_fetch.providers._ams_assets` / `paper_fetch.providers._ams_markdown`、`paper_fetch.providers.atypon_browser_workflow`、`paper_fetch.extraction.html.figure_links` 与 `paper_fetch.models.render`。
@@ -1464,8 +1467,16 @@ PNAS 的 supplementary 资产范围见 [Supplementary discovery 必须来自明�
   - [`../tests/unit/test_ams_provider.py`](../tests/unit/test_ams_provider.py) 中的 `test_ams_inline_spacing_repairs_prose_parentheses_conservatively`
   - [`../tests/unit/test_ams_provider.py`](../tests/unit/test_ams_provider.py) 中的 `test_ams_data_availability_stays_before_appendix`
   - [`../tests/unit/test_ams_provider.py`](../tests/unit/test_ams_provider.py) 中的 `test_ams_downloaded_inline_figure_and_table_assets_do_not_repeat_at_tail`
+  - [`../tests/unit/test_ams_provider.py`](../tests/unit/test_ams_provider.py) 中的 `test_ams_direct_http_preflight_succeeds_without_browser_runtime`
+  - [`../tests/unit/test_ams_provider.py`](../tests/unit/test_ams_provider.py) 中的 `test_ams_direct_http_preflight_falls_back_to_browser_runtime_on_403`
+  - [`../tests/unit/test_ams_provider.py`](../tests/unit/test_ams_provider.py) 中的 `test_ams_asset_extractor_prefers_download_figure_source_file`
+  - [`../tests/unit/test_ams_provider.py`](../tests/unit/test_ams_provider.py) 中的 `test_ams_browser_asset_scope_preserves_download_figure_source_after_cleanup`
+  - [`../tests/unit/test_ams_provider.py`](../tests/unit/test_ams_provider.py) 中的 `test_ams_fixture_extracts_mixed_tiff_and_eps_download_figure_sources`
+  - [`../tests/unit/test_html_shared_helpers.py`](../tests/unit/test_html_shared_helpers.py) 中的 `test_download_assets_figure_kind_converts_eps_source_to_png_and_keeps_original`
+  - [`../tests/unit/test_html_shared_helpers.py`](../tests/unit/test_html_shared_helpers.py) 中的 `test_download_assets_figure_kind_falls_back_when_source_conversion_fails`
 - 边界说明：
   - Atypon 共享 asset extractor 负责正文 figure、公式图片和 supplementary material；AMS `.tableWrap` 常只有表格截图而没有真实 HTML `<table>`，只在 AMS 专用补充步骤中降级为 `kind="table"` 图片资产，并按 URL 去重，避免同一个 tableWrap 图片同时作为 generic figure 和 AMS table 发出；后续 figure 链接注入也不能把 `Table` 图片块当作 figure 顺序 fallback 消费。
+  - AMS `Download Figure` 源图是在 DOM 归一化删除下载菜单前读取并合并回正文 figure 资产的；后续下载阶段识别 EPS/TIFF payload 或 URL 扩展名，再走 Ghostscript/libvips 转换。转换失败不得让正文图直接失败，必须继续 full-size JPG/PNG fallback。
   - MathML script type 只在 `extraction/html/formula_rules.py` 维护，AMS HTML 归一化与 HTML availability 诊断复用同一组 `math/mml` / `application/mathml+xml` / `text/mml` 判定。
   - AMS display formula 不为了单调性重编号，也不为无编号公式创建 `Equation n.`；子公式如 `7a`、`9b` 保留源站原始 label。
   - AMS Data availability 如果被源站 DOM 排在 appendix 之后，Markdown 后处理只把该 section 移回 Acknowledgments 之后、首个 Appendix 之前；不移动 References、Footnotes 或 appendix 内图表。

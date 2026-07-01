@@ -16,6 +16,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 LINUX_INSTALLER = REPO_ROOT / "install-offline.sh"
 WINDOWS_INSTALLER = REPO_ROOT / "install-offline.ps1"
 WINDOWS_INSTALLER_HELPER = REPO_ROOT / "scripts" / "windows-installer-helper.ps1"
+LINUX_OFFLINE_BUILD = REPO_ROOT / "scripts" / "build-offline-package.sh"
 WINDOWS_OFFLINE_BUILD = REPO_ROOT / "scripts" / "build-offline-package-windows.ps1"
 WINDOWS_INNO_INSTALLER = REPO_ROOT / "installer" / "paper-fetch-skill.iss"
 
@@ -105,6 +106,7 @@ def _fake_python_script(version: str) -> str:
     PAPER_FETCH_ENV_FILE
     PAPER_FETCH_DOWNLOAD_DIR
     PAPER_FETCH_FORMULA_TOOLS_DIR
+    PAPER_FETCH_IMAGE_TOOLS_DIR
     MATHML_TO_LATEX_NODE_BIN
     OUT
         exit 0
@@ -204,12 +206,14 @@ class OfflineInstallTests(unittest.TestCase):
         )
         _write_executable(bundle / "bin" / "paper-fetch-mcp", "#!/usr/bin/env bash\nexit 0\n")
         _write_executable(bundle / "bin" / "paper-fetch-install-formula-tools", "#!/usr/bin/env bash\nexit 0\n")
+        _write_executable(bundle / "bin" / "paper-fetch-install-image-tools", "#!/usr/bin/env bash\nexit 0\n")
         _write_file(bundle / "skills" / "paper-fetch-skill" / "SKILL.md", "# Paper fetch skill\n")
         _write_file(
             bundle / "skills" / "paper-fetch-skill" / "references" / "tool-contract.md",
             "Tool contract\n",
         )
         _write_executable(bundle / "formula-tools" / "bin" / "texmath", "#!/usr/bin/env bash\nexit 0\n")
+        (bundle / "image-tools" / "bin").mkdir(parents=True, exist_ok=True)
 
         fake_bin = root / "fake-bin"
         _write_executable(fake_bin / "python3", _fake_python_script(python_version))
@@ -270,6 +274,7 @@ class OfflineInstallTests(unittest.TestCase):
             self.assertIn('CLOAKBROWSER_CDP_ENDPOINT="ws://127.0.0.1:9222/devtools/browser/..."', offline_env)
             self.assertIn('CLOAKBROWSER_HEADLESS="true"', offline_env)
             self.assertIn('CLOAKBROWSER_BINARY_PATH="/absolute/path/to/chrome"', offline_env)
+            self.assertIn(f'PAPER_FETCH_IMAGE_TOOLS_DIR="{bundle / "image-tools"}"', offline_env)
             self.assertNotIn("PLAYWRIGHT_BROWSERS_PATH", offline_env)
             self.assertEqual((bundle / "runtime" / "python-bin").read_text(encoding="utf-8"), f"{fake_bin / 'python3'}\n")
             self.assertIn("CloakBrowser headless: true", result.stdout)
@@ -293,6 +298,8 @@ class OfflineInstallTests(unittest.TestCase):
             bashrc = (home / ".bashrc").read_text(encoding="utf-8")
             self.assertIn(f'export PAPER_FETCH_ENV_FILE="{install_root / "offline.env"}"', bashrc)
             self.assertIn(f"{install_root / 'bin'}", bashrc)
+            self.assertIn(f"{install_root / 'image-tools' / 'bin'}", bashrc)
+            self.assertIn(f'export PAPER_FETCH_IMAGE_TOOLS_DIR="{install_root / "image-tools"}"', bashrc)
             self.assertFalse((bundle / "offline.env").exists())
             self.assertIn(f"Install directory: {install_root}", result.stdout)
 
@@ -329,6 +336,7 @@ class OfflineInstallTests(unittest.TestCase):
             self.assertIn('USER_NOTE="keep"', offline_env)
             self.assertNotIn("/old/downloads", offline_env)
             self.assertIn(f'PAPER_FETCH_DOWNLOAD_DIR="{install_root / "downloads"}"', offline_env)
+            self.assertIn(f'PAPER_FETCH_IMAGE_TOOLS_DIR="{install_root / "image-tools"}"', offline_env)
 
     def test_shell_startup_blocks_set_headless_without_legacy_browser_paths(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -343,6 +351,8 @@ class OfflineInstallTests(unittest.TestCase):
             fish_config = (home / ".config" / "fish" / "conf.d" / "paper-fetch-offline.fish").read_text(encoding="utf-8")
             self.assertIn(f'export PAPER_FETCH_ENV_FILE="{bundle / "offline.env"}"', bashrc)
             self.assertIn(f'set -gx PAPER_FETCH_ENV_FILE "{bundle / "offline.env"}"', fish_config)
+            self.assertIn(f'export PAPER_FETCH_IMAGE_TOOLS_DIR="{bundle / "image-tools"}"', bashrc)
+            self.assertIn(f'set -gx PAPER_FETCH_IMAGE_TOOLS_DIR "{bundle / "image-tools"}"', fish_config)
             self.assertIn('export CLOAKBROWSER_HEADLESS="true"', bashrc)
             self.assertIn('set -gx CLOAKBROWSER_HEADLESS "true"', fish_config)
             self.assertNotIn("PLAYWRIGHT_BROWSERS_PATH", bashrc + fish_config)
@@ -398,6 +408,7 @@ class OfflineInstallTests(unittest.TestCase):
                 f"MATHML_TO_LATEX_NODE_BIN={bundle / 'runtime' / 'site-packages' / 'playwright' / 'driver' / 'node'}",
                 codex_add,
             )
+            self.assertIn(f"PAPER_FETCH_IMAGE_TOOLS_DIR={bundle / 'image-tools'}", codex_add)
             self.assertIn("CLOAKBROWSER_HEADLESS=true", codex_add)
             self.assertFalse(any(arg.startswith("CLOAKBROWSER_BINARY_PATH=") for arg in codex_add))
             self.assertFalse(any("PLAYWRIGHT_BROWSERS_PATH" in arg for arg in codex_add))
@@ -407,6 +418,7 @@ class OfflineInstallTests(unittest.TestCase):
             self.assertIn("--", claude_add)
             self.assertLess(claude_add.index("--"), claude_add.index("paper-fetch"))
             self.assertIn(f"PAPER_FETCH_ENV_FILE={bundle / 'offline.env'}", claude_add)
+            self.assertIn(f"PAPER_FETCH_IMAGE_TOOLS_DIR={bundle / 'image-tools'}", claude_add)
 
     def test_missing_codex_cli_writes_config_toml_with_headless_without_browser_paths(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -420,6 +432,7 @@ class OfflineInstallTests(unittest.TestCase):
             self.assertIn("[mcp_servers.paper-fetch]", config)
             self.assertIn(f'PAPER_FETCH_ENV_FILE = "{bundle / "offline.env"}"', config)
             self.assertIn('MATHML_TO_LATEX_NODE_BIN = "', config)
+            self.assertIn(f'PAPER_FETCH_IMAGE_TOOLS_DIR = "{bundle / "image-tools"}"', config)
             self.assertIn('CLOAKBROWSER_HEADLESS = "true"', config)
             self.assertNotIn("CLOAKBROWSER_BINARY_PATH", config)
             self.assertNotIn("PLAYWRIGHT_BROWSERS_PATH", config)
@@ -444,8 +457,8 @@ class OfflineInstallTests(unittest.TestCase):
                     "-lc",
                     (
                         f'source "{bundle / "activate-offline.sh"}"; '
-                        'printf "%s\\n%s\\n" '
-                        '"$PAPER_FETCH_ENV_FILE" "$PAPER_FETCH_DOWNLOAD_DIR"'
+                        'printf "%s\\n%s\\n%s\\n" '
+                        '"$PAPER_FETCH_ENV_FILE" "$PAPER_FETCH_DOWNLOAD_DIR" "$PAPER_FETCH_IMAGE_TOOLS_DIR"'
                     ),
                 ],
                 text=True,
@@ -453,7 +466,10 @@ class OfflineInstallTests(unittest.TestCase):
                 check=False,
             )
             self.assertEqual(probe.returncode, 0, probe.stderr)
-            self.assertEqual(probe.stdout.splitlines(), [str(reused_env), str(bundle / "downloads")])
+            self.assertEqual(
+                probe.stdout.splitlines(),
+                [str(reused_env), str(bundle / "downloads"), str(bundle / "image-tools")],
+            )
 
             zsh = shutil.which("zsh")
             if zsh:
@@ -463,8 +479,8 @@ class OfflineInstallTests(unittest.TestCase):
                         "-lc",
                         (
                             f'source "{bundle / "activate-offline.sh"}"; '
-                            'printf "%s\\n%s\\n" '
-                            '"$PAPER_FETCH_ENV_FILE" "$PAPER_FETCH_DOWNLOAD_DIR"'
+                            'printf "%s\\n%s\\n%s\\n" '
+                            '"$PAPER_FETCH_ENV_FILE" "$PAPER_FETCH_DOWNLOAD_DIR" "$PAPER_FETCH_IMAGE_TOOLS_DIR"'
                         ),
                     ],
                     text=True,
@@ -472,7 +488,10 @@ class OfflineInstallTests(unittest.TestCase):
                     check=False,
                 )
                 self.assertEqual(zsh_probe.returncode, 0, zsh_probe.stderr)
-                self.assertEqual(zsh_probe.stdout.splitlines(), [str(reused_env), str(bundle / "downloads")])
+                self.assertEqual(
+                    zsh_probe.stdout.splitlines(),
+                    [str(reused_env), str(bundle / "downloads"), str(bundle / "image-tools")],
+                )
 
     def test_activate_script_is_sourceable_from_macos_default_zsh(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -495,8 +514,8 @@ class OfflineInstallTests(unittest.TestCase):
                     "-lc",
                     (
                         f'source "{bundle / "activate-offline.sh"}"; '
-                        'printf "%s\\n%s\\n" '
-                        '"$PAPER_FETCH_ENV_FILE" "$PAPER_FETCH_DOWNLOAD_DIR"'
+                        'printf "%s\\n%s\\n%s\\n" '
+                        '"$PAPER_FETCH_ENV_FILE" "$PAPER_FETCH_DOWNLOAD_DIR" "$PAPER_FETCH_IMAGE_TOOLS_DIR"'
                     ),
                 ],
                 text=True,
@@ -504,7 +523,10 @@ class OfflineInstallTests(unittest.TestCase):
                 check=False,
             )
             self.assertEqual(probe.returncode, 0, probe.stderr)
-            self.assertEqual(probe.stdout.splitlines(), [str(bundle / "offline.env"), str(bundle / "downloads")])
+            self.assertEqual(
+                probe.stdout.splitlines(),
+                [str(bundle / "offline.env"), str(bundle / "downloads"), str(bundle / "image-tools")],
+            )
 
     def test_uninstall_removes_user_level_integrations_without_deleting_bundle_data(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -619,6 +641,7 @@ class OfflineInstallTests(unittest.TestCase):
         self.assertNotIn("os.environ.get(\"CLOAKBROWSER_BINARY_PATH\")", script)
         self.assertNotIn("probe-launch", script)
         self.assertIn("MATHML_TO_LATEX_NODE_BIN", script)
+        self.assertIn("PAPER_FETCH_IMAGE_TOOLS_DIR", script)
         self.assertIn("playwright/driver/node.exe", script)
         self.assertIn("CLOAKBROWSER_HEADLESS = \"true\"", script)
         self.assertIn("CLOAKBROWSER_HEADLESS", script)
@@ -639,6 +662,7 @@ class OfflineInstallTests(unittest.TestCase):
         self.assertIn("# CLOAKBROWSER_BINARY_PATH", script)
         self.assertNotIn("CLOAKBROWSER_BINARY_PATH is set", script)
         self.assertIn("MATHML_TO_LATEX_NODE_BIN", script)
+        self.assertIn("PAPER_FETCH_IMAGE_TOOLS_DIR", script)
         self.assertIn("playwright/driver/node.exe", script)
         self.assertIn("bundled node.exe --version failed", script)
         self.assertIn("Test-BrowserRuntimePackage", script)
@@ -666,17 +690,28 @@ class OfflineInstallTests(unittest.TestCase):
         self.assertIn("RestoreOfflineEnv;\n    RunPostInstallHelper;", script)
         self.assertNotIn("Paper Fetch Skill post-install helper failed with exit code", script)
 
-    def test_installer_manifest_declares_mathml_node_env_for_mcp_registration(self) -> None:
+    def test_installer_manifest_declares_runtime_env_for_mcp_registration(self) -> None:
         manifest = (REPO_ROOT / "installer" / "manifest.json").read_text(encoding="utf-8")
 
         self.assertIn('"MATHML_TO_LATEX_NODE_BIN"', manifest)
+        self.assertIn('"PAPER_FETCH_IMAGE_TOOLS_DIR"', manifest)
 
     def test_windows_offline_build_writes_default_mathml_node_env(self) -> None:
         script = WINDOWS_OFFLINE_BUILD.read_text(encoding="utf-8")
 
         self.assertIn("MATHML_TO_LATEX_NODE_BIN", script)
+        self.assertIn("PAPER_FETCH_IMAGE_TOOLS_DIR", script)
+        self.assertIn("--offline-bundle", script)
+        self.assertIn("--repo-root", script)
         self.assertIn("runtime/Lib/site-packages/playwright/driver/node.exe", script)
         self.assertIn("do not rely on a bare `node` from PATH", script)
+
+    def test_linux_offline_build_uses_image_tools_offline_bundle_mode(self) -> None:
+        script = LINUX_OFFLINE_BUILD.read_text(encoding="utf-8")
+
+        self.assertIn("-m paper_fetch.image_tools.install", script)
+        self.assertIn("--offline-bundle", script)
+        self.assertIn('--repo-root "$REPO_DIR"', script)
 
 
 if __name__ == "__main__":

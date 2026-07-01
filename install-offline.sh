@@ -27,6 +27,7 @@ MCP_ENV_KEYS=(
   PAPER_FETCH_ENV_FILE
   PAPER_FETCH_DOWNLOAD_DIR
   PAPER_FETCH_FORMULA_TOOLS_DIR
+  PAPER_FETCH_IMAGE_TOOLS_DIR
   CLOAKBROWSER_HEADLESS
 )
 
@@ -355,10 +356,12 @@ check_bundle_assets() {
   require_file "$BUNDLE_ROOT/bin/paper-fetch"
   require_file "$BUNDLE_ROOT/bin/paper-fetch-mcp"
   require_file "$BUNDLE_ROOT/bin/paper-fetch-install-formula-tools"
+  require_file "$BUNDLE_ROOT/bin/paper-fetch-install-image-tools"
   [ -x "$BUNDLE_ROOT/runtime/paper-fetch-python" ] || die "Bundled private Python launcher is not executable: $BUNDLE_ROOT/runtime/paper-fetch-python"
   [ -x "$BUNDLE_ROOT/bin/paper-fetch" ] || die "Bundled CLI wrapper is not executable: $BUNDLE_ROOT/bin/paper-fetch"
   [ -x "$BUNDLE_ROOT/bin/paper-fetch-mcp" ] || die "Bundled MCP wrapper is not executable: $BUNDLE_ROOT/bin/paper-fetch-mcp"
   [ -x "$BUNDLE_ROOT/bin/paper-fetch-install-formula-tools" ] || die "Bundled formula installer wrapper is not executable: $BUNDLE_ROOT/bin/paper-fetch-install-formula-tools"
+  [ -x "$BUNDLE_ROOT/bin/paper-fetch-install-image-tools" ] || die "Bundled image installer wrapper is not executable: $BUNDLE_ROOT/bin/paper-fetch-install-image-tools"
   require_file "$BUNDLE_ROOT/formula-tools/bin/texmath"
   [ -x "$BUNDLE_ROOT/formula-tools/bin/texmath" ] || die "Bundled texmath is not executable: $BUNDLE_ROOT/formula-tools/bin/texmath"
 
@@ -394,6 +397,7 @@ mcp_env_value() {
     PAPER_FETCH_ENV_FILE) printf '%s\n' "$OFFLINE_ENV_FILE" ;;
     PAPER_FETCH_DOWNLOAD_DIR) printf '%s\n' "$INSTALL_ROOT/downloads" ;;
     PAPER_FETCH_FORMULA_TOOLS_DIR) printf '%s\n' "$INSTALL_ROOT/formula-tools" ;;
+    PAPER_FETCH_IMAGE_TOOLS_DIR) printf '%s\n' "$INSTALL_ROOT/image-tools" ;;
     MATHML_TO_LATEX_NODE_BIN) mathml_node_bin ;;
     CLOAKBROWSER_HEADLESS) cloakbrowser_headless_value ;;
     *) die "Unknown MCP env key: $key" ;;
@@ -454,20 +458,22 @@ select_shell_startup_file() {
 
 write_posix_shell_block() {
   printf '%s\n' "$MANAGED_BEGIN"
-  printf 'export PATH=%s:%s:$PATH\n' "$(quote_env_value "$INSTALL_ROOT/bin")" "$(quote_env_value "$INSTALL_ROOT/formula-tools/bin")"
+  printf 'export PATH=%s:%s:%s:$PATH\n' "$(quote_env_value "$INSTALL_ROOT/bin")" "$(quote_env_value "$INSTALL_ROOT/formula-tools/bin")" "$(quote_env_value "$INSTALL_ROOT/image-tools/bin")"
   printf 'export PAPER_FETCH_ENV_FILE=%s\n' "$(quote_env_value "$OFFLINE_ENV_FILE")"
   printf 'export PAPER_FETCH_DOWNLOAD_DIR=%s\n' "$(quote_env_value "$INSTALL_ROOT/downloads")"
   printf 'export PAPER_FETCH_FORMULA_TOOLS_DIR=%s\n' "$(quote_env_value "$INSTALL_ROOT/formula-tools")"
+  printf 'export PAPER_FETCH_IMAGE_TOOLS_DIR=%s\n' "$(quote_env_value "$INSTALL_ROOT/image-tools")"
   printf 'export CLOAKBROWSER_HEADLESS=%s\n' "$(quote_env_value "$(cloakbrowser_headless_value)")"
   printf '%s\n' "$MANAGED_END"
 }
 
 write_fish_shell_block() {
   printf '%s\n' "$MANAGED_BEGIN"
-  printf 'set -gx PATH %s %s $PATH\n' "$(quote_env_value "$INSTALL_ROOT/bin")" "$(quote_env_value "$INSTALL_ROOT/formula-tools/bin")"
+  printf 'set -gx PATH %s %s %s $PATH\n' "$(quote_env_value "$INSTALL_ROOT/bin")" "$(quote_env_value "$INSTALL_ROOT/formula-tools/bin")" "$(quote_env_value "$INSTALL_ROOT/image-tools/bin")"
   printf 'set -gx PAPER_FETCH_ENV_FILE %s\n' "$(quote_env_value "$OFFLINE_ENV_FILE")"
   printf 'set -gx PAPER_FETCH_DOWNLOAD_DIR %s\n' "$(quote_env_value "$INSTALL_ROOT/downloads")"
   printf 'set -gx PAPER_FETCH_FORMULA_TOOLS_DIR %s\n' "$(quote_env_value "$INSTALL_ROOT/formula-tools")"
+  printf 'set -gx PAPER_FETCH_IMAGE_TOOLS_DIR %s\n' "$(quote_env_value "$INSTALL_ROOT/image-tools")"
   printf 'set -gx CLOAKBROWSER_HEADLESS %s\n' "$(quote_env_value "$(cloakbrowser_headless_value)")"
   printf '%s\n' "$MANAGED_END"
 }
@@ -835,6 +841,7 @@ write_managed_env_file() {
     printf '\n%s\n' "$MANAGED_BEGIN"
     printf 'PAPER_FETCH_DOWNLOAD_DIR=%s\n' "$(quote_env_value "$INSTALL_ROOT/downloads")"
     printf 'PAPER_FETCH_FORMULA_TOOLS_DIR=%s\n' "$(quote_env_value "$INSTALL_ROOT/formula-tools")"
+    printf 'PAPER_FETCH_IMAGE_TOOLS_DIR=%s\n' "$(quote_env_value "$INSTALL_ROOT/image-tools")"
     printf 'CLOAKBROWSER_HEADLESS=%s\n' "$(quote_env_value "$(cloakbrowser_headless_value)")"
     printf 'PAPER_FETCH_BROWSER_USER_AGENT="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36"\n'
     printf '# Optional: connect to an already-running Chrome/CloakBrowser CDP endpoint.\n'
@@ -875,11 +882,12 @@ if [ -f "\$PAPER_FETCH_ENV_FILE" ]; then
   set +a
 fi
 
-export PATH="\$INSTALL_ROOT/bin:\$INSTALL_ROOT/formula-tools/bin:\$PATH"
+export PATH="\$INSTALL_ROOT/bin:\$INSTALL_ROOT/formula-tools/bin:\$INSTALL_ROOT/image-tools/bin:\$PATH"
 export PYTHONPATH="\$INSTALL_ROOT/runtime/site-packages\${PYTHONPATH:+:\$PYTHONPATH}"
 export PAPER_FETCH_ENV_FILE=$offline_env_literal
 export PAPER_FETCH_DOWNLOAD_DIR="\$INSTALL_ROOT/downloads"
 export PAPER_FETCH_FORMULA_TOOLS_DIR="\$INSTALL_ROOT/formula-tools"
+export PAPER_FETCH_IMAGE_TOOLS_DIR="\$INSTALL_ROOT/image-tools"
 export CLOAKBROWSER_HEADLESS="\${CLOAKBROWSER_HEADLESS:-$headless_value}"
 export PYTHONUTF8="\${PYTHONUTF8:-1}"
 export PYTHONIOENCODING="\${PYTHONIOENCODING:-utf-8}"
@@ -906,10 +914,11 @@ if [ -f "$PAPER_FETCH_ENV_FILE" ]; then
   set +a
 fi
 
-export PATH="$INSTALL_ROOT/bin:$INSTALL_ROOT/formula-tools/bin:$PATH"
+export PATH="$INSTALL_ROOT/bin:$INSTALL_ROOT/formula-tools/bin:$INSTALL_ROOT/image-tools/bin:$PATH"
 export PYTHONPATH="$INSTALL_ROOT/runtime/site-packages${PYTHONPATH:+:$PYTHONPATH}"
 export PAPER_FETCH_DOWNLOAD_DIR="${PAPER_FETCH_DOWNLOAD_DIR:-$INSTALL_ROOT/downloads}"
 export PAPER_FETCH_FORMULA_TOOLS_DIR="${PAPER_FETCH_FORMULA_TOOLS_DIR:-$INSTALL_ROOT/formula-tools}"
+export PAPER_FETCH_IMAGE_TOOLS_DIR="${PAPER_FETCH_IMAGE_TOOLS_DIR:-$INSTALL_ROOT/image-tools}"
 export CLOAKBROWSER_HEADLESS="${CLOAKBROWSER_HEADLESS:-__CLOAKBROWSER_HEADLESS__}"
 export PYTHONUTF8="${PYTHONUTF8:-1}"
 export PYTHONIOENCODING="${PYTHONIOENCODING:-utf-8}"
@@ -937,6 +946,12 @@ run_smoke_checks() {
   log "Running local smoke checks"
   "$INSTALL_ROOT/bin/paper-fetch" --help >/dev/null
   "$INSTALL_ROOT/formula-tools/bin/texmath" --help >/dev/null
+  if [ -x "$INSTALL_ROOT/image-tools/bin/gs" ]; then
+    "$INSTALL_ROOT/image-tools/bin/gs" --version >/dev/null
+  fi
+  if [ -x "$INSTALL_ROOT/image-tools/bin/vips" ]; then
+    "$INSTALL_ROOT/image-tools/bin/vips" --version >/dev/null
+  fi
   check_browser_runtime_package
   for key in "${MCP_ENV_KEYS[@]}"; do
     env_args+=("$key=$(mcp_env_value "$key")")
@@ -958,6 +973,7 @@ clean_install_root_payload() {
     "$INSTALL_ROOT/bin" \
     "$INSTALL_ROOT/runtime" \
     "$INSTALL_ROOT/formula-tools" \
+    "$INSTALL_ROOT/image-tools" \
     "$INSTALL_ROOT/skills" \
     "$INSTALL_ROOT/installer" \
     "$INSTALL_ROOT/install-offline.sh" \

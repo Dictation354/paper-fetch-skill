@@ -28,13 +28,13 @@ provider 与环境变量说明见 [`providers.md`](providers.md)，架构说明�
 - 创建仓库内 `.venv`
 - 安装当前 Python 包
 - 如果存在 `.env.example` 且用户配置文件还不存在，创建 `~/.config/paper-fetch/.env`
-- 安装 Python 依赖和外部公式后端；默认 provider-owned HTML bootstrap 使用 CDP browser workflow，浏览器 binary 由 cloakbrowser 在运行时按需下载/定位或通过外部 CDP endpoint 提供
+- 安装 Python 依赖、外部公式后端和图片转换后端；默认 provider-owned HTML bootstrap 使用 CDP browser workflow，浏览器 binary 由 cloakbrowser 在运行时按需下载/定位或通过外部 CDP endpoint 提供
 - 安装结束时提示 Elsevier 官方 API key 的申请入口和配置位置；抓取 Elsevier 全文前需要从 <https://dev.elsevier.com/> 申请并设置 `ELSEVIER_API_KEY`
 
 补充说明：
 
 - 这是在线一键安装入口：用户不需要手动准备公式后端；浏览器路径统一由 CDP browser workflow 负责，未配置外部 endpoint 时由 cloakbrowser 启动受控 Chrome
-- 如果只想安装 Python 包和配置骨架，不准备外部公式后端，使用 `./install.sh --lite`
+- 如果只想安装 Python 包和配置骨架，不准备外部公式或图片转换后端，使用 `./install.sh --lite`
 - 如果要装进当前 `python3` 环境而不是 `.venv`，使用 `./install.sh --system`
 - arXiv 不需要本地转换器；official HTML 不可用或质量检测失败时直接进入 PDF fallback
 - 如果只想跳过公式 Node fallback，可使用 `--no-node`
@@ -157,11 +157,12 @@ source ~/.local/share/paper-fetch-skill/activate-offline.sh
 - Playwright/CloakBrowser 相关 Python 依赖随 Linux / macOS `runtime/site-packages` 和 Windows embedded runtime 分发；浏览器 binary 不随包分发，browser workflow 会在首次需要时通过 `cloakbrowser.ensure_binary()` 下载/定位 Chrome 并自动启动本机 CDP 浏览器；也可用 `CLOAKBROWSER_CDP_ENDPOINT` 复用已运行浏览器
 - Linux `.sh` payload 不包含仓库源码快照和 `tests/` 目录；离线安装目标是运行已打包工具，不在目标机执行项目测试
 - Linux / macOS 公式工具使用包内 `formula-tools/bin/texmath`，Windows 使用 `formula-tools/bin/texmath.exe`；目标机不编译 texmath，也不运行 `npm install`
-- Linux / macOS 默认写固定安装目录内的 `offline.env`、生成可在 bash/zsh 中 `source` 的 `activate-offline.sh`、复制 `~/.codex/skills/paper-fetch-skill` 和 `~/.claude/skills/paper-fetch-skill`，并把离线 CLI PATH、formula tools PATH、`PAPER_FETCH_ENV_FILE`、`PAPER_FETCH_FORMULA_TOOLS_DIR` 等写入当前 shell 对应启动文件；`offline.env` 的 managed block 默认启用普通 Chrome `PAPER_FETCH_BROWSER_USER_AGENT` 和 `CLOAKBROWSER_HEADLESS=true`，只有显式传 `--user-config` 才会把受标记管理的运行时块合并到 `~/.config/paper-fetch/.env`
+- Linux / macOS 会配置安装目录内 `image-tools` 作为图片转换工具查找目录；离线构建不会把构建机 PATH 上的 Ghostscript/libvips 符号链接固化进包内。运行时找到 Ghostscript 时可转 EPS，找到 libvips 时可转 TIFF；缺少对应工具时只影响 AMS `Download Figure` 源图转换，网页 JPG/PNG 候选仍可回退
+- Linux / macOS 默认写固定安装目录内的 `offline.env`、生成可在 bash/zsh 中 `source` 的 `activate-offline.sh`、复制 `~/.codex/skills/paper-fetch-skill` 和 `~/.claude/skills/paper-fetch-skill`，并把离线 CLI PATH、formula tools PATH、image tools PATH、`PAPER_FETCH_ENV_FILE`、`PAPER_FETCH_FORMULA_TOOLS_DIR`、`PAPER_FETCH_IMAGE_TOOLS_DIR` 等写入当前 shell 对应启动文件；`offline.env` 的 managed block 默认启用普通 Chrome `PAPER_FETCH_BROWSER_USER_AGENT` 和 `CLOAKBROWSER_HEADLESS=true`，只有显式传 `--user-config` 才会把受标记管理的运行时块合并到 `~/.config/paper-fetch/.env`
 - Linux / macOS `--install-dir <path>` 会把 runtime-only payload 固定安装到指定目录；升级同一目录时会清理 `src/`、`tests/`、`wheelhouse/`、`dist/`、`.github/` 等残留并保留安装目录内 `offline.env`
 - Linux / macOS `--reuse-env-file <path>` 会把 `PAPER_FETCH_ENV_FILE` 指向现有文件且不修改该文件；其它 runtime 路径仍由新安装目录写入 shell / MCP 环境
 - Linux / macOS 写入 shell 启动文件和 Codex fallback config 时会先替换既有受管理 block，重复安装不会重复追加；不修改 `/etc/profile`
-- Windows 首次安装会写安装目录内 `offline.env`；升级安装会保留用户已有内容，只替换 `# BEGIN/END paper-fetch offline managed` 包围的运行时 block。MCP 注册环境固定指向安装目录内 `offline.env`、`downloads/`、`formula-tools/` 和包内 `runtime/Lib/site-packages/playwright/driver/node.exe`，并设置 `PYTHONUTF8=1`、`PYTHONIOENCODING=utf-8`、`PAPER_FETCH_BROWSER_USER_AGENT=<普通 Chrome UA>`、`CLOAKBROWSER_HEADLESS=true`、`MATHML_TO_LATEX_NODE_BIN=<install-root>/runtime/Lib/site-packages/playwright/driver/node.exe`。Linux / macOS 也会在包内 Playwright Node 存在时把 `MATHML_TO_LATEX_NODE_BIN` 指向 `runtime/site-packages/playwright/driver/node`
+- Windows 首次安装会写安装目录内 `offline.env`；升级安装会保留用户已有内容，只替换 `# BEGIN/END paper-fetch offline managed` 包围的运行时 block。MCP 注册环境固定指向安装目录内 `offline.env`、`downloads/`、`formula-tools/`、`image-tools/` 和包内 `runtime/Lib/site-packages/playwright/driver/node.exe`，并设置 `PYTHONUTF8=1`、`PYTHONIOENCODING=utf-8`、`PAPER_FETCH_BROWSER_USER_AGENT=<普通 Chrome UA>`、`CLOAKBROWSER_HEADLESS=true`、`PAPER_FETCH_IMAGE_TOOLS_DIR=<install-root>/image-tools`、`MATHML_TO_LATEX_NODE_BIN=<install-root>/runtime/Lib/site-packages/playwright/driver/node.exe`。Linux / macOS 也会在包内 Playwright Node 存在时把 `MATHML_TO_LATEX_NODE_BIN` 指向 `runtime/site-packages/playwright/driver/node`
 - Windows 安装、升级或手工修改 `offline.env` 后，需要重启 Codex Desktop / Claude Code；已启动的 MCP 服务不会自动继承新写入的 env。
 - Windows GUI 安装完成页会提示 Elsevier API key 申请入口和包内 `offline.env` 位置，并提供可选的 Notepad 打开项；silent 安装不会弹出该提示。离线环境抓取 Elsevier 全文前，从 <https://dev.elsevier.com/> 申请 key，并在该文件中填写 `ELSEVIER_API_KEY`
 - `--preset=headless` / `--preset=headful` 设置自动启动浏览器的默认 headed/headless 行为；显式 `CLOAKBROWSER_CDP_ENDPOINT` 指向外部浏览器时，以外部浏览器自身状态为准
@@ -178,7 +179,7 @@ Windows 构建在 PowerShell 中执行：
 .\scripts\build-offline-package-windows.ps1 -OutputDir dist
 ```
 
-Linux / macOS 构建脚本会从当前平台、架构和 Python 推导包名；例如 Linux x86_64 上 `PYTHON_BIN=python3.13 scripts/build-offline-package.sh` 会默认生成 `paper-fetch-skill-offline-linux-x86_64-cp313.sh`，macOS arm64 上会生成 `paper-fetch-skill-offline-macos-arm64-cp313.tar.gz`。Linux 构建继续输出由 shell stub 和压缩 payload 组成的单文件 `.sh` 安装器；macOS 构建输出 `.tar.gz` bundle。两者都会先解析 binary wheelhouse，再把项目和依赖安装进 `runtime/site-packages`，预编译 bytecode，写入 `runtime/paper-fetch-python` 私有 launcher，以及 `bin/paper-fetch`、`bin/paper-fetch-mcp`、`bin/paper-fetch-install-formula-tools` 命令启动器；`bin/` 不包含通用 `python` wrapper，payload 不携带源码树或 wheelhouse。Windows 构建必须在 CPython 3.13 x64 上运行，会下载官方 CPython 3.13 embeddable x64 runtime，把 Python 包安装进 `runtime/Lib/site-packages`，并只把 embedded runtime、`bin/` 启动器、静态 skill、formula tools、`installer/manifest.json`、`scripts/windows-installer-helper.ps1` 和离线元数据放进 Inno Setup 安装器；安装后的 Windows payload 不携带顶层 `src/`、`tests/`、`.github/`、`wheelhouse/`、`dist/` 或 `pyproject.toml`。
+Linux / macOS 构建脚本会从当前平台、架构和 Python 推导包名；例如 Linux x86_64 上 `PYTHON_BIN=python3.13 scripts/build-offline-package.sh` 会默认生成 `paper-fetch-skill-offline-linux-x86_64-cp313.sh`，macOS arm64 上会生成 `paper-fetch-skill-offline-macos-arm64-cp313.tar.gz`。Linux 构建继续输出由 shell stub 和压缩 payload 组成的单文件 `.sh` 安装器；macOS 构建输出 `.tar.gz` bundle。两者都会先解析 binary wheelhouse，再把项目和依赖安装进 `runtime/site-packages`，预编译 bytecode，写入 `runtime/paper-fetch-python` 私有 launcher，以及 `bin/paper-fetch`、`bin/paper-fetch-mcp`、`bin/paper-fetch-install-formula-tools`、`bin/paper-fetch-install-image-tools` 命令启动器；`bin/` 不包含通用 `python` wrapper，payload 不携带源码树或 wheelhouse。离线构建只会从 repo-local 可重定位 runtime 暂存 Ghostscript/libvips，不会把构建机系统 PATH 的二进制或符号链接打包。Windows 构建必须在 CPython 3.13 x64 上运行，会下载官方 CPython 3.13 embeddable x64 runtime，把 Python 包安装进 `runtime/Lib/site-packages`，并只把 embedded runtime、`bin/` 启动器、静态 skill、formula tools、image-tools 目录/启动器、`installer/manifest.json`、`scripts/windows-installer-helper.ps1` 和离线元数据放进 Inno Setup 安装器；安装后的 Windows payload 不携带顶层 `src/`、`tests/`、`.github/`、`wheelhouse/`、`dist/` 或 `pyproject.toml`。
 
 安装器共享配置集中在 `installer/manifest.json`：`skill.name`、`mcp.name`、`mcp.env_keys`、managed block marker 和离线包命名都从这里读取。Linux / macOS / Windows 离线安装脚本、Windows Inno helper 和离线包构建脚本都使用该 manifest，新增 MCP 环境变量或调整 managed block 文案时应优先改这里。
 
@@ -190,7 +191,7 @@ scripts/verify-offline-package.sh dist/paper-fetch-skill-offline-linux-x86_64-cp
 
 上面的验证路径按实际构建出的 `cp311`、`cp312`、`cp313` 或 `cp314` 包名替换。
 
-验证脚本会执行 `.sh --install-dir <临时目录>` 或先解压 macOS `.tar.gz` 再执行包内 `install-offline.sh --install-dir <临时目录>`，确认安装后的固定目录包含 `runtime/site-packages` 和 `bin/` 启动器，且不包含源码树、`tests/`、`dist/` 或 build wheelhouse；再用 guard 拦截 `curl`、`git`、`npm`、`playwright` 等命令来确认安装器没有在线下载或目标机 patch 动作，并使用临时 HOME 和 fake `codex` / `claude` CLI 验证 Linux / macOS shell 写入、skill 复制和 MCP remove/add 注册；随后检查 `paper-fetch --help`、`texmath --help`、`cloakbrowser.ensure_binary` 可导入、`paper_fetch.mcp.fetch_tool.provider_status_payload`，最后执行 `install-offline.sh --uninstall` 验证用户级集成可清理且不删除安装目录内 `offline.env` 或 runtime，并执行 `--purge` 验证固定安装目录可显式删除。
+验证脚本会执行 `.sh --install-dir <临时目录>` 或先解压 macOS `.tar.gz` 再执行包内 `install-offline.sh --install-dir <临时目录>`，确认安装后的固定目录包含 `runtime/site-packages` 和 `bin/` 启动器，且不包含源码树、`tests/`、`dist/` 或 build wheelhouse；再用 guard 拦截 `curl`、`git`、`npm`、`playwright` 等命令来确认安装器没有在线下载或目标机 patch 动作，并使用临时 HOME 和 fake `codex` / `claude` CLI 验证 Linux / macOS shell 写入、skill 复制和 MCP remove/add 注册；随后检查 `paper-fetch --help`、`texmath --help`、`paper-fetch-install-image-tools`、`cloakbrowser.ensure_binary` 可导入、`paper_fetch.mcp.fetch_tool.provider_status_payload`，最后执行 `install-offline.sh --uninstall` 验证用户级集成可清理且不删除安装目录内 `offline.env` 或 runtime，并执行 `--purge` 验证固定安装目录可显式删除。
 
 Windows CI 在 `offline-windows-x86-64` job 中执行安装器验证：通过 `Start-Process -Wait -PassThru` silent install 并检查安装器进程退出码，失败时输出安装日志；随后验证安装目录是 runtime-only 布局，不存在顶层源码或构建目录，再验证 bundled `runtime\python.exe` import 和 `provider_status_payload()`、`bin\paper-fetch.cmd --help`、`texmath.exe --help`、CloakBrowser/Playwright runtime smoke，并用 fake `codex` / `claude` CLI 验证 MCP remove/add 命令。
 
@@ -209,6 +210,7 @@ python3 -m pip install .
 - `paper-fetch`
 - `paper-fetch-mcp`
 - `paper-fetch-install-formula-tools`
+- `paper-fetch-install-image-tools`
 
 ## 2. 准备配置文件
 
@@ -273,6 +275,31 @@ paper-fetch-install-formula-tools
 - 运行时可用 `PAPER_FETCH_FORMULA_TOOLS_DIR` 覆盖公式工具查找目录；默认会考虑 repo-local `.formula-tools` 和用户数据目录下的 `formula-tools`
 - 根目录 `package.json` / `package-lock.json` 与 `src/paper_fetch/resources/formula/package.json` / `package-lock.json` 必须保持公式 Node 依赖版本一致；`tests/unit/test_formula_package_sync.py` 会阻止 KaTeX / MathML 工具版本漂移。
 
+### 可选图片转换后端
+
+AMS 页面 `Download Figure` 常提供 EPS 或 TIFF 源图；运行时会优先保存这些源图，并用 Ghostscript/libvips 转成 PNG 供 Markdown 本地图片使用。缺少后端时，资产下载会继续尝试网页 full-size JPG/PNG 候选。
+
+已安装环境推荐执行：
+
+```bash
+paper-fetch-install-image-tools
+```
+
+当前仓库 repo-local 开发可执行：
+
+```bash
+./install-image-tools.sh
+```
+
+补充说明：
+
+- `paper-fetch-install-image-tools` 会把可用工具装到用户数据目录，更适合部署环境
+- `./install-image-tools.sh` 会把工具装到当前仓库的 `./.image-tools/`
+- 运行时可用 `PAPER_FETCH_IMAGE_TOOLS_DIR` 覆盖图片工具查找目录；默认会考虑 repo-local `.image-tools` 和用户数据目录下的 `image-tools`
+- `PAPER_FETCH_GHOSTSCRIPT_BIN` 可显式指定 Ghostscript 可执行文件；`PAPER_FETCH_VIPS_BIN` 可显式指定 libvips `vips` 可执行文件
+- `PAPER_FETCH_EPS_DPI` 控制 EPS 转 PNG 的 Ghostscript 输出 DPI，默认 `600`
+- `PAPER_FETCH_IMAGE_TOOL_TIMEOUT_SECONDS` 控制 Ghostscript/libvips 探测与转换子进程超时，默认 `120`
+
 ### CI / GitHub Actions
 
 普通 CI 的 unit suite 会验证 Elsevier display formula 的 `texmath` 输出格式。GitHub Actions 因此需要先准备 Haskell/cabal，再执行：
@@ -280,9 +307,10 @@ paper-fetch-install-formula-tools
 ```bash
 python -m paper_fetch.formula.install --target-dir "$PWD/.formula-tools" --no-node
 ./.formula-tools/bin/texmath --help >/dev/null
+python -m paper_fetch.image_tools.install --target-dir "$PWD/.image-tools"
 ```
 
-测试步骤应设置 `PAPER_FETCH_FORMULA_TOOLS_DIR=$GITHUB_WORKSPACE/.formula-tools`。这里用 `--no-node` 是为了避免安装失败后静默落到 `mathml-to-latex` fallback；如果 `texmath` 没有装好，CI 会在验证步骤直接失败。
+测试步骤应设置 `PAPER_FETCH_FORMULA_TOOLS_DIR=$GITHUB_WORKSPACE/.formula-tools` 和 `PAPER_FETCH_IMAGE_TOOLS_DIR=$GITHUB_WORKSPACE/.image-tools`。这里用 `--no-node` 是为了避免安装失败后静默落到 `mathml-to-latex` fallback；如果 `texmath` 没有装好，CI 会在验证步骤直接失败。图片后端安装是 best-effort：Ghostscript/libvips 不可用时，相关测试只覆盖识别和回退契约。
 
 CI 还包含 package smoke job：执行 `python -m build` 生成 sdist / wheel，然后在干净 venv 里安装 wheel，验证 `paper-fetch --help` 可运行，并确认 `paper-fetch-mcp` console script entry point 可以解析和 import。
 
@@ -301,7 +329,7 @@ scripts/clean-local-artifacts.sh --days 7
 
 `ieee` 不需要 IEEE API key；它走 `landing metadata / article number -> direct REST HTML -> clean-browser HTML -> direct HTTP PDF fallback -> seeded-browser PDF fallback`，但全文是否可用仍取决于当前环境对 IEEE Xplore 的合法访问上下文。clean-browser HTML 使用新的 CDP browser context，不读取本机浏览器 profile、不复用用户登录态、不自动登录、不处理验证码，也不绕过访问权限。direct HTTP PDF 返回 `stamp.jsp` HTML wrapper 或 access/challenge 页面时，seeded-browser PDF fallback 只复用当前页面运行期间获得的合法 IEEE cookies/session。
 
-`wiley`、`science`、`pnas`、`ams`、`annualreviews`、`acs`、`iop`、`aip`、`mdpi` 默认通过 CDP browser workflow 进入 provider-owned browser workflow。显式配置 `CLOAKBROWSER_CDP_ENDPOINT` 时复用已运行浏览器并借用现有 browser context；未配置时自动通过 cloakbrowser 下载/定位 Chrome 并启动受控本机 CDP 浏览器，同一 runtime/browser 配置复用一个 keyed browser manager。HTML 与 PDF fallback 会打开隔离 context/page；runtime-shared browser-backed 资产下载会串行化以避免跨线程复用 Playwright sync 对象，普通 HTTP 资产下载仍按配置并发。是否能拿到全文仍取决于 publisher 访问权限、paywall/challenge 与远端站点行为。
+`wiley`、`science`、`pnas`、`annualreviews`、`acs`、`iop`、`aip`、`mdpi` 默认通过 CDP browser workflow 进入 provider-owned browser workflow；`ams` 会先尝试带浏览器 UA/Referer 的 direct HTTP HTML preflight，失败后才进入同一 CDP browser fallback。显式配置 `CLOAKBROWSER_CDP_ENDPOINT` 时复用已运行浏览器并借用现有 browser context；未配置时自动通过 cloakbrowser 下载/定位 Chrome 并启动受控本机 CDP 浏览器，同一 runtime/browser 配置复用一个 keyed browser manager。HTML 与 PDF fallback 会打开隔离 context/page；runtime-shared browser-backed 资产下载会串行化以避免跨线程复用 Playwright sync 对象，普通 HTTP 资产下载仍按配置并发。是否能拿到全文仍取决于 publisher 访问权限、paywall/challenge 与远端站点行为。
 
 需要复用手动验证过的浏览器时，可启动带 DevTools 端口的浏览器并设置 endpoint：
 
@@ -341,7 +369,7 @@ export CLOAKBROWSER_PROFILE_DIR="$HOME/.cache/paper-fetch/browser-profile"
 
 补充：
 
-- `wiley` / `science` / `pnas` / `ams` / `annualreviews` / `acs` / `iop` / `aip` / `mdpi` 需要本地 browser runtime；`CLOAKBROWSER_CDP_ENDPOINT` 可显式复用外部浏览器，未设置时自动启动 cloakbrowser Chrome，并默认按 publisher 复用本地 storage-state
+- `wiley` / `science` / `pnas` / `annualreviews` / `acs` / `iop` / `aip` / `mdpi` 需要本地 browser runtime；`ams` direct HTTP preflight 成功时不启动 browser runtime，但 browser/PDF fallback、headed auth 和 provider status 仍使用该 runtime。`CLOAKBROWSER_CDP_ENDPOINT` 可显式复用外部浏览器，未设置时自动启动 cloakbrowser Chrome，并默认按 publisher 复用本地 storage-state
 - `paper-fetch auth <provider>` 是自动过盾失败后的人工 headed fallback；storage-state 只保存本机辅助状态，不绕过权限，也不作为正常抓取的必要条件
 - `PAPER_FETCH_AMS_STORAGE_STATE_JSON` 是可选 storage-state override；`paper-fetch auth ams` 默认复用 `publisher-browser-profiles/ams/storage-state.json`
 - `elsevier` 只需要 `ELSEVIER_API_KEY`
@@ -471,7 +499,7 @@ PYTHONPATH=src python3 -m pytest tests/unit -q --cov=paper_fetch --cov-report=te
 PAPER_FETCH_RUN_FULL_GOLDEN=1 PYTHONPATH=src python3 -m pytest tests/integration/test_golden_corpus.py -q
 ```
 
-未设置 `PAPER_FETCH_RUN_LIVE=1` 时，`tests/live/test_live_publishers.py` 和 `tests/live/test_live_mcp.py` 应稳定 skip。额外验证 live smoke 时，`arxiv` 不需要凭据或 browser runtime；`wiley` / `science` / `pnas` / `annualreviews` / `acs` / `iop` / `aip` / `mdpi` / `ams` 需要可用 browser runtime，默认会自动启动 cloakbrowser Chrome 并按 publisher 复用 storage-state；如需复用已验证浏览器，可设置 `CLOAKBROWSER_CDP_ENDPOINT`。`PAPER_FETCH_AMS_STORAGE_STATE_JSON` 可覆盖 AMS storage-state；`ieee` 不需要 IEEE API key，但 IEEE fulltext smoke 预期当前机器具备合法 IEEE Xplore 访问上下文。live 测试依赖真实 publisher/API/browser/授权上下文和外部限流状态，建议串行运行：
+未设置 `PAPER_FETCH_RUN_LIVE=1` 时，`tests/live/test_live_publishers.py` 和 `tests/live/test_live_mcp.py` 应稳定 skip。额外验证 live smoke 时，`arxiv` 不需要凭据或 browser runtime；`wiley` / `science` / `pnas` / `annualreviews` / `acs` / `iop` / `aip` / `mdpi` 需要可用 browser runtime，默认会自动启动 cloakbrowser Chrome 并按 publisher 复用 storage-state；`ams` direct HTTP HTML preflight 成功时不需要 browser runtime，但 CDP browser/PDF fallback 仍需要 runtime。如需复用已验证浏览器，可设置 `CLOAKBROWSER_CDP_ENDPOINT`。`PAPER_FETCH_AMS_STORAGE_STATE_JSON` 可覆盖 AMS storage-state；`ieee` 不需要 IEEE API key，但 IEEE fulltext smoke 预期当前机器具备合法 IEEE Xplore 访问上下文。live 测试依赖真实 publisher/API/browser/授权上下文和外部限流状态，建议串行运行：
 
 ```bash
 PAPER_FETCH_RUN_LIVE=1 PYTHONPATH=src python3 -m pytest tests/live/test_live_publishers.py tests/live/test_live_mcp.py -q -n 0

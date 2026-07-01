@@ -141,6 +141,35 @@ def _append_unique(values: list[str], candidate: str | None) -> None:
         values.append(normalized)
 
 
+def _nodes_with_class(
+    root: BeautifulSoup | Tag,
+    class_name: str,
+    *,
+    tag_name: str | None = None,
+) -> list[Tag]:
+    nodes = root.find_all(tag_name, class_=class_name) if tag_name else root.find_all(class_=class_name)
+    return [node for node in nodes if isinstance(node, Tag)]
+
+
+def _first_with_class(
+    root: BeautifulSoup | Tag,
+    class_name: str,
+    *,
+    tag_name: str | None = None,
+) -> Tag | None:
+    node = root.find(tag_name, class_=class_name) if tag_name else root.find(class_=class_name)
+    return node if isinstance(node, Tag) else None
+
+
+def _selector_class_name(selector: str) -> str | None:
+    if not selector.startswith("."):
+        return None
+    class_name = selector[1:]
+    if not class_name or any(char.isspace() for char in class_name):
+        return None
+    return class_name
+
+
 def citation_reference_metadata(metadata: Mapping[str, Any]) -> list[dict[str, str | None]]:
     raw_meta = metadata.get("raw_meta") if isinstance(metadata.get("raw_meta"), Mapping) else {}
     raw_values = raw_meta.get("citation_reference") if isinstance(raw_meta, Mapping) else []
@@ -242,7 +271,9 @@ def _supplementary_lines(soup: BeautifulSoup) -> list[str]:
     lines: list[str] = []
     seen: set[str] = set()
     for selector in OXFORDACADEMIC_SUPPLEMENTARY_LINK_SELECTORS:
-        for node in soup.select(selector):
+        class_name = _selector_class_name(selector)
+        nodes = _nodes_with_class(soup, class_name) if class_name else soup.select(selector)
+        for node in nodes:
             text = render_clean_text_from_html(
                 node,
                 collapse_prose_line_breaks=True,
@@ -262,9 +293,9 @@ def _supplementary_lines(soup: BeautifulSoup) -> list[str]:
 
 def _article_body(soup: BeautifulSoup) -> Any:
     return (
-        soup.select_one(".article-body")
-        or soup.select_one(".widget-ArticleFulltext")
-        or soup.select_one("article")
+        _first_with_class(soup, "article-body")
+        or _first_with_class(soup, "widget-ArticleFulltext")
+        or soup.find("article")
         or soup.body
         or soup
     )
@@ -273,7 +304,11 @@ def _article_body(soup: BeautifulSoup) -> Any:
 def _normalize_oxford_body_for_rendering(body: Any) -> None:
     if not isinstance(body, Tag):
         return
-    for node in body.select(f"div.{OXFORDACADEMIC_PARAGRAPH_BLOCK_CLASS}"):
+    for node in _nodes_with_class(
+        body,
+        OXFORDACADEMIC_PARAGRAPH_BLOCK_CLASS,
+        tag_name="div",
+    ):
         node.name = "p"
     for comment in body.find_all(string=lambda value: isinstance(value, Comment)):
         if "citationlinks" in str(comment).lower():
@@ -299,17 +334,21 @@ def extract_markdown(
     body = _article_body(soup)
     _normalize_oxford_body_for_rendering(body)
     for selector in OXFORDACADEMIC_EXTRACTION_CLEANUP_SELECTORS:
-        for node in list(body.select(selector)):
+        class_name = _selector_class_name(selector)
+        nodes = _nodes_with_class(body, class_name) if class_name else body.select(selector)
+        for node in list(nodes):
             node.decompose()
 
     table_replacements: dict[str, str] = {}
-    for index, wrapper in enumerate(list(body.select(".table-wrap")), start=1):
-        table = wrapper.select_one(".table-overflow table") or wrapper.select_one("table")
+    for index, wrapper in enumerate(list(_nodes_with_class(body, "table-wrap")), start=1):
+        overflow = _first_with_class(wrapper, "table-overflow")
+        table = overflow.find("table") if overflow is not None else None
+        table = table or wrapper.find("table")
         if table is None:
             continue
-        label = render_clean_text_from_html(wrapper.select_one(".label"))
+        label = render_clean_text_from_html(_first_with_class(wrapper, "label"))
         caption = render_clean_text_from_html(
-            wrapper.select_one(".caption"),
+            _first_with_class(wrapper, "caption"),
             collapse_prose_line_breaks=True,
         )
         rendered_table = render_table_markdown(table, label=label, caption=caption)

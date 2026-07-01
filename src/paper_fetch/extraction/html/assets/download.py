@@ -10,8 +10,19 @@ from collections.abc import Callable, Mapping, Sequence
 
 from ....http import DEFAULT_FULLTEXT_TIMEOUT_SECONDS, HttpTransport, RequestFailure
 from ....http.headers import header_value
+from ....image_tools import (
+    ImageConversionFailure,
+    convert_source_image_response_to_png,
+    source_image_format_from_payload,
+)
 from ....models.schema import AssetProfile
-from ....utils import build_asset_output_path, empty_asset_results, normalize_text, sanitize_filename, save_payload
+from ....utils import (
+    build_asset_output_path,
+    empty_asset_results,
+    normalize_text,
+    sanitize_filename,
+    save_payload,
+)
 from ._kind import (
     FIGURE_KIND,
     SUPPLEMENTARY_KIND,
@@ -81,6 +92,72 @@ def _fetch_document_fallback(
     return dict(response)
 
 
+def _candidate_source_image_format(candidate_url: str) -> str:
+    return source_image_format_from_payload(b"", source_url=candidate_url)
+
+
+def _should_use_figure_document_fetcher_for_candidate(
+    kind: AssetDownloadKind,
+    candidate_url: str,
+    document_fetcher: ImageDocumentFetcher | FileDocumentFetcher | None,
+) -> bool:
+    if kind.name != "figure" or document_fetcher is None:
+        return False
+    return _candidate_source_image_format(candidate_url) not in {"eps", "tiff"}
+
+
+def _converted_figure_response(
+    response: Mapping[str, Any],
+    *,
+    source_url: str,
+) -> tuple[dict[str, Any], str]:
+    source_format = source_image_format_from_payload(
+        response.get("body", b""),
+        content_type=header_value(response.get("headers"), "content-type"),
+        source_url=source_url,
+    )
+    if source_format not in {"eps", "tiff"}:
+        return dict(response), ""
+    conversion = convert_source_image_response_to_png(response, source_url=source_url)
+    if conversion is None:
+        return dict(response), ""
+    converted = dict(response)
+    converted_headers = dict(response.get("headers") or {})
+    converted_headers["content-type"] = conversion.content_type
+    converted["headers"] = converted_headers
+    converted["body"] = conversion.body
+    converted["_paper_fetch_original_body"] = response.get("body", b"")
+    converted["_paper_fetch_original_content_type"] = header_value(
+        response.get("headers"),
+        "content-type",
+    )
+    converted["_paper_fetch_original_source_format"] = conversion.source_format
+    converted["_paper_fetch_conversion_tool"] = conversion.tool
+    return converted, conversion.source_format
+
+
+def _conversion_failure_attempt(
+    kind: AssetDownloadKind,
+    asset: Mapping[str, Any],
+    candidate: _AssetDownloadCandidate,
+    response: Mapping[str, Any],
+    exc: ImageConversionFailure,
+) -> _AssetDownloadAttempt:
+    return _AssetDownloadAttempt(
+        candidate=candidate,
+        failure=_asset_failure(
+            kind.failure_template(
+                asset,
+                candidate.url,
+                status=response.get("status_code"),
+                content_type=header_value(response.get("headers"), "content-type"),
+                final_url=normalize_text(str(response.get("url") or candidate.url)),
+                reason=f"image_conversion_failed: {exc}",
+            )
+        ),
+    )
+
+
 def _document_fetch_failure(
     fetcher: ImageDocumentFetcher | FileDocumentFetcher | None,
     candidate_url: str,
@@ -101,7 +178,11 @@ def _unsupported_scheme_failure(
     candidate_url: str,
 ) -> dict[str, Any]:
     label = "supplementary URL" if kind.name == "supplementary" else "asset URL"
-    return kind.failure_template(asset, candidate_url, reason=f"Unsupported {label} scheme for {candidate_url}")
+    return kind.failure_template(
+        asset,
+        candidate_url,
+        reason=f"Unsupported {label} scheme for {candidate_url}",
+    )
 
 
 def _request_asset_candidate(
@@ -169,7 +250,8 @@ def _request_failure_attempt(
                 content_type=content_type,
                 final_url=exc.url,
                 body=body,
-                reason=kind.response_block_reason(content_type, bytes(body)) or str(exc),
+                reason=kind.response_block_reason(content_type, bytes(body))
+                or str(exc),
                 error_category=str(getattr(exc, "error_category", "") or ""),
             )
         ),
@@ -214,7 +296,11 @@ def _should_retry_seeded_full_size_candidate(
     if not active_seed_urls and not browser_cookies:
         return False
     candidate = normalize_text(candidate_url)
-    if not candidate or _is_preview_candidate(candidate, preview_url=preview_url, full_size_url=full_size_url):
+    if not candidate or _is_preview_candidate(
+        candidate,
+        preview_url=preview_url,
+        full_size_url=full_size_url,
+    ):
         return False
     if full_size_url and candidate == full_size_url:
         return True
@@ -231,7 +317,13 @@ def _resolution_preview_fields(
     if kind.name != "figure":
         return "", ""
     preview_url = normalize_text(
-        str(asset.get("preview_url") or asset.get("url") or asset.get("original_url") or asset.get("link") or "")
+        str(
+            asset.get("preview_url")
+            or asset.get("url")
+            or asset.get("original_url")
+            or asset.get("link")
+            or ""
+        )
     )
     full_size_url = _resolved_full_size_url(asset, preview_url=preview_url, candidate_urls=candidate_urls)
     return preview_url, full_size_url
@@ -310,14 +402,21 @@ def resolve_asset_download(
     preview_url, full_size_url = _resolution_preview_fields(kind, asset, candidate_urls)
     if not candidate_urls:
         failure = (
-            kind.failure_template(asset, "", reason="Supplementary asset did not include a downloadable URL.")
+            kind.failure_template(
+                asset,
+                "",
+                reason="Supplementary asset did not include a downloadable URL.",
+            )
             if kind.name == "supplementary"
             else None
         )
         return _resolution_from_attempt(
             asset=asset,
             attempt=(
-                _AssetDownloadAttempt(candidate=_AssetDownloadCandidate(""), failure=_asset_failure(failure))
+                _AssetDownloadAttempt(
+                    candidate=_AssetDownloadCandidate(""),
+                    failure=_asset_failure(failure),
+                )
                 if failure is not None
                 else None
             ),
@@ -332,23 +431,59 @@ def resolve_asset_download(
         if parsed.scheme not in {"http", "https"}:
             last_attempt = _AssetDownloadAttempt(
                 candidate=candidate,
-                failure=_asset_failure(_unsupported_scheme_failure(kind, asset, candidate_url)),
+                failure=_asset_failure(
+                    _unsupported_scheme_failure(kind, asset, candidate_url)
+                ),
             )
             continue
 
-        if kind.name == "figure" and document_fetcher is not None:
-            fallback_response = _fetch_document_fallback(kind, document_fetcher, candidate_url, asset)
+        if _should_use_figure_document_fetcher_for_candidate(
+            kind,
+            candidate_url,
+            document_fetcher,
+        ):
+            fallback_response = _fetch_document_fallback(
+                kind,
+                document_fetcher,
+                candidate_url,
+                asset,
+            )
             if fallback_response is not None:
+                try:
+                    fallback_response, _ = _converted_figure_response(
+                        fallback_response,
+                        source_url=candidate_url,
+                    )
+                except ImageConversionFailure as exc:
+                    last_attempt = _conversion_failure_attempt(
+                        kind,
+                        asset,
+                        candidate,
+                        fallback_response,
+                        exc,
+                    )
+                    continue
                 return _resolution_from_attempt(
                     asset=asset,
-                    attempt=_AssetDownloadAttempt(candidate=candidate, response=fallback_response, source_url=candidate_url),
+                    attempt=_AssetDownloadAttempt(
+                        candidate=candidate,
+                        response=fallback_response,
+                        source_url=candidate_url,
+                    ),
                     preview_url=preview_url,
                     full_size_url=full_size_url,
                 )
             fetch_failure = _document_fetch_failure(document_fetcher, candidate_url)
             last_attempt = _AssetDownloadAttempt(
                 candidate=candidate,
-                failure=_asset_failure(_failure_from_document_fetch(kind, asset, candidate_url, fetch_failure)),
+                failure=_asset_failure(
+                    _failure_from_document_fetch(
+                        kind,
+                        asset,
+                        candidate_url,
+                        fetch_failure,
+                    )
+                ),
             )
             continue
 
@@ -385,11 +520,34 @@ def resolve_asset_download(
             )
             if retry_resolution is not None:
                 return retry_resolution
-            fallback_response = _fetch_document_fallback(kind, document_fetcher, candidate_url, asset)
+            fallback_response = _fetch_document_fallback(
+                kind,
+                document_fetcher,
+                candidate_url,
+                asset,
+            )
             if fallback_response is not None:
+                try:
+                    fallback_response, _ = _converted_figure_response(
+                        fallback_response,
+                        source_url=candidate_url,
+                    )
+                except ImageConversionFailure as exc:
+                    last_attempt = _conversion_failure_attempt(
+                        kind,
+                        asset,
+                        candidate,
+                        fallback_response,
+                        exc,
+                    )
+                    continue
                 return _resolution_from_attempt(
                     asset=asset,
-                    attempt=_AssetDownloadAttempt(candidate=candidate, response=fallback_response, source_url=candidate_url),
+                    attempt=_AssetDownloadAttempt(
+                        candidate=candidate,
+                        response=fallback_response,
+                        source_url=candidate_url,
+                    ),
                     preview_url=preview_url,
                     full_size_url=full_size_url,
                 )
@@ -404,7 +562,14 @@ def resolve_asset_download(
         content_type = header_value(response.get("headers"), "content-type")
         block_reason = kind.response_block_reason(content_type, bytes(body))
         if block_reason:
-            last_attempt = _blocked_response_attempt(kind, asset, candidate, response, candidate_url, block_reason)
+            last_attempt = _blocked_response_attempt(
+                kind,
+                asset,
+                candidate,
+                response,
+                candidate_url,
+                block_reason,
+            )
             last_attempt, retry_resolution = _retry_seeded_figure_candidate(
                 kind,
                 transport,
@@ -423,11 +588,34 @@ def resolve_asset_download(
             )
             if retry_resolution is not None:
                 return retry_resolution
-            fallback_response = _fetch_document_fallback(kind, document_fetcher, candidate_url, asset)
+            fallback_response = _fetch_document_fallback(
+                kind,
+                document_fetcher,
+                candidate_url,
+                asset,
+            )
             if fallback_response is not None:
+                try:
+                    fallback_response, _ = _converted_figure_response(
+                        fallback_response,
+                        source_url=candidate_url,
+                    )
+                except ImageConversionFailure as exc:
+                    last_attempt = _conversion_failure_attempt(
+                        kind,
+                        asset,
+                        candidate,
+                        fallback_response,
+                        exc,
+                    )
+                    continue
                 return _resolution_from_attempt(
                     asset=asset,
-                    attempt=_AssetDownloadAttempt(candidate=candidate, response=fallback_response, source_url=candidate_url),
+                    attempt=_AssetDownloadAttempt(
+                        candidate=candidate,
+                        response=fallback_response,
+                        source_url=candidate_url,
+                    ),
                     preview_url=preview_url,
                     full_size_url=full_size_url,
                 )
@@ -440,13 +628,29 @@ def resolve_asset_download(
             kind.upgrade_targets is not None
             and document_fetcher is not None
             and _requires_image_payload(asset)
-            and _is_preview_candidate(candidate_url, preview_url=preview_url, full_size_url=full_size_url)
+            and _is_preview_candidate(
+                candidate_url,
+                preview_url=preview_url,
+                full_size_url=full_size_url,
+            )
         ):
             for upgrade_target in kind.upgrade_targets(candidate_url, asset):
                 if upgrade_target == candidate_url:
                     continue
-                fallback_response = _fetch_document_fallback(kind, document_fetcher, upgrade_target, asset)
+                fallback_response = _fetch_document_fallback(
+                    kind,
+                    document_fetcher,
+                    upgrade_target,
+                    asset,
+                )
                 if fallback_response is not None:
+                    try:
+                        fallback_response, _ = _converted_figure_response(
+                            fallback_response,
+                            source_url=upgrade_target,
+                        )
+                    except ImageConversionFailure:
+                        continue
                     return _resolution_from_attempt(
                         asset=asset,
                         attempt=_AssetDownloadAttempt(
@@ -459,14 +663,39 @@ def resolve_asset_download(
                         full_size_url=full_size_url,
                     )
 
+        try:
+            response, _ = (
+                _converted_figure_response(response, source_url=candidate_url)
+                if kind.name == "figure"
+                else (dict(response), "")
+            )
+        except ImageConversionFailure as exc:
+            last_attempt = _conversion_failure_attempt(
+                kind,
+                asset,
+                candidate,
+                response,
+                exc,
+            )
+            continue
+
         return _resolution_from_attempt(
             asset=asset,
-            attempt=_AssetDownloadAttempt(candidate=candidate, response=response, source_url=candidate_url),
+            attempt=_AssetDownloadAttempt(
+                candidate=candidate,
+                response=response,
+                source_url=candidate_url,
+            ),
             preview_url=preview_url,
             full_size_url=full_size_url,
         )
 
-    return _resolution_from_attempt(asset=asset, attempt=last_attempt, preview_url=preview_url, full_size_url=full_size_url)
+    return _resolution_from_attempt(
+        asset=asset,
+        attempt=last_attempt,
+        preview_url=preview_url,
+        full_size_url=full_size_url,
+    )
 
 
 def save_asset_resolution(
@@ -479,6 +708,7 @@ def save_asset_resolution(
     asset = resolved.asset
     response = resolved.response or {}
     source_url = normalize_text(resolved.source_url)
+    final_url = _response_final_url(response, source_url)
     body = response.get("body", b"")
     if not isinstance(body, (bytes, bytearray)) or not body:
         return _AssetDownloadFailure(
@@ -487,7 +717,7 @@ def save_asset_resolution(
                 source_url,
                 status=response.get("status_code") if isinstance(response, Mapping) else None,
                 content_type=header_value(response.get("headers"), "content-type"),
-                final_url=normalize_text(str(response.get("url") or source_url)),
+                final_url=final_url,
                 reason="empty_response_body",
             )
         )
@@ -500,7 +730,7 @@ def save_asset_resolution(
         target_asset_dir,
         source_url,
         content_type,
-        response.get("url") or source_url,
+        final_url,
         used_names_by_dir.setdefault(target_asset_dir, set()),
         preferred_filename=(
             normalize_text(str(asset.get("filename_hint") or "")) or None
@@ -509,13 +739,33 @@ def save_asset_resolution(
         ),
     )
     saved_path = save_payload(output_path, bytes(body))
+    original_body = response.get("_paper_fetch_original_body")
+    original_saved_path = ""
+    original_content_type = normalize_text(
+        str(response.get("_paper_fetch_original_content_type") or "")
+    )
+    original_source_format = normalize_text(
+        str(response.get("_paper_fetch_original_source_format") or "")
+    )
+    conversion_tool = normalize_text(
+        str(response.get("_paper_fetch_conversion_tool") or "")
+    )
+    if isinstance(original_body, (bytes, bytearray)) and original_body:
+        original_output_path = build_asset_output_path(
+            target_asset_dir,
+            source_url,
+            original_content_type,
+            final_url,
+            used_names_by_dir.setdefault(target_asset_dir, set()),
+        )
+        original_saved_path = save_payload(original_output_path, bytes(original_body)) or ""
     if kind.name == "supplementary":
         download: dict[str, Any] = {
             "kind": "supplementary",
             "heading": asset.get("heading") or asset.get("filename_hint") or "Supplementary Material",
             "caption": asset.get("caption", ""),
             "download_url": source_url,
-            "source_url": response.get("url") or source_url,
+            "source_url": final_url,
             "content_type": content_type,
             "path": saved_path,
             "downloaded_bytes": len(body),
@@ -552,7 +802,6 @@ def save_asset_resolution(
             else "full_size"
         )
     )
-    final_url = normalize_text(str(response.get("url") or source_url))
     download = {
         "kind": asset.get("kind", "figure"),
         "heading": asset.get("heading", "Figure"),
@@ -570,6 +819,14 @@ def save_asset_resolution(
         "downloaded_bytes": len(body),
         "section": asset.get("section") or "body",
     }
+    if original_saved_path:
+        download["original_source_path"] = original_saved_path
+        download["original_content_type"] = original_content_type
+        download["original_download_url"] = source_url
+        download["conversion_source_format"] = original_source_format
+        download["conversion_output_format"] = "png"
+        download["conversion_tool"] = conversion_tool
+        download["download_tier"] = "source_converted"
     if width > 0 and height > 0:
         download["width"] = width
         download["height"] = height
@@ -586,6 +843,11 @@ def _asset_marks_preview_accepted(asset: Mapping[str, Any]) -> bool:
     if isinstance(value, bool):
         return value
     return normalize_text(str(value or "")).lower() in {"1", "true", "yes", "accepted"}
+
+
+def _response_final_url(response: Mapping[str, Any], source_url: str) -> str:
+    response_url = normalize_text(str(response.get("url") or ""))
+    return urllib.parse.urljoin(source_url, response_url or source_url)
 
 
 def _asset_items_for_kind(

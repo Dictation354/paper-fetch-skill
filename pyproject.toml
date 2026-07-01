@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "paper-fetch-skill"
-version = "2.6.2"
+version = "2.7.0"
 description = "AI-friendly paper fetch tooling"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -45,6 +45,7 @@ dev = [
 paper-fetch = "paper_fetch.cli:main"
 paper-fetch-mcp = "paper_fetch.mcp.server:main"
 paper-fetch-install-formula-tools = "paper_fetch.formula.install:main"
+paper-fetch-install-image-tools = "paper_fetch.image_tools.install:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}

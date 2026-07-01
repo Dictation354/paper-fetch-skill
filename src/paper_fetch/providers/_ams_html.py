@@ -17,6 +17,7 @@ from ._ams_references import (
 )
 
 from ._ams_assets import (
+    extract_asset_html_scopes as extract_asset_html_scopes,
     scoped_asset_extractor as scoped_asset_extractor,
 )
 
@@ -55,6 +56,7 @@ __all__ = [
     "ams_keep_unknown_abstract_block",
     "ams_normalize_markdown",
     "blocking_fallback_signals",
+    "extract_asset_html_scopes",
     "extract_authors",
     "extract_references",
     "finalize_extraction",

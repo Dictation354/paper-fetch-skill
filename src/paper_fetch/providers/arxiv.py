@@ -44,6 +44,7 @@ from ._arxiv_assets import (
 from ._arxiv_atom import (
     ARXIV_API_DELAY_SECONDS,
     ARXIV_API_NUM_RETRIES,
+    ARXIV_API_TIMEOUT_SECONDS,
     ArxivSearch as _ArxivSearch,
     InternalArxivApiClient as _InternalArxivApiClient,
 )
@@ -142,6 +143,7 @@ class ArxivClient(ProviderClient):
                     details={
                         "mode": "arxiv_api",
                         "client": "internal_atom",
+                        "client_timeout_seconds": ARXIV_API_TIMEOUT_SECONDS,
                         "client_delay_seconds": ARXIV_API_DELAY_SECONDS,
                         "client_num_retries": ARXIV_API_NUM_RETRIES,
                     },

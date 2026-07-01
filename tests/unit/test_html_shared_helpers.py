@@ -5,6 +5,7 @@ import threading
 import time
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from bs4 import BeautifulSoup
 
@@ -44,6 +45,7 @@ from paper_fetch.extraction.html.inline import normalize_html_inline_text
 from paper_fetch.extraction.markdown_render.figures import is_html_figure_container
 from paper_fetch.extraction.html.tables import render_table_markdown
 from paper_fetch.http import HttpTransport
+from paper_fetch.image_tools import ImageConversionFailure, SourceImageConversion
 from paper_fetch.providers._html_section_markdown import (
     render_clean_text_from_html,
     render_container_markdown,
@@ -84,6 +86,17 @@ class _DelayedAssetTransport(HttpTransport):
         finally:
             with self.lock:
                 self.active -= 1
+
+
+class _StaticAssetTransport(HttpTransport):
+    def __init__(self, responses: dict[tuple[str, str], dict[str, object]]) -> None:
+        self.responses = responses
+        self.calls: list[dict[str, object]] = []
+
+    def request(self, method, url, **kwargs):
+        self.calls.append({"method": method, "url": url, "kwargs": dict(kwargs)})
+        response = self.responses[(method, url)]
+        return dict(response)
 
 
 class SharedHtmlHelperTests(unittest.TestCase):
@@ -1042,6 +1055,143 @@ class SharedHtmlHelperTests(unittest.TestCase):
         )
 
         self.assertEqual(candidates[0], "https://example.test/full.png")
+
+    def test_download_assets_figure_kind_converts_eps_source_to_png_and_keeps_original(
+        self,
+    ) -> None:
+        source_url = "https://example.test/images/example-f1.eps"
+        full_url = "https://example.test/images/full-example-f1.jpg"
+        source_body = b"%!PS-Adobe-3.0 EPSF-3.0\n%%BoundingBox: 0 0 10 10\n"
+        converted_body = b"\x89PNG\r\n\x1a\nconverted"
+        transport = _StaticAssetTransport(
+            {
+                ("GET", source_url): {
+                    "status_code": 200,
+                    "headers": {"content-type": "application/postscript"},
+                    "body": source_body,
+                    "url": "/images/example-f1.eps",
+                }
+            }
+        )
+        image_document_fetcher = mock.Mock()
+
+        with (
+            tempfile.TemporaryDirectory() as tmpdir,
+            mock.patch(
+                "paper_fetch.extraction.html.assets.download.convert_source_image_response_to_png",
+                return_value=SourceImageConversion(
+                    body=converted_body,
+                    content_type="image/png",
+                    source_format="eps",
+                    tool="ghostscript",
+                ),
+            ) as converter,
+        ):
+            result = html_assets.download_assets(
+                html_assets.FIGURE_KIND,
+                transport,
+                article_id="10.5555/eps-source",
+                assets=[
+                    {
+                        "kind": "figure",
+                        "heading": "Figure 1",
+                        "caption": "EPS source",
+                        "download_url": source_url,
+                        "full_size_url": full_url,
+                        "url": full_url,
+                        "section": "body",
+                    }
+                ],
+                output_dir=Path(tmpdir),
+                user_agent="paper-fetch-test",
+                asset_profile="all",
+                image_document_fetcher=image_document_fetcher,
+            )
+
+            self.assertEqual([call["url"] for call in transport.calls], [source_url])
+            image_document_fetcher.assert_not_called()
+            converter.assert_called_once()
+            self.assertEqual(result["asset_failures"], [])
+            self.assertEqual(len(result["assets"]), 1)
+            asset = result["assets"][0]
+            self.assertEqual(Path(asset["path"]).suffix, ".png")
+            self.assertEqual(Path(asset["path"]).read_bytes(), converted_body)
+            self.assertEqual(Path(asset["original_source_path"]).suffix, ".eps")
+            self.assertEqual(
+                Path(asset["original_source_path"]).read_bytes(),
+                source_body,
+            )
+            self.assertEqual(asset["download_url"], source_url)
+            self.assertEqual(asset["source_url"], source_url)
+            self.assertEqual(asset["download_tier"], "source_converted")
+            self.assertEqual(asset["conversion_source_format"], "eps")
+            self.assertEqual(asset["conversion_output_format"], "png")
+            self.assertEqual(asset["conversion_tool"], "ghostscript")
+            self.assertEqual(asset["original_download_url"], source_url)
+            self.assertEqual(asset["full_size_url"], full_url)
+
+    def test_download_assets_figure_kind_falls_back_when_source_conversion_fails(
+        self,
+    ) -> None:
+        source_url = "https://example.test/images/example-f1.eps"
+        full_url = "https://example.test/images/full-example-f1.png"
+        fallback_body = b"\x89PNG\r\n\x1a\nfallback"
+        transport = _StaticAssetTransport(
+            {
+                ("GET", source_url): {
+                    "status_code": 200,
+                    "headers": {"content-type": "application/postscript"},
+                    "body": b"%!PS-Adobe-3.0 EPSF-3.0\n",
+                    "url": source_url,
+                },
+                ("GET", full_url): {
+                    "status_code": 200,
+                    "headers": {"content-type": "image/png"},
+                    "body": fallback_body,
+                    "url": full_url,
+                },
+            }
+        )
+
+        with (
+            tempfile.TemporaryDirectory() as tmpdir,
+            mock.patch(
+                "paper_fetch.extraction.html.assets.download.convert_source_image_response_to_png",
+                side_effect=ImageConversionFailure("missing ghostscript"),
+            ) as converter,
+        ):
+            result = html_assets.download_assets(
+                html_assets.FIGURE_KIND,
+                transport,
+                article_id="10.5555/eps-source-fallback",
+                assets=[
+                    {
+                        "kind": "figure",
+                        "heading": "Figure 1",
+                        "caption": "EPS source",
+                        "download_url": source_url,
+                        "full_size_url": full_url,
+                        "url": full_url,
+                        "section": "body",
+                    }
+                ],
+                output_dir=Path(tmpdir),
+                user_agent="paper-fetch-test",
+                asset_profile="all",
+            )
+
+            self.assertEqual(
+                [call["url"] for call in transport.calls],
+                [source_url, full_url],
+            )
+            converter.assert_called_once()
+            self.assertEqual(result["asset_failures"], [])
+            self.assertEqual(len(result["assets"]), 1)
+            asset = result["assets"][0]
+            self.assertEqual(asset["download_url"], full_url)
+            self.assertEqual(asset["download_tier"], "full_size")
+            self.assertNotIn("original_source_path", asset)
+            self.assertEqual(Path(asset["path"]).read_bytes(), fallback_body)
 
     def test_download_assets_figure_kind_resolves_http_candidates_in_parallel_but_writes_in_order(
         self,

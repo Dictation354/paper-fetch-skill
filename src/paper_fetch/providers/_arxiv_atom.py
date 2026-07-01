@@ -10,7 +10,6 @@ import xml.etree.ElementTree as ET
 
 from ..arxiv_id import arxiv_id_from_query, normalize_arxiv_id
 from ..http import (
-    DEFAULT_TIMEOUT_SECONDS,
     HttpTransport,
     RequestFailure,
     is_pdf_content_type,
@@ -20,8 +19,9 @@ from ._arxiv_metadata import _dedupe_strings
 
 ARXIV_API_URL = "https://export.arxiv.org/api/query"
 ARXIV_API_ACCEPT = "application/atom+xml,application/xml,text/xml,*/*;q=0.8"
+ARXIV_API_TIMEOUT_SECONDS = 60
 ARXIV_API_DELAY_SECONDS = 0.0
-ARXIV_API_NUM_RETRIES = 0
+ARXIV_API_NUM_RETRIES = 2
 _ARXIV_ATOM_NAMESPACES = {
     "atom": "http://www.w3.org/2005/Atom",
     "arxiv": "http://arxiv.org/schemas/atom",
@@ -175,7 +175,9 @@ class InternalArxivApiClient:
                 "id_list": ",".join(requested_ids),
                 "max_results": str(max_results),
             },
-            timeout=DEFAULT_TIMEOUT_SECONDS,
+            timeout=ARXIV_API_TIMEOUT_SECONDS,
+            retry_on_transient=True,
+            transient_retries=ARXIV_API_NUM_RETRIES,
         )
         status_code = int(response.get("status_code") or 0)
         if status_code >= 400:

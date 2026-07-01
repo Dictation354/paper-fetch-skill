@@ -9,6 +9,7 @@ from collections.abc import Callable, Mapping, Sequence
 
 from ....utils import normalize_text
 from ...image_payloads import image_mime_type_from_bytes
+from ....image_tools import source_image_format_from_payload
 from ..shared import (
     html_text_snippet as _html_text_snippet,
     html_title_snippet as _html_title_snippet,
@@ -173,6 +174,8 @@ def _figure_upgrade_targets(candidate_url: str, asset: Mapping[str, Any]) -> lis
 def _figure_accepts_response(content_type: str | None, body: bytes) -> bool:
     normalized_content_type = normalize_text(content_type).split(";", 1)[0].lower()
     if image_mime_type_from_bytes(body):
+        return True
+    if source_image_format_from_payload(body, content_type=content_type):
         return True
     if normalized_content_type and not normalized_content_type.startswith("image/"):
         return False

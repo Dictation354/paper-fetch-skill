@@ -24,6 +24,7 @@ $McpEnvKeys = @(
     "PAPER_FETCH_ENV_FILE",
     "PAPER_FETCH_DOWNLOAD_DIR",
     "PAPER_FETCH_FORMULA_TOOLS_DIR",
+    "PAPER_FETCH_IMAGE_TOOLS_DIR",
     "MATHML_TO_LATEX_NODE_BIN",
     "CLOAKBROWSER_HEADLESS"
 )
@@ -260,12 +261,14 @@ function Install-ProjectVenv {
 function New-ManagedEnvLines {
     $downloadDir = Join-Path $BundleRoot "downloads"
     $formulaToolsDir = Join-Path $BundleRoot "formula-tools"
+    $imageToolsDir = Join-Path $BundleRoot "image-tools"
     $mathmlNode = Join-Path $BundleRoot ".venv/Lib/site-packages/playwright/driver/node.exe"
     return @(
         "",
         $ManagedBegin,
         "PAPER_FETCH_DOWNLOAD_DIR=$(Quote-DotenvValue $downloadDir)",
         "PAPER_FETCH_FORMULA_TOOLS_DIR=$(Quote-DotenvValue $formulaToolsDir)",
+        "PAPER_FETCH_IMAGE_TOOLS_DIR=$(Quote-DotenvValue $imageToolsDir)",
         "MATHML_TO_LATEX_NODE_BIN=$(Quote-DotenvValue $mathmlNode)",
         "CLOAKBROWSER_HEADLESS='true'",
         "PAPER_FETCH_BROWSER_USER_AGENT='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36'",
@@ -352,9 +355,13 @@ if (Test-Path -LiteralPath $venvActivate) {
 
 $venvScripts = Join-Path $InstallRoot ".venv/Scripts"
 $formulaBin = Join-Path $InstallRoot "formula-tools/bin"
-$env:PATH = "$venvScripts;$formulaBin;$env:PATH"
+$imageBin = Join-Path $InstallRoot "image-tools/bin"
+$env:PATH = "$venvScripts;$formulaBin;$imageBin;$env:PATH"
 if ([string]::IsNullOrWhiteSpace($env:PAPER_FETCH_FORMULA_TOOLS_DIR)) {
     $env:PAPER_FETCH_FORMULA_TOOLS_DIR = Join-Path $InstallRoot "formula-tools"
+}
+if ([string]::IsNullOrWhiteSpace($env:PAPER_FETCH_IMAGE_TOOLS_DIR)) {
+    $env:PAPER_FETCH_IMAGE_TOOLS_DIR = Join-Path $InstallRoot "image-tools"
 }
 if ([string]::IsNullOrWhiteSpace($env:MATHML_TO_LATEX_NODE_BIN)) {
     $env:MATHML_TO_LATEX_NODE_BIN = Join-Path $InstallRoot ".venv/Lib/site-packages/playwright/driver/node.exe"
@@ -403,6 +410,7 @@ function Run-SmokeChecks {
     Test-BrowserRuntimePackage
 
     $env:PAPER_FETCH_ENV_FILE = Join-Path $BundleRoot "offline.env"
+    $env:PAPER_FETCH_IMAGE_TOOLS_DIR = Join-Path $BundleRoot "image-tools"
     $env:MATHML_TO_LATEX_NODE_BIN = Join-Path $BundleRoot ".venv/Lib/site-packages/playwright/driver/node.exe"
     $env:CLOAKBROWSER_HEADLESS = "true"
     & (Join-Path $BundleRoot ".venv/Scripts/python.exe") -c "from paper_fetch.mcp.fetch_tool import provider_status_payload; payload = provider_status_payload(); assert 'providers' in payload"

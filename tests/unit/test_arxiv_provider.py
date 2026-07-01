@@ -390,7 +390,31 @@ class ArxivProviderTests(unittest.TestCase):
         self.assertEqual(
             transport.calls[0]["headers"]["Accept"], _arxiv_atom.ARXIV_API_ACCEPT
         )
+        self.assertEqual(
+            transport.calls[0]["timeout"], _arxiv_atom.ARXIV_API_TIMEOUT_SECONDS
+        )
+        self.assertTrue(transport.calls[0]["retry_on_transient"])
+        self.assertEqual(
+            transport.calls[0]["transient_retries"], _arxiv_atom.ARXIV_API_NUM_RETRIES
+        )
         self.assertIn("User-Agent", transport.calls[0]["headers"])
+
+    def test_probe_status_reports_atom_client_timeout_and_retries(self) -> None:
+        client = ArxivClient(RecordingTransport({}), {})
+
+        status = client.probe_status()
+        metadata_check = next(
+            check for check in status.checks if check.name == "metadata_api"
+        )
+
+        self.assertEqual(
+            metadata_check.details["client_timeout_seconds"],
+            _arxiv_atom.ARXIV_API_TIMEOUT_SECONDS,
+        )
+        self.assertEqual(
+            metadata_check.details["client_num_retries"],
+            _arxiv_atom.ARXIV_API_NUM_RETRIES,
+        )
 
     def test_fetch_metadata_reports_no_result_for_empty_atom_feed(self) -> None:
         arxiv_id = "2605.06663v1"

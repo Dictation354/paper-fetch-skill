@@ -23,6 +23,7 @@ Builds a CPython 3.11-3.14 offline runtime package containing:
   - command wrappers under bin/
   - private Python launcher under runtime/paper-fetch-python
   - texmath under formula-tools/
+  - image-tools directory and installer wrapper for optional Ghostscript/libvips converters
   - cloakbrowser Python package, which downloads/locates the Chrome binary on first browser-backed use
 Linux builds produce a self-extracting .sh installer. macOS builds produce a .tar.gz bundle.
 EOF
@@ -190,6 +191,17 @@ stage_bundled_node_workspace(Path(sys.argv[1]))
 PY
 }
 
+bundle_image_tools() {
+  local staging="$1"
+  log "Bundling image conversion tools"
+  mkdir -p "$staging/image-tools"
+  PYTHONPATH="$staging/runtime/site-packages${PYTHONPATH:+:$PYTHONPATH}" \
+    "$PYTHON_BIN" -m paper_fetch.image_tools.install \
+      --target-dir "$staging/image-tools" \
+      --offline-bundle \
+      --repo-root "$REPO_DIR"
+}
+
 write_cmd_wrappers() {
   local staging="$1"
   local bin="$staging/bin"
@@ -245,7 +257,20 @@ INSTALL_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 exec "$INSTALL_ROOT/runtime/paper-fetch-python" -X utf8 -m paper_fetch.formula.install "$@"
 EOF
 
-  chmod +x "$runtime/paper-fetch-python" "$bin/paper-fetch" "$bin/paper-fetch-mcp" "$bin/paper-fetch-install-formula-tools"
+  cat > "$bin/paper-fetch-install-image-tools" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+
+INSTALL_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+exec "$INSTALL_ROOT/runtime/paper-fetch-python" -X utf8 -m paper_fetch.image_tools.install "$@"
+EOF
+
+  chmod +x \
+    "$runtime/paper-fetch-python" \
+    "$bin/paper-fetch" \
+    "$bin/paper-fetch-mcp" \
+    "$bin/paper-fetch-install-formula-tools" \
+    "$bin/paper-fetch-install-image-tools"
 }
 
 write_offline_readme() {
@@ -260,7 +285,8 @@ write_offline_readme() {
   cat > "$staging/README.offline.md" <<'EOF'
 # Paper Fetch Offline Package
 
-This package includes an installed Python runtime under `runtime/site-packages`, a private Python launcher at `runtime/paper-fetch-python`, command wrappers under `bin/`, and formula tools.
+This package includes an installed Python runtime under `runtime/site-packages`, a private Python launcher at `runtime/paper-fetch-python`, command wrappers under `bin/`, formula tools, and image-tools configuration for optional conversion tools.
+The offline build does not bundle Ghostscript/libvips from the build host PATH; AMS EPS/TIFF source figure conversion falls back to webpage JPG/PNG candidates when those tools are unavailable.
 The `bin/` directory exposes paper-fetch commands only; it does not include a generic `python` wrapper.
 It does not redistribute a browser binary for browser-backed providers; cloakbrowser downloads or locates Chrome on first use.
 EOF
@@ -344,6 +370,7 @@ payload = {
         "installed_package_count": len(installed_packages),
         "installer_manifest": "installer/manifest.json",
         "formula_tools": "formula-tools",
+        "image_tools": "image-tools",
         "cloakbrowser": {
             "python_package": "runtime/site-packages",
             "browser_binary": "not_bundled",
@@ -455,6 +482,7 @@ main() {
   copy_runtime_assets "$staging"
   build_project_runtime "$staging"
   bundle_formula_tools "$staging"
+  bundle_image_tools "$staging"
   write_cmd_wrappers "$staging"
   write_offline_readme "$staging" "$target_platform"
   write_manifest_and_checksums "$staging" "$version" "$target_platform" "$target_arch" "$python_tag"

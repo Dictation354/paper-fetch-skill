@@ -103,6 +103,7 @@ grep -F -q "export PAPER_FETCH_ENV_FILE=\"$INSTALL_ROOT/offline.env\"" "$FAKE_HO
 grep -F -q "export CLOAKBROWSER_HEADLESS=\"true\"" "$FAKE_HOME/.bashrc"
 grep -F -q "$INSTALL_ROOT/bin" "$FAKE_HOME/.bashrc"
 grep -F -q "$INSTALL_ROOT/formula-tools/bin" "$FAKE_HOME/.bashrc"
+grep -F -q "$INSTALL_ROOT/image-tools/bin" "$FAKE_HOME/.bashrc"
 [ -f "$FAKE_HOME/.codex/skills/paper-fetch-skill/SKILL.md" ] || die "Codex skill was not installed."
 [ -f "$FAKE_HOME/.claude/skills/paper-fetch-skill/SKILL.md" ] || die "Claude skill was not installed."
 grep -F -q "codex mcp remove paper-fetch" "$FAKE_CLI_LOG"
@@ -111,6 +112,7 @@ grep -F -q "claude mcp remove -s user paper-fetch" "$FAKE_CLI_LOG"
 grep -F -q "claude mcp add -s user" "$FAKE_CLI_LOG"
 grep -F -q "PAPER_FETCH_ENV_FILE=$INSTALL_ROOT/offline.env" "$FAKE_CLI_LOG"
 grep -F -q "PAPER_FETCH_FORMULA_TOOLS_DIR=$INSTALL_ROOT/formula-tools" "$FAKE_CLI_LOG"
+grep -F -q "PAPER_FETCH_IMAGE_TOOLS_DIR=$INSTALL_ROOT/image-tools" "$FAKE_CLI_LOG"
 grep -F -q "MATHML_TO_LATEX_NODE_BIN=" "$FAKE_CLI_LOG"
 grep -F -q "CLOAKBROWSER_HEADLESS=true" "$FAKE_CLI_LOG"
 
@@ -120,6 +122,7 @@ source "$INSTALL_ROOT/activate-offline.sh"
 log "Verifying command entrypoints"
 paper-fetch --help >/dev/null
 texmath --help >/dev/null
+paper-fetch-install-image-tools --target-dir "$INSTALL_ROOT/image-tools" >/dev/null
 
 log "Verifying browser runtime package entrypoint"
 "$RUNTIME_PYTHON" - <<'PY'

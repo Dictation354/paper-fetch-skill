@@ -124,6 +124,8 @@ def retry_failed_browser_assets(
     )
     if not failed_body_assets and not failed_supplementary_assets:
         return previous
+    if recovery.runtime is None:
+        return previous
 
     refreshed_seed = deps.refresh_browser_context_seed(
         _seed_urls_for(recovery, recovery.browser_context_seed),
@@ -222,6 +224,8 @@ def _run_browser_asset_download_attempt(
             return merge_browser_context_seeds(attempt_seed)
 
     def raw_figure_page_fetcher(figure_page_url: str) -> tuple[str, str] | None:
+        if recovery.runtime is None:
+            return None
         try:
             html_result = deps.fetch_html_with_browser(
                 [figure_page_url],
@@ -248,6 +252,13 @@ def _run_browser_asset_download_attempt(
     def seed_urls_getter() -> list[str]:
         return _seed_urls_for(recovery, attempt_seed_snapshot())
 
+    def seeded_asset_headers(seed_snapshot: Mapping[str, Any]) -> dict[str, str]:
+        seed_urls = _seed_urls_for(recovery, seed_snapshot)
+        referer = normalize_text(str(seed_snapshot.get("browser_final_url") or ""))
+        if not referer and seed_urls:
+            referer = seed_urls[-1]
+        return {"Referer": referer} if referer else {}
+
     image_document_fetcher = _build_attempt_document_fetcher(
         recovery,
         attempt_seed=attempt_seed,
@@ -268,6 +279,7 @@ def _run_browser_asset_download_attempt(
         def download_body_assets() -> Mapping[str, Any]:
             if not attempt_body_assets:
                 return empty_asset_results()
+            seed_snapshot = attempt_seed_snapshot()
             return deps.download_assets(
                 FIGURE_KIND,
                 attempt_settings.get("transport"),
@@ -276,6 +288,9 @@ def _run_browser_asset_download_attempt(
                 output_dir=plan.output_dir,
                 user_agent=recovery.user_agent,
                 asset_profile=plan.asset_profile,
+                headers=seeded_asset_headers(seed_snapshot),
+                browser_context_seed=seed_snapshot,
+                seed_urls=_seed_urls_for(recovery, seed_snapshot),
                 figure_page_fetcher=figure_page_fetcher,
                 candidate_builder=deps._browser_workflow_image_download_candidates,
                 image_document_fetcher=image_document_fetcher,
@@ -305,6 +320,7 @@ def _run_browser_asset_download_attempt(
                 output_dir=plan.output_dir,
                 user_agent=recovery.user_agent,
                 asset_profile=plan.asset_profile,
+                headers=seeded_asset_headers(seed_snapshot),
                 browser_context_seed=seed_snapshot,
                 seed_urls=_seed_urls_for(recovery, seed_snapshot),
                 file_document_fetcher=file_document_fetcher,

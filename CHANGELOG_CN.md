@@ -6,6 +6,25 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 2.7.0 - 2026-07-01
+
+### 新增
+
+- 新增 AMS direct HTTP HTML preflight：在 CDP browser fallback 之前先用等价浏览器请求头请求公开 AMS 正文页，公开页面可减少浏览器启动，同时保留原有 browser/PDF 恢复路线。
+- 新增 AMS `Download Figure` EPS/TIFF 源图处理：正文 figure 资产会优先使用 publisher 源文件；Ghostscript/libvips 可用时转为 PNG，同时保留原始源文件和转换元数据；转换工具不可用或转换失败时继续回退网页 JPG/PNG 候选。
+- 新增可选图片转换工具链：`paper-fetch-install-image-tools`、`install-image-tools.sh`、`PAPER_FETCH_IMAGE_TOOLS_DIR`、`PAPER_FETCH_GHOSTSCRIPT_BIN`、`PAPER_FETCH_VIPS_BIN`、`PAPER_FETCH_EPS_DPI` 和 `PAPER_FETCH_IMAGE_TOOL_TIMEOUT_SECONDS`，并同步离线安装器环境变量。
+
+### 变更
+
+- Linux、macOS、Windows 离线包构建现在只配置 image-tools 路径，不再把构建机 `PATH` 上的 `gs`/`vips` 符号链接打进包内；Ghostscript/libvips 仍是可选运行时工具。
+- arXiv Atom API metadata enrichment 改为使用 60 秒专用超时，并对 timeout/5xx 做 2 次 transient retry；provider status 也会暴露这些诊断设置。
+
+### 修复
+
+- 修复 direct HTTP browser-workflow 资产下载：AMS 未启动 browser runtime 时，资产失败不会再尝试刷新 browser seed；supplementary 下载也会继承和正文 figure 一致的 seeded Referer 行为。
+- 忽略 repo-local `.image-tools/` 产物，避免本机 Ghostscript/libvips 暂存链接被误提交。
+- 同步 README、provider、deployment、architecture、extraction-rule、离线安装器、CI 和单测，覆盖 AMS 源图、图片转换回退和离线 image-tools 行为。
+
 ## 2.6.2 - 2026-06-27
 
 ### 变更

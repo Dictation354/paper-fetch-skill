@@ -90,9 +90,12 @@ def extract_asset_html_scopes(
     supplementary_container: Any,
     *,
     publisher: str,
+    source_url: str | None = None,
+    raw_body_container: Any | None = None,
     content_fragment_html,
     atypon_browser_workflow_supplementary_sections,
 ) -> tuple[str, str]:
+    del source_url, raw_body_container
     for node in list(atypon_browser_workflow_supplementary_sections(body_container)):
         node.decompose()
 

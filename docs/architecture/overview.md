@@ -205,7 +205,7 @@ workflow 尽量拿到 Crossref metadata 与 publisher metadata（`elsevier` 仍�
 
 实现要点：
 
-- Wiley / Science / PNAS / AMS / Annual Reviews / ACS / IOP / AIP / MDPI 共用 `paper_fetch.providers.browser_workflow` 这套 canonical browser workflow facade（profile / bootstrap / pdf_fallback / article / assets / client / shared / html_extraction / fetchers），通过 `shared.BrowserWorkflowDeps` 注入依赖，复用 `RuntimeContext` keyed `BrowserContextManager` 管理的 CDP browser connection，并按阶段/线程创建隔离 context/page。
+- Wiley / Science / PNAS / AMS / Annual Reviews / ACS / IOP / AIP / MDPI 共用 `paper_fetch.providers.browser_workflow` 这套 canonical browser workflow facade（profile / bootstrap / pdf_fallback / article / assets / client / shared / html_extraction / fetchers），通过 `shared.BrowserWorkflowDeps` 注入依赖。AMS 会先在 bootstrap 内尝试带浏览器 UA/Referer 的 direct HTTP HTML preflight；其余 browser provider 以及 AMS fallback 复用 `RuntimeContext` keyed `BrowserContextManager` 管理的 CDP browser connection，并按阶段/线程创建隔离 context/page。
 - Atypon 候选路由通过 `_atypon_browser_workflow_profiles` 分派，publisher 差异走 profile callback。
 - provider-owned author 抽取统一用 `_html_authors.AuthorExtractionPipeline`，每个 provider 只注册命名 `AuthorStep`。
 - 这些 waterfall 由 `_waterfall` 做轻量编排（按 step 顺序执行、累积 warnings、组合失败、写成功/失败 source markers）；`ProviderClient.fetch_result` 是 template-method，base 统一完成 raw payload、related assets、`to_article_model`、artifacts 和 trace/warning 组装。

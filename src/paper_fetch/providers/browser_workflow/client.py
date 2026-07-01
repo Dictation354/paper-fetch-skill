@@ -111,6 +111,13 @@ class BrowserWorkflowClient(ProviderClient):
             return profile.label
         return provider_display_name(self.name)
 
+    def _direct_http_asset_mode(self, seed: Mapping[str, Any]) -> bool:
+        return (
+            self.name == "ams"
+            and normalize_text(str(seed.get("paper_fetch_html_fetcher") or ""))
+            == "direct_http"
+        )
+
     def allow_pdf_fallback_after_html_failure(
         self,
         *,
@@ -460,17 +467,29 @@ class BrowserWorkflowClient(ProviderClient):
         if not plan.body_assets and not plan.supplementary_assets:
             return empty_asset_results()
 
-        runtime = self.deps.load_runtime_config(
-            self.env,
-            provider=self.name,
-            doi=normalized_doi,
+        raw_browser_context_seed = (
+            dict(content.browser_context_seed or {}) if content is not None else {}
         )
-        self.deps.ensure_runtime_ready(runtime)
-        browser_context_seed = merge_browser_context_seeds(
-            content.browser_context_seed if content is not None else None
+        direct_http_asset_mode = self._direct_http_asset_mode(raw_browser_context_seed)
+        browser_context_seed = merge_browser_context_seeds(raw_browser_context_seed)
+        if direct_http_asset_mode:
+            browser_context_seed["paper_fetch_html_fetcher"] = "direct_http"
+        if direct_http_asset_mode:
+            runtime = None
+        else:
+            runtime = self.deps.load_runtime_config(
+                self.env,
+                provider=self.name,
+                doi=normalized_doi,
+            )
+            self.deps.ensure_runtime_ready(runtime)
+        runtime_cdp_endpoint = (
+            normalize_text(getattr(runtime, "cdp_endpoint", None))
+            if runtime is not None
+            else ""
         )
         external_cdp_endpoint = bool(
-            normalize_text(getattr(runtime, "cdp_endpoint", None))
+            runtime_cdp_endpoint
             or normalize_text((getattr(context, "env", {}) or {}).get(CLOAKBROWSER_CDP_ENDPOINT_ENV_VAR))
         )
         asset_download_concurrency = (
@@ -503,8 +522,16 @@ class BrowserWorkflowClient(ProviderClient):
             "figure_page_fetcher_factory": _MemoizedFigurePageFetcher,
             "serial_browser_assets": external_cdp_endpoint,
         }
-        image_fetcher_factory = partial(self._browser_asset_image_fetcher, context)
-        file_fetcher_factory = partial(self._browser_asset_file_fetcher, context)
+        image_fetcher_factory = (
+            (lambda **_request: None)
+            if direct_http_asset_mode
+            else partial(self._browser_asset_image_fetcher, context)
+        )
+        file_fetcher_factory = (
+            (lambda **_request: None)
+            if direct_http_asset_mode
+            else partial(self._browser_asset_file_fetcher, context)
+        )
         result = run_browser_asset_download_attempt(
             plan,
             recovery,

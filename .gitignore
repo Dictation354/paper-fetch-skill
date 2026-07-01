@@ -4,6 +4,7 @@ node_modules/
 # Local tool installs
 .formula-tools/
 .formula-benchmarks/
+.image-tools/
 
 # Python
 .venv/

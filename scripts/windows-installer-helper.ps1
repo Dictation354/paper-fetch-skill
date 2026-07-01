@@ -21,6 +21,7 @@ $McpEnvKeys = @(
     "PAPER_FETCH_ENV_FILE",
     "PAPER_FETCH_DOWNLOAD_DIR",
     "PAPER_FETCH_FORMULA_TOOLS_DIR",
+    "PAPER_FETCH_IMAGE_TOOLS_DIR",
     "MATHML_TO_LATEX_NODE_BIN",
     "CLOAKBROWSER_HEADLESS"
 )
@@ -193,6 +194,7 @@ function Get-McpEnv {
     $offlineEnv = Join-Path $InstallRoot "offline.env"
     $downloads = Join-Path $InstallRoot "downloads"
     $formulaTools = Join-Path $InstallRoot "formula-tools"
+    $imageTools = Join-Path $InstallRoot "image-tools"
 
     $values = @{
         PYTHONUTF8 = "1"
@@ -200,6 +202,7 @@ function Get-McpEnv {
         PAPER_FETCH_ENV_FILE = (ConvertTo-FullPath $offlineEnv)
         PAPER_FETCH_DOWNLOAD_DIR = (ConvertTo-FullPath $downloads)
         PAPER_FETCH_FORMULA_TOOLS_DIR = (ConvertTo-FullPath $formulaTools)
+        PAPER_FETCH_IMAGE_TOOLS_DIR = (ConvertTo-FullPath $imageTools)
         MATHML_TO_LATEX_NODE_BIN = (ConvertTo-FullPath (Get-MathmlToLatexNode))
         CLOAKBROWSER_HEADLESS = "true"
     }
@@ -261,6 +264,7 @@ function Write-ManagedEnvFile {
     foreach ($name in @(
         "PAPER_FETCH_DOWNLOAD_DIR",
         "PAPER_FETCH_FORMULA_TOOLS_DIR",
+        "PAPER_FETCH_IMAGE_TOOLS_DIR",
         "MATHML_TO_LATEX_NODE_BIN",
         "CLOAKBROWSER_HEADLESS",
         "PYTHONUTF8",
@@ -611,6 +615,8 @@ path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding=
 function Invoke-SmokeChecks {
     $texmath = ConvertTo-FullPath (Join-Path (Join-Path $InstallRoot "formula-tools") "bin/texmath.exe")
     $node = ConvertTo-FullPath (Get-MathmlToLatexNode)
+    $gs = Join-Path (Join-Path $InstallRoot "image-tools") "bin/gswin64c.exe"
+    $vips = Join-Path (Join-Path $InstallRoot "image-tools") "bin/vips.exe"
 
     Set-ProcessRuntimeEnv
     Write-Log "Running bundled Python smoke checks"
@@ -633,6 +639,12 @@ assert BrowserContextManager is not None
     Invoke-RuntimePythonScript -Script $browserRuntimeCheck
     Invoke-Checked -FilePath $texmath -Arguments @("--help")
     Invoke-Checked -FilePath $node -Arguments @("--version")
+    if (Test-Path -LiteralPath $gs -PathType Leaf) {
+        Invoke-Checked -FilePath $gs -Arguments @("--version")
+    }
+    if (Test-Path -LiteralPath $vips -PathType Leaf) {
+        Invoke-Checked -FilePath $vips -Arguments @("--version")
+    }
 }
 
 switch ($Action) {

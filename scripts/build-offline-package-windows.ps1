@@ -253,6 +253,18 @@ stage_bundled_node_workspace(Path(sys.argv[1]))
     Invoke-Native $BuildPython -c $stageNodeWorkspace $target
 }
 
+function Add-ImageTools {
+    param(
+        [string]$Staging,
+        [string]$BuildPython
+    )
+
+    Write-Log "Bundling image conversion tools"
+    $target = Join-Path $Staging "image-tools"
+    New-Item -ItemType Directory -Force -Path $target | Out-Null
+    Invoke-Native $BuildPython -m paper_fetch.image_tools.install --target-dir $target --offline-bundle --repo-root $RepoDir
+}
+
 function Write-CmdWrappers {
     param([string]$Staging)
 
@@ -283,6 +295,15 @@ set "PYTHONIOENCODING=utf-8"
 exit /b %ERRORLEVEL%
 '@
     Set-Content -LiteralPath (Join-Path $bin "paper-fetch-mcp.cmd") -Value $mcp -Encoding ASCII
+
+    $imageTools = @'
+@echo off
+setlocal
+set "PAPER_FETCH_ROOT=%~dp0.."
+"%PAPER_FETCH_ROOT%\runtime\python.exe" -X utf8 -m paper_fetch.image_tools.install %*
+exit /b %ERRORLEVEL%
+'@
+    Set-Content -LiteralPath (Join-Path $bin "paper-fetch-install-image-tools.cmd") -Value $imageTools -Encoding ASCII
 }
 
 function Add-SkillAgentManifest {
@@ -308,6 +329,7 @@ ELSEVIER_API_KEY=""
 $OfflineManagedBegin
 PAPER_FETCH_DOWNLOAD_DIR='$($Staging.Replace("\", "/"))/downloads'
 PAPER_FETCH_FORMULA_TOOLS_DIR='$($Staging.Replace("\", "/"))/formula-tools'
+PAPER_FETCH_IMAGE_TOOLS_DIR='$($Staging.Replace("\", "/"))/image-tools'
 MATHML_TO_LATEX_NODE_BIN='$($Staging.Replace("\", "/"))/runtime/Lib/site-packages/playwright/driver/node.exe'
 CLOAKBROWSER_HEADLESS='true'
 PAPER_FETCH_BROWSER_USER_AGENT='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36'
@@ -328,7 +350,8 @@ function Write-OfflineReadme {
     $content = @'
 # Paper Fetch Windows Offline Installer
 
-This installer includes the embedded Python runtime, installed Python packages, and formula tools.
+This installer includes the embedded Python runtime, installed Python packages, formula tools, and image-tools configuration for optional conversion tools.
+The offline build does not bundle Ghostscript/libvips from the build host PATH; AMS EPS/TIFF source figure conversion falls back to webpage JPG/PNG candidates when those tools are unavailable.
 It does not redistribute a browser binary for browser-backed providers; cloakbrowser downloads or locates Chrome on first use.
 Formula conversion uses the bundled Playwright driver Node via `MATHML_TO_LATEX_NODE_BIN`; do not rely on a bare `node` from PATH in Codex Desktop sessions.
 
@@ -376,6 +399,7 @@ function Write-ManifestAndChecksums {
             installer_manifest = "installer/manifest.json"
             command_wrappers = "bin"
             formula_tools = "formula-tools"
+            image_tools = "image-tools"
             cloakbrowser = [ordered]@{
                 python_package = "runtime/Lib/site-packages"
                 browser_binary = "not_bundled"
@@ -407,6 +431,7 @@ function Assert-RuntimeOnlyStaging {
         "runtime/Lib/site-packages/paper_fetch/__init__.py",
         "bin/paper-fetch.cmd",
         "bin/paper-fetch-mcp.cmd",
+        "bin/paper-fetch-install-image-tools.cmd",
         "skills/$SkillName/SKILL.md",
         "installer/manifest.json",
         "scripts/windows-installer-helper.ps1"
@@ -494,6 +519,7 @@ $buildPython = New-BuildVenv
 Add-EmbeddedPythonRuntime $staging
 Install-EmbeddedPythonPackages $staging
 Add-FormulaTools -Staging $staging -BuildPython $buildPython
+Add-ImageTools -Staging $staging -BuildPython $buildPython
 Write-CmdWrappers $staging
 Add-SkillAgentManifest $staging
 Write-DefaultOfflineEnv $staging

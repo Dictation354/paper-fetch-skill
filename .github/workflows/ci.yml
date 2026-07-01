@@ -104,10 +104,14 @@ jobs:
           python -m paper_fetch.formula.install --target-dir "$PWD/.formula-tools" --no-node
           ./.formula-tools/bin/texmath --help >/dev/null
 
+      - name: Install image test backend
+        run: python -m paper_fetch.image_tools.install --target-dir "$PWD/.image-tools"
+
       - name: Run unit suite
         env:
           PYTHONPATH: ${{ github.workspace }}/src
           PAPER_FETCH_FORMULA_TOOLS_DIR: ${{ github.workspace }}/.formula-tools
+          PAPER_FETCH_IMAGE_TOOLS_DIR: ${{ github.workspace }}/.image-tools
         run: |
           python -m pytest tests/unit -q --durations=30
           python -m pytest tests/devtools -q --durations=30
@@ -247,6 +251,8 @@ jobs:
           test -f "$install_root/runtime/site-packages/paper_fetch/__init__.py"
           test -x "$install_root/bin/paper-fetch"
           test -x "$install_root/bin/paper-fetch-install-formula-tools"
+          test -x "$install_root/bin/paper-fetch-install-image-tools"
+          grep -F -q "PAPER_FETCH_IMAGE_TOOLS_DIR=\"$install_root/image-tools\"" "$install_root/offline.env"
           for forbidden in src tests wheelhouse dist .github pyproject.toml; do
             if [ -e "$install_root/$forbidden" ]; then
               echo "Linux runtime package must not include source/build path: $forbidden" >&2
@@ -339,8 +345,10 @@ jobs:
           test -f "$install_root/runtime/site-packages/paper_fetch/__init__.py"
           test -x "$install_root/bin/paper-fetch"
           test -x "$install_root/bin/paper-fetch-install-formula-tools"
+          test -x "$install_root/bin/paper-fetch-install-image-tools"
           grep -F -q 'CLOAKBROWSER_CDP_ENDPOINT="ws://127.0.0.1:9222/devtools/browser/..."' "$install_root/offline.env"
           grep -F -q 'CLOAKBROWSER_HEADLESS="false"' "$install_root/offline.env"
+          grep -F -q "PAPER_FETCH_IMAGE_TOOLS_DIR=\"$install_root/image-tools\"" "$install_root/offline.env"
           test -f "$layout_home/.gemini/antigravity-cli/skills/paper-fetch-skill/SKILL.md"
           test -f "$layout_home/.gemini/antigravity-cli/mcp_config.json"
           "$install_root/runtime/paper-fetch-python" -X utf8 - "$layout_home/.gemini/antigravity-cli/mcp_config.json" <<'PY'
@@ -587,6 +595,7 @@ jobs:
             "runtime/Lib/site-packages/paper_fetch/__init__.py",
             "bin/paper-fetch.cmd",
             "bin/paper-fetch-mcp.cmd",
+            "bin/paper-fetch-install-image-tools.cmd",
             "skills/paper-fetch-skill/SKILL.md",
             "installer/manifest.json",
             "scripts/windows-installer-helper.ps1"
@@ -627,6 +636,9 @@ jobs:
           if (-not $offlineEnv.Contains("$offlineEnvRoot/downloads")) {
             throw "offline.env managed block does not point at the install root.`n$offlineEnv"
           }
+          if (-not $offlineEnv.Contains("PAPER_FETCH_IMAGE_TOOLS_DIR='$offlineEnvRoot/image-tools'")) {
+            throw "offline.env managed block does not point at bundled image tools.`n$offlineEnv"
+          }
           if (-not $offlineEnv.Contains("MATHML_TO_LATEX_NODE_BIN='$offlineEnvRoot/runtime/Lib/site-packages/playwright/driver/node.exe'")) {
             throw "offline.env managed block does not pin bundled MathML Node.`n$offlineEnv"
           }
@@ -647,6 +659,7 @@ jobs:
           '@
           Invoke-RuntimePythonScript -Script $providerStatusCheck
           & (Join-Path $installRoot "bin/paper-fetch.cmd") --help | Out-Null
+          & (Join-Path $installRoot "bin/paper-fetch-install-image-tools.cmd") --target-dir (Join-Path $installRoot "image-tools") | Out-Null
           & (Join-Path $installRoot "formula-tools/bin/texmath.exe") --help | Out-Null
           & $mathmlNode --version | Out-Null
 
@@ -664,6 +677,7 @@ jobs:
           foreach ($expected in @(
             "codex mcp remove paper-fetch",
             "codex mcp add",
+            "PAPER_FETCH_IMAGE_TOOLS_DIR=$installRoot\image-tools",
             "MATHML_TO_LATEX_NODE_BIN=$installRoot\runtime\Lib\site-packages\playwright\driver\node.exe",
             "CLOAKBROWSER_HEADLESS=true",
             "claude mcp remove -s user paper-fetch",
@@ -852,10 +866,14 @@ jobs:
           python -m paper_fetch.formula.install --target-dir "$PWD/.formula-tools" --no-node
           ./.formula-tools/bin/texmath --help >/dev/null
 
+      - name: Install image test backend
+        run: python -m paper_fetch.image_tools.install --target-dir "$PWD/.image-tools"
+
       - name: Run full golden corpus regression
         env:
           PAPER_FETCH_RUN_FULL_GOLDEN: "1"
           PAPER_FETCH_FORMULA_TOOLS_DIR: ${{ github.workspace }}/.formula-tools
+          PAPER_FETCH_IMAGE_TOOLS_DIR: ${{ github.workspace }}/.image-tools
         run: python -m pytest tests/integration/test_golden_corpus.py -q
 
   live-mcp:

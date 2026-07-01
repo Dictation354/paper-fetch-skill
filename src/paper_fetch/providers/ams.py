@@ -86,6 +86,7 @@ register_provider_bundle(
 AMS_BROWSER_PROFILE = browser_workflow.make_atypon_browser_profile(
     "ams",
     fallback_author_extractor=_ams_html.extract_authors,
+    direct_http_html_preflight=True,
 )
 
 

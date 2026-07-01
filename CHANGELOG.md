@@ -6,6 +6,25 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 2.7.0 - 2026-07-01
+
+### Added
+
+- Added AMS direct HTTP HTML preflight with browser-equivalent headers before the CDP browser fallback, reducing browser startup for publicly reachable AMS article pages while preserving the existing browser/PDF recovery route.
+- Added AMS `Download Figure` EPS/TIFF source-figure handling: body figure assets now prefer publisher source files, convert them to PNG through Ghostscript/libvips when available, preserve the original source files and conversion metadata, and fall back to webpage JPG/PNG candidates when conversion is unavailable or fails.
+- Added optional image conversion tooling (`paper-fetch-install-image-tools`, `install-image-tools.sh`, `PAPER_FETCH_IMAGE_TOOLS_DIR`, `PAPER_FETCH_GHOSTSCRIPT_BIN`, `PAPER_FETCH_VIPS_BIN`, `PAPER_FETCH_EPS_DPI`, and `PAPER_FETCH_IMAGE_TOOL_TIMEOUT_SECONDS`) plus offline installer environment propagation.
+
+### Changed
+
+- Changed Linux, macOS, and Windows offline package builders to configure image-tools paths without bundling build-host `gs`/`vips` symlinks from `PATH`; Ghostscript/libvips remain optional runtime tools.
+- Changed arXiv Atom API enrichment to use a 60 second timeout and two transient retries for timeout/5xx failures, and surfaced those settings in provider status diagnostics.
+
+### Fixed
+
+- Fixed direct HTTP browser-workflow asset downloads so a failed AMS asset does not attempt browser seed refresh when no browser runtime was started, and so supplementary downloads inherit the same seeded Referer behavior as body figure downloads.
+- Ignored repo-local `.image-tools/` output so local Ghostscript/libvips staging artifacts are not accidentally committed.
+- Updated README, provider, deployment, architecture, extraction-rule, offline installer, CI, and unit-test coverage for AMS source figures, image conversion fallback, and offline image-tools behavior.
+
 ## 2.6.2 - 2026-06-27
 
 ### Changed

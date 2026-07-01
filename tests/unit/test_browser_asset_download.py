@@ -201,6 +201,28 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
         self.assertIs(figure_call.args[0], FIGURE_KIND)
         self.assertIs(figure_call.kwargs["image_document_fetcher"], image_fetcher)
         self.assertEqual(figure_call.kwargs["asset_download_concurrency"], 3)
+        self.assertEqual(
+            figure_call.kwargs["browser_context_seed"],
+            {
+                "browser_cookies": [
+                    {
+                        "name": "sid",
+                        "value": "one",
+                        "url": "https://example.test/final",
+                    }
+                ],
+                "browser_user_agent": "seed-agent",
+                "browser_final_url": "https://example.test/final",
+            },
+        )
+        self.assertEqual(
+            figure_call.kwargs["seed_urls"],
+            ["https://example.test/article", "https://example.test/final"],
+        )
+        self.assertEqual(
+            figure_call.kwargs["headers"],
+            {"Referer": "https://example.test/final"},
+        )
         self.assertIs(supplementary_call.args[0], SUPPLEMENTARY_KIND)
         self.assertIs(
             supplementary_call.kwargs["file_document_fetcher"],
@@ -213,6 +235,10 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
         self.assertEqual(
             supplementary_call.kwargs["seed_urls"],
             ["https://example.test/article", "https://example.test/final"],
+        )
+        self.assertEqual(
+            supplementary_call.kwargs["headers"],
+            {"Referer": "https://example.test/final"},
         )
         image_fetcher.close.assert_called_once()
         file_fetcher.close.assert_called_once()
@@ -642,3 +668,62 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
             ["https://example.test/supplement.pdf"],
         )
         self.assertEqual(result.failures, [])
+
+    def test_retry_failed_browser_assets_skips_refresh_without_runtime(self) -> None:
+        failed_figure = {
+            "kind": "figure",
+            "heading": "Figure 1",
+            "url": "https://example.test/figure1.png",
+            "section": "body",
+        }
+        plan = BrowserAssetDownloadPlan(
+            article_id="10.5555/example",
+            output_dir=Path("/tmp/browser-assets"),
+            asset_profile="all",
+            body_assets=[failed_figure],
+            supplementary_assets=[],
+        )
+        previous = BrowserAssetDownloadResult(
+            body_results=[],
+            supplementary_results=[],
+            failures=[
+                {
+                    "kind": "figure",
+                    "heading": "Figure 1",
+                    "source_url": "https://example.test/figure1.png",
+                    "section": "body",
+                    "reason": "image_conversion_failed: missing ghostscript",
+                }
+            ],
+        )
+        recovery = BrowserAssetRecoveryContext(
+            runtime=None,
+            provider="ams",
+            user_agent="test-agent",
+            browser_context_seed={
+                "browser_final_url": "https://example.test/article",
+                "paper_fetch_html_fetcher": "direct_http",
+            },
+            browser_cookies=[],
+            active_seed_urls=["https://example.test/article"],
+        )
+        mocked_warm = mock.Mock()
+        mocked_download_assets = mock.Mock()
+        deps = browser_workflow_deps(
+            refresh_browser_context_seed=mocked_warm,
+            download_assets=mocked_download_assets,
+        )
+
+        result = retry_failed_browser_assets(
+            plan,
+            previous,
+            recovery,
+            image_fetcher_factory=mock.Mock(return_value=None),
+            file_fetcher_factory=mock.Mock(return_value=None),
+            opener_requester={"transport": object()},
+            deps=deps,
+        )
+
+        self.assertIs(result, previous)
+        mocked_warm.assert_not_called()
+        mocked_download_assets.assert_not_called()
