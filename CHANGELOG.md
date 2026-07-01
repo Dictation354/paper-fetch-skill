@@ -8,6 +8,10 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 ## 2.7.1 - 2026-07-01
 
+### Added
+
+- Added `paper-fetch browser-preflight` to serially open browser-backed provider sample pages, save provider-scoped storage-state JSON on success, and report providers that need manual `paper-fetch auth`.
+
 ### Changed
 
 - PDF/ePDF fallback image exports now use the same DOI-scoped `<doi>_assets/` directory as HTML/XML asset downloads when a DOI is available, while retaining the legacy `body_assets/` fallback for DOI-less internal calls.

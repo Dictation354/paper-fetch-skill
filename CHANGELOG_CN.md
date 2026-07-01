@@ -8,6 +8,10 @@
 
 ## 2.7.1 - 2026-07-01
 
+### 新增
+
+- 新增 `paper-fetch browser-preflight`：串行打开 browser-backed provider 的内置样例页，成功时保存 provider 归属的 storage-state JSON，失败时报告需要运行 `paper-fetch auth` 的出版社。
+
 ### 变更
 
 - PDF/ePDF fallback 图片导出现在会在有 DOI 时使用与 HTML/XML 资产下载一致的 DOI 归属 `<doi>_assets/` 目录；无 DOI 的内部调用仍保留旧的 `body_assets/` 回退。

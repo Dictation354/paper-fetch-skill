@@ -207,6 +207,86 @@ class CliTests(unittest.TestCase):
         self.assertEqual(payload["status"], "not_configured")
         self.assertEqual(payload["reason"], "CloakBrowser missing.")
 
+    def test_browser_preflight_subcommand_invokes_runner(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            state_path = Path(tmpdir) / "publisher-browser-profiles" / "wiley" / "storage-state.json"
+            preflight_result = paper_fetch_cli.BrowserPreflightResult(
+                provider="wiley",
+                provider_label="Wiley",
+                ok=True,
+                target_url="https://onlinelibrary.wiley.com/doi/full/10.1111/gcb.16414",
+                final_url="https://onlinelibrary.wiley.com/doi/full/10.1111/gcb.16414",
+                storage_state_path=state_path,
+            )
+            stdout = io.StringIO()
+            stderr = io.StringIO()
+            original_argv = sys.argv
+            sys.argv = [
+                "paper_fetch.py",
+                "browser-preflight",
+                "--provider",
+                "wiley",
+                "--timeout-ms",
+                "45000",
+                "--browser-user-agent",
+                "Mozilla/5.0 preflight-test",
+            ]
+            try:
+                with (
+                    mock.patch.object(
+                        paper_fetch_cli,
+                        "run_browser_provider_preflight",
+                        return_value=[preflight_result],
+                    ) as run_preflight,
+                    contextlib.redirect_stdout(stdout),
+                    contextlib.redirect_stderr(stderr),
+                ):
+                    exit_code = paper_fetch_cli.main()
+            finally:
+                sys.argv = original_argv
+
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(stderr.getvalue(), "")
+            rendered = stdout.getvalue()
+            self.assertIn("ok: Wiley (wiley)", rendered)
+            self.assertIn("Storage state:", rendered)
+            run_preflight.assert_called_once()
+            kwargs = run_preflight.call_args.kwargs
+            self.assertEqual(kwargs["providers"], ["wiley"])
+            self.assertEqual(kwargs["timeout_ms"], 45000)
+            self.assertEqual(kwargs["browser_user_agent"], "Mozilla/5.0 preflight-test")
+
+    def test_browser_preflight_subcommand_reports_auth_hint_on_failure(self) -> None:
+        preflight_result = paper_fetch_cli.BrowserPreflightResult(
+            provider="wiley",
+            provider_label="Wiley",
+            ok=False,
+            target_url="https://onlinelibrary.wiley.com/doi/full/10.1111/gcb.16414",
+            reason="cloudflare_challenge",
+            message="Encountered a challenge or CAPTCHA page while loading publisher HTML.",
+        )
+        stdout = io.StringIO()
+        stderr = io.StringIO()
+        original_argv = sys.argv
+        sys.argv = ["paper_fetch.py", "browser-preflight", "--provider", "wiley"]
+        try:
+            with (
+                mock.patch.object(
+                    paper_fetch_cli,
+                    "run_browser_provider_preflight",
+                    return_value=[preflight_result],
+                ),
+                contextlib.redirect_stdout(stdout),
+                contextlib.redirect_stderr(stderr),
+            ):
+                exit_code = paper_fetch_cli.main()
+        finally:
+            sys.argv = original_argv
+
+        self.assertEqual(exit_code, 1)
+        self.assertIn("failed: Wiley (wiley)", stdout.getvalue())
+        self.assertIn("paper-fetch auth wiley", stderr.getvalue())
+
     def test_main_writes_markdown_json_and_both_to_stdout(self) -> None:
         article = sample_article()
         original_fetch = paper_fetch_cli.fetch_paper

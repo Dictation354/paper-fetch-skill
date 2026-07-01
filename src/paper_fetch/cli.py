@@ -19,6 +19,7 @@ from .auth import (
     browser_auth_provider_names,
 )
 from .artifacts import ArtifactMode, ArtifactStore
+from .browser_preflight import BrowserPreflightResult, run_browser_provider_preflight
 from .config import build_runtime_env, resolve_cli_download_dir
 from .models import FetchEnvelope, RenderOptions
 from .providers.base import ProviderFailure
@@ -659,6 +660,36 @@ def build_auth_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def build_browser_preflight_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        prog="paper-fetch browser-preflight",
+        description=(
+            "Serially open browser-backed provider sample pages, save provider "
+            "storage-state JSON on success, and report providers that need manual auth."
+        ),
+    )
+    parser.add_argument(
+        "--provider",
+        action="append",
+        choices=browser_auth_provider_names(),
+        help=(
+            "Browser-backed provider to preflight. May be repeated. "
+            "Defaults to all browser-backed providers."
+        ),
+    )
+    parser.add_argument(
+        "--timeout-ms",
+        type=parse_positive_int_arg,
+        default=None,
+        help="CloakBrowser navigation timeout in milliseconds.",
+    )
+    parser.add_argument(
+        "--browser-user-agent",
+        help="Browser-only User-Agent override for this preflight run.",
+    )
+    return parser
+
+
 def _write_auth_result(provider_key: str, provider_label: str, result) -> None:
     sys.stdout.write(f"{provider_label} storage state: {result.storage_state_path}\n")
     profile_dir = getattr(result, "profile_dir", None)
@@ -678,6 +709,33 @@ def _write_auth_result(provider_key: str, provider_label: str, result) -> None:
     if result.final_url:
         sys.stdout.write(f"Final URL: {result.final_url}\n")
     sys.stdout.write("Persistent browser state is optional; fetches still run without it.\n")
+
+
+def _write_browser_preflight_results(results: list[BrowserPreflightResult]) -> None:
+    sys.stdout.write("Browser preflight results:\n")
+    for result in results:
+        status = "ok" if result.ok else "failed"
+        sys.stdout.write(f"- {status}: {result.provider_label} ({result.provider})\n")
+        if result.final_url:
+            sys.stdout.write(f"  Final URL: {result.final_url}\n")
+        if result.storage_state_path is not None:
+            sys.stdout.write(f"  Storage state: {result.storage_state_path}\n")
+        if not result.ok:
+            detail = result.message or result.reason or "Browser preflight failed."
+            sys.stdout.write(f"  Reason: {detail}\n")
+
+
+def _write_browser_preflight_failure_hints(results: list[BrowserPreflightResult]) -> None:
+    failures = [result for result in results if not result.ok]
+    if not failures:
+        return
+    sys.stderr.write("Browser preflight failed for these providers; run manual auth before retrying:\n")
+    for result in failures:
+        detail = result.message or result.reason or "Browser preflight failed."
+        sys.stderr.write(
+            f"- {result.provider_label} ({result.provider}): {detail} "
+            f"Run: paper-fetch auth {result.provider}\n"
+        )
 
 
 def run_auth_command(raw_args: list[str]) -> int:
@@ -705,11 +763,30 @@ def run_auth_command(raw_args: list[str]) -> int:
     return 0
 
 
+def run_browser_preflight_command(raw_args: list[str]) -> int:
+    parser = build_browser_preflight_parser()
+    args = parser.parse_args(raw_args)
+    results = run_browser_provider_preflight(
+        providers=args.provider,
+        timeout_ms=args.timeout_ms,
+        browser_user_agent=args.browser_user_agent,
+    )
+    _write_browser_preflight_results(results)
+    _write_browser_preflight_failure_hints(results)
+    return 1 if any(not result.ok for result in results) else 0
+
+
 def main(argv: list[str] | None = None) -> int:
     raw_args = sys.argv[1:] if argv is None else list(argv)
     if raw_args[:1] == ["auth"]:
         try:
             return run_auth_command(raw_args[1:])
+        except ProviderFailure as exc:
+            sys.stderr.write(json.dumps(_error_payload(exc), ensure_ascii=False) + "\n")
+            return exit_code_for_error(exc)
+    if raw_args[:1] == ["browser-preflight"]:
+        try:
+            return run_browser_preflight_command(raw_args[1:])
         except ProviderFailure as exc:
             sys.stderr.write(json.dumps(_error_payload(exc), ensure_ascii=False) + "\n")
             return exit_code_for_error(exc)
