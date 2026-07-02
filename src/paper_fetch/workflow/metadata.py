@@ -12,7 +12,13 @@ from ..providers.base import ProviderFailure
 from ..providers.protocols import MetadataProvider
 from ..runtime import RuntimeContext
 from ..tracing import metadata_marker, route_marker
-from ..utils import choose_public_landing_page_url, dedupe_authors, extend_unique, normalize_text, safe_text
+from ..utils import (
+    choose_public_landing_page_url,
+    dedupe_authors,
+    extend_unique,
+    normalize_text,
+    safe_text,
+)
 from .routing import (
     build_official_provider_candidates,
     crossref_allowed_as_source,
@@ -33,7 +39,14 @@ def merge_primary_secondary_metadata(
 ) -> ProviderMetadata:
     merged = dict(secondary or {})
     merged.update(primary or {})
-    scalar_keys = ("doi", "title", "journal_title", "published", "abstract", "publisher")
+    scalar_keys = (
+        "doi",
+        "title",
+        "journal_title",
+        "published",
+        "abstract",
+        "publisher",
+    )
 
     def scalarize(value: Any, *, preserve_blank: bool = False) -> str | None:
         if isinstance(value, str):
@@ -72,7 +85,9 @@ def merge_primary_secondary_metadata(
 
     def merged_list(key: str, *, semantic: bool = False) -> list[Any]:
         result: list[Any] = []
-        for item in list((primary or {}).get(key) or []) + list((secondary or {}).get(key) or []):
+        for item in list((primary or {}).get(key) or []) + list(
+            (secondary or {}).get(key) or []
+        ):
             normalized_item = normalize_text(item) if isinstance(item, str) else item
             if normalized_item and normalized_item not in result:
                 result.append(normalized_item)
@@ -186,7 +201,9 @@ def fetch_metadata_for_resolved_query(
     crossref_client = clients.get("crossref")
 
     initial_probe_candidates = (
-        build_official_provider_candidates(resolved, routing_metadata=None, strategy=strategy)
+        build_official_provider_candidates(
+            resolved, routing_metadata=None, strategy=strategy
+        )
         if resolved.doi
         else []
     )
@@ -203,9 +220,13 @@ def fetch_metadata_for_resolved_query(
 
     def run_probe(candidate_provider: str):
         assert resolved.doi is not None
-        return probe_official_provider(candidate_provider, doi=resolved.doi, clients=clients, context=context)
+        return probe_official_provider(
+            candidate_provider, doi=resolved.doi, clients=clients, context=context
+        )
 
-    if resolved.doi and (isinstance(crossref_client, MetadataProvider) or initial_probe_candidates):
+    if resolved.doi and (
+        isinstance(crossref_client, MetadataProvider) or initial_probe_candidates
+    ):
         max_workers = 1 + len(initial_probe_candidates)
         with ThreadPoolExecutor(max_workers=max(1, max_workers)) as executor:
             crossref_future = (
@@ -233,7 +254,9 @@ def fetch_metadata_for_resolved_query(
         else:
             source_trail.append(route_marker("crossref_signal", "ok"))
     elif crossref_failure is not None and crossref_is_public_source:
-        source_trail.append(source_trail_for_failure("metadata", "crossref", crossref_failure))
+        source_trail.append(
+            source_trail_for_failure("metadata", "crossref", crossref_failure)
+        )
 
     extend_unique(
         source_trail,
@@ -256,9 +279,16 @@ def fetch_metadata_for_resolved_query(
         ):
             probe = initial_probe_results.get(candidate_provider)
             if probe is None:
-                probe = probe_official_provider(candidate_provider, doi=resolved.doi, clients=clients, context=context)
+                probe = probe_official_provider(
+                    candidate_provider,
+                    doi=resolved.doi,
+                    clients=clients,
+                    context=context,
+                )
             probes.append(probe)
-            source_trail.append(route_marker(f"probe_{candidate_provider}", probe.state))
+            source_trail.append(
+                route_marker(f"probe_{candidate_provider}", probe.state)
+            )
             if probe.state == "positive":
                 break
 
@@ -286,16 +316,25 @@ def fetch_metadata_for_resolved_query(
         try:
             official_metadata = cast(
                 ProviderMetadata,
-                provider_metadata_client.fetch_metadata(provider_metadata_query_from_resolution(resolved)),
+                provider_metadata_client.fetch_metadata(
+                    provider_metadata_query_from_resolution(resolved)
+                ),
             )
             source_trail.append(metadata_marker(provider_name, "ok"))
         except ProviderFailure as exc:
-            source_trail.append(source_trail_for_failure("metadata", provider_name, exc))
+            source_trail.append(
+                source_trail_for_failure("metadata", provider_name, exc)
+            )
 
     if official_metadata or crossref_metadata:
-        if official_metadata and metadata_marker(provider_name or "provider", "ok") not in source_trail:
+        if (
+            official_metadata
+            and metadata_marker(provider_name or "provider", "ok") not in source_trail
+        ):
             source_trail.append(metadata_marker(provider_name or "provider", "ok"))
-        metadata = merge_primary_secondary_metadata(official_metadata, crossref_metadata)
+        metadata = merge_primary_secondary_metadata(
+            official_metadata, crossref_metadata
+        )
         source_metadata = official_metadata or crossref_metadata or {}
         provider_value = source_metadata.get("provider")
         official_provider_value = source_metadata.get("official_provider")
@@ -305,9 +344,13 @@ def fetch_metadata_for_resolved_query(
             metadata["official_provider"] = official_provider_value
         if not metadata.get("landing_page_url"):
             metadata["landing_page_url"] = resolved.landing_url
-        metadata = _merge_cached_landing_probe_links(metadata, resolved, context=context)
+        metadata = _merge_cached_landing_probe_links(
+            metadata, resolved, context=context
+        )
         return metadata, provider_name, source_trail
 
     source_trail.append(metadata_marker("resolution_only"))
-    metadata = _merge_cached_landing_probe_links(metadata_from_resolution(resolved), resolved, context=context)
+    metadata = _merge_cached_landing_probe_links(
+        metadata_from_resolution(resolved), resolved, context=context
+    )
     return metadata, provider_name, source_trail

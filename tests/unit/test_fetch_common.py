@@ -12,7 +12,9 @@ from tests.paths import REPO_ROOT
 
 
 class FetchCommonTests(unittest.TestCase):
-    def test_sanitize_filename_truncates_long_values_with_stable_hash_suffix(self) -> None:
+    def test_sanitize_filename_truncates_long_values_with_stable_hash_suffix(
+        self,
+    ) -> None:
         long_name = "10.1016/" + ("a" * 260)
 
         sanitized = utils.sanitize_filename(long_name)
@@ -30,7 +32,9 @@ class FetchCommonTests(unittest.TestCase):
 
         self.assertEqual(authors, ["Zhang, San", "Alice Example"])
 
-    def test_runtime_dependencies_are_declared_explicitly_and_not_patch_pinned(self) -> None:
+    def test_runtime_dependencies_are_declared_explicitly_and_not_patch_pinned(
+        self,
+    ) -> None:
         with (REPO_ROOT / "pyproject.toml").open("rb") as handle:
             pyproject = tomllib.load(handle)
 
@@ -82,7 +86,9 @@ class FetchCommonTests(unittest.TestCase):
                 return original_write_bytes(self, data)
 
             original_write_bytes = Path.write_bytes
-            with mock.patch.object(Path, "write_bytes", autospec=True, side_effect=fail_once):
+            with mock.patch.object(
+                Path, "write_bytes", autospec=True, side_effect=fail_once
+            ):
                 with self.assertRaises(OSError):
                     utils.save_payload(target, b"new")
 
@@ -116,9 +122,13 @@ class FetchCommonTests(unittest.TestCase):
 
         for content_type, suffix in expected.items():
             with self.subTest(content_type=content_type):
-                self.assertEqual(utils.extension_from_content_type(content_type), suffix)
+                self.assertEqual(
+                    utils.extension_from_content_type(content_type), suffix
+                )
 
-    def test_build_asset_output_path_prefers_explicit_filename_before_url_path(self) -> None:
+    def test_build_asset_output_path_prefers_explicit_filename_before_url_path(
+        self,
+    ) -> None:
         with TemporaryDirectory() as tmpdir:
             output_path = utils.build_asset_output_path(
                 Path(tmpdir),

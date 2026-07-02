@@ -38,7 +38,11 @@ from tests.golden_criteria import (
     golden_criteria_dir_for_doi,
     golden_criteria_sample_for_doi,
 )
-from tests.unit._paper_fetch_support import RecordingTransport, StubProvider, http_response
+from tests.unit._paper_fetch_support import (
+    RecordingTransport,
+    StubProvider,
+    http_response,
+)
 
 
 PDF_FALLBACK_IDS = ("2006.11239v2", "1406.2661v1")
@@ -77,9 +81,7 @@ def _fixture_dir(arxiv_id: str) -> Path:
 
 def _api_payload(arxiv_id: str) -> dict:
     return json.loads(
-        golden_criteria_asset(_doi(arxiv_id), "api.json").read_text(
-            encoding="utf-8"
-        )
+        golden_criteria_asset(_doi(arxiv_id), "api.json").read_text(encoding="utf-8")
     )
 
 
@@ -249,9 +251,7 @@ def _html_transport(
             html_body if html_body is not None else _fixture_html(arxiv_id),
             html_content_type,
         ),
-        ("GET", _arxiv_atom.ARXIV_API_URL): _api_atom_response(
-            arxiv_id, body=api_body
-        ),
+        ("GET", _arxiv_atom.ARXIV_API_URL): _api_atom_response(arxiv_id, body=api_body),
     }
     responses.update(extra_responses or {})
     return RecordingTransport(responses)
@@ -503,9 +503,7 @@ class ArxivProviderTests(unittest.TestCase):
                     )
 
     def test_arxiv_ar5iv_chrome_selectors_share_base_script_style_rules(self) -> None:
-        self.assertEqual(
-            _arxiv_html._ARXIV_BASE_CHROME_SELECTORS, ("script", "style")
-        )
+        self.assertEqual(_arxiv_html._ARXIV_BASE_CHROME_SELECTORS, ("script", "style"))
         for key in ("frontmatter_noise", "reference_noise", "article_chrome"):
             with self.subTest(key=key):
                 selectors = _arxiv_html._ARXIV_AR5IV_SELECTORS[key]
@@ -1834,7 +1832,7 @@ class ArxivProviderTests(unittest.TestCase):
         source_url = f"https://arxiv.org/e-print/{arxiv_id}"
         source_archive = _source_tar(
             {
-                "main.tex": br"""
+                "main.tex": rb"""
                 \documentclass{article}
                 \usepackage{graphicx}
                 \begin{document}

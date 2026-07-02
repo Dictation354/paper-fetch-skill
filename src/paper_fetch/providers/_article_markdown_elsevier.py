@@ -40,12 +40,16 @@ from ._elsevier_xml_rules import (
 ELSEVIER_BLOCK_LOCAL_NAMES = {"display", "figure", "table", "e-component", "formula"}
 
 
-def resolve_elsevier_asset_link(markdown_path: Path, asset: Mapping[str, Any] | None) -> str:
+def resolve_elsevier_asset_link(
+    markdown_path: Path, asset: Mapping[str, Any] | None
+) -> str:
     if asset and asset.get("path"):
         return path_relative_to(markdown_path.parent, str(asset["path"]))
     if asset and asset.get("source_url"):
         return normalize_text(str(asset["source_url"]))
     return ""
+
+
 def classify_elsevier_display_block(element: ET.Element) -> str:
     if first_descendant(element, "figure") is not None:
         return "figure"
@@ -55,14 +59,19 @@ def classify_elsevier_display_block(element: ET.Element) -> str:
         return "supplementary"
     if first_descendant(element, "formula") is not None:
         return "formula"
-    if first_descendant(element, "math") is not None or first_descendant(element, "tex-math") is not None:
+    if (
+        first_descendant(element, "math") is not None
+        or first_descendant(element, "tex-math") is not None
+    ):
         return "formula"
     return "ignore"
 
 
 def figure_reference_token(heading: str) -> str | None:
     normalized = normalize_text(heading)
-    match = re.search(r"(?:fig(?:ure)?\.?\s*)([a-z]?\d+)", normalized, flags=re.IGNORECASE)
+    match = re.search(
+        r"(?:fig(?:ure)?\.?\s*)([a-z]?\d+)", normalized, flags=re.IGNORECASE
+    )
     if match:
         return match.group(1).lower()
     return None
@@ -111,7 +120,9 @@ def append_text_to_fragment(root: ET.Element, text: str | None) -> None:
     root.text = (root.text or "") + text
 
 
-def render_elsevier_paragraph_fragments(element: ET.Element) -> list[tuple[str, ET.Element]]:
+def render_elsevier_paragraph_fragments(
+    element: ET.Element,
+) -> list[tuple[str, ET.Element]]:
     fragments: list[tuple[str, ET.Element]] = []
     current = ET.Element("fragment")
     current.text = element.text or ""
@@ -298,7 +309,11 @@ def render_elsevier_blocks(
                 inside_appendix=inside_appendix,
             )
             normalized_title = normalize_text(title)
-            if normalized_title and normalized_title.lower() != "main text" and child_lines:
+            if (
+                normalized_title
+                and normalized_title.lower() != "main text"
+                and child_lines
+            ):
                 lines.extend([f"{'#' * heading_level} {normalized_title}", ""])
             lines.extend(child_lines)
             continue
@@ -314,7 +329,8 @@ def render_elsevier_blocks(
                     table_lookup=table_entries,
                     used_table_keys=used_table_entries,
                     formula_renders=formula_renders,
-                    inside_appendix=inside_appendix or local_name in {"appendices", "appendix"},
+                    inside_appendix=inside_appendix
+                    or local_name in {"appendices", "appendix"},
                 )
             )
             continue
@@ -342,7 +358,9 @@ def render_elsevier_blocks(
                     for entry in entries:
                         if entry["key"] in used_keys:
                             continue
-                        if not should_render_elsevier_figure_entry(entry, inside_appendix=inside_appendix):
+                        if not should_render_elsevier_figure_entry(
+                            entry, inside_appendix=inside_appendix
+                        ):
                             continue
                         if text and paragraph_mentions_figure(text, entry["heading"]):
                             add_figure_once(lines, entry, used_keys)
@@ -354,9 +372,13 @@ def render_elsevier_blocks(
                         seen_table_keys.add(entry_key)
                         if entry_key in used_table_entries:
                             continue
-                        if not should_render_elsevier_table_entry(entry, inside_appendix=inside_appendix):
+                        if not should_render_elsevier_table_entry(
+                            entry, inside_appendix=inside_appendix
+                        ):
                             continue
-                        if text and paragraph_mentions_table(text, str(entry.get("heading") or "")):
+                        if text and paragraph_mentions_table(
+                            text, str(entry.get("heading") or "")
+                        ):
                             add_elsevier_table_once(
                                 lines,
                                 entry,
@@ -456,7 +478,9 @@ def build_elsevier_asset_lookup(
         source_ref = normalize_text(str(asset.get("source_ref") or ""))
         if source_ref:
             lookup[source_ref] = asset
-        group_key = normalize_text(infer_elsevier_asset_group_key(str(asset.get("source_ref") or "")))
+        group_key = normalize_text(
+            infer_elsevier_asset_group_key(str(asset.get("source_ref") or ""))
+        )
         if group_key:
             lookup[group_key] = asset
     return lookup
@@ -472,7 +496,10 @@ def elsevier_table_registry(
     appendix_table_ids: set[str] = set()
     appendix_table_locators: set[str] = set()
     for container in root.iter():
-        if not isinstance(container.tag, str) or xml_local_name(container.tag) not in {"appendices", "appendix"}:
+        if not isinstance(container.tag, str) or xml_local_name(container.tag) not in {
+            "appendices",
+            "appendix",
+        }:
             continue
         for table in container.iter():
             if not isinstance(table.tag, str) or xml_local_name(table.tag) != "table":
@@ -518,7 +545,9 @@ def elsevier_table_registry(
             }
             if table_result.lossy:
                 entry["lossy_message"] = table_result.note
-                entry["conversion_notes"] = [table_result.note] if table_result.note else []
+                entry["conversion_notes"] = (
+                    [table_result.note] if table_result.note else []
+                )
         elif link:
             entry = {
                 "key": table_key or link,
@@ -576,10 +605,16 @@ def elsevier_figure_registry(
     appendix_figure_ids: set[str] = set()
     appendix_figure_locators: set[str] = set()
     for container in root.iter():
-        if not isinstance(container.tag, str) or xml_local_name(container.tag) not in {"appendices", "appendix"}:
+        if not isinstance(container.tag, str) or xml_local_name(container.tag) not in {
+            "appendices",
+            "appendix",
+        }:
             continue
         for figure in container.iter():
-            if not isinstance(figure.tag, str) or xml_local_name(figure.tag) != "figure":
+            if (
+                not isinstance(figure.tag, str)
+                or xml_local_name(figure.tag) != "figure"
+            ):
                 continue
             figure_id = normalize_text(figure.get("id"))
             if figure_id:
@@ -641,9 +676,8 @@ def elsevier_figure_registry(
                 lookup[key] = entry
 
     for asset in assets:
-        if (
-            asset.get("asset_type") not in {"image", "appendix_image"}
-            or not asset.get("path")
+        if asset.get("asset_type") not in {"image", "appendix_image"} or not asset.get(
+            "path"
         ):
             continue
         relative_path = path_relative_to(markdown_path.parent, str(asset["path"]))
@@ -657,13 +691,17 @@ def elsevier_figure_registry(
                 "caption": "",
                 "link": path_relative_to(markdown_path.parent, asset["path"]),
                 "path": str(asset["path"]),
-                "section": "appendix" if asset.get("asset_type") == "appendix_image" else "body",
+                "section": "appendix"
+                if asset.get("asset_type") == "appendix_image"
+                else "body",
             }
         )
     return lookup, entries
 
 
-def elsevier_supplement_entries(root: ET.Element, assets: list[dict[str, Any]], markdown_path: Path) -> list[dict[str, str]]:
+def elsevier_supplement_entries(
+    root: ET.Element, assets: list[dict[str, Any]], markdown_path: Path
+) -> list[dict[str, str]]:
     supplementary_assets: dict[str, dict[str, Any]] = {}
     for asset in assets:
         if asset.get("asset_type") != "supplementary" or not asset.get("path"):
@@ -676,7 +714,10 @@ def elsevier_supplement_entries(root: ET.Element, assets: list[dict[str, Any]], 
     entries: list[dict[str, str]] = []
     used_paths: set[str] = set()
     for component in root.iter():
-        if not isinstance(component.tag, str) or xml_local_name(component.tag) != "e-component":
+        if (
+            not isinstance(component.tag, str)
+            or xml_local_name(component.tag) != "e-component"
+        ):
             continue
         label = child_text(component, "label")
         caption = render_inline_text(first_child(component, "caption"))
@@ -686,7 +727,9 @@ def elsevier_supplement_entries(root: ET.Element, assets: list[dict[str, Any]], 
                 locator = (node.get("locator") or "").strip()
                 if locator:
                     break
-        asset = supplementary_assets.get(locator) or supplementary_assets.get(normalize_text(locator))
+        asset = supplementary_assets.get(locator) or supplementary_assets.get(
+            normalize_text(locator)
+        )
         if not asset or asset["path"] in used_paths:
             continue
         used_paths.add(asset["path"])
@@ -701,7 +744,11 @@ def elsevier_supplement_entries(root: ET.Element, assets: list[dict[str, Any]], 
         )
 
     for asset in assets:
-        if asset.get("asset_type") != "supplementary" or not asset.get("path") or asset["path"] in used_paths:
+        if (
+            asset.get("asset_type") != "supplementary"
+            or not asset.get("path")
+            or asset["path"] in used_paths
+        ):
             continue
         entries.append(
             {

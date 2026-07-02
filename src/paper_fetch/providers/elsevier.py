@@ -24,7 +24,12 @@ from ..http import (
 )
 from ..elsevier_identifiers import extract_elsevier_pii_from_url, normalize_elsevier_pii
 from ..metadata.types import ProviderMetadata
-from ..models import AssetProfile, article_from_markdown, article_from_structure, metadata_only_article
+from ..models import (
+    AssetProfile,
+    article_from_markdown,
+    article_from_structure,
+    metadata_only_article,
+)
 from ..provider_catalog import ProviderSpec
 from ..publisher_identity import normalize_doi
 from ..runtime import RuntimeContext
@@ -58,6 +63,7 @@ from ._pdf_common import (
     pdf_asset_output_dir,
     pdf_asset_profile_from_context,
     pdf_fetch_result_assets,
+    pdf_fetch_result_warnings,
     pdf_fetch_result_from_response,
 )
 from ._payloads import build_provider_payload
@@ -66,8 +72,20 @@ from ._retry_categories import (
     DEFAULT_RETRYABLE_ASSET_ERROR_CATEGORIES,
     NETWORK_RETRYABLE_REASON_TOKENS,
 )
-from ._waterfall import ProviderWaterfallStep, ProviderWaterfallState, run_provider_waterfall
-from ..reason_codes import ERROR, NO_RESULT, NOT_CONFIGURED, NOT_SUPPORTED, OK, PDF_FALLBACK, RATE_LIMITED
+from ._waterfall import (
+    ProviderWaterfallStep,
+    ProviderWaterfallState,
+    run_provider_waterfall,
+)
+from ..reason_codes import (
+    ERROR,
+    NO_RESULT,
+    NOT_CONFIGURED,
+    NOT_SUPPORTED,
+    OK,
+    PDF_FALLBACK,
+    RATE_LIMITED,
+)
 from ..quality.html_availability import (
     assess_plain_text_fulltext_availability,
     assess_structured_article_fulltext_availability,
@@ -184,7 +202,9 @@ def extract_elsevier_keywords(root: Mapping[str, Any]) -> list[str]:
     return keywords
 
 
-def elsevier_asset_priority(asset_kind: str, asset_type: str, category: str | None = None) -> int:
+def elsevier_asset_priority(
+    asset_kind: str, asset_type: str, category: str | None = None
+) -> int:
     normalized_type = asset_type.strip().upper()
     normalized_category = (category or "").strip().lower()
     if asset_kind not in ELSEVIER_IMAGE_ASSET_TYPES:
@@ -271,17 +291,23 @@ def extract_elsevier_asset_references(
     source_url: str | None = None,
     xml_root: ET.Element | None = None,
 ) -> list[dict[str, Any]]:
-    root = xml_root if xml_root is not None else elsevier_xml_root_from_payload(
-        xml_body,
-        context=context,
-        source_url=source_url,
+    root = (
+        xml_root
+        if xml_root is not None
+        else elsevier_xml_root_from_payload(
+            xml_body,
+            context=context,
+            source_url=source_url,
+        )
     )
     if root is None:
         return []
 
     references_by_key: dict[tuple[str, str], tuple[int, dict[str, Any]]] = {}
 
-    def register(reference: dict[str, Any], *, key: tuple[str, str], priority: int) -> None:
+    def register(
+        reference: dict[str, Any], *, key: tuple[str, str], priority: int
+    ) -> None:
         existing = references_by_key.get(key)
         if existing is None or priority < existing[0]:
             references_by_key[key] = (priority, reference)
@@ -325,14 +351,20 @@ def extract_elsevier_asset_references(
         if xml_local_name(element.tag) != "attachment":
             continue
 
-        attachment_type = (first_xml_child_text(element, "attachment-type") or "").strip()
+        attachment_type = (
+            first_xml_child_text(element, "attachment-type") or ""
+        ).strip()
         attachment_eid = (first_xml_child_text(element, "attachment-eid") or "").strip()
         filename = (first_xml_child_text(element, "filename") or "").strip()
         mimetype = None
         extension = (first_xml_child_text(element, "extension") or "").strip().lower()
         if extension:
             clean_extension = extension.lstrip(".")
-            filename_for_guess = filename if filename.lower().endswith(f".{clean_extension}") else f"attachment.{clean_extension}"
+            filename_for_guess = (
+                filename
+                if filename.lower().endswith(f".{clean_extension}")
+                else f"attachment.{clean_extension}"
+            )
             mimetype = mimetypes.guess_type(filename_for_guess)[0]
 
         if not attachment_eid:
@@ -366,7 +398,11 @@ def filter_elsevier_asset_references(
         return []
     if asset_profile == "body":
         allowed_asset_types = {"image", "table_asset"}
-        return [reference for reference in references if str(reference.get("asset_type") or "") in allowed_asset_types]
+        return [
+            reference
+            for reference in references
+            if str(reference.get("asset_type") or "") in allowed_asset_types
+        ]
     return list(references)
 
 
@@ -417,7 +453,12 @@ def _elsevier_retryable_body_asset_failure(failure: Mapping[str, Any]) -> bool:
         return False
 
     failure_url = normalize_text(
-        str(failure.get("source_url") or failure.get("url") or failure.get("download_url") or "")
+        str(
+            failure.get("source_url")
+            or failure.get("url")
+            or failure.get("download_url")
+            or ""
+        )
     )
     if failure_url:
         parsed_url = urllib.parse.urlparse(failure_url)
@@ -425,7 +466,9 @@ def _elsevier_retryable_body_asset_failure(failure: Mapping[str, Any]) -> bool:
             return False
 
     reason = normalize_text(str(failure.get("reason") or "")).lower()
-    if reason and any(token in reason for token in _ELSEVIER_NON_RETRYABLE_ASSET_REASON_TOKENS):
+    if reason and any(
+        token in reason for token in _ELSEVIER_NON_RETRYABLE_ASSET_REASON_TOKENS
+    ):
         return False
 
     error_category = normalize_text(str(failure.get("error_category") or "")).lower()
@@ -437,12 +480,22 @@ def _elsevier_retryable_body_asset_failure(failure: Mapping[str, Any]) -> bool:
     return any(token in reason for token in _ELSEVIER_RETRYABLE_ASSET_REASON_TOKENS)
 
 
-def _elsevier_body_asset_matches_failure(reference: Mapping[str, Any], failure: Mapping[str, Any]) -> bool:
-    if normalize_text(str(reference.get("asset_type") or "")).lower() not in _ELSEVIER_RETRYABLE_BODY_ASSET_TYPES:
+def _elsevier_body_asset_matches_failure(
+    reference: Mapping[str, Any], failure: Mapping[str, Any]
+) -> bool:
+    if (
+        normalize_text(str(reference.get("asset_type") or "")).lower()
+        not in _ELSEVIER_RETRYABLE_BODY_ASSET_TYPES
+    ):
         return False
     reference_url = normalize_text(str(reference.get("source_url") or ""))
     failure_url = normalize_text(
-        str(failure.get("source_url") or failure.get("url") or failure.get("download_url") or "")
+        str(
+            failure.get("source_url")
+            or failure.get("url")
+            or failure.get("download_url")
+            or ""
+        )
     )
     if reference_url and reference_url == failure_url:
         return True
@@ -481,20 +534,34 @@ def download_elsevier_related_assets(
         return empty_asset_results()
 
     references = filter_elsevier_asset_references(
-        extract_elsevier_asset_references(xml_body, context=context, source_url=source_url),
+        extract_elsevier_asset_references(
+            xml_body, context=context, source_url=source_url
+        ),
         asset_profile=asset_profile,
     )
     if not references:
         return empty_asset_results()
-    body_references = [reference for reference in references if reference.get("asset_type") != "supplementary"]
-    supplementary_references = [reference for reference in references if reference.get("asset_type") == "supplementary"]
+    body_references = [
+        reference
+        for reference in references
+        if reference.get("asset_type") != "supplementary"
+    ]
+    supplementary_references = [
+        reference
+        for reference in references
+        if reference.get("asset_type") == "supplementary"
+    ]
     if asset_download_concurrency is not None:
         try:
             active_asset_download_concurrency = max(1, int(asset_download_concurrency))
         except (TypeError, ValueError):
-            active_asset_download_concurrency = resolve_asset_download_concurrency(context.env if context is not None else None)
+            active_asset_download_concurrency = resolve_asset_download_concurrency(
+                context.env if context is not None else None
+            )
     else:
-        active_asset_download_concurrency = resolve_asset_download_concurrency(context.env if context is not None else None)
+        active_asset_download_concurrency = resolve_asset_download_concurrency(
+            context.env if context is not None else None
+        )
 
     asset_dir = output_dir / f"{sanitize_filename(doi)}_assets"
     asset_dir.mkdir(parents=True, exist_ok=True)
@@ -539,9 +606,16 @@ def download_elsevier_related_assets(
         if not references_to_download:
             return empty_asset_results()
 
-        resolved_body_results: list[tuple[Mapping[str, Any], dict[str, Any] | None, dict[str, Any] | None]] = []
-        with ThreadPoolExecutor(max_workers=min(max(1, concurrency), len(references_to_download))) as executor:
-            futures = [executor.submit(fetch_body_reference, reference) for reference in references_to_download]
+        resolved_body_results: list[
+            tuple[Mapping[str, Any], dict[str, Any] | None, dict[str, Any] | None]
+        ] = []
+        with ThreadPoolExecutor(
+            max_workers=min(max(1, concurrency), len(references_to_download))
+        ) as executor:
+            futures = [
+                executor.submit(fetch_body_reference, reference)
+                for reference in references_to_download
+            ]
             for future in futures:
                 resolved_body_results.append(future.result())
 
@@ -553,7 +627,9 @@ def download_elsevier_related_assets(
                 continue
             assert response is not None
 
-            content_type = response["headers"].get("content-type", reference.get("content_type"))
+            content_type = response["headers"].get(
+                "content-type", reference.get("content_type")
+            )
             asset_type = reference.get("asset_type")
             output_path = build_asset_output_path(
                 asset_dir,
@@ -584,7 +660,9 @@ def download_elsevier_related_assets(
             "asset_failures": body_failures,
         }
 
-    body_result = download_body_references(body_references, concurrency=active_asset_download_concurrency)
+    body_result = download_body_references(
+        body_references, concurrency=active_asset_download_concurrency
+    )
     retry_references = assets_for_network_retry(
         body_references,
         body_result.get("asset_failures") or [],
@@ -615,7 +693,9 @@ def download_elsevier_related_assets(
         assets=[
             {
                 "kind": "supplementary",
-                "heading": reference.get("filename_hint") or reference.get("source_ref") or "Supplementary Material",
+                "heading": reference.get("filename_hint")
+                or reference.get("source_ref")
+                or "Supplementary Material",
                 "caption": "",
                 "section": "supplementary",
                 "url": reference.get("source_url"),
@@ -731,7 +811,9 @@ class ElsevierClient(ProviderClient):
                 },
             ) from exc
 
-        content_type = str((response.get("headers") or {}).get("content-type") or "text/xml")
+        content_type = str(
+            (response.get("headers") or {}).get("content-type") or "text/xml"
+        )
         if not is_xml_content_type(content_type):
             raise ProviderFailure(
                 NO_RESULT,
@@ -770,7 +852,9 @@ class ElsevierClient(ProviderClient):
         context: RuntimeContext | None = None,
     ) -> RawFulltextPayload:
         url = self._official_article_url(doi)
-        effective_asset_profile = asset_profile or pdf_asset_profile_from_context(context)
+        effective_asset_profile = asset_profile or pdf_asset_profile_from_context(
+            context
+        )
         try:
             response = self.transport.request(
                 "GET",
@@ -797,13 +881,20 @@ class ElsevierClient(ProviderClient):
                 response,
                 artifact_dir=None,
                 asset_profile=effective_asset_profile,
-                asset_output_dir=pdf_asset_output_dir(context, asset_profile=effective_asset_profile, doi=doi),
+                asset_output_dir=pdf_asset_output_dir(
+                    context, asset_profile=effective_asset_profile, doi=doi
+                ),
                 source_url=url,
                 final_url=final_url,
                 not_pdf_message="Elsevier official PDF fallback did not return a PDF file.",
+                allow_pdf_only=True,
             )
         except PdfFetchFailure as exc:
-            message = str(exc) if str(exc).strip() else "Elsevier official PDF fallback was not usable."
+            message = (
+                str(exc)
+                if str(exc).strip()
+                else "Elsevier official PDF fallback was not usable."
+            )
             raise ProviderFailure(NO_RESULT, message) from exc
 
         return build_provider_payload(
@@ -816,6 +907,7 @@ class ElsevierClient(ProviderClient):
             reason="Downloaded full text from the official Elsevier API PDF fallback.",
             suggested_filename=pdf_result.suggested_filename,
             extracted_assets=pdf_fetch_result_assets(pdf_result),
+            warnings=pdf_fetch_result_warnings(pdf_result),
             trace_markers=[
                 fulltext_marker("elsevier", "ok", route="pdf_api"),
                 fulltext_marker("elsevier", "ok", route=PDF_FALLBACK),
@@ -832,32 +924,52 @@ class ElsevierClient(ProviderClient):
     ) -> bool:
         context = self._runtime_context(context)
         article = self.to_article_model(metadata, raw_payload, context=context)
-        title = normalize_text(str(metadata.get("title") or getattr(getattr(article, "metadata", None), "title", None) or ""))
+        title = normalize_text(
+            str(
+                metadata.get("title")
+                or getattr(getattr(article, "metadata", None), "title", None)
+                or ""
+            )
+        )
         if is_xml_content_type(raw_payload.content_type):
-            diagnostics = assess_structured_article_fulltext_availability(article, title=title or None)
+            diagnostics = assess_structured_article_fulltext_availability(
+                article, title=title or None
+            )
             if raw_payload.content is not None:
                 diagnostics_payload = dict(raw_payload.content.diagnostics)
                 diagnostics_payload["availability_diagnostics"] = diagnostics.to_dict()
-                raw_payload.content = replace(raw_payload.content, diagnostics=diagnostics_payload)
+                raw_payload.content = replace(
+                    raw_payload.content, diagnostics=diagnostics_payload
+                )
             return diagnostics.accepted
-        if raw_payload.content_type.startswith("text/") and not is_xml_content_type(raw_payload.content_type):
+        if raw_payload.content_type.startswith("text/") and not is_xml_content_type(
+            raw_payload.content_type
+        ):
             try:
                 markdown_text = raw_payload.body.decode("utf-8", errors="replace")
             except Exception:
                 return False
-            diagnostics = assess_plain_text_fulltext_availability(markdown_text, metadata, title=title or None)
+            diagnostics = assess_plain_text_fulltext_availability(
+                markdown_text, metadata, title=title or None
+            )
             if raw_payload.content is not None:
                 diagnostics_payload = dict(raw_payload.content.diagnostics)
                 diagnostics_payload["availability_diagnostics"] = diagnostics.to_dict()
-                raw_payload.content = replace(raw_payload.content, diagnostics=diagnostics_payload)
+                raw_payload.content = replace(
+                    raw_payload.content, diagnostics=diagnostics_payload
+                )
             return diagnostics.accepted
         if raw_payload.content is not None:
             diagnostics_payload = dict(raw_payload.content.diagnostics)
-            diagnostics_payload["availability_diagnostics"] = assess_structured_article_fulltext_availability(
-                article,
-                title=title or None,
-            ).to_dict()
-            raw_payload.content = replace(raw_payload.content, diagnostics=diagnostics_payload)
+            diagnostics_payload["availability_diagnostics"] = (
+                assess_structured_article_fulltext_availability(
+                    article,
+                    title=title or None,
+                ).to_dict()
+            )
+            raw_payload.content = replace(
+                raw_payload.content, diagnostics=diagnostics_payload
+            )
         return False
 
     def fetch_metadata(self, query: Mapping[str, str | None]) -> ProviderMetadata:
@@ -869,7 +981,11 @@ class ElsevierClient(ProviderClient):
                 "Elsevier official metadata retrieval needs a DOI or PII in this implementation.",
             )
 
-        url = self._official_abstract_url(doi) if doi else self._official_abstract_pii_url(pii or "")
+        url = (
+            self._official_abstract_url(doi)
+            if doi
+            else self._official_abstract_pii_url(pii or "")
+        )
         try:
             response = self.transport.request(
                 "GET",
@@ -893,22 +1009,33 @@ class ElsevierClient(ProviderClient):
             "doi": first_non_empty(core.get("prism:doi"), doi),
             "pii": first_non_empty(core.get("pii"), pii),
             "title": first_non_empty(core.get("dc:title"), core.get("title")),
-            "journal_title": first_non_empty(core.get("prism:publicationName"), core.get("publicationName")),
+            "journal_title": first_non_empty(
+                core.get("prism:publicationName"), core.get("publicationName")
+            ),
             "publisher": first_non_empty(core.get("dc:publisher"), "Elsevier"),
             "abstract": strip_html_tags(
                 first_non_empty(
                     core.get("dc:description"),
-                    root.get("item", {}).get("bibrecord", {}).get("head", {}).get("abstracts"),
+                    root.get("item", {})
+                    .get("bibrecord", {})
+                    .get("head", {})
+                    .get("abstracts"),
                 )
             ),
-            "published": first_non_empty(core.get("prism:coverDate"), core.get("prism:coverDisplayDate")),
-            "landing_page_url": choose_public_landing_page_url(core.get("link"), core.get("prism:url")),
+            "published": first_non_empty(
+                core.get("prism:coverDate"), core.get("prism:coverDisplayDate")
+            ),
+            "landing_page_url": choose_public_landing_page_url(
+                core.get("link"), core.get("prism:url")
+            ),
             "license_urls": [],
             "fulltext_links": [],
             "keywords": extract_elsevier_keywords(root),
         }
         if not metadata["title"]:
-            raise ProviderFailure(NO_RESULT, "Elsevier metadata payload did not contain a title.")
+            raise ProviderFailure(
+                NO_RESULT, "Elsevier metadata payload did not contain a title."
+            )
         return metadata
 
     def download_related_assets(
@@ -946,7 +1073,9 @@ class ElsevierClient(ProviderClient):
         context = self._runtime_context(context)
         normalized_doi = normalize_doi(doi)
         if not normalized_doi:
-            raise ProviderFailure(NOT_SUPPORTED, "Elsevier full-text retrieval requires a DOI.")
+            raise ProviderFailure(
+                NOT_SUPPORTED, "Elsevier full-text retrieval requires a DOI."
+            )
         pii_candidates = elsevier_pii_candidates_from_metadata(metadata)
 
         def run_xml(_state: ProviderWaterfallState) -> RawFulltextPayload:
@@ -958,8 +1087,13 @@ class ElsevierClient(ProviderClient):
                 "Elsevier official XML response did not produce enough article body text.",
             )
 
-        def xml_failure_warning(failure: ProviderFailure, _state: ProviderWaterfallState) -> str:
-            if failure.message == "Elsevier official XML response did not produce enough article body text.":
+        def xml_failure_warning(
+            failure: ProviderFailure, _state: ProviderWaterfallState
+        ) -> str:
+            if (
+                failure.message
+                == "Elsevier official XML response did not produce enough article body text."
+            ):
                 return "Elsevier official XML response did not produce enough article body text; attempting official PDF fallback."
             if pii_candidates and failure.code in _ELSEVIER_PII_RETRYABLE_CODES:
                 return f"Elsevier official XML route was not usable ({failure.message}); attempting Elsevier PII XML fallback."
@@ -967,7 +1101,11 @@ class ElsevierClient(ProviderClient):
 
         def pii_xml_condition(state: ProviderWaterfallState) -> bool:
             xml_failure = state.failure("xml")
-            return bool(pii_candidates and xml_failure is not None and xml_failure.code in _ELSEVIER_PII_RETRYABLE_CODES)
+            return bool(
+                pii_candidates
+                and xml_failure is not None
+                and xml_failure.code in _ELSEVIER_PII_RETRYABLE_CODES
+            )
 
         def run_pii_xml(_state: ProviderWaterfallState) -> RawFulltextPayload:
             last_failure: ProviderFailure | None = None
@@ -977,7 +1115,9 @@ class ElsevierClient(ProviderClient):
                 except ProviderFailure as exc:
                     last_failure = exc
                     continue
-                if self._official_payload_is_usable(metadata, xml_payload, context=context):
+                if self._official_payload_is_usable(
+                    metadata, xml_payload, context=context
+                ):
                     return xml_payload
                 last_failure = ProviderFailure(
                     NO_RESULT,
@@ -985,7 +1125,10 @@ class ElsevierClient(ProviderClient):
                 )
             if last_failure is not None:
                 raise last_failure
-            raise ProviderFailure(NO_RESULT, "Elsevier PII XML fallback did not have a usable PII candidate.")
+            raise ProviderFailure(
+                NO_RESULT,
+                "Elsevier PII XML fallback did not have a usable PII candidate.",
+            )
 
         steps = [
             ProviderWaterfallStep(
@@ -1034,23 +1177,40 @@ class ElsevierClient(ProviderClient):
     ):
         context = self._runtime_context(context)
         content = raw_payload.content
-        route = normalize_text(content.route_kind if content is not None else "").lower()
-        merged_metadata = content.merged_metadata if content is not None else raw_payload.merged_metadata
-        article_metadata = merged_metadata if isinstance(merged_metadata, Mapping) else metadata
+        route = normalize_text(
+            content.route_kind if content is not None else ""
+        ).lower()
+        merged_metadata = (
+            content.merged_metadata
+            if content is not None
+            else raw_payload.merged_metadata
+        )
+        article_metadata = (
+            merged_metadata if isinstance(merged_metadata, Mapping) else metadata
+        )
         doi = normalize_doi(article_metadata.get("doi") or metadata.get("doi"))
         warnings = list(raw_payload.warnings)
         trace = list(raw_payload.trace)
 
         if route == PDF_FALLBACK:
-            markdown_text = str((content.markdown_text if content is not None else "") or "").strip()
+            markdown_text = str(
+                (content.markdown_text if content is not None else "") or ""
+            ).strip()
             if not markdown_text:
-                warnings.append("Elsevier official PDF fallback did not produce usable Markdown.")
+                warnings.append(
+                    "Elsevier official PDF fallback did not produce usable Markdown."
+                )
                 return metadata_only_article(
                     source="elsevier_pdf",
                     metadata=article_metadata,
                     doi=doi or None,
                     warnings=warnings,
-                    trace=[*trace, *trace_from_markers([fulltext_marker("elsevier", "fail", route="parse")])],
+                    trace=[
+                        *trace,
+                        *trace_from_markers(
+                            [fulltext_marker("elsevier", "fail", route="parse")]
+                        ),
+                    ],
                 )
             return article_from_markdown(
                 source="elsevier_pdf",
@@ -1078,7 +1238,9 @@ class ElsevierClient(ProviderClient):
                     xml_root=xml_root,
                 )
             )
-            xml_path = Path(f"{sanitize_filename(doi or str(metadata.get('title') or 'article'))}.xml")
+            xml_path = Path(
+                f"{sanitize_filename(doi or str(metadata.get('title') or 'article'))}.xml"
+            )
             structure = build_article_structure(
                 provider="elsevier",
                 metadata=metadata,
@@ -1095,7 +1257,9 @@ class ElsevierClient(ProviderClient):
                         for item in (article_metadata.get("authors") or [])
                         if normalize_text(str(item))
                     ]
-                    xml_article_metadata["authors"] = dedupe_authors([*structure.authors, *existing_authors])
+                    xml_article_metadata["authors"] = dedupe_authors(
+                        [*structure.authors, *existing_authors]
+                    )
                 return article_from_structure(
                     source="elsevier_xml",
                     metadata=xml_article_metadata,
@@ -1119,7 +1283,9 @@ class ElsevierClient(ProviderClient):
             except Exception:
                 text = ""
             if text.strip():
-                warnings.append("Official full text was not available in XML format; returned plain text instead.")
+                warnings.append(
+                    "Official full text was not available in XML format; returned plain text instead."
+                )
             return article_from_markdown(
                 source="elsevier_xml",
                 metadata=article_metadata,
@@ -1128,7 +1294,9 @@ class ElsevierClient(ProviderClient):
                 warnings=warnings,
                 trace=trace,
             )
-        warnings.append("Official full text was not convertible to AI-friendly Markdown.")
+        warnings.append(
+            "Official full text was not convertible to AI-friendly Markdown."
+        )
         return metadata_only_article(
             source="elsevier_xml",
             metadata=article_metadata,
@@ -1150,7 +1318,9 @@ class ElsevierClient(ProviderClient):
             asset_failures=asset_failures,
         )
         content = raw_payload.content
-        route = normalize_text(content.route_kind if content is not None else "").lower()
+        route = normalize_text(
+            content.route_kind if content is not None else ""
+        ).lower()
         if route != PDF_FALLBACK:
             return artifacts
         pdf_assets = list(content.extracted_assets if content is not None else [])
@@ -1159,7 +1329,9 @@ class ElsevierClient(ProviderClient):
             asset_failures=list(artifacts.asset_failures),
             allow_related_assets=False,
             text_only=not pdf_assets,
-            skip_trace=trace_from_markers([download_marker("elsevier_assets_skipped_text_only")])
+            skip_trace=trace_from_markers(
+                [download_marker("elsevier_assets_skipped_text_only")]
+            )
             if not pdf_assets
             else [],
         )

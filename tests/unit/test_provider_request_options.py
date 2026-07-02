@@ -10,7 +10,11 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from paper_fetch.http import DEFAULT_FULLTEXT_TIMEOUT_SECONDS, DEFAULT_TIMEOUT_SECONDS, RequestFailure
+from paper_fetch.http import (
+    DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
+    DEFAULT_TIMEOUT_SECONDS,
+    RequestFailure,
+)
 from paper_fetch.extraction.html import assets as html_assets
 from paper_fetch.extraction.html.assets import download as asset_impl
 from paper_fetch.providers import browser_runtime, browser_workflow
@@ -150,7 +154,10 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         doi = "10.1016/test"
         transport = RecordingTransport(
             {
-                ("GET", "https://api.elsevier.com/content/article/doi/10.1016%2Ftest"): {
+                (
+                    "GET",
+                    "https://api.elsevier.com/content/article/doi/10.1016%2Ftest",
+                ): {
                     "status_code": 200,
                     "headers": {"content-type": "text/xml"},
                     "body": b"<xml />",
@@ -163,16 +170,24 @@ class ProviderRequestOptionsTests(unittest.TestCase):
             f"ELSEVIER_{name}": "ignored"
             for name in ("INSTTOKEN", "AUTHTOKEN", "CLICKTHROUGH_TOKEN")
         }
-        client = ElsevierClient(transport, {"ELSEVIER_API_KEY": "secret", **legacy_elsevier_env})
-        with mock.patch.object(client, "_official_payload_is_usable", return_value=True):
+        client = ElsevierClient(
+            transport, {"ELSEVIER_API_KEY": "secret", **legacy_elsevier_env}
+        )
+        with mock.patch.object(
+            client, "_official_payload_is_usable", return_value=True
+        ):
             payload = client.fetch_raw_fulltext(doi, {})
 
         self.assertEqual(payload.content_type, "text/xml")
         self.assertEqual(transport.calls[0]["headers"]["X-ELS-APIKey"], "secret")
         self.assertNotIn("X-ELS-" + "Insttoken", transport.calls[0]["headers"])
         self.assertNotIn("Authorization", transport.calls[0]["headers"])
-        self.assertNotIn("CR-" + "Clickthrough-Client-Token", transport.calls[0]["headers"])
-        self.assertEqual(transport.calls[0]["timeout"], DEFAULT_FULLTEXT_TIMEOUT_SECONDS)
+        self.assertNotIn(
+            "CR-" + "Clickthrough-Client-Token", transport.calls[0]["headers"]
+        )
+        self.assertEqual(
+            transport.calls[0]["timeout"], DEFAULT_FULLTEXT_TIMEOUT_SECONDS
+        )
         self.assertTrue(transport.calls[0]["retry_on_rate_limit"])
         self.assertTrue(transport.calls[0]["retry_on_transient"])
 
@@ -235,18 +250,27 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         )
 
         client = SpringerClient(transport, {})
-        payload = client.fetch_raw_fulltext(doi, {"landing_page_url": "https://www.nature.com/articles/example"})
+        payload = client.fetch_raw_fulltext(
+            doi, {"landing_page_url": "https://www.nature.com/articles/example"}
+        )
 
         self.assertEqual(payload.content_type, "text/html; charset=utf-8")
-        self.assertEqual(transport.calls[0]["timeout"], DEFAULT_FULLTEXT_TIMEOUT_SECONDS)
+        self.assertEqual(
+            transport.calls[0]["timeout"], DEFAULT_FULLTEXT_TIMEOUT_SECONDS
+        )
         self.assertTrue(transport.calls[0]["retry_on_transient"])
-        self.assertEqual(transport.calls[0]["url"], "https://www.nature.com/articles/example")
+        self.assertEqual(
+            transport.calls[0]["url"], "https://www.nature.com/articles/example"
+        )
 
     def test_springer_direct_html_follows_http_redirects(self) -> None:
         doi = "10.1186/s13059-024-03246-2"
         transport = RecordingTransport(
             {
-                ("GET", "https://genomebiology.biomedcentral.com/articles/10.1186/s13059-024-03246-2"): {
+                (
+                    "GET",
+                    "https://genomebiology.biomedcentral.com/articles/10.1186/s13059-024-03246-2",
+                ): {
                     "status_code": 301,
                     "headers": {
                         "content-type": "text/html; charset=utf-8",
@@ -255,7 +279,10 @@ class ProviderRequestOptionsTests(unittest.TestCase):
                     "body": b"<html><head><title>301 Moved Permanently</title></head><body>Moved</body></html>",
                     "url": "/articles/10.1186/s13059-024-03246-2",
                 },
-                ("GET", "https://link.springer.com/article/10.1186/s13059-024-03246-2"): {
+                (
+                    "GET",
+                    "https://link.springer.com/article/10.1186/s13059-024-03246-2",
+                ): {
                     "status_code": 200,
                     "headers": {"content-type": "text/html; charset=utf-8"},
                     "body": (
@@ -276,10 +303,15 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         client = SpringerClient(transport, {})
         payload = client.fetch_raw_fulltext(
             doi,
-            {"landing_page_url": "https://genomebiology.biomedcentral.com/articles/10.1186/s13059-024-03246-2"},
+            {
+                "landing_page_url": "https://genomebiology.biomedcentral.com/articles/10.1186/s13059-024-03246-2"
+            },
         )
 
-        self.assertEqual(payload.source_url, "https://link.springer.com/article/10.1186/s13059-024-03246-2")
+        self.assertEqual(
+            payload.source_url,
+            "https://link.springer.com/article/10.1186/s13059-024-03246-2",
+        )
         self.assertEqual(len(transport.calls), 2)
         self.assertEqual(
             [call["url"] for call in transport.calls],
@@ -289,7 +321,12 @@ class ProviderRequestOptionsTests(unittest.TestCase):
             ],
         )
         self.assertTrue(all(call["retry_on_transient"] for call in transport.calls))
-        self.assertTrue(all(call["timeout"] == DEFAULT_FULLTEXT_TIMEOUT_SECONDS for call in transport.calls))
+        self.assertTrue(
+            all(
+                call["timeout"] == DEFAULT_FULLTEXT_TIMEOUT_SECONDS
+                for call in transport.calls
+            )
+        )
 
     def test_wiley_browser_workflow_prefers_html_route(self) -> None:
         doi = "10.1002/ece3.9361"
@@ -319,8 +356,7 @@ class ProviderRequestOptionsTests(unittest.TestCase):
             ),
             extract_atypon_browser_workflow_markdown=mock.Mock(
                 return_value=(
-                    "# Example Wiley Article\n\n## Results\n\n"
-                    + ("Body text " * 120),
+                    "# Example Wiley Article\n\n## Results\n\n" + ("Body text " * 120),
                     {"title": "Example"},
                 )
             ),
@@ -329,7 +365,10 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         client = WileyClient(transport=None, env={}, deps=deps)
         payload = client.fetch_raw_fulltext(
             doi,
-            {"doi": doi, "landing_page_url": "https://onlinelibrary.wiley.com/doi/full/10.1002/ece3.9361"},
+            {
+                "doi": doi,
+                "landing_page_url": "https://onlinelibrary.wiley.com/doi/full/10.1002/ece3.9361",
+            },
         )
 
         mocked_pdf.assert_not_called()
@@ -338,7 +377,9 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         self.assertEqual(payload.content.route_kind, "html")
         self.assertEqual(payload.content_type, "text/html")
 
-    def test_browser_workflow_fast_path_uses_conservative_fallback_after_challenge(self) -> None:
+    def test_browser_workflow_fast_path_uses_conservative_fallback_after_challenge(
+        self,
+    ) -> None:
         doi = "10.1002/ece3.9361"
         runtime = browser_runtime.BrowserRuntimeConfig(
             provider="wiley",
@@ -373,8 +414,7 @@ class ProviderRequestOptionsTests(unittest.TestCase):
             fetch_html_with_browser=mocked_fetch,
             extract_atypon_browser_workflow_markdown=mock.Mock(
                 return_value=(
-                    "# Example Wiley Article\n\n## Results\n\n"
-                    + ("Body text " * 120),
+                    "# Example Wiley Article\n\n## Results\n\n" + ("Body text " * 120),
                     {"title": "Example"},
                 )
             ),
@@ -382,7 +422,10 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         client = WileyClient(transport=None, env={}, deps=deps)
         payload = client.fetch_raw_fulltext(
             doi,
-            {"doi": doi, "landing_page_url": "https://onlinelibrary.wiley.com/doi/full/10.1002/ece3.9361"},
+            {
+                "doi": doi,
+                "landing_page_url": "https://onlinelibrary.wiley.com/doi/full/10.1002/ece3.9361",
+            },
         )
 
         self.assertEqual(mocked_fetch.call_count, 2)
@@ -395,9 +438,14 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         self.assertIsNotNone(payload.content)
         assert payload.content is not None
         self.assertEqual(payload.content.fetcher, "cloakbrowser")
-        self.assertIn("fulltext:wiley_html_ok", [event.marker() for event in payload.trace if event.marker()])
+        self.assertIn(
+            "fulltext:wiley_html_ok",
+            [event.marker() for event in payload.trace if event.marker()],
+        )
 
-    def test_browser_workflow_fast_path_falls_back_after_insufficient_body(self) -> None:
+    def test_browser_workflow_fast_path_falls_back_after_insufficient_body(
+        self,
+    ) -> None:
         doi = "10.1002/ece3.9361"
         runtime = browser_runtime.BrowserRuntimeConfig(
             provider="wiley",
@@ -449,7 +497,10 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         client = WileyClient(transport=None, env={}, deps=deps)
         payload = client.fetch_raw_fulltext(
             doi,
-            {"doi": doi, "landing_page_url": "https://onlinelibrary.wiley.com/doi/full/10.1002/ece3.9361"},
+            {
+                "doi": doi,
+                "landing_page_url": "https://onlinelibrary.wiley.com/doi/full/10.1002/ece3.9361",
+            },
         )
 
         self.assertEqual(mocked_fetch.call_count, 2)
@@ -460,7 +511,9 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         self.assertEqual(payload.content.fetcher, "cloakbrowser")
         self.assertEqual(payload.content_type, "text/html")
 
-    def test_html_asset_download_prefers_direct_full_size_url_before_preview(self) -> None:
+    def test_html_asset_download_prefers_direct_full_size_url_before_preview(
+        self,
+    ) -> None:
         transport = RecordingTransport(
             {
                 ("GET", "https://example.test/images/large/figure1.png"): {
@@ -498,9 +551,14 @@ class ProviderRequestOptionsTests(unittest.TestCase):
                 asset_profile="body",
             )
 
-            self.assertEqual([call["url"] for call in transport.calls], ["https://example.test/images/large/figure1.png"])
+            self.assertEqual(
+                [call["url"] for call in transport.calls],
+                ["https://example.test/images/large/figure1.png"],
+            )
             self.assertEqual(len(result["assets"]), 1)
-            self.assertEqual(Path(result["assets"][0]["path"]).read_bytes(), png_body(b"large-image"))
+            self.assertEqual(
+                Path(result["assets"][0]["path"]).read_bytes(), png_body(b"large-image")
+            )
 
     def test_html_asset_download_accepts_explicit_cookie_opener_injection(self) -> None:
         transport = RecordingTransport({})
@@ -543,7 +601,9 @@ class ProviderRequestOptionsTests(unittest.TestCase):
                         }
                     ],
                 },
-                candidate_builder=lambda *_args, **_kwargs: ["https://example.test/images/figure1.png"],
+                candidate_builder=lambda *_args, **_kwargs: [
+                    "https://example.test/images/figure1.png"
+                ],
                 cookie_opener_builder=opener_builder,
                 opener_requester=opener_requester,
             )
@@ -551,9 +611,13 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         opener_builder.assert_called_once()
         opener_requester.assert_called_once()
         self.assertEqual(transport.calls, [])
-        self.assertEqual(result["assets"][0]["downloaded_bytes"], len(png_body(b"injected-image")))
+        self.assertEqual(
+            result["assets"][0]["downloaded_bytes"], len(png_body(b"injected-image"))
+        )
 
-    def test_html_asset_downloads_pass_patchable_hooks_without_mutating_asset_impl_globals(self) -> None:
+    def test_html_asset_downloads_pass_patchable_hooks_without_mutating_asset_impl_globals(
+        self,
+    ) -> None:
         transport = RecordingTransport({})
         impl_opener_builder = mock.Mock(return_value=object())
         facade_opener_builder = mock.Mock(return_value=object())
@@ -568,8 +632,12 @@ class ProviderRequestOptionsTests(unittest.TestCase):
 
         with (
             tempfile.TemporaryDirectory() as tmpdir,
-            mock.patch.object(asset_impl, "_build_cookie_seeded_opener", impl_opener_builder),
-            mock.patch.object(html_assets, "_build_cookie_seeded_opener", facade_opener_builder),
+            mock.patch.object(
+                asset_impl, "_build_cookie_seeded_opener", impl_opener_builder
+            ),
+            mock.patch.object(
+                html_assets, "_build_cookie_seeded_opener", facade_opener_builder
+            ),
             mock.patch.object(html_assets, "_request_with_opener", facade_requester),
         ):
             result = html_assets.download_assets(
@@ -598,15 +666,21 @@ class ProviderRequestOptionsTests(unittest.TestCase):
                         }
                     ],
                 },
-                candidate_builder=lambda *_args, **_kwargs: ["https://example.test/images/figure1.png"],
+                candidate_builder=lambda *_args, **_kwargs: [
+                    "https://example.test/images/figure1.png"
+                ],
             )
 
         impl_opener_builder.assert_not_called()
         facade_opener_builder.assert_called_once()
         facade_requester.assert_called_once()
-        self.assertEqual(result["assets"][0]["downloaded_bytes"], len(png_body(b"facade-image")))
+        self.assertEqual(
+            result["assets"][0]["downloaded_bytes"], len(png_body(b"facade-image"))
+        )
 
-    def test_html_supplementary_download_records_challenge_failure_diagnostics(self) -> None:
+    def test_html_supplementary_download_records_challenge_failure_diagnostics(
+        self,
+    ) -> None:
         transport = RecordingTransport({})
         opener_builder = mock.Mock(return_value=object())
         opener_requester = mock.Mock(
@@ -628,7 +702,8 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         )
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            result = asset_impl.download_assets(asset_impl.SUPPLEMENTARY_KIND,
+            result = asset_impl.download_assets(
+                asset_impl.SUPPLEMENTARY_KIND,
                 transport,
                 article_id="10.1000/example",
                 assets=[
@@ -652,11 +727,17 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         self.assertEqual(len(result["asset_failures"]), 1)
         self.assertEqual(result["asset_failures"][0]["reason"], "cloudflare_challenge")
         self.assertEqual(result["asset_failures"][0]["status"], 403)
-        self.assertEqual(result["asset_failures"][0]["title_snippet"], "Just a moment...")
-        self.assertIn("Checking your browser", result["asset_failures"][0]["body_snippet"])
+        self.assertEqual(
+            result["asset_failures"][0]["title_snippet"], "Just a moment..."
+        )
+        self.assertIn(
+            "Checking your browser", result["asset_failures"][0]["body_snippet"]
+        )
         self.assertNotIn("recovery_attempts", result["asset_failures"][0])
 
-    def test_elsevier_all_asset_profile_maps_supplementary_download_to_unified_fields(self) -> None:
+    def test_elsevier_all_asset_profile_maps_supplementary_download_to_unified_fields(
+        self,
+    ) -> None:
         xml_body = b"""<?xml version="1.0"?>
 <full-text-retrieval-response xmlns="http://www.elsevier.com/xml/svapi/article/dtd" xmlns:ce="http://www.elsevier.com/xml/common/dtd">
   <attachments>
@@ -681,7 +762,9 @@ class ProviderRequestOptionsTests(unittest.TestCase):
 
         with (
             tempfile.TemporaryDirectory() as tmpdir,
-            mock.patch.object(html_assets, "_build_cookie_seeded_opener", opener_builder),
+            mock.patch.object(
+                html_assets, "_build_cookie_seeded_opener", opener_builder
+            ),
             mock.patch.object(html_assets, "_request_with_opener", opener_requester),
         ):
             result = download_elsevier_related_assets(
@@ -704,8 +787,13 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         self.assertEqual(asset["downloaded_bytes"], len(b"%PDF-1.7 supplementary"))
         self.assertEqual(result["asset_failures"], [])
 
-    def test_elsevier_body_asset_download_uses_runtime_asset_concurrency_env(self) -> None:
-        urls = [f"https://api.elsevier.com/content/object/eid/fig{index}" for index in range(3)]
+    def test_elsevier_body_asset_download_uses_runtime_asset_concurrency_env(
+        self,
+    ) -> None:
+        urls = [
+            f"https://api.elsevier.com/content/object/eid/fig{index}"
+            for index in range(3)
+        ]
         xml_body = (
             b"<?xml version='1.0'?><full-text-retrieval-response>"
             + b"".join(
@@ -757,8 +845,13 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         self.assertEqual([asset["download_url"] for asset in result["assets"]], urls)
         self.assertEqual(result["asset_failures"], [])
 
-    def test_elsevier_body_asset_transient_failure_is_retried_once_and_removed(self) -> None:
-        urls = [f"https://api.elsevier.com/content/object/eid/fig{index}" for index in range(4)]
+    def test_elsevier_body_asset_transient_failure_is_retried_once_and_removed(
+        self,
+    ) -> None:
+        urls = [
+            f"https://api.elsevier.com/content/object/eid/fig{index}"
+            for index in range(4)
+        ]
         failed_url = urls[2]
         transport = RecordingTransport(
             {
@@ -775,7 +868,9 @@ class ProviderRequestOptionsTests(unittest.TestCase):
                     "url": urls[1],
                 },
                 ("GET", failed_url): [
-                    RequestFailure(None, "Network error: timed out", error_category="timeout"),
+                    RequestFailure(
+                        None, "Network error: timed out", error_category="timeout"
+                    ),
                     {
                         "status_code": 200,
                         "headers": {"content-type": "image/png"},
@@ -804,14 +899,19 @@ class ProviderRequestOptionsTests(unittest.TestCase):
 
         self.assertEqual(result["asset_failures"], [])
         self.assertEqual(len(result["assets"]), 4)
-        self.assertEqual([asset["download_url"] for asset in result["assets"]], [urls[0], urls[1], urls[3], urls[2]])
+        self.assertEqual(
+            [asset["download_url"] for asset in result["assets"]],
+            [urls[0], urls[1], urls[3], urls[2]],
+        )
         self.assertEqual([call["url"] for call in transport.calls].count(failed_url), 2)
 
     def test_elsevier_body_asset_http_status_failure_is_not_retried(self) -> None:
         url = "https://api.elsevier.com/content/object/eid/fig0"
         transport = RecordingTransport(
             {
-                ("GET", url): RequestFailure(403, "HTTP 403 for Elsevier object", url=url),
+                ("GET", url): RequestFailure(
+                    403, "HTTP 403 for Elsevier object", url=url
+                ),
             }
         )
 
@@ -835,8 +935,14 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         transport = RecordingTransport(
             {
                 ("GET", url): [
-                    RequestFailure(None, "Network error: timed out", error_category="timeout"),
-                    RequestFailure(None, "connection reset by peer", error_category="connection_reset"),
+                    RequestFailure(
+                        None, "Network error: timed out", error_category="timeout"
+                    ),
+                    RequestFailure(
+                        None,
+                        "connection reset by peer",
+                        error_category="connection_reset",
+                    ),
                 ],
             }
         )
@@ -854,15 +960,24 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         self.assertEqual(result["assets"], [])
         self.assertEqual(len(result["asset_failures"]), 1)
         self.assertIn("connection reset", result["asset_failures"][0]["reason"])
-        self.assertEqual(result["asset_failures"][0]["error_category"], "connection_reset")
+        self.assertEqual(
+            result["asset_failures"][0]["error_category"], "connection_reset"
+        )
         self.assertEqual([call["url"] for call in transport.calls], [url, url])
 
-    def test_elsevier_body_asset_retry_successes_are_appended_in_reference_order(self) -> None:
-        urls = [f"https://api.elsevier.com/content/object/eid/fig{index}" for index in range(4)]
+    def test_elsevier_body_asset_retry_successes_are_appended_in_reference_order(
+        self,
+    ) -> None:
+        urls = [
+            f"https://api.elsevier.com/content/object/eid/fig{index}"
+            for index in range(4)
+        ]
         transport = RecordingTransport(
             {
                 ("GET", urls[0]): [
-                    RequestFailure(None, "Network error: timed out", error_category="timeout"),
+                    RequestFailure(
+                        None, "Network error: timed out", error_category="timeout"
+                    ),
                     {
                         "status_code": 200,
                         "headers": {"content-type": "image/png"},
@@ -877,7 +992,11 @@ class ProviderRequestOptionsTests(unittest.TestCase):
                     "url": urls[1],
                 },
                 ("GET", urls[2]): [
-                    RequestFailure(None, "temporary failure in name resolution", error_category="dns_error"),
+                    RequestFailure(
+                        None,
+                        "temporary failure in name resolution",
+                        error_category="dns_error",
+                    ),
                     {
                         "status_code": 200,
                         "headers": {"content-type": "image/png"},
@@ -905,16 +1024,23 @@ class ProviderRequestOptionsTests(unittest.TestCase):
             )
 
         self.assertEqual(result["asset_failures"], [])
-        self.assertEqual([asset["download_url"] for asset in result["assets"]], [urls[1], urls[3], urls[0], urls[2]])
+        self.assertEqual(
+            [asset["download_url"] for asset in result["assets"]],
+            [urls[1], urls[3], urls[0], urls[2]],
+        )
 
-    def test_browser_image_page_fetch_is_abortable_and_does_not_cache_challenge_pages(self) -> None:
+    def test_browser_image_page_fetch_is_abortable_and_does_not_cache_challenge_pages(
+        self,
+    ) -> None:
         page = _FakeImagePage({"ok": False, "error": "AbortError", "timedOut": True})
         fetcher = browser_fetchers._SharedBrowserImageDocumentFetcher(
             browser_context_seed_getter=lambda: {},
             seed_urls_getter=lambda: [],
         )
 
-        result = fetcher._payload_from_page_fetch_url(page, "https://example.test/cdn/figure.jpg")
+        result = fetcher._payload_from_page_fetch_url(
+            page, "https://example.test/cdn/figure.jpg"
+        )
 
         self.assertIsNone(result)
         script, arg = page.evaluate_calls[0]
@@ -922,7 +1048,10 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         self.assertIn("cache: 'no-store'", script)
         self.assertEqual(
             arg,
-            ["https://example.test/cdn/figure.jpg", browser_workflow._IMAGE_DOCUMENT_FETCH_TIMEOUT_MS],
+            [
+                "https://example.test/cdn/figure.jpg",
+                browser_workflow._IMAGE_DOCUMENT_FETCH_TIMEOUT_MS,
+            ],
         )
         self.assertEqual(
             fetcher.failure_for("https://example.test/cdn/figure.jpg")["reason"],
@@ -935,7 +1064,9 @@ class ProviderRequestOptionsTests(unittest.TestCase):
     def test_failure_diagnostic_uses_browser_reason(self) -> None:
         image_url = "https://example.test/context-error.png"
         fetcher = browser_fetchers._build_shared_browser_image_fetcher(
-            browser_context_seed_getter=lambda: {"browser_user_agent": "UnitTestAgent/1.0"},
+            browser_context_seed_getter=lambda: {
+                "browser_user_agent": "UnitTestAgent/1.0"
+            },
             seed_urls_getter=lambda: [],
             browser_user_agent="UnitTestAgent/1.0",
             use_runtime_shared_browser=False,
@@ -959,7 +1090,9 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         self.assertEqual(failure["error_type"], "RuntimeError")
         self.assertEqual(failure["error_message"], "browser context already active")
 
-    def test_browser_image_wait_stops_immediately_on_cloudflare_challenge_title(self) -> None:
+    def test_browser_image_wait_stops_immediately_on_cloudflare_challenge_title(
+        self,
+    ) -> None:
         page = _FakeImagePage(
             {
                 "ready": False,
@@ -973,7 +1106,9 @@ class ProviderRequestOptionsTests(unittest.TestCase):
             seed_urls_getter=lambda: [],
         )
 
-        result = fetcher._wait_for_primary_image(page, "https://example.test/cdn/figure.jpg")
+        result = fetcher._wait_for_primary_image(
+            page, "https://example.test/cdn/figure.jpg"
+        )
 
         self.assertIsNone(result)
         self.assertEqual(page.wait_for_timeout_calls, [])
@@ -992,8 +1127,12 @@ class ProviderRequestOptionsTests(unittest.TestCase):
             seed_urls_getter=lambda: [],
         )
 
-        with mock.patch.object(browser_workflow.time, "monotonic", side_effect=[0.0, 16.0]):
-            result = fetcher._wait_for_primary_image(page, "https://example.test/cdn/figure.jpg")
+        with mock.patch.object(
+            browser_workflow.time, "monotonic", side_effect=[0.0, 16.0]
+        ):
+            result = fetcher._wait_for_primary_image(
+                page, "https://example.test/cdn/figure.jpg"
+            )
 
         self.assertIsNone(result)
         self.assertEqual(
@@ -1024,7 +1163,9 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         self.assertIsNone(result)
         self.assertEqual(fetcher.failure_for(image_url)["reason"], "non_image_response")
 
-    def test_browser_image_fetcher_prefers_warmed_article_image_before_direct_request(self) -> None:
+    def test_browser_image_fetcher_prefers_warmed_article_image_before_direct_request(
+        self,
+    ) -> None:
         image_body = png_body(b"article-page-image")
         image_url = "https://example.test/cdn/figure.png"
         page = _FakeImagePage(
@@ -1066,7 +1207,9 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         self.assertEqual(result["dimensions"], {"width": 640, "height": 480})
         self.assertEqual(len(page.evaluate_calls), 1)
 
-    def test_browser_image_fetcher_falls_back_when_warmed_article_lacks_target(self) -> None:
+    def test_browser_image_fetcher_falls_back_when_warmed_article_lacks_target(
+        self,
+    ) -> None:
         image_url = "https://example.test/cdn/figure.png"
         direct_payload = {
             "status_code": 200,
@@ -1186,9 +1329,13 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         result = fetcher._payload_from_warmed_article_image(page, image_url)
 
         self.assertIsNone(result)
-        self.assertEqual(fetcher.failure_for(image_url)["reason"], "cloudflare_challenge")
+        self.assertEqual(
+            fetcher.failure_for(image_url)["reason"], "cloudflare_challenge"
+        )
 
-    def test_browser_image_payload_uses_loaded_image_when_fetch_is_challenged(self) -> None:
+    def test_browser_image_payload_uses_loaded_image_when_fetch_is_challenged(
+        self,
+    ) -> None:
         image_body = b"\x89PNG\r\n\x1a\nloaded-image"
         image_url = "https://example.test/cdn/figure.png"
         page = _FakeQueuedImagePage(
@@ -1218,7 +1365,9 @@ class ProviderRequestOptionsTests(unittest.TestCase):
             seed_urls_getter=lambda: [],
         )
 
-        result = fetcher._payload_from_page_fetch(page, {"src": image_url, "width": 500, "height": 198})
+        result = fetcher._payload_from_page_fetch(
+            page, {"src": image_url, "width": 500, "height": 198}
+        )
 
         self.assertIsNotNone(result)
         assert result is not None
@@ -1249,7 +1398,9 @@ class ProviderRequestOptionsTests(unittest.TestCase):
                 seed_urls_getter=lambda: [],
             )
 
-            result = fetcher._payload_from_loaded_image(page, {"src": image_url, "width": 500, "height": 198})
+            result = fetcher._payload_from_loaded_image(
+                page, {"src": image_url, "width": 500, "height": 198}
+            )
 
             self.assertIsNone(result)
             self.assertEqual(fetcher.failure_for(image_url)["reason"], reason)
@@ -1271,7 +1422,9 @@ class ProviderRequestOptionsTests(unittest.TestCase):
 
         self.assertIsNone(payload)
 
-    def test_browser_image_document_payload_prefers_browser_exported_pixels(self) -> None:
+    def test_browser_image_document_payload_prefers_browser_exported_pixels(
+        self,
+    ) -> None:
         image_body = b"\x89PNG\r\n\x1a\ncanvas-export"
         result = browser_runtime.BrowserFetchedHtml(
             source_url="https://example.test/figure.png",
@@ -1354,7 +1507,9 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         self.assertEqual(payload["headers"]["content-type"], "image/svg+xml")
         self.assertEqual(payload["body"], svg_body)
 
-    def test_browser_image_document_payload_rejects_svg_content_type_with_html_body(self) -> None:
+    def test_browser_image_document_payload_rejects_svg_content_type_with_html_body(
+        self,
+    ) -> None:
         result = browser_runtime.BrowserFetchedHtml(
             source_url="https://example.test/figure.svg",
             final_url="https://example.test/figure.svg",
@@ -1377,7 +1532,9 @@ class ProviderRequestOptionsTests(unittest.TestCase):
 
         self.assertIsNone(payload)
 
-    def test_browser_image_fetcher_records_challenge_failure_without_recovery(self) -> None:
+    def test_browser_image_fetcher_records_challenge_failure_without_recovery(
+        self,
+    ) -> None:
         image_url = "https://example.test/cdn/figure.png"
         fetcher = browser_fetchers._SharedBrowserImageDocumentFetcher(
             browser_context_seed_getter=lambda: {},
@@ -1412,14 +1569,18 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         self.assertEqual(failure["reason"], "cloudflare_challenge")
         self.assertNotIn("recovery_attempts", failure)
 
-    def test_download_assets_figure_kind_with_image_document_fetcher_runs_in_parallel_and_keeps_order(self) -> None:
+    def test_download_assets_figure_kind_with_image_document_fetcher_runs_in_parallel_and_keeps_order(
+        self,
+    ) -> None:
         class TrackingFetcher:
             def __init__(self) -> None:
                 self.lock = threading.Lock()
                 self.active = 0
                 self.max_active = 0
 
-            def __call__(self, image_url: str, _asset: dict[str, object]) -> dict[str, object]:
+            def __call__(
+                self, image_url: str, _asset: dict[str, object]
+            ) -> dict[str, object]:
                 with self.lock:
                     self.active += 1
                     self.max_active = max(self.max_active, self.active)
@@ -1472,7 +1633,8 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         ]
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            result = asset_impl.download_assets(asset_impl.FIGURE_KIND,
+            result = asset_impl.download_assets(
+                asset_impl.FIGURE_KIND,
                 RecordingTransport({}),
                 article_id="10.1000/example",
                 assets=assets,
@@ -1484,9 +1646,14 @@ class ProviderRequestOptionsTests(unittest.TestCase):
             )
 
         self.assertGreaterEqual(fetcher.max_active, 2)
-        self.assertEqual([asset["heading"] for asset in result["assets"]], ["Figure 1", "Figure 2", "Figure 3"])
+        self.assertEqual(
+            [asset["heading"] for asset in result["assets"]],
+            ["Figure 1", "Figure 2", "Figure 3"],
+        )
 
-    def test_download_assets_figure_kind_with_image_document_fetcher_runs_single_asset_in_worker_thread(self) -> None:
+    def test_download_assets_figure_kind_with_image_document_fetcher_runs_single_asset_in_worker_thread(
+        self,
+    ) -> None:
         image_url = "https://example.test/single-figure.png"
         main_thread_id = threading.get_ident()
         thread_ids: list[int] = []
@@ -1513,7 +1680,8 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         ]
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            result = asset_impl.download_assets(asset_impl.FIGURE_KIND,
+            result = asset_impl.download_assets(
+                asset_impl.FIGURE_KIND,
                 RecordingTransport({}),
                 article_id="10.1000/example",
                 assets=assets,
@@ -1530,7 +1698,9 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         self.assertEqual(len(thread_ids), 1)
         self.assertNotEqual(thread_ids[0], main_thread_id)
 
-    def test_download_assets_figure_kind_with_caller_thread_fetcher_stays_on_caller_thread(self) -> None:
+    def test_download_assets_figure_kind_with_caller_thread_fetcher_stays_on_caller_thread(
+        self,
+    ) -> None:
         image_url = "https://example.test/runtime-shared-figure.png"
         main_thread_id = threading.get_ident()
 
@@ -1540,7 +1710,9 @@ class ProviderRequestOptionsTests(unittest.TestCase):
             def __init__(self) -> None:
                 self.thread_ids: list[int] = []
 
-            def __call__(self, current_url: str, _asset: dict[str, object]) -> dict[str, object]:
+            def __call__(
+                self, current_url: str, _asset: dict[str, object]
+            ) -> dict[str, object]:
                 self.thread_ids.append(threading.get_ident())
                 return {
                     "status_code": 200,
@@ -1565,7 +1737,8 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         ]
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            result = asset_impl.download_assets(asset_impl.FIGURE_KIND,
+            result = asset_impl.download_assets(
+                asset_impl.FIGURE_KIND,
                 RecordingTransport({}),
                 article_id="10.1000/example",
                 assets=assets,
@@ -1581,7 +1754,9 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         self.assertEqual(len(result["assets"]), 1)
         self.assertEqual(fetcher.thread_ids, [main_thread_id])
 
-    def test_download_assets_figure_kind_with_image_document_fetcher_single_asset_survives_main_thread_conflict(self) -> None:
+    def test_download_assets_figure_kind_with_image_document_fetcher_single_asset_survives_main_thread_conflict(
+        self,
+    ) -> None:
         image_url = "https://example.test/browser-conflict.png"
 
         class MainThreadFailingFetcher:
@@ -1590,7 +1765,9 @@ class ProviderRequestOptionsTests(unittest.TestCase):
                 self.thread_ids: list[int] = []
                 self.failed_on_main_thread = False
 
-            def __call__(self, current_url: str, _asset: dict[str, object]) -> dict[str, object] | None:
+            def __call__(
+                self, current_url: str, _asset: dict[str, object]
+            ) -> dict[str, object] | None:
                 current_thread_id = threading.get_ident()
                 self.thread_ids.append(current_thread_id)
                 if current_thread_id == self.main_thread_id:
@@ -1625,7 +1802,8 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         ]
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            result = asset_impl.download_assets(asset_impl.FIGURE_KIND,
+            result = asset_impl.download_assets(
+                asset_impl.FIGURE_KIND,
                 RecordingTransport({}),
                 article_id="10.1000/example",
                 assets=assets,
@@ -1643,11 +1821,15 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         self.assertTrue(fetcher.thread_ids)
         self.assertNotEqual(fetcher.thread_ids[0], fetcher.main_thread_id)
 
-    def test_download_assets_figure_kind_with_image_document_fetcher_preserves_context_error_diagnostic(self) -> None:
+    def test_download_assets_figure_kind_with_image_document_fetcher_preserves_context_error_diagnostic(
+        self,
+    ) -> None:
         image_url = "https://example.test/context-error.png"
 
         class FailingFetcher:
-            def __call__(self, _image_url: str, _asset: dict[str, object]) -> dict[str, object] | None:
+            def __call__(
+                self, _image_url: str, _asset: dict[str, object]
+            ) -> dict[str, object] | None:
                 return None
 
             def failure_for(self, _image_url: str) -> dict[str, object]:
@@ -1669,7 +1851,8 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         ]
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            result = asset_impl.download_assets(asset_impl.FIGURE_KIND,
+            result = asset_impl.download_assets(
+                asset_impl.FIGURE_KIND,
                 RecordingTransport({}),
                 article_id="10.1000/example",
                 assets=assets,
@@ -1687,8 +1870,12 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         self.assertEqual(failure["error_type"], "RuntimeError")
         self.assertEqual(failure["error_message"], "browser context already active")
 
-    def test_download_assets_figure_kind_with_image_document_fetcher_saves_svg_payload(self) -> None:
-        svg_body = b"<svg xmlns='http://www.w3.org/2000/svg'><path d='M0 0h1v1H0z'/></svg>"
+    def test_download_assets_figure_kind_with_image_document_fetcher_saves_svg_payload(
+        self,
+    ) -> None:
+        svg_body = (
+            b"<svg xmlns='http://www.w3.org/2000/svg'><path d='M0 0h1v1H0z'/></svg>"
+        )
         image_url = "https://example.test/figure.svg"
 
         def fetcher(_image_url: str, _asset: dict[str, object]) -> dict[str, object]:
@@ -1711,7 +1898,8 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         ]
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            result = asset_impl.download_assets(asset_impl.FIGURE_KIND,
+            result = asset_impl.download_assets(
+                asset_impl.FIGURE_KIND,
                 RecordingTransport({}),
                 article_id="10.1000/example",
                 assets=assets,
@@ -1730,7 +1918,9 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         self.assertEqual(saved_path.suffix, ".svg")
         self.assertEqual(saved_body, svg_body)
 
-    def test_browser_workflow_asset_downloads_pass_runtime_asset_concurrency_env(self) -> None:
+    def test_browser_workflow_asset_downloads_pass_runtime_asset_concurrency_env(
+        self,
+    ) -> None:
         doi = "10.1126/science.assets"
         runtime = browser_runtime.BrowserRuntimeConfig(
             provider="science",
@@ -1749,10 +1939,14 @@ class ProviderRequestOptionsTests(unittest.TestCase):
                 source_url="https://www.science.org/doi/full/10.1126/science.assets",
                 content_type="text/html",
                 body=b"<html></html>",
-                browser_context_seed={"browser_final_url": "https://www.science.org/doi/full/10.1126/science.assets"},
+                browser_context_seed={
+                    "browser_final_url": "https://www.science.org/doi/full/10.1126/science.assets"
+                },
             ),
         )
-        mocked_download_assets = mock.Mock(return_value={"assets": [], "asset_failures": []})
+        mocked_download_assets = mock.Mock(
+            return_value={"assets": [], "asset_failures": []}
+        )
         deps = browser_workflow_deps(
             load_runtime_config=mock.Mock(return_value=runtime),
             ensure_runtime_ready=mock.Mock(),
@@ -1786,12 +1980,17 @@ class ProviderRequestOptionsTests(unittest.TestCase):
                 raw_payload,
                 Path(tmpdir),
                 asset_profile="body",
-                context=RuntimeContext(env={"PAPER_FETCH_ASSET_DOWNLOAD_CONCURRENCY": "6"}),
-        )
+                context=RuntimeContext(
+                    env={"PAPER_FETCH_ASSET_DOWNLOAD_CONCURRENCY": "6"}
+                ),
+            )
 
         self.assertEqual(result, {"assets": [], "asset_failures": []})
         self.assertEqual(
-            [call.kwargs["asset_download_concurrency"] for call in mocked_download_assets.call_args_list],
+            [
+                call.kwargs["asset_download_concurrency"]
+                for call in mocked_download_assets.call_args_list
+            ],
             [6, 6],
         )
         self.assertEqual(
@@ -1824,7 +2023,9 @@ class ProviderRequestOptionsTests(unittest.TestCase):
                 },
             ),
         )
-        mocked_download_assets = mock.Mock(return_value={"assets": [], "asset_failures": []})
+        mocked_download_assets = mock.Mock(
+            return_value={"assets": [], "asset_failures": []}
+        )
         deps = browser_workflow_deps(
             load_runtime_config=mock.Mock(return_value=runtime),
             ensure_runtime_ready=mock.Mock(),
@@ -1858,12 +2059,17 @@ class ProviderRequestOptionsTests(unittest.TestCase):
                 raw_payload,
                 Path(tmpdir),
                 asset_profile="body",
-                context=RuntimeContext(env={"PAPER_FETCH_ASSET_DOWNLOAD_CONCURRENCY": "6"}),
+                context=RuntimeContext(
+                    env={"PAPER_FETCH_ASSET_DOWNLOAD_CONCURRENCY": "6"}
+                ),
             )
 
         self.assertEqual(result, {"assets": [], "asset_failures": []})
         self.assertEqual(
-            [call.kwargs["asset_download_concurrency"] for call in mocked_download_assets.call_args_list],
+            [
+                call.kwargs["asset_download_concurrency"]
+                for call in mocked_download_assets.call_args_list
+            ],
             [1, 1],
         )
         self.assertEqual(
@@ -1871,12 +2077,21 @@ class ProviderRequestOptionsTests(unittest.TestCase):
             [html_assets.FIGURE_KIND, html_assets.SUPPLEMENTARY_KIND],
         )
 
-    def test_shared_browser_file_fetcher_records_cloudflare_challenge_without_recovery(self) -> None:
+    def test_shared_browser_file_fetcher_records_cloudflare_challenge_without_recovery(
+        self,
+    ) -> None:
         file_url = "https://example.test/supplement.pdf"
         article_url = "https://example.test/article"
         fetcher = browser_fetchers._build_shared_browser_file_fetcher(
             browser_context_seed_getter=lambda: {
-                "browser_cookies": [{"name": "cf_clearance", "value": "seed", "domain": ".example.test", "path": "/"}],
+                "browser_cookies": [
+                    {
+                        "name": "cf_clearance",
+                        "value": "seed",
+                        "domain": ".example.test",
+                        "path": "/",
+                    }
+                ],
                 "browser_user_agent": "Mozilla/5.0",
                 "browser_final_url": article_url,
             },
@@ -1901,20 +2116,28 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         fetcher._fetch_with_context_request = mock.Mock(side_effect=side_effect)
 
         try:
-            result = fetcher(file_url, {"kind": "supplementary", "section": "supplementary"})
+            result = fetcher(
+                file_url, {"kind": "supplementary", "section": "supplementary"}
+            )
         finally:
             fetcher.close()
 
         self.assertIsNone(result)
-        self.assertEqual(fetcher._warm_seed_urls.call_args_list[0].kwargs["force"], False)
-        self.assertEqual(fetcher._warm_seed_urls.call_args_list[1].kwargs["force"], True)
+        self.assertEqual(
+            fetcher._warm_seed_urls.call_args_list[0].kwargs["force"], False
+        )
+        self.assertEqual(
+            fetcher._warm_seed_urls.call_args_list[1].kwargs["force"], True
+        )
         self.assertEqual(fetcher._fetch_with_context_request.call_count, 2)
         failure = fetcher.failure_for(file_url)
         assert failure is not None
         self.assertEqual(failure["reason"], "cloudflare_challenge")
         self.assertNotIn("recovery_attempts", failure)
 
-    def test_html_asset_download_uses_figure_page_full_size_before_preview(self) -> None:
+    def test_html_asset_download_uses_figure_page_full_size_before_preview(
+        self,
+    ) -> None:
         transport = RecordingTransport(
             {
                 ("GET", "https://example.test/figures/figure-1"): {
@@ -1969,9 +2192,14 @@ class ProviderRequestOptionsTests(unittest.TestCase):
                     "https://example.test/images/original/figure1.png",
                 ],
             )
-            self.assertEqual(Path(result["assets"][0]["path"]).read_bytes(), png_body(b"original-image"))
+            self.assertEqual(
+                Path(result["assets"][0]["path"]).read_bytes(),
+                png_body(b"original-image"),
+            )
 
-    def test_html_asset_download_falls_back_to_preview_when_full_size_fetch_fails(self) -> None:
+    def test_html_asset_download_falls_back_to_preview_when_full_size_fetch_fails(
+        self,
+    ) -> None:
         transport = RecordingTransport(
             {
                 ("GET", "https://example.test/figures/figure-1"): {
@@ -1984,7 +2212,10 @@ class ProviderRequestOptionsTests(unittest.TestCase):
                     ),
                     "url": "https://example.test/figures/figure-1",
                 },
-                ("GET", "https://example.test/images/original/figure1.png"): RequestFailure(
+                (
+                    "GET",
+                    "https://example.test/images/original/figure1.png",
+                ): RequestFailure(
                     403,
                     "Forbidden",
                     url="https://example.test/images/original/figure1.png",
@@ -2028,7 +2259,10 @@ class ProviderRequestOptionsTests(unittest.TestCase):
             )
             self.assertEqual(len(result["assets"]), 1)
             self.assertEqual(result["asset_failures"], [])
-            self.assertEqual(Path(result["assets"][0]["path"]).read_bytes(), png_body(b"preview-image"))
+            self.assertEqual(
+                Path(result["assets"][0]["path"]).read_bytes(),
+                png_body(b"preview-image"),
+            )
 
     def test_html_asset_download_retries_seeded_full_size_before_preview(self) -> None:
         large_url = "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/10932570/garg1-large.gif"
@@ -2086,7 +2320,9 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         self.assertEqual(result["assets"][0]["original_url"], large_url)
         self.assertEqual(saved_bytes, png_body(b"large-after-seed-refresh"))
 
-    def test_html_asset_download_preserves_mapping_when_seeded_preview_fallback_succeeds(self) -> None:
+    def test_html_asset_download_preserves_mapping_when_seeded_preview_fallback_succeeds(
+        self,
+    ) -> None:
         large_url = "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/10932570/garg2-large.gif"
         preview_url = "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/10932570/garg2-small.gif"
         landing_url = "https://ieeexplore.ieee.org/document/10932570/"
@@ -2151,7 +2387,9 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         self.assertEqual(result["assets"][0]["download_url"], preview_url)
         self.assertEqual(saved_bytes, png_body(b"preview-after-full-size-failure"))
 
-    def test_html_asset_download_preserves_provider_preview_acceptance_hint(self) -> None:
+    def test_html_asset_download_preserves_provider_preview_acceptance_hint(
+        self,
+    ) -> None:
         preview_url = "https://content.cld.iop.org/journals/example/f1_online.jpg"
         transport = RecordingTransport(
             {
@@ -2190,7 +2428,9 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         self.assertEqual(result["assets"][0]["download_tier"], "preview")
         self.assertTrue(result["assets"][0]["preview_accepted"])
 
-    def test_springer_body_asset_profile_ignores_supplementary_download_pdf_links(self) -> None:
+    def test_springer_body_asset_profile_ignores_supplementary_download_pdf_links(
+        self,
+    ) -> None:
         figure_url = "https://media.springernature.com/full/example-figure-1.png"
         transport = RecordingTransport(
             {
@@ -2251,7 +2491,9 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         self.assertEqual(result["asset_failures"], [])
         self.assertEqual(saved_bytes, png_body(b"springer-figure-1"))
 
-    def test_elsevier_body_asset_profile_excludes_appendix_and_supplementary(self) -> None:
+    def test_elsevier_body_asset_profile_excludes_appendix_and_supplementary(
+        self,
+    ) -> None:
         references = [
             {"asset_type": "image", "source_ref": "fx1"},
             {"asset_type": "table_asset", "source_ref": "tx1"},
@@ -2266,6 +2508,7 @@ class ProviderRequestOptionsTests(unittest.TestCase):
             [reference["asset_type"] for reference in filtered],
             ["image", "table_asset"],
         )
+
 
 if __name__ == "__main__":
     unittest.main()

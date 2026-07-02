@@ -85,10 +85,16 @@ def _runtime_context_from_args(
         "clients": clients,
         "download_dir": download_dir,
     }
-    explicit = {name: value for name, value in runtime_args.items() if value is not _RUNTIME_ARG_UNSET}
+    explicit = {
+        name: value
+        for name, value in runtime_args.items()
+        if value is not _RUNTIME_ARG_UNSET
+    }
     if context is not None:
         if explicit:
-            raise TypeError("test helper cannot combine context with runtime keyword arguments")
+            raise TypeError(
+                "test helper cannot combine context with runtime keyword arguments"
+            )
         return context
     if not explicit:
         return None
@@ -138,5 +144,6 @@ def _probe_has_fulltext(
         clients=clients,
     )
     return paper_fetch.probe_has_fulltext(query, context=runtime_context)
+
 
 __all__ = [name for name in globals() if not name.startswith("__")]

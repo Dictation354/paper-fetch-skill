@@ -6,7 +6,9 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 BUILD_OFFLINE_PACKAGE = REPO_ROOT / "scripts" / "build-offline-package.sh"
-BUILD_OFFLINE_PACKAGE_WINDOWS = REPO_ROOT / "scripts" / "build-offline-package-windows.ps1"
+BUILD_OFFLINE_PACKAGE_WINDOWS = (
+    REPO_ROOT / "scripts" / "build-offline-package-windows.ps1"
+)
 VERIFY_OFFLINE_PACKAGE = REPO_ROOT / "scripts" / "verify-offline-package.sh"
 
 
@@ -37,7 +39,11 @@ class OfflinePackageBuildTests(unittest.TestCase):
 
     def test_posix_manifest_and_readme_document_cdp_browser_policy(self) -> None:
         script = BUILD_OFFLINE_PACKAGE.read_text(encoding="utf-8")
-        manifest_block = script[script.index("payload = {") : script.index("(staging / \"offline-manifest.json\")")]
+        manifest_block = script[
+            script.index("payload = {") : script.index(
+                '(staging / "offline-manifest.json")'
+            )
+        ]
 
         self.assertIn('"schema_version": 2', manifest_block)
         self.assertIn('"python_runtime": "runtime/site-packages"', manifest_block)
@@ -47,7 +53,10 @@ class OfflinePackageBuildTests(unittest.TestCase):
         self.assertIn('"platform": target_platform', manifest_block)
         self.assertIn('"arch": target_arch', manifest_block)
         self.assertIn("README.offline.md", script)
-        self.assertIn('PAPER_FETCH_BROWSER_USER_AGENT="Mozilla/5.0 (Windows NT 10.0; Win64; x64)', script)
+        self.assertIn(
+            'PAPER_FETCH_BROWSER_USER_AGENT="Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+            script,
+        )
         self.assertIn("CLOAKBROWSER_CDP_ENDPOINT", script)
         self.assertIn("CLOAKBROWSER_BINARY_PATH", script)
         self.assertNotIn('# PAPER_FETCH_BROWSER_USER_AGENT="Mozilla/5.0', script)
@@ -57,13 +66,13 @@ class OfflinePackageBuildTests(unittest.TestCase):
         self.assertNotIn('"playwright_browsers"', manifest_block)
 
     def test_posix_checksums_are_portable_to_macos(self) -> None:
-        script = BUILD_OFFLINE_PACKAGE.read_text(encoding="utf-8") + (REPO_ROOT / "install-offline.sh").read_text(
-            encoding="utf-8"
-        )
+        script = BUILD_OFFLINE_PACKAGE.read_text(encoding="utf-8") + (
+            REPO_ROOT / "install-offline.sh"
+        ).read_text(encoding="utf-8")
 
         self.assertIn("shasum -a 256", script)
         self.assertIn("sha256sum", script)
-        self.assertNotIn("sed -i \"s|__CLOAKBROWSER_HEADLESS__", script)
+        self.assertNotIn('sed -i "s|__CLOAKBROWSER_HEADLESS__', script)
         self.assertNotIn("sed -i", script)
 
     def test_posix_offline_verifier_uses_browser_runtime_smoke(self) -> None:
@@ -72,15 +81,19 @@ class OfflinePackageBuildTests(unittest.TestCase):
         self.assertIn("offline-installer.sh|offline-bundle.tar.gz", script)
         self.assertIn("tar -xzf", script)
         self.assertIn("INSTALLER_PATH", script)
-        self.assertIn("--install-dir \"$INSTALL_ROOT\"", script)
+        self.assertIn('--install-dir "$INSTALL_ROOT"', script)
         self.assertIn("runtime/site-packages/paper_fetch", script)
         self.assertIn("Offline install should not include the source tree", script)
-        self.assertIn("Offline install should not expose a generic Python wrapper", script)
+        self.assertIn(
+            "Offline install should not expose a generic Python wrapper", script
+        )
         self.assertIn("Offline install should not include the build wheelhouse", script)
         self.assertIn("Purge did not remove the install directory", script)
         self.assertIn("import cloakbrowser", script)
         self.assertIn("import playwright", script)
-        self.assertIn("from paper_fetch.runtime_browser import BrowserContextManager", script)
+        self.assertIn(
+            "from paper_fetch.runtime_browser import BrowserContextManager", script
+        )
         self.assertIn('assert hasattr(cloakbrowser, "ensure_binary")', script)
         self.assertNotIn('assert hasattr(cloakbrowser, "launch")', script)
         self.assertIn("CLOAKBROWSER_HEADLESS=true", script)
@@ -97,8 +110,12 @@ class OfflinePackageBuildTests(unittest.TestCase):
         self.assertIn("Assert-RuntimeOnlyStaging", script)
         self.assertIn("scripts/windows-installer-helper.ps1", script)
         self.assertIn("installer/manifest.json", script)
-        self.assertIn('$sourceSkill = Join-Path (Join-Path $RepoDir "skills") $SkillName', script)
-        self.assertIn('Get-ChildItem -Path $wheelhouse -Filter "cloakbrowser-*.whl"', script)
+        self.assertIn(
+            '$sourceSkill = Join-Path (Join-Path $RepoDir "skills") $SkillName', script
+        )
+        self.assertIn(
+            'Get-ChildItem -Path $wheelhouse -Filter "cloakbrowser-*.whl"', script
+        )
         self.assertIn('browser_binary = "not_bundled"', script)
         self.assertIn("Write-OfflineReadme", script)
         self.assertNotIn("Copy-SourceSnapshot", script)
@@ -111,14 +128,25 @@ class OfflinePackageBuildTests(unittest.TestCase):
 
     def test_windows_wrappers_and_manifest_publish_cdp_browser_policy(self) -> None:
         script = BUILD_OFFLINE_PACKAGE_WINDOWS.read_text(encoding="utf-8")
-        wrapper_block = script[script.index("function Write-CmdWrappers") : script.index("function Add-SkillAgentManifest")]
-        manifest_block = script[script.index("components = [ordered]@{") : script.index("installer = [ordered]@{")]
+        wrapper_block = script[
+            script.index("function Write-CmdWrappers") : script.index(
+                "function Add-SkillAgentManifest"
+            )
+        ]
+        manifest_block = script[
+            script.index("components = [ordered]@{") : script.index(
+                "installer = [ordered]@{"
+            )
+        ]
 
         self.assertIn("paper-fetch.cmd", wrapper_block)
         self.assertIn("paper-fetch-mcp.cmd", wrapper_block)
-        self.assertIn("command_wrappers = \"bin\"", manifest_block)
+        self.assertIn('command_wrappers = "bin"', manifest_block)
         self.assertIn("cloakbrowser = [ordered]@{", manifest_block)
-        self.assertIn("PAPER_FETCH_BROWSER_USER_AGENT='Mozilla/5.0 (Windows NT 10.0; Win64; x64)", script)
+        self.assertIn(
+            "PAPER_FETCH_BROWSER_USER_AGENT='Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+            script,
+        )
         self.assertIn("CLOAKBROWSER_CDP_ENDPOINT", script)
         self.assertNotIn("# PAPER_FETCH_BROWSER_USER_AGENT='Mozilla/5.0", script)
         self.assertNotIn("project_wheels", manifest_block)

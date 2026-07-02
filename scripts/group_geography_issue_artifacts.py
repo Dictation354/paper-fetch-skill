@@ -24,7 +24,9 @@ def _load_issue_artifact_exports():
 
 def build_parser() -> argparse.ArgumentParser:
     default_issue_artifact_output_dir, _ = _load_issue_artifact_exports()
-    parser = argparse.ArgumentParser(description="Group geography issue artifacts into per-issue folders.")
+    parser = argparse.ArgumentParser(
+        description="Group geography issue artifacts into per-issue folders."
+    )
     parser.add_argument(
         "--artifact-root",
         default=str(default_issue_artifact_output_dir()),
@@ -46,7 +48,9 @@ def main() -> int:
         artifact_root=Path(args.artifact_root),
         clean=not args.no_clean,
     )
-    sys.stdout.write(f"created {len(summary['issue_dirs'])} issue folders under {summary['artifact_root']}\n")
+    sys.stdout.write(
+        f"created {len(summary['issue_dirs'])} issue folders under {summary['artifact_root']}\n"
+    )
     for item in summary["issue_dirs"]:
         sys.stdout.write(f"{item['issue_flag']}: {item['count']}\n")
     return 0

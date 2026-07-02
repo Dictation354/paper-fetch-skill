@@ -25,9 +25,13 @@ from tests.block_fixtures import block_asset
 from tests.golden_criteria import golden_criteria_asset
 
 
-SCIENCE_ENTITLED_FIXTURE = golden_criteria_asset("10.1126/science.aeg3511", "original.html")
+SCIENCE_ENTITLED_FIXTURE = golden_criteria_asset(
+    "10.1126/science.aeg3511", "original.html"
+)
 WILEY_ENTITLED_FIXTURE = golden_criteria_asset("10.1111/gcb.16998", "original.html")
-PNAS_ENTITLED_FIXTURE = golden_criteria_asset("10.1073/pnas.2309123120", "original.html")
+PNAS_ENTITLED_FIXTURE = golden_criteria_asset(
+    "10.1073/pnas.2309123120", "original.html"
+)
 SPRINGER_PAYWALL_SAMPLE_DOIS = (
     "10.1007/s00382-018-4286-0",
     "10.1007/s11430-021-9892-6",
@@ -40,12 +44,16 @@ def _science_paywall_metadata(_html: str, markdown: str) -> dict[str, str]:
     return {
         "title": "Magma plumbing beneath Yellowstone",
         "doi": "10.1126/science.aeg3511",
-        "abstract": markdown.split("## Access the full article", 1)[0].split("## Abstract", 1)[1].strip(),
+        "abstract": markdown.split("## Access the full article", 1)[0]
+        .split("## Abstract", 1)[1]
+        .strip(),
     }
 
 
 def _wiley_paywall_metadata(html: str, markdown: str) -> dict[str, str]:
-    metadata = parse_html_metadata(html, "https://onlinelibrary.wiley.com/doi/abs/10.1111/gcb.16414")
+    metadata = parse_html_metadata(
+        html, "https://onlinelibrary.wiley.com/doi/abs/10.1111/gcb.16414"
+    )
     return {
         **metadata,
         "title": "Contrasting temperature effects on the velocity of early- versus late-stage vegetation green-up in the Northern Hemisphere",
@@ -81,7 +89,10 @@ BROWSER_WORKFLOW_REJECT_CASES = {
         "title": "Contrasting temperature effects on the velocity of early- versus late-stage vegetation green-up in the Northern Hemisphere",
         "final_url": "https://onlinelibrary.wiley.com/doi/abs/10.1111/gcb.16414",
         "metadata_builder": _wiley_paywall_metadata,
-        "expected_blocking_fallback_signals": ["wiley_access_no", "wiley_format_viewed_abstract"],
+        "expected_blocking_fallback_signals": [
+            "wiley_access_no",
+            "wiley_format_viewed_abstract",
+        ],
     },
     "pnas": {
         "doi": "10.1073/pnas.2509692123",
@@ -139,7 +150,6 @@ def _extract_browser_workflow_markdown(
     )
 
 
-
 class HtmlAvailabilityTests(unittest.TestCase):
     def test_html_quality_assessor_matches_direct_provider_assessment(self) -> None:
         html = """
@@ -173,7 +183,9 @@ class HtmlAvailabilityTests(unittest.TestCase):
 
         self.assertEqual(via_assessor.to_dict(), direct.to_dict())
 
-    def test_assess_html_with_unknown_provider_uses_generic_availability_profile(self) -> None:
+    def test_assess_html_with_unknown_provider_uses_generic_availability_profile(
+        self,
+    ) -> None:
         first_paragraph = (
             "This body paragraph describes methods and results with enough repeated narrative text to be accepted. "
             * 8
@@ -189,11 +201,7 @@ class HtmlAvailabilityTests(unittest.TestCase):
           <p>{second_paragraph}</p>
         </article></body></html>
         """
-        markdown = (
-            "## Methods\n\n"
-            f"{first_paragraph}\n\n"
-            f"{second_paragraph}"
-        )
+        markdown = f"## Methods\n\n{first_paragraph}\n\n{second_paragraph}"
         selected_publishers: list[str | None] = []
         cleaned_publishers: list[str | None] = []
         original_select_best_container = html_availability_module.select_best_container
@@ -234,7 +242,9 @@ class HtmlAvailabilityTests(unittest.TestCase):
     def _assert_rejected_browser_workflow_case(self, case_name: str) -> None:
         case = BROWSER_WORKFLOW_REJECT_CASES[case_name]
         html = block_asset(case["doi"], case["html_asset"]).read_text(encoding="utf-8")
-        markdown = block_asset(case["doi"], case["markdown_asset"]).read_text(encoding="utf-8")
+        markdown = block_asset(case["doi"], case["markdown_asset"]).read_text(
+            encoding="utf-8"
+        )
         diagnostics = assess_html_fulltext_availability(
             markdown,
             case["metadata_builder"](html, markdown),
@@ -278,7 +288,9 @@ class HtmlAvailabilityTests(unittest.TestCase):
         self.assertEqual(diagnostics.content_kind, "fulltext")
         self.assertEqual(diagnostics.blocking_fallback_signals, [])
 
-    def test_assess_html_fulltext_accepts_body_sufficient_html_without_figures(self) -> None:
+    def test_assess_html_fulltext_accepts_body_sufficient_html_without_figures(
+        self,
+    ) -> None:
         markdown = "# Example Article\n\n## Results\n\n" + ("Body text " * 120)
         diagnostics = assess_html_fulltext_availability(
             markdown,
@@ -310,7 +322,9 @@ class HtmlAvailabilityTests(unittest.TestCase):
         self.assertEqual(diagnostics.figure_count, 1)
         self.assertIn("has_figures", diagnostics.soft_positive_signals)
 
-    def test_assess_html_fulltext_ignores_paywall_text_outside_body_container(self) -> None:
+    def test_assess_html_fulltext_ignores_paywall_text_outside_body_container(
+        self,
+    ) -> None:
         body_text = " ".join(["Important body text with enough detail."] * 30)
         html = (
             "<html><body>"
@@ -324,7 +338,8 @@ class HtmlAvailabilityTests(unittest.TestCase):
             "</body></html>"
         )
         diagnostics = assess_html_fulltext_availability(
-            "# Example Article\n\n## Abstract\n\nShort abstract.\n\n## Discussion\n\n" + body_text,
+            "# Example Article\n\n## Abstract\n\nShort abstract.\n\n## Discussion\n\n"
+            + body_text,
             {"title": "Example Article", "doi": "10.1000/example"},
             provider="generic",
             html_text=html,
@@ -337,7 +352,9 @@ class HtmlAvailabilityTests(unittest.TestCase):
         self.assertNotIn("publisher_paywall", diagnostics.hard_negative_signals)
         self.assertIn("explicit_body_container", diagnostics.strong_positive_signals)
 
-    def test_assess_html_fulltext_accepts_narrative_review_without_imrad_headings(self) -> None:
+    def test_assess_html_fulltext_accepts_narrative_review_without_imrad_headings(
+        self,
+    ) -> None:
         paragraph = "This review paragraph provides enough narrative detail. It contains multiple sentences for structure. "
         html = (
             "<html><body><article>"
@@ -348,7 +365,11 @@ class HtmlAvailabilityTests(unittest.TestCase):
         )
         diagnostics = assess_html_fulltext_availability(
             "# Review Example\n\n" + (paragraph * 2) + "\n\n" + (paragraph * 2),
-            {"title": "Review Example", "doi": "10.1000/review", "article_type": "Review"},
+            {
+                "title": "Review Example",
+                "doi": "10.1000/review",
+                "article_type": "Review",
+            },
             provider="generic",
             html_text=html,
             title="Review Example",
@@ -358,8 +379,12 @@ class HtmlAvailabilityTests(unittest.TestCase):
         self.assertIn("narrative_article_type", diagnostics.soft_positive_signals)
         self.assertEqual(diagnostics.body_metrics["body_run_paragraph_count"], 2)
 
-    def test_assess_html_uses_registered_science_perspective_availability_override(self) -> None:
-        first = "This perspective paragraph is concise. It still reads as article prose."
+    def test_assess_html_uses_registered_science_perspective_availability_override(
+        self,
+    ) -> None:
+        first = (
+            "This perspective paragraph is concise. It still reads as article prose."
+        )
         second = "A second concise paragraph keeps the narrative article body detectable. It adds another sentence."
         html = (
             "<html><body><article class='perspective'>"
@@ -379,7 +404,9 @@ class HtmlAvailabilityTests(unittest.TestCase):
         self.assertIn("narrative_article_type", diagnostics.soft_positive_signals)
         self.assertEqual(diagnostics.body_metrics["body_run_paragraph_count"], 2)
 
-    def test_assess_html_fulltext_uses_registered_science_perspective_callback(self) -> None:
+    def test_assess_html_fulltext_uses_registered_science_perspective_callback(
+        self,
+    ) -> None:
         first = (
             "This perspective paragraph gives enough narrative context to be treated as article body. "
             "It remains short."
@@ -407,7 +434,9 @@ class HtmlAvailabilityTests(unittest.TestCase):
         self.assertIn("narrative_article_type", diagnostics.soft_positive_signals)
         self.assertEqual(diagnostics.body_metrics["body_run_paragraph_count"], 2)
 
-    def test_assess_html_fulltext_springer_preview_wall_does_not_block_body_run(self) -> None:
+    def test_assess_html_fulltext_springer_preview_wall_does_not_block_body_run(
+        self,
+    ) -> None:
         first = (
             "This results paragraph is real article body after the abstract heading. "
             "It has enough prose to mark the body run."
@@ -437,9 +466,13 @@ class HtmlAvailabilityTests(unittest.TestCase):
 
         self.assertTrue(diagnostics.accepted)
         self.assertIn("post_abstract_body_run", diagnostics.strong_positive_signals)
-        self.assertNotIn("springer_access_preview_wall", diagnostics.blocking_fallback_signals)
+        self.assertNotIn(
+            "springer_access_preview_wall", diagnostics.blocking_fallback_signals
+        )
 
-    def test_assess_html_rejects_springer_article_in_press_notice_without_body_run(self) -> None:
+    def test_assess_html_rejects_springer_article_in_press_notice_without_body_run(
+        self,
+    ) -> None:
         notice = (
             "We are providing an unedited version of this manuscript to give early access to its "
             "findings. Before final publication, the manuscript will undergo further editing."
@@ -462,9 +495,13 @@ class HtmlAvailabilityTests(unittest.TestCase):
 
         self.assertFalse(diagnostics.accepted)
         self.assertEqual(diagnostics.content_kind, ABSTRACT_ONLY)
-        self.assertIn("springer_article_in_press_notice", diagnostics.blocking_fallback_signals)
+        self.assertIn(
+            "springer_article_in_press_notice", diagnostics.blocking_fallback_signals
+        )
 
-    def test_assess_html_ignores_springer_article_in_press_notice_with_body_run(self) -> None:
+    def test_assess_html_ignores_springer_article_in_press_notice_with_body_run(
+        self,
+    ) -> None:
         notice = "We are providing an unedited version of this manuscript to give early access to its findings."
         first = (
             "This results paragraph is real article body after the abstract heading. "
@@ -495,7 +532,9 @@ class HtmlAvailabilityTests(unittest.TestCase):
 
         self.assertTrue(diagnostics.accepted)
         self.assertIn("post_abstract_body_run", diagnostics.strong_positive_signals)
-        self.assertNotIn("springer_article_in_press_notice", diagnostics.blocking_fallback_signals)
+        self.assertNotIn(
+            "springer_article_in_press_notice", diagnostics.blocking_fallback_signals
+        )
 
     def test_assess_html_fulltext_rejects_access_gate_without_body_run(self) -> None:
         diagnostics = assess_html_fulltext_availability(
@@ -514,10 +553,16 @@ class HtmlAvailabilityTests(unittest.TestCase):
         self.assertFalse(diagnostics.accepted)
         self.assertEqual(diagnostics.reason, "publisher_paywall")
 
-    def test_assess_html_fulltext_rejects_denial_block_inside_body_container(self) -> None:
+    def test_assess_html_fulltext_rejects_denial_block_inside_body_container(
+        self,
+    ) -> None:
         diagnostics = assess_html_fulltext_availability(
             "# Example Article\n\n## Abstract\n\nShort abstract.\n\n## Access the full article\n\nView all access options to continue reading this article.",
-            {"title": "Example Article", "doi": "10.1000/example", "abstract": "Short abstract."},
+            {
+                "title": "Example Article",
+                "doi": "10.1000/example",
+                "abstract": "Short abstract.",
+            },
             provider="generic",
             html_text=(
                 "<html><body><article><section id='bodymatter' property='articleBody'>"
@@ -552,7 +597,9 @@ class HtmlAvailabilityTests(unittest.TestCase):
         self.assertFalse(diagnostics.accepted)
         self.assertEqual(diagnostics.reason, "insufficient_body")
 
-    def test_assess_html_fulltext_rejects_old_elsevier_abstract_page_with_keywords(self) -> None:
+    def test_assess_html_fulltext_rejects_old_elsevier_abstract_page_with_keywords(
+        self,
+    ) -> None:
         # Mirrors older Elsevier pages like 10.1016/0304-4165(96)00054-2 where
         # browser HTML exposes abstract, keywords, and references but no body.
         abstract_text = (
@@ -600,7 +647,9 @@ class HtmlAvailabilityTests(unittest.TestCase):
         self.assertEqual(diagnostics.body_metrics["word_count"], 0)
         self.assertEqual(diagnostics.body_metrics["body_paragraph_count"], 0)
 
-    def test_assess_html_fulltext_rejects_old_elsevier_cited_by_footer_noise(self) -> None:
+    def test_assess_html_fulltext_rejects_old_elsevier_cited_by_footer_noise(
+        self,
+    ) -> None:
         abstract_text = (
             "Elongation factor Tu from Escherichia coli is known to polymerize at slightly acidic pH and low ionic "
             "strength. The structure and dynamics of these aggregates have been examined using imaging and "
@@ -640,7 +689,9 @@ class HtmlAvailabilityTests(unittest.TestCase):
         self.assertEqual(diagnostics.body_metrics["body_run_paragraph_count"], 0)
         self.assertEqual(diagnostics.body_metrics["body_paragraph_count"], 0)
 
-    def test_assess_html_fulltext_rejects_elsevier_canonical_abstract_preview(self) -> None:
+    def test_assess_html_fulltext_rejects_elsevier_canonical_abstract_preview(
+        self,
+    ) -> None:
         abstract_text = (
             "The UV-visible and NIR absorption spectrum of Nd(III) ions in 1,10-phenanthroline has been recorded and "
             "the observed bands are assigned to different electronic transitions."
@@ -681,10 +732,15 @@ class HtmlAvailabilityTests(unittest.TestCase):
         self.assertEqual(diagnostics.reason, "abstract_only")
         self.assertIn("canonical_abstract_url", diagnostics.blocking_fallback_signals)
 
-    def test_assess_plain_text_accepts_short_editorial_when_marked_narrative(self) -> None:
+    def test_assess_plain_text_accepts_short_editorial_when_marked_narrative(
+        self,
+    ) -> None:
         paragraph = "This editorial paragraph is concise but still carries full narrative meaning. It has a second sentence. "
         diagnostics = assess_plain_text_fulltext_availability(
-            "# Editorial Example\n\nBy Alice Example\n\n" + (paragraph * 2) + "\n\n" + (paragraph * 2),
+            "# Editorial Example\n\nBy Alice Example\n\n"
+            + (paragraph * 2)
+            + "\n\n"
+            + (paragraph * 2),
             {"title": "Editorial Example", "article_type": "Editorial"},
             title="Editorial Example",
         )
@@ -693,7 +749,9 @@ class HtmlAvailabilityTests(unittest.TestCase):
         self.assertIn("narrative_article_type", diagnostics.soft_positive_signals)
         self.assertEqual(diagnostics.body_metrics["body_run_paragraph_count"], 2)
 
-    def test_assess_plain_text_rejects_abstract_only_without_metadata_abstract(self) -> None:
+    def test_assess_plain_text_rejects_abstract_only_without_metadata_abstract(
+        self,
+    ) -> None:
         abstract_text = (
             "This abstract remains long enough to look substantial, but it is still only abstract prose. "
             "It adds a second sentence so the detector sees more than a stub. "
@@ -709,7 +767,9 @@ class HtmlAvailabilityTests(unittest.TestCase):
         self.assertEqual(diagnostics.reason, "abstract_only")
         self.assertEqual(diagnostics.body_metrics["word_count"], 0)
 
-    def test_assess_plain_text_ignores_keywords_block_after_front_matter_heading(self) -> None:
+    def test_assess_plain_text_ignores_keywords_block_after_front_matter_heading(
+        self,
+    ) -> None:
         abstract_text = (
             "This abstract is substantial enough to look like article prose, but the page never exposes the main text. "
             "A second sentence keeps the abstract realistic."
@@ -761,7 +821,9 @@ class HtmlAvailabilityTests(unittest.TestCase):
         self.assertEqual(diagnostics.body_metrics["body_run_paragraph_count"], 0)
         self.assertEqual(diagnostics.body_metrics["word_count"], 0)
 
-    def test_assess_html_rejects_abstract_only_when_metadata_differs_only_by_punctuation(self) -> None:
+    def test_assess_html_rejects_abstract_only_when_metadata_differs_only_by_punctuation(
+        self,
+    ) -> None:
         abstract_markdown = (
             "This abstract has line breaks and punctuation differences, but no article body survives filtering.\n"
             "A second sentence keeps it looking substantial."
@@ -820,7 +882,9 @@ class HtmlAvailabilityTests(unittest.TestCase):
             "# Narrative Example\n\n" + (paragraph * 8),
             {"title": "Narrative Example", "doi": "10.1000/narrative"},
             provider="generic",
-            html_text="<html><body><article><p>" + (paragraph * 8) + "</p></article></body></html>",
+            html_text="<html><body><article><p>"
+            + (paragraph * 8)
+            + "</p></article></body></html>",
             title="Narrative Example",
         )
 
@@ -834,7 +898,9 @@ class HtmlAvailabilityTests(unittest.TestCase):
     def test_assess_html_accepts_science_entitled_fulltext_fixture(self) -> None:
         self._assert_accepted_browser_workflow_case("science")
 
-    def test_assess_html_rejects_springer_paywall_samples_without_promoting_ancillary_sections(self) -> None:
+    def test_assess_html_rejects_springer_paywall_samples_without_promoting_ancillary_sections(
+        self,
+    ) -> None:
         ancillary_headings = {
             "Corresponding author",
             "Additional information",
@@ -868,7 +934,9 @@ class HtmlAvailabilityTests(unittest.TestCase):
                 self.assertEqual(diagnostics.content_kind, "abstract_only")
                 self.assertEqual(diagnostics.reason, "abstract_only")
                 self.assertIn("check access", diagnostics.blocking_fallback_signals)
-                self.assertIn("access this article", diagnostics.blocking_fallback_signals)
+                self.assertIn(
+                    "access this article", diagnostics.blocking_fallback_signals
+                )
                 self.assertIn("buy now", diagnostics.blocking_fallback_signals)
                 self.assertFalse(
                     ancillary_headings
@@ -882,21 +950,26 @@ class HtmlAvailabilityTests(unittest.TestCase):
     def test_assess_html_rejects_wiley_paywall_metadata_with_abstract(self) -> None:
         self._assert_rejected_browser_workflow_case("wiley")
 
-    def test_assess_html_accepts_wiley_fulltext_fixture_despite_login_chrome(self) -> None:
+    def test_assess_html_accepts_wiley_fulltext_fixture_despite_login_chrome(
+        self,
+    ) -> None:
         self._assert_accepted_browser_workflow_case("wiley")
 
     def test_assess_html_rejects_pnas_paywall_metadata_with_abstract(self) -> None:
         self._assert_rejected_browser_workflow_case("pnas")
 
-    def test_assess_html_accepts_pnas_fulltext_fixture_despite_institutional_login_chrome(self) -> None:
+    def test_assess_html_accepts_pnas_fulltext_fixture_despite_institutional_login_chrome(
+        self,
+    ) -> None:
         """rule: rule-html-availability-contract"""
         self._assert_accepted_browser_workflow_case("pnas")
 
-    def test_body_metrics_excludes_nonliteral_data_availability_when_section_hints_are_present(self) -> None:
-        markdown = (
-            "# Example Article\n\n"
-            "## Availability Statement\n\n"
-            + ("The supporting dataset is archived in a repository with a persistent identifier. " * 20)
+    def test_body_metrics_excludes_nonliteral_data_availability_when_section_hints_are_present(
+        self,
+    ) -> None:
+        markdown = "# Example Article\n\n## Availability Statement\n\n" + (
+            "The supporting dataset is archived in a repository with a persistent identifier. "
+            * 20
         )
 
         metrics = body_metrics(
@@ -915,7 +988,9 @@ class HtmlAvailabilityTests(unittest.TestCase):
         self.assertEqual(metrics["char_count"], 0)
         self.assertEqual(metrics["body_block_count"], 0)
 
-    def test_body_metrics_excludes_real_structural_back_matter_and_chrome_headings(self) -> None:
+    def test_body_metrics_excludes_real_structural_back_matter_and_chrome_headings(
+        self,
+    ) -> None:
         real_fixture_cases = (
             {
                 "doi": "10.1111/gcb.15322",
@@ -934,7 +1009,9 @@ class HtmlAvailabilityTests(unittest.TestCase):
         )
         for case in real_fixture_cases:
             with self.subTest(doi=case["doi"]):
-                html = golden_criteria_asset(case["doi"], "original.html").read_text(encoding="utf-8", errors="ignore")
+                html = golden_criteria_asset(case["doi"], "original.html").read_text(
+                    encoding="utf-8", errors="ignore"
+                )
                 self.assertIn(case["raw_phrase"], html.casefold())
                 markdown, info = _extract_browser_workflow_markdown(
                     case["extractor"],
@@ -952,7 +1029,9 @@ class HtmlAvailabilityTests(unittest.TestCase):
                 self.assertNotIn(case["raw_phrase"], markdown.casefold())
                 self.assertNotIn(case["raw_phrase"], metrics["text"].casefold())
 
-        nature_html = golden_criteria_asset("10.1038/nature13376", "original.html").read_text(
+        nature_html = golden_criteria_asset(
+            "10.1038/nature13376", "original.html"
+        ).read_text(
             encoding="utf-8",
             errors="ignore",
         )
@@ -972,14 +1051,17 @@ class HtmlAvailabilityTests(unittest.TestCase):
         )
 
         self.assertNotIn("acknowledgements", nature_metrics["text"].casefold())
-        self.assertNotIn("rights and permissions", nature_payload["markdown_text"].casefold())
+        self.assertNotIn(
+            "rights and permissions", nature_payload["markdown_text"].casefold()
+        )
         self.assertNotIn("open access", nature_payload["markdown_text"].casefold())
 
-    def test_assess_plain_text_excludes_nonliteral_data_availability_when_section_hints_are_present(self) -> None:
-        markdown = (
-            "# Example Article\n\n"
-            "## Availability Statement\n\n"
-            + ("The supporting dataset is archived in a repository with a persistent identifier. " * 20)
+    def test_assess_plain_text_excludes_nonliteral_data_availability_when_section_hints_are_present(
+        self,
+    ) -> None:
+        markdown = "# Example Article\n\n## Availability Statement\n\n" + (
+            "The supporting dataset is archived in a repository with a persistent identifier. "
+            * 20
         )
 
         diagnostics = assess_plain_text_fulltext_availability(
@@ -999,7 +1081,9 @@ class HtmlAvailabilityTests(unittest.TestCase):
         self.assertFalse(diagnostics.accepted)
         self.assertEqual(diagnostics.content_kind, "metadata_only")
 
-    def test_assess_structured_article_accepts_single_narrative_body_section(self) -> None:
+    def test_assess_structured_article_accepts_single_narrative_body_section(
+        self,
+    ) -> None:
         article = SimpleNamespace(
             quality=SimpleNamespace(has_fulltext=True),
             sections=[
@@ -1016,11 +1100,12 @@ class HtmlAvailabilityTests(unittest.TestCase):
             metadata=SimpleNamespace(title="Structured Narrative Example"),
         )
 
-        diagnostics = assess_structured_article_fulltext_availability(article, title="Structured Narrative Example")
+        diagnostics = assess_structured_article_fulltext_availability(
+            article, title="Structured Narrative Example"
+        )
 
         self.assertTrue(diagnostics.accepted)
         self.assertEqual(diagnostics.reason, "structured_body_sections")
-
 
 
 if __name__ == "__main__":

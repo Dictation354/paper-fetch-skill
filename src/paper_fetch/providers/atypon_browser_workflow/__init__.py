@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
-from .markdown import extract_browser_workflow_markdown, extract_atypon_browser_workflow_markdown
+from .markdown import (
+    extract_browser_workflow_markdown,
+    extract_atypon_browser_workflow_markdown,
+)
 from .asset_scopes import (
     extract_browser_workflow_asset_html_scopes,
     extract_scoped_html_assets,

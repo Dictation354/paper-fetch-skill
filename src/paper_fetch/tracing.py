@@ -70,7 +70,9 @@ def trace_marker(stage: str, component: str, outcome: str = "info") -> str:
     return trace_event(stage, component, outcome).marker()
 
 
-def provider_stage_marker(stage: str, provider_name: str, outcome: str = "info", *, route: str | None = None) -> str:
+def provider_stage_marker(
+    stage: str, provider_name: str, outcome: str = "info", *, route: str | None = None
+) -> str:
     component = normalize_text(provider_name).lower()
     route_component = normalize_text(route).lower()
     if route_component:
@@ -78,7 +80,9 @@ def provider_stage_marker(stage: str, provider_name: str, outcome: str = "info",
     return trace_marker(stage, component, outcome)
 
 
-def fulltext_marker(provider_name: str, outcome: str = "info", *, route: str | None = None) -> str:
+def fulltext_marker(
+    provider_name: str, outcome: str = "info", *, route: str | None = None
+) -> str:
     return provider_stage_marker("fulltext", provider_name, outcome, route=route)
 
 
@@ -102,10 +106,14 @@ def fallback_marker(component: str, outcome: str = "info") -> str:
     return trace_marker("fallback", component, outcome)
 
 
-def trace_event_from_marker(marker: str, *, code: str | None = None, message: str | None = None) -> TraceEvent:
+def trace_event_from_marker(
+    marker: str, *, code: str | None = None, message: str | None = None
+) -> TraceEvent:
     normalized_marker = normalize_text(marker).lower()
     if ":" not in normalized_marker:
-        return trace_event("trace", normalized_marker or "unknown", code=code, message=message)
+        return trace_event(
+            "trace", normalized_marker or "unknown", code=code, message=message
+        )
     stage, component_part = normalized_marker.split(":", 1)
     component = component_part
     outcome = "info"
@@ -117,12 +125,20 @@ def trace_event_from_marker(marker: str, *, code: str | None = None, message: st
     return trace_event(stage, component, outcome, code=code, message=message)
 
 
-def merge_trace(*collections: list[TraceEvent] | tuple[TraceEvent, ...] | None) -> list[TraceEvent]:
+def merge_trace(
+    *collections: list[TraceEvent] | tuple[TraceEvent, ...] | None,
+) -> list[TraceEvent]:
     merged: list[TraceEvent] = []
     seen: set[tuple[str, str, str, str | None, str | None]] = set()
     for collection in collections:
         for event in collection or []:
-            key = (event.stage, event.component, event.outcome, event.code, event.message)
+            key = (
+                event.stage,
+                event.component,
+                event.outcome,
+                event.code,
+                event.message,
+            )
             if key in seen:
                 continue
             seen.add(key)
@@ -130,7 +146,9 @@ def merge_trace(*collections: list[TraceEvent] | tuple[TraceEvent, ...] | None) 
     return merged
 
 
-def source_trail_from_trace(trace: list[TraceEvent] | tuple[TraceEvent, ...] | None) -> list[str]:
+def source_trail_from_trace(
+    trace: list[TraceEvent] | tuple[TraceEvent, ...] | None,
+) -> list[str]:
     markers: list[str] = []
     for event in trace or []:
         marker = event.marker()
@@ -140,4 +158,8 @@ def source_trail_from_trace(trace: list[TraceEvent] | tuple[TraceEvent, ...] | N
 
 
 def trace_from_markers(markers: list[str] | tuple[str, ...] | None) -> list[TraceEvent]:
-    return [trace_event_from_marker(marker) for marker in markers or [] if normalize_text(marker)]
+    return [
+        trace_event_from_marker(marker)
+        for marker in markers or []
+        if normalize_text(marker)
+    ]

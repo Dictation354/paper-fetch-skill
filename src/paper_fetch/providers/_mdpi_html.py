@@ -44,6 +44,7 @@ from ._mdpi_dom import (
 def __getattr__(name: str) -> Any:
     return getattr(_impl, name)
 
+
 __all__ = [
     "MDPI_EXTRACTION_CLEANUP_SELECTORS",
     "MDPI_FRONT_MATTER_CONTAINS_TOKENS",

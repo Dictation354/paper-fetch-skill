@@ -16,9 +16,17 @@ class GeographyIssueArtifactsTests(unittest.TestCase):
     def test_collect_issue_rows_keeps_only_flagged_rows_and_honors_filter(self) -> None:
         payload = {
             "results": [
-                {"provider": "elsevier", "doi": "10.1000/e1", "issue_flags": ["abstract_inflated"]},
+                {
+                    "provider": "elsevier",
+                    "doi": "10.1000/e1",
+                    "issue_flags": ["abstract_inflated"],
+                },
                 {"provider": "springer", "doi": "10.1000/s1", "issue_flags": []},
-                {"provider": "wiley", "doi": "10.1000/w1", "issue_flags": ["refs_doi_not_normalized", "abstract_inflated"]},
+                {
+                    "provider": "wiley",
+                    "doi": "10.1000/w1",
+                    "issue_flags": ["refs_doi_not_normalized", "abstract_inflated"],
+                },
             ]
         }
 
@@ -28,16 +36,40 @@ class GeographyIssueArtifactsTests(unittest.TestCase):
         self.assertEqual([row["doi"] for row in selected], ["10.1000/e1", "10.1000/w1"])
         self.assertEqual([row["doi"] for row in filtered], ["10.1000/w1"])
 
-    def test_schedule_issue_rows_interleaves_providers_while_preserving_local_order(self) -> None:
+    def test_schedule_issue_rows_interleaves_providers_while_preserving_local_order(
+        self,
+    ) -> None:
         rows = [
-            {"provider": "elsevier", "doi": "10.1000/e1", "issue_flags": ["abstract_inflated"]},
-            {"provider": "elsevier", "doi": "10.1000/e2", "issue_flags": ["abstract_inflated"]},
-            {"provider": "wiley", "doi": "10.1000/w1", "issue_flags": ["refs_doi_not_normalized"]},
-            {"provider": "wiley", "doi": "10.1000/w2", "issue_flags": ["refs_doi_not_normalized"]},
-            {"provider": "science", "doi": "10.1000/c1", "issue_flags": ["abstract_body_overlap"]},
+            {
+                "provider": "elsevier",
+                "doi": "10.1000/e1",
+                "issue_flags": ["abstract_inflated"],
+            },
+            {
+                "provider": "elsevier",
+                "doi": "10.1000/e2",
+                "issue_flags": ["abstract_inflated"],
+            },
+            {
+                "provider": "wiley",
+                "doi": "10.1000/w1",
+                "issue_flags": ["refs_doi_not_normalized"],
+            },
+            {
+                "provider": "wiley",
+                "doi": "10.1000/w2",
+                "issue_flags": ["refs_doi_not_normalized"],
+            },
+            {
+                "provider": "science",
+                "doi": "10.1000/c1",
+                "issue_flags": ["abstract_body_overlap"],
+            },
         ]
 
-        scheduled = schedule_issue_rows(rows, providers=["elsevier", "wiley", "science"])
+        scheduled = schedule_issue_rows(
+            rows, providers=["elsevier", "wiley", "science"]
+        )
 
         self.assertEqual(
             [row["doi"] for row in scheduled],
@@ -62,7 +94,10 @@ class GeographyIssueArtifactsTests(unittest.TestCase):
                             },
                             {
                                 "doi": "10.1000/w1",
-                                "issue_flags": ["abstract_inflated", "refs_doi_not_normalized"],
+                                "issue_flags": [
+                                    "abstract_inflated",
+                                    "refs_doi_not_normalized",
+                                ],
                                 "output_dir": str(second),
                             },
                         ]
@@ -91,7 +126,9 @@ class GeographyIssueArtifactsTests(unittest.TestCase):
             export_dir.mkdir()
             stale_issue_dir = root / "abstract_body_overlap"
             stale_issue_dir.mkdir()
-            (stale_issue_dir / "10.1000_e1").symlink_to(export_dir.resolve(), target_is_directory=True)
+            (stale_issue_dir / "10.1000_e1").symlink_to(
+                export_dir.resolve(), target_is_directory=True
+            )
             (root / "index.json").write_text(
                 json.dumps(
                     {
@@ -115,7 +152,9 @@ class GeographyIssueArtifactsTests(unittest.TestCase):
             self.assertFalse(stale_issue_dir.exists())
             self.assertTrue((root / "abstract_inflated" / "10.1000_e1").is_symlink())
 
-    def test_materialize_issue_type_view_prefers_empty_current_issue_flags_over_original_flags(self) -> None:
+    def test_materialize_issue_type_view_prefers_empty_current_issue_flags_over_original_flags(
+        self,
+    ) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
             export_dir = root / "10.1000_e1"

@@ -30,7 +30,9 @@ from .utils import _extract_year, format_paper_stem, provider_display_name
 from .workflow.pipeline import FetchPipeline, MarkdownSaveSpec
 from .workflow.request_builder import build_fetch_pipeline_request
 from .workflow.rendering import rewrite_markdown_asset_links
-from .workflow.rendering import save_markdown_to_disk as save_markdown_to_disk_for_target
+from .workflow.rendering import (
+    save_markdown_to_disk as save_markdown_to_disk_for_target,
+)
 
 
 @dataclass(frozen=True)
@@ -59,7 +61,9 @@ def package_version() -> str:
         return "unknown"
 
 
-def save_markdown_to_disk(envelope: FetchEnvelope, *, output_dir: Path, render: RenderOptions) -> Path | None:
+def save_markdown_to_disk(
+    envelope: FetchEnvelope, *, output_dir: Path, render: RenderOptions
+) -> Path | None:
     return save_markdown_to_disk_for_target(
         envelope,
         output_dir=output_dir,
@@ -68,9 +72,15 @@ def save_markdown_to_disk(envelope: FetchEnvelope, *, output_dir: Path, render: 
     )
 
 
-def serialize_envelope(envelope: FetchEnvelope, *, output_format: str, markdown_override: str | None = None) -> str:
+def serialize_envelope(
+    envelope: FetchEnvelope, *, output_format: str, markdown_override: str | None = None
+) -> str:
     if output_format == "markdown":
-        return markdown_override if markdown_override is not None else envelope.markdown or ""
+        return (
+            markdown_override
+            if markdown_override is not None
+            else envelope.markdown or ""
+        )
     if output_format == "json":
         if envelope.article is None:
             raise ValueError("CLI json output requires the article payload.")
@@ -78,7 +88,11 @@ def serialize_envelope(envelope: FetchEnvelope, *, output_format: str, markdown_
     if envelope.article is None:
         raise ValueError("CLI both output requires the article payload.")
     markdown = markdown_override if markdown_override is not None else envelope.markdown
-    return json.dumps({"article": envelope.article.to_dict(), "markdown": markdown}, ensure_ascii=False, indent=2)
+    return json.dumps(
+        {"article": envelope.article.to_dict(), "markdown": markdown},
+        ensure_ascii=False,
+        indent=2,
+    )
 
 
 def write_output(serialized: str, output: str) -> None:
@@ -92,13 +106,19 @@ def write_output(serialized: str, output: str) -> None:
 
 def prepare_output_dir(output_dir: Path) -> None:
     if output_dir.exists() and not output_dir.is_dir():
-        raise OutputDirectoryError(f"output directory path exists but is not a directory: {output_dir}")
+        raise OutputDirectoryError(
+            f"output directory path exists but is not a directory: {output_dir}"
+        )
     try:
         output_dir.mkdir(parents=True, exist_ok=True)
     except OSError as exc:
-        raise OutputDirectoryError(f"could not create output directory {output_dir}: {exc}") from exc
+        raise OutputDirectoryError(
+            f"could not create output directory {output_dir}: {exc}"
+        ) from exc
     if not output_dir.is_dir():
-        raise OutputDirectoryError(f"output directory path exists but is not a directory: {output_dir}")
+        raise OutputDirectoryError(
+            f"output directory path exists but is not a directory: {output_dir}"
+        )
     if not os.access(output_dir, os.W_OK | os.X_OK):
         raise OutputDirectoryError(f"output directory is not writable: {output_dir}")
 
@@ -114,7 +134,12 @@ def _should_save_formatted_output_copy(
     output_is_explicit: bool,
     artifact_mode: ArtifactMode,
 ) -> bool:
-    if not (explicit_format and output_is_explicit and args.output == "-" and args.output_dir):
+    if not (
+        explicit_format
+        and output_is_explicit
+        and args.output == "-"
+        and args.output_dir
+    ):
         return False
     if artifact_mode == "all":
         return True
@@ -144,7 +169,9 @@ def _should_save_markdown_via_pipeline(
 
 
 def _formatted_output_filename(envelope: FetchEnvelope, *, output_format: str) -> str:
-    meta = envelope.article.metadata if envelope.article is not None else envelope.metadata
+    meta = (
+        envelope.article.metadata if envelope.article is not None else envelope.metadata
+    )
     authors = list(meta.authors) if meta and meta.authors else None
     year = _extract_year(meta.published if meta else None)
     title = meta.title if meta else None
@@ -164,7 +191,9 @@ def save_formatted_output_copy(
     output_format: str,
     render: RenderOptions,
 ) -> Path:
-    target = output_dir / _formatted_output_filename(envelope, output_format=output_format)
+    target = output_dir / _formatted_output_filename(
+        envelope, output_format=output_format
+    )
     markdown_override = (
         rewrite_markdown_asset_links(
             envelope.markdown or "",
@@ -175,8 +204,12 @@ def save_formatted_output_copy(
         if output_format in {"markdown", "both"}
         else None
     )
-    serialized = serialize_envelope(envelope, output_format=output_format, markdown_override=markdown_override)
-    return ArtifactStore.from_download_dir(output_dir).write_text_file(target, serialized, encoding="utf-8")
+    serialized = serialize_envelope(
+        envelope, output_format=output_format, markdown_override=markdown_override
+    )
+    return ArtifactStore.from_download_dir(output_dir).write_text_file(
+        target, serialized, encoding="utf-8"
+    )
 
 
 def parse_max_tokens(value: str) -> int | str:
@@ -186,7 +219,9 @@ def parse_max_tokens(value: str) -> int | str:
     try:
         parsed = int(value)
     except ValueError as exc:
-        raise argparse.ArgumentTypeError("max_tokens must be a positive integer or 'full_text'.") from exc
+        raise argparse.ArgumentTypeError(
+            "max_tokens must be a positive integer or 'full_text'."
+        ) from exc
     if parsed <= 0:
         raise argparse.ArgumentTypeError("max_tokens must be greater than 0.")
     return parsed
@@ -196,9 +231,13 @@ def parse_batch_concurrency(value: str) -> int:
     try:
         parsed = int(value)
     except ValueError as exc:
-        raise argparse.ArgumentTypeError("batch-concurrency must be an integer from 1 to 8.") from exc
+        raise argparse.ArgumentTypeError(
+            "batch-concurrency must be an integer from 1 to 8."
+        ) from exc
     if not 1 <= parsed <= 8:
-        raise argparse.ArgumentTypeError("batch-concurrency must be an integer from 1 to 8.")
+        raise argparse.ArgumentTypeError(
+            "batch-concurrency must be an integer from 1 to 8."
+        )
     return parsed
 
 
@@ -225,7 +264,9 @@ def read_query_file(path: Path) -> list[str]:
             continue
         queries.append(query)
     if not queries:
-        raise ValueError("query file did not contain any queries after filtering blank lines and comments.")
+        raise ValueError(
+            "query file did not contain any queries after filtering blank lines and comments."
+        )
     return queries
 
 
@@ -367,7 +408,9 @@ def run_single_fetch(
         if args.output != "-" and args.format in {"markdown", "both"}
         else None
     )
-    serialized = serialize_envelope(envelope, output_format=args.format, markdown_override=markdown_override)
+    serialized = serialize_envelope(
+        envelope, output_format=args.format, markdown_override=markdown_override
+    )
     output_path = None
     if args.save_output_copy:
         output_path = save_formatted_output_copy(
@@ -399,8 +442,12 @@ def _batch_success_payload(
         "status": "ok",
         "doi": envelope.doi,
         "source": envelope.source,
-        "output_path": str(result.output_path) if result.output_path is not None else None,
-        "saved_markdown_path": str(result.saved_markdown_path) if result.saved_markdown_path is not None else None,
+        "output_path": str(result.output_path)
+        if result.output_path is not None
+        else None,
+        "saved_markdown_path": str(result.saved_markdown_path)
+        if result.saved_markdown_path is not None
+        else None,
         "warnings": list(envelope.warnings),
         "error": None,
     }
@@ -448,9 +495,7 @@ def _run_batch_item(
 
 def exit_code_for_batch_results(results: list[dict[str, Any]]) -> int:
     failure_statuses = {
-        str(item.get("status"))
-        for item in results
-        if item.get("status") != "ok"
+        str(item.get("status")) for item in results if item.get("status") != "ok"
     }
     if not failure_statuses:
         return 0
@@ -472,7 +517,11 @@ def run_batch_fetch(
     runtime_env: Mapping[str, str],
     artifact_mode: ArtifactMode,
 ) -> int:
-    results_path = Path(args.batch_results) if args.batch_results else output_dir / "batch-results.jsonl"
+    results_path = (
+        Path(args.batch_results)
+        if args.batch_results
+        else output_dir / "batch-results.jsonl"
+    )
     results_path.parent.mkdir(parents=True, exist_ok=True)
     results: list[dict[str, Any]] = []
     shared_transport = build_http_transport_for_context(
@@ -708,7 +757,9 @@ def _write_auth_result(provider_key: str, provider_label: str, result) -> None:
         )
     if result.final_url:
         sys.stdout.write(f"Final URL: {result.final_url}\n")
-    sys.stdout.write("Persistent browser state is optional; fetches still run without it.\n")
+    sys.stdout.write(
+        "Persistent browser state is optional; fetches still run without it.\n"
+    )
 
 
 def _write_browser_preflight_results(results: list[BrowserPreflightResult]) -> None:
@@ -725,11 +776,15 @@ def _write_browser_preflight_results(results: list[BrowserPreflightResult]) -> N
             sys.stdout.write(f"  Reason: {detail}\n")
 
 
-def _write_browser_preflight_failure_hints(results: list[BrowserPreflightResult]) -> None:
+def _write_browser_preflight_failure_hints(
+    results: list[BrowserPreflightResult],
+) -> None:
     failures = [result for result in results if not result.ok]
     if not failures:
         return
-    sys.stderr.write("Browser preflight failed for these providers; run manual auth before retrying:\n")
+    sys.stderr.write(
+        "Browser preflight failed for these providers; run manual auth before retrying:\n"
+    )
     for result in failures:
         detail = result.message or result.reason or "Browser preflight failed."
         sys.stderr.write(
@@ -796,10 +851,14 @@ def main(argv: list[str] | None = None) -> int:
     args.output_is_explicit = _has_explicit_option(raw_args, "--output")
     batch_mode = bool(args.query_file)
     if batch_mode and args.output_is_explicit:
-        parser.error("--output cannot be used with --query-file; batch mode writes one primary output per query under --output-dir.")
+        parser.error(
+            "--output cannot be used with --query-file; batch mode writes one primary output per query under --output-dir."
+        )
     if not batch_mode and args.batch_results:
         parser.error("--batch-results requires --query-file.")
-    args.primary_output_to_output_dir = batch_mode or _should_write_primary_output_to_output_dir(args)
+    args.primary_output_to_output_dir = (
+        batch_mode or _should_write_primary_output_to_output_dir(args)
+    )
     args.save_output_copy = _should_save_formatted_output_copy(
         args,
         explicit_format=_has_explicit_option(raw_args, "--format"),
@@ -819,7 +878,11 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         runtime_env = build_runtime_env()
-        output_dir = Path(args.output_dir) if args.output_dir else resolve_cli_download_dir(runtime_env)
+        output_dir = (
+            Path(args.output_dir)
+            if args.output_dir
+            else resolve_cli_download_dir(runtime_env)
+        )
         prepare_output_dir(output_dir)
         if batch_mode:
             assert queries is not None

@@ -151,7 +151,8 @@ ELSEVIER_XML_RULES = ElsevierXmlRules(
     # Elsevier XML renders graphical abstracts as section-like metadata blocks.
     # Derive the shared front-matter heading while keeping supplementary data
     # provider-specific because it is an Elsevier XML section title.
-    ignored_section_titles=(FRONT_MATTER_HEADINGS & {"graphical abstract"}) | {"supplementary data"}
+    ignored_section_titles=(FRONT_MATTER_HEADINGS & {"graphical abstract"})
+    | {"supplementary data"}
 )
 
 ELSEVIER_IMAGE_ASSET_TYPES = frozenset(
@@ -171,19 +172,23 @@ ELSEVIER_ASSET_PREFIX_BY_KIND = {
 }
 
 
-def _elsevier_asset_prefix_pattern(prefixes: tuple[str, ...], *, fullmatch: bool) -> re.Pattern[str]:
+def _elsevier_asset_prefix_pattern(
+    prefixes: tuple[str, ...], *, fullmatch: bool
+) -> re.Pattern[str]:
     body = "|".join(f"{re.escape(prefix)}\\d+" for prefix in prefixes)
     suffix = r"\Z" if fullmatch else ""
     return re.compile(rf"({body}){suffix}", flags=re.IGNORECASE)
 
 
 _ALL_ELSEVIER_ASSET_PREFIXES = tuple(
-    prefix
-    for prefixes in ELSEVIER_ASSET_PREFIX_BY_KIND.values()
-    for prefix in prefixes
+    prefix for prefixes in ELSEVIER_ASSET_PREFIX_BY_KIND.values() for prefix in prefixes
 )
-_ASSET_GROUP_PATTERN = _elsevier_asset_prefix_pattern(_ALL_ELSEVIER_ASSET_PREFIXES, fullmatch=False)
-_BODY_IMAGE_PATTERN = _elsevier_asset_prefix_pattern(ELSEVIER_ASSET_PREFIX_BY_KIND["body_image"], fullmatch=True)
+_ASSET_GROUP_PATTERN = _elsevier_asset_prefix_pattern(
+    _ALL_ELSEVIER_ASSET_PREFIXES, fullmatch=False
+)
+_BODY_IMAGE_PATTERN = _elsevier_asset_prefix_pattern(
+    ELSEVIER_ASSET_PREFIX_BY_KIND["body_image"], fullmatch=True
+)
 _APPENDIX_IMAGE_PATTERN = _elsevier_asset_prefix_pattern(
     ELSEVIER_ASSET_PREFIX_BY_KIND["appendix_image"],
     fullmatch=True,
@@ -192,7 +197,9 @@ _GRAPHICAL_ABSTRACT_PATTERN = _elsevier_asset_prefix_pattern(
     ELSEVIER_ASSET_PREFIX_BY_KIND["graphical_abstract"],
     fullmatch=True,
 )
-_TABLE_ASSET_PATTERN = _elsevier_asset_prefix_pattern(ELSEVIER_ASSET_PREFIX_BY_KIND["table_asset"], fullmatch=True)
+_TABLE_ASSET_PATTERN = _elsevier_asset_prefix_pattern(
+    ELSEVIER_ASSET_PREFIX_BY_KIND["table_asset"], fullmatch=True
+)
 _SUPPLEMENTARY_ASSET_PATTERN = _elsevier_asset_prefix_pattern(
     ELSEVIER_ASSET_PREFIX_BY_KIND["supplementary"],
     fullmatch=True,
@@ -215,12 +222,17 @@ def normalize_elsevier_section_title(value: str | None) -> str:
 
 
 def should_ignore_elsevier_section_title(value: str | None) -> bool:
-    return normalize_elsevier_section_title(value) in ELSEVIER_XML_RULES.ignored_section_titles
+    return (
+        normalize_elsevier_section_title(value)
+        in ELSEVIER_XML_RULES.ignored_section_titles
+    )
 
 
 def infer_elsevier_asset_group_key(value: str) -> str:
     normalized = value.strip().lower()
-    filename = re.split(r"[?#]", normalized, maxsplit=1)[0].rsplit("/", 1)[-1] or normalized
+    filename = (
+        re.split(r"[?#]", normalized, maxsplit=1)[0].rsplit("/", 1)[-1] or normalized
+    )
     match = _ASSET_GROUP_PATTERN.search(filename)
     if match:
         return match.group(1).lower()

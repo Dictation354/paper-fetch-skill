@@ -19,10 +19,21 @@ from ..provider_catalog import (
 )
 from ..providers.base import ProviderArtifacts, ProviderFailure, ProviderFetchResult
 from ..providers.protocols import AssetProvider, FulltextProvider, RawFulltextProvider
-from ..reason_codes import ABSTRACT_ONLY, ERROR, METADATA_ONLY, NOT_SUPPORTED, PDF_FALLBACK
+from ..reason_codes import (
+    ABSTRACT_ONLY,
+    ERROR,
+    METADATA_ONLY,
+    NOT_SUPPORTED,
+    PDF_FALLBACK,
+)
 from ..quality.reason_codes import FULLTEXT
 from ..runtime import RUNTIME_UNSET, RuntimeContext, resolve_runtime_context
-from ..tracing import fallback_marker, fulltext_marker, resolve_marker, trace_from_markers
+from ..tracing import (
+    fallback_marker,
+    fulltext_marker,
+    resolve_marker,
+    trace_from_markers,
+)
 from ..utils import (
     extend_unique,
     safe_text,
@@ -100,12 +111,18 @@ def _provider_fetch_result(
             )
 
         if not isinstance(provider_client, RawFulltextProvider):
-            raise ProviderFailure(NOT_SUPPORTED, "Provider does not implement raw full-text retrieval.")
+            raise ProviderFailure(
+                NOT_SUPPORTED, "Provider does not implement raw full-text retrieval."
+            )
 
         raw_payload = provider_client.fetch_raw_fulltext(doi, metadata, context=context)
         downloaded_assets: list[Mapping[str, Any]] = []
         asset_failures: list[Mapping[str, Any]] = []
-        if download_dir is not None and asset_profile != "none" and isinstance(provider_client, AssetProvider):
+        if (
+            download_dir is not None
+            and asset_profile != "none"
+            and isinstance(provider_client, AssetProvider)
+        ):
             asset_started_at = time.monotonic()
             try:
                 asset_results = provider_client.download_related_assets(
@@ -117,7 +134,9 @@ def _provider_fetch_result(
                     context=context,
                 )
             finally:
-                context.accumulate_stage_timing("asset_seconds", started_at=asset_started_at)
+                context.accumulate_stage_timing(
+                    "asset_seconds", started_at=asset_started_at
+                )
             downloaded_assets = list(asset_results.get("assets") or [])
             asset_failures = list(asset_results.get("asset_failures") or [])
         article = provider_client.to_article_model(
@@ -129,9 +148,15 @@ def _provider_fetch_result(
         )
         content = getattr(raw_payload, "content", None)
         route = safe_text(getattr(content, "route_kind", "")).lower()
-        extracted_assets = list(getattr(content, "extracted_assets", []) or []) if route == PDF_FALLBACK else []
+        extracted_assets = (
+            list(getattr(content, "extracted_assets", []) or [])
+            if route == PDF_FALLBACK
+            else []
+        )
         return ProviderFetchResult(
-            provider=safe_text(getattr(provider_client, "name", "")) or safe_text(raw_payload.provider) or "provider",
+            provider=safe_text(getattr(provider_client, "name", ""))
+            or safe_text(raw_payload.provider)
+            or "provider",
             article=article,
             content=content,
             warnings=list(getattr(raw_payload, "warnings", []) or []),
@@ -166,7 +191,9 @@ def _try_official_provider(
     provider_client = clients.get(provider_name)
     if not isinstance(provider_client, (FulltextProvider, RawFulltextProvider)):
         return None
-    resolved_asset_profile = strategy.effective_asset_profile_for_provider(provider_name)
+    resolved_asset_profile = strategy.effective_asset_profile_for_provider(
+        provider_name
+    )
 
     extend_unique(source_trail, [fulltext_marker(provider_name, "attempt")])
     attempt_started_at = time.monotonic()
@@ -198,11 +225,13 @@ def _try_official_provider(
         )
         extend_unique(warnings, download_warnings)
         extend_unique(source_trail, download_trail)
-        html_download_warnings, html_download_trail = artifact_store.save_provider_html_payload(
-            provider_result.provider or provider_name,
-            content=provider_result.content,
-            doi=doi,
-            metadata=metadata,
+        html_download_warnings, html_download_trail = (
+            artifact_store.save_provider_html_payload(
+                provider_result.provider or provider_name,
+                content=provider_result.content,
+                doi=doi,
+                metadata=metadata,
+            )
         )
         extend_unique(warnings, html_download_warnings)
         extend_unique(source_trail, html_download_trail)
@@ -221,36 +250,80 @@ def _try_official_provider(
                 logging.DEBUG,
                 "official_provider_result",
                 provider=provider_name,
-                url=provider_result.content.source_url if provider_result.content is not None else None,
+                url=provider_result.content.source_url
+                if provider_result.content is not None
+                else None,
                 status="success",
                 elapsed_ms=round((time.monotonic() - attempt_started_at) * 1000, 3),
                 attempt=1,
             )
             extend_unique(source_trail, [fulltext_marker(provider_name, "article_ok")])
-            return finalize_article(article, warnings=warnings, source_trail=source_trail)
+            return finalize_article(
+                article, warnings=warnings, source_trail=source_trail
+            )
         if article.quality.content_kind == ABSTRACT_ONLY:
             emit_structured_log(
                 logger,
                 logging.DEBUG,
                 "official_provider_result",
                 provider=provider_name,
-                url=provider_result.content.source_url if provider_result.content is not None else None,
+                url=provider_result.content.source_url
+                if provider_result.content is not None
+                else None,
                 status=ABSTRACT_ONLY,
                 elapsed_ms=round((time.monotonic() - attempt_started_at) * 1000, 3),
                 attempt=1,
             )
             extend_unique(source_trail, [fulltext_marker(provider_name, ABSTRACT_ONLY)])
             if provider_name in PROVIDER_MANAGED_ABSTRACT_ONLY_PROVIDERS:
-                warnings.append("Official full text only contained abstract-level content; returning abstract-only provider result.")
-                return finalize_article(article, warnings=warnings, source_trail=source_trail)
-            warnings.append("Official full text only contained abstract-level content; continuing to metadata-only fallback.")
+                warnings.append(
+                    "Official full text only contained abstract-level content; returning abstract-only provider result."
+                )
+                return finalize_article(
+                    article, warnings=warnings, source_trail=source_trail
+                )
+            warnings.append(
+                "Official full text only contained abstract-level content; continuing to metadata-only fallback."
+            )
         else:
+            content = provider_result.content
+            route = safe_text(getattr(content, "route_kind", "")).lower()
+            body = getattr(content, "body", b"") if content is not None else b""
+            if (
+                route == PDF_FALLBACK
+                and isinstance(body, (bytes, bytearray))
+                and bytes(body).startswith(b"%PDF-")
+            ):
+                warnings.append(
+                    "Official provider downloaded a PDF, but Markdown full text was not available; returning PDF-only provider result."
+                )
+                emit_structured_log(
+                    logger,
+                    logging.DEBUG,
+                    "official_provider_result",
+                    provider=provider_name,
+                    url=provider_result.content.source_url
+                    if provider_result.content is not None
+                    else None,
+                    status="pdf_only",
+                    elapsed_ms=round((time.monotonic() - attempt_started_at) * 1000, 3),
+                    attempt=1,
+                )
+                extend_unique(
+                    source_trail,
+                    [fulltext_marker(provider_name, "ok", route=PDF_FALLBACK)],
+                )
+                return finalize_article(
+                    article, warnings=warnings, source_trail=source_trail
+                )
             emit_structured_log(
                 logger,
                 logging.DEBUG,
                 "official_provider_result",
                 provider=provider_name,
-                url=provider_result.content.source_url if provider_result.content is not None else None,
+                url=provider_result.content.source_url
+                if provider_result.content is not None
+                else None,
                 status="not_usable",
                 elapsed_ms=round((time.monotonic() - attempt_started_at) * 1000, 3),
                 attempt=1,
@@ -271,7 +344,9 @@ def _try_official_provider(
             attempt=1,
         )
         warnings.append(exc.message)
-        extend_unique(source_trail, [source_trail_for_failure("fulltext", provider_name, exc)])
+        extend_unique(
+            source_trail, [source_trail_for_failure("fulltext", provider_name, exc)]
+        )
     return None
 
 
@@ -284,12 +359,20 @@ def _fallback_to_metadata_only(
     source_trail: list[str],
 ) -> ArticleModel:
     if not metadata:
-        raise PaperFetchFailure(ERROR, "Unable to resolve metadata or full text for the requested paper.")
+        raise PaperFetchFailure(
+            ERROR, "Unable to resolve metadata or full text for the requested paper."
+        )
     if not strategy.allow_metadata_only_fallback:
-        raise PaperFetchFailure(ERROR, "Full text was not available and metadata-only fallback is disabled.")
-    warnings.append("Full text was not available; returning metadata and abstract only.")
+        raise PaperFetchFailure(
+            ERROR, "Full text was not available and metadata-only fallback is disabled."
+        )
+    warnings.append(
+        "Full text was not available; returning metadata and abstract only."
+    )
     extend_unique(source_trail, [fallback_marker(METADATA_ONLY)])
-    return build_metadata_only_result(metadata, resolved=resolved, warnings=warnings, source_trail=source_trail)
+    return build_metadata_only_result(
+        metadata, resolved=resolved, warnings=warnings, source_trail=source_trail
+    )
 
 
 def fetch_article(
@@ -369,7 +452,10 @@ def fetch_article(
             return article
 
         if provider_emits_html_managed_marker(provider_name):
-            extend_unique(source_trail, [fallback_marker(f"{provider_name}_html_managed_by_provider")])
+            extend_unique(
+                source_trail,
+                [fallback_marker(f"{provider_name}_html_managed_by_provider")],
+            )
 
         return _fallback_to_metadata_only(
             metadata=metadata,

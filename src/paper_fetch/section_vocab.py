@@ -15,7 +15,11 @@ MARKDOWN_ABSTRACT_HEADINGS = frozenset(
     }
 )
 SIGNIFICANCE_ABSTRACT_HEADINGS = frozenset({"significance", "significance statement"})
-PRIMARY_ABSTRACT_HEADINGS = MARKDOWN_ABSTRACT_HEADINGS & {"abstract", "structured abstract", "summary"}
+PRIMARY_ABSTRACT_HEADINGS = MARKDOWN_ABSTRACT_HEADINGS & {
+    "abstract",
+    "structured abstract",
+    "summary",
+}
 
 
 __all__ = [

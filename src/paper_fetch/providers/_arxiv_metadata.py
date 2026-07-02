@@ -275,6 +275,7 @@ def arxiv_metadata_probe_short_circuit(doi: str) -> ProviderMetadata | None:
 
 register_metadata_probe_short_circuit("arxiv", arxiv_metadata_probe_short_circuit)
 
+
 def _arxiv_date_to_iso(value: str | None) -> str | None:
     normalized = normalize_text(value)
     if not normalized:
@@ -311,6 +312,7 @@ def _extract_arxiv_watermark_metadata(root: Any) -> dict[str, Any]:
             "published": _arxiv_date_to_iso(match.group("date")),
         }
     return {}
+
 
 def _arxiv_node_identity_text(node: Any) -> str:
     if not isinstance(node, Tag):

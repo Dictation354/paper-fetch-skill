@@ -56,6 +56,9 @@ jobs:
       - name: Run ruff
         run: python -m ruff check .
 
+      - name: Check ruff formatting
+        run: python -m ruff format --check .
+
       - name: Run contract type check
         env:
           PYTHONPATH: ${{ github.workspace }}/src
@@ -113,7 +116,7 @@ jobs:
           PAPER_FETCH_FORMULA_TOOLS_DIR: ${{ github.workspace }}/.formula-tools
           PAPER_FETCH_IMAGE_TOOLS_DIR: ${{ github.workspace }}/.image-tools
         run: |
-          python -m pytest tests/unit -q --durations=30
+          python -m pytest tests/unit -q --durations=30 --cov=paper_fetch --cov-report=term-missing --cov-report=xml
           python -m pytest tests/devtools -q --durations=30
 
   integration:

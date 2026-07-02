@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import re
 
-INLINE_SUP_SUB_TEXT_PATTERN = re.compile(r"<(?P<tag>sub|sup)>(?P<body>[^<>]*)</(?P=tag)>")
+INLINE_SUP_SUB_TEXT_PATTERN = re.compile(
+    r"<(?P<tag>sub|sup)>(?P<body>[^<>]*)</(?P=tag)>"
+)
 
 
 def normalize_inline_sup_sub_tag_bodies(text: str) -> str:

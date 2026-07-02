@@ -107,7 +107,15 @@ PUBLICATION_WATERMARK_CONNECTORS = {"and", "of", "the", "&"}
 PUBLICATION_WATERMARK_MAX_LENGTH = 64
 PUBLICATION_WATERMARK_MAX_TOKENS = 5
 FRONT_MATTER_BYLINE_CONNECTORS = {
-    "and", "&", "et", "al", "the", "de", "del", "van", "von",
+    "and",
+    "&",
+    "et",
+    "al",
+    "the",
+    "de",
+    "del",
+    "van",
+    "von",
 }
 FRONT_MATTER_BYLINE_MAX_LENGTH = 96
 FRONT_MATTER_BYLINE_MAX_WORDS = 10
@@ -172,7 +180,13 @@ class _FallbackMarkdownParser(HTMLParser):
             return
         class_attr = attributes.get("class", "").lower()
         id_attr = attributes.get("id", "").lower()
-        skip_attr_tokens = ("cookie", "nav", "footer", "share", "signin")
+        skip_attr_tokens: tuple[str, ...] = (
+            "cookie",
+            "nav",
+            "footer",
+            "share",
+            "signin",
+        )
         if lowered_tag not in self.HEADING_TAGS:
             skip_attr_tokens = (*skip_attr_tokens, "header")
         if any(token in f"{class_attr} {id_attr}" for token in skip_attr_tokens):
@@ -313,9 +327,13 @@ def select_html_content_root(root: Any):
             if candidate_id in scored_candidates:
                 continue
             scored_candidates.add(candidate_id)
-            if best_candidate is not None and best_candidate in getattr(candidate, "parents", []):
+            if best_candidate is not None and best_candidate in getattr(
+                candidate, "parents", []
+            ):
                 continue
-            if best_candidate is not None and candidate in getattr(best_candidate, "parents", []):
+            if best_candidate is not None and candidate in getattr(
+                best_candidate, "parents", []
+            ):
                 words = _html_root_candidate_word_count(candidate)
             else:
                 words = _html_root_candidate_word_count(candidate)

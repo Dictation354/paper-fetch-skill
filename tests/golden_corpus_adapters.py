@@ -21,7 +21,9 @@ class GoldenCorpusAdapter:
     build_article: Callable[[Any], Any]
     lightweight_summary: Callable[[Any], dict[str, Any]]
     primary_contract: ProviderGoldenContract
-    fallback_contracts: Mapping[str, ProviderGoldenContract] = field(default_factory=dict)
+    fallback_contracts: Mapping[str, ProviderGoldenContract] = field(
+        default_factory=dict
+    )
     representative_doi: str | None = None
     representative_count_fields: tuple[str, ...] | None = None
 
@@ -71,10 +73,16 @@ def iter_golden_corpus_adapters() -> tuple[GoldenCorpusAdapter, ...]:
 def representative_golden_corpus_dois() -> tuple[str, ...]:
     return tuple(
         doi
-        for doi in (adapter.representative_doi for adapter in iter_golden_corpus_adapters())
+        for doi in (
+            adapter.representative_doi for adapter in iter_golden_corpus_adapters()
+        )
         if doi
     )
 
 
-def adapter_provider_names(adapters: Iterable[GoldenCorpusAdapter] | None = None) -> tuple[str, ...]:
-    return tuple(adapter.provider for adapter in (adapters or iter_golden_corpus_adapters()))
+def adapter_provider_names(
+    adapters: Iterable[GoldenCorpusAdapter] | None = None,
+) -> tuple[str, ...]:
+    return tuple(
+        adapter.provider for adapter in (adapters or iter_golden_corpus_adapters())
+    )

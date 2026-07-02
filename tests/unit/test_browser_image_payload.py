@@ -194,4 +194,7 @@ def test_capture_image_payload_rejects_html_only() -> None:
     )
 
     assert payload is None
-    assert page._paper_fetch_image_payload_failure["reason"] == "image_response_blocked_by_html_wrapper"
+    assert (
+        page._paper_fetch_image_payload_failure["reason"]
+        == "image_response_blocked_by_html_wrapper"
+    )

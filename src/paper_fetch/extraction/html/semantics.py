@@ -57,7 +57,9 @@ HTML_BLOCK_TAGS = frozenset(
 
 
 def coerce_html_section_hints(section_hints: Any) -> list[dict[str, Any]]:
-    return coerce_section_hint_dicts(section_hints, allowed_kinds=HTML_SECTION_HINT_KINDS)
+    return coerce_section_hint_dicts(
+        section_hints, allowed_kinds=HTML_SECTION_HINT_KINDS
+    )
 
 
 def match_next_html_section_hint(
@@ -139,15 +141,18 @@ BACK_MATTER_HEADINGS = frozenset(
         "disclosures",
     }
 )
-SUPPLEMENTARY_BACK_MATTER_HEADINGS = frozenset(
-    {
-        "electronic supplementary material",
-        "supplementary material",
-        "supplementary materials",
-        "supplementary information",
-        "supporting information",
-    }
-) & BACK_MATTER_HEADINGS
+SUPPLEMENTARY_BACK_MATTER_HEADINGS = (
+    frozenset(
+        {
+            "electronic supplementary material",
+            "supplementary material",
+            "supplementary materials",
+            "supplementary information",
+            "supporting information",
+        }
+    )
+    & BACK_MATTER_HEADINGS
+)
 # HTML ancillary headings classify DOM headings before rendering. Some labels
 # overlap with markdown cleanup, but this set decides whether a source heading
 # should be treated as article body while section hints are still available.
@@ -298,7 +303,9 @@ IDENTITY_ATTR_KEYS = (
 SECTION_HEADING_PATTERN = HEADING_LEVEL_PATTERN
 SECTION_TITLE_NON_ALNUM_PATTERN = re.compile(r"[^a-z0-9]+")
 _REFERENCE_MARKER_TOKENS = tuple(
-    token for token in (*REFERENCE_TOKEN_VOCABULARY, "r") if token not in {"refs", "reference", "bibliography"}
+    token
+    for token in (*REFERENCE_TOKEN_VOCABULARY, "r")
+    if token not in {"refs", "reference", "bibliography"}
 )
 REFERENCE_MARKER_VALUE_PATTERN = re.compile(
     rf"(?:{'|'.join(re.escape(token) for token in _REFERENCE_MARKER_TOKENS)})\d+[a-z]?",
@@ -312,7 +319,9 @@ def normalize_heading(text: str) -> str:
 
 
 def normalize_section_title(title: str) -> str:
-    return SECTION_TITLE_NON_ALNUM_PATTERN.sub(" ", normalize_text(title).lower()).strip()
+    return SECTION_TITLE_NON_ALNUM_PATTERN.sub(
+        " ", normalize_text(title).lower()
+    ).strip()
 
 
 def node_identity_text(node: Any) -> str:
@@ -336,7 +345,11 @@ def ancestor_identity_text(node: Any) -> str:
         identity = node_identity_text(current)
         if identity:
             identities.append(identity)
-        current = current.parent if isinstance(getattr(current, "parent", None), Tag) else None
+        current = (
+            current.parent
+            if isinstance(getattr(current, "parent", None), Tag)
+            else None
+        )
     return " ".join(identities)
 
 
@@ -398,9 +411,17 @@ def node_source_selector(node: Any) -> str:
         parts.append(f"#{node_id}")
     class_values = attrs.get("class")
     if isinstance(class_values, (list, tuple, set)):
-        classes = [normalize_text(str(item)).strip() for item in class_values if normalize_text(str(item)).strip()]
+        classes = [
+            normalize_text(str(item)).strip()
+            for item in class_values
+            if normalize_text(str(item)).strip()
+        ]
     else:
-        classes = [normalize_text(str(class_values)).strip()] if normalize_text(str(class_values or "")).strip() else []
+        classes = (
+            [normalize_text(str(class_values)).strip()]
+            if normalize_text(str(class_values or "")).strip()
+            else []
+        )
     if classes:
         parts.append("." + ".".join(classes[:3]))
     return "".join(parts)
@@ -412,7 +433,11 @@ def _node_class_tokens(node: Any) -> set[str]:
     attrs = getattr(node, "attrs", None) or {}
     class_values = attrs.get("class")
     if isinstance(class_values, (list, tuple, set)):
-        return {normalize_text(str(item)).lower() for item in class_values if normalize_text(str(item))}
+        return {
+            normalize_text(str(item)).lower()
+            for item in class_values
+            if normalize_text(str(item))
+        }
     token = normalize_text(str(class_values or "")).lower()
     return {token} if token else set()
 
@@ -445,7 +470,9 @@ def looks_like_reference_anchor(node: Any) -> bool:
         return False
     if normalize_text(getattr(node, "name", "")).lower() != "a":
         return False
-    return has_explicit_reference_marker(node) or looks_like_reference_href(str(node.get("href") or ""))
+    return has_explicit_reference_marker(node) or looks_like_reference_href(
+        str(node.get("href") or "")
+    )
 
 
 def section_hint_kind_for_category(category: str) -> str | None:
@@ -518,7 +545,9 @@ def container_has_explicit_body_container(container: Any) -> bool:
         return False
     if looks_like_explicit_body_container(container):
         return True
-    return any(looks_like_explicit_body_container(node) for node in container.find_all(True))
+    return any(
+        looks_like_explicit_body_container(node) for node in container.find_all(True)
+    )
 
 
 def iter_html_blocks(container: Any) -> list[dict[str, Any]]:
@@ -547,14 +576,26 @@ def iter_html_blocks(container: Any) -> list[dict[str, Any]]:
                 blocks.append({"kind": "heading", "node": node, "text": text})
             continue
         if name in {"figure", "table", "figcaption"}:
-            blocks.append({"kind": "figure_or_table", "node": node, "text": normalize_text(node.get_text(" ", strip=True))})
+            blocks.append(
+                {
+                    "kind": "figure_or_table",
+                    "node": node,
+                    "text": normalize_text(node.get_text(" ", strip=True)),
+                }
+            )
             continue
         if name == "p":
             text = normalize_text(node.get_text(" ", strip=True))
             if text:
                 blocks.append({"kind": "paragraph", "node": node, "text": text})
             continue
-        if name == "div" and normalize_text(str((getattr(node, "attrs", None) or {}).get("role") or "")).lower() == "paragraph":
+        if (
+            name == "div"
+            and normalize_text(
+                str((getattr(node, "attrs", None) or {}).get("role") or "")
+            ).lower()
+            == "paragraph"
+        ):
             text = normalize_text(node.get_text(" ", strip=True))
             if text:
                 blocks.append({"kind": "paragraph", "node": node, "text": text})
@@ -592,12 +633,21 @@ def classify_html_paragraph(
         return "code_availability"
 
     identity_kind = identity_category(ancestor_identity_text(node))
-    if identity_kind in {"references_or_back_matter", "data_availability", "code_availability", "abstract", "ancillary"}:
+    if identity_kind in {
+        "references_or_back_matter",
+        "data_availability",
+        "code_availability",
+        "abstract",
+        "ancillary",
+    }:
         return identity_kind
     lowered = normalize_text(text).lower()
     if looks_like_access_gate_text is not None and looks_like_access_gate_text(lowered):
         return "ancillary"
-    if looks_like_front_matter_paragraph is not None and looks_like_front_matter_paragraph(text):
+    if (
+        looks_like_front_matter_paragraph is not None
+        and looks_like_front_matter_paragraph(text)
+    ):
         return "front_matter"
     if is_substantial_prose is not None and is_substantial_prose(text):
         return "body_paragraph"
@@ -619,16 +669,28 @@ def collect_html_section_hints(
         text = normalize_text(node.get_text(" ", strip=True))
         if not text:
             continue
-        category = heading_category(normalize_text(node.name or "").lower(), text, title=title)
+        category = heading_category(
+            normalize_text(node.name or "").lower(), text, title=title
+        )
         if category in {"body_heading", "front_matter"}:
-            container = node.parent if isinstance(getattr(node, "parent", None), Tag) else node
+            container = (
+                node.parent if isinstance(getattr(node, "parent", None), Tag) else node
+            )
             container_kind = identity_category(ancestor_identity_text(container))
-            if container_kind in {"abstract", "data_availability", "code_availability", "references_or_back_matter", "ancillary"}:
+            if container_kind in {
+                "abstract",
+                "data_availability",
+                "code_availability",
+                "references_or_back_matter",
+                "ancillary",
+            }:
                 category = container_kind
         kind = section_hint_kind_for_category(category)
         if kind is None:
             continue
-        level_match = SECTION_HEADING_PATTERN.fullmatch(normalize_text(node.name or "").lower())
+        level_match = SECTION_HEADING_PATTERN.fullmatch(
+            normalize_text(node.name or "").lower()
+        )
         level = int(level_match.group(1)) if level_match else 2
         language = None
         if language_hint_resolver is not None:
@@ -642,7 +704,12 @@ def collect_html_section_hints(
                 "kind": kind,
                 "order": len(hints),
                 "language": normalize_text(language) or None,
-                "source_selector": node_source_selector(node.parent if isinstance(getattr(node, "parent", None), Tag) else node) or None,
+                "source_selector": node_source_selector(
+                    node.parent
+                    if isinstance(getattr(node, "parent", None), Tag)
+                    else node
+                )
+                or None,
             }
         )
     return hints

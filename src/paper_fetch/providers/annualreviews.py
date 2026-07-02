@@ -33,7 +33,11 @@ register_provider_bundle(
             official=True,
             domains=("annualreviews.org", "www.annualreviews.org"),
             doi_prefixes=("10.1146/",),
-            publisher_aliases=("annual reviews", "annual reviews inc", "annual reviews inc."),
+            publisher_aliases=(
+                "annual reviews",
+                "annual reviews inc",
+                "annual reviews inc.",
+            ),
             asset_default="body",
             probe_capability="routing_signal",
             provider_managed_abstract_only=True,
@@ -98,7 +102,9 @@ ANNUALREVIEWS_BROWSER_PROFILE = ProviderBrowserProfile(
 def _is_annualreviews_url(value: str | None) -> bool:
     parsed = urlparse(normalize_text(value))
     host = normalize_text(parsed.hostname or "").lower()
-    return host in {"annualreviews.org", "www.annualreviews.org"} or host.endswith(".annualreviews.org")
+    return host in {"annualreviews.org", "www.annualreviews.org"} or host.endswith(
+        ".annualreviews.org"
+    )
 
 
 def _append_unique(values: list[str], candidate: str | None) -> None:
@@ -110,7 +116,13 @@ def _append_unique(values: list[str], candidate: str | None) -> None:
 class AnnualreviewsClient(browser_workflow.BrowserWorkflowClient):
     name = ANNUALREVIEWS_BROWSER_PROFILE.name
     profile = ANNUALREVIEWS_BROWSER_PROFILE
-    waterfall_steps = ("landing_html", "article_html", "pdf_fallback", "abstract_only", "metadata_only")
+    waterfall_steps = (
+        "landing_html",
+        "article_html",
+        "pdf_fallback",
+        "abstract_only",
+        "metadata_only",
+    )
 
     def html_candidates(self, doi: str, metadata: Mapping[str, Any]) -> list[str]:
         normalized_doi = normalize_doi(doi)
@@ -120,7 +132,9 @@ class AnnualreviewsClient(browser_workflow.BrowserWorkflowClient):
             _append_unique(candidates, landing)
         if normalized_doi:
             quoted = quote(normalized_doi, safe="/")
-            _append_unique(candidates, f"https://www.annualreviews.org/content/journals/{quoted}")
+            _append_unique(
+                candidates, f"https://www.annualreviews.org/content/journals/{quoted}"
+            )
             _append_unique(candidates, f"https://www.annualreviews.org/doi/{quoted}")
             _append_unique(candidates, f"https://doi.org/{quoted}")
         return candidates
@@ -153,7 +167,9 @@ class AnnualreviewsClient(browser_workflow.BrowserWorkflowClient):
 
     def article_source_for_payload(self, raw_payload: RawFulltextPayload) -> str:
         content = raw_payload.content
-        route = normalize_text(content.route_kind if content is not None else "").lower()
+        route = normalize_text(
+            content.route_kind if content is not None else ""
+        ).lower()
         if route == PDF_FALLBACK:
             return "annualreviews_pdf"
         return "annualreviews_html"
@@ -182,8 +198,7 @@ class AnnualreviewsClient(browser_workflow.BrowserWorkflowClient):
         doi = normalize_doi(str(effective_metadata.get("doi") or ""))
         current_title = normalize_text(str(effective_metadata.get("title") or ""))
         if title and (
-            not current_title
-            or (doi and normalize_doi(current_title) == doi)
+            not current_title or (doi and normalize_doi(current_title) == doi)
         ):
             effective_metadata["title"] = title
         return super().to_article_model(

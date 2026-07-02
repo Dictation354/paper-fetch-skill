@@ -22,8 +22,7 @@ MDPI_ISSN_JOURNAL_CODES = {
     "2304-8158": "foods",
 }
 MDPI_JOURNAL_CODE_ISSNS = {
-    journal_code: issn
-    for issn, journal_code in MDPI_ISSN_JOURNAL_CODES.items()
+    journal_code: issn for issn, journal_code in MDPI_ISSN_JOURNAL_CODES.items()
 }
 MDPI_ISSN_PATTERN = re.compile(r"\d{4}-\d{3}[\dXx]")
 

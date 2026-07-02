@@ -25,9 +25,15 @@ _EXPORTS: dict[str, tuple[str, str]] = {
     "SpringerClient": (".springer", "SpringerClient"),
     "WileyClient": (".wiley", "WileyClient"),
     "build_elsevier_object_url": (".elsevier", "build_elsevier_object_url"),
-    "download_elsevier_related_assets": (".elsevier", "download_elsevier_related_assets"),
+    "download_elsevier_related_assets": (
+        ".elsevier",
+        "download_elsevier_related_assets",
+    ),
     "elsevier_asset_priority": (".elsevier", "elsevier_asset_priority"),
-    "extract_elsevier_asset_references": (".elsevier", "extract_elsevier_asset_references"),
+    "extract_elsevier_asset_references": (
+        ".elsevier",
+        "extract_elsevier_asset_references",
+    ),
     "first_xml_child_text": (".elsevier", "first_xml_child_text"),
     "infer_elsevier_asset_group_key": (".elsevier", "infer_elsevier_asset_group_key"),
     "xml_local_name": (".elsevier", "xml_local_name"),
@@ -96,8 +102,8 @@ def import_provider_entry_modules() -> tuple[str, ...]:
     if imported:
         provider_catalog = sys.modules.get("paper_fetch.provider_catalog")
         if provider_catalog is not None:
-            provider_catalog._PROVIDER_CATALOG_CACHE = None
-            provider_catalog._SOURCE_PROVIDER_MAP_CACHE = None
+            provider_catalog.__dict__["_PROVIDER_CATALOG_CACHE"] = None
+            provider_catalog.__dict__["_SOURCE_PROVIDER_MAP_CACHE"] = None
     _PROVIDER_ENTRY_IMPORTS_COMPLETE = True
     return tuple(imported)
 

@@ -14,9 +14,24 @@ from ..extraction.html import decode_html, render_html_markdown
 from ..http import RequestFailure
 from ..models import ArticleModel, AssetProfile
 from ..runtime import RuntimeContext
-from ..tracing import TraceEvent, download_marker, source_trail_from_trace, trace_from_markers
+from ..tracing import (
+    TraceEvent,
+    download_marker,
+    source_trail_from_trace,
+    trace_from_markers,
+)
 from ..utils import empty_asset_results, normalize_text, provider_display_name
-from ..reason_codes import ERROR, NO_ACCESS, NO_RESULT, NOT_CONFIGURED, NOT_SUPPORTED, OK, PARTIAL, RATE_LIMITED, READY
+from ..reason_codes import (
+    ERROR,
+    NO_ACCESS,
+    NO_RESULT,
+    NOT_CONFIGURED,
+    NOT_SUPPORTED,
+    OK,
+    PARTIAL,
+    RATE_LIMITED,
+    READY,
+)
 
 if TYPE_CHECKING:
     from ._waterfall import WaterfallStep
@@ -41,7 +56,9 @@ class ProviderFailure(Exception):
         self.retry_after_seconds = retry_after_seconds
         self.missing_env = list(missing_env or [])
         self.warnings = [str(item) for item in (warnings or []) if str(item).strip()]
-        self.source_trail = [str(item) for item in (source_trail or []) if str(item).strip()]
+        self.source_trail = [
+            str(item) for item in (source_trail or []) if str(item).strip()
+        ]
 
 
 @dataclass(frozen=True)
@@ -113,7 +130,11 @@ STRUCTURED_METADATA_KEYS = {
 
 def _passthrough_metadata(metadata: Mapping[str, Any] | None) -> dict[str, Any]:
     legacy = dict(metadata or {})
-    return {key: value for key, value in legacy.items() if key not in STRUCTURED_METADATA_KEYS}
+    return {
+        key: value
+        for key, value in legacy.items()
+        if key not in STRUCTURED_METADATA_KEYS
+    }
 
 
 @dataclass(init=False)
@@ -150,7 +171,9 @@ class RawFulltextPayload:
         self.content = content
         self.warnings = [str(item) for item in (warnings or []) if str(item).strip()]
         self.trace = list(trace or [])
-        self.merged_metadata = dict(merged_metadata) if isinstance(merged_metadata, Mapping) else None
+        self.merged_metadata = (
+            dict(merged_metadata) if isinstance(merged_metadata, Mapping) else None
+        )
         self.needs_local_copy = needs_local_copy
         self._legacy_metadata = _passthrough_metadata(metadata)
 
@@ -170,7 +193,10 @@ class RawFulltextPayload:
             if content.merged_metadata is not None:
                 payload["merged_metadata"] = dict(content.merged_metadata)
             if content.diagnostics:
-                payload["availability_diagnostics"] = dict(content.diagnostics.get("availability_diagnostics") or content.diagnostics)
+                payload["availability_diagnostics"] = dict(
+                    content.diagnostics.get("availability_diagnostics")
+                    or content.diagnostics
+                )
                 for key, value in content.diagnostics.items():
                     if key not in {"availability_diagnostics"} and key not in payload:
                         payload[key] = value
@@ -335,14 +361,18 @@ def map_request_failure(
 ) -> ProviderFailure:
     status_code = exc.status_code
     if status_code is not None and status_code in (no_result_status_codes or set()):
-        message = normalize_text(str((no_result_messages or {}).get(status_code) or "")) or str(exc)
+        message = normalize_text(
+            str((no_result_messages or {}).get(status_code) or "")
+        ) or str(exc)
         return ProviderFailure(NO_RESULT, message)
     if status_code in {401, 403}:
         return ProviderFailure(NO_ACCESS, str(exc))
     if status_code == 404:
         return ProviderFailure(NO_RESULT, str(exc))
     if status_code == 429:
-        return ProviderFailure(RATE_LIMITED, str(exc), retry_after_seconds=exc.retry_after_seconds)
+        return ProviderFailure(
+            RATE_LIMITED, str(exc), retry_after_seconds=exc.retry_after_seconds
+        )
     if status_code in {400, 406, 422}:
         return ProviderFailure(ERROR, str(exc))
     if status_code is None:
@@ -352,7 +382,9 @@ def map_request_failure(
     return ProviderFailure(ERROR, str(exc))
 
 
-def combine_provider_failures(failures: list[tuple[str, ProviderFailure]]) -> ProviderFailure:
+def combine_provider_failures(
+    failures: list[tuple[str, ProviderFailure]],
+) -> ProviderFailure:
     priority = {
         NO_ACCESS: 0,
         NO_RESULT: 1,
@@ -401,7 +433,9 @@ class ProviderClient:
     waterfall_steps: tuple[WaterfallStep, ...] = ()
 
     def fetch_metadata(self, query: Mapping[str, str | None]) -> dict[str, Any]:
-        raise ProviderFailure(NOT_SUPPORTED, f"{self.name} metadata retrieval is not available.")
+        raise ProviderFailure(
+            NOT_SUPPORTED, f"{self.name} metadata retrieval is not available."
+        )
 
     def fetch_result(
         self,
@@ -414,13 +448,19 @@ class ProviderClient:
         context: RuntimeContext | None = None,
     ) -> ProviderFetchResult:
         context = self._runtime_context(context, output_dir=output_dir)
-        active_artifact_store = artifact_store or ArtifactStore.from_download_dir(output_dir)
+        active_artifact_store = artifact_store or ArtifactStore.from_download_dir(
+            output_dir
+        )
         asset_output_dir = active_artifact_store.asset_download_dir
         previous_asset_profile = context.asset_profile
         context.asset_profile = asset_profile
         try:
-            prepared = self.prepare_fetch_result_payload(doi, metadata, asset_profile=asset_profile, context=context)
-            prepared.raw_payload = self._sync_fetch_result_content_local_copy(prepared.raw_payload)
+            prepared = self.prepare_fetch_result_payload(
+                doi, metadata, asset_profile=asset_profile, context=context
+            )
+            prepared.raw_payload = self._sync_fetch_result_content_local_copy(
+                prepared.raw_payload
+            )
             prepared = self.maybe_recover_fetch_result_payload(
                 doi,
                 metadata,
@@ -428,15 +468,27 @@ class ProviderClient:
                 asset_profile=asset_profile,
                 context=context,
             )
-            prepared.raw_payload = self._sync_fetch_result_content_local_copy(prepared.raw_payload)
-            prepared.raw_payload = self.ensure_html_markdown(prepared.raw_payload, metadata, context=context)
+            prepared.raw_payload = self._sync_fetch_result_content_local_copy(
+                prepared.raw_payload
+            )
+            prepared.raw_payload = self.ensure_html_markdown(
+                prepared.raw_payload, metadata, context=context
+            )
             raw_payload = prepared.raw_payload
             content = raw_payload.content
             artifact_policy = self.describe_artifacts(raw_payload)
             downloaded_assets: list[Mapping[str, Any]] = []
             asset_failures: list[Mapping[str, Any]] = []
-            warnings = list(prepared.result_warnings if prepared.result_warnings is not None else raw_payload.warnings)
-            trace = list(prepared.result_trace if prepared.result_trace is not None else raw_payload.trace)
+            warnings = list(
+                prepared.result_warnings
+                if prepared.result_warnings is not None
+                else raw_payload.warnings
+            )
+            trace = list(
+                prepared.result_trace
+                if prepared.result_trace is not None
+                else raw_payload.trace
+            )
             if (
                 asset_output_dir is not None
                 and asset_profile != "none"
@@ -458,16 +510,30 @@ class ProviderClient:
                             context=context,
                         )
                     finally:
-                        context.accumulate_stage_timing("asset_seconds", started_at=asset_started_at)
+                        context.accumulate_stage_timing(
+                            "asset_seconds", started_at=asset_started_at
+                        )
                     downloaded_assets = list(asset_results.get("assets") or [])
                     asset_failures = list(asset_results.get("asset_failures") or [])
                 except ProviderFailure as exc:
                     warnings.append(self.asset_download_failure_warning(exc))
-                    trace.extend(trace_from_markers([download_marker(f"{self.name}_assets_failed")]))
+                    trace.extend(
+                        trace_from_markers(
+                            [download_marker(f"{self.name}_assets_failed")]
+                        )
+                    )
                 except (RequestFailure, OSError) as exc:
                     warnings.append(self.asset_download_failure_warning(exc))
-                    trace.extend(trace_from_markers([download_marker(f"{self.name}_assets_failed")]))
-            if prepared.provisional_article is not None and not downloaded_assets and not asset_failures:
+                    trace.extend(
+                        trace_from_markers(
+                            [download_marker(f"{self.name}_assets_failed")]
+                        )
+                    )
+            if (
+                prepared.provisional_article is not None
+                and not downloaded_assets
+                and not asset_failures
+            ):
                 article = prepared.provisional_article
             else:
                 article = self.to_article_model(
@@ -499,7 +565,9 @@ class ProviderClient:
         finally:
             context.asset_profile = previous_asset_profile
 
-    def _runtime_context(self, context: RuntimeContext | None, *, output_dir: Path | None = None) -> RuntimeContext:
+    def _runtime_context(
+        self, context: RuntimeContext | None, *, output_dir: Path | None = None
+    ) -> RuntimeContext:
         if context is not None:
             return context
         return RuntimeContext(
@@ -508,10 +576,17 @@ class ProviderClient:
             download_dir=output_dir,
         )
 
-    def _sync_fetch_result_content_local_copy(self, raw_payload: RawFulltextPayload) -> RawFulltextPayload:
+    def _sync_fetch_result_content_local_copy(
+        self, raw_payload: RawFulltextPayload
+    ) -> RawFulltextPayload:
         content = raw_payload.content
-        if content is not None and content.needs_local_copy != raw_payload.needs_local_copy:
-            raw_payload.content = replace(content, needs_local_copy=raw_payload.needs_local_copy)
+        if (
+            content is not None
+            and content.needs_local_copy != raw_payload.needs_local_copy
+        ):
+            raw_payload.content = replace(
+                content, needs_local_copy=raw_payload.needs_local_copy
+            )
         return raw_payload
 
     def html_to_markdown(
@@ -538,7 +613,9 @@ class ProviderClient:
         context: RuntimeContext,
     ) -> RawFulltextPayload:
         content = raw_payload.content
-        payload_content_type = content.content_type if content is not None else raw_payload.content_type
+        payload_content_type = (
+            content.content_type if content is not None else raw_payload.content_type
+        )
         content_type = normalize_text(payload_content_type).lower()
         if "html" not in content_type:
             return raw_payload
@@ -608,7 +685,9 @@ class ProviderClient:
         context: RuntimeContext | None = None,
     ) -> PreparedFetchResultPayload:
         context = self._runtime_context(context)
-        return PreparedFetchResultPayload(raw_payload=self.fetch_raw_fulltext(doi, metadata, context=context))
+        return PreparedFetchResultPayload(
+            raw_payload=self.fetch_raw_fulltext(doi, metadata, context=context)
+        )
 
     def maybe_recover_fetch_result_payload(
         self,
@@ -640,7 +719,9 @@ class ProviderClient:
     ) -> ArticleModel:
         return article
 
-    def asset_download_failure_warning(self, exc: ProviderFailure | RequestFailure | OSError) -> str:
+    def asset_download_failure_warning(
+        self, exc: ProviderFailure | RequestFailure | OSError
+    ) -> str:
         message = exc.message if isinstance(exc, ProviderFailure) else str(exc)
         return f"{provider_display_name(self.name)} related assets could not be downloaded: {message}"
 
@@ -688,7 +769,9 @@ class ProviderClient:
         context: RuntimeContext | None = None,
     ):
         del context
-        raise ProviderFailure(NOT_SUPPORTED, f"{self.name} article conversion is not available.")
+        raise ProviderFailure(
+            NOT_SUPPORTED, f"{self.name} article conversion is not available."
+        )
 
     def download_related_assets(
         self,
@@ -834,7 +917,9 @@ class ProviderClient:
         return replace(result, status=result.status.upper())
 
 
-def _build_provider_registry_compat(*args: Any, **kwargs: Any) -> dict[str, ProviderClient]:
+def _build_provider_registry_compat(
+    *args: Any, **kwargs: Any
+) -> dict[str, ProviderClient]:
     from .registry import build_clients
 
     return build_clients(*args, **kwargs)

@@ -37,7 +37,9 @@ class ServiceOfficialPipelineTests(unittest.TestCase):
                             source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest",
                             content_type="text/xml",
                             body=b"<xml/>",
-                            metadata={"reason": "Downloaded full text from the official Elsevier API."},
+                            metadata={
+                                "reason": "Downloaded full text from the official Elsevier API."
+                            },
                         ),
                         article=official_article,
                     ),
@@ -61,7 +63,10 @@ class ServiceOfficialPipelineTests(unittest.TestCase):
         self.assertEqual(article.source, "elsevier_xml")
         self.assertTrue(article.quality.has_fulltext)
         self.assertIn("fulltext:elsevier_article_ok", article.quality.source_trail)
-    def test_fetch_paper_model_emits_service_debug_logs_for_official_provider(self) -> None:
+
+    def test_fetch_paper_model_emits_service_debug_logs_for_official_provider(
+        self,
+    ) -> None:
         resolved = paper_fetch.ResolvedQuery(
             query="10.1016/test",
             query_kind="doi",
@@ -96,7 +101,9 @@ class ServiceOfficialPipelineTests(unittest.TestCase):
                             source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest",
                             content_type="text/xml",
                             body=b"<xml/>",
-                            metadata={"reason": "Downloaded full text from the official Elsevier API."},
+                            metadata={
+                                "reason": "Downloaded full text from the official Elsevier API."
+                            },
                         ),
                         article=official_article,
                     ),
@@ -148,7 +155,10 @@ class ServiceOfficialPipelineTests(unittest.TestCase):
                 for payload in payloads
             )
         )
-    def test_fetch_paper_model_uses_official_pipeline_for_resolved_elsevier_url(self) -> None:
+
+    def test_fetch_paper_model_uses_official_pipeline_for_resolved_elsevier_url(
+        self,
+    ) -> None:
         resolved = paper_fetch.ResolvedQuery(
             query="https://linkinghub.elsevier.com/retrieve/pii/S0034425725000525",
             query_kind="url",
@@ -180,7 +190,9 @@ class ServiceOfficialPipelineTests(unittest.TestCase):
                             source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest",
                             content_type="text/xml",
                             body=b"<xml/>",
-                            metadata={"reason": "Downloaded full text from the official Elsevier API."},
+                            metadata={
+                                "reason": "Downloaded full text from the official Elsevier API."
+                            },
                         ),
                         article=official_article,
                     ),
@@ -206,7 +218,9 @@ class ServiceOfficialPipelineTests(unittest.TestCase):
         self.assertIn("fulltext:elsevier_article_ok", article.quality.source_trail)
         self.assertNotIn("fallback:metadata_only", article.quality.source_trail)
 
-    def test_fetch_paper_model_uses_elsevier_pii_metadata_for_url_without_doi(self) -> None:
+    def test_fetch_paper_model_uses_elsevier_pii_metadata_for_url_without_doi(
+        self,
+    ) -> None:
         resolved = paper_fetch.ResolvedQuery(
             query="https://www.sciencedirect.com/science/article/pii/S0959378017300134",
             query_kind="url",
@@ -224,7 +238,9 @@ class ServiceOfficialPipelineTests(unittest.TestCase):
                         source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest",
                         content_type="text/xml",
                         body=b"<xml/>",
-                        metadata={"reason": "Downloaded full text from the official Elsevier API."},
+                        metadata={
+                            "reason": "Downloaded full text from the official Elsevier API."
+                        },
                     ),
                     article=sample_article(),
                 )
@@ -251,7 +267,9 @@ class ServiceOfficialPipelineTests(unittest.TestCase):
         finally:
             paper_fetch.resolve_paper = original_resolve
 
-        self.assertEqual(provider.metadata_queries, [{"doi": None, "pii": "S0959378017300134"}])
+        self.assertEqual(
+            provider.metadata_queries, [{"doi": None, "pii": "S0959378017300134"}]
+        )
         self.assertEqual(article.source, "elsevier_xml")
         self.assertTrue(article.quality.has_fulltext)
         self.assertIn("metadata:elsevier_ok", article.quality.source_trail)
@@ -268,7 +286,9 @@ class ServiceOfficialPipelineTests(unittest.TestCase):
         )
         official_article = sample_article()
 
-        def write_related_assets(doi, metadata, raw_payload, output_dir, *, asset_profile="all"):
+        def write_related_assets(
+            doi, metadata, raw_payload, output_dir, *, asset_profile="all"
+        ):
             asset_dir = output_dir / "10.1016_test_assets"
             asset_dir.mkdir(parents=True, exist_ok=True)
             figure_path = asset_dir / "figure-1.png"
@@ -339,12 +359,20 @@ class ServiceOfficialPipelineTests(unittest.TestCase):
         finally:
             paper_fetch.resolve_paper = original_resolve
 
-        self.assertIn("download:elsevier_assets_saved_profile_all", article.quality.source_trail)
+        self.assertIn(
+            "download:elsevier_assets_saved_profile_all", article.quality.source_trail
+        )
         self.assertIsNotNone(raw_payload.content)
         assert raw_payload.content is not None
         self.assertEqual(raw_payload.content.route_kind, "official")
-        self.assertEqual(raw_payload.content.reason, "Downloaded full text from the official Elsevier API.")
-    def test_fetch_paper_model_skips_related_asset_downloads_when_no_download_is_set(self) -> None:
+        self.assertEqual(
+            raw_payload.content.reason,
+            "Downloaded full text from the official Elsevier API.",
+        )
+
+    def test_fetch_paper_model_skips_related_asset_downloads_when_no_download_is_set(
+        self,
+    ) -> None:
         resolved = paper_fetch.ResolvedQuery(
             query="10.1016/test",
             query_kind="doi",
@@ -356,7 +384,9 @@ class ServiceOfficialPipelineTests(unittest.TestCase):
         official_article = sample_article()
         related_asset_calls: list[str] = []
 
-        def write_related_assets(doi, metadata, raw_payload, output_dir, *, asset_profile="all"):
+        def write_related_assets(
+            doi, metadata, raw_payload, output_dir, *, asset_profile="all"
+        ):
             related_asset_calls.append(doi)
             return {}
 
@@ -385,7 +415,9 @@ class ServiceOfficialPipelineTests(unittest.TestCase):
                                 source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest",
                                 content_type="text/xml",
                                 body=b"<xml/>",
-                                metadata={"reason": "Downloaded full text from the official Elsevier API."},
+                                metadata={
+                                    "reason": "Downloaded full text from the official Elsevier API."
+                                },
                             ),
                             article=official_article,
                             related_asset_factory=write_related_assets,
@@ -408,7 +440,10 @@ class ServiceOfficialPipelineTests(unittest.TestCase):
 
         self.assertEqual(related_asset_calls, [])
         self.assertNotIn("download:elsevier_assets_saved", article.quality.source_trail)
-    def test_fetch_paper_model_skips_related_asset_downloads_for_profile_none(self) -> None:
+
+    def test_fetch_paper_model_skips_related_asset_downloads_for_profile_none(
+        self,
+    ) -> None:
         resolved = paper_fetch.ResolvedQuery(
             query="10.1016/test",
             query_kind="doi",
@@ -420,7 +455,9 @@ class ServiceOfficialPipelineTests(unittest.TestCase):
         official_article = sample_article()
         related_asset_calls: list[str] = []
 
-        def write_related_assets(doi, metadata, raw_payload, output_dir, *, asset_profile="all"):
+        def write_related_assets(
+            doi, metadata, raw_payload, output_dir, *, asset_profile="all"
+        ):
             related_asset_calls.append(asset_profile)
             return {}
 
@@ -448,7 +485,9 @@ class ServiceOfficialPipelineTests(unittest.TestCase):
                                 source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest",
                                 content_type="text/xml",
                                 body=b"<xml/>",
-                                metadata={"reason": "Downloaded full text from the official Elsevier API."},
+                                metadata={
+                                    "reason": "Downloaded full text from the official Elsevier API."
+                                },
                             ),
                             article=official_article,
                             related_asset_factory=write_related_assets,
@@ -470,8 +509,14 @@ class ServiceOfficialPipelineTests(unittest.TestCase):
             paper_fetch.resolve_paper = original_resolve
 
         self.assertEqual(related_asset_calls, [])
-        self.assertIn("download:elsevier_assets_skipped_profile_none", article.quality.source_trail)
-    def test_fetch_paper_model_treats_request_failure_during_asset_download_as_warning(self) -> None:
+        self.assertIn(
+            "download:elsevier_assets_skipped_profile_none",
+            article.quality.source_trail,
+        )
+
+    def test_fetch_paper_model_treats_request_failure_during_asset_download_as_warning(
+        self,
+    ) -> None:
         resolved = paper_fetch.ResolvedQuery(
             query="10.1016/test",
             query_kind="doi",
@@ -504,10 +549,14 @@ class ServiceOfficialPipelineTests(unittest.TestCase):
                                 source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest",
                                 content_type="text/xml",
                                 body=b"<xml/>",
-                                metadata={"reason": "Downloaded full text from the official Elsevier API."},
+                                metadata={
+                                    "reason": "Downloaded full text from the official Elsevier API."
+                                },
                             ),
                             article=sample_article(),
-                            related_asset_error=RequestFailure(503, "HTTP 503 for https://example.test/asset"),
+                            related_asset_error=RequestFailure(
+                                503, "HTTP 503 for https://example.test/asset"
+                            ),
                         ),
                         "crossref": StubProvider(
                             metadata={
@@ -528,8 +577,13 @@ class ServiceOfficialPipelineTests(unittest.TestCase):
         self.assertEqual(article.source, "elsevier_xml")
         self.assertIn("fulltext:elsevier_article_ok", article.quality.source_trail)
         self.assertIn("download:elsevier_assets_failed", article.quality.source_trail)
-        self.assertTrue(any("HTTP 503" in warning for warning in article.quality.warnings))
-    def test_fetch_paper_model_treats_oserror_during_asset_download_as_warning(self) -> None:
+        self.assertTrue(
+            any("HTTP 503" in warning for warning in article.quality.warnings)
+        )
+
+    def test_fetch_paper_model_treats_oserror_during_asset_download_as_warning(
+        self,
+    ) -> None:
         resolved = paper_fetch.ResolvedQuery(
             query="10.1016/test",
             query_kind="doi",
@@ -562,7 +616,9 @@ class ServiceOfficialPipelineTests(unittest.TestCase):
                                 source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest",
                                 content_type="text/xml",
                                 body=b"<xml/>",
-                                metadata={"reason": "Downloaded full text from the official Elsevier API."},
+                                metadata={
+                                    "reason": "Downloaded full text from the official Elsevier API."
+                                },
                             ),
                             article=sample_article(),
                             related_asset_error=OSError("disk full"),
@@ -586,8 +642,13 @@ class ServiceOfficialPipelineTests(unittest.TestCase):
         self.assertEqual(article.source, "elsevier_xml")
         self.assertIn("fulltext:elsevier_article_ok", article.quality.source_trail)
         self.assertIn("download:elsevier_assets_failed", article.quality.source_trail)
-        self.assertTrue(any("disk full" in warning for warning in article.quality.warnings))
-    def test_fetch_paper_model_does_not_swallow_programming_errors_during_asset_download(self) -> None:
+        self.assertTrue(
+            any("disk full" in warning for warning in article.quality.warnings)
+        )
+
+    def test_fetch_paper_model_does_not_swallow_programming_errors_during_asset_download(
+        self,
+    ) -> None:
         resolved = paper_fetch.ResolvedQuery(
             query="10.1016/test",
             query_kind="doi",
@@ -621,10 +682,14 @@ class ServiceOfficialPipelineTests(unittest.TestCase):
                                     source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest",
                                     content_type="text/xml",
                                     body=b"<xml/>",
-                                    metadata={"reason": "Downloaded full text from the official Elsevier API."},
+                                    metadata={
+                                        "reason": "Downloaded full text from the official Elsevier API."
+                                    },
                                 ),
                                 article=sample_article(),
-                                related_asset_error=AttributeError("buggy asset pipeline"),
+                                related_asset_error=AttributeError(
+                                    "buggy asset pipeline"
+                                ),
                             ),
                             "crossref": StubProvider(
                                 metadata={

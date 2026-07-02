@@ -5,9 +5,13 @@ from ._mcp_support import *
 
 
 class McpAsyncToolTests(unittest.IsolatedAsyncioTestCase):
-    async def test_structured_log_notification_handler_prefers_structured_data_with_spaces(self) -> None:
+    async def test_structured_log_notification_handler_prefers_structured_data_with_spaces(
+        self,
+    ) -> None:
         ctx = FakeContext()
-        handler = mcp_tools.StructuredLogNotificationHandler(ctx=ctx, loop=asyncio.get_running_loop())
+        handler = mcp_tools.StructuredLogNotificationHandler(
+            ctx=ctx, loop=asyncio.get_running_loop()
+        )
         record = logging.LogRecord(
             name="paper_fetch.service",
             level=logging.DEBUG,
@@ -35,19 +39,34 @@ class McpAsyncToolTests(unittest.IsolatedAsyncioTestCase):
                 "logger": "paper_fetch.service",
             },
         )
-    async def test_fetch_paper_tool_async_reports_progress_and_bridges_logs(self) -> None:
+
+    async def test_fetch_paper_tool_async_reports_progress_and_bridges_logs(
+        self,
+    ) -> None:
         ctx = FakeContext()
         captured: dict[str, object] = {}
 
         def fake_fetch_paper(query, **kwargs):
             captured.update(kwargs)
-            logging.getLogger("paper_fetch.service").debug("fetch_stage query=%s attempt=%s", query, 1)
+            logging.getLogger("paper_fetch.service").debug(
+                "fetch_stage query=%s attempt=%s", query, 1
+            )
             return sample_envelope(modes=kwargs["modes"], doi=query)
 
         with (
-            mock.patch.object(mcp_tools, "build_runtime_env", return_value={"PAPER_FETCH_HTTP_DISK_CACHE": "1"}),
-            mock.patch.object(mcp_tools, "resolve_mcp_download_dir", return_value=Path("/tmp/downloads")),
-            mock.patch.object(mcp_tools, "service_fetch_paper", side_effect=fake_fetch_paper),
+            mock.patch.object(
+                mcp_tools,
+                "build_runtime_env",
+                return_value={"PAPER_FETCH_HTTP_DISK_CACHE": "1"},
+            ),
+            mock.patch.object(
+                mcp_tools,
+                "resolve_mcp_download_dir",
+                return_value=Path("/tmp/downloads"),
+            ),
+            mock.patch.object(
+                mcp_tools, "service_fetch_paper", side_effect=fake_fetch_paper
+            ),
             mock.patch.object(mcp_tools, "refresh_cache_index_for_doi"),
         ):
             result = await mcp_tools.fetch_paper_tool_async(
@@ -70,7 +89,10 @@ class McpAsyncToolTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(ctx.session.messages[0]["data"]["query"], "10.1000/example")
         self.assertEqual(captured["context"].artifact_mode, "markdown-assets")
         self.assertIsNone(captured["context"].transport.disk_cache_dir)
-    async def test_fetch_paper_tool_async_sets_cancellation_flag_for_worker_transport(self) -> None:
+
+    async def test_fetch_paper_tool_async_sets_cancellation_flag_for_worker_transport(
+        self,
+    ) -> None:
         started = threading.Event()
         cancelled_seen = threading.Event()
 
@@ -86,8 +108,12 @@ class McpAsyncToolTests(unittest.IsolatedAsyncioTestCase):
                 time.sleep(0.01)
             return sample_envelope(modes={"article", "markdown"})
 
-        with mock.patch.object(mcp_tools, "service_fetch_paper", side_effect=fake_fetch_paper):
-            task = asyncio.create_task(mcp_tools.fetch_paper_tool_async(query="10.1000/example"))
+        with mock.patch.object(
+            mcp_tools, "service_fetch_paper", side_effect=fake_fetch_paper
+        ):
+            task = asyncio.create_task(
+                mcp_tools.fetch_paper_tool_async(query="10.1000/example")
+            )
             await wait_for_threading_event(started, 1.0)
             task.cancel()
             with self.assertRaises(asyncio.CancelledError):
@@ -95,7 +121,10 @@ class McpAsyncToolTests(unittest.IsolatedAsyncioTestCase):
             await wait_for_threading_event(cancelled_seen, 1.0)
 
         self.assertTrue(cancelled_seen.is_set())
-    async def test_batch_resolve_tool_async_sets_cancellation_flag_for_worker_transport(self) -> None:
+
+    async def test_batch_resolve_tool_async_sets_cancellation_flag_for_worker_transport(
+        self,
+    ) -> None:
         started = threading.Event()
         cancelled_seen = threading.Event()
 
@@ -110,7 +139,9 @@ class McpAsyncToolTests(unittest.IsolatedAsyncioTestCase):
                 time.sleep(0.01)
             return sample_resolved_query(query)
 
-        with mock.patch.object(mcp_tools, "service_resolve_paper", side_effect=fake_resolve):
+        with mock.patch.object(
+            mcp_tools, "service_resolve_paper", side_effect=fake_resolve
+        ):
             task = asyncio.create_task(
                 mcp_tools.batch_resolve_tool_async(
                     queries=["10.1000/one", "10.1000/two"],
@@ -124,14 +155,19 @@ class McpAsyncToolTests(unittest.IsolatedAsyncioTestCase):
             await wait_for_threading_event(cancelled_seen, 1.0)
 
         self.assertTrue(cancelled_seen.is_set())
+
     async def test_batch_check_tool_async_reports_per_query_progress(self) -> None:
         ctx = FakeContext()
 
         def fake_probe(query, *, context=None):
-            logging.getLogger("paper_fetch.http").debug("batch_check_item query=%s status=%s", query, "ok")
+            logging.getLogger("paper_fetch.http").debug(
+                "batch_check_item query=%s status=%s", query, "ok"
+            )
             return sample_probe_result(query, doi=query, title=f"Title for {query}")
 
-        with mock.patch.object(mcp_tools, "service_probe_has_fulltext", side_effect=fake_probe):
+        with mock.patch.object(
+            mcp_tools, "service_probe_has_fulltext", side_effect=fake_probe
+        ):
             result = await mcp_tools.batch_check_tool_async(
                 queries=["10.1000/one", "10.1000/two"],
                 mode="metadata",
@@ -149,7 +185,13 @@ class McpAsyncToolTests(unittest.IsolatedAsyncioTestCase):
                 (2, 2, "batch_check complete"),
             ],
         )
-        self.assertTrue(any(message["data"]["event"] == "batch_check_item" for message in ctx.session.messages))
+        self.assertTrue(
+            any(
+                message["data"]["event"] == "batch_check_item"
+                for message in ctx.session.messages
+            )
+        )
+
     async def test_batch_check_tool_async_rejects_too_many_queries(self) -> None:
         result = await mcp_tools.batch_check_tool_async(
             queries=[f"10.1000/{index}" for index in range(51)],
@@ -158,15 +200,23 @@ class McpAsyncToolTests(unittest.IsolatedAsyncioTestCase):
 
         self.assertTrue(result.isError)
         self.assertEqual(result.structuredContent["status"], "error")
-        self.assertIn("queries must contain at most 50 entries.", result.structuredContent["reason"])
+        self.assertIn(
+            "queries must contain at most 50 entries.",
+            result.structuredContent["reason"],
+        )
+
     async def test_batch_resolve_tool_async_reports_per_query_progress(self) -> None:
         ctx = FakeContext()
 
         def fake_resolve(query, *, context=None):
-            logging.getLogger("paper_fetch.service").debug("batch_resolve_item query=%s status=%s", query, "ok")
+            logging.getLogger("paper_fetch.service").debug(
+                "batch_resolve_item query=%s status=%s", query, "ok"
+            )
             return sample_resolved_query(query)
 
-        with mock.patch.object(mcp_tools, "service_resolve_paper", side_effect=fake_resolve):
+        with mock.patch.object(
+            mcp_tools, "service_resolve_paper", side_effect=fake_resolve
+        ):
             result = await mcp_tools.batch_resolve_tool_async(
                 queries=["10.1000/one", "10.1000/two"],
                 ctx=ctx,
@@ -183,7 +233,13 @@ class McpAsyncToolTests(unittest.IsolatedAsyncioTestCase):
                 (2, 2, "batch_resolve complete"),
             ],
         )
-        self.assertTrue(any(message["data"]["event"] == "batch_resolve_item" for message in ctx.session.messages))
+        self.assertTrue(
+            any(
+                message["data"]["event"] == "batch_resolve_item"
+                for message in ctx.session.messages
+            )
+        )
+
     async def test_batch_resolve_tool_async_rejects_too_many_queries(self) -> None:
         result = await mcp_tools.batch_resolve_tool_async(
             queries=[f"10.1000/{index}" for index in range(51)],
@@ -191,4 +247,7 @@ class McpAsyncToolTests(unittest.IsolatedAsyncioTestCase):
 
         self.assertTrue(result.isError)
         self.assertEqual(result.structuredContent["status"], "error")
-        self.assertIn("queries must contain at most 50 entries.", result.structuredContent["reason"])
+        self.assertIn(
+            "queries must contain at most 50 entries.",
+            result.structuredContent["reason"],
+        )

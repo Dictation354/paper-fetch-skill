@@ -26,7 +26,9 @@ class ElsevierTableRenderResult:
     note: str | None = None
 
 
-def _elsevier_table_rows_in_order(tgroup: ET.Element | None) -> tuple[list[ET.Element], list[ET.Element]]:
+def _elsevier_table_rows_in_order(
+    tgroup: ET.Element | None,
+) -> tuple[list[ET.Element], list[ET.Element]]:
     header_rows: list[ET.Element] = []
     body_rows: list[ET.Element] = []
     if tgroup is None:
@@ -34,11 +36,23 @@ def _elsevier_table_rows_in_order(tgroup: ET.Element | None) -> tuple[list[ET.El
     thead = first_child(tgroup, "thead")
     tbody = first_child(tgroup, "tbody")
     if thead is not None:
-        header_rows.extend(child for child in list(thead) if isinstance(child.tag, str) and xml_local_name(child.tag) == "row")
+        header_rows.extend(
+            child
+            for child in list(thead)
+            if isinstance(child.tag, str) and xml_local_name(child.tag) == "row"
+        )
     if tbody is not None:
-        body_rows.extend(child for child in list(tbody) if isinstance(child.tag, str) and xml_local_name(child.tag) == "row")
+        body_rows.extend(
+            child
+            for child in list(tbody)
+            if isinstance(child.tag, str) and xml_local_name(child.tag) == "row"
+        )
     if not header_rows and not body_rows:
-        body_rows.extend(child for child in list(tgroup) if isinstance(child.tag, str) and xml_local_name(child.tag) == "row")
+        body_rows.extend(
+            child
+            for child in list(tgroup)
+            if isinstance(child.tag, str) and xml_local_name(child.tag) == "row"
+        )
     return header_rows, body_rows
 
 
@@ -72,7 +86,14 @@ def render_elsevier_table_result(table: ET.Element | None) -> ElsevierTableRende
     col_count, col_index_by_name = _elsevier_table_column_map(tgroup)
     if col_count <= 0:
         col_count = max(
-            len([entry for entry in list(row) if isinstance(entry.tag, str) and xml_local_name(entry.tag) == "entry"])
+            len(
+                [
+                    entry
+                    for entry in list(row)
+                    if isinstance(entry.tag, str)
+                    and xml_local_name(entry.tag) == "entry"
+                ]
+            )
             for row in row_nodes
         )
     if col_count <= 0:
@@ -93,7 +114,11 @@ def render_elsevier_table_result(table: ET.Element | None) -> ElsevierTableRende
                     active_rowspans[index] = None
 
         cursor = 0
-        entries = [entry for entry in list(row) if isinstance(entry.tag, str) and xml_local_name(entry.tag) == "entry"]
+        entries = [
+            entry
+            for entry in list(row)
+            if isinstance(entry.tag, str) and xml_local_name(entry.tag) == "entry"
+        ]
         if not entries:
             continue
 
@@ -116,7 +141,9 @@ def render_elsevier_table_result(table: ET.Element | None) -> ElsevierTableRende
                 end_idx = col_index_by_name[named_end]
             if end_idx < start_idx or end_idx >= col_count:
                 return ElsevierTableRenderResult(rows=[])
-            if any(rendered[index] is not None for index in range(start_idx, end_idx + 1)):
+            if any(
+                rendered[index] is not None for index in range(start_idx, end_idx + 1)
+            ):
                 return ElsevierTableRenderResult(rows=[])
 
             rowspan = int(normalize_text(entry.get("morerows")) or 0) + 1
@@ -131,7 +158,10 @@ def render_elsevier_table_result(table: ET.Element | None) -> ElsevierTableRende
             if rowspan > 1:
                 for index in range(start_idx, end_idx + 1):
                     active_rowspans[index] = {
-                        "remaining": max(int((active_rowspans[index] or {}).get("remaining") or 0), rowspan - 1),
+                        "remaining": max(
+                            int((active_rowspans[index] or {}).get("remaining") or 0),
+                            rowspan - 1,
+                        ),
                         "text": text,
                     }
             cursor = end_idx + 1
@@ -191,7 +221,9 @@ def extract_elsevier_table_footnotes(table: ET.Element) -> list[str]:
 
 def table_reference_token(heading: str) -> str | None:
     normalized = normalize_text(heading)
-    match = re.search(r"(?:tab(?:le)?\.?\s*)([a-z]?\d+)", normalized, flags=re.IGNORECASE)
+    match = re.search(
+        r"(?:tab(?:le)?\.?\s*)([a-z]?\d+)", normalized, flags=re.IGNORECASE
+    )
     if match:
         return match.group(1).lower()
     return None

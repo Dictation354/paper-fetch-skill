@@ -9,7 +9,7 @@ import time
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 from collections.abc import Hashable, Mapping
 
 from .artifacts import DEFAULT_ARTIFACT_MODE, ArtifactMode, ArtifactStore
@@ -49,6 +49,69 @@ import contextlib
 RUNTIME_UNSET = object()
 _PARSE_CACHE_MISSING = object()
 _SESSION_CACHE_MISSING = object()
+_SHARED_BROWSER_MANAGER_LOCK = threading.RLock()
+_SHARED_BROWSER_MANAGERS: dict[
+    tuple[str, str, str, str], _SharedBrowserManagerEntry
+] = {}
+
+
+@dataclass
+class _SharedBrowserManagerEntry:
+    manager: Any
+    ref_count: int = 0
+
+
+class _SharedBrowserManagerLease:
+    def __init__(self, key: tuple[str, str, str, str], manager: Any) -> None:
+        self._key = key
+        self._manager = manager
+        self._closed = False
+
+    def browser(self, *, headless: bool = True) -> Any:
+        return self._manager.browser(headless=headless)
+
+    def new_context(self, *, headless: bool = True, **context_kwargs: Any) -> Any:
+        return self._manager.new_context(headless=headless, **context_kwargs)
+
+    def close(self) -> None:
+        if self._closed:
+            return
+        self._closed = True
+        manager_to_close = None
+        with _SHARED_BROWSER_MANAGER_LOCK:
+            entry = _SHARED_BROWSER_MANAGERS.get(self._key)
+            if entry is None or entry.manager is not self._manager:
+                return
+            entry.ref_count -= 1
+            if entry.ref_count <= 0:
+                _SHARED_BROWSER_MANAGERS.pop(self._key, None)
+                manager_to_close = entry.manager
+        if manager_to_close is not None:
+            manager_to_close.close()
+
+
+def _acquire_shared_browser_manager(
+    *,
+    key: tuple[str, str, str, str],
+    binary_path: str | None,
+    cdp_endpoint: str | None,
+    profile_dir: Path | None,
+    user_data_dir: Path | None,
+) -> _SharedBrowserManagerLease:
+    with _SHARED_BROWSER_MANAGER_LOCK:
+        entry = _SHARED_BROWSER_MANAGERS.get(key)
+        if entry is None:
+            entry = _SharedBrowserManagerEntry(
+                manager=BrowserContextManager(
+                    binary_path=binary_path,
+                    cdp_endpoint=cdp_endpoint,
+                    profile_dir=profile_dir,
+                    user_data_dir=user_data_dir,
+                )
+            )
+            _SHARED_BROWSER_MANAGERS[key] = entry
+        entry.ref_count += 1
+        return _SharedBrowserManagerLease(key, entry.manager)
 
 
 def _transport_disk_cache_dir(
@@ -87,8 +150,12 @@ def build_http_transport_for_context(
         default=DEFAULT_DISK_CACHE_MAX_AGE_DAYS,
     )
     return HttpTransport(
-        pool_num_pools=parse_positive_int_env(env, HTTP_POOL_NUM_POOLS_ENV_VAR, default=DEFAULT_POOL_NUM_POOLS),
-        pool_maxsize=parse_positive_int_env(env, HTTP_POOL_MAXSIZE_ENV_VAR, default=DEFAULT_POOL_MAXSIZE),
+        pool_num_pools=parse_positive_int_env(
+            env, HTTP_POOL_NUM_POOLS_ENV_VAR, default=DEFAULT_POOL_NUM_POOLS
+        ),
+        pool_maxsize=parse_positive_int_env(
+            env, HTTP_POOL_MAXSIZE_ENV_VAR, default=DEFAULT_POOL_MAXSIZE
+        ),
         per_host_concurrency=parse_positive_int_env(
             env,
             HTTP_PER_HOST_CONCURRENCY_ENV_VAR,
@@ -131,11 +198,17 @@ class RuntimeContext:
     parse_cache: dict[tuple[Hashable, ...], Any] = field(default_factory=dict)
     session_cache: dict[tuple[Hashable, ...], Any] = field(default_factory=dict)
     stage_timings: dict[str, float] = field(default_factory=dict)
-    _session_cache_lock: threading.RLock = field(default_factory=threading.RLock, init=False, repr=False)
-    _stage_timing_lock: threading.RLock = field(default_factory=threading.RLock, init=False, repr=False)
-    _browser_context_manager_lock: threading.RLock = field(default_factory=threading.RLock, init=False, repr=False)
-    _browser_context_manager: BrowserContextManager | None = field(default=None, init=False, repr=False)
-    _browser_context_managers: dict[tuple[str, str, str, str], BrowserContextManager] = field(
+    _session_cache_lock: threading.RLock = field(
+        default_factory=threading.RLock, init=False, repr=False
+    )
+    _stage_timing_lock: threading.RLock = field(
+        default_factory=threading.RLock, init=False, repr=False
+    )
+    _browser_context_manager_lock: threading.RLock = field(
+        default_factory=threading.RLock, init=False, repr=False
+    )
+    _browser_context_manager: Any | None = field(default=None, init=False, repr=False)
+    _browser_context_managers: dict[tuple[str, str, str, str], Any] = field(
         default_factory=dict,
         init=False,
         repr=False,
@@ -176,10 +249,14 @@ class RuntimeContext:
 
         return self._browser_lifecycle().browser(headless=headless)
 
-    def new_browser_context(self, *, headless: bool = True, **context_kwargs: Any) -> Any:
+    def new_browser_context(
+        self, *, headless: bool = True, **context_kwargs: Any
+    ) -> Any:
         """Create a browser context from the shared CDP browser."""
 
-        return self._browser_lifecycle().new_context(headless=headless, **context_kwargs)
+        return self._browser_lifecycle().new_context(
+            headless=headless, **context_kwargs
+        )
 
     def new_browser_context_for_config(
         self,
@@ -200,7 +277,9 @@ class RuntimeContext:
             user_data_dir=user_data_dir,
         ).new_context(headless=headless, **context_kwargs)
 
-    def new_playwright_context(self, *, headless: bool = True, **context_kwargs: Any) -> Any:
+    def new_playwright_context(
+        self, *, headless: bool = True, **context_kwargs: Any
+    ) -> Any:
         """Create a browser context from the shared CDP browser."""
 
         return self.new_browser_context(headless=headless, **context_kwargs)
@@ -223,18 +302,47 @@ class RuntimeContext:
             seen.add(id(keyed_manager))
             keyed_manager.close()
 
-    def _browser_lifecycle(self) -> BrowserContextManager:
+    def _browser_lifecycle(self) -> Any:
         with self._browser_context_manager_lock:
             if self._browser_context_manager is None:
-                cdp_endpoint = str((self.env or {}).get(CLOAKBROWSER_CDP_ENDPOINT_ENV_VAR, "")).strip() or None
-                binary_path = str((self.env or {}).get(CLOAKBROWSER_BINARY_PATH_ENV_VAR, "")).strip() or None
-                profile_dir_value = str((self.env or {}).get(CLOAKBROWSER_PROFILE_DIR_ENV_VAR, "")).strip()
-                user_data_dir_value = str((self.env or {}).get(CLOAKBROWSER_USER_DATA_DIR_ENV_VAR, "")).strip()
-                self._browser_context_manager = BrowserContextManager(
+                cdp_endpoint = (
+                    str(
+                        (self.env or {}).get(CLOAKBROWSER_CDP_ENDPOINT_ENV_VAR, "")
+                    ).strip()
+                    or None
+                )
+                binary_path = (
+                    str(
+                        (self.env or {}).get(CLOAKBROWSER_BINARY_PATH_ENV_VAR, "")
+                    ).strip()
+                    or None
+                )
+                profile_dir_value = str(
+                    (self.env or {}).get(CLOAKBROWSER_PROFILE_DIR_ENV_VAR, "")
+                ).strip()
+                user_data_dir_value = str(
+                    (self.env or {}).get(CLOAKBROWSER_USER_DATA_DIR_ENV_VAR, "")
+                ).strip()
+                profile_dir = (
+                    Path(profile_dir_value).expanduser() if profile_dir_value else None
+                )
+                user_data_dir = (
+                    Path(user_data_dir_value).expanduser()
+                    if user_data_dir_value
+                    else None
+                )
+                key = self._browser_lifecycle_key(
                     binary_path=binary_path,
                     cdp_endpoint=cdp_endpoint,
-                    profile_dir=Path(profile_dir_value).expanduser() if profile_dir_value else None,
-                    user_data_dir=Path(user_data_dir_value).expanduser() if user_data_dir_value else None,
+                    profile_dir=profile_dir,
+                    user_data_dir=user_data_dir,
+                )
+                self._browser_context_manager = _acquire_shared_browser_manager(
+                    key=key,
+                    binary_path=binary_path,
+                    cdp_endpoint=cdp_endpoint,
+                    profile_dir=profile_dir,
+                    user_data_dir=user_data_dir,
                 )
             return self._browser_context_manager
 
@@ -245,7 +353,7 @@ class RuntimeContext:
         cdp_endpoint: str | None,
         profile_dir: Path | str | None,
         user_data_dir: Path | str | None,
-    ) -> BrowserContextManager:
+    ) -> Any:
         key = self._browser_lifecycle_key(
             binary_path=binary_path,
             cdp_endpoint=cdp_endpoint,
@@ -255,11 +363,22 @@ class RuntimeContext:
         with self._browser_context_manager_lock:
             manager = self._browser_context_managers.get(key)
             if manager is None:
-                manager = BrowserContextManager(
-                    binary_path=str(binary_path or "").strip() or None,
-                    cdp_endpoint=str(cdp_endpoint or "").strip() or None,
-                    profile_dir=Path(profile_dir).expanduser() if profile_dir is not None else None,
-                    user_data_dir=Path(user_data_dir).expanduser() if user_data_dir is not None else None,
+                active_binary_path = str(binary_path or "").strip() or None
+                active_cdp_endpoint = str(cdp_endpoint or "").strip() or None
+                active_profile_dir = (
+                    Path(profile_dir).expanduser() if profile_dir is not None else None
+                )
+                active_user_data_dir = (
+                    Path(user_data_dir).expanduser()
+                    if user_data_dir is not None
+                    else None
+                )
+                manager = _acquire_shared_browser_manager(
+                    key=key,
+                    binary_path=active_binary_path,
+                    cdp_endpoint=active_cdp_endpoint,
+                    profile_dir=active_profile_dir,
+                    user_data_dir=active_user_data_dir,
                 )
                 self._browser_context_managers[key] = manager
             return manager
@@ -282,7 +401,9 @@ class RuntimeContext:
     def close(self) -> None:
         self.close_playwright()
 
-    def __del__(self) -> None:  # pragma: no cover - defensive cleanup at GC/interpreter shutdown
+    def __del__(
+        self,
+    ) -> None:  # pragma: no cover - defensive cleanup at GC/interpreter shutdown
         with contextlib.suppress(Exception):
             self.close_playwright()
 
@@ -447,22 +568,65 @@ def resolve_runtime_context(
         "stage_timings": stage_timings,
     }
     if context is not None:
-        explicit = [name for name, value in runtime_parts.items() if value is not RUNTIME_UNSET]
+        explicit = [
+            name for name, value in runtime_parts.items() if value is not RUNTIME_UNSET
+        ]
         if explicit:
             joined = ", ".join(explicit)
-            raise TypeError(f"RuntimeContext cannot be combined with runtime keyword arguments: {joined}")
+            raise TypeError(
+                f"RuntimeContext cannot be combined with runtime keyword arguments: {joined}"
+            )
         return context
 
+    resolved_env = None if env is RUNTIME_UNSET else cast(Mapping[str, str] | None, env)
+    resolved_transport = (
+        None if transport is RUNTIME_UNSET else cast(HttpTransport | None, transport)
+    )
+    resolved_clients = (
+        None if clients is RUNTIME_UNSET else cast(Mapping[str, object] | None, clients)
+    )
+    resolved_download_dir = (
+        None if download_dir is RUNTIME_UNSET else cast(Path | None, download_dir)
+    )
+    resolved_cancel_check = (
+        None
+        if cancel_check is RUNTIME_UNSET
+        else cast(Callable[[], bool] | None, cancel_check)
+    )
+    resolved_artifact_store = (
+        None
+        if artifact_store is RUNTIME_UNSET
+        else cast(ArtifactStore | None, artifact_store)
+    )
+    resolved_artifact_mode = (
+        DEFAULT_ARTIFACT_MODE
+        if artifact_mode is RUNTIME_UNSET
+        else cast(ArtifactMode, artifact_mode)
+    )
+    resolved_parse_cache = (
+        {}
+        if parse_cache is RUNTIME_UNSET
+        else cast(dict[tuple[Hashable, ...], Any], parse_cache)
+    )
+    resolved_session_cache = (
+        {}
+        if session_cache is RUNTIME_UNSET
+        else cast(dict[tuple[Hashable, ...], Any], session_cache)
+    )
+    resolved_stage_timings = (
+        {} if stage_timings is RUNTIME_UNSET else cast(dict[str, float], stage_timings)
+    )
+
     return RuntimeContext(
-        env=None if env is RUNTIME_UNSET else env,
-        transport=None if transport is RUNTIME_UNSET else transport,
-        clients=None if clients is RUNTIME_UNSET else clients,
-        download_dir=None if download_dir is RUNTIME_UNSET else download_dir,
-        cancel_check=None if cancel_check is RUNTIME_UNSET else cancel_check,
-        artifact_store=None if artifact_store is RUNTIME_UNSET else artifact_store,
-        artifact_mode=DEFAULT_ARTIFACT_MODE if artifact_mode is RUNTIME_UNSET else artifact_mode,
+        env=resolved_env,
+        transport=resolved_transport,
+        clients=resolved_clients,
+        download_dir=resolved_download_dir,
+        cancel_check=resolved_cancel_check,
+        artifact_store=resolved_artifact_store,
+        artifact_mode=resolved_artifact_mode,
         fetch_cache=None if fetch_cache is RUNTIME_UNSET else fetch_cache,
-        parse_cache={} if parse_cache is RUNTIME_UNSET else parse_cache,
-        session_cache={} if session_cache is RUNTIME_UNSET else session_cache,
-        stage_timings={} if stage_timings is RUNTIME_UNSET else stage_timings,
+        parse_cache=resolved_parse_cache,
+        session_cache=resolved_session_cache,
+        stage_timings=resolved_stage_timings,
     )

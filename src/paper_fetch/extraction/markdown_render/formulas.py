@@ -14,7 +14,10 @@ from ...extraction.html.formula_rules import (
 )
 from ...formula.convert import normalize_latex
 from ...markdown.images import render_markdown_image
-from ...providers._article_markdown_math import render_external_mathml_expression, render_mathml_expression
+from ...providers._article_markdown_math import (
+    render_external_mathml_expression,
+    render_mathml_expression,
+)
 from ...utils import normalize_text
 from ._ir import MarkdownFormula
 
@@ -29,9 +32,18 @@ def render_formula(formula: MarkdownFormula) -> list[str]:
     if label:
         lines.extend([label, ""])
     if latex:
-        lines.extend(["$$", latex, "$$", ""] if formula.display_mode else [f"${latex}$", ""])
+        lines.extend(
+            ["$$", latex, "$$", ""] if formula.display_mode else [f"${latex}$", ""]
+        )
     elif formula.fallback_image_url:
-        lines.extend([render_markdown_image("formula", formula.label, formula.fallback_image_url), ""])
+        lines.extend(
+            [
+                render_markdown_image(
+                    "formula", formula.label, formula.fallback_image_url
+                ),
+                "",
+            ]
+        )
     else:
         lines.extend(["[Formula unavailable]", ""])
     return lines
@@ -63,7 +75,11 @@ def normalize_tex_formula_text(value: str | None) -> str:
         ("$", "$"),
     )
     for opener, closer in delimiter_pairs:
-        if text.startswith(opener) and text.endswith(closer) and len(text) > len(opener) + len(closer):
+        if (
+            text.startswith(opener)
+            and text.endswith(closer)
+            and len(text) > len(opener) + len(closer)
+        ):
             latex = normalize_latex(text[len(opener) : -len(closer)].strip())
             return f"{opener}{latex}{closer}" if latex else ""
     return normalize_latex(text)
@@ -82,9 +98,17 @@ def html_formula_latex_from_node(node: Any) -> str:
         for candidate in node.find_all("script")
         if is_tex_formula_script_node(candidate)
     )
-    candidates.extend(candidate for candidate in node.find_all("tex-math") if isinstance(candidate, Tag))
+    candidates.extend(
+        candidate
+        for candidate in node.find_all("tex-math")
+        if isinstance(candidate, Tag)
+    )
     with contextlib.suppress(Exception):
-        candidates.extend(candidate for candidate in node.select(".mathjax-tex, .tex, .tex2jax_ignore") if isinstance(candidate, Tag))
+        candidates.extend(
+            candidate
+            for candidate in node.select(".mathjax-tex, .tex, .tex2jax_ignore")
+            if isinstance(candidate, Tag)
+        )
     seen: set[int] = set()
     for candidate in candidates:
         identity = id(candidate)
@@ -125,7 +149,9 @@ def render_html_mathml_node(node: Any) -> str:
     if element is None:
         return ""
     display_mode = is_html_display_formula_node(node)
-    expression = normalize_text(render_external_mathml_expression(element, display_mode=display_mode))
+    expression = normalize_text(
+        render_external_mathml_expression(element, display_mode=display_mode)
+    )
     if not expression:
         expression = normalize_text(render_mathml_expression(element))
     if not expression:
@@ -139,7 +165,9 @@ def render_html_formula_container(node: Any) -> str:
         return mathml
     latex = html_formula_latex_from_node(node)
     if latex:
-        return f"\n\n$$\n{latex}\n$$\n\n" if is_html_display_formula_node(node) else latex
+        return (
+            f"\n\n$$\n{latex}\n$$\n\n" if is_html_display_formula_node(node) else latex
+        )
     image_url = first_html_formula_image_url(node)
     if image_url:
         rendered = render_markdown_image("formula", "", image_url)

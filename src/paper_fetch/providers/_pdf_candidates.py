@@ -45,7 +45,9 @@ PDF_JS_DEFAULT_URL_RE = re.compile(
 )
 
 
-def _append_candidate(candidates: list[str], candidate: str | None, *, source_url: str | None = None) -> None:
+def _append_candidate(
+    candidates: list[str], candidate: str | None, *, source_url: str | None = None
+) -> None:
     normalized = normalize_text(candidate)
     if not normalized:
         return
@@ -69,7 +71,9 @@ def _append_query_param_pdf_candidates(
         return
     absolute = urllib.parse.urljoin(source_url or "", normalized)
     parsed = urllib.parse.urlparse(absolute)
-    for key, values in urllib.parse.parse_qs(parsed.query, keep_blank_values=True).items():
+    for key, values in urllib.parse.parse_qs(
+        parsed.query, keep_blank_values=True
+    ).items():
         if normalize_text(key).lower() not in {"file", "pdf", "src", "url"}:
             continue
         for value in values:
@@ -86,14 +90,18 @@ def extract_pdf_url_from_metadata_links(metadata: Mapping[str, Any]) -> str | No
         if not url:
             continue
         content_type = normalize_text(str(item.get("content_type") or "")).lower()
-        if any(token in url.lower() for token in PDF_HREF_TOKENS) or is_pdf_content_type(content_type):
+        if any(
+            token in url.lower() for token in PDF_HREF_TOKENS
+        ) or is_pdf_content_type(content_type):
             return url
     return None
 
 
 def looks_like_browser_workflow_pdf_url(url: str | None) -> bool:
     normalized = normalize_text(url).lower()
-    return bool(normalized) and any(token in normalized for token in BROWSER_WORKFLOW_PDF_URL_TOKENS)
+    return bool(normalized) and any(
+        token in normalized for token in BROWSER_WORKFLOW_PDF_URL_TOKENS
+    )
 
 
 def extract_pdf_url_from_crossref(metadata: Mapping[str, Any]) -> str | None:
@@ -104,7 +112,9 @@ def extract_pdf_url_from_crossref(metadata: Mapping[str, Any]) -> str | None:
         if not url:
             continue
         content_type = normalize_text(str(item.get("content_type") or "")).lower()
-        if looks_like_browser_workflow_pdf_url(url) or is_pdf_content_type(content_type):
+        if looks_like_browser_workflow_pdf_url(url) or is_pdf_content_type(
+            content_type
+        ):
             return url
     return None
 
@@ -118,10 +128,18 @@ def extract_pdf_candidate_urls_from_html(html_text: str, source_url: str) -> lis
         content = normalize_text(meta.get("content"))
         if not content:
             continue
-        meta_key = normalize_text(meta.get("name") or meta.get("property") or meta.get("itemprop")).lower()
-        if "citation_pdf_url" in meta_key or meta_key.endswith("pdf_url") or meta_key == "pdf_url":
+        meta_key = normalize_text(
+            meta.get("name") or meta.get("property") or meta.get("itemprop")
+        ).lower()
+        if (
+            "citation_pdf_url" in meta_key
+            or meta_key.endswith("pdf_url")
+            or meta_key == "pdf_url"
+        ):
             _append_candidate(candidates, content, source_url=source_url)
-            _append_query_param_pdf_candidates(candidates, content, source_url=source_url)
+            _append_query_param_pdf_candidates(
+                candidates, content, source_url=source_url
+            )
 
     for node in soup.find_all(["a", "link", "iframe", "embed", "object"]):
         target = normalize_text(node.get("href") or node.get("src") or node.get("data"))
@@ -129,23 +147,42 @@ def extract_pdf_candidate_urls_from_html(html_text: str, source_url: str) -> lis
             continue
         lowered_href = target.lower()
         content_type = normalize_text(node.get("type")).lower()
-        label = normalize_text(" ".join(filter(None, [node.get_text(" ", strip=True), node.get("title"), node.get("aria-label")]))).lower()
+        label = normalize_text(
+            " ".join(
+                filter(
+                    None,
+                    [
+                        node.get_text(" ", strip=True),
+                        node.get("title"),
+                        node.get("aria-label"),
+                    ],
+                )
+            )
+        ).lower()
         if (
             any(token in lowered_href for token in PDF_HREF_TOKENS)
             or any(token in label for token in PDF_LINK_TEXT_TOKENS)
             or "pdf" in content_type
         ):
             _append_candidate(candidates, target, source_url=source_url)
-            _append_query_param_pdf_candidates(candidates, target, source_url=source_url)
+            _append_query_param_pdf_candidates(
+                candidates, target, source_url=source_url
+            )
 
     for script in soup.find_all("script"):
-        script_text = script.string if script.string is not None else script.get_text(" ", strip=False)
+        script_text = (
+            script.string
+            if script.string is not None
+            else script.get_text(" ", strip=False)
+        )
         for match in PDF_JS_DEFAULT_URL_RE.finditer(str(script_text or "")):
             target = html.unescape(match.group(1))
             lowered_target = normalize_text(target).lower()
             if any(token in lowered_target for token in PDF_HREF_TOKENS):
                 _append_candidate(candidates, target, source_url=source_url)
-                _append_query_param_pdf_candidates(candidates, target, source_url=source_url)
+                _append_query_param_pdf_candidates(
+                    candidates, target, source_url=source_url
+                )
 
     return candidates
 
@@ -170,10 +207,15 @@ def _format_pdf_path_template(
         return None
 
 
-def _provider_pdf_template_host_matches(provider_name: str, hostname: str | None) -> bool:
+def _provider_pdf_template_host_matches(
+    provider_name: str, hostname: str | None
+) -> bool:
     if provider_domain_matches(provider_name, hostname):
         return True
-    return any(host_matches_domain(hostname, domain) for domain in provider_base_domains(provider_name))
+    return any(
+        host_matches_domain(hostname, domain)
+        for domain in provider_base_domains(provider_name)
+    )
 
 
 def _append_provider_source_path_pdf_candidates(
@@ -234,7 +276,9 @@ def _append_provider_doi_pdf_candidates(
         for template in provider_pdf_path_templates(provider_name):
             candidate_path = _format_pdf_path_template(template, doi=normalized_doi)
             if candidate_path:
-                _append_candidate(candidates, urllib.parse.urljoin(base_url, candidate_path))
+                _append_candidate(
+                    candidates, urllib.parse.urljoin(base_url, candidate_path)
+                )
 
 
 def build_springer_pdf_candidates(
@@ -251,7 +295,9 @@ def build_springer_pdf_candidates(
             _append_candidate(candidates, candidate)
 
     for url in (source_url, normalize_text(metadata.get("landing_page_url"))):
-        _append_provider_source_path_pdf_candidates(candidates, "springer", url, doi=doi)
+        _append_provider_source_path_pdf_candidates(
+            candidates, "springer", url, doi=doi
+        )
 
     landing_url = normalize_text(source_url or metadata.get("landing_page_url"))
     if landing_url:

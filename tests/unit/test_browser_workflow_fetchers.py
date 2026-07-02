@@ -25,7 +25,9 @@ class _FakePage:
 
 
 class _FakeRequestClient:
-    def get(self, *_args, **_kwargs):  # pragma: no cover - request path is stubbed in tests
+    def get(
+        self, *_args, **_kwargs
+    ):  # pragma: no cover - request path is stubbed in tests
         raise AssertionError("unexpected request.get() call")
 
 
@@ -66,7 +68,9 @@ class _FakeBrowser:
         self.closed_by = threading.current_thread().name
 
 
-def _fake_playwright_cdp_modules(browsers: list[_FakeBrowser]) -> dict[str, types.ModuleType]:
+def _fake_playwright_cdp_modules(
+    browsers: list[_FakeBrowser],
+) -> dict[str, types.ModuleType]:
     playwright_module = types.ModuleType("playwright")
     sync_api_module = types.ModuleType("playwright.sync_api")
 
@@ -97,18 +101,31 @@ def _fake_playwright_cdp_modules(browsers: list[_FakeBrowser]) -> dict[str, type
 
 def _runtime_context_with_cdp_and_forbidden_shared_browser() -> RuntimeContext:
     context = RuntimeContext(
-        env={CLOAKBROWSER_CDP_ENDPOINT_ENV_VAR: "ws://127.0.0.1:9222/devtools/browser/test"}
+        env={
+            CLOAKBROWSER_CDP_ENDPOINT_ENV_VAR: "ws://127.0.0.1:9222/devtools/browser/test"
+        }
     )
-    context.new_browser_context = mock.Mock(side_effect=AssertionError("shared runtime browser should not be used"))
+    context.new_browser_context = mock.Mock(
+        side_effect=AssertionError("shared runtime browser should not be used")
+    )
     return context
 
 
-def test_threaded_image_fetcher_uses_thread_private_browser_when_runtime_context_exists() -> None:
+def test_threaded_image_fetcher_uses_thread_private_browser_when_runtime_context_exists() -> (
+    None
+):
     runtime_context = _runtime_context_with_cdp_and_forbidden_shared_browser()
     browsers: list[_FakeBrowser] = []
     fetcher = browser_workflow._build_shared_browser_image_fetcher(
         browser_context_seed_getter=lambda: {
-            "browser_cookies": [{"name": "cf_clearance", "value": "seed", "domain": ".example.test", "path": "/"}],
+            "browser_cookies": [
+                {
+                    "name": "cf_clearance",
+                    "value": "seed",
+                    "domain": ".example.test",
+                    "path": "/",
+                }
+            ],
             "browser_user_agent": "UnitTestAgent/1.0",
         },
         seed_urls_getter=lambda: [],
@@ -201,7 +218,9 @@ def test_image_fetcher_passes_cdp_endpoint_to_context_factory() -> None:
     )
 
     try:
-        with mock.patch.object(fetcher_context, "_new_browser_context", side_effect=new_browser_context):
+        with mock.patch.object(
+            fetcher_context, "_new_browser_context", side_effect=new_browser_context
+        ):
             result = fetcher(image_url, {"kind": "figure"})
     finally:
         fetcher.close()
@@ -226,7 +245,9 @@ def test_image_fetcher_uses_runtime_keyed_context_when_shared_browser_enabled() 
     image_url = "https://example.test/figure.png"
     fake_context = _FakeContext()
     runtime_context = RuntimeContext(env={})
-    runtime_context.new_browser_context_for_config = mock.Mock(return_value=fake_context)
+    runtime_context.new_browser_context_for_config = mock.Mock(
+        return_value=fake_context
+    )
     fetcher = browser_workflow._SharedBrowserImageDocumentFetcher(
         browser_context_seed_getter=lambda: {"browser_user_agent": "UnitTestAgent/1.0"},
         seed_urls_getter=lambda: [],
@@ -264,9 +285,13 @@ def test_image_fetcher_uses_runtime_env_cdp_endpoint_for_keyed_context() -> None
     image_url = "https://example.test/figure.png"
     fake_context = _FakeContext()
     runtime_context = RuntimeContext(
-        env={CLOAKBROWSER_CDP_ENDPOINT_ENV_VAR: "ws://127.0.0.1:9222/devtools/browser/env"}
+        env={
+            CLOAKBROWSER_CDP_ENDPOINT_ENV_VAR: "ws://127.0.0.1:9222/devtools/browser/env"
+        }
     )
-    runtime_context.new_browser_context_for_config = mock.Mock(return_value=fake_context)
+    runtime_context.new_browser_context_for_config = mock.Mock(
+        return_value=fake_context
+    )
     fetcher = browser_workflow._SharedBrowserImageDocumentFetcher(
         browser_context_seed_getter=lambda: {"browser_user_agent": "UnitTestAgent/1.0"},
         seed_urls_getter=lambda: [],
@@ -303,12 +328,21 @@ def test_memoized_image_fetcher_preserves_caller_thread_requirement() -> None:
     assert fetcher.requires_caller_thread is True
 
 
-def test_threaded_file_fetcher_uses_thread_private_browser_when_runtime_context_exists() -> None:
+def test_threaded_file_fetcher_uses_thread_private_browser_when_runtime_context_exists() -> (
+    None
+):
     runtime_context = _runtime_context_with_cdp_and_forbidden_shared_browser()
     browsers: list[_FakeBrowser] = []
     fetcher = browser_workflow._build_shared_browser_file_fetcher(
         browser_context_seed_getter=lambda: {
-            "browser_cookies": [{"name": "cf_clearance", "value": "seed", "domain": ".example.test", "path": "/"}],
+            "browser_cookies": [
+                {
+                    "name": "cf_clearance",
+                    "value": "seed",
+                    "domain": ".example.test",
+                    "path": "/",
+                }
+            ],
             "browser_user_agent": "UnitTestAgent/1.0",
         },
         seed_urls_getter=lambda: [],
@@ -329,7 +363,9 @@ def test_threaded_file_fetcher_uses_thread_private_browser_when_runtime_context_
 
     try:
         with mock.patch.dict(sys.modules, _fake_playwright_cdp_modules(browsers)):
-            result = fetcher("https://example.test/supplement.pdf", {"kind": "supplementary"})
+            result = fetcher(
+                "https://example.test/supplement.pdf", {"kind": "supplementary"}
+            )
     finally:
         fetcher.close()
         fetcher.close()
@@ -372,7 +408,9 @@ def test_file_fetcher_passes_cdp_endpoint_to_context_factory() -> None:
     )
 
     try:
-        with mock.patch.object(fetcher_context, "_new_browser_context", side_effect=new_browser_context):
+        with mock.patch.object(
+            fetcher_context, "_new_browser_context", side_effect=new_browser_context
+        ):
             result = fetcher(file_url, {"kind": "supplementary"})
     finally:
         fetcher.close()
@@ -393,7 +431,9 @@ def test_file_fetcher_passes_cdp_endpoint_to_context_factory() -> None:
     fake_manager.close.assert_called_once()
 
 
-def test_threaded_image_fetcher_closes_thread_private_browser_on_worker_thread() -> None:
+def test_threaded_image_fetcher_closes_thread_private_browser_on_worker_thread() -> (
+    None
+):
     runtime_context = _runtime_context_with_cdp_and_forbidden_shared_browser()
     browsers: list[_FakeBrowser] = []
     fetcher = browser_workflow._build_shared_browser_image_fetcher(
@@ -408,8 +448,12 @@ def test_threaded_image_fetcher_closes_thread_private_browser_on_worker_thread()
 
     def run_fetch() -> None:
         try:
-            result_holder["result"] = fetcher("https://example.test/figure.png", {"kind": "figure"})
-        except BaseException as exc:  # pragma: no cover - assertion reports the captured exception
+            result_holder["result"] = fetcher(
+                "https://example.test/figure.png", {"kind": "figure"}
+            )
+        except (
+            BaseException
+        ) as exc:  # pragma: no cover - assertion reports the captured exception
             errors.append(exc)
 
     with (
@@ -458,8 +502,12 @@ def test_threaded_file_fetcher_closes_thread_private_browser_on_worker_thread() 
 
     def run_fetch() -> None:
         try:
-            result_holder["result"] = fetcher("https://example.test/supplement.pdf", {"kind": "supplementary"})
-        except BaseException as exc:  # pragma: no cover - assertion reports the captured exception
+            result_holder["result"] = fetcher(
+                "https://example.test/supplement.pdf", {"kind": "supplementary"}
+            )
+        except (
+            BaseException
+        ) as exc:  # pragma: no cover - assertion reports the captured exception
             errors.append(exc)
 
     with (
@@ -491,7 +539,9 @@ def test_threaded_file_fetcher_closes_thread_private_browser_on_worker_thread() 
     assert browser.contexts[0].pages[0].closed_by == "asset-worker"
 
 
-def test_threaded_file_fetcher_close_releases_all_thread_private_browser_resources() -> None:
+def test_threaded_file_fetcher_close_releases_all_thread_private_browser_resources() -> (
+    None
+):
     runtime_context = _runtime_context_with_cdp_and_forbidden_shared_browser()
     browsers: list[_FakeBrowser] = []
     fetcher = browser_workflow._build_shared_browser_file_fetcher(

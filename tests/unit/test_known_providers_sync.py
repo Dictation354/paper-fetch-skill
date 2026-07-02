@@ -40,7 +40,9 @@ def test_known_providers_manifest_paths_are_synced() -> None:
         status = entry["status"]
         manifest_path = entry.get("manifest_path")
         if status == "implemented":
-            assert manifest_path is not None, f"{provider} implemented provider needs manifest_path"
+            assert manifest_path is not None, (
+                f"{provider} implemented provider needs manifest_path"
+            )
         if manifest_path is None:
             assert status == "infrastructure", (
                 f"{provider} is {status!r}; only infrastructure providers may omit manifest_path"

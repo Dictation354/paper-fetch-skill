@@ -29,7 +29,8 @@ def _module_test_names(module_path: Path) -> set[str]:
     return {
         node.name
         for node in ast.walk(tree)
-        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name.startswith("test_")
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+        and node.name.startswith("test_")
     }
 
 
@@ -52,8 +53,16 @@ class FixtureProvenanceTests(unittest.TestCase):
                 if fixture_path not in catalog:
                     missing.append(f"{sample_id}: {fixture_path} (uncataloged)")
 
-        self.assertEqual(noncanonical, [], "Non-canonical manifest assets:\n" + "\n".join(noncanonical))
-        self.assertEqual(missing, [], "Missing or uncataloged manifest assets:\n" + "\n".join(missing))
+        self.assertEqual(
+            noncanonical,
+            [],
+            "Non-canonical manifest assets:\n" + "\n".join(noncanonical),
+        )
+        self.assertEqual(
+            missing,
+            [],
+            "Missing or uncataloged manifest assets:\n" + "\n".join(missing),
+        )
 
     def test_body_asset_files_are_registered_in_manifest_assets(self) -> None:
         manifest = golden_criteria_manifest()
@@ -65,12 +74,16 @@ class FixtureProvenanceTests(unittest.TestCase):
         missing: list[str] = []
 
         for body_assets_dir in sorted(GOLDEN_CRITERIA_ROOT.glob("*/body_assets")):
-            for asset_path in sorted(path for path in body_assets_dir.iterdir() if path.is_file()):
+            for asset_path in sorted(
+                path for path in body_assets_dir.iterdir() if path.is_file()
+            ):
                 fixture_path = asset_path.relative_to(REPO_ROOT).as_posix()
                 if fixture_path not in registered:
                     missing.append(fixture_path)
 
-        self.assertEqual(missing, [], "Unregistered body_assets files:\n" + "\n".join(missing))
+        self.assertEqual(
+            missing, [], "Unregistered body_assets files:\n" + "\n".join(missing)
+        )
 
     def test_registered_rule_tests_exist_and_are_documented(self) -> None:
         manifest = golden_criteria_manifest()
@@ -98,20 +111,33 @@ class FixtureProvenanceTests(unittest.TestCase):
 
         self.assertEqual(missing, [], "Manifest/doc mismatches:\n" + "\n".join(missing))
 
-    def test_registered_rule_test_modules_only_reference_canonical_rule_assets(self) -> None:
+    def test_registered_rule_test_modules_only_reference_canonical_rule_assets(
+        self,
+    ) -> None:
         manifest = golden_criteria_manifest()
         offending: list[str] = []
 
-        for module_name in sorted({entry["test"].split("::", 1)[0] for entry in manifest["tests"]}):
+        for module_name in sorted(
+            {entry["test"].split("::", 1)[0] for entry in manifest["tests"]}
+        ):
             source = (REPO_ROOT / module_name).read_text(encoding="utf-8")
             for snippet in FORBIDDEN_SOURCE_SNIPPETS:
                 if snippet in source:
-                    offending.append(f"{module_name}: contains forbidden source reference `{snippet}`")
+                    offending.append(
+                        f"{module_name}: contains forbidden source reference `{snippet}`"
+                    )
             for literal in re.findall(r"tests/fixtures/[^\"')\\s]+", source):
                 if not literal.startswith(CANONICAL_FIXTURE_PREFIXES):
-                    offending.append(f"{module_name}: contains non-canonical fixture literal `{literal}`")
+                    offending.append(
+                        f"{module_name}: contains non-canonical fixture literal `{literal}`"
+                    )
 
-        self.assertEqual(offending, [], "Registered rule modules reference non-canonical assets:\n" + "\n".join(offending))
+        self.assertEqual(
+            offending,
+            [],
+            "Registered rule modules reference non-canonical assets:\n"
+            + "\n".join(offending),
+        )
 
     def test_rule_docs_only_link_canonical_fixture_assets(self) -> None:
         docs = DOC_PATH.read_text(encoding="utf-8")
@@ -126,20 +152,31 @@ class FixtureProvenanceTests(unittest.TestCase):
                 if not path.is_file():
                     bad_links.append(f"{relative_path} (missing)")
 
-        self.assertEqual(bad_links, [], "Rule docs contain non-canonical or missing fixture links:\n" + "\n".join(bad_links))
+        self.assertEqual(
+            bad_links,
+            [],
+            "Rule docs contain non-canonical or missing fixture links:\n"
+            + "\n".join(bad_links),
+        )
 
     def test_manifest_file_itself_lives_under_golden_criteria(self) -> None:
         self.assertTrue((GOLDEN_CRITERIA_ROOT / "manifest.json").is_file())
 
     def test_legacy_fixture_roots_and_flat_files_are_removed(self) -> None:
         self.assertFalse((REPO_ROOT / "paywall-samples").exists())
-        self.assertFalse((REPO_ROOT / "tests" / "fixtures" / "geography_golden").exists())
+        self.assertFalse(
+            (REPO_ROOT / "tests" / "fixtures" / "geography_golden").exists()
+        )
         remaining_files = [
             path.name
             for path in (REPO_ROOT / "tests" / "fixtures").iterdir()
             if path.is_file() and path.name != "README.md"
         ]
-        self.assertEqual(remaining_files, [], "Legacy flat fixture files remain:\n" + "\n".join(sorted(remaining_files)))
+        self.assertEqual(
+            remaining_files,
+            [],
+            "Legacy flat fixture files remain:\n" + "\n".join(sorted(remaining_files)),
+        )
 
 
 if __name__ == "__main__":

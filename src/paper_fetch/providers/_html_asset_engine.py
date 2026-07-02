@@ -55,9 +55,13 @@ def extract_scoped_assets_with_policy(
             fallback=policy.supplementary_scope_fallback,
         )
         if supplementary_scope:
-            assets.extend(policy.supplementary_extractor(supplementary_scope, source_url))
+            assets.extend(
+                policy.supplementary_extractor(supplementary_scope, source_url)
+            )
         if source_data_html_text and policy.source_data_extractor is not None:
-            assets.extend(policy.source_data_extractor(source_data_html_text, source_url))
+            assets.extend(
+                policy.source_data_extractor(source_data_html_text, source_url)
+            )
     if policy.finalizer is not None:
         return policy.finalizer(assets)
     return assets
@@ -66,7 +70,9 @@ def extract_scoped_assets_with_policy(
 def merge_assets_by_identity(
     assets: list[dict[str, str]],
     *,
-    key_builder: Callable[[Mapping[str, Any]], str] = html_assets.html_asset_identity_key,
+    key_builder: Callable[
+        [Mapping[str, Any]], str
+    ] = html_assets.html_asset_identity_key,
 ) -> list[dict[str, str]]:
     merged: list[dict[str, str]] = []
     by_key: dict[str, int] = {}

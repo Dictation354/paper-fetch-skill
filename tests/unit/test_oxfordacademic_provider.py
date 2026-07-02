@@ -66,7 +66,9 @@ def test_client_pdf_candidates_keep_article_pdf_url_and_doi_templates() -> None:
     )
     client = OxfordAcademicClient(HttpTransport(), {})
 
-    candidates = client.pdf_candidates(PDF_DOI, {"doi": PDF_DOI, "source_url": source_url})
+    candidates = client.pdf_candidates(
+        PDF_DOI, {"doi": PDF_DOI, "source_url": source_url}
+    )
 
     assert candidates[0] == source_url
     assert f"https://academic.oup.com/doi/pdf/{PDF_DOI}" in candidates
@@ -163,12 +165,16 @@ def test_figure_fixture_stage_asset_contract_is_inline_body_image() -> None:
     figure_contract = manifest["asset_contract"]["figures"]
     markdown = _render_markdown_for_fixture(FIGURE_DOI)
     body_before_references = markdown.split("## References", 1)[0]
-    image_match = re.search(r"!\[(?:Figure|Image)[^\]]*\]\(([^)]+)\)", body_before_references)
+    image_match = re.search(
+        r"!\[(?:Figure|Image)[^\]]*\]\(([^)]+)\)", body_before_references
+    )
 
     assert figure_contract["inline"] == "body"
     assert figure_contract["download"] == "not_applicable"
     assert figure_contract["exception_reason"]
-    assert not (golden_criteria_asset(FIGURE_DOI, "extracted.md").parent / "body_assets").exists()
+    assert not (
+        golden_criteria_asset(FIGURE_DOI, "extracted.md").parent / "body_assets"
+    ).exists()
     assert image_match is not None
     assert "oup.silverchair-cdn.com" in image_match.group(1)
 
@@ -229,7 +235,10 @@ def test_oxford_reference_meta_fallback_strips_citation_keys() -> None:
     references = metadata.get("references")
 
     assert isinstance(references, list)
-    assert references[0]["raw"] == "Allison P.D. (1995). Survival Analysis Using SAS: A Practical Guide"
+    assert (
+        references[0]["raw"]
+        == "Allison P.D. (1995). Survival Analysis Using SAS: A Practical Guide"
+    )
     assert references[0]["title"] == "Survival Analysis Using SAS: A Practical Guide"
     assert references[0]["year"] == "1995"
     assert not re.search(r"\bcitation_[A-Za-z0-9_]+=", str(references))
@@ -270,4 +279,7 @@ def test_metadata_only_route_contract_is_declared() -> None:
         )
     )
     assert "metadata_only" in manifest["main_path"]
-    assert "fabricated body text" in manifest["route_contract"]["metadata_only"]["reject_if_any"]
+    assert (
+        "fabricated body text"
+        in manifest["route_contract"]["metadata_only"]["reject_if_any"]
+    )

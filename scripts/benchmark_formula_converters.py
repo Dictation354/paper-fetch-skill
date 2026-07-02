@@ -23,9 +23,13 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 ROOT_DIR = SCRIPT_DIR.parent
 
 
-def validate_latex(latex: str, *, display_mode: bool, env: dict[str, str]) -> tuple[bool, str | None]:
+def validate_latex(
+    latex: str, *, display_mode: bool, env: dict[str, str]
+) -> tuple[bool, str | None]:
     node_bin = env.get("MATHML_TO_LATEX_NODE_BIN", "node").strip() or "node"
-    validator_script = env.get("LATEX_VALIDATOR_SCRIPT", str(SCRIPT_DIR / "validate_latex_cli.mjs"))
+    validator_script = env.get(
+        "LATEX_VALIDATOR_SCRIPT", str(SCRIPT_DIR / "validate_latex_cli.mjs")
+    )
     args = [node_bin, validator_script]
     if display_mode:
         args.append("--display")
@@ -57,7 +61,9 @@ def build_summary(results: list[dict[str, Any]]) -> dict[str, Any]:
         total = len(items)
         converted = sum(1 for item in items if item["status"] == "ok")
         validated = sum(1 for item in items if item["validation_status"] == "ok")
-        avg_duration = round(sum(item["duration_ms"] for item in items) / total, 2) if total else 0
+        avg_duration = (
+            round(sum(item["duration_ms"] for item in items) / total, 2) if total else 0
+        )
         backend, _, run_kind = group_key.partition(":")
         summary[group_key] = {
             "backend": backend,
@@ -101,7 +107,9 @@ def choose_winner(summary: dict[str, Any]) -> str | None:
     return ranked[0][0] if ranked else None
 
 
-def conversion_env_for(env: dict[str, str], *, backend: str, run_kind: str) -> dict[str, str]:
+def conversion_env_for(
+    env: dict[str, str], *, backend: str, run_kind: str
+) -> dict[str, str]:
     runtime_env = dict(env)
     if run_kind == "cache_hit":
         runtime_env.setdefault("MATHML_CONVERSION_CACHE_SIZE", "1024")
@@ -156,7 +164,11 @@ def parse_args() -> argparse.Namespace:
 def main() -> int:
     args = parse_args()
     env = dict(os.environ)
-    xml_paths = [Path(item) for item in args.xml_paths] if args.xml_paths else sorted((ROOT_DIR / "live-downloads").glob("*.xml"))
+    xml_paths = (
+        [Path(item) for item in args.xml_paths]
+        if args.xml_paths
+        else sorted((ROOT_DIR / "live-downloads").glob("*.xml"))
+    )
     samples = collect_formula_samples(xml_paths, per_file_limit=args.per_file_limit)
     results: list[dict[str, Any]] = []
 
@@ -166,11 +178,15 @@ def main() -> int:
             if backend == BACKEND_MATHML_TO_LATEX:
                 run_kinds.append("worker")
             for run_kind in run_kinds:
-                conversion = run_conversion(sample, backend=backend, run_kind=run_kind, env=env)
+                conversion = run_conversion(
+                    sample, backend=backend, run_kind=run_kind, env=env
+                )
                 validation_status = "skipped"
                 validation_error = None
                 if conversion.status == "ok" and conversion.latex:
-                    valid, validation_error = validate_latex(conversion.latex, display_mode=sample.display_mode, env=env)
+                    valid, validation_error = validate_latex(
+                        conversion.latex, display_mode=sample.display_mode, env=env
+                    )
                     validation_status = "ok" if valid else "failed"
                 results.append(
                     {
@@ -198,8 +214,16 @@ def main() -> int:
         "results": results,
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    print(json.dumps({"winner": winner, "samples": len(samples), "summary": summary}, indent=2, ensure_ascii=False))
+    args.output.write_text(
+        json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
+    print(
+        json.dumps(
+            {"winner": winner, "samples": len(samples), "summary": summary},
+            indent=2,
+            ensure_ascii=False,
+        )
+    )
     return 0
 
 

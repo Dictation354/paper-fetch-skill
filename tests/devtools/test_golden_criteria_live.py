@@ -23,7 +23,14 @@ from paper_fetch_devtools.golden_criteria.live import (
     route_source_issue_categories,
     run_golden_criteria_live_review,
 )
-from paper_fetch.models import Asset, FetchEnvelope, Metadata, Quality, RenderOptions, Section
+from paper_fetch.models import (
+    Asset,
+    FetchEnvelope,
+    Metadata,
+    Quality,
+    RenderOptions,
+    Section,
+)
 from paper_fetch.provider_catalog import official_provider_names
 from paper_fetch.service import PaperFetchFailure
 
@@ -223,7 +230,9 @@ def _metadata_only_envelope(doi: str) -> FetchEnvelope:
         has_abstract=True,
         warnings=["Full text was not available; returning metadata and abstract only."],
         source_trail=["fallback:metadata_only"],
-        quality=Quality(has_fulltext=False, content_kind="metadata_only", has_abstract=True),
+        quality=Quality(
+            has_fulltext=False, content_kind="metadata_only", has_abstract=True
+        ),
         article=None,
         markdown="# Metadata only\n",
         metadata=Metadata(title="Metadata Only", abstract="Abstract"),
@@ -234,7 +243,9 @@ class GoldenCriteriaLiveTests(unittest.TestCase):
     def test_supported_providers_cover_html_xml_live_paths(self) -> None:
         self.assertEqual(SUPPORTED_PROVIDERS, official_provider_names())
 
-    def test_manifest_loader_selects_golden_samples_and_classifies_provider_support(self) -> None:
+    def test_manifest_loader_selects_golden_samples_and_classifies_provider_support(
+        self,
+    ) -> None:
         manifest = load_manifest()
         samples = iter_golden_criteria_samples(manifest)
         manifest_golden_samples = [
@@ -258,8 +269,12 @@ class GoldenCriteriaLiveTests(unittest.TestCase):
         unsupported = [sample for sample in samples if not sample.supported]
 
         self.assertEqual(len(supported), len(expected_supported))
-        self.assertEqual({sample.provider for sample in unsupported}, expected_unsupported_providers)
-        self.assertTrue(all(sample.provider in SUPPORTED_PROVIDERS for sample in supported))
+        self.assertEqual(
+            {sample.provider for sample in unsupported}, expected_unsupported_providers
+        )
+        self.assertTrue(
+            all(sample.provider in SUPPORTED_PROVIDERS for sample in supported)
+        )
 
     def test_runner_writes_reports_and_covers_live_statuses(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -272,8 +287,12 @@ class GoldenCriteriaLiveTests(unittest.TestCase):
                 if query == "10.1016/fulltext":
                     runtime_context = kwargs.get("context")
                     if runtime_context is not None:
-                        runtime_context.accumulate_stage_timing("asset_seconds", elapsed=0.125)
-                        runtime_context.accumulate_stage_timing("formula_seconds", elapsed=0.25)
+                        runtime_context.accumulate_stage_timing(
+                            "asset_seconds", elapsed=0.125
+                        )
+                        runtime_context.accumulate_stage_timing(
+                            "formula_seconds", elapsed=0.25
+                        )
                         transport = getattr(runtime_context, "transport", None)
                         increment = getattr(transport, "_increment_cache_stat", None)
                         if callable(increment):
@@ -295,7 +314,9 @@ class GoldenCriteriaLiveTests(unittest.TestCase):
                 if query == "10.1038/metadata":
                     return _metadata_only_envelope(query)
                 if query == "10.1126/ratelimited":
-                    raise PaperFetchFailure("rate_limited", "Science rate limit is active.")
+                    raise PaperFetchFailure(
+                        "rate_limited", "Science rate limit is active."
+                    )
                 if query == "10.1073/error":
                     raise RuntimeError("PNAS exploded")
                 if query == "10.3390/fulltext":
@@ -329,7 +350,11 @@ class GoldenCriteriaLiveTests(unittest.TestCase):
             self.assertTrue((output_root / "report.md").exists())
             self.assertTrue((output_root / "provider-status.json").exists())
             self.assertTrue((output_root / "manifest-snapshot.json").exists())
-            fulltext_result = next(result for result in report.results if result.sample_id == "elsevier_fulltext")
+            fulltext_result = next(
+                result
+                for result in report.results
+                if result.sample_id == "elsevier_fulltext"
+            )
             self.assertIn("fetch_seconds", fulltext_result.stage_timings)
             self.assertIn("materialize_seconds", fulltext_result.stage_timings)
             self.assertIn("total_seconds", fulltext_result.stage_timings)
@@ -342,7 +367,10 @@ class GoldenCriteriaLiveTests(unittest.TestCase):
             self.assertEqual(fulltext_result.stage_timings["asset_seconds"], 0.125)
             self.assertEqual(fulltext_result.stage_timings["formula_seconds"], 0.25)
             self.assertEqual(fulltext_result.http_cache_stats["miss"], 1)
-            self.assertEqual(fulltext_result.elapsed_seconds, fulltext_result.stage_timings["total_seconds"])
+            self.assertEqual(
+                fulltext_result.elapsed_seconds,
+                fulltext_result.stage_timings["total_seconds"],
+            )
 
             sample_dir = output_root / "elsevier_fulltext"
             self.assertTrue((sample_dir / "fetch-envelope.json").exists())
@@ -351,21 +379,36 @@ class GoldenCriteriaLiveTests(unittest.TestCase):
             self.assertTrue((sample_dir / "body_assets" / "figure-source.png").exists())
             rendered = (sample_dir / "extracted.md").read_text(encoding="utf-8")
             self.assertIn("](body_assets/figure-source.png)", rendered)
-            self.assertTrue((output_root / "wiley_not_configured" / "review.md").exists())
-            reviews = {result.sample_id: result.review_status for result in report.results}
+            self.assertTrue(
+                (output_root / "wiley_not_configured" / "review.md").exists()
+            )
+            reviews = {
+                result.sample_id: result.review_status for result in report.results
+            }
             self.assertEqual(reviews["elsevier_blocked_404"], "skipped")
             self.assertEqual(reviews["tandf_skip"], "skipped")
-            issues = {result.sample_id: result.issue_categories for result in report.results}
+            issues = {
+                result.sample_id: result.issue_categories for result in report.results
+            }
             self.assertEqual(issues["elsevier_blocked_404"], [])
             self.assertEqual(issues["tandf_skip"], [])
 
             report_markdown = (output_root / "report.md").read_text(encoding="utf-8")
             self.assertIn("## Coverage Overview", report_markdown)
-            self.assertIn("| Sample | Provider | DOI | Status | Content | Source | Assets | Seconds | Resolve | Metadata | Fulltext | Asset | Formula | Render | Fetch | Materialize | Review | Issues |", report_markdown)
+            self.assertIn(
+                "| Sample | Provider | DOI | Status | Content | Source | Assets | Seconds | Resolve | Metadata | Fulltext | Asset | Formula | Render | Fetch | Materialize | Review | Issues |",
+                report_markdown,
+            )
             self.assertIn("## Recurring Issue Groups", report_markdown)
             self.assertIn("## Prioritized Solutions", report_markdown)
-            report_json = json.loads((output_root / "report.json").read_text(encoding="utf-8"))
-            first_result = next(item for item in report_json["results"] if item["sample_id"] == "elsevier_fulltext")
+            report_json = json.loads(
+                (output_root / "report.json").read_text(encoding="utf-8")
+            )
+            first_result = next(
+                item
+                for item in report_json["results"]
+                if item["sample_id"] == "elsevier_fulltext"
+            )
             self.assertIn("stage_timings", first_result)
             self.assertIn("elapsed_seconds", first_result)
             self.assertIn("http_cache_stats", first_result)
@@ -383,7 +426,13 @@ class GoldenCriteriaLiveTests(unittest.TestCase):
 
             article = sample_article()
             article.assets = [
-                Asset(kind="figure", heading="Figure 1", caption="A figure.", path=str(source_asset), section="body")
+                Asset(
+                    kind="figure",
+                    heading="Figure 1",
+                    caption="A figure.",
+                    path=str(source_asset),
+                    section="body",
+                )
             ]
             envelope = build_envelope(article)
             sample_dir = root / "sample"
@@ -391,7 +440,9 @@ class GoldenCriteriaLiveTests(unittest.TestCase):
             count = materialize_fetch_artifacts(
                 envelope=envelope,
                 sample_dir=sample_dir,
-                render=RenderOptions(include_refs="all", asset_profile="body", max_tokens="full_text"),
+                render=RenderOptions(
+                    include_refs="all", asset_profile="body", max_tokens="full_text"
+                ),
             )
 
             self.assertEqual(count, 1)
@@ -399,7 +450,9 @@ class GoldenCriteriaLiveTests(unittest.TestCase):
             rendered = (sample_dir / "extracted.md").read_text(encoding="utf-8")
             self.assertIn("](body_assets/figure_one.png)", rendered)
 
-    def test_materialize_fetch_artifacts_keeps_assets_already_in_body_assets(self) -> None:
+    def test_materialize_fetch_artifacts_keeps_assets_already_in_body_assets(
+        self,
+    ) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
             sample_dir = root / "sample"
@@ -410,14 +463,22 @@ class GoldenCriteriaLiveTests(unittest.TestCase):
 
             article = sample_article()
             article.assets = [
-                Asset(kind="figure", heading="Figure 1", caption="A figure.", path=str(source_asset), section="body")
+                Asset(
+                    kind="figure",
+                    heading="Figure 1",
+                    caption="A figure.",
+                    path=str(source_asset),
+                    section="body",
+                )
             ]
             envelope = build_envelope(article)
 
             count = materialize_fetch_artifacts(
                 envelope=envelope,
                 sample_dir=sample_dir,
-                render=RenderOptions(include_refs="all", asset_profile="body", max_tokens="full_text"),
+                render=RenderOptions(
+                    include_refs="all", asset_profile="body", max_tokens="full_text"
+                ),
             )
 
             self.assertEqual(count, 1)
@@ -426,7 +487,9 @@ class GoldenCriteriaLiveTests(unittest.TestCase):
             self.assertIn("](body_assets/figure-source.png)", rendered)
             self.assertNotIn(str(source_asset), rendered)
 
-    def test_materialize_fetch_artifacts_rewrites_ieee_large_link_to_preview_asset(self) -> None:
+    def test_materialize_fetch_artifacts_rewrites_ieee_large_link_to_preview_asset(
+        self,
+    ) -> None:
         large_url = "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/10932570/garg7-0932570-large.gif"
         preview_url = "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/10932570/garg7-0932570-small.gif"
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -437,7 +500,9 @@ class GoldenCriteriaLiveTests(unittest.TestCase):
             source_asset.write_bytes(b"GIF89a\x01\x00\x01\x00\x00\x00;")
 
             article = sample_article()
-            article.sections[0].text = f"![Fig. 7]({large_url})\n\n**Fig. 7.** Preview fallback."
+            article.sections[
+                0
+            ].text = f"![Fig. 7]({large_url})\n\n**Fig. 7.** Preview fallback."
             article.assets = [
                 Asset(
                     kind="figure",
@@ -456,11 +521,15 @@ class GoldenCriteriaLiveTests(unittest.TestCase):
             count = materialize_fetch_artifacts(
                 envelope=envelope,
                 sample_dir=sample_dir,
-                render=RenderOptions(include_refs="all", asset_profile="body", max_tokens="full_text"),
+                render=RenderOptions(
+                    include_refs="all", asset_profile="body", max_tokens="full_text"
+                ),
             )
 
             self.assertEqual(count, 1)
-            self.assertTrue((sample_dir / "body_assets" / "garg7-0932570-small.gif").exists())
+            self.assertTrue(
+                (sample_dir / "body_assets" / "garg7-0932570-small.gif").exists()
+            )
             rendered = (sample_dir / "extracted.md").read_text(encoding="utf-8")
             self.assertIn("![Figure 7](body_assets/garg7-0932570-small.gif)", rendered)
             self.assertNotIn(large_url, rendered)
@@ -473,12 +542,16 @@ class GoldenCriteriaLiveTests(unittest.TestCase):
             ("skipped_unsupported_provider", "skipped", ["unsupported_provider"]),
         ]:
             with self.subTest(review_status=review_status):
-                result = _result(status=status, review_status=review_status, categories=categories)
+                result = _result(
+                    status=status, review_status=review_status, categories=categories
+                )
                 rendered = render_review_template(result)
                 parsed = parse_review_summary(rendered)
                 self.assertEqual(parsed.review_status, review_status)
                 self.assertEqual(parsed.issue_categories, categories)
-                self.assertTrue(set(parsed.issue_categories).issubset(set(ISSUE_CATEGORIES)))
+                self.assertTrue(
+                    set(parsed.issue_categories).issubset(set(ISSUE_CATEGORIES))
+                )
 
     def test_science_preview_accepted_is_not_an_asset_issue(self) -> None:
         article = sample_article()
@@ -493,7 +566,9 @@ class GoldenCriteriaLiveTests(unittest.TestCase):
 
         self.assertNotIn("asset_download_failure", categories)
 
-    def test_unlocalized_ieee_mediastore_link_with_local_asset_is_asset_issue(self) -> None:
+    def test_unlocalized_ieee_mediastore_link_with_local_asset_is_asset_issue(
+        self,
+    ) -> None:
         large_url = "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/10932570/garg7-0932570-large.gif"
         preview_url = "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/10932570/garg7-0932570-small.gif"
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -517,7 +592,9 @@ class GoldenCriteriaLiveTests(unittest.TestCase):
                 "download:ieee_assets_preview_accepted",
             ]
 
-            categories = issue_categories_for_result(status="fulltext", envelope=envelope)
+            categories = issue_categories_for_result(
+                status="fulltext", envelope=envelope
+            )
 
         self.assertIn("asset_download_failure", categories)
 
@@ -567,10 +644,14 @@ class GoldenCriteriaLiveTests(unittest.TestCase):
 
         self.assertIn("asset_download_failure", categories)
 
-    def test_related_assets_could_not_be_downloaded_warning_is_asset_issue(self) -> None:
+    def test_related_assets_could_not_be_downloaded_warning_is_asset_issue(
+        self,
+    ) -> None:
         article = sample_article()
         envelope = build_envelope(article)
-        envelope.warnings = ["arXiv related assets could not be downloaded: Network error for image: timed out."]
+        envelope.warnings = [
+            "arXiv related assets could not be downloaded: Network error for image: timed out."
+        ]
 
         categories = issue_categories_for_result(status="fulltext", envelope=envelope)
 
@@ -592,7 +673,9 @@ class GoldenCriteriaLiveTests(unittest.TestCase):
 
         self.assertIn("asset_download_failure", categories)
 
-    def test_references_block_mixed_numbered_and_bullet_items_is_reference_loss(self) -> None:
+    def test_references_block_mixed_numbered_and_bullet_items_is_reference_loss(
+        self,
+    ) -> None:
         """rule: rule-fulltext-reference-priority"""
         article = sample_article()
         envelope = build_envelope(article)
@@ -610,7 +693,9 @@ class GoldenCriteriaLiveTests(unittest.TestCase):
 
         self.assertIn("reference_loss", categories)
 
-    def test_body_bullets_do_not_trigger_reference_loss_when_references_are_numbered(self) -> None:
+    def test_body_bullets_do_not_trigger_reference_loss_when_references_are_numbered(
+        self,
+    ) -> None:
         article = sample_article()
         envelope = build_envelope(article)
         envelope.markdown = (
@@ -627,7 +712,9 @@ class GoldenCriteriaLiveTests(unittest.TestCase):
 
         self.assertNotIn("reference_loss", categories)
 
-    def test_pure_fallback_bullet_references_do_not_trigger_reference_loss(self) -> None:
+    def test_pure_fallback_bullet_references_do_not_trigger_reference_loss(
+        self,
+    ) -> None:
         article = sample_article()
         envelope = build_envelope(article)
         envelope.markdown = (
@@ -669,7 +756,10 @@ class GoldenCriteriaLiveTests(unittest.TestCase):
         self.assertEqual(parsed.review_status, "ok")
         self.assertEqual(parsed.issue_categories, [])
         self.assertIn("accepted diagnostic label", rendered)
-        self.assertIn("Do not classify this tier label alone as `asset_download_failure`", rendered)
+        self.assertIn(
+            "Do not classify this tier label alone as `asset_download_failure`",
+            rendered,
+        )
         self.assertNotIn("No issue recorded yet. Read extracted.md", rendered)
 
     def test_authorless_briefing_does_not_trigger_metadata_loss(self) -> None:
@@ -677,12 +767,36 @@ class GoldenCriteriaLiveTests(unittest.TestCase):
         article.source = "springer_html"
         article.metadata.authors = []
         article.sections = [
-            Section(heading="The question", level=2, kind="body", text="Question text " * 10),
-            Section(heading="The discovery", level=2, kind="body", text="Discovery text " * 10),
-            Section(heading="The implications", level=2, kind="body", text="Implications text " * 10),
-            Section(heading="Expert opinion", level=2, kind="body", text="Expert text " * 10),
-            Section(heading="Behind the paper", level=2, kind="body", text="Behind text " * 10),
-            Section(heading="From the editor", level=2, kind="body", text="Editor text " * 10),
+            Section(
+                heading="The question", level=2, kind="body", text="Question text " * 10
+            ),
+            Section(
+                heading="The discovery",
+                level=2,
+                kind="body",
+                text="Discovery text " * 10,
+            ),
+            Section(
+                heading="The implications",
+                level=2,
+                kind="body",
+                text="Implications text " * 10,
+            ),
+            Section(
+                heading="Expert opinion", level=2, kind="body", text="Expert text " * 10
+            ),
+            Section(
+                heading="Behind the paper",
+                level=2,
+                kind="body",
+                text="Behind text " * 10,
+            ),
+            Section(
+                heading="From the editor",
+                level=2,
+                kind="body",
+                text="Editor text " * 10,
+            ),
         ]
         envelope = build_envelope(article)
 
@@ -699,7 +813,9 @@ class GoldenCriteriaLiveTests(unittest.TestCase):
 
         self.assertIn("metadata_loss", categories)
 
-    def test_expected_metadata_only_outcome_applies_to_blocked_live_fetch_status(self) -> None:
+    def test_expected_metadata_only_outcome_applies_to_blocked_live_fetch_status(
+        self,
+    ) -> None:
         sample = GoldenCriteriaLiveSample(
             sample_id="elsevier_invalid",
             doi="10.1016/S1575-1813(18)30261-4",
@@ -811,7 +927,9 @@ class GoldenCriteriaLiveTests(unittest.TestCase):
                 lambda: output_dir,
             )
             try:
-                exit_code = golden_criteria_live_cli.main(["--output-dir", str(output_dir)])
+                exit_code = golden_criteria_live_cli.main(
+                    ["--output-dir", str(output_dir)]
+                )
             finally:
                 golden_criteria_live_cli._load_live_review_exports = original_loader
 

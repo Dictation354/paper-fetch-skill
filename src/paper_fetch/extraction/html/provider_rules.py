@@ -46,31 +46,65 @@ GENERIC_FRONT_MATTER_EXACT_TEXTS = (
 
 DEFAULT_SITE_RULE: dict[str, Any] = {
     "candidate_selectors": [
-        "article", "main article", "[role='main'] article", "[itemprop='articleBody']",
-        "[property='articleBody']", "[itemprop='mainEntity']", ".article",
-        ".article__body", ".article__content", ".article-body", ".main-content",
-        "#main-content", "main", "[role='main']", "body",
+        "article",
+        "main article",
+        "[role='main'] article",
+        "[itemprop='articleBody']",
+        "[property='articleBody']",
+        "[itemprop='mainEntity']",
+        ".article",
+        ".article__body",
+        ".article__content",
+        ".article-body",
+        ".main-content",
+        "#main-content",
+        "main",
+        "[role='main']",
+        "body",
     ],
     "remove_selectors": [
         *(tag for tag in HTML_DROP_TAGS if tag != "template"),
-        "iframe", ".social-share", ".article-tools", ".article-metrics",
-        ".metrics-widget", ".recommended-articles", ".related-content",
-        ".breadcrumbs", ".toc", ".tab__nav", ".accessDenialWidget",
-        ".cookie-banner", ".cookie-consent",
+        "iframe",
+        ".social-share",
+        ".article-tools",
+        ".article-metrics",
+        ".metrics-widget",
+        ".recommended-articles",
+        ".related-content",
+        ".breadcrumbs",
+        ".toc",
+        ".tab__nav",
+        ".accessDenialWidget",
+        ".cookie-banner",
+        ".cookie-consent",
     ],
-    "drop_keywords": {*COMMON_NOISE_TOKENS, "download", "citation-tool", "nav", "access-widget"},
+    "drop_keywords": {
+        *COMMON_NOISE_TOKENS,
+        "download",
+        "citation-tool",
+        "nav",
+        "access-widget",
+    },
     "drop_text": {"Check for updates", "View Metrics", "Share", "Cite"},
 }
 
 SCIENCE_SITE_RULE_OVERRIDES: dict[str, Any] = {
     "candidate_selectors": [".article__fulltext", ".article-view"],
     "remove_selectors": [
-        "header .social-share", ".jump-to-nav", ".article-access-info",
-        ".references-tab", ".permissions", ".issue-item__citation",
-        ".article-header__access", "#article_collateral_menu",
-        "#core-collateral-fulltext-options", "#core-collateral-metrics",
-        "#core-collateral-share", "#core-collateral-media",
-        "#core-collateral-figures", "#core-collateral-tables",
+        "header .social-share",
+        ".jump-to-nav",
+        ".article-access-info",
+        ".references-tab",
+        ".permissions",
+        ".issue-item__citation",
+        ".article-header__access",
+        "#article_collateral_menu",
+        "#core-collateral-fulltext-options",
+        "#core-collateral-metrics",
+        "#core-collateral-share",
+        "#core-collateral-media",
+        "#core-collateral-figures",
+        "#core-collateral-tables",
     ],
     "drop_keywords": {"advert", "tab-nav", "jump-to"},
     "drop_text": {"Permissions"},
@@ -79,35 +113,55 @@ SCIENCE_SITE_RULE_OVERRIDES: dict[str, Any] = {
 # SITE_UI_COPY_REGRESSION_MARKER: site-owned UI copy; rerun extraction rules
 # when publisher text changes.
 PNAS_MARKDOWN_PROMO_TOKENS = (
-    "sign up for pnas alerts", "get alerts for new articles, or get an alert when an article is cited",
+    "sign up for pnas alerts",
+    "get alerts for new articles, or get an alert when an article is cited",
 )
 ATYPON_FRONT_MATTER_EXACT_TEXTS = (
     # These article-type labels are front-matter chrome for Atypon renderers.
     # html_availability.NARRATIVE_ARTICLE_TYPES is a separate quality heuristic
     # for short narrative papers and intentionally does not drive cleanup.
-    "full access", "open access", "free access", "research article",
-    "perspective", "review", "editorial", "commentary",
+    "full access",
+    "open access",
+    "free access",
+    "research article",
+    "perspective",
+    "review",
+    "editorial",
+    "commentary",
 )
 ATYPON_FRONT_MATTER_CONTAINS_TOKENS = ("authors info", "affiliations")
 SCIENCE_MASTHEAD_TEXTS = ("science",)
 PNAS_MASTHEAD_TEXTS = ("pnas",)
 SCIENCE_FRONT_MATTER_PUBLICATION_KEYWORDS = SCIENCE_MASTHEAD_TEXTS
 PNAS_FRONT_MATTER_PUBLICATION_KEYWORDS = PNAS_MASTHEAD_TEXTS
-SCIENCE_FRONT_MATTER_EXACT_TEXTS = (*ATYPON_FRONT_MATTER_EXACT_TEXTS, *SCIENCE_MASTHEAD_TEXTS)
+SCIENCE_FRONT_MATTER_EXACT_TEXTS = (
+    *ATYPON_FRONT_MATTER_EXACT_TEXTS,
+    *SCIENCE_MASTHEAD_TEXTS,
+)
 # SITE_UI_COPY_REGRESSION_MARKER: site-owned UI copy; rerun extraction rules
 # when publisher text changes.
 # STRUCTURAL_UI_COPY_HOOK: provider-specific post-content cutoff, not generic
 # body denylist.
 SCIENCE_POST_CONTENT_BREAK_TOKENS = (
-    "purchase access to other journals in the science family", "become a aaas member", "activate your aaas id",
+    "purchase access to other journals in the science family",
+    "become a aaas member",
+    "activate your aaas id",
 )
 PNAS_FRONT_MATTER_EXACT_TEXTS = (*ATYPON_FRONT_MATTER_EXACT_TEXTS, *PNAS_MASTHEAD_TEXTS)
 WILEY_FRONT_MATTER_EXACT_TEXTS = ATYPON_FRONT_MATTER_EXACT_TEXTS
 PNAS_SITE_RULE_OVERRIDES: dict[str, Any] = {
-    "candidate_selectors": [".article__fulltext", ".core-container", ".article-content"],
+    "candidate_selectors": [
+        ".article__fulltext",
+        ".core-container",
+        ".article-content",
+    ],
     "remove_selectors": [
-        ".article__access", ".article__footer", ".article__reference-links",
-        ".core-collateral", ".card", ".signup-alert-ad",
+        ".article__access",
+        ".article__footer",
+        ".article__reference-links",
+        ".core-collateral",
+        ".card",
+        ".signup-alert-ad",
     ],
     "drop_keywords": {"tab-nav"},
 }
@@ -115,40 +169,75 @@ PNAS_SITE_RULE_OVERRIDES: dict[str, Any] = {
 # SITE_UI_COPY_REGRESSION_MARKER: site-owned UI copy; rerun extraction rules
 # when publisher text changes.
 SPRINGER_NATURE_MARKDOWN_PROMO_TOKENS = (
-    "sign up for alerts", "download citation", "reprints and permissions",
+    "sign up for alerts",
+    "download citation",
+    "reprints and permissions",
     "similar content being viewed by others",
 )
 # SITE_UI_COPY_REGRESSION_MARKER: site-owned Springer/Nature chrome; rerun
 # extraction rules when article action or license section labels change.
 SPRINGER_NATURE_CHROME_SECTION_HEADINGS = (
-    "about this article", "article information", "author information",
-    "authors and affiliations", "cite this article", "open access",
-    "permissions", "rights and permissions", "reprints and permissions",
+    "about this article",
+    "article information",
+    "author information",
+    "authors and affiliations",
+    "cite this article",
+    "open access",
+    "permissions",
+    "rights and permissions",
+    "reprints and permissions",
 )
 # SITE_UI_COPY_REGRESSION_MARKER: site-owned Springer/Nature action chrome;
 # rerun extraction rules when article action attributes change.
 SPRINGER_NATURE_CHROME_ATTR_TOKENS = (
-    "article-actions", "article-metrics", "saved-research", "save-article", "submit-manuscript",
+    "article-actions",
+    "article-metrics",
+    "saved-research",
+    "save-article",
+    "submit-manuscript",
 )
 SPRINGER_NATURE_LICENSE_LINK_HOSTS = ("creativecommons.org",)
 SPRINGER_NATURE_LICENSE_LINK_PATH_PREFIXES = ("/licenses/",)
 SPRINGER_NATURE_LICENSE_WORD_LIMIT = 180
-SPRINGER_NATURE_FORMULA_CONTAINER_TOKENS = ("c-article-equation", "c-article-equation__content")
-SPRINGER_NATURE_DISPLAY_FORMULA_SELECTORS = tuple(f".{token}" for token in SPRINGER_NATURE_FORMULA_CONTAINER_TOKENS)
-SPRINGER_NATURE_SUPPLEMENTARY_TEXT_TOKENS = (EXTENDED_DATA_LABEL, SPRINGER_NATURE_SOURCE_DATA_LABEL, "peer review")
+SPRINGER_NATURE_FORMULA_CONTAINER_TOKENS = (
+    "c-article-equation",
+    "c-article-equation__content",
+)
+SPRINGER_NATURE_DISPLAY_FORMULA_SELECTORS = tuple(
+    f".{token}" for token in SPRINGER_NATURE_FORMULA_CONTAINER_TOKENS
+)
+SPRINGER_NATURE_SUPPLEMENTARY_TEXT_TOKENS = (
+    EXTENDED_DATA_LABEL,
+    SPRINGER_NATURE_SOURCE_DATA_LABEL,
+    "peer review",
+)
 WILEY_FORMULA_CONTAINER_TOKENS = ("fallback__mathequation",)
 
 WILEY_SITE_RULE_OVERRIDES: dict[str, Any] = {
-    "candidate_selectors": [".article-section__content", ".issue-item__body", ".epub-section", ".doi-access"],
-    "remove_selectors": [".citation-tools", ".epub-reference", ".article-section__tableofcontents", ".publicationHistory"],
+    "candidate_selectors": [
+        ".article-section__content",
+        ".issue-item__body",
+        ".epub-section",
+        ".doi-access",
+    ],
+    "remove_selectors": [
+        ".citation-tools",
+        ".epub-reference",
+        ".article-section__tableofcontents",
+        ".publicationHistory",
+    ],
     "drop_text": {"Recommended articles"},
 }
 
 # SITE_UI_COPY_REGRESSION_MARKER: site-owned UI copy; rerun extraction rules
 # when AMS toolbar / recommendation labels change.
 AMS_MARKDOWN_PROMO_TOKENS = (
-    DOWNLOAD_PDF_LABEL, "share this article", *CITATION_TOOL_CHROME_TOKENS,
-    *RELATED_CONTENT_CHROME_TOKENS, "most read", "most cited",
+    DOWNLOAD_PDF_LABEL,
+    "share this article",
+    *CITATION_TOOL_CHROME_TOKENS,
+    *RELATED_CONTENT_CHROME_TOKENS,
+    "most read",
+    "most cited",
 )
 # SITE_UI_COPY_REGRESSION_MARKER: site-owned UI copy; rerun extraction rules
 # when publisher text changes. These tokens stop scanning after the article
@@ -156,20 +245,32 @@ AMS_MARKDOWN_PROMO_TOKENS = (
 # STRUCTURAL_UI_COPY_HOOK: provider-specific post-content cutoff, not generic
 # body denylist.
 AMS_POST_CONTENT_BREAK_TOKENS = (
-    "article type", "issue section", "most read", "most cited",
-    *RELATED_CONTENT_CHROME_TOKENS, "ams publications",
+    "article type",
+    "issue section",
+    "most read",
+    "most cited",
+    *RELATED_CONTENT_CHROME_TOKENS,
+    "ams publications",
 )
 AMS_MASTHEAD_TEXTS = ("ams", "bams")
-AMS_FRONT_MATTER_EXACT_TEXTS = (*ATYPON_FRONT_MATTER_EXACT_TEXTS, "american meteorological society")
+AMS_FRONT_MATTER_EXACT_TEXTS = (
+    *ATYPON_FRONT_MATTER_EXACT_TEXTS,
+    "american meteorological society",
+)
 # Provider-scoped masthead keywords only; runtime publication-watermark helpers
 # require short, punctuation-free, title-like text and must not match prose.
 AMS_FRONT_MATTER_PUBLICATION_KEYWORDS = AMS_MASTHEAD_TEXTS
 AMS_SITE_RULE_OVERRIDES: dict[str, Any] = {
     "candidate_selectors": [
-        "#articleBody", "#contentRoot",
+        "#articleBody",
+        "#contentRoot",
         ".component-content-item.component-container.container-fulltext-display",
-        ".component-content-item.component-content-html", ".article__fulltext",
-        ".articleFullText", ".NLM_article", ".NLM_body", "#bodymatter",
+        ".component-content-item.component-content-html",
+        ".article__fulltext",
+        ".articleFullText",
+        ".NLM_article",
+        ".NLM_body",
+        "#bodymatter",
     ],
     "remove_selectors": [".article__toolbar", ".article__metrics", ".core-collateral"],
     # Defaults already cover download/metrics/related/toolbar; AMS adds the
@@ -179,28 +280,55 @@ AMS_SITE_RULE_OVERRIDES: dict[str, Any] = {
 # AMS DOM postprocess removes AMS-only interactive chrome that must survive
 # generic cleanup until figure/gallery asset URLs have been normalized.
 AMS_DOM_POSTPROCESS_CLEANUP_SELECTORS = (
-    "button[data-xsl-identifier]", "[class*='popover']", ".citation",
-    ".citationActions", ".debug", ".download-figure", ".ppt", ".gallery-link",
-    ".component-image-gallery", ".gallery-overlay",
+    "button[data-xsl-identifier]",
+    "[class*='popover']",
+    ".citation",
+    ".citationActions",
+    ".debug",
+    ".download-figure",
+    ".ppt",
+    ".gallery-link",
+    ".component-image-gallery",
+    ".gallery-overlay",
 )
 
 COMMON_ACCESS_BLOCK_TOKENS = SHARED_COMMON_ACCESS_BLOCK_TOKENS
-IEEE_ACCESS_BLOCK_TEXT_TOKENS = (*COMMON_ACCESS_BLOCK_TOKENS, "institutional sign in", "purchase access")
+IEEE_ACCESS_BLOCK_TEXT_TOKENS = (
+    *COMMON_ACCESS_BLOCK_TOKENS,
+    "institutional sign in",
+    "purchase access",
+)
 # Generic script/style/noscript/iframe/button/input cleanup stays in
 # DEFAULT_SITE_RULE and the browser workflow. These are IEEE REST fragment or
 # Xplore-specific chrome selectors layered on top of those defaults.
 IEEE_EXTRACTION_CLEANUP_SELECTORS = (
-    "accesstype", "select", "textarea", ".zoom-container", ".document-actions",
-    ".article-toolbar", ".stats-document-abstract-view", "button[data-docId]",
-    "a[data-docId][href^='javascript:']", "[href^='javascript:']",
+    "accesstype",
+    "select",
+    "textarea",
+    ".zoom-container",
+    ".document-actions",
+    ".article-toolbar",
+    ".stats-document-abstract-view",
+    "button[data-docId]",
+    "a[data-docId][href^='javascript:']",
+    "[href^='javascript:']",
 )
-IEEE_AVAILABILITY_DROP_KEYWORDS = ("access-type", "document-actions", "references-modal", "show-all", "zoom")
+IEEE_AVAILABILITY_DROP_KEYWORDS = (
+    "access-type",
+    "document-actions",
+    "references-modal",
+    "show-all",
+    "zoom",
+)
 IEEE_AVAILABILITY_DROP_TEXT = ("Show All", "View References", "Download PDF")
 # SITE_UI_COPY_REGRESSION_MARKER: site-owned UI copy; rerun extraction rules
 # when IEEE toolbar labels change.
 IEEE_MARKDOWN_PROMO_TOKENS = (
-    DOWNLOAD_PDF_LABEL, *CITATION_TOOL_CHROME_TOKENS,
-    "show all", "view references", "view all authors",
+    DOWNLOAD_PDF_LABEL,
+    *CITATION_TOOL_CHROME_TOKENS,
+    "show all",
+    "view references",
+    "view all authors",
 )
 IEEE_SITE_RULE_OVERRIDES: dict[str, Any] = {
     "candidate_selectors": ["#article", "#BodyWrapper", ".ArticlePage"],
@@ -583,7 +711,10 @@ REGISTERED_NOISE_PROFILES: SetABC[str] = _RegisteredNoiseProfiles()
 
 
 def _reset_provider_html_rules_cache() -> None:
-    global _PROVIDER_HTML_RULES_CACHE, _PROVIDER_LOOKUP_CACHE, _NOISE_PROFILE_LOOKUP_CACHE
+    global \
+        _PROVIDER_HTML_RULES_CACHE, \
+        _PROVIDER_LOOKUP_CACHE, \
+        _NOISE_PROFILE_LOOKUP_CACHE
     _PROVIDER_HTML_RULES_CACHE = None
     _PROVIDER_LOOKUP_CACHE = None
     _NOISE_PROFILE_LOOKUP_CACHE = None

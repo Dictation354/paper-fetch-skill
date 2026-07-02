@@ -32,7 +32,10 @@ register_provider_bundle(
             official=True,
             domains=("www.science.org", "science.org"),
             doi_prefixes=("10.1126/",),
-            publisher_aliases=("american association for the advancement of science", "aaas"),
+            publisher_aliases=(
+                "american association for the advancement of science",
+                "aaas",
+            ),
             asset_default="body",
             probe_capability="routing_signal",
             provider_managed_abstract_only=True,

@@ -5,7 +5,9 @@ from ._service_support import *
 
 
 class ServiceMetadataRoutingTests(unittest.TestCase):
-    def test_fetch_metadata_uses_crossref_signal_without_public_crossref_source(self) -> None:
+    def test_fetch_metadata_uses_crossref_signal_without_public_crossref_source(
+        self,
+    ) -> None:
         resolved = paper_fetch.ResolvedQuery(
             query="10.1006/jaer.1996.0085",
             query_kind="doi",
@@ -14,41 +16,46 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
             confidence=1.0,
         )
 
-        metadata, provider_name, source_trail = paper_fetch.fetch_metadata_for_resolved_query(
-            resolved,
-            clients={
-                "elsevier": StubProvider(
-                    metadata={
-                        "provider": "elsevier",
-                        "official_provider": True,
-                        "doi": "10.1006/jaer.1996.0085",
-                        "title": "Official Elsevier Title",
-                        "landing_page_url": "https://api.elsevier.com/content/abstract/scopus_id/0012465826",
-                        "authors": ["Alice Example"],
-                        "fulltext_links": [],
-                        "references": [],
-                    }
-                ),
-                "crossref": StubProvider(
-                    metadata={
-                        "provider": "crossref",
-                        "official_provider": False,
-                        "doi": "10.1006/jaer.1996.0085",
-                        "title": "Crossref Title",
-                        "publisher": "Elsevier BV",
-                        "landing_page_url": "https://linkinghub.elsevier.com/retrieve/pii/S0021863496900852",
-                        "authors": ["Alice Example"],
-                        "fulltext_links": [],
-                        "references": [],
-                    }
-                ),
-            },
-            strategy=paper_fetch.FetchStrategy(preferred_providers=["elsevier"]),
+        metadata, provider_name, source_trail = (
+            paper_fetch.fetch_metadata_for_resolved_query(
+                resolved,
+                clients={
+                    "elsevier": StubProvider(
+                        metadata={
+                            "provider": "elsevier",
+                            "official_provider": True,
+                            "doi": "10.1006/jaer.1996.0085",
+                            "title": "Official Elsevier Title",
+                            "landing_page_url": "https://api.elsevier.com/content/abstract/scopus_id/0012465826",
+                            "authors": ["Alice Example"],
+                            "fulltext_links": [],
+                            "references": [],
+                        }
+                    ),
+                    "crossref": StubProvider(
+                        metadata={
+                            "provider": "crossref",
+                            "official_provider": False,
+                            "doi": "10.1006/jaer.1996.0085",
+                            "title": "Crossref Title",
+                            "publisher": "Elsevier BV",
+                            "landing_page_url": "https://linkinghub.elsevier.com/retrieve/pii/S0021863496900852",
+                            "authors": ["Alice Example"],
+                            "fulltext_links": [],
+                            "references": [],
+                        }
+                    ),
+                },
+                strategy=paper_fetch.FetchStrategy(preferred_providers=["elsevier"]),
+            )
         )
 
         self.assertEqual(provider_name, "elsevier")
         self.assertEqual(metadata["title"], "Official Elsevier Title")
-        self.assertEqual(metadata["landing_page_url"], "https://linkinghub.elsevier.com/retrieve/pii/S0021863496900852")
+        self.assertEqual(
+            metadata["landing_page_url"],
+            "https://linkinghub.elsevier.com/retrieve/pii/S0021863496900852",
+        )
         self.assertIn("route:crossref_signal_ok", source_trail)
         self.assertIn("route:signal_domain_elsevier", source_trail)
         self.assertIn("route:signal_publisher_elsevier", source_trail)
@@ -56,7 +63,10 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
         self.assertIn("route:provider_selected_elsevier", source_trail)
         self.assertIn("metadata:elsevier_ok", source_trail)
         self.assertNotIn("metadata:crossref_ok", source_trail)
-    def test_fetch_metadata_records_unknown_probe_and_uses_crossref_public_metadata(self) -> None:
+
+    def test_fetch_metadata_records_unknown_probe_and_uses_crossref_public_metadata(
+        self,
+    ) -> None:
         resolved = paper_fetch.ResolvedQuery(
             query="10.1007/test",
             query_kind="doi",
@@ -65,26 +75,30 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
             confidence=1.0,
         )
 
-        metadata, provider_name, source_trail = paper_fetch.fetch_metadata_for_resolved_query(
-            resolved,
-            clients={
-                "springer": StubProvider(
-                    metadata=paper_fetch.ProviderFailure("not_supported", "Springer metadata probe is not supported.")
-                ),
-                "crossref": StubProvider(
-                    metadata={
-                        "provider": "crossref",
-                        "official_provider": False,
-                        "doi": "10.1007/test",
-                        "title": "Crossref Fallback",
-                        "landing_page_url": "https://example.test/article",
-                        "authors": [],
-                        "fulltext_links": [],
-                        "references": [],
-                    }
-                ),
-            },
-            strategy=paper_fetch.FetchStrategy(),
+        metadata, provider_name, source_trail = (
+            paper_fetch.fetch_metadata_for_resolved_query(
+                resolved,
+                clients={
+                    "springer": StubProvider(
+                        metadata=paper_fetch.ProviderFailure(
+                            "not_supported", "Springer metadata probe is not supported."
+                        )
+                    ),
+                    "crossref": StubProvider(
+                        metadata={
+                            "provider": "crossref",
+                            "official_provider": False,
+                            "doi": "10.1007/test",
+                            "title": "Crossref Fallback",
+                            "landing_page_url": "https://example.test/article",
+                            "authors": [],
+                            "fulltext_links": [],
+                            "references": [],
+                        }
+                    ),
+                },
+                strategy=paper_fetch.FetchStrategy(),
+            )
         )
 
         self.assertEqual(provider_name, "springer")
@@ -92,7 +106,10 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
         self.assertIn("route:probe_springer_unknown", source_trail)
         self.assertIn("route:provider_selected_springer", source_trail)
         self.assertIn("metadata:crossref_ok", source_trail)
-    def test_fetch_paper_model_routes_10_1006_doi_to_elsevier_via_crossref_signal(self) -> None:
+
+    def test_fetch_paper_model_routes_10_1006_doi_to_elsevier_via_crossref_signal(
+        self,
+    ) -> None:
         resolved = paper_fetch.ResolvedQuery(
             query="10.1006/jaer.1996.0085",
             query_kind="doi",
@@ -153,7 +170,10 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
         self.assertIn("route:provider_selected_elsevier", article.quality.source_trail)
         self.assertIn("fulltext:elsevier_article_ok", article.quality.source_trail)
         self.assertNotIn("metadata:crossref_ok", article.quality.source_trail)
-    def test_fetch_paper_model_weak_negative_metadata_probe_still_attempts_official_fulltext(self) -> None:
+
+    def test_fetch_paper_model_weak_negative_metadata_probe_still_attempts_official_fulltext(
+        self,
+    ) -> None:
         resolved = paper_fetch.ResolvedQuery(
             query="10.1006/jaer.1996.0085",
             query_kind="doi",
@@ -169,7 +189,9 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
                 "10.1006/jaer.1996.0085",
                 clients={
                     "elsevier": StubProvider(
-                        metadata=paper_fetch.ProviderFailure("no_result", "Elsevier metadata probe missed."),
+                        metadata=paper_fetch.ProviderFailure(
+                            "no_result", "Elsevier metadata probe missed."
+                        ),
                         raw_payload=RawFulltextPayload(
                             provider="elsevier",
                             source_url="https://api.elsevier.com/content/article/doi/10.1006%2Fjaer.1996.0085",
@@ -201,6 +223,7 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
         self.assertIn("route:provider_selected_elsevier", article.quality.source_trail)
         self.assertIn("fulltext:elsevier_attempt", article.quality.source_trail)
         self.assertIn("fulltext:elsevier_article_ok", article.quality.source_trail)
+
     def test_fetch_paper_crossref_only_strategy_skips_official_probes(self) -> None:
         resolved = paper_fetch.ResolvedQuery(
             query="10.1016/test",
@@ -256,9 +279,16 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
         assert envelope.article is not None
         self.assertEqual(envelope.article.source, "crossref_meta")
         self.assertIn("metadata:crossref_ok", envelope.article.quality.source_trail)
-        self.assertNotIn("route:probe_elsevier_positive", envelope.article.quality.source_trail)
-        self.assertNotIn("fulltext:elsevier_attempt", envelope.article.quality.source_trail)
-    def test_fetch_paper_returns_fixed_envelope_shape_with_public_source_mapping(self) -> None:
+        self.assertNotIn(
+            "route:probe_elsevier_positive", envelope.article.quality.source_trail
+        )
+        self.assertNotIn(
+            "fulltext:elsevier_attempt", envelope.article.quality.source_trail
+        )
+
+    def test_fetch_paper_returns_fixed_envelope_shape_with_public_source_mapping(
+        self,
+    ) -> None:
         resolved = paper_fetch.ResolvedQuery(
             query="10.1111/test",
             query_kind="doi",
@@ -278,7 +308,9 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
                 strategy=paper_fetch.FetchStrategy(),
                 clients={
                     "wiley": StubProvider(
-                        metadata=paper_fetch.ProviderFailure("not_supported", "No official metadata."),
+                        metadata=paper_fetch.ProviderFailure(
+                            "not_supported", "No official metadata."
+                        ),
                         raw_payload=RawFulltextPayload(
                             provider="wiley",
                             source_url="https://example.test/wiley.pdf",
@@ -327,6 +359,7 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
         self.assertIsNone(envelope.metadata)
         self.assertTrue(envelope.markdown)
         self.assertTrue(envelope.has_fulltext)
+
     def test_fetch_paper_only_populates_envelope_metadata_when_requested(self) -> None:
         resolved = paper_fetch.ResolvedQuery(
             query="10.1016/test",
@@ -417,8 +450,13 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
 
         self.assertIsNone(without_metadata.metadata)
         self.assertIsNotNone(with_metadata.metadata)
-        self.assertEqual(with_metadata.metadata.title, with_metadata.article.metadata.title)
-    def test_fetch_paper_non_provider_landing_page_returns_metadata_only_without_generic_html_attempt(self) -> None:
+        self.assertEqual(
+            with_metadata.metadata.title, with_metadata.article.metadata.title
+        )
+
+    def test_fetch_paper_non_provider_landing_page_returns_metadata_only_without_generic_html_attempt(
+        self,
+    ) -> None:
         resolved = paper_fetch.ResolvedQuery(
             query="10.1000/test",
             query_kind="doi",
@@ -455,6 +493,7 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
         self.assertIn("fallback:metadata_only", article.quality.source_trail)
         self.assertNotIn("fallback:html_attempt", article.quality.source_trail)
         self.assertNotIn("fallback:html_abstract_only", article.quality.source_trail)
+
     def test_fetch_paper_raises_when_metadata_only_fallback_is_disabled(self) -> None:
         resolved = paper_fetch.ResolvedQuery(
             query="10.1016/test",
@@ -485,7 +524,9 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
                                 "fulltext_links": [],
                                 "references": [],
                             },
-                            raw_error=paper_fetch.ProviderFailure("no_result", "No full text."),
+                            raw_error=paper_fetch.ProviderFailure(
+                                "no_result", "No full text."
+                            ),
                         ),
                         "crossref": StubProvider(
                             metadata={

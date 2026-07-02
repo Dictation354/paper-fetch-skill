@@ -7,11 +7,24 @@ from unittest import mock
 
 from paper_fetch.http import RequestFailure
 from paper_fetch.providers import _springer_html as springer_html
-from paper_fetch.providers import browser_runtime, browser_workflow, elsevier as elsevier_provider, springer as springer_provider, wiley as wiley_provider
-from paper_fetch.providers.base import ProviderContent, ProviderFailure, RawFulltextPayload
+from paper_fetch.providers import (
+    browser_runtime,
+    browser_workflow,
+    elsevier as elsevier_provider,
+    springer as springer_provider,
+    wiley as wiley_provider,
+)
+from paper_fetch.providers.base import (
+    ProviderContent,
+    ProviderFailure,
+    RawFulltextPayload,
+)
 from paper_fetch.runtime import RuntimeContext
 from tests.golden_criteria import golden_criteria_scenario_asset
-from tests.provider_benchmark_samples import WILEY_PDF_FALLBACK_SAMPLE, provider_benchmark_sample
+from tests.provider_benchmark_samples import (
+    WILEY_PDF_FALLBACK_SAMPLE,
+    provider_benchmark_sample,
+)
 from tests.paths import FIXTURE_DIR
 from tests.unit._browser_workflow_deps import install_browser_workflow_deps
 from tests.unit._paper_fetch_support import RecordingTransport, fulltext_pdf_bytes
@@ -27,7 +40,9 @@ def _payload_route(raw_payload: RawFulltextPayload) -> str | None:
     return raw_payload.content.route_kind if raw_payload.content is not None else None
 
 
-def _payload_availability_diagnostics(raw_payload: RawFulltextPayload) -> dict[str, object]:
+def _payload_availability_diagnostics(
+    raw_payload: RawFulltextPayload,
+) -> dict[str, object]:
     assert raw_payload.content is not None
     return dict(raw_payload.content.diagnostics.get("availability_diagnostics") or {})
 
@@ -37,7 +52,9 @@ def _payload_source_trail(raw_payload: RawFulltextPayload) -> list[str]:
 
 
 class PublisherWaterfallTests(unittest.TestCase):
-    def _runtime_config(self, tmpdir: str, provider: str, doi: str) -> browser_runtime.BrowserRuntimeConfig:
+    def _runtime_config(
+        self, tmpdir: str, provider: str, doi: str
+    ) -> browser_runtime.BrowserRuntimeConfig:
         tmp = Path(tmpdir)
         return browser_runtime.BrowserRuntimeConfig(
             provider=provider,
@@ -68,10 +85,14 @@ class PublisherWaterfallTests(unittest.TestCase):
                 reason="Downloaded full text from the official Elsevier API.",
             ),
         )
-        client = elsevier_provider.ElsevierClient(transport=mock.Mock(), env={"ELSEVIER_API_KEY": "secret"})
+        client = elsevier_provider.ElsevierClient(
+            transport=mock.Mock(), env={"ELSEVIER_API_KEY": "secret"}
+        )
 
         with (
-            mock.patch.object(client, "_fetch_official_xml_payload", return_value=official_payload),
+            mock.patch.object(
+                client, "_fetch_official_xml_payload", return_value=official_payload
+            ),
             mock.patch.object(client, "_official_payload_is_usable", return_value=True),
             mock.patch.object(client, "_fetch_official_pdf_payload") as mocked_pdf,
         ):
@@ -83,13 +104,17 @@ class PublisherWaterfallTests(unittest.TestCase):
         self.assertEqual(article.source, "elsevier_xml")
         self.assertTrue(article.quality.has_fulltext)
 
-    def test_elsevier_xml_route_populates_article_authors_from_author_groups(self) -> None:
+    def test_elsevier_xml_route_populates_article_authors_from_author_groups(
+        self,
+    ) -> None:
         metadata = {
             "doi": "10.1016/test-authors",
             "title": "Elsevier Author Example",
             "landing_page_url": "https://example.test/article",
         }
-        xml_body = golden_criteria_scenario_asset("elsevier_author_groups_minimal", "original.xml").read_bytes()
+        xml_body = golden_criteria_scenario_asset(
+            "elsevier_author_groups_minimal", "original.xml"
+        ).read_bytes()
         raw_payload = RawFulltextPayload(
             provider="elsevier",
             source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest-authors",
@@ -103,20 +128,29 @@ class PublisherWaterfallTests(unittest.TestCase):
                 reason="Downloaded full text from the official Elsevier API.",
             ),
         )
-        client = elsevier_provider.ElsevierClient(transport=mock.Mock(), env={"ELSEVIER_API_KEY": "secret"})
+        client = elsevier_provider.ElsevierClient(
+            transport=mock.Mock(), env={"ELSEVIER_API_KEY": "secret"}
+        )
 
         article = client.to_article_model(metadata, raw_payload)
 
         self.assertEqual(article.source, "elsevier_xml")
-        self.assertEqual(article.metadata.authors, ["Jane Doe", "Smith, J.", "Open Climate Consortium"])
+        self.assertEqual(
+            article.metadata.authors,
+            ["Jane Doe", "Smith, J.", "Open Climate Consortium"],
+        )
 
-    def test_elsevier_xml_root_is_reused_across_asset_and_article_conversion(self) -> None:
+    def test_elsevier_xml_root_is_reused_across_asset_and_article_conversion(
+        self,
+    ) -> None:
         metadata = {
             "doi": "10.1016/test-authors",
             "title": "Elsevier Author Example",
             "landing_page_url": "https://example.test/article",
         }
-        xml_body = golden_criteria_scenario_asset("elsevier_author_groups_minimal", "original.xml").read_bytes()
+        xml_body = golden_criteria_scenario_asset(
+            "elsevier_author_groups_minimal", "original.xml"
+        ).read_bytes()
         raw_payload = RawFulltextPayload(
             provider="elsevier",
             source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest-authors",
@@ -130,10 +164,16 @@ class PublisherWaterfallTests(unittest.TestCase):
                 reason="Downloaded full text from the official Elsevier API.",
             ),
         )
-        context = RuntimeContext(env={"ELSEVIER_API_KEY": "secret"}, transport=mock.Mock())
-        client = elsevier_provider.ElsevierClient(transport=mock.Mock(), env={"ELSEVIER_API_KEY": "secret"})
+        context = RuntimeContext(
+            env={"ELSEVIER_API_KEY": "secret"}, transport=mock.Mock()
+        )
+        client = elsevier_provider.ElsevierClient(
+            transport=mock.Mock(), env={"ELSEVIER_API_KEY": "secret"}
+        )
 
-        with mock.patch.object(elsevier_provider.ET, "fromstring", wraps=elsevier_provider.ET.fromstring) as fromstring:
+        with mock.patch.object(
+            elsevier_provider.ET, "fromstring", wraps=elsevier_provider.ET.fromstring
+        ) as fromstring:
             elsevier_provider.extract_elsevier_asset_references(
                 raw_payload.body,
                 context=context,
@@ -165,7 +205,9 @@ class PublisherWaterfallTests(unittest.TestCase):
                 reason="Downloaded full text from the official Elsevier API.",
             ),
         )
-        client = elsevier_provider.ElsevierClient(transport=mock.Mock(), env={"ELSEVIER_API_KEY": "secret"})
+        client = elsevier_provider.ElsevierClient(
+            transport=mock.Mock(), env={"ELSEVIER_API_KEY": "secret"}
+        )
 
         usable = client._official_payload_is_usable(metadata, raw_payload)
 
@@ -180,16 +222,22 @@ class PublisherWaterfallTests(unittest.TestCase):
             provider="elsevier",
             source_url="https://api.elsevier.com/content/article/doi/example",
             content_type="text/plain",
-            body=("# Example Article\n\n## Results\n\n" + ("Body text " * 120)).encode("utf-8"),
+            body=("# Example Article\n\n## Results\n\n" + ("Body text " * 120)).encode(
+                "utf-8"
+            ),
             content=ProviderContent(
                 route_kind="official",
                 source_url="https://api.elsevier.com/content/article/doi/example",
                 content_type="text/plain",
-                body=("# Example Article\n\n## Results\n\n" + ("Body text " * 120)).encode("utf-8"),
+                body=(
+                    "# Example Article\n\n## Results\n\n" + ("Body text " * 120)
+                ).encode("utf-8"),
                 reason="Downloaded full text from the official Elsevier API.",
             ),
         )
-        client = elsevier_provider.ElsevierClient(transport=mock.Mock(), env={"ELSEVIER_API_KEY": "secret"})
+        client = elsevier_provider.ElsevierClient(
+            transport=mock.Mock(), env={"ELSEVIER_API_KEY": "secret"}
+        )
 
         usable = client._official_payload_is_usable(
             {"doi": "10.1016/example", "title": "Example Article"},
@@ -221,7 +269,9 @@ class PublisherWaterfallTests(unittest.TestCase):
         fake_article.sections = [mock.Mock(kind="abstract", text="Abstract only.")]
         fake_article.assets = []
         fake_article.metadata = mock.Mock(title="Example Article")
-        client = elsevier_provider.ElsevierClient(transport=mock.Mock(), env={"ELSEVIER_API_KEY": "secret"})
+        client = elsevier_provider.ElsevierClient(
+            transport=mock.Mock(), env={"ELSEVIER_API_KEY": "secret"}
+        )
 
         with mock.patch.object(client, "to_article_model", return_value=fake_article):
             usable = client._official_payload_is_usable(
@@ -267,16 +317,25 @@ class PublisherWaterfallTests(unittest.TestCase):
                 content_type="application/pdf",
                 body=fulltext_pdf_bytes(),
                 reason="Downloaded full text from the official Elsevier API PDF fallback.",
-                markdown_text=f"# {ELSEVIER_SAMPLE.title}\n\n## Results\n\n" + ("Body text " * 120),
+                markdown_text=f"# {ELSEVIER_SAMPLE.title}\n\n## Results\n\n"
+                + ("Body text " * 120),
             ),
             needs_local_copy=True,
         )
-        client = elsevier_provider.ElsevierClient(transport=mock.Mock(), env={"ELSEVIER_API_KEY": "secret"})
+        client = elsevier_provider.ElsevierClient(
+            transport=mock.Mock(), env={"ELSEVIER_API_KEY": "secret"}
+        )
 
         with (
-            mock.patch.object(client, "_fetch_official_xml_payload", return_value=xml_payload),
-            mock.patch.object(client, "_official_payload_is_usable", return_value=False),
-            mock.patch.object(client, "_fetch_official_pdf_payload", return_value=pdf_payload),
+            mock.patch.object(
+                client, "_fetch_official_xml_payload", return_value=xml_payload
+            ),
+            mock.patch.object(
+                client, "_official_payload_is_usable", return_value=False
+            ),
+            mock.patch.object(
+                client, "_fetch_official_pdf_payload", return_value=pdf_payload
+            ),
         ):
             raw_payload = client.fetch_raw_fulltext(doi, metadata)
             article = client.to_article_model(metadata, raw_payload)
@@ -291,7 +350,8 @@ class PublisherWaterfallTests(unittest.TestCase):
         self.assertNotIn("fulltext:elsevier_html_ok", article.quality.source_trail)
         self.assertTrue(
             any(
-                "Elsevier official XML response did not produce enough article body text" in item
+                "Elsevier official XML response did not produce enough article body text"
+                in item
                 for item in raw_payload.warnings
             )
         )
@@ -300,7 +360,9 @@ class PublisherWaterfallTests(unittest.TestCase):
             raw_payload.warnings,
         )
 
-    def test_elsevier_xml_transport_failures_can_use_official_pdf_fallback(self) -> None:
+    def test_elsevier_xml_transport_failures_can_use_official_pdf_fallback(
+        self,
+    ) -> None:
         doi = "10.1016/test-old-paper"
         metadata = {
             "doi": doi,
@@ -315,7 +377,10 @@ class PublisherWaterfallTests(unittest.TestCase):
                 transport = RecordingTransport(
                     {
                         ("GET", api_url): [
-                            RequestFailure(status_code, f"HTTP {status_code} for {api_url}?view=FULL"),
+                            RequestFailure(
+                                status_code,
+                                f"HTTP {status_code} for {api_url}?view=FULL",
+                            ),
                             {
                                 "status_code": 200,
                                 "headers": {"content-type": "application/pdf"},
@@ -325,14 +390,17 @@ class PublisherWaterfallTests(unittest.TestCase):
                         ]
                     }
                 )
-                client = elsevier_provider.ElsevierClient(transport=transport, env={"ELSEVIER_API_KEY": "secret"})
+                client = elsevier_provider.ElsevierClient(
+                    transport=transport, env={"ELSEVIER_API_KEY": "secret"}
+                )
                 with mock.patch.object(
                     elsevier_provider,
                     "pdf_fetch_result_from_response",
                     return_value=mock.Mock(
                         final_url=f"https://api.elsevier.com/content/article/doi/{doi}?view=FULL",
                         pdf_bytes=fulltext_pdf_bytes(),
-                        markdown_text="# Elsevier Legacy Article\n\n## Results\n\n" + ("Body text " * 80),
+                        markdown_text="# Elsevier Legacy Article\n\n## Results\n\n"
+                        + ("Body text " * 80),
                         suggested_filename="legacy.pdf",
                     ),
                 ):
@@ -340,12 +408,22 @@ class PublisherWaterfallTests(unittest.TestCase):
                     article = client.to_article_model(metadata, raw_payload)
 
                 self.assertEqual(_payload_route(raw_payload), "pdf_fallback")
-                self.assertIn("fulltext:elsevier_xml_fail", _payload_source_trail(raw_payload))
-                self.assertIn("fulltext:elsevier_pdf_api_ok", _payload_source_trail(raw_payload))
-                self.assertIn("fulltext:elsevier_pdf_fallback_ok", _payload_source_trail(raw_payload))
+                self.assertIn(
+                    "fulltext:elsevier_xml_fail", _payload_source_trail(raw_payload)
+                )
+                self.assertIn(
+                    "fulltext:elsevier_pdf_api_ok", _payload_source_trail(raw_payload)
+                )
+                self.assertIn(
+                    "fulltext:elsevier_pdf_fallback_ok",
+                    _payload_source_trail(raw_payload),
+                )
                 self.assertEqual(article.source, "elsevier_pdf")
                 self.assertEqual(
-                    [str(call["headers"].get("Accept") or "") for call in transport.calls],
+                    [
+                        str(call["headers"].get("Accept") or "")
+                        for call in transport.calls
+                    ],
                     ["text/xml", "application/pdf"],
                 )
                 self.assertEqual(
@@ -373,7 +451,9 @@ class PublisherWaterfallTests(unittest.TestCase):
         pii_url = "https://api.elsevier.com/content/article/pii/S0034425723001712"
         transport = RecordingTransport(
             {
-                ("GET", doi_url): RequestFailure(503, f"HTTP 503 for {doi_url}?view=FULL"),
+                ("GET", doi_url): RequestFailure(
+                    503, f"HTTP 503 for {doi_url}?view=FULL"
+                ),
                 ("GET", pii_url): {
                     "status_code": 200,
                     "headers": {"content-type": "text/xml"},
@@ -382,7 +462,9 @@ class PublisherWaterfallTests(unittest.TestCase):
                 },
             }
         )
-        client = elsevier_provider.ElsevierClient(transport=transport, env={"ELSEVIER_API_KEY": "secret"})
+        client = elsevier_provider.ElsevierClient(
+            transport=transport, env={"ELSEVIER_API_KEY": "secret"}
+        )
 
         with (
             mock.patch.object(client, "_official_payload_is_usable", return_value=True),
@@ -394,15 +476,25 @@ class PublisherWaterfallTests(unittest.TestCase):
         self.assertEqual(_payload_route(raw_payload), "official")
         self.assertEqual(raw_payload.source_url, f"{pii_url}?view=FULL")
         self.assertIn("fulltext:elsevier_xml_fail", _payload_source_trail(raw_payload))
-        self.assertIn("fulltext:elsevier_xml_pii_ok", _payload_source_trail(raw_payload))
-        self.assertNotIn("fulltext:elsevier_pdf_api_ok", _payload_source_trail(raw_payload))
-        self.assertEqual([str(call["url"]) for call in transport.calls], [doi_url, pii_url])
+        self.assertIn(
+            "fulltext:elsevier_xml_pii_ok", _payload_source_trail(raw_payload)
+        )
+        self.assertNotIn(
+            "fulltext:elsevier_pdf_api_ok", _payload_source_trail(raw_payload)
+        )
+        self.assertEqual(
+            [str(call["url"]) for call in transport.calls], [doi_url, pii_url]
+        )
 
-    def test_elsevier_pii_candidates_are_extracted_from_public_landing_urls(self) -> None:
+    def test_elsevier_pii_candidates_are_extracted_from_public_landing_urls(
+        self,
+    ) -> None:
         metadata = {
             "landing_page_url": "https://linkinghub.elsevier.com/retrieve/pii/S0034-4257(23)00171-2",
             "fulltext_links": [
-                {"url": "https://www.sciencedirect.com/science/article/pii/S0034425723001712"},
+                {
+                    "url": "https://www.sciencedirect.com/science/article/pii/S0034425723001712"
+                },
                 {"url": "https://example.test/not-elsevier"},
             ],
         }
@@ -412,7 +504,9 @@ class PublisherWaterfallTests(unittest.TestCase):
             ["S0034425723001712"],
         )
 
-    def test_elsevier_xml_and_pdf_failures_are_combined_without_html_markers(self) -> None:
+    def test_elsevier_xml_and_pdf_failures_are_combined_without_html_markers(
+        self,
+    ) -> None:
         doi = "10.1016/test-no-fulltext"
         metadata = {
             "doi": doi,
@@ -420,18 +514,26 @@ class PublisherWaterfallTests(unittest.TestCase):
             "landing_page_url": "https://linkinghub.elsevier.com/retrieve/pii/S0304416596000542",
             "fulltext_links": [],
         }
-        client = elsevier_provider.ElsevierClient(transport=mock.Mock(), env={"ELSEVIER_API_KEY": "secret"})
+        client = elsevier_provider.ElsevierClient(
+            transport=mock.Mock(), env={"ELSEVIER_API_KEY": "secret"}
+        )
 
         with (
             mock.patch.object(
                 client,
                 "_fetch_official_xml_payload",
-                side_effect=ProviderFailure("no_result", "Elsevier official XML representation is not available."),
+                side_effect=ProviderFailure(
+                    "no_result",
+                    "Elsevier official XML representation is not available.",
+                ),
             ),
             mock.patch.object(
                 client,
                 "_fetch_official_pdf_payload",
-                side_effect=ProviderFailure("no_result", "Elsevier official PDF representation is not available."),
+                side_effect=ProviderFailure(
+                    "no_result",
+                    "Elsevier official PDF representation is not available.",
+                ),
             ),
         ):
             with self.assertRaises(ProviderFailure) as ctx:
@@ -441,8 +543,14 @@ class PublisherWaterfallTests(unittest.TestCase):
         self.assertIn("fulltext:elsevier_xml_fail", ctx.exception.source_trail)
         self.assertIn("fulltext:elsevier_pdf_api_fail", ctx.exception.source_trail)
         self.assertNotIn("fulltext:elsevier_html_fail", ctx.exception.source_trail)
-        self.assertIn("Elsevier official XML representation is not available.", ctx.exception.message)
-        self.assertIn("Elsevier official PDF representation is not available.", ctx.exception.message)
+        self.assertIn(
+            "Elsevier official XML representation is not available.",
+            ctx.exception.message,
+        )
+        self.assertIn(
+            "Elsevier official PDF representation is not available.",
+            ctx.exception.message,
+        )
 
     def test_springer_html_success_keeps_springer_html_source(self) -> None:
         doi = SPRINGER_SAMPLE.doi
@@ -466,11 +574,14 @@ class PublisherWaterfallTests(unittest.TestCase):
         client = springer_provider.SpringerClient(transport=mock.Mock(), env={})
 
         with (
-            mock.patch.object(client, "_fetch_html_response", return_value=(response, landing_url)),
+            mock.patch.object(
+                client, "_fetch_html_response", return_value=(response, landing_url)
+            ),
             mock.patch.object(
                 springer_html,
                 "extract_article_markdown",
-                return_value=f"# {SPRINGER_SAMPLE.title}\n\n## Results\n\n" + ("Body text " * 120),
+                return_value=f"# {SPRINGER_SAMPLE.title}\n\n## Results\n\n"
+                + ("Body text " * 120),
             ),
             mock.patch.object(springer_provider, "fetch_pdf_over_http") as mocked_pdf,
         ):
@@ -482,7 +593,9 @@ class PublisherWaterfallTests(unittest.TestCase):
         self.assertEqual(article.source, "springer_html")
         self.assertIn("fulltext:springer_html_ok", article.quality.source_trail)
 
-    def test_springer_html_route_uses_provider_extracted_authors_when_shared_metadata_has_none(self) -> None:
+    def test_springer_html_route_uses_provider_extracted_authors_when_shared_metadata_has_none(
+        self,
+    ) -> None:
         doi = SPRINGER_SAMPLE.doi
         landing_url = SPRINGER_SAMPLE.landing_url
         metadata = {
@@ -507,7 +620,9 @@ class PublisherWaterfallTests(unittest.TestCase):
         client = springer_provider.SpringerClient(transport=mock.Mock(), env={})
 
         with (
-            mock.patch.object(client, "_fetch_html_response", return_value=(response, landing_url)),
+            mock.patch.object(
+                client, "_fetch_html_response", return_value=(response, landing_url)
+            ),
             mock.patch.object(
                 springer_html,
                 "parse_html_metadata",
@@ -522,7 +637,8 @@ class PublisherWaterfallTests(unittest.TestCase):
             mock.patch.object(
                 springer_html,
                 "extract_article_markdown",
-                return_value=f"# {SPRINGER_SAMPLE.title}\n\n## Results\n\n" + ("Body text " * 120),
+                return_value=f"# {SPRINGER_SAMPLE.title}\n\n## Results\n\n"
+                + ("Body text " * 120),
             ),
             mock.patch.object(springer_provider, "fetch_pdf_over_http") as mocked_pdf,
         ):
@@ -532,7 +648,9 @@ class PublisherWaterfallTests(unittest.TestCase):
         mocked_pdf.assert_not_called()
         self.assertEqual(article.metadata.authors, ["Alice Example", "Bob Example"])
 
-    def test_springer_extract_authors_uses_ld_json_main_entity_when_meta_missing(self) -> None:
+    def test_springer_extract_authors_uses_ld_json_main_entity_when_meta_missing(
+        self,
+    ) -> None:
         html = """
         <html>
           <head>
@@ -573,7 +691,9 @@ class PublisherWaterfallTests(unittest.TestCase):
 
         self.assertEqual(authors, ["Yang Li", "Celso von Randow"])
 
-    def test_springer_extract_authors_does_not_rewrite_collective_or_multi_comma_names(self) -> None:
+    def test_springer_extract_authors_does_not_rewrite_collective_or_multi_comma_names(
+        self,
+    ) -> None:
         html = """
         <html>
           <head>
@@ -586,7 +706,9 @@ class PublisherWaterfallTests(unittest.TestCase):
 
         authors = springer_html.extract_authors(html)
 
-        self.assertEqual(authors, ["The ENCODE Project Consortium, et al.", "Smith, John, Jr."])
+        self.assertEqual(
+            authors, ["The ENCODE Project Consortium, et al.", "Smith, John, Jr."]
+        )
 
     def test_springer_extract_authors_does_not_leak_reference_metadata(self) -> None:
         html = """
@@ -605,7 +727,9 @@ class PublisherWaterfallTests(unittest.TestCase):
 
         self.assertEqual(authors, [])
 
-    def test_springer_to_article_model_prefers_normalized_provider_authors_over_crossref_display(self) -> None:
+    def test_springer_to_article_model_prefers_normalized_provider_authors_over_crossref_display(
+        self,
+    ) -> None:
         doi = SPRINGER_SAMPLE.doi
         title = SPRINGER_SAMPLE.title
         landing_url = SPRINGER_SAMPLE.landing_url
@@ -638,9 +762,14 @@ class PublisherWaterfallTests(unittest.TestCase):
             raw_payload,
         )
 
-        self.assertEqual(article.metadata.authors[:3], ["Yang Li", "Celso von Randow", "Crossref Fallback"])
+        self.assertEqual(
+            article.metadata.authors[:3],
+            ["Yang Li", "Celso von Randow", "Crossref Fallback"],
+        )
 
-    def test_springer_to_article_model_keeps_extracted_figures_without_downloads(self) -> None:
+    def test_springer_to_article_model_keeps_extracted_figures_without_downloads(
+        self,
+    ) -> None:
         doi = SPRINGER_SAMPLE.doi
         title = SPRINGER_SAMPLE.title
         landing_url = SPRINGER_SAMPLE.landing_url
@@ -692,7 +821,9 @@ class PublisherWaterfallTests(unittest.TestCase):
             "doi": doi,
             "title": SPRINGER_SAMPLE.title,
             "landing_page_url": landing_url,
-            "fulltext_links": [{"url": f"{landing_url}.pdf", "content_type": "application/pdf"}],
+            "fulltext_links": [
+                {"url": f"{landing_url}.pdf", "content_type": "application/pdf"}
+            ],
         }
         response = {
             "headers": {"content-type": "text/html; charset=utf-8"},
@@ -708,7 +839,9 @@ class PublisherWaterfallTests(unittest.TestCase):
         client = springer_provider.SpringerClient(transport=mock.Mock(), env={})
 
         with (
-            mock.patch.object(client, "_fetch_html_response", return_value=(response, landing_url)),
+            mock.patch.object(
+                client, "_fetch_html_response", return_value=(response, landing_url)
+            ),
             mock.patch.object(
                 springer_html,
                 "extract_article_markdown",
@@ -721,7 +854,8 @@ class PublisherWaterfallTests(unittest.TestCase):
                     source_url=f"{landing_url}.pdf",
                     final_url=f"{landing_url}.pdf",
                     pdf_bytes=fulltext_pdf_bytes(),
-                    markdown_text=f"# {SPRINGER_SAMPLE.title}\n\n## Results\n\n" + ("Body text " * 120),
+                    markdown_text=f"# {SPRINGER_SAMPLE.title}\n\n## Results\n\n"
+                    + ("Body text " * 120),
                     suggested_filename="nature-article.pdf",
                 ),
             ) as mocked_pdf,
@@ -737,7 +871,10 @@ class PublisherWaterfallTests(unittest.TestCase):
         self.assertIn("fulltext:springer_html_fail", article.quality.source_trail)
         self.assertIn("fulltext:springer_pdf_fallback_ok", article.quality.source_trail)
         self.assertTrue(
-            any("Springer HTML route was not usable" in item for item in raw_payload.warnings)
+            any(
+                "Springer HTML route was not usable" in item
+                for item in raw_payload.warnings
+            )
         )
         self.assertIn(
             "Full text was extracted from PDF fallback after the Springer HTML path was not usable.",
@@ -755,7 +892,9 @@ class PublisherWaterfallTests(unittest.TestCase):
             "doi": doi,
             "title": SPRINGER_SAMPLE.title,
             "landing_page_url": landing_url,
-            "fulltext_links": [{"url": f"{landing_url}.pdf", "content_type": "application/pdf"}],
+            "fulltext_links": [
+                {"url": f"{landing_url}.pdf", "content_type": "application/pdf"}
+            ],
         }
         response = {
             "headers": {"content-type": "text/html; charset=utf-8"},
@@ -774,7 +913,9 @@ class PublisherWaterfallTests(unittest.TestCase):
         client = springer_provider.SpringerClient(transport=mock.Mock(), env={})
 
         with (
-            mock.patch.object(client, "_fetch_html_response", return_value=(response, landing_url)),
+            mock.patch.object(
+                client, "_fetch_html_response", return_value=(response, landing_url)
+            ),
             mock.patch.object(
                 springer_provider,
                 "fetch_pdf_over_http",
@@ -782,7 +923,8 @@ class PublisherWaterfallTests(unittest.TestCase):
                     source_url=f"{landing_url}.pdf",
                     final_url=f"{landing_url}.pdf",
                     pdf_bytes=fulltext_pdf_bytes(),
-                    markdown_text=f"# {SPRINGER_SAMPLE.title}\n\n## Results\n\n" + ("Body text " * 120),
+                    markdown_text=f"# {SPRINGER_SAMPLE.title}\n\n## Results\n\n"
+                    + ("Body text " * 120),
                     suggested_filename="nature-article.pdf",
                 ),
             ) as mocked_pdf,
@@ -792,17 +934,25 @@ class PublisherWaterfallTests(unittest.TestCase):
         mocked_pdf.assert_called_once()
         self.assertEqual(result.article.source, "springer_pdf")
         self.assertEqual(result.article.quality.content_kind, "fulltext")
-        self.assertIn("fulltext:springer_html_fail", result.article.quality.source_trail)
-        self.assertIn("fulltext:springer_pdf_fallback_ok", result.article.quality.source_trail)
+        self.assertIn(
+            "fulltext:springer_html_fail", result.article.quality.source_trail
+        )
+        self.assertIn(
+            "fulltext:springer_pdf_fallback_ok", result.article.quality.source_trail
+        )
 
-    def test_springer_fetch_result_returns_abstract_only_when_pdf_fallback_fails(self) -> None:
+    def test_springer_fetch_result_returns_abstract_only_when_pdf_fallback_fails(
+        self,
+    ) -> None:
         doi = SPRINGER_SAMPLE.doi
         landing_url = SPRINGER_SAMPLE.landing_url
         metadata = {
             "doi": doi,
             "title": SPRINGER_SAMPLE.title,
             "landing_page_url": landing_url,
-            "fulltext_links": [{"url": f"{landing_url}.pdf", "content_type": "application/pdf"}],
+            "fulltext_links": [
+                {"url": f"{landing_url}.pdf", "content_type": "application/pdf"}
+            ],
         }
         response = {
             "headers": {"content-type": "text/html; charset=utf-8"},
@@ -817,13 +967,21 @@ class PublisherWaterfallTests(unittest.TestCase):
         client = springer_provider.SpringerClient(transport=mock.Mock(), env={})
 
         with (
-            mock.patch.object(client, "_fetch_html_response", return_value=(response, landing_url)),
+            mock.patch.object(
+                client, "_fetch_html_response", return_value=(response, landing_url)
+            ),
             mock.patch.object(
                 springer_html,
                 "extract_html_payload",
                 return_value={
                     "markdown_text": f"# {SPRINGER_SAMPLE.title}\n\n## Abstract\n\nHTML abstract only.",
-                    "abstract_sections": [{"kind": "abstract", "heading": "Abstract", "text": "HTML abstract only."}],
+                    "abstract_sections": [
+                        {
+                            "kind": "abstract",
+                            "heading": "Abstract",
+                            "text": "HTML abstract only.",
+                        }
+                    ],
                     "section_hints": [],
                     "extracted_authors": [],
                 },
@@ -831,7 +989,9 @@ class PublisherWaterfallTests(unittest.TestCase):
             mock.patch.object(
                 springer_provider,
                 "fetch_pdf_over_http",
-                side_effect=springer_provider.PdfFetchFailure("pdf_download_failed", "Springer PDF fallback failed."),
+                side_effect=springer_provider.PdfFetchFailure(
+                    "pdf_download_failed", "Springer PDF fallback failed."
+                ),
             ),
         ):
             result = client.fetch_result(doi, metadata, None)
@@ -839,19 +999,32 @@ class PublisherWaterfallTests(unittest.TestCase):
         self.assertEqual(result.article.source, "springer_html")
         self.assertEqual(result.article.quality.content_kind, "abstract_only")
         self.assertEqual(result.article.metadata.abstract, "HTML abstract only.")
-        self.assertIn("fulltext:springer_html_fail", result.article.quality.source_trail)
-        self.assertIn("fulltext:springer_abstract_only", result.article.quality.source_trail)
+        self.assertIn(
+            "fulltext:springer_html_fail", result.article.quality.source_trail
+        )
+        self.assertIn(
+            "fulltext:springer_abstract_only", result.article.quality.source_trail
+        )
         self.assertNotIn("fallback:metadata_only", result.article.quality.source_trail)
-        self.assertTrue(any("returning abstract-only content" in warning for warning in result.article.quality.warnings))
+        self.assertTrue(
+            any(
+                "returning abstract-only content" in warning
+                for warning in result.article.quality.warnings
+            )
+        )
 
-    def test_springer_fetch_result_returns_metadata_only_when_no_abstract_and_pdf_fallback_fails(self) -> None:
+    def test_springer_fetch_result_returns_metadata_only_when_no_abstract_and_pdf_fallback_fails(
+        self,
+    ) -> None:
         doi = SPRINGER_SAMPLE.doi
         landing_url = SPRINGER_SAMPLE.landing_url
         metadata = {
             "doi": doi,
             "title": SPRINGER_SAMPLE.title,
             "landing_page_url": landing_url,
-            "fulltext_links": [{"url": f"{landing_url}.pdf", "content_type": "application/pdf"}],
+            "fulltext_links": [
+                {"url": f"{landing_url}.pdf", "content_type": "application/pdf"}
+            ],
         }
         response = {
             "headers": {"content-type": "text/html; charset=utf-8"},
@@ -866,7 +1039,9 @@ class PublisherWaterfallTests(unittest.TestCase):
         client = springer_provider.SpringerClient(transport=mock.Mock(), env={})
 
         with (
-            mock.patch.object(client, "_fetch_html_response", return_value=(response, landing_url)),
+            mock.patch.object(
+                client, "_fetch_html_response", return_value=(response, landing_url)
+            ),
             mock.patch.object(
                 springer_html,
                 "extract_html_payload",
@@ -880,14 +1055,18 @@ class PublisherWaterfallTests(unittest.TestCase):
             mock.patch.object(
                 springer_provider,
                 "fetch_pdf_over_http",
-                side_effect=springer_provider.PdfFetchFailure("pdf_download_failed", "Springer PDF fallback failed."),
+                side_effect=springer_provider.PdfFetchFailure(
+                    "pdf_download_failed", "Springer PDF fallback failed."
+                ),
             ),
         ):
             result = client.fetch_result(doi, metadata, None)
 
         self.assertEqual(result.article.source, "springer_html")
         self.assertEqual(result.article.quality.content_kind, "metadata_only")
-        self.assertNotIn("fulltext:springer_abstract_only", result.article.quality.source_trail)
+        self.assertNotIn(
+            "fulltext:springer_abstract_only", result.article.quality.source_trail
+        )
 
     def test_springer_fetch_result_recovers_pdf_after_abstract_only_html(self) -> None:
         doi = SPRINGER_SAMPLE.doi
@@ -896,7 +1075,9 @@ class PublisherWaterfallTests(unittest.TestCase):
             "doi": doi,
             "title": SPRINGER_SAMPLE.title,
             "landing_page_url": landing_url,
-            "fulltext_links": [{"url": f"{landing_url}.pdf", "content_type": "application/pdf"}],
+            "fulltext_links": [
+                {"url": f"{landing_url}.pdf", "content_type": "application/pdf"}
+            ],
         }
         response = {
             "headers": {"content-type": "text/html; charset=utf-8"},
@@ -911,13 +1092,21 @@ class PublisherWaterfallTests(unittest.TestCase):
         client = springer_provider.SpringerClient(transport=mock.Mock(), env={})
 
         with (
-            mock.patch.object(client, "_fetch_html_response", return_value=(response, landing_url)),
+            mock.patch.object(
+                client, "_fetch_html_response", return_value=(response, landing_url)
+            ),
             mock.patch.object(
                 springer_html,
                 "extract_html_payload",
                 return_value={
                     "markdown_text": f"# {SPRINGER_SAMPLE.title}\n\n## Abstract\n\nHTML abstract only.",
-                    "abstract_sections": [{"kind": "abstract", "heading": "Abstract", "text": "HTML abstract only."}],
+                    "abstract_sections": [
+                        {
+                            "kind": "abstract",
+                            "heading": "Abstract",
+                            "text": "HTML abstract only.",
+                        }
+                    ],
                     "section_hints": [],
                     "extracted_authors": [],
                 },
@@ -929,7 +1118,8 @@ class PublisherWaterfallTests(unittest.TestCase):
                     source_url=f"{landing_url}.pdf",
                     final_url=f"{landing_url}.pdf",
                     pdf_bytes=fulltext_pdf_bytes(),
-                    markdown_text=f"# {SPRINGER_SAMPLE.title}\n\n## Results\n\n" + ("Body text " * 120),
+                    markdown_text=f"# {SPRINGER_SAMPLE.title}\n\n## Results\n\n"
+                    + ("Body text " * 120),
                     suggested_filename="nature-article.pdf",
                 ),
             ),
@@ -938,17 +1128,25 @@ class PublisherWaterfallTests(unittest.TestCase):
 
         self.assertEqual(result.article.source, "springer_pdf")
         self.assertEqual(result.article.quality.content_kind, "fulltext")
-        self.assertIn("fulltext:springer_html_fail", result.article.quality.source_trail)
-        self.assertIn("fulltext:springer_pdf_fallback_ok", result.article.quality.source_trail)
+        self.assertIn(
+            "fulltext:springer_html_fail", result.article.quality.source_trail
+        )
+        self.assertIn(
+            "fulltext:springer_pdf_fallback_ok", result.article.quality.source_trail
+        )
 
-    def test_springer_fetch_result_recovers_pdf_when_accepted_html_renders_abstract_only(self) -> None:
+    def test_springer_fetch_result_recovers_pdf_when_accepted_html_renders_abstract_only(
+        self,
+    ) -> None:
         doi = SPRINGER_SAMPLE.doi
         landing_url = SPRINGER_SAMPLE.landing_url
         metadata = {
             "doi": doi,
             "title": SPRINGER_SAMPLE.title,
             "landing_page_url": landing_url,
-            "fulltext_links": [{"url": f"{landing_url}.pdf", "content_type": "application/pdf"}],
+            "fulltext_links": [
+                {"url": f"{landing_url}.pdf", "content_type": "application/pdf"}
+            ],
         }
         response = {
             "headers": {"content-type": "text/html; charset=utf-8"},
@@ -963,14 +1161,28 @@ class PublisherWaterfallTests(unittest.TestCase):
         client = springer_provider.SpringerClient(transport=mock.Mock(), env={})
 
         with (
-            mock.patch.object(client, "_fetch_html_response", return_value=(response, landing_url)),
+            mock.patch.object(
+                client, "_fetch_html_response", return_value=(response, landing_url)
+            ),
             mock.patch.object(
                 springer_html,
                 "extract_html_payload",
                 return_value={
                     "markdown_text": f"# {SPRINGER_SAMPLE.title}\n\n## Abstract\n\nHTML abstract only.",
-                    "abstract_sections": [{"kind": "abstract", "heading": "Abstract", "text": "HTML abstract only."}],
-                    "section_hints": [{"kind": "body", "heading": "Results", "text": "Publisher structure signal."}],
+                    "abstract_sections": [
+                        {
+                            "kind": "abstract",
+                            "heading": "Abstract",
+                            "text": "HTML abstract only.",
+                        }
+                    ],
+                    "section_hints": [
+                        {
+                            "kind": "body",
+                            "heading": "Results",
+                            "text": "Publisher structure signal.",
+                        }
+                    ],
                     "extracted_authors": [],
                 },
             ),
@@ -979,7 +1191,12 @@ class PublisherWaterfallTests(unittest.TestCase):
                 "assess",
                 return_value=mock.Mock(
                     accepted=True,
-                    to_dict=mock.Mock(return_value={"reason": "body_sufficient", "content_kind": "fulltext"}),
+                    to_dict=mock.Mock(
+                        return_value={
+                            "reason": "body_sufficient",
+                            "content_kind": "fulltext",
+                        }
+                    ),
                 ),
             ),
             mock.patch.object(
@@ -989,7 +1206,8 @@ class PublisherWaterfallTests(unittest.TestCase):
                     source_url=f"{landing_url}.pdf",
                     final_url=f"{landing_url}.pdf",
                     pdf_bytes=fulltext_pdf_bytes(),
-                    markdown_text=f"# {SPRINGER_SAMPLE.title}\n\n## Results\n\n" + ("Body text " * 120),
+                    markdown_text=f"# {SPRINGER_SAMPLE.title}\n\n## Results\n\n"
+                    + ("Body text " * 120),
                     suggested_filename="nature-article.pdf",
                 ),
             ) as mocked_pdf,
@@ -999,9 +1217,15 @@ class PublisherWaterfallTests(unittest.TestCase):
         mocked_pdf.assert_called_once()
         self.assertEqual(result.article.source, "springer_pdf")
         self.assertEqual(result.article.quality.content_kind, "fulltext")
-        self.assertIn("fulltext:springer_html_fail", result.article.quality.source_trail)
-        self.assertIn("fulltext:springer_pdf_fallback_ok", result.article.quality.source_trail)
-        self.assertNotIn("fulltext:springer_html_ok", result.article.quality.source_trail)
+        self.assertIn(
+            "fulltext:springer_html_fail", result.article.quality.source_trail
+        )
+        self.assertIn(
+            "fulltext:springer_pdf_fallback_ok", result.article.quality.source_trail
+        )
+        self.assertNotIn(
+            "fulltext:springer_html_ok", result.article.quality.source_trail
+        )
 
     def test_wiley_html_success_keeps_wiley_browser_source(self) -> None:
         doi = WILEY_SAMPLE.doi
@@ -1044,7 +1268,9 @@ class PublisherWaterfallTests(unittest.TestCase):
                 fetch_pdf_with_browser=mocked_browser_pdf,
             )
             with (
-                mock.patch.object(wiley_provider, "_fetch_wiley_tdm_pdf_result") as mocked_api,
+                mock.patch.object(
+                    wiley_provider, "_fetch_wiley_tdm_pdf_result"
+                ) as mocked_api,
             ):
                 raw_payload = client.fetch_raw_fulltext(doi, metadata)
                 article = client.to_article_model(metadata, raw_payload)
@@ -1056,7 +1282,9 @@ class PublisherWaterfallTests(unittest.TestCase):
         self.assertEqual(article.source, "wiley_browser")
         self.assertIn("fulltext:wiley_html_ok", article.quality.source_trail)
 
-    def test_wiley_prefers_browser_pdf_over_tdm_api_when_html_is_not_usable(self) -> None:
+    def test_wiley_prefers_browser_pdf_over_tdm_api_when_html_is_not_usable(
+        self,
+    ) -> None:
         doi = WILEY_PDF_SAMPLE.doi
         metadata = {
             "doi": doi,
@@ -1081,7 +1309,8 @@ class PublisherWaterfallTests(unittest.TestCase):
                         source_url=f"https://onlinelibrary.wiley.com/doi/epdf/{doi}",
                         content_type="application/pdf",
                         body=fulltext_pdf_bytes(),
-                        markdown_text=f"# {WILEY_PDF_SAMPLE.title}\n\n## Results\n\n" + ("Body text " * 120),
+                        markdown_text=f"# {WILEY_PDF_SAMPLE.title}\n\n## Results\n\n"
+                        + ("Body text " * 120),
                         suggested_filename="article.pdf",
                     ),
                     needs_local_copy=True,
@@ -1100,7 +1329,9 @@ class PublisherWaterfallTests(unittest.TestCase):
                 fetch_seeded_browser_pdf_payload=mocked_browser_pdf,
             )
             with (
-                mock.patch.object(wiley_provider, "_fetch_wiley_tdm_pdf_result") as mocked_api,
+                mock.patch.object(
+                    wiley_provider, "_fetch_wiley_tdm_pdf_result"
+                ) as mocked_api,
             ):
                 raw_payload = client.fetch_raw_fulltext(doi, metadata)
                 article = client.to_article_model(metadata, raw_payload)
@@ -1127,8 +1358,18 @@ class PublisherWaterfallTests(unittest.TestCase):
             mocked_warm = mock.Mock(
                 return_value={
                     "browser_cookies": [
-                        {"name": "cf_clearance", "value": "seed", "domain": ".wiley.com", "path": "/"},
-                        {"name": "sessionid", "value": "warm", "domain": ".wiley.com", "path": "/"},
+                        {
+                            "name": "cf_clearance",
+                            "value": "seed",
+                            "domain": ".wiley.com",
+                            "path": "/",
+                        },
+                        {
+                            "name": "sessionid",
+                            "value": "warm",
+                            "domain": ".wiley.com",
+                            "path": "/",
+                        },
                     ],
                     "browser_user_agent": "Mozilla/5.0",
                     "browser_final_url": WILEY_PDF_SAMPLE.landing_url,
@@ -1139,7 +1380,8 @@ class PublisherWaterfallTests(unittest.TestCase):
                     source_url=f"https://onlinelibrary.wiley.com/doi/epdf/{doi}",
                     final_url=f"https://onlinelibrary.wiley.com/doi/epdf/{doi}",
                     pdf_bytes=fulltext_pdf_bytes(),
-                    markdown_text=f"# {WILEY_PDF_SAMPLE.title}\n\n## Results\n\n" + ("Body text " * 120),
+                    markdown_text=f"# {WILEY_PDF_SAMPLE.title}\n\n## Results\n\n"
+                    + ("Body text " * 120),
                     suggested_filename="article.pdf",
                 )
             )
@@ -1153,7 +1395,12 @@ class PublisherWaterfallTests(unittest.TestCase):
                         "HTML redirected to abstract.",
                         browser_context_seed={
                             "browser_cookies": [
-                                {"name": "cf_clearance", "value": "seed", "domain": ".wiley.com", "path": "/"}
+                                {
+                                    "name": "cf_clearance",
+                                    "value": "seed",
+                                    "domain": ".wiley.com",
+                                    "path": "/",
+                                }
                             ],
                             "browser_user_agent": "Mozilla/5.0",
                             "browser_final_url": WILEY_PDF_SAMPLE.landing_url,
@@ -1164,7 +1411,9 @@ class PublisherWaterfallTests(unittest.TestCase):
                 fetch_pdf_with_browser=mocked_browser_pdf,
             )
             with (
-                mock.patch.object(wiley_provider, "_fetch_wiley_tdm_pdf_result") as mocked_api,
+                mock.patch.object(
+                    wiley_provider, "_fetch_wiley_tdm_pdf_result"
+                ) as mocked_api,
             ):
                 raw_payload = client.fetch_raw_fulltext(doi, metadata)
                 article = client.to_article_model(metadata, raw_payload)
@@ -1217,7 +1466,12 @@ class PublisherWaterfallTests(unittest.TestCase):
                         "HTML redirected to abstract.",
                         browser_context_seed={
                             "browser_cookies": [
-                                {"name": "cf_clearance", "value": "seed", "domain": ".wiley.com", "path": "/"}
+                                {
+                                    "name": "cf_clearance",
+                                    "value": "seed",
+                                    "domain": ".wiley.com",
+                                    "path": "/",
+                                }
                             ],
                             "browser_user_agent": "Mozilla/5.0",
                             "browser_final_url": WILEY_PDF_SAMPLE.landing_url,
@@ -1234,7 +1488,8 @@ class PublisherWaterfallTests(unittest.TestCase):
                         source_url=f"https://api.wiley.com/onlinelibrary/tdm/v1/articles/{doi}",
                         final_url=f"https://api.wiley.com/onlinelibrary/tdm/v1/articles/{doi}",
                         pdf_bytes=fulltext_pdf_bytes(),
-                        markdown_text=f"# {WILEY_PDF_SAMPLE.title}\n\n## Results\n\n" + ("Body text " * 120),
+                        markdown_text=f"# {WILEY_PDF_SAMPLE.title}\n\n## Results\n\n"
+                        + ("Body text " * 120),
                         suggested_filename="article.pdf",
                     ),
                 ) as mocked_api,
@@ -1251,7 +1506,9 @@ class PublisherWaterfallTests(unittest.TestCase):
         self.assertIn("fulltext:wiley_pdf_fallback_ok", article.quality.source_trail)
         self.assertNotIn("fulltext:wiley_pdf_browser_ok", article.quality.source_trail)
 
-    def test_wiley_reports_api_and_browser_pdf_failures_after_html_failure(self) -> None:
+    def test_wiley_reports_api_and_browser_pdf_failures_after_html_failure(
+        self,
+    ) -> None:
         doi = WILEY_PDF_SAMPLE.doi
         metadata = {
             "doi": doi,
@@ -1305,7 +1562,9 @@ class PublisherWaterfallTests(unittest.TestCase):
         self.assertIn("Wiley browser PDF failure", raised.exception.message)
         self.assertIn("Wiley API PDF failure", raised.exception.message)
 
-    def test_wiley_can_use_official_tdm_api_when_browser_runtime_is_not_configured(self) -> None:
+    def test_wiley_can_use_official_tdm_api_when_browser_runtime_is_not_configured(
+        self,
+    ) -> None:
         doi = WILEY_PDF_SAMPLE.doi
         metadata = {
             "doi": doi,
@@ -1334,7 +1593,8 @@ class PublisherWaterfallTests(unittest.TestCase):
                     source_url=f"https://api.wiley.com/onlinelibrary/tdm/v1/articles/{doi}",
                     final_url=f"https://api.wiley.com/onlinelibrary/tdm/v1/articles/{doi}",
                     pdf_bytes=fulltext_pdf_bytes(),
-                    markdown_text=f"# {WILEY_PDF_SAMPLE.title}\n\n## Results\n\n" + ("Body text " * 120),
+                    markdown_text=f"# {WILEY_PDF_SAMPLE.title}\n\n## Results\n\n"
+                    + ("Body text " * 120),
                     suggested_filename="article.pdf",
                 ),
             ) as mocked_api,
@@ -1348,14 +1608,25 @@ class PublisherWaterfallTests(unittest.TestCase):
         self.assertIn("fulltext:wiley_pdf_api_ok", article.quality.source_trail)
 
     def test_wiley_tdm_api_helper_follows_redirect_to_pdf_payload(self) -> None:
-        api_url = "https://api.wiley.com/onlinelibrary/tdm/v1/articles/10.1111%2Fexample"
+        api_url = (
+            "https://api.wiley.com/onlinelibrary/tdm/v1/articles/10.1111%2Fexample"
+        )
         download_url = "https://alm.wiley.com/alm/api/v2/download/example"
 
         class RedirectingTransport:
             def __init__(self) -> None:
                 self.calls: list[tuple[str, str, dict[str, str]]] = []
 
-            def request(self, method, url, *, headers=None, timeout=20, retry_on_transient=False, **kwargs):
+            def request(
+                self,
+                method,
+                url,
+                *,
+                headers=None,
+                timeout=20,
+                retry_on_transient=False,
+                **kwargs,
+            ):
                 self.calls.append((method, url, dict(headers or {})))
                 if url == api_url:
                     return {

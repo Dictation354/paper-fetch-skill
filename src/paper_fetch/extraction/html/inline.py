@@ -27,7 +27,9 @@ INLINE_EXPONENT_BODY_PATTERN = re.compile(r"[+\-−–]?\d+(?:\.\d+)?")
 INLINE_UNSIGNED_INTEGER_BODY_PATTERN = re.compile(r"\d+")
 INLINE_SUBSCRIPT_BODY_PATTERN = re.compile(r"\d+[A-Za-z]?|[A-Za-z]\d*")
 INLINE_CHEMICAL_BASE_PATTERN = re.compile(r"[A-Z][A-Z0-9]{0,5}")
-INLINE_COMPACT_UNIT_SYMBOL_PATTERN = re.compile(r"(?:[cdfhkmunpµμ][a-zµμ]{0,3}|[A-Z][A-Za-z]{0,3})")
+INLINE_COMPACT_UNIT_SYMBOL_PATTERN = re.compile(
+    r"(?:[cdfhkmunpµμ][a-zµμ]{0,3}|[A-Z][A-Za-z]{0,3})"
+)
 INLINE_MARKED_SINGLE_LETTER_PATTERN = re.compile(r"[*_][A-Za-z][*_]")
 INLINE_TOKEN_PATTERN = re.compile(r"[*_`]*[A-Za-z0-9µμ]+[*_`]*\Z")
 
@@ -80,7 +82,11 @@ def _normalize_inline_text_fragment(
     else:
         normalized = re.sub(r"[ \t\r\f\v]+", " ", value).strip(" ")
     if not normalized:
-        return " " if preserve_edge_space and (has_leading_space or has_trailing_space) else ""
+        return (
+            " "
+            if preserve_edge_space and (has_leading_space or has_trailing_space)
+            else ""
+        )
     if preserve_edge_space and has_leading_space:
         normalized = f" {normalized}"
     if preserve_edge_space and has_trailing_space:
@@ -119,7 +125,9 @@ def _sup_sub_token_from_body(tag: str, body: str) -> SupSubToken | None:
     )
 
 
-def inline_markdown_tokens(text: str, *, parse_citations: bool = True) -> list[InlineToken]:
+def inline_markdown_tokens(
+    text: str, *, parse_citations: bool = True
+) -> list[InlineToken]:
     """Tokenize a Markdown inline fragment containing existing sup/sub tags."""
 
     tokens: list[InlineToken] = []
@@ -295,27 +303,47 @@ def render_inline_tokens(
 ) -> str:
     if not tokens:
         return ""
-    pieces = [_render_token(token, collapse_newlines=collapse_newlines, break_render=break_render) for token in tokens]
+    pieces = [
+        _render_token(
+            token, collapse_newlines=collapse_newlines, break_render=break_render
+        )
+        for token in tokens
+    ]
     rendered = ""
     for index, (token, piece) in enumerate(zip(tokens, pieces, strict=True)):
         if not piece:
             continue
         if isinstance(token, (CitationToken, BreakToken)):
             rendered = rendered.rstrip(" \t")
-        elif isinstance(token, SupSubToken) and _should_tighten_before_sup_sub(rendered, token, pieces[index + 1 :]):
+        elif isinstance(token, SupSubToken) and _should_tighten_before_sup_sub(
+            rendered, token, pieces[index + 1 :]
+        ):
             rendered = rendered.rstrip(" \t")
-        elif _needs_inserted_space(rendered, piece, previous_token=tokens[index - 1] if index else None, current_token=token):
+        elif _needs_inserted_space(
+            rendered,
+            piece,
+            previous_token=tokens[index - 1] if index else None,
+            current_token=token,
+        ):
             rendered += " "
         rendered += piece
-    rendered = _cleanup_rendered_inline_text(rendered, policy=policy, collapse_newlines=collapse_newlines)
+    rendered = _cleanup_rendered_inline_text(
+        rendered, policy=policy, collapse_newlines=collapse_newlines
+    )
     return rendered.strip() if strip else rendered
 
 
-def _render_token(token: InlineToken, *, collapse_newlines: bool, break_render: str) -> str:
+def _render_token(
+    token: InlineToken, *, collapse_newlines: bool, break_render: str
+) -> str:
     if isinstance(token, TextToken):
-        return _normalize_inline_text_fragment(token.text, collapse_newlines=collapse_newlines)
+        return _normalize_inline_text_fragment(
+            token.text, collapse_newlines=collapse_newlines
+        )
     if isinstance(token, RawMarkdownToken):
-        return _normalize_inline_text_fragment(token.text, collapse_newlines=collapse_newlines)
+        return _normalize_inline_text_fragment(
+            token.text, collapse_newlines=collapse_newlines
+        )
     if isinstance(token, CitationToken):
         return f"{NUMERIC_CITATION_SENTINEL_PREFIX}{token.payload}@@"
     if isinstance(token, SupSubToken):
@@ -326,7 +354,9 @@ def _render_token(token: InlineToken, *, collapse_newlines: bool, break_render: 
     return ""
 
 
-def _cleanup_rendered_inline_text(text: str, *, policy: InlineTextPolicy, collapse_newlines: bool) -> str:
+def _cleanup_rendered_inline_text(
+    text: str, *, policy: InlineTextPolicy, collapse_newlines: bool
+) -> str:
     normalized = text.replace("\xa0", " ")
     if collapse_newlines:
         normalized = re.sub(r"[ \t\r\f\v]+", " ", normalized)
@@ -338,8 +368,12 @@ def _cleanup_rendered_inline_text(text: str, *, policy: InlineTextPolicy, collap
     normalized = re.sub(r"\s+</(sub|sup)>", r"</\1>", normalized, flags=re.IGNORECASE)
     normalized = re.sub(r"(</sub>)\s+\(", r"\1(", normalized, flags=re.IGNORECASE)
     punctuation = r"[,.;:%\]\}]" if policy == "table_cell" else r"[,.;:%\]\}\+\)]"
-    normalized = re.sub(rf"(</(?:sub|sup)>)\s+({punctuation})", r"\1\2", normalized, flags=re.IGNORECASE)
-    normalized = re.sub(r"([(\[])\s+(?=<(?:sub|sup)>)", r"\1", normalized, flags=re.IGNORECASE)
+    normalized = re.sub(
+        rf"(</(?:sub|sup)>)\s+({punctuation})", r"\1\2", normalized, flags=re.IGNORECASE
+    )
+    normalized = re.sub(
+        r"([(\[])\s+(?=<(?:sub|sup)>)", r"\1", normalized, flags=re.IGNORECASE
+    )
     return normalized
 
 
@@ -362,12 +396,17 @@ def _needs_inserted_space(
     right_edge = _visible_inline_edge(right, last=False)
     if not left_edge or not right_edge:
         return False
-    if left_edge in HTML_NO_SPACE_AFTER_CHARS or right_edge in HTML_NO_SPACE_BEFORE_CHARS:
+    if (
+        left_edge in HTML_NO_SPACE_AFTER_CHARS
+        or right_edge in HTML_NO_SPACE_BEFORE_CHARS
+    ):
         return False
     return right_edge.isalnum() or right_edge in {"*", "_", "<"}
 
 
-def _should_tighten_before_sup_sub(left: str, token: SupSubToken, future_pieces: Sequence[str]) -> bool:
+def _should_tighten_before_sup_sub(
+    left: str, token: SupSubToken, future_pieces: Sequence[str]
+) -> bool:
     if not left:
         return False
     if not left[-1:].isspace():
@@ -399,7 +438,9 @@ def _should_tighten_superscript(base: str, body: str, right: str) -> bool:
         return _looks_symbol_like(base)
     if right[:1].isupper() and INLINE_UNSIGNED_INTEGER_BODY_PATTERN.fullmatch(body):
         return False
-    return INLINE_UNSIGNED_INTEGER_BODY_PATTERN.fullmatch(body) is not None and _looks_compact_unit_symbol(base)
+    return INLINE_UNSIGNED_INTEGER_BODY_PATTERN.fullmatch(
+        body
+    ) is not None and _looks_compact_unit_symbol(base)
 
 
 def _should_tighten_subscript(base: str, body: str) -> bool:
@@ -411,7 +452,11 @@ def _should_tighten_subscript(base: str, body: str) -> bool:
 
 
 def _looks_like_isotope_superscript(tag: str, body: str, right: str) -> bool:
-    return tag == "sup" and right[:1].isupper() and INLINE_UNSIGNED_INTEGER_BODY_PATTERN.fullmatch(body) is not None
+    return (
+        tag == "sup"
+        and right[:1].isupper()
+        and INLINE_UNSIGNED_INTEGER_BODY_PATTERN.fullmatch(body) is not None
+    )
 
 
 def _looks_symbol_like(base: str) -> bool:
@@ -427,7 +472,10 @@ def _looks_compact_unit_symbol(base: str) -> bool:
 
 def _is_single_letter_math_symbol(base: str) -> bool:
     plain = _plain_inline_base(base)
-    return bool(re.fullmatch(r"[A-Za-z]", plain) or INLINE_MARKED_SINGLE_LETTER_PATTERN.fullmatch(base))
+    return bool(
+        re.fullmatch(r"[A-Za-z]", plain)
+        or INLINE_MARKED_SINGLE_LETTER_PATTERN.fullmatch(base)
+    )
 
 
 def _plain_inline_base(base: str) -> str:

@@ -19,7 +19,11 @@ def direct_child_tags(node: Tag) -> list[Tag]:
 def class_tokens(node: Tag) -> set[str]:
     raw_value = (getattr(node, "attrs", None) or {}).get("class")
     if isinstance(raw_value, (list, tuple, set)):
-        return {normalize_text(str(item)).lower() for item in raw_value if normalize_text(str(item))}
+        return {
+            normalize_text(str(item)).lower()
+            for item in raw_value
+            if normalize_text(str(item))
+        }
     normalized = normalize_text(str(raw_value or "")).lower()
     return {normalized} if normalized else set()
 
@@ -41,7 +45,9 @@ def soup_root(node: Tag | None) -> BeautifulSoup | None:
     return None
 
 
-def append_text_block(parent: Tag, text: str, *, tag_name: str = "p", soup: BeautifulSoup | None = None) -> None:
+def append_text_block(
+    parent: Tag, text: str, *, tag_name: str = "p", soup: BeautifulSoup | None = None
+) -> None:
     root = soup or soup_root(parent)
     if root is None:
         return
@@ -72,7 +78,11 @@ def html_title_snippet(body: bytes | bytearray | None, *, limit: int = 160) -> s
         decoded = bytes(body[:8192]).decode("utf-8", errors="replace")
     except Exception:
         return ""
-    match = re.search(r"<title\b[^>]*>(.*?)</title>", decoded, flags=re.IGNORECASE | re.DOTALL)
+    match = re.search(
+        r"<title\b[^>]*>(.*?)</title>", decoded, flags=re.IGNORECASE | re.DOTALL
+    )
     if not match:
         return ""
-    return normalize_text(html_lib.unescape(re.sub(r"<[^>]+>", " ", match.group(1))))[:limit]
+    return normalize_text(html_lib.unescape(re.sub(r"<[^>]+>", " ", match.group(1))))[
+        :limit
+    ]

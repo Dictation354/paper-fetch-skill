@@ -22,6 +22,7 @@ from .dom import _soup_attr_url
 
 from bs4 import BeautifulSoup, Tag
 
+
 def _looks_like_formula_image(
     tag: Any,
     url: str,
@@ -37,7 +38,10 @@ def _looks_like_formula_image(
     if not isinstance(tag, Tag):
         return False
     identity = formula_ancestor_identity_text(tag)
-    return any(token in identity for token in formula_container_tokens_for_profile(noise_profile))
+    return any(
+        token in identity
+        for token in formula_container_tokens_for_profile(noise_profile)
+    )
 
 
 def _formula_heading_for_image(
@@ -79,7 +83,10 @@ def _formula_asset_candidate_nodes(
     for node in soup.find_all(True):
         if not isinstance(node, Tag):
             continue
-        if any(node.has_attr(attr) for attr in (*FORMULA_IMAGE_ATTRS, *FORMULA_IMAGE_SRCSET_ATTRS)):
+        if any(
+            node.has_attr(attr)
+            for attr in (*FORMULA_IMAGE_ATTRS, *FORMULA_IMAGE_SRCSET_ATTRS)
+        ):
             add(node)
     return candidates
 
@@ -98,7 +105,9 @@ def extract_formula_assets(
     for node in _formula_asset_candidate_nodes(soup, noise_profile=noise_profile):
         if not isinstance(node, Tag):
             continue
-        url = formula_image_url_from_node(node, include_adjacent=True) or _soup_attr_url(
+        url = formula_image_url_from_node(
+            node, include_adjacent=True
+        ) or _soup_attr_url(
             node,
             *FORMULA_IMAGE_ATTRS,
             *FORMULA_IMAGE_SRCSET_ATTRS,

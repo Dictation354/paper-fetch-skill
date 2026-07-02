@@ -83,7 +83,12 @@ def texmath_target_path(target_dir: Path) -> Path:
 def stage_bundled_node_workspace(target_dir: Path) -> Path:
     target_dir.mkdir(parents=True, exist_ok=True)
     resource_root = bundled_formula_resources()
-    for name in (FORMULA_NODE_SCRIPT_NAME, FORMULA_NODE_WORKER_SCRIPT_NAME, "package.json", "package-lock.json"):
+    for name in (
+        FORMULA_NODE_SCRIPT_NAME,
+        FORMULA_NODE_WORKER_SCRIPT_NAME,
+        "package.json",
+        "package-lock.json",
+    ):
         resource = resource_root.joinpath(name)
         payload = resource.read_bytes()
         destination = target_dir / name
@@ -95,7 +100,11 @@ def stage_bundled_node_workspace(target_dir: Path) -> Path:
 
 def reuse_texmath_from_path(target_dir: Path) -> bool:
     system_texmath = next(
-        (candidate for name in TEXMATH_EXECUTABLE_NAMES if (candidate := shutil.which(name))),
+        (
+            candidate
+            for name in TEXMATH_EXECUTABLE_NAMES
+            if (candidate := shutil.which(name))
+        ),
         None,
     )
     if not system_texmath:
@@ -120,7 +129,12 @@ def install_texmath_with_cabal(target_dir: Path) -> bool:
     if not cabal:
         return False
     log("Attempting to install texmath with cabal")
-    subprocess.run([cabal, "update"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
+    subprocess.run(
+        [cabal, "update"],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        check=False,
+    )
     return _run_with_log(
         "texmath-cabal-",
         [
@@ -166,7 +180,9 @@ def ensure_texmath(target_dir: Path) -> bool:
         if have_working_texmath(target):
             log(f"Formula backend ready: texmath ({target})")
             return True
-        warn("texmath build reported success but the installed binary could not be executed.")
+        warn(
+            "texmath build reported success but the installed binary could not be executed."
+        )
     return False
 
 
@@ -184,24 +200,34 @@ def ensure_mathml_to_latex(target_dir: Path, *, install_node: bool) -> bool:
         return False
 
     workspace = stage_bundled_node_workspace(target_dir)
-    if (workspace / "node_modules" / "mathml-to-latex").exists() and (workspace / "node_modules" / "katex").exists():
+    if (workspace / "node_modules" / "mathml-to-latex").exists() and (
+        workspace / "node_modules" / "katex"
+    ).exists():
         log(f"Using existing mathml-to-latex Node dependencies in {workspace}")
         return True
 
     log(f"Installing Node dependencies for mathml-to-latex fallback in {workspace}")
-    if _run_with_log("mathml-to-latex-", [npm, "install", "--omit=dev", "--silent"], cwd=workspace):
+    if _run_with_log(
+        "mathml-to-latex-", [npm, "install", "--omit=dev", "--silent"], cwd=workspace
+    ):
         log("Formula backend ready: mathml-to-latex")
         return True
     return False
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Install optional external formula backends for paper-fetch.")
+    parser = argparse.ArgumentParser(
+        description="Install optional external formula backends for paper-fetch."
+    )
     parser.add_argument(
         "--target-dir",
         help="Directory that should store formula backend assets. Defaults to the paper-fetch user data directory.",
     )
-    parser.add_argument("--no-node", action="store_true", help="Skip the Node mathml-to-latex fallback install.")
+    parser.add_argument(
+        "--no-node",
+        action="store_true",
+        help="Skip the Node mathml-to-latex fallback install.",
+    )
     return parser
 
 
@@ -209,7 +235,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
 
-    target_dir = Path(args.target_dir).expanduser() if args.target_dir else default_user_formula_tools_dir()
+    target_dir = (
+        Path(args.target_dir).expanduser()
+        if args.target_dir
+        else default_user_formula_tools_dir()
+    )
     target_dir.mkdir(parents=True, exist_ok=True)
 
     if ensure_texmath(target_dir):
@@ -219,7 +249,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     if ensure_mathml_to_latex(target_dir, install_node=not args.no_node):
         return 0
 
-    warn("No external MathML-to-LaTeX backend is available. The built-in Python renderer will be used.")
+    warn(
+        "No external MathML-to-LaTeX backend is available. The built-in Python renderer will be used."
+    )
     return 0
 
 

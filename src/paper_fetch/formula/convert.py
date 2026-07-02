@@ -51,7 +51,9 @@ _FORMULA_TIMING_COLLECTOR: ContextVar[Callable[[float], None] | None] = ContextV
     "paper_fetch_formula_timing_collector",
     default=None,
 )
-_FORMULA_TIMING_DEPTH: ContextVar[int] = ContextVar("paper_fetch_formula_timing_depth", default=0)
+_FORMULA_TIMING_DEPTH: ContextVar[int] = ContextVar(
+    "paper_fetch_formula_timing_depth", default=0
+)
 
 
 def _stop_mathml_workers() -> None:
@@ -109,7 +111,9 @@ UPGREEK_LATEX_ALIASES = {
 UPGREEK_LATEX_ALIAS_NAMES = "|".join(
     re.escape(name) for name in sorted(UPGREEK_LATEX_ALIASES, key=len, reverse=True)
 )
-UPGREEK_LATEX_ALIAS_PATTERN = re.compile(r"\\(" + UPGREEK_LATEX_ALIAS_NAMES + r")(?![A-Za-z])")
+UPGREEK_LATEX_ALIAS_PATTERN = re.compile(
+    r"\\(" + UPGREEK_LATEX_ALIAS_NAMES + r")(?![A-Za-z])"
+)
 LATEX_MSPACE_MU_PATTERN = re.compile(
     r"\\mspace\s*\{\s*([+-]?(?:\d+(?:\.\d*)?|\.\d+))\s*mu\s*\}"
 )
@@ -117,7 +121,9 @@ LATEX_ZERO_HSPACE_PATTERN = re.compile(
     r"\\hspace\*?\s*\{\s*[+-]?(?:0+(?:\.0*)?|\.0+)\s*(?:pt|em|ex|mu|mm|cm|in|pc)?\s*\}"
 )
 ZERO_WIDTH_SPACE_PATTERN = re.compile(r"[\u200b\u200c\u200d\u2060\ufeff]")
-LATEX_SCRIPT_SPLIT_IDENTIFIER_PATTERN = re.compile(r"(?P<script>[_^])\{(?P<body>[A-Za-z0-9](?:\s+[A-Za-z0-9]){1,})\}")
+LATEX_SCRIPT_SPLIT_IDENTIFIER_PATTERN = re.compile(
+    r"(?P<script>[_^])\{(?P<body>[A-Za-z0-9](?:\s+[A-Za-z0-9]){1,})\}"
+)
 LATEX_UPPERCASE_SPLIT_IDENTIFIER_WITH_SCRIPT_PATTERN = re.compile(
     r"(?<![A-Za-z])(?P<body>[A-Z](?:\s+[A-Z]){1,})(?=\s*[_^])"
 )
@@ -232,7 +238,9 @@ class FormulaBackendStrategy:
         env: Mapping[str, str],
     ) -> FormulaConversionResult:
         for candidate in self.fallback_backends:
-            result = convert_mathml_string(raw_mathml, display_mode=display_mode, env=env, backend=candidate)
+            result = convert_mathml_string(
+                raw_mathml, display_mode=display_mode, env=env, backend=candidate
+            )
             if result.status == "ok":
                 return result
         return _completed_result(
@@ -251,7 +259,9 @@ class FormulaBackendStrategy:
     ) -> str:
         parts = [f"{self.name} failed: {primary.error}"]
         for fallback in fallbacks:
-            label = self.fallback_failure_labels.get(fallback.backend, f"{fallback.backend} fallback failed")
+            label = self.fallback_failure_labels.get(
+                fallback.backend, f"{fallback.backend} fallback failed"
+            )
             parts.append(f"{label}: {fallback.error}")
         return "; ".join(parts)
 
@@ -294,7 +304,9 @@ FORMULA_BACKEND_ALIASES = {
 }
 SUPPORTED_BACKENDS = set(FORMULA_BACKEND_REGISTRY)
 BENCHMARK_BACKENDS = tuple(
-    strategy.name for strategy in FORMULA_BACKEND_REGISTRY.values() if strategy.benchmark
+    strategy.name
+    for strategy in FORMULA_BACKEND_REGISTRY.values()
+    if strategy.benchmark
 )
 AUTO_BACKENDS = FORMULA_BACKEND_REGISTRY[BACKEND_AUTO].fallback_backends
 
@@ -317,7 +329,9 @@ def _env_config_value(env: Mapping[str, str], name: str) -> str:
     return str(env.get(name, "")).strip()
 
 
-def _env_signature(env: Mapping[str, str], names: Iterable[str]) -> tuple[tuple[str, str], ...]:
+def _env_signature(
+    env: Mapping[str, str], names: Iterable[str]
+) -> tuple[tuple[str, str], ...]:
     return tuple((name, _env_config_value(env, name)) for name in names)
 
 
@@ -338,7 +352,9 @@ def clear_conversion_cache() -> None:
 
 
 @contextmanager
-def formula_timing_collector(collector: Callable[[float], None] | None) -> Iterator[None]:
+def formula_timing_collector(
+    collector: Callable[[float], None] | None,
+) -> Iterator[None]:
     """Collect wall-clock seconds spent in top-level MathML conversion calls."""
 
     token = _FORMULA_TIMING_COLLECTOR.set(collector)
@@ -356,7 +372,9 @@ def _record_formula_timing(started_at: float) -> None:
         collector(max(0.0, time.monotonic() - started_at))
 
 
-def _conversion_cache_for(env: Mapping[str, str]) -> LRUCache[tuple[object, ...], FormulaConversionResult] | None:
+def _conversion_cache_for(
+    env: Mapping[str, str],
+) -> LRUCache[tuple[object, ...], FormulaConversionResult] | None:
     size = _cache_size(env)
     if size <= 0:
         return None
@@ -367,7 +385,9 @@ def _conversion_cache_for(env: Mapping[str, str]) -> LRUCache[tuple[object, ...]
         return _CONVERSION_CACHE
 
 
-def _cached_result(key: tuple[object, ...], env: Mapping[str, str]) -> FormulaConversionResult | None:
+def _cached_result(
+    key: tuple[object, ...], env: Mapping[str, str]
+) -> FormulaConversionResult | None:
     cache = _conversion_cache_for(env)
     if cache is None:
         return None
@@ -376,7 +396,9 @@ def _cached_result(key: tuple[object, ...], env: Mapping[str, str]) -> FormulaCo
     return replace(result, duration_ms=0) if result is not None else None
 
 
-def _store_result(key: tuple[object, ...], env: Mapping[str, str], result: FormulaConversionResult) -> FormulaConversionResult:
+def _store_result(
+    key: tuple[object, ...], env: Mapping[str, str], result: FormulaConversionResult
+) -> FormulaConversionResult:
     cache = _conversion_cache_for(env)
     if cache is not None:
         with _CONVERSION_CACHE_LOCK:
@@ -389,7 +411,9 @@ def _first_existing_path_cached(candidates: tuple[str, ...]) -> str:
     return first_existing_path(candidates)
 
 
-def _path_candidates_signature(candidates: Iterable[str | Path | None]) -> tuple[str, ...]:
+def _path_candidates_signature(
+    candidates: Iterable[str | Path | None],
+) -> tuple[str, ...]:
     return tuple(str(candidate) for candidate in candidates if candidate)
 
 
@@ -465,7 +489,11 @@ def normalize_latex_macros(value: str | None) -> str:
             except ValueError:
                 return ""
         following = match.string[match.end() : match.end() + 1]
-        suffix = " " if replacement.startswith("\\") and following and following.isalpha() else ""
+        suffix = (
+            " "
+            if replacement.startswith("\\") and following and following.isalpha()
+            else ""
+        )
         return replacement + suffix
 
     text = ZERO_WIDTH_SPACE_PATTERN.sub("", text)
@@ -499,12 +527,16 @@ def _normalize_split_latex_identifiers(value: str) -> str:
         return match.group("body").replace(" ", "")
 
     text = LATEX_SCRIPT_SPLIT_IDENTIFIER_PATTERN.sub(compact_script_identifier, value)
-    return LATEX_UPPERCASE_SPLIT_IDENTIFIER_WITH_SCRIPT_PATTERN.sub(compact_uppercase_identifier, text)
+    return LATEX_UPPERCASE_SPLIT_IDENTIFIER_WITH_SCRIPT_PATTERN.sub(
+        compact_uppercase_identifier, text
+    )
 
 
 def _normalize_latex_operator_spacing(value: str) -> str:
     text = re.sub(r"\\sum(?!\\limits)(?=_)", r"\\sum\\limits", value)
-    return re.sub(r"(\\sum\\limits_\{[^{}]+\}\^\{[^{}]+\})\s+(?=[A-Za-z\\])", r"\1", text)
+    return re.sub(
+        r"(\\sum\\limits_\{[^{}]+\}\^\{[^{}]+\})\s+(?=[A-Za-z\\])", r"\1", text
+    )
 
 
 def normalize_latex(value: str | None) -> str:
@@ -527,8 +559,18 @@ def normalize_latex(value: str | None) -> str:
     return text.strip()
 
 
-def resolve_backend(env: Mapping[str, str] | None = None, backend: str | None = None) -> str:
-    selected = (backend or (env or os.environ).get("MATHML_CONVERTER_BACKEND") or DEFAULT_BACKEND).strip().lower()
+def resolve_backend(
+    env: Mapping[str, str] | None = None, backend: str | None = None
+) -> str:
+    selected = (
+        (
+            backend
+            or (env or os.environ).get("MATHML_CONVERTER_BACKEND")
+            or DEFAULT_BACKEND
+        )
+        .strip()
+        .lower()
+    )
     selected = FORMULA_BACKEND_ALIASES.get(selected, selected)
     if selected not in SUPPORTED_BACKENDS:
         raise ValueError(f"Unsupported formula backend: {selected}")
@@ -569,14 +611,21 @@ def classpath_entries_exist(value: str | None) -> bool:
 def _worker_enabled(env: Mapping[str, str]) -> bool:
     if not _PERSISTENT_MATHML_WORKER_SUPPORTED:
         return False
-    return _env_config_value(env, "MATHML_TO_LATEX_WORKER").lower() not in {"0", "false", "no", "off"}
+    return _env_config_value(env, "MATHML_TO_LATEX_WORKER").lower() not in {
+        "0",
+        "false",
+        "no",
+        "off",
+    }
 
 
 def _compact_error_text(value: object) -> str:
     return re.sub(r"\s+", " ", str(value or "")).strip()
 
 
-def _resolve_mathml_to_latex_command(runtime_env: Mapping[str, str]) -> tuple[str, str, Path | None, str | None]:
+def _resolve_mathml_to_latex_command(
+    runtime_env: Mapping[str, str],
+) -> tuple[str, str, Path | None, str | None]:
     node_bin = _env_config_value(runtime_env, "MATHML_TO_LATEX_NODE_BIN") or "node"
     configured_script = _env_config_value(runtime_env, "MATHML_TO_LATEX_SCRIPT")
     script_candidates = mathml_to_latex_script_candidates(runtime_env)
@@ -588,11 +637,23 @@ def _resolve_mathml_to_latex_command(runtime_env: Mapping[str, str]) -> tuple[st
     if resolved_node is None and not Path(node_bin).exists():
         return node_bin, script_path, None, f"node executable not found: {node_bin}"
     if not Path(script_path).exists():
-        return node_bin, script_path, None, f"mathml-to-latex wrapper script not found: {script_path}"
-    return resolved_node or node_bin, script_path, Path(script_path).resolve().parent, None
+        return (
+            node_bin,
+            script_path,
+            None,
+            f"mathml-to-latex wrapper script not found: {script_path}",
+        )
+    return (
+        resolved_node or node_bin,
+        script_path,
+        Path(script_path).resolve().parent,
+        None,
+    )
 
 
-def _resolve_mathml_to_latex_worker_command(runtime_env: Mapping[str, str]) -> tuple[str, str, Path | None, str | None]:
+def _resolve_mathml_to_latex_worker_command(
+    runtime_env: Mapping[str, str],
+) -> tuple[str, str, Path | None, str | None]:
     node_bin = _env_config_value(runtime_env, "MATHML_TO_LATEX_NODE_BIN") or "node"
     configured_script = _env_config_value(runtime_env, "MATHML_TO_LATEX_WORKER_SCRIPT")
     script_candidates = mathml_to_latex_worker_script_candidates(runtime_env)
@@ -604,8 +665,18 @@ def _resolve_mathml_to_latex_worker_command(runtime_env: Mapping[str, str]) -> t
     if resolved_node is None and not Path(node_bin).exists():
         return node_bin, script_path, None, f"node executable not found: {node_bin}"
     if not Path(script_path).exists():
-        return node_bin, script_path, None, f"mathml-to-latex worker script not found: {script_path}"
-    return resolved_node or node_bin, script_path, Path(script_path).resolve().parent, None
+        return (
+            node_bin,
+            script_path,
+            None,
+            f"mathml-to-latex worker script not found: {script_path}",
+        )
+    return (
+        resolved_node or node_bin,
+        script_path,
+        Path(script_path).resolve().parent,
+        None,
+    )
 
 
 class MathMLToLatexWorker:
@@ -627,7 +698,12 @@ class MathMLToLatexWorker:
 
     def _ensure_process(self) -> subprocess.Popen[str]:
         process = self._process
-        if process is not None and process.poll() is None and process.stdin is not None and process.stdout is not None:
+        if (
+            process is not None
+            and process.poll() is None
+            and process.stdin is not None
+            and process.stdout is not None
+        ):
             return process
         self._process = subprocess.Popen(
             [self.node_bin, self.script_path],
@@ -662,23 +738,36 @@ class MathMLToLatexWorker:
                 raise RuntimeError("mathml-to-latex worker pipes were not available")
             self._next_id += 1
             request_id = self._next_id
-            process.stdin.write(json.dumps({"id": request_id, "mathml": raw_mathml}, ensure_ascii=False) + "\n")
+            process.stdin.write(
+                json.dumps({"id": request_id, "mathml": raw_mathml}, ensure_ascii=False)
+                + "\n"
+            )
             process.stdin.flush()
             ready, _, _ = select.select([process.stdout], [], [], timeout_seconds)
             if not ready:
                 self.stop()
-                raise subprocess.TimeoutExpired([self.node_bin, self.script_path], timeout_seconds)
+                raise subprocess.TimeoutExpired(
+                    [self.node_bin, self.script_path], timeout_seconds
+                )
             line = process.stdout.readline()
             if not line:
                 stderr = process.stderr.read() if process.stderr is not None else ""
                 self.stop()
-                raise RuntimeError(_compact_error_text(stderr) or "mathml-to-latex worker exited without output")
+                raise RuntimeError(
+                    _compact_error_text(stderr)
+                    or "mathml-to-latex worker exited without output"
+                )
             payload = json.loads(line)
             if payload.get("id") != request_id:
                 self.stop()
-                raise RuntimeError("mathml-to-latex worker returned an out-of-order response")
+                raise RuntimeError(
+                    "mathml-to-latex worker returned an out-of-order response"
+                )
             if not payload.get("ok"):
-                raise RuntimeError(_compact_error_text(payload.get("error")) or "mathml-to-latex worker conversion failed")
+                raise RuntimeError(
+                    _compact_error_text(payload.get("error"))
+                    or "mathml-to-latex worker conversion failed"
+                )
             return str(payload.get("latex") or "")
 
 
@@ -693,7 +782,9 @@ def _mathml_worker_for(
     with _MATHML_WORKERS_LOCK:
         worker = _MATHML_WORKERS.get(key)
         if worker is None:
-            worker = MathMLToLatexWorker(node_bin=node_bin, script_path=script_path, cwd=cwd, env=env)
+            worker = MathMLToLatexWorker(
+                node_bin=node_bin, script_path=script_path, cwd=cwd, env=env
+            )
             _MATHML_WORKERS[key] = worker
         return worker
 
@@ -800,7 +891,11 @@ def convert_with_texmath(
             display_mode=display_mode,
             started_at=started_at,
             status="failed",
-            error=(process.stderr or process.stdout or f"texmath exited with {process.returncode}").strip(),
+            error=(
+                process.stderr
+                or process.stdout
+                or f"texmath exited with {process.returncode}"
+            ).strip(),
         )
 
     latex = normalize_latex(process.stdout)
@@ -832,7 +927,9 @@ def convert_with_mathml_to_latex(
 ) -> FormulaConversionResult:
     runtime_env = dict(env or os.environ)
     started_at = time.monotonic()
-    node_bin, script_path, script_cwd, command_error = _resolve_mathml_to_latex_command(runtime_env)
+    node_bin, script_path, script_cwd, command_error = _resolve_mathml_to_latex_command(
+        runtime_env
+    )
 
     if command_error:
         return _completed_result(
@@ -846,7 +943,9 @@ def convert_with_mathml_to_latex(
 
     worker_error: str | None = None
     if _worker_enabled(runtime_env):
-        worker_node, worker_script, worker_cwd, worker_command_error = _resolve_mathml_to_latex_worker_command(runtime_env)
+        worker_node, worker_script, worker_cwd, worker_command_error = (
+            _resolve_mathml_to_latex_worker_command(runtime_env)
+        )
         if worker_command_error is None:
             worker = _mathml_worker_for(
                 node_bin=worker_node,
@@ -855,7 +954,9 @@ def convert_with_mathml_to_latex(
                 env=runtime_env,
             )
             try:
-                latex = normalize_latex(worker.convert(raw_mathml, timeout_seconds=DEFAULT_TIMEOUT_SECONDS))
+                latex = normalize_latex(
+                    worker.convert(raw_mathml, timeout_seconds=DEFAULT_TIMEOUT_SECONDS)
+                )
                 if latex:
                     return _completed_result(
                         backend=BACKEND_MATHML_TO_LATEX,
@@ -865,14 +966,21 @@ def convert_with_mathml_to_latex(
                         latex=latex,
                     )
                 worker_error = "mathml-to-latex worker returned empty output"
-            except (subprocess.TimeoutExpired, RuntimeError, json.JSONDecodeError, OSError) as exc:
+            except (
+                subprocess.TimeoutExpired,
+                RuntimeError,
+                json.JSONDecodeError,
+                OSError,
+            ) as exc:
                 worker_error = str(exc)
         else:
             worker_error = worker_command_error
 
     args = [node_bin, script_path]
     try:
-        process = _run_command(args, input_text=raw_mathml, env=runtime_env, cwd=script_cwd)
+        process = _run_command(
+            args, input_text=raw_mathml, env=runtime_env, cwd=script_cwd
+        )
     except subprocess.TimeoutExpired:
         return _completed_result(
             backend=BACKEND_MATHML_TO_LATEX,
@@ -896,7 +1004,11 @@ def convert_with_mathml_to_latex(
         )
 
     if process.returncode != 0:
-        error = (process.stderr or process.stdout or f"mathml-to-latex exited with {process.returncode}").strip()
+        error = (
+            process.stderr
+            or process.stdout
+            or f"mathml-to-latex exited with {process.returncode}"
+        ).strip()
         if worker_error:
             error = f"worker failed: {worker_error}; CLI failed: {error}"
         return _completed_result(
@@ -936,23 +1048,38 @@ def convert_with_mml2tex(
     runtime_env = dict(env or os.environ)
     java_bin = (
         runtime_env.get("MML2TEX_JAVA_BIN", "").strip()
-        or first_existing_path_cached(formula_tools_subpaths(Path("bin") / "java", runtime_env))
+        or first_existing_path_cached(
+            formula_tools_subpaths(Path("bin") / "java", runtime_env)
+        )
         or "java"
     )
-    local_saxon_jar = first_existing_path_cached(formula_tools_subpaths(Path("lib") / "Saxon-HE-12.5.jar", runtime_env))
-    local_xmlresolver_jar = first_existing_path_cached(formula_tools_subpaths(Path("lib") / "xmlresolver-5.2.2.jar", runtime_env))
+    local_saxon_jar = first_existing_path_cached(
+        formula_tools_subpaths(Path("lib") / "Saxon-HE-12.5.jar", runtime_env)
+    )
+    local_xmlresolver_jar = first_existing_path_cached(
+        formula_tools_subpaths(Path("lib") / "xmlresolver-5.2.2.jar", runtime_env)
+    )
     local_xmlresolver_data_jar = first_existing_path_cached(
         formula_tools_subpaths(Path("lib") / "xmlresolver-5.2.2-data.jar", runtime_env)
     )
     local_stylesheet = first_existing_path_cached(
-        formula_tools_subpaths(Path("vendor") / "mml2tex" / "xsl" / "invoke-mml2tex.xsl", runtime_env)
+        formula_tools_subpaths(
+            Path("vendor") / "mml2tex" / "xsl" / "invoke-mml2tex.xsl", runtime_env
+        )
     )
-    local_catalog = first_existing_path_cached(formula_tools_subpaths("mml2tex.catalog.xml", runtime_env))
+    local_catalog = first_existing_path_cached(
+        formula_tools_subpaths("mml2tex.catalog.xml", runtime_env)
+    )
 
     classpath = runtime_env.get("MML2TEX_CLASSPATH", "").strip()
     saxon_jar = runtime_env.get("MML2TEX_SAXON_JAR", "").strip() or local_saxon_jar
-    xmlresolver_jar = runtime_env.get("MML2TEX_XMLRESOLVER_JAR", "").strip() or local_xmlresolver_jar
-    xmlresolver_data_jar = runtime_env.get("MML2TEX_XMLRESOLVER_DATA_JAR", "").strip() or local_xmlresolver_data_jar
+    xmlresolver_jar = (
+        runtime_env.get("MML2TEX_XMLRESOLVER_JAR", "").strip() or local_xmlresolver_jar
+    )
+    xmlresolver_data_jar = (
+        runtime_env.get("MML2TEX_XMLRESOLVER_DATA_JAR", "").strip()
+        or local_xmlresolver_data_jar
+    )
     stylesheet = runtime_env.get("MML2TEX_STYLESHEET", "").strip() or local_stylesheet
     catalog = runtime_env.get("MML2TEX_CATALOG", "").strip() or local_catalog
     started_at = time.monotonic()
@@ -969,7 +1096,9 @@ def convert_with_mml2tex(
         if not xmlresolver_jar or not Path(xmlresolver_jar).exists():
             missing.append(f"xmlresolver jar not found: {xmlresolver_jar or '<unset>'}")
         if not xmlresolver_data_jar or not Path(xmlresolver_data_jar).exists():
-            missing.append(f"xmlresolver data jar not found: {xmlresolver_data_jar or '<unset>'}")
+            missing.append(
+                f"xmlresolver data jar not found: {xmlresolver_data_jar or '<unset>'}"
+            )
     if not stylesheet or not Path(stylesheet).exists():
         missing.append(f"mml2tex stylesheet not found: {stylesheet or '<unset>'}")
     if not catalog or not Path(catalog).exists():
@@ -1032,7 +1161,11 @@ def convert_with_mml2tex(
             display_mode=display_mode,
             started_at=started_at,
             status="failed",
-            error=(process.stderr or process.stdout or f"mml2tex exited with {process.returncode}").strip(),
+            error=(
+                process.stderr
+                or process.stdout
+                or f"mml2tex exited with {process.returncode}"
+            ).strip(),
         )
 
     match = re.search(r"<\?mml2tex\s+(.*?)\?>", process.stdout, flags=re.S)
@@ -1067,7 +1200,9 @@ def convert_mathml_string(
     depth_token = _FORMULA_TIMING_DEPTH.set(depth + 1)
     try:
         runtime_env = dict(env or os.environ)
-        explicitly_selected = bool((backend or runtime_env.get("MATHML_CONVERTER_BACKEND") or "").strip())
+        explicitly_selected = bool(
+            (backend or runtime_env.get("MATHML_CONVERTER_BACKEND") or "").strip()
+        )
         selected_backend = resolve_backend(env=env, backend=backend)
         cache_key = _formula_cache_key(
             backend=selected_backend,
@@ -1131,7 +1266,9 @@ def convert_mathml_element_to_latex(
             duration_ms=0,
             display_mode=display_mode,
         )
-    return convert_mathml_string(raw_mathml, display_mode=display_mode, env=env, backend=backend)
+    return convert_mathml_string(
+        raw_mathml, display_mode=display_mode, env=env, backend=backend
+    )
 
 
 def looks_like_mathml_element(element: ET.Element) -> bool:
@@ -1146,7 +1283,9 @@ def infer_source_provider(root: ET.Element, xml_path: Path) -> str:
     return provider_for_xml_source(root_name, str(xml_path))
 
 
-def extract_formula_samples_from_xml(xml_path: Path, *, limit: int | None = None) -> list[FormulaSample]:
+def extract_formula_samples_from_xml(
+    xml_path: Path, *, limit: int | None = None
+) -> list[FormulaSample]:
     try:
         root = ET.parse(xml_path).getroot()
     except ET.ParseError:
@@ -1187,5 +1326,7 @@ def collect_formula_samples(
 ) -> list[FormulaSample]:
     collected: list[FormulaSample] = []
     for xml_path in xml_paths:
-        collected.extend(extract_formula_samples_from_xml(xml_path, limit=per_file_limit))
+        collected.extend(
+            extract_formula_samples_from_xml(xml_path, limit=per_file_limit)
+        )
     return collected

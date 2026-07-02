@@ -39,7 +39,9 @@ GEOGRAPHY_RESULT_STATUSES = (
     NO_RESULT,
     ERROR,
 )
-REPORT_RESULT_WARNING = "Full text was not available; returning metadata and abstract only."
+REPORT_RESULT_WARNING = (
+    "Full text was not available; returning metadata and abstract only."
+)
 
 
 @dataclass(frozen=True)
@@ -125,7 +127,9 @@ class GeographyLiveReport:
             "per_provider_limit": self.per_provider_limit,
             "total_attempts": self.total_attempts,
             "results": [item.to_dict() for item in self.results],
-            "summary_by_provider": [item.to_dict() for item in self.summary_by_provider],
+            "summary_by_provider": [
+                item.to_dict() for item in self.summary_by_provider
+            ],
             "summary_by_issue": [item.to_dict() for item in self.summary_by_issue],
             "analysis_notes": [item.to_dict() for item in self.analysis_notes],
         }
@@ -177,7 +181,9 @@ class GeographyLiveReport:
         lines.extend(["", "## Analysis Notes", ""])
         for note in self.analysis_notes:
             if note.sample_dois:
-                lines.append(f"- `{note.key}`: {note.summary} Examples: {', '.join(note.sample_dois)}")
+                lines.append(
+                    f"- `{note.key}`: {note.summary} Examples: {', '.join(note.sample_dois)}"
+                )
             else:
                 lines.append(f"- `{note.key}`: {note.summary}")
 
@@ -187,7 +193,9 @@ class GeographyLiveReport:
             for result in self.results:
                 if result.provider != provider:
                     continue
-                flags = f" [{', '.join(result.issue_flags)}]" if result.issue_flags else ""
+                flags = (
+                    f" [{', '.join(result.issue_flags)}]" if result.issue_flags else ""
+                )
                 lines.append(
                     f"- `{result.doi}` | `{result.status}` | source=`{result.source or '-'}`"
                     f" | content_kind=`{result.content_kind or '-'}`"
@@ -204,7 +212,10 @@ class GeographyLiveReport:
 
 def default_report_paths() -> tuple[Path, Path]:
     output_dir = resolve_repo_root() / "live-downloads" / "reports"
-    return output_dir / "geography-live-report.json", output_dir / "geography-live-report.md"
+    return (
+        output_dir / "geography-live-report.json",
+        output_dir / "geography-live-report.md",
+    )
 
 
 def select_geography_samples(
@@ -213,7 +224,11 @@ def select_geography_samples(
     per_provider: int = 10,
     providers: Sequence[str] | None = None,
 ) -> list[GeographySample]:
-    provider_order = [item for item in GEOGRAPHY_PROVIDER_ORDER if providers is None or item in providers]
+    provider_order = [
+        item
+        for item in GEOGRAPHY_PROVIDER_ORDER
+        if providers is None or item in providers
+    ]
     grouped: dict[str, list[GeographySample]] = defaultdict(list)
     for sample in samples:
         grouped[sample.provider].append(sample)
@@ -239,7 +254,9 @@ def schedule_geography_samples(
         grouped[sample.provider].append(sample)
 
     scheduled: list[GeographySample] = []
-    max_samples = max((len(grouped.get(provider, [])) for provider in providers), default=0)
+    max_samples = max(
+        (len(grouped.get(provider, [])) for provider in providers), default=0
+    )
     for sample_index in range(max_samples):
         for provider in providers:
             provider_samples = grouped.get(provider, [])
@@ -256,10 +273,16 @@ def run_geography_live_report(
     env: Mapping[str, str] | None = None,
     transport: HttpTransport | None = None,
 ) -> GeographyLiveReport:
-    selected_samples = select_geography_samples(samples, per_provider=per_provider, providers=providers)
+    selected_samples = select_geography_samples(
+        samples, per_provider=per_provider, providers=providers
+    )
     scheduled_samples = schedule_geography_samples(
         selected_samples,
-        providers=[item for item in GEOGRAPHY_PROVIDER_ORDER if providers is None or item in providers],
+        providers=[
+            item
+            for item in GEOGRAPHY_PROVIDER_ORDER
+            if providers is None or item in providers
+        ],
     )
     active_env = build_runtime_env(env)
     active_transport = transport if transport is not None else HttpTransport()
@@ -284,7 +307,9 @@ def run_geography_live_report(
                 context=context,
             )
             elapsed_seconds = round(time.monotonic() - started_at, 3)
-            results.append(build_report_result(sample, envelope, elapsed_seconds=elapsed_seconds))
+            results.append(
+                build_report_result(sample, envelope, elapsed_seconds=elapsed_seconds)
+            )
         except PaperFetchFailure as exc:
             results.append(
                 GeographyReportResult(
@@ -326,14 +351,20 @@ def run_geography_live_report(
         finally:
             context.close()
 
-    report_providers = [item for item in GEOGRAPHY_PROVIDER_ORDER if any(result.provider == item for result in results)]
+    report_providers = [
+        item
+        for item in GEOGRAPHY_PROVIDER_ORDER
+        if any(result.provider == item for result in results)
+    ]
     return GeographyLiveReport(
         generated_at=datetime.now(UTC).isoformat(),
         providers=report_providers,
         per_provider_limit=per_provider,
         total_attempts=len(results),
         results=results,
-        summary_by_provider=build_provider_summaries(results, providers=report_providers),
+        summary_by_provider=build_provider_summaries(
+            results, providers=report_providers
+        ),
         summary_by_issue=build_issue_summaries(results),
         analysis_notes=build_analysis_notes(results, providers=report_providers),
     )
@@ -364,7 +395,9 @@ def build_report_result(
     )
 
 
-def classify_result_status(provider: str, envelope: FetchEnvelope) -> tuple[str, str | None]:
+def classify_result_status(
+    provider: str, envelope: FetchEnvelope
+) -> tuple[str, str | None]:
     if envelope.content_kind == FULLTEXT:
         return FULLTEXT, None
 
@@ -405,8 +438,17 @@ def build_provider_summaries(
             GeographyProviderSummary(
                 provider=provider,
                 attempted=len(provider_results),
-                status_counts={status: counts.get(status, 0) for status in GEOGRAPHY_RESULT_STATUSES},
-                success_sources=sorted({item.source for item in provider_results if item.status == FULLTEXT and item.source}),
+                status_counts={
+                    status: counts.get(status, 0)
+                    for status in GEOGRAPHY_RESULT_STATUSES
+                },
+                success_sources=sorted(
+                    {
+                        item.source
+                        for item in provider_results
+                        if item.status == FULLTEXT and item.source
+                    }
+                ),
                 success_source_trails=sorted(
                     {
                         success_path_signature(item.source_trail)
@@ -420,7 +462,9 @@ def build_provider_summaries(
     return summaries
 
 
-def build_issue_summaries(results: Sequence[GeographyReportResult]) -> list[GeographyIssueSummary]:
+def build_issue_summaries(
+    results: Sequence[GeographyReportResult],
+) -> list[GeographyIssueSummary]:
     grouped: dict[str, list[GeographyReportResult]] = defaultdict(list)
     for result in results:
         for issue_flag in result.issue_flags:
@@ -442,7 +486,11 @@ def build_analysis_notes(
     providers: Sequence[str],
 ) -> list[GeographyAnalysisNote]:
     notes: list[GeographyAnalysisNote] = []
-    precheck_results = [item for item in results if item.status in {NOT_CONFIGURED, RATE_LIMITED, NO_RESULT}]
+    precheck_results = [
+        item
+        for item in results
+        if item.status in {NOT_CONFIGURED, RATE_LIMITED, NO_RESULT}
+    ]
     notes.append(
         GeographyAnalysisNote(
             key="precheck_gap",
@@ -457,7 +505,11 @@ def build_analysis_notes(
     pnas_issues = [
         item
         for item in results
-        if item.provider == "pnas" and any(flag in item.issue_flags for flag in ("abstract_inflated", "abstract_body_overlap"))
+        if item.provider == "pnas"
+        and any(
+            flag in item.issue_flags
+            for flag in ("abstract_inflated", "abstract_body_overlap")
+        )
     ]
     notes.append(
         GeographyAnalysisNote(
@@ -471,7 +523,11 @@ def build_analysis_notes(
         )
     )
 
-    wiley_issues = [item for item in results if item.provider == "wiley" and "refs_doi_not_normalized" in item.issue_flags]
+    wiley_issues = [
+        item
+        for item in results
+        if item.provider == "wiley" and "refs_doi_not_normalized" in item.issue_flags
+    ]
     notes.append(
         GeographyAnalysisNote(
             key="wiley_reference_doi_normalization",
@@ -486,8 +542,14 @@ def build_analysis_notes(
 
     stability_parts: list[str] = []
     for provider in providers:
-        provider_results = [item for item in results if item.provider == provider and item.status == FULLTEXT]
-        signatures = sorted({success_path_signature(item.source_trail) for item in provider_results})
+        provider_results = [
+            item
+            for item in results
+            if item.provider == provider and item.status == FULLTEXT
+        ]
+        signatures = sorted(
+            {success_path_signature(item.source_trail) for item in provider_results}
+        )
         if not signatures:
             stability_parts.append(f"{provider}: no fulltext successes")
             continue
@@ -504,5 +566,9 @@ def build_analysis_notes(
 
 
 def success_path_signature(source_trail: Sequence[str]) -> str:
-    markers = [item for item in source_trail if item.startswith("fulltext:") and ("_ok" in item or "_article_ok" in item)]
+    markers = [
+        item
+        for item in source_trail
+        if item.startswith("fulltext:") and ("_ok" in item or "_article_ok" in item)
+    ]
     return " -> ".join(markers) if markers else "none"

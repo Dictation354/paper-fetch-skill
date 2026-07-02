@@ -52,6 +52,7 @@ class BrowserRuntimeFailure(Exception):
         self.browser_context_seed = dict(browser_context_seed or {})
         self.details = dict(details or {})
 
+
 class BrowserImagePayload(TypedDict):
     bodyB64: str
     contentType: str

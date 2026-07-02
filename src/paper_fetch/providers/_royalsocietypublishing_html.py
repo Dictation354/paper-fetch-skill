@@ -16,8 +16,14 @@ from ..extraction.html._metadata import merge_html_metadata, parse_html_metadata
 from ..extraction.html.assets import extract_scoped_html_assets
 from ..extraction.html.figure_links import inject_inline_figure_links
 from ..extraction.html.parsing import choose_parser
-from ..extraction.html.renderer import render_html_markdown, render_provider_html_fragment
-from ..extraction.markdown_render.formulas import normalize_tex_formula_text, render_html_mathml_node
+from ..extraction.html.renderer import (
+    render_html_markdown,
+    render_provider_html_fragment,
+)
+from ..extraction.markdown_render.formulas import (
+    normalize_tex_formula_text,
+    render_html_mathml_node,
+)
 from ..models import AssetProfile
 from ..publisher_identity import extract_doi, normalize_doi
 from ..utils import normalize_text
@@ -98,7 +104,9 @@ _BACK_MATTER_BODY_HEADINGS = {
     "acknowledgements",
 }
 _REFERENCE_FIELD_PATTERN = re.compile(r"\s*([^=;]+)\s*=\s*([^;]*)")
-_MARKDOWN_TABLE_SEPARATOR_RE = re.compile(r"^\|?\s*:?-{3,}:?\s*(?:\|\s*:?-{3,}:?\s*)+\|?$")
+_MARKDOWN_TABLE_SEPARATOR_RE = re.compile(
+    r"^\|?\s*:?-{3,}:?\s*(?:\|\s*:?-{3,}:?\s*)+\|?$"
+)
 _REFERENCE_TABLE_HEADER_RE = re.compile(
     r"^\|\s*reference\s*\|\s*number of patients\s*\|",
     flags=re.IGNORECASE,
@@ -129,7 +137,9 @@ def direct_article_url(doi: str) -> str:
 
 def direct_pdf_url(doi: str) -> str:
     normalized_doi = normalize_doi(doi)
-    return f"https://royalsocietypublishing.org/doi/pdf/{quote(normalized_doi, safe='/')}"
+    return (
+        f"https://royalsocietypublishing.org/doi/pdf/{quote(normalized_doi, safe='/')}"
+    )
 
 
 def _first_article_body(soup: BeautifulSoup) -> Tag | None:
@@ -188,7 +198,11 @@ def _normalize_silverchair_dom(container: Tag) -> None:
         if not isinstance(formula, Tag):
             continue
         math_node = formula.find("math")
-        rendered = normalize_text(render_html_mathml_node(math_node)) if isinstance(math_node, Tag) else ""
+        rendered = (
+            normalize_text(render_html_mathml_node(math_node))
+            if isinstance(math_node, Tag)
+            else ""
+        )
         text = rendered or normalize_text(formula.get_text(" ", strip=True))
         if text:
             formula.replace_with(text)
@@ -222,8 +236,16 @@ def _normalize_table_captions(container: Tag) -> None:
         if table_wrap.select_one(".paper-fetch-table-title") is not None:
             continue
         title_node = table_wrap.select_one(".table-wrap-title")
-        label = _node_text(title_node.select_one(".label")) if isinstance(title_node, Tag) else ""
-        caption = _node_text(title_node.select_one(".caption")) if isinstance(title_node, Tag) else ""
+        label = (
+            _node_text(title_node.select_one(".label"))
+            if isinstance(title_node, Tag)
+            else ""
+        )
+        caption = (
+            _node_text(title_node.select_one(".caption"))
+            if isinstance(title_node, Tag)
+            else ""
+        )
         text = normalize_text(": ".join(item for item in (label, caption) if item))
         if not text:
             continue
@@ -256,7 +278,9 @@ def _replace_display_formula(node: Tag, label_node: Tag | None) -> bool:
 
 
 def _inline_formula_markdown(markdown_text: str) -> str:
-    lines = [line.strip() for line in str(markdown_text or "").splitlines() if line.strip()]
+    lines = [
+        line.strip() for line in str(markdown_text or "").splitlines() if line.strip()
+    ]
     if len(lines) >= 3 and lines[0] == "$$" and lines[-1] == "$$":
         lines = lines[1:-1]
     text = normalize_text(" ".join(lines))
@@ -275,7 +299,11 @@ def _space_inline_math_spans(line: str) -> str:
         start, end = match.span()
         prefix = ""
         suffix = ""
-        if start > 0 and not line[start - 1].isspace() and line[start - 1] not in "([{/":
+        if (
+            start > 0
+            and not line[start - 1].isspace()
+            and line[start - 1] not in "([{/"
+        ):
             prefix = " "
         if end < len(line) and not line[end].isspace() and line[end] not in ".,;:)]}/":
             suffix = " "
@@ -343,7 +371,11 @@ def _raw_meta_values(metadata: Mapping[str, Any], key: str) -> list[str]:
         values = [values]
     if not isinstance(values, list):
         return []
-    return [normalize_text(str(item or "")) for item in values if normalize_text(str(item or ""))]
+    return [
+        normalize_text(str(item or ""))
+        for item in values
+        if normalize_text(str(item or ""))
+    ]
 
 
 def _parse_citation_reference(value: str) -> dict[str, Any] | None:
@@ -396,7 +428,9 @@ def _number_reference(reference: Mapping[str, Any], index: int) -> dict[str, Any
     return numbered
 
 
-def citation_references_from_metadata(metadata: Mapping[str, Any]) -> list[dict[str, Any]]:
+def citation_references_from_metadata(
+    metadata: Mapping[str, Any],
+) -> list[dict[str, Any]]:
     references: list[dict[str, Any]] = []
     seen: set[str] = set()
     for value in _raw_meta_values(metadata, "citation_reference"):
@@ -483,7 +517,9 @@ def _merge_metadata_with_parsed_html(
         merged["doi"] = normalize_doi(doi)
     html_title = normalize_text(str(html_metadata.get("title") or ""))
     current_title = normalize_text(str(merged.get("title") or ""))
-    doi_value = normalize_doi(str(doi or merged.get("doi") or html_metadata.get("doi") or ""))
+    doi_value = normalize_doi(
+        str(doi or merged.get("doi") or html_metadata.get("doi") or "")
+    )
     if html_title and doi_value and normalize_doi(current_title) == doi_value:
         merged["title"] = html_title
     references = references or citation_references_from_metadata(merged)
@@ -553,7 +589,9 @@ def _first_figure_link(node: Tag, source_url: str) -> str:
     return ""
 
 
-def _royal_society_figure_assets(html_text: str, source_url: str) -> list[dict[str, str]]:
+def _royal_society_figure_assets(
+    html_text: str, source_url: str
+) -> list[dict[str, str]]:
     soup = BeautifulSoup(html_text, choose_parser())
     assets: list[dict[str, str]] = []
     for node in soup.find_all("div"):
@@ -596,7 +634,13 @@ def _royal_society_figure_assets(html_text: str, source_url: str) -> list[dict[s
 
 
 def _asset_external_key(asset: Mapping[str, Any]) -> str:
-    for field in ("url", "full_size_url", "original_url", "preview_url", "download_url"):
+    for field in (
+        "url",
+        "full_size_url",
+        "original_url",
+        "preview_url",
+        "download_url",
+    ):
         value = normalize_text(str(asset.get(field) or ""))
         if value:
             return value.lower()
@@ -652,7 +696,10 @@ def _normalize_extracted_assets(assets: list[dict[str, str]]) -> list[dict[str, 
         if "/view-large/figure/" in url:
             asset["kind"] = "figure"
             asset["section"] = "body"
-            if normalize_text(str(asset.get("heading") or "")).lower() in _GENERIC_FIGURE_HEADINGS:
+            if (
+                normalize_text(str(asset.get("heading") or "")).lower()
+                in _GENERIC_FIGURE_HEADINGS
+            ):
                 asset["heading"] = "Figure"
         key_url = _asset_external_key(asset)
         key = (normalize_text(str(asset.get("kind") or "")).lower(), key_url)
@@ -831,7 +878,10 @@ def _restore_empty_back_matter_sections(
             continue
 
         next_index = index + 1
-        while next_index < len(lines) and _MARKDOWN_HEADING_RE.match(lines[next_index].strip()) is None:
+        while (
+            next_index < len(lines)
+            and _MARKDOWN_HEADING_RE.match(lines[next_index].strip()) is None
+        ):
             next_index += 1
         existing_body = "\n".join(lines[index + 1 : next_index])
         if normalize_text(existing_body):
@@ -868,7 +918,9 @@ def royalsocietypublishing_normalize_markdown(text: str) -> str:
                 continue
             line = re.sub(r"^(\s*-\s+)[—–-](?=\S)", r"\1", line)
             stripped = line.strip()
-            previous = next((item.strip() for item in reversed(lines) if item.strip()), "")
+            previous = next(
+                (item.strip() for item in reversed(lines) if item.strip()), ""
+            )
             if (
                 previous
                 and _MARKDOWN_TABLE_SEPARATOR_RE.fullmatch(previous)
@@ -887,7 +939,11 @@ def royalsocietypublishing_normalize_markdown(text: str) -> str:
                     and not _MARKDOWN_TABLE_SEPARATOR_RE.fullmatch(previous)
                 ):
                     continue
-            if stripped.startswith("|") and stripped.endswith("|") and stripped.count("|") < 3:
+            if (
+                stripped.startswith("|")
+                and stripped.endswith("|")
+                and stripped.count("|") < 3
+            ):
                 continue
             lines.append(line)
     return "\n".join(_drop_broken_reference_table_duplicate(lines)).strip()

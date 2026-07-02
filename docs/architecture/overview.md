@@ -93,7 +93,7 @@ Date: 2026-06-18
 - `pipeline`：CLI/MCP 共享的 `RuntimeContext` 生命周期、service 调用、可选 cache hook 与 Markdown 保存 hook
 - `request_builder`：CLI/MCP 共享的 `FetchPipelineRequest` 装配
 
-`RuntimeContext` 是 service/workflow 的显式运行时依赖容器，持有 `env`、`transport`、`clients`、`download_dir`、`cancel_check`、`artifact_store`、可选 `fetch_cache`，以及单次 fetch 生命周期内的 `parse_cache`、`session_cache` 和 `stage_timings`。Browser 生命周期由 CDP-only `paper_fetch.runtime_browser.BrowserContextManager` 管理。公开 service API 只接受 `context=`；调用方必须先构造 `RuntimeContext`，再交给 `paper_fetch.workflow.pipeline.FetchPipeline`。
+`RuntimeContext` 是 service/workflow 的显式运行时依赖容器，持有 `env`、`transport`、`clients`、`download_dir`、`cancel_check`、`artifact_store`、可选 `fetch_cache`，以及单次 fetch 生命周期内的 `parse_cache`、`session_cache` 和 `stage_timings`。Browser 生命周期由 CDP-only `paper_fetch.runtime_browser.BrowserContextManager` 管理；managed Chrome manager 会按 browser 配置在同一进程内共享引用，具体 context/page 使用调用线程自己的 CDP 连接。公开 service API 只接受 `context=`；调用方必须先构造 `RuntimeContext`，再交给 `paper_fetch.workflow.pipeline.FetchPipeline`。
 
 ### 6. Extraction 层
 
@@ -205,7 +205,7 @@ workflow 尽量拿到 Crossref metadata 与 publisher metadata（`elsevier` 仍�
 
 实现要点：
 
-- Wiley / Science / PNAS / AMS / Annual Reviews / ACS / IOP / AIP / MDPI 共用 `paper_fetch.providers.browser_workflow` 这套 canonical browser workflow facade（profile / bootstrap / pdf_fallback / article / assets / client / shared / html_extraction / fetchers），通过 `shared.BrowserWorkflowDeps` 注入依赖。AMS 会先在 bootstrap 内尝试带浏览器 UA/Referer 的 direct HTTP HTML preflight；其余 browser provider 以及 AMS fallback 复用 `RuntimeContext` keyed `BrowserContextManager` 管理的 CDP browser connection，并按阶段/线程创建隔离 context/page。
+- Wiley / Science / PNAS / AMS / Annual Reviews / Royal Society Publishing / ACS / IOP / AIP / MDPI 共用 `paper_fetch.providers.browser_workflow` 这套 canonical browser workflow facade（profile / bootstrap / pdf_fallback / article / assets / client / shared / html_extraction / fetchers），通过 `shared.BrowserWorkflowDeps` 注入依赖。AMS 会先在 bootstrap 内尝试带浏览器 UA/Referer 的 direct HTTP HTML preflight；其余 browser provider 以及 AMS fallback 复用进程级 keyed `BrowserContextManager` 管理的 managed Chrome 生命周期，并按阶段/线程创建隔离 context/page。
 - Atypon 候选路由通过 `_atypon_browser_workflow_profiles` 分派，publisher 差异走 profile callback。
 - provider-owned author 抽取统一用 `_html_authors.AuthorExtractionPipeline`，每个 provider 只注册命名 `AuthorStep`。
 - 这些 waterfall 由 `_waterfall` 做轻量编排（按 step 顺序执行、累积 warnings、组合失败、写成功/失败 source markers）；`ProviderClient.fetch_result` 是 template-method，base 统一完成 raw payload、related assets、`to_article_model`、artifacts 和 trace/warning 组装。

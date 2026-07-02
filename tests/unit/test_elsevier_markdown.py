@@ -6,7 +6,9 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 from paper_fetch.providers._article_markdown_common import render_inline_text
-from paper_fetch.providers import _article_markdown_elsevier_document as elsevier_document
+from paper_fetch.providers import (
+    _article_markdown_elsevier_document as elsevier_document,
+)
 from paper_fetch.providers import _elsevier_xml_rules as elsevier_rules
 from paper_fetch.providers import _article_markdown_math as article_markdown_math
 from paper_fetch.models import article_from_markdown, article_from_structure
@@ -89,7 +91,9 @@ class ElsevierMarkdownTests(unittest.TestCase):
         self.assertTrue(callable(article_markdown_math.render_mathml_expression))
 
     def test_build_article_structure_extracts_authors_from_author_groups(self) -> None:
-        xml_body = golden_criteria_scenario_asset("elsevier_author_groups_minimal", "original.xml").read_bytes()
+        xml_body = golden_criteria_scenario_asset(
+            "elsevier_author_groups_minimal", "original.xml"
+        ).read_bytes()
 
         structure = elsevier_document.build_article_structure(
             provider="elsevier",
@@ -105,7 +109,9 @@ class ElsevierMarkdownTests(unittest.TestCase):
 
         self.assertIsNotNone(structure)
         assert structure is not None
-        self.assertEqual(structure.authors, ["Jane Doe", "Smith, J.", "Open Climate Consortium"])
+        self.assertEqual(
+            structure.authors, ["Jane Doe", "Smith, J.", "Open Climate Consortium"]
+        )
 
     def test_elsevier_structure_builder_dispatch_rejects_unknown_provider(self) -> None:
         structure = elsevier_document.build_article_structure(
@@ -128,9 +134,16 @@ class ElsevierMarkdownTests(unittest.TestCase):
         )
 
     def test_elsevier_asset_group_requires_numbered_author_manuscript_key(self) -> None:
-        self.assertEqual(elsevier_rules.infer_elsevier_asset_group_key("am1.docx"), "am1")
-        self.assertEqual(elsevier_rules.infer_elsevier_asset_group_key("frame123.pdf"), "frame123.pdf")
-        self.assertTrue(elsevier_rules.should_ignore_elsevier_section_title("Graphical Abstract"))
+        self.assertEqual(
+            elsevier_rules.infer_elsevier_asset_group_key("am1.docx"), "am1"
+        )
+        self.assertEqual(
+            elsevier_rules.infer_elsevier_asset_group_key("frame123.pdf"),
+            "frame123.pdf",
+        )
+        self.assertTrue(
+            elsevier_rules.should_ignore_elsevier_section_title("Graphical Abstract")
+        )
 
     def test_build_article_structure_extracts_numbered_xml_references(self) -> None:
         """rule: rule-elsevier-xml-references"""
@@ -147,7 +160,10 @@ class ElsevierMarkdownTests(unittest.TestCase):
         self.assertGreater(len(structure.references), 20)
         first_reference = structure.references[0]
         self.assertTrue(first_reference.raw.startswith("1. A. Anav, P. Friedlingstein"))
-        self.assertIn("Spatiotemporal patterns of terrestrial gross primary production: a review", first_reference.raw)
+        self.assertIn(
+            "Spatiotemporal patterns of terrestrial gross primary production: a review",
+            first_reference.raw,
+        )
         self.assertIn("Reviews of Geophysics, 53(3): 785-818", first_reference.raw)
         self.assertIn("10.1002/2015rg000483", first_reference.raw)
         self.assertIn("[Anav et al., 2015]", first_reference.raw)
@@ -167,7 +183,10 @@ class ElsevierMarkdownTests(unittest.TestCase):
         rendered = article.to_ai_markdown(max_tokens="full_text")
 
         self.assertIn("1. A. Anav, P. Friedlingstein", rendered)
-        self.assertNotIn("- Spatiotemporal patterns of terrestrial gross primary production: a review", rendered)
+        self.assertNotIn(
+            "- Spatiotemporal patterns of terrestrial gross primary production: a review",
+            rendered,
+        )
 
     def test_elsevier_references_fall_back_without_skipping_bib_entries(self) -> None:
         root = ET.fromstring(
@@ -195,7 +214,9 @@ class ElsevierMarkdownTests(unittest.TestCase):
 
         self.assertEqual(len(references), 3)
         self.assertTrue(references[0].raw.startswith("1. 2024. Structured title"))
-        self.assertEqual(references[1].raw, "2. Raw fallback reference text for the second citation.")
+        self.assertEqual(
+            references[1].raw, "2. Raw fallback reference text for the second citation."
+        )
         self.assertEqual(references[2].raw, "3. [Reference text unavailable]")
 
     def test_article_from_structure_preserves_inline_elsevier_figures(self) -> None:
@@ -223,7 +244,10 @@ class ElsevierMarkdownTests(unittest.TestCase):
 """
         structure = elsevier_document.build_article_structure(
             provider="elsevier",
-            metadata={"doi": "10.1016/figure-preserve", "title": "Elsevier Figure Preserve"},
+            metadata={
+                "doi": "10.1016/figure-preserve",
+                "title": "Elsevier Figure Preserve",
+            },
             xml_body=xml_body,
             xml_path=Path("10.1016_figure-preserve.xml"),
             assets=[
@@ -240,7 +264,10 @@ class ElsevierMarkdownTests(unittest.TestCase):
         self.assertEqual(len(structure.used_figure_keys), 1)
         article = article_from_structure(
             source="elsevier_xml",
-            metadata={"doi": "10.1016/figure-preserve", "title": "Elsevier Figure Preserve"},
+            metadata={
+                "doi": "10.1016/figure-preserve",
+                "title": "Elsevier Figure Preserve",
+            },
             doi="10.1016/figure-preserve",
             abstract_lines=structure.abstract_lines,
             body_lines=structure.body_lines,
@@ -253,10 +280,15 @@ class ElsevierMarkdownTests(unittest.TestCase):
         )
         rendered = article.to_ai_markdown(asset_profile="body", max_tokens="full_text")
 
-        self.assertEqual(rendered.count("![Figure 1](body_assets/figure-preserve-fig1.jpeg)"), 1)
+        self.assertEqual(
+            rendered.count("![Figure 1](body_assets/figure-preserve-fig1.jpeg)"), 1
+        )
         self.assertIn("Observed response figure.", rendered)
         self.assertNotIn("## Additional Figures", rendered)
-    def test_article_from_structure_preserves_remote_elsevier_figure_links_without_local_assets(self) -> None:
+
+    def test_article_from_structure_preserves_remote_elsevier_figure_links_without_local_assets(
+        self,
+    ) -> None:
         xml_body = b"""<?xml version="1.0"?>
 <full-text-retrieval-response xmlns="http://www.elsevier.com/xml/svapi/article/dtd" xmlns:ce="http://www.elsevier.com/xml/common/dtd">
   <body>
@@ -278,10 +310,15 @@ class ElsevierMarkdownTests(unittest.TestCase):
   </body>
 </full-text-retrieval-response>
 """
-        remote_url = "https://api.elsevier.com/content/object/eid/gr1?httpAccept=%2A%2F%2A"
+        remote_url = (
+            "https://api.elsevier.com/content/object/eid/gr1?httpAccept=%2A%2F%2A"
+        )
         structure = elsevier_document.build_article_structure(
             provider="elsevier",
-            metadata={"doi": "10.1016/figure-preserve", "title": "Elsevier Figure Preserve"},
+            metadata={
+                "doi": "10.1016/figure-preserve",
+                "title": "Elsevier Figure Preserve",
+            },
             xml_body=xml_body,
             xml_path=Path("10.1016_figure-preserve.xml"),
             assets=[
@@ -298,7 +335,10 @@ class ElsevierMarkdownTests(unittest.TestCase):
         self.assertNotIn("path", structure.figure_entries[0])
         article = article_from_structure(
             source="elsevier_xml",
-            metadata={"doi": "10.1016/figure-preserve", "title": "Elsevier Figure Preserve"},
+            metadata={
+                "doi": "10.1016/figure-preserve",
+                "title": "Elsevier Figure Preserve",
+            },
             doi="10.1016/figure-preserve",
             abstract_lines=structure.abstract_lines,
             body_lines=structure.body_lines,
@@ -347,19 +387,26 @@ class ElsevierMarkdownTests(unittest.TestCase):
         )
         self.assertLess(markdown.index("(26)"), markdown.index("$$"))
 
-    def _assert_inline_math_symbols_in_paragraph_do_not_repeat_as_display_blocks(self) -> None:
+    def _assert_inline_math_symbols_in_paragraph_do_not_repeat_as_display_blocks(
+        self,
+    ) -> None:
         xml_body = _load_elsevier_scenario_xml("elsevier_formula_inline_display")
 
         markdown = build_elsevier_markdown(xml_body)
 
-        self.assertIn("Air temperature ($T$) and dewpoint temperature ($T_{d}$) were used:", markdown)
+        self.assertIn(
+            "Air temperature ($T$) and dewpoint temperature ($T_{d}$) were used:",
+            markdown,
+        )
         self.assertIn("where $c_{1}$ is constant.", markdown)
         self.assertRegex(markdown, r"\$\$\n\{?VPD\}? = T\n\$\$")
         self.assertNotIn("$$\nT\n$$", markdown)
         self.assertNotIn("$$\nT_{d}\n$$", markdown)
         self.assertNotIn("$$\nc_{1}\n$$", markdown)
 
-    def _assert_formula_placeholder_is_visible_and_counted_when_conversion_fails(self) -> None:
+    def _assert_formula_placeholder_is_visible_and_counted_when_conversion_fails(
+        self,
+    ) -> None:
         xml_body = _load_elsevier_scenario_xml("elsevier_formula_missing")
 
         structure = elsevier_document.build_article_structure(
@@ -390,7 +437,9 @@ class ElsevierMarkdownTests(unittest.TestCase):
         """rule: rule-elsevier-formula-rendering"""
         self._assert_inline_math_symbols_in_paragraph_do_not_repeat_as_display_blocks()
 
-    def test_elsevier_formula_placeholder_is_visible_when_conversion_fails(self) -> None:
+    def test_elsevier_formula_placeholder_is_visible_when_conversion_fails(
+        self,
+    ) -> None:
         """rule: rule-elsevier-formula-rendering"""
         self._assert_formula_placeholder_is_visible_and_counted_when_conversion_fails()
 
@@ -405,7 +454,9 @@ class ElsevierMarkdownTests(unittest.TestCase):
         self.assertIn("| Hydrometric | Station B | 20 |", markdown)
         self.assertIn("Merged table spans were semantically expanded", markdown)
 
-    def test_elsevier_real_complex_table_records_layout_degradation_quality(self) -> None:
+    def test_elsevier_real_complex_table_records_layout_degradation_quality(
+        self,
+    ) -> None:
         """rule: rule-elsevier-complex-table-span-degradation"""
         doi = "10.1016/j.jhydrol.2021.126210"
         structure = elsevier_document.build_article_structure(
@@ -431,7 +482,9 @@ class ElsevierMarkdownTests(unittest.TestCase):
             inline_figure_keys=sorted(structure.used_figure_keys),
             inline_table_keys=sorted(structure.used_table_keys),
         )
-        self.assertGreater(article.quality.semantic_losses.table_layout_degraded_count, 0)
+        self.assertGreater(
+            article.quality.semantic_losses.table_layout_degraded_count, 0
+        )
         self.assertIn("table_layout_degraded", article.quality.flags)
         self.assertIn(
             "- Table 1: Merged table spans were semantically expanded into rectangular Markdown cells; rowspan/colspan layout fidelity was reduced.",
@@ -475,7 +528,9 @@ class ElsevierMarkdownTests(unittest.TestCase):
             appendix_section,
         )
 
-    def _assert_real_elsevier_appendix_figure_stays_in_appendix_when_referenced_from_body(self) -> None:
+    def _assert_real_elsevier_appendix_figure_stays_in_appendix_when_referenced_from_body(
+        self,
+    ) -> None:
         markdown = self._render_real_elsevier_appendix_markdown()
         body_reference_idx = markdown.index("Fig. A.1 indicates locations.")
         appendix_idx = markdown.index("### Appendix")
@@ -507,7 +562,9 @@ class ElsevierMarkdownTests(unittest.TestCase):
         """rule: rule-elsevier-appendix-context"""
         self._assert_real_elsevier_appendix_table_renders_as_markdown_table()
 
-    def test_supplementary_display_is_omitted_from_body_and_listed_with_caption(self) -> None:
+    def test_supplementary_display_is_omitted_from_body_and_listed_with_caption(
+        self,
+    ) -> None:
         """rule: rule-elsevier-supplementary-materials"""
         xml_body = _load_elsevier_scenario_xml("elsevier_supplementary_display")
 
@@ -531,7 +588,9 @@ class ElsevierMarkdownTests(unittest.TestCase):
         self.assertIn("## Supplementary Materials", markdown)
         self.assertIn("[Supplementary material 1](supp.pdf): Extra dataset.", markdown)
 
-    def test_supplementary_asset_without_display_is_listed_as_supplementary_material(self) -> None:
+    def test_supplementary_asset_without_display_is_listed_as_supplementary_material(
+        self,
+    ) -> None:
         """rule: rule-elsevier-supplementary-materials"""
         xml_body = _load_elsevier_scenario_xml("elsevier_supplementary_asset_only")
 
@@ -592,12 +651,17 @@ refers to the tie.</ce:para>
 
         markdown = build_elsevier_markdown(xml_body)
 
-        self.assertIn("where *x*<sub>i</sub> and *x*<sub>j</sub> represent the grid unit values", markdown)
+        self.assertIn(
+            "where *x*<sub>i</sub> and *x*<sub>j</sub> represent the grid unit values",
+            markdown,
+        )
         self.assertIn("*t*<sub>m</sub> refers to the tie.", markdown)
         self.assertNotIn("where *x*\n*i*", markdown)
         self.assertNotIn("and *x*\n*j*", markdown)
 
-    def test_graphical_abstract_assets_do_not_appear_in_additional_figures(self) -> None:
+    def test_graphical_abstract_assets_do_not_appear_in_additional_figures(
+        self,
+    ) -> None:
         """rule: rule-elsevier-graphical-abstract"""
         xml_body = b"""<?xml version="1.0"?>
 <full-text-retrieval-response xmlns="http://www.elsevier.com/xml/svapi/article/dtd" xmlns:ce="http://www.elsevier.com/xml/common/dtd" xmlns:xlink="http://www.w3.org/1999/xlink">
@@ -659,7 +723,9 @@ refers to the tie.</ce:para>
         self.assertNotIn("Graphical Abstract", markdown)
         self.assertNotIn("ga.jpg", markdown)
 
-    def test_graphical_abstract_only_document_does_not_create_additional_figures(self) -> None:
+    def test_graphical_abstract_only_document_does_not_create_additional_figures(
+        self,
+    ) -> None:
         """rule: rule-elsevier-graphical-abstract"""
         xml_body = b"""<?xml version="1.0"?>
 <full-text-retrieval-response xmlns="http://www.elsevier.com/xml/svapi/article/dtd" xmlns:ce="http://www.elsevier.com/xml/common/dtd" xmlns:xlink="http://www.w3.org/1999/xlink">
@@ -705,7 +771,9 @@ refers to the tie.</ce:para>
         self.assertNotIn("Graphical Abstract", markdown)
         self.assertNotIn("ga.jpg", markdown)
 
-    def test_real_graphical_abstract_from_golden_xml_is_excluded_from_figures(self) -> None:
+    def test_real_graphical_abstract_from_golden_xml_is_excluded_from_figures(
+        self,
+    ) -> None:
         """rule: rule-elsevier-graphical-abstract"""
         doi = "10.1016/j.scitotenv.2022.158499"
         structure = elsevier_document.build_article_structure(
@@ -728,15 +796,21 @@ refers to the tie.</ce:para>
         )
 
         assert structure is not None
-        self.assertTrue(any(entry["path"] == "gr1.jpg" for entry in structure.figure_entries))
-        self.assertFalse(any(entry["path"] == "ga1.jpg" for entry in structure.figure_entries))
+        self.assertTrue(
+            any(entry["path"] == "gr1.jpg" for entry in structure.figure_entries)
+        )
+        self.assertFalse(
+            any(entry["path"] == "ga1.jpg" for entry in structure.figure_entries)
+        )
 
     def _render_real_elsevier_body_table_markdown(self) -> str:
         return _render_elsevier_golden_markdown("10.1016/j.jhydrol.2021.126210")
 
     def _assert_real_elsevier_body_table_is_inserted_near_reference(self) -> None:
         markdown = self._render_real_elsevier_body_table_markdown()
-        reference_idx = markdown.index("The detailed information on the hydro-meteorological data is given in Table 1")
+        reference_idx = markdown.index(
+            "The detailed information on the hydro-meteorological data is given in Table 1"
+        )
         caption_idx = markdown.index("Study area and data used in this study.")
         header_idx = markdown.index("| Type | Location | Station |")
 
@@ -744,10 +818,15 @@ refers to the tie.</ce:para>
         self.assertLess(caption_idx, header_idx)
         self.assertLess(header_idx - reference_idx, 500)
 
-    def _assert_real_elsevier_complex_body_table_prefers_lossy_markdown_over_image_fallback(self) -> None:
+    def _assert_real_elsevier_complex_body_table_prefers_lossy_markdown_over_image_fallback(
+        self,
+    ) -> None:
         markdown = self._render_real_elsevier_body_table_markdown()
 
-        self.assertIn("| Hydrometric | China | Jiuzhou | 385 | 1960–2006 | 23°04′12″N | 114°35′24″E | Water Conservancy", markdown)
+        self.assertIn(
+            "| Hydrometric | China | Jiuzhou | 385 | 1960–2006 | 23°04′12″N | 114°35′24″E | Water Conservancy",
+            markdown,
+        )
         self.assertIn("## Conversion Notes", markdown)
         self.assertIn(
             "- Table 1: Merged table spans were semantically expanded into rectangular Markdown cells; rowspan/colspan layout fidelity was reduced.",
@@ -756,7 +835,9 @@ refers to the tie.</ce:para>
         self.assertNotIn("- Table 1: None", markdown)
         self.assertNotIn("![Table 1]", markdown)
 
-    def _assert_real_elsevier_consumed_table_is_not_appended_by_article_model(self) -> None:
+    def _assert_real_elsevier_consumed_table_is_not_appended_by_article_model(
+        self,
+    ) -> None:
         doi = "10.1016/j.jhydrol.2021.126210"
         structure = elsevier_document.build_article_structure(
             provider="elsevier",
@@ -783,8 +864,15 @@ refers to the tie.</ce:para>
         )
         rendered = article.to_ai_markdown(asset_profile="body")
 
-        self.assertTrue(any(asset.kind == "table" and asset.render_state == "inline" for asset in article.assets))
-        self.assertGreater(article.quality.semantic_losses.table_layout_degraded_count, 0)
+        self.assertTrue(
+            any(
+                asset.kind == "table" and asset.render_state == "inline"
+                for asset in article.assets
+            )
+        )
+        self.assertGreater(
+            article.quality.semantic_losses.table_layout_degraded_count, 0
+        )
         self.assertEqual(article.quality.semantic_losses.table_lossy_count, 0)
         self.assertIn("table_layout_degraded", article.quality.flags)
         self.assertNotIn("table_semantic_loss", article.quality.flags)
@@ -834,7 +922,9 @@ refers to the tie.</ce:para>
         self.assertIn("Floating table.", markdown)
         self.assertIn("| A | B |", markdown)
 
-    def test_elsevier_golden_fixture_classifies_data_and_code_availability_sections(self) -> None:
+    def test_elsevier_golden_fixture_classifies_data_and_code_availability_sections(
+        self,
+    ) -> None:
         """rule: rule-availability-section-kind-mapping"""
         doi = "10.1016/j.rse.2025.114648"
         markdown = _render_elsevier_golden_markdown(doi)
@@ -845,26 +935,39 @@ refers to the tie.</ce:para>
             markdown_text=markdown,
         )
 
-        section_pairs = [(section.heading, section.kind) for section in article.sections]
+        section_pairs = [
+            (section.heading, section.kind) for section in article.sections
+        ]
         self.assertIn(("Data availability", "data_availability"), section_pairs)
         self.assertIn(("Code availability", "code_availability"), section_pairs)
 
     def test_elsevier_table_placement_contracts(self) -> None:
         cases = [
-            ("real_body_table_inserted_near_reference", self._assert_real_elsevier_body_table_is_inserted_near_reference),
+            (
+                "real_body_table_inserted_near_reference",
+                self._assert_real_elsevier_body_table_is_inserted_near_reference,
+            ),
             (
                 "real_complex_body_table_prefers_lossy_markdown",
                 self._assert_real_elsevier_complex_body_table_prefers_lossy_markdown_over_image_fallback,
             ),
-            ("real_consumed_table_not_appended_by_article_model", self._assert_real_elsevier_consumed_table_is_not_appended_by_article_model),
-            ("synthetic_unreferenced_float_table", self._assert_unreferenced_body_table_is_listed_in_additional_tables),
+            (
+                "real_consumed_table_not_appended_by_article_model",
+                self._assert_real_elsevier_consumed_table_is_not_appended_by_article_model,
+            ),
+            (
+                "synthetic_unreferenced_float_table",
+                self._assert_unreferenced_body_table_is_listed_in_additional_tables,
+            ),
         ]
 
         for label, assertion in cases:
             with self.subTest(label=label):
                 assertion()
 
-    def test_xml_multilingual_abstract_preserves_parallel_abstract_sections(self) -> None:
+    def test_xml_multilingual_abstract_preserves_parallel_abstract_sections(
+        self,
+    ) -> None:
         xml_body = b"""<?xml version="1.0"?>
 <full-text-retrieval-response xmlns="http://www.elsevier.com/xml/svapi/article/dtd" xmlns:ce="http://www.elsevier.com/xml/common/dtd">
   <abstract>
@@ -922,6 +1025,7 @@ refers to the tie.</ce:para>
         self.assertIn("Resumo em portugues que deve permanecer", markdown)
         self.assertIn("### Resultados", markdown)
         self.assertIn("Texto principal em portugues que deve permanecer", markdown)
+
 
 if __name__ == "__main__":
     unittest.main()

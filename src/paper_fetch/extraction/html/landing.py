@@ -32,13 +32,17 @@ class LandingRedirectLimitExceeded(Exception):
     """Raised when a caller chooses to treat redirect exhaustion as failure."""
 
     def __init__(self, url: str, max_redirects: int) -> None:
-        super().__init__(f"Landing HTML retrieval exceeded {max_redirects} redirects for {url}.")
+        super().__init__(
+            f"Landing HTML retrieval exceeded {max_redirects} redirects for {url}."
+        )
         self.url = url
         self.max_redirects = max_redirects
 
 
 def _response_url(response: Mapping[str, Any], current_url: str) -> str:
-    return urllib.parse.urljoin(current_url, str(response.get("url") or "").strip() or current_url)
+    return urllib.parse.urljoin(
+        current_url, str(response.get("url") or "").strip() or current_url
+    )
 
 
 def _response_headers(response: Mapping[str, Any]) -> Mapping[str, str]:

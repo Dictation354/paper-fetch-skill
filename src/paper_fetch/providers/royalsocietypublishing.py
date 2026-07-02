@@ -1,63 +1,34 @@
-"""Royal Society Publishing direct-HTTP provider client."""
+"""Royal Society Publishing browser-workflow provider client."""
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from pathlib import Path
 from typing import Any
-from collections.abc import Mapping, Sequence
-from urllib.parse import urljoin
+from collections.abc import Mapping
+from urllib.parse import quote, urlparse
 
-from ..config import build_user_agent, resolve_asset_download_concurrency
 from ..extraction.html.availability_policy import AvailabilityPolicy
-from ..extraction.html.assets import (
-    FIGURE_KIND,
-    SUPPLEMENTARY_KIND,
-    download_assets,
-    html_asset_identity_key,
-    split_body_and_supplementary_assets,
-)
-from ..extraction.html.landing import REDIRECT_STATUS_CODES, fetch_landing_html
 from ..extraction.html.provider_rules import (
     ProviderAssetRules,
     ProviderCleanupRules,
     ProviderFrontMatterRules,
     ProviderHtmlRules,
 )
-from ..http import DEFAULT_FULLTEXT_TIMEOUT_SECONDS, HttpTransport, PDF_MIME_TYPE, RequestFailure
-from ..http.headers import header_value
-from ..models import AssetProfile, article_from_markdown, metadata_only_article
+from ..extraction.html.signals import HtmlExtractionFailure
+from ..models import AssetProfile
 from ..provider_catalog import BodyTextThresholds, ProviderSpec
 from ..publisher_identity import normalize_doi
-from ..reason_codes import NO_RESULT, OK, PDF_FALLBACK
+from ..quality.html_availability import (
+    HtmlQualityAssessor,
+    availability_failure_message,
+)
+from ..reason_codes import PDF_FALLBACK
 from ..runtime import RuntimeContext
-from ..tracing import download_marker, fulltext_marker
 from ..utils import empty_asset_results, normalize_text
-from ..quality.html_availability import HtmlQualityAssessor, availability_failure_message
 from . import _royalsocietypublishing_html as royal_html
-from ._payloads import build_provider_payload
-from ._pdf_common import (
-    PdfFetchFailure,
-    default_pdf_headers,
-    filename_from_headers,
-    pdf_asset_output_dir,
-    pdf_asset_profile_from_context,
-    pdf_fetch_result_assets,
-    pdf_fetch_result_from_bytes,
-)
+from . import browser_workflow
 from ._registry import ProviderBundle, register_provider_bundle
-from ._waterfall import DEFAULT_WATERFALL_CONTINUE_CODES, ProviderWaterfallStep, ProviderWaterfallState, run_provider_waterfall
-from .base import (
-    ProviderArtifacts,
-    ProviderClient,
-    ProviderFailure,
-    ProviderStatusResult,
-    RawFulltextPayload,
-    build_provider_status_check,
-    combine_provider_failures,
-    map_request_failure,
-    summarize_capability_status,
-)
+from .base import RawFulltextPayload
+from .browser_workflow.profile import ProviderBrowserProfile
 
 
 register_provider_bundle(
@@ -77,8 +48,8 @@ register_provider_bundle(
             base_domains=("royalsocietypublishing.org",),
             html_path_templates=("/doi/{doi}",),
             pdf_path_templates=("/doi/pdf/{doi}",),
-            requires_playwright=False,
-            requires_browser_runtime=False,
+            requires_playwright=True,
+            requires_browser_runtime=True,
             body_text_thresholds=BodyTextThresholds(min_chars=800),
         ),
         html_rules=ProviderHtmlRules(
@@ -104,424 +75,149 @@ register_provider_bundle(
 )
 
 
-@dataclass(frozen=True)
-class RoyalSocietyArticleAttempt:
-    doi: str
-    requested_url: str
-    final_url: str
-    html_text: str
-    response_status: int | None
-    response_headers: Mapping[str, str]
-    metadata: dict[str, Any]
+ROYAL_SOCIETY_BROWSER_PROFILE = ProviderBrowserProfile(
+    name="royalsocietypublishing",
+    article_source_name="royalsocietypublishing_html",
+    label="Royal Society Publishing",
+    hosts=("royalsocietypublishing.org",),
+    base_hosts=("royalsocietypublishing.org",),
+    html_path_templates=("/doi/{doi}",),
+    pdf_path_templates=("/doi/pdf/{doi}",),
+    crossref_pdf_position=0,
+    markdown_publisher="royalsocietypublishing",
+    fallback_author_extractor=royal_html.extract_authors,
+    shared_browser_image_fetcher=True,
+)
 
 
-def _merge_assets(
-    extracted_assets: Sequence[Mapping[str, Any]] | None,
-    downloaded_assets: Sequence[Mapping[str, Any]] | None,
-) -> list[dict[str, Any]]:
-    merged: list[dict[str, Any]] = []
-    by_identity: dict[str, dict[str, Any]] = {}
-    for item in extracted_assets or []:
-        asset = dict(item)
-        merged.append(asset)
-        identity = html_asset_identity_key(asset)
-        if identity:
-            by_identity[identity] = asset
-    for item in downloaded_assets or []:
-        asset = dict(item)
-        identity = html_asset_identity_key(asset)
-        existing = by_identity.get(identity) if identity else None
-        if existing is not None:
-            existing.update(asset)
-            continue
-        merged.append(asset)
-        if identity:
-            by_identity[identity] = asset
-    return merged
+def _is_royal_society_url(value: str | None) -> bool:
+    parsed = urlparse(normalize_text(value))
+    host = normalize_text(parsed.hostname or "").lower()
+    return host == "royalsocietypublishing.org" or host.endswith(
+        ".royalsocietypublishing.org"
+    )
+
+
+def _append_unique(values: list[str], candidate: str | None) -> None:
+    normalized = normalize_text(candidate)
+    if normalized and normalized not in values:
+        values.append(normalized)
 
 
 def _filter_assets_for_profile(
-    assets: Sequence[Mapping[str, Any]] | None,
+    assets: list[Mapping[str, Any]],
     *,
     asset_profile: AssetProfile,
 ) -> list[dict[str, Any]]:
     if asset_profile == "none":
         return []
     filtered: list[dict[str, Any]] = []
-    for item in assets or []:
+    for item in assets:
         asset = dict(item)
-        kind = normalize_text(str(asset.get("kind") or asset.get("asset_type") or "")).lower()
+        kind = normalize_text(
+            str(asset.get("kind") or asset.get("asset_type") or "")
+        ).lower()
         section = normalize_text(str(asset.get("section") or "")).lower()
-        if asset_profile != "all" and (kind == "supplementary" or section == "supplementary"):
+        if asset_profile != "all" and (
+            kind == "supplementary" or section == "supplementary"
+        ):
             continue
         filtered.append(asset)
     return filtered
 
 
-def _pdf_failure_diagnostics(exc: PdfFetchFailure | None) -> dict[str, Any] | None:
-    if exc is None:
-        return None
-    return {
-        "kind": exc.kind,
-        "message": exc.message,
-        "details": dict(exc.details),
-    }
+class RoyalsocietypublishingClient(browser_workflow.BrowserWorkflowClient):
+    name = ROYAL_SOCIETY_BROWSER_PROFILE.name
+    profile = ROYAL_SOCIETY_BROWSER_PROFILE
+    waterfall_steps = (
+        "article_html",
+        "pdf_fallback",
+        "metadata_only",
+    )
 
-
-class RoyalsocietypublishingClient(ProviderClient):
-    name = "royalsocietypublishing"
-    landing_max_redirects = 8
-
-    def __init__(self, transport: HttpTransport, env: Mapping[str, str]) -> None:
-        self.transport = transport
-        self.env = dict(env)
-        self.user_agent = build_user_agent(env)
-
-    def probe_status(self) -> ProviderStatusResult:
-        return summarize_capability_status(
-            self.name,
-            official_provider=self.official_provider,
-            checks=[
-                build_provider_status_check(
-                    "article_html",
-                    OK,
-                    "Royal Society Publishing direct DOI HTML route is available without provider credentials.",
-                    details={"mode": "direct_http_html"},
-                ),
-                build_provider_status_check(
-                    PDF_FALLBACK,
-                    OK,
-                    "Royal Society Publishing direct PDF fallback is available; body/all asset requests can save exported PDF images when artifacts are enabled.",
-                    details={"mode": "direct_http_pdf"},
-                ),
-            ],
-        )
-
-    def _html_headers(self) -> dict[str, str]:
-        return {
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-            "User-Agent": self.user_agent,
-        }
-
-    def _fetch_article_attempt(
-        self,
-        doi: str,
-        metadata: Mapping[str, Any],
-    ) -> RoyalSocietyArticleAttempt:
+    def html_candidates(self, doi: str, metadata: Mapping[str, Any]) -> list[str]:
         normalized_doi = normalize_doi(doi)
-        requested_url = royal_html.direct_article_url(normalized_doi)
-        try:
-            landing = fetch_landing_html(
-                requested_url,
-                transport=self.transport,
-                headers=self._html_headers(),
-                timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
-                retry_on_transient=True,
-                max_redirects=self.landing_max_redirects,
-            )
-        except RequestFailure as exc:
-            raise map_request_failure(exc) from exc
+        candidates: list[str] = []
+        landing = normalize_text(str(metadata.get("landing_page_url") or ""))
+        if _is_royal_society_url(landing):
+            _append_unique(candidates, landing)
+        if normalized_doi:
+            quoted = quote(normalized_doi, safe="/")
+            _append_unique(candidates, royal_html.direct_article_url(normalized_doi))
+            _append_unique(candidates, f"https://doi.org/{quoted}")
+        return candidates
 
-        merged_metadata = royal_html.merge_metadata_with_html(
+    def pdf_candidates(self, doi: str, metadata: Mapping[str, Any]) -> list[str]:
+        normalized_doi = normalize_doi(doi)
+        if not normalized_doi:
+            return []
+        landing = normalize_text(str(metadata.get("landing_page_url") or ""))
+        source_url = (
+            landing
+            if _is_royal_society_url(landing)
+            else royal_html.direct_article_url(normalized_doi)
+        )
+        return royal_html.pdf_candidate_urls(
             metadata,
-            landing.html_text,
-            landing.final_url,
+            source_url=source_url,
             doi=normalized_doi,
         )
-        return RoyalSocietyArticleAttempt(
-            doi=normalized_doi,
-            requested_url=requested_url,
-            final_url=landing.final_url,
-            html_text=landing.html_text,
-            response_status=landing.status_code or None,
-            response_headers=landing.headers,
-            metadata=merged_metadata,
-        )
 
-    def _fetch_article_html_payload(
-        self,
-        attempt: RoyalSocietyArticleAttempt,
-        *,
-        asset_profile: AssetProfile,
-        context: RuntimeContext | None = None,
-    ) -> RawFulltextPayload:
-        del context
-        extraction = royal_html.extract_markdown(
-            attempt.html_text,
-            attempt.final_url,
-            metadata=attempt.metadata,
-            asset_profile=asset_profile,
-        )
-        diagnostics = HtmlQualityAssessor(self.name).assess(
-            extraction.markdown_text,
-            extraction.metadata,
-            html_text=extraction.html_text or attempt.html_text,
-            title=str(extraction.metadata.get("title") or ""),
-            requested_url=attempt.requested_url,
-            final_url=attempt.final_url,
-            response_status=attempt.response_status,
-            section_hints=extraction.section_hints,
-        )
-        if not diagnostics.accepted:
-            raise ProviderFailure(NO_RESULT, availability_failure_message(diagnostics))
-
-        content_type = header_value(attempt.response_headers, "content-type", "text/html")
-        return build_provider_payload(
-            provider=self.name,
-            route_kind="html",
-            source_url=attempt.final_url,
-            content_type=content_type,
-            body=extraction.html_text.encode("utf-8"),
-            markdown_text=extraction.markdown_text,
-            merged_metadata=extraction.metadata,
-            diagnostics={
-                "availability_diagnostics": diagnostics.to_dict(),
-                "extraction": {
-                    "abstract_sections": extraction.abstract_sections,
-                    "section_hints": extraction.section_hints,
-                },
-            },
-            reason="Downloaded full text from the Royal Society Publishing direct DOI HTML route.",
-            extracted_assets=extraction.extracted_assets,
-        )
-
-    def _request_pdf_candidate(self, url: str, *, referer: str | None = None) -> Mapping[str, Any]:
-        headers = default_pdf_headers(self.user_agent, referer=referer)
-        current_url = url
-        for redirect_count in range(self.landing_max_redirects + 1):
-            response = self.transport.request(
-                "GET",
-                current_url,
-                headers=headers,
-                timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
-                retry_on_transient=True,
-            )
-            response = dict(response)
-            response["url"] = urljoin(current_url, str(response.get("url") or "").strip() or current_url)
-            status_code = int(response.get("status_code") or 200)
-            location = header_value(response.get("headers"), "location")
-            if status_code in REDIRECT_STATUS_CODES and location:
-                if redirect_count >= self.landing_max_redirects:
-                    break
-                current_url = urljoin(str(response["url"]), location)
-                continue
-            return response
-        return response
-
-    def _fetch_pdf_payload(
-        self,
-        doi: str,
-        metadata: Mapping[str, Any],
-        *,
-        source_url: str,
-        html_failure_message: str,
-        html_trace_markers: Sequence[str],
-        context: RuntimeContext | None = None,
-    ) -> RawFulltextPayload:
-        candidates = royal_html.pdf_candidate_urls(metadata, source_url=source_url, doi=doi)
-        last_failure: PdfFetchFailure | None = None
-        effective_asset_profile = pdf_asset_profile_from_context(context)
-        for candidate in candidates:
-            try:
-                response = self._request_pdf_candidate(candidate, referer=source_url)
-            except RequestFailure as exc:
-                last_failure = PdfFetchFailure(
-                    "pdf_download_failed",
-                    f"Failed to download Royal Society Publishing PDF candidate: {exc}",
-                    details={"candidate_url": candidate, "status": exc.status_code},
-                )
-                continue
-
-            response_headers = response.get("headers") if isinstance(response.get("headers"), Mapping) else {}
-            body = response.get("body", b"")
-            pdf_bytes = bytes(body) if isinstance(body, (bytes, bytearray)) else b""
-            content_type = header_value(response_headers, "content-type")
-            final_url = str(response.get("url") or candidate)
-            if not pdf_bytes.lstrip().startswith(b"%PDF-"):
-                last_failure = PdfFetchFailure(
-                    "downloaded_file_not_pdf",
-                    "Royal Society Publishing PDF fallback candidate returned an HTML wrapper or other non-PDF content.",
-                    details={
-                        "candidate_url": candidate,
-                        "final_url": final_url,
-                        "status": int(response.get("status_code") or 0) or None,
-                        "content_type": content_type or None,
-                    },
-                )
-                continue
-
-            try:
-                pdf_result = pdf_fetch_result_from_bytes(
-                    artifact_dir=None,
-                    asset_profile=effective_asset_profile,
-                    asset_output_dir=pdf_asset_output_dir(context, asset_profile=effective_asset_profile, doi=doi),
-                    source_url=candidate,
-                    final_url=final_url,
-                    pdf_bytes=pdf_bytes,
-                    suggested_filename=filename_from_headers(response_headers),
-                )
-            except PdfFetchFailure as exc:
-                last_failure = exc
-                continue
-
-            merged_metadata = dict(metadata or {})
-            return build_provider_payload(
-                provider=self.name,
-                route_kind=PDF_FALLBACK,
-                source_url=pdf_result.final_url,
-                content_type=PDF_MIME_TYPE,
-                body=pdf_result.pdf_bytes,
-                markdown_text=pdf_result.markdown_text,
-                merged_metadata=merged_metadata,
-                diagnostics={
-                    PDF_FALLBACK: {
-                        "candidates": candidates,
-                        "source_url": candidate,
-                        "final_url": pdf_result.final_url,
-                        "html_failure_message": html_failure_message,
-                    },
-                },
-                reason="Downloaded full text from the Royal Society Publishing direct PDF fallback route.",
-                suggested_filename=pdf_result.suggested_filename,
-                extracted_assets=pdf_fetch_result_assets(pdf_result),
-                html_failure_message=html_failure_message,
-                content_needs_local_copy=True,
-                warnings=[
-                    "Full text was extracted from Royal Society Publishing PDF fallback after the HTML route was not usable.",
-                ],
-                trace_markers=[
-                    *list(html_trace_markers),
-                    fulltext_marker(self.name, "ok", route=PDF_FALLBACK),
-                ],
-                needs_local_copy=True,
-            )
-
-        raise ProviderFailure(
-            NO_RESULT,
-            (
-                last_failure.message
-                if last_failure is not None
-                else "No Royal Society Publishing PDF fallback candidates were attempted."
-            ),
-            warnings=[
-                "Royal Society Publishing PDF fallback was not usable."
-            ],
-        )
-
-    def fetch_raw_fulltext(
-        self,
-        doi: str,
-        metadata: Mapping[str, Any],
-        *,
-        context: RuntimeContext | None = None,
-    ) -> RawFulltextPayload:
-        runtime_context = self._runtime_context(context)
-        normalized_doi = normalize_doi(doi)
-        article_attempt: RoyalSocietyArticleAttempt | None = None
-        article_fetch_failure: ProviderFailure | None = None
-        try:
-            article_attempt = self._fetch_article_attempt(normalized_doi, metadata)
-        except ProviderFailure as exc:
-            article_fetch_failure = exc
-
-        def run_article_html(_state: ProviderWaterfallState) -> RawFulltextPayload:
-            if article_fetch_failure is not None:
-                raise article_fetch_failure
-            assert article_attempt is not None
-            return self._fetch_article_html_payload(
-                article_attempt,
-                asset_profile="all",
-                context=runtime_context,
-            )
-
-        def run_pdf_fallback(state: ProviderWaterfallState) -> RawFulltextPayload:
-            html_failure = state.failure("article_html")
-            source_metadata = dict(metadata)
-            source_url = royal_html.direct_article_url(normalized_doi)
-            if article_attempt is not None:
-                source_metadata = dict(article_attempt.metadata)
-                source_url = article_attempt.final_url
-            if not source_metadata.get("doi"):
-                source_metadata["doi"] = normalized_doi
-            html_failure_message = (
-                html_failure.message if html_failure is not None else "Royal Society Publishing HTML route failed."
-            )
-            try:
-                return self._fetch_pdf_payload(
-                    normalized_doi,
-                    source_metadata,
-                    source_url=source_url,
-                    html_failure_message=html_failure_message,
-                    html_trace_markers=state.source_markers(),
-                    context=runtime_context,
-                )
-            except ProviderFailure:
-                raise
-
-        def final_failure(state: ProviderWaterfallState) -> ProviderFailure:
-            failures = [
-                (
-                    "article_html",
-                    state.failure("article_html")
-                    or ProviderFailure(NO_RESULT, "Royal Society Publishing HTML route failed."),
-                ),
-                (
-                    "pdf_fallback",
-                    state.failure("pdf_fallback")
-                    or ProviderFailure(NO_RESULT, "Royal Society Publishing PDF fallback failed."),
-                ),
-            ]
-            combined = combine_provider_failures(failures)
-            return ProviderFailure(
-                combined.code,
-                "Royal Society Publishing full text could not be retrieved. " + combined.message,
-                warnings=state.warnings,
-                source_trail=state.source_markers(),
-            )
-
-        return run_provider_waterfall(
-            [
-                ProviderWaterfallStep(
-                    label="article_html",
-                    run=run_article_html,
-                    failure_marker=fulltext_marker(self.name, "fail", route="html"),
-                    success_markers=(fulltext_marker(self.name, "ok", route="html"),),
-                    continue_codes=DEFAULT_WATERFALL_CONTINUE_CODES,
-                    failure_warning=lambda failure, _state: (
-                        f"Royal Society Publishing HTML route was not usable ({failure.message}); attempting PDF fallback."
-                    ),
-                ),
-                ProviderWaterfallStep(
-                    label="pdf_fallback",
-                    run=run_pdf_fallback,
-                    failure_marker=fulltext_marker(self.name, "fail", route=PDF_FALLBACK),
-                    success_markers=(fulltext_marker(self.name, "ok", route=PDF_FALLBACK),),
-                    continue_codes=DEFAULT_WATERFALL_CONTINUE_CODES,
-                ),
-            ],
-            final_failure_factory=final_failure,
-        )
-
-    def html_to_markdown(
+    def extract_markdown(
         self,
         html_text: str,
-        source_url: str,
+        final_url: str,
         *,
         metadata: Mapping[str, Any],
-        context: RuntimeContext,
-    ) -> tuple[str, Mapping[str, Any]]:
-        del context
+    ) -> tuple[str, dict[str, Any]]:
         extraction = royal_html.extract_markdown(
             html_text,
-            source_url,
+            final_url,
             metadata=metadata,
             asset_profile="all",
         )
-        return extraction.markdown_text, {
+        title = normalize_text(str(extraction.metadata.get("title") or ""))
+        diagnostics = HtmlQualityAssessor(self.name).assess(
+            extraction.markdown_text,
+            extraction.metadata,
+            html_text=extraction.html_text or html_text,
+            title=title,
+            final_url=final_url,
+            section_hints=extraction.section_hints,
+        )
+        if not diagnostics.accepted:
+            raise HtmlExtractionFailure(
+                diagnostics.reason,
+                availability_failure_message(diagnostics),
+            )
+
+        abstract_text = (
+            normalize_text(str(extraction.abstract_sections[0].get("text") or ""))
+            if extraction.abstract_sections
+            else None
+        )
+        references = extraction.metadata.get("references")
+        extraction_payload: dict[str, Any] = {
+            "title": title or None,
+            "metadata": dict(extraction.metadata),
+            "abstract_text": abstract_text,
             "abstract_sections": extraction.abstract_sections,
             "section_hints": extraction.section_hints,
+            "availability_diagnostics": diagnostics.to_dict(),
+            "extracted_authors": royal_html.extract_authors(html_text),
+            "references": references if isinstance(references, list) else [],
             "extracted_assets": extraction.extracted_assets,
         }
+        return extraction.markdown_text, extraction_payload
+
+    def article_source_for_payload(self, raw_payload: RawFulltextPayload) -> str:
+        content = raw_payload.content
+        route = normalize_text(
+            content.route_kind if content is not None else ""
+        ).lower()
+        if route == PDF_FALLBACK:
+            return "royalsocietypublishing_pdf"
+        return "royalsocietypublishing_html"
 
     def to_article_model(
         self,
@@ -532,46 +228,24 @@ class RoyalsocietypublishingClient(ProviderClient):
         asset_failures: list[Mapping[str, Any]] | None = None,
         context: RuntimeContext | None = None,
     ):
-        del asset_failures, context
+        effective_metadata = dict(metadata)
         content = raw_payload.content
-        route = normalize_text(content.route_kind if content is not None else "").lower()
-        source = "royalsocietypublishing_pdf" if route == PDF_FALLBACK else "royalsocietypublishing_html"
-        merged_metadata = dict(
-            (content.merged_metadata if content is not None else None)
-            or raw_payload.merged_metadata
-            or metadata
-            or {}
+        extraction = (
+            content.diagnostics.get("extraction")
+            if content is not None and isinstance(content.diagnostics, Mapping)
+            else None
         )
-        markdown_text = normalize_text(content.markdown_text if content is not None else "")
-        if not markdown_text:
-            return metadata_only_article(
-                source=source,
-                metadata=merged_metadata,
-                doi=normalize_doi(str(merged_metadata.get("doi") or "")) or None,
-                warnings=list(raw_payload.warnings),
-                trace=raw_payload.trace,
-            )
-        diagnostics = dict(content.diagnostics if content is not None else {})
-        extraction = diagnostics.get("extraction") if isinstance(diagnostics.get("extraction"), Mapping) else {}
-        availability = diagnostics.get("availability_diagnostics")
-        extracted_assets = content.extracted_assets if content is not None else []
-        assets = (
-            list(extracted_assets)
-            if route == PDF_FALLBACK
-            else _merge_assets(extracted_assets, downloaded_assets)
+        extracted_metadata = (
+            extraction.get("metadata") if isinstance(extraction, Mapping) else None
         )
-        return article_from_markdown(
-            source=source,
-            metadata=merged_metadata,
-            doi=normalize_doi(str(merged_metadata.get("doi") or "")) or None,
-            markdown_text=markdown_text,
-            abstract_sections=list(extraction.get("abstract_sections") or []),
-            section_hints=list(extraction.get("section_hints") or []),
-            assets=assets,
-            warnings=list(raw_payload.warnings),
-            trace=raw_payload.trace,
-            availability_diagnostics=availability if isinstance(availability, Mapping) else None,
-            allow_downgrade_from_diagnostics=True,
+        if isinstance(extracted_metadata, Mapping):
+            effective_metadata = dict(extracted_metadata)
+        return super().to_article_model(
+            effective_metadata,
+            raw_payload,
+            downloaded_assets=downloaded_assets,
+            asset_failures=asset_failures,
+            context=context,
         )
 
     def download_related_assets(
@@ -579,91 +253,47 @@ class RoyalsocietypublishingClient(ProviderClient):
         doi: str,
         metadata: Mapping[str, Any],
         raw_payload: RawFulltextPayload,
-        output_dir: Path | None,
+        output_dir,
         *,
         asset_profile: AssetProfile = "all",
         context: RuntimeContext | None = None,
     ) -> dict[str, list[dict[str, Any]]]:
-        del metadata
         context = self._runtime_context(context, output_dir=output_dir)
         if output_dir is None or asset_profile == "none":
             return empty_asset_results()
         content = raw_payload.content
-        if normalize_text(content.route_kind if content is not None else "").lower() != "html":
+        if (
+            normalize_text(content.route_kind if content is not None else "").lower()
+            != "html"
+        ):
             return empty_asset_results()
 
-        extracted_assets = _filter_assets_for_profile(
-            content.extracted_assets if content is not None else [],
-            asset_profile=asset_profile,
+        extraction = (
+            content.diagnostics.get("extraction")
+            if content is not None and isinstance(content.diagnostics, Mapping)
+            else None
         )
-        if not extracted_assets:
+        extracted_assets = (
+            extraction.get("extracted_assets")
+            if isinstance(extraction, Mapping)
+            else None
+        )
+        if not isinstance(extracted_assets, list):
             return empty_asset_results()
-        body_assets, supplementary_assets = split_body_and_supplementary_assets(extracted_assets)
-        headers = {"Referer": raw_payload.source_url}
-        article_id = normalize_doi(doi) or "royalsocietypublishing"
-        body_results = download_assets(
-            FIGURE_KIND,
-            self.transport,
-            article_id=article_id,
-            assets=body_assets,
-            output_dir=output_dir,
-            user_agent=self.user_agent,
+        assets = _filter_assets_for_profile(
+            [item for item in extracted_assets if isinstance(item, Mapping)],
             asset_profile=asset_profile,
-            headers=headers,
-            seed_urls=[],
-            asset_download_concurrency=resolve_asset_download_concurrency(context.env),
         )
-        supplementary_results = (
-            download_assets(
-                SUPPLEMENTARY_KIND,
-                self.transport,
-                article_id=article_id,
-                assets=supplementary_assets,
-                output_dir=output_dir,
-                user_agent=self.user_agent,
-                asset_profile=asset_profile,
-                headers=headers,
-                seed_urls=[raw_payload.source_url],
-                asset_download_concurrency=resolve_asset_download_concurrency(context.env),
-            )
-            if asset_profile == "all"
-            else empty_asset_results()
-        )
-        return {
-            "assets": [
-                *list(body_results.get("assets") or []),
-                *list(supplementary_results.get("assets") or []),
-            ],
-            "asset_failures": [
-                *list(body_results.get("asset_failures") or []),
-                *list(supplementary_results.get("asset_failures") or []),
-            ],
-        }
-
-    def describe_artifacts(
-        self,
-        raw_payload: RawFulltextPayload,
-        *,
-        downloaded_assets: list[Mapping[str, Any]] | None = None,
-        asset_failures: list[Mapping[str, Any]] | None = None,
-    ) -> ProviderArtifacts:
-        artifacts = super().describe_artifacts(
+        if not assets:
+            return empty_asset_results()
+        return self._download_browser_backed_related_assets(
+            doi,
+            metadata,
             raw_payload,
-            downloaded_assets=downloaded_assets,
-            asset_failures=asset_failures,
-        )
-        content = raw_payload.content
-        if normalize_text(content.route_kind if content is not None else "").lower() != PDF_FALLBACK:
-            return artifacts
-        pdf_assets = list(content.extracted_assets if content is not None else [])
-        return ProviderArtifacts(
-            assets=[*list(artifacts.assets), *pdf_assets],
-            asset_failures=list(artifacts.asset_failures),
-            allow_related_assets=False,
-            text_only=not pdf_assets,
-            skip_trace=[download_marker("royalsocietypublishing_assets_skipped_text_only")]
-            if not pdf_assets
-            else [],
+            output_dir,
+            asset_profile=asset_profile,
+            context=context,
+            assets=assets,
         )
 
 

@@ -249,6 +249,7 @@ def _run_browser_asset_download_attempt(
         if callable(figure_page_fetcher_factory)
         else raw_figure_page_fetcher
     )
+
     def seed_urls_getter() -> list[str]:
         return _seed_urls_for(recovery, attempt_seed_snapshot())
 
@@ -276,6 +277,7 @@ def _run_browser_asset_download_attempt(
         fetcher_factory=file_fetcher_factory,
     )
     try:
+
         def download_body_assets() -> Mapping[str, Any]:
             if not attempt_body_assets:
                 return empty_asset_results()
@@ -335,7 +337,11 @@ def _run_browser_asset_download_attempt(
             or _requires_caller_thread(image_document_fetcher)
             or _requires_caller_thread(file_document_fetcher)
         )
-        if attempt_body_assets and attempt_supplementary_assets and not serial_browser_assets:
+        if (
+            attempt_body_assets
+            and attempt_supplementary_assets
+            and not serial_browser_assets
+        ):
             with ThreadPoolExecutor(max_workers=2) as executor:
                 body_future = executor.submit(download_body_assets)
                 supplementary_future = executor.submit(download_supplementary_assets)
@@ -345,12 +351,17 @@ def _run_browser_asset_download_attempt(
             body_result = download_body_assets()
             supplementary_result = download_supplementary_assets()
         return BrowserAssetDownloadResult(
-            body_results=[dict(asset) for asset in list(body_result.get("assets") or [])],
+            body_results=[
+                dict(asset) for asset in list(body_result.get("assets") or [])
+            ],
             supplementary_results=[
                 dict(asset) for asset in list(supplementary_result.get("assets") or [])
             ],
             failures=[
-                *[dict(failure) for failure in list(body_result.get("asset_failures") or [])],
+                *[
+                    dict(failure)
+                    for failure in list(body_result.get("asset_failures") or [])
+                ],
                 *[
                     dict(failure)
                     for failure in list(
@@ -425,7 +436,9 @@ def _attempt_settings(opener_requester: Any) -> dict[str, Any]:
     return settings
 
 
-def _result_mapping(result: BrowserAssetDownloadResult) -> dict[str, list[dict[str, Any]]]:
+def _result_mapping(
+    result: BrowserAssetDownloadResult,
+) -> dict[str, list[dict[str, Any]]]:
     return {
         "assets": [
             *[dict(asset) for asset in result.body_results],
@@ -446,5 +459,7 @@ def _download_result_from_mapping(
     return BrowserAssetDownloadResult(
         body_results=body_results,
         supplementary_results=supplementary_results,
-        failures=[dict(failure) for failure in list(result.get("asset_failures") or [])],
+        failures=[
+            dict(failure) for failure in list(result.get("asset_failures") or [])
+        ],
     )

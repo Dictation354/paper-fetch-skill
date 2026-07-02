@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# ruff: noqa: E402
 from __future__ import annotations
 
 import argparse
@@ -20,9 +21,13 @@ if SRC_PATH.is_dir() and str(SRC_PATH) not in sys.path:
     sys.path.insert(0, str(SRC_PATH))
 
 from _structured_errors import ToolError, emit_error, error_payload  # noqa: E402
-from paper_fetch.config import build_user_agent  # noqa: E402
+from paper_fetch.config import build_publisher_user_agent  # noqa: E402
 from paper_fetch.extraction.html.parsing import choose_parser  # noqa: E402
-from paper_fetch.extraction.html.signals import CHALLENGE_PATTERNS, contains_access_gate_text, summarize_html  # noqa: E402
+from paper_fetch.extraction.html.signals import (
+    CHALLENGE_PATTERNS,
+    contains_access_gate_text,
+    summarize_html,
+)  # noqa: E402
 from paper_fetch.http import (  # noqa: E402
     HttpTransport,
     RequestFailure,
@@ -216,13 +221,19 @@ def _load_provider_manifest(path: Path) -> dict[str, Any]:
     return data
 
 
-def _manifest_context(path_value: str | None, purpose: str | None) -> ManifestContext | None:
+def _manifest_context(
+    path_value: str | None, purpose: str | None
+) -> ManifestContext | None:
     if not path_value:
         return None
     path = Path(path_value)
     data = _load_provider_manifest(path)
     fixtures = data.get("fixtures") if isinstance(data.get("fixtures"), dict) else {}
-    doi_samples = fixtures.get("doi_samples") if isinstance(fixtures.get("doi_samples"), dict) else {}
+    doi_samples = (
+        fixtures.get("doi_samples")
+        if isinstance(fixtures.get("doi_samples"), dict)
+        else {}
+    )
     sample = doi_samples.get(purpose) if purpose else None
     if purpose and sample is not None and not isinstance(sample, dict):
         raise CaptureFixtureError(
@@ -282,12 +293,24 @@ def _allowed_runtimes(manifest: ManifestContext | None) -> set[str]:
 def _probe_requires_browser(manifest: ManifestContext | None) -> bool:
     if manifest is None:
         return False
-    probe = manifest.data.get("probe") if isinstance(manifest.data.get("probe"), dict) else {}
-    return bool(probe.get("requires_browser_runtime") or probe.get("requires_playwright"))
+    probe = (
+        manifest.data.get("probe")
+        if isinstance(manifest.data.get("probe"), dict)
+        else {}
+    )
+    return bool(
+        probe.get("requires_browser_runtime") or probe.get("requires_playwright")
+    )
 
 
-def _sample_prefers_browser_pdf_fallback(manifest: ManifestContext | None, purpose: str | None) -> bool:
-    if purpose != "pdf_fallback" or manifest is None or not isinstance(manifest.sample, dict):
+def _sample_prefers_browser_pdf_fallback(
+    manifest: ManifestContext | None, purpose: str | None
+) -> bool:
+    if (
+        purpose != "pdf_fallback"
+        or manifest is None
+        or not isinstance(manifest.sample, dict)
+    ):
         return False
     observed_signals = {
         normalize_text(str(signal)).lower()
@@ -344,7 +367,11 @@ def _iter_manifest_capture_contexts(path_value: str) -> list[ManifestContext]:
     path = Path(path_value)
     data = _load_provider_manifest(path)
     fixtures = data.get("fixtures") if isinstance(data.get("fixtures"), dict) else {}
-    doi_samples = fixtures.get("doi_samples") if isinstance(fixtures.get("doi_samples"), dict) else {}
+    doi_samples = (
+        fixtures.get("doi_samples")
+        if isinstance(fixtures.get("doi_samples"), dict)
+        else {}
+    )
     contexts: list[ManifestContext] = []
     for purpose in PURPOSES:
         sample = doi_samples.get(purpose)
@@ -386,12 +413,18 @@ def _iter_manifest_capture_contexts(path_value: str) -> list[ManifestContext]:
 
 def _write_manifest(path: Path, manifest: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(manifest, indent=2, sort_keys=False) + "\n", encoding="utf-8")
+    path.write_text(
+        json.dumps(manifest, indent=2, sort_keys=False) + "\n", encoding="utf-8"
+    )
 
 
 def _content_type(response: dict[str, Any]) -> str:
-    headers = response.get("headers") if isinstance(response.get("headers"), dict) else {}
-    return str(headers.get("content-type") or headers.get("Content-Type") or "text/html")
+    headers = (
+        response.get("headers") if isinstance(response.get("headers"), dict) else {}
+    )
+    return str(
+        headers.get("content-type") or headers.get("Content-Type") or "text/html"
+    )
 
 
 def _header_value(headers: dict[str, Any] | None, key: str) -> str:
@@ -454,7 +487,13 @@ def _fixture_path_from_entry(
             path = root / value
             if path.exists():
                 return path
-    for name in ("original.pdf", "original.xml", "original.html", "raw.html", "article.html"):
+    for name in (
+        "original.pdf",
+        "original.xml",
+        "original.html",
+        "raw.html",
+        "article.html",
+    ):
         value = assets.get(name)
         if isinstance(value, str) and value:
             path = root / value
@@ -468,7 +507,9 @@ def _fixture_path_from_entry(
     return None
 
 
-def _entry_matches_capture_plan(entry: dict[str, Any], *, purpose: str, content_type: str) -> bool:
+def _entry_matches_capture_plan(
+    entry: dict[str, Any], *, purpose: str, content_type: str
+) -> bool:
     route_kind = normalize_text(str(entry.get("route_kind") or "")).lower()
     entry_content_type = normalize_text(str(entry.get("content_type") or "")).lower()
     expected_extension = _extension_for(content_type, purpose)
@@ -483,7 +524,9 @@ def _entry_matches_capture_plan(entry: dict[str, Any], *, purpose: str, content_
     return route_kind in {"", "html"} and "pdf" not in entry_content_type
 
 
-def _planned_content_type_from_manifest(purpose: str, sample: dict[str, Any] | None) -> str:
+def _planned_content_type_from_manifest(
+    purpose: str, sample: dict[str, Any] | None
+) -> str:
     if purpose == "pdf_fallback":
         return "application/pdf"
     if not sample:
@@ -517,7 +560,11 @@ def _manifest_entry(
     content_type: str,
 ) -> dict[str, Any]:
     family = _fixture_family(purpose)
-    route_kind = "pdf_fallback" if purpose == "pdf_fallback" else ("block" if family == "block" else _extension_for(content_type, purpose))
+    route_kind = (
+        "pdf_fallback"
+        if purpose == "pdf_fallback"
+        else ("block" if family == "block" else _extension_for(content_type, purpose))
+    )
     asset_name = fixture_path.name
     return {
         "doi": doi,
@@ -547,7 +594,7 @@ def _redact_transient_url(url: str) -> str:
 def _capture_http(url: str) -> dict[str, Any]:
     headers = {
         "Accept": "text/html,application/xhtml+xml,application/xml,application/pdf;q=0.9,*/*;q=0.8",
-        "User-Agent": build_user_agent({}),
+        "User-Agent": build_publisher_user_agent({}),
     }
     transport = HttpTransport()
     current_url = url
@@ -561,7 +608,9 @@ def _capture_http(url: str) -> dict[str, Any]:
         response["url"] = _response_url(response, current_url)
         status_code = int(response.get("status_code") or 200)
         location = _header_value(
-            response.get("headers") if isinstance(response.get("headers"), dict) else {},
+            response.get("headers")
+            if isinstance(response.get("headers"), dict)
+            else {},
             "location",
         )
         if status_code in HTTP_REDIRECT_STATUS_CODES and location:
@@ -569,7 +618,9 @@ def _capture_http(url: str) -> dict[str, Any]:
                 raise RequestFailure(
                     status_code,
                     f"Exceeded HTTP redirect limit while capturing fixture for {url}",
-                    headers=response.get("headers") if isinstance(response.get("headers"), dict) else {},
+                    headers=response.get("headers")
+                    if isinstance(response.get("headers"), dict)
+                    else {},
                     url=response["url"],
                 )
             current_url = urljoin(response["url"], location)
@@ -583,7 +634,9 @@ def _capture_http(url: str) -> dict[str, Any]:
 
 
 def _is_pdf_response(content_type: str, body: bytes) -> bool:
-    return "application/pdf" in content_type.lower() or body.lstrip().startswith(b"%PDF")
+    return "application/pdf" in content_type.lower() or body.lstrip().startswith(
+        b"%PDF"
+    )
 
 
 def _is_html_response(content_type: str, body: bytes) -> bool:
@@ -600,7 +653,10 @@ def _decode_body(body: bytes) -> str:
 
 def _contains_challenge(text: str) -> bool:
     lowered = text.lower()
-    return any(pattern in lowered for pattern in CHALLENGE_PATTERNS) or "captcha" in lowered
+    return (
+        any(pattern in lowered for pattern in CHALLENGE_PATTERNS)
+        or "captcha" in lowered
+    )
 
 
 def _looks_empty_article_shell(content_type: str, body: bytes) -> bool:
@@ -620,7 +676,10 @@ def _has_populated_fulltext_container(html: str) -> bool:
         return False
     for selector in FULLTEXT_CONTAINER_SELECTORS:
         for node in soup.select(selector):
-            if len(normalize_text(node.get_text(" ", strip=True))) >= MIN_FULLTEXT_CONTAINER_TEXT_CHARS:
+            if (
+                len(normalize_text(node.get_text(" ", strip=True)))
+                >= MIN_FULLTEXT_CONTAINER_TEXT_CHARS
+            ):
                 return True
     return False
 
@@ -730,7 +789,9 @@ def _map_request_failure(exc: RequestFailure, *, route: str) -> CaptureFixtureEr
         )
     if exc.body:
         content_type = _content_type({"headers": exc.headers})
-        body_text = _decode_body(exc.body) if _is_html_response(content_type, exc.body) else ""
+        body_text = (
+            _decode_body(exc.body) if _is_html_response(content_type, exc.body) else ""
+        )
         if _contains_challenge(body_text):
             return CaptureFixtureError(
                 "CHALLENGE_DETECTED",
@@ -836,9 +897,14 @@ def _capture_browser(
     route: str,
 ) -> dict[str, Any]:
     if purpose == "pdf_fallback":
-        from paper_fetch.providers._pdf_fallback import PdfFallbackFailure, fetch_pdf_with_browser
+        from paper_fetch.providers._pdf_fallback import (
+            PdfFallbackFailure,
+            fetch_pdf_with_browser,
+        )
 
-        artifact_dir = root / ".paper-fetch-runs" / "fixture-capture" / doi_slug(doi) / purpose
+        artifact_dir = (
+            root / ".paper-fetch-runs" / "fixture-capture" / doi_slug(doi) / purpose
+        )
         seed_url = _pdf_seed_url(url)
         try:
             result = fetch_pdf_with_browser(
@@ -857,7 +923,9 @@ def _capture_browser(
 
     from paper_fetch.config import build_browser_user_agent
     from paper_fetch.extraction.html.signals import HtmlExtractionFailure
-    from paper_fetch.providers.browser_workflow.html_extraction import fetch_html_with_fast_browser
+    from paper_fetch.providers.browser_workflow.html_extraction import (
+        fetch_html_with_fast_browser,
+    )
 
     try:
         result = fetch_html_with_fast_browser(
@@ -869,7 +937,10 @@ def _capture_browser(
         raise _browser_capture_error(exc, route=route) from exc
     except Exception as exc:
         raise _browser_capture_error(exc, route=route) from exc
-    headers = {str(key).lower(): str(value) for key, value in (result.response_headers or {}).items()}
+    headers = {
+        str(key).lower(): str(value)
+        for key, value in (result.response_headers or {}).items()
+    }
     headers.setdefault("content-type", "text/html")
     return {
         "headers": headers,
@@ -922,7 +993,12 @@ def _capture_route(
     )
 
 
-def _should_retry_via(error: CaptureFixtureError, *, retry_via: str | None, manifest: ManifestContext | None) -> bool:
+def _should_retry_via(
+    error: CaptureFixtureError,
+    *,
+    retry_via: str | None,
+    manifest: ManifestContext | None,
+) -> bool:
     if retry_via != "browser":
         return False
     return error.code in RETRY_VIA_ERROR_CODES
@@ -948,7 +1024,9 @@ def _manifest_evidence_url(sample: dict[str, Any] | None) -> str:
 def capture_fixture(args: argparse.Namespace) -> dict[str, Any]:
     root = Path(args.output_dir).resolve()
     purpose = normalize_purpose(args.purpose)
-    manifest = getattr(args, "_manifest_context", None) or _manifest_context(getattr(args, "from_manifest", None), purpose)
+    manifest = getattr(args, "_manifest_context", None) or _manifest_context(
+        getattr(args, "from_manifest", None), purpose
+    )
     if manifest and manifest.sample is None:
         raise CaptureFixtureError(
             "UNSUITABLE_DOI_SAMPLE",
@@ -961,7 +1039,11 @@ def capture_fixture(args: argparse.Namespace) -> dict[str, Any]:
     raw_doi = args.doi or sample_doi
     provider = args.provider or (manifest.provider if manifest else None)
     if raw_doi is None:
-        sample_path = manifest.sample_path if manifest and manifest.sample_path else f"fixtures.doi_samples.{purpose}"
+        sample_path = (
+            manifest.sample_path
+            if manifest and manifest.sample_path
+            else f"fixtures.doi_samples.{purpose}"
+        )
         return {
             "status": "SKIPPED",
             "skipped": True,
@@ -970,21 +1052,31 @@ def capture_fixture(args: argparse.Namespace) -> dict[str, Any]:
             "manifest": manifest.path.as_posix() if manifest else None,
             "reason": f"{sample_path}.doi is null",
             "evidence": _manifest_evidence(manifest.sample if manifest else None),
-            "evidence_confidence": (manifest.sample or {}).get("confidence") if manifest else None,
+            "evidence_confidence": (manifest.sample or {}).get("confidence")
+            if manifest
+            else None,
         }
     doi = normalize_doi(str(raw_doi))
     slug = doi_slug(doi)
     provider = provider or infer_provider_from_doi(doi) or "unknown"
-    source_url = _manifest_evidence_url(manifest.sample if manifest else None) or f"https://doi.org/{doi}"
+    source_url = (
+        _manifest_evidence_url(manifest.sample if manifest else None)
+        or f"https://doi.org/{doi}"
+    )
     manifest_path = root / "tests" / "fixtures" / "golden_criteria" / "manifest.json"
     fixture_manifest = _load_manifest(manifest_path)
     samples = fixture_manifest["samples"]
     existing_entry = samples.get(slug) if isinstance(samples.get(slug), dict) else {}
-    manifest_planned_content_type = _planned_content_type_from_manifest(purpose, manifest.sample if manifest else None)
+    manifest_planned_content_type = _planned_content_type_from_manifest(
+        purpose, manifest.sample if manifest else None
+    )
     planned_content_type = (
         manifest_planned_content_type
         if purpose == "pdf_fallback"
-        else (str(existing_entry.get("content_type") or "") or manifest_planned_content_type)
+        else (
+            str(existing_entry.get("content_type") or "")
+            or manifest_planned_content_type
+        )
     )
     reuse_fixture_path = (
         _fixture_path_from_entry(
@@ -1022,19 +1114,33 @@ def capture_fixture(args: argparse.Namespace) -> dict[str, Any]:
             "manifest_entry": existing_entry,
             "content_type": existing_entry.get("content_type") or planned_content_type,
             "bytes": reuse_fixture_path.stat().st_size,
-            "route": existing_entry.get("route_kind") or _extension_for(planned_content_type, purpose),
+            "route": existing_entry.get("route_kind")
+            or _extension_for(planned_content_type, purpose),
             "capture_route": "reused",
-            "route_kind": existing_entry.get("route_kind") or _extension_for(planned_content_type, purpose),
+            "route_kind": existing_entry.get("route_kind")
+            or _extension_for(planned_content_type, purpose),
             "purpose": purpose,
             "provider": provider,
         }
         if getattr(args, "from_manifest", None):
-            provider_manifest = getattr(args, "_manifest_context", None) or _manifest_context(getattr(args, "from_manifest", None), purpose)
+            provider_manifest = getattr(
+                args, "_manifest_context", None
+            ) or _manifest_context(getattr(args, "from_manifest", None), purpose)
             summary["manifest"] = str(args.from_manifest)
-            summary["manifest_sample"] = _manifest_evidence(provider_manifest.sample if provider_manifest else None)
-            summary["evidence_confidence"] = (provider_manifest.sample or {}).get("confidence") if provider_manifest else None
-            summary["provider_routing"] = provider_manifest.routing if provider_manifest else {}
-            summary["manifest_sample_path"] = provider_manifest.sample_path if provider_manifest else None
+            summary["manifest_sample"] = _manifest_evidence(
+                provider_manifest.sample if provider_manifest else None
+            )
+            summary["evidence_confidence"] = (
+                (provider_manifest.sample or {}).get("confidence")
+                if provider_manifest
+                else None
+            )
+            summary["provider_routing"] = (
+                provider_manifest.routing if provider_manifest else {}
+            )
+            summary["manifest_sample_path"] = (
+                provider_manifest.sample_path if provider_manifest else None
+            )
         return summary
     if (
         not args.force
@@ -1052,7 +1158,9 @@ def capture_fixture(args: argparse.Namespace) -> dict[str, Any]:
             retryable=False,
         )
 
-    fetched_at = datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    fetched_at = (
+        datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    )
     if args.dry_run:
         content_type = planned_content_type
         body = b""
@@ -1110,7 +1218,9 @@ def capture_fixture(args: argparse.Namespace) -> dict[str, Any]:
             retryable=False,
         )
 
-    manifest_source_url = source_url if purpose == "pdf_fallback" and route == "browser" else final_url
+    manifest_source_url = (
+        source_url if purpose == "pdf_fallback" and route == "browser" else final_url
+    )
     entry = _manifest_entry(
         doi=doi,
         provider=provider,
@@ -1121,7 +1231,11 @@ def capture_fixture(args: argparse.Namespace) -> dict[str, Any]:
         root=root,
         content_type=content_type,
     )
-    if purpose == "pdf_fallback" and route == "browser" and final_url != manifest_source_url:
+    if (
+        purpose == "pdf_fallback"
+        and route == "browser"
+        and final_url != manifest_source_url
+    ):
         entry["diagnostics"] = {
             "browser_final_url": _redact_transient_url(final_url),
             "browser_final_url_redacted": "token=" in final_url.lower(),
@@ -1145,15 +1259,30 @@ def capture_fixture(args: argparse.Namespace) -> dict[str, Any]:
     if final_url != manifest_source_url:
         summary["capture_final_url"] = final_url
     if getattr(args, "from_manifest", None):
-        provider_manifest = getattr(args, "_manifest_context", None) or _manifest_context(getattr(args, "from_manifest", None), purpose)
+        provider_manifest = getattr(
+            args, "_manifest_context", None
+        ) or _manifest_context(getattr(args, "from_manifest", None), purpose)
         summary["manifest"] = str(args.from_manifest)
-        summary["manifest_sample"] = _manifest_evidence(provider_manifest.sample if provider_manifest else None)
-        summary["evidence_confidence"] = (provider_manifest.sample or {}).get("confidence") if provider_manifest else None
-        summary["provider_routing"] = provider_manifest.routing if provider_manifest else {}
-        summary["manifest_sample_path"] = provider_manifest.sample_path if provider_manifest else None
+        summary["manifest_sample"] = _manifest_evidence(
+            provider_manifest.sample if provider_manifest else None
+        )
+        summary["evidence_confidence"] = (
+            (provider_manifest.sample or {}).get("confidence")
+            if provider_manifest
+            else None
+        )
+        summary["provider_routing"] = (
+            provider_manifest.routing if provider_manifest else {}
+        )
+        summary["manifest_sample_path"] = (
+            provider_manifest.sample_path if provider_manifest else None
+        )
 
     if args.dry_run:
-        summary["would_write"] = [summary["fixture_path"], "tests/fixtures/golden_criteria/manifest.json"]
+        summary["would_write"] = [
+            summary["fixture_path"],
+            "tests/fixtures/golden_criteria/manifest.json",
+        ]
         summary["would_overwrite"] = bool(exists)
         return summary
 
@@ -1176,7 +1305,9 @@ def capture_all_from_manifest(args: argparse.Namespace) -> dict[str, Any]:
     failures: list[dict[str, Any]] = []
     for context in contexts:
         sample = context.sample or {}
-        purpose = normalize_purpose(str(sample.get("purpose") or (context.sample_path or "").rsplit(".", 1)[-1]))
+        purpose = normalize_purpose(
+            str(sample.get("purpose") or (context.sample_path or "").rsplit(".", 1)[-1])
+        )
         child_values = vars(args).copy()
         child_values.update(
             {
@@ -1197,7 +1328,9 @@ def capture_all_from_manifest(args: argparse.Namespace) -> dict[str, Any]:
                     provider=context.provider,
                     manifest=context.path.as_posix(),
                     purpose=purpose,
-                    task_id=f"{context.provider}-step3-capture-fixtures" if context.provider else "capture-fixtures",
+                    task_id=f"{context.provider}-step3-capture-fixtures"
+                    if context.provider
+                    else "capture-fixtures",
                 )
             )
     status = "OK" if not failures else "FAILED"
@@ -1207,7 +1340,9 @@ def capture_all_from_manifest(args: argparse.Namespace) -> dict[str, Any]:
         "manifest": str(args.from_manifest),
         "target_count": len(contexts),
         "captured_count": sum(1 for result in results if result.get("status") == "OK"),
-        "skipped_count": sum(1 for result in results if result.get("status") == "SKIPPED"),
+        "skipped_count": sum(
+            1 for result in results if result.get("status") == "SKIPPED"
+        ),
         "failure_count": len(failures),
         "results": results,
         "failures": failures,
@@ -1215,28 +1350,63 @@ def capture_all_from_manifest(args: argparse.Namespace) -> dict[str, Any]:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = CaptureArgumentParser(description="Capture a DOI replay fixture and register it in the golden manifest.")
+    parser = CaptureArgumentParser(
+        description="Capture a DOI replay fixture and register it in the golden manifest."
+    )
     parser.add_argument("--doi", help="DOI to capture, for example 10.1234/sample")
-    parser.add_argument("--provider", help="provider name; defaults to DOI/catalog inference")
-    parser.add_argument("--via", choices=("http", "playwright", "browser"), default="http")
+    parser.add_argument(
+        "--provider", help="provider name; defaults to DOI/catalog inference"
+    )
+    parser.add_argument(
+        "--via", choices=("http", "playwright", "browser"), default="http"
+    )
     parser.add_argument(
         "--auto-via",
         action="store_true",
         help="choose http or browser capture from manifest probe and access review",
     )
     parser.add_argument("--purpose", choices=CLI_PURPOSES)
-    parser.add_argument("--from-manifest", help="ProviderManifest YAML input; reads DOI, evidence, and routing by purpose")
-    parser.add_argument("--all", action="store_true", help="capture every non-null manifest DOI sample and extra fixture")
-    parser.add_argument("--retry-via", choices=("browser", "playwright"), help="retry failed capture through another route")
-    parser.add_argument("--fail-fast", action="store_true", help="emit JSON stderr and exit non-zero on the first failure")
-    parser.add_argument("--dry-run", action="store_true", help="print planned writes without fetching or writing")
-    parser.add_argument("--output-dir", default=_repo_root(), help="repo root to write into; defaults to this checkout")
-    parser.add_argument("--force", action="store_true", help="overwrite existing fixture and manifest sample")
+    parser.add_argument(
+        "--from-manifest",
+        help="ProviderManifest YAML input; reads DOI, evidence, and routing by purpose",
+    )
+    parser.add_argument(
+        "--all",
+        action="store_true",
+        help="capture every non-null manifest DOI sample and extra fixture",
+    )
+    parser.add_argument(
+        "--retry-via",
+        choices=("browser", "playwright"),
+        help="retry failed capture through another route",
+    )
+    parser.add_argument(
+        "--fail-fast",
+        action="store_true",
+        help="emit JSON stderr and exit non-zero on the first failure",
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="print planned writes without fetching or writing",
+    )
+    parser.add_argument(
+        "--output-dir",
+        default=_repo_root(),
+        help="repo root to write into; defaults to this checkout",
+    )
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="overwrite existing fixture and manifest sample",
+    )
     return parser
 
 
 def _error_context(args: argparse.Namespace) -> dict[str, str | None]:
-    purpose = normalize_purpose(args.purpose) if getattr(args, "purpose", None) else None
+    purpose = (
+        normalize_purpose(args.purpose) if getattr(args, "purpose", None) else None
+    )
     provider = args.provider
     if getattr(args, "from_manifest", None):
         try:
@@ -1249,7 +1419,9 @@ def _error_context(args: argparse.Namespace) -> dict[str, str | None]:
         "provider": provider,
         "manifest": getattr(args, "from_manifest", None),
         "purpose": purpose,
-        "task_id": f"{provider}-step3-capture-fixtures" if provider else "capture-fixtures",
+        "task_id": f"{provider}-step3-capture-fixtures"
+        if provider
+        else "capture-fixtures",
     }
 
 

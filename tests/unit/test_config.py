@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import tempfile
+import tomllib
 import unittest
 from pathlib import Path
 from unittest import mock
@@ -11,6 +12,14 @@ from paper_fetch.providers import browser_runtime
 
 
 class ConfigTests(unittest.TestCase):
+    def test_default_user_agent_matches_project_version(self) -> None:
+        pyproject_path = Path(__file__).resolve().parents[2] / "pyproject.toml"
+        project = tomllib.loads(pyproject_path.read_text(encoding="utf-8"))["project"]
+
+        self.assertEqual(
+            config.DEFAULT_USER_AGENT, f"paper-fetch-skill/{project['version']}"
+        )
+
     def test_load_env_file_uses_dotenv_syntax_without_interpolation(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             env_file = Path(tmpdir) / ".env"
@@ -38,14 +47,18 @@ class ConfigTests(unittest.TestCase):
         self.assertEqual(values["NO_INTERPOLATION"], "${EXPORTED}")
         self.assertNotIn("BARE_KEY", values)
 
-    def test_build_runtime_env_prefers_process_env_then_explicit_file_then_user_config(self) -> None:
+    def test_build_runtime_env_prefers_process_env_then_explicit_file_then_user_config(
+        self,
+    ) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             tmp = Path(tmpdir)
             user_env = tmp / "user.env"
             explicit_env = tmp / "explicit.env"
 
             user_env.write_text("SHARED=user\nUSER_ONLY=user\n", encoding="utf-8")
-            explicit_env.write_text("SHARED=explicit\nEXPLICIT_ONLY=explicit\n", encoding="utf-8")
+            explicit_env.write_text(
+                "SHARED=explicit\nEXPLICIT_ONLY=explicit\n", encoding="utf-8"
+            )
 
             with mock.patch.object(config, "DEFAULT_USER_ENV_FILE", user_env):
                 env = config.build_runtime_env(
@@ -68,8 +81,12 @@ class ConfigTests(unittest.TestCase):
             configured_env = tmp / "configured.env"
             explicit_env = tmp / "explicit.env"
             user_env.write_text("SHARED=user\n", encoding="utf-8")
-            configured_env.write_text("SHARED=configured\nCONFIGURED_ONLY=1\n", encoding="utf-8")
-            explicit_env.write_text("SHARED=explicit\nEXPLICIT_ONLY=1\n", encoding="utf-8")
+            configured_env.write_text(
+                "SHARED=configured\nCONFIGURED_ONLY=1\n", encoding="utf-8"
+            )
+            explicit_env.write_text(
+                "SHARED=explicit\nEXPLICIT_ONLY=1\n", encoding="utf-8"
+            )
 
             with mock.patch.object(config, "DEFAULT_USER_ENV_FILE", user_env):
                 env = config.build_runtime_env(
@@ -92,7 +109,9 @@ class ConfigTests(unittest.TestCase):
 
         self.assertEqual(env["SHARED"], "user")
 
-    def test_build_runtime_env_treats_explicit_empty_env_as_isolated_from_process_env(self) -> None:
+    def test_build_runtime_env_treats_explicit_empty_env_as_isolated_from_process_env(
+        self,
+    ) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             tmp = Path(tmpdir)
             user_env = tmp / "user.env"
@@ -117,6 +136,24 @@ class ConfigTests(unittest.TestCase):
         self.assertNotIn("PROCESS_ONLY", env)
         self.assertNotIn("PROCESS_FILE_ONLY", env)
 
+    def test_build_publisher_user_agent_ignores_shared_tool_user_agent(self) -> None:
+        user_agent = config.build_publisher_user_agent(
+            {config.USER_AGENT_ENV_VAR: "paper-fetch-skill/999"}
+        )
+
+        self.assertIn("Mozilla/5.0", user_agent)
+        self.assertNotIn("paper-fetch", user_agent)
+
+    def test_build_publisher_user_agent_uses_explicit_browser_user_agent(self) -> None:
+        user_agent = config.build_publisher_user_agent(
+            {
+                config.BROWSER_USER_AGENT_ENV_VAR: "Mozilla/5.0 test-browser",
+                config.USER_AGENT_ENV_VAR: "paper-fetch-skill/999",
+            }
+        )
+
+        self.assertEqual(user_agent, "Mozilla/5.0 test-browser")
+
     def test_repo_local_env_is_not_loaded_implicitly(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             tmp = Path(tmpdir)
@@ -130,7 +167,9 @@ class ConfigTests(unittest.TestCase):
 
             with (
                 mock.patch.object(config, "DEFAULT_USER_ENV_FILE", user_env),
-                mock.patch.object(config, "load_env_file", side_effect=fake_load_env_file),
+                mock.patch.object(
+                    config, "load_env_file", side_effect=fake_load_env_file
+                ),
             ):
                 config.build_runtime_env({})
 
@@ -155,11 +194,15 @@ class ConfigTests(unittest.TestCase):
             with mock.patch.object(config, "DEFAULT_USER_DATA_DIR", platform_default):
                 self.assertEqual(config.resolve_user_data_dir({}), platform_default)
                 self.assertEqual(
-                    config.resolve_user_data_dir({config.XDG_DATA_HOME_ENV_VAR: str(xdg_home)}),
+                    config.resolve_user_data_dir(
+                        {config.XDG_DATA_HOME_ENV_VAR: str(xdg_home)}
+                    ),
                     xdg_home / "paper-fetch",
                 )
 
-    def test_cli_download_dir_falls_back_to_cwd_when_default_user_data_dir_cannot_be_created(self) -> None:
+    def test_cli_download_dir_falls_back_to_cwd_when_default_user_data_dir_cannot_be_created(
+        self,
+    ) -> None:
         preferred_root = Path("/tmp/paper-fetch-test-user-data")
         preferred_dir = preferred_root / "downloads"
         original_mkdir = Path.mkdir
@@ -170,7 +213,9 @@ class ConfigTests(unittest.TestCase):
             return original_mkdir(path, *args, **kwargs)
 
         with (
-            mock.patch.object(config, "resolve_user_data_dir", return_value=preferred_root),
+            mock.patch.object(
+                config, "resolve_user_data_dir", return_value=preferred_root
+            ),
             mock.patch.object(Path, "mkdir", fake_mkdir),
         ):
             resolved = config.resolve_cli_download_dir({})
@@ -192,7 +237,9 @@ class ConfigTests(unittest.TestCase):
         self.assertEqual(config.resolve_cli_download_dir(env), expected)
         self.assertEqual(config.resolve_mcp_download_dir(env), expected)
 
-    def test_cloakbrowser_runtime_config_defaults_to_user_data_artifacts_without_browser_user_agent(self) -> None:
+    def test_cloakbrowser_runtime_config_defaults_to_user_data_artifacts_without_browser_user_agent(
+        self,
+    ) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             runtime_config = browser_runtime.load_runtime_config(
                 {
@@ -209,7 +256,9 @@ class ConfigTests(unittest.TestCase):
         self.assertIsNone(runtime_config.user_agent)
         self.assertIn("publisher-browser-artifacts", runtime_config.artifact_dir.parts)
 
-    def test_cloakbrowser_runtime_config_defaults_to_provider_user_data_dir_for_managed_browser(self) -> None:
+    def test_cloakbrowser_runtime_config_defaults_to_provider_user_data_dir_for_managed_browser(
+        self,
+    ) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             env = {config.XDG_DATA_HOME_ENV_VAR: tmpdir}
             science_runtime = browser_runtime.load_runtime_config(
@@ -223,12 +272,16 @@ class ConfigTests(unittest.TestCase):
                 doi="10.1073/pnas.2406303121",
             )
 
-        expected_root = Path(tmpdir).expanduser() / "paper-fetch" / "publisher-browser-profiles"
+        expected_root = (
+            Path(tmpdir).expanduser() / "paper-fetch" / "publisher-browser-profiles"
+        )
         self.assertEqual(science_runtime.user_data_dir, expected_root / "science")
         self.assertEqual(pnas_runtime.user_data_dir, expected_root / "pnas")
         self.assertNotEqual(science_runtime.user_data_dir, pnas_runtime.user_data_dir)
 
-    def test_cloakbrowser_runtime_config_does_not_default_user_data_dir_for_external_cdp(self) -> None:
+    def test_cloakbrowser_runtime_config_does_not_default_user_data_dir_for_external_cdp(
+        self,
+    ) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             runtime_config = browser_runtime.load_runtime_config(
                 {
@@ -241,7 +294,9 @@ class ConfigTests(unittest.TestCase):
 
         self.assertIsNone(runtime_config.user_data_dir)
 
-    def test_cloakbrowser_runtime_config_uses_explicit_shared_user_agent_for_browser(self) -> None:
+    def test_cloakbrowser_runtime_config_does_not_use_shared_tool_user_agent_for_browser(
+        self,
+    ) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             runtime_config = browser_runtime.load_runtime_config(
                 {
@@ -253,9 +308,11 @@ class ConfigTests(unittest.TestCase):
                 doi="10.1126/science.ady3136",
             )
 
-        self.assertEqual(runtime_config.user_agent, "paper-fetch-test/1")
+        self.assertIsNone(runtime_config.user_agent)
 
-    def test_cloakbrowser_runtime_config_browser_user_agent_overrides_shared_user_agent(self) -> None:
+    def test_cloakbrowser_runtime_config_browser_user_agent_overrides_shared_user_agent(
+        self,
+    ) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             runtime_config = browser_runtime.load_runtime_config(
                 {
@@ -290,9 +347,13 @@ class ConfigTests(unittest.TestCase):
         self.assertFalse(runtime_config.headless)
         self.assertEqual(runtime_config.timeout_ms, 12345)
         self.assertEqual(runtime_config.binary_path, str(browser_binary))
-        self.assertTrue(str(runtime_config.artifact_dir).startswith(str(Path(tmpdir).expanduser())))
+        self.assertTrue(
+            str(runtime_config.artifact_dir).startswith(str(Path(tmpdir).expanduser()))
+        )
 
-    def test_cloakbrowser_runtime_config_ignores_invalid_legacy_binary_path(self) -> None:
+    def test_cloakbrowser_runtime_config_ignores_invalid_legacy_binary_path(
+        self,
+    ) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             legacy_binary_path = str(Path(tmpdir) / "missing-chrome")
             runtime_config = browser_runtime.load_runtime_config(
@@ -307,7 +368,9 @@ class ConfigTests(unittest.TestCase):
 
         self.assertEqual(runtime_config.binary_path, legacy_binary_path)
 
-    def test_cloakbrowser_runtime_config_rejects_invalid_binary_path_for_managed_browser(self) -> None:
+    def test_cloakbrowser_runtime_config_rejects_invalid_binary_path_for_managed_browser(
+        self,
+    ) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             missing_binary_path = str(Path(tmpdir) / "missing-chrome")
             with self.assertRaisesRegex(Exception, "CLOAKBROWSER_BINARY_PATH"):

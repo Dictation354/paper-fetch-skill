@@ -22,6 +22,7 @@ class McpLoggingInlineImageTests(unittest.TestCase):
                 "attempt": 1,
             },
         )
+
     def test_structured_log_payload_from_record_prefers_record_payload(self) -> None:
         record = logging.LogRecord(
             name="paper_fetch.service",
@@ -49,6 +50,7 @@ class McpLoggingInlineImageTests(unittest.TestCase):
                 "logger": "paper_fetch.service",
             },
         )
+
     def test_inline_image_contents_limits_and_filters_assets(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
@@ -62,24 +64,72 @@ class McpLoggingInlineImageTests(unittest.TestCase):
 
             article = sample_article()
             article.assets = [
-                Asset(kind="figure", heading="Figure 1", caption="Body 1", path=str(figure_paths[0]), section="body"),
-                Asset(kind="figure", heading="Figure 2", caption="Body 2", path=str(figure_paths[1]), section="body"),
-                Asset(kind="figure", heading="Figure 3", caption="Body 3", path=str(figure_paths[2]), section="body"),
-                Asset(kind="figure", heading="Figure 4", caption="Body 4", path=str(figure_paths[3]), section="body"),
-                Asset(kind="figure", heading="Supplement", caption="Skip", path=str(figure_paths[0]), section="supplementary"),
-                Asset(kind="figure", heading="Too big", caption="Skip", path=str(oversized_path), section="body"),
-                Asset(kind="figure", heading="Text file", caption="Skip", path=str(text_path), section="body"),
+                Asset(
+                    kind="figure",
+                    heading="Figure 1",
+                    caption="Body 1",
+                    path=str(figure_paths[0]),
+                    section="body",
+                ),
+                Asset(
+                    kind="figure",
+                    heading="Figure 2",
+                    caption="Body 2",
+                    path=str(figure_paths[1]),
+                    section="body",
+                ),
+                Asset(
+                    kind="figure",
+                    heading="Figure 3",
+                    caption="Body 3",
+                    path=str(figure_paths[2]),
+                    section="body",
+                ),
+                Asset(
+                    kind="figure",
+                    heading="Figure 4",
+                    caption="Body 4",
+                    path=str(figure_paths[3]),
+                    section="body",
+                ),
+                Asset(
+                    kind="figure",
+                    heading="Supplement",
+                    caption="Skip",
+                    path=str(figure_paths[0]),
+                    section="supplementary",
+                ),
+                Asset(
+                    kind="figure",
+                    heading="Too big",
+                    caption="Skip",
+                    path=str(oversized_path),
+                    section="body",
+                ),
+                Asset(
+                    kind="figure",
+                    heading="Text file",
+                    caption="Skip",
+                    path=str(text_path),
+                    section="body",
+                ),
             ]
 
             contents, warnings = mcp_tools._inline_image_contents(
                 article,
-                budget=mcp_tools.FetchPaperRequest(query="10.1000/example").strategy.resolved_inline_image_budget(),
+                budget=mcp_tools.FetchPaperRequest(
+                    query="10.1000/example"
+                ).strategy.resolved_inline_image_budget(),
             )
 
         self.assertEqual(len(contents), 6)
-        self.assertEqual([content.type for content in contents], ["text", "image", "text", "image", "text", "image"])
+        self.assertEqual(
+            [content.type for content in contents],
+            ["text", "image", "text", "image", "text", "image"],
+        )
         self.assertEqual(len(warnings), 1)
         self.assertIn("omitted from inline MCP image output", warnings[0])
+
     def test_inline_image_contents_honors_total_byte_budget(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
@@ -90,19 +140,34 @@ class McpLoggingInlineImageTests(unittest.TestCase):
 
             article = sample_article()
             article.assets = [
-                Asset(kind="figure", heading="Figure 1", caption="Body 1", path=str(first_image), section="body"),
-                Asset(kind="figure", heading="Figure 2", caption="Body 2", path=str(second_image), section="body"),
+                Asset(
+                    kind="figure",
+                    heading="Figure 1",
+                    caption="Body 1",
+                    path=str(first_image),
+                    section="body",
+                ),
+                Asset(
+                    kind="figure",
+                    heading="Figure 2",
+                    caption="Body 2",
+                    path=str(second_image),
+                    section="body",
+                ),
             ]
             budget = mcp_tools.FetchPaperRequest(
                 query="10.1000/example",
                 strategy={"inline_image_budget": {"max_total_bytes": 40}},
             ).strategy.resolved_inline_image_budget()
 
-            contents, warnings = mcp_tools._inline_image_contents(article, budget=budget)
+            contents, warnings = mcp_tools._inline_image_contents(
+                article, budget=budget
+            )
 
         self.assertEqual([content.type for content in contents], ["text", "image"])
         self.assertEqual(len(warnings), 1)
         self.assertIn("omitted from inline MCP image output", warnings[0])
+
     def test_inline_image_contents_disabled_budget_suppresses_warning(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             image_path = Path(tmpdir) / "figure-1.png"
@@ -110,21 +175,34 @@ class McpLoggingInlineImageTests(unittest.TestCase):
 
             article = sample_article()
             article.assets = [
-                Asset(kind="figure", heading="Figure 1", caption="Body figure", path=str(image_path), section="body")
+                Asset(
+                    kind="figure",
+                    heading="Figure 1",
+                    caption="Body figure",
+                    path=str(image_path),
+                    section="body",
+                )
             ]
             budget = mcp_tools.FetchPaperRequest(
                 query="10.1000/example",
                 strategy={"inline_image_budget": {"max_images": 0}},
             ).strategy.resolved_inline_image_budget()
 
-            contents, warnings = mcp_tools._inline_image_contents(article, budget=budget)
+            contents, warnings = mcp_tools._inline_image_contents(
+                article, budget=budget
+            )
 
         self.assertEqual(contents, [])
         self.assertEqual(warnings, [])
-    def test_fetch_paper_payload_prefer_cache_reuses_old_sidecar_when_only_inline_budget_changes(self) -> None:
+
+    def test_fetch_paper_payload_prefer_cache_reuses_old_sidecar_when_only_inline_budget_changes(
+        self,
+    ) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             download_dir = Path(tmpdir)
-            create_cached_fetch_envelope(download_dir, "10.1000/example", modes=["markdown"])
+            create_cached_fetch_envelope(
+                download_dir, "10.1000/example", modes=["markdown"]
+            )
 
             with (
                 mock.patch.object(mcp_tools, "build_runtime_env", return_value={}),
@@ -146,7 +224,10 @@ class McpLoggingInlineImageTests(unittest.TestCase):
         self.assertEqual(payload["doi"], "10.1000/example")
         self.assertEqual(payload["markdown"], "# Example Article\n\nExample body.\n")
         mocked_fetch.assert_not_called()
-    def test_build_fetch_tool_result_keeps_article_hidden_while_attaching_budgeted_images(self) -> None:
+
+    def test_build_fetch_tool_result_keeps_article_hidden_while_attaching_budgeted_images(
+        self,
+    ) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             first_image = Path(tmpdir) / "figure-1.png"
             second_image = Path(tmpdir) / "figure-2.png"
@@ -155,8 +236,20 @@ class McpLoggingInlineImageTests(unittest.TestCase):
 
             article = sample_article()
             article.assets = [
-                Asset(kind="figure", heading="Figure 1", caption="Body figure", path=str(first_image), section="body"),
-                Asset(kind="figure", heading="Figure 2", caption="Body figure", path=str(second_image), section="body"),
+                Asset(
+                    kind="figure",
+                    heading="Figure 1",
+                    caption="Body figure",
+                    path=str(first_image),
+                    section="body",
+                ),
+                Asset(
+                    kind="figure",
+                    heading="Figure 2",
+                    caption="Body figure",
+                    path=str(second_image),
+                    section="body",
+                ),
             ]
             envelope = FetchEnvelope(
                 doi=article.doi,
@@ -173,22 +266,36 @@ class McpLoggingInlineImageTests(unittest.TestCase):
             request = mcp_tools.FetchPaperRequest(
                 query="10.1000/example",
                 modes=["markdown"],
-                strategy={"asset_profile": "body", "inline_image_budget": {"max_images": 1}},
+                strategy={
+                    "asset_profile": "body",
+                    "inline_image_budget": {"max_images": 1},
+                },
             )
 
             result = mcp_tools.build_fetch_tool_result(envelope, request)
 
         self.assertFalse(result.isError)
         self.assertEqual(result.structuredContent["article"], None)
-        self.assertEqual([content.type for content in result.content], ["text", "text", "image"])
-    def test_build_fetch_tool_result_save_markdown_suppresses_inline_images(self) -> None:
+        self.assertEqual(
+            [content.type for content in result.content], ["text", "text", "image"]
+        )
+
+    def test_build_fetch_tool_result_save_markdown_suppresses_inline_images(
+        self,
+    ) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             figure_path = Path(tmpdir) / "figure-1.png"
             write_binary(figure_path, size=32)
 
             article = sample_article()
             article.assets = [
-                Asset(kind="figure", heading="Figure 1", caption="Body figure", path=str(figure_path), section="body")
+                Asset(
+                    kind="figure",
+                    heading="Figure 1",
+                    caption="Body figure",
+                    path=str(figure_path),
+                    section="body",
+                )
             ]
             envelope = FetchEnvelope(
                 doi=article.doi,
@@ -206,7 +313,10 @@ class McpLoggingInlineImageTests(unittest.TestCase):
                 query="10.1000/example",
                 modes=["markdown"],
                 save_markdown=True,
-                strategy={"asset_profile": "body", "inline_image_budget": {"max_images": 1}},
+                strategy={
+                    "asset_profile": "body",
+                    "inline_image_budget": {"max_images": 1},
+                },
             )
 
             result = mcp_tools.build_fetch_tool_result(envelope, request)
@@ -214,16 +324,27 @@ class McpLoggingInlineImageTests(unittest.TestCase):
         self.assertFalse(result.isError)
         self.assertIsNone(result.structuredContent["markdown"])
         self.assertIsNone(result.structuredContent["article"])
-        self.assertEqual(result.structuredContent["metadata"]["title"], "Example Article")
+        self.assertEqual(
+            result.structuredContent["metadata"]["title"], "Example Article"
+        )
         self.assertEqual([content.type for content in result.content], ["text"])
-    def test_build_fetch_tool_result_asset_profile_none_keeps_remote_markdown_without_inline_images(self) -> None:
+
+    def test_build_fetch_tool_result_asset_profile_none_keeps_remote_markdown_without_inline_images(
+        self,
+    ) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             figure_path = Path(tmpdir) / "figure-1.png"
             write_binary(figure_path, size=32)
 
             article = sample_article()
             article.assets = [
-                Asset(kind="figure", heading="Figure 1", caption="Body figure", path=str(figure_path), section="body")
+                Asset(
+                    kind="figure",
+                    heading="Figure 1",
+                    caption="Body figure",
+                    path=str(figure_path),
+                    section="body",
+                )
             ]
             envelope = FetchEnvelope(
                 doi=article.doi,
@@ -240,15 +361,24 @@ class McpLoggingInlineImageTests(unittest.TestCase):
             request = mcp_tools.FetchPaperRequest(
                 query="10.1000/example",
                 modes=["markdown"],
-                strategy={"asset_profile": "none", "inline_image_budget": {"max_images": 1}},
+                strategy={
+                    "asset_profile": "none",
+                    "inline_image_budget": {"max_images": 1},
+                },
             )
 
             result = mcp_tools.build_fetch_tool_result(envelope, request)
 
         self.assertFalse(result.isError)
-        self.assertIn("![Figure 1](https://example.test/figure-1.png)", result.structuredContent["markdown"])
+        self.assertIn(
+            "![Figure 1](https://example.test/figure-1.png)",
+            result.structuredContent["markdown"],
+        )
         self.assertEqual([content.type for content in result.content], ["text"])
-    def test_build_fetch_tool_result_uses_provider_default_asset_profile_for_inline_images(self) -> None:
+
+    def test_build_fetch_tool_result_uses_provider_default_asset_profile_for_inline_images(
+        self,
+    ) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             figure_path = Path(tmpdir) / "figure-1.png"
             write_binary(figure_path, size=32)
@@ -256,7 +386,13 @@ class McpLoggingInlineImageTests(unittest.TestCase):
             article = sample_article()
             article.source = "science"
             article.assets = [
-                Asset(kind="figure", heading="Figure 1", caption="Body figure", path=str(figure_path), section="body"),
+                Asset(
+                    kind="figure",
+                    heading="Figure 1",
+                    caption="Body figure",
+                    path=str(figure_path),
+                    section="body",
+                ),
             ]
             envelope = FetchEnvelope(
                 doi=article.doi,
@@ -279,11 +415,16 @@ class McpLoggingInlineImageTests(unittest.TestCase):
             result = mcp_tools.build_fetch_tool_result(envelope, request)
 
         self.assertFalse(result.isError)
-        self.assertEqual([content.type for content in result.content], ["text", "text", "image"])
+        self.assertEqual(
+            [content.type for content in result.content], ["text", "text", "image"]
+        )
+
     def test_resolve_paper_tool_serializes_resolved_query(self) -> None:
         resolved = sample_resolved_query("10.1000/example")
 
-        with mock.patch.object(mcp_tools, "service_resolve_paper", return_value=resolved):
+        with mock.patch.object(
+            mcp_tools, "service_resolve_paper", return_value=resolved
+        ):
             result = mcp_tools.resolve_paper_tool(query="10.1000/example")
 
         self.assertFalse(result.isError)

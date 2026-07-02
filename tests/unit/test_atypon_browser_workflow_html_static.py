@@ -9,8 +9,12 @@ import pytest
 from tests.paths import SRC_DIR
 
 
-ATYPON_BROWSER_WORKFLOW_PACKAGE = SRC_DIR / "paper_fetch" / "providers" / "atypon_browser_workflow"
-ATYPON_BROWSER_WORKFLOW_MODULES = tuple(sorted(ATYPON_BROWSER_WORKFLOW_PACKAGE.glob("*.py")))
+ATYPON_BROWSER_WORKFLOW_PACKAGE = (
+    SRC_DIR / "paper_fetch" / "providers" / "atypon_browser_workflow"
+)
+ATYPON_BROWSER_WORKFLOW_MODULES = tuple(
+    sorted(ATYPON_BROWSER_WORKFLOW_PACKAGE.glob("*.py"))
+)
 ATYPON_BROWSER_WORKFLOW_MARKDOWN = ATYPON_BROWSER_WORKFLOW_PACKAGE / "markdown.py"
 ATYPON_BROWSER_WORKFLOW_POSTPROCESS = ATYPON_BROWSER_WORKFLOW_PACKAGE / "postprocess.py"
 PROVIDER_RULE_MODULES = (
@@ -56,22 +60,32 @@ def _top_level_defined_names(tree: ast.Module) -> set[str]:
 
 
 class AtyponBrowserWorkflowHtmlStaticTests(unittest.TestCase):
-    def test_atypon_browser_workflow_package_no_longer_defines_duplicate_availability_or_site_rules(self) -> None:
+    def test_atypon_browser_workflow_package_no_longer_defines_duplicate_availability_or_site_rules(
+        self,
+    ) -> None:
         class_names: set[str] = set()
         assigned_names: set[str] = set()
         function_names: set[str] = set()
 
         for path in ATYPON_BROWSER_WORKFLOW_MODULES:
             tree = ast.parse(path.read_text(encoding="utf-8"))
-            class_names.update(node.name for node in ast.walk(tree) if isinstance(node, ast.ClassDef))
-            function_names.update(node.name for node in ast.walk(tree) if isinstance(node, ast.FunctionDef))
+            class_names.update(
+                node.name for node in ast.walk(tree) if isinstance(node, ast.ClassDef)
+            )
+            function_names.update(
+                node.name
+                for node in ast.walk(tree)
+                if isinstance(node, ast.FunctionDef)
+            )
 
             for node in ast.walk(tree):
                 if isinstance(node, ast.Assign):
                     for target in node.targets:
                         if isinstance(target, ast.Name):
                             assigned_names.add(target.id)
-                elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
+                elif isinstance(node, ast.AnnAssign) and isinstance(
+                    node.target, ast.Name
+                ):
                     assigned_names.add(node.target.id)
 
         self.assertNotIn("StructuredBodyAnalysis", class_names)
@@ -101,21 +115,33 @@ class AtyponBrowserWorkflowHtmlStaticTests(unittest.TestCase):
             & function_names
         )
 
-    def test_atypon_browser_workflow_entrypoints_are_defined_in_split_modules(self) -> None:
-        markdown_tree = ast.parse(ATYPON_BROWSER_WORKFLOW_MARKDOWN.read_text(encoding="utf-8"))
-        postprocess_tree = ast.parse(ATYPON_BROWSER_WORKFLOW_POSTPROCESS.read_text(encoding="utf-8"))
-        defined_names = _top_level_defined_names(markdown_tree) | _top_level_defined_names(postprocess_tree)
+    def test_atypon_browser_workflow_entrypoints_are_defined_in_split_modules(
+        self,
+    ) -> None:
+        markdown_tree = ast.parse(
+            ATYPON_BROWSER_WORKFLOW_MARKDOWN.read_text(encoding="utf-8")
+        )
+        postprocess_tree = ast.parse(
+            ATYPON_BROWSER_WORKFLOW_POSTPROCESS.read_text(encoding="utf-8")
+        )
+        defined_names = _top_level_defined_names(
+            markdown_tree
+        ) | _top_level_defined_names(postprocess_tree)
 
         missing_symbols = EXPECTED_EXTRACTION_ENTRYPOINTS - defined_names
         forbidden_symbols: set[str] = set()
         for path in ATYPON_BROWSER_WORKFLOW_MODULES:
             tree = ast.parse(path.read_text(encoding="utf-8"))
-            forbidden_symbols |= FORBIDDEN_DEAD_COMPATIBILITY_WRAPPERS & _top_level_defined_names(tree)
+            forbidden_symbols |= (
+                FORBIDDEN_DEAD_COMPATIBILITY_WRAPPERS & _top_level_defined_names(tree)
+            )
 
         self.assertEqual(missing_symbols, set())
         self.assertEqual(forbidden_symbols, set())
 
-    def test_atypon_browser_workflow_modules_import_shared_helpers_without_shared_alias_layer(self) -> None:
+    def test_atypon_browser_workflow_modules_import_shared_helpers_without_shared_alias_layer(
+        self,
+    ) -> None:
         shared_import_aliases: list[str] = []
         for path in ATYPON_BROWSER_WORKFLOW_MODULES:
             tree = ast.parse(path.read_text(encoding="utf-8"))
@@ -125,12 +151,20 @@ class AtyponBrowserWorkflowHtmlStaticTests(unittest.TestCase):
                 for alias in node.names:
                     if alias.asname and alias.asname.startswith("_shared_"):
                         module = node.module or ""
-                        shared_import_aliases.append(f"{path.name}:{module}:{alias.asname}")
+                        shared_import_aliases.append(
+                            f"{path.name}:{module}:{alias.asname}"
+                        )
 
         self.assertEqual(shared_import_aliases, [])
 
-    def test_provider_rule_modules_do_not_define_candidate_or_markdown_delegate_wrappers(self) -> None:
-        forbidden = {"build_html_candidates", "build_pdf_candidates", "extract_markdown"}
+    def test_provider_rule_modules_do_not_define_candidate_or_markdown_delegate_wrappers(
+        self,
+    ) -> None:
+        forbidden = {
+            "build_html_candidates",
+            "build_pdf_candidates",
+            "extract_markdown",
+        }
         offenders: list[str] = []
         for path in PROVIDER_RULE_MODULES:
             tree = ast.parse(path.read_text(encoding="utf-8"))
@@ -142,7 +176,8 @@ class AtyponBrowserWorkflowHtmlStaticTests(unittest.TestCase):
 
 
 @pytest.mark.parametrize(
-    "module_name", ["_pnas_html", "_science_html", "_wiley_html", "_ams_html", "_acs_html"]
+    "module_name",
+    ["_pnas_html", "_science_html", "_wiley_html", "_ams_html", "_acs_html"],
 )
 def test_no_route_constants(module_name: str) -> None:
     module = importlib.import_module(f"paper_fetch.providers.{module_name}")

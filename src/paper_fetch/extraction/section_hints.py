@@ -2,13 +2,15 @@
 
 from __future__ import annotations
 
-from collections.abc import Container
+from collections.abc import Container, Sequence
 from typing import Any
 from collections.abc import Mapping
 
 from ..utils import normalize_text
 
-SECTION_HINT_KINDS = frozenset({"body", "data_availability", "code_availability", "references"})
+SECTION_HINT_KINDS = frozenset(
+    {"body", "data_availability", "code_availability", "references"}
+)
 
 
 def normalize_section_hint_heading(value: Any) -> str:
@@ -46,8 +48,12 @@ def coerce_section_hint_dicts(
                 "level": level,
                 "kind": kind,
                 "order": order,
-                "language": normalize_text(_section_hint_value(hint, "language")) or None,
-                "source_selector": normalize_text(_section_hint_value(hint, "source_selector")) or None,
+                "language": normalize_text(_section_hint_value(hint, "language"))
+                or None,
+                "source_selector": normalize_text(
+                    _section_hint_value(hint, "source_selector")
+                )
+                or None,
             }
         )
     hints.sort(key=lambda item: item["order"])
@@ -55,7 +61,7 @@ def coerce_section_hint_dicts(
 
 
 def match_next_section_hint(
-    section_hints: list[Mapping[str, Any]],
+    section_hints: Sequence[Mapping[str, Any]],
     hint_index: int,
     heading: str,
 ) -> tuple[Mapping[str, Any] | None, int]:

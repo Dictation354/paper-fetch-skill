@@ -4,7 +4,9 @@ import unittest
 
 from bs4 import BeautifulSoup
 
-from paper_fetch.providers.atypon_browser_workflow import extract_atypon_browser_workflow_markdown
+from paper_fetch.providers.atypon_browser_workflow import (
+    extract_atypon_browser_workflow_markdown,
+)
 from paper_fetch.providers import _science_html
 from paper_fetch.providers.atypon_browser_workflow import (
     normalization as atypon_browser_workflow_normalization,

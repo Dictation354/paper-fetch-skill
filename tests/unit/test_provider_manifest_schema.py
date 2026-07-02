@@ -66,7 +66,9 @@ def _normalized_doi(value: object) -> str | None:
 
 
 def _provider_identity_terms(manifest: dict) -> set[str]:
-    routing = manifest.get("routing") if isinstance(manifest.get("routing"), dict) else {}
+    routing = (
+        manifest.get("routing") if isinstance(manifest.get("routing"), dict) else {}
+    )
     values: list[object] = [
         manifest.get("name"),
         manifest.get("display_source"),
@@ -115,13 +117,21 @@ def _text_has_purpose_signal(text: str, purpose: str) -> bool:
 
 
 def _strong_signal_dois_from_manifest(manifest: dict, purpose: str) -> set[str]:
-    fixtures = manifest.get("fixtures") if isinstance(manifest.get("fixtures"), dict) else {}
-    doi_samples = fixtures.get("doi_samples") if isinstance(fixtures.get("doi_samples"), dict) else {}
+    fixtures = (
+        manifest.get("fixtures") if isinstance(manifest.get("fixtures"), dict) else {}
+    )
+    doi_samples = (
+        fixtures.get("doi_samples")
+        if isinstance(fixtures.get("doi_samples"), dict)
+        else {}
+    )
     candidates: list[dict] = [
         sample for sample in doi_samples.values() if isinstance(sample, dict)
     ]
     candidates.extend(
-        sample for sample in manifest.get("extra_fixtures") or [] if isinstance(sample, dict)
+        sample
+        for sample in manifest.get("extra_fixtures") or []
+        if isinstance(sample, dict)
     )
     signal_dois: set[str] = set()
     for sample in candidates:
@@ -190,7 +200,9 @@ def _assert_discovery_proof(manifest_path: Path, manifest: dict) -> None:
     doi_samples = fixtures["doi_samples"]
     proof = fixtures["discovery_proof"]
     source_queries = manifest["generation"]["source_queries"]
-    source_query_text = _normalized_text("\n".join(str(query) for query in source_queries))
+    source_query_text = _normalized_text(
+        "\n".join(str(query) for query in source_queries)
+    )
 
     for purpose in DISCOVERY_PROOF_PURPOSES:
         sample = doi_samples[purpose]
@@ -298,7 +310,9 @@ def test_all_provider_manifests_pass_schema_and_local_invariants() -> None:
 
     for manifest_path in manifest_paths:
         manifest = load_yaml(manifest_path)
-        errors = sorted(validator.iter_errors(manifest), key=lambda error: error.json_path)
+        errors = sorted(
+            validator.iter_errors(manifest), key=lambda error: error.json_path
+        )
         assert not errors, [
             f"{manifest_path}: {error.json_path}: {error.message}" for error in errors
         ]
@@ -307,7 +321,9 @@ def test_all_provider_manifests_pass_schema_and_local_invariants() -> None:
         assert isinstance(manifest["main_path"], list)
         assert manifest["main_path"], f"{manifest_path}: main_path must not be empty"
         route_sources = manifest.get("route_sources") or {}
-        assert isinstance(route_sources, dict), f"{manifest_path}: route_sources must be an object"
+        assert isinstance(route_sources, dict), (
+            f"{manifest_path}: route_sources must be an object"
+        )
         for step, source in route_sources.items():
             assert step in manifest["main_path"], (
                 f"{manifest_path}: route_sources.{step} must reference "
@@ -334,7 +350,9 @@ def test_all_provider_manifests_pass_schema_and_local_invariants() -> None:
         doi_samples = manifest["fixtures"]["doi_samples"]
         markdown_contract = manifest["markdown_contract"]
         for purpose in REQUIRED_DOI_PURPOSES:
-            assert doi_samples[purpose]["doi"], f"{manifest_path}: {purpose} DOI is required"
+            assert doi_samples[purpose]["doi"], (
+                f"{manifest_path}: {purpose} DOI is required"
+            )
         _assert_discovery_proof(manifest_path, manifest)
         for purpose, sample in doi_samples.items():
             doi = sample.get("doi")

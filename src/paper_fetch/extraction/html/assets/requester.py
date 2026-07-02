@@ -13,7 +13,9 @@ from ....http import RequestFailure, classify_network_error
 from ....models import normalize_text
 
 
-def cookie_header_for_url(browser_cookies: list[dict[str, Any]] | None, url: str) -> str | None:
+def cookie_header_for_url(
+    browser_cookies: list[dict[str, Any]] | None, url: str
+) -> str | None:
     parsed_url = urllib.parse.urlparse(normalize_text(url))
     host = normalize_text(parsed_url.hostname).lower()
     path = normalize_text(parsed_url.path) or "/"
@@ -30,11 +32,19 @@ def cookie_header_for_url(browser_cookies: list[dict[str, Any]] | None, url: str
         if not name:
             continue
 
-        cookie_domain = normalize_text(str(cookie.get("domain") or "")).lower().lstrip(".")
+        cookie_domain = (
+            normalize_text(str(cookie.get("domain") or "")).lower().lstrip(".")
+        )
         if not cookie_domain:
             cookie_url = normalize_text(str(cookie.get("url") or ""))
-            cookie_domain = normalize_text(urllib.parse.urlparse(cookie_url).hostname).lower()
-        if cookie_domain and host != cookie_domain and not host.endswith(f".{cookie_domain}"):
+            cookie_domain = normalize_text(
+                urllib.parse.urlparse(cookie_url).hostname
+            ).lower()
+        if (
+            cookie_domain
+            and host != cookie_domain
+            and not host.endswith(f".{cookie_domain}")
+        ):
             continue
 
         cookie_path = normalize_text(str(cookie.get("path") or "")) or "/"
@@ -56,17 +66,25 @@ def build_cookie_seeded_opener(
     timeout: int,
     browser_cookies: list[dict[str, Any]] | None = None,
 ) -> urllib.request.OpenerDirector | None:
-    normalized_seed_urls = [normalize_text(url) for url in seed_urls or [] if normalize_text(url)]
-    if not normalized_seed_urls and not any(isinstance(cookie, dict) for cookie in browser_cookies or []):
+    normalized_seed_urls = [
+        normalize_text(url) for url in seed_urls or [] if normalize_text(url)
+    ]
+    if not normalized_seed_urls and not any(
+        isinstance(cookie, dict) for cookie in browser_cookies or []
+    ):
         return None
 
-    opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
+    opener = urllib.request.build_opener(
+        urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar())
+    )
     seed_headers = {
         key: value
         for key, value in dict(headers).items()
         if str(key).lower() != "accept"
     }
-    seed_headers.setdefault("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+    seed_headers.setdefault(
+        "Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+    )
 
     for seed_url in normalized_seed_urls:
         request_headers = dict(seed_headers)
@@ -96,7 +114,10 @@ def request_with_opener(
         with opener.open(request, timeout=timeout) as response:
             return {
                 "status_code": int(getattr(response, "status", response.getcode())),
-                "headers": {str(key).lower(): str(value) for key, value in response.headers.items()},
+                "headers": {
+                    str(key).lower(): str(value)
+                    for key, value in response.headers.items()
+                },
                 "body": response.read(),
                 "url": str(response.geturl() or url),
             }
@@ -105,7 +126,9 @@ def request_with_opener(
             exc.code,
             f"HTTP {exc.code} for {url}",
             body=exc.read(),
-            headers={str(key).lower(): str(value) for key, value in exc.headers.items()},
+            headers={
+                str(key).lower(): str(value) for key, value in exc.headers.items()
+            },
             url=str(exc.geturl() or url),
         ) from exc
     except urllib.error.URLError as exc:

@@ -6,7 +6,7 @@ import html
 import re
 import urllib.parse
 from html.parser import HTMLParser
-from typing import Any
+from typing import Any, cast
 from collections.abc import Mapping
 
 from ...html_lookup import is_usable_html_lookup_title
@@ -17,8 +17,12 @@ from ...publisher_identity import normalize_doi
 from ...publisher_identity import extract_doi as extract_doi_from_text
 
 INPUT_TAG_PATTERN = re.compile(r"<input\b[^>]*>", flags=re.IGNORECASE)
-HTML_ATTRIBUTE_PATTERN = re.compile(r'([A-Za-z_:][-A-Za-z0-9_:.]*)\s*=\s*("([^"]*)"|\'([^\']*)\')')
-HTML_REFRESH_URL_PATTERN = re.compile(r"url\s*=\s*(?P<quote>['\"]?)(?P<url>[^'\";>]+)(?P=quote)", flags=re.IGNORECASE)
+HTML_ATTRIBUTE_PATTERN = re.compile(
+    r'([A-Za-z_:][-A-Za-z0-9_:.]*)\s*=\s*("([^"]*)"|\'([^\']*)\')'
+)
+HTML_REFRESH_URL_PATTERN = re.compile(
+    r"url\s*=\s*(?P<quote>['\"]?)(?P<url>[^'\";>]+)(?P=quote)", flags=re.IGNORECASE
+)
 HTML_SCRIPT_ARTICLE_NAME_PATTERN = re.compile(
     r"\barticleName\s*:\s*(['\"])(?P<value>.*?)(?<!\\)\1",
     flags=re.IGNORECASE | re.DOTALL,
@@ -49,7 +53,11 @@ class _MetaParser(HTMLParser):
         attributes = {key.lower(): (value or "") for key, value in attrs}
         lowered_tag = tag.lower()
         if lowered_tag == "meta":
-            key = attributes.get("name") or attributes.get("property") or attributes.get("http-equiv")
+            key = (
+                attributes.get("name")
+                or attributes.get("property")
+                or attributes.get("http-equiv")
+            )
             content = attributes.get("content", "").strip()
             if key and content:
                 self.meta.setdefault(key.lower(), []).append(content)
@@ -70,8 +78,12 @@ def extract_html_input_values(html_text: str) -> dict[str, str]:
     values: dict[str, str] = {}
     for match in INPUT_TAG_PATTERN.finditer(html_text):
         attributes: dict[str, str] = {}
-        for name, _, double_quoted, single_quoted in HTML_ATTRIBUTE_PATTERN.findall(match.group(0)):
-            attributes[name.lower()] = html.unescape(double_quoted or single_quoted or "")
+        for name, _, double_quoted, single_quoted in HTML_ATTRIBUTE_PATTERN.findall(
+            match.group(0)
+        ):
+            attributes[name.lower()] = html.unescape(
+                double_quoted or single_quoted or ""
+            )
         key = normalize_text(attributes.get("name") or "").lower()
         if key:
             values[key] = attributes.get("value", "")
@@ -135,7 +147,9 @@ def extract_html_lookup_hints(
     )
 
     return {
-        "lookup_title": lookup_title if is_usable_html_lookup_title(lookup_title) else None,
+        "lookup_title": lookup_title
+        if is_usable_html_lookup_title(lookup_title)
+        else None,
         "redirect_url": hidden_redirect or refresh_redirect,
         "identifier_value": identifier_value,
     }
@@ -157,22 +171,42 @@ def parse_html_metadata(html_text: str, source_url: str) -> HtmlMetadata:
         return None
 
     authors = dedupe_authors(
-        [normalize_text(value) for value in parser.meta.get("citation_author", []) if normalize_text(value)]
+        [
+            normalize_text(value)
+            for value in parser.meta.get("citation_author", [])
+            if normalize_text(value)
+        ]
     )
-    doi = extract_doi_from_meta(parser.meta) or extract_doi_from_text(parser.canonical_url or "")
+    doi = extract_doi_from_meta(parser.meta) or extract_doi_from_text(
+        parser.canonical_url or ""
+    )
     html_title = normalize_text("".join(parser.title)) or None
     if not is_usable_html_lookup_title(html_title):
         html_title = lookup_hints.get("lookup_title")
     title = first("citation_title", "dc.title", "og:title") or html_title or None
     abstract = first(*EXPLICIT_ABSTRACT_META_KEYS)
-    journal_title = first("citation_journal_title", "prism.publicationname", "dc.source")
-    article_type = first("citation_article_type", "dc.type", "prism.section", "article:section")
-    published = first("citation_publication_date", "citation_online_date", "dc.date", "prism.publicationdate")
-    citation_fulltext_html_url = normalize_lookup_url(first("citation_fulltext_html_url"), source_url)
-    citation_abstract_html_url = normalize_lookup_url(first("citation_abstract_html_url"), source_url)
+    journal_title = first(
+        "citation_journal_title", "prism.publicationname", "dc.source"
+    )
+    article_type = first(
+        "citation_article_type", "dc.type", "prism.section", "article:section"
+    )
+    published = first(
+        "citation_publication_date",
+        "citation_online_date",
+        "dc.date",
+        "prism.publicationdate",
+    )
+    citation_fulltext_html_url = normalize_lookup_url(
+        first("citation_fulltext_html_url"), source_url
+    )
+    citation_abstract_html_url = normalize_lookup_url(
+        first("citation_abstract_html_url"), source_url
+    )
     keywords = [
         normalize_text(item)
-        for item in parser.meta.get("citation_keywords", []) + parser.meta.get("keywords", [])
+        for item in parser.meta.get("citation_keywords", [])
+        + parser.meta.get("keywords", [])
         if normalize_text(item)
     ]
 
@@ -195,7 +229,9 @@ def parse_html_metadata(html_text: str, source_url: str) -> HtmlMetadata:
     }
 
 
-def merge_html_metadata(base_metadata: Mapping[str, Any] | None, html_metadata: HtmlMetadata) -> HtmlMetadata:
+def merge_html_metadata(
+    base_metadata: Mapping[str, Any] | None, html_metadata: HtmlMetadata
+) -> HtmlMetadata:
     base = dict(base_metadata or {})
     merged = dict(base)
     for key in (
@@ -208,17 +244,29 @@ def merge_html_metadata(base_metadata: Mapping[str, Any] | None, html_metadata: 
         "citation_fulltext_html_url",
         "citation_abstract_html_url",
     ):
-        merged[key] = normalize_text(str(base.get(key) or html_metadata.get(key) or "")) or None
-    merged["abstract"] = normalize_text(str(html_metadata.get("abstract") or base.get("abstract") or "")) or None
-    base_authors = [normalize_text(str(item)) for item in (base.get("authors") or []) if normalize_text(str(item))]
+        merged[key] = (
+            normalize_text(str(base.get(key) or html_metadata.get(key) or "")) or None
+        )
+    merged["abstract"] = (
+        normalize_text(str(html_metadata.get("abstract") or base.get("abstract") or ""))
+        or None
+    )
+    base_authors = [
+        normalize_text(str(item))
+        for item in (base.get("authors") or [])
+        if normalize_text(str(item))
+    ]
     html_authors = [
-        normalize_text(str(item)) for item in (html_metadata.get("authors") or []) if normalize_text(str(item))
+        normalize_text(str(item))
+        for item in (html_metadata.get("authors") or [])
+        if normalize_text(str(item))
     ]
     merged["authors"] = dedupe_authors(base_authors + html_authors)
     merged["keywords"] = list(
         dict.fromkeys(
             normalize_text(str(item))
-            for item in (base.get("keywords") or []) + (html_metadata.get("keywords") or [])
+            for item in (base.get("keywords") or [])
+            + (html_metadata.get("keywords") or [])
             if normalize_text(str(item))
         )
     )
@@ -233,4 +281,4 @@ def merge_html_metadata(base_metadata: Mapping[str, Any] | None, html_metadata: 
         merged["identifier_value"] = html_metadata.get("identifier_value")
     if not merged.get("doi"):
         merged["doi"] = normalize_doi(str(html_metadata.get("doi") or ""))
-    return merged
+    return cast(HtmlMetadata, merged)

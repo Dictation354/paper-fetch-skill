@@ -16,7 +16,9 @@ INLINE_TOKEN_MARKER_PATTERN = re.compile(
     flags=re.IGNORECASE,
 )
 FENCED_CODE_BLOCK_PATTERN = re.compile(r"(?ms)(^```.*?^```|^~~~.*?^~~~)")
-NUMERIC_CITATION_ITEM_PATTERN = re.compile(r"(?P<start>\d{1,3})(?:\s*[–-]\s*(?P<end>\d{1,3}))?")
+NUMERIC_CITATION_ITEM_PATTERN = re.compile(
+    r"(?P<start>\d{1,3})(?:\s*[–-]\s*(?P<end>\d{1,3}))?"
+)
 REFERENCE_PREFIX_SENTINEL_PATTERN = re.compile(
     rf"(?i)\brefs?\.\s*(?P<sentinel>{re.escape(NUMERIC_CITATION_SENTINEL_PREFIX)}[^@\n]+@@)"
 )
@@ -35,6 +37,7 @@ COMMON_LABEL_PATTERN = re.compile(
 COMMON_LABEL_PATTERNS = (COMMON_LABEL_PATTERN,)
 COMMON_FIGURE_LINE_PATTERN = re.compile(r"(?im)^fig\.\s*[a-z0-9.-]+:.*$")
 COMMON_FIGURE_LINE_PATTERNS = (COMMON_FIGURE_LINE_PATTERN,)
+
 
 def numeric_citation_payload(text: str) -> str | None:
     normalized = normalize_text(text).replace("−", "–").replace("—", "–")
@@ -64,7 +67,9 @@ def make_numeric_citation_sentinel(text: str) -> str | None:
 
 
 def _replace_sentinels_with_payloads(text: str) -> str:
-    return NUMERIC_CITATION_SENTINEL_PATTERN.sub(lambda match: match.group("payload"), text)
+    return NUMERIC_CITATION_SENTINEL_PATTERN.sub(
+        lambda match: match.group("payload"), text
+    )
 
 
 def _coalesce_sentinel_run(text: str) -> str:
@@ -118,8 +123,12 @@ def normalize_inline_citation_markdown(text: str) -> str:
         return ""
 
     normalized = text
-    normalized = REFERENCE_PREFIX_SENTINEL_PATTERN.sub(lambda match: match.group("sentinel"), normalized)
-    normalized = ADJACENT_SENTINEL_RUN_PATTERN.sub(lambda match: _coalesce_sentinel_run(match.group(0)), normalized)
+    normalized = REFERENCE_PREFIX_SENTINEL_PATTERN.sub(
+        lambda match: match.group("sentinel"), normalized
+    )
+    normalized = ADJACENT_SENTINEL_RUN_PATTERN.sub(
+        lambda match: _coalesce_sentinel_run(match.group(0)), normalized
+    )
 
     def replace_parenthetical(match: re.Match[str]) -> str:
         inner = match.group("inner")
@@ -130,7 +139,9 @@ def normalize_inline_citation_markdown(text: str) -> str:
         return sentinel or match.group(0)
 
     normalized = PARENTHETICAL_CITATION_PATTERN.sub(replace_parenthetical, normalized)
-    normalized = ADJACENT_SENTINEL_RUN_PATTERN.sub(lambda match: _coalesce_sentinel_run(match.group(0)), normalized)
+    normalized = ADJACENT_SENTINEL_RUN_PATTERN.sub(
+        lambda match: _coalesce_sentinel_run(match.group(0)), normalized
+    )
 
     def render_sentinel(match: re.Match[str]) -> str:
         payload = numeric_citation_payload(match.group("payload"))

@@ -4,13 +4,13 @@ from __future__ import annotations
 
 from functools import partial
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 from collections.abc import Mapping
 
 from ...config import (
     CLOAKBROWSER_CDP_ENDPOINT_ENV_VAR,
     build_browser_user_agent,
-    build_user_agent,
+    build_publisher_user_agent,
     resolve_asset_download_concurrency,
 )
 from ...extraction.html import decode_html
@@ -71,14 +71,14 @@ class BrowserWorkflowClient(ProviderClient):
     ) -> None:
         self.transport = transport
         self.env = dict(env)
-        self.user_agent = build_user_agent(env)
+        self.user_agent = build_publisher_user_agent(env)
         self.browser_user_agent = build_browser_user_agent(env)
         self.deps = deps
 
     def probe_status(self):
         return self.deps.probe_runtime_status(self.env, provider=self.name)
 
-    def fetch_metadata(self, query: Mapping[str, str | None]) -> ProviderMetadata:
+    def fetch_metadata(self, query: Mapping[str, str | None]) -> dict[str, Any]:
         raise ProviderFailure(
             NOT_SUPPORTED,
             f"{self.name} official metadata retrieval is not implemented; routing relies on Crossref metadata.",
@@ -224,15 +224,16 @@ class BrowserWorkflowClient(ProviderClient):
     def fetch_raw_fulltext(
         self,
         doi: str,
-        metadata: ProviderMetadata,
+        metadata: Mapping[str, Any],
         *,
         context: RuntimeContext | None = None,
     ) -> RawFulltextPayload:
         context = self._runtime_context(context)
+        provider_metadata = cast(ProviderMetadata, metadata)
         bootstrap = self.deps.bootstrap_browser_workflow(
             self,
             doi,
-            metadata,
+            provider_metadata,
             context=context,
             deps=self.deps,
         )
@@ -331,6 +332,7 @@ class BrowserWorkflowClient(ProviderClient):
         context: RuntimeContext | None = None,
     ) -> PreparedFetchResultPayload:
         context = self._runtime_context(context)
+        provider_metadata = cast(ProviderMetadata, metadata)
         raw_payload = prepared.raw_payload
         content = raw_payload.content
         if content is None or normalize_text(content.route_kind).lower() != "html":
@@ -352,17 +354,15 @@ class BrowserWorkflowClient(ProviderClient):
         try:
             recovered_payload = self._recover_pdf_payload_from_abstract_only_html(
                 doi,
-                metadata,
+                provider_metadata,
                 raw_payload,
                 context=context,
             )
         except (ProviderFailure, PdfFallbackFailure):
             provider_label = self.provider_label()
             prepared.finalize_warnings.append(
-                
-                    f"{provider_label} HTML route only exposed abstract-level content after markdown extraction, "
-                    "and PDF fallback did not return usable full text; returning abstract-only content."
-                
+                f"{provider_label} HTML route only exposed abstract-level content after markdown extraction, "
+                "and PDF fallback did not return usable full text; returning abstract-only content."
             )
             return prepared
 
@@ -398,7 +398,7 @@ class BrowserWorkflowClient(ProviderClient):
     def download_related_assets(
         self,
         doi: str,
-        metadata: ProviderMetadata,
+        metadata: Mapping[str, Any],
         raw_payload: RawFulltextPayload,
         output_dir,
         *,
@@ -447,7 +447,9 @@ class BrowserWorkflowClient(ProviderClient):
             }
             html_text = decode_html(
                 raw_payload.body,
-                content_type=content.content_type if content is not None else raw_payload.content_type,
+                content_type=content.content_type
+                if content is not None
+                else raw_payload.content_type,
             )
         else:
             plan_profile = {
@@ -492,7 +494,11 @@ class BrowserWorkflowClient(ProviderClient):
         )
         external_cdp_endpoint = bool(
             runtime_cdp_endpoint
-            or normalize_text((getattr(context, "env", {}) or {}).get(CLOAKBROWSER_CDP_ENDPOINT_ENV_VAR))
+            or normalize_text(
+                (getattr(context, "env", {}) or {}).get(
+                    CLOAKBROWSER_CDP_ENDPOINT_ENV_VAR
+                )
+            )
         )
         asset_download_concurrency = (
             1
@@ -608,7 +614,7 @@ class BrowserWorkflowClient(ProviderClient):
 
     def to_article_model(
         self,
-        metadata: ProviderMetadata,
+        metadata: Mapping[str, Any],
         raw_payload: RawFulltextPayload,
         *,
         downloaded_assets: list[Mapping[str, Any]] | None = None,
@@ -617,12 +623,16 @@ class BrowserWorkflowClient(ProviderClient):
     ):
         context = self._runtime_context(context)
         profile = self.require_profile()
+        provider_metadata = cast(ProviderMetadata, metadata)
         return browser_workflow_article_from_payload(
             self,
-            merge_provider_owned_authors(
-                metadata,
-                raw_payload,
-                fallback_extractor=profile.fallback_author_extractor,
+            cast(
+                ProviderMetadata,
+                merge_provider_owned_authors(
+                    provider_metadata,
+                    raw_payload,
+                    fallback_extractor=profile.fallback_author_extractor,
+                ),
             ),
             raw_payload,
             downloaded_assets=downloaded_assets,

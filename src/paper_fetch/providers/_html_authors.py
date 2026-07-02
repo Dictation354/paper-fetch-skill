@@ -52,9 +52,7 @@ class AuthorStep:
 
 
 class AuthorExtractionPipeline:
-    def __init__(
-        self, *steps: Callable[[str], list[str]] | AuthorStep
-    ) -> None:
+    def __init__(self, *steps: Callable[[str], list[str]] | AuthorStep) -> None:
         self.steps = tuple(self._coerce_step(step) for step in steps)
         self.extractors = tuple(step.extractor for step in self.steps)
 

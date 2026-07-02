@@ -16,7 +16,9 @@ DOCS_PROVIDER_PATH = REPO_ROOT / "docs" / "providers.md"
 ONBOARDING_README_PATH = REPO_ROOT / "onboarding" / "README.md"
 MCP_INSTRUCTIONS_PATH = REPO_ROOT / "src" / "paper_fetch" / "mcp" / "_instructions.py"
 PROVIDER_CATALOG_PATH = REPO_ROOT / "src" / "paper_fetch" / "provider_catalog.py"
-CLOAKBROWSER_PROVIDER_PATH = REPO_ROOT / "src" / "paper_fetch" / "providers" / "_cloakbrowser.py"
+CLOAKBROWSER_PROVIDER_PATH = (
+    REPO_ROOT / "src" / "paper_fetch" / "providers" / "_cloakbrowser.py"
+)
 SKILL_ENTRYPOINT_PATH = REPO_ROOT / "skills" / "paper-fetch-skill" / "SKILL.md"
 BROWSER_FACT_DOC_PATHS = (
     REPO_ROOT / "README.md",
@@ -38,7 +40,9 @@ def _read(path: Path) -> str:
 
 
 def _browser_provider_specs():
-    return tuple(spec for spec in ordered_provider_specs() if spec.requires_browser_runtime)
+    return tuple(
+        spec for spec in ordered_provider_specs() if spec.requires_browser_runtime
+    )
 
 
 def _official_provider_specs():
@@ -85,11 +89,12 @@ def test_cloakbrowser_helper_does_not_keep_second_browser_provider_table() -> No
 def test_mcp_instructions_cover_runtime_provider_and_source_catalog() -> None:
     rendered = server_instructions() + "\n" + fetch_tool_description()
 
-    missing_providers = [name for name in provider_names() if not _provider_is_mentioned(rendered, name)]
+    missing_providers = [
+        name for name in provider_names() if not _provider_is_mentioned(rendered, name)
+    ]
     assert not missing_providers, (
         "MCP instructions must mention every runtime provider accepted by "
-        "provider_hint/preferred_providers: "
-        + ", ".join(missing_providers)
+        "provider_hint/preferred_providers: " + ", ".join(missing_providers)
     )
 
     missing_browser = [
@@ -103,7 +108,9 @@ def test_mcp_instructions_cover_runtime_provider_and_source_catalog() -> None:
     )
     assert "ProviderSpec.requires_browser_runtime=True" in rendered
 
-    missing_sources = [source for source in SOURCE_PROVIDER_MAP if source not in rendered]
+    missing_sources = [
+        source for source in SOURCE_PROVIDER_MAP if source not in rendered
+    ]
     assert not missing_sources, (
         "MCP instructions must cover public sources from SOURCE_PROVIDER_MAP: "
         + ", ".join(missing_sources)
@@ -120,8 +127,7 @@ def test_human_docs_cover_catalog_browser_runtime_providers() -> None:
         ]
         assert not missing, (
             f"{path.relative_to(REPO_ROOT)} must mention all catalog browser "
-            "runtime providers: "
-            + ", ".join(missing)
+            "runtime providers: " + ", ".join(missing)
         )
 
 
@@ -137,8 +143,7 @@ def test_skill_entrypoint_uses_catalog_browser_runtime_boundary() -> None:
     ]
     assert not listed, (
         "Thin SKILL.md should point at catalog-derived browser runtime policy "
-        "instead of keeping a static provider table: "
-        + ", ".join(listed)
+        "instead of keeping a static provider table: " + ", ".join(listed)
     )
 
 
@@ -148,8 +153,7 @@ def test_human_docs_cover_public_source_provider_map() -> None:
         missing = [source for source in SOURCE_PROVIDER_MAP if source not in text]
         assert not missing, (
             f"{path.relative_to(REPO_ROOT)} must mention every public source in "
-            "SOURCE_PROVIDER_MAP: "
-            + ", ".join(missing)
+            "SOURCE_PROVIDER_MAP: " + ", ".join(missing)
         )
 
 
@@ -164,8 +168,7 @@ def test_docs_provider_status_section_covers_official_provider_catalog() -> None
 
     assert not missing, (
         "docs/providers.md provider_status() section must mention every "
-        "official provider from the runtime catalog: "
-        + ", ".join(missing)
+        "official provider from the runtime catalog: " + ", ".join(missing)
     )
 
 
@@ -177,11 +180,11 @@ def test_docs_providers_mentions_catalog_as_provider_fact_source() -> None:
     assert "official_provider_names()" in text
 
 
-def test_onboarding_readme_manifest_entry_uses_manifest_directory_as_authority() -> None:
+def test_onboarding_readme_manifest_entry_uses_manifest_directory_as_authority() -> (
+    None
+):
     text = _read(ONBOARDING_README_PATH)
-    manifest_line = next(
-        line for line in text.splitlines() if "[`manifests/`]" in line
-    )
+    manifest_line = next(line for line in text.splitlines() if "[`manifests/`]" in line)
 
     assert "known-providers.yml" in manifest_line
     assert "例如" not in manifest_line
@@ -193,6 +196,5 @@ def test_onboarding_readme_manifest_entry_uses_manifest_directory_as_authority()
     assert not explicitly_listed, (
         "onboarding/README.md manifests entry should point at the manifest "
         "directory/known-providers index instead of keeping a partial provider "
-        "example list: "
-        + ", ".join(explicitly_listed)
+        "example list: " + ", ".join(explicitly_listed)
     )

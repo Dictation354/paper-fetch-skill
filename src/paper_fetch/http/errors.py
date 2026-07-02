@@ -45,7 +45,9 @@ class RequestFailure(Exception):
         self.error_category = _normalize_request_error_category(error_category)
 
 
-def _normalize_request_error_category(value: RequestErrorCategory | str | None) -> RequestErrorCategory | None:
+def _normalize_request_error_category(
+    value: RequestErrorCategory | str | None,
+) -> RequestErrorCategory | None:
     if isinstance(value, RequestErrorCategory):
         return value
     if value is None:
@@ -60,7 +62,9 @@ class RequestCancelledError(Exception):
     """Raised when a cooperative cancellation check trips."""
 
 
-def build_http_error_message(status_code: int | None, url: str, *, retry_after_seconds: int | None = None) -> str:
+def build_http_error_message(
+    status_code: int | None, url: str, *, retry_after_seconds: int | None = None
+) -> str:
     from .cache import redact_url_for_cache
 
     message = f"HTTP {status_code} for {redact_url_for_cache(url)}"
@@ -90,7 +94,9 @@ def iter_network_error_causes(exc: Exception) -> Iterator[BaseException]:
 
 def is_timeout_network_error(exc: Exception) -> bool:
     return any(
-        isinstance(item, (socket.timeout, TimeoutError, urllib3.exceptions.TimeoutError))
+        isinstance(
+            item, (socket.timeout, TimeoutError, urllib3.exceptions.TimeoutError)
+        )
         for item in iter_network_error_causes(exc)
     )
 
@@ -99,9 +105,16 @@ def classify_network_error(exc: Exception) -> RequestErrorCategory:
     """Classify third-party network exceptions into stable retry categories."""
 
     causes = list(iter_network_error_causes(exc))
-    if any(isinstance(item, (socket.timeout, TimeoutError, urllib3.exceptions.TimeoutError)) for item in causes):
+    if any(
+        isinstance(
+            item, (socket.timeout, TimeoutError, urllib3.exceptions.TimeoutError)
+        )
+        for item in causes
+    ):
         return RequestErrorCategory.TIMEOUT
-    if any(isinstance(item, (ssl.SSLError, urllib3.exceptions.SSLError)) for item in causes):
+    if any(
+        isinstance(item, (ssl.SSLError, urllib3.exceptions.SSLError)) for item in causes
+    ):
         return RequestErrorCategory.TLS_ERROR
     if any(isinstance(item, socket.gaierror) for item in causes):
         return RequestErrorCategory.DNS_ERROR
@@ -109,7 +122,15 @@ def classify_network_error(exc: Exception) -> RequestErrorCategory:
     text = " ".join(str(item).lower() for item in causes if str(item).strip())
     if "connection reset" in text:
         return RequestErrorCategory.CONNECTION_RESET
-    if any(token in text for token in ("remote end closed", "connection aborted", "connection broken", "eof")):
+    if any(
+        token in text
+        for token in (
+            "remote end closed",
+            "connection aborted",
+            "connection broken",
+            "eof",
+        )
+    ):
         return RequestErrorCategory.CONNECTION_CLOSED
     if "temporary failure" in text and "name resolution" in text:
         return RequestErrorCategory.DNS_ERROR

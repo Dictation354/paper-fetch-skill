@@ -7,7 +7,10 @@ from typing import Any
 
 from ..extraction.html import decode_html
 from ..http.headers import header_value
-from ..quality.html_availability import HtmlQualityAssessor, availability_failure_message
+from ..quality.html_availability import (
+    HtmlQualityAssessor,
+    availability_failure_message,
+)
 from ..reason_codes import ERROR, NO_RESULT
 from ..runtime import RuntimeContext
 from ..runtime_browser import browser_context_options
@@ -61,12 +64,19 @@ def fetch_ieee_browser_html_payload(
     rest_url: str,
     direct_html_failure: ProviderFailure | None,
     context: RuntimeContext,
-    extraction_assets: Callable[[ieee_html.IeeeHtmlExtraction, ieee_metadata.IeeeLandingAttempt], list[dict[str, Any]]],
+    extraction_assets: Callable[
+        [ieee_html.IeeeHtmlExtraction, ieee_metadata.IeeeLandingAttempt],
+        list[dict[str, Any]],
+    ],
 ) -> RawFulltextPayload:
     try:
         from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
-    except Exception as exc:  # pragma: no cover - exercised by missing dependency deployments
-        raise ProviderFailure(ERROR, "Playwright is not installed; cannot use IEEE browser HTML fallback.") from exc
+    except (
+        Exception
+    ) as exc:  # pragma: no cover - exercised by missing dependency deployments
+        raise ProviderFailure(
+            ERROR, "Playwright is not installed; cannot use IEEE browser HTML fallback."
+        ) from exc
 
     article_number = landing_attempt.article_number
     browser_context = None
@@ -93,7 +103,9 @@ def fetch_ieee_browser_html_payload(
 
         def route_handler(route: Any) -> None:
             try:
-                resource_type = normalize_text(getattr(route.request, "resource_type", "")).lower()
+                resource_type = normalize_text(
+                    getattr(route.request, "resource_type", "")
+                ).lower()
                 if resource_type in BROWSER_HTML_BLOCKED_RESOURCE_TYPES:
                     route.abort()
                     return
@@ -106,7 +118,9 @@ def fetch_ieee_browser_html_payload(
         page = browser_context.new_page()
 
         def remember_rest_response(response: Any) -> None:
-            if ieee_url._is_ieee_rest_document_url(str(getattr(response, "url", "") or ""), article_number):
+            if ieee_url._is_ieee_rest_document_url(
+                str(getattr(response, "url", "") or ""), article_number
+            ):
                 rest_responses.append(response)
 
         page.on("response", remember_rest_response)
@@ -118,7 +132,9 @@ def fetch_ieee_browser_html_payload(
             )
         except PlaywrightTimeoutError:
             navigation_response = None
-        browser_final_url = normalize_text(str(getattr(page, "url", "") or "")) or document_url
+        browser_final_url = (
+            normalize_text(str(getattr(page, "url", "") or "")) or document_url
+        )
         navigation_status = _playwright_response_status(navigation_response)
 
         if not rest_responses:
@@ -132,7 +148,9 @@ def fetch_ieee_browser_html_payload(
                 continue
             if not isinstance(body, (bytes, bytearray)) or not body:
                 continue
-            source_url = ieee_url._absolute_ieee_url(str(getattr(response, "url", "") or rest_url), rest_url)
+            source_url = ieee_url._absolute_ieee_url(
+                str(getattr(response, "url", "") or rest_url), rest_url
+            )
             response_headers = _playwright_response_headers(response)
             html_text = decode_html(
                 bytes(body),
@@ -144,7 +162,9 @@ def fetch_ieee_browser_html_payload(
 
         if not html_text:
             with contextlib.suppress(PlaywrightTimeoutError):
-                page.wait_for_selector("#article", timeout=IEEE_BROWSER_HTML_DOM_WAIT_TIMEOUT_MS)
+                page.wait_for_selector(
+                    "#article", timeout=IEEE_BROWSER_HTML_DOM_WAIT_TIMEOUT_MS
+                )
             try:
                 has_article = page.locator("#article").count() > 0
             except Exception:
@@ -155,7 +175,9 @@ def fetch_ieee_browser_html_payload(
                     "IEEE browser HTML fallback did not capture REST full-text HTML or #article DOM.",
                 )
             html_text = str(page.content() or "")
-            browser_final_url = normalize_text(str(getattr(page, "url", "") or "")) or browser_final_url
+            browser_final_url = (
+                normalize_text(str(getattr(page, "url", "") or "")) or browser_final_url
+            )
             source_url = browser_final_url
             response_headers = {"content-type": "text/html"}
             response_status = navigation_status
@@ -164,7 +186,9 @@ def fetch_ieee_browser_html_payload(
         raise
     except Exception as exc:
         message = normalize_text(str(exc)) or exc.__class__.__name__
-        raise ProviderFailure(ERROR, f"IEEE browser HTML fallback failed ({message}).") from exc
+        raise ProviderFailure(
+            ERROR, f"IEEE browser HTML fallback failed ({message})."
+        ) from exc
     finally:
         if page is not None:
             with contextlib.suppress(Exception):
@@ -211,7 +235,9 @@ def fetch_ieee_browser_html_payload(
                 "final_url": browser_final_url,
                 "navigation_status": navigation_status,
                 "response_status": response_status,
-                "direct_html_failure": _provider_failure_diagnostics(direct_html_failure),
+                "direct_html_failure": _provider_failure_diagnostics(
+                    direct_html_failure
+                ),
             },
             "extraction": {
                 "abstract_sections": extraction.abstract_sections,

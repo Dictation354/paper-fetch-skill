@@ -125,7 +125,11 @@ def _has_table_spans(table: ET.Element | None) -> bool:
     if table is None:
         return False
     span_attrs = {"namest", "nameend", "morerows", "rowspan", "colspan"}
-    return any(any(node.get(attr) for attr in span_attrs) for node in table.iter() if isinstance(node.tag, str))
+    return any(
+        any(node.get(attr) for attr in span_attrs)
+        for node in table.iter()
+        if isinstance(node.tag, str)
+    )
 
 
 def _table_node(table_wrap: ET.Element) -> ET.Element | None:
@@ -159,7 +163,9 @@ def _table_footnotes(table_wrap: ET.Element) -> list[str]:
     seen: set[str] = set()
     for local_name in ("table-wrap-foot", "fn"):
         for node in iter_descendants(table_wrap, local_name):
-            text = normalize_text("\n\n".join(_render_paragraph_texts(node)) or render_inline_text(node))
+            text = normalize_text(
+                "\n\n".join(_render_paragraph_texts(node)) or render_inline_text(node)
+            )
             if text and text not in seen:
                 notes.append(text)
                 seen.add(text)
@@ -206,7 +212,9 @@ def _table_entry(table_wrap: ET.Element) -> tuple[dict[str, Any] | None, bool]:
             "section": "body",
             "render_state": "inline",
             "fallback_message": "Table content could not be converted to Markdown; caption text was retained.",
-            "conversion_notes": ["Table content could not be converted to Markdown; caption text was retained."],
+            "conversion_notes": [
+                "Table content could not be converted to Markdown; caption text was retained."
+            ],
         }, True
     return None, False
 
@@ -217,7 +225,10 @@ def _supplementary_entries(root: ET.Element, source_url: str) -> list[dict[str, 
     for node in root.iter():
         if not isinstance(node.tag, str):
             continue
-        if xml_local_name(node.tag) not in {"inline-supplementary-material", "supplementary-material"}:
+        if xml_local_name(node.tag) not in {
+            "inline-supplementary-material",
+            "supplementary-material",
+        }:
             continue
         url = _urljoin(source_url, _href(node))
         if not url:
@@ -248,7 +259,9 @@ def _supplementary_entries(root: ET.Element, source_url: str) -> list[dict[str, 
 
 def _render_list(node: ET.Element, *, ordered: bool) -> list[str]:
     items = [
-        normalize_text(" ".join(_render_paragraph_texts(item)) or render_inline_text(item))
+        normalize_text(
+            " ".join(_render_paragraph_texts(item)) or render_inline_text(item)
+        )
         for item in iter_children(node, "list-item")
     ]
     return render_list(MarkdownList(items=items, ordered=ordered))

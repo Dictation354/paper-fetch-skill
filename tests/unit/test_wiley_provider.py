@@ -76,7 +76,9 @@ def test_markdown_review_loop_formula_references_and_abstract_only_fixture() -> 
     assert "PowerPoint" not in references_markdown
 
 
-def test_wiley_browser_workflow_does_not_force_default_http_user_agent(tmp_path: Path) -> None:
+def test_wiley_browser_workflow_does_not_force_default_http_user_agent(
+    tmp_path: Path,
+) -> None:
     captured: dict[str, object] = {}
 
     def fake_fetch_html_with_browser(_candidate_urls, *, config, **_kwargs):
@@ -110,7 +112,9 @@ def test_wiley_browser_workflow_does_not_force_default_http_user_agent(tmp_path:
     assert captured["browser_user_agent"] is None
 
 
-def test_wiley_browser_workflow_uses_explicit_browser_user_agent(tmp_path: Path) -> None:
+def test_wiley_browser_workflow_uses_explicit_browser_user_agent(
+    tmp_path: Path,
+) -> None:
     captured: dict[str, object] = {}
     chrome_user_agent = (
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "

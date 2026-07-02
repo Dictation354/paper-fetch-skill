@@ -127,9 +127,10 @@ def extract_asset_html_scopes(html_text: str, source_url: str) -> tuple[str, str
     _normalize_mdpi_dom(supplementary_container)
 
     for node in list(body_container.select(", ".join(_SUPPLEMENTARY_SELECTORS))):
-        if isinstance(node, Tag) and "supplement" in normalize_text(
-            node.get_text(" ", strip=True)
-        ).lower():
+        if (
+            isinstance(node, Tag)
+            and "supplement" in normalize_text(node.get_text(" ", strip=True)).lower()
+        ):
             node.decompose()
 
     supplementary_nodes: list[Tag] = []
@@ -161,7 +162,9 @@ def extract_scoped_html_assets(
         noise_profile=MDPI_NOISE_PROFILE,
     )
     if asset_profile == "all":
-        assets.extend(_extract_mdpi_supplementary_assets(supplementary_html, source_url))
+        assets.extend(
+            _extract_mdpi_supplementary_assets(supplementary_html, source_url)
+        )
     return _dedupe_assets(assets)
 
 
@@ -183,8 +186,7 @@ def _extract_mdpi_supplementary_assets(
         )
         lowered = " ".join([href, text, context]).lower()
         if not any(
-            token in lowered
-            for token in ("supplement", "/s1", "table s", "figure s")
+            token in lowered for token in ("supplement", "/s1", "table s", "figure s")
         ):
             continue
         assets.append(
@@ -212,6 +214,7 @@ def _dedupe_assets(assets: list[dict[str, str]]) -> list[dict[str, str]]:
         seen.add(key)
         deduped.append(asset)
     return deduped
+
 
 __all__ = [
     "extract_asset_html_scopes",

@@ -108,10 +108,9 @@ def canonical_figure_label_from_url(value: str | None) -> str | None:
 def canonical_figure_label_from_image(
     alt_text: str | None, url: str | None
 ) -> str | None:
-    return (
-        canonical_figure_label(str(alt_text or ""))
-        or canonical_figure_label_from_url(url)
-    )
+    return canonical_figure_label(
+        str(alt_text or "")
+    ) or canonical_figure_label_from_url(url)
 
 
 def is_non_figure_image_alt(text: str | None) -> bool:
@@ -302,25 +301,27 @@ def inject_inline_figure_links(
                     return entry
         return take_entry_for_label(canonical_figure_label_from_image(alt_text, url))
 
-    caption_label_keys = {
-        label_key
-        for block in blocks
-        if (match := MARKDOWN_FIGURE_BLOCK_PATTERN.match(normalize_text(block)))
-        is not None
-        if (label_key := canonical_figure_label(match.group(1).rstrip("."))) is not None
-    }
-    existing_image_label_keys = {
-        label_key
-        for block in blocks
-        if (match := MARKDOWN_IMAGE_BLOCK_PATTERN.match(normalize_text(block)))
-        is not None
-        if not is_non_figure_image_alt(match.group(1))
-        if (
-            label_key := canonical_figure_label_from_image(
-                match.group(1), match.group(2)
+    caption_label_keys: set[str] = set()
+    existing_image_label_keys: set[str] = set()
+    for block in blocks:
+        normalized_existing_block = normalize_text(block)
+        figure_match = MARKDOWN_FIGURE_BLOCK_PATTERN.match(normalized_existing_block)
+        if figure_match is not None:
+            figure_label_key = canonical_figure_label(figure_match.group(1).rstrip("."))
+            if figure_label_key is not None:
+                caption_label_keys.add(figure_label_key)
+        existing_image_match = MARKDOWN_IMAGE_BLOCK_PATTERN.match(
+            normalized_existing_block
+        )
+        if existing_image_match is not None and not is_non_figure_image_alt(
+            existing_image_match.group(1)
+        ):
+            image_label_key = canonical_figure_label_from_image(
+                existing_image_match.group(1),
+                existing_image_match.group(2),
             )
-        ) is not None
-    }
+            if image_label_key is not None:
+                existing_image_label_keys.add(image_label_key)
     active_heading_key: str | None = None
     active_heading_allows_injection = False
 
@@ -341,23 +342,27 @@ def inject_inline_figure_links(
             if is_non_figure_image_alt(alt_text):
                 injected.append(block)
                 continue
-            entry = take_entry_for_image(alt_text, current_url)
-            if entry is not None:
+            image_entry = take_entry_for_image(alt_text, current_url)
+            if image_entry is not None:
                 heading = (
                     alt_text
-                    or normalize_text(entry.get("heading") or "Figure")
+                    or normalize_text(image_entry.get("heading") or "Figure")
                     or "Figure"
                 )
-                injected.append(render_markdown_image("figure", heading, entry["url"]))
+                injected.append(
+                    render_markdown_image("figure", heading, image_entry["url"])
+                )
             else:
                 injected.append(block)
             continue
         match = MARKDOWN_FIGURE_BLOCK_PATTERN.match(normalized_block)
         if match:
             label = match.group(1).rstrip(".")
-            entry = take_entry_for_label(canonical_figure_label(label))
-            if entry is not None:
-                image_block = render_markdown_image("figure", label, entry["url"])
+            caption_entry = take_entry_for_label(canonical_figure_label(label))
+            if caption_entry is not None:
+                image_block = render_markdown_image(
+                    "figure", label, caption_entry["url"]
+                )
                 if not injected or normalize_text(injected[-1]) != image_block:
                     injected.append(image_block)
                 injected.append(block)
@@ -366,18 +371,24 @@ def inject_inline_figure_links(
         if not active_heading_allows_injection:
             continue
         for label_key in _figure_reference_label_keys(normalized_block):
-            if label_key in caption_label_keys or label_key in existing_image_label_keys:
+            if (
+                label_key in caption_label_keys
+                or label_key in existing_image_label_keys
+            ):
                 continue
-            entry = take_entry_for_label(label_key)
-            if entry is not None:
+            referenced_entry = take_entry_for_label(label_key)
+            if referenced_entry is not None:
                 image_block = render_markdown_image(
                     "figure",
-                    normalize_text(entry.get("heading") or label_key) or "Figure",
-                    entry["url"],
+                    normalize_text(referenced_entry.get("heading") or label_key)
+                    or "Figure",
+                    referenced_entry["url"],
                 )
                 if image_block and normalize_text(injected[-1]) != image_block:
                     injected.append(image_block)
-                caption_block = _inline_fallback_caption_block(entry, markdown_text)
+                caption_block = _inline_fallback_caption_block(
+                    referenced_entry, markdown_text
+                )
                 if caption_block:
                     injected.append(caption_block)
     return clean_markdown_fn("\n\n".join(injected))

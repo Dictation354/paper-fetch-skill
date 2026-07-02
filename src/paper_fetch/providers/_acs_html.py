@@ -141,7 +141,11 @@ def _reference_year(text: str) -> str | None:
 
 def _reference_doi(node: Tag) -> str | None:
     citation = node.select_one(".NLM_citation")
-    doi = normalize_text(str(citation.get("data-doi") or "")) if isinstance(citation, Tag) else ""
+    doi = (
+        normalize_text(str(citation.get("data-doi") or ""))
+        if isinstance(citation, Tag)
+        else ""
+    )
     return doi or None
 
 
@@ -149,7 +153,9 @@ def extract_references(html_text: str) -> list[dict[str, str | None]]:
     if not normalize_text(html_text):
         return []
     soup = BeautifulSoup(html_text, choose_parser())
-    nodes = [node for node in soup.select("ol#references > li") if isinstance(node, Tag)]
+    nodes = [
+        node for node in soup.select("ol#references > li") if isinstance(node, Tag)
+    ]
     if not nodes:
         return extract_numbered_references_from_html(html_text)
 

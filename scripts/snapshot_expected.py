@@ -63,16 +63,23 @@ def _load_manifest(path: Path) -> dict[str, Any]:
 
 
 def _write_manifest(path: Path, manifest: dict[str, Any]) -> None:
-    path.write_text(json.dumps(manifest, indent=2, sort_keys=False) + "\n", encoding="utf-8")
+    path.write_text(
+        json.dumps(manifest, indent=2, sort_keys=False) + "\n", encoding="utf-8"
+    )
 
 
-def _sample_for_doi(manifest: dict[str, Any], doi: str) -> tuple[str, dict[str, Any]] | None:
+def _sample_for_doi(
+    manifest: dict[str, Any], doi: str
+) -> tuple[str, dict[str, Any]] | None:
     slug = doi_slug(doi)
     samples = manifest.get("samples", {})
     if slug in samples and isinstance(samples[slug], dict):
         return slug, samples[slug]
     for sample_id, sample in samples.items():
-        if isinstance(sample, dict) and normalize_doi(str(sample.get("doi") or "")) == doi:
+        if (
+            isinstance(sample, dict)
+            and normalize_doi(str(sample.get("doi") or "")) == doi
+        ):
             return str(sample_id), sample
     return None
 
@@ -91,16 +98,32 @@ def _fixture_root(root: Path, sample_id: str, sample: dict[str, Any]) -> Path:
 
 def _raw_fixture_path(root: Path, sample_id: str, sample: dict[str, Any]) -> Path:
     assets = sample.get("assets") if isinstance(sample.get("assets"), dict) else {}
-    for name in ("original.html", "original.xml", "original.pdf", "raw.html", "article.html", "extracted.md"):
+    for name in (
+        "original.html",
+        "original.xml",
+        "original.pdf",
+        "raw.html",
+        "article.html",
+        "extracted.md",
+    ):
         value = assets.get(name)
         if value:
             return root / str(value)
     fixture_root = _fixture_root(root, sample_id, sample)
-    for name in ("original.html", "original.xml", "original.pdf", "raw.html", "article.html", "extracted.md"):
+    for name in (
+        "original.html",
+        "original.xml",
+        "original.pdf",
+        "raw.html",
+        "article.html",
+        "extracted.md",
+    ):
         path = fixture_root / name
         if path.exists():
             return path
-    raise FileNotFoundError(f"fixture is missing replay source or extracted.md: {sample_id}")
+    raise FileNotFoundError(
+        f"fixture is missing replay source or extracted.md: {sample_id}"
+    )
 
 
 def _meta_values(soup: BeautifulSoup, *names: str) -> list[str]:
@@ -123,7 +146,9 @@ def _text_from_selector(soup: BeautifulSoup, selector: str) -> str:
 def _review_summary_from_html(raw_path: Path, sample: dict[str, Any]) -> dict[str, Any]:
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=XMLParsedAsHTMLWarning)
-        soup = BeautifulSoup(raw_path.read_text(encoding="utf-8", errors="ignore"), "html.parser")
+        soup = BeautifulSoup(
+            raw_path.read_text(encoding="utf-8", errors="ignore"), "html.parser"
+        )
     title = (
         (_meta_values(soup, "citation_title", "dc.title", "og:title") or [""])[0]
         or _text_from_selector(soup, "h1")
@@ -132,7 +157,10 @@ def _review_summary_from_html(raw_path: Path, sample: dict[str, Any]) -> dict[st
     )
     authors = _meta_values(soup, "citation_author", "dc.creator")
     abstract = (
-        (_meta_values(soup, "citation_abstract", "dc.description", "description") or [""])[0]
+        (
+            _meta_values(soup, "citation_abstract", "dc.description", "description")
+            or [""]
+        )[0]
         or _text_from_selector(soup, ".abstract")
         or _text_from_selector(soup, "[class*=abstract]")
     )
@@ -141,7 +169,9 @@ def _review_summary_from_html(raw_path: Path, sample: dict[str, Any]) -> dict[st
         for node in soup.find_all(re.compile(r"^h[1-6]$"))
         if normalize_text(node.get_text(" ", strip=True))
     ]
-    formula_count = len(soup.find_all("math")) + len(soup.select("[class*=formula], [class*=math], .equation"))
+    formula_count = len(soup.find_all("math")) + len(
+        soup.select("[class*=formula], [class*=math], .equation")
+    )
     return {
         "title": normalize_text(title),
         "authors": authors,
@@ -165,7 +195,9 @@ def _review_summary_from_pdf(raw_path: Path, sample: dict[str, Any]) -> dict[str
     }
 
 
-def _review_summary_from_markdown(raw_path: Path, sample: dict[str, Any]) -> dict[str, Any]:
+def _review_summary_from_markdown(
+    raw_path: Path, sample: dict[str, Any]
+) -> dict[str, Any]:
     text = raw_path.read_text(encoding="utf-8", errors="replace")
     headings = [
         normalize_text(match.group(1))
@@ -180,7 +212,9 @@ def _review_summary_from_markdown(raw_path: Path, sample: dict[str, Any]) -> dic
     return {
         "title": normalize_text(str(sample.get("title") or "")),
         "authors": [],
-        "abstract_length": len(normalize_text(abstract_match.group("body"))) if abstract_match else 0,
+        "abstract_length": len(normalize_text(abstract_match.group("body")))
+        if abstract_match
+        else 0,
         "section_headings": headings,
         "table_count": len(re.findall(r"^\s*\|.+\|\s*$", text, flags=re.MULTILINE)),
         "figure_count": len(re.findall(r"!\[[^\]]*\]\(", text)),
@@ -197,7 +231,12 @@ def _availability(sample: dict[str, Any], summary: dict[str, Any]) -> str:
         return "abstract-only"
     if family == "block":
         return "blocked"
-    if summary["section_headings"] or summary["table_count"] or summary["figure_count"] or summary["formula_count"]:
+    if (
+        summary["section_headings"]
+        or summary["table_count"]
+        or summary["figure_count"]
+        or summary["formula_count"]
+    ):
         return "fulltext"
     if summary["abstract_length"]:
         return "abstract-only"
@@ -239,7 +278,9 @@ def _expected_from_review_summary(summary: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def _expected_from_golden_corpus(doi: str, sample_id: str, sample: dict[str, Any], root: Path) -> dict[str, Any] | None:
+def _expected_from_golden_corpus(
+    doi: str, sample_id: str, sample: dict[str, Any], root: Path
+) -> dict[str, Any] | None:
     article = _article_from_golden_corpus(sample_id, sample, root)
     if article is None:
         return None
@@ -252,11 +293,19 @@ def _expected_from_golden_corpus(doi: str, sample_id: str, sample: dict[str, Any
     return expected
 
 
-def _article_from_golden_corpus(sample_id: str, sample: dict[str, Any], root: Path) -> Any | None:
-    if root != _repo_root().resolve() or str(sample.get("fixture_family") or "golden") != "golden":
+def _article_from_golden_corpus(
+    sample_id: str, sample: dict[str, Any], root: Path
+) -> Any | None:
+    if (
+        root != _repo_root().resolve()
+        or str(sample.get("fixture_family") or "golden") != "golden"
+    ):
         return None
     assets = sample.get("assets") if isinstance(sample.get("assets"), dict) else {}
-    if not any(name in assets for name in ("original.html", "original.xml", "original.pdf", "article.html")):
+    if not any(
+        name in assets
+        for name in ("original.html", "original.xml", "original.pdf", "article.html")
+    ):
         return None
     repo_root = str(root)
     if repo_root not in sys.path:
@@ -268,19 +317,44 @@ def _article_from_golden_corpus(sample_id: str, sample: dict[str, Any], root: Pa
         )
     except Exception:
         return None
-    return build_article_from_fixture(GoldenCorpusFixture(sample_id=sample_id, sample=dict(sample)))
+    return build_article_from_fixture(
+        GoldenCorpusFixture(sample_id=sample_id, sample=dict(sample))
+    )
 
 
 def _fallback_markdown(review_summary: dict[str, Any]) -> str:
-    lines = [f"# {review_summary.get('title') or review_summary.get('doi') or 'Untitled'}", ""]
+    lines = [
+        f"# {review_summary.get('title') or review_summary.get('doi') or 'Untitled'}",
+        "",
+    ]
     if review_summary.get("abstract_length"):
-        lines.extend(["## Abstract", "", "Abstract text is present in the replay fixture.", ""])
+        lines.extend(
+            ["## Abstract", "", "Abstract text is present in the replay fixture.", ""]
+        )
     for heading in review_summary.get("section_headings") or []:
-        lines.extend([f"## {heading}", "", "Section text is present in the replay fixture.", ""])
+        lines.extend(
+            [f"## {heading}", "", "Section text is present in the replay fixture.", ""]
+        )
     if review_summary.get("figure_count"):
-        lines.extend(["## Figures", "", "- Figure captions are present in the replay fixture.", ""])
+        lines.extend(
+            [
+                "## Figures",
+                "",
+                "- Figure captions are present in the replay fixture.",
+                "",
+            ]
+        )
     if review_summary.get("table_count"):
-        lines.extend(["## Tables", "", "| Column | Value |", "| --- | --- |", "| fixture | present |", ""])
+        lines.extend(
+            [
+                "## Tables",
+                "",
+                "| Column | Value |",
+                "| --- | --- |",
+                "| fixture | present |",
+                "",
+            ]
+        )
     return "\n".join(lines).strip() + "\n"
 
 
@@ -305,7 +379,9 @@ def _markdown_from_article_or_summary(
     return markdown, bool(getattr(article, "references", None))
 
 
-def _build_review_summary(root: Path, doi: str, sample_id: str, sample: dict[str, Any]) -> dict[str, Any]:
+def _build_review_summary(
+    root: Path, doi: str, sample_id: str, sample: dict[str, Any]
+) -> dict[str, Any]:
     raw_path = _raw_fixture_path(root, sample_id, sample)
     if raw_path.suffix.lower() == ".pdf":
         summary = _review_summary_from_pdf(raw_path, sample)
@@ -350,7 +426,9 @@ def _infer_route_metadata(raw_path: Path, sample: dict[str, Any]) -> tuple[str, 
         return "html", "text/html"
     if suffix == ".md":
         return str(sample.get("route_kind") or "extracted"), "text/markdown"
-    return str(sample.get("route_kind") or "unknown"), str(sample.get("content_type") or "application/octet-stream")
+    return str(sample.get("route_kind") or "unknown"), str(
+        sample.get("content_type") or "application/octet-stream"
+    )
 
 
 def snapshot_expected(args: argparse.Namespace) -> tuple[dict[str, Any], bool]:
@@ -402,7 +480,9 @@ def snapshot_expected(args: argparse.Namespace) -> tuple[dict[str, Any], bool]:
             retryable=False,
             details={"doi": doi, "sample_id": sample_id},
         ) from exc
-    expected = _expected_from_golden_corpus(doi, sample_id, sample, root) or _expected_from_review_summary(review_summary)
+    expected = _expected_from_golden_corpus(
+        doi, sample_id, sample, root
+    ) or _expected_from_review_summary(review_summary)
     markdown, _ = _markdown_from_article_or_summary(
         sample_id=sample_id,
         sample=sample,
@@ -411,8 +491,12 @@ def snapshot_expected(args: argparse.Namespace) -> tuple[dict[str, Any], bool]:
     )
     fixture_root = _fixture_root(root, sample_id, sample)
     markdown_rel_path = (fixture_root / "extracted.md").relative_to(root).as_posix()
-    prompt_rel_path = (fixture_root / "markdown-quality-prompt.md").relative_to(root).as_posix()
-    quality_rel_path = (fixture_root / "markdown-quality.json").relative_to(root).as_posix()
+    prompt_rel_path = (
+        (fixture_root / "markdown-quality-prompt.md").relative_to(root).as_posix()
+    )
+    quality_rel_path = (
+        (fixture_root / "markdown-quality.json").relative_to(root).as_posix()
+    )
     prompt = build_markdown_quality_prompt(
         provider=str(sample.get("publisher") or ""),
         doi=doi,
@@ -449,7 +533,9 @@ def snapshot_expected(args: argparse.Namespace) -> tuple[dict[str, Any], bool]:
     prompt_path = expected_path.with_name("markdown-quality-prompt.md")
     quality_path = expected_path.with_name("markdown-quality.json")
     expected_path.parent.mkdir(parents=True, exist_ok=True)
-    expected_path.write_text(json.dumps(expected, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    expected_path.write_text(
+        json.dumps(expected, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
     markdown_path.write_text(markdown, encoding="utf-8")
     write_markdown_quality_prompt(prompt_path, prompt)
     write_markdown_quality_report(quality_path, quality)
@@ -465,10 +551,22 @@ def snapshot_expected(args: argparse.Namespace) -> tuple[dict[str, Any], bool]:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = SnapshotArgumentParser(description="Generate expected.json from a local replay fixture.")
-    parser.add_argument("--doi", required=True, help="DOI to snapshot, for example 10.1234/sample")
-    parser.add_argument("--review", action="store_true", help="print the generated summary without writing")
-    parser.add_argument("--output-dir", default=_repo_root(), help="repo root to read/write; defaults to this checkout")
+    parser = SnapshotArgumentParser(
+        description="Generate expected.json from a local replay fixture."
+    )
+    parser.add_argument(
+        "--doi", required=True, help="DOI to snapshot, for example 10.1234/sample"
+    )
+    parser.add_argument(
+        "--review",
+        action="store_true",
+        help="print the generated summary without writing",
+    )
+    parser.add_argument(
+        "--output-dir",
+        default=_repo_root(),
+        help="repo root to read/write; defaults to this checkout",
+    )
     return parser
 
 

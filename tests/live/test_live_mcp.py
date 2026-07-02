@@ -9,8 +9,14 @@ from pathlib import Path
 from mcp.client.session import ClientSession
 from mcp.client.stdio import StdioServerParameters, stdio_client
 
-from tests.live._runtime_env import build_isolated_live_env, require_cloakbrowser_or_skip
-from tests.provider_benchmark_samples import provider_benchmark_sample, source_trail_matches
+from tests.live._runtime_env import (
+    build_isolated_live_env,
+    require_cloakbrowser_or_skip,
+)
+from tests.provider_benchmark_samples import (
+    provider_benchmark_sample,
+    source_trail_matches,
+)
 from tests.paths import REPO_ROOT, SRC_DIR
 
 
@@ -32,7 +38,9 @@ class LiveMcpServerTests(unittest.IsolatedAsyncioTestCase):
     @classmethod
     def setUpClass(cls) -> None:
         if not RUN_LIVE:
-            raise unittest.SkipTest("Set PAPER_FETCH_RUN_LIVE=1 to run live MCP smoke tests.")
+            raise unittest.SkipTest(
+                "Set PAPER_FETCH_RUN_LIVE=1 to run live MCP smoke tests."
+            )
         cls.env, cls.runtime_env_tempdir = build_isolated_live_env()
 
     @classmethod
@@ -44,7 +52,9 @@ class LiveMcpServerTests(unittest.IsolatedAsyncioTestCase):
     def _require_env(self, *keys: str) -> None:
         missing = [key for key in keys if not self.env.get(key, "").strip()]
         if missing:
-            self.skipTest(f"Missing required environment variables for live test: {', '.join(missing)}")
+            self.skipTest(
+                f"Missing required environment variables for live test: {', '.join(missing)}"
+            )
 
     async def _call_fetch(
         self,
@@ -77,8 +87,13 @@ class LiveMcpServerTests(unittest.IsolatedAsyncioTestCase):
             )
 
             with tempfile.TemporaryFile(mode="w+") as errlog:
-                async with stdio_client(server, errlog=errlog) as (read_stream, write_stream):
-                    async with ClientSession(read_stream, write_stream, logging_callback=logging_callback) as session:
+                async with stdio_client(server, errlog=errlog) as (
+                    read_stream,
+                    write_stream,
+                ):
+                    async with ClientSession(
+                        read_stream, write_stream, logging_callback=logging_callback
+                    ) as session:
                         await session.initialize()
                         result = await session.call_tool(
                             "fetch_paper",

@@ -44,6 +44,7 @@ from ._ams_dom import (
 def __getattr__(name: str) -> Any:
     return getattr(_impl, name)
 
+
 __all__ = [
     "_AUTHOR_PIPELINE",
     "_normalize_ams_markdown_text",

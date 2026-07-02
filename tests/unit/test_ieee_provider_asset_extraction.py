@@ -8,13 +8,23 @@ from ._ieee_provider_support import *
 
 
 class IeeeProviderAssetExtractionTests(unittest.TestCase):
-    def test_ieee_supplementary_suffixes_reuse_generic_source_with_ieee_extras(self) -> None:
-        self.assertTrue(_ieee_supplementary._has_ieee_supplementary_file_suffix("https://example.test/supplement.csv"))
+    def test_ieee_supplementary_suffixes_reuse_generic_source_with_ieee_extras(
+        self,
+    ) -> None:
         self.assertTrue(
-            _ieee_supplementary._has_ieee_supplementary_file_suffix("https://example.test/supplement.docx")
+            _ieee_supplementary._has_ieee_supplementary_file_suffix(
+                "https://example.test/supplement.csv"
+            )
         )
         self.assertTrue(
-            _ieee_supplementary._has_ieee_supplementary_file_suffix("https://example.test/archive.tar.gz")
+            _ieee_supplementary._has_ieee_supplementary_file_suffix(
+                "https://example.test/supplement.docx"
+            )
+        )
+        self.assertTrue(
+            _ieee_supplementary._has_ieee_supplementary_file_suffix(
+                "https://example.test/archive.tar.gz"
+            )
         )
 
     def test_ieee_figure_full_media_assets_are_body_assets(self) -> None:
@@ -59,7 +69,8 @@ class IeeeProviderAssetExtractionTests(unittest.TestCase):
         supplementary_assets = [
             item
             for item in extraction.extracted_assets
-            if item.get("kind") == "supplementary" and item.get("section") == "supplementary"
+            if item.get("kind") == "supplementary"
+            and item.get("section") == "supplementary"
         ]
         self.assertEqual(
             [item["url"] for item in supplementary_assets],
@@ -68,9 +79,14 @@ class IeeeProviderAssetExtractionTests(unittest.TestCase):
                 "https://ieeexplore.ieee.org/documents/multimedia.mp4",
             ],
         )
-        self.assertNotIn("/assets/img/icon.support.gif", json.dumps(extraction.extracted_assets))
+        self.assertNotIn(
+            "/assets/img/icon.support.gif", json.dumps(extraction.extracted_assets)
+        )
         self.assertNotIn("/assets/img/icon.support.gif", extraction.markdown_text)
-    def test_ieee_supplementary_assets_ignore_unscoped_body_data_code_media_links(self) -> None:
+
+    def test_ieee_supplementary_assets_ignore_unscoped_body_data_code_media_links(
+        self,
+    ) -> None:
         """rule: rule-ieee-supplementary-scope
         rule: rule-supplementary-discovery-explicit-scope"""
         article_number = "10388355"
@@ -83,8 +99,9 @@ class IeeeProviderAssetExtractionTests(unittest.TestCase):
             '<?xml version="1.0" encoding="UTF-8"?><response><accessType>Open Access</accessType>'
             '<div id="BodyWrapper"><div id="article">'
             '<div class="section" id="sec1"><h2>Data and Code Availability</h2><p>'
-            + paragraph * 25
-            + '</p><p>Project resources include '
+            + paragraph
+            * 25
+            + "</p><p>Project resources include "
             '<a href="/documents/data.csv">data</a>, '
             '<a href="/documents/code.zip">code</a>, and '
             '<a href="/documents/media.mp4">media</a> links in the body.</p></div>'
@@ -100,14 +117,18 @@ class IeeeProviderAssetExtractionTests(unittest.TestCase):
         )
 
         supplementary_assets = [
-            item for item in extraction.extracted_assets if item.get("kind") == "supplementary"
+            item
+            for item in extraction.extracted_assets
+            if item.get("kind") == "supplementary"
         ]
         self.assertEqual(
             [item["url"] for item in supplementary_assets],
             ["https://ieeexplore.ieee.org/documents/appendix.pdf"],
         )
 
-    def test_ieee_support_icon_filter_uses_structure_and_section_marker_variants(self) -> None:
+    def test_ieee_support_icon_filter_uses_structure_and_section_marker_variants(
+        self,
+    ) -> None:
         rest_url = "https://ieeexplore.ieee.org/rest/document/10388355/?logAccess=true"
         paragraph = "This IEEE body paragraph has enough article words for extraction. "
         html = (
@@ -115,27 +136,45 @@ class IeeeProviderAssetExtractionTests(unittest.TestCase):
             '<div id="BodyWrapper"><div id="article">'
             '<div class="section" id="sec1">'
             '<span class="kicker">Section 1</span><h2>Introduction</h2><p>'
-            + paragraph * 20
+            + paragraph
+            * 20
             + '</p><figure><img src="/assets/img/icon.support-new.gif" alt="Support icon" width="16" height="16"></figure>'
             '</div><div id="supplementary-materials"><h2>Supplementary Materials</h2>'
             '<a href="/documents/extra.png">Supplementary image</a></div>'
             "</div></div></response>"
         )
 
-        extraction = _ieee_html._extract_ieee_html(html, rest_url, metadata={"title": "IEEE Dynamic Article"})
+        extraction = _ieee_html._extract_ieee_html(
+            html, rest_url, metadata={"title": "IEEE Dynamic Article"}
+        )
 
         self.assertNotIn("Section 1", extraction.markdown_text)
-        self.assertNotIn("icon.support-new.gif", json.dumps(extraction.extracted_assets))
-        self.assertIn("https://ieeexplore.ieee.org/documents/extra.png", json.dumps(extraction.extracted_assets))
+        self.assertNotIn(
+            "icon.support-new.gif", json.dumps(extraction.extracted_assets)
+        )
+        self.assertIn(
+            "https://ieeexplore.ieee.org/documents/extra.png",
+            json.dumps(extraction.extracted_assets),
+        )
 
-    def test_real_ieee_multimedia_fixture_yields_supplementary_asset_from_explicit_scope(self) -> None:
+    def test_real_ieee_multimedia_fixture_yields_supplementary_asset_from_explicit_scope(
+        self,
+    ) -> None:
         """rule: rule-ieee-supplementary-scope
         rule: rule-supplementary-discovery-explicit-scope"""
-        fixture_root = REPO_ROOT / "tests" / "fixtures" / "golden_criteria" / "10.1109_RITA.2026.3668995"
+        fixture_root = (
+            REPO_ROOT
+            / "tests"
+            / "fixtures"
+            / "golden_criteria"
+            / "10.1109_RITA.2026.3668995"
+        )
         doi = "10.1109/RITA.2026.3668995"
         article_number = "11417163"
         document_url = f"https://ieeexplore.ieee.org/document/{article_number}/"
-        multimedia_url = f"https://ieeexplore.ieee.org/rest/document/{article_number}/multimedia"
+        multimedia_url = (
+            f"https://ieeexplore.ieee.org/rest/document/{article_number}/multimedia"
+        )
         landing_html = (fixture_root / "landing.html").read_text(encoding="utf-8")
         landing_metadata = _ieee_metadata._parse_landing_metadata(landing_html)
         multimedia_body = (fixture_root / "multimedia.json").read_bytes()
@@ -155,12 +194,18 @@ class IeeeProviderAssetExtractionTests(unittest.TestCase):
             landing_url=document_url,
             response_url=document_url,
             html_text=landing_html,
-            merged_metadata={"doi": doi, "article_number": article_number, "articleNumber": article_number},
+            merged_metadata={
+                "doi": doi,
+                "article_number": article_number,
+                "articleNumber": article_number,
+            },
             article_number=article_number,
             landing_metadata=landing_metadata,
         )
 
-        self.assertTrue(_ieee_metadata._landing_metadata_has_multimedia_scope(landing_metadata))
+        self.assertTrue(
+            _ieee_metadata._landing_metadata_has_multimedia_scope(landing_metadata)
+        )
         self.assertEqual(landing_metadata["sections"]["multimedia"], "true")
 
         supplementary_assets = client._fetch_multimedia_assets(attempt)
@@ -181,16 +226,29 @@ class IeeeProviderAssetExtractionTests(unittest.TestCase):
         self.assertEqual(request["url"], multimedia_url)
         self.assertEqual(request["headers"]["Referer"], document_url)
         self.assertEqual(request["headers"]["X-Requested-With"], "XMLHttpRequest")
-    def test_ieee_html_payload_merges_multimedia_supplementary_assets_from_landing_scope(self) -> None:
+
+    def test_ieee_html_payload_merges_multimedia_supplementary_assets_from_landing_scope(
+        self,
+    ) -> None:
         """rule: rule-ieee-supplementary-scope
         rule: rule-supplementary-discovery-explicit-scope"""
-        fixture_root = REPO_ROOT / "tests" / "fixtures" / "golden_criteria" / "10.1109_RITA.2026.3668995"
+        fixture_root = (
+            REPO_ROOT
+            / "tests"
+            / "fixtures"
+            / "golden_criteria"
+            / "10.1109_RITA.2026.3668995"
+        )
         doi = "10.1109/RITA.2026.3668995"
         article_number = "11417163"
         document_url = f"https://ieeexplore.ieee.org/document/{article_number}/"
         rest_url = f"https://ieeexplore.ieee.org/rest/document/{article_number}/?logAccess=true"
-        references_url = f"https://ieeexplore.ieee.org/rest/document/{article_number}/references"
-        multimedia_url = f"https://ieeexplore.ieee.org/rest/document/{article_number}/multimedia"
+        references_url = (
+            f"https://ieeexplore.ieee.org/rest/document/{article_number}/references"
+        )
+        multimedia_url = (
+            f"https://ieeexplore.ieee.org/rest/document/{article_number}/multimedia"
+        )
         transport = RecordingTransport(
             {
                 ("GET", document_url): {
@@ -221,25 +279,36 @@ class IeeeProviderAssetExtractionTests(unittest.TestCase):
         )
         client = IeeeClient(transport, {})
 
-        raw_payload = client.fetch_raw_fulltext(doi, {"doi": doi, "landing_page_url": document_url})
+        raw_payload = client.fetch_raw_fulltext(
+            doi, {"doi": doi, "landing_page_url": document_url}
+        )
 
         supplementary_assets = [
             item
-            for item in (raw_payload.content.extracted_assets if raw_payload.content is not None else [])
+            for item in (
+                raw_payload.content.extracted_assets
+                if raw_payload.content is not None
+                else []
+            )
             if item.get("kind") == "supplementary"
         ]
         self.assertEqual(
             [item["url"] for item in supplementary_assets],
-            ["https://ieeexplore.ieee.org/ielx8/6245520/11315891/11417163/supp1-3668995.pdf"],
+            [
+                "https://ieeexplore.ieee.org/ielx8/6245520/11315891/11417163/supp1-3668995.pdf"
+            ],
         )
         self.assertIn(multimedia_url, [str(call["url"]) for call in transport.calls])
+
     def test_ieee_table_asset_wins_over_shared_formula_candidate(self) -> None:
         """rule: rule-ieee-mediastore-body-assets"""
         article_number = "10388355"
         rest_url = f"https://ieeexplore.ieee.org/rest/document/{article_number}/?logAccess=true"
 
         extraction = _ieee_html._extract_ieee_html(
-            _dynamic_html_with_ieee_equation_alt_table_asset(article_number).decode("utf-8"),
+            _dynamic_html_with_ieee_equation_alt_table_asset(article_number).decode(
+                "utf-8"
+            ),
             rest_url,
             metadata={"title": "IEEE Dynamic Article"},
         )
@@ -247,7 +316,8 @@ class IeeeProviderAssetExtractionTests(unittest.TestCase):
         body_assets = [
             item
             for item in extraction.extracted_assets
-            if item.get("section") == "body" and item.get("kind") in {"figure", "table", "formula"}
+            if item.get("section") == "body"
+            and item.get("kind") in {"figure", "table", "formula"}
         ]
         self.assertEqual(len(body_assets), 1)
         table = body_assets[0]
@@ -262,15 +332,14 @@ class IeeeProviderAssetExtractionTests(unittest.TestCase):
             f"https://ieeexplore.ieee.org/mediastore/IEEE/content/media/{article_number}/{article_number}-table-1-small.gif",
         )
         self.assertNotIn("Formula 1", json.dumps(extraction.extracted_assets))
-    def test_ieee_merge_prefers_table_download_when_formula_shares_preview_url(self) -> None:
+
+    def test_ieee_merge_prefers_table_download_when_formula_shares_preview_url(
+        self,
+    ) -> None:
         """rule: rule-ieee-mediastore-body-assets"""
         article_number = "10388355"
-        large_url = (
-            f"https://ieeexplore.ieee.org/mediastore/IEEE/content/media/{article_number}/{article_number}-table-1-large.gif"
-        )
-        small_url = (
-            f"https://ieeexplore.ieee.org/mediastore/IEEE/content/media/{article_number}/{article_number}-table-1-small.gif"
-        )
+        large_url = f"https://ieeexplore.ieee.org/mediastore/IEEE/content/media/{article_number}/{article_number}-table-1-large.gif"
+        small_url = f"https://ieeexplore.ieee.org/mediastore/IEEE/content/media/{article_number}/{article_number}-table-1-small.gif"
         extracted_assets = [
             {
                 "kind": "table",
@@ -340,7 +409,10 @@ class IeeeProviderAssetExtractionTests(unittest.TestCase):
         self.assertEqual(merged[0]["download_url"], large_url)
         self.assertEqual(merged[0]["download_tier"], "full_size")
         self.assertNotEqual(merged[0]["path"], "/tmp/ieee-formula.gif")
-    def test_ieee_relative_rest_response_url_is_canonicalized_for_asset_urls(self) -> None:
+
+    def test_ieee_relative_rest_response_url_is_canonicalized_for_asset_urls(
+        self,
+    ) -> None:
         doi = "10.1109/ACCESS.2024.3352924"
         article_number = "10388355"
         landing_url = f"https://ieeexplore.ieee.org/document/{article_number}/"
@@ -364,7 +436,9 @@ class IeeeProviderAssetExtractionTests(unittest.TestCase):
         )
         client = IeeeClient(transport, {})
 
-        raw_payload = client.fetch_raw_fulltext(doi, {"doi": doi, "landing_page_url": landing_url})
+        raw_payload = client.fetch_raw_fulltext(
+            doi, {"doi": doi, "landing_page_url": landing_url}
+        )
 
         self.assertEqual(raw_payload.source_url, rest_url)
         self.assertEqual(raw_payload.content.source_url, rest_url)
@@ -375,9 +449,19 @@ class IeeeProviderAssetExtractionTests(unittest.TestCase):
         ]
         self.assertEqual(len(body_assets), 2)
         for asset in body_assets:
-            self.assertTrue(str(asset["url"]).startswith("https://ieeexplore.ieee.org/mediastore/"))
-            self.assertTrue(str(asset["full_size_url"]).startswith("https://ieeexplore.ieee.org/mediastore/"))
-            self.assertTrue(str(asset["preview_url"]).startswith("https://ieeexplore.ieee.org/mediastore/"))
+            self.assertTrue(
+                str(asset["url"]).startswith("https://ieeexplore.ieee.org/mediastore/")
+            )
+            self.assertTrue(
+                str(asset["full_size_url"]).startswith(
+                    "https://ieeexplore.ieee.org/mediastore/"
+                )
+            )
+            self.assertTrue(
+                str(asset["preview_url"]).startswith(
+                    "https://ieeexplore.ieee.org/mediastore/"
+                )
+            )
 
         with tempfile.TemporaryDirectory() as tmpdir:
             with mock.patch.object(
@@ -393,8 +477,22 @@ class IeeeProviderAssetExtractionTests(unittest.TestCase):
                     asset_profile="body",
                 )
 
-        self.assertIs(mocked_download.call_args.args[0], _ieee_supplementary.FIGURE_KIND)
+        self.assertIs(
+            mocked_download.call_args.args[0], _ieee_supplementary.FIGURE_KIND
+        )
         passed_assets = mocked_download.call_args.kwargs["assets"]
-        self.assertTrue(all(str(item["url"]).startswith("https://") for item in passed_assets))
-        self.assertTrue(all(str(item["full_size_url"]).startswith("https://") for item in passed_assets))
-        self.assertTrue(all(str(item["preview_url"]).startswith("https://") for item in passed_assets))
+        self.assertTrue(
+            all(str(item["url"]).startswith("https://") for item in passed_assets)
+        )
+        self.assertTrue(
+            all(
+                str(item["full_size_url"]).startswith("https://")
+                for item in passed_assets
+            )
+        )
+        self.assertTrue(
+            all(
+                str(item["preview_url"]).startswith("https://")
+                for item in passed_assets
+            )
+        )

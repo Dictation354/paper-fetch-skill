@@ -50,12 +50,15 @@ def extract_html_payload(
 ) -> dict[str, Any]:
     _markdown_impl.extract_article_markdown = extract_article_markdown
     _markdown_impl.extract_authors = extract_authors
-    _markdown_impl.extract_numbered_references_from_html = extract_numbered_references_from_html
+    _markdown_impl.extract_numbered_references_from_html = (
+        extract_numbered_references_from_html
+    )
     return _markdown_impl.extract_html_payload(html_text, source_url, title=title)
 
 
 def __getattr__(name: str) -> Any:
     return getattr(_impl, name)
+
 
 __all__ = [
     "SPRINGER_SUPPLEMENTARY_SECTION_TITLES",

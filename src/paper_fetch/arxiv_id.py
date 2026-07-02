@@ -10,7 +10,9 @@ from .utils import normalize_text
 ARXIV_DOI_PREFIX = "10.48550/arxiv."
 NEW_STYLE_ARXIV_ID_PATTERN = r"\d{4}\.\d{4,5}"
 OLD_STYLE_ARXIV_ID_PATTERN = r"[a-z-]+(?:\.[A-Z]{2})?/\d{7}"
-ARXIV_ID_BODY_PATTERN = rf"(?:{NEW_STYLE_ARXIV_ID_PATTERN}|{OLD_STYLE_ARXIV_ID_PATTERN})(?:v\d+)?"
+ARXIV_ID_BODY_PATTERN = (
+    rf"(?:{NEW_STYLE_ARXIV_ID_PATTERN}|{OLD_STYLE_ARXIV_ID_PATTERN})(?:v\d+)?"
+)
 ARXIV_ID_RE = re.compile(rf"^{ARXIV_ID_BODY_PATTERN}$", flags=re.IGNORECASE)
 ARXIV_ID_SEARCH_RE = re.compile(ARXIV_ID_BODY_PATTERN, flags=re.IGNORECASE)
 

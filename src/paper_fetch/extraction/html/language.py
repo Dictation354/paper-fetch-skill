@@ -56,7 +56,9 @@ ABSTRACT_LABELS = ABSTRACT_HEADINGS
 
 def _fold_language_text(value: str) -> str:
     normalized = unicodedata.normalize("NFKD", value)
-    return "".join(char for char in normalized if not unicodedata.combining(char)).lower()
+    return "".join(
+        char for char in normalized if not unicodedata.combining(char)
+    ).lower()
 
 
 def normalize_language_hint(
@@ -101,12 +103,20 @@ def html_node_language_hint(node: Any, *, allow_soft_hints: bool = False) -> str
 
 def collect_html_abstract_blocks(root: Any) -> list[dict[str, Any]]:
     structural_nodes = _top_level_html_abstract_nodes(root, structural_only=True)
-    candidate_nodes = _expand_parallel_html_abstract_variants(structural_nodes) if structural_nodes else _top_level_html_abstract_nodes(root)
+    candidate_nodes = (
+        _expand_parallel_html_abstract_variants(structural_nodes)
+        if structural_nodes
+        else _top_level_html_abstract_nodes(root)
+    )
     blocks: list[dict[str, Any]] = []
     seen: set[tuple[str, str]] = set()
     for order, node in enumerate(candidate_nodes):
         attrs = getattr(node, "attrs", None) or {}
-        heading = _first_html_heading_text(node) or normalize_text(_html_attribute_text(attrs.get("data-title"))) or "Abstract"
+        heading = (
+            _first_html_heading_text(node)
+            or normalize_text(_html_attribute_text(attrs.get("data-title")))
+            or "Abstract"
+        )
         text = normalize_text("\n\n".join(_html_text_blocks(node)))
         if not text:
             continue
@@ -159,7 +169,9 @@ def _element_children(parent: Any) -> list[Any]:
     children = getattr(parent, "children", None)
     if children is None:
         return []
-    return [child for child in children if isinstance(getattr(child, "name", None), str)]
+    return [
+        child for child in children if isinstance(getattr(child, "name", None), str)
+    ]
 
 
 def _html_attribute_text(value: Any) -> str:
@@ -168,10 +180,20 @@ def _html_attribute_text(value: Any) -> str:
     return str(value or "")
 
 
-def _top_level_html_abstract_nodes(root: Any, *, structural_only: bool = False) -> list[Any]:
+def _top_level_html_abstract_nodes(
+    root: Any, *, structural_only: bool = False
+) -> list[Any]:
     nodes: list[Any] = []
-    structural_match = _is_structural_html_abstract_node if structural_only else _is_abstract_like_html_node
-    for node in [root, *_element_children(root), *list(getattr(root, "find_all", lambda *_args, **_kwargs: [])(True))]:
+    structural_match = (
+        _is_structural_html_abstract_node
+        if structural_only
+        else _is_abstract_like_html_node
+    )
+    for node in [
+        root,
+        *_element_children(root),
+        *list(getattr(root, "find_all", lambda *_args, **_kwargs: [])(True)),
+    ]:
         if not isinstance(getattr(node, "name", None), str):
             continue
         if not structural_match(node):
@@ -189,7 +211,11 @@ def _top_level_html_abstract_nodes(root: Any, *, structural_only: bool = False) 
 def _dedupe_top_level_html_nodes(nodes: list[Any]) -> list[Any]:
     deduped: list[Any] = []
     for node in nodes:
-        if any(existing is node or node in getattr(existing, "find_all", lambda *_args, **_kwargs: [])(True) for existing in deduped):
+        if any(
+            existing is node
+            or node in getattr(existing, "find_all", lambda *_args, **_kwargs: [])(True)
+            for existing in deduped
+        ):
             continue
         deduped.append(node)
     return deduped
@@ -238,7 +264,10 @@ def _parallel_child_html_abstract_variants(node: Any) -> list[Any]:
 
     distinct_languages = {
         hint
-        for hint in (html_node_language_hint(child, allow_soft_hints=True) for child in child_candidates)
+        for hint in (
+            html_node_language_hint(child, allow_soft_hints=True)
+            for child in child_candidates
+        )
         if hint
     }
     if len(distinct_languages) >= 2:
@@ -247,7 +276,8 @@ def _parallel_child_html_abstract_variants(node: Any) -> list[Any]:
     structural_children = [
         child
         for child in child_candidates
-        if _is_structural_html_abstract_node(child) or _is_abstract_heading_text(_first_html_heading_text(child))
+        if _is_structural_html_abstract_node(child)
+        or _is_abstract_heading_text(_first_html_heading_text(child))
     ]
     if len(structural_children) >= 2:
         return _dedupe_top_level_html_nodes(structural_children)
@@ -273,7 +303,11 @@ def _html_text_blocks(node: Any) -> list[str]:
         for candidate in finder(True):
             if candidate is node:
                 continue
-            if normalize_text(getattr(candidate, "name", "")).lower() not in {"p", "li"} and normalize_text(candidate.get("role") or "").lower() != "paragraph":
+            if (
+                normalize_text(getattr(candidate, "name", "")).lower()
+                not in {"p", "li"}
+                and normalize_text(candidate.get("role") or "").lower() != "paragraph"
+            ):
                 continue
             text = normalize_text(candidate.get_text(" ", strip=True))
             if not text:
@@ -285,7 +319,9 @@ def _html_text_blocks(node: Any) -> list[str]:
             texts.append(text)
     if texts:
         return texts
-    fallback_text = normalize_text(getattr(node, "get_text", lambda *_args, **_kwargs: "")(" ", strip=True))
+    fallback_text = normalize_text(
+        getattr(node, "get_text", lambda *_args, **_kwargs: "")(" ", strip=True)
+    )
     heading_text = _first_html_heading_text(node)
     if heading_text and fallback_text:
         pattern = re.compile(rf"^{re.escape(heading_text)}[:\s-]*", flags=re.IGNORECASE)
@@ -300,7 +336,16 @@ def _is_abstract_heading_text(value: str) -> bool:
 
 def _is_structural_html_abstract_node(node: Any) -> bool:
     attrs = getattr(node, "attrs", None) or {}
-    for key in ("id", "class", "role", "itemprop", "property", "typeof", "data-title", "aria-label"):
+    for key in (
+        "id",
+        "class",
+        "role",
+        "itemprop",
+        "property",
+        "typeof",
+        "data-title",
+        "aria-label",
+    ):
         text = _normalize_semantic_text(_html_attribute_text(attrs.get(key)))
         if any(token in text for token in ABSTRACT_ATTR_TOKENS):
             return True
@@ -308,7 +353,9 @@ def _is_structural_html_abstract_node(node: Any) -> bool:
 
 
 def _is_abstract_like_html_node(node: Any) -> bool:
-    return _is_structural_html_abstract_node(node) or _is_abstract_heading_text(_first_html_heading_text(node))
+    return _is_structural_html_abstract_node(node) or _is_abstract_heading_text(
+        _first_html_heading_text(node)
+    )
 
 
 def _html_has_meaningful_abstract_text(node: Any) -> bool:

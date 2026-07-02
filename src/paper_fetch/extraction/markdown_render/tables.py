@@ -23,7 +23,11 @@ def table_from_entry(entry: Mapping[str, Any]) -> MarkdownTable:
         caption=str(entry.get("caption") or ""),
         headers=list(rows[0]) if rows else [],
         rows=rows,
-        footnotes=tuple(str(note) for note in entry.get("footnotes", []) if normalize_text(str(note))),
+        footnotes=tuple(
+            str(note)
+            for note in entry.get("footnotes", [])
+            if normalize_text(str(note))
+        ),
         page_url=normalize_text(str(entry.get("page_url") or "")) or None,
         locator=normalize_text(str(entry.get("locator") or "")) or None,
         image_fallback_url=normalize_text(str(entry.get("link") or "")) or None,
@@ -41,7 +45,9 @@ def render_table(table: MarkdownTable) -> list[str]:
             lines.append("| " + " | ".join(row) + " |")
         lines.append("")
     elif table.image_fallback_url:
-        lines.extend([render_markdown_image("table", table.label, table.image_fallback_url), ""])
+        lines.extend(
+            [render_markdown_image("table", table.label, table.image_fallback_url), ""]
+        )
     for footnote in table.footnotes:
         text = normalize_text(str(footnote))
         if text:
@@ -50,14 +56,20 @@ def render_table(table: MarkdownTable) -> list[str]:
 
 
 def render_image_table_block(entry: Mapping[str, Any]) -> list[str]:
-    return render_table(MarkdownTable(
-        label=str(entry["heading"]),
-        caption=str(entry.get("caption") or ""),
-        headers=[],
-        rows=[],
-        footnotes=tuple(str(note) for note in entry.get("footnotes", []) if normalize_text(str(note))),
-        image_fallback_url=normalize_text(str(entry.get("link") or "")) or None,
-    ))
+    return render_table(
+        MarkdownTable(
+            label=str(entry["heading"]),
+            caption=str(entry.get("caption") or ""),
+            headers=[],
+            rows=[],
+            footnotes=tuple(
+                str(note)
+                for note in entry.get("footnotes", [])
+                if normalize_text(str(note))
+            ),
+            image_fallback_url=normalize_text(str(entry.get("link") or "")) or None,
+        )
+    )
 
 
 def render_structured_table_block(entry: Mapping[str, Any]) -> list[str]:
@@ -74,13 +86,17 @@ def render_structured_table_block(entry: Mapping[str, Any]) -> list[str]:
 def render_table_block(entry: Mapping[str, Any]) -> list[str]:
     if not entry:
         return []
-    render_kind = normalize_text(str(entry.get("table_render_kind") or entry.get("kind") or "")).lower()
+    render_kind = normalize_text(
+        str(entry.get("table_render_kind") or entry.get("kind") or "")
+    ).lower()
     if render_kind == "structured":
         return render_structured_table_block(entry)
     return render_image_table_block(entry)
 
 
-def add_table_once(lines: list[str], entry: Mapping[str, Any] | None, used_table_keys: set[str]) -> None:
+def add_table_once(
+    lines: list[str], entry: Mapping[str, Any] | None, used_table_keys: set[str]
+) -> None:
     if not entry:
         return
     key = str(entry["key"])

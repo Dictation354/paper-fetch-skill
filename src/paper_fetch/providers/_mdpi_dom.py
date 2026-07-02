@@ -229,15 +229,25 @@ class _MdpiDisplayObject:
 def _class_tokens(node: Tag) -> set[str]:
     raw_classes = node.get("class") or []
     if isinstance(raw_classes, str):
-        return {normalize_text(item).lower() for item in raw_classes.split() if normalize_text(item)}
-    return {normalize_text(str(item)).lower() for item in raw_classes if normalize_text(str(item))}
+        return {
+            normalize_text(item).lower()
+            for item in raw_classes.split()
+            if normalize_text(item)
+        }
+    return {
+        normalize_text(str(item)).lower()
+        for item in raw_classes
+        if normalize_text(str(item))
+    }
 
 
 def _has_class(node: Tag, class_name: str) -> bool:
     return class_name.lower() in _class_tokens(node)
 
 
-def _extract_title(soup: BeautifulSoup, metadata: Mapping[str, Any] | None) -> str | None:
+def _extract_title(
+    soup: BeautifulSoup, metadata: Mapping[str, Any] | None
+) -> str | None:
     for selector, attr in (
         ("meta[name='citation_title']", "content"),
         ("meta[name='dc.title']", "content"),
@@ -333,7 +343,11 @@ def _article_container_html(
                 continue
             seen_old_style_nodes.add(id(node))
             old_style_display_nodes.append(node)
-    content_nodes = [*old_style_body_nodes, *old_style_display_nodes] if old_style_body_nodes else [source_container]
+    content_nodes = (
+        [*old_style_body_nodes, *old_style_display_nodes]
+        if old_style_body_nodes
+        else [source_container]
+    )
     for node in content_nodes:
         copied = _copy_node(node)
         if copied is None:
@@ -356,7 +370,9 @@ def _extract_abstract_text(container: Tag) -> str | None:
         node = container.select_one(selector)
         if isinstance(node, Tag):
             copied = _copy_node(node) or node
-            for keyword_node in list(copied.select("#html-keywords, #html-keywords-title")):
+            for keyword_node in list(
+                copied.select("#html-keywords, #html-keywords-title")
+            ):
                 keyword_node.decompose()
             text = normalize_text(copied.get_text(" ", strip=True))
             if text:
@@ -374,13 +390,19 @@ def _normalize_mdpi_dom(container: Tag) -> None:
     for node in list(container.select("#html-keywords")):
         node.decompose()
 
-    for node in list(container.find_all(["script", "style", "noscript", "template", "iframe", "form", "button"])):
+    for node in list(
+        container.find_all(
+            ["script", "style", "noscript", "template", "iframe", "form", "button"]
+        )
+    ):
         node.decompose()
 
     for anchor in list(container.find_all("a")):
         if not isinstance(anchor, Tag):
             continue
-        classes = {normalize_text(str(value)).lower() for value in anchor.get("class") or []}
+        classes = {
+            normalize_text(str(value)).lower() for value in anchor.get("class") or []
+        }
         href = normalize_text(str(anchor.get("href") or "")).lower()
         text = normalize_text(anchor.get_text(" ", strip=True)).lower()
         if classes & _NOISY_ANCHOR_CLASSES or "scholar.google." in href:
@@ -423,7 +445,11 @@ def _normalize_mdpi_dom(container: Tag) -> None:
 def _is_mdpi_paragraph_context(node: Tag) -> bool:
     name = normalize_text(node.name or "").lower()
     role = normalize_text(str(node.get("role") or "")).lower()
-    return name == "p" or _has_class(node, "html-p") or (name == "div" and role == "paragraph")
+    return (
+        name == "p"
+        or _has_class(node, "html-p")
+        or (name == "div" and role == "paragraph")
+    )
 
 
 def _is_mdpi_non_inline_wrapper_node(node: Tag) -> bool:
@@ -436,7 +462,10 @@ def _is_mdpi_non_inline_wrapper_node(node: Tag) -> bool:
         return True
     if name == "img":
         return True
-    if name == "math" and normalize_text(str(node.get("display") or "")).lower() == "block":
+    if (
+        name == "math"
+        and normalize_text(str(node.get("display") or "")).lower() == "block"
+    ):
         return True
     if node.get(_MDPI_DISPLAY_BLOCK_ATTR):
         return True
@@ -622,7 +651,11 @@ def _copy_mdpi_paragraph_attrs(node: Tag) -> dict[str, Any]:
 
 
 def _mdpi_node_has_renderable_content(node: Tag) -> bool:
-    return bool(normalize_text(node.get_text(" ", strip=True)) or node.find("img") or node.find("math"))
+    return bool(
+        normalize_text(node.get_text(" ", strip=True))
+        or node.find("img")
+        or node.find("math")
+    )
 
 
 def _new_mdpi_split_paragraph(source: Tag, soup: BeautifulSoup) -> Tag:
@@ -706,7 +739,11 @@ def _mdpi_display_label_number(label: str) -> str:
 
 def _mdpi_display_label_from_id(kind: str, node_id: str) -> str:
     suffix = "t" if kind == "table" else "f"
-    match = re.search(rf"[-_]{suffix}0*([1-9]\d*[A-Za-z]?)$", normalize_text(node_id), flags=re.IGNORECASE)
+    match = re.search(
+        rf"[-_]{suffix}0*([1-9]\d*[A-Za-z]?)$",
+        normalize_text(node_id),
+        flags=re.IGNORECASE,
+    )
     if match is None:
         return ""
     return f"{_display_label_kind(kind)} {match.group(1)}."
@@ -817,7 +854,9 @@ def _render_mdpi_table_object_markdown(
     if not isinstance(table, Tag):
         table = wrapper.find("table")
     if isinstance(table, Tag):
-        rendered = normalize_text(render_table_markdown(table, label=label, caption=caption))
+        rendered = normalize_text(
+            render_table_markdown(table, label=label, caption=caption)
+        )
         if rendered and ("|" in rendered or "\n- " in rendered):
             return rendered
 
@@ -825,7 +864,9 @@ def _render_mdpi_table_object_markdown(
     if image_url:
         image_line = render_markdown_image("table", label or "Table", image_url)
         heading = f"**{label}** {caption}".strip() if label else caption
-        return normalize_text("\n\n".join(part for part in (image_line, heading) if part))
+        return normalize_text(
+            "\n\n".join(part for part in (image_line, heading) if part)
+        )
 
     heading = f"**{label}** {caption}".strip() if label else caption
     fallback_text = short_text(popup) if isinstance(popup, Tag) else short_text(wrapper)
@@ -837,7 +878,9 @@ def _render_mdpi_table_object_markdown(
     return normalize_text("\n".join(lines))
 
 
-def _markdown_display_block(reference: Tag, markdown_text: str, kind: str) -> Tag | None:
+def _markdown_display_block(
+    reference: Tag, markdown_text: str, kind: str
+) -> Tag | None:
     soup = soup_root(reference)
     if soup is None:
         return None
@@ -883,7 +926,10 @@ def _table_display_object(
 def _is_mdpi_display_section(node: Tag) -> bool:
     section_type = normalize_text(str(node.get("type") or "")).lower()
     node_id = normalize_text(str(node.get("id") or "")).lower()
-    return section_type in _MDPI_DISPLAY_SECTION_TYPES or node_id in _MDPI_DISPLAY_SECTION_IDS
+    return (
+        section_type in _MDPI_DISPLAY_SECTION_TYPES
+        or node_id in _MDPI_DISPLAY_SECTION_IDS
+    )
 
 
 def _collect_mdpi_display_objects(container: Tag) -> list[_MdpiDisplayObject]:
@@ -894,7 +940,9 @@ def _collect_mdpi_display_objects(container: Tag) -> list[_MdpiDisplayObject]:
     }
     display_objects: list[_MdpiDisplayObject] = []
     seen: set[tuple[str, str]] = set()
-    for index, node in enumerate(list(container.select(".html-fig-wrap, .html-table-wrap"))):
+    for index, node in enumerate(
+        list(container.select(".html-fig-wrap, .html-table-wrap"))
+    ):
         if not isinstance(node, Tag):
             continue
         if _has_class(node, "html-fig-wrap"):
@@ -922,7 +970,11 @@ def _collect_mdpi_display_objects(container: Tag) -> list[_MdpiDisplayObject]:
 def _is_inside_mdpi_display_object(node: Tag) -> bool:
     current: Tag | None = node
     while isinstance(current, Tag):
-        if current.get(_MDPI_DISPLAY_BLOCK_ATTR) or _has_class(current, "html-fig-wrap") or _has_class(current, "html-table-wrap"):
+        if (
+            current.get(_MDPI_DISPLAY_BLOCK_ATTR)
+            or _has_class(current, "html-fig-wrap")
+            or _has_class(current, "html-table-wrap")
+        ):
             return True
         if _is_mdpi_display_section(current):
             return True
@@ -937,7 +989,11 @@ def _is_inside_references(node: Tag) -> bool:
         if node_id == "html-references_list":
             return True
         heading = current.find(re.compile(r"^h[1-6]$"), recursive=False)
-        if isinstance(heading, Tag) and normalize_text(heading.get_text(" ", strip=True)).lower() == "references":
+        if (
+            isinstance(heading, Tag)
+            and normalize_text(heading.get_text(" ", strip=True)).lower()
+            == "references"
+        ):
             return True
         current = current.parent if isinstance(current.parent, Tag) else None
     return False
@@ -960,7 +1016,11 @@ def _iter_mdpi_reference_blocks(container: Tag) -> list[Tag]:
             continue
         if node.name == "div" and not _has_class(node, "html-p"):
             continue
-        if node.get(_MDPI_DISPLAY_BLOCK_ATTR) or _is_inside_mdpi_display_object(node) or _is_inside_references(node):
+        if (
+            node.get(_MDPI_DISPLAY_BLOCK_ATTR)
+            or _is_inside_mdpi_display_object(node)
+            or _is_inside_references(node)
+        ):
             continue
         text = normalize_text(node.get_text(" ", strip=True))
         if not text:
@@ -1008,7 +1068,11 @@ def _display_objects_for_block(
         )
         if pattern.search(text):
             matched_keys.add(item.key)
-    return [item for item in display_objects if item.key in matched_keys and item.key not in used_keys]
+    return [
+        item
+        for item in display_objects
+        if item.key in matched_keys and item.key not in used_keys
+    ]
 
 
 def _references_anchor(container: Tag) -> Tag | None:
@@ -1016,7 +1080,11 @@ def _references_anchor(container: Tag) -> Tag | None:
     if isinstance(references, Tag):
         return references
     for heading in container.find_all(re.compile(r"^h[1-6]$")):
-        if isinstance(heading, Tag) and normalize_text(heading.get_text(" ", strip=True)).lower() == "references":
+        if (
+            isinstance(heading, Tag)
+            and normalize_text(heading.get_text(" ", strip=True)).lower()
+            == "references"
+        ):
             return heading.parent if isinstance(heading.parent, Tag) else heading
     return None
 
@@ -1059,19 +1127,29 @@ def _normalize_mdpi_display_objects(container: Tag) -> None:
     for section in list(container.find_all(["section", "div"])):
         if not isinstance(section, Tag) or not _is_mdpi_display_section(section):
             continue
-        if not normalize_text(section.get_text(" ", strip=True)) and not section.find("img"):
+        if not normalize_text(section.get_text(" ", strip=True)) and not section.find(
+            "img"
+        ):
             section.decompose()
 
 
 def _remove_mdpi_abstract_title_colon(container: Tag) -> None:
     for title_node in list(container.select("#html-abstract-title")):
         for sibling in list(title_node.next_siblings):
-            if isinstance(sibling, NavigableString) and not normalize_text(str(sibling)):
+            if isinstance(sibling, NavigableString) and not normalize_text(
+                str(sibling)
+            ):
                 continue
-            if isinstance(sibling, NavigableString) and normalize_text(str(sibling)) == ":":
+            if (
+                isinstance(sibling, NavigableString)
+                and normalize_text(str(sibling)) == ":"
+            ):
                 sibling.extract()
                 continue
-            if isinstance(sibling, Tag) and normalize_text(sibling.get_text(" ", strip=True)) == ":":
+            if (
+                isinstance(sibling, Tag)
+                and normalize_text(sibling.get_text(" ", strip=True)) == ":"
+            ):
                 sibling.decompose()
                 continue
             break

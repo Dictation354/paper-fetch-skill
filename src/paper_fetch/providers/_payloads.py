@@ -9,7 +9,9 @@ from ..tracing import trace_from_markers
 from .base import ProviderContent, ProviderFailure, RawFulltextPayload
 
 
-def provider_failure_diagnostics(failure: ProviderFailure | None) -> dict[str, Any] | None:
+def provider_failure_diagnostics(
+    failure: ProviderFailure | None,
+) -> dict[str, Any] | None:
     if failure is None:
         return None
     diagnostics: dict[str, Any] = {"code": failure.code, "message": failure.message}
@@ -46,7 +48,9 @@ def build_provider_payload(
         content_type=content_type,
         body=body,
         markdown_text=markdown_text,
-        merged_metadata=dict(merged_metadata) if isinstance(merged_metadata, Mapping) else None,
+        merged_metadata=dict(merged_metadata)
+        if isinstance(merged_metadata, Mapping)
+        else None,
         diagnostics=dict(diagnostics or {}),
         reason=reason,
         fetcher=fetcher,
@@ -55,7 +59,9 @@ def build_provider_payload(
         html_failure_reason=html_failure_reason,
         html_failure_message=html_failure_message,
         extracted_assets=[dict(item) for item in (extracted_assets or [])],
-        needs_local_copy=needs_local_copy if content_needs_local_copy is None else content_needs_local_copy,
+        needs_local_copy=needs_local_copy
+        if content_needs_local_copy is None
+        else content_needs_local_copy,
     )
     return RawFulltextPayload(
         provider=provider,

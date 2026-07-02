@@ -9,7 +9,13 @@ from typing import Any, cast, get_args
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from ..artifacts import ArtifactMode
-from ..models import AssetProfile, MaxTokensMode, OutputMode, RenderOptions, normalize_text
+from ..models import (
+    AssetProfile,
+    MaxTokensMode,
+    OutputMode,
+    RenderOptions,
+    normalize_text,
+)
 from ..service import FetchStrategy
 from ..workflow.types import ALLOWED_PREFERRED_PROVIDERS
 from ..utils import dedupe_authors
@@ -49,7 +55,11 @@ class InlineImageBudget:
 
     @property
     def disabled(self) -> bool:
-        return self.max_images == 0 or self.max_bytes_per_image == 0 or self.max_total_bytes == 0
+        return (
+            self.max_images == 0
+            or self.max_bytes_per_image == 0
+            or self.max_total_bytes == 0
+        )
 
 
 class InlineImageBudgetInput(BaseModel):
@@ -61,14 +71,18 @@ class InlineImageBudgetInput(BaseModel):
 
     def resolved(self) -> InlineImageBudget:
         return InlineImageBudget(
-            max_images=self.max_images if self.max_images is not None else DEFAULT_INLINE_IMAGE_MAX_IMAGES,
+            max_images=self.max_images
+            if self.max_images is not None
+            else DEFAULT_INLINE_IMAGE_MAX_IMAGES,
             max_bytes_per_image=(
                 self.max_bytes_per_image
                 if self.max_bytes_per_image is not None
                 else DEFAULT_INLINE_IMAGE_MAX_BYTES_PER_IMAGE
             ),
             max_total_bytes=(
-                self.max_total_bytes if self.max_total_bytes is not None else DEFAULT_INLINE_IMAGE_MAX_TOTAL_BYTES
+                self.max_total_bytes
+                if self.max_total_bytes is not None
+                else DEFAULT_INLINE_IMAGE_MAX_TOTAL_BYTES
             ),
         )
 
@@ -101,7 +115,9 @@ class ResolvePaperRequest(BaseModel):
     def normalize_authors(cls, value: list[str] | None) -> list[str] | None:
         if value is None:
             return None
-        normalized_authors = dedupe_authors([normalize_text(str(item)) for item in value if normalize_text(str(item))])
+        normalized_authors = dedupe_authors(
+            [normalize_text(str(item)) for item in value if normalize_text(str(item))]
+        )
         return normalized_authors or None
 
     @field_validator("year")
@@ -116,10 +132,14 @@ class ResolvePaperRequest(BaseModel):
     @model_validator(mode="after")
     def validate_input_mode(self) -> ResolvePaperRequest:
         has_query = self.query is not None
-        has_structured = self.title is not None or self.authors is not None or self.year is not None
+        has_structured = (
+            self.title is not None or self.authors is not None or self.year is not None
+        )
 
         if has_query and has_structured:
-            raise ValueError("provide either query or structured title/authors/year fields, but not both.")
+            raise ValueError(
+                "provide either query or structured title/authors/year fields, but not both."
+            )
         if has_query:
             return self
         if self.title is None:
@@ -197,7 +217,11 @@ class FetchStrategyInput(BaseModel):
             provider = normalize_text(str(item)).lower()
             if provider and provider not in normalized:
                 normalized.append(provider)
-        invalid = [provider for provider in normalized if provider not in ALLOWED_PREFERRED_PROVIDERS]
+        invalid = [
+            provider
+            for provider in normalized
+            if provider not in ALLOWED_PREFERRED_PROVIDERS
+        ]
         if invalid:
             raise ValueError(
                 "unsupported preferred_providers values: "
@@ -223,7 +247,9 @@ class FetchStrategyInput(BaseModel):
     def to_service_strategy(self) -> FetchStrategy:
         return FetchStrategy(
             allow_metadata_only_fallback=self.allow_metadata_only_fallback,
-            preferred_providers=list(self.preferred_providers) if self.preferred_providers is not None else None,
+            preferred_providers=list(self.preferred_providers)
+            if self.preferred_providers is not None
+            else None,
             asset_profile=cast(AssetProfile | None, self.asset_profile),
         )
 
@@ -326,7 +352,9 @@ class FetchPaperRequest(_RequiredQueryRequest):
             try:
                 value = int(normalized)
             except ValueError as exc:
-                raise ValueError("max_tokens must be a positive integer or 'full_text'.") from exc
+                raise ValueError(
+                    "max_tokens must be a positive integer or 'full_text'."
+                ) from exc
         if value <= 0:
             raise ValueError("max_tokens must be greater than 0.")
         return value

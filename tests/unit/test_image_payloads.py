@@ -11,7 +11,10 @@ class ImagePayloadDetectionTests(unittest.TestCase):
             "image/png": b"\x89PNG\r\n\x1a\npayload",
             "image/jpeg": b"\xff\xd8\xff\xe0" + b"\x00" * 16,
             "image/gif": b"GIF89a" + b"\x00" * 16,
-            "image/webp": b"RIFF" + (16).to_bytes(4, "little") + b"WEBPVP8 " + b"\x00" * 16,
+            "image/webp": b"RIFF"
+            + (16).to_bytes(4, "little")
+            + b"WEBPVP8 "
+            + b"\x00" * 16,
             "image/bmp": b"BM" + b"\x00" * 16,
             "image/x-icon": b"\x00\x00\x01\x00" + b"\x00" * 16,
             "image/apng": (
@@ -34,7 +37,9 @@ class ImagePayloadDetectionTests(unittest.TestCase):
         samples = [
             b"<svg xmlns='http://www.w3.org/2000/svg'></svg>",
             b"\xef\xbb\xbf  \n<svg xmlns='http://www.w3.org/2000/svg'></svg>",
-            " \n\ufeff<?xml version='1.0' encoding='UTF-8'?><svg></svg>".encode("utf-8"),
+            " \n\ufeff<?xml version='1.0' encoding='UTF-8'?><svg></svg>".encode(
+                "utf-8"
+            ),
         ]
 
         for body in samples:

@@ -100,10 +100,8 @@ _ARXIV_AUTHOR_INSTITUTION_BOUNDARY_PATTERN = (
         _ARXIV_AUTHOR_INSTITUTION_BOUNDARY_TOKENS
     )
 )
-_ARXIV_AUTHOR_COUNTRY_BOUNDARY_PATTERN = (
-    _compile_arxiv_author_country_boundary_pattern(
-        _ARXIV_AUTHOR_COUNTRY_BOUNDARY_TOKENS
-    )
+_ARXIV_AUTHOR_COUNTRY_BOUNDARY_PATTERN = _compile_arxiv_author_country_boundary_pattern(
+    _ARXIV_AUTHOR_COUNTRY_BOUNDARY_TOKENS
 )
 _ARXIV_AUTHOR_ADDRESS_BOUNDARY_PATTERN = re.compile(
     r"[,;]\s*(?:[A-Z]{1,3}[- ]?)?\d{3,}\b"
@@ -114,6 +112,7 @@ _ARXIV_ORCID_PATTERN = re.compile(
     r"\b\d{4}-\d{4}-\d{4}-\d{3}[\dX]\b", flags=re.IGNORECASE
 )
 _ARXIV_INITIAL_TOKEN_PATTERN = re.compile(r"^[A-Z]\.?$")
+
 
 def _arxiv_author_boundary_start(text: str) -> int | None:
     normalized = normalize_text(text)
@@ -143,6 +142,8 @@ def _trim_arxiv_author_text_at_boundary(text: str) -> str:
     if boundary_start is None:
         return normalize_text(text)
     return normalize_text(text[:boundary_start])
+
+
 def _candidate_arxiv_author_text_from_person_node(node: Any) -> str:
     if not isinstance(node, Tag):
         return ""
@@ -295,6 +296,7 @@ _AUTHOR_PIPELINE = AuthorExtractionPipeline(
 
 _ARXIV_UNDEFINED_MACRO_PATTERN = re.compile(r"^\\[A-Za-z@]+\*?$")
 _ARXIV_UNESCAPED_DOLLAR_PATTERN = re.compile(r"(?<!\\)\$")
+
 
 def _clean_official_html_latexml_noise(article: Any) -> dict[str, int]:
     if not isinstance(article, Tag):

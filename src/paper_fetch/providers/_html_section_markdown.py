@@ -32,8 +32,15 @@ from ..extraction.markdown_render.formulas import (
     render_html_formula_image_node as _render_formula_image_node,
     render_html_mathml_node as _render_mathml_node,
 )
-from ..extraction.html.semantics import has_explicit_reference_marker, normalize_section_title
-from ..extraction.html._runtime import HTML_BLOCK_TAGS, HTML_DROP_TAGS, should_drop_html_element
+from ..extraction.html.semantics import (
+    has_explicit_reference_marker,
+    normalize_section_title,
+)
+from ..extraction.html._runtime import (
+    HTML_BLOCK_TAGS,
+    HTML_DROP_TAGS,
+    should_drop_html_element,
+)
 from ..models import normalize_text
 from ..markdown.citations import is_citation_link, numeric_citation_payload
 
@@ -42,9 +49,12 @@ from bs4 import NavigableString, Tag
 INLINE_IMAGE_SPACING_PATTERN = re.compile(r"(?<=[^\s])(!\[)")
 LINE_EDGE_WHITESPACE_PATTERN = re.compile(r" *\n *")
 MARKDOWN_BLANK_RUN_PATTERN = re.compile(r"\n{3,}")
-ORDERED_LIST_PREFIX_PATTERN = re.compile(r"^\s*(?:\(?\d+[A-Za-z]?\)?|[ivxlcdm]+)[.)]\s+", flags=re.IGNORECASE)
+ORDERED_LIST_PREFIX_PATTERN = re.compile(
+    r"^\s*(?:\(?\d+[A-Za-z]?\)?|[ivxlcdm]+)[.)]\s+", flags=re.IGNORECASE
+)
 UNORDERED_LIST_PREFIX_PATTERN = re.compile(r"^\s*[•◦▪▫‣⁃∙●○◾◽◼□■]\s*")
 MARKDOWN_LIST_ITEM_PATTERN = re.compile(r"^\s*(?:[-*+]|\d+[.)])\s+")
+
 
 def _render_heading_inline_node(node: Any, *, text_style: str | None = None) -> str:
     return render_html_inline_node(node, policy="heading", text_style=text_style)
@@ -97,7 +107,9 @@ def section_has_direct_renderable_content(
         if _is_figure_container(child):
             return True
         if child.name in {"div", "article", "main"}:
-            if child.find("section", recursive=False) is None and render_clean_text_from_html(child):
+            if child.find(
+                "section", recursive=False
+            ) is None and render_clean_text_from_html(child):
                 return True
     return False
 
@@ -168,10 +180,9 @@ def render_container_markdown(
             continue
         if child.name and HEADING_TAG_PATTERN.match(child.name):
             heading_text = render_heading_text_from_html(child)
-            if (
-                skip_first_heading
-                and normalize_section_title(heading_text) == normalize_section_title(skip_first_heading)
-            ):
+            if skip_first_heading and normalize_section_title(
+                heading_text
+            ) == normalize_section_title(skip_first_heading):
                 continue
             if heading_text:
                 lines.extend([f"{'#' * max(2, min(level, 6))} {heading_text}", ""])
@@ -194,7 +205,9 @@ def render_container_markdown(
                 except ValueError:
                     start = 1
             for index, item in enumerate(child.find_all("li", recursive=False)):
-                text = render_clean_text_from_html(item, collapse_prose_line_breaks=True)
+                text = render_clean_text_from_html(
+                    item, collapse_prose_line_breaks=True
+                )
                 if text:
                     if child.name == "ol":
                         text = ORDERED_LIST_PREFIX_PATTERN.sub("", text)
@@ -237,11 +250,16 @@ def _is_div_section_container(node: Any) -> bool:
         classes = {item.lower() for item in class_values.split()}
     else:
         classes = {normalize_text(str(item)).lower() for item in class_values}
-    return bool(classes & {"section", "section_2"}) and node.find(HEADING_TAG_PATTERN) is not None
+    return (
+        bool(classes & {"section", "section_2"})
+        and node.find(HEADING_TAG_PATTERN) is not None
+    )
 
 
 def render_figure_markdown(node: Any, lines: list[str]) -> None:
-    render_html_figure_markdown(node, lines, render_clean_text=render_clean_text_from_html)
+    render_html_figure_markdown(
+        node, lines, render_clean_text=render_clean_text_from_html
+    )
 
 
 def _has_explicit_citation_marker(node: Any) -> bool:
@@ -256,11 +274,15 @@ def _numeric_citation_payload_from_html(node: Any) -> str | None:
     if payload is None:
         return None
     href = normalize_text(str(node.get("href") or ""))
-    if node.name == "a" and (_has_explicit_citation_marker(node) or is_citation_link(href, text)):
+    if node.name == "a" and (
+        _has_explicit_citation_marker(node) or is_citation_link(href, text)
+    ):
         return payload
     if node.name == "sup":
         anchors = [match for match in node.find_all("a") if isinstance(match, Tag)]
-        if anchors and all(_numeric_citation_payload_from_html(anchor) for anchor in anchors):
+        if anchors and all(
+            _numeric_citation_payload_from_html(anchor) for anchor in anchors
+        ):
             return payload
     return None
 
@@ -279,7 +301,9 @@ def _is_linebreak_sensitive_markdown_block(block: str) -> bool:
 
 
 def normalize_prose_markdown_line_breaks(text: str) -> str:
-    normalized = MARKDOWN_BLANK_RUN_PATTERN.sub("\n\n", text.replace("\r\n", "\n").replace("\r", "\n"))
+    normalized = MARKDOWN_BLANK_RUN_PATTERN.sub(
+        "\n\n", text.replace("\r\n", "\n").replace("\r", "\n")
+    )
     parts = re.split(r"(\n\s*\n)", normalized)
     collapsed: list[str] = []
     for part in parts:
@@ -295,7 +319,9 @@ def normalize_prose_markdown_line_breaks(text: str) -> str:
     return normalize_text("".join(collapsed))
 
 
-def render_clean_text_from_html(node: Any, *, collapse_prose_line_breaks: bool = False) -> str:
+def render_clean_text_from_html(
+    node: Any, *, collapse_prose_line_breaks: bool = False
+) -> str:
     rendered = render_clean_html_node(node)
     rendered = INLINE_IMAGE_SPACING_PATTERN.sub(r" \1", rendered)
     rendered = INLINE_WHITESPACE_PATTERN.sub(" ", rendered)
@@ -347,7 +373,9 @@ def _is_inline_html_node(node: Any) -> bool:
     if not isinstance(node, Tag):
         return False
     name = normalize_text(node.name or "").lower()
-    return bool(name) and name not in HTML_BLOCK_TAGS and name not in {"figure", "table"}
+    return (
+        bool(name) and name not in HTML_BLOCK_TAGS and name not in {"figure", "table"}
+    )
 
 
 def _raw_inline_markdown_from_node(node: Any) -> str | None:

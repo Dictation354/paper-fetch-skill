@@ -27,7 +27,9 @@ class AssetDownloadKind:
     failure_template: Callable[..., dict[str, Any]]
     output_subdir: Callable[[Mapping[str, Any]], Path | None]
     file_document_fetcher_kind: Literal["image", "file"]
-    request_headers: Callable[[Mapping[str, str] | None, str, Mapping[str, Any] | None], dict[str, str]]
+    request_headers: Callable[
+        [Mapping[str, str] | None, str, Mapping[str, Any] | None], dict[str, str]
+    ]
 
 
 def _dedupe_asset_urls(asset: Mapping[str, Any], fields: tuple[str, ...]) -> list[str]:
@@ -47,7 +49,9 @@ def requires_image_payload(asset: Mapping[str, Any]) -> bool:
     return kind in {"figure", "table", "formula"} and section != "supplementary"
 
 
-def is_preview_candidate(candidate_url: str, *, preview_url: str, full_size_url: str) -> bool:
+def is_preview_candidate(
+    candidate_url: str, *, preview_url: str, full_size_url: str
+) -> bool:
     normalized_candidate = normalize_text(candidate_url)
     if not normalized_candidate or not preview_url:
         return False
@@ -67,8 +71,14 @@ def resolved_full_size_url(
     direct_full_size_url = normalize_text(str(asset.get("full_size_url") or ""))
     if direct_full_size_url:
         return direct_full_size_url
-    primary_url = normalize_text(str(asset.get("url") or asset.get("original_url") or asset.get("link") or ""))
-    if primary_url and primary_url != preview_url and looks_like_full_size_asset_url(primary_url.lower()):
+    primary_url = normalize_text(
+        str(asset.get("url") or asset.get("original_url") or asset.get("link") or "")
+    )
+    if (
+        primary_url
+        and primary_url != preview_url
+        and looks_like_full_size_asset_url(primary_url.lower())
+    ):
         return primary_url
     for candidate_url in candidate_urls:
         candidate = normalize_text(candidate_url)
@@ -85,7 +95,9 @@ def active_seed_urls(
         normalized
         for normalized in [
             *[normalize_text(item) for item in seed_urls or []],
-            normalize_text(str((browser_context_seed or {}).get("browser_final_url") or "")),
+            normalize_text(
+                str((browser_context_seed or {}).get("browser_final_url") or "")
+            ),
         ]
         if normalized
     ]
@@ -101,8 +113,11 @@ def failure_from_document_fetch(
         return kind.failure_template(
             asset,
             candidate_url,
-            reason=normalize_text(str(fetch_failure.get("reason") or "")) or "file_fetch_error",
-            status=fetch_failure.get("status") if isinstance(fetch_failure.get("status"), int) else None,
+            reason=normalize_text(str(fetch_failure.get("reason") or ""))
+            or "file_fetch_error",
+            status=fetch_failure.get("status")
+            if isinstance(fetch_failure.get("status"), int)
+            else None,
             content_type=normalize_text(str(fetch_failure.get("content_type") or "")),
             final_url=normalize_text(str(fetch_failure.get("final_url") or "")),
             extra=fetch_failure,
@@ -110,20 +125,35 @@ def failure_from_document_fetch(
     return kind.failure_template(
         asset,
         candidate_url,
-        reason=normalize_text(str(fetch_failure.get("reason") or "")) or "image_fetch_error",
-        status=fetch_failure.get("status") if isinstance(fetch_failure.get("status"), int) else None,
+        reason=normalize_text(str(fetch_failure.get("reason") or ""))
+        or "image_fetch_error",
+        status=fetch_failure.get("status")
+        if isinstance(fetch_failure.get("status"), int)
+        else None,
         content_type=normalize_text(str(fetch_failure.get("content_type") or "")),
         final_url=normalize_text(str(fetch_failure.get("final_url") or "")),
         title_snippet=normalize_text(str(fetch_failure.get("title_snippet") or "")),
         body_snippet=normalize_text(str(fetch_failure.get("body_snippet") or "")),
         recovery_attempts=(
-            list(fetch_failure.get("recovery_attempts"))
-            if isinstance(fetch_failure.get("recovery_attempts"), list)
+            list(recovery_attempts)
+            if isinstance(
+                recovery_attempts := fetch_failure.get("recovery_attempts"), list
+            )
             else None
         ),
         canvas_error=normalize_text(str(fetch_failure.get("canvas_error") or "")),
-        error_type=normalize_text(str(fetch_failure.get("error_type") or fetch_failure.get("exception_type") or "")),
-        error_message=normalize_text(str(fetch_failure.get("error_message") or fetch_failure.get("message") or "")),
+        error_type=normalize_text(
+            str(
+                fetch_failure.get("error_type")
+                or fetch_failure.get("exception_type")
+                or ""
+            )
+        ),
+        error_message=normalize_text(
+            str(
+                fetch_failure.get("error_message") or fetch_failure.get("message") or ""
+            )
+        ),
     )
 
 
@@ -255,7 +285,9 @@ def _supplementary_template(
 ) -> dict[str, Any]:
     failure: dict[str, Any] = {
         "kind": "supplementary",
-        "heading": asset.get("heading") or asset.get("filename_hint") or "Supplementary Material",
+        "heading": asset.get("heading")
+        or asset.get("filename_hint")
+        or "Supplementary Material",
         "caption": asset.get("caption", ""),
         "source_url": source_url,
         "reason": reason,
@@ -294,7 +326,9 @@ def _supplementary_template(
     return failure
 
 
-def _supplementary_response_block_reason(content_type: str | None, body: bytes) -> str | None:
+def _supplementary_response_block_reason(
+    content_type: str | None, body: bytes
+) -> str | None:
     if not body:
         return "empty_response_body"
     return supplementary_response_block_reason(content_type, body)
@@ -312,8 +346,16 @@ def _base_request_headers(
     browser_context_seed: Mapping[str, Any] | None,
 ) -> dict[str, str]:
     request_headers = {"User-Agent": user_agent, "Accept": "*/*"}
-    request_headers.update({str(key): str(value) for key, value in (headers or {}).items() if value is not None})
-    active_user_agent = normalize_text(str((browser_context_seed or {}).get("browser_user_agent") or ""))
+    request_headers.update(
+        {
+            str(key): str(value)
+            for key, value in (headers or {}).items()
+            if value is not None
+        }
+    )
+    active_user_agent = normalize_text(
+        str((browser_context_seed or {}).get("browser_user_agent") or "")
+    )
     if active_user_agent:
         request_headers["User-Agent"] = active_user_agent
     elif not normalize_text(request_headers.get("User-Agent")):

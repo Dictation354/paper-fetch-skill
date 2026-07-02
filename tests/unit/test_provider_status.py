@@ -15,6 +15,7 @@ from paper_fetch.providers.crossref import CrossrefClient
 from paper_fetch.providers.elsevier import ElsevierClient
 from paper_fetch.providers.ieee import IeeeClient
 from paper_fetch.providers.pnas import PnasClient
+from paper_fetch.providers.royalsocietypublishing import RoyalsocietypublishingClient
 from paper_fetch.providers.science import ScienceClient
 from paper_fetch.providers.springer import SpringerClient
 from paper_fetch.providers.wiley import WILEY_TDM_CLIENT_TOKEN_ENV_VAR, WileyClient
@@ -36,6 +37,8 @@ class ProviderStatusTests(unittest.TestCase):
             return AmsClient(DummyTransport(), env)
         if provider == "science":
             return ScienceClient(DummyTransport(), env)
+        if provider == "royalsocietypublishing":
+            return RoyalsocietypublishingClient(DummyTransport(), env)
         return PnasClient(DummyTransport(), env)
 
     def test_crossref_without_mailto_is_ready_with_note(self) -> None:
@@ -164,7 +167,7 @@ class ProviderStatusTests(unittest.TestCase):
         self.assertTrue(all(check.status == "ok" for check in checks.values()))
 
     def test_browser_workflow_providers_are_ready_with_cdp_endpoint(self) -> None:
-        for provider in ("science", "pnas", "acs", "aip"):
+        for provider in ("science", "pnas", "acs", "aip", "royalsocietypublishing"):
             with (
                 self.subTest(provider=provider),
                 mock.patch.object(
@@ -227,7 +230,14 @@ class ProviderStatusTests(unittest.TestCase):
     def test_browser_workflow_providers_missing_cloakbrowser_are_not_configured(
         self,
     ) -> None:
-        for provider in ("science", "pnas", "ams", "acs", "aip"):
+        for provider in (
+            "science",
+            "pnas",
+            "ams",
+            "acs",
+            "aip",
+            "royalsocietypublishing",
+        ):
             with (
                 self.subTest(provider=provider),
                 mock.patch.object(
@@ -246,7 +256,10 @@ class ProviderStatusTests(unittest.TestCase):
     def test_browser_workflow_provider_ignores_legacy_invalid_cloakbrowser_binary_path(
         self,
     ) -> None:
-        env = {**CDP_ENV, config.CLOAKBROWSER_BINARY_PATH_ENV_VAR: "/definitely/missing/chrome"}
+        env = {
+            **CDP_ENV,
+            config.CLOAKBROWSER_BINARY_PATH_ENV_VAR: "/definitely/missing/chrome",
+        }
         with mock.patch.object(
             _cloakbrowser, "_dependency_available", return_value=True
         ):
@@ -292,7 +305,7 @@ class ProviderStatusTests(unittest.TestCase):
         self.assertEqual(checks["playwright_dependency"].status, "ok")
 
     def test_browser_workflow_providers_ignore_unrelated_rate_limit_env(self) -> None:
-        for provider in ("science", "pnas", "acs", "aip"):
+        for provider in ("science", "pnas", "acs", "aip", "royalsocietypublishing"):
             with self.subTest(provider=provider):
                 env = {**CDP_ENV, "PAPER_FETCH_UNUSED_RATE_LIMIT_SECONDS": "60"}
 
@@ -307,7 +320,7 @@ class ProviderStatusTests(unittest.TestCase):
                 self.assertNotIn("rate_limit_window", checks)
 
     def test_browser_workflow_providers_ready_status_checks_all_pass(self) -> None:
-        for provider in ("science", "pnas", "acs", "aip"):
+        for provider in ("science", "pnas", "acs", "aip", "royalsocietypublishing"):
             with (
                 self.subTest(provider=provider),
                 mock.patch.object(

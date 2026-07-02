@@ -11,9 +11,15 @@ from ..utils import normalize_text
 
 IEEE_BASE_URL = "https://ieeexplore.ieee.org"
 IEEE_DOCUMENT_URL_TEMPLATE = IEEE_BASE_URL + "/document/{article_number}/"
-IEEE_REST_URL_TEMPLATE = IEEE_BASE_URL + "/rest/document/{article_number}/?logAccess=true"
-IEEE_REFERENCES_URL_TEMPLATE = IEEE_BASE_URL + "/rest/document/{article_number}/references"
-IEEE_MULTIMEDIA_URL_TEMPLATE = IEEE_BASE_URL + "/rest/document/{article_number}/multimedia"
+IEEE_REST_URL_TEMPLATE = (
+    IEEE_BASE_URL + "/rest/document/{article_number}/?logAccess=true"
+)
+IEEE_REFERENCES_URL_TEMPLATE = (
+    IEEE_BASE_URL + "/rest/document/{article_number}/references"
+)
+IEEE_MULTIMEDIA_URL_TEMPLATE = (
+    IEEE_BASE_URL + "/rest/document/{article_number}/multimedia"
+)
 IEEE_STAMP_URL_TEMPLATE = IEEE_BASE_URL + "/stamp/stamp.jsp?arnumber={article_number}"
 IEEE_SUPPORT_ICON_PATH = "/assets/img/icon.support.gif"
 IEEE_MEDIASTORE_PATH_PREFIX = "/mediastore/ieee/content/media/"
@@ -22,7 +28,9 @@ IEEE_MEDIASTORE_PATH_PREFIX = "/mediastore/ieee/content/media/"
 # `/document/{article_number}/` URL contract. Other IEEE URLs expose the same
 # number in query params or REST paths, but those are handled by metadata fields
 # or explicit route builders instead of this landing URL parser.
-IEEE_ARTICLE_NUMBER_PATH_PATTERN = re.compile(r"^/document/(?P<article_number>\d+)(?:/|$)")
+IEEE_ARTICLE_NUMBER_PATH_PATTERN = re.compile(
+    r"^/document/(?P<article_number>\d+)(?:/|$)"
+)
 
 
 def _article_number_from_url(url: str | None) -> str:
@@ -89,9 +97,15 @@ def _pdf_candidates(landing_attempt: Any) -> list[str]:
     metadata = landing_attempt.merged_metadata
     candidates: list[str] = []
     for key in ("pdfUrl", "pdfPath"):
-        value = normalize_text(str(metadata.get(key) or landing_attempt.landing_metadata.get(key) or ""))
+        value = normalize_text(
+            str(metadata.get(key) or landing_attempt.landing_metadata.get(key) or "")
+        )
         if value:
             candidates.append(urllib.parse.urljoin(IEEE_BASE_URL, value))
     if landing_attempt.article_number:
-        candidates.append(IEEE_STAMP_URL_TEMPLATE.format(article_number=landing_attempt.article_number))
+        candidates.append(
+            IEEE_STAMP_URL_TEMPLATE.format(
+                article_number=landing_attempt.article_number
+            )
+        )
     return _dedupe_urls(candidates)

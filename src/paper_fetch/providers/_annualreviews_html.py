@@ -32,7 +32,10 @@ from ..quality.html_availability import (
     availability_failure_message,
 )
 from ..utils import normalize_text
-from ._html_section_markdown import render_clean_text_from_html, render_container_markdown
+from ._html_section_markdown import (
+    render_clean_text_from_html,
+    render_container_markdown,
+)
 
 
 ANNUALREVIEWS_ARTICLE_SELECTORS = (
@@ -84,9 +87,7 @@ ANNUALREVIEWS_FRONT_MATTER_EXACT_TEXTS = (
     "Download PDF",
     "Toggle display:",
 )
-ANNUALREVIEWS_FRONT_MATTER_CONTAINS_TOKENS = (
-    "Access provided by:",
-)
+ANNUALREVIEWS_FRONT_MATTER_CONTAINS_TOKENS = ("Access provided by:",)
 ANNUALREVIEWS_POST_CONTENT_BREAK_TOKENS: tuple[str, ...] = ()
 ANNUALREVIEWS_SUPPLEMENTARY_TEXT_TOKENS: tuple[str, ...] = ()
 ANNUALREVIEWS_SITE_RULE_OVERRIDES: dict[str, object] = {}
@@ -287,7 +288,9 @@ def _normalize_section_headings(container: Tag) -> None:
             continue
         label_node = lowest.find_previous_sibling(class_="label")
         label = _node_text(label_node if isinstance(label_node, Tag) else None)
-        title = _canonical_heading(" ".join(item for item in (label, _node_text(lowest)) if item))
+        title = _canonical_heading(
+            " ".join(item for item in (label, _node_text(lowest)) if item)
+        )
         if isinstance(label_node, Tag):
             label_node.decompose()
         if title:
@@ -352,11 +355,15 @@ def _figure_caption(figure: Tag) -> str:
 
 
 def _normalize_figures(container: Tag, source_url: str) -> None:
-    for figure in list(container.select(".html-fulltext-responsive-figure, div.figure")):
+    for figure in list(
+        container.select(".html-fulltext-responsive-figure, div.figure")
+    ):
         if not isinstance(figure, Tag):
             continue
         figure.name = "figure"
-        for node in list(figure.select(".downloadAsPptContainer, .figure-duplicate-label")):
+        for node in list(
+            figure.select(".downloadAsPptContainer, .figure-duplicate-label")
+        ):
             if isinstance(node, Tag):
                 node.decompose()
         for anchor in list(figure.find_all("a", href=True)):
@@ -391,7 +398,9 @@ def _normalize_figures(container: Tag, source_url: str) -> None:
             image["data-full-size"] = full_size
         if figure_url:
             image[INLINE_FIGURE_SRC_ATTR] = figure_url
-        image[INLINE_FIGURE_ALT_ATTR] = caption or normalize_text(str(image.get("alt") or "Figure")) or "Figure"
+        image[INLINE_FIGURE_ALT_ATTR] = (
+            caption or normalize_text(str(image.get("alt") or "Figure")) or "Figure"
+        )
 
 
 def _table_cell_text(cell: Tag) -> str:
@@ -535,7 +544,9 @@ def _cleaned_article_html_from_soup(
     title = _extract_page_title_from_soup(soup, metadata=html_metadata)
     container_text_length = len(_node_text(cleaned))
     section_hints = collect_html_section_hints(cleaned, title=title)
-    abstract_sections = _abstract_sections(cleaned, html_metadata or parse_html_metadata(html_text, source_url))
+    abstract_sections = _abstract_sections(
+        cleaned, html_metadata or parse_html_metadata(html_text, source_url)
+    )
     article_soup = BeautifulSoup("<article></article>", choose_parser())
     article = article_soup.find("article")
     if not isinstance(article, Tag):
@@ -547,7 +558,9 @@ def _cleaned_article_html_from_soup(
     return str(article), title, container_text_length, section_hints, abstract_sections
 
 
-def _abstract_sections(container: Tag, html_metadata: Mapping[str, Any]) -> list[dict[str, str]]:
+def _abstract_sections(
+    container: Tag, html_metadata: Mapping[str, Any]
+) -> list[dict[str, str]]:
     abstract_node = container.select_one(".article-abstract")
     if isinstance(abstract_node, Tag):
         paragraphs = [
@@ -556,7 +569,9 @@ def _abstract_sections(container: Tag, html_metadata: Mapping[str, Any]) -> list
             if _node_text(paragraph)
         ]
         if paragraphs:
-            return [{"heading": "Abstract", "text": normalize_text(" ".join(paragraphs))}]
+            return [
+                {"heading": "Abstract", "text": normalize_text(" ".join(paragraphs))}
+            ]
     abstract = normalize_text(str(html_metadata.get("abstract") or ""))
     return [{"heading": "Abstract", "text": abstract}] if abstract else []
 
@@ -605,7 +620,9 @@ def annualreviews_normalize_markdown(text: str) -> str:
             continue
         if lowered in _NOISY_LINES:
             continue
-        if any(token.lower() in lowered for token in ANNUALREVIEWS_MARKDOWN_PROMO_TOKENS):
+        if any(
+            token.lower() in lowered for token in ANNUALREVIEWS_MARKDOWN_PROMO_TOKENS
+        ):
             if len(normalized) < 240:
                 continue
         cleaned_lines: list[str] = []
@@ -697,9 +714,11 @@ def _extract_keywords_from_soup(
 
 
 def extract_asset_html_scopes(html_text: str, source_url: str) -> tuple[str, str]:
-    article_html, _title, _container_text_length, _section_hints, _abstract_sections = _cleaned_article_html(
-        html_text,
-        source_url,
+    article_html, _title, _container_text_length, _section_hints, _abstract_sections = (
+        _cleaned_article_html(
+            html_text,
+            source_url,
+        )
     )
     return article_html, ""
 
@@ -771,11 +790,13 @@ def extract_markdown(
         html_metadata,
         doi=str((metadata or {}).get("doi") or html_metadata.get("doi") or "") or None,
     )
-    article_html, title, container_text_length, section_hints, abstract_sections = _cleaned_article_html_from_soup(
-        soup,
-        html_text,
-        source_url,
-        html_metadata=html_metadata,
+    article_html, title, container_text_length, section_hints, abstract_sections = (
+        _cleaned_article_html_from_soup(
+            soup,
+            html_text,
+            source_url,
+            html_metadata=html_metadata,
+        )
     )
     if not title:
         title = normalize_text(str(merged_metadata.get("title") or ""))
@@ -828,7 +849,9 @@ def extract_markdown(
 
     extraction_payload = {
         "title": title,
-        "abstract_text": normalize_text(abstract_sections[0]["text"]) if abstract_sections else None,
+        "abstract_text": normalize_text(abstract_sections[0]["text"])
+        if abstract_sections
+        else None,
         "abstract_sections": abstract_sections,
         "section_hints": section_hints,
         "container_tag": "article",

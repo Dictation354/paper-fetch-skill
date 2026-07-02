@@ -37,17 +37,33 @@ class ModelsRenderTests(unittest.TestCase):
     def test_short_image_alt_omits_caption_text_and_unbalanced_brackets(self) -> None:
         """rule: rule-short-markdown-image-alt-labels"""
 
-        caption = "Figure 4. Effect of the [IO 4 -] concentration on [EMIM][Ac] membranes."
-        listing_caption = "Listing 1. Partial script using [ndaccAlloc] in a simulation."
+        caption = (
+            "Figure 4. Effect of the [IO 4 -] concentration on [EMIM][Ac] membranes."
+        )
+        listing_caption = (
+            "Listing 1. Partial script using [ndaccAlloc] in a simulation."
+        )
 
         self.assertEqual(short_image_alt("figure", caption), "Figure 4")
-        self.assertEqual(render_markdown_image("figure", caption, "fig4.png"), "![Figure 4](fig4.png)")
+        self.assertEqual(
+            render_markdown_image("figure", caption, "fig4.png"),
+            "![Figure 4](fig4.png)",
+        )
         self.assertEqual(short_image_alt("figure", listing_caption), "Listing 1")
-        self.assertEqual(render_markdown_image("figure", listing_caption, "listing1.png"), "![Listing 1](listing1.png)")
-        self.assertEqual(short_image_alt("listing", "Listing A.1 caption"), "Listing A.1")
-        self.assertEqual(short_image_alt("table", "Table 2. [AO10] removal results"), "Table 2")
+        self.assertEqual(
+            render_markdown_image("figure", listing_caption, "listing1.png"),
+            "![Listing 1](listing1.png)",
+        )
+        self.assertEqual(
+            short_image_alt("listing", "Listing A.1 caption"), "Listing A.1"
+        )
+        self.assertEqual(
+            short_image_alt("table", "Table 2. [AO10] removal results"), "Table 2"
+        )
         self.assertEqual(short_image_alt("formula", "Equation (1)"), "Formula")
-        self.assertEqual(short_image_alt("unknown", "A caption with [brackets]"), "Image")
+        self.assertEqual(
+            short_image_alt("unknown", "A caption with [brackets]"), "Image"
+        )
 
         for alt in (
             short_image_alt("figure", caption),
@@ -66,21 +82,31 @@ class ModelsRenderTests(unittest.TestCase):
         article.sections = [
             Section(heading="Introduction", level=2, kind="body", text="Intro " * 150),
             Section(heading="Methods", level=2, kind="body", text="Methods " * 150),
-            Section(heading="Discussion", level=2, kind="body", text="Discussion " * 150),
+            Section(
+                heading="Discussion", level=2, kind="body", text="Discussion " * 150
+            ),
         ]
         markdown = article.to_ai_markdown(max_tokens=450)
 
         self.assertIn("**Abstract.**", markdown)
         self.assertIn("## Introduction", markdown)
         self.assertNotIn("## Discussion", markdown)
-        self.assertNotIn("Output truncated to satisfy token budget.", article.quality.warnings)
+        self.assertNotIn(
+            "Output truncated to satisfy token budget.", article.quality.warnings
+        )
 
-    def test_to_ai_markdown_omits_blank_frontmatter_and_does_not_mutate_warnings(self) -> None:
+    def test_to_ai_markdown_omits_blank_frontmatter_and_does_not_mutate_warnings(
+        self,
+    ) -> None:
         article = ArticleModel(
             doi=None,
             source="crossref_meta",
             metadata=Metadata(),
-            sections=[Section(heading="Introduction", level=2, kind="body", text="Intro " * 200)],
+            sections=[
+                Section(
+                    heading="Introduction", level=2, kind="body", text="Intro " * 200
+                )
+            ],
             references=[],
             assets=[],
             quality=Quality(
@@ -100,11 +126,23 @@ class ModelsRenderTests(unittest.TestCase):
         self.assertIn("# Untitled Article", markdown)
         self.assertEqual(article.quality.warnings, ["Existing warning"])
 
-    def test_to_ai_markdown_defaults_to_captions_only_without_supplementary_links(self) -> None:
+    def test_to_ai_markdown_defaults_to_captions_only_without_supplementary_links(
+        self,
+    ) -> None:
         article = sample_article()
         article.assets = [
-            Asset(kind="figure", heading="Figure 1", caption="Overview figure.", url="downloads/figure-1.png"),
-            Asset(kind="supplementary", heading="Supplementary Data", caption="Raw measurements.", url="downloads/supplement.csv"),
+            Asset(
+                kind="figure",
+                heading="Figure 1",
+                caption="Overview figure.",
+                url="downloads/figure-1.png",
+            ),
+            Asset(
+                kind="supplementary",
+                heading="Supplementary Data",
+                caption="Raw measurements.",
+                url="downloads/supplement.csv",
+            ),
         ]
 
         markdown = article.to_ai_markdown()
@@ -118,10 +156,33 @@ class ModelsRenderTests(unittest.TestCase):
     def test_to_ai_markdown_body_profile_renders_body_assets_only(self) -> None:
         article = sample_article()
         article.assets = [
-            Asset(kind="figure", heading="Figure 1. Body figure.", caption="Body figure.", path="downloads/figure-1.png", section="body"),
-            Asset(kind="figure", heading="Figure A1", caption="Appendix figure.", path="downloads/figure-a1.png", section="appendix"),
-            Asset(kind="table", heading="Table 1. Body table.", caption="Body table.", path="downloads/table-1.png", section="body"),
-            Asset(kind="supplementary", heading="Supplementary Data", caption="Raw measurements.", path="downloads/supplement.csv"),
+            Asset(
+                kind="figure",
+                heading="Figure 1. Body figure.",
+                caption="Body figure.",
+                path="downloads/figure-1.png",
+                section="body",
+            ),
+            Asset(
+                kind="figure",
+                heading="Figure A1",
+                caption="Appendix figure.",
+                path="downloads/figure-a1.png",
+                section="appendix",
+            ),
+            Asset(
+                kind="table",
+                heading="Table 1. Body table.",
+                caption="Body table.",
+                path="downloads/table-1.png",
+                section="body",
+            ),
+            Asset(
+                kind="supplementary",
+                heading="Supplementary Data",
+                caption="Raw measurements.",
+                path="downloads/supplement.csv",
+            ),
         ]
 
         markdown = article.to_ai_markdown(asset_profile="body")
@@ -132,12 +193,28 @@ class ModelsRenderTests(unittest.TestCase):
         self.assertNotIn("Figure A1", markdown)
         self.assertNotIn("## Supplementary Materials", markdown)
 
-    def test_to_ai_markdown_skips_inline_assets_and_labels_additional_tables(self) -> None:
+    def test_to_ai_markdown_skips_inline_assets_and_labels_additional_tables(
+        self,
+    ) -> None:
         """rule: rule-elsevier-consumed-figure-table-dedup"""
         article = sample_article()
         article.assets = [
-            Asset(kind="table", heading="Table 1", caption="Inline table.", path="downloads/table-1.png", section="body", render_state="inline"),
-            Asset(kind="table", heading="Table 2", caption="Floating table.", path="downloads/table-2.png", section="body", render_state="appendix"),
+            Asset(
+                kind="table",
+                heading="Table 1",
+                caption="Inline table.",
+                path="downloads/table-1.png",
+                section="body",
+                render_state="inline",
+            ),
+            Asset(
+                kind="table",
+                heading="Table 2",
+                caption="Floating table.",
+                path="downloads/table-2.png",
+                section="body",
+                render_state="appendix",
+            ),
         ]
 
         markdown = article.to_ai_markdown(asset_profile="body")
@@ -146,8 +223,15 @@ class ModelsRenderTests(unittest.TestCase):
         self.assertIn("## Additional Tables", markdown)
         self.assertIn("![Table 2](downloads/table-2.png)", markdown)
 
-    def test_table_like_figure_detection_keeps_nature_extended_data_as_explicit_extension(self) -> None:
-        figure_asset = Asset(kind="figure", heading="Extended Data Table 1", caption="", path="downloads/table.png")
+    def test_table_like_figure_detection_keeps_nature_extended_data_as_explicit_extension(
+        self,
+    ) -> None:
+        figure_asset = Asset(
+            kind="figure",
+            heading="Extended Data Table 1",
+            caption="",
+            path="downloads/table.png",
+        )
 
         self.assertTrue(is_table_like_figure_asset(figure_asset))
 
@@ -179,7 +263,9 @@ class ModelsRenderTests(unittest.TestCase):
 
     def test_to_ai_markdown_full_text_respects_explicit_include_refs(self) -> None:
         article = sample_article()
-        article.references = [Reference(raw=f"Reference {index}") for index in range(1, 13)]
+        article.references = [
+            Reference(raw=f"Reference {index}") for index in range(1, 13)
+        ]
 
         markdown = article.to_ai_markdown(include_refs="top10")
 
@@ -189,20 +275,41 @@ class ModelsRenderTests(unittest.TestCase):
 
     def test_to_ai_markdown_full_text_matches_large_budget_rendering(self) -> None:
         article = sample_article()
-        article.references = [Reference(raw=f"Reference {index}") for index in range(1, 4)]
+        article.references = [
+            Reference(raw=f"Reference {index}") for index in range(1, 4)
+        ]
         article.assets = [
-            Asset(kind="figure", heading="Figure 1", caption="Overview figure.", path="downloads/figure-1.png", section="body"),
-            Asset(kind="supplementary", heading="Supplementary Data", caption="Raw measurements.", path="downloads/supplement.csv"),
+            Asset(
+                kind="figure",
+                heading="Figure 1",
+                caption="Overview figure.",
+                path="downloads/figure-1.png",
+                section="body",
+            ),
+            Asset(
+                kind="supplementary",
+                heading="Supplementary Data",
+                caption="Raw measurements.",
+                path="downloads/supplement.csv",
+            ),
         ]
 
-        full_text_markdown = article.to_ai_markdown(include_refs="all", asset_profile="all", max_tokens="full_text")
-        large_budget_markdown = article.to_ai_markdown(include_refs="all", asset_profile="all", max_tokens=100000)
+        full_text_markdown = article.to_ai_markdown(
+            include_refs="all", asset_profile="all", max_tokens="full_text"
+        )
+        large_budget_markdown = article.to_ai_markdown(
+            include_refs="all", asset_profile="all", max_tokens=100000
+        )
 
         self.assertEqual(full_text_markdown, large_budget_markdown)
 
-    def test_to_ai_markdown_preserves_significance_before_abstract_and_body(self) -> None:
+    def test_to_ai_markdown_preserves_significance_before_abstract_and_body(
+        self,
+    ) -> None:
         article = sample_article()
-        article.metadata.abstract = "Abstract summary stays distinct from the significance statement."
+        article.metadata.abstract = (
+            "Abstract summary stays distinct from the significance statement."
+        )
         article.sections = [
             Section(
                 heading="Significance",
@@ -223,10 +330,16 @@ class ModelsRenderTests(unittest.TestCase):
         self.assertIn("## Significance", markdown)
         self.assertIn("## Abstract", markdown)
         self.assertNotIn("**Abstract.**", markdown)
-        self.assertLess(markdown.index("## Significance"), markdown.index("## Abstract"))
-        self.assertLess(markdown.index("## Abstract"), markdown.index("## Results and Discussion"))
+        self.assertLess(
+            markdown.index("## Significance"), markdown.index("## Abstract")
+        )
+        self.assertLess(
+            markdown.index("## Abstract"), markdown.index("## Results and Discussion")
+        )
 
-    def test_to_ai_markdown_inline_figures_fall_back_to_captions_without_links(self) -> None:
+    def test_to_ai_markdown_inline_figures_fall_back_to_captions_without_links(
+        self,
+    ) -> None:
         article = sample_article()
         article.assets = [
             Asset(kind="figure", heading="Figure 1", caption="Overview figure."),
@@ -238,7 +351,9 @@ class ModelsRenderTests(unittest.TestCase):
         self.assertIn("- Figure 1: Overview figure.", markdown)
         self.assertNotIn("![Figure 1]", markdown)
 
-    def test_to_ai_markdown_suppresses_trailing_figures_for_body_figures_already_inline(self) -> None:
+    def test_to_ai_markdown_suppresses_trailing_figures_for_body_figures_already_inline(
+        self,
+    ) -> None:
         """rule: rule-no-trailing-figures-appendix"""
         article = sample_article()
         article.sections = [
@@ -258,8 +373,20 @@ class ModelsRenderTests(unittest.TestCase):
             )
         ]
         article.assets = [
-            Asset(kind="figure", heading="Figure 1", caption="Inline caption text.", path="/tmp/figure-1.png", section="body"),
-            Asset(kind="figure", heading="Figure A1", caption="Appendix figure.", path="/tmp/figure-a1.png", section="appendix"),
+            Asset(
+                kind="figure",
+                heading="Figure 1",
+                caption="Inline caption text.",
+                path="/tmp/figure-1.png",
+                section="body",
+            ),
+            Asset(
+                kind="figure",
+                heading="Figure A1",
+                caption="Appendix figure.",
+                path="/tmp/figure-a1.png",
+                section="appendix",
+            ),
         ]
 
         markdown = article.to_ai_markdown(asset_profile="body", max_tokens="full_text")
@@ -269,7 +396,9 @@ class ModelsRenderTests(unittest.TestCase):
         self.assertNotIn("- Figure 1: Inline caption text.", markdown)
         self.assertNotIn("Figure A1", markdown)
 
-    def test_to_ai_markdown_suppresses_trailing_figures_for_inline_relative_asset_suffix(self) -> None:
+    def test_to_ai_markdown_suppresses_trailing_figures_for_inline_relative_asset_suffix(
+        self,
+    ) -> None:
         article = sample_article()
         article.sections = [
             Section(
@@ -304,7 +433,9 @@ class ModelsRenderTests(unittest.TestCase):
         self.assertNotIn("## Figures", markdown)
         self.assertNotIn("- Figure 1: Inline science caption text.", markdown)
 
-    def test_to_ai_markdown_keeps_unmatched_body_figures_in_trailing_fallback_block(self) -> None:
+    def test_to_ai_markdown_keeps_unmatched_body_figures_in_trailing_fallback_block(
+        self,
+    ) -> None:
         article = sample_article()
         article.sections = [
             Section(
@@ -323,8 +454,20 @@ class ModelsRenderTests(unittest.TestCase):
             )
         ]
         article.assets = [
-            Asset(kind="figure", heading="Figure 1", caption="Inline caption text.", path="/tmp/figure-1.png", section="body"),
-            Asset(kind="figure", heading="Figure 2", caption="Unmatched caption text.", path="/tmp/figure-2.png", section="body"),
+            Asset(
+                kind="figure",
+                heading="Figure 1",
+                caption="Inline caption text.",
+                path="/tmp/figure-1.png",
+                section="body",
+            ),
+            Asset(
+                kind="figure",
+                heading="Figure 2",
+                caption="Unmatched caption text.",
+                path="/tmp/figure-2.png",
+                section="body",
+            ),
         ]
 
         markdown = article.to_ai_markdown(asset_profile="body", max_tokens="full_text")
@@ -334,7 +477,9 @@ class ModelsRenderTests(unittest.TestCase):
         self.assertNotIn("- Figure 1: Inline caption text.", markdown)
         self.assertIn("![Figure 2](/tmp/figure-2.png)", markdown)
 
-    def test_to_ai_markdown_skips_table_like_pseudo_figures_from_trailing_figures_block(self) -> None:
+    def test_to_ai_markdown_skips_table_like_pseudo_figures_from_trailing_figures_block(
+        self,
+    ) -> None:
         article = sample_article()
         article.sections = [
             Section(
@@ -359,7 +504,13 @@ class ModelsRenderTests(unittest.TestCase):
             )
         ]
         article.assets = [
-            Asset(kind="figure", heading="Figure 1", caption="Inline caption text.", path="/tmp/figure-1.png", section="body"),
+            Asset(
+                kind="figure",
+                heading="Figure 1",
+                caption="Inline caption text.",
+                path="/tmp/figure-1.png",
+                section="body",
+            ),
             Asset(
                 kind="figure",
                 heading="Table 1 Performance summary",
@@ -374,19 +525,35 @@ class ModelsRenderTests(unittest.TestCase):
         self.assertIn("**Table 1.** Inline table caption.", markdown)
         self.assertNotIn("## Figures", markdown)
 
-    def test_build_fetch_envelope_default_markdown_uses_captions_only_and_no_supplementary_links(self) -> None:
+    def test_build_fetch_envelope_default_markdown_uses_captions_only_and_no_supplementary_links(
+        self,
+    ) -> None:
         article = sample_article()
         article.assets = [
-            Asset(kind="figure", heading="Figure 1", caption="Overview figure.", url="downloads/figure-1.png"),
-            Asset(kind="supplementary", heading="Supplementary Data", caption="Raw measurements.", url="downloads/supplement.csv"),
+            Asset(
+                kind="figure",
+                heading="Figure 1",
+                caption="Overview figure.",
+                url="downloads/figure-1.png",
+            ),
+            Asset(
+                kind="supplementary",
+                heading="Supplementary Data",
+                caption="Raw measurements.",
+                url="downloads/supplement.csv",
+            ),
         ]
 
-        envelope = paper_fetch.build_fetch_envelope(article, modes={"article", "markdown"}, render=RenderOptions())
+        envelope = paper_fetch.build_fetch_envelope(
+            article, modes={"article", "markdown"}, render=RenderOptions()
+        )
 
         assert envelope.markdown is not None
         self.assertIn("- Figure 1: Overview figure.", envelope.markdown)
         self.assertNotIn("![Figure 1](downloads/figure-1.png)", envelope.markdown)
-        self.assertNotIn("[Supplementary Data](downloads/supplement.csv)", envelope.markdown)
+        self.assertNotIn(
+            "[Supplementary Data](downloads/supplement.csv)", envelope.markdown
+        )
         self.assertEqual(envelope.quality.extraction_revision, EXTRACTION_REVISION)
         self.assertEqual(envelope.quality.content_kind, article.quality.content_kind)
 
@@ -453,7 +620,10 @@ class ModelsRenderTests(unittest.TestCase):
             ),
         )
 
-        self.assertEqual([section.heading for section in article.sections], ["Results", "Primary outcome"])
+        self.assertEqual(
+            [section.heading for section in article.sections],
+            ["Results", "Primary outcome"],
+        )
         rendered = article.to_ai_markdown(max_tokens="full_text")
         self.assertIn("## Results\n\n### Primary outcome", rendered)
 
@@ -482,12 +652,16 @@ class ModelsRenderTests(unittest.TestCase):
             "$$![Figure 3](figure-3.png)"
         )
 
-        self.assertIn("### Vocabulary Development\n\n![Figure 1](figure-1.png)", normalized)
+        self.assertIn(
+            "### Vocabulary Development\n\n![Figure 1](figure-1.png)", normalized
+        )
         self.assertIn("Body text\n\n![Figure 2](figure-2.png)", normalized)
         self.assertIn("$$\n\n![Figure 3](figure-3.png)", normalized)
         self.assertNotIn("Development![Figure", normalized)
 
-    def test_to_ai_markdown_separates_adjacent_section_images_after_asset_rewrites(self) -> None:
+    def test_to_ai_markdown_separates_adjacent_section_images_after_asset_rewrites(
+        self,
+    ) -> None:
         article = sample_article()
         article.sections = [
             Section(
@@ -498,15 +672,24 @@ class ModelsRenderTests(unittest.TestCase):
             )
         ]
         article.assets = [
-            Asset(kind="figure", heading="Figure 2", path="/tmp/figure-2.png", section="body"),
+            Asset(
+                kind="figure",
+                heading="Figure 2",
+                path="/tmp/figure-2.png",
+                section="body",
+            ),
         ]
 
         rendered = article.to_ai_markdown(asset_profile="body", max_tokens="full_text")
 
-        self.assertIn("**Figure 1.** Caption text.\n\n![Figure 2](/tmp/figure-2.png)", rendered)
+        self.assertIn(
+            "**Figure 1.** Caption text.\n\n![Figure 2](/tmp/figure-2.png)", rendered
+        )
         self.assertNotIn("text.![Figure", rendered)
 
-    def test_article_from_markdown_rewrites_inline_asset_urls_to_downloaded_paths(self) -> None:
+    def test_article_from_markdown_rewrites_inline_asset_urls_to_downloaded_paths(
+        self,
+    ) -> None:
         """rule: rule-preserve-formula-image-fallbacks"""
         article = article_from_markdown(
             source="springer_html",
@@ -526,10 +709,16 @@ class ModelsRenderTests(unittest.TestCase):
             ],
         )
 
-        self.assertIn("![Formula](/tmp/downloads/IEq1_HTML.jpg)", article.sections[0].text)
-        self.assertNotIn("https://media.example.test/math/IEq1_HTML.jpg", article.sections[0].text)
+        self.assertIn(
+            "![Formula](/tmp/downloads/IEq1_HTML.jpg)", article.sections[0].text
+        )
+        self.assertNotIn(
+            "https://media.example.test/math/IEq1_HTML.jpg", article.sections[0].text
+        )
 
-    def test_article_from_markdown_rewrites_inline_asset_urls_with_short_alt(self) -> None:
+    def test_article_from_markdown_rewrites_inline_asset_urls_with_short_alt(
+        self,
+    ) -> None:
         article = article_from_markdown(
             source="springer_html",
             metadata={"title": "Structured Article"},
@@ -549,10 +738,14 @@ class ModelsRenderTests(unittest.TestCase):
             ],
         )
 
-        self.assertIn("![Figure 4](/tmp/downloads/Fig4_HTML.png)", article.sections[0].text)
+        self.assertIn(
+            "![Figure 4](/tmp/downloads/Fig4_HTML.png)", article.sections[0].text
+        )
         self.assertNotIn("[EMIM][Ac]", article.sections[0].text.split("](", 1)[0])
 
-    def test_article_from_markdown_normalizes_after_inline_asset_url_rewrite(self) -> None:
+    def test_article_from_markdown_normalizes_after_inline_asset_url_rewrite(
+        self,
+    ) -> None:
         article = article_from_markdown(
             source="springer_html",
             metadata={"title": "Structured Article"},
@@ -574,10 +767,15 @@ class ModelsRenderTests(unittest.TestCase):
         rendered_sections = "\n".join(
             f"{section.heading}\n{section.text}" for section in article.sections
         )
-        self.assertIn("Vocabulary Development\n![Figure 1](/tmp/downloads/Fig1_HTML.png)", rendered_sections)
+        self.assertIn(
+            "Vocabulary Development\n![Figure 1](/tmp/downloads/Fig1_HTML.png)",
+            rendered_sections,
+        )
         self.assertNotIn("Development![Figure", rendered_sections)
 
-    def test_article_from_markdown_applies_provider_render_policy_by_source(self) -> None:
+    def test_article_from_markdown_applies_provider_render_policy_by_source(
+        self,
+    ) -> None:
         seen: dict[str, object] = {}
 
         def mark_inline_assets(markdown_text, assets, source):
@@ -615,7 +813,9 @@ class ModelsRenderTests(unittest.TestCase):
             )
 
         self.assertEqual(seen["source"], "springer_html")
-        self.assertIn("![Figure 1](/tmp/downloads/Fig1_HTML.png)", seen["markdown_text"])
+        self.assertIn(
+            "![Figure 1](/tmp/downloads/Fig1_HTML.png)", seen["markdown_text"]
+        )
         self.assertEqual(article.assets[0].render_state, "inline")
 
     def test_metadata_only_article_populates_token_breakdown(self) -> None:
@@ -629,17 +829,29 @@ class ModelsRenderTests(unittest.TestCase):
             doi="10.1000/meta",
         )
 
-        self.assertEqual(article.quality.token_estimate_breakdown.abstract, estimate_tokens("Abstract summary text."))
+        self.assertEqual(
+            article.quality.token_estimate_breakdown.abstract,
+            estimate_tokens("Abstract summary text."),
+        )
         self.assertEqual(article.quality.token_estimate_breakdown.body, 0)
-        self.assertEqual(article.quality.token_estimate_breakdown.refs, estimate_tokens("Reference 1\nReference 2"))
-        self.assertEqual(article.quality.token_estimate, estimate_tokens("Abstract summary text."))
+        self.assertEqual(
+            article.quality.token_estimate_breakdown.refs,
+            estimate_tokens("Reference 1\nReference 2"),
+        )
+        self.assertEqual(
+            article.quality.token_estimate, estimate_tokens("Abstract summary text.")
+        )
         self.assertEqual(article.quality.confidence, "low")
         self.assertEqual(article.quality.extraction_revision, EXTRACTION_REVISION)
 
     def test_article_from_structure_populates_token_breakdown(self) -> None:
         article = article_from_structure(
             source="elsevier_xml",
-            metadata={"title": "Structured", "abstract": "Abstract words here.", "references": ["Reference 1"]},
+            metadata={
+                "title": "Structured",
+                "abstract": "Abstract words here.",
+                "references": ["Reference 1"],
+            },
             doi="10.1000/structured",
             abstract_lines=[],
             body_lines=["## Results", "", "Result text lives here."],
@@ -649,31 +861,56 @@ class ModelsRenderTests(unittest.TestCase):
             conversion_notes=[],
         )
 
-        self.assertEqual(article.quality.token_estimate_breakdown.abstract, estimate_tokens("Abstract words here."))
-        self.assertEqual(article.quality.token_estimate_breakdown.body, estimate_tokens("Result text lives here."))
-        self.assertEqual(article.quality.token_estimate_breakdown.refs, estimate_tokens("Reference 1"))
+        self.assertEqual(
+            article.quality.token_estimate_breakdown.abstract,
+            estimate_tokens("Abstract words here."),
+        )
+        self.assertEqual(
+            article.quality.token_estimate_breakdown.body,
+            estimate_tokens("Result text lives here."),
+        )
+        self.assertEqual(
+            article.quality.token_estimate_breakdown.refs,
+            estimate_tokens("Reference 1"),
+        )
         self.assertEqual(
             article.quality.token_estimate,
-            estimate_tokens("Abstract words here.") + estimate_tokens("Result text lives here."),
+            estimate_tokens("Abstract words here.")
+            + estimate_tokens("Result text lives here."),
         )
 
     def test_article_from_markdown_populates_token_breakdown(self) -> None:
         article = article_from_markdown(
             source="springer_html",
-            metadata={"title": "Markdown Article", "references": ["Reference 1", "Reference 2"]},
+            metadata={
+                "title": "Markdown Article",
+                "references": ["Reference 1", "Reference 2"],
+            },
             doi="10.1000/markdown",
             markdown_text="# Markdown Article\n\n## Abstract\n\nShort abstract.\n\n## Results\n\nBody text lives here.",
         )
 
-        self.assertEqual(article.quality.token_estimate_breakdown.abstract, estimate_tokens("Short abstract."))
-        self.assertEqual(article.quality.token_estimate_breakdown.body, estimate_tokens("Body text lives here."))
-        self.assertEqual(article.quality.token_estimate_breakdown.refs, estimate_tokens("Reference 1\nReference 2"))
+        self.assertEqual(
+            article.quality.token_estimate_breakdown.abstract,
+            estimate_tokens("Short abstract."),
+        )
+        self.assertEqual(
+            article.quality.token_estimate_breakdown.body,
+            estimate_tokens("Body text lives here."),
+        )
+        self.assertEqual(
+            article.quality.token_estimate_breakdown.refs,
+            estimate_tokens("Reference 1\nReference 2"),
+        )
         self.assertEqual(
             article.quality.token_estimate,
-            estimate_tokens("Short abstract.") + estimate_tokens("Body text lives here."),
+            estimate_tokens("Short abstract.")
+            + estimate_tokens("Body text lives here."),
         )
 
-    def test_article_from_markdown_prefixes_reference_labels_from_metadata(self) -> None:
+    def test_article_from_markdown_prefixes_reference_labels_from_metadata(
+        self,
+    ) -> None:
         article = article_from_markdown(
             source="springer_html",
             metadata={
@@ -687,9 +924,14 @@ class ModelsRenderTests(unittest.TestCase):
             markdown_text="# Markdown Article\n\n## Results\n\nBody text lives here.",
         )
 
-        self.assertEqual([reference.raw for reference in article.references], ["1. First numbered reference.", "2. Second numbered reference."])
+        self.assertEqual(
+            [reference.raw for reference in article.references],
+            ["1. First numbered reference.", "2. Second numbered reference."],
+        )
 
-    def test_article_from_markdown_skips_parsed_abstract_sections_when_explicit_abstracts_exist(self) -> None:
+    def test_article_from_markdown_skips_parsed_abstract_sections_when_explicit_abstracts_exist(
+        self,
+    ) -> None:
         article = article_from_markdown(
             source="springer_html",
             metadata={"title": "Nature Article"},
@@ -713,12 +955,21 @@ class ModelsRenderTests(unittest.TestCase):
             ],
         )
 
-        self.assertEqual([section.heading for section in article.sections if section.kind == "abstract"], ["Abstract"])
+        self.assertEqual(
+            [
+                section.heading
+                for section in article.sections
+                if section.kind == "abstract"
+            ],
+            ["Abstract"],
+        )
         rendered = article.to_ai_markdown(max_tokens="full_text")
         self.assertEqual(rendered.count("## Abstract"), 1)
         self.assertIn("## Results", rendered)
 
-    def test_article_from_markdown_keeps_data_availability_without_counting_it_as_fulltext(self) -> None:
+    def test_article_from_markdown_keeps_data_availability_without_counting_it_as_fulltext(
+        self,
+    ) -> None:
         article = article_from_markdown(
             source="springer_html",
             metadata={"title": "Markdown Article"},
@@ -733,17 +984,22 @@ class ModelsRenderTests(unittest.TestCase):
         )
 
         self.assertEqual(article.quality.content_kind, "abstract_only")
-        self.assertEqual([section.kind for section in article.sections], ["abstract", "data_availability"])
+        self.assertEqual(
+            [section.kind for section in article.sections],
+            ["abstract", "data_availability"],
+        )
         rendered = article.to_ai_markdown(max_tokens="full_text")
         self.assertIn("## Abstract", rendered)
         self.assertIn("## Data Availability", rendered)
         self.assertIn("The data are available from the corresponding author", rendered)
 
-    def test_article_from_markdown_keeps_code_availability_without_counting_it_as_fulltext(self) -> None:
+    def test_article_from_markdown_keeps_code_availability_without_counting_it_as_fulltext(
+        self,
+    ) -> None:
         """rule: rule-availability-excluded-from-body-metrics"""
-        markdown_text = golden_criteria_scenario_asset("availability_body_metrics", "code_availability.md").read_text(
-            encoding="utf-8"
-        )
+        markdown_text = golden_criteria_scenario_asset(
+            "availability_body_metrics", "code_availability.md"
+        ).read_text(encoding="utf-8")
         article = article_from_markdown(
             source="springer_html",
             metadata={"title": "Markdown Article"},
@@ -752,13 +1008,18 @@ class ModelsRenderTests(unittest.TestCase):
         )
 
         self.assertEqual(article.quality.content_kind, "abstract_only")
-        self.assertEqual([section.kind for section in article.sections], ["abstract", "code_availability"])
+        self.assertEqual(
+            [section.kind for section in article.sections],
+            ["abstract", "code_availability"],
+        )
         rendered = article.to_ai_markdown(max_tokens="full_text")
         self.assertIn("## Abstract", rendered)
         self.assertIn("## Code Availability", rendered)
         self.assertIn("The analysis code is archived", rendered)
 
-    def test_article_from_markdown_preserves_inline_figure_links_without_counting_them_as_body_text(self) -> None:
+    def test_article_from_markdown_preserves_inline_figure_links_without_counting_them_as_body_text(
+        self,
+    ) -> None:
         article = article_from_markdown(
             source="pnas",
             metadata={"title": "Markdown Article"},
@@ -778,14 +1039,22 @@ class ModelsRenderTests(unittest.TestCase):
             ),
         )
 
-        self.assertIn("![Figure 1](https://example.test/figure-1.png)", article.sections[0].text)
-        self.assertIn("![Figure 1](https://example.test/figure-1.png)", article.to_ai_markdown())
+        self.assertIn(
+            "![Figure 1](https://example.test/figure-1.png)", article.sections[0].text
+        )
+        self.assertIn(
+            "![Figure 1](https://example.test/figure-1.png)", article.to_ai_markdown()
+        )
         self.assertEqual(
             article.quality.token_estimate_breakdown.body,
-            estimate_tokens("Body text lives here.\n\n**Figure 1.** Figure caption text."),
+            estimate_tokens(
+                "Body text lives here.\n\n**Figure 1.** Figure caption text."
+            ),
         )
 
-    def test_article_from_markdown_moves_abstract_into_metadata_and_preserves_abstract_sections(self) -> None:
+    def test_article_from_markdown_moves_abstract_into_metadata_and_preserves_abstract_sections(
+        self,
+    ) -> None:
         article = article_from_markdown(
             source="springer_html",
             metadata={"title": "Markdown Article"},
@@ -803,7 +1072,9 @@ class ModelsRenderTests(unittest.TestCase):
         self.assertEqual(article.quality.confidence, "medium")
         self.assertIn(QUALITY_FLAG_WEAK_BODY_STRUCTURE, article.quality.flags)
 
-    def test_article_from_markdown_keeps_headingless_body_flat_without_synthetic_heading(self) -> None:
+    def test_article_from_markdown_keeps_headingless_body_flat_without_synthetic_heading(
+        self,
+    ) -> None:
         """rule: rule-keep-headingless-body-flat"""
         article = article_from_markdown(
             source="springer_html",
@@ -829,7 +1100,9 @@ class ModelsRenderTests(unittest.TestCase):
         self.assertNotIn("## Headingless Article", rendered)
         self.assertNotIn("## Full Text", rendered)
 
-    def test_article_from_structure_keeps_headingless_body_flat_without_synthetic_heading(self) -> None:
+    def test_article_from_structure_keeps_headingless_body_flat_without_synthetic_heading(
+        self,
+    ) -> None:
         article = article_from_structure(
             source="elsevier_xml",
             metadata={"title": "Structured Headingless"},
@@ -859,7 +1132,9 @@ class ModelsRenderTests(unittest.TestCase):
         self.assertNotIn("## Structured Headingless", rendered)
         self.assertNotIn("## Full Text", rendered)
 
-    def test_article_from_markdown_splits_leading_inline_abstract_from_main_text(self) -> None:
+    def test_article_from_markdown_splits_leading_inline_abstract_from_main_text(
+        self,
+    ) -> None:
         article = article_from_markdown(
             source="science",
             metadata={
@@ -876,12 +1151,16 @@ class ModelsRenderTests(unittest.TestCase):
             ),
         )
 
-        self.assertEqual(article.metadata.abstract, "Short abstract summary stays in metadata only.")
+        self.assertEqual(
+            article.metadata.abstract, "Short abstract summary stays in metadata only."
+        )
         self.assertEqual(article.sections[0].heading, "Main Text")
         self.assertIn("lead body paragraph", article.sections[0].text)
         self.assertEqual(article.sections[1].heading, "Results")
 
-    def test_article_from_markdown_treats_single_inline_abstract_block_as_abstract_only(self) -> None:
+    def test_article_from_markdown_treats_single_inline_abstract_block_as_abstract_only(
+        self,
+    ) -> None:
         article = article_from_markdown(
             source="science",
             metadata={"title": "Markdown Article"},
@@ -889,12 +1168,17 @@ class ModelsRenderTests(unittest.TestCase):
             markdown_text="# Markdown Article\n\n**Abstract.** Only the abstract is available in this markdown sample.",
         )
 
-        self.assertEqual(article.metadata.abstract, "Only the abstract is available in this markdown sample.")
+        self.assertEqual(
+            article.metadata.abstract,
+            "Only the abstract is available in this markdown sample.",
+        )
         self.assertEqual(article.sections, [])
         self.assertEqual(article.quality.content_kind, "abstract_only")
         self.assertEqual(article.quality.confidence, "low")
 
-    def test_article_from_markdown_downgrades_when_provider_diagnostics_explicitly_reject_body(self) -> None:
+    def test_article_from_markdown_downgrades_when_provider_diagnostics_explicitly_reject_body(
+        self,
+    ) -> None:
         article = article_from_markdown(
             source="springer_html",
             metadata={"title": "Diagnostic Article", "abstract": "Short abstract."},
@@ -931,7 +1215,9 @@ class ModelsRenderTests(unittest.TestCase):
         self.assertEqual(article.quality.confidence, "low")
         self.assertIn(QUALITY_FLAG_ACCESS_GATE_DETECTED, article.quality.flags)
 
-    def test_article_from_markdown_downgrades_when_blocking_fallback_signals_are_present(self) -> None:
+    def test_article_from_markdown_downgrades_when_blocking_fallback_signals_are_present(
+        self,
+    ) -> None:
         article = article_from_markdown(
             source="wiley_browser",
             metadata={"title": "Blocking Article", "abstract": "Short abstract."},
@@ -947,7 +1233,10 @@ class ModelsRenderTests(unittest.TestCase):
                 "accepted": False,
                 "reason": "abstract_only",
                 "content_kind": "abstract_only",
-                "blocking_fallback_signals": ["wiley_access_no", "wiley_format_viewed_abstract"],
+                "blocking_fallback_signals": [
+                    "wiley_access_no",
+                    "wiley_format_viewed_abstract",
+                ],
                 "hard_negative_signals": [],
                 "soft_positive_signals": ["selected_article_container"],
                 "body_metrics": {
@@ -968,17 +1257,21 @@ class ModelsRenderTests(unittest.TestCase):
         self.assertEqual([section.kind for section in article.sections], ["abstract"])
         self.assertIn(QUALITY_FLAG_ACCESS_GATE_DETECTED, article.quality.flags)
 
-    def test_article_from_markdown_does_not_treat_positive_access_signals_as_access_gate(self) -> None:
+    def test_article_from_markdown_does_not_treat_positive_access_signals_as_access_gate(
+        self,
+    ) -> None:
         article = article_from_markdown(
             source="science",
-            metadata={"title": "Accessible Science Article", "abstract": "Short abstract."},
+            metadata={
+                "title": "Accessible Science Article",
+                "abstract": "Short abstract.",
+            },
             doi="10.1000/science-access-positive",
             markdown_text=(
                 "# Accessible Science Article\n\n"
                 "## Abstract\n\n"
                 "Short abstract.\n\n"
-                "## Results\n\n"
-                + ("Body text " * 120)
+                "## Results\n\n" + ("Body text " * 120)
             ),
             availability_diagnostics={
                 "accepted": True,
@@ -1011,10 +1304,15 @@ class ModelsRenderTests(unittest.TestCase):
         self.assertEqual(article.quality.confidence, "high")
         self.assertNotIn(QUALITY_FLAG_ACCESS_GATE_DETECTED, article.quality.flags)
 
-    def test_article_from_markdown_merges_sparse_provider_body_metrics_with_article_structure(self) -> None:
+    def test_article_from_markdown_merges_sparse_provider_body_metrics_with_article_structure(
+        self,
+    ) -> None:
         article = article_from_markdown(
             source="elsevier_xml",
-            metadata={"title": "Structured Elsevier Article", "abstract": "Short abstract."},
+            metadata={
+                "title": "Structured Elsevier Article",
+                "abstract": "Short abstract.",
+            },
             doi="10.1000/elsevier-metrics-merge",
             markdown_text=(
                 "# Structured Elsevier Article\n\n"
@@ -1060,7 +1358,9 @@ class ModelsRenderTests(unittest.TestCase):
         self.assertEqual(article.quality.body_metrics.figure_count, 1)
         self.assertGreater(article.quality.body_metrics.word_count, 100)
 
-    def test_article_from_markdown_preserves_explicit_multilingual_abstract_sections(self) -> None:
+    def test_article_from_markdown_preserves_explicit_multilingual_abstract_sections(
+        self,
+    ) -> None:
         """rule: rule-keep-parallel-multilingual-abstracts"""
         article = article_from_markdown(
             source="wiley_browser",
@@ -1089,15 +1389,25 @@ class ModelsRenderTests(unittest.TestCase):
             ],
         )
 
-        self.assertEqual(article.metadata.abstract, "English abstract text remains available as the primary abstract.")
-        self.assertEqual([section.heading for section in article.sections[:2]], ["Abstract", "Resumo"])
-        self.assertTrue(all(section.kind == "abstract" for section in article.sections[:2]))
+        self.assertEqual(
+            article.metadata.abstract,
+            "English abstract text remains available as the primary abstract.",
+        )
+        self.assertEqual(
+            [section.heading for section in article.sections[:2]],
+            ["Abstract", "Resumo"],
+        )
+        self.assertTrue(
+            all(section.kind == "abstract" for section in article.sections[:2])
+        )
         rendered = article.to_ai_markdown(max_tokens="full_text")
         self.assertIn("## Abstract", rendered)
         self.assertIn("## Resumo", rendered)
         self.assertIn("## Results", rendered)
 
-    def test_article_from_markdown_uses_section_hints_for_nonliteral_data_availability(self) -> None:
+    def test_article_from_markdown_uses_section_hints_for_nonliteral_data_availability(
+        self,
+    ) -> None:
         article = article_from_markdown(
             source="springer_html",
             metadata={"title": "Markdown Article"},
@@ -1125,18 +1435,23 @@ class ModelsRenderTests(unittest.TestCase):
             ],
         )
 
-        self.assertEqual([section.kind for section in article.sections], ["data_availability", "body"])
+        self.assertEqual(
+            [section.kind for section in article.sections],
+            ["data_availability", "body"],
+        )
         self.assertEqual(article.quality.content_kind, "fulltext")
 
-    def test_article_from_markdown_coerces_dict_object_and_section_hint_in_declared_order(self) -> None:
+    def test_article_from_markdown_coerces_dict_object_and_section_hint_in_declared_order(
+        self,
+    ) -> None:
         """rule: rule-section-hints-normalize-availability"""
-        markdown_text = golden_criteria_scenario_asset("section_hints_availability", "article.md").read_text(
-            encoding="utf-8"
-        )
+        markdown_text = golden_criteria_scenario_asset(
+            "section_hints_availability", "article.md"
+        ).read_text(encoding="utf-8")
         hint_payloads = json.loads(
-            golden_criteria_scenario_asset("section_hints_availability", "section_hints.json").read_text(
-                encoding="utf-8"
-            )
+            golden_criteria_scenario_asset(
+                "section_hints_availability", "section_hints.json"
+            ).read_text(encoding="utf-8")
         )
         article = article_from_markdown(
             source="springer_html",
@@ -1160,7 +1475,9 @@ class ModelsRenderTests(unittest.TestCase):
             ],
         )
 
-    def test_article_from_markdown_uses_section_hints_for_nonliteral_code_availability(self) -> None:
+    def test_article_from_markdown_uses_section_hints_for_nonliteral_code_availability(
+        self,
+    ) -> None:
         article = article_from_markdown(
             source="springer_html",
             metadata={"title": "Markdown Article"},
@@ -1188,10 +1505,15 @@ class ModelsRenderTests(unittest.TestCase):
             ],
         )
 
-        self.assertEqual([section.kind for section in article.sections], ["code_availability", "body"])
+        self.assertEqual(
+            [section.kind for section in article.sections],
+            ["code_availability", "body"],
+        )
         self.assertEqual(article.quality.content_kind, "fulltext")
 
-    def test_article_from_markdown_keeps_heading_fallback_without_section_hints(self) -> None:
+    def test_article_from_markdown_keeps_heading_fallback_without_section_hints(
+        self,
+    ) -> None:
         article = article_from_markdown(
             source="springer_html",
             metadata={"title": "Markdown Article"},
@@ -1207,7 +1529,9 @@ class ModelsRenderTests(unittest.TestCase):
         self.assertEqual(article.sections[0].heading, "Availability Statement")
         self.assertEqual(article.sections[0].kind, "body")
 
-    def test_article_from_markdown_does_not_duplicate_explicit_abstract_when_section_hints_are_present(self) -> None:
+    def test_article_from_markdown_does_not_duplicate_explicit_abstract_when_section_hints_are_present(
+        self,
+    ) -> None:
         """rule: rule-stable-frontmatter-order"""
         article = article_from_markdown(
             source="springer_html",
@@ -1238,11 +1562,22 @@ class ModelsRenderTests(unittest.TestCase):
             ],
         )
 
-        self.assertEqual([section.heading for section in article.sections], ["Abstract", "Results"])
-        self.assertEqual(len([section for section in article.sections if section.kind == "abstract"]), 1)
-        self.assertEqual(article.metadata.abstract, "Explicit abstract block should not duplicate.")
+        self.assertEqual(
+            [section.heading for section in article.sections], ["Abstract", "Results"]
+        )
+        self.assertEqual(
+            len(
+                [section for section in article.sections if section.kind == "abstract"]
+            ),
+            1,
+        )
+        self.assertEqual(
+            article.metadata.abstract, "Explicit abstract block should not duplicate."
+        )
 
-    def test_article_from_markdown_deduplicates_near_matching_explicit_abstract_sections(self) -> None:
+    def test_article_from_markdown_deduplicates_near_matching_explicit_abstract_sections(
+        self,
+    ) -> None:
         base_abstract = (
             "Identifying droughts and accurately evaluating drought impacts on vegetation growth are crucial to understanding "
             "the terrestrial carbon balance across China. However, few studies have identified the critical drought thresholds "
@@ -1254,8 +1589,7 @@ class ModelsRenderTests(unittest.TestCase):
         )
         explicit_abstract = base_abstract + (
             " Additional supporting context keeps the abstract long enough to trigger near-duplicate matching without changing the "
-            "heading or the overall meaning of the section."
-            * 8
+            "heading or the overall meaning of the section." * 8
         )
         parsed_abstract = explicit_abstract.replace(" during 2001-2018.", " during.")
         article = article_from_markdown(
@@ -1287,11 +1621,20 @@ class ModelsRenderTests(unittest.TestCase):
             ],
         )
 
-        self.assertEqual([section.heading for section in article.sections], ["Abstract", "Results"])
-        self.assertEqual(len([section for section in article.sections if section.kind == "abstract"]), 1)
+        self.assertEqual(
+            [section.heading for section in article.sections], ["Abstract", "Results"]
+        )
+        self.assertEqual(
+            len(
+                [section for section in article.sections if section.kind == "abstract"]
+            ),
+            1,
+        )
         self.assertEqual(article.metadata.abstract, explicit_abstract)
 
-    def test_article_from_markdown_promotes_repeated_methods_summary_to_methods(self) -> None:
+    def test_article_from_markdown_promotes_repeated_methods_summary_to_methods(
+        self,
+    ) -> None:
         """rule: rule-springer-methods-summary"""
         html = golden_criteria_asset("10.1038/nature12915", "original.html").read_text(
             encoding="utf-8",
@@ -1303,7 +1646,9 @@ class ModelsRenderTests(unittest.TestCase):
         )
         article = article_from_markdown(
             source="springer_html",
-            metadata={"title": "Accelerated increase in vegetation carbon sequestration in tropical forests"},
+            metadata={
+                "title": "Accelerated increase in vegetation carbon sequestration in tropical forests"
+            },
             doi="10.1038/nature12915",
             markdown_text=extraction_payload["markdown_text"],
             abstract_sections=extraction_payload["abstract_sections"],
@@ -1315,7 +1660,10 @@ class ModelsRenderTests(unittest.TestCase):
             for section in article.sections
             if section.heading in {"Methods Summary", "Methods", "Online Methods"}
         ]
-        self.assertEqual([section.heading for section in methods_sections], ["Methods Summary", "Methods"])
+        self.assertEqual(
+            [section.heading for section in methods_sections],
+            ["Methods Summary", "Methods"],
+        )
         methods_section = methods_sections[1]
         self.assertEqual(methods_section.text, "")
 
@@ -1325,7 +1673,9 @@ class ModelsRenderTests(unittest.TestCase):
         self.assertEqual(markdown.count("\n## Methods\n"), 1)
         self.assertNotIn("## Online Methods", markdown)
 
-    def test_article_from_real_nature_markdown_keeps_methods_summary_without_structure_hints(self) -> None:
+    def test_article_from_real_nature_markdown_keeps_methods_summary_without_structure_hints(
+        self,
+    ) -> None:
         html = golden_criteria_asset("10.1038/nature12915", "original.html").read_text(
             encoding="utf-8",
             errors="ignore",
@@ -1336,7 +1686,9 @@ class ModelsRenderTests(unittest.TestCase):
         )
         article = article_from_markdown(
             source="springer_html",
-            metadata={"title": "Accelerated increase in vegetation carbon sequestration in tropical forests"},
+            metadata={
+                "title": "Accelerated increase in vegetation carbon sequestration in tropical forests"
+            },
             doi="10.1038/nature12915",
             markdown_text=extraction_payload["markdown_text"],
             abstract_sections=extraction_payload["abstract_sections"],
@@ -1367,9 +1719,13 @@ class ModelsRenderTests(unittest.TestCase):
             article.metadata.abstract,
             "The abstract text should not keep the duplicated heading prefix.",
         )
-        self.assertNotIn("**Abstract.** Abstract", article.to_ai_markdown(max_tokens="full_text"))
+        self.assertNotIn(
+            "**Abstract.** Abstract", article.to_ai_markdown(max_tokens="full_text")
+        )
 
-    def test_article_from_markdown_classifies_abstract_only_when_no_body_sections_remain(self) -> None:
+    def test_article_from_markdown_classifies_abstract_only_when_no_body_sections_remain(
+        self,
+    ) -> None:
         article = article_from_markdown(
             source="springer_html",
             metadata={"title": "Markdown Article"},
@@ -1384,7 +1740,9 @@ class ModelsRenderTests(unittest.TestCase):
         self.assertFalse(article.quality.has_fulltext)
         self.assertTrue(article.quality.has_abstract)
 
-    def test_normalize_markdown_text_collapses_padding_inside_display_math(self) -> None:
+    def test_normalize_markdown_text_collapses_padding_inside_display_math(
+        self,
+    ) -> None:
         normalized = normalize_markdown_text(
             "Before\n\n$$\n\n\\begin{matrix} a \\\\ b \\end{matrix}\n\n$$\n\nAfter"
         )

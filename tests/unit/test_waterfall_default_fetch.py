@@ -17,7 +17,9 @@ class EmptyWaterfallClient(ProviderClient):
 def test_default_fetch_raw_fulltext_without_waterfall_steps_raises() -> None:
     client = EmptyWaterfallClient()
 
-    with pytest.raises(NotImplementedError, match="override fetch_raw_fulltext.*waterfall_steps"):
+    with pytest.raises(
+        NotImplementedError, match="override fetch_raw_fulltext.*waterfall_steps"
+    ):
         client.fetch_raw_fulltext("10.0000/empty", {}, context=None)
 
 

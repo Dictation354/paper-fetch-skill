@@ -21,6 +21,7 @@ def __getattr__(name: str):
         return CrossrefLookupClient
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
+
 __all__ = [
     "CrossrefLookupClient",
     "CrossrefMetadata",

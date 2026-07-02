@@ -76,9 +76,7 @@ class MarkdownImageMatch:
     text: str
 
 
-_MARKDOWN_BLOCK_IMAGE_ALT_PATTERN = (
-    rf"fig(?:ure)?\.?|(?:{re.escape(EXTENDED_DATA_LABEL)}|supplementary)?\s*table|supplementary\s+fig(?:ure)?\.?"
-)
+_MARKDOWN_BLOCK_IMAGE_ALT_PATTERN = rf"fig(?:ure)?\.?|(?:{re.escape(EXTENDED_DATA_LABEL)}|supplementary)?\s*table|supplementary\s+fig(?:ure)?\.?"
 
 MARKDOWN_BLOCK_IMAGE_ALT_PATTERN = re.compile(
     rf"^\s*(?:{_MARKDOWN_BLOCK_IMAGE_ALT_PATTERN})\b",
@@ -116,25 +114,39 @@ CANONICAL_MATCH_NON_WORD_PATTERN = re.compile(r"[\W_]+", flags=re.UNICODE)
 INLINE_HTML_NEWLINE_WHITESPACE_PATTERN = re.compile(r"\s*\n\s*")
 
 
-INLINE_HTML_BR_WHITESPACE_PATTERN = re.compile(r"\s*(<br\s*/?>)\s*", flags=re.IGNORECASE)
+INLINE_HTML_BR_WHITESPACE_PATTERN = re.compile(
+    r"\s*(<br\s*/?>)\s*", flags=re.IGNORECASE
+)
 
 
-INLINE_HTML_OPEN_SUBSUP_WHITESPACE_PATTERN = re.compile(r"\s*<(sub|sup)>\s*", flags=re.IGNORECASE)
+INLINE_HTML_OPEN_SUBSUP_WHITESPACE_PATTERN = re.compile(
+    r"\s*<(sub|sup)>\s*", flags=re.IGNORECASE
+)
 
 
-INLINE_HTML_CLOSE_SUBSUP_WHITESPACE_PATTERN = re.compile(r"\s+</(sub|sup)>", flags=re.IGNORECASE)
+INLINE_HTML_CLOSE_SUBSUP_WHITESPACE_PATTERN = re.compile(
+    r"\s+</(sub|sup)>", flags=re.IGNORECASE
+)
 
 
-INLINE_HTML_BEFORE_SUBSUP_PATTERN = re.compile(r"\s+(<(?:sub|sup)>)", flags=re.IGNORECASE)
+INLINE_HTML_BEFORE_SUBSUP_PATTERN = re.compile(
+    r"\s+(<(?:sub|sup)>)", flags=re.IGNORECASE
+)
 
 
-INLINE_HTML_AFTER_SUBSUP_NEWLINE_PATTERN = re.compile(r"(</(?:sub|sup)>)\s*\n\s*", flags=re.IGNORECASE)
+INLINE_HTML_AFTER_SUBSUP_NEWLINE_PATTERN = re.compile(
+    r"(</(?:sub|sup)>)\s*\n\s*", flags=re.IGNORECASE
+)
 
 
-INLINE_HTML_AFTER_SUBSUP_WORD_PATTERN = re.compile(r"(</(?:sub|sup)>)(?=[A-Za-z0-9])", flags=re.IGNORECASE)
+INLINE_HTML_AFTER_SUBSUP_WORD_PATTERN = re.compile(
+    r"(</(?:sub|sup)>)(?=[A-Za-z0-9])", flags=re.IGNORECASE
+)
 
 
-INLINE_HTML_AFTER_SUBSUP_PUNCT_PATTERN = re.compile(r"(</(?:sub|sup)>)\s+([,.;:%\]\}\+\)])", flags=re.IGNORECASE)
+INLINE_HTML_AFTER_SUBSUP_PUNCT_PATTERN = re.compile(
+    r"(</(?:sub|sup)>)\s+([,.;:%\]\}\+\)])", flags=re.IGNORECASE
+)
 
 
 def image_reference_candidates(value: str | None) -> set[str]:
@@ -144,7 +156,12 @@ def image_reference_candidates(value: str | None) -> set[str]:
 
     parsed = urllib.parse.urlsplit(normalized)
     path = parsed.path or normalized
-    candidates = {normalized, path, urllib.parse.unquote(normalized), urllib.parse.unquote(path)}
+    candidates = {
+        normalized,
+        path,
+        urllib.parse.unquote(normalized),
+        urllib.parse.unquote(path),
+    }
     cleaned: set[str] = set()
     for candidate in candidates:
         text = normalize_text(candidate).replace("\\", "/")
@@ -165,14 +182,26 @@ def image_references_match(left: set[str], right: set[str]) -> bool:
         return True
     for left_item in left:
         for right_item in right:
-            if left_item.endswith(f"/{right_item}") or right_item.endswith(f"/{left_item}"):
+            if left_item.endswith(f"/{right_item}") or right_item.endswith(
+                f"/{left_item}"
+            ):
                 return True
-    left_basenames = {image_reference_basename(item) for item in left if image_reference_basename(item)}
-    right_basenames = {image_reference_basename(item) for item in right if image_reference_basename(item)}
+    left_basenames = {
+        image_reference_basename(item)
+        for item in left
+        if image_reference_basename(item)
+    }
+    right_basenames = {
+        image_reference_basename(item)
+        for item in right
+        if image_reference_basename(item)
+    }
     return bool(left_basenames & right_basenames)
 
 
-def _find_balanced_markdown_delimiter(text: str, start: int, opener: str, closer: str) -> int:
+def _find_balanced_markdown_delimiter(
+    text: str, start: int, opener: str, closer: str
+) -> int:
     depth = 1
     index = start + 1
     while index < len(text):
@@ -200,7 +229,9 @@ def _split_markdown_image_destination(raw_destination: str) -> tuple[str, str]:
             url = destination[1:close_index]
             title = destination[close_index + 1 :].strip()
             return url, title
-    match = re.match(r"(?P<url>\S+)(?:\s+(?P<title>.*))?\s*$", destination, flags=re.DOTALL)
+    match = re.match(
+        r"(?P<url>\S+)(?:\s+(?P<title>.*))?\s*$", destination, flags=re.DOTALL
+    )
     if match is None:
         return destination, ""
     return match.group("url") or "", (match.group("title") or "").strip()
@@ -218,7 +249,9 @@ def _parse_markdown_image_at(text: str, start: int) -> MarkdownImageMatch | None
         return None
 
     destination_open = alt_close + 1
-    destination_close = _find_balanced_markdown_delimiter(text, destination_open, "(", ")")
+    destination_close = _find_balanced_markdown_delimiter(
+        text, destination_open, "(", ")"
+    )
     if destination_close < 0:
         return None
 
@@ -235,7 +268,9 @@ def _parse_markdown_image_at(text: str, start: int) -> MarkdownImageMatch | None
             attrs = text[attr_probe : attr_close + 1]
             end = attr_close + 1
 
-    url, title = _split_markdown_image_destination(text[destination_open + 1 : destination_close])
+    url, title = _split_markdown_image_destination(
+        text[destination_open + 1 : destination_close]
+    )
     return MarkdownImageMatch(
         start=start,
         end=end,
@@ -351,12 +386,16 @@ def _split_markdown_image_adjacency_line(line: str) -> list[str]:
             break
         if (
             _is_standalone_markdown_image_alt(match.alt)
-            and re.search(r"\b(?:equation|formula)\b", normalize_text(prefix), flags=re.IGNORECASE)
+            and re.search(
+                r"\b(?:equation|formula)\b", normalize_text(prefix), flags=re.IGNORECASE
+            )
             and not normalize_text(suffix)
         ):
             split_required = True
             break
-        if normalize_text(prefix).endswith("$$") or normalize_text(suffix).startswith("$$"):
+        if normalize_text(prefix).endswith("$$") or normalize_text(suffix).startswith(
+            "$$"
+        ):
             split_required = True
             break
     if not split_required:
@@ -475,7 +514,7 @@ def normalize_markdown_prose_line(line: str) -> str:
 
     leading_match = re.match(r"^\s*", expanded)
     leading = leading_match.group(0) if leading_match else ""
-    body = INLINE_WHITESPACE_PATTERN.sub(" ", expanded[len(leading):]).strip()
+    body = INLINE_WHITESPACE_PATTERN.sub(" ", expanded[len(leading) :]).strip()
     if not body:
         return ""
     return f"{leading}{body}" if leading else body
@@ -492,9 +531,16 @@ def _canonical_match_text(value: str) -> str:
 
 def normalize_authors(value: Any) -> list[str]:
     if isinstance(value, list):
-        return [normalize_inline_html_text(item) for item in value if normalize_inline_html_text(item)]
+        return [
+            normalize_inline_html_text(item)
+            for item in value
+            if normalize_inline_html_text(item)
+        ]
     if isinstance(value, str):
-        parts = [normalize_inline_html_text(part) for part in re.split(r"\s*;\s*|\s*,\s*", value)]
+        parts = [
+            normalize_inline_html_text(part)
+            for part in re.split(r"\s*;\s*|\s*,\s*", value)
+        ]
         return [part for part in parts if part]
     return []
 
@@ -524,7 +570,9 @@ def normalize_inline_html_text(value: Any) -> str:
     return text.strip()
 
 
-def strip_leading_markdown_title_heading(markdown_text: str, *, title: str | None) -> str:
+def strip_leading_markdown_title_heading(
+    markdown_text: str, *, title: str | None
+) -> str:
     normalized_markdown = normalize_markdown_text(markdown_text)
     normalized_title = normalize_text(title)
     if not normalized_markdown or not normalized_title:
@@ -545,7 +593,9 @@ def strip_leading_markdown_title_heading(markdown_text: str, *, title: str | Non
         return normalized_markdown
 
     trimmed_lines = list(lines[:line_index]) + list(lines[line_index + 1 :])
-    while line_index < len(trimmed_lines) and not normalize_text(trimmed_lines[line_index]):
+    while line_index < len(trimmed_lines) and not normalize_text(
+        trimmed_lines[line_index]
+    ):
         trimmed_lines.pop(line_index)
     return normalize_markdown_text("\n".join(trimmed_lines))
 

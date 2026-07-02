@@ -475,10 +475,12 @@ class ExtractionRulesValidatorUnitTests(unittest.TestCase):
         )
 
     def test_validator_cli_report_mode_prints_coverage_report(self) -> None:
-        with mock.patch.object(validator, "validate_markdown", return_value=[]), mock.patch.object(
-            Path,
-            "read_text",
-            return_value="""
+        with (
+            mock.patch.object(validator, "validate_markdown", return_value=[]),
+            mock.patch.object(
+                Path,
+                "read_text",
+                return_value="""
 ## Generic
 
 <a id="rule-demo"></a>
@@ -487,6 +489,7 @@ class ExtractionRulesValidatorUnitTests(unittest.TestCase):
 - 代表性 HTML / XML：
   - 当前无稳定 DOI 样本，直接见对应测试。
 """,
+            ),
         ):
             result = validator.main(["--report"])
 

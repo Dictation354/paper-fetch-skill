@@ -5,7 +5,9 @@ from ._service_support import *
 
 
 class ServiceBrowserWorkflowTests(unittest.TestCase):
-    def test_wiley_provider_failure_returns_metadata_only_without_generic_html_fallback(self) -> None:
+    def test_wiley_provider_failure_returns_metadata_only_without_generic_html_fallback(
+        self,
+    ) -> None:
         resolved = paper_fetch.ResolvedQuery(
             query="10.1111/test",
             query_kind="doi",
@@ -22,8 +24,12 @@ class ServiceBrowserWorkflowTests(unittest.TestCase):
                 allow_downloads=False,
                 clients={
                     "wiley": StubProvider(
-                        metadata=paper_fetch.ProviderFailure("not_supported", "No official metadata."),
-                        raw_error=paper_fetch.ProviderFailure("no_result", "Browser workflow failed."),
+                        metadata=paper_fetch.ProviderFailure(
+                            "not_supported", "No official metadata."
+                        ),
+                        raw_error=paper_fetch.ProviderFailure(
+                            "no_result", "Browser workflow failed."
+                        ),
                     ),
                     "crossref": StubProvider(
                         metadata={
@@ -46,10 +52,20 @@ class ServiceBrowserWorkflowTests(unittest.TestCase):
         self.assertEqual(article.source, "crossref_meta")
         self.assertFalse(article.quality.has_fulltext)
         self.assertIn("fulltext:wiley_fail", article.quality.source_trail)
-        self.assertIn("fallback:wiley_html_managed_by_provider", article.quality.source_trail)
+        self.assertIn(
+            "fallback:wiley_html_managed_by_provider", article.quality.source_trail
+        )
         self.assertIn("fallback:metadata_only", article.quality.source_trail)
-        self.assertTrue(any("Full text was not available" in warning for warning in article.quality.warnings))
-    def test_science_provider_skips_generic_html_fallback_after_provider_failure(self) -> None:
+        self.assertTrue(
+            any(
+                "Full text was not available" in warning
+                for warning in article.quality.warnings
+            )
+        )
+
+    def test_science_provider_skips_generic_html_fallback_after_provider_failure(
+        self,
+    ) -> None:
         resolved = paper_fetch.ResolvedQuery(
             query="10.1126/science.ady3136",
             query_kind="doi",
@@ -65,8 +81,12 @@ class ServiceBrowserWorkflowTests(unittest.TestCase):
                 "10.1126/science.ady3136",
                 clients={
                     "science": StubProvider(
-                        metadata=paper_fetch.ProviderFailure("not_supported", "Science metadata probe is route-only."),
-                        raw_error=paper_fetch.ProviderFailure("no_result", "Science provider failed."),
+                        metadata=paper_fetch.ProviderFailure(
+                            "not_supported", "Science metadata probe is route-only."
+                        ),
+                        raw_error=paper_fetch.ProviderFailure(
+                            "no_result", "Science provider failed."
+                        ),
                     ),
                     "crossref": StubProvider(
                         metadata={
@@ -89,8 +109,11 @@ class ServiceBrowserWorkflowTests(unittest.TestCase):
 
         self.assertEqual(article.source, "crossref_meta")
         self.assertFalse(article.quality.has_fulltext)
-        self.assertIn("fallback:science_html_managed_by_provider", article.quality.source_trail)
+        self.assertIn(
+            "fallback:science_html_managed_by_provider", article.quality.source_trail
+        )
         self.assertIn("fallback:metadata_only", article.quality.source_trail)
+
     def test_science_provider_public_source_and_html_assets_are_exposed(self) -> None:
         resolved = paper_fetch.ResolvedQuery(
             query="10.1126/science.aeg3511",
@@ -113,17 +136,22 @@ class ServiceBrowserWorkflowTests(unittest.TestCase):
                     download_dir=Path(tmpdir),
                     clients={
                         "science": StubProvider(
-                            metadata=paper_fetch.ProviderFailure("not_supported", "Science metadata probe is route-only."),
+                            metadata=paper_fetch.ProviderFailure(
+                                "not_supported", "Science metadata probe is route-only."
+                            ),
                             raw_payload=_typed_payload(
                                 provider="science",
                                 source_url=resolved.landing_url,
                                 content_type="text/html",
                                 body=b"<html />",
                                 route_kind="html",
-                                markdown_text="# Science Example\n\n## Results\n\n" + ("Body text " * 80),
+                                markdown_text="# Science Example\n\n## Results\n\n"
+                                + ("Body text " * 80),
                                 source_trail=["fulltext:science_html_ok"],
                             ),
-                            article_factory=science_provider.ScienceClient(HttpTransport(), {}).to_article_model,
+                            article_factory=science_provider.ScienceClient(
+                                HttpTransport(), {}
+                            ).to_article_model,
                             related_assets={
                                 "assets": [
                                     {
@@ -158,13 +186,20 @@ class ServiceBrowserWorkflowTests(unittest.TestCase):
             paper_fetch.resolve_paper = original_resolve
 
         self.assertEqual(envelope.source, "science")
-        self.assertIn("download:science_assets_saved_profile_body", envelope.source_trail)
-        self.assertFalse(any("text-only full text" in warning for warning in envelope.warnings))
+        self.assertIn(
+            "download:science_assets_saved_profile_body", envelope.source_trail
+        )
+        self.assertFalse(
+            any("text-only full text" in warning for warning in envelope.warnings)
+        )
         assert envelope.article is not None
         self.assertEqual(len(envelope.article.assets), 1)
         self.assertEqual(envelope.article.assets[0].section, "body")
         self.assertEqual(envelope.article.assets[0].path, str(asset_path))
-    def test_wiley_provider_public_source_and_html_body_assets_are_exposed(self) -> None:
+
+    def test_wiley_provider_public_source_and_html_body_assets_are_exposed(
+        self,
+    ) -> None:
         resolved = paper_fetch.ResolvedQuery(
             query="10.1111/test",
             query_kind="doi",
@@ -185,17 +220,22 @@ class ServiceBrowserWorkflowTests(unittest.TestCase):
                     output_dir=Path(tmpdir),
                     clients={
                         "wiley": StubProvider(
-                            metadata=paper_fetch.ProviderFailure("not_supported", "No official metadata."),
+                            metadata=paper_fetch.ProviderFailure(
+                                "not_supported", "No official metadata."
+                            ),
                             raw_payload=_typed_payload(
                                 provider="wiley",
                                 source_url=resolved.landing_url,
                                 content_type="text/html",
                                 body=b"<html></html>",
                                 route_kind="html",
-                                markdown_text="# Wiley HTML Article\n\n## Results\n\n" + ("Body text " * 80),
+                                markdown_text="# Wiley HTML Article\n\n## Results\n\n"
+                                + ("Body text " * 80),
                                 source_trail=["fulltext:wiley_html_ok"],
                             ),
-                            article_factory=WileyClient(HttpTransport(), {}).to_article_model,
+                            article_factory=WileyClient(
+                                HttpTransport(), {}
+                            ).to_article_model,
                             related_assets={
                                 "assets": [
                                     {
@@ -228,10 +268,17 @@ class ServiceBrowserWorkflowTests(unittest.TestCase):
             paper_fetch.resolve_paper = original_resolve
 
         self.assertEqual(article.source, "wiley_browser")
-        self.assertIn("download:wiley_assets_saved_profile_body", article.quality.source_trail)
+        self.assertIn(
+            "download:wiley_assets_saved_profile_body", article.quality.source_trail
+        )
         self.assertEqual(len(article.assets), 1)
         self.assertEqual(article.assets[0].section, "body")
-        self.assertFalse(any("text-only full text" in warning for warning in article.quality.warnings))
+        self.assertFalse(
+            any(
+                "text-only full text" in warning for warning in article.quality.warnings
+            )
+        )
+
     def test_pnas_provider_public_source_and_html_all_assets_are_exposed(self) -> None:
         resolved = paper_fetch.ResolvedQuery(
             query="10.1073/pnas.test",
@@ -255,17 +302,22 @@ class ServiceBrowserWorkflowTests(unittest.TestCase):
                     output_dir=Path(tmpdir),
                     clients={
                         "pnas": StubProvider(
-                            metadata=paper_fetch.ProviderFailure("not_supported", "PNAS metadata probe is route-only."),
+                            metadata=paper_fetch.ProviderFailure(
+                                "not_supported", "PNAS metadata probe is route-only."
+                            ),
                             raw_payload=_typed_payload(
                                 provider="pnas",
                                 source_url=resolved.landing_url,
                                 content_type="text/html",
                                 body=b"<html></html>",
                                 route_kind="html",
-                                markdown_text="# PNAS HTML Article\n\n## Results\n\n" + ("Body text " * 80),
+                                markdown_text="# PNAS HTML Article\n\n## Results\n\n"
+                                + ("Body text " * 80),
                                 source_trail=["fulltext:pnas_html_ok"],
                             ),
-                            article_factory=pnas_provider.PnasClient(HttpTransport(), {}).to_article_model,
+                            article_factory=pnas_provider.PnasClient(
+                                HttpTransport(), {}
+                            ).to_article_model,
                             related_assets={
                                 "assets": [
                                     {
@@ -306,10 +358,21 @@ class ServiceBrowserWorkflowTests(unittest.TestCase):
             paper_fetch.resolve_paper = original_resolve
 
         self.assertEqual(article.source, "pnas")
-        self.assertIn("download:pnas_assets_saved_profile_all", article.quality.source_trail)
-        self.assertEqual({asset.kind for asset in article.assets}, {"figure", "supplementary"})
-        self.assertFalse(any("text-only full text" in warning for warning in article.quality.warnings))
-    def test_browser_workflow_html_final_markdown_prefers_downloaded_local_figure_links(self) -> None:
+        self.assertIn(
+            "download:pnas_assets_saved_profile_all", article.quality.source_trail
+        )
+        self.assertEqual(
+            {asset.kind for asset in article.assets}, {"figure", "supplementary"}
+        )
+        self.assertFalse(
+            any(
+                "text-only full text" in warning for warning in article.quality.warnings
+            )
+        )
+
+    def test_browser_workflow_html_final_markdown_prefers_downloaded_local_figure_links(
+        self,
+    ) -> None:
         cases = [
             {
                 "provider_name": "science",
@@ -320,7 +383,9 @@ class ServiceBrowserWorkflowTests(unittest.TestCase):
                 "title": "Science Example",
                 "remote_url": "https://www.science.org/images/large/figure1.png",
                 "asset_name": "science-figure.png",
-                "article_factory": science_provider.ScienceClient(HttpTransport(), {}).to_article_model,
+                "article_factory": science_provider.ScienceClient(
+                    HttpTransport(), {}
+                ).to_article_model,
             },
             {
                 "provider_name": "wiley",
@@ -342,7 +407,9 @@ class ServiceBrowserWorkflowTests(unittest.TestCase):
                 "title": "PNAS HTML Article",
                 "remote_url": "https://www.pnas.org/images/figure1.png",
                 "asset_name": "pnas-figure.png",
-                "article_factory": pnas_provider.PnasClient(HttpTransport(), {}).to_article_model,
+                "article_factory": pnas_provider.PnasClient(
+                    HttpTransport(), {}
+                ).to_article_model,
             },
         ]
         original_resolve = paper_fetch.resolve_paper
@@ -357,14 +424,20 @@ class ServiceBrowserWorkflowTests(unittest.TestCase):
                         provider_hint=case["provider_name"],
                         confidence=1.0,
                     )
-                    paper_fetch.resolve_paper = lambda *args, _resolved=resolved, **kwargs: _resolved
+                    paper_fetch.resolve_paper = (
+                        lambda *args, _resolved=resolved, **kwargs: _resolved
+                    )
                     with tempfile.TemporaryDirectory() as tmpdir:
                         asset_path = Path(tmpdir) / case["asset_name"]
-                        asset_path.write_bytes(f"{case['provider_name']}-figure".encode())
+                        asset_path.write_bytes(
+                            f"{case['provider_name']}-figure".encode()
+                        )
                         envelope = _fetch_paper(
                             case["doi"],
                             modes={"article", "markdown"},
-                            strategy=paper_fetch.FetchStrategy(asset_profile=case["asset_profile"]),
+                            strategy=paper_fetch.FetchStrategy(
+                                asset_profile=case["asset_profile"]
+                            ),
                             download_dir=Path(tmpdir),
                             clients={
                                 case["provider_name"]: StubProvider(
@@ -387,7 +460,9 @@ class ServiceBrowserWorkflowTests(unittest.TestCase):
                                                 "**Figure 1.** Caption body for the browser HTML figure.",
                                             ]
                                         ),
-                                        source_trail=[f"fulltext:{case['provider_name']}_html_ok"],
+                                        source_trail=[
+                                            f"fulltext:{case['provider_name']}_html_ok"
+                                        ],
                                     ),
                                     article_factory=case["article_factory"],
                                     related_assets={
@@ -424,18 +499,47 @@ class ServiceBrowserWorkflowTests(unittest.TestCase):
                     assert envelope.markdown is not None
                     self.assertEqual(envelope.article.assets[0].path, str(asset_path))
                     self.assertIn(f"![Figure 1]({asset_path})", envelope.markdown)
-                    self.assertNotIn(f"![Figure 1]({case['remote_url']})", envelope.markdown)
+                    self.assertNotIn(
+                        f"![Figure 1]({case['remote_url']})", envelope.markdown
+                    )
         finally:
             paper_fetch.resolve_paper = original_resolve
-    def test_browser_workflow_pdf_fallback_routes_still_skip_asset_downloads(self) -> None:
+
+    def test_browser_workflow_pdf_fallback_routes_still_skip_asset_downloads(
+        self,
+    ) -> None:
         cases = [
-            ("wiley", "10.1111/test", "https://example.test/wiley", WileyClient(HttpTransport(), {}).to_article_model, "wiley_browser"),
-            ("science", "10.1126/science.test", "https://www.science.org/doi/full/10.1126/science.test", science_provider.ScienceClient(HttpTransport(), {}).to_article_model, "science"),
-            ("pnas", "10.1073/pnas.test", "https://www.pnas.org/doi/10.1073/pnas.test", pnas_provider.PnasClient(HttpTransport(), {}).to_article_model, "pnas"),
+            (
+                "wiley",
+                "10.1111/test",
+                "https://example.test/wiley",
+                WileyClient(HttpTransport(), {}).to_article_model,
+                "wiley_browser",
+            ),
+            (
+                "science",
+                "10.1126/science.test",
+                "https://www.science.org/doi/full/10.1126/science.test",
+                science_provider.ScienceClient(HttpTransport(), {}).to_article_model,
+                "science",
+            ),
+            (
+                "pnas",
+                "10.1073/pnas.test",
+                "https://www.pnas.org/doi/10.1073/pnas.test",
+                pnas_provider.PnasClient(HttpTransport(), {}).to_article_model,
+                "pnas",
+            ),
         ]
         original_resolve = paper_fetch.resolve_paper
         try:
-            for provider_name, doi, landing_url, article_factory, expected_source in cases:
+            for (
+                provider_name,
+                doi,
+                landing_url,
+                article_factory,
+                expected_source,
+            ) in cases:
                 with self.subTest(provider=provider_name):
                     resolved = paper_fetch.ResolvedQuery(
                         query=doi,
@@ -453,14 +557,17 @@ class ServiceBrowserWorkflowTests(unittest.TestCase):
                             output_dir=Path(tmpdir),
                             clients={
                                 provider_name: StubProvider(
-                                    metadata=paper_fetch.ProviderFailure("not_supported", "Route-only provider metadata."),
+                                    metadata=paper_fetch.ProviderFailure(
+                                        "not_supported", "Route-only provider metadata."
+                                    ),
                                     raw_payload=_typed_payload(
                                         provider=provider_name,
                                         source_url=f"{landing_url}.pdf",
                                         content_type="application/pdf",
                                         body=fulltext_pdf_bytes(),
                                         route_kind="pdf_fallback",
-                                        markdown_text=f"# {provider_name.title()} PDF Article\n\n## Results\n\n" + ("Body text " * 80),
+                                        markdown_text=f"# {provider_name.title()} PDF Article\n\n## Results\n\n"
+                                        + ("Body text " * 80),
                                         warnings=[
                                             "Full text was extracted from PDF fallback after the HTML path was not usable."
                                         ],
@@ -471,8 +578,12 @@ class ServiceBrowserWorkflowTests(unittest.TestCase):
                                         needs_local_copy=True,
                                     ),
                                     article_factory=article_factory,
-                                    related_asset_factory=lambda *args, **kwargs: (_ for _ in ()).throw(
-                                        AssertionError("PDF fallback routes should not attempt asset downloads.")
+                                    related_asset_factory=lambda *args, **kwargs: (
+                                        _ for _ in ()
+                                    ).throw(
+                                        AssertionError(
+                                            "PDF fallback routes should not attempt asset downloads."
+                                        )
                                     ),
                                 ),
                                 "crossref": StubProvider(
@@ -491,7 +602,15 @@ class ServiceBrowserWorkflowTests(unittest.TestCase):
                         )
 
                     self.assertEqual(article.source, expected_source)
-                    self.assertIn(f"download:{provider_name}_assets_skipped_text_only", article.quality.source_trail)
-                    self.assertTrue(any("text-only full text" in warning for warning in article.quality.warnings))
+                    self.assertIn(
+                        f"download:{provider_name}_assets_skipped_text_only",
+                        article.quality.source_trail,
+                    )
+                    self.assertTrue(
+                        any(
+                            "text-only full text" in warning
+                            for warning in article.quality.warnings
+                        )
+                    )
         finally:
             paper_fetch.resolve_paper = original_resolve

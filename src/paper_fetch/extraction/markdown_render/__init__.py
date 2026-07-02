@@ -2,7 +2,13 @@
 
 from __future__ import annotations
 
-from ._ir import MarkdownCaption, MarkdownFigure, MarkdownFormula, MarkdownList, MarkdownTable
+from ._ir import (
+    MarkdownCaption,
+    MarkdownFigure,
+    MarkdownFormula,
+    MarkdownList,
+    MarkdownTable,
+)
 from .captions import render_caption
 from .figures import add_figure_once, render_figure, render_figure_block
 from .formulas import render_formula

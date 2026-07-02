@@ -96,6 +96,7 @@ def extract_keywords(html_text: str) -> list[str]:
             _append_unique(keywords, part)
     return keywords
 
+
 __all__ = [
     "extract_keywords",
     "extract_references",

@@ -32,7 +32,9 @@ def build_fetch_pipeline_request(
     cache_hooks: FetchPipelineCacheHooks | None = None,
     markdown_save: MarkdownSaveSpec | None = None,
 ) -> FetchPipelineRequest:
-    runtime_env = dict(context.env) if context is not None and context.env is not None else env
+    runtime_env = (
+        dict(context.env) if context is not None and context.env is not None else env
+    )
     return FetchPipelineRequest(
         query=query,
         modes=set(modes),

@@ -16,7 +16,7 @@ from ..arxiv_id import (
     canonical_arxiv_pdf_url,
     normalize_arxiv_id,
 )
-from ..config import build_user_agent
+from ..config import build_publisher_user_agent, build_user_agent
 from ..extraction.html import assets as html_assets
 from ..extraction.html.availability_policy import AvailabilityPolicy
 from ..extraction.html.provider_rules import ProviderHtmlRules
@@ -32,7 +32,11 @@ from ..provider_catalog import ProviderSpec
 from ..runtime import RuntimeContext
 from ..tracing import download_marker, fulltext_marker, trace_from_markers
 from ..utils import empty_asset_results, normalize_text
-from ._asset_retry import assets_for_network_retry, merge_asset_failures, merge_asset_retry_results
+from ._asset_retry import (
+    assets_for_network_retry,
+    merge_asset_failures,
+    merge_asset_retry_results,
+)
 from ._arxiv_assets import (
     ARXIV_ASSET_RETRY_POLICY,
     ARXIV_IMAGE_ACCEPT,
@@ -59,7 +63,13 @@ from ._arxiv_metadata import (
 )
 from ._payloads import build_provider_payload
 from ._pdf_fallback import PdfFallbackStrategy, PdfFetchFailure, fetch_pdf_over_http
-from ._pdf_common import default_pdf_headers, pdf_asset_output_dir, pdf_asset_profile_from_context, pdf_fetch_result_assets
+from ._pdf_common import (
+    default_pdf_headers,
+    pdf_asset_output_dir,
+    pdf_asset_profile_from_context,
+    pdf_fetch_result_assets,
+    pdf_fetch_result_warnings,
+)
 from ._registry import ProviderBundle, register_provider_bundle
 from ._waterfall import (
     DEFAULT_WATERFALL_CONTINUE_CODES,
@@ -121,11 +131,11 @@ class ArxivClient(ProviderClient):
     ) -> None:
         self.transport = transport
         self.env = dict(env)
-        self.user_agent = build_user_agent(env)
+        self.user_agent = build_publisher_user_agent(env)
         self.api_enrichment_enabled = True
         self.api_client = api_client or _InternalArxivApiClient(
             transport=self.transport,
-            user_agent=self.user_agent,
+            user_agent=build_user_agent(env),
         )
 
     def probe_status(self) -> ProviderStatusResult:
@@ -383,7 +393,8 @@ class ArxivClient(ProviderClient):
             extracted_assets=pdf_fetch_result_assets(pdf_result),
             html_failure_message=previous_failure_message,
             warnings=[
-                "Full text was extracted from arXiv PDF fallback after arXiv official HTML was not usable."
+                *pdf_fetch_result_warnings(pdf_result),
+                "Full text was extracted from arXiv PDF fallback after arXiv official HTML was not usable.",
             ],
             content_needs_local_copy=True,
             needs_local_copy=True,
@@ -500,7 +511,9 @@ class ArxivClient(ProviderClient):
                 article_id=article_id,
                 article_html=article_html,
                 source_url=normalize_text(
-                    content.source_url if content is not None else raw_payload.source_url
+                    content.source_url
+                    if content is not None
+                    else raw_payload.source_url
                 ),
                 output_dir=output_dir,
                 user_agent=self.user_agent,

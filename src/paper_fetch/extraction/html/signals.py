@@ -78,7 +78,11 @@ SUPPLEMENTARY_BLOCKING_TITLE_TOKENS = (
     ACCESS_DENIED_TOKEN,
 )
 SUPPLEMENTARY_BLOCKING_BODY_TOKENS = (
-    *(token for token in CHALLENGE_PATTERNS if token in {"checking your browser", "cloudflare"}),
+    *(
+        token
+        for token in CHALLENGE_PATTERNS
+        if token in {"checking your browser", "cloudflare"}
+    ),
     "enable javascript and cookies",
     "please sign in",
     ACCESS_GATE_INSTITUTIONAL_LOGIN_LABEL,
@@ -143,6 +147,7 @@ class HtmlExtractionFailure(Exception):
         super().__init__(message)
         self.reason = reason
         self.message = message
+        self.html_result: object | None = None
 
 
 def summarize_html(html_text: str, limit: int = 1000) -> str:
@@ -181,7 +186,9 @@ def detect_html_access_signals(
     combined = normalize_text(" ".join([title, text])).lower()
     if any(pattern in combined for pattern in CHALLENGE_PATTERNS):
         signals.append(CLOUDFLARE_CHALLENGE)
-    if response_status == 404 or any(pattern in combined for pattern in NOT_FOUND_PATTERNS):
+    if response_status == 404 or any(
+        pattern in combined for pattern in NOT_FOUND_PATTERNS
+    ):
         signals.append(PUBLISHER_NOT_FOUND)
     if response_status in {401, 402, 403} and CLOUDFLARE_CHALLENGE not in signals:
         signals.append(PUBLISHER_ACCESS_DENIED)
@@ -192,7 +199,9 @@ def detect_html_access_signals(
     return list(dict.fromkeys(signals))
 
 
-def detect_html_block(title: str, text: str, response_status: int | None) -> HtmlExtractionFailure | None:
+def detect_html_block(
+    title: str, text: str, response_status: int | None
+) -> HtmlExtractionFailure | None:
     signals = detect_html_access_signals(title, text, response_status)
     if not signals:
         return None

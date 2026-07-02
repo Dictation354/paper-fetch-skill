@@ -199,7 +199,9 @@ class FetchPipelineTests(unittest.TestCase):
             self.assertEqual(saved, [(result.envelope, saved_path)])
             self.assertIn("download:markdown_saved", result.envelope.source_trail)
 
-    def test_request_builder_applies_context_runtime_resources_without_context_download_dir(self) -> None:
+    def test_request_builder_applies_context_runtime_resources_without_context_download_dir(
+        self,
+    ) -> None:
         transport = object()
         clients = {"crossref": object()}
         explicit_transport = object()

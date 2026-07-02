@@ -3,11 +3,12 @@ set -euo pipefail
 
 usage() {
   cat <<'USAGE'
-Usage: scripts/dev-preflight.sh [--fast] [--skip-integration] [--skip-devtools] [--skip-typecheck]
+Usage: scripts/dev-preflight.sh [--fast] [--coverage] [--skip-integration] [--skip-devtools] [--skip-typecheck]
 
 Runs the local preflight gate:
-  - ruff
-  - contract-layer mypy
+  - ruff format check
+  - ruff lint
+  - contract-layer mypy against project files
   - unit tests
   - devtools tests
   - extraction-rules validation
@@ -15,6 +16,7 @@ Runs the local preflight gate:
 
 Options:
   --fast              Run ruff, mypy, and unit tests only.
+  --coverage          Generate unit coverage baseline reports without enforcing a coverage threshold.
   --skip-integration Skip integration tests.
   --skip-devtools    Skip tests/devtools.
   --skip-typecheck   Skip mypy.
@@ -25,12 +27,16 @@ USAGE
 run_devtools=1
 run_integration=1
 run_typecheck=1
+run_coverage=0
 
 while (($#)); do
   case "$1" in
     --fast)
       run_devtools=0
       run_integration=0
+      ;;
+    --coverage)
+      run_coverage=1
       ;;
     --skip-devtools)
       run_devtools=0
@@ -54,22 +60,50 @@ while (($#)); do
   shift
 done
 
+if [[ -z "${PYTHON_BIN:-}" ]]; then
+  if [[ -x ".venv/bin/python" ]]; then
+    PYTHON_BIN=".venv/bin/python"
+  else
+    PYTHON_BIN="python3"
+  fi
+fi
+
+require_module() {
+  local module="$1"
+  if ! "$PYTHON_BIN" -m "$module" --version >/dev/null 2>&1; then
+    echo "Missing Python module '$module' for $PYTHON_BIN." >&2
+    echo "Run scripts/dev-bootstrap.sh, activate .venv, or set PYTHON_BIN to a prepared interpreter." >&2
+    exit 1
+  fi
+}
+
+require_module ruff
+require_module pytest
+if [[ "$run_typecheck" == "1" ]]; then
+  require_module mypy
+fi
+
 export PYTHONPATH="${PYTHONPATH:-src}"
 
-python3 -m ruff check .
+"$PYTHON_BIN" -m ruff format --check .
+"$PYTHON_BIN" -m ruff check .
 
 if [[ "$run_typecheck" == "1" ]]; then
-  PYTHONPATH=src python3 -m mypy
+  PYTHONPATH=src "$PYTHON_BIN" -m mypy --no-site-packages
 fi
 
-PYTHONPATH=src python3 -m pytest tests/unit -q
+unit_args=(tests/unit -q)
+if [[ "$run_coverage" == "1" ]]; then
+  unit_args+=(--cov=paper_fetch --cov-report=term-missing --cov-report=xml)
+fi
+PYTHONPATH=src "$PYTHON_BIN" -m pytest "${unit_args[@]}"
 
 if [[ "$run_devtools" == "1" ]]; then
-  PYTHONPATH=src python3 -m pytest tests/devtools -q
+  PYTHONPATH=src "$PYTHON_BIN" -m pytest tests/devtools -q
 fi
 
-python3 scripts/validate_extraction_rules.py
+"$PYTHON_BIN" scripts/validate_extraction_rules.py
 
 if [[ "$run_integration" == "1" ]]; then
-  PYTHONPATH=src python3 -m pytest tests/integration -q
+  PYTHONPATH=src "$PYTHON_BIN" -m pytest tests/integration -q
 fi

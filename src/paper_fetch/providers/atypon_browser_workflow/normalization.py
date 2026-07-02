@@ -309,7 +309,7 @@ def _figure_label_from_node_identifier(node: Tag) -> str:
 
 def _caption_label(node: Tag, *, kind: str) -> str:
     label_pattern = FIGURE_LABEL_PATTERN if kind == "Figure" else TABLE_LABEL_PATTERN
-    selectors = (
+    selectors: tuple[str, ...] = (
         ".figure__title",
         "header .label",
         ".label",
@@ -525,7 +525,9 @@ def _figure_like_nodes(
     return _dedupe_top_level_nodes(nodes)
 
 
-BOXED_TEXT_LABEL_PATTERN = re.compile(r"^(?P<label>Box\s+\d+[A-Za-z]?\.?)\s*(?P<caption>.*)$", flags=re.IGNORECASE)
+BOXED_TEXT_LABEL_PATTERN = re.compile(
+    r"^(?P<label>Box\s+\d+[A-Za-z]?\.?)\s*(?P<caption>.*)$", flags=re.IGNORECASE
+)
 
 
 def _boxed_text_replacement_target(node: Tag) -> Tag:
@@ -551,7 +553,9 @@ def _normalize_boxed_text_blocks(container: Tag) -> None:
 
         lines: list[str] = []
         caption_node = node.find("figcaption")
-        caption = _render_caption_text(caption_node) if isinstance(caption_node, Tag) else ""
+        caption = (
+            _render_caption_text(caption_node) if isinstance(caption_node, Tag) else ""
+        )
         match = BOXED_TEXT_LABEL_PATTERN.match(caption)
         if match is not None:
             label = normalize_text(match.group("label"))

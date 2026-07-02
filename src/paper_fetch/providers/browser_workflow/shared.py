@@ -10,7 +10,9 @@ from collections.abc import Callable
 
 from ...quality import html_profiles as _html_profiles
 from ...utils import normalize_text
-from .._pdf_candidates import extract_pdf_url_from_crossref as extract_pdf_url_from_crossref
+from .._pdf_candidates import (
+    extract_pdf_url_from_crossref as extract_pdf_url_from_crossref,
+)
 
 HTML_STRONG_FULLTEXT_MARKERS = _html_profiles.HTML_STRONG_FULLTEXT_MARKERS
 HTML_STRUCTURE_MARKERS = _html_profiles.HTML_STRUCTURE_MARKERS
@@ -43,6 +45,7 @@ _BROWSER_WORKFLOW_DEP_FIELDS = (
     "_browser_workflow_image_download_candidates",
 )
 
+
 @dataclass(frozen=True, init=False)
 class BrowserWorkflowDeps:
     load_runtime_config: Callable[..., Any]
@@ -71,7 +74,9 @@ class BrowserWorkflowDeps:
         unknown = sorted(set(values) - set(_BROWSER_WORKFLOW_DEP_FIELDS))
         if unknown:
             unknown_display = ", ".join(unknown)
-            raise TypeError(f"Unexpected BrowserWorkflowDeps field(s): {unknown_display}")
+            raise TypeError(
+                f"Unexpected BrowserWorkflowDeps field(s): {unknown_display}"
+            )
 
         missing = [name for name in _BROWSER_WORKFLOW_DEP_FIELDS if name not in values]
         if missing:
@@ -149,8 +154,7 @@ def preferred_html_candidate_from_landing_page(
     parsed = urllib.parse.urlparse(candidate)
     hostname = normalize_text(parsed.hostname or "").lower()
     if parsed.scheme not in {"http", "https"} or not any(
-        hostname == token or hostname.endswith(f".{token}")
-        for token in hosts
+        hostname == token or hostname.endswith(f".{token}") for token in hosts
     ):
         return None
     unquoted_candidate = normalize_text(urllib.parse.unquote(candidate)).lower()
@@ -175,7 +179,9 @@ def build_base_urls(
         parsed = urllib.parse.urlparse(preferred)
         hostname = normalize_text(parsed.hostname or "").lower()
         if parsed.scheme in {"http", "https"} and hostname:
-            if any(hostname == token or hostname.endswith(f".{token}") for token in hosts):
+            if any(
+                hostname == token or hostname.endswith(f".{token}") for token in hosts
+            ):
                 base_urls.append(f"{parsed.scheme}://{hostname}")
     for host in base_hosts or hosts:
         candidate = f"https://{host}"
@@ -205,7 +211,9 @@ def build_browser_workflow_html_candidates(
         hosts=hosts,
     )
     _append_unique(candidates, preferred_candidate)
-    for base in build_base_urls(hosts=hosts, base_hosts=base_hosts, landing_page_url=landing_page_url):
+    for base in build_base_urls(
+        hosts=hosts, base_hosts=base_hosts, landing_page_url=landing_page_url
+    ):
         for template in path_templates:
             _append_unique(candidates, f"{base}{template.format(doi=doi)}")
     return candidates
@@ -222,7 +230,9 @@ def build_browser_workflow_pdf_candidates(
     base_seed_url: str | None = None,
 ) -> list[str]:
     generated_candidates: list[str] = []
-    for base in build_base_urls(hosts=hosts, base_hosts=base_hosts, landing_page_url=base_seed_url):
+    for base in build_base_urls(
+        hosts=hosts, base_hosts=base_hosts, landing_page_url=base_seed_url
+    ):
         for template in path_templates:
             _append_unique(generated_candidates, f"{base}{template.format(doi=doi)}")
 

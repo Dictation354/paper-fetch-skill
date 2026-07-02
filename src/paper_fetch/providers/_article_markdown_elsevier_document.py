@@ -129,13 +129,17 @@ def _extract_reference_authors(contribution: ET.Element | None) -> list[str]:
 
 def _extract_reference_title(contribution: ET.Element | None) -> str:
     title_node = first_child(contribution, "title")
-    return _child_text(title_node, "maintitle") or _first_descendant_text(contribution, "maintitle")
+    return _child_text(title_node, "maintitle") or _first_descendant_text(
+        contribution, "maintitle"
+    )
 
 
 def _extract_reference_source(host: ET.Element | None) -> str:
     series_node = first_descendant(host, "series")
     title_node = first_child(series_node, "title")
-    return _child_text(title_node, "maintitle") or _first_descendant_text(host, "maintitle")
+    return _child_text(title_node, "maintitle") or _first_descendant_text(
+        host, "maintitle"
+    )
 
 
 def _format_reference_body(
@@ -187,7 +191,9 @@ def _raw_reference_text(bib_reference: ET.Element, *, label: str) -> str:
     if label:
         label_text = normalize_text(label).strip("[](). ")
         if label_text:
-            text = normalize_text(re.sub(rf"^\[?\s*{re.escape(label_text)}\s*\]?\.?\s*", "", text))
+            text = normalize_text(
+                re.sub(rf"^\[?\s*{re.escape(label_text)}\s*\]?\.?\s*", "", text)
+            )
     return text
 
 
@@ -196,7 +202,11 @@ def _reference_body_is_doi_only(body: str, doi: str) -> bool:
     normalized_doi = normalize_doi(doi).lower().rstrip(".,;")
     if not normalized_body or not normalized_doi:
         return False
-    return normalized_body in {normalized_doi, f"https://doi.org/{normalized_doi}", f"doi: {normalized_doi}"}
+    return normalized_body in {
+        normalized_doi,
+        f"https://doi.org/{normalized_doi}",
+        f"doi: {normalized_doi}",
+    }
 
 
 def _reference_label_is_numeric_counter(label: str, index: int) -> bool:
@@ -208,7 +218,9 @@ def _reference_label_is_numeric_counter(label: str, index: int) -> bool:
 
 def extract_elsevier_references(root: ET.Element) -> list[Reference]:
     references: list[Reference] = []
-    for index, bib_reference in enumerate(_iter_elements_by_local_name(root, "bib-reference"), start=1):
+    for index, bib_reference in enumerate(
+        _iter_elements_by_local_name(root, "bib-reference"), start=1
+    ):
         label = _child_text(bib_reference, "label")
         sb_reference = first_child(bib_reference, "reference")
         if sb_reference is None:
@@ -217,7 +229,9 @@ def extract_elsevier_references(root: ET.Element) -> list[Reference]:
         host = first_child(sb_reference, "host")
         source_text = _child_text(bib_reference, "source-text")
         fallback_text = source_text or _raw_reference_text(bib_reference, label=label)
-        doi = normalize_doi(_first_descendant_text(sb_reference, "doi")) or (extract_doi(source_text) or "")
+        doi = normalize_doi(_first_descendant_text(sb_reference, "doi")) or (
+            extract_doi(source_text) or ""
+        )
         title = _extract_reference_title(contribution)
         year = _first_descendant_text(host, "date")
         body = _format_reference_body(
@@ -237,7 +251,11 @@ def extract_elsevier_references(root: ET.Element) -> list[Reference]:
         if not body:
             body = "[Reference text unavailable]"
         raw = f"{index}. {body}"
-        if label and not _reference_label_is_numeric_counter(label, index) and not body.startswith(label):
+        if (
+            label
+            and not _reference_label_is_numeric_counter(label, index)
+            and not body.startswith(label)
+        ):
             raw = f"{raw} [{label}]"
         references.append(
             Reference(
@@ -286,12 +304,19 @@ def _build_elsevier_article_structure(
     )
     if not abstract_lines:
         fallback_abstract = normalize_text(
-            str(metadata.get("abstract") or child_text(first_descendant(root, "coredata"), "description"))
+            str(
+                metadata.get("abstract")
+                or child_text(first_descendant(root, "coredata"), "description")
+            )
         )
         if fallback_abstract:
             abstract_lines = [fallback_abstract, ""]
-    table_lookup, table_entries = elsevier_table_registry(root, assets, xml_path.with_suffix(".md"))
-    figure_lookup, figure_entries = elsevier_figure_registry(root, assets, xml_path.with_suffix(".md"))
+    table_lookup, table_entries = elsevier_table_registry(
+        root, assets, xml_path.with_suffix(".md")
+    )
+    figure_lookup, figure_entries = elsevier_figure_registry(
+        root, assets, xml_path.with_suffix(".md")
+    )
     body_lines = render_elsevier_blocks(
         body_node,
         heading_level=3,
@@ -306,7 +331,9 @@ def _build_elsevier_article_structure(
     for availability_node in _iter_elements_by_local_name(root, "data-availability"):
         if _contains_element(body_node, availability_node):
             continue
-        availability_title = child_text(availability_node, "section-title") or child_text(availability_node, "title")
+        availability_title = child_text(
+            availability_node, "section-title"
+        ) or child_text(availability_node, "title")
         availability_body_lines = render_elsevier_blocks(
             availability_node,
             heading_level=4,
@@ -322,18 +349,40 @@ def _build_elsevier_article_structure(
             head_availability_lines.extend([f"### {normalized_availability_title}", ""])
         head_availability_lines.extend(availability_body_lines)
     body_lines.extend(head_availability_lines)
-    supplement_entries = elsevier_supplement_entries(root, assets, xml_path.with_suffix(".md"))
+    supplement_entries = elsevier_supplement_entries(
+        root, assets, xml_path.with_suffix(".md")
+    )
     references = extract_elsevier_references(root)
 
     semantic_losses = SemanticLosses(
-        table_fallback_count=sum(1 for entry in table_entries if normalize_text(str(entry.get("kind") or "")) == "fallback"),
-        table_layout_degraded_count=sum(1 for entry in table_entries if normalize_text(str(entry.get("lossy_message") or ""))),
-        formula_fallback_count=sum(1 for result in formula_renders if getattr(result, "fallback_kind", None) == "fallback"),
-        formula_missing_count=sum(1 for result in formula_renders if getattr(result, "fallback_kind", None) == "missing"),
+        table_fallback_count=sum(
+            1
+            for entry in table_entries
+            if normalize_text(str(entry.get("kind") or "")) == "fallback"
+        ),
+        table_layout_degraded_count=sum(
+            1
+            for entry in table_entries
+            if normalize_text(str(entry.get("lossy_message") or ""))
+        ),
+        formula_fallback_count=sum(
+            1
+            for result in formula_renders
+            if getattr(result, "fallback_kind", None) == "fallback"
+        ),
+        formula_missing_count=sum(
+            1
+            for result in formula_renders
+            if getattr(result, "fallback_kind", None) == "missing"
+        ),
     )
     conversion_notes = collect_conversion_notes(
         table_entries=table_entries,
-        formula_notes=[str(result.note) for result in formula_renders if normalize_text(str(result.note or ""))],
+        formula_notes=[
+            str(result.note)
+            for result in formula_renders
+            if normalize_text(str(result.note or ""))
+        ],
     )
     return ArticleStructure(
         title=title,
@@ -410,7 +459,9 @@ def build_markdown_document(
         lines.append(f"- Journal: {structure.journal_title}")
     if structure.published:
         lines.append(f"- Published: {structure.published}")
-    lines.append(f"- XML: [{structure.xml_path.name}]({path_relative_to(structure.xml_path.parent, structure.xml_path)})")
+    lines.append(
+        f"- XML: [{structure.xml_path.name}]({path_relative_to(structure.xml_path.parent, structure.xml_path)})"
+    )
     if structure.landing_page:
         lines.append(f"- Landing Page: {structure.landing_page}")
     lines.append("")
@@ -427,7 +478,8 @@ def build_markdown_document(
     remaining_figure_entries = [
         entry
         for entry in structure.figure_entries
-        if entry["key"] not in structure.used_figure_keys and entry.get("section") == "body"
+        if entry["key"] not in structure.used_figure_keys
+        and entry.get("section") == "body"
     ]
     if remaining_figure_entries:
         lines.extend(["## Additional Figures", ""])
@@ -438,7 +490,8 @@ def build_markdown_document(
     remaining_table_entries = [
         entry
         for entry in structure.table_entries
-        if str(entry["key"]) not in structure.used_table_keys and entry.get("section") == "body"
+        if str(entry["key"]) not in structure.used_table_keys
+        and entry.get("section") == "body"
     ]
     if remaining_table_entries:
         lines.extend(["## Additional Tables", ""])

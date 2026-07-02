@@ -55,7 +55,9 @@ def _prepend_path(monkeypatch: pytest.MonkeyPatch, path: Path) -> None:
     monkeypatch.setenv("PATH", value)
 
 
-def _write_fake_codex_wrapper(bin_dir: Path, agent: Path, *, repo_root: Path = REPO_ROOT) -> Path:
+def _write_fake_codex_wrapper(
+    bin_dir: Path, agent: Path, *, repo_root: Path = REPO_ROOT
+) -> Path:
     return _write_executable(
         bin_dir / "codex",
         f"""
@@ -145,8 +147,9 @@ def test_start_provider_dry_run_writes_dag_and_worker_briefs(tmp_path: Path) -> 
     assert dag["human_gates"][0]["operator_must_edit"] == (
         "onboarding/access-reviews/mdpi.yml"
     )
-    assert "finalize-review-artifact --provider mdpi --confirmed-final-quality" in (
-        dag["human_gates"][1]["command"]
+    assert (
+        "finalize-review-artifact --provider mdpi --confirmed-final-quality"
+        in (dag["human_gates"][1]["command"])
     )
     assert discover_brief_path.is_file()
     assert implement_brief_path.is_file()
@@ -163,22 +166,20 @@ def test_start_provider_dry_run_writes_dag_and_worker_briefs(tmp_path: Path) -> 
     assert implement_brief["upstream_artifacts"]["cleaning_proposal"] == (
         "onboarding/cleaning-chain-proposals/mdpi.yml"
     )
-    assert implement_brief["cleaning_proposal"]["producer_task"] == "propose-cleaning-chain"
-    assert implement_brief["access_review"] == (
-        "onboarding/access-reviews/mdpi.yml"
+    assert (
+        implement_brief["cleaning_proposal"]["producer_task"]
+        == "propose-cleaning-chain"
     )
+    assert implement_brief["access_review"] == ("onboarding/access-reviews/mdpi.yml")
     assert implement_brief["access_policy_constraints"]["do_not_auto_login"] is True
     assert implement_brief["access_policy_constraints"]["do_not_solve_captcha"] is True
-    assert implement_brief["hard_constraints"] == (
-        "onboarding/hard-constraints.md"
-    )
+    assert implement_brief["hard_constraints"] == ("onboarding/hard-constraints.md")
     assert HARD_CONSTRAINTS_PATH.is_file()
     assert implement_brief["no_commit"] is True
     assert implement_brief["markdown_review_loop"] == {
         "required": True,
         "fixture_source": (
-            "provider_manifest.fixtures.doi_samples + "
-            "provider_manifest.extra_fixtures"
+            "provider_manifest.fixtures.doi_samples + provider_manifest.extra_fixtures"
         ),
         "route_contract_source": "provider_manifest.route_contract",
         "markdown_contract_source": "provider_manifest.markdown_contract",
@@ -202,8 +203,7 @@ def test_start_provider_dry_run_writes_dag_and_worker_briefs(tmp_path: Path) -> 
     }
     assert implement_brief["coordinator_integration_scope"] == {
         "route_sources": (
-            "provider_manifest.route_sources maps main_path steps to "
-            "runtime sources."
+            "provider_manifest.route_sources maps main_path steps to runtime sources."
         ),
         "extra_fixtures": (
             "provider_manifest.extra_fixtures extends capture and Markdown "
@@ -260,21 +260,22 @@ def test_start_provider_dry_run_writes_dag_and_worker_briefs(tmp_path: Path) -> 
         "tests/unit/test_provider_markdown_review_contract.py -q"
     ) in implement_brief["acceptance"]["pytest"]
     assert (
-        "PYTHONPATH=src python3 -m pytest "
-        "tests/unit/test_provider_asset_contract.py -q"
+        "PYTHONPATH=src python3 -m pytest tests/unit/test_provider_asset_contract.py -q"
     ) in implement_brief["acceptance"]["pytest"]
     assert (
-        "PYTHONPATH=src python3 -m pytest "
-        "tests/unit/test_provider_route_contract.py -q"
+        "PYTHONPATH=src python3 -m pytest tests/unit/test_provider_route_contract.py -q"
     ) in implement_brief["acceptance"]["pytest"]
     assert "files_allowed_to_modify" in implement_brief
     assert "files_must_not_modify" in implement_brief
     assert "onboarding/manifests/mdpi.yml" in implement_brief["files_allowed_to_modify"]
-    assert "src/paper_fetch/providers/_mdpi_*.py" in implement_brief["files_allowed_to_modify"]
-    assert "tests/unit/test_mdpi_*.py" in implement_brief["files_allowed_to_modify"]
-    assert implement_brief["manifest_adjustment_policy"]["allowed_only_for_failure_code"] == (
-        "MARKDOWN_CONTRACT_DRIFT"
+    assert (
+        "src/paper_fetch/providers/_mdpi_*.py"
+        in implement_brief["files_allowed_to_modify"]
     )
+    assert "tests/unit/test_mdpi_*.py" in implement_brief["files_allowed_to_modify"]
+    assert implement_brief["manifest_adjustment_policy"][
+        "allowed_only_for_failure_code"
+    ] == ("MARKDOWN_CONTRACT_DRIFT")
     grep_paths = set(implement_brief["acceptance"]["grep_must_be_empty"][0]["paths"])
     forbidden_paths = set(implement_brief["files_must_not_modify"])
     assert CENTRAL_PROVIDER_LOGIC_PATHS <= grep_paths
@@ -337,7 +338,9 @@ def test_prepare_discovery_cli_no_network_writes_evidence_pack(tmp_path: Path) -
         "--no-network",
     )
     payload = json.loads(result.stdout)
-    pack = json.loads((tmp_path / "discovery" / "evidence-pack.json").read_text(encoding="utf-8"))
+    pack = json.loads(
+        (tmp_path / "discovery" / "evidence-pack.json").read_text(encoding="utf-8")
+    )
 
     assert payload["provider"] == "newpub"
     assert payload["network_enabled"] is False
@@ -410,7 +413,9 @@ def test_discovery_http_403_uses_browser_fallback_when_access_allows() -> None:
     assert {"body_tables", "table_evidence"} <= set(probe["observed_signals"])
 
 
-def test_discovery_browser_required_provider_falls_back_for_missing_purpose_signal() -> None:
+def test_discovery_browser_required_provider_falls_back_for_missing_purpose_signal() -> (
+    None
+):
     module = load_script_module("onboard_from_manifests")
     calls: list[str] = []
 
@@ -457,7 +462,9 @@ def test_discovery_access_review_disallowing_browser_keeps_http_evidence(
         "_load_optional_access_review",
         lambda _provider: {"allowed_runtimes": ["http"]},
     )
-    monkeypatch.setattr(module, "_provider_requires_browser_runtime", lambda _provider: True)
+    monkeypatch.setattr(
+        module, "_provider_requires_browser_runtime", lambda _provider: True
+    )
     policy = module._discovery_browser_fallback_policy(
         provider="newpub",
         mode="auto",
@@ -709,8 +716,12 @@ def test_discovery_unprobed_fulltext_candidates_do_not_rank_as_high(
     assert errors == []
     assert all("probe" in candidate for candidate in candidates["table"][:3])
     assert all("probe" not in candidate for candidate in candidates["table"][3:])
-    assert {candidate["confidence"] for candidate in candidates["table"][:3]} == {"medium"}
-    assert {candidate["confidence"] for candidate in candidates["table"][3:]} == {"medium"}
+    assert {candidate["confidence"] for candidate in candidates["table"][:3]} == {
+        "medium"
+    }
+    assert {candidate["confidence"] for candidate in candidates["table"][3:]} == {
+        "medium"
+    }
 
 
 def test_start_manifest_replay_skips_discover_brief(tmp_path: Path) -> None:
@@ -774,7 +785,9 @@ def test_state_commands_persist_next_verify_and_advance(tmp_path: Path) -> None:
     assert state["active_provider"] == "mdpi"
     assert provider_state["completed_steps"] == ["operator-access-preflight"]
     assert provider_state["task_statuses"]["discover-manifest"] == "in_progress"
-    assert provider_state["verifications"]["provider-local-acceptance"]["dry_run"] is True
+    assert (
+        provider_state["verifications"]["provider-local-acceptance"]["dry_run"] is True
+    )
 
 
 def test_verify_plan_uses_existing_tool_interfaces(tmp_path: Path) -> None:
@@ -874,7 +887,11 @@ def test_verify_plan_uses_existing_tool_interfaces(tmp_path: Path) -> None:
         "--doi",
         "10.3390/membranes15030093",
     ] in snapshot_commands
-    assert ["python3", "scripts/snapshot_expected.py", "--help"] not in snapshot_commands
+    assert [
+        "python3",
+        "scripts/snapshot_expected.py",
+        "--help",
+    ] not in snapshot_commands
 
     implement = run_cli(
         "verify",
@@ -972,7 +989,9 @@ def test_verify_plan_uses_existing_tool_interfaces(tmp_path: Path) -> None:
     ] in local_acceptance_commands
 
 
-def test_live_review_policy_defaults_to_future_providers_and_exempts_legacy_non_risk() -> None:
+def test_live_review_policy_defaults_to_future_providers_and_exempts_legacy_non_risk() -> (
+    None
+):
     module = load_script_module("onboard_from_manifests")
 
     future_live_command = [
@@ -1034,12 +1053,9 @@ def test_written_state_matches_schema(tmp_path: Path) -> None:
 def test_access_review_schema_accepts_required_operator_fields() -> None:
     schema = json.loads(ACCESS_REVIEW_SCHEMA_PATH.read_text(encoding="utf-8"))
     review = yaml.safe_load(
-        (
-            REPO_ROOT
-            / "onboarding"
-            / "access-reviews"
-            / "mdpi.yml"
-        ).read_text(encoding="utf-8")
+        (REPO_ROOT / "onboarding" / "access-reviews" / "mdpi.yml").read_text(
+            encoding="utf-8"
+        )
     )
 
     Draft202012Validator.check_schema(schema)
@@ -1189,7 +1205,9 @@ print("worker ok")
     state_path = tmp_path / "state.json"
     output_dir = tmp_path / "run"
     _prepend_path(monkeypatch, tmp_path / "bin")
-    monkeypatch.setenv("PROVIDER_ONBOARDING_AGENT_CLI", f"{sys.executable} {fake_agent}")
+    monkeypatch.setenv(
+        "PROVIDER_ONBOARDING_AGENT_CLI", f"{sys.executable} {fake_agent}"
+    )
 
     result = run_cli(
         "run",
@@ -1321,7 +1339,9 @@ def test_validate_manifest_runs_pre_and_targeted_autofix(
     assert calls == [False, True]
 
 
-def test_run_checks_emits_structured_failure_for_missing_access_review(tmp_path: Path) -> None:
+def test_run_checks_emits_structured_failure_for_missing_access_review(
+    tmp_path: Path,
+) -> None:
     state_path = tmp_path / "state.json"
     result = subprocess.run(
         [
@@ -1346,7 +1366,9 @@ def test_run_checks_emits_structured_failure_for_missing_access_review(tmp_path:
     assert payload["code"] == "ACCESS_REVIEW_NOT_FOUND"
     assert payload["retryable"] is False
     state = json.loads(state_path.read_text(encoding="utf-8"))
-    failure = state["providers"]["newpub"]["runs"]["operator-access-preflight"]["failure"]
+    failure = state["providers"]["newpub"]["runs"]["operator-access-preflight"][
+        "failure"
+    ]
     assert failure["code"] == "ACCESS_REVIEW_NOT_FOUND"
     assert failure["structured_error"]["code"] == "ACCESS_REVIEW_NOT_FOUND"
 
@@ -1376,7 +1398,9 @@ def test_run_access_preflight_failure_is_diagnosable(tmp_path: Path) -> None:
         text=True,
         capture_output=True,
     )
-    diagnosis_result = run_cli("diagnose", "--provider", "newpub", "--state", str(state_path))
+    diagnosis_result = run_cli(
+        "diagnose", "--provider", "newpub", "--state", str(state_path)
+    )
     diagnosis = json.loads(diagnosis_result.stdout)["providers"][0]
 
     assert result.returncode != 0
@@ -1520,7 +1544,9 @@ def test_diagnose_reports_retryable_failure_and_recovery_action(tmp_path: Path) 
     assert "retry budget" in diagnosis["failure"]["action"]
 
 
-def test_resume_blocked_requires_pdf_fallback_sample_replacement(tmp_path: Path) -> None:
+def test_resume_blocked_requires_pdf_fallback_sample_replacement(
+    tmp_path: Path,
+) -> None:
     state_path = tmp_path / "state.json"
     _write_blocked_state(state_path, code="NON_PDF_FALLBACK_CONTENT")
 
@@ -1536,7 +1562,10 @@ def test_resume_blocked_requires_pdf_fallback_sample_replacement(tmp_path: Path)
     plan = payload["resume_plan"]
 
     assert plan["resumable"] is False
-    assert "failed pdf_fallback DOI sample must be replaced before retry" in plan["blockers"]
+    assert (
+        "failed pdf_fallback DOI sample must be replaced before retry"
+        in plan["blockers"]
+    )
 
 
 def test_diagnose_ignores_stale_failure_for_completed_task(tmp_path: Path) -> None:
@@ -1551,7 +1580,9 @@ def test_diagnose_ignores_stale_failure_for_completed_task(tmp_path: Path) -> No
     provider_state["status"] = "merge_ready"
     provider_state["current_step"] = None
     provider_state["completed_steps"] = list(provider_state["steps"])
-    provider_state["task_statuses"] = {step: "completed" for step in provider_state["steps"]}
+    provider_state["task_statuses"] = {
+        step: "completed" for step in provider_state["steps"]
+    }
     state["active_provider"] = None
     state_path.write_text(json.dumps(state), encoding="utf-8")
 
@@ -1564,7 +1595,9 @@ def test_diagnose_ignores_stale_failure_for_completed_task(tmp_path: Path) -> No
     assert diagnosis["operator_required"] is False
 
 
-def test_markdown_contract_drift_recovery_targets_implementation(tmp_path: Path) -> None:
+def test_markdown_contract_drift_recovery_targets_implementation(
+    tmp_path: Path,
+) -> None:
     state_path = tmp_path / "state.json"
     _write_blocked_state(
         state_path,
@@ -1572,7 +1605,9 @@ def test_markdown_contract_drift_recovery_targets_implementation(tmp_path: Path)
         code="MARKDOWN_CONTRACT_DRIFT",
     )
 
-    diagnosis_result = run_cli("diagnose", "--provider", "mdpi", "--state", str(state_path))
+    diagnosis_result = run_cli(
+        "diagnose", "--provider", "mdpi", "--state", str(state_path)
+    )
     diagnosis = json.loads(diagnosis_result.stdout)["providers"][0]
     resume_result = run_cli(
         "resume-blocked",
@@ -1613,7 +1648,9 @@ def test_resume_blocked_dry_run_requires_approved_access_review(tmp_path: Path) 
     assert state_path.read_text(encoding="utf-8") == before
 
 
-def test_resume_blocked_executes_retryable_prefix_after_preconditions(tmp_path: Path) -> None:
+def test_resume_blocked_executes_retryable_prefix_after_preconditions(
+    tmp_path: Path,
+) -> None:
     state_path = tmp_path / "state.json"
     output_dir = tmp_path / "run"
     _write_blocked_state(
@@ -1658,7 +1695,9 @@ def test_run_refuses_merge_ready_state_with_failed_task(tmp_path: Path) -> None:
     steps = provider_state["steps"]
     provider_state["status"] = "merge_ready"
     provider_state["current_step"] = None
-    provider_state["completed_steps"] = [step for step in steps if step != "snapshot-expected"]
+    provider_state["completed_steps"] = [
+        step for step in steps if step != "snapshot-expected"
+    ]
     provider_state["task_statuses"] = {step: "completed" for step in steps}
     provider_state["task_statuses"]["snapshot-expected"] = "failed"
     state["active_provider"] = None
@@ -1695,7 +1734,9 @@ def test_run_refuses_merge_ready_state_with_failed_task(tmp_path: Path) -> None:
     assert updated_provider["task_statuses"]["snapshot-expected"] == "failed"
 
 
-def test_summarize_outputs_json_and_markdown_without_fabricated_passes(tmp_path: Path) -> None:
+def test_summarize_outputs_json_and_markdown_without_fabricated_passes(
+    tmp_path: Path,
+) -> None:
     state_path = tmp_path / "state.json"
     markdown_path = tmp_path / "summary.md"
     _write_blocked_state(state_path, code="NETWORK_TRANSIENT")
@@ -1727,7 +1768,9 @@ def test_summarize_outputs_json_and_markdown_without_fabricated_passes(tmp_path:
         str(state_path),
     )
     payload = json.loads(result.stdout)
-    diagnosis_result = run_cli("diagnose", "--provider", "mdpi", "--state", str(state_path))
+    diagnosis_result = run_cli(
+        "diagnose", "--provider", "mdpi", "--state", str(state_path)
+    )
     diagnosis = json.loads(diagnosis_result.stdout)["providers"][0]
 
     assert payload["provider"] == "mdpi"
@@ -1765,17 +1808,23 @@ def test_summarize_outputs_json_and_markdown_without_fabricated_passes(tmp_path:
     assert "onboarding/reviews/mdpi.yml" in markdown
     assert "## Markdown Quality Repairs" in markdown
     assert "doi=10.3390/su12072826 status=failed attempts=2 quality=fail" in markdown
-    assert "tests/fixtures/golden_criteria/10.3390_membranes15030093/structure" in markdown
+    assert (
+        "tests/fixtures/golden_criteria/10.3390_membranes15030093/structure" in markdown
+    )
     assert "issue_ids=[] fix_ids=[] tests=[]" in markdown
     assert "## Run Checks" in markdown
     assert "- command: `fake-command`" in markdown
     assert "## Verification Plans" in markdown
     assert "- provider-local-acceptance: result=planned" in markdown
-    assert "- command: `python3 -m pytest tests/unit/test_mdpi_provider.py -q`" in markdown
+    assert (
+        "- command: `python3 -m pytest tests/unit/test_mdpi_provider.py -q`" in markdown
+    )
     assert "no recorded run-check results" not in markdown
 
 
-def test_agent_summary_maps_provider_local_acceptance_to_local_ready(tmp_path: Path) -> None:
+def test_agent_summary_maps_provider_local_acceptance_to_local_ready(
+    tmp_path: Path,
+) -> None:
     state_path = tmp_path / "state.json"
     _write_blocked_state(state_path, task="global-lint", code="GLOBAL_LINT_FAILED")
     state = json.loads(state_path.read_text(encoding="utf-8"))
@@ -1879,9 +1928,9 @@ def test_dispatch_worker_rejects_changes_outside_allowed_scope(
 
     assert exc.value.code == "WORKER_MODIFIED_FORBIDDEN_FILE"
     assert exc.value.details["disallowed_paths"] == ["docs/providers.md"]
-    assert provider_state["runs"]["implement-provider"]["failure"]["disallowed_paths"] == [
-        "docs/providers.md"
-    ]
+    assert provider_state["runs"]["implement-provider"]["failure"][
+        "disallowed_paths"
+    ] == ["docs/providers.md"]
 
 
 def _agent_quality_report(
@@ -1900,7 +1949,9 @@ def _agent_quality_report(
         "prompt_path": "tests/fixtures/golden_criteria/10.1234_sample/markdown-quality-prompt.md",
         "status": status,
         "issues": issues,
-        "blocking_issue_count": sum(1 for item in issues if item.get("blocking") is True),
+        "blocking_issue_count": sum(
+            1 for item in issues if item.get("blocking") is True
+        ),
     }
     if status != "pending_agent_review":
         report["reviewed_by"] = "codex-agent"
@@ -1935,9 +1986,13 @@ markdown_contract:
 """,
         encoding="utf-8",
     )
-    (fixture_dir / "expected.json").write_text('{"expected_content_kind":"fulltext"}\n', encoding="utf-8")
+    (fixture_dir / "expected.json").write_text(
+        '{"expected_content_kind":"fulltext"}\n', encoding="utf-8"
+    )
     (fixture_dir / "extracted.md").write_text("# Demo\n", encoding="utf-8")
-    (fixture_dir / "markdown-quality-prompt.md").write_text("Review prompt\n", encoding="utf-8")
+    (fixture_dir / "markdown-quality-prompt.md").write_text(
+        "Review prompt\n", encoding="utf-8"
+    )
     issue = None
     if quality_status == "fail":
         issue = {
@@ -2040,7 +2095,9 @@ def test_check_snapshot_requires_prompt_asset_and_agent_pass_report(
     module = load_script_module("onboard_from_manifests")
     monkeypatch.setattr(module, "_repo_root", lambda: tmp_path)
     fake_agent = _write_fake_fresh_quality_agent(tmp_path)
-    monkeypatch.setenv("PROVIDER_ONBOARDING_AGENT_CLI", f"{sys.executable} {fake_agent}")
+    monkeypatch.setenv(
+        "PROVIDER_ONBOARDING_AGENT_CLI", f"{sys.executable} {fake_agent}"
+    )
     args = argparse.Namespace(provider="newpub", doi="10.1234/sample")
 
     _write_check_snapshot_fixture(tmp_path)
@@ -2050,7 +2107,9 @@ def test_check_snapshot_requires_prompt_asset_and_agent_pass_report(
     with pytest.raises(module.ToolError) as prompt_missing:
         module.run_check_snapshot(args)
     assert prompt_missing.value.code == "EXPECTED_SNAPSHOT_FAILED"
-    assert prompt_missing.value.details["missing_assets"] == ["markdown-quality-prompt.md"]
+    assert prompt_missing.value.details["missing_assets"] == [
+        "markdown-quality-prompt.md"
+    ]
 
     _write_check_snapshot_fixture(tmp_path, quality_status="pending_agent_review")
     with pytest.raises(module.ToolError) as pending:
@@ -2077,7 +2136,12 @@ def test_check_snapshot_uses_default_codex_dispatcher_for_fresh_report(
     _prepend_path(monkeypatch, tmp_path / "bin")
     _write_check_snapshot_fixture(tmp_path)
 
-    assert module.run_check_snapshot(argparse.Namespace(provider="newpub", doi="10.1234/sample")) == 0
+    assert (
+        module.run_check_snapshot(
+            argparse.Namespace(provider="newpub", doi="10.1234/sample")
+        )
+        == 0
+    )
 
     fresh_reports = list(
         (tmp_path / ".paper-fetch-runs" / "newpub-markdown-quality-audit").glob(
@@ -2095,12 +2159,18 @@ def test_check_snapshot_fresh_review_blocks_stale_pass_report(
 ) -> None:
     module = load_script_module("onboard_from_manifests")
     monkeypatch.setattr(module, "_repo_root", lambda: tmp_path)
-    fake_agent = _write_fake_fresh_quality_agent(tmp_path, status="fail", issue_id="fresh-empty-figures")
-    monkeypatch.setenv("PROVIDER_ONBOARDING_AGENT_CLI", f"{sys.executable} {fake_agent}")
+    fake_agent = _write_fake_fresh_quality_agent(
+        tmp_path, status="fail", issue_id="fresh-empty-figures"
+    )
+    monkeypatch.setenv(
+        "PROVIDER_ONBOARDING_AGENT_CLI", f"{sys.executable} {fake_agent}"
+    )
     _write_check_snapshot_fixture(tmp_path, quality_status="pass")
 
     with pytest.raises(module.ToolError) as stale_pass:
-        module.run_check_snapshot(argparse.Namespace(provider="newpub", doi="10.1234/sample"))
+        module.run_check_snapshot(
+            argparse.Namespace(provider="newpub", doi="10.1234/sample")
+        )
 
     assert stale_pass.value.code == "MARKDOWN_QUALITY_FAILED"
     assert stale_pass.value.details["markdown_quality_status"] == "pass"
@@ -2209,9 +2279,15 @@ fixtures:
 """,
         encoding="utf-8",
     )
-    (fixture_dir / "expected.json").write_text('{"expected_content_kind":"fulltext"}\n', encoding="utf-8")
-    (fixture_dir / "extracted.md").write_text("# Demo\n\n## Abstract\n\n| orphan | row |\n", encoding="utf-8")
-    (fixture_dir / "markdown-quality-prompt.md").write_text("Review prompt\n", encoding="utf-8")
+    (fixture_dir / "expected.json").write_text(
+        '{"expected_content_kind":"fulltext"}\n', encoding="utf-8"
+    )
+    (fixture_dir / "extracted.md").write_text(
+        "# Demo\n\n## Abstract\n\n| orphan | row |\n", encoding="utf-8"
+    )
+    (fixture_dir / "markdown-quality-prompt.md").write_text(
+        "Review prompt\n", encoding="utf-8"
+    )
     issue = None
     if quality_status == "fail":
         issue = {
@@ -2222,7 +2298,8 @@ fixtures:
             "evidence": evidence,
         }
     (fixture_dir / "markdown-quality.json").write_text(
-        json.dumps(_agent_quality_report(status=quality_status, issue=issue), indent=2) + "\n",
+        json.dumps(_agent_quality_report(status=quality_status, issue=issue), indent=2)
+        + "\n",
         encoding="utf-8",
     )
     (fixture_dir.parent / "manifest.json").write_text(
@@ -2309,12 +2386,23 @@ def test_repair_markdown_quality_brief_includes_issue_scope_and_verification(
 
     assert "table" in brief["repair_domains"]
     assert brief["quality_issues"][0]["evidence"] == "| orphan | row |"
-    assert "tests/fixtures/golden_criteria/10.1234_sample/**" in brief["files_allowed_to_modify"]
+    assert (
+        "tests/fixtures/golden_criteria/10.1234_sample/**"
+        in brief["files_allowed_to_modify"]
+    )
     assert "tests/unit/test_newpub_provider.py" in brief["files_allowed_to_modify"]
-    assert "src/paper_fetch/extraction/markdown_render.py" in brief["files_allowed_to_modify"]
+    assert (
+        "src/paper_fetch/extraction/markdown_render.py"
+        in brief["files_allowed_to_modify"]
+    )
     assert "onboarding/known-providers.yml" in brief["files_must_not_modify"]
-    assert any("scripts/snapshot_expected.py" in command for command in brief["verification_commands"][1])
-    assert brief["required_order"][0].startswith("Add or update a provider-local regression test")
+    assert any(
+        "scripts/snapshot_expected.py" in command
+        for command in brief["verification_commands"][1]
+    )
+    assert brief["required_order"][0].startswith(
+        "Add or update a provider-local regression test"
+    )
 
 
 def test_repair_markdown_quality_requires_agent_for_fresh_review(
@@ -2401,7 +2489,9 @@ else:
     def fake_run_env(command: list[str]) -> subprocess.CompletedProcess[str]:
         return subprocess.CompletedProcess(command, 0, "ok\n", "")
 
-    monkeypatch.setenv("PROVIDER_ONBOARDING_AGENT_CLI", f"{sys.executable} {fake_agent}")
+    monkeypatch.setenv(
+        "PROVIDER_ONBOARDING_AGENT_CLI", f"{sys.executable} {fake_agent}"
+    )
     monkeypatch.setattr(module, "_run_env_command", fake_run_env)
 
     result = module.run_repair_markdown_quality(
@@ -2415,7 +2505,9 @@ else:
     )
     state = json.loads((tmp_path / "state.json").read_text(encoding="utf-8"))
     repair = state["providers"]["newpub"]["repairs"]["markdown_quality"][0]
-    review = yaml.safe_load((tmp_path / "onboarding" / "reviews" / "newpub.yml").read_text(encoding="utf-8"))
+    review = yaml.safe_load(
+        (tmp_path / "onboarding" / "reviews" / "newpub.yml").read_text(encoding="utf-8")
+    )
 
     assert result == 0
     assert repair["status"] == "passed"
@@ -2423,7 +2515,14 @@ else:
     assert repair["issue_ids"] == ["broken-table"]
     assert repair["quality_status"] == "pass"
     assert repair["review_artifact_updated"] is True
-    assert (tmp_path / "run" / "markdown-quality" / "10.1234_sample" / "attempt-1" / "repair-brief.yml").is_file()
+    assert (
+        tmp_path
+        / "run"
+        / "markdown-quality"
+        / "10.1234_sample"
+        / "attempt-1"
+        / "repair-brief.yml"
+    ).is_file()
     assert review["fixtures"][0]["markdown_semantic_reviewed"] is False
     assert review["fixtures"][0]["markdown_quality_sha256"] != "1" * 64
 
@@ -2480,7 +2579,9 @@ print("ok")
         encoding="utf-8",
     )
 
-    monkeypatch.setenv("PROVIDER_ONBOARDING_AGENT_CLI", f"{sys.executable} {fake_agent}")
+    monkeypatch.setenv(
+        "PROVIDER_ONBOARDING_AGENT_CLI", f"{sys.executable} {fake_agent}"
+    )
     monkeypatch.setattr(
         module,
         "_run_env_command",
@@ -2626,7 +2727,9 @@ print("done")
     def fake_run_env(command: list[str]) -> subprocess.CompletedProcess[str]:
         return subprocess.CompletedProcess(command, 0, "ok\n", "")
 
-    monkeypatch.setenv("PROVIDER_ONBOARDING_AGENT_CLI", f"{sys.executable} {fake_agent}")
+    monkeypatch.setenv(
+        "PROVIDER_ONBOARDING_AGENT_CLI", f"{sys.executable} {fake_agent}"
+    )
     monkeypatch.setattr(module, "_run_env_command", fake_run_env)
 
     with pytest.raises(module.ToolError) as failed:

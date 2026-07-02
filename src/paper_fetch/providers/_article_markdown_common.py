@@ -8,7 +8,7 @@ import urllib.parse
 import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Any
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 
 from ._article_markdown_xml import (
     child_text,
@@ -61,13 +61,16 @@ __all__ = [
 ]
 
 
-def iter_children(element: ET.Element | None, local_name: str | None = None) -> list[ET.Element]:
+def iter_children(
+    element: ET.Element | None, local_name: str | None = None
+) -> list[ET.Element]:
     if element is None:
         return []
     return [
         child
         for child in list(element)
-        if isinstance(child.tag, str) and (local_name is None or xml_local_name(child.tag) == local_name)
+        if isinstance(child.tag, str)
+        and (local_name is None or xml_local_name(child.tag) == local_name)
     ]
 
 
@@ -87,7 +90,9 @@ def normalize_inline_markup_text(value: str | None) -> str:
         return ""
 
     text = INLINE_SPLIT_SUBSCRIPT_PATTERN.sub(
-        lambda match: f"*{match.group('base')}*<sub>{match.group('italic_sub') or match.group('plain_sub')}</sub>",
+        lambda match: (
+            f"*{match.group('base')}*<sub>{match.group('italic_sub') or match.group('plain_sub')}</sub>"
+        ),
         text,
     )
     text = re.sub(r"\s*(<(?:sub|sup)>)\s*", r"\1", text, flags=re.IGNORECASE)
@@ -95,14 +100,18 @@ def normalize_inline_markup_text(value: str | None) -> str:
     text = re.sub(r"\s+(<(?:sub|sup)>)", r"\1", text, flags=re.IGNORECASE)
     text = re.sub(r"(</(?:sub|sup)>)\s*\n\s*", r"\1 ", text, flags=re.IGNORECASE)
     text = re.sub(r"(</(?:sub|sup)>)(?=[A-Za-z0-9])", r"\1 ", text, flags=re.IGNORECASE)
-    text = re.sub(r"(</(?:sub|sup)>)\s+([,.;:%\]\}\+\)])", r"\1\2", text, flags=re.IGNORECASE)
+    text = re.sub(
+        r"(</(?:sub|sup)>)\s+([,.;:%\]\}\+\)])", r"\1\2", text, flags=re.IGNORECASE
+    )
     text = re.sub(r"\s*\n\s*([,.;:%\]\}\)])", r"\1", text)
     text = re.sub(r"([(\[{])\s*\n\s*", r"\1", text)
     text = re.sub(r"(?<=[A-Za-z0-9>])\s*\n\s*(?=[A-Za-z0-9*_<])", " ", text)
     return text.strip()
 
 
-def render_inline_text(element: ET.Element | None, *, skip_local_names: set[str] | None = None) -> str:
+def render_inline_text(
+    element: ET.Element | None, *, skip_local_names: set[str] | None = None
+) -> str:
     if element is None:
         return ""
 
@@ -131,7 +140,9 @@ def render_inline_text(element: ET.Element | None, *, skip_local_names: set[str]
                     parts.append(child.tail)
                 continue
             if local_name == "math":
-                expression = render_external_mathml_expression(child, display_mode=False)
+                expression = render_external_mathml_expression(
+                    child, display_mode=False
+                )
                 if expression:
                     parts.append(f"${expression}$")
             elif local_name == "inline-formula":
@@ -143,13 +154,21 @@ def render_inline_text(element: ET.Element | None, *, skip_local_names: set[str]
                 if expression:
                     parts.append(f"${expression}$")
             if local_name == "sup":
-                parts.append(f"<sup>{render_inline_text(child, skip_local_names=skip_names)}</sup>")
+                parts.append(
+                    f"<sup>{render_inline_text(child, skip_local_names=skip_names)}</sup>"
+                )
             elif local_name == "sub":
-                parts.append(f"<sub>{render_inline_text(child, skip_local_names=skip_names)}</sub>")
+                parts.append(
+                    f"<sub>{render_inline_text(child, skip_local_names=skip_names)}</sub>"
+                )
             elif local_name in {"bold"}:
-                parts.append(f"**{render_inline_text(child, skip_local_names=skip_names)}**")
+                parts.append(
+                    f"**{render_inline_text(child, skip_local_names=skip_names)}**"
+                )
             elif local_name in {"italic"}:
-                parts.append(f"*{render_inline_text(child, skip_local_names=skip_names)}*")
+                parts.append(
+                    f"*{render_inline_text(child, skip_local_names=skip_names)}*"
+                )
             elif local_name in {"break", "br"}:
                 parts.append("\n")
             elif local_name in {"math", "inline-formula", "tex-math"}:
@@ -208,7 +227,7 @@ def normalize_lines(lines: list[str]) -> str:
 
 def collect_conversion_notes(
     *,
-    table_entries: list[Mapping[str, Any]] | None = None,
+    table_entries: Sequence[Mapping[str, Any]] | None = None,
     formula_notes: list[str] | None = None,
 ) -> list[str]:
     notes: list[str] = []

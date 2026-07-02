@@ -1,6 +1,9 @@
 from __future__ import annotations
 
-from paper_fetch.extraction.html.renderer import render_html_markdown, render_provider_html_fragment
+from paper_fetch.extraction.html.renderer import (
+    render_html_markdown,
+    render_provider_html_fragment,
+)
 
 
 def test_render_html_markdown_applies_shared_cleaning_and_postprocess() -> None:
@@ -8,7 +11,9 @@ def test_render_html_markdown_applies_shared_cleaning_and_postprocess() -> None:
         "<article><h1>Example</h1><p>Body text.</p></article>",
         "https://example.test/article",
         trafilatura_backend=None,
-        postprocessors=(lambda value: f"{value}\n\n## Data availability\n\nAvailable on request.",),
+        postprocessors=(
+            lambda value: f"{value}\n\n## Data availability\n\nAvailable on request.",
+        ),
     )
 
     assert "# Example" in markdown

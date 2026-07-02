@@ -57,7 +57,10 @@ ANCHOR_PATTERNS = {
     "references": re.compile(r"\bReferences?\b", re.IGNORECASE),
     "figure": re.compile(r"\bFigure\s+\d+", re.IGNORECASE),
     "table": re.compile(r"\bTable\s+\d+", re.IGNORECASE),
-    "math": re.compile(r"(?:<math\b|class=[\"'][^\"']*(?:formula|math|equation)|\bEquation\s+\d+)", re.IGNORECASE),
+    "math": re.compile(
+        r"(?:<math\b|class=[\"'][^\"']*(?:formula|math|equation)|\bEquation\s+\d+)",
+        re.IGNORECASE,
+    ),
 }
 SENTINEL_TOKENS = {
     "[formula unavailable]",
@@ -133,7 +136,9 @@ def _load_golden_manifest() -> dict[str, Any]:
     return data
 
 
-def _sample_for_doi(doi: str, golden_manifest: dict[str, Any]) -> tuple[str, dict[str, Any]] | None:
+def _sample_for_doi(
+    doi: str, golden_manifest: dict[str, Any]
+) -> tuple[str, dict[str, Any]] | None:
     normalized = normalize_doi(doi)
     samples = golden_manifest.get("samples", {})
     slug = _doi_slug(normalized)
@@ -141,7 +146,10 @@ def _sample_for_doi(doi: str, golden_manifest: dict[str, Any]) -> tuple[str, dic
     if isinstance(sample, dict):
         return slug, sample
     for sample_id, candidate in samples.items():
-        if isinstance(candidate, dict) and normalize_doi(str(candidate.get("doi") or "")) == normalized:
+        if (
+            isinstance(candidate, dict)
+            and normalize_doi(str(candidate.get("doi") or "")) == normalized
+        ):
             return str(sample_id), candidate
     return None
 
@@ -186,7 +194,9 @@ def _raw_fixture_path(sample_id: str, sample: dict[str, Any]) -> Path | None:
     return None
 
 
-def _skip_cleaning_inventory_item(purpose: str, sample: dict[str, Any], raw_path: Path | None) -> bool:
+def _skip_cleaning_inventory_item(
+    purpose: str, sample: dict[str, Any], raw_path: Path | None
+) -> bool:
     # Oxford Academic PDF fallback is a text-only route; HTML cleaning evidence comes from article fixtures.
     return (
         purpose == "pdf_fallback"
@@ -200,7 +210,9 @@ def collect_fixture_inventory(manifest: dict[str, Any]) -> list[dict[str, Any]]:
     golden_manifest = _load_golden_manifest()
     inventory: list[dict[str, Any]] = []
 
-    def add_sample(purpose: str, sample: dict[str, Any], *, extra: bool = False) -> None:
+    def add_sample(
+        purpose: str, sample: dict[str, Any], *, extra: bool = False
+    ) -> None:
         doi = sample.get("doi")
         if not doi:
             return
@@ -229,15 +241,22 @@ def collect_fixture_inventory(manifest: dict[str, Any]) -> list[dict[str, Any]]:
                 "sample_id": sample_id,
                 "fixture_path": _repo_rel(_fixture_root(sample_id, golden_sample)),
                 "raw_path": _repo_rel(raw_path) if raw_path else None,
-                "content_type": golden_sample.get("content_type") or _content_type_for_path(raw_path),
+                "content_type": golden_sample.get("content_type")
+                or _content_type_for_path(raw_path),
                 "fixture_family": golden_sample.get("fixture_family") or "golden",
                 "extra_fixture": extra,
                 "status": "ok" if raw_path else "missing_raw",
             }
         )
 
-    fixtures = manifest.get("fixtures") if isinstance(manifest.get("fixtures"), dict) else {}
-    doi_samples = fixtures.get("doi_samples") if isinstance(fixtures.get("doi_samples"), dict) else {}
+    fixtures = (
+        manifest.get("fixtures") if isinstance(manifest.get("fixtures"), dict) else {}
+    )
+    doi_samples = (
+        fixtures.get("doi_samples")
+        if isinstance(fixtures.get("doi_samples"), dict)
+        else {}
+    )
     for purpose, sample in doi_samples.items():
         if isinstance(sample, dict):
             add_sample(str(purpose), sample)
@@ -253,11 +272,15 @@ def collect_fixture_inventory(manifest: dict[str, Any]) -> list[dict[str, Any]]:
     return inventory
 
 
-def collect_skipped_cleaning_inventory_items(manifest: dict[str, Any]) -> list[dict[str, Any]]:
+def collect_skipped_cleaning_inventory_items(
+    manifest: dict[str, Any],
+) -> list[dict[str, Any]]:
     golden_manifest = _load_golden_manifest()
     skipped: list[dict[str, Any]] = []
 
-    def add_sample(purpose: str, sample: dict[str, Any], *, extra: bool = False) -> None:
+    def add_sample(
+        purpose: str, sample: dict[str, Any], *, extra: bool = False
+    ) -> None:
         doi = sample.get("doi")
         if not doi:
             return
@@ -279,8 +302,14 @@ def collect_skipped_cleaning_inventory_items(manifest: dict[str, Any]) -> list[d
             }
         )
 
-    fixtures = manifest.get("fixtures") if isinstance(manifest.get("fixtures"), dict) else {}
-    doi_samples = fixtures.get("doi_samples") if isinstance(fixtures.get("doi_samples"), dict) else {}
+    fixtures = (
+        manifest.get("fixtures") if isinstance(manifest.get("fixtures"), dict) else {}
+    )
+    doi_samples = (
+        fixtures.get("doi_samples")
+        if isinstance(fixtures.get("doi_samples"), dict)
+        else {}
+    )
     for purpose, sample in doi_samples.items():
         if isinstance(sample, dict):
             add_sample(str(purpose), sample)
@@ -288,7 +317,11 @@ def collect_skipped_cleaning_inventory_items(manifest: dict[str, Any]) -> list[d
     if isinstance(extra_fixtures, list):
         for index, sample in enumerate(extra_fixtures):
             if isinstance(sample, dict):
-                add_sample(str(sample.get("purpose") or f"extra_fixtures[{index}]"), sample, extra=True)
+                add_sample(
+                    str(sample.get("purpose") or f"extra_fixtures[{index}]"),
+                    sample,
+                    extra=True,
+                )
     return skipped
 
 
@@ -330,7 +363,9 @@ def _line_records(text: str, fixture: dict[str, Any]) -> list[dict[str, Any]]:
 
 
 class _ProviderFixtureReplay:
-    def __init__(self, *, sample_id: str, sample: dict[str, Any], raw_path: Path) -> None:
+    def __init__(
+        self, *, sample_id: str, sample: dict[str, Any], raw_path: Path
+    ) -> None:
         self.sample_id = sample_id
         self.sample = sample
         self._raw_path = raw_path
@@ -349,11 +384,15 @@ class _ProviderFixtureReplay:
 
     @property
     def source_url(self) -> str:
-        return str(self.sample.get("source_url") or self.sample.get("landing_url") or "")
+        return str(
+            self.sample.get("source_url") or self.sample.get("landing_url") or ""
+        )
 
     @property
     def landing_url(self) -> str:
-        return str(self.sample.get("landing_url") or self.sample.get("source_url") or "")
+        return str(
+            self.sample.get("landing_url") or self.sample.get("source_url") or ""
+        )
 
     @property
     def route_kind(self) -> str:
@@ -369,7 +408,11 @@ class _ProviderFixtureReplay:
 
 
 def _fixture_asset_path(fixture: _ProviderFixtureReplay, name: str) -> Path | None:
-    assets = fixture.sample.get("assets") if isinstance(fixture.sample.get("assets"), dict) else {}
+    assets = (
+        fixture.sample.get("assets")
+        if isinstance(fixture.sample.get("assets"), dict)
+        else {}
+    )
     value = assets.get(name)
     if not value:
         return None
@@ -393,7 +436,9 @@ def _load_fixture_provider_metadata(fixture: _ProviderFixtureReplay) -> dict[str
             payload = json.loads(api_path.read_text(encoding="utf-8"))
         except json.JSONDecodeError:
             payload = {}
-        provider_metadata = payload.get("provider_metadata") if isinstance(payload, dict) else {}
+        provider_metadata = (
+            payload.get("provider_metadata") if isinstance(payload, dict) else {}
+        )
         if isinstance(provider_metadata, dict):
             metadata.update(provider_metadata)
     return metadata
@@ -411,8 +456,12 @@ def _build_arxiv_article_from_fixture(fixture: _ProviderFixtureReplay) -> Any:
     from paper_fetch.tracing import fulltext_marker
 
     base_metadata = _load_fixture_provider_metadata(fixture)
-    arxiv_id = str(base_metadata.get("arxiv_id") or arxiv_id_from_doi(fixture.doi) or "")
-    metadata = _minimal_arxiv_metadata(arxiv_id, doi=fixture.doi, metadata=base_metadata)
+    arxiv_id = str(
+        base_metadata.get("arxiv_id") or arxiv_id_from_doi(fixture.doi) or ""
+    )
+    metadata = _minimal_arxiv_metadata(
+        arxiv_id, doi=fixture.doi, metadata=base_metadata
+    )
     body = fixture.raw_path.read_bytes()
     client = ArxivClient(HttpTransport(), {})
     if fixture.route_kind == PDF_FALLBACK or fixture.raw_path.suffix == ".pdf":
@@ -504,7 +553,9 @@ def _build_plos_article_from_fixture(fixture: _ProviderFixtureReplay) -> Any:
         base_metadata=metadata,
     )
     if extraction is None:
-        raise BaselineRenderError(f"PLOS fixture {fixture.sample_id} did not parse as JATS XML")
+        raise BaselineRenderError(
+            f"PLOS fixture {fixture.sample_id} did not parse as JATS XML"
+        )
     article_metadata = dict(extraction.metadata)
     if extraction.references:
         article_metadata["references"] = list(extraction.references)
@@ -536,7 +587,9 @@ def _build_ieee_article_from_fixture(
     if landing_path is None and fixture.raw_path.name == "landing.html":
         landing_path = fixture.raw_path
     if landing_path is None:
-        raise BaselineRenderError(f"IEEE fixture {fixture.sample_id} does not include landing.html")
+        raise BaselineRenderError(
+            f"IEEE fixture {fixture.sample_id} does not include landing.html"
+        )
 
     landing_metadata = _ieee_metadata._parse_landing_metadata(
         landing_path.read_text(encoding="utf-8", errors="ignore")
@@ -573,14 +626,20 @@ def _build_ieee_article_from_fixture(
         return (
             client.to_article_model(
                 {"doi": fixture.doi},
-                client._abstract_only_payload(landing_attempt, warnings=[], trace_markers=[]),
+                client._abstract_only_payload(
+                    landing_attempt, warnings=[], trace_markers=[]
+                ),
             ),
             "paper_fetch.providers.ieee:provider_managed_abstract_only",
         )
 
-    expected_route = str(fixture.sample.get("expected_route") or fixture.route_kind or "").lower()
+    expected_route = str(
+        fixture.sample.get("expected_route") or fixture.route_kind or ""
+    ).lower()
     extracted_path = _fixture_asset_path(fixture, "extracted.md")
-    if (normalized_purpose == PDF_FALLBACK or expected_route == PDF_FALLBACK) and extracted_path is not None:
+    if (
+        normalized_purpose == PDF_FALLBACK or expected_route == PDF_FALLBACK
+    ) and extracted_path is not None:
         markdown_text = extracted_path.read_text(encoding="utf-8", errors="ignore")
         raw_payload = build_provider_payload(
             provider="ieee",
@@ -604,7 +663,9 @@ def _build_ieee_article_from_fixture(
             "paper_fetch.providers.ieee:provider_managed_pdf_fallback_fixture",
         )
 
-    raise BaselineRenderError(f"IEEE fixture {fixture.sample_id} is not a provider-managed fallback sample")
+    raise BaselineRenderError(
+        f"IEEE fixture {fixture.sample_id} is not a provider-managed fallback sample"
+    )
 
 
 def _render_markdown_baseline(
@@ -620,7 +681,11 @@ def _render_markdown_baseline(
         from tests.golden_corpus import build_article_from_fixture
         from tests.golden_criteria import golden_criteria_sample_for_doi
 
-        sample = dict(fixture_sample) if isinstance(fixture_sample, dict) else golden_criteria_sample_for_doi(doi)
+        sample = (
+            dict(fixture_sample)
+            if isinstance(fixture_sample, dict)
+            else golden_criteria_sample_for_doi(doi)
+        )
         fixture = _ProviderFixtureReplay(
             sample_id=str(sample_id or sample.get("sample_id") or _doi_slug(doi)),
             sample=sample,
@@ -640,7 +705,9 @@ def _render_markdown_baseline(
             )
         ):
             article, source = _build_ieee_article_from_fixture(fixture, purpose=purpose)
-            return article.to_ai_markdown(asset_profile="body", max_tokens="full_text"), source
+            return article.to_ai_markdown(
+                asset_profile="body", max_tokens="full_text"
+            ), source
         if fixture.provider == "plos" and fixture.raw_path.suffix in {".xml", ".pdf"}:
             article = _build_plos_article_from_fixture(fixture)
             return (
@@ -698,10 +765,14 @@ def collect_baselines(inventory: list[dict[str, Any]]) -> dict[str, dict[str, An
             "doi": fixture["doi"],
             "raw_path": fixture["raw_path"],
             "raw_text_chars": len(normalize_text(raw_text)),
-            "raw_line_count": len([line for line in raw_text.splitlines() if normalize_text(line)]),
+            "raw_line_count": len(
+                [line for line in raw_text.splitlines() if normalize_text(line)]
+            ),
             "markdown_source": markdown_source,
             "markdown_chars": len(normalize_text(markdown)),
-            "markdown_heading_count": len(re.findall(r"(?m)^\s{0,3}#{1,6}\s+", markdown)),
+            "markdown_heading_count": len(
+                re.findall(r"(?m)^\s{0,3}#{1,6}\s+", markdown)
+            ),
             "raw_text": raw_text,
             "markdown": markdown,
         }
@@ -768,7 +839,9 @@ def mine_boilerplate_candidates(
                 ),
             }
         )
-    return sorted(candidates, key=lambda item: (-item["fixture_count"], item["token"]))[:50]
+    return sorted(candidates, key=lambda item: (-item["fixture_count"], item["token"]))[
+        :50
+    ]
 
 
 def mine_selector_candidates(inventory: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -787,9 +860,15 @@ def mine_selector_candidates(inventory: list[dict[str, Any]]) -> list[dict[str, 
             if node_id:
                 attrs.append(f"#{node_id}")
             classes = node.get("class") or []
-            attrs.extend(f".{class_name}" for class_name in classes if isinstance(class_name, str))
+            attrs.extend(
+                f".{class_name}"
+                for class_name in classes
+                if isinstance(class_name, str)
+            )
             attr_blob = " ".join(attrs).lower()
-            if not attr_blob or not any(keyword in attr_blob for keyword in SELECTOR_KEYWORDS):
+            if not attr_blob or not any(
+                keyword in attr_blob for keyword in SELECTOR_KEYWORDS
+            ):
                 continue
             selector = f"{node.name}{''.join(attrs[:3])}"
             key = (str(fixture["raw_path"]), str(fixture["purpose"]), selector)
@@ -859,13 +938,19 @@ def calibrate_markdown_contract(
     *,
     skip_purposes: set[str] | None = None,
 ) -> dict[str, Any]:
-    markdown_contract = manifest.get("markdown_contract") if isinstance(manifest.get("markdown_contract"), dict) else {}
+    markdown_contract = (
+        manifest.get("markdown_contract")
+        if isinstance(manifest.get("markdown_contract"), dict)
+        else {}
+    )
     skipped = {str(purpose) for purpose in (skip_purposes or set())}
     anchor_by_purpose: dict[str, list[str]] = defaultdict(list)
     for anchor in anchors:
         anchor_by_purpose[str(anchor["purpose"])].append(str(anchor["text"]))
     deltas: dict[str, Any] = {}
-    all_raw = "\n".join(str(item.get("raw_text") or "") for item in baselines.values()).lower()
+    all_raw = "\n".join(
+        str(item.get("raw_text") or "") for item in baselines.values()
+    ).lower()
     for purpose, contract in markdown_contract.items():
         purpose_key = str(purpose)
         if purpose_key in skipped:
@@ -878,7 +963,8 @@ def calibrate_markdown_contract(
         missing_include = [
             token
             for token in contract.get("must_include") or []
-            if normalize_text(str(token)) and normalize_text(str(token)) not in normalize_text(markdown)
+            if normalize_text(str(token))
+            and normalize_text(str(token)) not in normalize_text(markdown)
         ]
         dead_negative = [
             token
@@ -893,7 +979,9 @@ def calibrate_markdown_contract(
         }
         suggested = [
             token
-            for token in _dedupe_normalized_tokens(anchor_by_purpose.get(purpose_key, []))
+            for token in _dedupe_normalized_tokens(
+                anchor_by_purpose.get(purpose_key, [])
+            )
             if _token_key(token) not in current_includes
         ][:10]
         deltas[purpose_key] = {
@@ -905,7 +993,9 @@ def calibrate_markdown_contract(
     return deltas
 
 
-def classify_dead_must_not_include(tokens: list[Any]) -> dict[str, list[dict[str, str]]]:
+def classify_dead_must_not_include(
+    tokens: list[Any],
+) -> dict[str, list[dict[str, str]]]:
     classified: dict[str, list[dict[str, str]]] = {
         "sentinel": [],
         "cross_route_guard": [],
@@ -994,7 +1084,9 @@ def token_conflict_report(
             if token and token in raw_text:
                 hits.append({"fixture": key, "purpose": str(baseline["purpose"])})
             if token and token in markdown:
-                baseline_hits.append({"fixture": key, "purpose": str(baseline["purpose"])})
+                baseline_hits.append(
+                    {"fixture": key, "purpose": str(baseline["purpose"])}
+                )
         report.append(
             {
                 "token": candidate["token"],
@@ -1006,7 +1098,9 @@ def token_conflict_report(
     return report
 
 
-def build_cleaning_chain_proposal(manifest: dict[str, Any], *, manifest_path: str) -> dict[str, Any]:
+def build_cleaning_chain_proposal(
+    manifest: dict[str, Any], *, manifest_path: str
+) -> dict[str, Any]:
     provider = _provider_slug(str(manifest["name"]))
     inventory = collect_fixture_inventory(manifest)
     skipped_inventory_items = collect_skipped_cleaning_inventory_items(manifest)
@@ -1066,7 +1160,9 @@ def build_compact_proposal(proposal: dict[str, Any]) -> dict[str, Any]:
             "token": candidate.get("token"),
             "fixture_count": candidate.get("fixture_count"),
             "purposes": candidate.get("purposes") or [],
-            "appears_in_markdown_baseline": bool(candidate.get("appears_in_markdown_baseline")),
+            "appears_in_markdown_baseline": bool(
+                candidate.get("appears_in_markdown_baseline")
+            ),
         }
         for candidate in boilerplate
         if not candidate.get("appears_in_markdown_baseline")
@@ -1092,7 +1188,9 @@ def build_compact_proposal(proposal: dict[str, Any]) -> dict[str, Any]:
         "artifact": proposal["artifact"],
         "evidence_artifact": proposal["evidence_artifact"],
         "fixtures_digest": proposal["fixtures_digest"],
-        "proposed_markdown_contract_delta": proposal["proposed_markdown_contract_delta"],
+        "proposed_markdown_contract_delta": proposal[
+            "proposed_markdown_contract_delta"
+        ],
         "skipped_cleaning_inventory": proposal.get("skipped_cleaning_inventory") or [],
         "selected_drop_tokens": selected_drop_tokens,
         "selected_drop_selectors": selected_drop_selectors,
@@ -1116,11 +1214,15 @@ def contract_check_result(proposal: dict[str, Any]) -> dict[str, Any]:
     blocking_truly_vacuous: list[dict[str, Any]] = []
     warning_sentinel: list[dict[str, Any]] = []
     warning_cross_route_guard: list[dict[str, Any]] = []
-    for purpose, delta in (proposal.get("proposed_markdown_contract_delta") or {}).items():
+    for purpose, delta in (
+        proposal.get("proposed_markdown_contract_delta") or {}
+    ).items():
         doi = delta.get("doi")
         for token in delta.get("missing_must_include") or []:
             blocking_missing.append({"purpose": purpose, "doi": doi, "token": token})
-        classified = delta.get("dead_must_not_include") if isinstance(delta, dict) else {}
+        classified = (
+            delta.get("dead_must_not_include") if isinstance(delta, dict) else {}
+        )
         if not isinstance(classified, dict):
             continue
         for item in classified.get("truly_vacuous") or []:
@@ -1164,11 +1266,15 @@ def _manifest_from_args(args: argparse.Namespace) -> tuple[Path, str]:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Generate fixture-driven cleaning-chain proposals.")
+    parser = argparse.ArgumentParser(
+        description="Generate fixture-driven cleaning-chain proposals."
+    )
     source = parser.add_mutually_exclusive_group(required=True)
     source.add_argument("--provider", help="provider name")
     source.add_argument("--manifest", help="provider manifest path")
-    parser.add_argument("--write", action="store_true", help="write proposal YAML artifact")
+    parser.add_argument(
+        "--write", action="store_true", help="write proposal YAML artifact"
+    )
     parser.add_argument(
         "--check-contract",
         action="store_true",
@@ -1183,7 +1289,11 @@ def main(argv: list[str] | None = None) -> int:
     manifest_path, manifest_ref = _manifest_from_args(args)
     manifest = _load_yaml(manifest_path)
     proposal = build_cleaning_chain_proposal(manifest, manifest_path=manifest_ref)
-    output_path = Path(args.output) if args.output else REPO_ROOT / DEFAULT_OUTPUT_DIR / f"{proposal['provider']}.yml"
+    output_path = (
+        Path(args.output)
+        if args.output
+        else REPO_ROOT / DEFAULT_OUTPUT_DIR / f"{proposal['provider']}.yml"
+    )
     if not output_path.is_absolute():
         output_path = REPO_ROOT / output_path
     if args.write:
@@ -1225,7 +1335,12 @@ def main(argv: list[str] | None = None) -> int:
             end="",
         )
         return 1 if check["status"] == "fail" else 0
-    print(yaml.safe_dump(build_compact_proposal(proposal), sort_keys=False, allow_unicode=False), end="")
+    print(
+        yaml.safe_dump(
+            build_compact_proposal(proposal), sort_keys=False, allow_unicode=False
+        ),
+        end="",
+    )
     return 0
 
 

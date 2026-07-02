@@ -39,9 +39,7 @@ def _science_datalayer(
     """
 
 
-def _pnas_datalayer(
-    *, access_type: str, free_access: str, user_access: str
-) -> str:
+def _pnas_datalayer(*, access_type: str, free_access: str, user_access: str) -> str:
     return f"""
     <html><script>
     PNASdataLayer = {{
@@ -103,7 +101,9 @@ class DatalayerSignalSetTests(unittest.TestCase):
             ["aaas_page_type_denial"],
         )
         self.assertEqual(
-            evaluate_datalayer_blocking_signals(abstract_denied_html, SCIENCE_SIGNAL_SET),
+            evaluate_datalayer_blocking_signals(
+                abstract_denied_html, SCIENCE_SIGNAL_SET
+            ),
             [
                 "aaas_page_type_abstract",
                 "aaas_view_abs",
@@ -126,7 +126,9 @@ class DatalayerSignalSetTests(unittest.TestCase):
             user_access="no",
         )
 
-        strong, soft, abstract_only = evaluate_datalayer_positive_signals(fulltext_html, SCIENCE_SIGNAL_SET)
+        strong, soft, abstract_only = evaluate_datalayer_positive_signals(
+            fulltext_html, SCIENCE_SIGNAL_SET
+        )
 
         self.assertEqual(strong, ["aaas_user_entitled", "aaas_user_access_yes"])
         self.assertEqual(

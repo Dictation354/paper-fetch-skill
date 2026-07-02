@@ -7,7 +7,10 @@ import re
 from typing import Any
 
 from ...common_patterns import FIGURE_LABEL_CORE_PATTERN
-from ...extraction.html.ui_tokens import FIGURE_FULL_SIZE_IMAGE_LABEL, FIGURE_POWERPOINT_SLIDE_LABEL
+from ...extraction.html.ui_tokens import (
+    FIGURE_FULL_SIZE_IMAGE_LABEL,
+    FIGURE_POWERPOINT_SLIDE_LABEL,
+)
 from ...markdown.images import render_markdown_image
 from ...utils import normalize_text
 from ._ir import MarkdownFigure
@@ -18,7 +21,9 @@ FIGURE_LABEL_PATTERN = re.compile(
     rf"^\s*{FIGURE_LABEL_CORE_PATTERN}\s*[:.]?\s*(.*)$",
     flags=re.IGNORECASE,
 )
-FIGURE_ID_PATTERN = re.compile(r"(?:^|[-_ ])figure[-_ ]?(\d+[A-Za-z]?)$", flags=re.IGNORECASE)
+FIGURE_ID_PATTERN = re.compile(
+    r"(?:^|[-_ ])figure[-_ ]?(\d+[A-Za-z]?)$", flags=re.IGNORECASE
+)
 SILVERCHAIR_FIGURE_ID_PATTERN = re.compile(
     r"(?:^|[-_])f(\d+[A-Za-z]?)(?:$|[-_ ])",
     flags=re.IGNORECASE,
@@ -80,7 +85,9 @@ def render_figure_block(entry: Mapping[str, str]) -> list[str]:
     return render_figure(figure_from_entry(entry))
 
 
-def add_figure_once(lines: list[str], entry: Mapping[str, str] | None, used_figure_keys: set[str]) -> None:
+def add_figure_once(
+    lines: list[str], entry: Mapping[str, str] | None, used_figure_keys: set[str]
+) -> None:
     if not entry:
         return
     key = entry["key"]
@@ -95,7 +102,14 @@ def html_node_attr_text(node: Any) -> str:
         return ""
     attrs = getattr(node, "attrs", None) or {}
     parts = [normalize_text(node.name or "")]
-    for key in ("id", "class", "data-test", "data-container-section", "data-content-id", "data-id"):
+    for key in (
+        "id",
+        "class",
+        "data-test",
+        "data-container-section",
+        "data-content-id",
+        "data-id",
+    ):
         value = attrs.get(key)
         if isinstance(value, (list, tuple, set)):
             parts.extend(normalize_text(str(item)) for item in value)
@@ -109,8 +123,16 @@ def _html_class_tokens(node: Any) -> set[str]:
         return set()
     raw_classes = (getattr(node, "attrs", None) or {}).get("class") or []
     if isinstance(raw_classes, str):
-        return {normalize_text(value).lower() for value in raw_classes.split() if normalize_text(value)}
-    return {normalize_text(str(value)).lower() for value in raw_classes if normalize_text(str(value))}
+        return {
+            normalize_text(value).lower()
+            for value in raw_classes.split()
+            if normalize_text(value)
+        }
+    return {
+        normalize_text(str(value)).lower()
+        for value in raw_classes
+        if normalize_text(str(value))
+    }
 
 
 def _is_silverchair_figure_section(node: Any) -> bool:
@@ -119,12 +141,9 @@ def _is_silverchair_figure_section(node: Any) -> bool:
 
 
 def _has_silverchair_figure_content(node: Any) -> bool:
-    return (
-        isinstance(node, Tag)
-        and (
-            node.find("img") is not None
-            or node.select_one(".fig-label, .fig-caption, .caption") is not None
-        )
+    return isinstance(node, Tag) and (
+        node.find("img") is not None
+        or node.select_one(".fig-label, .fig-caption, .caption") is not None
     )
 
 
@@ -134,7 +153,11 @@ def _has_silverchair_figure_section_ancestor(node: Any, *, max_depth: int = 4) -
     while isinstance(current, Tag) and depth < max_depth:
         if _is_silverchair_figure_section(current):
             return True
-        current = current.parent if isinstance(getattr(current, "parent", None), Tag) else None
+        current = (
+            current.parent
+            if isinstance(getattr(current, "parent", None), Tag)
+            else None
+        )
         depth += 1
     return False
 
@@ -143,13 +166,10 @@ def _is_explicit_generic_figure_container(node: Any) -> bool:
     if not isinstance(node, Tag):
         return False
     classes = _html_class_tokens(node)
-    return (
-        "figure" in classes
-        and (
-            node.find("img") is not None
-            or node.find("picture") is not None
-            or node.select_one("figcaption, .figcaption, .figure__caption-text") is not None
-        )
+    return "figure" in classes and (
+        node.find("img") is not None
+        or node.find("picture") is not None
+        or node.select_one("figcaption, .figcaption, .figure__caption-text") is not None
     )
 
 
@@ -202,7 +222,11 @@ def html_figure_label_from_node(node: Any) -> str:
         match = SILVERCHAIR_FIGURE_ID_PATTERN.search(identity)
         if match is not None:
             return f"Figure {match.group(1)}."
-        current = current.parent if isinstance(getattr(current, "parent", None), Tag) else None
+        current = (
+            current.parent
+            if isinstance(getattr(current, "parent", None), Tag)
+            else None
+        )
     image = node.find("img")
     if isinstance(image, Tag):
         for attr in FIGURE_IMAGE_SRC_ATTRS:
@@ -213,7 +237,9 @@ def html_figure_label_from_node(node: Any) -> str:
     return ""
 
 
-def iter_html_figure_text_candidates(node: Any, *, render_clean_text: Callable[[Any], str]) -> list[str]:
+def iter_html_figure_text_candidates(
+    node: Any, *, render_clean_text: Callable[[Any], str]
+) -> list[str]:
     if not isinstance(node, Tag):
         return []
     caption_candidates: list[str] = []
@@ -232,7 +258,9 @@ def iter_html_figure_text_candidates(node: Any, *, render_clean_text: Callable[[
             if text not in caption_candidates:
                 caption_candidates.append(text)
     if caption_candidates:
-        return caption_candidates + [text for text in description_candidates if text not in caption_candidates]
+        return caption_candidates + [
+            text for text in description_candidates if text not in caption_candidates
+        ]
     if description_candidates:
         return description_candidates
 
@@ -289,13 +317,17 @@ def append_inline_html_figure_image(lines: list[str], src: str, alt: str) -> Non
     lines.extend([render_markdown_image("figure", alt or "Figure", src), ""])
 
 
-def render_html_figure_markdown(node: Any, lines: list[str], *, render_clean_text: Callable[[Any], str]) -> None:
+def render_html_figure_markdown(
+    node: Any, lines: list[str], *, render_clean_text: Callable[[Any], str]
+) -> None:
     if not isinstance(node, Tag):
         return
 
     inline_images = iter_inline_html_figure_images(node)
     figure_items: list[tuple[str, str]] = []
-    for text in iter_html_figure_text_candidates(node, render_clean_text=render_clean_text):
+    for text in iter_html_figure_text_candidates(
+        node, render_clean_text=render_clean_text
+    ):
         label, remainder = html_figure_label_from_text(text)
         candidate = clean_html_figure_text_candidate(remainder if label else text)
         item = (label, candidate)
@@ -310,7 +342,11 @@ def render_html_figure_markdown(node: Any, lines: list[str], *, render_clean_tex
             append_inline_html_figure_image(lines, src, alt)
         return
 
-    if inline_images and len(inline_images) == len(figure_items) and len(inline_images) > 1:
+    if (
+        inline_images
+        and len(inline_images) == len(figure_items)
+        and len(inline_images) > 1
+    ):
         for index, (label, caption) in enumerate(figure_items):
             src, alt = inline_images[index]
             active_label = label or (fallback_label if index == 0 else "")
@@ -322,7 +358,9 @@ def render_html_figure_markdown(node: Any, lines: list[str], *, render_clean_tex
 
     for index, (src, alt) in enumerate(inline_images):
         figure_item_label = figure_items[index][0] if index < len(figure_items) else ""
-        append_inline_html_figure_image(lines, src, figure_item_label or fallback_label or alt)
+        append_inline_html_figure_image(
+            lines, src, figure_item_label or fallback_label or alt
+        )
 
     for index, (label, caption) in enumerate(figure_items):
         active_label = label or (fallback_label if index == 0 else "")

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "paper-fetch-skill"
-version = "2.7.1"
+version = "2.8.0"
 description = "AI-friendly paper fetch tooling"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -104,20 +104,32 @@ files = [
   "src/paper_fetch/http",
   "src/paper_fetch/metadata",
   "src/paper_fetch/markdown",
+  "src/paper_fetch/extraction/html",
   "src/paper_fetch/extraction/markdown_render",
   "src/paper_fetch/extraction/citation_anchors.py",
+  "src/paper_fetch/extraction/section_hints.py",
+  "src/paper_fetch/artifacts.py",
   "src/paper_fetch/tracing.py",
   "src/paper_fetch/reason_codes.py",
   "src/paper_fetch/arxiv_id.py",
+  "src/paper_fetch/image_tools/convert.py",
   "src/paper_fetch/normalize_journal_name.py",
   "src/paper_fetch/section_vocab.py",
   "src/paper_fetch/logging_utils.py",
   "src/paper_fetch/publisher_identity.py",
   "src/paper_fetch/provider_catalog.py",
+  "src/paper_fetch/providers/__init__.py",
   "src/paper_fetch/providers/base.py",
   "src/paper_fetch/providers/protocols.py",
+  "src/paper_fetch/providers/browser_workflow",
+  "src/paper_fetch/providers/atypon_browser_workflow",
   "src/paper_fetch/providers/copernicus.py",
   "src/paper_fetch/providers/_article_markdown_copernicus.py",
+  "src/paper_fetch/providers/_article_markdown_common.py",
+  "src/paper_fetch/providers/_article_markdown_jats.py",
+  "src/paper_fetch/providers/_cloakbrowser.py",
+  "src/paper_fetch/service.py",
+  "src/paper_fetch/resolve/query.py",
 ]
 check_untyped_defs = true
 ignore_missing_imports = true

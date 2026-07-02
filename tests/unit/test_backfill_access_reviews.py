@@ -114,14 +114,17 @@ def test_build_access_review_draft_matches_schema_and_stays_blocked() -> None:
         "paywall_bypass",
         "challenge_bypass",
     } <= set(draft["forbidden_behaviors"])
-    assert any("manifest fixture structure DOI" in item for item in draft["legal_access"]["evidence"])
-
-
-def test_committed_access_reviews_match_schema_and_generated_drafts_stay_blocked() -> None:
-    schema = json.loads(ACCESS_REVIEW_SCHEMA_PATH.read_text(encoding="utf-8"))
-    paths = sorted(
-        (REPO_ROOT / "onboarding" / "access-reviews").glob("*.yml")
+    assert any(
+        "manifest fixture structure DOI" in item
+        for item in draft["legal_access"]["evidence"]
     )
+
+
+def test_committed_access_reviews_match_schema_and_generated_drafts_stay_blocked() -> (
+    None
+):
+    schema = json.loads(ACCESS_REVIEW_SCHEMA_PATH.read_text(encoding="utf-8"))
+    paths = sorted((REPO_ROOT / "onboarding" / "access-reviews").glob("*.yml"))
 
     assert paths
     for path in paths:
@@ -130,13 +133,17 @@ def test_committed_access_reviews_match_schema_and_generated_drafts_stay_blocked
             Draft202012Validator(schema).iter_errors(review),
             key=lambda error: error.json_path,
         )
-        assert not errors, [f"{path}: {error.json_path}: {error.message}" for error in errors]
+        assert not errors, [
+            f"{path}: {error.json_path}: {error.message}" for error in errors
+        ]
         if review.get("reviewed_by") == "operator-required":
             assert review["status"] == "blocked"
             assert review["may_continue"] is False
 
 
-def test_backfill_dry_run_reports_missing_reviews_without_writing(tmp_path: Path) -> None:
+def test_backfill_dry_run_reports_missing_reviews_without_writing(
+    tmp_path: Path,
+) -> None:
     _write_minimal_onboarding_root(tmp_path)
 
     result = subprocess.run(
@@ -230,7 +237,9 @@ def test_backfill_write_can_seed_new_provider_draft(tmp_path: Path) -> None:
     assert draft["legal_access"]["mode"] == "blocked"
     assert draft["allowed_runtimes"] == ["http"]
     assert any("not listed" in item for item in draft["legal_access"]["evidence"])
-    assert any("journals.plos.org" in item for item in draft["legal_access"]["evidence"])
+    assert any(
+        "journals.plos.org" in item for item in draft["legal_access"]["evidence"]
+    )
     assert any("10.1371/" in item for item in draft["legal_access"]["evidence"])
 
 

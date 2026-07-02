@@ -526,7 +526,7 @@ metadata
 <a id="rule-browser-primary-image-download-path"></a>
 ### 浏览器工作流图片下载必须使用浏览器上下文或浏览器等价请求头
 
-- 这条规则约束的是：使用 browser workflow 的 provider 在下载正文 figure / table / formula 图片时，必须以 `RuntimeContext` / `BrowserContextManager` 管理的 CDP browser connection 作为主链路；AMS direct HTTP HTML preflight 成功路径例外，但它的正文图片 HTTP 请求必须继承浏览器 UA 和正文 Referer。同一 runtime 内复用 keyed browser manager，每个阶段或 worker 线程创建隔离的 seeded context/page，preview fallback 也通过同一线程的 context 获取。Atypon/AMS 这类 lazy image 页面里的 `Blank.svg` / `Blank.png` 只允许作为待加载占位信号，不能作为成功正文 asset 保存；当 `download_url` / `full_size_url` 指向真实 `full-*.jpg` 时，下载候选和最终 `source_url` 必须指向真实图片响应。
+- 这条规则约束的是：使用 browser workflow 的 provider 在下载正文 figure / table / formula 图片时，必须以 `RuntimeContext` / `BrowserContextManager` 管理的 CDP browser connection 作为主链路；AMS direct HTTP HTML preflight 成功路径例外，但它的正文图片 HTTP 请求必须继承浏览器 UA 和正文 Referer。同一进程内按 browser 配置复用 keyed browser manager，每个阶段或 worker 线程创建隔离的 seeded context/page，preview fallback 也通过同一线程的 context 获取。Atypon/AMS 这类 lazy image 页面里的 `Blank.svg` / `Blank.png` 只允许作为待加载占位信号，不能作为成功正文 asset 保存；当 `download_url` / `full_size_url` 指向真实 `full-*.jpg` 时，下载候选和最终 `source_url` 必须指向真实图片响应。
 - 如果违反，用户会看到：目标站点明明在浏览器会话里可见图片，系统却因为普通 HTTP challenge 或重复 context 冷启动而稳定缺图，或者所有本地图片都变成相同的 `Blank.png` 占位图。
 - 它对应的阶段是：`asset-download`、`asset-validation`。
 - Owner：`paper_fetch.providers.browser_workflow.fetchers`。
@@ -542,7 +542,7 @@ metadata
     - [`../tests/unit/test_atypon_browser_workflow_provider_retries.py`](../tests/unit/test_atypon_browser_workflow_provider_retries.py) 中的 `test_wiley_provider_download_related_assets_reuses_shared_browser_fetcher_across_assets`
     - [`../tests/unit/test_ams_provider.py`](../tests/unit/test_ams_provider.py) 中的 `test_ams_direct_http_asset_download_uses_browser_seed_without_runtime`
 - 边界说明：
-  - 这条规则目前适用于 `wiley`、`science`、`pnas`、`ams`、`annualreviews`、`acs`、`iop`、`aip`、`mdpi` 的 browser workflow HTML 成功路径；AMS direct HTTP HTML 成功路径不启动 CDP browser，但仍必须传递 browser-equivalent seed。
+  - 这条规则目前适用于 `wiley`、`science`、`pnas`、`ams`、`annualreviews`、`royalsocietypublishing`、`acs`、`iop`、`aip`、`mdpi` 的 browser workflow HTML 成功路径；AMS direct HTTP HTML 成功路径不启动 CDP browser，但仍必须传递 browser-equivalent seed。
   - 它不改变 `elsevier` XML、`springer` direct HTML 或 PDF fallback 的下载语义。
 
 <a id="rule-table-flatten-or-list"></a>
@@ -1871,8 +1871,8 @@ PNAS 的 supplementary 资产范围见 [Supplementary discovery 必须来自明�
 | golden / Copernicus PDF fallback | `10.5194_acp-1-1-2001`, `10.5194_bg-1-1-2004`, `10.5194_cp-1-1-2005`, `10.5194_dwes-1-1-2008` | Copernicus 早期 abstract-only XML 落到 PDF fallback 的 route 和 expected payload 回归池；waterfall 归 providers.md。 |
 | golden / PLOS XML | `10.1371_journal.pcbi.1003118`, `10.1371_journal.pone.0015338`, `10.1371_journal.pone.0026949`, `10.1371_journal.pone.0126635`, `10.1371_journal.pone.0218513`, `10.1371_journal.pone.0263725`, `10.1371_journal.pone.0304873` | PLOS public JATS XML onboarding 的结构、figure、references、formula、supplementary 和 table 合约样本；waterfall 和 provider route 语义归 providers.md，provider-owned 清洗依据记录在 cleaning proposal 和 provider-local tests。 |
 | golden / PLOS PDF fallback | `10.1371_journal.pbio.0040298` | PLOS printable PDF fallback 的 route 和 expected payload 回归池；waterfall 归 providers.md，不定义 provider-specific Markdown cleanup 规则。 |
-| golden / Royal Society Publishing | `10.1098_rsif.2019.0334`, `10.1098_rsos.201188`, `10.1098_rsos.201200`, `10.1098_rspb.2020.0097` | Royal Society Publishing direct HTTP HTML onboarding breadth corpus；waterfall 与 no-XML 语义归 providers.md。 |
-| golden / Royal Society Publishing PDF fallback | `10.1098_rsta.2020.0108` | Royal Society Publishing direct PDF fallback 的 shared PDF conversion route 回归池；waterfall 归 providers.md，不定义 provider-specific Markdown cleanup 规则。 |
+| golden / Royal Society Publishing | `10.1098_rsif.2019.0334`, `10.1098_rsos.201188`, `10.1098_rsos.201200`, `10.1098_rspb.2020.0097` | Royal Society Publishing browser HTML onboarding breadth corpus；waterfall 与 no-XML 语义归 providers.md。 |
+| golden / Royal Society Publishing PDF fallback | `10.1098_rsta.2020.0108` | Royal Society Publishing seeded-browser PDF fallback 的 shared PDF conversion route 回归池；waterfall 归 providers.md，不定义 provider-specific Markdown cleanup 规则。 |
 | golden / other publishers | `10.1080_19455224.2025.2547671`, `10.1345_aph.1M379` | 非核心 provider 的 multilingual / content regression 样本。 |
 <!-- extraction-rules-unlinked-fixtures:end -->
 

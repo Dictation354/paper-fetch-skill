@@ -18,10 +18,19 @@ def test_scaffold_provider_syncs_docs_placeholders_by_default(tmp_path: Path) ->
     extraction = (tmp_path / "docs/extraction-rules.md").read_text(encoding="utf-8")
     changelog = (tmp_path / "CHANGELOG.md").read_text(encoding="utf-8")
 
-    assert "| `newpub` | TODO | TODO | TODO | TODO | <!-- TODO(scaffold-newpub): fill --> |" in providers
-    assert "<!-- TODO(scaffold-newpub): fill routing / waterfall / asset_profile / status docs. -->" in providers
+    assert (
+        "| `newpub` | TODO | TODO | TODO | TODO | <!-- TODO(scaffold-newpub): fill --> |"
+        in providers
+    )
+    assert (
+        "<!-- TODO(scaffold-newpub): fill routing / waterfall / asset_profile / status docs. -->"
+        in providers
+    )
     assert "| `newpub` | <!-- TODO(scaffold-newpub): fill --> |" in extraction
-    assert "<!-- TODO(scaffold-newpub): fill --> Add `newpub` provider scaffold docs" in changelog
+    assert (
+        "<!-- TODO(scaffold-newpub): fill --> Add `newpub` provider scaffold docs"
+        in changelog
+    )
     assert "Docs placeholders to fill:" in result.stdout
     assert "- docs/providers.md" in result.stdout
     assert "- docs/extraction-rules.md" in result.stdout

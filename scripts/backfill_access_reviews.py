@@ -82,13 +82,21 @@ def _runtime_suggestions(manifest: dict[str, Any], bundle: Any | None) -> list[s
         runtimes.add("browser")
     if requires_playwright:
         runtimes.add("playwright")
-    return [runtime for runtime in ("http", "browser", "playwright") if runtime in runtimes]
+    return [
+        runtime for runtime in ("http", "browser", "playwright") if runtime in runtimes
+    ]
 
 
 def _fixture_evidence(manifest: dict[str, Any]) -> list[str]:
     evidence: list[str] = []
-    fixtures = manifest.get("fixtures") if isinstance(manifest.get("fixtures"), dict) else {}
-    doi_samples = fixtures.get("doi_samples") if isinstance(fixtures.get("doi_samples"), dict) else {}
+    fixtures = (
+        manifest.get("fixtures") if isinstance(manifest.get("fixtures"), dict) else {}
+    )
+    doi_samples = (
+        fixtures.get("doi_samples")
+        if isinstance(fixtures.get("doi_samples"), dict)
+        else {}
+    )
     for purpose, sample in sorted(doi_samples.items()):
         if not isinstance(sample, dict) or not sample.get("doi"):
             continue
@@ -122,10 +130,8 @@ def _legal_access_evidence(
             f"{KNOWN_PROVIDERS_PATH} marks {provider} as implemented with manifest {manifest_path}."
         )
     evidence.append(
-        
-            f"{manifest_path} declares display_source={manifest.get('display_source')} "
-            f"and main_path={manifest.get('main_path')}."
-        
+        f"{manifest_path} declares display_source={manifest.get('display_source')} "
+        f"and main_path={manifest.get('main_path')}."
     )
     routing = manifest.get("routing")
     if isinstance(routing, dict):
@@ -167,13 +173,9 @@ def build_access_review_draft(
     """Build a blocked operator review draft from local manifest and bundle facts."""
     provider_name = _provider_slug(provider)
     manifest_ref = manifest_path or f"onboarding/manifests/{provider_name}.yml"
-    timestamp = (
-        reviewed_at
-        or datetime.now(UTC)
-        .replace(microsecond=0)
-        .isoformat()
-        .replace("+00:00", "Z")
-    )
+    timestamp = reviewed_at or datetime.now(UTC).replace(
+        microsecond=0
+    ).isoformat().replace("+00:00", "Z")
     return {
         "schema_version": 1,
         "provider": provider_name,
@@ -349,7 +351,9 @@ def build_parser() -> argparse.ArgumentParser:
         description="Generate blocked draft provider access reviews from local onboarding facts."
     )
     targets = parser.add_mutually_exclusive_group(required=True)
-    targets.add_argument("--all", action="store_true", help="process every implemented provider")
+    targets.add_argument(
+        "--all", action="store_true", help="process every implemented provider"
+    )
     targets.add_argument("--provider", help="single provider name")
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument(
@@ -358,7 +362,9 @@ def build_parser() -> argparse.ArgumentParser:
         help="print planned drafts without writing files",
     )
     mode.add_argument("--write", action="store_true", help="write missing draft files")
-    parser.add_argument("--force", action="store_true", help="overwrite an existing review file")
+    parser.add_argument(
+        "--force", action="store_true", help="overwrite an existing review file"
+    )
     parser.add_argument(
         "--domain",
         help="required when --provider names a new provider not yet listed in known-providers.yml",
@@ -403,7 +409,9 @@ def main(argv: list[str] | None = None) -> int:
                 {
                     "provider": provider,
                     "path": _repo_path(path, root),
-                    "action": "would_write" if not path.exists() or args.force else "skipped_exists",
+                    "action": "would_write"
+                    if not path.exists() or args.force
+                    else "skipped_exists",
                     "draft": draft,
                 }
             )

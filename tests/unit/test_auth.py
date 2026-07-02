@@ -32,14 +32,33 @@ class _FakeAuthContext:
         self.closed = False
         self.state_payload = {
             "cookies": [
-                {"name": "cf_clearance", "value": "wiley", "domain": ".wiley.com", "path": "/"},
+                {
+                    "name": "cf_clearance",
+                    "value": "wiley",
+                    "domain": ".wiley.com",
+                    "path": "/",
+                },
                 {"name": "sid", "value": "ams", "domain": ".ametsoc.org", "path": "/"},
-                {"name": "other", "value": "no", "domain": ".example.test", "path": "/"},
+                {
+                    "name": "other",
+                    "value": "no",
+                    "domain": ".example.test",
+                    "path": "/",
+                },
             ],
             "origins": [
-                {"origin": "https://onlinelibrary.wiley.com", "localStorage": [{"name": "ok", "value": "1"}]},
-                {"origin": "https://journals.ametsoc.org", "localStorage": [{"name": "ams", "value": "1"}]},
-                {"origin": "https://example.test", "localStorage": [{"name": "no", "value": "1"}]},
+                {
+                    "origin": "https://onlinelibrary.wiley.com",
+                    "localStorage": [{"name": "ok", "value": "1"}],
+                },
+                {
+                    "origin": "https://journals.ametsoc.org",
+                    "localStorage": [{"name": "ams", "value": "1"}],
+                },
+                {
+                    "origin": "https://example.test",
+                    "localStorage": [{"name": "no", "value": "1"}],
+                },
             ],
         }
 
@@ -99,12 +118,16 @@ def _install_fake_browser_manager(monkeypatch) -> type[_FakeAuthBrowserManager]:
     return FakeManager
 
 
-def _patch_auth_runtime(monkeypatch, tmp_path, env: dict[str, str] | None = None) -> None:
+def _patch_auth_runtime(
+    monkeypatch, tmp_path, env: dict[str, str] | None = None
+) -> None:
     runtime_env = {XDG_DATA_HOME_ENV_VAR: str(tmp_path / "xdg")}
     if env is not None:
         runtime_env.update(env)
     monkeypatch.setattr(auth, "build_runtime_env", lambda: dict(runtime_env))
-    monkeypatch.setattr(auth._cloakbrowser, "ensure_runtime_ready", lambda _runtime: None)
+    monkeypatch.setattr(
+        auth._cloakbrowser, "ensure_runtime_ready", lambda _runtime: None
+    )
 
 
 def test_upsert_env_file_updates_existing_values(tmp_path) -> None:
@@ -132,7 +155,9 @@ def test_upsert_env_file_updates_existing_values(tmp_path) -> None:
     )
 
 
-def test_authenticate_provider_profile_ams_uses_provider_profile_not_legacy_env(monkeypatch, tmp_path) -> None:
+def test_authenticate_provider_profile_ams_uses_provider_profile_not_legacy_env(
+    monkeypatch, tmp_path
+) -> None:
     legacy_state_path = tmp_path / "legacy" / "ams-storage-state.json"
     fake_manager = _install_fake_browser_manager(monkeypatch)
 
@@ -150,7 +175,9 @@ def test_authenticate_provider_profile_ams_uses_provider_profile_not_legacy_env(
         confirm=lambda _prompt: None,
     )
 
-    profile_dir = tmp_path / "xdg" / "paper-fetch" / "publisher-browser-profiles" / "ams"
+    profile_dir = (
+        tmp_path / "xdg" / "paper-fetch" / "publisher-browser-profiles" / "ams"
+    )
     storage_state_path = profile_dir / "storage-state.json"
     assert result.provider == "ams"
     assert result.profile_dir == profile_dir
@@ -161,8 +188,15 @@ def test_authenticate_provider_profile_ams_uses_provider_profile_not_legacy_env(
     assert result.final_url == auth.AMS_AUTH_URL
     assert not legacy_state_path.exists()
     assert json.loads(storage_state_path.read_text(encoding="utf-8")) == {
-        "cookies": [{"name": "sid", "value": "ams", "domain": ".ametsoc.org", "path": "/"}],
-        "origins": [{"origin": "https://journals.ametsoc.org", "localStorage": [{"name": "ams", "value": "1"}]}],
+        "cookies": [
+            {"name": "sid", "value": "ams", "domain": ".ametsoc.org", "path": "/"}
+        ],
+        "origins": [
+            {
+                "origin": "https://journals.ametsoc.org",
+                "localStorage": [{"name": "ams", "value": "1"}],
+            }
+        ],
     }
     manager = fake_manager.instances[0]
     assert manager.cdp_endpoint == "ws://127.0.0.1:9222/devtools/browser/auth"
@@ -193,7 +227,9 @@ def test_provider_label_uses_catalog_display_name() -> None:
     assert auth._provider_label("annualreviews") == "Annual Reviews"
 
 
-def test_authenticate_provider_profile_uses_sample_headed_profile_and_storage(monkeypatch, tmp_path) -> None:
+def test_authenticate_provider_profile_uses_sample_headed_profile_and_storage(
+    monkeypatch, tmp_path
+) -> None:
     fake_manager = _install_fake_browser_manager(monkeypatch)
     _patch_auth_runtime(monkeypatch, tmp_path)
     prompts: list[str] = []
@@ -203,7 +239,9 @@ def test_authenticate_provider_profile_uses_sample_headed_profile_and_storage(mo
         confirm=lambda prompt: prompts.append(prompt),
     )
 
-    profile_dir = tmp_path / "xdg" / "paper-fetch" / "publisher-browser-profiles" / "wiley"
+    profile_dir = (
+        tmp_path / "xdg" / "paper-fetch" / "publisher-browser-profiles" / "wiley"
+    )
     storage_state_path = profile_dir / "storage-state.json"
     assert result.provider == "wiley"
     assert result.profile_dir == profile_dir
@@ -217,14 +255,27 @@ def test_authenticate_provider_profile_uses_sample_headed_profile_and_storage(mo
     assert manager.new_context_kwargs["headless"] is False
     assert "storage_state" not in manager.new_context_kwargs
     assert manager.context.page.goto_calls == [
-        (auth.AUTH_TARGETS["wiley"].url, {"wait_until": "domcontentloaded", "timeout": 120000})
+        (
+            auth.AUTH_TARGETS["wiley"].url,
+            {"wait_until": "domcontentloaded", "timeout": 120000},
+        )
     ]
     assert prompts and str(profile_dir) in prompts[0]
     assert str(storage_state_path) in prompts[0]
     assert json.loads(storage_state_path.read_text(encoding="utf-8")) == {
-        "cookies": [{"name": "cf_clearance", "value": "wiley", "domain": ".wiley.com", "path": "/"}],
+        "cookies": [
+            {
+                "name": "cf_clearance",
+                "value": "wiley",
+                "domain": ".wiley.com",
+                "path": "/",
+            }
+        ],
         "origins": [
-            {"origin": "https://onlinelibrary.wiley.com", "localStorage": [{"name": "ok", "value": "1"}]}
+            {
+                "origin": "https://onlinelibrary.wiley.com",
+                "localStorage": [{"name": "ok", "value": "1"}],
+            }
         ],
     }
 
@@ -243,7 +294,9 @@ def test_authenticate_provider_profile_url_override(monkeypatch, tmp_path) -> No
     )
 
     manager = fake_manager.instances[0]
-    assert manager.context.page.goto_calls == [(target_url, {"wait_until": "domcontentloaded", "timeout": 45000})]
+    assert manager.context.page.goto_calls == [
+        (target_url, {"wait_until": "domcontentloaded", "timeout": 45000})
+    ]
     assert manager.new_context_kwargs["user_agent"] == "Mozilla/5.0 auth-test"
     assert result.final_url == target_url
 
@@ -259,7 +312,9 @@ def test_authenticate_provider_profile_rejects_non_browser_provider() -> None:
         raise AssertionError("expected non-browser provider auth to fail")
 
 
-def test_authenticate_provider_profile_allows_url_for_catalog_provider_without_sample(monkeypatch, tmp_path) -> None:
+def test_authenticate_provider_profile_allows_url_for_catalog_provider_without_sample(
+    monkeypatch, tmp_path
+) -> None:
     fake_manager = _install_fake_browser_manager(monkeypatch)
     _patch_auth_runtime(monkeypatch, tmp_path)
     monkeypatch.setattr(auth, "browser_auth_provider_names", lambda: ("newbrowser",))

@@ -85,7 +85,9 @@ def _write_pdf_fallback_manifest(
     observed_signals: list[str] | None = None,
 ) -> str:
     pdf_url = "https://academic.oup.com/bioinformatics/article-pdf/36/11/3409/50670673/bioinformatics_36_11_3409.pdf"
-    rendered_signals = "\n".join(f"        - {signal}" for signal in (observed_signals or ["pdf_link"]))
+    rendered_signals = "\n".join(
+        f"        - {signal}" for signal in (observed_signals or ["pdf_link"])
+    )
     path.write_text(
         f"""
 name: {provider}
@@ -110,7 +112,9 @@ fixtures:
     return pdf_url
 
 
-def test_capture_fixture_writes_fixture_manifest_and_summary(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_capture_fixture_writes_fixture_manifest_and_summary(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     module = load_script_module("capture_fixture")
 
     class FakeTransport:
@@ -119,7 +123,7 @@ def test_capture_fixture_writes_fixture_manifest_and_summary(tmp_path: Path, mon
             assert url == "https://doi.org/10.1234/example"
             headers = kwargs.get("headers")
             assert isinstance(headers, dict)
-            assert headers["User-Agent"].startswith("paper-fetch-skill/")
+            assert "Chrome/" in headers["User-Agent"]
             return {
                 "headers": {"content-type": "text/html; charset=utf-8"},
                 "body": b"<html><title>Fixture</title></html>",
@@ -131,17 +135,32 @@ def test_capture_fixture_writes_fixture_manifest_and_summary(tmp_path: Path, mon
 
     summary = module.capture_fixture(_args(tmp_path))
 
-    fixture_path = tmp_path / "tests" / "fixtures" / "golden_criteria" / "10.1234_example" / "original.html"
-    manifest_path = tmp_path / "tests" / "fixtures" / "golden_criteria" / "manifest.json"
+    fixture_path = (
+        tmp_path
+        / "tests"
+        / "fixtures"
+        / "golden_criteria"
+        / "10.1234_example"
+        / "original.html"
+    )
+    manifest_path = (
+        tmp_path / "tests" / "fixtures" / "golden_criteria" / "manifest.json"
+    )
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
 
     assert fixture_path.read_bytes() == b"<html><title>Fixture</title></html>"
-    assert summary["fixture_path"] == "tests/fixtures/golden_criteria/10.1234_example/original.html"
+    assert (
+        summary["fixture_path"]
+        == "tests/fixtures/golden_criteria/10.1234_example/original.html"
+    )
     assert summary["content_type"] == "text/html; charset=utf-8"
     assert summary["bytes"] == len(b"<html><title>Fixture</title></html>")
     assert manifest["samples"]["10.1234_example"]["expected_outcome"] == "pending"
     assert manifest["samples"]["10.1234_example"]["purpose"] == "structure"
-    assert manifest["samples"]["10.1234_example"]["assets"]["original.html"] == summary["fixture_path"]
+    assert (
+        manifest["samples"]["10.1234_example"]["assets"]["original.html"]
+        == summary["fixture_path"]
+    )
 
 
 def test_capture_fixture_http_follows_location_redirects(
@@ -174,11 +193,16 @@ def test_capture_fixture_http_follows_location_redirects(
 
     summary = module.capture_fixture(_args(tmp_path))
 
-    assert seen_urls == ["https://doi.org/10.1234/example", "https://publisher.test/article"]
+    assert seen_urls == [
+        "https://doi.org/10.1234/example",
+        "https://publisher.test/article",
+    ]
     assert summary["manifest_entry"]["source_url"] == "https://publisher.test/article"
 
 
-def test_capture_fixture_dry_run_does_not_fetch_or_write(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_capture_fixture_dry_run_does_not_fetch_or_write(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     module = load_script_module("capture_fixture")
 
     class FailingTransport:
@@ -195,16 +219,24 @@ def test_capture_fixture_dry_run_does_not_fetch_or_write(tmp_path: Path, monkeyp
     assert not (tmp_path / "tests").exists()
 
 
-def test_capture_fixture_refuses_to_overwrite_without_force(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_capture_fixture_refuses_to_overwrite_without_force(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     module = load_script_module("capture_fixture")
 
-    fixture_dir = tmp_path / "tests" / "fixtures" / "golden_criteria" / "10.1234_example"
+    fixture_dir = (
+        tmp_path / "tests" / "fixtures" / "golden_criteria" / "10.1234_example"
+    )
     fixture_dir.mkdir(parents=True)
     (fixture_dir / "original.html").write_text("old", encoding="utf-8")
 
     class FakeTransport:
         def request(self, *_args: object, **_kwargs: object) -> dict[str, object]:
-            return {"headers": {"content-type": "text/html"}, "body": b"new", "url": "https://example.test"}
+            return {
+                "headers": {"content-type": "text/html"},
+                "body": b"new",
+                "url": "https://example.test",
+            }
 
     monkeypatch.setattr(module, "HttpTransport", FakeTransport)
 
@@ -218,10 +250,19 @@ def test_capture_fixture_reuses_existing_manifest_sample_for_duplicate_purpose(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     module = load_script_module("capture_fixture")
-    fixture_path = tmp_path / "tests" / "fixtures" / "golden_criteria" / "10.1234_example" / "original.html"
+    fixture_path = (
+        tmp_path
+        / "tests"
+        / "fixtures"
+        / "golden_criteria"
+        / "10.1234_example"
+        / "original.html"
+    )
     fixture_path.parent.mkdir(parents=True)
     fixture_path.write_text("<html>existing article</html>", encoding="utf-8")
-    manifest_path = tmp_path / "tests" / "fixtures" / "golden_criteria" / "manifest.json"
+    manifest_path = (
+        tmp_path / "tests" / "fixtures" / "golden_criteria" / "manifest.json"
+    )
     manifest_path.write_text(
         json.dumps(
             {
@@ -231,7 +272,9 @@ def test_capture_fixture_reuses_existing_manifest_sample_for_duplicate_purpose(
                         "publisher": "examplepub",
                         "content_type": "text/html",
                         "route_kind": "html",
-                        "assets": {"original.html": str(fixture_path.relative_to(tmp_path))},
+                        "assets": {
+                            "original.html": str(fixture_path.relative_to(tmp_path))
+                        },
                     }
                 }
             }
@@ -241,7 +284,9 @@ def test_capture_fixture_reuses_existing_manifest_sample_for_duplicate_purpose(
 
     class FailingTransport:
         def request(self, *_args: object, **_kwargs: object) -> dict[str, object]:
-            raise AssertionError("existing duplicate fixture must be reused without fetching")
+            raise AssertionError(
+                "existing duplicate fixture must be reused without fetching"
+            )
 
     monkeypatch.setattr(module, "HttpTransport", FailingTransport)
 
@@ -258,10 +303,19 @@ def test_capture_fixture_rejects_existing_route_mismatch_without_force(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     module = load_script_module("capture_fixture")
-    fixture_path = tmp_path / "tests" / "fixtures" / "golden_criteria" / "10.1234_example" / "original.html"
+    fixture_path = (
+        tmp_path
+        / "tests"
+        / "fixtures"
+        / "golden_criteria"
+        / "10.1234_example"
+        / "original.html"
+    )
     fixture_path.parent.mkdir(parents=True)
     fixture_path.write_text("<html>existing article</html>", encoding="utf-8")
-    manifest_path = tmp_path / "tests" / "fixtures" / "golden_criteria" / "manifest.json"
+    manifest_path = (
+        tmp_path / "tests" / "fixtures" / "golden_criteria" / "manifest.json"
+    )
     manifest_path.write_text(
         json.dumps(
             {
@@ -271,7 +325,9 @@ def test_capture_fixture_rejects_existing_route_mismatch_without_force(
                         "publisher": "examplepub",
                         "content_type": "text/html",
                         "route_kind": "html",
-                        "assets": {"original.html": str(fixture_path.relative_to(tmp_path))},
+                        "assets": {
+                            "original.html": str(fixture_path.relative_to(tmp_path))
+                        },
                     }
                 }
             }
@@ -292,20 +348,32 @@ def test_capture_fixture_rejects_existing_route_mismatch_without_force(
     assert "route_kind='html'" in exc_info.value.message
 
 
-def test_capture_fixture_routes_block_purpose_to_block_fixture_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_capture_fixture_routes_block_purpose_to_block_fixture_dir(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     module = load_script_module("capture_fixture")
 
     class FakeTransport:
         def request(self, *_args: object, **_kwargs: object) -> dict[str, object]:
-            return {"headers": {"content-type": "text/html"}, "body": b"<html>gate</html>", "url": "https://example.test"}
+            return {
+                "headers": {"content-type": "text/html"},
+                "body": b"<html>gate</html>",
+                "url": "https://example.test",
+            }
 
     monkeypatch.setattr(module, "HttpTransport", FakeTransport)
 
     summary = module.capture_fixture(_args(tmp_path, purpose="access-gate"))
 
     assert summary["route"] == "block"
-    assert (tmp_path / "tests" / "fixtures" / "block" / "10.1234_example" / "original.html").is_file()
-    manifest = json.loads((tmp_path / "tests" / "fixtures" / "golden_criteria" / "manifest.json").read_text())
+    assert (
+        tmp_path / "tests" / "fixtures" / "block" / "10.1234_example" / "original.html"
+    ).is_file()
+    manifest = json.loads(
+        (
+            tmp_path / "tests" / "fixtures" / "golden_criteria" / "manifest.json"
+        ).read_text()
+    )
     assert manifest["samples"]["10.1234_example"]["fixture_family"] == "block"
 
 
@@ -331,7 +399,13 @@ def test_capture_fixture_reads_doi_and_evidence_from_manifest(
     monkeypatch.setattr(module, "HttpTransport", FakeTransport)
 
     summary = module.capture_fixture(
-        _args(tmp_path, doi=None, provider=None, from_manifest=str(manifest_path), purpose="structure"),
+        _args(
+            tmp_path,
+            doi=None,
+            provider=None,
+            from_manifest=str(manifest_path),
+            purpose="structure",
+        ),
     )
 
     assert summary["doi"] == "10.3390/membranes15030093"
@@ -410,7 +484,11 @@ def test_capture_fixture_auto_via_selects_browser_for_pdf_fallback_http_403_sign
 ) -> None:
     module = load_script_module("capture_fixture")
     access_dir = tmp_path / "access-reviews"
-    _write_access_review(access_dir / "oxfordacademic.yml", provider="oxfordacademic", runtimes=["http", "browser"])
+    _write_access_review(
+        access_dir / "oxfordacademic.yml",
+        provider="oxfordacademic",
+        runtimes=["http", "browser"],
+    )
     monkeypatch.setattr(module, "ACCESS_REVIEW_DIR", access_dir)
     manifest_path = tmp_path / "oxfordacademic.yml"
     _write_pdf_fallback_manifest(
@@ -444,11 +522,17 @@ def test_capture_fixture_auto_via_retries_403_with_browser_pdf_and_keeps_stable_
 ) -> None:
     module = load_script_module("capture_fixture")
     access_dir = tmp_path / "access-reviews"
-    _write_access_review(access_dir / "oxfordacademic.yml", provider="oxfordacademic", runtimes=["http", "browser"])
+    _write_access_review(
+        access_dir / "oxfordacademic.yml",
+        provider="oxfordacademic",
+        runtimes=["http", "browser"],
+    )
     monkeypatch.setattr(module, "ACCESS_REVIEW_DIR", access_dir)
     manifest_path = tmp_path / "oxfordacademic.yml"
     pdf_url = _write_pdf_fallback_manifest(manifest_path, observed_signals=["pdf_link"])
-    final_token_url = "https://watermark02.silverchair.com/tokenized.pdf?token=short-lived"
+    final_token_url = (
+        "https://watermark02.silverchair.com/tokenized.pdf?token=short-lived"
+    )
 
     class ForbiddenTransport:
         def request(self, *_args: object, **_kwargs: object) -> dict[str, object]:
@@ -483,8 +567,19 @@ def test_capture_fixture_auto_via_retries_403_with_browser_pdf_and_keeps_stable_
         )
     )
 
-    fixture_path = tmp_path / "tests" / "fixtures" / "golden_criteria" / "10.1093_bioinformatics_btaa161" / "original.pdf"
-    manifest = json.loads((tmp_path / "tests" / "fixtures" / "golden_criteria" / "manifest.json").read_text())
+    fixture_path = (
+        tmp_path
+        / "tests"
+        / "fixtures"
+        / "golden_criteria"
+        / "10.1093_bioinformatics_btaa161"
+        / "original.pdf"
+    )
+    manifest = json.loads(
+        (
+            tmp_path / "tests" / "fixtures" / "golden_criteria" / "manifest.json"
+        ).read_text()
+    )
     entry = manifest["samples"]["10.1093_bioinformatics_btaa161"]
 
     assert summary["capture_route"] == "browser"
@@ -493,11 +588,16 @@ def test_capture_fixture_auto_via_retries_403_with_browser_pdf_and_keeps_stable_
     assert entry["route_kind"] == "pdf_fallback"
     assert entry["assets"]["original.pdf"] == summary["fixture_path"]
     assert entry["source_url"] == pdf_url
-    assert entry["diagnostics"]["browser_final_url"] == "https://watermark02.silverchair.com/tokenized.pdf"
+    assert (
+        entry["diagnostics"]["browser_final_url"]
+        == "https://watermark02.silverchair.com/tokenized.pdf"
+    )
     assert entry["diagnostics"]["browser_final_url_redacted"] is True
 
 
-def test_capture_fixture_skips_manifest_null_doi(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_capture_fixture_skips_manifest_null_doi(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     module = load_script_module("capture_fixture")
     manifest_path = tmp_path / "mdpi.yml"
     _write_provider_manifest(manifest_path, doi=None)
@@ -509,7 +609,13 @@ def test_capture_fixture_skips_manifest_null_doi(tmp_path: Path, monkeypatch: py
     monkeypatch.setattr(module, "HttpTransport", FailingTransport)
 
     summary = module.capture_fixture(
-        _args(tmp_path, doi=None, provider=None, from_manifest=str(manifest_path), purpose="structure"),
+        _args(
+            tmp_path,
+            doi=None,
+            provider=None,
+            from_manifest=str(manifest_path),
+            purpose="structure",
+        ),
     )
 
     assert summary["status"] == "SKIPPED"
@@ -585,9 +691,10 @@ extra_fixtures:
     reasons = [item.get("reason") for item in summary["results"]]
     assert "fixtures.doi_samples.figure.doi is null" in reasons
     planned = [item for item in summary["results"] if item.get("status") == "OK"]
-    assert {
-        item["manifest_sample_path"] for item in planned
-    } == {"fixtures.doi_samples.structure", "extra_fixtures[0]"}
+    assert {item["manifest_sample_path"] for item in planned} == {
+        "fixtures.doi_samples.structure",
+        "extra_fixtures[0]",
+    }
     assert not (tmp_path / "tests").exists()
 
 
@@ -653,7 +760,9 @@ def test_capture_fixture_reuses_existing_xml_manifest_asset(
     manifest_path = tmp_path / "plos.yml"
     doi = "10.1371/journal.pone.0263725"
     slug = "10.1371_journal.pone.0263725"
-    fixture_path = tmp_path / "tests" / "fixtures" / "golden_criteria" / slug / "original.xml"
+    fixture_path = (
+        tmp_path / "tests" / "fixtures" / "golden_criteria" / slug / "original.xml"
+    )
     fixture_path.parent.mkdir(parents=True)
     fixture_path.write_text("<article />", encoding="utf-8")
     manifest_path.write_text(
@@ -677,7 +786,9 @@ fixtures:
 """,
         encoding="utf-8",
     )
-    fixture_manifest_path = tmp_path / "tests" / "fixtures" / "golden_criteria" / "manifest.json"
+    fixture_manifest_path = (
+        tmp_path / "tests" / "fixtures" / "golden_criteria" / "manifest.json"
+    )
     fixture_manifest_path.write_text(
         json.dumps(
             {
@@ -688,7 +799,9 @@ fixtures:
                         "content_type": "text/xml",
                         "route_kind": "xml",
                         "assets": {
-                            "original.xml": fixture_path.relative_to(tmp_path).as_posix()
+                            "original.xml": fixture_path.relative_to(
+                                tmp_path
+                            ).as_posix()
                         },
                     }
                 }
@@ -727,7 +840,11 @@ def test_capture_fixture_retries_403_with_browser_placeholder(
 
     class ForbiddenTransport:
         def request(self, *_args: object, **_kwargs: object) -> dict[str, object]:
-            return {"headers": {"content-type": "text/html"}, "body": b"forbidden", "status_code": 403}
+            return {
+                "headers": {"content-type": "text/html"},
+                "body": b"forbidden",
+                "status_code": 403,
+            }
 
     monkeypatch.setattr(module, "HttpTransport", ForbiddenTransport)
     monkeypatch.setattr(
@@ -752,7 +869,9 @@ def test_capture_fixture_retries_403_with_browser_placeholder(
     assert not (tmp_path / "tests").exists()
 
 
-def test_capture_fixture_maps_challenge_html(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_capture_fixture_maps_challenge_html(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     module = load_script_module("capture_fixture")
 
     class ChallengeTransport:
@@ -771,7 +890,9 @@ def test_capture_fixture_maps_challenge_html(tmp_path: Path, monkeypatch: pytest
     assert exc_info.value.code == "CHALLENGE_DETECTED"
 
 
-def test_capture_fixture_validation_allows_annualreviews_access_provided_by_fulltext() -> None:
+def test_capture_fixture_validation_allows_annualreviews_access_provided_by_fulltext() -> (
+    None
+):
     module = load_script_module("capture_fixture")
     body_text = "Annual Reviews full article section text with enough substance. " * 8
     html = (
@@ -797,7 +918,9 @@ def test_capture_fixture_validation_allows_annualreviews_access_provided_by_full
     assert final_url == "https://www.annualreviews.org/content/journals/10.1146/example"
 
 
-def test_capture_fixture_validation_allows_access_ui_when_fulltext_container_is_populated() -> None:
+def test_capture_fixture_validation_allows_access_ui_when_fulltext_container_is_populated() -> (
+    None
+):
     module = load_script_module("capture_fixture")
     body_text = "Annual Reviews full article section text with enough substance. " * 80
     html = (
@@ -888,7 +1011,11 @@ def test_capture_fixture_fail_fast_writes_json_stderr_without_stdout(
 
     class RateLimitedTransport:
         def request(self, *_args: object, **_kwargs: object) -> dict[str, object]:
-            return {"headers": {"content-type": "text/html"}, "body": b"slow down", "status_code": 429}
+            return {
+                "headers": {"content-type": "text/html"},
+                "body": b"slow down",
+                "status_code": 429,
+            }
 
     monkeypatch.setattr(module, "HttpTransport", RateLimitedTransport)
 

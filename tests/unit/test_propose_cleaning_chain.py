@@ -53,18 +53,27 @@ def test_cleaning_proposal_contains_fixture_provenance_and_contract_delta() -> N
     )
     assert proposal["content_anchors"]
     assert {"structure", "table"} <= set(proposal["proposed_markdown_contract_delta"])
-    assert "missing_must_include" in proposal["proposed_markdown_contract_delta"]["structure"]
+    assert (
+        "missing_must_include"
+        in proposal["proposed_markdown_contract_delta"]["structure"]
+    )
     assert isinstance(
-        proposal["proposed_markdown_contract_delta"]["structure"]["dead_must_not_include"],
+        proposal["proposed_markdown_contract_delta"]["structure"][
+            "dead_must_not_include"
+        ],
         dict,
     )
     assert proposal["repeated_boilerplate_candidates"]
     first_candidate = proposal["repeated_boilerplate_candidates"][0]
     assert first_candidate["provenance"]
-    assert {"fixture_path", "purpose", "line", "text"} <= set(first_candidate["provenance"][0])
+    assert {"fixture_path", "purpose", "line", "text"} <= set(
+        first_candidate["provenance"][0]
+    )
 
 
-def test_markdown_baseline_uses_provider_golden_adapter(monkeypatch, tmp_path: Path) -> None:
+def test_markdown_baseline_uses_provider_golden_adapter(
+    monkeypatch, tmp_path: Path
+) -> None:
     calls: list[object] = []
 
     class FakeArticle:
@@ -139,13 +148,17 @@ def test_plos_xml_baseline_uses_shared_jats_renderer(tmp_path: Path) -> None:
         sample_id="plos-test",
     )
 
-    assert source == "paper_fetch.providers._article_markdown_jats:plos_manifest_fixture"
+    assert (
+        source == "paper_fetch.providers._article_markdown_jats:plos_manifest_fixture"
+    )
     assert "PLOS JATS Fixture" in markdown
     assert "This abstract comes from JATS" in markdown
     assert "Body text proves the XML route" in markdown
 
 
-def test_ieee_landing_only_fallback_fixtures_render_provider_managed_baselines() -> None:
+def test_ieee_landing_only_fallback_fixtures_render_provider_managed_baselines() -> (
+    None
+):
     manifest = yaml.safe_load(
         (REPO_ROOT / "onboarding" / "manifests" / "ieee.yml").read_text(
             encoding="utf-8"
@@ -226,7 +239,9 @@ def test_cleaning_risk_and_token_conflict_helpers_report_risks() -> None:
     )
 
     assert risks
-    assert {"purpose", "doi", "fixture_path", "dom_path", "sample_text", "risk"} <= set(risks[0])
+    assert {"purpose", "doi", "fixture_path", "dom_path", "sample_text", "risk"} <= set(
+        risks[0]
+    )
     assert conflicts == [
         {
             "token": "Abstract",
@@ -271,7 +286,9 @@ def test_cleaning_proposal_cli_writes_yaml(tmp_path: Path) -> None:
 
     payload = json.loads(result.stdout)
     proposal = yaml.safe_load(output_path.read_text(encoding="utf-8"))
-    evidence = yaml.safe_load((tmp_path / "proposal.evidence.yml").read_text(encoding="utf-8"))
+    evidence = yaml.safe_load(
+        (tmp_path / "proposal.evidence.yml").read_text(encoding="utf-8")
+    )
     assert payload["provider"] == "mdpi"
     assert payload["output"] == output_path.as_posix()
     assert payload["evidence_output"] == (tmp_path / "proposal.evidence.yml").as_posix()
@@ -359,7 +376,9 @@ def test_check_contract_cli_warning_only_returns_zero(tmp_path: Path) -> None:
         }
     }
     manifest_path = tmp_path / "mdpi-warning.yml"
-    manifest_path.write_text(yaml.safe_dump(manifest, sort_keys=False), encoding="utf-8")
+    manifest_path.write_text(
+        yaml.safe_dump(manifest, sort_keys=False), encoding="utf-8"
+    )
 
     result = subprocess.run(
         [
@@ -391,7 +410,9 @@ def test_check_contract_cli_blocking_returns_nonzero(tmp_path: Path) -> None:
         }
     }
     manifest_path = tmp_path / "mdpi-blocking.yml"
-    manifest_path.write_text(yaml.safe_dump(manifest, sort_keys=False), encoding="utf-8")
+    manifest_path.write_text(
+        yaml.safe_dump(manifest, sort_keys=False), encoding="utf-8"
+    )
 
     result = subprocess.run(
         [

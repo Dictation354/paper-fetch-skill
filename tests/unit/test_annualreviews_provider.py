@@ -117,7 +117,10 @@ def test_pdf_fallback_contract_uses_pdf_magic_and_annualreviews_pdf_source() -> 
     )
 
     assert body.startswith(b"%PDF")
-    assert AnnualreviewsClient(None, {}).article_source_for_payload(raw_payload) == "annualreviews_pdf"
+    assert (
+        AnnualreviewsClient(None, {}).article_source_for_payload(raw_payload)
+        == "annualreviews_pdf"
+    )
 
 
 def test_abstract_only_and_metadata_only_contract_are_provider_managed() -> None:
@@ -156,7 +159,9 @@ def test_markdown_contract_table_fixture() -> None:
 def test_markdown_contract_formula_fixture() -> None:
     # markdown-review: purpose=formula doi=10.1146/annurev-neuro-062111-150343
     markdown = _render_markdown_for_fixture(FORMULA_DOI)
-    assert "The NMDA spike as a hallmark of electrogenesis in thin dendrites." in markdown
+    assert (
+        "The NMDA spike as a hallmark of electrogenesis in thin dendrites." in markdown
+    )
     assert "I-V curve" in markdown
     assert "g max" in markdown
     assert "Na<sup>+</sup>" in markdown
@@ -262,7 +267,9 @@ def test_article_model_uses_extracted_html_title_instead_of_doi_placeholder() ->
         max_tokens="full_text",
     )
 
-    title = "Stretchable Shape Sensing and Computation for General Shape-Changing Robots"
+    title = (
+        "Stretchable Shape Sensing and Computation for General Shape-Changing Robots"
+    )
     assert article.metadata.title == title
     assert f'title: "{title}"' in rendered
     assert f"# {title}" in rendered
@@ -285,14 +292,19 @@ def test_golden_replay_rewrites_downloaded_figure_assets_to_local_paths() -> Non
     )
 
     assert local_asset in markdown
-    assert "https://www.annualreviews.org/docserver/fulltext/control/8/1/as801.f1.png" not in markdown
+    assert (
+        "https://www.annualreviews.org/docserver/fulltext/control/8/1/as801.f1.png"
+        not in markdown
+    )
     assert Path(local_asset).is_file()
 
 
 def test_download_related_assets_fetches_annualreviews_body_figure() -> None:
     """asset-download-contract: provider=annualreviews"""
 
-    figure_url = "https://www.annualreviews.org/docserver/fulltext/control/8/1/as801.f1.png"
+    figure_url = (
+        "https://www.annualreviews.org/docserver/fulltext/control/8/1/as801.f1.png"
+    )
     html = f"""
 <html><body>
   <div id="itemFullTextId">
@@ -325,13 +337,16 @@ def test_download_related_assets_fetches_annualreviews_body_figure() -> None:
             content_type="text/html",
             body=html.encode("utf-8"),
             route="html",
-            markdown_text="# Annual Reviews Figure\n\n## Results\n\n" + ("Body text " * 120),
+            markdown_text="# Annual Reviews Figure\n\n## Results\n\n"
+            + ("Body text " * 120),
             browser_context_seed={},
         )
         mocked_builder = mock.Mock(return_value=shared_fetcher)
         install_browser_workflow_deps(
             client,
-            load_runtime_config=mock.Mock(return_value=_runtime_config(tmpdir, HTML_DOI)),
+            load_runtime_config=mock.Mock(
+                return_value=_runtime_config(tmpdir, HTML_DOI)
+            ),
             ensure_runtime_ready=mock.Mock(),
             _build_shared_browser_image_fetcher=mocked_builder,
         )

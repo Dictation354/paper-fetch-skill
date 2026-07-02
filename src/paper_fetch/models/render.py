@@ -44,7 +44,12 @@ from .sections import (
     section_priority,
     split_leading_abstract_context_sections,
 )
-from .tokens import estimate_normalized_tokens, estimate_tokens, normalize_token_budget, truncate_text_to_tokens
+from .tokens import (
+    estimate_normalized_tokens,
+    estimate_tokens,
+    normalize_token_budget,
+    truncate_text_to_tokens,
+)
 
 MARKDOWN_DECORATION_PATTERN = re.compile(r"[*_`$]+")
 # Rendering strips only already-rendered caption prefixes; this is narrower
@@ -62,9 +67,9 @@ def asset_link(asset: Asset) -> str:
 def is_table_like_figure_asset(asset: Asset) -> bool:
     for candidate in (asset.heading, asset.caption):
         normalized = normalize_text(candidate)
-        if TABLE_LIKE_FIGURE_ASSET_PATTERN.match(normalized) or NATURE_TABLE_LIKE_FIGURE_ASSET_PATTERN.match(
+        if TABLE_LIKE_FIGURE_ASSET_PATTERN.match(
             normalized
-        ):
+        ) or NATURE_TABLE_LIKE_FIGURE_ASSET_PATTERN.match(normalized):
             return True
     return False
 
@@ -83,7 +88,9 @@ def resolve_reference_limit(include_refs: str, total: int) -> int:
     return min(total, 10)
 
 
-def resolve_reference_mode(include_refs: str | None, *, full_text_requested: bool) -> str:
+def resolve_reference_mode(
+    include_refs: str | None, *, full_text_requested: bool
+) -> str:
     if include_refs is not None:
         return include_refs
     if full_text_requested:
@@ -91,13 +98,17 @@ def resolve_reference_mode(include_refs: str | None, *, full_text_requested: boo
     return "top10"
 
 
-def resolve_figure_mode(include_figures: str | None, *, asset_profile: AssetProfile) -> str:
+def resolve_figure_mode(
+    include_figures: str | None, *, asset_profile: AssetProfile
+) -> str:
     if include_figures is not None:
         return include_figures
     return "captions_only" if asset_profile == "none" else "inline"
 
 
-def resolve_supplementary_mode(include_supplementary: bool | None, *, asset_profile: AssetProfile) -> bool:
+def resolve_supplementary_mode(
+    include_supplementary: bool | None, *, asset_profile: AssetProfile
+) -> bool:
     if include_supplementary is not None:
         return include_supplementary
     return asset_profile == "all"
@@ -107,7 +118,10 @@ def _build_article_header_block(article: ArticleModel) -> RenderedBlock:
     lines = ["---"]
     front_matter_fields = (
         ("title", article.metadata.title),
-        ("authors", ", ".join(article.metadata.authors) if article.metadata.authors else None),
+        (
+            "authors",
+            ", ".join(article.metadata.authors) if article.metadata.authors else None,
+        ),
         ("journal", article.metadata.journal),
         ("doi", article.doi),
         ("published", article.metadata.published),
@@ -116,7 +130,9 @@ def _build_article_header_block(article: ArticleModel) -> RenderedBlock:
         normalized_value = normalize_inline_html_text(value)
         if normalized_value:
             lines.append(f'{key}: "{normalized_value.replace(chr(34), chr(39))}"')
-    display_title = normalize_inline_html_text(article.metadata.title) or "Untitled Article"
+    display_title = (
+        normalize_inline_html_text(article.metadata.title) or "Untitled Article"
+    )
     lines.extend(
         [
             f'source: "{article.source}"',
@@ -143,19 +159,26 @@ def _build_markdown_render_plan(
     max_tokens: MaxTokensMode,
 ) -> _MarkdownRenderPlan:
     token_budget, full_text_requested = normalize_token_budget(max_tokens)
-    effective_include_refs = resolve_reference_mode(include_refs, full_text_requested=full_text_requested)
-    effective_include_figures = resolve_figure_mode(include_figures, asset_profile=asset_profile)
+    effective_include_refs = resolve_reference_mode(
+        include_refs, full_text_requested=full_text_requested
+    )
+    effective_include_figures = resolve_figure_mode(
+        include_figures, asset_profile=asset_profile
+    )
     effective_include_supplementary = resolve_supplementary_mode(
         include_supplementary,
         asset_profile=asset_profile,
     )
     body_sections = tuple(renderable_body_sections(article.sections))
     rendered_abstract_sections = tuple(abstract_sections(article.sections))
-    lead_sections, remaining_body_sections = split_leading_abstract_context_sections(body_sections)
+    lead_sections, remaining_body_sections = split_leading_abstract_context_sections(
+        body_sections
+    )
     retained_sections = tuple(
         section
         for section in article.sections
-        if strip_markdown_images(section.text) and normalize_text(section.kind).lower() in RETAINED_NON_BODY_SECTION_KINDS
+        if strip_markdown_images(section.text)
+        and normalize_text(section.kind).lower() in RETAINED_NON_BODY_SECTION_KINDS
     )
     remaining_ids = {id(section) for section in remaining_body_sections}
     retained_ids = {id(section) for section in retained_sections}
@@ -167,7 +190,12 @@ def _build_markdown_render_plan(
     figure_assets = selected_figure_assets(article.assets, asset_profile=asset_profile)
     figure_assets = filter_inline_body_figure_assets(
         figure_assets,
-        sections=(*lead_sections, *rendered_abstract_sections, *remaining_body_sections, *retained_sections),
+        sections=(
+            *lead_sections,
+            *rendered_abstract_sections,
+            *remaining_body_sections,
+            *retained_sections,
+        ),
     )
     figure_assets = suppress_repeated_body_figure_captions(
         figure_assets,
@@ -175,15 +203,24 @@ def _build_markdown_render_plan(
     )
     table_assets = filter_inline_body_table_assets(
         selected_table_assets(article.assets, asset_profile=asset_profile),
-        sections=(*lead_sections, *rendered_abstract_sections, *remaining_body_sections, *retained_sections),
+        sections=(
+            *lead_sections,
+            *rendered_abstract_sections,
+            *remaining_body_sections,
+            *retained_sections,
+        ),
     )
     return _MarkdownRenderPlan(
         token_budget=token_budget,
-        abstract_text=first_abstract_text(abstract_text=article.metadata.abstract, sections=article.sections),
+        abstract_text=first_abstract_text(
+            abstract_text=article.metadata.abstract, sections=article.sections
+        ),
         abstract_sections=rendered_abstract_sections,
         level_shift=compute_level_shift(body_sections or retained_sections),
         include_figures=effective_include_figures,
-        reference_count=resolve_reference_limit(effective_include_refs, len(article.references)),
+        reference_count=resolve_reference_limit(
+            effective_include_refs, len(article.references)
+        ),
         lead_sections=lead_sections,
         body_sections=source_ordered_main_sections,
         retained_sections=(),
@@ -200,7 +237,9 @@ def _build_markdown_render_plan(
 
 
 def render_abstract_section_block(abstract_text: str) -> RenderedBlock:
-    return render_section_block(Section(heading="Abstract", level=2, kind="abstract", text=abstract_text))
+    return render_section_block(
+        Section(heading="Abstract", level=2, kind="abstract", text=abstract_text)
+    )
 
 
 def _append_abstract_with_budget(
@@ -212,14 +251,22 @@ def _append_abstract_with_budget(
 ) -> None:
     if not abstract_text:
         return
-    abstract_block = render_abstract_section_block(abstract_text) if as_section else render_abstract_block(abstract_text)
+    abstract_block = (
+        render_abstract_section_block(abstract_text)
+        if as_section
+        else render_abstract_block(abstract_text)
+    )
     if context.append_if_fits(lines, abstract_block):
         return
-    truncated_text = truncate_text_to_tokens(abstract_text, max(int(context.remaining_budget - 8), 0))
+    truncated_text = truncate_text_to_tokens(
+        abstract_text, max(int(context.remaining_budget - 8), 0)
+    )
     if truncated_text:
         context.append_if_fits(
             lines,
-            render_abstract_section_block(truncated_text) if as_section else render_abstract_block(truncated_text),
+            render_abstract_section_block(truncated_text)
+            if as_section
+            else render_abstract_block(truncated_text),
         )
     context.mark_truncated()
 
@@ -234,9 +281,13 @@ def _append_sections_with_budget(
 ) -> None:
     selected_sections: list[tuple[int, RenderedBlock]] = []
     indexed_sections = list(enumerate(sections))
-    ordered_sections = indexed_sections if preserve_source_order else sorted(
-        indexed_sections,
-        key=lambda item: (section_priority(item[1]), item[0]),
+    ordered_sections = (
+        indexed_sections
+        if preserve_source_order
+        else sorted(
+            indexed_sections,
+            key=lambda item: (section_priority(item[1]), item[0]),
+        )
     )
     for index, section in ordered_sections:
         section_block = render_section_block(section, level_shift=level_shift)
@@ -247,7 +298,12 @@ def _append_sections_with_budget(
         if not math.isinf(context.remaining_budget) and context.remaining_budget > 64:
             truncated_text = truncate_text_to_tokens(
                 section.text,
-                max(int(context.remaining_budget - estimate_tokens(section.heading) - 4), 0),
+                max(
+                    int(
+                        context.remaining_budget - estimate_tokens(section.heading) - 4
+                    ),
+                    0,
+                ),
             )
             if truncated_text:
                 truncated_section = Section(
@@ -259,7 +315,9 @@ def _append_sections_with_budget(
                 selected_sections.append(
                     (
                         index,
-                        render_section_block(truncated_section, level_shift=level_shift),
+                        render_section_block(
+                            truncated_section, level_shift=level_shift
+                        ),
                     )
                 )
                 context.remaining_budget = 0
@@ -287,8 +345,14 @@ def asset_in_body(asset: Asset) -> bool:
     return normalize_asset_section(asset) not in {"appendix", "supplementary"}
 
 
-def selected_figure_assets(assets: list[Asset], *, asset_profile: AssetProfile) -> list[Asset]:
-    figure_assets = [asset for asset in assets if asset.kind == "figure" and asset_is_appendable(asset)]
+def selected_figure_assets(
+    assets: list[Asset], *, asset_profile: AssetProfile
+) -> list[Asset]:
+    figure_assets = [
+        asset
+        for asset in assets
+        if asset.kind == "figure" and asset_is_appendable(asset)
+    ]
     if asset_profile == "body":
         return [asset for asset in figure_assets if asset_in_body(asset)]
     return figure_assets
@@ -339,7 +403,9 @@ def _asset_image_markdown(
     return render_markdown_image(kind, heading, replacement_path)
 
 
-def rewrite_markdown_asset_links(markdown_text: str, assets: Sequence[Asset | Mapping[str, Any]] | None) -> str:
+def rewrite_markdown_asset_links(
+    markdown_text: str, assets: Sequence[Asset | Mapping[str, Any]] | None
+) -> str:
     if not markdown_text or not assets:
         return markdown_text
 
@@ -432,7 +498,11 @@ def _figure_caption_candidates(asset: Asset) -> list[str]:
     candidates: list[str] = []
     if caption:
         candidates.append(caption)
-    if heading and caption and not normalize_text(caption).lower().startswith(heading.lower()):
+    if (
+        heading
+        and caption
+        and not normalize_text(caption).lower().startswith(heading.lower())
+    ):
         candidates.append(f"{heading}. {caption}")
     return candidates
 
@@ -444,7 +514,9 @@ def suppress_repeated_body_figure_captions(
 ) -> list[Asset]:
     if not assets or not sections:
         return list(assets)
-    body_match_text = _caption_match_text("\n\n".join(section.text for section in sections))
+    body_match_text = _caption_match_text(
+        "\n\n".join(section.text for section in sections)
+    )
     if not body_match_text:
         return list(assets)
 
@@ -454,15 +526,22 @@ def suppress_repeated_body_figure_captions(
             suppressed.append(asset)
             continue
         repeated = any(
-            _caption_has_meaningful_body(candidate) and _caption_match_text(candidate) in body_match_text
+            _caption_has_meaningful_body(candidate)
+            and _caption_match_text(candidate) in body_match_text
             for candidate in _figure_caption_candidates(asset)
         )
         suppressed.append(replace(asset, caption=None) if repeated else asset)
     return suppressed
 
 
-def selected_table_assets(assets: list[Asset], *, asset_profile: AssetProfile) -> list[Asset]:
-    table_assets = [asset for asset in assets if asset.kind == "table" and asset_is_appendable(asset)]
+def selected_table_assets(
+    assets: list[Asset], *, asset_profile: AssetProfile
+) -> list[Asset]:
+    table_assets = [
+        asset
+        for asset in assets
+        if asset.kind == "table" and asset_is_appendable(asset)
+    ]
     if asset_profile == "none":
         return []
     if asset_profile == "body":
@@ -486,8 +565,14 @@ def selected_supplementary_assets(
     return supplementary_assets
 
 
-def build_rendered_block(lines: list[str], *, normalized_text: str | None = None) -> RenderedBlock:
-    normalized = normalized_text if normalized_text is not None else normalize_markdown_text("\n".join(lines))
+def build_rendered_block(
+    lines: list[str], *, normalized_text: str | None = None
+) -> RenderedBlock:
+    normalized = (
+        normalized_text
+        if normalized_text is not None
+        else normalize_markdown_text("\n".join(lines))
+    )
     return RenderedBlock(
         lines=tuple(lines),
         normalized_text=normalized,
@@ -499,7 +584,9 @@ def render_abstract_block(abstract_text: str) -> RenderedBlock:
     return build_rendered_block([f"**Abstract.** {abstract_text}", ""])
 
 
-def append_asset_block(lines: list[str], *, heading: str, item_groups: list[RenderedBlock]) -> None:
+def append_asset_block(
+    lines: list[str], *, heading: str, item_groups: list[RenderedBlock]
+) -> None:
     if not item_groups:
         return
     lines.extend([f"## {heading}", ""])
@@ -544,7 +631,9 @@ def append_asset_block_with_budget(
 
 
 def asset_block_heading(default_heading: str, assets: Sequence[Asset]) -> str:
-    if assets and all(normalize_asset_render_state(asset) == "appendix" for asset in assets):
+    if assets and all(
+        normalize_asset_render_state(asset) == "appendix" for asset in assets
+    ):
         return f"Additional {default_heading}"
     return default_heading
 
@@ -565,7 +654,9 @@ def append_reference_block(
 ) -> None:
     if not references:
         return
-    lines.extend([f"## References ({total_references} total, showing {shown_references})", ""])
+    lines.extend(
+        [f"## References ({total_references} total, showing {shown_references})", ""]
+    )
     for reference in references:
         lines.append(_render_reference_line(reference.raw))
     lines.append("")
@@ -581,7 +672,9 @@ def append_reference_block_with_budget(
     if not references:
         return
 
-    header_block = build_rendered_block([f"## References ({total_references} total, showing {len(references)})", ""])
+    header_block = build_rendered_block(
+        [f"## References ({total_references} total, showing {len(references)})", ""]
+    )
     if header_block.token_estimate > context.remaining_budget:
         context.mark_truncated()
         return
@@ -595,8 +688,12 @@ def append_reference_block_with_budget(
             remaining_after_header -= candidate_block.token_estimate
             continue
         if not math.isinf(remaining_after_header) and remaining_after_header > 16:
-            truncated_reference = truncate_text_to_tokens(reference.raw, max(8, int(remaining_after_header - 2)))
-            truncated_block = build_rendered_block([_render_reference_line(truncated_reference)])
+            truncated_reference = truncate_text_to_tokens(
+                reference.raw, max(8, int(remaining_after_header - 2))
+            )
+            truncated_block = build_rendered_block(
+                [_render_reference_line(truncated_reference)]
+            )
             if truncated_block.token_estimate <= remaining_after_header:
                 selected_references.append(truncated_block)
                 remaining_after_header -= truncated_block.token_estimate
@@ -606,14 +703,23 @@ def append_reference_block_with_budget(
     if not selected_references:
         return
 
-    lines.extend(build_rendered_block([f"## References ({total_references} total, showing {len(selected_references)})", ""]).lines)
+    lines.extend(
+        build_rendered_block(
+            [
+                f"## References ({total_references} total, showing {len(selected_references)})",
+                "",
+            ]
+        ).lines
+    )
     for block in selected_references:
         lines.extend(block.lines)
     lines.append("")
     context.remaining_budget = remaining_after_header
 
 
-def render_figure_asset_groups(assets: list[Asset], *, include_figures: str) -> list[RenderedBlock]:
+def render_figure_asset_groups(
+    assets: list[Asset], *, include_figures: str
+) -> list[RenderedBlock]:
     if include_figures not in {"captions_only", "inline"}:
         return []
 
@@ -714,7 +820,8 @@ def compute_level_shift(sections: Sequence[Section]) -> int:
     body_levels = [
         section.level
         for section in sections
-        if normalize_text(section.kind).lower() not in BODY_SECTION_EXCLUDED_KINDS and section.level > 0
+        if normalize_text(section.kind).lower() not in BODY_SECTION_EXCLUDED_KINDS
+        and section.level > 0
     ]
     if not body_levels:
         return 0

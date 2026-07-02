@@ -242,13 +242,17 @@ class SharedHtmlHelperTests(unittest.TestCase):
 </html>
 """
 
-        assets = html_assets.extract_figure_assets(html, "https://academic.oup.com/article")
+        assets = html_assets.extract_figure_assets(
+            html, "https://academic.oup.com/article"
+        )
 
         self.assertEqual(len(assets), 1)
         self.assertEqual(assets[0]["kind"], "figure")
         self.assertEqual(assets[0]["heading"], "Fig. 4.")
         self.assertIn("Basic TM on abstracts and full-texts", assets[0]["caption"])
-        self.assertEqual(assets[0]["url"], "https://academic.oup.com/content/m_btaa823f4.jpeg")
+        self.assertEqual(
+            assets[0]["url"], "https://academic.oup.com/content/m_btaa823f4.jpeg"
+        )
 
     def test_silverchair_figure_section_images_are_not_formula_assets(self) -> None:
         html = """
@@ -328,7 +332,9 @@ class SharedHtmlHelperTests(unittest.TestCase):
         self.assertEqual(len(formula_assets), 1)
         self.assertEqual(formula_assets[0]["kind"], "formula")
         self.assertIn("zpq01009-6960-m02.jpeg", formula_assets[0]["url"])
-        self.assertEqual([asset["kind"] for asset in scoped_assets], ["figure", "formula"])
+        self.assertEqual(
+            [asset["kind"] for asset in scoped_assets], ["figure", "formula"]
+        )
 
     def test_scoped_assets_prefer_formula_when_figure_reuses_formula_url(self) -> None:
         html = """
@@ -390,7 +396,9 @@ class SharedHtmlHelperTests(unittest.TestCase):
 
         self.assertFalse(is_html_figure_container(soup.select_one("article")))
         self.assertFalse(is_html_figure_container(soup.select_one("#article-contents")))
-        self.assertFalse(is_html_figure_container(soup.select_one("#sec2-foods-10-01757")))
+        self.assertFalse(
+            is_html_figure_container(soup.select_one("#sec2-foods-10-01757"))
+        )
         self.assertFalse(is_html_figure_container(soup.select_one("#itemFullTextId")))
         self.assertFalse(is_html_figure_container(soup.select_one("#section-future")))
         self.assertFalse(is_html_figure_container(soup.select_one("a.media-link")))
@@ -433,7 +441,9 @@ class SharedHtmlHelperTests(unittest.TestCase):
         )
 
         self.assertTrue(is_html_figure_container(soup.select_one(".figure-full")))
-        self.assertFalse(is_html_figure_container(soup.select_one(".figure-links-panel")))
+        self.assertFalse(
+            is_html_figure_container(soup.select_one(".figure-links-panel"))
+        )
 
     def test_formula_image_url_signal_precedes_figure_context_exclusion(self) -> None:
         soup = BeautifulSoup(
@@ -742,7 +752,8 @@ class SharedHtmlHelperTests(unittest.TestCase):
             }
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            result = html_assets.download_assets(html_assets.SUPPLEMENTARY_KIND,
+            result = html_assets.download_assets(
+                html_assets.SUPPLEMENTARY_KIND,
                 HttpTransport(),
                 article_id="10.1111/gcb.16414",
                 assets=[
@@ -790,7 +801,8 @@ class SharedHtmlHelperTests(unittest.TestCase):
             return responses[url]
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            result = html_assets.download_assets(html_assets.SUPPLEMENTARY_KIND,
+            result = html_assets.download_assets(
+                html_assets.SUPPLEMENTARY_KIND,
                 HttpTransport(),
                 article_id="10.1000/example",
                 assets=[
@@ -840,7 +852,8 @@ class SharedHtmlHelperTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmpdir:
             output_dir = Path(tmpdir)
-            result = html_assets.download_assets(html_assets.SUPPLEMENTARY_KIND,
+            result = html_assets.download_assets(
+                html_assets.SUPPLEMENTARY_KIND,
                 HttpTransport(),
                 article_id="10.1000/source-only",
                 assets=[
@@ -1227,7 +1240,9 @@ class SharedHtmlHelperTests(unittest.TestCase):
         )
         self.assertEqual(result["asset_failures"], [])
 
-    def test_download_assets_figure_kind_respects_explicit_concurrency_limit(self) -> None:
+    def test_download_assets_figure_kind_respects_explicit_concurrency_limit(
+        self,
+    ) -> None:
         urls = [f"https://example.test/serial-fig{i}.png" for i in range(3)]
         transport = _DelayedAssetTransport({url: 0.01 for url in urls})
         assets = [
@@ -1294,7 +1309,8 @@ class SharedHtmlHelperTests(unittest.TestCase):
         ]
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            result = html_assets.download_assets(html_assets.SUPPLEMENTARY_KIND,
+            result = html_assets.download_assets(
+                html_assets.SUPPLEMENTARY_KIND,
                 HttpTransport(),
                 article_id="10.5555/parallel",
                 assets=assets,
@@ -1347,7 +1363,8 @@ class SharedHtmlHelperTests(unittest.TestCase):
         ]
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            result = html_assets.download_assets(html_assets.SUPPLEMENTARY_KIND,
+            result = html_assets.download_assets(
+                html_assets.SUPPLEMENTARY_KIND,
                 HttpTransport(),
                 article_id="10.5555/serial",
                 assets=assets,
@@ -1650,9 +1667,7 @@ Learn more
         self.assertNotIn("Learn more", cleaned.splitlines())
 
     def test_body_metrics_learn_more_preserves_body_sentence(self) -> None:
-        body_sentence = (
-            "Readers who want to learn more about this dataset can consult the appendix."
-        )
+        body_sentence = "Readers who want to learn more about this dataset can consult the appendix."
         metrics = html_runtime.body_metrics(
             f"# Example\n\n## Results\n\n{body_sentence}\n\nLearn more",
             {"title": "Example", "abstract": ""},
@@ -1773,9 +1788,7 @@ Learn more
         )
         self.assertEqual(
             rules.availability.overrides,
-            availability_rules_for_provider(
-                "springer_nature"
-            ).overrides,
+            availability_rules_for_provider("springer_nature").overrides,
         )
         self.assertEqual(
             rules.formula.display_selectors,
@@ -1787,9 +1800,7 @@ Learn more
         )
         self.assertEqual(
             rules.availability.overrides,
-            availability_rules_for_provider(
-                "springer_nature"
-            ).overrides,
+            availability_rules_for_provider("springer_nature").overrides,
         )
 
     def test_front_matter_publication_keywords_keep_atypon_browser_workflow_provider_scoped(

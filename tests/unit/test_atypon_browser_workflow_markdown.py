@@ -7,8 +7,12 @@ from bs4 import BeautifulSoup
 from paper_fetch.extraction.html._runtime import body_metrics
 from paper_fetch.providers._html_references import extract_numbered_references_from_html
 from paper_fetch.extraction.html.signals import HtmlExtractionFailure
-from paper_fetch.providers.atypon_browser_workflow import extract_atypon_browser_workflow_markdown
-from paper_fetch.providers.atypon_browser_workflow import normalization as atypon_browser_workflow_normalization
+from paper_fetch.providers.atypon_browser_workflow import (
+    extract_atypon_browser_workflow_markdown,
+)
+from paper_fetch.providers.atypon_browser_workflow import (
+    normalization as atypon_browser_workflow_normalization,
+)
 from tests.golden_criteria import golden_criteria_asset
 from tests.provider_benchmark_samples import provider_benchmark_sample
 from tests.paths import FIXTURE_DIR
@@ -17,9 +21,15 @@ from tests.paths import FIXTURE_DIR
 SCIENCE_SAMPLE = provider_benchmark_sample("science")
 WILEY_SAMPLE = provider_benchmark_sample("wiley")
 PNAS_SAMPLE = provider_benchmark_sample("pnas")
-PNAS_COLLATERAL_FIXTURE = golden_criteria_asset("10.1073/pnas.2309123120", "original.html")
-SCIENCE_PERSPECTIVE_FIXTURE = golden_criteria_asset("10.1126/science.aeg3511", "original.html")
-SCIENCE_ADP0212_FIXTURE = golden_criteria_asset("10.1126/science.adp0212", "original.html")
+PNAS_COLLATERAL_FIXTURE = golden_criteria_asset(
+    "10.1073/pnas.2309123120", "original.html"
+)
+SCIENCE_PERSPECTIVE_FIXTURE = golden_criteria_asset(
+    "10.1126/science.aeg3511", "original.html"
+)
+SCIENCE_ADP0212_FIXTURE = golden_criteria_asset(
+    "10.1126/science.adp0212", "original.html"
+)
 
 
 class AtyponBrowserWorkflowMarkdownTests(unittest.TestCase):
@@ -48,8 +58,18 @@ class AtyponBrowserWorkflowMarkdownTests(unittest.TestCase):
         self.assertEqual(
             references,
             [
-                {"label": "1", "raw": "First numbered reference.", "doi": None, "year": None},
-                {"label": "2", "raw": "Second numbered reference.", "doi": None, "year": None},
+                {
+                    "label": "1",
+                    "raw": "First numbered reference.",
+                    "doi": None,
+                    "year": None,
+                },
+                {
+                    "label": "2",
+                    "raw": "Second numbered reference.",
+                    "doi": None,
+                    "year": None,
+                },
             ],
         )
 
@@ -85,16 +105,24 @@ class AtyponBrowserWorkflowMarkdownTests(unittest.TestCase):
         markdown, info = self._extract_sample_markdown(SCIENCE_SAMPLE)
 
         self.assertEqual(info["container_tag"], "main")
-        self.assertIn("# Hyaluronic acid and tissue mechanics orchestrate mammalian digit tip regeneration", markdown)
+        self.assertIn(
+            "# Hyaluronic acid and tissue mechanics orchestrate mammalian digit tip regeneration",
+            markdown,
+        )
         self.assertIn("Structured Abstract", markdown)
         self.assertIn("Discussion", markdown)
         self.assertIn("Materials and methods", markdown)
         self.assertIn("![Figure 1](", markdown)
         self.assertNotIn("**Figure 1.** .", markdown)
-        self.assertIn("**Figure 1.** The niche discriminates regeneration from fibrosis after digit tip amputation. (**A**)", markdown)
+        self.assertIn(
+            "**Figure 1.** The niche discriminates regeneration from fibrosis after digit tip amputation. (**A**)",
+            markdown,
+        )
         self.assertNotIn("amputation.(**A**)", markdown)
 
-    def test_science_fixture_markdown_omits_frontmatter_and_collateral_noise(self) -> None:
+    def test_science_fixture_markdown_omits_frontmatter_and_collateral_noise(
+        self,
+    ) -> None:
         markdown, _ = self._extract_sample_markdown(SCIENCE_SAMPLE)
 
         self.assertNotIn("Full access", markdown)
@@ -107,15 +135,22 @@ class AtyponBrowserWorkflowMarkdownTests(unittest.TestCase):
         self.assertNotIn("Purchase digital access to this article", markdown)
         self.assertNotIn("Copyright ©", markdown)
 
-    def test_science_fixture_keeps_data_availability_but_filters_teaser_figure(self) -> None:
+    def test_science_fixture_keeps_data_availability_but_filters_teaser_figure(
+        self,
+    ) -> None:
         markdown, _ = self._extract_sample_markdown(SCIENCE_SAMPLE)
 
         self.assertIn("## Data, code, and materials availability", markdown)
-        self.assertNotIn("The ECM and tissue mechanics direct wound healing outcomes after digit amputations", markdown)
+        self.assertNotIn(
+            "The ECM and tissue mechanics direct wound healing outcomes after digit amputations",
+            markdown,
+        )
         self.assertIn("![Figure 1](", markdown)
 
     def test_pnas_abstract_fixture_is_rejected(self) -> None:
-        html = golden_criteria_asset("10.1073/pnas.2406303121", "abstract.html").read_text(encoding="utf-8")
+        html = golden_criteria_asset(
+            "10.1073/pnas.2406303121", "abstract.html"
+        ).read_text(encoding="utf-8")
 
         with self.assertRaises(HtmlExtractionFailure) as ctx:
             extract_atypon_browser_workflow_markdown(
@@ -130,20 +165,30 @@ class AtyponBrowserWorkflowMarkdownTests(unittest.TestCase):
     def test_pnas_full_fixture_extracts_body_sections_from_real_html(self) -> None:
         markdown, info = self._extract_sample_markdown(PNAS_SAMPLE)
 
-        self.assertIn("# The kinetics of SARS-CoV-2 infection based on a human challenge study", markdown)
+        self.assertIn(
+            "# The kinetics of SARS-CoV-2 infection based on a human challenge study",
+            markdown,
+        )
         self.assertIn("## Significance", markdown)
         self.assertIn("## Abstract", markdown)
-        self.assertIn("Severe acute respiratory syndrome coronavirus 2 (SARS-CoV-2) continues to spread worldwide", markdown)
+        self.assertIn(
+            "Severe acute respiratory syndrome coronavirus 2 (SARS-CoV-2) continues to spread worldwide",
+            markdown,
+        )
         self.assertIn("## Methods", markdown)
         self.assertIn("## Mathematical Models", markdown)
         self.assertIn("### Data", markdown)
-        self.assertIn("### The Relationship between Total and Infectious Virus", markdown)
+        self.assertIn(
+            "### The Relationship between Total and Infectious Virus", markdown
+        )
         self.assertIn("**Equation 1.**", markdown)
         self.assertIn("$$", markdown)
         self.assertIn("**Equation 2.**", markdown)
         self.assertIn("![Figure 1](", markdown)
         self.assertIn("**Figure 1.**", markdown)
-        self.assertLess(markdown.index("## Significance"), markdown.index("## Abstract"))
+        self.assertLess(
+            markdown.index("## Significance"), markdown.index("## Abstract")
+        )
         self.assertLess(markdown.index("## Abstract"), markdown.index("## Methods"))
         diagnostics = info["availability_diagnostics"]
         self.assertTrue(diagnostics["accepted"])
@@ -162,15 +207,28 @@ class AtyponBrowserWorkflowMarkdownTests(unittest.TestCase):
         self.assertNotIn("Vi=fV=BVh", markdown)
         self.assertNotIn("dTdt=", markdown)
 
-    def test_pnas_full_fixture_keeps_data_availability_and_renders_table_markdown(self) -> None:
+    def test_pnas_full_fixture_keeps_data_availability_and_renders_table_markdown(
+        self,
+    ) -> None:
         markdown, _ = self._extract_sample_markdown(PNAS_SAMPLE)
 
         self.assertIn("## Data, Materials, and Software Availability", markdown)
-        self.assertEqual(markdown.count("## Data, Materials, and Software Availability"), 1)
+        self.assertEqual(
+            markdown.count("## Data, Materials, and Software Availability"), 1
+        )
         self.assertNotIn("#### Data, Materials, and Software Availability", markdown)
-        self.assertIn("**Table 1.** Estimated population parameters for the DDRCM with humoral immune response", markdown)
-        self.assertRegex(markdown, r"\| Parameter\s+\| Description\s+\| Fixed Effects \(R\.S\.E\., %\)\s+\|")
-        self.assertNotIn("**Figure** Estimated population parameters for the DDRCM with humoral immune response", markdown)
+        self.assertIn(
+            "**Table 1.** Estimated population parameters for the DDRCM with humoral immune response",
+            markdown,
+        )
+        self.assertRegex(
+            markdown,
+            r"\| Parameter\s+\| Description\s+\| Fixed Effects \(R\.S\.E\., %\)\s+\|",
+        )
+        self.assertNotIn(
+            "**Figure** Estimated population parameters for the DDRCM with humoral immune response",
+            markdown,
+        )
         self.assertLess(markdown.index("**Figure 4.**"), markdown.index("**Table 1.**"))
 
     def test_pnas_collateral_data_availability_fixture_is_not_duplicated(self) -> None:
@@ -182,7 +240,9 @@ class AtyponBrowserWorkflowMarkdownTests(unittest.TestCase):
         )
 
         self.assertIn(info["container_tag"], {"article", "main", "body"})
-        self.assertEqual(markdown.count("## Data, Materials, and Software Availability"), 1)
+        self.assertEqual(
+            markdown.count("## Data, Materials, and Software Availability"), 1
+        )
         self.assertEqual(markdown.count("## Significance"), 1)
         self.assertEqual(markdown.count("## Abstract"), 1)
         self.assertNotIn("#### Data, Materials, and Software Availability", markdown)
@@ -201,7 +261,10 @@ class AtyponBrowserWorkflowMarkdownTests(unittest.TestCase):
             markdown,
         )
         self.assertIn("## Abstract", markdown)
-        self.assertIn("Global vegetation greening has been widely confirmed in previous studies", markdown)
+        self.assertIn(
+            "Global vegetation greening has been widely confirmed in previous studies",
+            markdown,
+        )
         self.assertIn("## 1 INTRODUCTION", markdown)
         self.assertIn("## 2 MATERIALS AND METHODS", markdown)
         self.assertIn("## 3 RESULTS", markdown)
@@ -213,7 +276,9 @@ class AtyponBrowserWorkflowMarkdownTests(unittest.TestCase):
         self.assertNotIn("CO2 emission", markdown)
         self.assertNotIn("m2 m−2 year−1", markdown)
         self.assertNotIn("## Abbreviations", markdown)
-        self.assertLess(markdown.index("## Abstract"), markdown.index("## 1 INTRODUCTION"))
+        self.assertLess(
+            markdown.index("## Abstract"), markdown.index("## 1 INTRODUCTION")
+        )
         diagnostics = info["availability_diagnostics"]
         self.assertTrue(diagnostics["accepted"])
         self.assertEqual(diagnostics["content_kind"], "fulltext")
@@ -226,7 +291,9 @@ class AtyponBrowserWorkflowMarkdownTests(unittest.TestCase):
         self.assertNotIn("Download PDF", markdown)
         self.assertNotIn("About Wiley Online Library", markdown)
 
-    def test_wiley_full_fixture_keeps_data_availability_but_filters_other_back_matter(self) -> None:
+    def test_wiley_full_fixture_keeps_data_availability_but_filters_other_back_matter(
+        self,
+    ) -> None:
         markdown, _ = self._extract_sample_markdown(WILEY_SAMPLE)
 
         self.assertIn("## DATA AVAILABILITY STATEMENT", markdown)
@@ -310,11 +377,26 @@ class AtyponBrowserWorkflowMarkdownTests(unittest.TestCase):
         )
 
         self.assertTrue(info["availability_diagnostics"]["accepted"])
-        self.assertIn("![Formula](/cms/10.1073/pnas.0810156106/asset/formula/assets/graphic/zpq01009-6960-m01.jpeg)", markdown)
-        self.assertIn("![Formula](/cms/10.1073/pnas.0810156106/asset/formula/assets/graphic/zpq01009-6960-m02.jpeg)", markdown)
-        self.assertIn("![Figure 2](https://www.pnas.org/cms/10.1073/pnas.0810156106/asset/main/assets/graphic/zpq9990969600002.jpeg)", markdown)
-        self.assertNotIn("![Figure 2](/cms/10.1073/pnas.0810156106/asset/formula/assets/graphic/zpq01009-6960-m02.jpeg)", markdown)
-        self.assertNotIn("![Figure](/cms/10.1073/pnas.0810156106/asset/formula/assets/graphic/zpq01009-6960-m02.jpeg)", markdown)
+        self.assertIn(
+            "![Formula](/cms/10.1073/pnas.0810156106/asset/formula/assets/graphic/zpq01009-6960-m01.jpeg)",
+            markdown,
+        )
+        self.assertIn(
+            "![Formula](/cms/10.1073/pnas.0810156106/asset/formula/assets/graphic/zpq01009-6960-m02.jpeg)",
+            markdown,
+        )
+        self.assertIn(
+            "![Figure 2](https://www.pnas.org/cms/10.1073/pnas.0810156106/asset/main/assets/graphic/zpq9990969600002.jpeg)",
+            markdown,
+        )
+        self.assertNotIn(
+            "![Figure 2](/cms/10.1073/pnas.0810156106/asset/formula/assets/graphic/zpq01009-6960-m02.jpeg)",
+            markdown,
+        )
+        self.assertNotIn(
+            "![Figure](/cms/10.1073/pnas.0810156106/asset/formula/assets/graphic/zpq01009-6960-m02.jpeg)",
+            markdown,
+        )
 
     def test_wiley_real_fixture_does_not_count_research_funding_as_body(self) -> None:
         fixture_path = golden_criteria_asset("10.1111/gcb.15322", "original.html")
@@ -358,7 +440,9 @@ class AtyponBrowserWorkflowMarkdownTests(unittest.TestCase):
         self.assertNotIn("statement of competing interests", markdown.casefold())
         self.assertNotIn("statement of competing interests", metrics["text"].casefold())
 
-    def test_wiley_inline_mathml_with_fallback_span_does_not_emit_placeholder(self) -> None:
+    def test_wiley_inline_mathml_with_fallback_span_does_not_emit_placeholder(
+        self,
+    ) -> None:
         soup = BeautifulSoup(
             """
             <div class="article-section__content">
@@ -380,9 +464,13 @@ class AtyponBrowserWorkflowMarkdownTests(unittest.TestCase):
 
         container = soup.select_one(".article-section__content")
         self.assertIsNotNone(container)
-        atypon_browser_workflow_normalization._normalize_display_formula_blocks(container)
+        atypon_browser_workflow_normalization._normalize_display_formula_blocks(
+            container
+        )
         atypon_browser_workflow_normalization._normalize_inline_math_nodes(container)
-        atypon_browser_workflow_normalization._normalize_non_table_inline_blocks(container)
+        atypon_browser_workflow_normalization._normalize_non_table_inline_blocks(
+            container
+        )
 
         rendered = str(container)
         self.assertNotIn("[Formula unavailable]", rendered)
@@ -408,7 +496,9 @@ class AtyponBrowserWorkflowMarkdownTests(unittest.TestCase):
 
         container = soup.select_one(".article-section__content")
         self.assertIsNotNone(container)
-        atypon_browser_workflow_normalization._normalize_display_formula_blocks(container)
+        atypon_browser_workflow_normalization._normalize_display_formula_blocks(
+            container
+        )
 
         rendered = str(container)
         self.assertNotIn("[Formula unavailable]", rendered)
@@ -419,7 +509,11 @@ class AtyponBrowserWorkflowMarkdownTests(unittest.TestCase):
         cases = (
             (
                 "10.1111/gcb.15322",
-                ("Atkinson", "Inter-comparison of four models", "Remote Sensing of Environment"),
+                (
+                    "Atkinson",
+                    "Inter-comparison of four models",
+                    "Remote Sensing of Environment",
+                ),
             ),
             (
                 "10.1111/gcb.16998",
@@ -429,7 +523,9 @@ class AtyponBrowserWorkflowMarkdownTests(unittest.TestCase):
 
         for doi, expected_tokens in cases:
             with self.subTest(doi=doi):
-                html = golden_criteria_asset(doi, "original.html").read_text(encoding="utf-8")
+                html = golden_criteria_asset(doi, "original.html").read_text(
+                    encoding="utf-8"
+                )
 
                 references = extract_numbered_references_from_html(html)
 
@@ -447,12 +543,18 @@ class AtyponBrowserWorkflowMarkdownTests(unittest.TestCase):
             "10.1111/cas.16395",
         )
 
-        self.assertIn("**Table 1.** AI-SaMD approved as a medical device in the field of oncology in Japan (as of May 2024).", markdown)
+        self.assertIn(
+            "**Table 1.** AI-SaMD approved as a medical device in the field of oncology in Japan (as of May 2024).",
+            markdown,
+        )
         self.assertRegex(
             markdown,
             r"\| Research area\s+\| Approval number\s+\| Product\s+\| Manufacturer\s+\| Target inspection method\s+\| Class\s+\| Year of approval\s+\|",
         )
-        self.assertNotIn("Research areaApproval numberProductManufacturerTarget inspection methodClassYear of approval", markdown)
+        self.assertNotIn(
+            "Research areaApproval numberProductManufacturerTarget inspection methodClassYear of approval",
+            markdown,
+        )
 
     def test_wiley_multilingual_abstract_keeps_parallel_abstract_sections(self) -> None:
         html = """
@@ -554,21 +656,32 @@ class AtyponBrowserWorkflowMarkdownTests(unittest.TestCase):
 
         self.assertIn("# Nested Wiley Example", markdown)
         self.assertEqual(markdown.count("## Abstract"), 1)
-        self.assertIn("Inner article abstract paragraph that should be preserved exactly once", markdown)
+        self.assertIn(
+            "Inner article abstract paragraph that should be preserved exactly once",
+            markdown,
+        )
         self.assertIn("## Main Text", markdown)
-        self.assertIn("The first real body paragraph belongs to the inner article", markdown)
-        self.assertNotIn("wrapper synopsis belongs to the issue listing", markdown.lower())
+        self.assertIn(
+            "The first real body paragraph belongs to the inner article", markdown
+        )
+        self.assertNotIn(
+            "wrapper synopsis belongs to the issue listing", markdown.lower()
+        )
         self.assertLess(markdown.index("## Abstract"), markdown.index("## Main Text"))
         self.assertLess(
             markdown.index("## Main Text"),
-            markdown.index("The first real body paragraph belongs to the inner article"),
+            markdown.index(
+                "The first real body paragraph belongs to the inner article"
+            ),
         )
         self.assertEqual(
             [section["heading"] for section in info["abstract_sections"]],
             ["Abstract"],
         )
 
-    def test_science_browser_workflow_does_not_reinject_teaser_before_structured_abstract(self) -> None:
+    def test_science_browser_workflow_does_not_reinject_teaser_before_structured_abstract(
+        self,
+    ) -> None:
         html = """
         <html>
           <body>
@@ -637,7 +750,9 @@ class AtyponBrowserWorkflowMarkdownTests(unittest.TestCase):
             ["body", "body"],
         )
 
-    def test_browser_workflow_preserves_parallel_multilingual_abstract_sections(self) -> None:
+    def test_browser_workflow_preserves_parallel_multilingual_abstract_sections(
+        self,
+    ) -> None:
         html = """
         <html>
           <body>
@@ -672,12 +787,21 @@ class AtyponBrowserWorkflowMarkdownTests(unittest.TestCase):
         self.assertIn("## Resumen", markdown)
         self.assertIn("This results paragraph is long enough", markdown)
         self.assertIn("Resumen en espanol que debe permanecer", markdown)
-        self.assertEqual([item["heading"] for item in info["abstract_sections"]], ["Abstract", "Resumen"])
-        self.assertTrue(all(item["kind"] == "abstract" for item in info["abstract_sections"]))
-        self.assertEqual([item["heading"] for item in info["section_hints"]], ["Results"])
+        self.assertEqual(
+            [item["heading"] for item in info["abstract_sections"]],
+            ["Abstract", "Resumen"],
+        )
+        self.assertTrue(
+            all(item["kind"] == "abstract" for item in info["abstract_sections"])
+        )
+        self.assertEqual(
+            [item["heading"] for item in info["section_hints"]], ["Results"]
+        )
         self.assertEqual([item["kind"] for item in info["section_hints"]], ["body"])
 
-    def test_browser_workflow_returns_section_hints_for_structural_data_availability(self) -> None:
+    def test_browser_workflow_returns_section_hints_for_structural_data_availability(
+        self,
+    ) -> None:
         html = """
         <html>
           <body>
@@ -712,7 +836,9 @@ class AtyponBrowserWorkflowMarkdownTests(unittest.TestCase):
             [("Results", "body"), ("Availability Statement", "data_availability")],
         )
 
-    def test_browser_workflow_returns_section_hints_for_structural_code_availability(self) -> None:
+    def test_browser_workflow_returns_section_hints_for_structural_code_availability(
+        self,
+    ) -> None:
         html = """
         <html>
           <body>
@@ -748,7 +874,9 @@ class AtyponBrowserWorkflowMarkdownTests(unittest.TestCase):
             [("Results", "body"), ("Availability Statement", "code_availability")],
         )
 
-    def test_browser_workflow_keeps_non_english_article_when_no_parallel_language_variant_exists(self) -> None:
+    def test_browser_workflow_keeps_non_english_article_when_no_parallel_language_variant_exists(
+        self,
+    ) -> None:
         html = """
         <html>
           <body>
@@ -780,7 +908,9 @@ class AtyponBrowserWorkflowMarkdownTests(unittest.TestCase):
         self.assertIn("Resumo em portugues que deve permanecer", markdown)
         self.assertIn("Este paragrafo em portugues deve permanecer", markdown)
 
-    def test_science_perspective_fixture_extracts_fulltext_without_section_headings(self) -> None:
+    def test_science_perspective_fixture_extracts_fulltext_without_section_headings(
+        self,
+    ) -> None:
         markdown, info = self._extract_fixture_markdown(
             SCIENCE_PERSPECTIVE_FIXTURE,
             "https://www.science.org/doi/full/10.1126/science.aeg3511",
@@ -790,7 +920,9 @@ class AtyponBrowserWorkflowMarkdownTests(unittest.TestCase):
 
         self.assertIn(info["container_tag"], {"article", "main"})
         self.assertIn("# Magma plumbing beneath Yellowstone", markdown)
-        self.assertIn("Yellowstone is one of the most seismically active areas", markdown)
+        self.assertIn(
+            "Yellowstone is one of the most seismically active areas", markdown
+        )
         self.assertIn("The findings of Cao", markdown)
         self.assertIn("<sup>1–3</sup>", markdown)
         self.assertIn("<sup>6, 7</sup>", markdown)
@@ -804,7 +936,9 @@ class AtyponBrowserWorkflowMarkdownTests(unittest.TestCase):
         self.assertIn("aaas_user_entitled", diagnostics["strong_positive_signals"])
         self.assertGreaterEqual(diagnostics["figure_count"], 1)
 
-    def test_science_numeric_citations_become_superscripts_without_touching_numeric_parentheses(self) -> None:
+    def test_science_numeric_citations_become_superscripts_without_touching_numeric_parentheses(
+        self,
+    ) -> None:
         html = """
         <html>
           <body>
@@ -900,7 +1034,9 @@ class AtyponBrowserWorkflowMarkdownTests(unittest.TestCase):
         self.assertIn("Zhu et al. (2016)", markdown)
         self.assertNotIn("<sup>2016</sup>", markdown)
 
-    def test_science_adp0212_fixture_splits_display_equations_and_caption_sentences(self) -> None:
+    def test_science_adp0212_fixture_splits_display_equations_and_caption_sentences(
+        self,
+    ) -> None:
         markdown, _ = self._extract_fixture_markdown(
             SCIENCE_ADP0212_FIXTURE,
             "https://www.science.org/doi/full/10.1126/science.adp0212",
@@ -911,12 +1047,14 @@ class AtyponBrowserWorkflowMarkdownTests(unittest.TestCase):
         self.assertIn("**Equation 1.**", markdown)
         self.assertIn("$$", markdown)
         self.assertIn("where *P* is precipitation", markdown)
-        self.assertLess(markdown.index("**Equation 1.**"), markdown.index("where *P* is precipitation"))
+        self.assertLess(
+            markdown.index("**Equation 1.**"),
+            markdown.index("where *P* is precipitation"),
+        )
         self.assertIn(
             "**Figure 2.** Regional change in daily precipitation variability from 1900 to 2020. Time series",
             markdown,
         )
-
 
 
 if __name__ == "__main__":

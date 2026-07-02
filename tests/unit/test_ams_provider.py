@@ -33,9 +33,15 @@ from ._atypon_browser_workflow_provider_support import (
 
 AMS_DOI = "10.1175/jcli-d-23-0738.1"
 AMS_TITLE = "Human Influence Has Increased the Likelihood of Extreme Autumn Fire Weather in California"
-AMS_LANDING_URL = "https://journals.ametsoc.org/view/journals/clim/37/24/JCLI-D-23-0738.1.xml"
-AMS_PDF_URL = "https://journals.ametsoc.org/downloadpdf/journals/clim/37/24/JCLI-D-23-0738.1.xml"
-AMS_XML_URL = "https://journals.ametsoc.org/doc/journals/clim/37/24/JCLI-D-23-0738.1.xml"
+AMS_LANDING_URL = (
+    "https://journals.ametsoc.org/view/journals/clim/37/24/JCLI-D-23-0738.1.xml"
+)
+AMS_PDF_URL = (
+    "https://journals.ametsoc.org/downloadpdf/journals/clim/37/24/JCLI-D-23-0738.1.xml"
+)
+AMS_XML_URL = (
+    "https://journals.ametsoc.org/doc/journals/clim/37/24/JCLI-D-23-0738.1.xml"
+)
 
 
 def _fixture_metadata(doi: str) -> dict[str, object]:
@@ -128,7 +134,9 @@ class AmsProviderTests(AtyponBrowserWorkflowProviderTestCase):
                 transport=None,
                 env={config.AMS_STORAGE_STATE_JSON_ENV_VAR: str(state_path)},
             )
-            runtime = replace(self._runtime_config(tmpdir, "ams", AMS_DOI), cdp_endpoint=None)
+            runtime = replace(
+                self._runtime_config(tmpdir, "ams", AMS_DOI), cdp_endpoint=None
+            )
             mocked_html = mock.Mock(
                 return_value=browser_runtime.BrowserFetchedHtml(
                     source_url=AMS_LANDING_URL,
@@ -166,7 +174,9 @@ class AmsProviderTests(AtyponBrowserWorkflowProviderTestCase):
         self.assertEqual(_payload_route(raw_payload), "html")
         self.assertIsNone(mocked_html.call_args.kwargs["config"].cdp_endpoint)
 
-    def test_ams_html_route_uses_browser_runtime_and_ignores_citation_xml_url(self) -> None:
+    def test_ams_html_route_uses_browser_runtime_and_ignores_citation_xml_url(
+        self,
+    ) -> None:
         client = AmsClient(transport=None, env={})
         with tempfile.TemporaryDirectory() as tmpdir:
             runtime = self._runtime_config(tmpdir, "ams", AMS_DOI)
@@ -340,7 +350,9 @@ class AmsProviderTests(AtyponBrowserWorkflowProviderTestCase):
         self,
     ) -> None:
         doi_landing_url = "https://journals.ametsoc.org/doi/10.1175/JCLI-D-23-0738.1"
-        challenge_url = "https://journals.ametsoc.org/view/journals/clim/37/24/JCLI-D-23-0738.1.xml"
+        challenge_url = (
+            "https://journals.ametsoc.org/view/journals/clim/37/24/JCLI-D-23-0738.1.xml"
+        )
         transport = AssetTransport(
             {
                 ("GET", doi_landing_url): {
@@ -546,7 +558,8 @@ class AmsProviderTests(AtyponBrowserWorkflowProviderTestCase):
                     source_url=AMS_PDF_URL,
                     final_url=AMS_PDF_URL,
                     pdf_bytes=fulltext_pdf_bytes(),
-                    markdown_text=f"# {AMS_TITLE}\n\n## Results\n\n" + ("Body text " * 120),
+                    markdown_text=f"# {AMS_TITLE}\n\n## Results\n\n"
+                    + ("Body text " * 120),
                     suggested_filename="ams.pdf",
                 )
             )
@@ -568,10 +581,42 @@ class AmsProviderTests(AtyponBrowserWorkflowProviderTestCase):
             article = client.to_article_model(self._metadata(), raw_payload)
 
         self.assertIn(AMS_PDF_URL, list(mocked_pdf.call_args.args[0]))
+        self.assertTrue(mocked_pdf.call_args.kwargs["allow_pdf_only"])
         self.assertEqual(_payload_route(raw_payload), "pdf_fallback")
         self.assertEqual(article.source, "ams_pdf")
         self.assertIn("fulltext:ams_html_fail", article.quality.source_trail)
         self.assertIn("fulltext:ams_pdf_fallback_ok", article.quality.source_trail)
+
+    def test_ams_old_style_doi_and_landing_urls_build_pdf_candidates(self) -> None:
+        client = AmsClient(transport=None, env={})
+        old_doi = "10.1175/1520-0469(1967)024<0241:teotaw>2.0.co;2"
+        old_landing = (
+            "https://journals.ametsoc.org/view/journals/atsc/24/3/"
+            "1520-0469_1967_024_0241_teotaw_2_0_co_2.xml"
+        )
+        old_pdf = (
+            "https://journals.ametsoc.org/downloadpdf/view/journals/atsc/24/3/"
+            "1520-0469_1967_024_0241_teotaw_2_0_co_2.pdf"
+        )
+
+        self.assertEqual(
+            client.html_candidates(old_doi, {"doi": old_doi}),
+            [
+                "https://doi.org/10.1175/1520-0469%281967%29024%3C0241%3Ateotaw%3E2.0.co%3B2"
+            ],
+        )
+        self.assertEqual(
+            client.pdf_candidates(
+                old_doi, {"doi": old_doi, "landing_page_url": old_landing}
+            )[0],
+            old_pdf,
+        )
+        self.assertEqual(
+            client.pdf_candidates(
+                old_doi, {"doi": old_doi, "landing_page_url": old_pdf}
+            )[0],
+            old_pdf,
+        )
 
     def test_ams_html_failure_adds_citation_pdf_url_before_pdf_fallback(self) -> None:
         client = AmsClient(transport=None, env={})
@@ -589,7 +634,8 @@ class AmsProviderTests(AtyponBrowserWorkflowProviderTestCase):
                     source_url=citation_pdf_url,
                     final_url=citation_pdf_url,
                     pdf_bytes=fulltext_pdf_bytes(),
-                    markdown_text=f"# {AMS_TITLE}\n\n## Results\n\n" + ("Body text " * 120),
+                    markdown_text=f"# {AMS_TITLE}\n\n## Results\n\n"
+                    + ("Body text " * 120),
                     suggested_filename="ams.pdf",
                 )
             )
@@ -628,7 +674,9 @@ class AmsProviderTests(AtyponBrowserWorkflowProviderTestCase):
 
         self.assertEqual(list(mocked_pdf.call_args.args[0])[0], citation_pdf_url)
         self.assertEqual(_payload_route(raw_payload), "pdf_fallback")
-        self.assertIn("fulltext:ams_pdf_fallback_ok", _payload_source_trail(raw_payload))
+        self.assertIn(
+            "fulltext:ams_pdf_fallback_ok", _payload_source_trail(raw_payload)
+        )
 
     def test_ams_asset_extractor_uses_lazy_image_and_gallery_link(self) -> None:
         html = """
@@ -894,10 +942,14 @@ class AmsProviderTests(AtyponBrowserWorkflowProviderTestCase):
         figures = [asset for asset in assets if asset.get("kind") == "figure"]
 
         figure1 = next(
-            asset for asset in figures if str(asset.get("full_size_url", "")).endswith("-f1.jpg")
+            asset
+            for asset in figures
+            if str(asset.get("full_size_url", "")).endswith("-f1.jpg")
         )
         figure2 = next(
-            asset for asset in figures if str(asset.get("full_size_url", "")).endswith("-f2.jpg")
+            asset
+            for asset in figures
+            if str(asset.get("full_size_url", "")).endswith("-f2.jpg")
         )
 
         self.assertTrue(str(figure1.get("download_url", "")).endswith("-f1.tif"))
@@ -994,8 +1046,13 @@ class AmsProviderTests(AtyponBrowserWorkflowProviderTestCase):
             markdown.index("## 2. The history of WAVEWATCH III"),
             markdown.index("## 6. Lessons learned"),
         )
-        self.assertLess(markdown.index("## Footnotes"), markdown.index("## Acknowledgments"))
-        self.assertLess(markdown.index("## Acknowledgments"), markdown.index("## Data availability statement"))
+        self.assertLess(
+            markdown.index("## Footnotes"), markdown.index("## Acknowledgments")
+        )
+        self.assertLess(
+            markdown.index("## Acknowledgments"),
+            markdown.index("## Data availability statement"),
+        )
         self.assertNotIn("\n\nhttps://www.top500.org.\n\n", markdown)
         self.assertNotIn("\n\nhttps://git-scm.com/docs.\n\n", markdown)
         self.assertNotIn("Fig .", markdown)
@@ -1016,7 +1073,11 @@ class AmsProviderTests(AtyponBrowserWorkflowProviderTestCase):
         self.assertIn("## Footnotes", rendered)
         self.assertIn(
             "data_availability",
-            {section.kind for section in article.sections if section.heading == "Data availability statement"},
+            {
+                section.kind
+                for section in article.sections
+                if section.heading == "Data availability statement"
+            },
         )
 
     def test_ams_table_images_are_extracted_and_rendered_inline(self) -> None:
@@ -1047,11 +1108,16 @@ class AmsProviderTests(AtyponBrowserWorkflowProviderTestCase):
                     _fixture_source_url(doi),
                     asset_profile="body",
                 )
-                table_assets = [asset for asset in assets if asset.get("kind") == "table"]
+                table_assets = [
+                    asset for asset in assets if asset.get("kind") == "table"
+                ]
 
                 self.assertTrue(table_assets)
                 self.assertTrue(
-                    any(full_size_path in str(asset.get("url") or "") for asset in table_assets)
+                    any(
+                        full_size_path in str(asset.get("url") or "")
+                        for asset in table_assets
+                    )
                 )
                 self.assertIn("**Table 1.**", markdown)
                 self.assertIn(f"![Table 1]({full_size_path})", markdown)
@@ -1073,7 +1139,9 @@ class AmsProviderTests(AtyponBrowserWorkflowProviderTestCase):
             block for block in markdown.split("\n\n") if block.startswith("![Table 1](")
         ]
         figure2_image_blocks = [
-            block for block in markdown.split("\n\n") if "full-AIES-D-23-0093.1-f2.jpg" in block
+            block
+            for block in markdown.split("\n\n")
+            if "full-AIES-D-23-0093.1-f2.jpg" in block
         ]
 
         self.assertEqual(table_image_blocks, [table_image])
@@ -1245,7 +1313,9 @@ class AmsProviderTests(AtyponBrowserWorkflowProviderTestCase):
                     self.assertNotIn(forbidden, markdown)
                 for expected in expected_values:
                     if isinstance(expected, tuple):
-                        self.assertTrue(any(candidate in markdown for candidate in expected))
+                        self.assertTrue(
+                            any(candidate in markdown for candidate in expected)
+                        )
                     else:
                         self.assertIn(expected, markdown)
 
@@ -1280,8 +1350,12 @@ class AmsProviderTests(AtyponBrowserWorkflowProviderTestCase):
         rule: rule-ams-html-body-assets-formulas
         rule: rule-preserve-inline-semantics-in-body-and-tables
         """
-        jpo_markdown, jpo_extraction = _extract_fixture_markdown("10.1175/jpo-d-23-0234.1")
-        mwr_markdown, mwr_extraction = _extract_fixture_markdown("10.1175/mwr-d-24-0060.1")
+        jpo_markdown, jpo_extraction = _extract_fixture_markdown(
+            "10.1175/jpo-d-23-0234.1"
+        )
+        mwr_markdown, mwr_extraction = _extract_fixture_markdown(
+            "10.1175/mwr-d-24-0060.1"
+        )
 
         for forbidden in (
             "</sub>(i.e.",
@@ -1361,7 +1435,9 @@ class AmsProviderTests(AtyponBrowserWorkflowProviderTestCase):
                     rendered.index("## APPENDIX"),
                 )
 
-    def test_ams_normalize_markdown_moves_data_availability_before_appendix(self) -> None:
+    def test_ams_normalize_markdown_moves_data_availability_before_appendix(
+        self,
+    ) -> None:
         """rule: rule-ams-html-body-assets-formulas"""
         markdown = "\n\n".join(
             [
@@ -1390,7 +1466,9 @@ class AmsProviderTests(AtyponBrowserWorkflowProviderTestCase):
             normalized.index("Appendix figure and table text stays in place."),
         )
 
-    def test_ams_downloaded_inline_figure_and_table_assets_do_not_repeat_at_tail(self) -> None:
+    def test_ams_downloaded_inline_figure_and_table_assets_do_not_repeat_at_tail(
+        self,
+    ) -> None:
         """rule: rule-ams-html-body-assets-formulas"""
         doi = "10.1175/jamc-d-24-0048.1"
         markdown, extraction = _extract_fixture_markdown(doi)

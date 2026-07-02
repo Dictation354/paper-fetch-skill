@@ -54,7 +54,9 @@ def test_golden_corpus_is_balanced_across_publishers() -> None:
 
 
 @pytest.mark.parametrize("fixture", GOLDEN_CORPUS_FIXTURES, ids=_fixture_id)
-def test_golden_corpus_lightweight_contracts_hold_across_full_corpus(fixture: GoldenCorpusFixture) -> None:
+def test_golden_corpus_lightweight_contracts_hold_across_full_corpus(
+    fixture: GoldenCorpusFixture,
+) -> None:
     expected = fixture.load_expected()
     actual = lightweight_positive_summary_from_fixture(fixture)
     contract = golden_contract_for_fixture(fixture)
@@ -68,7 +70,10 @@ def test_golden_corpus_lightweight_contracts_hold_across_full_corpus(fixture: Go
         if expected["has"][field_name]:
             assert actual["has"][field_name], f"Expected {field_name} for {fixture.doi}"
 
-    if fixture.provider in {"ams", "science", "pnas", "wiley"} and fixture.route_kind == "html":
+    if (
+        fixture.provider in {"ams", "science", "pnas", "wiley"}
+        and fixture.route_kind == "html"
+    ):
         assert list(actual["blocking_fallback_signals"]) == [], (
             f"Positive fixture leaked paywall signals for {fixture.doi}"
         )
@@ -77,9 +82,13 @@ def test_golden_corpus_lightweight_contracts_hold_across_full_corpus(fixture: Go
         )
 
 
-def test_golden_corpus_representative_fixtures_cover_primary_fulltext_paths_by_provider() -> None:
+def test_golden_corpus_representative_fixtures_cover_primary_fulltext_paths_by_provider() -> (
+    None
+):
     assert len(REPRESENTATIVE_GOLDEN_CORPUS_FIXTURES) == 17
-    assert Counter(fixture.provider for fixture in REPRESENTATIVE_GOLDEN_CORPUS_FIXTURES) == Counter(
+    assert Counter(
+        fixture.provider for fixture in REPRESENTATIVE_GOLDEN_CORPUS_FIXTURES
+    ) == Counter(
         {
             "acs": 1,
             "aip": 1,
@@ -102,8 +111,12 @@ def test_golden_corpus_representative_fixtures_cover_primary_fulltext_paths_by_p
     )
 
 
-@pytest.mark.parametrize("fixture", REPRESENTATIVE_GOLDEN_CORPUS_FIXTURES, ids=_fixture_id)
-def test_golden_corpus_representative_fixture_matches_primary_fulltext_path(fixture: GoldenCorpusFixture) -> None:
+@pytest.mark.parametrize(
+    "fixture", REPRESENTATIVE_GOLDEN_CORPUS_FIXTURES, ids=_fixture_id
+)
+def test_golden_corpus_representative_fixture_matches_primary_fulltext_path(
+    fixture: GoldenCorpusFixture,
+) -> None:
     article = build_article_from_fixture(fixture)
     actual = expected_summary_from_article(article)
     expected = fixture.load_expected()
@@ -121,10 +134,15 @@ def test_golden_corpus_representative_fixture_matches_primary_fulltext_path(fixt
             assert actual["has"][field_name], f"Expected {field_name} for {fixture.doi}"
 
     for count_name, expected_count in expected["counts"].items():
-        if adapter.representative_count_fields is not None and count_name not in adapter.representative_count_fields:
+        if (
+            adapter.representative_count_fields is not None
+            and count_name not in adapter.representative_count_fields
+        ):
             continue
         if expected_count > 0:
-            assert actual["counts"][count_name] > 0, f"Expected positive {count_name} count for {fixture.doi}"
+            assert actual["counts"][count_name] > 0, (
+                f"Expected positive {count_name} count for {fixture.doi}"
+            )
 
 
 @pytest.mark.skipif(
@@ -132,7 +150,9 @@ def test_golden_corpus_representative_fixture_matches_primary_fulltext_path(fixt
     reason=f"Set {FULL_GOLDEN_ENV}=1 to run full 132-fixture golden corpus regression.",
 )
 @pytest.mark.parametrize("fixture", GOLDEN_CORPUS_FIXTURES, ids=_fixture_id)
-def test_golden_corpus_expected_summary_matches_current_extractor(fixture: GoldenCorpusFixture) -> None:
+def test_golden_corpus_expected_summary_matches_current_extractor(
+    fixture: GoldenCorpusFixture,
+) -> None:
     article = build_article_from_fixture(fixture)
     actual = expected_summary_from_article(article)
     expected = fixture.load_expected()

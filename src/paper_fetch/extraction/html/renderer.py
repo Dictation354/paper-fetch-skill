@@ -50,7 +50,9 @@ class HtmlMarkdownRenderer:
         if self.noise_profile is not None:
             kwargs["noise_profile"] = self.noise_profile
         if self.cleaned_html:
-            return extract_article_markdown_from_cleaned_html(html_text, source_url, **kwargs)
+            return extract_article_markdown_from_cleaned_html(
+                html_text, source_url, **kwargs
+            )
         return extract_article_markdown(html_text, source_url, **kwargs)
 
 
@@ -125,7 +127,9 @@ def render_provider_html_fragment(
 ) -> RenderedHtmlFragment:
     root = _fragment_root(str(html_fragment or ""))
     section_hints = (
-        collect_html_section_hints(root, title=title, language_hint_resolver=language_hint_resolver)
+        collect_html_section_hints(
+            root, title=title, language_hint_resolver=language_hint_resolver
+        )
         if root is not None
         else []
     )
@@ -143,7 +147,9 @@ def render_provider_html_fragment(
         section_hints=[dict(item) for item in section_hints],
         abstract_sections=[dict(item) for item in abstract_sections],
         container_tag=str(getattr(root, "name", "") or "") or None,
-        container_text_length=len(" ".join(root.stripped_strings)) if root is not None else None,
+        container_text_length=len(" ".join(root.stripped_strings))
+        if root is not None
+        else None,
     )
 
 

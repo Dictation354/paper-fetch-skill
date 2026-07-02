@@ -13,7 +13,10 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 def _write_manifest(root: Path, sample: dict[str, object]) -> None:
     manifest_path = root / "tests" / "fixtures" / "golden_criteria" / "manifest.json"
     manifest_path.parent.mkdir(parents=True, exist_ok=True)
-    manifest_path.write_text(json.dumps({"samples": {"10.1234_example": sample}}, indent=2) + "\n", encoding="utf-8")
+    manifest_path.write_text(
+        json.dumps({"samples": {"10.1234_example": sample}}, indent=2) + "\n",
+        encoding="utf-8",
+    )
 
 
 def _args(tmp_path: Path, **overrides: object) -> argparse.Namespace:
@@ -26,9 +29,13 @@ def _args(tmp_path: Path, **overrides: object) -> argparse.Namespace:
     return argparse.Namespace(**values)
 
 
-def test_snapshot_expected_writes_existing_golden_schema_and_updates_manifest(tmp_path: Path) -> None:
+def test_snapshot_expected_writes_existing_golden_schema_and_updates_manifest(
+    tmp_path: Path,
+) -> None:
     module = load_script_module("snapshot_expected")
-    fixture_dir = tmp_path / "tests" / "fixtures" / "golden_criteria" / "10.1234_example"
+    fixture_dir = (
+        tmp_path / "tests" / "fixtures" / "golden_criteria" / "10.1234_example"
+    )
     fixture_dir.mkdir(parents=True)
     (fixture_dir / "original.html").write_text(
         """
@@ -71,7 +78,11 @@ def test_snapshot_expected_writes_existing_golden_schema_and_updates_manifest(tm
     markdown_path = fixture_dir / "extracted.md"
     prompt_path = fixture_dir / "markdown-quality-prompt.md"
     quality_path = fixture_dir / "markdown-quality.json"
-    manifest = json.loads((tmp_path / "tests" / "fixtures" / "golden_criteria" / "manifest.json").read_text())
+    manifest = json.loads(
+        (
+            tmp_path / "tests" / "fixtures" / "golden_criteria" / "manifest.json"
+        ).read_text()
+    )
     written = json.loads(expected_path.read_text(encoding="utf-8"))
     quality = json.loads(quality_path.read_text(encoding="utf-8"))
 
@@ -83,8 +94,14 @@ def test_snapshot_expected_writes_existing_golden_schema_and_updates_manifest(tm
     assert quality["schema_version"] == 2
     assert quality["review_method"] == "agent_prompt"
     assert quality["status"] == "pending_agent_review"
-    assert quality["markdown_path"] == "tests/fixtures/golden_criteria/10.1234_example/extracted.md"
-    assert quality["prompt_path"] == "tests/fixtures/golden_criteria/10.1234_example/markdown-quality-prompt.md"
+    assert (
+        quality["markdown_path"]
+        == "tests/fixtures/golden_criteria/10.1234_example/extracted.md"
+    )
+    assert (
+        quality["prompt_path"]
+        == "tests/fixtures/golden_criteria/10.1234_example/markdown-quality-prompt.md"
+    )
     assert set(written) == {"has", "counts", "expected_content_kind"}
     assert written["has"]["title"] is True
     assert written["has"]["authors"] is True
@@ -99,17 +116,19 @@ def test_snapshot_expected_writes_existing_golden_schema_and_updates_manifest(tm
     assert manifest["samples"]["10.1234_example"]["assets"]["extracted.md"] == (
         "tests/fixtures/golden_criteria/10.1234_example/extracted.md"
     )
-    assert manifest["samples"]["10.1234_example"]["assets"]["markdown-quality-prompt.md"] == (
-        "tests/fixtures/golden_criteria/10.1234_example/markdown-quality-prompt.md"
-    )
-    assert manifest["samples"]["10.1234_example"]["assets"]["markdown-quality.json"] == (
-        "tests/fixtures/golden_criteria/10.1234_example/markdown-quality.json"
-    )
+    assert manifest["samples"]["10.1234_example"]["assets"][
+        "markdown-quality-prompt.md"
+    ] == ("tests/fixtures/golden_criteria/10.1234_example/markdown-quality-prompt.md")
+    assert manifest["samples"]["10.1234_example"]["assets"][
+        "markdown-quality.json"
+    ] == ("tests/fixtures/golden_criteria/10.1234_example/markdown-quality.json")
 
 
 def test_snapshot_expected_review_print_shape_without_writing(tmp_path: Path) -> None:
     module = load_script_module("snapshot_expected")
-    fixture_dir = tmp_path / "tests" / "fixtures" / "golden_criteria" / "10.1234_example"
+    fixture_dir = (
+        tmp_path / "tests" / "fixtures" / "golden_criteria" / "10.1234_example"
+    )
     fixture_dir.mkdir(parents=True)
     (fixture_dir / "original.html").write_text(
         "<html><head><title>T</title><meta name='description' content='Abstract'></head><body></body></html>",
@@ -128,13 +147,22 @@ def test_snapshot_expected_review_print_shape_without_writing(tmp_path: Path) ->
         },
     }
     _write_manifest(tmp_path, sample)
-    before = (tmp_path / "tests" / "fixtures" / "golden_criteria" / "manifest.json").read_text(encoding="utf-8")
+    before = (
+        tmp_path / "tests" / "fixtures" / "golden_criteria" / "manifest.json"
+    ).read_text(encoding="utf-8")
 
     payload, wrote = module.snapshot_expected(_args(tmp_path, review=True))
 
-    after = (tmp_path / "tests" / "fixtures" / "golden_criteria" / "manifest.json").read_text(encoding="utf-8")
+    after = (
+        tmp_path / "tests" / "fixtures" / "golden_criteria" / "manifest.json"
+    ).read_text(encoding="utf-8")
     assert wrote is False
-    assert set(payload) == {"expected", "review", "markdown_quality_prompt", "markdown_quality_report"}
+    assert set(payload) == {
+        "expected",
+        "review",
+        "markdown_quality_prompt",
+        "markdown_quality_report",
+    }
     assert set(payload["expected"]) == {"has", "counts", "expected_content_kind"}
     assert payload["review"]["title"] == "T"
     assert "Markdown Quality Agent Review" in payload["markdown_quality_prompt"]
@@ -146,10 +174,14 @@ def test_snapshot_expected_review_print_shape_without_writing(tmp_path: Path) ->
     assert after == before
 
 
-def test_snapshot_expected_missing_fixture_review_returns_placeholder(tmp_path: Path) -> None:
+def test_snapshot_expected_missing_fixture_review_returns_placeholder(
+    tmp_path: Path,
+) -> None:
     module = load_script_module("snapshot_expected")
 
-    payload, wrote = module.snapshot_expected(_args(tmp_path, doi="10.0000/probe", review=True))
+    payload, wrote = module.snapshot_expected(
+        _args(tmp_path, doi="10.0000/probe", review=True)
+    )
 
     assert wrote is False
     assert payload["doi"] == "10.0000/probe"

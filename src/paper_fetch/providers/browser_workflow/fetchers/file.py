@@ -190,10 +190,7 @@ def _build_shared_browser_file_fetcher(
     profile_dir: Any = None,
     user_data_dir: Any = None,
     thread_local: bool = False,
-) -> (
-    _ThreadLocalSharedBrowserFileDocumentFetcher
-    | _SharedBrowserFileDocumentFetcher
-):
+) -> _ThreadLocalSharedBrowserFileDocumentFetcher | _SharedBrowserFileDocumentFetcher:
     fetcher_cls: (
         type[_ThreadLocalSharedBrowserFileDocumentFetcher]
         | type[_SharedBrowserFileDocumentFetcher]

@@ -28,7 +28,14 @@ from .markdown import (
 from .schema import ExtractedAbstractBlock, Section, SectionHint
 
 BODY_SECTION_EXCLUDED_KINDS = frozenset(
-    {"abstract", "references", "supplementary", "diagnostics", "data_availability", "code_availability"}
+    {
+        "abstract",
+        "references",
+        "supplementary",
+        "diagnostics",
+        "data_availability",
+        "code_availability",
+    }
 )
 
 
@@ -111,7 +118,9 @@ def section_kind_for_heading(heading: str) -> str:
     return "body"
 
 
-def _should_preserve_empty_parent_section(heading: str, current_level: int, next_level: int) -> bool:
+def _should_preserve_empty_parent_section(
+    heading: str, current_level: int, next_level: int
+) -> bool:
     if next_level <= current_level:
         return False
     normalized = normalize_text(heading)
@@ -139,7 +148,8 @@ def filtered_body_sections(sections: Sequence[Section]) -> list[Section]:
         section
         for section in sections
         if strip_markdown_images(_normalized_text_field(getattr(section, "text", None)))
-        and _normalized_text_field(getattr(section, "kind", None)).lower() not in BODY_SECTION_EXCLUDED_KINDS
+        and _normalized_text_field(getattr(section, "kind", None)).lower()
+        not in BODY_SECTION_EXCLUDED_KINDS
     ]
 
 
@@ -150,18 +160,28 @@ def renderable_body_sections(sections: Sequence[Section]) -> list[Section]:
         kind = _normalized_text_field(getattr(section, "kind", None)).lower()
         if kind in BODY_SECTION_EXCLUDED_KINDS:
             continue
-        if strip_markdown_images(_normalized_text_field(getattr(section, "text", None))):
+        if strip_markdown_images(
+            _normalized_text_field(getattr(section, "text", None))
+        ):
             renderable.append(section)
             continue
-        if kind != "body" or not _normalized_text_field(getattr(section, "heading", None)):
+        if kind != "body" or not _normalized_text_field(
+            getattr(section, "heading", None)
+        ):
             continue
         for follower in section_list[index + 1 :]:
-            follower_kind = _normalized_text_field(getattr(follower, "kind", None)).lower()
+            follower_kind = _normalized_text_field(
+                getattr(follower, "kind", None)
+            ).lower()
             if follower_kind in BODY_SECTION_EXCLUDED_KINDS:
                 continue
-            if not strip_markdown_images(_normalized_text_field(getattr(follower, "text", None))):
+            if not strip_markdown_images(
+                _normalized_text_field(getattr(follower, "text", None))
+            ):
                 continue
-            if int(getattr(follower, "level", 0) or 0) > int(getattr(section, "level", 0) or 0):
+            if int(getattr(follower, "level", 0) or 0) > int(
+                getattr(section, "level", 0) or 0
+            ):
                 renderable.append(section)
             break
     return renderable
@@ -176,7 +196,9 @@ def abstract_sections(sections: Sequence[Section]) -> list[Section]:
     ]
 
 
-def first_abstract_text(*, abstract_text: str | None, sections: Sequence[Section]) -> str:
+def first_abstract_text(
+    *, abstract_text: str | None, sections: Sequence[Section]
+) -> str:
     section_abstract = next(
         (
             strip_markdown_images(section.text)
@@ -190,10 +212,18 @@ def first_abstract_text(*, abstract_text: str | None, sections: Sequence[Section
     return normalize_text(abstract_text)
 
 
-def combine_abstract_text(*, abstract_text: str | None, sections: Sequence[Section]) -> str:
+def combine_abstract_text(
+    *, abstract_text: str | None, sections: Sequence[Section]
+) -> str:
     texts: list[str] = []
     seen: set[str] = set()
-    for candidate in [normalize_text(abstract_text), *[strip_markdown_images(section.text) for section in abstract_sections(sections)]]:
+    for candidate in [
+        normalize_text(abstract_text),
+        *[
+            strip_markdown_images(section.text)
+            for section in abstract_sections(sections)
+        ],
+    ]:
         normalized_candidate = normalize_text(candidate)
         if not normalized_candidate:
             continue
@@ -232,7 +262,9 @@ def _coerce_section_hints(
             language=normalize_text(hint.get("language")) or None,
             source_selector=normalize_text(hint.get("source_selector")) or None,
         )
-        for hint in coerce_section_hint_dicts(section_hints, allowed_kinds=SECTION_HINT_KINDS)
+        for hint in coerce_section_hint_dicts(
+            section_hints, allowed_kinds=SECTION_HINT_KINDS
+        )
     ]
 
 
@@ -252,7 +284,11 @@ def _match_next_section_hint(
         hint_index,
         heading,
     )
-    return (section_hints[next_index - 1], next_index) if matched is not None else (None, next_index)
+    return (
+        (section_hints[next_index - 1], next_index)
+        if matched is not None
+        else (None, next_index)
+    )
 
 
 def lines_to_sections(
@@ -280,7 +316,9 @@ def lines_to_sections(
             Section(
                 heading=heading,
                 level=level,
-                kind=matched_hint.kind if matched_hint is not None else section_kind_for_heading(heading),
+                kind=matched_hint.kind
+                if matched_hint is not None
+                else section_kind_for_heading(heading),
                 text="",
             )
         )
@@ -290,7 +328,11 @@ def lines_to_sections(
         if not buffer:
             return
         raw_text = "\n".join(buffer)
-        text = normalize_markdown_text(raw_text) if preserve_images else strip_markdown_images(raw_text)
+        text = (
+            normalize_markdown_text(raw_text)
+            if preserve_images
+            else strip_markdown_images(raw_text)
+        )
         if not text:
             return
         matched_hint, section_hint_index = _match_next_section_hint(
@@ -302,7 +344,9 @@ def lines_to_sections(
             Section(
                 heading=current_heading,
                 level=current_level,
-                kind=matched_hint.kind if matched_hint is not None else section_kind_for_heading(current_heading),
+                kind=matched_hint.kind
+                if matched_hint is not None
+                else section_kind_for_heading(current_heading),
                 text=text,
             )
         )
@@ -311,7 +355,9 @@ def lines_to_sections(
         stripped = line.strip()
         if stripped.startswith("#"):
             next_level = len(stripped) - len(stripped.lstrip("#"))
-            if not buffer and _should_preserve_empty_parent_section(current_heading, current_level, next_level):
+            if not buffer and _should_preserve_empty_parent_section(
+                current_heading, current_level, next_level
+            ):
                 append_empty_section(current_heading, current_level)
             flush()
             buffer = []
@@ -325,7 +371,8 @@ def lines_to_sections(
 
 
 def _coerce_explicit_abstract_blocks(
-    abstract_blocks: Sequence[ExtractedAbstractBlock | Mapping[str, Any] | Section] | None,
+    abstract_blocks: Sequence[ExtractedAbstractBlock | Mapping[str, Any] | Section]
+    | None,
 ) -> list[ExtractedAbstractBlock]:
     coerced: list[ExtractedAbstractBlock] = []
     for index, block in enumerate(abstract_blocks or []):
@@ -370,7 +417,8 @@ def _coerce_explicit_abstract_blocks(
 
 
 def _abstract_sections_from_blocks(
-    abstract_blocks: Sequence[ExtractedAbstractBlock | Mapping[str, Any] | Section] | None,
+    abstract_blocks: Sequence[ExtractedAbstractBlock | Mapping[str, Any] | Section]
+    | None,
 ) -> list[Section]:
     sections: list[Section] = []
     for block in _coerce_explicit_abstract_blocks(abstract_blocks):
@@ -437,7 +485,10 @@ def _is_near_duplicate_body_abstract_paragraph(left: str, right: str) -> bool:
         return False
     if _canonical_match_text(left_text) == _canonical_match_text(right_text):
         return True
-    if abs(len(left_text) - len(right_text)) > BODY_ABSTRACT_PARAGRAPH_NEAR_DUPLICATE_MAX_LENGTH_DELTA:
+    if (
+        abs(len(left_text) - len(right_text))
+        > BODY_ABSTRACT_PARAGRAPH_NEAR_DUPLICATE_MAX_LENGTH_DELTA
+    ):
         return False
     return (
         SequenceMatcher(None, left_text, right_text).ratio()
@@ -488,7 +539,9 @@ def _strip_leading_explicit_abstract_paragraphs(
     leading_index = 0
     while leading_index < len(paragraphs):
         if not any(
-            _is_near_duplicate_body_abstract_paragraph(paragraphs[leading_index], candidate)
+            _is_near_duplicate_body_abstract_paragraph(
+                paragraphs[leading_index], candidate
+            )
             for candidate in abstract_paragraphs
         ):
             break
@@ -557,13 +610,19 @@ def _has_old_nature_methods_summary_structure(
     # Historical Nature/Springer pages used a body "Methods Summary" followed
     # by "Online Methods". This model-layer compatibility check only protects
     # that rendered markdown shape after provider section hints have been lost.
-    parsed_headings = {normalize_text(section.heading).lower() for section in parsed_sections if normalize_text(section.heading)}
+    parsed_headings = {
+        normalize_text(section.heading).lower()
+        for section in parsed_sections
+        if normalize_text(section.heading)
+    }
     if "methods summary" not in parsed_headings:
         return False
     if "online methods" in parsed_headings:
         return True
 
-    hint_headings, hint_source_blob = _coerced_section_hint_headings_and_sources(section_hints)
+    hint_headings, hint_source_blob = _coerced_section_hint_headings_and_sources(
+        section_hints
+    )
     if "methods summary" in hint_headings and "online methods" in hint_headings:
         return True
     if "methods summary" in hint_headings and any(
@@ -591,7 +650,9 @@ def _normalize_inline_citations_in_section(section: Section) -> Section:
     )
 
 
-def split_leading_inline_abstract(sections: Sequence[Section]) -> tuple[str | None, list[Section]]:
+def split_leading_inline_abstract(
+    sections: Sequence[Section],
+) -> tuple[str | None, list[Section]]:
     if not sections:
         return None, []
 
@@ -599,7 +660,11 @@ def split_leading_inline_abstract(sections: Sequence[Section]) -> tuple[str | No
     if normalize_text(first.kind).lower() != "body":
         return None, list(sections)
 
-    paragraphs = [paragraph for paragraph in re.split(r"\n\s*\n", first.text) if normalize_text(paragraph)]
+    paragraphs = [
+        paragraph
+        for paragraph in re.split(r"\n\s*\n", first.text)
+        if normalize_text(paragraph)
+    ]
     if not paragraphs:
         return None, list(sections)
 
@@ -610,13 +675,16 @@ def split_leading_inline_abstract(sections: Sequence[Section]) -> tuple[str | No
     if len(sections) == 1:
         return normalize_abstract_text(strip_markdown_images(first.text)) or None, []
 
-    abstract_text = normalize_abstract_text(strip_markdown_images(first_paragraph)) or None
+    abstract_text = (
+        normalize_abstract_text(strip_markdown_images(first_paragraph)) or None
+    )
     remaining_text = normalize_markdown_text("\n\n".join(paragraphs[1:]))
     remaining_sections = list(sections)
     if remaining_text:
         replacement_heading = (
             "Main Text"
-            if first.level <= 1 or normalize_text(first.heading).lower() in {"", "full text"}
+            if first.level <= 1
+            or normalize_text(first.heading).lower() in {"", "full text"}
             else first.heading
         )
         remaining_sections[0] = Section(

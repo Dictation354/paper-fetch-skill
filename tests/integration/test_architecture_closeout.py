@@ -65,18 +65,18 @@ PROVIDER_MAGIC_METADATA_KEYS = (
     "source_trail",
 )
 MAGIC_KEY_PATTERN = re.compile(
-    r'\[(?:\"|\')('
+    r"\[(?:\"|\')("
     + "|".join(PROVIDER_MAGIC_METADATA_KEYS)
-    + r')(?:\"|\')\]|get\((?:\"|\')('
+    + r")(?:\"|\')\]|get\((?:\"|\')("
     + "|".join(PROVIDER_MAGIC_METADATA_KEYS)
-    + r')(?:\"|\')'
+    + r")(?:\"|\')"
 )
 RAW_PAYLOAD_METADATA_MAGIC_PATTERN = re.compile(
-    r'\b(?:raw_payload|payload)\.metadata(?:\[(?:\"|\')('
+    r"\b(?:raw_payload|payload)\.metadata(?:\[(?:\"|\')("
     + "|".join(PROVIDER_MAGIC_METADATA_KEYS)
-    + r')(?:\"|\')\]|\.get\((?:\"|\')('
+    + r")(?:\"|\')\]|\.get\((?:\"|\')("
     + "|".join(PROVIDER_MAGIC_METADATA_KEYS)
-    + r')(?:\"|\'))'
+    + r")(?:\"|\'))"
 )
 TARGETED_CYCLE_PATHS = [
     PAPER_FETCH_SRC / "extraction" / "html" / "_metadata.py",
@@ -157,11 +157,19 @@ def legacy_import_problem(node: ast.AST) -> tuple[str, int] | None:
     if isinstance(node, ast.Import):
         for alias in node.names:
             name = alias.name
-            if name in {"article_model", "fetch_common", "providers"} or name.startswith("providers."):
+            if name in {
+                "article_model",
+                "fetch_common",
+                "providers",
+            } or name.startswith("providers."):
                 return f"legacy import '{name}'", node.lineno
     if isinstance(node, ast.ImportFrom):
         module = node.module or ""
-        if module in {"article_model", "fetch_common", "providers"} or module.startswith("providers."):
+        if module in {
+            "article_model",
+            "fetch_common",
+            "providers",
+        } or module.startswith("providers."):
             return f"legacy from-import '{module}'", node.lineno
     return None
 
@@ -172,16 +180,26 @@ def forbidden_test_patterns(path: Path) -> list[str]:
 
     for node in ast.walk(tree):
         if isinstance(node, ast.Call) and is_sys_path_mutation(node):
-            problems.append(f"{path.relative_to(REPO_ROOT)}:{node.lineno} uses sys.path mutation")
+            problems.append(
+                f"{path.relative_to(REPO_ROOT)}:{node.lineno} uses sys.path mutation"
+            )
         elif isinstance(node, ast.Call) and is_spec_from_file_location(node):
-            problems.append(f"{path.relative_to(REPO_ROOT)}:{node.lineno} uses spec_from_file_location")
+            problems.append(
+                f"{path.relative_to(REPO_ROOT)}:{node.lineno} uses spec_from_file_location"
+            )
         elif isinstance(node, ast.Assign):
             if any(is_sys_modules_subscript(target) for target in node.targets):
-                problems.append(f"{path.relative_to(REPO_ROOT)}:{node.lineno} mutates sys.modules")
+                problems.append(
+                    f"{path.relative_to(REPO_ROOT)}:{node.lineno} mutates sys.modules"
+                )
         elif isinstance(node, ast.AnnAssign) and is_sys_modules_subscript(node.target):
-            problems.append(f"{path.relative_to(REPO_ROOT)}:{node.lineno} mutates sys.modules")
+            problems.append(
+                f"{path.relative_to(REPO_ROOT)}:{node.lineno} mutates sys.modules"
+            )
         elif isinstance(node, ast.AugAssign) and is_sys_modules_subscript(node.target):
-            problems.append(f"{path.relative_to(REPO_ROOT)}:{node.lineno} mutates sys.modules")
+            problems.append(
+                f"{path.relative_to(REPO_ROOT)}:{node.lineno} mutates sys.modules"
+            )
 
         import_problem = legacy_import_problem(node)
         if import_problem is not None:
@@ -217,8 +235,10 @@ def top_level_internal_imports(path: Path) -> list[str]:
                     imports.append(alias.name)
         elif isinstance(node, ast.ImportFrom):
             if node.level:
-                base_parts = module_parts[:-node.level]
-                target_parts = base_parts + ((node.module or "").split(".") if node.module else [])
+                base_parts = module_parts[: -node.level]
+                target_parts = base_parts + (
+                    (node.module or "").split(".") if node.module else []
+                )
                 imported_module = ".".join(part for part in target_parts if part)
             else:
                 imported_module = node.module or ""
@@ -266,7 +286,11 @@ class ArchitectureCloseoutTests(unittest.TestCase):
         self.assertTrue((SKILL_DIR / "SKILL.md").exists())
         self.assertFalse((SKILL_DIR / "agents" / "openai.yaml").exists())
 
-        files = sorted(path.relative_to(SKILL_DIR).as_posix() for path in SKILL_DIR.rglob("*") if path.is_file())
+        files = sorted(
+            path.relative_to(SKILL_DIR).as_posix()
+            for path in SKILL_DIR.rglob("*")
+            if path.is_file()
+        )
         self.assertEqual(
             files,
             [
@@ -278,10 +302,16 @@ class ArchitectureCloseoutTests(unittest.TestCase):
             ],
         )
 
-    def test_repo_hygiene_guards_against_old_script_package_and_tracked_benchmarks(self) -> None:
+    def test_repo_hygiene_guards_against_old_script_package_and_tracked_benchmarks(
+        self,
+    ) -> None:
         self.assertFalse((REPO_ROOT / "scripts" / "__init__.py").exists())
-        self.assertFalse((REPO_ROOT / "references" / "formula_backend_report.json").exists())
-        self.assertFalse((REPO_ROOT / "vendor" / "fetch_fulltext.reference.py").exists())
+        self.assertFalse(
+            (REPO_ROOT / "references" / "formula_backend_report.json").exists()
+        )
+        self.assertFalse(
+            (REPO_ROOT / "vendor" / "fetch_fulltext.reference.py").exists()
+        )
 
     def test_removed_provider_compatibility_modules_stay_deleted(self) -> None:
         offenders = [
@@ -304,13 +334,17 @@ class ArchitectureCloseoutTests(unittest.TestCase):
         self.assertNotRegex(text, MAGIC_KEY_PATTERN)
 
     def test_public_service_api_no_longer_accepts_legacy_runtime_keywords(self) -> None:
-        self.assertEqual(keyword_only_parameters(SERVICE_PATH, "probe_has_fulltext"), ["context"])
+        self.assertEqual(
+            keyword_only_parameters(SERVICE_PATH, "probe_has_fulltext"), ["context"]
+        )
         self.assertEqual(
             keyword_only_parameters(SERVICE_PATH, "fetch_paper"),
             ["modes", "strategy", "render", "context"],
         )
 
-    def test_provider_fetch_fulltext_dict_compatibility_entrypoints_stay_deleted(self) -> None:
+    def test_provider_fetch_fulltext_dict_compatibility_entrypoints_stay_deleted(
+        self,
+    ) -> None:
         offenders: list[str] = []
         for path in sorted(PROVIDERS_DIR.rglob("*.py")):
             if "def fetch_fulltext" in path.read_text(encoding="utf-8"):
@@ -319,10 +353,14 @@ class ArchitectureCloseoutTests(unittest.TestCase):
 
     def test_resolve_query_stays_outside_provider_implementations(self) -> None:
         imports = top_level_internal_imports(RESOLVE_QUERY_PATH)
-        disallowed = [name for name in imports if name.startswith("paper_fetch.providers")]
+        disallowed = [
+            name for name in imports if name.startswith("paper_fetch.providers")
+        ]
         self.assertEqual(disallowed, [])
 
-    def test_provider_modules_no_longer_use_magic_key_contract_reads_or_writes(self) -> None:
+    def test_provider_modules_no_longer_use_magic_key_contract_reads_or_writes(
+        self,
+    ) -> None:
         offenders: list[str] = []
         for path in sorted(PROVIDERS_DIR.glob("*.py")):
             if path.name == "base.py":
@@ -332,7 +370,9 @@ class ArchitectureCloseoutTests(unittest.TestCase):
                 offenders.append(path.relative_to(REPO_ROOT).as_posix())
         self.assertEqual(offenders, [])
 
-    def test_production_code_does_not_read_raw_payload_metadata_magic_keys(self) -> None:
+    def test_production_code_does_not_read_raw_payload_metadata_magic_keys(
+        self,
+    ) -> None:
         offenders: list[str] = []
         for path in sorted(PAPER_FETCH_SRC.rglob("*.py")):
             if path == PROVIDERS_DIR / "base.py":
@@ -340,12 +380,16 @@ class ArchitectureCloseoutTests(unittest.TestCase):
             text = path.read_text(encoding="utf-8")
             match = RAW_PAYLOAD_METADATA_MAGIC_PATTERN.search(text)
             if match:
-                offenders.append(f"{path.relative_to(REPO_ROOT).as_posix()}:{text[:match.start()].count(chr(10)) + 1}")
+                offenders.append(
+                    f"{path.relative_to(REPO_ROOT).as_posix()}:{text[: match.start()].count(chr(10)) + 1}"
+                )
         self.assertEqual(offenders, [])
 
     def test_targeted_static_import_graph_is_cycle_free(self) -> None:
         target_modules = {module_name_for_path(path) for path in TARGETED_CYCLE_PATHS}
-        graph: dict[str, set[str]] = {module_name_for_path(path): set() for path in TARGETED_CYCLE_PATHS}
+        graph: dict[str, set[str]] = {
+            module_name_for_path(path): set() for path in TARGETED_CYCLE_PATHS
+        }
         for path in TARGETED_CYCLE_PATHS:
             module_name = module_name_for_path(path)
             for imported_module in top_level_internal_imports(path):
@@ -364,7 +408,10 @@ class ArchitectureCloseoutTests(unittest.TestCase):
         )
 
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertIn("Fetch AI-friendly full text for a paper by DOI, URL, or title.", result.stdout)
+        self.assertIn(
+            "Fetch AI-friendly full text for a paper by DOI, URL, or title.",
+            result.stdout,
+        )
         self.assertIn("--query", result.stdout)
         self.assertIn("--format", result.stdout)
         self.assertIn("PAPER_FETCH_DOWNLOAD_DIR", result.stdout)
@@ -379,7 +426,9 @@ class ArchitectureCloseoutTests(unittest.TestCase):
         )
 
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertIn("Install optional external formula backends for paper-fetch.", result.stdout)
+        self.assertIn(
+            "Install optional external formula backends for paper-fetch.", result.stdout
+        )
         self.assertIn("--target-dir", result.stdout)
         self.assertIn("--no-node", result.stdout)
 

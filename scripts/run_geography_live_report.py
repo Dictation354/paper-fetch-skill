@@ -35,7 +35,9 @@ def _load_geography_live_exports():
 
 def all_geography_samples():
     samples_path = REPO_ROOT / "tests" / "live" / "geography_samples.py"
-    spec = importlib.util.spec_from_file_location("paper_fetch_geography_samples", samples_path)
+    spec = importlib.util.spec_from_file_location(
+        "paper_fetch_geography_samples", samples_path
+    )
     if spec is None or spec.loader is None:
         raise RuntimeError(f"Could not load geography samples from {samples_path}")
     module = importlib.util.module_from_spec(spec)
@@ -46,7 +48,9 @@ def all_geography_samples():
 def build_parser() -> argparse.ArgumentParser:
     GEOGRAPHY_PROVIDER_ORDER, default_report_paths, _ = _load_geography_live_exports()
     json_path, markdown_path = default_report_paths()
-    parser = argparse.ArgumentParser(description="Run the geography live-only publisher report without MCP.")
+    parser = argparse.ArgumentParser(
+        description="Run the geography live-only publisher report without MCP."
+    )
     parser.add_argument(
         "--providers",
         nargs="*",

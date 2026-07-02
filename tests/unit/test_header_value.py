@@ -16,7 +16,9 @@ class HeaderValueTests(unittest.TestCase):
         self.assertEqual(header_value(None, "content-type"), "")
 
     def test_header_value_returns_default_for_missing_header(self) -> None:
-        self.assertEqual(header_value({"x-other": "1"}, "content-type", "text/html"), "text/html")
+        self.assertEqual(
+            header_value({"x-other": "1"}, "content-type", "text/html"), "text/html"
+        )
 
 
 if __name__ == "__main__":

@@ -9,7 +9,9 @@ from unittest import TestCase, mock
 
 from paper_fetch.extraction.html.assets import FIGURE_KIND, SUPPLEMENTARY_KIND
 from paper_fetch.providers.browser_workflow import assets as browser_workflow_assets
-from paper_fetch.providers.browser_workflow.fetchers import image as browser_image_fetcher
+from paper_fetch.providers.browser_workflow.fetchers import (
+    image as browser_image_fetcher,
+)
 from paper_fetch.providers.browser_workflow.asset_download import (
     BrowserAssetDownloadPlan,
     BrowserAssetDownloadResult,
@@ -28,16 +30,18 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
         full_size_url = "https://example.test/images/full-figure.jpg"
         preview_url = "https://example.test/skin/site/img/Blank.svg"
 
-        candidates = browser_workflow_assets._browser_workflow_image_download_candidates(
-            None,
-            asset={
-                "kind": "figure",
-                "download_url": download_url,
-                "full_size_url": full_size_url,
-                "url": preview_url,
-                "preview_url": preview_url,
-            },
-            user_agent="test-agent",
+        candidates = (
+            browser_workflow_assets._browser_workflow_image_download_candidates(
+                None,
+                asset={
+                    "kind": "figure",
+                    "download_url": download_url,
+                    "full_size_url": full_size_url,
+                    "url": preview_url,
+                    "preview_url": preview_url,
+                },
+                user_agent="test-agent",
+            )
         )
 
         self.assertEqual(candidates, [download_url, full_size_url, preview_url])
@@ -146,9 +150,7 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
             "asset_failures": [{"kind": "figure", "reason": "preview_failed"}],
         }
         supplementary_result = {
-            "assets": [
-                {"kind": "supplementary", "download_url": "supplement.pdf"}
-            ],
+            "assets": [{"kind": "supplementary", "download_url": "supplement.pdf"}],
             "asset_failures": [],
         }
 
@@ -195,7 +197,9 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
             "ws://127.0.0.1:9222/devtools/browser/test",
         )
         self.assertEqual(mocked_download_assets.call_count, 2)
-        calls_by_kind = {call.args[0]: call for call in mocked_download_assets.call_args_list}
+        calls_by_kind = {
+            call.args[0]: call for call in mocked_download_assets.call_args_list
+        }
         figure_call = calls_by_kind[FIGURE_KIND]
         supplementary_call = calls_by_kind[SUPPLEMENTARY_KIND]
         self.assertIs(figure_call.args[0], FIGURE_KIND)
@@ -289,9 +293,7 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
             supplementary_started.set()
             self.assertTrue(body_started.wait(1))
             return {
-                "assets": [
-                    {"kind": "supplementary", "download_url": "supplement.pdf"}
-                ],
+                "assets": [{"kind": "supplementary", "download_url": "supplement.pdf"}],
                 "asset_failures": [],
             }
 
@@ -356,9 +358,7 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
                 }
             self.assertEqual(call_order, [FIGURE_KIND, SUPPLEMENTARY_KIND])
             return {
-                "assets": [
-                    {"kind": "supplementary", "download_url": "supplement.pdf"}
-                ],
+                "assets": [{"kind": "supplementary", "download_url": "supplement.pdf"}],
                 "asset_failures": [],
             }
 
@@ -428,9 +428,7 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
                 }
             self.assertEqual(call_order, [FIGURE_KIND, SUPPLEMENTARY_KIND])
             return {
-                "assets": [
-                    {"kind": "supplementary", "download_url": "supplement.pdf"}
-                ],
+                "assets": [{"kind": "supplementary", "download_url": "supplement.pdf"}],
                 "asset_failures": [],
             }
 
@@ -655,7 +653,9 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
         mocked_warm.assert_called_once()
         mocked_download_assets.assert_called_once()
         self.assertIs(mocked_download_assets.call_args.args[0], FIGURE_KIND)
-        self.assertEqual(mocked_download_assets.call_args.kwargs["assets"], [failed_figure])
+        self.assertEqual(
+            mocked_download_assets.call_args.kwargs["assets"], [failed_figure]
+        )
         self.assertEqual(
             sorted(asset["download_url"] for asset in result.body_results),
             [

@@ -66,15 +66,10 @@ def test_discover_brief_contains_required_search_contract() -> None:
         "record_rejections_by_doi": True,
         "selected_doi_must_match_doi_samples": True,
     }
-    assert (
-        brief["output_requirements"][
-            "optional_null_sample_purposes_require_discovery_proof"
-        ]
-        == ["table", "formula", "supplementary"]
-    )
-    assert brief["files_allowed_to_modify"] == [
-        "onboarding/manifests/mdpi.yml"
-    ]
+    assert brief["output_requirements"][
+        "optional_null_sample_purposes_require_discovery_proof"
+    ] == ["table", "formula", "supplementary"]
+    assert brief["files_allowed_to_modify"] == ["onboarding/manifests/mdpi.yml"]
     assert {"src/", "tests/", "docs/providers.md", "CHANGELOG.md"}.issubset(
         set(brief["files_must_not_modify"])
     )
@@ -118,7 +113,11 @@ class FakeDiscoveryTransport:
             query_text = ""
             if isinstance(query, dict):
                 query_text = str(query.get("query.bibliographic") or "")
-            doi = "10.5555/table1" if "table" in query_text.lower() else "10.5555/structure1"
+            doi = (
+                "10.5555/table1"
+                if "table" in query_text.lower()
+                else "10.5555/structure1"
+            )
             payload = {
                 "message": {
                     "items": [
@@ -178,7 +177,9 @@ class FakeDiscoveryTransport:
         }
 
 
-def test_prepare_discovery_no_network_writes_query_plan_without_http(tmp_path: Path) -> None:
+def test_prepare_discovery_no_network_writes_query_plan_without_http(
+    tmp_path: Path,
+) -> None:
     module = load_script_module("onboard_from_manifests")
     transport = FakeDiscoveryTransport()
 
@@ -214,16 +215,24 @@ def test_prepare_discovery_scores_dedupes_and_probes_candidates(tmp_path: Path) 
     )
 
     table_candidates = pack["doi_candidates"]["table"]
-    assert [candidate["doi"] for candidate in table_candidates].count("10.5555/table1") == 1
+    assert [candidate["doi"] for candidate in table_candidates].count(
+        "10.5555/table1"
+    ) == 1
     top = table_candidates[0]
     assert top["confidence"] == "high"
     assert top["score"] >= 0.72
     assert {"body_tables", "references"} <= set(top["observed_signals"])
-    assert any(call["url"] == "https://api.crossref.org/works" for call in transport.calls)
-    assert any(call["url"] == "https://api.openalex.org/works" for call in transport.calls)
+    assert any(
+        call["url"] == "https://api.crossref.org/works" for call in transport.calls
+    )
+    assert any(
+        call["url"] == "https://api.openalex.org/works" for call in transport.calls
+    )
 
 
-def _evidence_pack_with_candidate(*, score: float, confidence: str) -> dict[str, object]:
+def _evidence_pack_with_candidate(
+    *, score: float, confidence: str
+) -> dict[str, object]:
     query_plan = {
         "table": [
             "example 10.5555 table DOI candidates",
@@ -344,7 +353,10 @@ def test_autofix_manifest_fills_contracts_and_high_confidence_sample() -> None:
     assert result["changed"] is True
     table_sample = manifest["fixtures"]["doi_samples"]["table"]
     assert table_sample["doi"] == "10.5555/table1"
-    assert manifest["fixtures"]["discovery_proof"]["table"]["selected_doi"] == "10.5555/table1"
+    assert (
+        manifest["fixtures"]["discovery_proof"]["table"]["selected_doi"]
+        == "10.5555/table1"
+    )
     assert manifest["markdown_contract"]["table"]["doi"] == "10.5555/table1"
     assert manifest["route_contract"]["article_html"]["success_requires"]
     assert manifest["asset_contract"]["figures"]["purposes"] == ["figure"]

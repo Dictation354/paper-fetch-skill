@@ -18,7 +18,9 @@ from paper_fetch.image_tools.paths import (
 
 
 class ImageToolsTests(unittest.TestCase):
-    def test_source_image_format_detection_reads_payload_content_type_and_url(self) -> None:
+    def test_source_image_format_detection_reads_payload_content_type_and_url(
+        self,
+    ) -> None:
         self.assertEqual(
             source_image_format_from_payload(b"%!PS-Adobe-3.0 EPSF-3.0\n"),
             "eps",
@@ -64,8 +66,12 @@ class ImageToolsTests(unittest.TestCase):
             target = root / "image-tools"
 
             with (
-                mock.patch.object(image_install.shutil, "which", return_value=str(source)),
-                mock.patch.object(image_install, "_have_working_binary", return_value=True),
+                mock.patch.object(
+                    image_install.shutil, "which", return_value=str(source)
+                ),
+                mock.patch.object(
+                    image_install, "_have_working_binary", return_value=True
+                ),
             ):
                 self.assertTrue(image_install.ensure_ghostscript(target))
 
@@ -78,7 +84,9 @@ class ImageToolsTests(unittest.TestCase):
             repo_root = root / "repo"
             repo_root.mkdir()
 
-            with mock.patch.object(image_install, "_stage_from_path") as stage_from_path:
+            with mock.patch.object(
+                image_install, "_stage_from_path"
+            ) as stage_from_path:
                 self.assertFalse(
                     image_install.ensure_ghostscript(
                         target,

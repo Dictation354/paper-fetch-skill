@@ -21,8 +21,12 @@ class ProviderRenderPolicy:
     mark_inline_assets: Callable[[str, list[Any], str], None] | None = None
 
     def __post_init__(self) -> None:
-        if self.mark_inline_assets is not None and not callable(self.mark_inline_assets):
-            raise TypeError("Provider render policy mark_inline_assets must be callable.")
+        if self.mark_inline_assets is not None and not callable(
+            self.mark_inline_assets
+        ):
+            raise TypeError(
+                "Provider render policy mark_inline_assets must be callable."
+            )
 
 
 @dataclass(frozen=True)
@@ -45,9 +49,14 @@ class ProviderBundle:
             self.render_policy,
             ProviderRenderPolicy,
         ):
-            raise TypeError("Provider bundle render_policy must be a ProviderRenderPolicy.")
+            raise TypeError(
+                "Provider bundle render_policy must be a ProviderRenderPolicy."
+            )
         if self.html_rules is not None and self.html_rules.name != self.catalog.name:
-            if self.catalog.name not in (self.html_rules.name, *self.html_rules.aliases):
+            if self.catalog.name not in (
+                self.html_rules.name,
+                *self.html_rules.aliases,
+            ):
                 raise ValueError(
                     "Provider bundle HTML rules must match the catalog provider name."
                 )

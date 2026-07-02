@@ -106,8 +106,7 @@ def serialize_datalayer_signal_set(signal_set: Any) -> dict[str, Any] | None:
             _serialize_datalayer_rule(rule) for rule in signal_set.soft_rules
         ],
         "abstract_only_rules": [
-            _serialize_datalayer_rule(rule)
-            for rule in signal_set.abstract_only_rules
+            _serialize_datalayer_rule(rule) for rule in signal_set.abstract_only_rules
         ],
         "presence_rules": [
             {"field": field, "token": token}
@@ -428,7 +427,9 @@ def sync_docs_from_manifest(
     return changed
 
 
-def sync_manifest(path: Path, *, provider: str, sync_docs: bool = False, root: Path | None = None) -> dict[str, Any]:
+def sync_manifest(
+    path: Path, *, provider: str, sync_docs: bool = False, root: Path | None = None
+) -> dict[str, Any]:
     repo_root = root or _repo_root()
     manifest = _load_yaml(path)
     manifest_provider = str(manifest.get("name") or "")
@@ -482,7 +483,9 @@ def build_parser() -> argparse.ArgumentParser:
         description="Serialize runtime ProviderBundle sync-back fields into a manifest."
     )
     parser.add_argument("--provider", required=True, help="provider name")
-    parser.add_argument("--manifest", help="manifest YAML path; defaults via known-providers.yml")
+    parser.add_argument(
+        "--manifest", help="manifest YAML path; defaults via known-providers.yml"
+    )
     parser.add_argument(
         "--sync-docs",
         action="store_true",

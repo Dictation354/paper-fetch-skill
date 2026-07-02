@@ -16,7 +16,9 @@ def _render_log_value(value: Any) -> str:
     if isinstance(value, (int, float)):
         return str(value)
     text = str(value)
-    if any(char.isspace() for char in text) or any(char in text for char in {'"', "'", "="}):
+    if any(char.isspace() for char in text) or any(
+        char in text for char in {'"', "'", "="}
+    ):
         return json.dumps(text, ensure_ascii=False)
     return text
 
@@ -33,7 +35,9 @@ def structured_log_payload(event: str, **fields: Any) -> dict[str, Any]:
     return payload
 
 
-def emit_structured_log(logger: logging.Logger, level: int, event: str, **fields: Any) -> None:
+def emit_structured_log(
+    logger: logging.Logger, level: int, event: str, **fields: Any
+) -> None:
     logger.log(
         level,
         format_structured_log_message(event, fields),

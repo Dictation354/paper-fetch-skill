@@ -10,7 +10,11 @@ from paper_fetch.providers.copernicus import CopernicusClient
 from paper_fetch.providers._article_markdown_copernicus import parse_copernicus_xml
 from paper_fetch.providers._article_markdown_jats import parse_jats_xml
 
-from tests.unit._paper_fetch_support import RecordingTransport, fulltext_pdf_bytes, http_response
+from tests.unit._paper_fetch_support import (
+    RecordingTransport,
+    fulltext_pdf_bytes,
+    http_response,
+)
 
 
 DOI = "10.5194/acp-24-1-2024"
@@ -25,7 +29,9 @@ MARKDOWN_REVIEWED_FIXTURES = {
 }
 
 
-def _landing_html(*, xml_url: str = XML_URL, pdf_url: str = PDF_URL, body: str = "") -> bytes:
+def _landing_html(
+    *, xml_url: str = XML_URL, pdf_url: str = PDF_URL, body: str = ""
+) -> bytes:
     return f"""
     <html>
       <head>
@@ -50,9 +56,14 @@ def _article_body_text() -> str:
     return sentence * 10
 
 
-def _xml_fixture(*, body_text: str | None = None, graphic_href: str | None = None) -> bytes:
+def _xml_fixture(
+    *, body_text: str | None = None, graphic_href: str | None = None
+) -> bytes:
     body = body_text or _article_body_text()
-    graphic = graphic_href or "https://acp.copernicus.org/articles/24/1/2024/acp-24-1-2024-f01.png"
+    graphic = (
+        graphic_href
+        or "https://acp.copernicus.org/articles/24/1/2024/acp-24-1-2024-f01.png"
+    )
     return f"""<?xml version="1.0" encoding="UTF-8"?>
 <article xmlns:xlink="http://www.w3.org/1999/xlink"
          xmlns:mml="http://www.w3.org/1998/Math/MathML"
@@ -123,16 +134,24 @@ class CopernicusProviderTests(unittest.TestCase):
             "https://doi.org/10.5194/not-pattern",
         )
 
-    def test_xml_main_path_builds_fulltext_article_and_records_request_options(self) -> None:
+    def test_xml_main_path_builds_fulltext_article_and_records_request_options(
+        self,
+    ) -> None:
         transport = RecordingTransport(
             {
-                ("GET", LANDING_URL): http_response(LANDING_URL, _landing_html(), "text/html"),
-                ("GET", XML_URL): http_response(XML_URL, _xml_fixture(), "application/xml"),
+                ("GET", LANDING_URL): http_response(
+                    LANDING_URL, _landing_html(), "text/html"
+                ),
+                ("GET", XML_URL): http_response(
+                    XML_URL, _xml_fixture(), "application/xml"
+                ),
             }
         )
         client = CopernicusClient(transport, {})
 
-        raw_payload = client.fetch_raw_fulltext(DOI, {"doi": DOI, "landing_page_url": LANDING_URL})
+        raw_payload = client.fetch_raw_fulltext(
+            DOI, {"doi": DOI, "landing_page_url": LANDING_URL}
+        )
         article = client.to_article_model({"doi": DOI}, raw_payload)
 
         self.assertEqual(raw_payload.content.route_kind, "xml")
@@ -143,7 +162,11 @@ class CopernicusProviderTests(unittest.TestCase):
         self.assertTrue(article.references)
         self.assertTrue([asset for asset in article.assets if asset.kind == "figure"])
         self.assertTrue([asset for asset in article.assets if asset.kind == "table"])
-        table_assets = [asset for asset in raw_payload.content.extracted_assets if asset.get("kind") == "table"]
+        table_assets = [
+            asset
+            for asset in raw_payload.content.extracted_assets
+            if asset.get("kind") == "table"
+        ]
         self.assertEqual(table_assets[0]["table_render_kind"], "structured")
         landing_call, xml_call = transport.calls[:2]
         self.assertIn("text/html", landing_call["headers"]["Accept"])
@@ -160,12 +183,16 @@ class CopernicusProviderTests(unittest.TestCase):
         transport = RecordingTransport(
             {
                 ("GET", LANDING_URL): http_response(LANDING_URL, landing, "text/html"),
-                ("GET", linked_xml_url): http_response(linked_xml_url, _xml_fixture(), "application/xml"),
+                ("GET", linked_xml_url): http_response(
+                    linked_xml_url, _xml_fixture(), "application/xml"
+                ),
             }
         )
         client = CopernicusClient(transport, {})
 
-        raw_payload = client.fetch_raw_fulltext(DOI, {"doi": DOI, "landing_page_url": LANDING_URL})
+        raw_payload = client.fetch_raw_fulltext(
+            DOI, {"doi": DOI, "landing_page_url": LANDING_URL}
+        )
 
         self.assertEqual(raw_payload.source_url, linked_xml_url)
         self.assertEqual(raw_payload.content.route_kind, "xml")
@@ -174,13 +201,21 @@ class CopernicusProviderTests(unittest.TestCase):
         relative_response_url = "/articles/24/1/2024/acp-24-1-2024.xml"
         transport = RecordingTransport(
             {
-                ("GET", LANDING_URL): http_response(LANDING_URL, _landing_html(), "text/html"),
-                ("GET", XML_URL): http_response(relative_response_url, _xml_fixture(graphic_href="acp-24-1-2024-f01.png"), "application/xml"),
+                ("GET", LANDING_URL): http_response(
+                    LANDING_URL, _landing_html(), "text/html"
+                ),
+                ("GET", XML_URL): http_response(
+                    relative_response_url,
+                    _xml_fixture(graphic_href="acp-24-1-2024-f01.png"),
+                    "application/xml",
+                ),
             }
         )
         client = CopernicusClient(transport, {})
 
-        raw_payload = client.fetch_raw_fulltext(DOI, {"doi": DOI, "landing_page_url": LANDING_URL})
+        raw_payload = client.fetch_raw_fulltext(
+            DOI, {"doi": DOI, "landing_page_url": LANDING_URL}
+        )
         article = client.to_article_model({"doi": DOI}, raw_payload)
         figure_assets = [asset for asset in article.assets if asset.kind == "figure"]
 
@@ -194,13 +229,21 @@ class CopernicusProviderTests(unittest.TestCase):
     def test_xml_assets_download_from_canonical_original_url(self) -> None:
         """asset-download-contract: provider=copernicus"""
 
-        figure_url = "https://acp.copernicus.org/articles/24/1/2024/acp-24-1-2024-f01.png"
+        figure_url = (
+            "https://acp.copernicus.org/articles/24/1/2024/acp-24-1-2024-f01.png"
+        )
         figure_body = b"\x89PNG\r\n\x1a\nfigure"
         transport = RecordingTransport(
             {
-                ("GET", LANDING_URL): http_response(LANDING_URL, _landing_html(), "text/html"),
-                ("GET", XML_URL): http_response(XML_URL, _xml_fixture(graphic_href=figure_url), "application/xml"),
-                ("GET", figure_url): http_response(figure_url, figure_body, "image/png"),
+                ("GET", LANDING_URL): http_response(
+                    LANDING_URL, _landing_html(), "text/html"
+                ),
+                ("GET", XML_URL): http_response(
+                    XML_URL, _xml_fixture(graphic_href=figure_url), "application/xml"
+                ),
+                ("GET", figure_url): http_response(
+                    figure_url, figure_body, "image/png"
+                ),
             }
         )
         client = CopernicusClient(transport, {})
@@ -213,7 +256,9 @@ class CopernicusProviderTests(unittest.TestCase):
                 asset_profile="body",
             )
             downloaded_asset = result.artifacts.assets[0]
-            markdown = result.article.to_ai_markdown(asset_profile="body", max_tokens="full_text")
+            markdown = result.article.to_ai_markdown(
+                asset_profile="body", max_tokens="full_text"
+            )
             self.assertTrue(Path(downloaded_asset["path"]).is_file())
             self.assertEqual(Path(downloaded_asset["path"]).read_bytes(), figure_body)
             self.assertIn(downloaded_asset["path"], markdown)
@@ -221,8 +266,13 @@ class CopernicusProviderTests(unittest.TestCase):
 
         self.assertTrue(result.artifacts.assets)
         self.assertEqual(result.artifacts.assets[0]["original_url"], figure_url)
-        self.assertEqual(result.artifacts.assets[0]["downloaded_bytes"], len(figure_body))
-        self.assertIn(("GET", figure_url), [(call["method"], call["url"]) for call in transport.calls])
+        self.assertEqual(
+            result.artifacts.assets[0]["downloaded_bytes"], len(figure_body)
+        )
+        self.assertIn(
+            ("GET", figure_url),
+            [(call["method"], call["url"]) for call in transport.calls],
+        )
 
     def test_xml_failure_skips_landing_html_and_falls_back_to_pdf(self) -> None:
         html_body = (
@@ -234,29 +284,41 @@ class CopernicusProviderTests(unittest.TestCase):
         pdf_bytes = fulltext_pdf_bytes()
         transport = RecordingTransport(
             {
-                ("GET", LANDING_URL): http_response(LANDING_URL, _landing_html(body=html_body), "text/html"),
-                ("GET", XML_URL): http_response(XML_URL, b"<html>not xml</html>", "text/html"),
+                ("GET", LANDING_URL): http_response(
+                    LANDING_URL, _landing_html(body=html_body), "text/html"
+                ),
+                ("GET", XML_URL): http_response(
+                    XML_URL, b"<html>not xml</html>", "text/html"
+                ),
                 ("GET", PDF_URL): http_response(PDF_URL, pdf_bytes, "application/pdf"),
             }
         )
         client = CopernicusClient(transport, {})
 
-        raw_payload = client.fetch_raw_fulltext(DOI, {"doi": DOI, "landing_page_url": LANDING_URL})
+        raw_payload = client.fetch_raw_fulltext(
+            DOI, {"doi": DOI, "landing_page_url": LANDING_URL}
+        )
         article = client.to_article_model({"doi": DOI}, raw_payload)
 
         self.assertEqual(raw_payload.content.route_kind, "pdf_fallback")
         self.assertEqual(article.source, "copernicus_pdf")
         self.assertIn("fulltext:copernicus_xml_fail", article.quality.source_trail)
-        self.assertIn("fulltext:copernicus_pdf_fallback_ok", article.quality.source_trail)
+        self.assertIn(
+            "fulltext:copernicus_pdf_fallback_ok", article.quality.source_trail
+        )
 
     def test_abstract_only_short_body_xml_falls_back_to_pdf(self) -> None:
         pdf_bytes = fulltext_pdf_bytes()
         transport = RecordingTransport(
             {
-                ("GET", LANDING_URL): http_response(LANDING_URL, _landing_html(), "text/html"),
+                ("GET", LANDING_URL): http_response(
+                    LANDING_URL, _landing_html(), "text/html"
+                ),
                 ("GET", XML_URL): http_response(
                     XML_URL,
-                    _abstract_only_xml_fixture(body="<body><sec><p>Too short.</p></sec></body>"),
+                    _abstract_only_xml_fixture(
+                        body="<body><sec><p>Too short.</p></sec></body>"
+                    ),
                     "application/xml",
                 ),
                 ("GET", PDF_URL): http_response(PDF_URL, pdf_bytes, "application/pdf"),
@@ -264,20 +326,34 @@ class CopernicusProviderTests(unittest.TestCase):
         )
         client = CopernicusClient(transport, {})
 
-        raw_payload = client.fetch_raw_fulltext(DOI, {"doi": DOI, "landing_page_url": LANDING_URL})
+        raw_payload = client.fetch_raw_fulltext(
+            DOI, {"doi": DOI, "landing_page_url": LANDING_URL}
+        )
 
         self.assertEqual(raw_payload.content.route_kind, "pdf_fallback")
-        self.assertTrue(any("did not expose enough body text" in warning for warning in raw_payload.warnings))
-        self.assertIn(("GET", PDF_URL), [(call["method"], call["url"]) for call in transport.calls])
+        self.assertTrue(
+            any(
+                "did not expose enough body text" in warning
+                for warning in raw_payload.warnings
+            )
+        )
+        self.assertIn(
+            ("GET", PDF_URL),
+            [(call["method"], call["url"]) for call in transport.calls],
+        )
 
     def test_xml_without_body_paragraphs_falls_back_to_pdf(self) -> None:
         pdf_bytes = fulltext_pdf_bytes()
         transport = RecordingTransport(
             {
-                ("GET", LANDING_URL): http_response(LANDING_URL, _landing_html(), "text/html"),
+                ("GET", LANDING_URL): http_response(
+                    LANDING_URL, _landing_html(), "text/html"
+                ),
                 ("GET", XML_URL): http_response(
                     XML_URL,
-                    _abstract_only_xml_fixture(body="<body><sec><title>Introduction</title></sec></body>"),
+                    _abstract_only_xml_fixture(
+                        body="<body><sec><title>Introduction</title></sec></body>"
+                    ),
                     "application/xml",
                 ),
                 ("GET", PDF_URL): http_response(PDF_URL, pdf_bytes, "application/pdf"),
@@ -285,82 +361,133 @@ class CopernicusProviderTests(unittest.TestCase):
         )
         client = CopernicusClient(transport, {})
 
-        raw_payload = client.fetch_raw_fulltext(DOI, {"doi": DOI, "landing_page_url": LANDING_URL})
+        raw_payload = client.fetch_raw_fulltext(
+            DOI, {"doi": DOI, "landing_page_url": LANDING_URL}
+        )
 
         self.assertEqual(raw_payload.content.route_kind, "pdf_fallback")
-        self.assertTrue(any("did not expose body paragraphs" in warning for warning in raw_payload.warnings))
+        self.assertTrue(
+            any(
+                "did not expose body paragraphs" in warning
+                for warning in raw_payload.warnings
+            )
+        )
 
     def test_empty_body_xml_falls_back_to_pdf(self) -> None:
         pdf_bytes = fulltext_pdf_bytes()
         transport = RecordingTransport(
             {
-                ("GET", LANDING_URL): http_response(LANDING_URL, _landing_html(), "text/html"),
-                ("GET", XML_URL): http_response(XML_URL, _abstract_only_xml_fixture(), "application/xml"),
+                ("GET", LANDING_URL): http_response(
+                    LANDING_URL, _landing_html(), "text/html"
+                ),
+                ("GET", XML_URL): http_response(
+                    XML_URL, _abstract_only_xml_fixture(), "application/xml"
+                ),
                 ("GET", PDF_URL): http_response(PDF_URL, pdf_bytes, "application/pdf"),
             }
         )
         client = CopernicusClient(transport, {})
 
-        raw_payload = client.fetch_raw_fulltext(DOI, {"doi": DOI, "landing_page_url": LANDING_URL})
+        raw_payload = client.fetch_raw_fulltext(
+            DOI, {"doi": DOI, "landing_page_url": LANDING_URL}
+        )
 
         self.assertEqual(raw_payload.content.route_kind, "pdf_fallback")
         self.assertTrue(
-            any("missing article metadata or body sections" in warning for warning in raw_payload.warnings)
+            any(
+                "missing article metadata or body sections" in warning
+                for warning in raw_payload.warnings
+            )
         )
 
     def test_landing_failure_continues_with_doi_derived_xml_candidate(self) -> None:
         transport = RecordingTransport(
             {
-                ("GET", LANDING_URL): RequestFailure(503, "landing unavailable", url=LANDING_URL),
-                ("GET", XML_URL): http_response(XML_URL, _xml_fixture(), "application/xml"),
+                ("GET", LANDING_URL): RequestFailure(
+                    503, "landing unavailable", url=LANDING_URL
+                ),
+                ("GET", XML_URL): http_response(
+                    XML_URL, _xml_fixture(), "application/xml"
+                ),
             }
         )
         client = CopernicusClient(transport, {})
 
-        raw_payload = client.fetch_raw_fulltext(DOI, {"doi": DOI, "landing_page_url": LANDING_URL})
+        raw_payload = client.fetch_raw_fulltext(
+            DOI, {"doi": DOI, "landing_page_url": LANDING_URL}
+        )
         article = client.to_article_model({"doi": DOI}, raw_payload)
 
         self.assertEqual(raw_payload.content.route_kind, "xml")
-        self.assertTrue(any("DOI-derived XML/PDF candidates" in warning for warning in raw_payload.warnings))
+        self.assertTrue(
+            any(
+                "DOI-derived XML/PDF candidates" in warning
+                for warning in raw_payload.warnings
+            )
+        )
         self.assertIn("fulltext:copernicus_landing_fail", article.quality.source_trail)
         self.assertIn("fulltext:copernicus_xml_ok", article.quality.source_trail)
-        self.assertIn(("GET", XML_URL), [(call["method"], call["url"]) for call in transport.calls])
+        self.assertIn(
+            ("GET", XML_URL),
+            [(call["method"], call["url"]) for call in transport.calls],
+        )
 
     def test_landing_failure_continues_with_doi_derived_pdf_candidate(self) -> None:
         pdf_bytes = fulltext_pdf_bytes()
         transport = RecordingTransport(
             {
-                ("GET", LANDING_URL): RequestFailure(503, "landing unavailable", url=LANDING_URL),
-                ("GET", XML_URL): http_response(XML_URL, b"<html>not xml</html>", "text/html"),
+                ("GET", LANDING_URL): RequestFailure(
+                    503, "landing unavailable", url=LANDING_URL
+                ),
+                ("GET", XML_URL): http_response(
+                    XML_URL, b"<html>not xml</html>", "text/html"
+                ),
                 ("GET", PDF_URL): http_response(PDF_URL, pdf_bytes, "application/pdf"),
             }
         )
         client = CopernicusClient(transport, {})
 
-        raw_payload = client.fetch_raw_fulltext(DOI, {"doi": DOI, "landing_page_url": LANDING_URL})
+        raw_payload = client.fetch_raw_fulltext(
+            DOI, {"doi": DOI, "landing_page_url": LANDING_URL}
+        )
         article = client.to_article_model({"doi": DOI}, raw_payload)
 
         self.assertEqual(raw_payload.content.route_kind, "pdf_fallback")
         self.assertIn("fulltext:copernicus_landing_fail", article.quality.source_trail)
         self.assertIn("fulltext:copernicus_xml_fail", article.quality.source_trail)
-        self.assertIn("fulltext:copernicus_pdf_fallback_ok", article.quality.source_trail)
-        self.assertIn(("GET", PDF_URL), [(call["method"], call["url"]) for call in transport.calls])
+        self.assertIn(
+            "fulltext:copernicus_pdf_fallback_ok", article.quality.source_trail
+        )
+        self.assertIn(
+            ("GET", PDF_URL),
+            [(call["method"], call["url"]) for call in transport.calls],
+        )
 
     def test_fulltext_failures_raise_for_metadata_fallback(self) -> None:
         transport = RecordingTransport(
             {
-                ("GET", LANDING_URL): http_response(LANDING_URL, _landing_html(pdf_url=""), "text/html"),
-                ("GET", XML_URL): http_response(XML_URL, b"<html>not xml</html>", "text/html"),
+                ("GET", LANDING_URL): http_response(
+                    LANDING_URL, _landing_html(pdf_url=""), "text/html"
+                ),
+                ("GET", XML_URL): http_response(
+                    XML_URL, b"<html>not xml</html>", "text/html"
+                ),
                 ("GET", PDF_URL): RequestFailure(404, "missing PDF", url=PDF_URL),
             }
         )
         client = CopernicusClient(transport, {})
 
         with self.assertRaises(ProviderFailure) as raised:
-            client.fetch_raw_fulltext(DOI, {"doi": DOI, "landing_page_url": LANDING_URL})
+            client.fetch_raw_fulltext(
+                DOI, {"doi": DOI, "landing_page_url": LANDING_URL}
+            )
 
-        self.assertIn("Copernicus XML route was not usable", raised.exception.warnings[0])
-        self.assertIn("Copernicus PDF fallback was not usable", raised.exception.warnings[-1])
+        self.assertIn(
+            "Copernicus XML route was not usable", raised.exception.warnings[0]
+        )
+        self.assertIn(
+            "Copernicus PDF fallback was not usable", raised.exception.warnings[-1]
+        )
         self.assertIn("fulltext:copernicus_xml_fail", raised.exception.source_trail)
         self.assertIn("fulltext:copernicus_pdf_fail", raised.exception.source_trail)
 
@@ -368,41 +495,68 @@ class CopernicusProviderTests(unittest.TestCase):
         pdf_bytes = fulltext_pdf_bytes()
         transport = RecordingTransport(
             {
-                ("GET", LANDING_URL): http_response(LANDING_URL, _landing_html(), "text/html"),
-                ("GET", XML_URL): http_response(XML_URL, b"<html>not xml</html>", "text/html"),
+                ("GET", LANDING_URL): http_response(
+                    LANDING_URL, _landing_html(), "text/html"
+                ),
+                ("GET", XML_URL): http_response(
+                    XML_URL, b"<html>not xml</html>", "text/html"
+                ),
                 ("GET", PDF_URL): http_response(PDF_URL, pdf_bytes, "application/pdf"),
             }
         )
         client = CopernicusClient(transport, {})
 
-        result = client.fetch_result(DOI, {"doi": DOI, "landing_page_url": LANDING_URL}, None, asset_profile="body")
+        result = client.fetch_result(
+            DOI,
+            {"doi": DOI, "landing_page_url": LANDING_URL},
+            None,
+            asset_profile="body",
+        )
 
         self.assertEqual(result.article.source, "copernicus_pdf")
         self.assertTrue(result.artifacts.text_only)
         self.assertFalse(result.artifacts.allow_related_assets)
-        self.assertIn("download:copernicus_assets_skipped_text_only", [event.marker() for event in result.artifacts.skip_trace])
+        self.assertIn(
+            "download:copernicus_assets_skipped_text_only",
+            [event.marker() for event in result.artifacts.skip_trace],
+        )
 
-    def test_pdf_fallback_uses_doi_derived_candidate_when_landing_omits_pdf_meta(self) -> None:
+    def test_pdf_fallback_uses_doi_derived_candidate_when_landing_omits_pdf_meta(
+        self,
+    ) -> None:
         pdf_bytes = fulltext_pdf_bytes()
         transport = RecordingTransport(
             {
-                ("GET", LANDING_URL): http_response(LANDING_URL, _landing_html(pdf_url=""), "text/html"),
-                ("GET", XML_URL): http_response(XML_URL, b"<html>not xml</html>", "text/html"),
+                ("GET", LANDING_URL): http_response(
+                    LANDING_URL, _landing_html(pdf_url=""), "text/html"
+                ),
+                ("GET", XML_URL): http_response(
+                    XML_URL, b"<html>not xml</html>", "text/html"
+                ),
                 ("GET", PDF_URL): http_response(PDF_URL, pdf_bytes, "application/pdf"),
             }
         )
         client = CopernicusClient(transport, {})
 
-        raw_payload = client.fetch_raw_fulltext(DOI, {"doi": DOI, "landing_page_url": LANDING_URL})
+        raw_payload = client.fetch_raw_fulltext(
+            DOI, {"doi": DOI, "landing_page_url": LANDING_URL}
+        )
 
         self.assertEqual(raw_payload.content.route_kind, "pdf_fallback")
         self.assertEqual(raw_payload.source_url, PDF_URL)
-        self.assertIn(("GET", PDF_URL), [(call["method"], call["url"]) for call in transport.calls])
+        self.assertIn(
+            ("GET", PDF_URL),
+            [(call["method"], call["url"]) for call in transport.calls],
+        )
 
-    def test_xml_request_failures_continue_to_pdf_before_metadata_fallback(self) -> None:
+    def test_xml_request_failures_continue_to_pdf_before_metadata_fallback(
+        self,
+    ) -> None:
         transport = RecordingTransport(
             {
-                ("GET", LANDING_URL): http_response(LANDING_URL, _landing_html(pdf_url=""), "text/html"),
+                ("GET", LANDING_URL): http_response(
+                    LANDING_URL, _landing_html(pdf_url=""), "text/html"
+                ),
                 ("GET", XML_URL): RequestFailure(503, "temporary outage", url=XML_URL),
                 ("GET", PDF_URL): RequestFailure(404, "missing PDF", url=PDF_URL),
             }
@@ -410,15 +564,29 @@ class CopernicusProviderTests(unittest.TestCase):
         client = CopernicusClient(transport, {})
 
         with self.assertRaises(ProviderFailure) as raised:
-            client.fetch_raw_fulltext(DOI, {"doi": DOI, "landing_page_url": LANDING_URL})
+            client.fetch_raw_fulltext(
+                DOI, {"doi": DOI, "landing_page_url": LANDING_URL}
+            )
 
-        self.assertTrue(any("Copernicus XML route was not usable" in warning for warning in raised.exception.warnings))
-        self.assertIn(("GET", PDF_URL), [(call["method"], call["url"]) for call in transport.calls])
+        self.assertTrue(
+            any(
+                "Copernicus XML route was not usable" in warning
+                for warning in raised.exception.warnings
+            )
+        )
+        self.assertIn(
+            ("GET", PDF_URL),
+            [(call["method"], call["url"]) for call in transport.calls],
+        )
 
     def test_xml_renderer_extracts_core_jats_structures(self) -> None:
         """rule: rule-copernicus-xml-jats-rendering"""
-        extraction = parse_copernicus_xml(_xml_fixture(), source_url=XML_URL, base_metadata={"doi": DOI})
-        generic_extraction = parse_jats_xml(_xml_fixture(), source_url=XML_URL, base_metadata={"doi": DOI})
+        extraction = parse_copernicus_xml(
+            _xml_fixture(), source_url=XML_URL, base_metadata={"doi": DOI}
+        )
+        generic_extraction = parse_jats_xml(
+            _xml_fixture(), source_url=XML_URL, base_metadata={"doi": DOI}
+        )
 
         self.assertIsNotNone(extraction)
         assert extraction is not None
@@ -428,11 +596,17 @@ class CopernicusProviderTests(unittest.TestCase):
         self.assertIn("$$", extraction.markdown_text)
         self.assertIn("| Season | Value |", extraction.markdown_text)
         self.assertNotIn("<article", extraction.markdown_text)
-        self.assertTrue([asset for asset in extraction.assets if asset["kind"] == "figure"])
-        self.assertTrue([asset for asset in extraction.assets if asset["kind"] == "supplementary"])
+        self.assertTrue(
+            [asset for asset in extraction.assets if asset["kind"] == "figure"]
+        )
+        self.assertTrue(
+            [asset for asset in extraction.assets if asset["kind"] == "supplementary"]
+        )
         self.assertEqual(extraction.references[0]["doi"], "10.1000/example")
         self.assertIn("Data availability", extraction.markdown_text)
-        table_assets = [asset for asset in extraction.assets if asset["kind"] == "table"]
+        table_assets = [
+            asset for asset in extraction.assets if asset["kind"] == "table"
+        ]
         self.assertTrue(table_assets)
         self.assertEqual(table_assets[0]["table_render_kind"], "structured")
 

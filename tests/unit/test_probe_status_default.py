@@ -42,7 +42,9 @@ def _install_catalog(monkeypatch: Any, catalog: ProviderSpec) -> None:
         assert name == catalog.name
         return bundle
 
-    monkeypatch.setattr("paper_fetch.providers._registry.provider_bundle", fake_provider_bundle)
+    monkeypatch.setattr(
+        "paper_fetch.providers._registry.provider_bundle", fake_provider_bundle
+    )
 
 
 def _client(catalog: ProviderSpec, env: dict[str, str] | None = None) -> ProviderClient:
@@ -112,7 +114,9 @@ def test_default_probe_status_checks_playwright_requirement(monkeypatch: Any) ->
         find_spec_calls.append(name)
         return importlib.machinery.ModuleSpec(name, loader=None)
 
-    monkeypatch.setattr("paper_fetch.providers.base.importlib.util.find_spec", fake_find_spec)
+    monkeypatch.setattr(
+        "paper_fetch.providers.base.importlib.util.find_spec", fake_find_spec
+    )
     monkeypatch.setattr(_cloakbrowser, "_dependency_available", lambda: True)
 
     result = _client(
@@ -126,7 +130,9 @@ def test_default_probe_status_checks_playwright_requirement(monkeypatch: Any) ->
     assert find_spec_calls == ["playwright.sync_api", "playwright", "cloakbrowser"]
 
 
-def test_default_probe_status_checks_browser_runtime_without_launch(monkeypatch: Any) -> None:
+def test_default_probe_status_checks_browser_runtime_without_launch(
+    monkeypatch: Any,
+) -> None:
     catalog = _catalog(
         "s10_browser_runtime",
         requires_browser_runtime=True,

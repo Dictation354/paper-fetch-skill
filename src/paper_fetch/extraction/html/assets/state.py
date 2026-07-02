@@ -91,7 +91,9 @@ def resolve_asset_downloads_in_order(
 ) -> list[AssetDownloadResolution | None]:
     if not work_items:
         return []
-    max_workers = asset_download_worker_count(len(work_items), asset_download_concurrency)
+    max_workers = asset_download_worker_count(
+        len(work_items), asset_download_concurrency
+    )
     if max_workers <= 1 and not force_worker_thread:
         return [resolver(item) for item in work_items]
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
@@ -102,7 +104,9 @@ def resolve_asset_downloads_in_order(
 def collect_downloads_from_resolutions(
     resolutions: list[AssetDownloadResolution | None],
     *,
-    saver: Callable[[AssetDownloadResolution], dict[str, Any] | AssetDownloadFailure | None],
+    saver: Callable[
+        [AssetDownloadResolution], dict[str, Any] | AssetDownloadFailure | None
+    ],
 ) -> dict[str, list[dict[str, Any]]]:
     downloads: list[dict[str, Any]] = []
     failures: list[dict[str, Any]] = []

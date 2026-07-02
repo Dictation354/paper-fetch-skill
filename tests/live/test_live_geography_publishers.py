@@ -21,7 +21,9 @@ class LiveGeographyPublisherReportTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         if not RUN_LIVE:
-            raise unittest.SkipTest("Set PAPER_FETCH_RUN_LIVE=1 to run geography live report tests.")
+            raise unittest.SkipTest(
+                "Set PAPER_FETCH_RUN_LIVE=1 to run geography live report tests."
+            )
         cls.tempdir = tempfile.TemporaryDirectory()
         cls.json_path = Path(cls.tempdir.name) / "geography-live-report.json"
         cls.markdown_path = Path(cls.tempdir.name) / "geography-live-report.md"
@@ -39,10 +41,14 @@ class LiveGeographyPublisherReportTests(unittest.TestCase):
     def test_report_attempts_ten_samples_per_provider(self) -> None:
         self.assertEqual(self.report.total_attempts, 50)
         counts = {
-            provider: sum(1 for item in self.report.results if item.provider == provider)
+            provider: sum(
+                1 for item in self.report.results if item.provider == provider
+            )
             for provider in GEOGRAPHY_PROVIDER_ORDER
         }
-        self.assertEqual(counts, {provider: 10 for provider in GEOGRAPHY_PROVIDER_ORDER})
+        self.assertEqual(
+            counts, {provider: 10 for provider in GEOGRAPHY_PROVIDER_ORDER}
+        )
 
     def test_report_results_use_known_statuses_and_required_fields(self) -> None:
         allowed_statuses = set(GEOGRAPHY_RESULT_STATUSES)

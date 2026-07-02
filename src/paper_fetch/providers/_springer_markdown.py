@@ -81,6 +81,7 @@ def extract_html_payload(
         "references": extracted_references,
     }
 
+
 __all__ = [
     "_remove_springer_ai_alt_disclaimers",
     "clean_markdown",

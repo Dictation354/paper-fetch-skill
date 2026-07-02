@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import re
+import urllib.parse
+
 from ..extraction.html.availability_policy import AvailabilityPolicy
 from ..extraction.html.provider_rules import (
     AMS_DOM_POSTPROCESS_CLEANUP_SELECTORS,
@@ -93,15 +96,77 @@ AMS_BROWSER_PROFILE = browser_workflow.make_atypon_browser_profile(
     fallback_author_extractor=_ams_html.extract_authors,
     direct_http_html_preflight=True,
 )
+AMS_SICI_DOI_PATTERN = re.compile(
+    r"^10\.1175/[0-9]{4}-[0-9]{4}\(\d{4}\)\d{3}<[^>]+>2\.0\.co;2$",
+    flags=re.IGNORECASE,
+)
+
+
+def _append_unique(candidates: list[str], candidate: str | None) -> None:
+    normalized = normalize_text(candidate)
+    if normalized and normalized not in candidates:
+        candidates.append(normalized)
+
+
+def _ams_pdf_candidates_from_landing_url(landing_page_url: str | None) -> list[str]:
+    normalized = normalize_text(landing_page_url)
+    if not normalized:
+        return []
+    parsed = urllib.parse.urlparse(normalized)
+    hostname = normalize_text(parsed.hostname).lower()
+    if parsed.scheme not in {"http", "https"} or not (
+        hostname == "journals.ametsoc.org" or hostname.endswith(".journals.ametsoc.org")
+    ):
+        return []
+
+    candidates: list[str] = []
+    lowered_path = parsed.path.lower()
+    if "/downloadpdf/" in lowered_path:
+        _append_unique(candidates, normalized)
+    if lowered_path.startswith("/view/") and lowered_path.endswith(".xml"):
+        pdf_path = f"/downloadpdf{parsed.path[:-4]}.pdf"
+        _append_unique(
+            candidates,
+            urllib.parse.urlunparse(
+                (parsed.scheme, parsed.netloc, pdf_path, "", parsed.query, "")
+            ),
+        )
+    return candidates
+
+
+def _ams_old_style_doi_url(doi: str) -> str | None:
+    normalized = normalize_text(doi)
+    if not AMS_SICI_DOI_PATTERN.match(normalized):
+        return None
+    return f"https://doi.org/{urllib.parse.quote(normalized, safe='/')}"
 
 
 class AmsClient(browser_workflow.BrowserWorkflowClient):
     name = AMS_BROWSER_PROFILE.name
     profile = AMS_BROWSER_PROFILE
 
+    def html_candidates(self, doi: str, metadata):
+        candidates: list[str] = []
+        for candidate in super().html_candidates(doi, metadata):
+            _append_unique(candidates, candidate)
+        _append_unique(candidates, _ams_old_style_doi_url(doi))
+        return candidates
+
+    def pdf_candidates(self, doi: str, metadata):
+        candidates: list[str] = []
+        for candidate in _ams_pdf_candidates_from_landing_url(
+            metadata.get("landing_page_url")
+        ):
+            _append_unique(candidates, candidate)
+        for candidate in super().pdf_candidates(doi, metadata):
+            _append_unique(candidates, candidate)
+        return candidates
+
     def article_source_for_payload(self, raw_payload: RawFulltextPayload) -> str:
         content = raw_payload.content
-        route = normalize_text(content.route_kind if content is not None else "").lower()
+        route = normalize_text(
+            content.route_kind if content is not None else ""
+        ).lower()
         if route == PDF_FALLBACK:
             return "ams_pdf"
         return "ams_html"

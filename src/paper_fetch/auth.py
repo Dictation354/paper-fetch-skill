@@ -88,9 +88,7 @@ class AuthResult:
 
 def browser_auth_provider_names() -> tuple[str, ...]:
     return tuple(
-        spec.name
-        for spec in ordered_provider_specs()
-        if spec.requires_browser_runtime
+        spec.name for spec in ordered_provider_specs() if spec.requires_browser_runtime
     )
 
 
@@ -107,7 +105,9 @@ def _require_browser_auth_provider(provider: str) -> str:
     return provider_key
 
 
-def _auth_target_for_provider(provider_key: str, *, target_url: str | None) -> AuthTarget:
+def _auth_target_for_provider(
+    provider_key: str, *, target_url: str | None
+) -> AuthTarget:
     auth_target = AUTH_TARGETS.get(provider_key)
     if auth_target is not None:
         return auth_target
@@ -133,7 +133,9 @@ def _dotenv_quote(value: str) -> str:
 
 def upsert_env_file(path: Path, values: Mapping[str, str]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    existing_lines = path.read_text(encoding="utf-8").splitlines() if path.exists() else []
+    existing_lines = (
+        path.read_text(encoding="utf-8").splitlines() if path.exists() else []
+    )
     pending = dict(values)
     output_lines: list[str] = []
     assignment_pattern = re.compile(r"^(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=")
@@ -273,7 +275,7 @@ def authenticate_provider_profile(
             **browser_context_options(
                 user_agent=normalize_text(runtime.user_agent),
                 **_cloakbrowser._storage_context_options(runtime),
-            )
+            ),
         )
         page = context.new_page()
         page.goto(active_url, wait_until="domcontentloaded", timeout=runtime.timeout_ms)
@@ -298,7 +300,9 @@ def authenticate_provider_profile(
         raise
     except Exception as exc:
         message = normalize_text(str(exc)) or exc.__class__.__name__
-        raise ProviderFailure(ERROR, f"{provider_label} authentication failed: {message}") from exc
+        raise ProviderFailure(
+            ERROR, f"{provider_label} authentication failed: {message}"
+        ) from exc
     finally:
         for value in (page, context, manager):
             try:

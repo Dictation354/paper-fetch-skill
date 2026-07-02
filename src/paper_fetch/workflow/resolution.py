@@ -18,4 +18,6 @@ def resolve_paper(
     context: RuntimeContext | None = None,
 ) -> ResolvedQuery:
     runtime = resolve_runtime_context(context, env=env, transport=transport)
-    return resolve_query(query, transport=runtime.transport, env=runtime.env or build_runtime_env())
+    return resolve_query(
+        query, transport=runtime.transport, env=runtime.env or build_runtime_env()
+    )

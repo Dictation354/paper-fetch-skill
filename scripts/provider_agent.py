@@ -55,7 +55,9 @@ def _output_dir(provider: str, value: str | None) -> str:
     return value or DEFAULT_OUTPUT_DIR_TEMPLATE.format(provider=provider)
 
 
-def _capture_call(func: Callable[[argparse.Namespace], int], args: argparse.Namespace) -> coordinator.ToolError | None:
+def _capture_call(
+    func: Callable[[argparse.Namespace], int], args: argparse.Namespace
+) -> coordinator.ToolError | None:
     buffer = io.StringIO()
     try:
         with redirect_stdout(buffer):
@@ -174,7 +176,9 @@ def _run_until(
 
 
 def _provider_state(provider: str, state: dict[str, Any]) -> dict[str, Any] | None:
-    providers = state.get("providers") if isinstance(state.get("providers"), dict) else {}
+    providers = (
+        state.get("providers") if isinstance(state.get("providers"), dict) else {}
+    )
     value = providers.get(provider) if isinstance(providers, dict) else None
     return value if isinstance(value, dict) else None
 
@@ -255,7 +259,10 @@ def cmd_continue(args: argparse.Namespace) -> int:
 
     access = _access_review_summary(provider)
     if access.get("approved"):
-        if isinstance(provider_state, dict) and provider_state.get("status") == "blocked":
+        if (
+            isinstance(provider_state, dict)
+            and provider_state.get("status") == "blocked"
+        ):
             resume_plan = coordinator.plan_resume_blocked(provider_state)
             if resume_plan.get("resumable"):
                 error = _capture_call(
@@ -309,7 +316,8 @@ def cmd_doctor(args: argparse.Namespace) -> int:
     provider_state = _provider_state(provider, state)
     resume_plan = (
         coordinator.plan_resume_blocked(provider_state)
-        if isinstance(provider_state, dict) and provider_state.get("status") == "blocked"
+        if isinstance(provider_state, dict)
+        and provider_state.get("status") == "blocked"
         else None
     )
     payload = _build_summary(
@@ -353,13 +361,17 @@ def build_parser() -> argparse.ArgumentParser:
             help="coordinator state JSON path",
         )
 
-    add = subparsers.add_parser("add", help="add a provider from natural-language seeds")
+    add = subparsers.add_parser(
+        "add", help="add a provider from natural-language seeds"
+    )
     add_common(add)
     add.add_argument("--domain", help="provider domain seed")
     add.add_argument("--doi-prefix", help="optional DOI prefix seed")
     add.set_defaults(func=cmd_add)
 
-    cont = subparsers.add_parser("continue", help="continue an existing provider onboarding")
+    cont = subparsers.add_parser(
+        "continue", help="continue an existing provider onboarding"
+    )
     add_common(cont)
     cont.set_defaults(func=cmd_continue)
 
@@ -367,7 +379,9 @@ def build_parser() -> argparse.ArgumentParser:
     add_common(status)
     status.set_defaults(func=cmd_status)
 
-    doctor = subparsers.add_parser("doctor", help="diagnose why provider onboarding is stuck")
+    doctor = subparsers.add_parser(
+        "doctor", help="diagnose why provider onboarding is stuck"
+    )
     add_common(doctor)
     doctor.set_defaults(func=cmd_doctor)
     return parser
@@ -379,8 +393,12 @@ def main(argv: list[str] | None = None) -> int:
     try:
         return int(args.func(args))
     except coordinator.ToolError as exc:
-        provider = _provider_slug(getattr(args, "provider", "") or exc.provider or "unknown")
-        target = coordinator.normalize_agent_target(getattr(args, "target", "local-ready"))
+        provider = _provider_slug(
+            getattr(args, "provider", "") or exc.provider or "unknown"
+        )
+        target = coordinator.normalize_agent_target(
+            getattr(args, "target", "local-ready")
+        )
         state_path = _state_path(getattr(args, "state", coordinator.DEFAULT_STATE_PATH))
         payload = _build_summary(
             provider=provider,

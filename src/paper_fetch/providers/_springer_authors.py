@@ -86,9 +86,7 @@ def _extract_jsonld_authors(html_text: str) -> list[str]:
 
 def _node_author_text(node: Any) -> str:
     return (
-        normalize_text(node.get_text(" ", strip=True))
-        if isinstance(node, Tag)
-        else ""
+        normalize_text(node.get_text(" ", strip=True)) if isinstance(node, Tag) else ""
     )
 
 

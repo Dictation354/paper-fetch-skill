@@ -766,8 +766,11 @@ def _build_royalsocietypublishing_article(fixture: GoldenCorpusFixture):
             merged_metadata=extraction.metadata,
             diagnostics={
                 "extraction": {
+                    "metadata": extraction.metadata,
                     "abstract_sections": extraction.abstract_sections,
                     "section_hints": extraction.section_hints,
+                    "references": extraction.metadata.get("references", []),
+                    "extracted_assets": extraction.extracted_assets,
                 }
             },
             reason="Loaded Royal Society Publishing real HTML fixture.",
@@ -776,7 +779,11 @@ def _build_royalsocietypublishing_article(fixture: GoldenCorpusFixture):
         trace=trace_from_markers(["fulltext:royalsocietypublishing_html_ok"]),
         merged_metadata=extraction.metadata,
     )
-    return client.to_article_model(extraction.metadata, raw_payload)
+    return client.to_article_model(
+        extraction.metadata,
+        raw_payload,
+        downloaded_assets=extraction.extracted_assets,
+    )
 
 
 def _build_plos_article(fixture: GoldenCorpusFixture):

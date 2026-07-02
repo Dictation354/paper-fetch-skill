@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import replace
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 from collections.abc import Callable, Mapping
 
 from ...extraction.html.signals import HtmlExtractionFailure
@@ -13,9 +13,15 @@ from ...models import (
     coerce_asset_failure_diagnostics,
     metadata_only_article,
 )
+from ...models.schema import SourceKind
 from ...publisher_identity import normalize_doi
 from ...runtime import RuntimeContext
-from ...tracing import fulltext_marker, merge_trace, source_trail_from_trace, trace_from_markers
+from ...tracing import (
+    fulltext_marker,
+    merge_trace,
+    source_trail_from_trace,
+    trace_from_markers,
+)
 from ...utils import dedupe_authors, extend_unique, normalize_text
 from ...reason_codes import ABSTRACT_ONLY, PDF_FALLBACK
 from .html_extraction import (
@@ -144,8 +150,9 @@ def browser_workflow_article_from_payload(
     trace = list(raw_payload.trace)
     doi = normalize_doi(metadata.get("doi"))
     source = client.article_source_for_payload(raw_payload)
+    source_kind = cast(SourceKind, source)
     route = normalize_text(content.route_kind if content is not None else "").lower()
-    assets = (
+    assets: list[Mapping[str, Any]] = (
         list(content.extracted_assets if content is not None else [])
         if route == PDF_FALLBACK
         else list(downloaded_assets or [])
@@ -189,11 +196,16 @@ def browser_workflow_article_from_payload(
     if not markdown_text:
         warnings.append(f"{client.name} retrieval did not produce usable markdown.")
         return metadata_only_article(
-            source=source,
+            source=source_kind,
             metadata=metadata,
             doi=doi or None,
             warnings=warnings,
-            trace=[*trace, *trace_from_markers([fulltext_marker(client.name, "fail", route="parse")])],
+            trace=[
+                *trace,
+                *trace_from_markers(
+                    [fulltext_marker(client.name, "fail", route="parse")]
+                ),
+            ],
         )
     if asset_failures and getattr(client, "article_asset_failure_warning", True):
         warnings.append(
@@ -240,19 +252,27 @@ def browser_workflow_article_from_payload(
         article_metadata["references"] = extracted_references
     if extracted_abstract:
         lead_body = _leading_body_after_abstract(
-            article_metadata.get("abstract"), extracted_abstract
+            normalize_text(str(article_metadata.get("abstract") or "")) or None,
+            extracted_abstract,
         )
         article_metadata["abstract"] = extracted_abstract
         markdown_text = _prepend_leading_body_markdown(markdown_text, lead_body)
     if extracted_keywords:
+        existing_keywords = article_metadata.get("keywords")
         keywords = [
             normalize_text(str(item))
-            for item in (article_metadata.get("keywords") or [])
+            for item in (
+                existing_keywords if isinstance(existing_keywords, list | tuple) else []
+            )
             if normalize_text(str(item))
         ]
         extend_unique(
             keywords,
-            [normalize_text(str(item)) for item in extracted_keywords if normalize_text(str(item))],
+            [
+                normalize_text(str(item))
+                for item in extracted_keywords
+                if normalize_text(str(item))
+            ],
         )
         article_metadata["keywords"] = keywords
     availability_diagnostics = (
@@ -263,7 +283,7 @@ def browser_workflow_article_from_payload(
     )
 
     article = article_from_markdown(
-        source=source,
+        source=source_kind,
         metadata=article_metadata,
         doi=doi or None,
         markdown_text=markdown_text,

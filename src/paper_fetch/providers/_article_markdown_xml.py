@@ -34,7 +34,9 @@ def first_descendant(element: ET.Element | None, local_name: str) -> ET.Element 
     return None
 
 
-def render_literal_inline_text(element: ET.Element | None, *, skip_local_names: set[str] | None = None) -> str:
+def render_literal_inline_text(
+    element: ET.Element | None, *, skip_local_names: set[str] | None = None
+) -> str:
     if element is None:
         return ""
     skip_names = skip_local_names or set()
@@ -54,13 +56,21 @@ def render_literal_inline_text(element: ET.Element | None, *, skip_local_names: 
                     parts.append(child.tail)
                 continue
             if local_name == "sup":
-                parts.append(f"<sup>{render_literal_inline_text(child, skip_local_names=skip_names)}</sup>")
+                parts.append(
+                    f"<sup>{render_literal_inline_text(child, skip_local_names=skip_names)}</sup>"
+                )
             elif local_name == "sub":
-                parts.append(f"<sub>{render_literal_inline_text(child, skip_local_names=skip_names)}</sub>")
+                parts.append(
+                    f"<sub>{render_literal_inline_text(child, skip_local_names=skip_names)}</sub>"
+                )
             elif local_name == "bold":
-                parts.append(f"**{render_literal_inline_text(child, skip_local_names=skip_names)}**")
+                parts.append(
+                    f"**{render_literal_inline_text(child, skip_local_names=skip_names)}**"
+                )
             elif local_name == "italic":
-                parts.append(f"*{render_literal_inline_text(child, skip_local_names=skip_names)}*")
+                parts.append(
+                    f"*{render_literal_inline_text(child, skip_local_names=skip_names)}*"
+                )
             elif local_name in {"break", "br"}:
                 parts.append("\n")
             else:

@@ -29,7 +29,14 @@ warnings.filterwarnings(
 
 
 class FakeHTTPResponse:
-    def __init__(self, body: bytes, url: str, *, status: int = 200, headers: dict[str, str] | None = None) -> None:
+    def __init__(
+        self,
+        body: bytes,
+        url: str,
+        *,
+        status: int = 200,
+        headers: dict[str, str] | None = None,
+    ) -> None:
         self._stream = io.BytesIO(body)
         self._url = url
         self.status = status
@@ -67,7 +74,9 @@ class FakeHTTPError(urllib.error.HTTPError):
         return payload
 
 
-def build_http_error(url: str, *, status: int, headers: dict[str, str] | None = None, body: bytes = b"") -> urllib.error.HTTPError:
+def build_http_error(
+    url: str, *, status: int, headers: dict[str, str] | None = None, body: bytes = b""
+) -> urllib.error.HTTPError:
     return FakeHTTPError(url, status, f"HTTP {status}", headers or {}, io.BytesIO(body))
 
 
@@ -76,16 +85,24 @@ def lower_header_map(headers: dict[str, str]) -> dict[str, str]:
 
 
 class HttpTransportCacheTests(unittest.TestCase):
-    def test_runtime_metadata_cache_ttl_defaults_to_one_day_and_allows_env_override(self) -> None:
+    def test_runtime_metadata_cache_ttl_defaults_to_one_day_and_allows_env_override(
+        self,
+    ) -> None:
         default_context = RuntimeContext(env={})
-        disabled_context = RuntimeContext(env={"PAPER_FETCH_HTTP_METADATA_CACHE_TTL": "0"})
-        short_context = RuntimeContext(env={"PAPER_FETCH_HTTP_METADATA_CACHE_TTL": "30"})
+        disabled_context = RuntimeContext(
+            env={"PAPER_FETCH_HTTP_METADATA_CACHE_TTL": "0"}
+        )
+        short_context = RuntimeContext(
+            env={"PAPER_FETCH_HTTP_METADATA_CACHE_TTL": "30"}
+        )
 
         self.assertEqual(default_context.transport.metadata_cache_ttl, 86400)
         self.assertEqual(disabled_context.transport.metadata_cache_ttl, 0)
         self.assertEqual(short_context.transport.metadata_cache_ttl, 30)
 
-    def test_runtime_http_disk_cache_limits_have_defaults_and_env_overrides(self) -> None:
+    def test_runtime_http_disk_cache_limits_have_defaults_and_env_overrides(
+        self,
+    ) -> None:
         default_context = RuntimeContext(env={})
         overridden_context = RuntimeContext(
             env={
@@ -95,26 +112,41 @@ class HttpTransportCacheTests(unittest.TestCase):
             }
         )
 
-        self.assertEqual(default_context.transport.disk_cache_max_entries, http_module.DEFAULT_DISK_CACHE_MAX_ENTRIES)
-        self.assertEqual(default_context.transport.disk_cache_max_bytes, http_module.DEFAULT_DISK_CACHE_MAX_BYTES)
+        self.assertEqual(
+            default_context.transport.disk_cache_max_entries,
+            http_module.DEFAULT_DISK_CACHE_MAX_ENTRIES,
+        )
+        self.assertEqual(
+            default_context.transport.disk_cache_max_bytes,
+            http_module.DEFAULT_DISK_CACHE_MAX_BYTES,
+        )
         self.assertEqual(
             default_context.transport.disk_cache_max_age_seconds,
             http_module.DEFAULT_DISK_CACHE_MAX_AGE_SECONDS,
         )
         self.assertEqual(overridden_context.transport.disk_cache_max_entries, 12)
         self.assertEqual(overridden_context.transport.disk_cache_max_bytes, 3456)
-        self.assertEqual(overridden_context.transport.disk_cache_max_age_seconds, 2 * 24 * 60 * 60)
+        self.assertEqual(
+            overridden_context.transport.disk_cache_max_age_seconds, 2 * 24 * 60 * 60
+        )
 
-    def test_runtime_markdown_assets_artifact_mode_disables_download_dir_http_cache(self) -> None:
+    def test_runtime_markdown_assets_artifact_mode_disables_download_dir_http_cache(
+        self,
+    ) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
-            all_context = RuntimeContext(env={}, download_dir=Path(tmpdir), artifact_mode="all")
+            all_context = RuntimeContext(
+                env={}, download_dir=Path(tmpdir), artifact_mode="all"
+            )
             markdown_assets_context = RuntimeContext(
                 env={},
                 download_dir=Path(tmpdir),
                 artifact_mode="markdown-assets",
             )
 
-        self.assertEqual(all_context.transport.disk_cache_dir, Path(tmpdir) / ".paper-fetch-http-cache")
+        self.assertEqual(
+            all_context.transport.disk_cache_dir,
+            Path(tmpdir) / ".paper-fetch-http-cache",
+        )
         self.assertIsNone(markdown_assets_context.transport.disk_cache_dir)
 
     def test_disk_cache_key_redacts_crossref_mailto_query_param(self) -> None:
@@ -134,17 +166,23 @@ class HttpTransportCacheTests(unittest.TestCase):
                 return FakeHTTPResponse(
                     b'{"message":{"DOI":"10.1234/example"}}',
                     request.full_url,
-                    headers={"content-type": "application/vnd.crossref-api-message+json"},
+                    headers={
+                        "content-type": "application/vnd.crossref-api-message+json"
+                    },
                 )
 
-            with mock.patch.object(first_transport, "_perform_request", side_effect=fake_urlopen):
+            with mock.patch.object(
+                first_transport, "_perform_request", side_effect=fake_urlopen
+            ):
                 first_transport.request(
                     "GET",
                     "https://api.crossref.org/works/10.1234%2Fexample",
                     headers={"Accept": "application/json"},
                     query={"mailto": "alice@example.test"},
                 )
-            with mock.patch.object(second_transport, "_perform_request") as mocked_request:
+            with mock.patch.object(
+                second_transport, "_perform_request"
+            ) as mocked_request:
                 response = second_transport.request(
                     "GET",
                     "https://api.crossref.org/works/10.1234%2Fexample",
@@ -155,9 +193,17 @@ class HttpTransportCacheTests(unittest.TestCase):
         self.assertEqual(response["body"], b'{"message":{"DOI":"10.1234/example"}}')
         mocked_request.assert_not_called()
 
-    def test_vendor_json_and_xml_content_types_are_cacheable_textual_payloads(self) -> None:
-        self.assertTrue(http_module.is_textual_content_type("application/vnd.crossref-api-message+json"))
-        self.assertTrue(http_module.is_textual_content_type("application/vnd.crossref.unixsd+xml"))
+    def test_vendor_json_and_xml_content_types_are_cacheable_textual_payloads(
+        self,
+    ) -> None:
+        self.assertTrue(
+            http_module.is_textual_content_type(
+                "application/vnd.crossref-api-message+json"
+            )
+        )
+        self.assertTrue(
+            http_module.is_textual_content_type("application/vnd.crossref.unixsd+xml")
+        )
 
     def test_get_requests_hit_in_memory_cache_for_same_url_and_headers(self) -> None:
         transport = http_module.HttpTransport(cache_ttl=30, cache_capacity=128)
@@ -169,8 +215,12 @@ class HttpTransportCacheTests(unittest.TestCase):
             return FakeHTTPResponse(b"ok", request.full_url)
 
         with mock.patch.object(transport, "_perform_request", side_effect=fake_urlopen):
-            first = transport.request("GET", "https://example.test/article", headers={"Accept": "text/plain"})
-            second = transport.request("GET", "https://example.test/article", headers={"Accept": "text/plain"})
+            first = transport.request(
+                "GET", "https://example.test/article", headers={"Accept": "text/plain"}
+            )
+            second = transport.request(
+                "GET", "https://example.test/article", headers={"Accept": "text/plain"}
+            )
 
         self.assertEqual(call_count, 1)
         self.assertEqual(first["body"], b"ok")
@@ -180,12 +230,20 @@ class HttpTransportCacheTests(unittest.TestCase):
         transport = http_module.HttpTransport(cache_ttl=30, cache_capacity=128)
 
         def fake_urlopen(request, timeout=20):
-            return FakeHTTPResponse(b"ok", request.full_url, headers={"content-type": "text/plain"})
+            return FakeHTTPResponse(
+                b"ok", request.full_url, headers={"content-type": "text/plain"}
+            )
 
         with mock.patch.object(transport, "_perform_request", side_effect=fake_urlopen):
-            transport.request("GET", "https://example.test/article", headers={"Accept": "text/plain"})
-            transport.request("GET", "https://example.test/article", headers={"Accept": "text/plain"})
-            transport.request("POST", "https://example.test/article", headers={"Accept": "text/plain"})
+            transport.request(
+                "GET", "https://example.test/article", headers={"Accept": "text/plain"}
+            )
+            transport.request(
+                "GET", "https://example.test/article", headers={"Accept": "text/plain"}
+            )
+            transport.request(
+                "POST", "https://example.test/article", headers={"Accept": "text/plain"}
+            )
 
         stats = transport.cache_stats_snapshot()
         self.assertEqual(stats["miss"], 1)
@@ -205,14 +263,30 @@ class HttpTransportCacheTests(unittest.TestCase):
             call_count += 1
             return FakeHTTPResponse(f"ok-{call_count}".encode(), request.full_url)
 
-        with mock.patch.object(http_module.time, "monotonic", side_effect=fake_monotonic):
+        with mock.patch.object(
+            http_module.time, "monotonic", side_effect=fake_monotonic
+        ):
             transport = http_module.HttpTransport(cache_ttl=1, cache_capacity=128)
-            with mock.patch.object(transport, "_perform_request", side_effect=fake_urlopen):
-                first = transport.request("GET", "https://example.test/article", headers={"Accept": "text/plain"})
+            with mock.patch.object(
+                transport, "_perform_request", side_effect=fake_urlopen
+            ):
+                first = transport.request(
+                    "GET",
+                    "https://example.test/article",
+                    headers={"Accept": "text/plain"},
+                )
                 now = 100.5
-                second = transport.request("GET", "https://example.test/article", headers={"Accept": "text/plain"})
+                second = transport.request(
+                    "GET",
+                    "https://example.test/article",
+                    headers={"Accept": "text/plain"},
+                )
                 now = 101.1
-                third = transport.request("GET", "https://example.test/article", headers={"Accept": "text/plain"})
+                third = transport.request(
+                    "GET",
+                    "https://example.test/article",
+                    headers={"Accept": "text/plain"},
+                )
 
         self.assertEqual(first["body"], b"ok-1")
         self.assertEqual(second["body"], b"ok-1")
@@ -220,7 +294,9 @@ class HttpTransportCacheTests(unittest.TestCase):
         self.assertEqual(call_count, 2)
 
     def test_cache_capacity_evicts_least_recently_used_entry(self) -> None:
-        transport = http_module.HttpTransport(cache_ttl=30, cache_capacity=2, max_total_cache_bytes=0)
+        transport = http_module.HttpTransport(
+            cache_ttl=30, cache_capacity=2, max_total_cache_bytes=0
+        )
         call_count = 0
 
         def fake_urlopen(request, timeout=20):
@@ -229,22 +305,36 @@ class HttpTransportCacheTests(unittest.TestCase):
             return FakeHTTPResponse(request.full_url.encode("utf-8"), request.full_url)
 
         with mock.patch.object(transport, "_perform_request", side_effect=fake_urlopen):
-            transport.request("GET", "https://example.test/one", headers={"Accept": "text/plain"})
-            transport.request("GET", "https://example.test/two", headers={"Accept": "text/plain"})
-            transport.request("GET", "https://example.test/three", headers={"Accept": "text/plain"})
-            transport.request("GET", "https://example.test/one", headers={"Accept": "text/plain"})
+            transport.request(
+                "GET", "https://example.test/one", headers={"Accept": "text/plain"}
+            )
+            transport.request(
+                "GET", "https://example.test/two", headers={"Accept": "text/plain"}
+            )
+            transport.request(
+                "GET", "https://example.test/three", headers={"Accept": "text/plain"}
+            )
+            transport.request(
+                "GET", "https://example.test/one", headers={"Accept": "text/plain"}
+            )
 
         self.assertEqual(call_count, 4)
         self.assertEqual(len(transport._cache), 2)
 
-    def test_cache_key_redacts_sensitive_query_params_and_digests_sensitive_header_values(self) -> None:
+    def test_cache_key_redacts_sensitive_query_params_and_digests_sensitive_header_values(
+        self,
+    ) -> None:
         transport = http_module.HttpTransport(cache_ttl=30, cache_capacity=128)
         call_count = 0
 
         def fake_urlopen(request, timeout=20):
             nonlocal call_count
             call_count += 1
-            return FakeHTTPResponse(f'{{"call":{call_count}}}'.encode(), request.full_url, headers={"content-type": "application/json"})
+            return FakeHTTPResponse(
+                f'{{"call":{call_count}}}'.encode(),
+                request.full_url,
+                headers={"content-type": "application/json"},
+            )
 
         with mock.patch.object(transport, "_perform_request", side_effect=fake_urlopen):
             first = transport.request(
@@ -288,11 +378,24 @@ class HttpTransportCacheTests(unittest.TestCase):
             self.assertIn(("accept-language", "en-US"), cached_headers)
             self.assertNotIn(("user-agent", "UnitTest/1.0"), cached_headers)
             self.assertFalse(any(key == "x-els-reqid" for key, _ in cached_headers))
-            seen_header_values.update(value for key, value in cached_headers if key == "x-els-apikey")
+            seen_header_values.update(
+                value for key, value in cached_headers if key == "x-els-apikey"
+            )
 
         self.assertEqual(len(seen_header_values), 2)
-        self.assertTrue(all(value.startswith(http_module.REDACTED_CACHE_HEADER_DIGEST_PREFIX) for value in seen_header_values))
-        self.assertFalse(any(secret in value for value in seen_header_values for secret in ["top-secret", "different-secret"]))
+        self.assertTrue(
+            all(
+                value.startswith(http_module.REDACTED_CACHE_HEADER_DIGEST_PREFIX)
+                for value in seen_header_values
+            )
+        )
+        self.assertFalse(
+            any(
+                secret in value
+                for value in seen_header_values
+                for secret in ["top-secret", "different-secret"]
+            )
+        )
 
     def test_sensitive_authorization_values_do_not_share_memory_cache(self) -> None:
         transport = http_module.HttpTransport(cache_ttl=30, cache_capacity=128)
@@ -316,7 +419,10 @@ class HttpTransportCacheTests(unittest.TestCase):
             second = transport.request(
                 "GET",
                 "https://example.test/article",
-                headers={"Accept": "text/plain", "Authorization": "Bearer second-token"},
+                headers={
+                    "Accept": "text/plain",
+                    "Authorization": "Bearer second-token",
+                },
             )
             first_again = transport.request(
                 "GET",
@@ -334,7 +440,9 @@ class HttpTransportCacheTests(unittest.TestCase):
         self.assertNotIn("second-token", rendered_keys)
         self.assertNotIn("Bearer", rendered_keys)
 
-    def test_sensitive_header_values_do_not_share_disk_cache_or_leak_to_payload(self) -> None:
+    def test_sensitive_header_values_do_not_share_disk_cache_or_leak_to_payload(
+        self,
+    ) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             first_transport = http_module.HttpTransport(
                 cache_ttl=30,
@@ -360,39 +468,65 @@ class HttpTransportCacheTests(unittest.TestCase):
             with mock.patch.object(
                 first_transport,
                 "_perform_request",
-                return_value=FakeHTTPResponse(b"payload-for-first", "https://example.test/article", headers={"content-type": "text/plain"}),
+                return_value=FakeHTTPResponse(
+                    b"payload-for-first",
+                    "https://example.test/article",
+                    headers={"content-type": "text/plain"},
+                ),
             ):
                 first_transport.request(
                     "GET",
                     "https://example.test/article",
-                    headers={"Accept": "text/plain", "X-ELS-APIKey": "els-first-secret"},
+                    headers={
+                        "Accept": "text/plain",
+                        "X-ELS-APIKey": "els-first-secret",
+                    },
                 )
             with mock.patch.object(
                 second_transport,
                 "_perform_request",
-                return_value=FakeHTTPResponse(b"payload-for-second", "https://example.test/article", headers={"content-type": "text/plain"}),
+                return_value=FakeHTTPResponse(
+                    b"payload-for-second",
+                    "https://example.test/article",
+                    headers={"content-type": "text/plain"},
+                ),
             ):
                 second_transport.request(
                     "GET",
                     "https://example.test/article",
-                    headers={"Accept": "text/plain", "X-ELS-APIKey": "els-second-secret"},
+                    headers={
+                        "Accept": "text/plain",
+                        "X-ELS-APIKey": "els-second-secret",
+                    },
                 )
-            with mock.patch.object(first_reader, "_perform_request") as mocked_first_request:
+            with mock.patch.object(
+                first_reader, "_perform_request"
+            ) as mocked_first_request:
                 first = first_reader.request(
                     "GET",
                     "https://example.test/article",
-                    headers={"Accept": "text/plain", "X-ELS-APIKey": "els-first-secret"},
+                    headers={
+                        "Accept": "text/plain",
+                        "X-ELS-APIKey": "els-first-secret",
+                    },
                 )
-            with mock.patch.object(second_reader, "_perform_request") as mocked_second_request:
+            with mock.patch.object(
+                second_reader, "_perform_request"
+            ) as mocked_second_request:
                 second = second_reader.request(
                     "GET",
                     "https://example.test/article",
-                    headers={"Accept": "text/plain", "X-ELS-APIKey": "els-second-secret"},
+                    headers={
+                        "Accept": "text/plain",
+                        "X-ELS-APIKey": "els-second-secret",
+                    },
                 )
 
             disk_files = list(Path(tmpdir).rglob("*.json"))
             rendered_paths = "\n".join(str(path) for path in disk_files)
-            rendered_payloads = "\n".join(path.read_text(encoding="utf-8") for path in disk_files)
+            rendered_payloads = "\n".join(
+                path.read_text(encoding="utf-8") for path in disk_files
+            )
 
         self.assertEqual(first["body"], b"payload-for-first")
         self.assertEqual(second["body"], b"payload-for-second")
@@ -416,12 +550,19 @@ class HttpTransportCacheTests(unittest.TestCase):
             with mock.patch.object(
                 transport,
                 "_perform_request",
-                return_value=FakeHTTPResponse(b"ok", "https://example.test/article", headers={"content-type": "text/plain"}),
+                return_value=FakeHTTPResponse(
+                    b"ok",
+                    "https://example.test/article",
+                    headers={"content-type": "text/plain"},
+                ),
             ):
                 transport.request(
                     "GET",
                     "https://example.test/article",
-                    headers={"Accept": "text/plain", "Authorization": "Bearer log-secret-token"},
+                    headers={
+                        "Accept": "text/plain",
+                        "Authorization": "Bearer log-secret-token",
+                    },
                 )
         finally:
             http_logger.removeHandler(handler)
@@ -445,7 +586,11 @@ class HttpTransportCacheTests(unittest.TestCase):
         transport = http_module.HttpTransport(cache_ttl=30, cache_capacity=128)
 
         def fake_urlopen(request, timeout=20):
-            return FakeHTTPResponse(b'{"ok":true}', request.full_url, headers={"content-type": "application/json"})
+            return FakeHTTPResponse(
+                b'{"ok":true}',
+                request.full_url,
+                headers={"content-type": "application/json"},
+            )
 
         with mock.patch.object(transport, "_perform_request", side_effect=fake_urlopen):
             transport.request(
@@ -462,14 +607,20 @@ class HttpTransportCacheTests(unittest.TestCase):
         self.assertIn("api_key=%2A%2A%2A", cached_url)
         self.assertIn("mailto=%2A%2A%2A", cached_url)
 
-    def test_cache_key_distinguishes_accept_language_and_authorization_presence(self) -> None:
+    def test_cache_key_distinguishes_accept_language_and_authorization_presence(
+        self,
+    ) -> None:
         transport = http_module.HttpTransport(cache_ttl=30, cache_capacity=128)
         call_count = 0
 
         def fake_urlopen(request, timeout=20):
             nonlocal call_count
             call_count += 1
-            return FakeHTTPResponse(b'{"ok":true}', request.full_url, headers={"content-type": "application/json"})
+            return FakeHTTPResponse(
+                b'{"ok":true}',
+                request.full_url,
+                headers={"content-type": "application/json"},
+            )
 
         with mock.patch.object(transport, "_perform_request", side_effect=fake_urlopen):
             transport.request(
@@ -485,7 +636,11 @@ class HttpTransportCacheTests(unittest.TestCase):
             transport.request(
                 "GET",
                 "https://example.test/article",
-                headers={"Accept": "application/json", "Accept-Language": "zh-CN", "Authorization": "Bearer secret"},
+                headers={
+                    "Accept": "application/json",
+                    "Accept-Language": "zh-CN",
+                    "Authorization": "Bearer secret",
+                },
             )
 
         self.assertEqual(call_count, 3)
@@ -500,11 +655,17 @@ class HttpTransportCacheTests(unittest.TestCase):
             return FakeHTTPResponse(b"ok", request.full_url)
 
         with mock.patch.object(transport, "_perform_request", side_effect=fake_urlopen):
-            transport.request("GET", "https://example.test/article", headers={"Accept": "text/plain"})
+            transport.request(
+                "GET", "https://example.test/article", headers={"Accept": "text/plain"}
+            )
 
-        self.assertEqual(lower_header_map(captured_headers[0])["accept-encoding"], "gzip")
+        self.assertEqual(
+            lower_header_map(captured_headers[0])["accept-encoding"], "gzip"
+        )
 
-    def test_http_transport_emits_debug_logs_with_url_status_and_elapsed_time(self) -> None:
+    def test_http_transport_emits_debug_logs_with_url_status_and_elapsed_time(
+        self,
+    ) -> None:
         transport = http_module.HttpTransport(cache_ttl=0, cache_capacity=0)
         http_logger = logging.getLogger("paper_fetch.http")
         original_level = http_logger.level
@@ -516,8 +677,14 @@ class HttpTransportCacheTests(unittest.TestCase):
             return FakeHTTPResponse(b"ok", request.full_url)
 
         try:
-            with mock.patch.object(transport, "_perform_request", side_effect=fake_urlopen):
-                transport.request("GET", "https://example.test/article", headers={"Accept": "text/plain"})
+            with mock.patch.object(
+                transport, "_perform_request", side_effect=fake_urlopen
+            ):
+                transport.request(
+                    "GET",
+                    "https://example.test/article",
+                    headers={"Accept": "text/plain"},
+                )
         finally:
             http_logger.removeHandler(handler)
             http_logger.setLevel(original_level)
@@ -573,7 +740,9 @@ class HttpTransportCacheTests(unittest.TestCase):
                 headers={"Accept": "text/plain", "Accept-Encoding": "identity"},
             )
 
-        self.assertEqual(lower_header_map(captured_headers[0])["accept-encoding"], "identity")
+        self.assertEqual(
+            lower_header_map(captured_headers[0])["accept-encoding"], "identity"
+        )
 
     def test_gzip_response_body_is_decompressed_before_returning(self) -> None:
         transport = http_module.HttpTransport(cache_ttl=30, cache_capacity=128)
@@ -587,14 +756,20 @@ class HttpTransportCacheTests(unittest.TestCase):
             )
 
         with mock.patch.object(transport, "_perform_request", side_effect=fake_urlopen):
-            response = transport.request("GET", "https://example.test/article", headers={"Accept": "text/plain"})
-            cached_response = transport.request("GET", "https://example.test/article", headers={"Accept": "text/plain"})
+            response = transport.request(
+                "GET", "https://example.test/article", headers={"Accept": "text/plain"}
+            )
+            cached_response = transport.request(
+                "GET", "https://example.test/article", headers={"Accept": "text/plain"}
+            )
 
         self.assertEqual(response["body"], b"decompressed body")
         self.assertEqual(cached_response["body"], b"decompressed body")
 
     def test_gzip_decompressed_size_limit_is_enforced(self) -> None:
-        transport = http_module.HttpTransport(cache_ttl=0, cache_capacity=0, max_response_bytes=4)
+        transport = http_module.HttpTransport(
+            cache_ttl=0, cache_capacity=0, max_response_bytes=4
+        )
         compressed = gzip.compress(b"abcde")
 
         def fake_urlopen(request, timeout=20):
@@ -606,27 +781,44 @@ class HttpTransportCacheTests(unittest.TestCase):
 
         with mock.patch.object(transport, "_perform_request", side_effect=fake_urlopen):
             with self.assertRaises(http_module.RequestFailure) as context:
-                transport.request("GET", "https://example.test/article", headers={"Accept": "text/plain"})
+                transport.request(
+                    "GET",
+                    "https://example.test/article",
+                    headers={"Accept": "text/plain"},
+                )
 
         self.assertIn("Response body exceeded 4 bytes", str(context.exception))
 
     def test_gzip_compressed_size_limit_is_enforced_before_decompression(self) -> None:
-        transport = http_module.HttpTransport(cache_ttl=0, cache_capacity=0, max_response_bytes=8)
+        transport = http_module.HttpTransport(
+            cache_ttl=0, cache_capacity=0, max_response_bytes=8
+        )
         compressed = gzip.compress(bytes(range(256)) * 2)
-        self.assertGreater(len(compressed), transport.max_response_bytes * http_module.DEFAULT_MAX_COMPRESSED_BODY_MULTIPLIER)
+        self.assertGreater(
+            len(compressed),
+            transport.max_response_bytes
+            * http_module.DEFAULT_MAX_COMPRESSED_BODY_MULTIPLIER,
+        )
 
         def fake_urlopen(request, timeout=20):
             return FakeHTTPResponse(
                 compressed,
                 request.full_url,
-                headers={"content-type": "application/octet-stream", "content-encoding": "gzip"},
+                headers={
+                    "content-type": "application/octet-stream",
+                    "content-encoding": "gzip",
+                },
             )
 
         with mock.patch.object(transport, "_perform_request", side_effect=fake_urlopen):
             with self.assertRaises(http_module.RequestFailure) as context:
-                transport.request("GET", "https://example.test/article", headers={"Accept": "*/*"})
+                transport.request(
+                    "GET", "https://example.test/article", headers={"Accept": "*/*"}
+                )
 
-        self.assertIn("Compressed response body exceeded 64 bytes", str(context.exception))
+        self.assertIn(
+            "Compressed response body exceeded 64 bytes", str(context.exception)
+        )
 
     def test_pdf_payloads_are_not_cached(self) -> None:
         transport = http_module.HttpTransport(cache_ttl=30, cache_capacity=128)
@@ -636,11 +828,17 @@ class HttpTransportCacheTests(unittest.TestCase):
         def fake_urlopen(request, timeout=20):
             nonlocal call_count
             call_count += 1
-            return FakeHTTPResponse(pdf_body, request.full_url, headers={"content-type": "application/pdf"})
+            return FakeHTTPResponse(
+                pdf_body, request.full_url, headers={"content-type": "application/pdf"}
+            )
 
         with mock.patch.object(transport, "_perform_request", side_effect=fake_urlopen):
-            transport.request("GET", "https://example.test/article.pdf", headers={"Accept": "*/*"})
-            transport.request("GET", "https://example.test/article.pdf", headers={"Accept": "*/*"})
+            transport.request(
+                "GET", "https://example.test/article.pdf", headers={"Accept": "*/*"}
+            )
+            transport.request(
+                "GET", "https://example.test/article.pdf", headers={"Accept": "*/*"}
+            )
 
         self.assertEqual(call_count, 2)
         self.assertEqual(len(transport._cache), 0)
@@ -650,24 +848,36 @@ class HttpTransportCacheTests(unittest.TestCase):
         response = FakeHTTPResponse(b"ok", "https://example.test/article")
 
         with mock.patch.object(transport, "_perform_request", return_value=response):
-            payload = transport.request("GET", "https://example.test/article", headers={"Accept": "text/plain"})
+            payload = transport.request(
+                "GET", "https://example.test/article", headers={"Accept": "text/plain"}
+            )
 
         self.assertEqual(payload["body"], b"ok")
         self.assertTrue(response.released)
         self.assertFalse(response.closed)
 
-    def test_oversized_pooled_response_is_closed_without_releasing_connection(self) -> None:
-        transport = http_module.HttpTransport(cache_ttl=0, cache_capacity=0, max_response_bytes=4)
+    def test_oversized_pooled_response_is_closed_without_releasing_connection(
+        self,
+    ) -> None:
+        transport = http_module.HttpTransport(
+            cache_ttl=0, cache_capacity=0, max_response_bytes=4
+        )
         response = FakeHTTPResponse(b"abcde", "https://example.test/article")
 
         with mock.patch.object(transport, "_perform_request", return_value=response):
             with self.assertRaises(http_module.RequestFailure):
-                transport.request("GET", "https://example.test/article", headers={"Accept": "text/plain"})
+                transport.request(
+                    "GET",
+                    "https://example.test/article",
+                    headers={"Accept": "text/plain"},
+                )
 
         self.assertTrue(response.closed)
         self.assertFalse(response.released)
 
-    def test_http_error_response_releases_connection_after_request_failure(self) -> None:
+    def test_http_error_response_releases_connection_after_request_failure(
+        self,
+    ) -> None:
         transport = http_module.HttpTransport(cache_ttl=0, cache_capacity=0)
         response = FakeHTTPResponse(
             b"server error",
@@ -678,7 +888,11 @@ class HttpTransportCacheTests(unittest.TestCase):
 
         with mock.patch.object(transport, "_perform_request", return_value=response):
             with self.assertRaises(http_module.RequestFailure):
-                transport.request("GET", "https://example.test/article", headers={"Accept": "text/plain"})
+                transport.request(
+                    "GET",
+                    "https://example.test/article",
+                    headers={"Accept": "text/plain"},
+                )
 
         self.assertTrue(response.released)
         self.assertFalse(response.closed)
@@ -696,13 +910,23 @@ class HttpTransportCacheTests(unittest.TestCase):
             nonlocal call_count
             call_count += 1
             payload = b"abc" if request.full_url.endswith("/one") else b"de"
-            return FakeHTTPResponse(payload, request.full_url, headers={"content-type": "text/plain"})
+            return FakeHTTPResponse(
+                payload, request.full_url, headers={"content-type": "text/plain"}
+            )
 
         with mock.patch.object(transport, "_perform_request", side_effect=fake_urlopen):
-            first = transport.request("GET", "https://example.test/one", headers={"Accept": "text/plain"})
-            second = transport.request("GET", "https://example.test/two", headers={"Accept": "text/plain"})
-            cached_second = transport.request("GET", "https://example.test/two", headers={"Accept": "text/plain"})
-            third_first = transport.request("GET", "https://example.test/one", headers={"Accept": "text/plain"})
+            first = transport.request(
+                "GET", "https://example.test/one", headers={"Accept": "text/plain"}
+            )
+            second = transport.request(
+                "GET", "https://example.test/two", headers={"Accept": "text/plain"}
+            )
+            cached_second = transport.request(
+                "GET", "https://example.test/two", headers={"Accept": "text/plain"}
+            )
+            third_first = transport.request(
+                "GET", "https://example.test/one", headers={"Accept": "text/plain"}
+            )
 
         self.assertEqual(first["body"], b"abc")
         self.assertEqual(second["body"], b"de")
@@ -713,7 +937,9 @@ class HttpTransportCacheTests(unittest.TestCase):
         self.assertLessEqual(transport._cache_body_bytes, 4)
 
     def test_oversized_response_body_raises_and_is_not_cached(self) -> None:
-        transport = http_module.HttpTransport(cache_ttl=30, cache_capacity=128, max_response_bytes=4)
+        transport = http_module.HttpTransport(
+            cache_ttl=30, cache_capacity=128, max_response_bytes=4
+        )
         call_count = 0
 
         def fake_urlopen(request, timeout=20):
@@ -724,7 +950,11 @@ class HttpTransportCacheTests(unittest.TestCase):
         with mock.patch.object(transport, "_perform_request", side_effect=fake_urlopen):
             for _ in range(2):
                 with self.assertRaises(http_module.RequestFailure) as context:
-                    transport.request("GET", "https://example.test/article", headers={"Accept": "text/plain"})
+                    transport.request(
+                        "GET",
+                        "https://example.test/article",
+                        headers={"Accept": "text/plain"},
+                    )
 
         self.assertEqual(call_count, 2)
         self.assertEqual(len(transport._cache), 0)
@@ -763,7 +993,9 @@ class HttpTransportCacheTests(unittest.TestCase):
         mocked_sleep.assert_called_once_with(1)
         rate_limited_error.close.assert_called_once_with()
 
-    def test_rate_limited_request_without_retry_after_uses_short_fallback_backoff(self) -> None:
+    def test_rate_limited_request_without_retry_after_uses_short_fallback_backoff(
+        self,
+    ) -> None:
         transport = http_module.HttpTransport(cache_ttl=0, cache_capacity=0)
         call_count = 0
         rate_limited_error = build_http_error(
@@ -793,7 +1025,9 @@ class HttpTransportCacheTests(unittest.TestCase):
 
         self.assertEqual(call_count, 2)
         self.assertEqual(response["body"], b"ok")
-        mocked_sleep.assert_called_once_with(http_module.DEFAULT_TRANSIENT_BACKOFF_BASE_SECONDS)
+        mocked_sleep.assert_called_once_with(
+            http_module.DEFAULT_TRANSIENT_BACKOFF_BASE_SECONDS
+        )
         rate_limited_error.close.assert_called_once_with()
 
     def test_transient_http_5xx_is_retried_with_exponential_backoff(self) -> None:
@@ -804,7 +1038,9 @@ class HttpTransportCacheTests(unittest.TestCase):
             nonlocal call_count
             call_count += 1
             if call_count <= 2:
-                raise build_http_error("https://example.test/article", status=503, body=b"transient")
+                raise build_http_error(
+                    "https://example.test/article", status=503, body=b"transient"
+                )
             return FakeHTTPResponse(b"ok", request.full_url)
 
         with mock.patch.object(transport, "_perform_request", side_effect=fake_urlopen):
@@ -828,7 +1064,9 @@ class HttpTransportCacheTests(unittest.TestCase):
             nonlocal call_count
             call_count += 1
             if call_count <= 2:
-                raise urllib3.exceptions.ReadTimeoutError(None, request.full_url, "timed out")
+                raise urllib3.exceptions.ReadTimeoutError(
+                    None, request.full_url, "timed out"
+                )
             return FakeHTTPResponse(b"ok", request.full_url)
 
         with mock.patch.object(transport, "_perform_request", side_effect=fake_urlopen):
@@ -852,7 +1090,9 @@ class HttpTransportCacheTests(unittest.TestCase):
             nonlocal call_count
             call_count += 1
             if call_count <= 2:
-                raise urllib3.exceptions.ProtocolError("conn broken", TimeoutError("timed out"))
+                raise urllib3.exceptions.ProtocolError(
+                    "conn broken", TimeoutError("timed out")
+                )
             return FakeHTTPResponse(b"ok", request.full_url)
 
         with mock.patch.object(transport, "_perform_request", side_effect=fake_urlopen):
@@ -945,7 +1185,9 @@ class HttpTransportCacheTests(unittest.TestCase):
         def fake_urlopen(request, timeout=20):
             nonlocal call_count
             call_count += 1
-            raise urllib3.exceptions.ProtocolError("conn broken", OSError("connection reset"))
+            raise urllib3.exceptions.ProtocolError(
+                "conn broken", OSError("connection reset")
+            )
 
         with mock.patch.object(transport, "_perform_request", side_effect=fake_urlopen):
             with mock.patch.object(http_module.time, "sleep") as mocked_sleep:
@@ -1001,17 +1243,23 @@ class HttpTransportCacheTests(unittest.TestCase):
             with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
                 responses = list(
                     executor.map(
-                        lambda url: transport.request("GET", url, headers={"Accept": "text/plain"}),
+                        lambda url: transport.request(
+                            "GET", url, headers={"Accept": "text/plain"}
+                        ),
                         urls,
                     )
                 )
 
-        self.assertEqual([item["body"] for item in responses], [url.encode("utf-8") for url in urls])
+        self.assertEqual(
+            [item["body"] for item in responses], [url.encode("utf-8") for url in urls]
+        )
         self.assertLessEqual(len(transport._cache), 4)
         self.assertTrue(call_count >= len({*urls}))
 
     def test_same_host_requests_obey_configured_concurrency_limit(self) -> None:
-        transport = http_module.HttpTransport(cache_ttl=0, cache_capacity=0, per_host_concurrency=2)
+        transport = http_module.HttpTransport(
+            cache_ttl=0, cache_capacity=0, per_host_concurrency=2
+        )
         active_by_host: dict[str, int] = {}
         max_active_by_host: dict[str, int] = {}
         global_active = 0
@@ -1023,7 +1271,9 @@ class HttpTransportCacheTests(unittest.TestCase):
             host = urllib.parse.urlparse(request.full_url).hostname or ""
             with lock:
                 active_by_host[host] = active_by_host.get(host, 0) + 1
-                max_active_by_host[host] = max(max_active_by_host.get(host, 0), active_by_host[host])
+                max_active_by_host[host] = max(
+                    max_active_by_host.get(host, 0), active_by_host[host]
+                )
                 global_active += 1
                 max_global_active = max(max_global_active, global_active)
             try:
@@ -1046,7 +1296,14 @@ class HttpTransportCacheTests(unittest.TestCase):
         ]
         with mock.patch.object(transport, "_perform_request", side_effect=fake_urlopen):
             with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
-                list(executor.map(lambda url: transport.request("GET", url, headers={"Accept": "text/plain"}), urls))
+                list(
+                    executor.map(
+                        lambda url: transport.request(
+                            "GET", url, headers={"Accept": "text/plain"}
+                        ),
+                        urls,
+                    )
+                )
 
         self.assertEqual(max_active_by_host["same.test"], 2)
         self.assertGreaterEqual(max_global_active, 2)
@@ -1071,10 +1328,22 @@ class HttpTransportCacheTests(unittest.TestCase):
                     headers={"content-type": "text/plain", "etag": '"v1"'},
                 )
 
-            with mock.patch.object(first_transport, "_perform_request", side_effect=fake_urlopen):
-                first = first_transport.request("GET", "https://example.test/article", headers={"Accept": "text/plain"})
-            with mock.patch.object(second_transport, "_perform_request") as mocked_request:
-                second = second_transport.request("GET", "https://example.test/article", headers={"Accept": "text/plain"})
+            with mock.patch.object(
+                first_transport, "_perform_request", side_effect=fake_urlopen
+            ):
+                first = first_transport.request(
+                    "GET",
+                    "https://example.test/article",
+                    headers={"Accept": "text/plain"},
+                )
+            with mock.patch.object(
+                second_transport, "_perform_request"
+            ) as mocked_request:
+                second = second_transport.request(
+                    "GET",
+                    "https://example.test/article",
+                    headers={"Accept": "text/plain"},
+                )
 
         self.assertEqual(first["body"], b"cached body")
         self.assertEqual(second["body"], b"cached body")
@@ -1105,10 +1374,16 @@ class HttpTransportCacheTests(unittest.TestCase):
                 )
 
             with mock.patch.object(http_module.time, "time", side_effect=fake_time):
-                with mock.patch.object(transport, "_perform_request", side_effect=fake_urlopen):
+                with mock.patch.object(
+                    transport, "_perform_request", side_effect=fake_urlopen
+                ):
                     for index, path in enumerate(["one", "two", "three"]):
                         now = 1000.0 + index
-                        transport.request("GET", f"https://example.test/{path}", headers={"Accept": "text/plain"})
+                        transport.request(
+                            "GET",
+                            f"https://example.test/{path}",
+                            headers={"Accept": "text/plain"},
+                        )
 
             cache_files = list(Path(tmpdir).rglob("*.json"))
             reader = http_module.HttpTransport(
@@ -1122,7 +1397,11 @@ class HttpTransportCacheTests(unittest.TestCase):
             with mock.patch.object(reader, "_perform_request") as mocked_request:
                 now = 1003.0
                 with mock.patch.object(http_module.time, "time", side_effect=fake_time):
-                    second = reader.request("GET", "https://example.test/two", headers={"Accept": "text/plain"})
+                    second = reader.request(
+                        "GET",
+                        "https://example.test/two",
+                        headers={"Accept": "text/plain"},
+                    )
 
         self.assertEqual(len(cache_files), 2)
         self.assertEqual(second["body"], b"https://example.test/two")
@@ -1153,16 +1432,26 @@ class HttpTransportCacheTests(unittest.TestCase):
                 )
 
             with mock.patch.object(http_module.time, "time", side_effect=fake_time):
-                with mock.patch.object(transport, "_perform_request", side_effect=fake_urlopen):
+                with mock.patch.object(
+                    transport, "_perform_request", side_effect=fake_urlopen
+                ):
                     for index, path in enumerate(["one", "two", "three"]):
                         now = 2000.0 + index
-                        transport.request("GET", f"https://example.test/{path}", headers={"Accept": "text/plain"})
+                        transport.request(
+                            "GET",
+                            f"https://example.test/{path}",
+                            headers={"Accept": "text/plain"},
+                        )
 
-            total_bytes = sum(path.stat().st_size for path in Path(tmpdir).rglob("*.json"))
+            total_bytes = sum(
+                path.stat().st_size for path in Path(tmpdir).rglob("*.json")
+            )
 
         self.assertLessEqual(total_bytes, 360)
 
-    def test_disk_cache_max_age_removes_expired_entries_instead_of_revalidating(self) -> None:
+    def test_disk_cache_max_age_removes_expired_entries_instead_of_revalidating(
+        self,
+    ) -> None:
         now = 3000.0
 
         def fake_time() -> float:
@@ -1192,7 +1481,11 @@ class HttpTransportCacheTests(unittest.TestCase):
                         headers={"content-type": "text/plain", "etag": '"v1"'},
                     ),
                 ):
-                    writer.request("GET", "https://example.test/article", headers={"Accept": "text/plain"})
+                    writer.request(
+                        "GET",
+                        "https://example.test/article",
+                        headers={"Accept": "text/plain"},
+                    )
 
                 now = 3011.0
                 with mock.patch.object(
@@ -1204,7 +1497,11 @@ class HttpTransportCacheTests(unittest.TestCase):
                         headers={"content-type": "text/plain", "etag": '"v2"'},
                     ),
                 ) as mocked_request:
-                    response = reader.request("GET", "https://example.test/article", headers={"Accept": "text/plain"})
+                    response = reader.request(
+                        "GET",
+                        "https://example.test/article",
+                        headers={"Accept": "text/plain"},
+                    )
 
         self.assertEqual(response["body"], b"new body")
         mocked_request.assert_called_once()
@@ -1229,17 +1526,38 @@ class HttpTransportCacheTests(unittest.TestCase):
                 return FakeHTTPResponse(
                     b"cached body",
                     request.full_url,
-                    headers={"content-type": "text/plain", "etag": '"v1"', "last-modified": "Mon, 01 Jan 2024 00:00:00 GMT"},
+                    headers={
+                        "content-type": "text/plain",
+                        "etag": '"v1"',
+                        "last-modified": "Mon, 01 Jan 2024 00:00:00 GMT",
+                    },
                 )
 
             def not_modified(request, timeout=20):
                 captured_headers.append(dict(request.headers))
-                return FakeHTTPResponse(b"", request.full_url, status=304, headers={"content-type": "text/plain", "etag": '"v1"'})
+                return FakeHTTPResponse(
+                    b"",
+                    request.full_url,
+                    status=304,
+                    headers={"content-type": "text/plain", "etag": '"v1"'},
+                )
 
-            with mock.patch.object(first_transport, "_perform_request", side_effect=first_response):
-                first_transport.request("GET", "https://example.test/article", headers={"Accept": "text/plain"})
-            with mock.patch.object(stale_transport, "_perform_request", side_effect=not_modified):
-                response = stale_transport.request("GET", "https://example.test/article", headers={"Accept": "text/plain"})
+            with mock.patch.object(
+                first_transport, "_perform_request", side_effect=first_response
+            ):
+                first_transport.request(
+                    "GET",
+                    "https://example.test/article",
+                    headers={"Accept": "text/plain"},
+                )
+            with mock.patch.object(
+                stale_transport, "_perform_request", side_effect=not_modified
+            ):
+                response = stale_transport.request(
+                    "GET",
+                    "https://example.test/article",
+                    headers={"Accept": "text/plain"},
+                )
 
         lowered = lower_header_map(captured_headers[0])
         self.assertEqual(lowered["if-none-match"], '"v1"')

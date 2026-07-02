@@ -27,7 +27,9 @@ def _ams_parenthetical_looks_like_math_argument(value: str) -> bool:
     )
     if token_match:
         tokens = re.findall(r"[\w\u0370-\u03ffµμ]+", normalized)
-        return bool(tokens) and all(len(token) == 1 or token.isdigit() for token in tokens)
+        return bool(tokens) and all(
+            len(token) == 1 or token.isdigit() for token in tokens
+        )
     return bool(re.fullmatch(r"[0-9\s,.;:+\-−*/=<>^_{}\[\]\\|]+", normalized))
 
 
@@ -41,8 +43,15 @@ def _restore_ams_prose_parenthesis_match(match: re.Match[str]) -> str:
 
 
 def _ams_markdown_heading(block: str) -> tuple[int, str] | None:
-    match = re.match(r"^(#{1,6})\s+(.+?)\s*$", normalize_text(block.splitlines()[0] if block.splitlines() else ""))
-    return (len(match.group(1)), normalize_text(match.group(2)).rstrip(".:")) if match else None
+    match = re.match(
+        r"^(#{1,6})\s+(.+?)\s*$",
+        normalize_text(block.splitlines()[0] if block.splitlines() else ""),
+    )
+    return (
+        (len(match.group(1)), normalize_text(match.group(2)).rstrip(".:"))
+        if match
+        else None
+    )
 
 
 def _is_ams_markdown_heading(block: str, target: str) -> bool:
@@ -50,7 +59,9 @@ def _is_ams_markdown_heading(block: str, target: str) -> bool:
     if heading is None:
         return False
     normalized = normalize_text(heading[1]).lower()
-    return normalized == target or (target == "appendix" and normalized.startswith("appendix "))
+    return normalized == target or (
+        target == "appendix" and normalized.startswith("appendix ")
+    )
 
 
 def _ams_section_end_index(blocks: list[str], start: int) -> int:
@@ -65,17 +76,51 @@ def _ams_section_end_index(blocks: list[str], start: int) -> int:
 
 
 def _reorder_ams_backmatter_sections(markdown_text: str) -> str:
-    blocks = [block for block in re.split(r"\n\s*\n", markdown_text) if normalize_text(block)]
-    data_start = next((i for i, block in enumerate(blocks) if _is_ams_markdown_heading(block, "data availability statement")), -1)
-    appendix_start = next((i for i, block in enumerate(blocks) if _is_ams_markdown_heading(block, "appendix")), -1)
+    blocks = [
+        block for block in re.split(r"\n\s*\n", markdown_text) if normalize_text(block)
+    ]
+    data_start = next(
+        (
+            i
+            for i, block in enumerate(blocks)
+            if _is_ams_markdown_heading(block, "data availability statement")
+        ),
+        -1,
+    )
+    appendix_start = next(
+        (
+            i
+            for i, block in enumerate(blocks)
+            if _is_ams_markdown_heading(block, "appendix")
+        ),
+        -1,
+    )
     if data_start < 0 or appendix_start < 0 or data_start < appendix_start:
         return markdown_text
     data_end = _ams_section_end_index(blocks, data_start)
     data_section = blocks[data_start:data_end]
     del blocks[data_start:data_end]
-    appendix_start = next((i for i, block in enumerate(blocks) if _is_ams_markdown_heading(block, "appendix")), len(blocks))
-    ack_start = next((i for i, block in enumerate(blocks) if _is_ams_markdown_heading(block, "acknowledgments")), -1)
-    insert_at = _ams_section_end_index(blocks, ack_start) if 0 <= ack_start < appendix_start else appendix_start
+    appendix_start = next(
+        (
+            i
+            for i, block in enumerate(blocks)
+            if _is_ams_markdown_heading(block, "appendix")
+        ),
+        len(blocks),
+    )
+    ack_start = next(
+        (
+            i
+            for i, block in enumerate(blocks)
+            if _is_ams_markdown_heading(block, "acknowledgments")
+        ),
+        -1,
+    )
+    insert_at = (
+        _ams_section_end_index(blocks, ack_start)
+        if 0 <= ack_start < appendix_start
+        else appendix_start
+    )
     blocks[insert_at:insert_at] = data_section
     return "\n\n".join(blocks)
 
@@ -86,8 +131,14 @@ def _normalize_ams_markdown_text(markdown_text: str) -> str:
     text = re.sub(r"\bTable\s+\.\s+", "Table ", text)
     for pattern, replacement in (
         (r"<(sup|sub)>\s*<\1>(.*?)</\1>\s*</\1>", r"<\1>\2</\1>"),
-        (r"<sub>\s*([^<>]*?)\s*</sub>\s*<sub>\s*([,;])\s*</sub>\s*<sub>\s*([^<>]*?)\s*</sub>", r"<sub>\1\2\3</sub>"),
-        (r"<sub>\s*([^<>]*?)\s*</sub>\s*<sub>\s*([,;][^<>]*?)\s*</sub>", r"<sub>\1\2</sub>"),
+        (
+            r"<sub>\s*([^<>]*?)\s*</sub>\s*<sub>\s*([,;])\s*</sub>\s*<sub>\s*([^<>]*?)\s*</sub>",
+            r"<sub>\1\2\3</sub>",
+        ),
+        (
+            r"<sub>\s*([^<>]*?)\s*</sub>\s*<sub>\s*([,;][^<>]*?)\s*</sub>",
+            r"<sub>\1\2</sub>",
+        ),
         (r"</sup>\s*<sup>\s*([,;])\s*</sup>\s*<sup>", r"</sup>\1<sup>"),
         (r"(\*[\w\u0370-\u03ffµμ]+\*)\s+<(sub|sup)>", r"\1<\2>"),
     ):
@@ -101,9 +152,16 @@ def _normalize_ams_label_text(text: str, *, kind: str | None = None) -> str:
     if not normalized:
         return ""
     if kind in {None, "figure"}:
-        normalized = FIGURE_LABEL_PATTERN.sub(lambda m: f"{'Figure' if m.group(0).lower().startswith('figure') else 'Fig.'} {m.group(1)}.", normalized)
+        normalized = FIGURE_LABEL_PATTERN.sub(
+            lambda m: (
+                f"{'Figure' if m.group(0).lower().startswith('figure') else 'Fig.'} {m.group(1)}."
+            ),
+            normalized,
+        )
     if kind in {None, "table"}:
-        normalized = TABLE_LABEL_PATTERN.sub(lambda m: f"Table {m.group(1)}.", normalized)
+        normalized = TABLE_LABEL_PATTERN.sub(
+            lambda m: f"Table {m.group(1)}.", normalized
+        )
     return normalized
 
 
@@ -114,7 +172,12 @@ def ams_normalize_markdown(markdown_text: str) -> str:
 def ams_classify_heading(heading: str, title: str | None) -> str | None:
     del title
     normalized_heading = normalize_text(heading).rstrip(".").lower()
-    return "body_heading" if normalized_heading in {"acknowledgment", "acknowledgments", "acknowledgement", "acknowledgements"} else None
+    return (
+        "body_heading"
+        if normalized_heading
+        in {"acknowledgment", "acknowledgments", "acknowledgement", "acknowledgements"}
+        else None
+    )
 
 
 def ams_keep_unknown_abstract_block(block: str) -> bool:

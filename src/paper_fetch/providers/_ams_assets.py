@@ -129,11 +129,7 @@ def _ams_download_link_is_powerpoint(anchor: Any) -> bool:
     class_blob = _ams_tag_class_blob(anchor)
     text = normalize_text(anchor.get_text(" ", strip=True)).lower()
     href = normalize_text(str(anchor.get("href") or ""))
-    return (
-        "export-figure-ppt" in class_blob
-        or "powerpoint" in text
-        or href == "#"
-    )
+    return "export-figure-ppt" in class_blob or "powerpoint" in text or href == "#"
 
 
 def _ams_download_link_source_format(anchor: Any, href: str) -> str:
@@ -316,7 +312,9 @@ def _append_ams_download_figure_source_sidecar(
     if not sidecar_html:
         return
     fragment = BeautifulSoup(sidecar_html, choose_parser())
-    sidecar = fragment.find(attrs={"data-paper-fetch-ams-download-figure-sources": "true"})
+    sidecar = fragment.find(
+        attrs={"data-paper-fetch-ams-download-figure-sources": "true"}
+    )
     if isinstance(sidecar, Tag):
         target = body_container.select_one(
             "#articleBody, #contentRoot, #bodymatter, [property='articleBody'], "
@@ -392,7 +390,9 @@ def _extract_ams_table_assets(html_text: str, source_url: str) -> list[dict[str,
     return assets
 
 
-def _extract_ams_formula_assets(html_text: str, source_url: str) -> list[dict[str, str]]:
+def _extract_ams_formula_assets(
+    html_text: str, source_url: str
+) -> list[dict[str, str]]:
     return extract_formula_assets(html_text, source_url, noise_profile="ams")
 
 
@@ -411,7 +411,9 @@ def extract_asset_html_scopes(
 
     supplementary_html = "\n".join(
         str(node)
-        for node in atypon_browser_workflow_supplementary_sections(supplementary_container)
+        for node in atypon_browser_workflow_supplementary_sections(
+            supplementary_container
+        )
         if normalize_text(node.get_text(" ", strip=True))
     )
     if raw_body_container is not None:
@@ -420,7 +422,9 @@ def extract_asset_html_scopes(
             raw_body_container,
             source_url,
         )
-    return content_fragment_html(body_container, publisher=publisher), supplementary_html
+    return content_fragment_html(
+        body_container, publisher=publisher
+    ), supplementary_html
 
 
 def scoped_asset_extractor(

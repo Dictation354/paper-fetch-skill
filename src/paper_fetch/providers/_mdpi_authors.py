@@ -30,6 +30,7 @@ def extract_authors(html_text: str) -> list[str]:
                 _append_unique(candidates, node.get_text(" ", strip=True))
     return dedupe_authors(candidates)
 
+
 __all__ = [
     "extract_authors",
 ]

@@ -25,7 +25,7 @@ If `asset_profile=body|all` returns assets but a figure appears missing:
 
 - Inspect `article.assets[*].download_tier`, `width`, `height`, `content_type`, and `source_trail` before treating it as a failure.
 - `download_tier=preview` can be acceptable when dimensions meet the threshold and preview accepted appears in the source trail.
-- For `wiley` / `science` / `pnas` / `ams` / `annualreviews` / `acs` / `iop` / `aip` / `mdpi`, the main HTML asset path should only emit `full_size` or `preview`; if challenge recovery fails, inspect `quality.asset_failures[*].reason` and `recovery_attempts` rather than expecting a separate canvas tier.
+- For `wiley` / `science` / `pnas` / `ams` / `annualreviews` / `royalsocietypublishing` / `acs` / `iop` / `aip` / `mdpi`, the main HTML asset path should only emit `full_size` or `preview`; if challenge recovery fails, inspect `quality.asset_failures[*].reason` and `recovery_attempts` rather than expecting a separate canvas tier.
 
 If table quality warnings appear:
 

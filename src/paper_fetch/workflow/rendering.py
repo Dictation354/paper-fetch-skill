@@ -12,12 +12,28 @@ from collections.abc import Mapping
 from ..artifacts import ArtifactStore
 from ..markdown.images import render_markdown_image
 from ..models import ArticleModel, FetchEnvelope, OutputMode, RenderOptions
-from ..models.markdown import image_reference_basename, image_reference_candidates, replace_markdown_images
+from ..models.markdown import (
+    image_reference_basename,
+    image_reference_candidates,
+    replace_markdown_images,
+)
 from ..provider_catalog import known_article_source_names
 from ..reason_codes import METADATA_ONLY
 from ..quality.reason_codes import FULLTEXT
-from ..tracing import download_marker, fallback_marker, merge_trace, source_trail_from_trace, trace_from_markers
-from ..utils import _extract_year, extend_unique, format_paper_stem, normalize_text, sanitize_filename
+from ..tracing import (
+    download_marker,
+    fallback_marker,
+    merge_trace,
+    source_trail_from_trace,
+    trace_from_markers,
+)
+from ..utils import (
+    _extract_year,
+    extend_unique,
+    format_paper_stem,
+    normalize_text,
+    sanitize_filename,
+)
 from .types import effective_asset_profile
 
 
@@ -29,7 +45,9 @@ def finalize_article(
 ) -> ArticleModel:
     extend_unique(article.quality.warnings, list(warnings or []))
     if source_trail:
-        article.quality.trace = merge_trace(article.quality.trace, trace_from_markers(list(source_trail)))
+        article.quality.trace = merge_trace(
+            article.quality.trace, trace_from_markers(list(source_trail))
+        )
         article.quality.source_trail = source_trail_from_trace(article.quality.trace)
     return article
 
@@ -73,7 +91,11 @@ def _local_asset_lookup_by_basename(
         basenames = {Path(str(asset.path or "")).name}
         source_url = str(asset.url or "").strip()
         if source_url:
-            basenames.add(image_reference_basename(urllib.parse.unquote(urllib.parse.urlparse(source_url).path)))
+            basenames.add(
+                image_reference_basename(
+                    urllib.parse.unquote(urllib.parse.urlparse(source_url).path)
+                )
+            )
         for basename in basenames:
             if not basename:
                 continue
@@ -84,7 +106,11 @@ def _local_asset_lookup_by_basename(
             elif existing[0] != relative_path:
                 ambiguous.add(basename)
 
-    return {basename: path for basename, path in candidates.items() if basename not in ambiguous}
+    return {
+        basename: path
+        for basename, path in candidates.items()
+        if basename not in ambiguous
+    }
 
 
 def _asset_field(asset: Any, field: str) -> str | None:
@@ -106,7 +132,9 @@ def _local_asset_lookups(
     basenames: dict[str, tuple[str, Any]] = {}
     basename_ambiguous: set[str] = set()
     for asset in article.assets:
-        relative_path = relative_asset_link(_asset_field(asset, "path"), target_path=target_path)
+        relative_path = relative_asset_link(
+            _asset_field(asset, "path"), target_path=target_path
+        )
         if relative_path is None:
             continue
         candidates: set[str] = set()
@@ -141,15 +169,25 @@ def _local_asset_lookups(
                 basename_ambiguous.add(basename)
 
     return (
-        {candidate: path for candidate, path in exact.items() if candidate not in exact_ambiguous},
-        {basename: path for basename, path in basenames.items() if basename not in basename_ambiguous},
+        {
+            candidate: path
+            for candidate, path in exact.items()
+            if candidate not in exact_ambiguous
+        },
+        {
+            basename: path
+            for basename, path in basenames.items()
+            if basename not in basename_ambiguous
+        },
     )
 
 
 def _remote_asset_basename(destination: str) -> str | None:
     if not destination.startswith(("http://", "https://", "//")):
         return None
-    parsed = urllib.parse.urlparse(destination if not destination.startswith("//") else f"https:{destination}")
+    parsed = urllib.parse.urlparse(
+        destination if not destination.startswith("//") else f"https:{destination}"
+    )
     basename = Path(urllib.parse.unquote(parsed.path)).name
     return basename or None
 
@@ -177,10 +215,14 @@ def rewrite_markdown_asset_links(
     if not markdown or envelope.article is None:
         return markdown
 
-    local_assets_by_basename = _local_asset_lookup_by_basename(envelope.article, target_path=target_path)
-    local_assets_by_reference, local_assets_by_candidate_basename = _local_asset_lookups(
-        envelope.article,
-        target_path=target_path,
+    local_assets_by_basename = _local_asset_lookup_by_basename(
+        envelope.article, target_path=target_path
+    )
+    local_assets_by_reference, local_assets_by_candidate_basename = (
+        _local_asset_lookups(
+            envelope.article,
+            target_path=target_path,
+        )
     )
 
     def rewrite_inline_match(match: re.Match[str]) -> str:
@@ -196,12 +238,16 @@ def rewrite_markdown_asset_links(
                     break
             if relative_path is None:
                 for candidate in destination_candidates:
-                    match_value = local_assets_by_candidate_basename.get(image_reference_basename(candidate))
+                    match_value = local_assets_by_candidate_basename.get(
+                        image_reference_basename(candidate)
+                    )
                     if match_value is not None:
                         relative_path = match_value[0]
                         break
             if relative_path is None:
-                match_value = local_assets_by_basename.get(_remote_asset_basename(destination) or "")
+                match_value = local_assets_by_basename.get(
+                    _remote_asset_basename(destination) or ""
+                )
                 if match_value is not None:
                     relative_path = match_value[0]
         if relative_path is None:
@@ -220,12 +266,16 @@ def rewrite_markdown_asset_links(
                 break
         if relative_path is None:
             for candidate in destination_candidates:
-                match_value = local_assets_by_candidate_basename.get(image_reference_basename(candidate))
+                match_value = local_assets_by_candidate_basename.get(
+                    image_reference_basename(candidate)
+                )
                 if match_value is not None:
                     relative_path, matched_asset = match_value
                     break
         if relative_path is None:
-            match_value = local_assets_by_basename.get(_remote_asset_basename(destination) or "")
+            match_value = local_assets_by_basename.get(
+                _remote_asset_basename(destination) or ""
+            )
             if match_value is not None:
                 relative_path, matched_asset = match_value
         if relative_path is None:
@@ -249,7 +299,9 @@ def rewrite_markdown_asset_links(
     )
 
 
-def _markdown_filename(envelope: FetchEnvelope, *, markdown_filename: str | None = None) -> str:
+def _markdown_filename(
+    envelope: FetchEnvelope, *, markdown_filename: str | None = None
+) -> str:
     requested = normalize_text(markdown_filename)
     if requested:
         requested_path = Path(requested)
@@ -259,7 +311,9 @@ def _markdown_filename(envelope: FetchEnvelope, *, markdown_filename: str | None
         stem = requested_path.stem if requested_path.suffix else requested_path.name
         return f"{sanitize_filename(stem or 'article')}{suffix}"
 
-    meta = envelope.article.metadata if envelope.article is not None else envelope.metadata
+    meta = (
+        envelope.article.metadata if envelope.article is not None else envelope.metadata
+    )
     authors = list(meta.authors) if meta and meta.authors else None
     year = _extract_year(meta.published if meta else None)
     title = meta.title if meta else None
@@ -289,7 +343,9 @@ def save_markdown_to_disk(
     markdown_filename: str | None = None,
     request_label: str = "save_markdown",
 ) -> Path | None:
-    has_usable_fulltext = bool(envelope.content_kind == FULLTEXT and envelope.markdown and envelope.article)
+    has_usable_fulltext = bool(
+        envelope.content_kind == FULLTEXT and envelope.markdown and envelope.article
+    )
     if not has_usable_fulltext:
         _extend_envelope_status(
             envelope,
@@ -300,10 +356,14 @@ def save_markdown_to_disk(
         )
         return None
 
-    target = output_dir / _markdown_filename(envelope, markdown_filename=markdown_filename)
+    target = output_dir / _markdown_filename(
+        envelope, markdown_filename=markdown_filename
+    )
     ArtifactStore.from_download_dir(output_dir).write_text_file(
         target,
-        rewrite_markdown_asset_links(envelope.markdown or "", envelope, target_path=target, render=render),
+        rewrite_markdown_asset_links(
+            envelope.markdown or "", envelope, target_path=target, render=render
+        ),
         encoding="utf-8",
     )
     message = f"Markdown full text was saved to {target}."
@@ -321,7 +381,9 @@ def build_fetch_envelope(
     modes: set[OutputMode],
     render: RenderOptions,
 ) -> FetchEnvelope:
-    resolved_asset_profile = effective_asset_profile(render.asset_profile, source_name=article.source)
+    resolved_asset_profile = effective_asset_profile(
+        render.asset_profile, source_name=article.source
+    )
     markdown = (
         article.to_ai_markdown(
             include_refs=render.include_refs,

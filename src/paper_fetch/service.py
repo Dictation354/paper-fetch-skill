@@ -11,7 +11,10 @@ from .providers.registry import build_clients
 from .resolve.query import ResolvedQuery
 from .runtime import RuntimeContext
 from .workflow.fulltext import fetch_article
-from .workflow.metadata import fetch_metadata_for_resolved_query, merge_primary_secondary_metadata
+from .workflow.metadata import (
+    fetch_metadata_for_resolved_query,
+    merge_primary_secondary_metadata,
+)
 from .workflow.rendering import build_fetch_envelope
 from .workflow.resolution import resolve_paper
 from .workflow.routing import (
@@ -78,9 +81,11 @@ def fetch_paper(
             ),
             max_tokens=active_render.max_tokens,
         )
-        with formula_timing_collector(
-            lambda seconds: runtime.accumulate_stage_timing("formula_seconds", elapsed=seconds)
-        ):
+
+        def record_formula_timing(seconds: float) -> None:
+            runtime.accumulate_stage_timing("formula_seconds", elapsed=seconds)
+
+        with formula_timing_collector(record_formula_timing):
             article = fetch_article(
                 query,
                 strategy=active_strategy,
@@ -88,7 +93,9 @@ def fetch_paper(
                 resolve_paper_fn=resolve_paper,
             )
             render_started_at = time.monotonic()
-            envelope = build_fetch_envelope(article, modes=requested_modes, render=resolved_render)
+            envelope = build_fetch_envelope(
+                article, modes=requested_modes, render=resolved_render
+            )
             runtime.record_stage_timing("render_seconds", render_started_at)
         return envelope
     finally:

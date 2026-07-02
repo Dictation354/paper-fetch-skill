@@ -262,7 +262,9 @@ def test_iop_accepts_loaded_article_body_with_residual_challenge_scripts() -> No
     assert "cloudflare_challenge" not in diagnostics.hard_negative_signals
     assert "iop_radware_challenge" not in diagnostics.blocking_fallback_signals
     assert "iop_captcha_challenge" not in diagnostics.blocking_fallback_signals
-    assert "residual_challenge_outside_body_ignored" in diagnostics.soft_positive_signals
+    assert (
+        "residual_challenge_outside_body_ignored" in diagnostics.soft_positive_signals
+    )
 
     markdown, extraction = IopClient(None, {}).extract_markdown(
         html,
@@ -281,7 +283,9 @@ def test_iop_accepts_loaded_article_body_with_residual_challenge_scripts() -> No
     assert extraction["availability_diagnostics"]["accepted"] is True
 
 
-def test_iop_extract_markdown_preserves_article_sections_figure_and_references() -> None:
+def test_iop_extract_markdown_preserves_article_sections_figure_and_references() -> (
+    None
+):
     """rule: rule-iop-body-challenge-cleanup"""
     markdown, extraction = IopClient(None, {}).extract_markdown(
         _iop_article_html(),
@@ -484,9 +488,17 @@ def test_iop_real_replay_covers_table_and_formula_purposes() -> None:
     assert all(asset.get("preview_accepted") is True for asset in assets)
     assert any("qstac3460f1_online.jpg" in url for url in asset_urls)
     assert any("qstac3460f2_online.jpg" in url for url in asset_urls)
-    assert any(str(asset.get("full_size_url", "")).endswith("qstac3460f1_hr.jpg") for asset in assets)
-    assert any(str(asset.get("full_size_url", "")).endswith("qstac3460f2_hr.jpg") for asset in assets)
-    assert not any("qstac3460eqn" in url or "qstac3460ieqn" in url for url in asset_urls)
+    assert any(
+        str(asset.get("full_size_url", "")).endswith("qstac3460f1_hr.jpg")
+        for asset in assets
+    )
+    assert any(
+        str(asset.get("full_size_url", "")).endswith("qstac3460f2_hr.jpg")
+        for asset in assets
+    )
+    assert not any(
+        "qstac3460eqn" in url or "qstac3460ieqn" in url for url in asset_urls
+    )
 
 
 def test_iop_real_pdf_fallback_fixture_records_iop_pdf_source() -> None:

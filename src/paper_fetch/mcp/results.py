@@ -25,11 +25,13 @@ def _tool_result(
     is_error: bool,
     extra_content: Sequence[TextContent | ImageContent] | None = None,
 ) -> CallToolResult:
-    content: list[TextContent | ImageContent] = [TextContent(type="text", text=_dump_payload(payload))]
+    content: list[TextContent | ImageContent] = [
+        TextContent(type="text", text=_dump_payload(payload))
+    ]
     if extra_content:
         content.extend(extra_content)
     return CallToolResult(
-        content=content,  # type: ignore[arg-type]
+        content=content,
         structuredContent=dict(payload),
         isError=is_error,
     )
@@ -45,9 +47,19 @@ def _validation_reason(error: ValidationError) -> str:
 
 def error_payload_from_exception(error: Exception) -> dict[str, Any]:
     if isinstance(error, ValidationError):
-        return {"status": ERROR, "reason": _validation_reason(error), "candidates": None, "missing_env": None}
+        return {
+            "status": ERROR,
+            "reason": _validation_reason(error),
+            "candidates": None,
+            "missing_env": None,
+        }
     if isinstance(error, RequestCancelledError):
-        return {"status": ERROR, "reason": "Request cancelled.", "candidates": None, "missing_env": None}
+        return {
+            "status": ERROR,
+            "reason": "Request cancelled.",
+            "candidates": None,
+            "missing_env": None,
+        }
     if isinstance(error, PaperFetchFailure):
         return {
             "status": error.status,
@@ -65,4 +77,9 @@ def error_payload_from_exception(error: Exception) -> dict[str, Any]:
             "candidates": None,
             "missing_env": error.missing_env or None,
         }
-    return {"status": ERROR, "reason": str(error), "candidates": None, "missing_env": None}
+    return {
+        "status": ERROR,
+        "reason": str(error),
+        "candidates": None,
+        "missing_env": None,
+    }

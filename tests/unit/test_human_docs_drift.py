@@ -50,6 +50,7 @@ HUMAN_ONLY_API_ALLOWLIST = frozenset(
         "ProviderHtmlRules",
         "ProviderHtmlRules.availability",
         "ProviderSpec",
+        "PdfFallbackStrategy",
         "RawFulltextPayload",
         "RuntimeContext",
         "RuntimeContext.transport",
@@ -106,8 +107,7 @@ def _fenced_code_blocks(markdown: str) -> list[str]:
 
 def _src_text() -> str:
     return "\n".join(
-        path.read_text(encoding="utf-8")
-        for path in sorted(SRC_DIR.rglob("*.py"))
+        path.read_text(encoding="utf-8") for path in sorted(SRC_DIR.rglob("*.py"))
     )
 
 
@@ -206,11 +206,12 @@ def test_adding_provider_uses_stable_provider_development_anchors() -> None:
         )
     )
 
-    assert fragments, "docs/adding-a-provider.md must link provider-development.md anchors"
+    assert fragments, (
+        "docs/adding-a-provider.md must link provider-development.md anchors"
+    )
     assert fragments <= stable_anchors, (
         "docs/adding-a-provider.md must link explicit stable anchors in "
-        "docs/provider-development.md: "
-        + ", ".join(sorted(fragments - stable_anchors))
+        "docs/provider-development.md: " + ", ".join(sorted(fragments - stable_anchors))
     )
 
 
@@ -228,8 +229,7 @@ def test_human_docs_ai_topics_link_ai_authority_in_same_block() -> None:
     assert not violations, (
         "Human docs may explain onboarding, but AI worker input, DAG, manifest "
         "fields, hard constraints, acceptance, and merge-ready gates must link "
-        "onboarding/ authority in the same block:\n"
-        + "\n".join(violations)
+        "onboarding/ authority in the same block:\n" + "\n".join(violations)
     )
 
 
@@ -247,10 +247,14 @@ def _grep_commands_from_hard_constraints() -> list[list[str]]:
 
 
 def _grep_pattern_and_paths(tokens: list[str]) -> tuple[str, list[str]]:
-    assert "--" in tokens, f"grep command must include explicit path separator: {' '.join(tokens)}"
+    assert "--" in tokens, (
+        f"grep command must include explicit path separator: {' '.join(tokens)}"
+    )
     separator = tokens.index("--")
     path_tokens = tokens[separator + 1 :]
-    assert path_tokens, f"grep command must include at least one path: {' '.join(tokens)}"
+    assert path_tokens, (
+        f"grep command must include at least one path: {' '.join(tokens)}"
+    )
 
     pattern: str | None = None
     index = 2
@@ -266,13 +270,17 @@ def _grep_pattern_and_paths(tokens: list[str]) -> tuple[str, list[str]]:
             pattern = token
         index += 1
 
-    assert pattern is not None, f"grep command must include a pattern: {' '.join(tokens)}"
+    assert pattern is not None, (
+        f"grep command must include a pattern: {' '.join(tokens)}"
+    )
     return pattern, path_tokens
 
 
 def test_hard_constraints_grep_commands_are_parseable_and_paths_exist() -> None:
     commands = _grep_commands_from_hard_constraints()
-    assert commands, f"{HARD_CONSTRAINTS_PATH.relative_to(REPO_ROOT)} must list grep checks"
+    assert commands, (
+        f"{HARD_CONSTRAINTS_PATH.relative_to(REPO_ROOT)} must list grep checks"
+    )
 
     for tokens in commands:
         pattern, path_tokens = _grep_pattern_and_paths(tokens)

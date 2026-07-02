@@ -36,7 +36,9 @@ def test_central_modules_do_not_define_provider_specific_functions() -> None:
         source = path.read_text()
         for provider in provider_names():
             pattern = re.compile(rf"^def {re.escape(provider)}_", flags=re.MULTILINE)
-            assert pattern.search(source) is None, f"{path.relative_to(PROJECT_ROOT)} defines {provider}_*"
+            assert pattern.search(source) is None, (
+                f"{path.relative_to(PROJECT_ROOT)} defines {provider}_*"
+            )
 
 
 class ProviderBranchVisitor(ast.NodeVisitor):
@@ -57,7 +59,9 @@ class ProviderBranchVisitor(ast.NodeVisitor):
                 if not isinstance(operator, ast.Eq):
                     continue
                 provider = self._provider_literal(left) or self._provider_literal(right)
-                variable = self._provider_variable(left) or self._provider_variable(right)
+                variable = self._provider_variable(left) or self._provider_variable(
+                    right
+                )
                 if provider is not None and variable is not None:
                     self.violations.append((child.lineno, provider))
 
@@ -85,5 +89,8 @@ def test_central_html_and_quality_modules_do_not_branch_on_provider_name() -> No
 
             assert not visitor.violations, (
                 f"{path.relative_to(PROJECT_ROOT)} has provider-specific branch(es): "
-                + ", ".join(f"line {line} compares {provider!r}" for line, provider in visitor.violations)
+                + ", ".join(
+                    f"line {line} compares {provider!r}"
+                    for line, provider in visitor.violations
+                )
             )

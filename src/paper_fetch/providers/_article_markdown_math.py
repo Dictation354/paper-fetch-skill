@@ -30,7 +30,9 @@ class FormulaRenderResult:
 
 
 def render_tex_math(element: ET.Element | None) -> str:
-    raw = normalize_compact_text("".join(element.itertext()) if element is not None else "")
+    raw = normalize_compact_text(
+        "".join(element.itertext()) if element is not None else ""
+    )
     if raw.startswith(r"\(") and raw.endswith(r"\)"):
         return raw[2:-2].strip()
     if raw.startswith(r"\[") and raw.endswith(r"\]"):
@@ -38,7 +40,9 @@ def render_tex_math(element: ET.Element | None) -> str:
     return raw
 
 
-def render_external_mathml_expression(element: ET.Element | None, *, display_mode: bool) -> str:
+def render_external_mathml_expression(
+    element: ET.Element | None, *, display_mode: bool
+) -> str:
     if element is None:
         return ""
     result = convert_mathml_element_to_latex(element, display_mode=display_mode)
@@ -104,10 +108,14 @@ def render_mathml_expression(element: ET.Element | None) -> str:
             return spaced.get(operator, operator)
         if local_name == "msub":
             if len(children) >= 2:
-                return f"{render_script_base(children[0])}_{{{render_node(children[1])}}}"
+                return (
+                    f"{render_script_base(children[0])}_{{{render_node(children[1])}}}"
+                )
         if local_name == "msup":
             if len(children) >= 2:
-                return f"{render_script_base(children[0])}^{{{render_node(children[1])}}}"
+                return (
+                    f"{render_script_base(children[0])}^{{{render_node(children[1])}}}"
+                )
         if local_name == "msubsup":
             if len(children) >= 3:
                 return f"{render_script_base(children[0])}_{{{render_node(children[1])}}}^{{{render_node(children[2])}}}"
@@ -118,7 +126,9 @@ def render_mathml_expression(element: ET.Element | None) -> str:
             return rf"\sqrt{{{''.join(render_node(child) for child in children)}}}"
         if local_name == "mroot":
             if len(children) >= 2:
-                return rf"\sqrt[{render_node(children[1])}]{{{render_node(children[0])}}}"
+                return (
+                    rf"\sqrt[{render_node(children[1])}]{{{render_node(children[0])}}}"
+                )
         if local_name == "mfenced":
             open_char = node.get("open", "(")
             close_char = node.get("close", ")")
@@ -145,9 +155,15 @@ def render_mathml_expression(element: ET.Element | None) -> str:
             for row in children:
                 if xml_local_name(row.tag) != "mtr":
                     continue
-                cells = [render_node(cell) for cell in list(row) if isinstance(cell.tag, str)]
+                cells = [
+                    render_node(cell) for cell in list(row) if isinstance(cell.tag, str)
+                ]
                 rows.append(" , ".join(cells))
-            return r"\begin{matrix} " + r" \\ ".join(rows) + r" \end{matrix}" if rows else ""
+            return (
+                r"\begin{matrix} " + r" \\ ".join(rows) + r" \end{matrix}"
+                if rows
+                else ""
+            )
         if local_name == "mtr":
             return " , ".join(render_node(child) for child in children)
         if local_name == "mtd":
@@ -191,13 +207,17 @@ def formula_graphic_url(element: ET.Element | None, *, source_url: str = "") -> 
     graphic = first_descendant(element, "graphic")
     if graphic is None:
         return ""
-    href = normalize_compact_text(str(graphic.get(XLINK_HREF) or graphic.get("href") or ""))
+    href = normalize_compact_text(
+        str(graphic.get(XLINK_HREF) or graphic.get("href") or "")
+    )
     if not href:
         return ""
     return urllib.parse.urljoin(source_url, href)
 
 
-def render_display_formula_result(element: ET.Element | None, *, source_url: str = "") -> FormulaRenderResult:
+def render_display_formula_result(
+    element: ET.Element | None, *, source_url: str = ""
+) -> FormulaRenderResult:
     if element is None:
         return FormulaRenderResult(lines=[])
 
@@ -229,7 +249,9 @@ def render_display_formula_result(element: ET.Element | None, *, source_url: str
             fallback_kind = "fallback"
             note = "Formula used the publisher formula image fallback."
     if not expression:
-        expression = normalize_compact_text(render_literal_inline_text(element, skip_local_names={"label"}))
+        expression = normalize_compact_text(
+            render_literal_inline_text(element, skip_local_names={"label"})
+        )
         if expression:
             fallback_kind = "fallback"
             note = "Formula used normalized literal text fallback."
@@ -248,7 +270,9 @@ def render_display_formula_result(element: ET.Element | None, *, source_url: str
     if label:
         lines.extend([label, ""])
     if image_url:
-        lines.extend([render_markdown_image("formula", label or "Formula", image_url), ""])
+        lines.extend(
+            [render_markdown_image("formula", label or "Formula", image_url), ""]
+        )
     elif fallback_kind == "missing":
         lines.extend([expression, ""])
     else:

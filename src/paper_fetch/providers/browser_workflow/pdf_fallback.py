@@ -4,14 +4,18 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import Any
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 
 from ...http import PDF_MIME_TYPE
 from ...runtime import RuntimeContext
 from ...tracing import trace_from_markers
 from ...reason_codes import PDF_FALLBACK
 from ..base import ProviderContent, RawFulltextPayload
-from .._pdf_common import pdf_asset_output_dir, pdf_asset_profile_from_context, pdf_fetch_result_assets
+from .._pdf_common import (
+    pdf_asset_output_dir,
+    pdf_asset_profile_from_context,
+    pdf_fetch_result_assets,
+)
 from .fetchers import _choose_browser_seed_url
 from .shared import BrowserWorkflowDeps, default_browser_workflow_deps
 
@@ -21,7 +25,9 @@ def _runtime_storage_state_path(runtime: Any) -> Any | None:
     if storage_state_path is not None:
         path = Path(storage_state_path).expanduser()
         return path if path.is_file() else None
-    profile_dir = getattr(runtime, "profile_dir", None) or getattr(runtime, "user_data_dir", None)
+    profile_dir = getattr(runtime, "profile_dir", None) or getattr(
+        runtime, "user_data_dir", None
+    )
     if profile_dir is None:
         return None
     path = Path(profile_dir).expanduser() / "storage-state.json"
@@ -50,7 +56,9 @@ def fetch_seeded_browser_pdf_payload(
     deps = deps or default_browser_workflow_deps()
     context_warmer = deps.warm_browser_context
     if deps.pdf_browser_context_seed is not deps.warm_browser_context:
-        from ..browser_runtime import warm_browser_context as default_warm_browser_context
+        from ..browser_runtime import (
+            warm_browser_context as default_warm_browser_context,
+        )
 
         if deps.warm_browser_context is default_warm_browser_context:
             context_warmer = deps.pdf_browser_context_seed
@@ -81,9 +89,17 @@ def fetch_seeded_browser_pdf_payload(
         user_data_dir=getattr(runtime, "user_data_dir", None),
         storage_state_path=_runtime_storage_state_path(runtime),
         seed_urls=[seed_url] if seed_url else None,
+        allow_pdf_only=True,
         context=context,
     )
     payload_warnings = [str(item) for item in warnings or [] if str(item).strip()]
+    pdf_result_warnings = getattr(pdf_result, "warnings", [])
+    if isinstance(pdf_result_warnings, Sequence) and not isinstance(
+        pdf_result_warnings, (str, bytes, bytearray)
+    ):
+        payload_warnings.extend(
+            str(item) for item in pdf_result_warnings if str(item).strip()
+        )
     if success_warning:
         payload_warnings.append(success_warning)
     return RawFulltextPayload(

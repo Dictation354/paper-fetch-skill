@@ -20,7 +20,7 @@ from .paths import (
 )
 
 _DOS_EPS_MAGIC = b"\xc5\xd0\xd3\xc6"
-_POSTSCRIPT_PREFIX_RE = re.compile(br"^\s*%!")
+_POSTSCRIPT_PREFIX_RE = re.compile(rb"^\s*%!")
 _TIFF_MAGICS = (b"II*\x00", b"MM\x00*")
 
 
@@ -49,7 +49,12 @@ def source_image_format_from_payload(
 
     if payload.startswith(_DOS_EPS_MAGIC) or _POSTSCRIPT_PREFIX_RE.match(payload[:256]):
         return "eps"
-    if normalized_content_type in {"application/postscript", "application/eps", "image/x-eps", "image/eps"}:
+    if normalized_content_type in {
+        "application/postscript",
+        "application/eps",
+        "image/x-eps",
+        "image/eps",
+    }:
         return "eps"
     if suffix == ".eps":
         return "eps"
@@ -101,7 +106,9 @@ def _tool_env(binary: Path) -> dict[str, str]:
     if root is None:
         return env
 
-    usr_root = root / "usr" if (root / "usr" / "share" / "ghostscript").exists() else root
+    usr_root = (
+        root / "usr" if (root / "usr" / "share" / "ghostscript").exists() else root
+    )
     lib_dirs = [
         usr_root / "lib" / "x86_64-linux-gnu",
         root / "lib" / "x86_64-linux-gnu",
@@ -116,7 +123,11 @@ def _tool_env(binary: Path) -> dict[str, str]:
         )
 
     gs_share = usr_root / "share" / "ghostscript"
-    versions = sorted(path for path in gs_share.glob("*") if path.is_dir()) if gs_share.exists() else []
+    versions = (
+        sorted(path for path in gs_share.glob("*") if path.is_dir())
+        if gs_share.exists()
+        else []
+    )
     if versions:
         version_root = versions[-1]
         gs_lib_values = [
@@ -188,7 +199,9 @@ def _convert_eps_to_png(input_path: Path, output_path: Path) -> str:
 
 def _convert_tiff_to_png(input_path: Path, output_path: Path) -> str:
     binary = _vips_binary()
-    _run([str(binary), "copy", str(input_path), str(output_path)], env=_tool_env(binary))
+    _run(
+        [str(binary), "copy", str(input_path), str(output_path)], env=_tool_env(binary)
+    )
     return "libvips"
 
 
@@ -200,7 +213,10 @@ def convert_source_image_response_to_png(
     body = response.get("body", b"")
     if not isinstance(body, (bytes, bytearray)) or not body:
         return None
-    content_type = header_value(response.get("headers"), "content-type")
+    headers = response.get("headers")
+    content_type = header_value(
+        headers if isinstance(headers, Mapping) else None, "content-type"
+    )
     source_format = source_image_format_from_payload(
         body,
         content_type=content_type,

@@ -48,11 +48,16 @@ def _provider_test_text(provider: str) -> str:
     return "\n".join(texts)
 
 
-def _marker_block(text: str, marker: str, *, line_count: int = 90) -> str:
+def _marker_block(text: str, marker: str, *, line_count: int = 160) -> str:
     lines = text.splitlines()
     for index, line in enumerate(lines):
         if marker in line:
-            return "\n".join(lines[index : index + line_count])
+            end = min(len(lines), index + line_count)
+            for cursor in range(index + 1, end):
+                if lines[cursor].startswith(("def test_", "    def test_")):
+                    end = cursor
+                    break
+            return "\n".join(lines[index:end])
     return ""
 
 
@@ -60,16 +65,24 @@ def test_provider_manifests_define_figure_asset_contracts() -> None:
     for manifest_path in _manifest_paths():
         manifest = _load_yaml(manifest_path)
         contract = manifest.get("asset_contract")
-        assert isinstance(contract, dict), f"{manifest_path}: asset_contract is required"
+        assert isinstance(contract, dict), (
+            f"{manifest_path}: asset_contract is required"
+        )
         figures = contract.get("figures")
-        assert isinstance(figures, dict), f"{manifest_path}: asset_contract.figures is required"
+        assert isinstance(figures, dict), (
+            f"{manifest_path}: asset_contract.figures is required"
+        )
 
         inline = figures.get("inline")
         download = figures.get("download")
         purposes = figures.get("purposes")
         exception_reason = figures.get("exception_reason")
-        assert inline in {"body", "not_applicable"}, f"{manifest_path}: invalid figures.inline"
-        assert download in {"required", "not_applicable"}, f"{manifest_path}: invalid figures.download"
+        assert inline in {"body", "not_applicable"}, (
+            f"{manifest_path}: invalid figures.inline"
+        )
+        assert download in {"required", "not_applicable"}, (
+            f"{manifest_path}: invalid figures.download"
+        )
         assert isinstance(purposes, list) and purposes, (
             f"{manifest_path}: asset_contract.figures.purposes must list fixture purposes"
         )
@@ -84,13 +97,17 @@ def test_provider_manifests_define_figure_asset_contracts() -> None:
 
         samples = manifest["fixtures"]["doi_samples"]
         for purpose in purposes:
-            assert purpose in samples, f"{manifest_path}: unknown figure contract purpose {purpose!r}"
+            assert purpose in samples, (
+                f"{manifest_path}: unknown figure contract purpose {purpose!r}"
+            )
             assert samples[purpose].get("doi"), (
                 f"{manifest_path}: figure contract purpose {purpose!r} must point to a DOI fixture"
             )
 
 
-def test_body_inline_figure_contracts_have_markdown_images_before_tail_sections() -> None:
+def test_body_inline_figure_contracts_have_markdown_images_before_tail_sections() -> (
+    None
+):
     for manifest_path in _manifest_paths():
         manifest = _load_yaml(manifest_path)
         figures = manifest["asset_contract"]["figures"]
@@ -124,13 +141,15 @@ def test_required_figure_download_contracts_have_provider_local_markers() -> Non
         marker = f"asset-download-contract: provider={provider}"
         test_text = _provider_test_text(provider)
         block = _marker_block(test_text, marker)
-        assert block, f"{manifest_path}: provider-local tests must contain marker {marker!r}"
+        assert block, (
+            f"{manifest_path}: provider-local tests must contain marker {marker!r}"
+        )
         assert "download_related_assets(" in block or ".fetch_result(" in block, (
             f"{manifest_path}: marker {marker!r} must cover a fetch/download call"
         )
-        assert "path" in block and ("read_bytes" in block or "is_file" in block or "downloaded_bytes" in block), (
-            f"{manifest_path}: marker {marker!r} must assert downloaded asset path/bytes"
-        )
+        assert "path" in block and (
+            "read_bytes" in block or "is_file" in block or "downloaded_bytes" in block
+        ), f"{manifest_path}: marker {marker!r} must assert downloaded asset path/bytes"
         assert "asset_failures" in block or "artifacts.assets" in block, (
             f"{manifest_path}: marker {marker!r} must assert asset download result state"
         )

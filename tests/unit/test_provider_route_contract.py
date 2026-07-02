@@ -17,7 +17,12 @@ STEP_ALIASES = {
     "xml": ("xml",),
     "pdf_fallback": ("pdf_fallback", "pdf fallback"),
     "abstract_only": ("abstract_only", "abstract only"),
-    "metadata_only": ("metadata_only", "metadata only", "metadata fallback", "metadata"),
+    "metadata_only": (
+        "metadata_only",
+        "metadata only",
+        "metadata fallback",
+        "metadata",
+    ),
 }
 
 
@@ -64,8 +69,14 @@ def _step_dois(manifest: dict[str, Any], step: str) -> list[str]:
         contract = markdown_contract.get(step)
         if isinstance(contract, dict) and isinstance(contract.get("doi"), str):
             values.append(contract["doi"])
-    fixtures = manifest.get("fixtures") if isinstance(manifest.get("fixtures"), dict) else {}
-    doi_samples = fixtures.get("doi_samples") if isinstance(fixtures.get("doi_samples"), dict) else {}
+    fixtures = (
+        manifest.get("fixtures") if isinstance(manifest.get("fixtures"), dict) else {}
+    )
+    doi_samples = (
+        fixtures.get("doi_samples")
+        if isinstance(fixtures.get("doi_samples"), dict)
+        else {}
+    )
     sample = doi_samples.get(step)
     if isinstance(sample, dict) and isinstance(sample.get("doi"), str):
         values.append(sample["doi"])
@@ -73,26 +84,44 @@ def _step_dois(manifest: dict[str, Any], step: str) -> list[str]:
 
 
 @pytest.mark.parametrize("manifest_path", _manifest_paths(), ids=lambda path: path.stem)
-def test_provider_route_contract_has_provider_local_coverage(manifest_path: Path) -> None:
+def test_provider_route_contract_has_provider_local_coverage(
+    manifest_path: Path,
+) -> None:
     manifest = _load_manifest(manifest_path)
     provider = manifest["name"]
     main_path = manifest.get("main_path")
     route_contract = manifest.get("route_contract")
-    route_sources = manifest.get("route_sources") if isinstance(manifest.get("route_sources"), dict) else {}
-    assert isinstance(main_path, list) and main_path, f"{manifest_path}: main_path is required"
-    assert isinstance(route_contract, dict), f"{manifest_path}: route_contract is required"
+    route_sources = (
+        manifest.get("route_sources")
+        if isinstance(manifest.get("route_sources"), dict)
+        else {}
+    )
+    assert isinstance(main_path, list) and main_path, (
+        f"{manifest_path}: main_path is required"
+    )
+    assert isinstance(route_contract, dict), (
+        f"{manifest_path}: route_contract is required"
+    )
 
     provider_test_paths = _provider_test_paths(provider)
-    assert provider_test_paths, f"{manifest_path}: no provider-local route test evidence found"
+    assert provider_test_paths, (
+        f"{manifest_path}: no provider-local route test evidence found"
+    )
     corpus = _coverage_text(provider_test_paths)
     normalized_corpus = _normalize(corpus)
 
     for step in main_path:
-        assert step in route_contract, f"{manifest_path}: route_contract.{step} is required"
+        assert step in route_contract, (
+            f"{manifest_path}: route_contract.{step} is required"
+        )
         contract = route_contract[step]
-        assert isinstance(contract, dict), f"{manifest_path}: route_contract.{step} must be an object"
+        assert isinstance(contract, dict), (
+            f"{manifest_path}: route_contract.{step} must be an object"
+        )
         success_requires = contract.get("success_requires")
-        assert success_requires, f"{manifest_path}: route_contract.{step}.success_requires is required"
+        assert success_requires, (
+            f"{manifest_path}: route_contract.{step}.success_requires is required"
+        )
 
         step_evidence = [step, *STEP_ALIASES.get(str(step), ())]
         route_source = route_sources.get(step)
@@ -116,10 +145,21 @@ def test_provider_route_contract_has_provider_local_coverage(manifest_path: Path
             )
 
         if contract.get("require_pdf_magic") is True:
-            assert any(token in normalized_corpus for token in ("pdf magic", "magic bytes", "application pdf", "content type")), (
+            assert any(
+                token in normalized_corpus
+                for token in (
+                    "pdf magic",
+                    "magic bytes",
+                    "application pdf",
+                    "content type",
+                )
+            ), (
                 f"{manifest_path}: route_contract.{step}.require_pdf_magic needs explicit PDF magic coverage"
             )
         if contract.get("reject_html_wrapper") is True:
-            assert any(token in normalized_corpus for token in ("html wrapper", "stamp jsp", "not a pdf", "text html")), (
+            assert any(
+                token in normalized_corpus
+                for token in ("html wrapper", "stamp jsp", "not a pdf", "text html")
+            ), (
                 f"{manifest_path}: route_contract.{step}.reject_html_wrapper needs explicit HTML wrapper coverage"
             )

@@ -43,7 +43,9 @@ def test_figure_kind_candidate_response_and_failure_template_round_trip() -> Non
         "https://example.test/download.png",
         "https://example.test/preview.png",
     ]
-    assert FIGURE_KIND.accepts_response("application/octet-stream", b"\x89PNG\r\n\x1a\npayload")
+    assert FIGURE_KIND.accepts_response(
+        "application/octet-stream", b"\x89PNG\r\n\x1a\npayload"
+    )
     assert not FIGURE_KIND.accepts_response("text/html", b"<html></html>")
 
     failure = FIGURE_KIND.failure_template(
@@ -72,7 +74,9 @@ def test_figure_kind_candidate_response_and_failure_template_round_trip() -> Non
     }
 
 
-def test_supplementary_kind_candidate_response_and_failure_template_round_trip() -> None:
+def test_supplementary_kind_candidate_response_and_failure_template_round_trip() -> (
+    None
+):
     asset = {
         "kind": "supplementary",
         "heading": "",

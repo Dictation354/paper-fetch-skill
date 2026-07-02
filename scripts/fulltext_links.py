@@ -21,7 +21,9 @@ def download_from_fulltext_links(
 ) -> dict[str, Any]:
     links = metadata.get("fulltext_links") or []
     if not isinstance(links, list) or not links:
-        raise ProviderFailure(NO_RESULT, "No full-text links are available in the metadata payload.")
+        raise ProviderFailure(
+            NO_RESULT, "No full-text links are available in the metadata payload."
+        )
 
     preferred_order = {
         "application/pdf": 0,
@@ -34,7 +36,9 @@ def download_from_fulltext_links(
 
     sorted_links = sorted(
         [item for item in links if isinstance(item, dict) and item.get("url")],
-        key=lambda item: preferred_order.get((item.get("content_type") or "").lower(), 9),
+        key=lambda item: preferred_order.get(
+            (item.get("content_type") or "").lower(), 9
+        ),
     )
 
     for link in sorted_links:
@@ -51,7 +55,13 @@ def download_from_fulltext_links(
             raise map_request_failure(exc) from exc
 
         content_type = response["headers"].get("content-type", link.get("content_type"))
-        output_path = build_output_path(output_dir, metadata.get("doi"), metadata.get("title"), content_type, response["url"])
+        output_path = build_output_path(
+            output_dir,
+            metadata.get("doi"),
+            metadata.get("title"),
+            content_type,
+            response["url"],
+        )
         return {
             "attempted": True,
             "status": "saved" if output_path else "fetched",

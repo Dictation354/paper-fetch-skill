@@ -8,7 +8,7 @@ import urllib.parse
 from typing import Any
 from collections.abc import Mapping
 
-from ..config import build_browser_user_agent, build_user_agent
+from ..config import build_browser_user_agent, build_publisher_user_agent
 from ..extraction.html import decode_html
 from ..extraction.html.availability_policy import AvailabilityPolicy
 from ..extraction.html.landing import LandingRedirectLimitExceeded, fetch_landing_html
@@ -21,15 +21,33 @@ from ..extraction.html.provider_rules import (
     ProviderCleanupRules,
     ProviderHtmlRules,
 )
-from ..http import DEFAULT_FULLTEXT_TIMEOUT_SECONDS, HttpTransport, PDF_MIME_TYPE, RequestFailure
+from ..http import (
+    DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
+    HttpTransport,
+    PDF_MIME_TYPE,
+    RequestFailure,
+)
 from ..http.headers import header_value
 from ..metadata.types import ProviderMetadata
 from ..models import AssetProfile
 from ..provider_catalog import ProviderSpec
 from ..publisher_identity import normalize_doi
-from ..quality.html_availability import HtmlQualityAssessor, availability_failure_message
-from ..quality.html_signals import IEEE_AVAILABILITY_OVERRIDES, IEEE_TEXT_MARKER_SIGNAL_SET
-from ..reason_codes import ABSTRACT_ONLY, ERROR, NO_RESULT, NOT_SUPPORTED, OK, PDF_FALLBACK
+from ..quality.html_availability import (
+    HtmlQualityAssessor,
+    availability_failure_message,
+)
+from ..quality.html_signals import (
+    IEEE_AVAILABILITY_OVERRIDES,
+    IEEE_TEXT_MARKER_SIGNAL_SET,
+)
+from ..reason_codes import (
+    ABSTRACT_ONLY,
+    ERROR,
+    NO_RESULT,
+    NOT_SUPPORTED,
+    OK,
+    PDF_FALLBACK,
+)
 from ..runtime import RuntimeContext
 from ..tracing import download_marker, fulltext_marker, trace_from_markers
 from ..utils import choose_public_landing_page_url, normalize_text
@@ -38,11 +56,29 @@ from . import _ieee_html as ieee_html
 from . import _ieee_metadata as ieee_metadata
 from . import _ieee_supplementary as ieee_supplementary
 from . import _ieee_url as ieee_url
-from ._pdf_common import pdf_asset_output_dir, pdf_asset_profile_from_context, pdf_fetch_result_assets
-from ._pdf_fallback import PdfFallbackStrategy, PdfFetchFailure, fetch_pdf_over_http, fetch_pdf_with_browser
-from ._payloads import build_provider_payload, provider_failure_diagnostics as _provider_failure_diagnostics
+from ._pdf_common import (
+    pdf_asset_output_dir,
+    pdf_asset_profile_from_context,
+    pdf_fetch_result_assets,
+    pdf_fetch_result_warnings,
+)
+from ._pdf_fallback import (
+    PdfFallbackStrategy,
+    PdfFetchFailure,
+    fetch_pdf_over_http,
+    fetch_pdf_with_browser,
+)
+from ._payloads import (
+    build_provider_payload,
+    provider_failure_diagnostics as _provider_failure_diagnostics,
+)
 from ._registry import ProviderBundle, register_provider_bundle
-from ._waterfall import DEFAULT_WATERFALL_CONTINUE_CODES, ProviderWaterfallState, ProviderWaterfallStep, run_provider_waterfall
+from ._waterfall import (
+    DEFAULT_WATERFALL_CONTINUE_CODES,
+    ProviderWaterfallState,
+    ProviderWaterfallStep,
+    run_provider_waterfall,
+)
 from .base import (
     ProviderArtifacts,
     ProviderClient,
@@ -60,15 +96,24 @@ __all__ = ["IeeeClient"]
 register_provider_bundle(
     ProviderBundle(
         catalog=ProviderSpec(
-            name="ieee", display_name="IEEE", official=True,
-            domains=("ieeexplore.ieee.org",), doi_prefixes=("10.1109/",),
-            publisher_aliases=("ieee", "institute of electrical and electronics engineers"),
-            asset_default="body", probe_capability="routing_signal",
+            name="ieee",
+            display_name="IEEE",
+            official=True,
+            domains=("ieeexplore.ieee.org",),
+            doi_prefixes=("10.1109/",),
+            publisher_aliases=(
+                "ieee",
+                "institute of electrical and electronics engineers",
+            ),
+            asset_default="body",
+            probe_capability="routing_signal",
             provider_managed_abstract_only=True,
-            client_factory_path="paper_fetch.providers.ieee:IeeeClient", status_order=6,
+            client_factory_path="paper_fetch.providers.ieee:IeeeClient",
+            status_order=6,
         ),
         html_rules=ProviderHtmlRules(
-            name="ieee", noise_profile="ieee",
+            name="ieee",
+            noise_profile="ieee",
             cleanup=ProviderCleanupRules(
                 markdown_promo_tokens=IEEE_MARKDOWN_PROMO_TOKENS,
                 extraction_cleanup_selectors=IEEE_EXTRACTION_CLEANUP_SELECTORS,
@@ -76,18 +121,21 @@ register_provider_bundle(
                 access_block_text_tokens=IEEE_ACCESS_BLOCK_TEXT_TOKENS,
             ),
             availability=AvailabilityPolicy(
-                name="ieee", site_rule_overrides=IEEE_SITE_RULE_OVERRIDES,
+                name="ieee",
+                site_rule_overrides=IEEE_SITE_RULE_OVERRIDES,
                 text_marker_signal_set=IEEE_TEXT_MARKER_SIGNAL_SET,
                 overrides=IEEE_AVAILABILITY_OVERRIDES,
             ),
         ),
-        asset_retry=ieee_html.IEEE_ASSET_RETRY_POLICY, sources=("ieee_html", "ieee_pdf"),
+        asset_retry=ieee_html.IEEE_ASSET_RETRY_POLICY,
+        sources=("ieee_html", "ieee_pdf"),
     )
 )
 
 IEEE_PDF_FALLBACK_ARTIFACT_DIR_NAME = "ieee_pdf_fallback"
 MAX_IEEE_LANDING_REDIRECTS = 8
 _FETCH_PDF_WITH_BROWSER = fetch_pdf_with_playwright = fetch_pdf_with_browser
+
 
 def _pdf_failure_diagnostics(failure: PdfFetchFailure | None) -> dict[str, Any] | None:
     if failure is None:
@@ -104,7 +152,7 @@ class IeeeClient(ProviderClient):
     def __init__(self, transport: HttpTransport, env: Mapping[str, str]) -> None:
         self.transport = transport
         self.env = dict(env)
-        self.user_agent = build_user_agent(env)
+        self.user_agent = build_publisher_user_agent(env)
         self.browser_user_agent = build_browser_user_agent(env)
 
     def probe_status(self) -> ProviderStatusResult:
@@ -148,7 +196,9 @@ class IeeeClient(ProviderClient):
         return ieee_url.IEEE_REST_URL_TEMPLATE.format(article_number=article_number)
 
     def _multimedia_url(self, article_number: str) -> str:
-        return ieee_url.IEEE_MULTIMEDIA_URL_TEMPLATE.format(article_number=article_number)
+        return ieee_url.IEEE_MULTIMEDIA_URL_TEMPLATE.format(
+            article_number=article_number
+        )
 
     def _multimedia_headers(self, document_url: str) -> dict[str, str]:
         headers = self._rest_headers(document_url)
@@ -163,7 +213,9 @@ class IeeeClient(ProviderClient):
         )
         return headers
 
-    def _fetch_reference_metadata(self, article_number: str, document_url: str, *, expected_count: int = 0) -> list[dict[str, str | None]]:
+    def _fetch_reference_metadata(
+        self, article_number: str, document_url: str, *, expected_count: int = 0
+    ) -> list[dict[str, str | None]]:
         return ieee_metadata.fetch_ieee_reference_metadata(
             self.transport,
             article_number,
@@ -173,7 +225,9 @@ class IeeeClient(ProviderClient):
             expected_count=expected_count,
         )
 
-    def _fetch_multimedia_assets(self, landing_attempt: ieee_metadata.IeeeLandingAttempt) -> list[dict[str, str]]:
+    def _fetch_multimedia_assets(
+        self, landing_attempt: ieee_metadata.IeeeLandingAttempt
+    ) -> list[dict[str, str]]:
         if not landing_attempt.article_number:
             return []
         document_url = self._document_url(landing_attempt.article_number)
@@ -191,7 +245,10 @@ class IeeeClient(ProviderClient):
         landing_attempt: ieee_metadata.IeeeLandingAttempt,
     ) -> list[dict[str, Any]]:
         return ieee_html._dedupe_ieee_assets_by_priority(
-            [*list(extraction.extracted_assets), *self._fetch_multimedia_assets(landing_attempt)],
+            [
+                *list(extraction.extracted_assets),
+                *self._fetch_multimedia_assets(landing_attempt),
+            ],
             merge_fields=ieee_html.IEEE_ASSET_URL_FIELDS,
         )
 
@@ -204,16 +261,23 @@ class IeeeClient(ProviderClient):
     def _resolve_landing_url(self, doi: str, metadata: Mapping[str, Any]) -> str:
         article_number = ieee_url._article_number_from_metadata(metadata)
         document_url = self._document_url(article_number) if article_number else None
-        return choose_public_landing_page_url(
-            metadata.get("landing_page_url"),
-            document_url,
-            f"https://doi.org/{urllib.parse.quote(doi, safe='')}",
-        ) or f"https://doi.org/{urllib.parse.quote(doi, safe='')}"
+        return (
+            choose_public_landing_page_url(
+                metadata.get("landing_page_url"),
+                document_url,
+                f"https://doi.org/{urllib.parse.quote(doi, safe='')}",
+            )
+            or f"https://doi.org/{urllib.parse.quote(doi, safe='')}"
+        )
 
-    def _fetch_landing_attempt(self, doi: str, metadata: Mapping[str, Any]) -> ieee_metadata.IeeeLandingAttempt:
+    def _fetch_landing_attempt(
+        self, doi: str, metadata: Mapping[str, Any]
+    ) -> ieee_metadata.IeeeLandingAttempt:
         normalized_doi = normalize_doi(doi)
         if not normalized_doi:
-            raise ProviderFailure(NOT_SUPPORTED, "IEEE full-text retrieval requires a DOI.")
+            raise ProviderFailure(
+                NOT_SUPPORTED, "IEEE full-text retrieval requires a DOI."
+            )
         landing_url = self._resolve_landing_url(normalized_doi, metadata)
         try:
             landing_fetch = fetch_landing_html(
@@ -233,7 +297,9 @@ class IeeeClient(ProviderClient):
         except RequestFailure as exc:
             raise map_request_failure(exc) from exc
 
-        landing_metadata = ieee_metadata._parse_landing_metadata(landing_fetch.html_text)
+        landing_metadata = ieee_metadata._parse_landing_metadata(
+            landing_fetch.html_text
+        )
         article_number = (
             ieee_url._article_number_from_metadata(landing_metadata)
             or ieee_url._article_number_from_url(landing_fetch.final_url)
@@ -241,8 +307,12 @@ class IeeeClient(ProviderClient):
             or ieee_url._article_number_from_url(landing_url)
         )
         if not article_number:
-            raise ProviderFailure(NO_RESULT, "IEEE landing page did not expose an article number.")
-        merged_metadata = ieee_metadata._merge_ieee_metadata(metadata, landing_metadata, landing_fetch.final_url)
+            raise ProviderFailure(
+                NO_RESULT, "IEEE landing page did not expose an article number."
+            )
+        merged_metadata = ieee_metadata._merge_ieee_metadata(
+            metadata, landing_metadata, landing_fetch.final_url
+        )
         reference_count = 0
         try:
             reference_count = int(landing_metadata.get("referenceCount") or 0)
@@ -292,7 +362,9 @@ class IeeeClient(ProviderClient):
             )
         except RequestFailure as exc:
             raise map_request_failure(exc) from exc
-        response_url = ieee_url._absolute_ieee_url(str(response.get("url") or rest_url), rest_url)
+        response_url = ieee_url._absolute_ieee_url(
+            str(response.get("url") or rest_url), rest_url
+        )
         body = bytes(response.get("body") or b"")
         html_text = decode_html(
             body,
@@ -316,9 +388,13 @@ class IeeeClient(ProviderClient):
         )
         if not diagnostics.accepted:
             raise ProviderFailure(NO_RESULT, availability_failure_message(diagnostics))
-        content_type = header_value(response.get("headers"), "content-type", "text/html")
+        content_type = header_value(
+            response.get("headers"), "content-type", "text/html"
+        )
         cleaned_body = extraction.html_text.encode("utf-8")
-        extracted_assets = self._html_extraction_assets_with_landing_payloads(extraction, landing_attempt)
+        extracted_assets = self._html_extraction_assets_with_landing_payloads(
+            extraction, landing_attempt
+        )
         return build_provider_payload(
             provider=self.name,
             route_kind="html",
@@ -382,7 +458,11 @@ class IeeeClient(ProviderClient):
             else None
         )
         effective_asset_profile = pdf_asset_profile_from_context(context)
-        asset_output_dir = pdf_asset_output_dir(context, asset_profile=effective_asset_profile, doi=landing_attempt.normalized_doi)
+        asset_output_dir = pdf_asset_output_dir(
+            context,
+            asset_profile=effective_asset_profile,
+            doi=landing_attempt.normalized_doi,
+        )
         direct_failure: PdfFetchFailure | None = None
         try:
             pdf_result = PdfFallbackStrategy(
@@ -398,10 +478,16 @@ class IeeeClient(ProviderClient):
             fetcher = "direct_http"
         except PdfFetchFailure as exc:
             direct_failure = exc
-            browser_seed_urls = ieee_url._dedupe_urls([landing_attempt.response_url, document_url])
+            browser_seed_urls = ieee_url._dedupe_urls(
+                [landing_attempt.response_url, document_url]
+            )
 
             def run_browser_pdf(active_artifact_dir: Path):
-                return (fetch_pdf_with_playwright if fetch_pdf_with_playwright is not _FETCH_PDF_WITH_BROWSER else fetch_pdf_with_browser)(
+                return (
+                    fetch_pdf_with_playwright
+                    if fetch_pdf_with_playwright is not _FETCH_PDF_WITH_BROWSER
+                    else fetch_pdf_with_browser
+                )(
                     candidates,
                     artifact_dir=active_artifact_dir,
                     asset_profile=effective_asset_profile,
@@ -410,12 +496,15 @@ class IeeeClient(ProviderClient):
                     headless=True,
                     referer=document_url,
                     seed_urls=browser_seed_urls,
+                    allow_pdf_only=True,
                     context=context,
                 )
 
             try:
                 if artifact_dir is None:
-                    with tempfile.TemporaryDirectory(prefix="paper_fetch_ieee_pdf_") as tempdir:
+                    with tempfile.TemporaryDirectory(
+                        prefix="paper_fetch_ieee_pdf_"
+                    ) as tempdir:
                         pdf_result = run_browser_pdf(Path(tempdir))
                 else:
                     pdf_result = run_browser_pdf(artifact_dir)
@@ -465,9 +554,12 @@ class IeeeClient(ProviderClient):
             suggested_filename=pdf_result.suggested_filename,
             html_failure_message=html_failure_message,
             content_needs_local_copy=True,
-            warnings=payload_warnings,
+            warnings=[*payload_warnings, *pdf_fetch_result_warnings(pdf_result)],
             trace_markers=[
-                *list(html_trace_markers or [fulltext_marker("ieee", "fail", route="html")]),
+                *list(
+                    html_trace_markers
+                    or [fulltext_marker("ieee", "fail", route="html")]
+                ),
                 fulltext_marker("ieee", "ok", route=PDF_FALLBACK),
             ],
             needs_local_copy=True,
@@ -480,10 +572,15 @@ class IeeeClient(ProviderClient):
         warnings: list[str],
         trace_markers: list[str],
         diagnostics: Mapping[str, Any] | None = None,
-        ) -> _RawFulltextPayload:
-        markdown_text = ieee_metadata._abstract_markdown(landing_attempt.merged_metadata)
+    ) -> _RawFulltextPayload:
+        markdown_text = ieee_metadata._abstract_markdown(
+            landing_attempt.merged_metadata
+        )
         if not markdown_text:
-            raise ProviderFailure(NO_RESULT, "IEEE landing metadata did not include provider abstract content.")
+            raise ProviderFailure(
+                NO_RESULT,
+                "IEEE landing metadata did not include provider abstract content.",
+            )
         body = markdown_text.encode("utf-8")
         return build_provider_payload(
             provider=self.name,
@@ -522,7 +619,9 @@ class IeeeClient(ProviderClient):
             html_failure = state.failure("html")
             browser_html_failure = state.failure("browser_html")
             html_failure_message = (
-                html_failure.message if html_failure is not None else "IEEE dynamic HTML route failed."
+                html_failure.message
+                if html_failure is not None
+                else "IEEE dynamic HTML route failed."
             )
             if browser_html_failure is not None:
                 html_failure_message = f"{html_failure_message} Browser HTML fallback: {browser_html_failure.message}"
@@ -544,8 +643,12 @@ class IeeeClient(ProviderClient):
                 warnings=[],
                 trace_markers=state.source_markers(),
                 diagnostics={
-                    "html_failure": _provider_failure_diagnostics(state.failure("html")),
-                    "browser_html_failure": _provider_failure_diagnostics(state.failure("browser_html")),
+                    "html_failure": _provider_failure_diagnostics(
+                        state.failure("html")
+                    ),
+                    "browser_html_failure": _provider_failure_diagnostics(
+                        state.failure("browser_html")
+                    ),
                     PDF_FALLBACK: pdf_failure_diagnostics
                     or _provider_failure_diagnostics(state.failure("pdf")),
                 },
@@ -553,16 +656,25 @@ class IeeeClient(ProviderClient):
 
         def final_failure(state: ProviderWaterfallState) -> ProviderFailure:
             failures = [
-                ("html", state.failure("html") or ProviderFailure(NO_RESULT, "IEEE dynamic HTML route failed.")),
+                (
+                    "html",
+                    state.failure("html")
+                    or ProviderFailure(NO_RESULT, "IEEE dynamic HTML route failed."),
+                ),
                 (
                     "browser_html",
                     state.failure("browser_html")
                     or ProviderFailure(NO_RESULT, "IEEE browser HTML fallback failed."),
                 ),
-                ("pdf", state.failure("pdf") or ProviderFailure(NO_RESULT, "IEEE PDF fallback failed.")),
+                (
+                    "pdf",
+                    state.failure("pdf")
+                    or ProviderFailure(NO_RESULT, "IEEE PDF fallback failed."),
+                ),
                 (
                     "abstract",
-                    state.failure("abstract") or ProviderFailure(NO_RESULT, "IEEE abstract fallback failed."),
+                    state.failure("abstract")
+                    or ProviderFailure(NO_RESULT, "IEEE abstract fallback failed."),
                 ),
             ]
             combined = combine_provider_failures(failures)
@@ -581,7 +693,9 @@ class IeeeClient(ProviderClient):
             [
                 ProviderWaterfallStep(
                     label="html",
-                    run=lambda _state: self._fetch_dynamic_html_payload(landing_attempt, context=runtime_context),
+                    run=lambda _state: self._fetch_dynamic_html_payload(
+                        landing_attempt, context=runtime_context
+                    ),
                     failure_marker=fulltext_marker("ieee", "fail", route="html"),
                     continue_codes=DEFAULT_WATERFALL_CONTINUE_CODES,
                     failure_warning=lambda failure, _state: (
@@ -592,7 +706,9 @@ class IeeeClient(ProviderClient):
                 ProviderWaterfallStep(
                     label="browser_html",
                     run=run_browser_html,
-                    failure_marker=fulltext_marker("ieee", "fail", route="browser_html"),
+                    failure_marker=fulltext_marker(
+                        "ieee", "fail", route="browser_html"
+                    ),
                     continue_codes=DEFAULT_WATERFALL_CONTINUE_CODES,
                     failure_warning=lambda failure, _state: (
                         f"IEEE browser HTML fallback was not usable ({failure.message}); attempting PDF fallback."
@@ -624,7 +740,9 @@ class IeeeClient(ProviderClient):
         metadata: Mapping[str, Any],
         context: RuntimeContext,
     ) -> tuple[str, Mapping[str, Any]]:
-        extraction = ieee_html._extract_ieee_html(html_text, source_url, metadata=metadata, context=context)
+        extraction = ieee_html._extract_ieee_html(
+            html_text, source_url, metadata=metadata, context=context
+        )
         return extraction.markdown_text, {
             "abstract_sections": extraction.abstract_sections,
             "section_hints": extraction.section_hints,
@@ -653,7 +771,9 @@ class IeeeClient(ProviderClient):
             asset_profile=asset_profile,
         )
 
-    def asset_download_failure_warning(self, exc: ProviderFailure | RequestFailure | OSError) -> str:
+    def asset_download_failure_warning(
+        self, exc: ProviderFailure | RequestFailure | OSError
+    ) -> str:
         message = exc.message if isinstance(exc, ProviderFailure) else str(exc)
         return f"IEEE related assets could not be downloaded: {message}"
 
@@ -687,10 +807,17 @@ class IeeeClient(ProviderClient):
             asset_failures=asset_failures,
         )
         content = raw_payload.content
-        if normalize_text(content.route_kind if content is not None else "").lower() != PDF_FALLBACK:
+        if (
+            normalize_text(content.route_kind if content is not None else "").lower()
+            != PDF_FALLBACK
+        ):
             return artifacts
         pdf_assets = list(content.extracted_assets if content is not None else [])
-        skip_trace = [] if pdf_assets else trace_from_markers([download_marker("ieee_assets_skipped_text_only")])
+        skip_trace = (
+            []
+            if pdf_assets
+            else trace_from_markers([download_marker("ieee_assets_skipped_text_only")])
+        )
         return ProviderArtifacts(
             assets=[*list(artifacts.assets), *pdf_assets],
             asset_failures=list(artifacts.asset_failures),

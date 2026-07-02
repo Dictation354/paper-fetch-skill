@@ -176,6 +176,7 @@ def extract_markdown(
     }
     return markdown, extraction_payload
 
+
 __all__ = [
     "_normalize_mdpi_markdown",
     "extract_markdown",

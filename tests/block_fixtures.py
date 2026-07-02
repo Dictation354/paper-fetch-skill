@@ -4,7 +4,11 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from tests.golden_criteria import doi_to_fixture_slug, fixture_sample_for_doi, iter_manifest_samples
+from tests.golden_criteria import (
+    doi_to_fixture_slug,
+    fixture_sample_for_doi,
+    iter_manifest_samples,
+)
 from tests.paths import FIXTURE_DIR
 
 

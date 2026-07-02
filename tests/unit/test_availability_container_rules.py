@@ -39,9 +39,7 @@ def test_availability_container_rules_round_trip_from_site_rule_overrides() -> N
     container_rules = _availability_container_rules_from_rules(rules)
 
     assert isinstance(container_rules, AvailabilityContainerRules)
-    assert container_rules.candidate_selectors == tuple(
-        merged["candidate_selectors"]
-    )
+    assert container_rules.candidate_selectors == tuple(merged["candidate_selectors"])
     assert container_rules.remove_selectors == tuple(merged["remove_selectors"])
     assert set(container_rules.drop_keywords) == merged["drop_keywords"]
     assert set(container_rules.drop_texts) == merged["drop_text"]
@@ -53,10 +51,10 @@ def test_availability_container_rules_round_trip_from_site_rule_overrides() -> N
     )
 
 
-def test_availability_container_rules_are_frozen_and_cleanup_policy_has_no_copy() -> None:
-    container_rules = availability_rules_for_provider(
-        "ieee"
-    ).container_rules
+def test_availability_container_rules_are_frozen_and_cleanup_policy_has_no_copy() -> (
+    None
+):
+    container_rules = availability_rules_for_provider("ieee").container_rules
 
     assert "document-actions" in container_rules.drop_keywords
     assert ".document-actions" in container_rules.remove_selectors

@@ -43,23 +43,34 @@ GENERIC_SUPPLEMENTARY_FILE_SUFFIXES = (
 )
 
 
-def supplementary_text_tokens_for_profile(noise_profile: str | None = None) -> tuple[str, ...]:
+def supplementary_text_tokens_for_profile(
+    noise_profile: str | None = None,
+) -> tuple[str, ...]:
     return (
         *GENERIC_SUPPLEMENTARY_TEXT_TOKENS,
         *(provider_supplementary_text_tokens(noise_profile) if noise_profile else ()),
     )
 
 
-def supplementary_file_suffixes(*, extra_suffixes: tuple[str, ...] = ()) -> tuple[str, ...]:
+def supplementary_file_suffixes(
+    *, extra_suffixes: tuple[str, ...] = ()
+) -> tuple[str, ...]:
     return tuple(dict.fromkeys([*GENERIC_SUPPLEMENTARY_FILE_SUFFIXES, *extra_suffixes]))
 
 
-def has_supplementary_file_suffix(url: str, *, extra_suffixes: tuple[str, ...] = ()) -> bool:
+def has_supplementary_file_suffix(
+    url: str, *, extra_suffixes: tuple[str, ...] = ()
+) -> bool:
     lowered_url = normalize_text(str(url or "")).lower()
-    return any(token in lowered_url for token in supplementary_file_suffixes(extra_suffixes=extra_suffixes))
+    return any(
+        token in lowered_url
+        for token in supplementary_file_suffixes(extra_suffixes=extra_suffixes)
+    )
 
 
-def _supplementary_anchor_is_supported(anchor: Any, *, noise_profile: str | None = None) -> bool:
+def _supplementary_anchor_is_supported(
+    anchor: Any, *, noise_profile: str | None = None
+) -> bool:
     if not isinstance(anchor, Tag):
         return False
 
@@ -67,7 +78,9 @@ def _supplementary_anchor_is_supported(anchor: Any, *, noise_profile: str | None
     if not href or href.startswith("#"):
         return False
     text = normalize_text(anchor.get_text(" ", strip=True)).lower()
-    if any(token in text for token in supplementary_text_tokens_for_profile(noise_profile)):
+    if any(
+        token in text for token in supplementary_text_tokens_for_profile(noise_profile)
+    ):
         return True
     lowered_href = href.lower()
     return has_supplementary_file_suffix(lowered_href)
@@ -85,8 +98,12 @@ def _supplementary_asset_from_anchor(
         return None
 
     href = normalize_text(str(anchor.get("href") or ""))
-    heading = normalize_text(anchor.get_text(" ", strip=True)) or "Supplementary Material"
-    heading = re.sub(r"\s*\(\s*download\s+pdf\s*\)\s*$", "", heading, flags=re.IGNORECASE)
+    heading = (
+        normalize_text(anchor.get_text(" ", strip=True)) or "Supplementary Material"
+    )
+    heading = re.sub(
+        r"\s*\(\s*download\s+pdf\s*\)\s*$", "", heading, flags=re.IGNORECASE
+    )
     absolute_href = urllib.parse.urljoin(source_url, href)
     return {
         "kind": "supplementary",
@@ -107,7 +124,9 @@ def extract_supplementary_assets(
     soup = BeautifulSoup(html_text, choose_parser())
     assets_by_key: dict[tuple[str, str, str], dict[str, str]] = {}
     for anchor in soup.find_all("a", href=True):
-        asset = _supplementary_asset_from_anchor(anchor, source_url, noise_profile=noise_profile)
+        asset = _supplementary_asset_from_anchor(
+            anchor, source_url, noise_profile=noise_profile
+        )
         if asset is None:
             continue
         url = normalize_text(asset.get("url") or "")
@@ -170,9 +189,11 @@ def extract_scoped_html_assets(
         source_url,
         noise_profile=noise_profile,
     )
-    formula_url_candidates = set().union(
-        *(_asset_url_candidates(asset) for asset in formula_assets)
-    ) if formula_assets else set()
+    formula_url_candidates = (
+        set().union(*(_asset_url_candidates(asset) for asset in formula_assets))
+        if formula_assets
+        else set()
+    )
     assets = [
         asset
         for asset in extract_figure_assets(body_html_text, source_url)
@@ -180,7 +201,11 @@ def extract_scoped_html_assets(
     ]
     assets.extend(formula_assets)
     if asset_profile == "all":
-        supplementary_scope = body_html_text if supplementary_html_text is None else supplementary_html_text
+        supplementary_scope = (
+            body_html_text
+            if supplementary_html_text is None
+            else supplementary_html_text
+        )
         assets.extend(
             extract_supplementary_assets(
                 supplementary_scope,

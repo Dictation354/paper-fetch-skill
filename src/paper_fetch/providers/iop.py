@@ -158,7 +158,9 @@ class IopClient(browser_workflow.BrowserWorkflowClient):
 
     def article_source_for_payload(self, raw_payload: RawFulltextPayload) -> str:
         content = raw_payload.content
-        route = normalize_text(content.route_kind if content is not None else "").lower()
+        route = normalize_text(
+            content.route_kind if content is not None else ""
+        ).lower()
         if route == PDF_FALLBACK:
             return "iop_pdf"
         return "iop_html"

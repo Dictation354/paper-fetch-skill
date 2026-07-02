@@ -18,11 +18,7 @@ from paper_fetch.providers import (
 
 
 def _jsonld(payload: object) -> str:
-    return (
-        '<script type="application/ld+json">'
-        f"{json.dumps(payload)}"
-        "</script>"
-    )
+    return f'<script type="application/ld+json">{json.dumps(payload)}</script>'
 
 
 @pytest.mark.parametrize(

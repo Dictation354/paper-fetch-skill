@@ -29,7 +29,9 @@ class SectionScanStateTests(unittest.TestCase):
 
                 self.assertEqual(state.in_abstract, active_field == "in_abstract")
                 self.assertEqual(state.in_back_matter, active_field == "in_back_matter")
-                self.assertEqual(state.in_front_matter, active_field == "in_front_matter")
+                self.assertEqual(
+                    state.in_front_matter, active_field == "in_front_matter"
+                )
                 self.assertEqual(
                     state.in_data_availability,
                     active_field == "in_data_availability",
@@ -44,14 +46,18 @@ class SectionScanStateTests(unittest.TestCase):
         self.assertTrue(state.in_abstract)
         self.assertTrue(state.abstract_seen)
 
-    def test_front_matter_non_heading_clears_without_entering_front_matter(self) -> None:
+    def test_front_matter_non_heading_clears_without_entering_front_matter(
+        self,
+    ) -> None:
         state = SectionScanState(in_abstract=True, in_front_matter=True)
 
         state.transition("front_matter", is_heading=False)
 
         self.assertFalse(state.in_skipped_section())
 
-    def test_ancillary_without_auxiliary_only_clears_front_and_data_states(self) -> None:
+    def test_ancillary_without_auxiliary_only_clears_front_and_data_states(
+        self,
+    ) -> None:
         state = SectionScanState(
             in_abstract=True,
             in_back_matter=True,
@@ -90,7 +96,9 @@ class SectionScanStateTests(unittest.TestCase):
         self.assertTrue(state.in_auxiliary)
         self.assertTrue(state.in_skipped_section())
 
-    def test_body_heading_clears_sections_and_records_post_abstract_heading(self) -> None:
+    def test_body_heading_clears_sections_and_records_post_abstract_heading(
+        self,
+    ) -> None:
         state = SectionScanState(in_abstract=True)
         state.abstract_seen = True
 

@@ -198,7 +198,9 @@ def _minimal_changelog_doc() -> str:
     )
 
 
-def _insert_table_row_after_marker(text: str, marker: str, row: str) -> tuple[str, bool]:
+def _insert_table_row_after_marker(
+    text: str, marker: str, row: str
+) -> tuple[str, bool]:
     if row in text:
         return text, False
     if marker not in text:
@@ -263,7 +265,9 @@ def _load_provider_manifest(path: Path) -> dict[str, Any]:
         import yaml
         from jsonschema import Draft202012Validator
     except ImportError as exc:
-        raise ManifestSchemaError(f"manifest validation dependency is missing: {exc}") from exc
+        raise ManifestSchemaError(
+            f"manifest validation dependency is missing: {exc}"
+        ) from exc
 
     try:
         manifest = yaml.safe_load(path.read_text(encoding="utf-8"))
@@ -278,7 +282,9 @@ def _load_provider_manifest(path: Path) -> dict[str, Any]:
     try:
         schema = json.loads(schema_path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
-        raise ManifestSchemaError(f"provider manifest schema cannot be loaded: {exc}") from exc
+        raise ManifestSchemaError(
+            f"provider manifest schema cannot be loaded: {exc}"
+        ) from exc
 
     validator = Draft202012Validator(schema)
     errors = sorted(validator.iter_errors(manifest), key=lambda error: list(error.path))
@@ -341,16 +347,19 @@ def _markdown_contracts_from_manifest(
         count_items: tuple[tuple[str, int], ...] = ()
         if isinstance(count_equals, dict):
             count_items = tuple(
-                (str(key), int(value))
-                for key, value in sorted(count_equals.items())
+                (str(key), int(value)) for key, value in sorted(count_equals.items())
             )
         contracts.append(
             MarkdownContract(
                 purpose=str(purpose),
                 doi=str(contract["doi"]),
                 must_include=tuple(str(value) for value in contract["must_include"]),
-                must_not_include=tuple(str(value) for value in contract["must_not_include"]),
-                must_match=tuple(str(value) for value in contract.get("must_match") or ()),
+                must_not_include=tuple(
+                    str(value) for value in contract["must_not_include"]
+                ),
+                must_match=tuple(
+                    str(value) for value in contract.get("must_match") or ()
+                ),
                 count_equals=count_items,
             )
         )
@@ -392,7 +401,9 @@ def _scaffold_input_from_manifest(manifest_path: Path) -> ScaffoldInput:
         doi=placeholder_doi,
         source=display_source,
         fulltext_client=bool(main_path),
-        html_capable=any(step in {"landing_html", "article_html"} for step in main_path),
+        html_capable=any(
+            step in {"landing_html", "article_html"} for step in main_path
+        ),
         display_name=name.replace("_", " ").title(),
         domains=tuple(str(value) for value in routing["domains"]),
         doi_prefixes=tuple(str(value) for value in routing["doi_prefixes"]),
@@ -446,7 +457,9 @@ def _html_module_content(
     name = spec.name
     display_name = name.replace("_", " ").title()
     client_factory_path = (
-        f"paper_fetch.providers.{name}:{_class_name(name)}" if spec.fulltext_client else ""
+        f"paper_fetch.providers.{name}:{_class_name(name)}"
+        if spec.fulltext_client
+        else ""
     )
     catalog_lines = [
         "        catalog=ProviderSpec(",
@@ -471,7 +484,9 @@ def _html_module_content(
             f"            env_requirements={_format_py_tuple(spec.env_requirements)},"
         )
     if spec.requires_playwright or spec.manifest_path is not None:
-        catalog_lines.append(f"            requires_playwright={spec.requires_playwright},")
+        catalog_lines.append(
+            f"            requires_playwright={spec.requires_playwright},"
+        )
     if spec.requires_browser_runtime or spec.manifest_path is not None:
         catalog_lines.append(
             f"            requires_browser_runtime={spec.requires_browser_runtime},"
@@ -595,7 +610,7 @@ def _client_module_content(name: str, waterfall_steps: tuple[str, ...]) -> str:
             "    )",
             "",
             "",
-            f"__all__ = [\"{class_name}\"]",
+            f'__all__ = ["{class_name}"]',
             "",
         ]
     )
@@ -644,7 +659,9 @@ def _markdown_contract_test_content(
         for value in contract.must_not_include:
             lines.append(f"    assert {_format_py_string(value)} not in markdown")
         for pattern in contract.must_match:
-            lines.append(f"    assert re.search({_format_py_string(pattern)}, markdown)")
+            lines.append(
+                f"    assert re.search({_format_py_string(pattern)}, markdown)"
+            )
         for value, expected_count in contract.count_equals:
             lines.append(
                 f"    assert markdown.count({_format_py_string(value)}) == {expected_count}"
@@ -746,7 +763,9 @@ def _capture_commands_content(spec: ScaffoldInput) -> str:
     return "\n".join(lines) + "\n"
 
 
-def _diff_preview(path: Path, planned_content: str, *, max_lines: int = 80) -> list[str]:
+def _diff_preview(
+    path: Path, planned_content: str, *, max_lines: int = 80
+) -> list[str]:
     existing = path.read_text(encoding="utf-8") if path.exists() else ""
     diff = list(
         difflib.unified_diff(
@@ -821,9 +840,7 @@ def _sync_docs_placeholders(root: Path, *, spec: ScaffoldInput) -> list[Path]:
 
     providers_text = providers_path.read_text(encoding="utf-8")
     provider_anchor = f'<a id="{name.replace("_", "-")}"></a>'
-    providers_row = (
-        f"| `{name}` | TODO | TODO | TODO | TODO | <!-- {todo} --> |"
-    )
+    providers_row = f"| `{name}` | TODO | TODO | TODO | TODO | <!-- {todo} --> |"
     if todo in providers_text or provider_anchor in providers_text:
         providers_changed = False
         provider_section_changed = False
@@ -864,9 +881,7 @@ def _sync_docs_placeholders(root: Path, *, spec: ScaffoldInput) -> list[Path]:
         spec.docs_extraction_rules_summary
         or "skipped: manifest docs.extraction_rules_summary is null; fill after fixture replay."
     )
-    extraction_row = (
-        f"| `{name}` | <!-- {todo} --> | {extraction_summary} | TODO |"
-    )
+    extraction_row = f"| `{name}` | <!-- {todo} --> | {extraction_summary} | TODO |"
     if todo in extraction_text:
         extraction_changed = False
     else:
@@ -997,7 +1012,9 @@ def scaffold(
     )
     if existing_provider_paths and spec.manifest_path is not None:
         merge_existing = getattr(args, "merge_existing", "plan")
-        provider_required_outputs_exist = all(path.exists() for path in required_provider_paths)
+        provider_required_outputs_exist = all(
+            path.exists() for path in required_provider_paths
+        )
         if merge_existing != "safe" or (
             divergent_existing_paths and not provider_required_outputs_exist
         ):
@@ -1094,11 +1111,15 @@ def _json_summary(
         "generated_files": [rel(path) for path in paths],
         "docs_files": [rel(path) for path in docs_paths],
         "reused_fixture_samples": sorted(set(reused_fixture_samples or ())),
-        "reused_existing_files": [rel(path) for path in sorted(reused_existing_paths or [])],
+        "reused_existing_files": [
+            rel(path) for path in sorted(reused_existing_paths or [])
+        ],
     }
 
 
-def _write_scaffold_summary(root: Path, provider: str, summary: dict[str, object]) -> None:
+def _write_scaffold_summary(
+    root: Path, provider: str, summary: dict[str, object]
+) -> None:
     path = root / "onboarding" / "scaffold" / f"{provider}.json"
     path.parent.mkdir(parents=True, exist_ok=True)
     summary["summary_path"] = _rel(path, root)
@@ -1111,12 +1132,20 @@ def _write_scaffold_summary(root: Path, provider: str, summary: dict[str, object
 def _print_checklist(paths: list[Path], root: Path, *, docs_paths: list[Path]) -> None:
     print("PR-checklist TODO:")
     print("- Fill ProviderSpec domains, aliases, routing templates, and status_order.")
-    print("- Replace placeholder HTML rules with provider-owned cleanup and availability signals.")
+    print(
+        "- Replace placeholder HTML rules with provider-owned cleanup and availability signals."
+    )
     print("- Generate baseline Markdown for every non-null manifest fixture purpose.")
-    print("- Replace the failing Markdown review-loop placeholder test with provider-local assertions.")
+    print(
+        "- Replace the failing Markdown review-loop placeholder test with provider-local assertions."
+    )
     print("- Add positive Markdown assertions for expected article content.")
-    print("- Add negative Markdown assertions for site chrome, access noise, and duplicate boilerplate.")
-    print("- Ensure each non-null fixture purpose is named or asserted in the provider test.")
+    print(
+        "- Add negative Markdown assertions for site chrome, access noise, and duplicate boilerplate."
+    )
+    print(
+        "- Ensure each non-null fixture purpose is named or asserted in the provider test."
+    )
     print("- Run python3 scripts/validate_extraction_rules.py and targeted pytest.")
     print("Generated files:")
     for path in paths:
@@ -1189,7 +1218,9 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _validate_input_mode(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
+def _validate_input_mode(
+    parser: argparse.ArgumentParser, args: argparse.Namespace
+) -> None:
     del parser
     legacy_values = {
         "--name": args.name,
@@ -1249,7 +1280,9 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     try:
         _validate_input_mode(parser, args)
-        paths, docs_paths, spec, reused_fixture_samples, reused_existing_paths = scaffold(args)
+        paths, docs_paths, spec, reused_fixture_samples, reused_existing_paths = (
+            scaffold(args)
+        )
     except ScaffoldMergePlan as exc:
         print(json.dumps(exc.summary, ensure_ascii=False, sort_keys=True))
         return 0
@@ -1258,7 +1291,9 @@ def main(argv: list[str] | None = None) -> int:
             error_payload(
                 exc.code,
                 exc.message,
-                provider=exc.provider or args.name or _provider_hint_from_manifest(args.from_manifest),
+                provider=exc.provider
+                or args.name
+                or _provider_hint_from_manifest(args.from_manifest),
                 manifest=exc.manifest or args.from_manifest,
                 task_id=exc.task_id or _task_id_for_scaffold(args, "scaffold"),
                 retryable=exc.retryable,
@@ -1288,7 +1323,11 @@ def main(argv: list[str] | None = None) -> int:
                 manifest=args.from_manifest,
                 task_id=_task_id_for_scaffold(args, "scaffold"),
                 retryable=False,
-                details={"path": str(exc).removeprefix("refusing to overwrite existing path: ")},
+                details={
+                    "path": str(exc).removeprefix(
+                        "refusing to overwrite existing path: "
+                    )
+                },
             )
         )
         return 2

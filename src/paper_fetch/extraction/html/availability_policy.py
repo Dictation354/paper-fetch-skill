@@ -30,9 +30,7 @@ class AvailabilityContainerRules:
     def short_text_patterns_for(
         self, *, browser_workflow: bool = False
     ) -> tuple[str, ...]:
-        return (
-            self.browser_workflow_short_text_patterns if browser_workflow else ()
-        )
+        return self.browser_workflow_short_text_patterns if browser_workflow else ()
 
 
 @dataclass(frozen=True)

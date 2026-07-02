@@ -21,7 +21,9 @@ from paper_fetch.providers import (
     science as science_provider,
     wiley as wiley_provider,
 )
-from paper_fetch.providers.atypon_browser_workflow import asset_scopes as atypon_browser_workflow_asset_scopes
+from paper_fetch.providers.atypon_browser_workflow import (
+    asset_scopes as atypon_browser_workflow_asset_scopes,
+)
 from paper_fetch.quality.html_availability import assess_html_fulltext_availability
 from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
 from paper_fetch.tracing import trace_from_markers
@@ -42,27 +44,60 @@ from tests.unit._paper_fetch_support import build_envelope, fulltext_pdf_bytes
 SCIENCE_SAMPLE = provider_benchmark_sample("science")
 PNAS_SAMPLE = provider_benchmark_sample("pnas")
 WILEY_REGRESSION_FIXTURE = golden_criteria_asset("10.1111/gcb.16998", "original.html")
-PNAS_REGRESSION_FIXTURE = golden_criteria_asset("10.1073/pnas.2309123120", "original.html")
-PNAS_COMMENTARY_FIXTURE = golden_criteria_asset("10.1073/pnas.2317456120", "commentary.html")
-SCIENCE_FRONTMATTER_REGRESSION_FIXTURE = golden_criteria_asset("10.1126/science.abp8622", "original.html")
-SCIENCE_DATALAYER_AUTHOR_FIXTURE = golden_criteria_asset("10.1126/science.adp0212", "original.html")
+PNAS_REGRESSION_FIXTURE = golden_criteria_asset(
+    "10.1073/pnas.2309123120", "original.html"
+)
+PNAS_COMMENTARY_FIXTURE = golden_criteria_asset(
+    "10.1073/pnas.2317456120", "commentary.html"
+)
+SCIENCE_FRONTMATTER_REGRESSION_FIXTURE = golden_criteria_asset(
+    "10.1126/science.abp8622", "original.html"
+)
+SCIENCE_DATALAYER_AUTHOR_FIXTURE = golden_criteria_asset(
+    "10.1126/science.adp0212", "original.html"
+)
 SCIENCE_PAYWALL_SAMPLE_RAW = block_asset("10.1126/science.aeg3511", "raw.html")
 SCIENCE_PAYWALL_SAMPLE_MARKDOWN = block_asset("10.1126/science.aeg3511", "extracted.md")
-SCIENCE_FULLTEXT_FALLBACK_MARKDOWN = golden_criteria_asset("10.1126/science.aeg3511", "extracted.md")
-SCIENCE_ADL6155_ROOT_CAUSE_FIXTURE = golden_criteria_asset("10.1126/sciadv.adl6155", "original.html")
-SCIENCE_ADL6155_METADATA = golden_criteria_asset("10.1126/sciadv.adl6155", "article.json")
-SCIENCE_ADL6155_ASSET_DIR = golden_criteria_dir_for_doi("10.1126/sciadv.adl6155") / "body_assets"
-SCIENCE_ADZ3492_SVG_ASSET = golden_criteria_dir_for_doi("10.1126/science.adz3492") / "body_assets" / "science.adz3492-f1.svg"
+SCIENCE_FULLTEXT_FALLBACK_MARKDOWN = golden_criteria_asset(
+    "10.1126/science.aeg3511", "extracted.md"
+)
+SCIENCE_ADL6155_ROOT_CAUSE_FIXTURE = golden_criteria_asset(
+    "10.1126/sciadv.adl6155", "original.html"
+)
+SCIENCE_ADL6155_METADATA = golden_criteria_asset(
+    "10.1126/sciadv.adl6155", "article.json"
+)
+SCIENCE_ADL6155_ASSET_DIR = (
+    golden_criteria_dir_for_doi("10.1126/sciadv.adl6155") / "body_assets"
+)
+SCIENCE_ADZ3492_SVG_ASSET = (
+    golden_criteria_dir_for_doi("10.1126/science.adz3492")
+    / "body_assets"
+    / "science.adz3492-f1.svg"
+)
 PNAS_PAYWALL_SAMPLE_RAW = block_asset("10.1073/pnas.2509692123", "raw.html")
 PNAS_PAYWALL_SAMPLE_MARKDOWN = block_asset("10.1073/pnas.2509692123", "extracted.md")
-PNAS_FULLTEXT_FALLBACK_MARKDOWN = golden_criteria_asset("10.1073/pnas.2406303121", "extracted.md")
-WILEY_2004GB002273_ROOT_CAUSE_FIXTURE = golden_criteria_asset("10.1029/2004GB002273", "original.html")
-WILEY_2004GB002273_METADATA = golden_criteria_asset("10.1029/2004GB002273", "article.json")
-WILEY_2004GB002273_ASSET_DIR = golden_criteria_dir_for_doi("10.1029/2004GB002273") / "body_assets"
+PNAS_FULLTEXT_FALLBACK_MARKDOWN = golden_criteria_asset(
+    "10.1073/pnas.2406303121", "extracted.md"
+)
+WILEY_2004GB002273_ROOT_CAUSE_FIXTURE = golden_criteria_asset(
+    "10.1029/2004GB002273", "original.html"
+)
+WILEY_2004GB002273_METADATA = golden_criteria_asset(
+    "10.1029/2004GB002273", "article.json"
+)
+WILEY_2004GB002273_ASSET_DIR = (
+    golden_criteria_dir_for_doi("10.1029/2004GB002273") / "body_assets"
+)
 
 
 def png_header(width: int, height: int) -> bytes:
-    return b"\x89PNG\r\n\x1a\n" + b"\x00\x00\x00\rIHDR" + width.to_bytes(4, "big") + height.to_bytes(4, "big")
+    return (
+        b"\x89PNG\r\n\x1a\n"
+        + b"\x00\x00\x00\rIHDR"
+        + width.to_bytes(4, "big")
+        + height.to_bytes(4, "big")
+    )
 
 
 def _typed_raw_payload(
@@ -112,7 +147,9 @@ def _payload_source_trail(raw_payload: RawFulltextPayload) -> list[str]:
 
 
 class AssetTransport:
-    def __init__(self, responses: dict[tuple[str, str], dict[str, object] | Exception]) -> None:
+    def __init__(
+        self, responses: dict[tuple[str, str], dict[str, object] | Exception]
+    ) -> None:
         self.responses = responses
         self.calls: list[dict[str, object]] = []
 
@@ -150,13 +187,17 @@ class AssetTransport:
             raise response
         return response
 
+
 class AtyponBrowserWorkflowProviderTestCase(unittest.TestCase):
-    def _metadata_from_golden_criteria(self, article_path: Path, doi: str) -> dict[str, object]:
+    def _metadata_from_golden_criteria(
+        self, article_path: Path, doi: str
+    ) -> dict[str, object]:
         article_payload = json.loads(article_path.read_text(encoding="utf-8"))
         metadata = dict(article_payload.get("metadata") or {})
         metadata["doi"] = doi
         metadata["references"] = list(article_payload.get("references") or [])
         return metadata
+
     def _map_local_assets_by_basename(
         self,
         extracted_assets: list[dict[str, object]],
@@ -171,24 +212,44 @@ class AtyponBrowserWorkflowProviderTestCase(unittest.TestCase):
         downloaded_assets: list[dict[str, object]] = []
         for asset in extracted_assets:
             candidate_names: list[str] = []
-            for field in ("full_size_url", "url", "preview_url", "figure_page_url", "source_url"):
+            for field in (
+                "full_size_url",
+                "url",
+                "preview_url",
+                "figure_page_url",
+                "source_url",
+            ):
                 raw_value = str(asset.get(field) or "").strip()
                 if not raw_value:
                     continue
-                parsed = urllib.parse.urlparse(raw_value if not raw_value.startswith("//") else f"https:{raw_value}")
+                parsed = urllib.parse.urlparse(
+                    raw_value
+                    if not raw_value.startswith("//")
+                    else f"https:{raw_value}"
+                )
                 basename = Path(urllib.parse.unquote(parsed.path)).name
                 if basename:
                     candidate_names.append(basename)
                     if "." not in basename:
                         candidate_names.append(f"{basename}.html")
-            local_path = next((local_by_name[name] for name in candidate_names if name in local_by_name), None)
+            local_path = next(
+                (
+                    local_by_name[name]
+                    for name in candidate_names
+                    if name in local_by_name
+                ),
+                None,
+            )
             if not local_path:
                 continue
             downloaded_asset = dict(asset)
             downloaded_asset["path"] = local_path
             downloaded_assets.append(downloaded_asset)
         return downloaded_assets
-    def _runtime_config(self, tmpdir: str, provider: str, doi: str) -> browser_runtime.BrowserRuntimeConfig:
+
+    def _runtime_config(
+        self, tmpdir: str, provider: str, doi: str
+    ) -> browser_runtime.BrowserRuntimeConfig:
         tmp = Path(tmpdir)
         return browser_runtime.BrowserRuntimeConfig(
             provider=provider,
@@ -197,6 +258,7 @@ class AtyponBrowserWorkflowProviderTestCase(unittest.TestCase):
             headless=True,
             user_agent="paper-fetch-test/1",
         )
+
     def _build_browser_html_raw_payload(
         self,
         client,
@@ -222,6 +284,7 @@ class AtyponBrowserWorkflowProviderTestCase(unittest.TestCase):
             extraction=extraction,
         )
         return markdown_text, extraction, raw_payload
+
     def _build_browser_fixture_article(
         self,
         client,
@@ -248,8 +311,14 @@ class AtyponBrowserWorkflowProviderTestCase(unittest.TestCase):
             asset_failures=asset_failures,
         )
         return article, extraction, raw_payload
-    def _assert_issue_flag_absent(self, provider: str, article, flag: str, *, status: str = "fulltext") -> None:
-        self.assertNotIn(flag, collect_issue_flags(provider, build_envelope(article), status=status))
+
+    def _assert_issue_flag_absent(
+        self, provider: str, article, flag: str, *, status: str = "fulltext"
+    ) -> None:
+        self.assertNotIn(
+            flag, collect_issue_flags(provider, build_envelope(article), status=status)
+        )
+
     def _assert_provider_owned_author_case(
         self,
         *,
@@ -267,7 +336,10 @@ class AtyponBrowserWorkflowProviderTestCase(unittest.TestCase):
             article_metadata={"doi": doi, "title": title, "authors": []},
             extraction_metadata={"doi": doi, "title": title},
         )
-        self.assertEqual(article.metadata.authors[: len(expected_authors)], expected_authors)
+        self.assertEqual(
+            article.metadata.authors[: len(expected_authors)], expected_authors
+        )
         self._assert_issue_flag_absent(client.name, article, "empty_authors")
+
 
 __all__ = [name for name in globals() if not name.startswith("__")]

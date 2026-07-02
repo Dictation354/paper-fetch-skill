@@ -7,7 +7,9 @@ from ._ieee_provider_support import *
 
 
 class IeeeProviderAssetDownloadTests(unittest.TestCase):
-    def test_ieee_download_related_assets_body_profile_passes_body_figures_tables_only(self) -> None:
+    def test_ieee_download_related_assets_body_profile_passes_body_figures_tables_only(
+        self,
+    ) -> None:
         doi = "10.1109/ACCESS.2024.3352924"
         article_number = "10388355"
         landing_url = f"https://ieeexplore.ieee.org/document/{article_number}/"
@@ -29,8 +31,12 @@ class IeeeProviderAssetDownloadTests(unittest.TestCase):
             }
         )
         client = IeeeClient(transport, {})
-        raw_payload = client.fetch_raw_fulltext(doi, {"doi": doi, "landing_page_url": landing_url})
-        raw_payload.content.merged_metadata["landing_page_url"] = f"https://doi.org/{doi}"
+        raw_payload = client.fetch_raw_fulltext(
+            doi, {"doi": doi, "landing_page_url": landing_url}
+        )
+        raw_payload.content.merged_metadata["landing_page_url"] = (
+            f"https://doi.org/{doi}"
+        )
 
         with tempfile.TemporaryDirectory() as tmpdir:
             with mock.patch.object(
@@ -48,25 +54,30 @@ class IeeeProviderAssetDownloadTests(unittest.TestCase):
 
         self.assertEqual(result, {"assets": [], "asset_failures": []})
         mocked_download.assert_called_once()
-        self.assertIs(mocked_download.call_args.args[0], _ieee_supplementary.FIGURE_KIND)
+        self.assertIs(
+            mocked_download.call_args.args[0], _ieee_supplementary.FIGURE_KIND
+        )
         self.assertEqual(mocked_download.call_args.kwargs["seed_urls"], [landing_url])
-        self.assertEqual(mocked_download.call_args.kwargs["headers"]["Referer"], landing_url)
+        self.assertEqual(
+            mocked_download.call_args.kwargs["headers"]["Referer"], landing_url
+        )
         passed_assets = mocked_download.call_args.kwargs["assets"]
         self.assertEqual([item["kind"] for item in passed_assets], ["figure", "table"])
         self.assertTrue(all(item["section"] == "body" for item in passed_assets))
         self.assertNotIn("supplementary", {item.get("kind") for item in passed_assets})
-    def test_ieee_download_related_assets_all_profile_downloads_supplementary_files(self) -> None:
+
+    def test_ieee_download_related_assets_all_profile_downloads_supplementary_files(
+        self,
+    ) -> None:
         doi = "10.1109/ACCESS.2024.3352924"
         article_number = "10388355"
         landing_url = f"https://ieeexplore.ieee.org/document/{article_number}/"
         rest_url = f"https://ieeexplore.ieee.org/rest/document/{article_number}/?logAccess=true"
-        figure_large_url = (
-            f"https://ieeexplore.ieee.org/mediastore/IEEE/content/media/{article_number}/{article_number}-fig-1-large.gif"
+        figure_large_url = f"https://ieeexplore.ieee.org/mediastore/IEEE/content/media/{article_number}/{article_number}-fig-1-large.gif"
+        table_large_url = f"https://ieeexplore.ieee.org/mediastore/IEEE/content/media/{article_number}/{article_number}-table-1-large.gif"
+        supplementary_pdf_url = (
+            "https://ieeexplore.ieee.org/documents/supplementary.pdf"
         )
-        table_large_url = (
-            f"https://ieeexplore.ieee.org/mediastore/IEEE/content/media/{article_number}/{article_number}-table-1-large.gif"
-        )
-        supplementary_pdf_url = "https://ieeexplore.ieee.org/documents/supplementary.pdf"
         supplementary_mp4_url = "https://ieeexplore.ieee.org/documents/multimedia.mp4"
         gif_payload = b"GIF89a\x01\x00\x01\x00\x80\x00\x00\x00\x00\x00\xff\xff\xff,\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02D\x01\x00;"
         transport = RecordingTransport(
@@ -98,7 +109,9 @@ class IeeeProviderAssetDownloadTests(unittest.TestCase):
             }
         )
         client = IeeeClient(transport, {})
-        raw_payload = client.fetch_raw_fulltext(doi, {"doi": doi, "landing_page_url": landing_url})
+        raw_payload = client.fetch_raw_fulltext(
+            doi, {"doi": doi, "landing_page_url": landing_url}
+        )
 
         def opener_requester(opener, url, **kwargs):
             del opener
@@ -130,8 +143,12 @@ class IeeeProviderAssetDownloadTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmpdir:
             with (
-                mock.patch.object(html_assets, "_build_cookie_seeded_opener", return_value=object()) as mocked_opener,
-                mock.patch.object(html_assets, "_request_with_opener", side_effect=opener_requester) as mocked_request,
+                mock.patch.object(
+                    html_assets, "_build_cookie_seeded_opener", return_value=object()
+                ) as mocked_opener,
+                mock.patch.object(
+                    html_assets, "_request_with_opener", side_effect=opener_requester
+                ) as mocked_request,
             ):
                 result = client.download_related_assets(
                     doi,
@@ -140,10 +157,15 @@ class IeeeProviderAssetDownloadTests(unittest.TestCase):
                     Path(tmpdir),
                     asset_profile="all",
                 )
-                downloaded_paths_exist = all(Path(item["path"]).is_file() for item in result["assets"])
+                downloaded_paths_exist = all(
+                    Path(item["path"]).is_file() for item in result["assets"]
+                )
 
         self.assertEqual(result["asset_failures"], [])
-        self.assertEqual([item["kind"] for item in result["assets"]], ["figure", "table", "supplementary", "supplementary"])
+        self.assertEqual(
+            [item["kind"] for item in result["assets"]],
+            ["figure", "table", "supplementary", "supplementary"],
+        )
         self.assertEqual(result["assets"][2]["section"], "supplementary")
         self.assertEqual(result["assets"][2]["download_tier"], "supplementary_file")
         self.assertEqual(result["assets"][2]["content_type"], "application/pdf")
@@ -152,21 +174,23 @@ class IeeeProviderAssetDownloadTests(unittest.TestCase):
         self.assertTrue(downloaded_paths_exist)
         self.assertEqual(mocked_request.call_count, 4)
         self.assertTrue(
-            any(call.kwargs["headers"].get("Referer") == landing_url for call in mocked_opener.call_args_list)
+            any(
+                call.kwargs["headers"].get("Referer") == landing_url
+                for call in mocked_opener.call_args_list
+            )
         )
-    def test_ieee_download_related_assets_downloads_mediastore_gifs_without_support_icon_failure(self) -> None:
+
+    def test_ieee_download_related_assets_downloads_mediastore_gifs_without_support_icon_failure(
+        self,
+    ) -> None:
         """asset-download-contract: provider=ieee"""
 
         doi = "10.1109/ACCESS.2024.3352924"
         article_number = "10388355"
         landing_url = f"https://ieeexplore.ieee.org/document/{article_number}/"
         rest_url = f"https://ieeexplore.ieee.org/rest/document/{article_number}/?logAccess=true"
-        figure_large_url = (
-            f"https://ieeexplore.ieee.org/mediastore/IEEE/content/media/{article_number}/{article_number}-fig-1-large.gif"
-        )
-        table_large_url = (
-            f"https://ieeexplore.ieee.org/mediastore/IEEE/content/media/{article_number}/{article_number}-table-1-large.gif"
-        )
+        figure_large_url = f"https://ieeexplore.ieee.org/mediastore/IEEE/content/media/{article_number}/{article_number}-fig-1-large.gif"
+        table_large_url = f"https://ieeexplore.ieee.org/mediastore/IEEE/content/media/{article_number}/{article_number}-table-1-large.gif"
         gif_payload = b"GIF89a\x01\x00\x01\x00\x80\x00\x00\x00\x00\x00\xff\xff\xff,\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02D\x01\x00;"
         transport = RecordingTransport(
             {
@@ -197,7 +221,9 @@ class IeeeProviderAssetDownloadTests(unittest.TestCase):
             }
         )
         client = IeeeClient(transport, {})
-        raw_payload = client.fetch_raw_fulltext(doi, {"doi": doi, "landing_page_url": landing_url})
+        raw_payload = client.fetch_raw_fulltext(
+            doi, {"doi": doi, "landing_page_url": landing_url}
+        )
 
         def opener_requester(opener, url, **kwargs):
             del opener, kwargs
@@ -212,8 +238,12 @@ class IeeeProviderAssetDownloadTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmpdir:
             with (
-                mock.patch.object(html_assets, "_build_cookie_seeded_opener", return_value=object()) as mocked_opener,
-                mock.patch.object(html_assets, "_request_with_opener", side_effect=opener_requester) as mocked_request,
+                mock.patch.object(
+                    html_assets, "_build_cookie_seeded_opener", return_value=object()
+                ) as mocked_opener,
+                mock.patch.object(
+                    html_assets, "_request_with_opener", side_effect=opener_requester
+                ) as mocked_request,
             ):
                 result = client.download_related_assets(
                     doi,
@@ -221,38 +251,54 @@ class IeeeProviderAssetDownloadTests(unittest.TestCase):
                     raw_payload,
                     Path(tmpdir),
                     asset_profile="body",
-                    context=RuntimeContext(env={"PAPER_FETCH_ASSET_DOWNLOAD_CONCURRENCY": "1"}),
+                    context=RuntimeContext(
+                        env={"PAPER_FETCH_ASSET_DOWNLOAD_CONCURRENCY": "1"}
+                    ),
                 )
-                self.assertTrue(all(Path(item["path"]).is_file() for item in result["assets"]))
+                self.assertTrue(
+                    all(Path(item["path"]).is_file() for item in result["assets"])
+                )
 
         self.assertEqual(result["asset_failures"], [])
         self.assertEqual(len(result["assets"]), 2)
-        self.assertEqual({item["kind"] for item in result["assets"]}, {"figure", "table"})
-        self.assertTrue(all(item["download_tier"] == "full_size" for item in result["assets"]))
+        self.assertEqual(
+            {item["kind"] for item in result["assets"]}, {"figure", "table"}
+        )
+        self.assertTrue(
+            all(item["download_tier"] == "full_size" for item in result["assets"])
+        )
         self.assertEqual(mocked_request.call_count, 2)
         self.assertEqual(mocked_opener.call_args.args[0], [landing_url])
-        self.assertFalse(any("/assets/img/icon.support.gif" in str(call["url"]) for call in transport.calls))
+        self.assertFalse(
+            any(
+                "/assets/img/icon.support.gif" in str(call["url"])
+                for call in transport.calls
+            )
+        )
         article = client.to_article_model(
             {"doi": doi},
             raw_payload,
             downloaded_assets=result["assets"],
             asset_failures=result["asset_failures"],
         )
-        body_article_assets = [asset for asset in article.assets if asset.kind in {"figure", "table"}]
+        body_article_assets = [
+            asset for asset in article.assets if asset.kind in {"figure", "table"}
+        ]
         self.assertEqual(len(body_article_assets), 2)
         self.assertTrue(all(asset.path for asset in body_article_assets))
-        self.assertTrue(all(asset.download_tier == "full_size" for asset in body_article_assets))
-    def test_ieee_supplementary_download_failure_does_not_discard_body_assets(self) -> None:
+        self.assertTrue(
+            all(asset.download_tier == "full_size" for asset in body_article_assets)
+        )
+
+    def test_ieee_supplementary_download_failure_does_not_discard_body_assets(
+        self,
+    ) -> None:
         doi = "10.1109/ACCESS.2024.3352924"
         article_number = "10388355"
         landing_url = f"https://ieeexplore.ieee.org/document/{article_number}/"
         rest_url = f"https://ieeexplore.ieee.org/rest/document/{article_number}/?logAccess=true"
-        figure_large_url = (
-            f"https://ieeexplore.ieee.org/mediastore/IEEE/content/media/{article_number}/{article_number}-fig-1-large.gif"
-        )
-        table_large_url = (
-            f"https://ieeexplore.ieee.org/mediastore/IEEE/content/media/{article_number}/{article_number}-table-1-large.gif"
-        )
+        figure_large_url = f"https://ieeexplore.ieee.org/mediastore/IEEE/content/media/{article_number}/{article_number}-fig-1-large.gif"
+        table_large_url = f"https://ieeexplore.ieee.org/mediastore/IEEE/content/media/{article_number}/{article_number}-table-1-large.gif"
         gif_payload = b"GIF89a\x01\x00\x01\x00\x80\x00\x00\x00\x00\x00\xff\xff\xff,\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02D\x01\x00;"
         transport = RecordingTransport(
             {
@@ -283,7 +329,9 @@ class IeeeProviderAssetDownloadTests(unittest.TestCase):
             }
         )
         client = IeeeClient(transport, {})
-        raw_payload = client.fetch_raw_fulltext(doi, {"doi": doi, "landing_page_url": landing_url})
+        raw_payload = client.fetch_raw_fulltext(
+            doi, {"doi": doi, "landing_page_url": landing_url}
+        )
 
         challenge_html = {
             "status_code": 403,
@@ -308,8 +356,12 @@ class IeeeProviderAssetDownloadTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmpdir:
             with (
-                mock.patch.object(html_assets, "_build_cookie_seeded_opener", return_value=object()),
-                mock.patch.object(html_assets, "_request_with_opener", side_effect=opener_requester),
+                mock.patch.object(
+                    html_assets, "_build_cookie_seeded_opener", return_value=object()
+                ),
+                mock.patch.object(
+                    html_assets, "_request_with_opener", side_effect=opener_requester
+                ),
             ):
                 result = client.download_related_assets(
                     doi,
@@ -317,14 +369,30 @@ class IeeeProviderAssetDownloadTests(unittest.TestCase):
                     raw_payload,
                     Path(tmpdir),
                     asset_profile="all",
-                    context=RuntimeContext(env={"PAPER_FETCH_ASSET_DOWNLOAD_CONCURRENCY": "1"}),
+                    context=RuntimeContext(
+                        env={"PAPER_FETCH_ASSET_DOWNLOAD_CONCURRENCY": "1"}
+                    ),
                 )
 
-        self.assertEqual([item["kind"] for item in result["assets"]], ["figure", "table"])
+        self.assertEqual(
+            [item["kind"] for item in result["assets"]], ["figure", "table"]
+        )
         self.assertEqual(len(result["asset_failures"]), 2)
-        self.assertTrue(all(item["kind"] == "supplementary" for item in result["asset_failures"]))
-        self.assertTrue(all(item["reason"] == "login_or_access_html" for item in result["asset_failures"]))
-        self.assertFalse(any("/assets/img/icon.support.gif" in json.dumps(item) for item in result["asset_failures"]))
+        self.assertTrue(
+            all(item["kind"] == "supplementary" for item in result["asset_failures"])
+        )
+        self.assertTrue(
+            all(
+                item["reason"] == "login_or_access_html"
+                for item in result["asset_failures"]
+            )
+        )
+        self.assertFalse(
+            any(
+                "/assets/img/icon.support.gif" in json.dumps(item)
+                for item in result["asset_failures"]
+            )
+        )
         article = client.to_article_model(
             {"doi": doi},
             raw_payload,

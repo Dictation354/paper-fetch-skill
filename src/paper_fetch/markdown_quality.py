@@ -81,8 +81,8 @@ def build_markdown_quality_prompt(
         "\n"
         "## Output JSON Contract\n"
         "\n"
-        "Write JSON to the report path using this schema. Use `status: \"pass\"` "
-        "only when there are no blocking issues. Use `status: \"fail\"` when one "
+        'Write JSON to the report path using this schema. Use `status: "pass"` '
+        'only when there are no blocking issues. Use `status: "fail"` when one '
         "or more blocking issues remain, and set `blocking_issue_count` to the "
         "number of issues whose `blocking` field is `true`.\n"
         "\n"
@@ -163,8 +163,8 @@ def build_fresh_markdown_quality_prompt(
         "\n"
         "## Output JSON Contract\n"
         "\n"
-        "Write JSON to the fresh report path using this schema. Use `status: \"pass\"` "
-        "only when there are no blocking issues. Use `status: \"fail\"` when one "
+        'Write JSON to the fresh report path using this schema. Use `status: "pass"` '
+        'only when there are no blocking issues. Use `status: "fail"` when one '
         "or more blocking issues remain, and set `blocking_issue_count` to the "
         "number of issues whose `blocking` field is `true`.\n"
         "\n"
@@ -227,7 +227,11 @@ def build_agent_markdown_quality_report(
         "status": status,
         "issues": issue_list,
         "blocking_issue_count": len(
-            [issue for issue in issue_list if isinstance(issue, dict) and issue.get("blocking") is True]
+            [
+                issue
+                for issue in issue_list
+                if isinstance(issue, dict) and issue.get("blocking") is True
+            ]
         ),
         "reviewed_by": reviewed_by,
         "reviewed_at": reviewed_at,
@@ -305,7 +309,9 @@ def validate_markdown_quality_report(report: Any) -> list[str]:
         if "id" in issue and not isinstance(issue.get("id"), str):
             errors.append(f"issues[{index}].id must be a string")
         if issue.get("severity") not in SEVERITY_VALUES:
-            errors.append(f"issues[{index}].severity must be one of {sorted(SEVERITY_VALUES)}")
+            errors.append(
+                f"issues[{index}].severity must be one of {sorted(SEVERITY_VALUES)}"
+            )
         if "blocking" in issue and not isinstance(issue.get("blocking"), bool):
             errors.append(f"issues[{index}].blocking must be a boolean")
         if "summary" in issue and not isinstance(issue.get("summary"), str):
@@ -326,7 +332,11 @@ def validate_markdown_quality_report(report: Any) -> list[str]:
             if not isinstance(report.get(field), str) or not report.get(field):
                 errors.append(f"{field} is required for pass/fail reports")
         reviewed_at = report.get("reviewed_at")
-        if isinstance(reviewed_at, str) and reviewed_at and not _is_datetime(reviewed_at):
+        if (
+            isinstance(reviewed_at, str)
+            and reviewed_at
+            and not _is_datetime(reviewed_at)
+        ):
             errors.append("reviewed_at must be an ISO-8601 timestamp")
 
     if status == "pass" and blocking_count:
@@ -352,4 +362,6 @@ def write_markdown_quality_prompt(path: Path, prompt: str) -> None:
 
 
 def write_markdown_quality_report(path: Path, report: dict[str, Any]) -> None:
-    path.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    path.write_text(
+        json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )

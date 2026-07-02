@@ -18,7 +18,11 @@ DEFAULT_MCP_DOWNLOAD_DIR = DEFAULT_USER_DATA_DIR / "downloads"
 DEFAULT_CLI_DOWNLOAD_DIR = Path("live-downloads")
 DEFAULT_REPO_ROOT = Path(__file__).resolve().parents[2]
 
-DEFAULT_USER_AGENT = "paper-fetch-skill/2.7.1"
+DEFAULT_USER_AGENT = "paper-fetch-skill/2.8.0"
+DEFAULT_PUBLISHER_USER_AGENT = (
+    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+)
 USER_AGENT_ENV_VAR = "PAPER_FETCH_SKILL_USER_AGENT"
 BROWSER_USER_AGENT_ENV_VAR = "PAPER_FETCH_BROWSER_USER_AGENT"
 ENV_FILE_ENV_VAR = "PAPER_FETCH_ENV_FILE"
@@ -108,8 +112,13 @@ def build_browser_user_agent(env: Mapping[str, str]) -> str | None:
     browser_user_agent = env.get(BROWSER_USER_AGENT_ENV_VAR, "").strip()
     if browser_user_agent:
         return browser_user_agent
-    shared_user_agent = env.get(USER_AGENT_ENV_VAR, "").strip()
-    return shared_user_agent or None
+    return None
+
+
+def build_publisher_user_agent(env: Mapping[str, str]) -> str:
+    return (
+        env.get(BROWSER_USER_AGENT_ENV_VAR, "").strip() or DEFAULT_PUBLISHER_USER_AGENT
+    )
 
 
 def _configured_download_dir(env: Mapping[str, str] | None = None) -> Path | None:

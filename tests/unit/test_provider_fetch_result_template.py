@@ -7,7 +7,10 @@ from collections.abc import Mapping
 
 from paper_fetch.artifacts import ArtifactStore
 from paper_fetch.models import article_from_markdown
-from paper_fetch.providers._waterfall import ProviderWaterfallStep, run_provider_waterfall
+from paper_fetch.providers._waterfall import (
+    ProviderWaterfallStep,
+    run_provider_waterfall,
+)
 from paper_fetch.providers.base import (
     ProviderFailure,
     ProviderClient,
@@ -18,7 +21,11 @@ from paper_fetch.runtime import RuntimeContext
 from paper_fetch.tracing import trace_from_markers
 
 
-def _payload(*, source_url: str = "https://example.test/article", markers: list[str] | None = None) -> RawFulltextPayload:
+def _payload(
+    *,
+    source_url: str = "https://example.test/article",
+    markers: list[str] | None = None,
+) -> RawFulltextPayload:
     body = b"<html><body>Article</body></html>"
     return RawFulltextPayload(
         provider="template",
@@ -42,7 +49,9 @@ class ProviderWaterfallRunnerTests(unittest.TestCase):
 
         def first(_state):
             calls.append("first")
-            raise ProviderFailure("no_result", "HTML was abstract only.", warnings=["first warning"])
+            raise ProviderFailure(
+                "no_result", "HTML was abstract only.", warnings=["first warning"]
+            )
 
         def second(_state):
             calls.append("second")
@@ -71,7 +80,9 @@ class ProviderWaterfallRunnerTests(unittest.TestCase):
         )
 
         self.assertEqual(calls, ["first", "second"])
-        self.assertEqual(payload.warnings, ["first warning", "trying pdf", "pdf success"])
+        self.assertEqual(
+            payload.warnings, ["first warning", "trying pdf", "pdf success"]
+        )
         self.assertEqual(
             [event.marker() for event in payload.trace if event.marker()],
             ["fulltext:template_html_fail", "fulltext:template_pdf_ok"],
@@ -83,12 +94,16 @@ class ProviderWaterfallRunnerTests(unittest.TestCase):
                 [
                     ProviderWaterfallStep(
                         label="html",
-                        run=lambda _state: (_ for _ in ()).throw(ProviderFailure("no_result", "HTML failed.")),
+                        run=lambda _state: (_ for _ in ()).throw(
+                            ProviderFailure("no_result", "HTML failed.")
+                        ),
                         failure_marker="fulltext:template_html_fail",
                     ),
                     ProviderWaterfallStep(
                         label="pdf",
-                        run=lambda _state: (_ for _ in ()).throw(ProviderFailure("no_result", "PDF failed.")),
+                        run=lambda _state: (_ for _ in ()).throw(
+                            ProviderFailure("no_result", "PDF failed.")
+                        ),
                         failure_marker="fulltext:template_pdf_fail",
                     ),
                 ]
@@ -139,7 +154,9 @@ class ProviderWaterfallRunnerTests(unittest.TestCase):
 
 
 class RawFulltextPayloadMetadataCompatibilityTests(unittest.TestCase):
-    def test_metadata_magic_keys_are_not_ingested_as_structured_payload_fields(self) -> None:
+    def test_metadata_magic_keys_are_not_ingested_as_structured_payload_fields(
+        self,
+    ) -> None:
         payload = RawFulltextPayload(
             provider="template",
             source_url="https://example.test/article",
@@ -150,13 +167,20 @@ class RawFulltextPayloadMetadataCompatibilityTests(unittest.TestCase):
                 "reason": "legacy reason",
                 "markdown_text": "# Legacy\n\nBody text",
                 "merged_metadata": {"title": "Merged Legacy Title"},
-                "availability_diagnostics": {"accepted": True, "reason": "body_sufficient"},
+                "availability_diagnostics": {
+                    "accepted": True,
+                    "reason": "body_sufficient",
+                },
                 "html_fetcher": "cloakbrowser",
-                "browser_context_seed": {"browser_final_url": "https://example.test/final"},
+                "browser_context_seed": {
+                    "browser_final_url": "https://example.test/final"
+                },
                 "suggested_filename": "legacy.html",
                 "html_failure_reason": "abstract_only",
                 "html_failure_message": "HTML exposed only abstract content.",
-                "extracted_assets": [{"kind": "figure", "url": "https://example.test/f1.png"}],
+                "extracted_assets": [
+                    {"kind": "figure", "url": "https://example.test/f1.png"}
+                ],
                 "warnings": ["legacy warning"],
                 "source_trail": ["fulltext:template_html_ok"],
                 "custom_passthrough": "kept",
@@ -199,14 +223,23 @@ class RawFulltextPayloadMetadataCompatibilityTests(unittest.TestCase):
                 body=body,
                 markdown_text="# Typed\n\nBody text",
                 merged_metadata={"title": "Merged Typed Title"},
-                diagnostics={"availability_diagnostics": {"accepted": True, "reason": "body_sufficient"}},
+                diagnostics={
+                    "availability_diagnostics": {
+                        "accepted": True,
+                        "reason": "body_sufficient",
+                    }
+                },
                 reason="typed reason",
                 fetcher="cloakbrowser",
-                browser_context_seed={"browser_final_url": "https://example.test/final"},
+                browser_context_seed={
+                    "browser_final_url": "https://example.test/final"
+                },
                 suggested_filename="typed.html",
                 html_failure_reason="abstract_only",
                 html_failure_message="HTML exposed only abstract content.",
-                extracted_assets=[{"kind": "figure", "url": "https://example.test/f1.png"}],
+                extracted_assets=[
+                    {"kind": "figure", "url": "https://example.test/f1.png"}
+                ],
             ),
             warnings=["typed warning"],
             trace=trace_from_markers(["fulltext:template_html_ok"]),
@@ -216,23 +249,41 @@ class RawFulltextPayloadMetadataCompatibilityTests(unittest.TestCase):
         self.assertEqual(payload.metadata["route"], "html")
         self.assertEqual(payload.metadata["reason"], "typed reason")
         self.assertEqual(payload.metadata["markdown_text"], "# Typed\n\nBody text")
-        self.assertEqual(payload.metadata["merged_metadata"], {"title": "Merged Typed Title"})
-        self.assertEqual(payload.metadata["availability_diagnostics"], {"accepted": True, "reason": "body_sufficient"})
+        self.assertEqual(
+            payload.metadata["merged_metadata"], {"title": "Merged Typed Title"}
+        )
+        self.assertEqual(
+            payload.metadata["availability_diagnostics"],
+            {"accepted": True, "reason": "body_sufficient"},
+        )
         self.assertEqual(payload.metadata["html_fetcher"], "cloakbrowser")
-        self.assertEqual(payload.metadata["browser_context_seed"], {"browser_final_url": "https://example.test/final"})
+        self.assertEqual(
+            payload.metadata["browser_context_seed"],
+            {"browser_final_url": "https://example.test/final"},
+        )
         self.assertEqual(payload.metadata["suggested_filename"], "typed.html")
         self.assertEqual(payload.metadata["html_failure_reason"], "abstract_only")
-        self.assertEqual(payload.metadata["html_failure_message"], "HTML exposed only abstract content.")
-        self.assertEqual(payload.metadata["extracted_assets"], [{"kind": "figure", "url": "https://example.test/f1.png"}])
+        self.assertEqual(
+            payload.metadata["html_failure_message"],
+            "HTML exposed only abstract content.",
+        )
+        self.assertEqual(
+            payload.metadata["extracted_assets"],
+            [{"kind": "figure", "url": "https://example.test/f1.png"}],
+        )
         self.assertEqual(payload.metadata["warnings"], ["typed warning"])
-        self.assertEqual(payload.metadata["source_trail"], ["fulltext:template_html_ok"])
+        self.assertEqual(
+            payload.metadata["source_trail"], ["fulltext:template_html_ok"]
+        )
         self.assertEqual(payload.metadata["custom_passthrough"], "kept")
 
 
 class _TemplateClient(ProviderClient):
     name = "template"
 
-    def fetch_raw_fulltext(self, doi: str, metadata: Mapping[str, object], *, context=None) -> RawFulltextPayload:
+    def fetch_raw_fulltext(
+        self, doi: str, metadata: Mapping[str, object], *, context=None
+    ) -> RawFulltextPayload:
         del context
         return _payload()
 
@@ -250,12 +301,23 @@ class _TemplateClient(ProviderClient):
             source="template",
             metadata=metadata,
             doi=str(metadata.get("doi") or "") or None,
-            markdown_text=raw_payload.content.markdown_text if raw_payload.content is not None else "",
+            markdown_text=raw_payload.content.markdown_text
+            if raw_payload.content is not None
+            else "",
             warnings=list(raw_payload.warnings),
             trace=list(raw_payload.trace),
         )
 
-    def download_related_assets(self, doi, metadata, raw_payload, output_dir, *, asset_profile="all", context=None):
+    def download_related_assets(
+        self,
+        doi,
+        metadata,
+        raw_payload,
+        output_dir,
+        *,
+        asset_profile="all",
+        context=None,
+    ):
         del context
         raise ProviderFailure("error", "asset backend failed")
 
@@ -362,9 +424,14 @@ class ProviderFetchResultTemplateTests(unittest.TestCase):
             )
 
         self.assertIn("custom asset warning: asset backend failed", result.warnings)
-        self.assertIn("download:template_assets_failed", [event.marker() for event in result.trace if event.marker()])
+        self.assertIn(
+            "download:template_assets_failed",
+            [event.marker() for event in result.trace if event.marker()],
+        )
 
-    def test_base_fetch_result_passes_same_runtime_context_to_all_provider_hooks(self) -> None:
+    def test_base_fetch_result_passes_same_runtime_context_to_all_provider_hooks(
+        self,
+    ) -> None:
         seen: list[object] = []
 
         class ContextRecordingClient(_TemplateClient):
@@ -372,7 +439,16 @@ class ProviderFetchResultTemplateTests(unittest.TestCase):
                 seen.append(context)
                 return super().fetch_raw_fulltext(doi, metadata, context=context)
 
-            def download_related_assets(self, doi, metadata, raw_payload, output_dir, *, asset_profile="all", context=None):
+            def download_related_assets(
+                self,
+                doi,
+                metadata,
+                raw_payload,
+                output_dir,
+                *,
+                asset_profile="all",
+                context=None,
+            ):
                 seen.append(context)
                 return {"assets": [], "asset_failures": []}
 
@@ -406,17 +482,24 @@ class ProviderFetchResultTemplateTests(unittest.TestCase):
 
         self.assertEqual(seen, [runtime_context, runtime_context, runtime_context])
 
-    def test_base_fetch_result_uses_artifact_store_download_dir_when_supplied(self) -> None:
+    def test_base_fetch_result_uses_artifact_store_download_dir_when_supplied(
+        self,
+    ) -> None:
         client = _TemplateClient()
         output_dirs: list[Path | None] = []
 
-        def fake_download_related_assets(doi, metadata, raw_payload, output_dir, *, asset_profile="all", context=None):
+        def fake_download_related_assets(
+            doi, metadata, raw_payload, output_dir, *, asset_profile="all", context=None
+        ):
             del context
             output_dirs.append(output_dir)
             return {"assets": [], "asset_failures": []}
 
         client.download_related_assets = fake_download_related_assets
-        with tempfile.TemporaryDirectory() as legacy_tmpdir, tempfile.TemporaryDirectory() as artifact_tmpdir:
+        with (
+            tempfile.TemporaryDirectory() as legacy_tmpdir,
+            tempfile.TemporaryDirectory() as artifact_tmpdir,
+        ):
             artifact_dir = Path(artifact_tmpdir)
             result = client.fetch_result(
                 "10.5555/template",

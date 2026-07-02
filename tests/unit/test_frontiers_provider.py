@@ -6,12 +6,18 @@ from pathlib import Path
 from paper_fetch.providers.frontiers import FrontiersClient
 from paper_fetch.reason_codes import PDF_FALLBACK
 from tests.unit._atypon_browser_workflow_provider_support import png_header
-from tests.unit._paper_fetch_support import FixtureHtmlTransport, fulltext_pdf_bytes, http_response
+from tests.unit._paper_fetch_support import (
+    FixtureHtmlTransport,
+    fulltext_pdf_bytes,
+    http_response,
+)
 
 
 DOI = "10.3389/fmars.2023.1101972"
 LEGACY_FULL_URL = f"https://www.frontiersin.org/articles/{DOI}/full"
-CANONICAL_FULL_URL = f"https://www.frontiersin.org/journals/marine-science/articles/{DOI}/full"
+CANONICAL_FULL_URL = (
+    f"https://www.frontiersin.org/journals/marine-science/articles/{DOI}/full"
+)
 XML_URL = f"https://www.frontiersin.org/journals/marine-science/articles/{DOI}/xml"
 PDF_URL = f"https://www.frontiersin.org/journals/marine-science/articles/{DOI}/pdf"
 IMAGE_URL = "https://www.frontiersin.org/files/Articles/1101972/xml-images/fmars-10-1101972-g001.webp"
@@ -98,7 +104,9 @@ def _frontiers_xml() -> bytes:
 """.encode()
 
 
-def _frontiers_transport(extra: dict[str, dict[str, object]] | None = None) -> FixtureHtmlTransport:
+def _frontiers_transport(
+    extra: dict[str, dict[str, object]] | None = None,
+) -> FixtureHtmlTransport:
     responses: dict[str, dict[str, object]] = {
         LEGACY_FULL_URL: http_response(
             LEGACY_FULL_URL,
@@ -107,7 +115,9 @@ def _frontiers_transport(extra: dict[str, dict[str, object]] | None = None) -> F
             status_code=302,
             headers={"location": CANONICAL_FULL_URL},
         ),
-        CANONICAL_FULL_URL: http_response(CANONICAL_FULL_URL, _landing_html(), "text/html"),
+        CANONICAL_FULL_URL: http_response(
+            CANONICAL_FULL_URL, _landing_html(), "text/html"
+        ),
     }
     responses.update(extra or {})
     return FixtureHtmlTransport(responses)
@@ -138,7 +148,10 @@ def test_frontiers_xml_route_fetches_canonical_jats_and_rewrites_figure_url() ->
     # markdown-review: purpose=supplementary doi=10.3389/fmars.2023.1101972
     # markdown-review: purpose=references doi=10.3389/fmars.2023.1101972
     assert "## Abstract" in rendered_markdown
-    assert "Ocean acidification and warming modify stimulatory benthos effects" in rendered_markdown
+    assert (
+        "Ocean acidification and warming modify stimulatory benthos effects"
+        in rendered_markdown
+    )
     assert "seawater temperature" in markdown
     assert "| Variable | Low | High |" in markdown
     assert "Effects of temperature and pH" in markdown
@@ -167,7 +180,9 @@ def test_frontiers_asset_download_resolves_xml_image_filename(tmp_path: Path) ->
     client = FrontiersClient(transport, {})
     raw_payload = client.fetch_raw_fulltext(DOI, {"doi": DOI})
     article = client.to_article_model({"doi": DOI}, raw_payload)
-    first_figure = next(asset.__dict__ for asset in article.assets if asset.kind == "figure")
+    first_figure = next(
+        asset.__dict__ for asset in article.assets if asset.kind == "figure"
+    )
     raw_payload.content = replace(raw_payload.content, extracted_assets=[first_figure])
 
     # asset-download-contract: provider=frontiers
@@ -202,7 +217,9 @@ def test_frontiers_asset_download_resolves_xml_image_filename(tmp_path: Path) ->
 def test_frontiers_pdf_fallback_rejects_html_xml_candidate() -> None:
     transport = _frontiers_transport(
         {
-            XML_URL: http_response(XML_URL, b"<!doctype html><html>Not XML</html>", "text/html"),
+            XML_URL: http_response(
+                XML_URL, b"<!doctype html><html>Not XML</html>", "text/html"
+            ),
             PDF_URL: http_response(PDF_URL, fulltext_pdf_bytes(), "application/pdf"),
         }
     )
@@ -231,6 +248,9 @@ def test_frontiers_catalog_routes_domain_publisher_and_doi_signals() -> None:
     assert "10.3389/" in spec.doi_prefixes
     assert publisher_identity.infer_provider_from_doi(DOI) == "frontiers"
     assert publisher_identity.infer_provider_from_url(CANONICAL_FULL_URL) == "frontiers"
-    assert publisher_identity.infer_provider_from_publisher("Frontiers Media S.A.") == "frontiers"
+    assert (
+        publisher_identity.infer_provider_from_publisher("Frontiers Media S.A.")
+        == "frontiers"
+    )
     assert provider_for_source("frontiers_xml") == "frontiers"
     assert provider_for_source("frontiers_pdf") == "frontiers"

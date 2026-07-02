@@ -365,7 +365,11 @@ class McpStdioIntegrationTests(unittest.IsolatedAsyncioTestCase):
             )
 
             with tempfile.TemporaryFile(mode="w+") as errlog:
-                async with stdio_client(server, errlog=errlog) as (read_stream, write_stream):
+                async with stdio_client(server, errlog=errlog) as (
+                    read_stream,
+                    write_stream,
+                ):
+
                     async def logging_callback(params) -> None:
                         log_messages.append(params.data)
 
@@ -400,8 +404,12 @@ class McpStdioIntegrationTests(unittest.IsolatedAsyncioTestCase):
                                 "resolve_paper",
                             ],
                         )
-                        self.assertTrue(all(tool.outputSchema is not None for tool in listed.tools))
-                        self.assertTrue(all(tool.annotations is not None for tool in listed.tools))
+                        self.assertTrue(
+                            all(tool.outputSchema is not None for tool in listed.tools)
+                        )
+                        self.assertTrue(
+                            all(tool.annotations is not None for tool in listed.tools)
+                        )
 
                         prompts = await session.list_prompts()
                         self.assertEqual(
@@ -412,27 +420,51 @@ class McpStdioIntegrationTests(unittest.IsolatedAsyncioTestCase):
                             "summarize_paper",
                             {"query": "10.1000/example", "focus": "methods"},
                         )
-                        self.assertIn("token_estimate_breakdown", summarize_prompt.messages[0].content.text)
+                        self.assertIn(
+                            "token_estimate_breakdown",
+                            summarize_prompt.messages[0].content.text,
+                        )
                         verify_prompt = await session.get_prompt(
                             "verify_citation_list",
-                            {"citations": "Citation A\\nCitation B", "mode": "metadata"},
+                            {
+                                "citations": "Citation A\\nCitation B",
+                                "mode": "metadata",
+                            },
                         )
-                        self.assertIn("batch_check", verify_prompt.messages[0].content.text)
+                        self.assertIn(
+                            "batch_check", verify_prompt.messages[0].content.text
+                        )
 
-                        resolved = await session.call_tool("resolve_paper", {"query": "10.1000/example"})
+                        resolved = await session.call_tool(
+                            "resolve_paper", {"query": "10.1000/example"}
+                        )
                         self.assertFalse(resolved.isError)
-                        self.assertEqual(resolved.structuredContent["doi"], "10.1000/example")
+                        self.assertEqual(
+                            resolved.structuredContent["doi"], "10.1000/example"
+                        )
                         structured_resolved = await session.call_tool(
                             "resolve_paper",
-                            {"title": "Example title", "authors": ["Alice Example"], "year": 2024},
+                            {
+                                "title": "Example title",
+                                "authors": ["Alice Example"],
+                                "year": 2024,
+                            },
                         )
                         self.assertFalse(structured_resolved.isError)
-                        self.assertEqual(structured_resolved.structuredContent["query"], "Example title Alice Example 2024")
+                        self.assertEqual(
+                            structured_resolved.structuredContent["query"],
+                            "Example title Alice Example 2024",
+                        )
 
-                        probe = await session.call_tool("has_fulltext", {"query": "10.1000/example"})
+                        probe = await session.call_tool(
+                            "has_fulltext", {"query": "10.1000/example"}
+                        )
                         self.assertFalse(probe.isError)
                         self.assertEqual(probe.structuredContent["state"], "likely_yes")
-                        self.assertEqual(probe.structuredContent["evidence"], ["crossref_fulltext_link"])
+                        self.assertEqual(
+                            probe.structuredContent["evidence"],
+                            ["crossref_fulltext_link"],
+                        )
 
                         provider_status = await session.call_tool("provider_status", {})
                         self.assertFalse(provider_status.isError)
@@ -441,11 +473,21 @@ class McpStdioIntegrationTests(unittest.IsolatedAsyncioTestCase):
                             for item in provider_status.structuredContent["providers"]
                         }
                         self.assertEqual(
-                            [item["provider"] for item in provider_status.structuredContent["providers"]],
+                            [
+                                item["provider"]
+                                for item in provider_status.structuredContent[
+                                    "providers"
+                                ]
+                            ],
                             list(provider_status_order()),
                         )
-                        self.assertEqual(providers_by_name["crossref"]["status"], "ready")
-                        self.assertEqual(providers_by_name["elsevier"]["missing_env"], ["ELSEVIER_API_KEY"])
+                        self.assertEqual(
+                            providers_by_name["crossref"]["status"], "ready"
+                        )
+                        self.assertEqual(
+                            providers_by_name["elsevier"]["missing_env"],
+                            ["ELSEVIER_API_KEY"],
+                        )
                         self.assertIn("mdpi", providers_by_name)
                         self.assertEqual(providers_by_name["ams"]["provider"], "ams")
 
@@ -460,13 +502,20 @@ class McpStdioIntegrationTests(unittest.IsolatedAsyncioTestCase):
                             progress_callback=progress_callback,
                         )
                         self.assertFalse(custom_fetch.isError)
-                        self.assertEqual(custom_fetch.structuredContent["article"], None)
+                        self.assertEqual(
+                            custom_fetch.structuredContent["article"], None
+                        )
                         self.assertEqual(
                             custom_fetch.structuredContent["token_estimate_breakdown"],
                             {"abstract": 16, "body": 48, "refs": 20},
                         )
-                        self.assertEqual([content.type for content in custom_fetch.content], ["text", "text", "image"])
-                        self.assertEqual(progress_updates[-1], (4, 4, "fetch_paper complete"))
+                        self.assertEqual(
+                            [content.type for content in custom_fetch.content],
+                            ["text", "text", "image"],
+                        )
+                        self.assertEqual(
+                            progress_updates[-1], (4, 4, "fetch_paper complete")
+                        )
                         self.assertTrue(
                             any(
                                 isinstance(message, dict)
@@ -485,93 +534,175 @@ class McpStdioIntegrationTests(unittest.IsolatedAsyncioTestCase):
                         )
                         custom_cached = await session.call_tool(
                             "get_cached",
-                            {"doi": "10.1000/custom", "download_dir": str(isolated_dir)},
+                            {
+                                "doi": "10.1000/custom",
+                                "download_dir": str(isolated_dir),
+                            },
                         )
                         self.assertFalse(custom_cached.isError)
-                        self.assertEqual(custom_cached.structuredContent["status"], "hit")
-                        self.assertEqual(len(custom_cached.structuredContent["entries"]), 4)
+                        self.assertEqual(
+                            custom_cached.structuredContent["status"], "hit"
+                        )
+                        self.assertEqual(
+                            len(custom_cached.structuredContent["entries"]), 4
+                        )
 
-                        listed_custom = await session.call_tool("list_cached", {"download_dir": str(isolated_dir)})
+                        listed_custom = await session.call_tool(
+                            "list_cached", {"download_dir": str(isolated_dir)}
+                        )
                         self.assertFalse(listed_custom.isError)
-                        self.assertEqual(len(listed_custom.structuredContent["entries"]), 4)
+                        self.assertEqual(
+                            len(listed_custom.structuredContent["entries"]), 4
+                        )
 
                         batch = await session.call_tool(
                             "batch_check",
-                            {"queries": ["10.1000/custom", "10.1000/other"], "mode": "metadata", "concurrency": 2},
+                            {
+                                "queries": ["10.1000/custom", "10.1000/other"],
+                                "mode": "metadata",
+                                "concurrency": 2,
+                            },
                         )
                         self.assertFalse(batch.isError)
                         self.assertEqual(batch.structuredContent["mode"], "metadata")
                         self.assertEqual(len(batch.structuredContent["results"]), 2)
-                        self.assertEqual(batch.structuredContent["results"][0]["probe_state"], "likely_yes")
-                        self.assertEqual(batch.structuredContent["results"][0]["source"], None)
-                        self.assertEqual(batch.structuredContent["results"][0]["token_estimate_breakdown"], None)
+                        self.assertEqual(
+                            batch.structuredContent["results"][0]["probe_state"],
+                            "likely_yes",
+                        )
+                        self.assertEqual(
+                            batch.structuredContent["results"][0]["source"], None
+                        )
+                        self.assertEqual(
+                            batch.structuredContent["results"][0][
+                                "token_estimate_breakdown"
+                            ],
+                            None,
+                        )
 
                         batch_resolved = await session.call_tool(
                             "batch_resolve",
-                            {"queries": ["10.1000/custom", "10.1000/other"], "concurrency": 2},
+                            {
+                                "queries": ["10.1000/custom", "10.1000/other"],
+                                "concurrency": 2,
+                            },
                         )
                         self.assertFalse(batch_resolved.isError)
                         self.assertEqual(
-                            [item["doi"] for item in batch_resolved.structuredContent["results"]],
+                            [
+                                item["doi"]
+                                for item in batch_resolved.structuredContent["results"]
+                            ],
                             ["10.1000/custom", "10.1000/other"],
                         )
 
-                        default_fetch = await session.call_tool("fetch_paper", {"query": "10.1000/default"})
+                        default_fetch = await session.call_tool(
+                            "fetch_paper", {"query": "10.1000/default"}
+                        )
                         self.assertFalse(default_fetch.isError)
                         self.assertTrue(
                             any(
-                                isinstance(getattr(message, "root", None), mcp_types.ResourceListChangedNotification)
+                                isinstance(
+                                    getattr(message, "root", None),
+                                    mcp_types.ResourceListChangedNotification,
+                                )
                                 for message in protocol_messages
                             )
                         )
 
                         resources = await session.list_resources()
-                        resource_uris = sorted(str(resource.uri) for resource in resources.resources)
-                        self.assertIn("resource://paper-fetch/cache-index", resource_uris)
-                        self.assertTrue(any(uri.startswith("resource://paper-fetch/cached/") for uri in resource_uris))
+                        resource_uris = sorted(
+                            str(resource.uri) for resource in resources.resources
+                        )
+                        self.assertIn(
+                            "resource://paper-fetch/cache-index", resource_uris
+                        )
+                        self.assertTrue(
+                            any(
+                                uri.startswith("resource://paper-fetch/cached/")
+                                for uri in resource_uris
+                            )
+                        )
                         custom_scope_id = cache_scope_id(isolated_dir)
-                        custom_index_uri = scoped_cache_index_resource_uri(custom_scope_id)
+                        custom_index_uri = scoped_cache_index_resource_uri(
+                            custom_scope_id
+                        )
                         self.assertIn(custom_index_uri, resource_uris)
                         self.assertTrue(
-                            any(uri.startswith(scoped_cached_resource_uri_prefix(custom_scope_id)) for uri in resource_uris)
+                            any(
+                                uri.startswith(
+                                    scoped_cached_resource_uri_prefix(custom_scope_id)
+                                )
+                                for uri in resource_uris
+                            )
                         )
 
                         templates = await session.list_resource_templates()
-                        template_uris = [str(template.uriTemplate) for template in templates.resourceTemplates]
-                        self.assertIn("resource://paper-fetch/cached/{entry_id}", template_uris)
+                        template_uris = [
+                            str(template.uriTemplate)
+                            for template in templates.resourceTemplates
+                        ]
+                        self.assertIn(
+                            "resource://paper-fetch/cached/{entry_id}", template_uris
+                        )
 
-                        cache_index = await session.read_resource("resource://paper-fetch/cache-index")
+                        cache_index = await session.read_resource(
+                            "resource://paper-fetch/cache-index"
+                        )
                         cache_text = cache_index.contents[0].text
                         cache_payload = json.loads(cache_text)
-                        self.assertEqual(str(default_dir), cache_payload["download_dir"])
+                        self.assertEqual(
+                            str(default_dir), cache_payload["download_dir"]
+                        )
                         markdown_entry = next(
                             entry
                             for entry in cache_payload["entries"]
-                            if entry["doi"] == "10.1000/default" and entry["kind"] == "markdown"
+                            if entry["doi"] == "10.1000/default"
+                            and entry["kind"] == "markdown"
                         )
 
                         markdown_resource = await session.read_resource(
                             f"resource://paper-fetch/cached/{markdown_entry['id']}"
                         )
-                        self.assertIn("# Example Article", markdown_resource.contents[0].text)
+                        self.assertIn(
+                            "# Example Article", markdown_resource.contents[0].text
+                        )
 
-                        custom_cache_index = await session.read_resource(custom_index_uri)
-                        custom_cache_payload = json.loads(custom_cache_index.contents[0].text)
-                        self.assertEqual(str(isolated_dir), custom_cache_payload["download_dir"])
+                        custom_cache_index = await session.read_resource(
+                            custom_index_uri
+                        )
+                        custom_cache_payload = json.loads(
+                            custom_cache_index.contents[0].text
+                        )
+                        self.assertEqual(
+                            str(isolated_dir), custom_cache_payload["download_dir"]
+                        )
                         custom_markdown_entry = next(
                             entry
                             for entry in custom_cache_payload["entries"]
-                            if entry["doi"] == "10.1000/custom" and entry["kind"] == "markdown"
+                            if entry["doi"] == "10.1000/custom"
+                            and entry["kind"] == "markdown"
                         )
                         custom_markdown_resource = await session.read_resource(
-                            scoped_cached_resource_uri(custom_scope_id, custom_markdown_entry["id"])
+                            scoped_cached_resource_uri(
+                                custom_scope_id, custom_markdown_entry["id"]
+                            )
                         )
-                        self.assertIn("# Example Article", custom_markdown_resource.contents[0].text)
+                        self.assertIn(
+                            "# Example Article",
+                            custom_markdown_resource.contents[0].text,
+                        )
 
-                        invalid = await session.call_tool("fetch_paper", {"query": "10.1000/example", "modes": ["pdf"]})
+                        invalid = await session.call_tool(
+                            "fetch_paper",
+                            {"query": "10.1000/example", "modes": ["pdf"]},
+                        )
                         self.assertTrue(invalid.isError)
                         self.assertEqual(invalid.structuredContent["status"], "error")
-                        self.assertIn("unsupported output modes", invalid.structuredContent["reason"])
+                        self.assertIn(
+                            "unsupported output modes",
+                            invalid.structuredContent["reason"],
+                        )
 
 
 if __name__ == "__main__":

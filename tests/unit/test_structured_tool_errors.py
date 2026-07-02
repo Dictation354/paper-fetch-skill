@@ -64,7 +64,9 @@ def _stderr_json(result: subprocess.CompletedProcess[str]) -> dict[str, object]:
     return payload
 
 
-def test_scaffold_forbidden_manifest_flags_emit_structured_error(tmp_path: Path) -> None:
+def test_scaffold_forbidden_manifest_flags_emit_structured_error(
+    tmp_path: Path,
+) -> None:
     result = _run(
         "scripts/scaffold_provider.py",
         "--from-manifest",
@@ -175,7 +177,9 @@ def test_coordinator_state_conflict_emits_structured_schema(tmp_path: Path) -> N
 
 
 def test_failure_recovery_has_signal_sections_for_all_codes() -> None:
-    text = (REPO_ROOT / "onboarding" / "failure-recovery.md").read_text(encoding="utf-8")
+    text = (REPO_ROOT / "onboarding" / "failure-recovery.md").read_text(
+        encoding="utf-8"
+    )
     for code in SIGNAL_CODES:
         section = f"## Signal: {code}"
         assert section in text

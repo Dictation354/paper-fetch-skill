@@ -1,6 +1,9 @@
 from __future__ import annotations
 
-from tests.golden_corpus import iter_golden_corpus_fixtures, iter_golden_corpus_representative_fixtures
+from tests.golden_corpus import (
+    iter_golden_corpus_fixtures,
+    iter_golden_corpus_representative_fixtures,
+)
 from tests.golden_corpus_adapters import adapter_provider_names, golden_corpus_adapter
 
 
@@ -21,4 +24,6 @@ def test_golden_corpus_adapters_declare_contracts_for_all_fixture_routes() -> No
 def test_golden_corpus_adapters_provide_one_representative_per_provider() -> None:
     representatives = iter_golden_corpus_representative_fixtures()
 
-    assert {fixture.provider for fixture in representatives} == set(adapter_provider_names())
+    assert {fixture.provider for fixture in representatives} == set(
+        adapter_provider_names()
+    )

@@ -94,13 +94,17 @@ def redact_url_for_cache(url: str) -> str:
         [
             (
                 key,
-                REDACTED_CACHE_VALUE if key.lower() in SENSITIVE_QUERY_PARAM_NAMES else value,
+                REDACTED_CACHE_VALUE
+                if key.lower() in SENSITIVE_QUERY_PARAM_NAMES
+                else value,
             )
             for key, value in query_items
         ],
         doseq=True,
     )
-    return urllib.parse.urlunsplit((parsed.scheme, parsed.netloc, parsed.path, redacted_query, parsed.fragment))
+    return urllib.parse.urlunsplit(
+        (parsed.scheme, parsed.netloc, parsed.path, redacted_query, parsed.fragment)
+    )
 
 
 class CacheMixin:
@@ -143,7 +147,10 @@ class CacheMixin:
             return None
         normalized_headers = tuple(
             sorted(
-                (str(key).lower(), self._normalize_header_value_for_cache(str(key), str(value)))
+                (
+                    str(key).lower(),
+                    self._normalize_header_value_for_cache(str(key), str(value)),
+                )
                 for key, value in headers.items()
                 if str(key).lower() in _cache_key_header_names()
             )
@@ -153,7 +160,9 @@ class CacheMixin:
     def _normalize_header_value_for_cache(self, key: str, value: str) -> str:
         normalized_key = key.lower()
         if normalized_key in _sensitive_cache_header_names():
-            digest = hashlib.sha256(f"{normalized_key}\0{value}".encode()).hexdigest()[:16]
+            digest = hashlib.sha256(f"{normalized_key}\0{value}".encode()).hexdigest()[
+                :16
+            ]
             return f"{REDACTED_CACHE_HEADER_DIGEST_PREFIX}{digest}"
         if normalized_key in UNSTABLE_CACHE_HEADER_NAMES:
             return "<volatile>"
@@ -209,7 +218,9 @@ class CacheMixin:
     def _disk_cache_path(self, cache_key: _CacheKey) -> Path | None:
         if self.disk_cache_dir is None:
             return None
-        encoded_key = json.dumps(cache_key, ensure_ascii=True, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        encoded_key = json.dumps(
+            cache_key, ensure_ascii=True, sort_keys=True, separators=(",", ":")
+        ).encode("utf-8")
         digest = hashlib.sha256(encoded_key).hexdigest()
         return self._disk_cache_root() / digest[:2] / f"{digest}.json"
 
@@ -269,13 +280,19 @@ class CacheMixin:
             entries = self._iter_disk_cache_entries()
             survivors: list[_DiskCacheEntry] = []
             for entry in entries:
-                if self.disk_cache_max_age_seconds > 0 and now - entry.stored_at > self.disk_cache_max_age_seconds:
+                if (
+                    self.disk_cache_max_age_seconds > 0
+                    and now - entry.stored_at > self.disk_cache_max_age_seconds
+                ):
                     self._unlink_disk_cache_path(entry.path)
                 else:
                     survivors.append(entry)
 
             survivors.sort(key=lambda item: (item.stored_at, str(item.path)))
-            if self.disk_cache_max_entries > 0 and len(survivors) > self.disk_cache_max_entries:
+            if (
+                self.disk_cache_max_entries > 0
+                and len(survivors) > self.disk_cache_max_entries
+            ):
                 remove_count = len(survivors) - self.disk_cache_max_entries
                 for entry in survivors[:remove_count]:
                     self._unlink_disk_cache_path(entry.path)
@@ -288,7 +305,9 @@ class CacheMixin:
                     total_bytes -= entry.size
                     self._unlink_disk_cache_path(entry.path)
 
-    def _load_disk_cached_entry(self, cache_key: _CacheKey | None) -> dict[str, Any] | None:
+    def _load_disk_cached_entry(
+        self, cache_key: _CacheKey | None
+    ) -> dict[str, Any] | None:
         if cache_key is None:
             return None
         cache_path = self._disk_cache_path(cache_key)
@@ -301,7 +320,10 @@ class CacheMixin:
             body = base64.b64decode(str(payload.get("body_b64") or ""), validate=True)
             response = {
                 "status_code": int(payload.get("status_code") or 200),
-                "headers": {str(key).lower(): str(value) for key, value in dict(payload.get("headers") or {}).items()},
+                "headers": {
+                    str(key).lower(): str(value)
+                    for key, value in dict(payload.get("headers") or {}).items()
+                },
                 "body": body,
                 "url": str(payload.get("url") or ""),
             }
@@ -310,14 +332,18 @@ class CacheMixin:
             stored_at = float(payload.get("stored_at") or 0.0)
         except (OSError, ValueError, TypeError, json.JSONDecodeError):
             return None
-        if self.disk_cache_max_age_seconds > 0 and time.time() - stored_at > self.disk_cache_max_age_seconds:
+        if (
+            self.disk_cache_max_age_seconds > 0
+            and time.time() - stored_at > self.disk_cache_max_age_seconds
+        ):
             with self._disk_cache_lock:
                 self._unlink_disk_cache_path(cache_path)
             return None
         return {
             "response": response,
             "stored_at": stored_at,
-            "fresh": self.metadata_cache_ttl > 0 and time.time() - stored_at <= self.metadata_cache_ttl,
+            "fresh": self.metadata_cache_ttl > 0
+            and time.time() - stored_at <= self.metadata_cache_ttl,
         }
 
     def _store_disk_cached_response(
@@ -325,7 +351,11 @@ class CacheMixin:
         cache_key: _CacheKey | None,
         response: Mapping[str, Any],
     ) -> bool:
-        if cache_key is None or self.disk_cache_dir is None or not self._is_cacheable_response(response):
+        if (
+            cache_key is None
+            or self.disk_cache_dir is None
+            or not self._is_cacheable_response(response)
+        ):
             return False
         cache_path = self._disk_cache_path(cache_key)
         if cache_path is None:
@@ -344,16 +374,26 @@ class CacheMixin:
         with self._disk_cache_lock:
             try:
                 cache_path.parent.mkdir(parents=True, exist_ok=True)
-                tmp_path = cache_path.with_suffix(cache_path.suffix + f".{os.getpid()}.{threading.get_ident()}.tmp")
-                tmp_path.write_text(json.dumps(payload, ensure_ascii=True, sort_keys=True), encoding="utf-8")
+                tmp_path = cache_path.with_suffix(
+                    cache_path.suffix + f".{os.getpid()}.{threading.get_ident()}.tmp"
+                )
+                tmp_path.write_text(
+                    json.dumps(payload, ensure_ascii=True, sort_keys=True),
+                    encoding="utf-8",
+                )
                 tmp_path.replace(cache_path)
             except OSError:
                 return False
             self._prune_disk_cache()
             return cache_path.exists()
 
-    def _conditional_headers_from_cached_response(self, response: Mapping[str, Any]) -> dict[str, str]:
-        headers = {str(key).lower(): str(value) for key, value in dict(response.get("headers") or {}).items()}
+    def _conditional_headers_from_cached_response(
+        self, response: Mapping[str, Any]
+    ) -> dict[str, str]:
+        headers = {
+            str(key).lower(): str(value)
+            for key, value in dict(response.get("headers") or {}).items()
+        }
         conditional_headers: dict[str, str] = {}
         etag = headers.get("etag")
         last_modified = headers.get("last-modified")
@@ -374,7 +414,9 @@ class CacheMixin:
         merged_headers = dict(refreshed.get("headers") or {})
         merged_headers.update(dict(headers_map))
         refreshed["headers"] = merged_headers
-        refreshed["url"] = redact_url_for_cache(response_url or str(refreshed.get("url") or ""))
+        refreshed["url"] = redact_url_for_cache(
+            response_url or str(refreshed.get("url") or "")
+        )
         return refreshed
 
     def _is_cacheable_response(self, response: Mapping[str, Any]) -> bool:
@@ -383,7 +425,10 @@ class CacheMixin:
         if self.max_cacheable_body_bytes <= 0:
             return False
         body = response.get("body", b"")
-        if not isinstance(body, (bytes, bytearray)) or len(body) > self.max_cacheable_body_bytes:
+        if (
+            not isinstance(body, (bytes, bytearray))
+            or len(body) > self.max_cacheable_body_bytes
+        ):
             return False
         content_type = str((response.get("headers") or {}).get("content-type") or "")
         return is_textual_content_type(content_type)

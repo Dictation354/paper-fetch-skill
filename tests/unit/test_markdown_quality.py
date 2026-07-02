@@ -120,7 +120,9 @@ def test_report_validation_rejects_legacy_or_inconsistent_agent_reports() -> Non
 
 
 def test_module_does_not_infer_issues_from_markdown_content() -> None:
-    suspicious_markdown = "# Demo\n\n## Abstract\n\n[open](javascript:;)\n\n## Abstract\n"
+    suspicious_markdown = (
+        "# Demo\n\n## Abstract\n\n[open](javascript:;)\n\n## Abstract\n"
+    )
     report = build_pending_markdown_quality_report(**BASE)
 
     assert suspicious_markdown

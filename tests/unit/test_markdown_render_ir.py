@@ -65,14 +65,21 @@ class MarkdownRenderIrTests(unittest.TestCase):
         )
 
         self.assertEqual(asdict(figure)["asset_url"], "figures/f1.png")
-        self.assertEqual(render_figure(figure), ["![Figure 1](figures/f1.png)", "", "Rendered figure.", ""])
+        self.assertEqual(
+            render_figure(figure),
+            ["![Figure 1](figures/f1.png)", "", "Rendered figure.", ""],
+        )
 
     def test_formula_caption_and_list_renderers(self) -> None:
-        formula = MarkdownFormula(label="Equation 1.", latex="x = y + z", display_mode=True)
+        formula = MarkdownFormula(
+            label="Equation 1.", latex="x = y + z", display_mode=True
+        )
         caption = MarkdownCaption(label="Figure 2.", text="A caption.")
         items = MarkdownList(items=["First", "Second"], ordered=True)
 
-        self.assertEqual(render_formula(formula), ["Equation 1.", "", "$$", "x = y + z", "$$", ""])
+        self.assertEqual(
+            render_formula(formula), ["Equation 1.", "", "$$", "x = y + z", "$$", ""]
+        )
         self.assertEqual(render_caption(caption), "**Figure 2.** A caption.")
         self.assertEqual(render_list(items), ["1. First", "2. Second", ""])
 

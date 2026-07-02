@@ -26,7 +26,11 @@ def loads_json(value: str | None) -> Any | None:
 
 def extract_balanced_json(text: str, *, start_index: int = 0) -> str | None:
     open_index = min(
-        (index for index in (text.find("{", start_index), text.find("[", start_index)) if index >= 0),
+        (
+            index
+            for index in (text.find("{", start_index), text.find("[", start_index))
+            if index >= 0
+        ),
         default=-1,
     )
     if open_index < 0:
@@ -72,7 +76,10 @@ def _group_payload(match) -> str | None:
     if match.lastindex:
         for index in range(1, match.lastindex + 1):
             candidate = match.group(index)
-            if normalize_text(candidate) and normalize_text(candidate)[0] in _JSON_CLOSERS:
+            if (
+                normalize_text(candidate)
+                and normalize_text(candidate)[0] in _JSON_CLOSERS
+            ):
                 return candidate
     return None
 
@@ -90,7 +97,9 @@ def extract_assignment_json(text: str, assignment: str | Pattern[str]) -> Any | 
     return loads_json(balanced_payload)
 
 
-def extract_function_call_json(text: str, function_name: str | Pattern[str]) -> Any | None:
+def extract_function_call_json(
+    text: str, function_name: str | Pattern[str]
+) -> Any | None:
     if isinstance(function_name, str):
         match = re.search(rf"\b{re.escape(function_name)}\s*\(", text)
     else:

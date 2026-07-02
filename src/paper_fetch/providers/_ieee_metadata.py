@@ -19,7 +19,11 @@ from ..tracing import fulltext_marker, trace_from_markers
 from ..utils import dedupe_authors, normalize_text, strip_html_tags
 from ._asset_retry import merge_asset_retry_results
 from ._html_authors import AuthorExtractionPipeline, AuthorStep
-from ._ieee_url import IEEE_REFERENCES_URL_TEMPLATE, _article_number_from_metadata, _article_number_from_url
+from ._ieee_url import (
+    IEEE_REFERENCES_URL_TEMPLATE,
+    _article_number_from_metadata,
+    _article_number_from_url,
+)
 from ._reference_doi import reference_doi_match as _reference_doi_match
 from ._script_json import extract_assignment_json
 
@@ -51,11 +55,16 @@ def _landing_metadata_has_multimedia_scope(metadata: Mapping[str, Any] | None) -
     sections = (metadata or {}).get("sections")
     if isinstance(sections, Mapping) and _boolish(sections.get("multimedia")):
         return True
-    return _boolish((metadata or {}).get("hasMultimedia")) or _boolish((metadata or {}).get("multimedia"))
+    return _boolish((metadata or {}).get("hasMultimedia")) or _boolish(
+        (metadata or {}).get("multimedia")
+    )
 
 
 def _script_value(text: str, key: str) -> Any:
-    pattern = re.compile(IEEE_SCRIPT_VALUE_PATTERN_TEMPLATE.format(key=re.escape(key)), flags=re.IGNORECASE)
+    pattern = re.compile(
+        IEEE_SCRIPT_VALUE_PATTERN_TEMPLATE.format(key=re.escape(key)),
+        flags=re.IGNORECASE,
+    )
     match = pattern.search(text)
     if not match:
         return None
@@ -115,7 +124,9 @@ def _extract_ieee_author_first_last_name(author_payload: str) -> list[str]:
     author = _load_author_pipeline_value(author_payload)
     if not isinstance(author, Mapping):
         return []
-    name = normalize_text(f"{normalize_text(str(author.get('firstName') or ''))} {normalize_text(str(author.get('lastName') or ''))}")
+    name = normalize_text(
+        f"{normalize_text(str(author.get('firstName') or ''))} {normalize_text(str(author.get('lastName') or ''))}"
+    )
     return [name] if name else []
 
 
@@ -143,15 +154,23 @@ def _ieee_author_items_from_metadata_key(metadata_payload: str, key: str) -> lis
 
 
 def _extract_ieee_authors_from_items(items: list[Any]) -> list[str]:
-    return [name for item in items for name in _AUTHOR_NAME_PIPELINE(_author_pipeline_json(item))]
+    return [
+        name
+        for item in items
+        for name in _AUTHOR_NAME_PIPELINE(_author_pipeline_json(item))
+    ]
 
 
 def _extract_ieee_authors(metadata_payload: str) -> list[str]:
-    return _extract_ieee_authors_from_items(_ieee_author_items_from_metadata_key(metadata_payload, "authors"))
+    return _extract_ieee_authors_from_items(
+        _ieee_author_items_from_metadata_key(metadata_payload, "authors")
+    )
 
 
 def _extract_ieee_authors_list(metadata_payload: str) -> list[str]:
-    return _extract_ieee_authors_from_items(_ieee_author_items_from_metadata_key(metadata_payload, "authorsList"))
+    return _extract_ieee_authors_from_items(
+        _ieee_author_items_from_metadata_key(metadata_payload, "authorsList")
+    )
 
 
 _AUTHOR_PIPELINE = AuthorExtractionPipeline(
@@ -160,15 +179,37 @@ _AUTHOR_PIPELINE = AuthorExtractionPipeline(
 )
 
 _IEEE_METADATA_SCALAR_KEYS = (
-    "provider", "official_provider", "publisher", "doi", "title", "abstract",
-    "journal_title", "published", "landing_page_url", "article_number",
-    "articleNumber", "articleId", "isDynamicHtml", "html_flag", "ml_html_flag",
-    "pdfUrl", "pdfPath", "raw_ieee_metadata",
+    "provider",
+    "official_provider",
+    "publisher",
+    "doi",
+    "title",
+    "abstract",
+    "journal_title",
+    "published",
+    "landing_page_url",
+    "article_number",
+    "articleNumber",
+    "articleId",
+    "isDynamicHtml",
+    "html_flag",
+    "ml_html_flag",
+    "pdfUrl",
+    "pdfPath",
+    "raw_ieee_metadata",
 )
 _IEEE_METADATA_TEXT_KEYS = (
-    "publisher", "title", "abstract", "journal_title", "published",
-    "landing_page_url", "article_number", "articleNumber", "articleId",
-    "pdfUrl", "pdfPath",
+    "publisher",
+    "title",
+    "abstract",
+    "journal_title",
+    "published",
+    "landing_page_url",
+    "article_number",
+    "articleNumber",
+    "articleId",
+    "pdfUrl",
+    "pdfPath",
 )
 _IEEE_METADATA_MERGE_RULE = MetadataMergeRule(
     overwrite=_IEEE_METADATA_SCALAR_KEYS,
@@ -204,7 +245,12 @@ def _keywords_from_ieee_metadata(metadata: Mapping[str, Any]) -> list[str]:
     if isinstance(raw_keywords, list):
         for item in raw_keywords:
             if isinstance(item, Mapping):
-                values = item.get("kwd") or item.get("keywords") or item.get("terms") or item.get("value")
+                values = (
+                    item.get("kwd")
+                    or item.get("keywords")
+                    or item.get("terms")
+                    or item.get("value")
+                )
                 if isinstance(values, str):
                     keyword_groups.append([values])
                 elif isinstance(values, list):
@@ -265,7 +311,12 @@ def _reference_doi_from_ieee_reference(item: Mapping[str, Any]) -> str:
             match = _reference_doi_match(value)
             if match is not None:
                 return normalize_doi(match.group(0).rstrip(").,;")) or ""
-    for key in ("doi", "googleScholarStructredQuery", "googleScholarStructuredQuery", "text"):
+    for key in (
+        "doi",
+        "googleScholarStructredQuery",
+        "googleScholarStructuredQuery",
+        "text",
+    ):
         value = normalize_text(str(item.get(key) or ""))
         match = _reference_doi_match(value)
         if match is not None:
@@ -273,7 +324,9 @@ def _reference_doi_from_ieee_reference(item: Mapping[str, Any]) -> str:
     return ""
 
 
-def _references_from_ieee_reference_payload(payload: Mapping[str, Any]) -> list[dict[str, str | None]]:
+def _references_from_ieee_reference_payload(
+    payload: Mapping[str, Any],
+) -> list[dict[str, str | None]]:
     raw_references = payload.get("references")
     if not isinstance(raw_references, list):
         return []
@@ -282,7 +335,9 @@ def _references_from_ieee_reference_payload(payload: Mapping[str, Any]) -> list[
     for index, item in enumerate(raw_references, start=1):
         if not isinstance(item, Mapping):
             continue
-        raw_text = normalize_text(html_lib.unescape(strip_html_tags(str(item.get("text") or "")) or ""))
+        raw_text = normalize_text(
+            html_lib.unescape(strip_html_tags(str(item.get("text") or "")) or "")
+        )
         if not raw_text:
             continue
         label = normalize_text(str(item.get("order") or index))
@@ -295,15 +350,26 @@ def _references_from_ieee_reference_payload(payload: Mapping[str, Any]) -> list[
                 "label": label or None,
                 "raw": raw_text,
                 "doi": _reference_doi_from_ieee_reference(item) or None,
-                "title": normalize_text(html_lib.unescape(strip_html_tags(str(item.get("title") or "")) or "")) or None,
+                "title": normalize_text(
+                    html_lib.unescape(
+                        strip_html_tags(str(item.get("title") or "")) or ""
+                    )
+                )
+                or None,
             }
         )
     return references
 
 
-def _merge_ieee_metadata(base_metadata: Mapping[str, Any], landing_metadata: Mapping[str, Any], response_url: str) -> dict[str, Any]:
+def _merge_ieee_metadata(
+    base_metadata: Mapping[str, Any],
+    landing_metadata: Mapping[str, Any],
+    response_url: str,
+) -> dict[str, Any]:
     base_layer = dict(base_metadata or {})
-    base_layer["journal_title"] = base_layer.get("journal_title") or base_layer.get("journal")
+    base_layer["journal_title"] = base_layer.get("journal_title") or base_layer.get(
+        "journal"
+    )
     base_layer["keywords"] = _keyword_values(base_layer.get("keywords"))
     for key in _IEEE_METADATA_TEXT_KEYS:
         if key in base_layer:
@@ -311,14 +377,23 @@ def _merge_ieee_metadata(base_metadata: Mapping[str, Any], landing_metadata: Map
     if base_layer.get("doi"):
         base_layer["doi"] = normalize_doi(str(base_layer.get("doi") or "")) or None
     base_layer.pop("authors", None)
-    title = (
-        strip_html_tags(_first_metadata_text(landing_metadata, "formulaStrippedArticleTitle", "displayDocTitle", "title"))
-        or normalize_text(str(base_layer.get("title") or ""))
-    )
-    abstract = strip_html_tags(_first_metadata_text(landing_metadata, "abstract")) or normalize_text(str(base_layer.get("abstract") or ""))
+    title = strip_html_tags(
+        _first_metadata_text(
+            landing_metadata, "formulaStrippedArticleTitle", "displayDocTitle", "title"
+        )
+    ) or normalize_text(str(base_layer.get("title") or ""))
+    abstract = strip_html_tags(
+        _first_metadata_text(landing_metadata, "abstract")
+    ) or normalize_text(str(base_layer.get("abstract") or ""))
     landing_authors = _AUTHOR_PIPELINE(_author_pipeline_json(landing_metadata))
-    base_authors = [normalize_text(str(item)) for item in (base_metadata or {}).get("authors") or [] if normalize_text(str(item))]
-    article_number = _article_number_from_metadata(landing_metadata) or _article_number_from_url(response_url)
+    base_authors = [
+        normalize_text(str(item))
+        for item in (base_metadata or {}).get("authors") or []
+        if normalize_text(str(item))
+    ]
+    article_number = _article_number_from_metadata(
+        landing_metadata
+    ) or _article_number_from_url(response_url)
     landing_layer = {
         "provider": "ieee",
         "official_provider": True,
@@ -326,12 +401,16 @@ def _merge_ieee_metadata(base_metadata: Mapping[str, Any], landing_metadata: Map
         "title": title or None,
         "abstract": abstract or None,
         "journal_title": _first_metadata_text(landing_metadata, "publicationTitle"),
-        "published": _first_metadata_text(landing_metadata, "publicationDate", "onlineDate", "publicationYear"),
+        "published": _first_metadata_text(
+            landing_metadata, "publicationDate", "onlineDate", "publicationYear"
+        ),
         "keywords": _keywords_from_ieee_metadata(landing_metadata),
         "landing_page_url": response_url,
         "article_number": article_number or None,
         "articleNumber": article_number or None,
-        "articleId": _first_metadata_text(landing_metadata, "articleId") or article_number or None,
+        "articleId": _first_metadata_text(landing_metadata, "articleId")
+        or article_number
+        or None,
         "isDynamicHtml": _boolish(landing_metadata.get("isDynamicHtml")),
         "html_flag": _boolish(landing_metadata.get("html_flag")),
         "ml_html_flag": _boolish(landing_metadata.get("ml_html_flag")),
@@ -339,7 +418,9 @@ def _merge_ieee_metadata(base_metadata: Mapping[str, Any], landing_metadata: Map
         "pdfPath": _first_metadata_text(landing_metadata, "pdfPath") or None,
         "raw_ieee_metadata": dict(landing_metadata),
     }
-    merged = merge_metadata_layers([base_layer, landing_layer], rule=_IEEE_METADATA_MERGE_RULE)
+    merged = merge_metadata_layers(
+        [base_layer, landing_layer], rule=_IEEE_METADATA_MERGE_RULE
+    )
     authors_layer = merge_metadata_layers(
         [{"authors": landing_authors}, {"authors": base_authors}],
         rule=_IEEE_AUTHOR_MERGE_RULE,
@@ -433,16 +514,27 @@ def build_ieee_article_model(
     from . import _ieee_html as ieee_html
 
     content = raw_payload.content
-    merged_metadata = content.merged_metadata if content is not None else raw_payload.merged_metadata
-    article_metadata = merged_metadata if isinstance(merged_metadata, Mapping) else metadata
+    merged_metadata = (
+        content.merged_metadata if content is not None else raw_payload.merged_metadata
+    )
+    article_metadata = (
+        merged_metadata if isinstance(merged_metadata, Mapping) else metadata
+    )
     doi = normalize_doi(str(article_metadata.get("doi") or metadata.get("doi") or ""))
-    markdown_text = str((content.markdown_text if content is not None else "") or "").strip()
+    markdown_text = str(
+        (content.markdown_text if content is not None else "") or ""
+    ).strip()
     route = normalize_text(content.route_kind if content is not None else "").lower()
     source = "ieee_pdf" if route == PDF_FALLBACK else "ieee_html"
-    trace = list(raw_payload.trace or trace_from_markers([fulltext_marker("ieee", "ok", route="html")]))
+    trace = list(
+        raw_payload.trace
+        or trace_from_markers([fulltext_marker("ieee", "ok", route="html")])
+    )
     warnings = list(raw_payload.warnings)
     if asset_failures:
-        warnings.append(f"IEEE related assets were only partially downloaded ({len(asset_failures)} failed).")
+        warnings.append(
+            f"IEEE related assets were only partially downloaded ({len(asset_failures)} failed)."
+        )
     if not markdown_text:
         warnings.append("IEEE retrieval did not produce usable Markdown.")
         return metadata_only_article(
@@ -452,11 +544,24 @@ def build_ieee_article_model(
             warnings=warnings,
             trace=trace,
         )
-    extraction_payload = content.diagnostics.get("extraction") if content is not None else None
-    abstract_sections = list(extraction_payload.get("abstract_sections") or []) if isinstance(extraction_payload, Mapping) else []
-    section_hints = list(extraction_payload.get("section_hints") or []) if isinstance(extraction_payload, Mapping) else []
+    extraction_payload = (
+        content.diagnostics.get("extraction") if content is not None else None
+    )
+    abstract_sections = (
+        list(extraction_payload.get("abstract_sections") or [])
+        if isinstance(extraction_payload, Mapping)
+        else []
+    )
+    section_hints = (
+        list(extraction_payload.get("section_hints") or [])
+        if isinstance(extraction_payload, Mapping)
+        else []
+    )
     extracted_assets = ieee_html._dedupe_ieee_assets_by_priority(
-        [dict(item) for item in list(content.extracted_assets if content is not None else [])],
+        [
+            dict(item)
+            for item in list(content.extracted_assets if content is not None else [])
+        ],
         merge_fields=ieee_html.IEEE_ASSET_URL_FIELDS,
     )
     downloaded_asset_results = ieee_html._dedupe_ieee_assets_by_priority(
@@ -473,7 +578,8 @@ def build_ieee_article_model(
     )
     availability_diagnostics = (
         dict(content.diagnostics.get("availability_diagnostics") or {})
-        if content is not None and isinstance(content.diagnostics.get("availability_diagnostics"), Mapping)
+        if content is not None
+        and isinstance(content.diagnostics.get("availability_diagnostics"), Mapping)
         else None
     )
     article = article_from_markdown(
@@ -487,7 +593,9 @@ def build_ieee_article_model(
         warnings=warnings,
         trace=trace,
         availability_diagnostics=availability_diagnostics,
-        semantic_losses={"formula_missing_count": markdown_text.count("[Formula unavailable]")},
+        semantic_losses={
+            "formula_missing_count": markdown_text.count("[Formula unavailable]")
+        },
         allow_downgrade_from_diagnostics=True,
     )
     if asset_failures:

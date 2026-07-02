@@ -101,7 +101,9 @@ def extract_asset_html_scopes(
 
     supplementary_html = "\n".join(
         str(node)
-        for node in atypon_browser_workflow_supplementary_sections(supplementary_container)
+        for node in atypon_browser_workflow_supplementary_sections(
+            supplementary_container
+        )
         if normalize_text(node.get_text(" ", strip=True))
     )
     return content_fragment_html(

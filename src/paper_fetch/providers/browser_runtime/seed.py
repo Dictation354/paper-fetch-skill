@@ -96,8 +96,12 @@ def browser_cookie_matches_url(cookie: Mapping[str, Any], url: str | None) -> bo
 
     cookie_url = normalize_text(str(cookie.get("url") or ""))
     if cookie_url:
-        cookie_host = normalize_text(urllib.parse.urlparse(cookie_url).hostname or "").lower()
-        return bool(cookie_host and (host == cookie_host or host.endswith(f".{cookie_host}")))
+        cookie_host = normalize_text(
+            urllib.parse.urlparse(cookie_url).hostname or ""
+        ).lower()
+        return bool(
+            cookie_host and (host == cookie_host or host.endswith(f".{cookie_host}"))
+        )
     return True
 
 
@@ -123,8 +127,11 @@ def merge_browser_context_seeds(*seeds: Mapping[str, Any] | None) -> dict[str, A
             continue
 
         cookies = normalize_browser_cookies_for_playwright(
-            seed.get("browser_cookies") if isinstance(seed.get("browser_cookies"), list) else None,
-            fallback_url=normalize_text(str(seed.get("browser_final_url") or "")) or None,
+            seed.get("browser_cookies")
+            if isinstance(seed.get("browser_cookies"), list)
+            else None,
+            fallback_url=normalize_text(str(seed.get("browser_final_url") or ""))
+            or None,
         )
         for cookie in cookies:
             key = (

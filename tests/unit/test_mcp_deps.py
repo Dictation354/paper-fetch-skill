@@ -30,7 +30,9 @@ class McpDepsTests(unittest.TestCase):
         self.assertIs(deps.list_cache_entries, list_cache_entries)
         self.assertIs(deps.preferred_cached_entries, preferred_cached_entries)
         self.assertEqual(deps.fetch_paper_envelope.__name__, "_fetch_paper_envelope")
-        self.assertEqual(deps.write_cached_fetch_envelope.__name__, "_write_cached_fetch_envelope")
+        self.assertEqual(
+            deps.write_cached_fetch_envelope.__name__, "_write_cached_fetch_envelope"
+        )
 
     def test_mcp_deps_round_trips_and_protects_fields(self) -> None:
         deps = default_mcp_deps()

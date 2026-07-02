@@ -18,7 +18,12 @@ from ..extraction.html.provider_rules import (
     WILEY_FRONT_MATTER_EXACT_TEXTS,
     WILEY_SITE_RULE_OVERRIDES,
 )
-from ..http import DEFAULT_FULLTEXT_TIMEOUT_SECONDS, PDF_ACCEPT_HEADER, PDF_MIME_TYPE, RequestFailure
+from ..http import (
+    DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
+    PDF_ACCEPT_HEADER,
+    PDF_MIME_TYPE,
+    RequestFailure,
+)
 from ..extraction.html.landing import REDIRECT_STATUS_CODES
 from ..provider_catalog import (
     ATYPON_DEFAULT_PDF_PATH_TEMPLATES,
@@ -37,6 +42,7 @@ from ._pdf_common import (
     pdf_asset_output_dir,
     pdf_asset_profile_from_context,
     pdf_fetch_result_assets,
+    pdf_fetch_result_warnings,
     pdf_fetch_result_from_response,
 )
 from ._waterfall import (
@@ -83,7 +89,10 @@ register_provider_bundle(
             ),
             crossref_pdf_position=1,
             api_url_templates=(
-                ("tdm_pdf", "https://api.wiley.com/onlinelibrary/tdm/v1/articles/{doi}"),
+                (
+                    "tdm_pdf",
+                    "https://api.wiley.com/onlinelibrary/tdm/v1/articles/{doi}",
+                ),
             ),
             sensitive_headers=("wiley-tdm-client-token",),
             env_requirements=("CROSSREF_MAILTO",),
@@ -179,6 +188,7 @@ def _fetch_wiley_tdm_pdf_result(
         source_url=api_url,
         final_url=final_url,
         not_pdf_message="Wiley API PDF fallback did not return a PDF file.",
+        allow_pdf_only=True,
     )
 
 
@@ -325,6 +335,7 @@ class WileyClient(browser_workflow.BrowserWorkflowClient):
                     suggested_filename=pdf_result.suggested_filename,
                     extracted_assets=pdf_fetch_result_assets(pdf_result),
                 ),
+                warnings=pdf_fetch_result_warnings(pdf_result),
                 needs_local_copy=True,
             )
 

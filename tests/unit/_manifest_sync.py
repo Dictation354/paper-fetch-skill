@@ -184,9 +184,15 @@ def serialize_datalayer_signal_set(signal_set: Any) -> dict[str, Any] | None:
             },
             "required_fields": list(schema.required_fields),
         },
-        "blocking_rules": [_serialize_datalayer_rule(rule) for rule in signal_set.blocking_rules],
-        "strong_rules": [_serialize_datalayer_rule(rule) for rule in signal_set.strong_rules],
-        "soft_rules": [_serialize_datalayer_rule(rule) for rule in signal_set.soft_rules],
+        "blocking_rules": [
+            _serialize_datalayer_rule(rule) for rule in signal_set.blocking_rules
+        ],
+        "strong_rules": [
+            _serialize_datalayer_rule(rule) for rule in signal_set.strong_rules
+        ],
+        "soft_rules": [
+            _serialize_datalayer_rule(rule) for rule in signal_set.soft_rules
+        ],
         "abstract_only_rules": [
             _serialize_datalayer_rule(rule) for rule in signal_set.abstract_only_rules
         ],

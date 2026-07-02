@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 import urllib.parse
 from typing import TYPE_CHECKING
+from collections.abc import Mapping
 
 from ...extraction.html._runtime import decode_html
 from ...extraction.html.signals import HtmlExtractionFailure, summarize_html
@@ -52,7 +53,10 @@ def _direct_http_referer(candidate_url: str, landing_page_url: str | None) -> st
 
 
 def _direct_http_browser_user_agent(client: BrowserWorkflowClient) -> str:
-    return normalize_text(client.browser_user_agent) or DEFAULT_BROWSER_NAVIGATION_USER_AGENT
+    return (
+        normalize_text(client.browser_user_agent)
+        or DEFAULT_BROWSER_NAVIGATION_USER_AGENT
+    )
 
 
 def _direct_http_html_headers(
@@ -73,7 +77,10 @@ def _direct_http_html_headers(
 
 
 def _direct_http_response_is_html(response: dict[str, object]) -> bool:
-    content_type = header_value(response.get("headers"), "content-type").lower()
+    headers = response.get("headers")
+    content_type = header_value(
+        headers if isinstance(headers, Mapping) else None, "content-type"
+    ).lower()
     body = response.get("body")
     if not isinstance(body, (bytes, bytearray)) or not body:
         return False
@@ -83,11 +90,16 @@ def _direct_http_response_is_html(response: dict[str, object]) -> bool:
     return head.startswith(b"<!doctype html") or head.startswith(b"<html")
 
 
-def _direct_http_redirect_target(candidate_url: str, response: dict[str, object]) -> str | None:
+def _direct_http_redirect_target(
+    candidate_url: str, response: dict[str, object]
+) -> str | None:
     status = response.get("status_code")
     if not isinstance(status, int) or status not in DIRECT_HTTP_REDIRECT_STATUS_CODES:
         return None
-    location = header_value(response.get("headers"), "location")
+    headers = response.get("headers")
+    location = header_value(
+        headers if isinstance(headers, Mapping) else None, "location"
+    )
     target = urllib.parse.urljoin(candidate_url, normalize_text(location))
     parsed = urllib.parse.urlparse(target)
     if parsed.scheme not in {"http", "https"} or not parsed.netloc:
@@ -131,7 +143,11 @@ def _fetch_direct_http_html_preflight(
                     retry_on_rate_limit=True,
                 )
             except RequestFailure as exc:
-                last_reason = f"status_{exc.status_code}" if exc.status_code else exc.__class__.__name__
+                last_reason = (
+                    f"status_{exc.status_code}"
+                    if exc.status_code
+                    else exc.__class__.__name__
+                )
                 break
             except Exception as exc:
                 last_reason = normalize_text(str(exc)) or exc.__class__.__name__
@@ -165,7 +181,9 @@ def _fetch_direct_http_html_preflight(
             body = response.get("body")
             html_text = decode_html(bytes(body), content_type=content_type)
             summary = summarize_html(html_text)
-            detected = detect_html_block("", summary, status if isinstance(status, int) else None)
+            detected = detect_html_block(
+                "", summary, status if isinstance(status, int) else None
+            )
             if detected is not None:
                 last_reason = detected.reason
                 break
@@ -194,7 +212,9 @@ def _fetch_direct_http_html_preflight(
     )
 
 
-def _fetch_browser_html_payload(*args, deps: BrowserWorkflowDeps | None = None, **kwargs):
+def _fetch_browser_html_payload(
+    *args, deps: BrowserWorkflowDeps | None = None, **kwargs
+):
     deps = deps or default_browser_workflow_deps()
     kwargs.setdefault(
         "html_fetcher",
@@ -213,9 +233,7 @@ def _fetch_browser_html_payload_with_fast_path(
         "html_fetcher",
         deps.fetch_html_with_browser,
     )
-    return _html_extraction._fetch_browser_html_payload_with_fast_path(
-        *args, **kwargs
-    )
+    return _html_extraction._fetch_browser_html_payload_with_fast_path(*args, **kwargs)
 
 
 def bootstrap_browser_workflow(
@@ -400,16 +418,16 @@ def bootstrap_browser_workflow(
         result.html_failure_reason = exc.kind
         result.html_failure_message = exc.message
     except HtmlExtractionFailure as exc:
-        html_result = getattr(exc, "html_result", None)
-        if html_result is not None:
+        extraction_html_result = getattr(exc, "html_result", None)
+        if extraction_html_result is not None:
             result.browser_context_seed = (
-                getattr(html_result, "browser_context_seed", None)
+                getattr(extraction_html_result, "browser_context_seed", None)
                 or result.browser_context_seed
             )
             for pdf_candidate in reversed(
                 extract_pdf_candidate_urls_from_html(
-                    getattr(html_result, "html", "") or "",
-                    getattr(html_result, "final_url", "") or "",
+                    getattr(extraction_html_result, "html", "") or "",
+                    getattr(extraction_html_result, "final_url", "") or "",
                 )
             ):
                 if pdf_candidate and pdf_candidate not in result.pdf_candidates:

@@ -779,12 +779,7 @@ def build_rule_coverage_report(markdown: str) -> list[RuleCoverageReport]:
             _normalize_fixture_link(link)
             for link, _line_no in _extract_fixture_links(block)
         }
-        stable_samples = len(
-            {
-                "/".join(link.split("/")[:4])
-                for link in fixture_links
-            }
-        )
+        stable_samples = len({"/".join(link.split("/")[:4]) for link in fixture_links})
         no_stable_marker = "当前无稳定 DOI 样本" in block
         low_coverage = any(marker in block for marker in LOW_COVERAGE_MARKERS)
         rows.append(

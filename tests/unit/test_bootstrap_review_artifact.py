@@ -85,22 +85,23 @@ def _run_bootstrap(tmp_path: Path) -> dict[str, object]:
     return yaml.safe_load(review_path.read_text(encoding="utf-8"))
 
 
-def test_bootstrap_review_artifact_writes_schema_valid_pending_draft(tmp_path: Path) -> None:
+def test_bootstrap_review_artifact_writes_schema_valid_pending_draft(
+    tmp_path: Path,
+) -> None:
     manifest_path = tmp_path / "onboarding" / "manifests" / "newpub.yml"
-    fixture_dir = (
-        tmp_path
-        / "tests"
-        / "fixtures"
-        / "golden_criteria"
-        / "10.1234_sample"
-    )
+    fixture_dir = tmp_path / "tests" / "fixtures" / "golden_criteria" / "10.1234_sample"
     markdown_path = fixture_dir / "extracted.md"
     quality_path = fixture_dir / "markdown-quality.json"
     manifest_path.parent.mkdir(parents=True)
     fixture_dir.mkdir(parents=True)
     markdown_path.write_text("## Abstract\nBody\n", encoding="utf-8")
-    (fixture_dir / "markdown-quality-prompt.md").write_text("Review prompt\n", encoding="utf-8")
-    quality_path.write_text(json.dumps(_quality_report(status="pending_agent_review")) + "\n", encoding="utf-8")
+    (fixture_dir / "markdown-quality-prompt.md").write_text(
+        "Review prompt\n", encoding="utf-8"
+    )
+    quality_path.write_text(
+        json.dumps(_quality_report(status="pending_agent_review")) + "\n",
+        encoding="utf-8",
+    )
     _write_manifest(manifest_path)
 
     review = _run_bootstrap(tmp_path)
@@ -136,13 +137,17 @@ def test_bootstrap_review_artifact_writes_schema_valid_pending_draft(tmp_path: P
     assert "must not include Download PDF" in fixture["assertions"]
 
 
-def test_bootstrap_review_artifact_copies_fail_issues_and_omits_pass_quality_issue(tmp_path: Path) -> None:
+def test_bootstrap_review_artifact_copies_fail_issues_and_omits_pass_quality_issue(
+    tmp_path: Path,
+) -> None:
     manifest_path = tmp_path / "onboarding" / "manifests" / "newpub.yml"
     fixture_dir = tmp_path / "tests" / "fixtures" / "golden_criteria" / "10.1234_sample"
     manifest_path.parent.mkdir(parents=True)
     fixture_dir.mkdir(parents=True)
     (fixture_dir / "extracted.md").write_text("## Abstract\nBody\n", encoding="utf-8")
-    (fixture_dir / "markdown-quality-prompt.md").write_text("Review prompt\n", encoding="utf-8")
+    (fixture_dir / "markdown-quality-prompt.md").write_text(
+        "Review prompt\n", encoding="utf-8"
+    )
     _write_manifest(manifest_path)
 
     (fixture_dir / "markdown-quality.json").write_text(

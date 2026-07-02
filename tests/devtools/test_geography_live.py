@@ -77,7 +77,9 @@ def make_envelope(
 
 
 class GeographyLiveTests(unittest.TestCase):
-    def test_schedule_geography_samples_interleaves_providers_but_preserves_local_order(self) -> None:
+    def test_schedule_geography_samples_interleaves_providers_but_preserves_local_order(
+        self,
+    ) -> None:
         samples = [
             make_sample("elsevier", "10.1000/e1"),
             make_sample("elsevier", "10.1000/e2"),
@@ -86,7 +88,9 @@ class GeographyLiveTests(unittest.TestCase):
             make_sample("wiley", "10.1000/w1"),
         ]
 
-        scheduled = schedule_geography_samples(samples, providers=["elsevier", "springer", "wiley"])
+        scheduled = schedule_geography_samples(
+            samples, providers=["elsevier", "springer", "wiley"]
+        )
 
         self.assertEqual(
             [item.doi for item in scheduled],
@@ -112,13 +116,22 @@ class GeographyLiveTests(unittest.TestCase):
                     + "\n\nA third paragraph keeps the abstract unusually long for this synthetic test."
                 ),
             ),
-            sections=[Section(heading="Results", level=2, kind="body", text=f"{repeated_paragraph} Additional body text.")],
+            sections=[
+                Section(
+                    heading="Results",
+                    level=2,
+                    kind="body",
+                    text=f"{repeated_paragraph} Additional body text.",
+                )
+            ],
             references=[],
             source_trail=["fulltext:pnas_html_ok", "fulltext:pnas_article_ok"],
             breakdown=TokenEstimateBreakdown(abstract=620, body=400, refs=0),
         )
 
-        result = build_report_result(make_sample("pnas", envelope.doi or ""), envelope, elapsed_seconds=0.5)
+        result = build_report_result(
+            make_sample("pnas", envelope.doi or ""), envelope, elapsed_seconds=0.5
+        )
 
         self.assertIn("abstract_inflated", result.issue_flags)
         self.assertIn("abstract_body_overlap", result.issue_flags)
@@ -155,16 +168,16 @@ class GeographyLiveTests(unittest.TestCase):
             )
         )
 
-    def test_report_result_uses_primary_wiley_abstract_instead_of_total_bilingual_budget(self) -> None:
+    def test_report_result_uses_primary_wiley_abstract_instead_of_total_bilingual_budget(
+        self,
+    ) -> None:
         english_abstract = (
             "This primary abstract summarizes the study design, disturbance gradient, satellite observations, "
-            "and regional implications without reproducing the body text. "
-            * 8
+            "and regional implications without reproducing the body text. " * 8
         ).strip()
         portuguese_abstract = (
             "Este resumo paralelo descreve o mesmo estudo em portugues e nao deve inflar a regra de issue "
-            "quando o resumo primario continua em tamanho normal. "
-            * 8
+            "quando o resumo primario continua em tamanho normal. " * 8
         ).strip()
         envelope = make_envelope(
             provider="wiley",
@@ -176,13 +189,20 @@ class GeographyLiveTests(unittest.TestCase):
                 abstract=f"{english_abstract}\n\n{portuguese_abstract}",
             ),
             sections=[
-                Section(heading="Abstract", level=2, kind="abstract", text=english_abstract),
-                Section(heading="Resumo", level=2, kind="abstract", text=portuguese_abstract),
+                Section(
+                    heading="Abstract", level=2, kind="abstract", text=english_abstract
+                ),
+                Section(
+                    heading="Resumo", level=2, kind="abstract", text=portuguese_abstract
+                ),
                 Section(
                     heading="Main Text",
                     level=2,
                     kind="body",
-                    text=("Body paragraphs discuss methods, results, and discussion in a distinct narrative. " * 40).strip(),
+                    text=(
+                        "Body paragraphs discuss methods, results, and discussion in a distinct narrative. "
+                        * 40
+                    ).strip(),
                 ),
             ],
             references=[],
@@ -190,21 +210,23 @@ class GeographyLiveTests(unittest.TestCase):
             breakdown=TokenEstimateBreakdown(abstract=980, body=700, refs=0),
         )
 
-        result = build_report_result(make_sample("wiley", envelope.doi or ""), envelope, elapsed_seconds=0.2)
+        result = build_report_result(
+            make_sample("wiley", envelope.doi or ""), envelope, elapsed_seconds=0.2
+        )
 
         self.assertNotIn("abstract_inflated", result.issue_flags)
         self.assertNotIn("abstract_body_overlap", result.issue_flags)
 
-    def test_report_result_ignores_pnas_significance_when_canonical_abstract_exists(self) -> None:
+    def test_report_result_ignores_pnas_significance_when_canonical_abstract_exists(
+        self,
+    ) -> None:
         significance = (
             "This significance statement is intentionally long and should not become the primary abstract for "
-            "geography issue detection even when metadata.abstract points at it. "
-            * 10
+            "geography issue detection even when metadata.abstract points at it. " * 10
         ).strip()
         canonical_abstract = (
             "This canonical abstract focuses on the core finding and remains short enough to stay below the "
-            "inflation threshold when evaluated on its own. "
-            * 7
+            "inflation threshold when evaluated on its own. " * 7
         ).strip()
         envelope = make_envelope(
             provider="pnas",
@@ -216,13 +238,23 @@ class GeographyLiveTests(unittest.TestCase):
                 abstract=significance,
             ),
             sections=[
-                Section(heading="Significance", level=2, kind="abstract", text=significance),
-                Section(heading="Abstract", level=2, kind="abstract", text=canonical_abstract),
+                Section(
+                    heading="Significance", level=2, kind="abstract", text=significance
+                ),
+                Section(
+                    heading="Abstract",
+                    level=2,
+                    kind="abstract",
+                    text=canonical_abstract,
+                ),
                 Section(
                     heading="Results",
                     level=2,
                     kind="body",
-                    text=("Results paragraphs remain distinct from the abstract and significance blocks. " * 45).strip(),
+                    text=(
+                        "Results paragraphs remain distinct from the abstract and significance blocks. "
+                        * 45
+                    ).strip(),
                 ),
             ],
             references=[],
@@ -230,7 +262,9 @@ class GeographyLiveTests(unittest.TestCase):
             breakdown=TokenEstimateBreakdown(abstract=1040, body=800, refs=0),
         )
 
-        result = build_report_result(make_sample("pnas", envelope.doi or ""), envelope, elapsed_seconds=0.2)
+        result = build_report_result(
+            make_sample("pnas", envelope.doi or ""), envelope, elapsed_seconds=0.2
+        )
 
         self.assertNotIn("abstract_inflated", result.issue_flags)
         self.assertNotIn("abstract_body_overlap", result.issue_flags)
@@ -241,52 +275,89 @@ class GeographyLiveTests(unittest.TestCase):
             doi="10.1111/example2",
             source="wiley_browser",
             metadata=Metadata(title="Example", authors=[]),
-            sections=[Section(heading="Results", level=2, kind="body", text="Body text.")],
+            sections=[
+                Section(heading="Results", level=2, kind="body", text="Body text.")
+            ],
             references=[Reference(raw="ref", doi="10.1038/s41561-022-00912-7")],
             source_trail=["fulltext:wiley_html_ok", "fulltext:wiley_article_ok"],
             breakdown=TokenEstimateBreakdown(abstract=0, body=100, refs=30),
         )
 
-        result = build_report_result(make_sample("wiley", envelope.doi or ""), envelope, elapsed_seconds=0.3)
+        result = build_report_result(
+            make_sample("wiley", envelope.doi or ""), envelope, elapsed_seconds=0.3
+        )
 
         self.assertIn("empty_authors", result.issue_flags)
         self.assertNotIn("refs_doi_not_normalized", result.issue_flags)
 
-    def test_report_result_does_not_flag_empty_authors_for_research_briefing_signature(self) -> None:
+    def test_report_result_does_not_flag_empty_authors_for_research_briefing_signature(
+        self,
+    ) -> None:
         envelope = make_envelope(
             provider="springer",
             doi="10.1038/example-briefing",
             source="springer_html",
             metadata=Metadata(title="Example Briefing", authors=[]),
             sections=[
-                Section(heading="The question", level=2, kind="body", text="Question text."),
-                Section(heading="The discovery", level=2, kind="body", text="Discovery text."),
-                Section(heading="The implications", level=2, kind="body", text="Implication text."),
-                Section(heading="Expert opinion", level=2, kind="body", text="Opinion text."),
-                Section(heading="Behind the paper", level=2, kind="body", text="Behind the paper text."),
-                Section(heading="From the editor", level=2, kind="body", text="Editor text."),
+                Section(
+                    heading="The question", level=2, kind="body", text="Question text."
+                ),
+                Section(
+                    heading="The discovery",
+                    level=2,
+                    kind="body",
+                    text="Discovery text.",
+                ),
+                Section(
+                    heading="The implications",
+                    level=2,
+                    kind="body",
+                    text="Implication text.",
+                ),
+                Section(
+                    heading="Expert opinion", level=2, kind="body", text="Opinion text."
+                ),
+                Section(
+                    heading="Behind the paper",
+                    level=2,
+                    kind="body",
+                    text="Behind the paper text.",
+                ),
+                Section(
+                    heading="From the editor", level=2, kind="body", text="Editor text."
+                ),
             ],
             references=[],
             source_trail=["fulltext:springer_html_ok", "fulltext:springer_article_ok"],
             breakdown=TokenEstimateBreakdown(abstract=0, body=300, refs=0),
         )
 
-        result = build_report_result(make_sample("springer", envelope.doi or ""), envelope, elapsed_seconds=0.2)
+        result = build_report_result(
+            make_sample("springer", envelope.doi or ""), envelope, elapsed_seconds=0.2
+        )
 
         self.assertNotIn("empty_authors", result.issue_flags)
 
-    def test_reference_normalization_removes_unicode_dash_before_issue_flagging(self) -> None:
-        references = build_references([{"raw": "ref", "doi": "10.1038/s41561‐022‐00912‐7"}])
+    def test_reference_normalization_removes_unicode_dash_before_issue_flagging(
+        self,
+    ) -> None:
+        references = build_references(
+            [{"raw": "ref", "doi": "10.1038/s41561‐022‐00912‐7"}]
+        )
 
         self.assertEqual(references[0].doi, "10.1038/s41561-022-00912-7")
         self.assertFalse(reference_doi_requires_normalization(references[0].doi))
 
-    def test_report_result_classifies_not_configured_even_with_metadata_fallback(self) -> None:
+    def test_report_result_classifies_not_configured_even_with_metadata_fallback(
+        self,
+    ) -> None:
         envelope = make_envelope(
             provider="wiley",
             doi="10.1111/example3",
             source="metadata_only",
-            metadata=Metadata(title="Example", authors=["Author"], abstract="Metadata abstract."),
+            metadata=Metadata(
+                title="Example", authors=["Author"], abstract="Metadata abstract."
+            ),
             sections=[],
             references=[],
             warnings=[
@@ -297,7 +368,9 @@ class GeographyLiveTests(unittest.TestCase):
             breakdown=TokenEstimateBreakdown(abstract=40, body=0, refs=0),
         )
 
-        result = build_report_result(make_sample("wiley", envelope.doi or ""), envelope, elapsed_seconds=0.2)
+        result = build_report_result(
+            make_sample("wiley", envelope.doi or ""), envelope, elapsed_seconds=0.2
+        )
 
         self.assertEqual(result.status, "not_configured")
         self.assertEqual(result.error_code, "not_configured")
@@ -309,13 +382,17 @@ class GeographyLiveTests(unittest.TestCase):
             doi="10.1126/example4",
             source="crossref_meta",
             metadata=Metadata(title="Example", authors=["Author"]),
-            sections=[Section(heading="Discussion", level=2, kind="body", text="Body text.")],
+            sections=[
+                Section(heading="Discussion", level=2, kind="body", text="Body text.")
+            ],
             references=[],
             source_trail=["fulltext:science_html_ok", "fulltext:science_article_ok"],
             breakdown=TokenEstimateBreakdown(abstract=0, body=100, refs=0),
         )
 
-        result = build_report_result(make_sample("science", envelope.doi or ""), envelope, elapsed_seconds=0.1)
+        result = build_report_result(
+            make_sample("science", envelope.doi or ""), envelope, elapsed_seconds=0.1
+        )
 
         self.assertEqual(result.status, "fulltext")
         self.assertIn("unexpected_source_path", result.issue_flags)

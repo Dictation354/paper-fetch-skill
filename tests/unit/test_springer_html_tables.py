@@ -165,7 +165,9 @@ class SpringerHtmlTableTests(unittest.TestCase):
                 downloaded_assets=result["assets"],
                 asset_failures=result["asset_failures"],
             )
-            rendered = article.to_ai_markdown(asset_profile="body", max_tokens="full_text")
+            rendered = article.to_ai_markdown(
+                asset_profile="body", max_tokens="full_text"
+            )
 
         self.assertEqual(result["asset_failures"], [])
         self.assertEqual(len(result["assets"]), 1)
@@ -433,9 +435,7 @@ class SpringerHtmlTableTests(unittest.TestCase):
 
         attempt = self._prepare_generic_extended_table_attempt(responses)
 
-        self.assertIn(
-            f"![Table 1]({table_image_url})", attempt.markdown_text
-        )
+        self.assertIn(f"![Table 1]({table_image_url})", attempt.markdown_text)
         self.assertIn(
             "**Extended Data Table 1.** Observed water yield at long-term lysimeter stations",
             attempt.markdown_text,
@@ -473,9 +473,7 @@ class SpringerHtmlTableTests(unittest.TestCase):
 
         attempt = self._prepare_generic_extended_table_attempt(responses)
 
-        self.assertIn(
-            f"![Table 1]({table_image_url})", attempt.markdown_text
-        )
+        self.assertIn(f"![Table 1]({table_image_url})", attempt.markdown_text)
         self.assertEqual(len(attempt.inline_table_assets), 1)
         self.assertEqual(attempt.inline_table_assets[0].get("kind"), "table")
         self.assertEqual(

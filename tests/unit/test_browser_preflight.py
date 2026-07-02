@@ -27,7 +27,9 @@ def _runtime_config(tmp_path: Path, *, provider: str, doi: str) -> BrowserRuntim
     )
 
 
-def test_browser_preflight_adds_provider_storage_path_for_external_cdp(tmp_path: Path) -> None:
+def test_browser_preflight_adds_provider_storage_path_for_external_cdp(
+    tmp_path: Path,
+) -> None:
     captured: dict[str, object] = {}
 
     def load_runtime_config(env, *, provider, doi):
@@ -50,9 +52,17 @@ def test_browser_preflight_adds_provider_storage_path_for_external_cdp(tmp_path:
         )
 
     with (
-        mock.patch.object(browser_preflight, "load_runtime_config", side_effect=load_runtime_config),
-        mock.patch.object(browser_preflight, "ensure_runtime_ready") as ensure_runtime_ready,
-        mock.patch.object(browser_preflight, "fetch_html_with_browser", side_effect=fetch_html_with_browser),
+        mock.patch.object(
+            browser_preflight, "load_runtime_config", side_effect=load_runtime_config
+        ),
+        mock.patch.object(
+            browser_preflight, "ensure_runtime_ready"
+        ) as ensure_runtime_ready,
+        mock.patch.object(
+            browser_preflight,
+            "fetch_html_with_browser",
+            side_effect=fetch_html_with_browser,
+        ),
     ):
         results = browser_preflight.run_browser_provider_preflight(
             providers=["wiley"],
@@ -65,9 +75,15 @@ def test_browser_preflight_adds_provider_storage_path_for_external_cdp(tmp_path:
     result = results[0]
     assert result.ok is True
     assert result.provider == "wiley"
-    assert result.final_url == "https://onlinelibrary.wiley.com/doi/full/10.1111/gcb.16414"
+    assert (
+        result.final_url == "https://onlinelibrary.wiley.com/doi/full/10.1111/gcb.16414"
+    )
     assert result.storage_state_path == (
-        tmp_path / "paper-fetch" / "publisher-browser-profiles" / "wiley" / "storage-state.json"
+        tmp_path
+        / "paper-fetch"
+        / "publisher-browser-profiles"
+        / "wiley"
+        / "storage-state.json"
     )
     assert captured["publisher"] == "wiley"
     assert captured["candidate_urls"] == [
@@ -75,7 +91,10 @@ def test_browser_preflight_adds_provider_storage_path_for_external_cdp(tmp_path:
     ]
     runtime = captured["config"]
     assert isinstance(runtime, BrowserRuntimeConfig)
-    assert runtime.user_data_dir == tmp_path / "paper-fetch" / "publisher-browser-profiles" / "wiley"
+    assert (
+        runtime.user_data_dir
+        == tmp_path / "paper-fetch" / "publisher-browser-profiles" / "wiley"
+    )
     ensure_runtime_ready.assert_called_once_with(runtime)
     runtime_env = captured["env"]
     assert isinstance(runtime_env, dict)
@@ -112,9 +131,15 @@ def test_browser_preflight_records_failure_and_continues(tmp_path: Path) -> None
         )
 
     with (
-        mock.patch.object(browser_preflight, "load_runtime_config", side_effect=load_runtime_config),
+        mock.patch.object(
+            browser_preflight, "load_runtime_config", side_effect=load_runtime_config
+        ),
         mock.patch.object(browser_preflight, "ensure_runtime_ready"),
-        mock.patch.object(browser_preflight, "fetch_html_with_browser", side_effect=fetch_html_with_browser),
+        mock.patch.object(
+            browser_preflight,
+            "fetch_html_with_browser",
+            side_effect=fetch_html_with_browser,
+        ),
     ):
         results = browser_preflight.run_browser_provider_preflight(
             providers=["science", "pnas"],
@@ -124,7 +149,10 @@ def test_browser_preflight_records_failure_and_continues(tmp_path: Path) -> None
     assert [result.provider for result in results] == ["science", "pnas"]
     assert results[0].ok is False
     assert results[0].reason == "cloudflare_challenge"
-    assert results[0].storage_state_path == tmp_path / "profiles" / "science" / "storage-state.json"
+    assert (
+        results[0].storage_state_path
+        == tmp_path / "profiles" / "science" / "storage-state.json"
+    )
     assert results[1].ok is True
 
 
@@ -136,4 +164,3 @@ def test_browser_preflight_reports_missing_builtin_target() -> None:
     assert result.provider == "wiley"
     assert result.reason == "error"
     assert "No built-in browser preflight URL" in (result.message or "")
-

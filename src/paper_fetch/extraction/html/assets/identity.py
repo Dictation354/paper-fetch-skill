@@ -8,8 +8,18 @@ from collections.abc import Mapping
 
 from ....models import normalize_text
 
+
 def html_asset_identity_key(asset: Mapping[str, Any]) -> str:
-    for field in ("figure_page_url", "original_url", "download_url", "full_size_url", "preview_url", "url", "source_url", "path"):
+    for field in (
+        "figure_page_url",
+        "original_url",
+        "download_url",
+        "full_size_url",
+        "preview_url",
+        "url",
+        "source_url",
+        "path",
+    ):
         candidate = normalize_text(str(asset.get(field) or ""))
         if candidate:
             return candidate
@@ -17,7 +27,9 @@ def html_asset_identity_key(asset: Mapping[str, Any]) -> str:
 
 
 def html_asset_is_supplementary(asset: Mapping[str, Any]) -> bool:
-    kind = normalize_text(str(asset.get("kind") or asset.get("asset_type") or "")).lower()
+    kind = normalize_text(
+        str(asset.get("kind") or asset.get("asset_type") or "")
+    ).lower()
     section = normalize_text(str(asset.get("section") or "")).lower()
     return kind == "supplementary" or section == "supplementary"
 

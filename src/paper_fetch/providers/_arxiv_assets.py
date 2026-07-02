@@ -269,7 +269,10 @@ def _read_arxiv_source_files(body: bytes) -> dict[str, bytes]:
         decompressed = gzip.decompress(body)
     except OSError:
         return {}
-    if b"\\documentclass" in decompressed[:4096] or b"\\begin{document}" in decompressed[:8192]:
+    if (
+        b"\\documentclass" in decompressed[:4096]
+        or b"\\begin{document}" in decompressed[:8192]
+    ):
         return {"source.tex": decompressed}
     return {}
 
@@ -529,7 +532,11 @@ def _unique_source_asset_path(
 ) -> Path:
     source = Path(source_path.replace("\\", "/"))
     stem = sanitize_filename(source.stem or "figure")
-    suffix = ".png" if content_type == "image/png" and source.suffix.lower() == ".pdf" else source.suffix
+    suffix = (
+        ".png"
+        if content_type == "image/png" and source.suffix.lower() == ".pdf"
+        else source.suffix
+    )
     if not suffix:
         suffix = ".png" if content_type == "image/png" else ".bin"
     filename = f"{stem}{suffix}"
@@ -698,7 +705,9 @@ def download_arxiv_source_figure_assets(
             used_names=used_names,
         )
         saved_path = save_payload(output_path, image_body)
-        source_ref_url = f"{source_archive_url}#{urllib.parse.quote(source_path, safe='/._-')}"
+        source_ref_url = (
+            f"{source_archive_url}#{urllib.parse.quote(source_path, safe='/._-')}"
+        )
         asset = {
             **placeholder,
             "url": f"arxiv-source://{arxiv_id}/{source_path}",

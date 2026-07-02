@@ -58,7 +58,9 @@ async def run_blocking_call(
         raise
 
 
-def _batch_check_success_payload(query: str, payload: Mapping[str, Any], *, mode: str) -> dict[str, Any]:
+def _batch_check_success_payload(
+    query: str, payload: Mapping[str, Any], *, mode: str
+) -> dict[str, Any]:
     title = None
     if mode == "metadata":
         title = payload.get("title")
@@ -111,7 +113,9 @@ def _run_batch_check_item(
     from . import fetch_tool
 
     if mode == "metadata":
-        payload = fetch_tool._call_service_probe_has_fulltext(query, context=context, deps=deps).to_dict()
+        payload = fetch_tool._call_service_probe_has_fulltext(
+            query, context=context, deps=deps
+        ).to_dict()
     else:
         payload = fetch_tool.fetch_paper_payload(
             query=query,
@@ -170,7 +174,11 @@ def _run_batch_sync(
                     results[index] = payload
                     if payload["status"] == RATE_LIMITED and abort_reason is None:
                         abort_reason = dict(payload)
-            while abort_reason is None and next_index < len(queries) and len(pending) < max_workers:
+            while (
+                abort_reason is None
+                and next_index < len(queries)
+                and len(pending) < max_workers
+            ):
                 submit(next_index)
                 next_index += 1
 
@@ -224,7 +232,11 @@ async def _run_batch_async(
                     len(queries),
                     f"{progress_prefix} {completed} of {len(queries)} queries",
                 )
-            while abort_reason is None and next_index < len(queries) and len(pending) < max_workers:
+            while (
+                abort_reason is None
+                and next_index < len(queries)
+                and len(pending) < max_workers
+            ):
                 launch(next_index)
                 next_index += 1
     except asyncio.CancelledError:
@@ -255,7 +267,9 @@ def batch_resolve_payload(
     results, abort_reason = _run_batch_sync(
         queries=request.queries,
         concurrency=request.concurrency,
-        process_item=lambda query: fetch_tool.resolve_paper_payload(query=query, context=runtime_context, deps=deps),
+        process_item=lambda query: fetch_tool.resolve_paper_payload(
+            query=query, context=runtime_context, deps=deps
+        ),
     )
 
     return {
@@ -329,7 +343,9 @@ async def batch_resolve_tool_async(
             results, abort_reason = await _run_batch_async(
                 queries=request.queries,
                 concurrency=request.concurrency,
-                process_item=lambda query: fetch_tool.resolve_paper_payload(query=query, context=runtime_context, deps=deps),
+                process_item=lambda query: fetch_tool.resolve_paper_payload(
+                    query=query, context=runtime_context, deps=deps
+                ),
                 ctx=ctx,
                 progress_prefix="Resolved",
                 cancel_event=cancelled,
@@ -347,7 +363,9 @@ async def batch_resolve_tool_async(
         ctx,
         total_queries,
         total_queries,
-        "batch_resolve complete" if abort_reason is None else "batch_resolve stopped after rate limit",
+        "batch_resolve complete"
+        if abort_reason is None
+        else "batch_resolve stopped after rate limit",
     )
     return _tool_result(payload, is_error=False)
 
@@ -371,7 +389,9 @@ async def batch_check_tool_async(
 
     runtime_env = deps.build_runtime_env(env)
     cancelled = threading.Event()
-    runtime_context = RuntimeContext(env=runtime_env, download_dir=None, cancel_check=cancelled.is_set)
+    runtime_context = RuntimeContext(
+        env=runtime_env, download_dir=None, cancel_check=cancelled.is_set
+    )
     runtime_context.get_clients()
     requested_modes = _BATCH_CHECK_MODES[request.mode]
     loop = asyncio.get_running_loop()
@@ -409,6 +429,8 @@ async def batch_check_tool_async(
         ctx,
         total_queries,
         total_queries,
-        "batch_check complete" if abort_reason is None else "batch_check stopped after rate limit",
+        "batch_check complete"
+        if abort_reason is None
+        else "batch_check stopped after rate limit",
     )
     return _tool_result(payload, is_error=False)

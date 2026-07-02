@@ -17,7 +17,9 @@ STRUCTURED_ARTICLE_NOT_FULLTEXT = "structured_article_not_fulltext"
 STRUCTURED_MISSING_BODY_SECTIONS = "structured_missing_body_sections"
 
 ACCESS_PAGE_URL = "access_page_url"
-FINAL_URL_MATCHES_CITATION_ABSTRACT_HTML_URL = "final_url_matches_citation_abstract_html_url"
+FINAL_URL_MATCHES_CITATION_ABSTRACT_HTML_URL = (
+    "final_url_matches_citation_abstract_html_url"
+)
 DATA_ARTICLE_ACCESS_ABSTRACT = "data_article_access_abstract"
 DATA_ARTICLE_ACCESS_NO = "data_article_access_no"
 WT_ABSTRACT_PAGE_TYPE = "wt_abstract_page_type"

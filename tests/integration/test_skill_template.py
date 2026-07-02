@@ -10,7 +10,12 @@ from pathlib import Path
 
 import yaml
 
-from paper_fetch.mcp._instructions import DEFAULT_FETCH_NOTES, DEFAULT_FETCH_VALUES, ERROR_CONTRACT, SKILL_ENVIRONMENT_VARIABLES
+from paper_fetch.mcp._instructions import (
+    DEFAULT_FETCH_NOTES,
+    DEFAULT_FETCH_VALUES,
+    ERROR_CONTRACT,
+    SKILL_ENVIRONMENT_VARIABLES,
+)
 from tests.paths import REPO_ROOT, SKILL_DIR
 
 STATIC_SKILL_DIR = SKILL_DIR
@@ -46,11 +51,24 @@ def write_fake_mcp_cli(path: Path, log_path: Path) -> None:
 def copy_installer_fixture(repo_dir: Path) -> None:
     (repo_dir / "scripts").mkdir(parents=True, exist_ok=True)
     shutil.copy2(REPO_ROOT / "install.sh", repo_dir / "install.sh")
-    shutil.copy2(REPO_ROOT / "install-formula-tools.sh", repo_dir / "install-formula-tools.sh")
-    shutil.copy2(REPO_ROOT / "scripts" / "_skill_install_common.sh", repo_dir / "scripts" / "_skill_install_common.sh")
-    shutil.copy2(REPO_ROOT / "scripts" / "install-claude-skill.sh", repo_dir / "scripts" / "install-claude-skill.sh")
-    shutil.copy2(REPO_ROOT / "scripts" / "install-codex-skill.sh", repo_dir / "scripts" / "install-codex-skill.sh")
-    shutil.copytree(STATIC_SKILL_DIR, repo_dir / "skills" / "paper-fetch-skill", dirs_exist_ok=True)
+    shutil.copy2(
+        REPO_ROOT / "install-formula-tools.sh", repo_dir / "install-formula-tools.sh"
+    )
+    shutil.copy2(
+        REPO_ROOT / "scripts" / "_skill_install_common.sh",
+        repo_dir / "scripts" / "_skill_install_common.sh",
+    )
+    shutil.copy2(
+        REPO_ROOT / "scripts" / "install-claude-skill.sh",
+        repo_dir / "scripts" / "install-claude-skill.sh",
+    )
+    shutil.copy2(
+        REPO_ROOT / "scripts" / "install-codex-skill.sh",
+        repo_dir / "scripts" / "install-codex-skill.sh",
+    )
+    shutil.copytree(
+        STATIC_SKILL_DIR, repo_dir / "skills" / "paper-fetch-skill", dirs_exist_ok=True
+    )
     shutil.copy2(REPO_ROOT / "pyproject.toml", repo_dir / "pyproject.toml")
 
 
@@ -59,12 +77,22 @@ def iter_skill_markdown_files(root: Path) -> list[Path]:
 
 
 def read_skill_bundle(root: Path) -> str:
-    return "\n\n".join(path.read_text(encoding="utf-8") for path in iter_skill_markdown_files(root))
+    return "\n\n".join(
+        path.read_text(encoding="utf-8") for path in iter_skill_markdown_files(root)
+    )
 
 
-def assert_skill_bundle_matches_repo(testcase: unittest.TestCase, installed_root: Path) -> None:
-    expected_files = [path.relative_to(STATIC_SKILL_DIR).as_posix() for path in iter_skill_markdown_files(STATIC_SKILL_DIR)]
-    actual_files = [path.relative_to(installed_root).as_posix() for path in iter_skill_markdown_files(installed_root)]
+def assert_skill_bundle_matches_repo(
+    testcase: unittest.TestCase, installed_root: Path
+) -> None:
+    expected_files = [
+        path.relative_to(STATIC_SKILL_DIR).as_posix()
+        for path in iter_skill_markdown_files(STATIC_SKILL_DIR)
+    ]
+    actual_files = [
+        path.relative_to(installed_root).as_posix()
+        for path in iter_skill_markdown_files(installed_root)
+    ]
 
     testcase.assertEqual(actual_files, expected_files)
     for relative_path in expected_files:
@@ -202,7 +230,9 @@ class InstallerSmokeTests(unittest.TestCase):
         )
 
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertIn("One-command installer for the full paper-fetch runtime.", result.stdout)
+        self.assertIn(
+            "One-command installer for the full paper-fetch runtime.", result.stdout
+        )
         self.assertIn("--lite", result.stdout)
         self.assertNotIn("--skip-playwright-install", result.stdout)
 
@@ -223,7 +253,13 @@ class InstallerSmokeTests(unittest.TestCase):
         env["PATH"] = f"{fake_bin_dir}{os.pathsep}{env.get('PATH', '')}"
         env["HOME"] = str(home_dir)
         result = subprocess.run(
-            ["bash", str(repo_dir / "install.sh"), "--system", "--lite", "--skip-env-file"],
+            [
+                "bash",
+                str(repo_dir / "install.sh"),
+                "--system",
+                "--lite",
+                "--skip-env-file",
+            ],
             cwd=repo_dir,
             env=env,
             check=False,
@@ -233,15 +269,18 @@ class InstallerSmokeTests(unittest.TestCase):
 
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("Installation complete.", result.stdout)
-        self.assertIn("Elsevier setup: request a key at https://dev.elsevier.com/", result.stdout)
+        self.assertIn(
+            "Elsevier setup: request a key at https://dev.elsevier.com/", result.stdout
+        )
         self.assertIn('ELSEVIER_API_KEY="..."', result.stdout)
 
     def test_skill_installers_prompt_for_elsevier_api_key(self) -> None:
         for script_name in ("install-claude-skill.sh", "install-codex-skill.sh"):
             with self.subTest(script_name=script_name):
-                script = (
-                    (REPO_ROOT / "scripts" / script_name).read_text(encoding="utf-8")
-                    + (REPO_ROOT / "scripts" / "_skill_install_common.sh").read_text(encoding="utf-8")
+                script = (REPO_ROOT / "scripts" / script_name).read_text(
+                    encoding="utf-8"
+                ) + (REPO_ROOT / "scripts" / "_skill_install_common.sh").read_text(
+                    encoding="utf-8"
                 )
                 self.assertIn("ELSEVIER_API_KEY", script)
                 self.assertIn("https://dev.elsevier.com/", script)
@@ -278,8 +317,12 @@ class InstallerSmokeTests(unittest.TestCase):
         self.assertIn("--no-node", log_text)
         self.assertNotIn("--skip-playwright-install", log_text)
 
-    def test_claude_installer_copies_static_skill_without_repo_bootstrap_side_effects(self) -> None:
-        repo_dir, sandbox, log_path = self.run_installer(script_name="install-claude-skill.sh")
+    def test_claude_installer_copies_static_skill_without_repo_bootstrap_side_effects(
+        self,
+    ) -> None:
+        repo_dir, sandbox, log_path = self.run_installer(
+            script_name="install-claude-skill.sh"
+        )
 
         installed_root = sandbox / "home" / ".claude" / "skills" / "paper-fetch-skill"
         installed_skill = installed_root / "SKILL.md"
@@ -293,7 +336,13 @@ class InstallerSmokeTests(unittest.TestCase):
     def test_claude_installer_can_register_mcp_server(self) -> None:
         _, _, log_path = self.run_installer(
             script_name="install-claude-skill.sh",
-            args=["--register-mcp", "--env-file", "/tmp/paper-fetch.env", "--mcp-scope", "project"],
+            args=[
+                "--register-mcp",
+                "--env-file",
+                "/tmp/paper-fetch.env",
+                "--mcp-scope",
+                "project",
+            ],
             fake_claude=True,
         )
 
@@ -306,7 +355,9 @@ class InstallerSmokeTests(unittest.TestCase):
         self.assertIn("-m paper_fetch.mcp.server", log_text)
 
     def test_codex_installer_adds_openai_manifest_shim(self) -> None:
-        repo_dir, sandbox, log_path = self.run_installer(script_name="install-codex-skill.sh")
+        repo_dir, sandbox, log_path = self.run_installer(
+            script_name="install-codex-skill.sh"
+        )
 
         skill_dir = sandbox / "codex-home" / "skills" / "paper-fetch-skill"
         installed_skill = skill_dir / "SKILL.md"
@@ -337,7 +388,9 @@ class InstallerSmokeTests(unittest.TestCase):
         self.assertIn("-X utf8 -m paper_fetch.mcp.server", log_text)
         self.assertNotIn("PLAYWRIGHT_BROWSERS_PATH", log_text)
 
-    def test_claude_installer_does_not_auto_bind_repo_env_for_mcp_registration(self) -> None:
+    def test_claude_installer_does_not_auto_bind_repo_env_for_mcp_registration(
+        self,
+    ) -> None:
         _, _, log_path = self.run_installer(
             script_name="install-claude-skill.sh",
             args=["--register-mcp", "--mcp-scope", "project"],
@@ -349,7 +402,9 @@ class InstallerSmokeTests(unittest.TestCase):
         self.assertIn("claude mcp add -s project -- paper-fetch", log_text)
         self.assertNotIn("PAPER_FETCH_ENV_FILE=", log_text)
 
-    def test_codex_installer_does_not_auto_bind_repo_env_for_mcp_registration(self) -> None:
+    def test_codex_installer_does_not_auto_bind_repo_env_for_mcp_registration(
+        self,
+    ) -> None:
         _, _, log_path = self.run_installer(
             script_name="install-codex-skill.sh",
             args=["--register-mcp"],

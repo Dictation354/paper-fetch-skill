@@ -94,7 +94,9 @@ class RetryMixin:
         if (
             status_code == 429
             and self._retry_remaining(rate_limit_policy) > 0
-            and rate_limit_policy.is_retry(method.upper(), status_code, retry_after_seconds is not None)
+            and rate_limit_policy.is_retry(
+                method.upper(), status_code, retry_after_seconds is not None
+            )
             and rate_limit_wait_seconds is not None
             and rate_limit_wait_seconds <= max_rate_limit_wait_seconds
         ):
@@ -113,9 +115,8 @@ class RetryMixin:
             rate_limit_policy = self._consume_retry(rate_limit_policy)
             time.sleep(max(0.0, rate_limit_wait_seconds))
             return True, rate_limit_policy, transient_policy, transient_attempts_made
-        if (
-            self._retry_remaining(transient_policy) > 0
-            and transient_policy.is_retry(method.upper(), status_code, retry_after_seconds is not None)
+        if self._retry_remaining(transient_policy) > 0 and transient_policy.is_retry(
+            method.upper(), status_code, retry_after_seconds is not None
         ):
             emit_structured_log(
                 logger,
@@ -130,7 +131,11 @@ class RetryMixin:
                 reason="transient_http",
             )
             transient_policy = self._consume_retry(transient_policy)
-            time.sleep(self._transient_backoff_seconds(transient_policy, transient_attempts_made))
+            time.sleep(
+                self._transient_backoff_seconds(
+                    transient_policy, transient_attempts_made
+                )
+            )
             transient_attempts_made += 1
             return True, rate_limit_policy, transient_policy, transient_attempts_made
         emit_structured_log(
@@ -146,7 +151,9 @@ class RetryMixin:
         )
         raise RequestFailure(
             status_code,
-            build_http_error_message(status_code, request_url, retry_after_seconds=retry_after_seconds),
+            build_http_error_message(
+                status_code, request_url, retry_after_seconds=retry_after_seconds
+            ),
             body=body,
             headers=headers_map,
             url=redact_url_for_cache(error_url),

@@ -8,7 +8,10 @@ import yaml
 
 from paper_fetch.providers.plos import PlosClient
 from paper_fetch.reason_codes import PDF_FALLBACK
-from tests.golden_corpus import build_article_from_fixture, golden_corpus_fixture_for_doi
+from tests.golden_corpus import (
+    build_article_from_fixture,
+    golden_corpus_fixture_for_doi,
+)
 from tests.golden_criteria import golden_criteria_asset
 from tests.unit._atypon_browser_workflow_provider_support import png_header
 from tests.unit._paper_fetch_support import FixtureHtmlTransport, http_response
@@ -37,7 +40,9 @@ def test_plos_xml_route_replays_jats_fixture_as_fulltext() -> None:
     fixture = golden_corpus_fixture_for_doi(STRUCTURE_DOI)
 
     article = build_article_from_fixture(fixture)
-    markdown = article.to_ai_markdown(include_refs="all", asset_profile="body", max_tokens="full_text")
+    markdown = article.to_ai_markdown(
+        include_refs="all", asset_profile="body", max_tokens="full_text"
+    )
 
     assert article.source == "plos_xml"
     assert "fulltext:plos_xml_ok" in article.quality.source_trail
@@ -49,7 +54,11 @@ def test_plos_xml_route_replays_jats_fixture_as_fulltext() -> None:
 def test_plos_runtime_xml_route_fetches_and_converts_jats_fixture() -> None:
     fixture = golden_corpus_fixture_for_doi(STRUCTURE_DOI)
     transport = FixtureHtmlTransport(
-        {STRUCTURE_XML_URL: http_response(STRUCTURE_XML_URL, fixture.raw_path.read_bytes(), "application/xml")}
+        {
+            STRUCTURE_XML_URL: http_response(
+                STRUCTURE_XML_URL, fixture.raw_path.read_bytes(), "application/xml"
+            )
+        }
     )
     client = PlosClient(transport, {})
 
@@ -68,23 +77,35 @@ def test_plos_pdf_fallback_route_uses_pdf_magic_and_rejects_html_wrapper() -> No
     pdf_bytes = fixture.raw_path.read_bytes()
 
     article = build_article_from_fixture(fixture)
-    markdown = article.to_ai_markdown(include_refs="all", asset_profile="body", max_tokens="full_text")
+    markdown = article.to_ai_markdown(
+        include_refs="all", asset_profile="body", max_tokens="full_text"
+    )
 
-    assert pdf_bytes.startswith(b"%PDF"), "PLOS pdf_fallback fixture must preserve PDF magic bytes"
+    assert pdf_bytes.startswith(b"%PDF"), (
+        "PLOS pdf_fallback fixture must preserve PDF magic bytes"
+    )
     assert fixture.content_type == "application/pdf"
     assert article.source == "plos_pdf"
     assert "fulltext:plos_pdf_fallback_ok" in article.quality.source_trail
     assert "Access Denied" not in markdown
-    assert "<html" not in markdown.lower(), "PLOS pdf_fallback must not capture an HTML wrapper"
+    assert "<html" not in markdown.lower(), (
+        "PLOS pdf_fallback must not capture an HTML wrapper"
+    )
 
 
 def test_plos_runtime_pdf_fallback_rejects_html_xml_candidate() -> None:
     fixture = golden_corpus_fixture_for_doi(PDF_FALLBACK_DOI)
-    html_body = b"<!doctype html><html><title>Not XML</title><body>Download PDF</body></html>"
+    html_body = (
+        b"<!doctype html><html><title>Not XML</title><body>Download PDF</body></html>"
+    )
     transport = FixtureHtmlTransport(
         {
-            PDF_FALLBACK_XML_URL: http_response(PDF_FALLBACK_XML_URL, html_body, "text/html"),
-            PDF_FALLBACK_URL: http_response(PDF_FALLBACK_URL, fixture.raw_path.read_bytes(), "application/pdf"),
+            PDF_FALLBACK_XML_URL: http_response(
+                PDF_FALLBACK_XML_URL, html_body, "text/html"
+            ),
+            PDF_FALLBACK_URL: http_response(
+                PDF_FALLBACK_URL, fixture.raw_path.read_bytes(), "application/pdf"
+            ),
         }
     )
     client = PlosClient(transport, {})
@@ -113,7 +134,9 @@ def test_plos_markdown_review_loop_non_null_fixture_contracts() -> None:
     # markdown-review: purpose=structure doi=10.1371/journal.pone.0263725
     markdown = _markdown_for(STRUCTURE_DOI)
     assert "## Abstract" in markdown
-    assert "Social media usage to share information in communication journals" in markdown
+    assert (
+        "Social media usage to share information in communication journals" in markdown
+    )
     assert "Download PDF" not in markdown
 
     # markdown-review: purpose=table doi=10.1371/journal.pone.0304873
@@ -161,7 +184,9 @@ def test_plos_asset_download_contract_resolves_figure_doi_uri(tmp_path: Path) ->
     image_body = png_header(8, 8) + b"plos-figure"
     transport = FixtureHtmlTransport(
         {
-            FIGURE_XML_URL: http_response(FIGURE_XML_URL, fixture.raw_path.read_bytes(), "application/xml"),
+            FIGURE_XML_URL: http_response(
+                FIGURE_XML_URL, fixture.raw_path.read_bytes(), "application/xml"
+            ),
             "https://journals.plos.org/plosone/article/figure/image?size=large&id=10.1371/journal.pone.0015338.g001": http_response(
                 "https://journals.plos.org/plosone/article/figure/image?size=large&id=10.1371/journal.pone.0015338.g001",
                 image_body,
@@ -175,7 +200,9 @@ def test_plos_asset_download_contract_resolves_figure_doi_uri(tmp_path: Path) ->
     body_figures = [
         asset
         for asset in article.assets
-        if asset.kind == "figure" and asset.section == "body" and asset.url.startswith("info:doi/")
+        if asset.kind == "figure"
+        and asset.section == "body"
+        and asset.url.startswith("info:doi/")
     ]
     first_figure = body_figures[0].__dict__
     figure_id = first_figure["url"].removeprefix("info:doi/")
@@ -219,7 +246,9 @@ def test_plos_asset_download_follows_signed_image_redirect(tmp_path: Path) -> No
     image_body = png_header(9, 9) + b"plos-redirected-figure"
     transport = FixtureHtmlTransport(
         {
-            FIGURE_XML_URL: http_response(FIGURE_XML_URL, fixture.raw_path.read_bytes(), "application/xml"),
+            FIGURE_XML_URL: http_response(
+                FIGURE_XML_URL, fixture.raw_path.read_bytes(), "application/xml"
+            ),
             image_url: http_response(
                 image_url,
                 b"",
@@ -255,27 +284,34 @@ def test_plos_asset_download_follows_signed_image_redirect(tmp_path: Path) -> No
     assert Path(result["assets"][0]["path"]).read_bytes() == image_body
 
 
-def test_plos_formula_graphic_assets_are_rendered_and_downloaded(tmp_path: Path) -> None:
+def test_plos_formula_graphic_assets_are_rendered_and_downloaded(
+    tmp_path: Path,
+) -> None:
     fixture = golden_corpus_fixture_for_doi(FIGURE_DOI)
     formula_url = "https://journals.plos.org/plosone/article/file?id=10.1371/journal.pone.0015338.e001&type=thumbnail"
     image_body = png_header(10, 10) + b"plos-formula"
     transport = FixtureHtmlTransport(
         {
-            FIGURE_XML_URL: http_response(FIGURE_XML_URL, fixture.raw_path.read_bytes(), "application/xml"),
+            FIGURE_XML_URL: http_response(
+                FIGURE_XML_URL, fixture.raw_path.read_bytes(), "application/xml"
+            ),
             formula_url: http_response(formula_url, image_body, "image/png"),
         }
     )
     client = PlosClient(transport, {})
     raw_payload = client.fetch_raw_fulltext(FIGURE_DOI, {"doi": FIGURE_DOI})
     article = client.to_article_model({"doi": FIGURE_DOI}, raw_payload)
-    rendered = article.to_ai_markdown(include_refs="all", asset_profile="body", max_tokens="full_text")
+    rendered = article.to_ai_markdown(
+        include_refs="all", asset_profile="body", max_tokens="full_text"
+    )
 
     assert "[Formula unavailable" not in rendered
     assert "![Formula](info:doi/10.1371/journal.pone.0015338.e001)" in rendered
     formula_asset = next(
         asset.__dict__
         for asset in article.assets
-        if asset.kind == "formula" and asset.url == "info:doi/10.1371/journal.pone.0015338.e001"
+        if asset.kind == "formula"
+        and asset.url == "info:doi/10.1371/journal.pone.0015338.e001"
     )
     raw_payload.content = replace(raw_payload.content, extracted_assets=[formula_asset])
 
@@ -305,4 +341,7 @@ def test_plos_formula_graphic_assets_are_rendered_and_downloaded(tmp_path: Path)
         max_tokens="full_text",
     )
     assert f"![Formula]({path})" in rendered_with_assets
-    assert "![Formula](info:doi/10.1371/journal.pone.0015338.e001)" not in rendered_with_assets
+    assert (
+        "![Formula](info:doi/10.1371/journal.pone.0015338.e001)"
+        not in rendered_with_assets
+    )

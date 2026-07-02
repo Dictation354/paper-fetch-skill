@@ -38,7 +38,9 @@ def _parse_log_value(raw_value: str) -> Any:
         return raw_value
 
 
-def parse_structured_log_message(message: str, *, logger_name: str | None = None) -> dict[str, Any]:
+def parse_structured_log_message(
+    message: str, *, logger_name: str | None = None
+) -> dict[str, Any]:
     normalized = normalize_text(message)
     payload: dict[str, Any] = {"event": "log"}
     if logger_name:

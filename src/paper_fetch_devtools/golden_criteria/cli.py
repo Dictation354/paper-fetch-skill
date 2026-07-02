@@ -26,12 +26,19 @@ def _load_live_review_exports():
             and str(sample.get("publisher") or "").strip()
         }
     )
-    return SUPPORTED_PROVIDERS, provider_choices, run_golden_criteria_live_review, timestamped_review_output_dir
+    return (
+        SUPPORTED_PROVIDERS,
+        provider_choices,
+        run_golden_criteria_live_review,
+        timestamped_review_output_dir,
+    )
 
 
 def build_parser() -> argparse.ArgumentParser:
     _, provider_choices, _, timestamped_review_output_dir = _load_live_review_exports()
-    parser = argparse.ArgumentParser(description="Run the golden criteria live review pipeline.")
+    parser = argparse.ArgumentParser(
+        description="Run the golden criteria live review pipeline."
+    )
     parser.add_argument(
         "--providers",
         nargs="*",
@@ -64,7 +71,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     output_root = Path(report.output_dir)
     sys.stdout.write(f"wrote report json to {output_root / 'report.json'}\n")
     sys.stdout.write(f"wrote report markdown to {output_root / 'report.md'}\n")
-    sys.stdout.write(f"wrote provider status to {output_root / 'provider-status.json'}\n")
-    sys.stdout.write(f"wrote manifest snapshot to {output_root / 'manifest-snapshot.json'}\n")
+    sys.stdout.write(
+        f"wrote provider status to {output_root / 'provider-status.json'}\n"
+    )
+    sys.stdout.write(
+        f"wrote manifest snapshot to {output_root / 'manifest-snapshot.json'}\n"
+    )
     sys.stdout.write(f"processed {report.total_samples} samples\n")
     return 0

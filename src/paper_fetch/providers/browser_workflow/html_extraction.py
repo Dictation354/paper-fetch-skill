@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 import time
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 from collections.abc import Callable, Mapping
 
 from ...config import (
@@ -16,7 +16,11 @@ from ...config import (
     build_runtime_env,
 )
 from ...extraction.html.assets import extract_scoped_html_assets
-from ...extraction.html.signals import HtmlExtractionFailure, detect_html_block, summarize_html
+from ...extraction.html.signals import (
+    HtmlExtractionFailure,
+    detect_html_block,
+    summarize_html,
+)
 from ...metadata.types import ProviderMetadata
 from ...models import AssetProfile
 from ...quality.reason_codes import (
@@ -30,7 +34,11 @@ from ...quality.reason_codes import (
     STRUCTURED_MISSING_BODY_SECTIONS,
 )
 from ...runtime import RuntimeContext
-from ...runtime_browser import BrowserContextManager, browser_context_options, browser_page_user_agent
+from ...runtime_browser import (
+    BrowserContextManager,
+    browser_context_options,
+    browser_page_user_agent,
+)
 from ...tracing import fulltext_marker, trace_from_markers
 from ...utils import normalize_text
 from .fetchers.context import (
@@ -90,6 +98,7 @@ __all__ = [
     "rewrite_inline_figure_links",
 ]
 
+
 def _cached_browser_workflow_markdown(
     client: BrowserWorkflowClient,
     html_text: str,
@@ -115,7 +124,7 @@ def _cached_browser_workflow_markdown(
         lambda: client.extract_markdown(
             html_text,
             final_url,
-            metadata=metadata,
+            metadata=cast(ProviderMetadata, metadata),
         ),
         copy_value=True,
     )
@@ -129,7 +138,9 @@ def _cached_browser_workflow_assets(
     *,
     asset_profile: AssetProfile,
     context: RuntimeContext,
-    scoped_asset_extractor: Callable[..., list[dict[str, Any]]] = extract_scoped_html_assets,
+    scoped_asset_extractor: Callable[
+        ..., list[dict[str, Any]]
+    ] = extract_scoped_html_assets,
 ) -> list[dict[str, Any]]:
     key = context.build_parse_cache_key(
         provider=client.name,
@@ -141,10 +152,12 @@ def _cached_browser_workflow_assets(
     )
 
     def extract_assets() -> list[dict[str, Any]]:
-        body_asset_html, supplementary_asset_html = extract_browser_workflow_asset_html_scopes(
-            html_text,
-            source_url,
-            client.name,
+        body_asset_html, supplementary_asset_html = (
+            extract_browser_workflow_asset_html_scopes(
+                html_text,
+                source_url,
+                client.name,
+            )
         )
         return scoped_asset_extractor(
             body_asset_html,
@@ -156,7 +169,9 @@ def _cached_browser_workflow_assets(
     return context.get_or_set_parse_cache(key, extract_assets, copy_value=True)
 
 
-def _fast_browser_context_seed(context: Any, *, final_url: str, user_agent: str | None) -> dict[str, Any]:
+def _fast_browser_context_seed(
+    context: Any, *, final_url: str, user_agent: str | None
+) -> dict[str, Any]:
     try:
         cookies = context.cookies()
     except Exception:
@@ -179,7 +194,9 @@ def fetch_html_with_fast_browser(
     browser_config: Any | None = None,
 ) -> BrowserFetchedHtml:
     if not candidate_urls:
-        raise HtmlExtractionFailure("empty_html_attempts", "No publisher HTML candidates were attempted.")
+        raise HtmlExtractionFailure(
+            "empty_html_attempts", "No publisher HTML candidates were attempted."
+        )
 
     last_failure: HtmlExtractionFailure | None = None
     manager = None
@@ -189,7 +206,11 @@ def fetch_html_with_fast_browser(
     try:
         context_kwargs = browser_context_options(user_agent=configured_user_agent)
         try:
-            if context is not None and browser_config is not None and isinstance(context, RuntimeContext):
+            if (
+                context is not None
+                and browser_config is not None
+                and isinstance(context, RuntimeContext)
+            ):
                 browser_context = context.new_browser_context_for_config(
                     headless=headless,
                     binary_path=getattr(browser_config, "binary_path", None),
@@ -199,20 +220,34 @@ def fetch_html_with_fast_browser(
                     **context_kwargs,
                 )
             elif context is not None:
-                browser_context = context.new_browser_context(headless=headless, **context_kwargs)
+                browser_context = context.new_browser_context(
+                    headless=headless, **context_kwargs
+                )
             else:
                 runtime_env = build_runtime_env()
-                endpoint = normalize_text(getattr(browser_config, "cdp_endpoint", None)) or normalize_text(runtime_env.get(CLOAKBROWSER_CDP_ENDPOINT_ENV_VAR))
-                binary_path = normalize_text(getattr(browser_config, "binary_path", None)) or normalize_text(runtime_env.get(CLOAKBROWSER_BINARY_PATH_ENV_VAR))
-                profile_dir = normalize_text(str(getattr(browser_config, "profile_dir", "") or "")) or normalize_text(runtime_env.get(CLOAKBROWSER_PROFILE_DIR_ENV_VAR))
-                user_data_dir = normalize_text(str(getattr(browser_config, "user_data_dir", "") or "")) or normalize_text(runtime_env.get(CLOAKBROWSER_USER_DATA_DIR_ENV_VAR))
+                endpoint = normalize_text(
+                    getattr(browser_config, "cdp_endpoint", None)
+                ) or normalize_text(runtime_env.get(CLOAKBROWSER_CDP_ENDPOINT_ENV_VAR))
+                binary_path = normalize_text(
+                    getattr(browser_config, "binary_path", None)
+                ) or normalize_text(runtime_env.get(CLOAKBROWSER_BINARY_PATH_ENV_VAR))
+                profile_dir = normalize_text(
+                    str(getattr(browser_config, "profile_dir", "") or "")
+                ) or normalize_text(runtime_env.get(CLOAKBROWSER_PROFILE_DIR_ENV_VAR))
+                user_data_dir = normalize_text(
+                    str(getattr(browser_config, "user_data_dir", "") or "")
+                ) or normalize_text(runtime_env.get(CLOAKBROWSER_USER_DATA_DIR_ENV_VAR))
                 manager = BrowserContextManager(
                     binary_path=binary_path or None,
                     cdp_endpoint=endpoint or None,
                     profile_dir=Path(profile_dir).expanduser() if profile_dir else None,
-                    user_data_dir=Path(user_data_dir).expanduser() if user_data_dir else None,
+                    user_data_dir=Path(user_data_dir).expanduser()
+                    if user_data_dir
+                    else None,
                 )
-                browser_context = manager.new_context(headless=headless, **context_kwargs)
+                browser_context = manager.new_context(
+                    headless=headless, **context_kwargs
+                )
         except Exception as exc:
             raise HtmlExtractionFailure(
                 "browser_runtime_unavailable",
@@ -222,7 +257,9 @@ def fetch_html_with_fast_browser(
 
         def route_handler(route: Any) -> None:
             try:
-                resource_type = normalize_text(str(route.request.resource_type or "")).lower()
+                resource_type = normalize_text(
+                    str(route.request.resource_type or "")
+                ).lower()
                 if resource_type in _FAST_BROWSER_HTML_BLOCKED_RESOURCE_TYPES:
                     route.abort()
                     return
@@ -240,24 +277,29 @@ def fetch_html_with_fast_browser(
                 continue
             try:
                 request_started = time.monotonic()
-                response = page.goto(normalized_url, wait_until="domcontentloaded", timeout=timeout_ms)
+                response = page.goto(
+                    normalized_url, wait_until="domcontentloaded", timeout=timeout_ms
+                )
                 remaining_timeout_seconds = max(
                     0.0,
-                    (float(timeout_ms) / 1000.0)
-                    - (time.monotonic() - request_started),
+                    (float(timeout_ms) / 1000.0) - (time.monotonic() - request_started),
                 )
                 readiness = wait_for_atypon_body_dom_ready(
                     page,
                     publisher,
                     timeout_seconds=min(8.0, remaining_timeout_seconds),
                 )
-                final_url = normalize_text(str(getattr(page, "url", "") or "")) or normalized_url
+                final_url = (
+                    normalize_text(str(getattr(page, "url", "") or ""))
+                    or normalized_url
+                )
                 html_text = page.content()
                 title = normalize_text(str(page.title() or "")) or None
             except Exception as exc:
                 last_failure = HtmlExtractionFailure(
                     "fast_browser_failed",
-                    normalize_text(str(exc)) or f"Fast {publisher} browser HTML preflight failed.",
+                    normalize_text(str(exc))
+                    or f"Fast {publisher} browser HTML preflight failed.",
                 )
                 continue
 
@@ -310,7 +352,9 @@ def fetch_html_with_fast_browser(
 
     if last_failure is not None:
         raise last_failure
-    raise HtmlExtractionFailure("empty_html_attempts", "No publisher HTML candidates were attempted.")
+    raise HtmlExtractionFailure(
+        "empty_html_attempts", "No publisher HTML candidates were attempted."
+    )
 
 
 fetch_html_with_fast_browser.paper_fetch_html_fetcher_name = "cloakbrowser_fast"  # type: ignore[attr-defined]
@@ -437,7 +481,9 @@ def _fetch_browser_html_payload_with_fast_path(
         logger.debug(
             "browser_workflow_fast_browser_path provider=%s action=fallback reason=%s message=%s",
             client.name,
-            getattr(exc, "kind", None) or getattr(exc, "reason", None) or exc.__class__.__name__,
+            getattr(exc, "kind", None)
+            or getattr(exc, "reason", None)
+            or exc.__class__.__name__,
             getattr(exc, "message", None) or normalize_text(str(exc)),
         )
 

@@ -72,7 +72,9 @@ def browser_risk_providers() -> list[str]:
             continue
         manifest = _load_yaml(REPO_ROOT / str(manifest_path))
         probe = manifest.get("probe") if isinstance(manifest.get("probe"), dict) else {}
-        if bool(probe.get("requires_browser_runtime")) or bool(probe.get("requires_playwright")):
+        if bool(probe.get("requires_browser_runtime")) or bool(
+            probe.get("requires_playwright")
+        ):
             providers.append(str(entry["name"]))
     return providers
 
@@ -83,18 +85,28 @@ def _expected_source_for_sample(manifest: dict[str, Any], purpose: str) -> str |
         return normalize_text(str(manifest.get("display_source") or "")) or None
     if purpose == "pdf_fallback":
         return normalize_text(route_sources.get("pdf_fallback")) or None
-    main_path = manifest.get("main_path") if isinstance(manifest.get("main_path"), list) else []
+    main_path = (
+        manifest.get("main_path") if isinstance(manifest.get("main_path"), list) else []
+    )
     for step in main_path:
         step_name = normalize_text(str(step))
-        if step_name in {"article_html", "landing_html", "xml"} and route_sources.get(step_name):
+        if step_name in {"article_html", "landing_html", "xml"} and route_sources.get(
+            step_name
+        ):
             return normalize_text(route_sources.get(step_name))
     return normalize_text(str(manifest.get("display_source") or "")) or None
 
 
 def collect_manifest_samples(manifest: dict[str, Any]) -> list[dict[str, Any]]:
     samples: list[dict[str, Any]] = []
-    fixtures = manifest.get("fixtures") if isinstance(manifest.get("fixtures"), dict) else {}
-    doi_samples = fixtures.get("doi_samples") if isinstance(fixtures.get("doi_samples"), dict) else {}
+    fixtures = (
+        manifest.get("fixtures") if isinstance(manifest.get("fixtures"), dict) else {}
+    )
+    doi_samples = (
+        fixtures.get("doi_samples")
+        if isinstance(fixtures.get("doi_samples"), dict)
+        else {}
+    )
     for purpose, sample in doi_samples.items():
         if not isinstance(sample, dict) or not sample.get("doi"):
             continue
@@ -142,8 +154,12 @@ def live_runner(provider: str, doi: str) -> RunnerResult:
     try:
         envelope = fetch_paper(
             doi,
-            strategy=FetchStrategy(preferred_providers=[provider], asset_profile="none"),
-            render=RenderOptions(include_refs="all", asset_profile="none", max_tokens="full_text"),
+            strategy=FetchStrategy(
+                preferred_providers=[provider], asset_profile="none"
+            ),
+            render=RenderOptions(
+                include_refs="all", asset_profile="none", max_tokens="full_text"
+            ),
         )
     except Exception as exc:
         return {
@@ -158,7 +174,9 @@ def live_runner(provider: str, doi: str) -> RunnerResult:
         }
     return {
         "doi": doi,
-        "status": FULLTEXT if getattr(envelope, "article", None) is not None else "metadata_only",
+        "status": FULLTEXT
+        if getattr(envelope, "article", None) is not None
+        else "metadata_only",
         "source": getattr(envelope, "source", None),
         "markdown": getattr(envelope, "markdown", None) or "",
         "warnings": list(getattr(envelope, "warnings", []) or []),
@@ -177,7 +195,9 @@ def _markdown_contract_for_sample(
     markdown_contract = manifest.get("markdown_contract")
     if isinstance(markdown_contract, dict):
         contract = markdown_contract.get(purpose)
-        if isinstance(contract, dict) and normalize_doi(str(contract.get("doi") or "")) == normalize_doi(doi):
+        if isinstance(contract, dict) and normalize_doi(
+            str(contract.get("doi") or "")
+        ) == normalize_doi(doi):
             return contract
     for extra in manifest.get("extra_fixtures") or []:
         if not isinstance(extra, dict):
@@ -190,9 +210,15 @@ def _markdown_contract_for_sample(
     return None
 
 
-def classify_markdown_contract(contract: dict[str, Any] | None, markdown: str) -> dict[str, Any]:
+def classify_markdown_contract(
+    contract: dict[str, Any] | None, markdown: str
+) -> dict[str, Any]:
     if contract is None:
-        return {"status": "missing_contract", "missing_must_include": [], "present_must_not_include": []}
+        return {
+            "status": "missing_contract",
+            "missing_must_include": [],
+            "present_must_not_include": [],
+        }
     normalized = normalize_text(markdown)
     missing = [
         str(token)
@@ -214,10 +240,15 @@ def classify_markdown_contract(contract: dict[str, Any] | None, markdown: str) -
 
 def _operator_action(categories: list[str]) -> str:
     if "access_gate" in categories or "challenge_or_rate_limit" in categories:
-        return "rerun live later or update access review/runtime after operator inspection"
+        return (
+            "rerun live later or update access review/runtime after operator inspection"
+        )
     if "metadata_only_degradation" in categories:
         return "repair provider route or replace DOI sample if full text is no longer available"
-    if "pdf_fallback_silent_degradation" in categories or "source_mismatch" in categories:
+    if (
+        "pdf_fallback_silent_degradation" in categories
+        or "source_mismatch" in categories
+    ):
         return "repair provider route-source handling before accepting live drift"
     if "markdown_contract_issue" in categories:
         return "inspect Markdown output and update provider cleanup or contract after review"
@@ -238,12 +269,20 @@ def evaluate_sample(
     status = str(result.get("status") or "")
     error_blob = " ".join(
         normalize_text(str(value)).lower()
-        for value in (result.get("error_code"), result.get("error_message"), *(result.get("warnings") or []))
+        for value in (
+            result.get("error_code"),
+            result.get("error_message"),
+            *(result.get("warnings") or []),
+        )
         if value
     )
     if expected_source and actual_source and actual_source != expected_source:
         categories.append("source_mismatch")
-    if sample["purpose"] != "pdf_fallback" and actual_source and re.search(r"(?:^|_)pdf(?:_|$)", actual_source):
+    if (
+        sample["purpose"] != "pdf_fallback"
+        and actual_source
+        and re.search(r"(?:^|_)pdf(?:_|$)", actual_source)
+    ):
         categories.append("pdf_fallback_silent_degradation")
     if status == "metadata_only" or actual_source == "metadata_only":
         categories.append("metadata_only_degradation")
@@ -256,7 +295,9 @@ def evaluate_sample(
         purpose=str(sample["purpose"]),
         doi=str(sample["doi"]),
     )
-    contract_result = classify_markdown_contract(contract, str(result.get("markdown") or ""))
+    contract_result = classify_markdown_contract(
+        contract, str(result.get("markdown") or "")
+    )
     if contract_result["status"] == "issue":
         categories.append("markdown_contract_issue")
     categories = list(dict.fromkeys(categories))
@@ -267,7 +308,8 @@ def evaluate_sample(
         "actual_source": actual_source,
         "status": status,
         "source_mismatch": "source_mismatch" in categories,
-        "pdf_fallback_silent_degradation": "pdf_fallback_silent_degradation" in categories,
+        "pdf_fallback_silent_degradation": "pdf_fallback_silent_degradation"
+        in categories,
         "metadata_only_degradation": "metadata_only_degradation" in categories,
         "challenge_rate_limit_or_access_gate": any(
             category in categories
@@ -290,7 +332,9 @@ def build_provider_report(
 ) -> dict[str, Any]:
     samples = collect_manifest_samples(manifest)
     sample_results = [
-        evaluate_sample(provider=provider, manifest=manifest, sample=sample, runner=runner)
+        evaluate_sample(
+            provider=provider, manifest=manifest, sample=sample, runner=runner
+        )
         for sample in samples
     ]
     return {
@@ -334,7 +378,9 @@ def build_drift_report(*, providers: list[str], runner: Runner) -> dict[str, Any
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Run local provider route-source drift report.")
+    parser = argparse.ArgumentParser(
+        description="Run local provider route-source drift report."
+    )
     source = parser.add_mutually_exclusive_group(required=True)
     source.add_argument("--provider", help="provider name")
     source.add_argument(
@@ -344,14 +390,22 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--output", help="output JSON path; stdout when omitted")
     parser.add_argument("--fake-source", help="test-only fake FetchEnvelope.source")
-    parser.add_argument("--fake-status", default=FULLTEXT, help="test-only fake fetch status")
-    parser.add_argument("--fake-markdown", default="", help="test-only fake markdown text")
+    parser.add_argument(
+        "--fake-status", default=FULLTEXT, help="test-only fake fetch status"
+    )
+    parser.add_argument(
+        "--fake-markdown", default="", help="test-only fake markdown text"
+    )
     return parser
 
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
-    providers = browser_risk_providers() if args.all_browser_risk else [_provider_slug(args.provider)]
+    providers = (
+        browser_risk_providers()
+        if args.all_browser_risk
+        else [_provider_slug(args.provider)]
+    )
     if args.fake_source:
         runner = fake_runner(
             source=args.fake_source,
@@ -360,7 +414,9 @@ def main(argv: list[str] | None = None) -> int:
         )
     else:
         if os.environ.get(RUN_LIVE_ENV_VAR) != "1":
-            raise SystemExit(f"Set {RUN_LIVE_ENV_VAR}=1 to run live provider drift report.")
+            raise SystemExit(
+                f"Set {RUN_LIVE_ENV_VAR}=1 to run live provider drift report."
+            )
         runner = live_runner
     report = build_drift_report(providers=providers, runner=runner)
     content = json.dumps(report, indent=2, sort_keys=True) + "\n"

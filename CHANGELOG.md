@@ -6,6 +6,30 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 2.8.0 - 2026-07-02
+
+### Added
+
+- Added provider-template-aware DOI extraction for DOI-bearing publisher URLs, including query-parameter DOIs, known route/extension suffix stripping, and AMS old-style SICI `view` / `downloadpdf` slug support, so many URL queries resolve directly without fetching a landing page first.
+- Added `scripts/dev-preflight.sh --coverage` plus CI unit coverage reports (`term-missing` and `coverage.xml`) as a baseline signal without enforcing a coverage threshold.
+
+### Changed
+
+- Changed publisher-facing landing/PDF requests and browser workflows to use browser-shaped user agents through `build_publisher_user_agent`; `PAPER_FETCH_USER_AGENT` remains the tool/API user agent and no longer becomes the default browser context user agent.
+- Changed Royal Society Publishing from direct HTTP DOI/PDF fetching to the shared CDP browser HTML plus seeded-browser PDF workflow while keeping `royalsocietypublishing_html` / `royalsocietypublishing_pdf` sources and the no-XML route contract.
+- Changed title-query resolution to prefer a formal journal publication over a near-tie preprint when Crossref metadata identifies a clear formal publication candidate.
+- Expanded mypy coverage to 136 project source files, including HTML extraction, browser workflow, Atypon browser workflow, shared JATS/common Markdown helpers, the CloakBrowser helper, service, artifacts, image conversion, and resolver modules.
+- Changed local and CI quality gates to enforce `ruff format --check`, keep ruff linting, prefer repo-local `.venv/bin/python` or explicit `PYTHON_BIN`, report missing dev dependencies early, and run local preflight type checks with `mypy --no-site-packages`.
+- Applied `ruff format` across the Python codebase and updated module-layout and asset-contract guard tests for the formatted source shape.
+
+### Fixed
+
+- Fixed browser-backed batch concurrency so managed CDP browser managers are shared process-wide by provider/browser config, preventing concurrent CLI/MCP fetches for the same provider profile from racing on `.paper-fetch-profile.lock`; isolated contexts now use thread-owned CDP connections to avoid cross-thread Playwright sync object reuse.
+- Fixed SICI DOI normalization and URL DOI suffix handling so DOI suffixes such as `<...>` / `;` are preserved, while provider route tokens such as Frontiers `/full`, IOP `/pdf`, Wiley `/fullpdf`, and Springer `.pdf` are stripped only when provider catalog templates make that safe.
+- Fixed official PDF fallback degradation for scanned/PDF-only provider results: real downloaded PDFs are retained with explicit warnings and provider source trail instead of being replaced by Crossref/general metadata-only results when Markdown extraction is unusable.
+- Fixed publisher landing/probe requests that previously sent the stable `paper-fetch-skill/<version>` tool user agent to browser-facing publisher routes.
+- Fixed docs and contract drift around `PdfFallbackStrategy`, browser runtime ownership, provider URL/route behavior, and asset-download contract marker scanning after repository-wide ruff formatting.
+
 ## 2.7.1 - 2026-07-01
 
 ### Added

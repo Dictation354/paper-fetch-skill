@@ -5,9 +5,9 @@ generation:
   generated_by: ai_discovery
   generated_at: '2026-05-22T00:00:00Z'
   source_queries:
-    - onboarding/access-reviews/royalsocietypublishing.yml approved direct HTTP review
-    - Royal Society Publishing DOI prefix 10.1098 direct DOI HTML probes
-    - Royal Society Publishing citation_pdf_url and /doi/pdf/{doi} direct PDF probes
+    - onboarding/access-reviews/royalsocietypublishing.yml approved browser workflow review
+    - Royal Society Publishing DOI prefix 10.1098 browser DOI HTML probes
+    - Royal Society Publishing citation_pdf_url and /doi/pdf/{doi} seeded-browser PDF probes
     - Royal Society Publishing 10.1098 table DOI candidates
     - site:royalsocietypublishing.org Royal Society Publishing table article DOI
     - 10.1098 table fixture discovery royalsocietypublishing
@@ -44,7 +44,7 @@ success_criteria:
 route_contract:
   article_html:
     success_requires:
-      - direct /doi/{doi} request redirects to a Royal Society Publishing Silverchair article page
+      - browser /doi/{doi} request reaches a Royal Society Publishing Silverchair article page
       - provider article body container is present
       - title or DOI metadata is present
       - body sections or paragraphs are present
@@ -56,11 +56,11 @@ route_contract:
       - citation_xml_url fallback used as XML full text
     min_body_chars: 1200
     min_body_sections: 1
-    notes: The approved route is direct HTTP DOI HTML; citation_xml_url redirects to provider HTML
+    notes: The approved route is browser DOI HTML; citation_xml_url redirects to provider HTML
       and is not an XML route.
   pdf_fallback:
     success_requires:
-      - citation_pdf_url or /doi/pdf/{doi} returns PDF bytes after redirects
+      - citation_pdf_url or /doi/pdf/{doi} returns PDF bytes through seeded-browser PDF fallback
       - PDF response has PDF magic bytes
       - PDF text extraction produces body text
     reject_if_any:
@@ -165,26 +165,26 @@ supplementary_scope:
 abstract_only_strategy: metadata_only
 probe:
   env_requirements: []
-  requires_playwright: false
-  requires_browser_runtime: false
+  requires_playwright: true
+  requires_browser_runtime: true
   ping_url: https://royalsocietypublishing.org/
 fixtures:
   doi_samples:
     structure:
       doi: 10.1098/rsta.2019.0558
       evidence_url: https://royalsocietypublishing.org/doi/10.1098/rsta.2019.0558
-      evidence_reason: Direct DOI HTML redirects to a Royal Society Publishing Silverchair article
+      evidence_reason: Browser DOI HTML reaches a Royal Society Publishing Silverchair article
         with abstract, body sections, figures, tables, and references.
       observed_signals:
         - article_html
-        - direct_doi_redirect
+        - browser_doi_html
         - html_body
         - references
       confidence: high
     table:
       doi: 10.1098/rspb.2020.0097
       evidence_url: https://royalsocietypublishing.org/doi/10.1098/rspb.2020.0097
-      evidence_reason: Direct DOI HTML exposes a full article body with multiple body tables and
+      evidence_reason: Browser DOI HTML exposes a full article body with multiple body tables and
         captions.
       observed_signals:
         - article_html
@@ -194,7 +194,7 @@ fixtures:
     formula:
       doi: 10.1098/rsos.201188
       evidence_url: https://royalsocietypublishing.org/doi/10.1098/rsos.201188
-      evidence_reason: Direct DOI HTML exposes a quantitative article body with formula and equation
+      evidence_reason: Browser DOI HTML exposes a quantitative article body with formula and equation
         content.
       observed_signals:
         - article_html
@@ -204,7 +204,7 @@ fixtures:
     figure:
       doi: 10.1098/rsos.150470
       evidence_url: https://royalsocietypublishing.org/doi/10.1098/rsos.150470
-      evidence_reason: Direct DOI HTML exposes a full article body with multiple body figures and
+      evidence_reason: Browser DOI HTML exposes a full article body with multiple body figures and
         captions.
       observed_signals:
         - article_html
@@ -214,7 +214,7 @@ fixtures:
     supplementary:
       doi: 10.1098/rsif.2019.0334
       evidence_url: https://royalsocietypublishing.org/doi/10.1098/rsif.2019.0334
-      evidence_reason: Direct DOI HTML exposes article-scoped supplementary material links under the
+      evidence_reason: Browser DOI HTML exposes article-scoped supplementary material links under the
         Royal Society /article-supplement/ route.
       observed_signals:
         - article_html
@@ -224,7 +224,7 @@ fixtures:
     references:
       doi: 10.1098/rsos.201200
       evidence_url: https://royalsocietypublishing.org/doi/10.1098/rsos.201200
-      evidence_reason: Direct DOI HTML exposes reference metadata and a full article body for
+      evidence_reason: Browser DOI HTML exposes reference metadata and a full article body for
         references regression coverage.
       observed_signals:
         - article_html
@@ -234,7 +234,7 @@ fixtures:
     pdf_fallback:
       doi: 10.1098/rsta.2020.0108
       evidence_url: https://royalsocietypublishing.org/doi/pdf/10.1098/rsta.2020.0108
-      evidence_reason: Direct PDF URL follows Royal Society Publishing redirects to real PDF bytes
+      evidence_reason: Seeded-browser PDF URL follows Royal Society Publishing redirects to real PDF bytes
         for text-only fallback coverage.
       observed_signals:
         - pdf_fallback
@@ -250,14 +250,14 @@ fixtures:
     access_gate:
       doi:
       evidence_url: https://royalsocietypublishing.org/
-      evidence_reason: No stable approved access-gate DOI sample is selected for the direct HTTP
+      evidence_reason: No stable approved access-gate DOI sample is selected for the browser
         onboarding route.
       observed_signals: []
       confidence: low
     empty_shell:
       doi:
       evidence_url: https://royalsocietypublishing.org/
-      evidence_reason: No stable empty-shell DOI sample is selected for the direct HTTP onboarding
+      evidence_reason: No stable empty-shell DOI sample is selected for the browser onboarding
         route.
       observed_signals: []
       confidence: low
@@ -314,11 +314,12 @@ extraction_hints:
   metadata_merge: []
 owner_reuse_exceptions: []
 docs:
-  providers_md_capability_row: '`royalsocietypublishing` | Direct DOI HTML metadata merge | `direct HTTP
-    DOI HTML -> direct HTTP PDF -> metadata fallback` | HTML 路线支持 `none` / `body` / `all`；PDF fallback
-    当前 text-only | 强 | Royal Society Publishing 通过 `10.1098/` DOI 和 `royalsocietypublishing.org` 路由；HTML
-    成功公开为 `royalsocietypublishing_html`，PDF fallback 公开为 `royalsocietypublishing_pdf`；显式不把 `citation_xml_url`
-    当作 XML/JATS 路线'
-  changelog_summary: Add Royal Society Publishing direct HTTP HTML provider with strict PDF
-    fallback.
+  providers_md_capability_row: '`royalsocietypublishing` | Crossref/DOI browser HTML metadata
+    merge | `CDP browser DOI HTML -> CDP browser-seeded PDF -> metadata fallback` | HTML 路线支持
+    `none` / `body` / `all`；PDF fallback 在 `body/all` 且允许落盘时提取 PDF 图片到 `<doi>_assets/`
+    | 强 | Royal Society Publishing 通过 `10.1098/` DOI 和 `royalsocietypublishing.org`
+    路由；HTML 成功公开为 `royalsocietypublishing_html`，PDF fallback 公开为 `royalsocietypublishing_pdf`；需要
+    Playwright/browser runtime；显式不把 `citation_xml_url` 当作 XML/JATS 路线'
+  changelog_summary: Route Royal Society Publishing through CDP browser HTML with seeded-browser
+    PDF fallback.
   extraction_rules_summary:

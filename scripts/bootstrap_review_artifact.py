@@ -77,11 +77,19 @@ def _load_manifest(path: Path) -> dict[str, Any]:
 
 def _iter_review_samples(manifest: dict[str, Any]) -> list[dict[str, Any]]:
     samples: list[dict[str, Any]] = []
-    fixtures = manifest.get("fixtures") if isinstance(manifest.get("fixtures"), dict) else {}
-    doi_samples = fixtures.get("doi_samples") if isinstance(fixtures.get("doi_samples"), dict) else {}
+    fixtures = (
+        manifest.get("fixtures") if isinstance(manifest.get("fixtures"), dict) else {}
+    )
+    doi_samples = (
+        fixtures.get("doi_samples")
+        if isinstance(fixtures.get("doi_samples"), dict)
+        else {}
+    )
     for purpose, sample in doi_samples.items():
         if isinstance(sample, dict) and sample.get("doi"):
-            samples.append({"purpose": str(purpose), "doi": str(sample["doi"]), "sample": sample})
+            samples.append(
+                {"purpose": str(purpose), "doi": str(sample["doi"]), "sample": sample}
+            )
     extra_fixtures = manifest.get("extra_fixtures")
     if isinstance(extra_fixtures, list):
         for sample in extra_fixtures:
@@ -96,11 +104,19 @@ def _iter_review_samples(manifest: dict[str, Any]) -> list[dict[str, Any]]:
     return samples
 
 
-def _contract_for_sample(manifest: dict[str, Any], sample: dict[str, Any]) -> dict[str, Any]:
+def _contract_for_sample(
+    manifest: dict[str, Any], sample: dict[str, Any]
+) -> dict[str, Any]:
     raw_sample = sample["sample"]
-    if isinstance(raw_sample, dict) and isinstance(raw_sample.get("markdown_contract"), dict):
+    if isinstance(raw_sample, dict) and isinstance(
+        raw_sample.get("markdown_contract"), dict
+    ):
         return dict(raw_sample["markdown_contract"])
-    contracts = manifest.get("markdown_contract") if isinstance(manifest.get("markdown_contract"), dict) else {}
+    contracts = (
+        manifest.get("markdown_contract")
+        if isinstance(manifest.get("markdown_contract"), dict)
+        else {}
+    )
     contract = contracts.get(sample["purpose"])
     return dict(contract) if isinstance(contract, dict) else {}
 
@@ -120,7 +136,9 @@ def _assertions_from_contract(contract: dict[str, Any]) -> list[str]:
     return assertions or ["baseline markdown exists for semantic review"]
 
 
-def _classifier_issues(contract: dict[str, Any], baseline_text: str) -> list[dict[str, str]]:
+def _classifier_issues(
+    contract: dict[str, Any], baseline_text: str
+) -> list[dict[str, str]]:
     issues: list[dict[str, str]] = []
     for index, value in enumerate(contract.get("must_include") or (), start=1):
         if str(value) not in baseline_text:
@@ -155,7 +173,9 @@ def _classifier_issues(contract: dict[str, Any], baseline_text: str) -> list[dic
             )
     count_equals = contract.get("count_equals")
     if isinstance(count_equals, dict):
-        for index, (value, expected) in enumerate(sorted(count_equals.items()), start=1):
+        for index, (value, expected) in enumerate(
+            sorted(count_equals.items()), start=1
+        ):
             try:
                 expected_count = int(expected)
             except (TypeError, ValueError):
@@ -187,11 +207,16 @@ def _load_golden_manifest(root: Path) -> dict[str, Any]:
 def _artifact_path(root: Path, doi: str, asset_name: str) -> Path:
     slug = _doi_slug(doi)
     manifest = _load_golden_manifest(root)
-    samples = manifest.get("samples") if isinstance(manifest.get("samples"), dict) else {}
+    samples = (
+        manifest.get("samples") if isinstance(manifest.get("samples"), dict) else {}
+    )
     sample = samples.get(slug)
     if not isinstance(sample, dict):
         for sample_id, item in samples.items():
-            if isinstance(item, dict) and _normalized_doi(str(item.get("doi") or "")) == doi:
+            if (
+                isinstance(item, dict)
+                and _normalized_doi(str(item.get("doi") or "")) == doi
+            ):
                 slug = str(sample_id)
                 sample = item
                 break
@@ -202,7 +227,14 @@ def _artifact_path(root: Path, doi: str, asset_name: str) -> Path:
             return root / asset_path
         family = str(sample.get("fixture_family") or "golden")
         if family == "block":
-            return root / "tests" / "fixtures" / "block" / slug.removesuffix("__block") / asset_name
+            return (
+                root
+                / "tests"
+                / "fixtures"
+                / "block"
+                / slug.removesuffix("__block")
+                / asset_name
+            )
     return root / "tests" / "fixtures" / "golden_criteria" / slug / asset_name
 
 
@@ -267,7 +299,9 @@ def _review_issues_from_quality(quality: dict[str, Any]) -> list[dict[str, str]]
             {
                 "id": str(issue.get("id") or "markdown-quality-failed"),
                 "severity": str(issue.get("severity") or "high"),
-                "summary": str(issue.get("summary") or "Markdown quality check failed."),
+                "summary": str(
+                    issue.get("summary") or "Markdown quality check failed."
+                ),
             }
         )
     return issues
@@ -304,7 +338,10 @@ def build_review(
                 provider=provider,
                 manifest=manifest_path.as_posix(),
                 task_id=f"{provider}-bootstrap-review-artifact",
-                details={"doi": doi, "baseline_markdown_path": baseline.relative_to(root).as_posix()},
+                details={
+                    "doi": doi,
+                    "baseline_markdown_path": baseline.relative_to(root).as_posix(),
+                },
             )
         quality_report = _quality_path(root, doi)
         if not quality_report.is_file():
@@ -315,12 +352,19 @@ def build_review(
                 provider=provider,
                 manifest=manifest_path.as_posix(),
                 task_id=f"{provider}-bootstrap-review-artifact",
-                details={"doi": doi, "markdown_quality_path": quality_report.relative_to(root).as_posix()},
+                details={
+                    "doi": doi,
+                    "markdown_quality_path": quality_report.relative_to(
+                        root
+                    ).as_posix(),
+                },
             )
         quality = _load_quality_report(quality_report)
         contract = _contract_for_sample(manifest, sample)
         baseline_text = baseline.read_text(encoding="utf-8", errors="replace")
-        issues = _classifier_issues(contract, baseline_text) + _review_issues_from_quality(quality)
+        issues = _classifier_issues(
+            contract, baseline_text
+        ) + _review_issues_from_quality(quality)
         fixture_reviews.append(
             {
                 "fixture": f"tests/fixtures/golden_criteria/{slug}",
@@ -355,7 +399,10 @@ def build_review(
     return {
         "schema_version": 2,
         "provider": provider,
-        "reviewed_at": datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
+        "reviewed_at": datetime.now(UTC)
+        .replace(microsecond=0)
+        .isoformat()
+        .replace("+00:00", "Z"),
         "reviewed_by": "bootstrap_review_artifact.py",
         "fixtures": fixture_reviews,
     }
@@ -372,7 +419,9 @@ def build_parser() -> argparse.ArgumentParser:
         default=_repo_root(),
         help="repo root to resolve fixture snapshots and write review artifact",
     )
-    parser.add_argument("--force", action="store_true", help="overwrite an existing review artifact")
+    parser.add_argument(
+        "--force", action="store_true", help="overwrite an existing review artifact"
+    )
     return parser
 
 

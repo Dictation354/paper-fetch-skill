@@ -11,15 +11,28 @@ import re
 from ..common_patterns import WORD_TOKEN_PATTERN
 from ..extraction.html._runtime import clean_markdown
 from ..extraction.html.html_tags import HTML_DROP_TAGS
-from ..extraction.html.semantics import HTML_BLOCK_TAGS, SECTION_HEADING_PATTERN, heading_category, node_source_selector, section_hint_kind_for_category
-from ..extraction.html.tables import TABLE_PLACEHOLDER_PREFIX, inject_inline_table_blocks
+from ..extraction.html.semantics import (
+    HTML_BLOCK_TAGS,
+    SECTION_HEADING_PATTERN,
+    heading_category,
+    node_source_selector,
+    section_hint_kind_for_category,
+)
+from ..extraction.html.tables import (
+    TABLE_PLACEHOLDER_PREFIX,
+    inject_inline_table_blocks,
+)
 from ..models.markdown import normalize_markdown_text
 from ..quality.html_availability import assess_plain_text_fulltext_availability
 from ..quality.reason_codes import FULLTEXT
 from ..reason_codes import NO_RESULT
 from ..utils import normalize_text
 from ._arxiv_parsing import ARXIV_HTML_PARSER
-from ._html_section_markdown import render_clean_text_from_html, render_container_markdown, render_heading_text_from_html
+from ._html_section_markdown import (
+    render_clean_text_from_html,
+    render_container_markdown,
+    render_heading_text_from_html,
+)
 from .base import ProviderFailure
 
 from bs4 import BeautifulSoup, Tag
@@ -29,7 +42,18 @@ _WORD_PATTERN = WORD_TOKEN_PATTERN
 _ARXIV_BASE_CHROME_SELECTORS = ("script", "style")
 _ARXIV_AR5IV_SELECTORS: Mapping[str, tuple[str, ...]] = {
     "watermark": ("#watermark-tr", ".ltx_page_header", ".ltx_page_footer"),
-    "frontmatter_noise": (*_ARXIV_BASE_CHROME_SELECTORS, "math", ".ltx_note", ".ltx_contact", ".ltx_author_notes", ".ltx_role_email", ".ltx_role_orcid", ".ltx_role_affiliation", "a[href^='mailto:']", ".ltx_font_typewriter"),
+    "frontmatter_noise": (
+        *_ARXIV_BASE_CHROME_SELECTORS,
+        "math",
+        ".ltx_note",
+        ".ltx_contact",
+        ".ltx_author_notes",
+        ".ltx_role_email",
+        ".ltx_role_orcid",
+        ".ltx_role_affiliation",
+        "a[href^='mailto:']",
+        ".ltx_font_typewriter",
+    ),
     "author_creators": (".ltx_creator.ltx_role_author",),
     "author_person_names": (".ltx_personname",),
     "document_title": ("h1.ltx_title_document",),
@@ -37,7 +61,11 @@ _ARXIV_AR5IV_SELECTORS: Mapping[str, tuple[str, ...]] = {
     "abstract_heading": (".ltx_title_abstract", "h1", "h2", "h3", "h4", "h5", "h6"),
     "bibliography_containers": ("section.ltx_bibliography", "section#bib"),
     "bibliography_items": (".ltx_bibitem", "li.ltx_bibitem"),
-    "reference_noise": (*_ARXIV_BASE_CHROME_SELECTORS, ".ltx_bib_cited", ".ltx_bib_links"),
+    "reference_noise": (
+        *_ARXIV_BASE_CHROME_SELECTORS,
+        ".ltx_bib_cited",
+        ".ltx_bib_links",
+    ),
     "reference_links": (".ltx_bib_links", ".ltx_bib_cited"),
     "reference_blocks": (".ltx_bibblock",),
     "reference_year": (".ltx_bib_year",),
@@ -51,24 +79,72 @@ _ARXIV_AR5IV_SELECTORS: Mapping[str, tuple[str, ...]] = {
     "listing_noise": (".ltx_rule", ".ltx_linenumber"),
     "listing_lines": (".ltx_listingline",),
     "article_root": ("article.ltx_document",),
-    "article_chrome": (*_ARXIV_BASE_CHROME_SELECTORS, "nav", "header", "footer", "h1.ltx_title_document", "div.ltx_authors", "div.ltx_dates", "span.ltx_note.ltx_role_thanks", "span.ltx_note.ltx_note_frontmatter", "span.ltx_role_submissionid", "span.ltx_role_journal", "span.ltx_role_ccs", ".ltx_pagination"),
+    "article_chrome": (
+        *_ARXIV_BASE_CHROME_SELECTORS,
+        "nav",
+        "header",
+        "footer",
+        "h1.ltx_title_document",
+        "div.ltx_authors",
+        "div.ltx_dates",
+        "span.ltx_note.ltx_role_thanks",
+        "span.ltx_note.ltx_note_frontmatter",
+        "span.ltx_role_submissionid",
+        "span.ltx_role_journal",
+        "span.ltx_role_ccs",
+        ".ltx_pagination",
+    ),
 }
-_ARXIV_AR5IV_FATAL_ERROR_TEXTS = ("an error in the conversion from latex to xml has occurred",)
-_ARXIV_PLACEHOLDER_PATTERN = re.compile(rf"\b{re.escape(TABLE_PLACEHOLDER_PREFIX)}\d{{4}}\b")
+_ARXIV_AR5IV_FATAL_ERROR_TEXTS = (
+    "an error in the conversion from latex to xml has occurred",
+)
+_ARXIV_PLACEHOLDER_PATTERN = re.compile(
+    rf"\b{re.escape(TABLE_PLACEHOLDER_PREFIX)}\d{{4}}\b"
+)
 _ARXIV_HTML_FATAL_ERROR_PATTERNS = (
     *(
         re.compile(r"\s+".join(re.escape(part) for part in text.split()), re.IGNORECASE)
         for text in _ARXIV_AR5IV_FATAL_ERROR_TEXTS
     ),
 )
-_ARXIV_SECTION_HINT_SKIP_CLASS_TOKENS = {"ltx_toc", "ltx_toclist", "ltx_tocentry", "ltx_page_navbar", "ltx_page_header", "ltx_page_footer", "ltx_pagination", "ltx_authors", "ltx_dates", "ltx_role_thanks", "ltx_note_frontmatter"}
-_ARXIV_SECTION_HINT_STRUCTURAL_SKIP_TAGS = ("aside", "figcaption", "footer", "header", "nav", "table", "tbody", "td", "tfoot", "th", "thead", "tr")
+_ARXIV_SECTION_HINT_SKIP_CLASS_TOKENS = {
+    "ltx_toc",
+    "ltx_toclist",
+    "ltx_tocentry",
+    "ltx_page_navbar",
+    "ltx_page_header",
+    "ltx_page_footer",
+    "ltx_pagination",
+    "ltx_authors",
+    "ltx_dates",
+    "ltx_role_thanks",
+    "ltx_note_frontmatter",
+}
+_ARXIV_SECTION_HINT_STRUCTURAL_SKIP_TAGS = (
+    "aside",
+    "figcaption",
+    "footer",
+    "header",
+    "nav",
+    "table",
+    "tbody",
+    "td",
+    "tfoot",
+    "th",
+    "thead",
+    "tr",
+)
 _ARXIV_SECTION_HINT_SKIP_TAGS = {
     "figure",
     "math",
     *(tag for tag in HTML_DROP_TAGS if tag in {"script", "style", "svg"}),
-    *(tag for tag in _ARXIV_SECTION_HINT_STRUCTURAL_SKIP_TAGS if tag in HTML_BLOCK_TAGS),
+    *(
+        tag
+        for tag in _ARXIV_SECTION_HINT_STRUCTURAL_SKIP_TAGS
+        if tag in HTML_BLOCK_TAGS
+    ),
 }
+
 
 @dataclass(frozen=True)
 class ArxivHtmlExtraction:
@@ -108,6 +184,8 @@ def _arxiv_select_one(node: Any, selector_group: str) -> Any:
         if isinstance(match, Tag):
             return match
     return None
+
+
 def _clean_arxiv_frontmatter_text(node: Any, *, remove_line_breaks: bool = True) -> str:
     if not isinstance(node, Tag):
         return ""
@@ -155,6 +233,7 @@ def _looks_like_html(content_type: str | None, body: bytes) -> bool:
 
 def _markdown_word_count(markdown_text: str) -> int:
     return len(_WORD_PATTERN.findall(normalize_text(markdown_text)))
+
 
 def _split_markdown_block_around_placeholder(
     block: str, placeholder: str, replacement: str

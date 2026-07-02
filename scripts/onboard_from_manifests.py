@@ -57,8 +57,7 @@ STATE_SCHEMA_PATH = "onboarding/onboarding-state.schema.json"
 DEFAULT_STATE_PATH = "onboarding/onboarding-state.json"
 AGENT_CLI_ENV = "PROVIDER_ONBOARDING_AGENT_CLI"
 DEFAULT_CODEX_AGENT_CLI = (
-    "codex exec --cd <repo-root> --sandbox workspace-write "
-    "-c approval_policy=\"never\" -"
+    'codex exec --cd <repo-root> --sandbox workspace-write -c approval_policy="never" -'
 )
 ACCESS_PREFLIGHT_STEP = "operator-access-preflight"
 HUMAN_PREFLIGHT_REVIEW_GATE = "waterfall-preflight-review"
@@ -244,7 +243,9 @@ TASK_DAG: tuple[DagStep, ...] = (
     DagStep(id=SHARED_INTEGRATION_STEP, type="coordinator-action", owner="coordinator"),
     DagStep(id=SNAPSHOT_EXPECTED_STEP, type="coordinator-action", owner="coordinator"),
     DagStep(id="manifest-sync-back", type="coordinator-action", owner="coordinator"),
-    DagStep(id="provider-local-acceptance", type="coordinator-check", owner="coordinator"),
+    DagStep(
+        id="provider-local-acceptance", type="coordinator-check", owner="coordinator"
+    ),
     DagStep(id="global-lint", type="coordinator-check", owner="coordinator"),
     DagStep(id="merge-ready", type="coordinator-action", owner="coordinator"),
 )
@@ -431,7 +432,10 @@ def _load_access_review(provider: str) -> dict[str, Any]:
             provider=provider_name,
             manifest=default_manifest_path(provider_name),
             task_id=f"{provider_name}-{ACCESS_PREFLIGHT_STEP}",
-            details={"path": path.relative_to(_repo_root()).as_posix(), "reason": str(exc)},
+            details={
+                "path": path.relative_to(_repo_root()).as_posix(),
+                "reason": str(exc),
+            },
         ) from exc
     if not isinstance(data, dict):
         raise ToolError(
@@ -620,7 +624,9 @@ def _seed_base_url(domain: str | None) -> str:
     return "https://doi.org/"
 
 
-def default_evidence_pack_path(provider: str, output_dir: Path | str | None = None) -> str:
+def default_evidence_pack_path(
+    provider: str, output_dir: Path | str | None = None
+) -> str:
     provider_name = _provider_slug(provider)
     if output_dir is None:
         return f".paper-fetch-runs/{provider_name}-onboarding/{DISCOVERY_EVIDENCE_RELATIVE_PATH}"
@@ -628,7 +634,9 @@ def default_evidence_pack_path(provider: str, output_dir: Path | str | None = No
     return (base / DISCOVERY_EVIDENCE_RELATIVE_PATH).as_posix()
 
 
-def _query_identity_terms(provider: str, domain: str | None, doi_prefix: str | None) -> list[str]:
+def _query_identity_terms(
+    provider: str, domain: str | None, doi_prefix: str | None
+) -> list[str]:
     terms = [provider]
     if domain:
         terms.append(domain)
@@ -862,9 +870,7 @@ def _access_review_allowed_runtimes(review: Mapping[str, Any] | None) -> set[str
     runtimes = review.get("allowed_runtimes") if isinstance(review, Mapping) else None
     if isinstance(runtimes, list):
         return {
-            str(runtime).strip().lower()
-            for runtime in runtimes
-            if str(runtime).strip()
+            str(runtime).strip().lower() for runtime in runtimes if str(runtime).strip()
         }
     return set()
 
@@ -914,9 +920,7 @@ def _discovery_browser_fallback_policy(
     allowed_runtimes = sorted(_access_review_allowed_runtimes(review))
     provider_requires_browser = _provider_requires_browser_runtime(provider)
     enabled = (
-        mode == "auto"
-        and not no_network
-        and _access_review_allows_browser(review)
+        mode == "auto" and not no_network and _access_review_allows_browser(review)
     )
     disabled_reason = None
     if mode == "off":
@@ -964,7 +968,13 @@ def _merge_candidate(
     if existing is None:
         candidates[doi] = candidate
         return
-    for key in ["title", "journal_title", "publisher", "landing_page_url", "evidence_url"]:
+    for key in [
+        "title",
+        "journal_title",
+        "publisher",
+        "landing_page_url",
+        "evidence_url",
+    ]:
         if not existing.get(key) and candidate.get(key):
             existing[key] = candidate[key]
     existing_queries = existing.setdefault("source_queries", [])
@@ -1017,9 +1027,7 @@ def _crossref_candidate(
         "landing_page_url": landing_url,
         "evidence_url": landing_url,
         "source_queries": [query],
-        "metadata_sources": [
-            {"source": "crossref", "url": metadata.get("source_url")}
-        ],
+        "metadata_sources": [{"source": "crossref", "url": metadata.get("source_url")}],
         "observed_signals": sorted(set(signals)),
         "rejection_hint": _candidate_rejection_hint(purpose),
     }
@@ -1151,7 +1159,11 @@ def _openalex_candidates(
         if doi is None:
             continue
         primary_location = item.get("primary_location")
-        source = primary_location.get("source") if isinstance(primary_location, Mapping) else {}
+        source = (
+            primary_location.get("source")
+            if isinstance(primary_location, Mapping)
+            else {}
+        )
         landing_url = _safe_url(item.get("landing_page_url"))
         if landing_url is None and isinstance(primary_location, Mapping):
             landing_url = _safe_url(primary_location.get("landing_page_url"))
@@ -1345,7 +1357,9 @@ def _signals_from_failure_code(failure_code: str) -> list[str]:
     signals: list[str] = []
     if any(token in normalized for token in ["challenge", "captcha", "cloudflare"]):
         signals.append("challenge")
-    if any(token in normalized for token in ["access", "paywall", "forbidden", "denied"]):
+    if any(
+        token in normalized for token in ["access", "paywall", "forbidden", "denied"]
+    ):
         signals.append("access_gate")
     if "empty" in normalized:
         signals.append("empty_shell")
@@ -1359,7 +1373,9 @@ def _html_probe_from_response(
     purpose: str,
     route: str,
 ) -> dict[str, Any]:
-    content_type = str((response.get("headers") or {}).get("content-type") or "").lower()
+    content_type = str(
+        (response.get("headers") or {}).get("content-type") or ""
+    ).lower()
     body = _decode_response_body(response)
     signals: list[str] = []
     if "pdf" in content_type or body.startswith("%PDF"):
@@ -1384,8 +1400,7 @@ def _html_probe_from_response(
     if soup.find("table") or re.search(r"\btable\s+\d+\b", text_lower):
         signals.extend(["body_tables", "table"])
     if soup.find("math") or any(
-        token in body.lower()
-        for token in ["mathjax", "mathml", "<mml:math"]
+        token in body.lower() for token in ["mathjax", "mathml", "<mml:math"]
     ):
         signals.extend(["formula", "mathml"])
     if re.search(r"\b(equation|formula)\s+\d+\b", text_lower):
@@ -1401,7 +1416,11 @@ def _html_probe_from_response(
         label = anchor.get_text(" ", strip=True).lower()
         if href.endswith(".pdf") or "/pdf" in href or label == "pdf":
             signals.append("pdf_link")
-        if "supplement" in href or "supplement" in label or "supporting information" in label:
+        if (
+            "supplement" in href
+            or "supplement" in label
+            or "supporting information" in label
+        ):
             signals.append("supplementary")
     status_code = _response_status_code(response)
     if any(token in body_lower or token in text_lower for token in CHALLENGE_PATTERNS):
@@ -1503,7 +1522,9 @@ def _score_discovery_candidate(
     doi = str(candidate.get("doi") or "").lower()
     if doi_prefix and doi.startswith(doi_prefix.rstrip("/").lower()):
         score += 0.25
-    evidence_url = str(candidate.get("evidence_url") or candidate.get("landing_page_url") or "").lower()
+    evidence_url = str(
+        candidate.get("evidence_url") or candidate.get("landing_page_url") or ""
+    ).lower()
     if domain and domain.lower().strip("/") in evidence_url:
         score += 0.18
     identity_text = " ".join(
@@ -1561,7 +1582,9 @@ def _finalize_discovery_candidate(
     domain: str | None,
     doi_prefix: str | None,
 ) -> dict[str, Any]:
-    signals = list(dict.fromkeys(str(signal) for signal in candidate.get("observed_signals") or []))
+    signals = list(
+        dict.fromkeys(str(signal) for signal in candidate.get("observed_signals") or [])
+    )
     candidate["observed_signals"] = signals
     score = _score_discovery_candidate(
         candidate,
@@ -1572,7 +1595,10 @@ def _finalize_discovery_candidate(
     )
     candidate["score"] = round(score, 3)
     candidate["confidence"] = _candidate_confidence(score)
-    candidate.setdefault("evidence_url", candidate.get("landing_page_url") or _doi_url(candidate.get("doi")))
+    candidate.setdefault(
+        "evidence_url",
+        candidate.get("landing_page_url") or _doi_url(candidate.get("doi")),
+    )
     candidate.setdefault("rejection_hint", _candidate_rejection_hint(purpose))
     return candidate
 
@@ -1648,7 +1674,9 @@ def _prepare_discovery_candidates(
         )
         candidates = candidates[:DISCOVERY_MAX_METADATA_CANDIDATES_PER_PURPOSE]
         for candidate in candidates[:DISCOVERY_MAX_PAGE_PROBES_PER_PURPOSE]:
-            url = _safe_url(candidate.get("landing_page_url")) or _doi_url(candidate.get("doi"))
+            url = _safe_url(candidate.get("landing_page_url")) or _doi_url(
+                candidate.get("doi")
+            )
             probe = _probe_landing_page(
                 transport=transport,
                 url=url,
@@ -1674,7 +1702,12 @@ def _prepare_discovery_candidates(
             )
             for candidate in candidates
         ]
-        finalized.sort(key=lambda item: (-float(item.get("score") or 0), str(item.get("doi") or "")))
+        finalized.sort(
+            key=lambda item: (
+                -float(item.get("score") or 0),
+                str(item.get("doi") or ""),
+            )
+        )
         candidates_by_purpose[purpose] = finalized
     return candidates_by_purpose, errors
 
@@ -1745,7 +1778,9 @@ def prepare_manifest_discovery(
             query_plan=query_plan,
             transport=active_transport,
             browser_fallback_enabled=bool(fallback_policy.get("enabled")),
-            browser_required=bool(fallback_policy.get("provider_requires_browser_runtime")),
+            browser_required=bool(
+                fallback_policy.get("provider_requires_browser_runtime")
+            ),
         )
         pack["doi_candidates"] = candidates
         pack["network_errors"] = errors
@@ -1754,8 +1789,14 @@ def prepare_manifest_discovery(
 
 
 def _compact_evidence_pack_summary(pack: Mapping[str, Any]) -> dict[str, Any]:
-    query_plan = pack.get("query_plan") if isinstance(pack.get("query_plan"), Mapping) else {}
-    candidates = pack.get("doi_candidates") if isinstance(pack.get("doi_candidates"), Mapping) else {}
+    query_plan = (
+        pack.get("query_plan") if isinstance(pack.get("query_plan"), Mapping) else {}
+    )
+    candidates = (
+        pack.get("doi_candidates")
+        if isinstance(pack.get("doi_candidates"), Mapping)
+        else {}
+    )
     summary: dict[str, Any] = {
         "provider": pack.get("provider"),
         "network_enabled": bool((pack.get("network") or {}).get("enabled"))
@@ -1813,7 +1854,9 @@ def _load_evidence_pack(path: Path) -> dict[str, Any]:
     return data
 
 
-def _candidate_list(evidence_pack: Mapping[str, Any], purpose: str) -> list[dict[str, Any]]:
+def _candidate_list(
+    evidence_pack: Mapping[str, Any], purpose: str
+) -> list[dict[str, Any]]:
     raw_candidates = evidence_pack.get("doi_candidates")
     if not isinstance(raw_candidates, Mapping):
         return []
@@ -1821,7 +1864,9 @@ def _candidate_list(evidence_pack: Mapping[str, Any], purpose: str) -> list[dict
     if not isinstance(items, list):
         return []
     candidates = [item for item in items if isinstance(item, dict)]
-    candidates.sort(key=lambda item: (-float(item.get("score") or 0), str(item.get("doi") or "")))
+    candidates.sort(
+        key=lambda item: (-float(item.get("score") or 0), str(item.get("doi") or ""))
+    )
     return candidates
 
 
@@ -1841,13 +1886,19 @@ def _best_high_confidence_candidate(
 
 
 def _autofix_default_routing(evidence_pack: Mapping[str, Any]) -> dict[str, Any]:
-    seed = evidence_pack.get("provider_seed") if isinstance(evidence_pack.get("provider_seed"), Mapping) else {}
+    seed = (
+        evidence_pack.get("provider_seed")
+        if isinstance(evidence_pack.get("provider_seed"), Mapping)
+        else {}
+    )
     provider = str(seed.get("name") or evidence_pack.get("provider") or "provider")
     domain = str(seed.get("domain") or "").strip()
     doi_prefix = str(seed.get("doi_prefix_hint") or "").strip()
     return {
         "primary": "doi_prefix" if doi_prefix else "domain",
-        "doi_prefixes": [doi_prefix if doi_prefix.endswith("/") else f"{doi_prefix}/"] if doi_prefix else [],
+        "doi_prefixes": [doi_prefix if doi_prefix.endswith("/") else f"{doi_prefix}/"]
+        if doi_prefix
+        else [],
         "domains": [domain] if domain else [],
         "domain_suffixes": [],
         "publisher_aliases": [provider.replace("_", " ")],
@@ -1880,7 +1931,8 @@ def _sample_from_candidate(
             f"{candidate.get('confidence', 'low')} confidence."
         ),
         "observed_signals": [
-            str(signal) for signal in candidate.get("observed_signals") or ["crossref_metadata"]
+            str(signal)
+            for signal in candidate.get("observed_signals") or ["crossref_metadata"]
         ],
         "confidence": str(candidate.get("confidence") or "low"),
     }
@@ -1892,7 +1944,11 @@ def _ensure_manifest_containers(
     changes: list[str],
 ) -> None:
     provider = str(manifest.get("name") or evidence_pack.get("provider") or "provider")
-    seed = evidence_pack.get("provider_seed") if isinstance(evidence_pack.get("provider_seed"), Mapping) else {}
+    seed = (
+        evidence_pack.get("provider_seed")
+        if isinstance(evidence_pack.get("provider_seed"), Mapping)
+        else {}
+    )
     domain = seed.get("domain") if isinstance(seed.get("domain"), str) else None
     if not manifest.get("schema_version"):
         manifest["schema_version"] = 1
@@ -2026,14 +2082,20 @@ def _autofix_doi_samples(
     evidence_pack: Mapping[str, Any],
     changes: list[str],
 ) -> None:
-    seed = evidence_pack.get("provider_seed") if isinstance(evidence_pack.get("provider_seed"), Mapping) else {}
+    seed = (
+        evidence_pack.get("provider_seed")
+        if isinstance(evidence_pack.get("provider_seed"), Mapping)
+        else {}
+    )
     domain = seed.get("domain") if isinstance(seed.get("domain"), str) else None
     doi_samples = manifest["fixtures"]["doi_samples"]
     for purpose in DOI_SAMPLE_PURPOSES:
         sample = doi_samples.get(purpose)
         if not isinstance(sample, dict):
             candidate = _best_high_confidence_candidate(evidence_pack, purpose)
-            doi_samples[purpose] = _sample_from_candidate(candidate, purpose=purpose, domain=domain)
+            doi_samples[purpose] = _sample_from_candidate(
+                candidate, purpose=purpose, domain=domain
+            )
             changes.append(f"fixtures.doi_samples.{purpose}")
             continue
         sample_doi = _normalize_doi_or_none(sample.get("doi"))
@@ -2042,7 +2104,9 @@ def _autofix_doi_samples(
         if (sample_doi is None or invalid_doi) and (
             candidate := _best_high_confidence_candidate(evidence_pack, purpose)
         ):
-            doi_samples[purpose] = _sample_from_candidate(candidate, purpose=purpose, domain=domain)
+            doi_samples[purpose] = _sample_from_candidate(
+                candidate, purpose=purpose, domain=domain
+            )
             changes.append(f"fixtures.doi_samples.{purpose}.doi")
             continue
         if invalid_doi and purpose not in REQUIRED_DISCOVERY_SAMPLE_PURPOSES:
@@ -2069,7 +2133,11 @@ def _autofix_discovery_proof(
     evidence_pack: Mapping[str, Any],
     changes: list[str],
 ) -> None:
-    query_plan = evidence_pack.get("query_plan") if isinstance(evidence_pack.get("query_plan"), Mapping) else {}
+    query_plan = (
+        evidence_pack.get("query_plan")
+        if isinstance(evidence_pack.get("query_plan"), Mapping)
+        else {}
+    )
     proof = manifest["fixtures"]["discovery_proof"]
     doi_samples = manifest["fixtures"]["doi_samples"]
     source_queries = manifest["generation"].setdefault("source_queries", [])
@@ -2093,7 +2161,9 @@ def _autofix_discovery_proof(
             if str(query).strip()
         ][:DISCOVERY_MAX_QUERIES_PER_PURPOSE]
         if len(queries) < 3:
-            provider = str(manifest.get("name") or evidence_pack.get("provider") or "provider")
+            provider = str(
+                manifest.get("name") or evidence_pack.get("provider") or "provider"
+            )
             fallback_plan = build_discovery_query_plan(
                 provider=provider,
                 domain=None,
@@ -2106,12 +2176,18 @@ def _autofix_discovery_proof(
             changes.append(f"fixtures.discovery_proof.{purpose}.queries")
             active_queries = queries
         else:
-            active_queries = [str(query) for query in existing_queries if str(query).strip()]
+            active_queries = [
+                str(query) for query in existing_queries if str(query).strip()
+            ]
         for query in active_queries:
             if query not in source_queries:
                 source_queries.append(query)
                 changes.append("generation.source_queries")
-        sample = doi_samples.get(purpose) if isinstance(doi_samples.get(purpose), dict) else {}
+        sample = (
+            doi_samples.get(purpose)
+            if isinstance(doi_samples.get(purpose), dict)
+            else {}
+        )
         sample_doi = _normalize_doi_or_none(sample.get("doi"))
         candidate_dois = [
             doi
@@ -2223,11 +2299,17 @@ def _autofix_contracts(
                 changes.append(f"markdown_contract.{purpose}.{key}")
     asset_contract = manifest["asset_contract"]
     figures = asset_contract.get("figures")
-    figure_sample = doi_samples.get("figure") if isinstance(doi_samples.get("figure"), dict) else {}
-    figure_signals = set(str(signal) for signal in figure_sample.get("observed_signals") or [])
+    figure_sample = (
+        doi_samples.get("figure") if isinstance(doi_samples.get("figure"), dict) else {}
+    )
+    figure_signals = set(
+        str(signal) for signal in figure_sample.get("observed_signals") or []
+    )
     if not figure_signals:
         for candidate in _candidate_list(evidence_pack, "figure")[:1]:
-            figure_signals.update(str(signal) for signal in candidate.get("observed_signals") or [])
+            figure_signals.update(
+                str(signal) for signal in candidate.get("observed_signals") or []
+            )
     if {"figures", "body_figures", "body_images"} & figure_signals:
         template = {
             "inline": "body",
@@ -2250,7 +2332,11 @@ def _autofix_contracts(
     else:
         for key, value in template.items():
             current = figures.get(key)
-            if key not in figures or current in ([], "") or (current is None and value is not None):
+            if (
+                key not in figures
+                or current in ([], "")
+                or (current is None and value is not None)
+            ):
                 figures[key] = value
                 changes.append(f"asset_contract.figures.{key}")
 
@@ -2325,17 +2411,35 @@ def inspect_manifest_discovery(
     manifest: Mapping[str, Any],
     evidence_pack: Mapping[str, Any],
 ) -> dict[str, Any]:
-    fixtures = manifest.get("fixtures") if isinstance(manifest.get("fixtures"), Mapping) else {}
-    doi_samples = fixtures.get("doi_samples") if isinstance(fixtures.get("doi_samples"), Mapping) else {}
-    proof = fixtures.get("discovery_proof") if isinstance(fixtures.get("discovery_proof"), Mapping) else {}
+    fixtures = (
+        manifest.get("fixtures")
+        if isinstance(manifest.get("fixtures"), Mapping)
+        else {}
+    )
+    doi_samples = (
+        fixtures.get("doi_samples")
+        if isinstance(fixtures.get("doi_samples"), Mapping)
+        else {}
+    )
+    proof = (
+        fixtures.get("discovery_proof")
+        if isinstance(fixtures.get("discovery_proof"), Mapping)
+        else {}
+    )
     purposes: dict[str, Any] = {}
     low_confidence: list[str] = []
     proof_gaps: list[dict[str, Any]] = []
     for purpose in DOI_SAMPLE_PURPOSES:
         candidates = _candidate_list(evidence_pack, purpose)
         top = candidates[0] if candidates else None
-        sample = doi_samples.get(purpose) if isinstance(doi_samples.get(purpose), Mapping) else {}
-        sample_confidence = sample.get("confidence") if isinstance(sample, Mapping) else None
+        sample = (
+            doi_samples.get(purpose)
+            if isinstance(doi_samples.get(purpose), Mapping)
+            else {}
+        )
+        sample_confidence = (
+            sample.get("confidence") if isinstance(sample, Mapping) else None
+        )
         purposes[purpose] = {
             "sample_doi": sample.get("doi") if isinstance(sample, Mapping) else None,
             "sample_confidence": sample_confidence,
@@ -2355,7 +2459,11 @@ def inspect_manifest_discovery(
             low_confidence.append(purpose)
     for purpose in MANDATORY_DISCOVERY_PROOF_PURPOSES:
         entry = proof.get(purpose) if isinstance(proof.get(purpose), Mapping) else None
-        sample = doi_samples.get(purpose) if isinstance(doi_samples.get(purpose), Mapping) else {}
+        sample = (
+            doi_samples.get(purpose)
+            if isinstance(doi_samples.get(purpose), Mapping)
+            else {}
+        )
         if entry is None:
             proof_gaps.append({"purpose": purpose, "gap": "missing_discovery_proof"})
             continue
@@ -2364,7 +2472,11 @@ def inspect_manifest_discovery(
         if entry.get("selected_doi") != sample.get("doi"):
             proof_gaps.append({"purpose": purpose, "gap": "selected_doi_mismatch"})
         candidates = entry.get("candidates") or []
-        rejections = entry.get("rejections") if isinstance(entry.get("rejections"), Mapping) else {}
+        rejections = (
+            entry.get("rejections")
+            if isinstance(entry.get("rejections"), Mapping)
+            else {}
+        )
         for candidate in candidates:
             if candidate != entry.get("selected_doi") and candidate not in rejections:
                 proof_gaps.append(
@@ -2524,7 +2636,11 @@ def _compact_cleaning_proposal_for_brief(provider: str) -> dict[str, Any]:
     except yaml.YAMLError as exc:
         return {**base, "status": "invalid_yaml", "error": str(exc)}
     if not isinstance(proposal, dict):
-        return {**base, "status": "invalid_shape", "error": "proposal root is not a mapping"}
+        return {
+            **base,
+            "status": "invalid_shape",
+            "error": "proposal root is not a mapping",
+        }
     if proposal.get("schema_version") != 2:
         return {
             **base,
@@ -2651,7 +2767,9 @@ def build_implementation_brief(
                 f"python3 scripts/propose_cleaning_chain.py --provider {provider_name} --check-contract",
             ],
             "live_review": {
-                "required_for_provider_acceptance": _provider_requires_live_review(provider_name),
+                "required_for_provider_acceptance": _provider_requires_live_review(
+                    provider_name
+                ),
                 "policy": (
                     "Future providers default to one provider subset live assets review; "
                     "legacy non-risk providers are exempt."
@@ -2664,7 +2782,9 @@ def build_implementation_brief(
                 "markdown_contract": "provider_manifest.markdown_contract",
             },
         },
-        "files_allowed_to_modify": _implementation_allowed_files(provider_name, manifest),
+        "files_allowed_to_modify": _implementation_allowed_files(
+            provider_name, manifest
+        ),
         "files_must_not_modify": _implementation_forbidden_files(),
         "failure_recovery": {
             "policy": FAILURE_RECOVERY_PATH,
@@ -2802,7 +2922,25 @@ def _yaml_scalar(value: Any) -> str:
         return json.dumps(text)
     if text in {"-", "?", ":"} or text.startswith(("- ", "? ", ": ")):
         return json.dumps(text)
-    if any(char in text for char in [":", "#", "{", "}", "[", "]", ",", "&", "*", "!", "|", ">", "'", '"']):
+    if any(
+        char in text
+        for char in [
+            ":",
+            "#",
+            "{",
+            "}",
+            "[",
+            "]",
+            ",",
+            "&",
+            "*",
+            "!",
+            "|",
+            ">",
+            "'",
+            '"',
+        ]
+    ):
         return json.dumps(text)
     if text.lower() in {"null", "true", "false", "yes", "no"}:
         return json.dumps(text)
@@ -2969,7 +3107,9 @@ def _provider_requires_live_review(provider: str) -> bool:
     except ToolError:
         return provider_name not in LEGACY_LIVE_REVIEW_EXEMPT_PROVIDERS
     probe = manifest.get("probe") if isinstance(manifest.get("probe"), dict) else {}
-    if bool(probe.get("requires_browser_runtime")) or bool(probe.get("requires_playwright")):
+    if bool(probe.get("requires_browser_runtime")) or bool(
+        probe.get("requires_playwright")
+    ):
         return True
     return provider_name not in LEGACY_LIVE_REVIEW_EXEMPT_PROVIDERS
 
@@ -3001,8 +3141,14 @@ def _manifest_dois(manifest: dict[str, Any]) -> list[str]:
             seen.add(doi)
             dois.append(doi)
 
-    fixtures = manifest.get("fixtures") if isinstance(manifest.get("fixtures"), dict) else {}
-    doi_samples = fixtures.get("doi_samples") if isinstance(fixtures.get("doi_samples"), dict) else {}
+    fixtures = (
+        manifest.get("fixtures") if isinstance(manifest.get("fixtures"), dict) else {}
+    )
+    doi_samples = (
+        fixtures.get("doi_samples")
+        if isinstance(fixtures.get("doi_samples"), dict)
+        else {}
+    )
     for sample in doi_samples.values():
         if isinstance(sample, dict):
             add(sample.get("doi"))
@@ -3015,7 +3161,9 @@ def _manifest_dois(manifest: dict[str, Any]) -> list[str]:
     return dois
 
 
-def _snapshot_expected_commands(provider: str, manifest_path: str | None = None) -> list[list[str]]:
+def _snapshot_expected_commands(
+    provider: str, manifest_path: str | None = None
+) -> list[list[str]]:
     if manifest_path is None:
         path = _manifest_path_for_provider(provider)
     else:
@@ -3065,9 +3213,19 @@ def _utc_now_iso() -> str:
 
 def _manifest_review_samples(manifest: dict[str, Any]) -> list[dict[str, Any]]:
     samples: list[dict[str, Any]] = []
-    contracts = manifest.get("markdown_contract") if isinstance(manifest.get("markdown_contract"), dict) else {}
-    fixtures = manifest.get("fixtures") if isinstance(manifest.get("fixtures"), dict) else {}
-    doi_samples = fixtures.get("doi_samples") if isinstance(fixtures.get("doi_samples"), dict) else {}
+    contracts = (
+        manifest.get("markdown_contract")
+        if isinstance(manifest.get("markdown_contract"), dict)
+        else {}
+    )
+    fixtures = (
+        manifest.get("fixtures") if isinstance(manifest.get("fixtures"), dict) else {}
+    )
+    doi_samples = (
+        fixtures.get("doi_samples")
+        if isinstance(fixtures.get("doi_samples"), dict)
+        else {}
+    )
     for purpose, sample in doi_samples.items():
         if not isinstance(sample, dict) or not sample.get("doi"):
             continue
@@ -3112,7 +3270,9 @@ def _assertions_from_markdown_contract(contract: dict[str, Any]) -> list[str]:
     return assertions or ["baseline Markdown passed final batch review"]
 
 
-def _contract_issues_for_markdown(contract: dict[str, Any], markdown_text: str) -> list[dict[str, str]]:
+def _contract_issues_for_markdown(
+    contract: dict[str, Any], markdown_text: str
+) -> list[dict[str, str]]:
     issues: list[dict[str, str]] = []
     for index, value in enumerate(contract.get("must_include") or (), start=1):
         if str(value) not in markdown_text:
@@ -3195,7 +3355,11 @@ def _review_fixture_assets(
     }
     for key, path in paths.items():
         if not path.is_file():
-            code = "MARKDOWN_QUALITY_FAILED" if key in {"prompt", "quality"} else "EXPECTED_SNAPSHOT_FAILED"
+            code = (
+                "MARKDOWN_QUALITY_FAILED"
+                if key in {"prompt", "quality"}
+                else "EXPECTED_SNAPSHOT_FAILED"
+            )
             raise ToolError(
                 code,
                 f"final review requires fixture artifact {path.name}.",
@@ -3293,13 +3457,21 @@ def build_human_preflight_digest(
         if isinstance(item, dict)
     }
     missing_purposes = [
-        purpose
-        for purpose in DOI_SAMPLE_PURPOSES
-        if purpose not in purpose_status
+        purpose for purpose in DOI_SAMPLE_PURPOSES if purpose not in purpose_status
     ]
-    route_contract = manifest.get("route_contract") if isinstance(manifest.get("route_contract"), dict) else {}
-    route_sources = manifest.get("route_sources") if isinstance(manifest.get("route_sources"), dict) else {}
-    main_path = manifest.get("main_path") if isinstance(manifest.get("main_path"), list) else []
+    route_contract = (
+        manifest.get("route_contract")
+        if isinstance(manifest.get("route_contract"), dict)
+        else {}
+    )
+    route_sources = (
+        manifest.get("route_sources")
+        if isinstance(manifest.get("route_sources"), dict)
+        else {}
+    )
+    main_path = (
+        manifest.get("main_path") if isinstance(manifest.get("main_path"), list) else []
+    )
     waterfall = [
         {
             "step": step,
@@ -3402,7 +3574,9 @@ def finalize_review_artifact(
             "provider": provider_name,
             "fixtures": [],
         }
-    existing_items = review.get("fixtures") if isinstance(review.get("fixtures"), list) else []
+    existing_items = (
+        review.get("fixtures") if isinstance(review.get("fixtures"), list) else []
+    )
     existing = {
         (str(item.get("purpose")), _normalized_doi(str(item.get("doi") or ""))): item
         for item in existing_items
@@ -3413,7 +3587,9 @@ def finalize_review_artifact(
     for sample in samples:
         purpose = str(sample["purpose"])
         doi = str(sample["doi"])
-        assets = _review_fixture_assets(provider=provider_name, doi=doi, task_id=task_id)
+        assets = _review_fixture_assets(
+            provider=provider_name, doi=doi, task_id=task_id
+        )
         quality = _quality_report_for_final_review(
             provider=provider_name,
             doi=doi,
@@ -3450,7 +3626,9 @@ def finalize_review_artifact(
                 )
             fresh_reports.append(_rel(fresh.report_path))
         markdown_text = assets["markdown"].read_text(encoding="utf-8", errors="replace")
-        contract_issues = _contract_issues_for_markdown(sample["contract"], markdown_text)
+        contract_issues = _contract_issues_for_markdown(
+            sample["contract"], markdown_text
+        )
         if contract_issues:
             raise ToolError(
                 "MARKDOWN_CONTRACT_DRIFT",
@@ -3484,7 +3662,8 @@ def finalize_review_artifact(
                 "markdown_semantic_reviewed": True,
                 "issues": [],
                 "assertions": current.get("assertions")
-                if isinstance(current.get("assertions"), list) and current.get("assertions")
+                if isinstance(current.get("assertions"), list)
+                and current.get("assertions")
                 else _assertions_from_markdown_contract(sample["contract"]),
                 "fixes": [],
             }
@@ -3513,7 +3692,9 @@ def finalize_review_artifact(
     }
 
 
-def _verify_commands(provider: str, task: str, *, include_live: bool = True) -> list[list[str]]:
+def _verify_commands(
+    provider: str, task: str, *, include_live: bool = True
+) -> list[list[str]]:
     provider_name = _provider_slug(provider)
     command_map: dict[str, list[list[str]]] = {
         ACCESS_PREFLIGHT_STEP: [
@@ -3714,7 +3895,11 @@ def _verify_commands(provider: str, task: str, *, include_live: bool = True) -> 
     }
     if task == SNAPSHOT_EXPECTED_STEP:
         return _snapshot_expected_commands(provider_name)
-    if include_live and task == "provider-local-acceptance" and _provider_requires_live_review(provider_name):
+    if (
+        include_live
+        and task == "provider-local-acceptance"
+        and _provider_requires_live_review(provider_name)
+    ):
         command_map["provider-local-acceptance"].append(
             [
                 "PAPER_FETCH_RUN_LIVE=1",
@@ -3737,7 +3922,10 @@ def _load_golden_manifest() -> dict[str, Any]:
             "golden criteria manifest cannot be loaded.",
             retryable=True,
             task_id=SNAPSHOT_EXPECTED_STEP,
-            details={"path": path.relative_to(_repo_root()).as_posix(), "reason": str(exc)},
+            details={
+                "path": path.relative_to(_repo_root()).as_posix(),
+                "reason": str(exc),
+            },
         ) from exc
     if not isinstance(data, dict) or not isinstance(data.get("samples"), dict):
         raise ToolError(
@@ -3750,7 +3938,9 @@ def _load_golden_manifest() -> dict[str, Any]:
     return data
 
 
-def _golden_sample_for_doi(doi: str, manifest: dict[str, Any]) -> tuple[str, dict[str, Any]] | None:
+def _golden_sample_for_doi(
+    doi: str, manifest: dict[str, Any]
+) -> tuple[str, dict[str, Any]] | None:
     slug = _doi_slug(doi)
     samples = manifest.get("samples", {})
     sample = samples.get(slug)
@@ -3758,7 +3948,10 @@ def _golden_sample_for_doi(doi: str, manifest: dict[str, Any]) -> tuple[str, dic
         return slug, sample
     normalized = _normalized_doi(doi)
     for sample_id, item in samples.items():
-        if isinstance(item, dict) and _normalized_doi(str(item.get("doi") or "")) == normalized:
+        if (
+            isinstance(item, dict)
+            and _normalized_doi(str(item.get("doi") or "")) == normalized
+        ):
             return str(sample_id), item
     return None
 
@@ -3771,7 +3964,13 @@ def _fixture_root_for_sample(sample_id: str, sample: dict[str, Any]) -> Path:
             path = _repo_root() / str(value)
             if "tests/fixtures/block/" in path.as_posix():
                 return path.parent
-        return _repo_root() / "tests" / "fixtures" / "block" / sample_id.removesuffix("__block")
+        return (
+            _repo_root()
+            / "tests"
+            / "fixtures"
+            / "block"
+            / sample_id.removesuffix("__block")
+        )
     return _repo_root() / "tests" / "fixtures" / "golden_criteria" / sample_id
 
 
@@ -3782,7 +3981,9 @@ def _rel(path: Path) -> str:
         return path.as_posix()
 
 
-def _read_json_object(path: Path, *, code: str, task_id: str, provider: str | None = None) -> dict[str, Any]:
+def _read_json_object(
+    path: Path, *, code: str, task_id: str, provider: str | None = None
+) -> dict[str, Any]:
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
@@ -3835,7 +4036,9 @@ def _fresh_markdown_quality_attempt_dir(
     doi: str,
     output_dir: Path | None,
 ) -> Path:
-    base_dir = output_dir or (_repo_root() / f".paper-fetch-runs/{provider}-markdown-quality-audit")
+    base_dir = output_dir or (
+        _repo_root() / f".paper-fetch-runs/{provider}-markdown-quality-audit"
+    )
     if not base_dir.is_absolute():
         base_dir = _repo_root() / base_dir
     review_root = base_dir / _doi_slug(doi)
@@ -3937,7 +4140,9 @@ def _run_fresh_markdown_quality_review(
     if not report_path.is_file():
         stdout_report = _parse_json_object_from_stdout(completed.stdout)
         if stdout_report is not None:
-            write_text(report_path, json.dumps(stdout_report, indent=2, sort_keys=True) + "\n")
+            write_text(
+                report_path, json.dumps(stdout_report, indent=2, sort_keys=True) + "\n"
+            )
     if not report_path.is_file():
         raise ToolError(
             "MARKDOWN_QUALITY_FAILED",
@@ -3995,13 +4200,19 @@ def _run_fresh_markdown_quality_review(
     )
 
 
-def _fresh_markdown_quality_blocking_issues(report: dict[str, Any]) -> list[dict[str, Any]]:
+def _fresh_markdown_quality_blocking_issues(
+    report: dict[str, Any],
+) -> list[dict[str, Any]]:
     blocking = blocking_markdown_quality_issues(report)
     if blocking:
         return blocking
     if report.get("status") == "fail":
         issues = report.get("issues")
-        return [issue for issue in issues if isinstance(issue, dict)] if isinstance(issues, list) else []
+        return (
+            [issue for issue in issues if isinstance(issue, dict)]
+            if isinstance(issues, list)
+            else []
+        )
     return []
 
 
@@ -4042,8 +4253,14 @@ def _manifest_fixture_for_doi(
     normalized = _normalized_doi(doi)
     manifest_contract = manifest.get("markdown_contract")
     manifest_contract = manifest_contract if isinstance(manifest_contract, dict) else {}
-    fixtures = manifest.get("fixtures") if isinstance(manifest.get("fixtures"), dict) else {}
-    doi_samples = fixtures.get("doi_samples") if isinstance(fixtures.get("doi_samples"), dict) else {}
+    fixtures = (
+        manifest.get("fixtures") if isinstance(manifest.get("fixtures"), dict) else {}
+    )
+    doi_samples = (
+        fixtures.get("doi_samples")
+        if isinstance(fixtures.get("doi_samples"), dict)
+        else {}
+    )
     for purpose, sample in doi_samples.items():
         if not isinstance(sample, dict):
             continue
@@ -4108,10 +4325,26 @@ def _load_markdown_repair_context(
     prompt_path = fixture_root / "markdown-quality-prompt.md"
     quality_path = fixture_root / "markdown-quality.json"
     for path, error_code, message in (
-        (expected_path, "EXPECTED_SNAPSHOT_FAILED", "expected snapshot file is missing."),
-        (markdown_path, "EXPECTED_SNAPSHOT_FAILED", "extracted Markdown baseline is missing."),
-        (prompt_path, "MARKDOWN_QUALITY_FAILED", "Markdown quality agent prompt is missing."),
-        (quality_path, "MARKDOWN_QUALITY_FAILED", "Markdown quality report is missing."),
+        (
+            expected_path,
+            "EXPECTED_SNAPSHOT_FAILED",
+            "expected snapshot file is missing.",
+        ),
+        (
+            markdown_path,
+            "EXPECTED_SNAPSHOT_FAILED",
+            "extracted Markdown baseline is missing.",
+        ),
+        (
+            prompt_path,
+            "MARKDOWN_QUALITY_FAILED",
+            "Markdown quality agent prompt is missing.",
+        ),
+        (
+            quality_path,
+            "MARKDOWN_QUALITY_FAILED",
+            "Markdown quality report is missing.",
+        ),
     ):
         if not path.is_file():
             raise ToolError(
@@ -4166,7 +4399,11 @@ def _load_markdown_repair_context(
         )
     effective_quality = quality_report_override or quality
     blocking_issues = blocking_markdown_quality_issues(effective_quality)
-    if effective_quality.get("status") == "pass" and not blocking_issues and not allow_passing_report:
+    if (
+        effective_quality.get("status") == "pass"
+        and not blocking_issues
+        and not allow_passing_report
+    ):
         raise ToolError(
             "MARKDOWN_QUALITY_REPAIR_NOT_REQUIRED",
             "Markdown quality report is already passing.",
@@ -4174,12 +4411,17 @@ def _load_markdown_repair_context(
             provider=provider_name,
             manifest=default_manifest_path(provider_name),
             task_id=task_id,
-            details={"doi": normalized_doi, "markdown_quality_path": _rel(quality_path)},
+            details={
+                "doi": normalized_doi,
+                "markdown_quality_path": _rel(quality_path),
+            },
         )
     if (
         effective_quality.get("status") != "fail"
         and not blocking_issues
-        and not (allow_pending_report and effective_quality.get("status") == PENDING_STATUS)
+        and not (
+            allow_pending_report and effective_quality.get("status") == PENDING_STATUS
+        )
         and not allow_passing_report
     ):
         raise ToolError(
@@ -4223,7 +4465,11 @@ def _markdown_repair_issues(report: dict[str, Any]) -> list[dict[str, Any]]:
     if blocking:
         return blocking
     issues = report.get("issues")
-    return [issue for issue in issues if isinstance(issue, dict)] if isinstance(issues, list) else []
+    return (
+        [issue for issue in issues if isinstance(issue, dict)]
+        if isinstance(issues, list)
+        else []
+    )
 
 
 def _infer_markdown_repair_domains(issues: list[dict[str, Any]]) -> list[str]:
@@ -4235,22 +4481,33 @@ def _infer_markdown_repair_domains(issues: list[dict[str, Any]]) -> list[str]:
 
     for issue in issues:
         text = " ".join(
-            str(issue.get(field) or "")
-            for field in ("id", "summary", "evidence")
+            str(issue.get(field) or "") for field in ("id", "summary", "evidence")
         ).lower()
         if re.search(r"\b(table|row|column|cell|header)\b|\|", text):
             add("table")
         if re.search(r"\b(formula|equation|math|latex|tex)\b", text):
             add("formula")
-        if re.search(r"\b(figure|fig\.|image|caption|asset|media|supplementary)\b", text):
+        if re.search(
+            r"\b(figure|fig\.|image|caption|asset|media|supplementary)\b", text
+        ):
             add("figure/asset")
-        if re.search(r"\b(reference|references|citation|bibliography|doi-only|scholar)\b", text):
+        if re.search(
+            r"\b(reference|references|citation|bibliography|doi-only|scholar)\b", text
+        ):
             add("references")
-        if re.search(r"\b(chrome|boilerplate|navigation|cookie|license|download|toolbar|metrics)\b", text):
+        if re.search(
+            r"\b(chrome|boilerplate|navigation|cookie|license|download|toolbar|metrics)\b",
+            text,
+        ):
             add("chrome/boilerplate")
-        if re.search(r"javascript|template|placeholder|unresolved|\{\{|ocr|noise", text):
+        if re.search(
+            r"javascript|template|placeholder|unresolved|\{\{|ocr|noise", text
+        ):
             add("javascript/unresolved text")
-        if re.search(r"\b(duplicate|duplicated|missing|section|abstract|title|body|empty)\b", text):
+        if re.search(
+            r"\b(duplicate|duplicated|missing|section|abstract|title|body|empty)\b",
+            text,
+        ):
             add("duplicate/missing section")
     if not matches:
         matches.append("generic markdown corruption")
@@ -4268,7 +4525,9 @@ def _provider_owned_repair_scope(ctx: MarkdownQualityRepairContext) -> list[str]
     ]
 
 
-def _markdown_repair_allowed_scope(ctx: MarkdownQualityRepairContext, domains: list[str]) -> list[str]:
+def _markdown_repair_allowed_scope(
+    ctx: MarkdownQualityRepairContext, domains: list[str]
+) -> list[str]:
     allowed = _provider_owned_repair_scope(ctx)
     for domain in domains:
         for path in SHARED_MARKDOWN_REPAIR_SCOPES.get(domain, []):
@@ -4328,7 +4587,11 @@ def _markdown_repair_brief(
     domains: list[str],
     allowed_scope: list[str],
 ) -> dict[str, Any]:
-    assets = ctx.golden_sample.get("assets") if isinstance(ctx.golden_sample.get("assets"), dict) else {}
+    assets = (
+        ctx.golden_sample.get("assets")
+        if isinstance(ctx.golden_sample.get("assets"), dict)
+        else {}
+    )
     issues = _markdown_repair_issues(ctx.quality_report)
     issue_payload = [
         {
@@ -4364,7 +4627,9 @@ def _markdown_repair_brief(
             "markdown_sha256": _sha256_file(ctx.markdown_path),
             "quality_prompt": _rel(ctx.prompt_path),
             "quality_report": _rel(ctx.quality_path),
-            "fresh_quality_report": _rel(ctx.fresh_quality_path) if ctx.fresh_quality_path else None,
+            "fresh_quality_report": _rel(ctx.fresh_quality_path)
+            if ctx.fresh_quality_path
+            else None,
             "assets": assets,
         },
         "markdown_contract": ctx.markdown_contract,
@@ -4515,7 +4780,9 @@ def check_cleaning_proposal_freshness(
             task_id=f"{provider_name}-{PROPOSE_CLEANING_STEP}",
             details={
                 "proposal": path.as_posix(),
-                "schema_version": proposal.get("schema_version") if isinstance(proposal, dict) else None,
+                "schema_version": proposal.get("schema_version")
+                if isinstance(proposal, dict)
+                else None,
                 "recovery_task": PROPOSE_CLEANING_STEP,
                 "reason": "proposal_schema_not_compact",
             },
@@ -4600,7 +4867,9 @@ def check_cleaning_proposal_freshness(
     }
 
 
-def _command_failed(command: list[str], completed: subprocess.CompletedProcess[str]) -> bool:
+def _command_failed(
+    command: list[str], completed: subprocess.CompletedProcess[str]
+) -> bool:
     argv = _command_argv(command)
     if len(argv) >= 2 and argv[0] == "git" and argv[1] == "grep":
         return completed.returncode != 1
@@ -4614,7 +4883,9 @@ def _tail(text: str, limit: int = 4000) -> str:
 
 
 def _command_argv(command: list[str]) -> list[str]:
-    return [part for part in command if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*=.*", part)]
+    return [
+        part for part in command if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*=.*", part)
+    ]
 
 
 def _is_cleaning_contract_command(command: list[str]) -> bool:
@@ -4689,7 +4960,8 @@ def _latest_failure(provider_state: dict[str, Any]) -> dict[str, Any] | None:
     ordered_tasks.extend(
         str(task)
         for task, status in task_statuses.items()
-        if status in {"failed", "blocked"} and (not isinstance(steps, list) or task not in steps)
+        if status in {"failed", "blocked"}
+        and (not isinstance(steps, list) or task not in steps)
     )
     seen: set[str] = set()
     for task in ordered_tasks:
@@ -4795,12 +5067,8 @@ AGENT_FAILURE_USER_ACTIONS = {
     "NON_PDF_FALLBACK_CONTENT": (
         "PDF fallback 样本不是 PDF；我会重新找 pdf_fallback 样本。"
     ),
-    "ACCESS_GATE_CAPTURED": (
-        "样本捕获到 access gate；我会替换失败 purpose 的 DOI。"
-    ),
-    "EMPTY_ARTICLE_SHELL": (
-        "样本捕获到空文章壳；我会替换失败 purpose 的 DOI。"
-    ),
+    "ACCESS_GATE_CAPTURED": ("样本捕获到 access gate；我会替换失败 purpose 的 DOI。"),
+    "EMPTY_ARTICLE_SHELL": ("样本捕获到空文章壳；我会替换失败 purpose 的 DOI。"),
     "MARKDOWN_CONTRACT_DRIFT": (
         "Markdown contract 与当前 fixture 不一致；我会先刷新 cleaning proposal 或回到实现修复。"
     ),
@@ -4816,9 +5084,7 @@ AGENT_FAILURE_USER_ACTIONS = {
     "SHARED_INTEGRATION_FAILED": (
         "shared integration 验证失败；我会只修有 manifest/fixture/test 证据支持的 shared surface。"
     ),
-    "GLOBAL_LINT_FAILED": (
-        "全局本地检查失败；我只修当前 provider 引入的问题。"
-    ),
+    "GLOBAL_LINT_FAILED": ("全局本地检查失败；我只修当前 provider 引入的问题。"),
     "WORKER_MODIFIED_FORBIDDEN_FILE": (
         "worker 修改了不该改的文件；我会停下保护工作区并说明越界路径。"
     ),
@@ -4831,7 +5097,9 @@ AGENT_FAILURE_USER_ACTIONS = {
 }
 
 
-def _latest_markdown_quality_repair(provider_state: dict[str, Any]) -> dict[str, Any] | None:
+def _latest_markdown_quality_repair(
+    provider_state: dict[str, Any],
+) -> dict[str, Any] | None:
     repairs = provider_state.get("repairs")
     if not isinstance(repairs, dict):
         return None
@@ -4848,7 +5116,9 @@ def diagnose_provider_state(provider_state: dict[str, Any]) -> dict[str, Any]:
     failure = _latest_failure(provider_state)
     failure_code = str(failure.get("code")) if failure and failure.get("code") else None
     recovery = recovery_entries.get(failure_code or "", {})
-    retryable = bool(recovery.get("retryable")) if failure_code in recovery_entries else None
+    retryable = (
+        bool(recovery.get("retryable")) if failure_code in recovery_entries else None
+    )
     operator_required = (
         failure_code in OPERATOR_REQUIRED_FAILURE_CODES
         if failure_code is not None
@@ -4869,7 +5139,9 @@ def diagnose_provider_state(provider_state: dict[str, Any]) -> dict[str, Any]:
             "action": recovery.get("action"),
         },
         "access_review": access,
-        "recent_markdown_quality_repair": _latest_markdown_quality_repair(provider_state),
+        "recent_markdown_quality_repair": _latest_markdown_quality_repair(
+            provider_state
+        ),
         "operator_required": operator_required,
     }
 
@@ -4889,13 +5161,13 @@ def plan_resume_blocked(provider_state: dict[str, Any]) -> dict[str, Any]:
         blockers.append(f"failure code is not retryable: {code}")
     access = diagnosis["access_review"]
     if not access.get("approved"):
-        blockers.append(
-            f"access review is not approved: {access.get('status')}"
-        )
+        blockers.append(f"access review is not approved: {access.get('status')}")
     if code in OPERATOR_REQUIRED_FAILURE_CODES:
         blockers.append(f"operator action required for failure code: {code}")
     if code == "UNSUITABLE_DOI_SAMPLE":
-        blockers.append("failed DOI purpose must be replaced or explicitly approved before retry")
+        blockers.append(
+            "failed DOI purpose must be replaced or explicitly approved before retry"
+        )
     if code == "NON_PDF_FALLBACK_CONTENT":
         blockers.append("failed pdf_fallback DOI sample must be replaced before retry")
     if code == "BROWSER_RUNTIME_REQUIRED":
@@ -5306,13 +5578,19 @@ def _matches_forbidden(path: str, forbidden: list[str]) -> bool:
             if normalized == base or normalized.startswith(base + "/"):
                 return True
             continue
-        if normalized == pattern.strip("/") or normalized.startswith(pattern.strip("/") + "/"):
+        if normalized == pattern.strip("/") or normalized.startswith(
+            pattern.strip("/") + "/"
+        ):
             return True
     return False
 
 
-def _forbidden_changes(before: set[str], after: set[str], forbidden: list[str]) -> list[str]:
-    return sorted(path for path in after - before if _matches_forbidden(path, forbidden))
+def _forbidden_changes(
+    before: set[str], after: set[str], forbidden: list[str]
+) -> list[str]:
+    return sorted(
+        path for path in after - before if _matches_forbidden(path, forbidden)
+    )
 
 
 def _matches_scope(path: str, scope: list[str]) -> bool:
@@ -5336,7 +5614,9 @@ def _matches_scope(path: str, scope: list[str]) -> bool:
     return False
 
 
-def _disallowed_changes(before: set[str], after: set[str], allowed: list[str]) -> list[str]:
+def _disallowed_changes(
+    before: set[str], after: set[str], allowed: list[str]
+) -> list[str]:
     return sorted(path for path in after - before if not _matches_scope(path, allowed))
 
 
@@ -5398,9 +5678,7 @@ def _worker_prompt(
     if task == DISCOVER_STEP:
         evidence_ref = brief.get("evidence_pack")
         evidence_path_value = (
-            evidence_ref.get("path")
-            if isinstance(evidence_ref, dict)
-            else evidence_ref
+            evidence_ref.get("path") if isinstance(evidence_ref, dict) else evidence_ref
         )
         if isinstance(evidence_path_value, str):
             evidence_path = Path(evidence_path_value)
@@ -5444,7 +5722,9 @@ def _worker_prompt(
                 ]
             )
     if task == IMPLEMENT_STEP:
-        manifest_path = root / str(brief.get("provider_manifest") or default_manifest_path(provider))
+        manifest_path = root / str(
+            brief.get("provider_manifest") or default_manifest_path(provider)
+        )
         if manifest_path.exists():
             parts.extend(
                 [
@@ -5535,7 +5815,9 @@ def _dispatch_worker(
                 task_id=f"{provider}-{task}",
                 details=last_failure,
             )
-        disallowed_paths = _disallowed_changes(before, after, allowed) if allowed else []
+        disallowed_paths = (
+            _disallowed_changes(before, after, allowed) if allowed else []
+        )
         if disallowed_paths:
             retry_counts[task] = attempt
             last_failure = {
@@ -5695,7 +5977,9 @@ def _execute_local_task(
     state_path: Path | None = None,
     output_dir: Path | None = None,
 ) -> None:
-    manifest_path = str(provider_state.get("manifest") or default_manifest_path(provider))
+    manifest_path = str(
+        provider_state.get("manifest") or default_manifest_path(provider)
+    )
     commands = _run_task_commands(provider, task, manifest=manifest_path)
     if task in {ACCESS_PREFLIGHT_STEP, DISCOVER_STEP}:
         try:
@@ -5762,7 +6046,13 @@ def _execute_local_task(
                         }
                         if structured:
                             failure["structured_error"] = structured
-                        _record_run(provider_state, task=task, commands=commands, result="failed", failure=failure)
+                        _record_run(
+                            provider_state,
+                            task=task,
+                            commands=commands,
+                            result="failed",
+                            failure=failure,
+                        )
                         raise ToolError(
                             exc.code,
                             "snapshot Markdown quality auto-repair failed.",
@@ -5774,12 +6064,16 @@ def _execute_local_task(
                         ) from exc
                     if state is not None:
                         fresh_state = _load_state(state_path)
-                        fresh_provider_state = fresh_state.get("providers", {}).get(provider)
+                        fresh_provider_state = fresh_state.get("providers", {}).get(
+                            provider
+                        )
                         if isinstance(fresh_provider_state, dict):
                             provider_state.clear()
                             provider_state.update(fresh_provider_state)
                             state["agent_cli"] = fresh_state.get("agent_cli")
-                            state["active_provider"] = fresh_state.get("active_provider")
+                            state["active_provider"] = fresh_state.get(
+                                "active_provider"
+                            )
                             state.setdefault("providers", {})[provider] = provider_state
                     completed = _run_env_command(command)
                     if not _command_failed(command, completed):
@@ -5788,7 +6082,10 @@ def _execute_local_task(
                     structured = _payload_from_stderr(completed.stderr)
                     if structured and isinstance(structured.get("code"), str):
                         failure_code = str(structured["code"])
-            if task == "validate-manifest" and failure_code == "MANIFEST_SCHEMA_INVALID":
+            if (
+                task == "validate-manifest"
+                and failure_code == "MANIFEST_SCHEMA_INVALID"
+            ):
                 targeted_autofix = _autofix_manifest_for_runner(
                     provider=provider,
                     manifest=manifest_path,
@@ -5819,7 +6116,13 @@ def _execute_local_task(
                 contract_payload = _payload_from_stdout_yaml(completed.stdout)
                 if contract_payload is not None:
                     failure["contract_check"] = contract_payload
-            _record_run(provider_state, task=task, commands=commands, result="failed", failure=failure)
+            _record_run(
+                provider_state,
+                task=task,
+                commands=commands,
+                result="failed",
+                failure=failure,
+            )
             raise ToolError(
                 failure_code,
                 f"onboarding run failed for task {task}.",
@@ -5841,7 +6144,9 @@ def run_run(args: argparse.Namespace) -> int:
             domain=args.domain,
             doi_prefix=args.doi_prefix,
         )
-    output_dir = Path(args.output_dir or f".paper-fetch-runs/{source.provider}-onboarding")
+    output_dir = Path(
+        args.output_dir or f".paper-fetch-runs/{source.provider}-onboarding"
+    )
     if not output_dir.is_absolute():
         output_dir = _repo_root() / output_dir
     step_ids = _dag_step_ids(source.include_discovery)
@@ -6111,7 +6416,10 @@ def run_check_snapshot(args: argparse.Namespace) -> int:
             provider=provider,
             manifest=default_manifest_path(provider),
             task_id=f"{provider}-{SNAPSHOT_EXPECTED_STEP}",
-            details={"doi": doi, "fixture_dir": fixture_root.relative_to(_repo_root()).as_posix()},
+            details={
+                "doi": doi,
+                "fixture_dir": fixture_root.relative_to(_repo_root()).as_posix(),
+            },
         )
     if not expected_path.is_file():
         raise ToolError(
@@ -6121,7 +6429,10 @@ def run_check_snapshot(args: argparse.Namespace) -> int:
             provider=provider,
             manifest=default_manifest_path(provider),
             task_id=f"{provider}-{SNAPSHOT_EXPECTED_STEP}",
-            details={"doi": doi, "expected_path": expected_path.relative_to(_repo_root()).as_posix()},
+            details={
+                "doi": doi,
+                "expected_path": expected_path.relative_to(_repo_root()).as_posix(),
+            },
         )
     if not markdown_path.is_file():
         raise ToolError(
@@ -6131,7 +6442,12 @@ def run_check_snapshot(args: argparse.Namespace) -> int:
             provider=provider,
             manifest=default_manifest_path(provider),
             task_id=f"{provider}-{SNAPSHOT_EXPECTED_STEP}",
-            details={"doi": doi, "baseline_markdown_path": markdown_path.relative_to(_repo_root()).as_posix()},
+            details={
+                "doi": doi,
+                "baseline_markdown_path": markdown_path.relative_to(
+                    _repo_root()
+                ).as_posix(),
+            },
         )
     if not prompt_path.is_file():
         raise ToolError(
@@ -6141,7 +6457,12 @@ def run_check_snapshot(args: argparse.Namespace) -> int:
             provider=provider,
             manifest=default_manifest_path(provider),
             task_id=f"{provider}-{SNAPSHOT_EXPECTED_STEP}",
-            details={"doi": doi, "markdown_quality_prompt_path": prompt_path.relative_to(_repo_root()).as_posix()},
+            details={
+                "doi": doi,
+                "markdown_quality_prompt_path": prompt_path.relative_to(
+                    _repo_root()
+                ).as_posix(),
+            },
         )
     if not quality_path.is_file():
         raise ToolError(
@@ -6151,7 +6472,12 @@ def run_check_snapshot(args: argparse.Namespace) -> int:
             provider=provider,
             manifest=default_manifest_path(provider),
             task_id=f"{provider}-{SNAPSHOT_EXPECTED_STEP}",
-            details={"doi": doi, "markdown_quality_path": quality_path.relative_to(_repo_root()).as_posix()},
+            details={
+                "doi": doi,
+                "markdown_quality_path": quality_path.relative_to(
+                    _repo_root()
+                ).as_posix(),
+            },
         )
     try:
         quality = json.loads(quality_path.read_text(encoding="utf-8"))
@@ -6165,7 +6491,9 @@ def run_check_snapshot(args: argparse.Namespace) -> int:
             task_id=f"{provider}-{SNAPSHOT_EXPECTED_STEP}",
             details={
                 "doi": doi,
-                "markdown_quality_path": quality_path.relative_to(_repo_root()).as_posix(),
+                "markdown_quality_path": quality_path.relative_to(
+                    _repo_root()
+                ).as_posix(),
                 "reason": str(exc),
             },
         ) from exc
@@ -6184,7 +6512,9 @@ def run_check_snapshot(args: argparse.Namespace) -> int:
             task_id=f"{provider}-{SNAPSHOT_EXPECTED_STEP}",
             details={
                 "doi": doi,
-                "markdown_quality_path": quality_path.relative_to(_repo_root()).as_posix(),
+                "markdown_quality_path": quality_path.relative_to(
+                    _repo_root()
+                ).as_posix(),
                 "validation_errors": validation_errors,
             },
         )
@@ -6208,9 +6538,15 @@ def run_check_snapshot(args: argparse.Namespace) -> int:
             task_id=f"{provider}-{SNAPSHOT_EXPECTED_STEP}",
             details={
                 "doi": doi,
-                "baseline_markdown_path": markdown_path.relative_to(_repo_root()).as_posix(),
-                "markdown_quality_path": quality_path.relative_to(_repo_root()).as_posix(),
-                "markdown_quality_status": quality.get("status") if isinstance(quality, dict) else None,
+                "baseline_markdown_path": markdown_path.relative_to(
+                    _repo_root()
+                ).as_posix(),
+                "markdown_quality_path": quality_path.relative_to(
+                    _repo_root()
+                ).as_posix(),
+                "markdown_quality_status": quality.get("status")
+                if isinstance(quality, dict)
+                else None,
                 "fresh_markdown_quality_path": _rel(fresh.report_path),
                 "fresh_markdown_quality_status": fresh.report.get("status"),
                 "issues": fresh_blocking_issues,
@@ -6226,15 +6562,23 @@ def run_check_snapshot(args: argparse.Namespace) -> int:
             task_id=f"{provider}-{SNAPSHOT_EXPECTED_STEP}",
             details={
                 "doi": doi,
-                "markdown_quality_prompt_path": prompt_path.relative_to(_repo_root()).as_posix(),
-                "markdown_quality_path": quality_path.relative_to(_repo_root()).as_posix(),
+                "markdown_quality_prompt_path": prompt_path.relative_to(
+                    _repo_root()
+                ).as_posix(),
+                "markdown_quality_path": quality_path.relative_to(
+                    _repo_root()
+                ).as_posix(),
                 "fresh_markdown_quality_path": _rel(fresh.report_path),
                 "fresh_markdown_quality_status": fresh.report.get("status"),
                 "status": quality.get("status"),
             },
         )
     blocking_issues = blocking_markdown_quality_issues(quality)
-    if not isinstance(quality, dict) or quality.get("status") != "pass" or blocking_issues:
+    if (
+        not isinstance(quality, dict)
+        or quality.get("status") != "pass"
+        or blocking_issues
+    ):
         raise ToolError(
             "MARKDOWN_QUALITY_FAILED",
             "Markdown quality report contains blocking issues.",
@@ -6244,7 +6588,9 @@ def run_check_snapshot(args: argparse.Namespace) -> int:
             task_id=f"{provider}-{SNAPSHOT_EXPECTED_STEP}",
             details={
                 "doi": doi,
-                "markdown_quality_path": quality_path.relative_to(_repo_root()).as_posix(),
+                "markdown_quality_path": quality_path.relative_to(
+                    _repo_root()
+                ).as_posix(),
                 "fresh_markdown_quality_path": _rel(fresh.report_path),
                 "fresh_markdown_quality_status": fresh.report.get("status"),
                 "status": quality.get("status") if isinstance(quality, dict) else None,
@@ -6290,9 +6636,15 @@ def run_check_snapshot(args: argparse.Namespace) -> int:
                 "doi": doi,
                 "sample_id": sample_id,
                 "expected_path": expected_path.relative_to(_repo_root()).as_posix(),
-                "baseline_markdown_path": markdown_path.relative_to(_repo_root()).as_posix(),
-                "markdown_quality_prompt_path": prompt_path.relative_to(_repo_root()).as_posix(),
-                "markdown_quality_path": quality_path.relative_to(_repo_root()).as_posix(),
+                "baseline_markdown_path": markdown_path.relative_to(
+                    _repo_root()
+                ).as_posix(),
+                "markdown_quality_prompt_path": prompt_path.relative_to(
+                    _repo_root()
+                ).as_posix(),
+                "markdown_quality_path": quality_path.relative_to(
+                    _repo_root()
+                ).as_posix(),
                 "fresh_markdown_quality_path": _rel(fresh.report_path),
                 "fresh_markdown_quality_status": fresh.report.get("status"),
                 "markdown_quality_status": quality.get("status"),
@@ -6312,7 +6664,9 @@ def run_check_cleaning_proposal(args: argparse.Namespace) -> int:
         proposal_path = _repo_root() / proposal_path
     print(
         json.dumps(
-            check_cleaning_proposal_freshness(args.provider, proposal_path=proposal_path),
+            check_cleaning_proposal_freshness(
+                args.provider, proposal_path=proposal_path
+            ),
             indent=2,
             sort_keys=True,
         )
@@ -6393,7 +6747,13 @@ def run_run_checks(args: argparse.Namespace) -> int:
                     contract_payload = _payload_from_stdout_yaml(completed.stdout)
                     if contract_payload is not None:
                         failure["contract_check"] = contract_payload
-                _record_run(provider_state, task=task, commands=commands, result="failed", failure=failure)
+                _record_run(
+                    provider_state,
+                    task=task,
+                    commands=commands,
+                    result="failed",
+                    failure=failure,
+                )
                 _write_json(state_path, state)
                 raise ToolError(
                     failure_code,
@@ -6502,7 +6862,9 @@ def _run_repair_command(
     return not failed, details
 
 
-def _load_quality_after_review(ctx: MarkdownQualityRepairContext) -> tuple[dict[str, Any] | None, list[str]]:
+def _load_quality_after_review(
+    ctx: MarkdownQualityRepairContext,
+) -> tuple[dict[str, Any] | None, list[str]]:
     try:
         quality = json.loads(ctx.quality_path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
@@ -6545,7 +6907,9 @@ def _load_fresh_markdown_repair_context(
         persistent_report=base_ctx.persistent_quality_report,
         fresh_report=fresh.report,
     )
-    if effective.get("status") == "pass" and not blocking_markdown_quality_issues(effective):
+    if effective.get("status") == "pass" and not blocking_markdown_quality_issues(
+        effective
+    ):
         raise ToolError(
             "MARKDOWN_QUALITY_REPAIR_NOT_REQUIRED",
             "Fresh Markdown quality review and persistent report are already passing.",
@@ -6617,7 +6981,9 @@ def run_repair_markdown_quality(args: argparse.Namespace) -> int:
     state_path = _state_path(args.state)
     state = _load_state(state_path)
     provider_state = _ensure_provider_state(state, provider=provider)
-    output_dir = Path(args.output_dir or f".paper-fetch-runs/{provider}-markdown-repair")
+    output_dir = Path(
+        args.output_dir or f".paper-fetch-runs/{provider}-markdown-repair"
+    )
     if not output_dir.is_absolute():
         output_dir = _repo_root() / output_dir
     repair_dir = output_dir / "markdown-quality" / _doi_slug(doi)
@@ -6722,7 +7088,9 @@ def run_repair_markdown_quality(args: argparse.Namespace) -> int:
         post_review_command = commands[2]
         command_failed = False
         for index, command in enumerate(pre_review_commands, start=1):
-            ok, details = _run_repair_command(command, attempt_dir=attempt_dir, index=index)
+            ok, details = _run_repair_command(
+                command, attempt_dir=attempt_dir, index=index
+            )
             executed_commands.append(command)
             command_details.append(details)
             if not ok:
@@ -6745,7 +7113,9 @@ def run_repair_markdown_quality(args: argparse.Namespace) -> int:
             allowed_scope=[_rel(ctx.quality_path)],
         )
         changed_paths.update(review_after - review_before)
-        review_disallowed = _disallowed_changes(review_before, review_after, [_rel(ctx.quality_path)])
+        review_disallowed = _disallowed_changes(
+            review_before, review_after, [_rel(ctx.quality_path)]
+        )
         if review_disallowed:
             last_failure = {
                 "code": "WORKER_MODIFIED_FORBIDDEN_FILE",
@@ -6789,25 +7159,37 @@ def run_repair_markdown_quality(args: argparse.Namespace) -> int:
             }
             continue
 
-        ok, details = _run_repair_command(post_review_command, attempt_dir=attempt_dir, index=3)
+        ok, details = _run_repair_command(
+            post_review_command, attempt_dir=attempt_dir, index=3
+        )
         executed_commands.append(post_review_command)
         command_details.append(details)
         quality, quality_errors = _load_quality_after_review(ctx)
-        quality_status = quality.get("status") if isinstance(quality, dict) else "invalid"
+        quality_status = (
+            quality.get("status") if isinstance(quality, dict) else "invalid"
+        )
         write_text(
             attempt_dir / "quality-status.json",
             json.dumps(
                 {
                     "status": quality_status,
                     "errors": quality_errors,
-                    "blocking_issues": blocking_markdown_quality_issues(quality) if isinstance(quality, dict) else [],
+                    "blocking_issues": blocking_markdown_quality_issues(quality)
+                    if isinstance(quality, dict)
+                    else [],
                 },
                 indent=2,
                 sort_keys=True,
             )
             + "\n",
         )
-        if ok and isinstance(quality, dict) and not quality_errors and quality.get("status") == "pass" and not blocking_markdown_quality_issues(quality):
+        if (
+            ok
+            and isinstance(quality, dict)
+            and not quality_errors
+            and quality.get("status") == "pass"
+            and not blocking_markdown_quality_issues(quality)
+        ):
             review_updated = _update_review_artifact_hashes(ctx)
             if review_updated:
                 changed_paths.add(_rel(ctx.review_path))
@@ -6827,7 +7209,11 @@ def run_repair_markdown_quality(args: argparse.Namespace) -> int:
             }
             _record_markdown_quality_repair(provider_state, entry)
             _write_json(state_path, state)
-            print(json.dumps({**entry, "state": str(state_path)}, indent=2, sort_keys=True))
+            print(
+                json.dumps(
+                    {**entry, "state": str(state_path)}, indent=2, sort_keys=True
+                )
+            )
             return 0
         last_failure = {
             "code": "MARKDOWN_QUALITY_FAILED",
@@ -6873,7 +7259,9 @@ def _fixture_path_for_doi(doi: str) -> str | None:
     if sample_entry is None:
         return None
     sample_id, sample = sample_entry
-    return _fixture_root_for_sample(sample_id, sample).relative_to(_repo_root()).as_posix()
+    return (
+        _fixture_root_for_sample(sample_id, sample).relative_to(_repo_root()).as_posix()
+    )
 
 
 def _fixture_asset_paths_for_doi(doi: str) -> dict[str, Any]:
@@ -6887,7 +7275,13 @@ def _fixture_asset_paths_for_doi(doi: str) -> dict[str, Any]:
     _sample_id, sample = sample_entry
     assets = sample.get("assets") if isinstance(sample.get("assets"), dict) else {}
     raw_path = None
-    for name in ("original.xml", "original.pdf", "original.html", "raw.html", "article.html"):
+    for name in (
+        "original.xml",
+        "original.pdf",
+        "original.html",
+        "raw.html",
+        "article.html",
+    ):
         value = assets.get(name)
         if isinstance(value, str) and value:
             raw_path = value
@@ -6902,7 +7296,9 @@ def _fixture_asset_paths_for_doi(doi: str) -> dict[str, Any]:
             except (OSError, json.JSONDecodeError):
                 quality_status = "invalid"
             else:
-                quality_status = quality.get("status") if isinstance(quality, dict) else "invalid"
+                quality_status = (
+                    quality.get("status") if isinstance(quality, dict) else "invalid"
+                )
         else:
             quality_status = "missing"
     return {
@@ -6931,8 +7327,12 @@ def _discovery_proof_summary(
     if not isinstance(proof, dict):
         return None
     queries = proof.get("queries") if isinstance(proof.get("queries"), list) else []
-    candidates = proof.get("candidates") if isinstance(proof.get("candidates"), list) else []
-    rejections = proof.get("rejections") if isinstance(proof.get("rejections"), dict) else {}
+    candidates = (
+        proof.get("candidates") if isinstance(proof.get("candidates"), list) else []
+    )
+    rejections = (
+        proof.get("rejections") if isinstance(proof.get("rejections"), dict) else {}
+    )
     selected_doi = proof.get("selected_doi")
     evidence_summary = normalize_text(str(proof.get("evidence_summary") or ""))
     exhausted = proof.get("exhausted")
@@ -6957,7 +7357,9 @@ def _discovery_proof_summary(
 
 def _manifest_fixture_summary(manifest: dict[str, Any]) -> list[dict[str, Any]]:
     fixtures: list[dict[str, Any]] = []
-    manifest_fixtures = manifest.get("fixtures") if isinstance(manifest.get("fixtures"), dict) else {}
+    manifest_fixtures = (
+        manifest.get("fixtures") if isinstance(manifest.get("fixtures"), dict) else {}
+    )
     doi_samples = (
         manifest_fixtures.get("doi_samples")
         if isinstance(manifest_fixtures.get("doi_samples"), dict)
@@ -7017,9 +7419,13 @@ def _manifest_fixture_summary(manifest: dict[str, Any]) -> list[dict[str, Any]]:
                     "evidence_reason": sample.get("evidence_reason"),
                     "fixture_path": _fixture_path_for_doi(str(doi)) if doi else None,
                     "raw_path": asset_paths.get("raw_path"),
-                    "extracted_markdown_path": asset_paths.get("extracted_markdown_path"),
+                    "extracted_markdown_path": asset_paths.get(
+                        "extracted_markdown_path"
+                    ),
                     "markdown_quality_path": asset_paths.get("markdown_quality_path"),
-                    "markdown_quality_status": asset_paths.get("markdown_quality_status"),
+                    "markdown_quality_status": asset_paths.get(
+                        "markdown_quality_status"
+                    ),
                     "expected_json_path": asset_paths.get("expected_json_path"),
                     "expected_outcome": asset_paths.get("expected_outcome"),
                     "route_kind": asset_paths.get("route_kind"),
@@ -7039,7 +7445,11 @@ def _manifest_fixture_summary(manifest: dict[str, Any]) -> list[dict[str, Any]]:
 def _review_artifact_summary(provider: str) -> dict[str, Any]:
     path = _repo_root() / "onboarding" / "reviews" / f"{provider}.yml"
     if not path.exists():
-        return {"status": "missing", "path": path.relative_to(_repo_root()).as_posix(), "fixtures": []}
+        return {
+            "status": "missing",
+            "path": path.relative_to(_repo_root()).as_posix(),
+            "fixtures": [],
+        }
     try:
         review = yaml.safe_load(path.read_text(encoding="utf-8"))
     except yaml.YAMLError as exc:
@@ -7055,8 +7465,12 @@ def _review_artifact_summary(provider: str) -> dict[str, Any]:
         for fixture in fixtures:
             if not isinstance(fixture, dict):
                 continue
-            fixes = fixture.get("fixes") if isinstance(fixture.get("fixes"), list) else []
-            issues = fixture.get("issues") if isinstance(fixture.get("issues"), list) else []
+            fixes = (
+                fixture.get("fixes") if isinstance(fixture.get("fixes"), list) else []
+            )
+            issues = (
+                fixture.get("issues") if isinstance(fixture.get("issues"), list) else []
+            )
             quality_status = None
             quality_path_value = fixture.get("markdown_quality_path")
             if isinstance(quality_path_value, str) and quality_path_value:
@@ -7067,7 +7481,11 @@ def _review_artifact_summary(provider: str) -> dict[str, Any]:
                     except (OSError, json.JSONDecodeError):
                         quality_status = "invalid"
                     else:
-                        quality_status = quality.get("status") if isinstance(quality, dict) else "invalid"
+                        quality_status = (
+                            quality.get("status")
+                            if isinstance(quality, dict)
+                            else "invalid"
+                        )
                 else:
                     quality_status = "missing"
             summaries.append(
@@ -7093,7 +7511,9 @@ def _review_artifact_summary(provider: str) -> dict[str, Any]:
                             for test_name in (fix.get("test_names") or [])
                         }
                     ),
-                    "markdown_semantic_reviewed": fixture.get("markdown_semantic_reviewed"),
+                    "markdown_semantic_reviewed": fixture.get(
+                        "markdown_semantic_reviewed"
+                    ),
                     "markdown_quality_status": quality_status,
                 }
             )
@@ -7119,7 +7539,8 @@ def _review_artifact_summary(provider: str) -> dict[str, Any]:
             "pass"
             if quality_values and all(value == "pass" for value in quality_values)
             else "pending"
-            if not quality_values or any(value == PENDING_STATUS for value in quality_values)
+            if not quality_values
+            or any(value == PENDING_STATUS for value in quality_values)
             else "fail"
         ),
         "fixtures": summaries,
@@ -7132,8 +7553,12 @@ def build_provider_summary(
     state: dict[str, Any],
 ) -> dict[str, Any]:
     provider_name = _provider_slug(provider)
-    providers = state.get("providers") if isinstance(state.get("providers"), dict) else {}
-    provider_state = providers.get(provider_name) if isinstance(providers, dict) else None
+    providers = (
+        state.get("providers") if isinstance(state.get("providers"), dict) else {}
+    )
+    provider_state = (
+        providers.get(provider_name) if isinstance(providers, dict) else None
+    )
     if not isinstance(provider_state, dict):
         provider_state = {
             "provider": provider_name,
@@ -7141,17 +7566,27 @@ def build_provider_summary(
             "status": "not_started",
             "current_step": None,
         }
-    manifest_path = _repo_root() / str(provider_state.get("manifest") or default_manifest_path(provider_name))
+    manifest_path = _repo_root() / str(
+        provider_state.get("manifest") or default_manifest_path(provider_name)
+    )
     manifest: dict[str, Any] = {}
     if manifest_path.exists():
         manifest = _read_manifest(manifest_path)
-    runs = provider_state.get("runs") if isinstance(provider_state.get("runs"), dict) else {}
+    runs = (
+        provider_state.get("runs")
+        if isinstance(provider_state.get("runs"), dict)
+        else {}
+    )
     verifications = (
         provider_state.get("verifications")
         if isinstance(provider_state.get("verifications"), dict)
         else {}
     )
-    repairs = provider_state.get("repairs") if isinstance(provider_state.get("repairs"), dict) else {}
+    repairs = (
+        provider_state.get("repairs")
+        if isinstance(provider_state.get("repairs"), dict)
+        else {}
+    )
     markdown_quality_repairs = (
         repairs.get("markdown_quality")
         if isinstance(repairs.get("markdown_quality"), list)
@@ -7175,9 +7610,7 @@ def build_provider_summary(
         "fixture_coverage": _manifest_fixture_summary(manifest) if manifest else [],
         "review_artifact": _review_artifact_summary(provider_name),
         "markdown_quality_repairs": [
-            repair
-            for repair in markdown_quality_repairs
-            if isinstance(repair, dict)
+            repair for repair in markdown_quality_repairs if isinstance(repair, dict)
         ][-5:],
         "run_checks": [
             {
@@ -7237,8 +7670,12 @@ def _provider_state_for_agent_summary(
     state: dict[str, Any],
 ) -> dict[str, Any]:
     provider_name = _provider_slug(provider)
-    providers = state.get("providers") if isinstance(state.get("providers"), dict) else {}
-    provider_state = providers.get(provider_name) if isinstance(providers, dict) else None
+    providers = (
+        state.get("providers") if isinstance(state.get("providers"), dict) else {}
+    )
+    provider_state = (
+        providers.get(provider_name) if isinstance(providers, dict) else None
+    )
     if isinstance(provider_state, dict):
         return provider_state
     return {
@@ -7271,9 +7708,8 @@ def _step_completed(provider_state: dict[str, Any], step: str) -> bool:
 def _agent_target_complete(provider_state: dict[str, Any], target: str) -> bool:
     target_name = normalize_agent_target(target)
     if target_name == "local-ready":
-        return (
-            provider_state.get("status") != "blocked"
-            and _step_completed(provider_state, AGENT_TARGET_STEPS[target_name])
+        return provider_state.get("status") != "blocked" and _step_completed(
+            provider_state, AGENT_TARGET_STEPS[target_name]
         )
     return provider_state.get("status") == "merge_ready" or _step_completed(
         provider_state,
@@ -7319,7 +7755,11 @@ def _agent_phase(
 ) -> str:
     status = summary.get("status")
     failure_code = summary.get("failure_code")
-    access = summary.get("access_review") if isinstance(summary.get("access_review"), dict) else {}
+    access = (
+        summary.get("access_review")
+        if isinstance(summary.get("access_review"), dict)
+        else {}
+    )
     if status == "merge_ready":
         return "merge-ready"
     if _agent_target_complete(provider_state, target):
@@ -7327,9 +7767,13 @@ def _agent_phase(
     if _semantic_review_gate_pending(summary, provider_state, target):
         return "user-gate"
     if status == "not_started":
-        return "user-gate" if access.get("status") not in {None, "missing"} else "intake"
+        return (
+            "user-gate" if access.get("status") not in {None, "missing"} else "intake"
+        )
     if status == "blocked":
-        if failure_code in OPERATOR_REQUIRED_FAILURE_CODES or not access.get("approved"):
+        if failure_code in OPERATOR_REQUIRED_FAILURE_CODES or not access.get(
+            "approved"
+        ):
             return "user-gate"
         return "blocked"
     if not access.get("approved") and access.get("status") not in {None, "missing"}:
@@ -7344,14 +7788,24 @@ def _agent_completed_items(
     provider_state: dict[str, Any],
 ) -> list[str]:
     items: list[str] = []
-    access = summary.get("access_review") if isinstance(summary.get("access_review"), dict) else {}
+    access = (
+        summary.get("access_review")
+        if isinstance(summary.get("access_review"), dict)
+        else {}
+    )
     if access.get("approved"):
         items.append("access review 已批准")
-    manifest = summary.get("manifest") if isinstance(summary.get("manifest"), dict) else {}
+    manifest = (
+        summary.get("manifest") if isinstance(summary.get("manifest"), dict) else {}
+    )
     manifest_path = manifest.get("path")
     if isinstance(manifest_path, str) and (_repo_root() / manifest_path).exists():
         items.append("manifest 已生成")
-    if any(item.get("raw_path") for item in summary.get("fixture_coverage", []) if isinstance(item, dict)):
+    if any(
+        item.get("raw_path")
+        for item in summary.get("fixture_coverage", [])
+        if isinstance(item, dict)
+    ):
         items.append("至少一个 fixture 已捕获")
     if _step_completed(provider_state, "scaffold"):
         items.append("provider-owned skeleton 已生成")
@@ -7391,7 +7845,9 @@ def _markdown_review_user_summary(summary: dict[str, Any]) -> dict[str, Any]:
         "path": review.get("path"),
         "semantic_review_status": review.get("semantic_review_status"),
         "markdown_quality_status": review.get("markdown_quality_status"),
-        "fixtures": review.get("fixtures") if isinstance(review.get("fixtures"), list) else [],
+        "fixtures": review.get("fixtures")
+        if isinstance(review.get("fixtures"), list)
+        else [],
     }
 
 
@@ -7402,7 +7858,11 @@ def _agent_related_files(
 ) -> list[str]:
     provider_name = _provider_slug(provider)
     files: list[str] = []
-    access = summary.get("access_review") if isinstance(summary.get("access_review"), dict) else {}
+    access = (
+        summary.get("access_review")
+        if isinstance(summary.get("access_review"), dict)
+        else {}
+    )
     for value in (
         access.get("path"),
         summary.get("manifest", {}).get("path")
@@ -7440,12 +7900,20 @@ def build_agent_user_summary(
     provider_state = _provider_state_for_agent_summary(provider_name, state)
     summary = build_provider_summary(provider=provider_name, state=state)
     phase = _agent_phase(summary, provider_state, target_name)
-    access = summary.get("access_review") if isinstance(summary.get("access_review"), dict) else {}
+    access = (
+        summary.get("access_review")
+        if isinstance(summary.get("access_review"), dict)
+        else {}
+    )
     failure_action = _agent_failure_action(summary)
     review = _markdown_review_user_summary(summary)
     if phase == "local-ready":
-        why_stopped = "已达到默认目标 local-ready：主路径本地可用，最小 provider-local 验证通过。"
-        next_action = f"如需完整合入标准，请告诉我：继续 {provider_name} provider 到 merge-ready"
+        why_stopped = (
+            "已达到默认目标 local-ready：主路径本地可用，最小 provider-local 验证通过。"
+        )
+        next_action = (
+            f"如需完整合入标准，请告诉我：继续 {provider_name} provider 到 merge-ready"
+        )
     elif phase == "merge-ready":
         why_stopped = "已达到 merge-ready：完整本地 acceptance 和人工语义签字均已完成。"
         next_action = "未发现必需的下一步。"
@@ -7456,7 +7924,9 @@ def build_agent_user_summary(
             f"确认 allowed_runtimes、challenge_policy、status、may_continue；确认后对我说：继续 {provider_name} provider"
         )
     elif phase == "user-gate" and review.get("semantic_review_status") != "complete":
-        why_stopped = "Markdown semantic review 需要人工基于当前 extracted.md 和质量报告签字。"
+        why_stopped = (
+            "Markdown semantic review 需要人工基于当前 extracted.md 和质量报告签字。"
+        )
         next_action = (
             "阅读 extracted.md、markdown-quality.json 和 "
             f"{review.get('path') or f'onboarding/reviews/{provider_name}.yml'}；"
@@ -7464,10 +7934,15 @@ def build_agent_user_summary(
         )
     elif phase in {"blocked", "user-gate"}:
         why_stopped = failure_action or "runner 停在需要诊断的 blocked state。"
-        next_action = failure_action or f"查看相关 artifact 后对我说：诊断 {provider_name} provider 为什么卡住"
+        next_action = (
+            failure_action
+            or f"查看相关 artifact 后对我说：诊断 {provider_name} provider 为什么卡住"
+        )
     elif phase == "intake":
         why_stopped = "还没有足够的 provider 启动信息。"
-        next_action = f"请提供 domain，例如：添加 {provider_name} provider，domain 是 example.org"
+        next_action = (
+            f"请提供 domain，例如：添加 {provider_name} provider，domain 是 example.org"
+        )
     else:
         why_stopped = "没有停在人工 gate；项目 runner 可以继续推进。"
         next_action = f"继续运行项目 runner 到下一个人工 gate 或 {target_name}"
@@ -7502,7 +7977,9 @@ def render_agent_user_summary_markdown(payload: dict[str, Any]) -> str:
     if payload.get("failure_code"):
         lines.append(f"- failure code: {payload.get('failure_code')}")
     lines.extend(["", "为什么停:", f"- {payload.get('why_stopped')}"])
-    completed = payload.get("completed") if isinstance(payload.get("completed"), list) else []
+    completed = (
+        payload.get("completed") if isinstance(payload.get("completed"), list) else []
+    )
     lines.extend(["", "已完成:"])
     if completed:
         lines.extend(f"- {item}" for item in completed)
@@ -7547,7 +8024,11 @@ def render_agent_user_summary_markdown(payload: dict[str, Any]) -> str:
             ]
         )
     lines.extend(["", "下一步:", f"- {payload.get('next_user_action')}"])
-    related = payload.get("related_files") if isinstance(payload.get("related_files"), list) else []
+    related = (
+        payload.get("related_files")
+        if isinstance(payload.get("related_files"), list)
+        else []
+    )
     if related:
         lines.extend(["", "相关文件:"])
         lines.extend(f"- {path}" for path in related)
@@ -7614,9 +8095,15 @@ def render_provider_summary_markdown(summary: dict[str, Any]) -> str:
     else:
         lines.append(f"- status: {review.get('status')}")
         lines.append(f"- path: {review.get('path')}")
-        lines.append(f"- semantic_review_status: {review.get('semantic_review_status')}")
-        lines.append(f"- markdown_quality_status: {review.get('markdown_quality_status')}")
-        fixtures = review.get("fixtures") if isinstance(review.get("fixtures"), list) else []
+        lines.append(
+            f"- semantic_review_status: {review.get('semantic_review_status')}"
+        )
+        lines.append(
+            f"- markdown_quality_status: {review.get('markdown_quality_status')}"
+        )
+        fixtures = (
+            review.get("fixtures") if isinstance(review.get("fixtures"), list) else []
+        )
         if not fixtures:
             lines.append("- no review fixture summaries")
         for fixture in fixtures:
@@ -7640,7 +8127,9 @@ def render_provider_summary_markdown(summary: dict[str, Any]) -> str:
     for repair in repairs:
         if not isinstance(repair, dict):
             continue
-        failure = repair.get("failure") if isinstance(repair.get("failure"), dict) else {}
+        failure = (
+            repair.get("failure") if isinstance(repair.get("failure"), dict) else {}
+        )
         lines.append(
             "- "
             f"doi={repair.get('doi')} "
@@ -7679,7 +8168,9 @@ def render_provider_summary_markdown(summary: dict[str, Any]) -> str:
 def run_diagnose(args: argparse.Namespace) -> int:
     state_path = _state_path(args.state)
     state = _load_state(state_path)
-    providers = state.get("providers") if isinstance(state.get("providers"), dict) else {}
+    providers = (
+        state.get("providers") if isinstance(state.get("providers"), dict) else {}
+    )
     if args.provider:
         provider_name = _provider_slug(args.provider)
         provider_state = providers.get(provider_name)
@@ -7715,7 +8206,9 @@ def run_resume_blocked(args: argparse.Namespace) -> int:
     provider = _provider_slug(args.provider)
     state_path = _state_path(args.state)
     state = _load_state(state_path)
-    providers = state.get("providers") if isinstance(state.get("providers"), dict) else {}
+    providers = (
+        state.get("providers") if isinstance(state.get("providers"), dict) else {}
+    )
     provider_state = providers.get(provider)
     if not isinstance(provider_state, dict):
         raise ToolError(
@@ -7740,7 +8233,11 @@ def run_resume_blocked(args: argparse.Namespace) -> int:
             task_id=f"{provider}-resume-blocked",
             details=payload,
         )
-    steps = provider_state.get("steps") if isinstance(provider_state.get("steps"), list) else []
+    steps = (
+        provider_state.get("steps")
+        if isinstance(provider_state.get("steps"), list)
+        else []
+    )
     if args.until not in steps:
         raise ToolError(
             "TASK_BRIEF_INVALID",
@@ -7830,7 +8327,9 @@ def run_finalize_review_artifact(args: argparse.Namespace) -> int:
         confirmed_final_quality=args.confirmed_final_quality,
         run_fresh_review=True,
     )
-    print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n", end="")
+    print(
+        json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n", end=""
+    )
     return 0
 
 
@@ -7851,7 +8350,10 @@ def run_advance(args: argparse.Namespace) -> int:
         )
     if args.task == ACCESS_PREFLIGHT_STEP:
         validate_access_review(provider)
-    elif args.task == DISCOVER_STEP and ACCESS_PREFLIGHT_STEP not in provider_state["completed_steps"]:
+    elif (
+        args.task == DISCOVER_STEP
+        and ACCESS_PREFLIGHT_STEP not in provider_state["completed_steps"]
+    ):
         validate_access_review(provider)
         raise ToolError(
             "ACCESS_REVIEW_NOT_APPROVED",
@@ -7898,7 +8400,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser = CoordinatorArgumentParser(
         description="Generate manifest-driven provider onboarding dry-run artifacts."
     )
-    subparsers = parser.add_subparsers(dest="command", required=True, parser_class=CoordinatorArgumentParser)
+    subparsers = parser.add_subparsers(
+        dest="command", required=True, parser_class=CoordinatorArgumentParser
+    )
 
     discover = subparsers.add_parser(
         "discover",
@@ -7922,9 +8426,15 @@ def build_parser() -> argparse.ArgumentParser:
         "prepare-discovery",
         help="write the manifest discovery evidence pack",
     )
-    prepare_discovery.add_argument("--provider", required=True, help="provider name seed")
-    prepare_discovery.add_argument("--domain", required=True, help="provider domain seed")
-    prepare_discovery.add_argument("--doi-prefix", required=True, help="DOI prefix seed")
+    prepare_discovery.add_argument(
+        "--provider", required=True, help="provider name seed"
+    )
+    prepare_discovery.add_argument(
+        "--domain", required=True, help="provider domain seed"
+    )
+    prepare_discovery.add_argument(
+        "--doi-prefix", required=True, help="DOI prefix seed"
+    )
     prepare_discovery.add_argument(
         "--output-dir",
         required=True,
@@ -7947,11 +8457,19 @@ def build_parser() -> argparse.ArgumentParser:
         "autofix-manifest",
         help="repair schema-level manifest discovery gaps from an evidence pack",
     )
-    autofix_manifest.add_argument("--manifest", required=True, help="ProviderManifest YAML path")
-    autofix_manifest.add_argument("--evidence-pack", required=True, help="discovery evidence pack JSON")
+    autofix_manifest.add_argument(
+        "--manifest", required=True, help="ProviderManifest YAML path"
+    )
+    autofix_manifest.add_argument(
+        "--evidence-pack", required=True, help="discovery evidence pack JSON"
+    )
     write_group = autofix_manifest.add_mutually_exclusive_group(required=True)
-    write_group.add_argument("--write", action="store_true", help="write changes back to manifest")
-    write_group.add_argument("--dry-run", action="store_true", help="print proposed changes only")
+    write_group.add_argument(
+        "--write", action="store_true", help="write changes back to manifest"
+    )
+    write_group.add_argument(
+        "--dry-run", action="store_true", help="print proposed changes only"
+    )
     autofix_manifest.add_argument(
         "--targeted",
         action="store_true",
@@ -7963,8 +8481,12 @@ def build_parser() -> argparse.ArgumentParser:
         "inspect-discovery",
         help="summarize candidates, low-confidence purposes, and proof gaps",
     )
-    inspect_discovery.add_argument("--manifest", required=True, help="ProviderManifest YAML path")
-    inspect_discovery.add_argument("--evidence-pack", required=True, help="discovery evidence pack JSON")
+    inspect_discovery.add_argument(
+        "--manifest", required=True, help="ProviderManifest YAML path"
+    )
+    inspect_discovery.add_argument(
+        "--evidence-pack", required=True, help="discovery evidence pack JSON"
+    )
     inspect_discovery.set_defaults(func=run_inspect_discovery)
 
     start = subparsers.add_parser(
@@ -7976,8 +8498,12 @@ def build_parser() -> argparse.ArgumentParser:
     source.add_argument("--manifest", help="existing manifest path for replay mode")
     start.add_argument("--domain", help="provider domain seed")
     start.add_argument("--doi-prefix", help="DOI prefix seed")
-    start.add_argument("--dry-run", action="store_true", help="write planned artifacts only")
-    start.add_argument("--output-dir", required=True, help="directory for dry-run artifacts")
+    start.add_argument(
+        "--dry-run", action="store_true", help="write planned artifacts only"
+    )
+    start.add_argument(
+        "--output-dir", required=True, help="directory for dry-run artifacts"
+    )
     start.add_argument(
         "--state",
         default=DEFAULT_STATE_PATH,
@@ -8027,7 +8553,9 @@ def build_parser() -> argparse.ArgumentParser:
         help="resume one retryable blocked provider after preconditions are satisfied",
     )
     resume_blocked.add_argument("--provider", required=True, help="provider name")
-    resume_blocked.add_argument("--dry-run", action="store_true", help="print resume plan only")
+    resume_blocked.add_argument(
+        "--dry-run", action="store_true", help="print resume plan only"
+    )
     resume_blocked.add_argument(
         "--until",
         default="provider-local-acceptance",
@@ -8073,7 +8601,9 @@ def build_parser() -> argparse.ArgumentParser:
         "prepare-human-preflight",
         help="render the compact human review digest for access, waterfall, and purpose coverage",
     )
-    prepare_human_preflight.add_argument("--provider", required=True, help="provider name")
+    prepare_human_preflight.add_argument(
+        "--provider", required=True, help="provider name"
+    )
     prepare_human_preflight.add_argument("--domain", help="provider domain seed")
     prepare_human_preflight.add_argument("--doi-prefix", help="DOI prefix seed")
     prepare_human_preflight.add_argument("--output", help="optional output path")
@@ -8143,7 +8673,9 @@ def build_parser() -> argparse.ArgumentParser:
         REPAIR_MARKDOWN_QUALITY_STEP,
         help="repair a failing markdown-quality.json report through the onboarding agent CLI",
     )
-    repair_markdown_quality.add_argument("--provider", required=True, help="provider name")
+    repair_markdown_quality.add_argument(
+        "--provider", required=True, help="provider name"
+    )
     repair_markdown_quality.add_argument("--doi", required=True, help="DOI to repair")
     repair_markdown_quality.add_argument(
         "--state",

@@ -135,8 +135,12 @@ def _new_browser_context(
     manager = BrowserContextManager(
         binary_path=browser_env["binary_path"],
         cdp_endpoint=browser_env["cdp_endpoint"],
-        profile_dir=Path(browser_env["profile_dir"]).expanduser() if browser_env["profile_dir"] else None,
-        user_data_dir=Path(browser_env["user_data_dir"]).expanduser() if browser_env["user_data_dir"] else None,
+        profile_dir=Path(browser_env["profile_dir"]).expanduser()
+        if browser_env["profile_dir"]
+        else None,
+        user_data_dir=Path(browser_env["user_data_dir"]).expanduser()
+        if browser_env["user_data_dir"]
+        else None,
     )
     try:
         browser_context = manager.new_context(headless=headless, **context_kwargs)
@@ -159,7 +163,9 @@ def _resolve_cdp_endpoint(
         endpoint = normalize_text(runtime_env.get(CLOAKBROWSER_CDP_ENDPOINT_ENV_VAR))
         if endpoint:
             return endpoint
-    endpoint = normalize_text(build_runtime_env().get(CLOAKBROWSER_CDP_ENDPOINT_ENV_VAR))
+    endpoint = normalize_text(
+        build_runtime_env().get(CLOAKBROWSER_CDP_ENDPOINT_ENV_VAR)
+    )
     return endpoint or None
 
 
@@ -174,10 +180,18 @@ def _resolve_browser_env(
     runtime_env = getattr(runtime_context, "env", None)
     env = runtime_env if isinstance(runtime_env, Mapping) else build_runtime_env()
     return {
-        "binary_path": normalize_text(str(binary_path or "")) or normalize_text(env.get(CLOAKBROWSER_BINARY_PATH_ENV_VAR)) or None,
-        "cdp_endpoint": _resolve_cdp_endpoint(cdp_endpoint, runtime_context=runtime_context),
-        "profile_dir": normalize_text(str(profile_dir or "")) or normalize_text(env.get(CLOAKBROWSER_PROFILE_DIR_ENV_VAR)) or None,
-        "user_data_dir": normalize_text(str(user_data_dir or "")) or normalize_text(env.get(CLOAKBROWSER_USER_DATA_DIR_ENV_VAR)) or None,
+        "binary_path": normalize_text(str(binary_path or ""))
+        or normalize_text(env.get(CLOAKBROWSER_BINARY_PATH_ENV_VAR))
+        or None,
+        "cdp_endpoint": _resolve_cdp_endpoint(
+            cdp_endpoint, runtime_context=runtime_context
+        ),
+        "profile_dir": normalize_text(str(profile_dir or ""))
+        or normalize_text(env.get(CLOAKBROWSER_PROFILE_DIR_ENV_VAR))
+        or None,
+        "user_data_dir": normalize_text(str(user_data_dir or ""))
+        or normalize_text(env.get(CLOAKBROWSER_USER_DATA_DIR_ENV_VAR))
+        or None,
     }
 
 
@@ -207,8 +221,12 @@ class _BaseBrowserDocumentFetcher:
         )
         self._binary_path = normalize_text(binary_path) or None
         self._cdp_endpoint = normalize_text(cdp_endpoint) or None
-        self._profile_dir = Path(profile_dir).expanduser() if profile_dir is not None else None
-        self._user_data_dir = Path(user_data_dir).expanduser() if user_data_dir is not None else None
+        self._profile_dir = (
+            Path(profile_dir).expanduser() if profile_dir is not None else None
+        )
+        self._user_data_dir = (
+            Path(user_data_dir).expanduser() if user_data_dir is not None else None
+        )
         self._browser_manager = None
         self._context = None
         self._page = None
@@ -219,6 +237,11 @@ class _BaseBrowserDocumentFetcher:
     def failure_for(self, source_url: str) -> dict[str, Any] | None:
         diagnostic = self._last_failure_by_url.get(normalize_text(source_url))
         return dict(diagnostic) if diagnostic else None
+
+    def __call__(
+        self, source_url: str, asset: Mapping[str, Any]
+    ) -> dict[str, Any] | None:
+        raise NotImplementedError
 
     def close(self) -> None:
         if self._page is not None:
@@ -242,23 +265,27 @@ class _BaseBrowserDocumentFetcher:
         if self._context is not None:
             return self._context
 
-        active_user_agent = (
-            normalize_text(self._current_seed().get("browser_user_agent"))
-            or normalize_text(self._browser_user_agent)
-        )
+        active_user_agent = normalize_text(
+            self._current_seed().get("browser_user_agent")
+        ) or normalize_text(self._browser_user_agent)
         try:
-            self._browser_manager, _unused_browser, self._context = _new_browser_context(
-                runtime_context=self._runtime_context,
-                headless=self._headless,
-                user_agent=active_user_agent,
-                use_runtime_shared_browser=self._use_runtime_shared_browser,
-                binary_path=self._binary_path,
-                cdp_endpoint=self._cdp_endpoint,
-                profile_dir=self._profile_dir,
-                user_data_dir=self._user_data_dir,
+            self._browser_manager, _unused_browser, self._context = (
+                _new_browser_context(
+                    runtime_context=self._runtime_context,
+                    headless=self._headless,
+                    user_agent=active_user_agent,
+                    use_runtime_shared_browser=self._use_runtime_shared_browser,
+                    binary_path=self._binary_path,
+                    cdp_endpoint=self._cdp_endpoint,
+                    profile_dir=self._profile_dir,
+                    user_data_dir=self._user_data_dir,
+                )
             )
             self._sync_context_cookies()
-            self._page = self._context.new_page()
+            context = self._context
+            if context is None:
+                return None
+            self._page = context.new_page()
             self._last_context_failure = {}
         except Exception as exc:
             self._last_context_failure = self._context_failure_diagnostic(exc)
@@ -366,7 +393,9 @@ class _ThreadLocalSharedDocumentFetcher:
                     failure = fetcher.failure_for(normalized_url)
                     if isinstance(failure, Mapping):
                         with self._lock:
-                            self._failure_by_url[normalized_url] = _copy_failure_diagnostic(failure)
+                            self._failure_by_url[normalized_url] = (
+                                _copy_failure_diagnostic(failure)
+                            )
                 else:
                     with self._lock:
                         self._failure_by_url.pop(normalized_url, None)
@@ -385,7 +414,9 @@ class _ThreadLocalSharedDocumentFetcher:
                 cached_failure = self._failure_by_url.get(normalized_url)
             return _copy_failure_diagnostic(cached_failure) if cached_failure else None
         failure = fetcher.failure_for(source_url)
-        return _copy_failure_diagnostic(failure) if isinstance(failure, Mapping) else None
+        return (
+            _copy_failure_diagnostic(failure) if isinstance(failure, Mapping) else None
+        )
 
     def _close_fetcher_for_current_thread(
         self, fetcher: _BaseBrowserDocumentFetcher
@@ -394,7 +425,9 @@ class _ThreadLocalSharedDocumentFetcher:
             fetcher.close()
         finally:
             with self._lock:
-                self._fetchers = [item for item in self._fetchers if item is not fetcher]
+                self._fetchers = [
+                    item for item in self._fetchers if item is not fetcher
+                ]
             if getattr(self._thread_local, "fetcher", None) is fetcher:
                 with contextlib.suppress(AttributeError):
                     delattr(self._thread_local, "fetcher")

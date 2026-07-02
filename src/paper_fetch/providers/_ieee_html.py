@@ -34,12 +34,19 @@ from ._ieee_url import (
 from .base import ProviderFailure
 
 from bs4 import BeautifulSoup, Tag
+
 IEEE_ASSET_KIND_PRIORITY = {"formula": 10, "figure": 20, "table": 30}
 IEEE_ASSET_URL_FIELDS = (*DEFAULT_ASSET_URL_FIELDS, "download_url", "figure_page_url")
 IEEE_STRONG_ASSET_IDENTITY_FIELDS = tuple(
-    field for field in IEEE_ASSET_URL_FIELDS if field in {"download_url", "source_url", "full_size_url", "url"}
+    field
+    for field in IEEE_ASSET_URL_FIELDS
+    if field in {"download_url", "source_url", "full_size_url", "url"}
 )
-IEEE_WEAK_ASSET_IDENTITY_FIELDS = tuple(field for field in IEEE_ASSET_URL_FIELDS if field not in IEEE_STRONG_ASSET_IDENTITY_FIELDS)
+IEEE_WEAK_ASSET_IDENTITY_FIELDS = tuple(
+    field
+    for field in IEEE_ASSET_URL_FIELDS
+    if field not in IEEE_STRONG_ASSET_IDENTITY_FIELDS
+)
 IEEE_DOWNLOAD_MERGE_FIELDS = (
     "path",
     "download_url",
@@ -53,10 +60,19 @@ IEEE_DOWNLOAD_MERGE_FIELDS = (
     "downloaded_bytes",
     "preview_accepted",
 )
-IEEE_SECTION_MARKER_PATTERN = re.compile(r"^SECTION\s+(?:[IVXLCDM]+|\d+)\s*[.:]?$", flags=re.IGNORECASE)
+IEEE_SECTION_MARKER_PATTERN = re.compile(
+    r"^SECTION\s+(?:[IVXLCDM]+|\d+)\s*[.:]?$", flags=re.IGNORECASE
+)
 IEEE_ASSET_RETRY_KEY_FIELDS = (
-    "download_url", "source_url", "full_size_url", "url", "original_url",
-    "preview_url", "figure_page_url", "path", "link",
+    "download_url",
+    "source_url",
+    "full_size_url",
+    "url",
+    "original_url",
+    "preview_url",
+    "figure_page_url",
+    "path",
+    "link",
 )
 
 
@@ -90,7 +106,11 @@ def _clean_ieee_article(article: Tag) -> None:
         try:
             for node in list(article.select(selector)):
                 if isinstance(node, Tag):
-                    if "href^='javascript:'" in selector and node.name == "a" and _is_ieee_bibliography_anchor(node):
+                    if (
+                        "href^='javascript:'" in selector
+                        and node.name == "a"
+                        and _is_ieee_bibliography_anchor(node)
+                    ):
                         continue
                     node.decompose()
         except Exception:
@@ -102,11 +122,17 @@ def _clean_ieee_article(article: Tag) -> None:
         if not isinstance(node, Tag):
             continue
         text = normalize_text(node.get_text(" ", strip=True))
-        classes = {normalize_text(str(item)).lower() for item in (node.get("class") or [])}
+        classes = {
+            normalize_text(str(item)).lower() for item in (node.get("class") or [])
+        }
         if "kicker" in classes and IEEE_SECTION_MARKER_PATTERN.fullmatch(text):
             node.decompose()
             continue
-        if node.name in {"span", "div"} and IEEE_SECTION_MARKER_PATTERN.fullmatch(text) and not node.find(True):
+        if (
+            node.name in {"span", "div"}
+            and IEEE_SECTION_MARKER_PATTERN.fullmatch(text)
+            and not node.find(True)
+        ):
             node.decompose()
     for anchor in list(article.find_all("a")):
         if not isinstance(anchor, Tag):
@@ -143,10 +169,19 @@ def _annotate_ieee_inline_media_blocks(article: Tag, source_url: str) -> None:
         asset = _ieee_asset_from_figure_full_block(block, source_url)
         if asset is None:
             continue
-        inline_url = normalize_text(str(asset.get("url") or asset.get("full_size_url") or asset.get("preview_url") or ""))
+        inline_url = normalize_text(
+            str(
+                asset.get("url")
+                or asset.get("full_size_url")
+                or asset.get("preview_url")
+                or ""
+            )
+        )
         if inline_url:
             block["data-paper-fetch-inline-src"] = inline_url
-            block["data-paper-fetch-inline-alt"] = normalize_text(str(asset.get("heading") or asset.get("caption") or "Figure"))
+            block["data-paper-fetch-inline-alt"] = normalize_text(
+                str(asset.get("heading") or asset.get("caption") or "Figure")
+            )
 
 
 def _ieee_marker_counts(article: Tag) -> dict[str, int]:
@@ -156,7 +191,9 @@ def _ieee_marker_counts(article: Tag) -> dict[str, int]:
         "paragraphs": len(article.select("p")),
         "figures": len(article.select("figure, .figure, .fig, [id^='fig']")),
         "tables": len(article.select("table, .table, [id^='table']")),
-        "formulas": len(article.select("tex-math, .tex-math, math, .formula, .disp-formula")),
+        "formulas": len(
+            article.select("tex-math, .tex-math, math, .formula, .disp-formula")
+        ),
     }
 
 
@@ -169,7 +206,11 @@ def _looks_like_ieee_large_media_url(url: str) -> bool:
 
 
 def _looks_like_ieee_small_media_url(url: str) -> bool:
-    return bool(re.search(r"-(?:small|thumb|thumbnail|preview)\.[a-z0-9]+$", _ieee_asset_url_path(url)))
+    return bool(
+        re.search(
+            r"-(?:small|thumb|thumbnail|preview)\.[a-z0-9]+$", _ieee_asset_url_path(url)
+        )
+    )
 
 
 def _first_ieee_text(node: Tag, selectors: tuple[str, ...]) -> str:
@@ -193,13 +234,21 @@ def _dedupe_ieee_urls(urls: list[str]) -> list[str]:
     return deduped
 
 
-def _ieee_media_urls_from_attrs(node: Tag, source_url: str, *, tag_name: str, attr_name: str) -> list[str]:
+def _ieee_media_urls_from_attrs(
+    node: Tag, source_url: str, *, tag_name: str, attr_name: str
+) -> list[str]:
     urls: list[str] = []
     for tag in node.find_all(tag_name):
         if not isinstance(tag, Tag):
             continue
-        absolute_url = _absolute_ieee_asset_url(normalize_text(str(tag.get(attr_name) or "")), source_url)
-        if absolute_url and _is_ieee_mediastore_url(absolute_url) and not _is_ignored_ieee_asset_url(absolute_url):
+        absolute_url = _absolute_ieee_asset_url(
+            normalize_text(str(tag.get(attr_name) or "")), source_url
+        )
+        if (
+            absolute_url
+            and _is_ieee_mediastore_url(absolute_url)
+            and not _is_ignored_ieee_asset_url(absolute_url)
+        ):
             urls.append(absolute_url)
     return _dedupe_ieee_urls(urls)
 
@@ -216,12 +265,22 @@ def _preferred_ieee_url(urls: list[str], *, prefer_large: bool) -> str:
     return urls[0] if urls else ""
 
 
-def _ieee_asset_from_figure_full_block(block: Tag, source_url: str) -> dict[str, str] | None:
-    class_names = {normalize_text(str(item)).lower() for item in (block.get("class") or [])}
+def _ieee_asset_from_figure_full_block(
+    block: Tag, source_url: str
+) -> dict[str, str] | None:
+    class_names = {
+        normalize_text(str(item)).lower() for item in (block.get("class") or [])
+    }
     kind = "table" if "table" in class_names else "figure"
-    href_urls = _ieee_media_urls_from_attrs(block, source_url, tag_name="a", attr_name="href")
-    image_urls = _ieee_media_urls_from_attrs(block, source_url, tag_name="img", attr_name="src")
-    full_size_url = _preferred_ieee_url(href_urls, prefer_large=True) or _preferred_ieee_url(image_urls, prefer_large=True)
+    href_urls = _ieee_media_urls_from_attrs(
+        block, source_url, tag_name="a", attr_name="href"
+    )
+    image_urls = _ieee_media_urls_from_attrs(
+        block, source_url, tag_name="img", attr_name="src"
+    )
+    full_size_url = _preferred_ieee_url(
+        href_urls, prefer_large=True
+    ) or _preferred_ieee_url(image_urls, prefer_large=True)
     preview_url = _preferred_ieee_url(image_urls, prefer_large=False)
     url = full_size_url or preview_url
     if not url:
@@ -229,11 +288,16 @@ def _ieee_asset_from_figure_full_block(block: Tag, source_url: str) -> dict[str,
     title = _first_ieee_text(block, (".title",))
     caption = _first_ieee_text(block, (".figcaption", "figcaption"))
     image = block.find("img")
-    alt_text = normalize_text(str(image.get("alt") or "")) if isinstance(image, Tag) else ""
+    alt_text = (
+        normalize_text(str(image.get("alt") or "")) if isinstance(image, Tag) else ""
+    )
     caption = caption or title or alt_text
     asset = {
         "kind": kind,
-        "heading": title or caption[:80] or alt_text or ("Table" if kind == "table" else "Figure"),
+        "heading": title
+        or caption[:80]
+        or alt_text
+        or ("Table" if kind == "table" else "Figure"),
         "caption": caption,
         "url": url,
         "section": "body",
@@ -246,7 +310,9 @@ def _ieee_asset_from_figure_full_block(block: Tag, source_url: str) -> dict[str,
     return asset
 
 
-def _extract_ieee_body_media_assets(article_html: str, source_url: str) -> list[dict[str, str]]:
+def _extract_ieee_body_media_assets(
+    article_html: str, source_url: str
+) -> list[dict[str, str]]:
     soup = BeautifulSoup(article_html, choose_parser())
     assets: list[dict[str, str]] = []
     for block in soup.select("div.figure.figure-full"):
@@ -260,11 +326,29 @@ def _extract_ieee_body_media_assets(article_html: str, source_url: str) -> list[
 def _ieee_asset_has_ignored_url(asset: Mapping[str, Any]) -> bool:
     semantic_text = " ".join(
         normalize_text(str(asset.get(field) or ""))
-        for field in ("heading", "caption", "alt", "title", "aria_label", "filename_hint")
+        for field in (
+            "heading",
+            "caption",
+            "alt",
+            "title",
+            "aria_label",
+            "filename_hint",
+        )
     )
-    if _ieee_support_icon_text(semantic_text) and (_small_html_dimension(asset.get("width")) or _small_html_dimension(asset.get("height"))):
+    if _ieee_support_icon_text(semantic_text) and (
+        _small_html_dimension(asset.get("width"))
+        or _small_html_dimension(asset.get("height"))
+    ):
         return True
-    for field in ("url", "full_size_url", "preview_url", "original_url", "download_url", "source_url", "figure_page_url"):
+    for field in (
+        "url",
+        "full_size_url",
+        "preview_url",
+        "original_url",
+        "download_url",
+        "source_url",
+        "figure_page_url",
+    ):
         value = normalize_text(str(asset.get(field) or ""))
         if value and _is_ignored_ieee_asset_url(value):
             return True
@@ -272,7 +356,9 @@ def _ieee_asset_has_ignored_url(asset: Mapping[str, Any]) -> bool:
 
 
 def _ieee_asset_kind(asset: Mapping[str, Any]) -> str:
-    return normalize_text(str(asset.get("kind") or asset.get("asset_type") or "")).lower()
+    return normalize_text(
+        str(asset.get("kind") or asset.get("asset_type") or "")
+    ).lower()
 
 
 def _ieee_asset_priority(asset: Mapping[str, Any]) -> int:
@@ -289,9 +375,13 @@ def _ieee_asset_field_has_value(value: Any) -> bool:
     return bool(normalize_text(str(value)))
 
 
-def _merge_ieee_missing_asset_fields(target: dict[str, Any], source: Mapping[str, Any], fields: tuple[str, ...]) -> None:
+def _merge_ieee_missing_asset_fields(
+    target: dict[str, Any], source: Mapping[str, Any], fields: tuple[str, ...]
+) -> None:
     for field in fields:
-        if not _ieee_asset_field_has_value(target.get(field)) and _ieee_asset_field_has_value(source.get(field)):
+        if not _ieee_asset_field_has_value(
+            target.get(field)
+        ) and _ieee_asset_field_has_value(source.get(field)):
             target[field] = source[field]
 
 
@@ -306,7 +396,9 @@ def _unique_ieee_assets(assets: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return unique
 
 
-def _ieee_asset_values_for_fields(asset: Mapping[str, Any], fields: tuple[str, ...]) -> list[str]:
+def _ieee_asset_values_for_fields(
+    asset: Mapping[str, Any], fields: tuple[str, ...]
+) -> list[str]:
     values: list[str] = []
     seen: set[str] = set()
     for field in fields:
@@ -318,7 +410,9 @@ def _ieee_asset_values_for_fields(asset: Mapping[str, Any], fields: tuple[str, .
 
 
 def _ieee_asset_identity_values(asset: Mapping[str, Any]) -> list[str]:
-    return _ieee_asset_values_for_fields(asset, (*IEEE_ASSET_URL_FIELDS, "path", "link"))
+    return _ieee_asset_values_for_fields(
+        asset, (*IEEE_ASSET_URL_FIELDS, "path", "link")
+    )
 
 
 def _ieee_asset_identity_index(
@@ -328,7 +422,11 @@ def _ieee_asset_identity_index(
 ) -> dict[str, list[dict[str, Any]]]:
     index: dict[str, list[dict[str, Any]]] = {}
     for asset in assets:
-        values = _ieee_asset_values_for_fields(asset, fields) if fields is not None else _ieee_asset_identity_values(asset)
+        values = (
+            _ieee_asset_values_for_fields(asset, fields)
+            if fields is not None
+            else _ieee_asset_identity_values(asset)
+        )
         for value in values:
             bucket = index.setdefault(value, [])
             if all(existing is not asset for existing in bucket):
@@ -336,7 +434,9 @@ def _ieee_asset_identity_index(
     return index
 
 
-def _ieee_index_matches(index: Mapping[str, list[dict[str, Any]]], values: list[str]) -> list[dict[str, Any]]:
+def _ieee_index_matches(
+    index: Mapping[str, list[dict[str, Any]]], values: list[str]
+) -> list[dict[str, Any]]:
     matches: list[dict[str, Any]] = []
     seen: set[int] = set()
     for value in values:
@@ -348,16 +448,23 @@ def _ieee_index_matches(index: Mapping[str, list[dict[str, Any]]], values: list[
     return matches
 
 
-def _select_ieee_asset_survivor(candidates: list[dict[str, Any]], current_assets: list[dict[str, Any]]) -> dict[str, Any]:
+def _select_ieee_asset_survivor(
+    candidates: list[dict[str, Any]], current_assets: list[dict[str, Any]]
+) -> dict[str, Any]:
     current_order = {id(asset): index for index, asset in enumerate(current_assets)}
     fallback_order = len(current_assets)
     return max(
         candidates,
-        key=lambda asset: (_ieee_asset_priority(asset), -current_order.get(id(asset), fallback_order)),
+        key=lambda asset: (
+            _ieee_asset_priority(asset),
+            -current_order.get(id(asset), fallback_order),
+        ),
     )
 
 
-def _asset_identity_index_in_list(assets: list[dict[str, Any]], target: dict[str, Any]) -> int | None:
+def _asset_identity_index_in_list(
+    assets: list[dict[str, Any]], target: dict[str, Any]
+) -> int | None:
     for index, asset in enumerate(assets):
         if asset is target:
             return index
@@ -374,7 +481,10 @@ def _merge_ieee_asset_group(
     survivor = _select_ieee_asset_survivor(candidates, current_assets)
     existing_positions = [
         position
-        for position in (_asset_identity_index_in_list(current_assets, candidate) for candidate in candidates)
+        for position in (
+            _asset_identity_index_in_list(current_assets, candidate)
+            for candidate in candidates
+        )
         if position is not None
     ]
     insert_at = min(existing_positions) if existing_positions else len(current_assets)
@@ -384,7 +494,10 @@ def _merge_ieee_asset_group(
     survivor_position = _asset_identity_index_in_list(current_assets, survivor)
     for index in range(len(current_assets) - 1, -1, -1):
         asset = current_assets[index]
-        if any(asset is candidate for candidate in candidates) and asset is not survivor:
+        if (
+            any(asset is candidate for candidate in candidates)
+            and asset is not survivor
+        ):
             del current_assets[index]
     if survivor_position is None:
         current_assets.insert(min(insert_at, len(current_assets)), survivor)
@@ -399,15 +512,21 @@ def _dedupe_ieee_assets_by_priority(
     deduped: list[dict[str, Any]] = []
     for asset in assets:
         identity_index = _ieee_asset_identity_index(deduped)
-        overlaps = _ieee_index_matches(identity_index, _ieee_asset_identity_values(asset))
+        overlaps = _ieee_index_matches(
+            identity_index, _ieee_asset_identity_values(asset)
+        )
         if overlaps:
-            _merge_ieee_asset_group(deduped, [*overlaps, asset], merge_fields=merge_fields)
+            _merge_ieee_asset_group(
+                deduped, [*overlaps, asset], merge_fields=merge_fields
+            )
             continue
         deduped.append(asset)
     return deduped
 
 
-def _absolute_ieee_html_asset_fields(asset: dict[str, Any], source_url: str) -> dict[str, Any]:
+def _absolute_ieee_html_asset_fields(
+    asset: dict[str, Any], source_url: str
+) -> dict[str, Any]:
     for field in IEEE_ASSET_URL_FIELDS:
         value = normalize_text(str(asset.get(field) or ""))
         if value:
@@ -425,7 +544,9 @@ def _normalize_ieee_html_assets(
         asset = _absolute_ieee_html_asset_fields(dict(item), source_url)
         if not _ieee_asset_has_ignored_url(asset):
             candidates.append(asset)
-    return _dedupe_ieee_assets_by_priority(candidates, merge_fields=IEEE_ASSET_URL_FIELDS)
+    return _dedupe_ieee_assets_by_priority(
+        candidates, merge_fields=IEEE_ASSET_URL_FIELDS
+    )
 
 
 def _extract_ieee_html(
@@ -436,32 +557,50 @@ def _extract_ieee_html(
     context: RuntimeContext | None = None,
 ) -> IeeeHtmlExtraction:
     if _looks_like_ieee_block_page(html_text, context=context, source_url=source_url):
-        raise ProviderFailure(NO_RESULT, "IEEE dynamic HTML endpoint returned an access, challenge, or unable page.")
+        raise ProviderFailure(
+            NO_RESULT,
+            "IEEE dynamic HTML endpoint returned an access, challenge, or unable page.",
+        )
 
     html_for_parse = re.sub(r"^\s*<\?xml[^>]*>\s*", "", html_text)
     soup = BeautifulSoup(html_for_parse, choose_parser())
     article = soup.select_one("#article")
     if not isinstance(article, Tag):
-        raise ProviderFailure(NO_RESULT, "IEEE dynamic HTML endpoint did not include #article.")
+        raise ProviderFailure(
+            NO_RESULT, "IEEE dynamic HTML endpoint did not include #article."
+        )
     asset_html = str(article)
     _clean_ieee_article(article)
     _annotate_ieee_inline_media_blocks(article, source_url)
     marker_counts = _ieee_marker_counts(article)
     article_text = normalize_text(article.get_text(" ", strip=True))
     if not article_text and not any(marker_counts.values()):
-        raise ProviderFailure(NO_RESULT, "IEEE dynamic HTML endpoint returned an empty #article shell.")
+        raise ProviderFailure(
+            NO_RESULT, "IEEE dynamic HTML endpoint returned an empty #article shell."
+        )
     if marker_counts["paragraphs"] <= 0 and marker_counts["sections"] <= 0:
-        raise ProviderFailure(NO_RESULT, "IEEE dynamic HTML endpoint did not include article body sections or paragraphs.")
+        raise ProviderFailure(
+            NO_RESULT,
+            "IEEE dynamic HTML endpoint did not include article body sections or paragraphs.",
+        )
 
-    section_hints = collect_html_section_hints(article, title=str(metadata.get("title") or "") or None)
+    section_hints = collect_html_section_hints(
+        article, title=str(metadata.get("title") or "") or None
+    )
     lines: list[str] = []
     render_container_markdown(article, lines, level=2)
     markdown_text = clean_rendered_markdown("\n".join(lines), noise_profile="ieee")
     if not normalize_text(markdown_text):
-        raise ProviderFailure(NO_RESULT, "IEEE dynamic HTML endpoint did not produce usable Markdown.")
+        raise ProviderFailure(
+            NO_RESULT, "IEEE dynamic HTML endpoint did not produce usable Markdown."
+        )
     cleaned_html = str(article)
-    extracted_assets = extract_scoped_html_assets(cleaned_html, source_url, asset_profile="body")
-    extracted_assets.extend(_extract_ieee_supplementary_assets(cleaned_html, source_url))
+    extracted_assets = extract_scoped_html_assets(
+        cleaned_html, source_url, asset_profile="body"
+    )
+    extracted_assets.extend(
+        _extract_ieee_supplementary_assets(cleaned_html, source_url)
+    )
     extracted_assets = _normalize_ieee_html_assets(
         [dict(item) for item in extracted_assets],
         _extract_ieee_body_media_assets(asset_html, source_url),

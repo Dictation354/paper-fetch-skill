@@ -56,11 +56,26 @@ AMS_INLINE_MARKDOWN_TAGS = (
 AMS_INLINE_SKIP_ANCESTOR_TAGS = {"math", "script", "style", "table"}
 
 
-def ams_before_block_normalization(container: Any) -> None: _normalize_ams_dom(container)
-def ams_after_block_normalization(container: Any) -> None: _normalize_ams_dom(container)
-def ams_body_container(container: Any) -> None: _normalize_ams_dom(container)
-def ams_asset_body_container(container: Any) -> None: _normalize_ams_dom(container)
-def ams_asset_figure_extraction(container: Any) -> None: _normalize_ams_dom(container)
+def ams_before_block_normalization(container: Any) -> None:
+    _normalize_ams_dom(container)
+
+
+def ams_after_block_normalization(container: Any) -> None:
+    _normalize_ams_dom(container)
+
+
+def ams_body_container(container: Any) -> None:
+    _normalize_ams_dom(container)
+
+
+def ams_asset_body_container(container: Any) -> None:
+    _normalize_ams_dom(container)
+
+
+def ams_asset_figure_extraction(container: Any) -> None:
+    _normalize_ams_dom(container)
+
+
 def _normalize_nested_sup_sub(container: Any) -> None:
     if not isinstance(container, Tag):
         return

@@ -19,8 +19,7 @@ from .base import (
 
 @runtime_checkable
 class MetadataProvider(Protocol):
-    def fetch_metadata(self, query: Mapping[str, str | None]) -> dict[str, Any]:
-        ...
+    def fetch_metadata(self, query: Mapping[str, str | None]) -> dict[str, Any]: ...
 
 
 @runtime_checkable
@@ -34,11 +33,11 @@ class AssetProvider(Protocol):
         *,
         asset_profile: AssetProfile = "all",
         context: RuntimeContext | None = None,
-    ) -> dict[str, list[dict[str, Any]]]:
-        ...
+    ) -> dict[str, list[dict[str, Any]]]: ...
 
-    def asset_download_failure_warning(self, exc: ProviderFailure | RequestFailure | OSError) -> str:
-        ...
+    def asset_download_failure_warning(
+        self, exc: ProviderFailure | RequestFailure | OSError
+    ) -> str: ...
 
 
 @runtime_checkable
@@ -49,8 +48,7 @@ class RawFulltextProvider(Protocol):
         metadata: Mapping[str, Any],
         *,
         context: RuntimeContext | None = None,
-    ) -> RawFulltextPayload:
-        ...
+    ) -> RawFulltextPayload: ...
 
     def to_article_model(
         self,
@@ -60,8 +58,7 @@ class RawFulltextProvider(Protocol):
         downloaded_assets: list[Mapping[str, Any]] | None = None,
         asset_failures: list[Mapping[str, Any]] | None = None,
         context: RuntimeContext | None = None,
-    ) -> ArticleModel:
-        ...
+    ) -> ArticleModel: ...
 
 
 @runtime_checkable
@@ -75,5 +72,4 @@ class FulltextProvider(Protocol):
         asset_profile: AssetProfile = "none",
         artifact_store: ArtifactStore | None = None,
         context: RuntimeContext | None = None,
-    ) -> ProviderFetchResult:
-        ...
+    ) -> ProviderFetchResult: ...

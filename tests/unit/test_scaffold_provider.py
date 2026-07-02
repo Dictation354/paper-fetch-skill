@@ -41,9 +41,7 @@ def test_scaffold_provider_generates_repo_like_structure(tmp_path: Path) -> None
     html_module = tmp_path / "src/paper_fetch/providers/_newpub_html.py"
     client_module = tmp_path / "src/paper_fetch/providers/newpub.py"
     test_module = tmp_path / "tests/unit/test_newpub_provider.py"
-    fixture_keep = (
-        tmp_path / "tests/fixtures/golden_criteria/10.1234_sample/.gitkeep"
-    )
+    fixture_keep = tmp_path / "tests/fixtures/golden_criteria/10.1234_sample/.gitkeep"
     manifest_path = tmp_path / "tests/fixtures/golden_criteria/manifest.json"
 
     assert html_module.is_file()
@@ -53,7 +51,10 @@ def test_scaffold_provider_generates_repo_like_structure(tmp_path: Path) -> None
     assert manifest_path.is_file()
     assert "PR-checklist TODO:" in result.stdout
     assert "src/paper_fetch/providers/_newpub_html.py" in result.stdout
-    assert "Generate baseline Markdown for every non-null manifest fixture purpose." in result.stdout
+    assert (
+        "Generate baseline Markdown for every non-null manifest fixture purpose."
+        in result.stdout
+    )
     assert "positive Markdown assertions" in result.stdout
     assert "negative Markdown assertions" in result.stdout
     assert "Ensure each non-null fixture purpose is named or asserted" in result.stdout
@@ -94,14 +95,16 @@ def test_scaffold_provider_places_bundle_registration_after_imports(
 ) -> None:
     _run_scaffold(tmp_path, "--name", "newpub", "--doi", "10.1234/sample")
 
-    module_text = (
-        tmp_path / "src/paper_fetch/providers/_newpub_html.py"
-    ).read_text(encoding="utf-8")
+    module_text = (tmp_path / "src/paper_fetch/providers/_newpub_html.py").read_text(
+        encoding="utf-8"
+    )
     lines = module_text.splitlines()
 
     assert _register_call_line(module_text) == 13
     assert lines[12] == "register_provider_bundle("
-    assert "def newpub_before_block_normalization(container: Any) -> Any:" in module_text
+    assert (
+        "def newpub_before_block_normalization(container: Any) -> Any:" in module_text
+    )
     assert "def newpub_normalize_markdown(text: str) -> str:" in module_text
     assert "def extract_authors(html_text: str) -> list[str]:" in module_text
     assert "# kept for compatibility" not in module_text
@@ -112,9 +115,9 @@ def test_scaffold_provider_html_capable_bundle_satisfies_s4_shape(
 ) -> None:
     _run_scaffold(tmp_path, "--name", "newpub", "--doi", "10.1234/sample")
 
-    module_text = (
-        tmp_path / "src/paper_fetch/providers/_newpub_html.py"
-    ).read_text(encoding="utf-8")
+    module_text = (tmp_path / "src/paper_fetch/providers/_newpub_html.py").read_text(
+        encoding="utf-8"
+    )
 
     assert "html_capable=False" not in module_text
     assert "html_rules=ProviderHtmlRules(" in module_text
@@ -170,9 +173,9 @@ def test_scaffold_provider_non_html_bundle_satisfies_s4_shape(
         "--html-capable=false",
     )
 
-    module_text = (
-        tmp_path / "src/paper_fetch/providers/_newpub_html.py"
-    ).read_text(encoding="utf-8")
+    module_text = (tmp_path / "src/paper_fetch/providers/_newpub_html.py").read_text(
+        encoding="utf-8"
+    )
     test_text = (tmp_path / "tests/unit/test_newpub_provider.py").read_text(
         encoding="utf-8"
     )

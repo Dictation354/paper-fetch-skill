@@ -8,7 +8,14 @@ from collections.abc import Callable, Mapping
 
 from ..tracing import source_trail_from_trace, trace_from_markers
 from .base import ProviderFailure, RawFulltextPayload, combine_provider_failures
-from ..reason_codes import ERROR, NO_ACCESS, NO_RESULT, NOT_CONFIGURED, NOT_SUPPORTED, RATE_LIMITED
+from ..reason_codes import (
+    ERROR,
+    NO_ACCESS,
+    NO_RESULT,
+    NOT_CONFIGURED,
+    NOT_SUPPORTED,
+    RATE_LIMITED,
+)
 
 DEFAULT_WATERFALL_CONTINUE_CODES = (
     NO_RESULT,
@@ -89,7 +96,9 @@ def _append_unique_text(target: list[str], values: list[str] | tuple[str, ...]) 
             target.append(normalized)
 
 
-def _failure_with_marker(failure: ProviderFailure, marker: str | None) -> ProviderFailure:
+def _failure_with_marker(
+    failure: ProviderFailure, marker: str | None
+) -> ProviderFailure:
     if not marker:
         return failure
     source_trail = list(failure.source_trail)
@@ -105,7 +114,9 @@ def _failure_with_marker(failure: ProviderFailure, marker: str | None) -> Provid
     )
 
 
-def _failure_with_warning(failure: ProviderFailure, warning: str | None) -> ProviderFailure:
+def _failure_with_warning(
+    failure: ProviderFailure, warning: str | None
+) -> ProviderFailure:
     normalized = str(warning or "").strip()
     if not normalized:
         return failure
@@ -168,7 +179,9 @@ def run_provider_waterfall(
         if step.condition is not None and not step.condition(state):
             continue
         try:
-            payload = _run_step(step, state, doi, metadata, context=context, client=client)
+            payload = _run_step(
+                step, state, doi, metadata, context=context, client=client
+            )
         except ProviderFailure as exc:
             failure = _failure_with_marker(exc, step.failure_marker)
             if failure.code not in step.continue_codes:
@@ -183,7 +196,9 @@ def run_provider_waterfall(
         payload_warnings = [*state.warnings, *payload.warnings]
         if step.success_warning:
             payload_warnings.append(step.success_warning)
-        payload.warnings = [warning for warning in payload_warnings if str(warning).strip()]
+        payload.warnings = [
+            warning for warning in payload_warnings if str(warning).strip()
+        ]
 
         if step.success_markers:
             source_trail = list(state.initial_source_trail)
@@ -198,5 +213,7 @@ def run_provider_waterfall(
         return payload
 
     if not state.failures:
-        raise ProviderFailure(NO_RESULT, "Provider waterfall did not run any retrieval steps.")
+        raise ProviderFailure(
+            NO_RESULT, "Provider waterfall did not run any retrieval steps."
+        )
     raise (final_failure_factory or _default_final_failure)(state)

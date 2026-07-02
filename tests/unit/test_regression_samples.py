@@ -18,8 +18,14 @@ from paper_fetch.providers import pnas as pnas_provider
 from paper_fetch.providers import science as science_provider
 from paper_fetch.providers import springer as springer_provider
 from paper_fetch.providers import wiley as wiley_provider
-from paper_fetch.providers.atypon_browser_workflow import extract_atypon_browser_workflow_markdown
-from paper_fetch.providers.base import ProviderContent, ProviderFailure, RawFulltextPayload
+from paper_fetch.providers.atypon_browser_workflow import (
+    extract_atypon_browser_workflow_markdown,
+)
+from paper_fetch.providers.base import (
+    ProviderContent,
+    ProviderFailure,
+    RawFulltextPayload,
+)
 from paper_fetch.tracing import trace_from_markers
 from tests.provider_benchmark_samples import (
     WILEY_PDF_FALLBACK_SAMPLE,
@@ -60,7 +66,9 @@ class FixtureTransport(HttpTransport):
 
 
 class ProviderStub:
-    def __init__(self, metadata=None, raw_payload=None, raw_error=None, article_factory=None):
+    def __init__(
+        self, metadata=None, raw_payload=None, raw_error=None, article_factory=None
+    ):
         self._metadata = metadata
         self._raw_payload = raw_payload
         self._raw_error = raw_error
@@ -77,10 +85,20 @@ class ProviderStub:
             raise self._raw_error
         return self._raw_payload
 
-    def to_article_model(self, metadata, raw_payload, *, downloaded_assets=None, asset_failures=None, context=None):
+    def to_article_model(
+        self,
+        metadata,
+        raw_payload,
+        *,
+        downloaded_assets=None,
+        asset_failures=None,
+        context=None,
+    ):
         del context
         if self._article_factory is None:
-            raise AssertionError("article_factory must be provided for raw full-text tests.")
+            raise AssertionError(
+                "article_factory must be provided for raw full-text tests."
+            )
         return self._article_factory(
             metadata,
             raw_payload,
@@ -90,7 +108,11 @@ class ProviderStub:
 
 
 def fetch_article(query: str, **kwargs):
-    runtime_keys = {key: kwargs.pop(key) for key in ("clients", "transport", "env", "download_dir") if key in kwargs}
+    runtime_keys = {
+        key: kwargs.pop(key)
+        for key in ("clients", "transport", "env", "download_dir")
+        if key in kwargs
+    }
     if runtime_keys:
         kwargs["context"] = paper_fetch.RuntimeContext(**runtime_keys)
     envelope = paper_fetch.fetch_paper(query, modes={"article"}, **kwargs)
@@ -199,12 +221,16 @@ class RegressionSampleTests(unittest.TestCase):
         abstract_headings: list[str],
         first_body_heading: str,
     ) -> None:
-        abstracts = [section for section in article.sections if section.kind == "abstract"]
+        abstracts = [
+            section for section in article.sections if section.kind == "abstract"
+        ]
         self.assertEqual([section.heading for section in abstracts], abstract_headings)
         self.assertTrue(all(section.kind == "abstract" for section in abstracts))
         self.assertEqual(article.metadata.abstract, abstracts[0].text)
         self.assertTrue(article.quality.has_fulltext)
-        first_body_section = next(section for section in article.sections if section.kind != "abstract")
+        first_body_section = next(
+            section for section in article.sections if section.kind != "abstract"
+        )
         self.assertEqual(first_body_section.kind, "body")
         self.assertEqual(first_body_section.heading, first_body_heading)
         for abstract in abstracts:
@@ -287,7 +313,9 @@ class RegressionSampleTests(unittest.TestCase):
             trace=trace_from_markers(["fulltext:wiley_html_ok"]),
             merged_metadata=metadata,
         )
-        return wiley_provider.WileyClient(HttpTransport(), {}).to_article_model(metadata, raw_payload)
+        return wiley_provider.WileyClient(HttpTransport(), {}).to_article_model(
+            metadata, raw_payload
+        )
 
     def _build_springer_bilingual_fixture_article(self):
         return build_shared_html_fixture_article(
@@ -303,7 +331,9 @@ class RegressionSampleTests(unittest.TestCase):
 
     def _build_elsevier_bilingual_fixture_article(self):
         fixture_name = "golden_criteria/10.1016_S1575-1813(18)30261-4/bilingual.xml"
-        landing_url = "https://www.sciencedirect.com/science/article/pii/S1575181318302614"
+        landing_url = (
+            "https://www.sciencedirect.com/science/article/pii/S1575181318302614"
+        )
         metadata = {
             "doi": "10.1016/S1575-1813(18)30261-4",
             "title": "Community pharmacy counseling in multilingual care",
@@ -317,7 +347,9 @@ class RegressionSampleTests(unittest.TestCase):
             trace=trace_from_markers(["fulltext:elsevier_xml_ok"]),
             merged_metadata=metadata,
         )
-        return elsevier_provider.ElsevierClient(HttpTransport(), {}).to_article_model(metadata, raw_payload)
+        return elsevier_provider.ElsevierClient(HttpTransport(), {}).to_article_model(
+            metadata, raw_payload
+        )
 
     def _build_shared_bilingual_fixture_article(
         self,
@@ -346,13 +378,15 @@ class RegressionSampleTests(unittest.TestCase):
         )
         original_resolve = paper_fetch.resolve_paper
         try:
-            paper_fetch.resolve_paper = lambda *args, **kwargs: paper_fetch.ResolvedQuery(
-                query=sample.doi,
-                query_kind="doi",
-                doi=sample.doi,
-                landing_url=sample.landing_url,
-                provider_hint=provider_name,
-                confidence=1.0,
+            paper_fetch.resolve_paper = lambda *args, **kwargs: (
+                paper_fetch.ResolvedQuery(
+                    query=sample.doi,
+                    query_kind="doi",
+                    doi=sample.doi,
+                    landing_url=sample.landing_url,
+                    provider_hint=provider_name,
+                    confidence=1.0,
+                )
             )
             return fetch_article(
                 sample.doi,
@@ -394,11 +428,16 @@ class RegressionSampleTests(unittest.TestCase):
                 self.assertEqual(article.metadata.authors, sample["authors"])
                 self.assertTrue(article.quality.has_fulltext)
                 self.assertEqual(article.quality.warnings, [])
-                self.assertGreaterEqual(len(article.sections), len(sample["expected_headings"]))
+                self.assertGreaterEqual(
+                    len(article.sections), len(sample["expected_headings"])
+                )
                 for heading in sample["expected_headings"]:
                     self.assertIn(heading, headings)
                 self.assertTrue(
-                    any(sample["figure_caption_contains"] in (asset.caption or "") for asset in article.assets),
+                    any(
+                        sample["figure_caption_contains"] in (asset.caption or "")
+                        for asset in article.assets
+                    ),
                     f"Expected figure caption containing {sample['figure_caption_contains']!r}.",
                 )
                 self.assertNotIn("Similar content being viewed by others", markdown)
@@ -420,9 +459,18 @@ class RegressionSampleTests(unittest.TestCase):
                         provider_hint="springer",
                         confidence=1.0,
                     )
-                    paper_fetch.resolve_paper = lambda *args, _resolved=resolved, **kwargs: _resolved
+                    paper_fetch.resolve_paper = (
+                        lambda *args, _resolved=resolved, **kwargs: _resolved
+                    )
 
-                    transport = FixtureTransport({sample["url"]: (read_fixture_bytes(sample["fixture"]), sample["url"])})
+                    transport = FixtureTransport(
+                        {
+                            sample["url"]: (
+                                read_fixture_bytes(sample["fixture"]),
+                                sample["url"],
+                            )
+                        }
+                    )
                     metadata = {
                         "provider": "crossref",
                         "official_provider": False,
@@ -448,7 +496,9 @@ class RegressionSampleTests(unittest.TestCase):
                     self.assertEqual(article.source, "springer_html")
                     self.assertEqual(article.metadata.title, sample["title"])
                     self.assertTrue(article.quality.has_fulltext)
-                    self.assertIn("fulltext:springer_html_ok", article.quality.source_trail)
+                    self.assertIn(
+                        "fulltext:springer_html_ok", article.quality.source_trail
+                    )
         finally:
             paper_fetch.resolve_paper = original_resolve
 
@@ -474,7 +524,9 @@ class RegressionSampleTests(unittest.TestCase):
             body=xml_body,
             metadata={"reason": "Replay fixture for Elsevier XML regression test."},
         )
-        real_elsevier_client = elsevier_provider.ElsevierClient(FixtureTransport({}), {})
+        real_elsevier_client = elsevier_provider.ElsevierClient(
+            FixtureTransport({}), {}
+        )
         replay_provider = ProviderStub(
             metadata=metadata,
             raw_payload=raw_payload,
@@ -483,13 +535,15 @@ class RegressionSampleTests(unittest.TestCase):
 
         original_resolve = paper_fetch.resolve_paper
         try:
-            paper_fetch.resolve_paper = lambda *args, **kwargs: paper_fetch.ResolvedQuery(
-                query=sample.doi,
-                query_kind="doi",
-                doi=sample.doi,
-                landing_url=sample.landing_url,
-                provider_hint="elsevier",
-                confidence=1.0,
+            paper_fetch.resolve_paper = lambda *args, **kwargs: (
+                paper_fetch.ResolvedQuery(
+                    query=sample.doi,
+                    query_kind="doi",
+                    doi=sample.doi,
+                    landing_url=sample.landing_url,
+                    provider_hint="elsevier",
+                    confidence=1.0,
+                )
             )
 
             article = fetch_article(
@@ -512,7 +566,12 @@ class RegressionSampleTests(unittest.TestCase):
         self.assertIn("Discussion", headings)
         self.assertIn("Conclusions", headings)
         self.assertTrue(any("data" in heading.lower() for heading in headings))
-        self.assertTrue(any("season" in heading.lower() or "climate" in heading.lower() for heading in headings))
+        self.assertTrue(
+            any(
+                "season" in heading.lower() or "climate" in heading.lower()
+                for heading in headings
+            )
+        )
 
     def test_paper_fetch_uses_science_replay_fixture_for_positive_sample(self) -> None:
         science_html = read_fixture_text(SCIENCE_SAMPLE.fixture_name)
@@ -565,7 +624,9 @@ class RegressionSampleTests(unittest.TestCase):
         self.assertIn("![Figure 1](", markdown)
         self.assertIn("**Figure 1.**", markdown)
 
-    def test_paper_fetch_uses_wiley_html_replay_fixture_for_positive_sample(self) -> None:
+    def test_paper_fetch_uses_wiley_html_replay_fixture_for_positive_sample(
+        self,
+    ) -> None:
         wiley_html = read_fixture_text(WILEY_SAMPLE.fixture_name)
         metadata = {
             "provider": "crossref",
@@ -618,16 +679,24 @@ class RegressionSampleTests(unittest.TestCase):
         self.assertIn("fulltext:wiley_html_ok", article.quality.source_trail)
         markdown = article.to_ai_markdown(max_tokens=16000)
         self.assertIn("## Abstract", markdown)
-        self.assertIn("Global vegetation greening has been widely confirmed in previous studies", article.metadata.abstract)
+        self.assertIn(
+            "Global vegetation greening has been widely confirmed in previous studies",
+            article.metadata.abstract,
+        )
         self.assertIn("## 1 INTRODUCTION", markdown)
         self.assertIn("### 2.1 Study area", markdown)
-        self.assertIn("### 3.1 Spatiotemporal changes in the velocity of vegetation green-up", markdown)
+        self.assertIn(
+            "### 3.1 Spatiotemporal changes in the velocity of vegetation green-up",
+            markdown,
+        )
         self.assertIn("## 4 DISCUSSION", markdown)
         self.assertNotIn("## Abbreviations", markdown)
         self.assertIn("![Figure 1](", markdown)
         self.assertIn("**Figure 1.**", markdown)
 
-    def test_paper_fetch_uses_wiley_pdf_fallback_replay_fixture_for_secondary_sample(self) -> None:
+    def test_paper_fetch_uses_wiley_pdf_fallback_replay_fixture_for_secondary_sample(
+        self,
+    ) -> None:
         markdown_text = read_fixture_text(WILEY_PDF_FALLBACK_SAMPLE.fixture_name)
         metadata = {
             "provider": "crossref",
@@ -738,9 +807,13 @@ class RegressionSampleTests(unittest.TestCase):
         self.assertIn("**Equation 1.**", markdown)
         self.assertIn("**Figure 1.**", markdown)
 
-    def test_paper_fetch_elsevier_negative_sample_falls_back_to_crossref_metadata(self) -> None:
+    def test_paper_fetch_elsevier_negative_sample_falls_back_to_crossref_metadata(
+        self,
+    ) -> None:
         doi = "10.1016/j.solener.2024.01.001"
-        landing_url = "https://www.sciencedirect.com/science/article/pii/S0038092X24000010"
+        landing_url = (
+            "https://www.sciencedirect.com/science/article/pii/S0038092X24000010"
+        )
         metadata = {
             "provider": "crossref",
             "official_provider": False,
@@ -761,13 +834,15 @@ class RegressionSampleTests(unittest.TestCase):
 
         original_resolve = paper_fetch.resolve_paper
         try:
-            paper_fetch.resolve_paper = lambda *args, **kwargs: paper_fetch.ResolvedQuery(
-                query=doi,
-                query_kind="doi",
-                doi=doi,
-                landing_url=landing_url,
-                provider_hint="elsevier",
-                confidence=1.0,
+            paper_fetch.resolve_paper = lambda *args, **kwargs: (
+                paper_fetch.ResolvedQuery(
+                    query=doi,
+                    query_kind="doi",
+                    doi=doi,
+                    landing_url=landing_url,
+                    provider_hint="elsevier",
+                    confidence=1.0,
+                )
             )
 
             article = fetch_article(
@@ -775,7 +850,10 @@ class RegressionSampleTests(unittest.TestCase):
                 strategy=paper_fetch.FetchStrategy(),
                 clients={
                     "elsevier": ProviderStub(
-                        metadata=ProviderFailure("not_supported", "Regression fixture omits official metadata."),
+                        metadata=ProviderFailure(
+                            "not_supported",
+                            "Regression fixture omits official metadata.",
+                        ),
                         raw_error=not_found_error,
                     ),
                     "crossref": ProviderStub(metadata=metadata),
@@ -787,16 +865,27 @@ class RegressionSampleTests(unittest.TestCase):
         self.assertEqual(article.source, "crossref_meta")
         self.assertFalse(article.quality.has_fulltext)
         self.assertEqual(article.doi, doi)
-        self.assertTrue(any("HTTP 404" in warning for warning in article.quality.warnings))
-        self.assertTrue(any("Full text was not available" in warning for warning in article.quality.warnings))
+        self.assertTrue(
+            any("HTTP 404" in warning for warning in article.quality.warnings)
+        )
+        self.assertTrue(
+            any(
+                "Full text was not available" in warning
+                for warning in article.quality.warnings
+            )
+        )
 
     def test_wiley_bilingual_fixture_preserves_parallel_abstract_sections(self) -> None:
         self._assert_bilingual_fixture_case("wiley")
 
-    def test_springer_bilingual_fixture_preserves_parallel_abstract_sections(self) -> None:
+    def test_springer_bilingual_fixture_preserves_parallel_abstract_sections(
+        self,
+    ) -> None:
         self._assert_bilingual_fixture_case("springer")
 
-    def test_elsevier_bilingual_fixture_preserves_parallel_abstract_sections(self) -> None:
+    def test_elsevier_bilingual_fixture_preserves_parallel_abstract_sections(
+        self,
+    ) -> None:
         self._assert_bilingual_fixture_case("elsevier")
 
     def test_sage_bilingual_fixture_preserves_parallel_abstract_sections(self) -> None:

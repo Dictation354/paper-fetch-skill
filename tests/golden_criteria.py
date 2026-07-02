@@ -70,7 +70,9 @@ def _samples_by_doi_and_family() -> dict[tuple[str, str], dict[str, Any]]:
     return indexed
 
 
-def fixture_sample_for_doi(doi: str, *, fixture_family: str = "golden") -> dict[str, Any]:
+def fixture_sample_for_doi(
+    doi: str, *, fixture_family: str = "golden"
+) -> dict[str, Any]:
     return dict(_samples_by_doi_and_family()[(fixture_family, doi.casefold())])
 
 
@@ -78,10 +80,15 @@ def golden_criteria_sample_for_doi(doi: str) -> dict[str, Any]:
     return fixture_sample_for_doi(doi, fixture_family="golden")
 
 
-def iter_manifest_samples(*, fixture_family: str | None = None) -> tuple[dict[str, Any], ...]:
+def iter_manifest_samples(
+    *, fixture_family: str | None = None
+) -> tuple[dict[str, Any], ...]:
     samples: Iterable[dict[str, Any]] = (
-        golden_criteria_sample(sample_id) for sample_id in golden_criteria_manifest()["samples"]
+        golden_criteria_sample(sample_id)
+        for sample_id in golden_criteria_manifest()["samples"]
     )
     if fixture_family is None:
         return tuple(samples)
-    return tuple(sample for sample in samples if sample.get("fixture_family") == fixture_family)
+    return tuple(
+        sample for sample in samples if sample.get("fixture_family") == fixture_family
+    )

@@ -7,7 +7,9 @@ import re
 from ..utils import normalize_text
 
 _FORMULA_KIND_PATTERN = re.compile(r"^(?:formula|equation)$", flags=re.IGNORECASE)
-_IMAGE_LABEL_NUMBER_PATTERN = r"([A-Za-z]?\d+[A-Za-z]?(?:\.\d+[A-Za-z]?)*|[A-Za-z]\.\d+[A-Za-z]?)"
+_IMAGE_LABEL_NUMBER_PATTERN = (
+    r"([A-Za-z]?\d+[A-Za-z]?(?:\.\d+[A-Za-z]?)*|[A-Za-z]\.\d+[A-Za-z]?)"
+)
 _FIGURE_LABEL_PATTERN = re.compile(
     rf"\bfig(?:ure)?\s*\.?\s*{_IMAGE_LABEL_NUMBER_PATTERN}",
     flags=re.IGNORECASE,
@@ -41,7 +43,9 @@ def _first_label_number(
     return None
 
 
-def short_image_alt(kind: str | None, heading: str | None = None, fallback: str | None = None) -> str:
+def short_image_alt(
+    kind: str | None, heading: str | None = None, fallback: str | None = None
+) -> str:
     """Return a compact, caption-free alt label for generated image Markdown."""
 
     normalized_kind = normalize_text(kind).lower()
@@ -49,7 +53,9 @@ def short_image_alt(kind: str | None, heading: str | None = None, fallback: str 
         number = _first_label_number("figure", heading=heading, fallback=fallback)
         if number:
             return f"Figure {number}"
-        listing_number = _first_label_number("listing", heading=heading, fallback=fallback)
+        listing_number = _first_label_number(
+            "listing", heading=heading, fallback=fallback
+        )
         if listing_number:
             return f"Listing {listing_number}"
         return "Figure"
@@ -64,7 +70,9 @@ def short_image_alt(kind: str | None, heading: str | None = None, fallback: str 
     return "Image"
 
 
-def render_markdown_image(kind: str | None, heading: str | None, url: str | None) -> str:
+def render_markdown_image(
+    kind: str | None, heading: str | None, url: str | None
+) -> str:
     image_url = normalize_text(url)
     if not image_url:
         return ""

@@ -25,7 +25,9 @@ def normalize_optional_path(value: str | os.PathLike[str] | None) -> Path | None
 
 def repo_root() -> Path | None:
     candidate = Path(__file__).resolve().parents[3]
-    if (candidate / "install.sh").exists() and (candidate / "src" / "paper_fetch").exists():
+    if (candidate / "install.sh").exists() and (
+        candidate / "src" / "paper_fetch"
+    ).exists():
         return candidate
     return None
 

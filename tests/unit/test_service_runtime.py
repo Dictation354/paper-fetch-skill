@@ -5,7 +5,9 @@ from ._service_support import *
 
 
 class ServiceRuntimeTests(unittest.TestCase):
-    def test_probe_then_fetch_reuses_crossref_metadata_in_same_runtime_context(self) -> None:
+    def test_probe_then_fetch_reuses_crossref_metadata_in_same_runtime_context(
+        self,
+    ) -> None:
         resolved = paper_fetch.ResolvedQuery(
             query="10.1126/science.cache",
             query_kind="doi",
@@ -49,7 +51,8 @@ class ServiceRuntimeTests(unittest.TestCase):
                             content_type="text/html",
                             body=b"<html></html>",
                             route_kind="html",
-                            markdown_text="# Example Article\n\n## Results\n\n" + ("Body text " * 80),
+                            markdown_text="# Example Article\n\n## Results\n\n"
+                            + ("Body text " * 80),
                             source_trail=["fulltext:science_html_ok"],
                         ),
                         article=sample_article(),
@@ -70,6 +73,7 @@ class ServiceRuntimeTests(unittest.TestCase):
         self.assertEqual(probe.evidence, ["crossref_license"])
         self.assertIsNotNone(envelope.article)
         self.assertEqual(crossref_calls["count"], 1)
+
     def test_landing_citation_pdf_probe_is_reused_by_fetch_metadata_links(self) -> None:
         landing_url = "https://example.test/article"
         resolved = paper_fetch.ResolvedQuery(
@@ -106,7 +110,8 @@ class ServiceRuntimeTests(unittest.TestCase):
                             content_type="text/html",
                             body=b"<html></html>",
                             route_kind="html",
-                            markdown_text="# Example Article\n\n## Results\n\n" + ("Body text " * 80),
+                            markdown_text="# Example Article\n\n## Results\n\n"
+                            + ("Body text " * 80),
                             source_trail=["fulltext:science_html_ok"],
                         ),
                         article_factory=lambda metadata, raw_payload, **kwargs: (
@@ -138,7 +143,10 @@ class ServiceRuntimeTests(unittest.TestCase):
             },
             links,
         )
-    def test_session_cache_does_not_cross_runtime_contexts_or_contextless_calls(self) -> None:
+
+    def test_session_cache_does_not_cross_runtime_contexts_or_contextless_calls(
+        self,
+    ) -> None:
         resolved = paper_fetch.ResolvedQuery(
             query="10.1126/science.cache-isolated",
             query_kind="doi",
@@ -175,8 +183,14 @@ class ServiceRuntimeTests(unittest.TestCase):
         try:
             paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
             different_context_counter = {"count": 0}
-            first_context = RuntimeContext(env={}, clients={"crossref": counting_crossref(different_context_counter)})
-            second_context = RuntimeContext(env={}, clients={"crossref": counting_crossref(different_context_counter)})
+            first_context = RuntimeContext(
+                env={},
+                clients={"crossref": counting_crossref(different_context_counter)},
+            )
+            second_context = RuntimeContext(
+                env={},
+                clients={"crossref": counting_crossref(different_context_counter)},
+            )
 
             _probe_has_fulltext(resolved.query, context=first_context)
             _probe_has_fulltext(resolved.query, context=second_context)
@@ -195,7 +209,10 @@ class ServiceRuntimeTests(unittest.TestCase):
 
         self.assertEqual(different_context_counter["count"], 2)
         self.assertEqual(contextless_counter["count"], 2)
-    def test_fetch_paper_uses_runtime_context_dependencies_when_legacy_keywords_are_omitted(self) -> None:
+
+    def test_fetch_paper_uses_runtime_context_dependencies_when_legacy_keywords_are_omitted(
+        self,
+    ) -> None:
         resolved = paper_fetch.ResolvedQuery(
             query="10.1126/science.context",
             query_kind="doi",
@@ -225,12 +242,14 @@ class ServiceRuntimeTests(unittest.TestCase):
                                 content_type="text/html",
                                 body=b"<html></html>",
                                 route_kind="html",
-                                markdown_text="# Example Article\n\n## Results\n\n" + ("Body text " * 80),
+                                markdown_text="# Example Article\n\n## Results\n\n"
+                                + ("Body text " * 80),
                                 source_trail=["fulltext:science_html_ok"],
                             ),
                             article=sample_article(),
                             related_asset_factory=lambda _doi, _metadata, _payload, output_dir, **_kwargs: (
-                                asset_output_dirs.append(output_dir) or {"assets": [], "asset_failures": []}
+                                asset_output_dirs.append(output_dir)
+                                or {"assets": [], "asset_failures": []}
                             ),
                         )
                     },
@@ -250,6 +269,7 @@ class ServiceRuntimeTests(unittest.TestCase):
         self.assertIs(captured["transport"], runtime_transport)
         self.assertEqual(captured["env"], runtime_env)
         self.assertEqual(asset_output_dirs, [context.download_dir])
+
     def test_provider_client_fetch_result_accumulates_asset_timing(self) -> None:
         class TimedProvider(ProviderClient):
             name = "timed"
@@ -303,6 +323,7 @@ class ServiceRuntimeTests(unittest.TestCase):
                 runtime_module.time.monotonic = original_monotonic
 
         self.assertEqual(context.stage_timings["asset_seconds"], 0.2)
+
     def test_raw_fulltext_provider_branch_accumulates_asset_timing(self) -> None:
         class RawTimedProvider:
             name = "raw_timed"
@@ -361,7 +382,10 @@ class ServiceRuntimeTests(unittest.TestCase):
                 runtime_module.time.monotonic = original_monotonic
 
         self.assertEqual(context.stage_timings["asset_seconds"], 0.3)
-    def test_provider_fetch_result_passes_artifact_store_to_fulltext_provider(self) -> None:
+
+    def test_provider_fetch_result_passes_artifact_store_to_fulltext_provider(
+        self,
+    ) -> None:
         seen: dict[str, object] = {}
 
         class RecordingProvider:
@@ -380,7 +404,9 @@ class ServiceRuntimeTests(unittest.TestCase):
                 seen["output_dir"] = output_dir
                 seen["artifact_store"] = artifact_store
                 seen["context"] = context
-                return ProviderFetchResult(provider="recording", article=sample_article())
+                return ProviderFetchResult(
+                    provider="recording", article=sample_article()
+                )
 
         with tempfile.TemporaryDirectory() as tmpdir:
             artifact_store = ArtifactStore.from_download_dir(Path(tmpdir))
@@ -397,16 +423,23 @@ class ServiceRuntimeTests(unittest.TestCase):
         self.assertEqual(seen["output_dir"], artifact_store.download_dir)
         self.assertIs(seen["artifact_store"], artifact_store)
         self.assertIs(seen["context"], context)
+
     def test_fetch_paper_rejects_legacy_runtime_keywords(self) -> None:
         with self.assertRaises(TypeError):
             paper_fetch.fetch_paper("10.1126/science.override", clients={})
 
         with self.assertRaises(TypeError):
-            paper_fetch.fetch_paper("10.1126/science.override", download_dir=Path("/tmp/paper-fetch-test"))
+            paper_fetch.fetch_paper(
+                "10.1126/science.override", download_dir=Path("/tmp/paper-fetch-test")
+            )
+
     def test_probe_has_fulltext_rejects_legacy_runtime_keywords(self) -> None:
         with self.assertRaises(TypeError):
             paper_fetch.probe_has_fulltext("10.1126/science.override", clients={})
-    def test_artifact_store_preserves_provider_payload_and_springer_html_markers(self) -> None:
+
+    def test_artifact_store_preserves_provider_payload_and_springer_html_markers(
+        self,
+    ) -> None:
         pdf_content = ProviderContent(
             route_kind="pdf_fallback",
             source_url="https://example.test/article.pdf",
@@ -421,7 +454,9 @@ class ServiceRuntimeTests(unittest.TestCase):
             body=b"<html><body>Springer article</body></html>",
         )
 
-        skipped_warnings, skipped_trail = ArtifactStore.from_download_dir(None).save_provider_payload(
+        skipped_warnings, skipped_trail = ArtifactStore.from_download_dir(
+            None
+        ).save_provider_payload(
             "wiley",
             content=pdf_content,
             doi="10.1111/example",
@@ -429,10 +464,14 @@ class ServiceRuntimeTests(unittest.TestCase):
         )
         self.assertEqual(
             skipped_warnings,
-            ["Wiley official PDF/binary was not written to disk because --no-download was set."],
+            [
+                "Wiley official PDF/binary was not written to disk because --no-download was set."
+            ],
         )
         self.assertEqual(skipped_trail, ["download:wiley_skipped"])
-        ieee_skipped_warnings, ieee_skipped_trail = ArtifactStore.from_download_dir(None).save_provider_payload(
+        ieee_skipped_warnings, ieee_skipped_trail = ArtifactStore.from_download_dir(
+            None
+        ).save_provider_payload(
             "ieee",
             content=pdf_content,
             doi="10.1109/example",
@@ -440,7 +479,9 @@ class ServiceRuntimeTests(unittest.TestCase):
         )
         self.assertEqual(
             ieee_skipped_warnings,
-            ["IEEE official PDF/binary was not written to disk because --no-download was set."],
+            [
+                "IEEE official PDF/binary was not written to disk because --no-download was set."
+            ],
         )
         self.assertEqual(ieee_skipped_trail, ["download:ieee_skipped"])
 
@@ -468,15 +509,24 @@ class ServiceRuntimeTests(unittest.TestCase):
             saved_paths = list(Path(tmpdir).glob("*"))
 
         self.assertEqual(saved_trail, ["download:wiley_saved"])
-        self.assertTrue(any("Wiley official full text was downloaded as PDF/binary to" in item for item in saved_warnings))
+        self.assertTrue(
+            any(
+                "Wiley official full text was downloaded as PDF/binary to" in item
+                for item in saved_warnings
+            )
+        )
         self.assertEqual(html_warnings, [])
         self.assertEqual(html_trail, ["download:springer_html_saved"])
         self.assertEqual(wiley_html_warnings, [])
         self.assertEqual(wiley_html_trail, [])
         self.assertTrue(any(path.name.endswith(".pdf") for path in saved_paths))
-        self.assertTrue(any(path.name.endswith("_original.html") for path in saved_paths))
+        self.assertTrue(
+            any(path.name.endswith("_original.html") for path in saved_paths)
+        )
 
-    def test_artifact_store_markdown_assets_keeps_pdf_fallback_but_skips_raw_html(self) -> None:
+    def test_artifact_store_markdown_assets_keeps_pdf_fallback_but_skips_raw_html(
+        self,
+    ) -> None:
         pdf_content = ProviderContent(
             route_kind="pdf_fallback",
             source_url="https://example.test/article.pdf",
@@ -510,13 +560,22 @@ class ServiceRuntimeTests(unittest.TestCase):
             saved_paths = list(Path(tmpdir).glob("*"))
 
         self.assertEqual(saved_trail, ["download:wiley_saved"])
-        self.assertTrue(any("Wiley official full text was downloaded as PDF/binary to" in item for item in saved_warnings))
+        self.assertTrue(
+            any(
+                "Wiley official full text was downloaded as PDF/binary to" in item
+                for item in saved_warnings
+            )
+        )
         self.assertEqual(html_warnings, [])
         self.assertEqual(html_trail, [])
         self.assertTrue(any(path.name.endswith(".pdf") for path in saved_paths))
-        self.assertFalse(any(path.name.endswith("_original.html") for path in saved_paths))
+        self.assertFalse(
+            any(path.name.endswith("_original.html") for path in saved_paths)
+        )
 
-    def test_artifact_store_uses_payload_merged_metadata_for_pdf_payload_filename(self) -> None:
+    def test_artifact_store_uses_payload_merged_metadata_for_pdf_payload_filename(
+        self,
+    ) -> None:
         pdf_content = ProviderContent(
             route_kind="pdf_fallback",
             source_url="https://arxiv.org/pdf/2510.02576",
@@ -588,7 +647,12 @@ class ServiceRuntimeTests(unittest.TestCase):
             store.apply_provider_artifacts(
                 provider_name="wiley",
                 artifacts=ProviderArtifacts(
-                    assets=[{"path": str(Path(tmpdir) / "asset.png"), "download_tier": "full_size"}]
+                    assets=[
+                        {
+                            "path": str(Path(tmpdir) / "asset.png"),
+                            "download_tier": "full_size",
+                        }
+                    ]
                 ),
                 asset_profile="body",
                 warnings=warnings,

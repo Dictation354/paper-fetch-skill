@@ -100,7 +100,10 @@ def _browser_workflow_label(provider: str) -> str:
 
 def _dependency_available() -> bool:
     try:
-        return importlib_util.find_spec("playwright") is not None and importlib_util.find_spec("cloakbrowser") is not None
+        return (
+            importlib_util.find_spec("playwright") is not None
+            and importlib_util.find_spec("cloakbrowser") is not None
+        )
     except (ModuleNotFoundError, ValueError):
         return False
 
@@ -179,7 +182,9 @@ _PROVIDER_STORAGE_STATE_ENV_VARS = {
 }
 
 
-def _configured_storage_state_path(env: Mapping[str, str], *, provider: str) -> Path | None:
+def _configured_storage_state_path(
+    env: Mapping[str, str], *, provider: str
+) -> Path | None:
     env_var = _PROVIDER_STORAGE_STATE_ENV_VARS.get(normalize_text(provider).lower())
     if env_var is None:
         return None
@@ -187,7 +192,9 @@ def _configured_storage_state_path(env: Mapping[str, str], *, provider: str) -> 
     return Path(value).expanduser() if value else None
 
 
-def _validate_binary_path(binary_path: str | None, *, require_launch_binary: bool) -> None:
+def _validate_binary_path(
+    binary_path: str | None, *, require_launch_binary: bool
+) -> None:
     if not require_launch_binary or not binary_path:
         return
     path = Path(binary_path).expanduser()
@@ -261,7 +268,12 @@ def load_runtime_config(
     require_storage_state: bool = False,
 ) -> CloakBrowserRuntimeConfig:
     headless = not _env_flag_false(env.get(CLOAKBROWSER_HEADLESS_ENV_VAR))
-    artifact_dir = resolve_user_data_dir(env) / "publisher-browser-artifacts" / provider / sanitize_filename(doi)
+    artifact_dir = (
+        resolve_user_data_dir(env)
+        / "publisher-browser-artifacts"
+        / provider
+        / sanitize_filename(doi)
+    )
     binary_path = _configured_binary_path(env)
     cdp_endpoint = _configured_cdp_endpoint(env)
     _validate_cdp_endpoint(cdp_endpoint, provider=provider)
@@ -321,19 +333,29 @@ def _runtime_probe_details(
             if config is not None
             else not _env_flag_false(env.get(CLOAKBROWSER_HEADLESS_ENV_VAR))
         ),
-        "timeout_ms": config.timeout_ms if config is not None else parse_positive_int_env(
+        "timeout_ms": config.timeout_ms
+        if config is not None
+        else parse_positive_int_env(
             env,
             CLOAKBROWSER_TIMEOUT_MS_ENV_VAR,
             default=DEFAULT_CLOAKBROWSER_TIMEOUT_MS,
         ),
-        "binary_path_configured": bool(config.binary_path if config is not None else _configured_binary_path(env)),
+        "binary_path_configured": bool(
+            config.binary_path if config is not None else _configured_binary_path(env)
+        ),
         "cdp_endpoint_configured": bool(
             config.cdp_endpoint if config is not None else _configured_cdp_endpoint(env)
         ),
         "profile_dir_configured": bool(
-            config.profile_dir if config is not None else _configured_profile_dir(env, provider=provider)
+            config.profile_dir
+            if config is not None
+            else _configured_profile_dir(env, provider=provider)
         ),
-        "user_data_dir_configured": bool(config.user_data_dir if config is not None else _configured_user_data_dir(env)),
+        "user_data_dir_configured": bool(
+            config.user_data_dir
+            if config is not None
+            else _configured_user_data_dir(env)
+        ),
         "storage_state_json_configured": bool(storage_state_path),
         "auto_cdp_browser_enabled": not bool(
             config.cdp_endpoint if config is not None else _configured_cdp_endpoint(env)
@@ -370,9 +392,17 @@ def probe_runtime_status(
             )
         )
     except ProviderFailure as exc:
-        checks.append(provider_status_check_from_failure("runtime_env", exc, details=runtime_details))
+        checks.append(
+            provider_status_check_from_failure(
+                "runtime_env", exc, details=runtime_details
+            )
+        )
     except Exception as exc:
-        checks.append(build_provider_status_check("runtime_env", ERROR, str(exc), details=runtime_details))
+        checks.append(
+            build_provider_status_check(
+                "runtime_env", ERROR, str(exc), details=runtime_details
+            )
+        )
 
     dependency_details = _dependency_details()
     if dependency_available:
@@ -483,8 +513,9 @@ def _capture_expected_response(page: Any, request_url: str) -> Any:
     )
     try:
         expected_response = page.expect_response(
-            lambda response: normalize_text(str(getattr(response, "url", "") or ""))
-            == request_url,
+            lambda response: (
+                normalize_text(str(getattr(response, "url", "") or "")) == request_url
+            ),
             timeout=timeout_ms,
         )
     except Exception:
@@ -531,8 +562,7 @@ def _payload_from_canvas_export(
         return None
     body_b64 = normalize_text(str(rendered.get("bodyB64") or ""))
     content_type = (
-        _normalized_content_type(str(rendered.get("contentType") or ""))
-        or "image/png"
+        _normalized_content_type(str(rendered.get("contentType") or "")) or "image/png"
     )
     data_url = normalize_text(
         str(rendered.get("dataURL") or rendered.get("dataUrl") or "")
@@ -596,10 +626,10 @@ def _capture_image_payload(
         html = str(page.content() or "")
     except Exception:
         html = ""
-    if (
-        _normalized_content_type(content_type) in {"image/svg+xml", ""}
-        or normalize_text(html).startswith("<")
-    ):
+    if _normalized_content_type(content_type) in {
+        "image/svg+xml",
+        "",
+    } or normalize_text(html).startswith("<"):
         svg_payload = _browser_image_payload_from_bytes(
             html.encode("utf-8"),
             content_type="image/svg+xml",
@@ -642,7 +672,7 @@ def _capture_image_payload(
         title = ""
     if not title and html:
         try:
-            title = extract_page_title(BeautifulSoup(html, choose_parser()))
+            title = extract_page_title(BeautifulSoup(html, choose_parser())) or ""
         except Exception:
             title = ""
     summary = summarize_html(html) if normalize_text(html) else ""
@@ -666,7 +696,9 @@ def _capture_image_payload(
     return None
 
 
-def _context_seed(context: Any, *, final_url: str, user_agent: str | None) -> dict[str, Any]:
+def _context_seed(
+    context: Any, *, final_url: str, user_agent: str | None
+) -> dict[str, Any]:
     already_filtered = False
     try:
         cookies = context.cookies([final_url])
@@ -725,10 +757,16 @@ def _storage_origin_matches_url(origin: Mapping[str, Any], url: str | None) -> b
         target_host = normalize_text(urlparse(target_url).hostname or "").lower()
     except Exception:
         return True
-    return bool(origin_host and target_host and (origin_host == target_host or target_host.endswith(f".{origin_host}")))
+    return bool(
+        origin_host
+        and target_host
+        and (origin_host == target_host or target_host.endswith(f".{origin_host}"))
+    )
 
 
-def _filtered_storage_state_payload(context: Any, *, url: str) -> Mapping[str, Any] | None:
+def _filtered_storage_state_payload(
+    context: Any, *, url: str
+) -> Mapping[str, Any] | None:
     try:
         payload = context.storage_state()
     except TypeError:
@@ -766,7 +804,9 @@ def _save_storage_state(
         storage_state_path.parent.mkdir(parents=True, exist_ok=True)
         active_filter_url = normalize_text(filter_url)
         if active_filter_url:
-            filtered_payload = _filtered_storage_state_payload(context, url=active_filter_url)
+            filtered_payload = _filtered_storage_state_payload(
+                context, url=active_filter_url
+            )
             if filtered_payload is not None:
                 storage_state_path.write_text(
                     json.dumps(filtered_payload, ensure_ascii=False, indent=2),
@@ -800,7 +840,9 @@ def fetch_html_with_cloakbrowser(
 ) -> BrowserFetchedHtml:
     del warm_wait_seconds
     if not candidate_urls:
-        raise CloakBrowserFailure("empty_html_attempts", "No publisher HTML candidates were attempted.")
+        raise CloakBrowserFailure(
+            "empty_html_attempts", "No publisher HTML candidates were attempted."
+        )
     if return_image_payload:
         disable_media = False
 
@@ -844,7 +886,9 @@ def fetch_html_with_cloakbrowser(
                     profile_dir=config.profile_dir,
                     user_data_dir=config.user_data_dir,
                 )
-                browser_context = manager.new_context(headless=config.headless, **context_kwargs)
+                browser_context = manager.new_context(
+                    headless=config.headless, **context_kwargs
+                )
             page = browser_context.new_page()
         except Exception as exc:
             raise CloakBrowserFailure(
@@ -854,8 +898,13 @@ def fetch_html_with_cloakbrowser(
 
         def route_handler(route: Any) -> None:
             try:
-                resource_type = normalize_text(str(route.request.resource_type or "")).lower()
-                if disable_media and resource_type in BROWSER_HTML_BLOCKED_RESOURCE_TYPES:
+                resource_type = normalize_text(
+                    str(route.request.resource_type or "")
+                ).lower()
+                if (
+                    disable_media
+                    and resource_type in BROWSER_HTML_BLOCKED_RESOURCE_TYPES
+                ):
                     route.abort()
                     return
                 route.continue_()
@@ -886,10 +935,12 @@ def fetch_html_with_cloakbrowser(
                         setattr(page, _IMAGE_PAYLOAD_TIMEOUT_ATTR, timeout_ms)
                     try:
                         with page.expect_response(
-                            lambda candidate_response, normalized_url=normalized_url: normalize_text(
-                                str(getattr(candidate_response, "url", "") or "")
-                            )
-                            == normalized_url,
+                            lambda candidate_response, normalized_url=normalized_url: (
+                                normalize_text(
+                                    str(getattr(candidate_response, "url", "") or "")
+                                )
+                                == normalized_url
+                            ),
                             timeout=timeout_ms,
                         ) as response_info:
                             response = page.goto(
@@ -931,12 +982,12 @@ def fetch_html_with_cloakbrowser(
                             remaining_timeout_seconds,
                         ),
                     )
-                if (
-                    (readiness is None or not readiness.attempted)
-                    and wait_seconds > 0
-                ):
+                if (readiness is None or not readiness.attempted) and wait_seconds > 0:
                     page.wait_for_timeout(max(0, int(wait_seconds)) * 1000)
-                final_url = normalize_text(str(getattr(page, "url", "") or "")) or normalized_url
+                final_url = (
+                    normalize_text(str(getattr(page, "url", "") or ""))
+                    or normalized_url
+                )
                 latest_storage_state_url = final_url
                 html = str(page.content() or "")
                 title = normalize_text(str(page.title() or "")) or extract_page_title(
@@ -950,7 +1001,9 @@ def fetch_html_with_cloakbrowser(
                     final_url=final_url,
                     user_agent=configured_user_agent or browser_page_user_agent(page),
                 )
-                if browser_context_seed.get("browser_cookies") or browser_context_seed.get("browser_user_agent"):
+                if browser_context_seed.get(
+                    "browser_cookies"
+                ) or browser_context_seed.get("browser_user_agent"):
                     latest_browser_context_seed = browser_context_seed
                 image_payload = None
                 if return_image_payload:
@@ -965,9 +1018,9 @@ def fetch_html_with_cloakbrowser(
                     image_failure = getattr(page, _IMAGE_PAYLOAD_FAILURE_ATTR, None)
                     if isinstance(image_failure, Mapping):
                         headers = dict(headers)
-                        headers[
-                            "x-paper-fetch-image-payload-failure-reason"
-                        ] = normalize_text(str(image_failure.get("reason") or ""))
+                        headers["x-paper-fetch-image-payload-failure-reason"] = (
+                            normalize_text(str(image_failure.get("reason") or ""))
+                        )
             except Exception as exc:
                 if isinstance(exc, CloakBrowserFailure):
                     last_failure = exc
@@ -1011,7 +1064,9 @@ def fetch_html_with_cloakbrowser(
                 try:
                     screenshot_payload = page.screenshot(type="png", timeout=timeout_ms)
                     if isinstance(screenshot_payload, bytes):
-                        screenshot_b64 = base64.b64encode(screenshot_payload).decode("ascii")
+                        screenshot_b64 = base64.b64encode(screenshot_payload).decode(
+                            "ascii"
+                        )
                     elif isinstance(screenshot_payload, str):
                         screenshot_b64 = screenshot_payload
                 except Exception:
@@ -1029,7 +1084,9 @@ def fetch_html_with_cloakbrowser(
                 image_payload=image_payload,
             )
     finally:
-        _save_storage_state(browser_context, config, filter_url=latest_storage_state_url)
+        _save_storage_state(
+            browser_context, config, filter_url=latest_storage_state_url
+        )
         _safe_close(page)
         _safe_close(browser_context)
         _safe_close(manager)
@@ -1041,7 +1098,9 @@ def fetch_html_with_cloakbrowser(
             browser_context_seed=latest_browser_context_seed,
         )
     if last_failure is None:
-        last_failure = CloakBrowserFailure("empty_html_attempts", "No publisher HTML candidates were attempted.")
+        last_failure = CloakBrowserFailure(
+            "empty_html_attempts", "No publisher HTML candidates were attempted."
+        )
     if artifact_dir:
         with contextlib.suppress(OSError):
             artifact_dir.mkdir(parents=True, exist_ok=True)

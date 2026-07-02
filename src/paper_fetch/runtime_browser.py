@@ -94,18 +94,24 @@ def _resolve_cloakbrowser_binary(binary_path: str | None = None) -> str:
     if active_binary:
         path = Path(active_binary).expanduser()
         if not path.is_file():
-            raise RuntimeError(f"CLOAKBROWSER_BINARY_PATH is set but does not point to a file: {path}")
+            raise RuntimeError(
+                f"CLOAKBROWSER_BINARY_PATH is set but does not point to a file: {path}"
+            )
         return str(path)
 
     try:
         cloakbrowser = import_cloakbrowser()
     except Exception as exc:
-        raise RuntimeError(f"CloakBrowser Python package is not importable: {exc}") from exc
+        raise RuntimeError(
+            f"CloakBrowser Python package is not importable: {exc}"
+        ) from exc
 
     try:
         return str(cloakbrowser.ensure_binary())
     except Exception as exc:
-        raise RuntimeError(f"CloakBrowser Chrome binary is not available: {exc}") from exc
+        raise RuntimeError(
+            f"CloakBrowser Chrome binary is not available: {exc}"
+        ) from exc
 
 
 def _build_managed_chrome_args(
@@ -133,8 +139,7 @@ def _build_managed_chrome_args(
             )
         )
         has_headless_flag = any(
-            arg == "--headless" or arg.startswith("--headless=")
-            for arg in built_args
+            arg == "--headless" or arg.startswith("--headless=") for arg in built_args
         )
         if headless and not has_headless_flag:
             built_args.append("--headless=new")
@@ -157,7 +162,9 @@ def _wait_for_cdp_endpoint(
 
     while time.monotonic() < deadline:
         if process.poll() is not None:
-            raise RuntimeError(f"Managed Chrome exited before CDP endpoint was ready: {process.returncode}")
+            raise RuntimeError(
+                f"Managed Chrome exited before CDP endpoint was ready: {process.returncode}"
+            )
         try:
             with urllib.request.urlopen(url, timeout=1.0) as response:
                 payload = json.loads(response.read().decode("utf-8"))
@@ -200,7 +207,9 @@ def _storage_state_payload(storage_state: Any) -> Mapping[str, Any] | None:
     if not storage_state_path:
         return None
     try:
-        payload = json.loads(Path(storage_state_path).expanduser().read_text(encoding="utf-8"))
+        payload = json.loads(
+            Path(storage_state_path).expanduser().read_text(encoding="utf-8")
+        )
     except Exception:
         return None
     return payload if isinstance(payload, Mapping) else None
@@ -227,12 +236,38 @@ def _apply_storage_state_cookies(context: Any, storage_state: Any) -> int:
 class _BorrowedBrowserContext:
     """Wrap an externally-owned browser context without closing it."""
 
-    def __init__(self, context: Any) -> None:
+    def __init__(self, context: Any, browser: Any | None = None) -> None:
         self._context = context
+        self._browser = browser
         self._paper_fetch_borrowed_context = True
+        self._closed = False
 
     def close(self) -> None:
-        return None
+        if self._closed:
+            return
+        self._closed = True
+        _safe_close(self._browser)
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self._context, name)
+
+
+class _OwnedBrowserContext:
+    """Close a thread-owned CDP connection when the context is closed."""
+
+    def __init__(self, context: Any, browser: Any) -> None:
+        self._context = context
+        self._browser = browser
+        self._closed = False
+
+    def close(self) -> None:
+        if self._closed:
+            return
+        self._closed = True
+        try:
+            _safe_close(self._context)
+        finally:
+            _safe_close(self._browser)
 
     def __getattr__(self, name: str) -> Any:
         return getattr(self._context, name)
@@ -240,6 +275,13 @@ class _BorrowedBrowserContext:
 
 def is_borrowed_browser_context(context: Any) -> bool:
     return bool(getattr(context, "_paper_fetch_borrowed_context", False))
+
+
+def _safe_close(value: Any) -> None:
+    if value is None:
+        return
+    with suppress(Exception):
+        value.close()
 
 
 @dataclass
@@ -251,10 +293,14 @@ class BrowserContextManager:
     profile_dir: Path | None = None
     user_data_dir: Path | None = None
     profile_lock_timeout_seconds: float = DEFAULT_PROFILE_LOCK_TIMEOUT_SECONDS
-    _lock: threading.RLock = field(default_factory=threading.RLock, init=False, repr=False)
+    _lock: threading.RLock = field(
+        default_factory=threading.RLock, init=False, repr=False
+    )
     _browser: Any | None = field(default=None, init=False, repr=False)
     _headless: bool | None = field(default=None, init=False, repr=False)
-    _managed_process: subprocess.Popen[Any] | None = field(default=None, init=False, repr=False)
+    _managed_process: subprocess.Popen[Any] | None = field(
+        default=None, init=False, repr=False
+    )
     _managed_cdp_endpoint: str | None = field(default=None, init=False, repr=False)
     _using_external_endpoint: bool = field(default=False, init=False, repr=False)
     _profile_lock: FileLock | None = field(default=None, init=False, repr=False)
@@ -266,7 +312,11 @@ class BrowserContextManager:
         return resolve_user_data_dir() / "cloakbrowser-cdp-profile"
 
     def _ensure_managed_cdp_endpoint(self, *, headless: bool) -> str:
-        if self._managed_cdp_endpoint and self._managed_process is not None and self._managed_process.poll() is None:
+        if (
+            self._managed_cdp_endpoint
+            and self._managed_process is not None
+            and self._managed_process.poll() is None
+        ):
             return self._managed_cdp_endpoint
 
         self._managed_cdp_endpoint = None
@@ -285,7 +335,9 @@ class BrowserContextManager:
             port=port,
         )
         command = [binary_path, *args, "about:blank"]
-        creationflags = getattr(subprocess, "CREATE_NO_WINDOW", 0) if os.name == "nt" else 0
+        creationflags = (
+            getattr(subprocess, "CREATE_NO_WINDOW", 0) if os.name == "nt" else 0
+        )
         try:
             self._managed_process = subprocess.Popen(
                 command,
@@ -363,15 +415,38 @@ class BrowserContextManager:
 
     def new_context(self, *, headless: bool = True, **context_kwargs: Any) -> Any:
         with self._lock:
-            browser = self.browser(headless=headless)
-            if self._using_external_endpoint:
+            endpoint = str(self.cdp_endpoint or "").strip()
+            using_external_endpoint = bool(endpoint)
+            active_headless = bool(headless)
+            if not endpoint:
+                if (
+                    self._managed_process is not None
+                    and self._managed_process.poll() is None
+                    and self._headless != active_headless
+                ):
+                    self.close()
+                endpoint = self._ensure_managed_cdp_endpoint(headless=active_headless)
+                self._headless = active_headless
+
+            try:
+                browser = connect_browser_over_cdp(endpoint)
+            except Exception:
+                if not using_external_endpoint:
+                    _terminate_process(self._managed_process)
+                    self._managed_process = None
+                    self._managed_cdp_endpoint = None
+                    self._release_profile_lock()
+                raise
+            if using_external_endpoint:
                 contexts = list(getattr(browser, "contexts", []) or [])
                 if contexts:
                     context = contexts[0]
                     storage_state = context_kwargs.get("storage_state")
                     if storage_state is not None:
                         try:
-                            cookie_count = _apply_storage_state_cookies(context, storage_state)
+                            cookie_count = _apply_storage_state_cookies(
+                                context, storage_state
+                            )
                             if cookie_count:
                                 logger.debug(
                                     "cdp_external_context_applied_storage_state_cookies count=%s",
@@ -390,8 +465,13 @@ class BrowserContextManager:
                             "cdp_external_context_ignored_options keys=%s",
                             ",".join(ignored_keys),
                         )
-                    return _BorrowedBrowserContext(context)
-            return browser.new_context(**context_kwargs)
+                    return _BorrowedBrowserContext(context, browser)
+            try:
+                context = browser.new_context(**context_kwargs)
+            except Exception:
+                _safe_close(browser)
+                raise
+            return _OwnedBrowserContext(context, browser)
 
     def close(self) -> None:
         with self._lock:
@@ -407,9 +487,12 @@ class BrowserContextManager:
             _terminate_process(managed_process)
             self._release_profile_lock()
 
-    def __del__(self) -> None:  # pragma: no cover - defensive cleanup at GC/interpreter shutdown
+    def __del__(
+        self,
+    ) -> None:  # pragma: no cover - defensive cleanup at GC/interpreter shutdown
         with suppress(Exception):
             self.close()
+
 
 __all__ = [
     "BrowserContextManager",

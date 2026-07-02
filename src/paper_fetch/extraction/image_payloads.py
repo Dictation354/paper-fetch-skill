@@ -50,7 +50,9 @@ def image_mime_type_from_bytes(body: bytes | bytearray | None) -> str:
     return "image/svg+xml" if _looks_like_svg_document(payload) else ""
 
 
-def image_dimensions_from_bytes(body: bytes | bytearray | None) -> tuple[int, int] | None:
+def image_dimensions_from_bytes(
+    body: bytes | bytearray | None,
+) -> tuple[int, int] | None:
     payload = bytes(body or b"")
     if not payload or image_mime_type_from_bytes(payload) not in _DIMENSION_MIME_TYPES:
         return None

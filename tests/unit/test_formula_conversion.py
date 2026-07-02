@@ -19,16 +19,23 @@ class FormulaConversionTests(unittest.TestCase):
         formula_conversion.clear_conversion_cache()
 
     def test_stringify_mathml_omits_tail_text(self) -> None:
-        root = ET.fromstring('<root><math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi></math> trailing</root>')
+        root = ET.fromstring(
+            '<root><math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi></math> trailing</root>'
+        )
         math_node = list(root)[0]
 
         raw_mathml = formula_conversion.stringify_mathml(math_node)
 
-        self.assertEqual(raw_mathml, '<math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi></math>')
+        self.assertEqual(
+            raw_mathml,
+            '<math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi></math>',
+        )
 
     def test_looks_like_mathml_element_excludes_tex_math(self) -> None:
         tex_math_node = ET.fromstring("<tex-math>x^2</tex-math>")
-        math_node = ET.fromstring('<math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi></math>')
+        math_node = ET.fromstring(
+            '<math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi></math>'
+        )
 
         self.assertFalse(formula_conversion.looks_like_mathml_element(tex_math_node))
         self.assertTrue(formula_conversion.looks_like_mathml_element(math_node))
@@ -48,7 +55,10 @@ class FormulaConversionTests(unittest.TestCase):
             samples = formula_conversion.extract_formula_samples_from_xml(xml_path)
 
         self.assertEqual(len(samples), 1)
-        self.assertEqual(samples[0].raw_mathml, '<math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi></math>')
+        self.assertEqual(
+            samples[0].raw_mathml,
+            '<math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi></math>',
+        )
 
     def test_infer_source_provider_uses_provider_catalog(self) -> None:
         elsevier_root = ET.fromstring("<full-text-retrieval-response />")
@@ -87,11 +97,13 @@ class FormulaConversionTests(unittest.TestCase):
     def test_normalize_latex_repairs_identifier_escaped_underscores(self) -> None:
         """rule: rule-formula-latex-normalization"""
         samples = json.loads(
-            golden_criteria_scenario_asset("formula_latex_normalization", "samples.json").read_text(
-                encoding="utf-8"
-            )
+            golden_criteria_scenario_asset(
+                "formula_latex_normalization", "samples.json"
+            ).read_text(encoding="utf-8")
         )
-        sample = next(item for item in samples if item["name"] == "identifier_escaped_underscores")
+        sample = next(
+            item for item in samples if item["name"] == "identifier_escaped_underscores"
+        )
 
         normalized = formula_conversion.normalize_latex(sample["input"])
 
@@ -103,9 +115,9 @@ class FormulaConversionTests(unittest.TestCase):
     def test_normalize_latex_scenario_samples_are_katex_compatible(self) -> None:
         """rule: rule-formula-latex-normalization"""
         samples = json.loads(
-            golden_criteria_scenario_asset("formula_latex_normalization", "samples.json").read_text(
-                encoding="utf-8"
-            )
+            golden_criteria_scenario_asset(
+                "formula_latex_normalization", "samples.json"
+            ).read_text(encoding="utf-8")
         )
 
         for sample in samples:
@@ -124,7 +136,9 @@ class FormulaConversionTests(unittest.TestCase):
         self.assertEqual(normalized, r"\text{\textbackslash\_NDVI}")
 
     def test_normalize_latex_rewrites_upgreek_macros(self) -> None:
-        normalized = formula_conversion.normalize_latex(r"\updelta Q + \upDelta P + \updeltaQ")
+        normalized = formula_conversion.normalize_latex(
+            r"\updelta Q + \upDelta P + \updeltaQ"
+        )
 
         self.assertEqual(normalized, r"\delta Q + \Delta P + \updeltaQ")
 
@@ -154,7 +168,9 @@ class FormulaConversionTests(unittest.TestCase):
             r"F_{c r i t} = \sum_{t_{p}}^{S O S_{y 0}} R_{f} + \mathcal{ℴ}"
         )
 
-        self.assertEqual(normalized, r"F_{crit} = \sum\limits_{t_{p}}^{SOS_{y0}} R_{f} + \mathcal{O}")
+        self.assertEqual(
+            normalized, r"F_{crit} = \sum\limits_{t_{p}}^{SOS_{y0}} R_{f} + \mathcal{O}"
+        )
 
     def test_normalize_latex_rewrites_unicode_commands_for_katex(self) -> None:
         normalized = formula_conversion.normalize_latex(
@@ -173,7 +189,9 @@ class FormulaConversionTests(unittest.TestCase):
             formula_conversion.BENCHMARK_BACKENDS,
             ("texmath", "mathml-to-latex", "mml2tex"),
         )
-        self.assertEqual(formula_conversion.AUTO_BACKENDS, ("texmath", "mathml-to-latex"))
+        self.assertEqual(
+            formula_conversion.AUTO_BACKENDS, ("texmath", "mathml-to-latex")
+        )
 
     def test_backend_registry_resolves_aliases_and_legacy_strategy(self) -> None:
         self.assertEqual(
@@ -188,8 +206,12 @@ class FormulaConversionTests(unittest.TestCase):
                 backend="legacy",
             )
 
-    def test_auto_backend_uses_registry_order_without_texmath_default_fallback(self) -> None:
-        raw_mathml = '<math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi></math>'
+    def test_auto_backend_uses_registry_order_without_texmath_default_fallback(
+        self,
+    ) -> None:
+        raw_mathml = (
+            '<math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi></math>'
+        )
         calls: list[str] = []
         original_texmath = formula_conversion.convert_with_texmath
         original_mathml = formula_conversion.convert_with_mathml_to_latex
@@ -234,30 +256,38 @@ class FormulaConversionTests(unittest.TestCase):
         self.assertEqual(result.status, "ok")
 
     def test_default_texmath_falls_back_to_mathml_to_latex(self) -> None:
-        raw_mathml = '<math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi></math>'
+        raw_mathml = (
+            '<math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi></math>'
+        )
         original_texmath = formula_conversion.convert_with_texmath
         original_mathml = formula_conversion.convert_with_mathml_to_latex
         try:
-            formula_conversion.convert_with_texmath = lambda *args, **kwargs: formula_conversion.FormulaConversionResult(
-                backend="texmath",
-                status="failed",
-                latex="",
-                raw_mathml=raw_mathml,
-                error="texmath missing",
-                duration_ms=1,
-                display_mode=False,
+            formula_conversion.convert_with_texmath = lambda *args, **kwargs: (
+                formula_conversion.FormulaConversionResult(
+                    backend="texmath",
+                    status="failed",
+                    latex="",
+                    raw_mathml=raw_mathml,
+                    error="texmath missing",
+                    duration_ms=1,
+                    display_mode=False,
+                )
             )
-            formula_conversion.convert_with_mathml_to_latex = lambda *args, **kwargs: formula_conversion.FormulaConversionResult(
-                backend="mathml-to-latex",
-                status="ok",
-                latex="x",
-                raw_mathml=raw_mathml,
-                error=None,
-                duration_ms=2,
-                display_mode=False,
+            formula_conversion.convert_with_mathml_to_latex = lambda *args, **kwargs: (
+                formula_conversion.FormulaConversionResult(
+                    backend="mathml-to-latex",
+                    status="ok",
+                    latex="x",
+                    raw_mathml=raw_mathml,
+                    error=None,
+                    duration_ms=2,
+                    display_mode=False,
+                )
             )
 
-            result = formula_conversion.convert_mathml_string(raw_mathml, display_mode=False, env={})
+            result = formula_conversion.convert_mathml_string(
+                raw_mathml, display_mode=False, env={}
+            )
         finally:
             formula_conversion.convert_with_texmath = original_texmath
             formula_conversion.convert_with_mathml_to_latex = original_mathml
@@ -266,11 +296,16 @@ class FormulaConversionTests(unittest.TestCase):
         self.assertEqual(result.status, "ok")
         self.assertEqual(result.latex, "x")
 
-    def test_conversion_cache_reuses_result_for_same_backend_payload_and_config(self) -> None:
-        raw_mathml = '<math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi></math>'
+    def test_conversion_cache_reuses_result_for_same_backend_payload_and_config(
+        self,
+    ) -> None:
+        raw_mathml = (
+            '<math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi></math>'
+        )
         calls = 0
         original_texmath = formula_conversion.convert_with_texmath
         try:
+
             def fake_texmath(*args, **kwargs):
                 nonlocal calls
                 calls += 1
@@ -286,8 +321,12 @@ class FormulaConversionTests(unittest.TestCase):
 
             formula_conversion.convert_with_texmath = fake_texmath
 
-            first = formula_conversion.convert_mathml_string(raw_mathml, display_mode=False, env={}, backend="texmath")
-            second = formula_conversion.convert_mathml_string(raw_mathml, display_mode=False, env={}, backend="texmath")
+            first = formula_conversion.convert_mathml_string(
+                raw_mathml, display_mode=False, env={}, backend="texmath"
+            )
+            second = formula_conversion.convert_mathml_string(
+                raw_mathml, display_mode=False, env={}, backend="texmath"
+            )
         finally:
             formula_conversion.convert_with_texmath = original_texmath
 
@@ -296,8 +335,12 @@ class FormulaConversionTests(unittest.TestCase):
         self.assertEqual(second.latex, "x")
         self.assertEqual(second.duration_ms, 0)
 
-    def test_formula_timing_collector_records_uncached_and_cache_hit_calls(self) -> None:
-        raw_mathml = '<math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi></math>'
+    def test_formula_timing_collector_records_uncached_and_cache_hit_calls(
+        self,
+    ) -> None:
+        raw_mathml = (
+            '<math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi></math>'
+        )
         durations: list[float] = []
         original_texmath = formula_conversion.convert_with_texmath
         original_monotonic = formula_conversion.time.monotonic
@@ -341,9 +384,13 @@ class FormulaConversionTests(unittest.TestCase):
         self.assertEqual([round(duration, 3) for duration in durations], [0.125, 0.05])
 
     def test_mathml_to_latex_worker_success_avoids_cli_process(self) -> None:
-        raw_mathml = '<math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi></math>'
+        raw_mathml = (
+            '<math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi></math>'
+        )
         original_command = formula_conversion._resolve_mathml_to_latex_command
-        original_worker_command = formula_conversion._resolve_mathml_to_latex_worker_command
+        original_worker_command = (
+            formula_conversion._resolve_mathml_to_latex_worker_command
+        )
         original_worker_for = formula_conversion._mathml_worker_for
         original_run_command = formula_conversion._run_command
 
@@ -352,10 +399,22 @@ class FormulaConversionTests(unittest.TestCase):
                 return "x"
 
         try:
-            formula_conversion._resolve_mathml_to_latex_command = lambda _env: ("node", "/tmp/cli.mjs", None, None)
-            formula_conversion._resolve_mathml_to_latex_worker_command = lambda _env: ("node", "/tmp/worker.mjs", None, None)
+            formula_conversion._resolve_mathml_to_latex_command = lambda _env: (
+                "node",
+                "/tmp/cli.mjs",
+                None,
+                None,
+            )
+            formula_conversion._resolve_mathml_to_latex_worker_command = lambda _env: (
+                "node",
+                "/tmp/worker.mjs",
+                None,
+                None,
+            )
             formula_conversion._mathml_worker_for = lambda **_kwargs: FakeWorker()
-            formula_conversion._run_command = lambda *args, **kwargs: (_ for _ in ()).throw(AssertionError("CLI fallback should not run"))
+            formula_conversion._run_command = lambda *args, **kwargs: (
+                _ for _ in ()
+            ).throw(AssertionError("CLI fallback should not run"))
 
             result = formula_conversion.convert_with_mathml_to_latex(
                 raw_mathml,
@@ -364,7 +423,9 @@ class FormulaConversionTests(unittest.TestCase):
             )
         finally:
             formula_conversion._resolve_mathml_to_latex_command = original_command
-            formula_conversion._resolve_mathml_to_latex_worker_command = original_worker_command
+            formula_conversion._resolve_mathml_to_latex_worker_command = (
+                original_worker_command
+            )
             formula_conversion._mathml_worker_for = original_worker_for
             formula_conversion._run_command = original_run_command
 
@@ -372,9 +433,13 @@ class FormulaConversionTests(unittest.TestCase):
         self.assertEqual(result.latex, "x")
 
     def test_mathml_to_latex_worker_failure_falls_back_to_cli(self) -> None:
-        raw_mathml = '<math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi></math>'
+        raw_mathml = (
+            '<math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi></math>'
+        )
         original_command = formula_conversion._resolve_mathml_to_latex_command
-        original_worker_command = formula_conversion._resolve_mathml_to_latex_worker_command
+        original_worker_command = (
+            formula_conversion._resolve_mathml_to_latex_worker_command
+        )
         original_worker_for = formula_conversion._mathml_worker_for
         original_run_command = formula_conversion._run_command
 
@@ -383,10 +448,22 @@ class FormulaConversionTests(unittest.TestCase):
                 raise RuntimeError("worker crashed")
 
         try:
-            formula_conversion._resolve_mathml_to_latex_command = lambda _env: ("node", "/tmp/cli.mjs", None, None)
-            formula_conversion._resolve_mathml_to_latex_worker_command = lambda _env: ("node", "/tmp/worker.mjs", None, None)
+            formula_conversion._resolve_mathml_to_latex_command = lambda _env: (
+                "node",
+                "/tmp/cli.mjs",
+                None,
+                None,
+            )
+            formula_conversion._resolve_mathml_to_latex_worker_command = lambda _env: (
+                "node",
+                "/tmp/worker.mjs",
+                None,
+                None,
+            )
             formula_conversion._mathml_worker_for = lambda **_kwargs: FailingWorker()
-            formula_conversion._run_command = lambda *args, **kwargs: subprocess.CompletedProcess(args[0], 0, "x", "")
+            formula_conversion._run_command = lambda *args, **kwargs: (
+                subprocess.CompletedProcess(args[0], 0, "x", "")
+            )
 
             result = formula_conversion.convert_with_mathml_to_latex(
                 raw_mathml,
@@ -395,7 +472,9 @@ class FormulaConversionTests(unittest.TestCase):
             )
         finally:
             formula_conversion._resolve_mathml_to_latex_command = original_command
-            formula_conversion._resolve_mathml_to_latex_worker_command = original_worker_command
+            formula_conversion._resolve_mathml_to_latex_worker_command = (
+                original_worker_command
+            )
             formula_conversion._mathml_worker_for = original_worker_for
             formula_conversion._run_command = original_run_command
 
@@ -403,7 +482,9 @@ class FormulaConversionTests(unittest.TestCase):
         self.assertEqual(result.latex, "x")
 
     def test_mathml_to_latex_cli_permission_error_returns_failed_result(self) -> None:
-        raw_mathml = '<math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi></math>'
+        raw_mathml = (
+            '<math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi></math>'
+        )
         original_command = formula_conversion._resolve_mathml_to_latex_command
         original_run_command = formula_conversion._run_command
         try:
@@ -413,9 +494,9 @@ class FormulaConversionTests(unittest.TestCase):
                 None,
                 None,
             )
-            formula_conversion._run_command = lambda *args, **kwargs: (_ for _ in ()).throw(
-                PermissionError(5, "Access is denied")
-            )
+            formula_conversion._run_command = lambda *args, **kwargs: (
+                _ for _ in ()
+            ).throw(PermissionError(5, "Access is denied"))
 
             result = formula_conversion.convert_with_mathml_to_latex(
                 raw_mathml,
@@ -432,20 +513,26 @@ class FormulaConversionTests(unittest.TestCase):
         self.assertIn("WindowsApps", result.error or "")
         self.assertIn("Access is denied", result.error or "")
 
-    def test_texmath_default_fallback_reports_mathml_node_permission_error(self) -> None:
-        raw_mathml = '<math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi></math>'
+    def test_texmath_default_fallback_reports_mathml_node_permission_error(
+        self,
+    ) -> None:
+        raw_mathml = (
+            '<math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi></math>'
+        )
         original_texmath = formula_conversion.convert_with_texmath
         original_command = formula_conversion._resolve_mathml_to_latex_command
         original_run_command = formula_conversion._run_command
         try:
-            formula_conversion.convert_with_texmath = lambda *args, **kwargs: formula_conversion.FormulaConversionResult(
-                backend="texmath",
-                status="failed",
-                latex="",
-                raw_mathml=raw_mathml,
-                error="texmath returned empty output",
-                duration_ms=1,
-                display_mode=False,
+            formula_conversion.convert_with_texmath = lambda *args, **kwargs: (
+                formula_conversion.FormulaConversionResult(
+                    backend="texmath",
+                    status="failed",
+                    latex="",
+                    raw_mathml=raw_mathml,
+                    error="texmath returned empty output",
+                    duration_ms=1,
+                    display_mode=False,
+                )
             )
             formula_conversion._resolve_mathml_to_latex_command = lambda _env: (
                 "C:/Program Files/WindowsApps/OpenAI.Codex/app/resources/node.exe",
@@ -453,9 +540,9 @@ class FormulaConversionTests(unittest.TestCase):
                 None,
                 None,
             )
-            formula_conversion._run_command = lambda *args, **kwargs: (_ for _ in ()).throw(
-                PermissionError(5, "Access is denied")
-            )
+            formula_conversion._run_command = lambda *args, **kwargs: (
+                _ for _ in ()
+            ).throw(PermissionError(5, "Access is denied"))
 
             result = formula_conversion.convert_mathml_string(
                 raw_mathml,
@@ -469,23 +556,38 @@ class FormulaConversionTests(unittest.TestCase):
 
         self.assertEqual(result.backend, "texmath")
         self.assertEqual(result.status, "failed")
-        self.assertIn("texmath failed: texmath returned empty output", result.error or "")
+        self.assertIn(
+            "texmath failed: texmath returned empty output", result.error or ""
+        )
         self.assertIn("mathml-to-latex node executable failed", result.error or "")
         self.assertIn("WindowsApps", result.error or "")
 
     def test_mathml_to_latex_worker_is_disabled_on_windows(self) -> None:
-        raw_mathml = '<math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi></math>'
+        raw_mathml = (
+            '<math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi></math>'
+        )
         original_supported = formula_conversion._PERSISTENT_MATHML_WORKER_SUPPORTED
         original_command = formula_conversion._resolve_mathml_to_latex_command
         original_worker_for = formula_conversion._mathml_worker_for
         original_run_command = formula_conversion._run_command
         try:
             formula_conversion._PERSISTENT_MATHML_WORKER_SUPPORTED = False
-            formula_conversion._resolve_mathml_to_latex_command = lambda _env: ("node", "/tmp/cli.mjs", None, None)
-            formula_conversion._mathml_worker_for = lambda **_kwargs: (_ for _ in ()).throw(
-                AssertionError("Windows must use CLI fallback instead of the persistent worker")
+            formula_conversion._resolve_mathml_to_latex_command = lambda _env: (
+                "node",
+                "/tmp/cli.mjs",
+                None,
+                None,
             )
-            formula_conversion._run_command = lambda *args, **kwargs: subprocess.CompletedProcess(args[0], 0, "x", "")
+            formula_conversion._mathml_worker_for = lambda **_kwargs: (
+                _ for _ in ()
+            ).throw(
+                AssertionError(
+                    "Windows must use CLI fallback instead of the persistent worker"
+                )
+            )
+            formula_conversion._run_command = lambda *args, **kwargs: (
+                subprocess.CompletedProcess(args[0], 0, "x", "")
+            )
 
             result = formula_conversion.convert_with_mathml_to_latex(
                 raw_mathml,
@@ -520,13 +622,17 @@ class FormulaConversionTests(unittest.TestCase):
         self.assertEqual(process.stderr, "err\ufffd\n")
 
     def test_texmath_exe_under_formula_tools_is_discovered(self) -> None:
-        raw_mathml = '<math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi></math>'
+        raw_mathml = (
+            '<math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi></math>'
+        )
         with tempfile.TemporaryDirectory() as tmpdir:
             tools_dir = Path(tmpdir) / "formula-tools"
             texmath = tools_dir / "bin" / "texmath.exe"
             texmath.parent.mkdir(parents=True)
             texmath.write_text("#!/usr/bin/env bash\nprintf 'x\\n'\n", encoding="utf-8")
-            texmath.chmod(texmath.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+            texmath.chmod(
+                texmath.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH
+            )
 
             result = formula_conversion.convert_with_texmath(
                 raw_mathml,
@@ -541,27 +647,33 @@ class FormulaConversionTests(unittest.TestCase):
         self.assertEqual(result.latex, "x")
 
     def test_explicit_texmath_does_not_hide_failure(self) -> None:
-        raw_mathml = '<math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi></math>'
+        raw_mathml = (
+            '<math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi></math>'
+        )
         original_texmath = formula_conversion.convert_with_texmath
         original_mathml = formula_conversion.convert_with_mathml_to_latex
         try:
-            formula_conversion.convert_with_texmath = lambda *args, **kwargs: formula_conversion.FormulaConversionResult(
-                backend="texmath",
-                status="failed",
-                latex="",
-                raw_mathml=raw_mathml,
-                error="texmath missing",
-                duration_ms=1,
-                display_mode=False,
+            formula_conversion.convert_with_texmath = lambda *args, **kwargs: (
+                formula_conversion.FormulaConversionResult(
+                    backend="texmath",
+                    status="failed",
+                    latex="",
+                    raw_mathml=raw_mathml,
+                    error="texmath missing",
+                    duration_ms=1,
+                    display_mode=False,
+                )
             )
-            formula_conversion.convert_with_mathml_to_latex = lambda *args, **kwargs: formula_conversion.FormulaConversionResult(
-                backend="mathml-to-latex",
-                status="ok",
-                latex="x",
-                raw_mathml=raw_mathml,
-                error=None,
-                duration_ms=2,
-                display_mode=False,
+            formula_conversion.convert_with_mathml_to_latex = lambda *args, **kwargs: (
+                formula_conversion.FormulaConversionResult(
+                    backend="mathml-to-latex",
+                    status="ok",
+                    latex="x",
+                    raw_mathml=raw_mathml,
+                    error=None,
+                    duration_ms=2,
+                    display_mode=False,
+                )
             )
 
             result = formula_conversion.convert_mathml_string(

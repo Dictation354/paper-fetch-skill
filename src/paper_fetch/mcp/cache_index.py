@@ -23,7 +23,9 @@ CACHED_RESOURCE_URI_PREFIX = "resource://paper-fetch/cached/"
 CACHED_RESOURCE_TEMPLATE = "resource://paper-fetch/cached/{entry_id}"
 SCOPED_CACHE_INDEX_RESOURCE_PREFIX = f"{CACHE_INDEX_RESOURCE_URI}/"
 SCOPED_CACHED_RESOURCE_URI_PREFIX = "resource://paper-fetch/cached-dir/"
-SCOPED_CACHED_RESOURCE_TEMPLATE = "resource://paper-fetch/cached-dir/{scope_id}/{entry_id}"
+SCOPED_CACHED_RESOURCE_TEMPLATE = (
+    "resource://paper-fetch/cached-dir/{scope_id}/{entry_id}"
+)
 
 _TEXT_MIME_TYPES = {
     *STRUCTURED_TEXT_MIME_TYPES,
@@ -58,7 +60,9 @@ def cached_resource_uri(entry_id: str) -> str:
 
 
 def cache_scope_id(download_dir: Path) -> str:
-    digest = sha1(str(download_dir.expanduser().resolve()).encode("utf-8", errors="ignore")).hexdigest()
+    digest = sha1(
+        str(download_dir.expanduser().resolve()).encode("utf-8", errors="ignore")
+    ).hexdigest()
     return digest[:12]
 
 
@@ -85,7 +89,9 @@ def guess_mime_type(path: Path) -> str:
 
 
 def _entry_id(*, doi: str, kind: str, path: Path) -> str:
-    digest = sha1(f"{doi}\0{kind}\0{path.resolve()}".encode("utf-8", errors="ignore")).hexdigest()
+    digest = sha1(
+        f"{doi}\0{kind}\0{path.resolve()}".encode("utf-8", errors="ignore")
+    ).hexdigest()
     return digest[:16]
 
 
@@ -245,7 +251,9 @@ def find_cached_entry(download_dir: Path, entry_id: str) -> dict[str, Any] | Non
 
 def preferred_cached_entries(entries: list[dict[str, Any]]) -> dict[str, Any]:
     markdown_entries = [entry for entry in entries if entry.get("kind") == "markdown"]
-    primary_entries = [entry for entry in entries if entry.get("kind") == "primary_payload"]
+    primary_entries = [
+        entry for entry in entries if entry.get("kind") == "primary_payload"
+    ]
     assets = [entry for entry in entries if entry.get("kind") == "asset"]
 
     def newest(candidates: list[dict[str, Any]]) -> dict[str, Any] | None:

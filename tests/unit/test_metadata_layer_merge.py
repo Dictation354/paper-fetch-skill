@@ -4,7 +4,9 @@ from paper_fetch.metadata.types import MetadataMergeRule, merge_metadata_layers
 from paper_fetch.providers import _arxiv_metadata, _ieee_metadata, _springer_html
 
 
-def test_merge_metadata_layers_respects_field_precedence_and_default_fill_empty() -> None:
+def test_merge_metadata_layers_respects_field_precedence_and_default_fill_empty() -> (
+    None
+):
     rule = MetadataMergeRule(
         fill_empty=("title",),
         overwrite=("abstract",),
@@ -113,7 +115,9 @@ def test_ieee_merge_uses_landing_scalars_and_keeps_base_fallbacks() -> None:
         "edge inference",
     ]
     assert merged["article_number"] == "10388355"
-    assert merged["landing_page_url"] == "https://ieeexplore.ieee.org/document/10388355/"
+    assert (
+        merged["landing_page_url"] == "https://ieeexplore.ieee.org/document/10388355/"
+    )
     assert merged["publisher"] == "IEEE"
 
 

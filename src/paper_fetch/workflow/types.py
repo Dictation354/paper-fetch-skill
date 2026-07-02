@@ -41,7 +41,13 @@ def effective_asset_profile(
 
 
 class PaperFetchFailure(Exception):
-    def __init__(self, status: str, reason: str, *, candidates: list[dict[str, Any]] | None = None) -> None:
+    def __init__(
+        self,
+        status: str,
+        reason: str,
+        *,
+        candidates: list[dict[str, Any]] | None = None,
+    ) -> None:
         super().__init__(reason)
         self.status = status
         self.reason = reason
@@ -98,8 +104,14 @@ class FetchStrategy:
     def normalized_preferred_providers(self) -> set[str] | None:
         if self.preferred_providers is None:
             return None
-        normalized = {normalize_text(item).lower() for item in self.preferred_providers if normalize_text(item)}
+        normalized = {
+            normalize_text(item).lower()
+            for item in self.preferred_providers
+            if normalize_text(item)
+        }
         return normalized or set()
 
-    def effective_asset_profile_for_provider(self, provider_name: str | None) -> AssetProfile:
+    def effective_asset_profile_for_provider(
+        self, provider_name: str | None
+    ) -> AssetProfile:
         return effective_asset_profile(self.asset_profile, provider_name=provider_name)

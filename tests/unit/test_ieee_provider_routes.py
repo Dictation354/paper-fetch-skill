@@ -17,14 +17,30 @@ class IeeeProviderRouteTests(unittest.TestCase):
         strategy = FetchStrategy(preferred_providers=["ieee"])
 
         self.assertEqual(strategy.normalized_preferred_providers(), {"ieee"})
+
     def test_landing_metadata_and_article_number_parsing(self) -> None:
         html = _landing_html(article_number="10388355").decode("utf-8")
         metadata = _ieee_metadata._parse_landing_metadata(html)
 
         self.assertEqual(metadata["articleNumber"], "10388355")
-        self.assertEqual(_ieee_url._article_number_from_url("https://ieeexplore.ieee.org/document/10388355/"), "10388355")
-        self.assertEqual(_ieee_url._article_number_from_url("https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=10388355"), "")
-        self.assertEqual(_ieee_url._article_number_from_url("https://ieeexplore.ieee.org/rest/document/10388355/references"), "")
+        self.assertEqual(
+            _ieee_url._article_number_from_url(
+                "https://ieeexplore.ieee.org/document/10388355/"
+            ),
+            "10388355",
+        )
+        self.assertEqual(
+            _ieee_url._article_number_from_url(
+                "https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=10388355"
+            ),
+            "",
+        )
+        self.assertEqual(
+            _ieee_url._article_number_from_url(
+                "https://ieeexplore.ieee.org/rest/document/10388355/references"
+            ),
+            "",
+        )
         self.assertTrue(metadata["isDynamicHtml"])
 
     def test_ieee_block_page_detection_is_cached_in_runtime_context(self) -> None:
@@ -47,13 +63,16 @@ class IeeeProviderRouteTests(unittest.TestCase):
                 self.assertEqual(scanner.call_count, 1)
         finally:
             context.close()
+
     def test_landing_attempt_merges_ieee_keywords_and_reference_text(self) -> None:
         """rule: rule-ieee-landing-metadata-references
         rule: rule-fulltext-reference-priority"""
         doi = "10.1109/ACCESS.2024.3352924"
         article_number = "10388355"
         landing_url = f"https://ieeexplore.ieee.org/document/{article_number}/"
-        references_url = f"https://ieeexplore.ieee.org/rest/document/{article_number}/references"
+        references_url = (
+            f"https://ieeexplore.ieee.org/rest/document/{article_number}/references"
+        )
         landing_metadata = {
             "articleNumber": article_number,
             "articleId": article_number,
@@ -83,7 +102,9 @@ class IeeeProviderRouteTests(unittest.TestCase):
                         "order": "1",
                         "text": "A. Author, “Full IEEE reference title,” <em>Proc. Test</em>, 2024.",
                         "title": "Full IEEE reference title",
-                        "links": {"crossRefLink": "https://doi.org/10.1109/TEST.2024.1"},
+                        "links": {
+                            "crossRefLink": "https://doi.org/10.1109/TEST.2024.1"
+                        },
                     }
                 ]
             }
@@ -118,22 +139,34 @@ class IeeeProviderRouteTests(unittest.TestCase):
             },
         )
 
-        self.assertEqual(attempt.merged_metadata["keywords"], ["Random access memory", "near-data processing"])
+        self.assertEqual(
+            attempt.merged_metadata["keywords"],
+            ["Random access memory", "near-data processing"],
+        )
         self.assertEqual(len(attempt.merged_metadata["references"]), 1)
         self.assertEqual(attempt.merged_metadata["references"][0]["label"], "1")
-        self.assertIn("Full IEEE reference title", attempt.merged_metadata["references"][0]["raw"])
-        self.assertEqual(attempt.merged_metadata["references"][0]["doi"], "10.1109/test.2024.1")
+        self.assertIn(
+            "Full IEEE reference title", attempt.merged_metadata["references"][0]["raw"]
+        )
+        self.assertEqual(
+            attempt.merged_metadata["references"][0]["doi"], "10.1109/test.2024.1"
+        )
         self.assertNotIn(
             "Metadata fallback title without IEEE citation text",
             json.dumps(attempt.merged_metadata["references"]),
         )
-    def test_landing_attempt_keeps_metadata_references_when_ieee_payload_is_empty(self) -> None:
+
+    def test_landing_attempt_keeps_metadata_references_when_ieee_payload_is_empty(
+        self,
+    ) -> None:
         """rule: rule-ieee-landing-metadata-references
         rule: rule-fulltext-reference-priority"""
         doi = "10.1109/ACCESS.2024.3352924"
         article_number = "10388355"
         landing_url = f"https://ieeexplore.ieee.org/document/{article_number}/"
-        references_url = f"https://ieeexplore.ieee.org/rest/document/{article_number}/references"
+        references_url = (
+            f"https://ieeexplore.ieee.org/rest/document/{article_number}/references"
+        )
         landing_metadata = {
             "articleNumber": article_number,
             "articleId": article_number,
@@ -175,10 +208,15 @@ class IeeeProviderRouteTests(unittest.TestCase):
 
         attempt = client._fetch_landing_attempt(
             doi,
-            {"doi": doi, "landing_page_url": landing_url, "references": fallback_references},
+            {
+                "doi": doi,
+                "landing_page_url": landing_url,
+                "references": fallback_references,
+            },
         )
 
         self.assertEqual(attempt.merged_metadata["references"], fallback_references)
+
     def test_dynamic_html_success_uses_ieee_html_source_and_rest_headers(self) -> None:
         doi = "10.1109/ACCESS.2024.3352924"
         article_number = "10388355"
@@ -202,7 +240,9 @@ class IeeeProviderRouteTests(unittest.TestCase):
         )
         client = IeeeClient(transport, {})
 
-        raw_payload = client.fetch_raw_fulltext(doi, {"doi": doi, "landing_page_url": landing_url})
+        raw_payload = client.fetch_raw_fulltext(
+            doi, {"doi": doi, "landing_page_url": landing_url}
+        )
         article = client.to_article_model({"doi": doi}, raw_payload)
 
         self.assertEqual(raw_payload.content.route_kind, "html")
@@ -221,6 +261,7 @@ class IeeeProviderRouteTests(unittest.TestCase):
         diagnostics = raw_payload.content.diagnostics["extraction"]
         self.assertGreaterEqual(diagnostics["marker_counts"]["sections"], 2)
         self.assertGreaterEqual(diagnostics["marker_counts"]["formulas"], 1)
+
     def test_direct_rest_401_uses_browser_html_fallback_before_pdf(self) -> None:
         doi = "10.1109/TIM.2024.3509573"
         article_number = "10772041"
@@ -234,7 +275,9 @@ class IeeeProviderRouteTests(unittest.TestCase):
                     "body": _landing_html(doi=doi, article_number=article_number),
                     "url": landing_url,
                 },
-                ("GET", rest_url): RequestFailure(401, f"HTTP 401 for {rest_url}", url=rest_url),
+                ("GET", rest_url): RequestFailure(
+                    401, f"HTTP 401 for {rest_url}", url=rest_url
+                ),
             }
         )
         client = IeeeClient(transport, {})
@@ -243,14 +286,22 @@ class IeeeProviderRouteTests(unittest.TestCase):
             article_number=article_number,
             html_text=_dynamic_html(article_number).decode("utf-8"),
             source_url=rest_url,
-            trace_markers=["fulltext:ieee_html_fail", "fulltext:ieee_browser_html_ok", "fulltext:ieee_html_ok"],
+            trace_markers=[
+                "fulltext:ieee_html_fail",
+                "fulltext:ieee_browser_html_ok",
+                "fulltext:ieee_html_ok",
+            ],
         )
 
         with (
-            mock.patch.object(client, "_fetch_browser_html_payload", return_value=browser_payload) as mocked_browser,
+            mock.patch.object(
+                client, "_fetch_browser_html_payload", return_value=browser_payload
+            ) as mocked_browser,
             mock.patch.object(ieee_provider, "fetch_pdf_over_http") as mocked_pdf,
         ):
-            raw_payload = client.fetch_raw_fulltext(doi, {"doi": doi, "landing_page_url": landing_url})
+            raw_payload = client.fetch_raw_fulltext(
+                doi, {"doi": doi, "landing_page_url": landing_url}
+            )
             article = client.to_article_model({"doi": doi}, raw_payload)
 
         self.assertEqual(raw_payload.content.route_kind, "html")
@@ -260,9 +311,14 @@ class IeeeProviderRouteTests(unittest.TestCase):
         self.assertIn("fulltext:ieee_browser_html_ok", article.quality.source_trail)
         self.assertIn("fulltext:ieee_html_ok", article.quality.source_trail)
         mocked_browser.assert_called_once()
-        self.assertEqual(mocked_browser.call_args.kwargs["direct_html_failure"].code, "no_access")
+        self.assertEqual(
+            mocked_browser.call_args.kwargs["direct_html_failure"].code, "no_access"
+        )
         mocked_pdf.assert_not_called()
-    def test_browser_html_fallback_uses_response_listener_without_wait_for_response_api(self) -> None:
+
+    def test_browser_html_fallback_uses_response_listener_without_wait_for_response_api(
+        self,
+    ) -> None:
         doi = "10.1109/TIM.2024.3509573"
         article_number = "10772041"
         document_url = f"https://ieeexplore.ieee.org/document/{article_number}/"
@@ -271,7 +327,9 @@ class IeeeProviderRouteTests(unittest.TestCase):
             normalized_doi=doi,
             landing_url=document_url,
             response_url=document_url,
-            html_text=_landing_html(doi=doi, article_number=article_number).decode("utf-8"),
+            html_text=_landing_html(doi=doi, article_number=article_number).decode(
+                "utf-8"
+            ),
             merged_metadata={
                 "doi": doi,
                 "title": "IEEE Dynamic Article",
@@ -323,7 +381,9 @@ class IeeeProviderRouteTests(unittest.TestCase):
                 return None
 
             def wait_for_timeout(self, timeout):
-                assert timeout == _ieee_browser_html.IEEE_BROWSER_HTML_REST_WAIT_TIMEOUT_MS
+                assert (
+                    timeout == _ieee_browser_html.IEEE_BROWSER_HTML_REST_WAIT_TIMEOUT_MS
+                )
 
             def close(self):
                 self.closed = True
@@ -351,18 +411,31 @@ class IeeeProviderRouteTests(unittest.TestCase):
 
         raw_payload = client._fetch_browser_html_payload(
             landing_attempt,
-            direct_html_failure=ieee_provider.ProviderFailure("no_access", "Forced direct failure."),
+            direct_html_failure=ieee_provider.ProviderFailure(
+                "no_access", "Forced direct failure."
+            ),
             context=fake_runtime,
         )
 
         self.assertEqual(raw_payload.content.route_kind, "html")
         self.assertEqual(raw_payload.content.fetcher, "playwright_html")
-        self.assertEqual(raw_payload.content.diagnostics["browser_html"]["payload_source"], "rest_response")
-        self.assertEqual(raw_payload.content.diagnostics["browser_html"]["direct_html_failure"]["code"], "no_access")
+        self.assertEqual(
+            raw_payload.content.diagnostics["browser_html"]["payload_source"],
+            "rest_response",
+        )
+        self.assertEqual(
+            raw_payload.content.diagnostics["browser_html"]["direct_html_failure"][
+                "code"
+            ],
+            "no_access",
+        )
         self.assertEqual(fake_browser_context.route_pattern, "**/*")
         self.assertTrue(fake_browser_context.closed)
         self.assertTrue(fake_browser_context.page.closed)
-    def test_direct_rest_and_browser_html_failures_continue_to_pdf_fallback(self) -> None:
+
+    def test_direct_rest_and_browser_html_failures_continue_to_pdf_fallback(
+        self,
+    ) -> None:
         doi = "10.1109/MPER.1985.5526567"
         article_number = "5526567"
         landing_url = f"https://ieeexplore.ieee.org/document/{article_number}/"
@@ -372,19 +445,26 @@ class IeeeProviderRouteTests(unittest.TestCase):
                 ("GET", landing_url): {
                     "status_code": 200,
                     "headers": {"content-type": "text/html; charset=utf-8"},
-                    "body": _landing_html(doi=doi, article_number=article_number, dynamic=False),
+                    "body": _landing_html(
+                        doi=doi, article_number=article_number, dynamic=False
+                    ),
                     "url": landing_url,
                 },
-                ("GET", rest_url): RequestFailure(401, f"HTTP 401 for {rest_url}", url=rest_url),
+                ("GET", rest_url): RequestFailure(
+                    401, f"HTTP 401 for {rest_url}", url=rest_url
+                ),
             }
         )
         client = IeeeClient(transport, {})
-        browser_failure = ieee_provider.ProviderFailure("no_result", "Browser HTML did not expose #article.")
+        browser_failure = ieee_provider.ProviderFailure(
+            "no_result", "Browser HTML did not expose #article."
+        )
         pdf_result = PdfFetchResult(
             source_url=f"https://ieeexplore.ieee.org/iel7/{article_number}.pdf",
             final_url=f"https://ieeexplore.ieee.org/iel7/{article_number}.pdf",
             pdf_bytes=b"%PDF-1.7 ieee",
-            markdown_text="# IEEE PDF Article\n\n## Results\n\n" + ("PDF body text " * 160),
+            markdown_text="# IEEE PDF Article\n\n## Results\n\n"
+            + ("PDF body text " * 160),
             suggested_filename=f"{article_number}.pdf",
             assets=[
                 {
@@ -399,10 +479,16 @@ class IeeeProviderRouteTests(unittest.TestCase):
         )
 
         with (
-            mock.patch.object(client, "_fetch_browser_html_payload", side_effect=browser_failure) as mocked_browser,
-            mock.patch.object(ieee_provider, "fetch_pdf_over_http", return_value=pdf_result) as mocked_pdf,
+            mock.patch.object(
+                client, "_fetch_browser_html_payload", side_effect=browser_failure
+            ) as mocked_browser,
+            mock.patch.object(
+                ieee_provider, "fetch_pdf_over_http", return_value=pdf_result
+            ) as mocked_pdf,
         ):
-            raw_payload = client.fetch_raw_fulltext(doi, {"doi": doi, "landing_page_url": landing_url})
+            raw_payload = client.fetch_raw_fulltext(
+                doi, {"doi": doi, "landing_page_url": landing_url}
+            )
             article = client.to_article_model({"doi": doi}, raw_payload)
 
         self.assertEqual(raw_payload.content.route_kind, "pdf_fallback")
@@ -410,13 +496,21 @@ class IeeeProviderRouteTests(unittest.TestCase):
         self.assertIn("fulltext:ieee_html_fail", article.quality.source_trail)
         self.assertIn("fulltext:ieee_browser_html_fail", article.quality.source_trail)
         self.assertIn("fulltext:ieee_pdf_fallback_ok", article.quality.source_trail)
-        self.assertEqual(raw_payload.content.extracted_assets[0]["url"], "body_assets/ieee-f1.png")
+        self.assertEqual(
+            raw_payload.content.extracted_assets[0]["url"], "body_assets/ieee-f1.png"
+        )
         self.assertEqual(article.assets[0].url, "body_assets/ieee-f1.png")
         self.assertEqual(article.assets[0].section, "body")
-        self.assertIn("Browser HTML fallback: Browser HTML did not expose #article.", raw_payload.content.html_failure_message)
+        self.assertIn(
+            "Browser HTML fallback: Browser HTML did not expose #article.",
+            raw_payload.content.html_failure_message,
+        )
         mocked_browser.assert_called_once()
         mocked_pdf.assert_called_once()
-    def test_direct_rest_browser_html_and_pdf_failures_return_abstract_only(self) -> None:
+
+    def test_direct_rest_browser_html_and_pdf_failures_return_abstract_only(
+        self,
+    ) -> None:
         doi = "10.1109/PGEC.1967.264619"
         article_number = "4038993"
         landing_url = f"https://ieeexplore.ieee.org/document/{article_number}/"
@@ -434,26 +528,38 @@ class IeeeProviderRouteTests(unittest.TestCase):
                     ),
                     "url": landing_url,
                 },
-                ("GET", rest_url): RequestFailure(401, f"HTTP 401 for {rest_url}", url=rest_url),
+                ("GET", rest_url): RequestFailure(
+                    401, f"HTTP 401 for {rest_url}", url=rest_url
+                ),
             }
         )
         client = IeeeClient(transport, {})
-        browser_failure = ieee_provider.ProviderFailure("no_result", "Browser HTML did not expose #article.")
+        browser_failure = ieee_provider.ProviderFailure(
+            "no_result", "Browser HTML did not expose #article."
+        )
 
         with (
-            mock.patch.object(client, "_fetch_browser_html_payload", side_effect=browser_failure),
+            mock.patch.object(
+                client, "_fetch_browser_html_payload", side_effect=browser_failure
+            ),
             mock.patch.object(
                 ieee_provider,
                 "fetch_pdf_over_http",
-                side_effect=PdfFetchFailure("downloaded_file_not_pdf", "Direct PDF did not return a PDF file."),
+                side_effect=PdfFetchFailure(
+                    "downloaded_file_not_pdf", "Direct PDF did not return a PDF file."
+                ),
             ),
             mock.patch.object(
                 ieee_provider,
                 "fetch_pdf_with_playwright",
-                side_effect=PdfFetchFailure("publisher_access_challenge", "Browser PDF reached an access page."),
+                side_effect=PdfFetchFailure(
+                    "publisher_access_challenge", "Browser PDF reached an access page."
+                ),
             ),
         ):
-            raw_payload = client.fetch_raw_fulltext(doi, {"doi": doi, "landing_page_url": landing_url})
+            raw_payload = client.fetch_raw_fulltext(
+                doi, {"doi": doi, "landing_page_url": landing_url}
+            )
             article = client.to_article_model({"doi": doi}, raw_payload)
 
         self.assertEqual(raw_payload.content.route_kind, "abstract_only")
@@ -467,4 +573,7 @@ class IeeeProviderRouteTests(unittest.TestCase):
         self.assertIn("IEEE PDF fallback was not usable", warning_blob)
         diagnostics = raw_payload.content.diagnostics
         self.assertEqual(diagnostics["html_failure"]["code"], "no_access")
-        self.assertEqual(diagnostics["browser_html_failure"]["message"], "Browser HTML did not expose #article.")
+        self.assertEqual(
+            diagnostics["browser_html_failure"]["message"],
+            "Browser HTML did not expose #article.",
+        )

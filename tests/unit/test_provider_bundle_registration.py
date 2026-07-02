@@ -79,7 +79,7 @@ def test_provider_entry_discovery_imports_new_bundle_modules_without_central_edi
     provider_dir = tmp_path / "paper_fetch" / "providers"
     provider_dir.mkdir(parents=True)
     (provider_dir / "autodiscovered.py").write_text(
-        '''
+        """
 from __future__ import annotations
 
 from paper_fetch.provider_catalog import ProviderSpec
@@ -105,7 +105,7 @@ register_provider_bundle(
         sources=("autodiscovered_html",),
     )
 )
-''',
+""",
         encoding="utf-8",
     )
 

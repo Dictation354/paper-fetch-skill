@@ -99,7 +99,9 @@ def _reference_label(node: Any, *, fallback_index: int) -> str | None:
         return explicit_label
 
     label_node = node.select_one(".label")
-    label_text = _normalized_label(label_node.get_text(" ", strip=True) if isinstance(label_node, Tag) else "")
+    label_text = _normalized_label(
+        label_node.get_text(" ", strip=True) if isinstance(label_node, Tag) else ""
+    )
     if label_text:
         return label_text
 
@@ -121,9 +123,17 @@ def _reference_label(node: Any, *, fallback_index: int) -> str | None:
 def _node_matches_reference_content(node: Tag) -> bool:
     class_values = getattr(node, "attrs", {}).get("class") or []
     if isinstance(class_values, str):
-        classes = {normalize_text(item).lower() for item in class_values.split() if normalize_text(item)}
+        classes = {
+            normalize_text(item).lower()
+            for item in class_values.split()
+            if normalize_text(item)
+        }
     else:
-        classes = {normalize_text(str(item)).lower() for item in class_values if normalize_text(str(item))}
+        classes = {
+            normalize_text(str(item)).lower()
+            for item in class_values
+            if normalize_text(str(item))
+        }
     return bool(classes & REFERENCE_CONTENT_CLASS_TOKENS)
 
 
@@ -195,7 +205,9 @@ def _candidate_reference_nodes(soup: Any) -> list[Any]:
     return []
 
 
-def extract_numbered_references_from_html(html_text: str) -> list[dict[str, str | None]]:
+def extract_numbered_references_from_html(
+    html_text: str,
+) -> list[dict[str, str | None]]:
     if not normalize_text(html_text):
         return []
 

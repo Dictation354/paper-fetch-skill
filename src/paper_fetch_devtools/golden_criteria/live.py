@@ -69,7 +69,9 @@ QUALITY_FLAG_CATEGORY_MAP = {
 }
 MARKDOWN_IMAGE_URL_PATTERN = re.compile(r"!\[[^\]]*\]\(([^)]+)\)")
 MARKDOWN_HEADING_PATTERN = re.compile(r"^\s{0,3}#{1,6}\s+")
-REFERENCES_HEADING_PATTERN = re.compile(r"^\s{0,3}#{1,6}\s+references(?:\s|\(|$)", flags=re.IGNORECASE)
+REFERENCES_HEADING_PATTERN = re.compile(
+    r"^\s{0,3}#{1,6}\s+references(?:\s|\(|$)", flags=re.IGNORECASE
+)
 NUMBERED_REFERENCE_ITEM_PATTERN = re.compile(r"^\s*(?:\d{1,4}[.)]|\[\d{1,4}\])\s+\S")
 BULLET_REFERENCE_ITEM_PATTERN = re.compile(r"^\s*[-*+]\s+\S")
 IEEE_MEDIASTORE_HOST = "ieeexplore.ieee.org"
@@ -241,9 +243,13 @@ class GoldenCriteriaLiveReport:
             "skipped_samples": self.skipped_samples,
             "provider_status": self.provider_status,
             "results": [item.to_dict() for item in self.results],
-            "summary_by_provider": [item.to_dict() for item in self.summary_by_provider],
+            "summary_by_provider": [
+                item.to_dict() for item in self.summary_by_provider
+            ],
             "summary_by_issue": [item.to_dict() for item in self.summary_by_issue],
-            "solution_recommendations": [item.to_dict() for item in self.solution_recommendations],
+            "solution_recommendations": [
+                item.to_dict() for item in self.solution_recommendations
+            ],
         }
 
     def to_json(self) -> str:
@@ -271,7 +277,11 @@ class GoldenCriteriaLiveReport:
             "| --- | ---: | ---: | ---: | ---: | --- |",
         ]
         for summary in self.summary_by_provider:
-            counts = ", ".join(f"{key}={value}" for key, value in sorted(summary.status_counts.items()) if value)
+            counts = ", ".join(
+                f"{key}={value}"
+                for key, value in sorted(summary.status_counts.items())
+                if value
+            )
             lines.append(
                 f"| `{summary.provider}` | {summary.attempted} | {summary.fulltext} | "
                 f"{summary.blocked} | {summary.skipped} | {counts or '-'} |"
@@ -288,7 +298,9 @@ class GoldenCriteriaLiveReport:
         )
         for result in self.results:
             issues = ", ".join(f"`{item}`" for item in result.issue_categories) or "-"
-            sample_link = f"[{result.sample_id}]({Path(result.sample_output_dir).name}/review.md)"
+            sample_link = (
+                f"[{result.sample_id}]({Path(result.sample_output_dir).name}/review.md)"
+            )
             resolve_seconds = result.stage_timings.get("resolve_seconds", 0.0)
             metadata_seconds = result.stage_timings.get("metadata_seconds", 0.0)
             fulltext_seconds = result.stage_timings.get("fulltext_seconds", 0.0)
@@ -317,8 +329,12 @@ class GoldenCriteriaLiveReport:
         )
         if self.summary_by_issue:
             for summary in self.summary_by_issue:
-                sample_ids = ", ".join(f"`{item}`" for item in summary.sample_ids) or "-"
-                lines.append(f"| `{summary.issue_category}` | {summary.count} | {sample_ids} |")
+                sample_ids = (
+                    ", ".join(f"`{item}`" for item in summary.sample_ids) or "-"
+                )
+                lines.append(
+                    f"| `{summary.issue_category}` | {summary.count} | {sample_ids} |"
+                )
         else:
             lines.append("| `none` | 0 | - |")
 
@@ -331,7 +347,9 @@ class GoldenCriteriaLiveReport:
         )
         if self.solution_recommendations:
             for item in self.solution_recommendations:
-                sample_ids = ", ".join(f"`{sample_id}`" for sample_id in item.sample_ids) or "-"
+                sample_ids = (
+                    ", ".join(f"`{sample_id}`" for sample_id in item.sample_ids) or "-"
+                )
                 lines.extend(
                     [
                         f"{item.priority}. **{item.title}**",
@@ -355,7 +373,9 @@ ProviderStatusFn = Callable[..., dict[str, Any]]
 
 
 def default_manifest_path() -> Path:
-    return resolve_repo_root() / "tests" / "fixtures" / "golden_criteria" / "manifest.json"
+    return (
+        resolve_repo_root() / "tests" / "fixtures" / "golden_criteria" / "manifest.json"
+    )
 
 
 def provider_manifest_path(provider: str) -> Path:
@@ -370,7 +390,9 @@ def timestamped_review_output_dir(*, now: datetime | None = None) -> Path:
 
 def ensure_live_opt_in(env: Mapping[str, str]) -> None:
     if normalize_text(env.get(RUN_LIVE_ENV_VAR)) != "1":
-        raise RuntimeError(f"Set {RUN_LIVE_ENV_VAR}=1 to run the golden criteria live review pipeline.")
+        raise RuntimeError(
+            f"Set {RUN_LIVE_ENV_VAR}=1 to run the golden criteria live review pipeline."
+        )
 
 
 def load_manifest(manifest_path: Path | None = None) -> dict[str, Any]:
@@ -386,7 +408,9 @@ def load_provider_manifest(provider: str) -> dict[str, Any] | None:
     return data if isinstance(data, dict) else None
 
 
-def iter_golden_criteria_samples(manifest: Mapping[str, Any]) -> list[GoldenCriteriaLiveSample]:
+def iter_golden_criteria_samples(
+    manifest: Mapping[str, Any],
+) -> list[GoldenCriteriaLiveSample]:
     samples: list[GoldenCriteriaLiveSample] = []
     for sample_id, raw_sample in (manifest.get("samples") or {}).items():
         if not isinstance(raw_sample, Mapping):
@@ -412,9 +436,18 @@ def iter_golden_criteria_samples(manifest: Mapping[str, Any]) -> list[GoldenCrit
                 source_url=source_url,
                 landing_url=landing_url,
                 assets=assets,
-                expected_live_status=normalize_text(raw_sample.get("expected_live_status")) or None,
-                expected_review_status=normalize_text(raw_sample.get("expected_review_status")).lower() or None,
-                out_of_scope_reason=normalize_text(raw_sample.get("out_of_scope_reason")) or None,
+                expected_live_status=normalize_text(
+                    raw_sample.get("expected_live_status")
+                )
+                or None,
+                expected_review_status=normalize_text(
+                    raw_sample.get("expected_review_status")
+                ).lower()
+                or None,
+                out_of_scope_reason=normalize_text(
+                    raw_sample.get("out_of_scope_reason")
+                )
+                or None,
                 purpose=normalize_text(raw_sample.get("purpose")) or None,
                 route_kind=normalize_text(raw_sample.get("route_kind")) or None,
                 fixture_purposes=tuple(
@@ -433,26 +466,40 @@ def select_samples(
     providers: Sequence[str] | None = None,
     sample_ids: Sequence[str] | None = None,
 ) -> list[GoldenCriteriaLiveSample]:
-    provider_filter = {normalize_text(item).lower() for item in (providers or []) if normalize_text(item)}
-    sample_filter = {normalize_text(item) for item in (sample_ids or []) if normalize_text(item)}
+    provider_filter = {
+        normalize_text(item).lower()
+        for item in (providers or [])
+        if normalize_text(item)
+    }
+    sample_filter = {
+        normalize_text(item) for item in (sample_ids or []) if normalize_text(item)
+    }
     selected = []
     for sample in samples:
         if provider_filter and sample.provider not in provider_filter:
             continue
-        if sample_filter and sample.sample_id not in sample_filter and sample.doi not in sample_filter:
+        if (
+            sample_filter
+            and sample.sample_id not in sample_filter
+            and sample.doi not in sample_filter
+        ):
             continue
         selected.append(sample)
     return selected
 
 
-def schedule_supported_samples(samples: Sequence[GoldenCriteriaLiveSample]) -> list[GoldenCriteriaLiveSample]:
+def schedule_supported_samples(
+    samples: Sequence[GoldenCriteriaLiveSample],
+) -> list[GoldenCriteriaLiveSample]:
     grouped: dict[str, list[GoldenCriteriaLiveSample]] = defaultdict(list)
     for sample in samples:
         if sample.supported:
             grouped[sample.provider].append(sample)
 
     scheduled: list[GoldenCriteriaLiveSample] = []
-    max_count = max((len(grouped.get(provider, [])) for provider in SUPPORTED_PROVIDERS), default=0)
+    max_count = max(
+        (len(grouped.get(provider, [])) for provider in SUPPORTED_PROVIDERS), default=0
+    )
     for index in range(max_count):
         for provider in SUPPORTED_PROVIDERS:
             provider_samples = grouped.get(provider, [])
@@ -493,7 +540,9 @@ def provider_status_payload(
                     "provider": provider_name,
                     "status": ERROR,
                     "available": False,
-                    "official_provider": bool(getattr(client, "official_provider", True)),
+                    "official_provider": bool(
+                        getattr(client, "official_provider", True)
+                    ),
                     "missing_env": [],
                     "notes": [f"Provider diagnostics failed unexpectedly: {exc}"],
                     "checks": [],
@@ -506,7 +555,9 @@ def sample_output_dir(output_root: Path, sample: GoldenCriteriaLiveSample) -> Pa
     return output_root / sanitize_filename(sample.sample_id)
 
 
-def classify_envelope_status(sample: GoldenCriteriaLiveSample, envelope: FetchEnvelope) -> tuple[str, str | None, str | None]:
+def classify_envelope_status(
+    sample: GoldenCriteriaLiveSample, envelope: FetchEnvelope
+) -> tuple[str, str | None, str | None]:
     if envelope.content_kind == FULLTEXT:
         return FULLTEXT, None, None
 
@@ -518,16 +569,28 @@ def classify_envelope_status(sample: GoldenCriteriaLiveSample, envelope: FetchEn
         f"fulltext:{sample.provider}_fail" in source_trail
         or f"fulltext:{sample.provider}_not_usable" in source_trail
     ):
-        return "blocked_live_fetch", NO_RESULT, _first_non_generic_warning(envelope.warnings)
+        return (
+            "blocked_live_fetch",
+            NO_RESULT,
+            _first_non_generic_warning(envelope.warnings),
+        )
     if envelope.content_kind in {ABSTRACT_ONLY, METADATA_ONLY}:
         return METADATA_ONLY, None, _first_non_generic_warning(envelope.warnings)
-    return "blocked_live_fetch", "blocked_live_fetch", _first_non_generic_warning(envelope.warnings)
+    return (
+        "blocked_live_fetch",
+        "blocked_live_fetch",
+        _first_non_generic_warning(envelope.warnings),
+    )
 
 
 def _first_non_generic_warning(warnings: Sequence[str]) -> str | None:
     for warning in warnings:
         text = normalize_text(warning)
-        if text and text != "Full text was not available; returning metadata and abstract only.":
+        if (
+            text
+            and text
+            != "Full text was not available; returning metadata and abstract only."
+        ):
             return text
     return normalize_text(warnings[0]) if warnings else None
 
@@ -549,15 +612,20 @@ def issue_categories_for_result(
         warning_blob = " ".join(envelope.warnings).lower()
         preview_fallback_assets = [
             asset
-            for asset in list((envelope.article.assets if envelope.article is not None else []) or [])
-            if normalize_text(getattr(asset, "download_tier", None)).lower() == "preview"
+            for asset in list(
+                (envelope.article.assets if envelope.article is not None else []) or []
+            )
+            if normalize_text(getattr(asset, "download_tier", None)).lower()
+            == "preview"
         ]
         preview_fallback_has_non_formula_asset = any(
             normalize_text(getattr(asset, "kind", None)).lower() != "formula"
             for asset in preview_fallback_assets
         )
         article_asset_failures = list(
-            getattr(envelope.article.quality, "asset_failures", []) if envelope.article is not None else []
+            getattr(envelope.article.quality, "asset_failures", [])
+            if envelope.article is not None
+            else []
         )
         if (
             "asset_failures" in trail_blob
@@ -565,11 +633,19 @@ def issue_categories_for_result(
             or "partially downloaded" in warning_blob
             or "assets were only partially downloaded" in warning_blob
             or bool(article_asset_failures)
-            or ("assets_preview_fallback" in trail_blob and (not preview_fallback_assets or preview_fallback_has_non_formula_asset))
+            or (
+                "assets_preview_fallback" in trail_blob
+                and (
+                    not preview_fallback_assets
+                    or preview_fallback_has_non_formula_asset
+                )
+            )
             or _markdown_has_unlocalized_downloaded_ieee_mediastore_asset(envelope)
         ):
             categories.append("asset_download_failure")
-        if _markdown_references_block_mixes_numbered_and_bullet_items(envelope.markdown):
+        if _markdown_references_block_mixes_numbered_and_bullet_items(
+            envelope.markdown
+        ):
             categories.append("reference_loss")
         for flag in envelope.quality.flags:
             category = QUALITY_FLAG_CATEGORY_MAP.get(normalize_text(flag).lower())
@@ -585,7 +661,9 @@ def issue_categories_for_result(
 
 
 def _sample_purposes(sample: GoldenCriteriaLiveSample) -> tuple[str, ...]:
-    purposes = [purpose for purpose in (sample.purpose, *sample.fixture_purposes) if purpose]
+    purposes = [
+        purpose for purpose in (sample.purpose, *sample.fixture_purposes) if purpose
+    ]
     return tuple(dict.fromkeys(purposes))
 
 
@@ -641,7 +719,10 @@ def _markdown_contract_for_sample(
     if isinstance(markdown_contract, Mapping):
         for purpose in purposes:
             contract = markdown_contract.get(purpose)
-            if isinstance(contract, Mapping) and normalize_text(contract.get("doi")) == sample.doi:
+            if (
+                isinstance(contract, Mapping)
+                and normalize_text(contract.get("doi")) == sample.doi
+            ):
                 return contract
     for extra_fixture in provider_manifest.get("extra_fixtures") or []:
         if not isinstance(extra_fixture, Mapping):
@@ -696,10 +777,15 @@ def _dedupe_issue_categories(categories: Sequence[str]) -> list[str]:
 
 
 def _markdown_image_urls(markdown: str | None) -> list[str]:
-    return [normalize_text(match.group(1)).strip("<>") for match in MARKDOWN_IMAGE_URL_PATTERN.finditer(markdown or "")]
+    return [
+        normalize_text(match.group(1)).strip("<>")
+        for match in MARKDOWN_IMAGE_URL_PATTERN.finditer(markdown or "")
+    ]
 
 
-def _markdown_references_block_mixes_numbered_and_bullet_items(markdown: str | None) -> bool:
+def _markdown_references_block_mixes_numbered_and_bullet_items(
+    markdown: str | None,
+) -> bool:
     in_references = False
     has_numbered_item = False
     has_bullet_item = False
@@ -726,7 +812,9 @@ def _markdown_references_block_mixes_numbered_and_bullet_items(markdown: str | N
 
 
 def _is_ieee_mediastore_url(url: str) -> bool:
-    parsed = urllib.parse.urlparse(normalize_text(url) if not url.startswith("//") else f"https:{url}")
+    parsed = urllib.parse.urlparse(
+        normalize_text(url) if not url.startswith("//") else f"https:{url}"
+    )
     return (
         normalize_text(parsed.netloc).lower().endswith(IEEE_MEDIASTORE_HOST)
         and IEEE_MEDIASTORE_PATH_TOKEN in normalize_text(parsed.path).lower()
@@ -739,10 +827,19 @@ def _reference_candidates(value: str | None) -> set[str]:
         return set()
     parsed = urllib.parse.urlsplit(normalized)
     path = parsed.path or normalized
-    raw_candidates = {normalized, path, urllib.parse.unquote(normalized), urllib.parse.unquote(path)}
+    raw_candidates = {
+        normalized,
+        path,
+        urllib.parse.unquote(normalized),
+        urllib.parse.unquote(path),
+    }
     candidates: set[str] = set()
     for raw_candidate in raw_candidates:
-        candidate = re.sub(r"/+", "/", normalize_text(raw_candidate).replace("\\", "/")).strip().removeprefix("./")
+        candidate = (
+            re.sub(r"/+", "/", normalize_text(raw_candidate).replace("\\", "/"))
+            .strip()
+            .removeprefix("./")
+        )
         if candidate:
             candidates.add(candidate)
             candidates.add(candidate.lstrip("/"))
@@ -756,8 +853,12 @@ def _reference_basename(value: str) -> str:
 def _references_match(left: set[str], right: set[str]) -> bool:
     if left & right:
         return True
-    left_basenames = {_reference_basename(item) for item in left if _reference_basename(item)}
-    right_basenames = {_reference_basename(item) for item in right if _reference_basename(item)}
+    left_basenames = {
+        _reference_basename(item) for item in left if _reference_basename(item)
+    }
+    right_basenames = {
+        _reference_basename(item) for item in right if _reference_basename(item)
+    }
     return bool(left_basenames & right_basenames)
 
 
@@ -777,10 +878,16 @@ def _asset_reference_candidates(asset: Any) -> set[str]:
     return candidates
 
 
-def _markdown_has_unlocalized_downloaded_ieee_mediastore_asset(envelope: FetchEnvelope) -> bool:
+def _markdown_has_unlocalized_downloaded_ieee_mediastore_asset(
+    envelope: FetchEnvelope,
+) -> bool:
     if envelope.article is None:
         return False
-    remote_urls = [url for url in _markdown_image_urls(envelope.markdown) if _is_ieee_mediastore_url(url)]
+    remote_urls = [
+        url
+        for url in _markdown_image_urls(envelope.markdown)
+        if _is_ieee_mediastore_url(url)
+    ]
     if not remote_urls:
         return False
     remote_candidate_sets = [_reference_candidates(url) for url in remote_urls]
@@ -788,7 +895,10 @@ def _markdown_has_unlocalized_downloaded_ieee_mediastore_asset(envelope: FetchEn
         if local_existing_asset_path(asset) is None:
             continue
         asset_candidates = _asset_reference_candidates(asset)
-        if asset_candidates and any(_references_match(asset_candidates, remote_candidates) for remote_candidates in remote_candidate_sets):
+        if asset_candidates and any(
+            _references_match(asset_candidates, remote_candidates)
+            for remote_candidates in remote_candidate_sets
+        ):
             return True
     return False
 
@@ -801,11 +911,16 @@ def review_status_for(status: str, issue_categories: Sequence[str]) -> str:
     return "issue" if issue_categories else "ok"
 
 
-def sample_expected_outcome_applies(sample: GoldenCriteriaLiveSample, status: str) -> bool:
+def sample_expected_outcome_applies(
+    sample: GoldenCriteriaLiveSample, status: str
+) -> bool:
     expected_live_status = normalize_text(sample.expected_live_status).lower()
     normalized_status = normalize_text(status).lower()
     status_matches = expected_live_status == normalized_status
-    if expected_live_status == METADATA_ONLY and normalized_status == "blocked_live_fetch":
+    if (
+        expected_live_status == METADATA_ONLY
+        and normalized_status == "blocked_live_fetch"
+    ):
         status_matches = True
     if expected_live_status and not status_matches:
         return False
@@ -819,7 +934,11 @@ def apply_expected_outcome(
     if not sample_expected_outcome_applies(sample, result.status):
         return result
     expected_review_status = normalize_text(sample.expected_review_status).lower()
-    review_status = expected_review_status if expected_review_status in REVIEW_STATUS_VALUES else result.review_status
+    review_status = (
+        expected_review_status
+        if expected_review_status in REVIEW_STATUS_VALUES
+        else result.review_status
+    )
     return replace(
         result,
         review_status=review_status,
@@ -898,11 +1017,17 @@ def materialize_fetch_artifacts(
         )
     if markdown is not None:
         target_path = sample_dir / "extracted.md"
-        envelope.markdown = rewrite_markdown_asset_links(markdown, envelope, target_path=target_path, render=render)
+        envelope.markdown = rewrite_markdown_asset_links(
+            markdown, envelope, target_path=target_path, render=render
+        )
         target_path.write_text(envelope.markdown, encoding="utf-8")
     if envelope.article is not None:
-        (sample_dir / "article.json").write_text(envelope.article.to_json() + "\n", encoding="utf-8")
-    (sample_dir / "fetch-envelope.json").write_text(envelope.to_json() + "\n", encoding="utf-8")
+        (sample_dir / "article.json").write_text(
+            envelope.article.to_json() + "\n", encoding="utf-8"
+        )
+    (sample_dir / "fetch-envelope.json").write_text(
+        envelope.to_json() + "\n", encoding="utf-8"
+    )
     return asset_count
 
 
@@ -925,7 +1050,9 @@ def collect_asset_diagnostics(article: Any) -> list[dict[str, Any]]:
             "width": getattr(asset, "width", None),
             "height": getattr(asset, "height", None),
         }
-        compact = {key: value for key, value in entry.items() if value not in ("", None)}
+        compact = {
+            key: value for key, value in entry.items() if value not in ("", None)
+        }
         if compact:
             diagnostics.append(compact)
     return diagnostics
@@ -966,7 +1093,9 @@ def _transport_cache_stats(transport: HttpTransport) -> dict[str, int]:
     return snapshot()
 
 
-def _cache_stats_delta(before: Mapping[str, Any] | None, after: Mapping[str, Any] | None) -> dict[str, int]:
+def _cache_stats_delta(
+    before: Mapping[str, Any] | None, after: Mapping[str, Any] | None
+) -> dict[str, int]:
     keys = sorted(set((before or {}).keys()) | set((after or {}).keys()))
     delta: dict[str, int] = {}
     for key in keys:
@@ -1013,13 +1142,19 @@ def _emit_sample_start_log(sample: GoldenCriteriaLiveSample) -> None:
 def render_asset_diagnostics(asset_diagnostics: Sequence[Mapping[str, Any]]) -> str:
     rows: list[str] = []
     for asset in asset_diagnostics:
-        heading = normalize_text(asset.get("heading")) or normalize_text(asset.get("kind")) or "asset"
+        heading = (
+            normalize_text(asset.get("heading"))
+            or normalize_text(asset.get("kind"))
+            or "asset"
+        )
         tier = normalize_text(asset.get("download_tier")) or "-"
         width = asset.get("width")
         height = asset.get("height")
         dimensions = f"{width}x{height}" if width and height else "-"
         content_type = normalize_text(asset.get("content_type")) or "-"
-        rows.append(f"- {heading}: tier={tier}, dimensions={dimensions}, content_type={content_type}")
+        rows.append(
+            f"- {heading}: tier={tier}, dimensions={dimensions}, content_type={content_type}"
+        )
     return "\n".join(rows) if rows else "No downloaded asset diagnostics recorded."
 
 
@@ -1037,7 +1172,10 @@ def _science_preview_tier_is_accepted(result: GoldenCriteriaLiveResult) -> bool:
 def render_review_template(result: GoldenCriteriaLiveResult) -> str:
     issue_categories = ", ".join(result.issue_categories)
     if result.expected_outcome:
-        reason = normalize_text(result.out_of_scope_reason) or "This sample is documented as an expected live-review outcome."
+        reason = (
+            normalize_text(result.out_of_scope_reason)
+            or "This sample is documented as an expected live-review outcome."
+        )
         what_is_wrong = f"No provider defect is recorded. Expected outcome: {reason}"
         proposed_fix = "No fix proposed; keep this sample as an explicit expected/out-of-scope case."
     elif result.review_status == "ok":
@@ -1059,11 +1197,15 @@ def render_review_template(result: GoldenCriteriaLiveResult) -> str:
         what_is_wrong = f"Sample was skipped because provider `{result.provider}` is not supported by this live review pipeline."
         proposed_fix = "Add provider support or keep this sample documented as unsupported for live review."
     elif result.review_status == "blocked":
-        what_is_wrong = f"Live fetch did not produce fulltext. Status: `{result.status}`."
+        what_is_wrong = (
+            f"Live fetch did not produce fulltext. Status: `{result.status}`."
+        )
         proposed_fix = "Fix provider configuration, rate limiting, access handling, or provider waterfall before content review."
     else:
         what_is_wrong = "Automated review heuristics detected a possible issue. Confirm by reading extracted.md."
-        proposed_fix = "Inspect the affected provider path and add a focused regression test."
+        proposed_fix = (
+            "Inspect the affected provider path and add a focused regression test."
+        )
 
     return (
         f"# Review: {result.sample_id}\n\n"
@@ -1123,12 +1265,17 @@ def parse_issue_categories(value: str) -> list[str]:
     return [category for category in ISSUE_CATEGORIES if category in set(categories)]
 
 
-def ensure_review_file(result: GoldenCriteriaLiveResult, sample_dir: Path) -> ReviewSummary:
+def ensure_review_file(
+    result: GoldenCriteriaLiveResult, sample_dir: Path
+) -> ReviewSummary:
     review_path = sample_dir / "review.md"
     if review_path.exists():
         return parse_review_summary(review_path.read_text(encoding="utf-8"))
     review_path.write_text(render_review_template(result), encoding="utf-8")
-    return ReviewSummary(review_status=result.review_status, issue_categories=list(result.issue_categories))
+    return ReviewSummary(
+        review_status=result.review_status,
+        issue_categories=list(result.issue_categories),
+    )
 
 
 def result_with_review_summary(
@@ -1163,7 +1310,9 @@ def result_with_review_summary(
     )
 
 
-def skipped_result(sample: GoldenCriteriaLiveSample, sample_dir: Path) -> GoldenCriteriaLiveResult:
+def skipped_result(
+    sample: GoldenCriteriaLiveSample, sample_dir: Path
+) -> GoldenCriteriaLiveResult:
     categories = issue_categories_for_result(
         status=UNSUPPORTED_PROVIDER_STATUS,
         unsupported_provider=True,
@@ -1177,7 +1326,9 @@ def skipped_result(sample: GoldenCriteriaLiveSample, sample_dir: Path) -> Golden
         content_kind=None,
         source=None,
         has_fulltext=False,
-        warnings=[f"Provider {sample.provider!r} is not supported by the live review pipeline."],
+        warnings=[
+            f"Provider {sample.provider!r} is not supported by the live review pipeline."
+        ],
         source_trail=[],
         asset_count=0,
         sample_output_dir=str(sample_dir),
@@ -1196,7 +1347,9 @@ def precheck_blocked_result(
     *,
     provider_status_entry: Mapping[str, Any],
 ) -> GoldenCriteriaLiveResult:
-    status = normalize_text(provider_status_entry.get("status")).lower() or NOT_CONFIGURED
+    status = (
+        normalize_text(provider_status_entry.get("status")).lower() or NOT_CONFIGURED
+    )
     message = provider_status_message(provider_status_entry)
     categories = issue_categories_for_result(status=status)
     return GoldenCriteriaLiveResult(
@@ -1204,7 +1357,9 @@ def precheck_blocked_result(
         provider=sample.provider,
         doi=sample.doi,
         title=sample.title,
-        status=status if status in {NOT_CONFIGURED, RATE_LIMITED, ERROR} else "blocked_live_fetch",
+        status=status
+        if status in {NOT_CONFIGURED, RATE_LIMITED, ERROR}
+        else "blocked_live_fetch",
         content_kind=None,
         source=None,
         has_fulltext=False,
@@ -1273,7 +1428,9 @@ def fetch_sample_result(
         envelope = fetch_paper_fn(sample.doi, **fetch_kwargs)
         fetch_seconds = time.monotonic() - fetch_started_at
         materialize_started_at = time.monotonic()
-        asset_count = materialize_fetch_artifacts(envelope=envelope, sample_dir=sample_dir, render=render)
+        asset_count = materialize_fetch_artifacts(
+            envelope=envelope, sample_dir=sample_dir, render=render
+        )
         materialize_seconds = time.monotonic() - materialize_started_at
         elapsed_seconds = round(time.monotonic() - started_at, 3)
         timings = _stage_timings(
@@ -1301,7 +1458,9 @@ def fetch_sample_result(
                 ),
             ]
         )
-        http_cache_stats = _cache_stats_delta(cache_stats_before, _transport_cache_stats(transport))
+        http_cache_stats = _cache_stats_delta(
+            cache_stats_before, _transport_cache_stats(transport)
+        )
         result = GoldenCriteriaLiveResult(
             sample_id=sample.sample_id,
             provider=sample.provider,
@@ -1334,9 +1493,15 @@ def fetch_sample_result(
             total_seconds=elapsed_seconds,
             runtime_stage_timings=runtime_context.stage_timings,
         )
-        status = exc.status if exc.status in {NOT_CONFIGURED, RATE_LIMITED} else "blocked_live_fetch"
+        status = (
+            exc.status
+            if exc.status in {NOT_CONFIGURED, RATE_LIMITED}
+            else "blocked_live_fetch"
+        )
         categories = issue_categories_for_result(status=status)
-        http_cache_stats = _cache_stats_delta(cache_stats_before, _transport_cache_stats(transport))
+        http_cache_stats = _cache_stats_delta(
+            cache_stats_before, _transport_cache_stats(transport)
+        )
         result = GoldenCriteriaLiveResult(
             sample_id=sample.sample_id,
             provider=sample.provider,
@@ -1369,7 +1534,9 @@ def fetch_sample_result(
             runtime_stage_timings=runtime_context.stage_timings,
         )
         categories = issue_categories_for_result(status="blocked_live_fetch")
-        http_cache_stats = _cache_stats_delta(cache_stats_before, _transport_cache_stats(transport))
+        http_cache_stats = _cache_stats_delta(
+            cache_stats_before, _transport_cache_stats(transport)
+        )
         result = GoldenCriteriaLiveResult(
             sample_id=sample.sample_id,
             provider=sample.provider,
@@ -1397,7 +1564,9 @@ def fetch_sample_result(
         runtime_context.close()
 
 
-def build_provider_summaries(results: Sequence[GoldenCriteriaLiveResult]) -> list[ProviderReviewSummary]:
+def build_provider_summaries(
+    results: Sequence[GoldenCriteriaLiveResult],
+) -> list[ProviderReviewSummary]:
     providers = sorted({result.provider for result in results})
     summaries: list[ProviderReviewSummary] = []
     for provider in providers:
@@ -1409,14 +1578,24 @@ def build_provider_summaries(results: Sequence[GoldenCriteriaLiveResult]) -> lis
                 attempted=len(provider_results),
                 status_counts=dict(sorted(counts.items())),
                 fulltext=counts.get(FULLTEXT, 0),
-                blocked=sum(1 for result in provider_results if result.review_status == "blocked"),
-                skipped=sum(1 for result in provider_results if result.review_status == "skipped"),
+                blocked=sum(
+                    1
+                    for result in provider_results
+                    if result.review_status == "blocked"
+                ),
+                skipped=sum(
+                    1
+                    for result in provider_results
+                    if result.review_status == "skipped"
+                ),
             )
         )
     return summaries
 
 
-def build_issue_summaries(results: Sequence[GoldenCriteriaLiveResult]) -> list[IssueReviewSummary]:
+def build_issue_summaries(
+    results: Sequence[GoldenCriteriaLiveResult],
+) -> list[IssueReviewSummary]:
     grouped: dict[str, list[GoldenCriteriaLiveResult]] = defaultdict(list)
     for result in results:
         for category in result.issue_categories:
@@ -1432,7 +1611,9 @@ def build_issue_summaries(results: Sequence[GoldenCriteriaLiveResult]) -> list[I
     ]
 
 
-def build_solution_recommendations(results: Sequence[GoldenCriteriaLiveResult]) -> list[SolutionRecommendation]:
+def build_solution_recommendations(
+    results: Sequence[GoldenCriteriaLiveResult],
+) -> list[SolutionRecommendation]:
     grouped: dict[str, list[GoldenCriteriaLiveResult]] = defaultdict(list)
     for result in results:
         for category in result.issue_categories:
@@ -1471,8 +1652,12 @@ def build_report(
         generated_at=generated_at,
         output_dir=str(output_dir),
         total_samples=len(result_list),
-        supported_samples=sum(1 for result in result_list if result.provider in SUPPORTED_PROVIDERS),
-        skipped_samples=sum(1 for result in result_list if result.status == UNSUPPORTED_PROVIDER_STATUS),
+        supported_samples=sum(
+            1 for result in result_list if result.provider in SUPPORTED_PROVIDERS
+        ),
+        skipped_samples=sum(
+            1 for result in result_list if result.status == UNSUPPORTED_PROVIDER_STATUS
+        ),
         provider_status=provider_status,
         results=result_list,
         summary_by_provider=build_provider_summaries(result_list),
@@ -1495,7 +1680,9 @@ def run_golden_criteria_live_review(
 ) -> GoldenCriteriaLiveReport:
     manifest = load_manifest(manifest_path)
     all_samples = iter_golden_criteria_samples(manifest)
-    selected_samples = select_samples(all_samples, providers=providers, sample_ids=sample_ids)
+    selected_samples = select_samples(
+        all_samples, providers=providers, sample_ids=sample_ids
+    )
     output_root = (output_dir or timestamped_review_output_dir(now=now)).resolve()
     output_root.mkdir(parents=True, exist_ok=True)
 
@@ -1504,7 +1691,9 @@ def run_golden_criteria_live_review(
     ensure_live_opt_in(runtime_env)
     active_transport = transport or HttpTransport()
     clients = build_clients(active_transport, runtime_env)
-    render = RenderOptions(include_refs="all", asset_profile="body", max_tokens="full_text")
+    render = RenderOptions(
+        include_refs="all", asset_profile="body", max_tokens="full_text"
+    )
     status_payload = provider_status_fn(env=runtime_env, transport=active_transport)
     provider_status_by_provider = {
         normalize_text(entry.get("provider")).lower(): dict(entry)
@@ -1568,9 +1757,15 @@ def run_golden_criteria_live_review(
         )
         result = apply_expected_outcome(sample, result)
         review = ensure_review_file(result, sample_dir)
-        results_by_sample_id[sample.sample_id] = result_with_review_summary(result, review)
+        results_by_sample_id[sample.sample_id] = result_with_review_summary(
+            result, review
+        )
 
-    ordered_results = [results_by_sample_id[sample.sample_id] for sample in selected_samples if sample.sample_id in results_by_sample_id]
+    ordered_results = [
+        results_by_sample_id[sample.sample_id]
+        for sample in selected_samples
+        if sample.sample_id in results_by_sample_id
+    ]
     report = build_report(
         generated_at=generated_at,
         output_dir=output_root,

@@ -9,8 +9,15 @@ from collections.abc import Mapping
 
 from ..utils import normalize_text
 from .markdown import normalize_markdown_text, strip_markdown_images
-from .schema import MaxTokensMode, Reference, Section, TokenEstimateBreakdown, TRUNCATION_WARNING
+from .schema import (
+    MaxTokensMode,
+    Reference,
+    Section,
+    TokenEstimateBreakdown,
+    TRUNCATION_WARNING,
+)
 from .sections import BODY_SECTION_EXCLUDED_KINDS, combine_abstract_text
+
 
 def estimate_tokens(text: str) -> int:
     normalized = normalize_markdown_text(text)
@@ -62,15 +69,24 @@ def build_token_estimate_breakdown(
     sections: Sequence[Section],
     references: Sequence[Reference],
 ) -> TokenEstimateBreakdown:
-    abstract = estimate_tokens(combine_abstract_text(abstract_text=abstract_text, sections=sections) or "")
+    abstract = estimate_tokens(
+        combine_abstract_text(abstract_text=abstract_text, sections=sections) or ""
+    )
     body = estimate_tokens(
         "\n\n".join(
             strip_markdown_images(section.text)
             for section in sections
-            if section.kind not in BODY_SECTION_EXCLUDED_KINDS and strip_markdown_images(section.text)
+            if section.kind not in BODY_SECTION_EXCLUDED_KINDS
+            and strip_markdown_images(section.text)
         )
     )
-    refs = estimate_tokens("\n".join(normalize_text(reference.raw) for reference in references if normalize_text(reference.raw)))
+    refs = estimate_tokens(
+        "\n".join(
+            normalize_text(reference.raw)
+            for reference in references
+            if normalize_text(reference.raw)
+        )
+    )
     return TokenEstimateBreakdown(abstract=abstract, body=body, refs=refs)
 
 

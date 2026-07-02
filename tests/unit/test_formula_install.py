@@ -38,8 +38,13 @@ class FormulaInstallTests(unittest.TestCase):
         finally:
             formula_install.os.name = original_os_name
 
-    def test_formula_tools_search_dirs_include_explicit_override_and_user_dir(self) -> None:
-        env = {"PAPER_FETCH_FORMULA_TOOLS_DIR": "~/custom-formula-tools", "XDG_DATA_HOME": "/tmp/pf-xdg"}
+    def test_formula_tools_search_dirs_include_explicit_override_and_user_dir(
+        self,
+    ) -> None:
+        env = {
+            "PAPER_FETCH_FORMULA_TOOLS_DIR": "~/custom-formula-tools",
+            "XDG_DATA_HOME": "/tmp/pf-xdg",
+        }
 
         dirs = formula_paths.formula_tools_search_dirs(env)
 
@@ -52,11 +57,19 @@ class FormulaInstallTests(unittest.TestCase):
             completed = subprocess.CompletedProcess(["tool"], 0)
 
             with (
-                mock.patch.object(formula_install.tempfile, "mkstemp", return_value=(fd, log_path)),
-                mock.patch.object(formula_install.os, "close", wraps=formula_install.os.close) as close,
-                mock.patch.object(formula_install.subprocess, "run", return_value=completed),
+                mock.patch.object(
+                    formula_install.tempfile, "mkstemp", return_value=(fd, log_path)
+                ),
+                mock.patch.object(
+                    formula_install.os, "close", wraps=formula_install.os.close
+                ) as close,
+                mock.patch.object(
+                    formula_install.subprocess, "run", return_value=completed
+                ),
             ):
-                self.assertTrue(formula_install._run_with_log("texmath-cabal-", ["tool"]))
+                self.assertTrue(
+                    formula_install._run_with_log("texmath-cabal-", ["tool"])
+                )
 
             close.assert_called_once_with(fd)
             self.assertFalse(Path(log_path).exists())
@@ -67,12 +80,20 @@ class FormulaInstallTests(unittest.TestCase):
             completed = subprocess.CompletedProcess(["tool"], 0)
 
             with (
-                mock.patch.object(formula_install.tempfile, "mkstemp", return_value=(fd, log_path)),
-                mock.patch.object(formula_install.subprocess, "run", return_value=completed),
-                mock.patch.object(Path, "unlink", side_effect=PermissionError("locked")),
+                mock.patch.object(
+                    formula_install.tempfile, "mkstemp", return_value=(fd, log_path)
+                ),
+                mock.patch.object(
+                    formula_install.subprocess, "run", return_value=completed
+                ),
+                mock.patch.object(
+                    Path, "unlink", side_effect=PermissionError("locked")
+                ),
                 mock.patch.object(formula_install, "warn") as warn,
             ):
-                self.assertTrue(formula_install._run_with_log("texmath-cabal-", ["tool"]))
+                self.assertTrue(
+                    formula_install._run_with_log("texmath-cabal-", ["tool"])
+                )
 
             warn.assert_called_once()
 

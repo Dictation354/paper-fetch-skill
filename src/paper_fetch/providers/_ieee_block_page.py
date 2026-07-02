@@ -28,4 +28,8 @@ def _looks_like_ieee_block_page(
         parser="text-token-scan",
         config={"tokens": IEEE_ACCESS_BLOCK_TEXT_TOKENS},
     )
-    return bool(context.get_or_set_parse_cache(key, lambda: _scan_ieee_block_page_tokens(html_text)))
+    return bool(
+        context.get_or_set_parse_cache(
+            key, lambda: _scan_ieee_block_page_tokens(html_text)
+        )
+    )

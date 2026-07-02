@@ -74,7 +74,9 @@ class CrossrefLookupClient:
                 "Crossref metadata search requires a DOI or article_title in this implementation.",
             )
 
-        candidates = self.search_bibliographic_candidates(article_title, journal_title=journal_title, rows=5)
+        candidates = self.search_bibliographic_candidates(
+            article_title, journal_title=journal_title, rows=5
+        )
         if not candidates:
             raise ProviderFailure(NO_RESULT, "Crossref returned no metadata results.")
         return candidates[0]
@@ -89,7 +91,10 @@ class CrossrefLookupClient:
     ) -> list[CrossrefMetadata]:
         normalized_title = article_title.strip()
         if not normalized_title:
-            raise ProviderFailure(NOT_SUPPORTED, "Crossref bibliographic search requires a non-empty title query.")
+            raise ProviderFailure(
+                NOT_SUPPORTED,
+                "Crossref bibliographic search requires a non-empty title query.",
+            )
 
         params = self.query_params()
         params.update(
@@ -120,9 +125,15 @@ class CrossrefLookupClient:
         items = payload.get("message", {}).get("items", [])
         if not items:
             return []
-        return [self.normalize_message(item, response["url"]) for item in items if isinstance(item, dict)]
+        return [
+            self.normalize_message(item, response["url"])
+            for item in items
+            if isinstance(item, dict)
+        ]
 
-    def normalize_message(self, message: Mapping[str, Any], source_url: str) -> CrossrefMetadata:
+    def normalize_message(
+        self, message: Mapping[str, Any], source_url: str
+    ) -> CrossrefMetadata:
         links: list[FulltextLink] = []
         for item in message.get("link", []) or []:
             if not isinstance(item, dict):
@@ -164,7 +175,11 @@ class CrossrefLookupClient:
         for reference in message.get("reference", []) or []:
             if not isinstance(reference, dict):
                 continue
-            raw = first_non_empty(reference.get("unstructured"), reference.get("article-title"), reference.get("DOI"))
+            raw = first_non_empty(
+                reference.get("unstructured"),
+                reference.get("article-title"),
+                reference.get("DOI"),
+            )
             if not raw:
                 continue
             references.append(

@@ -17,7 +17,11 @@ from ..extraction.html.assets import (
 from ..extraction.html.formula_rules import is_tex_formula_script_node
 from ..extraction.html.parsing import choose_parser
 from ..extraction.html.provider_rules import COMMON_ACCESS_BLOCK_TOKENS
-from ..models.markdown import image_reference_candidates, image_references_match, iter_markdown_images
+from ..models.markdown import (
+    image_reference_candidates,
+    image_references_match,
+    iter_markdown_images,
+)
 from ..publisher_identity import normalize_doi
 from ..quality.html_signals import TextMarkerRule, TextMarkerSignalSet
 from ..utils import normalize_text
@@ -276,7 +280,9 @@ def pdf_candidate_urls(
         str(metadata.get("landing_page_url") or "")
     )
     for value in _raw_meta_values(metadata, "citation_pdf_url"):
-        _append_unique(candidates, urljoin(base_url or direct_article_url(doi or ""), value))
+        _append_unique(
+            candidates, urljoin(base_url or direct_article_url(doi or ""), value)
+        )
     for item in metadata.get("fulltext_links") or ():
         if not isinstance(item, Mapping):
             continue
@@ -310,7 +316,9 @@ def extract_references(html_text: str) -> list[dict[str, str | None]]:
     soup = BeautifulSoup(html_text, choose_parser())
     references = _extract_references_from_soup(soup)
     if not references:
-        references = _extract_references_from_metadata(parse_html_metadata(html_text, ""))
+        references = _extract_references_from_metadata(
+            parse_html_metadata(html_text, "")
+        )
     if references:
         return references
     return _extract_references_from_metadata(parse_html_metadata(html_text, ""))
@@ -351,7 +359,9 @@ def _extract_references_from_soup(soup: BeautifulSoup) -> list[dict[str, str | N
     return []
 
 
-def _extract_references_from_metadata(metadata: Mapping[str, Any]) -> list[dict[str, str | None]]:
+def _extract_references_from_metadata(
+    metadata: Mapping[str, Any],
+) -> list[dict[str, str | None]]:
     parsed: list[dict[str, str | None]] = []
     seen: set[str] = set()
     raw_meta = metadata.get("raw_meta")
@@ -414,7 +424,9 @@ def extract_figure_captions(html_text: str) -> list[str]:
 
 def _extract_figure_captions_from_soup(soup: BeautifulSoup) -> list[str]:
     captions: list[str] = []
-    for node in soup.select("figure figcaption, .figure .caption, .article-figure .caption"):
+    for node in soup.select(
+        "figure figcaption, .figure .caption, .article-figure .caption"
+    ):
         if not isinstance(node, Tag):
             continue
         caption = _clean_iop_figure_caption_text(node.get_text(" ", strip=True))
@@ -424,7 +436,9 @@ def _extract_figure_captions_from_soup(soup: BeautifulSoup) -> list[str]:
 
 
 def _plain_markdown_text(markdown_text: str) -> str:
-    return normalize_text(re.sub(r"[*_`!\[\]()]|https?://\S+", " ", markdown_text)).lower()
+    return normalize_text(
+        re.sub(r"[*_`!\[\]()]|https?://\S+", " ", markdown_text)
+    ).lower()
 
 
 def _clean_iop_figure_caption_text(caption: Any) -> str:
@@ -465,7 +479,9 @@ def _markdown_contains_caption(markdown_text: str, caption: str) -> bool:
     return len(caption_body) >= 40 and caption_body in plain_markdown
 
 
-def _markdown_contains_asset_image(markdown_text: str, asset: Mapping[str, Any]) -> bool:
+def _markdown_contains_asset_image(
+    markdown_text: str, asset: Mapping[str, Any]
+) -> bool:
     inline_candidates = [
         image_reference_candidates(image.url)
         for image in iter_markdown_images(markdown_text or "")
@@ -594,11 +610,13 @@ def extract_markdown(
         html_title,
     ):
         metadata_for_extraction["title"] = html_title
-    markdown_text, extraction = browser_workflow.extract_atypon_browser_workflow_markdown(
-        html_text,
-        source_url,
-        "iop",
-        metadata=metadata_for_extraction,
+    markdown_text, extraction = (
+        browser_workflow.extract_atypon_browser_workflow_markdown(
+            html_text,
+            source_url,
+            "iop",
+            metadata=metadata_for_extraction,
+        )
     )
     finalized = dict(extraction)
     if html_title:
@@ -614,7 +632,9 @@ def extract_markdown(
         markdown_text = _append_missing_figure_captions(markdown_text, figure_captions)
     references = _extract_references_from_soup(soup)
     if not references:
-        references = _extract_references_from_metadata(parse_html_metadata(html_text, ""))
+        references = _extract_references_from_metadata(
+            parse_html_metadata(html_text, "")
+        )
     if references:
         finalized["references"] = references
         markdown_text = _append_references_markdown(markdown_text, references)
@@ -676,7 +696,11 @@ def _remove_iop_formula_fallback_asset_nodes(container: Any) -> None:
     if not isinstance(container, Tag):
         return
     for node in list(container.select(".inline-eqn, .display-eqn")):
-        if isinstance(node, Tag) and node.parent is not None and _is_iop_latex_formula_container(node):
+        if (
+            isinstance(node, Tag)
+            and node.parent is not None
+            and _is_iop_latex_formula_container(node)
+        ):
             node.decompose()
     for node in list(container.select(".texImage")):
         if (
@@ -709,9 +733,7 @@ def _iop_figure_preview_is_accepted(asset: Mapping[str, Any]) -> bool:
         for field in ("url", "preview_url", "full_size_url", "original_url")
     ]
     return any(
-        token in url
-        for url in urls
-        for token in IOP_ACCEPTED_FIGURE_PREVIEW_URL_TOKENS
+        token in url for url in urls for token in IOP_ACCEPTED_FIGURE_PREVIEW_URL_TOKENS
     )
 
 
@@ -729,7 +751,9 @@ def _iop_high_resolution_figure_url(value: str | None) -> str:
     return f"{match.group('stem')}_hr{match.group('suffix')}"
 
 
-def _augment_iop_figure_resolution_candidates(asset: Mapping[str, Any]) -> dict[str, Any]:
+def _augment_iop_figure_resolution_candidates(
+    asset: Mapping[str, Any],
+) -> dict[str, Any]:
     item = dict(asset)
     if normalize_text(str(item.get("kind") or "")).lower() != "figure":
         return item
@@ -737,7 +761,9 @@ def _augment_iop_figure_resolution_candidates(asset: Mapping[str, Any]) -> dict[
         return item
 
     for field in ("preview_url", "url", "original_url", "source_url"):
-        high_resolution_url = _iop_high_resolution_figure_url(str(item.get(field) or ""))
+        high_resolution_url = _iop_high_resolution_figure_url(
+            str(item.get(field) or "")
+        )
         if high_resolution_url:
             item["full_size_url"] = high_resolution_url
             break
@@ -791,13 +817,21 @@ scoped_asset_extractor = extract_scoped_html_assets
 
 def _is_iop_article_body_node(node: Tag) -> bool:
     attrs = getattr(node, "attrs", None) or {}
-    return normalize_text(str(attrs.get("property") or attrs.get("itemprop") or "")).lower() == "articlebody"
+    return (
+        normalize_text(
+            str(attrs.get("property") or attrs.get("itemprop") or "")
+        ).lower()
+        == "articlebody"
+    )
 
 
 def _contains_iop_abstract(node: Tag) -> bool:
-    return node.select_one(
-        ".article-abstract, [itemprop='description'], #artAbst, #abstracts, [role='doc-abstract']"
-    ) is not None
+    return (
+        node.select_one(
+            ".article-abstract, [itemprop='description'], #artAbst, #abstracts, [role='doc-abstract']"
+        )
+        is not None
+    )
 
 
 def _complete_iop_article_container(body: Tag) -> Tag | None:

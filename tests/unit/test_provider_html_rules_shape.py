@@ -210,7 +210,9 @@ def test_require_provider_html_rules_resolves_aliases_and_rejects_unknown() -> N
         require_provider_html_rules("missing-provider")
 
 
-def test_provider_html_rules_rejects_alias_conflicts(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_provider_html_rules_rejects_alias_conflicts(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     first = ProviderHtmlRules(name="first", aliases=("shared",))
     second = ProviderHtmlRules(name="second", aliases=("shared",))
 
@@ -241,7 +243,9 @@ def test_provider_html_rules_cache_reset_rebuilds_lookup(
         calls += 1
         return MappingProxyType({"cached": rules})
 
-    monkeypatch.setattr(provider_rules_module, "_build_provider_html_rules", build_rules)
+    monkeypatch.setattr(
+        provider_rules_module, "_build_provider_html_rules", build_rules
+    )
     monkeypatch.setattr(
         provider_rules_module,
         "_provider_entry_imports_complete",

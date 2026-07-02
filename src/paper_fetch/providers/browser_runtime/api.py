@@ -9,12 +9,20 @@ from .. import _cloakbrowser
 from ..base import ProviderStatusResult
 from .types import BrowserFetchedHtml, BrowserRuntimeConfig
 
-DEFAULT_BROWSER_RUNTIME_MAX_TIMEOUT_MS = _cloakbrowser.DEFAULT_BROWSER_RUNTIME_MAX_TIMEOUT_MS
-DEFAULT_BROWSER_RUNTIME_WAIT_SECONDS = _cloakbrowser.DEFAULT_BROWSER_RUNTIME_WAIT_SECONDS
-DEFAULT_BROWSER_RUNTIME_WARM_WAIT_SECONDS = _cloakbrowser.DEFAULT_BROWSER_RUNTIME_WARM_WAIT_SECONDS
+DEFAULT_BROWSER_RUNTIME_MAX_TIMEOUT_MS = (
+    _cloakbrowser.DEFAULT_BROWSER_RUNTIME_MAX_TIMEOUT_MS
+)
+DEFAULT_BROWSER_RUNTIME_WAIT_SECONDS = (
+    _cloakbrowser.DEFAULT_BROWSER_RUNTIME_WAIT_SECONDS
+)
+DEFAULT_BROWSER_RUNTIME_WARM_WAIT_SECONDS = (
+    _cloakbrowser.DEFAULT_BROWSER_RUNTIME_WARM_WAIT_SECONDS
+)
 
 
-def load_runtime_config(env: Mapping[str, str], *, provider: str, doi: str) -> BrowserRuntimeConfig:
+def load_runtime_config(
+    env: Mapping[str, str], *, provider: str, doi: str
+) -> BrowserRuntimeConfig:
     return _cloakbrowser.load_runtime_config(env, provider=provider, doi=doi)
 
 

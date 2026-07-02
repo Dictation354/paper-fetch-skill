@@ -10,7 +10,7 @@
 这份文档不解决：
 
 - provider 差异、路由规则和限速语义
-- Wiley / Science / PNAS / AMS / Annual Reviews / ACS / IOP / AIP / MDPI 的浏览器运行时细节
+- Wiley / Science / PNAS / AMS / Annual Reviews / Royal Society Publishing / ACS / IOP / AIP / MDPI 的浏览器运行时细节
 - 架构实现细节
 
 provider 与环境变量说明见 [`providers.md`](providers.md)，架构说明见 [`architecture/overview.md`](architecture/overview.md)。
@@ -329,7 +329,7 @@ scripts/clean-local-artifacts.sh --days 7
 
 `ieee` 不需要 IEEE API key；它走 `landing metadata / article number -> direct REST HTML -> clean-browser HTML -> direct HTTP PDF fallback -> seeded-browser PDF fallback`，但全文是否可用仍取决于当前环境对 IEEE Xplore 的合法访问上下文。clean-browser HTML 使用新的 CDP browser context，不读取本机浏览器 profile、不复用用户登录态、不自动登录、不处理验证码，也不绕过访问权限。direct HTTP PDF 返回 `stamp.jsp` HTML wrapper 或 access/challenge 页面时，seeded-browser PDF fallback 只复用当前页面运行期间获得的合法 IEEE cookies/session。
 
-`wiley`、`science`、`pnas`、`annualreviews`、`acs`、`iop`、`aip`、`mdpi` 默认通过 CDP browser workflow 进入 provider-owned browser workflow；`ams` 会先尝试带浏览器 UA/Referer 的 direct HTTP HTML preflight，失败后才进入同一 CDP browser fallback。显式配置 `CLOAKBROWSER_CDP_ENDPOINT` 时复用已运行浏览器并借用现有 browser context；未配置时自动通过 cloakbrowser 下载/定位 Chrome 并启动受控本机 CDP 浏览器，同一 runtime/browser 配置复用一个 keyed browser manager。HTML 与 PDF fallback 会打开隔离 context/page；runtime-shared browser-backed 资产下载会串行化以避免跨线程复用 Playwright sync 对象，普通 HTTP 资产下载仍按配置并发。是否能拿到全文仍取决于 publisher 访问权限、paywall/challenge 与远端站点行为。
+`wiley`、`science`、`pnas`、`annualreviews`、`royalsocietypublishing`、`acs`、`iop`、`aip`、`mdpi` 默认通过 CDP browser workflow 进入 provider-owned browser workflow；`ams` 会先尝试带浏览器 UA/Referer 的 direct HTTP HTML preflight，失败后才进入同一 CDP browser fallback。显式配置 `CLOAKBROWSER_CDP_ENDPOINT` 时复用已运行浏览器并借用现有 browser context；未配置时自动通过 cloakbrowser 下载/定位 Chrome 并启动受控本机 CDP 浏览器，同一进程内按 runtime/browser 配置复用一个 keyed browser manager，批量并发任务不会为同一个 provider profile 启动多个 Chrome 去抢 profile lock。HTML 与 PDF fallback 会打开隔离 context/page，并在调用线程建立自己的 CDP 连接；browser-backed 资产下载会串行化以避免跨线程复用 Playwright sync 对象，普通 HTTP 资产下载仍按配置并发。是否能拿到全文仍取决于 publisher 访问权限、paywall/challenge 与远端站点行为。
 
 需要复用手动验证过的浏览器时，可启动带 DevTools 端口的浏览器并设置 endpoint：
 
@@ -483,11 +483,12 @@ PYTHONPATH=src pytest tests/unit/test_cli.py tests/unit/test_service_*.py tests/
 PYTHONPATH=src pytest
 ```
 
-`scripts/dev-preflight.sh` 是本地和 CI 常规门禁的命令源：依次运行 `ruff`、contract 层 `mypy`、`tests/unit`、`tests/devtools`、`scripts/validate_extraction_rules.py` 和 `tests/integration`。快速迭代可用 `--fast`，需要单独排除 integration 或 type check 时使用 `--skip-integration` / `--skip-typecheck`。CI pytest 步骤保留 `--durations=30` 日志用于定位慢测，但默认仍复用 `pyproject.toml` 的 xdist 并行配置。
+`scripts/dev-preflight.sh` 是本地和 CI 常规门禁的命令源：优先使用 repo-local `.venv/bin/python`，不存在时退回 `python3`，也可显式设置 `PYTHON_BIN=/path/to/python`。脚本依次运行 `ruff format --check`、`ruff check`、contract 层 `mypy --no-site-packages`、`tests/unit`、`tests/devtools`、`scripts/validate_extraction_rules.py` 和 `tests/integration`；如果缺少 ruff / mypy / pytest，会提示先运行 `scripts/dev-bootstrap.sh` 或指定已安装依赖的解释器。快速迭代可用 `--fast`，需要单独排除 integration 或 type check 时使用 `--skip-integration` / `--skip-typecheck`。CI pytest 步骤保留 `--durations=30` 日志用于定位慢测，但默认仍复用 `pyproject.toml` 的 xdist 并行配置。
 
-Provider 重构前可以生成本地 coverage baseline，用来观察当前 unit suite 保护范围。第一阶段只生成报告，不设置覆盖率阈值，也不作为 live/browser 测试前置条件：
+Provider 重构前可以生成本地 coverage baseline，用来观察当前 unit suite 保护范围。第一阶段只生成报告，不设置覆盖率阈值，也不作为 live/browser 测试前置条件。CI 的 unit job 会生成 `term-missing` 和 `coverage.xml` 报告；本地可用 preflight 的 `--coverage` 执行同一类检查：
 
 ```bash
+bash scripts/dev-preflight.sh --fast --coverage
 PYTHONPATH=src python3 -m pytest tests/unit -q --cov=paper_fetch --cov-report=term-missing --cov-report=xml
 ```
 

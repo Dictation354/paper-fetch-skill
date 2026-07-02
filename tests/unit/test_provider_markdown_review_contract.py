@@ -116,27 +116,39 @@ def _quality_report_errors(review_path: Path, item: dict[str, Any]) -> list[str]
     baseline_path_value = str(item["baseline_markdown_path"])
     quality_path_value = str(item["markdown_quality_path"])
     if not baseline_path_value.endswith("/extracted.md"):
-        errors.append(f"{review_path}: {key} baseline_markdown_path must point to extracted.md")
+        errors.append(
+            f"{review_path}: {key} baseline_markdown_path must point to extracted.md"
+        )
     if not quality_path_value.endswith("/markdown-quality.json"):
-        errors.append(f"{review_path}: {key} markdown_quality_path must point to markdown-quality.json")
+        errors.append(
+            f"{review_path}: {key} markdown_quality_path must point to markdown-quality.json"
+        )
     baseline_path = REPO_ROOT / baseline_path_value
     quality_path = REPO_ROOT / quality_path_value
     if not baseline_path.is_file():
         errors.append(f"{review_path}: {key} baseline_markdown_path must exist")
     elif _sha256(baseline_path) != item["baseline_markdown_sha256"]:
-        errors.append(f"{review_path}: {key} baseline_markdown_sha256 does not match file content")
+        errors.append(
+            f"{review_path}: {key} baseline_markdown_sha256 does not match file content"
+        )
     if not quality_path.is_file():
         errors.append(f"{review_path}: {key} markdown_quality_path must exist")
         return errors
     if _sha256(quality_path) != item["markdown_quality_sha256"]:
-        errors.append(f"{review_path}: {key} markdown_quality_sha256 does not match file content")
+        errors.append(
+            f"{review_path}: {key} markdown_quality_sha256 does not match file content"
+        )
     try:
         quality = json.loads(quality_path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as exc:
-        errors.append(f"{review_path}: {key} markdown_quality_path is invalid JSON: {exc}")
+        errors.append(
+            f"{review_path}: {key} markdown_quality_path is invalid JSON: {exc}"
+        )
         return errors
     if not isinstance(quality, dict):
-        errors.append(f"{review_path}: {key} markdown quality report root must be an object")
+        errors.append(
+            f"{review_path}: {key} markdown quality report root must be an object"
+        )
         return errors
     validation_errors = validate_markdown_quality_report(quality)
     if validation_errors:
@@ -146,19 +158,29 @@ def _quality_report_errors(review_path: Path, item: dict[str, Any]) -> list[str]
         )
         return errors
     if quality.get("markdown_path") != baseline_path_value:
-        errors.append(f"{review_path}: {key} markdown quality markdown_path must match baseline")
+        errors.append(
+            f"{review_path}: {key} markdown quality markdown_path must match baseline"
+        )
     prompt_path_value = quality.get("prompt_path")
-    if not isinstance(prompt_path_value, str) or not prompt_path_value.endswith("/markdown-quality-prompt.md"):
-        errors.append(f"{review_path}: {key} markdown quality prompt_path must point to markdown-quality-prompt.md")
+    if not isinstance(prompt_path_value, str) or not prompt_path_value.endswith(
+        "/markdown-quality-prompt.md"
+    ):
+        errors.append(
+            f"{review_path}: {key} markdown quality prompt_path must point to markdown-quality-prompt.md"
+        )
     else:
         prompt_path = REPO_ROOT / prompt_path_value
         if not prompt_path.is_file():
-            errors.append(f"{review_path}: {key} markdown quality prompt_path must exist")
+            errors.append(
+                f"{review_path}: {key} markdown quality prompt_path must exist"
+            )
     if quality.get("status") != "pass":
         errors.append(f"{review_path}: {key} markdown quality status must be pass")
     blocking = [issue.get("id") for issue in blocking_markdown_quality_issues(quality)]
     if blocking:
-        errors.append(f"{review_path}: {key} markdown quality has blocking issues {blocking}")
+        errors.append(
+            f"{review_path}: {key} markdown quality has blocking issues {blocking}"
+        )
     return errors
 
 
@@ -209,8 +231,7 @@ def _assert_review_artifact(manifest_path: Path, manifest: dict[str, Any]) -> No
         if isinstance(item, dict)
     }
     assert expected <= reviewed, (
-        f"{review_path}: missing fixture reviews for "
-        f"{sorted(expected - reviewed)}"
+        f"{review_path}: missing fixture reviews for {sorted(expected - reviewed)}"
     )
     for item in review["fixtures"]:
         key = (str(item["purpose"]), str(item["doi"]))
@@ -267,11 +288,12 @@ def test_manifest_provider_tests_enforce_markdown_review_loop_contract() -> None
         test_paths = _provider_test_paths(provider)
 
         test_text = "\n".join(path.read_text(encoding="utf-8") for path in test_paths)
-        test_labels = ", ".join(path.relative_to(REPO_ROOT).as_posix() for path in test_paths)
+        test_labels = ", ".join(
+            path.relative_to(REPO_ROOT).as_posix() for path in test_paths
+        )
         for placeholder in PLACEHOLDER_PATTERNS:
             assert placeholder not in test_text, (
-                f"{test_labels} still contains scaffold "
-                f"placeholder {placeholder!r}"
+                f"{test_labels} still contains scaffold placeholder {placeholder!r}"
             )
 
         doi_samples = manifest["fixtures"]["doi_samples"]
@@ -317,11 +339,10 @@ def test_manifest_provider_tests_enforce_markdown_review_loop_contract() -> None
                     f"{test_labels} marker {marker!r} must be followed by "
                     "a positive Markdown assertion"
                 )
-                assert (
-                    _assertion_mentions_markdown(block, NEGATIVE_ASSERTION_PATTERN)
-                    or _assertion_mentions_markdown(
-                        block, COUNT_OR_REGEX_ASSERTION_PATTERN
-                    )
+                assert _assertion_mentions_markdown(
+                    block, NEGATIVE_ASSERTION_PATTERN
+                ) or _assertion_mentions_markdown(
+                    block, COUNT_OR_REGEX_ASSERTION_PATTERN
                 ), (
                     f"{test_labels} marker {marker!r} must be followed by "
                     "a negative, regex, or count Markdown assertion"
@@ -492,7 +513,9 @@ def _agent_quality_report(
         "prompt_path": prompt_path,
         "status": status,
         "issues": issue_list,
-        "blocking_issue_count": sum(1 for issue in issue_list if issue.get("blocking") is True),
+        "blocking_issue_count": sum(
+            1 for issue in issue_list if issue.get("blocking") is True
+        ),
     }
     if status != "pending_agent_review":
         report["reviewed_by"] = "codex-agent"
@@ -527,17 +550,33 @@ def test_quality_report_contract_rejects_legacy_non_agent_pending_sha_and_blocki
     review_path = tmp_path / "review.yml"
 
     legacy_item = _quality_item(tmp_path, _agent_quality_report(schema_version=1))
-    assert any("schema_version must be 2" in error for error in _quality_report_errors(review_path, legacy_item))
+    assert any(
+        "schema_version must be 2" in error
+        for error in _quality_report_errors(review_path, legacy_item)
+    )
 
-    non_agent_item = _quality_item(tmp_path, _agent_quality_report(review_method="heuristic"))
-    assert any("review_method must be 'agent_prompt'" in error for error in _quality_report_errors(review_path, non_agent_item))
+    non_agent_item = _quality_item(
+        tmp_path, _agent_quality_report(review_method="heuristic")
+    )
+    assert any(
+        "review_method must be 'agent_prompt'" in error
+        for error in _quality_report_errors(review_path, non_agent_item)
+    )
 
-    pending_item = _quality_item(tmp_path, _agent_quality_report(status="pending_agent_review"))
-    assert any("markdown quality status must be pass" in error for error in _quality_report_errors(review_path, pending_item))
+    pending_item = _quality_item(
+        tmp_path, _agent_quality_report(status="pending_agent_review")
+    )
+    assert any(
+        "markdown quality status must be pass" in error
+        for error in _quality_report_errors(review_path, pending_item)
+    )
 
     sha_item = _quality_item(tmp_path, _agent_quality_report())
     sha_item["markdown_quality_sha256"] = "0" * 64
-    assert any("markdown_quality_sha256 does not match" in error for error in _quality_report_errors(review_path, sha_item))
+    assert any(
+        "markdown_quality_sha256 does not match" in error
+        for error in _quality_report_errors(review_path, sha_item)
+    )
 
     blocking_item = _quality_item(
         tmp_path,
@@ -554,5 +593,10 @@ def test_quality_report_contract_rejects_legacy_non_agent_pending_sha_and_blocki
         ),
     )
     blocking_errors = _quality_report_errors(review_path, blocking_item)
-    assert any("markdown quality status must be pass" in error for error in blocking_errors)
-    assert any("markdown quality has blocking issues ['broken-table']" in error for error in blocking_errors)
+    assert any(
+        "markdown quality status must be pass" in error for error in blocking_errors
+    )
+    assert any(
+        "markdown quality has blocking issues ['broken-table']" in error
+        for error in blocking_errors
+    )

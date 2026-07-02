@@ -86,7 +86,12 @@ def test_acs_browser_client_profile_and_author_fallback() -> None:
     assert client.profile.name == "acs"
     assert client.article_source() == "acs"
     assert client.provider_label() == "ACS"
-    assert client.html_candidates(ACS_SAMPLE_DOI, {"landing_page_url": ACS_SAMPLE_LANDING})[0] == ACS_SAMPLE_LANDING
+    assert (
+        client.html_candidates(
+            ACS_SAMPLE_DOI, {"landing_page_url": ACS_SAMPLE_LANDING}
+        )[0]
+        == ACS_SAMPLE_LANDING
+    )
     assert client.profile.fallback_author_extractor is not None
     assert client.profile.fallback_author_extractor(html) == [
         "Ada Lovelace",
@@ -94,7 +99,9 @@ def test_acs_browser_client_profile_and_author_fallback() -> None:
     ]
 
 
-def test_acs_profile_exposes_provider_owned_hooks_for_article_html_pdf_fallback_and_abstract_only() -> None:
+def test_acs_profile_exposes_provider_owned_hooks_for_article_html_pdf_fallback_and_abstract_only() -> (
+    None
+):
     profile = publisher_profile("acs")
 
     assert profile.dom_hooks.before_block_normalization is not None
@@ -103,7 +110,9 @@ def test_acs_profile_exposes_provider_owned_hooks_for_article_html_pdf_fallback_
     assert profile.finalize_extraction is not None
 
 
-def test_acs_provider_owned_cleanup_removes_copy_chrome_and_extracts_references() -> None:
+def test_acs_provider_owned_cleanup_removes_copy_chrome_and_extracts_references() -> (
+    None
+):
     html = """
     <article>
       <h1>ACS title <span class="article__copy">Click to copy article link Article link copied!</span></h1>
@@ -237,7 +246,9 @@ def test_acs_probe_status_uses_browser_runtime_requirements() -> None:
     with mock.patch.object(_cloakbrowser, "_dependency_available", return_value=True):
         result = AcsClient(
             transport=None,
-            env={"CLOAKBROWSER_CDP_ENDPOINT": "ws://127.0.0.1:9222/devtools/browser/test"},
+            env={
+                "CLOAKBROWSER_CDP_ENDPOINT": "ws://127.0.0.1:9222/devtools/browser/test"
+            },
         ).probe_status()
 
     checks = {check.name: check for check in result.checks}

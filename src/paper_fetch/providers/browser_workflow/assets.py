@@ -125,8 +125,7 @@ def _browser_workflow_retryable_asset_failure(failure: Mapping[str, Any]) -> boo
     return bool(
         reason
         and any(
-            token in reason
-            for token in _BROWSER_WORKFLOW_RETRYABLE_ASSET_REASON_TOKENS
+            token in reason for token in _BROWSER_WORKFLOW_RETRYABLE_ASSET_REASON_TOKENS
         )
     )
 
@@ -157,7 +156,11 @@ def _assets_matching_download_failures(
     retry_scope: str,
 ) -> list[dict[str, Any]]:
     return assets_for_network_retry(
-        [asset for asset in assets if _download_asset_retry_scope(asset) == retry_scope],
+        [
+            asset
+            for asset in assets
+            if _download_asset_retry_scope(asset) == retry_scope
+        ],
         [
             failure
             for failure in failures

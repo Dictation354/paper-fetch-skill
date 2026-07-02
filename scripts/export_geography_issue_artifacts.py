@@ -24,10 +24,14 @@ def _load_issue_artifact_exports():
 
 def build_parser() -> argparse.ArgumentParser:
     default_issue_artifact_output_dir, _ = _load_issue_artifact_exports()
-    parser = argparse.ArgumentParser(description="Export issue-flagged geography live artifacts without MCP.")
+    parser = argparse.ArgumentParser(
+        description="Export issue-flagged geography live artifacts without MCP."
+    )
     parser.add_argument(
         "--report-json",
-        default=str(REPO_ROOT / "live-downloads" / "reports" / "geography-live-report.json"),
+        default=str(
+            REPO_ROOT / "live-downloads" / "reports" / "geography-live-report.json"
+        ),
         help="Path to the geography live JSON report.",
     )
     parser.add_argument(
@@ -60,7 +64,9 @@ def main() -> int:
         limit=args.limit,
     )
     sys.stdout.write(f"wrote issue artifacts to {summary['output_dir']}\n")
-    sys.stdout.write(f"selected={summary['total_selected']} exported={summary['exported']} failed={summary['failed']}\n")
+    sys.stdout.write(
+        f"selected={summary['total_selected']} exported={summary['exported']} failed={summary['failed']}\n"
+    )
     return 0
 
 

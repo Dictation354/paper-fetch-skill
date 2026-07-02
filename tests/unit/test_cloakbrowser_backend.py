@@ -139,12 +139,28 @@ class _FakeContext:
         self.storage_state_path: str | None = None
         self.storage_state_payload = {
             "cookies": [
-                {"name": "cf_clearance", "value": "secret", "domain": ".science.org", "path": "/"},
-                {"name": "sid", "value": "unrelated", "domain": ".unrelated.test", "path": "/"},
+                {
+                    "name": "cf_clearance",
+                    "value": "secret",
+                    "domain": ".science.org",
+                    "path": "/",
+                },
+                {
+                    "name": "sid",
+                    "value": "unrelated",
+                    "domain": ".unrelated.test",
+                    "path": "/",
+                },
             ],
             "origins": [
-                {"origin": "https://www.science.org", "localStorage": [{"name": "ok", "value": "1"}]},
-                {"origin": "https://unrelated.test", "localStorage": [{"name": "no", "value": "1"}]},
+                {
+                    "origin": "https://www.science.org",
+                    "localStorage": [{"name": "ok", "value": "1"}],
+                },
+                {
+                    "origin": "https://unrelated.test",
+                    "localStorage": [{"name": "no", "value": "1"}],
+                },
             ],
         }
 
@@ -155,11 +171,28 @@ class _FakeContext:
         if urls:
             url = str(urls[0])
             if "science.org" in url:
-                return [{"name": "cf_clearance", "value": "secret", "domain": ".science.org", "path": "/"}]
+                return [
+                    {
+                        "name": "cf_clearance",
+                        "value": "secret",
+                        "domain": ".science.org",
+                        "path": "/",
+                    }
+                ]
             return []
         return [
-            {"name": "cf_clearance", "value": "secret", "domain": ".science.org", "path": "/"},
-            {"name": "sid", "value": "unrelated", "domain": ".unrelated.test", "path": "/"},
+            {
+                "name": "cf_clearance",
+                "value": "secret",
+                "domain": ".science.org",
+                "path": "/",
+            },
+            {
+                "name": "sid",
+                "value": "unrelated",
+                "domain": ".unrelated.test",
+                "path": "/",
+            },
         ]
 
     def storage_state(self, *, path: str | None = None):
@@ -264,7 +297,9 @@ def _wiley_runtime_config(tmp_path):
     )
 
 
-def _ready_payload(*, selector: str, text_length: int, paragraph_count: int, heading_count: int = 0):
+def _ready_payload(
+    *, selector: str, text_length: int, paragraph_count: int, heading_count: int = 0
+):
     return {
         "ready": True,
         "selector": selector,
@@ -275,7 +310,9 @@ def _ready_payload(*, selector: str, text_length: int, paragraph_count: int, hea
     }
 
 
-def _not_ready_payload(*, selector: str | None = None, text_length: int = 0, paragraph_count: int = 0):
+def _not_ready_payload(
+    *, selector: str | None = None, text_length: int = 0, paragraph_count: int = 0
+):
     return {
         "ready": False,
         "selector": selector,
@@ -299,7 +336,9 @@ def test_fetch_html_with_cloakbrowser_returns_existing_html_contract(tmp_path) -
     fake_module = _FakeCloakBrowserModule()
     config = _runtime_config(tmp_path)
 
-    with mock.patch.object(_cloakbrowser, "_import_cloakbrowser", return_value=fake_module):
+    with mock.patch.object(
+        _cloakbrowser, "_import_cloakbrowser", return_value=fake_module
+    ):
         result = _cloakbrowser.fetch_html_with_cloakbrowser(
             ["https://www.science.org/doi/full/10.1126/science.example"],
             publisher="science",
@@ -308,7 +347,9 @@ def test_fetch_html_with_cloakbrowser_returns_existing_html_contract(tmp_path) -
             wait_seconds=0,
         )
 
-    assert result.final_url == "https://www.science.org/doi/full/10.1126/science.example"
+    assert (
+        result.final_url == "https://www.science.org/doi/full/10.1126/science.example"
+    )
     assert result.response_status == 200
     assert result.response_headers["content-type"] == "text/html"
     assert result.title == "Example Article"
@@ -330,7 +371,9 @@ def test_fetch_html_with_cloakbrowser_reuses_and_saves_storage_state(tmp_path) -
     state_path.write_text('{"cookies":[]}', encoding="utf-8")
     config = replace(_runtime_config(tmp_path), user_data_dir=user_data_dir)
 
-    with mock.patch.object(_cloakbrowser, "_import_cloakbrowser", return_value=fake_module):
+    with mock.patch.object(
+        _cloakbrowser, "_import_cloakbrowser", return_value=fake_module
+    ):
         _cloakbrowser.fetch_html_with_cloakbrowser(
             ["https://www.science.org/doi/full/10.1126/science.example"],
             publisher="science",
@@ -342,14 +385,24 @@ def test_fetch_html_with_cloakbrowser_reuses_and_saves_storage_state(tmp_path) -
     assert fake_module.browser.context.storage_state_path is None
     saved_state = json.loads(state_path.read_text(encoding="utf-8"))
     assert saved_state["cookies"] == [
-        {"name": "cf_clearance", "value": "secret", "domain": ".science.org", "path": "/"}
+        {
+            "name": "cf_clearance",
+            "value": "secret",
+            "domain": ".science.org",
+            "path": "/",
+        }
     ]
     assert saved_state["origins"] == [
-        {"origin": "https://www.science.org", "localStorage": [{"name": "ok", "value": "1"}]}
+        {
+            "origin": "https://www.science.org",
+            "localStorage": [{"name": "ok", "value": "1"}],
+        }
     ]
 
 
-def test_fetch_html_with_cloakbrowser_prefers_explicit_storage_state_path(tmp_path) -> None:
+def test_fetch_html_with_cloakbrowser_prefers_explicit_storage_state_path(
+    tmp_path,
+) -> None:
     fake_module = _FakeCloakBrowserModule()
     user_data_dir = tmp_path / "shared-profile"
     explicit_state_path = tmp_path / "ams-state.json"
@@ -361,7 +414,9 @@ def test_fetch_html_with_cloakbrowser_prefers_explicit_storage_state_path(tmp_pa
         storage_state_path=explicit_state_path,
     )
 
-    with mock.patch.object(_cloakbrowser, "_import_cloakbrowser", return_value=fake_module):
+    with mock.patch.object(
+        _cloakbrowser, "_import_cloakbrowser", return_value=fake_module
+    ):
         _cloakbrowser.fetch_html_with_cloakbrowser(
             ["https://journals.ametsoc.org/doi/10.1175/MWR-D-10-05037.1"],
             publisher="ams",
@@ -377,7 +432,9 @@ def test_fetch_html_with_cloakbrowser_prefers_explicit_storage_state_path(tmp_pa
     assert not (user_data_dir / "storage-state.json").exists()
 
 
-def test_fetch_html_with_cloakbrowser_ignores_legacy_profile_dir_in_cdp_mode(tmp_path) -> None:
+def test_fetch_html_with_cloakbrowser_ignores_legacy_profile_dir_in_cdp_mode(
+    tmp_path,
+) -> None:
     fake_module = _FakeCloakBrowserModule()
     profile_dir = tmp_path / "persistent-profile"
     state_path = tmp_path / "wiley-state.json"
@@ -389,7 +446,9 @@ def test_fetch_html_with_cloakbrowser_ignores_legacy_profile_dir_in_cdp_mode(tmp
         binary_path="/tmp/cloakbrowser-chrome",
     )
 
-    with mock.patch.object(_cloakbrowser, "_import_cloakbrowser", return_value=fake_module):
+    with mock.patch.object(
+        _cloakbrowser, "_import_cloakbrowser", return_value=fake_module
+    ):
         _cloakbrowser.fetch_html_with_cloakbrowser(
             ["https://onlinelibrary.wiley.com/doi/full/10.1111/gcb.70541"],
             publisher="wiley",
@@ -409,7 +468,9 @@ def test_fetch_html_with_cloakbrowser_ignores_legacy_profile_dir_in_cdp_mode(tmp
     assert fake_module.browser.closed is True
 
 
-def test_fetch_html_with_cloakbrowser_uses_cdp_endpoint_without_launching_browser(tmp_path) -> None:
+def test_fetch_html_with_cloakbrowser_uses_cdp_endpoint_without_launching_browser(
+    tmp_path,
+) -> None:
     fake_module = _FakeCloakBrowserModule()
     config = replace(
         _wiley_runtime_config(tmp_path),
@@ -423,8 +484,14 @@ def test_fetch_html_with_cloakbrowser_uses_cdp_endpoint_without_launching_browse
         return fake_module.browser
 
     with (
-        mock.patch.object(runtime_browser, "connect_browser_over_cdp", side_effect=fake_connect),
-        mock.patch.object(_cloakbrowser, "_import_cloakbrowser", side_effect=AssertionError("launch not used")),
+        mock.patch.object(
+            runtime_browser, "connect_browser_over_cdp", side_effect=fake_connect
+        ),
+        mock.patch.object(
+            _cloakbrowser,
+            "_import_cloakbrowser",
+            side_effect=AssertionError("launch not used"),
+        ),
     ):
         result = _cloakbrowser.fetch_html_with_cloakbrowser(
             ["https://onlinelibrary.wiley.com/doi/full/10.1111/gcb.70541"],
@@ -434,7 +501,9 @@ def test_fetch_html_with_cloakbrowser_uses_cdp_endpoint_without_launching_browse
             wait_seconds=0,
         )
 
-    assert result.final_url == "https://onlinelibrary.wiley.com/doi/full/10.1111/gcb.70541"
+    assert (
+        result.final_url == "https://onlinelibrary.wiley.com/doi/full/10.1111/gcb.70541"
+    )
     assert endpoints == ["ws://127.0.0.1:9222/devtools/browser/test"]
     assert fake_module.launch_kwargs == {}
     assert fake_module.persistent_context_kwargs == {}
@@ -484,7 +553,9 @@ def test_load_runtime_config_accepts_generic_cloakbrowser_profile_dir(tmp_path) 
     assert config.profile_dir == tmp_path / "shared-profile"
 
 
-def test_storage_state_path_uses_profile_dir_when_user_data_dir_is_not_set(tmp_path) -> None:
+def test_storage_state_path_uses_profile_dir_when_user_data_dir_is_not_set(
+    tmp_path,
+) -> None:
     config = replace(
         _runtime_config(tmp_path),
         profile_dir=tmp_path / "shared-profile",
@@ -492,7 +563,10 @@ def test_storage_state_path_uses_profile_dir_when_user_data_dir_is_not_set(tmp_p
         storage_state_path=None,
     )
 
-    assert _cloakbrowser._storage_state_path(config) == tmp_path / "shared-profile" / "storage-state.json"
+    assert (
+        _cloakbrowser._storage_state_path(config)
+        == tmp_path / "shared-profile" / "storage-state.json"
+    )
 
 
 def test_load_runtime_config_accepts_cdp_endpoint() -> None:
@@ -506,7 +580,9 @@ def test_load_runtime_config_accepts_cdp_endpoint() -> None:
 
 
 def test_load_runtime_config_allows_auto_managed_cdp_browser() -> None:
-    config = _cloakbrowser.load_runtime_config({}, provider="ams", doi="10.1175/example")
+    config = _cloakbrowser.load_runtime_config(
+        {}, provider="ams", doi="10.1175/example"
+    )
 
     assert config.cdp_endpoint is None
 
@@ -541,7 +617,9 @@ def test_load_runtime_config_accepts_wiley_storage_state_json(tmp_path) -> None:
     assert config.storage_state_path == state_path
 
 
-def test_fetch_html_with_cloakbrowser_skips_challenge_block_after_wiley_body_dom_ready(tmp_path) -> None:
+def test_fetch_html_with_cloakbrowser_skips_challenge_block_after_wiley_body_dom_ready(
+    tmp_path,
+) -> None:
     body_text = "Wiley article body text with enough substance. " * 18
     html = (
         "<html><head><title>Wiley Article</title></head><body>"
@@ -568,7 +646,9 @@ def test_fetch_html_with_cloakbrowser_skips_challenge_block_after_wiley_body_dom
     fake_module = _FakeCloakBrowserModule()
     fake_module.browser.context.page = page
 
-    with mock.patch.object(_cloakbrowser, "_import_cloakbrowser", return_value=fake_module):
+    with mock.patch.object(
+        _cloakbrowser, "_import_cloakbrowser", return_value=fake_module
+    ):
         result = _cloakbrowser.fetch_html_with_cloakbrowser(
             ["https://onlinelibrary.wiley.com/doi/full/10.1111/gcb.70541"],
             publisher="wiley",
@@ -577,13 +657,17 @@ def test_fetch_html_with_cloakbrowser_skips_challenge_block_after_wiley_body_dom
             max_timeout_ms=2000,
         )
 
-    assert result.final_url == "https://onlinelibrary.wiley.com/doi/full/10.1111/gcb.70541"
+    assert (
+        result.final_url == "https://onlinelibrary.wiley.com/doi/full/10.1111/gcb.70541"
+    )
     assert "Cloudflare challenge" in result.summary
     assert page.wait_calls == [750]
     assert len(page.evaluate_calls) == 2
 
 
-def test_fetch_html_with_cloakbrowser_keeps_challenge_block_when_body_dom_never_ready(tmp_path) -> None:
+def test_fetch_html_with_cloakbrowser_keeps_challenge_block_when_body_dom_never_ready(
+    tmp_path,
+) -> None:
     html = (
         "<html><head><title>Just a moment</title></head><body>"
         "<main>Checking your browser before accessing this publisher page. Cloudflare.</main>"
@@ -601,7 +685,9 @@ def test_fetch_html_with_cloakbrowser_keeps_challenge_block_when_body_dom_never_
     fake_module = _FakeCloakBrowserModule()
     fake_module.browser.context.page = page
 
-    with mock.patch.object(_cloakbrowser, "_import_cloakbrowser", return_value=fake_module):
+    with mock.patch.object(
+        _cloakbrowser, "_import_cloakbrowser", return_value=fake_module
+    ):
         try:
             _cloakbrowser.fetch_html_with_cloakbrowser(
                 ["https://onlinelibrary.wiley.com/doi/full/10.1111/gcb.70541"],
@@ -622,11 +708,15 @@ def test_fetch_html_with_cloakbrowser_keeps_challenge_block_when_body_dom_never_
     assert len(page.evaluate_calls) == 3
 
 
-def test_fetch_html_with_cloakbrowser_omits_user_agent_when_not_configured(tmp_path) -> None:
+def test_fetch_html_with_cloakbrowser_omits_user_agent_when_not_configured(
+    tmp_path,
+) -> None:
     fake_module = _FakeCloakBrowserModule()
     config = _runtime_config_without_browser_user_agent(tmp_path)
 
-    with mock.patch.object(_cloakbrowser, "_import_cloakbrowser", return_value=fake_module):
+    with mock.patch.object(
+        _cloakbrowser, "_import_cloakbrowser", return_value=fake_module
+    ):
         result = _cloakbrowser.fetch_html_with_cloakbrowser(
             ["https://agupubs.onlinelibrary.wiley.com/doi/full/10.1029/2023JD040418"],
             publisher="wiley",
@@ -639,12 +729,16 @@ def test_fetch_html_with_cloakbrowser_omits_user_agent_when_not_configured(tmp_p
     assert result.browser_context_seed["browser_user_agent"] is None
 
 
-def test_fetch_html_with_cloakbrowser_ignores_config_binary_path_in_cdp_mode(tmp_path, monkeypatch) -> None:
+def test_fetch_html_with_cloakbrowser_ignores_config_binary_path_in_cdp_mode(
+    tmp_path, monkeypatch
+) -> None:
     fake_module = _FakeCloakBrowserModule()
     config = replace(_runtime_config(tmp_path), binary_path="/tmp/chrome")
     monkeypatch.delenv("CLOAKBROWSER_BINARY_PATH", raising=False)
 
-    with mock.patch.object(_cloakbrowser, "_import_cloakbrowser", return_value=fake_module):
+    with mock.patch.object(
+        _cloakbrowser, "_import_cloakbrowser", return_value=fake_module
+    ):
         _cloakbrowser.fetch_html_with_cloakbrowser(
             ["https://www.science.org/doi/full/10.1126/science.example"],
             publisher="science",
@@ -658,12 +752,16 @@ def test_fetch_html_with_cloakbrowser_ignores_config_binary_path_in_cdp_mode(tmp
     assert "CLOAKBROWSER_BINARY_PATH" not in os.environ
 
 
-def test_fetch_html_with_cloakbrowser_uses_runtime_context_shared_browser(tmp_path) -> None:
+def test_fetch_html_with_cloakbrowser_uses_runtime_context_shared_browser(
+    tmp_path,
+) -> None:
     fake_module = _FakeCloakBrowserModule()
     runtime_context = mock.Mock()
     runtime_context.new_browser_context.return_value = fake_module.browser.context
 
-    with mock.patch.object(_cloakbrowser, "_import_cloakbrowser", return_value=fake_module):
+    with mock.patch.object(
+        _cloakbrowser, "_import_cloakbrowser", return_value=fake_module
+    ):
         result = _cloakbrowser.fetch_html_with_cloakbrowser(
             ["https://www.science.org/doi/full/10.1126/science.example"],
             publisher="science",
@@ -673,13 +771,17 @@ def test_fetch_html_with_cloakbrowser_uses_runtime_context_shared_browser(tmp_pa
         )
 
     runtime_context.new_browser_context.assert_called_once()
-    assert result.final_url == "https://www.science.org/doi/full/10.1126/science.example"
+    assert (
+        result.final_url == "https://www.science.org/doi/full/10.1126/science.example"
+    )
     assert fake_module.launch_kwargs == {}
     assert fake_module.browser.context.closed is True
     assert fake_module.browser.closed is False
 
 
-def test_fetch_html_with_fast_browser_returns_pnas_html_when_body_dom_ready_despite_challenge() -> None:
+def test_fetch_html_with_fast_browser_returns_pnas_html_when_body_dom_ready_despite_challenge() -> (
+    None
+):
     body_text = "PNAS article body text with enough substance. " * 18
     html = (
         "<html><head><title>PNAS Article</title></head><body>"
@@ -729,7 +831,9 @@ def test_fetch_html_with_fast_browser_returns_pnas_html_when_body_dom_ready_desp
     assert browser_context.closed is True
 
 
-def test_atypon_body_ready_selectors_include_annualreviews_fulltext_containers() -> None:
+def test_atypon_body_ready_selectors_include_annualreviews_fulltext_containers() -> (
+    None
+):
     selectors = atypon_body_ready_selectors("annualreviews")
 
     assert "#itemFullTextId" in selectors
@@ -832,7 +936,9 @@ def test_fetch_html_with_browser_marks_diagnostic(tmp_path) -> None:
     context = RuntimeContext(env={})
 
     with (
-        mock.patch.object(_cloakbrowser, "_import_cloakbrowser", return_value=fake_module),
+        mock.patch.object(
+            _cloakbrowser, "_import_cloakbrowser", return_value=fake_module
+        ),
         mock.patch.object(
             context,
             "new_browser_context_for_config",
@@ -866,8 +972,12 @@ def test_fetch_html_with_cloakbrowser_returns_image_payload(tmp_path) -> None:
     }
 
     with (
-        mock.patch.object(_cloakbrowser, "_import_cloakbrowser", return_value=fake_module),
-        mock.patch.object(_cloakbrowser, "_capture_image_payload", return_value=image_payload),
+        mock.patch.object(
+            _cloakbrowser, "_import_cloakbrowser", return_value=fake_module
+        ),
+        mock.patch.object(
+            _cloakbrowser, "_capture_image_payload", return_value=image_payload
+        ),
     ):
         result = _cloakbrowser.fetch_html_with_cloakbrowser(
             ["https://www.science.org/image.png"],
@@ -883,7 +993,11 @@ def test_fetch_html_with_cloakbrowser_returns_image_payload(tmp_path) -> None:
 def test_probe_runtime_status_reports_missing_playwright_dependency() -> None:
     with (
         mock.patch.object(_cloakbrowser, "_dependency_available", return_value=False),
-        mock.patch.object(_cloakbrowser, "_dependency_details", return_value={"probe": "importlib.find_spec"}),
+        mock.patch.object(
+            _cloakbrowser,
+            "_dependency_details",
+            return_value={"probe": "importlib.find_spec"},
+        ),
     ):
         result = _cloakbrowser.probe_runtime_status(
             {"CLOAKBROWSER_CDP_ENDPOINT": "ws://127.0.0.1:9222/devtools/browser/test"},
@@ -903,11 +1017,16 @@ def test_import_cloakbrowser_helper_returns_package() -> None:
 
 
 def test_browser_runtime_module_imports() -> None:
-    assert browser_runtime.BrowserRuntimeConfig is _cloakbrowser.CloakBrowserRuntimeConfig
+    assert (
+        browser_runtime.BrowserRuntimeConfig is _cloakbrowser.CloakBrowserRuntimeConfig
+    )
     assert browser_runtime.BrowserRuntimeFailure is _cloakbrowser.CloakBrowserFailure
     assert browser_runtime.BrowserFetchedHtml is _cloakbrowser.BrowserFetchedHtml
     assert hasattr(browser_runtime, "BrowserImagePayload")
-    assert browser_runtime.fetch_html_with_browser.paper_fetch_html_fetcher_name == "cloakbrowser"
+    assert (
+        browser_runtime.fetch_html_with_browser.paper_fetch_html_fetcher_name
+        == "cloakbrowser"
+    )
     assert callable(browser_runtime.warm_browser_context)
     assert callable(browser_runtime.load_runtime_config)
     assert callable(browser_runtime.ensure_runtime_ready)

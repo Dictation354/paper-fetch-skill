@@ -36,6 +36,8 @@ _ARXIV_CAPTION_LABEL_PATTERN = re.compile(
     r"^(?P<label>(?:Table|Algorithm)\s+\d+[A-Za-z]?)[.:]?\s*(?P<caption>.*)$",
     flags=re.IGNORECASE,
 )
+
+
 def _extract_reference_doi(node: Any) -> str | None:
     if not isinstance(node, Tag):
         return None
@@ -176,6 +178,7 @@ def _extract_arxiv_html_references(root: Any) -> list[dict[str, str | None]]:
         )
     return references
 
+
 def _is_arxiv_table_figure(node: Any) -> bool:
     return (
         isinstance(node, Tag)
@@ -220,6 +223,7 @@ def _is_arxiv_inline_figure_container(node: Any) -> bool:
         return False
     return not _is_arxiv_table_figure(node) and not _is_arxiv_algorithm_figure(node)
 
+
 def _arxiv_parent_identities(node: Any) -> set[int]:
     identities: set[int] = set()
     current = getattr(node, "parent", None)
@@ -256,6 +260,7 @@ def _replace_arxiv_semantic_node_with_placeholder(
         node.decompose()
         return
     node.replace_with(placeholder_node)
+
 
 def _arxiv_label_from_identifier(node: Any, *, default_label: str) -> str:
     if not isinstance(node, Tag):

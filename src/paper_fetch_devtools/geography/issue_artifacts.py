@@ -55,11 +55,17 @@ def collect_issue_rows(
     issue_flags: Sequence[str] | None = None,
     limit: int | None = None,
 ) -> list[dict[str, Any]]:
-    wanted_flags = {normalize_text(item) for item in (issue_flags or []) if normalize_text(item)}
+    wanted_flags = {
+        normalize_text(item) for item in (issue_flags or []) if normalize_text(item)
+    }
     rows: list[dict[str, Any]] = []
     for raw_row in report_payload.get("results", []):
         row = dict(raw_row)
-        row_flags = [normalize_text(item) for item in row.get("issue_flags", []) if normalize_text(item)]
+        row_flags = [
+            normalize_text(item)
+            for item in row.get("issue_flags", [])
+            if normalize_text(item)
+        ]
         if not row_flags:
             continue
         if wanted_flags and not wanted_flags.intersection(row_flags):
@@ -89,7 +95,9 @@ def schedule_issue_rows(
             provider_order.append(provider)
 
     scheduled: list[dict[str, Any]] = []
-    max_rows = max((len(grouped.get(provider, [])) for provider in provider_order), default=0)
+    max_rows = max(
+        (len(grouped.get(provider, [])) for provider in provider_order), default=0
+    )
     for row_index in range(max_rows):
         for provider in provider_order:
             provider_rows = grouped.get(provider, [])
@@ -108,8 +116,14 @@ def export_geography_issue_artifacts(
     transport: HttpTransport | None = None,
 ) -> dict[str, Any]:
     report_payload = load_report_payload(report_json_path)
-    selected_rows = collect_issue_rows(report_payload, issue_flags=issue_flags, limit=limit)
-    providers = [normalize_text(item) for item in report_payload.get("providers", []) if normalize_text(item)]
+    selected_rows = collect_issue_rows(
+        report_payload, issue_flags=issue_flags, limit=limit
+    )
+    providers = [
+        normalize_text(item)
+        for item in report_payload.get("providers", [])
+        if normalize_text(item)
+    ]
     scheduled_rows = schedule_issue_rows(selected_rows, providers=providers)
     export_root = Path(output_dir or default_issue_artifact_output_dir())
     export_root.mkdir(parents=True, exist_ok=True)
@@ -121,21 +135,29 @@ def export_geography_issue_artifacts(
     started_at = time.monotonic()
 
     for row in scheduled_rows:
-        entry = export_issue_row(row=row, output_root=export_root, env=active_env, transport=active_transport)
+        entry = export_issue_row(
+            row=row, output_root=export_root, env=active_env, transport=active_transport
+        )
         entries.append(entry)
 
     summary = {
         "generated_from_report": str(report_json_path),
         "output_dir": str(export_root),
-        "selected_issue_flags": sorted({flag for row in scheduled_rows for flag in row.get("issue_flags", [])}),
-        "requested_issue_flags": [normalize_text(item) for item in (issue_flags or []) if normalize_text(item)],
+        "selected_issue_flags": sorted(
+            {flag for row in scheduled_rows for flag in row.get("issue_flags", [])}
+        ),
+        "requested_issue_flags": [
+            normalize_text(item) for item in (issue_flags or []) if normalize_text(item)
+        ],
         "total_selected": len(scheduled_rows),
         "exported": sum(1 for entry in entries if entry.export_status == "exported"),
         "failed": sum(1 for entry in entries if entry.export_status != "exported"),
         "elapsed_seconds": round(time.monotonic() - started_at, 3),
         "entries": [entry.to_dict() for entry in entries],
     }
-    (export_root / "index.json").write_text(json.dumps(summary, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    (export_root / "index.json").write_text(
+        json.dumps(summary, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+    )
     return summary
 
 
@@ -149,10 +171,16 @@ def export_issue_row(
     doi = normalize_text(row.get("doi")) or "unknown-doi"
     provider = normalize_text(row.get("provider")) or "unknown-provider"
     title = normalize_text(row.get("title")) or doi
-    flags = [normalize_text(item) for item in row.get("issue_flags", []) if normalize_text(item)]
+    flags = [
+        normalize_text(item)
+        for item in row.get("issue_flags", [])
+        if normalize_text(item)
+    ]
     entry_dir = output_root / sanitize_filename(doi)
     entry_dir.mkdir(parents=True, exist_ok=True)
-    (entry_dir / "original-issue-row.json").write_text(json.dumps(dict(row), ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    (entry_dir / "original-issue-row.json").write_text(
+        json.dumps(dict(row), ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+    )
 
     started_at = time.monotonic()
     context = RuntimeContext(env=env, transport=transport, download_dir=entry_dir)
@@ -163,7 +191,9 @@ def export_issue_row(
             strategy=FetchStrategy(
                 allow_metadata_only_fallback=True,
             ),
-            render=RenderOptions(include_refs="all", asset_profile="none", max_tokens="full_text"),
+            render=RenderOptions(
+                include_refs="all", asset_profile="none", max_tokens="full_text"
+            ),
             context=context,
         )
         elapsed_seconds = round(time.monotonic() - started_at, 3)
@@ -176,13 +206,22 @@ def export_issue_row(
             year=0,
             seed_level=0,
         )
-        current_result = build_report_result(sample, envelope, elapsed_seconds=elapsed_seconds)
-        (entry_dir / "fetch-envelope.json").write_text(envelope.to_json() + "\n", encoding="utf-8")
+        current_result = build_report_result(
+            sample, envelope, elapsed_seconds=elapsed_seconds
+        )
+        (entry_dir / "fetch-envelope.json").write_text(
+            envelope.to_json() + "\n", encoding="utf-8"
+        )
         if envelope.article is not None:
-            (entry_dir / "article.json").write_text(envelope.article.to_json() + "\n", encoding="utf-8")
+            (entry_dir / "article.json").write_text(
+                envelope.article.to_json() + "\n", encoding="utf-8"
+            )
         if envelope.markdown is not None:
             (entry_dir / "extracted.md").write_text(envelope.markdown, encoding="utf-8")
-        (entry_dir / "current-issue-row.json").write_text(json.dumps(current_result.to_dict(), ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        (entry_dir / "current-issue-row.json").write_text(
+            json.dumps(current_result.to_dict(), ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+        )
 
         return GeographyIssueExportEntry(
             provider=provider,
@@ -208,7 +247,10 @@ def export_issue_row(
             "error_code": exc.status,
             "error_message": exc.reason,
         }
-        (entry_dir / "export-error.json").write_text(json.dumps(error_payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        (entry_dir / "export-error.json").write_text(
+            json.dumps(error_payload, ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+        )
         return GeographyIssueExportEntry(
             provider=provider,
             doi=doi,
@@ -231,7 +273,10 @@ def export_issue_row(
             "error_code": exc.__class__.__name__,
             "error_message": str(exc),
         }
-        (entry_dir / "export-error.json").write_text(json.dumps(error_payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        (entry_dir / "export-error.json").write_text(
+            json.dumps(error_payload, ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+        )
         return GeographyIssueExportEntry(
             provider=provider,
             doi=doi,
@@ -263,7 +308,11 @@ def effective_issue_flags(entry: Mapping[str, Any]) -> list[str]:
             for item in entry.get("current_issue_flags", [])
             if normalize_text(item)
         ]
-    return [normalize_text(item) for item in entry.get("issue_flags", []) if normalize_text(item)]
+    return [
+        normalize_text(item)
+        for item in entry.get("issue_flags", [])
+        if normalize_text(item)
+    ]
 
 
 def materialize_issue_type_view(
@@ -290,7 +339,9 @@ def materialize_issue_type_view(
         stale_issue_dirs = [
             path
             for path in artifact_root.iterdir()
-            if path.is_dir() and path.name not in export_dir_names and path.name not in issue_dirs
+            if path.is_dir()
+            and path.name not in export_dir_names
+            and path.name not in issue_dirs
         ]
         for stale_dir in stale_issue_dirs:
             for child in sorted(stale_dir.iterdir()):
@@ -340,12 +391,16 @@ def materialize_issue_type_view(
             "count": len(linked),
             "dois": linked,
         }
-        (issue_dir / "index.json").write_text(json.dumps(summary, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        (issue_dir / "index.json").write_text(
+            json.dumps(summary, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+        )
         summary_entries.append(summary)
 
     view_summary = {
         "artifact_root": str(artifact_root),
         "issue_dirs": summary_entries,
     }
-    (artifact_root / "issue-view-index.json").write_text(json.dumps(view_summary, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    (artifact_root / "issue-view-index.json").write_text(
+        json.dumps(view_summary, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+    )
     return view_summary

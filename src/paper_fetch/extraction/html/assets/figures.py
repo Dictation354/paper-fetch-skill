@@ -98,7 +98,11 @@ class _FigureParser(HTMLParser):
                 self._caption_parts.append(caption)
             self._in_figcaption = False
         elif lowered_tag == "figure":
-            captions = [normalize_text(caption) for caption in self._caption_parts if normalize_text(caption)]
+            captions = [
+                normalize_text(caption)
+                for caption in self._caption_parts
+                if normalize_text(caption)
+            ]
             images = list(self._current_images)
             if not images and captions:
                 images = [{"src": "", "image_id": "", "alt": ""}]
@@ -165,8 +169,16 @@ def _tag_class_tokens(node: Any) -> set[str]:
         return set()
     raw_classes = (getattr(node, "attrs", None) or {}).get("class") or []
     if isinstance(raw_classes, str):
-        return {normalize_text(value).lower() for value in raw_classes.split() if normalize_text(value)}
-    return {normalize_text(str(value)).lower() for value in raw_classes if normalize_text(str(value))}
+        return {
+            normalize_text(value).lower()
+            for value in raw_classes.split()
+            if normalize_text(value)
+        }
+    return {
+        normalize_text(str(value)).lower()
+        for value in raw_classes
+        if normalize_text(str(value))
+    }
 
 
 def _silverchair_figure_heading_texts_from_soup(node: Any) -> list[str]:
@@ -216,14 +228,20 @@ def _is_silverchair_figure_node(node: Any) -> bool:
     return "-f" in data_content_id.lower()
 
 
-def _append_candidate_node(candidates: list[Any], seen_nodes: set[int], node: Any) -> None:
+def _append_candidate_node(
+    candidates: list[Any], seen_nodes: set[int], node: Any
+) -> None:
     if not isinstance(node, Tag):
         return
     current = node.parent if isinstance(getattr(node, "parent", None), Tag) else None
     while isinstance(current, Tag):
         if id(current) in seen_nodes:
             return
-        current = current.parent if isinstance(getattr(current, "parent", None), Tag) else None
+        current = (
+            current.parent
+            if isinstance(getattr(current, "parent", None), Tag)
+            else None
+        )
     node_id = id(node)
     if node_id not in seen_nodes:
         seen_nodes.add(node_id)
@@ -249,7 +267,11 @@ def _figure_page_url_from_soup(node: Any, source_url: str) -> str:
                     normalize_text(str(anchor.get("title") or "")).lower(),
                 ]
             )
-            if any(token in hint_blob for token in FIGURE_PAGE_HINTS) and href and not href.startswith("#"):
+            if (
+                any(token in hint_blob for token in FIGURE_PAGE_HINTS)
+                and href
+                and not href.startswith("#")
+            ):
                 return urllib.parse.urljoin(source_url, href)
     return ""
 
@@ -264,7 +286,9 @@ def _figure_full_size_url_from_soup(node: Any, source_url: str) -> str:
 
     for context in contexts:
         for tag in [context, *context.find_all(True)]:
-            for candidate in _collect_tag_attr_urls(tag, source_url, *FULL_SIZE_IMAGE_ATTRS):
+            for candidate in _collect_tag_attr_urls(
+                tag, source_url, *FULL_SIZE_IMAGE_ATTRS
+            ):
                 if looks_like_full_size_asset_url(candidate):
                     return candidate
 
@@ -281,7 +305,9 @@ def _figure_full_size_url_from_soup(node: Any, source_url: str) -> str:
                     normalize_text(str(anchor.get("title") or "")).lower(),
                 ]
             )
-            if looks_like_full_size_asset_url(absolute_href) or any(token in hint_blob for token in FIGURE_PAGE_HINTS):
+            if looks_like_full_size_asset_url(absolute_href) or any(
+                token in hint_blob for token in FIGURE_PAGE_HINTS
+            ):
                 return absolute_href
     return ""
 
@@ -314,7 +340,9 @@ def _image_anchor_url(image: Any, node: Any, source_url: str) -> str:
     return ""
 
 
-def _image_full_size_url_from_soup(image: Any, node: Any, source_url: str, *, single_image: bool) -> str:
+def _image_full_size_url_from_soup(
+    image: Any, node: Any, source_url: str, *, single_image: bool
+) -> str:
     if not isinstance(image, Tag):
         return ""
     full_size_url = _soup_attr_url(image, *FULL_SIZE_IMAGE_ATTRS)
@@ -368,14 +396,18 @@ def _figure_caption_texts_from_soup(node: Any) -> list[str]:
     return captions
 
 
-def _figure_assets_from_soup_node(node: Any, soup: Any, source_url: str) -> list[dict[str, str]]:
+def _figure_assets_from_soup_node(
+    node: Any, soup: Any, source_url: str
+) -> list[dict[str, str]]:
     if not isinstance(node, Tag):
         return []
 
     figure_page_url = _figure_page_url_from_soup(node, source_url)
     dom_id = normalize_text(str(node.get("id") or ""))
     if not dom_id:
-        dom_id = normalize_text(str(node.get("data-content-id") or node.get("data-id") or ""))
+        dom_id = normalize_text(
+            str(node.get("data-content-id") or node.get("data-id") or "")
+        )
     figure_headings = _silverchair_figure_heading_texts_from_soup(node)
     captions = _figure_caption_texts_from_soup(node)
     images = [image for image in node.find_all("img") if isinstance(image, Tag)]
@@ -383,7 +415,9 @@ def _figure_assets_from_soup_node(node: Any, soup: Any, source_url: str) -> list
         caption = _figure_caption_from_soup(node, soup)
         if not caption:
             return []
-        heading = _caption_for_image_index(figure_headings, 0) or caption[:80] or "Figure"
+        heading = (
+            _caption_for_image_index(figure_headings, 0) or caption[:80] or "Figure"
+        )
         return [
             {
                 "kind": "figure",
@@ -417,7 +451,9 @@ def _figure_assets_from_soup_node(node: Any, soup: Any, source_url: str) -> list
             and not looks_like_full_size_asset_url(absolute_full_size_url)
         ):
             absolute_full_size_url = ""
-        if not absolute_full_size_url and looks_like_full_size_asset_url(absolute_preview_url):
+        if not absolute_full_size_url and looks_like_full_size_asset_url(
+            absolute_preview_url
+        ):
             absolute_full_size_url = absolute_preview_url
 
         caption = _caption_for_image_index(captions, index)
@@ -426,7 +462,9 @@ def _figure_assets_from_soup_node(node: Any, soup: Any, source_url: str) -> list
             _caption_for_image_index(figure_headings, index)
             or caption[:80]
             or alt_text
-            or _figure_heading_from_image_url(absolute_full_size_url or absolute_preview_url)
+            or _figure_heading_from_image_url(
+                absolute_full_size_url or absolute_preview_url
+            )
             or "Figure"
         )
         if not caption and alt_text:
@@ -458,7 +496,9 @@ def _figure_assets_from_soup_node(node: Any, soup: Any, source_url: str) -> list
     return assets
 
 
-def _extract_figure_assets_with_soup(html_text: str, source_url: str) -> tuple[list[dict[str, str]], bool]:
+def _extract_figure_assets_with_soup(
+    html_text: str, source_url: str
+) -> tuple[list[dict[str, str]], bool]:
 
     soup = BeautifulSoup(html_text, choose_parser())
     candidates: list[Any] = []
@@ -494,7 +534,9 @@ def _extract_figure_assets_with_soup(html_text: str, source_url: str) -> tuple[l
                 existing["caption"] = caption
             if len(heading) > len(existing_heading):
                 existing["heading"] = heading
-            if figure_page_url and not normalize_text(existing.get("figure_page_url") or ""):
+            if figure_page_url and not normalize_text(
+                existing.get("figure_page_url") or ""
+            ):
                 existing["figure_page_url"] = figure_page_url
             if preview_url and not normalize_text(existing.get("url") or ""):
                 existing["url"] = preview_url
@@ -503,17 +545,19 @@ def _extract_figure_assets_with_soup(html_text: str, source_url: str) -> tuple[l
 
 
 def extract_figure_assets(html_text: str, source_url: str) -> list[dict[str, str]]:
-    assets, saw_soup_candidates = _extract_figure_assets_with_soup(html_text, source_url)
+    assets, saw_soup_candidates = _extract_figure_assets_with_soup(
+        html_text, source_url
+    )
     if assets or saw_soup_candidates:
         return assets
 
     parser = _FigureParser()
     parser.feed(html_text)
     parser.close()
-    assets: list[dict[str, str]] = []
+    fallback_assets: list[dict[str, str]] = []
     for item in parser.assets:
         url = item.get("url", "").strip()
-        assets.append(
+        fallback_assets.append(
             {
                 "kind": "figure",
                 "heading": item.get("heading", "Figure"),
@@ -525,7 +569,7 @@ def extract_figure_assets(html_text: str, source_url: str) -> list[dict[str, str
                 "asset_order": item.get("asset_order", ""),
             }
         )
-    return assets
+    return fallback_assets
 
 
 def extract_full_size_figure_image_url(html_text: str, source_url: str) -> str | None:
@@ -534,10 +578,11 @@ def extract_full_size_figure_image_url(html_text: str, source_url: str) -> str |
     if isinstance(raw_meta, Mapping):
         for key in ("twitter:image", "twitter:image:src", "og:image"):
             for value in raw_meta.get(key, []):
-                candidate = urllib.parse.urljoin(source_url, normalize_text(str(value or "")))
+                candidate = urllib.parse.urljoin(
+                    source_url, normalize_text(str(value or ""))
+                )
                 if candidate:
                     return candidate
-
 
     soup = BeautifulSoup(html_text, choose_parser())
     fallback_candidate = None
@@ -593,13 +638,20 @@ def figure_download_candidates(
             if figure_page_fetcher is not None:
                 page_result = figure_page_fetcher(figure_page_url)
                 if page_result is None:
-                    raise RequestFailure(None, f"Missing figure-page HTML for {figure_page_url}", url=figure_page_url)
+                    raise RequestFailure(
+                        None,
+                        f"Missing figure-page HTML for {figure_page_url}",
+                        url=figure_page_url,
+                    )
                 page_html, page_url = page_result
             else:
                 response = transport.request(
                     "GET",
                     figure_page_url,
-                    headers={"User-Agent": user_agent, "Accept": "text/html,application/xhtml+xml"},
+                    headers={
+                        "User-Agent": user_agent,
+                        "Accept": "text/html,application/xhtml+xml",
+                    },
                     timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
                     retry_on_rate_limit=True,
                     retry_on_transient=True,
@@ -627,7 +679,9 @@ def resolve_figure_download_url(
     asset: Mapping[str, Any],
     user_agent: str,
 ) -> str:
-    candidates = figure_download_candidates(transport, asset=asset, user_agent=user_agent)
+    candidates = figure_download_candidates(
+        transport, asset=asset, user_agent=user_agent
+    )
     return candidates[0] if candidates else normalize_text(str(asset.get("url") or ""))
 
 

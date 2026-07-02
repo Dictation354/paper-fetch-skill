@@ -167,11 +167,16 @@ SPRINGER_PREVIEW_MARKDOWN_LINE_PATTERN = re.compile(
     rf"(?im)^[ \t>*-]*{re.escape(SPRINGER_PREVIEW_PHRASE)}[,.!;:]*\s*$\n?",
 )
 SPRINGER_AI_ALT_DISCLAIMER_ID_TOKEN = "ai-alt-disclaimer"
-SPRINGER_NON_SUPPLEMENTARY_BACK_MATTER_HEADINGS = BACK_MATTER_HEADINGS - SUPPLEMENTARY_BACK_MATTER_HEADINGS
+SPRINGER_NON_SUPPLEMENTARY_BACK_MATTER_HEADINGS = (
+    BACK_MATTER_HEADINGS - SUPPLEMENTARY_BACK_MATTER_HEADINGS
+)
 # BACK_MATTER_HEADINGS also includes references, acknowledgements, disclosures,
 # and similar prose sections; those are not downloadable supplementary scopes.
 SPRINGER_SUPPLEMENTARY_SECTION_TITLES = frozenset(
-    (BACK_MATTER_HEADINGS | {EXTENDED_DATA_LABEL, f"{EXTENDED_DATA_LABEL} figures and tables"})
+    (
+        BACK_MATTER_HEADINGS
+        | {EXTENDED_DATA_LABEL, f"{EXTENDED_DATA_LABEL} figures and tables"}
+    )
     - SPRINGER_NON_SUPPLEMENTARY_BACK_MATTER_HEADINGS
 )
 SPRINGER_EXTENDED_DATA_SECTION_TITLES = frozenset(
@@ -631,6 +636,7 @@ def _springer_figure_asset_score(asset: Mapping[str, Any]) -> int:
         score += 5
     return score
 
+
 def promote_springer_media_url_to_full_size(url: str | None) -> str | None:
     candidate = normalize_text(url)
     if not candidate:
@@ -753,9 +759,7 @@ def _springer_table_image_url_has_table_semantics(url: str) -> bool:
     if SPRINGER_TABLE_IMAGE_HINT_PATTERN.search(blob):
         return True
     return (
-        "/springer-static/esm/" in blob
-        and "/mediaobjects/" in blob
-        and "_tab" in blob
+        "/springer-static/esm/" in blob and "/mediaobjects/" in blob and "_tab" in blob
     )
 
 
@@ -868,9 +872,7 @@ def _springer_table_meta_image_urls(
     for tag in soup.find_all("meta"):
         if not isinstance(tag, Tag):
             continue
-        key = normalize_text(
-            str(tag.get("property") or tag.get("name") or "")
-        ).lower()
+        key = normalize_text(str(tag.get("property") or tag.get("name") or "")).lower()
         if key not in {"og:image", "twitter:image", "twitter:image:src"}:
             continue
         candidate = normalize_text(str(tag.get("content") or ""))
@@ -900,14 +902,18 @@ def _springer_table_image_candidate_score(
     number_matches = _springer_table_image_url_has_expected_number(url, table_number)
     has_table_semantics = _springer_table_image_url_has_table_semantics(url)
     is_esm_mediaobject = _springer_table_image_url_is_springer_esm_mediaobject(url)
-    is_table_context = node is not None and _springer_node_is_table_content_context(node)
+    is_table_context = node is not None and _springer_node_is_table_content_context(
+        node
+    )
     if not (
         number_matches
         or (is_esm_mediaobject and has_table_semantics)
         or (is_table_context and has_table_semantics)
     ):
         return -1
-    if from_meta and not (number_matches or (is_esm_mediaobject and has_table_semantics)):
+    if from_meta and not (
+        number_matches or (is_esm_mediaobject and has_table_semantics)
+    ):
         return -1
 
     blob = _springer_table_image_url_blob(url)

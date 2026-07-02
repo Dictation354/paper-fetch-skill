@@ -7,8 +7,14 @@ import unittest
 from paper_fetch.http import HttpTransport
 from paper_fetch.runtime import RuntimeContext
 from paper_fetch.service import FetchStrategy, fetch_paper
-from tests.live._runtime_env import build_isolated_live_env, require_cloakbrowser_or_skip
-from tests.provider_benchmark_samples import provider_benchmark_sample, source_trail_matches
+from tests.live._runtime_env import (
+    build_isolated_live_env,
+    require_cloakbrowser_or_skip,
+)
+from tests.provider_benchmark_samples import (
+    provider_benchmark_sample,
+    source_trail_matches,
+)
 
 
 RUN_LIVE = os.environ.get("PAPER_FETCH_RUN_LIVE") == "1"
@@ -46,7 +52,9 @@ class LivePublisherTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         if not RUN_LIVE:
-            raise unittest.SkipTest("Set PAPER_FETCH_RUN_LIVE=1 to run live publisher smoke tests.")
+            raise unittest.SkipTest(
+                "Set PAPER_FETCH_RUN_LIVE=1 to run live publisher smoke tests."
+            )
         cls.env, cls.runtime_env_tempdir = build_isolated_live_env()
 
     @classmethod
@@ -58,14 +66,18 @@ class LivePublisherTests(unittest.TestCase):
     def _require_env(self, *keys: str) -> None:
         missing = [key for key in keys if not self.env.get(key, "").strip()]
         if missing:
-            self.skipTest(f"Missing required environment variables for live test: {', '.join(missing)}")
+            self.skipTest(
+                f"Missing required environment variables for live test: {', '.join(missing)}"
+            )
 
     def _assert_matches_sample(self, article, sample) -> None:
         self.assertEqual(article.source, sample.expected_source)
         self.assertTrue(article.quality.has_fulltext)
         self.assertGreater(len(article.sections), 0)
         self.assertTrue(
-            source_trail_matches(article.quality.source_trail, sample.accepted_live_source_trail_groups),
+            source_trail_matches(
+                article.quality.source_trail, sample.accepted_live_source_trail_groups
+            ),
             article.quality.source_trail,
         )
 

@@ -169,7 +169,10 @@ class MdpiProviderTests(AtyponBrowserWorkflowProviderTestCase):
     def test_mdpi_without_cdp_endpoint_uses_auto_managed_browser_runtime(self) -> None:
         client = MdpiClient(transport=None, env={})
         with tempfile.TemporaryDirectory() as tmpdir:
-            runtime = replace(self._runtime_config(tmpdir, "mdpi", MDPI_STRUCTURE_DOI), cdp_endpoint=None)
+            runtime = replace(
+                self._runtime_config(tmpdir, "mdpi", MDPI_STRUCTURE_DOI),
+                cdp_endpoint=None,
+            )
             mocked_html = mock.Mock(
                 return_value=browser_runtime.BrowserFetchedHtml(
                     source_url=MDPI_LANDING_URL,
@@ -180,7 +183,10 @@ class MdpiProviderTests(AtyponBrowserWorkflowProviderTestCase):
                         "<body><article><div id='article-contents'>"
                         "<section class='html-abstract'><h2>Abstract</h2><p>Abstract text.</p></section>"
                         "<section><h2>1. Introduction</h2>"
-                        + ("<p>Body text with enough words for MDPI extraction.</p>" * 80)
+                        + (
+                            "<p>Body text with enough words for MDPI extraction.</p>"
+                            * 80
+                        )
                         + "</section></div></article></body></html>"
                     ),
                     response_status=200,
@@ -197,12 +203,16 @@ class MdpiProviderTests(AtyponBrowserWorkflowProviderTestCase):
                 fetch_html_with_browser=mocked_html,
             )
 
-            raw_payload = client.fetch_raw_fulltext(MDPI_STRUCTURE_DOI, self._metadata())
+            raw_payload = client.fetch_raw_fulltext(
+                MDPI_STRUCTURE_DOI, self._metadata()
+            )
 
         self.assertEqual(_payload_route(raw_payload), "html")
         self.assertIsNone(mocked_html.call_args.kwargs["config"].cdp_endpoint)
 
-    def test_mdpi_html_route_uses_browser_landing_page_and_ignores_xml_url(self) -> None:
+    def test_mdpi_html_route_uses_browser_landing_page_and_ignores_xml_url(
+        self,
+    ) -> None:
         client = MdpiClient(transport=None, env={})
         with tempfile.TemporaryDirectory() as tmpdir:
             runtime = self._runtime_config(tmpdir, "mdpi", MDPI_STRUCTURE_DOI)
@@ -216,7 +226,10 @@ class MdpiProviderTests(AtyponBrowserWorkflowProviderTestCase):
                         "<body><article><div id='article-contents'>"
                         "<section class='html-abstract'><h2>Abstract</h2><p>Abstract text.</p></section>"
                         "<section><h2>1. Introduction</h2>"
-                        + ("<p>Body text with enough words for MDPI extraction.</p>" * 80)
+                        + (
+                            "<p>Body text with enough words for MDPI extraction.</p>"
+                            * 80
+                        )
                         + "</section></div></article></body></html>"
                     ),
                     response_status=200,
@@ -232,7 +245,9 @@ class MdpiProviderTests(AtyponBrowserWorkflowProviderTestCase):
                 ensure_runtime_ready=mock.Mock(),
                 fetch_html_with_browser=mocked_html,
             )
-            raw_payload = client.fetch_raw_fulltext(MDPI_STRUCTURE_DOI, self._metadata())
+            raw_payload = client.fetch_raw_fulltext(
+                MDPI_STRUCTURE_DOI, self._metadata()
+            )
             article = client.to_article_model(self._metadata(), raw_payload)
 
         attempted_html = list(mocked_html.call_args.args[0])
@@ -253,7 +268,8 @@ class MdpiProviderTests(AtyponBrowserWorkflowProviderTestCase):
                     source_url=MDPI_PDF_URL,
                     final_url=MDPI_PDF_URL,
                     pdf_bytes=fulltext_pdf_bytes(),
-                    markdown_text=f"# {MDPI_TITLE}\n\n## Results\n\n" + ("Body text " * 120),
+                    markdown_text=f"# {MDPI_TITLE}\n\n## Results\n\n"
+                    + ("Body text " * 120),
                     suggested_filename="mdpi.pdf",
                 )
             )
@@ -269,7 +285,9 @@ class MdpiProviderTests(AtyponBrowserWorkflowProviderTestCase):
                 ),
                 fetch_pdf_with_browser=mocked_pdf,
             )
-            raw_payload = client.fetch_raw_fulltext(MDPI_STRUCTURE_DOI, self._metadata())
+            raw_payload = client.fetch_raw_fulltext(
+                MDPI_STRUCTURE_DOI, self._metadata()
+            )
             article = client.to_article_model(self._metadata(), raw_payload)
 
         self.assertIn(MDPI_PDF_URL, list(mocked_pdf.call_args.args[0]))
@@ -392,7 +410,9 @@ class MdpiProviderTests(AtyponBrowserWorkflowProviderTestCase):
         self.assertGreater(first_table_block, first_table_ref)
         self.assertLess(first_table_block - first_table_ref, 1200)
         self.assertLess(first_table_block, table_markdown.index("### 2.2."))
-        self.assertEqual(table_markdown.count("1–9 Scaling method in judgment matrix."), 1)
+        self.assertEqual(
+            table_markdown.count("1–9 Scaling method in judgment matrix."), 1
+        )
 
     def test_mdpi_abstract_keywords_do_not_render_as_abstract_body(self) -> None:
         """rule: rule-mdpi-body-semantics-chrome-removal"""
@@ -417,7 +437,11 @@ class MdpiProviderTests(AtyponBrowserWorkflowProviderTestCase):
 
     def test_mdpi_formula_fallbacks_do_not_fragment_or_emit_unavailable(self) -> None:
         """rule: rule-mdpi-formula-inline-display-rendering"""
-        for doi in (MDPI_REFERENCES_DOI, "10.3390/ijerph18094484", MDPI_SUPPLEMENTARY_DOI):
+        for doi in (
+            MDPI_REFERENCES_DOI,
+            "10.3390/ijerph18094484",
+            MDPI_SUPPLEMENTARY_DOI,
+        ):
             with self.subTest(doi=doi):
                 markdown, _ = _extract_fixture_markdown(doi)
 
@@ -518,8 +542,12 @@ class MdpiProviderTests(AtyponBrowserWorkflowProviderTestCase):
         )
 
         self.assertIn("Supplementary Spreadsheet", markdown)
-        self.assertFalse(any(asset.get("kind") == "supplementary" for asset in body_assets))
-        self.assertTrue(any(asset.get("kind") == "supplementary" for asset in all_assets))
+        self.assertFalse(
+            any(asset.get("kind") == "supplementary" for asset in body_assets)
+        )
+        self.assertTrue(
+            any(asset.get("kind") == "supplementary" for asset in all_assets)
+        )
         self.assertNotIn("Download Supplementary Material", markdown)
 
     def test_mdpi_references_fixture_markdown(self) -> None:
@@ -528,7 +556,10 @@ class MdpiProviderTests(AtyponBrowserWorkflowProviderTestCase):
         references = extraction["references"]
         article = article_from_markdown(
             source="mdpi_html",
-            metadata={**_fixture_metadata(MDPI_REFERENCES_DOI), "references": references},
+            metadata={
+                **_fixture_metadata(MDPI_REFERENCES_DOI),
+                "references": references,
+            },
             doi=MDPI_REFERENCES_DOI,
             markdown_text=markdown,
         )
@@ -619,7 +650,8 @@ class MdpiProviderTests(AtyponBrowserWorkflowProviderTestCase):
                 content_type="text/html",
                 body=html.encode("utf-8"),
                 route="html",
-                markdown_text=f"# {MDPI_TITLE}\n\n## Results\n\n" + ("Body text " * 120),
+                markdown_text=f"# {MDPI_TITLE}\n\n## Results\n\n"
+                + ("Body text " * 120),
                 browser_context_seed={},
             )
             mocked_builder = mock.Mock(return_value=shared_fetcher)
@@ -645,7 +677,9 @@ class MdpiProviderTests(AtyponBrowserWorkflowProviderTestCase):
         self.assertEqual(transport.calls, [])
         self.assertEqual(len(result["assets"]), 1)
         self.assertEqual(result["assets"][0]["download_tier"], "preview")
-        self.assertEqual(result["assets"][0]["downloaded_bytes"], len(png_header(640, 480)))
+        self.assertEqual(
+            result["assets"][0]["downloaded_bytes"], len(png_header(640, 480))
+        )
         self.assertEqual(result["asset_failures"], [])
         self.assertEqual(saved_bytes, png_header(640, 480))
 

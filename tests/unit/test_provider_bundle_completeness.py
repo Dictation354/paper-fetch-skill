@@ -22,7 +22,10 @@ def test_each_provider_bundle_has_catalog() -> None:
 
 
 def test_provider_spec_declares_html_capability_default() -> None:
-    field_map = {field.name: field for field in fields(type(next(iter_provider_bundles()).catalog))}
+    field_map = {
+        field.name: field
+        for field in fields(type(next(iter_provider_bundles()).catalog))
+    }
 
     assert field_map["html_capable"].default is True
 
@@ -41,7 +44,9 @@ def test_registered_html_rules_include_required_facets() -> None:
 
         assert isinstance(rules, ProviderHtmlRules), bundle.catalog.name
         assert isinstance(rules.cleanup, ProviderCleanupRules), bundle.catalog.name
-        assert isinstance(rules.front_matter, ProviderFrontMatterRules), bundle.catalog.name
+        assert isinstance(rules.front_matter, ProviderFrontMatterRules), (
+            bundle.catalog.name
+        )
         assert isinstance(rules.availability, AvailabilityPolicy), bundle.catalog.name
 
 

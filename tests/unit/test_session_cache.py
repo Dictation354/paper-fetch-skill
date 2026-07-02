@@ -4,7 +4,12 @@ import unittest
 from dataclasses import FrozenInstanceError
 
 from paper_fetch.runtime import RuntimeContext
-from paper_fetch.workflow.session_cache import RESOLVED_QUERY_KEY, SessionCacheKey, cached_call, get_cached
+from paper_fetch.workflow.session_cache import (
+    RESOLVED_QUERY_KEY,
+    SessionCacheKey,
+    cached_call,
+    get_cached,
+)
 
 
 class SessionCacheTests(unittest.TestCase):
@@ -34,9 +39,13 @@ class SessionCacheTests(unittest.TestCase):
         context = RuntimeContext(env={})
 
         self.assertIsNone(get_cached(RESOLVED_QUERY_KEY, ("missing",), context))
-        cached_call(RESOLVED_QUERY_KEY, ("present",), context, lambda: {"query": "present"})
+        cached_call(
+            RESOLVED_QUERY_KEY, ("present",), context, lambda: {"query": "present"}
+        )
 
-        self.assertEqual(get_cached(RESOLVED_QUERY_KEY, ("present",), context), {"query": "present"})
+        self.assertEqual(
+            get_cached(RESOLVED_QUERY_KEY, ("present",), context), {"query": "present"}
+        )
 
 
 if __name__ == "__main__":

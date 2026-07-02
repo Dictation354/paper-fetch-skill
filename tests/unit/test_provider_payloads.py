@@ -36,8 +36,12 @@ def test_build_provider_payload_populates_typed_content_and_trace() -> None:
 
 
 def test_provider_waterfall_state_failure_helpers_return_labelled_failures() -> None:
-    html_failure = ProviderFailure("no_result", "HTML route failed.", source_trail=["fulltext:html_fail"])
-    pdf_failure = ProviderFailure("no_result", "PDF route failed.", source_trail=["fulltext:pdf_fail"])
+    html_failure = ProviderFailure(
+        "no_result", "HTML route failed.", source_trail=["fulltext:html_fail"]
+    )
+    pdf_failure = ProviderFailure(
+        "no_result", "PDF route failed.", source_trail=["fulltext:pdf_fail"]
+    )
     state = ProviderWaterfallState(
         initial_source_trail=["fulltext:start"],
         failure_source_trail=["fulltext:html_fail", "fulltext:pdf_fail"],
@@ -48,4 +52,8 @@ def test_provider_waterfall_state_failure_helpers_return_labelled_failures() -> 
     assert state.failure("pdf") is pdf_failure
     assert state.failure("abstract") is None
     assert state.last_failure() is pdf_failure
-    assert state.source_markers() == ["fulltext:start", "fulltext:html_fail", "fulltext:pdf_fail"]
+    assert state.source_markers() == [
+        "fulltext:start",
+        "fulltext:html_fail",
+        "fulltext:pdf_fail",
+    ]

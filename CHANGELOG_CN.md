@@ -6,6 +6,30 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 2.8.0 - 2026-07-02
+
+### 新增
+
+- 新增基于 provider path template 的 URL DOI 提取：支持 query parameter 中的 DOI、已知 route/扩展名后缀剥离，以及 AMS 旧式 SICI `view` / `downloadpdf` slug；许多带 DOI 的出版社 URL 现在可直接解析，不必先抓 landing page。
+- 新增 `scripts/dev-preflight.sh --coverage`，并让 CI unit job 生成 coverage baseline 报告（`term-missing` 和 `coverage.xml`），第一阶段只产出信号，不设置覆盖率阈值。
+
+### 变更
+
+- publisher-facing landing/PDF 请求和 browser workflow 改为通过 `build_publisher_user_agent` 使用浏览器形态 UA；`PAPER_FETCH_USER_AGENT` 继续只作为工具/API UA，不再默认传给 browser context。
+- Royal Society Publishing 从 direct HTTP DOI/PDF 抓取改为共享 CDP browser HTML 加 seeded-browser PDF workflow，同时保持 `royalsocietypublishing_html` / `royalsocietypublishing_pdf` source 和不走 XML route 的契约。
+- 标题查询解析现在会在 Crossref metadata 明确存在正式期刊版本时，优先选择与 preprint 分数接近的正式出版候选。
+- mypy 覆盖面扩展到 136 个项目源码文件，新增覆盖 HTML extraction、browser workflow、Atypon browser workflow、shared JATS/common Markdown helper、CloakBrowser helper、service、artifacts、image conversion 和 resolver 模块。
+- 本地和 CI 质量门禁现在会执行 `ruff format --check`、保留 ruff lint、优先使用 repo-local `.venv/bin/python` 或显式 `PYTHON_BIN`、提前提示缺失的开发依赖，并在本地 preflight 中用 `mypy --no-site-packages` 检查项目文件。
+- 对全 Python 代码库应用 `ruff format`，并同步调整 module layout 与 asset contract 守护测试，使其匹配格式化后的源码形态。
+
+### 修复
+
+- 修复 browser-backed 批量并发：managed CDP browser manager 现在会按 provider/browser 配置在同一进程内共享，避免同一 provider profile 的 CLI/MCP 并发抓取互相争抢 `.paper-fetch-profile.lock`；隔离 context 会使用调用线程自己的 CDP 连接，避免跨线程复用 Playwright sync 对象。
+- 修复 SICI DOI normalize 与 URL DOI 后缀处理：`<...>` / `;` 等 DOI 后缀会被保留；Frontiers `/full`、IOP `/pdf`、Wiley `/fullpdf`、Springer `.pdf` 等 provider route token 只有在 provider catalog template 能证明其为路由/扩展名时才会被剥离。
+- 修复 official PDF fallback 的降级行为：真实 PDF 已下载但 Markdown extraction 不可用时，会保留 provider source trail 和本地 PDF artifact，并通过 warning 说明 PDF-only 状态，不再替换为 Crossref/general metadata-only 结果。
+- 修复 publisher landing/probe 请求误把稳定的 `paper-fetch-skill/<version>` 工具 UA 发给浏览器形态出版社路线的问题。
+- 修复 `PdfFallbackStrategy`、browser runtime ownership、provider URL/route 行为和 asset-download contract marker 扫描相关的文档/契约漂移，并同步仓库级 ruff format 后的测试窗口。
+
 ## 2.7.1 - 2026-07-01
 
 ### 新增

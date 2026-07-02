@@ -5,11 +5,17 @@ from ._service_support import *
 
 
 class ServiceProbeAndAssetTests(unittest.TestCase):
-    def test_fetch_paper_omitted_asset_profile_defaults_to_body_for_scoped_html_providers(self) -> None:
+    def test_fetch_paper_omitted_asset_profile_defaults_to_body_for_scoped_html_providers(
+        self,
+    ) -> None:
         cases = [
             ("springer", "10.1007/test", "https://www.nature.com/articles/example"),
             ("wiley", "10.1111/test", "https://example.test/wiley"),
-            ("science", "10.1126/science.test", "https://www.science.org/doi/full/10.1126/science.test"),
+            (
+                "science",
+                "10.1126/science.test",
+                "https://www.science.org/doi/full/10.1126/science.test",
+            ),
             ("pnas", "10.1073/pnas.test", "https://www.pnas.org/doi/10.1073/pnas.test"),
         ]
         original_resolve = paper_fetch.resolve_paper
@@ -25,7 +31,9 @@ class ServiceProbeAndAssetTests(unittest.TestCase):
                         provider_hint=provider_name,
                         confidence=1.0,
                     )
-                    paper_fetch.resolve_paper = lambda *args, _resolved=resolved, **kwargs: _resolved
+                    paper_fetch.resolve_paper = (
+                        lambda *args, _resolved=resolved, **kwargs: _resolved
+                    )
                     with tempfile.TemporaryDirectory() as tmpdir:
                         envelope = _fetch_paper(
                             doi,
@@ -40,12 +48,18 @@ class ServiceProbeAndAssetTests(unittest.TestCase):
                                         content_type="text/html",
                                         body=b"<html></html>",
                                         route_kind="html",
-                                        markdown_text="# Example Article\n\n## Results\n\n" + ("Body text " * 80),
-                                        source_trail=[f"fulltext:{provider_name}_html_ok"],
+                                        markdown_text="# Example Article\n\n## Results\n\n"
+                                        + ("Body text " * 80),
+                                        source_trail=[
+                                            f"fulltext:{provider_name}_html_ok"
+                                        ],
                                     ),
                                     article=sample_article(),
                                     related_asset_factory=lambda *args, **kwargs: (
-                                        related_asset_calls.append(kwargs["asset_profile"]) or {"assets": [], "asset_failures": []}
+                                        related_asset_calls.append(
+                                            kwargs["asset_profile"]
+                                        )
+                                        or {"assets": [], "asset_failures": []}
                                     ),
                                 ),
                                 "crossref": StubProvider(
@@ -67,7 +81,10 @@ class ServiceProbeAndAssetTests(unittest.TestCase):
                     self.assertEqual(related_asset_calls, ["body"])
         finally:
             paper_fetch.resolve_paper = original_resolve
-    def test_fetch_paper_explicit_asset_profile_none_disables_scoped_provider_asset_downloads(self) -> None:
+
+    def test_fetch_paper_explicit_asset_profile_none_disables_scoped_provider_asset_downloads(
+        self,
+    ) -> None:
         resolved = paper_fetch.ResolvedQuery(
             query="10.1126/science.test",
             query_kind="doi",
@@ -93,12 +110,17 @@ class ServiceProbeAndAssetTests(unittest.TestCase):
                                 content_type="text/html",
                                 body=b"<html></html>",
                                 route_kind="html",
-                                markdown_text="# Example Article\n\n## Results\n\n" + ("Body text " * 80),
+                                markdown_text="# Example Article\n\n## Results\n\n"
+                                + ("Body text " * 80),
                                 source_trail=["fulltext:science_html_ok"],
                             ),
                             article=sample_article(),
-                            related_asset_factory=lambda *args, **kwargs: (_ for _ in ()).throw(
-                                AssertionError("asset downloads should stay disabled when asset_profile='none'")
+                            related_asset_factory=lambda *args, **kwargs: (
+                                _ for _ in ()
+                            ).throw(
+                                AssertionError(
+                                    "asset downloads should stay disabled when asset_profile='none'"
+                                )
                             ),
                         ),
                         "crossref": StubProvider(
@@ -118,8 +140,13 @@ class ServiceProbeAndAssetTests(unittest.TestCase):
         finally:
             paper_fetch.resolve_paper = original_resolve
 
-        self.assertIn("download:science_assets_skipped_profile_none", envelope.source_trail)
-    def test_fetch_paper_warns_when_scoped_provider_falls_back_to_preview_images(self) -> None:
+        self.assertIn(
+            "download:science_assets_skipped_profile_none", envelope.source_trail
+        )
+
+    def test_fetch_paper_warns_when_scoped_provider_falls_back_to_preview_images(
+        self,
+    ) -> None:
         resolved = paper_fetch.ResolvedQuery(
             query="10.1126/science.preview",
             query_kind="doi",
@@ -147,7 +174,8 @@ class ServiceProbeAndAssetTests(unittest.TestCase):
                                 content_type="text/html",
                                 body=b"<html></html>",
                                 route_kind="html",
-                                markdown_text="# Example Article\n\n## Results\n\n" + ("Body text " * 80),
+                                markdown_text="# Example Article\n\n## Results\n\n"
+                                + ("Body text " * 80),
                                 source_trail=["fulltext:science_html_ok"],
                             ),
                             article=sample_article(),
@@ -182,8 +210,16 @@ class ServiceProbeAndAssetTests(unittest.TestCase):
         finally:
             paper_fetch.resolve_paper = original_resolve
 
-        self.assertTrue(any("fell back to preview images" in warning for warning in envelope.warnings))
-    def test_fetch_paper_accepts_preview_images_with_sufficient_dimensions(self) -> None:
+        self.assertTrue(
+            any(
+                "fell back to preview images" in warning
+                for warning in envelope.warnings
+            )
+        )
+
+    def test_fetch_paper_accepts_preview_images_with_sufficient_dimensions(
+        self,
+    ) -> None:
         """rule: rule-image-download-validates-real-images"""
         resolved = paper_fetch.ResolvedQuery(
             query="10.1126/science.preview.accepted",
@@ -212,7 +248,8 @@ class ServiceProbeAndAssetTests(unittest.TestCase):
                                 content_type="text/html",
                                 body=b"<html></html>",
                                 route_kind="html",
-                                markdown_text="# Example Article\n\n## Results\n\n" + ("Body text " * 80),
+                                markdown_text="# Example Article\n\n## Results\n\n"
+                                + ("Body text " * 80),
                                 source_trail=["fulltext:science_html_ok"],
                             ),
                             article=sample_article(),
@@ -250,8 +287,13 @@ class ServiceProbeAndAssetTests(unittest.TestCase):
             paper_fetch.resolve_paper = original_resolve
 
         self.assertIn("download:science_assets_preview_accepted", envelope.source_trail)
-        self.assertNotIn("download:science_assets_preview_fallback", envelope.source_trail)
-        self.assertFalse(any("used preview images" in warning for warning in envelope.warnings))
+        self.assertNotIn(
+            "download:science_assets_preview_fallback", envelope.source_trail
+        )
+        self.assertFalse(
+            any("used preview images" in warning for warning in envelope.warnings)
+        )
+
     def test_probe_has_fulltext_uses_crossref_license_signal(self) -> None:
         resolved = paper_fetch.ResolvedQuery(
             query="10.1000/license",
@@ -285,6 +327,7 @@ class ServiceProbeAndAssetTests(unittest.TestCase):
         self.assertEqual(result.title, "Licensed Article")
         self.assertEqual(result.evidence, ["crossref_license"])
         self.assertEqual(result.warnings, [])
+
     def test_probe_has_fulltext_uses_crossref_fulltext_link_signal(self) -> None:
         resolved = paper_fetch.ResolvedQuery(
             query="10.1000/fulltext",
@@ -304,7 +347,9 @@ class ServiceProbeAndAssetTests(unittest.TestCase):
                             "doi": "10.1000/fulltext",
                             "title": "Linked Article",
                             "license_urls": [],
-                            "fulltext_links": [{"url": "https://fulltext.example/test.pdf"}],
+                            "fulltext_links": [
+                                {"url": "https://fulltext.example/test.pdf"}
+                            ],
                             "references": [],
                         }
                     )
@@ -315,6 +360,7 @@ class ServiceProbeAndAssetTests(unittest.TestCase):
 
         self.assertEqual(result.state, "likely_yes")
         self.assertEqual(result.evidence, ["crossref_fulltext_link"])
+
     def test_probe_has_fulltext_uses_provider_metadata_probe_signal(self) -> None:
         resolved = paper_fetch.ResolvedQuery(
             query="10.1016/test",
@@ -425,6 +471,7 @@ class ServiceProbeAndAssetTests(unittest.TestCase):
         self.assertEqual(result.state, "likely_yes")
         self.assertEqual(result.title, "Landing Page Article")
         self.assertEqual(result.evidence, ["landing_page_citation_pdf_url"])
+
     def test_probe_has_fulltext_uses_crossref_only_for_springer_signals(self) -> None:
         resolved = paper_fetch.ResolvedQuery(
             query="10.1007/test",
@@ -459,7 +506,10 @@ class ServiceProbeAndAssetTests(unittest.TestCase):
                         }
                     ),
                     "springer": StubProvider(
-                        metadata=paper_fetch.ProviderFailure("not_supported", "Springer metadata probe should not be used.")
+                        metadata=paper_fetch.ProviderFailure(
+                            "not_supported",
+                            "Springer metadata probe should not be used.",
+                        )
                     ),
                 },
             )

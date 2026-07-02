@@ -7,8 +7,20 @@ import fitz
 
 from paper_fetch import service as paper_fetch
 from paper_fetch.http import DEFAULT_TIMEOUT_SECONDS, HttpTransport, RequestFailure
-from paper_fetch.models import ArticleModel, FetchEnvelope, Metadata, Quality, RenderOptions, Section, TokenEstimateBreakdown
-from paper_fetch.providers.base import ProviderArtifacts, ProviderFailure, ProviderFetchResult
+from paper_fetch.models import (
+    ArticleModel,
+    FetchEnvelope,
+    Metadata,
+    Quality,
+    RenderOptions,
+    Section,
+    TokenEstimateBreakdown,
+)
+from paper_fetch.providers.base import (
+    ProviderArtifacts,
+    ProviderFailure,
+    ProviderFetchResult,
+)
 from paper_fetch.tracing import trace_from_markers
 from paper_fetch.utils import empty_asset_results
 
@@ -47,7 +59,15 @@ class StubProvider:
             raise self._raw_error
         return self._raw_payload
 
-    def to_article_model(self, metadata, raw_payload, *, downloaded_assets=None, asset_failures=None, context=None):
+    def to_article_model(
+        self,
+        metadata,
+        raw_payload,
+        *,
+        downloaded_assets=None,
+        asset_failures=None,
+        context=None,
+    ):
         del context
         if self._article_factory is not None:
             return self._article_factory(
@@ -58,25 +78,53 @@ class StubProvider:
             )
         return self._article
 
-    def download_related_assets(self, doi, metadata, raw_payload, output_dir, *, asset_profile="all", context=None):
+    def download_related_assets(
+        self,
+        doi,
+        metadata,
+        raw_payload,
+        output_dir,
+        *,
+        asset_profile="all",
+        context=None,
+    ):
         del context
         if self._related_asset_error:
             raise self._related_asset_error
         if self._related_asset_factory is not None:
-            return self._related_asset_factory(doi, metadata, raw_payload, output_dir, asset_profile=asset_profile)
+            return self._related_asset_factory(
+                doi, metadata, raw_payload, output_dir, asset_profile=asset_profile
+            )
         if self._related_assets is not None:
             return self._related_assets
         return empty_asset_results()
 
-    def fetch_result(self, doi, metadata, output_dir, *, asset_profile="none", artifact_store=None, context=None):
-        active_output_dir = artifact_store.download_dir if artifact_store is not None else output_dir
+    def fetch_result(
+        self,
+        doi,
+        metadata,
+        output_dir,
+        *,
+        asset_profile="none",
+        artifact_store=None,
+        context=None,
+    ):
+        active_output_dir = (
+            artifact_store.download_dir if artifact_store is not None else output_dir
+        )
         raw_payload = self.fetch_raw_fulltext(doi, metadata, context=context)
         content = getattr(raw_payload, "content", None)
-        if content is not None and getattr(raw_payload, "needs_local_copy", False) and not content.needs_local_copy:
+        if (
+            content is not None
+            and getattr(raw_payload, "needs_local_copy", False)
+            and not content.needs_local_copy
+        ):
             content = replace(content, needs_local_copy=True)
             raw_payload.content = content
         route = str(content.route_kind if content is not None else "").strip().lower()
-        provider_name = str(raw_payload.provider or self.name or "provider").strip().lower()
+        provider_name = (
+            str(raw_payload.provider or self.name or "provider").strip().lower()
+        )
         downloaded_assets = []
         asset_failures = []
         skip_warning = None
@@ -88,14 +136,18 @@ class StubProvider:
                 "Elsevier PDF fallback currently returns text-only full text; "
                 "figure and supplementary asset downloads are not implemented yet."
             )
-            skip_trace = trace_from_markers(["download:elsevier_assets_skipped_text_only"])
+            skip_trace = trace_from_markers(
+                ["download:elsevier_assets_skipped_text_only"]
+            )
         elif provider_name == "springer" and route == "pdf_fallback":
             allow_related_assets = False
             skip_warning = (
                 "Springer PDF fallback currently returns text-only full text; "
                 "figure and supplementary asset downloads are not implemented yet."
             )
-            skip_trace = trace_from_markers(["download:springer_assets_skipped_text_only"])
+            skip_trace = trace_from_markers(
+                ["download:springer_assets_skipped_text_only"]
+            )
         elif provider_name == "ieee" and route == "pdf_fallback":
             allow_related_assets = False
             skip_warning = (
@@ -103,7 +155,10 @@ class StubProvider:
                 "figure and supplementary asset downloads are not implemented for PDF fallback."
             )
             skip_trace = trace_from_markers(["download:ieee_assets_skipped_text_only"])
-        elif provider_name in {"wiley", "science", "pnas", "ams", "acs"} and route == "pdf_fallback":
+        elif (
+            provider_name in {"wiley", "science", "pnas", "ams", "acs"}
+            and route == "pdf_fallback"
+        ):
             allow_related_assets = False
             provider_label = (
                 provider_name.upper()
@@ -114,7 +169,9 @@ class StubProvider:
                 f"{provider_label} PDF fallback currently returns text-only full text; "
                 "figure and supplementary asset downloads are not implemented yet."
             )
-            skip_trace = trace_from_markers([f"download:{provider_name}_assets_skipped_text_only"])
+            skip_trace = trace_from_markers(
+                [f"download:{provider_name}_assets_skipped_text_only"]
+            )
         elif active_output_dir is not None and asset_profile != "none":
             try:
                 asset_results = self.download_related_assets(
@@ -135,8 +192,12 @@ class StubProvider:
                     asset_failures=[],
                     context=context,
                 )
-                article.quality.warnings.append(f"{provider_name.replace('_', ' ').title()} related assets could not be downloaded: {exc}")
-                article.quality.source_trail.append(f"download:{provider_name}_assets_failed")
+                article.quality.warnings.append(
+                    f"{provider_name.replace('_', ' ').title()} related assets could not be downloaded: {exc}"
+                )
+                article.quality.source_trail.append(
+                    f"download:{provider_name}_assets_failed"
+                )
                 return ProviderFetchResult(
                     provider=provider_name or "provider",
                     article=article,
@@ -265,11 +326,15 @@ class RecordingTransport(HttpTransport):
         return response
 
 
-def build_envelope(article: ArticleModel, *, include_markdown: bool = True) -> FetchEnvelope:
+def build_envelope(
+    article: ArticleModel, *, include_markdown: bool = True
+) -> FetchEnvelope:
     modes = {"article"}
     if include_markdown:
         modes.add("markdown")
-    return paper_fetch.build_fetch_envelope(article, modes=modes, render=RenderOptions())
+    return paper_fetch.build_fetch_envelope(
+        article, modes=modes, render=RenderOptions()
+    )
 
 
 def fetch_paper_model(
@@ -313,8 +378,15 @@ def sample_article() -> paper_fetch.ArticleModel:
             published="2026-01-01",
         ),
         sections=[
-            Section(heading="Introduction", level=2, kind="body", text="Introduction text " * 30),
-            Section(heading="Discussion", level=2, kind="body", text="Discussion text " * 30),
+            Section(
+                heading="Introduction",
+                level=2,
+                kind="body",
+                text="Introduction text " * 30,
+            ),
+            Section(
+                heading="Discussion", level=2, kind="body", text="Discussion text " * 30
+            ),
         ],
         references=[],
         assets=[],
@@ -322,7 +394,9 @@ def sample_article() -> paper_fetch.ArticleModel:
             has_fulltext=True,
             token_estimate=600,
             warnings=[],
-            token_estimate_breakdown=TokenEstimateBreakdown(abstract=120, body=480, refs=64),
+            token_estimate_breakdown=TokenEstimateBreakdown(
+                abstract=120, body=480, refs=64
+            ),
         ),
     )
 

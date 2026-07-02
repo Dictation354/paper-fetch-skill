@@ -53,7 +53,9 @@ class CrossrefClient(ProviderClient):
     def probe_status(self) -> ProviderStatusResult:
         notes: list[str] = []
         if not self.mailto:
-            notes.append("CROSSREF_MAILTO is not configured; adding one is recommended for better API etiquette.")
+            notes.append(
+                "CROSSREF_MAILTO is not configured; adding one is recommended for better API etiquette."
+            )
         return summarize_capability_status(
             self.name,
             official_provider=self.official_provider,

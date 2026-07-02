@@ -61,11 +61,13 @@ def _dynamic_html(article_number: str = "10388355") -> bytes:
         '<?xml version="1.0" encoding="UTF-8"?><response><accessType>Open Access</accessType>'
         '<div id="BodyWrapper"><div id="article">'
         '<div class="section" id="sec1"><h2>Introduction</h2><p>'
-        + paragraph * 25
+        + paragraph
+        * 25
         + '</p><figure id="fig1"><figcaption>Fig. 1. Example system overview.</figcaption></figure></div>'
         '<div class="section_2" id="sec2"><h3>Results</h3><p>'
-        + paragraph * 25
-        + '</p><tex-math>\\alpha + \\beta</tex-math><table><tr><td>Metric</td></tr></table></div>'
+        + paragraph
+        * 25
+        + "</p><tex-math>\\alpha + \\beta</tex-math><table><tr><td>Metric</td></tr></table></div>"
         '<a href="javascript:void()" data-docId="'
         + article_number
         + '">Show All</a></div></div></response>'
@@ -125,8 +127,9 @@ def _dynamic_html_with_ieee_media_assets(article_number: str = "10388355") -> by
         '<?xml version="1.0" encoding="UTF-8"?><response><accessType>Open Access</accessType>'
         '<div id="BodyWrapper"><div id="article">'
         '<div class="section" id="sec1"><h2>Introduction</h2><p>'
-        + paragraph * 25
-        + '</p>'
+        + paragraph
+        * 25
+        + "</p>"
         '<a href="/assets/img/icon.support.gif">support</a>'
         '<img src="/assets/img/icon.support.gif" alt="Formula"/>'
         '<div class="figure figure-full" id="fig1">'
@@ -165,14 +168,14 @@ def _dynamic_html_with_ieee_media_assets(article_number: str = "10388355") -> by
     ).encode("utf-8")
 
 
-def _dynamic_html_with_ieee_equation_alt_table_asset(article_number: str = "10388355") -> bytes:
+def _dynamic_html_with_ieee_equation_alt_table_asset(
+    article_number: str = "10388355",
+) -> bytes:
     paragraph = "This IEEE body paragraph describes methods, results, and evaluation evidence across several experiments. "
     return (
         '<?xml version="1.0" encoding="UTF-8"?><response><accessType>Open Access</accessType>'
         '<div id="BodyWrapper"><div id="article">'
-        '<div class="section" id="sec1"><h2>Results</h2><p>'
-        + paragraph * 25
-        + "</p>"
+        '<div class="section" id="sec1"><h2>Results</h2><p>' + paragraph * 25 + "</p>"
         '<div class="figure figure-full table" id="table1">'
         '<a href="/mediastore/IEEE/content/media/'
         + article_number
@@ -210,8 +213,12 @@ def _real_ieee_fixture_metadata(*, doi: str, article_number: str) -> dict[str, o
         landing_metadata,
         f"https://ieeexplore.ieee.org/document/{article_number}/",
     )
-    references_payload = json.loads((fixture_root / "references.json").read_text(encoding="utf-8"))
-    references = _ieee_metadata._references_from_ieee_reference_payload(references_payload)
+    references_payload = json.loads(
+        (fixture_root / "references.json").read_text(encoding="utf-8")
+    )
+    references = _ieee_metadata._references_from_ieee_reference_payload(
+        references_payload
+    )
     if references:
         metadata["references"] = references
     return metadata
@@ -224,7 +231,9 @@ def _real_ieee_fixture_article(
     tmpdir: Path,
 ):
     fixture_root = golden_criteria_dir_for_doi(doi)
-    source_url = f"https://ieeexplore.ieee.org/rest/document/{article_number}/?logAccess=true"
+    source_url = (
+        f"https://ieeexplore.ieee.org/rest/document/{article_number}/?logAccess=true"
+    )
     metadata = _real_ieee_fixture_metadata(doi=doi, article_number=article_number)
     extraction = _ieee_html._extract_ieee_html(
         (fixture_root / "original.html").read_text(encoding="utf-8"),
@@ -235,7 +244,9 @@ def _real_ieee_fixture_article(
     for index, item in enumerate(extraction.extracted_assets, start=1):
         if item.get("kind") not in {"figure", "table"} or item.get("section") != "body":
             continue
-        asset_url = item.get("url") or item.get("full_size_url") or item.get("preview_url")
+        asset_url = (
+            item.get("url") or item.get("full_size_url") or item.get("preview_url")
+        )
         if not asset_url:
             continue
         path = tmpdir / f"ieee-asset-{index}.gif"
@@ -279,8 +290,13 @@ def _real_ieee_fixture_article(
         merged_metadata=metadata,
     )
     client = IeeeClient(RecordingTransport({}), {})
-    article = client.to_article_model({"doi": doi}, raw_payload, downloaded_assets=downloaded_assets)
-    markdown = article.to_ai_markdown(asset_profile="body", include_figures="inline", max_tokens="full_text")
+    article = client.to_article_model(
+        {"doi": doi}, raw_payload, downloaded_assets=downloaded_assets
+    )
+    markdown = article.to_ai_markdown(
+        asset_profile="body", include_figures="inline", max_tokens="full_text"
+    )
     return extraction, article, markdown
+
 
 __all__ = [name for name in globals() if not name.startswith("__")]

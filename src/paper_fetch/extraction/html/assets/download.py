@@ -325,7 +325,9 @@ def _resolution_preview_fields(
             or ""
         )
     )
-    full_size_url = _resolved_full_size_url(asset, preview_url=preview_url, candidate_urls=candidate_urls)
+    full_size_url = _resolved_full_size_url(
+        asset, preview_url=preview_url, candidate_urls=candidate_urls
+    )
     return preview_url, full_size_url
 
 
@@ -372,12 +374,18 @@ def _retry_seeded_figure_candidate(
     body = response.get("body", b"")
     if not isinstance(body, (bytes, bytearray)):
         body = b""
-    block_reason = kind.response_block_reason(header_value(response.get("headers"), "content-type"), bytes(body))
+    block_reason = kind.response_block_reason(
+        header_value(response.get("headers"), "content-type"), bytes(body)
+    )
     if block_reason:
-        return _blocked_response_attempt(kind, asset, candidate, response, candidate.url, block_reason), None
+        return _blocked_response_attempt(
+            kind, asset, candidate, response, candidate.url, block_reason
+        ), None
     return last_attempt, _resolution_from_attempt(
         asset=asset,
-        attempt=_AssetDownloadAttempt(candidate=candidate, response=response, source_url=candidate.url),
+        attempt=_AssetDownloadAttempt(
+            candidate=candidate, response=response, source_url=candidate.url
+        ),
         preview_url=preview_url,
         full_size_url=full_size_url,
     )
@@ -715,7 +723,9 @@ def save_asset_resolution(
             kind.failure_template(
                 asset,
                 source_url,
-                status=response.get("status_code") if isinstance(response, Mapping) else None,
+                status=response.get("status_code")
+                if isinstance(response, Mapping)
+                else None,
                 content_type=header_value(response.get("headers"), "content-type"),
                 final_url=final_url,
                 reason="empty_response_body",
@@ -724,7 +734,9 @@ def save_asset_resolution(
 
     content_type = header_value(response.get("headers"), "content-type")
     output_subdir = kind.output_subdir(asset)
-    target_asset_dir = asset_dir / output_subdir if output_subdir is not None else asset_dir
+    target_asset_dir = (
+        asset_dir / output_subdir if output_subdir is not None else asset_dir
+    )
     target_asset_dir.mkdir(parents=True, exist_ok=True)
     output_path = build_asset_output_path(
         target_asset_dir,
@@ -758,11 +770,15 @@ def save_asset_resolution(
             final_url,
             used_names_by_dir.setdefault(target_asset_dir, set()),
         )
-        original_saved_path = save_payload(original_output_path, bytes(original_body)) or ""
+        original_saved_path = (
+            save_payload(original_output_path, bytes(original_body)) or ""
+        )
     if kind.name == "supplementary":
         download: dict[str, Any] = {
             "kind": "supplementary",
-            "heading": asset.get("heading") or asset.get("filename_hint") or "Supplementary Material",
+            "heading": asset.get("heading")
+            or asset.get("filename_hint")
+            or "Supplementary Material",
             "caption": asset.get("caption", ""),
             "download_url": source_url,
             "source_url": final_url,
@@ -791,23 +807,22 @@ def save_asset_resolution(
     download_tier_override = normalize_text(resolved.download_tier_override)
     dimensions = _response_dimensions(response) or (0, 0)
     width, height = dimensions
-    download_tier = (
-        download_tier_override
-        or (
-            "preview"
-            if preview_url
-            and source_url == preview_url
-            and source_url != full_size_url
-            and not looks_like_full_size_asset_url(source_url.lower())
-            else "full_size"
-        )
+    download_tier = download_tier_override or (
+        "preview"
+        if preview_url
+        and source_url == preview_url
+        and source_url != full_size_url
+        and not looks_like_full_size_asset_url(source_url.lower())
+        else "full_size"
     )
     download = {
         "kind": asset.get("kind", "figure"),
         "heading": asset.get("heading", "Figure"),
         "caption": asset.get("caption", ""),
         "url": asset.get("url", "") or full_size_url or preview_url,
-        "original_url": full_size_url or normalize_text(str(asset.get("original_url") or "")) or source_url,
+        "original_url": full_size_url
+        or normalize_text(str(asset.get("original_url") or ""))
+        or source_url,
         "preview_url": preview_url,
         "full_size_url": full_size_url,
         "figure_page_url": asset.get("figure_page_url", ""),
@@ -877,7 +892,8 @@ def download_assets(
     document_fetcher: ImageDocumentFetcher | FileDocumentFetcher | None = None,
     image_document_fetcher: ImageDocumentFetcher | None = None,
     file_document_fetcher: FileDocumentFetcher | None = None,
-    cookie_opener_builder: Callable[..., urllib.request.OpenerDirector | None] | None = None,
+    cookie_opener_builder: Callable[..., urllib.request.OpenerDirector | None]
+    | None = None,
     opener_requester: Callable[..., dict[str, Any]] | None = None,
     asset_download_concurrency: int | None = None,
 ) -> dict[str, list[dict[str, Any]]]:

@@ -27,6 +27,7 @@ _ARXIV_ATOM_NAMESPACES = {
     "arxiv": "http://arxiv.org/schemas/atom",
 }
 
+
 @dataclass(frozen=True)
 class ArxivSearch:
     id_list: Sequence[str]

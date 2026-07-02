@@ -13,7 +13,7 @@ from contextlib import nullcontext
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Literal
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 import hashlib
 import urllib.parse
 
@@ -34,6 +34,7 @@ class PdfFetchResult:
     markdown_text: str
     suggested_filename: str | None = None
     assets: list[dict[str, Any]] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
 
 
 def pdf_fetch_result_assets(pdf_result: Any) -> list[dict[str, Any]]:
@@ -46,15 +47,28 @@ def pdf_fetch_result_assets(pdf_result: Any) -> list[dict[str, Any]]:
         return []
 
 
+def pdf_fetch_result_warnings(pdf_result: Any) -> list[str]:
+    warnings = getattr(pdf_result, "warnings", None)
+    if warnings is None or isinstance(warnings, str | bytes | bytearray):
+        return []
+    if not isinstance(warnings, Sequence):
+        return []
+    return [str(item) for item in warnings if str(item).strip()]
+
+
 class PdfFetchFailure(Exception):
-    def __init__(self, kind: str, message: str, *, details: Mapping[str, Any] | None = None) -> None:
+    def __init__(
+        self, kind: str, message: str, *, details: Mapping[str, Any] | None = None
+    ) -> None:
         super().__init__(message)
         self.kind = kind
         self.message = message
         self.details = dict(details or {})
 
 
-_CONTENT_DISPOSITION_FILENAME_PATTERN = re.compile(r'filename\*?=(?:UTF-8\'\')?"?([^";]+)"?', flags=re.IGNORECASE)
+_CONTENT_DISPOSITION_FILENAME_PATTERN = re.compile(
+    r'filename\*?=(?:UTF-8\'\')?"?([^";]+)"?', flags=re.IGNORECASE
+)
 _PDF_MARKDOWN_WORD_PATTERN = WORD_TOKEN_PATTERN
 # IEEE PDF cover/license pages are the common failure mode this guard was
 # calibrated against; keep the marker name provider-specific so callers do not
@@ -70,6 +84,7 @@ _MIN_USABLE_PDF_MARKDOWN_WORDS = 250
 _MIN_TRANSPARENT_TEXT_WORDS = 500
 _TRANSPARENT_FALLBACK_WORD_FACTOR = 3
 _PYMUPDF_SUBPROCESS_PATCH_LOCK = threading.RLock()
+PDF_ONLY_MARKDOWN_WARNING = "PDF was downloaded but Markdown extraction was not usable."
 
 
 @dataclass(frozen=True)
@@ -81,7 +96,9 @@ class _PdfMarkdownQuality:
 
     @property
     def is_usable(self) -> bool:
-        return self.word_count >= _MIN_USABLE_PDF_MARKDOWN_WORDS and not self.license_only
+        return (
+            self.word_count >= _MIN_USABLE_PDF_MARKDOWN_WORDS and not self.license_only
+        )
 
 
 @dataclass(frozen=True)
@@ -111,7 +128,9 @@ def sanitize_storage_state(path: Path) -> Path:
     fd, temp_path = tempfile.mkstemp(prefix="playwright_state_", suffix=".json")
     temp_file = Path(temp_path)
     os.close(fd)
-    temp_file.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    temp_file.write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
     return temp_file
 
 
@@ -125,7 +144,9 @@ def filename_from_headers(headers: Mapping[str, str] | None) -> str | None:
     return normalize_text(match.group(1)) or None
 
 
-def default_pdf_headers(user_agent: str, *, referer: str | None = None) -> dict[str, str]:
+def default_pdf_headers(
+    user_agent: str, *, referer: str | None = None
+) -> dict[str, str]:
     headers = {
         "Accept": PDF_ACCEPT_HEADER,
         "User-Agent": user_agent,
@@ -204,13 +225,10 @@ class _SubprocessTextDecodeReplace:
         self._original_run = subprocess.run
 
         def run_with_replace(*args, **kwargs):
-            if (
-                "errors" not in kwargs
-                and (
-                    kwargs.get("text")
-                    or kwargs.get("universal_newlines")
-                    or kwargs.get("encoding") is not None
-                )
+            if "errors" not in kwargs and (
+                kwargs.get("text")
+                or kwargs.get("universal_newlines")
+                or kwargs.get("encoding") is not None
             ):
                 kwargs = dict(kwargs)
                 kwargs["errors"] = "replace"
@@ -223,11 +241,18 @@ class _SubprocessTextDecodeReplace:
         _PYMUPDF_SUBPROCESS_PATCH_LOCK.release()
 
 
-def _render_default_pdf_markdown(pdf_path: Path, *, image_dir: Path | None = None) -> str:
+def _render_default_pdf_markdown(
+    pdf_path: Path, *, image_dir: Path | None = None
+) -> str:
     try:
         import pymupdf4llm
-    except Exception as exc:  # pragma: no cover - exercised by missing dependency integration tests
-        raise PdfFetchFailure("missing_pymupdf4llm", "pymupdf4llm is not installed; cannot use PDF fallback.") from exc
+    except (
+        Exception
+    ) as exc:  # pragma: no cover - exercised by missing dependency integration tests
+        raise PdfFetchFailure(
+            "missing_pymupdf4llm",
+            "pymupdf4llm is not installed; cannot use PDF fallback.",
+        ) from exc
     kwargs: dict[str, Any] = {}
     if image_dir is not None:
         image_dir.mkdir(parents=True, exist_ok=True)
@@ -244,16 +269,26 @@ def _render_default_pdf_markdown(pdf_path: Path, *, image_dir: Path | None = Non
 def _render_transparent_pdf_markdown(pdf_path: Path) -> str:
     try:
         from pymupdf4llm.helpers import pymupdf_rag
-    except Exception as exc:  # pragma: no cover - exercised by missing dependency integration tests
-        raise PdfFetchFailure("missing_pymupdf4llm", "pymupdf4llm is not installed; cannot use PDF fallback.") from exc
+    except (
+        Exception
+    ) as exc:  # pragma: no cover - exercised by missing dependency integration tests
+        raise PdfFetchFailure(
+            "missing_pymupdf4llm",
+            "pymupdf4llm is not installed; cannot use PDF fallback.",
+        ) from exc
     with _SubprocessTextDecodeReplace():
-        return str(pymupdf_rag.to_markdown(str(pdf_path), ignore_alpha=True, hdr_info=False) or "")
+        return str(
+            pymupdf_rag.to_markdown(str(pdf_path), ignore_alpha=True, hdr_info=False)
+            or ""
+        )
 
 
 def _pdf_text_layer_stats(pdf_path: Path) -> _PdfTextLayerStats:
     try:
         import pymupdf
-    except Exception:  # pragma: no cover - PyMuPDF is a pymupdf4llm dependency in supported installs
+    except (
+        Exception
+    ):  # pragma: no cover - PyMuPDF is a pymupdf4llm dependency in supported installs
         try:
             import fitz as pymupdf
         except Exception:
@@ -295,7 +330,8 @@ def _should_try_transparent_pdf_fallback(
         return False
     return (
         text_layer_stats.transparent_words >= _MIN_TRANSPARENT_TEXT_WORDS
-        and text_layer_stats.raw_words >= default_quality.word_count * _TRANSPARENT_FALLBACK_WORD_FACTOR
+        and text_layer_stats.raw_words
+        >= default_quality.word_count * _TRANSPARENT_FALLBACK_WORD_FACTOR
     )
 
 
@@ -328,10 +364,14 @@ def _insufficient_pdf_markdown_failure(
     )
 
 
-def _pdf_image_dir(asset_output_dir: Path | None, asset_profile: PdfAssetProfile) -> Path | None:
+def _pdf_image_dir(
+    asset_output_dir: Path | None, asset_profile: PdfAssetProfile
+) -> Path | None:
     if asset_profile == "none" or asset_output_dir is None:
         return None
-    if asset_output_dir.name == "body_assets" or asset_output_dir.name.endswith("_assets"):
+    if asset_output_dir.name == "body_assets" or asset_output_dir.name.endswith(
+        "_assets"
+    ):
         return asset_output_dir
     return asset_output_dir / "body_assets"
 
@@ -477,7 +517,10 @@ def render_pdf_markdown_result(
             _MIN_USABLE_PDF_MARKDOWN_WORDS,
             default_quality.word_count * _TRANSPARENT_FALLBACK_WORD_FACTOR,
         )
-        if legacy_quality.word_count >= min_legacy_words and not legacy_quality.license_only:
+        if (
+            legacy_quality.word_count >= min_legacy_words
+            and not legacy_quality.license_only
+        ):
             return PdfMarkdownRenderResult(markdown_text=legacy_markdown, assets=[])
         raise _insufficient_pdf_markdown_failure(
             default_quality=default_quality,
@@ -497,7 +540,9 @@ def render_pdf_markdown(pdf_path: Path) -> str:
     return render_pdf_markdown_result(pdf_path).markdown_text
 
 
-def looks_like_pdf_payload(content_type: str | None, payload: bytes, final_url: str | None = None) -> bool:
+def looks_like_pdf_payload(
+    content_type: str | None, payload: bytes, final_url: str | None = None
+) -> bool:
     normalized_content_type = normalize_text(content_type).lower()
     normalized_final_url = normalize_text(final_url).lower()
     return (
@@ -520,12 +565,16 @@ def pdf_fetch_result_from_response(
     artifact_dir: Path | None,
     asset_profile: PdfAssetProfile = "none",
     asset_output_dir: Path | None = None,
+    allow_pdf_only: bool = False,
     source_url: str,
     not_pdf_message: str,
     final_url: str | None = None,
 ) -> PdfFetchResult:
     response_headers = _normalized_response_headers(response)
-    resolved_final_url = normalize_text(str(final_url or response.get("url") or source_url)) or source_url
+    resolved_final_url = (
+        normalize_text(str(final_url or response.get("url") or source_url))
+        or source_url
+    )
     try:
         status = int(response.get("status_code") or 0) or None
     except (TypeError, ValueError):
@@ -557,6 +606,7 @@ def pdf_fetch_result_from_response(
         final_url=resolved_final_url,
         pdf_bytes=pdf_bytes,
         suggested_filename=filename_from_headers(response_headers),
+        allow_pdf_only=allow_pdf_only,
     )
 
 
@@ -579,8 +629,12 @@ def _stable_pdf_filename(
         if raw_stem:
             stem = raw_stem[:80]
             break
-    digest_source = normalize_text(final_url) or normalize_text(source_url) or stem or "pdf"
-    digest = hashlib.sha1(digest_source.encode("utf-8", errors="ignore")).hexdigest()[:10]
+    digest_source = (
+        normalize_text(final_url) or normalize_text(source_url) or stem or "pdf"
+    )
+    digest = hashlib.sha1(digest_source.encode("utf-8", errors="ignore")).hexdigest()[
+        :10
+    ]
     return f"{stem or 'downloaded'}-{digest}.pdf"
 
 
@@ -589,12 +643,17 @@ def pdf_fetch_result_from_bytes(
     artifact_dir: Path | None,
     asset_profile: PdfAssetProfile = "none",
     asset_output_dir: Path | None = None,
+    allow_pdf_only: bool = False,
     source_url: str,
     final_url: str,
     pdf_bytes: bytes,
     suggested_filename: str | None = None,
 ) -> PdfFetchResult:
-    temp_dir_cm = tempfile.TemporaryDirectory(prefix="paper_fetch_pdf_") if artifact_dir is None else nullcontext(None)
+    temp_dir_cm = (
+        tempfile.TemporaryDirectory(prefix="paper_fetch_pdf_")
+        if artifact_dir is None
+        else nullcontext(None)
+    )
     with temp_dir_cm as temp_dir:
         active_dir = Path(temp_dir) if temp_dir is not None else artifact_dir
         assert active_dir is not None
@@ -610,22 +669,41 @@ def pdf_fetch_result_from_bytes(
             raise PdfFetchFailure(
                 "downloaded_file_not_pdf",
                 "PDF fallback did not produce a PDF file.",
-                details={"source_url": source_url, "suggested_filename": suggested_filename},
+                details={
+                    "source_url": source_url,
+                    "suggested_filename": suggested_filename,
+                },
             )
 
-        render_result = render_pdf_markdown_result(
-            pdf_path,
-            asset_profile=asset_profile,
-            asset_output_dir=asset_output_dir,
-            source_url=final_url or source_url,
-        )
+        warnings: list[str] = []
+        try:
+            render_result = render_pdf_markdown_result(
+                pdf_path,
+                asset_profile=asset_profile,
+                asset_output_dir=asset_output_dir,
+                source_url=final_url or source_url,
+            )
+        except PdfFetchFailure:
+            if not allow_pdf_only:
+                raise
+            render_result = PdfMarkdownRenderResult(markdown_text="", assets=[])
+            warnings.append(PDF_ONLY_MARKDOWN_WARNING)
+        except Exception:
+            if not allow_pdf_only:
+                raise
+            render_result = PdfMarkdownRenderResult(markdown_text="", assets=[])
+            warnings.append(PDF_ONLY_MARKDOWN_WARNING)
         markdown_text = render_result.markdown_text
         if not normalize_text(markdown_text):
-            raise PdfFetchFailure(
-                "empty_pdf_markdown",
-                "PDF fallback produced empty Markdown.",
-                details={"source_url": source_url, "final_url": final_url},
-            )
+            if allow_pdf_only:
+                if PDF_ONLY_MARKDOWN_WARNING not in warnings:
+                    warnings.append(PDF_ONLY_MARKDOWN_WARNING)
+            else:
+                raise PdfFetchFailure(
+                    "empty_pdf_markdown",
+                    "PDF fallback produced empty Markdown.",
+                    details={"source_url": source_url, "final_url": final_url},
+                )
 
         return PdfFetchResult(
             source_url=source_url,
@@ -634,4 +712,5 @@ def pdf_fetch_result_from_bytes(
             markdown_text=markdown_text,
             suggested_filename=suggested_filename,
             assets=[dict(item) for item in render_result.assets],
+            warnings=warnings,
         )

@@ -142,7 +142,9 @@ def coerce_body_quality_metrics(
     return metrics
 
 
-def coerce_semantic_losses(value: SemanticLosses | Mapping[str, Any] | None) -> SemanticLosses:
+def coerce_semantic_losses(
+    value: SemanticLosses | Mapping[str, Any] | None,
+) -> SemanticLosses:
     if isinstance(value, SemanticLosses):
         return SemanticLosses(
             table_fallback_count=int(value.table_fallback_count or 0),
@@ -157,15 +159,21 @@ def coerce_semantic_losses(value: SemanticLosses | Mapping[str, Any] | None) -> 
         return SemanticLosses(
             table_fallback_count=int(value.get("table_fallback_count") or 0),
             table_lossy_count=legacy_lossy_count,
-            table_layout_degraded_count=int(value.get("table_layout_degraded_count") or 0),
-            table_semantic_loss_count=int(value.get("table_semantic_loss_count") or legacy_lossy_count or 0),
+            table_layout_degraded_count=int(
+                value.get("table_layout_degraded_count") or 0
+            ),
+            table_semantic_loss_count=int(
+                value.get("table_semantic_loss_count") or legacy_lossy_count or 0
+            ),
             formula_fallback_count=int(value.get("formula_fallback_count") or 0),
             formula_missing_count=int(value.get("formula_missing_count") or 0),
         )
     return SemanticLosses()
 
 
-def classify_content(*, sections: Sequence[Section], abstract_text: str | None) -> ContentKind:
+def classify_content(
+    *, sections: Sequence[Section], abstract_text: str | None
+) -> ContentKind:
     if filtered_body_sections(sections):
         return "fulltext"
     if normalize_text(abstract_text) or abstract_sections(sections):
@@ -182,7 +190,8 @@ def classify_article_content(article: ArticleModel) -> ContentKind:
             (
                 _normalized_text_field(getattr(section, "text", None))
                 for section in sections
-                if _normalized_text_field(getattr(section, "kind", None)).lower() == "abstract"
+                if _normalized_text_field(getattr(section, "kind", None)).lower()
+                == "abstract"
                 and _normalized_text_field(getattr(section, "text", None))
             ),
             "",
@@ -191,7 +200,11 @@ def classify_article_content(article: ArticleModel) -> ContentKind:
 
 
 def _dedupe_strings(values: Sequence[str] | None) -> list[str]:
-    return list(dict.fromkeys(normalize_text(value) for value in (values or []) if normalize_text(value)))
+    return list(
+        dict.fromkeys(
+            normalize_text(value) for value in (values or []) if normalize_text(value)
+        )
+    )
 
 
 def _coerce_diagnostic_value(value: Any) -> Any:
@@ -230,9 +243,15 @@ def _word_count(text: str) -> int:
 
 def _article_body_quality_metrics(article: ArticleModel) -> BodyQualityMetrics:
     body_sections = filtered_body_sections(article.sections)
-    body_chunks = [strip_markdown_images(section.text) for section in body_sections if strip_markdown_images(section.text)]
+    body_chunks = [
+        strip_markdown_images(section.text)
+        for section in body_sections
+        if strip_markdown_images(section.text)
+    ]
     body_text = normalize_text("\n\n".join(body_chunks))
-    abstract_text = first_abstract_text(abstract_text=article.metadata.abstract, sections=article.sections)
+    abstract_text = first_abstract_text(
+        abstract_text=article.metadata.abstract, sections=article.sections
+    )
     abstract_word_count = _word_count(abstract_text)
     word_count = _word_count(body_text)
     body_to_abstract_ratio = (
@@ -244,14 +263,17 @@ def _article_body_quality_metrics(article: ArticleModel) -> BodyQualityMetrics:
         [
             asset
             for asset in article.assets
-            if normalize_text(asset.kind).lower() == "figure" and normalize_text(asset.section).lower() != "supplementary"
+            if normalize_text(asset.kind).lower() == "figure"
+            and normalize_text(asset.section).lower() != "supplementary"
         ]
     )
     return BodyQualityMetrics(
         char_count=len(body_text),
         word_count=word_count,
         body_block_count=len(body_sections),
-        body_heading_count=len([section for section in body_sections if normalize_text(section.heading)]),
+        body_heading_count=len(
+            [section for section in body_sections if normalize_text(section.heading)]
+        ),
         body_to_abstract_ratio=body_to_abstract_ratio,
         explicit_body_container=False,
         post_abstract_body_run=False,
@@ -268,7 +290,9 @@ def _quality_body_metrics(
     if not isinstance(availability_diagnostics, Mapping):
         return article_metrics
     diagnostics_metrics = coerce_body_quality_metrics(
-        availability_diagnostics.get("body_metrics") if isinstance(availability_diagnostics.get("body_metrics"), Mapping) else None,
+        availability_diagnostics.get("body_metrics")
+        if isinstance(availability_diagnostics.get("body_metrics"), Mapping)
+        else None,
         figure_count=int(availability_diagnostics.get("figure_count") or 0),
     )
     has_article_metrics = any(
@@ -288,9 +312,13 @@ def _quality_body_metrics(
         body_block_count=article_metrics.body_block_count,
         body_heading_count=article_metrics.body_heading_count,
         body_to_abstract_ratio=article_metrics.body_to_abstract_ratio,
-        explicit_body_container=article_metrics.explicit_body_container or diagnostics_metrics.explicit_body_container,
-        post_abstract_body_run=article_metrics.post_abstract_body_run or diagnostics_metrics.post_abstract_body_run,
-        figure_count=max(article_metrics.figure_count, diagnostics_metrics.figure_count),
+        explicit_body_container=article_metrics.explicit_body_container
+        or diagnostics_metrics.explicit_body_container,
+        post_abstract_body_run=article_metrics.post_abstract_body_run
+        or diagnostics_metrics.post_abstract_body_run,
+        figure_count=max(
+            article_metrics.figure_count, diagnostics_metrics.figure_count
+        ),
     )
 
 
@@ -299,8 +327,14 @@ def _diagnostic_access_gate_signals(value: Mapping[str, Any] | None) -> list[str
         return []
     signals = [
         normalize_text(value.get("reason")).lower(),
-        *[normalize_text(item).lower() for item in value.get("blocking_fallback_signals") or []],
-        *[normalize_text(item).lower() for item in value.get("hard_negative_signals") or []],
+        *[
+            normalize_text(item).lower()
+            for item in value.get("blocking_fallback_signals") or []
+        ],
+        *[
+            normalize_text(item).lower()
+            for item in value.get("hard_negative_signals") or []
+        ],
     ]
     if value.get("accepted") is False:
         signals.extend(
@@ -311,7 +345,11 @@ def _diagnostic_access_gate_signals(value: Mapping[str, Any] | None) -> list[str
 
 
 def _diagnostics_access_gate_detected(value: Mapping[str, Any] | None) -> bool:
-    if isinstance(value, Mapping) and [item for item in value.get("blocking_fallback_signals") or [] if normalize_text(item)]:
+    if isinstance(value, Mapping) and [
+        item
+        for item in value.get("blocking_fallback_signals") or []
+        if normalize_text(item)
+    ]:
         return True
     for signal in _diagnostic_access_gate_signals(value):
         if any(token in signal for token in _QUALITY_ACCESS_SIGNAL_TOKENS):
@@ -336,7 +374,11 @@ def _diagnostics_require_downgrade(
 ) -> bool:
     if not isinstance(diagnostics, Mapping):
         return False
-    if [item for item in diagnostics.get("blocking_fallback_signals") or [] if normalize_text(item)]:
+    if [
+        item
+        for item in diagnostics.get("blocking_fallback_signals") or []
+        if normalize_text(item)
+    ]:
         return True
     if diagnostics.get("accepted") is not False:
         return False
@@ -359,7 +401,9 @@ def _clone_quality(quality: Quality) -> Quality:
         warnings=list(quality.warnings),
         source_trail=list(quality.source_trail),
         trace=list(quality.trace),
-        token_estimate_breakdown=coerce_token_estimate_breakdown(quality.token_estimate_breakdown),
+        token_estimate_breakdown=coerce_token_estimate_breakdown(
+            quality.token_estimate_breakdown
+        ),
         confidence=quality.confidence,
         flags=list(quality.flags),
         body_metrics=coerce_body_quality_metrics(quality.body_metrics),
@@ -375,10 +419,15 @@ def _refresh_article_quality(
     explicit_content_kind: ContentKind | None = None,
     recompute_tokens: bool = True,
 ) -> None:
-    abstract_text = first_abstract_text(abstract_text=article.metadata.abstract, sections=article.sections)
+    abstract_text = first_abstract_text(
+        abstract_text=article.metadata.abstract, sections=article.sections
+    )
     if abstract_text and not normalize_text(article.metadata.abstract):
         article.metadata.abstract = abstract_text
-    if recompute_tokens or article.quality.token_estimate_breakdown == TokenEstimateBreakdown():
+    if (
+        recompute_tokens
+        or article.quality.token_estimate_breakdown == TokenEstimateBreakdown()
+    ):
         token_estimate_breakdown = build_token_estimate_breakdown(
             abstract_text=article.metadata.abstract,
             sections=article.sections,
@@ -387,13 +436,19 @@ def _refresh_article_quality(
         article.quality.token_estimate_breakdown = token_estimate_breakdown
     token_estimate_breakdown = article.quality.token_estimate_breakdown
     if recompute_tokens or article.quality.token_estimate <= 0:
-        article.quality.token_estimate = token_estimate_breakdown.abstract + token_estimate_breakdown.body
+        article.quality.token_estimate = (
+            token_estimate_breakdown.abstract + token_estimate_breakdown.body
+        )
     content_kind: ContentKind = explicit_content_kind or classify_content(
         sections=article.sections,
         abstract_text=article.metadata.abstract,
     )
     article.quality.content_kind = content_kind
-    article.quality.has_abstract = bool(first_abstract_text(abstract_text=article.metadata.abstract, sections=article.sections))
+    article.quality.has_abstract = bool(
+        first_abstract_text(
+            abstract_text=article.metadata.abstract, sections=article.sections
+        )
+    )
     article.quality.has_fulltext = content_kind == FULLTEXT
 
 
@@ -409,7 +464,9 @@ def _downgrade_article(article: ArticleModel, *, target_kind: ContentKind) -> No
         if normalize_text(section.kind).lower() == "abstract"
     ]
     article.assets = []
-    if not first_abstract_text(abstract_text=article.metadata.abstract, sections=article.sections):
+    if not first_abstract_text(
+        abstract_text=article.metadata.abstract, sections=article.sections
+    ):
         article.sections = []
         _refresh_article_quality(article, explicit_content_kind="metadata_only")
         return
@@ -419,15 +476,21 @@ def _downgrade_article(article: ArticleModel, *, target_kind: ContentKind) -> No
 def _semantic_loss_warning_messages(losses: SemanticLosses) -> list[str]:
     warnings: list[str] = []
     if losses.table_fallback_count:
-        warnings.append("Some tables could only be retained as original-resource fallbacks; structured table data may be incomplete.")
+        warnings.append(
+            "Some tables could only be retained as original-resource fallbacks; structured table data may be incomplete."
+        )
     if losses.table_semantic_loss_count or losses.table_lossy_count:
         warnings.append("Some tables lost semantic content during Markdown conversion.")
     if losses.table_layout_degraded_count:
-        warnings.append("Some tables were flattened lossily for Markdown output; merged-cell structure was not preserved exactly.")
+        warnings.append(
+            "Some tables were flattened lossily for Markdown output; merged-cell structure was not preserved exactly."
+        )
     if losses.formula_fallback_count:
         warnings.append("Some formulas required degraded fallback rendering.")
     if losses.formula_missing_count:
-        warnings.append("Some formulas could not be converted faithfully and were replaced with explicit placeholders.")
+        warnings.append(
+            "Some formulas could not be converted faithfully and were replaced with explicit placeholders."
+        )
     return warnings
 
 
@@ -441,7 +504,11 @@ def _resolve_quality_confidence(
     normalized_flags = set(_dedupe_strings(flags))
     hard_negative = bool(
         isinstance(diagnostics, Mapping)
-        and [normalize_text(item) for item in diagnostics.get("hard_negative_signals") or [] if normalize_text(item)]
+        and [
+            normalize_text(item)
+            for item in diagnostics.get("hard_negative_signals") or []
+            if normalize_text(item)
+        ]
     )
     if (
         content_kind != FULLTEXT
@@ -473,15 +540,23 @@ def apply_quality_assessment(
     recompute_tokens: bool = True,
 ) -> ArticleModel:
     losses = coerce_semantic_losses(semantic_losses)
-    body_metrics = _quality_body_metrics(article, availability_diagnostics=availability_diagnostics)
+    body_metrics = _quality_body_metrics(
+        article, availability_diagnostics=availability_diagnostics
+    )
     flags = _dedupe_strings(extra_flags)
-    reason = normalize_text((availability_diagnostics or {}).get("reason") if isinstance(availability_diagnostics, Mapping) else "").lower()
+    reason = normalize_text(
+        (availability_diagnostics or {}).get("reason")
+        if isinstance(availability_diagnostics, Mapping)
+        else ""
+    ).lower()
 
     if _diagnostics_access_gate_detected(availability_diagnostics):
         flags.append(QUALITY_FLAG_ACCESS_GATE_DETECTED)
     if reason == INSUFFICIENT_BODY:
         flags.append(QUALITY_FLAG_INSUFFICIENT_BODY)
-    if article.quality.content_kind == FULLTEXT and _has_weak_body_structure(body_metrics):
+    if article.quality.content_kind == FULLTEXT and _has_weak_body_structure(
+        body_metrics
+    ):
         flags.append(QUALITY_FLAG_WEAK_BODY_STRUCTURE)
     if losses.table_fallback_count > 0:
         flags.append(QUALITY_FLAG_TABLE_FALLBACK_PRESENT)
@@ -514,7 +589,9 @@ def apply_quality_assessment(
         else:
             target_kind = (
                 "abstract_only"
-                if first_abstract_text(abstract_text=article.metadata.abstract, sections=article.sections)
+                if first_abstract_text(
+                    abstract_text=article.metadata.abstract, sections=article.sections
+                )
                 else "metadata_only"
             )
         _downgrade_article(article, target_kind=target_kind)
@@ -531,7 +608,9 @@ def apply_quality_assessment(
         semantic_losses=losses,
         diagnostics=availability_diagnostics,
     )
-    article.quality.warnings = _dedupe_strings([*article.quality.warnings, *_semantic_loss_warning_messages(losses)])
+    article.quality.warnings = _dedupe_strings(
+        [*article.quality.warnings, *_semantic_loss_warning_messages(losses)]
+    )
     return article
 
 
