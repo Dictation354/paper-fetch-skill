@@ -45,8 +45,6 @@ class ProviderBrowserProfile:
     markdown_publisher: str
     fallback_author_extractor: Callable[[str], list[str]] | None
     shared_browser_image_fetcher: bool
-    direct_http_html_preflight: bool = False
-    direct_playwright_html_preflight: bool = False
 
 
 def make_atypon_browser_profile(
@@ -54,8 +52,6 @@ def make_atypon_browser_profile(
     *,
     fallback_author_extractor: Callable[[str], list[str]],
     article_source_name: str | None = None,
-    direct_http_html_preflight: bool = False,
-    direct_playwright_html_preflight: bool = False,
 ) -> ProviderBrowserProfile:
     return ProviderBrowserProfile(
         name=name,
@@ -69,6 +65,4 @@ def make_atypon_browser_profile(
         markdown_publisher=name,
         fallback_author_extractor=fallback_author_extractor,
         shared_browser_image_fetcher=True,
-        direct_http_html_preflight=direct_http_html_preflight,
-        direct_playwright_html_preflight=direct_playwright_html_preflight,
     )

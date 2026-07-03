@@ -93,7 +93,7 @@ Date: 2026-06-18
 - `pipeline`：CLI/MCP 共享的 `RuntimeContext` 生命周期、service 调用、可选 cache hook 与 Markdown 保存 hook
 - `request_builder`：CLI/MCP 共享的 `FetchPipelineRequest` 装配
 
-`RuntimeContext` 是 service/workflow 的显式运行时依赖容器，持有 `env`、`transport`、`clients`、`download_dir`、`cancel_check`、`artifact_store`、可选 `fetch_cache`，以及单次 fetch 生命周期内的 `parse_cache`、`session_cache` 和 `stage_timings`。Browser 生命周期由 CDP-only `paper_fetch.runtime_browser.BrowserContextManager` 管理；managed Chrome manager 会按 browser 配置在同一进程内共享引用，具体 context/page 使用调用线程自己的 CDP 连接。公开 service API 只接受 `context=`；调用方必须先构造 `RuntimeContext`，再交给 `paper_fetch.workflow.pipeline.FetchPipeline`。
+`RuntimeContext` 是 service/workflow 的显式运行时依赖容器，持有 `env`、`transport`、`clients`、`download_dir`、`cancel_check`、`artifact_store`、可选 `fetch_cache`，以及单次 fetch 生命周期内的 `parse_cache`、`session_cache` 和 `stage_timings`。Browser provider 只依赖 `paper_fetch.providers.browser_runtime` facade；生产 backend 是 CloakBrowser，storage/profile 路径由 `browser_runtime.paths` 统一解析。Browser 生命周期由 CDP-only `paper_fetch.runtime_browser.BrowserContextManager` 管理；managed Chrome manager 会按 browser 配置在同一进程内共享引用，具体 context/page 使用调用线程自己的 CDP 连接，最后一个引用释放或进程退出时清理。公开 service API 只接受 `context=`；调用方必须先构造 `RuntimeContext`，再交给 `paper_fetch.workflow.pipeline.FetchPipeline`。
 
 ### 6. Extraction 层
 
@@ -159,6 +159,7 @@ provider 身份与能力配置统一来自 provider entry module 顶部注册的
 入口：`src/paper_fetch/runtime.py`、`artifacts.py`、`mcp/fetch_cache.py`
 
 - `RuntimeContext` 显式承载运行时依赖；`parse_cache` 是进程内、单 context 生命周期的解析 memo（key 含 provider、role、source、body sha256、parser 和配置指纹），dict/list 读取返回拷贝，XML root 只读复用。
+- Browser runtime 使用 backend facade 和集中 storage-state manager；auth、preflight、HTML fetch、seeded PDF fallback 共享 provider-scoped `storage-state.json` 路径、写锁和 atomic write。External CDP 默认借用既有 context，并在 diagnostics 中报告被忽略的 context options；`PAPER_FETCH_CDP_EXTERNAL_NEW_CONTEXT=1` 可要求在外部浏览器中创建新 context。
 - `ArtifactStore` / `DownloadPolicy` 管理 artifact mode：provider PDF/binary local copy、PDF fallback 源文件、provider 原始 HTML、Markdown 保存、asset 诊断、HTTP textual cache 开关，以及 fetch-envelope/cache-index JSON 的原子写入。
 - `FetchCache` 管理 MCP fetch-envelope sidecar reuse/write 语义与 cache index refresh；sidecar version、`EXTRACTION_REVISION` 校验、resource URI 与 scoped cache resource 语义稳定，实际 JSON materialization 委托给 `ArtifactStore`。
 
@@ -205,7 +206,7 @@ workflow 尽量拿到 Crossref metadata 与 publisher metadata（`elsevier` 仍�
 
 实现要点：
 
-- Wiley / Science / PNAS / AMS / Annual Reviews / Royal Society Publishing / ACS / IOP / AIP / MDPI 共用 `paper_fetch.providers.browser_workflow` 这套 canonical browser workflow facade（profile / bootstrap / pdf_fallback / article / assets / client / shared / html_extraction / fetchers），通过 `shared.BrowserWorkflowDeps` 注入依赖。AMS 会先在 bootstrap 内尝试带浏览器 UA/Referer 的 direct HTTP HTML preflight；其余 browser provider 以及 AMS fallback 复用进程级 keyed `BrowserContextManager` 管理的 managed Chrome 生命周期，并按阶段/线程创建隔离 context/page。
+- Wiley / Science / PNAS / Annual Reviews / Royal Society Publishing / ACS / IOP / AIP / MDPI 共用 `paper_fetch.providers.browser_workflow` 这套 canonical browser workflow facade（profile / bootstrap / pdf_fallback / article / assets / client / shared / html_extraction / fetchers），通过 `shared.BrowserWorkflowDeps` 注入依赖。AMS 使用 provider-owned direct HTTP HTML/PDF 路径，不参与 browser workflow bootstrap 或 seeded-browser PDF fallback。
 - Atypon 候选路由通过 `_atypon_browser_workflow_profiles` 分派，publisher 差异走 profile callback。
 - provider-owned author 抽取统一用 `_html_authors.AuthorExtractionPipeline`，每个 provider 只注册命名 `AuthorStep`。
 - 这些 waterfall 由 `_waterfall` 做轻量编排（按 step 顺序执行、累积 warnings、组合失败、写成功/失败 source markers）；`ProviderClient.fetch_result` 是 template-method，base 统一完成 raw payload、related assets、`to_article_model`、artifacts 和 trace/warning 组装。

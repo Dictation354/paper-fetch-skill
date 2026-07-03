@@ -83,6 +83,7 @@ raw_fixture_inventory:
   fixture_family: golden
   extra_fixture: false
   status: ok
+skipped_cleaning_inventory: []
 raw_baselines:
   structure:10.1175/bams-d-24-0223.1:
     purpose: structure
@@ -136,8 +137,8 @@ raw_baselines:
     raw_text_chars: 0
     raw_line_count: 0
     markdown_source: tests.golden_corpus:provider_adapter_production_chain
-    markdown_chars: 26828
-    markdown_heading_count: 27
+    markdown_chars: 26581
+    markdown_heading_count: 25
 repeated_boilerplate_candidates:
 - token: Download PDF
   occurrences: 5

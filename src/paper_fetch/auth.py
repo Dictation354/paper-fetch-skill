@@ -8,7 +8,6 @@ from pathlib import Path
 from collections.abc import Callable, Mapping
 
 from .config import (
-    AMS_STORAGE_STATE_JSON_ENV_VAR,
     BROWSER_USER_AGENT_ENV_VAR,
     CLOAKBROWSER_HEADLESS_ENV_VAR,
     CLOAKBROWSER_TIMEOUT_MS_ENV_VAR,
@@ -16,14 +15,21 @@ from .config import (
     build_runtime_env,
 )
 from .provider_catalog import ordered_provider_specs
-from .providers import _cloakbrowser
+from .providers.browser_runtime import (
+    BrowserRuntimeConfig,
+    ensure_runtime_ready,
+    load_runtime_config,
+    save_storage_state,
+    storage_state_path,
+)
+from .providers.browser_runtime.paths import (
+    runtime_with_default_storage_profile,
+    storage_context_options,
+)
 from .providers.base import ProviderFailure
 from .reason_codes import ERROR
 from .runtime_browser import BrowserContextManager, browser_context_options
 from .utils import normalize_text, provider_display_name
-
-
-AMS_AUTH_URL = "https://journals.ametsoc.org/doi/10.1175/MWR-D-10-05037.1"
 
 
 @dataclass(frozen=True)
@@ -45,7 +51,6 @@ AUTH_TARGETS: Mapping[str, AuthTarget] = {
         doi="10.1073/pnas.2406303121",
         url="https://www.pnas.org/doi/full/10.1073/pnas.2406303121",
     ),
-    "ams": AuthTarget(doi="10.1175/mwr-d-10-05037.1", url=AMS_AUTH_URL),
     "mdpi": AuthTarget(
         doi="10.3390/membranes15030093",
         url="https://www.mdpi.com/2077-0375/15/3/93",
@@ -69,7 +74,6 @@ AUTH_TARGETS: Mapping[str, AuthTarget] = {
 }
 
 _LEGACY_AUTH_STORAGE_STATE_ENV_VARS = {
-    "ams": AMS_STORAGE_STATE_JSON_ENV_VAR,
     "wiley": WILEY_STORAGE_STATE_JSON_ENV_VAR,
 }
 
@@ -201,18 +205,19 @@ def _wait_for_manual_completion(
 
 
 def _runtime_with_auth_storage(
-    runtime: _cloakbrowser.CloakBrowserRuntimeConfig,
+    runtime: BrowserRuntimeConfig,
     *,
     env: Mapping[str, str],
     provider: str,
     storage_state_path: Path | None = None,
-) -> _cloakbrowser.CloakBrowserRuntimeConfig:
+) -> BrowserRuntimeConfig:
     updates: dict[str, object] = {}
     if storage_state_path is not None:
         updates["storage_state_path"] = storage_state_path.expanduser().resolve()
     if runtime.profile_dir is None and runtime.user_data_dir is None:
-        updates["user_data_dir"] = _cloakbrowser._default_provider_user_data_dir(
-            env,
+        runtime = runtime_with_default_storage_profile(
+            runtime,
+            env=env,
             provider=provider,
         )
     if not updates:
@@ -243,21 +248,20 @@ def authenticate_provider_profile(
     if browser_user_agent:
         runtime_env[BROWSER_USER_AGENT_ENV_VAR] = browser_user_agent
 
-    runtime = _cloakbrowser.load_runtime_config(
+    runtime = load_runtime_config(
         runtime_env,
         provider=provider_key,
         doi=auth_target.doi,
-        require_storage_state=False,
     )
     runtime = _runtime_with_auth_storage(
         runtime,
         env=runtime_env,
         provider=provider_key,
     )
-    _cloakbrowser.ensure_runtime_ready(runtime)
+    ensure_runtime_ready(runtime)
 
     profile_dir = runtime.profile_dir or runtime.user_data_dir
-    resolved_storage_state_path = _cloakbrowser._storage_state_path(runtime)
+    resolved_storage_state_path = storage_state_path(runtime)
     manager = None
     context = None
     page = None
@@ -274,7 +278,7 @@ def authenticate_provider_profile(
             headless=False,
             **browser_context_options(
                 user_agent=normalize_text(runtime.user_agent),
-                **_cloakbrowser._storage_context_options(runtime),
+                **storage_context_options(runtime),
             ),
         )
         page = context.new_page()
@@ -291,7 +295,7 @@ def authenticate_provider_profile(
             title = normalize_text(str(page.title() or "")) or None
         except Exception:
             title = None
-        _cloakbrowser._save_storage_state(
+        save_storage_state(
             context,
             runtime,
             filter_url=final_url or active_url,

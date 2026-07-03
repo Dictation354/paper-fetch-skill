@@ -356,10 +356,12 @@ class _ThreadLocalSharedDocumentFetcher:
         fetcher_factory: Callable[[], _BaseBrowserDocumentFetcher],
         log_event: str,
         requires_caller_thread: bool = False,
+        close_after_call: bool = True,
     ) -> None:
         self._fetcher_factory = fetcher_factory
         self._log_event = log_event
         self.requires_caller_thread = bool(requires_caller_thread)
+        self._close_after_call = bool(close_after_call)
         self._thread_local = threading.local()
         self._lock = threading.Lock()
         self._fetchers: list[_BaseBrowserDocumentFetcher] = []
@@ -400,11 +402,17 @@ class _ThreadLocalSharedDocumentFetcher:
                     with self._lock:
                         self._failure_by_url.pop(normalized_url, None)
             return payload
+        except Exception as exc:
+            if not self._close_after_call and _looks_like_thread_ownership_error(exc):
+                self._close_after_call = True
+                self._close_fetcher_for_current_thread(fetcher)
+            raise
         finally:
-            # Browser sync objects must be closed from their owning worker
-            # thread. Closing these thread-local fetchers later from the caller
-            # thread can leave Chromium subprocesses behind.
-            self._close_fetcher_for_current_thread(fetcher)
+            if self._close_after_call:
+                # Browser sync objects must be closed from their owning worker
+                # thread. Closing these thread-local fetchers later from the caller
+                # thread can leave Chromium subprocesses behind.
+                self._close_fetcher_for_current_thread(fetcher)
 
     def failure_for(self, source_url: str) -> dict[str, Any] | None:
         fetcher = getattr(self._thread_local, "fetcher", None)
@@ -438,3 +446,10 @@ class _ThreadLocalSharedDocumentFetcher:
             self._fetchers.clear()
         for fetcher in fetchers:
             fetcher.close()
+
+
+def _looks_like_thread_ownership_error(exc: Exception) -> bool:
+    text = normalize_text(str(exc)).lower()
+    return "thread" in text and (
+        "owner" in text or "same" in text or "greenlet" in text or "sync" in text
+    )

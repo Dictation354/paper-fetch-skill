@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from pathlib import Path
-import tempfile
 import unittest
 from unittest import mock
 
@@ -33,8 +31,6 @@ class ProviderStatusTests(unittest.TestCase):
             return AcsClient(DummyTransport(), env)
         if provider == "aip":
             return AipClient(DummyTransport(), env)
-        if provider == "ams":
-            return AmsClient(DummyTransport(), env)
         if provider == "science":
             return ScienceClient(DummyTransport(), env)
         if provider == "royalsocietypublishing":
@@ -183,49 +179,17 @@ class ProviderStatusTests(unittest.TestCase):
                 self.assertEqual(checks["runtime_env"].status, "ok")
                 self.assertEqual(checks["playwright_dependency"].status, "ok")
 
-    def test_ams_browser_runtime_allows_auto_managed_cdp_browser(self) -> None:
-        with mock.patch.object(
-            _cloakbrowser, "_dependency_available", return_value=True
-        ):
-            result = AmsClient(DummyTransport(), {}).probe_status()
+    def test_ams_status_has_no_browser_runtime_requirement(self) -> None:
+        with mock.patch.object(_cloakbrowser, "_dependency_available") as dependency:
+            result = AmsClient(DummyTransport(), dict(CDP_ENV)).probe_status()
         checks = {check.name: check for check in result.checks}
 
         self.assertEqual(result.status, "ready")
         self.assertTrue(result.available)
         self.assertEqual(result.missing_env, [])
-        self.assertEqual(checks["runtime_env"].status, "ok")
-        self.assertEqual(checks["playwright_dependency"].status, "ok")
-        self.assertTrue(checks["runtime_env"].details["auto_cdp_browser_enabled"])
-
-    def test_ams_browser_runtime_rejects_invalid_storage_state_json(self) -> None:
-        env = {**CDP_ENV, config.AMS_STORAGE_STATE_JSON_ENV_VAR: __file__}
-        with mock.patch.object(
-            _cloakbrowser, "_dependency_available", return_value=True
-        ):
-            result = AmsClient(DummyTransport(), env).probe_status()
-        checks = {check.name: check for check in result.checks}
-
-        self.assertEqual(result.status, "not_configured")
-        self.assertFalse(result.available)
-        self.assertEqual(checks["runtime_env"].status, "not_configured")
-        self.assertIn("valid JSON", checks["runtime_env"].message)
-
-    def test_ams_browser_runtime_ready_with_storage_state_json(self) -> None:
-        with tempfile.TemporaryDirectory() as tmpdir:
-            state_path = Path(tmpdir) / "ams-state.json"
-            state_path.write_text('{"cookies":[]}', encoding="utf-8")
-            env = {**CDP_ENV, config.AMS_STORAGE_STATE_JSON_ENV_VAR: str(state_path)}
-            with mock.patch.object(
-                _cloakbrowser, "_dependency_available", return_value=True
-            ):
-                result = AmsClient(DummyTransport(), env).probe_status()
-        checks = {check.name: check for check in result.checks}
-
-        self.assertEqual(result.status, "ready")
-        self.assertTrue(result.available)
-        self.assertEqual(result.missing_env, [])
-        self.assertEqual(checks["runtime_env"].status, "ok")
-        self.assertEqual(checks["playwright_dependency"].status, "ok")
+        self.assertEqual(list(checks), ["local_requirements"])
+        self.assertEqual(checks["local_requirements"].status, "ok")
+        dependency.assert_not_called()
 
     def test_browser_workflow_providers_missing_cloakbrowser_are_not_configured(
         self,
@@ -233,7 +197,6 @@ class ProviderStatusTests(unittest.TestCase):
         for provider in (
             "science",
             "pnas",
-            "ams",
             "acs",
             "aip",
             "royalsocietypublishing",

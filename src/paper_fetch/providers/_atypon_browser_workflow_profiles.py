@@ -222,6 +222,8 @@ def build_pdf_candidates(
     normalized = normalize_text(publisher).lower()
     if _publisher_module(normalized) is None:
         raise ValueError(_unsupported_atypon_publisher_message("PDF", publisher))
+    if normalized == "ams":
+        return []
     crossref_pdf_position = provider_crossref_pdf_position(normalized)
     return build_browser_workflow_pdf_candidates(
         doi,

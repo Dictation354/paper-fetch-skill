@@ -10,7 +10,7 @@
 这份文档不解决：
 
 - provider 差异、路由规则和限速语义
-- Wiley / Science / PNAS / AMS / Annual Reviews / Royal Society Publishing / ACS / IOP / AIP / MDPI 的浏览器运行时细节
+- Wiley / Science / PNAS / Annual Reviews / Royal Society Publishing / ACS / IOP / AIP / MDPI 的浏览器运行时细节，以及 AMS direct HTTP HTML/PDF 路径
 - 架构实现细节
 
 provider 与环境变量说明见 [`providers.md`](providers.md)，架构说明见 [`architecture/overview.md`](architecture/overview.md)。
@@ -329,7 +329,7 @@ scripts/clean-local-artifacts.sh --days 7
 
 `ieee` 不需要 IEEE API key；它走 `landing metadata / article number -> direct REST HTML -> clean-browser HTML -> direct HTTP PDF fallback -> seeded-browser PDF fallback`，但全文是否可用仍取决于当前环境对 IEEE Xplore 的合法访问上下文。clean-browser HTML 使用新的 CDP browser context，不读取本机浏览器 profile、不复用用户登录态、不自动登录、不处理验证码，也不绕过访问权限。direct HTTP PDF 返回 `stamp.jsp` HTML wrapper 或 access/challenge 页面时，seeded-browser PDF fallback 只复用当前页面运行期间获得的合法 IEEE cookies/session。
 
-`wiley`、`science`、`pnas`、`annualreviews`、`royalsocietypublishing`、`acs`、`iop`、`aip`、`mdpi` 默认通过 CDP browser workflow 进入 provider-owned browser workflow；`ams` 会先尝试带浏览器 UA/Referer 的 direct HTTP HTML preflight，失败后才进入同一 CDP browser fallback。显式配置 `CLOAKBROWSER_CDP_ENDPOINT` 时复用已运行浏览器并借用现有 browser context；未配置时自动通过 cloakbrowser 下载/定位 Chrome 并启动受控本机 CDP 浏览器，同一进程内按 runtime/browser 配置复用一个 keyed browser manager，批量并发任务不会为同一个 provider profile 启动多个 Chrome 去抢 profile lock。HTML 与 PDF fallback 会打开隔离 context/page，并在调用线程建立自己的 CDP 连接；browser-backed 资产下载会串行化以避免跨线程复用 Playwright sync 对象，普通 HTTP 资产下载仍按配置并发。是否能拿到全文仍取决于 publisher 访问权限、paywall/challenge 与远端站点行为。
+`wiley`、`science`、`pnas`、`annualreviews`、`royalsocietypublishing`、`acs`、`iop`、`aip`、`mdpi` 默认通过 CDP browser workflow 进入 provider-owned browser workflow；`ams` 只使用带浏览器 UA/Referer 的 direct HTTP HTML 主路径和 direct HTTP `downloadpdf` PDF fallback，不进入 CDP browser HTML 或 seeded-browser PDF fallback。显式配置 `CLOAKBROWSER_CDP_ENDPOINT` 时复用已运行浏览器并借用现有 browser context；未配置时自动通过 cloakbrowser 下载/定位 Chrome 并启动受控本机 CDP 浏览器，同一进程内按 runtime/browser 配置复用一个 keyed browser manager，批量并发任务不会为同一个 provider profile 启动多个 Chrome 去抢 profile lock。HTML 与 PDF fallback 会打开隔离 context/page，并在调用线程建立自己的 CDP 连接；browser-backed 资产下载会串行化以避免跨线程复用 Playwright sync 对象，普通 HTTP 资产下载仍按配置并发。是否能拿到全文仍取决于 publisher 访问权限、paywall/challenge 与远端站点行为。
 
 需要复用手动验证过的浏览器时，可启动带 DevTools 端口的浏览器并设置 endpoint：
 
@@ -350,7 +350,7 @@ paper-fetch auth <provider>
 paper-fetch auth wiley --url "https://onlinelibrary.wiley.com/doi/full/10.1111/example"
 ```
 
-`provider` 来自 browser runtime catalog，例如 `wiley` / `science` / `pnas` / `ams` / `annualreviews` / `acs` / `iop` / `aip` / `mdpi`。未传 `--url` 时打开内置样例文章；传入 `--url` 时打开具体失败文章页。命令强制 headed 模式，打印 managed Chrome 启动目录和 storage-state 路径，终端按 Enter 后保存过滤后的本地 storage-state 并退出；包括 AMS 在内都默认使用 `publisher-browser-profiles/<provider>/storage-state.json`，不写 `.env`。
+`provider` 来自 browser runtime catalog，例如 `wiley` / `science` / `pnas` / `annualreviews` / `acs` / `iop` / `aip` / `mdpi`。未传 `--url` 时打开内置样例文章；传入 `--url` 时打开具体失败文章页。命令强制 headed 模式，打印 managed Chrome 启动目录和 storage-state 路径，终端按 Enter 后保存过滤后的本地 storage-state 并退出，不写 `.env`。AMS 主路径是 direct HTTP HTML，不支持 `paper-fetch auth ams`。
 
 这些浏览器 HTML route 会在 challenge/paywall 判定前先等待正文 DOM 稳定；如果正文已经可抽取，页面残留的 Cloudflare/challenge 文案不会提前中断 HTML route，最终全文/摘要/降级结论仍由 Markdown 抽取后的 availability 判定负责。
 
@@ -369,14 +369,13 @@ export CLOAKBROWSER_PROFILE_DIR="$HOME/.cache/paper-fetch/browser-profile"
 
 补充：
 
-- `wiley` / `science` / `pnas` / `annualreviews` / `acs` / `iop` / `aip` / `mdpi` 需要本地 browser runtime；`ams` direct HTTP preflight 成功时不启动 browser runtime，但 browser/PDF fallback、headed auth 和 provider status 仍使用该 runtime。`CLOAKBROWSER_CDP_ENDPOINT` 可显式复用外部浏览器，未设置时自动启动 cloakbrowser Chrome，并默认按 publisher 复用本地 storage-state
+- `wiley` / `science` / `pnas` / `annualreviews` / `acs` / `iop` / `aip` / `mdpi` 需要本地 browser runtime；`ams` direct HTTP HTML/PDF 路径不启动 browser runtime，也不参与 `paper-fetch auth` / `browser-preflight`。`CLOAKBROWSER_CDP_ENDPOINT` 可显式复用外部浏览器，未设置时自动启动 cloakbrowser Chrome，并默认按 publisher 复用本地 storage-state
 - `paper-fetch auth <provider>` 是自动过盾失败后的人工 headed fallback；storage-state 只保存本机辅助状态，不绕过权限，也不作为正常抓取的必要条件
-- `PAPER_FETCH_AMS_STORAGE_STATE_JSON` 是可选 storage-state override；`paper-fetch auth ams` 默认复用 `publisher-browser-profiles/ams/storage-state.json`
 - `elsevier` 只需要 `ELSEVIER_API_KEY`
 - `ieee` 不需要额外 env；普通 fetch 在无授权或 REST/browser/PDF route 返回非全文时会降级到 provider abstract-only / metadata-only；golden criteria live review 面向具备合法 IEEE Xplore 授权上下文的机器，IEEE 样本预期为 fulltext，降级会作为 blocked live fetch 暴露；配置了 `download_dir` 且 artifact mode 为 `all` 时 PDF fallback 的最后一个非 PDF HTML 会保存在 `ieee_pdf_fallback/pdf.failure.html`
 - `arxiv` 不需要额外 env；路径细节见 [`providers.md` 的 arXiv 小节](providers.md#arxiv)。
 - 如果只想启用 `wiley` 的官方 TDM API PDF lane，可以只配置 `WILEY_TDM_CLIENT_TOKEN`；这不会启用 HTML 资产下载或 seeded-browser PDF/ePDF fallback
-- `wiley` / `science` / `pnas` / `ams` / `annualreviews` / `acs` / `iop` / `aip` / `mdpi` 的 browser workflow 顺序见 [`providers.md`](providers.md#wiley-science-pnas-browser-workflow)。
+- `wiley` / `science` / `pnas` / `annualreviews` / `acs` / `iop` / `aip` / `mdpi` 的 browser workflow 顺序见 [`providers.md`](providers.md#wiley-science-pnas-browser-workflow)；AMS 的 direct HTTP HTML/PDF 顺序见同页 AMS 小节。
 
 ## 5. 部署到 Codex
 
@@ -500,7 +499,7 @@ PYTHONPATH=src python3 -m pytest tests/unit -q --cov=paper_fetch --cov-report=te
 PAPER_FETCH_RUN_FULL_GOLDEN=1 PYTHONPATH=src python3 -m pytest tests/integration/test_golden_corpus.py -q
 ```
 
-未设置 `PAPER_FETCH_RUN_LIVE=1` 时，`tests/live/test_live_publishers.py` 和 `tests/live/test_live_mcp.py` 应稳定 skip。额外验证 live smoke 时，`arxiv` 不需要凭据或 browser runtime；`wiley` / `science` / `pnas` / `annualreviews` / `acs` / `iop` / `aip` / `mdpi` 需要可用 browser runtime，默认会自动启动 cloakbrowser Chrome 并按 publisher 复用 storage-state；`ams` direct HTTP HTML preflight 成功时不需要 browser runtime，但 CDP browser/PDF fallback 仍需要 runtime。如需复用已验证浏览器，可设置 `CLOAKBROWSER_CDP_ENDPOINT`。`PAPER_FETCH_AMS_STORAGE_STATE_JSON` 可覆盖 AMS storage-state；`ieee` 不需要 IEEE API key，但 IEEE fulltext smoke 预期当前机器具备合法 IEEE Xplore 访问上下文。live 测试依赖真实 publisher/API/browser/授权上下文和外部限流状态，建议串行运行：
+未设置 `PAPER_FETCH_RUN_LIVE=1` 时，`tests/live/test_live_publishers.py` 和 `tests/live/test_live_mcp.py` 应稳定 skip。额外验证 live smoke 时，`arxiv` 和 `ams` 不需要凭据或 browser runtime；`wiley` / `science` / `pnas` / `annualreviews` / `acs` / `iop` / `aip` / `mdpi` 需要可用 browser runtime，默认会自动启动 cloakbrowser Chrome 并按 publisher 复用 storage-state；如需复用已验证浏览器，可设置 `CLOAKBROWSER_CDP_ENDPOINT`。`ieee` 不需要 IEEE API key，但 IEEE fulltext smoke 预期当前机器具备合法 IEEE Xplore 访问上下文。live 测试依赖真实 publisher/API/browser/授权上下文和外部限流状态，建议串行运行：
 
 ```bash
 PAPER_FETCH_RUN_LIVE=1 PYTHONPATH=src python3 -m pytest tests/live/test_live_publishers.py tests/live/test_live_mcp.py -q -n 0

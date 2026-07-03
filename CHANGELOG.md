@@ -6,6 +6,18 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+### Changed
+
+- Changed browser-backed providers to use the public `browser_runtime` backend facade, centralizing CloakBrowser storage/profile path resolution, storage-state locking, and atomic storage-state writes across auth, preflight, HTML fetch, and seeded PDF fallback.
+- Changed external CDP handling to report borrowed-context diagnostics and support `PAPER_FETCH_CDP_EXTERNAL_NEW_CONTEXT=1` for creating a fresh context in an existing browser.
+- Changed browser-backed asset downloads to reuse a scoped thread-local page/context during safe caller-thread attempts, with automatic fallback to per-call close on Playwright thread-ownership errors.
+- Added cooperative cancellation checks to browser HTML, seeded PDF fallback, browser asset retry, and browser preflight loops.
+- Changed `paper-fetch browser-preflight` to reuse each browser-backed provider's normal HTML candidates and HTML bootstrap retry semantics for built-in samples while still skipping PDF fallback.
+- Removed the PNAS fast browser HTML preflight special case; PNAS now uses the standard browser workflow HTML bootstrap before seeded PDF fallback.
+- Changed AMS to a no-browser direct HTTP HTML provider with direct HTTP PDF fallback, publishing `ams_html` or `ams_pdf` while still skipping browser auth/preflight/status and seeded-browser PDF fallback.
+- Updated README, CLI/MCP instructions, provider/runtime/deployment/extraction docs, AMS onboarding manifest/access-review/cleaning-chain evidence, and the provider runtime optimization plan to match the new browser-runtime and AMS direct-HTTP ownership boundaries.
+- Expanded unit and integration coverage for AMS direct HTTP HTML/PDF fallback, browser-preflight provider candidates/no-PDF behavior, external-CDP new-context diagnostics, browser runtime facade wiring, and browser workflow dependency grouping.
+
 ## 2.8.0 - 2026-07-02
 
 ### Added

@@ -9,13 +9,11 @@ class AtyponBrowserWorkflowProviderHtmlTests(AtyponBrowserWorkflowProviderTestCa
         client = science_provider.ScienceClient(transport=None, env={})
         with tempfile.TemporaryDirectory() as tmpdir:
             runtime = self._runtime_config(tmpdir, "science", SCIENCE_SAMPLE.doi)
-            mocked_direct = mock.Mock()
             mocked_pdf = mock.Mock()
             install_browser_workflow_deps(
                 client,
                 load_runtime_config=mock.Mock(return_value=runtime),
                 ensure_runtime_ready=mock.Mock(),
-                fetch_html_with_fast_browser=mocked_direct,
                 fetch_html_with_browser=mock.Mock(
                     return_value=browser_runtime.BrowserFetchedHtml(
                         source_url=SCIENCE_SAMPLE.landing_url,
@@ -47,7 +45,6 @@ class AtyponBrowserWorkflowProviderHtmlTests(AtyponBrowserWorkflowProviderTestCa
             )
 
         mocked_pdf.assert_not_called()
-        mocked_direct.assert_not_called()
         self.assertEqual(_payload_route(raw_payload), "html")
         self.assertEqual(article.source, "science")
         self.assertIn("fulltext:science_html_ok", article.quality.source_trail)

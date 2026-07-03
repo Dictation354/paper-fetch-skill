@@ -6,7 +6,6 @@ import base64
 import importlib
 from importlib import metadata as importlib_metadata
 from importlib import util as importlib_util
-import json
 import logging
 import os
 import time
@@ -18,16 +17,13 @@ from urllib.parse import urlparse
 from bs4 import BeautifulSoup
 
 from ..config import (
-    AMS_STORAGE_STATE_JSON_ENV_VAR,
+    CDP_EXTERNAL_NEW_CONTEXT_ENV_VAR,
     CLOAKBROWSER_BINARY_PATH_ENV_VAR,
     CLOAKBROWSER_CDP_ENDPOINT_ENV_VAR,
     CLOAKBROWSER_HEADLESS_ENV_VAR,
-    CLOAKBROWSER_PROFILE_DIR_ENV_VAR,
     CLOAKBROWSER_TIMEOUT_MS_ENV_VAR,
-    CLOAKBROWSER_USER_DATA_DIR_ENV_VAR,
-    WILEY_STORAGE_STATE_JSON_ENV_VAR,
-    WILEY_PROFILE_DIR_ENV_VAR,
     build_browser_user_agent,
+    env_flag_enabled,
     parse_positive_int_env,
     resolve_user_data_dir,
 )
@@ -35,6 +31,7 @@ from ..extraction.image_payloads import (
     image_dimensions_from_bytes,
     image_mime_type_from_bytes,
 )
+from ..http import RequestCancelledError
 from ..extraction.html.signals import detect_html_block, summarize_html
 from ..quality.html_availability import choose_parser, extract_page_title
 from ..quality.html_signals import looks_like_abstract_redirect
@@ -44,9 +41,9 @@ from ..runtime_browser import (
     BrowserContextManager,
     browser_context_options,
     browser_page_user_agent,
-    is_borrowed_browser_context,
 )
 from ..utils import normalize_text, provider_display_name, sanitize_filename
+from .browser_runtime import paths as runtime_paths
 from .browser_runtime.seed import (
     filter_browser_cookies_for_url,
     merge_browser_context_seeds,
@@ -151,45 +148,21 @@ def _configured_cdp_endpoint(env: Mapping[str, str]) -> str | None:
 
 
 def _configured_user_data_dir(env: Mapping[str, str]) -> Path | None:
-    value = env.get(CLOAKBROWSER_USER_DATA_DIR_ENV_VAR, "").strip()
-    return Path(value).expanduser() if value else None
+    return runtime_paths.configured_user_data_dir(env)
 
 
 def _default_provider_user_data_dir(env: Mapping[str, str], *, provider: str) -> Path:
-    provider_key = sanitize_filename(normalize_text(provider).lower() or "browser")
-    return resolve_user_data_dir(env) / "publisher-browser-profiles" / provider_key
-
-
-_PROVIDER_PROFILE_DIR_ENV_VARS = {
-    "wiley": WILEY_PROFILE_DIR_ENV_VAR,
-}
+    return runtime_paths.default_provider_user_data_dir(env, provider=provider)
 
 
 def _configured_profile_dir(env: Mapping[str, str], *, provider: str) -> Path | None:
-    provider_key = normalize_text(provider).lower()
-    provider_env_var = _PROVIDER_PROFILE_DIR_ENV_VARS.get(provider_key)
-    if provider_env_var is not None:
-        provider_value = env.get(provider_env_var, "").strip()
-        if provider_value:
-            return Path(provider_value).expanduser()
-    value = env.get(CLOAKBROWSER_PROFILE_DIR_ENV_VAR, "").strip()
-    return Path(value).expanduser() if value else None
-
-
-_PROVIDER_STORAGE_STATE_ENV_VARS = {
-    "ams": AMS_STORAGE_STATE_JSON_ENV_VAR,
-    "wiley": WILEY_STORAGE_STATE_JSON_ENV_VAR,
-}
+    return runtime_paths.configured_profile_dir(env, provider=provider)
 
 
 def _configured_storage_state_path(
     env: Mapping[str, str], *, provider: str
 ) -> Path | None:
-    env_var = _PROVIDER_STORAGE_STATE_ENV_VARS.get(normalize_text(provider).lower())
-    if env_var is None:
-        return None
-    value = env.get(env_var, "").strip()
-    return Path(value).expanduser() if value else None
+    return runtime_paths.configured_storage_state_path(env, provider=provider)
 
 
 def _validate_binary_path(
@@ -232,32 +205,11 @@ def _validate_storage_state_path(
     provider: str,
     require_storage_state: bool,
 ) -> None:
-    env_var = _PROVIDER_STORAGE_STATE_ENV_VARS.get(normalize_text(provider).lower())
-    if storage_state_path is None:
-        return
-    if not storage_state_path.is_file() and not require_storage_state:
-        return
-    env_label = env_var or "storage-state JSON"
-    if not storage_state_path.is_file():
-        raise ProviderFailure(
-            NOT_CONFIGURED,
-            (
-                f"{env_label} is set but does not point to a readable "
-                f"storage-state JSON file: {storage_state_path}"
-            ),
-        )
-    try:
-        payload = json.loads(storage_state_path.read_text(encoding="utf-8"))
-    except Exception as exc:
-        raise ProviderFailure(
-            NOT_CONFIGURED,
-            f"{env_label} is not valid JSON: {storage_state_path}",
-        ) from exc
-    if not isinstance(payload, Mapping):
-        raise ProviderFailure(
-            NOT_CONFIGURED,
-            f"{env_label} must point to a JSON object: {storage_state_path}",
-        )
+    runtime_paths.validate_storage_state_path(
+        storage_state_path,
+        provider=provider,
+        require_storage_state=require_storage_state,
+    )
 
 
 def load_runtime_config(
@@ -301,6 +253,7 @@ def load_runtime_config(
         ),
         binary_path=binary_path,
         cdp_endpoint=cdp_endpoint,
+        external_new_context=env_flag_enabled(env, CDP_EXTERNAL_NEW_CONTEXT_ENV_VAR),
         profile_dir=profile_dir,
         user_data_dir=user_data_dir,
         storage_state_path=storage_state_path,
@@ -345,6 +298,11 @@ def _runtime_probe_details(
         ),
         "cdp_endpoint_configured": bool(
             config.cdp_endpoint if config is not None else _configured_cdp_endpoint(env)
+        ),
+        "cdp_external_new_context": (
+            config.external_new_context
+            if config is not None
+            else env_flag_enabled(env, CDP_EXTERNAL_NEW_CONTEXT_ENV_VAR)
         ),
         "profile_dir_configured": bool(
             config.profile_dir
@@ -729,64 +687,28 @@ def _safe_close(value: Any) -> None:
         value.close()
 
 
+def _raise_if_cancelled(runtime_context: RuntimeContext | None) -> None:
+    cancel_check = getattr(runtime_context, "cancel_check", None)
+    if callable(cancel_check) and cancel_check() is True:
+        raise RequestCancelledError("Request cancelled.")
+
+
 def _storage_state_path(config: CloakBrowserRuntimeConfig) -> Path | None:
-    if config.storage_state_path is not None:
-        return config.storage_state_path
-    profile_dir = config.profile_dir or config.user_data_dir
-    if profile_dir is None:
-        return None
-    return Path(profile_dir).expanduser() / "storage-state.json"
+    return runtime_paths.storage_state_path(config)
 
 
 def _storage_context_options(config: CloakBrowserRuntimeConfig) -> dict[str, Any]:
-    storage_state_path = _storage_state_path(config)
-    if storage_state_path is None or not storage_state_path.is_file():
-        return {}
-    return {"storage_state": str(storage_state_path)}
+    return runtime_paths.storage_context_options(config)
 
 
 def _storage_origin_matches_url(origin: Mapping[str, Any], url: str | None) -> bool:
-    origin_url = normalize_text(str(origin.get("origin") or ""))
-    target_url = normalize_text(url)
-    if not origin_url or not target_url:
-        return True
-    try:
-        from urllib.parse import urlparse
-
-        origin_host = normalize_text(urlparse(origin_url).hostname or "").lower()
-        target_host = normalize_text(urlparse(target_url).hostname or "").lower()
-    except Exception:
-        return True
-    return bool(
-        origin_host
-        and target_host
-        and (origin_host == target_host or target_host.endswith(f".{origin_host}"))
-    )
+    return runtime_paths.storage_origin_matches_url(origin, url)
 
 
 def _filtered_storage_state_payload(
     context: Any, *, url: str
 ) -> Mapping[str, Any] | None:
-    try:
-        payload = context.storage_state()
-    except TypeError:
-        return None
-    except Exception:
-        return None
-    if not isinstance(payload, Mapping):
-        return None
-    filtered = dict(payload)
-    payload_cookies = payload.get("cookies")
-    cookies = payload_cookies if isinstance(payload_cookies, list) else []
-    filtered["cookies"] = filter_browser_cookies_for_url(cookies, url)
-    payload_origins = payload.get("origins")
-    origins = payload_origins if isinstance(payload_origins, list) else []
-    filtered["origins"] = [
-        origin
-        for origin in origins
-        if isinstance(origin, Mapping) and _storage_origin_matches_url(origin, url)
-    ]
-    return filtered
+    return runtime_paths.filtered_storage_state_payload(context, url=url)
 
 
 def _save_storage_state(
@@ -794,35 +716,15 @@ def _save_storage_state(
     config: CloakBrowserRuntimeConfig,
     *,
     filter_url: str | None = None,
-) -> None:
-    storage_state_path = _storage_state_path(config)
-    if context is None or storage_state_path is None:
-        return
-    if is_borrowed_browser_context(context) and not normalize_text(filter_url):
-        return
-    try:
-        storage_state_path.parent.mkdir(parents=True, exist_ok=True)
-        active_filter_url = normalize_text(filter_url)
-        if active_filter_url:
-            filtered_payload = _filtered_storage_state_payload(
-                context, url=active_filter_url
-            )
-            if filtered_payload is not None:
-                storage_state_path.write_text(
-                    json.dumps(filtered_payload, ensure_ascii=False, indent=2),
-                    encoding="utf-8",
-                )
-                return
-            if is_borrowed_browser_context(context):
-                return
-        context.storage_state(path=str(storage_state_path))
-    except Exception:
+) -> dict[str, Any]:
+    result = runtime_paths.save_storage_state(context, config, filter_url=filter_url)
+    if result.get("attempted") and not result.get("saved"):
         logger.debug(
             "cloakbrowser_storage_state provider=%s action=save_failed path=%s",
             config.provider,
-            storage_state_path,
-            exc_info=True,
+            result.get("path"),
         )
+    return result
 
 
 def fetch_html_with_cloakbrowser(
@@ -852,12 +754,25 @@ def fetch_html_with_cloakbrowser(
     timeout_ms = max_timeout_ms or config.timeout_ms
     artifact_dir = config.artifact_dir / "cloakbrowser"
     configured_user_agent = normalize_text(config.user_agent)
+    trace: dict[str, Any] = {
+        "backend": "cloakbrowser",
+        "candidate_count": len(candidate_urls),
+        "candidates": [],
+        "media_blocking": bool(disable_media),
+        "return_image_payload": bool(return_image_payload),
+        "return_screenshot": bool(return_screenshot),
+        "external_cdp": bool(config.cdp_endpoint),
+        "storage_state_path": str(_storage_state_path(config) or ""),
+    }
+    overall_started = time.monotonic()
 
     manager = None
     browser_context = None
     page = None
     try:
+        _raise_if_cancelled(runtime_context)
         try:
+            connect_started = time.monotonic()
             context_kwargs = browser_context_options(
                 user_agent=configured_user_agent,
                 **_storage_context_options(config),
@@ -870,6 +785,7 @@ def fetch_html_with_cloakbrowser(
                         headless=config.headless,
                         binary_path=config.binary_path,
                         cdp_endpoint=config.cdp_endpoint,
+                        external_new_context=config.external_new_context,
                         profile_dir=config.profile_dir,
                         user_data_dir=config.user_data_dir,
                         **context_kwargs,
@@ -883,17 +799,33 @@ def fetch_html_with_cloakbrowser(
                 manager = BrowserContextManager(
                     binary_path=config.binary_path,
                     cdp_endpoint=config.cdp_endpoint,
+                    external_new_context=config.external_new_context,
                     profile_dir=config.profile_dir,
                     user_data_dir=config.user_data_dir,
                 )
                 browser_context = manager.new_context(
                     headless=config.headless, **context_kwargs
                 )
+            trace["cdp_connect_seconds"] = round(time.monotonic() - connect_started, 3)
+            external_diagnostics = getattr(
+                browser_context, "_paper_fetch_external_cdp_diagnostics", None
+            )
+            if isinstance(external_diagnostics, Mapping):
+                trace["external_cdp_context"] = dict(external_diagnostics)
+            elif config.cdp_endpoint:
+                trace["external_cdp_context"] = {
+                    "external_cdp": True,
+                    "borrowed_existing_context": None,
+                    "ignored_context_options": [],
+                    "storage_state_cookie_count": None,
+                }
             page = browser_context.new_page()
         except Exception as exc:
+            trace["cdp_connect_seconds"] = round(time.monotonic() - connect_started, 3)
             raise CloakBrowserFailure(
                 "cdp_browser_connection_failed",
                 normalize_text(str(exc)) or "CDP browser connection failed.",
+                details={"trace": trace},
             ) from exc
 
         def route_handler(route: Any) -> None:
@@ -917,9 +849,16 @@ def fetch_html_with_cloakbrowser(
                 page.route("**/*", route_handler)
 
         for url in candidate_urls:
+            _raise_if_cancelled(runtime_context)
             normalized_url = normalize_text(url)
             if not normalized_url:
                 continue
+            candidate_trace: dict[str, Any] = {
+                "url": normalized_url,
+                "started_at": round(time.time(), 3),
+            }
+            trace["candidates"].append(candidate_trace)
+            candidate_started = time.monotonic()
             try:
                 logger.debug(
                     "cloakbrowser_request provider=%s action=request wait_seconds=%s url=%s",
@@ -962,6 +901,9 @@ def fetch_html_with_cloakbrowser(
                         wait_until="domcontentloaded",
                         timeout=timeout_ms,
                     )
+                candidate_trace["navigation_seconds"] = round(
+                    time.monotonic() - request_started, 3
+                )
                 if top_level_response is None:
                     top_level_response = response
                 if return_image_payload:
@@ -969,11 +911,13 @@ def fetch_html_with_cloakbrowser(
                         setattr(page, _IMAGE_PAYLOAD_RESPONSE_ATTR, top_level_response)
                 readiness = None
                 if not return_image_payload:
+                    _raise_if_cancelled(runtime_context)
                     remaining_timeout_seconds = max(
                         0.0,
                         (float(timeout_ms) / 1000.0)
                         - (time.monotonic() - request_started),
                     )
+                    readiness_started = time.monotonic()
                     readiness = wait_for_atypon_body_dom_ready(
                         page,
                         publisher,
@@ -982,7 +926,13 @@ def fetch_html_with_cloakbrowser(
                             remaining_timeout_seconds,
                         ),
                     )
+                    candidate_trace["dom_readiness_seconds"] = round(
+                        time.monotonic() - readiness_started, 3
+                    )
+                    candidate_trace["dom_readiness_attempted"] = readiness.attempted
+                    candidate_trace["dom_readiness_ready"] = readiness.ready
                 if (readiness is None or not readiness.attempted) and wait_seconds > 0:
+                    _raise_if_cancelled(runtime_context)
                     page.wait_for_timeout(max(0, int(wait_seconds)) * 1000)
                 final_url = (
                     normalize_text(str(getattr(page, "url", "") or ""))
@@ -995,6 +945,8 @@ def fetch_html_with_cloakbrowser(
                 )
                 status = _browser_response_status(response, zero_as_none=False)
                 headers = _browser_response_headers(response)
+                candidate_trace["status"] = status
+                candidate_trace["final_url"] = final_url
                 summary = summarize_html(html)
                 browser_context_seed = _context_seed(
                     browser_context,
@@ -1021,21 +973,41 @@ def fetch_html_with_cloakbrowser(
                         headers["x-paper-fetch-image-payload-failure-reason"] = (
                             normalize_text(str(image_failure.get("reason") or ""))
                         )
+            except RequestCancelledError:
+                candidate_trace["duration_seconds"] = round(
+                    time.monotonic() - candidate_started,
+                    3,
+                )
+                candidate_trace["error"] = "cancelled"
+                raise
             except Exception as exc:
+                candidate_trace["duration_seconds"] = round(
+                    time.monotonic() - candidate_started,
+                    3,
+                )
+                candidate_trace["error"] = (
+                    normalize_text(str(exc)) or exc.__class__.__name__
+                )
                 if isinstance(exc, CloakBrowserFailure):
                     last_failure = exc
                 else:
                     last_failure = CloakBrowserFailure(
                         "cloakbrowser_request_failed",
                         normalize_text(str(exc)) or "CloakBrowser page request failed.",
+                        details={"trace": trace},
                     )
                 continue
 
             if looks_like_abstract_redirect(normalized_url, final_url):
+                candidate_trace["duration_seconds"] = round(
+                    time.monotonic() - candidate_started, 3
+                )
+                candidate_trace["block_reason"] = REDIRECTED_TO_ABSTRACT
                 last_failure = CloakBrowserFailure(
                     REDIRECTED_TO_ABSTRACT,
                     "Publisher redirected the full-text URL to an abstract page.",
                     browser_context_seed=browser_context_seed,
+                    details={"trace": trace},
                 )
                 continue
 
@@ -1045,17 +1017,27 @@ def fetch_html_with_cloakbrowser(
                 else detect_html_block(title or "", summary, status)
             )
             if detected is not None and not return_image_payload:
+                candidate_trace["duration_seconds"] = round(
+                    time.monotonic() - candidate_started, 3
+                )
+                candidate_trace["block_reason"] = detected.reason
                 last_failure = CloakBrowserFailure(
                     detected.reason,
                     detected.message,
                     browser_context_seed=browser_context_seed,
+                    details={"trace": trace},
                 )
                 continue
             if not normalize_text(html) and image_payload is None:
+                candidate_trace["duration_seconds"] = round(
+                    time.monotonic() - candidate_started, 3
+                )
+                candidate_trace["block_reason"] = "empty_html_response"
                 last_failure = CloakBrowserFailure(
                     "empty_html_response",
                     "CloakBrowser returned empty publisher HTML.",
                     browser_context_seed=browser_context_seed,
+                    details={"trace": trace},
                 )
                 continue
 
@@ -1071,6 +1053,10 @@ def fetch_html_with_cloakbrowser(
                         screenshot_b64 = screenshot_payload
                 except Exception:
                     screenshot_b64 = None
+            candidate_trace["duration_seconds"] = round(
+                time.monotonic() - candidate_started, 3
+            )
+            candidate_trace["result"] = "success"
             return BrowserFetchedHtml(
                 source_url=normalized_url,
                 final_url=final_url,
@@ -1082,11 +1068,21 @@ def fetch_html_with_cloakbrowser(
                 browser_context_seed=browser_context_seed,
                 screenshot_b64=screenshot_b64,
                 image_payload=image_payload,
+                diagnostics={"browser_runtime_trace": trace},
             )
     finally:
-        _save_storage_state(
+        trace["storage_state_save"] = _save_storage_state(
             browser_context, config, filter_url=latest_storage_state_url
         )
+        trace["duration_seconds"] = round(time.monotonic() - overall_started, 3)
+        if runtime_context is not None and hasattr(
+            runtime_context, "accumulate_stage_timing"
+        ):
+            with contextlib.suppress(Exception):
+                runtime_context.accumulate_stage_timing(
+                    "browser_seconds",
+                    elapsed=time.monotonic() - overall_started,
+                )
         _safe_close(page)
         _safe_close(browser_context)
         _safe_close(manager)
@@ -1096,10 +1092,13 @@ def fetch_html_with_cloakbrowser(
             "empty_html_attempts",
             "No publisher HTML candidates were attempted.",
             browser_context_seed=latest_browser_context_seed,
+            details={"trace": trace},
         )
     if last_failure is None:
         last_failure = CloakBrowserFailure(
-            "empty_html_attempts", "No publisher HTML candidates were attempted."
+            "empty_html_attempts",
+            "No publisher HTML candidates were attempted.",
+            details={"trace": trace},
         )
     if artifact_dir:
         with contextlib.suppress(OSError):

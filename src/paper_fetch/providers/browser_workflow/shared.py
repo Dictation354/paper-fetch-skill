@@ -38,7 +38,6 @@ _BROWSER_WORKFLOW_DEP_FIELDS = (
     "extract_atypon_browser_workflow_markdown",
     "pdf_browser_context_seed",
     "refresh_browser_context_seed",
-    "fetch_html_with_fast_browser",
     "_cached_browser_workflow_markdown",
     "_cached_browser_workflow_assets",
     "_assets_matching_download_failures",
@@ -63,7 +62,6 @@ class BrowserWorkflowDeps:
     extract_atypon_browser_workflow_markdown: Callable[..., Any]
     pdf_browser_context_seed: Callable[..., Any]
     refresh_browser_context_seed: Callable[..., Any]
-    fetch_html_with_fast_browser: Callable[..., Any]
     _cached_browser_workflow_markdown: Callable[..., Any]
     _cached_browser_workflow_assets: Callable[..., Any]
     _assets_matching_download_failures: Callable[..., Any]
@@ -85,6 +83,93 @@ class BrowserWorkflowDeps:
 
         for name in _BROWSER_WORKFLOW_DEP_FIELDS:
             object.__setattr__(self, name, values[name])
+
+    @property
+    def runtime(self) -> BrowserRuntimeDeps:
+        return BrowserRuntimeDeps(
+            load_runtime_config=self.load_runtime_config,
+            ensure_runtime_ready=self.ensure_runtime_ready,
+            probe_runtime_status=self.probe_runtime_status,
+            fetch_html_with_browser=self.fetch_html_with_browser,
+            warm_browser_context=self.warm_browser_context,
+        )
+
+    @property
+    def html(self) -> BrowserHtmlDeps:
+        return BrowserHtmlDeps(
+            bootstrap_browser_workflow=self.bootstrap_browser_workflow,
+            extract_atypon_browser_workflow_markdown=self.extract_atypon_browser_workflow_markdown,
+            _cached_browser_workflow_markdown=self._cached_browser_workflow_markdown,
+        )
+
+    @property
+    def pdf(self) -> BrowserPdfDeps:
+        return BrowserPdfDeps(
+            fetch_seeded_browser_pdf_payload=self.fetch_seeded_browser_pdf_payload,
+            fetch_pdf_with_browser=self.fetch_pdf_with_browser,
+            pdf_browser_context_seed=self.pdf_browser_context_seed,
+        )
+
+    @property
+    def assets(self) -> BrowserAssetDeps:
+        return BrowserAssetDeps(
+            download_assets=self.download_assets,
+            split_body_and_supplementary_assets=self.split_body_and_supplementary_assets,
+            _build_shared_browser_file_fetcher=self._build_shared_browser_file_fetcher,
+            _build_shared_browser_image_fetcher=self._build_shared_browser_image_fetcher,
+            refresh_browser_context_seed=self.refresh_browser_context_seed,
+            _cached_browser_workflow_assets=self._cached_browser_workflow_assets,
+            _assets_matching_download_failures=self._assets_matching_download_failures,
+            _browser_workflow_image_download_candidates=self._browser_workflow_image_download_candidates,
+        )
+
+    @property
+    def cache(self) -> BrowserCacheDeps:
+        return BrowserCacheDeps(
+            _cached_browser_workflow_markdown=self._cached_browser_workflow_markdown,
+            _cached_browser_workflow_assets=self._cached_browser_workflow_assets,
+        )
+
+
+@dataclass(frozen=True)
+class BrowserRuntimeDeps:
+    load_runtime_config: Callable[..., Any]
+    ensure_runtime_ready: Callable[..., Any]
+    probe_runtime_status: Callable[..., Any]
+    fetch_html_with_browser: Callable[..., Any]
+    warm_browser_context: Callable[..., Any]
+
+
+@dataclass(frozen=True)
+class BrowserHtmlDeps:
+    bootstrap_browser_workflow: Callable[..., Any]
+    extract_atypon_browser_workflow_markdown: Callable[..., Any]
+    _cached_browser_workflow_markdown: Callable[..., Any]
+
+
+@dataclass(frozen=True)
+class BrowserPdfDeps:
+    fetch_seeded_browser_pdf_payload: Callable[..., Any]
+    fetch_pdf_with_browser: Callable[..., Any]
+    pdf_browser_context_seed: Callable[..., Any]
+
+
+@dataclass(frozen=True)
+class BrowserAssetDeps:
+    download_assets: Callable[..., Any]
+    split_body_and_supplementary_assets: Callable[..., Any]
+    _build_shared_browser_file_fetcher: Callable[..., Any]
+    _build_shared_browser_image_fetcher: Callable[..., Any]
+    refresh_browser_context_seed: Callable[..., Any]
+    _cached_browser_workflow_assets: Callable[..., Any]
+    _assets_matching_download_failures: Callable[..., Any]
+    _browser_workflow_image_download_candidates: Callable[..., Any]
+
+
+@dataclass(frozen=True)
+class BrowserCacheDeps:
+    _cached_browser_workflow_markdown: Callable[..., Any]
+    _cached_browser_workflow_assets: Callable[..., Any]
 
 
 def default_browser_workflow_deps() -> BrowserWorkflowDeps:
@@ -112,10 +197,7 @@ def default_browser_workflow_deps() -> BrowserWorkflowDeps:
         _build_shared_browser_file_fetcher,
         _build_shared_browser_image_fetcher,
     )
-    from .html_extraction import (
-        _cached_browser_workflow_markdown,
-        fetch_html_with_fast_browser,
-    )
+    from .html_extraction import _cached_browser_workflow_markdown
     from .pdf_fallback import fetch_seeded_browser_pdf_payload
 
     return BrowserWorkflowDeps(
@@ -134,7 +216,6 @@ def default_browser_workflow_deps() -> BrowserWorkflowDeps:
         extract_atypon_browser_workflow_markdown=extract_atypon_browser_workflow_markdown,
         pdf_browser_context_seed=warm_browser_context,
         refresh_browser_context_seed=warm_browser_context,
-        fetch_html_with_fast_browser=fetch_html_with_fast_browser,
         _cached_browser_workflow_markdown=_cached_browser_workflow_markdown,
         _cached_browser_workflow_assets=_cached_browser_workflow_assets,
         _assets_matching_download_failures=_assets_matching_download_failures,

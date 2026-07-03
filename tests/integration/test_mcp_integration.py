@@ -301,19 +301,14 @@ SERVER_SCRIPT = textwrap.dedent(
             "ams": FakeProviderClient(
                 ProviderStatusResult(
                     provider="ams",
-                    status="not_configured",
-                    available=False,
+                    status="ready",
+                    available=True,
                     official_provider=True,
                     checks=[
                         build_provider_status_check(
-                            "runtime_env",
-                            "not_configured",
-                            "ams browser runtime requires Playwright and CloakBrowser packages.",
-                        ),
-                        build_provider_status_check(
-                            "playwright_dependency",
-                            "not_configured",
-                            "Playwright Python package is not installed.",
+                            "local_requirements",
+                            "ok",
+                            "AMS direct HTTP HTML route is available.",
                         ),
                     ],
                 )

@@ -15,6 +15,7 @@ from ...extraction.html.assets import (
     extract_scoped_html_assets,
 )
 from ...models import AssetProfile
+from ...http import RequestCancelledError
 from ...utils import dedupe_normalized, empty_asset_results, normalize_text
 from ..browser_runtime import (
     BrowserRuntimeFailure,
@@ -89,6 +90,7 @@ def run_browser_asset_download_attempt(
     opener_requester,
     deps: BrowserWorkflowDeps,
 ) -> BrowserAssetDownloadResult:
+    _raise_if_cancelled(recovery.runtime_context)
     return _run_browser_asset_download_attempt(
         plan,
         recovery,
@@ -112,6 +114,7 @@ def retry_failed_browser_assets(
     opener_requester,
     deps: BrowserWorkflowDeps,
 ) -> BrowserAssetDownloadResult:
+    _raise_if_cancelled(recovery.runtime_context)
     failed_body_assets = deps._assets_matching_download_failures(
         plan.body_assets,
         previous.failures,
@@ -127,6 +130,7 @@ def retry_failed_browser_assets(
     if recovery.runtime is None:
         return previous
 
+    _raise_if_cancelled(recovery.runtime_context)
     refreshed_seed = deps.refresh_browser_context_seed(
         _seed_urls_for(recovery, recovery.browser_context_seed),
         publisher=recovery.provider,
@@ -212,6 +216,7 @@ def _run_browser_asset_download_attempt(
     opener_requester,
     deps: BrowserWorkflowDeps,
 ) -> BrowserAssetDownloadResult:
+    _raise_if_cancelled(recovery.runtime_context)
     attempt_seed = merge_browser_context_seeds(
         {"browser_cookies": recovery.browser_cookies},
         current_seed,
@@ -279,6 +284,7 @@ def _run_browser_asset_download_attempt(
     try:
 
         def download_body_assets() -> Mapping[str, Any]:
+            _raise_if_cancelled(recovery.runtime_context)
             if not attempt_body_assets:
                 return empty_asset_results()
             seed_snapshot = attempt_seed_snapshot()
@@ -302,6 +308,7 @@ def _run_browser_asset_download_attempt(
             )
 
         def download_supplementary_assets() -> Mapping[str, Any]:
+            _raise_if_cancelled(recovery.runtime_context)
             if not attempt_supplementary_assets:
                 return empty_asset_results()
             supplementary_kwargs: dict[str, Any] = {}
@@ -375,6 +382,12 @@ def _run_browser_asset_download_attempt(
             close_fetcher = getattr(fetcher, "close", None)
             if callable(close_fetcher):
                 close_fetcher()
+
+
+def _raise_if_cancelled(runtime_context: Any | None) -> None:
+    cancel_check = getattr(runtime_context, "cancel_check", None)
+    if callable(cancel_check) and cancel_check() is True:
+        raise RequestCancelledError("Request cancelled.")
 
 
 def _build_attempt_document_fetcher(

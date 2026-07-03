@@ -38,7 +38,7 @@
 
 - 不替代主题检索、文献推荐或综述生成；开放式搜索可先形成候选，当后续需要阅读、总结、比较、核验可读性或获取全文时，再把 DOI、URL、标题、arXiv ID 或引用条目交给 paper-fetch 抓取和核验候选论文全文。
 - 不绕过付费墙或访问授权；可用性取决于 provider、凭据和本机运行环境。
-- Wiley、Science、PNAS、AMS、Annual Reviews、Royal Society Publishing、ACS、IOP、AIP、MDPI 的浏览器路径统一使用 CDP browser workflow；未配置外部 endpoint 时由 cloakbrowser 启动受控 Chrome。
+- Wiley、Science、PNAS、Annual Reviews、Royal Society Publishing、ACS、IOP、AIP、MDPI 的浏览器路径统一使用 CDP browser workflow；未配置外部 endpoint 时由 cloakbrowser 启动受控 Chrome。AMS 使用 direct HTTP HTML/PDF 路径，不参与 browser runtime / auth / preflight。
 - 用户可以自行 fork 后添加新出版社，见 [`onboarding/README.md`](onboarding/README.md)，但是需要人工审核确定全文获取、markdown 转换质量等能力。
 
 ## 效果展示
@@ -111,11 +111,11 @@ paper-fetch --help
 ```
 如果有输出`usage: cli.py [-h] -`（后略）则安装成功
 
-**4. 开启 Wiley / Science / PNAS / AMS / Annual Reviews / Royal Society Publishing / ACS / IOP / AIP / MDPI 浏览器路径**
+**4. 开启 Wiley / Science / PNAS / Annual Reviews / Royal Society Publishing / ACS / IOP / AIP / MDPI 浏览器路径**
 
-Browser workflow 会优先连接 `CLOAKBROWSER_CDP_ENDPOINT` 指向的现有 Chrome/CloakBrowser；未配置时，paper-fetch 会用 `cloakbrowser.ensure_binary()` 首次下载/定位 Chrome，并自动启动带 CDP 端口的受控浏览器。后续 Wiley / Science / PNAS / AMS / Annual Reviews / Royal Society Publishing / ACS / IOP / AIP / MDPI 的 HTML 抓取、browser-backed 资产下载和 seeded PDF/ePDF fallback 都使用该 CDP 浏览器路径。默认 managed 模式在同一进程内复用一个按 provider/browser 配置 keyed 的 browser manager，批量并发任务不会各自启动 Chrome 抢同一个 provider profile lock；每个 HTML/PDF/资产 context 会在调用线程建立自己的 CDP 连接，避免跨线程复用 Playwright sync 对象。外部 CDP 模式借用现有 browser context，browser-backed 资产下载同样会串行化；普通 HTTP 资产下载仍按配置并发。
+Browser workflow 会优先连接 `CLOAKBROWSER_CDP_ENDPOINT` 指向的现有 Chrome/CloakBrowser；未配置时，paper-fetch 会用 `cloakbrowser.ensure_binary()` 首次下载/定位 Chrome，并自动启动带 CDP 端口的受控浏览器。后续 Wiley / Science / PNAS / Annual Reviews / Royal Society Publishing / ACS / IOP / AIP / MDPI 的 HTML 抓取、browser-backed 资产下载和 seeded PDF/ePDF fallback 都使用该 CDP 浏览器路径。默认 managed 模式在同一进程内复用一个按 provider/browser 配置 keyed 的 browser manager，批量并发任务不会各自启动 Chrome 抢同一个 provider profile lock；每个 HTML/PDF/资产 context 会在调用线程建立自己的 CDP 连接，避免跨线程复用 Playwright sync 对象。外部 CDP 模式默认借用现有 browser context，并在 diagnostics 中报告被忽略的 context option；设置 `PAPER_FETCH_CDP_EXTERNAL_NEW_CONTEXT=1` 可在外部浏览器中新建 context。browser-backed 资产下载在安全的 caller-thread 路径内会复用同一 attempt 的 page/context，遇到 Playwright 线程所有权异常会自动降级；普通 HTTP 资产下载仍按配置并发。AMS 主路径是 direct HTTP HTML，不需要 browser runtime、`browser-preflight` 或 `auth ams`。
 
-`CLOAKBROWSER_BINARY_PATH` 可指向预装 Chrome 以跳过下载；`CLOAKBROWSER_HEADLESS` 控制自动启动的 headed/headless，默认 managed headless 会确保传入 Chrome 原生 `--headless=new` 参数，避免依赖参数缺失时弹出浏览器窗口；未显式指定目录时，自动浏览器默认按 publisher 使用 `publisher-browser-profiles/<provider>/storage-state.json` 复用过滤后的 storage-state，以减少 Science/Wiley 等站点的冷启动 challenge。`CLOAKBROWSER_PROFILE_DIR` / `CLOAKBROWSER_USER_DATA_DIR` 只覆盖 managed Chrome 启动目录和 storage-state 保存位置，不承诺完整复用 IndexedDB、service worker 或扩展等浏览器 profile 状态。批量抓取前可运行 `paper-fetch browser-preflight` 串行打开各 browser-backed provider 的内置样例页并刷新 storage-state；失败时按提示运行 `paper-fetch auth <provider> [--url ...]` 打开同一 provider 的 headed browser 手动登录/验证，按 Enter 后保存本地 storage-state。未配置持久状态不阻止正常抓取。
+`CLOAKBROWSER_BINARY_PATH` 可指向预装 Chrome 以跳过下载；`CLOAKBROWSER_HEADLESS` 控制自动启动的 headed/headless，默认 managed headless 会确保传入 Chrome 原生 `--headless=new` 参数，避免依赖参数缺失时弹出浏览器窗口；未显式指定目录时，自动浏览器默认按 publisher 使用 `publisher-browser-profiles/<provider>/storage-state.json` 复用过滤后的 storage-state，以减少 Science/Wiley 等站点的冷启动 challenge。auth、preflight、HTML fetch 和 seeded PDF fallback 共享同一 storage-state 路径解析，保存时会加锁并原子替换。`CLOAKBROWSER_PROFILE_DIR` / `CLOAKBROWSER_USER_DATA_DIR` 只覆盖 managed Chrome 启动目录和 storage-state 保存位置，不承诺完整复用 IndexedDB、service worker 或扩展等浏览器 profile 状态。批量抓取前可运行 `paper-fetch browser-preflight` 串行使用各 browser-backed provider 的内置样例 DOI/URL 和正常 HTML candidate/bootstrap 语义预热 storage-state；失败时按提示运行 `paper-fetch auth <provider> [--url ...]` 打开同一 provider 的 headed browser 手动登录/验证，按 Enter 后保存本地 storage-state。未配置持久状态不阻止正常抓取。
 Windows 安装器还会设置 `MATHML_TO_LATEX_NODE_BIN` 指向包内 Playwright Node，避免 Codex Desktop 的 WindowsApps/MSIX 内部 `node.exe` 被公式转换 fallback 误用；同时设置 `PAPER_FETCH_IMAGE_TOOLS_DIR` 指向安装目录内 `image-tools`。Ghostscript/libvips 存在时 AMS `Download Figure` 的 EPS/TIFF 源图会转为 PNG，缺失时回退网页 JPG/PNG。
 
 **5. 开启 Elsevier 获取权限**
@@ -357,7 +357,7 @@ Browser workflow 可显式复用已经运行的浏览器，也可让 paper-fetch
 export CLOAKBROWSER_CDP_ENDPOINT="ws://127.0.0.1:9222/devtools/browser/..."
 ```
 
-未配置 `CLOAKBROWSER_CDP_ENDPOINT` 时，paper-fetch 会通过 cloakbrowser 首次下载/定位 Chrome 并自动启动本机 CDP 浏览器，默认按 publisher 复用 `storage-state.json`，且默认 headless managed 浏览器会带 `--headless=new`；如需固定 binary 或显式指定 storage-state 所在目录，可设置 `CLOAKBROWSER_BINARY_PATH`、`CLOAKBROWSER_PROFILE_DIR` 或 `CLOAKBROWSER_USER_DATA_DIR`。配置外部 CDP endpoint 时，抓取以现有 browser context 为准，storage-state cookies 会尽量注入，UA、viewport 等新 context 参数不保证生效。managed 和外部 CDP 的 browser-backed 资产下载都会串行化；普通 HTTP 资产下载仍按配置并发。
+未配置 `CLOAKBROWSER_CDP_ENDPOINT` 时，paper-fetch 会通过 cloakbrowser 首次下载/定位 Chrome 并自动启动本机 CDP 浏览器，默认按 publisher 复用 `storage-state.json`，且默认 headless managed 浏览器会带 `--headless=new`；如需固定 binary 或显式指定 storage-state 所在目录，可设置 `CLOAKBROWSER_BINARY_PATH`、`CLOAKBROWSER_PROFILE_DIR` 或 `CLOAKBROWSER_USER_DATA_DIR`。配置外部 CDP endpoint 时，抓取默认借用现有 browser context，storage-state cookies 会尽量注入，UA、viewport 等新 context 参数不保证生效；设置 `PAPER_FETCH_CDP_EXTERNAL_NEW_CONTEXT=1` 可要求在外部浏览器中创建新 context。managed 和外部 CDP 的 browser-backed 资产下载会避免跨线程复用 Playwright sync 对象；普通 HTTP 资产下载仍按配置并发。
 
 自动过盾失败时，可打开对应 provider 的 headed browser 手动登录/验证：
 
@@ -367,7 +367,7 @@ paper-fetch auth <provider>
 paper-fetch auth wiley --url "https://onlinelibrary.wiley.com/doi/full/10.1111/example"
 ```
 
-`provider` 来自 browser runtime catalog，例如 `wiley` / `science` / `pnas` / `ams` / `annualreviews` / `acs` / `iop` / `aip` / `mdpi`。`browser-preflight` 会按 catalog 顺序真实打开这些 provider 的内置样例文章，成功时保存 `publisher-browser-profiles/<provider>/storage-state.json`，失败时打印需要人工 auth 的出版社；`auth` 未传 `--url` 时打开内置样例文章，传入 `--url` 时打开具体失败文章页。命令会打印 managed Chrome 启动目录和 storage-state 路径，终端按 Enter 后保存过滤后的本地 storage-state 并退出；包括 AMS 在内都默认使用 `publisher-browser-profiles/<provider>/storage-state.json`，不写 `.env`。
+`provider` 来自 browser runtime catalog，例如 `wiley` / `science` / `pnas` / `annualreviews` / `acs` / `iop` / `aip` / `mdpi`。`browser-preflight` 会按 catalog 顺序使用这些 provider 的内置样例 DOI/URL 构造正常 HTML candidates，并复用 provider HTML bootstrap、同一 browser context 重试和 availability 判定；成功时保存 `publisher-browser-profiles/<provider>/storage-state.json`，失败时打印需要人工 auth 的出版社。该命令只验证 HTML 路径，不触发 PDF fallback；`auth` 未传 `--url` 时打开内置样例文章，传入 `--url` 时打开具体失败文章页。命令会打印 managed Chrome 启动目录和 storage-state 路径，终端按 Enter 后保存过滤后的本地 storage-state 并退出，不写 `.env`。
 
 
 ### 接入 Codex

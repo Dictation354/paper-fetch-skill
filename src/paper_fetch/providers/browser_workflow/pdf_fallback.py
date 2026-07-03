@@ -2,15 +2,15 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Any
 from collections.abc import Mapping, Sequence
 
-from ...http import PDF_MIME_TYPE
+from ...http import PDF_MIME_TYPE, RequestCancelledError
 from ...runtime import RuntimeContext
 from ...tracing import trace_from_markers
 from ...reason_codes import PDF_FALLBACK
 from ..base import ProviderContent, RawFulltextPayload
+from ..browser_runtime import storage_state_path as browser_runtime_storage_state_path
 from .._pdf_common import (
     pdf_asset_output_dir,
     pdf_asset_profile_from_context,
@@ -21,17 +21,16 @@ from .shared import BrowserWorkflowDeps, default_browser_workflow_deps
 
 
 def _runtime_storage_state_path(runtime: Any) -> Any | None:
-    storage_state_path = getattr(runtime, "storage_state_path", None)
-    if storage_state_path is not None:
-        path = Path(storage_state_path).expanduser()
-        return path if path.is_file() else None
-    profile_dir = getattr(runtime, "profile_dir", None) or getattr(
-        runtime, "user_data_dir", None
-    )
-    if profile_dir is None:
+    if runtime is None:
         return None
-    path = Path(profile_dir).expanduser() / "storage-state.json"
-    return path if path.is_file() else None
+    path = browser_runtime_storage_state_path(runtime)
+    return path if path is not None and path.is_file() else None
+
+
+def _raise_if_cancelled(context: RuntimeContext | None) -> None:
+    cancel_check = getattr(context, "cancel_check", None)
+    if callable(cancel_check) and cancel_check() is True:
+        raise RequestCancelledError("Request cancelled.")
 
 
 def fetch_seeded_browser_pdf_payload(
@@ -53,6 +52,7 @@ def fetch_seeded_browser_pdf_payload(
     context: RuntimeContext | None = None,
     deps: BrowserWorkflowDeps | None = None,
 ) -> RawFulltextPayload:
+    _raise_if_cancelled(context)
     deps = deps or default_browser_workflow_deps()
     context_warmer = deps.warm_browser_context
     if deps.pdf_browser_context_seed is not deps.warm_browser_context:
@@ -68,6 +68,7 @@ def fetch_seeded_browser_pdf_payload(
         config=runtime,
         browser_context_seed=browser_context_seed,
     )
+    _raise_if_cancelled(context)
     seed_url = _choose_browser_seed_url(
         (browser_context_seed or {}).get("browser_final_url"),
         html_candidates[0] if html_candidates else None,
@@ -85,6 +86,7 @@ def fetch_seeded_browser_pdf_payload(
         headless=runtime.headless,
         binary_path=getattr(runtime, "binary_path", None),
         cdp_endpoint=getattr(runtime, "cdp_endpoint", None),
+        external_new_context=getattr(runtime, "external_new_context", False),
         profile_dir=getattr(runtime, "profile_dir", None),
         user_data_dir=getattr(runtime, "user_data_dir", None),
         storage_state_path=_runtime_storage_state_path(runtime),
@@ -92,6 +94,7 @@ def fetch_seeded_browser_pdf_payload(
         allow_pdf_only=True,
         context=context,
     )
+    _raise_if_cancelled(context)
     payload_warnings = [str(item) for item in warnings or [] if str(item).strip()]
     pdf_result_warnings = getattr(pdf_result, "warnings", [])
     if isinstance(pdf_result_warnings, Sequence) and not isinstance(

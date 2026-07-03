@@ -771,6 +771,22 @@ def _write_browser_preflight_results(results: list[BrowserPreflightResult]) -> N
             sys.stdout.write(f"  Final URL: {result.final_url}\n")
         if result.storage_state_path is not None:
             sys.stdout.write(f"  Storage state: {result.storage_state_path}\n")
+        trace = (result.diagnostics or {}).get("browser_runtime_trace")
+        external = (
+            trace.get("external_cdp_context") if isinstance(trace, dict) else None
+        )
+        if isinstance(external, dict) and external.get("external_cdp"):
+            borrowed = external.get("borrowed_existing_context")
+            sys.stdout.write(
+                "  External CDP: "
+                f"{'borrowed existing context' if borrowed else 'new context'}\n"
+            )
+            ignored = external.get("ignored_context_options") or []
+            if ignored:
+                sys.stdout.write(f"  Ignored context options: {', '.join(ignored)}\n")
+            cookie_count = external.get("storage_state_cookie_count")
+            if cookie_count is not None:
+                sys.stdout.write(f"  Injected storage cookies: {cookie_count}\n")
         if not result.ok:
             detail = result.message or result.reason or "Browser preflight failed."
             sys.stdout.write(f"  Reason: {detail}\n")

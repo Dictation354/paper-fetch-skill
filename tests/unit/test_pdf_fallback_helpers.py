@@ -388,6 +388,7 @@ class PdfFallbackHelperTests(unittest.TestCase):
                 {
                     "binary_path": None,
                     "cdp_endpoint": None,
+                    "external_new_context": False,
                     "profile_dir": profile_dir,
                     "user_data_dir": user_data_dir,
                 }

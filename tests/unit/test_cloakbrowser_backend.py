@@ -587,7 +587,7 @@ def test_load_runtime_config_allows_auto_managed_cdp_browser() -> None:
     assert config.cdp_endpoint is None
 
 
-def test_load_runtime_config_accepts_ams_storage_state_json(tmp_path) -> None:
+def test_load_runtime_config_ignores_ams_storage_state_json(tmp_path) -> None:
     state_path = tmp_path / "ams-state.json"
     state_path.write_text('{"cookies":[]}', encoding="utf-8")
     config = _cloakbrowser.load_runtime_config(
@@ -599,7 +599,7 @@ def test_load_runtime_config_accepts_ams_storage_state_json(tmp_path) -> None:
         doi="10.1175/example",
     )
 
-    assert config.storage_state_path == state_path
+    assert config.storage_state_path is None
 
 
 def test_load_runtime_config_accepts_wiley_storage_state_json(tmp_path) -> None:
@@ -811,9 +811,9 @@ def test_fetch_html_with_fast_browser_returns_pnas_html_when_body_dom_ready_desp
 
     with mock.patch.object(
         runtime_context,
-        "new_browser_context",
+        "new_browser_context_for_config",
         return_value=browser_context,
-    ) as new_browser_context:
+    ) as new_browser_context_for_config:
         result = fetch_html_with_fast_browser(
             ["https://www.pnas.org/doi/full/10.1073/pnas.123"],
             publisher="pnas",
@@ -822,7 +822,7 @@ def test_fetch_html_with_fast_browser_returns_pnas_html_when_body_dom_ready_desp
             context=runtime_context,
         )
 
-    new_browser_context.assert_called_once()
+    new_browser_context_for_config.assert_called_once()
     assert result.final_url == "https://www.pnas.org/doi/full/10.1073/pnas.123"
     assert "Cloudflare challenge" in result.summary
     assert result.browser_context_seed["browser_user_agent"] == "Mozilla/5.0"

@@ -10,20 +10,22 @@ legal_access:
     onboarding/manifests/ams.yml.
   - onboarding/manifests/ams.yml declares display_source=ams_html and main_path=['landing_html',
     'article_html', 'pdf_fallback', 'abstract_only'].
-  - registered provider bundle sources=ams_html, ams_pdf; requires_browser_runtime=True;
+  - registered provider bundle sources=ams_html,ams_pdf; requires_browser_runtime=False;
     requires_playwright=False.
-  - docs/providers.md documents AMS as a DOI landing to CloakBrowser HTML route with
-    seeded-browser publisher PDF fallback, and the provider must reject challenges,
-    access gates, and empty shells.
+  - docs/providers.md documents AMS as a DOI landing to direct HTTP HTML route
+    with direct HTTP PDF fallback; the provider does not enter CDP browser HTML
+    or seeded-browser PDF fallback, and must reject challenges, access gates,
+    empty shells, and non-PDF wrappers.
   - 'manifest fixture figure DOI 10.1175/jamc-d-24-0048.1 (high confidence): Provider-local
     tests verify AMS figure asset placement and duplicate figure appendix suppression.'
   - 'manifest fixture formula DOI 10.1175/aies-d-23-0093.1 (high confidence): Provider-local
     tests verify AMS inline and display formula normalization from a real fixture.'
-  - 'manifest fixture pdf_fallback DOI 10.1175/bams-d-24-0270.1 (high confidence):
-    Golden fixture records AMS PDF fallback with a real PDF payload and expected output.'
   - 'manifest fixture references DOI 10.1175/jcli-d-23-0738.1 (medium confidence):
     Provider-local tests exercise AMS article assembly on a real fixture that includes
     reference extraction behavior.'
+  - 'manifest fixture pdf_fallback DOI 10.1175/bams-d-24-0270.1 (high confidence):
+    Golden fixture records AMS direct HTTP PDF fallback with a real PDF payload and
+    expected output.'
   - 'manifest fixture structure DOI 10.1175/bams-d-24-0223.1 (high confidence): Provider-local
     tests verify AMS/BAMS section ordering, footnotes, and Markdown cleanup from a
     real fixture.'
@@ -31,7 +33,6 @@ legal_access:
     tests verify AMS image-only table extraction and inline table asset placement.'
 allowed_runtimes:
 - http
-- browser
 forbidden_behaviors:
 - automatic_login
 - captcha_solving

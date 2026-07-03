@@ -95,10 +95,6 @@ _EXPORTS: dict[str, tuple[str, str]] = {
         ".html_extraction",
         "extract_atypon_browser_workflow_markdown",
     ),
-    "fetch_html_with_fast_browser": (
-        ".html_extraction",
-        "fetch_html_with_fast_browser",
-    ),
     "fetch_html_with_browser": (
         "paper_fetch.providers.browser_runtime",
         "fetch_html_with_browser",

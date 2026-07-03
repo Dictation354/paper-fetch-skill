@@ -14,16 +14,19 @@ from typing import Any
 from collections.abc import Callable, Mapping
 
 from ..config import (
+    CDP_EXTERNAL_NEW_CONTEXT_ENV_VAR,
     CLOAKBROWSER_BINARY_PATH_ENV_VAR,
     CLOAKBROWSER_CDP_ENDPOINT_ENV_VAR,
     CLOAKBROWSER_PROFILE_DIR_ENV_VAR,
     CLOAKBROWSER_USER_DATA_DIR_ENV_VAR,
     build_runtime_env,
+    env_flag_enabled,
 )
 from ..http import (
     DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
     HttpTransport,
     PDF_ACCEPT_HEADER,
+    RequestCancelledError,
     RequestFailure,
 )
 from ..http.headers import header_value
@@ -55,6 +58,12 @@ DEFAULT_BROWSER_NAVIGATION_USER_AGENT = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
     "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36"
 )
+
+
+def _raise_if_cancelled(context: RuntimeContext | None) -> None:
+    cancel_check = getattr(context, "cancel_check", None)
+    if callable(cancel_check) and cancel_check() is True:
+        raise RequestCancelledError("Request cancelled.")
 
 
 @dataclass(frozen=True)
@@ -419,6 +428,7 @@ def fetch_pdf_with_browser(
     referer: str | None = None,
     binary_path: str | None = None,
     cdp_endpoint: str | None = None,
+    external_new_context: bool = False,
     profile_dir: Path | str | None = None,
     user_data_dir: Path | str | None = None,
     storage_state_path: Path | None = None,
@@ -428,6 +438,7 @@ def fetch_pdf_with_browser(
     _allow_thread_handoff: bool = True,
     _use_runtime_browser: bool = True,
 ) -> PdfFallbackResult:
+    _raise_if_cancelled(context)
     if _allow_thread_handoff and _running_asyncio_loop_active():
         with ThreadPoolExecutor(max_workers=1) as executor:
             return executor.submit(
@@ -442,6 +453,7 @@ def fetch_pdf_with_browser(
                 referer=referer,
                 binary_path=binary_path,
                 cdp_endpoint=cdp_endpoint,
+                external_new_context=external_new_context,
                 profile_dir=profile_dir,
                 user_data_dir=user_data_dir,
                 storage_state_path=storage_state_path,
@@ -523,6 +535,7 @@ def fetch_pdf_with_browser(
                     headless=headless,
                     binary_path=binary_path,
                     cdp_endpoint=cdp_endpoint,
+                    external_new_context=external_new_context,
                     profile_dir=profile_dir,
                     user_data_dir=user_data_dir,
                     **context_kwargs,
@@ -550,6 +563,8 @@ def fetch_pdf_with_browser(
             manager = BrowserContextManager(
                 binary_path=active_binary_path or None,
                 cdp_endpoint=endpoint or None,
+                external_new_context=external_new_context
+                or env_flag_enabled(runtime_env, CDP_EXTERNAL_NEW_CONTEXT_ENV_VAR),
                 profile_dir=Path(active_profile_dir).expanduser()
                 if active_profile_dir
                 else None,
@@ -572,11 +587,13 @@ def fetch_pdf_with_browser(
         for seed_url in [
             normalize_text(url) for url in seed_urls or [] if normalize_text(url)
         ]:
+            _raise_if_cancelled(context)
             try:
                 page.goto(seed_url, wait_until="domcontentloaded", timeout=60000)
             except Exception:
                 continue
         for url in candidate_urls:
+            _raise_if_cancelled(context)
             initial_response = None
             goto_kwargs: dict[str, Any] = {
                 "wait_until": "domcontentloaded",

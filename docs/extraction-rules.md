@@ -542,7 +542,7 @@ metadata
     - [`../tests/unit/test_atypon_browser_workflow_provider_retries.py`](../tests/unit/test_atypon_browser_workflow_provider_retries.py) 中的 `test_wiley_provider_download_related_assets_reuses_shared_browser_fetcher_across_assets`
     - [`../tests/unit/test_ams_provider.py`](../tests/unit/test_ams_provider.py) 中的 `test_ams_direct_http_asset_download_uses_browser_seed_without_runtime`
 - 边界说明：
-  - 这条规则目前适用于 `wiley`、`science`、`pnas`、`ams`、`annualreviews`、`royalsocietypublishing`、`acs`、`iop`、`aip`、`mdpi` 的 browser workflow HTML 成功路径；AMS direct HTTP HTML 成功路径不启动 CDP browser，但仍必须传递 browser-equivalent seed。
+  - 这条规则目前适用于 `wiley`、`science`、`pnas`、`annualreviews`、`royalsocietypublishing`、`acs`、`iop`、`aip`、`mdpi` 的 browser workflow HTML 成功路径；AMS direct HTTP HTML 成功路径不启动 CDP browser，但仍必须传递 browser-equivalent seed。
   - 它不改变 `elsevier` XML、`springer` direct HTML 或 PDF fallback 的下载语义。
 
 <a id="rule-table-flatten-or-list"></a>
@@ -1445,8 +1445,8 @@ PNAS 的 supplementary 资产范围见 [Supplementary discovery 必须来自明�
 <a id="rule-ams-html-body-assets-formulas"></a>
 ### AMS HTML 必须保留完整正文并把图表图片回填原位
 
-- 这条规则约束的是：AMS browser workflow HTML 要从 `#articleBody` / `.container-fulltext-display` 等完整正文容器抽取正文，保留后部 section、Acknowledgments 和 Data availability；正文中的 figure 与 image-only `.tableWrap` 要在原始位置渲染图片块与 caption；MathJax 渲染层旁边的扁平 fallback 文本不能和结构化公式重复出现；display equation 编号只来自源站明确 label 或 AMS `E...` 公式 id，`UE...` 无编号公式不合成 `Equation n.`；AMS 专用 inline renderer 要在正文和 caption 中保留 MathML、上下标和斜体变量，并保守修复上下标后 prose 括注的空格。
-- AMS 先用 direct HTTP HTML preflight 请求 `journals.ametsoc.org/view/...xml`，请求头必须包含浏览器 UA 和页面 Referer；direct 失败或正文质量门槛不通过时再回退 browser workflow。
+- 这条规则约束的是：AMS HTML 要从 `#articleBody` / `.container-fulltext-display` 等完整正文容器抽取正文，保留后部 section、Acknowledgments 和 Data availability；正文中的 figure 与 image-only `.tableWrap` 要在原始位置渲染图片块与 caption；MathJax 渲染层旁边的扁平 fallback 文本不能和结构化公式重复出现；display equation 编号只来自源站明确 label 或 AMS `E...` 公式 id，`UE...` 无编号公式不合成 `Equation n.`；AMS 专用 inline renderer 要在正文和 caption 中保留 MathML、上下标和斜体变量，并保守修复上下标后 prose 括注的空格。
+- AMS 用 direct HTTP HTML 请求 `journals.ametsoc.org/view/...xml`，请求头必须包含浏览器 UA 和页面 Referer；direct HTML 失败或正文质量门槛不通过时只允许 direct HTTP PDF fallback，不回退 browser workflow。
 - AMS figure 资产候选必须优先使用源 HTML 的 `Download Figure` EPS/TIFF 链接，并保留网页 full-size JPG/PNG 作为回退；PowerPoint 下载项不是图片资产。EPS/TIFF 下载请求必须继承浏览器 UA/Referer，下载成功后应通过图片转换后端转成 PNG 用于 Markdown，本地同时保留原始源文件和转换元数据。
 - 如果违反，用户会看到：BAMS 正文在 section 2 后提前截断，图表只剩文末附录或只剩 `Table 1.` 文本无图片，`Fig . 1.` 这类标签噪声泄漏，同一公式同时出现 LaTeX 和粘连的可见 fallback 文本，`UE1` 被误渲染成重复的 `Equation 1.`，或者 caption 里出现 `ϕ 2`、正文里出现 `νn` / `</sub>(i.e.` 这类行内语义退化。
 - 它对应的阶段是：`provider-html-or-xml-extraction`、`asset-discovery`、`asset-link-rewrite`、`formula-rendering`、`final-rendering`。
@@ -1468,7 +1468,7 @@ PNAS 的 supplementary 资产范围见 [Supplementary discovery 必须来自明�
   - [`../tests/unit/test_ams_provider.py`](../tests/unit/test_ams_provider.py) 中的 `test_ams_data_availability_stays_before_appendix`
   - [`../tests/unit/test_ams_provider.py`](../tests/unit/test_ams_provider.py) 中的 `test_ams_downloaded_inline_figure_and_table_assets_do_not_repeat_at_tail`
   - [`../tests/unit/test_ams_provider.py`](../tests/unit/test_ams_provider.py) 中的 `test_ams_direct_http_preflight_succeeds_without_browser_runtime`
-  - [`../tests/unit/test_ams_provider.py`](../tests/unit/test_ams_provider.py) 中的 `test_ams_direct_http_preflight_falls_back_to_browser_runtime_on_403`
+  - [`../tests/unit/test_ams_provider.py`](../tests/unit/test_ams_provider.py) 中的 `test_ams_direct_http_preflight_does_not_fall_back_to_browser_on_403`
   - [`../tests/unit/test_ams_provider.py`](../tests/unit/test_ams_provider.py) 中的 `test_ams_asset_extractor_prefers_download_figure_source_file`
   - [`../tests/unit/test_ams_provider.py`](../tests/unit/test_ams_provider.py) 中的 `test_ams_browser_asset_scope_preserves_download_figure_source_after_cleanup`
   - [`../tests/unit/test_ams_provider.py`](../tests/unit/test_ams_provider.py) 中的 `test_ams_fixture_extracts_mixed_tiff_and_eps_download_figure_sources`
@@ -1857,7 +1857,7 @@ PNAS 的 supplementary 资产范围见 [Supplementary discovery 必须来自明�
 | golden / Springer | `10.1038_d41586-022-01795-9`, `10.1038_d41586-023-01829-w`, `10.1038_s41467-022-30729-2`, `10.1038_s41561-022-00974-7`, `10.1038_s41612-021-00218-2` | Springer / Nature golden corpus 的结构多样性回归池。 |
 | golden / IEEE early PDF | `10.1109_MPER.1985.5526567`, `10.1109_PGEC.1967.264619` | IEEE 早期文章 PDF fallback 期望形态样本；waterfall 归 providers.md，不直接定义单条 extraction rule。 |
 | golden / arXiv | `10.48550_arxiv.1406.2661v1`, `10.48550_arxiv.2006.11239v2`, `10.48550_arxiv.2605.06653v1`, `10.48550_arxiv.2605.06659v1`, `10.48550_arxiv.2605.06663v1`, `10.48550_arxiv.2605.06666v1` | arXiv golden corpus 的 official HTML 与 PDF fallback route 回归池；waterfall 路线说明归 providers.md。2605.06556v1、2605.06598v1、2605.06665v1 与 2605.06667v1 已直接挂到上方规则。 |
-| golden / AMS browser workflow | `10.1175_bams-d-24-0270.1`, `10.1175_jcli-d-23-0738.1`, `10.1175_jcli-d-25-0547.1`, `10.1175_jhm-d-23-0228.1` | AMS golden corpus 的剩余 HTML 主路径和 PDF fallback route 回归池；waterfall 与 no-XML 语义归 providers.md。AIES/BAMS/JAMC/WAF/JPO/JTECH/MWR 资产、脚注和正文语义已挂到 [AMS HTML body/assets/formulas](#rule-ams-html-body-assets-formulas)、[Inline semantics](#rule-preserve-inline-semantics-in-body-and-tables) 或 [AMS footnotes](#rule-ams-footnotes-stay-linked-to-body-markers)。 |
+| golden / AMS direct HTML/PDF | `10.1175_bams-d-24-0270.1`, `10.1175_jcli-d-23-0738.1`, `10.1175_jcli-d-25-0547.1`, `10.1175_jhm-d-23-0228.1` | AMS golden corpus 的 direct HTML 主路径和 direct HTTP PDF fallback 回归池；waterfall 与 no-XML 语义归 providers.md。AIES/BAMS/JAMC/WAF/JPO/JTECH/MWR 资产、脚注和正文语义已挂到 [AMS HTML body/assets/formulas](#rule-ams-html-body-assets-formulas)、[Inline semantics](#rule-preserve-inline-semantics-in-body-and-tables) 或 [AMS footnotes](#rule-ams-footnotes-stay-linked-to-body-markers)。 |
 | golden / MDPI PDF fallback | `10.3390_en16186655` | MDPI browser PDF fallback route 回归池；waterfall 路线说明归 providers.md，不直接定义单条 extraction rule。 |
 | golden / Oxford Academic | `10.1093_bioinformatics_btaa153`, `10.1093_bioinformatics_btaa161`, `10.1093_bioinformatics_btaa823` | Oxford Academic onboarding 的 HTML 结构/table/formula/figure/supplementary/references 与 PDF fallback fixture；waterfall 路线说明归 providers.md，provider-owned 清洗依据记录在 cleaning proposal 和 provider-local tests。 |
 | golden / ACS browser workflow | `10.1021_acsomega.4c03987`, `10.1021_acsomega.3c06992`, `10.1021_acsomega.2c02828` | ACS 真实 replay baseline，锁定 provider-owned UI cleanup、body table、MathML/LaTeX formula rendering、Supporting Information、references extraction、public PDF fallback replay、manifest markdown review 和 fulltext source trail；规则依据记录在 cleaning proposal 与 provider-local tests。 |

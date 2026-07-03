@@ -1239,13 +1239,11 @@ class PublisherWaterfallTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmpdir:
             runtime = self._runtime_config(tmpdir, "wiley", doi)
-            mocked_fast = mock.Mock()
             mocked_browser_pdf = mock.Mock()
             install_browser_workflow_deps(
                 client,
                 load_runtime_config=mock.Mock(return_value=runtime),
                 ensure_runtime_ready=mock.Mock(),
-                fetch_html_with_fast_browser=mocked_fast,
                 fetch_html_with_browser=mock.Mock(
                     return_value=browser_runtime.BrowserFetchedHtml(
                         source_url=WILEY_SAMPLE.landing_url,
@@ -1277,7 +1275,6 @@ class PublisherWaterfallTests(unittest.TestCase):
 
         mocked_api.assert_not_called()
         mocked_browser_pdf.assert_not_called()
-        mocked_fast.assert_not_called()
         self.assertEqual(_payload_route(raw_payload), "html")
         self.assertEqual(article.source, "wiley_browser")
         self.assertIn("fulltext:wiley_html_ok", article.quality.source_trail)

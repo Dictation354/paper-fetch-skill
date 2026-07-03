@@ -97,6 +97,14 @@ class AtyponBrowserWorkflowBrowserRuntimeTests(unittest.TestCase):
         self.assertEqual(merged["browser_user_agent"], "UA/1")
         self.assertEqual(merged["browser_final_url"], "https://example.org/pdf")
 
+    def test_merge_browser_context_seeds_preserves_fetcher_marker(self) -> None:
+        merged = browser_runtime.merge_browser_context_seeds(
+            {"paper_fetch_html_fetcher": "cloakbrowser"},
+            {"paper_fetch_html_fetcher": "direct_http"},
+        )
+
+        self.assertEqual(merged["paper_fetch_html_fetcher"], "direct_http")
+
     def test_warm_browser_context_merges_existing_and_preflight_seed(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             config = self._runtime_config(tmpdir, "wiley", "10.1111/test")

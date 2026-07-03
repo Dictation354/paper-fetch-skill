@@ -1,4 +1,4 @@
-"""AMS browser-workflow HTML callbacks."""
+"""AMS HTML extraction callbacks."""
 
 from __future__ import annotations
 

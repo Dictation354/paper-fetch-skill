@@ -23,7 +23,7 @@ Date: 2026-05-22
 | --- | --- | --- | --- | --- | --- | --- |
 | 14.3 MiB | `tests/fixtures/golden_criteria/10.3390_en16186655/original.pdf` | pdf | mdpi | yes | tests/fixtures/golden_criteria/manifest.json<br>docs/extraction-rules.md | lfs-evaluate |
 | 9.8 MiB | `tests/fixtures/golden_criteria/10.48550_arxiv.2006.11239v2/original.pdf` | pdf | arxiv | yes | tests/fixtures/golden_criteria/manifest.json<br>docs/extraction-rules.md | lfs-evaluate |
-| 2.5 MiB | `tests/fixtures/golden_criteria/10.1175_jcli-d-25-0547.1/original.pdf` | pdf | ams | yes | tests/fixtures/golden_criteria/manifest.json<br>docs/extraction-rules.md | compress-evaluate |
+| 2.6 MiB | `tests/fixtures/golden_criteria/10.1175_jcli-d-25-0547.1/original.pdf` | pdf | ams | yes | tests/fixtures/golden_criteria/manifest.json<br>docs/extraction-rules.md | compress-evaluate |
 | 2.0 MiB | `tests/fixtures/golden_criteria/10.1175_mwr-d-24-0060.1/original.html` | html | ams | yes | tests/fixtures/golden_criteria/manifest.json<br>docs/extraction-rules.md | minimize-evaluate |
 | 1.8 MiB | `tests/fixtures/golden_criteria/10.1175_waf-d-24-0019.1/original.html` | html | ams | yes | tests/fixtures/golden_criteria/manifest.json<br>docs/extraction-rules.md | minimize-evaluate |
 | 1.6 MiB | `tests/fixtures/golden_criteria/10.1175_jhm-d-23-0228.1/original.html` | html | ams | yes | tests/fixtures/golden_criteria/manifest.json<br>docs/extraction-rules.md | minimize-evaluate |
@@ -33,8 +33,8 @@ Date: 2026-05-22
 | 1.5 MiB | `tests/fixtures/golden_criteria/10.1175_jcli-d-23-0738.1/original.html` | html | ams | yes | tests/fixtures/golden_criteria/manifest.json<br>docs/extraction-rules.md | minimize-evaluate |
 | 1.4 MiB | `tests/fixtures/golden_criteria/10.1175_jtech-d-24-0028.1/original.html` | html | ams | yes | tests/fixtures/golden_criteria/manifest.json<br>docs/extraction-rules.md | minimize-evaluate |
 | 1.3 MiB | `tests/fixtures/golden_criteria/10.1175_jamc-d-24-0048.1/original.html` | html | ams | yes | docs/extraction-rules.md<br>tests/fixtures/golden_criteria/manifest.json | minimize-evaluate |
-| 1.3 MiB | `tests/fixtures/golden_criteria/10.1175_bams-d-24-0223.1/original.html` | html | ams | yes | tests/fixtures/golden_criteria/manifest.json<br>docs/extraction-rules.md | minimize-evaluate |
 | 1.3 MiB | `tests/fixtures/golden_criteria/10.1175_bams-d-24-0270.1/original.pdf` | pdf | ams | yes | tests/fixtures/golden_criteria/manifest.json<br>docs/extraction-rules.md | compress-evaluate |
+| 1.3 MiB | `tests/fixtures/golden_criteria/10.1175_bams-d-24-0223.1/original.html` | html | ams | yes | tests/fixtures/golden_criteria/manifest.json<br>docs/extraction-rules.md | minimize-evaluate |
 | 1.1 MiB | `tests/fixtures/golden_criteria/10.1126_science.abp8622/original.html` | html | science | yes | tests/fixtures/golden_criteria/manifest.json<br>docs/extraction-rules.md | minimize-evaluate |
 | 977 KiB | `tests/fixtures/golden_criteria/10.5194_cp-1-1-2005/original.pdf` | pdf | copernicus | yes | tests/fixtures/golden_criteria/manifest.json<br>docs/extraction-rules.md | compress-evaluate |
 | 922 KiB | `tests/fixtures/golden_criteria/10.1126_sciadv.adl6155/original.html` | html | science | yes | tests/fixtures/golden_criteria/manifest.json<br>docs/extraction-rules.md | keep |
@@ -60,7 +60,7 @@ Date: 2026-05-22
 | 603 KiB | `tests/fixtures/golden_criteria/10.1016_j.rse.2025.114648/original.xml` | xml | elsevier | yes | tests/fixtures/golden_criteria/manifest.json<br>docs/extraction-rules.md | keep |
 | 594 KiB | `tests/fixtures/golden_criteria/10.1126_science.ady3136/original.html` | html | science | yes | tests/fixtures/golden_criteria/manifest.json<br>docs/extraction-rules.md | keep |
 | 591 KiB | `tests/fixtures/golden_criteria/10.3390_rs16010010/original.html` | html | mdpi | yes | tests/fixtures/golden_criteria/manifest.json<br>docs/extraction-rules.md | keep |
-| 583 KiB | `tests/fixtures/golden_criteria/10.1175_jcli-d-25-0547.1/landing.html` | html | ams | yes | tests/fixtures/golden_criteria/manifest.json<br>docs/extraction-rules.md | keep |
+| 584 KiB | `tests/fixtures/golden_criteria/10.1175_jcli-d-25-0547.1/landing.html` | html | ams | yes | tests/fixtures/golden_criteria/manifest.json<br>docs/extraction-rules.md | keep |
 
 ## 治理规则
 

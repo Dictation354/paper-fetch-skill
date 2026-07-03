@@ -25,9 +25,5 @@ def test_browser_workflow_namespace_uses_canonical_child_modules() -> None:
         is browser_workflow.build_browser_workflow_pdf_candidates
     )
     assert (
-        html_extraction.fetch_html_with_fast_browser
-        is browser_workflow.fetch_html_with_fast_browser
-    )
-    assert (
         fetchers._choose_browser_seed_url is browser_workflow._choose_browser_seed_url
     )

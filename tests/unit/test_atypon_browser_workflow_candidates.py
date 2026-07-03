@@ -214,12 +214,6 @@ class AtyponBrowserWorkflowCandidateTests(unittest.TestCase):
             ("science", ScienceClient(None, {}), SCIENCE_SAMPLE.doi, None),
             ("pnas", PnasClient(None, {}), PNAS_SAMPLE.doi, None),
             ("wiley", WileyClient(None, {}), WILEY_SAMPLE.doi, crossref_pdf_url),
-            (
-                "ams",
-                AmsClient(None, {}),
-                "10.1175/jcli-d-23-0738.1",
-                "https://journals.ametsoc.org/downloadpdf/journals/clim/37/24/JCLI-D-23-0738.1.xml",
-            ),
             ("acs", AcsClient(None, {}), ACS_SAMPLE.doi, None),
             ("aip", AipClient(None, {}), AIP_SAMPLE.doi, None),
         )
@@ -243,6 +237,39 @@ class AtyponBrowserWorkflowCandidateTests(unittest.TestCase):
                     client.pdf_candidates(doi, metadata),
                     build_pdf_candidates(provider, doi, pdf_url),
                 )
+
+    def test_ams_client_uses_direct_http_pdf_candidates_without_atypon_default_pdf_paths(
+        self,
+    ) -> None:
+        doi = "10.1175/jcli-d-23-0738.1"
+        landing_url = (
+            "https://journals.ametsoc.org/view/journals/clim/37/24/JCLI-D-23-0738.1.xml"
+        )
+        crossref_pdf_url = "https://journals.ametsoc.org/downloadpdf/journals/clim/37/24/JCLI-D-23-0738.1.xml"
+        client = AmsClient(None, {})
+
+        self.assertEqual(
+            client.html_candidates(doi, {"doi": doi, "landing_page_url": landing_url}),
+            [landing_url],
+        )
+        self.assertEqual(
+            client.pdf_candidates(
+                doi,
+                {
+                    "doi": doi,
+                    "landing_page_url": landing_url,
+                    "fulltext_links": [
+                        {"url": crossref_pdf_url, "content_type": "text/html"}
+                    ],
+                },
+            ),
+            [
+                crossref_pdf_url,
+                "https://journals.ametsoc.org/downloadpdf/journals/clim/37/24/JCLI-D-23-0738.1.pdf",
+                "https://journals.ametsoc.org/downloadpdf/view/journals/clim/37/24/JCLI-D-23-0738.1.xml",
+                "https://journals.ametsoc.org/downloadpdf/view/journals/clim/37/24/JCLI-D-23-0738.1.pdf",
+            ],
+        )
 
     def test_extract_pdf_url_from_crossref_recognizes_wiley_fullpdf_links(self) -> None:
         crossref_pdf_url = extract_pdf_url_from_crossref(

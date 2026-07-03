@@ -6,6 +6,18 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+### 变更
+
+- browser-backed provider 现在通过公共 `browser_runtime` backend facade 访问 CloakBrowser；auth、preflight、HTML fetch 和 seeded PDF fallback 共享 storage/profile 路径解析、storage-state 写锁和原子写入。
+- external CDP 现在会报告是否借用已有 context、忽略了哪些 context option，以及 storage-state cookie 注入数量；新增 `PAPER_FETCH_CDP_EXTERNAL_NEW_CONTEXT=1` 可在外部浏览器中创建新 context。
+- browser-backed 资产下载在安全的 caller-thread attempt 内会复用线程本地 page/context；遇到 Playwright 线程所有权异常会自动降级回 per-call close。
+- browser HTML、seeded PDF fallback、browser asset retry 和 browser preflight 循环新增协作式取消检查。
+- `paper-fetch browser-preflight` 现在会对内置样例复用各 browser-backed provider 的正常 HTML candidates 和 HTML bootstrap 重试语义，但仍不触发 PDF fallback。
+- 移除 PNAS fast browser HTML preflight 特例；PNAS 现在先走标准 browser workflow HTML bootstrap，再按需进入 seeded PDF fallback。
+- AMS 改为无需浏览器的 direct HTTP HTML provider，并新增 direct HTTP PDF fallback；成功时发布 `ams_html` 或 `ams_pdf`，仍不参与 browser auth / preflight / status，也不尝试 seeded-browser PDF fallback。
+- 同步 README、CLI/MCP instructions、provider/runtime/deployment/extraction 文档、AMS onboarding manifest / access review / cleaning-chain 证据，以及 provider runtime 优化计划，使其匹配新的 browser-runtime 与 AMS direct-HTTP 归属边界。
+- 扩展 unit 与 integration 覆盖：包含 AMS direct HTTP HTML/PDF fallback、browser-preflight provider candidates 与不触发 PDF 的行为、external-CDP new-context 诊断、browser runtime facade 接线，以及 browser workflow 依赖分组。
+
 ## 2.8.0 - 2026-07-02
 
 ### 新增

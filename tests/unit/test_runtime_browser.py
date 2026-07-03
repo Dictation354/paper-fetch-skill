@@ -454,6 +454,32 @@ def test_browser_manager_creates_owned_context_when_cdp_browser_has_no_contexts(
     assert cdp_browser.close_count == 1
 
 
+def test_browser_manager_external_new_context_does_not_borrow_existing_context(
+    monkeypatch,
+) -> None:
+    existing_context = _FakeCdpContext()
+    cdp_browser = _FakeCdpBrowser([existing_context])
+    monkeypatch.setattr(
+        runtime_browser,
+        "connect_browser_over_cdp",
+        lambda _endpoint: cdp_browser,
+    )
+    lifecycle = BrowserContextManager(
+        cdp_endpoint="ws://127.0.0.1:9222/devtools/browser/test",
+        external_new_context=True,
+    )
+
+    context = lifecycle.new_context(headless=True, locale="en-US")
+    diagnostics = context._paper_fetch_external_cdp_diagnostics
+    context.close()
+    lifecycle.close()
+
+    assert len(cdp_browser.contexts) == 2
+    assert existing_context.close_count == 0
+    assert cdp_browser.new_context_kwargs == [{"locale": "en-US"}]
+    assert diagnostics["borrowed_existing_context"] is False
+
+
 def test_runtime_context_passes_env_cdp_endpoint_to_browser_manager(
     monkeypatch,
 ) -> None:
@@ -523,6 +549,36 @@ def test_runtime_context_caches_browser_managers_by_runtime_config(
     assert first[1]["profile_dir"] == tmp_path / "science-profile"
     assert third[1]["profile_dir"] == tmp_path / "pnas-profile"
     assert len(created) == 2
+
+
+def test_runtime_context_dump_shared_browser_managers(monkeypatch, tmp_path) -> None:
+    class FakeLifecycle:
+        def __init__(self, **kwargs: Any) -> None:
+            self.kwargs = dict(kwargs)
+
+        def new_context(
+            self, **kwargs: Any
+        ) -> tuple[str, dict[str, Any], dict[str, Any]]:
+            return "context", self.kwargs, dict(kwargs)
+
+        def close(self) -> None:
+            pass
+
+    monkeypatch.setattr(runtime_module, "BrowserContextManager", FakeLifecycle)
+    context = RuntimeContext(env={})
+    context.new_browser_context_for_config(
+        headless=True,
+        cdp_endpoint="ws://127.0.0.1:9222/devtools/browser/test",
+        external_new_context=True,
+        profile_dir=tmp_path / "science-profile",
+    )
+
+    dump = runtime_module.dump_shared_browser_managers()
+    context.close()
+
+    assert any(item["ref_count"] == 1 for item in dump)
+    assert any(item["external_cdp"] for item in dump)
+    assert any(item["external_new_context"] for item in dump)
 
 
 def test_runtime_context_shares_browser_managers_across_runtime_instances(

@@ -53,57 +53,25 @@ class CliTests(unittest.TestCase):
         self.assertIn("--max-tokens MAX_TOKENS", help_text)
         self.assertIn("Markdown rendering budget", help_text)
 
-    def test_auth_ams_subcommand_invokes_auth_helper(self) -> None:
-        with tempfile.TemporaryDirectory() as tmpdir:
-            state_path = (
-                Path(tmpdir)
-                / "publisher-browser-profiles"
-                / "ams"
-                / "storage-state.json"
-            )
-            profile_dir = state_path.parent
-            auth_result = SimpleNamespace(
-                storage_state_path=state_path,
-                profile_dir=profile_dir,
-                env_written=False,
-                env_file_path=None,
-                verified=True,
-                final_url="https://journals.ametsoc.org/view/journals/mwre/example.xml",
-            )
-            stdout = io.StringIO()
-            stderr = io.StringIO()
-            original_argv = sys.argv
-            sys.argv = [
-                "paper_fetch.py",
-                "auth",
-                "ams",
-                "--timeout-ms",
-                "120000",
-            ]
-            try:
-                with (
-                    mock.patch.object(
-                        paper_fetch_cli,
-                        "authenticate_provider_profile",
-                        return_value=auth_result,
-                    ) as authenticate,
-                    contextlib.redirect_stdout(stdout),
-                    contextlib.redirect_stderr(stderr),
-                ):
-                    exit_code = paper_fetch_cli.main()
-            finally:
-                sys.argv = original_argv
+    def test_auth_ams_subcommand_is_not_supported(self) -> None:
+        stderr = io.StringIO()
+        original_argv = sys.argv
+        sys.argv = ["paper_fetch.py", "auth", "ams"]
+        try:
+            with (
+                mock.patch.object(
+                    paper_fetch_cli, "authenticate_provider_profile"
+                ) as authenticate,
+                contextlib.redirect_stderr(stderr),
+                self.assertRaises(SystemExit) as raised,
+            ):
+                paper_fetch_cli.main()
+        finally:
+            sys.argv = original_argv
 
-            self.assertEqual(exit_code, 0)
-            self.assertEqual(stderr.getvalue(), "")
-            self.assertIn("AMS storage state:", stdout.getvalue())
-            self.assertIn("AMS profile dir:", stdout.getvalue())
-            authenticate.assert_called_once()
-            kwargs = authenticate.call_args.kwargs
-            self.assertEqual(kwargs["provider"], "ams")
-            self.assertIsNone(kwargs["target_url"])
-            self.assertEqual(kwargs["timeout_ms"], 120000)
-            self.assertIsNone(kwargs["browser_user_agent"])
+        self.assertEqual(raised.exception.code, 2)
+        self.assertIn("invalid choice", stderr.getvalue())
+        authenticate.assert_not_called()
 
     def test_auth_wiley_subcommand_invokes_generic_auth_helper(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -164,10 +132,6 @@ class CliTests(unittest.TestCase):
 
     def test_auth_rejects_legacy_ams_only_args_for_all_providers(self) -> None:
         cases = (
-            ("ams", "--state-json", "state.json"),
-            ("ams", "--env-file", ".env"),
-            ("ams", "--no-env-write"),
-            ("ams", "--wait-seconds", "30"),
             ("wiley", "--state-json", "state.json"),
             ("wiley", "--env-file", ".env"),
             ("wiley", "--no-env-write"),
@@ -194,11 +158,11 @@ class CliTests(unittest.TestCase):
                 self.assertIn("unsupported for provider auth", stderr.getvalue())
                 authenticate.assert_not_called()
 
-    def test_auth_ams_subcommand_reports_provider_failure(self) -> None:
+    def test_auth_subcommand_reports_provider_failure(self) -> None:
         stdout = io.StringIO()
         stderr = io.StringIO()
         original_argv = sys.argv
-        sys.argv = ["paper_fetch.py", "auth", "ams"]
+        sys.argv = ["paper_fetch.py", "auth", "wiley"]
         try:
             with (
                 mock.patch.object(

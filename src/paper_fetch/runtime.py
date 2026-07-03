@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import copy
+import atexit
 import hashlib
 import threading
 import time
@@ -14,6 +15,7 @@ from collections.abc import Hashable, Mapping
 
 from .artifacts import DEFAULT_ARTIFACT_MODE, ArtifactMode, ArtifactStore
 from .config import (
+    CDP_EXTERNAL_NEW_CONTEXT_ENV_VAR,
     CLOAKBROWSER_BINARY_PATH_ENV_VAR,
     CLOAKBROWSER_CDP_ENDPOINT_ENV_VAR,
     CLOAKBROWSER_PROFILE_DIR_ENV_VAR,
@@ -51,7 +53,7 @@ _PARSE_CACHE_MISSING = object()
 _SESSION_CACHE_MISSING = object()
 _SHARED_BROWSER_MANAGER_LOCK = threading.RLock()
 _SHARED_BROWSER_MANAGERS: dict[
-    tuple[str, str, str, str], _SharedBrowserManagerEntry
+    tuple[str, str, str, str, str], _SharedBrowserManagerEntry
 ] = {}
 
 
@@ -62,7 +64,7 @@ class _SharedBrowserManagerEntry:
 
 
 class _SharedBrowserManagerLease:
-    def __init__(self, key: tuple[str, str, str, str], manager: Any) -> None:
+    def __init__(self, key: tuple[str, str, str, str, str], manager: Any) -> None:
         self._key = key
         self._manager = manager
         self._closed = False
@@ -92,9 +94,10 @@ class _SharedBrowserManagerLease:
 
 def _acquire_shared_browser_manager(
     *,
-    key: tuple[str, str, str, str],
+    key: tuple[str, str, str, str, str],
     binary_path: str | None,
     cdp_endpoint: str | None,
+    external_new_context: bool,
     profile_dir: Path | None,
     user_data_dir: Path | None,
 ) -> _SharedBrowserManagerLease:
@@ -105,6 +108,7 @@ def _acquire_shared_browser_manager(
                 manager=BrowserContextManager(
                     binary_path=binary_path,
                     cdp_endpoint=cdp_endpoint,
+                    external_new_context=external_new_context,
                     profile_dir=profile_dir,
                     user_data_dir=user_data_dir,
                 )
@@ -112,6 +116,32 @@ def _acquire_shared_browser_manager(
             _SHARED_BROWSER_MANAGERS[key] = entry
         entry.ref_count += 1
         return _SharedBrowserManagerLease(key, entry.manager)
+
+
+def dump_shared_browser_managers() -> list[dict[str, Any]]:
+    with _SHARED_BROWSER_MANAGER_LOCK:
+        return [
+            {
+                "key": key,
+                "ref_count": entry.ref_count,
+                "manager_type": entry.manager.__class__.__name__,
+                "external_cdp": bool(key[1]),
+                "external_new_context": key[2] == "1",
+            }
+            for key, entry in _SHARED_BROWSER_MANAGERS.items()
+        ]
+
+
+def close_shared_browser_managers() -> None:
+    with _SHARED_BROWSER_MANAGER_LOCK:
+        entries = list(_SHARED_BROWSER_MANAGERS.values())
+        _SHARED_BROWSER_MANAGERS.clear()
+    for entry in entries:
+        with contextlib.suppress(Exception):
+            entry.manager.close()
+
+
+atexit.register(close_shared_browser_managers)
 
 
 def _transport_disk_cache_dir(
@@ -208,7 +238,7 @@ class RuntimeContext:
         default_factory=threading.RLock, init=False, repr=False
     )
     _browser_context_manager: Any | None = field(default=None, init=False, repr=False)
-    _browser_context_managers: dict[tuple[str, str, str, str], Any] = field(
+    _browser_context_managers: dict[tuple[str, str, str, str, str], Any] = field(
         default_factory=dict,
         init=False,
         repr=False,
@@ -233,6 +263,7 @@ class RuntimeContext:
                 artifact_mode=self.artifact_mode,
             )
         self.stage_timings.setdefault("asset_seconds", 0.0)
+        self.stage_timings.setdefault("browser_seconds", 0.0)
         self.stage_timings.setdefault("formula_seconds", 0.0)
 
     def get_clients(self) -> Mapping[str, object]:
@@ -264,6 +295,7 @@ class RuntimeContext:
         headless: bool = True,
         binary_path: str | None = None,
         cdp_endpoint: str | None = None,
+        external_new_context: bool = False,
         profile_dir: Path | str | None = None,
         user_data_dir: Path | str | None = None,
         **context_kwargs: Any,
@@ -273,6 +305,7 @@ class RuntimeContext:
         return self._browser_lifecycle_for_config(
             binary_path=binary_path,
             cdp_endpoint=cdp_endpoint,
+            external_new_context=external_new_context,
             profile_dir=profile_dir,
             user_data_dir=user_data_dir,
         ).new_context(headless=headless, **context_kwargs)
@@ -331,9 +364,13 @@ class RuntimeContext:
                     if user_data_dir_value
                     else None
                 )
+                external_new_context = env_flag_enabled(
+                    self.env or {}, CDP_EXTERNAL_NEW_CONTEXT_ENV_VAR
+                )
                 key = self._browser_lifecycle_key(
                     binary_path=binary_path,
                     cdp_endpoint=cdp_endpoint,
+                    external_new_context=external_new_context,
                     profile_dir=profile_dir,
                     user_data_dir=user_data_dir,
                 )
@@ -341,6 +378,7 @@ class RuntimeContext:
                     key=key,
                     binary_path=binary_path,
                     cdp_endpoint=cdp_endpoint,
+                    external_new_context=external_new_context,
                     profile_dir=profile_dir,
                     user_data_dir=user_data_dir,
                 )
@@ -351,12 +389,14 @@ class RuntimeContext:
         *,
         binary_path: str | None,
         cdp_endpoint: str | None,
-        profile_dir: Path | str | None,
-        user_data_dir: Path | str | None,
+        external_new_context: bool,
+        profile_dir: Path | str | None = None,
+        user_data_dir: Path | str | None = None,
     ) -> Any:
         key = self._browser_lifecycle_key(
             binary_path=binary_path,
             cdp_endpoint=cdp_endpoint,
+            external_new_context=external_new_context,
             profile_dir=profile_dir,
             user_data_dir=user_data_dir,
         )
@@ -377,6 +417,7 @@ class RuntimeContext:
                     key=key,
                     binary_path=active_binary_path,
                     cdp_endpoint=active_cdp_endpoint,
+                    external_new_context=external_new_context,
                     profile_dir=active_profile_dir,
                     user_data_dir=active_user_data_dir,
                 )
@@ -388,12 +429,14 @@ class RuntimeContext:
         *,
         binary_path: str | None,
         cdp_endpoint: str | None,
+        external_new_context: bool = False,
         profile_dir: Path | str | None,
         user_data_dir: Path | str | None,
-    ) -> tuple[str, str, str, str]:
+    ) -> tuple[str, str, str, str, str]:
         return (
             str(binary_path or "").strip(),
             str(cdp_endpoint or "").strip(),
+            "1" if external_new_context else "0",
             str(Path(profile_dir).expanduser()) if profile_dir is not None else "",
             str(Path(user_data_dir).expanduser()) if user_data_dir is not None else "",
         )

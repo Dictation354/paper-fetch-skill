@@ -79,7 +79,6 @@ register_provider_bundle(
 PNAS_BROWSER_PROFILE = browser_workflow.make_atypon_browser_profile(
     "pnas",
     fallback_author_extractor=_pnas_html.extract_authors,
-    direct_playwright_html_preflight=True,
 )
 
 

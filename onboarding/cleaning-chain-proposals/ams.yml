@@ -130,6 +130,7 @@ proposed_markdown_contract_delta:
       cross_route_guard: []
       truly_vacuous: []
     suggested_must_include_from_fixtures: []
+skipped_cleaning_inventory: []
 selected_drop_tokens:
 - token: Download PDF
   fixture_count: 4

@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from paper_fetch import auth
 from paper_fetch.config import XDG_DATA_HOME_ENV_VAR
 from paper_fetch.providers.base import ProviderFailure
@@ -125,9 +127,7 @@ def _patch_auth_runtime(
     if env is not None:
         runtime_env.update(env)
     monkeypatch.setattr(auth, "build_runtime_env", lambda: dict(runtime_env))
-    monkeypatch.setattr(
-        auth._cloakbrowser, "ensure_runtime_ready", lambda _runtime: None
-    )
+    monkeypatch.setattr(auth, "ensure_runtime_ready", lambda _runtime: None)
 
 
 def test_upsert_env_file_updates_existing_values(tmp_path) -> None:
@@ -155,68 +155,22 @@ def test_upsert_env_file_updates_existing_values(tmp_path) -> None:
     )
 
 
-def test_authenticate_provider_profile_ams_uses_provider_profile_not_legacy_env(
-    monkeypatch, tmp_path
-) -> None:
-    legacy_state_path = tmp_path / "legacy" / "ams-storage-state.json"
-    fake_manager = _install_fake_browser_manager(monkeypatch)
+def test_authenticate_provider_profile_ams_is_not_browser_backed(monkeypatch) -> None:
+    with pytest.raises(ProviderFailure) as raised:
+        auth.authenticate_provider_profile(
+            provider="ams",
+            confirm=lambda _prompt: None,
+        )
 
-    _patch_auth_runtime(
-        monkeypatch,
-        tmp_path,
-        {
-            "CLOAKBROWSER_CDP_ENDPOINT": "ws://127.0.0.1:9222/devtools/browser/auth",
-            "PAPER_FETCH_AMS_STORAGE_STATE_JSON": str(legacy_state_path),
-        },
-    )
-
-    result = auth.authenticate_provider_profile(
-        provider="ams",
-        confirm=lambda _prompt: None,
-    )
-
-    profile_dir = (
-        tmp_path / "xdg" / "paper-fetch" / "publisher-browser-profiles" / "ams"
-    )
-    storage_state_path = profile_dir / "storage-state.json"
-    assert result.provider == "ams"
-    assert result.profile_dir == profile_dir
-    assert result.storage_state_path == storage_state_path
-    assert result.env_written is False
-    assert result.env_file_path is None
-    assert result.verified is True
-    assert result.final_url == auth.AMS_AUTH_URL
-    assert not legacy_state_path.exists()
-    assert json.loads(storage_state_path.read_text(encoding="utf-8")) == {
-        "cookies": [
-            {"name": "sid", "value": "ams", "domain": ".ametsoc.org", "path": "/"}
-        ],
-        "origins": [
-            {
-                "origin": "https://journals.ametsoc.org",
-                "localStorage": [{"name": "ams", "value": "1"}],
-            }
-        ],
-    }
-    manager = fake_manager.instances[0]
-    assert manager.cdp_endpoint == "ws://127.0.0.1:9222/devtools/browser/auth"
-    assert manager.user_data_dir == profile_dir
-    assert manager.new_context_kwargs["headless"] is False
-    assert "storage_state" not in manager.new_context_kwargs
-    assert manager.context.page.goto_calls == [
-        (auth.AMS_AUTH_URL, {"wait_until": "domcontentloaded", "timeout": 120000})
-    ]
-    assert manager.context.storage_state_path is None
-    assert manager.context.page.closed is True
-    assert manager.context.closed is True
-    assert manager.closed is True
+    assert raised.value.code == "error"
+    assert "Unsupported auth provider" in raised.value.message
 
 
 def test_browser_auth_provider_names_uses_runtime_catalog() -> None:
     names = auth.browser_auth_provider_names()
 
     assert "wiley" in names
-    assert "ams" in names
+    assert "ams" not in names
     assert "arxiv" not in names
 
 

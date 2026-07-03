@@ -240,6 +240,7 @@ class _BorrowedBrowserContext:
         self._context = context
         self._browser = browser
         self._paper_fetch_borrowed_context = True
+        self._paper_fetch_external_cdp_diagnostics: dict[str, Any] = {}
         self._closed = False
 
     def close(self) -> None:
@@ -258,6 +259,7 @@ class _OwnedBrowserContext:
     def __init__(self, context: Any, browser: Any) -> None:
         self._context = context
         self._browser = browser
+        self._paper_fetch_external_cdp_diagnostics: dict[str, Any] = {}
         self._closed = False
 
     def close(self) -> None:
@@ -290,6 +292,7 @@ class BrowserContextManager:
 
     binary_path: str | None = None
     cdp_endpoint: str | None = None
+    external_new_context: bool = False
     profile_dir: Path | None = None
     user_data_dir: Path | None = None
     profile_lock_timeout_seconds: float = DEFAULT_PROFILE_LOCK_TIMEOUT_SECONDS
@@ -439,9 +442,10 @@ class BrowserContextManager:
                 raise
             if using_external_endpoint:
                 contexts = list(getattr(browser, "contexts", []) or [])
-                if contexts:
+                if contexts and not self.external_new_context:
                     context = contexts[0]
                     storage_state = context_kwargs.get("storage_state")
+                    cookie_count = 0
                     if storage_state is not None:
                         try:
                             cookie_count = _apply_storage_state_cookies(
@@ -465,13 +469,28 @@ class BrowserContextManager:
                             "cdp_external_context_ignored_options keys=%s",
                             ",".join(ignored_keys),
                         )
-                    return _BorrowedBrowserContext(context, browser)
+                    borrowed = _BorrowedBrowserContext(context, browser)
+                    borrowed._paper_fetch_external_cdp_diagnostics = {
+                        "external_cdp": True,
+                        "borrowed_existing_context": True,
+                        "ignored_context_options": ignored_keys,
+                        "storage_state_cookie_count": cookie_count,
+                    }
+                    return borrowed
             try:
                 context = browser.new_context(**context_kwargs)
             except Exception:
                 _safe_close(browser)
                 raise
-            return _OwnedBrowserContext(context, browser)
+            owned = _OwnedBrowserContext(context, browser)
+            if using_external_endpoint:
+                owned._paper_fetch_external_cdp_diagnostics = {
+                    "external_cdp": True,
+                    "borrowed_existing_context": False,
+                    "ignored_context_options": [],
+                    "storage_state_cookie_count": None,
+                }
+            return owned
 
     def close(self) -> None:
         with self._lock:
