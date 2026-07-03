@@ -79,6 +79,7 @@ from ._waterfall import (
 )
 from ..reason_codes import (
     ERROR,
+    NO_ACCESS,
     NO_RESULT,
     NOT_CONFIGURED,
     NOT_SUPPORTED,
@@ -281,6 +282,7 @@ def elsevier_xml_root_from_payload(
         except ET.ParseError:
             return None
 
+    # Reuse the parsed XML tree as read-only state; callers must not mutate it.
     return context.get_or_set_parse_cache(key, parse_root, copy_value=False)
 
 
@@ -1136,7 +1138,7 @@ class ElsevierClient(ProviderClient):
                 run=run_xml,
                 failure_marker=fulltext_marker("elsevier", "fail", route="xml"),
                 failure_warning=xml_failure_warning,
-                continue_codes=(NO_RESULT, ERROR, RATE_LIMITED),
+                continue_codes=(NO_RESULT, NO_ACCESS, ERROR, RATE_LIMITED),
             ),
             ProviderWaterfallStep(
                 label="pii_xml",
@@ -1147,7 +1149,7 @@ class ElsevierClient(ProviderClient):
                 failure_warning=lambda failure, _state: (
                     f"Elsevier PII XML fallback was not usable ({failure.message}); attempting official PDF fallback."
                 ),
-                continue_codes=(NO_RESULT, ERROR, RATE_LIMITED),
+                continue_codes=(NO_RESULT, NO_ACCESS, ERROR, RATE_LIMITED),
             ),
             ProviderWaterfallStep(
                 label="pdf",

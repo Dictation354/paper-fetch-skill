@@ -5,6 +5,8 @@ param(
     [switch]$SkipSmoke
 )
 
+# Repo-local legacy Windows offline installer. Release users should run the
+# Inno Setup .exe, which invokes scripts/windows-installer-helper.ps1.
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
@@ -28,6 +30,16 @@ $McpEnvKeys = @(
     "MATHML_TO_LATEX_NODE_BIN",
     "CLOAKBROWSER_HEADLESS"
 )
+$OfflineEnvKeys = @(
+    "PAPER_FETCH_DOWNLOAD_DIR",
+    "PAPER_FETCH_FORMULA_TOOLS_DIR",
+    "PAPER_FETCH_IMAGE_TOOLS_DIR",
+    "MATHML_TO_LATEX_NODE_BIN",
+    "CLOAKBROWSER_HEADLESS",
+    "PYTHONUTF8",
+    "PYTHONIOENCODING",
+    "PAPER_FETCH_BROWSER_USER_AGENT"
+)
 
 function Write-Log {
     param([string]$Message)
@@ -49,13 +61,17 @@ function Import-InstallerManifest {
     $script:SkillName = [string]$manifest.skill.name
     $script:McpName = [string]$manifest.mcp.name
     $script:McpEnvKeys = @($manifest.mcp.env_keys | ForEach-Object { [string]$_ })
+    if ($null -ne $manifest.env_sets -and $null -ne $manifest.env_sets.offline_env_keys) {
+        $script:OfflineEnvKeys = @($manifest.env_sets.offline_env_keys | ForEach-Object { [string]$_ })
+    }
     Normalize-McpEnvKeys
 
     if ([string]::IsNullOrWhiteSpace($script:ManagedBegin) -or
         [string]::IsNullOrWhiteSpace($script:ManagedEnd) -or
         [string]::IsNullOrWhiteSpace($script:SkillName) -or
         [string]::IsNullOrWhiteSpace($script:McpName) -or
-        $script:McpEnvKeys.Count -eq 0) {
+        $script:McpEnvKeys.Count -eq 0 -or
+        $script:OfflineEnvKeys.Count -eq 0) {
         Fail "installer manifest is missing required installer constants."
     }
 }
@@ -108,6 +124,12 @@ function Quote-DotenvValue {
     return "'$escaped'"
 }
 
+function Quote-DotenvString {
+    param([string]$Value)
+    $escaped = $Value.Replace("'", "\'")
+    return "'$escaped'"
+}
+
 function ConvertFrom-DotenvValue {
     param([string]$Value)
     $trimmed = $Value.Trim()
@@ -119,6 +141,10 @@ function ConvertFrom-DotenvValue {
         }
     }
     return $trimmed
+}
+
+function Get-BrowserUserAgent {
+    return "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36"
 }
 
 function Test-RunningOnWindowsPlatform {
@@ -258,26 +284,44 @@ function Install-ProjectVenv {
     }
 }
 
+function Get-OfflineEnvValue {
+    param([string]$Name)
+
+    switch ($Name) {
+        "PAPER_FETCH_DOWNLOAD_DIR" { return (Join-Path $BundleRoot "downloads") }
+        "PAPER_FETCH_FORMULA_TOOLS_DIR" { return (Join-Path $BundleRoot "formula-tools") }
+        "PAPER_FETCH_IMAGE_TOOLS_DIR" { return (Join-Path $BundleRoot "image-tools") }
+        "MATHML_TO_LATEX_NODE_BIN" { return (Join-Path $BundleRoot ".venv/Lib/site-packages/playwright/driver/node.exe") }
+        "CLOAKBROWSER_HEADLESS" { return "true" }
+        "PYTHONUTF8" { return "1" }
+        "PYTHONIOENCODING" { return "utf-8" }
+        "PAPER_FETCH_BROWSER_USER_AGENT" { return (Get-BrowserUserAgent) }
+        default { Fail "Unknown offline env key in installer manifest: $Name" }
+    }
+}
+
+function Format-DotenvAssignment {
+    param([string]$Name, [string]$Value)
+
+    if ($Name -in @("PYTHONUTF8", "PYTHONIOENCODING", "CLOAKBROWSER_HEADLESS", "PAPER_FETCH_BROWSER_USER_AGENT")) {
+        return "$Name=$(Quote-DotenvString $Value)"
+    }
+    return "$Name=$(Quote-DotenvValue $Value)"
+}
+
 function New-ManagedEnvLines {
-    $downloadDir = Join-Path $BundleRoot "downloads"
-    $formulaToolsDir = Join-Path $BundleRoot "formula-tools"
-    $imageToolsDir = Join-Path $BundleRoot "image-tools"
-    $mathmlNode = Join-Path $BundleRoot ".venv/Lib/site-packages/playwright/driver/node.exe"
-    return @(
-        "",
-        $ManagedBegin,
-        "PAPER_FETCH_DOWNLOAD_DIR=$(Quote-DotenvValue $downloadDir)",
-        "PAPER_FETCH_FORMULA_TOOLS_DIR=$(Quote-DotenvValue $formulaToolsDir)",
-        "PAPER_FETCH_IMAGE_TOOLS_DIR=$(Quote-DotenvValue $imageToolsDir)",
-        "MATHML_TO_LATEX_NODE_BIN=$(Quote-DotenvValue $mathmlNode)",
-        "CLOAKBROWSER_HEADLESS='true'",
-        "PAPER_FETCH_BROWSER_USER_AGENT='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36'",
-        "# Optional: connect to an already-running Chrome/CloakBrowser CDP endpoint.",
-        "# CLOAKBROWSER_CDP_ENDPOINT='ws://127.0.0.1:9222/devtools/browser/...'",
-        "# Optional: use a preinstalled Chrome/CloakBrowser binary instead of cloakbrowser download.",
-        "# CLOAKBROWSER_BINARY_PATH='C:/path/to/chrome.exe'",
-        $ManagedEnd
-    )
+    $lines = New-Object System.Collections.Generic.List[string]
+    $lines.Add("")
+    $lines.Add($ManagedBegin)
+    foreach ($name in $OfflineEnvKeys) {
+        $lines.Add((Format-DotenvAssignment -Name $name -Value ([string](Get-OfflineEnvValue $name))))
+    }
+    $lines.Add("# Optional: connect to an already-running Chrome/CloakBrowser CDP endpoint.")
+    $lines.Add("# CLOAKBROWSER_CDP_ENDPOINT='ws://127.0.0.1:9222/devtools/browser/...'")
+    $lines.Add("# Optional: use a preinstalled Chrome/CloakBrowser binary instead of cloakbrowser download.")
+    $lines.Add("# CLOAKBROWSER_BINARY_PATH='C:/path/to/chrome.exe'")
+    $lines.Add($ManagedEnd)
+    return $lines.ToArray()
 }
 
 function Write-ManagedEnvFile {
@@ -357,6 +401,9 @@ $venvScripts = Join-Path $InstallRoot ".venv/Scripts"
 $formulaBin = Join-Path $InstallRoot "formula-tools/bin"
 $imageBin = Join-Path $InstallRoot "image-tools/bin"
 $env:PATH = "$venvScripts;$formulaBin;$imageBin;$env:PATH"
+if ([string]::IsNullOrWhiteSpace($env:PAPER_FETCH_DOWNLOAD_DIR)) {
+    $env:PAPER_FETCH_DOWNLOAD_DIR = Join-Path $InstallRoot "downloads"
+}
 if ([string]::IsNullOrWhiteSpace($env:PAPER_FETCH_FORMULA_TOOLS_DIR)) {
     $env:PAPER_FETCH_FORMULA_TOOLS_DIR = Join-Path $InstallRoot "formula-tools"
 }
@@ -368,6 +415,12 @@ if ([string]::IsNullOrWhiteSpace($env:MATHML_TO_LATEX_NODE_BIN)) {
 }
 if ([string]::IsNullOrWhiteSpace($env:CLOAKBROWSER_HEADLESS)) {
     $env:CLOAKBROWSER_HEADLESS = "true"
+}
+if ([string]::IsNullOrWhiteSpace($env:PYTHONUTF8)) {
+    $env:PYTHONUTF8 = "1"
+}
+if ([string]::IsNullOrWhiteSpace($env:PYTHONIOENCODING)) {
+    $env:PYTHONIOENCODING = "utf-8"
 }
 '@
     [System.IO.File]::WriteAllText($target, $content, [System.Text.UTF8Encoding]::new($false))

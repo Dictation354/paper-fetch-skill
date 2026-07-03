@@ -9,6 +9,7 @@ import subprocess
 import stat
 import sys
 from pathlib import Path
+from unittest import mock
 
 from paper_fetch.formula import convert as formula_conversion
 from tests.golden_criteria import golden_criteria_scenario_asset
@@ -382,6 +383,43 @@ class FormulaConversionTests(unittest.TestCase):
         self.assertEqual(second.status, "ok")
         self.assertEqual(second.duration_ms, 0)
         self.assertEqual([round(duration, 3) for duration in durations], [0.125, 0.05])
+
+    def test_texmath_cache_avoids_duplicate_subprocess_run(self) -> None:
+        raw_mathml = (
+            '<math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi></math>'
+        )
+        with tempfile.TemporaryDirectory() as tmpdir:
+            texmath_bin = Path(tmpdir) / (
+                "texmath.exe" if os.name == "nt" else "texmath"
+            )
+            texmath_bin.write_bytes(b"")
+            calls: list[list[str]] = []
+
+            def fake_run(args, **_kwargs):
+                command = [str(item) for item in args]
+                calls.append(command)
+                return subprocess.CompletedProcess(command, 0, "x", "")
+
+            with mock.patch.object(
+                formula_conversion.subprocess, "run", side_effect=fake_run
+            ):
+                first = formula_conversion.convert_mathml_string(
+                    raw_mathml,
+                    display_mode=False,
+                    env={"TEXMATH_BIN": str(texmath_bin)},
+                    backend="texmath",
+                )
+                second = formula_conversion.convert_mathml_string(
+                    raw_mathml,
+                    display_mode=False,
+                    env={"TEXMATH_BIN": str(texmath_bin)},
+                    backend="texmath",
+                )
+
+        self.assertEqual(first.status, "ok")
+        self.assertEqual(second.status, "ok")
+        self.assertEqual(second.duration_ms, 0)
+        self.assertEqual(len(calls), 1)
 
     def test_mathml_to_latex_worker_success_avoids_cli_process(self) -> None:
         raw_mathml = (

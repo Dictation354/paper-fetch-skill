@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Sequence
+from typing import Any
 
 from ..extraction.citation_anchors import looks_like_reference_href
 from ..utils import normalize_text
@@ -171,6 +172,81 @@ def is_reference_href(href: str) -> bool:
 
 def is_citation_link(href: str, text: str) -> bool:
     return is_citation_text(text) and is_reference_href(href)
+
+
+def _strip_citation_wrappers(
+    text: str, strip_wrappers: Sequence[tuple[str, str]]
+) -> str:
+    stripped = normalize_text(text)
+    for opener, closer in strip_wrappers:
+        if (
+            stripped.startswith(opener)
+            and stripped.endswith(closer)
+            and len(stripped) > len(opener) + len(closer)
+        ):
+            return stripped[len(opener) : -len(closer)].strip()
+    return stripped
+
+
+def _html_node_name(node: Any) -> str:
+    return normalize_text(str(getattr(node, "name", "") or "")).lower()
+
+
+def _html_node_text(node: Any) -> str:
+    get_text = getattr(node, "get_text", None)
+    if not callable(get_text):
+        return ""
+    return normalize_text(str(get_text(" ", strip=True)))
+
+
+def _html_node_attr(node: Any, name: str) -> str:
+    get = getattr(node, "get", None)
+    if not callable(get):
+        return ""
+    return normalize_text(str(get(name) or ""))
+
+
+def _html_node_anchors(node: Any) -> list[Any]:
+    find_all = getattr(node, "find_all", None)
+    if not callable(find_all):
+        return []
+    return list(find_all("a"))
+
+
+def numeric_citation_payload_from_html_node(
+    node: Any,
+    *,
+    wrapper_tags: Sequence[str] = ("sup",),
+    strip_wrappers: Sequence[tuple[str, str]] = (("[", "]"),),
+) -> str | None:
+    from ..extraction.html.semantics import has_explicit_reference_marker
+
+    name = _html_node_name(node)
+    if not name:
+        return None
+    text = _html_node_text(node)
+    citation_text = _strip_citation_wrappers(text, strip_wrappers)
+    payload = numeric_citation_payload(citation_text)
+    if payload is None:
+        return None
+    if name == "a":
+        href = _html_node_attr(node, "href")
+        if has_explicit_reference_marker(node) or is_citation_link(href, citation_text):
+            return payload
+        return None
+    normalized_wrapper_tags = {normalize_text(tag).lower() for tag in wrapper_tags}
+    if name in normalized_wrapper_tags:
+        anchors = _html_node_anchors(node)
+        if anchors and all(
+            numeric_citation_payload_from_html_node(
+                anchor,
+                wrapper_tags=wrapper_tags,
+                strip_wrappers=strip_wrappers,
+            )
+            for anchor in anchors
+        ):
+            return payload
+    return None
 
 
 def _join_label_reference(match: re.Match[str]) -> str:

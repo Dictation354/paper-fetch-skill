@@ -111,6 +111,7 @@ class BrowserRuntimeBackend(Protocol):
         config: BrowserRuntimeConfig,
         browser_context_seed: Mapping[str, Any] | None = None,
         runtime_context: Any | None = None,
+        lightweight: bool = False,
     ) -> dict[str, Any]: ...
 
     def storage_state_path(self, config: BrowserRuntimeConfig) -> Path | None: ...

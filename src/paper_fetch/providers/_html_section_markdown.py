@@ -25,24 +25,23 @@ from ..extraction.markdown_render.figures import (
 )
 from ..extraction.markdown_render.formulas import (
     is_html_formula_container as _is_formula_container,
+    is_html_display_formula_node as _is_display_formula_node,
     is_html_formula_image_node as _is_formula_image_node,
     is_mathjax_tex_node as _is_mathjax_tex_node,
     normalize_tex_formula_text as _normalize_tex_formula_text,
+    render_inline_latex_markdown as _render_inline_latex_markdown,
     render_html_formula_container as _render_formula_container,
     render_html_formula_image_node as _render_formula_image_node,
     render_html_mathml_node as _render_mathml_node,
 )
-from ..extraction.html.semantics import (
-    has_explicit_reference_marker,
-    normalize_section_title,
-)
+from ..extraction.html.semantics import normalize_section_title
 from ..extraction.html._runtime import (
     HTML_BLOCK_TAGS,
     HTML_DROP_TAGS,
     should_drop_html_element,
 )
 from ..models import normalize_text
-from ..markdown.citations import is_citation_link, numeric_citation_payload
+from ..markdown.citations import numeric_citation_payload_from_html_node
 
 from bs4 import NavigableString, Tag
 
@@ -262,29 +261,11 @@ def render_figure_markdown(node: Any, lines: list[str]) -> None:
     )
 
 
-def _has_explicit_citation_marker(node: Any) -> bool:
-    return has_explicit_reference_marker(node)
-
-
 def _numeric_citation_payload_from_html(node: Any) -> str | None:
-    if not isinstance(node, Tag):
-        return None
-    text = normalize_text(node.get_text("", strip=True))
-    payload = numeric_citation_payload(text.strip("[]"))
-    if payload is None:
-        return None
-    href = normalize_text(str(node.get("href") or ""))
-    if node.name == "a" and (
-        _has_explicit_citation_marker(node) or is_citation_link(href, text)
-    ):
-        return payload
-    if node.name == "sup":
-        anchors = [match for match in node.find_all("a") if isinstance(match, Tag)]
-        if anchors and all(
-            _numeric_citation_payload_from_html(anchor) for anchor in anchors
-        ):
-            return payload
-    return None
+    return numeric_citation_payload_from_html_node(
+        node,
+        wrapper_tags=("sup", "i", "em"),
+    )
 
 
 def _is_linebreak_sensitive_markdown_block(block: str) -> bool:
@@ -342,7 +323,12 @@ def render_clean_html_node(node: Any) -> str:
     if node.name in HTML_DROP_TAGS:
         return ""
     if _is_mathjax_tex_node(node):
-        return _normalize_tex_formula_text(node.get_text("", strip=False))
+        latex = _normalize_tex_formula_text(node.get_text("", strip=False))
+        return (
+            latex
+            if _is_display_formula_node(node)
+            else _render_inline_latex_markdown(latex)
+        )
     if normalize_text(node.name or "").lower() == "math":
         return _render_mathml_node(node)
     if _is_formula_image_node(node):
@@ -382,7 +368,14 @@ def _raw_inline_markdown_from_node(node: Any) -> str | None:
     if not isinstance(node, Tag):
         return None
     if _is_mathjax_tex_node(node):
-        return _normalize_tex_formula_text(node.get_text("", strip=False)) or None
+        latex = _normalize_tex_formula_text(node.get_text("", strip=False))
+        if not latex:
+            return None
+        return (
+            latex
+            if _is_display_formula_node(node)
+            else _render_inline_latex_markdown(latex)
+        )
     if normalize_text(node.name or "").lower() == "math":
         return _render_mathml_node(node) or None
     if _is_formula_image_node(node):

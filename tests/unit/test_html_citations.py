@@ -2,11 +2,14 @@ from __future__ import annotations
 
 import unittest
 
+from bs4 import BeautifulSoup
+
 from paper_fetch.markdown.citations import (
     clean_citation_markers,
     is_citation_link,
     is_citation_text,
     make_numeric_citation_sentinel,
+    numeric_citation_payload_from_html_node,
     normalize_inline_citation_markdown,
 )
 from paper_fetch.providers.html_springer_nature import (
@@ -34,6 +37,66 @@ class HtmlCitationsTests(unittest.TestCase):
         self.assertFalse(is_citation_link("#Fig1", "1"))
         self.assertFalse(is_citation_link("#references", "1"))
         self.assertFalse(is_citation_link("#gcb16414-bib-0007", "2019"))
+
+    def test_numeric_citation_payload_from_html_node_handles_wrappers(self) -> None:
+        soup = BeautifulSoup(
+            """
+<p>
+  <i id="range"><a href="#core-collateral-R1" role="doc-biblioref">1</a>-<a href="#core-collateral-R3" role="doc-biblioref">3</a></i>
+  <a id="bracketed" data-test="citation-ref" href="#ref-CR1">[1,2]</a>
+  <sup id="bare">2</sup>
+  <a id="figure" href="#Fig1">[1]</a>
+  <a id="year" class="bibLink" href="#gcb16414-bib-0007">2019</a>
+</p>
+""",
+            "html.parser",
+        )
+
+        self.assertEqual(
+            numeric_citation_payload_from_html_node(
+                soup.select_one("#range"),
+                wrapper_tags=("sup", "i", "em"),
+            ),
+            "1–3",
+        )
+        self.assertEqual(
+            numeric_citation_payload_from_html_node(soup.select_one("#bracketed")),
+            "1, 2",
+        )
+        self.assertIsNone(
+            numeric_citation_payload_from_html_node(soup.select_one("#bare"))
+        )
+        self.assertIsNone(
+            numeric_citation_payload_from_html_node(soup.select_one("#figure"))
+        )
+        self.assertIsNone(
+            numeric_citation_payload_from_html_node(soup.select_one("#year"))
+        )
+
+    def test_section_and_atypon_citation_payloads_match_for_italic_ranges(self) -> None:
+        from paper_fetch.providers._html_section_markdown import (
+            render_clean_text_from_html,
+        )
+        from paper_fetch.providers.atypon_browser_workflow.normalization import (
+            _render_non_table_inline_node,
+        )
+
+        soup = BeautifulSoup(
+            """
+<p>Observed <i><a href="#core-collateral-R1" role="doc-biblioref">1</a> – <a href="#core-collateral-R3" role="doc-biblioref">3</a></i> in practice.</p>
+""",
+            "html.parser",
+        )
+
+        section = normalize_inline_citation_markdown(
+            render_clean_text_from_html(soup.p)
+        )
+        atypon = normalize_inline_citation_markdown(
+            _render_non_table_inline_node(soup.p)
+        )
+
+        self.assertEqual(section, "Observed<sup>1–3</sup> in practice.")
+        self.assertEqual(atypon, section)
 
     def test_clean_citation_markers_preserves_year_ranges(self) -> None:
         cleaned = clean_citation_markers(

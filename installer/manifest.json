@@ -20,6 +20,38 @@
       "CLOAKBROWSER_HEADLESS"
     ]
   },
+  "env_sets": {
+    "offline_env_keys": [
+      "PAPER_FETCH_DOWNLOAD_DIR",
+      "PAPER_FETCH_FORMULA_TOOLS_DIR",
+      "PAPER_FETCH_IMAGE_TOOLS_DIR",
+      "MATHML_TO_LATEX_NODE_BIN",
+      "CLOAKBROWSER_HEADLESS",
+      "PYTHONUTF8",
+      "PYTHONIOENCODING",
+      "PAPER_FETCH_BROWSER_USER_AGENT"
+    ],
+    "shell_env_keys": [
+      "PAPER_FETCH_ENV_FILE",
+      "PAPER_FETCH_DOWNLOAD_DIR",
+      "PAPER_FETCH_FORMULA_TOOLS_DIR",
+      "PAPER_FETCH_IMAGE_TOOLS_DIR",
+      "MATHML_TO_LATEX_NODE_BIN",
+      "CLOAKBROWSER_HEADLESS",
+      "PYTHONUTF8",
+      "PYTHONIOENCODING"
+    ],
+    "activate_env_keys": [
+      "PAPER_FETCH_ENV_FILE",
+      "PAPER_FETCH_DOWNLOAD_DIR",
+      "PAPER_FETCH_FORMULA_TOOLS_DIR",
+      "PAPER_FETCH_IMAGE_TOOLS_DIR",
+      "MATHML_TO_LATEX_NODE_BIN",
+      "CLOAKBROWSER_HEADLESS",
+      "PYTHONUTF8",
+      "PYTHONIOENCODING"
+    ]
+  },
   "managed_blocks": {
     "offline": {
       "begin": "# BEGIN paper-fetch offline managed",

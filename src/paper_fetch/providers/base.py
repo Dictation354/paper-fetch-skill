@@ -20,7 +20,12 @@ from ..tracing import (
     source_trail_from_trace,
     trace_from_markers,
 )
-from ..utils import empty_asset_results, normalize_text, provider_display_name
+from ..utils import (
+    empty_asset_results,
+    extend_unique,
+    normalize_text,
+    provider_display_name,
+)
 from ..reason_codes import (
     ERROR,
     NO_ACCESS,
@@ -385,6 +390,12 @@ def map_request_failure(
 def combine_provider_failures(
     failures: list[tuple[str, ProviderFailure]],
 ) -> ProviderFailure:
+    if not failures:
+        return ProviderFailure(
+            NO_RESULT,
+            "Provider waterfall did not record any retrieval failures.",
+        )
+
     priority = {
         NO_ACCESS: 0,
         NO_RESULT: 1,
@@ -401,27 +412,22 @@ def combine_provider_failures(
     if len(failures) == 1:
         message = f"{selected_label}: {selected_failure.message}"
     missing_env: list[str] = []
+    warnings: list[str] = []
+    source_trail: list[str] = []
+    retry_after_values: list[int] = []
     for _label, failure in failures:
-        for name in failure.missing_env:
-            if name not in missing_env:
-                missing_env.append(name)
+        extend_unique(missing_env, failure.missing_env)
+        extend_unique(warnings, failure.warnings)
+        extend_unique(source_trail, failure.source_trail)
+        if failure.retry_after_seconds is not None:
+            retry_after_values.append(failure.retry_after_seconds)
     return ProviderFailure(
         selected_failure.code,
         message,
-        retry_after_seconds=selected_failure.retry_after_seconds,
+        retry_after_seconds=max(retry_after_values) if retry_after_values else None,
         missing_env=missing_env,
-        warnings=[
-            warning
-            for _label, failure in failures
-            for warning in failure.warnings
-            if str(warning).strip()
-        ],
-        source_trail=[
-            marker
-            for _label, failure in failures
-            for marker in failure.source_trail
-            if str(marker).strip()
-        ],
+        warnings=warnings,
+        source_trail=source_trail,
     )
 
 

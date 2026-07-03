@@ -477,6 +477,31 @@ class AtyponBrowserWorkflowMarkdownTests(unittest.TestCase):
         self.assertIn("$\\beta$", rendered)
         self.assertIn("represents the linear effect of FVC on d(LST)/dt.", rendered)
 
+    def test_inline_formula_image_tex_fallback_keeps_math_delimiters(self) -> None:
+        soup = BeautifulSoup(
+            """
+            <p>
+              Inline
+              <span class="inline-equation">
+                <script type="math/tex">x+y</script>
+                <img src="/assets/example-math-0001.png" />
+              </span>
+              continues.
+            </p>
+            """,
+            "html.parser",
+        )
+        container = soup.p
+        self.assertIsNotNone(container)
+
+        atypon_browser_workflow_normalization._normalize_inline_formula_image_nodes(
+            container
+        )
+
+        rendered = str(container)
+        self.assertIn("$x+y$", rendered)
+        self.assertNotIn('src="/assets/example-math-0001.png"', rendered)
+
     def test_wiley_display_formula_can_fall_back_to_alt_image_span(self) -> None:
         soup = BeautifulSoup(
             """

@@ -46,7 +46,7 @@ resolve
 
 必须遵守这些原则：
 
-- Provider 身份、路由信号、默认资产策略、status 顺序和 registry factory 统一来自 provider entry module 顶部注册的 `ProviderBundle`；`PROVIDER_CATALOG` 和 source map 由 bundle discovery 懒加载派生。
+- Provider 身份、路由信号、默认资产策略、status 顺序和 registry factory 统一来自 provider entry module 顶部注册的 `ProviderBundle`；`PROVIDER_CATALOG` 和 source map 由 bundle discovery 懒加载派生。内置 entry module 由显式清单管理；新增动态 entry 必须包含真实 `register_provider_bundle(...)` 调用，注释、docstring 或普通字符串不会触发 discovery。
 - Provider 主链必须返回 typed payload：`ProviderContent`、`ProviderFetchResult`、`ProviderArtifacts`、`warnings`、`trace` 和 `merged_metadata`。
 - 不允许通过 `raw_payload.metadata[...]` 读写结构化状态；它只是 read-only compatibility view。
 - Provider 层只做 publisher adapter；通用 HTML、表格、公式、引用、资产验证、availability 判定优先挂到已有 canonical owner。
@@ -131,7 +131,7 @@ register_provider_bundle(
 <a id="client-contract"></a>
 ## 3. Client Contract + Markdown Review Loop
 
-优先继承 `paper_fetch.providers.base.ProviderClient`。新 provider 的全文主链默认声明为 class-level `waterfall_steps`，只在确有特殊模板流程时覆盖必要 hook：
+优先继承 `paper_fetch.providers.base.ProviderClient`。新 provider 的全文主链默认声明为 class-level `waterfall_steps`，元素必须是 `WaterfallStep`；只有像 `BrowserWorkflowClient` 这样已经覆盖 `fetch_raw_fulltext()` 的模板实现，才可以用 `route_order` 保存字符串路线标签。只在确有特殊模板流程时覆盖必要 hook：
 
 - `to_article_model(metadata, raw_payload, *, downloaded_assets=None, asset_failures=None, context=None)`
 - `html_to_markdown(html_text, source_url, *, metadata, context)`，仅 HTML 路线需要
@@ -190,7 +190,7 @@ step 函数放在 provider-owned 模块中，签名使用 `def newpub_fetch_html
 
 ### Provider mypy 分批纳入
 
-当前 mypy 覆盖面包含核心模型、workflow、MCP、HTTP/metadata/markdown、provider base/protocols、provider catalog、HTML extraction、browser workflow、Atypon browser workflow、shared JATS/common Markdown helpers、CloakBrowser helper，以及第一批真实 provider：`src/paper_fetch/providers/copernicus.py` 和 `src/paper_fetch/providers/_article_markdown_copernicus.py`。后续新增 provider typing 批次必须先跑 targeted mypy 清零，再把文件加入 `pyproject.toml` 的 `[tool.mypy].files`；本地 preflight 使用 `mypy --no-site-packages`，避免开发机第三方 stub 与 CI Python 版本不一致时阻断项目文件检查。
+当前 mypy 覆盖面包含核心模型、workflow、MCP、HTTP/metadata/markdown、runtime/config/quality、provider base/protocols、provider catalog、PDF fallback shared helpers、HTML extraction、browser runtime、browser workflow、Atypon browser workflow、formula core、shared JATS/common Markdown helpers、CloakBrowser helper，以及第一批真实 provider：`src/paper_fetch/providers/copernicus.py` 和 `src/paper_fetch/providers/_article_markdown_copernicus.py`。后续新增 provider typing 批次必须先跑 targeted mypy 清零，再把文件加入 `pyproject.toml` 的 `[tool.mypy].files`；本地 preflight 与 CI 都通过 `pyproject.toml` 的 `no_site_packages = true` 避免开发机第三方 stub 与 CI Python 版本不一致时阻断项目文件检查。
 
 下一批 backlog 是 arXiv，不应混入 Copernicus 或其它 provider 批次。开始前先运行：
 

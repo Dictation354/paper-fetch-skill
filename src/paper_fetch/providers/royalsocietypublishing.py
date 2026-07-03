@@ -129,7 +129,7 @@ def _filter_assets_for_profile(
 class RoyalsocietypublishingClient(browser_workflow.BrowserWorkflowClient):
     name = ROYAL_SOCIETY_BROWSER_PROFILE.name
     profile = ROYAL_SOCIETY_BROWSER_PROFILE
-    waterfall_steps = (
+    route_order = (
         "article_html",
         "pdf_fallback",
         "metadata_only",

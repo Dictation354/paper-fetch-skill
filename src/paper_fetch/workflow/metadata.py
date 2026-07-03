@@ -7,14 +7,16 @@ from typing import Any, cast
 from collections.abc import Mapping
 
 from ..http import PDF_MIME_TYPE
-from ..metadata.types import ProviderMetadata
+from ..metadata.types import (
+    ProviderMetadata,
+    merge_primary_secondary_metadata as merge_metadata_layers_primary_secondary,
+)
 from ..providers.base import ProviderFailure
 from ..providers.protocols import MetadataProvider
 from ..runtime import RuntimeContext
 from ..tracing import metadata_marker, route_marker
 from ..utils import (
     choose_public_landing_page_url,
-    dedupe_authors,
     extend_unique,
     normalize_text,
     safe_text,
@@ -37,73 +39,7 @@ def merge_primary_secondary_metadata(
     primary: Mapping[str, Any] | None,
     secondary: Mapping[str, Any] | None,
 ) -> ProviderMetadata:
-    merged = dict(secondary or {})
-    merged.update(primary or {})
-    scalar_keys = (
-        "doi",
-        "title",
-        "journal_title",
-        "published",
-        "abstract",
-        "publisher",
-    )
-
-    def scalarize(value: Any, *, preserve_blank: bool = False) -> str | None:
-        if isinstance(value, str):
-            normalized = normalize_text(value)
-            if normalized:
-                return normalized
-            return "" if preserve_blank else None
-        if isinstance(value, list):
-            for item in value:
-                scalar = scalarize(item, preserve_blank=preserve_blank)
-                if scalar is not None:
-                    return scalar
-            return "" if preserve_blank and value else None
-        if isinstance(value, Mapping):
-            for key in ("value", "url", "URL"):
-                scalar = scalarize(value.get(key), preserve_blank=preserve_blank)
-                if scalar is not None:
-                    return scalar
-            return "" if preserve_blank and value else None
-        if value is None:
-            return None
-        normalized = safe_text(value)
-        if normalized:
-            return normalized
-        return "" if preserve_blank else None
-
-    for key in scalar_keys:
-        if primary is not None and key in primary and primary.get(key) is not None:
-            merged[key] = scalarize(primary.get(key), preserve_blank=True)
-        else:
-            merged[key] = scalarize((secondary or {}).get(key))
-    merged["landing_page_url"] = choose_public_landing_page_url(
-        (primary or {}).get("landing_page_url"),
-        (secondary or {}).get("landing_page_url"),
-    )
-
-    def merged_list(key: str, *, semantic: bool = False) -> list[Any]:
-        result: list[Any] = []
-        for item in list((primary or {}).get(key) or []) + list(
-            (secondary or {}).get(key) or []
-        ):
-            normalized_item = normalize_text(item) if isinstance(item, str) else item
-            if normalized_item and normalized_item not in result:
-                result.append(normalized_item)
-        if semantic:
-            return dedupe_authors([str(item) for item in result])
-        return result
-
-    merged["authors"] = merged_list("authors", semantic=True)
-    merged["keywords"] = merged_list("keywords")
-    merged["license_urls"] = merged_list("license_urls")
-    merged["fulltext_links"] = merged_list("fulltext_links")
-    merged["references"] = merged_list("references")
-    for key in scalar_keys:
-        if merged.get(key) == "":
-            merged[key] = None
-    return cast(ProviderMetadata, merged)
+    return merge_metadata_layers_primary_secondary(primary, secondary)
 
 
 def metadata_from_resolution(resolved) -> ProviderMetadata:

@@ -5,7 +5,7 @@ from __future__ import annotations
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from typing import Any, cast
-from collections.abc import Mapping
+from collections.abc import Iterator, Mapping, Set as AbstractSet
 import urllib.parse
 
 from ..config import build_publisher_user_agent
@@ -58,7 +58,23 @@ from .types import (
     RouteProbeResult,
 )
 
-OFFICIAL_PROVIDER_NAMES = official_provider_names()
+
+def official_provider_name_set() -> frozenset[str]:
+    return frozenset(official_provider_names())
+
+
+class _OfficialProviderNames(AbstractSet[str]):
+    def __contains__(self, value: object) -> bool:
+        return value in official_provider_name_set()
+
+    def __iter__(self) -> Iterator[str]:
+        return iter(official_provider_name_set())
+
+    def __len__(self) -> int:
+        return len(official_provider_name_set())
+
+
+OFFICIAL_PROVIDER_NAMES: AbstractSet[str] = _OfficialProviderNames()
 
 
 @dataclass(frozen=True)
@@ -116,7 +132,8 @@ def build_official_provider_candidates(
     return [
         (provider, signal)
         for provider, signal in candidates
-        if provider in OFFICIAL_PROVIDER_NAMES and provider_allowed(provider, strategy)
+        if provider in official_provider_name_set()
+        and provider_allowed(provider, strategy)
     ]
 
 

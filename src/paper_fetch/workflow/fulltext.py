@@ -6,7 +6,7 @@ import logging
 from pathlib import Path
 import time
 from typing import Any
-from collections.abc import Mapping
+from collections.abc import Iterator, Mapping, Set as AbstractSet
 
 from ..artifacts import ArtifactStore
 from ..http import HttpTransport
@@ -46,7 +46,26 @@ from .shared import source_trail_for_failure
 from .types import FetchStrategy, PaperFetchFailure
 
 logger = logging.getLogger("paper_fetch.service")
-PROVIDER_MANAGED_ABSTRACT_ONLY_PROVIDERS = provider_managed_abstract_only_names()
+
+
+def provider_managed_abstract_only_provider_set() -> frozenset[str]:
+    return provider_managed_abstract_only_names()
+
+
+class _ProviderManagedAbstractOnlyProviders(AbstractSet[str]):
+    def __contains__(self, value: object) -> bool:
+        return value in provider_managed_abstract_only_provider_set()
+
+    def __iter__(self) -> Iterator[str]:
+        return iter(provider_managed_abstract_only_provider_set())
+
+    def __len__(self) -> int:
+        return len(provider_managed_abstract_only_provider_set())
+
+
+PROVIDER_MANAGED_ABSTRACT_ONLY_PROVIDERS: AbstractSet[str] = (
+    _ProviderManagedAbstractOnlyProviders()
+)
 
 
 def _record_stage_timing(context: RuntimeContext, name: str, started_at: float) -> None:
@@ -275,7 +294,7 @@ def _try_official_provider(
                 attempt=1,
             )
             extend_unique(source_trail, [fulltext_marker(provider_name, ABSTRACT_ONLY)])
-            if provider_name in PROVIDER_MANAGED_ABSTRACT_ONLY_PROVIDERS:
+            if provider_name in provider_managed_abstract_only_provider_set():
                 warnings.append(
                     "Official full text only contained abstract-level content; returning abstract-only provider result."
                 )

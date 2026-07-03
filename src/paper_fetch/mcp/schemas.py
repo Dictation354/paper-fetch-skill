@@ -16,8 +16,9 @@ from ..models import (
     RenderOptions,
     normalize_text,
 )
+from ..resolve.query import StructuredResolveRequest
 from ..service import FetchStrategy
-from ..workflow.types import ALLOWED_PREFERRED_PROVIDERS
+from ..workflow.types import allowed_preferred_providers
 from ..utils import dedupe_authors
 
 ALLOWED_INCLUDE_REFS = {"none", "top10", "all"}
@@ -149,12 +150,16 @@ class ResolvePaperRequest(BaseModel):
     def composed_query(self) -> str:
         if self.query is not None:
             return self.query
+        return self.title or ""
 
-        parts: list[str] = [self.title or ""]
-        parts.extend((self.authors or [])[:3])
-        if self.year is not None:
-            parts.append(str(self.year))
-        return normalize_text(" ".join(parts))
+    def to_resolution_request(self) -> StructuredResolveRequest:
+        if self.query is not None:
+            return StructuredResolveRequest(query=self.query)
+        return StructuredResolveRequest(
+            title=self.title,
+            authors=tuple(self.authors or ()),
+            year=self.year,
+        )
 
 
 class _RequiredQueryRequest(BaseModel):
@@ -217,17 +222,16 @@ class FetchStrategyInput(BaseModel):
             provider = normalize_text(str(item)).lower()
             if provider and provider not in normalized:
                 normalized.append(provider)
+        allowed_providers = allowed_preferred_providers()
         invalid = [
-            provider
-            for provider in normalized
-            if provider not in ALLOWED_PREFERRED_PROVIDERS
+            provider for provider in normalized if provider not in allowed_providers
         ]
         if invalid:
             raise ValueError(
                 "unsupported preferred_providers values: "
                 + ", ".join(invalid)
                 + ". Expected one or more of: "
-                + ", ".join(sorted(ALLOWED_PREFERRED_PROVIDERS))
+                + ", ".join(sorted(allowed_providers))
                 + "."
             )
         return normalized or None

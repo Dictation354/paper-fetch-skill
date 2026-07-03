@@ -97,6 +97,12 @@ class OfflinePackageBuildTests(unittest.TestCase):
         self.assertIn('assert hasattr(cloakbrowser, "ensure_binary")', script)
         self.assertNotIn('assert hasattr(cloakbrowser, "launch")', script)
         self.assertIn("CLOAKBROWSER_HEADLESS=true", script)
+        self.assertIn("Antigravity skill was not installed", script)
+        self.assertIn("mcp_config.json", script)
+        self.assertIn("activate-offline.sh executed shell code", script)
+        self.assertIn("MATHML_TO_LATEX_NODE_BIN", script)
+        self.assertIn("PYTHONUTF8", script)
+        self.assertIn("PYTHONIOENCODING", script)
         self.assertNotIn(".venv/bin", script)
         self.assertNotIn("sessions.list", script)
         self.assertNotIn("playwright.sync_api", script)
@@ -143,12 +149,15 @@ class OfflinePackageBuildTests(unittest.TestCase):
         self.assertIn("paper-fetch-mcp.cmd", wrapper_block)
         self.assertIn('command_wrappers = "bin"', manifest_block)
         self.assertIn("cloakbrowser = [ordered]@{", manifest_block)
+        self.assertIn("$OfflineEnvKeys", script)
+        self.assertIn("env_sets.offline_env_keys", script)
+        self.assertIn("Get-DefaultOfflineEnvValue", script)
         self.assertIn(
-            "PAPER_FETCH_BROWSER_USER_AGENT='Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
             script,
         )
         self.assertIn("CLOAKBROWSER_CDP_ENDPOINT", script)
-        self.assertNotIn("# PAPER_FETCH_BROWSER_USER_AGENT='Mozilla/5.0", script)
+        self.assertNotIn("# PAPER_FETCH_BROWSER_USER_AGENT", script)
         self.assertNotIn("project_wheels", manifest_block)
         self.assertNotIn("wheelhouse_count", manifest_block)
         self.assertNotIn("source_snapshot", manifest_block)

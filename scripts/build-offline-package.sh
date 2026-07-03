@@ -299,6 +299,7 @@ Set `CLOAKBROWSER_CDP_ENDPOINT` only when you want to reuse an already-running b
 Set `CLOAKBROWSER_HEADLESS=false` only when running with a display-capable session.
 
 The installer writes `CLOAKBROWSER_HEADLESS=true` and `PAPER_FETCH_BROWSER_USER_AGENT="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36"` into `offline.env` by default for browser-backed publisher fetches.
+`activate-offline.sh` parses `offline.env` with python-dotenv and exports valid key/value pairs; it does not source the file as shell code.
 EOF
 }
 

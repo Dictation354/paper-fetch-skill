@@ -63,6 +63,20 @@ class ProviderBundle:
 
 
 _REGISTERED_PROVIDERS: dict[str, ProviderBundle] = {}
+_ENSURING_PROVIDER_IMPORTS = False
+
+
+def _ensure_provider_entry_modules_imported() -> None:
+    global _ENSURING_PROVIDER_IMPORTS
+    if _ENSURING_PROVIDER_IMPORTS:
+        return
+    _ENSURING_PROVIDER_IMPORTS = True
+    try:
+        import paper_fetch.providers as provider_entries
+
+        provider_entries.import_provider_entry_modules()
+    finally:
+        _ENSURING_PROVIDER_IMPORTS = False
 
 
 def register_provider_bundle(bundle: ProviderBundle) -> None:
@@ -78,6 +92,7 @@ def register_provider_bundle(bundle: ProviderBundle) -> None:
 
 
 def iter_provider_bundles() -> Iterator[ProviderBundle]:
+    _ensure_provider_entry_modules_imported()
     yield from sorted(
         MappingProxyType(_REGISTERED_PROVIDERS).values(),
         key=lambda bundle: bundle.catalog.status_order,
@@ -85,6 +100,7 @@ def iter_provider_bundles() -> Iterator[ProviderBundle]:
 
 
 def provider_bundle(name: str) -> ProviderBundle:
+    _ensure_provider_entry_modules_imported()
     normalized = str(name or "").strip().lower()
     try:
         return _REGISTERED_PROVIDERS[normalized]

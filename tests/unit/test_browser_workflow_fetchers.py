@@ -8,6 +8,7 @@ from unittest import mock
 from paper_fetch.config import CLOAKBROWSER_CDP_ENDPOINT_ENV_VAR
 from paper_fetch.providers import browser_workflow
 from paper_fetch.providers.browser_workflow.fetchers import context as fetcher_context
+from paper_fetch.providers.browser_workflow.fetchers import image as image_fetchers
 from paper_fetch.runtime import RuntimeContext
 
 
@@ -188,6 +189,84 @@ def test_threaded_image_fetcher_records_browser_context_exception_diagnostic() -
     assert failure["reason"] == "browser_context_error"
     assert failure["error_type"] == "RuntimeError"
     assert failure["error_message"] == "browser context already active"
+
+
+def test_browser_image_fetcher_applies_per_image_budget_to_browser_steps() -> None:
+    image_url = "https://example.test/figure.png"
+    seed_urls = ["https://example.test/article", "https://example.test/extra"]
+
+    class Budget:
+        def exhausted(self) -> bool:
+            return False
+
+        def timeout_ms(self, requested_ms: int) -> int:
+            return min(requested_ms, 1234)
+
+        def loop_deadline(self, _max_seconds: float) -> float:
+            return image_fetchers.time.monotonic()
+
+    class Response:
+        status = 200
+        url = image_url
+        headers = {"content-type": "text/html"}
+
+        def body(self) -> bytes:
+            return b"<html><title>Not an image</title></html>"
+
+    class RequestClient:
+        def __init__(self) -> None:
+            self.calls: list[dict[str, object]] = []
+
+        def get(self, url: str, **kwargs):
+            self.calls.append({"url": url, **kwargs})
+            return Response()
+
+    class Context:
+        def __init__(self) -> None:
+            self.request = RequestClient()
+
+        def add_cookies(self, _cookies) -> None:
+            return None
+
+    class Page:
+        def __init__(self) -> None:
+            self.url = ""
+            self.goto_calls: list[dict[str, object]] = []
+            self.fetch_timeouts: list[int] = []
+
+        def goto(self, url: str, **kwargs):
+            self.url = url
+            self.goto_calls.append({"url": url, **kwargs})
+            return Response()
+
+        def evaluate(self, script, args):
+            if "fetch(imageSrc" in str(script):
+                self.fetch_timeouts.append(int(args[1]))
+                return {"ok": False, "error": "AbortError", "timedOut": True}
+            raise AssertionError("wait loops should be skipped by the fake budget")
+
+    page = Page()
+    context = Context()
+    fetcher = image_fetchers._SharedBrowserImageDocumentFetcher(
+        browser_context_seed_getter=lambda: {},
+        seed_urls_getter=lambda: seed_urls,
+    )
+    fetcher._page = page
+    fetcher._context = context
+
+    with mock.patch.object(image_fetchers, "_ImageFetchBudget", return_value=Budget()):
+        result = fetcher(image_url, {"kind": "figure"})
+
+    assert result is None
+    assert [call["url"] for call in page.goto_calls] == [
+        seed_urls[0],
+        image_url,
+        seed_urls[0],
+        image_url,
+    ]
+    assert all(call["timeout"] == 1234 for call in page.goto_calls)
+    assert page.fetch_timeouts == [1234, 1234]
+    assert [call["timeout"] for call in context.request.calls] == [1234, 1234]
 
 
 def test_image_fetcher_passes_cdp_endpoint_to_context_factory() -> None:

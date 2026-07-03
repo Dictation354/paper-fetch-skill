@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 import ast
+import os
+import subprocess
+import sys
 import unittest
 from pathlib import Path
 
@@ -109,6 +112,52 @@ class ImportBoundaryTests(unittest.TestCase):
                     )
 
         self.assertEqual(offenders, [], "\n".join(offenders))
+
+    def test_root_import_does_not_load_heavy_optional_html_dependencies(
+        self,
+    ) -> None:
+        probe = subprocess.run(
+            [
+                sys.executable,
+                "-c",
+                """
+import importlib
+import sys
+
+importlib.import_module("paper_fetch")
+
+forbidden = sorted(
+    name
+    for name in sys.modules
+    if name == "trafilatura"
+    or name.startswith("trafilatura.")
+    or name == "idutils"
+    or name.startswith("idutils.")
+)
+provider_entries = sorted(
+    name
+    for name in sys.modules
+    if name.startswith("paper_fetch.providers.")
+    and name
+    not in {
+        "paper_fetch.providers.base",
+        "paper_fetch.providers.protocols",
+        "paper_fetch.providers.registry",
+    }
+)
+if forbidden:
+    raise SystemExit("forbidden optional modules loaded: " + ", ".join(forbidden))
+if provider_entries:
+    raise SystemExit("provider entry modules loaded: " + ", ".join(provider_entries))
+""",
+            ],
+            check=False,
+            text=True,
+            capture_output=True,
+            env={**os.environ, "PYTHONPATH": str(SRC_DIR)},
+        )
+
+        self.assertEqual(probe.returncode, 0, probe.stderr + probe.stdout)
 
 
 if __name__ == "__main__":

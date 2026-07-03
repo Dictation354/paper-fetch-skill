@@ -1724,7 +1724,7 @@ class CliTests(unittest.TestCase):
             ):
                 captured: dict[str, object] = {}
 
-                def fake_fetch(*args, **kwargs):
+                def fake_fetch(*args, captured=captured, **kwargs):
                     captured.update(kwargs)
                     return build_envelope(article)
 

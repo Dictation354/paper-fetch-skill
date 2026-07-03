@@ -20,6 +20,7 @@ from ..models import ArticleModel, Asset, FetchEnvelope
 from ..provider_catalog import is_official_provider, provider_status_order
 from ..providers.base import ProviderStatusResult, build_provider_status_check
 from ..reason_codes import ERROR
+from ..resolve.query import StructuredResolveRequest
 from ..runtime import RuntimeContext
 from ..utils import extend_unique, normalize_text
 from ..workflow.pipeline import FetchPipeline, FetchPipelineCacheHooks
@@ -35,7 +36,7 @@ from .fetch_cache import (
     payload_from_envelope as _payload_from_envelope,
 )
 from .log_bridge import PaperFetchLogBridge
-from .results import _tool_result, error_payload_from_exception
+from .results import _tool_result, error_payload_from_exception, with_schema_version
 from .schemas import (
     FetchPaperRequest,
     FetchStrategyInput,
@@ -149,7 +150,10 @@ def _write_cached_fetch_envelope(
 
 
 def _call_service_resolve_paper(
-    query: str, *, context: RuntimeContext, deps: MCPDeps = default_mcp_deps()
+    query: str | StructuredResolveRequest,
+    *,
+    context: RuntimeContext,
+    deps: MCPDeps = default_mcp_deps(),
 ) -> Any:
     return deps.service_resolve_paper(query, context=context)
 
@@ -312,10 +316,13 @@ def resolve_paper_payload(
     runtime_context = context or RuntimeContext(
         env=deps.build_runtime_env(env), transport=transport
     )
-    resolved = _call_service_resolve_paper(
-        request.composed_query(), context=runtime_context, deps=deps
+    service_query: str | StructuredResolveRequest = (
+        request.query if request.query is not None else request.to_resolution_request()
     )
-    return resolved.to_dict()
+    resolved = _call_service_resolve_paper(
+        service_query, context=runtime_context, deps=deps
+    )
+    return with_schema_version(resolved.to_dict())
 
 
 def has_fulltext_payload(
@@ -335,7 +342,7 @@ def has_fulltext_payload(
     )
     payload = probe_result.to_dict()
     payload.pop("title", None)
-    return payload
+    return with_schema_version(payload)
 
 
 def fetch_paper_payload(
@@ -390,7 +397,7 @@ def fetch_paper_payload(
     payload = _response_payload_from_envelope(envelope, request)
     if saved_markdown_path is not None:
         payload["saved_markdown_path"] = str(saved_markdown_path)
-    return payload
+    return with_schema_version(payload)
 
 
 def _provider_status_error_payload(
@@ -448,7 +455,7 @@ def provider_status_payload(
                 )
             )
 
-    return {"providers": results}
+    return with_schema_version({"providers": results})
 
 
 def _is_body_figure_asset(asset: Asset) -> bool:

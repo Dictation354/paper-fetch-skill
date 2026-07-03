@@ -14,7 +14,10 @@ from ...extraction.html.formula_rules import (
     looks_like_formula_image,
     mathml_element_from_html_node,
 )
-from ...extraction.markdown_render.formulas import html_formula_latex_from_node
+from ...extraction.markdown_render.formulas import (
+    html_formula_latex_from_node,
+    render_inline_latex_markdown,
+)
 from ...extraction.html.shared import (
     append_text_block as _append_text_block,
     short_text as _short_text,
@@ -252,17 +255,8 @@ def _has_class_token(node: Tag, token: str) -> bool:
     return token in {normalize_text(value).lower() for value in class_values}
 
 
-def _is_delimited_inline_latex(value: str) -> bool:
-    return (value.startswith("$") and value.endswith("$") and len(value) > 2) or (
-        value.startswith(r"\(") and value.endswith(r"\)") and len(value) > 4
-    )
-
-
 def _inline_latex_markdown(value: str) -> str:
-    latex = normalize_text(value)
-    if not latex:
-        return ""
-    return latex if _is_delimited_inline_latex(latex) else f"${latex}$"
+    return render_inline_latex_markdown(value)
 
 
 def _latex_from_tex_script_container(node: Tag) -> str:
@@ -297,7 +291,7 @@ def _normalize_inline_formula_image_nodes(container: Tag) -> None:
             continue
         latex = _latex_from_nearest_formula_container(image)
         if latex:
-            image.replace_with(latex)
+            image.replace_with(_inline_latex_markdown(latex))
             continue
         image.replace_with(_formula_image_markdown(image))
 

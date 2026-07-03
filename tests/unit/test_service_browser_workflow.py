@@ -549,7 +549,9 @@ class ServiceBrowserWorkflowTests(unittest.TestCase):
                         provider_hint=provider_name,
                         confidence=1.0,
                     )
-                    paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
+                    paper_fetch.resolve_paper = (
+                        lambda *args, resolved=resolved, **kwargs: resolved
+                    )
                     with tempfile.TemporaryDirectory() as tmpdir:
                         article = fetch_paper_model(
                             doi,

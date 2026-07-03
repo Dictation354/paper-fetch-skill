@@ -116,7 +116,7 @@ def _append_unique(values: list[str], candidate: str | None) -> None:
 class AnnualreviewsClient(browser_workflow.BrowserWorkflowClient):
     name = ANNUALREVIEWS_BROWSER_PROFILE.name
     profile = ANNUALREVIEWS_BROWSER_PROFILE
-    waterfall_steps = (
+    route_order = (
         "landing_html",
         "article_html",
         "pdf_fallback",

@@ -62,6 +62,7 @@ class BrowserWorkflowClient(ProviderClient):
     name = "browser_workflow"
     article_source_name: str | None = None
     profile: ProviderBrowserProfile | None = None
+    route_order: tuple[str, ...] = ()
 
     def __init__(
         self,

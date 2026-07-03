@@ -7,8 +7,23 @@ from ._mcp_support import *
 class McpPayloadCacheTests(unittest.TestCase):
     def test_build_server_exposes_output_schemas_for_all_tools(self) -> None:
         server = build_server()
+        expected_contract_fields = {
+            "schema_version",
+            "code",
+            "http_status",
+            "error_category",
+            "retry_after_seconds",
+            "provider",
+            "warnings",
+            "source_trail",
+        }
         for name, tool in server._tool_manager._tools.items():
             self.assertIsNotNone(tool.output_schema, name)
+            properties = (tool.output_schema or {}).get("properties", {})
+            self.assertTrue(
+                expected_contract_fields <= set(properties),
+                f"{name} output schema missing MCP contract fields",
+            )
 
     def test_build_server_exposes_expected_tool_annotations(self) -> None:
         server = build_server()
@@ -122,7 +137,7 @@ class McpPayloadCacheTests(unittest.TestCase):
                 captured: dict[str, object] = {}
                 download_dir = Path(tmpdir)
 
-                def fake_fetch_paper(query, **kwargs):
+                def fake_fetch_paper(query, captured=captured, **kwargs):
                     captured.update(kwargs)
                     return sample_envelope(modes=kwargs["modes"], doi=query)
 

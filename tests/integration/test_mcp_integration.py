@@ -38,10 +38,11 @@ SERVER_SCRIPT = textwrap.dedent(
     from paper_fetch.utils import sanitize_filename
 
     def fake_resolve(query, *, context=None):
+        lookup_query = query.lookup_query if hasattr(query, "lookup_query") else query
         return ResolvedQuery(
-            query=query,
+            query=lookup_query,
             query_kind="doi",
-            doi=query if query.startswith("10.") else "10.1000/example",
+            doi=lookup_query if lookup_query.startswith("10.") else "10.1000/example",
             landing_url="https://example.test/article",
             provider_hint="crossref",
             confidence=1.0,
@@ -448,7 +449,7 @@ class McpStdioIntegrationTests(unittest.IsolatedAsyncioTestCase):
                         self.assertFalse(structured_resolved.isError)
                         self.assertEqual(
                             structured_resolved.structuredContent["query"],
-                            "Example title Alice Example 2024",
+                            "Example title",
                         )
 
                         probe = await session.call_tool(

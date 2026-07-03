@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import tempfile
 import unittest
 import xml.etree.ElementTree as ET
@@ -11,6 +12,8 @@ from paper_fetch.providers import (
 )
 from paper_fetch.providers import _elsevier_xml_rules as elsevier_rules
 from paper_fetch.providers import _article_markdown_math as article_markdown_math
+from paper_fetch.providers import elsevier as elsevier_provider
+from paper_fetch.runtime import RuntimeContext
 from paper_fetch.models import article_from_markdown, article_from_structure
 from tests.golden_criteria import golden_criteria_asset, golden_criteria_scenario_asset
 
@@ -83,12 +86,57 @@ def _render_elsevier_golden_markdown(
     )
 
 
+def _assert_markdown_table_row(
+    test_case: unittest.TestCase,
+    markdown: str,
+    cells: list[str],
+    *,
+    allow_more_cells: bool = False,
+) -> None:
+    cell_pattern = r"\s*\|\s*".join(re.escape(cell) for cell in cells)
+    suffix = r"(?:\s*\|.*)?$" if allow_more_cells else r"\s*\|$"
+    test_case.assertRegex(markdown, rf"(?m)^\|\s*{cell_pattern}{suffix}")
+
+
 class ElsevierMarkdownTests(unittest.TestCase):
     def test_elsevier_document_module_remains_importable(self) -> None:
         self.assertTrue(callable(elsevier_document.build_article_structure))
         self.assertTrue(callable(elsevier_document.build_markdown_document))
         self.assertTrue(callable(elsevier_document.write_article_markdown))
         self.assertTrue(callable(article_markdown_math.render_mathml_expression))
+
+    def test_elsevier_cached_xml_root_is_reused_read_only(self) -> None:
+        xml_body = b"""
+        <full-text-retrieval-response xmlns:ce="http://www.elsevier.com/xml/common/dtd">
+          <ce:object ref="gr1" type="image" category="thumbnail" mimetype="image/jpeg">https://example.test/gr1.jpg</ce:object>
+        </full-text-retrieval-response>
+        """
+        context = RuntimeContext(env={})
+
+        root = elsevier_provider.elsevier_xml_root_from_payload(
+            xml_body,
+            context=context,
+            source_url="https://example.test/article",
+        )
+        cached_root = elsevier_provider.elsevier_xml_root_from_payload(
+            xml_body,
+            context=context,
+            source_url="https://example.test/article",
+        )
+
+        self.assertIs(root, cached_root)
+        assert root is not None
+        before = ET.tostring(root)
+        references = elsevier_provider.extract_elsevier_asset_references(
+            xml_body,
+            context=context,
+            source_url="https://example.test/article",
+            xml_root=root,
+        )
+
+        self.assertEqual(ET.tostring(root), before)
+        self.assertEqual(references[0]["source_ref"], "gr1")
+        self.assertEqual(references[0]["source_url"], "https://example.test/gr1.jpg")
 
     def test_build_article_structure_extracts_authors_from_author_groups(self) -> None:
         xml_body = golden_criteria_scenario_asset(
@@ -449,9 +497,11 @@ class ElsevierMarkdownTests(unittest.TestCase):
 
         markdown = build_elsevier_markdown(xml_body)
 
-        self.assertIn("| Station group | Station group | Value |", markdown)
-        self.assertIn("| Hydrometric | Station A | 10 |", markdown)
-        self.assertIn("| Hydrometric | Station B | 20 |", markdown)
+        _assert_markdown_table_row(
+            self, markdown, ["Station group", "Station group", "Value"]
+        )
+        _assert_markdown_table_row(self, markdown, ["Hydrometric", "Station A", "10"])
+        _assert_markdown_table_row(self, markdown, ["Hydrometric", "Station B", "20"])
         self.assertIn("Merged table spans were semantically expanded", markdown)
 
     def test_elsevier_real_complex_table_records_layout_degradation_quality(
@@ -548,7 +598,12 @@ class ElsevierMarkdownTests(unittest.TestCase):
             "List of publications on SAR-based wind resources using Envisat ASAR, ERS, and R-1.",
             appendix_section,
         )
-        self.assertIn("| Reference | SAR | Location |", appendix_section)
+        _assert_markdown_table_row(
+            self,
+            appendix_section,
+            ["Reference", "SAR", "Location"],
+            allow_more_cells=True,
+        )
 
     def test_elsevier_appendix_figure_renders_as_figure_block(self) -> None:
         """rule: rule-elsevier-appendix-context"""
@@ -812,7 +867,12 @@ refers to the tie.</ce:para>
             "The detailed information on the hydro-meteorological data is given in Table 1"
         )
         caption_idx = markdown.index("Study area and data used in this study.")
-        header_idx = markdown.index("| Type | Location | Station |")
+        header_match = re.search(
+            r"(?m)^\|\s*Type\s*\|\s*Location\s*\|\s*Station\s*\|", markdown
+        )
+        self.assertIsNotNone(header_match)
+        assert header_match is not None
+        header_idx = header_match.start()
 
         self.assertLess(reference_idx, caption_idx)
         self.assertLess(caption_idx, header_idx)
@@ -823,9 +883,20 @@ refers to the tie.</ce:para>
     ) -> None:
         markdown = self._render_real_elsevier_body_table_markdown()
 
-        self.assertIn(
-            "| Hydrometric | China | Jiuzhou | 385 | 1960–2006 | 23°04′12″N | 114°35′24″E | Water Conservancy",
+        _assert_markdown_table_row(
+            self,
             markdown,
+            [
+                "Hydrometric",
+                "China",
+                "Jiuzhou",
+                "385",
+                "1960–2006",
+                "23°04′12″N",
+                "114°35′24″E",
+                "Water Conservancy and Electric Power Bureau, Guangdong Province, China",
+            ],
+            allow_more_cells=True,
         )
         self.assertIn("## Conversion Notes", markdown)
         self.assertIn(
@@ -920,7 +991,7 @@ refers to the tie.</ce:para>
         self.assertIn("Main text only.", markdown)
         self.assertIn("## Additional Tables", markdown)
         self.assertIn("Floating table.", markdown)
-        self.assertIn("| A | B |", markdown)
+        _assert_markdown_table_row(self, markdown, ["A", "B"])
 
     def test_elsevier_golden_fixture_classifies_data_and_code_availability_sections(
         self,

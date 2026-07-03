@@ -8,12 +8,14 @@ from pathlib import Path
 import re
 import subprocess
 import tempfile
+import threading
 import urllib.parse
 from collections.abc import Mapping
 
 from ..http.headers import header_value
 from ..utils import normalize_text
 from .paths import (
+    _clear_image_tool_path_caches,
     ghostscript_binary_candidates,
     image_tool_timeout_seconds,
     vips_binary_candidates,
@@ -22,6 +24,10 @@ from .paths import (
 _DOS_EPS_MAGIC = b"\xc5\xd0\xd3\xc6"
 _POSTSCRIPT_PREFIX_RE = re.compile(rb"^\s*%!")
 _TIFF_MAGICS = (b"II*\x00", b"MM\x00*")
+_WORKING_BINARY_CACHE: dict[tuple[object, ...], str | None] = {}
+_WORKING_BINARY_CACHE_LOCK = threading.RLock()
+_TOOL_ENV_OVERLAY_CACHE: dict[tuple[object, ...], dict[str, str]] = {}
+_TOOL_ENV_OVERLAY_CACHE_LOCK = threading.RLock()
 
 
 class ImageConversionFailure(RuntimeError):
@@ -69,30 +75,64 @@ def source_image_format_from_payload(
     return ""
 
 
+def _path_fingerprint(path: Path) -> tuple[str, bool, int, int]:
+    try:
+        stat_result = path.stat()
+    except OSError:
+        return (str(path), False, 0, 0)
+    return (
+        str(path),
+        True,
+        int(stat_result.st_mtime_ns),
+        int(stat_result.st_size),
+    )
+
+
+def _working_binary_cache_key(
+    candidates: list[Path], probe_args: list[str]
+) -> tuple[object, ...]:
+    return (
+        tuple(str(candidate) for candidate in candidates),
+        tuple(_path_fingerprint(candidate) for candidate in candidates),
+        tuple(probe_args),
+        image_tool_timeout_seconds(),
+        os.environ.get("LD_LIBRARY_PATH", ""),
+        os.environ.get("GS_LIB", ""),
+    )
+
+
 def _working_binary(candidates: list[Path], probe_args: list[str]) -> Path | None:
-    for candidate in candidates:
-        if not candidate.exists():
-            continue
-        try:
-            process = subprocess.run(
-                [str(candidate), *probe_args],
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-                check=False,
-                env=_tool_env(candidate),
-                timeout=image_tool_timeout_seconds(),
-            )
-        except (OSError, subprocess.TimeoutExpired):
-            continue
-        if process.returncode == 0:
-            return candidate
-    return None
+    cache_key = _working_binary_cache_key(candidates, probe_args)
+    with _WORKING_BINARY_CACHE_LOCK:
+        cached = _WORKING_BINARY_CACHE.get(cache_key)
+        if cache_key in _WORKING_BINARY_CACHE:
+            return Path(cached) if cached else None
+
+        resolved: Path | None = None
+        for candidate in candidates:
+            if not candidate.exists():
+                continue
+            try:
+                process = subprocess.run(
+                    [str(candidate), *probe_args],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    check=False,
+                    env=_tool_env(candidate),
+                    timeout=image_tool_timeout_seconds(),
+                )
+            except (OSError, subprocess.TimeoutExpired):
+                continue
+            if process.returncode == 0:
+                resolved = candidate
+                break
+        _WORKING_BINARY_CACHE[cache_key] = str(resolved) if resolved else None
+        return resolved
 
 
-def _tool_env(binary: Path) -> dict[str, str]:
-    env = os.environ.copy()
+def _tool_env_root(binary: Path) -> Path | None:
     parts = list(binary.resolve().parents)
-    root = next(
+    return next(
         (
             parent
             for parent in parts
@@ -103,9 +143,42 @@ def _tool_env(binary: Path) -> dict[str, str]:
         ),
         None,
     )
-    if root is None:
-        return env
 
+
+def _tool_env_overlay_cache_key(binary: Path) -> tuple[object, ...]:
+    resolved = binary.resolve()
+    parents = tuple(
+        (
+            str(parent),
+            _path_fingerprint(parent / "share" / "ghostscript"),
+            _path_fingerprint(parent / "usr" / "share" / "ghostscript"),
+            _path_fingerprint(parent / "lib"),
+            _path_fingerprint(parent / "usr" / "lib"),
+        )
+        for parent in resolved.parents
+    )
+    return (
+        str(resolved),
+        _path_fingerprint(resolved),
+        os.environ.get("LD_LIBRARY_PATH", ""),
+        os.environ.get("GS_LIB", ""),
+        parents,
+    )
+
+
+def _tool_env_overlay(binary: Path) -> dict[str, str]:
+    cache_key = _tool_env_overlay_cache_key(binary)
+    with _TOOL_ENV_OVERLAY_CACHE_LOCK:
+        cached = _TOOL_ENV_OVERLAY_CACHE.get(cache_key)
+        if cached is not None:
+            return dict(cached)
+
+    overlay: dict[str, str] = {}
+    root = _tool_env_root(binary)
+    if root is None:
+        with _TOOL_ENV_OVERLAY_CACHE_LOCK:
+            _TOOL_ENV_OVERLAY_CACHE[cache_key] = {}
+        return {}
     usr_root = (
         root / "usr" if (root / "usr" / "share" / "ghostscript").exists() else root
     )
@@ -115,10 +188,10 @@ def _tool_env(binary: Path) -> dict[str, str]:
         usr_root / "lib",
         root / "lib",
     ]
-    existing_ld = env.get("LD_LIBRARY_PATH", "")
+    existing_ld = os.environ.get("LD_LIBRARY_PATH", "")
     ld_values = [str(path) for path in lib_dirs if path.exists()]
     if ld_values:
-        env["LD_LIBRARY_PATH"] = ":".join(
+        overlay["LD_LIBRARY_PATH"] = ":".join(
             [*ld_values, *([existing_ld] if existing_ld else [])]
         )
 
@@ -135,8 +208,26 @@ def _tool_env(binary: Path) -> dict[str, str]:
             version_root / "lib",
             version_root / "Resource",
         ]
-        env["GS_LIB"] = ":".join(str(path) for path in gs_lib_values if path.exists())
+        overlay["GS_LIB"] = ":".join(
+            str(path) for path in gs_lib_values if path.exists()
+        )
+    with _TOOL_ENV_OVERLAY_CACHE_LOCK:
+        _TOOL_ENV_OVERLAY_CACHE[cache_key] = dict(overlay)
+    return overlay
+
+
+def _tool_env(binary: Path) -> dict[str, str]:
+    env = os.environ.copy()
+    env.update(_tool_env_overlay(binary))
     return env
+
+
+def _clear_image_tool_caches() -> None:
+    _clear_image_tool_path_caches()
+    with _WORKING_BINARY_CACHE_LOCK:
+        _WORKING_BINARY_CACHE.clear()
+    with _TOOL_ENV_OVERLAY_CACHE_LOCK:
+        _TOOL_ENV_OVERLAY_CACHE.clear()
 
 
 def _ghostscript_binary() -> Path:

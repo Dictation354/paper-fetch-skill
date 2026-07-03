@@ -538,6 +538,6 @@ def test_iop_pdf_fallback_contract_uses_pdf_magic_and_source() -> None:
 
 def test_iop_abstract_only_and_metadata_only_contract_are_provider_managed() -> None:
     # route-contract: abstract_only metadata_only provider-managed degradation after HTML/PDF failure
-    assert "abstract_only" in IopClient.waterfall_steps
-    assert "metadata_only" in IopClient.waterfall_steps
+    assert "abstract_only" in IopClient.route_order
+    assert "metadata_only" in IopClient.route_order
     assert PROVIDER_CATALOG["iop"].provider_managed_abstract_only is True

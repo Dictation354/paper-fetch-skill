@@ -830,6 +830,106 @@ class ResolveQueryTests(unittest.TestCase):
         self.assertIsNone(result.doi)
         self.assertEqual(len(result.candidates), 3)
 
+    def test_structured_title_query_uses_authors_without_query_concatenation(
+        self,
+    ) -> None:
+        title = "Shared structured resolve title"
+        transport = RecordingTransport(
+            {
+                ("GET", "https://api.crossref.org/works"): {
+                    "status_code": 200,
+                    "headers": {"content-type": "application/json"},
+                    "body": json.dumps(
+                        {
+                            "message": {
+                                "items": [
+                                    {
+                                        "DOI": "10.1000/wrong-author",
+                                        "title": [title],
+                                        "author": [
+                                            {
+                                                "given": "Bob",
+                                                "family": "Example",
+                                            }
+                                        ],
+                                        "issued": {"date-parts": [[2024]]},
+                                        "container-title": ["Journal A"],
+                                    },
+                                    {
+                                        "DOI": "10.1000/right-author",
+                                        "title": [title],
+                                        "author": [
+                                            {
+                                                "given": "Alice",
+                                                "family": "Example",
+                                            }
+                                        ],
+                                        "issued": {"date-parts": [[2024]]},
+                                        "container-title": ["Journal B"],
+                                    },
+                                ]
+                            }
+                        }
+                    ).encode("utf-8"),
+                    "url": "https://api.crossref.org/works",
+                }
+            }
+        )
+
+        result = resolve_query.resolve_query(
+            resolve_query.StructuredResolveRequest(
+                title=title, authors=("Alice Example",), year=2024
+            ),
+            transport=transport,
+            env={},
+        )
+
+        self.assertEqual(result.doi, "10.1000/right-author")
+        self.assertEqual(
+            transport.calls[0]["query"]["query.bibliographic"],
+            title,
+        )
+
+    def test_structured_title_query_uses_year_as_independent_signal(self) -> None:
+        title = "Shared year resolve title"
+        transport = RecordingTransport(
+            {
+                ("GET", "https://api.crossref.org/works"): {
+                    "status_code": 200,
+                    "headers": {"content-type": "application/json"},
+                    "body": json.dumps(
+                        {
+                            "message": {
+                                "items": [
+                                    {
+                                        "DOI": "10.1000/old",
+                                        "title": [title],
+                                        "issued": {"date-parts": [[2020]]},
+                                        "container-title": ["Journal A"],
+                                    },
+                                    {
+                                        "DOI": "10.1000/new",
+                                        "title": [title],
+                                        "issued": {"date-parts": [[2024]]},
+                                        "container-title": ["Journal B"],
+                                    },
+                                ]
+                            }
+                        }
+                    ).encode("utf-8"),
+                    "url": "https://api.crossref.org/works",
+                }
+            }
+        )
+
+        result = resolve_query.resolve_query(
+            resolve_query.StructuredResolveRequest(title=title, year=2024),
+            transport=transport,
+            env={},
+        )
+
+        self.assertEqual(result.doi, "10.1000/new")
+
     def test_no_title_results_raise_provider_failure(self) -> None:
         transport = RecordingTransport(
             {

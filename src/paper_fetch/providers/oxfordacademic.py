@@ -29,7 +29,7 @@ from ..provider_catalog import BodyTextThresholds, ProviderSpec
 from ..publisher_identity import normalize_doi
 from ..reason_codes import NO_RESULT, OK, PDF_FALLBACK
 from ..runtime import RuntimeContext
-from ..tracing import fulltext_marker
+from ..tracing import download_marker, fulltext_marker, trace_from_markers
 from ..utils import empty_asset_results, normalize_text
 from ..quality.html_availability import (
     HtmlQualityAssessor,
@@ -640,7 +640,13 @@ class OxfordAcademicClient(ProviderClient):
                 dict(item) for item in [*pdf_assets, *list(downloaded_assets or [])]
             ],
             asset_failures=[dict(item) for item in (asset_failures or [])],
+            allow_related_assets=not text_only,
             text_only=text_only and not pdf_assets,
+            skip_trace=trace_from_markers(
+                [download_marker("oxfordacademic_assets_skipped_text_only")]
+            )
+            if text_only and not pdf_assets
+            else [],
         )
 
 

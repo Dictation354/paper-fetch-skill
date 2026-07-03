@@ -6,15 +6,29 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 3.0.0 - 2026-07-03
+
 ### Changed
 
 - Changed browser-backed providers to use the public `browser_runtime` backend facade, centralizing CloakBrowser storage/profile path resolution, storage-state locking, and atomic storage-state writes across auth, preflight, HTML fetch, and seeded PDF fallback.
 - Changed external CDP handling to report borrowed-context diagnostics and support `PAPER_FETCH_CDP_EXTERNAL_NEW_CONTEXT=1` for creating a fresh context in an existing browser.
 - Changed browser-backed asset downloads to reuse a scoped thread-local page/context during safe caller-thread attempts, with automatic fallback to per-call close on Playwright thread-ownership errors.
+- Changed browser image fetches to use a single per-image wall-clock budget across seed warming, page fetch, request-context fetch, direct navigation, and image wait; PDF fallback browser seeding now uses a lightweight warm path and skips duplicate seed navigation when cookies were already collected.
+- Changed local conversion paths to cache Ghostscript/libvips candidate and `--version` probes, keep existing formula result/worker reuse under subprocess-call tests, and reuse no-image PDF Markdown rendering by PDF hash with byte/page guards and render diagnostics.
 - Added cooperative cancellation checks to browser HTML, seeded PDF fallback, browser asset retry, and browser preflight loops.
 - Changed `paper-fetch browser-preflight` to reuse each browser-backed provider's normal HTML candidates and HTML bootstrap retry semantics for built-in samples while still skipping PDF fallback.
 - Removed the PNAS fast browser HTML preflight special case; PNAS now uses the standard browser workflow HTML bootstrap before seeded PDF fallback.
 - Changed AMS to a no-browser direct HTTP HTML provider with direct HTTP PDF fallback, publishing `ams_html` or `ams_pdf` while still skipping browser auth/preflight/status and seeded-browser PDF fallback.
+- Changed CI offline package jobs to run only on `v*` tag pushes or manual dispatch, leaving ordinary push/PR runs to the regular quality gates.
+- Changed quality gates to expand mypy coverage to runtime/config/quality/PDF fallback/browser-runtime/formula core paths, configure mypy with `no_site_packages`, enforce a unit coverage baseline of 40 in CI and local coverage preflight, and remove the global `tests/**` `B023` ruff ignore.
+- Changed offline installers to derive MCP, `offline.env`, shell, and activation runtime environment keys from `installer/manifest.json`, propagate bundled Node/Python encoding consistently, register Antigravity MCP in verifier coverage, and parse `activate-offline.sh` env files without executing shell code.
+- Changed `RuntimeContext.parse_cache` accessors to use a lock and same-key in-flight coordination so concurrent parser memoization runs each supplier once.
+- Changed MCP tool outputs to include top-level `schema_version=1`, preserve provider/HTTP error details in machine-readable fields, and stop batch submission on rate-limit categories, HTTP 429, or retry-after hints while retaining `abort_reason.retry_after_seconds`.
+- Changed MCP cache-index reads to validate `INDEX_VERSION`, reject stale/invalid manifests unless explicitly rescanned, expose `list_cached(cache_mode="index"|"refresh"|"rescan")`, keep structured resolve `title`/`authors`/`year` as independent resolver signals, and move provider/Crossref primary-secondary metadata merge semantics into one rule-backed helper.
+- Changed provider waterfalls to continue fallback routes consistently for access, rate-limit, no-result, and generic provider failures while deduplicating aggregated warnings/source trail and preserving retry-after details in final failures.
+- Changed provider registry cold-start behavior so root `paper_fetch` imports no longer load provider entry modules, `trafilatura`, or `idutils`; provider discovery now uses an explicit built-in entry list plus cached AST checks for dynamic entries, and browser workflow route labels live in `route_order` instead of string-valued `waterfall_steps`.
+- Changed shared Markdown table rendering to use one canonical pipe-table formatter across IR and HTML paths, preserving explicit headers, escaping pipes/newlines, padding ragged rows, and rendering fallback messages.
+- Changed HTML-derived formula and citation rendering to keep inline TeX math delimited, prefer explicit figure context before formula-image URL heuristics, and share one numeric citation payload helper across section and Atypon renderers.
 - Updated README, CLI/MCP instructions, provider/runtime/deployment/extraction docs, AMS onboarding manifest/access-review/cleaning-chain evidence, and the provider runtime optimization plan to match the new browser-runtime and AMS direct-HTTP ownership boundaries.
 - Expanded unit and integration coverage for AMS direct HTTP HTML/PDF fallback, browser-preflight provider candidates/no-PDF behavior, external-CDP new-context diagnostics, browser runtime facade wiring, and browser workflow dependency grouping.
 

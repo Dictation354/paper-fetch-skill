@@ -13,7 +13,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest import mock
 
-from paper_fetch.http import RequestCancelledError
+from paper_fetch.http import RequestCancelledError, RequestFailure
 from paper_fetch.mcp import batch as mcp_batch
 from paper_fetch.mcp import cache_payloads as mcp_cache_payloads
 from paper_fetch.mcp import fetch_tool as mcp_fetch_tool

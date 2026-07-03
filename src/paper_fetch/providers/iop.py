@@ -114,7 +114,7 @@ def _append_unique(values: list[str], candidate: str | None) -> None:
 class IopClient(browser_workflow.BrowserWorkflowClient):
     name = IOP_BROWSER_PROFILE.name
     profile = IOP_BROWSER_PROFILE
-    waterfall_steps = (
+    route_order = (
         "article_html",
         "pdf_fallback",
         "abstract_only",

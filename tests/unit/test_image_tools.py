@@ -18,6 +18,12 @@ from paper_fetch.image_tools.paths import (
 
 
 class ImageToolsTests(unittest.TestCase):
+    def setUp(self) -> None:
+        image_convert._clear_image_tool_caches()
+
+    def tearDown(self) -> None:
+        image_convert._clear_image_tool_caches()
+
     def test_source_image_format_detection_reads_payload_content_type_and_url(
         self,
     ) -> None:
@@ -144,3 +150,117 @@ class ImageToolsTests(unittest.TestCase):
                 "timed out",
             ):
                 image_convert._run(["gs"], env={})
+
+    def test_convert_eps_reuses_cached_ghostscript_probe_for_multiple_images(
+        self,
+    ) -> None:
+        version_calls: list[list[str]] = []
+        conversion_calls: list[list[str]] = []
+
+        def fake_run(args, **_kwargs):
+            command = [str(item) for item in args]
+            if "--version" in command:
+                version_calls.append(command)
+                return subprocess.CompletedProcess(command, 0, "", "")
+            output_arg = next(
+                item for item in command if item.startswith("-sOutputFile=")
+            )
+            Path(output_arg.split("=", 1)[1]).write_bytes(b"\x89PNG\r\n\x1a\none")
+            conversion_calls.append(command)
+            return subprocess.CompletedProcess(command, 0, "", "")
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            binary = Path(tmpdir) / ("gs.exe" if os.name == "nt" else "gs")
+            binary.write_bytes(b"")
+            response = {
+                "body": b"%!PS-Adobe-3.0 EPSF-3.0\n",
+                "headers": {"content-type": "application/postscript"},
+            }
+            with (
+                mock.patch.dict(
+                    os.environ, {"PAPER_FETCH_GHOSTSCRIPT_BIN": str(binary)}
+                ),
+                mock.patch.object(
+                    image_convert.subprocess, "run", side_effect=fake_run
+                ),
+            ):
+                first = image_convert.convert_source_image_response_to_png(
+                    response,
+                    source_url="https://example.test/one.eps",
+                )
+                second = image_convert.convert_source_image_response_to_png(
+                    response,
+                    source_url="https://example.test/two.eps",
+                )
+
+        self.assertEqual(first.tool, "ghostscript")
+        self.assertEqual(second.tool, "ghostscript")
+        self.assertEqual(len(version_calls), 1)
+        self.assertEqual(len(conversion_calls), 2)
+
+    def test_convert_tiff_reuses_cached_vips_probe_for_multiple_images(self) -> None:
+        version_calls: list[list[str]] = []
+        conversion_calls: list[list[str]] = []
+
+        def fake_run(args, **_kwargs):
+            command = [str(item) for item in args]
+            if "--version" in command:
+                version_calls.append(command)
+                return subprocess.CompletedProcess(command, 0, "", "")
+            Path(command[-1]).write_bytes(b"\x89PNG\r\n\x1a\ntiff")
+            conversion_calls.append(command)
+            return subprocess.CompletedProcess(command, 0, "", "")
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            binary = Path(tmpdir) / ("vips.exe" if os.name == "nt" else "vips")
+            binary.write_bytes(b"")
+            response = {
+                "body": b"II*\x00payload",
+                "headers": {"content-type": "image/tiff"},
+            }
+            with (
+                mock.patch.dict(os.environ, {"PAPER_FETCH_VIPS_BIN": str(binary)}),
+                mock.patch.object(
+                    image_convert.subprocess, "run", side_effect=fake_run
+                ),
+            ):
+                first = image_convert.convert_source_image_response_to_png(
+                    response,
+                    source_url="https://example.test/one.tif",
+                )
+                second = image_convert.convert_source_image_response_to_png(
+                    response,
+                    source_url="https://example.test/two.tif",
+                )
+
+        self.assertEqual(first.tool, "libvips")
+        self.assertEqual(second.tool, "libvips")
+        self.assertEqual(len(version_calls), 1)
+        self.assertEqual(len(conversion_calls), 2)
+
+    def test_probe_cache_key_changes_when_explicit_binary_env_changes(self) -> None:
+        version_calls: list[str] = []
+
+        def fake_run(args, **_kwargs):
+            command = [str(item) for item in args]
+            version_calls.append(command[0])
+            return subprocess.CompletedProcess(command, 0, "", "")
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            first = Path(tmpdir) / "first-gs"
+            second = Path(tmpdir) / "second-gs"
+            first.write_bytes(b"")
+            second.write_bytes(b"")
+            with mock.patch.object(
+                image_convert.subprocess, "run", side_effect=fake_run
+            ):
+                with mock.patch.dict(
+                    os.environ, {"PAPER_FETCH_GHOSTSCRIPT_BIN": str(first)}
+                ):
+                    self.assertEqual(image_convert._ghostscript_binary(), first)
+                with mock.patch.dict(
+                    os.environ, {"PAPER_FETCH_GHOSTSCRIPT_BIN": str(second)}
+                ):
+                    self.assertEqual(image_convert._ghostscript_binary(), second)
+
+        self.assertEqual(version_calls, [str(first), str(second)])

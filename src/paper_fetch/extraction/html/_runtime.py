@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import codecs
 import functools
+import importlib
 import logging
 import re
 from dataclasses import dataclass
@@ -62,13 +63,23 @@ from .provider_rules import (
 )
 from bs4 import BeautifulSoup
 
-trafilatura: Any
-try:
-    import trafilatura as _trafilatura
-except ImportError:  # pragma: no cover - exercised implicitly when dependency is absent
-    trafilatura = None
-else:
-    trafilatura = _trafilatura
+_TRAFILATURA_UNSET = object()
+trafilatura: Any = _TRAFILATURA_UNSET
+
+
+@functools.lru_cache(maxsize=1)
+def _import_trafilatura() -> Any:
+    try:
+        return importlib.import_module("trafilatura")
+    except ImportError:  # pragma: no cover - exercised by degraded installs
+        return None
+
+
+def _module_trafilatura_backend() -> Any:
+    if trafilatura is _TRAFILATURA_UNSET:
+        return _import_trafilatura()
+    return trafilatura
+
 
 _charset_normalizer_from_bytes: Any
 try:
@@ -511,7 +522,7 @@ def extract_article_markdown_from_cleaned_html(
     del source_url
     active_noise_profile = _normalize_noise_profile(noise_profile)
     active_trafilatura = (
-        trafilatura
+        _module_trafilatura_backend()
         if trafilatura_backend is _USE_MODULE_TRAFILATURA
         else trafilatura_backend
     )

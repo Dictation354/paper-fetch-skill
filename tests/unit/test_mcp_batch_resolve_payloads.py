@@ -115,6 +115,7 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
 
         self.assertFalse(result.isError)
         payload = result.structuredContent
+        self.assertEqual(payload["schema_version"], 1)
         self.assertEqual(payload["source"], "elsevier_xml")
         self.assertTrue(payload["has_fulltext"])
         self.assertEqual(payload["warnings"], ["example warning"])
@@ -174,6 +175,8 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
 
         self.assertTrue(result.isError)
         self.assertEqual(result.structuredContent["status"], "ambiguous")
+        self.assertEqual(result.structuredContent["schema_version"], 1)
+        self.assertEqual(result.structuredContent["code"], "ambiguous")
         self.assertEqual(
             result.structuredContent["candidates"][0]["doi"], "10.1000/example"
         )
@@ -184,16 +187,49 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
         with mock.patch.object(
             mcp_tools,
             "service_fetch_paper",
-            side_effect=ProviderFailure("no_access", "Provider request failed."),
+            side_effect=ProviderFailure(
+                "no_access",
+                "Provider request failed.",
+                warnings=["provider warning"],
+                source_trail=["fulltext:provider_failed"],
+            ),
         ):
             result = asyncio.run(
                 mcp_tools.fetch_paper_tool_async(query="10.1000/example")
             )
 
         self.assertTrue(result.isError)
+        self.assertEqual(result.structuredContent["schema_version"], 1)
         self.assertEqual(result.structuredContent["status"], "no_access")
+        self.assertEqual(result.structuredContent["code"], "no_access")
+        self.assertEqual(result.structuredContent["error_category"], "no_access")
         self.assertEqual(result.structuredContent["reason"], "Provider request failed.")
+        self.assertEqual(result.structuredContent["warnings"], ["provider warning"])
+        self.assertEqual(
+            result.structuredContent["source_trail"], ["fulltext:provider_failed"]
+        )
         self.assertIsNone(result.structuredContent["missing_env"])
+
+    def test_error_payload_from_exception_preserves_provider_failure_code(
+        self,
+    ) -> None:
+        payload = mcp_tools.error_payload_from_exception(
+            ProviderFailure(
+                "no_result",
+                "Provider returned no full text.",
+                retry_after_seconds=7,
+                warnings=["temporary provider issue"],
+                source_trail=["fulltext:provider_no_result"],
+            )
+        )
+
+        self.assertEqual(payload["schema_version"], 1)
+        self.assertEqual(payload["status"], "error")
+        self.assertEqual(payload["code"], "no_result")
+        self.assertEqual(payload["error_category"], "no_result")
+        self.assertEqual(payload["retry_after_seconds"], 7)
+        self.assertEqual(payload["warnings"], ["temporary provider issue"])
+        self.assertEqual(payload["source_trail"], ["fulltext:provider_no_result"])
 
     def test_error_payload_from_exception_exposes_missing_env_and_promotes_not_configured(
         self,
@@ -207,7 +243,21 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
         )
 
         self.assertEqual(payload["status"], "no_access")
+        self.assertEqual(payload["code"], "not_configured")
+        self.assertEqual(payload["error_category"], "not_configured")
         self.assertEqual(payload["missing_env"], ["ELSEVIER_API_KEY"])
+
+    def test_error_payload_from_exception_maps_http_rate_limit_details(self) -> None:
+        payload = mcp_tools.error_payload_from_exception(
+            RequestFailure(429, "HTTP 429 for provider", retry_after_seconds=4)
+        )
+
+        self.assertEqual(payload["schema_version"], 1)
+        self.assertEqual(payload["status"], "rate_limited")
+        self.assertEqual(payload["code"], "http_429")
+        self.assertEqual(payload["http_status"], 429)
+        self.assertEqual(payload["error_category"], "rate_limited")
+        self.assertEqual(payload["retry_after_seconds"], 4)
 
     def test_fetch_paper_tool_missing_env_payload_matches_output_schema(self) -> None:
         server = build_server()
@@ -301,7 +351,12 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
             seen_queries.append(query)
             transport_ids.append(id(context.transport if context is not None else None))
             if query == "second":
-                raise ProviderFailure("rate_limited", "Slow down.")
+                raise ProviderFailure(
+                    "rate_limited",
+                    "Slow down.",
+                    retry_after_seconds=3,
+                    source_trail=["fulltext:rate_limited"],
+                )
             return sample_resolved_query(query)
 
         with mock.patch.object(
@@ -312,10 +367,44 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
             )
 
         self.assertTrue(payload["aborted"])
+        self.assertEqual(payload["schema_version"], 1)
         self.assertEqual(payload["abort_reason"]["status"], "rate_limited")
+        self.assertEqual(payload["abort_reason"]["code"], "rate_limited")
+        self.assertEqual(payload["abort_reason"]["retry_after_seconds"], 3)
+        self.assertEqual(
+            payload["abort_reason"]["source_trail"], ["fulltext:rate_limited"]
+        )
         self.assertEqual(len(payload["results"]), 2)
         self.assertEqual(seen_queries, ["first", "second"])
         self.assertEqual(len(set(transport_ids)), 1)
+
+    def test_batch_resolve_payload_aborts_on_retry_after_machine_field(
+        self,
+    ) -> None:
+        seen_queries: list[str] = []
+
+        def fake_resolve(query, *, context=None):
+            seen_queries.append(query)
+            if query == "second":
+                raise ProviderFailure(
+                    "error",
+                    "Provider asked to retry later.",
+                    retry_after_seconds=12,
+                )
+            return sample_resolved_query(query)
+
+        with mock.patch.object(
+            mcp_tools, "service_resolve_paper", side_effect=fake_resolve
+        ):
+            payload = mcp_tools.batch_resolve_payload(
+                queries=["first", "second", "third"]
+            )
+
+        self.assertTrue(payload["aborted"])
+        self.assertEqual(payload["abort_reason"]["status"], "error")
+        self.assertEqual(payload["abort_reason"]["code"], "error")
+        self.assertEqual(payload["abort_reason"]["retry_after_seconds"], 12)
+        self.assertEqual(seen_queries, ["first", "second"])
 
     def test_batch_resolve_payload_supports_optional_concurrency(self) -> None:
         active = 0
@@ -387,6 +476,7 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
         self.assertEqual(payload["mode"], "metadata")
         self.assertFalse(payload["aborted"])
         self.assertEqual(len(payload["results"]), 2)
+        self.assertEqual(payload["results"][0]["schema_version"], 1)
         self.assertEqual(payload["results"][0]["query"], "10.1000/one")
         self.assertEqual(payload["results"][0]["doi"], "10.1000/one")
         self.assertEqual(payload["results"][0]["title"], "Title for 10.1000/one")
@@ -465,12 +555,12 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
         self.assertEqual(seen_queries, ["10.1000/one", "10.1000/two"])
         self.assertEqual(len(payload["results"]), 2)
 
-    def test_resolve_paper_payload_composes_structured_query(self) -> None:
+    def test_resolve_paper_payload_preserves_structured_query(self) -> None:
         captured: dict[str, object] = {}
 
         def fake_resolve(query, *, context=None):
             captured["query"] = query
-            return sample_resolved_query(query)
+            return sample_resolved_query(query.lookup_query)
 
         with mock.patch.object(
             mcp_tools, "service_resolve_paper", side_effect=fake_resolve
@@ -487,14 +577,14 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
                 year=2024,
             )
 
+        request = captured["query"]
+        self.assertEqual(request.lookup_query, "Example title")
         self.assertEqual(
-            captured["query"],
-            "Example title Alice Example Bob Example Carol Example 2024",
+            request.authors,
+            ("Alice Example", "Bob Example", "Carol Example", "Dana Example"),
         )
-        self.assertEqual(
-            payload["query"],
-            "Example title Alice Example Bob Example Carol Example 2024",
-        )
+        self.assertEqual(request.year, 2024)
+        self.assertEqual(payload["query"], "Example title")
 
     def test_resolve_paper_tool_rejects_mixed_query_and_structured_fields(self) -> None:
         result = mcp_tools.resolve_paper_tool(

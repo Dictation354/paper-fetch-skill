@@ -45,13 +45,17 @@ esac
 
 INSTALL_ROOT="$TMP_ROOT/install-root"
 RUNTIME_PYTHON="$INSTALL_ROOT/runtime/paper-fetch-python"
+ACTIVATE_SENTINEL="$TMP_ROOT/activate-env-command-ran"
 mkdir -p "$INSTALL_ROOT/src" "$INSTALL_ROOT/tests" "$INSTALL_ROOT/wheelhouse" "$INSTALL_ROOT/dist"
 printf 'ELSEVIER_API_KEY="secret"\nUSER_NOTE="keep"\n' > "$INSTALL_ROOT/offline.env"
+printf 'PAPER_FETCH_ACTIVATE_SENTINEL="$(touch %s)"\n' "$ACTIVATE_SENTINEL" >> "$INSTALL_ROOT/offline.env"
 
 GUARD_DIR="$(mktemp -d)"
 FAKE_HOME="$TMP_ROOT/home"
 FAKE_CLI_LOG="$TMP_ROOT/mcp-cli.log"
 mkdir -p "$FAKE_HOME"
+mkdir -p "$FAKE_HOME/.gemini/antigravity-cli"
+printf '{"mcpServers":{"keep-server":{"command":"keep"}}}\n' > "$FAKE_HOME/.gemini/antigravity-cli/mcp_config.json"
 for name in curl git npm npx playwright; do
   cat > "$GUARD_DIR/$name" <<'EOF'
 #!/usr/bin/env bash
@@ -92,6 +96,9 @@ log "Verifying installed runtime package layout"
 [ ! -d "$INSTALL_ROOT/dist" ] || die "Offline install should not include dist."
 grep -F -q 'ELSEVIER_API_KEY="secret"' "$INSTALL_ROOT/offline.env"
 grep -F -q 'USER_NOTE="keep"' "$INSTALL_ROOT/offline.env"
+grep -F -q 'MATHML_TO_LATEX_NODE_BIN=' "$INSTALL_ROOT/offline.env"
+grep -F -q "PYTHONUTF8=\"1\"" "$INSTALL_ROOT/offline.env"
+grep -F -q "PYTHONIOENCODING=\"utf-8\"" "$INSTALL_ROOT/offline.env"
 expected_browser_user_agent='PAPER_FETCH_BROWSER_USER_AGENT="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36"'
 grep -F -q "$expected_browser_user_agent" "$INSTALL_ROOT/offline.env" || die "Offline install did not enable default browser UA."
 if grep -E -q '^[[:space:]]*#.*PAPER_FETCH_BROWSER_USER_AGENT' "$INSTALL_ROOT/offline.env"; then
@@ -106,6 +113,7 @@ grep -F -q "$INSTALL_ROOT/formula-tools/bin" "$FAKE_HOME/.bashrc"
 grep -F -q "$INSTALL_ROOT/image-tools/bin" "$FAKE_HOME/.bashrc"
 [ -f "$FAKE_HOME/.codex/skills/paper-fetch-skill/SKILL.md" ] || die "Codex skill was not installed."
 [ -f "$FAKE_HOME/.claude/skills/paper-fetch-skill/SKILL.md" ] || die "Claude skill was not installed."
+[ -f "$FAKE_HOME/.gemini/antigravity-cli/skills/paper-fetch-skill/SKILL.md" ] || die "Antigravity skill was not installed."
 grep -F -q "codex mcp remove paper-fetch" "$FAKE_CLI_LOG"
 grep -F -q "codex mcp add" "$FAKE_CLI_LOG"
 grep -F -q "claude mcp remove -s user paper-fetch" "$FAKE_CLI_LOG"
@@ -116,8 +124,40 @@ grep -F -q "PAPER_FETCH_IMAGE_TOOLS_DIR=$INSTALL_ROOT/image-tools" "$FAKE_CLI_LO
 grep -F -q "MATHML_TO_LATEX_NODE_BIN=" "$FAKE_CLI_LOG"
 grep -F -q "CLOAKBROWSER_HEADLESS=true" "$FAKE_CLI_LOG"
 
+"$RUNTIME_PYTHON" - "$FAKE_HOME/.gemini/antigravity-cli/mcp_config.json" "$INSTALL_ROOT" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+config_path = Path(sys.argv[1])
+install_root = Path(sys.argv[2])
+data = json.loads(config_path.read_text(encoding="utf-8"))
+servers = data["mcpServers"]
+assert "keep-server" in servers, servers
+entry = servers["paper-fetch"]
+assert entry["command"] == str(install_root / "runtime" / "paper-fetch-python"), entry
+assert entry["args"] == ["-X", "utf8", "-m", "paper_fetch.mcp.server"], entry
+env = entry["env"]
+expected = {
+    "PYTHONUTF8": "1",
+    "PYTHONIOENCODING": "utf-8",
+    "PAPER_FETCH_ENV_FILE": str(install_root / "offline.env"),
+    "PAPER_FETCH_DOWNLOAD_DIR": str(install_root / "downloads"),
+    "PAPER_FETCH_FORMULA_TOOLS_DIR": str(install_root / "formula-tools"),
+    "PAPER_FETCH_IMAGE_TOOLS_DIR": str(install_root / "image-tools"),
+    "MATHML_TO_LATEX_NODE_BIN": str(install_root / "runtime" / "site-packages" / "playwright" / "driver" / "node"),
+    "CLOAKBROWSER_HEADLESS": "true",
+}
+for key, value in expected.items():
+    assert env.get(key) == value, (key, env)
+PY
+
 # shellcheck disable=SC1091
 source "$INSTALL_ROOT/activate-offline.sh"
+[ ! -e "$ACTIVATE_SENTINEL" ] || die "activate-offline.sh executed shell code from offline.env."
+[ "${PYTHONUTF8:-}" = "1" ] || die "activate-offline.sh did not set PYTHONUTF8."
+[ "${PYTHONIOENCODING:-}" = "utf-8" ] || die "activate-offline.sh did not set PYTHONIOENCODING."
+[ "${MATHML_TO_LATEX_NODE_BIN:-}" = "$INSTALL_ROOT/runtime/site-packages/playwright/driver/node" ] || die "activate-offline.sh did not set bundled Node."
 
 log "Verifying command entrypoints"
 paper-fetch --help >/dev/null
@@ -166,8 +206,19 @@ if grep -F -q "# BEGIN paper-fetch offline managed" "$FAKE_HOME/.bashrc"; then
 fi
 [ ! -d "$FAKE_HOME/.codex/skills/paper-fetch-skill" ] || die "Codex skill was not removed."
 [ ! -d "$FAKE_HOME/.claude/skills/paper-fetch-skill" ] || die "Claude skill was not removed."
+[ ! -d "$FAKE_HOME/.gemini/antigravity-cli/skills/paper-fetch-skill" ] || die "Antigravity skill was not removed."
 grep -F -q "codex mcp remove paper-fetch" "$FAKE_CLI_LOG"
 grep -F -q "claude mcp remove -s user paper-fetch" "$FAKE_CLI_LOG"
+"$RUNTIME_PYTHON" - "$FAKE_HOME/.gemini/antigravity-cli/mcp_config.json" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+data = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
+servers = data["mcpServers"]
+assert "keep-server" in servers, servers
+assert "paper-fetch" not in servers, servers
+PY
 [ -f "$INSTALL_ROOT/offline.env" ] || die "Uninstall removed offline.env."
 [ -x "$RUNTIME_PYTHON" ] || die "Uninstall removed private Python launcher."
 [ ! -e "$INSTALL_ROOT/bin/python" ] || die "Uninstall should not restore a generic Python wrapper."

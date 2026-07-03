@@ -119,7 +119,7 @@ def _metadata_pdf_urls(metadata: Mapping[str, Any]) -> list[str]:
 class MdpiClient(browser_workflow.BrowserWorkflowClient):
     name = MDPI_BROWSER_PROFILE.name
     profile = MDPI_BROWSER_PROFILE
-    waterfall_steps = ("article_html", "pdf_fallback", "metadata_only")
+    route_order = ("article_html", "pdf_fallback", "metadata_only")
     article_asset_failure_warning = False
 
     def html_candidates(self, doi: str, metadata: Mapping[str, Any]) -> list[str]:

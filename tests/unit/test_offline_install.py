@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import os
 from pathlib import Path
 import shutil
+import shlex
 import subprocess
+import sys
 import tempfile
 import textwrap
 import unittest
@@ -50,11 +53,13 @@ def _python_tag(version: str) -> str:
 
 def _fake_python_script(version: str) -> str:
     tag = _python_tag(version)
+    real_python = shlex.quote(sys.executable)
     return f"""\
     #!/usr/bin/env bash
     set -euo pipefail
     VERSION="{version}"
     TAG="{tag}"
+    REAL_PYTHON={real_python}
 
     while [[ "${{1:-}}" == "-X" ]]; do
       shift 2
@@ -101,6 +106,7 @@ def _fake_python_script(version: str) -> str:
     # END paper-fetch installer managed
     paper-fetch-skill
     paper-fetch
+    [mcp.env_keys]
     PYTHONUTF8
     PYTHONIOENCODING
     PAPER_FETCH_ENV_FILE
@@ -108,6 +114,34 @@ def _fake_python_script(version: str) -> str:
     PAPER_FETCH_FORMULA_TOOLS_DIR
     PAPER_FETCH_IMAGE_TOOLS_DIR
     MATHML_TO_LATEX_NODE_BIN
+    CLOAKBROWSER_HEADLESS
+    [env_sets.offline_env_keys]
+    PAPER_FETCH_DOWNLOAD_DIR
+    PAPER_FETCH_FORMULA_TOOLS_DIR
+    PAPER_FETCH_IMAGE_TOOLS_DIR
+    MATHML_TO_LATEX_NODE_BIN
+    CLOAKBROWSER_HEADLESS
+    PYTHONUTF8
+    PYTHONIOENCODING
+    PAPER_FETCH_BROWSER_USER_AGENT
+    [env_sets.shell_env_keys]
+    PAPER_FETCH_ENV_FILE
+    PAPER_FETCH_DOWNLOAD_DIR
+    PAPER_FETCH_FORMULA_TOOLS_DIR
+    PAPER_FETCH_IMAGE_TOOLS_DIR
+    MATHML_TO_LATEX_NODE_BIN
+    CLOAKBROWSER_HEADLESS
+    PYTHONUTF8
+    PYTHONIOENCODING
+    [env_sets.activate_env_keys]
+    PAPER_FETCH_ENV_FILE
+    PAPER_FETCH_DOWNLOAD_DIR
+    PAPER_FETCH_FORMULA_TOOLS_DIR
+    PAPER_FETCH_IMAGE_TOOLS_DIR
+    MATHML_TO_LATEX_NODE_BIN
+    CLOAKBROWSER_HEADLESS
+    PYTHONUTF8
+    PYTHONIOENCODING
     OUT
         exit 0
       fi
@@ -115,6 +149,12 @@ def _fake_python_script(version: str) -> str:
         exit 0
       fi
       exit 0
+    fi
+
+    if [[ "${{1:-}}" == "-" ]]; then
+      code="$(cat)"
+      "$REAL_PYTHON" "$@" <<< "$code"
+      exit $?
     fi
 
     if [[ "${{1:-}}" == "-m" && "${{2:-}}" == "venv" ]]; then
@@ -317,6 +357,12 @@ class OfflineInstallTests(unittest.TestCase):
             self.assertIn(
                 f'PAPER_FETCH_IMAGE_TOOLS_DIR="{bundle / "image-tools"}"', offline_env
             )
+            self.assertIn(
+                f'MATHML_TO_LATEX_NODE_BIN="{bundle / "runtime" / "site-packages" / "playwright" / "driver" / "node"}"',
+                offline_env,
+            )
+            self.assertIn('PYTHONUTF8="1"', offline_env)
+            self.assertIn('PYTHONIOENCODING="utf-8"', offline_env)
             self.assertNotIn("PLAYWRIGHT_BROWSERS_PATH", offline_env)
             self.assertEqual(
                 (bundle / "runtime" / "python-bin").read_text(encoding="utf-8"),
@@ -456,6 +502,12 @@ class OfflineInstallTests(unittest.TestCase):
             )
             self.assertIn('export CLOAKBROWSER_HEADLESS="true"', bashrc)
             self.assertIn('set -gx CLOAKBROWSER_HEADLESS "true"', fish_config)
+            self.assertIn("export MATHML_TO_LATEX_NODE_BIN=", bashrc)
+            self.assertIn("set -gx MATHML_TO_LATEX_NODE_BIN ", fish_config)
+            self.assertIn('export PYTHONUTF8="1"', bashrc)
+            self.assertIn('set -gx PYTHONUTF8 "1"', fish_config)
+            self.assertIn('export PYTHONIOENCODING="utf-8"', bashrc)
+            self.assertIn('set -gx PYTHONIOENCODING "utf-8"', fish_config)
             self.assertNotIn("PLAYWRIGHT_BROWSERS_PATH", bashrc + fish_config)
 
     def test_unknown_preset_is_rejected(self) -> None:
@@ -559,6 +611,63 @@ class OfflineInstallTests(unittest.TestCase):
             self.assertNotIn("CLOAKBROWSER_BINARY_PATH", config)
             self.assertNotIn("PLAYWRIGHT_BROWSERS_PATH", config)
 
+    def test_antigravity_mcp_config_uses_manifest_env_keys_and_preserves_existing_servers(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            bundle, fake_bin, home = self._create_bundle(root)
+            antigravity_home = home / ".gemini" / "antigravity-cli"
+            _write_file(
+                antigravity_home / "mcp_config.json",
+                json.dumps({"mcpServers": {"keep-server": {"command": "keep"}}}),
+            )
+
+            result = self._run_installer(bundle, fake_bin, home)
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertTrue(
+                (
+                    antigravity_home / "skills" / "paper-fetch-skill" / "SKILL.md"
+                ).exists()
+            )
+            data = json.loads(
+                (antigravity_home / "mcp_config.json").read_text(encoding="utf-8")
+            )
+            servers = data["mcpServers"]
+            self.assertIn("keep-server", servers)
+            entry = servers["paper-fetch"]
+            self.assertEqual(
+                entry["command"], str(bundle / "runtime" / "paper-fetch-python")
+            )
+            self.assertEqual(
+                entry["args"], ["-X", "utf8", "-m", "paper_fetch.mcp.server"]
+            )
+            manifest = json.loads(
+                (REPO_ROOT / "installer" / "manifest.json").read_text(encoding="utf-8")
+            )
+            self.assertEqual(set(entry["env"]), set(manifest["mcp"]["env_keys"]))
+            self.assertEqual(entry["env"]["PYTHONUTF8"], "1")
+            self.assertEqual(entry["env"]["PYTHONIOENCODING"], "utf-8")
+            self.assertEqual(
+                entry["env"]["PAPER_FETCH_ENV_FILE"], str(bundle / "offline.env")
+            )
+            self.assertEqual(
+                entry["env"]["PAPER_FETCH_IMAGE_TOOLS_DIR"],
+                str(bundle / "image-tools"),
+            )
+            self.assertEqual(
+                entry["env"]["MATHML_TO_LATEX_NODE_BIN"],
+                str(
+                    bundle
+                    / "runtime"
+                    / "site-packages"
+                    / "playwright"
+                    / "driver"
+                    / "node"
+                ),
+            )
+
     def test_reuse_env_file_keeps_file_untouched_and_activate_script_sets_runtime_dirs(
         self,
     ) -> None:
@@ -566,7 +675,12 @@ class OfflineInstallTests(unittest.TestCase):
             root = Path(tmpdir)
             bundle, fake_bin, home = self._create_bundle(root)
             reused_env = root / "shared" / "offline.env"
-            reused_payload = 'ELSEVIER_API_KEY="secret"\n'
+            marker = root / "activate-command-ran"
+            sentinel = f"$(touch {marker})"
+            reused_payload = (
+                'ELSEVIER_API_KEY="secret"\n'
+                f'PAPER_FETCH_ACTIVATE_SENTINEL="{sentinel}"\n'
+            )
             _write_file(reused_env, reused_payload)
 
             result = self._run_installer(
@@ -583,8 +697,14 @@ class OfflineInstallTests(unittest.TestCase):
                     "-lc",
                     (
                         f'source "{bundle / "activate-offline.sh"}"; '
-                        'printf "%s\\n%s\\n%s\\n" '
-                        '"$PAPER_FETCH_ENV_FILE" "$PAPER_FETCH_DOWNLOAD_DIR" "$PAPER_FETCH_IMAGE_TOOLS_DIR"'
+                        'printf "%s\\n%s\\n%s\\n%s\\n%s\\n%s\\n%s\\n" '
+                        '"$PAPER_FETCH_ENV_FILE" '
+                        '"$PAPER_FETCH_DOWNLOAD_DIR" '
+                        '"$PAPER_FETCH_IMAGE_TOOLS_DIR" '
+                        '"$MATHML_TO_LATEX_NODE_BIN" '
+                        '"$PYTHONUTF8" '
+                        '"$PYTHONIOENCODING" '
+                        '"$PAPER_FETCH_ACTIVATE_SENTINEL"'
                     ),
                 ],
                 text=True,
@@ -592,12 +712,24 @@ class OfflineInstallTests(unittest.TestCase):
                 check=False,
             )
             self.assertEqual(probe.returncode, 0, probe.stderr)
+            self.assertFalse(marker.exists())
             self.assertEqual(
                 probe.stdout.splitlines(),
                 [
                     str(reused_env),
                     str(bundle / "downloads"),
                     str(bundle / "image-tools"),
+                    str(
+                        bundle
+                        / "runtime"
+                        / "site-packages"
+                        / "playwright"
+                        / "driver"
+                        / "node"
+                    ),
+                    "1",
+                    "utf-8",
+                    sentinel,
                 ],
             )
 
@@ -609,8 +741,14 @@ class OfflineInstallTests(unittest.TestCase):
                         "-lc",
                         (
                             f'source "{bundle / "activate-offline.sh"}"; '
-                            'printf "%s\\n%s\\n%s\\n" '
-                            '"$PAPER_FETCH_ENV_FILE" "$PAPER_FETCH_DOWNLOAD_DIR" "$PAPER_FETCH_IMAGE_TOOLS_DIR"'
+                            'printf "%s\\n%s\\n%s\\n%s\\n%s\\n%s\\n%s\\n" '
+                            '"$PAPER_FETCH_ENV_FILE" '
+                            '"$PAPER_FETCH_DOWNLOAD_DIR" '
+                            '"$PAPER_FETCH_IMAGE_TOOLS_DIR" '
+                            '"$MATHML_TO_LATEX_NODE_BIN" '
+                            '"$PYTHONUTF8" '
+                            '"$PYTHONIOENCODING" '
+                            '"$PAPER_FETCH_ACTIVATE_SENTINEL"'
                         ),
                     ],
                     text=True,
@@ -624,8 +762,77 @@ class OfflineInstallTests(unittest.TestCase):
                         str(reused_env),
                         str(bundle / "downloads"),
                         str(bundle / "image-tools"),
+                        str(
+                            bundle
+                            / "runtime"
+                            / "site-packages"
+                            / "playwright"
+                            / "driver"
+                            / "node"
+                        ),
+                        "1",
+                        "utf-8",
+                        sentinel,
                     ],
                 )
+
+    def test_activate_script_parses_dotenv_without_executing_shell_code(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            bundle, fake_bin, home = self._create_bundle(root)
+            marker = root / "default-activate-command-ran"
+            sentinel = f"$(touch {marker})"
+
+            result = self._run_installer(bundle, fake_bin, home)
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            offline_env = bundle / "offline.env"
+            offline_env.write_text(
+                offline_env.read_text(encoding="utf-8")
+                + "\n"
+                + 'export PAPER_FETCH_SPACED="hello world"\n'
+                + f'PAPER_FETCH_ACTIVATE_SENTINEL="{sentinel}"\n',
+                encoding="utf-8",
+            )
+
+            probe = subprocess.run(
+                [
+                    "bash",
+                    "-lc",
+                    (
+                        f'source "{bundle / "activate-offline.sh"}"; '
+                        'printf "%s\\n%s\\n%s\\n%s\\n%s\\n" '
+                        '"$PAPER_FETCH_SPACED" '
+                        '"$PAPER_FETCH_ACTIVATE_SENTINEL" '
+                        '"$MATHML_TO_LATEX_NODE_BIN" '
+                        '"$PYTHONUTF8" '
+                        '"$PYTHONIOENCODING"'
+                    ),
+                ],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+
+            self.assertEqual(probe.returncode, 0, probe.stderr)
+            self.assertFalse(marker.exists())
+            self.assertEqual(
+                probe.stdout.splitlines(),
+                [
+                    "hello world",
+                    sentinel,
+                    str(
+                        bundle
+                        / "runtime"
+                        / "site-packages"
+                        / "playwright"
+                        / "driver"
+                        / "node"
+                    ),
+                    "1",
+                    "utf-8",
+                ],
+            )
 
     def test_activate_script_is_sourceable_from_macos_default_zsh(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -683,6 +890,27 @@ class OfflineInstallTests(unittest.TestCase):
             _write_file(
                 home / ".codex" / "skills" / "paper-fetch-skill" / "SKILL.md", "codex\n"
             )
+            _write_file(
+                home
+                / ".gemini"
+                / "antigravity-cli"
+                / "skills"
+                / "paper-fetch-skill"
+                / "SKILL.md",
+                "antigravity\n",
+            )
+            _write_file(
+                home / ".gemini" / "antigravity-cli" / "mcp_config.json",
+                json.dumps(
+                    {
+                        "mcpServers": {
+                            "keep-server": {"command": "keep"},
+                            "paper-fetch": {"command": "old", "args": []},
+                        }
+                    }
+                )
+                + "\n",
+            )
             managed = textwrap.dedent(
                 """
                 # BEGIN paper-fetch offline managed
@@ -705,6 +933,22 @@ class OfflineInstallTests(unittest.TestCase):
             self.assertFalse(
                 (home / ".codex" / "skills" / "paper-fetch-skill").exists()
             )
+            self.assertFalse(
+                (
+                    home
+                    / ".gemini"
+                    / "antigravity-cli"
+                    / "skills"
+                    / "paper-fetch-skill"
+                ).exists()
+            )
+            antigravity_config = json.loads(
+                (home / ".gemini" / "antigravity-cli" / "mcp_config.json").read_text(
+                    encoding="utf-8"
+                )
+            )
+            self.assertIn("keep-server", antigravity_config["mcpServers"])
+            self.assertNotIn("paper-fetch", antigravity_config["mcpServers"])
             self.assertEqual(
                 (home / ".bashrc").read_text(encoding="utf-8"),
                 "keep bash before\nkeep bash after\n",
@@ -809,11 +1053,15 @@ class OfflineInstallTests(unittest.TestCase):
         )
         self.assertIn('assert hasattr(cloakbrowser, "ensure_binary")', script)
         self.assertNotIn('assert hasattr(cloakbrowser, "launch")', script)
+        self.assertIn("function Get-BrowserUserAgent", script)
         self.assertIn(
-            "PAPER_FETCH_BROWSER_USER_AGENT='Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
             script,
         )
         self.assertNotIn("# PAPER_FETCH_BROWSER_USER_AGENT", script)
+        self.assertIn("$OfflineEnvKeys = @(", script)
+        self.assertIn("env_sets.offline_env_keys", script)
+        self.assertIn("Format-DotenvAssignment", script)
         self.assertIn("CLOAKBROWSER_CDP_ENDPOINT", script)
         self.assertIn("# CLOAKBROWSER_BINARY_PATH", script)
         self.assertNotIn('os.environ.get("CLOAKBROWSER_BINARY_PATH")', script)
@@ -839,9 +1087,14 @@ class OfflineInstallTests(unittest.TestCase):
     ) -> None:
         script = WINDOWS_INSTALLER.read_text(encoding="utf-8")
 
+        self.assertIn("Repo-local legacy Windows offline installer", script)
         self.assertIn("CLOAKBROWSER_CDP_ENDPOINT", script)
-        self.assertIn("CLOAKBROWSER_HEADLESS='true'", script)
+        self.assertIn('"CLOAKBROWSER_HEADLESS"', script)
         self.assertIn('$env:CLOAKBROWSER_HEADLESS = "true"', script)
+        self.assertIn('$env:PYTHONUTF8 = "1"', script)
+        self.assertIn('$env:PYTHONIOENCODING = "utf-8"', script)
+        self.assertIn("env_sets.offline_env_keys", script)
+        self.assertIn("Format-DotenvAssignment", script)
         self.assertIn("# CLOAKBROWSER_BINARY_PATH", script)
         self.assertNotIn("CLOAKBROWSER_BINARY_PATH is set", script)
         self.assertIn("MATHML_TO_LATEX_NODE_BIN", script)
@@ -881,12 +1134,26 @@ class OfflineInstallTests(unittest.TestCase):
         )
 
     def test_installer_manifest_declares_runtime_env_for_mcp_registration(self) -> None:
-        manifest = (REPO_ROOT / "installer" / "manifest.json").read_text(
-            encoding="utf-8"
+        manifest = json.loads(
+            (REPO_ROOT / "installer" / "manifest.json").read_text(encoding="utf-8")
         )
 
-        self.assertIn('"MATHML_TO_LATEX_NODE_BIN"', manifest)
-        self.assertIn('"PAPER_FETCH_IMAGE_TOOLS_DIR"', manifest)
+        mcp_env_keys = manifest["mcp"]["env_keys"]
+        self.assertIn("MATHML_TO_LATEX_NODE_BIN", mcp_env_keys)
+        self.assertIn("PAPER_FETCH_IMAGE_TOOLS_DIR", mcp_env_keys)
+        self.assertEqual(
+            set(manifest["env_sets"]["shell_env_keys"]),
+            set(mcp_env_keys),
+        )
+        self.assertEqual(
+            set(manifest["env_sets"]["activate_env_keys"]),
+            set(mcp_env_keys),
+        )
+        self.assertEqual(
+            set(manifest["env_sets"]["offline_env_keys"]),
+            (set(mcp_env_keys) - {"PAPER_FETCH_ENV_FILE"})
+            | {"PAPER_FETCH_BROWSER_USER_AGENT"},
+        )
 
     def test_windows_offline_build_writes_default_mathml_node_env(self) -> None:
         script = WINDOWS_OFFLINE_BUILD.read_text(encoding="utf-8")

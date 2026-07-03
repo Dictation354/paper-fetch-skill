@@ -1,5 +1,5 @@
 """Query resolution helpers."""
 
-from .query import ResolvedQuery, resolve_query
+from .query import ResolvedQuery, StructuredResolveRequest, resolve_query
 
-__all__ = ["ResolvedQuery", "resolve_query"]
+__all__ = ["ResolvedQuery", "StructuredResolveRequest", "resolve_query"]

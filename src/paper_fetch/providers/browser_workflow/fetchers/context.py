@@ -314,17 +314,30 @@ class _BaseBrowserDocumentFetcher:
     def _seed_urls(self) -> list[str]:
         return dedupe_normalized(self._seed_urls_getter())
 
-    def _warm_seed_urls(self, *, force: bool) -> None:
+    def _warm_seed_urls(
+        self,
+        *,
+        force: bool,
+        timeout_ms: int = 30000,
+        max_urls: int | None = None,
+    ) -> None:
         page = self._page
         if page is None:
             return
+        if timeout_ms <= 0:
+            return
+        warmed_count = 0
         for seed_url in self._seed_urls():
             if not force and seed_url in self._warmed_seed_urls:
                 continue
+            if max_urls is not None and warmed_count >= max_urls:
+                break
             try:
-                page.goto(seed_url, wait_until="domcontentloaded", timeout=30000)
+                page.goto(seed_url, wait_until="domcontentloaded", timeout=timeout_ms)
                 self._warmed_seed_urls.add(seed_url)
+                warmed_count += 1
             except Exception:
+                warmed_count += 1
                 continue
 
     def _record_failure(self, source_url: str, **values: Any) -> None:

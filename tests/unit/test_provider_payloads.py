@@ -1,8 +1,13 @@
 from __future__ import annotations
 
+import tempfile
+from pathlib import Path
+
+from paper_fetch.artifacts import ArtifactStore
 from paper_fetch.providers._payloads import build_provider_payload
 from paper_fetch.providers._waterfall import ProviderWaterfallState
-from paper_fetch.providers.base import ProviderFailure
+from paper_fetch.providers.base import ProviderArtifacts, ProviderFailure
+from paper_fetch.tracing import trace_from_markers
 
 
 def test_build_provider_payload_populates_typed_content_and_trace() -> None:
@@ -57,3 +62,28 @@ def test_provider_waterfall_state_failure_helpers_return_labelled_failures() -> 
         "fulltext:html_fail",
         "fulltext:pdf_fail",
     ]
+
+
+def test_artifact_store_applies_skip_trace_without_skip_warning() -> None:
+    with tempfile.TemporaryDirectory() as tmpdir:
+        store = ArtifactStore.from_download_dir(
+            Path(tmpdir), artifact_mode="markdown-assets"
+        )
+        warnings: list[str] = []
+        source_trail: list[str] = []
+
+        store.apply_provider_artifacts(
+            provider_name="example",
+            artifacts=ProviderArtifacts(
+                text_only=True,
+                skip_trace=trace_from_markers(
+                    ["download:example_assets_skipped_text_only"]
+                ),
+            ),
+            asset_profile="body",
+            warnings=warnings,
+            source_trail=source_trail,
+        )
+
+    assert warnings == []
+    assert source_trail == ["download:example_assets_skipped_text_only"]

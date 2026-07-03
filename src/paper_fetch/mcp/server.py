@@ -480,19 +480,24 @@ def build_server() -> FastMCP:
 
     @server.tool(
         name="list_cached",
-        description="List cached downloads known to the MCP cache index without touching the network.",
+        description=(
+            "List cached downloads without touching the network. cache_mode=index reads "
+            "the manifest only, refresh validates and prunes the manifest, and rescan "
+            "rebuilds it from discoverable fetch-envelope sidecars."
+        ),
         annotations=_read_only_annotations(open_world=False),
         structured_output=True,
     )
     async def list_cached(
         download_dir: str | None = None,
+        cache_mode: str = "index",
         ctx: Context | None = None,
     ) -> Annotated[CallToolResult, ListCachedOutput]:
         parsed_download_dir = _parse_download_dir(download_dir)
         tool_kwargs: dict[str, Any] = {}
         if parsed_download_dir is not None:
             tool_kwargs["download_dir"] = parsed_download_dir
-        result = list_cached_tool(**tool_kwargs, deps=deps)
+        result = list_cached_tool(cache_mode=cache_mode, **tool_kwargs, deps=deps)
         if not result.isError:
             resources_changed = _sync_resources_for_download_dir(
                 server, parsed_download_dir, deps=deps

@@ -8,10 +8,12 @@ from collections.abc import Mapping
 from paper_fetch.artifacts import ArtifactStore
 from paper_fetch.models import article_from_markdown
 from paper_fetch.providers._waterfall import (
+    DEFAULT_WATERFALL_CONTINUE_CODES,
     ProviderWaterfallStep,
     run_provider_waterfall,
 )
 from paper_fetch.providers.base import (
+    combine_provider_failures,
     ProviderFailure,
     ProviderClient,
     ProviderContent,
@@ -44,13 +46,20 @@ def _payload(
 
 
 class ProviderWaterfallRunnerTests(unittest.TestCase):
+    def test_step_default_continue_codes_match_provider_fallback_contract(self) -> None:
+        step = ProviderWaterfallStep(label="html", run=lambda _state: _payload())
+
+        self.assertEqual(step.continue_codes, DEFAULT_WATERFALL_CONTINUE_CODES)
+
     def test_runner_accumulates_warnings_and_stops_after_success(self) -> None:
         calls: list[str] = []
 
         def first(_state):
             calls.append("first")
             raise ProviderFailure(
-                "no_result", "HTML was abstract only.", warnings=["first warning"]
+                "no_result",
+                "HTML was abstract only.",
+                warnings=["first warning", "trying pdf"],
             )
 
         def second(_state):
@@ -115,6 +124,133 @@ class ProviderWaterfallRunnerTests(unittest.TestCase):
         self.assertEqual(
             raised.exception.source_trail,
             ["fulltext:template_html_fail", "fulltext:template_pdf_fail"],
+        )
+
+    def test_runner_combines_initial_trail_when_all_steps_fail(self) -> None:
+        with self.assertRaises(ProviderFailure) as raised:
+            run_provider_waterfall(
+                [
+                    ProviderWaterfallStep(
+                        label="html",
+                        run=lambda _state: (_ for _ in ()).throw(
+                            ProviderFailure(
+                                "no_result",
+                                "HTML failed.",
+                                source_trail=["fulltext:template_html_fail"],
+                            )
+                        ),
+                    )
+                ],
+                initial_source_trail=["fulltext:template_landing_ok"],
+            )
+
+        self.assertEqual(
+            raised.exception.source_trail,
+            ["fulltext:template_landing_ok", "fulltext:template_html_fail"],
+        )
+
+    def test_runner_short_circuit_failure_keeps_prior_state(self) -> None:
+        with self.assertRaises(ProviderFailure) as raised:
+            run_provider_waterfall(
+                [
+                    ProviderWaterfallStep(
+                        label="html",
+                        run=lambda _state: (_ for _ in ()).throw(
+                            ProviderFailure(
+                                "rate_limited",
+                                "HTML was rate limited.",
+                                retry_after_seconds=9,
+                                warnings=["html warning"],
+                            )
+                        ),
+                        failure_marker="fulltext:template_html_fail",
+                    ),
+                    ProviderWaterfallStep(
+                        label="pdf",
+                        run=lambda _state: (_ for _ in ()).throw(
+                            ProviderFailure("no_access", "PDF was blocked.")
+                        ),
+                        failure_marker="fulltext:template_pdf_fail",
+                        continue_codes=(),
+                    ),
+                ]
+            )
+
+        self.assertEqual(raised.exception.code, "no_access")
+        self.assertEqual(raised.exception.retry_after_seconds, 9)
+        self.assertEqual(raised.exception.warnings, ["html warning"])
+        self.assertEqual(
+            raised.exception.source_trail,
+            ["fulltext:template_html_fail", "fulltext:template_pdf_fail"],
+        )
+
+    def test_runner_custom_final_failure_keeps_state_fields(self) -> None:
+        def final_failure(_state):
+            return ProviderFailure("error", "Custom final failure.")
+
+        with self.assertRaises(ProviderFailure) as raised:
+            run_provider_waterfall(
+                [
+                    ProviderWaterfallStep(
+                        label="html",
+                        run=lambda _state: (_ for _ in ()).throw(
+                            ProviderFailure(
+                                "rate_limited",
+                                "HTML was rate limited.",
+                                retry_after_seconds=11,
+                                missing_env=["HTML_TOKEN"],
+                                warnings=["html warning"],
+                            )
+                        ),
+                        failure_marker="fulltext:template_html_fail",
+                    )
+                ],
+                final_failure_factory=final_failure,
+            )
+
+        self.assertEqual(raised.exception.code, "error")
+        self.assertEqual(raised.exception.retry_after_seconds, 11)
+        self.assertEqual(raised.exception.missing_env, ["HTML_TOKEN"])
+        self.assertEqual(raised.exception.warnings, ["html warning"])
+        self.assertEqual(raised.exception.source_trail, ["fulltext:template_html_fail"])
+
+    def test_combine_provider_failures_preserves_retry_after_and_dedupes_details(
+        self,
+    ) -> None:
+        combined = combine_provider_failures(
+            [
+                (
+                    "html",
+                    ProviderFailure(
+                        "no_result",
+                        "HTML failed.",
+                        warnings=["shared", "html warning"],
+                        source_trail=["fulltext:template_html_fail", "shared_marker"],
+                    ),
+                ),
+                (
+                    "pdf",
+                    ProviderFailure(
+                        "rate_limited",
+                        "PDF was rate limited.",
+                        retry_after_seconds=7,
+                        warnings=["shared", "pdf warning"],
+                        source_trail=["shared_marker", "fulltext:template_pdf_fail"],
+                    ),
+                ),
+            ]
+        )
+
+        self.assertEqual(combined.code, "no_result")
+        self.assertEqual(combined.retry_after_seconds, 7)
+        self.assertEqual(combined.warnings, ["shared", "html warning", "pdf warning"])
+        self.assertEqual(
+            combined.source_trail,
+            [
+                "fulltext:template_html_fail",
+                "shared_marker",
+                "fulltext:template_pdf_fail",
+            ],
         )
 
     def test_runner_skips_step_when_condition_is_false(self) -> None:

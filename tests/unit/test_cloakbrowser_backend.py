@@ -363,6 +363,55 @@ def test_fetch_html_with_cloakbrowser_returns_existing_html_contract(tmp_path) -
     assert fake_module.browser.closed is True
 
 
+def test_warm_browser_context_lightweight_skips_full_html_processing(tmp_path) -> None:
+    class LightweightPage(_FakePage):
+        def __init__(self) -> None:
+            super().__init__()
+            self.content_calls = 0
+            self.title_calls = 0
+            self.wait_calls: list[int] = []
+
+        def content(self) -> str:
+            self.content_calls += 1
+            raise AssertionError("lightweight warm should not read page content")
+
+        def title(self) -> str:
+            self.title_calls += 1
+            raise AssertionError("lightweight warm should not read page title")
+
+        def wait_for_timeout(self, timeout_ms: int) -> None:
+            self.wait_calls.append(timeout_ms)
+
+    fake_module = _FakeCloakBrowserModule()
+    page = LightweightPage()
+    fake_module.browser.context.page = page
+    url = "https://www.science.org/doi/full/10.1126/science.example"
+
+    with (
+        mock.patch.object(
+            _cloakbrowser, "_import_cloakbrowser", return_value=fake_module
+        ),
+        mock.patch.object(
+            _cloakbrowser,
+            "wait_for_atypon_body_dom_ready",
+            side_effect=AssertionError("lightweight warm should not wait for DOM"),
+        ),
+    ):
+        warmed = _cloakbrowser.warm_browser_context_with_cloakbrowser(
+            [url],
+            publisher="science",
+            config=_runtime_config(tmp_path),
+            lightweight=True,
+        )
+
+    assert page.goto_calls == [url]
+    assert page.content_calls == 0
+    assert page.title_calls == 0
+    assert page.wait_calls == []
+    assert warmed["browser_final_url"] == url
+    assert warmed["browser_cookies"][0]["name"] == "cf_clearance"
+
+
 def test_fetch_html_with_cloakbrowser_reuses_and_saves_storage_state(tmp_path) -> None:
     fake_module = _FakeCloakBrowserModule()
     user_data_dir = tmp_path / "cloakbrowser-profile"

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import unittest
+from unittest import mock
 
 from paper_fetch import publisher_identity
 from paper_fetch.providers._reference_doi import reference_doi_match
@@ -30,6 +31,28 @@ class PublisherIdentityTests(unittest.TestCase):
             ),
             "10.1002/(sici)1097-4571(199505)46:4<282::aid-asi5>3.0.co;2-0",
         )
+
+    def test_normalize_doi_falls_back_when_idutils_is_unavailable(self) -> None:
+        original_import_module = publisher_identity.importlib.import_module
+
+        def import_without_idutils(name: str, *args, **kwargs):
+            if name == "idutils":
+                raise ImportError("missing idutils")
+            return original_import_module(name, *args, **kwargs)
+
+        publisher_identity._idutils_module.cache_clear()
+        try:
+            with mock.patch.object(
+                publisher_identity.importlib,
+                "import_module",
+                side_effect=import_without_idutils,
+            ):
+                self.assertEqual(
+                    publisher_identity.normalize_doi("doi:10.1111/ABC"),
+                    "10.1111/abc",
+                )
+        finally:
+            publisher_identity._idutils_module.cache_clear()
 
     def test_infer_provider_from_doi(self) -> None:
         self.assertEqual(

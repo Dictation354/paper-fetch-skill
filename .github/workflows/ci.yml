@@ -53,11 +53,11 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -e ".[dev]"
 
-      - name: Run ruff
-        run: python -m ruff check .
-
       - name: Check ruff formatting
         run: python -m ruff format --check .
+
+      - name: Run ruff
+        run: python -m ruff check .
 
       - name: Run contract type check
         env:
@@ -116,7 +116,7 @@ jobs:
           PAPER_FETCH_FORMULA_TOOLS_DIR: ${{ github.workspace }}/.formula-tools
           PAPER_FETCH_IMAGE_TOOLS_DIR: ${{ github.workspace }}/.image-tools
         run: |
-          python -m pytest tests/unit -q --durations=30 --cov=paper_fetch --cov-report=term-missing --cov-report=xml
+          python -m pytest tests/unit -q --durations=30 --cov=paper_fetch --cov-report=term-missing --cov-report=xml --cov-fail-under=40
           python -m pytest tests/devtools -q --durations=30
 
   integration:
@@ -187,7 +187,7 @@ jobs:
           PY
 
   offline-linux-x86-64:
-    if: ${{ github.event_name != 'workflow_dispatch' || !inputs.run_offline_windows_only }}
+    if: ${{ (startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch') && (github.event_name != 'workflow_dispatch' || !inputs.run_offline_windows_only) }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -271,7 +271,7 @@ jobs:
           if-no-files-found: error
 
   offline-macos-install:
-    if: ${{ github.event_name != 'workflow_dispatch' || !inputs.run_offline_windows_only }}
+    if: ${{ (startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch') && (github.event_name != 'workflow_dispatch' || !inputs.run_offline_windows_only) }}
     runs-on: macos-latest
     strategy:
       fail-fast: false
@@ -484,6 +484,7 @@ jobs:
           if-no-files-found: error
 
   offline-windows-x86-64:
+    if: ${{ startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch' }}
     runs-on: windows-latest
 
     steps:

@@ -10,7 +10,9 @@ from ...runtime import RuntimeContext
 from ...tracing import trace_from_markers
 from ...reason_codes import PDF_FALLBACK
 from ..base import ProviderContent, RawFulltextPayload
-from ..browser_runtime import storage_state_path as browser_runtime_storage_state_path
+from ..browser_runtime.api import (
+    storage_state_path as browser_runtime_storage_state_path,
+)
 from .._pdf_common import (
     pdf_asset_output_dir,
     pdf_asset_profile_from_context,
@@ -56,7 +58,7 @@ def fetch_seeded_browser_pdf_payload(
     deps = deps or default_browser_workflow_deps()
     context_warmer = deps.warm_browser_context
     if deps.pdf_browser_context_seed is not deps.warm_browser_context:
-        from ..browser_runtime import (
+        from ..browser_runtime.api import (
             warm_browser_context as default_warm_browser_context,
         )
 
@@ -67,6 +69,7 @@ def fetch_seeded_browser_pdf_payload(
         publisher=provider,
         config=runtime,
         browser_context_seed=browser_context_seed,
+        lightweight=True,
     )
     _raise_if_cancelled(context)
     seed_url = _choose_browser_seed_url(
@@ -75,22 +78,25 @@ def fetch_seeded_browser_pdf_payload(
         landing_page_url,
         pdf_context_seed.get("browser_final_url"),
     )
+    seeded_browser_cookies = list(pdf_context_seed.get("browser_cookies") or [])
+    seed_urls = None if seeded_browser_cookies else ([seed_url] if seed_url else None)
     pdf_result = deps.fetch_pdf_with_browser(
         pdf_candidates,
         artifact_dir=runtime.artifact_dir / artifact_subdir,
         asset_profile=pdf_asset_profile_from_context(context),
         asset_output_dir=pdf_asset_output_dir(context, doi=doi),
-        browser_cookies=list(pdf_context_seed.get("browser_cookies") or []),
+        browser_cookies=seeded_browser_cookies,
         browser_user_agent=pdf_context_seed.get("browser_user_agent")
         or getattr(runtime, "user_agent", None),
         headless=runtime.headless,
+        referer=seed_url,
         binary_path=getattr(runtime, "binary_path", None),
         cdp_endpoint=getattr(runtime, "cdp_endpoint", None),
         external_new_context=getattr(runtime, "external_new_context", False),
         profile_dir=getattr(runtime, "profile_dir", None),
         user_data_dir=getattr(runtime, "user_data_dir", None),
         storage_state_path=_runtime_storage_state_path(runtime),
-        seed_urls=[seed_url] if seed_url else None,
+        seed_urls=seed_urls,
         allow_pdf_only=True,
         context=context,
     )

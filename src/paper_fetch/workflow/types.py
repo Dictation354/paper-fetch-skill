@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Any
+from collections.abc import Iterator, Set as AbstractSet
 
 from ..metadata.types import ProviderMetadata
 from ..models import AssetProfile
@@ -14,7 +15,23 @@ from ..provider_catalog import (
 )
 from ..utils import normalize_text
 
-ALLOWED_PREFERRED_PROVIDERS = frozenset(provider_names())
+
+def allowed_preferred_providers() -> frozenset[str]:
+    return frozenset(provider_names())
+
+
+class _AllowedPreferredProviders(AbstractSet[str]):
+    def __contains__(self, value: object) -> bool:
+        return value in allowed_preferred_providers()
+
+    def __iter__(self) -> Iterator[str]:
+        return iter(allowed_preferred_providers())
+
+    def __len__(self) -> int:
+        return len(allowed_preferred_providers())
+
+
+ALLOWED_PREFERRED_PROVIDERS: AbstractSet[str] = _AllowedPreferredProviders()
 
 
 def provider_default_asset_profile(provider_name: str | None) -> AssetProfile:
@@ -91,13 +108,14 @@ class FetchStrategy:
         normalized = self.normalized_preferred_providers()
         if normalized is None:
             return
-        invalid = sorted(normalized - ALLOWED_PREFERRED_PROVIDERS)
+        allowed = allowed_preferred_providers()
+        invalid = sorted(normalized - allowed)
         if invalid:
             raise ValueError(
                 "unsupported preferred_providers values: "
                 + ", ".join(invalid)
                 + ". Expected one or more of: "
-                + ", ".join(sorted(ALLOWED_PREFERRED_PROVIDERS))
+                + ", ".join(sorted(allowed))
                 + "."
             )
 

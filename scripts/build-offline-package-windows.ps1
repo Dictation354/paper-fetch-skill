@@ -15,6 +15,19 @@ $InstallerManifest = Get-Content -LiteralPath $InstallerManifestPath -Raw | Conv
 $SkillName = [string]$InstallerManifest.skill.name
 $OfflineManagedBegin = [string]$InstallerManifest.managed_blocks.offline.begin
 $OfflineManagedEnd = [string]$InstallerManifest.managed_blocks.offline.end
+$OfflineEnvKeys = @(
+    "PAPER_FETCH_DOWNLOAD_DIR",
+    "PAPER_FETCH_FORMULA_TOOLS_DIR",
+    "PAPER_FETCH_IMAGE_TOOLS_DIR",
+    "MATHML_TO_LATEX_NODE_BIN",
+    "CLOAKBROWSER_HEADLESS",
+    "PYTHONUTF8",
+    "PYTHONIOENCODING",
+    "PAPER_FETCH_BROWSER_USER_AGENT"
+)
+if ($null -ne $InstallerManifest.env_sets -and $null -ne $InstallerManifest.env_sets.offline_env_keys) {
+    $OfflineEnvKeys = @($InstallerManifest.env_sets.offline_env_keys | ForEach-Object { [string]$_ })
+}
 $WindowsSetupBaseName = [string]$InstallerManifest.packages.windows_setup_base_name
 $BuildDir = if ($env:PAPER_FETCH_OFFLINE_BUILD_DIR) {
     [System.IO.Path]::GetFullPath($env:PAPER_FETCH_OFFLINE_BUILD_DIR)
@@ -323,24 +336,45 @@ interface:
 function Write-DefaultOfflineEnv {
     param([string]$Staging)
 
-    $content = @"
-ELSEVIER_API_KEY=""
+    function ConvertTo-StagingEnvPath {
+        param([string]$Path)
+        return $Path.Replace("\", "/")
+    }
 
-$OfflineManagedBegin
-PAPER_FETCH_DOWNLOAD_DIR='$($Staging.Replace("\", "/"))/downloads'
-PAPER_FETCH_FORMULA_TOOLS_DIR='$($Staging.Replace("\", "/"))/formula-tools'
-PAPER_FETCH_IMAGE_TOOLS_DIR='$($Staging.Replace("\", "/"))/image-tools'
-MATHML_TO_LATEX_NODE_BIN='$($Staging.Replace("\", "/"))/runtime/Lib/site-packages/playwright/driver/node.exe'
-CLOAKBROWSER_HEADLESS='true'
-PAPER_FETCH_BROWSER_USER_AGENT='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36'
-# Optional: connect to an already-running Chrome/CloakBrowser CDP endpoint.
-# CLOAKBROWSER_CDP_ENDPOINT='ws://127.0.0.1:9222/devtools/browser/...'
-# Optional: use a preinstalled Chrome/CloakBrowser binary instead of cloakbrowser download.
-# CLOAKBROWSER_BINARY_PATH='C:/path/to/chrome.exe'
-PYTHONUTF8='1'
-PYTHONIOENCODING='utf-8'
-$OfflineManagedEnd
-"@
+    function Quote-DotenvString {
+        param([string]$Value)
+        return "'" + $Value.Replace("'", "\'") + "'"
+    }
+
+    function Get-DefaultOfflineEnvValue {
+        param([string]$Name)
+
+        switch ($Name) {
+            "PAPER_FETCH_DOWNLOAD_DIR" { return (ConvertTo-StagingEnvPath "$Staging/downloads") }
+            "PAPER_FETCH_FORMULA_TOOLS_DIR" { return (ConvertTo-StagingEnvPath "$Staging/formula-tools") }
+            "PAPER_FETCH_IMAGE_TOOLS_DIR" { return (ConvertTo-StagingEnvPath "$Staging/image-tools") }
+            "MATHML_TO_LATEX_NODE_BIN" { return (ConvertTo-StagingEnvPath "$Staging/runtime/Lib/site-packages/playwright/driver/node.exe") }
+            "CLOAKBROWSER_HEADLESS" { return "true" }
+            "PYTHONUTF8" { return "1" }
+            "PYTHONIOENCODING" { return "utf-8" }
+            "PAPER_FETCH_BROWSER_USER_AGENT" { return "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36" }
+            default { throw "Unknown offline env key in installer manifest: $Name" }
+        }
+    }
+
+    $lines = New-Object System.Collections.Generic.List[string]
+    $lines.Add('ELSEVIER_API_KEY=""')
+    $lines.Add("")
+    $lines.Add($OfflineManagedBegin)
+    foreach ($name in $OfflineEnvKeys) {
+        $lines.Add("$name=$(Quote-DotenvString ([string](Get-DefaultOfflineEnvValue $name)))")
+    }
+    $lines.Add("# Optional: connect to an already-running Chrome/CloakBrowser CDP endpoint.")
+    $lines.Add("# CLOAKBROWSER_CDP_ENDPOINT='ws://127.0.0.1:9222/devtools/browser/...'")
+    $lines.Add("# Optional: use a preinstalled Chrome/CloakBrowser binary instead of cloakbrowser download.")
+    $lines.Add("# CLOAKBROWSER_BINARY_PATH='C:/path/to/chrome.exe'")
+    $lines.Add($OfflineManagedEnd)
+    $content = ($lines.ToArray() -join [Environment]::NewLine) + [Environment]::NewLine
     [System.IO.File]::WriteAllText((Join-Path $Staging "offline.env"), $content, [System.Text.UTF8Encoding]::new($false))
 }
 

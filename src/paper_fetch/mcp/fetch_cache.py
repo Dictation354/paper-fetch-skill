@@ -31,11 +31,18 @@ from ..tracing import TraceEvent, trace_event
 from ..utils import normalize_text, sanitize_filename
 from ..workflow.types import PaperFetchFailure
 from .cache_index import (
+    CACHE_INDEX_MODE_INDEX,
+    CACHE_INDEX_MODE_RESCAN,
+    CACHE_INDEX_MODE_REFRESH,
+    CacheIndexResult,
     cache_file_lock,
     fetch_envelope_lock_path,
     list_cache_entries,
     preferred_cached_entries,
+    read_cache_index,
+    refresh_cache_index_for_doi_result,
     refresh_cache_index_for_doi,
+    rescan_cache_index,
 )
 from .schemas import FetchPaperRequest
 
@@ -374,6 +381,11 @@ class FetchCache:
         refresh_cache_index_for_doi_fn: Callable[
             [Path, str], list[dict[str, Any]]
         ] = refresh_cache_index_for_doi,
+        refresh_cache_index_for_doi_result_fn: Callable[
+            [Path, str], CacheIndexResult
+        ] = refresh_cache_index_for_doi_result,
+        read_cache_index_fn: Callable[..., CacheIndexResult] = read_cache_index,
+        rescan_cache_index_fn: Callable[[Path], CacheIndexResult] = rescan_cache_index,
         list_cache_entries_fn: Callable[
             [Path], list[dict[str, Any]]
         ] = list_cache_entries,
@@ -386,6 +398,9 @@ class FetchCache:
         )
         self.download_dir = self._artifact_store.download_dir
         self._refresh_cache_index_for_doi = refresh_cache_index_for_doi_fn
+        self._refresh_cache_index_for_doi_result = refresh_cache_index_for_doi_result_fn
+        self._read_cache_index = read_cache_index_fn
+        self._rescan_cache_index = rescan_cache_index_fn
         self._list_cache_entries = list_cache_entries_fn
         self._preferred_cached_entries = preferred_cached_entries_fn
 
@@ -474,19 +489,49 @@ class FetchCache:
             return []
         return self._refresh_cache_index_for_doi(self.download_dir, doi)
 
-    def list_payload(self) -> dict[str, Any]:
+    def list_payload(
+        self, *, cache_mode: str = CACHE_INDEX_MODE_INDEX
+    ) -> dict[str, Any]:
         if self.download_dir is None:
-            return {"download_dir": None, "entries": []}
+            return {
+                "download_dir": None,
+                "entries": [],
+                "cache_mode": cache_mode,
+                "index_status": "unavailable",
+                "index_version": None,
+                "expected_index_version": None,
+                "index_reason": "download directory is disabled",
+            }
+        if cache_mode == CACHE_INDEX_MODE_RESCAN:
+            result = self._rescan_cache_index(self.download_dir)
+        elif cache_mode == CACHE_INDEX_MODE_REFRESH:
+            result = self._read_cache_index(
+                self.download_dir, refresh=True, cache_mode=CACHE_INDEX_MODE_REFRESH
+            )
+        else:
+            result = self._read_cache_index(
+                self.download_dir, refresh=False, cache_mode=CACHE_INDEX_MODE_INDEX
+            )
         return {
             "download_dir": str(self.download_dir),
-            "entries": self._list_cache_entries(self.download_dir),
+            "entries": result.entries,
+            **result.metadata(),
         }
 
     def get_payload(self, doi: str) -> dict[str, Any]:
         if self.download_dir is None:
             entries: list[dict[str, Any]] = []
+            index_metadata: dict[str, Any] = {
+                "cache_mode": CACHE_INDEX_MODE_REFRESH,
+                "index_status": "unavailable",
+                "index_version": None,
+                "expected_index_version": None,
+                "index_reason": "download directory is disabled",
+            }
         else:
-            entries = self._refresh_cache_index_for_doi(self.download_dir, doi)
+            result = self._refresh_cache_index_for_doi_result(self.download_dir, doi)
+            entries = result.entries
+            index_metadata = result.metadata()
         preferred = self._preferred_cached_entries(entries)
         return {
             "status": "hit" if entries else "miss",
@@ -496,4 +541,5 @@ class FetchCache:
             else None,
             "entries": entries,
             "preferred": preferred,
+            **index_metadata,
         }

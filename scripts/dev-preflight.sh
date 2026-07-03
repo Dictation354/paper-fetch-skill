@@ -16,7 +16,7 @@ Runs the local preflight gate:
 
 Options:
   --fast              Run ruff, mypy, and unit tests only.
-  --coverage          Generate unit coverage baseline reports without enforcing a coverage threshold.
+  --coverage          Generate unit coverage reports and enforce the baseline threshold.
   --skip-integration Skip integration tests.
   --skip-devtools    Skip tests/devtools.
   --skip-typecheck   Skip mypy.
@@ -89,21 +89,26 @@ export PYTHONPATH="${PYTHONPATH:-src}"
 "$PYTHON_BIN" -m ruff check .
 
 if [[ "$run_typecheck" == "1" ]]; then
-  PYTHONPATH=src "$PYTHON_BIN" -m mypy --no-site-packages
+  PYTHONPATH=src "$PYTHON_BIN" -m mypy
 fi
 
-unit_args=(tests/unit -q)
+unit_args=(tests/unit -q --durations=30)
 if [[ "$run_coverage" == "1" ]]; then
-  unit_args+=(--cov=paper_fetch --cov-report=term-missing --cov-report=xml)
+  unit_args+=(
+    --cov=paper_fetch
+    --cov-report=term-missing
+    --cov-report=xml
+    --cov-fail-under=40
+  )
 fi
 PYTHONPATH=src "$PYTHON_BIN" -m pytest "${unit_args[@]}"
 
 if [[ "$run_devtools" == "1" ]]; then
-  PYTHONPATH=src "$PYTHON_BIN" -m pytest tests/devtools -q
+  PYTHONPATH=src "$PYTHON_BIN" -m pytest tests/devtools -q --durations=30
 fi
 
-"$PYTHON_BIN" scripts/validate_extraction_rules.py
+"$PYTHON_BIN" scripts/validate_extraction_rules.py --ci
 
 if [[ "$run_integration" == "1" ]]; then
-  PYTHONPATH=src "$PYTHON_BIN" -m pytest tests/integration -q
+  PYTHONPATH=src "$PYTHON_BIN" -m pytest tests/integration -q --durations=30
 fi

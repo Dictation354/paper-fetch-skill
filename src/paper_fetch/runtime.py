@@ -228,6 +228,12 @@ class RuntimeContext:
     parse_cache: dict[tuple[Hashable, ...], Any] = field(default_factory=dict)
     session_cache: dict[tuple[Hashable, ...], Any] = field(default_factory=dict)
     stage_timings: dict[str, float] = field(default_factory=dict)
+    _parse_cache_lock: threading.RLock = field(
+        default_factory=threading.RLock, init=False, repr=False
+    )
+    _parse_cache_inflight: dict[tuple[Hashable, ...], threading.Event] = field(
+        default_factory=dict, init=False, repr=False
+    )
     _session_cache_lock: threading.RLock = field(
         default_factory=threading.RLock, init=False, repr=False
     )
@@ -489,12 +495,13 @@ class RuntimeContext:
         copy_value: bool = True,
         default: Any = _PARSE_CACHE_MISSING,
     ) -> Any:
-        value = self.parse_cache.get(key, _PARSE_CACHE_MISSING)
-        if value is _PARSE_CACHE_MISSING:
-            if default is _PARSE_CACHE_MISSING:
-                return None
-            return default
-        return copy.deepcopy(value) if copy_value else value
+        with self._parse_cache_lock:
+            value = self.parse_cache.get(key, _PARSE_CACHE_MISSING)
+            if value is _PARSE_CACHE_MISSING:
+                if default is _PARSE_CACHE_MISSING:
+                    return None
+                return default
+            return copy.deepcopy(value) if copy_value else value
 
     def set_parse_cache(
         self,
@@ -503,8 +510,10 @@ class RuntimeContext:
         *,
         copy_value: bool = True,
     ) -> Any:
-        self.parse_cache[key] = copy.deepcopy(value) if copy_value else value
-        return copy.deepcopy(value) if copy_value else value
+        stored = copy.deepcopy(value) if copy_value else value
+        with self._parse_cache_lock:
+            self.parse_cache[key] = stored
+        return copy.deepcopy(stored) if copy_value else stored
 
     def get_or_set_parse_cache(
         self,
@@ -513,11 +522,31 @@ class RuntimeContext:
         *,
         copy_value: bool = True,
     ) -> Any:
-        cached = self.parse_cache.get(key, _PARSE_CACHE_MISSING)
-        if cached is not _PARSE_CACHE_MISSING:
-            return copy.deepcopy(cached) if copy_value else cached
-        value = factory()
-        return self.set_parse_cache(key, value, copy_value=copy_value)
+        """Atomically memoize parser output for a single cache key."""
+
+        while True:
+            with self._parse_cache_lock:
+                cached = self.parse_cache.get(key, _PARSE_CACHE_MISSING)
+                if cached is not _PARSE_CACHE_MISSING:
+                    return copy.deepcopy(cached) if copy_value else cached
+                inflight = self._parse_cache_inflight.get(key)
+                if inflight is None:
+                    inflight = threading.Event()
+                    self._parse_cache_inflight[key] = inflight
+                    break
+            inflight.wait()
+
+        try:
+            value = factory()
+            stored = copy.deepcopy(value) if copy_value else value
+            with self._parse_cache_lock:
+                self.parse_cache[key] = stored
+            return copy.deepcopy(stored) if copy_value else stored
+        finally:
+            with self._parse_cache_lock:
+                completed = self._parse_cache_inflight.pop(key, None)
+                if completed is not None:
+                    completed.set()
 
     def get_session_cache(
         self,

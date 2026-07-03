@@ -8,20 +8,57 @@ from typing import Any
 from ...markdown.images import render_markdown_image
 from ...utils import normalize_text
 from ._ir import MarkdownTable
+from .table_format import (
+    normalize_table_cell_markdown_text,
+    render_aligned_markdown_table,
+)
 
 
 def normalize_table_cell_text(value: str) -> str:
-    text = normalize_text(value)
-    text = text.replace("\n", "<br>")
-    return text.replace("|", r"\|")
+    return normalize_table_cell_markdown_text(value)
+
+
+def _cell_texts(value: Any) -> list[str]:
+    if value is None:
+        return []
+    if isinstance(value, str):
+        return [value]
+    try:
+        return [str(cell) for cell in value]
+    except TypeError:
+        return [str(value)]
+
+
+def _row_texts(value: Any) -> list[list[str]]:
+    rows: list[list[str]] = []
+    for row in value or []:
+        rows.append(_cell_texts(row))
+    return rows
+
+
+def _same_row(left: list[str], right: list[str]) -> bool:
+    if len(left) != len(right):
+        return False
+    return [normalize_text(cell) for cell in left] == [
+        normalize_text(cell) for cell in right
+    ]
+
+
+def _table_matrix(table: MarkdownTable) -> list[list[str]]:
+    headers = _cell_texts(table.headers)
+    rows = _row_texts(table.rows)
+    if headers:
+        body_rows = rows[1:] if rows and _same_row(headers, rows[0]) else rows
+        return [headers, *body_rows]
+    return rows
 
 
 def table_from_entry(entry: Mapping[str, Any]) -> MarkdownTable:
-    rows = [list(row) for row in entry.get("rows") or []]
+    rows = _row_texts(entry.get("rows"))
     return MarkdownTable(
         label=str(entry.get("heading") or ""),
         caption=str(entry.get("caption") or ""),
-        headers=list(rows[0]) if rows else [],
+        headers=_cell_texts(entry.get("headers")),
         rows=rows,
         footnotes=tuple(
             str(note)
@@ -31,6 +68,7 @@ def table_from_entry(entry: Mapping[str, Any]) -> MarkdownTable:
         page_url=normalize_text(str(entry.get("page_url") or "")) or None,
         locator=normalize_text(str(entry.get("locator") or "")) or None,
         image_fallback_url=normalize_text(str(entry.get("link") or "")) or None,
+        fallback_message=normalize_text(str(entry.get("fallback_message") or "")),
     )
 
 
@@ -38,13 +76,13 @@ def render_table(table: MarkdownTable) -> list[str]:
     lines = [table.label, ""]
     if table.caption:
         lines.extend([table.caption, ""])
-    if table.rows:
-        lines.append("| " + " | ".join(table.rows[0]) + " |")
-        lines.append("| " + " | ".join(["---"] * len(table.rows[0])) + " |")
-        for row in table.rows[1:]:
-            lines.append("| " + " | ".join(row) + " |")
+    matrix = _table_matrix(table)
+    if matrix:
+        lines.extend(render_aligned_markdown_table(matrix))
         lines.append("")
-    elif table.image_fallback_url:
+    if table.fallback_message:
+        lines.extend([table.fallback_message, ""])
+    if not matrix and table.image_fallback_url:
         lines.extend(
             [render_markdown_image("table", table.label, table.image_fallback_url), ""]
         )
@@ -68,6 +106,7 @@ def render_image_table_block(entry: Mapping[str, Any]) -> list[str]:
                 if normalize_text(str(note))
             ),
             image_fallback_url=normalize_text(str(entry.get("link") or "")) or None,
+            fallback_message=normalize_text(str(entry.get("fallback_message") or "")),
         )
     )
 
@@ -78,7 +117,8 @@ def render_structured_table_block(entry: Mapping[str, Any]) -> list[str]:
     return render_image_table_block(
         {
             **entry,
-            "fallback_message": "Table content could not be fully converted to Markdown; original table resource is retained below.",
+            "fallback_message": normalize_text(str(entry.get("fallback_message") or ""))
+            or "Table content could not be fully converted to Markdown; original table resource is retained below.",
         }
     )
 

@@ -1,5 +1,10 @@
 """Browser-neutral runtime contract for provider workflows."""
 
+from __future__ import annotations
+
+from importlib import import_module
+from typing import Any
+
 from .seed import (
     CLOUDFLARE_COOKIE_NAMES,
     _CLOUDFLARE_COOKIE_PREFIXES,
@@ -18,19 +23,20 @@ from .types import (
     BrowserRuntimeConfig,
     BrowserRuntimeFailure,
 )
-from .api import (
-    DEFAULT_BROWSER_RUNTIME_MAX_TIMEOUT_MS,
-    DEFAULT_BROWSER_RUNTIME_BACKEND,
-    DEFAULT_BROWSER_RUNTIME_WAIT_SECONDS,
-    DEFAULT_BROWSER_RUNTIME_WARM_WAIT_SECONDS,
-    ensure_runtime_ready,
-    fetch_html_with_browser,
-    load_runtime_config,
-    probe_runtime_status,
-    save_storage_state,
-    storage_state_path,
-    warm_browser_context,
-)
+
+_API_EXPORTS = {
+    "DEFAULT_BROWSER_RUNTIME_BACKEND",
+    "DEFAULT_BROWSER_RUNTIME_MAX_TIMEOUT_MS",
+    "DEFAULT_BROWSER_RUNTIME_WAIT_SECONDS",
+    "DEFAULT_BROWSER_RUNTIME_WARM_WAIT_SECONDS",
+    "ensure_runtime_ready",
+    "fetch_html_with_browser",
+    "load_runtime_config",
+    "probe_runtime_status",
+    "save_storage_state",
+    "storage_state_path",
+    "warm_browser_context",
+}
 
 __all__ = [
     "CLOUDFLARE_COOKIE_NAMES",
@@ -59,3 +65,16 @@ __all__ = [
     "storage_state_path",
     "warm_browser_context",
 ]
+
+
+def __getattr__(name: str) -> Any:
+    if name not in _API_EXPORTS:
+        raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+    api = import_module(f"{__name__}.api")
+    value = getattr(api, name)
+    globals()[name] = value
+    return value
+
+
+def __dir__() -> list[str]:
+    return sorted(set(globals()) | set(__all__))

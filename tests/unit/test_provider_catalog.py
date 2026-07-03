@@ -132,10 +132,12 @@ class ProviderCatalogTests(unittest.TestCase):
         )
 
     def test_runtime_provider_order_constants_are_catalog_derived(self) -> None:
-        self.assertEqual(routing.OFFICIAL_PROVIDER_NAMES, official_provider_names())
         self.assertEqual(
-            fulltext.PROVIDER_MANAGED_ABSTRACT_ONLY_PROVIDERS,
-            provider_managed_abstract_only_names(),
+            set(routing.OFFICIAL_PROVIDER_NAMES), set(official_provider_names())
+        )
+        self.assertEqual(
+            set(fulltext.PROVIDER_MANAGED_ABSTRACT_ONLY_PROVIDERS),
+            set(provider_managed_abstract_only_names()),
         )
         self.assertEqual(_PROVIDER_STATUS_ORDER, provider_names())
         self.assertEqual(_PROVIDER_STATUS_ORDER, provider_status_order())

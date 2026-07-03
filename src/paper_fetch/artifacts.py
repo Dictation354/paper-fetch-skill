@@ -260,12 +260,14 @@ class ArtifactStore:
                 [download_marker(f"{provider_name}_assets_skipped_profile_none")],
             )
             return
+        skip_trace_markers = [
+            event.marker() for event in artifacts.skip_trace if event.marker()
+        ]
         if artifacts.skip_warning:
             extend_unique(warnings, [artifacts.skip_warning])
-            extend_unique(
-                source_trail,
-                [event.marker() for event in artifacts.skip_trace if event.marker()],
-            )
+        if skip_trace_markers:
+            extend_unique(source_trail, skip_trace_markers)
+        if artifacts.skip_warning or artifacts.text_only:
             return
         if artifacts.assets:
             extend_unique(

@@ -9,6 +9,7 @@ import subprocess
 import tempfile
 import threading
 import contextlib
+import time
 from contextlib import nullcontext
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -16,6 +17,8 @@ from typing import Any, Literal
 from collections.abc import Mapping, Sequence
 import hashlib
 import urllib.parse
+
+from cachetools import LRUCache
 
 from ..common_patterns import WORD_TOKEN_PATTERN
 from ..http import PDF_ACCEPT_HEADER, is_pdf_content_type
@@ -35,6 +38,7 @@ class PdfFetchResult:
     suggested_filename: str | None = None
     assets: list[dict[str, Any]] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
+    diagnostics: dict[str, Any] = field(default_factory=dict)
 
 
 def pdf_fetch_result_assets(pdf_result: Any) -> list[dict[str, Any]]:
@@ -85,6 +89,16 @@ _MIN_TRANSPARENT_TEXT_WORDS = 500
 _TRANSPARENT_FALLBACK_WORD_FACTOR = 3
 _PYMUPDF_SUBPROCESS_PATCH_LOCK = threading.RLock()
 PDF_ONLY_MARKDOWN_WARNING = "PDF was downloaded but Markdown extraction was not usable."
+PDF_MAX_BYTES_ENV_VAR = "PAPER_FETCH_PDF_MAX_BYTES"
+PDF_MAX_PAGES_ENV_VAR = "PAPER_FETCH_PDF_MAX_PAGES"
+PDF_MARKDOWN_CACHE_SIZE_ENV_VAR = "PAPER_FETCH_PDF_MARKDOWN_CACHE_SIZE"
+DEFAULT_PDF_MAX_BYTES = 150 * 1024 * 1024
+DEFAULT_PDF_MAX_PAGES = 1000
+DEFAULT_PDF_MARKDOWN_CACHE_SIZE = 16
+_PDF_MARKDOWN_RENDER_CACHE: (
+    LRUCache[tuple[str, str], PdfMarkdownRenderResult] | None
+) = None
+_PDF_MARKDOWN_RENDER_CACHE_LOCK = threading.RLock()
 
 
 @dataclass(frozen=True)
@@ -112,6 +126,129 @@ class _PdfTextLayerStats:
 class PdfMarkdownRenderResult:
     markdown_text: str
     assets: list[dict[str, Any]] = field(default_factory=list)
+
+
+def _positive_int_env(name: str, default: int) -> int:
+    value = normalize_text(os.environ.get(name))
+    if not value:
+        return default
+    try:
+        parsed = int(value)
+    except ValueError:
+        return default
+    return parsed if parsed > 0 else default
+
+
+def _pdf_max_bytes() -> int:
+    return _positive_int_env(PDF_MAX_BYTES_ENV_VAR, DEFAULT_PDF_MAX_BYTES)
+
+
+def _pdf_max_pages() -> int:
+    return _positive_int_env(PDF_MAX_PAGES_ENV_VAR, DEFAULT_PDF_MAX_PAGES)
+
+
+def _pdf_markdown_cache_size() -> int:
+    value = normalize_text(os.environ.get(PDF_MARKDOWN_CACHE_SIZE_ENV_VAR))
+    if not value:
+        return DEFAULT_PDF_MARKDOWN_CACHE_SIZE
+    try:
+        parsed = int(value)
+    except ValueError:
+        return DEFAULT_PDF_MARKDOWN_CACHE_SIZE
+    return max(0, parsed)
+
+
+def _pdf_markdown_render_cache() -> (
+    LRUCache[tuple[str, str], PdfMarkdownRenderResult] | None
+):
+    size = _pdf_markdown_cache_size()
+    if size <= 0:
+        return None
+    with _PDF_MARKDOWN_RENDER_CACHE_LOCK:
+        global _PDF_MARKDOWN_RENDER_CACHE
+        if (
+            _PDF_MARKDOWN_RENDER_CACHE is None
+            or _PDF_MARKDOWN_RENDER_CACHE.maxsize != size
+        ):
+            _PDF_MARKDOWN_RENDER_CACHE = LRUCache(maxsize=size)
+        return _PDF_MARKDOWN_RENDER_CACHE
+
+
+def _clear_pdf_markdown_render_cache() -> None:
+    with _PDF_MARKDOWN_RENDER_CACHE_LOCK:
+        global _PDF_MARKDOWN_RENDER_CACHE
+        _PDF_MARKDOWN_RENDER_CACHE = None
+
+
+def _copy_pdf_markdown_render_result(
+    result: PdfMarkdownRenderResult,
+) -> PdfMarkdownRenderResult:
+    return PdfMarkdownRenderResult(
+        markdown_text=result.markdown_text,
+        assets=[dict(item) for item in result.assets],
+    )
+
+
+def _pdf_page_count(pdf_path: Path) -> int | None:
+    try:
+        import pymupdf
+    except Exception:  # pragma: no cover - PyMuPDF is a pymupdf4llm dependency
+        try:
+            import fitz as pymupdf
+        except Exception:
+            return None
+    try:
+        with pymupdf.open(str(pdf_path)) as document:
+            page_count = getattr(document, "page_count", None)
+            if page_count is None:
+                page_count = len(document)
+            return int(page_count)
+    except Exception:
+        return None
+
+
+def _cacheable_pdf_markdown_key(
+    *,
+    pdf_sha256: str,
+    asset_profile: PdfAssetProfile,
+    asset_output_dir: Path | None,
+) -> tuple[str, str] | None:
+    if _pdf_image_dir(asset_output_dir, asset_profile) is not None:
+        return None
+    return ("no_image_dir", pdf_sha256)
+
+
+def _render_pdf_markdown_result_with_cache(
+    pdf_path: Path,
+    *,
+    pdf_sha256: str,
+    asset_profile: PdfAssetProfile,
+    asset_output_dir: Path | None,
+    source_url: str | None,
+) -> tuple[PdfMarkdownRenderResult, str]:
+    cache_key = _cacheable_pdf_markdown_key(
+        pdf_sha256=pdf_sha256,
+        asset_profile=asset_profile,
+        asset_output_dir=asset_output_dir,
+    )
+    cache = _pdf_markdown_render_cache() if cache_key is not None else None
+    if cache is not None and cache_key is not None:
+        with _PDF_MARKDOWN_RENDER_CACHE_LOCK:
+            cached = cache.get(cache_key)
+        if cached is not None:
+            return _copy_pdf_markdown_render_result(cached), "hit"
+
+    result = render_pdf_markdown_result(
+        pdf_path,
+        asset_profile=asset_profile,
+        asset_output_dir=asset_output_dir,
+        source_url=source_url,
+    )
+    if cache is not None and cache_key is not None:
+        with _PDF_MARKDOWN_RENDER_CACHE_LOCK:
+            cache[cache_key] = _copy_pdf_markdown_render_result(result)
+        return result, "miss"
+    return result, "disabled"
 
 
 def sanitize_storage_state(path: Path) -> Path:
@@ -223,12 +360,17 @@ class _SubprocessTextDecodeReplace:
     def __enter__(self) -> None:
         _PYMUPDF_SUBPROCESS_PATCH_LOCK.acquire()
         self._original_run = subprocess.run
+        self._owner_thread_id = threading.get_ident()
 
         def run_with_replace(*args, **kwargs):
-            if "errors" not in kwargs and (
-                kwargs.get("text")
-                or kwargs.get("universal_newlines")
-                or kwargs.get("encoding") is not None
+            if (
+                threading.get_ident() == self._owner_thread_id
+                and "errors" not in kwargs
+                and (
+                    kwargs.get("text")
+                    or kwargs.get("universal_newlines")
+                    or kwargs.get("encoding") is not None
+                )
             ):
                 kwargs = dict(kwargs)
                 kwargs["errors"] = "replace"
@@ -649,6 +791,22 @@ def pdf_fetch_result_from_bytes(
     pdf_bytes: bytes,
     suggested_filename: str | None = None,
 ) -> PdfFetchResult:
+    pdf_size = len(pdf_bytes)
+    pdf_sha256 = hashlib.sha256(pdf_bytes).hexdigest()
+    max_bytes = _pdf_max_bytes()
+    if pdf_size > max_bytes:
+        raise PdfFetchFailure(
+            "pdf_too_large",
+            "PDF fallback downloaded a PDF larger than the configured limit.",
+            details={
+                "source_url": source_url,
+                "final_url": final_url,
+                "pdf_bytes": pdf_size,
+                "max_pdf_bytes": max_bytes,
+                "pdf_sha256": pdf_sha256,
+            },
+        )
+
     temp_dir_cm = (
         tempfile.TemporaryDirectory(prefix="paper_fetch_pdf_")
         if artifact_dir is None
@@ -675,24 +833,47 @@ def pdf_fetch_result_from_bytes(
                 },
             )
 
+        page_count = _pdf_page_count(pdf_path)
+        max_pages = _pdf_max_pages()
+        if page_count is not None and page_count > max_pages:
+            pdf_path.unlink(missing_ok=True)
+            raise PdfFetchFailure(
+                "pdf_too_many_pages",
+                "PDF fallback downloaded a PDF with too many pages.",
+                details={
+                    "source_url": source_url,
+                    "final_url": final_url,
+                    "pdf_bytes": pdf_size,
+                    "pdf_pages": page_count,
+                    "max_pdf_pages": max_pages,
+                    "pdf_sha256": pdf_sha256,
+                },
+            )
+
         warnings: list[str] = []
+        render_started = time.monotonic()
+        render_cache_status = "not_started"
         try:
-            render_result = render_pdf_markdown_result(
+            render_result, render_cache_status = _render_pdf_markdown_result_with_cache(
                 pdf_path,
+                pdf_sha256=pdf_sha256,
                 asset_profile=asset_profile,
                 asset_output_dir=asset_output_dir,
                 source_url=final_url or source_url,
             )
         except PdfFetchFailure:
+            render_cache_status = "failed"
             if not allow_pdf_only:
                 raise
             render_result = PdfMarkdownRenderResult(markdown_text="", assets=[])
             warnings.append(PDF_ONLY_MARKDOWN_WARNING)
         except Exception:
+            render_cache_status = "failed"
             if not allow_pdf_only:
                 raise
             render_result = PdfMarkdownRenderResult(markdown_text="", assets=[])
             warnings.append(PDF_ONLY_MARKDOWN_WARNING)
+        render_seconds = max(0.0, time.monotonic() - render_started)
         markdown_text = render_result.markdown_text
         if not normalize_text(markdown_text):
             if allow_pdf_only:
@@ -713,4 +894,13 @@ def pdf_fetch_result_from_bytes(
             suggested_filename=suggested_filename,
             assets=[dict(item) for item in render_result.assets],
             warnings=warnings,
+            diagnostics={
+                "pdf_sha256": pdf_sha256,
+                "pdf_bytes": pdf_size,
+                "pdf_pages": page_count,
+                "pdf_markdown_cache": {"status": render_cache_status},
+                "stage_timings": {
+                    "pdf_markdown_seconds": round(render_seconds, 6),
+                },
+            },
         )

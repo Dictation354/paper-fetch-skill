@@ -43,7 +43,6 @@ from ..runtime_browser import (
     browser_page_user_agent,
 )
 from ..utils import normalize_text, provider_display_name, sanitize_filename
-from .browser_runtime import paths as runtime_paths
 from .browser_runtime.seed import (
     filter_browser_cookies_for_url,
     merge_browser_context_seeds,
@@ -72,6 +71,13 @@ import contextlib
 if TYPE_CHECKING:
     from ..runtime import RuntimeContext
     from .browser_runtime import BrowserImagePayload
+
+
+def _runtime_paths():
+    from .browser_runtime import paths as runtime_paths
+
+    return runtime_paths
+
 
 logger = logging.getLogger("paper_fetch.providers.cloakbrowser")
 
@@ -148,21 +154,21 @@ def _configured_cdp_endpoint(env: Mapping[str, str]) -> str | None:
 
 
 def _configured_user_data_dir(env: Mapping[str, str]) -> Path | None:
-    return runtime_paths.configured_user_data_dir(env)
+    return _runtime_paths().configured_user_data_dir(env)
 
 
 def _default_provider_user_data_dir(env: Mapping[str, str], *, provider: str) -> Path:
-    return runtime_paths.default_provider_user_data_dir(env, provider=provider)
+    return _runtime_paths().default_provider_user_data_dir(env, provider=provider)
 
 
 def _configured_profile_dir(env: Mapping[str, str], *, provider: str) -> Path | None:
-    return runtime_paths.configured_profile_dir(env, provider=provider)
+    return _runtime_paths().configured_profile_dir(env, provider=provider)
 
 
 def _configured_storage_state_path(
     env: Mapping[str, str], *, provider: str
 ) -> Path | None:
-    return runtime_paths.configured_storage_state_path(env, provider=provider)
+    return _runtime_paths().configured_storage_state_path(env, provider=provider)
 
 
 def _validate_binary_path(
@@ -205,7 +211,7 @@ def _validate_storage_state_path(
     provider: str,
     require_storage_state: bool,
 ) -> None:
-    runtime_paths.validate_storage_state_path(
+    _runtime_paths().validate_storage_state_path(
         storage_state_path,
         provider=provider,
         require_storage_state=require_storage_state,
@@ -694,21 +700,21 @@ def _raise_if_cancelled(runtime_context: RuntimeContext | None) -> None:
 
 
 def _storage_state_path(config: CloakBrowserRuntimeConfig) -> Path | None:
-    return runtime_paths.storage_state_path(config)
+    return _runtime_paths().storage_state_path(config)
 
 
 def _storage_context_options(config: CloakBrowserRuntimeConfig) -> dict[str, Any]:
-    return runtime_paths.storage_context_options(config)
+    return _runtime_paths().storage_context_options(config)
 
 
 def _storage_origin_matches_url(origin: Mapping[str, Any], url: str | None) -> bool:
-    return runtime_paths.storage_origin_matches_url(origin, url)
+    return _runtime_paths().storage_origin_matches_url(origin, url)
 
 
 def _filtered_storage_state_payload(
     context: Any, *, url: str
 ) -> Mapping[str, Any] | None:
-    return runtime_paths.filtered_storage_state_payload(context, url=url)
+    return _runtime_paths().filtered_storage_state_payload(context, url=url)
 
 
 def _save_storage_state(
@@ -717,7 +723,7 @@ def _save_storage_state(
     *,
     filter_url: str | None = None,
 ) -> dict[str, Any]:
-    result = runtime_paths.save_storage_state(context, config, filter_url=filter_url)
+    result = _runtime_paths().save_storage_state(context, config, filter_url=filter_url)
     if result.get("attempted") and not result.get("saved"):
         logger.debug(
             "cloakbrowser_storage_state provider=%s action=save_failed path=%s",
@@ -738,6 +744,7 @@ def fetch_html_with_cloakbrowser(
     return_image_payload: bool = False,
     return_screenshot: bool = False,
     disable_media: bool = False,
+    lightweight_seed_only: bool = False,
     runtime_context: RuntimeContext | None = None,
 ) -> BrowserFetchedHtml:
     del warm_wait_seconds
@@ -761,6 +768,7 @@ def fetch_html_with_cloakbrowser(
         "media_blocking": bool(disable_media),
         "return_image_payload": bool(return_image_payload),
         "return_screenshot": bool(return_screenshot),
+        "lightweight_seed_only": bool(lightweight_seed_only),
         "external_cdp": bool(config.cdp_endpoint),
         "storage_state_path": str(_storage_state_path(config) or ""),
     }
@@ -909,6 +917,41 @@ def fetch_html_with_cloakbrowser(
                 if return_image_payload:
                     with contextlib.suppress(Exception):
                         setattr(page, _IMAGE_PAYLOAD_RESPONSE_ATTR, top_level_response)
+                if lightweight_seed_only:
+                    final_url = (
+                        normalize_text(str(getattr(page, "url", "") or ""))
+                        or normalized_url
+                    )
+                    latest_storage_state_url = final_url
+                    status = _browser_response_status(response, zero_as_none=False)
+                    headers = _browser_response_headers(response)
+                    candidate_trace["status"] = status
+                    candidate_trace["final_url"] = final_url
+                    browser_context_seed = _context_seed(
+                        browser_context,
+                        final_url=final_url,
+                        user_agent=configured_user_agent
+                        or browser_page_user_agent(page),
+                    )
+                    if browser_context_seed.get(
+                        "browser_cookies"
+                    ) or browser_context_seed.get("browser_user_agent"):
+                        latest_browser_context_seed = browser_context_seed
+                    candidate_trace["duration_seconds"] = round(
+                        time.monotonic() - candidate_started, 3
+                    )
+                    candidate_trace["result"] = "success"
+                    return BrowserFetchedHtml(
+                        source_url=normalized_url,
+                        final_url=final_url,
+                        html="",
+                        response_status=status,
+                        response_headers=headers,
+                        title=None,
+                        summary="",
+                        browser_context_seed=browser_context_seed,
+                        diagnostics={"browser_runtime_trace": trace},
+                    )
                 readiness = None
                 if not return_image_payload:
                     _raise_if_cancelled(runtime_context)
@@ -1123,6 +1166,7 @@ def warm_browser_context_with_cloakbrowser(
     config: CloakBrowserRuntimeConfig,
     browser_context_seed: Mapping[str, Any] | None = None,
     runtime_context: RuntimeContext | None = None,
+    lightweight: bool = False,
 ) -> dict[str, Any]:
     merged_seed = merge_browser_context_seeds(browser_context_seed)
     if not candidate_urls:
@@ -1134,6 +1178,7 @@ def warm_browser_context_with_cloakbrowser(
             publisher=publisher,
             config=config,
             runtime_context=runtime_context,
+            lightweight_seed_only=lightweight,
         )
     except CloakBrowserFailure as exc:
         return merge_browser_context_seeds(merged_seed, exc.browser_context_seed)

@@ -437,7 +437,9 @@ class ProviderManagedFallbackServiceTests(unittest.TestCase):
                 )
                 original_resolve = paper_fetch.resolve_paper
                 try:
-                    paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
+                    paper_fetch.resolve_paper = (
+                        lambda *args, resolved=resolved, **kwargs: resolved
+                    )
                     article = fetch_paper_model(
                         resolved.doi or "",
                         allow_downloads=False,
@@ -537,7 +539,9 @@ class ProviderManagedFallbackServiceTests(unittest.TestCase):
                 )
                 original_resolve = paper_fetch.resolve_paper
                 try:
-                    paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
+                    paper_fetch.resolve_paper = (
+                        lambda *args, resolved=resolved, **kwargs: resolved
+                    )
                     article = fetch_paper_model(
                         resolved.doi or "",
                         allow_downloads=False,

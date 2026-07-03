@@ -15,6 +15,7 @@ class MarkdownTable:
     page_url: str | None = None
     locator: str | None = None
     image_fallback_url: str | None = None
+    fallback_message: str = ""
 
 
 @dataclass(frozen=True)

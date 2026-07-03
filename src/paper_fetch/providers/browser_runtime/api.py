@@ -82,6 +82,7 @@ def warm_browser_context(
     config: BrowserRuntimeConfig,
     browser_context_seed: Mapping[str, Any] | None = None,
     runtime_context: Any | None = None,
+    lightweight: bool = False,
 ) -> dict[str, Any]:
     return DEFAULT_BROWSER_RUNTIME_BACKEND.warm_context(
         candidate_urls,
@@ -89,6 +90,7 @@ def warm_browser_context(
         config=config,
         browser_context_seed=browser_context_seed,
         runtime_context=runtime_context,
+        lightweight=lightweight,
     )
 
 

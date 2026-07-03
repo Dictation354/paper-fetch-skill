@@ -232,6 +232,7 @@ domain > publisher > DOI fallback
 - `resolve_paper().provider_hint` 表示“当前最可信的 provider 提示”。
 - 它来自 domain、publisher、DOI 信号综合判断。
 - 它不是“保证最终一定由该 provider 成功返回”的承诺。
+- 当 MCP 使用 structured `title` / `authors` / `year` resolve 时，Crossref title query 只包含 title；authors/year 分别作为候选消歧信号，不拼入标题字符串。
 
 ### `crossref` 作为 signal 与 source 的区别
 
@@ -244,7 +245,7 @@ domain > publisher > DOI fallback
    - 当调用方显式收敛到 Crossref-only 且没有进入 metadata fallback 时，底层文章来源可保持 `crossref_meta`。
    - 当 fulltext waterfall 失败并进入 metadata fallback 时，`FetchEnvelope.source` 会公开表现为 `metadata_only`；底层 `ArticleModel.source` 仍可能是 `crossref_meta`。
 
-实现边界上，Crossref HTTP lookup 的底层 owner 是 `paper_fetch.metadata.crossref.CrossrefLookupClient`；`paper_fetch.providers.crossref.CrossrefClient` 只是 provider adapter，并继续保留 public import path。
+实现边界上，Crossref HTTP lookup 的底层 owner 是 `paper_fetch.metadata.crossref.CrossrefLookupClient`；`paper_fetch.providers.crossref.CrossrefClient` 只是 provider adapter，并继续保留 public import path。provider metadata 与 Crossref metadata 的 primary-secondary merge 规则由 `paper_fetch.metadata.types.PRIMARY_SECONDARY_METADATA_MERGE_RULE` / `merge_primary_secondary_metadata()` 统一承载。
 
 ### `preferred_providers` 的语义
 
@@ -582,6 +583,7 @@ URL query 解析 DOI 时会优先使用 URL 专用抽取：先读取 query param
 因此：
 
 - 没有 public HTML fallback 开关
+- provider-owned waterfall 默认会在主路径出现 `NO_RESULT`、`NO_ACCESS`、`RATE_LIMITED` 或 `ERROR` 时继续尝试后续 PDF/abstract fallback；最终失败会保留前序 route 的 warning、`source_trail` 和 retry-after，便于 host 判断限流或访问失败。
 - 对 `elsevier` 来说，系统始终按内部 `官方 DOI XML/API -> PII XML/API fallback -> 官方 API PDF fallback` waterfall 执行
 - 对 `springer` 来说，系统始终按内部 `direct HTML -> direct HTTP PDF` waterfall 执行
 - 对 `wiley` / `science` / `pnas` / `annualreviews` / `royalsocietypublishing` / `acs` / `iop` / `aip` / `mdpi` 来说，系统始终按上文声明的 provider-owned browser workflow 执行。
@@ -766,8 +768,10 @@ CLI 主输出、artifact 与命令组合的用户语义见 [`cli.md`](cli.md)；
 - CLI `--artifact-mode` 和 MCP `artifact_mode` 控制 provider artifact 保留范围，`--asset-profile` / `strategy.asset_profile` 只控制本地内容资产下载范围；`asset_profile=none` 不会主动移除 Markdown 中可解析的远程图片链接。
 - `markdown-assets` 是 CLI 和 MCP `fetch_paper` 默认值：保存 Markdown 和资产策略允许的本地资产，不保存 provider 原始 HTML/XML、额外格式副本或 `<download_dir>/.paper-fetch-http-cache/` textual cache；未显式传 `--output` 且指定 `--output-dir` 时写入的 CLI 主输出文件不属于额外副本。
 - 当正文来自 `pdf_fallback` 时，`markdown-assets` 仍会保存 PDF 源文件；文件名优先使用 provider 抓取后合并的标题、作者和年份元数据，缺失时再回退到进入 provider 前的 metadata/DOI。PDF fallback 的 Markdown 转换质量通常低于 XML/provider HTML，需要保留来源便于溯源和排查。
+- Browser-backed 正文图片下载对单图有总预算；seed warm、browser page fetch、request-context fetch、直接导航和 image wait 不再简单累加长 timeout。Seeded browser PDF fallback 在进入 PDF 下载前只做 lightweight warm 采集 cookies/user-agent/final URL；当 warm 已经拿到 cookie seed 时，后续 PDF 抓取只传 cookies/referer，不再重复导航同一个 seed URL。
 - `all` 保留完整调试 artifact：provider HTML/PDF、辅助 artifact、HTTP textual cache 和 provider structured sidecar 都可落盘；MCP fetch-envelope sidecar/cache-index 仍按 MCP adapter cache 语义单独管理。
 - `none` 不保存 provider artifact 或资产；显式 `--output <path>`、`--save-markdown`，以及未显式 `--output` 时由 `--output-dir` 承接的 CLI 主输出仍可写文件。MCP 中 `artifact_mode="none"` 仍可写 fetch-envelope sidecar/cache-index 以支持 `prefer_cache`、`list_cached` 和 resources。
+- MCP cache index 读取会校验 index version；旧版或坏 schema 不会被默认当作可信 manifest。`list_cached(cache_mode="index")` 只读 manifest，`refresh` 只修剪/规范化现有 manifest，`rescan` 从可证明 DOI 归属的 fetch-envelope sidecar 重建 index；`get_cached(doi)` 仍只做该 DOI 的本地 refresh。
 - `--no-download` 等价于 `--artifact-mode none`。
 - 对 provider artifact 来说，`download_dir=None` 优先级最高
 - CLI/MCP 通过 `workflow.request_builder.build_fetch_pipeline_request()` 统一装配 `FetchPipelineRequest`。
@@ -928,6 +932,7 @@ export PAPER_FETCH_BROWSER_USER_AGENT="Mozilla/5.0 (Windows NT 10.0; Win64; x64)
 - 可选。
 - 公式转换 LRU 大小；默认 `1024`，设为 `0` 可禁用结果缓存。
 - 缓存 key 包含 backend、原始 MathML、display mode 和关键 converter 配置。
+- `mathml-to-latex` 默认使用常驻 Node worker；相同 MathML/backend/config 会优先命中结果缓存，不会重复启动 texmath/Node 子进程。
 
 #### `MML2TEX_*`
 
@@ -943,6 +948,7 @@ export PAPER_FETCH_BROWSER_USER_AGENT="Mozilla/5.0 (Windows NT 10.0; Win64; x64)
 - 覆盖运行时查找 Ghostscript/libvips 的目录。
 - 未配置时，运行时会依次考虑 repo-local `.image-tools`、用户数据目录下的 `image-tools`，再查找系统 `PATH`。
 - 离线安装器会把它写入 `offline.env` 和 MCP 环境，默认指向安装目录下的 `image-tools`；离线构建不会把构建机 PATH 上的 Ghostscript/libvips 符号链接固化进包内。
+- 运行时会按相关 env、搜索目录和候选文件指纹缓存候选列表与可用性探测；同一进程内多张 EPS/TIFF 图不会重复执行 Ghostscript/libvips `--version` 探测。
 
 #### `PAPER_FETCH_GHOSTSCRIPT_BIN`
 
@@ -967,6 +973,26 @@ export PAPER_FETCH_BROWSER_USER_AGENT="Mozilla/5.0 (Windows NT 10.0; Win64; x64)
 - 可选。
 - Ghostscript/libvips 探测与转换子进程超时秒数；默认 `120`。
 - 非正数或非整数会回退默认值。超时按转换失败处理，AMS 源图下载继续尝试网页 JPG/PNG 候选。
+
+### PDF fallback guard 与渲染缓存
+
+#### `PAPER_FETCH_PDF_MAX_BYTES`
+
+- 可选。
+- PDF fallback 接受的单个 PDF 最大字节数；默认 `157286400`（150 MiB）。
+- 超过上限会在写入和 Markdown 渲染前返回 `pdf_too_large` 失败。
+
+#### `PAPER_FETCH_PDF_MAX_PAGES`
+
+- 可选。
+- PDF fallback 接受的最大页数；默认 `1000`。
+- 能读取页数且超过上限时会在 Markdown 渲染前返回 `pdf_too_many_pages` 失败。
+
+#### `PAPER_FETCH_PDF_MARKDOWN_CACHE_SIZE`
+
+- 可选。
+- 进程内 PDF Markdown 渲染 LRU 大小；默认 `16`，设为 `0` 可禁用。
+- 只复用无图片导出路径的渲染结果，避免把本地 PDF 图片路径跨输出目录复用；成功结果的 diagnostics 会记录 PDF hash、字节数、页数、cache status 和 Markdown 渲染耗时。
 
 ### Elsevier
 

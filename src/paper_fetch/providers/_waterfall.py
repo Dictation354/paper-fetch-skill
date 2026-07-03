@@ -63,7 +63,7 @@ class WaterfallStep:
     run: StepRunner
     failure_marker: str | None = None
     success_markers: tuple[str, ...] = ()
-    continue_codes: tuple[str, ...] = (NO_RESULT,)
+    continue_codes: tuple[str, ...] = DEFAULT_WATERFALL_CONTINUE_CODES
     failure_warning: str | WarningFactory | None = None
     success_warning: str | None = None
     include_failure_trail_on_success: bool = True
@@ -121,7 +121,7 @@ def _failure_with_warning(
     if not normalized:
         return failure
     warnings = list(failure.warnings)
-    warnings.append(normalized)
+    _append_unique_text(warnings, [normalized])
     return ProviderFailure(
         failure.code,
         failure.message,
@@ -144,20 +144,41 @@ def _resolve_failure_warning(
     return warning
 
 
+def _failure_with_state(
+    failure: ProviderFailure,
+    state: ProviderWaterfallState,
+) -> ProviderFailure:
+    warnings: list[str] = []
+    source_trail: list[str] = []
+    missing_env: list[str] = []
+    retry_after_values: list[int] = []
+
+    _append_unique_text(warnings, state.warnings)
+    _append_unique_text(warnings, failure.warnings)
+    _append_unique_text(source_trail, state.initial_source_trail)
+    _append_unique_text(source_trail, state.failure_source_trail)
+    _append_unique_text(source_trail, failure.source_trail)
+    for _label, state_failure in state.failures:
+        _append_unique_text(missing_env, state_failure.missing_env)
+        if state_failure.retry_after_seconds is not None:
+            retry_after_values.append(state_failure.retry_after_seconds)
+    _append_unique_text(missing_env, failure.missing_env)
+    if failure.retry_after_seconds is not None:
+        retry_after_values.append(failure.retry_after_seconds)
+
+    return ProviderFailure(
+        failure.code,
+        failure.message,
+        retry_after_seconds=max(retry_after_values) if retry_after_values else None,
+        missing_env=missing_env,
+        warnings=warnings,
+        source_trail=source_trail,
+    )
+
+
 def _default_final_failure(state: ProviderWaterfallState) -> ProviderFailure:
     combined = combine_provider_failures(state.failures)
-    warnings = list(state.warnings)
-    for warning in combined.warnings:
-        if warning not in warnings:
-            warnings.append(warning)
-    return ProviderFailure(
-        combined.code,
-        combined.message,
-        retry_after_seconds=combined.retry_after_seconds,
-        missing_env=combined.missing_env,
-        warnings=warnings,
-        source_trail=combined.source_trail,
-    )
+    return _failure_with_state(combined, state)
 
 
 def run_provider_waterfall(
@@ -185,7 +206,7 @@ def run_provider_waterfall(
         except ProviderFailure as exc:
             failure = _failure_with_marker(exc, step.failure_marker)
             if failure.code not in step.continue_codes:
-                raise failure from exc
+                raise _failure_with_state(failure, state) from exc
             warning = _resolve_failure_warning(step.failure_warning, failure, state)
             failure = _failure_with_warning(failure, warning)
             state.failures.append((step.label, failure))
@@ -193,12 +214,12 @@ def run_provider_waterfall(
             _append_unique_text(state.failure_source_trail, failure.source_trail)
             continue
 
-        payload_warnings = [*state.warnings, *payload.warnings]
+        payload_warnings: list[str] = []
+        _append_unique_text(payload_warnings, state.warnings)
+        _append_unique_text(payload_warnings, payload.warnings)
         if step.success_warning:
-            payload_warnings.append(step.success_warning)
-        payload.warnings = [
-            warning for warning in payload_warnings if str(warning).strip()
-        ]
+            _append_unique_text(payload_warnings, [step.success_warning])
+        payload.warnings = payload_warnings
 
         if step.success_markers:
             source_trail = list(state.initial_source_trail)
@@ -216,4 +237,6 @@ def run_provider_waterfall(
         raise ProviderFailure(
             NO_RESULT, "Provider waterfall did not run any retrieval steps."
         )
-    raise (final_failure_factory or _default_final_failure)(state)
+    raise _failure_with_state(
+        (final_failure_factory or _default_final_failure)(state), state
+    )

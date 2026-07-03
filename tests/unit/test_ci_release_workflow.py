@@ -1,7 +1,11 @@
 from __future__ import annotations
 
+import re
+import tomllib
 import unittest
 from pathlib import Path
+
+import yaml
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -9,12 +13,242 @@ RELEASE_WORKFLOW = REPO_ROOT / ".github" / "workflows" / "release.yml"
 CI_WORKFLOW = REPO_ROOT / ".github" / "workflows" / "ci.yml"
 LINUX_OFFLINE_VERIFY = REPO_ROOT / "scripts" / "verify-offline-package.sh"
 DEV_PREFLIGHT = REPO_ROOT / "scripts" / "dev-preflight.sh"
+PYPROJECT = REPO_ROOT / "pyproject.toml"
+OFFLINE_JOB_IDS = (
+    "offline-linux-x86-64",
+    "offline-macos-install",
+    "offline-windows-x86-64",
+)
+OFFLINE_NON_WINDOWS_IF = "${{ (startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch') && (github.event_name != 'workflow_dispatch' || !inputs.run_offline_windows_only) }}"
+OFFLINE_WINDOWS_IF = "${{ startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch' }}"
+
+
+def _load_ci_workflow() -> dict:
+    workflow = yaml.load(
+        CI_WORKFLOW.read_text(encoding="utf-8"), Loader=yaml.BaseLoader
+    )
+    if not isinstance(workflow, dict):
+        raise AssertionError("CI workflow did not parse to a mapping")
+    return workflow
+
+
+def _job_if(workflow: dict, job_id: str) -> str:
+    job = workflow["jobs"][job_id]
+    condition = job.get("if", "")
+    if not isinstance(condition, str):
+        raise AssertionError(f"{job_id} has non-string if condition: {condition!r}")
+    return condition
+
+
+def _evaluate_github_if(
+    expression: str,
+    *,
+    event_name: str,
+    ref: str,
+    run_offline_windows_only: bool = False,
+    publish_release: bool = False,
+) -> bool:
+    expr = expression.strip()
+    if expr.startswith("${{") and expr.endswith("}}"):
+        expr = expr[3:-2]
+    expr = re.sub(r"\s+", " ", expr).strip()
+    expr = expr.replace(
+        "startsWith(github.ref, 'refs/tags/v')",
+        "ref.startswith('refs/tags/v')",
+    )
+    expr = expr.replace("github.event_name", "event_name")
+    expr = expr.replace("inputs.run_offline_windows_only", "run_offline_windows_only")
+    expr = expr.replace("inputs.publish_release", "publish_release")
+    expr = expr.replace("&&", " and ").replace("||", " or ")
+    expr = re.sub(r"!\s*(?!=)", " not ", expr)
+    return bool(
+        eval(  # noqa: S307 - test-only evaluator for the workflow expression subset.
+            expr,
+            {"__builtins__": {}},
+            {
+                "event_name": event_name,
+                "publish_release": publish_release,
+                "ref": ref,
+                "run_offline_windows_only": run_offline_windows_only,
+            },
+        )
+    )
 
 
 class CiReleaseWorkflowTests(unittest.TestCase):
     def test_phase8_release_workflow_input_is_absent_in_this_repository(self) -> None:
         self.assertFalse(RELEASE_WORKFLOW.exists())
         self.assertTrue(CI_WORKFLOW.exists())
+
+    def test_ci_workflow_declares_regular_and_manual_triggers(self) -> None:
+        workflow = _load_ci_workflow()
+
+        self.assertEqual(
+            {"pull_request", "push", "workflow_dispatch"},
+            set(workflow["on"]),
+        )
+        dispatch_inputs = workflow["on"]["workflow_dispatch"]["inputs"]
+        self.assertIn("publish_release", dispatch_inputs)
+        self.assertIn("run_offline_windows_only", dispatch_inputs)
+
+    def test_offline_jobs_only_run_on_tags_or_manual_dispatch(self) -> None:
+        workflow = _load_ci_workflow()
+        expected_conditions = {
+            "offline-linux-x86-64": OFFLINE_NON_WINDOWS_IF,
+            "offline-macos-install": OFFLINE_NON_WINDOWS_IF,
+            "offline-windows-x86-64": OFFLINE_WINDOWS_IF,
+        }
+
+        for job_id, expected_condition in expected_conditions.items():
+            with self.subTest(job_id=job_id):
+                condition = _job_if(workflow, job_id)
+
+                self.assertEqual(expected_condition, condition)
+                self.assertFalse(
+                    _evaluate_github_if(
+                        condition,
+                        event_name="push",
+                        ref="refs/heads/main",
+                    )
+                )
+                self.assertFalse(
+                    _evaluate_github_if(
+                        condition,
+                        event_name="pull_request",
+                        ref="refs/pull/1/merge",
+                    )
+                )
+                self.assertTrue(
+                    _evaluate_github_if(
+                        condition,
+                        event_name="push",
+                        ref="refs/tags/v3.0.0",
+                    )
+                )
+                self.assertTrue(
+                    _evaluate_github_if(
+                        condition,
+                        event_name="workflow_dispatch",
+                        ref="refs/heads/main",
+                    )
+                )
+
+        self.assertFalse(
+            _evaluate_github_if(
+                _job_if(workflow, "offline-linux-x86-64"),
+                event_name="workflow_dispatch",
+                ref="refs/heads/main",
+                run_offline_windows_only=True,
+            )
+        )
+        self.assertFalse(
+            _evaluate_github_if(
+                _job_if(workflow, "offline-macos-install"),
+                event_name="workflow_dispatch",
+                ref="refs/heads/main",
+                run_offline_windows_only=True,
+            )
+        )
+        self.assertTrue(
+            _evaluate_github_if(
+                _job_if(workflow, "offline-windows-x86-64"),
+                event_name="workflow_dispatch",
+                ref="refs/heads/main",
+                run_offline_windows_only=True,
+            )
+        )
+
+    def test_package_smoke_remains_a_regular_quality_gate(self) -> None:
+        workflow = _load_ci_workflow()
+        condition = _job_if(workflow, "package-smoke")
+
+        self.assertTrue(
+            _evaluate_github_if(condition, event_name="push", ref="refs/heads/main")
+        )
+        self.assertTrue(
+            _evaluate_github_if(
+                condition,
+                event_name="pull_request",
+                ref="refs/pull/1/merge",
+            )
+        )
+        self.assertTrue(
+            _evaluate_github_if(
+                condition,
+                event_name="workflow_dispatch",
+                ref="refs/heads/main",
+            )
+        )
+        self.assertFalse(
+            _evaluate_github_if(
+                condition,
+                event_name="workflow_dispatch",
+                ref="refs/heads/main",
+                run_offline_windows_only=True,
+            )
+        )
+
+    def test_release_job_requires_v_tag_and_release_intent(self) -> None:
+        workflow = _load_ci_workflow()
+        release_job = workflow["jobs"]["release-offline-packages"]
+        condition = _job_if(workflow, "release-offline-packages")
+
+        self.assertTrue(
+            {"package-smoke", *OFFLINE_JOB_IDS}.issubset(release_job["needs"])
+        )
+        self.assertFalse(
+            _evaluate_github_if(condition, event_name="push", ref="refs/heads/main")
+        )
+        self.assertFalse(
+            _evaluate_github_if(
+                condition,
+                event_name="pull_request",
+                ref="refs/tags/v3.0.0",
+            )
+        )
+        self.assertTrue(
+            _evaluate_github_if(condition, event_name="push", ref="refs/tags/v3.0.0")
+        )
+        self.assertFalse(
+            _evaluate_github_if(
+                condition,
+                event_name="workflow_dispatch",
+                ref="refs/heads/main",
+                publish_release=True,
+            )
+        )
+        self.assertFalse(
+            _evaluate_github_if(
+                condition,
+                event_name="workflow_dispatch",
+                ref="refs/tags/v3.0.0",
+            )
+        )
+        self.assertTrue(
+            _evaluate_github_if(
+                condition,
+                event_name="workflow_dispatch",
+                ref="refs/tags/v3.0.0",
+                publish_release=True,
+            )
+        )
+        self.assertFalse(
+            _evaluate_github_if(
+                condition,
+                event_name="workflow_dispatch",
+                ref="refs/tags/v3.0.0",
+                publish_release=True,
+                run_offline_windows_only=True,
+            )
+        )
+
+    def test_release_notes_come_from_chinese_changelog(self) -> None:
+        workflow = CI_WORKFLOW.read_text(encoding="utf-8")
+
+        self.assertIn("Extract release notes from CHANGELOG_CN", workflow)
+        self.assertIn("CHANGELOG_CN.md > release-notes.md", workflow)
+        self.assertIn("body_path: release-notes.md", workflow)
+        self.assertIn("generate_release_notes: false", workflow)
 
     def test_ci_and_local_preflight_share_core_quality_gates(self) -> None:
         workflow = CI_WORKFLOW.read_text(encoding="utf-8")
@@ -25,19 +259,61 @@ class CiReleaseWorkflowTests(unittest.TestCase):
         self.assertIn("--cov=paper_fetch", workflow)
         self.assertIn("--cov-report=term-missing", workflow)
         self.assertIn("--cov-report=xml", workflow)
+        self.assertIn("--cov-fail-under=40", workflow)
         self.assertIn("bash scripts/dev-preflight.sh --help", workflow)
         self.assertIn("PYTHON_BIN", preflight)
         self.assertIn("-m mypy", preflight)
-        self.assertIn("--no-site-packages", preflight)
+        self.assertNotIn("--no-site-packages", preflight)
         self.assertIn("-m ruff format --check .", preflight)
         self.assertIn("-m ruff check .", preflight)
         self.assertIn("--coverage", preflight)
         self.assertIn("--cov=paper_fetch", preflight)
+        self.assertIn("--cov-fail-under=40", preflight)
         self.assertIn("tests/unit -q", preflight)
+        self.assertIn("tests/unit -q --durations=30", preflight)
         self.assertIn("tests/devtools -q", preflight)
         self.assertIn("scripts/validate_extraction_rules.py", preflight)
+        self.assertIn("scripts/validate_extraction_rules.py --ci", preflight)
         self.assertIn("tests/integration -q", preflight)
         self.assertIn("--durations=30", workflow)
+
+    def test_quality_gate_config_guards_mypy_coverage_and_b023(self) -> None:
+        with PYPROJECT.open("rb") as handle:
+            pyproject = tomllib.load(handle)
+
+        mypy_config = pyproject["tool"]["mypy"]
+        mypy_files = set(mypy_config["files"])
+        self.assertTrue(mypy_config["no_site_packages"])
+        self.assertGreaterEqual(
+            pyproject["tool"]["coverage"]["report"]["fail_under"], 40
+        )
+        self.assertEqual(
+            pyproject["tool"]["ruff"]["lint"].get("per-file-ignores", {}), {}
+        )
+        for entry in mypy_files:
+            path = REPO_ROOT / entry
+            self.assertTrue(path.exists(), f"mypy files entry does not exist: {entry}")
+            if path.is_dir():
+                self.assertTrue(
+                    any(path.rglob("*.py")) or any(path.rglob("*.pyi")),
+                    f"mypy directory entry has no Python files: {entry}",
+                )
+
+        required_mypy_paths = {
+            "src/paper_fetch/_cloakbrowser_runtime.py",
+            "src/paper_fetch/config.py",
+            "src/paper_fetch/runtime.py",
+            "src/paper_fetch/runtime_browser.py",
+            "src/paper_fetch/formula/convert.py",
+            "src/paper_fetch/formula/paths.py",
+            "src/paper_fetch/quality",
+            "src/paper_fetch/providers/_waterfall.py",
+            "src/paper_fetch/providers/_pdf_common.py",
+            "src/paper_fetch/providers/_pdf_fallback.py",
+            "src/paper_fetch/providers/browser_runtime",
+            "src/paper_fetch/providers/browser_workflow",
+        }
+        self.assertLessEqual(required_mypy_paths, mypy_files)
 
     def test_windows_offline_ci_uses_current_provider_status_entrypoint(self) -> None:
         workflow = CI_WORKFLOW.read_text(encoding="utf-8")

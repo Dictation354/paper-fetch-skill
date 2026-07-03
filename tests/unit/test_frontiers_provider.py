@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 from pathlib import Path
+import re
 
 from paper_fetch.providers.frontiers import FrontiersClient
 from paper_fetch.reason_codes import PDF_FALLBACK
@@ -153,7 +154,7 @@ def test_frontiers_xml_route_fetches_canonical_jats_and_rewrites_figure_url() ->
         in rendered_markdown
     )
     assert "seawater temperature" in markdown
-    assert "| Variable | Low | High |" in markdown
+    assert re.search(r"(?m)^\|\s*Variable\s*\|\s*Low\s*\|\s*High\s*\|", markdown)
     assert "Effects of temperature and pH" in markdown
     assert "Supplementary material" in markdown
     assert "Frontiers reference title" in rendered_markdown

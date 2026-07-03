@@ -6,6 +6,7 @@ import re
 from typing import Any
 from collections.abc import Callable, Mapping
 
+from ..markdown_render import table_format as markdown_table_format
 from ...models import normalize_markdown_text
 from ...utils import normalize_text
 from .inline import (
@@ -18,7 +19,6 @@ from .shared import attr_text
 from bs4 import Tag
 
 TABLE_PLACEHOLDER_PREFIX = "PAPER_FETCH_TABLE_PLACEHOLDER_"
-TABLE_CELL_LINE_BREAK_PATTERN = re.compile(r"\s*\n+\s*")
 
 RenderInlineTextFn = Callable[[Any], str]
 CleanMarkdownFn = Callable[[str], str]
@@ -315,44 +315,19 @@ def table_header_row_count_without_thead(rows: list[list[dict[str, Any]]]) -> in
 
 
 def normalize_table_block_text(text: str) -> str:
-    return normalize_text(TABLE_CELL_LINE_BREAK_PATTERN.sub(" ", text))
+    return markdown_table_format.normalize_table_block_text(text)
 
 
 def normalize_table_cell_markdown_text(text: str) -> str:
-    return TABLE_CELL_LINE_BREAK_PATTERN.sub("<br>", normalize_text(text))
+    return markdown_table_format.normalize_table_cell_markdown_text(text)
 
 
 def escape_markdown_table_cell(text: str) -> str:
-    return normalize_table_cell_markdown_text(text).replace("|", r"\|")
+    return markdown_table_format.escape_markdown_table_cell(text)
 
 
 def render_aligned_markdown_table(matrix: list[list[str]]) -> list[str]:
-    if not matrix:
-        return []
-
-    width = max(len(row) for row in matrix)
-    normalized_rows = [row + [""] * max(0, width - len(row)) for row in matrix]
-    escaped_rows = [
-        [escape_markdown_table_cell(cell) for cell in row] for row in normalized_rows
-    ]
-    column_widths = [
-        max(3, max(len(row[index]) for row in escaped_rows)) for index in range(width)
-    ]
-
-    def format_row(row: list[str]) -> str:
-        padded = [
-            f" {cell.ljust(column_widths[index])} " for index, cell in enumerate(row)
-        ]
-        return "|" + "|".join(padded) + "|"
-
-    header = format_row(escaped_rows[0])
-    separator = (
-        "|"
-        + "|".join(f" {'-' * column_widths[index]} " for index in range(width))
-        + "|"
-    )
-    body = [format_row(row) for row in escaped_rows[1:]]
-    return [header, separator, *body]
+    return markdown_table_format.render_aligned_markdown_table(matrix)
 
 
 def render_table_markdown(

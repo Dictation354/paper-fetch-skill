@@ -100,7 +100,7 @@ paper-fetch-skill-windows-x86_64-setup.exe
 .\paper-fetch-skill-windows-x86_64-setup.exe
 ```
 
-安装器默认安装到 `%LOCALAPPDATA%\PaperFetchSkill`，不要求管理员权限。会自动安装 paper-fetch CLI 工具、注册 MCP 并安装 Skill。若用户级 PATH / Skill / MCP 集成或 smoke check 在本机失败，runtime 仍会保留在安装目录，详细警告见 `%LOCALAPPDATA%\PaperFetchSkill\install-helper.log`。
+安装器默认安装到 `%LOCALAPPDATA%\PaperFetchSkill`，不要求管理员权限。会自动安装 paper-fetch CLI 工具，复制 Codex / Claude Code / Antigravity Skill，并注册 MCP。若用户级 PATH / Skill / MCP 集成或 smoke check 在本机失败，runtime 仍会保留在安装目录，详细警告见 `%LOCALAPPDATA%\PaperFetchSkill\install-helper.log`。仓库根目录的 `install-offline.ps1` 仅保留给本地/旧 Windows 离线 bundle 使用；release 用户应运行 `paper-fetch-skill-windows-x86_64-setup.exe`。
 
 **3. 验证安装**
 
@@ -128,7 +128,7 @@ notepad "$env:LOCALAPPDATA\PaperFetchSkill\offline.env"
 
 **6. 刷新 agent skill**
 
-修改 Codex / Claude Code skill、MCP 配置或 `offline.env` 后需要重启对应 host；已经启动的 MCP 服务不会自动继承新环境变量。
+修改 Codex / Claude Code / Antigravity skill、MCP 配置或 `offline.env` 后需要重启对应 host；已经启动的 MCP 服务不会自动继承新环境变量。
 
 **7. 常见问题**
 
@@ -154,6 +154,8 @@ paper-fetch-skill-offline-linux-x86_64-cp314.sh
 ```
 
 Linux `.sh` 是自解压安装器，内部 payload 是预安装 runtime 包。默认安装到 `~/.local/share/paper-fetch-skill`，也可以用 `--install-dir <path>` 指定固定目录。
+
+普通 `push` / `pull_request` 的 GitHub Actions 只跑常规质量门，不构建离线包；Linux / macOS / Windows 离线包和 release 上传只在 `v*` tag 或手动 `workflow_dispatch` 路径运行。
 
 Ubuntu 24.04 系统默认 Python 版本 3.12，Ubuntu 26.04 为 3.14。
 
@@ -203,7 +205,7 @@ Linux 下载与目标机 Python 版本匹配的新版 `.sh` 后直接运行。�
 source ~/.local/share/paper-fetch-skill/activate-offline.sh
 ```
 
-`--reuse-env-file` 会让 shell / Skill / MCP 指向新版 runtime，但不会修改被复用的 `offline.env`。更新后重启 Codex / Claude Code。
+`--reuse-env-file` 会让 shell / Skill / MCP 指向新版 runtime，但不会修改被复用的 `offline.env`。`activate-offline.sh` 默认只读取本安装目录的 `offline.env`，或安装时显式绑定的复用文件；它会按 dotenv 语法解析并导出键值，不会把文件当 shell 脚本执行。更新后重启 Codex / Claude Code / Antigravity。
 
 **卸载**
 

@@ -36,6 +36,7 @@ from ..publisher_identity import (
     normalize_doi,
 )
 from ..reason_codes import ERROR, NO_RESULT, NOT_SUPPORTED
+from ..utils import canonical_author_key, normalize_text
 
 CONFIDENT_SCORE_MIN = 0.90
 CONFIDENT_MARGIN_MIN = 0.05
@@ -63,6 +64,30 @@ AMS_OLD_STYLE_SLUG_PATTERN = re.compile(
     r"(?P<code>[A-Za-z0-9]+)_2_0_co_2$",
     flags=re.IGNORECASE,
 )
+
+
+@dataclass
+class StructuredResolveRequest:
+    query: str | None = None
+    title: str | None = None
+    authors: tuple[str, ...] = ()
+    year: int | None = None
+
+    @classmethod
+    def from_value(
+        cls, value: str | StructuredResolveRequest
+    ) -> StructuredResolveRequest:
+        if isinstance(value, StructuredResolveRequest):
+            return value
+        return cls(query=str(value or "").strip() or None)
+
+    @property
+    def lookup_query(self) -> str:
+        return str(self.query or self.title or "").strip()
+
+    @property
+    def is_structured(self) -> bool:
+        return self.query is None and self.title is not None
 
 
 @dataclass
@@ -127,6 +152,54 @@ def candidate_score(query: str, candidate_title: str) -> float:
     return round((0.7 * jaccard) + (0.3 * ratio), 6)
 
 
+def _published_year(value: Any) -> int | None:
+    match = re.search(r"\b(1\d{3}|2\d{3})\b", str(value or ""))
+    if not match:
+        return None
+    return int(match.group(1))
+
+
+def _candidate_author_keys(candidate: Mapping[str, Any]) -> set[str]:
+    return {
+        key
+        for key in (
+            canonical_author_key(str(author))
+            for author in candidate.get("authors") or []
+            if normalize_text(author)
+        )
+        if key
+    }
+
+
+def _author_match_score(
+    requested_authors: tuple[str, ...], candidate: Mapping[str, Any]
+) -> float:
+    requested_keys = {
+        key
+        for key in (canonical_author_key(author) for author in requested_authors)
+        if key
+    }
+    if not requested_keys:
+        return 0.0
+    candidate_keys = _candidate_author_keys(candidate)
+    if not candidate_keys:
+        return 0.0
+    return len(requested_keys & candidate_keys) / len(requested_keys)
+
+
+def _year_match_score(year: int | None, candidate: Mapping[str, Any]) -> float:
+    if year is None:
+        return 0.0
+    candidate_year = _published_year(candidate.get("published"))
+    if candidate_year is None:
+        return 0.0
+    if candidate_year == year:
+        return 1.0
+    if abs(candidate_year - year) == 1:
+        return 0.5
+    return 0.0
+
+
 def is_preprint_candidate(candidate: Mapping[str, Any]) -> bool:
     doi = normalize_doi(str(candidate.get("doi") or "")) or ""
     landing_url = str(candidate.get("landing_page_url") or "").lower()
@@ -142,12 +215,31 @@ def is_formal_publication_candidate(candidate: Mapping[str, Any]) -> bool:
 
 
 def score_candidates(
-    query: str, candidates: list[CrossrefMetadata]
+    query: str | StructuredResolveRequest, candidates: list[CrossrefMetadata]
 ) -> list[dict[str, Any]]:
+    request = StructuredResolveRequest.from_value(query)
+    lookup_query = request.lookup_query
+    use_author_score = bool(request.authors) and any(
+        _candidate_author_keys(item) for item in candidates
+    )
+    use_year_score = request.year is not None and any(
+        _published_year(item.get("published")) is not None for item in candidates
+    )
+    author_weight = 0.12 if use_author_score else 0.0
+    year_weight = 0.06 if use_year_score else 0.0
+    title_weight = 1.0 - author_weight - year_weight
     scored: list[dict[str, Any]] = []
     for item in candidates:
         title = str(item.get("title") or "")
-        score = candidate_score(query, title)
+        title_score = candidate_score(lookup_query, title)
+        author_score = _author_match_score(request.authors, item)
+        year_score = _year_match_score(request.year, item)
+        score = round(
+            (title_weight * title_score)
+            + (author_weight * author_score)
+            + (year_weight * year_score),
+            6,
+        )
         provider_hint = infer_provider_from_signals(
             landing_urls=[str(item.get("landing_page_url") or "")],
             publishers=[str(item.get("publisher") or "")],
@@ -157,11 +249,15 @@ def score_candidates(
             {
                 "doi": item.get("doi"),
                 "title": item.get("title"),
+                "authors": item.get("authors") or [],
                 "journal_title": item.get("journal_title"),
                 "published": item.get("published"),
                 "landing_page_url": item.get("landing_page_url"),
                 "provider_hint": provider_hint,
                 "score": score,
+                "title_score": title_score,
+                "author_score": author_score,
+                "year_score": year_score,
                 "is_preprint": is_preprint_candidate(item),
                 "is_formal_publication": is_formal_publication_candidate(item),
             }
@@ -170,6 +266,9 @@ def score_candidates(
         scored,
         key=lambda item: (
             item["score"],
+            item["title_score"],
+            item["author_score"],
+            item["year_score"],
             bool(item["is_formal_publication"]),
             not bool(item["is_preprint"]),
         ),
@@ -234,12 +333,13 @@ def is_confident_top_candidate(candidates: list[dict[str, Any]]) -> bool:
 
 
 def resolve_query(
-    query: str,
+    query: str | StructuredResolveRequest,
     *,
     transport: HttpTransport | None = None,
     env: Mapping[str, str] | None = None,
 ) -> ResolvedQuery:
-    normalized_query = query.strip()
+    request = StructuredResolveRequest.from_value(query)
+    normalized_query = request.lookup_query
     if not normalized_query:
         raise ProviderFailure(NOT_SUPPORTED, "Query must not be empty.")
 
@@ -433,7 +533,7 @@ def resolve_query(
         raise ProviderFailure(
             NO_RESULT, "Crossref returned no metadata results for the title query."
         )
-    scored = score_candidates(normalized_query, candidates)
+    scored = score_candidates(request, candidates)
     top_one = scored[0]
     selected_candidate = select_formal_publication_candidate(scored)
     if selected_candidate is not None or is_confident_top_candidate(scored):

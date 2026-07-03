@@ -19,6 +19,10 @@ FORMULA_IMAGE_URL_PATTERN = re.compile(
     r"(?:^|[-_/])(?:math|ieq|equ)[-_]?\d|_(?:IEq|Equ)\d|math-\d|equation",
     flags=re.IGNORECASE,
 )
+EXPLICIT_FORMULA_IMAGE_URL_PATTERN = re.compile(
+    r"(?:^|[-_/])(?:math|ieq|equ)[-_]?\d|_(?:IEq|Equ)\d|math-\d",
+    flags=re.IGNORECASE,
+)
 GENERIC_FORMULA_CONTAINER_TOKENS = (
     "inline-equation",
     "inline-eqn",
@@ -337,10 +341,10 @@ def looks_like_formula_image(
     candidate_url = normalize_text(url or formula_image_url_from_node(node))
     if not candidate_url:
         return False
+    if html_node_is_figure_asset_context(node, noise_profile=noise_profile):
+        return bool(EXPLICIT_FORMULA_IMAGE_URL_PATTERN.search(candidate_url))
     if FORMULA_IMAGE_URL_PATTERN.search(candidate_url):
         return True
-    if html_node_is_figure_asset_context(node, noise_profile=noise_profile):
-        return False
     identity = formula_ancestor_identity_text(node)
     alt_blob = " ".join(
         normalize_text(str(node.get(attr) or "")).lower()

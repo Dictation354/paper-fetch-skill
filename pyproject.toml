@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "paper-fetch-skill"
-version = "2.8.0"
+version = "3.0.0"
 description = "AI-friendly paper fetch tooling"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -70,11 +70,6 @@ select = ["E4", "E7", "E9", "F", "TID251", "UP", "RUF022", "SIM105", "B"]
 # seam (overridden in tests), not the mutable-default footgun the rule targets.
 ignore = ["B008"]
 
-[tool.ruff.lint.per-file-ignores]
-# Test closures (mock side_effects / capture helpers) are invoked synchronously within
-# their loop iteration, so the loop-variable binding warning is a false positive here.
-"tests/**" = ["B023"]
-
 [tool.ruff.lint.flake8-tidy-imports.banned-api]
 "paper_fetch.providers._article_markdown".msg = "Removed compatibility module; import the canonical provider or extraction owner instead."
 "paper_fetch.providers._html_access_signals".msg = "Removed compatibility module; import paper_fetch.extraction.html.signals or paper_fetch.quality owners instead."
@@ -108,19 +103,35 @@ files = [
   "src/paper_fetch/extraction/markdown_render",
   "src/paper_fetch/extraction/citation_anchors.py",
   "src/paper_fetch/extraction/section_hints.py",
+  "src/paper_fetch/_cloakbrowser_runtime.py",
   "src/paper_fetch/artifacts.py",
+  "src/paper_fetch/config.py",
+  "src/paper_fetch/runtime.py",
+  "src/paper_fetch/runtime_browser.py",
   "src/paper_fetch/tracing.py",
   "src/paper_fetch/reason_codes.py",
   "src/paper_fetch/arxiv_id.py",
+  "src/paper_fetch/formula/__init__.py",
+  "src/paper_fetch/formula/convert.py",
+  "src/paper_fetch/formula/paths.py",
   "src/paper_fetch/image_tools/convert.py",
   "src/paper_fetch/normalize_journal_name.py",
   "src/paper_fetch/section_vocab.py",
   "src/paper_fetch/logging_utils.py",
   "src/paper_fetch/publisher_identity.py",
   "src/paper_fetch/provider_catalog.py",
+  "src/paper_fetch/quality",
   "src/paper_fetch/providers/__init__.py",
   "src/paper_fetch/providers/base.py",
   "src/paper_fetch/providers/protocols.py",
+  "src/paper_fetch/providers/registry.py",
+  "src/paper_fetch/providers/_registry.py",
+  "src/paper_fetch/providers/_waterfall.py",
+  "src/paper_fetch/providers/_asset_retry.py",
+  "src/paper_fetch/providers/_pdf_candidates.py",
+  "src/paper_fetch/providers/_pdf_common.py",
+  "src/paper_fetch/providers/_pdf_fallback.py",
+  "src/paper_fetch/providers/browser_runtime",
   "src/paper_fetch/providers/browser_workflow",
   "src/paper_fetch/providers/atypon_browser_workflow",
   "src/paper_fetch/providers/copernicus.py",
@@ -133,7 +144,11 @@ files = [
 ]
 check_untyped_defs = true
 ignore_missing_imports = true
+no_site_packages = true
 warn_unused_ignores = true
+
+[tool.coverage.report]
+fail_under = 40
 
 [tool.pytest.ini_options]
 addopts = "-n auto"

@@ -64,6 +64,28 @@ def is_mathjax_tex_node(node: Any) -> bool:
     return bool(normalized_classes & {"mathjax-tex", "tex", "tex2jax_ignore"})
 
 
+def _class_tokens(node: Any) -> set[str]:
+    if not isinstance(node, Tag):
+        return set()
+    classes = getattr(node, "attrs", {}).get("class") or []
+    if isinstance(classes, str):
+        values = classes.split()
+    else:
+        values = [str(value) for value in classes]
+    return {normalize_text(value).lower() for value in values if normalize_text(value)}
+
+
+def _is_inline_tex_formula_container(node: Any) -> bool:
+    classes = _class_tokens(node)
+    if not classes & {"inline-equation", "inline-eqn"}:
+        return False
+    if classes & {"display-equation", "display-eqn", "display-formula", "disp-formula"}:
+        return False
+    return isinstance(node, Tag) and any(
+        is_tex_formula_script_node(script) for script in node.find_all("script")
+    )
+
+
 def normalize_tex_formula_text(value: str | None) -> str:
     text = str(value or "").strip()
     if not text:
@@ -83,6 +105,29 @@ def normalize_tex_formula_text(value: str | None) -> str:
             latex = normalize_latex(text[len(opener) : -len(closer)].strip())
             return f"{opener}{latex}{closer}" if latex else ""
     return normalize_latex(text)
+
+
+def _is_delimited_inline_latex(value: str) -> bool:
+    text = normalize_text(value)
+    delimiter_pairs = (
+        ("$$", "$$"),
+        (r"\(", r"\)"),
+        (r"\[", r"\]"),
+        ("$", "$"),
+    )
+    return any(
+        text.startswith(opener)
+        and text.endswith(closer)
+        and len(text) > len(opener) + len(closer)
+        for opener, closer in delimiter_pairs
+    )
+
+
+def render_inline_latex_markdown(value: str | None) -> str:
+    latex = normalize_text(value)
+    if not latex:
+        return ""
+    return latex if _is_delimited_inline_latex(latex) else f"${latex}$"
 
 
 def html_formula_latex_from_node(node: Any) -> str:
@@ -165,8 +210,13 @@ def render_html_formula_container(node: Any) -> str:
         return mathml
     latex = html_formula_latex_from_node(node)
     if latex:
+        display_mode = is_html_display_formula_node(
+            node
+        ) and not _is_inline_tex_formula_container(node)
         return (
-            f"\n\n$$\n{latex}\n$$\n\n" if is_html_display_formula_node(node) else latex
+            f"\n\n$$\n{latex}\n$$\n\n"
+            if display_mode
+            else render_inline_latex_markdown(latex)
         )
     image_url = first_html_formula_image_url(node)
     if image_url:

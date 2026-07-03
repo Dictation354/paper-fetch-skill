@@ -10,16 +10,28 @@ from typing_extensions import TypedDict
 class ResolvedCandidateOutput(TypedDict, total=False):
     doi: str | None
     title: str | None
+    authors: list[str]
     journal_title: str | None
     published: str | None
     landing_page_url: str | None
     provider_hint: str | None
     score: float
+    title_score: float
+    author_score: float
+    year_score: float
 
 
 class ErrorPayloadOutput(TypedDict, total=False):
+    schema_version: int
     status: str
     reason: str
+    code: str | None
+    http_status: int | None
+    error_category: str | None
+    retry_after_seconds: int | None
+    provider: str | None
+    warnings: list[str]
+    source_trail: list[str]
     candidates: list[ResolvedCandidateOutput] | None
     missing_env: list[str] | None
 
@@ -39,7 +51,6 @@ class HasFulltextOutput(ErrorPayloadOutput, total=False):
     doi: str | None
     state: str
     evidence: list[str]
-    warnings: list[str]
 
 
 class MetadataOutput(TypedDict, total=False):
@@ -170,8 +181,6 @@ class FetchPaperOutput(ErrorPayloadOutput, total=False):
     has_fulltext: bool
     content_kind: str
     has_abstract: bool
-    warnings: list[str]
-    source_trail: list[str]
     trace: list[TraceEventOutput]
     token_estimate: int
     token_estimate_breakdown: TokenEstimateBreakdownOutput
@@ -201,6 +210,11 @@ class PreferredCacheEntriesOutput(TypedDict, total=False):
 class ListCachedOutput(ErrorPayloadOutput, total=False):
     download_dir: str | None
     entries: list[CacheEntryOutput]
+    cache_mode: str
+    index_status: str
+    index_version: int | str | None
+    expected_index_version: int | None
+    index_reason: str | None
 
 
 class GetCachedOutput(ErrorPayloadOutput, total=False):
@@ -208,6 +222,11 @@ class GetCachedOutput(ErrorPayloadOutput, total=False):
     download_dir: str | None
     entries: list[CacheEntryOutput]
     preferred: PreferredCacheEntriesOutput
+    cache_mode: str
+    index_status: str
+    index_version: int | str | None
+    expected_index_version: int | None
+    index_reason: str | None
 
 
 class BatchResolveOutput(ErrorPayloadOutput, total=False):
@@ -224,8 +243,6 @@ class BatchCheckItemOutput(ErrorPayloadOutput, total=False):
     has_fulltext: bool | None
     content_kind: str | None
     has_abstract: bool | None
-    warnings: list[str]
-    source_trail: list[str]
     trace: list[TraceEventOutput]
     token_estimate: int | None
     token_estimate_breakdown: TokenEstimateBreakdownOutput | None

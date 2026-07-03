@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 from pathlib import Path
 import sys
 import threading
@@ -16,11 +17,19 @@ from paper_fetch.providers import (
     _pdf_common,
     _pdf_fallback,
 )
+from paper_fetch.providers.browser_workflow import pdf_fallback as browser_pdf_fallback
 from paper_fetch.runtime import RuntimeContext
+from tests.unit._browser_workflow_deps import browser_workflow_deps
 from tests.unit._paper_fetch_support import RecordingTransport
 
 
 class PdfFallbackHelperTests(unittest.TestCase):
+    def setUp(self) -> None:
+        _pdf_common._clear_pdf_markdown_render_cache()
+
+    def tearDown(self) -> None:
+        _pdf_common._clear_pdf_markdown_render_cache()
+
     def test_sanitize_storage_state_uses_shared_cloudflare_cookie_tokens(self) -> None:
         self.assertIs(
             _pdf_common.CLOUDFLARE_COOKIE_NAMES,
@@ -55,6 +64,71 @@ class PdfFallbackHelperTests(unittest.TestCase):
                 sanitized_path.unlink(missing_ok=True)
 
         self.assertEqual(sanitized["cookies"], [{"name": "session", "value": "kept"}])
+
+    def test_seeded_browser_pdf_payload_uses_lightweight_warm_and_skips_seed_when_cookie_seeded(
+        self,
+    ) -> None:
+        pdf_url = "https://example.test/article.pdf"
+        article_url = "https://example.test/article"
+        warmed_seed = {
+            "browser_cookies": [
+                {
+                    "name": "sessionid",
+                    "value": "warm",
+                    "domain": ".example.test",
+                    "path": "/",
+                }
+            ],
+            "browser_user_agent": "UnitTest/1.0",
+            "browser_final_url": article_url,
+        }
+        mocked_warm = mock.Mock(return_value=warmed_seed)
+        mocked_fetch_pdf = mock.Mock(
+            return_value=_pdf_common.PdfFetchResult(
+                source_url=pdf_url,
+                final_url=pdf_url,
+                pdf_bytes=b"%PDF-1.7 browser",
+                markdown_text="# PDF\n\nBody",
+                suggested_filename="article.pdf",
+            )
+        )
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            runtime = types.SimpleNamespace(
+                artifact_dir=Path(tmpdir),
+                headless=True,
+                user_agent="UnitTest/1.0",
+                storage_state_path=None,
+                profile_dir=None,
+                user_data_dir=None,
+            )
+            payload = browser_pdf_fallback.fetch_seeded_browser_pdf_payload(
+                provider="wiley",
+                doi="10.1000/example",
+                runtime=runtime,
+                pdf_candidates=[pdf_url],
+                html_candidates=[article_url],
+                landing_page_url=article_url,
+                user_agent="UnitTest/1.0",
+                browser_context_seed={},
+                html_failure_reason="html_blocked",
+                html_failure_message="HTML blocked",
+                deps=browser_workflow_deps(
+                    pdf_browser_context_seed=mocked_warm,
+                    fetch_pdf_with_browser=mocked_fetch_pdf,
+                ),
+            )
+
+        self.assertEqual(payload.content.route_kind, "pdf_fallback")
+        mocked_warm.assert_called_once()
+        self.assertTrue(mocked_warm.call_args.kwargs["lightweight"])
+        mocked_fetch_pdf.assert_called_once()
+        self.assertEqual(mocked_fetch_pdf.call_args.kwargs["referer"], article_url)
+        self.assertIsNone(mocked_fetch_pdf.call_args.kwargs["seed_urls"])
+        self.assertEqual(
+            mocked_fetch_pdf.call_args.kwargs["browser_cookies"],
+            warmed_seed["browser_cookies"],
+        )
 
     def test_pdf_fallback_strategy_delegates_http_fetch_options(self) -> None:
         calls: list[dict[str, object]] = []
@@ -816,6 +890,49 @@ class PdfFallbackHelperTests(unittest.TestCase):
         self.assertEqual(result, "## Results\n\nExtracted PDF body.")
         self.assertEqual(calls[0]["errors"], "replace")
 
+    def test_default_pdf_markdown_subprocess_patch_only_mutates_owner_thread(
+        self,
+    ) -> None:
+        calls: list[tuple[str, dict[str, object]]] = []
+        owner_entered = threading.Event()
+        release_owner = threading.Event()
+
+        def fake_run(*args, **kwargs):
+            label = str(args[0][0])
+            calls.append((label, dict(kwargs)))
+            return mock.Mock(returncode=1, stdout="", stderr="")
+
+        def fake_to_markdown(path: str) -> str:
+            self.assertEqual(path, "sample.pdf")
+            _pdf_common.subprocess.run(["owner"], text=True)
+            owner_entered.set()
+            self.assertTrue(release_owner.wait(timeout=5))
+            return "# Example\n\n" + ("owner body " * 140)
+
+        fake_pymupdf4llm = types.SimpleNamespace(to_markdown=fake_to_markdown)
+        result_holder: list[str] = []
+
+        with (
+            mock.patch.dict(sys.modules, {"pymupdf4llm": fake_pymupdf4llm}),
+            mock.patch.object(_pdf_common.subprocess, "run", side_effect=fake_run),
+        ):
+            worker = threading.Thread(
+                target=lambda: result_holder.append(
+                    _pdf_common._render_default_pdf_markdown(Path("sample.pdf"))
+                )
+            )
+            worker.start()
+            self.assertTrue(owner_entered.wait(timeout=5))
+            _pdf_common.subprocess.run(["other"], text=True)
+            release_owner.set()
+            worker.join(timeout=5)
+
+        self.assertFalse(worker.is_alive())
+        self.assertEqual(len(result_holder), 1)
+        kwargs_by_label = {label: kwargs for label, kwargs in calls}
+        self.assertEqual(kwargs_by_label["owner"]["errors"], "replace")
+        self.assertNotIn("errors", kwargs_by_label["other"])
+
     def test_render_pdf_markdown_result_does_not_write_images_for_asset_profile_none(
         self,
     ) -> None:
@@ -841,6 +958,87 @@ class PdfFallbackHelperTests(unittest.TestCase):
 
         self.assertEqual(calls, [{}])
         self.assertEqual(result.assets, [])
+
+    def test_pdf_fetch_result_from_bytes_reuses_cached_markdown_for_same_pdf(
+        self,
+    ) -> None:
+        calls: list[str] = []
+
+        def fake_to_markdown(path: str, **kwargs) -> str:
+            calls.append(path)
+            self.assertEqual(kwargs, {})
+            return "# Example\n\n" + ("cached body text " * 140)
+
+        fake_pymupdf4llm = types.SimpleNamespace(to_markdown=fake_to_markdown)
+        pdf_bytes = b"%PDF-1.7 cached bytes"
+
+        with (
+            mock.patch.dict(sys.modules, {"pymupdf4llm": fake_pymupdf4llm}),
+            mock.patch.object(_pdf_common, "_pdf_page_count", return_value=3),
+        ):
+            first = _pdf_common.pdf_fetch_result_from_bytes(
+                artifact_dir=None,
+                source_url="https://example.org/one.pdf",
+                final_url="https://example.org/one.pdf",
+                pdf_bytes=pdf_bytes,
+                suggested_filename="one.pdf",
+            )
+            second = _pdf_common.pdf_fetch_result_from_bytes(
+                artifact_dir=None,
+                source_url="https://example.org/two.pdf",
+                final_url="https://example.org/two.pdf",
+                pdf_bytes=pdf_bytes,
+                suggested_filename="two.pdf",
+            )
+
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(first.markdown_text, second.markdown_text)
+        self.assertEqual(first.diagnostics["pdf_markdown_cache"]["status"], "miss")
+        self.assertEqual(second.diagnostics["pdf_markdown_cache"]["status"], "hit")
+        self.assertEqual(second.diagnostics["pdf_pages"], 3)
+        self.assertEqual(second.diagnostics["pdf_bytes"], len(pdf_bytes))
+
+    def test_pdf_fetch_result_from_bytes_rejects_pdf_larger_than_guard(self) -> None:
+        with (
+            mock.patch.dict(os.environ, {"PAPER_FETCH_PDF_MAX_BYTES": "8"}),
+            mock.patch.object(
+                _pdf_common, "render_pdf_markdown_result"
+            ) as mocked_render,
+        ):
+            with self.assertRaises(_pdf_common.PdfFetchFailure) as ctx:
+                _pdf_common.pdf_fetch_result_from_bytes(
+                    artifact_dir=None,
+                    source_url="https://example.org/large.pdf",
+                    final_url="https://example.org/large.pdf",
+                    pdf_bytes=b"%PDF-1.7 large payload",
+                )
+
+        self.assertEqual(ctx.exception.kind, "pdf_too_large")
+        self.assertEqual(ctx.exception.details["max_pdf_bytes"], 8)
+        mocked_render.assert_not_called()
+
+    def test_pdf_fetch_result_from_bytes_rejects_too_many_pages_before_render(
+        self,
+    ) -> None:
+        with (
+            mock.patch.dict(os.environ, {"PAPER_FETCH_PDF_MAX_PAGES": "2"}),
+            mock.patch.object(_pdf_common, "_pdf_page_count", return_value=3),
+            mock.patch.object(
+                _pdf_common, "render_pdf_markdown_result"
+            ) as mocked_render,
+        ):
+            with self.assertRaises(_pdf_common.PdfFetchFailure) as ctx:
+                _pdf_common.pdf_fetch_result_from_bytes(
+                    artifact_dir=None,
+                    source_url="https://example.org/long.pdf",
+                    final_url="https://example.org/long.pdf",
+                    pdf_bytes=b"%PDF-1.7 long payload",
+                )
+
+        self.assertEqual(ctx.exception.kind, "pdf_too_many_pages")
+        self.assertEqual(ctx.exception.details["pdf_pages"], 3)
+        self.assertEqual(ctx.exception.details["max_pdf_pages"], 2)
+        mocked_render.assert_not_called()
 
     def test_pdf_asset_output_dir_uses_doi_asset_dir_when_available(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

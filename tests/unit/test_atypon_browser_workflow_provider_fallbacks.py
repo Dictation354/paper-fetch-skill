@@ -80,9 +80,10 @@ class AtyponBrowserWorkflowProviderFallbackTests(AtyponBrowserWorkflowProviderTe
             mocked_pdf.call_args.kwargs["browser_cookies"],
             [seed["browser_cookies"][0], preflight_seed["browser_cookies"][0]],
         )
+        self.assertTrue(mocked_warm.call_args.kwargs["lightweight"])
+        self.assertIsNone(mocked_pdf.call_args.kwargs["seed_urls"])
         self.assertEqual(
-            mocked_pdf.call_args.kwargs["seed_urls"],
-            [SCIENCE_SAMPLE.landing_url],
+            mocked_pdf.call_args.kwargs["referer"], SCIENCE_SAMPLE.landing_url
         )
         self.assertTrue(mocked_pdf.call_args.kwargs["allow_pdf_only"])
         self.assertIn(
@@ -767,8 +768,10 @@ class AtyponBrowserWorkflowProviderFallbackTests(AtyponBrowserWorkflowProviderTe
             kwargs["browser_cookies"],
             [seed["browser_cookies"][0], preflight_seed["browser_cookies"][0]],
         )
+        self.assertTrue(mocked_warm.call_args.kwargs["lightweight"])
+        self.assertIsNone(kwargs["seed_urls"])
         self.assertEqual(
-            kwargs["seed_urls"], [f"https://www.pnas.org/doi/{PNAS_SAMPLE.doi}"]
+            kwargs["referer"], f"https://www.pnas.org/doi/{PNAS_SAMPLE.doi}"
         )
         self.assertEqual(
             list(mocked_pdf.call_args.args[0])[:3],

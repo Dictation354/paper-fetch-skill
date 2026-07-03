@@ -25,6 +25,16 @@ $McpEnvKeys = @(
     "MATHML_TO_LATEX_NODE_BIN",
     "CLOAKBROWSER_HEADLESS"
 )
+$OfflineEnvKeys = @(
+    "PAPER_FETCH_DOWNLOAD_DIR",
+    "PAPER_FETCH_FORMULA_TOOLS_DIR",
+    "PAPER_FETCH_IMAGE_TOOLS_DIR",
+    "MATHML_TO_LATEX_NODE_BIN",
+    "CLOAKBROWSER_HEADLESS",
+    "PYTHONUTF8",
+    "PYTHONIOENCODING",
+    "PAPER_FETCH_BROWSER_USER_AGENT"
+)
 $InstallerWarnings = New-Object System.Collections.Generic.List[string]
 
 if ([string]::IsNullOrWhiteSpace($InstallRoot)) {
@@ -46,6 +56,9 @@ function Import-InstallerManifest {
     $script:CodexManagedBegin = [string]$manifest.managed_blocks.codex.begin
     $script:CodexManagedEnd = [string]$manifest.managed_blocks.codex.end
     $script:McpEnvKeys = @($manifest.mcp.env_keys | ForEach-Object { [string]$_ })
+    if ($null -ne $manifest.env_sets -and $null -ne $manifest.env_sets.offline_env_keys) {
+        $script:OfflineEnvKeys = @($manifest.env_sets.offline_env_keys | ForEach-Object { [string]$_ })
+    }
     Normalize-McpEnvKeys
 
     if ([string]::IsNullOrWhiteSpace($script:SkillName) -or
@@ -54,7 +67,8 @@ function Import-InstallerManifest {
         [string]::IsNullOrWhiteSpace($script:OfflineManagedEnd) -or
         [string]::IsNullOrWhiteSpace($script:CodexManagedBegin) -or
         [string]::IsNullOrWhiteSpace($script:CodexManagedEnd) -or
-        $script:McpEnvKeys.Count -eq 0) {
+        $script:McpEnvKeys.Count -eq 0 -or
+        $script:OfflineEnvKeys.Count -eq 0) {
         throw "installer manifest is missing required installer constants."
     }
 }
@@ -184,10 +198,20 @@ function Quote-DotenvValue {
     return "'$escaped'"
 }
 
+function Quote-DotenvString {
+    param([string]$Value)
+    $escaped = $Value.Replace("'", "\'")
+    return "'$escaped'"
+}
+
 function ConvertTo-TomlString {
     param([string]$Value)
     $escaped = $Value.Replace("\", "\\").Replace('"', '\"')
     return '"' + $escaped + '"'
+}
+
+function Get-BrowserUserAgent {
+    return "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36"
 }
 
 function Get-McpEnv {
@@ -222,6 +246,29 @@ function Set-ProcessRuntimeEnv {
     }
 }
 
+function Get-OfflineEnvValue {
+    param([string]$Name)
+
+    if ($Name -eq "PAPER_FETCH_BROWSER_USER_AGENT") {
+        return (Get-BrowserUserAgent)
+    }
+
+    $envMap = Get-McpEnv
+    if (-not $envMap.Contains($Name)) {
+        throw "Unknown offline env key in installer manifest: $Name"
+    }
+    return [string]$envMap[$Name]
+}
+
+function Format-DotenvAssignment {
+    param([string]$Name, [string]$Value)
+
+    if ($Name -in @("PYTHONUTF8", "PYTHONIOENCODING", "CLOAKBROWSER_HEADLESS", "PAPER_FETCH_BROWSER_USER_AGENT")) {
+        return "$Name=$(Quote-DotenvString $Value)"
+    }
+    return "$Name=$(Quote-DotenvValue $Value)"
+}
+
 function Remove-ManagedEnvBlock {
     param([string[]]$Lines)
 
@@ -245,7 +292,6 @@ function Remove-ManagedEnvBlock {
 
 function Write-ManagedEnvFile {
     $target = Join-Path $InstallRoot "offline.env"
-    $envMap = Get-McpEnv
     $lines = New-Object System.Collections.Generic.List[string]
     if (Test-Path -LiteralPath $target -PathType Leaf) {
         $existing = Get-Content -LiteralPath $target
@@ -261,23 +307,10 @@ function Write-ManagedEnvFile {
     }
     $lines.Add("")
     $lines.Add($OfflineManagedBegin)
-    foreach ($name in @(
-        "PAPER_FETCH_DOWNLOAD_DIR",
-        "PAPER_FETCH_FORMULA_TOOLS_DIR",
-        "PAPER_FETCH_IMAGE_TOOLS_DIR",
-        "MATHML_TO_LATEX_NODE_BIN",
-        "CLOAKBROWSER_HEADLESS",
-        "PYTHONUTF8",
-        "PYTHONIOENCODING"
-    )) {
-        $value = [string]$envMap[$name]
-        if ($name -in @("PYTHONUTF8", "PYTHONIOENCODING", "CLOAKBROWSER_HEADLESS")) {
-            $lines.Add("$name='$value'")
-        } else {
-            $lines.Add("$name=$(Quote-DotenvValue $value)")
-        }
+    foreach ($name in $OfflineEnvKeys) {
+        $value = [string](Get-OfflineEnvValue $name)
+        $lines.Add((Format-DotenvAssignment -Name $name -Value $value))
     }
-    $lines.Add("PAPER_FETCH_BROWSER_USER_AGENT='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36'")
     $lines.Add("# Optional: connect to an already-running Chrome/CloakBrowser CDP endpoint.")
     $lines.Add("# CLOAKBROWSER_CDP_ENDPOINT='ws://127.0.0.1:9222/devtools/browser/...'")
     $lines.Add("# Optional: use a preinstalled Chrome/CloakBrowser binary instead of cloakbrowser download.")

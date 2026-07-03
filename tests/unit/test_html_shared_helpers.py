@@ -445,18 +445,43 @@ class SharedHtmlHelperTests(unittest.TestCase):
             is_html_figure_container(soup.select_one(".figure-links-panel"))
         )
 
-    def test_formula_image_url_signal_precedes_figure_context_exclusion(self) -> None:
+    def test_figure_context_precedes_formula_image_url_signal(self) -> None:
         soup = BeautifulSoup(
             """
-<figure>
-  <img src="//media.springernature.com/lw14/springer-static/image/art%3A10.1038%2Fnature13376/MediaObjects/41586_2014_BFnature13376_IEq3_HTML.jpg"
-       alt="Equation 3" />
+<figure id="fig-equation-overview">
+  <img src="/images/system-equation-overview.png" alt="Calculated by Equation 3." />
+  <figcaption>Figure 1. System overview with equation labels.</figcaption>
 </figure>
 """,
             "html.parser",
         )
+        html = str(soup)
 
-        self.assertTrue(looks_like_formula_image(soup.select_one("img")))
+        self.assertFalse(looks_like_formula_image(soup.select_one("img")))
+        self.assertEqual(
+            [
+                asset["kind"]
+                for asset in html_assets.extract_figure_assets(
+                    html, "https://example.test/article"
+                )
+            ],
+            ["figure"],
+        )
+        self.assertEqual(
+            html_assets.extract_formula_assets(html, "https://example.test/article"),
+            [],
+        )
+        self.assertEqual(
+            [
+                asset["kind"]
+                for asset in html_assets.extract_scoped_html_assets(
+                    html,
+                    "https://example.test/article",
+                    asset_profile="body",
+                )
+            ],
+            ["figure"],
+        )
 
     def test_extract_figure_assets_reads_multi_image_multi_caption_figure_blocks(
         self,
@@ -1512,6 +1537,45 @@ class SharedHtmlHelperTests(unittest.TestCase):
         self.assertEqual(calls, [cleaned_html])
         self.assertIn("Fallback body text remains.", markdown)
 
+    def test_extract_article_markdown_falls_back_without_trafilatura(self) -> None:
+        """rule: rule-html-byte-decoding-and-cleanup-bounds"""
+        original_import_module = html_runtime.importlib.import_module
+        original_trafilatura = html_runtime.trafilatura
+
+        def import_without_trafilatura(name: str, *args, **kwargs):
+            if name == "trafilatura":
+                raise ImportError("missing trafilatura")
+            return original_import_module(name, *args, **kwargs)
+
+        html = """
+<html>
+  <body>
+    <article>
+      <h1>Fallback Article</h1>
+      <p>Fallback body text remains readable.</p>
+    </article>
+  </body>
+</html>
+"""
+
+        html_runtime._import_trafilatura.cache_clear()
+        try:
+            html_runtime.trafilatura = html_runtime._TRAFILATURA_UNSET
+            with mock.patch.object(
+                html_runtime.importlib,
+                "import_module",
+                side_effect=import_without_trafilatura,
+            ):
+                markdown = html_runtime.extract_article_markdown(
+                    html, "https://example.test/article"
+                )
+        finally:
+            html_runtime.trafilatura = original_trafilatura
+            html_runtime._import_trafilatura.cache_clear()
+
+        self.assertIn("# Fallback Article", markdown)
+        self.assertIn("Fallback body text remains readable.", markdown)
+
     def test_orcid_href_pattern_is_module_constant_used_by_pruning(self) -> None:
         """rule: rule-html-byte-decoding-and-cleanup-bounds"""
         self.assertIsNotNone(
@@ -2083,6 +2147,31 @@ Learn more
         self.assertTrue(pipe_lines)
         self.assertEqual({line.count("|") for line in pipe_lines}, {6})
 
+    def test_table_markdown_escapes_edge_cells_and_pads_ragged_rows(self) -> None:
+        soup = BeautifulSoup(
+            """
+<table>
+  <thead><tr><th>Name</th><th>Value|Unit</th></tr></thead>
+  <tbody>
+    <tr><td>A|B</td><td>first<br/>second</td></tr>
+    <tr><td>ragged</td><td></td></tr>
+  </tbody>
+</table>
+""",
+            "html.parser",
+        )
+
+        markdown = render_table_markdown(soup.table, label="", caption="")
+        pipe_lines = [line for line in markdown.splitlines() if line.startswith("|")]
+
+        self.assertIn(r"Value\|Unit", markdown)
+        self.assertIn(r"A\|B", markdown)
+        self.assertIn("first<br>second", markdown)
+        self.assertTrue(pipe_lines)
+        self.assertEqual(
+            {line.replace(r"\|", "").count("|") for line in pipe_lines}, {3}
+        )
+
     def test_table_header_flattening_preserves_distinguishing_group_spanners(
         self,
     ) -> None:
@@ -2175,6 +2264,18 @@ Learn more
             render_inline_text=render_clean_text_from_html,
         )
         self.assertIn("s + 1", table_markdown)
+
+    def test_inline_tex_formula_container_renders_with_math_delimiters(self) -> None:
+        soup = BeautifulSoup(
+            """
+<p>Let <span class="inline-equation"><script type="math/tex">x+y</script></span> stay inline.</p>
+""",
+            "html.parser",
+        )
+
+        body_text = render_clean_text_from_html(soup.p)
+
+        self.assertEqual(body_text, "Let $x+y$ stay inline.")
 
     def test_formula_rules_detect_real_formula_image_urls(self) -> None:
         """rule: rule-preserve-formula-image-fallbacks"""

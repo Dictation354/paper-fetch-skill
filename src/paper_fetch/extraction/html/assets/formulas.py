@@ -29,10 +29,10 @@ def _looks_like_formula_image(
     *,
     noise_profile: str | None = None,
 ) -> bool:
-    if FORMULA_IMAGE_URL_PATTERN.search(url):
-        return True
     if html_node_is_figure_asset_context(tag, noise_profile=noise_profile):
         return False
+    if FORMULA_IMAGE_URL_PATTERN.search(url):
+        return True
     if looks_like_formula_image(tag, url, noise_profile=noise_profile):
         return True
     if not isinstance(tag, Tag):

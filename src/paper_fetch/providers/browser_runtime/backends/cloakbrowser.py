@@ -136,6 +136,7 @@ class CloakBrowserBackend:
         config: BrowserRuntimeConfig,
         browser_context_seed: Mapping[str, Any] | None = None,
         runtime_context: Any | None = None,
+        lightweight: bool = False,
     ) -> dict[str, Any]:
         return _cloakbrowser.warm_browser_context_with_cloakbrowser(
             candidate_urls,
@@ -143,6 +144,7 @@ class CloakBrowserBackend:
             config=config,
             browser_context_seed=browser_context_seed,
             runtime_context=runtime_context,
+            lightweight=lightweight,
         )
 
     def storage_state_path(self, config: BrowserRuntimeConfig):

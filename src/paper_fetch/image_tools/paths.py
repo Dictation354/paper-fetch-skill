@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import shutil
+from functools import lru_cache
 from pathlib import Path
 from collections.abc import Mapping
 
@@ -14,6 +15,24 @@ IMAGE_TOOL_TIMEOUT_SECONDS_ENV_VAR = "PAPER_FETCH_IMAGE_TOOL_TIMEOUT_SECONDS"
 DEFAULT_IMAGE_TOOL_TIMEOUT_SECONDS = 120
 GHOSTSCRIPT_EXECUTABLE_NAMES = ("gs", "gswin64c.exe", "gswin32c.exe", "gs.exe")
 VIPS_EXECUTABLE_NAMES = ("vips", "vips.exe")
+_IMAGE_TOOL_CANDIDATE_CACHE_SIZE = 64
+
+
+def _env_text(env: Mapping[str, str], name: str) -> str:
+    return str(env.get(name) or "")
+
+
+def _path_fingerprint(path: Path) -> tuple[str, bool, int, int]:
+    try:
+        stat_result = path.stat()
+    except OSError:
+        return (str(path), False, 0, 0)
+    return (
+        str(path),
+        True,
+        int(stat_result.st_mtime_ns),
+        int(stat_result.st_size),
+    )
 
 
 def normalize_optional_path(value: str | os.PathLike[str] | None) -> Path | None:
@@ -100,48 +119,83 @@ def _subpath_candidates(root: Path, names: tuple[str, ...]) -> list[Path]:
     return candidates
 
 
-def ghostscript_binary_candidates(env: Mapping[str, str] | None = None) -> list[Path]:
-    active_env = env or os.environ
+@lru_cache(maxsize=_IMAGE_TOOL_CANDIDATE_CACHE_SIZE)
+def _binary_candidates_cached(
+    cache_key: tuple[object, ...],
+    *,
+    configured: str,
+    roots: tuple[str, ...],
+    names: tuple[str, ...],
+    path: str | None,
+) -> tuple[str, ...]:
+    del cache_key
     candidates: list[Path] = []
+    if configured:
+        candidates.append(Path(configured))
 
-    configured = normalize_optional_path(active_env.get("PAPER_FETCH_GHOSTSCRIPT_BIN"))
-    if configured is not None:
-        candidates.append(configured)
-
-    for root in image_tools_search_dirs(active_env):
-        for candidate in _subpath_candidates(root, GHOSTSCRIPT_EXECUTABLE_NAMES):
+    for root_text in roots:
+        for candidate in _subpath_candidates(Path(root_text), names):
             if candidate not in candidates:
                 candidates.append(candidate)
 
-    for name in GHOSTSCRIPT_EXECUTABLE_NAMES:
-        system = shutil.which(name)
+    for name in names:
+        system = shutil.which(name, path=path)
         if system:
             candidate = Path(system)
             if candidate not in candidates:
                 candidates.append(candidate)
-    return candidates
+    return tuple(str(candidate) for candidate in candidates)
+
+
+def _binary_candidates(
+    *,
+    env: Mapping[str, str] | None,
+    configured_env_name: str,
+    names: tuple[str, ...],
+) -> list[Path]:
+    active_env = env or os.environ
+    configured = normalize_optional_path(active_env.get(configured_env_name))
+    roots = tuple(image_tools_search_dirs(active_env))
+    path_value = active_env.get("PATH")
+    cache_key = (
+        configured_env_name,
+        tuple(names),
+        str(configured or ""),
+        _env_text(active_env, IMAGE_TOOLS_DIR_ENV_VAR),
+        _env_text(active_env, "XDG_DATA_HOME"),
+        _env_text(active_env, "PATH"),
+        tuple(_path_fingerprint(root) for root in roots),
+    )
+    return [
+        Path(candidate)
+        for candidate in _binary_candidates_cached(
+            cache_key,
+            configured=str(configured or ""),
+            roots=tuple(str(root) for root in roots),
+            names=names,
+            path=path_value,
+        )
+    ]
+
+
+def _clear_image_tool_path_caches() -> None:
+    _binary_candidates_cached.cache_clear()
+
+
+def ghostscript_binary_candidates(env: Mapping[str, str] | None = None) -> list[Path]:
+    return _binary_candidates(
+        env=env,
+        configured_env_name="PAPER_FETCH_GHOSTSCRIPT_BIN",
+        names=GHOSTSCRIPT_EXECUTABLE_NAMES,
+    )
 
 
 def vips_binary_candidates(env: Mapping[str, str] | None = None) -> list[Path]:
-    active_env = env or os.environ
-    candidates: list[Path] = []
-
-    configured = normalize_optional_path(active_env.get("PAPER_FETCH_VIPS_BIN"))
-    if configured is not None:
-        candidates.append(configured)
-
-    for root in image_tools_search_dirs(active_env):
-        for candidate in _subpath_candidates(root, VIPS_EXECUTABLE_NAMES):
-            if candidate not in candidates:
-                candidates.append(candidate)
-
-    for name in VIPS_EXECUTABLE_NAMES:
-        system = shutil.which(name)
-        if system:
-            candidate = Path(system)
-            if candidate not in candidates:
-                candidates.append(candidate)
-    return candidates
+    return _binary_candidates(
+        env=env,
+        configured_env_name="PAPER_FETCH_VIPS_BIN",
+        names=VIPS_EXECUTABLE_NAMES,
+    )
 
 
 __all__ = [

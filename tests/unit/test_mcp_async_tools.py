@@ -240,6 +240,48 @@ class McpAsyncToolTests(unittest.IsolatedAsyncioTestCase):
             )
         )
 
+    async def test_batch_resolve_tool_async_aborts_with_retry_after_details(
+        self,
+    ) -> None:
+        ctx = FakeContext()
+        seen_queries: list[str] = []
+
+        def fake_resolve(query, *, context=None):
+            seen_queries.append(query)
+            if query == "10.1000/two":
+                raise ProviderFailure(
+                    "rate_limited",
+                    "Slow down.",
+                    retry_after_seconds=5,
+                )
+            return sample_resolved_query(query)
+
+        with mock.patch.object(
+            mcp_tools, "service_resolve_paper", side_effect=fake_resolve
+        ):
+            result = await mcp_tools.batch_resolve_tool_async(
+                queries=["10.1000/one", "10.1000/two", "10.1000/three"],
+                concurrency=1,
+                ctx=ctx,
+            )
+
+        self.assertFalse(result.isError)
+        self.assertEqual(result.structuredContent["schema_version"], 1)
+        self.assertTrue(result.structuredContent["aborted"])
+        self.assertEqual(
+            result.structuredContent["abort_reason"]["status"], "rate_limited"
+        )
+        self.assertEqual(
+            result.structuredContent["abort_reason"]["code"], "rate_limited"
+        )
+        self.assertEqual(
+            result.structuredContent["abort_reason"]["retry_after_seconds"], 5
+        )
+        self.assertEqual(seen_queries, ["10.1000/one", "10.1000/two"])
+        self.assertEqual(
+            ctx.progress[-1], (3, 3, "batch_resolve stopped after rate limit")
+        )
+
     async def test_batch_resolve_tool_async_rejects_too_many_queries(self) -> None:
         result = await mcp_tools.batch_resolve_tool_async(
             queries=[f"10.1000/{index}" for index in range(51)],

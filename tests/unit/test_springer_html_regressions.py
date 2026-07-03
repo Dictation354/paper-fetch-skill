@@ -1231,7 +1231,7 @@ class SpringerHtmlRegressionTests(unittest.TestCase):
             "https://www.nature.com/articles/s41561-022-00912-7",
         )
 
-        self.assertIn("s(s + 1)", markdown)
+        self.assertIn("$s(s + 1)$", markdown)
         self.assertRegex(
             markdown,
             r"\$\$F_\{crit\} = \\sum\\limits_\{t_\{p\}\}\^\{SOS_\{y0\}\}\s*R_\{f\}\$\$",

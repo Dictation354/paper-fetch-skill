@@ -55,7 +55,7 @@ class ServiceProbeAndAssetTests(unittest.TestCase):
                                         ],
                                     ),
                                     article=sample_article(),
-                                    related_asset_factory=lambda *args, **kwargs: (
+                                    related_asset_factory=lambda *args, related_asset_calls=related_asset_calls, **kwargs: (
                                         related_asset_calls.append(
                                             kwargs["asset_profile"]
                                         )

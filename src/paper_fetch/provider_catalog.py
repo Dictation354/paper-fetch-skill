@@ -443,10 +443,12 @@ def provider_render_policy_for_source(source_name: str | None) -> Any | None:
     provider_name = provider_for_source(source_name)
     if not provider_name:
         return None
-    for bundle in _registered_provider_bundles():
-        if bundle.catalog.name == provider_name:
-            return bundle.render_policy
-    return None
+    from .providers._registry import provider_bundle
+
+    try:
+        return provider_bundle(provider_name).render_policy
+    except KeyError:
+        return None
 
 
 def known_article_source_names() -> frozenset[str]:

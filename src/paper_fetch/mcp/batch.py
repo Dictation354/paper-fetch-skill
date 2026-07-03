@@ -13,11 +13,15 @@ from collections.abc import Callable, Mapping
 from mcp.server.fastmcp import Context
 from mcp.types import CallToolResult
 
-from ..reason_codes import RATE_LIMITED
 from ..runtime import RuntimeContext
 from ._deps import MCPDeps, default_mcp_deps
 from .log_bridge import PaperFetchLogBridge
-from .results import _tool_result, error_payload_from_exception
+from .results import (
+    _tool_result,
+    error_payload_from_exception,
+    is_rate_limited_payload,
+    with_schema_version,
+)
 from .schemas import BatchCheckRequest, BatchResolveRequest
 
 _BATCH_CHECK_MODES = {
@@ -64,42 +68,46 @@ def _batch_check_success_payload(
     title = None
     if mode == "metadata":
         title = payload.get("title")
-        return {
-            "query": query,
-            "doi": payload.get("doi"),
-            "title": title,
-            "has_fulltext": True if payload.get("state") == "likely_yes" else None,
-            "content_kind": None,
-            "has_abstract": None,
-            "probe_state": payload.get("state"),
-            "evidence": list(payload.get("evidence") or []),
-            "warnings": list(payload.get("warnings") or []),
-            "source": None,
-            "source_trail": [],
-            "trace": [],
-            "token_estimate": None,
-            "token_estimate_breakdown": None,
-        }
+        return with_schema_version(
+            {
+                "query": query,
+                "doi": payload.get("doi"),
+                "title": title,
+                "has_fulltext": True if payload.get("state") == "likely_yes" else None,
+                "content_kind": None,
+                "has_abstract": None,
+                "probe_state": payload.get("state"),
+                "evidence": list(payload.get("evidence") or []),
+                "warnings": list(payload.get("warnings") or []),
+                "source": None,
+                "source_trail": [],
+                "trace": [],
+                "token_estimate": None,
+                "token_estimate_breakdown": None,
+            }
+        )
     article = payload.get("article") or {}
     if isinstance(article, Mapping):
         metadata = article.get("metadata") or {}
         if isinstance(metadata, Mapping):
             title = metadata.get("title")
 
-    return {
-        "query": query,
-        "doi": payload.get("doi"),
-        "title": title,
-        "source": payload.get("source"),
-        "has_fulltext": payload.get("has_fulltext"),
-        "content_kind": payload.get("content_kind"),
-        "has_abstract": payload.get("has_abstract"),
-        "warnings": list(payload.get("warnings") or []),
-        "source_trail": list(payload.get("source_trail") or []),
-        "trace": list(payload.get("trace") or []),
-        "token_estimate": payload.get("token_estimate"),
-        "token_estimate_breakdown": payload.get("token_estimate_breakdown"),
-    }
+    return with_schema_version(
+        {
+            "query": query,
+            "doi": payload.get("doi"),
+            "title": title,
+            "source": payload.get("source"),
+            "has_fulltext": payload.get("has_fulltext"),
+            "content_kind": payload.get("content_kind"),
+            "has_abstract": payload.get("has_abstract"),
+            "warnings": list(payload.get("warnings") or []),
+            "source_trail": list(payload.get("source_trail") or []),
+            "trace": list(payload.get("trace") or []),
+            "token_estimate": payload.get("token_estimate"),
+            "token_estimate_breakdown": payload.get("token_estimate_breakdown"),
+        }
+    )
 
 
 def _run_batch_check_item(
@@ -145,7 +153,7 @@ def _run_batch_sync(
                 payload = error_payload_from_exception(error)
                 payload["query"] = query
                 results[index] = payload
-                if payload["status"] == RATE_LIMITED:
+                if is_rate_limited_payload(payload):
                     abort_reason = dict(payload)
                     break
         return [result for result in results if result is not None], abort_reason
@@ -172,7 +180,7 @@ def _run_batch_sync(
                     payload = error_payload_from_exception(error)
                     payload["query"] = query
                     results[index] = payload
-                    if payload["status"] == RATE_LIMITED and abort_reason is None:
+                    if is_rate_limited_payload(payload) and abort_reason is None:
                         abort_reason = dict(payload)
             while (
                 abort_reason is None
@@ -223,7 +231,7 @@ async def _run_batch_async(
                     payload = error_payload_from_exception(error)
                     payload["query"] = query
                     results[index] = payload
-                    if payload["status"] == RATE_LIMITED and abort_reason is None:
+                    if is_rate_limited_payload(payload) and abort_reason is None:
                         abort_reason = dict(payload)
                 completed += 1
                 await report_progress(
@@ -272,11 +280,13 @@ def batch_resolve_payload(
         ),
     )
 
-    return {
-        "results": results,
-        "aborted": abort_reason is not None,
-        "abort_reason": abort_reason,
-    }
+    return with_schema_version(
+        {
+            "results": results,
+            "aborted": abort_reason is not None,
+            "abort_reason": abort_reason,
+        }
+    )
 
 
 def batch_check_payload(
@@ -304,12 +314,14 @@ def batch_check_payload(
         ),
     )
 
-    return {
-        "mode": request.mode,
-        "results": results,
-        "aborted": abort_reason is not None,
-        "abort_reason": abort_reason,
-    }
+    return with_schema_version(
+        {
+            "mode": request.mode,
+            "results": results,
+            "aborted": abort_reason is not None,
+            "abort_reason": abort_reason,
+        }
+    )
 
 
 async def batch_resolve_tool_async(
@@ -354,11 +366,13 @@ async def batch_resolve_tool_async(
             cancelled.set()
             raise
 
-    payload = {
-        "results": results,
-        "aborted": abort_reason is not None,
-        "abort_reason": abort_reason,
-    }
+    payload = with_schema_version(
+        {
+            "results": results,
+            "aborted": abort_reason is not None,
+            "abort_reason": abort_reason,
+        }
+    )
     await report_progress(
         ctx,
         total_queries,
@@ -419,12 +433,14 @@ async def batch_check_tool_async(
             cancelled.set()
             raise
 
-    payload = {
-        "mode": request.mode,
-        "results": results,
-        "aborted": abort_reason is not None,
-        "abort_reason": abort_reason,
-    }
+    payload = with_schema_version(
+        {
+            "mode": request.mode,
+            "results": results,
+            "aborted": abort_reason is not None,
+            "abort_reason": abort_reason,
+        }
+    )
     await report_progress(
         ctx,
         total_queries,

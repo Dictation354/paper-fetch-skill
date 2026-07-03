@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 import html
+import importlib
+import functools
 import re
 import urllib.parse
 import unicodedata
-
-import idutils
 
 from .normalize_journal_name import normalize_journal_name
 from .provider_catalog import (
@@ -52,6 +52,14 @@ URL_DOI_ROUTE_SUFFIX_OVERRIDES: dict[str, frozenset[str]] = {
 URL_DOI_TEMPLATE_MARKERS = ("{doi}", "{doi_quoted}")
 
 
+@functools.lru_cache(maxsize=1)
+def _idutils_module():
+    try:
+        return importlib.import_module("idutils")
+    except ImportError:  # pragma: no cover - exercised by degraded installs
+        return None
+
+
 def _clean_doi_value(doi: str) -> str:
     value = (
         unicodedata.normalize("NFKC", doi)
@@ -68,6 +76,9 @@ def _clean_doi_value(doi: str) -> str:
 
 def _idutils_normalized_doi(value: str) -> str:
     if not value:
+        return ""
+    idutils = _idutils_module()
+    if idutils is None:
         return ""
     try:
         if not idutils.is_doi(value):

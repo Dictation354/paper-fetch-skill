@@ -6,15 +6,29 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 3.0.0 - 2026-07-03
+
 ### 变更
 
 - browser-backed provider 现在通过公共 `browser_runtime` backend facade 访问 CloakBrowser；auth、preflight、HTML fetch 和 seeded PDF fallback 共享 storage/profile 路径解析、storage-state 写锁和原子写入。
 - external CDP 现在会报告是否借用已有 context、忽略了哪些 context option，以及 storage-state cookie 注入数量；新增 `PAPER_FETCH_CDP_EXTERNAL_NEW_CONTEXT=1` 可在外部浏览器中创建新 context。
 - browser-backed 资产下载在安全的 caller-thread attempt 内会复用线程本地 page/context；遇到 Playwright 线程所有权异常会自动降级回 per-call close。
+- browser 图片抓取现在对单图 seed warm、page fetch、request-context fetch、直接导航和图片等待共用一个 wall-clock 总预算；PDF fallback 的 browser seed 改为轻量 warm，已拿到 cookie seed 时不再重复导航 seed URL。
+- 本地转换链路现在会缓存 Ghostscript/libvips 候选路径与 `--version` 探测；公式转换继续复用既有结果缓存/worker，并新增 subprocess 调用次数测试；无图片导出的 PDF Markdown 渲染会按 PDF hash 复用，并带字节/页数 guard 与渲染诊断。
 - browser HTML、seeded PDF fallback、browser asset retry 和 browser preflight 循环新增协作式取消检查。
 - `paper-fetch browser-preflight` 现在会对内置样例复用各 browser-backed provider 的正常 HTML candidates 和 HTML bootstrap 重试语义，但仍不触发 PDF fallback。
 - 移除 PNAS fast browser HTML preflight 特例；PNAS 现在先走标准 browser workflow HTML bootstrap，再按需进入 seeded PDF fallback。
 - AMS 改为无需浏览器的 direct HTTP HTML provider，并新增 direct HTTP PDF fallback；成功时发布 `ams_html` 或 `ams_pdf`，仍不参与 browser auth / preflight / status，也不尝试 seeded-browser PDF fallback。
+- CI 离线包 job 现在只在 `v*` tag push 或手动 dispatch 时运行，普通 push/PR 只保留常规质量门。
+- 质量门禁现在把 mypy 覆盖扩展到 runtime/config/quality/PDF fallback/browser-runtime/formula core 路径，并在 mypy 配置层启用 `no_site_packages`；CI 与本地 coverage preflight 都强制 unit coverage baseline 40，同时移除 `tests/**` 全局 `B023` ruff ignore。
+- 离线安装器现在从 `installer/manifest.json` 派生 MCP、`offline.env`、shell 和 activate runtime env key，一致传播包内 Node / Python encoding 配置；验证脚本覆盖 Antigravity MCP，并且 `activate-offline.sh` 只按 dotenv 解析 env 文件，不再执行其中的 shell 代码。
+- `RuntimeContext.parse_cache` 访问器现在使用锁和同 key in-flight 协调，并发 parser memoization 对每个 key 只执行一次 supplier。
+- MCP tool 输出现在统一带顶层 `schema_version=1`，provider/HTTP 错误细节会进入机器可读字段；批量任务遇到 rate-limit category、HTTP 429 或 retry-after hint 会停止继续提交，并保留 `abort_reason.retry_after_seconds`。
+- MCP cache-index 读取现在校验 `INDEX_VERSION`，旧版/坏 manifest 只有显式 rescan 才会重建；`list_cached` 新增 `cache_mode="index"|"refresh"|"rescan"`，structured resolve 会把 `title`/`authors`/`year` 作为独立 resolver 信号，并把 provider/Crossref primary-secondary metadata merge 语义收敛到一个 rule-backed helper。
+- provider waterfall 现在会对访问失败、限流、无结果和通用 provider 失败一致继续后续 fallback route；最终失败会去重聚合 warnings/source trail，并保留 retry-after 细节。
+- provider registry 冷启动路径现在不会在根 `paper_fetch` import 时加载 provider entry module、`trafilatura` 或 `idutils`；provider discovery 改为显式内置入口清单加缓存 AST 检测动态入口，browser workflow 的字符串路线标签改放在 `route_order`，不再塞进 `waterfall_steps`。
+- 共享 Markdown 表格渲染现在统一复用 canonical pipe-table formatter；IR 与 HTML 路径都会消费显式 headers、转义 pipe/单元格换行、补齐 ragged rows，并渲染 fallback message。
+- HTML 派生的公式与 citation 渲染现在会为 inline TeX 保留数学分隔符，formula image URL 启发式会先让位于显式 figure 上下文，并让 section renderer 与 Atypon renderer 共用同一个数字 citation payload helper。
 - 同步 README、CLI/MCP instructions、provider/runtime/deployment/extraction 文档、AMS onboarding manifest / access review / cleaning-chain 证据，以及 provider runtime 优化计划，使其匹配新的 browser-runtime 与 AMS direct-HTTP 归属边界。
 - 扩展 unit 与 integration 覆盖：包含 AMS direct HTTP HTML/PDF fallback、browser-preflight provider candidates 与不触发 PDF 的行为、external-CDP new-context 诊断、browser runtime facade 接线，以及 browser workflow 依赖分组。
 

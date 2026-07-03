@@ -27,10 +27,12 @@ from ..browser_runtime import (
     BrowserFetchedHtml,
     BrowserRuntimeConfig,
     BrowserRuntimeFailure,
+)
+from ..browser_runtime.api import (
     DEFAULT_BROWSER_RUNTIME_WAIT_SECONDS,
     DEFAULT_BROWSER_RUNTIME_WARM_WAIT_SECONDS,
-    load_runtime_config,
     fetch_html_with_browser,
+    load_runtime_config,
 )
 from ..atypon_browser_workflow import (
     extract_browser_workflow_asset_html_scopes,
