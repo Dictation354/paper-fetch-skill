@@ -6,7 +6,14 @@ import json
 from typing import Any
 from collections.abc import Mapping, Sequence
 
-from mcp.types import CallToolResult, ImageContent, TextContent
+from mcp.types import (
+    AudioContent,
+    CallToolResult,
+    EmbeddedResource,
+    ImageContent,
+    ResourceLink,
+    TextContent,
+)
 from pydantic import ValidationError
 
 from ..http import RequestCancelledError
@@ -25,9 +32,9 @@ def _tool_result(
     is_error: bool,
     extra_content: Sequence[TextContent | ImageContent] | None = None,
 ) -> CallToolResult:
-    content: list[TextContent | ImageContent] = [
-        TextContent(type="text", text=_dump_payload(payload))
-    ]
+    content: list[
+        TextContent | ImageContent | AudioContent | ResourceLink | EmbeddedResource
+    ] = [TextContent(type="text", text=_dump_payload(payload))]
     if extra_content:
         content.extend(extra_content)
     return CallToolResult(

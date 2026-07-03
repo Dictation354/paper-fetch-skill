@@ -16,6 +16,7 @@ from .renderer import (
 )
 from .shared import (
     append_text_block,
+    attr_text,
     class_tokens,
     direct_child_tags,
     html_text_snippet,
@@ -32,6 +33,7 @@ __all__ = [
     "LandingHtmlFetchResult",
     "RenderedHtmlFragment",
     "append_text_block",
+    "attr_text",
     "class_tokens",
     "clean_markdown",
     "clean_rendered_markdown",

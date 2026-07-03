@@ -13,7 +13,7 @@ from ...extraction.html.figure_links import (
 from ...extraction.html.language import collect_html_abstract_blocks
 from ...extraction.html.section_scan import SectionScanState
 from ...extraction.html.semantics import normalize_heading, node_source_selector
-from ...extraction.html.shared import short_text as _short_text
+from ...extraction.html.shared import attr_text, short_text as _short_text
 from ...extraction.html.tables import inject_inline_table_blocks
 from ...models import normalize_markdown_text
 from ...utils import normalize_text
@@ -108,9 +108,12 @@ def _abstract_block_texts(node: Tag) -> list[str]:
     for candidate in node.find_all(True):
         if candidate is heading:
             continue
-        if normalize_text(
-            candidate.get("role") or ""
-        ).lower() == "paragraph" or candidate.name in {"p", "li"}:
+        if attr_text(
+            candidate.get("role")
+        ).lower() == "paragraph" or candidate.name in {
+            "p",
+            "li",
+        }:
             text = _render_non_table_inline_text(candidate)
             if text and text not in seen:
                 texts.append(text)

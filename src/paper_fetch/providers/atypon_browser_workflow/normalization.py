@@ -28,6 +28,8 @@ from ...extraction.html.semantics import (
     normalize_heading,
 )
 from ...extraction.html.shared import (
+    attr_text,
+    direct_child_tags as _direct_child_tags,
     short_text as _short_text,
     soup_root as _soup_root,
 )
@@ -564,8 +566,8 @@ def _normalize_boxed_text_blocks(container: Tag) -> None:
         elif caption:
             lines.append(caption)
 
-        for paragraph in node.find_all(attrs={"role": "paragraph"}, recursive=False):
-            if not isinstance(paragraph, Tag):
+        for paragraph in _direct_child_tags(node):
+            if attr_text(paragraph.get("role")).lower() != "paragraph":
                 continue
             text = _render_non_table_inline_text(paragraph)
             if text:

@@ -38,6 +38,7 @@ from ...extraction.html._runtime import (
 from ...extraction.html.front_matter import COMMON_FRONT_MATTER_LINE_PATTERNS
 from ...extraction.html.signals import contains_access_gate_text
 from ...extraction.html.shared import (
+    attr_text,
     class_tokens as _class_tokens,
     direct_child_tags as _direct_child_tags,
     short_text as _short_text,
@@ -244,9 +245,7 @@ def _drop_promotional_blocks(
 def _structural_abstract_nodes(container: Tag) -> list[Tag]:
     abstract_roots: list[Tag] = []
     if (
-        normalize_text(
-            (getattr(container, "attrs", None) or {}).get("id") or ""
-        ).lower()
+        attr_text((getattr(container, "attrs", None) or {}).get("id")).lower()
         == "abstracts"
     ):
         abstract_roots.append(container)
@@ -267,7 +266,7 @@ def _structural_abstract_nodes(container: Tag) -> list[Tag]:
             for child in _direct_child_tags(parent):
                 if normalize_text(child.name or "").lower() != "section":
                     continue
-                if normalize_text(child.get("role") or "").lower() != "doc-abstract":
+                if attr_text(child.get("role")).lower() != "doc-abstract":
                     continue
                 if id(child) in seen:
                     continue

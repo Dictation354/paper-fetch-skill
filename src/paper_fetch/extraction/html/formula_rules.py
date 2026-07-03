@@ -123,7 +123,7 @@ def first_url_from_srcset(value: str | None) -> str:
     return best_url
 
 
-def normalize_formula_script_type(value: str | None) -> str:
+def normalize_formula_script_type(value: Any) -> str:
     normalized = normalize_text(str(value or "")).lower()
     return re.sub(r"\s*;\s*", "; ", normalized)
 
@@ -167,7 +167,7 @@ def formula_node_identity_text(node: Any) -> str:
 
 def formula_ancestor_identity_text(node: Any, *, max_depth: int = 6) -> str:
     parts: list[str] = []
-    current = node
+    current: Any = node
     depth = 0
     while isinstance(current, Tag) and depth < max_depth:
         parts.append(formula_node_identity_text(current))
@@ -357,7 +357,7 @@ def formula_heading_for_image(
 ) -> str:
     if not isinstance(node, Tag):
         return f"Formula {index}"
-    current = node
+    current: Any = node
     depth = 0
     while isinstance(current, Tag) and depth < 6:
         identity = formula_node_identity_text(current)

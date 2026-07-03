@@ -60,18 +60,25 @@ from .provider_rules import (
     front_matter_publication_keywords_for_profile,
     normalize_noise_profile,
 )
+from bs4 import BeautifulSoup
 
+trafilatura: Any
 try:
-    import trafilatura
+    import trafilatura as _trafilatura
 except ImportError:  # pragma: no cover - exercised implicitly when dependency is absent
     trafilatura = None
+else:
+    trafilatura = _trafilatura
 
+_charset_normalizer_from_bytes: Any
 try:
-    from charset_normalizer import from_bytes as _charset_normalizer_from_bytes
+    from charset_normalizer import (
+        from_bytes as _imported_charset_normalizer_from_bytes,
+    )
 except ImportError:  # pragma: no cover - dependency is optional for degraded installs
     _charset_normalizer_from_bytes = None
-
-from bs4 import BeautifulSoup
+else:
+    _charset_normalizer_from_bytes = _imported_charset_normalizer_from_bytes
 
 LOGGER = logging.getLogger(__name__)
 HTML_ROOT_SELECTORS = ("article", "main", '[role="main"]')

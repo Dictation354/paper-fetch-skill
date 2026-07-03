@@ -18,6 +18,7 @@ from mcp.server.fastmcp.resources import FileResource, FunctionResource
 from mcp.server.lowlevel.server import NotificationOptions
 from mcp.shared.message import SessionMessage
 from mcp.types import CallToolResult, ToolAnnotations
+from pydantic import AnyUrl
 
 from ..artifacts import ArtifactMode
 from ._instructions import fetch_tool_description, server_instructions
@@ -231,7 +232,7 @@ def _sync_cache_resources(
     for entry in entries:
         uri = entry_uri_for(entry["id"])
         resources[uri] = FileResource(
-            uri=uri,
+            uri=AnyUrl(uri),
             name=f"cached_{entry['id']}",
             description=f"Cached {entry['kind']} for DOI {entry['doi']}.",
             path=Path(str(entry["path"])),
@@ -323,9 +324,10 @@ def _enable_resource_list_changed_capability(server: FastMCP) -> None:
             experimental_capabilities=experimental_capabilities,
         )
 
-    server._mcp_server.create_initialization_options = MethodType(
+    mcp_server: Any = server._mcp_server
+    mcp_server.create_initialization_options = MethodType(
         create_options_with_resource_notifications,
-        server._mcp_server,
+        mcp_server,
     )
 
 

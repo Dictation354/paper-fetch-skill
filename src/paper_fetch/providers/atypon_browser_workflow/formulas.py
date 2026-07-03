@@ -177,11 +177,11 @@ def _split_paragraph_display_formula_blocks(parent: Tag, soup: BeautifulSoup) ->
 
     pending_children: list[Any] = []
     for child in list(parent.contents):
-        formula_node = formula_nodes.get(id(child))
-        if formula_node is None:
+        matched_formula_node = formula_nodes.get(id(child))
+        if matched_formula_node is None:
             pending_children.append(child)
             continue
-        replacement = _display_formula_replacement(formula_node, soup)
+        replacement = _display_formula_replacement(matched_formula_node, soup)
         if pending_children:
             _insert_split_paragraph(parent, pending_children, soup)
             pending_children = []

@@ -28,6 +28,12 @@ def class_tokens(node: Tag) -> set[str]:
     return {normalized} if normalized else set()
 
 
+def attr_text(value: Any) -> str:
+    if isinstance(value, (list, tuple, set)):
+        return normalize_text(" ".join(str(item) for item in value if item is not None))
+    return normalize_text(str(value or ""))
+
+
 def short_text(node: Tag | None) -> str:
     if node is None:
         return ""

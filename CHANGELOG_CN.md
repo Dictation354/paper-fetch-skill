@@ -24,6 +24,7 @@
 
 ### 修复
 
+- 修复扩展后的 mypy 契约检查：BeautifulSoup 属性值在传入 helper 前会先规整为文本，可选 HTML 依赖 fallback 在类型检查下保持可用，并让 MCP request/resource/result 类型与当前 SDK 签名对齐。
 - 修复 browser-backed 批量并发：managed CDP browser manager 现在会按 provider/browser 配置在同一进程内共享，避免同一 provider profile 的 CLI/MCP 并发抓取互相争抢 `.paper-fetch-profile.lock`；隔离 context 会使用调用线程自己的 CDP 连接，避免跨线程复用 Playwright sync 对象。
 - 修复 SICI DOI normalize 与 URL DOI 后缀处理：`<...>` / `;` 等 DOI 后缀会被保留；Frontiers `/full`、IOP `/pdf`、Wiley `/fullpdf`、Springer `.pdf` 等 provider route token 只有在 provider catalog template 能证明其为路由/扩展名时才会被剥离。
 - 修复 official PDF fallback 的降级行为：真实 PDF 已下载但 Markdown extraction 不可用时，会保留 provider source trail 和本地 PDF artifact，并通过 warning 说明 PDF-only 状态，不再替换为 Crossref/general metadata-only 结果。

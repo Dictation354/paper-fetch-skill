@@ -232,6 +232,54 @@ def _fetch_envelope_cache_path(download_dir: Path, doi: str) -> Path:
     return fetch_envelope_cache_path(download_dir, doi)
 
 
+def _resolve_request_from_inputs(
+    *,
+    query: str | None,
+    title: str | None,
+    authors: list[str] | str | None,
+    year: int | None,
+) -> ResolvePaperRequest:
+    return ResolvePaperRequest.model_validate(
+        {
+            "query": query,
+            "title": title,
+            "authors": authors,
+            "year": year,
+        }
+    )
+
+
+def _fetch_request_from_inputs(
+    *,
+    query: str,
+    modes: list[str] | None,
+    strategy: FetchStrategyInput | Mapping[str, Any] | None,
+    include_refs: str | None,
+    max_tokens: int | str,
+    prefer_cache: bool,
+    no_download: bool,
+    artifact_mode: ArtifactMode,
+    save_markdown: bool,
+    markdown_output_dir: str | None,
+    markdown_filename: str | None,
+) -> FetchPaperRequest:
+    return FetchPaperRequest.model_validate(
+        {
+            "query": query,
+            "modes": modes,
+            "strategy": strategy,
+            "include_refs": include_refs,
+            "max_tokens": max_tokens,
+            "prefer_cache": prefer_cache,
+            "no_download": no_download,
+            "artifact_mode": artifact_mode,
+            "save_markdown": save_markdown,
+            "markdown_output_dir": markdown_output_dir,
+            "markdown_filename": markdown_filename,
+        }
+    )
+
+
 def _response_payload_from_envelope(
     envelope: FetchEnvelope, request: FetchPaperRequest
 ) -> dict[str, Any]:
@@ -258,7 +306,9 @@ def resolve_paper_payload(
     context: RuntimeContext | None = None,
     deps: MCPDeps = default_mcp_deps(),
 ) -> dict[str, Any]:
-    request = ResolvePaperRequest(query=query, title=title, authors=authors, year=year)
+    request = _resolve_request_from_inputs(
+        query=query, title=title, authors=authors, year=year
+    )
     runtime_context = context or RuntimeContext(
         env=deps.build_runtime_env(env), transport=transport
     )
@@ -307,7 +357,7 @@ def fetch_paper_payload(
     context: RuntimeContext | None = None,
     deps: MCPDeps = default_mcp_deps(),
 ) -> dict[str, Any]:
-    request = FetchPaperRequest(
+    request = _fetch_request_from_inputs(
         query=query,
         modes=modes,
         strategy=strategy,
@@ -599,7 +649,7 @@ async def fetch_paper_tool_async(
         ctx, 0, _FETCH_PROGRESS_TOTAL, "Validating fetch_paper request"
     )
     try:
-        request = FetchPaperRequest(
+        request = _fetch_request_from_inputs(
             query=query,
             modes=modes,
             strategy=strategy,

@@ -13,6 +13,7 @@ from .inline import (
     render_html_inline_node,
     wrap_html_inline_text_fragment,
 )
+from .shared import attr_text
 
 from bs4 import Tag
 
@@ -52,7 +53,7 @@ def table_cell_data(
         colspan = max(1, int(colspan_text))
     except ValueError:
         colspan = 1
-    class_values = cell.get("class") or []
+    class_values: Any = cell.get("class") or []
     if isinstance(class_values, str):
         classes = {
             normalize_text(item).lower()
@@ -71,7 +72,7 @@ def table_cell_data(
     )
     is_header_candidate = (
         is_header
-        or normalize_text(str(cell.get("scope") or ""))
+        or attr_text(cell.get("scope"))
         or bool(classes & {"ltx_th", "ltx_th_column", "ltx_th_row"})
         or (has_bold_text and "ltx_border_tt" in classes)
     )

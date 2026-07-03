@@ -189,7 +189,7 @@ def _clone_container(container: Tag) -> Tag:
         f'<div data-paper-fetch-clone-root="1">{container}</div>',
         choose_parser(),
     )
-    clone_root = clone_soup.find(attrs={"data-paper-fetch-clone-root": "1"})
+    clone_root = clone_soup.select_one('[data-paper-fetch-clone-root="1"]')
     if not isinstance(clone_root, Tag):
         raise HtmlExtractionFailure(
             "article_container_clone_failed",

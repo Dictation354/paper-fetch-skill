@@ -24,6 +24,7 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 ### Fixed
 
+- Fixed the expanded mypy contract suite by normalizing BeautifulSoup attribute values before helper calls, preserving optional HTML dependency fallbacks under type checking, and aligning MCP request/resource/result types with the current SDK signatures.
 - Fixed browser-backed batch concurrency so managed CDP browser managers are shared process-wide by provider/browser config, preventing concurrent CLI/MCP fetches for the same provider profile from racing on `.paper-fetch-profile.lock`; isolated contexts now use thread-owned CDP connections to avoid cross-thread Playwright sync object reuse.
 - Fixed SICI DOI normalization and URL DOI suffix handling so DOI suffixes such as `<...>` / `;` are preserved, while provider route tokens such as Frontiers `/full`, IOP `/pdf`, Wiley `/fullpdf`, and Springer `.pdf` are stripped only when provider catalog templates make that safe.
 - Fixed official PDF fallback degradation for scanned/PDF-only provider results: real downloaded PDFs are retained with explicit warnings and provider source trail instead of being replaced by Crossref/general metadata-only results when Markdown extraction is unusable.

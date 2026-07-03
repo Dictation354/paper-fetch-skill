@@ -18,6 +18,7 @@ from ..signals import (
     SUPPLEMENTARY_BLOCKING_TITLE_TOKENS,
 )
 from ..shared import (
+    attr_text,
     html_text_snippet as _html_text_snippet,
     html_title_snippet as _html_title_snippet,
 )
@@ -156,9 +157,9 @@ def _soup_attr_url(tag: Any, *attrs: str) -> str:
         if not raw:
             continue
         if attr.endswith("srcset"):
-            candidate = _first_url_from_srcset(raw)
+            candidate = _first_url_from_srcset(attr_text(raw))
         else:
-            candidate = normalize_text(str(raw))
+            candidate = attr_text(raw)
         if candidate:
             return candidate
     return ""
@@ -184,9 +185,9 @@ def _collect_tag_attr_urls(tag: Any, source_url: str, *attrs: str) -> list[str]:
         values = [raw] if not isinstance(raw, list) else raw
         for value in values:
             candidate = (
-                _first_url_from_srcset(value)
+                _first_url_from_srcset(attr_text(value))
                 if attr.endswith("srcset")
-                else normalize_text(str(value))
+                else attr_text(value)
             )
             absolute_candidate = (
                 urllib.parse.urljoin(source_url, candidate) if candidate else ""
