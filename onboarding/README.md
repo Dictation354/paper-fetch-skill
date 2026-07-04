@@ -30,10 +30,10 @@ DOI prefix 是 10.xxxx/
 /goal follow onboarding/instruction.md 添加 <provider> Provider，domain 是 <domain>，目标 merge-ready
 ```
 
-AIP 示例：
+示例：
 
 ```text
-/goal follow onboarding/instruction.md 添加 AIP Provider，domain 是 https://pubs.aip.org/，目标 merge-ready
+/goal follow onboarding/instruction.md 添加 NewPub Provider，domain 是 https://newpub.example/，目标 merge-ready
 ```
 
 如果该 provider 已经存在，agent 应从现有 state、manifest、access review、review artifact 和 run logs 继续，而不是从零覆盖已有成果。

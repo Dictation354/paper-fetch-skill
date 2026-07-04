@@ -31,7 +31,7 @@ paper-fetch auth <provider>
 paper-fetch auth wiley --url "https://onlinelibrary.wiley.com/doi/full/10.1111/example"
 ```
 
-`provider` 来自 browser runtime catalog，例如 `wiley` / `science` / `pnas` / `annualreviews` / `acs` / `iop` / `aip` / `mdpi`。未传 `--url` 时打开内置样例文章；传入 `--url` 时打开用户指定的失败文章页。命令强制 headed 模式，打印 managed Chrome 启动目录和 storage-state 路径，用户在浏览器中完成合法登录或验证后，在终端按 Enter 保存过滤后的本地 storage-state 并退出。AMS 使用 direct HTTP HTML/PDF 路径，不支持 `paper-fetch auth ams`。
+`provider` 来自 browser runtime catalog，例如 `wiley` / `science` / `pnas` / `mdpi` / `royalsocietypublishing` / `annualreviews` / `acs` / `iop` / `aip`。未传 `--url` 时打开内置样例文章；传入 `--url` 时打开用户指定的失败文章页。命令强制 headed 模式，打印 managed Chrome 启动目录和 storage-state 路径，用户在浏览器中完成合法登录或验证后，在终端按 Enter 保存过滤后的本地 storage-state 并退出。AMS 使用 direct HTTP HTML/PDF 路径，不支持 `paper-fetch auth ams`。
 
 如果需要在批量抓取前确认所有 browser-backed provider 的浏览器链路是否能过站点验证，可以先串行运行预检：
 
@@ -40,7 +40,7 @@ paper-fetch browser-preflight
 paper-fetch browser-preflight --provider wiley --provider science --timeout-ms 120000
 ```
 
-预检会按 runtime catalog 中 `requires_browser_runtime=True` 的 provider 顺序使用内置样例 DOI/URL 构造正常 HTML candidates，并复用 provider HTML bootstrap、同一 browser context 重试和 availability 判定。成功时会保存对应 `publisher-browser-profiles/<provider>/storage-state.json`；失败时 stdout 保留逐 provider 汇总，stderr 打印失败出版社和 `paper-fetch auth <provider>` 人工认证提示。该命令只验证 HTML 路径，不触发 PDF fallback；它会真实访问出版社样例页，不同于 MCP/provider `provider_status()` 的本地能力检查。
+预检会按 runtime catalog 中 `requires_browser_runtime=True` 的 provider 顺序使用内置样例 DOI/URL 构造正常 HTML candidates，并复用 provider HTML bootstrap、同一 browser context 重试和 availability 判定。内置样例优先选择结构较轻、已有 fixture 覆盖的 full-text 页面，降低预热耗时；成功时会保存对应 `publisher-browser-profiles/<provider>/storage-state.json`；失败时 stdout 保留逐 provider 汇总，stderr 打印失败出版社和 `paper-fetch auth <provider>` 人工认证提示。该命令只验证 HTML 路径，不触发 PDF fallback；它会真实访问出版社样例页，不同于 MCP/provider `provider_status()` 的本地能力检查。
 
 普通 `paper-fetch --query ...` 抓取在未设置 `CLOAKBROWSER_HEADLESS=0` 且未配置外部 `CLOAKBROWSER_CDP_ENDPOINT` 时默认使用 managed headless Chrome，并确保启动参数包含 `--headless=new`。只有 `paper-fetch auth <provider>`、显式关闭 headless，或连接到已有 headed CDP 浏览器时才会显示浏览器窗口。
 
@@ -63,9 +63,9 @@ paper-fetch --query-file ./queries.txt --output-dir ./papers
 
 批量模式不会把每篇正文打印到 stdout。每篇论文仍按 `--format` 写出主输出：
 
-- `markdown`：`<output-dir>/<doi-or-title>.md`
-- `json`：`<output-dir>/<doi-or-title>.json`
-- `both`：`<output-dir>/<doi-or-title>.both.json`
+- `markdown`：`<output-dir>/<paper-stem>.md`
+- `json`：`<output-dir>/<paper-stem>.json`
+- `both`：`<output-dir>/<paper-stem>.both.json`
 
 如果未提供 `--output-dir`，CLI 使用默认下载目录。默认汇总文件是 `<output-dir>/batch-results.jsonl`，可用 `--batch-results <path>` 覆盖。每行是一条 JSON 结果，包含 `index`、`query`、`status`、`doi`、`source`、`output_path`、`saved_markdown_path`、`warnings` 和 `error`。
 
@@ -100,15 +100,15 @@ paper-fetch --query-file ./queries.txt \
 - 显式 `--output -` 会强制打印到 stdout，即使同时提供 `--output-dir`。
 - 显式 `--output <path>` 会把主输出写到该路径，`--output-dir` 只作为 artifact / 资产目录。
 
-当 `--output-dir` 承接主输出时，默认文件名来自 DOI 或标题并经过安全化处理：
+当 `--output-dir` 承接主输出时，默认文件名来自安全化论文 stem：优先使用首作者姓氏、可选 `_et_al`、年份和标题；元数据不足时回退 DOI 或标题。格式决定后缀：
 
 | 格式 | 主输出文件 |
 | --- | --- |
-| `markdown` | `<doi>.md` |
-| `json` | `<doi>.json` |
-| `both` | `<doi>.both.json` |
+| `markdown` | `<paper-stem>.md` |
+| `json` | `<paper-stem>.json` |
+| `both` | `<paper-stem>.both.json` |
 
-例如 DOI `10.1016/test` 会写成 `10.1016_test.md`。
+需要精确文件名时，显式使用 `--output <path>`。
 
 ## 输出格式
 
@@ -131,8 +131,8 @@ paper-fetch --query-file ./queries.txt \
 
 常见 artifact 包括：
 
-- Markdown artifact：`<doi>.md`
-- 资产目录：`<doi>_assets/`
+- Markdown artifact：`<paper-stem>.md`
+- 资产目录：`<doi>_assets/` 或 provider 指定的同级资产目录
 - PDF fallback 源文件，文件名优先使用 provider 抓取后合并的标题、作者和年份元数据
 - provider 原始 HTML/XML/PDF
 - HTTP textual cache：`.paper-fetch-http-cache/`
@@ -145,7 +145,7 @@ paper-fetch --query-file ./queries.txt \
 paper-fetch --query "10.1016/test" --format json --output-dir ./papers --artifact-mode none
 ```
 
-结果是：
+如果查询元数据不足以构造作者/年份/标题 stem，结果可能回退为：
 
 ```text
 ./papers/10.1016_test.json
@@ -203,14 +203,14 @@ paper-fetch --query "10.1016/test" \
 | 命令 | stdout | 主输出文件 | artifact / 资产 |
 | --- | --- | --- | --- |
 | `paper-fetch --query ...` | 打印 Markdown | 无显式主输出文件 | 拿到全文时在默认目录保存 Markdown/正文资产 |
-| `paper-fetch --query ... --output-dir ./papers` | 不打印正文 | `./papers/<doi>.md` | 拿到全文时在 `./papers` 下保存正文资产 |
-| `paper-fetch --query ... --format json --output-dir ./papers` | 不打印正文 | `./papers/<doi>.json` | 拿到全文时默认还保存 Markdown artifact 和正文资产 |
-| `paper-fetch --query ... --format both --output-dir ./papers` | 不打印正文 | `./papers/<doi>.both.json` | 拿到全文时默认还保存 Markdown artifact 和正文资产 |
+| `paper-fetch --query ... --output-dir ./papers` | 不打印正文 | `./papers/<paper-stem>.md` | 拿到全文时在 `./papers` 下保存正文资产 |
+| `paper-fetch --query ... --format json --output-dir ./papers` | 不打印正文 | `./papers/<paper-stem>.json` | 拿到全文时默认还保存 Markdown artifact 和正文资产 |
+| `paper-fetch --query ... --format both --output-dir ./papers` | 不打印正文 | `./papers/<paper-stem>.both.json` | 拿到全文时默认还保存 Markdown artifact 和正文资产 |
 | `paper-fetch --query ... --output - --output-dir ./papers` | 打印 Markdown | 无默认主输出文件 | `./papers` 只用于 artifact/资产 |
 | `paper-fetch --query ... --output ./result.md --output-dir ./papers` | 不打印正文 | `./result.md` | `./papers` 只用于 artifact/资产 |
-| `paper-fetch --query ... --format json --output-dir ./papers --artifact-mode none` | 不打印正文 | `./papers/<doi>.json` | 不保存 artifact/资产 |
+| `paper-fetch --query ... --format json --output-dir ./papers --artifact-mode none` | 不打印正文 | `./papers/<paper-stem>.json` | 不保存 artifact/资产 |
 | `paper-fetch --query ... --output - --artifact-mode none` | 打印 Markdown | 无 | 不保存 artifact/资产 |
-| `paper-fetch --query-file ./queries.txt --output-dir ./papers` | 不打印正文 | 每篇 `./papers/<doi-or-title>.md`，另有 `batch-results.jsonl` | 拿到全文时在 `./papers` 下保存正文资产 |
+| `paper-fetch --query-file ./queries.txt --output-dir ./papers` | 不打印正文 | 每篇 `./papers/<paper-stem>.md`，另有 `batch-results.jsonl` | 拿到全文时在 `./papers` 下保存正文资产 |
 
 ## 渲染选项
 

@@ -67,58 +67,6 @@ jobs:
       - name: Validate local preflight script
         run: bash scripts/dev-preflight.sh --help
 
-  unit:
-    if: ${{ github.event_name != 'workflow_dispatch' || !inputs.run_offline_windows_only }}
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v7
-
-      - name: Set up Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.11"
-
-      - name: Set up Haskell toolchain for formula tests
-        id: setup-haskell
-        uses: haskell-actions/setup@v2.11.0
-        with:
-          ghc-version: "9.8.4"
-          cabal-version: "latest"
-
-      - name: Restore formula tool cache
-        uses: actions/cache@v6
-        with:
-          path: |
-            ${{ steps.setup-haskell.outputs.cabal-store }}
-            .formula-tools
-          key: ${{ runner.os }}-formula-tools-${{ steps.setup-haskell.outputs.ghc-version }}-${{ hashFiles('src/paper_fetch/formula/install.py', 'src/paper_fetch/resources/formula/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-formula-tools-${{ steps.setup-haskell.outputs.ghc-version }}-
-
-      - name: Install test dependencies
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install -e ".[dev]"
-
-      - name: Install formula test backend
-        run: |
-          python -m paper_fetch.formula.install --target-dir "$PWD/.formula-tools" --no-node
-          ./.formula-tools/bin/texmath --help >/dev/null
-
-      - name: Install image test backend
-        run: python -m paper_fetch.image_tools.install --target-dir "$PWD/.image-tools"
-
-      - name: Run unit suite
-        env:
-          PYTHONPATH: ${{ github.workspace }}/src
-          PAPER_FETCH_FORMULA_TOOLS_DIR: ${{ github.workspace }}/.formula-tools
-          PAPER_FETCH_IMAGE_TOOLS_DIR: ${{ github.workspace }}/.image-tools
-        run: |
-          python -m pytest tests/unit -q --durations=30 --cov=paper_fetch --cov-report=term-missing --cov-report=xml --cov-fail-under=40
-          python -m pytest tests/devtools -q --durations=30
-
   integration:
     if: ${{ github.event_name != 'workflow_dispatch' || !inputs.run_offline_windows_only }}
     runs-on: ubuntu-latest
@@ -721,7 +669,6 @@ jobs:
   release-offline-packages:
     needs:
       - lint
-      - unit
       - integration
       - package-smoke
       - offline-linux-x86-64
@@ -918,7 +865,8 @@ jobs:
           fi
 
           # Live MCP tests share external publisher/API state and secrets, so they
-          # run serially even though regular unit/integration suites use xdist.
+          # run serially even though local unit/integration and CI integration
+          # suites use xdist.
           pytest -n 0 tests/live/test_live_mcp.py -k "not ieee"
 
           if [ "${{ inputs.run_ieee_live_mcp }}" = "true" ]; then

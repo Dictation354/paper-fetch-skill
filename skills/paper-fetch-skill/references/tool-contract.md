@@ -50,7 +50,7 @@
 - `springer` 使用 provider-managed direct HTML 和 direct HTTP PDF fallback，公开 source 为 `springer_html` 或 `springer_pdf`。
 - `wiley` 使用 CDP browser HTML 路径，并可在配置 `WILEY_TDM_CLIENT_TOKEN` 时启用官方 TDM API PDF 通道；公开 source 为 `wiley_browser`。
 - `science` 与 `pnas` 使用 provider-managed CDP browser HTML 加 CDP browser-seeded publisher PDF/ePDF workflow，并保持现有公开 source 名称。
-- `ams` 使用 provider-managed CDP browser HTML 加 CDP browser-seeded publisher PDF fallback；HTML 成功公开 `ams_html`，PDF fallback 成功公开 `ams_pdf`。
+- `ams` 使用 provider-managed direct HTTP HTML 加 direct HTTP PDF fallback；HTML 成功公开 `ams_html`，PDF fallback 成功公开 `ams_pdf`，不使用 CDP browser auth/preflight 或 seeded-browser PDF fallback。
 - `annualreviews` 使用 provider-managed CDP browser HTML 加 CDP browser-seeded PDF fallback；HTML 成功公开 `annualreviews_html`，PDF fallback 成功公开 `annualreviews_pdf`。
 - `royalsocietypublishing` 使用 provider-managed CDP browser DOI HTML 加 CDP browser-seeded PDF fallback；HTML 成功公开 `royalsocietypublishing_html`，PDF fallback 成功公开 `royalsocietypublishing_pdf`，`citation_xml_url` 不作为 XML/JATS 路线。
 - `plos` 使用 public JATS XML 加 direct HTTP PDF fallback；XML 成功公开 `plos_xml`，PDF fallback 成功公开 `plos_pdf`。
@@ -61,5 +61,5 @@
 - `aip` 使用 provider-managed CDP browser AIP article HTML 加 CDP browser-seeded AIP PDF fallback；HTML 成功公开 `aip_html`，PDF fallback 成功公开 `aip_pdf`。
 - `mdpi` 使用 provider-managed CDP browser HTML 加 CDP browser-seeded article PDF fallback；HTML 成功公开 `mdpi_html`，PDF fallback 成功公开 `mdpi_pdf`。
 - `ieee` 使用 landing metadata / article number、Xplore dynamic HTML endpoint、direct HTTP PDF fallback 和 seeded-browser PDF fallback；HTML 成功公开 `ieee_html`，PDF fallback 成功公开 `ieee_pdf`，非 PDF wrapper/access/challenge 页面必须 fail closed 到 abstract-only / metadata-only。
-- Wiley / Science / PNAS / AMS / Annual Reviews / Royal Society Publishing / ACS / IOP / AIP / MDPI 在 HTML 成功路径下支持 `asset_profile="body"` / `"all"` 资源下载。
+- Wiley / Science / PNAS / Annual Reviews / Royal Society Publishing / ACS / IOP / AIP / MDPI 在 browser HTML 成功路径下支持 `asset_profile="body"` / `"all"` 资源下载；AMS direct HTTP HTML 成功路径也支持正文资产下载，但不进入 browser workflow。
 - PDF/ePDF fallback 的正文 Markdown 来自共享 PDF 转换；`asset_profile="body"` / `"all"` 且 artifact saving 启用时，会保存 PDF 导出的正文图片。

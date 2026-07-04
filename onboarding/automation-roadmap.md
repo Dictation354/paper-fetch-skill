@@ -1,8 +1,8 @@
-# AI Onboarding Automation Roadmap
+# AI Onboarding Automation Scope
 
-本文记录 provider onboarding 中可以由脚本 / agent 自动完成的部分，以及必须由 operator 保留的人工边界。它补充 [`README.md`](./README.md)、[`coordinator-spec.md`](./coordinator-spec.md) 和 [`acceptance.md`](./acceptance.md)，不替代 manifest、access review 或 provider review schema。
+本文记录 provider onboarding 中当前可以由脚本 / agent 自动完成的部分，以及必须由 operator 保留的人工边界。它补充 [`README.md`](./README.md)、[`coordinator-spec.md`](./coordinator-spec.md) 和 [`acceptance.md`](./acceptance.md)，不替代 manifest、access review 或 provider review schema。
 
-普通用户 agent 对话入口、状态展示和可复制 prompt 见 [`runbook.md#agent-对话入口`](./runbook.md#agent-对话入口)；本文只记录自动化能力、不可自动化边界和 runner/worker 实现路线。
+普通用户 agent 对话入口、状态展示和可复制 prompt 见 [`runbook.md#agent-对话入口`](./runbook.md#agent-对话入口)；本文只记录现有自动化能力、不可自动化边界和 runner/worker 维护说明。
 
 ## 可自动化项
 

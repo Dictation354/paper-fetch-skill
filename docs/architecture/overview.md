@@ -175,7 +175,7 @@ provider 身份与能力配置统一来自 provider entry module 顶部注册的
 
 ### 10. CI / 回归验证边界
 
-`.github/workflows/ci.yml` 是 CI 命令事实来源：`unit`、`integration`、`devtools` 默认复用 `pyproject.toml` 的 `pytest-xdist` 并行配置，不传 `-n 0`。普通 `push` / `pull_request` 只运行常规质量门；重型 offline/release job 只在 `v*` tag 或手动 `workflow_dispatch` 路径运行。只有 live MCP、browser provider smoke、共享真实 publisher/API 状态或专门排查顺序问题的测试可串行，并在命令旁说明原因。
+`.github/workflows/ci.yml` 是 CI 命令事实来源：普通 `push` / `pull_request` 运行 `lint`、`integration` 和 `package-smoke`，完整 `unit` / `devtools` / unit coverage 留给本地 `scripts/dev-preflight.sh`。CI integration 与本地 unit / integration / devtools 默认复用 `pyproject.toml` 的 `pytest-xdist` 并行配置，不传 `-n 0`。重型 offline/release job 只在 `v*` tag 或手动 `workflow_dispatch` 路径运行。只有 live MCP、browser provider smoke、共享真实 publisher/API 状态或专门排查顺序问题的测试可串行，并在命令旁说明原因。
 
 架构边界由测试强制，而非仅靠文档约定：`tests/unit/test_import_boundaries.py` 阻止 provider-neutral 层 import `providers._*` 与 compat module，`tests/integration/test_architecture_closeout.py` 锁定 service facade、magic-key 契约、import-cycle 和兼容表面边界。更新提取规则文档后先运行 `python3 scripts/validate_extraction_rules.py`，再按变更范围运行并行 unit / integration。
 

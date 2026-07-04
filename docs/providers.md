@@ -48,7 +48,7 @@
 - 这张矩阵描述的是“当前代码里已经实现的 provider-owned waterfall”，不是“任意 DOI、任意运行环境都必然能拿到 publisher 全文”的承诺。
 - 尤其 `wiley` / `science` / `pnas` / `annualreviews` / `acs` / `iop` / `aip` / `mdpi` 的浏览器与 PDF/ePDF 路径，以及 AMS 的 direct HTTP HTML/PDF 路径，仍受 publisher 访问权限、paywall/challenge 与远端站点行为影响。
 - Provider/source/domain/API/fallback marker、候选 URL 模板、HTML artifact 持久化、XML provider 推断与正文阈值的事实来源是 `paper_fetch.provider_catalog.ProviderSpec`。`SOURCE_PROVIDER_MAP` 登记实际 envelope / `ArticleModel.source` 值；例如 Springer HTML / PDF fallback 分别公开 `springer_html` / `springer_pdf`，二者都映射到 `springer` provider。
-- `wiley` / `science` / `pnas` / `annualreviews` / `acs` / `iop` / `aip` / `mdpi` 只保留一套 provider-owned 浏览器栈，canonical runtime 是 `paper_fetch.providers.browser_workflow` 包入口；AMS 保留 provider-owned direct HTTP HTML/PDF 路径，不参与 browser workflow bootstrap。
+- `wiley` / `science` / `pnas` / `annualreviews` / `royalsocietypublishing` / `acs` / `iop` / `aip` / `mdpi` 只保留一套 provider-owned 浏览器栈，canonical runtime 是 `paper_fetch.providers.browser_workflow` 包入口；AMS 保留 provider-owned direct HTTP HTML/PDF 路径，不参与 browser workflow bootstrap。
 - browser workflow 的 bootstrap、PDF/ePDF fallback、article assembly、asset retry helper、client 基类和 browser fetchers 由 `browser_workflow/` 子包维护；storage-state 默认面向 provider catalog 中的浏览器 provider。
 - publisher 差异通过各 provider 模块 callback 下沉；browser-PDF executor 继续共享 `_pdf_fallback`，公开入口使用 `browser_workflow` 包。
 - browser-workflow 的 HTML bootstrap 通过 `RuntimeContext` 复用 CDP browser context；并发 asset download fetcher 使用线程私有 page/context 连接同一 CDP browser，不共享同步 Playwright page 对象。
@@ -642,13 +642,12 @@ CLI、Python API、MCP 当前默认值如下：
 - Windows 上 PyMuPDF 探测 Tesseract 时可能产生本地编码的 stdout/stderr；PDF Markdown 转换会对这类第三方文本子进程输出使用 replacement 解码，避免非 UTF-8 字节让 reader thread 抛出 `UnicodeDecodeError`。
 - 二次转换仍不足时，继续走候选重试或 provider 降级。
 
-#### Provider HTML 资产语义（wiley / science / pnas / ams / annualreviews / acs / iop / aip / mdpi / royalsocietypublishing / oxfordacademic / arxiv / ieee / copernicus / springer / elsevier）
+#### Provider HTML/XML 资产语义
 
 - `wiley` / `science` / `pnas` / `annualreviews` / `royalsocietypublishing` / `acs` / `iop` / `aip` / `mdpi` 的 CDP browser HTML 成功路径支持正文图、表和公式图片资产；Royal Society Publishing HTML 路线保留 Silverchair `div.fig-section` figure caption；AIP replay 覆盖本地 body figure asset rewrite；IOP 当前 committed replay 覆盖远程正文 figure links/captions、body table 和 formula image Markdown，并从 `_online`/`_lr` 标准图链接派生 `_hr` 高分辨率候选，资产下载合约按 best-effort 记录。
+- 这些 browser-backed provider 以 CDP browser context 为 HTML 主链路；普通 HTTP 直连不是 HTML 主路径。
+- 图片候选优先 full-size/original；全部失败后才尝试 preview，preview 也通过同一个 seeded browser context 下载。
 - AMS 走带浏览器 UA/Referer 的 direct HTTP HTML；正文资产使用等价浏览器请求头下载，不进入 CDP browser HTML/PDF fallback。
-- 除 AMS direct HTTP 路径外，这些 provider 以 CDP browser context 为主链路，普通 HTTP 直连不是 HTML 主路径。
-- 图片候选优先 full-size/original；全部失败后才尝试 preview。
-- preview 也通过同一个 seeded browser context 下载。
 - `ams` 的正文 figure 和 image-only table 会在原 DOM 位置渲染图片块；正文已消费的 figure / table 资产不会再追加到尾部附录。
 - `ams` 的正文 figure 下载候选优先来自 `Download Figure` EPS/TIFF；转换后的 PNG 是 Markdown 使用的本地图片，原始源文件保存在同一资产目录并通过 `original_source_path` / `conversion_source_format` / `conversion_output_format` 记录。
 - `ams` 表格没有真实 HTML table 时，以 `Table N.`、保留 inline 语义的 caption 和 full-size 表格图片作为可读降级。
@@ -777,7 +776,7 @@ CLI 主输出、artifact 与命令组合的用户语义见 [`cli.md`](cli.md)；
 - CLI/MCP 通过 `workflow.request_builder.build_fetch_pipeline_request()` 统一装配 `FetchPipelineRequest`。
 - `FetchPipeline` 负责创建 `RuntimeContext`。
 - Provider payload、Springer HTML local copy、Markdown 保存和 asset 诊断仍由 `ArtifactStore` 应用。
-- CLI 的 `--output-dir` 是默认主输出、Markdown、PDF fallback 来源文件和本地资产目录；在 `--artifact-mode all` 下也会接收 provider HTML/PDF/图片等调试 artifact。未显式传 `--output` 且指定 `--output-dir` 时，CLI 会把主输出写入该目录，文件名为 `<doi>.md`、`<doi>.json` 或 `<doi>.both.json`，不向 stdout 打印正文；显式 `--output -` 会强制保留 stdout，显式 `--output <path>` 则使用该路径作为主输出。
+- CLI 的 `--output-dir` 是默认主输出、Markdown、PDF fallback 来源文件和本地资产目录；在 `--artifact-mode all` 下也会接收 provider HTML/PDF/图片等调试 artifact。未显式传 `--output` 且指定 `--output-dir` 时，CLI 会把主输出写入该目录，文件名使用安全化论文 stem 加 `.md`、`.json` 或 `.both.json` 后缀，不向 stdout 打印正文；显式 `--output -` 会强制保留 stdout，显式 `--output <path>` 则使用该路径作为主输出。
 - 既有 warning 与 `download:*` source trail marker 保持不变。
 - MCP `download_dir` 是 cache/artifact scope，不是 CLI `--output-dir` 那样的主输出目录；MCP 只有 `save_markdown=true` 才会单独写 Markdown 主体文件并返回 `saved_markdown_path`。
 - MCP fetch-envelope sidecar/cache-index 是 adapter cache，不按 provider artifact 处理；JSON 写入复用 `ArtifactStore` 的原子 writer，但不受 `artifact_mode=markdown-assets|none` 禁止。
@@ -1102,7 +1101,7 @@ IEEE direct REST HTML / clean-browser HTML / direct HTTP PDF / seeded-browser PD
 
 #### Browser HTML readiness
 
-- `wiley` / `science` / `pnas` / `ams` / `annualreviews` / `royalsocietypublishing` / `acs` / `iop` / `aip` / `mdpi` 的 HTML fetch 会先等待 provider 正文 DOM 命中并连续两次轮询稳定，再执行 pre-extraction challenge / paywall 判定。
+- `wiley` / `science` / `pnas` / `annualreviews` / `royalsocietypublishing` / `acs` / `iop` / `aip` / `mdpi` 的 browser HTML fetch 会先等待 provider 正文 DOM 命中并连续两次轮询稳定，再执行 pre-extraction challenge / paywall 判定。
 - 如果稳定正文 DOM 已出现，即使页面 shell 仍残留 Cloudflare / challenge 文案，也会继续进入 Markdown 抽取和 availability 判定；只有等待超时仍无可抽取正文 DOM 时，才把 challenge / paywall 作为 HTML route fallback 条件。
 
 <a id="royalsocietypublishing"></a>

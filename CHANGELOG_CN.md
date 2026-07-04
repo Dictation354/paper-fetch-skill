@@ -6,6 +6,15 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 3.0.1 - 2026-07-04
+
+### 变更
+
+- `paper-fetch browser-preflight` / `paper-fetch auth` 的 Wiley 和 Science 内置样例改为结构更轻、已有 fixture 覆盖的 full-text 页面，减少默认 browser preflight 的慢解析耗时。
+- `paper-fetch browser-preflight` / `paper-fetch auth royalsocietypublishing` 新增 Royal Society Publishing 内置样例，默认预检现在会覆盖该 browser-backed provider。
+- 默认 GitHub Actions CI 移除完整 unit/devtools/coverage job；本地 `scripts/dev-preflight.sh` 仍保留完整 unit、devtools 和可选 coverage 检查。
+- 刷新用户与 agent 文档：恢复 README 展示内容和抓取效果截图，同时保留精简快速上手路径；修正 AMS direct HTTP / browser runtime 表述，统一 CLI `--output-dir` 默认文件名说明为论文 stem 命名，并把 onboarding 中已完成 provider 示例替换为占位 provider 示例。
+
 ## 3.0.0 - 2026-07-03
 
 ### 变更

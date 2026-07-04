@@ -21,7 +21,7 @@ Useful options:
 - `--batch-results <path>`: JSONL batch summary path (default: `<output-dir>/batch-results.jsonl`).
 - `--format markdown|json|both`: serialization format for stdout, `--output`, or the default primary output under `--output-dir` (default: `markdown`).
 - `--output -|<path>`: formatted output destination. Explicit `-` means stdout.
-- `--output-dir <dir>`: default primary output, Markdown, PDF fallback source, and asset directory. When `--output` is omitted, the CLI writes the primary output here as `<doi>.md`, `<doi>.json`, or `<doi>.both.json` and does not print the body to stdout.
+- `--output-dir <dir>`: default primary output, Markdown, PDF fallback source, and asset directory. When `--output` is omitted, the CLI writes the primary output here using a sanitized paper stem plus the selected format suffix and does not print the body to stdout.
 - `--artifact-mode markdown-assets|all|none`: local artifact retention (default: `markdown-assets`).
 - `--no-download`
 - `--save-markdown`: extra full-text Markdown save step; only writes when full text was retrieved.

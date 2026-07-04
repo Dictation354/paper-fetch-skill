@@ -67,7 +67,7 @@ def test_browser_preflight_adds_provider_storage_path_for_external_cdp(
         captured["config"] = config
         return BrowserFetchedHtml(
             source_url=candidate_urls[0],
-            final_url="https://onlinelibrary.wiley.com/doi/full/10.1111/gcb.16414",
+            final_url="https://onlinelibrary.wiley.com/doi/full/10.1111/gcb.15322",
             html="<html><title>Sample</title><body>Article body</body></html>",
             response_status=200,
             response_headers={},
@@ -111,7 +111,7 @@ def test_browser_preflight_adds_provider_storage_path_for_external_cdp(
     assert result.ok is True
     assert result.provider == "wiley"
     assert (
-        result.final_url == "https://onlinelibrary.wiley.com/doi/full/10.1111/gcb.16414"
+        result.final_url == "https://onlinelibrary.wiley.com/doi/full/10.1111/gcb.15322"
     )
     assert result.storage_state_path == (
         tmp_path
@@ -122,8 +122,8 @@ def test_browser_preflight_adds_provider_storage_path_for_external_cdp(
     )
     assert captured["publisher"] == "wiley"
     assert captured["candidate_urls"] == [
-        "https://onlinelibrary.wiley.com/doi/full/10.1111/gcb.16414",
-        "https://onlinelibrary.wiley.com/doi/10.1111/gcb.16414",
+        "https://onlinelibrary.wiley.com/doi/full/10.1111/gcb.15322",
+        "https://onlinelibrary.wiley.com/doi/10.1111/gcb.15322",
     ]
     runtime = captured["config"]
     assert isinstance(runtime, BrowserRuntimeConfig)
@@ -198,6 +198,65 @@ def test_browser_preflight_uses_provider_html_candidates_for_aip(
         ),
         "https://pubs.aip.org/doi/full/10.1063/5.0129134",
         "https://pubs.aip.org/doi/10.1063/5.0129134",
+    ]
+
+
+def test_browser_preflight_uses_provider_html_candidates_for_royal_society(
+    tmp_path: Path,
+) -> None:
+    captured: dict[str, object] = {}
+
+    def load_runtime_config(env, *, provider, doi):
+        return _runtime_config(tmp_path, provider=provider, doi=doi)
+
+    def fetch_html_with_browser(candidate_urls, *, publisher, config, **kwargs):
+        del publisher, config, kwargs
+        captured["candidate_urls"] = list(candidate_urls)
+        return BrowserFetchedHtml(
+            source_url=candidate_urls[1],
+            final_url=(
+                "https://royalsocietypublishing.org/rsos/article/7/10/201200/95314/"
+                "Adaptation-of-the-carbamoyl-phosphate-synthetase"
+            ),
+            html="<html><body>Royal Society article body</body></html>",
+            response_status=200,
+            response_headers={},
+            title="Royal Society sample",
+            summary="Royal Society article body",
+            browser_context_seed={},
+        )
+
+    with (
+        mock.patch.object(
+            browser_preflight, "load_runtime_config", side_effect=load_runtime_config
+        ),
+        mock.patch.object(browser_preflight, "ensure_runtime_ready"),
+        mock.patch.object(
+            browser_preflight,
+            "fetch_html_with_browser",
+            side_effect=fetch_html_with_browser,
+        ),
+        mock.patch.object(
+            browser_preflight,
+            "default_browser_workflow_deps",
+            side_effect=_preflight_deps,
+        ),
+        mock.patch.object(
+            html_extraction,
+            "_cached_browser_workflow_markdown",
+            side_effect=_fake_markdown("Royal Society sample"),
+        ),
+    ):
+        result = browser_preflight.preflight_browser_provider(
+            "royalsocietypublishing",
+            env={XDG_DATA_HOME_ENV_VAR: str(tmp_path)},
+        )
+
+    assert result.ok is True
+    assert result.provider == "royalsocietypublishing"
+    assert captured["candidate_urls"] == [
+        "https://royalsocietypublishing.org/doi/10.1098/rsos.201200",
+        "https://doi.org/10.1098/rsos.201200",
     ]
 
 

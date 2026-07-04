@@ -40,12 +40,12 @@ class AuthTarget:
 
 AUTH_TARGETS: Mapping[str, AuthTarget] = {
     "wiley": AuthTarget(
-        doi="10.1111/gcb.16414",
-        url="https://onlinelibrary.wiley.com/doi/full/10.1111/gcb.16414",
+        doi="10.1111/gcb.15322",
+        url="https://onlinelibrary.wiley.com/doi/full/10.1111/gcb.15322",
     ),
     "science": AuthTarget(
-        doi="10.1126/science.ady3136",
-        url="https://www.science.org/doi/full/10.1126/science.ady3136",
+        doi="10.1126/science.adz3492",
+        url="https://www.science.org/doi/full/10.1126/science.adz3492",
     ),
     "pnas": AuthTarget(
         doi="10.1073/pnas.2406303121",
@@ -54,6 +54,10 @@ AUTH_TARGETS: Mapping[str, AuthTarget] = {
     "mdpi": AuthTarget(
         doi="10.3390/membranes15030093",
         url="https://www.mdpi.com/2077-0375/15/3/93",
+    ),
+    "royalsocietypublishing": AuthTarget(
+        doi="10.1098/rsos.201200",
+        url="https://royalsocietypublishing.org/doi/10.1098/rsos.201200",
     ),
     "annualreviews": AuthTarget(
         doi="10.1146/annurev-control-030123-013355",

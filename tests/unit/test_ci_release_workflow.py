@@ -188,14 +188,29 @@ class CiReleaseWorkflowTests(unittest.TestCase):
             )
         )
 
+    def test_ci_workflow_omits_full_unit_gate(self) -> None:
+        workflow = _load_ci_workflow()
+        workflow_text = CI_WORKFLOW.read_text(encoding="utf-8")
+
+        self.assertNotIn("unit", workflow["jobs"])
+        self.assertNotIn("Run unit suite", workflow_text)
+        self.assertNotIn("python -m pytest tests/unit -q", workflow_text)
+        self.assertNotIn("tests/unit -q --durations=30", workflow_text)
+        self.assertNotIn("tests/devtools -q", workflow_text)
+        self.assertNotIn("--cov=paper_fetch", workflow_text)
+        self.assertNotIn("--cov-fail-under=40", workflow_text)
+
     def test_release_job_requires_v_tag_and_release_intent(self) -> None:
         workflow = _load_ci_workflow()
         release_job = workflow["jobs"]["release-offline-packages"]
         condition = _job_if(workflow, "release-offline-packages")
 
         self.assertTrue(
-            {"package-smoke", *OFFLINE_JOB_IDS}.issubset(release_job["needs"])
+            {"lint", "integration", "package-smoke", *OFFLINE_JOB_IDS}.issubset(
+                release_job["needs"]
+            )
         )
+        self.assertNotIn("unit", release_job["needs"])
         self.assertFalse(
             _evaluate_github_if(condition, event_name="push", ref="refs/heads/main")
         )
@@ -256,11 +271,8 @@ class CiReleaseWorkflowTests(unittest.TestCase):
 
         self.assertIn("python -m mypy", workflow)
         self.assertIn("python -m ruff format --check .", workflow)
-        self.assertIn("--cov=paper_fetch", workflow)
-        self.assertIn("--cov-report=term-missing", workflow)
-        self.assertIn("--cov-report=xml", workflow)
-        self.assertIn("--cov-fail-under=40", workflow)
         self.assertIn("bash scripts/dev-preflight.sh --help", workflow)
+        self.assertIn("tests/integration -q --durations=30", workflow)
         self.assertIn("PYTHON_BIN", preflight)
         self.assertIn("-m mypy", preflight)
         self.assertNotIn("--no-site-packages", preflight)

@@ -57,8 +57,8 @@ paper-fetch-skill-windows-x86_64-setup.exe
 
 CI 自动发布规则：
 
-- 普通 `push` / `pull_request` 只运行 `lint`、`unit`、`integration` 和 `package-smoke` 常规质量门，不启动 Linux / macOS / Windows 离线包矩阵或 release job。
-- 推送 `v*` tag 时，CI 会先等待 `lint`、`unit`、`integration`、`package-smoke`、`offline-linux-x86-64`、`offline-macos-install` 和 `offline-windows-x86-64` 全部成功，再创建对应 GitHub Release。
+- 普通 `push` / `pull_request` 只运行 `lint`、`integration` 和 `package-smoke` 常规质量门，不启动完整 unit / devtools / coverage，也不启动 Linux / macOS / Windows 离线包矩阵或 release job。
+- 推送 `v*` tag 时，CI 会先等待 `lint`、`integration`、`package-smoke`、`offline-linux-x86-64`、`offline-macos-install` 和 `offline-windows-x86-64` 全部成功，再创建对应 GitHub Release。
 - 手动运行 `workflow_dispatch` 可以运行离线包矩阵；设置 `run_offline_windows_only=true` 时只运行 `offline-windows-x86-64`，其它常规 job 和非 Windows 离线 job 会跳过。
 - release job 会下载本次运行产出的 `paper-fetch-skill-*` artifacts，确认上面 9 个文件都存在且没有额外文件，然后把它们作为 release assets 上传。
 - `offline-macos-install` 会在 `macos-latest` 上使用 CPython 3.11、3.12、3.13、3.14 矩阵构建本机架构 macOS tarball，执行安装器验证、headful preset 安装布局检查，并用安装后的 `paper-fetch` / `python` 通过 CloakBrowser 启动本机浏览器打开本地 `data:` 页面，确认 macOS 包安装后可实际使用浏览器路径；验证通过后上传 `paper-fetch-skill-offline-macos-*-cp*.tar.gz` artifact。
@@ -306,7 +306,7 @@ paper-fetch-install-image-tools
 
 ### CI / GitHub Actions
 
-普通 CI 的 unit suite 会验证 Elsevier display formula 的 `texmath` 输出格式。GitHub Actions 因此需要先准备 Haskell/cabal，再执行：
+本地完整 unit suite 和手动 `full-golden` workflow 会验证或使用公式 / 图片后端。GitHub Actions 的 `full-golden` job 因此需要先准备 Haskell/cabal，再执行：
 
 ```bash
 python -m paper_fetch.formula.install --target-dir "$PWD/.formula-tools" --no-node
@@ -314,7 +314,7 @@ python -m paper_fetch.formula.install --target-dir "$PWD/.formula-tools" --no-no
 python -m paper_fetch.image_tools.install --target-dir "$PWD/.image-tools"
 ```
 
-测试步骤应设置 `PAPER_FETCH_FORMULA_TOOLS_DIR=$GITHUB_WORKSPACE/.formula-tools` 和 `PAPER_FETCH_IMAGE_TOOLS_DIR=$GITHUB_WORKSPACE/.image-tools`。这里用 `--no-node` 是为了避免安装失败后静默落到 `mathml-to-latex` fallback；如果 `texmath` 没有装好，CI 会在验证步骤直接失败。图片后端安装是 best-effort：Ghostscript/libvips 不可用时，相关测试只覆盖识别和回退契约。
+相关测试步骤应设置 `PAPER_FETCH_FORMULA_TOOLS_DIR=$GITHUB_WORKSPACE/.formula-tools` 和 `PAPER_FETCH_IMAGE_TOOLS_DIR=$GITHUB_WORKSPACE/.image-tools`。这里用 `--no-node` 是为了避免安装失败后静默落到 `mathml-to-latex` fallback；如果 `texmath` 没有装好，对应验证步骤会直接失败。图片后端安装是 best-effort：Ghostscript/libvips 不可用时，相关测试只覆盖识别和回退契约。
 
 CI 还包含 package smoke job：执行 `python -m build` 生成 sdist / wheel，然后在干净 venv 里安装 wheel，验证 `paper-fetch --help` 可运行，并确认 `paper-fetch-mcp` console script entry point 可以解析和 import。
 
@@ -356,7 +356,7 @@ paper-fetch auth <provider>
 paper-fetch auth wiley --url "https://onlinelibrary.wiley.com/doi/full/10.1111/example"
 ```
 
-`provider` 来自 browser runtime catalog，例如 `wiley` / `science` / `pnas` / `annualreviews` / `acs` / `iop` / `aip` / `mdpi`。未传 `--url` 时打开内置样例文章；传入 `--url` 时打开具体失败文章页。命令强制 headed 模式，打印 managed Chrome 启动目录和 storage-state 路径，终端按 Enter 后保存过滤后的本地 storage-state 并退出，不写 `.env`。AMS 主路径是 direct HTTP HTML，不支持 `paper-fetch auth ams`。
+`provider` 来自 browser runtime catalog，例如 `wiley` / `science` / `pnas` / `mdpi` / `royalsocietypublishing` / `annualreviews` / `acs` / `iop` / `aip`。未传 `--url` 时打开内置样例文章；传入 `--url` 时打开具体失败文章页。命令强制 headed 模式，打印 managed Chrome 启动目录和 storage-state 路径，终端按 Enter 后保存过滤后的本地 storage-state 并退出，不写 `.env`。AMS 主路径是 direct HTTP HTML，不支持 `paper-fetch auth ams`。
 
 这些浏览器 HTML route 会在 challenge/paywall 判定前先等待正文 DOM 稳定；如果正文已经可抽取，页面残留的 Cloudflare/challenge 文案不会提前中断 HTML route，最终全文/摘要/降级结论仍由 Markdown 抽取后的 availability 判定负责。
 
@@ -375,13 +375,13 @@ export CLOAKBROWSER_PROFILE_DIR="$HOME/.cache/paper-fetch/browser-profile"
 
 补充：
 
-- `wiley` / `science` / `pnas` / `annualreviews` / `acs` / `iop` / `aip` / `mdpi` 需要本地 browser runtime；`ams` direct HTTP HTML/PDF 路径不启动 browser runtime，也不参与 `paper-fetch auth` / `browser-preflight`。`CLOAKBROWSER_CDP_ENDPOINT` 可显式复用外部浏览器，未设置时自动启动 cloakbrowser Chrome，并默认按 publisher 复用本地 storage-state
+- `wiley` / `science` / `pnas` / `mdpi` / `royalsocietypublishing` / `annualreviews` / `acs` / `iop` / `aip` 需要本地 browser runtime；`ams` direct HTTP HTML/PDF 路径不启动 browser runtime，也不参与 `paper-fetch auth` / `browser-preflight`。`CLOAKBROWSER_CDP_ENDPOINT` 可显式复用外部浏览器，未设置时自动启动 cloakbrowser Chrome，并默认按 publisher 复用本地 storage-state
 - `paper-fetch auth <provider>` 是自动过盾失败后的人工 headed fallback；storage-state 只保存本机辅助状态，不绕过权限，也不作为正常抓取的必要条件
 - `elsevier` 只需要 `ELSEVIER_API_KEY`
 - `ieee` 不需要额外 env；普通 fetch 在无授权或 REST/browser/PDF route 返回非全文时会降级到 provider abstract-only / metadata-only；golden criteria live review 面向具备合法 IEEE Xplore 授权上下文的机器，IEEE 样本预期为 fulltext，降级会作为 blocked live fetch 暴露；配置了 `download_dir` 且 artifact mode 为 `all` 时 PDF fallback 的最后一个非 PDF HTML 会保存在 `ieee_pdf_fallback/pdf.failure.html`
 - `arxiv` 不需要额外 env；路径细节见 [`providers.md` 的 arXiv 小节](providers.md#arxiv)。
 - 如果只想启用 `wiley` 的官方 TDM API PDF lane，可以只配置 `WILEY_TDM_CLIENT_TOKEN`；这不会启用 HTML 资产下载或 seeded-browser PDF/ePDF fallback
-- `wiley` / `science` / `pnas` / `annualreviews` / `acs` / `iop` / `aip` / `mdpi` 的 browser workflow 顺序见 [`providers.md`](providers.md#wiley-science-pnas-browser-workflow)；AMS 的 direct HTTP HTML/PDF 顺序见同页 AMS 小节。
+- `wiley` / `science` / `pnas` / `mdpi` / `royalsocietypublishing` / `annualreviews` / `acs` / `iop` / `aip` 的 browser workflow 顺序见 [`providers.md`](providers.md#wiley-science-pnas-browser-workflow)；AMS 的 direct HTTP HTML/PDF 顺序见同页 AMS 小节。
 
 ## 5. 部署到 Codex
 
@@ -477,7 +477,7 @@ python3 -m pip install .
 paper-fetch --query "10.1186/1471-2105-11-421"
 ```
 
-CLI 默认打印 Markdown 到终端；如果指定 `--output-dir` 且未显式传 `--output`，主输出会写入 `<doi>.md`、`<doi>.json` 或 `<doi>.both.json`，正文不会打印到终端。完整输出、artifact、资产下载和错误码语义见 [`cli.md`](cli.md)。
+CLI 默认打印 Markdown 到终端；如果指定 `--output-dir` 且未显式传 `--output`，主输出会用安全化论文 stem 加 `.md`、`.json` 或 `.both.json` 后缀写入该目录，正文不会打印到终端。完整输出、artifact、资产下载和错误码语义见 [`cli.md`](cli.md)。
 
 如果你在仓库源码目录里做 repo-local 验证，先安装测试依赖，并推荐显式带上 `PYTHONPATH=src`。默认 `pytest` 覆盖 `tests/unit` + `tests/integration` + `tests/devtools` 并启用多进程并行；`tests/live` 需要显式指定路径并串行运行：
 
@@ -488,9 +488,9 @@ PYTHONPATH=src pytest tests/unit/test_cli.py tests/unit/test_service_*.py tests/
 PYTHONPATH=src pytest
 ```
 
-`scripts/dev-preflight.sh` 是本地常规门禁入口，CI 使用同一组核心命令参数：优先使用 repo-local `.venv/bin/python`，不存在时退回 `python3`，也可显式设置 `PYTHON_BIN=/path/to/python`。脚本依次运行 `ruff format --check`、`ruff check`、contract 层 `mypy`（`pyproject.toml` 配置 `no_site_packages = true`）、`tests/unit --durations=30`、`tests/devtools --durations=30`、`scripts/validate_extraction_rules.py --ci` 和 `tests/integration --durations=30`；如果缺少 ruff / mypy / pytest，会提示先运行 `scripts/dev-bootstrap.sh` 或指定已安装依赖的解释器。快速迭代可用 `--fast`，需要单独排除 integration 或 type check 时使用 `--skip-integration` / `--skip-typecheck`。CI pytest 步骤保留 `--durations=30` 日志用于定位慢测，但默认仍复用 `pyproject.toml` 的 xdist 并行配置。
+`scripts/dev-preflight.sh` 是本地完整门禁入口：优先使用 repo-local `.venv/bin/python`，不存在时退回 `python3`，也可显式设置 `PYTHON_BIN=/path/to/python`。脚本依次运行 `ruff format --check`、`ruff check`、contract 层 `mypy`（`pyproject.toml` 配置 `no_site_packages = true`）、`tests/unit --durations=30`、`tests/devtools --durations=30`、`scripts/validate_extraction_rules.py --ci` 和 `tests/integration --durations=30`；如果缺少 ruff / mypy / pytest，会提示先运行 `scripts/dev-bootstrap.sh` 或指定已安装依赖的解释器。快速迭代可用 `--fast`，需要单独排除 integration 或 type check 时使用 `--skip-integration` / `--skip-typecheck`。GitHub CI 为缩短耗时只保留 ruff / mypy / preflight help、extraction-rule 校验和 `tests/integration --durations=30`，不再运行完整 `tests/unit`、`tests/devtools` 或 unit coverage；CI pytest 步骤仍复用 `pyproject.toml` 的 xdist 并行配置。
 
-Provider 重构前可以生成本地 coverage baseline，用来观察当前 unit suite 保护范围。CI 与本地 `--coverage` preflight 都生成 `term-missing` 和 `coverage.xml`，并强制低噪声 baseline `--cov-fail-under=40`；该阈值是防止覆盖率接线失效和大面积倒退的底线，不替代 provider-specific fixture / live/browser 验证：
+Provider 重构前可以生成本地 coverage baseline，用来观察当前 unit suite 保护范围。本地 `--coverage` preflight 会生成 `term-missing` 和 `coverage.xml`，并强制低噪声 baseline `--cov-fail-under=40`；该阈值是防止覆盖率接线失效和大面积倒退的底线，不替代 provider-specific fixture / live/browser 验证。GitHub CI 不再生成 unit coverage report：
 
 ```bash
 bash scripts/dev-preflight.sh --fast --coverage
@@ -505,7 +505,7 @@ PYTHONPATH=src python3 -m pytest tests/unit -q --cov=paper_fetch --cov-report=te
 PAPER_FETCH_RUN_FULL_GOLDEN=1 PYTHONPATH=src python3 -m pytest tests/integration/test_golden_corpus.py -q
 ```
 
-未设置 `PAPER_FETCH_RUN_LIVE=1` 时，`tests/live/test_live_publishers.py` 和 `tests/live/test_live_mcp.py` 应稳定 skip。额外验证 live smoke 时，`arxiv` 和 `ams` 不需要凭据或 browser runtime；`wiley` / `science` / `pnas` / `annualreviews` / `acs` / `iop` / `aip` / `mdpi` 需要可用 browser runtime，默认会自动启动 cloakbrowser Chrome 并按 publisher 复用 storage-state；如需复用已验证浏览器，可设置 `CLOAKBROWSER_CDP_ENDPOINT`。`ieee` 不需要 IEEE API key，但 IEEE fulltext smoke 预期当前机器具备合法 IEEE Xplore 访问上下文。live 测试依赖真实 publisher/API/browser/授权上下文和外部限流状态，建议串行运行：
+未设置 `PAPER_FETCH_RUN_LIVE=1` 时，`tests/live/test_live_publishers.py` 和 `tests/live/test_live_mcp.py` 应稳定 skip。额外验证 live smoke 时，`arxiv` 和 `ams` 不需要凭据或 browser runtime；`wiley` / `science` / `pnas` / `mdpi` / `royalsocietypublishing` / `annualreviews` / `acs` / `iop` / `aip` 需要可用 browser runtime，默认会自动启动 cloakbrowser Chrome 并按 publisher 复用 storage-state；如需复用已验证浏览器，可设置 `CLOAKBROWSER_CDP_ENDPOINT`。`ieee` 不需要 IEEE API key，但 IEEE fulltext smoke 预期当前机器具备合法 IEEE Xplore 访问上下文。live 测试依赖真实 publisher/API/browser/授权上下文和外部限流状态，建议串行运行：
 
 ```bash
 PAPER_FETCH_RUN_LIVE=1 PYTHONPATH=src python3 -m pytest tests/live/test_live_publishers.py tests/live/test_live_mcp.py -q -n 0

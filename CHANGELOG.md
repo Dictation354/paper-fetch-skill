@@ -6,6 +6,15 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 3.0.1 - 2026-07-04
+
+### Changed
+
+- Changed the built-in Wiley and Science samples used by `paper-fetch browser-preflight` and `paper-fetch auth` to lighter full-text pages already covered by fixtures, reducing slow parsing time in the default browser preflight.
+- Added a built-in Royal Society Publishing sample for `paper-fetch browser-preflight` and `paper-fetch auth royalsocietypublishing`, so the default browser preflight now covers that browser-backed provider.
+- Removed the full GitHub Actions unit/devtools/coverage job from the default CI gate; local `scripts/dev-preflight.sh` still runs the complete unit, devtools, and optional coverage checks.
+- Refreshed user and agent documentation: restored the README showcase and example screenshots while keeping the quick-start path compact, corrected AMS direct-HTTP/browser-runtime wording, aligned CLI `--output-dir` filename descriptions with paper-stem output naming, and replaced completed-provider onboarding examples with placeholder provider examples.
+
 ## 3.0.0 - 2026-07-03
 
 ### Changed
