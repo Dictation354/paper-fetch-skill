@@ -13,18 +13,25 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest import mock
 
+from paper_fetch.browser_preflight import (
+    BrowserPreflightResult,
+    run_browser_provider_preflight,
+)
 from paper_fetch.http import RequestCancelledError, RequestFailure
 from paper_fetch.mcp import batch as mcp_batch
+from paper_fetch.mcp import browser_preflight as mcp_browser_preflight
 from paper_fetch.mcp import cache_payloads as mcp_cache_payloads
 from paper_fetch.mcp import fetch_tool as mcp_fetch_tool
 from paper_fetch.mcp._deps import MCPDeps, default_mcp_deps
 from paper_fetch.mcp.cache_index import (
+    IDENTITY_PROOF_MARKDOWN_REGISTRATION,
     LOCK_DIRNAME,
     cache_lock_dir,
     cache_scope_id,
     find_cached_entry,
     list_cache_entries,
     preferred_cached_entries,
+    register_markdown_entry,
     refresh_cache_index_for_doi,
     scoped_cache_index_resource_uri,
     scoped_cached_resource_uri_prefix,
@@ -87,6 +94,8 @@ def _mcp_deps_from_namespace(**overrides) -> MCPDeps:
         "find_cached_entry": mcp_tools.find_cached_entry,
         "list_cache_entries": mcp_tools.list_cache_entries,
         "preferred_cached_entries": mcp_tools.preferred_cached_entries,
+        "register_markdown_entry": mcp_tools.register_markdown_entry,
+        "run_browser_provider_preflight": mcp_tools.run_browser_provider_preflight,
     }
     values.update(overrides)
     return MCPDeps(**values)
@@ -158,6 +167,12 @@ mcp_tools = SimpleNamespace(
     batch_resolve_tool_async=lambda **kwargs: _call_async_with_namespace_deps(
         mcp_batch.batch_resolve_tool_async, kwargs
     ),
+    browser_preflight_payload=lambda **kwargs: _call_with_namespace_deps(
+        mcp_browser_preflight.browser_preflight_payload, kwargs
+    ),
+    browser_preflight_tool_async=lambda **kwargs: _call_async_with_namespace_deps(
+        mcp_browser_preflight.browser_preflight_tool_async, kwargs
+    ),
     build_clients=build_clients,
     build_fetch_tool_result=mcp_fetch_tool.build_fetch_tool_result,
     build_runtime_env=build_runtime_env,
@@ -185,6 +200,8 @@ mcp_tools = SimpleNamespace(
         mcp_fetch_tool.provider_status_tool, kwargs
     ),
     refresh_cache_index_for_doi=refresh_cache_index_for_doi,
+    register_markdown_entry=register_markdown_entry,
+    run_browser_provider_preflight=run_browser_provider_preflight,
     resolve_mcp_download_dir=resolve_mcp_download_dir,
     resolve_paper_payload=lambda **kwargs: _call_with_namespace_deps(
         mcp_fetch_tool.resolve_paper_payload, kwargs
@@ -293,7 +310,22 @@ def create_cached_downloads(download_dir: Path, doi: str) -> None:
     base = sanitize_filename(doi)
     download_dir.mkdir(parents=True, exist_ok=True)
     (download_dir / f"{base}.xml").write_text("<article />", encoding="utf-8")
-    (download_dir / f"{base}.md").write_text("# Cached Markdown\n", encoding="utf-8")
+    (download_dir / f"{base}.md").write_text(
+        "\n".join(
+            [
+                "---",
+                f'doi: "{doi}"',
+                'source: "unit_test"',
+                "has_fulltext: true",
+                'content_kind: "fulltext"',
+                "---",
+                "",
+                "# Cached Markdown",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
     asset_dir = download_dir / f"{base}_assets"
     asset_dir.mkdir(parents=True, exist_ok=True)
     (asset_dir / "figure-1.png").write_bytes(b"\x89PNG\r\n")

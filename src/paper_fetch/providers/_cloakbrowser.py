@@ -771,6 +771,7 @@ def fetch_html_with_cloakbrowser(
         "lightweight_seed_only": bool(lightweight_seed_only),
         "external_cdp": bool(config.cdp_endpoint),
         "storage_state_path": str(_storage_state_path(config) or ""),
+        "storage_state_write_enabled": config.persist_storage_state,
     }
     overall_started = time.monotonic()
 
@@ -1114,9 +1115,17 @@ def fetch_html_with_cloakbrowser(
                 diagnostics={"browser_runtime_trace": trace},
             )
     finally:
-        trace["storage_state_save"] = _save_storage_state(
-            browser_context, config, filter_url=latest_storage_state_url
-        )
+        if config.persist_storage_state:
+            trace["storage_state_save"] = _save_storage_state(
+                browser_context, config, filter_url=latest_storage_state_url
+            )
+        else:
+            trace["storage_state_save"] = {
+                "attempted": False,
+                "saved": False,
+                "path": str(_storage_state_path(config) or "") or None,
+                "reason": "storage_state_write_disabled",
+            }
         trace["duration_seconds"] = round(time.monotonic() - overall_started, 3)
         if runtime_context is not None and hasattr(
             runtime_context, "accumulate_stage_timing"

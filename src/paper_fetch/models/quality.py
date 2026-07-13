@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Sequence
-from typing import Any
+from typing import Any, cast
 from collections.abc import Mapping
 
 from ..utils import normalize_text
@@ -25,6 +25,12 @@ from ..quality.reason_codes import (
 from .markdown import strip_markdown_images
 from .schema import (
     ArticleModel,
+    AssetDiagnostic,
+    AssetDiagnosticStatus,
+    AssetKindSummary,
+    AssetLogicalKind,
+    AssetProfile,
+    AssetQualitySummary,
     BodyQualityMetrics,
     ContentKind,
     EXTRACTION_REVISION,
@@ -72,6 +78,26 @@ QUALITY_FLAG_FORMULA_MISSING_PRESENT = "formula_missing_present"
 
 
 QUALITY_FLAG_CACHED_WITH_CURRENT_REVISION = "cached_with_current_revision"
+
+
+_ASSET_LOGICAL_KINDS: tuple[AssetLogicalKind, ...] = (
+    "figure",
+    "formula",
+    "table",
+    "supplement",
+    "decoration",
+)
+
+
+_ASSET_DIAGNOSTIC_STATUSES: frozenset[str] = frozenset(
+    {
+        "available",
+        "not_requested",
+        "not_archived",
+        "failed",
+        "placeholder_suspected",
+    }
+)
 
 
 _QUALITY_ACCESS_SIGNAL_TOKENS = frozenset(
@@ -207,6 +233,14 @@ def _dedupe_strings(values: Sequence[str] | None) -> list[str]:
     )
 
 
+def coerce_asset_provenance(value: Any) -> list[str]:
+    """Normalize additive asset provenance while accepting legacy payloads."""
+
+    if not isinstance(value, Sequence) or isinstance(value, (str, bytes, bytearray)):
+        return []
+    return _dedupe_strings([str(item) for item in value])
+
+
 def _coerce_diagnostic_value(value: Any) -> Any:
     if value is None or isinstance(value, (bool, int, float)):
         return value
@@ -232,6 +266,177 @@ def coerce_asset_failure_diagnostics(value: Any) -> list[dict[str, Any]]:
         if isinstance(normalized, dict) and normalized:
             failures.append(normalized)
     return failures
+
+
+def _nonnegative_int(value: Any) -> int:
+    try:
+        return max(int(value or 0), 0)
+    except (TypeError, ValueError):
+        return 0
+
+
+def _optional_nonnegative_int(value: Any) -> int | None:
+    if value is None or value == "":
+        return None
+    try:
+        return max(int(value), 0)
+    except (TypeError, ValueError):
+        return None
+
+
+def _asset_logical_kind(value: Any) -> AssetLogicalKind:
+    normalized = normalize_text(str(value or "")).lower()
+    return (
+        cast(AssetLogicalKind, normalized)
+        if normalized in _ASSET_LOGICAL_KINDS
+        else "decoration"
+    )
+
+
+def _asset_profile(value: Any) -> AssetProfile:
+    normalized = normalize_text(str(value or "")).lower()
+    return (
+        cast(AssetProfile, normalized)
+        if normalized in {"none", "body", "all"}
+        else "none"
+    )
+
+
+def _asset_diagnostic_status(value: Any) -> AssetDiagnosticStatus:
+    normalized = normalize_text(str(value or "")).lower()
+    if normalized in _ASSET_DIAGNOSTIC_STATUSES:
+        return cast(AssetDiagnosticStatus, normalized)
+    return "not_requested"
+
+
+def _coerce_asset_kind_summary(value: Any) -> AssetKindSummary:
+    if isinstance(value, AssetKindSummary):
+        payload: Mapping[str, Any] = {
+            "total": value.total,
+            "requested": value.requested,
+            "full_size": value.full_size,
+            "preview": value.preview,
+            "failed": value.failed,
+            "placeholder_suspected": value.placeholder_suspected,
+            "not_requested": value.not_requested,
+            "not_archived": value.not_archived,
+        }
+    elif isinstance(value, Mapping):
+        payload = value
+    else:
+        payload = {}
+    return AssetKindSummary(
+        total=_nonnegative_int(payload.get("total")),
+        requested=_nonnegative_int(payload.get("requested")),
+        full_size=_nonnegative_int(payload.get("full_size")),
+        preview=_nonnegative_int(payload.get("preview")),
+        failed=_nonnegative_int(payload.get("failed")),
+        placeholder_suspected=_nonnegative_int(payload.get("placeholder_suspected")),
+        not_requested=_nonnegative_int(payload.get("not_requested")),
+        not_archived=_nonnegative_int(payload.get("not_archived")),
+    )
+
+
+def _coerce_asset_diagnostic(value: Any) -> AssetDiagnostic | None:
+    if isinstance(value, AssetDiagnostic):
+        payload: Mapping[str, Any] = {
+            "request_profile": value.request_profile,
+            "kind": value.kind,
+            "status": value.status,
+            "download_tier": value.download_tier,
+            "path": value.path,
+            "real_mime": value.real_mime,
+            "byte_count": value.byte_count,
+            "width": value.width,
+            "height": value.height,
+            "sha256": value.sha256,
+            "failure_code": value.failure_code,
+            "provenance": value.provenance,
+            "suspected_reasons": value.suspected_reasons,
+        }
+    elif isinstance(value, Mapping):
+        payload = value
+    else:
+        return None
+    return AssetDiagnostic(
+        request_profile=_asset_profile(payload.get("request_profile")),
+        kind=_asset_logical_kind(payload.get("kind")),
+        status=_asset_diagnostic_status(payload.get("status")),
+        download_tier=normalize_text(payload.get("download_tier")) or None,
+        path=normalize_text(payload.get("path")) or None,
+        real_mime=normalize_text(payload.get("real_mime")).lower() or None,
+        byte_count=_optional_nonnegative_int(payload.get("byte_count")),
+        width=_optional_nonnegative_int(payload.get("width")),
+        height=_optional_nonnegative_int(payload.get("height")),
+        sha256=normalize_text(payload.get("sha256")).lower() or None,
+        failure_code=normalize_text(payload.get("failure_code")).lower() or None,
+        provenance=coerce_asset_provenance(payload.get("provenance")),
+        suspected_reasons=_dedupe_strings(payload.get("suspected_reasons")),
+    )
+
+
+def coerce_asset_quality_summary(value: Any) -> AssetQualitySummary:
+    """Load additive asset summary fields while accepting legacy missing payloads."""
+
+    if isinstance(value, AssetQualitySummary):
+        payload: Mapping[str, Any] = {
+            "audited": value.audited,
+            "requested": value.requested,
+            "profile": value.profile,
+            "total": value.total,
+            "local": value.local,
+            "full_size": value.full_size,
+            "preview": value.preview,
+            "failed": value.failed,
+            "placeholder_suspected": value.placeholder_suspected,
+            "not_requested": value.not_requested,
+            "not_archived": value.not_archived,
+            "remote_link_count": value.remote_link_count,
+            "remote_only_count": value.remote_only_count,
+            "failure_codes": value.failure_codes,
+            "by_kind": value.by_kind,
+            "diagnostics": value.diagnostics,
+        }
+    elif isinstance(value, Mapping):
+        payload = value
+    else:
+        payload = {}
+    raw_by_kind = payload.get("by_kind")
+    by_kind = {
+        kind: _coerce_asset_kind_summary(
+            raw_by_kind.get(kind) if isinstance(raw_by_kind, Mapping) else None
+        )
+        for kind in _ASSET_LOGICAL_KINDS
+    }
+    raw_diagnostics = payload.get("diagnostics")
+    diagnostics = [
+        diagnostic
+        for item in (
+            raw_diagnostics
+            if isinstance(raw_diagnostics, Sequence)
+            and not isinstance(raw_diagnostics, (str, bytes, bytearray))
+            else []
+        )
+        if (diagnostic := _coerce_asset_diagnostic(item)) is not None
+    ]
+    return AssetQualitySummary(
+        audited=bool(payload.get("audited")),
+        requested=bool(payload.get("requested")),
+        profile=_asset_profile(payload.get("profile")),
+        total=_nonnegative_int(payload.get("total")),
+        local=_nonnegative_int(payload.get("local")),
+        full_size=_nonnegative_int(payload.get("full_size")),
+        preview=_nonnegative_int(payload.get("preview")),
+        failed=_nonnegative_int(payload.get("failed")),
+        placeholder_suspected=_nonnegative_int(payload.get("placeholder_suspected")),
+        not_requested=_nonnegative_int(payload.get("not_requested")),
+        not_archived=_nonnegative_int(payload.get("not_archived")),
+        remote_link_count=_nonnegative_int(payload.get("remote_link_count")),
+        remote_only_count=_nonnegative_int(payload.get("remote_only_count")),
+        failure_codes=_dedupe_strings(payload.get("failure_codes")),
+        by_kind=by_kind,
+        diagnostics=diagnostics,
+    )
 
 
 def _word_count(text: str) -> int:
@@ -409,6 +614,7 @@ def _clone_quality(quality: Quality) -> Quality:
         body_metrics=coerce_body_quality_metrics(quality.body_metrics),
         semantic_losses=coerce_semantic_losses(quality.semantic_losses),
         asset_failures=coerce_asset_failure_diagnostics(quality.asset_failures),
+        asset_summary=coerce_asset_quality_summary(quality.asset_summary),
         extraction_revision=quality.extraction_revision,
     )
 
@@ -632,6 +838,8 @@ __all__ = [
     "classify_article_content",
     "classify_content",
     "coerce_asset_failure_diagnostics",
+    "coerce_asset_provenance",
+    "coerce_asset_quality_summary",
     "coerce_body_quality_metrics",
     "coerce_semantic_losses",
     "combine_abstract_text",

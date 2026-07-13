@@ -1,21 +1,65 @@
 # Environment
 
-- `PAPER_FETCH_ENV_FILE`: Optional path to an explicit environment file. The default user config file is resolved with `platformdirs` and is outside the repo; repo-local config files are not auto-loaded.
-- `PAPER_FETCH_SKILL_USER_AGENT`: Optional custom HTTP `User-Agent` for non-browser metadata/API requests; when unset, runtime uses `paper_fetch.config.DEFAULT_USER_AGENT`. Browser contexts do not reuse this value.
-- `PAPER_FETCH_BROWSER_USER_AGENT`: Optional browser-only `User-Agent` override for managed Chromium/Playwright contexts. Leave unset to use the browser's own UA. For AGU/Wiley Cloudflare challenge issues, set this to a normal Chrome UA.
-- `CROSSREF_MAILTO`: Recommended contact email for Crossref polite pool requests.
-- `ELSEVIER_API_KEY`: Required for official Elsevier full-text access.
-- `WILEY_TDM_CLIENT_TOKEN`: Optional Wiley Text and Data Mining client token for the official Wiley PDF lane; browser PDF/ePDF fallback can still run without it when the local runtime is ready.
-- `CLOAKBROWSER_CDP_ENDPOINT`: Optional explicit browser endpoint. When set, browser workflows attach to that already-running Chrome/CloakBrowser, borrow its existing browser context, and serialize browser-backed asset downloads. When unset, paper-fetch uses `cloakbrowser.ensure_binary()` to download/locate Chrome and starts one managed local CDP browser per runtime browser config for HTML fetches, browser-backed asset downloads, and seeded PDF/ePDF fallbacks. Runtime-shared browser-backed assets open isolated contexts/pages serially to avoid cross-thread Playwright sync object reuse; ordinary HTTP asset downloads can still run concurrently.
-- AMS uses direct HTTP HTML/PDF routes and does not support `paper-fetch auth ams`; no AMS storage-state environment variable is used by the current runtime.
-- `CLOAKBROWSER_BINARY_PATH`: Optional path to a preinstalled Chrome/CloakBrowser binary; cloakbrowser uses it instead of downloading its bundled Chromium.
-- `CLOAKBROWSER_PROFILE_DIR`, `CLOAKBROWSER_USER_DATA_DIR`, `CLOAKBROWSER_HEADLESS`: Optional controls for the managed Chrome startup directory, storage-state location, and headed/headless mode when `CLOAKBROWSER_CDP_ENDPOINT` is unset. Default managed headless startup ensures Chrome receives `--headless=new`; set `CLOAKBROWSER_HEADLESS=0` only for deliberate headed runs. If no directory env is set, browser providers default to provider-scoped `publisher-browser-profiles/<provider>/storage-state.json`; storage-state is the primary reused state, not the full browser profile.
-- `PAPER_FETCH_WILEY_STORAGE_STATE_JSON`, `PAPER_FETCH_WILEY_PROFILE_DIR`: Optional Wiley auth/profile overrides. Prefer the default provider-scoped storage-state; when manual verification is needed, run `paper-fetch auth wiley [--url ...]` and retry the fetch.
-- `CLOAKBROWSER_TIMEOUT_MS`: Optional override for browser workflow per-request timeout. Defaults to `120000`.
-- IEEE dynamic HTML / direct HTTP PDF / seeded-browser PDF fallback does not use an IEEE API key; full text availability still depends on the current environment's lawful IEEE Xplore access context. The browser PDF fallback only runs after non-PDF PDF candidates and fails closed on access, challenge, or temporary unavailable pages.
-- `PAPER_FETCH_DOWNLOAD_DIR`: Overrides the default CLI/MCP download directory; otherwise downloads use the user data directory, with CLI falling back to `live-downloads` only if that directory cannot be created.
-- `XDG_DATA_HOME`: Changes the user data base used for default downloads and formula tools; otherwise the platform default from `platformdirs` is used.
-- `PAPER_FETCH_FORMULA_TOOLS_DIR`: Overrides the directory used to find optional formula backends.
-- `PAPER_FETCH_RUN_LIVE`: Test-only flag for live publisher integration checks.
-- Formula backend env such as `MATHML_CONVERTER_BACKEND`, `TEXMATH_BIN`, `MATHML_TO_LATEX_NODE_BIN`, and `MATHML_TO_LATEX_SCRIPT` only affects MathML-to-LaTeX conversion backends. The default backend is `texmath`; when not explicitly selected, `texmath` failure falls back to `mathml-to-latex`. On Windows offline installs, keep `MATHML_TO_LATEX_NODE_BIN` pointed at the bundled Playwright driver Node instead of a bare `node` from PATH. Shared LaTeX normalization for common publisher macros runs independently of these variables.
-- Advanced `mml2tex` support exists behind `MATHML_CONVERTER_BACKEND=mml2tex` plus `MML2TEX_*` Java/XSLT env vars; the default installer does not prepare that toolchain.
+本文件只说明配置来源、运行时工具链和诊断入口。Provider/source/capability 名单不在静态文档复制；MCP 宿主通过 `resources/read` 读取 `resource://paper-fetch/provider-catalog`，再用 `provider_status(provider=...)` 判断当前机器是否就绪。
+
+## 配置来源与离线 wrapper
+
+运行时配置优先级固定为：**进程环境 > 调用方显式 `env_file` > `PAPER_FETCH_ENV_FILE` 指向的文件 > platformdirs 用户配置 > 内置默认值**。CLI diagnostics 的显式层是 `paper-fetch doctor --env-file <path>`；显式参数和环境变量指向同一文件时只读取一次，并归因到显式层。仓库本地 `.env` 不会被隐式加载。
+
+兼容表述：process environment > an explicit `env_file` argument > the file named by `PAPER_FETCH_ENV_FILE` > the platformdirs user config file > built-in defaults。
+
+离线安装的 `paper-fetch` / `paper-fetch-mcp` wrapper 只在调用方尚未设置 `PAPER_FETCH_ENV_FILE` 时把它指向 `<install-root>/offline.env`。`activate-offline.sh` 默认安全解析同一文件；使用 installer 的 `--reuse-env-file <path>` 时改为指向该外部文件。dotenv 内容不作为 shell 执行，安装/激活后仍以最终进程环境为运行时最高优先级。不要在诊断输出、日志或报告中复制 secret 值。
+
+## 基础配置与凭证名称
+
+- `PAPER_FETCH_ENV_FILE`：显式 dotenv 文件路径。
+- `PAPER_FETCH_DOWNLOAD_DIR`：CLI/MCP 默认下载和 cache scope；未设置时使用 platformdirs 用户数据目录。
+- `PAPER_FETCH_SKILL_USER_AGENT`：非 browser metadata/API 请求的可选 User-Agent；未设置时使用 `paper_fetch.config.DEFAULT_USER_AGENT`。
+- `CROSSREF_MAILTO`：Crossref polite pool 联系邮箱。
+- `ELSEVIER_API_KEY`：Elsevier 官方全文路线所需的 key 名称。
+- `WILEY_TDM_CLIENT_TOKEN`：Wiley 官方 TDM PDF lane 的可选 token 名称；本地 browser 路线是否可用仍由动态 catalog 与诊断决定。
+- `XDG_DATA_HOME`：改变 platformdirs 用户数据基目录，因而影响默认下载和本地工具目录。
+- `PAPER_FETCH_RUN_LIVE`：仅用于显式 opt-in 的 live publisher 测试；正常诊断和单元测试不得设置它。
+
+## Chrome、CDP 与 storage-state
+
+- `PAPER_FETCH_BROWSER_USER_AGENT`：managed browser/publisher direct 路线的可选浏览器 UA；它与 `PAPER_FETCH_SKILL_USER_AGENT` 分离。
+- `CLOAKBROWSER_CDP_ENDPOINT`：连接已经运行的 Chrome/CloakBrowser CDP endpoint。设置后默认借用既有 browser context；browser-backed asset 下载仍串行化。
+- `PAPER_FETCH_CDP_EXTERNAL_NEW_CONTEXT=1`：显式要求在 external CDP browser 内创建新 context；未设置时保留借用既有 context 的兼容行为。
+- `CLOAKBROWSER_BINARY_PATH`：managed 模式使用的预装 Chrome/CloakBrowser binary；未设置时由 cloakbrowser 定位或按需准备 binary。
+- `CLOAKBROWSER_PROFILE_DIR`、`CLOAKBROWSER_USER_DATA_DIR`：managed Chrome 启动目录和 provider-scoped storage-state 根目录覆盖；storage-state 是主要复用状态，不承诺完整复用浏览器 profile。
+- `CLOAKBROWSER_HEADLESS`：managed Chrome headed/headless 开关；external CDP 模式服从外部浏览器自身状态。
+- `CLOAKBROWSER_TIMEOUT_MS`：browser workflow 单次请求超时，默认 `120000`。
+- `PAPER_FETCH_WILEY_STORAGE_STATE_JSON`、`PAPER_FETCH_WILEY_PROFILE_DIR`：Wiley 的兼容 storage/profile 覆盖。常规流程优先使用 provider-scoped storage-state；人工验证只在 preflight/fetch 明确要求时运行 `paper-fetch auth <provider>`。
+
+静态 `paper-fetch doctor --provider <name> --detail full --json` / MCP `provider_status` 不连接 CDP、不启动 Chrome、也不访问出版社页面。需要 live 证明时再运行 CLI `paper-fetch browser-preflight --provider <name>` 或 MCP `browser_preflight(provider=...)`；它们可能更新过滤后的 storage-state，但不会运行 PDF fallback 或自动认证。MCP preflight is open-world：它会访问远端页面、非只读且可能写 storage-state。
+
+## 图片与资产工具
+
+- `PAPER_FETCH_IMAGE_TOOLS_DIR`：Ghostscript/libvips 工具目录覆盖；默认还会检查 repo-local 和 platformdirs 用户工具目录。
+- `PAPER_FETCH_GHOSTSCRIPT_BIN`：Ghostscript executable 覆盖，用于 EPS → PNG。
+- `PAPER_FETCH_VIPS_BIN`：libvips `vips` executable 覆盖，用于 TIFF → PNG。
+- `PAPER_FETCH_EPS_DPI`：Ghostscript EPS 输出 DPI，默认 `600`。
+- `PAPER_FETCH_IMAGE_TOOL_TIMEOUT_SECONDS`：后端探测/转换子进程超时，默认 `120` 秒。
+- `PAPER_FETCH_ASSET_DOWNLOAD_CONCURRENCY`：HTTP/HTML 资产 worker 上限；实际 provider/runtime 限制仍以动态 catalog 和运行时为准。
+
+安装入口是 `paper-fetch-install-image-tools`（已安装环境）或仓库脚本 `./install-image-tools.sh`。`paper-fetch doctor --json` / `provider_status(detail="full")` 会报告 Ghostscript/libvips 的 `ready`、`missing`、`timeout` 或 `error`，不自动安装。对应结构化原因包括 `image_conversion_backend_missing`、`image_conversion_backend_timeout` 和 `image_conversion_backend_error`；它们不能被解释为远端 publisher 资产失败。
+
+## 公式工具
+
+- `PAPER_FETCH_FORMULA_TOOLS_DIR`：公式工具目录覆盖。
+- `MATHML_CONVERTER_BACKEND`：选择 `texmath`、`mathml-to-latex` 或高级 `mml2tex` backend；未显式选择时优先 `texmath`，失败可回退 `mathml-to-latex`。
+- `TEXMATH_BIN`：`texmath` executable 覆盖。
+- `MATHML_TO_LATEX_NODE_BIN`、`MATHML_TO_LATEX_SCRIPT`：Node fallback executable/script；离线安装默认指向包内 Playwright driver Node。
+- `MATHML_TO_LATEX_WORKER`、`MATHML_TO_LATEX_WORKER_SCRIPT`：可复用 worker 及其脚本开关/覆盖。
+- `MATHML_CONVERSION_CACHE_SIZE`：进程内 MathML 转换结果 cache 上限。
+- `MML2TEX_JAVA_BIN`、`MML2TEX_CLASSPATH`、`MML2TEX_SAXON_JAR`、`MML2TEX_XMLRESOLVER_JAR`、`MML2TEX_XMLRESOLVER_DATA_JAR`、`MML2TEX_STYLESHEET`、`MML2TEX_CATALOG`：仅在显式 `mml2tex` 高级后端时使用；默认 installer 不准备该 Java/XSLT 工具链。
+
+安装入口是 `paper-fetch-install-formula-tools`（已安装环境）或仓库脚本 `./install-formula-tools.sh`。公式工具缺失只影响相应转换/fallback，不改变 provider 身份；共享 LaTeX 宏规范化独立运行。
+
+## 诊断顺序
+
+1. 用 `paper-fetch doctor --json` 或 `provider_status(detail="full")` 做无网络静态检查；输出只包含变量名、是否存在和来源层；token, cookie, endpoint, path, and other values are never echoed。
+2. 只有动态 catalog 表明目标依赖 browser runtime 且需要真实链路证明时，运行 `browser-preflight` / `browser_preflight`。
+3. 只有结构化结果为 `challenge` / `auth_required` 时进入人工 auth；`runtime_error` 先修本地 Chrome/CDP 或工具链。
+4. 配置或合法访问状态没有变化时，不重复抓取；重试边界统一遵循 [`failure-handling.md`](failure-handling.md)。

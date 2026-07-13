@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "paper-fetch-skill"
-version = "3.0.1"
+version = "3.1.0"
 description = "AI-friendly paper fetch tooling"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -26,6 +26,7 @@ dependencies = [
   "PyMuPDF>=1.27,<2",
   "pymupdf4llm>=1.27,<2",
   "pydantic>=2,<3",
+  "PyYAML>=6,<7",
   "urllib3>=2.2,<3",
 ]
 
@@ -33,9 +34,9 @@ dependencies = [
 dev = [
   "build>=1.2,<2",
   "jsonschema>=4,<5",
+  "markdown-it-py>=3,<5",
   "pytest>=8,<10",
   "pytest-cov>=6,<8",
-  "PyYAML>=6,<7",
   "pytest-xdist>=3.6,<4",
   "ruff>=0.8,<1",
   "mypy>=1.14,<3",
@@ -58,6 +59,7 @@ exclude = ["paper_fetch_devtools*"]
 [tool.setuptools.package-data]
 "paper_fetch.resources.arxiv" = ["*.json"]
 "paper_fetch.resources.formula" = ["*.json", "*.mjs"]
+"paper_fetch.resources.manifest" = ["*.json"]
 "paper_fetch.models" = ["*.pyi"]
 
 [tool.ruff]
@@ -118,6 +120,8 @@ files = [
   "src/paper_fetch/normalize_journal_name.py",
   "src/paper_fetch/section_vocab.py",
   "src/paper_fetch/logging_utils.py",
+  "src/paper_fetch/manifest.py",
+  "src/paper_fetch/manifest_writer.py",
   "src/paper_fetch/publisher_identity.py",
   "src/paper_fetch/provider_catalog.py",
   "src/paper_fetch/quality",

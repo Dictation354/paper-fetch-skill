@@ -9,6 +9,7 @@ from paper_fetch.mcp.cache_index import (
     find_cached_entry,
     list_cache_entries,
     preferred_cached_entries,
+    register_markdown_entry,
     refresh_cache_index_for_doi,
 )
 from paper_fetch.providers.registry import build_clients
@@ -29,6 +30,7 @@ class McpDepsTests(unittest.TestCase):
         self.assertIs(deps.find_cached_entry, find_cached_entry)
         self.assertIs(deps.list_cache_entries, list_cache_entries)
         self.assertIs(deps.preferred_cached_entries, preferred_cached_entries)
+        self.assertIs(deps.register_markdown_entry, register_markdown_entry)
         self.assertEqual(deps.fetch_paper_envelope.__name__, "_fetch_paper_envelope")
         self.assertEqual(
             deps.write_cached_fetch_envelope.__name__, "_write_cached_fetch_envelope"

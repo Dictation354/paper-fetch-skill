@@ -128,6 +128,7 @@ register_provider_bundle(
             status_order=1,
             api_hosts=("scopus.com", "www.scopus.com"),
             sensitive_headers=("x-els-apikey",),
+            env_requirements=("ELSEVIER_API_KEY",),
             xml_root_tags=("full-text-retrieval-response",),
             xml_file_tokens=("elsevier", "10.1016"),
         ),

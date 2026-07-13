@@ -481,6 +481,41 @@ def test_fetch_html_with_cloakbrowser_prefers_explicit_storage_state_path(
     assert not (user_data_dir / "storage-state.json").exists()
 
 
+def test_fetch_html_with_cloakbrowser_can_disable_storage_state_write(
+    tmp_path,
+) -> None:
+    fake_module = _FakeCloakBrowserModule()
+    state_path = tmp_path / "science-state.json"
+    original_state = '{"cookies": [{"name": "existing"}]}'
+    state_path.write_text(original_state, encoding="utf-8")
+    config = replace(
+        _runtime_config(tmp_path),
+        storage_state_path=state_path,
+        persist_storage_state=False,
+    )
+
+    with mock.patch.object(
+        _cloakbrowser, "_import_cloakbrowser", return_value=fake_module
+    ):
+        result = _cloakbrowser.fetch_html_with_cloakbrowser(
+            ["https://www.science.org/doi/full/10.1126/science.example"],
+            publisher="science",
+            config=config,
+            disable_media=True,
+            wait_seconds=0,
+        )
+
+    assert state_path.read_text(encoding="utf-8") == original_state
+    trace = result.diagnostics["browser_runtime_trace"]
+    assert trace["storage_state_write_enabled"] is False
+    assert trace["storage_state_save"] == {
+        "attempted": False,
+        "saved": False,
+        "path": str(state_path),
+        "reason": "storage_state_write_disabled",
+    }
+
+
 def test_fetch_html_with_cloakbrowser_ignores_legacy_profile_dir_in_cdp_mode(
     tmp_path,
 ) -> None:

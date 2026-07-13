@@ -7,6 +7,7 @@ from typing import Any
 from collections.abc import Callable
 
 from ..config import build_runtime_env, resolve_mcp_download_dir
+from ..browser_preflight import run_browser_provider_preflight
 from ..providers.registry import build_clients
 from ..service import fetch_paper as service_fetch_paper
 from ..service import probe_has_fulltext as service_probe_has_fulltext
@@ -15,6 +16,7 @@ from .cache_index import (
     find_cached_entry,
     list_cache_entries,
     preferred_cached_entries,
+    register_markdown_entry,
     refresh_cache_index_for_doi,
 )
 
@@ -33,6 +35,8 @@ class MCPDeps:
     find_cached_entry: Callable[..., Any]
     list_cache_entries: Callable[..., Any]
     preferred_cached_entries: Callable[..., Any]
+    register_markdown_entry: Callable[..., Any]
+    run_browser_provider_preflight: Callable[..., Any]
 
 
 def _fetch_paper_envelope(*args: Any, **kwargs: Any) -> Any:
@@ -61,4 +65,6 @@ def default_mcp_deps() -> MCPDeps:
         find_cached_entry=find_cached_entry,
         list_cache_entries=list_cache_entries,
         preferred_cached_entries=preferred_cached_entries,
+        register_markdown_entry=register_markdown_entry,
+        run_browser_provider_preflight=run_browser_provider_preflight,
     )

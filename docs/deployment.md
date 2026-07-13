@@ -13,7 +13,7 @@
 - Wiley / Science / PNAS / Annual Reviews / Royal Society Publishing / ACS / IOP / AIP / MDPI 的浏览器运行时细节，以及 AMS direct HTTP HTML/PDF 路径
 - 架构实现细节
 
-provider 与环境变量说明见 [`providers.md`](providers.md)，架构说明见 [`architecture/overview.md`](architecture/overview.md)。
+provider 运行时细节见 [`providers.md`](providers.md)，架构说明见 [`architecture/overview.md`](architecture/overview.md)。安装 skill 内部的自包含环境/离线 wrapper 说明见 [`environment.md`](../skills/paper-fetch-skill/references/environment.md)，正常 CLI 主路径见 [`cli-workflow.md`](../skills/paper-fetch-skill/references/cli-workflow.md)；这些 reference 不依赖安装包外的仓库 `docs/`。
 
 ## 1. 安装 Python 包
 
@@ -67,12 +67,15 @@ CI 自动发布规则：
 
 主包版本号同步清单：
 
+当前向后兼容功能集按 SemVer minor 准备为 `3.1.0`；构建脚本不得把高于该版本的 HEAD 降级。
+
 - `pyproject.toml` 的 `[project].version` 是 Python 包和离线构建脚本读取的主版本来源。
 - `src/paper_fetch/config.py` 的 `DEFAULT_USER_AGENT` 需要同步默认 `paper-fetch-skill/<version>`。
 - `skills/paper-fetch-skill/references/environment.md` 不写死版本号，只指向运行时 `paper_fetch.config.DEFAULT_USER_AGENT`。
 - `installer/paper-fetch-skill.iss` 的 `AppVersion` 默认值需要同步；正常 Windows 构建会从 `pyproject.toml` 传入覆盖值，但直接运行 Inno Setup 模板时会使用这里的默认值。
 - `tests/unit/test_offline_install.py` 中用于离线安装测试的 runtime fixture 需要与 Linux / macOS 安装脚本的布局保持同步。
 - `CHANGELOG.md` / `CHANGELOG_CN.md` 需要新增对应版本章节。`paper-fetch-skill-formula-tools` 的 `package.json` / `package-lock.json` 是公式辅助 Node 包版本，除非单独发布该辅助包，否则不跟随 Python 主包版本。
+- `tests/unit/test_install_provenance.py` 会把上述版本来源作为同一契约检查；任何一处漂移都必须在发布前修正。
 
 Linux 目标机直接运行与 Python ABI 匹配的 `.sh`。默认安装到 `~/.local/share/paper-fetch-skill`：
 
@@ -240,6 +243,7 @@ ELSEVIER_API_KEY="..."
 
 - 运行时默认读取 `platformdirs` 解析出的用户配置目录下的 `.env`；常见 Linux/XDG 布局为 `~/.config/paper-fetch/.env`
 - 仓库内的 `.env` 不会自动加载
+- 配置覆盖优先级从高到低为：进程环境、调用方显式 `env_file`（CLI doctor 对应 `--env-file`）、`PAPER_FETCH_ENV_FILE` 指向的文件、platformdirs 用户配置、代码默认值。同一个文件同时由显式参数和环境变量指定时只读取一次，并按显式层报告。
 - 如果要显式指定配置文件，请设置：
 
 ```bash
@@ -304,6 +308,27 @@ paper-fetch-install-image-tools
 - `PAPER_FETCH_IMAGE_TOOL_TIMEOUT_SECONDS` 控制 Ghostscript/libvips 探测与转换子进程超时，默认 `120`
 - 运行时会按相关 env、目录和候选文件指纹缓存 Ghostscript/libvips 候选与 `--version` 探测结果；批量下载多张 EPS/TIFF 源图时不会为每张图重复探测同一工具
 
+### 静态诊断与 live 边界
+
+安装或修改配置后，可以先运行无网络诊断：
+
+```bash
+paper-fetch doctor --json
+paper-fetch doctor --provider elsevier --detail full --json
+paper-fetch doctor --group browser --detail compact
+paper-fetch doctor --install-root ~/.local/share/paper-fetch-skill --json
+```
+
+`doctor` 与 MCP `provider_status` 共用同一静态诊断：检查 provider 配置、配置来源、Playwright/CloakBrowser、Chrome/CDP 配置和 Ghostscript/libvips，但不连接 CDP、不启动 Chrome、不请求出版社页面，也不自动安装依赖。配置部分只输出变量名、来源层和是否存在，不输出 token、cookie、endpoint、文件路径或其它值；因此可以保存 JSON 供部署排查，但仍应按敏感运维日志管理。
+
+`full` 保留 provider checks 和本地能力；`compact` 只保留路由所需的状态、关键 reason 与建议动作。`install_provenance` 会分别给出 source `pyproject.toml`、当前 Python distribution metadata、`DEFAULT_USER_AGENT`、PATH 上 `paper-fetch --version`、指定或自动发现的 `offline-manifest.json`、安装 runtime metadata 与 entrypoint 的版本和绝对路径；`consistency.version_drift` 直接列出 expected/actual/path。源码开发态没有 offline manifest 时，离线安装部分返回 `not_applicable`，不会误报安装失败，但 distribution 或 PATH CLI 与源码版本不一致仍会报告 `drift`。
+
+offline manifest schema 3 保留 `version`、`git_revision`、`built_at_utc`、`target.platform` / `arch` / `python_tag` 和 `entrypoint`，并新增 `skill_bundle`：其中列出 `SKILL.md`、全部 `references/` 及其它 bundle 文件的相对路径和逐文件 SHA256。POSIX 与 Windows 安装器会在复制前校验 bundle，在复制后再次校验安装根目录及 Codex、Claude Code、Antigravity 三份 skill；缺文件、多文件、符号链接或 hash 不一致都会阻止完整性验收。
+
+升级后应从目标安装 runtime 执行带 `--install-root` 的诊断，确认 `install_provenance.status=ready`，再重启 Codex、Claude Code 和 Antigravity，使宿主重新扫描已验证的 skill/MCP。PF-020 只准备并验证 `3.1.0` 包，不覆盖当前活动安装；实际替换活动安装和重启后的独立 MCP 验收留在发布收口步骤执行。
+
+部署排查顺序为：`doctor` / `provider_status` 静态检查 → 对 browser provider 运行 CLI `paper-fetch browser-preflight` 或 MCP `browser_preflight` 做真实页面预检 → 只有返回 challenge/auth required 或实际抓取明确需要时，才由用户运行 `paper-fetch auth <provider>`。后两步可能访问网络，preflight 默认可能更新 provider storage-state；MCP 可显式设 `save_storage_state=false` 禁止本轮保存。两种 preflight 入口共用 HTML 核心，均不运行 PDF fallback 或自动 auth；静态 `ready` 不代表网页当前健康或账号已有访问权。
+
 ### CI / GitHub Actions
 
 本地完整 unit suite 和手动 `full-golden` workflow 会验证或使用公式 / 图片后端。GitHub Actions 的 `full-golden` job 因此需要先准备 Haskell/cabal，再执行：
@@ -316,7 +341,7 @@ python -m paper_fetch.image_tools.install --target-dir "$PWD/.image-tools"
 
 相关测试步骤应设置 `PAPER_FETCH_FORMULA_TOOLS_DIR=$GITHUB_WORKSPACE/.formula-tools` 和 `PAPER_FETCH_IMAGE_TOOLS_DIR=$GITHUB_WORKSPACE/.image-tools`。这里用 `--no-node` 是为了避免安装失败后静默落到 `mathml-to-latex` fallback；如果 `texmath` 没有装好，对应验证步骤会直接失败。图片后端安装是 best-effort：Ghostscript/libvips 不可用时，相关测试只覆盖识别和回退契约。
 
-CI 还包含 package smoke job：执行 `python -m build` 生成 sdist / wheel，然后在干净 venv 里安装 wheel，验证 `paper-fetch --help` 可运行，并确认 `paper-fetch-mcp` console script entry point 可以解析和 import。
+CI 还包含 package smoke job：用 `python -m build --outdir "$RUNNER_TEMP/paper-fetch-dist"` 在 checkout 外生成且只接受一个 sdist / wheel，然后在干净 venv 里安装 wheel。该门会核对安装 metadata 与 `paper-fetch --version`，运行 CLI help、formula/image installer help、`paper-fetch-mcp` EOF smoke，并加载四个 console-script entry point；最后运行静态 `doctor --json`，确认 wheel 开发态没有版本 drift。构建和诊断产物都只写 runner 临时目录。
 
 重型 offline/release job 不属于普通 `push` / `pull_request` 默认门禁；触发边界见上方“CI 自动发布规则”。
 
@@ -488,7 +513,15 @@ PYTHONPATH=src pytest tests/unit/test_cli.py tests/unit/test_service_*.py tests/
 PYTHONPATH=src pytest
 ```
 
-`scripts/dev-preflight.sh` 是本地完整门禁入口：优先使用 repo-local `.venv/bin/python`，不存在时退回 `python3`，也可显式设置 `PYTHON_BIN=/path/to/python`。脚本依次运行 `ruff format --check`、`ruff check`、contract 层 `mypy`（`pyproject.toml` 配置 `no_site_packages = true`）、`tests/unit --durations=30`、`tests/devtools --durations=30`、`scripts/validate_extraction_rules.py --ci` 和 `tests/integration --durations=30`；如果缺少 ruff / mypy / pytest，会提示先运行 `scripts/dev-bootstrap.sh` 或指定已安装依赖的解释器。快速迭代可用 `--fast`，需要单独排除 integration 或 type check 时使用 `--skip-integration` / `--skip-typecheck`。GitHub CI 为缩短耗时只保留 ruff / mypy / preflight help、extraction-rule 校验和 `tests/integration --durations=30`，不再运行完整 `tests/unit`、`tests/devtools` 或 unit coverage；CI pytest 步骤仍复用 `pyproject.toml` 的 xdist 并行配置。
+`scripts/dev-preflight.sh` 是本地完整门禁入口：优先使用 repo-local `.venv/bin/python`，不存在时退回 `python3`，也可显式设置 `PYTHON_BIN=/path/to/python`。脚本依次运行 `ruff format --check`、`ruff check`、contract 层 `mypy`（`pyproject.toml` 配置 `no_site_packages = true`）、`tests/unit --durations=30`、`tests/devtools --durations=30`、`scripts/validate_extraction_rules.py --ci` 和 `tests/integration --durations=30`；如果缺少 ruff / mypy / pytest，会提示先运行 `scripts/dev-bootstrap.sh` 或指定已安装依赖的解释器。快速迭代可用 `--fast`，需要单独排除 integration 或 type check 时使用 `--skip-integration` / `--skip-typecheck`。
+
+验证分层如下：
+
+- 本地完整门：`scripts/dev-preflight.sh`，包含完整并行 unit、devtools、integration、Ruff、mypy 和 extraction-rule 校验；发布候选还需单独执行 build/install 终验。
+- 普通 `push` / `pull_request` CI 门：`lint` 保留 Ruff/mypy，`integration` 先运行 MCP schema 与 CLI/MCP/cache/manifest、落盘、batch、skill/provenance 轻量契约集，再运行完整 integration；`package-smoke` 验证 wheel/sdist 和全部 console scripts。为控制耗时，CI 不重复完整 unit、devtools 或 unit coverage。
+- opt-in 门：`full-golden`、offline/release 和 `live-mcp` 只允许相应 `workflow_dispatch` 输入或 `v*` tag 路径；普通 push 不运行真实 publisher、认证 browser 或重型 offline 流程。
+
+所有常规 pytest 步骤继续复用 `pyproject.toml` 的 xdist 并行配置，不传 `-n 0`。关键 workflow 步骤和触发边界由 `tests/unit/test_ci_release_workflow.py` 锁定。
 
 Provider 重构前可以生成本地 coverage baseline，用来观察当前 unit suite 保护范围。本地 `--coverage` preflight 会生成 `term-missing` 和 `coverage.xml`，并强制低噪声 baseline `--cov-fail-under=40`；该阈值是防止覆盖率接线失效和大面积倒退的底线，不替代 provider-specific fixture / live/browser 验证。GitHub CI 不再生成 unit coverage report：
 

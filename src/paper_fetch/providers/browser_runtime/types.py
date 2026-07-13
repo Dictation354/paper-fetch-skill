@@ -22,6 +22,7 @@ class BrowserRuntimeConfig:
     profile_dir: Path | None = None
     user_data_dir: Path | None = None
     storage_state_path: Path | None = None
+    persist_storage_state: bool = True
 
 
 @dataclass(frozen=True)

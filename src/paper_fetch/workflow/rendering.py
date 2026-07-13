@@ -342,6 +342,7 @@ def save_markdown_to_disk(
     render: RenderOptions,
     markdown_filename: str | None = None,
     request_label: str = "save_markdown",
+    overwrite: bool = True,
 ) -> Path | None:
     has_usable_fulltext = bool(
         envelope.content_kind == FULLTEXT and envelope.markdown and envelope.article
@@ -365,6 +366,8 @@ def save_markdown_to_disk(
             envelope.markdown or "", envelope, target_path=target, render=render
         ),
         encoding="utf-8",
+        overwrite=overwrite,
+        use_lock=True,
     )
     message = f"Markdown full text was saved to {target}."
     _extend_envelope_status(

@@ -295,10 +295,13 @@ class ArchitectureCloseoutTests(unittest.TestCase):
             files,
             [
                 "SKILL.md",
-                "references/cli-fallback.md",
+                "references/acceptance.md",
+                "references/cli-workflow.md",
                 "references/environment.md",
                 "references/failure-handling.md",
+                "references/presets.md",
                 "references/tool-contract.md",
+                "references/workflow.md",
             ],
         )
 
@@ -409,7 +412,7 @@ class ArchitectureCloseoutTests(unittest.TestCase):
 
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn(
-            "Fetch AI-friendly full text for a paper by DOI, URL, or title.",
+            "Fetch AI-friendly paper full text and manage browser-backed provider access.",
             result.stdout,
         )
         self.assertIn("--query", result.stdout)

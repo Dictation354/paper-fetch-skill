@@ -1,6 +1,6 @@
 # Paper Fetch Skill 架构与业务流程
 
-Date: 2026-06-18
+Date: 2026-07-10
 
 ## 状态说明
 
@@ -61,7 +61,9 @@ Date: 2026-06-18
 - stdio transport 用后台 stdin reader + async stream pump，避免同步 stdin 阻塞事件循环。
 - payload/tool 入口通过 `paper_fetch.mcp._deps.MCPDeps` 显式注入 runtime env、service、provider registry 与 cache index 依赖；生产默认由 `default_mcp_deps()` 装配，测试通过构造定制 deps 注入。
 - 所有 MCP tool JSON payload 顶层都带 `schema_version=1`；错误 payload 保留兼容字段 `status` / `reason`，并补充 `code`、`http_status`、`error_category`、`retry_after_seconds`、`provider`、`warnings` 和 `source_trail` 供 host 做机器判断。
-- `fetch_paper` 和批量工具把阻塞抓取放到有界 `ThreadPoolExecutor`，事件循环继续处理 progress / log / cancellation；批量工具保持输入顺序，遇到 rate-limit status/code/category、HTTP 429 或 retry-after 后停止提交新任务。
+- `resource://paper-fetch/provider-catalog` 由轻量 MCP catalog adapter 在读取时直接投影 runtime `ProviderSpec` 和 `SOURCE_PROVIDER_MAP`；provider/source、browser/runtime、status/preflight 与资产默认不在 server instructions、tool description 或 skill contract 中维护第二张静态表。
+- MCP 上下文有独立回归预算：server instructions 不超过 1500 字符，`fetch_paper` description 不超过 1200 字符，全部 tool description 合计不超过 5000 字符，`tool_count * instructions_length + descriptions_length` 宿主 narrative 不超过 24000 字符。Native tools/list 总字节和 input/output schema 字节分别快照，新工具需单独说明并更新基线，不把 schema 体积混入文案预算。加入第十个 `batch_fetch` 后的基线分别为 `74411` / `70913` bytes，当前 instructions/fetch description/全部 descriptions/host narrative 为 `1093/985/2601/13531` 字符。
+- `fetch_paper` 和批量工具把阻塞抓取放到有界 `ThreadPoolExecutor`，事件循环继续处理 progress / log / cancellation；批量工具保持输入顺序，遇到 rate-limit status/code/category、HTTP 429 或 retry-after 后停止对应 provider/resource lane 的新提交。
 - async `fetch_paper` 用 `RuntimeContext(cancel_check=...)` 创建 cancel-aware `HttpTransport`，service/workflow 只消费 transport。
 
 不负责 provider 路由决策、正文抓取瀑布、Markdown 转换细节。
@@ -94,7 +96,76 @@ Date: 2026-06-18
 - `pipeline`：CLI/MCP 共享的 `RuntimeContext` 生命周期、service 调用、可选 cache hook 与 Markdown 保存 hook
 - `request_builder`：CLI/MCP 共享的 `FetchPipelineRequest` 装配
 
+#### 增量 batch runner 与 provider lane
+
+`paper_fetch.workflow.batch_runner` 是面向 CLI/MCP 的共享批量调度状态机，新增批量入口必须复用它。单项 worker 仍按 resolution → metadata/routing → fulltext → rendering 的阶段顺序执行；runner 只在同一批的项之间提供受控并发，不把单篇抓取的阶段拆散或乱序。现有 MCP batch 和 CLI batch 都复用这一 runner；执行面 adapter 只负责把共享终态转换为各自的 response 或 manifest record。
+
+- 全局 worker 与每个 provider/resource lane 的并发上限都限制在公开范围 `1..8`。runner 最多只维持全局上限数量的 in-flight future，并在每次完成后增量扫描未提交输入；某个 lane 暂时占满时，其他可运行 lane 不会被队首阻塞。
+- lane key 由调用方在调度前提供。worker 通过结构化 failure/result classifier 报告既有 `rate_limited` reason code 和可选 `retry_after_seconds`；runner 不解析 warning 文案。观察到限流后，该 lane 在本次 run 内不再提交新项，并用可注入的单调 clock 记录 `limited_at`、解析后的 cooldown 与 `cooldown_until`；其他 lane 继续运行。本模块不跨 run 学习或维护全局限流服务。
+- `BatchRunResult.results` 始终按输入 index 排列且每项只有一个终态；真实完成、worker 异常、协作式取消以及从未提交的项分别表示为 `succeeded`、`failed/rate_limited`、`cancelled` 和 `not_scheduled`。`completion_events` 与 completion/progress callback 独立保留终态被观察到的顺序，流式消费者不能把它误当输入顺序。
+- stop predicate 或 cancel event 只阻止新的增量提交；已在途 worker 依靠 `RuntimeContext.cancel_check` 协作退出。worker 已观察到的异常和取消、以及因 stop/cancel/lane cooldown 未调度的输入，都会生成结构化终态，避免批次尾部静默丢失。
+- 每个终态（包括 `not_scheduled`）依次触发一次 completion callback 和一次 progress callback；两者都可同步或异步。callback 是观察者：异常写入 `BatchRunResult.callback_failures`，不覆盖 item 终态，也不隐式改变停止策略；需要把 callback 失败升级为 run 失败的 adapter 必须显式检查该字段。callback 内设置 cancel event 会在下一次增量提交前生效。
+
+现有 MCP `batch_resolve` / `batch_check` / `batch_fetch` 与 CLI batch 都通过这个 runner 调度。前两个 probe/resolve 工具保持既有兼容调度；`batch_fetch` 在提交前只调用 catalog-backed URL/DOI 身份 helper 推断 provider lane，一个 lane 限流后把该 lane 的后续输入终态化为未调度，其他 lane 继续。它的 `results` 按原 1-based input index 返回，`completion_order` 单独投影完成顺序，progress 使用完整终态计数。
+
 `RuntimeContext` 是 service/workflow 的显式运行时依赖容器，持有 `env`、`transport`、`clients`、`download_dir`、`cancel_check`、`artifact_store`、可选 `fetch_cache`，以及单次 fetch 生命周期内的 `parse_cache`、`session_cache` 和 `stage_timings`。Browser provider 只依赖 `paper_fetch.providers.browser_runtime` facade；生产 backend 是 CloakBrowser，storage/profile 路径由 `browser_runtime.paths` 统一解析。Browser 生命周期由 CDP-only `paper_fetch.runtime_browser.BrowserContextManager` 管理；managed Chrome manager 会按 browser 配置在同一进程内共享引用，具体 context/page 使用调用线程自己的 CDP 连接，最后一个引用释放或进程退出时清理。公开 service API 只接受 `context=`；调用方必须先构造 `RuntimeContext`，再交给 `paper_fetch.workflow.pipeline.FetchPipeline`。
+
+#### 统一抓取验收模型
+
+`paper_fetch.workflow.acceptance` 是 CLI、MCP、cache 和 manifest 唯一可复用的抓取验收语义。`evaluate_fetch_acceptance()` 是纯函数：它只消费 `FetchEnvelope` / 结构化失败 code、请求的 `asset_profile`、请求输出集合和可选的 `AssetAcceptanceSummary`，不联网、不访问或写入文件，也不重新运行 provider 质量判断。文件存在性、hash、MIME 等 I/O 事实由外层 adapter 收集后再以结构化事实传入；验收层不解析 warning 文案。
+
+`FetchAcceptanceReport` 固定包含七个分面：
+
+| 分面 | 事实与边界 |
+| --- | --- |
+| `overall` | 稳定枚举 `complete`、`degraded`、`limited`、`failed`、`action_required`。 |
+| `identity` | 归一化 DOI、期望 DOI、标题、候选数和 `resolved/ambiguous/mismatch/unavailable`；DOI 归一化复用 `publisher_identity.normalize_doi()`。 |
+| `fetch` | `ok` 只表示调用已完成；歧义、无访问权限或配置缺失是 `action_required`，其他未产出 envelope 的错误是 `failed`。 |
+| `content` | 只使用 `fulltext`、`abstract_only`、`metadata_only`、`unavailable`，同时保留 `has_fulltext`、`has_abstract`、confidence 和 flags。表格布局降级、表格语义损失、公式 fallback/missing 保持独立计数。 |
+| `asset` | 显式记录 profile、`requested`、本地/远程、full-size、preview、failure、placeholder suspected 和 not-archived。`asset_profile=none` 必须得到 `requested=false/status=not_requested`，未完成 fetch 时已请求资产是 `unavailable`；仍保留的远程链接由 `remote_link_count`、`remote_only_count` 和 `remote_links_preserved` 单独表达，不是假失败。 |
+| `output` | 只验收调用方声明请求的 article/Markdown/metadata；未请求是 `not_requested`，请求但缺失才是 `partial/missing`。 |
+| `provenance` | 从 `TraceEvent.stage/outcome/code`、`Quality.flags`、`SemanticLosses` 和结构化 asset failures 派生 fallback/warning/failure codes。原 warning 只计数，不按消息子串分类；`cached_with_current_revision` 等显式信息型 flag 保留在 content facts 中但不制造降级。 |
+
+常见状态组合是：
+
+| 调用结果 | `fetch.status` | `content.status` | `overall` |
+| --- | --- | --- | --- |
+| 全文、请求输出和溯源均完整 | `ok` | `fulltext` | `complete` |
+| 全文存在，但资产、表格、公式或 fallback 降级 | `ok` | `fulltext` | `degraded` |
+| 只得到摘要或元数据 | `ok` | `abstract_only/metadata_only` | `limited` |
+| 调用完成但请求输出缺失，或普通抓取失败 | `ok/failed` | 任意或 `unavailable` | `failed` |
+| 身份歧义、DOI 不匹配、no-access 或缺配置 | `action_required` 或 `ok` | 任意 | `action_required` |
+
+因此 transport/adapter 的旧 `status=ok`、正文事实 `has_fulltext` 和任务级 `overall` 是三个不同维度，任何调用方都不得互相替代解释。metadata-only 可以同时是 `status=ok`、`fetch.status=ok`、`has_fulltext=false`、`overall=limited`。
+
+验收 schema 当前为 v1。每份报告都必须序列化 `schema_version=1` 和 `minimum_reader_schema_version=1`。v1 内只允许新增可忽略字段；v1 reader 忽略未知字段。既有字段含义、必填性或枚举值不得原地改变，任何不兼容变更必须提升 schema version（并在需要时提升最低 reader version）。缺少版本或版本不受支持的报告必须拒绝，不能猜测迁移。`FetchAcceptanceReport.model_json_schema()` / `fetch_acceptance_json_schema()` 是 JSON Schema 唯一生成入口。
+
+#### 版本化 manifest record
+
+`paper_fetch.manifest` 是单篇 CLI、CLI batch 和 MCP `batch_fetch` 共用的 manifest record owner。adapter 只向 `build_manifest_record()` 提交原 query、JSON-safe 请求参数、`FetchEnvelope` 或结构化 error、输出文件声明和 run/index/attempt；schema 字段、兼容字段、验收摘要、trace 与文件快照均由 builder 统一派生。builder 保持纯逻辑，不写 JSONL、run manifest 或任何输出文件，也不执行 audit/resume。
+
+manifest record schema 当前为 v2，`schema_version=2` 和 `minimum_reader_schema_version=2` 都是必填常量。v2 是旧无版本 CLI JSONL 的首个版本化超集，仍在 record 顶层保留原九字段 `index/query/status/doi/source/output_path/saved_markdown_path/warnings/error`；`legacy_projection()` 可以直接返回且只返回这九个字段，CLI/MCP 不应各自维护兼容字段表。旧 `status=ok` 仍只表示调用未抛异常，完整度必须读取同一 record 内的 `acceptance.overall/content/asset`。
+
+其余关键不变量如下：
+
+- `index` 与 `attempt` 都从 1 开始；`run_id`、`record_id`、带时区的开始/结束时间、clock 与 UUID factory 均可注入；默认 clock 与 artifact mtime 使用 UTC。
+- `request_fingerprint` 是原 query 和 JSON-safe request parameters 的 canonical JSON SHA-256；对象键顺序不会改变 fingerprint，数组顺序会保留。
+- `identity`、`doi`、`source`、`fallback_codes`、`warning_codes`、`failure_codes`、`semantic_losses` 和 `asset_summary` 都直接来自 `FetchAcceptanceReport`，不会重新按 warning/message 文本分类。原 warning 文本只为兼容和人工诊断原样保留。
+- `trace` 由既有 `TraceEvent` 或兼容 `source_trail` marker 转换；message 只是说明文字，不参与 fallback/warning/failure 分类。
+- 每个 `output_artifacts[*]` 记录 path、kind、size、SHA-256、mtime、record completion time 和 `verified/missing/unreadable` 快照状态。stat 与 hash reader 可注入，builder 只读文件，不落盘。
+- artifact facts 表示 record 完成时观察到的状态，不证明文件现在仍存在或内容未变。当前文件状态必须由只读 audit/reconcile 重新 stat/hash 后判断，禁止把历史 `verification_status=verified` 当作持续有效的文件锁或 resume 依据。
+
+打包资源 `paper_fetch.resources.manifest/manifest-record-v2.schema.json` 是对外稳定的 Draft 2020-12 schema；测试要求它与 `generated_manifest_record_json_schema()` 同步并能验证真实 round-trip payload。v2 reader 忽略 additive unknown fields；删除字段、改变必填性/含义或收窄既有值域属于不兼容变更，必须提升 manifest schema version，不能覆盖 v2 资源或猜测迁移。缺少版本、fingerprint 或违反派生字段一致性的 record 必须拒绝。
+
+#### Run persistence、只读审计与恢复
+
+`paper_fetch.manifest_writer` 是 durable manifest persistence 和只读审计的 owner，复用 `paper_fetch.manifest` 的 v2 record 与 `workflow.acceptance` 的质量事实，不建立第二套 record 或验收模型。`RunManifestStore` 原子维护 schema-v1 `run-manifest.json` 摘要；`ManifestJsonlWriter` 以 append-only JSONL 持久化 attempts。摘要包含完整有序输入、run 级 request fingerprint、工具版本、事件文件引用、时间、attempt 数和按最新 attempt 汇总的状态计数。
+
+run 状态机为 `running -> completed|interrupted|cancelled|failed`。每个终态 event 先 flush/fsync，再原子 checkpoint 摘要；异常路径尽力写入对应终态而不掩盖原始异常。`index` 始终绑定有序输入，`attempt` 必须是每个 index 的连续 `1..N`；`record_id` 由 run/index/attempt 确定，因此完成顺序乱序不影响重建。run lock 串行化同一 run 的新建和恢复，artifact path lock、同目录 `.part` 与 `os.replace` 保护最终输出及 JSON 摘要；默认拒绝覆盖，调用方必须显式声明 overwrite。
+
+`audit_manifest_path()` 同时接受 run 摘要和单篇 v2 manifest，全程只读且无网络。它校验 run/input/index/attempt/record id/request fingerprint/计数结构，并重新读取当前 artifact 的存在性、size、SHA256 和通过 PF-005 YAML helper 解析的 Markdown front matter DOI/source/content，再结合 record acceptance 判断是否可复用。稳定结果为 `ok`、`manifest_stale` 或 `invalid`；CLI 将其映射到退出码 `0/1/2`。`audit` 与 `reconcile` 当前共享同一审计引擎，二者都不修复或改写状态。
+
+CLI 和 MCP `batch_fetch` resume 都必须提交原有序输入、同一工具版本和完全相同的关键请求参数。只有 audit 标记为 reusable 的最新 attempt 会被跳过；missing、stale、失败或低于请求质量的项进入共享 batch runner 并追加下一 attempt。输入或 fingerprint 变化、结构无效会在任何 run mutation 前拒绝；仍存在的 stale 输出必须显式 overwrite，已经缺失的输出可以安全重建。MCP adapter 只在显式 `run_manifest` / `batch_results` / `resume` 时创建 durable 状态；默认内存 run 保留相同 record/run fingerprint 但不写盘。取消和适配层异常分别尽力终态化完整 index 集合并写 `cancelled` / `interrupted`，不复制 persistence 状态机。
 
 ### 6. Extraction 层
 
@@ -163,7 +234,7 @@ provider 身份与能力配置统一来自 provider entry module 顶部注册的
 - Browser runtime 使用 backend facade 和集中 storage-state manager；auth、preflight、HTML fetch、seeded PDF fallback 共享 provider-scoped `storage-state.json` 路径、写锁和 atomic write。Browser-backed image fetch 对单图 seed warm、page fetch、request-context fetch、直接导航和 image wait 共用一个 wall-clock budget；PDF fallback 只用 lightweight browser warm 采集 cookies/user-agent/final URL，已有 cookie seed 时不再对同一 seed URL 做第二次 browser navigation。External CDP 默认借用既有 context，并在 diagnostics 中报告被忽略的 context options；`PAPER_FETCH_CDP_EXTERNAL_NEW_CONTEXT=1` 可要求在外部浏览器中创建新 context。
 - 本地转换工具链使用进程内有界缓存降低重复探测：Ghostscript/libvips 候选路径、`--version` probe 和工具 env overlay 按相关 env/目录/文件指纹失效；公式转换保留 MathML 结果缓存和 `mathml-to-latex` worker 复用；PDF fallback 对无图片导出路径的同一 PDF hash 复用 Markdown 渲染结果，并在成功结果 diagnostics 中记录 hash、字节数、页数、cache status 和耗时。
 - `ArtifactStore` / `DownloadPolicy` 管理 artifact mode：provider PDF/binary local copy、PDF fallback 源文件、provider 原始 HTML、Markdown 保存、asset 诊断、HTTP textual cache 开关，以及 fetch-envelope/cache-index JSON 的原子写入。
-- `FetchCache` 管理 MCP fetch-envelope sidecar reuse/write 语义与 cache index refresh；sidecar version、`EXTRACTION_REVISION` 校验、resource URI 与 scoped cache resource 语义稳定，实际 JSON materialization 委托给 `ArtifactStore`。MCP cache index 读取会校验 `INDEX_VERSION`；旧版/坏 schema 默认拒绝作为可信 manifest，`list_cached(cache_mode="index")` 只读 manifest，`refresh` 只校验/修剪现有 manifest，`rescan` 只从可证明 DOI 归属的 fetch-envelope sidecar 重建。
+- `FetchCache` 管理 MCP fetch-envelope sidecar reuse/write 语义与 cache index refresh；sidecar version、`EXTRACTION_REVISION` 校验、resource URI 与 scoped cache resource 语义稳定，实际 JSON materialization 委托给 `ArtifactStore`。MCP cache index 读取会校验 `INDEX_VERSION`；旧版/坏 schema 默认拒绝作为可信 manifest，`list_cached(cache_mode="index")` 只读 manifest，`refresh` 只校验/修剪现有 manifest，`rescan` 只从可证明 DOI 归属的 fetch-envelope sidecar 重建。`get_cached(detail="compact")` 仍由该 facade 读取确定性 sidecar：请求兼容唯一调用 `cached_request_matches()`，质量摘要调用统一 `evaluate_fetch_acceptance()`，request fingerprint 复用 manifest canonical hash；adapter 只裁剪 full/preferred/compact 视图，不复制匹配或验收规则。
 
 ### 9. Transport 层
 
@@ -175,7 +246,7 @@ provider 身份与能力配置统一来自 provider entry module 顶部注册的
 
 ### 10. CI / 回归验证边界
 
-`.github/workflows/ci.yml` 是 CI 命令事实来源：普通 `push` / `pull_request` 运行 `lint`、`integration` 和 `package-smoke`，完整 `unit` / `devtools` / unit coverage 留给本地 `scripts/dev-preflight.sh`。CI integration 与本地 unit / integration / devtools 默认复用 `pyproject.toml` 的 `pytest-xdist` 并行配置，不传 `-n 0`。重型 offline/release job 只在 `v*` tag 或手动 `workflow_dispatch` 路径运行。只有 live MCP、browser provider smoke、共享真实 publisher/API 状态或专门排查顺序问题的测试可串行，并在命令旁说明原因。
+`.github/workflows/ci.yml` 是 CI 命令事实来源：普通 `push` / `pull_request` 运行 `lint`、`integration` 和 `package-smoke`。`integration` 在完整 integration 前显式复用稳定的 CLI/MCP schema、description/resource/skill、落盘、batch、manifest、provenance 与四 adapter acceptance 契约；`package-smoke` 在 checkout 外构建 wheel/sdist，并在干净 venv 验证版本、四个 console scripts、MCP EOF 和静态 provenance。完整 `unit` / `devtools` / unit coverage 留给本地 `scripts/dev-preflight.sh`。CI integration 与本地 unit / integration / devtools 默认复用 `pyproject.toml` 的 `pytest-xdist` 并行配置，不传 `-n 0`。重型 offline/release job 只在 `v*` tag 或手动 `workflow_dispatch` 路径运行，full-golden/live 也只允许显式 dispatch。只有 live MCP、browser provider smoke、共享真实 publisher/API 状态或专门排查顺序问题的测试可串行，并在命令旁说明原因。
 
 架构边界由测试强制，而非仅靠文档约定：`tests/unit/test_import_boundaries.py` 阻止 provider-neutral 层 import `providers._*` 与 compat module，`tests/integration/test_architecture_closeout.py` 锁定 service facade、magic-key 契约、import-cycle 和兼容表面边界。更新提取规则文档后先运行 `python3 scripts/validate_extraction_rules.py`，再按变更范围运行并行 unit / integration。
 
@@ -256,6 +327,12 @@ MCP tool 返回的是在业务 payload 顶层追加 `schema_version=1` 的 JSON-
 
 在抓取前报告本地环境是否就绪。本地检查边界与各 provider check 名称以 [`../providers.md`](../providers.md#provider-status-local-boundary) 为准；IEEE 当前返回 `html_route` 与 `pdf_fallback` 两条 check。
 
+`paper_fetch.diagnostics` 是 CLI `doctor` 与 MCP `provider_status` 的共享 owner：provider/group/detail 筛选先由 catalog-backed schema 校验，随后只构建目标 provider 的静态状态。full 报告复用 `config.resolve_runtime_env()` 的来源元数据、`browser_preflight.static_browser_capabilities()` 的非 live 浏览器能力和 `image_tools.probe_image_conversion_backends()` 的本地可执行文件探测；compact 只保留路由字段。该层可以构造 transport 供 provider client 保持原接口，但禁止调用 transport、启动/连接浏览器或检查远端页面。
+
+CLI 与 MCP live 入口都以 `paper_fetch.browser_preflight.run_browser_provider_preflight()` 为唯一 orchestration owner；`paper_fetch.mcp.browser_preflight` 只做 Pydantic 入参、状态分类、progress/cancel 转接和 JSON-safe structured output。共享核心串行保留逐 provider 结果，把 `RuntimeContext.cancel_check` 传入现有 browser HTML bootstrap，并通过 `BrowserRuntimeConfig.persist_storage_state` 控制是否保存；不得复制 provider workflow 或转入 PDF fallback。
+
+诊断语义分三层：`provider_status` / `doctor` 只证明静态配置与本地依赖；CLI `browser-preflight` / MCP `browser_preflight` 才证明一次真实样例页面链路并可能写 storage-state；auth 是明确的人工副作用入口。三层结果不得相互冒充。
+
 ### `has_fulltext`
 
 区分两个层面：`fetch_paper().has_fulltext` 是完整抓取瀑布后的最终 verdict；MCP 的 `has_fulltext()` 是只用更弱信号的廉价 probe。两者不要求逐案完全一致（见 [`probe-semantics.md`](probe-semantics.md)）。
@@ -284,7 +361,7 @@ MCP tool 返回的是在业务 payload 顶层追加 `schema_version=1` 的 JSON-
 ## 扩展点：新增能力时应改哪一层
 
 - **新增 provider**：主要改 `src/paper_fetch/providers/`，必要时更新 provider-specific extraction / metadata adapter，并在 provider entry module 顶部注册 `ProviderBundle`；不要手工编辑 `provider_catalog.py`、`provider_rules.py`、`quality/html_signals.py` 或 `quality/html_availability.py`，不要把 provider 逻辑塞进 CLI / MCP。
-- **新增 MCP surface**：主要改 `src/paper_fetch/mcp/`（`schemas.py`、`fetch_tool.py`、`cache_payloads.py`、`batch.py`、`server.py`）；需要真正的新抓取逻辑要先落到 service / workflow 层。
+- **新增 MCP surface**：主要改 `src/paper_fetch/mcp/`（`schemas.py`、`fetch_tool.py`、`cache_payloads.py`、`batch.py`、`batch_fetch.py`、`server.py`）；需要真正的新抓取逻辑要先落到 service / workflow 层。新的批量抓取入口必须继续复用 `workflow.batch_runner`、`manifest.build_manifest_record` 和 `manifest_writer.RunManifestStore`。
 - **新增渲染能力**：正文渲染或资产展示能力优先改 `src/paper_fetch/models/` 与 provider 到 `ArticleModel` 的转换，而不是让 CLI / MCP 自己拼装业务结果。
 
 ## 相关文档

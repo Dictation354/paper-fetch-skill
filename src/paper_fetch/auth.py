@@ -215,18 +215,18 @@ def _runtime_with_auth_storage(
     provider: str,
     storage_state_path: Path | None = None,
 ) -> BrowserRuntimeConfig:
-    updates: dict[str, object] = {}
-    if storage_state_path is not None:
-        updates["storage_state_path"] = storage_state_path.expanduser().resolve()
     if runtime.profile_dir is None and runtime.user_data_dir is None:
         runtime = runtime_with_default_storage_profile(
             runtime,
             env=env,
             provider=provider,
         )
-    if not updates:
+    if storage_state_path is None:
         return runtime
-    return replace(runtime, **updates)
+    return replace(
+        runtime,
+        storage_state_path=storage_state_path.expanduser().resolve(),
+    )
 
 
 def authenticate_provider_profile(

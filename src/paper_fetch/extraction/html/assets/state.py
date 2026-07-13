@@ -5,7 +5,7 @@ from __future__ import annotations
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from typing import Any, TypeVar
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 
 from ....config import DEFAULT_ASSET_DOWNLOAD_CONCURRENCY
 
@@ -40,6 +40,7 @@ class AssetDownloadResolution:
     preview_url: str = ""
     full_size_url: str = ""
     download_tier_override: str = ""
+    provenance: tuple[str, ...] = ()
 
 
 def asset_download_worker_count(total: int, configured_concurrency: int | None) -> int:
@@ -64,12 +65,14 @@ def resolution_from_attempt(
     attempt: AssetDownloadAttempt | None,
     preview_url: str = "",
     full_size_url: str = "",
+    provenance: Sequence[str] = (),
 ) -> AssetDownloadResolution:
     if attempt is None:
         return AssetDownloadResolution(
             asset=dict(asset),
             preview_url=preview_url,
             full_size_url=full_size_url,
+            provenance=tuple(dict.fromkeys(provenance)),
         )
     return AssetDownloadResolution(
         asset=dict(asset),
@@ -79,6 +82,7 @@ def resolution_from_attempt(
         preview_url=preview_url,
         full_size_url=full_size_url,
         download_tier_override=attempt.download_tier_override,
+        provenance=tuple(dict.fromkeys(provenance)),
     )
 
 

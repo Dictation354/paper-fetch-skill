@@ -6,6 +6,25 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 3.1.0 - 2026-07-13
+
+### Added
+
+- Added canonical asset acceptance and manifest-v2 records across CLI, MCP, cache, and durable batch runs, including deterministic output hashes, audit/reconcile/resume support, bounded concurrent execution, cancellation, and rate-limit stop semantics.
+- Added network-free provider/runtime diagnostics, browser preflight and provider catalog MCP resources/tools, compact cache inspection, and the structured `batch_fetch` MCP tool with explicit persistence and resume modes.
+- Added machine-readable installation provenance to `paper-fetch doctor --json`, covering source and distribution versions, the default User-Agent, PATH entrypoint, offline target/revision/build metadata, installed runtime metadata, and all three host skill copies.
+
+### Changed
+
+- Changed the static skill into a thin, self-contained workflow entrypoint with dedicated workflow, presets, acceptance, CLI, environment, tool-contract, and failure-handling references whose links are parser-validated in source, staging, and installer copies.
+- Changed offline manifest schema to version 3 so Linux, macOS, and Windows bundles carry the complete skill file list and a SHA256 for every file; installers now reject missing, extra, symlinked, or hash-drifted skill content before and after host installation.
+- Prepared the backward-compatible feature set as the SemVer minor release `3.1.0`, synchronizing package metadata, the stable tool User-Agent, Windows installer fallback version, deployment guidance, and both changelogs.
+- Added a lightweight cross-CLI/MCP/cache/manifest CI contract gate; package smoke now builds outside the checkout and verifies version consistency, every console script, MCP EOF, and static installation provenance while keeping live/offline heavy jobs opt-in.
+
+### Fixed
+
+- Fixed version ambiguity that could leave source, installed distribution metadata, and the PATH CLI at different releases without exposing their concrete paths; source development without an offline manifest is now reported as not applicable instead of an installation failure.
+
 ## 3.0.1 - 2026-07-04
 
 ### Changed

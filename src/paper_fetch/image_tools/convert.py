@@ -13,6 +13,13 @@ import urllib.parse
 from collections.abc import Mapping
 
 from ..http.headers import header_value
+from ..reason_codes import (
+    IMAGE_CONVERSION_BACKEND_ERROR,
+    IMAGE_CONVERSION_BACKEND_MISSING,
+    IMAGE_CONVERSION_BACKEND_READY,
+    IMAGE_CONVERSION_BACKEND_TIMEOUT,
+    IMAGE_CONVERSION_FAILED,
+)
 from ..utils import normalize_text
 from .paths import (
     _clear_image_tool_path_caches,
@@ -24,7 +31,7 @@ from .paths import (
 _DOS_EPS_MAGIC = b"\xc5\xd0\xd3\xc6"
 _POSTSCRIPT_PREFIX_RE = re.compile(rb"^\s*%!")
 _TIFF_MAGICS = (b"II*\x00", b"MM\x00*")
-_WORKING_BINARY_CACHE: dict[tuple[object, ...], str | None] = {}
+_WORKING_BINARY_CACHE: dict[tuple[object, ...], _WorkingBinaryProbe] = {}
 _WORKING_BINARY_CACHE_LOCK = threading.RLock()
 _TOOL_ENV_OVERLAY_CACHE: dict[tuple[object, ...], dict[str, str]] = {}
 _TOOL_ENV_OVERLAY_CACHE_LOCK = threading.RLock()
@@ -33,6 +40,15 @@ _TOOL_ENV_OVERLAY_CACHE_LOCK = threading.RLock()
 class ImageConversionFailure(RuntimeError):
     """Raised when an external source image cannot be converted."""
 
+    def __init__(
+        self,
+        message: str,
+        *,
+        reason_code: str = IMAGE_CONVERSION_FAILED,
+    ) -> None:
+        super().__init__(message)
+        self.reason_code = reason_code
+
 
 @dataclass(frozen=True)
 class SourceImageConversion:
@@ -40,6 +56,40 @@ class SourceImageConversion:
     content_type: str
     source_format: str
     tool: str
+
+
+@dataclass(frozen=True)
+class ImageConversionBackendProbe:
+    backend: str
+    source_formats: tuple[str, ...]
+    status: str
+    available: bool
+    reason_code: str
+    message: str
+    candidate_count: int
+    timeout_seconds: int
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "backend": self.backend,
+            "source_formats": list(self.source_formats),
+            "status": self.status,
+            "available": self.available,
+            "reason_code": self.reason_code,
+            "message": self.message,
+            "candidate_count": self.candidate_count,
+            "timeout_seconds": self.timeout_seconds,
+        }
+
+
+@dataclass(frozen=True)
+class _WorkingBinaryProbe:
+    binary: Path | None
+    status: str
+    reason_code: str
+    message: str
+    candidate_count: int
+    timeout_seconds: int
 
 
 def source_image_format_from_payload(
@@ -89,45 +139,111 @@ def _path_fingerprint(path: Path) -> tuple[str, bool, int, int]:
 
 
 def _working_binary_cache_key(
-    candidates: list[Path], probe_args: list[str]
+    candidates: list[Path],
+    probe_args: list[str],
+    *,
+    env: Mapping[str, str] | None = None,
 ) -> tuple[object, ...]:
+    active_env = os.environ if env is None else env
     return (
         tuple(str(candidate) for candidate in candidates),
         tuple(_path_fingerprint(candidate) for candidate in candidates),
         tuple(probe_args),
-        image_tool_timeout_seconds(),
-        os.environ.get("LD_LIBRARY_PATH", ""),
-        os.environ.get("GS_LIB", ""),
+        image_tool_timeout_seconds(active_env),
+        active_env.get("LD_LIBRARY_PATH", ""),
+        active_env.get("GS_LIB", ""),
     )
 
 
-def _working_binary(candidates: list[Path], probe_args: list[str]) -> Path | None:
-    cache_key = _working_binary_cache_key(candidates, probe_args)
+def _probe_working_binary(
+    candidates: list[Path],
+    probe_args: list[str],
+    *,
+    env: Mapping[str, str] | None = None,
+) -> _WorkingBinaryProbe:
+    active_env = os.environ if env is None else env
+    timeout = image_tool_timeout_seconds(active_env)
+    existing_candidates = [candidate for candidate in candidates if candidate.exists()]
+    timed_out = False
+    failed = False
+    for candidate in existing_candidates:
+        try:
+            process = subprocess.run(
+                [str(candidate), *probe_args],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                check=False,
+                env=_tool_env(candidate, env=active_env),
+                timeout=timeout,
+            )
+        except subprocess.TimeoutExpired:
+            timed_out = True
+            continue
+        except OSError:
+            failed = True
+            continue
+        if process.returncode == 0:
+            return _WorkingBinaryProbe(
+                binary=candidate,
+                status="ready",
+                reason_code=IMAGE_CONVERSION_BACKEND_READY,
+                message="Local image conversion backend is executable.",
+                candidate_count=len(existing_candidates),
+                timeout_seconds=timeout,
+            )
+        failed = True
+
+    if timed_out:
+        return _WorkingBinaryProbe(
+            binary=None,
+            status="error",
+            reason_code=IMAGE_CONVERSION_BACKEND_TIMEOUT,
+            message="Local image conversion backend probe timed out.",
+            candidate_count=len(existing_candidates),
+            timeout_seconds=timeout,
+        )
+    if failed:
+        return _WorkingBinaryProbe(
+            binary=None,
+            status="error",
+            reason_code=IMAGE_CONVERSION_BACKEND_ERROR,
+            message="Local image conversion backend candidates failed their version probe.",
+            candidate_count=len(existing_candidates),
+            timeout_seconds=timeout,
+        )
+    return _WorkingBinaryProbe(
+        binary=None,
+        status="not_configured",
+        reason_code=IMAGE_CONVERSION_BACKEND_MISSING,
+        message="No local image conversion backend executable was found.",
+        candidate_count=0,
+        timeout_seconds=timeout,
+    )
+
+
+def _working_binary_probe(
+    candidates: list[Path],
+    probe_args: list[str],
+    *,
+    env: Mapping[str, str] | None = None,
+) -> _WorkingBinaryProbe:
+    cache_key = _working_binary_cache_key(candidates, probe_args, env=env)
     with _WORKING_BINARY_CACHE_LOCK:
         cached = _WORKING_BINARY_CACHE.get(cache_key)
-        if cache_key in _WORKING_BINARY_CACHE:
-            return Path(cached) if cached else None
+        if cached is not None:
+            return cached
+        probe = _probe_working_binary(candidates, probe_args, env=env)
+        _WORKING_BINARY_CACHE[cache_key] = probe
+        return probe
 
-        resolved: Path | None = None
-        for candidate in candidates:
-            if not candidate.exists():
-                continue
-            try:
-                process = subprocess.run(
-                    [str(candidate), *probe_args],
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL,
-                    check=False,
-                    env=_tool_env(candidate),
-                    timeout=image_tool_timeout_seconds(),
-                )
-            except (OSError, subprocess.TimeoutExpired):
-                continue
-            if process.returncode == 0:
-                resolved = candidate
-                break
-        _WORKING_BINARY_CACHE[cache_key] = str(resolved) if resolved else None
-        return resolved
+
+def _working_binary(
+    candidates: list[Path],
+    probe_args: list[str],
+    *,
+    env: Mapping[str, str] | None = None,
+) -> Path | None:
+    return _working_binary_probe(candidates, probe_args, env=env).binary
 
 
 def _tool_env_root(binary: Path) -> Path | None:
@@ -145,7 +261,10 @@ def _tool_env_root(binary: Path) -> Path | None:
     )
 
 
-def _tool_env_overlay_cache_key(binary: Path) -> tuple[object, ...]:
+def _tool_env_overlay_cache_key(
+    binary: Path, env: Mapping[str, str] | None = None
+) -> tuple[object, ...]:
+    active_env = os.environ if env is None else env
     resolved = binary.resolve()
     parents = tuple(
         (
@@ -160,14 +279,17 @@ def _tool_env_overlay_cache_key(binary: Path) -> tuple[object, ...]:
     return (
         str(resolved),
         _path_fingerprint(resolved),
-        os.environ.get("LD_LIBRARY_PATH", ""),
-        os.environ.get("GS_LIB", ""),
+        active_env.get("LD_LIBRARY_PATH", ""),
+        active_env.get("GS_LIB", ""),
         parents,
     )
 
 
-def _tool_env_overlay(binary: Path) -> dict[str, str]:
-    cache_key = _tool_env_overlay_cache_key(binary)
+def _tool_env_overlay(
+    binary: Path, env: Mapping[str, str] | None = None
+) -> dict[str, str]:
+    active_env = os.environ if env is None else env
+    cache_key = _tool_env_overlay_cache_key(binary, active_env)
     with _TOOL_ENV_OVERLAY_CACHE_LOCK:
         cached = _TOOL_ENV_OVERLAY_CACHE.get(cache_key)
         if cached is not None:
@@ -188,7 +310,7 @@ def _tool_env_overlay(binary: Path) -> dict[str, str]:
         usr_root / "lib",
         root / "lib",
     ]
-    existing_ld = os.environ.get("LD_LIBRARY_PATH", "")
+    existing_ld = active_env.get("LD_LIBRARY_PATH", "")
     ld_values = [str(path) for path in lib_dirs if path.exists()]
     if ld_values:
         overlay["LD_LIBRARY_PATH"] = ":".join(
@@ -216,10 +338,10 @@ def _tool_env_overlay(binary: Path) -> dict[str, str]:
     return overlay
 
 
-def _tool_env(binary: Path) -> dict[str, str]:
-    env = os.environ.copy()
-    env.update(_tool_env_overlay(binary))
-    return env
+def _tool_env(binary: Path, *, env: Mapping[str, str] | None = None) -> dict[str, str]:
+    active_env = dict(os.environ if env is None else env)
+    active_env.update(_tool_env_overlay(binary, active_env))
+    return active_env
 
 
 def _clear_image_tool_caches() -> None:
@@ -231,17 +353,57 @@ def _clear_image_tool_caches() -> None:
 
 
 def _ghostscript_binary() -> Path:
-    binary = _working_binary(ghostscript_binary_candidates(), ["--version"])
-    if binary is None:
-        raise ImageConversionFailure("Ghostscript is unavailable for EPS conversion.")
-    return binary
+    probe = _working_binary_probe(ghostscript_binary_candidates(), ["--version"])
+    if probe.binary is None:
+        raise ImageConversionFailure(
+            "Ghostscript is unavailable for EPS conversion.",
+            reason_code=probe.reason_code,
+        )
+    return probe.binary
 
 
 def _vips_binary() -> Path:
-    binary = _working_binary(vips_binary_candidates(), ["--version"])
-    if binary is None:
-        raise ImageConversionFailure("libvips is unavailable for TIFF conversion.")
-    return binary
+    probe = _working_binary_probe(vips_binary_candidates(), ["--version"])
+    if probe.binary is None:
+        raise ImageConversionFailure(
+            "libvips is unavailable for TIFF conversion.",
+            reason_code=probe.reason_code,
+        )
+    return probe.binary
+
+
+def probe_image_conversion_backends(
+    env: Mapping[str, str] | None = None,
+) -> dict[str, dict[str, object]]:
+    """Probe EPS/TIFF conversion executables without converting user assets."""
+
+    probes = (
+        (
+            "ghostscript",
+            ("eps",),
+            _working_binary_probe(
+                ghostscript_binary_candidates(env), ["--version"], env=env
+            ),
+        ),
+        (
+            "libvips",
+            ("tiff",),
+            _working_binary_probe(vips_binary_candidates(env), ["--version"], env=env),
+        ),
+    )
+    return {
+        backend: ImageConversionBackendProbe(
+            backend=backend,
+            source_formats=source_formats,
+            status=probe.status,
+            available=probe.binary is not None,
+            reason_code=probe.reason_code,
+            message=probe.message,
+            candidate_count=probe.candidate_count,
+            timeout_seconds=probe.timeout_seconds,
+        ).to_dict()
+        for backend, source_formats, probe in probes
+    }
 
 
 def _run(args: list[str], *, env: Mapping[str, str] | None = None) -> None:
@@ -255,15 +417,19 @@ def _run(args: list[str], *, env: Mapping[str, str] | None = None) -> None:
             timeout=timeout,
         )
     except OSError as exc:
-        raise ImageConversionFailure(str(exc)) from exc
+        raise ImageConversionFailure(
+            str(exc), reason_code=IMAGE_CONVERSION_BACKEND_ERROR
+        ) from exc
     except subprocess.TimeoutExpired as exc:
         raise ImageConversionFailure(
-            f"{Path(args[0]).name} timed out after {timeout} seconds."
+            f"{Path(args[0]).name} timed out after {timeout} seconds.",
+            reason_code=IMAGE_CONVERSION_BACKEND_TIMEOUT,
         ) from exc
     if process.returncode != 0:
         message = process.stderr.decode("utf-8", errors="replace").strip()
         raise ImageConversionFailure(
-            message or f"{Path(args[0]).name} exited with {process.returncode}."
+            message or f"{Path(args[0]).name} exited with {process.returncode}.",
+            reason_code=IMAGE_CONVERSION_FAILED,
         )
 
 
@@ -338,8 +504,10 @@ def convert_source_image_response_to_png(
 
 
 __all__ = [
+    "ImageConversionBackendProbe",
     "ImageConversionFailure",
     "SourceImageConversion",
     "convert_source_image_response_to_png",
+    "probe_image_conversion_backends",
     "source_image_format_from_payload",
 ]

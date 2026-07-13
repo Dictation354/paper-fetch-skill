@@ -330,6 +330,24 @@ function Copy-InstalledSkill {
     Remove-Item -Recurse -Force -ErrorAction SilentlyContinue $Destination
     New-Item -ItemType Directory -Force -Path $Destination | Out-Null
     Copy-Item -Path (Join-Path $source "*") -Destination $Destination -Recurse -Force
+    Test-SkillBundleIntegrity -SkillDir $Destination
+}
+
+function Test-SkillBundleIntegrity {
+    param([string]$SkillDir)
+
+    $manifestPath = Join-Path $InstallRoot "offline-manifest.json"
+    if (-not (Test-Path -LiteralPath $manifestPath -PathType Leaf)) {
+        throw "Missing offline manifest: $manifestPath"
+    }
+    Invoke-RuntimePythonScript -Script @'
+from pathlib import Path
+import sys
+
+from paper_fetch.skill_integrity import require_valid_skill_bundle
+
+require_valid_skill_bundle(Path(sys.argv[1]), skill_dir=Path(sys.argv[2]))
+'@ -Arguments @($manifestPath, $SkillDir)
 }
 
 function Get-AntigravityHome {
@@ -682,8 +700,10 @@ assert BrowserContextManager is not None
 
 switch ($Action) {
     "Install" {
+        $bundledSkill = Join-Path (Join-Path $InstallRoot "skills") $SkillName
+        Invoke-InstallerStep -Name "bundled skill integrity" -Required -ScriptBlock { Test-SkillBundleIntegrity -SkillDir $bundledSkill }
         Invoke-InstallerStep -Name "offline.env update" -Required -ScriptBlock { Write-ManagedEnvFile }
-        Invoke-InstallerStep -Name "skill installation" -ScriptBlock { Install-Skills }
+        Invoke-InstallerStep -Name "skill installation" -Required -ScriptBlock { Install-Skills }
         Invoke-InstallerStep -Name "PATH update" -ScriptBlock { Add-UserPathEntry (Join-Path $InstallRoot "bin") }
         Invoke-InstallerStep -Name "Codex MCP registration" -ScriptBlock { Register-CodexMcp }
         Invoke-InstallerStep -Name "Claude MCP registration" -ScriptBlock { Register-ClaudeMcp }
@@ -704,6 +724,8 @@ switch ($Action) {
         try { Unregister-AntigravityMcp } catch { Write-Warn $_.Exception.Message }
     }
     "Smoke" {
+        $bundledSkill = Join-Path (Join-Path $InstallRoot "skills") $SkillName
+        Test-SkillBundleIntegrity -SkillDir $bundledSkill
         Invoke-SmokeChecks
     }
 }

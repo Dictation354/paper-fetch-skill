@@ -4,75 +4,26 @@ description: "适用场景：已知论文阅读、总结、全文获取与核验
 ---
 
 # 论文抓取技能
-当代理需要获取特定论文的内容或全文可用性，或在主题检索、文献推荐、综述生成过程中增强候选论文阅读时，使用这个技能；领域搜索可先用搜索工具发现候选，后续需要阅读、总结、比较、翻译、批判、核验可读性或获取全文时再交给 paper-fetch。
 
-## 适用场景
+先确认论文身份，再根据任务意图选择执行面；抓取后必须验收并报告。搜索工具只负责发现候选，不得用搜索摘要或网页片段冒充论文全文。
 
-- 用户提供了 `doi`、论文 `url`、arXiv ID、论文 `title` 或引用条目。
-- 用户要求阅读、总结、比较、批判、翻译，或提取某篇特定论文的方法/结果。
-- 用户给出参考文献列表、书目，或搜索工具/主题检索/文献推荐/综述生成已经产生候选论文，需要阅读、总结、比较、翻译、批判、抓取全文或核验可读性。
-- 你需要可直接放入模型上下文的精简 Markdown 或结构化元数据。
+## 核心契约
 
-> ## 🚨 全局执行纪律（强制）
->
-> **本工作流是严格的串行流水线。以下规则具有最高优先级，违反任意一条都构成执行失败：**
->
-> 1. **串行执行**：步骤必须按顺序执行；每一步的输出都是下一步的输入。相邻的非 BLOCKING 步骤在前置条件满足后可以连续推进，无需等待用户说“继续”。
-> 2. **BLOCKING = 强制暂停**：标记为 ⛔ BLOCKING 的步骤必须完全暂停；AI 必须等待用户明确回复后才能继续，且不得替用户做决定。
+- 开始任务前读取 [`references/workflow.md`](references/workflow.md)，按其中唯一的状态机推进。阶段之间保持依赖有序；同一阶段内身份独立的论文允许受控并发。
+- 身份和意图明确后读取 [`references/presets.md`](references/presets.md)，把任务映射为五个显式预设之一；分别按 CLI/MCP 矩阵设置主输出、cache、artifact、资产与完全不落盘语义，不依赖运行时默认值。
+- 只允许状态机的 BLOCKING 白名单暂停工作。普通上下文阅读/总结不因保存策略缺失而阻塞，后端选择本身也不要求用户确认。
+- 对单篇使用 `resolve_paper(...)`，对成批候选使用 `batch_resolve(...)`；身份去重后优先检查同 scope 的 `get_cached(doi, detail="compact", preferred_only=true, ...)`，只有 DOI 未知且确需浏览 scope 时才用 `list_cached()`，再按需使用 `has_fulltext(...)`、`batch_check(...)`、`fetch_paper(...)` 或结构化全文批量入口 `batch_fetch(...)`。
+- 只在 provider、凭证或浏览器运行时可能影响结果时调用 `provider_status()`；对 runtime `ProviderSpec.requires_browser_runtime=True` 的 provider，首次联网抓取前先做静态检查，需要 live 证明时再调用 `browser_preflight(provider=...)`，仅在结果明确要求时进入人工 auth。
+- 抓取不是终点。始终按 [`references/acceptance.md`](references/acceptance.md) 检查实际响应、文件和统一 acceptance 结果，再报告身份、来源、降级、产物路径和下一步；不得用 `.gitignore` 或 `git status` 是否变化代替文件验收。
+- 不要仅因为本地没有 PDF 或缓存文本文件就断定论文不可读；也不要把 abstract-only 或 metadata-only 报告成全文成功。
+- 参考文献列表或 web search 已产生候选论文后，先进入身份状态机；没有可核验候选的开放式发现任务不由本技能替代。
 
-## Provider 特殊规则
-- 对 runtime `ProviderSpec.requires_browser_runtime=True` 的 provider，第一次抓取前用 `provider_status()` 确认本地 browser runtime；浏览器链路首次失败时，排除明显配置错误后最多重试 `2` 次，优先绕过缓存，仍失败则明确说明失败发生在浏览器链路。
+## 按需参考
 
-## 不适用场景
-
-- 用户只要求发现论文、生成推荐列表或撰写综述，但没有候选论文、参考文献、标题、DOI、arXiv ID 或 URL 等可核验目标；此时本工具不替代检索、推荐或综述能力，应先形成候选后再按需调用。
-- 对话或工作区里已经有经过核验的完整论文文本，不需要再次抓取。
-
-## 工作流
-
-### 第 1 步：确认是否需要保存
-GATE：普通阅读、总结、比较、翻译、批判或信息提取可默认不保存并直接进入参数映射；只有用户要求保存 Markdown/资产、指定保存目录、批量归档，或任务目标包含本地归档时，才需要保存决策。
-
-BLOCKING：条件性 ⛔ BLOCKING。仅在需要保存时，如果以下任一信息缺失，必须暂停并等待用户明确回复：`是否保存`、`保存到哪里`（当选择保存时）、`是否下载图片资源`。普通上下文阅读/总结不因保存策略缺失而阻塞。
-
-1. 如果任务只是阅读、总结、比较、翻译、批判或提取内容，默认 `save_markdown=false`，不需要先确认保存策略。
-2. 将“是否保存”映射到 `save_markdown`、`artifact_mode` 和 `no_download`：保存 Markdown 用 `save_markdown=true`；只关闭 provider artifact/资产但保留 MCP cache 用 `artifact_mode="none"`；尽量不落盘用 `no_download=true`。将“保存到哪里”优先映射到 Markdown 主体文件的 `markdown_output_dir`，需要隔离 cache/artifact scope 时再设置 `download_dir`。将“是否下载图片资源”映射到 `strategy.asset_profile`：不下载用 `none`，正文资源用 `body`，正文加补充材料用 `all`；实际下载资产还要求 `no_download=false` 且 `artifact_mode!="none"`。
-3. 当用户选择保存 Markdown 时，默认使用 `save_markdown=true`；此时 MCP 响应只返回保存路径和诊断字段，不直接返回全文 `markdown` 或包含正文 sections 的 `article`。后续需要正文时，从 `saved_markdown_path` 读取所需片段。
-
-### 第 2 步：给出CLI操作
-GATE：仅当第 1 步已经完成参数映射后，才能判断是否需要建议 CLI；判断依据是当前任务是否要处理 `>=3` 篇文献，或是否明显属于成批抓取/核验场景。若用户已经明确表示坚持不用 CLI，则本步只需简短说明“仍可直接抓取”，随后进入第 3 步。
-
-BLOCKING：条件性 ⛔ BLOCKING。若判断应建议 CLI（通常是 `>=3` 篇文献或批量任务），在给出 CLI 用法后必须等待用户明确选择“改用 CLI”或“继续由当前代理直接抓取”；在用户作出选择前不得擅自进入批量抓取。若任务不是批量场景，则本步非 BLOCKING，可直接进入第 3 步。
-
-1. 完成映射后，判断用户是否要抓取>=3篇文献，若是，建议用户改用 `paper-fetch` CLI 自助批量处理，并优先使用 `--query-file <path>`（每行一个 DOI、URL 或标题，空行和 `#` 注释会被忽略）。
-2. 当你建议用户使用 CLI 时，说明这是为了提高下载效率、节省 token。
-3. 当你建议用户使用 CLI 时，按用户在第 1 步已选定的保存方式，给出对应的 CLI 操作方法，例如 `paper-fetch --query-file ./queries.txt --output-dir ./papers --batch-concurrency 4`；如需自定义汇总位置，补充 `--batch-results ./papers/results.jsonl`。
-4. 当你建议用户使用 CLI 时，要明确说明：如果用户坚持不使用 CLI，也可以继续由当前代理直接抓取。
-
-### 第 3 步：抓取
-GATE：只有在保存策略无需确认或已确认，且 CLI 分流结果也已明确后，才能开始抓取。对标题或其他可能歧义的输入，必须先完成 `resolve_paper(...)` 并拿到唯一目标；对依赖浏览器运行时的 provider，必须先按上面的 `Provider 特殊规则` 确认本地 browser runtime 健康。
-
-BLOCKING：默认非 BLOCKING，可连续执行抓取与后续处理；但遇到以下情况时必须立即暂停并等待用户明确回复：`resolve_paper(...)` 返回多个候选、输入信息不足以唯一定位论文、或用户尚未决定是否改用 CLI。除这些情形外，不需要逐步征求“继续”许可。
-
-1. 保存策略无需确认或已确认，并确认不使用 CLI 后，如果用户提供的是论文标题，不要直接拿标题进入抓取；先调用 `resolve_paper(...)` 定位 DOI 或落地页，再用解析后的 DOI 或 URL 抓取。若解析结果不唯一，先向用户确认目标论文。
-2. 只要可用，优先使用 MCP 工具。
-3. 在多轮会话里，重新抓取前先调用 `list_cached()` 或 `get_cached(doi)`。
-4. 如果用户给的是标题，先调用 `resolve_paper(query | title, authors, year)` 定位 DOI 或落地页；确认唯一候选后，后续抓取一律优先使用解析出的 DOI，其次使用落地页 URL，不要继续直接拿标题调用 `fetch_paper(...)`。
-5. 如果查询可能有歧义，也先调用 `resolve_paper(query | title, authors, year)` 并在必要时向用户消歧。
-6. 如果单篇文献有保存需求，先询问用户是否保存、保存位置、是否下载图片资源，再决定 `save_markdown`、`download_dir` / `markdown_output_dir` 和 `strategy.asset_profile`。
-7. 如果多篇文献有保存需求，也先按整批询问是否保存、保存位置、是否下载图片资源，再统一决定 `save_markdown`、`download_dir` / `markdown_output_dir` 和 `strategy.asset_profile`。
-8. 搜索工具只负责发现候选；当 web search、主题检索、推荐或综述流程产生 DOI、URL、arXiv ID、标题或引用条目，且后续需要阅读、总结、比较、翻译、批判、核验可读性或获取全文时，提取候选并进入本步骤；不要继续依赖搜索结果硬读摘要或网页正文来冒充全文阅读。
-9. 对书目或参考文献列表任务，先调用 `batch_check(queries, mode, concurrency)` 做分诊；如果用户确实要处理多篇文献，优先建议他们改用 `paper-fetch` CLI。
-10. 如果只需要低成本判断能否读取全文，调用 `has_fulltext(query)`。
-11. 如果目标 provider 由 runtime 标记为 `ProviderSpec.requires_browser_runtime=True`，在第一次抓取前调用 `provider_status()` 确认本地 browser runtime 健康。
-12. 如果提供方凭证、本地运行时状态，或 IEEE Xplore 访问上下文可能影响结果，在第一次抓取前调用 `provider_status()`。
-13. 当你需要适合 AI 的 Markdown、结构化文章数据或元数据时，调用 `fetch_paper(query, modes, strategy, include_refs, max_tokens, prefer_cache, no_download, artifact_mode, save_markdown, markdown_output_dir, markdown_filename, download_dir)`；如果 `save_markdown=true`，把返回结果视为路径和质量诊断，不要期待本轮工具结果携带全文。
-14. 如果浏览器链路抓取失败，先检查 `provider_status()`、确认运行时健康，并优先以 `prefer_cache=false` 重试；总重试次数最多 `2` 次，不要无限重跑。
-15. 不要仅因为本地没有 PDF 或缓存文本文件，就断定“不可读”。
-16. 如果拿不到全文，也要继续利用返回的仅摘要或仅元数据结果，并明确告诉用户当前基于元数据或摘要工作。
-
-## 参考资料
-
-- 当你需要提供方凭证、下载目录行为、runtime `ProviderSpec.requires_browser_runtime=True` provider 的本地运行时要求，或 IEEE 访问边界时，读取 [`references/environment.md`](references/environment.md)。
-- 当 MCP 不可用，或用户明确要求 shell 命令时，读取 [`references/cli-fallback.md`](references/cli-fallback.md)。
-- 当结果为 `ambiguous`、`no_access`、`rate_limited` 或仅有元数据时，读取 [`references/failure-handling.md`](references/failure-handling.md)。
+- 工作流阶段、BLOCKING 白名单、目录推断、执行面选择和验收报告：[`references/workflow.md`](references/workflow.md)
+- 五个任务预设、CLI/MCP 独立落盘矩阵、本地优先决策树和 50 条分块规则：[`references/presets.md`](references/presets.md)
+- 统一 acceptance 分面、文件/path/hash 复核和最终报告字段：[`references/acceptance.md`](references/acceptance.md)
+- 工具参数、默认值、返回字段及唯一的标题解析规则：[`references/tool-contract.md`](references/tool-contract.md)
+- provider 凭证、下载目录、browser runtime 与合法访问上下文：[`references/environment.md`](references/environment.md)
+- 正常 CLI 单篇/批量归档、manifest 审计/恢复和 CLI 不可用时的窄 fallback：[`references/cli-workflow.md`](references/cli-workflow.md)
+- 批量 probe、代理级重试、限流、全部 error category、降级与失败报告的唯一决策表：[`references/failure-handling.md`](references/failure-handling.md)

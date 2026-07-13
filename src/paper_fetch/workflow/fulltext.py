@@ -262,6 +262,16 @@ def _try_official_provider(
             source_trail=source_trail,
         )
         article = provider_result.article
+        artifact_store.audit_article_assets(
+            article,
+            asset_profile=resolved_asset_profile,
+            asset_failures=provider_result.artifacts.asset_failures,
+            archive_enabled=(
+                artifact_store.asset_download_dir is not None
+                and provider_result.artifacts.allow_related_assets
+                and not provider_result.artifacts.text_only
+            ),
+        )
         extend_unique(source_trail, article.quality.source_trail)
         if article.quality.content_kind == FULLTEXT:
             emit_structured_log(

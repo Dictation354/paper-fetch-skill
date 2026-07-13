@@ -15,6 +15,11 @@ from paper_fetch.image_tools.paths import (
     DEFAULT_IMAGE_TOOL_TIMEOUT_SECONDS,
     image_tool_timeout_seconds,
 )
+from paper_fetch.reason_codes import (
+    IMAGE_CONVERSION_BACKEND_MISSING,
+    IMAGE_CONVERSION_BACKEND_READY,
+    IMAGE_CONVERSION_BACKEND_TIMEOUT,
+)
 
 
 class ImageToolsTests(unittest.TestCase):
@@ -150,6 +155,63 @@ class ImageToolsTests(unittest.TestCase):
                 "timed out",
             ):
                 image_convert._run(["gs"], env={})
+
+    def test_backend_probe_distinguishes_ready_missing_and_timeout(self) -> None:
+        backend_cases = ("ghostscript", "libvips")
+        outcomes = (
+            ("ready", "ready", IMAGE_CONVERSION_BACKEND_READY),
+            ("missing", "not_configured", IMAGE_CONVERSION_BACKEND_MISSING),
+            ("timeout", "error", IMAGE_CONVERSION_BACKEND_TIMEOUT),
+        )
+        with tempfile.TemporaryDirectory() as tmpdir:
+            binary = Path(tmpdir) / "image-tool"
+            binary.write_bytes(b"")
+            for backend in backend_cases:
+                for outcome, expected_status, expected_code in outcomes:
+                    with self.subTest(backend=backend, outcome=outcome):
+                        image_convert._clear_image_tool_caches()
+                        candidates = [] if outcome == "missing" else [binary]
+                        run_side_effect = (
+                            subprocess.TimeoutExpired(cmd=str(binary), timeout=1)
+                            if outcome == "timeout"
+                            else None
+                        )
+                        completed = subprocess.CompletedProcess(
+                            [str(binary), "--version"], 0
+                        )
+                        with (
+                            mock.patch.object(
+                                image_convert,
+                                "ghostscript_binary_candidates",
+                                return_value=(
+                                    candidates if backend == "ghostscript" else []
+                                ),
+                            ),
+                            mock.patch.object(
+                                image_convert,
+                                "vips_binary_candidates",
+                                return_value=(
+                                    candidates if backend == "libvips" else []
+                                ),
+                            ),
+                            mock.patch.object(
+                                image_convert.subprocess,
+                                "run",
+                                side_effect=run_side_effect,
+                                return_value=completed,
+                            ),
+                        ):
+                            report = image_convert.probe_image_conversion_backends(
+                                {
+                                    "PATH": "",
+                                    "PAPER_FETCH_IMAGE_TOOL_TIMEOUT_SECONDS": "1",
+                                }
+                            )
+
+                        entry = report[backend]
+                        self.assertEqual(entry["status"], expected_status)
+                        self.assertEqual(entry["reason_code"], expected_code)
+                        self.assertEqual(entry["available"], outcome == "ready")
 
     def test_convert_eps_reuses_cached_ghostscript_probe_for_multiple_images(
         self,

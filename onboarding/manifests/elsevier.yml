@@ -127,7 +127,8 @@ supplementary_scope:
   url_pattern:
 abstract_only_strategy: not_supported
 probe:
-  env_requirements: []
+  env_requirements:
+    - ELSEVIER_API_KEY
   requires_playwright: false
   requires_browser_runtime: false
   ping_url: https://www.sciencedirect.com/

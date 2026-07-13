@@ -153,6 +153,51 @@ class McpServerResourceTests(unittest.IsolatedAsyncioTestCase):
             )
         )
 
+    async def test_batch_fetch_server_syncs_saved_markdown_resource_uris(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            default_dir = Path(tmpdir) / "default"
+            isolated_dir = Path(tmpdir) / "isolated"
+            ctx = FakeContext()
+
+            def fake_fetch(query, **kwargs):
+                return sample_envelope(modes=kwargs["modes"], doi=query)
+
+            with (
+                mock.patch.object(mcp_tools, "build_runtime_env", return_value={}),
+                mock.patch.object(
+                    mcp_tools, "resolve_mcp_download_dir", return_value=default_dir
+                ),
+                mock.patch.object(
+                    mcp_tools, "service_fetch_paper", side_effect=fake_fetch
+                ),
+            ):
+                server = build_server()
+                result = await server._tool_manager.call_tool(
+                    "batch_fetch",
+                    {
+                        "queries": ["10.1000/one", "10.1000/two"],
+                        "concurrency": 2,
+                        "strategy": {"asset_profile": "none"},
+                        "no_download": True,
+                        "artifact_mode": "none",
+                        "save_markdown": True,
+                        "download_dir": str(isolated_dir),
+                    },
+                    context=ctx,
+                )
+
+        self.assertFalse(result.isError)
+        self.assertEqual(result.structuredContent["summary"]["saved_markdown"], 2)
+        scope_id = cache_scope_id(isolated_dir)
+        expected_prefix = scoped_cached_resource_uri_prefix(scope_id)
+        returned_uris = {
+            item["resource_uri"] for item in result.structuredContent["results"]
+        }
+        self.assertTrue(all(uri.startswith(expected_prefix) for uri in returned_uris))
+        resource_uris = set(server._resource_manager._resources)
+        self.assertTrue(returned_uris <= resource_uris)
+        self.assertEqual(ctx.session.resource_list_changed_calls, 1)
+
     async def test_fetch_paper_server_no_download_skipped_markdown_save_does_not_sync_resources(
         self,
     ) -> None:

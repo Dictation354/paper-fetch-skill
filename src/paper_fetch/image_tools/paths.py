@@ -12,6 +12,8 @@ from ..config import resolve_user_data_dir
 
 IMAGE_TOOLS_DIR_ENV_VAR = "PAPER_FETCH_IMAGE_TOOLS_DIR"
 IMAGE_TOOL_TIMEOUT_SECONDS_ENV_VAR = "PAPER_FETCH_IMAGE_TOOL_TIMEOUT_SECONDS"
+GHOSTSCRIPT_BIN_ENV_VAR = "PAPER_FETCH_GHOSTSCRIPT_BIN"
+VIPS_BIN_ENV_VAR = "PAPER_FETCH_VIPS_BIN"
 DEFAULT_IMAGE_TOOL_TIMEOUT_SECONDS = 120
 GHOSTSCRIPT_EXECUTABLE_NAMES = ("gs", "gswin64c.exe", "gswin32c.exe", "gs.exe")
 VIPS_EXECUTABLE_NAMES = ("vips", "vips.exe")
@@ -57,7 +59,7 @@ def repo_image_tools_dir() -> Path | None:
 
 
 def default_user_image_tools_dir(env: Mapping[str, str] | None = None) -> Path:
-    active_env = env or os.environ
+    active_env = os.environ if env is None else env
     configured = normalize_optional_path(active_env.get(IMAGE_TOOLS_DIR_ENV_VAR))
     if configured is not None:
         return configured
@@ -65,7 +67,7 @@ def default_user_image_tools_dir(env: Mapping[str, str] | None = None) -> Path:
 
 
 def image_tool_timeout_seconds(env: Mapping[str, str] | None = None) -> int:
-    active_env = env or os.environ
+    active_env = os.environ if env is None else env
     value = str(active_env.get(IMAGE_TOOL_TIMEOUT_SECONDS_ENV_VAR) or "").strip()
     if not value:
         return DEFAULT_IMAGE_TOOL_TIMEOUT_SECONDS
@@ -77,7 +79,7 @@ def image_tool_timeout_seconds(env: Mapping[str, str] | None = None) -> int:
 
 
 def image_tools_search_dirs(env: Mapping[str, str] | None = None) -> list[Path]:
-    active_env = env or os.environ
+    active_env = os.environ if env is None else env
     candidates: list[Path] = []
 
     explicit = normalize_optional_path(active_env.get(IMAGE_TOOLS_DIR_ENV_VAR))
@@ -153,7 +155,7 @@ def _binary_candidates(
     configured_env_name: str,
     names: tuple[str, ...],
 ) -> list[Path]:
-    active_env = env or os.environ
+    active_env = os.environ if env is None else env
     configured = normalize_optional_path(active_env.get(configured_env_name))
     roots = tuple(image_tools_search_dirs(active_env))
     path_value = active_env.get("PATH")
@@ -185,7 +187,7 @@ def _clear_image_tool_path_caches() -> None:
 def ghostscript_binary_candidates(env: Mapping[str, str] | None = None) -> list[Path]:
     return _binary_candidates(
         env=env,
-        configured_env_name="PAPER_FETCH_GHOSTSCRIPT_BIN",
+        configured_env_name=GHOSTSCRIPT_BIN_ENV_VAR,
         names=GHOSTSCRIPT_EXECUTABLE_NAMES,
     )
 
@@ -193,16 +195,18 @@ def ghostscript_binary_candidates(env: Mapping[str, str] | None = None) -> list[
 def vips_binary_candidates(env: Mapping[str, str] | None = None) -> list[Path]:
     return _binary_candidates(
         env=env,
-        configured_env_name="PAPER_FETCH_VIPS_BIN",
+        configured_env_name=VIPS_BIN_ENV_VAR,
         names=VIPS_EXECUTABLE_NAMES,
     )
 
 
 __all__ = [
     "DEFAULT_IMAGE_TOOL_TIMEOUT_SECONDS",
+    "GHOSTSCRIPT_BIN_ENV_VAR",
     "GHOSTSCRIPT_EXECUTABLE_NAMES",
     "IMAGE_TOOLS_DIR_ENV_VAR",
     "IMAGE_TOOL_TIMEOUT_SECONDS_ENV_VAR",
+    "VIPS_BIN_ENV_VAR",
     "VIPS_EXECUTABLE_NAMES",
     "default_user_image_tools_dir",
     "ghostscript_binary_candidates",

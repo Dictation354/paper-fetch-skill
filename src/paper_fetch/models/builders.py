@@ -20,7 +20,11 @@ from .markdown import (
     strip_leading_markdown_title_heading,
     strip_markdown_images,
 )
-from .quality import apply_quality_assessment, classify_content
+from .quality import (
+    apply_quality_assessment,
+    classify_content,
+    coerce_asset_provenance,
+)
 from .render import rewrite_markdown_asset_links
 from .schema import (
     ArticleModel,
@@ -64,6 +68,13 @@ def _optional_int(value: Any) -> int | None:
     except (TypeError, ValueError):
         return None
     return integer if integer >= 0 else None
+
+
+def _asset_provenance(entry: Mapping[str, Any]) -> list[str]:
+    values = coerce_asset_provenance(entry.get("provenance"))
+    if safe_text(entry.get("conversion_source_format")):
+        values.append("source_converted")
+    return list(dict.fromkeys(values))
 
 
 def _asset_from_entry(
@@ -115,6 +126,7 @@ def _asset_from_entry(
         downloaded_bytes=_optional_int(entry.get("downloaded_bytes")),
         width=_optional_int(entry.get("width")),
         height=_optional_int(entry.get("height")),
+        provenance=_asset_provenance(entry),
     )
 
 

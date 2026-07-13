@@ -474,7 +474,7 @@ metadata
 <a id="rule-image-download-validates-real-images"></a>
 ### 图片下载必须验证真实图片内容
 
-- 这条规则约束的是：正文图片下载不能把 Cloudflare challenge HTML、Chrome 图片查看器壳或过小的站点图标当成论文图片保存；preview 图只有尺寸达标并在 source trail 中标记为 accepted 时才能作为可接受降级。
+- 这条规则约束的是：正文图片下载不能把 Cloudflare challenge HTML、Chrome 图片查看器壳或过小的站点图标当成论文图片保存；preview 图只有尺寸达标并在 source trail 中标记为 accepted 时才能作为可接受降级。下载后的统一审计必须用 `filetype` 读取真实 MIME、用 `imagesize` 读取尺寸，并记录文件实际字节数和 `SHA256`，不能信任扩展名、响应头或 provider 声明值代替文件事实。
 - 如果违反，用户会看到：正文缺图，或本地图片文件其实是 HTML / 站点图标，后续渲染和 live review 都无法解释失败原因。
 - 它对应的阶段是：`asset-download`、`asset-validation`、`availability-quality`。
 - Owner：`paper_fetch.extraction.html.assets` 与 `paper_fetch.providers.browser_workflow.fetchers`。
@@ -495,14 +495,23 @@ metadata
     - [`../tests/devtools/test_golden_criteria_live.py`](../tests/devtools/test_golden_criteria_live.py) 中的 `test_science_preview_accepted_is_not_an_asset_issue`
     - [`../tests/devtools/test_golden_criteria_live.py`](../tests/devtools/test_golden_criteria_live.py) 中的 `test_formula_only_preview_fallback_is_not_an_asset_issue`
     - [`../tests/devtools/test_golden_criteria_live.py`](../tests/devtools/test_golden_criteria_live.py) 中的 `test_non_formula_preview_fallback_remains_an_asset_issue`
+  - 统一真实性审计：
+    - [`../tests/unit/test_asset_quality.py`](../tests/unit/test_asset_quality.py) 中的 `test_valid_png_jpeg_svg_and_pseudo_extension_record_real_facts`
+    - [`../tests/unit/test_asset_quality.py`](../tests/unit/test_asset_quality.py) 中的 `test_placeholder_signals_are_suspected_and_never_delete_files`
+    - [`../tests/unit/test_asset_quality.py`](../tests/unit/test_asset_quality.py) 中的 `test_missing_path_and_explicit_failure_are_definite_and_classified`
 - 边界说明：
   - `download_tier="preview"` 不是天然错误；当下载阶段判定 preview 尺寸满足阈值，或 provider 明确把该 preview 标记为可接受，并在 source trail 中记录 `download:*_assets_preview_accepted` 时，它是诊断标签，不应写入普通 warning，也不应自动映射为 `asset_download_failure`。
   - formula-only preview fallback 是公式图片语义的降级呈现，不自动归为 `asset_download_failure`；figure/table preview fallback 仍按资产问题处理，除非已有 accepted 诊断。
+  - `Blank.svg` / `Blank.png` URL、零字节、异常小文件或尺寸、无效真实 MIME、MIME 与扩展名不一致，以及多个不同逻辑正文图共享完全相同 `SHA256`，都只是保守的 `placeholder_suspected` 信号。审计器不会据此删除、覆盖或改写文件，也不会声称已经完成视觉语义判断。
+  - 明确的下载 failure diagnostic、声明了本地路径但文件不存在或不可读，才属于确定的资产失败；这些失败仍不能把已经成功的正文内容改判成抓取失败。
+  - `asset_profile=none` 时，保留下来的远程链接逐项记为 `not_requested`，不能对它们执行本地存在性失败判定；请求了对应 kind、但 no-download / artifact policy 禁止归档时记为 `not_archived`。`body` profile 不请求 supplement，`all` 才请求 supplement 和 decoration。
+  - `figure`、`formula`、`table`、`supplement`、`decoration` 必须分别汇总；公式占位嫌疑不能冒充正文主图失败，主图失败也不能被公式成功掩盖。
+  - 图片可用性与正文完整性是两个独立分面：preview、疑似占位、未归档或资产失败只降低资产分面；是否 fulltext 仍由正文验收规则决定。
 
 <a id="rule-asset-download-diagnostic-fields"></a>
 ### 下载资产必须保留诊断字段
 
-- 这条规则约束的是：成功或失败的资产下载都要保留足够诊断信息；成功图片记录 `download_tier`、下载 URL、原始 full-size / preview 候选 URL、content type、字节数和尺寸，失败资产保留 status、content type、snippet、reason 和 recovery 轨迹。
+- 这条规则约束的是：成功或失败的资产下载都要保留足够诊断信息；成功图片记录请求 profile、逻辑 kind、`download_tier`、路径、下载 URL、原始 full-size / preview 候选 URL、声明 content type、真实 MIME、实际字节数、尺寸、`SHA256` 和 provenance，失败资产保留 failure code、status、content type、snippet、reason 和 recovery 轨迹。结构化摘要必须同时给出 `requested`、`total`、`full_size`、`preview`、`failed`、`placeholder_suspected`、`not_requested`、`not_archived`，以及按 kind 的同类计数。
 - 如果违反，用户会看到：live review 只能笼统报 `asset_download_failure`，看不出是 full-size 被拦截、preview 可接受、supplementary 失败，还是图片真的缺失。
 - 它对应的阶段是：`asset-validation`、`article-assembly`、`final-rendering`。
 - Owner：`paper_fetch.extraction.html.assets.download`、`paper_fetch.extraction.html.assets.state`、`paper_fetch.models.Asset` / `paper_fetch.models.Quality` 与 `paper_fetch.mcp.schemas`。
@@ -512,6 +521,8 @@ metadata
 - 对应测试：
   - Owner（models / MCP）：
     - [`../tests/unit/test_mcp_payload_cache.py`](../tests/unit/test_mcp_payload_cache.py) 中的 `test_article_payload_preserves_asset_download_diagnostics`
+    - [`../tests/unit/test_asset_quality.py`](../tests/unit/test_asset_quality.py) 中的 `test_asset_summary_model_and_legacy_cache_payloads_are_compatible`
+    - [`../tests/unit/test_workflow_acceptance.py`](../tests/unit/test_workflow_acceptance.py) 中的 `test_audited_quality_asset_summary_matches_explicit_acceptance_adapter`
   - Provider 覆盖：
     - [`../tests/unit/test_asset_retry_policy.py`](../tests/unit/test_asset_retry_policy.py) 中的 `test_provider_asset_retry_policies_round_trip_merge_and_retry`
     - [`../tests/unit/test_atypon_browser_workflow_provider_retries.py`](../tests/unit/test_atypon_browser_workflow_provider_retries.py) 中的 `test_browser_workflow_download_related_assets_retries_after_partial_failures`
@@ -522,6 +533,8 @@ metadata
   - 本规则只要求诊断字段不丢失，不要求所有 provider 使用同一种远端下载实现。
   - Browser workflow 的 retry 只覆盖网络、超时、browser context/fetch error 和 challenge 类可恢复失败；404、非目标 content type、unsupported scheme 等确定性失败不触发重试。403、429 和 5xx 只有在 reason 同时指向 challenge 或 browser fetch/context 临时失败时才重试。
   - 诊断字段不能替代用户可见内容；caption、占位和 warnings 仍由渲染规则决定。
+  - EPS/TIFF 源转换失败后，如果后续 JPG/PNG 候选成功，最终资产保持成功且记录 `conversion_degraded` provenance；不能保留一个虚假的最终 asset failure。只有所有候选均失败时才计入 `failed`。
+  - 旧 cache 或旧模型缺少结构化资产摘要时按“尚未审计”的空摘要读取；不能把字段缺失解释成资产完整，也不能因此拒绝反序列化。
 
 <a id="rule-browser-primary-image-download-path"></a>
 ### 浏览器工作流图片下载必须使用浏览器上下文或浏览器等价请求头

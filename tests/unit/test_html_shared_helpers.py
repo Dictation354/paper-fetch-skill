@@ -1228,8 +1228,58 @@ class SharedHtmlHelperTests(unittest.TestCase):
             asset = result["assets"][0]
             self.assertEqual(asset["download_url"], full_url)
             self.assertEqual(asset["download_tier"], "full_size")
+            self.assertEqual(asset["provenance"], ["conversion_degraded"])
             self.assertNotIn("original_source_path", asset)
             self.assertEqual(Path(asset["path"]).read_bytes(), fallback_body)
+
+    def test_conversion_backend_missing_has_distinct_asset_reason_code(self) -> None:
+        source_url = "https://example.test/images/example-f1.eps"
+        transport = _StaticAssetTransport(
+            {
+                ("GET", source_url): {
+                    "status_code": 200,
+                    "headers": {"content-type": "application/postscript"},
+                    "body": b"%!PS-Adobe-3.0 EPSF-3.0\n",
+                    "url": source_url,
+                }
+            }
+        )
+
+        with (
+            tempfile.TemporaryDirectory() as tmpdir,
+            mock.patch(
+                "paper_fetch.extraction.html.assets.download.convert_source_image_response_to_png",
+                side_effect=ImageConversionFailure(
+                    "missing ghostscript",
+                    reason_code="image_conversion_backend_missing",
+                ),
+            ),
+        ):
+            result = html_assets.download_assets(
+                html_assets.FIGURE_KIND,
+                transport,
+                article_id="10.5555/eps-source-missing-backend",
+                assets=[
+                    {
+                        "kind": "figure",
+                        "heading": "Figure 1",
+                        "caption": "EPS source",
+                        "download_url": source_url,
+                        "url": source_url,
+                        "section": "body",
+                    }
+                ],
+                output_dir=Path(tmpdir),
+                user_agent="paper-fetch-test",
+                asset_profile="all",
+            )
+
+        self.assertEqual(result["assets"], [])
+        self.assertEqual(len(result["asset_failures"]), 1)
+        self.assertEqual(
+            result["asset_failures"][0]["reason"],
+            "image_conversion_backend_missing: missing ghostscript",
+        )
 
     def test_download_assets_figure_kind_resolves_http_candidates_in_parallel_but_writes_in_order(
         self,

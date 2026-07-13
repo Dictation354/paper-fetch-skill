@@ -15,6 +15,7 @@ from paper_fetch.providers.browser_runtime import (
     BrowserRuntimeConfig,
     BrowserRuntimeFailure,
 )
+from paper_fetch.providers.base import ProviderStatusResult, build_provider_status_check
 from paper_fetch.providers.browser_workflow import html_extraction
 from paper_fetch.providers.browser_workflow.shared import default_browser_workflow_deps
 
@@ -49,6 +50,46 @@ def _preflight_deps(markdown_title: str = "Sample"):
         default_browser_workflow_deps(),
         _cached_browser_workflow_markdown=_fake_markdown(markdown_title),
     )
+
+
+def test_static_browser_capabilities_never_claims_live_health() -> None:
+    status = ProviderStatusResult(
+        provider="wiley",
+        status="ready",
+        available=True,
+        official_provider=True,
+        checks=[
+            build_provider_status_check(
+                "runtime_env",
+                "ok",
+                "configured",
+                details={
+                    "cdp_endpoint_configured": True,
+                    "binary_path_configured": False,
+                    "auto_cdp_browser_enabled": False,
+                },
+            ),
+            build_provider_status_check(
+                "playwright_dependency",
+                "ok",
+                "dependencies import",
+                details={"packages": {"playwright": True, "cloakbrowser": True}},
+            ),
+        ],
+    )
+
+    with mock.patch.object(
+        browser_preflight, "probe_runtime_status", return_value=status
+    ):
+        report = browser_preflight.static_browser_capabilities({}, provider="wiley")
+
+    assert report["live_checked"] is False
+    assert report["publisher_page_checked"] is False
+    assert report["playwright"]["available"] is True
+    assert report["cloakbrowser"]["available"] is True
+    assert report["chrome_cdp"]["status"] == "configured"
+    assert report["chrome_cdp"]["reason_code"] == ("cdp_endpoint_configured_not_probed")
+    assert report["chrome_cdp"]["connection_checked"] is False
 
 
 def test_browser_preflight_adds_provider_storage_path_for_external_cdp(
@@ -136,6 +177,79 @@ def test_browser_preflight_adds_provider_storage_path_for_external_cdp(
     assert isinstance(runtime_env, dict)
     assert runtime_env[CLOAKBROWSER_TIMEOUT_MS_ENV_VAR] == "45000"
     assert runtime_env[BROWSER_USER_AGENT_ENV_VAR] == "Mozilla/5.0 preflight-test"
+
+
+def test_browser_preflight_uses_custom_target_and_disables_storage_write(
+    tmp_path: Path,
+) -> None:
+    captured: dict[str, object] = {}
+    state_path = tmp_path / "state with spaces" / "wiley.json"
+    target_url = "https://onlinelibrary.wiley.com/doi/full/10.1111/custom.123"
+
+    def load_runtime_config(env, *, provider, doi):
+        del env
+        captured["doi"] = doi
+        return _runtime_config(tmp_path, provider=provider, doi=doi)
+
+    def fetch_html_with_browser(candidate_urls, *, publisher, config, **kwargs):
+        del kwargs
+        captured["candidate_urls"] = list(candidate_urls)
+        captured["publisher"] = publisher
+        captured["config"] = config
+        return BrowserFetchedHtml(
+            source_url=candidate_urls[0],
+            final_url=candidate_urls[0],
+            html="<html><body>Article body</body></html>",
+            response_status=200,
+            response_headers={},
+            title="Custom sample",
+            summary="Article body",
+            browser_context_seed={},
+        )
+
+    with (
+        mock.patch.object(
+            browser_preflight, "load_runtime_config", side_effect=load_runtime_config
+        ),
+        mock.patch.object(browser_preflight, "ensure_runtime_ready"),
+        mock.patch.object(
+            browser_preflight,
+            "fetch_html_with_browser",
+            side_effect=fetch_html_with_browser,
+        ),
+        mock.patch.object(
+            browser_preflight,
+            "default_browser_workflow_deps",
+            side_effect=_preflight_deps,
+        ),
+        mock.patch.object(
+            html_extraction,
+            "_cached_browser_workflow_markdown",
+            side_effect=_fake_markdown("Custom sample"),
+        ),
+    ):
+        result = browser_preflight.preflight_browser_provider(
+            "wiley",
+            env={XDG_DATA_HOME_ENV_VAR: str(tmp_path)},
+            target_url=target_url,
+            storage_state_path=state_path,
+            save_storage_state=False,
+        )
+
+    assert result.ok is True
+    assert result.target_url == target_url
+    assert result.storage_state_path == state_path
+    assert captured["doi"] == "10.1111/custom.123"
+    assert captured["publisher"] == "wiley"
+    candidate_urls = captured["candidate_urls"]
+    assert isinstance(candidate_urls, list)
+    assert candidate_urls[0] == target_url
+    runtime = captured["config"]
+    assert isinstance(runtime, BrowserRuntimeConfig)
+    assert runtime.storage_state_path == state_path
+    assert runtime.user_data_dir is None
+    assert runtime.profile_dir is None
+    assert runtime.persist_storage_state is False
 
 
 def test_browser_preflight_uses_provider_html_candidates_for_aip(
@@ -323,6 +437,43 @@ def test_browser_preflight_records_failure_and_continues(tmp_path: Path) -> None
         == tmp_path / "profiles" / "science" / "storage-state.json"
     )
     assert results[1].ok is True
+
+
+def test_browser_preflight_cancellation_keeps_completed_provider_result() -> None:
+    cancelled = False
+    progress: list[tuple[str, int, int]] = []
+
+    def fake_preflight(provider, **_kwargs):
+        return browser_preflight.BrowserPreflightResult(
+            provider=provider,
+            provider_label=provider.upper(),
+            ok=True,
+        )
+
+    def on_result(result, completed, total):
+        nonlocal cancelled
+        progress.append((result.provider, completed, total))
+        if result.provider == "science":
+            cancelled = True
+
+    with mock.patch.object(
+        browser_preflight,
+        "preflight_browser_provider",
+        side_effect=fake_preflight,
+    ):
+        results = browser_preflight.run_browser_provider_preflight(
+            providers=["science", "wiley", "pnas"],
+            cancel_check=lambda: cancelled,
+            cancel_as_result=True,
+            on_result=on_result,
+            env={},
+        )
+
+    assert [result.provider for result in results] == ["science", "wiley"]
+    assert results[0].ok is True
+    assert results[1].ok is False
+    assert results[1].reason == "request_cancelled"
+    assert progress == [("science", 1, 3), ("wiley", 2, 3)]
 
 
 def test_browser_preflight_does_not_use_pdf_fallback(tmp_path: Path) -> None:

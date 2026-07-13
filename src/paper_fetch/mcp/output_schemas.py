@@ -97,6 +97,7 @@ class AssetOutput(TypedDict, total=False):
     downloaded_bytes: int | None
     width: int | None
     height: int | None
+    provenance: list[str]
 
 
 class TokenEstimateBreakdownOutput(TypedDict, total=False):
@@ -148,6 +149,60 @@ class AssetFailureOutput(TypedDict, total=False):
     recovery_attempts: list[dict[str, Any]]
 
 
+class AssetDiagnosticOutput(TypedDict, total=False):
+    request_profile: str
+    kind: str
+    status: str
+    download_tier: str | None
+    path: str | None
+    real_mime: str | None
+    byte_count: int | None
+    width: int | None
+    height: int | None
+    sha256: str | None
+    failure_code: str | None
+    provenance: list[str]
+    suspected_reasons: list[str]
+
+
+class AssetKindSummaryOutput(TypedDict, total=False):
+    total: int
+    requested: int
+    full_size: int
+    preview: int
+    failed: int
+    placeholder_suspected: int
+    not_requested: int
+    not_archived: int
+
+
+class AssetByKindOutput(TypedDict, total=False):
+    figure: AssetKindSummaryOutput
+    formula: AssetKindSummaryOutput
+    table: AssetKindSummaryOutput
+    supplement: AssetKindSummaryOutput
+    decoration: AssetKindSummaryOutput
+
+
+class AssetQualitySummaryOutput(TypedDict, total=False):
+    audited: bool
+    requested: bool
+    profile: str
+    total: int
+    local: int
+    full_size: int
+    preview: int
+    failed: int
+    placeholder_suspected: int
+    not_requested: int
+    not_archived: int
+    remote_link_count: int
+    remote_only_count: int
+    failure_codes: list[str]
+    by_kind: AssetByKindOutput
+    diagnostics: list[AssetDiagnosticOutput]
+
+
 class QualityOutput(TypedDict, total=False):
     has_fulltext: bool
     content_kind: str
@@ -162,6 +217,7 @@ class QualityOutput(TypedDict, total=False):
     body_metrics: BodyMetricsOutput
     semantic_losses: SemanticLossesOutput
     asset_failures: list[AssetFailureOutput]
+    asset_summary: AssetQualitySummaryOutput
     extraction_revision: int
 
 
@@ -199,12 +255,79 @@ class CacheEntryOutput(TypedDict, total=False):
     mime: str
     size: int
     mtime: float
+    identity_proof: str
+    source: str | None
+    has_fulltext: bool | None
+    content_kind: str | None
+    completed_at: str | None
+    content_sha256: str | None
 
 
 class PreferredCacheEntriesOutput(TypedDict, total=False):
     markdown: CacheEntryOutput | None
     primary_payload: CacheEntryOutput | None
     assets: list[CacheEntryOutput]
+
+
+class CacheEntrySummaryOutput(TypedDict, total=False):
+    total: int
+    by_kind: dict[str, int]
+
+
+class CacheAcceptanceSummaryOutput(TypedDict, total=False):
+    status: str
+    overall: str | None
+    identity: str
+    fetch: str
+    content: str
+    asset: str
+    output: str
+    provenance: str
+    reason_code: str | None
+
+
+class CacheAssetSummaryOutput(TypedDict, total=False):
+    status: str
+    requested: bool
+    profile: str
+    total: int
+    local: int
+    full_size: int
+    preview: int
+    failed: int
+    placeholder_suspected: int
+    not_archived: int
+    remote_link_count: int
+    remote_only_count: int
+    failure_codes: list[str]
+    remote_links_preserved: bool
+
+
+class CacheWarningSummaryOutput(TypedDict, total=False):
+    messages: list[str]
+    fallback_codes: list[str]
+    warning_codes: list[str]
+    failure_codes: list[str]
+    unstructured_warning_count: int
+
+
+class CacheSidecarOutput(TypedDict, total=False):
+    status: str
+    reason_code: str
+    reason: str
+    path: str | None
+    version: int | str | None
+    expected_version: int
+    extraction_revision: int | str | None
+    expected_extraction_revision: int
+    cached_request: dict[str, Any] | None
+    cached_request_fingerprint: str | None
+    requested_request: dict[str, Any]
+    requested_request_fingerprint: str
+    request_matches: bool
+    payload_satisfies_request: bool
+    request_satisfied: bool
+    request_status: str
 
 
 class ListCachedOutput(ErrorPayloadOutput, total=False):
@@ -227,6 +350,25 @@ class GetCachedOutput(ErrorPayloadOutput, total=False):
     index_version: int | str | None
     expected_index_version: int | None
     index_reason: str | None
+    detail: str
+    preferred_only: bool
+    scope_status: str
+    identity_status: str
+    has_entries: bool
+    entry_summary: CacheEntrySummaryOutput
+    content_kind: str | None
+    has_fulltext: bool | None
+    confidence: str | None
+    acceptance: CacheAcceptanceSummaryOutput
+    asset_summary: CacheAssetSummaryOutput
+    warning_summary: CacheWarningSummaryOutput
+    sidecar: CacheSidecarOutput
+    cached_request: dict[str, Any] | None
+    cached_request_fingerprint: str | None
+    requested_request: dict[str, Any]
+    requested_request_fingerprint: str
+    request_status: str
+    request_satisfied: bool
 
 
 class BatchResolveOutput(ErrorPayloadOutput, total=False):
@@ -257,6 +399,104 @@ class BatchCheckOutput(ErrorPayloadOutput, total=False):
     abort_reason: ErrorPayloadOutput | None
 
 
+class BatchFetchAcceptanceOutput(TypedDict, total=False):
+    overall: str
+    identity: str
+    fetch: str
+    content: str
+    asset: str
+    output: str
+    provenance: str
+    has_fulltext: bool
+    has_abstract: bool
+    token_estimate: int
+
+
+class BatchFetchArtifactOutput(TypedDict, total=False):
+    path: str
+    kind: str
+    size: int | None
+    sha256: str | None
+    completed_at: str
+    verification_status: str
+    resource_uri: str | None
+
+
+class BatchFetchItemOutput(TypedDict, total=False):
+    index: int
+    query: str
+    attempt: int
+    completion_sequence: int | None
+    started_at: str
+    completed_at: str
+    record_status: str
+    status: str
+    run_id: str
+    record_id: str
+    request_fingerprint: str
+    doi: str | None
+    source: str | None
+    reused: bool
+    cache_hit: bool
+    acceptance: BatchFetchAcceptanceOutput
+    fallback_codes: list[str]
+    warning_codes: list[str]
+    failure_codes: list[str]
+    warnings: list[str]
+    error: ErrorPayloadOutput | None
+    output_artifacts: list[BatchFetchArtifactOutput]
+    saved_markdown_path: str | None
+    resource_uri: str | None
+    content: str | None
+    content_available_chars: int | None
+    content_returned_chars: int
+    content_truncated: bool
+
+
+class BatchFetchCompletionOutput(TypedDict, total=False):
+    sequence: int
+    index: int
+    attempt: int
+    status: str
+    completed_at: str
+
+
+class BatchFetchLaneCooldownOutput(TypedDict, total=False):
+    lane: str
+    reason_code: str
+    source_index: int
+    retry_after_seconds: float | None
+    cooldown_seconds: float
+
+
+class BatchFetchSummaryOutput(TypedDict, total=False):
+    record_statuses: dict[str, int]
+    acceptance: dict[str, int]
+    cache_hits: int
+    saved_markdown: int
+
+
+class BatchFetchOutput(ErrorPayloadOutput, total=False):
+    run_id: str
+    request_fingerprint: str
+    state: str
+    persisted: bool
+    run_manifest_path: str | None
+    events_path: str | None
+    query_count: int
+    attempted_count: int
+    reused_count: int
+    detail: str
+    content_max_chars: int
+    content_returned_chars: int
+    results: list[BatchFetchItemOutput]
+    completion_order: list[BatchFetchCompletionOutput]
+    summary: BatchFetchSummaryOutput
+    lane_cooldowns: list[BatchFetchLaneCooldownOutput]
+    aborted: bool
+    cancelled: bool
+
+
 class ProviderStatusCheckOutput(TypedDict, total=False):
     name: str
     status: str
@@ -273,7 +513,84 @@ class ProviderStatusItemOutput(TypedDict, total=False):
     missing_env: list[str]
     notes: list[str]
     checks: list[ProviderStatusCheckOutput]
+    reason_code: str
+    reason: str
+    suggested_action: str
+    diagnostic_scope: str
+    live_checked: bool
+
+
+class ConfigurationSourceValueOutput(TypedDict, total=False):
+    name: str
+    source: str
+    present: bool
+    uses_default: bool
+    sensitive: bool
+
+
+class ConfigurationSourceLayerOutput(TypedDict, total=False):
+    source: str
+    present: bool
+
+
+class ConfigurationSourcesOutput(TypedDict, total=False):
+    precedence: list[str]
+    layers: list[ConfigurationSourceLayerOutput]
+    values: list[ConfigurationSourceValueOutput]
 
 
 class ProviderStatusOutput(ErrorPayloadOutput, total=False):
+    diagnostic_scope: str
+    live_network_checked: bool
+    remote_publisher_health: str
+    detail: str
+    provider_filter: str | None
+    group_filter: str | None
     providers: list[ProviderStatusItemOutput]
+    configuration: ConfigurationSourcesOutput
+    local_capabilities: dict[str, Any]
+
+
+class BrowserPreflightStorageStateOutput(TypedDict, total=False):
+    path: str | None
+    save_requested: bool
+    attempted: bool
+    saved: bool
+    reason: str | None
+
+
+class BrowserPreflightItemOutput(TypedDict, total=False):
+    provider: str
+    provider_label: str
+    status: str
+    ready: bool
+    reason_code: str
+    reason: str
+    next_action: str
+    target_url: str | None
+    final_url: str | None
+    title: str | None
+    storage_state: BrowserPreflightStorageStateOutput
+    diagnostics: dict[str, Any]
+
+
+class BrowserPreflightSummaryOutput(TypedDict, total=False):
+    requested: int
+    completed: int
+    ready: int
+    challenge: int
+    auth_required: int
+    runtime_error: int
+    cancelled: int
+
+
+class BrowserPreflightOutput(ErrorPayloadOutput, total=False):
+    diagnostic_scope: str
+    provider_filter: str | None
+    detail: str
+    network_access: str
+    storage_state_write_enabled: bool
+    pdf_fallback_attempted: bool
+    auth_attempted: bool
+    results: list[BrowserPreflightItemOutput]
+    summary: BrowserPreflightSummaryOutput

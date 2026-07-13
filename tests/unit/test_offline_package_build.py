@@ -45,7 +45,8 @@ class OfflinePackageBuildTests(unittest.TestCase):
             )
         ]
 
-        self.assertIn('"schema_version": 2', manifest_block)
+        self.assertIn('"schema_version": 3', manifest_block)
+        self.assertIn('"skill_bundle": skill_bundle', manifest_block)
         self.assertIn('"python_runtime": "runtime/site-packages"', manifest_block)
         self.assertIn('"command_wrappers": "bin"', manifest_block)
         self.assertIn('"cloakbrowser"', manifest_block)
@@ -103,6 +104,9 @@ class OfflinePackageBuildTests(unittest.TestCase):
         self.assertIn("MATHML_TO_LATEX_NODE_BIN", script)
         self.assertIn("PYTHONUTF8", script)
         self.assertIn("PYTHONIOENCODING", script)
+        self.assertIn("paper-fetch doctor", script)
+        self.assertIn("install_provenance", script)
+        self.assertIn('schema_version"] == 3', script)
         self.assertNotIn(".venv/bin", script)
         self.assertNotIn("sessions.list", script)
         self.assertNotIn("playwright.sync_api", script)
@@ -124,6 +128,8 @@ class OfflinePackageBuildTests(unittest.TestCase):
         )
         self.assertIn('browser_binary = "not_bundled"', script)
         self.assertIn("Write-OfflineReadme", script)
+        self.assertIn("skill_integrity.py", script)
+        self.assertIn("skill_bundle = $skillBundle", script)
         self.assertNotIn("Copy-SourceSnapshot", script)
         self.assertNotIn("robocopy", script)
         self.assertNotIn('Join-Path $RepoDir "legacy"', script)

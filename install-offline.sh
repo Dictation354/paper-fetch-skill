@@ -415,6 +415,21 @@ verify_checksums() {
   fi
 }
 
+verify_skill_bundle_integrity() {
+  local runtime_root="$1"
+  local skill_dir="$2"
+  local phase="$3"
+  local verifier="$runtime_root/runtime/site-packages/paper_fetch/skill_integrity.py"
+
+  require_file "$runtime_root/offline-manifest.json"
+  require_file "$verifier"
+  log "Verifying $phase skill bundle manifest"
+  "$runtime_root/runtime/paper-fetch-python" -X utf8 \
+    -m paper_fetch.skill_integrity verify \
+    --manifest "$runtime_root/offline-manifest.json" \
+    --skill-dir "$skill_dir" >/dev/null
+}
+
 check_preset_requirements() {
   host_platform >/dev/null || die "This offline bundle supports Linux and macOS only; detected $(uname -s)."
 }
@@ -1170,10 +1185,18 @@ main() {
   check_platform
   check_python
   verify_checksums
+  verify_skill_bundle_integrity \
+    "$BUNDLE_ROOT" \
+    "$BUNDLE_ROOT/skills/$SKILL_NAME" \
+    "bundled pre-install"
   check_preset_requirements
   check_bundle_assets
   install_runtime_payload
   write_runtime_python_file
+  verify_skill_bundle_integrity \
+    "$INSTALL_ROOT" \
+    "$INSTALL_ROOT/skills/$SKILL_NAME" \
+    "installed runtime"
 
   if [ "$REUSE_ENV_FILE" = "1" ]; then
     log "Reusing offline.env without modifying it: $OFFLINE_ENV_FILE"
@@ -1190,6 +1213,18 @@ main() {
   fi
 
   install_skills
+  verify_skill_bundle_integrity \
+    "$INSTALL_ROOT" \
+    "$HOME/.codex/skills/$SKILL_NAME" \
+    "Codex post-install"
+  verify_skill_bundle_integrity \
+    "$INSTALL_ROOT" \
+    "$HOME/.claude/skills/$SKILL_NAME" \
+    "Claude post-install"
+  verify_skill_bundle_integrity \
+    "$INSTALL_ROOT" \
+    "$(antigravity_home)/skills/$SKILL_NAME" \
+    "Antigravity post-install"
   write_shell_startup_file
   register_codex_mcp
   register_claude_mcp

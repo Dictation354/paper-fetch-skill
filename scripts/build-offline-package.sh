@@ -328,11 +328,18 @@ write_manifest_and_checksums() {
   local target_platform="$3"
   local target_arch="$4"
   local python_tag="$5"
-  local git_revision
+  local git_revision skill_name skill_bundle_json
   git_revision="$(git -C "$REPO_DIR" rev-parse HEAD 2>/dev/null || true)"
+  skill_name="$(installer_manifest_value skill.name)"
+  skill_bundle_json="$(
+    "$PYTHON_BIN" "$REPO_DIR/src/paper_fetch/skill_integrity.py" build \
+      --skill-dir "$staging/skills/$skill_name" \
+      --name "$skill_name" \
+      --root "skills/$skill_name"
+  )"
 
   log "Writing manifest and checksums"
-  "$PYTHON_BIN" - "$staging" "$version" "$git_revision" "$target_platform" "$target_arch" "$python_tag" "$INSTALLER_MANIFEST_FILE" <<'PY'
+  "$PYTHON_BIN" - "$staging" "$version" "$git_revision" "$target_platform" "$target_arch" "$python_tag" "$INSTALLER_MANIFEST_FILE" "$skill_bundle_json" <<'PY'
 from __future__ import annotations
 
 import json
@@ -348,12 +355,13 @@ target_platform = sys.argv[4]
 target_arch = sys.argv[5]
 python_tag = sys.argv[6]
 installer_manifest = json.loads(Path(sys.argv[7]).read_text(encoding="utf-8"))
+skill_bundle = json.loads(sys.argv[8])
 site_packages = staging / "runtime" / "site-packages"
 installed_packages = sorted(path.name for path in site_packages.glob("*.dist-info"))
 manifest_name_key = f"{target_platform}_manifest_name"
 
 payload = {
-    "schema_version": 2,
+    "schema_version": 3,
     "name": installer_manifest["packages"][manifest_name_key],
     "project": installer_manifest["project"],
     "version": version,
@@ -365,6 +373,7 @@ payload = {
         "python_tag": python_tag,
     },
     "entrypoint": "install-offline.sh",
+    "skill_bundle": skill_bundle,
     "components": {
         "python_runtime": "runtime/site-packages",
         "command_wrappers": "bin",

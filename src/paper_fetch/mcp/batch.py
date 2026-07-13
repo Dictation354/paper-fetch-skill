@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
 from contextlib import ExitStack
 from functools import partial
 import threading
@@ -13,7 +12,17 @@ from collections.abc import Callable, Mapping
 from mcp.server.fastmcp import Context
 from mcp.types import CallToolResult
 
+from ..reason_codes import ERROR
 from ..runtime import RuntimeContext
+from ..workflow.batch_runner import (
+    BatchFailure,
+    BatchItemResult,
+    BatchItemStatus,
+    BatchProgress,
+    BatchRunResult,
+    run_batch,
+    run_batch_async,
+)
 from ._deps import MCPDeps, default_mcp_deps
 from .log_bridge import PaperFetchLogBridge
 from .results import (
@@ -141,56 +150,77 @@ def _run_batch_sync(
     concurrency: int,
     process_item: Callable[[str], dict[str, Any]],
 ) -> tuple[list[dict[str, Any]], dict[str, Any] | None]:
-    max_workers = max(1, min(concurrency, len(queries)))
-    results: list[dict[str, Any] | None] = [None] * len(queries)
-    abort_reason: dict[str, Any] | None = None
+    run_result = run_batch(
+        queries,
+        process_item,
+        max_workers=_batch_worker_count(queries, concurrency),
+        failure_classifier=_mcp_batch_failure,
+    )
+    return _mcp_batch_payloads(run_result)
 
-    if max_workers == 1:
-        for index, query in enumerate(queries):
-            try:
-                results[index] = process_item(query)
-            except Exception as error:
-                payload = error_payload_from_exception(error)
-                payload["query"] = query
-                results[index] = payload
-                if is_rate_limited_payload(payload):
-                    abort_reason = dict(payload)
-                    break
-        return [result for result in results if result is not None], abort_reason
 
-    with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        pending: dict[Any, tuple[int, str]] = {}
-        next_index = 0
+def _batch_worker_count(queries: list[str], concurrency: int) -> int:
+    return max(1, min(concurrency, len(queries)))
 
-        def submit(index: int) -> None:
-            future = executor.submit(process_item, queries[index])
-            pending[future] = (index, queries[index])
 
-        while next_index < len(queries) and len(pending) < max_workers:
-            submit(next_index)
-            next_index += 1
+def _mcp_batch_failure(error: Exception) -> BatchFailure:
+    payload = error_payload_from_exception(error)
+    retry_after_value = payload.get("retry_after_seconds")
+    retry_after_seconds = (
+        float(retry_after_value)
+        if isinstance(retry_after_value, (int, float))
+        and not isinstance(retry_after_value, bool)
+        else None
+    )
+    return BatchFailure(
+        reason_code=str(payload.get("code") or ERROR),
+        message=str(payload.get("reason") or error),
+        retry_after_seconds=retry_after_seconds,
+        rate_limited=is_rate_limited_payload(payload),
+        cancelled=payload.get("error_category") == "cancelled",
+        details=payload,
+    )
 
-        while pending:
-            done, _ = wait(pending, return_when=FIRST_COMPLETED)
-            for future in done:
-                index, query = pending.pop(future)
-                try:
-                    results[index] = future.result()
-                except Exception as error:
-                    payload = error_payload_from_exception(error)
-                    payload["query"] = query
-                    results[index] = payload
-                    if is_rate_limited_payload(payload) and abort_reason is None:
-                        abort_reason = dict(payload)
-            while (
-                abort_reason is None
-                and next_index < len(queries)
-                and len(pending) < max_workers
-            ):
-                submit(next_index)
-                next_index += 1
 
-    return [result for result in results if result is not None], abort_reason
+def _mcp_payload_from_batch_result(
+    result: BatchItemResult[str, dict[str, Any]],
+) -> dict[str, Any]:
+    if result.failure is None:
+        if result.value is None:
+            return error_payload_from_exception(
+                RuntimeError("Batch worker returned no payload.")
+            )
+        return result.value
+
+    if isinstance(result.failure.details, Mapping):
+        payload = dict(result.failure.details)
+    elif result.error is not None:
+        payload = error_payload_from_exception(result.error)
+    else:
+        payload = error_payload_from_exception(RuntimeError(result.failure.message))
+    payload["query"] = result.item
+    return payload
+
+
+def _mcp_batch_payloads(
+    run_result: BatchRunResult[str, dict[str, Any]],
+) -> tuple[list[dict[str, Any]], dict[str, Any] | None]:
+    payloads_by_index: dict[int, dict[str, Any]] = {}
+    results: list[dict[str, Any]] = []
+    for result in run_result.results:
+        if not result.was_submitted:
+            continue
+        payload = _mcp_payload_from_batch_result(result)
+        payloads_by_index[result.index] = payload
+        results.append(payload)
+
+    abort_reason = None
+    for event in run_result.completion_events:
+        result = event.result
+        if result.was_submitted and result.status is BatchItemStatus.RATE_LIMITED:
+            abort_reason = dict(payloads_by_index[result.index])
+            break
+    return results, abort_reason
 
 
 async def _run_batch_async(
@@ -202,62 +232,27 @@ async def _run_batch_async(
     progress_prefix: str,
     cancel_event: threading.Event | None = None,
 ) -> tuple[list[dict[str, Any]], dict[str, Any] | None]:
-    results: list[dict[str, Any] | None] = [None] * len(queries)
-    abort_reason: dict[str, Any] | None = None
-    completed = 0
-    max_workers = max(1, min(concurrency, len(queries)))
-    loop = asyncio.get_running_loop()
-    executor = ThreadPoolExecutor(max_workers=max_workers)
-    pending: dict[asyncio.Future[dict[str, Any]], tuple[int, str]] = {}
-    next_index = 0
-    shutdown_wait = True
+    async def progress_callback(
+        progress: BatchProgress[str, dict[str, Any]],
+    ) -> None:
+        if not progress.event.result.was_submitted:
+            return
+        await report_progress(
+            ctx,
+            progress.completed,
+            len(queries),
+            (f"{progress_prefix} {progress.completed} of {len(queries)} queries"),
+        )
 
-    def launch(index: int) -> None:
-        future = loop.run_in_executor(executor, process_item, queries[index])
-        pending[future] = (index, queries[index])
-
-    try:
-        while next_index < len(queries) and len(pending) < max_workers:
-            launch(next_index)
-            next_index += 1
-
-        while pending:
-            done, _ = await asyncio.wait(pending, return_when=asyncio.FIRST_COMPLETED)
-            for future in done:
-                index, query = pending.pop(future)
-                try:
-                    results[index] = future.result()
-                except Exception as error:
-                    payload = error_payload_from_exception(error)
-                    payload["query"] = query
-                    results[index] = payload
-                    if is_rate_limited_payload(payload) and abort_reason is None:
-                        abort_reason = dict(payload)
-                completed += 1
-                await report_progress(
-                    ctx,
-                    completed,
-                    len(queries),
-                    f"{progress_prefix} {completed} of {len(queries)} queries",
-                )
-            while (
-                abort_reason is None
-                and next_index < len(queries)
-                and len(pending) < max_workers
-            ):
-                launch(next_index)
-                next_index += 1
-    except asyncio.CancelledError:
-        if cancel_event is not None:
-            cancel_event.set()
-        for future in pending:
-            future.cancel()
-        shutdown_wait = False
-        raise
-    finally:
-        executor.shutdown(wait=shutdown_wait, cancel_futures=not shutdown_wait)
-
-    return [result for result in results if result is not None], abort_reason
+    run_result = await run_batch_async(
+        queries,
+        process_item,
+        max_workers=_batch_worker_count(queries, concurrency),
+        progress_callback=progress_callback,
+        cancel_event=cancel_event,
+        failure_classifier=_mcp_batch_failure,
+    )
+    return _mcp_batch_payloads(run_result)
 
 
 def batch_resolve_payload(

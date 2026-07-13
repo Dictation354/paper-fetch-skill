@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import base64
 import time
-import urllib.parse
 from typing import Any
 from collections.abc import Callable, Mapping
 
@@ -13,6 +12,7 @@ from ....extraction.html.shared import (
     html_title_snippet as _html_title_snippet,
     image_magic_type as _image_magic_type,
 )
+from ....extraction.image_payloads import is_placeholder_image_url
 from ....extraction.html.signals import (
     CLOUDFLARE_CHALLENGE_TITLE_TOKENS as _CLOUDFLARE_CHALLENGE_TITLE_TOKENS,
 )
@@ -40,7 +40,6 @@ _IMAGE_DOCUMENT_TOTAL_BUDGET_SECONDS = 30.0
 _IMAGE_DOCUMENT_SEED_WARM_TIMEOUT_MS = 5000
 _IMAGE_DOCUMENT_NAVIGATION_TIMEOUT_MS = 10000
 _IMAGE_DOCUMENT_MAX_ATTEMPTS = 2
-_PLACEHOLDER_IMAGE_BASENAMES = frozenset({"blank.svg", "blank.png", "blank.gif"})
 
 
 class _ImageFetchBudget:
@@ -88,12 +87,7 @@ def _looks_like_image_response_payload(
 
 
 def _looks_like_placeholder_image_url(source_url: str | None) -> bool:
-    normalized = normalize_text(str(source_url or ""))
-    if not normalized:
-        return False
-    path = urllib.parse.unquote(urllib.parse.urlparse(normalized).path).lower()
-    basename = path.rsplit("/", 1)[-1]
-    return basename in _PLACEHOLDER_IMAGE_BASENAMES
+    return is_placeholder_image_url(source_url)
 
 
 def _browser_image_document_payload(

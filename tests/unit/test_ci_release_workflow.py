@@ -188,6 +188,28 @@ class CiReleaseWorkflowTests(unittest.TestCase):
             )
         )
 
+    def test_package_smoke_builds_outside_checkout_and_verifies_all_entrypoints(
+        self,
+    ) -> None:
+        workflow = CI_WORKFLOW.read_text(encoding="utf-8")
+
+        self.assertIn(
+            'python -m build --outdir "$RUNNER_TEMP/paper-fetch-dist"', workflow
+        )
+        self.assertNotIn("python -m build\n", workflow)
+        self.assertNotIn("pip install dist/*.whl", workflow)
+        self.assertIn('test "$("$smoke_root/bin/paper-fetch" --version)"', workflow)
+        for script in (
+            "paper-fetch",
+            "paper-fetch-mcp",
+            "paper-fetch-install-formula-tools",
+            "paper-fetch-install-image-tools",
+        ):
+            self.assertIn(script, workflow)
+        self.assertIn('paper-fetch-mcp" </dev/null', workflow)
+        self.assertIn('paper-fetch" doctor --json', workflow)
+        self.assertIn('provenance["consistency"]["version_drift"] == []', workflow)
+
     def test_ci_workflow_omits_full_unit_gate(self) -> None:
         workflow = _load_ci_workflow()
         workflow_text = CI_WORKFLOW.read_text(encoding="utf-8")
@@ -288,6 +310,32 @@ class CiReleaseWorkflowTests(unittest.TestCase):
         self.assertIn("scripts/validate_extraction_rules.py --ci", preflight)
         self.assertIn("tests/integration -q", preflight)
         self.assertIn("--durations=30", workflow)
+        self.assertIn("Run MCP input schema contract", workflow)
+        self.assertIn("Run cross-execution surface contracts", workflow)
+        for contract_path in (
+            "tests/unit/test_mcp_context_budget.py",
+            "tests/unit/test_mcp_provider_catalog.py",
+            "tests/unit/test_skill_information_architecture.py",
+            "tests/unit/test_presets_contract.py",
+            "tests/unit/test_mcp_batch_fetch.py",
+            "tests/unit/test_cli_run_manifest.py",
+            "tests/unit/test_manifest_persistence.py",
+            "tests/unit/test_install_provenance.py",
+            "tests/unit/test_acceptance_adapter_contract.py",
+        ):
+            self.assertIn(contract_path, workflow)
+
+    def test_live_and_full_golden_jobs_remain_manual_opt_in(self) -> None:
+        workflow = _load_ci_workflow()
+
+        full_golden = _job_if(workflow, "full-golden")
+        live_mcp = _job_if(workflow, "live-mcp")
+        self.assertIn("github.event_name == 'workflow_dispatch'", full_golden)
+        self.assertIn("inputs.run_full_golden", full_golden)
+        self.assertIn("github.event_name == 'workflow_dispatch'", live_mcp)
+        self.assertIn("inputs.run_live_mcp", live_mcp)
+        for job_id in ("lint", "integration", "package-smoke"):
+            self.assertNotIn("tests/live", repr(workflow["jobs"][job_id]))
 
     def test_quality_gate_config_guards_mypy_coverage_and_b023(self) -> None:
         with PYPROJECT.open("rb") as handle:

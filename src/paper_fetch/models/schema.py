@@ -52,6 +52,24 @@ OutputMode = Literal["article", "markdown", "metadata"]
 AssetProfile = Literal["none", "body", "all"]
 
 
+AssetLogicalKind = Literal[
+    "figure",
+    "formula",
+    "table",
+    "supplement",
+    "decoration",
+]
+
+
+AssetDiagnosticStatus = Literal[
+    "available",
+    "not_requested",
+    "not_archived",
+    "failed",
+    "placeholder_suspected",
+]
+
+
 MaxTokensMode = int | Literal["full_text"]
 
 
@@ -135,6 +153,74 @@ class Asset:
     downloaded_bytes: int | None = None
     width: int | None = None
     height: int | None = None
+    provenance: list[str] = field(default_factory=list)
+
+
+@dataclass
+class AssetDiagnostic:
+    """Serializable, conservative facts for one logical asset."""
+
+    request_profile: AssetProfile = "none"
+    kind: AssetLogicalKind = "decoration"
+    status: AssetDiagnosticStatus = "not_requested"
+    download_tier: str | None = None
+    path: str | None = None
+    real_mime: str | None = None
+    byte_count: int | None = None
+    width: int | None = None
+    height: int | None = None
+    sha256: str | None = None
+    failure_code: str | None = None
+    provenance: list[str] = field(default_factory=list)
+    suspected_reasons: list[str] = field(default_factory=list)
+
+
+@dataclass
+class AssetKindSummary:
+    """Machine-readable counts for one canonical logical asset kind."""
+
+    total: int = 0
+    requested: int = 0
+    full_size: int = 0
+    preview: int = 0
+    failed: int = 0
+    placeholder_suspected: int = 0
+    not_requested: int = 0
+    not_archived: int = 0
+
+
+def _empty_asset_kind_summaries() -> dict[AssetLogicalKind, AssetKindSummary]:
+    return {
+        "figure": AssetKindSummary(),
+        "formula": AssetKindSummary(),
+        "table": AssetKindSummary(),
+        "supplement": AssetKindSummary(),
+        "decoration": AssetKindSummary(),
+    }
+
+
+@dataclass
+class AssetQualitySummary:
+    """Structured asset-quality facet kept separate from text quality."""
+
+    audited: bool = False
+    requested: bool = False
+    profile: AssetProfile = "none"
+    total: int = 0
+    local: int = 0
+    full_size: int = 0
+    preview: int = 0
+    failed: int = 0
+    placeholder_suspected: int = 0
+    not_requested: int = 0
+    not_archived: int = 0
+    remote_link_count: int = 0
+    remote_only_count: int = 0
+    failure_codes: list[str] = field(default_factory=list)
+    by_kind: dict[AssetLogicalKind, AssetKindSummary] = field(
+        default_factory=_empty_asset_kind_summaries
+    )
+    diagnostics: list[AssetDiagnostic] = field(default_factory=list)
 
 
 @dataclass
@@ -183,12 +269,14 @@ class Quality:
     body_metrics: BodyQualityMetrics = field(default_factory=BodyQualityMetrics)
     semantic_losses: SemanticLosses = field(default_factory=SemanticLosses)
     asset_failures: list[dict[str, Any]] = field(default_factory=list)
+    asset_summary: AssetQualitySummary = field(default_factory=AssetQualitySummary)
     extraction_revision: int = EXTRACTION_REVISION
 
     def __post_init__(self) -> None:
         from .quality import (
             _dedupe_strings,
             coerce_asset_failure_diagnostics,
+            coerce_asset_quality_summary,
             coerce_body_quality_metrics,
             coerce_semantic_losses,
         )
@@ -200,6 +288,7 @@ class Quality:
         self.body_metrics = coerce_body_quality_metrics(self.body_metrics)
         self.semantic_losses = coerce_semantic_losses(self.semantic_losses)
         self.asset_failures = coerce_asset_failure_diagnostics(self.asset_failures)
+        self.asset_summary = coerce_asset_quality_summary(self.asset_summary)
         self.token_estimate_breakdown = coerce_token_estimate_breakdown(
             self.token_estimate_breakdown
         )
@@ -502,7 +591,12 @@ __all__ = [
     "TRUNCATION_WARNING",
     "ArticleModel",
     "Asset",
+    "AssetDiagnostic",
+    "AssetDiagnosticStatus",
+    "AssetKindSummary",
+    "AssetLogicalKind",
     "AssetProfile",
+    "AssetQualitySummary",
     "BodyQualityMetrics",
     "ContentKind",
     "ExtractedAbstractBlock",

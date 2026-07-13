@@ -2,14 +2,20 @@
 
 from __future__ import annotations
 
+import contextlib
 from dataclasses import dataclass, field
+import hashlib
 import json
 from pathlib import Path
 from typing import Any, Literal
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 
+from filelock import FileLock
+from platformdirs import user_runtime_path
+
+from .config import APP_NAME
 from .extraction.html.assets.dom import preview_dimensions_are_acceptable
-from .models import AssetProfile
+from .models import ArticleModel, AssetProfile, AssetQualitySummary
 from .provider_catalog import provider_persists_provider_html
 from .reason_codes import PDF_FALLBACK
 from .tracing import download_marker
@@ -23,11 +29,29 @@ from .utils import (
     provider_display_name,
     safe_text,
 )
-import contextlib
-
 
 ArtifactMode = Literal["markdown-assets", "all", "none"]
 DEFAULT_ARTIFACT_MODE: ArtifactMode = "all"
+ARTIFACT_LOCK_DIRNAME = "locks"
+
+
+def artifact_file_lock_path(
+    path: Path,
+    *,
+    scope: Literal["artifact", "run"] = "artifact",
+) -> Path:
+    """Return a stable path-scoped lock outside the user's output namespace."""
+
+    digest = hashlib.sha256(
+        str(path.expanduser().resolve(strict=False)).encode(
+            "utf-8", errors="surrogatepass"
+        )
+    ).hexdigest()[:24]
+    return (
+        user_runtime_path(APP_NAME, appauthor=False)
+        / ARTIFACT_LOCK_DIRNAME
+        / f"{scope}-{digest}.lock"
+    )
 
 
 @dataclass(frozen=True)
@@ -115,17 +139,32 @@ class ArtifactStore:
         return self.policy.allows_structured_sidecars
 
     def write_text_file(
-        self, path: Path, text: str, *, encoding: str = "utf-8"
+        self,
+        path: Path,
+        text: str,
+        *,
+        encoding: str = "utf-8",
+        overwrite: bool = True,
+        use_lock: bool = False,
     ) -> Path:
         path.parent.mkdir(parents=True, exist_ok=True)
-        tmp_path = path.with_suffix(path.suffix + ".part")
-        try:
-            tmp_path.write_text(text, encoding=encoding)
-            tmp_path.replace(path)
-        except Exception:
-            with contextlib.suppress(OSError):
-                tmp_path.unlink(missing_ok=True)
-            raise
+        lock_path = artifact_file_lock_path(path)
+        if use_lock:
+            lock_path.parent.mkdir(parents=True, exist_ok=True)
+        lock = FileLock(str(lock_path)) if use_lock else contextlib.nullcontext()
+        with lock:
+            if path.exists() and not overwrite:
+                raise FileExistsError(
+                    f"refusing to overwrite existing artifact without explicit permission: {path}"
+                )
+            tmp_path = path.with_suffix(path.suffix + ".part")
+            try:
+                tmp_path.write_text(text, encoding=encoding)
+                tmp_path.replace(path)
+            except Exception:
+                with contextlib.suppress(OSError):
+                    tmp_path.unlink(missing_ok=True)
+                raise
         return path
 
     def write_bytes_file(self, path: Path, body: bytes) -> Path:
@@ -140,11 +179,20 @@ class ArtifactStore:
             raise
         return path
 
-    def write_json_file(self, path: Path, payload: Mapping[str, Any]) -> Path:
+    def write_json_file(
+        self,
+        path: Path,
+        payload: Mapping[str, Any],
+        *,
+        overwrite: bool = True,
+        use_lock: bool = False,
+    ) -> Path:
         return self.write_text_file(
             path,
             json.dumps(dict(payload), ensure_ascii=False, indent=2),
             encoding="utf-8",
+            overwrite=overwrite,
+            use_lock=use_lock,
         )
 
     def save_provider_payload(
@@ -319,6 +367,36 @@ class ArtifactStore:
             extend_unique(
                 source_trail, [download_marker(f"{provider_name}_asset_failures")]
             )
+
+    def audit_article_assets(
+        self,
+        article: ArticleModel,
+        *,
+        asset_profile: AssetProfile,
+        asset_failures: Sequence[Mapping[str, Any]] | None = None,
+        archive_enabled: bool | None = None,
+    ) -> AssetQualitySummary:
+        """Attach a pure, read-only asset audit without changing text quality."""
+
+        from .quality.assets import build_asset_quality_summary
+
+        summary = build_asset_quality_summary(
+            article.assets,
+            asset_failures=(
+                asset_failures
+                if asset_failures is not None
+                else article.quality.asset_failures
+            ),
+            asset_profile=asset_profile,
+            archive_enabled=(
+                self.asset_download_dir is not None
+                if archive_enabled is None
+                else archive_enabled
+            ),
+            base_dir=self.download_dir,
+        )
+        article.quality.asset_summary = summary
+        return summary
 
 
 def _preview_asset_accepted(asset: Mapping[str, Any]) -> bool:

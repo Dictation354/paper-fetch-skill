@@ -90,6 +90,31 @@ jobs:
           PYTHONPATH: ${{ github.workspace }}/src
         run: python scripts/validate_extraction_rules.py --ci
 
+      - name: Run MCP input schema contract
+        env:
+          PYTHONPATH: ${{ github.workspace }}/src
+        run: python -m pytest tests/unit/test_mcp_input_schema_contract.py -q
+
+      - name: Run cross-execution surface contracts
+        env:
+          PYTHONPATH: ${{ github.workspace }}/src
+        run: |
+          python -m pytest \
+            tests/unit/test_cli.py::CliTests::test_top_level_and_subcommand_help_contract_snapshot \
+            tests/unit/test_cli.py::CliTests::test_explicit_fetch_and_legacy_root_fetch_have_same_contract \
+            tests/unit/test_cli.py::CliTests::test_main_writes_markdown_json_and_both_to_stdout \
+            tests/unit/test_mcp_payload_cache.py::McpPayloadCacheTests::test_build_server_exposes_output_schemas_for_all_tools \
+            tests/unit/test_mcp_context_budget.py \
+            tests/unit/test_mcp_provider_catalog.py \
+            tests/unit/test_skill_information_architecture.py \
+            tests/unit/test_presets_contract.py \
+            tests/unit/test_mcp_batch_fetch.py \
+            tests/unit/test_cli_run_manifest.py \
+            tests/unit/test_manifest_persistence.py \
+            tests/unit/test_install_provenance.py \
+            tests/unit/test_acceptance_adapter_contract.py \
+            -q
+
       - name: Run integration suite
         env:
           PYTHONPATH: ${{ github.workspace }}/src
@@ -114,24 +139,59 @@ jobs:
           python -m pip install -e ".[dev]"
 
       - name: Build wheel and sdist
-        run: python -m build
+        shell: bash
+        run: |
+          python -m build --outdir "$RUNNER_TEMP/paper-fetch-dist"
+          test "$(find "$RUNNER_TEMP/paper-fetch-dist" -maxdepth 1 -type f -name '*.whl' | wc -l)" -eq 1
+          test "$(find "$RUNNER_TEMP/paper-fetch-dist" -maxdepth 1 -type f -name '*.tar.gz' | wc -l)" -eq 1
 
       - name: Install wheel in clean venv
         shell: bash
         run: |
           python -m venv "$RUNNER_TEMP/paper-fetch-wheel-smoke"
           "$RUNNER_TEMP/paper-fetch-wheel-smoke/bin/python" -m pip install --upgrade pip
-          "$RUNNER_TEMP/paper-fetch-wheel-smoke/bin/python" -m pip install dist/*.whl
+          "$RUNNER_TEMP/paper-fetch-wheel-smoke/bin/python" -m pip install "$RUNNER_TEMP"/paper-fetch-dist/*.whl
 
       - name: Verify console scripts
         shell: bash
         run: |
+          smoke_root="$RUNNER_TEMP/paper-fetch-wheel-smoke"
+          export PATH="$smoke_root/bin:/usr/bin:/bin"
+          unset PAPER_FETCH_ENV_FILE
+          version="$("$smoke_root/bin/python" -c 'from importlib.metadata import version; print(version("paper-fetch-skill"))')"
+          test "$("$smoke_root/bin/paper-fetch" --version)" = "paper-fetch $version"
           "$RUNNER_TEMP/paper-fetch-wheel-smoke/bin/paper-fetch" --help >/dev/null
+          "$smoke_root/bin/paper-fetch-install-formula-tools" --help >/dev/null
+          "$smoke_root/bin/paper-fetch-install-image-tools" --help >/dev/null
+          "$smoke_root/bin/paper-fetch-mcp" </dev/null
+          doctor_exit=0
+          export PAPER_FETCH_DOCTOR_REPORT="$RUNNER_TEMP/paper-fetch-wheel-doctor.json"
+          "$smoke_root/bin/paper-fetch" doctor --json >"$PAPER_FETCH_DOCTOR_REPORT" || doctor_exit=$?
+          test "$doctor_exit" -le 1
           "$RUNNER_TEMP/paper-fetch-wheel-smoke/bin/python" - <<'PY'
+          import json
+          import os
           from importlib.metadata import entry_points
+          from pathlib import Path
 
           scripts = {entry_point.name: entry_point for entry_point in entry_points(group="console_scripts")}
-          scripts["paper-fetch-mcp"].load()
+          expected = {
+              "paper-fetch",
+              "paper-fetch-mcp",
+              "paper-fetch-install-formula-tools",
+              "paper-fetch-install-image-tools",
+          }
+          assert expected <= scripts.keys()
+          for name in expected:
+              scripts[name].load()
+
+          payload = json.loads(
+              Path(os.environ["PAPER_FETCH_DOCTOR_REPORT"]).read_text(encoding="utf-8")
+          )
+          provenance = payload["install_provenance"]
+          assert provenance["status"] == "not_applicable"
+          assert provenance["consistency"]["version_status"] == "ready"
+          assert provenance["consistency"]["version_drift"] == []
           PY
 
   offline-linux-x86-64:

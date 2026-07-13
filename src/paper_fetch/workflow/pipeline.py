@@ -34,6 +34,7 @@ class MarkdownSaveSpec:
     filename: str | None = None
     request_label: str = "save_markdown"
     on_saved: MarkdownSavedHook | None = None
+    overwrite: bool = True
 
 
 @dataclass(frozen=True)
@@ -120,6 +121,7 @@ class FetchPipeline:
                     render=request.markdown_save.render,
                     markdown_filename=request.markdown_save.filename,
                     request_label=request.markdown_save.request_label,
+                    overwrite=request.markdown_save.overwrite,
                 )
                 if (
                     saved_markdown_path is not None

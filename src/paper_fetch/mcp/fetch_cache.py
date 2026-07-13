@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Callable, Mapping, Sequence
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, cast
-from collections.abc import Callable, Mapping, Sequence
 
 from ..artifacts import ArtifactStore
+from ..manifest import build_manifest_request_fingerprint
 from ..models import (
     ArticleModel,
     Asset,
@@ -21,15 +23,20 @@ from ..models import (
     TokenEstimateBreakdown,
     build_token_estimate_breakdown,
     coerce_asset_failure_diagnostics,
+    coerce_asset_provenance,
+    coerce_asset_quality_summary,
     coerce_body_quality_metrics,
     coerce_semantic_losses,
     coerce_token_estimate_breakdown,
 )
+from ..publisher_identity import normalize_doi
 from ..reason_codes import METADATA_ONLY
 from ..runtime import RuntimeContext
 from ..tracing import TraceEvent, trace_event
 from ..utils import normalize_text, sanitize_filename
 from ..workflow.types import PaperFetchFailure
+from ..workflow.acceptance import FetchAcceptanceReport, evaluate_fetch_acceptance
+from ..workflow.types import effective_asset_profile
 from .cache_index import (
     CACHE_INDEX_MODE_INDEX,
     CACHE_INDEX_MODE_RESCAN,
@@ -40,8 +47,9 @@ from .cache_index import (
     list_cache_entries,
     preferred_cached_entries,
     read_cache_index,
-    refresh_cache_index_for_doi_result,
+    register_markdown_entry,
     refresh_cache_index_for_doi,
+    refresh_cache_index_for_doi_result,
     rescan_cache_index,
 )
 from .schemas import FetchPaperRequest
@@ -50,8 +58,15 @@ FETCH_ENVELOPE_CACHE_VERSION = 2
 FETCH_ENVELOPE_EXTRACTION_REVISION = EXTRACTION_REVISION
 
 
+@dataclass(frozen=True)
+class CacheSidecarInspection:
+    summary: dict[str, Any]
+    envelope: FetchEnvelope | None = None
+
+
 def fetch_envelope_cache_path(download_dir: Path, doi: str) -> Path:
-    return download_dir / f"{sanitize_filename(doi)}.fetch-envelope.json"
+    normalized_doi = normalize_doi(doi) or normalize_text(doi)
+    return download_dir / f"{sanitize_filename(normalized_doi)}.fetch-envelope.json"
 
 
 def request_cache_payload(request: FetchPaperRequest) -> dict[str, Any]:
@@ -61,6 +76,75 @@ def request_cache_payload(request: FetchPaperRequest) -> dict[str, Any]:
         "include_refs": request.include_refs,
         "max_tokens": request.max_tokens,
     }
+
+
+def cache_request_fingerprint(
+    doi: str,
+    request_payload: Mapping[str, Any],
+) -> str:
+    """Return the shared manifest fingerprint for cache request semantics."""
+
+    return build_manifest_request_fingerprint(
+        {
+            "query": doi or "<invalid-doi>",
+            "parameters": dict(request_payload),
+        }
+    )
+
+
+def _acceptance_summary(report: FetchAcceptanceReport) -> dict[str, Any]:
+    payload = report.to_dict()
+    return {
+        "status": "evaluated",
+        "overall": payload["overall"],
+        "identity": payload["identity"]["status"],
+        "fetch": payload["fetch"]["status"],
+        "content": payload["content"]["status"],
+        "asset": payload["asset"]["status"],
+        "output": payload["output"]["status"],
+        "provenance": payload["provenance"]["status"],
+    }
+
+
+def _warning_summary(
+    envelope: FetchEnvelope | None,
+    report: FetchAcceptanceReport | None,
+) -> dict[str, Any]:
+    if report is None:
+        return {
+            "messages": [],
+            "fallback_codes": [],
+            "warning_codes": [],
+            "failure_codes": [],
+            "unstructured_warning_count": 0,
+        }
+    provenance = report.provenance
+    return {
+        "messages": list(envelope.warnings if envelope is not None else ()),
+        "fallback_codes": list(provenance.fallback_codes),
+        "warning_codes": list(provenance.warning_codes),
+        "failure_codes": list(provenance.failure_codes),
+        "unstructured_warning_count": provenance.unstructured_warning_count,
+    }
+
+
+def _entry_summary(entries: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
+    by_kind: dict[str, int] = {}
+    for entry in entries:
+        kind = normalize_text(entry.get("kind")) or "unknown"
+        by_kind[kind] = by_kind.get(kind, 0) + 1
+    return {
+        "total": len(entries),
+        "by_kind": dict(sorted(by_kind.items())),
+    }
+
+
+def _reported_cache_version(value: Any) -> int | str | None:
+    if isinstance(value, bool):
+        return str(value).lower()
+    if isinstance(value, int | str):
+        return value
+    return None
 
 
 def payload_from_envelope(
@@ -211,6 +295,7 @@ def quality_from_payload(value: Mapping[str, Any] | None) -> Quality:
             else None
         ),
         asset_failures=coerce_asset_failure_diagnostics(payload.get("asset_failures")),
+        asset_summary=coerce_asset_quality_summary(payload.get("asset_summary")),
         extraction_revision=int(
             payload.get("extraction_revision") or FETCH_ENVELOPE_EXTRACTION_REVISION
         ),
@@ -280,6 +365,7 @@ def article_from_payload(value: Mapping[str, Any] | None) -> ArticleModel | None
                 downloaded_bytes=_coerce_cached_int(entry.get("downloaded_bytes")),
                 width=_coerce_cached_int(entry.get("width")),
                 height=_coerce_cached_int(entry.get("height")),
+                provenance=coerce_asset_provenance(entry.get("provenance")),
             )
             for entry in value.get("assets") or []
             if isinstance(entry, Mapping)
@@ -392,6 +478,9 @@ class FetchCache:
         preferred_cached_entries_fn: Callable[
             [list[dict[str, Any]]], dict[str, Any]
         ] = preferred_cached_entries,
+        register_markdown_entry_fn: Callable[..., dict[str, Any] | None] = (
+            register_markdown_entry
+        ),
     ) -> None:
         self._artifact_store = artifact_store or ArtifactStore.from_download_dir(
             download_dir
@@ -403,6 +492,7 @@ class FetchCache:
         self._rescan_cache_index = rescan_cache_index_fn
         self._list_cache_entries = list_cache_entries_fn
         self._preferred_cached_entries = preferred_cached_entries_fn
+        self._register_markdown_entry = register_markdown_entry_fn
 
     def load_fetch_envelope(
         self,
@@ -420,7 +510,7 @@ class FetchCache:
                 "Query resolution is ambiguous; choose one of the DOI candidates.",
                 candidates=resolved.candidates,
             )
-        doi = normalize_text(resolved.doi)
+        doi = normalize_doi(normalize_text(resolved.doi))
         if not doi:
             return None
         entries = self._refresh_cache_index_for_doi(self.download_dir, doi)
@@ -457,6 +547,8 @@ class FetchCache:
         payload = cache_payload.get("payload")
         if not isinstance(cached_request, Mapping) or not isinstance(payload, Mapping):
             return None
+        if normalize_doi(str(payload.get("doi") or "")) != doi:
+            return None
         if not cached_request_matches(cached_request, request):
             return None
         if not cached_payload_satisfies_request(payload, request):
@@ -470,7 +562,7 @@ class FetchCache:
     ) -> None:
         if self.download_dir is None:
             return
-        doi = normalize_text(envelope.doi)
+        doi = normalize_doi(normalize_text(envelope.doi))
         if not doi:
             return
         cache_path = fetch_envelope_cache_path(self.download_dir, doi)
@@ -484,10 +576,32 @@ class FetchCache:
             self._artifact_store.write_json_file(cache_path, payload)
         self._refresh_cache_index_for_doi(self.download_dir, doi)
 
+    def register_markdown(
+        self, path: Path, envelope: FetchEnvelope
+    ) -> dict[str, Any] | None:
+        """Register a saved Markdown file with identity known from its envelope."""
+
+        if self.download_dir is None:
+            return None
+        doi = normalize_doi(normalize_text(envelope.doi))
+        if not doi:
+            return None
+        return self._register_markdown_entry(
+            self.download_dir,
+            doi,
+            path,
+            source=str(envelope.source),
+            has_fulltext=envelope.has_fulltext,
+            content_kind=str(envelope.content_kind),
+        )
+
     def refresh_for_doi(self, doi: str) -> list[dict[str, Any]]:
         if self.download_dir is None:
             return []
-        return self._refresh_cache_index_for_doi(self.download_dir, doi)
+        normalized_doi = normalize_doi(doi)
+        if not normalized_doi:
+            return []
+        return self._refresh_cache_index_for_doi(self.download_dir, normalized_doi)
 
     def list_payload(
         self, *, cache_mode: str = CACHE_INDEX_MODE_INDEX
@@ -518,7 +632,209 @@ class FetchCache:
             **result.metadata(),
         }
 
-    def get_payload(self, doi: str) -> dict[str, Any]:
+    def _inspect_fetch_envelope_sidecar(
+        self,
+        doi: str,
+        request: FetchPaperRequest,
+    ) -> CacheSidecarInspection:
+        requested_request = request_cache_payload(request)
+        requested_fingerprint = cache_request_fingerprint(doi, requested_request)
+        path = (
+            fetch_envelope_cache_path(self.download_dir, doi)
+            if self.download_dir is not None
+            else None
+        )
+        base: dict[str, Any] = {
+            "status": "missing",
+            "reason_code": "cache_sidecar_missing",
+            "reason": "No fetch-envelope sidecar exists in the selected cache scope.",
+            "path": str(path) if path is not None else None,
+            "version": None,
+            "expected_version": FETCH_ENVELOPE_CACHE_VERSION,
+            "extraction_revision": None,
+            "expected_extraction_revision": FETCH_ENVELOPE_EXTRACTION_REVISION,
+            "cached_request": None,
+            "cached_request_fingerprint": None,
+            "requested_request": requested_request,
+            "requested_request_fingerprint": requested_fingerprint,
+            "request_matches": False,
+            "payload_satisfies_request": False,
+            "request_satisfied": False,
+            "request_status": "unavailable",
+        }
+
+        def finish(
+            status: str,
+            reason_code: str,
+            reason: str,
+            *,
+            updates: Mapping[str, Any] | None = None,
+            envelope: FetchEnvelope | None = None,
+        ) -> CacheSidecarInspection:
+            summary = {
+                **base,
+                "status": status,
+                "reason_code": reason_code,
+                "reason": reason,
+                **dict(updates or {}),
+            }
+            return CacheSidecarInspection(summary=summary, envelope=envelope)
+
+        if self.download_dir is None or path is None:
+            return finish(
+                "disabled",
+                "cache_scope_disabled",
+                "The selected cache scope is disabled.",
+            )
+        if not path.exists():
+            return finish(
+                "missing",
+                "cache_sidecar_missing",
+                "No fetch-envelope sidecar exists in the selected cache scope.",
+            )
+        try:
+            resolved_root = self.download_dir.expanduser().resolve()
+            resolved_path = path.expanduser().resolve()
+            resolved_path.relative_to(resolved_root)
+        except (OSError, ValueError):
+            return finish(
+                "invalid_scope",
+                "cache_sidecar_outside_scope",
+                "The fetch-envelope sidecar resolves outside the selected cache scope.",
+            )
+        if not resolved_path.is_file():
+            return finish(
+                "invalid",
+                "cache_sidecar_not_file",
+                "The expected fetch-envelope sidecar is not a regular file.",
+            )
+        try:
+            with cache_file_lock(fetch_envelope_lock_path(self.download_dir, doi)):
+                cache_payload = json.loads(resolved_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            return finish(
+                "corrupt",
+                "cache_sidecar_invalid_json",
+                "The fetch-envelope sidecar is not valid JSON.",
+            )
+        except OSError:
+            return finish(
+                "unreadable",
+                "cache_sidecar_unreadable",
+                "The fetch-envelope sidecar could not be read.",
+            )
+        if not isinstance(cache_payload, Mapping):
+            return finish(
+                "invalid",
+                "cache_sidecar_invalid_shape",
+                "The fetch-envelope sidecar root must be an object.",
+            )
+
+        version = cache_payload.get("version")
+        extraction_revision = cache_payload.get("extraction_revision")
+        version_updates = {
+            "version": _reported_cache_version(version),
+            "extraction_revision": _reported_cache_version(extraction_revision),
+        }
+        if version != FETCH_ENVELOPE_CACHE_VERSION:
+            return finish(
+                "version_mismatch",
+                "cache_sidecar_version_mismatch",
+                "The fetch-envelope sidecar version is not supported.",
+                updates=version_updates,
+            )
+        if extraction_revision != FETCH_ENVELOPE_EXTRACTION_REVISION:
+            return finish(
+                "extraction_revision_mismatch",
+                "cache_sidecar_extraction_revision_mismatch",
+                "The fetch-envelope extraction revision is stale.",
+                updates=version_updates,
+            )
+
+        cached_request = cache_payload.get("request")
+        payload = cache_payload.get("payload")
+        if not isinstance(cached_request, Mapping) or not isinstance(payload, Mapping):
+            return finish(
+                "invalid",
+                "cache_sidecar_missing_request_or_payload",
+                "The fetch-envelope sidecar lacks a structured request or payload.",
+                updates=version_updates,
+            )
+        cached_request_payload = dict(cached_request)
+        try:
+            cached_fingerprint = cache_request_fingerprint(doi, cached_request_payload)
+        except (TypeError, ValueError):
+            return finish(
+                "invalid",
+                "cache_sidecar_request_not_canonical_json",
+                "The cached request cannot be represented as canonical JSON.",
+                updates=version_updates,
+            )
+        request_updates = {
+            **version_updates,
+            "cached_request": cached_request_payload,
+            "cached_request_fingerprint": cached_fingerprint,
+        }
+        if normalize_doi(str(payload.get("doi") or "")) != doi:
+            return finish(
+                "doi_mismatch",
+                "cache_sidecar_doi_mismatch",
+                "The fetch-envelope payload DOI does not match the requested DOI.",
+                updates=request_updates,
+            )
+        try:
+            envelope = envelope_from_payload(payload)
+        except Exception:  # noqa: BLE001 - local cache corruption is reported.
+            return finish(
+                "invalid",
+                "cache_sidecar_payload_invalid",
+                "The fetch-envelope payload could not be reconstructed.",
+                updates=request_updates,
+            )
+
+        request_matches = cached_request_matches(cached_request, request)
+        payload_matches = cached_payload_satisfies_request(payload, request)
+        satisfied = request_matches and payload_matches
+        match_updates = {
+            **request_updates,
+            "request_matches": request_matches,
+            "payload_satisfies_request": payload_matches,
+            "request_satisfied": satisfied,
+            "request_status": "satisfied" if satisfied else "mismatch",
+        }
+        if not request_matches:
+            return finish(
+                "ready",
+                "cached_request_mismatch",
+                "A valid sidecar exists, but its cached request does not match the current request.",
+                updates=match_updates,
+                envelope=envelope,
+            )
+        if not payload_matches:
+            return finish(
+                "ready",
+                "cached_payload_missing_requested_modes",
+                "The cached payload does not contain every currently requested output mode.",
+                updates=match_updates,
+                envelope=envelope,
+            )
+        return finish(
+            "ready",
+            "cached_request_satisfied",
+            "The valid fetch-envelope sidecar satisfies the current request.",
+            updates=match_updates,
+            envelope=envelope,
+        )
+
+    def get_payload(
+        self,
+        doi: str,
+        *,
+        request: FetchPaperRequest | None = None,
+        detail: str = "full",
+        preferred_only: bool = False,
+    ) -> dict[str, Any]:
+        normalized_doi = normalize_doi(doi)
         if self.download_dir is None:
             entries: list[dict[str, Any]] = []
             index_metadata: dict[str, Any] = {
@@ -529,13 +845,15 @@ class FetchCache:
                 "index_reason": "download directory is disabled",
             }
         else:
-            result = self._refresh_cache_index_for_doi_result(self.download_dir, doi)
+            result = self._refresh_cache_index_for_doi_result(
+                self.download_dir, normalized_doi
+            )
             entries = result.entries
             index_metadata = result.metadata()
         preferred = self._preferred_cached_entries(entries)
-        return {
+        base_payload = {
             "status": "hit" if entries else "miss",
-            "doi": doi,
+            "doi": normalized_doi,
             "download_dir": str(self.download_dir)
             if self.download_dir is not None
             else None,
@@ -543,3 +861,133 @@ class FetchCache:
             "preferred": preferred,
             **index_metadata,
         }
+        if request is None:
+            return base_payload
+
+        sidecar = self._inspect_fetch_envelope_sidecar(normalized_doi, request)
+        envelope = sidecar.envelope
+        acceptance: FetchAcceptanceReport | None = None
+        acceptance_reason: str | None = sidecar.summary["reason_code"]
+        if envelope is not None:
+            try:
+                acceptance = evaluate_fetch_acceptance(
+                    envelope,
+                    asset_profile=effective_asset_profile(
+                        request.strategy.asset_profile,
+                        source_name=envelope.source,
+                    ),
+                    requested_outputs=request.requested_modes(),
+                    expected_doi=normalized_doi,
+                )
+                acceptance_reason = None
+            except Exception:  # noqa: BLE001 - report malformed local cache facts.
+                acceptance_reason = "cached_acceptance_invalid"
+
+        entry_summary = _entry_summary(entries)
+        preferred_markdown = preferred.get("markdown")
+        content_kind = (
+            str(envelope.content_kind)
+            if envelope is not None
+            else (
+                str(preferred_markdown.get("content_kind"))
+                if isinstance(preferred_markdown, Mapping)
+                and preferred_markdown.get("content_kind") is not None
+                else None
+            )
+        )
+        has_fulltext = (
+            envelope.has_fulltext
+            if envelope is not None
+            else (
+                preferred_markdown.get("has_fulltext")
+                if isinstance(preferred_markdown, Mapping)
+                and isinstance(preferred_markdown.get("has_fulltext"), bool)
+                else None
+            )
+        )
+        confidence = str(envelope.quality.confidence) if envelope is not None else None
+        acceptance_summary = (
+            _acceptance_summary(acceptance)
+            if acceptance is not None
+            else {
+                "status": "not_evaluated",
+                "overall": None,
+                "reason_code": acceptance_reason,
+            }
+        )
+        asset_summary = (
+            acceptance.asset.model_dump(mode="json")
+            if acceptance is not None
+            else {
+                "status": "indexed_only",
+                "total": entry_summary["by_kind"].get("asset", 0),
+            }
+        )
+        scope_status = (
+            "disabled"
+            if self.download_dir is None
+            else "available"
+            if self.download_dir.exists()
+            else "missing"
+        )
+        summary_fields = {
+            "detail": detail,
+            "preferred_only": preferred_only,
+            "scope_status": scope_status,
+            "identity_status": "proven" if entries else "no_proven_entries",
+            "has_entries": bool(entries),
+            "entry_summary": entry_summary,
+            "content_kind": content_kind,
+            "has_fulltext": has_fulltext,
+            "confidence": confidence,
+            "acceptance": acceptance_summary,
+            "asset_summary": asset_summary,
+            "warning_summary": _warning_summary(envelope, acceptance),
+            "sidecar": sidecar.summary,
+            "cached_request": sidecar.summary["cached_request"],
+            "cached_request_fingerprint": sidecar.summary["cached_request_fingerprint"],
+            "requested_request": sidecar.summary["requested_request"],
+            "requested_request_fingerprint": sidecar.summary[
+                "requested_request_fingerprint"
+            ],
+            "request_status": sidecar.summary["request_status"],
+            "request_satisfied": sidecar.summary["request_satisfied"],
+        }
+
+        compact_preferred = {
+            "markdown": preferred.get("markdown"),
+            "primary_payload": preferred.get("primary_payload"),
+        }
+        if detail == "compact":
+            return {
+                key: value
+                for key, value in {
+                    "status": base_payload["status"],
+                    "doi": normalized_doi,
+                    "download_dir": base_payload["download_dir"],
+                    "preferred": compact_preferred,
+                    **index_metadata,
+                    **summary_fields,
+                }.items()
+                if key != "entries"
+            }
+
+        if preferred_only:
+            selected_entries: list[dict[str, Any]] = []
+            selected_ids: set[str] = set()
+            for key in ("markdown", "primary_payload"):
+                entry = preferred.get(key)
+                if not isinstance(entry, dict):
+                    continue
+                entry_id = str(entry.get("id") or entry.get("path") or "")
+                if entry_id in selected_ids:
+                    continue
+                selected_ids.add(entry_id)
+                selected_entries.append(entry)
+            return {
+                **base_payload,
+                "entries": selected_entries,
+                "preferred": {**compact_preferred, "assets": []},
+                **summary_fields,
+            }
+        return {**base_payload, **summary_fields}

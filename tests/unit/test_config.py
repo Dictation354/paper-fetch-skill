@@ -98,6 +98,62 @@ class ConfigTests(unittest.TestCase):
         self.assertEqual(env["CONFIGURED_ONLY"], "1")
         self.assertEqual(env["EXPLICIT_ONLY"], "1")
 
+    def test_runtime_configuration_report_preserves_precedence_without_values(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            user_env = tmp / "user.env"
+            configured_env = tmp / "configured.env"
+            explicit_env = tmp / "explicit.env"
+            user_env.write_text(
+                "SHARED=user\nUSER_ONLY=user-secret\n", encoding="utf-8"
+            )
+            configured_env.write_text(
+                "SHARED=configured\nCONFIGURED_ONLY=configured-secret\n",
+                encoding="utf-8",
+            )
+            explicit_env.write_text(
+                "SHARED=explicit\nEXPLICIT_ONLY=explicit-secret\n",
+                encoding="utf-8",
+            )
+
+            with mock.patch.object(config, "DEFAULT_USER_ENV_FILE", user_env):
+                report = config.runtime_configuration_report(
+                    {
+                        "SHARED",
+                        "USER_ONLY",
+                        "CONFIGURED_ONLY",
+                        "EXPLICIT_ONLY",
+                        "DEFAULT_ONLY",
+                        "UNSET_ONLY",
+                    },
+                    base_env={
+                        "SHARED": "process-secret",
+                        config.ENV_FILE_ENV_VAR: str(configured_env),
+                    },
+                    env_file=explicit_env,
+                    default_names={"DEFAULT_ONLY"},
+                    sensitive_names={"SHARED"},
+                )
+
+        entries = {entry["name"]: entry for entry in report["values"]}
+        self.assertEqual(entries["SHARED"]["source"], "process_env")
+        self.assertEqual(entries["EXPLICIT_ONLY"]["source"], "explicit_env_file")
+        self.assertEqual(entries["CONFIGURED_ONLY"]["source"], "env_var_file")
+        self.assertEqual(entries["USER_ONLY"]["source"], "user_config")
+        self.assertEqual(entries["DEFAULT_ONLY"]["source"], "default")
+        self.assertEqual(entries["UNSET_ONLY"]["source"], "unset")
+        self.assertTrue(entries["SHARED"]["sensitive"])
+        serialized = str(report)
+        for secret in (
+            "process-secret",
+            "explicit-secret",
+            "configured-secret",
+            "user-secret",
+        ):
+            self.assertNotIn(secret, serialized)
+
     def test_user_env_file_is_the_default_runtime_baseline(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             tmp = Path(tmpdir)

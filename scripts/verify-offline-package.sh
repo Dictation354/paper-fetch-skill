@@ -164,6 +164,39 @@ paper-fetch --help >/dev/null
 texmath --help >/dev/null
 paper-fetch-install-image-tools --target-dir "$INSTALL_ROOT/image-tools" >/dev/null
 
+log "Verifying installed version and skill provenance"
+PROVENANCE_JSON="$TMP_ROOT/install-provenance.json"
+paper-fetch doctor \
+  --provider crossref \
+  --detail compact \
+  --install-root "$INSTALL_ROOT" \
+  --json > "$PROVENANCE_JSON"
+"$RUNTIME_PYTHON" - "$PROVENANCE_JSON" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+report = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
+provenance = report["install_provenance"]
+assert provenance["status"] == "ready", provenance
+assert provenance["offline_manifest"]["schema_version"] == 3, provenance
+assert provenance["offline_manifest"]["git_revision"], provenance
+assert provenance["offline_manifest"]["target"]["python_tag"], provenance
+expected = provenance["consistency"]["expected_version"]
+assert expected, provenance
+for component in (
+    "current_distribution",
+    "default_user_agent",
+    "offline_manifest",
+    "installed_runtime",
+    "active_cli",
+):
+    assert provenance[component]["version"] == expected, (component, provenance)
+assert provenance["bundled_skill"]["expected_file_count"] > 1, provenance
+assert len(provenance["host_skills"]) == 3, provenance
+assert all(item["status"] == "ready" for item in provenance["host_skills"]), provenance
+PY
+
 log "Verifying browser runtime package entrypoint"
 "$RUNTIME_PYTHON" - <<'PY'
 import cloakbrowser

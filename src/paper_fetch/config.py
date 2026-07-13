@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+from dataclasses import dataclass
 from pathlib import Path
 from collections.abc import Mapping
 
@@ -18,10 +19,24 @@ DEFAULT_MCP_DOWNLOAD_DIR = DEFAULT_USER_DATA_DIR / "downloads"
 DEFAULT_CLI_DOWNLOAD_DIR = Path("live-downloads")
 DEFAULT_REPO_ROOT = Path(__file__).resolve().parents[2]
 
-DEFAULT_USER_AGENT = "paper-fetch-skill/3.0.1"
+DEFAULT_USER_AGENT = "paper-fetch-skill/3.1.0"
 DEFAULT_PUBLISHER_USER_AGENT = (
     "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
     "(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+)
+
+CONFIG_SOURCE_PROCESS_ENV = "process_env"
+CONFIG_SOURCE_EXPLICIT_ENV_FILE = "explicit_env_file"
+CONFIG_SOURCE_ENV_VAR_FILE = "env_var_file"
+CONFIG_SOURCE_USER_CONFIG = "user_config"
+CONFIG_SOURCE_DEFAULT = "default"
+CONFIG_SOURCE_UNSET = "unset"
+CONFIG_SOURCE_PRECEDENCE = (
+    CONFIG_SOURCE_PROCESS_ENV,
+    CONFIG_SOURCE_EXPLICIT_ENV_FILE,
+    CONFIG_SOURCE_ENV_VAR_FILE,
+    CONFIG_SOURCE_USER_CONFIG,
+    CONFIG_SOURCE_DEFAULT,
 )
 USER_AGENT_ENV_VAR = "PAPER_FETCH_SKILL_USER_AGENT"
 BROWSER_USER_AGENT_ENV_VAR = "PAPER_FETCH_BROWSER_USER_AGENT"
@@ -73,6 +88,76 @@ def _active_env(env: Mapping[str, str] | None = None) -> Mapping[str, str]:
     return os.environ if env is None else env
 
 
+@dataclass(frozen=True)
+class RuntimeEnvResolution:
+    """Merged runtime values plus non-secret source metadata."""
+
+    values: dict[str, str]
+    sources: dict[str, str]
+    layers: tuple[dict[str, object], ...]
+
+
+def resolve_runtime_env(
+    base_env: Mapping[str, str] | None = None,
+    *,
+    env_file: Path | None = None,
+) -> RuntimeEnvResolution:
+    """Resolve runtime env and retain the winning source for each key."""
+
+    process_env = dict(_active_env(base_env))
+    explicit_env_file = normalize_env_file_path(env_file)
+    configured_env_file = normalize_env_file_path(process_env.get(ENV_FILE_ENV_VAR))
+
+    candidates: list[tuple[Path, str]] = []
+
+    def add_candidate(path: Path | None, source: str) -> None:
+        if path is None:
+            return
+        for index, (existing, _) in enumerate(candidates):
+            if existing == path:
+                candidates[index] = (path, source)
+                return
+        candidates.append((path, source))
+
+    add_candidate(DEFAULT_USER_ENV_FILE, CONFIG_SOURCE_USER_CONFIG)
+    add_candidate(configured_env_file, CONFIG_SOURCE_ENV_VAR_FILE)
+    add_candidate(explicit_env_file, CONFIG_SOURCE_EXPLICIT_ENV_FILE)
+
+    merged: dict[str, str] = {}
+    sources: dict[str, str] = {}
+    for candidate, source in candidates:
+        loaded = load_env_file(candidate)
+        merged.update(loaded)
+        sources.update(dict.fromkeys(loaded, source))
+    merged.update(process_env)
+    sources.update(dict.fromkeys(process_env, CONFIG_SOURCE_PROCESS_ENV))
+
+    layers = (
+        {
+            "source": CONFIG_SOURCE_PROCESS_ENV,
+            "present": bool(process_env),
+        },
+        {
+            "source": CONFIG_SOURCE_EXPLICIT_ENV_FILE,
+            "present": bool(
+                explicit_env_file is not None and explicit_env_file.is_file()
+            ),
+        },
+        {
+            "source": CONFIG_SOURCE_ENV_VAR_FILE,
+            "present": bool(
+                configured_env_file is not None and configured_env_file.is_file()
+            ),
+        },
+        {
+            "source": CONFIG_SOURCE_USER_CONFIG,
+            "present": DEFAULT_USER_ENV_FILE.is_file(),
+        },
+        {"source": CONFIG_SOURCE_DEFAULT, "present": True},
+    )
+    return RuntimeEnvResolution(values=merged, sources=sources, layers=layers)
+
+
 def build_runtime_env(
     base_env: Mapping[str, str] | None = None,
     *,
@@ -82,23 +167,47 @@ def build_runtime_env(
 
     Precedence, highest to lowest:
     - process environment / base_env
-    - explicit env_file arg or PAPER_FETCH_ENV_FILE
+    - explicit env_file arg
+    - file named by PAPER_FETCH_ENV_FILE
     - ~/.config/paper-fetch/.env
+    - built-in defaults applied by individual consumers
     """
-    process_env = dict(_active_env(base_env))
-    explicit_env_file = normalize_env_file_path(env_file)
-    configured_env_file = normalize_env_file_path(process_env.get(ENV_FILE_ENV_VAR))
+    return resolve_runtime_env(base_env, env_file=env_file).values
 
-    merged: dict[str, str] = {}
-    candidates: list[Path] = [DEFAULT_USER_ENV_FILE]
-    for candidate in (configured_env_file, explicit_env_file):
-        if candidate is not None and candidate not in candidates:
-            candidates.append(candidate)
 
-    for candidate in candidates:
-        merged.update(load_env_file(candidate))
-    merged.update(process_env)
-    return merged
+def runtime_configuration_report(
+    names: list[str] | tuple[str, ...] | set[str] | frozenset[str],
+    *,
+    base_env: Mapping[str, str] | None = None,
+    env_file: Path | None = None,
+    default_names: set[str] | frozenset[str] = frozenset(),
+    sensitive_names: set[str] | frozenset[str] = frozenset(),
+) -> dict[str, object]:
+    """Return source/presence facts without exposing configuration values."""
+
+    resolution = resolve_runtime_env(base_env, env_file=env_file)
+    values: list[dict[str, object]] = []
+    for name in sorted(set(names)):
+        source = resolution.sources.get(name)
+        if source is None:
+            source = (
+                CONFIG_SOURCE_DEFAULT if name in default_names else CONFIG_SOURCE_UNSET
+            )
+        present = bool(str(resolution.values.get(name, "")).strip())
+        values.append(
+            {
+                "name": name,
+                "source": source,
+                "present": present,
+                "uses_default": source == CONFIG_SOURCE_DEFAULT,
+                "sensitive": name in sensitive_names,
+            }
+        )
+    return {
+        "precedence": list(CONFIG_SOURCE_PRECEDENCE),
+        "layers": [dict(layer) for layer in resolution.layers],
+        "values": values,
+    }
 
 
 def build_user_agent(env: Mapping[str, str]) -> str:

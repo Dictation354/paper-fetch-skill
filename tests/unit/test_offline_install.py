@@ -13,6 +13,7 @@ import textwrap
 import unittest
 
 from ._installer_support import write_executable as _write_executable
+from paper_fetch.skill_integrity import build_skill_bundle_manifest
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -64,6 +65,12 @@ def _fake_python_script(version: str) -> str:
     while [[ "${{1:-}}" == "-X" ]]; do
       shift 2
     done
+
+    if [[ "${{1:-}}" == "-m" && "${{2:-}}" == "paper_fetch.skill_integrity" ]]; then
+      RUNTIME_DIR="$(cd "$(dirname "$0")" && pwd)"
+      export PYTHONPATH="$RUNTIME_DIR/site-packages${{PYTHONPATH:+:$PYTHONPATH}}"
+      exec "$REAL_PYTHON" "$@"
+    fi
 
     if [[ "${{1:-}}" == "-c" ]]; then
       code="${{2:-}}"
@@ -229,19 +236,13 @@ class OfflineInstallTests(unittest.TestCase):
         shutil.copytree(REPO_ROOT / "installer", bundle / "installer")
 
         manifest_python_tag = manifest_python_tag or _python_tag(python_version)
-        _write_file(
-            bundle / "offline-manifest.json",
-            (
-                '{"target": {'
-                f'"platform": "{target_platform}", '
-                f'"arch": "{target_arch}", '
-                f'"python_tag": "{manifest_python_tag}"'
-                "}}\n"
-            ),
-        )
         _write_file(bundle / ".env.example", 'ELSEVIER_API_KEY=""\n')
         _write_file(
             bundle / "runtime" / "site-packages" / "paper_fetch" / "__init__.py", "\n"
+        )
+        shutil.copy2(
+            REPO_ROOT / "src" / "paper_fetch" / "skill_integrity.py",
+            bundle / "runtime" / "site-packages" / "paper_fetch" / "skill_integrity.py",
         )
         _write_file(
             bundle / "runtime" / "site-packages" / "cloakbrowser" / "__init__.py", "\n"
@@ -282,6 +283,31 @@ class OfflineInstallTests(unittest.TestCase):
             "#!/usr/bin/env bash\nexit 0\n",
         )
         (bundle / "image-tools" / "bin").mkdir(parents=True, exist_ok=True)
+
+        skill_dir = bundle / "skills" / "paper-fetch-skill"
+        manifest = {
+            "schema_version": 3,
+            "name": "paper-fetch-skill-offline-linux-x86_64",
+            "project": "paper-fetch-skill",
+            "version": "3.1.0",
+            "built_at_utc": "2026-07-13T00:00:00Z",
+            "git_revision": "test-revision",
+            "target": {
+                "platform": target_platform,
+                "arch": target_arch,
+                "python_tag": manifest_python_tag,
+            },
+            "entrypoint": "install-offline.sh",
+            "skill_bundle": build_skill_bundle_manifest(
+                skill_dir,
+                name="paper-fetch-skill",
+                root="skills/paper-fetch-skill",
+            ),
+        }
+        _write_file(
+            bundle / "offline-manifest.json",
+            json.dumps(manifest, indent=2) + "\n",
+        )
 
         fake_bin = root / "fake-bin"
         _write_executable(fake_bin / "python3", _fake_python_script(python_version))
@@ -998,7 +1024,45 @@ class OfflineInstallTests(unittest.TestCase):
 
                 result = self._run_installer(bundle, fake_bin, home)
 
-                self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_skill_hash_drift_is_rejected_after_bundle_checksum_passes(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            bundle, fake_bin, home = self._create_bundle(Path(tmpdir))
+            reference = (
+                bundle
+                / "skills"
+                / "paper-fetch-skill"
+                / "references"
+                / "tool-contract.md"
+            )
+            reference.write_text("changed after manifest\n", encoding="utf-8")
+            _write_checksums(bundle)
+
+            result = self._run_installer(bundle, fake_bin, home)
+
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("skill bundle integrity check failed", result.stderr)
+            self.assertIn("references/tool-contract.md", result.stderr)
+
+    def test_missing_skill_reference_is_rejected_after_checksum_passes(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            bundle, fake_bin, home = self._create_bundle(Path(tmpdir))
+            reference = (
+                bundle
+                / "skills"
+                / "paper-fetch-skill"
+                / "references"
+                / "tool-contract.md"
+            )
+            reference.unlink()
+            _write_checksums(bundle)
+
+            result = self._run_installer(bundle, fake_bin, home)
+
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("skill bundle integrity check failed", result.stderr)
+            self.assertIn("references/tool-contract.md", result.stderr)
 
     def test_mismatched_manifest_and_interpreter_tag_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -1081,6 +1145,10 @@ class OfflineInstallTests(unittest.TestCase):
         self.assertNotIn('"-X", "utf8", "-c"', script)
         self.assertNotIn("sessions.list", script)
         self.assertNotIn("playwright.sync_api", script)
+        self.assertIn("function Test-SkillBundleIntegrity", script)
+        self.assertIn("from paper_fetch.skill_integrity import", script)
+        self.assertIn('Name "bundled skill integrity" -Required', script)
+        self.assertIn('Name "skill installation" -Required', script)
 
     def test_windows_offline_installer_declares_cdp_env_hint_without_playwright_runtime_path(
         self,

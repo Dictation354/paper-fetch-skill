@@ -36,10 +36,22 @@ class McpPayloadCacheTests(unittest.TestCase):
                 "idempotentHint": False,
                 "openWorldHint": True,
             },
+            "batch_fetch": {
+                "readOnlyHint": False,
+                "destructiveHint": False,
+                "idempotentHint": False,
+                "openWorldHint": True,
+            },
             "list_cached": {"readOnlyHint": True, "openWorldHint": False},
             "get_cached": {"readOnlyHint": True, "openWorldHint": False},
             "batch_resolve": {"readOnlyHint": True, "openWorldHint": True},
             "batch_check": {"readOnlyHint": True, "openWorldHint": True},
+            "browser_preflight": {
+                "readOnlyHint": False,
+                "destructiveHint": False,
+                "idempotentHint": False,
+                "openWorldHint": True,
+            },
             "provider_status": {"readOnlyHint": True, "openWorldHint": False},
         }
 
@@ -50,6 +62,17 @@ class McpPayloadCacheTests(unittest.TestCase):
                 self.assertEqual(
                     getattr(tool.annotations, field_name), value, f"{name}.{field_name}"
                 )
+
+    def test_fetch_output_schema_exposes_asset_audit_and_provenance(self) -> None:
+        schema = build_server()._tool_manager._tools["fetch_paper"].output_schema or {}
+        definitions = schema.get("$defs", {})
+
+        self.assertIn("provenance", definitions["AssetOutput"]["properties"])
+        self.assertIn("asset_summary", definitions["QualityOutput"]["properties"])
+        self.assertEqual(
+            definitions["AssetQualitySummaryOutput"]["properties"]["by_kind"],
+            {"$ref": "#/$defs/AssetByKindOutput"},
+        )
 
     def test_provider_status_tool_returns_success_when_providers_are_unconfigured(
         self,
@@ -409,6 +432,11 @@ class McpPayloadCacheTests(unittest.TestCase):
             self.assertEqual(
                 [entry["kind"] for entry in listed["entries"]], ["markdown"]
             )
+            self.assertEqual(
+                listed["entries"][0]["identity_proof"],
+                IDENTITY_PROOF_MARKDOWN_REGISTRATION,
+            )
+            self.assertEqual(listed["entries"][0]["doi"], "10.1000/example")
 
     def test_fetch_paper_payload_normalizes_preferred_providers(self) -> None:
         captured: dict[str, object] = {}
@@ -685,6 +713,10 @@ class McpPayloadCacheTests(unittest.TestCase):
                 "asset_download_diagnostics", "article_payload.json"
             ).read_text(encoding="utf-8")
         )
+        payload["assets"][0]["provenance"] = [
+            "conversion_degraded",
+            "conversion_degraded",
+        ]
         article = mcp_tools._article_from_payload(payload)
 
         self.assertIsNotNone(article)
@@ -696,6 +728,7 @@ class McpPayloadCacheTests(unittest.TestCase):
         self.assertEqual(asset.download_url, "https://example.test/figure-preview.png")
         self.assertEqual(asset.width, 640)
         self.assertEqual(asset.height, 480)
+        self.assertEqual(asset.provenance, ["conversion_degraded"])
 
     def test_fetch_envelope_payload_preserves_quality_asset_failures(self) -> None:
         request = mcp_tools.FetchPaperRequest(

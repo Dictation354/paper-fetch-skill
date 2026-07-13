@@ -45,13 +45,333 @@ class CliTests(unittest.TestCase):
 
     def test_help_documents_rendering_and_asset_options(self) -> None:
         help_text = paper_fetch_cli.build_parser().format_help()
+        normalized_help = " ".join(help_text.split())
 
+        self.assertIn("{fetch,auth,browser-preflight,manifest,doctor}", help_text)
+        self.assertIn("Fetch one paper or a query-file batch.", help_text)
+        self.assertIn("Open a headed browser", help_text)
+        self.assertIn("Live-check browser-backed providers", help_text)
+        self.assertIn(
+            "root-level fetch flags remain available for one release cycle",
+            normalized_help,
+        )
+        self.assertIn("Doctor performs static, network-free checks", normalized_help)
         self.assertIn("--include-refs {none,top10,all}", help_text)
         self.assertIn("Reference rendering mode", help_text)
         self.assertIn("--asset-profile {none,body,all}", help_text)
         self.assertIn("Local content asset scope", help_text)
         self.assertIn("--max-tokens MAX_TOKENS", help_text)
         self.assertIn("Markdown rendering budget", help_text)
+
+    def test_top_level_and_subcommand_help_contract_snapshot(self) -> None:
+        expected_fragments = {
+            (): (
+                "usage: paper-fetch",
+                "commands:",
+                "{fetch,auth,browser-preflight,manifest,doctor}",
+                "Doctor performs static, network-free checks.",
+            ),
+            ("fetch",): (
+                "usage: paper-fetch fetch",
+                "--format {markdown,json,both}",
+                "default: markdown",
+                "--artifact-mode {markdown-assets,all,none}",
+                "default: markdown-assets",
+                "--asset-profile {none,body,all}",
+                "default: body",
+                "CLI artifact alias for --artifact-mode none",
+                "does not block explicit --output",
+            ),
+            ("auth",): (
+                "usage: paper-fetch auth",
+                "Browser-backed provider to open for manual authentication.",
+                "default: the provider's built-in sample article",
+                "--timeout-ms TIMEOUT_MS",
+            ),
+            ("browser-preflight",): (
+                "usage: paper-fetch browser-preflight",
+                "--provider {wiley,science,pnas,mdpi",
+                "default: all browser-backed providers",
+                "save provider storage-state JSON on success",
+            ),
+            ("manifest",): (
+                "usage: paper-fetch manifest",
+                "{audit,reconcile}",
+                "without writing files or using network",
+            ),
+            ("doctor",): (
+                "usage: paper-fetch doctor",
+                "--provider {crossref,elsevier",
+                "--group {all,official,browser,direct,metadata}",
+                "--detail {full,compact}",
+                "without network access",
+            ),
+        }
+
+        for command, fragments in expected_fragments.items():
+            with self.subTest(command=command):
+                stdout = io.StringIO()
+                stderr = io.StringIO()
+                with (
+                    contextlib.redirect_stdout(stdout),
+                    contextlib.redirect_stderr(stderr),
+                    self.assertRaises(SystemExit) as raised,
+                ):
+                    paper_fetch_cli.main([*command, "--help"])
+
+                self.assertEqual(raised.exception.code, 0)
+                self.assertEqual(stderr.getvalue(), "")
+                rendered = " ".join(stdout.getvalue().split()).replace("- ", "-")
+                for fragment in fragments:
+                    self.assertIn(fragment, rendered)
+
+    def test_manifest_and_doctor_default_commands_remain_replaceable(self) -> None:
+        registered: list[str] = []
+
+        def register_manifest(subparsers) -> None:
+            subparsers.add_parser("manifest", help="Injected manifest command.")
+            registered.append("manifest")
+
+        def register_doctor(subparsers) -> None:
+            subparsers.add_parser("doctor", help="Injected doctor command.")
+            registered.append("doctor")
+
+        default_help = paper_fetch_cli.build_parser().format_help()
+        injected_help = paper_fetch_cli.build_parser(
+            manifest_registrar=register_manifest,
+            doctor_registrar=register_doctor,
+        ).format_help()
+
+        self.assertEqual(registered, ["manifest", "doctor"])
+        self.assertNotIn("Injected manifest command.", default_help)
+        self.assertNotIn("Injected doctor command.", default_help)
+        self.assertIn("Inspect static provider configuration and local", default_help)
+        self.assertIn("Injected manifest command.", injected_help)
+        self.assertIn("Injected doctor command.", injected_help)
+
+    def test_doctor_json_is_static_machine_readable_and_includes_provenance(
+        self,
+    ) -> None:
+        report = {
+            "schema_version": 1,
+            "status": "ready",
+            "diagnostic_scope": "static_configuration_and_local_dependencies",
+            "live_network_checked": False,
+            "provider_status": {
+                "providers": [
+                    {
+                        "provider": "crossref",
+                        "status": "ready",
+                        "reason": "Static requirements are ready.",
+                        "suggested_action": "run the requested fetch",
+                    }
+                ]
+            },
+            "install_provenance": {
+                "status": "not_applicable",
+                "reason_code": "source_development_without_offline_manifest",
+            },
+        }
+        stdout = io.StringIO()
+        with (
+            mock.patch.object(
+                paper_fetch_cli, "build_doctor_payload", return_value=report
+            ) as build_report,
+            contextlib.redirect_stdout(stdout),
+        ):
+            exit_code = paper_fetch_cli.main(
+                [
+                    "doctor",
+                    "--provider",
+                    "crossref",
+                    "--detail",
+                    "compact",
+                    "--json",
+                ]
+            )
+
+        self.assertEqual(exit_code, 0)
+        self.assertEqual(json.loads(stdout.getvalue()), report)
+        build_report.assert_called_once_with(
+            provider="crossref",
+            group=None,
+            detail="compact",
+            env_file=None,
+            install_root=None,
+        )
+
+    def test_doctor_human_output_explains_static_preflight_auth_layers(self) -> None:
+        report = {
+            "status": "degraded",
+            "provider_status": {
+                "providers": [
+                    {
+                        "provider": "wiley",
+                        "status": "not_configured",
+                        "reason": "Local browser dependency is missing.",
+                        "suggested_action": "prepare the browser runtime",
+                    }
+                ]
+            },
+        }
+        stdout = io.StringIO()
+        with (
+            mock.patch.object(
+                paper_fetch_cli, "build_doctor_payload", return_value=report
+            ),
+            contextlib.redirect_stdout(stdout),
+        ):
+            exit_code = paper_fetch_cli.main(["doctor", "--provider", "wiley"])
+
+        rendered = stdout.getvalue()
+        self.assertEqual(exit_code, 1)
+        self.assertIn("static configuration and local dependencies", rendered)
+        self.assertIn("Live publisher or browser-page checks: not run", rendered)
+        self.assertIn("browser-preflight", rendered)
+        self.assertIn("auth explicitly", rendered)
+
+    def test_doctor_rejects_incompatible_provider_group_before_probing(self) -> None:
+        stderr = io.StringIO()
+        with (
+            mock.patch.object(paper_fetch_cli, "build_doctor_payload") as build_report,
+            contextlib.redirect_stderr(stderr),
+            self.assertRaises(SystemExit) as raised,
+        ):
+            build_report.side_effect = ValueError(
+                "provider 'crossref' does not belong to group 'browser'."
+            )
+            paper_fetch_cli.main(
+                ["doctor", "--provider", "crossref", "--group", "browser"]
+            )
+
+        self.assertEqual(raised.exception.code, 2)
+        self.assertIn("does not belong to group", stderr.getvalue())
+
+    def test_fetch_subparser_preserves_root_defaults_and_pre_command_values(
+        self,
+    ) -> None:
+        args = paper_fetch_cli.build_parser().parse_args(
+            [
+                "--artifact-mode",
+                "none",
+                "--asset-profile",
+                "all",
+                "fetch",
+                "--query",
+                "10.1000/example",
+            ]
+        )
+
+        self.assertEqual(args.query, "10.1000/example")
+        self.assertEqual(args.artifact_mode, "none")
+        self.assertEqual(args.asset_profile, "all")
+        self.assertEqual(args.format, "markdown")
+        self.assertEqual(args.output, "-")
+
+    def test_explicit_fetch_and_legacy_root_fetch_have_same_contract(self) -> None:
+        def invoke(prefix: list[str], output_dir: Path):
+            captured: dict[str, object] = {}
+            article = sample_article()
+
+            def fake_fetch(*args, **kwargs):
+                captured.update(kwargs)
+                return paper_fetch.build_fetch_envelope(
+                    article, modes=kwargs["modes"], render=kwargs["render"]
+                )
+
+            stdout = io.StringIO()
+            stderr = io.StringIO()
+            with (
+                mock.patch.object(
+                    paper_fetch_cli, "build_runtime_env", return_value={}
+                ),
+                mock.patch.object(
+                    paper_fetch_cli,
+                    "resolve_cli_download_dir",
+                    return_value=output_dir,
+                ),
+                mock.patch.object(
+                    paper_fetch_cli, "fetch_paper", side_effect=fake_fetch
+                ),
+                contextlib.redirect_stdout(stdout),
+                contextlib.redirect_stderr(stderr),
+            ):
+                exit_code = paper_fetch_cli.main(
+                    [
+                        *prefix,
+                        "--query",
+                        "10.1016/test",
+                        "--output",
+                        "-",
+                        "--artifact-mode",
+                        "none",
+                        "--asset-profile",
+                        "none",
+                    ]
+                )
+            return exit_code, stdout.getvalue(), stderr.getvalue(), captured
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            legacy = invoke([], Path(tmpdir) / "legacy")
+            explicit = invoke(["fetch"], Path(tmpdir) / "explicit")
+
+        self.assertEqual(legacy[:3], explicit[:3])
+        self.assertEqual(legacy[0], 0)
+        self.assertIn("# Example Article", legacy[1])
+        self.assertEqual(legacy[2], "")
+        for key in ("modes", "render", "strategy"):
+            self.assertEqual(legacy[3][key], explicit[3][key])
+        self.assertEqual(legacy[3]["context"].artifact_mode, "none")
+        self.assertEqual(explicit[3]["context"].artifact_mode, "none")
+
+    def test_argparse_errors_use_command_specific_usage_and_stderr(self) -> None:
+        cases = (
+            (["unknown-command"], "usage: paper-fetch ", "invalid choice"),
+            (["--unknown-option"], "usage: paper-fetch ", "unrecognized arguments"),
+            (
+                ["fetch", "--unknown-option"],
+                "usage: paper-fetch ",
+                "unrecognized arguments",
+            ),
+        )
+        for argv, usage, message in cases:
+            with self.subTest(argv=argv):
+                stdout = io.StringIO()
+                stderr = io.StringIO()
+                with (
+                    contextlib.redirect_stdout(stdout),
+                    contextlib.redirect_stderr(stderr),
+                    self.assertRaises(SystemExit) as raised,
+                ):
+                    paper_fetch_cli.main(argv)
+
+                self.assertEqual(raised.exception.code, 2)
+                self.assertEqual(stdout.getvalue(), "")
+                self.assertTrue(stderr.getvalue().startswith(usage))
+                self.assertIn(message, stderr.getvalue())
+
+    def test_explicit_fetch_rejects_conflicting_query_sources(self) -> None:
+        stdout = io.StringIO()
+        stderr = io.StringIO()
+        with (
+            contextlib.redirect_stdout(stdout),
+            contextlib.redirect_stderr(stderr),
+            self.assertRaises(SystemExit) as raised,
+        ):
+            paper_fetch_cli.main(
+                [
+                    "fetch",
+                    "--query",
+                    "10.1000/a",
+                    "--query-file",
+                    "queries.txt",
+                ]
+            )
+
+        self.assertEqual(raised.exception.code, 2)
+        self.assertEqual(stdout.getvalue(), "")
+        self.assertTrue(stderr.getvalue().startswith("usage: paper-fetch fetch "))
+        self.assertIn("not allowed with argument", stderr.getvalue())
 
     def test_auth_ams_subcommand_is_not_supported(self) -> None:
         stderr = io.StringIO()
@@ -286,6 +606,10 @@ class CliTests(unittest.TestCase):
                     "10.1016/test",
                     "--format",
                     output_format,
+                    "--artifact-mode",
+                    "none",
+                    "--asset-profile",
+                    "none",
                 ]
                 original_argv = sys.argv
                 sys.argv = argv

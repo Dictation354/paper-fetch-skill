@@ -412,8 +412,16 @@ function Write-ManifestAndChecksums {
         $gitRevision = $null
     }
 
+    $skillManifestTool = Join-Path (Join-Path (Join-Path $RepoDir "src") "paper_fetch") "skill_integrity.py"
+    $skillRoot = Join-Path (Join-Path $Staging "skills") $SkillName
+    $skillBundleOutput = & $PythonBin $skillManifestTool build --skill-dir $skillRoot --name $SkillName --root "skills/$SkillName"
+    if ($LASTEXITCODE -ne 0) {
+        throw "Could not build the staged skill bundle manifest."
+    }
+    $skillBundle = ($skillBundleOutput -join [Environment]::NewLine) | ConvertFrom-Json
+
     $payload = [ordered]@{
-        schema_version = 2
+        schema_version = 3
         name = [string]$InstallerManifest.packages.windows_manifest_name
         project = [string]$InstallerManifest.project
         version = $Version
@@ -426,6 +434,7 @@ function Write-ManifestAndChecksums {
             python_runtime = "cpython-$EmbeddedPythonVersion-embed-amd64"
         }
         entrypoint = "$SetupBaseName.exe"
+        skill_bundle = $skillBundle
         components = [ordered]@{
             runtime = "runtime"
             bin = "bin"

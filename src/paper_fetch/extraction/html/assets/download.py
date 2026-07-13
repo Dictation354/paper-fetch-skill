@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 import urllib.parse
 import urllib.request
 from pathlib import Path
@@ -152,7 +153,7 @@ def _conversion_failure_attempt(
                 status=response.get("status_code"),
                 content_type=header_value(response.get("headers"), "content-type"),
                 final_url=normalize_text(str(response.get("url") or candidate.url)),
-                reason=f"image_conversion_failed: {exc}",
+                reason=f"{exc.reason_code}: {exc}",
             )
         ),
     )
@@ -406,6 +407,7 @@ def resolve_asset_download(
     opener_requester: Callable[..., dict[str, Any]],
     candidate_url_resolver: Callable[[Mapping[str, Any]], list[str]] | None = None,
 ) -> _AssetDownloadResolution:
+    conversion_degraded = False
     candidate_urls = (candidate_url_resolver or kind.candidate_url_resolver)(asset)
     preview_url, full_size_url = _resolution_preview_fields(kind, asset, candidate_urls)
     if not candidate_urls:
@@ -463,6 +465,7 @@ def resolve_asset_download(
                         source_url=candidate_url,
                     )
                 except ImageConversionFailure as exc:
+                    conversion_degraded = True
                     last_attempt = _conversion_failure_attempt(
                         kind,
                         asset,
@@ -480,6 +483,7 @@ def resolve_asset_download(
                     ),
                     preview_url=preview_url,
                     full_size_url=full_size_url,
+                    provenance=("conversion_degraded",) if conversion_degraded else (),
                 )
             fetch_failure = _document_fetch_failure(document_fetcher, candidate_url)
             last_attempt = _AssetDownloadAttempt(
@@ -527,6 +531,10 @@ def resolve_asset_download(
                 last_attempt=last_attempt,
             )
             if retry_resolution is not None:
+                if conversion_degraded:
+                    retry_resolution = replace(
+                        retry_resolution, provenance=("conversion_degraded",)
+                    )
                 return retry_resolution
             fallback_response = _fetch_document_fallback(
                 kind,
@@ -541,6 +549,7 @@ def resolve_asset_download(
                         source_url=candidate_url,
                     )
                 except ImageConversionFailure as exc:
+                    conversion_degraded = True
                     last_attempt = _conversion_failure_attempt(
                         kind,
                         asset,
@@ -558,6 +567,7 @@ def resolve_asset_download(
                     ),
                     preview_url=preview_url,
                     full_size_url=full_size_url,
+                    provenance=("conversion_degraded",) if conversion_degraded else (),
                 )
             fetch_failure = _document_fetch_failure(document_fetcher, candidate_url)
             if fetch_failure and last_attempt.failure is not None:
@@ -595,6 +605,10 @@ def resolve_asset_download(
                 last_attempt=last_attempt,
             )
             if retry_resolution is not None:
+                if conversion_degraded:
+                    retry_resolution = replace(
+                        retry_resolution, provenance=("conversion_degraded",)
+                    )
                 return retry_resolution
             fallback_response = _fetch_document_fallback(
                 kind,
@@ -609,6 +623,7 @@ def resolve_asset_download(
                         source_url=candidate_url,
                     )
                 except ImageConversionFailure as exc:
+                    conversion_degraded = True
                     last_attempt = _conversion_failure_attempt(
                         kind,
                         asset,
@@ -626,6 +641,7 @@ def resolve_asset_download(
                     ),
                     preview_url=preview_url,
                     full_size_url=full_size_url,
+                    provenance=("conversion_degraded",) if conversion_degraded else (),
                 )
             fetch_failure = _document_fetch_failure(document_fetcher, candidate_url)
             if fetch_failure and last_attempt.failure is not None:
@@ -658,6 +674,7 @@ def resolve_asset_download(
                             source_url=upgrade_target,
                         )
                     except ImageConversionFailure:
+                        conversion_degraded = True
                         continue
                     return _resolution_from_attempt(
                         asset=asset,
@@ -669,6 +686,9 @@ def resolve_asset_download(
                         ),
                         preview_url=preview_url,
                         full_size_url=full_size_url,
+                        provenance=("conversion_degraded",)
+                        if conversion_degraded
+                        else (),
                     )
 
         try:
@@ -678,6 +698,7 @@ def resolve_asset_download(
                 else (dict(response), "")
             )
         except ImageConversionFailure as exc:
+            conversion_degraded = True
             last_attempt = _conversion_failure_attempt(
                 kind,
                 asset,
@@ -696,6 +717,7 @@ def resolve_asset_download(
             ),
             preview_url=preview_url,
             full_size_url=full_size_url,
+            provenance=("conversion_degraded",) if conversion_degraded else (),
         )
 
     return _resolution_from_attempt(
@@ -703,6 +725,7 @@ def resolve_asset_download(
         attempt=last_attempt,
         preview_url=preview_url,
         full_size_url=full_size_url,
+        provenance=("conversion_degraded",) if conversion_degraded else (),
     )
 
 
@@ -834,6 +857,8 @@ def save_asset_resolution(
         "downloaded_bytes": len(body),
         "section": asset.get("section") or "body",
     }
+    if resolved.provenance:
+        download["provenance"] = list(resolved.provenance)
     if original_saved_path:
         download["original_source_path"] = original_saved_path
         download["original_content_type"] = original_content_type

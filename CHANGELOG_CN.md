@@ -6,6 +6,25 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 3.1.0 - 2026-07-13
+
+### 新增
+
+- CLI、MCP、cache 和持久批量任务新增统一资产验收与 manifest v2 记录，覆盖确定性输出 hash、audit/reconcile/resume、有界并发、取消和限流停止语义。
+- 新增无网络 provider/runtime 诊断、browser preflight 与 provider catalog MCP resource/tool、紧凑 cache 检查，以及带明确落盘和 resume 模式的结构化 `batch_fetch` MCP tool。
+- `paper-fetch doctor --json` 新增机器可读安装 provenance，汇总源码与 distribution 版本、默认 User-Agent、PATH entrypoint、离线 target/revision/build 信息、安装 runtime metadata 和三个宿主的 skill 副本。
+
+### 变更
+
+- 静态 skill 改为薄而自包含的 workflow 入口，拆分 workflow、presets、acceptance、CLI、environment、tool-contract 和 failure-handling reference；source、staging 与安装副本均使用成熟 Markdown parser 验证链接。
+- 离线 manifest schema 升级到 3；Linux、macOS、Windows bundle 都记录完整 skill 文件清单及逐文件 SHA256，安装器会在宿主安装前后拒绝缺失、多余、符号链接或 hash 漂移的 skill 内容。
+- 按向后兼容新增功能准备 SemVer minor `3.1.0`，同步 Python 包 metadata、稳定工具 User-Agent、Windows 安装器默认版本、部署说明和中英文 changelog。
+- CI 新增跨 CLI/MCP/cache/manifest 的轻量契约门；package smoke 改在 checkout 外构建并验证版本、全部 console scripts、MCP EOF 与静态安装 provenance，同时保持 live/offline 重任务仅显式触发。
+
+### 修复
+
+- 修复源码、当前 distribution metadata 和 PATH CLI 处于不同版本时缺少具体路径证据的问题；源码开发态没有 offline manifest 时现在报告不适用，不再误判为安装失败。
+
 ## 3.0.1 - 2026-07-04
 
 ### 变更

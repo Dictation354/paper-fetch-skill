@@ -10,6 +10,7 @@ from unittest import mock
 from paper_fetch.models import article_from_markdown
 from paper_fetch.providers import _ams_html, browser_workflow
 from paper_fetch.providers.ams import AmsClient
+from paper_fetch.quality.assets import build_asset_quality_summary
 from paper_fetch.providers.atypon_browser_workflow.asset_scopes import (
     extract_browser_workflow_asset_html_scopes,
 )
@@ -709,6 +710,13 @@ class AmsProviderTests(AtyponBrowserWorkflowProviderTestCase):
         )
         self.assertNotIn("Blank.svg", formula_assets[0]["url"])
         self.assertEqual(figure_assets[0]["kind"], "figure")
+        asset_summary = build_asset_quality_summary(
+            assets,
+            asset_profile="none",
+            archive_enabled=False,
+        )
+        self.assertEqual(asset_summary.by_kind["figure"].total, 1)
+        self.assertEqual(asset_summary.by_kind["formula"].total, 1)
 
         markdown, _ = extract_atypon_browser_workflow_markdown(
             html,

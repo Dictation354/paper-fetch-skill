@@ -17,7 +17,8 @@ from paper_fetch.mcp.cache_index import (
     scoped_cached_resource_uri,
     scoped_cached_resource_uri_prefix,
 )
-from paper_fetch.provider_catalog import provider_status_order
+from paper_fetch.mcp.provider_catalog import PROVIDER_CATALOG_RESOURCE_URI
+from paper_fetch.provider_catalog import SOURCE_PROVIDER_MAP, provider_status_order
 from tests.paths import REPO_ROOT, SRC_DIR
 
 
@@ -29,6 +30,7 @@ SERVER_SCRIPT = textwrap.dedent(
     from paper_fetch.models import ArticleModel, Asset, FetchEnvelope, Metadata, Quality, Section, TokenEstimateBreakdown
     from dataclasses import replace
 
+    from paper_fetch.browser_preflight import BrowserPreflightResult
     from paper_fetch.mcp import server as mcp_server
     from paper_fetch.mcp._deps import default_mcp_deps
     from paper_fetch.mcp.server import main
@@ -58,7 +60,17 @@ SERVER_SCRIPT = textwrap.dedent(
             output_dir.mkdir(parents=True, exist_ok=True)
             base = sanitize_filename(query)
             (output_dir / f"{base}.xml").write_text("<article />", encoding="utf-8")
-            (output_dir / f"{base}.md").write_text("# Example Article\\n\\nExample body.\\n", encoding="utf-8")
+            (output_dir / f"{base}.md").write_text(
+                (
+                    "---\\n"
+                    f'doi: "{query}"\\n'
+                    'source: "crossref_meta"\\n'
+                    "has_fulltext: true\\n"
+                    'content_kind: "fulltext"\\n'
+                    "---\\n\\n# Example Article\\n\\nExample body.\\n"
+                ),
+                encoding="utf-8",
+            )
             asset_dir = output_dir / f"{base}_assets"
             asset_dir.mkdir(parents=True, exist_ok=True)
             figure_path = asset_dir / "figure-1.png"
@@ -327,6 +339,45 @@ SERVER_SCRIPT = textwrap.dedent(
             ),
         }
 
+    def fake_browser_preflight(
+        *,
+        providers=None,
+        target_url=None,
+        storage_state_path=None,
+        save_storage_state=True,
+        on_result=None,
+        **kwargs,
+    ):
+        del kwargs
+        provider = list(providers or ["wiley"])[0]
+        saved = False
+        if storage_state_path is not None and save_storage_state:
+            storage_state_path.parent.mkdir(parents=True, exist_ok=True)
+            storage_state_path.write_text('{"cookies": []}\\n', encoding="utf-8")
+            saved = True
+        result = BrowserPreflightResult(
+            provider=provider,
+            provider_label="Wiley",
+            ok=True,
+            target_url=target_url or "https://onlinelibrary.wiley.com/doi/full/10.1111/example",
+            final_url=target_url or "https://onlinelibrary.wiley.com/doi/full/10.1111/example",
+            title="Wiley preflight sample",
+            storage_state_path=storage_state_path,
+            diagnostics={
+                "browser_runtime_trace": {
+                    "storage_state_save": {
+                        "attempted": storage_state_path is not None and save_storage_state,
+                        "saved": saved,
+                        "path": str(storage_state_path) if storage_state_path is not None else None,
+                        "reason": None,
+                    }
+                }
+            },
+        )
+        if on_result is not None:
+            on_result(result, 1, 1)
+        return [result]
+
     def fake_default_mcp_deps():
         return replace(
             default_mcp_deps(),
@@ -334,6 +385,7 @@ SERVER_SCRIPT = textwrap.dedent(
             service_fetch_paper=fake_fetch,
             service_probe_has_fulltext=fake_probe,
             build_clients=fake_build_clients,
+            run_browser_provider_preflight=fake_browser_preflight,
         )
 
     mcp_server.default_mcp_deps = fake_default_mcp_deps
@@ -348,6 +400,8 @@ class McpStdioIntegrationTests(unittest.IsolatedAsyncioTestCase):
             default_dir = Path(tmpdir) / "default"
             isolated_dir = Path(tmpdir) / "isolated"
             progress_updates: list[tuple[float, float | None, str | None]] = []
+            batch_fetch_progress: list[tuple[float, float | None, str | None]] = []
+            preflight_progress: list[tuple[float, float | None, str | None]] = []
             log_messages: list[object] = []
             protocol_messages: list[object] = []
             server = StdioServerParameters(
@@ -372,6 +426,16 @@ class McpStdioIntegrationTests(unittest.IsolatedAsyncioTestCase):
                     async def progress_callback(progress, total, message) -> None:
                         progress_updates.append((progress, total, message))
 
+                    async def preflight_progress_callback(
+                        progress, total, message
+                    ) -> None:
+                        preflight_progress.append((progress, total, message))
+
+                    async def batch_fetch_progress_callback(
+                        progress, total, message
+                    ) -> None:
+                        batch_fetch_progress.append((progress, total, message))
+
                     async def message_handler(message) -> None:
                         protocol_messages.append(message)
 
@@ -391,7 +455,9 @@ class McpStdioIntegrationTests(unittest.IsolatedAsyncioTestCase):
                             tool_names,
                             [
                                 "batch_check",
+                                "batch_fetch",
                                 "batch_resolve",
+                                "browser_preflight",
                                 "fetch_paper",
                                 "get_cached",
                                 "has_fulltext",
@@ -406,6 +472,36 @@ class McpStdioIntegrationTests(unittest.IsolatedAsyncioTestCase):
                         self.assertTrue(
                             all(tool.annotations is not None for tool in listed.tools)
                         )
+                        batch_fetch_tool = next(
+                            tool for tool in listed.tools if tool.name == "batch_fetch"
+                        )
+                        self.assertEqual(
+                            batch_fetch_tool.inputSchema["properties"]["queries"][
+                                "maxItems"
+                            ],
+                            50,
+                        )
+                        self.assertEqual(
+                            batch_fetch_tool.inputSchema["properties"]["concurrency"][
+                                "maximum"
+                            ],
+                            8,
+                        )
+                        self.assertEqual(
+                            batch_fetch_tool.inputSchema["properties"]["detail"][
+                                "enum"
+                            ],
+                            ["compact", "bounded"],
+                        )
+                        browser_tool = next(
+                            tool
+                            for tool in listed.tools
+                            if tool.name == "browser_preflight"
+                        )
+                        self.assertFalse(browser_tool.annotations.readOnlyHint)
+                        self.assertFalse(browser_tool.annotations.destructiveHint)
+                        self.assertFalse(browser_tool.annotations.idempotentHint)
+                        self.assertTrue(browser_tool.annotations.openWorldHint)
 
                         prompts = await session.list_prompts()
                         self.assertEqual(
@@ -487,6 +583,78 @@ class McpStdioIntegrationTests(unittest.IsolatedAsyncioTestCase):
                         self.assertIn("mdpi", providers_by_name)
                         self.assertEqual(providers_by_name["ams"]["provider"], "ams")
 
+                        compact_status = await session.call_tool(
+                            "provider_status",
+                            {"provider": "crossref", "detail": "compact"},
+                        )
+                        self.assertFalse(compact_status.isError)
+                        self.assertEqual(
+                            compact_status.structuredContent["provider_filter"],
+                            "crossref",
+                        )
+                        self.assertEqual(
+                            compact_status.structuredContent["providers"],
+                            [
+                                {
+                                    "provider": "crossref",
+                                    "status": "ready",
+                                    "reason_code": "static_requirements_ready",
+                                    "reason": (
+                                        "Static configuration and local dependencies "
+                                        "are ready; remote access was not checked."
+                                    ),
+                                    "suggested_action": "run the requested fetch",
+                                }
+                            ],
+                        )
+                        self.assertNotIn(
+                            "configuration", compact_status.structuredContent
+                        )
+
+                        storage_state_path = isolated_dir / "browser" / "wiley.json"
+                        live_preflight = await session.call_tool(
+                            "browser_preflight",
+                            {
+                                "provider": "wiley",
+                                "test_url": (
+                                    "https://onlinelibrary.wiley.com/doi/full/"
+                                    "10.1111/example"
+                                ),
+                                "storage_state_path": str(storage_state_path),
+                                "detail": "full",
+                            },
+                            progress_callback=preflight_progress_callback,
+                        )
+                        self.assertFalse(live_preflight.isError)
+                        self.assertEqual(
+                            live_preflight.structuredContent["status"], "ready"
+                        )
+                        self.assertEqual(
+                            live_preflight.structuredContent["results"][0]["status"],
+                            "ready",
+                        )
+                        self.assertEqual(
+                            live_preflight.structuredContent["results"][0][
+                                "storage_state"
+                            ]["saved"],
+                            True,
+                        )
+                        self.assertFalse(
+                            live_preflight.structuredContent["pdf_fallback_attempted"]
+                        )
+                        self.assertFalse(
+                            live_preflight.structuredContent["auth_attempted"]
+                        )
+                        self.assertTrue(storage_state_path.is_file())
+                        self.assertEqual(
+                            preflight_progress,
+                            [
+                                (0, 1, "Starting live browser_preflight"),
+                                (1, 1, "Preflight wiley: ready"),
+                                (1, 1, "browser_preflight complete"),
+                            ],
+                        )
+
                         custom_fetch = await session.call_tool(
                             "fetch_paper",
                             {
@@ -543,6 +711,38 @@ class McpStdioIntegrationTests(unittest.IsolatedAsyncioTestCase):
                             len(custom_cached.structuredContent["entries"]), 4
                         )
 
+                        compact_cached = await session.call_tool(
+                            "get_cached",
+                            {
+                                "doi": "10.1000/custom",
+                                "download_dir": str(isolated_dir),
+                                "detail": "compact",
+                                "preferred_only": True,
+                                "modes": ["markdown"],
+                                "strategy": {"asset_profile": "body"},
+                            },
+                        )
+                        self.assertFalse(compact_cached.isError)
+                        self.assertEqual(
+                            compact_cached.structuredContent["status"], "hit"
+                        )
+                        self.assertNotIn("entries", compact_cached.structuredContent)
+                        self.assertEqual(
+                            set(compact_cached.structuredContent["preferred"]),
+                            {"markdown", "primary_payload"},
+                        )
+                        self.assertTrue(
+                            compact_cached.structuredContent["request_satisfied"]
+                        )
+                        self.assertEqual(
+                            len(
+                                compact_cached.structuredContent[
+                                    "cached_request_fingerprint"
+                                ]
+                            ),
+                            64,
+                        )
+
                         listed_custom = await session.call_tool(
                             "list_cached", {"download_dir": str(isolated_dir)}
                         )
@@ -592,6 +792,49 @@ class McpStdioIntegrationTests(unittest.IsolatedAsyncioTestCase):
                             ["10.1000/custom", "10.1000/other"],
                         )
 
+                        batch_fetched = await session.call_tool(
+                            "batch_fetch",
+                            {
+                                "queries": [
+                                    "10.1000/batch-one",
+                                    "10.1000/batch-two",
+                                ],
+                                "concurrency": 2,
+                                "strategy": {"asset_profile": "none"},
+                                "no_download": True,
+                                "artifact_mode": "none",
+                                "detail": "bounded",
+                                "content_max_chars": 24,
+                            },
+                            progress_callback=batch_fetch_progress_callback,
+                        )
+                        self.assertFalse(batch_fetched.isError)
+                        self.assertEqual(
+                            [
+                                item["index"]
+                                for item in batch_fetched.structuredContent["results"]
+                            ],
+                            [1, 2],
+                        )
+                        self.assertEqual(
+                            batch_fetched.structuredContent["content_returned_chars"],
+                            24,
+                        )
+                        self.assertTrue(
+                            all(
+                                "article" not in item and "markdown" not in item
+                                for item in batch_fetched.structuredContent["results"]
+                            )
+                        )
+                        self.assertEqual(
+                            batch_fetch_progress[0],
+                            (0, 2, "Starting batch_fetch"),
+                        )
+                        self.assertEqual(
+                            batch_fetch_progress[-1],
+                            (2, 2, "batch_fetch complete"),
+                        )
+
                         default_fetch = await session.call_tool(
                             "fetch_paper", {"query": "10.1000/default"}
                         )
@@ -613,6 +856,7 @@ class McpStdioIntegrationTests(unittest.IsolatedAsyncioTestCase):
                         self.assertIn(
                             "resource://paper-fetch/cache-index", resource_uris
                         )
+                        self.assertIn(PROVIDER_CATALOG_RESOURCE_URI, resource_uris)
                         self.assertTrue(
                             any(
                                 uri.startswith("resource://paper-fetch/cached/")
@@ -657,6 +901,28 @@ class McpStdioIntegrationTests(unittest.IsolatedAsyncioTestCase):
                             and entry["kind"] == "markdown"
                         )
 
+                        provider_catalog = await session.read_resource(
+                            PROVIDER_CATALOG_RESOURCE_URI
+                        )
+                        provider_catalog_payload = json.loads(
+                            provider_catalog.contents[0].text
+                        )
+                        self.assertEqual(
+                            provider_catalog_payload["resource_uri"],
+                            PROVIDER_CATALOG_RESOURCE_URI,
+                        )
+                        self.assertEqual(
+                            [
+                                item["provider"]
+                                for item in provider_catalog_payload["providers"]
+                            ],
+                            list(provider_status_order()),
+                        )
+                        self.assertEqual(
+                            provider_catalog_payload["source_provider_map"],
+                            dict(sorted(SOURCE_PROVIDER_MAP.items())),
+                        )
+
                         markdown_resource = await session.read_resource(
                             f"resource://paper-fetch/cached/{markdown_entry['id']}"
                         )
@@ -694,10 +960,10 @@ class McpStdioIntegrationTests(unittest.IsolatedAsyncioTestCase):
                             {"query": "10.1000/example", "modes": ["pdf"]},
                         )
                         self.assertTrue(invalid.isError)
-                        self.assertEqual(invalid.structuredContent["status"], "error")
+                        self.assertIsNone(invalid.structuredContent)
                         self.assertIn(
                             "unsupported output modes",
-                            invalid.structuredContent["reason"],
+                            invalid.content[0].text,
                         )
 
 

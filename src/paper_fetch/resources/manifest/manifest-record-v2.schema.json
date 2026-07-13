@@ -1,0 +1,976 @@
+{
+  "$defs": {
+    "AcceptanceOutputKind": {
+      "enum": [
+        "article",
+        "markdown",
+        "metadata"
+      ],
+      "title": "AcceptanceOutputKind",
+      "type": "string"
+    },
+    "ArtifactVerificationStatus": {
+      "description": "File state observed while the immutable record was built.",
+      "enum": [
+        "verified",
+        "missing",
+        "unreadable"
+      ],
+      "title": "ArtifactVerificationStatus",
+      "type": "string"
+    },
+    "AssetAcceptanceFacet": {
+      "properties": {
+        "failed": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Failed",
+          "type": "integer"
+        },
+        "failure_codes": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Failure Codes",
+          "type": "array"
+        },
+        "full_size": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Full Size",
+          "type": "integer"
+        },
+        "local": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Local",
+          "type": "integer"
+        },
+        "not_archived": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Not Archived",
+          "type": "integer"
+        },
+        "placeholder_suspected": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Placeholder Suspected",
+          "type": "integer"
+        },
+        "preview": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Preview",
+          "type": "integer"
+        },
+        "profile": {
+          "default": "unknown",
+          "enum": [
+            "none",
+            "body",
+            "all",
+            "unknown"
+          ],
+          "title": "Profile",
+          "type": "string"
+        },
+        "remote_link_count": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Remote Link Count",
+          "type": "integer"
+        },
+        "remote_links_preserved": {
+          "title": "Remote Links Preserved",
+          "type": "boolean"
+        },
+        "remote_only_count": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Remote Only Count",
+          "type": "integer"
+        },
+        "requested": {
+          "title": "Requested",
+          "type": "boolean"
+        },
+        "status": {
+          "$ref": "#/$defs/AssetAcceptanceStatus"
+        },
+        "total": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Total",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "requested",
+        "status",
+        "remote_links_preserved"
+      ],
+      "title": "AssetAcceptanceFacet",
+      "type": "object"
+    },
+    "AssetAcceptanceStatus": {
+      "enum": [
+        "complete",
+        "degraded",
+        "failed",
+        "unavailable",
+        "not_requested"
+      ],
+      "title": "AssetAcceptanceStatus",
+      "type": "string"
+    },
+    "ContentAcceptanceFacet": {
+      "properties": {
+        "confidence": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Confidence"
+        },
+        "flags": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Flags",
+          "type": "array"
+        },
+        "formulas": {
+          "$ref": "#/$defs/FormulaAcceptanceFacet"
+        },
+        "has_abstract": {
+          "title": "Has Abstract",
+          "type": "boolean"
+        },
+        "has_fulltext": {
+          "title": "Has Fulltext",
+          "type": "boolean"
+        },
+        "status": {
+          "$ref": "#/$defs/ContentAcceptanceStatus"
+        },
+        "tables": {
+          "$ref": "#/$defs/TableAcceptanceFacet"
+        },
+        "token_estimate": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Token Estimate",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "status",
+        "has_fulltext",
+        "has_abstract"
+      ],
+      "title": "ContentAcceptanceFacet",
+      "type": "object"
+    },
+    "ContentAcceptanceStatus": {
+      "enum": [
+        "fulltext",
+        "abstract_only",
+        "metadata_only",
+        "unavailable"
+      ],
+      "title": "ContentAcceptanceStatus",
+      "type": "string"
+    },
+    "FetchAcceptanceFacet": {
+      "properties": {
+        "code": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Code"
+        },
+        "completed": {
+          "title": "Completed",
+          "type": "boolean"
+        },
+        "status": {
+          "$ref": "#/$defs/FetchAcceptanceStatus"
+        }
+      },
+      "required": [
+        "status",
+        "completed"
+      ],
+      "title": "FetchAcceptanceFacet",
+      "type": "object"
+    },
+    "FetchAcceptanceReport": {
+      "description": "Canonical acceptance report shared by all external adapters.",
+      "properties": {
+        "asset": {
+          "$ref": "#/$defs/AssetAcceptanceFacet"
+        },
+        "content": {
+          "$ref": "#/$defs/ContentAcceptanceFacet"
+        },
+        "fetch": {
+          "$ref": "#/$defs/FetchAcceptanceFacet"
+        },
+        "identity": {
+          "$ref": "#/$defs/IdentityAcceptanceFacet"
+        },
+        "minimum_reader_schema_version": {
+          "const": 1,
+          "title": "Minimum Reader Schema Version",
+          "type": "integer"
+        },
+        "output": {
+          "$ref": "#/$defs/OutputAcceptanceFacet"
+        },
+        "overall": {
+          "$ref": "#/$defs/OverallAcceptanceStatus"
+        },
+        "provenance": {
+          "$ref": "#/$defs/ProvenanceAcceptanceFacet"
+        },
+        "schema_version": {
+          "const": 1,
+          "title": "Schema Version",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "schema_version",
+        "minimum_reader_schema_version",
+        "overall",
+        "identity",
+        "fetch",
+        "content",
+        "asset",
+        "output",
+        "provenance"
+      ],
+      "title": "FetchAcceptanceReport",
+      "type": "object"
+    },
+    "FetchAcceptanceStatus": {
+      "enum": [
+        "ok",
+        "failed",
+        "action_required"
+      ],
+      "title": "FetchAcceptanceStatus",
+      "type": "string"
+    },
+    "FormulaAcceptanceFacet": {
+      "properties": {
+        "fallback_count": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Fallback Count",
+          "type": "integer"
+        },
+        "missing_count": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Missing Count",
+          "type": "integer"
+        }
+      },
+      "title": "FormulaAcceptanceFacet",
+      "type": "object"
+    },
+    "IdentityAcceptanceFacet": {
+      "properties": {
+        "candidate_count": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Candidate Count",
+          "type": "integer"
+        },
+        "codes": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Codes",
+          "type": "array"
+        },
+        "doi": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Doi"
+        },
+        "expected_doi": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Expected Doi"
+        },
+        "status": {
+          "$ref": "#/$defs/IdentityAcceptanceStatus"
+        },
+        "title": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Title"
+        }
+      },
+      "required": [
+        "status"
+      ],
+      "title": "IdentityAcceptanceFacet",
+      "type": "object"
+    },
+    "IdentityAcceptanceStatus": {
+      "enum": [
+        "resolved",
+        "ambiguous",
+        "mismatch",
+        "unavailable"
+      ],
+      "title": "IdentityAcceptanceStatus",
+      "type": "string"
+    },
+    "JsonValue": {},
+    "LegacyArtifactField": {
+      "description": "Legacy CLI field supplied by one output artifact.",
+      "enum": [
+        "output_path",
+        "saved_markdown_path"
+      ],
+      "title": "LegacyArtifactField",
+      "type": "string"
+    },
+    "ManifestError": {
+      "additionalProperties": true,
+      "description": "Structured failure with transport-specific additive facts preserved.",
+      "properties": {
+        "reason": {
+          "minLength": 1,
+          "title": "Reason",
+          "type": "string"
+        },
+        "status": {
+          "minLength": 1,
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "status",
+        "reason"
+      ],
+      "title": "ManifestError",
+      "type": "object"
+    },
+    "ManifestOutputArtifact": {
+      "description": "Immutable file facts observed at record completion.",
+      "properties": {
+        "completed_at": {
+          "format": "date-time",
+          "title": "Completed At",
+          "type": "string"
+        },
+        "kind": {
+          "minLength": 1,
+          "title": "Kind",
+          "type": "string"
+        },
+        "legacy_field": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LegacyArtifactField"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "mtime": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Mtime"
+        },
+        "path": {
+          "minLength": 1,
+          "title": "Path",
+          "type": "string"
+        },
+        "sha256": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Sha256"
+        },
+        "size": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Size"
+        },
+        "verification_status": {
+          "$ref": "#/$defs/ArtifactVerificationStatus"
+        }
+      },
+      "required": [
+        "path",
+        "kind",
+        "completed_at",
+        "verification_status"
+      ],
+      "title": "ManifestOutputArtifact",
+      "type": "object"
+    },
+    "ManifestRecordStatus": {
+      "description": "Lifecycle of one immutable attempt record.",
+      "enum": [
+        "completed",
+        "failed",
+        "aborted"
+      ],
+      "title": "ManifestRecordStatus",
+      "type": "string"
+    },
+    "ManifestRequest": {
+      "description": "Original query plus JSON request semantics covered by the fingerprint.",
+      "properties": {
+        "parameters": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "title": "Parameters",
+          "type": "object"
+        },
+        "query": {
+          "title": "Query",
+          "type": "string"
+        }
+      },
+      "required": [
+        "query"
+      ],
+      "title": "ManifestRequest",
+      "type": "object"
+    },
+    "ManifestSemanticLosses": {
+      "description": "Stable compatibility summary derived from acceptance content facets.",
+      "properties": {
+        "formula_fallback_count": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Formula Fallback Count",
+          "type": "integer"
+        },
+        "formula_missing_count": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Formula Missing Count",
+          "type": "integer"
+        },
+        "table_fallback_count": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Table Fallback Count",
+          "type": "integer"
+        },
+        "table_layout_degraded_count": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Table Layout Degraded Count",
+          "type": "integer"
+        },
+        "table_legacy_lossy_count": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Table Legacy Lossy Count",
+          "type": "integer"
+        },
+        "table_semantic_loss_count": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Table Semantic Loss Count",
+          "type": "integer"
+        }
+      },
+      "title": "ManifestSemanticLosses",
+      "type": "object"
+    },
+    "ManifestTraceEvent": {
+      "description": "Pydantic wire representation of the canonical TraceEvent.",
+      "properties": {
+        "code": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Code"
+        },
+        "component": {
+          "minLength": 1,
+          "title": "Component",
+          "type": "string"
+        },
+        "message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Message"
+        },
+        "outcome": {
+          "default": "info",
+          "minLength": 1,
+          "title": "Outcome",
+          "type": "string"
+        },
+        "stage": {
+          "minLength": 1,
+          "title": "Stage",
+          "type": "string"
+        }
+      },
+      "required": [
+        "stage",
+        "component"
+      ],
+      "title": "ManifestTraceEvent",
+      "type": "object"
+    },
+    "OutputAcceptanceFacet": {
+      "properties": {
+        "available": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/AcceptanceOutputKind"
+          },
+          "title": "Available",
+          "type": "array"
+        },
+        "missing": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/AcceptanceOutputKind"
+          },
+          "title": "Missing",
+          "type": "array"
+        },
+        "requested": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/AcceptanceOutputKind"
+          },
+          "title": "Requested",
+          "type": "array"
+        },
+        "status": {
+          "$ref": "#/$defs/OutputAcceptanceStatus"
+        }
+      },
+      "required": [
+        "status"
+      ],
+      "title": "OutputAcceptanceFacet",
+      "type": "object"
+    },
+    "OutputAcceptanceStatus": {
+      "enum": [
+        "complete",
+        "partial",
+        "missing",
+        "not_requested"
+      ],
+      "title": "OutputAcceptanceStatus",
+      "type": "string"
+    },
+    "OverallAcceptanceStatus": {
+      "description": "Stable top-level acceptance outcomes.",
+      "enum": [
+        "complete",
+        "degraded",
+        "limited",
+        "failed",
+        "action_required"
+      ],
+      "title": "OverallAcceptanceStatus",
+      "type": "string"
+    },
+    "ProvenanceAcceptanceFacet": {
+      "properties": {
+        "failure_codes": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Failure Codes",
+          "type": "array"
+        },
+        "fallback_codes": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Fallback Codes",
+          "type": "array"
+        },
+        "source": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source"
+        },
+        "status": {
+          "$ref": "#/$defs/ProvenanceAcceptanceStatus"
+        },
+        "trace_event_count": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Trace Event Count",
+          "type": "integer"
+        },
+        "unstructured_warning_count": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Unstructured Warning Count",
+          "type": "integer"
+        },
+        "warning_codes": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Warning Codes",
+          "type": "array"
+        }
+      },
+      "required": [
+        "status"
+      ],
+      "title": "ProvenanceAcceptanceFacet",
+      "type": "object"
+    },
+    "ProvenanceAcceptanceStatus": {
+      "enum": [
+        "complete",
+        "partial",
+        "missing"
+      ],
+      "title": "ProvenanceAcceptanceStatus",
+      "type": "string"
+    },
+    "TableAcceptanceFacet": {
+      "properties": {
+        "fallback_count": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Fallback Count",
+          "type": "integer"
+        },
+        "layout_degraded_count": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Layout Degraded Count",
+          "type": "integer"
+        },
+        "legacy_lossy_count": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Legacy Lossy Count",
+          "type": "integer"
+        },
+        "semantic_loss_count": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Semantic Loss Count",
+          "type": "integer"
+        }
+      },
+      "title": "TableAcceptanceFacet",
+      "type": "object"
+    }
+  },
+  "$id": "https://paper-fetch.local/schema/manifest-record-v2.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "One versioned, append-only fetch attempt record.",
+  "properties": {
+    "acceptance": {
+      "$ref": "#/$defs/FetchAcceptanceReport"
+    },
+    "asset_summary": {
+      "$ref": "#/$defs/AssetAcceptanceFacet"
+    },
+    "attempt": {
+      "minimum": 1,
+      "title": "Attempt",
+      "type": "integer"
+    },
+    "completed_at": {
+      "format": "date-time",
+      "title": "Completed At",
+      "type": "string"
+    },
+    "doi": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Doi"
+    },
+    "error": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ManifestError"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "failure_codes": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Failure Codes",
+      "type": "array"
+    },
+    "fallback_codes": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Fallback Codes",
+      "type": "array"
+    },
+    "identity": {
+      "$ref": "#/$defs/IdentityAcceptanceFacet"
+    },
+    "index": {
+      "minimum": 1,
+      "title": "Index",
+      "type": "integer"
+    },
+    "minimum_reader_schema_version": {
+      "const": 2,
+      "title": "Minimum Reader Schema Version",
+      "type": "integer"
+    },
+    "output_artifacts": {
+      "items": {
+        "$ref": "#/$defs/ManifestOutputArtifact"
+      },
+      "title": "Output Artifacts",
+      "type": "array"
+    },
+    "output_path": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Output Path"
+    },
+    "query": {
+      "title": "Query",
+      "type": "string"
+    },
+    "record_id": {
+      "format": "uuid",
+      "title": "Record Id",
+      "type": "string"
+    },
+    "record_status": {
+      "$ref": "#/$defs/ManifestRecordStatus"
+    },
+    "request": {
+      "$ref": "#/$defs/ManifestRequest"
+    },
+    "request_fingerprint": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Request Fingerprint",
+      "type": "string"
+    },
+    "run_id": {
+      "format": "uuid",
+      "title": "Run Id",
+      "type": "string"
+    },
+    "saved_markdown_path": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Saved Markdown Path"
+    },
+    "schema_version": {
+      "const": 2,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "semantic_losses": {
+      "$ref": "#/$defs/ManifestSemanticLosses"
+    },
+    "source": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Source"
+    },
+    "started_at": {
+      "format": "date-time",
+      "title": "Started At",
+      "type": "string"
+    },
+    "status": {
+      "minLength": 1,
+      "title": "Status",
+      "type": "string"
+    },
+    "tool_version": {
+      "minLength": 1,
+      "title": "Tool Version",
+      "type": "string"
+    },
+    "trace": {
+      "items": {
+        "$ref": "#/$defs/ManifestTraceEvent"
+      },
+      "title": "Trace",
+      "type": "array"
+    },
+    "warning_codes": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Warning Codes",
+      "type": "array"
+    },
+    "warnings": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Warnings",
+      "type": "array"
+    }
+  },
+  "required": [
+    "schema_version",
+    "minimum_reader_schema_version",
+    "tool_version",
+    "run_id",
+    "record_id",
+    "index",
+    "attempt",
+    "query",
+    "request",
+    "request_fingerprint",
+    "record_status",
+    "status",
+    "identity",
+    "doi",
+    "started_at",
+    "completed_at",
+    "source",
+    "acceptance",
+    "trace",
+    "fallback_codes",
+    "warning_codes",
+    "failure_codes",
+    "warnings",
+    "semantic_losses",
+    "asset_summary",
+    "error",
+    "output_artifacts",
+    "output_path",
+    "saved_markdown_path"
+  ],
+  "title": "ManifestRecord",
+  "type": "object"
+}
