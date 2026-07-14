@@ -6,6 +6,18 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 3.1.1 - 2026-07-14
+
+### Added
+
+- Added bounded IOP supplementary expansion for `asset_profile=all`, resolving same-DOI `/data` indexes to `SM`-numbered attachments with browser cookie/Referer reuse.
+- Added a focused CI contract gate for IOP supplementary extraction, explicit asset Referer forwarding, signed-URL redaction, and browser challenge regression coverage.
+
+### Fixed
+
+- Fixed IOP supplementary discovery so `/data` index HTML, figure download controls, QR images, mismatched parent DOIs, blocked indexes, and empty scopes cannot be accepted as supplementary files; unresolved declared indexes now surface structured asset failures.
+- Fixed browser-backed supplementary file requests to forward their explicit Referer and redact AWS `X-Amz-*`, `Signature`, and `AWSAccessKeyId` query values from cache keys and retained asset diagnostics.
+
 ## 3.1.0 - 2026-07-13
 
 ### Added

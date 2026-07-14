@@ -3,7 +3,7 @@ name: iop
 display_source: iop_html
 generation:
   generated_by: manual_replay
-  generated_at: '2026-05-27T00:00:00Z'
+  generated_at: '2026-07-14T00:00:00Z'
   source_queries:
     - IOPScience 10.1088 article route and Crossref metadata for 10.1088/1748-9326/ab7d02
     - IOPScience CloakBrowser fixture capture for 10.1088/1748-9326/ab7d02
@@ -16,12 +16,13 @@ generation:
     - site:iopscience.iop.org IOP Publishing formula equation article DOI
     - 10.1088 formula fixture discovery iop
     - IOP Publishing 10.1088 supplementary supporting information DOI candidates
+    - IOPScience /data and SM0001 supplementary attachment replay for 10.1088/2752-5295/ae2d89
     - site:iopscience.iop.org IOP Publishing supplementary article DOI
     - 10.1088 supplementary fixture discovery iop
     - Crossref prefix:10.1088 targeted table/formula candidate refresh
     - Browser capture probes for IOP table/formula/pdf fallback candidates
-    - prepare-discovery IOP evidence pack refresh with prefix-filtered Crossref
-      candidates and browser fallback probes
+    - prepare-discovery IOP evidence pack refresh with prefix-filtered Crossref candidates
+      and browser fallback probes
     - IOPScience CloakBrowser table/formula replay for 10.1088/2058-9565/ac3460
     - IOPScience seeded-browser PDF replay for 10.1088/1748-9326/aa9f73
     - '"Table 1" "IOPscience" "Quantum Science and Technology" "10.1088/2058-9565"'
@@ -55,7 +56,8 @@ success_criteria:
 route_contract:
   article_html:
     success_requires:
-      - CloakBrowser-rendered IOPScience article page exposes title metadata and an article body container
+      - CloakBrowser-rendered IOPScience article page exposes title metadata and an
+        article body container
       - body sections appear after the abstract and before metrics or citation chrome
       - provider availability accepts explicit articleBody or IOPScience article markers
     reject_if_any:
@@ -65,8 +67,8 @@ route_contract:
       - empty article shell
     min_body_chars: 1200
     min_body_sections: 1
-    notes: Direct HTTP article, PDF, meta, and XML probes can return Radware/hCaptcha HTML
-      in the current environment and must not be accepted as article content.
+    notes: Direct HTTP article, PDF, meta, and XML probes can return Radware/hCaptcha
+      HTML in the current environment and must not be accepted as article content.
   pdf_fallback:
     success_requires:
       - seeded-browser PDF navigation uses the IOPScience /article/{doi}/pdf route
@@ -79,8 +81,8 @@ route_contract:
       - error page
     require_pdf_magic: true
     reject_html_wrapper: true
-    notes: PDF fallback is text-only; IOP TDM delivery is SFTP-backed and is not
-      implemented as an unauthenticated XML/PDF route.
+    notes: PDF fallback is text-only; IOP TDM delivery is SFTP-backed and is not implemented
+      as an unauthenticated XML/PDF route.
   abstract_only:
     success_requires:
       - provider-managed page or payload exposes abstract text
@@ -167,13 +169,12 @@ asset_contract:
     download: not_applicable
     purposes:
       - figure
-    exception_reason: The committed IOP CloakBrowser replay exposes remote body
-      figure links and captions, but no local downloadable figure asset replay is
-      committed yet; HTML body asset download remains best-effort through the browser
-      workflow.
+    exception_reason: The committed IOP CloakBrowser replay exposes remote body figure
+      links and captions, but no local downloadable figure asset replay is committed
+      yet; HTML body asset download remains best-effort through the browser workflow.
 supplementary_scope:
-  selector: a[href*="supplementary"], a[href*="suppdata"], a[href*="/suppdata/"]
-  url_pattern: https://iopscience.iop.org/article/{doi}/suppdata
+  selector: '#supplDataLink -> #supplementarydata a[id^="SM"]'
+  url_pattern: https://iopscience.iop.org/article/{doi}/data
 abstract_only_strategy: provider_managed
 probe:
   env_requirements: []
@@ -185,9 +186,9 @@ fixtures:
     structure:
       doi: 10.1088/1748-9326/ab7d02
       evidence_url: https://iopscience.iop.org/article/10.1088/1748-9326/ab7d02
-      evidence_reason: CloakBrowser fixture discovery captured a real IOPScience
-        article replay with title, abstract, body sections, figure captions, data
-        availability, and citation_reference metadata.
+      evidence_reason: CloakBrowser fixture discovery captured a real IOPScience article
+        replay with title, abstract, body sections, figure captions, data availability,
+        and citation_reference metadata.
       observed_signals:
         - article_html
         - abstract
@@ -196,9 +197,9 @@ fixtures:
     table:
       doi: 10.1088/2058-9565/ac3460
       evidence_url: https://iopscience.iop.org/article/10.1088/2058-9565/ac3460
-      evidence_reason: CloakBrowser captured a stable IOPScience Quantum Science
-        and Technology replay whose extracted Markdown preserves article-scoped
-        table captions and Markdown table rows for Table 1 without IOPScience chrome.
+      evidence_reason: CloakBrowser captured a stable IOPScience Quantum Science and
+        Technology replay whose extracted Markdown preserves article-scoped table
+        captions and Markdown table rows for Table 1 without IOPScience chrome.
       observed_signals:
         - article_html
         - body_tables
@@ -227,13 +228,12 @@ fixtures:
     supplementary:
       doi: 10.1088/1748-9326/ab7d02
       evidence_url: https://iopscience.iop.org/article/10.1088/1748-9326/ab7d02
-      evidence_reason: Re-approved after reviewing the committed real replay; the
-        IOPScience article exposes a /data supplementary entry in original HTML and
-        the extracted body preserves the article-scoped stacks.iop.org mmedia link
-        plus Supplementary figure/table mentions.
+      evidence_reason: The committed article replay remains the Markdown review fixture
+        for supplementary mentions and the /data entry; expanded SM-numbered attachment
+        discovery is tracked separately in discovery_proof.
       observed_signals:
         - article_html
-        - supplementary_data_link
+        - supplementary_data_index
         - supplementary_body_mentions
       confidence: medium
     references:
@@ -268,18 +268,18 @@ fixtures:
     access_gate:
       doi: null
       evidence_url: https://iopscience.iop.org/
-      evidence_reason: Current subscription-like IOP probes either loaded fulltext in
-        the legal browser context or failed as Radware/hCaptcha challenges rather than
-        a stable article access-gate-only fixture, so access-gate handling stays covered
-        by provider challenge tests and shared availability rules.
+      evidence_reason: Current subscription-like IOP probes either loaded fulltext
+        in the legal browser context or failed as Radware/hCaptcha challenges rather
+        than a stable article access-gate-only fixture, so access-gate handling stays
+        covered by provider challenge tests and shared availability rules.
       observed_signals: []
       confidence: low
     empty_shell:
       doi: null
       evidence_url: https://iopscience.iop.org/
       evidence_reason: No stable empty-shell IOPScience article replay is selected;
-        empty-shell keyword hits were article-title false positives or challenge
-        pages, and empty article shells remain a route rejection condition.
+        empty-shell keyword hits were article-title false positives or challenge pages,
+        and empty article shells remain a route rejection condition.
       observed_signals: []
       confidence: low
   discovery_proof:
@@ -306,31 +306,30 @@ fixtures:
         10.1088/1748-9326/aa9f73: Browser HTML probe produced a usable table replay,
           but the DOI is selected instead for the seeded-browser PDF fallback fixture
           to avoid duplicating the table/formula sample purpose.
-        10.1088/1748-9326/aae19a: Browser probe produced stable body tables, but
-          10.1088/2058-9565/ac3460 was selected because it covers both body tables
-          and formula images in one IOPScience HTML replay.
-        10.1088/1748-9326/11/9/095012: Browser probe produced stable body tables, but
-          the selected Quantum Science and Technology replay gives broader table plus
-          formula coverage for fixture discovery.
+        10.1088/1748-9326/aae19a: Browser probe produced stable body tables, but 10.1088/2058-9565/ac3460
+          was selected because it covers both body tables and formula images in one
+          IOPScience HTML replay.
+        10.1088/1748-9326/11/9/095012: Browser probe produced stable body tables,
+          but the selected Quantum Science and Technology replay gives broader table
+          plus formula coverage for fixture discovery.
         10.1088/1748-9326/aaf936: Browser probe produced stable body tables, but the
           selected DOI offers denser formula and table assertions in a single replay.
-        10.1088/1748-9326/ab7d02: Same DOI was checked as a potential table fixture but
-          is not selected because the real CloakBrowser replay lacks stable article-scoped
+        10.1088/1748-9326/ab7d02: Same DOI was checked as a potential table fixture
+          but is not selected because the real CloakBrowser replay lacks stable article-scoped
           table assertions.
         10.1088/1755-1315/1234/1/012001: Browser capture produced an IOP Conference
           Series page with title, abstract, and PDF metadata, but no articleBody/fulltext
-          container or body table; it also retained challenge signals, so it is not a
-          stable table fixture.
-        10.1088/1748-9326/adc8bd: Crossref confirms an IOP Environmental Research Letters
-          article route, but browser capture currently returns an IOP Radware/hCaptcha
+          container or body table; it also retained challenge signals, so it is not
+          a stable table fixture.
+        10.1088/1748-9326/adc8bd: Crossref confirms an IOP Environmental Research
+          Letters article route, but browser capture currently returns an IOP Radware/hCaptcha
           challenge before a usable fulltext replay can be committed.
         10.1088/1755-1315/297/1/012045: Crossref records an IOP Conference Series
           classification article candidate, but no stable committed replay is available
           to verify body table rendering for this IOP route.
-        10.1088/1755-1315/1088/1/011001: Prefix-filtered discovery returned this
-          IOP Preface as a table-query false positive; HTTP/browser probes hit
-          Radware/hCaptcha challenge signals and no article-scoped body table evidence
-          was available.
+        10.1088/1755-1315/1088/1/011001: Prefix-filtered discovery returned this IOP
+          Preface as a table-query false positive; HTTP/browser probes hit Radware/hCaptcha
+          challenge signals and no article-scoped body table evidence was available.
         10.1088/1755-1315/1334/1/012054: Prefix-filtered discovery found a shaking-table
           article candidate, but the current browser fallback probe hit Radware/hCaptcha
           challenge signals before a usable fulltext replay or body table assertion
@@ -367,21 +366,21 @@ fixtures:
         - 10.1088/1757-899x/571/1/012022
       selected_doi: 10.1088/2058-9565/ac3460
       rejections:
-        10.1088/1367-2630/ac753d: Browser probe produced stable equation image
-          Markdown, but 10.1088/2058-9565/ac3460 was selected because it covers
-          both formula images and body tables in one replay.
-        10.1088/1367-2630/ab83d4: Browser probe produced stable equation image
-          Markdown, but the selected DOI provides stronger combined purpose coverage.
-        10.1088/1367-2630/ab950b: Browser probe produced stable equation image
-          Markdown, but the selected DOI provides stronger combined purpose coverage.
-        10.1088/1367-2630/aaa67c: Browser probe produced stable equation image
-          Markdown, but the selected DOI provides stronger combined purpose coverage.
-        10.1088/1367-2630/ac325f: Browser probe produced stable equation image
-          Markdown, but the selected DOI provides stronger combined purpose coverage.
-        10.1088/2058-9565/ad26b3: Browser probe produced stable equation image
-          Markdown, but the selected DOI provides stronger combined purpose coverage.
-        10.1088/2058-9565/ac16ed: Browser probe produced stable equation image
-          Markdown, but the selected DOI provides stronger combined purpose coverage.
+        10.1088/1367-2630/ac753d: Browser probe produced stable equation image Markdown,
+          but 10.1088/2058-9565/ac3460 was selected because it covers both formula
+          images and body tables in one replay.
+        10.1088/1367-2630/ab83d4: Browser probe produced stable equation image Markdown,
+          but the selected DOI provides stronger combined purpose coverage.
+        10.1088/1367-2630/ab950b: Browser probe produced stable equation image Markdown,
+          but the selected DOI provides stronger combined purpose coverage.
+        10.1088/1367-2630/aaa67c: Browser probe produced stable equation image Markdown,
+          but the selected DOI provides stronger combined purpose coverage.
+        10.1088/1367-2630/ac325f: Browser probe produced stable equation image Markdown,
+          but the selected DOI provides stronger combined purpose coverage.
+        10.1088/2058-9565/ad26b3: Browser probe produced stable equation image Markdown,
+          but the selected DOI provides stronger combined purpose coverage.
+        10.1088/2058-9565/ac16ed: Browser probe produced stable equation image Markdown,
+          but the selected DOI provides stronger combined purpose coverage.
         10.1088/1748-9326/ab7d02: Same DOI was checked as a potential formula fixture
           but is not selected because the real CloakBrowser replay lacks stable article-scoped
           formula assertions.
@@ -389,64 +388,134 @@ fixtures:
           article candidate, but browser capture currently returns an IOP Radware/hCaptcha
           challenge before a usable fulltext replay can be committed.
         10.1088/1402-4896/ac8185: Crossref confirms an IOP Physica Scripta equation-oriented
-          article candidate, but no stable committed replay is available to verify equation
-          or math rendering for this IOP route.
+          article candidate, but no stable committed replay is available to verify
+          equation or math rendering for this IOP route.
         10.1088/0253-6102/67/2/207: Crossref confirms an IOP Communications in Theoretical
-          Physics equation-oriented article candidate, but no stable committed replay is
-          available to verify equation or math rendering for this IOP route.
+          Physics equation-oriented article candidate, but no stable committed replay
+          is available to verify equation or math rendering for this IOP route.
         10.1088/1757-899x/10/1/012222: Prefix-filtered discovery found an IOP scalar-wave
           equation candidate, but the browser fallback probe hit Radware/hCaptcha
           challenge signals before formula rendering could be verified.
         10.1088/1757-899x/53/1/012003: Prefix-filtered discovery found the IOP Cauchy
-          Integral Formula candidate, but only Crossref metadata/pdf_link signals were
-          available in this pass; no stable fulltext replay verified article-scoped math.
+          Integral Formula candidate, but only Crossref metadata/pdf_link signals
+          were available in this pass; no stable fulltext replay verified article-scoped
+          math.
         10.1088/1757-899x/571/1/012022: Prefix-filtered discovery found an IOP beam-model
           equation candidate, but only Crossref metadata/pdf_link signals were available
           in this pass; no stable fulltext replay verified article-scoped math.
       exhausted: false
       evidence_summary: The formula search now selects 10.1088/2058-9565/ac3460 because
-        the committed CloakBrowser replay preserves article-scoped formula image
-        Markdown such as qstac3460eqn1.gif and keeps IOPScience download, metrics, and
-        challenge chrome out of the body.
+        the committed CloakBrowser replay preserves article-scoped formula image Markdown
+        such as qstac3460eqn1.gif and keeps IOPScience download, metrics, and challenge
+        chrome out of the body.
     supplementary:
       queries:
         - IOP Publishing 10.1088 supplementary supporting information DOI candidates
         - site:iopscience.iop.org IOP Publishing supplementary article DOI
         - 10.1088 supplementary fixture discovery iop
       candidates:
+        - 10.1088/2752-5295/ae2d89
         - 10.1088/1748-9326/ab7d02
         - 10.1088/1742-6596/1234/1/012001
         - 10.1088/1742-6596/210/1/011003
       selected_doi: 10.1088/1748-9326/ab7d02
       rejections:
+        10.1088/2752-5295/ae2d89: Browser replay verifies the expanded SM0001 DOCX
+          attachment and drives the provider structural regression, but it is not
+          the committed Markdown review fixture for the supplementary purpose.
         10.1088/1742-6596/1234/1/012001: Candidate was not selected because no stable
-          committed replay is available to verify supplementary material extraction for
-          this IOP route.
+          committed replay is available to verify supplementary material extraction
+          for this IOP route.
         10.1088/1742-6596/210/1/011003: Crossref records an IOP supplementary-data
-          candidate, but the existing 10.1088/1748-9326/ab7d02 replay already provides
-          article-scoped supplementary coverage with stable extracted Markdown.
+          candidate, but no stable expanded SM-numbered attachment replay is available
+          for that route.
       exhausted: false
-      evidence_summary: The existing 10.1088/1748-9326/ab7d02 replay is selected for
-        supplementary coverage because original.html contains an IOPScience
-        supplementary data entry and extracted.md preserves the article-scoped
-        stacks.iop.org mmedia link and Supplementary table/figure mentions.
+      evidence_summary: The committed 10.1088/1748-9326/ab7d02 article replay remains
+        the selected Markdown fixture and proves the same-DOI /data index. The 10.1088/2752-5295/ae2d89
+        browser replay additionally verifies that the expanded supplementarydata scope
+        links SM0001 to erclae2d89supp1.docx; the provider regression keeps its signed
+        URL synthetic while testing the same DOM contract.
 extraction_hints:
-  datalayer_signal_set:
+  datalayer_signal_set: null
   text_marker_signal_set:
+    blocking_markers:
+      - substring: confirm you are a human
+        token: iop_captcha_challenge
+        negate: false
+        contains: []
+        absent: []
+        access_gate_context: false
+      - substring: h-captcha
+        token: iop_captcha_challenge
+        negate: false
+        contains: []
+        absent: []
+        access_gate_context: false
+      - substring: perfdrive
+        token: iop_radware_challenge
+        negate: false
+        contains: []
+        absent: []
+        access_gate_context: false
+      - substring: radware bot manager
+        token: iop_radware_challenge
+        negate: false
+        contains: []
+        absent: []
+        access_gate_context: false
+    positive_strong:
+      - substring: articlebody
+        token: iop_article_body_marker
+        negate: false
+        contains: []
+        absent: []
+        access_gate_context: false
+      - substring: iopscience
+        token: iopscience_page
+        negate: false
+        contains: []
+        absent: []
+        access_gate_context: false
+    positive_soft:
+      - substring: /article/10.1088/
+        token: iop_article_url
+        negate: false
+        contains: []
+        absent: []
+        access_gate_context: false
+      - substring: citation_pdf_url
+        token: iop_pdf_meta
+        negate: false
+        contains: []
+        absent: []
+        access_gate_context: false
+    abstract_only: []
   front_matter:
-  asset_retry:
+    exact_texts:
+      - iop publishing
+      - iopscience
+      - open access
+      - paper
+    contains_tokens: []
+    publication_keywords:
+      - iopscience
+      - iop publishing
+  asset_retry: null
   metadata_merge: []
 owner_reuse_exceptions: []
 docs:
-  providers_md_capability_row: "`iop` | Crossref routing | CloakBrowser article HTML -> seeded-browser
-    IOP PDF -> provider-managed abstract_only -> metadata fallback | HTML body assets best-effort;
-    PDF fallback text-only | low-medium | IOP uses 10.1088/ DOI routing and iopscience.iop.org;
+  providers_md_capability_row: '`iop` | Crossref routing | CloakBrowser article HTML
+    -> seeded-browser IOP PDF -> provider-managed abstract_only -> metadata fallback
+    | HTML body figures plus two-stage /data -> SM-numbered supplementary downloads
+    for all; PDF fallback assets | medium | IOP uses 10.1088/ DOI routing and iopscience.iop.org;
     Radware/hCaptcha pages are rejected; public sources `iop_html` / `iop_pdf`; unauthenticated
-    TDM XML/PDF is not implemented"
-  changelog_summary: Add IOP Publishing provider routing for 10.1088/ and iopscience.iop.org
-    with CloakBrowser HTML, seeded-browser PDF fallback, iop_html/iop_pdf sources, and
-    Radware/hCaptcha rejection.
-  extraction_rules_summary: IOP browser HTML must target articleBody/body sections and remove
-    IOPScience download, metrics, citation, navigation, and challenge-page chrome
-    while preserving body tables, formula images, figure captions, supplementary
-    links, and references.
+    TDM XML/PDF is not implemented'
+  changelog_summary: Added bounded IOP supplementary expansion for `asset_profile=all`,
+    resolving same-DOI `/data` indexes to `SM`-numbered attachments with browser cookie/Referer
+    reuse.
+  extraction_rules_summary: IOP browser HTML must target articleBody/body sections
+    and remove IOPScience download, metrics, citation, navigation, and challenge-page
+    chrome. Supplementary discovery is two-stage and bounded to a same-DOI /data index
+    followed by supplementarydata SM-numbered attachments; figure controls, QR images,
+    mismatched DOI pages, and empty/challenge indexes cannot be accepted as supplementary
+    files.

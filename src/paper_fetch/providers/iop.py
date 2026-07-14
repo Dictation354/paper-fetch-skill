@@ -2,9 +2,14 @@
 
 from __future__ import annotations
 
+import contextlib
 from typing import Any
 from collections.abc import Mapping
 
+from ..extraction.html import decode_html
+from ..extraction.html.signals import HtmlExtractionFailure
+from ..http import redact_url_for_cache
+from ..http.headers import header_value
 from ..extraction.html.availability_policy import AvailabilityPolicy
 from ..extraction.html.provider_rules import (
     DomHooks,
@@ -23,6 +28,7 @@ from ..utils import empty_asset_results, normalize_text
 from . import _iop_html, browser_workflow
 from ._registry import ProviderBundle, register_provider_bundle
 from .base import RawFulltextPayload
+from .browser_runtime import BrowserRuntimeFailure
 from .browser_workflow.profile import ProviderBrowserProfile
 
 
@@ -111,6 +117,55 @@ def _append_unique(values: list[str], candidate: str | None) -> None:
         values.append(normalized)
 
 
+def _supplementary_index_failure(
+    source_url: str,
+    reason: str,
+    *,
+    message: str = "",
+    details: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
+    failure: dict[str, Any] = {
+        "kind": "supplementary",
+        "heading": "Supplementary data",
+        "caption": "",
+        "source_url": source_url,
+        "reason": reason,
+        "section": "supplementary",
+        "source_kind": "iop_supplementary_index",
+    }
+    if message:
+        failure["error_message"] = message
+    for key, value in (details or {}).items():
+        if value in (None, "", [], {}):
+            continue
+        if key == "reason":
+            failure["upstream_reason"] = value
+        elif key not in failure:
+            failure[key] = value
+    return failure
+
+
+def _redact_iop_supplementary_urls(
+    items: list[Mapping[str, Any]],
+) -> list[dict[str, Any]]:
+    redacted: list[dict[str, Any]] = []
+    for raw_item in items:
+        item = dict(raw_item)
+        if normalize_text(str(item.get("kind") or "")).lower() == "supplementary":
+            for key in (
+                "url",
+                "download_url",
+                "source_url",
+                "final_url",
+                "original_url",
+            ):
+                value = item.get(key)
+                if isinstance(value, str):
+                    item[key] = redact_url_for_cache(value)
+        redacted.append(item)
+    return redacted
+
+
 class IopClient(browser_workflow.BrowserWorkflowClient):
     name = IOP_BROWSER_PROFILE.name
     profile = IOP_BROWSER_PROFILE
@@ -165,6 +220,162 @@ class IopClient(browser_workflow.BrowserWorkflowClient):
             return "iop_pdf"
         return "iop_html"
 
+    def _resolve_supplementary_data_assets(
+        self,
+        normalized_doi: str,
+        raw_payload: RawFulltextPayload,
+        index_urls: list[str],
+        *,
+        context: RuntimeContext,
+    ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+        if not index_urls:
+            return [], []
+        try:
+            runtime = self.deps.load_runtime_config(
+                self.env,
+                provider=self.name,
+                doi=normalized_doi,
+            )
+            self.deps.ensure_runtime_ready(runtime)
+        except BrowserRuntimeFailure as exc:
+            failures = [
+                _supplementary_index_failure(
+                    index_url,
+                    "iop_supplementary_index_runtime_failed",
+                    message=exc.message,
+                    details={"runtime_reason": exc.kind, **exc.details},
+                )
+                for index_url in index_urls
+            ]
+            return [], failures
+
+        content = raw_payload.content
+        browser_context_seed = (
+            dict(content.browser_context_seed or {}) if content is not None else {}
+        )
+        seed_urls = [
+            url
+            for url in (
+                raw_payload.source_url,
+                normalize_text(
+                    str(browser_context_seed.get("browser_final_url") or "")
+                ),
+            )
+            if url
+        ]
+        index_fetcher = self.deps._build_shared_browser_file_fetcher(
+            browser_context_seed_getter=lambda: browser_context_seed,
+            seed_urls_getter=lambda: list(seed_urls),
+            browser_user_agent=(
+                normalize_text(str(getattr(runtime, "user_agent", None) or ""))
+                or self.browser_user_agent
+            ),
+            headless=bool(getattr(runtime, "headless", True)),
+            runtime_context=context,
+            use_runtime_shared_browser=True,
+            binary_path=getattr(runtime, "binary_path", None),
+            cdp_endpoint=getattr(runtime, "cdp_endpoint", None),
+            profile_dir=getattr(runtime, "profile_dir", None),
+            user_data_dir=getattr(runtime, "user_data_dir", None),
+        )
+        resolved_assets: list[dict[str, Any]] = []
+        failures: list[dict[str, Any]] = []
+        try:
+            for index_url in index_urls:
+                try:
+                    response = index_fetcher(
+                        index_url,
+                        {
+                            "kind": "supplementary",
+                            "section": "supplementary",
+                            "referer_url": raw_payload.source_url,
+                        },
+                    )
+                except BrowserRuntimeFailure as exc:
+                    failures.append(
+                        _supplementary_index_failure(
+                            index_url,
+                            "iop_supplementary_index_fetch_failed",
+                            message=exc.message,
+                            details={"upstream_reason": exc.kind, **exc.details},
+                        )
+                    )
+                    continue
+                if not isinstance(response, Mapping):
+                    failure_for = getattr(index_fetcher, "failure_for", None)
+                    diagnostic = (
+                        failure_for(index_url) if callable(failure_for) else None
+                    )
+                    failures.append(
+                        _supplementary_index_failure(
+                            index_url,
+                            "iop_supplementary_index_fetch_failed",
+                            details=diagnostic
+                            if isinstance(diagnostic, Mapping)
+                            else None,
+                        )
+                    )
+                    continue
+
+                body = response.get("body")
+                if not isinstance(body, (bytes, bytearray)) or not body:
+                    failures.append(
+                        _supplementary_index_failure(
+                            index_url,
+                            "iop_supplementary_index_fetch_failed",
+                            details={
+                                "upstream_reason": "empty_response_body",
+                                "status": response.get("status_code"),
+                            },
+                        )
+                    )
+                    continue
+                final_url = normalize_text(str(response.get("url") or "")) or index_url
+                content_type = header_value(
+                    response.get("headers"),
+                    "content-type",
+                )
+                html_text = decode_html(bytes(body), content_type=content_type)
+                try:
+                    resolved_assets.extend(
+                        _iop_html.extract_supplementary_data_assets(
+                            html_text,
+                            final_url,
+                            expected_doi=normalized_doi,
+                        )
+                    )
+                except HtmlExtractionFailure as exc:
+                    failures.append(
+                        _supplementary_index_failure(
+                            index_url,
+                            exc.reason,
+                            message=exc.message,
+                            details={
+                                "status": response.get("status_code"),
+                                "content_type": content_type,
+                                "final_url": final_url,
+                            },
+                        )
+                    )
+        finally:
+            close = getattr(index_fetcher, "close", None)
+            if callable(close):
+                with contextlib.suppress(Exception):
+                    close()
+
+        deduplicated_assets: list[dict[str, Any]] = []
+        seen: set[tuple[str, str]] = set()
+        for asset in resolved_assets:
+            key = (
+                normalize_text(str(asset.get("source_ref") or "")).lower(),
+                normalize_text(str(asset.get("url") or "")),
+            )
+            if key in seen:
+                continue
+            seen.add(key)
+            deduplicated_assets.append(asset)
+        return deduplicated_assets, failures
+
     def download_related_assets(
         self,
         doi: str,
@@ -193,14 +404,33 @@ class IopClient(browser_workflow.BrowserWorkflowClient):
             raw_payload.source_url,
             asset_profile=asset_profile,
         )
+        index_failures: list[dict[str, Any]] = []
+        if asset_profile == "all":
+            index_urls = _iop_html.extract_supplementary_index_urls(
+                html_text,
+                raw_payload.source_url,
+                doi=normalized_doi,
+            )
+            supplementary_assets, index_failures = (
+                self._resolve_supplementary_data_assets(
+                    normalized_doi,
+                    raw_payload,
+                    index_urls,
+                    context=context,
+                )
+            )
+            assets.extend(supplementary_assets)
         if content.markdown_text:
             assets = _iop_html.suppress_iop_asset_captions_already_in_markdown(
                 assets,
                 content.markdown_text,
             )
         if not assets:
-            return empty_asset_results()
-        return self._download_browser_backed_related_assets(
+            return {
+                "assets": [],
+                "asset_failures": _redact_iop_supplementary_urls(index_failures),
+            }
+        result = self._download_browser_backed_related_assets(
             doi,
             metadata,
             raw_payload,
@@ -209,6 +439,15 @@ class IopClient(browser_workflow.BrowserWorkflowClient):
             context=context,
             assets=assets,
         )
+        return {
+            "assets": _redact_iop_supplementary_urls(list(result.get("assets") or [])),
+            "asset_failures": _redact_iop_supplementary_urls(
+                [
+                    *index_failures,
+                    *list(result.get("asset_failures") or []),
+                ]
+            ),
+        }
 
 
 __all__ = ["IopClient"]

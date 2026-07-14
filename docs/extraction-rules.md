@@ -140,7 +140,7 @@ metadata
 | `frontiers` docs sync | Frontiers 复用 shared JATS rendering，并把 XML graphic 文件名重写为 `/files/Articles/{id}/xml-images/*.webp` 资产 URL。 | Provider fixture replay or Markdown review exposes a docs-rule gap. | `onboarding/manifests/frontiers.yml` |
 | `oxfordacademic` docs sync | Oxford Academic cleanup should preserve article abstract, body headings, figures, body tables, Silverchair formula paragraph text, supplementary data links, and visible `.ref-list` references while removing Oxford Academic navigation, metrics, author search links, slide/download chrome, citation widgets, and raw `citation_*` meta key strings. | Provider fixture replay or Markdown review exposes a docs-rule gap. | `onboarding/manifests/oxfordacademic.yml` |
 | `acs` docs sync | ACS 接入复用 Atypon browser workflow：当前 replay 已覆盖正文 section、body table、figures、formula、Supporting Information、references、provider-owned author metadata，以及 public PDF fallback；同时清理 ACS Publications citation/download/metrics chrome。 | Provider fixture replay or Markdown review exposes a docs-rule gap. | `onboarding/manifests/acs.yml` |
-| `iop` docs sync | IOP 接入复用 browser workflow：当前 real replay 覆盖 article body、table、formula image、figure caption、references、supplementary、Radware/hCaptcha challenge rejection、IOPScience download/metrics/citation chrome 清理，以及 PDF fallback source 合约。 | Provider fixture replay or Markdown review exposes a docs-rule gap. | `onboarding/manifests/iop.yml` |
+| `iop` docs sync | IOP browser HTML must target articleBody/body sections and remove IOPScience download, metrics, citation, navigation, and challenge-page chrome. Supplementary discovery is two-stage and bounded to a same-DOI /data index followed by supplementarydata SM-numbered attachments; figure controls, QR images, mismatched DOI pages, and empty/challenge indexes cannot be accepted as supplementary files. | Provider fixture replay or Markdown review exposes a docs-rule gap. | `onboarding/manifests/iop.yml` |
 | `aip` docs sync | AIP 接入复用 Atypon browser workflow，provider-owned 清理移除 AIP article navigation、citation/download、metrics chrome，并保留正文 figures、Markdown tables、LaTeX equations、SUPPLEMENTARY MATERIAL 与 references。 | Provider fixture replay or Markdown review exposes a docs-rule gap. | `onboarding/manifests/aip.yml` |
 
 ## Generic
@@ -242,7 +242,8 @@ metadata
   - [`../tests/fixtures/golden_criteria/10.1038_s41561-022-00912-7/original.html`](../tests/fixtures/golden_criteria/10.1038_s41561-022-00912-7/original.html)
   - [`../tests/fixtures/golden_criteria/10.1038_s41558-022-01584-2/original.html`](../tests/fixtures/golden_criteria/10.1038_s41558-022-01584-2/original.html)
   - [`../tests/fixtures/golden_criteria/10.1038_s43247-024-01270-5/original.html`](../tests/fixtures/golden_criteria/10.1038_s43247-024-01270-5/original.html)
-  - 这些样本分别覆盖 IEEE landing `sections.multimedia` + multimedia payload、Wiley `Supporting Information` 区块、Science supplementary section 与正文 Data Availability 普通链接的边界，以及 Springer / Nature `Source data`、Extended Data 和 peer-review 文件排除。
+  - [`../tests/fixtures/golden_criteria/10.1088_1748-9326_ab7d02/original.html`](../tests/fixtures/golden_criteria/10.1088_1748-9326_ab7d02/original.html)
+  - 这些样本分别覆盖 IEEE landing `sections.multimedia` + multimedia payload、Wiley `Supporting Information` 区块、Science supplementary section 与正文 Data Availability 普通链接的边界、Springer / Nature `Source data`、Extended Data 和 peer-review 文件排除，以及 IOP 正文页 `/data` 索引与 figure 下载控件/二维码之间的边界。IOP `SM0001` 索引页形态由 provider 单测中的精简真实 DOM 固定。
 - 对应测试：
   - [`../tests/unit/test_ieee_provider_asset_extraction.py`](../tests/unit/test_ieee_provider_asset_extraction.py) 中的 `test_real_ieee_multimedia_fixture_yields_supplementary_asset_from_explicit_scope`
   - [`../tests/unit/test_ieee_provider_asset_extraction.py`](../tests/unit/test_ieee_provider_asset_extraction.py) 中的 `test_ieee_html_payload_merges_multimedia_supplementary_assets_from_landing_scope`
@@ -250,6 +251,9 @@ metadata
   - [`../tests/unit/test_html_shared_helpers.py`](../tests/unit/test_html_shared_helpers.py) 中的 `test_extract_scoped_html_assets_empty_supplementary_scope_does_not_scan_body`
   - [`../tests/unit/test_html_shared_helpers.py`](../tests/unit/test_html_shared_helpers.py) 中的 `test_wiley_body_figures_are_not_promoted_to_supplementary_without_supporting_information`
   - [`../tests/unit/test_springer_html_regressions.py`](../tests/unit/test_springer_html_regressions.py) 中的 `test_extract_asset_html_scopes_leave_empty_supplementary_scope_without_supplementary_sections`
+  - [`../tests/unit/test_iop_provider.py`](../tests/unit/test_iop_provider.py) 中的 `test_iop_real_article_replay_does_not_promote_figure_controls_or_qr_to_supplementary`
+  - [`../tests/unit/test_iop_provider.py`](../tests/unit/test_iop_provider.py) 中的 `test_iop_data_page_extracts_only_sm_numbered_real_attachments`
+  - [`../tests/unit/test_iop_provider.py`](../tests/unit/test_iop_provider.py) 中的 `test_iop_unresolved_declared_data_index_records_asset_failure`
 - Provider 差异表：
 
 | Provider | 明确附件 scope | 关键排除 |
@@ -260,10 +264,12 @@ metadata
 | ACS | Atypon back matter 的 `Supporting Information` section 和 publisher `/doi/suppl/.../suppl_file/...` 附件。 | 正文 figure/table asset、citation/download chrome 和机构 OpenURL 链接不归 supplementary。 |
 | IEEE | 明确 Supplementary / Supporting Material / Multimedia section，IEEE 附件语义容器，或 landing metadata `sections.multimedia=true` 加 `/rest/document/{article_number}/multimedia` payload。 | 正文 `data` / `dataset` / `code` / `media` / repository 链接和文件后缀不能单独触发 supplementary。 |
 | Copernicus | NLM/JATS XML 中的 `supplementary-material`、`inline-supplementary-material` 和明确 `xlink:href` 附件节点。 | 正文 Data/Code Availability 普通仓库链接不凭文本或后缀升级为 supplementary。 |
+| IOP | 正文页的 `#supplDataLink` 或同 DOI `/article/{doi}/data[N]` 入口只是索引；复用文章浏览器 cookie/Referer 打开索引页后，只接受 `#supplementarydata` 内 `id=SM数字` 的真实附件。 | `/data` HTML 本身、正文 figure 的 Standard/High-resolution 控件、页脚 WeChat QR 和未编号链接都不归 supplementary；索引 challenge、DOI 不匹配或空附件必须记录 asset failure。 |
 
 - 边界说明：
   - 这条规则不定义每个 publisher 的完整 DOM selector、REST endpoint 或 URL allowlist；这些细节由 provider-specific helper 维护，本文只保留用户可见 contract。
   - 它也不限制附件文件类型。只要来源 scope 明确，supplementary 可以是 PDF、Office 文档、压缩包、数据表、图片或视频。
+  - IOP 附件下载仍即时使用 publisher 返回的 AWS 签名 URL，但最终资产/失败诊断会复用 HTTP URL 脱敏规则隐藏 `X-Amz-*`、`Signature` 和 `AWSAccessKeyId` 值。
 
 <a id="rule-filter-publisher-ui-noise"></a>
 ### 出版社站点 UI 噪声不能泄漏进最终 markdown

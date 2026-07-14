@@ -90,6 +90,17 @@ jobs:
           PYTHONPATH: ${{ github.workspace }}/src
         run: python scripts/validate_extraction_rules.py --ci
 
+      - name: Run IOP supplementary asset regression contracts
+        env:
+          PYTHONPATH: ${{ github.workspace }}/src
+        run: |
+          python -m pytest \
+            tests/unit/test_iop_provider.py \
+            tests/unit/test_browser_workflow_fetchers.py::test_file_fetcher_forwards_explicit_asset_referer \
+            tests/unit/test_http_cache.py::HttpTransportCacheTests::test_url_redaction_covers_aws_signed_query_parameters \
+            tests/unit/test_provider_request_options.py::ProviderRequestOptionsTests::test_shared_browser_file_fetcher_records_cloudflare_challenge_without_recovery \
+            -q
+
       - name: Run MCP input schema contract
         env:
           PYTHONPATH: ${{ github.workspace }}/src

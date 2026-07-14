@@ -40,7 +40,7 @@
 | `frontiers` | Frontiers domain / DOI routing | `landing HTML -> public JATS XML -> direct HTTP PDF -> metadata fallback` | XML route supports body figures and tables; PDF fallback is text/PDF-derived assets | 强 | Frontiers 通过 `10.3389/` DOI prefix 和 `www.frontiersin.org` 路由；XML 成功公开为 `frontiers_xml`，PDF fallback 公开为 `frontiers_pdf` |
 | `oxfordacademic` | DOI prefix/domain routing for Oxford Academic public articles | `direct HTTP article HTML -> direct HTTP PDF fallback -> metadata fallback` | HTML fixture preserves inline body figure links, normalizes Silverchair formula paragraph blocks, and extracts visible `.ref-list` references before falling back to `citation_reference` meta; local asset download is deferred for Oxford. PDF fallback uses the stable article-pdf URL and accepts only validated PDF responses | medium | `oxfordacademic_html` / `oxfordacademic_pdf` |
 | `acs` | 依赖 Crossref routing | `CDP browser HTML -> CDP browser-seeded publisher PDF/ePDF with browser-navigation direct PDF preflight -> provider-managed abstract_only` | HTML 路线支持 `none` / `body` / `all`；PDF/ePDF fallback 在 `body/all` 且允许落盘时提取 PDF 图片到 `<doi>_assets/` | 中 | ACS 通过 `10.1021/` DOI、用户指定的 `www.acs.org` 域和实际文章 host `pubs.acs.org` 路由；HTML/PDF 路径复用 browser workflow，公开 source 为 `acs` |
-| `iop` | 依赖 Crossref routing | `CDP browser article HTML -> CDP browser-seeded IOP PDF -> provider-managed abstract_only -> metadata fallback` | HTML 路线支持 `none` / `body` / `all` best-effort，并会优先尝试 IOP CDN 的 `_hr` figure 资产；PDF fallback 在 `body/all` 且允许落盘时提取 PDF 图片到 `<doi>_assets/` | 低-中 | IOP 通过 `10.1088/` DOI 和 `iopscience.iop.org` 路由；CDP browser 会等待 `articleBody`/`.article-content` 正文 DOM 稳定，正文已加载时忽略页面残留的 Radware/PerfDrive shell 信号；已由 `math/tex` 脚本渲染为 LaTeX 的公式跳过 GIF fallback，正文 `_online`/`_lr` figure preview 可派生 `_hr` 高分辨率候选，预览图仍可作为可接受回退诊断；独立 Radware/hCaptcha 页面仍 fail closed；HTML 成功公开 `iop_html`，PDF fallback 公开 `iop_pdf`；不实现未授权 TDM XML/PDF |
+| `iop` | Crossref routing | CloakBrowser article HTML -> seeded-browser IOP PDF -> provider-managed abstract_only -> metadata fallback | HTML body figures plus two-stage /data -> SM-numbered supplementary downloads for all; PDF fallback assets | medium | IOP uses 10.1088/ DOI routing and iopscience.iop.org; Radware/hCaptcha pages are rejected; public sources `iop_html` / `iop_pdf`; unauthenticated TDM XML/PDF is not implemented |
 | `aip` | 依赖 Crossref routing | `CDP browser AIP article HTML -> CDP browser-seeded AIP PDF -> provider-managed abstract_only -> metadata fallback` | HTML 路线支持 `none` / `body` / `all`；PDF fallback 在 `body/all` 且允许落盘时提取 PDF 图片到 `<doi>_assets/` | 中 | AIP 通过 `10.1063/` DOI 和 `pubs.aip.org` 路由；HTML 成功公开 `aip_html`，PDF fallback 公开 `aip_pdf` |
 
 说明：
@@ -676,7 +676,7 @@ CLI、Python API、MCP 当前默认值如下：
 
 #### Supplementary 范围与命名
 
-- `wiley` / `science` / `pnas` / `annualreviews` / `acs` / `iop` / `aip` / `mdpi` 的 `asset_profile=all` 会把可识别 supplementary 作为独立文件附件下载；AMS direct HTTP HTML 也会按页面可见 supplementary 链接做 best-effort 附件下载。Annual Reviews 当前不扩大 supplementary scope，IOP committed replay 当前覆盖 article-scoped `stacks.iop.org` supplementary media link，独立附件下载仍按 provider 资产链路 best-effort 执行。
+- `wiley` / `science` / `pnas` / `annualreviews` / `acs` / `iop` / `aip` / `mdpi` 的 `asset_profile=all` 会把可识别 supplementary 作为独立文件附件下载；AMS direct HTTP HTML 也会按页面可见 supplementary 链接做 best-effort 附件下载。Annual Reviews 当前不扩大 supplementary scope；IOP 只把文章页的同 DOI `/data[N]` 当索引，并从索引明确的 `SM数字` 链接下载真实附件。
 - 这条链路不因 supplementary 失败重新下载已成功的正文 figure。
 - `wiley` supplementary 只从 `Supporting Information` 区块抽取。
 - `wiley` 只接受 `/action/downloadSupplement`、结构化 supplementary link 属性或 `sup-*` supporting file 链接。
@@ -1110,6 +1110,14 @@ IEEE direct REST HTML / clean-browser HTML / direct HTTP PDF / seeded-browser PD
 
 - `wiley` / `science` / `pnas` / `annualreviews` / `royalsocietypublishing` / `acs` / `iop` / `aip` / `mdpi` 的 browser HTML fetch 会先等待 provider 正文 DOM 命中并连续两次轮询稳定，再执行 pre-extraction challenge / paywall 判定。
 - 如果稳定正文 DOM 已出现，即使页面 shell 仍残留 Cloudflare / challenge 文案，也会继续进入 Markdown 抽取和 availability 判定；只有等待超时仍无可抽取正文 DOM 时，才把 challenge / paywall 作为 HTML route fallback 条件。
+
+<a id="iop"></a>
+### IOP Publishing
+
+- `asset_profile=body` 只处理正文 figure；`_online` / `_lr` IOP CDN 图片会派生 `_hr` 候选，已渲染成 LaTeX 的公式不会再把 GIF fallback 当正文图。
+- `asset_profile=all` 使用有界两阶段流程：文章页只识别 `#supplDataLink` 或同 DOI `/article/{doi}/data[N]` 索引，不把索引 HTML 当附件；随后复用文章浏览器 cookie，并以文章页为 Referer 请求索引，只从 `#supplementarydata` 中接受 `id=SM数字` 的文件链接。Office 文档、压缩包、数据表、图片或视频都不受通用后缀白名单限制。
+- figure 的 Standard/High-resolution 操作链接、页脚 WeChat QR、索引页未编号链接不会进入 supplementary。索引被 challenge 阻断、父 DOI 不匹配、缺少明确 scope 或没有真实附件时，会写入 `article.quality.asset_failures`，因此资产验收不会误报 `complete`。
+- publisher 返回的 AWS 签名附件 URL 仅用于即时下载；最终资产和失败诊断会脱敏 `X-Amz-*`、`Signature`、`AWSAccessKeyId` 参数。独立 Radware/hCaptcha 页面仍 fail closed，HTML/PDF 成功 source 分别是 `iop_html` / `iop_pdf`。
 
 <a id="royalsocietypublishing"></a>
 ### Royal Society Publishing

@@ -289,8 +289,8 @@ class OfflineInstallTests(unittest.TestCase):
             "schema_version": 3,
             "name": "paper-fetch-skill-offline-linux-x86_64",
             "project": "paper-fetch-skill",
-            "version": "3.1.0",
-            "built_at_utc": "2026-07-13T00:00:00Z",
+            "version": "3.1.1",
+            "built_at_utc": "2026-07-14T00:00:00Z",
             "git_revision": "test-revision",
             "target": {
                 "platform": target_platform,

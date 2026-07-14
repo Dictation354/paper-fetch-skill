@@ -60,7 +60,7 @@ class _SharedBrowserFileDocumentFetcher(_BaseBrowserDocumentFetcher):
         self._sync_context_cookies()
         self._warm_seed_urls(force=False)
         for attempt in range(3):
-            result = self._fetch_with_context_request(normalized_url)
+            result = self._fetch_with_context_request(normalized_url, asset)
             if result is not None:
                 return result
             if attempt == 0:
@@ -90,13 +90,21 @@ class _SharedBrowserFileDocumentFetcher(_BaseBrowserDocumentFetcher):
             reason=reason,
         )
 
-    def _fetch_with_context_request(self, file_url: str) -> dict[str, Any] | None:
+    def _fetch_with_context_request(
+        self,
+        file_url: str,
+        asset: Mapping[str, Any],
+    ) -> dict[str, Any] | None:
         if self._context is None:
             return None
+        request_headers = {"Accept": "*/*"}
+        referer_url = normalize_text(str(asset.get("referer_url") or ""))
+        if referer_url:
+            request_headers["Referer"] = referer_url
         try:
             response = self._context.request.get(
                 file_url,
-                headers={"Accept": "*/*"},
+                headers=request_headers,
                 timeout=60000,
             )
         except Exception as exc:

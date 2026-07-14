@@ -1,10 +1,18 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
 from pathlib import Path
 import re
+from types import SimpleNamespace
+from unittest import mock
+
+import pytest
 
 from paper_fetch import publisher_identity
-from paper_fetch.extraction.html.signals import detect_html_access_signals
+from paper_fetch.extraction.html.signals import (
+    HtmlExtractionFailure,
+    detect_html_access_signals,
+)
 from paper_fetch.provider_catalog import (
     PROVIDER_CATALOG,
     SOURCE_PROVIDER_MAP,
@@ -19,6 +27,7 @@ from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
 from paper_fetch.providers.iop import IopClient
 from paper_fetch.quality.html_availability import HtmlQualityAssessor
 from paper_fetch.tracing import trace_from_markers
+from tests.unit._browser_workflow_deps import browser_workflow_deps
 
 
 IOP_SAMPLE_DOI = "10.1088/1748-9326/ab7d02"
@@ -33,6 +42,14 @@ IOP_TABLE_FORMULA_LANDING = (
 )
 IOP_TABLE_FORMULA_TITLE = "Quantum pattern recognition in photonic circuits"
 IOP_PDF_FALLBACK_DOI = "10.1088/1748-9326/aa9f73"
+IOP_CURRENT_SUPPLEMENTARY_DOI = "10.1088/2752-5295/ae2d89"
+IOP_CURRENT_SUPPLEMENTARY_LANDING = (
+    f"https://iopscience.iop.org/article/{IOP_CURRENT_SUPPLEMENTARY_DOI}"
+)
+IOP_TEST_SIGNED_SUPPLEMENTARY_URL = (
+    "https://iop-supplements.example.test/path/erclae2d89supp1.docx"
+    "?X-Amz-Signature=test"
+)
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
@@ -157,6 +174,98 @@ def _iop_loaded_article_with_residual_challenge_html() -> str:
   </body>
 </html>
 """
+
+
+def _iop_supplementary_article_html() -> str:
+    return f"""
+    <html>
+      <body>
+        <article>
+          <figure>
+            <img src="https://content.cld.iop.org/example/f1_online.jpg" alt="Figure 1" />
+            <figcaption>Figure 1. A body figure.</figcaption>
+            <a href="https://content.cld.iop.org/example/f1_lr.jpg">Standard image</a>
+            <a href="https://content.cld.iop.org/example/f1_hr.jpg">High-resolution image</a>
+          </figure>
+        </article>
+        <div>
+          <a href="/article/{IOP_CURRENT_SUPPLEMENTARY_DOI}/data">
+            <h2 id="supplDataLink">Supplementary data</h2>
+          </a>
+        </div>
+        <footer>
+          <a href="https://iopscience.iop.org/wechat-qr-code.png">Supplementary QR image</a>
+        </footer>
+      </body>
+    </html>
+    """
+
+
+def _iop_supplementary_data_html(
+    doi: str = IOP_CURRENT_SUPPLEMENTARY_DOI,
+) -> str:
+    return f"""
+    <html>
+      <head>
+        <title>Supplementary data for: Example IOP article - IOPscience</title>
+        <meta name="citation_doi" content="{doi}" />
+        <link rel="canonical" href="https://iopscience.iop.org/article/{doi}" />
+      </head>
+      <body>
+        <div id="supplementarydata" data-content-move-source="supplementarydata">
+          <div>
+            <a
+              id="SM0001"
+              href="{IOP_TEST_SIGNED_SUPPLEMENTARY_URL}"
+            >Supplementary data</a>
+            <div>(3.4 MB DOCX)</div>
+          </div>
+          <div>
+            <a id="SM0002" href="/attachments/table-s1.xlsx">Table S1</a>
+            <span>(18 KB XLSX)</span>
+          </div>
+          <a href="/attachments/not-numbered.zip">Supplementary unnumbered link</a>
+        </div>
+        <footer>
+          <a href="/wechat-qr-code.png">Supplementary QR image</a>
+        </footer>
+      </body>
+    </html>
+    """
+
+
+def _iop_html_raw_payload(
+    html: str,
+    *,
+    doi: str = IOP_CURRENT_SUPPLEMENTARY_DOI,
+) -> RawFulltextPayload:
+    source_url = f"https://iopscience.iop.org/article/{doi}"
+    body = html.encode("utf-8")
+    return RawFulltextPayload(
+        provider="iop",
+        source_url=source_url,
+        content_type="text/html",
+        body=body,
+        content=ProviderContent(
+            route_kind="html",
+            source_url=source_url,
+            content_type="text/html",
+            body=body,
+            markdown_text="# Example IOP article\n",
+            browser_context_seed={
+                "browser_user_agent": "UnitTestAgent/1.0",
+                "browser_final_url": source_url,
+                "browser_cookies": [
+                    {
+                        "name": "iop-session",
+                        "value": "test",
+                        "domain": ".iopscience.iop.org",
+                        "path": "/",
+                    }
+                ],
+            },
+        ),
+    )
 
 
 def test_iop_provider_bundle_declares_routing_sources_and_browser_runtime() -> None:
@@ -410,6 +519,269 @@ def test_iop_extracts_high_resolution_candidate_from_standard_figure_url() -> No
     assert assets[1]["preview_url"].endswith("erlad560bf2_online.jpg")
     assert assets[1]["full_size_url"].endswith("erlad560bf2_hr.jpg")
     assert "full_size_url" not in assets[2]
+
+
+def test_iop_article_page_discovers_only_supplementary_index_not_ui_assets() -> None:
+    """rule: rule-supplementary-discovery-explicit-scope"""
+    html = _iop_supplementary_article_html()
+
+    assets = _iop_html.extract_scoped_html_assets(
+        html,
+        IOP_CURRENT_SUPPLEMENTARY_LANDING,
+        asset_profile="all",
+    )
+    index_urls = _iop_html.extract_supplementary_index_urls(
+        html,
+        IOP_CURRENT_SUPPLEMENTARY_LANDING,
+        doi=IOP_CURRENT_SUPPLEMENTARY_DOI,
+    )
+
+    assert [asset["kind"] for asset in assets] == ["figure"]
+    assert not any(asset.get("kind") == "supplementary" for asset in assets)
+    assert index_urls == [f"{IOP_CURRENT_SUPPLEMENTARY_LANDING}/data"]
+
+
+def test_iop_real_article_replay_does_not_promote_figure_controls_or_qr_to_supplementary() -> (
+    None
+):
+    """rule: rule-supplementary-discovery-explicit-scope"""
+    html = _golden_fixture_text(IOP_SAMPLE_DOI, "original.html")
+
+    assets = _iop_html.extract_scoped_html_assets(
+        html,
+        IOP_SAMPLE_LANDING,
+        asset_profile="all",
+    )
+    index_urls = _iop_html.extract_supplementary_index_urls(
+        html,
+        IOP_SAMPLE_LANDING,
+        doi=IOP_SAMPLE_DOI,
+    )
+
+    assert assets
+    assert all(asset["kind"] == "figure" for asset in assets)
+    assert index_urls == [f"{IOP_SAMPLE_LANDING}/data"]
+    assert not any("wechat" in str(asset).lower() for asset in assets)
+
+
+def test_iop_data_page_extracts_only_sm_numbered_real_attachments() -> None:
+    """rule: rule-supplementary-discovery-explicit-scope"""
+    assets = _iop_html.extract_supplementary_data_assets(
+        _iop_supplementary_data_html(),
+        f"{IOP_CURRENT_SUPPLEMENTARY_LANDING}/data",
+        expected_doi=IOP_CURRENT_SUPPLEMENTARY_DOI,
+    )
+
+    assert [asset["source_ref"] for asset in assets] == ["SM0001", "SM0002"]
+    assert [asset["filename_hint"] for asset in assets] == [
+        "erclae2d89supp1.docx",
+        "table-s1.xlsx",
+    ]
+    assert assets[0]["url"].endswith("X-Amz-Signature=test")
+    assert assets[0]["referer_url"] == (f"{IOP_CURRENT_SUPPLEMENTARY_LANDING}/data")
+    assert not any("wechat" in str(asset).lower() for asset in assets)
+    assert not any("not-numbered" in str(asset) for asset in assets)
+
+
+@pytest.mark.parametrize(
+    ("html", "expected_reason"),
+    [
+        (
+            _iop_supplementary_data_html("10.1088/2752-5295/different"),
+            "iop_supplementary_index_doi_mismatch",
+        ),
+        (
+            "<html><title>Radware Bot Manager</title><body>Confirm you are a human. h-captcha</body></html>",
+            "iop_supplementary_index_blocked",
+        ),
+        (
+            f"""
+            <html><head><meta name="citation_doi" content="{IOP_CURRENT_SUPPLEMENTARY_DOI}" /></head>
+            <body><div id="supplementarydata"><a href="/footer.png">Footer</a></div></body></html>
+            """,
+            "iop_supplementary_index_empty",
+        ),
+    ],
+)
+def test_iop_data_page_rejects_mismatch_challenge_and_empty_scope(
+    html: str,
+    expected_reason: str,
+) -> None:
+    """rule: rule-supplementary-discovery-explicit-scope"""
+    with pytest.raises(HtmlExtractionFailure) as exc_info:
+        _iop_html.extract_supplementary_data_assets(
+            html,
+            f"{IOP_CURRENT_SUPPLEMENTARY_LANDING}/data",
+            expected_doi=IOP_CURRENT_SUPPLEMENTARY_DOI,
+        )
+
+    assert exc_info.value.reason == expected_reason
+
+
+class _FakeIopSupplementaryIndexFetcher:
+    def __init__(
+        self,
+        response: Mapping[str, object] | None,
+        *,
+        failure: Mapping[str, object] | None = None,
+    ) -> None:
+        self.response = response
+        self.failure = dict(failure or {})
+        self.calls: list[tuple[str, dict[str, object]]] = []
+        self.closed = False
+
+    def __call__(
+        self,
+        url: str,
+        asset: Mapping[str, object],
+    ) -> Mapping[str, object] | None:
+        self.calls.append((url, dict(asset)))
+        return self.response
+
+    def failure_for(self, _url: str) -> dict[str, object] | None:
+        return dict(self.failure) if self.failure else None
+
+    def close(self) -> None:
+        self.closed = True
+
+
+def _iop_supplementary_test_deps(index_fetcher):
+    runtime = SimpleNamespace(
+        user_agent="UnitTestAgent/1.0",
+        headless=True,
+        binary_path=None,
+        cdp_endpoint=None,
+        profile_dir=None,
+        user_data_dir=None,
+    )
+    return browser_workflow_deps(
+        load_runtime_config=mock.Mock(return_value=runtime),
+        ensure_runtime_ready=mock.Mock(),
+        _build_shared_browser_file_fetcher=mock.Mock(return_value=index_fetcher),
+    )
+
+
+def test_iop_all_profile_expands_data_index_before_existing_asset_downloader(
+    tmp_path: Path,
+) -> None:
+    """rule: rule-supplementary-discovery-explicit-scope"""
+    index_url = f"{IOP_CURRENT_SUPPLEMENTARY_LANDING}/data"
+    index_fetcher = _FakeIopSupplementaryIndexFetcher(
+        {
+            "status_code": 200,
+            "headers": {"content-type": "text/html; charset=utf-8"},
+            "body": _iop_supplementary_data_html().encode("utf-8"),
+            "url": index_url,
+        }
+    )
+    deps = _iop_supplementary_test_deps(index_fetcher)
+    client = IopClient(None, {}, deps=deps)
+    raw_payload = _iop_html_raw_payload(_iop_supplementary_article_html())
+    downloaded = {
+        "kind": "supplementary",
+        "heading": "Supplementary data",
+        "path": str(tmp_path / "erclae2d89supp1.docx"),
+        "download_url": IOP_TEST_SIGNED_SUPPLEMENTARY_URL,
+        "source_url": IOP_TEST_SIGNED_SUPPLEMENTARY_URL,
+        "download_tier": "supplementary_file",
+    }
+
+    with mock.patch.object(
+        client,
+        "_download_browser_backed_related_assets",
+        return_value={"assets": [downloaded], "asset_failures": []},
+    ) as download_assets:
+        result = client.download_related_assets(
+            IOP_CURRENT_SUPPLEMENTARY_DOI,
+            {"doi": IOP_CURRENT_SUPPLEMENTARY_DOI},
+            raw_payload,
+            tmp_path,
+            asset_profile="all",
+        )
+
+    passed_assets = download_assets.call_args.kwargs["assets"]
+    supplementary_assets = [
+        asset for asset in passed_assets if asset["kind"] == "supplementary"
+    ]
+    assert result["asset_failures"] == []
+    assert result["assets"][0]["path"] == downloaded["path"]
+    assert "X-Amz-Signature=test" not in result["assets"][0]["download_url"]
+    assert "X-Amz-Signature=%2A%2A%2A" in result["assets"][0]["download_url"]
+    assert "X-Amz-Signature=test" not in result["assets"][0]["source_url"]
+    assert len(supplementary_assets) == 2
+    assert supplementary_assets[0]["source_ref"] == "SM0001"
+    assert supplementary_assets[0]["filename_hint"] == "erclae2d89supp1.docx"
+    assert not any(asset.get("url") == index_url for asset in passed_assets)
+    assert index_fetcher.calls == [
+        (
+            index_url,
+            {
+                "kind": "supplementary",
+                "section": "supplementary",
+                "referer_url": IOP_CURRENT_SUPPLEMENTARY_LANDING,
+            },
+        )
+    ]
+    assert index_fetcher.closed is True
+    seed_getter = deps._build_shared_browser_file_fetcher.call_args.kwargs[
+        "browser_context_seed_getter"
+    ]
+    assert seed_getter()["browser_cookies"][0]["name"] == "iop-session"
+
+
+def test_iop_unresolved_declared_data_index_records_asset_failure(
+    tmp_path: Path,
+) -> None:
+    """rule: rule-supplementary-discovery-explicit-scope"""
+    index_url = f"{IOP_CURRENT_SUPPLEMENTARY_LANDING}/data"
+    index_fetcher = _FakeIopSupplementaryIndexFetcher(
+        None,
+        failure={
+            "reason": "login_or_access_html",
+            "status": 403,
+            "content_type": "text/html",
+        },
+    )
+    client = IopClient(
+        None,
+        {},
+        deps=_iop_supplementary_test_deps(index_fetcher),
+    )
+    raw_payload = _iop_html_raw_payload(
+        f"""
+        <html><body><a href="{index_url}"><h2 id="supplDataLink">Supplementary data</h2></a></body></html>
+        """
+    )
+
+    with mock.patch.object(
+        client,
+        "_download_browser_backed_related_assets",
+    ) as download_assets:
+        result = client.download_related_assets(
+            IOP_CURRENT_SUPPLEMENTARY_DOI,
+            {"doi": IOP_CURRENT_SUPPLEMENTARY_DOI},
+            raw_payload,
+            tmp_path,
+            asset_profile="all",
+        )
+
+    download_assets.assert_not_called()
+    assert result["assets"] == []
+    assert result["asset_failures"] == [
+        {
+            "kind": "supplementary",
+            "heading": "Supplementary data",
+            "caption": "",
+            "source_url": index_url,
+            "reason": "iop_supplementary_index_fetch_failed",
+            "section": "supplementary",
+            "source_kind": "iop_supplementary_index",
+            "upstream_reason": "login_or_access_html",
+            "status": 403,
+            "content_type": "text/html",
+        }
+    ]
+    assert index_fetcher.closed is True
 
 
 def test_iop_real_replay_covers_table_and_formula_purposes() -> None:

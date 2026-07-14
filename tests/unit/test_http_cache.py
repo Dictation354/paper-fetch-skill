@@ -582,6 +582,22 @@ class HttpTransportCacheTests(unittest.TestCase):
         self.assertNotIn("log-secret-token", rendered_payloads)
         self.assertNotIn("Bearer", rendered_payloads)
 
+    def test_url_redaction_covers_aws_signed_query_parameters(self) -> None:
+        signed_url = (
+            "https://assets.example.test/supplement.docx"
+            "?X-Amz-Credential=test-credential"
+            "&X-Amz-Signature=test-signature"
+            "&response-content-type=application%2Foctet-stream"
+        )
+
+        redacted = http_module.redact_url_for_cache(signed_url)
+
+        self.assertNotIn("test-credential", redacted)
+        self.assertNotIn("test-signature", redacted)
+        self.assertIn("X-Amz-Credential=%2A%2A%2A", redacted)
+        self.assertIn("X-Amz-Signature=%2A%2A%2A", redacted)
+        self.assertIn("response-content-type=application%2Foctet-stream", redacted)
+
     def test_cache_key_redacts_sensitive_query_params(self) -> None:
         transport = http_module.HttpTransport(cache_ttl=30, cache_capacity=128)
 

@@ -2102,7 +2102,7 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         fetcher._sync_context_cookies = mock.Mock()
         fetcher._warm_seed_urls = mock.Mock()
 
-        def side_effect(current_url: str):
+        def side_effect(current_url: str, _asset: object):
             fetcher._record_failure(
                 current_url,
                 status=403,

@@ -56,10 +56,12 @@ UNSTABLE_CACHE_HEADER_NAMES = {
 SENSITIVE_QUERY_PARAM_NAMES = {
     "api_key",
     "apikey",
+    "awsaccesskeyid",
     "token",
     "auth",
     "authorization",
     "mailto",
+    "signature",
 }
 REDACTED_CACHE_VALUE = "***"
 REDACTED_CACHE_HEADER_DIGEST_PREFIX = "sha256:"
@@ -96,6 +98,7 @@ def redact_url_for_cache(url: str) -> str:
                 key,
                 REDACTED_CACHE_VALUE
                 if key.lower() in SENSITIVE_QUERY_PARAM_NAMES
+                or key.lower().startswith("x-amz-")
                 else value,
             )
             for key, value in query_items

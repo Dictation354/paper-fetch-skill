@@ -510,6 +510,35 @@ def test_file_fetcher_passes_cdp_endpoint_to_context_factory() -> None:
     fake_manager.close.assert_called_once()
 
 
+def test_file_fetcher_forwards_explicit_asset_referer() -> None:
+    file_url = "https://assets.example.test/supplement.docx"
+    referer_url = "https://publisher.example.test/article/10.1000/example/data"
+    response = mock.Mock(status=200, url=file_url)
+    response.all_headers.return_value = {
+        "content-type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    }
+    response.body.return_value = b"PK\x03\x04example-docx"
+    request_client = mock.Mock()
+    request_client.get.return_value = response
+    fetcher = browser_workflow._SharedBrowserFileDocumentFetcher(
+        browser_context_seed_getter=lambda: {},
+        seed_urls_getter=lambda: [],
+    )
+    fetcher._context = mock.Mock(request=request_client)
+
+    result = fetcher._fetch_with_context_request(
+        file_url,
+        {"kind": "supplementary", "referer_url": referer_url},
+    )
+
+    assert result is not None
+    request_client.get.assert_called_once_with(
+        file_url,
+        headers={"Accept": "*/*", "Referer": referer_url},
+        timeout=60000,
+    )
+
+
 def test_threaded_image_fetcher_closes_thread_private_browser_on_worker_thread() -> (
     None
 ):

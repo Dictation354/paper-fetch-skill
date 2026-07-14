@@ -6,6 +6,18 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 3.1.1 - 2026-07-14
+
+### 新增
+
+- `asset_profile=all` 新增有界的 IOP 补充材料展开流程：先识别同 DOI 的 `/data` 索引，再复用 browser cookie/Referer 提取并下载 `SM` 编号附件。
+- CI 新增聚焦契约门，覆盖 IOP 补充材料抽取、显式资产 Referer 透传、签名 URL 脱敏和 browser challenge 回归。
+
+### 修复
+
+- 修复 IOP 补充材料发现误把 `/data` 索引 HTML、figure 下载控件、二维码、父 DOI 不匹配、被阻断索引或空 scope 当作附件的问题；无法解析的已声明索引现在会产生结构化资产失败。
+- 修复 browser-backed 补充附件请求未透传显式 Referer，以及 cache key 和保留的资产诊断未脱敏 AWS `X-Amz-*`、`Signature`、`AWSAccessKeyId` 查询值的问题。
+
 ## 3.1.0 - 2026-07-13
 
 ### 新增
