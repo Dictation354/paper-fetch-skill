@@ -83,7 +83,7 @@ QualityConfidence = Literal["high", "medium", "low"]
 
 
 TRUNCATION_WARNING = "Output truncated to satisfy token budget."
-EXTRACTION_REVISION = 2
+EXTRACTION_REVISION = 3
 
 
 @dataclass

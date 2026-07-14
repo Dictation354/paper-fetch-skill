@@ -367,7 +367,7 @@ def test_capture_fixture_routes_block_purpose_to_block_fixture_dir(
 
     assert summary["route"] == "block"
     assert (
-        tmp_path / "tests" / "fixtures" / "block" / "10.1234_example" / "original.html"
+        tmp_path / "tests" / "fixtures" / "block" / "10.1234_example" / "raw.html"
     ).is_file()
     manifest = json.loads(
         (

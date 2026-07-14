@@ -1125,9 +1125,14 @@ def _lightweight_annualreviews_summary(fixture: GoldenCorpusFixture) -> dict[str
         )
     html_text = fixture.raw_path.read_text(encoding="utf-8", errors="ignore")
     metadata = parse_html_metadata(html_text, fixture.source_url)
-    article_html, title, _container_text_length, section_hints, abstract_sections = (
-        _annualreviews_html._cleaned_article_html(html_text, fixture.source_url)
-    )
+    (
+        article_html,
+        title,
+        _container_text_length,
+        section_hints,
+        abstract_sections,
+        _container_evidence,
+    ) = _annualreviews_html._cleaned_article_html(html_text, fixture.source_url)
     client = annualreviews_provider.AnnualreviewsClient(HttpTransport(), {})
     candidate_urls = client.html_candidates(
         fixture.doi,

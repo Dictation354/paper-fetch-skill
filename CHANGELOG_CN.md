@@ -6,6 +6,18 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 3.1.2 - 2026-07-14
+
+### 变更
+
+- HTML 全文验收改为同时要求可信的 article/body container scope 与实质正文证据；合成 `<article>` 规范化会保留原始 scope，并把 `EXTRACTION_REVISION` 提升到 3，使旧的误判 sidecar 重新抓取。
+- 新增聚焦的离线 CI 门和真实 Annual Reviews 空壳 replay，覆盖共享 availability、provider PDF fallback 与 block corpus 回归。
+
+### 修复
+
+- 修复空 full-text marker 与大量 Most Read、Most Cited、Recommended、Related 模块仅凭页面文字量被升级为全文的问题。
+- 修复 Annual Reviews 空落地页未触发 HTML 质量失败和既有 PDF fallback 的问题；同时锁住 Wiley `10.1002/joc.3370130706` 的摘要 datalayer 阻断行为。
+
 ## 3.1.1 - 2026-07-14
 
 ### 新增

@@ -159,8 +159,12 @@ SUPPLEMENTARY_BACK_MATTER_HEADINGS = (
 ANCILLARY_HEADINGS = frozenset(
     {
         "recommended",
+        "recommendations",
         "related content",
         *RELATED_CONTENT_CHROME_TOKENS,
+        "most read",
+        "most read this month",
+        "most cited",
         "metrics",
         "metrics & citations",
         "view options",
@@ -286,6 +290,10 @@ ANCILLARY_TOKENS = (
     "additional-information",
     "profiles",
     "subscribe",
+    "mostread",
+    "most-read",
+    "mostcited",
+    "most-cited",
 )
 IDENTITY_ATTR_KEYS = (
     "id",
@@ -617,6 +625,7 @@ def classify_html_paragraph(
     in_abstract: bool = False,
     in_data_availability: bool = False,
     in_code_availability: bool = False,
+    in_auxiliary: bool = False,
     looks_like_front_matter_paragraph: Callable[[str], bool] | None = None,
     is_substantial_prose: Callable[[str], bool] | None = None,
     looks_like_access_gate_text: Callable[[str], bool] | None = None,
@@ -631,6 +640,8 @@ def classify_html_paragraph(
         return "data_availability"
     if in_code_availability:
         return "code_availability"
+    if in_auxiliary:
+        return "ancillary"
 
     identity_kind = identity_category(ancestor_identity_text(node))
     if identity_kind in {

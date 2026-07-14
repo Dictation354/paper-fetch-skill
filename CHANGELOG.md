@@ -6,6 +6,18 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 3.1.2 - 2026-07-14
+
+### Changed
+
+- Changed HTML full-text acceptance to require a trusted article/body container scope plus substantive body evidence, preserved the original scope through synthetic `<article>` normalization, and raised `EXTRACTION_REVISION` to 3 so stale false-positive sidecars are refetched.
+- Added a focused offline CI gate and a real Annual Reviews empty-shell replay for shared availability, provider fallback, and block-corpus regressions.
+
+### Fixed
+
+- Fixed landing pages with empty full-text markers and large Most Read, Most Cited, Recommended, or Related modules being promoted to full text solely by page text volume.
+- Fixed Annual Reviews empty landing shells so they fail HTML quality assessment and continue through the existing PDF fallback; retained Wiley abstract datalayer blocking for `10.1002/joc.3370130706`.
+
 ## 3.1.1 - 2026-07-14
 
 ### Added

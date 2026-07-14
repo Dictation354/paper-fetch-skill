@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import asdict, dataclass, field
-from typing import Any
+from typing import Any, Literal
 from collections.abc import Callable, Mapping
 
 from ..common_patterns import HEADING_TAG_PATTERN
@@ -37,6 +37,7 @@ from ..extraction.html.semantics import (
     looks_like_explicit_body_container,
     match_next_html_section_hint,
     node_identity_text,
+    node_source_selector,
     normalize_heading,
 )
 from ..extraction.html.shared import (
@@ -98,6 +99,26 @@ HTML_CONTAINER_DROP_AVAILABILITY = "availability"
 HTML_CONTAINER_DROP_BROWSER_WORKFLOW = "browser_workflow"
 HTML_CONTAINER_BROWSER_WORKFLOW_FALLBACK_TAGS = ("article", "main", "body")
 HTML_CONTAINER_BODY_SELECTORS = ARTICLE_BODY_SELECTORS
+HtmlContainerScope = Literal["explicit_body", "article", "page"]
+HTML_CONTAINER_SCOPE_EXPLICIT_BODY: HtmlContainerScope = "explicit_body"
+HTML_CONTAINER_SCOPE_ARTICLE: HtmlContainerScope = "article"
+HTML_CONTAINER_SCOPE_PAGE: HtmlContainerScope = "page"
+
+
+@dataclass(frozen=True)
+class HtmlContainerEvidence:
+    """Origin evidence for a selected HTML container.
+
+    Provider extractors sometimes normalize a selected node into a synthetic
+    ``<article>`` before quality assessment.  Keeping the original scope here
+    prevents that normalization from upgrading a page-level shell into an
+    article-level full-text signal.
+    """
+
+    tag: str | None
+    selector: str | None
+    scope: HtmlContainerScope
+    synthetic: bool = False
 
 
 @dataclass(frozen=True)
@@ -114,7 +135,10 @@ class HtmlContainerSelectionPolicy:
 
 @dataclass
 class StructuredBodyAnalysis:
+    body_marker_present: bool = False
+    substantive_article_container: bool = False
     explicit_body_container: bool = False
+    substantive_body_container: bool = False
     post_abstract_body_run: bool = False
     narrative_article_type: bool = False
     paywall_text_outside_body_ignored: bool = False
@@ -302,6 +326,46 @@ def _has_selector_descendant(node: Tag, selectors: tuple[str, ...]) -> bool:
     return False
 
 
+def _matches_selector(node: Tag, selector: str) -> bool:
+    try:
+        return bool(node.css.match(selector))
+    except Exception:
+        return False
+
+
+def html_container_evidence(
+    node: Tag,
+    *,
+    policy: HtmlContainerSelectionPolicy | None = None,
+    selector: str | None = None,
+    scope: HtmlContainerScope | None = None,
+    synthetic: bool = False,
+) -> HtmlContainerEvidence:
+    """Describe the original trust scope of a selected container."""
+
+    active_policy = policy or HtmlContainerSelectionPolicy()
+    node_name = normalize_text(node.name or "").lower() or None
+    resolved_scope = scope
+    if resolved_scope is None:
+        if looks_like_explicit_body_container(node) or any(
+            _matches_selector(node, candidate)
+            for candidate in active_policy.body_selectors
+        ):
+            resolved_scope = HTML_CONTAINER_SCOPE_EXPLICIT_BODY
+        elif node_name == "article" or re.search(
+            r"(?:^|[\s_-])article(?:$|[\s_-])", node_identity_text(node)
+        ):
+            resolved_scope = HTML_CONTAINER_SCOPE_ARTICLE
+        else:
+            resolved_scope = HTML_CONTAINER_SCOPE_PAGE
+    return HtmlContainerEvidence(
+        tag=node_name,
+        selector=normalize_text(selector or node_source_selector(node)) or None,
+        scope=resolved_scope,
+        synthetic=synthetic,
+    )
+
+
 def _browser_workflow_score_container(node: Tag) -> float:
     text = " ".join(node.stripped_strings)
     text_length = len(text)
@@ -341,6 +405,10 @@ def score_container(
     identity_bonus = 0.0
     if looks_like_explicit_body_container(node):
         identity_bonus += 400.0
+    if normalize_text(node.name or "").lower() == "article" or re.search(
+        r"(?:^|[\s_-])article(?:$|[\s_-])", identity
+    ):
+        identity_bonus += 200.0
     if any(token in identity for token in BACK_MATTER_TOKENS):
         identity_bonus -= 120.0
     return float(
@@ -665,6 +733,57 @@ def _run_candidate_barrier(kind: str) -> bool:
     }
 
 
+def _availability_section_scan_state() -> SectionScanState:
+    return SectionScanState(
+        enabled_states=frozenset(
+            {
+                "body",
+                "abstract",
+                "back_matter",
+                "front_matter",
+                "data_availability",
+                "auxiliary",
+            }
+        )
+    )
+
+
+def _substantive_explicit_body_container(container: Tag) -> bool:
+    candidates = [
+        node
+        for node in (container, *container.find_all(True))
+        if isinstance(node, Tag) and looks_like_explicit_body_container(node)
+    ]
+    for candidate in candidates:
+        paragraphs = [
+            normalize_text(node.get_text(" ", strip=True))
+            for node in candidate.find_all("p")
+            if isinstance(node, Tag)
+        ]
+        if any(_is_substantial_prose(text) for text in paragraphs):
+            return True
+        if not paragraphs and _is_substantial_prose(
+            normalize_text(candidate.get_text(" ", strip=True))
+        ):
+            return True
+    return False
+
+
+def _substantive_article_container(container: Tag) -> bool:
+    candidates = (
+        [container]
+        if normalize_text(str(container.name or "")).lower() == "article"
+        else []
+    )
+    candidates.extend(
+        node for node in container.find_all("article") if isinstance(node, Tag)
+    )
+    return any(
+        _is_substantial_prose(normalize_text(node.get_text(" ", strip=True)))
+        for node in candidates
+    )
+
+
 def _apply_availability_override_policy(
     *,
     provider: str | None,
@@ -755,7 +874,7 @@ def _analyze_html_structure(
     title: str | None,
     metadata: Mapping[str, Any] | None,
     final_url: str | None,
-) -> tuple[StructuredBodyAnalysis, str | None, int | None]:
+) -> tuple[StructuredBodyAnalysis, HtmlContainerEvidence | None, int | None]:
     analysis = StructuredBodyAnalysis(
         narrative_article_type=_is_narrative_article_type(
             _extract_article_type(metadata, provider=provider, html_text=html_text)
@@ -775,7 +894,13 @@ def _analyze_html_structure(
         return analysis, None, None
 
     clean_container(container, provider)
-    analysis.explicit_body_container = container_has_explicit_body_container(container)
+    container_evidence = html_container_evidence(container)
+    analysis.body_marker_present = container_has_explicit_body_container(container)
+    analysis.substantive_article_container = _substantive_article_container(container)
+    analysis.substantive_body_container = _substantive_explicit_body_container(
+        container
+    )
+    analysis.explicit_body_container = analysis.substantive_body_container
     container_text = normalize_text(container.get_text(" ", strip=True))
     page_text = _normalized_page_text(html_text)
     analysis.page_has_paywall_text = contains_access_gate_text(page_text)
@@ -784,11 +909,11 @@ def _analyze_html_structure(
     blocks = iter_html_blocks(container)
     body_chunks: list[str] = []
     normalized_title_heading = normalize_heading(title or "")
-    state = SectionScanState()
+    state = _availability_section_scan_state()
 
     for block in blocks:
         if block["kind"] == "marker":
-            analysis.explicit_body_container = True
+            analysis.body_marker_present = True
             continue
 
         node = block["node"]
@@ -816,6 +941,7 @@ def _analyze_html_structure(
                 in_front_matter=state.in_front_matter,
                 in_abstract=state.in_abstract,
                 in_data_availability=state.in_data_availability,
+                in_auxiliary=state.in_auxiliary,
                 looks_like_front_matter_paragraph=lambda value: (
                     _looks_like_front_matter_paragraph(value, title=title)
                 ),
@@ -881,7 +1007,7 @@ def _analyze_html_structure(
         final_url=final_url,
         metadata=metadata,
     )
-    return analysis, container.name, len(" ".join(container.stripped_strings))
+    return analysis, container_evidence, len(" ".join(container.stripped_strings))
 
 
 def _analyze_markdown_structure(
@@ -903,7 +1029,7 @@ def _analyze_markdown_structure(
     ]
     normalized_title_heading = normalize_heading(title or "")
     coerced_section_hints = coerce_html_section_hints(section_hints)
-    state = SectionScanState()
+    state = _availability_section_scan_state()
     body_chunks: list[str] = []
     section_hint_index = 0
 
@@ -945,6 +1071,8 @@ def _analyze_markdown_structure(
                 category = "data_availability"
             elif state.in_abstract:
                 category = "abstract"
+            elif state.in_auxiliary:
+                category = "ancillary"
             elif _looks_like_access_gate_text(block):
                 category = "ancillary"
         if access_gate_markers:
@@ -990,9 +1118,20 @@ def _analyze_markdown_structure(
 
 
 def _structure_accepts_fulltext(analysis: StructuredBodyAnalysis) -> bool:
-    if analysis.explicit_body_container and analysis.body_paragraph_count >= 1:
+    if (
+        analysis.explicit_body_container
+        and analysis.body_run_paragraph_count >= 1
+        and analysis.body_run_char_count >= 80
+    ):
         return True
-    if analysis.post_abstract_body_run:
+    if (
+        analysis.substantive_article_container
+        and analysis.post_abstract_body_run
+        and analysis.body_run_paragraph_count >= 1
+        and analysis.body_run_char_count >= 80
+    ):
+        return True
+    if analysis.post_abstract_body_run and analysis.body_run_paragraph_count >= 2:
         return True
     if analysis.body_run_paragraph_count >= 3:
         return True
@@ -1165,12 +1304,14 @@ def assess_html_fulltext_availability(
     *,
     provider: str | None = None,
     html_text: str | None = None,
+    structure_html_text: str | None = None,
     title: str | None = None,
     response_status: int | None = None,
     requested_url: str | None = None,
     final_url: str | None = None,
     container_tag: str | None = None,
     container_text_length: int | None = None,
+    container_evidence: HtmlContainerEvidence | None = None,
     section_hints: Any = None,
 ) -> FulltextAvailabilityDiagnostics:
     metadata_map = dict(metadata or {})
@@ -1192,20 +1333,49 @@ def assess_html_fulltext_availability(
     structure = StructuredBodyAnalysis()
     resolved_container_tag = container_tag
     resolved_container_text_length = container_text_length
-    if html_text:
-        structure, inferred_container_tag, inferred_container_text_length = (
+    resolved_container_evidence = container_evidence
+    analyzed_html_text = structure_html_text or html_text
+    if analyzed_html_text:
+        structure, inferred_container_evidence, inferred_container_text_length = (
             _analyze_html_structure(
-                html_text,
+                analyzed_html_text,
                 provider=provider,
                 title=normalized_title,
                 metadata=metadata_map,
                 final_url=final_url,
             )
         )
+        if resolved_container_evidence is None:
+            resolved_container_evidence = inferred_container_evidence
         if not resolved_container_tag:
-            resolved_container_tag = inferred_container_tag
+            resolved_container_tag = (
+                inferred_container_evidence.tag
+                if inferred_container_evidence is not None
+                else None
+            )
         if not resolved_container_text_length:
             resolved_container_text_length = inferred_container_text_length
+    resolved_container_scope = (
+        resolved_container_evidence.scope
+        if resolved_container_evidence is not None
+        else HTML_CONTAINER_SCOPE_PAGE
+    )
+    if (
+        resolved_container_scope == HTML_CONTAINER_SCOPE_EXPLICIT_BODY
+        and structure.body_paragraph_count > 0
+    ):
+        structure.substantive_body_container = True
+        structure.explicit_body_container = True
+    synthetic_page_wrapper = bool(
+        resolved_container_evidence
+        and resolved_container_evidence.synthetic
+        and resolved_container_scope == HTML_CONTAINER_SCOPE_PAGE
+    )
+    trusted_container_scope = not analyzed_html_text or (
+        resolved_container_scope == HTML_CONTAINER_SCOPE_ARTICLE
+        or (structure.substantive_article_container and not synthetic_page_wrapper)
+        or structure.substantive_body_container
+    )
     structure_ok = _structure_accepts_fulltext(structure)
     body_ok_fallback = has_sufficient_article_body(
         markdown_text,
@@ -1213,14 +1383,27 @@ def assess_html_fulltext_availability(
         section_hints=section_hints,
         provider=provider,
     )
-    body_ok = structure_ok or body_ok_fallback
+    body_ok = trusted_container_scope and (structure_ok or body_ok_fallback)
     metrics = body_metrics(markdown_text, metadata_map, section_hints=section_hints)
     metrics["body_run_paragraph_count"] = structure.body_run_paragraph_count
     metrics["body_run_char_count"] = structure.body_run_char_count
     metrics["body_paragraph_count"] = structure.body_paragraph_count
+    metrics["body_marker_present"] = structure.body_marker_present
+    metrics["substantive_article_container"] = structure.substantive_article_container
     metrics["explicit_body_container"] = structure.explicit_body_container
+    metrics["substantive_body_container"] = structure.substantive_body_container
     metrics["post_abstract_body_run"] = structure.post_abstract_body_run
     metrics["narrative_article_type"] = structure.narrative_article_type
+    metrics["container_scope"] = resolved_container_scope
+    metrics["container_scope_trusted"] = trusted_container_scope
+    metrics["container_selector"] = (
+        resolved_container_evidence.selector
+        if resolved_container_evidence is not None
+        else None
+    )
+    metrics["container_synthetic"] = bool(
+        resolved_container_evidence and resolved_container_evidence.synthetic
+    )
     strong_positive_signals: list[str] = []
     soft_positive_signals: list[str] = []
     abstract_only_hints: list[str] = []
@@ -1230,6 +1413,8 @@ def assess_html_fulltext_availability(
         strong_positive_signals.append(BODY_SUFFICIENT)
     if structure.explicit_body_container:
         strong_positive_signals.append("explicit_body_container")
+    elif structure.body_marker_present:
+        soft_positive_signals.append("body_container_marker_only")
     if structure.post_abstract_body_run:
         strong_positive_signals.append("post_abstract_body_run")
     if structure.body_run_paragraph_count:
@@ -1238,6 +1423,8 @@ def assess_html_fulltext_availability(
         strong_positive_signals.append("selected_container_has_body_text")
     if resolved_container_tag:
         soft_positive_signals.append("selected_article_container")
+    if not trusted_container_scope:
+        soft_positive_signals.append("untrusted_container_scope")
     if figure_count:
         soft_positive_signals.append("has_figures")
     if structure.narrative_article_type:

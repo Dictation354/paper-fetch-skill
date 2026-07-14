@@ -567,7 +567,9 @@ class PublisherWaterfallTests(unittest.TestCase):
                 b"<html><head>"
                 + f'<meta name="citation_title" content="{SPRINGER_SAMPLE.title}" />'.encode()
                 + f'<meta name="citation_doi" content="{SPRINGER_SAMPLE.doi}" />'.encode()
-                + f"</head><body><article><h1>{SPRINGER_SAMPLE.title}</h1></article></body></html>".encode()
+                + f"</head><body><article><h1>{SPRINGER_SAMPLE.title}</h1><section><h2>Results</h2><p>".encode()
+                + (b"Body text " * 120)
+                + b"</p></section></article></body></html>"
             ),
             "url": landing_url,
         }
@@ -613,7 +615,9 @@ class PublisherWaterfallTests(unittest.TestCase):
                 + f'<meta name="citation_doi" content="{SPRINGER_SAMPLE.doi}" />'.encode()
                 + b'<meta name="citation_author" content="Alice Example" />'
                 + b'<meta name="citation_author" content="Bob Example" />'
-                + f"</head><body><article><h1>{SPRINGER_SAMPLE.title}</h1></article></body></html>".encode()
+                + f"</head><body><article><h1>{SPRINGER_SAMPLE.title}</h1><section><h2>Results</h2><p>".encode()
+                + (b"Body text " * 120)
+                + b"</p></section></article></body></html>"
             ),
             "url": landing_url,
         }

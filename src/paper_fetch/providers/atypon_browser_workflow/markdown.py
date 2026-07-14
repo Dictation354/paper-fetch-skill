@@ -15,6 +15,7 @@ from ...quality.html_availability import (
     HtmlQualityAssessor,
     availability_failure_message,
     clean_container,
+    html_container_evidence,
     select_best_container,
 )
 from ...publisher_identity import normalize_doi
@@ -54,18 +55,19 @@ def extract_browser_workflow_markdown(
     soup = BeautifulSoup(html_text, choose_parser())
     title = extract_page_title(soup)
     title = _preferred_title_from_metadata(title, metadata)
-    container = select_best_container(
-        soup, publisher, policy=_container_selection_policy(publisher)
-    )
+    container_policy = _container_selection_policy(publisher)
+    container = select_best_container(soup, publisher, policy=container_policy)
     if container is None:
         raise HtmlExtractionFailure(
             "article_container_not_found",
             "Could not identify the main article container in publisher HTML.",
         )
+    container_evidence = html_container_evidence(container, policy=container_policy)
 
     clean_container(
         container, publisher, drop_profile=HTML_CONTAINER_DROP_BROWSER_WORKFLOW
     )
+    availability_container_html = str(container)
     from ...extraction.html.assets import extract_figure_assets
 
     profile = _publisher_profile(publisher)
@@ -129,10 +131,12 @@ def extract_browser_workflow_markdown(
         markdown,
         quality_metadata,
         html_text=html_text,
+        structure_html_text=availability_container_html,
         title=title,
         final_url=source_url,
         container_tag=container.name,
         container_text_length=len(" ".join(container.stripped_strings)),
+        container_evidence=container_evidence,
         section_hints=section_hints,
     )
     if not diagnostics.accepted:
@@ -148,6 +152,9 @@ def extract_browser_workflow_markdown(
         "abstract_sections": abstract_sections,
         "section_hints": section_hints,
         "container_tag": container.name,
+        "container_selector": container_evidence.selector,
+        "container_scope": container_evidence.scope,
+        "container_synthetic": container_evidence.synthetic,
         "container_text_length": len(" ".join(container.stripped_strings)),
         "availability_diagnostics": diagnostics.to_dict(),
     }

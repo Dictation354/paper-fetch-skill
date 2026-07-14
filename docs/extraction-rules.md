@@ -135,7 +135,7 @@ metadata
 | [LaTeX normalization](#rule-formula-latex-normalization) | normalize 分支无 DOI 级 replay；已有 `_scenarios/formula_latex_normalization`。 | 真实 MathML 转换产出新 KaTeX 不兼容宏。 | 包含 publisher-specific MathML 宏或 mtext 转义的 XML / HTML。 |
 | [HTML bytes 解码和清洗 fallback 边界](#rule-html-byte-decoding-and-cleanup-bounds) | 当前无稳定 DOI 样本；已有 unit tests 锁定 charset 顺序、provider raw HTML 解码、no-root cheap cleanup、raw trafilatura 上限和 ORCID 常量。 | 真实 publisher HTML 出现非 UTF-8 charset、无内容根大页面或 raw fallback 性能回归。 | 带 HTTP charset/meta charset 的原始 HTML replay，或 no-root 大 HTML replay。 |
 | `royalsocietypublishing` docs sync | manifest docs.extraction_rules_summary is null; no unstable DOI rule row required yet. | Provider fixture replay or Markdown review exposes a docs-rule gap. | `onboarding/manifests/royalsocietypublishing.yml` |
-| `annualreviews` | HTML fixture replay 已覆盖 `#html_fulltext` / `#itemFullTextId` 全文容器、`.articleSection` 正文段落、Annual Reviews figure/table 节点和 references；清洗链 proposal 已通过 `check-cleaning-proposal`。 | Annual Reviews 需要 provider-owned HTML extraction：选择动态全文容器，移除导航、访问 UI、PDF/PPT 操作、section menu、reference resolver 链接和动态 shell/comment 噪声，并在渲染前规范化章节标题、figure caption 与 table caption；通用 Atypon 抽取不足以维护这些结构。 | 继续补充稳定 table/formula/supplementary DOI 样本；PowerPoint 链接明确排除在 supplementary scope 之外。 |
+| `annualreviews` | HTML fixture replay 已覆盖 `#html_fulltext` / `#itemFullTextId` 全文容器、`.articleSection` 正文段落、Annual Reviews figure/table 节点和 references；`10.1146/annurev.pp.19.060168.001235` 另覆盖空 `#html_fulltext` 加 Most Read/Most Cited 卡片的真实落地页。 | Annual Reviews 需要 provider-owned HTML extraction：选择动态全文容器，保留原始 container scope，移除导航、访问 UI、PDF/PPT 操作、section menu、reference resolver、Most Read/Most Cited/推荐模块和动态 shell/comment 噪声，并在渲染前规范化章节标题、figure caption 与 table caption；通用 Atypon 抽取不足以维护这些结构。 | 继续补充稳定 table/formula/supplementary DOI 样本；PowerPoint 链接明确排除在 supplementary scope 之外。 |
 | `plos` docs sync | manifest docs.extraction_rules_summary is null; no unstable DOI rule row required yet. | Provider fixture replay or Markdown review exposes a docs-rule gap. | `onboarding/manifests/plos.yml` |
 | `frontiers` docs sync | Frontiers 复用 shared JATS rendering，并把 XML graphic 文件名重写为 `/files/Articles/{id}/xml-images/*.webp` 资产 URL。 | Provider fixture replay or Markdown review exposes a docs-rule gap. | `onboarding/manifests/frontiers.yml` |
 | `oxfordacademic` docs sync | Oxford Academic cleanup should preserve article abstract, body headings, figures, body tables, Silverchair formula paragraph text, supplementary data links, and visible `.ref-list` references while removing Oxford Academic navigation, metrics, author search links, slide/download chrome, citation widgets, and raw `citation_*` meta key strings. | Provider fixture replay or Markdown review exposes a docs-rule gap. | `onboarding/manifests/oxfordacademic.yml` |
@@ -328,6 +328,7 @@ metadata
 - 它对应的阶段是：`availability-quality`、`article-assembly`。
 - Owner：`paper_fetch.quality.html_availability` 与 `paper_fetch.extraction.html.provider_rules`；HTML container 评分、选择、清理的架构边界见 [architecture/overview.md 的 Extraction 层](architecture/overview.md#6-extraction-层)。
 - 代表性 HTML / XML：
+  - [`../tests/fixtures/block/10.1146_annurev.pp.19.060168.001235/raw.html`](../tests/fixtures/block/10.1146_annurev.pp.19.060168.001235/raw.html)
   - [`../tests/fixtures/block/10.1126_science.aeg3511/raw.html`](../tests/fixtures/block/10.1126_science.aeg3511/raw.html)
   - [`../tests/fixtures/golden_criteria/10.1126_science.aeg3511/original.html`](../tests/fixtures/golden_criteria/10.1126_science.aeg3511/original.html)
   - [`../tests/fixtures/block/10.1111_gcb.16414/raw.html`](../tests/fixtures/block/10.1111_gcb.16414/raw.html)
@@ -335,8 +336,14 @@ metadata
   - [`../tests/fixtures/block/10.1073_pnas.2509692123/raw.html`](../tests/fixtures/block/10.1073_pnas.2509692123/raw.html)
   - [`../tests/fixtures/golden_criteria/10.1073_pnas.2309123120/original.html`](../tests/fixtures/golden_criteria/10.1073_pnas.2309123120/original.html)
   - [`../tests/fixtures/block/10.1007_s00382-018-4286-0/raw.html`](../tests/fixtures/block/10.1007_s00382-018-4286-0/raw.html)
-  - 这些样本分别覆盖 Science、Wiley、PNAS 和 Springer 的 paywall / entitled 对照场景。
+  - 这些样本分别覆盖 Annual Reviews 空全文 shell、Science、Wiley、PNAS 和 Springer 的 paywall / entitled 对照场景。
 - 对应测试：
+  - [`../tests/unit/test_annualreviews_provider.py`](../tests/unit/test_annualreviews_provider.py) 中的 `test_real_empty_shell_does_not_promote_page_chrome_to_fulltext`
+  - [`../tests/unit/test_annualreviews_provider.py`](../tests/unit/test_annualreviews_provider.py) 中的 `test_empty_shell_html_failure_continues_to_annualreviews_pdf_fallback`
+  - [`../tests/unit/test_html_availability.py`](../tests/unit/test_html_availability.py) 中的 `test_assess_html_rejects_large_page_shell_with_empty_fulltext_marker`
+  - [`../tests/unit/test_html_availability.py`](../tests/unit/test_html_availability.py) 中的 `test_assess_html_synthetic_article_preserves_page_scope`
+  - [`../tests/unit/test_html_availability.py`](../tests/unit/test_html_availability.py) 中的 `test_assess_html_real_article_stays_fulltext_with_repeated_ui_cards`
+  - [`../tests/unit/test_html_availability.py`](../tests/unit/test_html_availability.py) 中的 `test_assess_html_rejects_target_wiley_abstract_datalayer`
   - [`../tests/unit/test_atypon_browser_workflow_markdown.py`](../tests/unit/test_atypon_browser_workflow_markdown.py) 中的 `test_pnas_abstract_fixture_is_rejected`
   - [`../tests/unit/test_html_availability.py`](../tests/unit/test_html_availability.py) 中的 `test_assess_html_rejects_science_paywall_sample_with_abstract`
   - [`../tests/unit/test_html_availability.py`](../tests/unit/test_html_availability.py) 中的 `test_assess_html_accepts_science_entitled_fulltext_fixture`
@@ -353,6 +360,9 @@ metadata
   - 这条规则不约束 provider 路由、PDF fallback 编排或 live 网络重试。
   - 它只约束“用户实际可见的 HTML 内容类型判定不能错位”。
   - availability 相关阈值分三组维护：near-duplicate / inflated abstract 保护渲染层不重复输出摘要；HTML body scoring 保护 access gate 与真实正文判定；provider body thresholds 只覆盖 XML/纯文本 provider 的最小正文量。这些阈值只随回归样本一起调整，不能在单个 provider 内临时覆盖。
+  - HTML 接受条件是“可信 container scope + 实质正文证据 + 无 blocking signal”。真实 `article`、有内容的显式 body container，或包含上述实质子容器的 page-level root 才属于可信 scope；空 `fulltext` ID/class 只是 marker，不能与页面其它位置的推荐卡片拼成正文证据。
+  - `main` / `body` 的页面总字数、段落数、heading 数和重复 UI 数量不能独立证明全文。provider 把选中节点包装成合成 `<article>` 时必须传递原始 selector/scope，并在 diagnostics 的 body metrics 中保留 `container_scope`、`container_scope_trusted`、`container_selector` 与 `container_synthetic`。
+  - Most Read、Most Cited、Recommended 和 Related 等 auxiliary section 后的卡片不计入正文；重复这些 UI 不能把拒绝翻成接受，把相同 UI 附加到真实正文也不能把接受翻成拒绝。
   - Publisher 私有的 availability override（例如 Science perspective、Elsevier canonical abstract URL、Springer preview wall vs body run、Springer/Nature article-in-press notice）必须通过 provider `AvailabilityPolicy` / `ProviderHtmlRules.availability` 注册；access-gate 文案统一来自 `paper_fetch.extraction.html.signals.ACCESS_GATE_LABELS` / `ACCESS_GATE_PATTERNS`，Markdown 降噪只引用 `MARKDOWN_ACCESS_NOISE_LABELS`，不得在 provider 后处理或 runtime 中复制。
   - Springer/Nature 的 `We are providing an unedited version of this manuscript` 只是 Article-in-Press 访问提示；没有真实 `post_abstract_body_run` 时必须作为 blocking fallback signal，触发 provider 内部 PDF fallback，不能用这段提示撑起 HTML fulltext 判定。
 

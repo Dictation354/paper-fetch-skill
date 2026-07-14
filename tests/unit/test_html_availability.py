@@ -10,6 +10,8 @@ from paper_fetch.providers import _springer_html as springer_html
 from paper_fetch.providers import browser_workflow
 from paper_fetch.quality import html_availability as html_availability_module
 from paper_fetch.quality.html_availability import (
+    HTML_CONTAINER_SCOPE_PAGE,
+    HtmlContainerEvidence,
     HtmlQualityAssessor,
     assess_html_fulltext_availability,
     assess_plain_text_fulltext_availability,
@@ -292,17 +294,172 @@ class HtmlAvailabilityTests(unittest.TestCase):
         self,
     ) -> None:
         markdown = "# Example Article\n\n## Results\n\n" + ("Body text " * 120)
+        html_body = "Body text " * 120
         diagnostics = assess_html_fulltext_availability(
             markdown,
             {"title": "Example Article", "doi": "10.1000/example"},
             provider="generic",
-            html_text="<html><body><article><div property='articleBody'>Body</div></article></body></html>",
+            html_text=(
+                "<html><body><article><div property='articleBody'>"
+                f"{html_body}"
+                "</div></article></body></html>"
+            ),
             title="Example Article",
         )
 
         self.assertTrue(diagnostics.accepted)
         self.assertEqual(diagnostics.reason, "body_sufficient")
         self.assertEqual(diagnostics.figure_count, 0)
+
+    def test_assess_html_rejects_large_page_shell_with_empty_fulltext_marker(
+        self,
+    ) -> None:
+        recommendation = (
+            "A recommended article card contains a long title, author list, journal "
+            "metadata, publication details, and descriptive interface copy. "
+        )
+        for repeat_count in (1, 10, 100):
+            with self.subTest(repeat_count=repeat_count):
+                cards = "".join(f"<p>{recommendation}</p>" for _ in range(repeat_count))
+                markdown = "## Most Read This Month\n\n" + "\n\n".join(
+                    recommendation for _ in range(repeat_count)
+                )
+                diagnostics = assess_html_fulltext_availability(
+                    markdown,
+                    {"title": "Landing Page Shell", "doi": "10.1000/shell"},
+                    provider="generic",
+                    html_text=(
+                        "<html><body><main><h1>Landing Page Shell</h1>"
+                        "<div id='html_fulltext'></div>"
+                        "<section class='mostreadcontainer'>"
+                        "<h2>Most Read This Month</h2>"
+                        f"{cards}</section></main></body></html>"
+                    ),
+                    title="Landing Page Shell",
+                )
+
+                self.assertFalse(diagnostics.accepted)
+                self.assertTrue(diagnostics.body_metrics["body_marker_present"])
+                self.assertFalse(diagnostics.body_metrics["substantive_body_container"])
+                self.assertFalse(diagnostics.body_metrics["container_scope_trusted"])
+                self.assertIn(
+                    "body_container_marker_only", diagnostics.soft_positive_signals
+                )
+
+    def test_assess_html_synthetic_article_preserves_page_scope(self) -> None:
+        paragraph = (
+            "This page-level recommendation paragraph is deliberately long enough "
+            "to satisfy the legacy body-volume heuristic. "
+        )
+        diagnostics = assess_html_fulltext_availability(
+            "\n\n".join(paragraph * 5 for _ in range(3)),
+            {"title": "Synthetic Shell", "doi": "10.1000/synthetic-shell"},
+            provider="generic",
+            html_text=(
+                "<article><h2>Recommendations</h2>"
+                + "".join(f"<p>{paragraph * 5}</p>" for _ in range(3))
+                + "</article>"
+            ),
+            title="Synthetic Shell",
+            container_tag="article",
+            container_evidence=HtmlContainerEvidence(
+                tag="article",
+                selector="main",
+                scope=HTML_CONTAINER_SCOPE_PAGE,
+                synthetic=True,
+            ),
+        )
+
+        self.assertFalse(diagnostics.accepted)
+        self.assertEqual(diagnostics.body_metrics["container_scope"], "page")
+        self.assertTrue(diagnostics.body_metrics["container_synthetic"])
+
+    def test_assess_html_accepts_main_with_substantive_body_descendant(self) -> None:
+        first = (
+            "The first results paragraph reports methods and observations in enough "
+            "detail to identify substantive article prose. "
+        ) * 4
+        second = (
+            "The second results paragraph interprets those observations and provides "
+            "a separate continuous body block. "
+        ) * 4
+        diagnostics = assess_html_fulltext_availability(
+            f"## Results\n\n{first}\n\n{second}",
+            {"title": "Trusted Descendant", "doi": "10.1000/trusted"},
+            provider="generic",
+            html_text=(
+                "<html><body><main><h1>Trusted Descendant</h1>"
+                "<section itemprop='articleBody'><h2>Results</h2>"
+                f"<p>{first}</p><p>{second}</p>"
+                "</section></main></body></html>"
+            ),
+            title="Trusted Descendant",
+        )
+
+        self.assertTrue(diagnostics.accepted)
+        self.assertTrue(diagnostics.body_metrics["substantive_body_container"])
+        self.assertTrue(diagnostics.body_metrics["container_scope_trusted"])
+
+    def test_assess_html_real_article_stays_fulltext_with_repeated_ui_cards(
+        self,
+    ) -> None:
+        first = "This methods paragraph contains substantive scientific prose. " * 8
+        second = "This results paragraph contains a separate substantive body run. " * 8
+        card = (
+            "A recommendation card includes title, authors, and publication metadata. "
+        )
+        for repeat_count in (1, 10, 100):
+            with self.subTest(repeat_count=repeat_count):
+                diagnostics = assess_html_fulltext_availability(
+                    f"## Methods\n\n{first}\n\n## Results\n\n{second}",
+                    {"title": "Stable Full Text", "doi": "10.1000/stable"},
+                    provider="generic",
+                    html_text=(
+                        "<html><body><article><h1>Stable Full Text</h1>"
+                        f"<h2>Methods</h2><p>{first}</p>"
+                        f"<h2>Results</h2><p>{second}</p>"
+                        "<section class='recommended-articles'><h2>Recommended</h2>"
+                        + "".join(f"<p>{card}</p>" for _ in range(repeat_count))
+                        + "</section></article></body></html>"
+                    ),
+                    title="Stable Full Text",
+                )
+
+                self.assertTrue(diagnostics.accepted)
+                self.assertEqual(diagnostics.content_kind, FULLTEXT)
+
+    def test_assess_html_rejects_target_wiley_abstract_datalayer(self) -> None:
+        html = """
+        <html><body><main><h1>Observations of climate, albedo, and surface radiation</h1>
+        <script>window.adobeDataLayer.push({
+          "content": {"item": {"doi": "10.1002/joc.3370130706", "access": "no",
+          "format-viewed": "abstract"}},
+          "page": {"type": "article", "tertiary-section": "abs"}
+        });</script>
+        <section class="show-recommended"><h2>Recommended</h2>
+        <p>This recommendation card contains enough interface prose to defeat a volume-only heuristic.</p>
+        </section></main></body></html>
+        """
+        diagnostics = assess_html_fulltext_availability(
+            "# Observations of climate, albedo, and surface radiation\n\n## Abstract\n\nShort abstract.",
+            {
+                "title": "Observations of climate, albedo, and surface radiation",
+                "doi": "10.1002/joc.3370130706",
+                "abstract": "Short abstract.",
+            },
+            provider="wiley",
+            html_text=html,
+            title="Observations of climate, albedo, and surface radiation",
+            final_url="https://onlinelibrary.wiley.com/doi/abs/10.1002/joc.3370130706",
+        )
+
+        self.assertFalse(diagnostics.accepted)
+        self.assertEqual(diagnostics.content_kind, ABSTRACT_ONLY)
+        self.assertIn("wiley_access_no", diagnostics.blocking_fallback_signals)
+        self.assertIn(
+            "wiley_format_viewed_abstract", diagnostics.blocking_fallback_signals
+        )
+        self.assertIn("wiley_page_tertiary_abs", diagnostics.blocking_fallback_signals)
 
     def test_assess_html_fulltext_rejects_figure_only_teaser(self) -> None:
         diagnostics = assess_html_fulltext_availability(

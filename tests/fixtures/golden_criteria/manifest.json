@@ -3253,6 +3253,23 @@
         "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1063_5.0188905/markdown-quality-prompt.md",
         "markdown-quality.json": "tests/fixtures/golden_criteria/10.1063_5.0188905/markdown-quality.json"
       }
+    },
+    "10.1146_annurev.pp.19.060168.001235": {
+      "doi": "10.1146/annurev.pp.19.060168.001235",
+      "publisher": "annualreviews",
+      "title": "Transpiration and Leaf Temperature",
+      "source_url": "https://www.annualreviews.org/content/journals/10.1146/annurev.pp.19.060168.001235",
+      "fetched_at": "2026-07-14T12:35:32Z",
+      "purpose": "empty_shell",
+      "expected_outcome": "metadata_only",
+      "fixture_family": "block",
+      "content_type": "text/html;charset=UTF-8",
+      "route_kind": "block",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "assets": {
+        "raw.html": "tests/fixtures/block/10.1146_annurev.pp.19.060168.001235/raw.html"
+      }
     }
   },
   "tests": [

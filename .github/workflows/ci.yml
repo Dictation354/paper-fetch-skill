@@ -90,6 +90,16 @@ jobs:
           PYTHONPATH: ${{ github.workspace }}/src
         run: python scripts/validate_extraction_rules.py --ci
 
+      - name: Run HTML availability regression contracts
+        env:
+          PYTHONPATH: ${{ github.workspace }}/src
+        run: |
+          python -m pytest \
+            tests/unit/test_html_availability.py \
+            tests/unit/test_annualreviews_provider.py \
+            tests/unit/test_block_corpus.py \
+            -q
+
       - name: Run IOP supplementary asset regression contracts
         env:
           PYTHONPATH: ${{ github.workspace }}/src

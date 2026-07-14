@@ -467,7 +467,7 @@ def _fixture_family(purpose: str) -> str:
 def _fixture_path(root: Path, slug: str, purpose: str, content_type: str) -> Path:
     family = _fixture_family(purpose)
     if family == "block":
-        return root / "tests" / "fixtures" / "block" / slug / "original.html"
+        return root / "tests" / "fixtures" / "block" / slug / "raw.html"
     filename = f"original.{_extension_for(content_type, purpose)}"
     return root / "tests" / "fixtures" / "golden_criteria" / slug / filename
 
@@ -481,7 +481,11 @@ def _fixture_path_from_entry(
 ) -> Path | None:
     assets = entry.get("assets") if isinstance(entry.get("assets"), dict) else {}
     if purpose is not None and content_type is not None:
-        expected_name = f"original.{_extension_for(content_type, purpose)}"
+        expected_name = (
+            "raw.html"
+            if _fixture_family(purpose) == "block"
+            else f"original.{_extension_for(content_type, purpose)}"
+        )
         value = assets.get(expected_name)
         if isinstance(value, str) and value:
             path = root / value

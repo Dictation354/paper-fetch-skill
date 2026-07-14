@@ -67,7 +67,7 @@ CI 自动发布规则：
 
 主包版本号同步清单：
 
-当前 IOP 补充材料修复集按 SemVer patch 准备为 `3.1.1`；构建脚本不得把高于该版本的 HEAD 降级。
+当前 HTML 全文可用性修复集按 SemVer patch 准备为 `3.1.2`；构建脚本不得把高于该版本的 HEAD 降级。
 
 - `pyproject.toml` 的 `[project].version` 是 Python 包和离线构建脚本读取的主版本来源。
 - `src/paper_fetch/config.py` 的 `DEFAULT_USER_AGENT` 需要同步默认 `paper-fetch-skill/<version>`。

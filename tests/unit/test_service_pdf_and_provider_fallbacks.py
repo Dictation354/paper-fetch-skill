@@ -528,7 +528,9 @@ class ServicePdfAndProviderFallbackTests(unittest.TestCase):
                         b"<html><head>"
                         b'<meta name="citation_title" content="HTML Springer Article" />'
                         b'<meta name="citation_doi" content="10.1007/test" />'
-                        b"</head><body>"
+                        b"</head><body><article><section><h2>Introduction</h2><p>"
+                        + (b"Important body text for HTML fallback. " * 30)
+                        + b"</p></section>"
                         b'<div class="c-article-section__figure-item">'
                         b'<picture class="c-article-section__figure-picture">'
                         b'<img aria-describedby="figure-1-desc" src="//media.springernature.com/lw685/springer-static/image/art%3A10.1007%2Ftest/MediaObjects/Fig1.png" alt="Preview image" />'
@@ -536,7 +538,7 @@ class ServicePdfAndProviderFallbackTests(unittest.TestCase):
                         b'<div class="c-article-section__figure-link"><a href="/articles/example/figures/1" aria-label="Full size image figure 1">Full size image</a></div>'
                         b"</div>"
                         b'<div class="c-article-section__figure-description" id="figure-1-desc"><p>Figure showing a woodland canopy.</p></div>'
-                        b"</body></html>"
+                        b"</article></body></html>"
                     ),
                 },
                 figure_page_url: {
