@@ -113,6 +113,12 @@ class PdfFallbackHelperTests(unittest.TestCase):
                 browser_context_seed={},
                 html_failure_reason="html_blocked",
                 html_failure_message="HTML blocked",
+                html_failure_diagnostics={
+                    "browser_failure": {
+                        "stage": "cdp_connect",
+                        "code": "cdp_connect_failed",
+                    }
+                },
                 deps=browser_workflow_deps(
                     pdf_browser_context_seed=mocked_warm,
                     fetch_pdf_with_browser=mocked_fetch_pdf,
@@ -120,6 +126,12 @@ class PdfFallbackHelperTests(unittest.TestCase):
             )
 
         self.assertEqual(payload.content.route_kind, "pdf_fallback")
+        self.assertEqual(
+            payload.content.diagnostics["html_failure"]["browser_failure"]["stage"],
+            "cdp_connect",
+        )
+        self.assertEqual(payload.trace[0].code, "html_blocked")
+        self.assertEqual(payload.trace[0].message, "HTML blocked")
         mocked_warm.assert_called_once()
         self.assertTrue(mocked_warm.call_args.kwargs["lightweight"])
         mocked_fetch_pdf.assert_called_once()

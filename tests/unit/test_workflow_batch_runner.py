@@ -247,6 +247,37 @@ def test_callback_can_cancel_before_the_next_incremental_submission() -> None:
     assert [event.result.index for event in result.completion_events] == [0, 1, 2]
 
 
+def test_cancel_grace_escalates_once_and_waits_for_worker_convergence() -> None:
+    cancel_event = threading.Event()
+    release_worker = threading.Event()
+    escalations: list[str] = []
+
+    def worker(item: str) -> str:
+        cancel_event.set()
+        assert release_worker.wait(timeout=1)
+        raise RequestCancelledError(f"cancelled {item}")
+
+    def escalate() -> None:
+        escalations.append("forced")
+        release_worker.set()
+
+    result = run_batch(
+        ["first", "not-scheduled"],
+        worker,
+        max_workers=1,
+        cancel_event=cancel_event,
+        cancel_grace_period_seconds=0,
+        cancel_escalation_callback=escalate,
+    )
+
+    assert escalations == ["forced"]
+    assert result.cancelled is True
+    assert [item.status for item in result.results] == [
+        BatchItemStatus.CANCELLED,
+        BatchItemStatus.NOT_SCHEDULED,
+    ]
+
+
 def test_callback_failures_are_ordered_and_do_not_corrupt_terminal_results() -> None:
     callback_order: list[tuple[str, int]] = []
 

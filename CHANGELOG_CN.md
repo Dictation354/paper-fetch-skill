@@ -6,6 +6,22 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 3.1.3 - 2026-07-15
+
+### 新增
+
+- managed Chrome profile、启动、CDP、context 和 page 阶段新增稳定的浏览器生命周期失败 code；有界且脱敏的 stderr 诊断会贯通 browser preflight、provider trace、fallback payload、CLI manifest 与 agent 指引。
+
+### 变更
+
+- CLI 与 MCP 批量执行现在会跨条目空档保留同一个共享 browser manager，并采用带宽限期的协作式取消、仅一次的浏览器关闭升级，以及 CLI 第一次/第二次 Ctrl-C 分级处理。
+- 扩展 macOS 离线浏览器 smoke 与单元契约，覆盖保守的陈旧 profile 恢复、4 worker/50 context 复用、取消收敛、诊断脱敏和 fallback provenance。
+
+### 修复
+
+- 修复异常退出后 managed Chrome profile 无法复用的问题：同时核验 singleton 的 owner、host、PID/profile 与 socket，仅归档已确认陈旧的链接并保留恢复记录；首次启动留下新的陈旧 singleton 时最多恢复并重试一次。
+- 修复 browser/PDF 与 metadata fallback 丢失精确 HTML/browser 失败 trace 的问题；fallback 成功后 acceptance 仍保留 degraded，浏览器 runtime 失败也不再错误建议执行出版社认证，而是引导先修复本地 runtime 状态。
+
 ## 3.1.2 - 2026-07-14
 
 ### 变更

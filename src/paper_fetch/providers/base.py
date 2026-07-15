@@ -17,6 +17,7 @@ from ..runtime import RuntimeContext
 from ..tracing import (
     TraceEvent,
     download_marker,
+    merge_trace,
     source_trail_from_trace,
     trace_from_markers,
 )
@@ -54,6 +55,7 @@ class ProviderFailure(Exception):
         missing_env: list[str] | None = None,
         warnings: list[str] | None = None,
         source_trail: list[str] | None = None,
+        trace: list[TraceEvent] | None = None,
     ) -> None:
         super().__init__(message)
         self.code = code
@@ -64,6 +66,7 @@ class ProviderFailure(Exception):
         self.source_trail = [
             str(item) for item in (source_trail or []) if str(item).strip()
         ]
+        self.trace = list(trace or [])
 
 
 @dataclass(frozen=True)
@@ -415,10 +418,12 @@ def combine_provider_failures(
     warnings: list[str] = []
     source_trail: list[str] = []
     retry_after_values: list[int] = []
+    trace: list[TraceEvent] = []
     for _label, failure in failures:
         extend_unique(missing_env, failure.missing_env)
         extend_unique(warnings, failure.warnings)
         extend_unique(source_trail, failure.source_trail)
+        trace = merge_trace(trace, failure.trace)
         if failure.retry_after_seconds is not None:
             retry_after_values.append(failure.retry_after_seconds)
     return ProviderFailure(
@@ -428,6 +433,7 @@ def combine_provider_failures(
         missing_env=missing_env,
         warnings=warnings,
         source_trail=source_trail,
+        trace=trace,
     )
 
 

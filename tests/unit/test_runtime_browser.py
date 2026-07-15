@@ -1,16 +1,124 @@
 from __future__ import annotations
 
 import inspect
+import io
 import logging
+from pathlib import Path
+import socket
 import sys
+import threading
+import time
 from types import SimpleNamespace
 from typing import Any
 from unittest import mock
+
+import pytest
 
 from paper_fetch import runtime as runtime_module
 from paper_fetch import runtime_browser
 from paper_fetch.runtime import RuntimeContext
 from paper_fetch.runtime_browser import BrowserContextManager
+from paper_fetch.workflow.batch_runner import run_batch
+
+
+def _write_stale_singletons(profile_dir: Path, *, pid: int = 99_999_999) -> None:
+    profile_dir.mkdir(parents=True, exist_ok=True)
+    (profile_dir / "SingletonLock").symlink_to(f"{socket.gethostname()}-{pid}")
+    (profile_dir / "SingletonSocket").symlink_to(
+        profile_dir / "missing-singleton-socket"
+    )
+    (profile_dir / "SingletonCookie").symlink_to("123456789")
+
+
+def test_chromium_stale_singletons_are_detected_and_atomically_recovered(
+    tmp_path,
+) -> None:
+    profile_dir = tmp_path / "profile"
+    _write_stale_singletons(profile_dir)
+
+    inspection = runtime_browser.inspect_chromium_singletons(profile_dir)
+    diagnostic_dir = runtime_browser.recover_stale_chromium_singletons(
+        profile_dir, inspection
+    )
+
+    assert inspection.state == "stale"
+    assert inspection.reason == "singleton_pid_missing_and_socket_inactive"
+    for name in runtime_browser.CHROMIUM_SINGLETON_FILENAMES:
+        assert not (profile_dir / name).is_symlink()
+        assert (diagnostic_dir / name).is_symlink()
+    assert (diagnostic_dir / "recovery.json").is_file()
+
+
+def test_chromium_recovery_rechecks_state_before_moving_files(tmp_path) -> None:
+    profile_dir = tmp_path / "profile"
+    _write_stale_singletons(profile_dir)
+    inspection = runtime_browser.inspect_chromium_singletons(profile_dir)
+    (profile_dir / "SingletonLock").unlink()
+    (profile_dir / "SingletonLock").symlink_to("other-host-4242")
+
+    with pytest.raises(RuntimeError, match="state changed"):
+        runtime_browser.recover_stale_chromium_singletons(profile_dir, inspection)
+
+    assert (profile_dir / "SingletonLock").is_symlink()
+    assert (profile_dir / "SingletonSocket").is_symlink()
+    assert (profile_dir / "SingletonCookie").is_symlink()
+
+
+def test_chromium_active_profile_is_never_recovered(monkeypatch, tmp_path) -> None:
+    profile_dir = tmp_path / "profile"
+    _write_stale_singletons(profile_dir, pid=4242)
+    monkeypatch.setattr(runtime_browser, "_process_exists", lambda _pid: True)
+    monkeypatch.setattr(
+        runtime_browser,
+        "_process_cmdline",
+        lambda _pid: f"/opt/chrome --user-data-dir={profile_dir}",
+    )
+
+    inspection = runtime_browser.inspect_chromium_singletons(profile_dir)
+
+    assert inspection.state == "in_use"
+    assert inspection.reason == "singleton_pid_active_for_profile"
+    try:
+        runtime_browser.recover_stale_chromium_singletons(profile_dir, inspection)
+    except ValueError as exc:
+        assert "confirmed stale" in str(exc)
+    else:  # pragma: no cover
+        raise AssertionError("active profile must not be recovered")
+    assert (profile_dir / "SingletonLock").is_symlink()
+
+
+def test_chromium_reused_pid_for_other_process_is_not_recovered(
+    monkeypatch, tmp_path
+) -> None:
+    profile_dir = tmp_path / "profile"
+    _write_stale_singletons(profile_dir, pid=4242)
+    monkeypatch.setattr(runtime_browser, "_process_exists", lambda _pid: True)
+    monkeypatch.setattr(
+        runtime_browser,
+        "_process_cmdline",
+        lambda _pid: "/usr/bin/unrelated-process",
+    )
+
+    inspection = runtime_browser.inspect_chromium_singletons(profile_dir)
+
+    assert inspection.state == "in_use"
+    assert inspection.reason == "singleton_pid_exists_for_other_process"
+    assert (profile_dir / "SingletonLock").is_symlink()
+
+
+def test_chromium_foreign_host_singleton_is_conservatively_in_use(
+    tmp_path,
+) -> None:
+    profile_dir = tmp_path / "profile"
+    profile_dir.mkdir()
+    (profile_dir / "SingletonLock").symlink_to("other-host-4242")
+    (profile_dir / "SingletonSocket").symlink_to(profile_dir / "missing")
+    (profile_dir / "SingletonCookie").symlink_to("123")
+
+    inspection = runtime_browser.inspect_chromium_singletons(profile_dir)
+
+    assert inspection.state == "in_use"
+    assert inspection.reason == "singleton_lock_remote_host"
 
 
 def test_managed_chrome_args_enforce_headless_when_cloakbrowser_omits_flag(
@@ -154,6 +262,182 @@ def test_browser_manager_auto_starts_managed_cdp_browser(monkeypatch, tmp_path) 
     assert cdp_browser.close_count == 1
 
 
+def test_browser_manager_recovers_stale_singletons_before_launch(
+    monkeypatch, tmp_path
+) -> None:
+    cdp_browser = _FakeCdpBrowser([])
+    profile_dir = tmp_path / "profile"
+    _write_stale_singletons(profile_dir)
+
+    class _FakeProcess:
+        stderr = None
+        returncode = None
+
+        def poll(self):
+            return self.returncode
+
+        def terminate(self) -> None:
+            self.returncode = 0
+
+        def wait(self, timeout=None):
+            return self.returncode
+
+        def kill(self) -> None:
+            self.returncode = -9
+
+    monkeypatch.setattr(
+        runtime_browser,
+        "_resolve_cloakbrowser_binary",
+        lambda _binary_path=None: "/tmp/chrome",
+    )
+    monkeypatch.setattr(runtime_browser, "_unused_tcp_port", lambda: 9333)
+    monkeypatch.setattr(
+        runtime_browser.subprocess,
+        "Popen",
+        lambda *_args, **_kwargs: _FakeProcess(),
+    )
+    monkeypatch.setattr(
+        runtime_browser,
+        "_wait_for_cdp_endpoint",
+        lambda **_kwargs: "ws://127.0.0.1:9333/devtools/browser/managed",
+    )
+    monkeypatch.setattr(
+        runtime_browser, "connect_browser_over_cdp", lambda _endpoint: cdp_browser
+    )
+
+    lifecycle = BrowserContextManager(profile_dir=profile_dir)
+    lifecycle.new_context().close()
+    recovery_paths = list(lifecycle._singleton_recovery_paths)
+    lifecycle.close()
+
+    assert len(recovery_paths) == 1
+    assert (recovery_paths[0] / "recovery.json").is_file()
+
+
+def test_browser_manager_recovers_new_stale_singletons_and_retries_once(
+    monkeypatch, tmp_path
+) -> None:
+    profile_dir = tmp_path / "profile"
+    attempts: list[int] = []
+
+    monkeypatch.setattr(
+        runtime_browser,
+        "_resolve_cloakbrowser_binary",
+        lambda _binary_path=None: "/tmp/chrome",
+    )
+
+    lifecycle = BrowserContextManager(profile_dir=profile_dir)
+
+    def launch(**_kwargs) -> str:
+        attempts.append(len(attempts) + 1)
+        if len(attempts) == 1:
+            _write_stale_singletons(profile_dir)
+            raise runtime_browser.ManagedBrowserError(
+                "managed_chrome_exited_before_cdp",
+                "Chrome exited.",
+                stage="managed_chrome_startup",
+            )
+        return "ws://127.0.0.1:9333/devtools/browser/recovered"
+
+    monkeypatch.setattr(lifecycle, "_launch_managed_chrome", launch)
+
+    endpoint = lifecycle._ensure_managed_cdp_endpoint(headless=True)
+    lifecycle.close()
+
+    assert endpoint.endswith("/recovered")
+    assert attempts == [1, 2]
+    assert len(lifecycle._singleton_recovery_paths) == 1
+
+
+def test_managed_chrome_startup_failure_keeps_redacted_bounded_diagnostic(
+    monkeypatch, tmp_path
+) -> None:
+    profile_dir = tmp_path / "profile"
+
+    class _FakeProcess:
+        def __init__(self) -> None:
+            self.stderr = io.BytesIO(
+                b"x" * (runtime_browser.DEFAULT_BROWSER_STDERR_TAIL_BYTES + 512)
+                + b"\ntoken=super-secret\nlast startup failure\n"
+            )
+            self.returncode = 12
+
+        def poll(self):
+            return self.returncode
+
+        def terminate(self) -> None:
+            pass
+
+        def wait(self, timeout=None):
+            return self.returncode
+
+        def kill(self) -> None:
+            pass
+
+    monkeypatch.setattr(
+        runtime_browser,
+        "_resolve_cloakbrowser_binary",
+        lambda _binary_path=None: "/tmp/chrome",
+    )
+    monkeypatch.setattr(runtime_browser, "_unused_tcp_port", lambda: 9333)
+    monkeypatch.setattr(
+        runtime_browser.subprocess,
+        "Popen",
+        lambda *_args, **_kwargs: _FakeProcess(),
+    )
+
+    lifecycle = BrowserContextManager(profile_dir=profile_dir)
+    try:
+        lifecycle.new_context()
+    except runtime_browser.ManagedBrowserError as exc:
+        error = exc
+    else:  # pragma: no cover
+        raise AssertionError("expected managed Chrome startup failure")
+
+    assert error.code == "managed_chrome_exited_before_cdp"
+    assert error.stage == "managed_chrome_startup"
+    assert error.details["exit_code"] == 12
+    assert "super-secret" not in str(error.details["stderr_summary"])
+    assert "[REDACTED]" in str(error.details["stderr_summary"])
+    assert len(str(error.details["stderr_summary"])) <= (
+        runtime_browser.DEFAULT_BROWSER_ERROR_SUMMARY_CHARS
+    )
+    diagnostic_path = Path(str(error.details["diagnostic_path"]))
+    assert (diagnostic_path / "diagnostic.json").is_file()
+    stderr_log = (diagnostic_path / "chrome-stderr.log").read_text()
+    assert "super-secret" not in stderr_log
+    assert len(stderr_log.encode("utf-8")) <= (
+        runtime_browser.DEFAULT_BROWSER_STDERR_TAIL_BYTES
+    )
+
+
+def test_wait_for_cdp_endpoint_has_distinct_exit_and_timeout_codes() -> None:
+    exited = SimpleNamespace(poll=lambda: 17, returncode=17)
+    try:
+        runtime_browser._wait_for_cdp_endpoint(
+            process=exited,
+            port=9333,
+            timeout_seconds=1,
+        )
+    except runtime_browser.ManagedBrowserError as exc:
+        assert exc.code == "managed_chrome_exited_before_cdp"
+        assert exc.details["exit_code"] == 17
+    else:  # pragma: no cover
+        raise AssertionError("expected early Chrome exit")
+
+    running = SimpleNamespace(poll=lambda: None, returncode=None)
+    try:
+        runtime_browser._wait_for_cdp_endpoint(
+            process=running,
+            port=9333,
+            timeout_seconds=0,
+        )
+    except runtime_browser.ManagedBrowserError as exc:
+        assert exc.code == "managed_chrome_cdp_timeout"
+    else:  # pragma: no cover
+        raise AssertionError("expected CDP timeout")
+
+
 def test_browser_manager_restarts_managed_browser_when_headless_changes(
     monkeypatch, tmp_path
 ) -> None:
@@ -276,8 +560,9 @@ def test_browser_manager_terminates_managed_browser_when_cdp_connect_fails(
     lifecycle = BrowserContextManager(profile_dir=profile_dir)
     try:
         lifecycle.new_context(headless=True)
-    except RuntimeError as exc:
+    except runtime_browser.ManagedBrowserError as exc:
         assert str(exc) == "connect failed"
+        assert exc.code == "cdp_connect_failed"
     else:  # pragma: no cover - assertion reports the unexpected success path
         raise AssertionError("expected CDP connect failure")
     profile_lock = runtime_browser._profile_lock_for_dir(profile_dir)
@@ -285,6 +570,31 @@ def test_browser_manager_terminates_managed_browser_when_cdp_connect_fails(
     profile_lock.release()
 
     assert process.terminated is True
+
+
+def test_browser_manager_reports_context_creation_stage(monkeypatch) -> None:
+    class _ContextFailureBrowser(_FakeCdpBrowser):
+        def new_context(self, **kwargs: Any):
+            del kwargs
+            raise RuntimeError("context failed")
+
+    monkeypatch.setattr(
+        runtime_browser,
+        "connect_browser_over_cdp",
+        lambda _endpoint: _ContextFailureBrowser([]),
+    )
+    lifecycle = BrowserContextManager(
+        cdp_endpoint="ws://127.0.0.1:9222/devtools/browser/test",
+        external_new_context=True,
+    )
+
+    try:
+        lifecycle.new_context()
+    except runtime_browser.ManagedBrowserError as exc:
+        assert exc.code == "browser_context_create_failed"
+        assert exc.stage == "browser_context_create"
+    else:  # pragma: no cover
+        raise AssertionError("expected browser context creation failure")
 
 
 def test_browser_manager_profile_lock_timeout_reports_error(
@@ -625,6 +935,92 @@ def test_runtime_context_shares_browser_managers_across_runtime_instances(
 
     assert first[1] is second[1] is third[1]
     assert len(created) == 1
+    assert created[0].close_count == 1
+
+
+def test_batch_scope_retains_idle_browser_manager_between_items(
+    monkeypatch, tmp_path
+) -> None:
+    created: list[Any] = []
+
+    class FakeLifecycle:
+        def __init__(self, **kwargs: Any) -> None:
+            self.kwargs = dict(kwargs)
+            self.close_count = 0
+            created.append(self)
+
+        def new_context(self, **kwargs: Any):
+            return self
+
+        def close(self) -> None:
+            self.close_count += 1
+
+    monkeypatch.setattr(runtime_module, "BrowserContextManager", FakeLifecycle)
+    profile_dir = tmp_path / "wiley-profile"
+
+    with runtime_module.retain_shared_browser_managers():
+        first_runtime = RuntimeContext(env={})
+        first = first_runtime.new_browser_context_for_config(profile_dir=profile_dir)
+        first_runtime.close()
+        retained = runtime_module.dump_shared_browser_managers()
+
+        second_runtime = RuntimeContext(env={})
+        second = second_runtime.new_browser_context_for_config(profile_dir=profile_dir)
+        second_runtime.close()
+
+        assert first is second
+        assert retained[0]["ref_count"] == 0
+        assert retained[0]["retained_by_batch_scope"] is True
+        assert created[0].close_count == 0
+
+    assert created[0].close_count == 1
+
+
+def test_four_worker_batch_reuses_one_manager_across_fifty_contexts_and_gaps(
+    monkeypatch, tmp_path
+) -> None:
+    created: list[Any] = []
+
+    class FakeContext:
+        def close(self) -> None:
+            pass
+
+    class FakeLifecycle:
+        def __init__(self, **kwargs: Any) -> None:
+            self.kwargs = dict(kwargs)
+            self.context_count = 0
+            self.close_count = 0
+            self.lock = threading.Lock()
+            created.append(self)
+
+        def new_context(self, **kwargs: Any):
+            del kwargs
+            with self.lock:
+                self.context_count += 1
+            return FakeContext()
+
+        def close(self) -> None:
+            self.close_count += 1
+
+    monkeypatch.setattr(runtime_module, "BrowserContextManager", FakeLifecycle)
+    profile_dir = tmp_path / "wiley-profile"
+
+    def worker(index: int) -> int:
+        context = RuntimeContext(env={})
+        browser_context = context.new_browser_context_for_config(
+            profile_dir=profile_dir
+        )
+        browser_context.close()
+        context.close()
+        if index % 7 == 0:
+            time.sleep(0.005)
+        return index
+
+    result = run_batch(list(range(50)), worker, max_workers=4)
+
+    assert [item.value for item in result.results] == list(range(50))
+    assert len(created) == 1
+    assert created[0].context_count == 50
     assert created[0].close_count == 1
 
 

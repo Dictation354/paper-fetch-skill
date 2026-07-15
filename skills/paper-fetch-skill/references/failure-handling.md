@@ -48,13 +48,14 @@
 | `no_access` / `not_configured` / HTTP 401/403：缺少凭证、授权、entitlement 或合法访问上下文 | `missing_env` 已补齐，或用户完成手动认证/授权且状态可观察地改变；不得自动 auth | 认证状态未变、合法访问边界不允许继续、用户不授权，或达到 attempt 3 | `status/code`、provider、`http_status`、`missing_env`、所需用户动作、attempt |
 | `rate_limited` / HTTP 429 / 出现 `retry_after_seconds`：provider 或资源 lane 限流 | 停止同 provider 新提交并尊重 Retry-After；无该字段时使用工具记录的 cooldown/policy，明确报告服务端未给时长 | 冷却尚未结束、任务不适合等待、冷却后仍限流，或达到 attempt 3 | provider/lane、`http_status`、`retry_after_seconds` 或 cooldown、未调度 index、attempt |
 | `network_error` / `timeout` / `tls_error` / `dns_error` / `connection_reset` / `connection_closed`，或已返回的 HTTP 5xx | 确认底层 transport 已结束；等待/backoff 后观察网络状态变化，或在契约允许时改变 provider route/环境；不得立即原样重跑 | 网络/路由状态无变化、相同瞬态重复，或达到 attempt 3 | `error_category`、`http_status`、provider/route、等待或环境变化、attempt |
-| browser transient：browser fetch 的 `error`/`no_result` 且 trace/preflight 指向超时、进程/连接或页面瞬态，不含确定性 challenge/auth 证据 | 先检查静态配置；在执行面可用时做 live browser preflight。只有 browser profile/CDP endpoint、认证状态、运行时健康、请求参数或环境发生变化才重试；`provider_status()` 不是 live 健康证明 | 无状态变化、preflight 为 challenge/auth_required/runtime_error 且未解决、相同失败重复，或达到 attempt 3 | provider、browser backend、preflight/trace、变化项、`source_trail`、attempt |
+| browser transient：trace/preflight 出现 `managed_chrome_exited_before_cdp`、`managed_chrome_cdp_timeout`、`cdp_connect_failed`、`browser_context_create_failed` 或 `browser_page_create_failed`，且不含确定性 challenge/auth 证据 | 先读取 `stage/exit_code/stderr_summary/diagnostic_path` 并检查静态配置；在执行面可用时做 live browser preflight，`provider_status()` 不是 live 健康证明。runtime 已在单次调用内对确认 stale 的 singleton 至多恢复并重启一次；只有 browser profile/CDP endpoint、认证状态、运行时健康、请求参数或环境发生变化才重试 | 无状态变化、preflight 为 challenge/auth_required/runtime_error 且未解决、相同失败重复，或达到 attempt 3 | provider、精确 browser code/stage、脱敏摘要、diagnostic artifact、preflight/trace、变化项、`source_trail`、attempt |
 | `cancelled` / `request_cancelled`：用户、宿主或 cooperative cancellation 终止 | 只有用户明确恢复任务并重新确认仍需执行时才开始新的尝试；批量先保留 cancelled/not-scheduled index | 未恢复、任务已过期，或达到 attempt 3 | 已完成/取消/未调度 index、产物、恢复条件、attempt |
 | 未分类 `error`：结构化字段不足，且不匹配上述类别 | 先收集 `reason`、trace、provider status 与实际产物；只有诊断导出具体参数/状态变化时重试 | 无可执行变化、同错重复，或达到 attempt 3 | `status/code/error_category`、`reason`、provider、trace/产物、诊断和 attempt |
 
 ## 降级结果和质量警告
 
 - `abstract_only` / `metadata_only` 是降级成功，不是已验证全文。告诉用户证据边界；若摘要或元数据足以完成意图则停止，只有用户确需全文且能改变 provider/访问/策略时才按上表计入重试。
+- Browser HTML 失败后 PDF/ePDF fallback 成功仍是降级成功：顶层可为 `status=ok`，但必须保留 HTML failure trace/code，且 `acceptance.overall=degraded`；不得只报告 PDF 成功或把 browser 原因抹掉。
 - `asset_profile=body|all` 返回资源但图片似乎缺失时，先检查 `article.assets[*].render_state`、`download_tier`、`width`、`height`、`content_type`、`downloaded_bytes` 和 `source_trail`。`download_tier=preview` 在尺寸达标且 source trail 记录接受时可以合格，不自动触发全文重试。
 - Browser/runtime 能力和 provider/source 归属只从 `resource://paper-fetch/provider-catalog` 读取，不在本文件维护静态 provider 列表。Browser HTML 资产通常只报告 `full_size` 或 `preview`；challenge recovery 失败时检查 `quality.asset_failures[*].reason` 与 `recovery_attempts`，direct HTTP 转换可能报告 `source_converted`。
 - `table_layout_degraded_count` 是布局保真警告；`table_semantic_loss_count` 才是内容可能不完整的更强信号。二者都应进入 acceptance，而不是无条件重抓全文。

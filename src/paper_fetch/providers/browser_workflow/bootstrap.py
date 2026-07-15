@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Mapping
 from typing import TYPE_CHECKING
 
 from ...extraction.html.signals import HtmlExtractionFailure
@@ -25,6 +26,24 @@ if TYPE_CHECKING:
     from .client import BrowserWorkflowClient
 
 logger = logging.getLogger("paper_fetch.providers.browser_workflow")
+_BROWSER_FAILURE_MESSAGE_MAX_CHARS = 4096
+
+
+def _structured_browser_failure_message(exc: BrowserRuntimeFailure) -> str:
+    details = dict(exc.details or {})
+    browser_failure = details.get("browser_failure")
+    failure_payload = (
+        dict(browser_failure) if isinstance(browser_failure, Mapping) else details
+    )
+    stage = str(failure_payload.get("stage") or "").strip()
+    stderr_summary = str(failure_payload.get("stderr_summary") or "").strip()
+    parts = [f"{stage}: {exc.message}" if stage else exc.message]
+    if stderr_summary:
+        parts.append(f"Chrome stderr: {stderr_summary}")
+    message = " ".join(part for part in parts if part).strip()
+    if len(message) > _BROWSER_FAILURE_MESSAGE_MAX_CHARS:
+        message = "..." + message[-_BROWSER_FAILURE_MESSAGE_MAX_CHARS:]
+    return message
 
 
 def _fetch_browser_html_payload(
@@ -132,7 +151,8 @@ def bootstrap_browser_workflow(
             exc.browser_context_seed or result.browser_context_seed
         )
         result.html_failure_reason = exc.kind
-        result.html_failure_message = exc.message
+        result.html_failure_message = _structured_browser_failure_message(exc)
+        result.html_failure_diagnostics = dict(exc.details or {})
     except HtmlExtractionFailure as exc:
         extraction_html_result = getattr(exc, "html_result", None)
         if extraction_html_result is not None:

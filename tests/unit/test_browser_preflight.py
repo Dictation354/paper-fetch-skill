@@ -389,8 +389,15 @@ def test_browser_preflight_records_failure_and_continues(tmp_path: Path) -> None
         del config, kwargs
         if publisher == "science":
             raise BrowserRuntimeFailure(
-                "cloudflare_challenge",
-                "Encountered a challenge or CAPTCHA page while loading publisher HTML.",
+                "managed_chrome_exited_before_cdp",
+                "Managed Chrome exited before CDP was ready.",
+                details={
+                    "browser_failure": {
+                        "stage": "managed_chrome_startup",
+                        "exit_code": 12,
+                        "stderr_summary": "profile startup failed",
+                    }
+                },
             )
         return BrowserFetchedHtml(
             source_url=candidate_urls[0],
@@ -431,7 +438,9 @@ def test_browser_preflight_records_failure_and_continues(tmp_path: Path) -> None
 
     assert [result.provider for result in results] == ["science", "wiley"]
     assert results[0].ok is False
-    assert results[0].reason == "cloudflare_challenge"
+    assert results[0].reason == "managed_chrome_exited_before_cdp"
+    assert results[0].diagnostics is not None
+    assert results[0].diagnostics["browser_failure"]["exit_code"] == 12
     assert (
         results[0].storage_state_path
         == tmp_path / "profiles" / "science" / "storage-state.json"

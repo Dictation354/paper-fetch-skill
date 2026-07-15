@@ -20,7 +20,7 @@ from paper_fetch.providers.base import (
     RawFulltextPayload,
 )
 from paper_fetch.runtime import RuntimeContext
-from paper_fetch.tracing import trace_from_markers
+from paper_fetch.tracing import trace_event, trace_from_markers
 
 
 def _payload(
@@ -287,6 +287,39 @@ class ProviderWaterfallRunnerTests(unittest.TestCase):
 
         self.assertEqual(calls, ["first", "second"])
         self.assertEqual(payload.content.source_url, "https://example.test/article")
+
+    def test_runner_preserves_structured_failure_trace_on_fallback_success(
+        self,
+    ) -> None:
+        payload = _payload()
+        payload.trace = [
+            trace_event(
+                "fulltext",
+                "template_html",
+                "fail",
+                code="managed_chrome_cdp_timeout",
+                message="CDP endpoint timed out.",
+            )
+        ]
+
+        result = run_provider_waterfall(
+            [
+                ProviderWaterfallStep(
+                    label="pdf",
+                    run=lambda _state: payload,
+                    success_markers=("fulltext:template_pdf_fallback_ok",),
+                )
+            ],
+            initial_source_trail=["fulltext:template_html_fail"],
+        )
+
+        html_event = next(
+            event
+            for event in result.trace
+            if event.marker() == "fulltext:template_html_fail"
+        )
+        self.assertEqual(html_event.code, "managed_chrome_cdp_timeout")
+        self.assertEqual(html_event.message, "CDP endpoint timed out.")
 
 
 class RawFulltextPayloadMetadataCompatibilityTests(unittest.TestCase):

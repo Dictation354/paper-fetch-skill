@@ -52,6 +52,7 @@ RUNTIME_UNSET = object()
 _PARSE_CACHE_MISSING = object()
 _SESSION_CACHE_MISSING = object()
 _SHARED_BROWSER_MANAGER_LOCK = threading.RLock()
+_SHARED_BROWSER_BATCH_SCOPE_COUNT = 0
 _SHARED_BROWSER_MANAGERS: dict[
     tuple[str, str, str, str, str], _SharedBrowserManagerEntry
 ] = {}
@@ -86,8 +87,10 @@ class _SharedBrowserManagerLease:
                 return
             entry.ref_count -= 1
             if entry.ref_count <= 0:
-                _SHARED_BROWSER_MANAGERS.pop(self._key, None)
-                manager_to_close = entry.manager
+                entry.ref_count = 0
+                if _SHARED_BROWSER_BATCH_SCOPE_COUNT <= 0:
+                    _SHARED_BROWSER_MANAGERS.pop(self._key, None)
+                    manager_to_close = entry.manager
         if manager_to_close is not None:
             manager_to_close.close()
 
@@ -127,6 +130,9 @@ def dump_shared_browser_managers() -> list[dict[str, Any]]:
                 "manager_type": entry.manager.__class__.__name__,
                 "external_cdp": bool(key[1]),
                 "external_new_context": key[2] == "1",
+                "retained_by_batch_scope": (
+                    entry.ref_count == 0 and _SHARED_BROWSER_BATCH_SCOPE_COUNT > 0
+                ),
             }
             for key, entry in _SHARED_BROWSER_MANAGERS.items()
         ]
@@ -139,6 +145,34 @@ def close_shared_browser_managers() -> None:
     for entry in entries:
         with contextlib.suppress(Exception):
             entry.manager.close()
+
+
+@contextlib.contextmanager
+def retain_shared_browser_managers():
+    """Keep idle shared browser managers alive for one overlapping batch scope."""
+
+    global _SHARED_BROWSER_BATCH_SCOPE_COUNT
+    with _SHARED_BROWSER_MANAGER_LOCK:
+        _SHARED_BROWSER_BATCH_SCOPE_COUNT += 1
+    try:
+        yield
+    finally:
+        managers_to_close: list[Any] = []
+        with _SHARED_BROWSER_MANAGER_LOCK:
+            _SHARED_BROWSER_BATCH_SCOPE_COUNT = max(
+                0, _SHARED_BROWSER_BATCH_SCOPE_COUNT - 1
+            )
+            if _SHARED_BROWSER_BATCH_SCOPE_COUNT == 0:
+                idle_keys = [
+                    key
+                    for key, entry in _SHARED_BROWSER_MANAGERS.items()
+                    if entry.ref_count <= 0
+                ]
+                for key in idle_keys:
+                    managers_to_close.append(_SHARED_BROWSER_MANAGERS.pop(key).manager)
+        for manager in managers_to_close:
+            with contextlib.suppress(Exception):
+                manager.close()
 
 
 atexit.register(close_shared_browser_managers)

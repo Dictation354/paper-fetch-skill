@@ -20,7 +20,7 @@ from ...models import AssetProfile
 from ...publisher_identity import normalize_doi
 from ...quality.reason_codes import FULLTEXT
 from ...runtime import RuntimeContext
-from ...tracing import download_marker, fulltext_marker, trace_from_markers
+from ...tracing import download_marker, fulltext_marker, trace_event, trace_from_markers
 from ...utils import empty_asset_results, normalize_text, provider_display_name
 from .shared import (
     BrowserWorkflowDeps,
@@ -256,6 +256,19 @@ class BrowserWorkflowClient(ProviderClient):
                     f"{self.name} HTML route was not usable; skipping PDF fallback."
                 ],
                 source_trail=[fulltext_marker(self.name, "fail", route="html")],
+                trace=(
+                    [
+                        trace_event(
+                            "fulltext",
+                            f"{self.name}_html",
+                            "fail",
+                            code=bootstrap.html_failure_reason,
+                            message=bootstrap.html_failure_message,
+                        )
+                    ]
+                    if bootstrap.html_failure_reason
+                    else []
+                ),
             )
 
         initial_warning = (
@@ -276,6 +289,7 @@ class BrowserWorkflowClient(ProviderClient):
                     browser_context_seed=bootstrap.browser_context_seed,
                     html_failure_reason=bootstrap.html_failure_reason,
                     html_failure_message=bootstrap.html_failure_message,
+                    html_failure_diagnostics=bootstrap.html_failure_diagnostics,
                     warnings=[],
                     success_source_trail=[],
                     context=context,
@@ -290,6 +304,19 @@ class BrowserWorkflowClient(ProviderClient):
                     (
                         f"{self.name} full text could not be retrieved via HTML or PDF fallback. "
                         f"HTML failure: {reason} PDF failure: {exc.message}"
+                    ),
+                    trace=(
+                        [
+                            trace_event(
+                                "fulltext",
+                                f"{self.name}_html",
+                                "fail",
+                                code=bootstrap.html_failure_reason,
+                                message=bootstrap.html_failure_message,
+                            )
+                        ]
+                        if bootstrap.html_failure_reason
+                        else []
                     ),
                 ) from exc
 

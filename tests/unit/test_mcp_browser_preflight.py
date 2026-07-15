@@ -106,8 +106,8 @@ def test_browser_preflight_payload_keeps_per_provider_action_states() -> None:
         _preflight_result(
             "pnas",
             ok=False,
-            reason="cdp_browser_connection_failed",
-            message="CDP connection failed.",
+            reason="cdp_connect_failed",
+            message="CDP connection failed after Chrome startup.",
         ),
         _preflight_result("mdpi", ok=True),
     ]

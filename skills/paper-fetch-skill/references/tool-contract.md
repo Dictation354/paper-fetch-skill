@@ -29,6 +29,7 @@
 - 工具 annotations 为 open-world、非只读、非 destructive、非 idempotent：它会打开 Chrome/CDP 与出版社页面，也可能写 storage-state。它不调用 PDF fallback，且 `auth_attempted=false`；challenge、验证码、付费或登录边界不会被自动绕过。
 - 每个 provider 独立返回 `ready`、`challenge`、`auth_required`、`runtime_error` 或 `cancelled`，并给出 `reason_code`、`reason` 和 `next_action`。前一个 provider 的 challenge/runtime failure 不会删除其它已完成结果；取消会保留取消前的结果，并停止调度后续 provider。
 - `detail="compact"` 的每项严格只有 `provider/status/reason_code/reason/next_action`；`full` 另含 provider label、目标/最终 URL、title、storage-state 保存诊断和 browser runtime diagnostics。顶层始终显式报告 `pdf_fallback_attempted=false`、`auth_attempted=false` 和逐状态汇总。
+- browser runtime 失败沿用 fetch trace 的稳定 code：`managed_chrome_profile_in_use`、`managed_chrome_exited_before_cdp`、`managed_chrome_cdp_timeout`、`cdp_connect_failed`、`browser_context_create_failed`、`browser_page_create_failed`。full diagnostics 在可用时保留 `stage`、`exit_code`、脱敏 `stderr_summary` 和 `diagnostic_path`；确认 stale singleton 后 runtime 会受控恢复并至多重启一次，无法确认时不会删除 profile 状态。
 - 支持 progress 的宿主会收到开始、逐 provider 完成和最终完成通知。`challenge` / `auth_required` 的下一步是显式人工 auth；`runtime_error` 先修复静态配置或本地 runtime；`ready` 才继续目标 fetch。
 
 ## Cache Query Contract

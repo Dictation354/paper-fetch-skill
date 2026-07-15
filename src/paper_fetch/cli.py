@@ -3,13 +3,16 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime
 import importlib.metadata
 import json
 import os
+import signal
 import sys
+import threading
 import tomllib
 from pathlib import Path
 from typing import Any
@@ -61,10 +64,13 @@ from .publisher_identity import (
     infer_provider_from_doi,
     infer_provider_from_url,
 )
-from .reason_codes import ERROR, NO_ACCESS, RATE_LIMITED
-from .runtime import build_http_transport_for_context
+from .reason_codes import BROWSER_RUNTIME_FAILURE_CODES, ERROR, NO_ACCESS, RATE_LIMITED
+from .runtime import (
+    build_http_transport_for_context,
+    close_shared_browser_managers,
+)
 from .service import FetchStrategy, PaperFetchFailure, fetch_paper
-from .tracing import trace_from_markers
+from .tracing import merge_trace, trace_from_markers
 from .utils import _extract_year, format_paper_stem, provider_display_name
 from .workflow.batch_runner import (
     BatchCompletionEvent,
@@ -129,6 +135,34 @@ class OutputOverwriteRequired(OutputDirectoryError):
 
 
 SubcommandRegistrar = Callable[[argparse._SubParsersAction], None]
+
+
+@contextlib.contextmanager
+def _cooperative_batch_cancel(cancel_event: threading.Event):
+    if threading.current_thread() is not threading.main_thread() or not hasattr(
+        signal, "SIGINT"
+    ):
+        yield
+        return
+
+    previous_handler = signal.getsignal(signal.SIGINT)
+
+    def handle_interrupt(_signum, _frame) -> None:
+        if cancel_event.is_set():
+            close_shared_browser_managers()
+            raise KeyboardInterrupt
+        cancel_event.set()
+        print(
+            "Cancellation requested; waiting for active batch workers to stop. "
+            "Press Ctrl-C again to force browser shutdown.",
+            file=sys.stderr,
+        )
+
+    signal.signal(signal.SIGINT, handle_interrupt)
+    try:
+        yield
+    finally:
+        signal.signal(signal.SIGINT, previous_handler)
 
 
 def package_version() -> str:
@@ -468,6 +502,7 @@ def run_single_fetch(
     runtime_env: Mapping[str, str],
     artifact_mode: ArtifactMode,
     transport=None,
+    cancel_check: Callable[[], bool] | None = None,
 ) -> SingleFetchResult:
     modes = _compute_modes(args)
     render_options = _render_options_from_args(args)
@@ -487,6 +522,7 @@ def run_single_fetch(
                 no_download=args.no_download,
                 artifact_mode=artifact_mode,
                 transport=transport,
+                cancel_check=cancel_check,
                 markdown_save=_markdown_save_spec(
                     args,
                     output_dir=output_dir,
@@ -723,7 +759,10 @@ def _build_cli_manifest_record(
         source_trail = tuple(
             str(item) for item in (getattr(error, "source_trail", ()) or ())
         )
-        trace = trace_from_markers(source_trail) if source_trail else None
+        structured_error_trace = list(getattr(error, "trace", ()) or ())
+        trace = merge_trace(trace_from_markers(source_trail), structured_error_trace)
+        if not trace:
+            trace = None
         candidate_count = (
             len(error.candidates) if isinstance(error, PaperFetchFailure) else 0
         )
@@ -765,6 +804,7 @@ def _run_batch_item(
     runtime_env: Mapping[str, str],
     artifact_mode: ArtifactMode,
     transport,
+    cancel_check: Callable[[], bool] | None,
     deps: ManifestBuilderDependencies,
 ) -> CliFetchOutcome:
     started_at = deps.clock()
@@ -776,6 +816,7 @@ def _run_batch_item(
             runtime_env=runtime_env,
             artifact_mode=artifact_mode,
             transport=transport,
+            cancel_check=cancel_check,
         )
     except Exception as exc:  # noqa: BLE001 - every batch input gets a terminal record.
         return CliFetchOutcome(
@@ -1080,6 +1121,7 @@ def run_batch_fetch(
 
             run_cancelled = False
             if items:
+                cancel_event = threading.Event()
                 shared_transport = build_http_transport_for_context(
                     runtime_env,
                     download_dir=output_dir,
@@ -1112,22 +1154,26 @@ def run_batch_fetch(
                             checkpoint_run_manifest(manifest, records)
                         )
 
-                    run_result = run_batch(
-                        items,
-                        lambda item: _run_batch_item(
-                            item,
-                            args=args,
-                            output_dir=output_dir,
-                            runtime_env=runtime_env,
-                            artifact_mode=artifact_mode,
-                            transport=shared_transport,
-                            deps=deps,
-                        ),
-                        max_workers=args.batch_concurrency,
-                        lane_key=lambda item: item.lane_key,
-                        completion_callback=on_completion,
-                        result_classifier=_classify_batch_outcome,
-                    )
+                    with _cooperative_batch_cancel(cancel_event):
+                        run_result = run_batch(
+                            items,
+                            lambda item: _run_batch_item(
+                                item,
+                                args=args,
+                                output_dir=output_dir,
+                                runtime_env=runtime_env,
+                                artifact_mode=artifact_mode,
+                                transport=shared_transport,
+                                cancel_check=cancel_event.is_set,
+                                deps=deps,
+                            ),
+                            max_workers=args.batch_concurrency,
+                            lane_key=lambda item: item.lane_key,
+                            completion_callback=on_completion,
+                            result_classifier=_classify_batch_outcome,
+                            cancel_event=cancel_event,
+                            cancel_escalation_callback=(close_shared_browser_managers),
+                        )
                 if run_result.callback_failures:
                     details = "; ".join(
                         f"index {failure.source_index + 1}: {failure.message}"
@@ -1753,7 +1799,37 @@ def _write_browser_preflight_results(results: list[BrowserPreflightResult]) -> N
                 sys.stdout.write(f"  Injected storage cookies: {cookie_count}\n")
         if not result.ok:
             detail = result.message or result.reason or "Browser preflight failed."
+            if result.reason:
+                sys.stdout.write(f"  Code: {result.reason}\n")
+            browser_failure = _browser_preflight_failure_details(result)
+            stage = str(browser_failure.get("stage") or "").strip()
+            if stage:
+                sys.stdout.write(f"  Stage: {stage}\n")
+            exit_code = browser_failure.get("exit_code")
+            if exit_code is not None:
+                sys.stdout.write(f"  Exit code: {exit_code}\n")
+            stderr_summary = str(browser_failure.get("stderr_summary") or "").strip()
+            if stderr_summary:
+                sys.stdout.write(f"  Chrome stderr: {stderr_summary}\n")
+            diagnostic_path = str(browser_failure.get("diagnostic_path") or "").strip()
+            if diagnostic_path:
+                sys.stdout.write(f"  Diagnostic artifact: {diagnostic_path}\n")
             sys.stdout.write(f"  Reason: {detail}\n")
+
+
+def _browser_preflight_failure_details(
+    result: BrowserPreflightResult,
+) -> Mapping[str, Any]:
+    diagnostics = result.diagnostics or {}
+    browser_failure = diagnostics.get("browser_failure")
+    if isinstance(browser_failure, Mapping):
+        return browser_failure
+    trace = diagnostics.get("trace")
+    if isinstance(trace, Mapping):
+        browser_failure = trace.get("browser_failure")
+        if isinstance(browser_failure, Mapping):
+            return browser_failure
+    return {}
 
 
 def _write_browser_preflight_failure_hints(
@@ -1767,10 +1843,20 @@ def _write_browser_preflight_failure_hints(
     )
     for result in failures:
         detail = result.message or result.reason or "Browser preflight failed."
-        sys.stderr.write(
-            f"- {result.provider_label} ({result.provider}): {detail} "
-            f"Run: paper-fetch auth {result.provider}\n"
-        )
+        if result.reason in BROWSER_RUNTIME_FAILURE_CODES:
+            browser_failure = _browser_preflight_failure_details(result)
+            artifact = str(browser_failure.get("diagnostic_path") or "").strip()
+            artifact_hint = f" Diagnostic artifact: {artifact}." if artifact else ""
+            sys.stderr.write(
+                f"- {result.provider_label} ({result.provider}) "
+                f"[{result.reason}]: {detail}.{artifact_hint} Retry browser-preflight "
+                "after resolving the reported browser runtime state.\n"
+            )
+        else:
+            sys.stderr.write(
+                f"- {result.provider_label} ({result.provider}): {detail} "
+                f"Run: paper-fetch auth {result.provider}\n"
+            )
 
 
 def _run_auth_namespace(args: argparse.Namespace) -> int:

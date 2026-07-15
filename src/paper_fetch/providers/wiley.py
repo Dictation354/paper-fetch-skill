@@ -32,7 +32,7 @@ from ..provider_catalog import (
 )
 from ..quality.html_signals import WILEY_SIGNAL_SET
 from ..runtime import RuntimeContext
-from ..tracing import fulltext_marker
+from ..tracing import fulltext_marker, trace_event
 from ..utils import normalize_text
 from . import _wiley_html, browser_workflow
 from .browser_workflow.shared import BrowserWorkflowDeps, default_browser_workflow_deps
@@ -330,12 +330,30 @@ class WileyClient(browser_workflow.BrowserWorkflowClient):
                     content_type=PDF_MIME_TYPE,
                     body=pdf_result.pdf_bytes,
                     markdown_text=pdf_result.markdown_text,
+                    diagnostics=(
+                        {"html_failure": dict(bootstrap.html_failure_diagnostics)}
+                        if bootstrap.html_failure_diagnostics
+                        else {}
+                    ),
                     html_failure_reason=bootstrap.html_failure_reason,
                     html_failure_message=bootstrap.html_failure_message,
                     suggested_filename=pdf_result.suggested_filename,
                     extracted_assets=pdf_fetch_result_assets(pdf_result),
                 ),
                 warnings=pdf_fetch_result_warnings(pdf_result),
+                trace=(
+                    [
+                        trace_event(
+                            "fulltext",
+                            f"{self.name}_html",
+                            "fail",
+                            code=bootstrap.html_failure_reason,
+                            message=bootstrap.html_failure_message,
+                        )
+                    ]
+                    if bootstrap.html_failure_reason
+                    else []
+                ),
                 needs_local_copy=True,
             )
 
@@ -362,6 +380,7 @@ class WileyClient(browser_workflow.BrowserWorkflowClient):
                     browser_context_seed=bootstrap.browser_context_seed,
                     html_failure_reason=bootstrap.html_failure_reason,
                     html_failure_message=bootstrap.html_failure_message,
+                    html_failure_diagnostics=bootstrap.html_failure_diagnostics,
                     warnings=[],
                     success_source_trail=[],
                     success_warning=(
@@ -447,6 +466,19 @@ class WileyClient(browser_workflow.BrowserWorkflowClient):
                     ),
                     fulltext_marker(self.name, "fail", route="pdf_api"),
                 ],
+                trace=(
+                    [
+                        trace_event(
+                            "fulltext",
+                            f"{self.name}_html",
+                            "fail",
+                            code=bootstrap.html_failure_reason,
+                            message=bootstrap.html_failure_message,
+                        )
+                    ]
+                    if bootstrap.html_failure_reason
+                    else []
+                ),
             )
 
         steps = []

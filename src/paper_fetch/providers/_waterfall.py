@@ -6,7 +6,12 @@ from dataclasses import dataclass, field
 from typing import Any
 from collections.abc import Callable, Mapping
 
-from ..tracing import source_trail_from_trace, trace_from_markers
+from ..tracing import (
+    TraceEvent,
+    merge_trace,
+    source_trail_from_trace,
+    trace_from_markers,
+)
 from .base import ProviderFailure, RawFulltextPayload, combine_provider_failures
 from ..reason_codes import (
     ERROR,
@@ -96,6 +101,33 @@ def _append_unique_text(target: list[str], values: list[str] | tuple[str, ...]) 
             target.append(normalized)
 
 
+def _trace_with_markers(
+    markers: list[str],
+    payload_trace: list[TraceEvent],
+) -> list[TraceEvent]:
+    remaining = list(payload_trace)
+    events: list[TraceEvent] = []
+    for marker_event in trace_from_markers(markers):
+        matching_index = next(
+            (
+                index
+                for index, event in enumerate(remaining)
+                if event.marker() == marker_event.marker()
+            ),
+            None,
+        )
+        if matching_index is None:
+            events.append(marker_event)
+        else:
+            events.append(remaining.pop(matching_index))
+    events.extend(
+        event
+        for event in remaining
+        if event.code is not None or event.message is not None
+    )
+    return events
+
+
 def _failure_with_marker(
     failure: ProviderFailure, marker: str | None
 ) -> ProviderFailure:
@@ -111,6 +143,7 @@ def _failure_with_marker(
         missing_env=failure.missing_env,
         warnings=failure.warnings,
         source_trail=source_trail,
+        trace=failure.trace,
     )
 
 
@@ -129,6 +162,7 @@ def _failure_with_warning(
         missing_env=failure.missing_env,
         warnings=warnings,
         source_trail=failure.source_trail,
+        trace=failure.trace,
     )
 
 
@@ -152,6 +186,7 @@ def _failure_with_state(
     source_trail: list[str] = []
     missing_env: list[str] = []
     retry_after_values: list[int] = []
+    trace: list[TraceEvent] = []
 
     _append_unique_text(warnings, state.warnings)
     _append_unique_text(warnings, failure.warnings)
@@ -160,11 +195,13 @@ def _failure_with_state(
     _append_unique_text(source_trail, failure.source_trail)
     for _label, state_failure in state.failures:
         _append_unique_text(missing_env, state_failure.missing_env)
+        trace = merge_trace(trace, state_failure.trace)
         if state_failure.retry_after_seconds is not None:
             retry_after_values.append(state_failure.retry_after_seconds)
     _append_unique_text(missing_env, failure.missing_env)
     if failure.retry_after_seconds is not None:
         retry_after_values.append(failure.retry_after_seconds)
+    trace = merge_trace(trace, failure.trace)
 
     return ProviderFailure(
         failure.code,
@@ -173,6 +210,7 @@ def _failure_with_state(
         missing_env=missing_env,
         warnings=warnings,
         source_trail=source_trail,
+        trace=trace,
     )
 
 
@@ -226,11 +264,11 @@ def run_provider_waterfall(
             if step.include_failure_trail_on_success:
                 _append_unique_text(source_trail, state.failure_source_trail)
             _append_unique_text(source_trail, list(step.success_markers))
-            payload.trace = trace_from_markers(source_trail)
+            payload.trace = _trace_with_markers(source_trail, payload.trace)
         elif state.source_trail:
             source_trail = list(state.source_trail)
             _append_unique_text(source_trail, source_trail_from_trace(payload.trace))
-            payload.trace = trace_from_markers(source_trail)
+            payload.trace = _trace_with_markers(source_trail, payload.trace)
         return payload
 
     if not state.failures:

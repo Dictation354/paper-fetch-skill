@@ -863,6 +863,61 @@ def test_fetch_html_with_cloakbrowser_uses_runtime_context_shared_browser(
     assert fake_module.browser.closed is False
 
 
+def test_fetch_html_with_cloakbrowser_preserves_managed_browser_error_details(
+    tmp_path,
+) -> None:
+    runtime_context = mock.Mock()
+    runtime_context.new_browser_context.side_effect = (
+        runtime_browser.ManagedBrowserError(
+            "managed_chrome_cdp_timeout",
+            "CDP startup timed out.",
+            stage="managed_chrome_startup",
+            details={"exit_code": None, "stderr_summary": "startup failed"},
+        )
+    )
+
+    with pytest.raises(browser_runtime.BrowserRuntimeFailure) as captured:
+        _cloakbrowser.fetch_html_with_cloakbrowser(
+            ["https://www.science.org/doi/full/10.1126/science.example"],
+            publisher="science",
+            config=_runtime_config(tmp_path),
+            runtime_context=runtime_context,
+            wait_seconds=0,
+        )
+
+    assert captured.value.kind == "managed_chrome_cdp_timeout"
+    assert captured.value.details["browser_failure"]["stage"] == (
+        "managed_chrome_startup"
+    )
+    assert captured.value.details["browser_failure"]["stderr_summary"] == (
+        "startup failed"
+    )
+
+
+def test_fetch_html_with_cloakbrowser_reports_page_creation_stage(tmp_path) -> None:
+    class _PageFailureContext:
+        def new_page(self):
+            raise RuntimeError("new page failed")
+
+        def close(self) -> None:
+            pass
+
+    runtime_context = mock.Mock()
+    runtime_context.new_browser_context.return_value = _PageFailureContext()
+
+    with pytest.raises(browser_runtime.BrowserRuntimeFailure) as captured:
+        _cloakbrowser.fetch_html_with_cloakbrowser(
+            ["https://www.science.org/doi/full/10.1126/science.example"],
+            publisher="science",
+            config=_runtime_config(tmp_path),
+            runtime_context=runtime_context,
+            wait_seconds=0,
+        )
+
+    assert captured.value.kind == "browser_page_create_failed"
+    assert captured.value.details["browser_failure"]["stage"] == ("browser_page_create")
+
+
 def test_fetch_html_with_fast_browser_returns_pnas_html_when_body_dom_ready_despite_challenge() -> (
     None
 ):

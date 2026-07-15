@@ -590,6 +590,47 @@ class CliTests(unittest.TestCase):
         self.assertIn("failed: Wiley (wiley)", stdout.getvalue())
         self.assertIn("paper-fetch auth wiley", stderr.getvalue())
 
+    def test_browser_preflight_reports_structured_runtime_failure(self) -> None:
+        preflight_result = paper_fetch_cli.BrowserPreflightResult(
+            provider="wiley",
+            provider_label="Wiley",
+            ok=False,
+            reason="managed_chrome_exited_before_cdp",
+            message="Managed Chrome exited before CDP was ready.",
+            diagnostics={
+                "browser_failure": {
+                    "stage": "managed_chrome_startup",
+                    "exit_code": 12,
+                    "stderr_summary": "profile startup failed",
+                    "diagnostic_path": "/tmp/browser-diagnostic",
+                }
+            },
+        )
+        stdout = io.StringIO()
+        stderr = io.StringIO()
+
+        with (
+            mock.patch.object(
+                paper_fetch_cli,
+                "run_browser_provider_preflight",
+                return_value=[preflight_result],
+            ),
+            contextlib.redirect_stdout(stdout),
+            contextlib.redirect_stderr(stderr),
+        ):
+            exit_code = paper_fetch_cli.main(
+                ["browser-preflight", "--provider", "wiley"]
+            )
+
+        self.assertEqual(exit_code, 1)
+        self.assertIn("Code: managed_chrome_exited_before_cdp", stdout.getvalue())
+        self.assertIn("Stage: managed_chrome_startup", stdout.getvalue())
+        self.assertIn("Exit code: 12", stdout.getvalue())
+        self.assertIn("Chrome stderr: profile startup failed", stdout.getvalue())
+        self.assertIn("Diagnostic artifact: /tmp/browser-diagnostic", stdout.getvalue())
+        self.assertIn("[managed_chrome_exited_before_cdp]", stderr.getvalue())
+        self.assertNotIn("paper-fetch auth", stderr.getvalue())
+
     def test_main_writes_markdown_json_and_both_to_stdout(self) -> None:
         article = sample_article()
         original_fetch = paper_fetch_cli.fetch_paper

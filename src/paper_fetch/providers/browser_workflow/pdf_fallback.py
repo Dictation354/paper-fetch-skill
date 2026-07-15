@@ -7,7 +7,7 @@ from collections.abc import Mapping, Sequence
 
 from ...http import PDF_MIME_TYPE, RequestCancelledError
 from ...runtime import RuntimeContext
-from ...tracing import trace_from_markers
+from ...tracing import trace_event, trace_from_markers
 from ...reason_codes import PDF_FALLBACK
 from ..base import ProviderContent, RawFulltextPayload
 from ..browser_runtime.api import (
@@ -47,6 +47,7 @@ def fetch_seeded_browser_pdf_payload(
     browser_context_seed: Mapping[str, Any] | None,
     html_failure_reason: str | None,
     html_failure_message: str | None,
+    html_failure_diagnostics: Mapping[str, Any] | None = None,
     warnings: list[str] | None = None,
     success_source_trail: list[str] | None = None,
     success_warning: str = "Full text was extracted from PDF fallback after the HTML path was not usable.",
@@ -111,6 +112,18 @@ def fetch_seeded_browser_pdf_payload(
         )
     if success_warning:
         payload_warnings.append(success_warning)
+    failure_diagnostics = dict(html_failure_diagnostics or {})
+    payload_trace = trace_from_markers(list(success_source_trail or []))
+    if html_failure_reason:
+        payload_trace.append(
+            trace_event(
+                "fulltext",
+                f"{provider}_html",
+                "fail",
+                code=html_failure_reason,
+                message=html_failure_message,
+            )
+        )
     return RawFulltextPayload(
         provider=provider,
         source_url=pdf_result.final_url,
@@ -122,12 +135,15 @@ def fetch_seeded_browser_pdf_payload(
             content_type=PDF_MIME_TYPE,
             body=pdf_result.pdf_bytes,
             markdown_text=pdf_result.markdown_text,
+            diagnostics=(
+                {"html_failure": failure_diagnostics} if failure_diagnostics else {}
+            ),
             html_failure_reason=html_failure_reason,
             html_failure_message=html_failure_message,
             suggested_filename=pdf_result.suggested_filename,
             extracted_assets=pdf_fetch_result_assets(pdf_result),
         ),
         warnings=payload_warnings,
-        trace=trace_from_markers(list(success_source_trail or [])),
+        trace=payload_trace,
         needs_local_copy=True,
     )

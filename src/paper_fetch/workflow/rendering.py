@@ -21,6 +21,7 @@ from ..provider_catalog import known_article_source_names
 from ..reason_codes import METADATA_ONLY
 from ..quality.reason_codes import FULLTEXT
 from ..tracing import (
+    TraceEvent,
     download_marker,
     fallback_marker,
     merge_trace,
@@ -42,11 +43,14 @@ def finalize_article(
     *,
     warnings: list[str] | None = None,
     source_trail: list[str] | None = None,
+    trace: list[TraceEvent] | None = None,
 ) -> ArticleModel:
     extend_unique(article.quality.warnings, list(warnings or []))
-    if source_trail:
+    if source_trail or trace:
         article.quality.trace = merge_trace(
-            article.quality.trace, trace_from_markers(list(source_trail))
+            article.quality.trace,
+            trace_from_markers(list(source_trail or [])),
+            trace,
         )
         article.quality.source_trail = source_trail_from_trace(article.quality.trace)
     return article

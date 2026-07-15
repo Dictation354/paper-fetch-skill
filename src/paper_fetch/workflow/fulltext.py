@@ -29,8 +29,10 @@ from ..reason_codes import (
 from ..quality.reason_codes import FULLTEXT
 from ..runtime import RUNTIME_UNSET, RuntimeContext, resolve_runtime_context
 from ..tracing import (
+    TraceEvent,
     fallback_marker,
     fulltext_marker,
+    merge_trace,
     resolve_marker,
     trace_from_markers,
 )
@@ -78,6 +80,7 @@ def build_metadata_only_result(
     resolved,
     warnings: list[str] | None = None,
     source_trail: list[str] | None = None,
+    trace: list[TraceEvent] | None = None,
 ) -> ArticleModel:
     from ..publisher_identity import normalize_doi
 
@@ -86,7 +89,7 @@ def build_metadata_only_result(
         metadata=metadata,
         doi=normalize_doi(safe_text(metadata.get("doi") or resolved.doi)) or None,
         warnings=list(warnings or []),
-        trace=trace_from_markers(list(source_trail or [])),
+        trace=merge_trace(trace_from_markers(list(source_trail or [])), trace),
     )
 
 
@@ -200,7 +203,9 @@ def _try_official_provider(
     clients: Mapping[str, object],
     warnings: list[str],
     source_trail: list[str],
+    trace: list[TraceEvent] | None = None,
 ) -> ArticleModel | None:
+    workflow_trace = trace if trace is not None else []
     if not doi or not provider_name or not is_official_provider(provider_name):
         return None
     if not provider_allowed(provider_name, strategy):
@@ -235,6 +240,7 @@ def _try_official_provider(
             asset_profile=resolved_asset_profile,
             context=context,
         )
+        workflow_trace[:] = merge_trace(workflow_trace, provider_result.trace)
         extend_unique(warnings, provider_result.warnings)
         download_warnings, download_trail = artifact_store.save_provider_payload(
             provider_result.provider or provider_name,
@@ -288,7 +294,10 @@ def _try_official_provider(
             )
             extend_unique(source_trail, [fulltext_marker(provider_name, "article_ok")])
             return finalize_article(
-                article, warnings=warnings, source_trail=source_trail
+                article,
+                warnings=warnings,
+                source_trail=source_trail,
+                trace=workflow_trace,
             )
         if article.quality.content_kind == ABSTRACT_ONLY:
             emit_structured_log(
@@ -309,7 +318,10 @@ def _try_official_provider(
                     "Official full text only contained abstract-level content; returning abstract-only provider result."
                 )
                 return finalize_article(
-                    article, warnings=warnings, source_trail=source_trail
+                    article,
+                    warnings=warnings,
+                    source_trail=source_trail,
+                    trace=workflow_trace,
                 )
             warnings.append(
                 "Official full text only contained abstract-level content; continuing to metadata-only fallback."
@@ -343,7 +355,10 @@ def _try_official_provider(
                     [fulltext_marker(provider_name, "ok", route=PDF_FALLBACK)],
                 )
                 return finalize_article(
-                    article, warnings=warnings, source_trail=source_trail
+                    article,
+                    warnings=warnings,
+                    source_trail=source_trail,
+                    trace=workflow_trace,
                 )
             emit_structured_log(
                 logger,
@@ -360,6 +375,7 @@ def _try_official_provider(
             extend_unique(source_trail, [fulltext_marker(provider_name, "not_usable")])
         extend_unique(warnings, article.quality.warnings)
     except ProviderFailure as exc:
+        workflow_trace[:] = merge_trace(workflow_trace, exc.trace)
         extend_unique(warnings, exc.warnings)
         extend_unique(source_trail, exc.source_trail)
         emit_structured_log(
@@ -386,6 +402,7 @@ def _fallback_to_metadata_only(
     strategy: FetchStrategy,
     warnings: list[str],
     source_trail: list[str],
+    trace: list[TraceEvent] | None = None,
 ) -> ArticleModel:
     if not metadata:
         raise PaperFetchFailure(
@@ -400,7 +417,11 @@ def _fallback_to_metadata_only(
     )
     extend_unique(source_trail, [fallback_marker(METADATA_ONLY)])
     return build_metadata_only_result(
-        metadata, resolved=resolved, warnings=warnings, source_trail=source_trail
+        metadata,
+        resolved=resolved,
+        warnings=warnings,
+        source_trail=source_trail,
+        trace=trace,
     )
 
 
@@ -463,6 +484,7 @@ def fetch_article(
 
         doi = normalize_doi(safe_text(metadata.get("doi") or resolved.doi)) or None
         warnings: list[str] = []
+        trace: list[TraceEvent] = []
 
         fulltext_started_at = time.monotonic()
         article = _try_official_provider(
@@ -475,6 +497,7 @@ def fetch_article(
             clients=client_registry,
             warnings=warnings,
             source_trail=source_trail,
+            trace=trace,
         )
         _record_stage_timing(runtime, "fulltext_seconds", fulltext_started_at)
         if article is not None:
@@ -492,6 +515,7 @@ def fetch_article(
             strategy=strategy,
             warnings=warnings,
             source_trail=source_trail,
+            trace=trace,
         )
     finally:
         if owns_runtime:

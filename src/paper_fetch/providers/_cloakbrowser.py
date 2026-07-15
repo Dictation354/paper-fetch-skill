@@ -39,8 +39,13 @@ from ..quality.reason_codes import REDIRECTED_TO_ABSTRACT
 from ..reason_codes import ERROR, NOT_CONFIGURED, OK, READY
 from ..runtime_browser import (
     BrowserContextManager,
+    ManagedBrowserError,
     browser_context_options,
     browser_page_user_agent,
+)
+from ..reason_codes import (
+    BROWSER_CONTEXT_CREATE_FAILED,
+    BROWSER_PAGE_CREATE_FAILED,
 )
 from ..utils import normalize_text, provider_display_name, sanitize_filename
 from .browser_runtime.seed import (
@@ -828,13 +833,45 @@ def fetch_html_with_cloakbrowser(
                     "ignored_context_options": [],
                     "storage_state_cookie_count": None,
                 }
-            page = browser_context.new_page()
+        except ManagedBrowserError as exc:
+            trace["cdp_connect_seconds"] = round(time.monotonic() - connect_started, 3)
+            trace["browser_failure"] = dict(exc.details)
+            raise CloakBrowserFailure(
+                exc.code,
+                exc.message,
+                details={"trace": trace, "browser_failure": dict(exc.details)},
+            ) from exc
         except Exception as exc:
             trace["cdp_connect_seconds"] = round(time.monotonic() - connect_started, 3)
+            message = normalize_text(str(exc)) or "Browser context creation failed."
             raise CloakBrowserFailure(
-                "cdp_browser_connection_failed",
-                normalize_text(str(exc)) or "CDP browser connection failed.",
-                details={"trace": trace},
+                BROWSER_CONTEXT_CREATE_FAILED,
+                message,
+                details={
+                    "trace": trace,
+                    "browser_failure": {
+                        "stage": "browser_context_create",
+                        "code": BROWSER_CONTEXT_CREATE_FAILED,
+                        "message": message,
+                    },
+                },
+            ) from exc
+
+        try:
+            page = browser_context.new_page()
+        except Exception as exc:
+            message = normalize_text(str(exc)) or "Browser page creation failed."
+            raise CloakBrowserFailure(
+                BROWSER_PAGE_CREATE_FAILED,
+                message,
+                details={
+                    "trace": trace,
+                    "browser_failure": {
+                        "stage": "browser_page_create",
+                        "code": BROWSER_PAGE_CREATE_FAILED,
+                        "message": message,
+                    },
+                },
             ) from exc
 
         def route_handler(route: Any) -> None:

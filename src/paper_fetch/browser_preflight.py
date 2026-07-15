@@ -382,6 +382,7 @@ def preflight_browser_provider(
                 storage_state_path=storage_path["value"],
                 reason=bootstrap.html_failure_reason,
                 message=bootstrap.html_failure_message,
+                diagnostics=bootstrap.html_failure_diagnostics,
             )
     except RequestCancelledError:
         raise

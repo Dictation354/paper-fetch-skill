@@ -515,11 +515,13 @@ class CiReleaseWorkflowTests(unittest.TestCase):
         self.assertIn(
             "from paper_fetch.runtime_browser import BrowserContextManager", workflow
         )
-        self.assertIn("--remote-debugging-port", workflow)
-        self.assertIn("CLOAKBROWSER_CDP_ENDPOINT", workflow)
-        self.assertIn("BrowserContextManager(cdp_endpoint=endpoint)", workflow)
+        self.assertIn("ThreadPoolExecutor(max_workers=4)", workflow)
+        self.assertIn("executor.map(open_context, range(50))", workflow)
+        self.assertIn("profile_dir=profile_path", workflow)
+        self.assertIn('profile_path / "SingletonLock"', workflow)
+        self.assertIn("singleton-recovery-*/recovery.json", workflow)
         self.assertIn(
-            "data:text/html,<title>paper-fetch macOS browser smoke</title>", workflow
+            "data:text/html,<title>paper-fetch macOS browser smoke ", workflow
         )
         self.assertIn("\n          from pathlib import Path\n", workflow)
         self.assertIn(

@@ -137,6 +137,7 @@ ProgressCallback = Callable[[BatchProgress[ItemT, ResultT]], Awaitable[None] | N
 FailureClassifier = Callable[[Exception], BatchFailure]
 ResultClassifier = Callable[[ResultT], BatchFailure | None]
 StopPredicate = Callable[[BatchItemResult[ItemT, ResultT]], bool]
+CancelEscalationCallback = Callable[[], None]
 
 
 def _validate_worker_limit(value: int, *, name: str) -> int:
@@ -201,6 +202,8 @@ class BatchRunner(Generic[ItemT, ResultT]):
             DEFAULT_RATE_LIMIT_COOLDOWN_SECONDS
         ),
         cancel_poll_interval_seconds: float = 0.05,
+        cancel_grace_period_seconds: float = 10.0,
+        cancel_escalation_callback: CancelEscalationCallback | None = None,
     ) -> None:
         self._worker = worker
         self._max_workers = _validate_worker_limit(max_workers, name="max_workers")
@@ -234,6 +237,15 @@ class BatchRunner(Generic[ItemT, ResultT]):
                 "cancel_poll_interval_seconds must be a finite, positive number."
             )
         self._cancel_poll_interval_seconds = float(cancel_poll_interval_seconds)
+        if (
+            not math.isfinite(cancel_grace_period_seconds)
+            or cancel_grace_period_seconds < 0
+        ):
+            raise ValueError(
+                "cancel_grace_period_seconds must be a finite, non-negative number."
+            )
+        self._cancel_grace_period_seconds = float(cancel_grace_period_seconds)
+        self._cancel_escalation_callback = cancel_escalation_callback
 
     def run(self, items: Sequence[ItemT]) -> BatchRunResult[ItemT, ResultT]:
         """Run synchronously; callers already in an event loop should use run_async."""
@@ -259,6 +271,8 @@ class BatchRunner(Generic[ItemT, ResultT]):
         pending: dict[asyncio.Future[ResultT], tuple[int, LaneKey, float]] = {}
         stopped_by: BatchItemResult[ItemT, ResultT] | None = None
         cancellation_observed = self._cancel_event.is_set()
+        cancellation_started_at = self._clock() if cancellation_observed else None
+        cancellation_escalated = False
 
         loop = asyncio.get_running_loop()
         executor = ThreadPoolExecutor(
@@ -387,10 +401,38 @@ class BatchRunner(Generic[ItemT, ResultT]):
                 lane_cooldowns[result.lane_key] = candidate
 
         def cancellation_requested() -> bool:
-            nonlocal cancellation_observed
+            nonlocal cancellation_observed, cancellation_started_at
             if self._cancel_event.is_set():
                 cancellation_observed = True
+                if cancellation_started_at is None:
+                    cancellation_started_at = self._clock()
             return cancellation_observed
+
+        def maybe_escalate_cancellation() -> None:
+            nonlocal cancellation_escalated
+            if (
+                not cancellation_requested()
+                or cancellation_escalated
+                or not pending
+                or cancellation_started_at is None
+                or self._clock() - cancellation_started_at
+                < self._cancel_grace_period_seconds
+            ):
+                return
+            cancellation_escalated = True
+            callback = self._cancel_escalation_callback
+            if callback is None:
+                return
+            try:
+                callback()
+            except Exception as error:
+                callback_failures.append(
+                    BatchCallbackFailure(
+                        callback="cancel_escalation",
+                        source_index=-1,
+                        message=str(error),
+                    )
+                )
 
         def find_eligible_position() -> int | None:
             if cancellation_requested() or stopped_by is not None:
@@ -421,6 +463,7 @@ class BatchRunner(Generic[ItemT, ResultT]):
             fill_available_slots()
             while pending:
                 cancellation_requested()
+                maybe_escalate_cancellation()
                 done, _ = await asyncio.wait(
                     pending,
                     timeout=self._cancel_poll_interval_seconds,
@@ -579,23 +622,32 @@ def run_batch(
     failure_classifier: FailureClassifier = _default_failure_classifier,
     result_classifier: ResultClassifier[ResultT] | None = None,
     default_rate_limit_cooldown_seconds: float = (DEFAULT_RATE_LIMIT_COOLDOWN_SECONDS),
+    cancel_grace_period_seconds: float = 10.0,
+    cancel_escalation_callback: CancelEscalationCallback | None = None,
 ) -> BatchRunResult[ItemT, ResultT]:
     """Convenience wrapper around :class:`BatchRunner.run`."""
 
-    return BatchRunner(
-        worker,
-        max_workers=max_workers,
-        lane_key=lane_key,
-        lane_limits=lane_limits,
-        completion_callback=completion_callback,
-        progress_callback=progress_callback,
-        stop_predicate=stop_predicate,
-        cancel_event=cancel_event,
-        clock=clock,
-        failure_classifier=failure_classifier,
-        result_classifier=result_classifier,
-        default_rate_limit_cooldown_seconds=(default_rate_limit_cooldown_seconds),
-    ).run(items)
+    from ..runtime import close_shared_browser_managers, retain_shared_browser_managers
+
+    escalation_callback = cancel_escalation_callback or close_shared_browser_managers
+
+    with retain_shared_browser_managers():
+        return BatchRunner(
+            worker,
+            max_workers=max_workers,
+            lane_key=lane_key,
+            lane_limits=lane_limits,
+            completion_callback=completion_callback,
+            progress_callback=progress_callback,
+            stop_predicate=stop_predicate,
+            cancel_event=cancel_event,
+            clock=clock,
+            failure_classifier=failure_classifier,
+            result_classifier=result_classifier,
+            default_rate_limit_cooldown_seconds=(default_rate_limit_cooldown_seconds),
+            cancel_grace_period_seconds=cancel_grace_period_seconds,
+            cancel_escalation_callback=escalation_callback,
+        ).run(items)
 
 
 async def run_batch_async(
@@ -613,23 +665,32 @@ async def run_batch_async(
     failure_classifier: FailureClassifier = _default_failure_classifier,
     result_classifier: ResultClassifier[ResultT] | None = None,
     default_rate_limit_cooldown_seconds: float = (DEFAULT_RATE_LIMIT_COOLDOWN_SECONDS),
+    cancel_grace_period_seconds: float = 10.0,
+    cancel_escalation_callback: CancelEscalationCallback | None = None,
 ) -> BatchRunResult[ItemT, ResultT]:
     """Convenience wrapper around :class:`BatchRunner.run_async`."""
 
-    return await BatchRunner(
-        worker,
-        max_workers=max_workers,
-        lane_key=lane_key,
-        lane_limits=lane_limits,
-        completion_callback=completion_callback,
-        progress_callback=progress_callback,
-        stop_predicate=stop_predicate,
-        cancel_event=cancel_event,
-        clock=clock,
-        failure_classifier=failure_classifier,
-        result_classifier=result_classifier,
-        default_rate_limit_cooldown_seconds=(default_rate_limit_cooldown_seconds),
-    ).run_async(items)
+    from ..runtime import close_shared_browser_managers, retain_shared_browser_managers
+
+    escalation_callback = cancel_escalation_callback or close_shared_browser_managers
+
+    with retain_shared_browser_managers():
+        return await BatchRunner(
+            worker,
+            max_workers=max_workers,
+            lane_key=lane_key,
+            lane_limits=lane_limits,
+            completion_callback=completion_callback,
+            progress_callback=progress_callback,
+            stop_predicate=stop_predicate,
+            cancel_event=cancel_event,
+            clock=clock,
+            failure_classifier=failure_classifier,
+            result_classifier=result_classifier,
+            default_rate_limit_cooldown_seconds=(default_rate_limit_cooldown_seconds),
+            cancel_grace_period_seconds=cancel_grace_period_seconds,
+            cancel_escalation_callback=escalation_callback,
+        ).run_async(items)
 
 
 __all__ = [
@@ -645,6 +706,7 @@ __all__ = [
     "BatchProgress",
     "BatchRunResult",
     "BatchRunner",
+    "CancelEscalationCallback",
     "run_batch",
     "run_batch_async",
 ]

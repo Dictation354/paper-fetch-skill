@@ -442,12 +442,10 @@ jobs:
 
           paper-fetch --help >/dev/null
           python - <<'PY'
-          import json
+          from concurrent.futures import ThreadPoolExecutor
           import os
           from pathlib import Path
-          import subprocess
-          import time
-          import urllib.request
+          import socket
 
           from paper_fetch.runtime_browser import BrowserContextManager
 
@@ -455,54 +453,54 @@ jobs:
           assert binary_path and Path(binary_path).is_file(), binary_path
           profile = os.environ.get("PAPER_FETCH_BROWSER_PROFILE")
           assert profile, profile
-
-          port = 9222
-          browser = subprocess.Popen(
-              [
-                  binary_path,
-                  "--headless=new",
-                  f"--user-data-dir={profile}",
-                  "--remote-debugging-address=127.0.0.1",
-                  f"--remote-debugging-port={port}",
-                  "--no-first-run",
-                  "--no-default-browser-check",
-                  "about:blank",
-              ]
+          profile_path = Path(profile)
+          profile_path.mkdir(parents=True, exist_ok=True)
+          (profile_path / "SingletonLock").symlink_to(
+              f"{socket.gethostname()}-99999999"
           )
-          manager = None
-          try:
-              endpoint = ""
-              for _ in range(60):
-                  try:
-                      with urllib.request.urlopen(
-                          f"http://127.0.0.1:{port}/json/version",
-                          timeout=1,
-                      ) as response:
-                          endpoint = json.loads(response.read().decode("utf-8"))[
-                              "webSocketDebuggerUrl"
-                          ]
-                          break
-                  except Exception:
-                      time.sleep(0.5)
-              assert endpoint.startswith("ws://127.0.0.1:"), endpoint
+          (profile_path / "SingletonSocket").symlink_to(
+              profile_path / "missing-singleton-socket"
+          )
+          (profile_path / "SingletonCookie").symlink_to("123456789")
 
-              os.environ["CLOAKBROWSER_CDP_ENDPOINT"] = endpoint
-              manager = BrowserContextManager(cdp_endpoint=endpoint)
+          manager = BrowserContextManager(
+              binary_path=binary_path,
+              profile_dir=profile_path,
+          )
+
+          def open_context(index):
               context = manager.new_context()
               try:
                   page = context.new_page()
-                  page.goto("data:text/html,<title>paper-fetch macOS browser smoke</title><main>ok</main>")
-                  assert page.title() == "paper-fetch macOS browser smoke"
+                  page.goto(
+                      "data:text/html,<title>paper-fetch macOS browser smoke "
+                      f"{index}</title><main>ok</main>"
+                  )
+                  assert page.title() == f"paper-fetch macOS browser smoke {index}"
+                  return index
               finally:
                   context.close()
+
+          try:
+              with ThreadPoolExecutor(max_workers=4) as executor:
+                  completed = list(executor.map(open_context, range(50)))
+              assert completed == list(range(50)), completed
           finally:
-              if manager is not None:
-                  manager.close()
-              browser.terminate()
-              try:
-                  browser.wait(timeout=10)
-              except subprocess.TimeoutExpired:
-                  browser.kill()
+              manager.close()
+
+          for singleton_name in (
+              "SingletonLock",
+              "SingletonSocket",
+              "SingletonCookie",
+          ):
+              singleton = profile_path / singleton_name
+              assert not singleton.exists() and not singleton.is_symlink(), singleton
+          recoveries = list(
+              (profile_path / ".paper-fetch-browser-diagnostics").glob(
+                  "singleton-recovery-*/recovery.json"
+              )
+          )
+          assert recoveries, "stale singleton recovery diagnostic was not written"
           PY
 
       - name: Upload macOS offline package

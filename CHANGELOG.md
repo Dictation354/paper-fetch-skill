@@ -6,6 +6,22 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 3.1.3 - 2026-07-15
+
+### Added
+
+- Added stable browser lifecycle failure codes for managed Chrome profile, startup, CDP, context, and page stages, with bounded redacted stderr diagnostics propagated through browser preflight, provider traces, fallback payloads, CLI manifests, and agent guidance.
+
+### Changed
+
+- Changed CLI and MCP batch execution to retain one shared browser manager across item gaps and use cooperative cancellation with a grace period, one-time browser shutdown escalation, and first/second Ctrl-C handling in the CLI.
+- Expanded the macOS offline browser smoke and unit contracts to cover conservative stale-profile recovery, four-worker/50-context reuse, cancellation convergence, diagnostic redaction, and fallback provenance.
+
+### Fixed
+
+- Fixed managed Chrome profile reuse after abnormal exits by validating singleton ownership, host, PID/profile, and socket state; only proven-stale links are archived with recovery metadata, and a failed launch is retried at most once after a newly stale set is recovered.
+- Fixed browser/PDF and metadata fallbacks so precise HTML/browser failure traces survive a successful fallback and keep acceptance degraded; browser runtime failures now direct users to repair local runtime state instead of incorrectly suggesting publisher authentication.
+
 ## 3.1.2 - 2026-07-14
 
 ### Changed

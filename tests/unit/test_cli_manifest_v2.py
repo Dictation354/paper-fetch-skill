@@ -20,7 +20,8 @@ from paper_fetch.manifest import (
 )
 from paper_fetch.models import Asset, SemanticLosses
 from paper_fetch.providers.base import ProviderFailure
-from paper_fetch.reason_codes import RATE_LIMITED
+from paper_fetch.reason_codes import MANAGED_CHROME_EXITED_BEFORE_CDP, RATE_LIMITED
+from paper_fetch.tracing import trace_event
 from paper_fetch.workflow.acceptance import (
     AssetAcceptanceStatus,
     OverallAcceptanceStatus,
@@ -281,6 +282,82 @@ def test_single_failure_manifest_preserves_exit_code_and_null_output_fields(
     assert record.saved_markdown_path is None
     assert record.output_artifacts == ()
     assert record.warnings == ("license required",)
+
+
+def test_failed_manifest_preserves_managed_chrome_stage_code_and_summary(
+    tmp_path: Path,
+) -> None:
+    error = ProviderFailure(
+        MANAGED_CHROME_EXITED_BEFORE_CDP,
+        "managed_chrome_startup: Chrome exited. Chrome stderr: profile locked",
+        trace=[
+            trace_event(
+                "managed_chrome_startup",
+                "wiley_html",
+                "fail",
+                code=MANAGED_CHROME_EXITED_BEFORE_CDP,
+                message="Chrome stderr: profile locked",
+            )
+        ],
+    )
+
+    record = cli._build_cli_manifest_record(
+        _args(),
+        index=1,
+        query="10.1000/acceptance",
+        output_dir=tmp_path,
+        artifact_mode="none",
+        run_id=RUN_ID,
+        tool_version="3.1.0",
+        started_at=STARTED_AT,
+        completed_at=COMPLETED_AT,
+        error=error,
+        deps=_fixed_deps(),
+    )
+
+    assert record.record_status == ManifestRecordStatus.FAILED
+    assert record.error is not None
+    assert record.error.status == MANAGED_CHROME_EXITED_BEFORE_CDP
+    assert record.trace[0].stage == "managed_chrome_startup"
+    assert record.trace[0].code == MANAGED_CHROME_EXITED_BEFORE_CDP
+    assert record.trace[0].message == "Chrome stderr: profile locked"
+    assert MANAGED_CHROME_EXITED_BEFORE_CDP in record.failure_codes
+
+
+def test_successful_pdf_fallback_keeps_html_browser_failure_degraded(
+    tmp_path: Path,
+) -> None:
+    envelope = _envelope(
+        trace=[
+            trace_event(
+                "fulltext",
+                "wiley_html",
+                "fail",
+                code="managed_chrome_cdp_timeout",
+                message="CDP startup timed out.",
+            ),
+            trace_event("fulltext", "wiley_pdf_fallback", "ok"),
+        ]
+    )
+
+    record = cli._build_cli_manifest_record(
+        _args(),
+        index=1,
+        query="10.1000/acceptance",
+        output_dir=tmp_path,
+        artifact_mode="none",
+        run_id=RUN_ID,
+        tool_version="3.1.0",
+        started_at=STARTED_AT,
+        completed_at=COMPLETED_AT,
+        result=cli.SingleFetchResult(envelope),
+        deps=_fixed_deps(),
+    )
+
+    assert record.status == "ok"
+    assert record.acceptance.overall == OverallAcceptanceStatus.DEGRADED
+    assert "managed_chrome_cdp_timeout" in record.failure_codes
+    assert "managed_chrome_cdp_timeout" in record.fallback_codes
 
 
 @pytest.mark.parametrize(

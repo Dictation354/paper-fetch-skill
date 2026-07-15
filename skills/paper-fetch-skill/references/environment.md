@@ -34,6 +34,10 @@
 
 静态 `paper-fetch doctor --provider <name> --detail full --json` / MCP `provider_status` 不连接 CDP、不启动 Chrome、也不访问出版社页面。需要 live 证明时再运行 CLI `paper-fetch browser-preflight --provider <name>` 或 MCP `browser_preflight(provider=...)`；它们可能更新过滤后的 storage-state，但不会运行 PDF fallback 或自动认证。MCP preflight is open-world：它会访问远端页面、非只读且可能写 storage-state。
 
+managed Chrome 会先在 paper-fetch profile lock 内核验 `SingletonLock`、`SingletonSocket` 与 `SingletonCookie`。只有 owner、本地主机、PID/profile 和 socket 证据共同确认 stale 时，才把它们移入 `<profile>/.paper-fetch-browser-diagnostics/singleton-recovery-*/` 并最多重启一次；无法证明 stale 时返回 `managed_chrome_profile_in_use`，不得手工盲删。启动失败的有界、脱敏 stderr 和 JSON 诊断位于同一 diagnostics 根目录。
+
+browser trace/preflight 的稳定运行时 code 为 `managed_chrome_profile_in_use`、`managed_chrome_exited_before_cdp`、`managed_chrome_cdp_timeout`、`cdp_connect_failed`、`browser_context_create_failed`、`browser_page_create_failed`。优先读取 `code`、`stage`、`exit_code`、`stderr_summary` 和 `diagnostic_path`，不要再把它们折叠成宽泛的 CDP 连接失败。
+
 ## 图片与资产工具
 
 - `PAPER_FETCH_IMAGE_TOOLS_DIR`：Ghostscript/libvips 工具目录覆盖；默认还会检查 repo-local 和 platformdirs 用户工具目录。

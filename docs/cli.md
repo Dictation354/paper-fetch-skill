@@ -94,7 +94,7 @@ paper-fetch doctor --install-root ~/.local/share/paper-fetch-skill --json
 
 ## Browser 登录态
 
-Browser workflow 优先连接已运行浏览器的 CDP endpoint；未配置时会通过 cloakbrowser 首次下载/定位 Chrome，并自动启动受控 CDP 浏览器。默认 managed 模式在同一进程内复用一个按 provider/browser 配置 keyed 的 browser manager，CLI/MCP 批量并发任务不会为同一个 provider profile 启动多个 Chrome 去抢 `.paper-fetch-profile.lock`；HTML、PDF fallback 和 browser-backed 资产下载仍各自打开隔离 context/page，并在调用线程建立自己的 CDP 连接，避免跨线程复用 Playwright sync 对象。自动浏览器默认按 publisher 复用本地 `publisher-browser-profiles/<provider>/storage-state.json`，以减少 Science/Wiley 等站点的冷启动 challenge；相关目录变量主要覆盖 managed Chrome 启动目录和 storage-state 保存位置，不承诺完整复用浏览器 profile 的其它状态。需要复用手动验证过的浏览器时，可先启动 Chrome/CloakBrowser 并设置 `CLOAKBROWSER_CDP_ENDPOINT`；外部 CDP 模式以现有 browser context 为准，storage-state 中的 cookies 会尽量注入，UA、viewport 等新 context 参数不保证生效。managed 和外部 CDP 的 runtime-shared browser-backed 资产下载都会串行化，以避免跨线程复用 Playwright sync 对象；普通 HTTP 资产下载仍按配置并发：
+Browser workflow 优先连接已运行浏览器的 CDP endpoint；未配置时会通过 cloakbrowser 首次下载/定位 Chrome，并自动启动受控 CDP 浏览器。默认 managed 模式在同一进程内复用一个按 provider/browser 配置 keyed 的 browser manager，CLI/MCP 批量并发任务不会为同一个 provider profile 启动多个 Chrome 去抢 `.paper-fetch-profile.lock`；一个 batch 还会保留暂时空闲的 manager，直到 worker 全部终态化，避免条目空档触发反复启停。HTML、PDF fallback 和 browser-backed 资产下载仍各自打开隔离 context/page，并在调用线程建立自己的 CDP 连接，避免跨线程复用 Playwright sync 对象。自动浏览器默认按 publisher 复用本地 `publisher-browser-profiles/<provider>/storage-state.json`，以减少 Science/Wiley 等站点的冷启动 challenge；相关目录变量主要覆盖 managed Chrome 启动目录和 storage-state 保存位置，不承诺完整复用浏览器 profile 的其它状态。需要复用手动验证过的浏览器时，可先启动 Chrome/CloakBrowser 并设置 `CLOAKBROWSER_CDP_ENDPOINT`；外部 CDP 模式以现有 browser context 为准，storage-state 中的 cookies 会尽量注入，UA、viewport 等新 context 参数不保证生效。managed 和外部 CDP 的 runtime-shared browser-backed 资产下载都会串行化，以避免跨线程复用 Playwright sync 对象；普通 HTTP 资产下载仍按配置并发：
 
 ```bash
 /path/to/chrome \
@@ -105,6 +105,8 @@ Browser workflow 优先连接已运行浏览器的 CDP endpoint；未配置时�
 
 export CLOAKBROWSER_CDP_ENDPOINT="ws://127.0.0.1:9222/devtools/browser/..."
 ```
+
+managed Chrome 启动前会在 `.paper-fetch-profile.lock` 内核验 Chromium 的 `SingletonLock`、`SingletonSocket` 和 `SingletonCookie`。只有当前用户、本地主机且 PID/profile 与 socket 证据共同确认无活跃浏览器时，才把 stale singleton 移入 `<profile>/.paper-fetch-browser-diagnostics/singleton-recovery-*/` 并最多重启一次；活跃、异主机、异 owner 或无法核验的状态绝不删除，并返回 `managed_chrome_profile_in_use`。启动 stderr 只保留有界、脱敏尾部，完整诊断写入同一 diagnostics 根目录。
 
 如果自动过盾失败，可用通用手动 fallback 打开 headed browser：
 
@@ -122,7 +124,7 @@ paper-fetch browser-preflight
 paper-fetch browser-preflight --provider wiley --provider science --timeout-ms 120000
 ```
 
-预检会按 runtime catalog 中 `requires_browser_runtime=True` 的 provider 顺序使用内置样例 DOI/URL 构造正常 HTML candidates，并复用 provider HTML bootstrap、同一 browser context 重试和 availability 判定。内置样例优先选择结构较轻、已有 fixture 覆盖的 full-text 页面，降低预热耗时；成功时会保存对应 `publisher-browser-profiles/<provider>/storage-state.json`；失败时 stdout 保留逐 provider 汇总，stderr 打印失败出版社和 `paper-fetch auth <provider>` 人工认证提示。该命令只验证 HTML 路径，不触发 PDF fallback；它会真实访问出版社样例页，不同于 MCP `provider_status()` 的本地能力检查。
+预检会按 runtime catalog 中 `requires_browser_runtime=True` 的 provider 顺序使用内置样例 DOI/URL 构造正常 HTML candidates，并复用 provider HTML bootstrap、同一 browser context 重试和 availability 判定。内置样例优先选择结构较轻、已有 fixture 覆盖的 full-text 页面，降低预热耗时；成功时会保存对应 `publisher-browser-profiles/<provider>/storage-state.json`。失败时 stdout 输出稳定 `Code`，并在可用时输出 `Stage`、Chrome `Exit code`、脱敏 stderr 摘要和 diagnostic artifact；challenge/auth 失败的 stderr 才提示人工认证，browser runtime 失败则提示先修复运行时。该命令只验证 HTML 路径，不触发 PDF fallback；它会真实访问出版社样例页，不同于 MCP `provider_status()` 的本地能力检查。
 
 MCP 的 `browser_preflight` 直接调用同一个 preflight 核心。无参数时与 CLI 一样检查全部 browser provider；单 provider 可传 `provider`，并可同时指定 `test_url`、`timeout_ms`、`browser_user_agent`、`storage_state_path`、`save_storage_state` 和 `detail="full|compact"`。`test_url` / `storage_state_path` 要求显式单 provider；默认 `save_storage_state=true`，因此该 open-world 工具不是只读操作。返回逐 provider `ready/challenge/auth_required/runtime_error/cancelled`、下一步与进度；compact 每项只保留路由字段。一个 provider 失败不抹掉其它已完成结果，取消保留已完成结果并停止后续调度。该工具始终报告未尝试 PDF fallback 和 auth；需要登录或处理 challenge 时只建议用户显式运行 `paper-fetch auth <provider>`。
 
@@ -173,7 +175,7 @@ paper-fetch fetch --query-file ./queries.txt \
   --max-tokens full_text
 ```
 
-`--batch-concurrency` 默认是 `1`，允许范围是 `1..8`。CLI 使用共享增量 runner，只维持有限的 in-flight 项。某个可静态识别的 provider lane 被限速后，不再向该 lane 提交新任务；无法从 URL/DOI 可靠判断 provider 的标题查询进入通用 lane。已提交任务正常终态化，未调度项也各写一条 `record_status=aborted`、`status=aborted` 的记录。一次正常完成的批量运行保证输入数、record 数和唯一 `index` 数相等。
+`--batch-concurrency` 默认是 `1`，允许范围是 `1..8`。CLI 使用共享增量 runner，只维持有限的 in-flight 项。某个可静态识别的 provider lane 被限速后，不再向该 lane 提交新任务；无法从 URL/DOI 可靠判断 provider 的标题查询进入通用 lane。已提交任务正常终态化，未调度项也各写一条 `record_status=aborted`、`status=aborted` 的记录。一次正常完成的批量运行保证输入数、record 数和唯一 `index` 数相等。第一次 Ctrl-C 只发出协作式取消并等待在途 worker 收敛；超过宽限期 runner 才关闭共享 browser manager，第二次 Ctrl-C 可立即升级强制关闭。
 
 单个条目的普通 provider 错误不会停止其它 lane；失败条目会写入 JSONL 的 `error` 字段。全部调用成功且没有 aborted 时退出码为 `0`；工具失败或 aborted 为非零，并继续按 `no_access`、`rate_limited`、`ambiguous` 优先映射到 `3`、`4`、`2`，其它失败/aborted 为 `1`。`acceptance.overall=degraded` 本身不会把退出码升级为非零。
 
@@ -193,7 +195,7 @@ paper-fetch fetch --query-file ./queries.txt \
   --max-tokens full_text
 ```
 
-上面的命令最多同时抓取 `4` 篇。每篇抓取会独立创建运行时上下文，避免跨任务共享 provider/runtime 状态；同一个 batch 会共享 HTTP transport，因此连接池、同 host 限流和请求缓存可以跨条目复用。JSONL 汇总仍由主线程在每个终态到达时立即写入并 flush，避免并发写文件。并行模式下 `batch-results.jsonl` 按任务完成顺序追加，不保证与输入文件顺序一致；`index` 始终是输入文件过滤空行和注释后的稳定 1-based 序号，消费者必须按 `index` 关联或重排输入，不能把行号当成输入顺序。
+上面的命令最多同时抓取 `4` 篇。每篇抓取会独立创建运行时上下文，避免跨任务共享 provider 解析状态；同一个 batch 会共享 HTTP transport，并按 browser 配置共享且保留 managed browser manager，因此连接池、同 host 限流、请求缓存和 provider Chrome lifecycle 可以跨条目复用，而 context/page 仍逐条隔离。JSONL 汇总仍由主线程在每个终态到达时立即写入并 flush，避免并发写文件。并行模式下 `batch-results.jsonl` 按任务完成顺序追加，不保证与输入文件顺序一致；`index` 始终是输入文件过滤空行和注释后的稳定 1-based 序号，消费者必须按 `index` 关联或重排输入，不能把行号当成输入顺序。
 
 ### Run 目录、状态与 attempts
 
@@ -278,7 +280,7 @@ CLI 先在 run lock 内执行只读审计。只有 query、工具版本和关键
 ```json
 {
   "schema_version": 2,
-  "tool_version": "3.1.2",
+  "tool_version": "3.1.3",
   "run_id": "10000000-0000-4000-8000-000000000001",
   "record_id": "20000000-0000-4000-8000-000000000002",
   "index": 2,
