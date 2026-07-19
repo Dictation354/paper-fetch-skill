@@ -65,6 +65,20 @@ CI 自动发布规则：
 - 手动运行 workflow 时，只有在 `v*` tag 上显式设置 `publish_release=true` 才会发布，确保 release tag 和本次构建产物来自同一个 commit。
 - 发布使用 workflow 内置的 `GITHUB_TOKEN`，release job 单独声明 `contents: write` 和 `actions: read` 权限，不需要额外 PAT。
 
+#### 每日滚动依赖 prerelease
+
+除固定版本 Release 外，CI 维护一个 tag 和名称都固定为 `dependency-latest` 的滚动 prerelease。它面向希望继续使用最新稳定版源码、同时获取最新兼容 Python 运行时依赖的用户；该 prerelease 是可变发布，不应作为长期可复现构建的版本锚点。
+
+- workflow 每天北京时间 03:17（UTC 19:17）运行。GitHub 定时任务是尽力调度，平台繁忙时可能延迟。
+- 每次检测都通过 GitHub 的 latest release API 选择最新的非 prerelease `v*` Release 作为源码基线，不从 `main` 构建安装包。
+- CI 使用固定版本的 `pip` 解析 Linux x86_64 CPython 3.11–3.14、macOS arm64 CPython 3.11–3.14 和 Windows x86_64 CPython 3.13 的全部直接及传递运行时依赖，并把每个 wheel 的名称、版本、文件名和 SHA256 合并到 `dependency-manifest.json`。
+- 只有源码基线或任一目标的依赖集合发生变化时，才会用本次解析并校验过的冻结 wheelhouse 重建全部 9 个安装包。依赖未变化时，构建矩阵和 Release 更新都会跳过，现有 `dependency-latest` 不会被改动。
+- 更新会把固定 `dependency-latest` tag 移到稳定版源码 commit，覆盖同名安装包，并发布恰好 11 个 assets：9 个安装包、`dependency-manifest.json` 和 `SHA256SUMS`。该 Release 始终设置 `prerelease=true`、`make_latest=false`，不会取代稳定版 latest Release。
+- 如果上一次发布缺少任一预期 asset，CI 会在下载基线文件前将其判为不完整并进入全量重建；`SHA256SUMS`、manifest 或远端 asset digest 校验失败时也会忽略该基线。也可手动运行 `workflow_dispatch` 并设置 `force_refresh=true`，强制重新解析、构建和覆盖全部滚动 assets。并发组会串行化滚动更新，避免两次发布互相覆盖。
+- 下载滚动安装包时应同时下载并核验同一次发布中的 `SHA256SUMS`。固定 tag 下的文件内容会随依赖更新而改变；需要固定内容时应使用具体 `v*` Release。
+
+依赖快照由 `scripts/resolve_offline_dependencies.py` 管理：`resolve` 复用 `pip` 的标准 resolver 生成单目标 wheelhouse，`merge` 生成完整矩阵 manifest，`compare` 判断是否需要更新，`verify` 在构建前拒绝 wheel 缺失、多余或 hash 漂移。构建 job 只消费已验证的本地 wheelhouse，不在滚动构建阶段重新选择依赖版本。
+
 主包版本号同步清单：
 
 当前 managed Chrome 恢复、诊断与批量生命周期修复集按 SemVer patch 准备为 `3.1.3`；构建脚本不得把高于该版本的 HEAD 降级。

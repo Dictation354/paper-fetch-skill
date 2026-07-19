@@ -78,6 +78,8 @@ agent 安装 skill 后，可以识别 `paper-fetch-skill` 的适用边界，并�
 - Linux：下载匹配 Python ABI 的 `paper-fetch-skill-offline-linux-x86_64-cp*.sh`。
 - macOS：下载匹配架构和 Python ABI 的 `paper-fetch-skill-offline-macos-<arch>-cp*.tar.gz`。
 
+默认优先选择具体 `v*` Release。需要在最新稳定版源码上使用最新兼容 Python 依赖时，可选择可变的 `dependency-latest` prerelease，并用同一发布中的 `SHA256SUMS` 校验；自动任务每天检测依赖，只有依赖、稳定版源码基线变化，或上一版资产缺失/校验失败时才覆盖资产，异常时也可手动设置 `force_refresh=true` 强制重建。详见 [`docs/deployment.md`](docs/deployment.md#每日滚动依赖-prerelease)。
+
 Windows 安装后新开 PowerShell，验证 CLI：
 
 ```powershell

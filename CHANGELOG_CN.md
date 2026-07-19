@@ -6,6 +6,15 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+### 新增
+
+- 新增每日 `dependency-latest` 滚动 prerelease：从最新稳定 `v*` Release 解析完整的 Python 直接/传递运行时依赖矩阵，仅在源码或 wheel 集合变化时重建全部 9 个离线安装包，并提供显式 `force_refresh` 恢复入口。
+- 新增依赖快照工具与契约测试，覆盖逐目标 wheel 清单、确定性的跨平台 manifest、依赖集合比较，以及构建前的 wheel 文件名/SHA256 校验。
+
+### 变更
+
+- 滚动更新复用现有 Linux、macOS 和 Windows 离线构建 job 并消费冻结 wheelhouse；发布阶段移动固定 prerelease tag、精确覆盖并核验安装包/manifest/checksum assets，上一次资产缺失或校验失败时触发重建，同时不改变稳定版 latest Release。
+
 ## 3.1.3 - 2026-07-15
 
 ### 新增

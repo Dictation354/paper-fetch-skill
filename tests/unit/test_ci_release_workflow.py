@@ -19,8 +19,30 @@ OFFLINE_JOB_IDS = (
     "offline-macos-install",
     "offline-windows-x86-64",
 )
-OFFLINE_NON_WINDOWS_IF = "${{ (startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch') && (github.event_name != 'workflow_dispatch' || !inputs.run_offline_windows_only) }}"
-OFFLINE_WINDOWS_IF = "${{ startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch' }}"
+ROLLING_TARGETS = {
+    "linux-x86_64-cp311",
+    "linux-x86_64-cp312",
+    "linux-x86_64-cp313",
+    "linux-x86_64-cp314",
+    "macos-arm64-cp311",
+    "macos-arm64-cp312",
+    "macos-arm64-cp313",
+    "macos-arm64-cp314",
+    "windows-x86_64-cp313",
+}
+ROLLING_ASSETS = {
+    "SHA256SUMS",
+    "dependency-manifest.json",
+    "paper-fetch-skill-offline-linux-x86_64-cp311.sh",
+    "paper-fetch-skill-offline-linux-x86_64-cp312.sh",
+    "paper-fetch-skill-offline-linux-x86_64-cp313.sh",
+    "paper-fetch-skill-offline-linux-x86_64-cp314.sh",
+    "paper-fetch-skill-offline-macos-arm64-cp311.tar.gz",
+    "paper-fetch-skill-offline-macos-arm64-cp312.tar.gz",
+    "paper-fetch-skill-offline-macos-arm64-cp313.tar.gz",
+    "paper-fetch-skill-offline-macos-arm64-cp314.tar.gz",
+    "paper-fetch-skill-windows-x86_64-setup.exe",
+}
 
 
 def _load_ci_workflow() -> dict:
@@ -47,6 +69,9 @@ def _evaluate_github_if(
     ref: str,
     run_offline_windows_only: bool = False,
     publish_release: bool = False,
+    force_refresh: bool = False,
+    dependency_refresh_result: str = "skipped",
+    dependency_changed: bool = False,
 ) -> bool:
     expr = expression.strip()
     if expr.startswith("${{") and expr.endswith("}}"):
@@ -56,9 +81,19 @@ def _evaluate_github_if(
         "startsWith(github.ref, 'refs/tags/v')",
         "ref.startswith('refs/tags/v')",
     )
+    expr = expr.replace("always()", "True")
+    expr = expr.replace(
+        "needs.dependency-refresh-compare.outputs.changed",
+        "dependency_changed",
+    )
+    expr = expr.replace(
+        "needs.dependency-refresh-compare.result",
+        "dependency_refresh_result",
+    )
     expr = expr.replace("github.event_name", "event_name")
     expr = expr.replace("inputs.run_offline_windows_only", "run_offline_windows_only")
     expr = expr.replace("inputs.publish_release", "publish_release")
+    expr = expr.replace("inputs.force_refresh", "force_refresh")
     expr = expr.replace("&&", " and ").replace("||", " or ")
     expr = re.sub(r"!\s*(?!=)", " not ", expr)
     return bool(
@@ -67,6 +102,9 @@ def _evaluate_github_if(
             {"__builtins__": {}},
             {
                 "event_name": event_name,
+                "force_refresh": force_refresh,
+                "dependency_changed": str(dependency_changed).lower(),
+                "dependency_refresh_result": dependency_refresh_result,
                 "publish_release": publish_release,
                 "ref": ref,
                 "run_offline_windows_only": run_offline_windows_only,
@@ -80,30 +118,39 @@ class CiReleaseWorkflowTests(unittest.TestCase):
         self.assertFalse(RELEASE_WORKFLOW.exists())
         self.assertTrue(CI_WORKFLOW.exists())
 
-    def test_ci_workflow_declares_regular_and_manual_triggers(self) -> None:
+    def test_ci_workflow_declares_regular_daily_and_manual_triggers(self) -> None:
         workflow = _load_ci_workflow()
 
         self.assertEqual(
-            {"pull_request", "push", "workflow_dispatch"},
+            {"pull_request", "push", "schedule", "workflow_dispatch"},
             set(workflow["on"]),
         )
+        self.assertEqual("17 19 * * *", workflow["on"]["schedule"][0]["cron"])
         dispatch_inputs = workflow["on"]["workflow_dispatch"]["inputs"]
         self.assertIn("publish_release", dispatch_inputs)
         self.assertIn("run_offline_windows_only", dispatch_inputs)
+        self.assertEqual("false", dispatch_inputs["force_refresh"]["default"])
+        self.assertIn(
+            "paper-fetch-dependency-latest",
+            workflow["concurrency"]["group"],
+        )
+        self.assertEqual("false", workflow["concurrency"]["cancel-in-progress"])
 
-    def test_offline_jobs_only_run_on_tags_or_manual_dispatch(self) -> None:
+    def test_offline_jobs_run_for_release_or_changed_dependency_refresh(self) -> None:
         workflow = _load_ci_workflow()
-        expected_conditions = {
-            "offline-linux-x86-64": OFFLINE_NON_WINDOWS_IF,
-            "offline-macos-install": OFFLINE_NON_WINDOWS_IF,
-            "offline-windows-x86-64": OFFLINE_WINDOWS_IF,
-        }
 
-        for job_id, expected_condition in expected_conditions.items():
+        for job_id in OFFLINE_JOB_IDS:
             with self.subTest(job_id=job_id):
                 condition = _job_if(workflow, job_id)
 
-                self.assertEqual(expected_condition, condition)
+                self.assertEqual(
+                    "dependency-refresh-compare", workflow["jobs"][job_id]["needs"]
+                )
+                self.assertIn("always()", condition)
+                self.assertIn("inputs.force_refresh", condition)
+                self.assertIn(
+                    "needs.dependency-refresh-compare.outputs.changed", condition
+                )
                 self.assertFalse(
                     _evaluate_github_if(
                         condition,
@@ -130,6 +177,54 @@ class CiReleaseWorkflowTests(unittest.TestCase):
                         condition,
                         event_name="workflow_dispatch",
                         ref="refs/heads/main",
+                    )
+                )
+                self.assertFalse(
+                    _evaluate_github_if(
+                        condition,
+                        event_name="schedule",
+                        ref="refs/heads/main",
+                        dependency_refresh_result="success",
+                        dependency_changed=False,
+                    )
+                )
+                self.assertTrue(
+                    _evaluate_github_if(
+                        condition,
+                        event_name="schedule",
+                        ref="refs/heads/main",
+                        dependency_refresh_result="success",
+                        dependency_changed=True,
+                    )
+                )
+                self.assertTrue(
+                    _evaluate_github_if(
+                        condition,
+                        event_name="workflow_dispatch",
+                        ref="refs/heads/main",
+                        force_refresh=True,
+                        run_offline_windows_only=True,
+                        dependency_refresh_result="success",
+                        dependency_changed=True,
+                    )
+                )
+                self.assertFalse(
+                    _evaluate_github_if(
+                        condition,
+                        event_name="schedule",
+                        ref="refs/heads/main",
+                        dependency_refresh_result="failure",
+                        dependency_changed=True,
+                    )
+                )
+                self.assertTrue(
+                    _evaluate_github_if(
+                        condition,
+                        event_name="workflow_dispatch",
+                        ref="refs/heads/main",
+                        force_refresh=True,
+                        dependency_refresh_result="success",
+                        dependency_changed=True,
                     )
                 )
 
@@ -182,11 +277,133 @@ class CiReleaseWorkflowTests(unittest.TestCase):
         self.assertFalse(
             _evaluate_github_if(
                 condition,
+                event_name="schedule",
+                ref="refs/heads/main",
+            )
+        )
+        self.assertFalse(
+            _evaluate_github_if(
+                condition,
                 event_name="workflow_dispatch",
                 ref="refs/heads/main",
                 run_offline_windows_only=True,
             )
         )
+        self.assertFalse(
+            _evaluate_github_if(
+                condition,
+                event_name="workflow_dispatch",
+                ref="refs/heads/main",
+                force_refresh=True,
+            )
+        )
+
+    def test_dependency_refresh_resolves_exact_matrix_from_latest_stable_release(
+        self,
+    ) -> None:
+        workflow = _load_ci_workflow()
+        workflow_text = CI_WORKFLOW.read_text(encoding="utf-8")
+        context_job = workflow["jobs"]["dependency-refresh-context"]
+        resolve_job = workflow["jobs"]["dependency-refresh-resolve"]
+        target_matrix = {
+            entry["target"] for entry in resolve_job["strategy"]["matrix"]["include"]
+        }
+
+        self.assertIn("github.event_name == 'schedule'", context_job["if"])
+        self.assertIn("inputs.force_refresh", context_job["if"])
+        self.assertIn("releases/latest", workflow_text)
+        self.assertIn("Latest stable release tag must start with v", workflow_text)
+        self.assertEqual(ROLLING_TARGETS, target_matrix)
+        self.assertIn('"pip==26.1.2" "packaging==26.2"', workflow_text)
+        self.assertIn("resolve_offline_dependencies.py resolve", workflow_text)
+        self.assertIn("dependency-snapshot-${{ matrix.target }}", workflow_text)
+
+    def test_dependency_refresh_compares_complete_manifest_before_building(
+        self,
+    ) -> None:
+        workflow = _load_ci_workflow()
+        workflow_text = CI_WORKFLOW.read_text(encoding="utf-8")
+        compare_job = workflow["jobs"]["dependency-refresh-compare"]
+        baseline_step = next(
+            step
+            for step in compare_job["steps"]
+            if step.get("name") == "Download rolling release baseline"
+        )
+        baseline_script = baseline_step["run"]
+
+        self.assertEqual(
+            {"dependency-refresh-context", "dependency-refresh-resolve"},
+            set(compare_job["needs"]),
+        )
+        for target in ROLLING_TARGETS:
+            self.assertIn(target, workflow_text)
+        self.assertIn("--expected-target", workflow_text)
+        self.assertIn("dependency-manifest.json", workflow_text)
+        self.assertIn("Rolling release is incomplete or malformed", workflow_text)
+        self.assertIn("Rolling SHA256SUMS asset digest mismatch", workflow_text)
+        self.assertLess(
+            baseline_script.index('if python - "$release_json"'),
+            baseline_script.index("gh release download dependency-latest"),
+        )
+        self.assertIn(
+            "PY\n  then\n    mkdir -p dependency-baseline-candidate\n"
+            "    gh release download dependency-latest",
+            baseline_script,
+        )
+        self.assertIn("actual == expected", baseline_script)
+        self.assertIn("--force", workflow_text)
+        self.assertEqual(
+            "dependency-refresh-manifest",
+            compare_job["steps"][-1]["with"]["name"],
+        )
+
+    def test_dependency_refresh_reuses_offline_builds_with_frozen_wheelhouses(
+        self,
+    ) -> None:
+        workflow = _load_ci_workflow()
+        workflow_text = CI_WORKFLOW.read_text(encoding="utf-8")
+
+        for job_id in OFFLINE_JOB_IDS:
+            with self.subTest(job_id=job_id):
+                job_text = repr(workflow["jobs"][job_id])
+                self.assertIn("dependency-refresh-compare.outputs.source_sha", job_text)
+                self.assertIn("Download frozen dependency snapshot", job_text)
+                self.assertIn("resolve_offline_dependencies.py verify", job_text)
+                self.assertIn("PIP_NO_INDEX", job_text)
+                self.assertIn("PIP_FIND_LINKS", job_text)
+        self.assertIn("runtime-wheels", workflow_text)
+        self.assertIn("support-wheels", workflow_text)
+
+    def test_rolling_prerelease_overwrites_exact_assets_and_verifies_hashes(
+        self,
+    ) -> None:
+        workflow = _load_ci_workflow()
+        workflow_text = CI_WORKFLOW.read_text(encoding="utf-8")
+        release_job = workflow["jobs"]["release-dependency-refresh"]
+        publish_step = next(
+            step
+            for step in release_job["steps"]
+            if step.get("name") == "Publish rolling prerelease"
+        )
+
+        self.assertEqual(
+            {"dependency-refresh-compare", *OFFLINE_JOB_IDS},
+            set(release_job["needs"]),
+        )
+        self.assertIn("outputs.changed == 'true'", release_job["if"])
+        self.assertEqual("softprops/action-gh-release@v3", publish_step["uses"])
+        self.assertEqual("dependency-latest", publish_step["with"]["tag_name"])
+        self.assertEqual("true", publish_step["with"]["prerelease"])
+        self.assertEqual("false", publish_step["with"]["make_latest"])
+        self.assertEqual("true", publish_step["with"]["overwrite_files"])
+        self.assertIn("git/refs/tags/dependency-latest", workflow_text)
+        self.assertIn("sha256sum", workflow_text)
+        self.assertIn("Remove stale rolling release assets", workflow_text)
+        self.assertIn("Published rolling tag points to", workflow_text)
+        self.assertIn("Published SHA256 mismatch", workflow_text)
+        self.assertEqual(11, len(ROLLING_ASSETS))
+        for asset in ROLLING_ASSETS:
+            self.assertIn(asset, workflow_text)
 
     def test_package_smoke_builds_outside_checkout_and_verifies_all_entrypoints(
         self,
@@ -278,6 +495,15 @@ class CiReleaseWorkflowTests(unittest.TestCase):
                 run_offline_windows_only=True,
             )
         )
+        self.assertFalse(
+            _evaluate_github_if(
+                condition,
+                event_name="workflow_dispatch",
+                ref="refs/tags/v3.0.0",
+                publish_release=True,
+                force_refresh=True,
+            )
+        )
 
     def test_release_notes_come_from_chinese_changelog(self) -> None:
         workflow = CI_WORKFLOW.read_text(encoding="utf-8")
@@ -311,6 +537,9 @@ class CiReleaseWorkflowTests(unittest.TestCase):
         self.assertIn("tests/integration -q", preflight)
         self.assertIn("--durations=30", workflow)
         self.assertIn("Run MCP input schema contract", workflow)
+        self.assertIn("Run dependency refresh workflow contracts", workflow)
+        self.assertIn("tests/unit/test_resolve_offline_dependencies.py", workflow)
+        self.assertIn("tests/unit/test_ci_release_workflow.py", workflow)
         self.assertIn("Run cross-execution surface contracts", workflow)
         for contract_path in (
             "tests/unit/test_mcp_context_budget.py",

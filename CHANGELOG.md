@@ -6,6 +6,15 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+### Added
+
+- Added a daily `dependency-latest` rolling prerelease that resolves the full direct/transitive Python runtime dependency matrix from the latest stable `v*` release, rebuilds all nine offline installers only when the source or resolved wheel set changes, and supports an explicit `force_refresh` recovery run.
+- Added dependency snapshot tooling and contracts for per-target wheel inventories, deterministic cross-platform manifests, dependency-set comparison, and pre-build wheel filename/SHA256 verification.
+
+### Changed
+
+- Reused the existing Linux, macOS, and Windows offline build jobs for rolling updates with frozen wheelhouses; publishing retargets the fixed prerelease, replaces and verifies its exact installer/manifest/checksum asset set, and treats incomplete or invalid prior assets as a rebuild trigger without changing the stable latest release.
+
 ## 3.1.3 - 2026-07-15
 
 ### Added

@@ -3,6 +3,9 @@ name: CI
 on:
   push:
   pull_request:
+  schedule:
+    # 03:17 Asia/Shanghai. Avoid the high-load start of the UTC hour.
+    - cron: "17 19 * * *"
   workflow_dispatch:
     inputs:
       run_live_mcp:
@@ -30,13 +33,327 @@ on:
         required: false
         default: false
         type: boolean
+      force_refresh:
+        description: "Force a dependency-latest rebuild and rolling prerelease update"
+        required: false
+        default: false
+        type: boolean
+
+concurrency:
+  group: ${{ (github.event_name == 'schedule' || inputs.force_refresh) && 'paper-fetch-dependency-latest' || github.run_id }}
+  cancel-in-progress: false
 
 permissions:
   contents: read
 
 jobs:
+  dependency-refresh-context:
+    if: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.force_refresh) }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      source_tag: ${{ steps.source.outputs.source_tag }}
+      source_sha: ${{ steps.source.outputs.source_sha }}
+      project_version: ${{ steps.source.outputs.project_version }}
+
+    steps:
+      - name: Resolve latest stable release source
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          source_tag="$(gh api "repos/$GITHUB_REPOSITORY/releases/latest" --jq .tag_name)"
+          case "$source_tag" in
+            v*) ;;
+            *)
+              echo "Latest stable release tag must start with v: $source_tag" >&2
+              exit 1
+              ;;
+          esac
+          echo "source_tag=$source_tag" >> "$GITHUB_OUTPUT"
+
+      - name: Refuse immutable rolling release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          release_json="$RUNNER_TEMP/dependency-latest-release.json"
+          release_error="$RUNNER_TEMP/dependency-latest-release.error"
+          if gh api "repos/$GITHUB_REPOSITORY/releases/tags/dependency-latest" \
+            > "$release_json" 2> "$release_error"; then
+            immutable="$(python3 -c 'import json, pathlib, sys; print(str(json.loads(pathlib.Path(sys.argv[1]).read_text()).get("immutable", False)).lower())' "$release_json")"
+            if [ "$immutable" = "true" ]; then
+              echo "dependency-latest is immutable and cannot be rolled forward." >&2
+              exit 1
+            fi
+          elif ! grep -Fq '(HTTP 404)' "$release_error"; then
+            cat "$release_error" >&2
+            exit 1
+          fi
+
+      - name: Check out latest stable source
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ steps.release.outputs.source_tag }}
+          path: stable-source
+          fetch-depth: 1
+
+      - name: Publish stable source metadata
+        id: source
+        env:
+          SOURCE_TAG: ${{ steps.release.outputs.source_tag }}
+        run: |
+          set -euo pipefail
+          source_sha="$(git -C stable-source rev-parse HEAD)"
+          project_version="$(python3 -c 'import pathlib, tomllib; print(tomllib.loads(pathlib.Path("stable-source/pyproject.toml").read_text(encoding="utf-8"))["project"]["version"])')"
+          echo "source_tag=$SOURCE_TAG" >> "$GITHUB_OUTPUT"
+          echo "source_sha=$source_sha" >> "$GITHUB_OUTPUT"
+          echo "project_version=$project_version" >> "$GITHUB_OUTPUT"
+
+  dependency-refresh-resolve:
+    needs: dependency-refresh-context
+    if: ${{ needs.dependency-refresh-context.result == 'success' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            python-version: "3.11"
+            target: linux-x86_64-cp311
+          - os: ubuntu-latest
+            python-version: "3.12"
+            target: linux-x86_64-cp312
+          - os: ubuntu-latest
+            python-version: "3.13"
+            target: linux-x86_64-cp313
+          - os: ubuntu-latest
+            python-version: "3.14"
+            target: linux-x86_64-cp314
+          - os: macos-latest
+            python-version: "3.11"
+            target: macos-arm64-cp311
+          - os: macos-latest
+            python-version: "3.12"
+            target: macos-arm64-cp312
+          - os: macos-latest
+            python-version: "3.13"
+            target: macos-arm64-cp313
+          - os: macos-latest
+            python-version: "3.14"
+            target: macos-arm64-cp314
+          - os: windows-latest
+            python-version: "3.13"
+            target: windows-x86_64-cp313
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+
+    steps:
+      - name: Check out dependency refresh tooling
+        uses: actions/checkout@v7
+
+      - name: Check out latest stable source
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.dependency-refresh-context.outputs.source_sha }}
+          path: stable-source
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install pinned resolver tooling
+        run: python -m pip install "pip==26.1.2" "packaging==26.2"
+
+      - name: Resolve target dependency snapshot
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/resolve_offline_dependencies.py resolve \
+            --project-root stable-source \
+            --output-dir "$RUNNER_TEMP/dependency-snapshot" \
+            --target "${{ matrix.target }}" \
+            --source-tag "${{ needs.dependency-refresh-context.outputs.source_tag }}" \
+            --source-sha "${{ needs.dependency-refresh-context.outputs.source_sha }}"
+
+      - name: Upload target dependency snapshot
+        uses: actions/upload-artifact@v7
+        with:
+          name: dependency-snapshot-${{ matrix.target }}
+          path: ${{ runner.temp }}/dependency-snapshot
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 1
+
+  dependency-refresh-compare:
+    needs:
+      - dependency-refresh-context
+      - dependency-refresh-resolve
+    if: ${{ needs.dependency-refresh-context.result == 'success' && needs.dependency-refresh-resolve.result == 'success' }}
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+    outputs:
+      changed: ${{ steps.compare.outputs.changed }}
+      reason: ${{ steps.compare.outputs.reason }}
+      dependency_set_sha256: ${{ steps.compare.outputs.dependency_set_sha256 }}
+      source_tag: ${{ steps.compare.outputs.source_tag }}
+      source_sha: ${{ steps.compare.outputs.source_sha }}
+      project_version: ${{ steps.compare.outputs.project_version }}
+
+    steps:
+      - name: Check out dependency refresh tooling
+        uses: actions/checkout@v7
+
+      - name: Download target dependency snapshots
+        uses: actions/download-artifact@v8
+        with:
+          pattern: dependency-snapshot-*
+          path: dependency-snapshots
+
+      - name: Merge target dependency snapshots
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t fragments < <(find dependency-snapshots -type f -name fragment.json -print | sort)
+          python scripts/resolve_offline_dependencies.py merge \
+            --fragment "${fragments[@]}" \
+            --expected-target \
+              linux-x86_64-cp311 \
+              linux-x86_64-cp312 \
+              linux-x86_64-cp313 \
+              linux-x86_64-cp314 \
+              macos-arm64-cp311 \
+              macos-arm64-cp312 \
+              macos-arm64-cp313 \
+              macos-arm64-cp314 \
+              windows-x86_64-cp313 \
+            --output dependency-manifest.json
+
+      - name: Download rolling release baseline
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p dependency-baseline
+          release_json="$RUNNER_TEMP/dependency-latest-release.json"
+          release_error="$RUNNER_TEMP/dependency-latest-release.error"
+          if gh api "repos/$GITHUB_REPOSITORY/releases/tags/dependency-latest" \
+            > "$release_json" 2> "$release_error"; then
+            if python - "$release_json" <<'PY'
+          import json
+          import sys
+          from pathlib import Path
+
+          expected = {
+              "SHA256SUMS",
+              "dependency-manifest.json",
+              "paper-fetch-skill-offline-linux-x86_64-cp311.sh",
+              "paper-fetch-skill-offline-linux-x86_64-cp312.sh",
+              "paper-fetch-skill-offline-linux-x86_64-cp313.sh",
+              "paper-fetch-skill-offline-linux-x86_64-cp314.sh",
+              "paper-fetch-skill-offline-macos-arm64-cp311.tar.gz",
+              "paper-fetch-skill-offline-macos-arm64-cp312.tar.gz",
+              "paper-fetch-skill-offline-macos-arm64-cp313.tar.gz",
+              "paper-fetch-skill-offline-macos-arm64-cp314.tar.gz",
+              "paper-fetch-skill-windows-x86_64-setup.exe",
+          }
+          release = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
+          assets = {asset["name"]: asset for asset in release.get("assets", [])}
+          actual = set(assets)
+          valid = (
+              release.get("tag_name") == "dependency-latest"
+              and release.get("prerelease") is True
+              and actual == expected
+          )
+          if not valid:
+              print(
+                  "Rolling release is incomplete or malformed; forcing a rebuild. "
+                  f"missing={sorted(expected - actual)}, extra={sorted(actual - expected)}",
+                  file=sys.stderr,
+              )
+              raise SystemExit(1)
+          PY
+            then
+              mkdir -p dependency-baseline-candidate
+              gh release download dependency-latest \
+                --repo "$GITHUB_REPOSITORY" \
+                --pattern dependency-manifest.json \
+                --pattern SHA256SUMS \
+                --dir dependency-baseline-candidate
+              if python - "$release_json" dependency-baseline-candidate <<'PY'
+          import hashlib
+          import json
+          import sys
+          from pathlib import Path
+
+          release = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
+          baseline_dir = Path(sys.argv[2])
+          assets = {asset["name"]: asset for asset in release.get("assets", [])}
+          expected = set(assets)
+
+          checksums = {}
+          checksum_path = baseline_dir / "SHA256SUMS"
+          for line in checksum_path.read_text(encoding="utf-8").splitlines():
+              digest, separator, filename = line.partition("  ")
+              if not separator or filename in checksums:
+                  raise SystemExit("Rolling SHA256SUMS is malformed")
+              checksums[filename] = digest
+          if set(checksums) != expected - {"SHA256SUMS"}:
+              raise SystemExit("Rolling SHA256SUMS has the wrong asset set")
+
+          for filename, digest in checksums.items():
+              if assets[filename].get("digest") != f"sha256:{digest}":
+                  raise SystemExit(f"Rolling asset digest mismatch for {filename}")
+          checksum_digest = hashlib.sha256(checksum_path.read_bytes()).hexdigest()
+          if assets["SHA256SUMS"].get("digest") != f"sha256:{checksum_digest}":
+              raise SystemExit("Rolling SHA256SUMS asset digest mismatch")
+
+          manifest_path = baseline_dir / "dependency-manifest.json"
+          manifest_digest = hashlib.sha256(manifest_path.read_bytes()).hexdigest()
+          if assets["dependency-manifest.json"].get("digest") != f"sha256:{manifest_digest}":
+              raise SystemExit("Rolling dependency manifest asset digest mismatch")
+          PY
+              then
+                cp dependency-baseline-candidate/dependency-manifest.json \
+                  dependency-baseline/dependency-manifest.json
+              fi
+            fi
+          elif ! grep -Fq '(HTTP 404)' "$release_error"; then
+            cat "$release_error" >&2
+            exit 1
+          fi
+
+      - name: Compare resolved dependency set
+        id: compare
+        shell: bash
+        run: |
+          set -euo pipefail
+          force_args=()
+          if [ "${{ inputs.force_refresh || false }}" = "true" ]; then
+            force_args+=(--force)
+          fi
+          python scripts/resolve_offline_dependencies.py compare \
+            --candidate dependency-manifest.json \
+            --baseline dependency-baseline/dependency-manifest.json \
+            --github-output "$GITHUB_OUTPUT" \
+            "${force_args[@]}"
+
+      - name: Upload merged dependency manifest
+        uses: actions/upload-artifact@v7
+        with:
+          name: dependency-refresh-manifest
+          path: dependency-manifest.json
+          if-no-files-found: error
+          retention-days: 1
+
   lint:
-    if: ${{ github.event_name != 'workflow_dispatch' || !inputs.run_offline_windows_only }}
+    if: ${{ github.event_name != 'schedule' && !inputs.force_refresh && (github.event_name != 'workflow_dispatch' || !inputs.run_offline_windows_only) }}
     runs-on: ubuntu-latest
 
     steps:
@@ -68,7 +385,7 @@ jobs:
         run: bash scripts/dev-preflight.sh --help
 
   integration:
-    if: ${{ github.event_name != 'workflow_dispatch' || !inputs.run_offline_windows_only }}
+    if: ${{ github.event_name != 'schedule' && !inputs.force_refresh && (github.event_name != 'workflow_dispatch' || !inputs.run_offline_windows_only) }}
     runs-on: ubuntu-latest
 
     steps:
@@ -116,6 +433,15 @@ jobs:
           PYTHONPATH: ${{ github.workspace }}/src
         run: python -m pytest tests/unit/test_mcp_input_schema_contract.py -q
 
+      - name: Run dependency refresh workflow contracts
+        env:
+          PYTHONPATH: ${{ github.workspace }}/src
+        run: |
+          python -m pytest \
+            tests/unit/test_resolve_offline_dependencies.py \
+            tests/unit/test_ci_release_workflow.py \
+            -q
+
       - name: Run cross-execution surface contracts
         env:
           PYTHONPATH: ${{ github.workspace }}/src
@@ -142,7 +468,7 @@ jobs:
         run: python -m pytest tests/integration -q --durations=30
 
   package-smoke:
-    if: ${{ github.event_name != 'workflow_dispatch' || !inputs.run_offline_windows_only }}
+    if: ${{ github.event_name != 'schedule' && !inputs.force_refresh && (github.event_name != 'workflow_dispatch' || !inputs.run_offline_windows_only) }}
     runs-on: ubuntu-latest
 
     steps:
@@ -216,7 +542,25 @@ jobs:
           PY
 
   offline-linux-x86-64:
-    if: ${{ (startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch') && (github.event_name != 'workflow_dispatch' || !inputs.run_offline_windows_only) }}
+    needs: dependency-refresh-compare
+    if: >-
+      ${{
+        always() &&
+        (
+          startsWith(github.ref, 'refs/tags/v') ||
+          (github.event_name == 'workflow_dispatch' && !inputs.force_refresh) ||
+          (
+            (github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.force_refresh)) &&
+            needs.dependency-refresh-compare.result == 'success' &&
+            needs.dependency-refresh-compare.outputs.changed == 'true'
+          )
+        ) &&
+        (
+          github.event_name != 'workflow_dispatch' ||
+          !inputs.run_offline_windows_only ||
+          inputs.force_refresh
+        )
+      }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -234,6 +578,29 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
+        with:
+          ref: ${{ (github.event_name == 'schedule' || inputs.force_refresh) && needs.dependency-refresh-compare.outputs.source_sha || github.ref }}
+
+      - name: Check out dependency refresh tooling
+        if: ${{ github.event_name == 'schedule' || inputs.force_refresh }}
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+          path: .dependency-refresh-automation
+
+      - name: Download frozen dependency snapshot
+        if: ${{ github.event_name == 'schedule' || inputs.force_refresh }}
+        uses: actions/download-artifact@v8
+        with:
+          name: dependency-snapshot-linux-x86_64-${{ matrix.python-tag }}
+          path: ${{ runner.temp }}/dependency-snapshot
+
+      - name: Download merged dependency manifest
+        if: ${{ github.event_name == 'schedule' || inputs.force_refresh }}
+        uses: actions/download-artifact@v8
+        with:
+          name: dependency-refresh-manifest
+          path: ${{ runner.temp }}/dependency-manifest
 
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -265,7 +632,20 @@ jobs:
           sudo apt-get install -y xvfb
 
       - name: Build offline package
-        run: scripts/build-offline-package.sh --output-dir "$PWD/offline-artifacts"
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name == 'schedule' || inputs.force_refresh }}" = "true" ]; then
+            snapshot_root="$RUNNER_TEMP/dependency-snapshot"
+            python .dependency-refresh-automation/scripts/resolve_offline_dependencies.py verify \
+              --manifest "$RUNNER_TEMP/dependency-manifest/dependency-manifest.json" \
+              --target "linux-x86_64-${{ matrix.python-tag }}" \
+              --snapshot-root "$snapshot_root"
+            export PIP_NO_INDEX=1
+            export PIP_DISABLE_PIP_VERSION_CHECK=1
+            export PIP_FIND_LINKS="$snapshot_root/runtime-wheels $snapshot_root/support-wheels"
+          fi
+          scripts/build-offline-package.sh --output-dir "$PWD/offline-artifacts"
 
       - name: Verify offline package
         run: scripts/verify-offline-package.sh "$PWD/offline-artifacts/paper-fetch-skill-offline-linux-x86_64-${{ matrix.python-tag }}.sh"
@@ -300,7 +680,25 @@ jobs:
           if-no-files-found: error
 
   offline-macos-install:
-    if: ${{ (startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch') && (github.event_name != 'workflow_dispatch' || !inputs.run_offline_windows_only) }}
+    needs: dependency-refresh-compare
+    if: >-
+      ${{
+        always() &&
+        (
+          startsWith(github.ref, 'refs/tags/v') ||
+          (github.event_name == 'workflow_dispatch' && !inputs.force_refresh) ||
+          (
+            (github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.force_refresh)) &&
+            needs.dependency-refresh-compare.result == 'success' &&
+            needs.dependency-refresh-compare.outputs.changed == 'true'
+          )
+        ) &&
+        (
+          github.event_name != 'workflow_dispatch' ||
+          !inputs.run_offline_windows_only ||
+          inputs.force_refresh
+        )
+      }}
     runs-on: macos-latest
     strategy:
       fail-fast: false
@@ -318,6 +716,29 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
+        with:
+          ref: ${{ (github.event_name == 'schedule' || inputs.force_refresh) && needs.dependency-refresh-compare.outputs.source_sha || github.ref }}
+
+      - name: Check out dependency refresh tooling
+        if: ${{ github.event_name == 'schedule' || inputs.force_refresh }}
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+          path: .dependency-refresh-automation
+
+      - name: Download frozen dependency snapshot
+        if: ${{ github.event_name == 'schedule' || inputs.force_refresh }}
+        uses: actions/download-artifact@v8
+        with:
+          name: dependency-snapshot-macos-arm64-${{ matrix.python-tag }}
+          path: ${{ runner.temp }}/dependency-snapshot
+
+      - name: Download merged dependency manifest
+        if: ${{ github.event_name == 'schedule' || inputs.force_refresh }}
+        uses: actions/download-artifact@v8
+        with:
+          name: dependency-refresh-manifest
+          path: ${{ runner.temp }}/dependency-manifest
 
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -341,7 +762,20 @@ jobs:
             ${{ runner.os }}-offline-formula-tools-${{ steps.setup-haskell.outputs.ghc-version }}-
 
       - name: Build macOS offline package
-        run: scripts/build-offline-package.sh --output-dir "$PWD/offline-artifacts"
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name == 'schedule' || inputs.force_refresh }}" = "true" ]; then
+            snapshot_root="$RUNNER_TEMP/dependency-snapshot"
+            python .dependency-refresh-automation/scripts/resolve_offline_dependencies.py verify \
+              --manifest "$RUNNER_TEMP/dependency-manifest/dependency-manifest.json" \
+              --target "macos-arm64-${{ matrix.python-tag }}" \
+              --snapshot-root "$snapshot_root"
+            export PIP_NO_INDEX=1
+            export PIP_DISABLE_PIP_VERSION_CHECK=1
+            export PIP_FIND_LINKS="$snapshot_root/runtime-wheels $snapshot_root/support-wheels"
+          fi
+          scripts/build-offline-package.sh --output-dir "$PWD/offline-artifacts"
 
       - name: Verify macOS offline package
         shell: bash
@@ -511,12 +945,48 @@ jobs:
           if-no-files-found: error
 
   offline-windows-x86-64:
-    if: ${{ startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch' }}
+    needs: dependency-refresh-compare
+    if: >-
+      ${{
+        always() &&
+        (
+          startsWith(github.ref, 'refs/tags/v') ||
+          (github.event_name == 'workflow_dispatch' && !inputs.force_refresh) ||
+          (
+            (github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.force_refresh)) &&
+            needs.dependency-refresh-compare.result == 'success' &&
+            needs.dependency-refresh-compare.outputs.changed == 'true'
+          )
+        )
+      }}
     runs-on: windows-latest
 
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
+        with:
+          ref: ${{ (github.event_name == 'schedule' || inputs.force_refresh) && needs.dependency-refresh-compare.outputs.source_sha || github.ref }}
+
+      - name: Check out dependency refresh tooling
+        if: ${{ github.event_name == 'schedule' || inputs.force_refresh }}
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+          path: .dependency-refresh-automation
+
+      - name: Download frozen dependency snapshot
+        if: ${{ github.event_name == 'schedule' || inputs.force_refresh }}
+        uses: actions/download-artifact@v8
+        with:
+          name: dependency-snapshot-windows-x86_64-cp313
+          path: ${{ runner.temp }}/dependency-snapshot
+
+      - name: Download merged dependency manifest
+        if: ${{ github.event_name == 'schedule' || inputs.force_refresh }}
+        uses: actions/download-artifact@v8
+        with:
+          name: dependency-refresh-manifest
+          path: ${{ runner.temp }}/dependency-manifest
 
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -545,7 +1015,21 @@ jobs:
 
       - name: Build offline package
         shell: pwsh
-        run: ./scripts/build-offline-package-windows.ps1 -OutputDir "$PWD/offline-artifacts"
+        run: |
+          if ("${{ github.event_name == 'schedule' || inputs.force_refresh }}" -eq "true") {
+            $snapshotRoot = Join-Path $env:RUNNER_TEMP "dependency-snapshot"
+            python .dependency-refresh-automation/scripts/resolve_offline_dependencies.py verify `
+              --manifest (Join-Path $env:RUNNER_TEMP "dependency-manifest/dependency-manifest.json") `
+              --target "windows-x86_64-cp313" `
+              --snapshot-root $snapshotRoot
+            if ($LASTEXITCODE -ne 0) {
+              throw "Frozen Windows dependency snapshot verification failed."
+            }
+            $env:PIP_NO_INDEX = "1"
+            $env:PIP_DISABLE_PIP_VERSION_CHECK = "1"
+            $env:PIP_FIND_LINKS = "$(Join-Path $snapshotRoot 'runtime-wheels') $(Join-Path $snapshotRoot 'support-wheels')"
+          }
+          ./scripts/build-offline-package-windows.ps1 -OutputDir "$PWD/offline-artifacts"
 
       - name: Verify setup installer
         shell: pwsh
@@ -755,6 +1239,7 @@ jobs:
       - offline-windows-x86-64
     if: >-
       ${{
+        !inputs.force_refresh &&
         !inputs.run_offline_windows_only &&
         startsWith(github.ref, 'refs/tags/v') &&
         (
@@ -856,8 +1341,211 @@ jobs:
           generate_release_notes: false
           prerelease: ${{ contains(github.ref_name, '-') }}
 
+  release-dependency-refresh:
+    needs:
+      - dependency-refresh-compare
+      - offline-linux-x86-64
+      - offline-macos-install
+      - offline-windows-x86-64
+    if: >-
+      ${{
+        always() &&
+        (
+          github.event_name == 'schedule' ||
+          (github.event_name == 'workflow_dispatch' && inputs.force_refresh)
+        ) &&
+        needs.dependency-refresh-compare.result == 'success' &&
+        needs.dependency-refresh-compare.outputs.changed == 'true' &&
+        needs.offline-linux-x86-64.result == 'success' &&
+        needs.offline-macos-install.result == 'success' &&
+        needs.offline-windows-x86-64.result == 'success'
+      }}
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: write
+
+    steps:
+      - name: Download offline packages
+        uses: actions/download-artifact@v8
+        with:
+          pattern: paper-fetch-skill-*
+          path: release-artifacts
+          merge-multiple: true
+
+      - name: Download dependency manifest
+        uses: actions/download-artifact@v8
+        with:
+          name: dependency-refresh-manifest
+          path: release-artifacts
+
+      - name: Verify rolling release assets and write checksums
+        shell: bash
+        run: |
+          set -euo pipefail
+          expected=(
+            dependency-manifest.json
+            paper-fetch-skill-offline-linux-x86_64-cp311.sh
+            paper-fetch-skill-offline-linux-x86_64-cp312.sh
+            paper-fetch-skill-offline-linux-x86_64-cp313.sh
+            paper-fetch-skill-offline-linux-x86_64-cp314.sh
+            paper-fetch-skill-offline-macos-arm64-cp311.tar.gz
+            paper-fetch-skill-offline-macos-arm64-cp312.tar.gz
+            paper-fetch-skill-offline-macos-arm64-cp313.tar.gz
+            paper-fetch-skill-offline-macos-arm64-cp314.tar.gz
+            paper-fetch-skill-windows-x86_64-setup.exe
+          )
+          printf '%s\n' "${expected[@]}" | LC_ALL=C sort > "$RUNNER_TEMP/expected-assets.txt"
+          find release-artifacts -maxdepth 1 -type f -printf '%f\n' \
+            | LC_ALL=C sort > "$RUNNER_TEMP/actual-assets.txt"
+          if ! diff -u "$RUNNER_TEMP/expected-assets.txt" "$RUNNER_TEMP/actual-assets.txt"; then
+            echo "Rolling release build did not produce the exact expected asset set." >&2
+            exit 1
+          fi
+          (
+            cd release-artifacts
+            sha256sum "${expected[@]}" | LC_ALL=C sort -k2 > SHA256SUMS
+          )
+
+      - name: Write rolling release notes
+        shell: bash
+        env:
+          SOURCE_TAG: ${{ needs.dependency-refresh-compare.outputs.source_tag }}
+          SOURCE_SHA: ${{ needs.dependency-refresh-compare.outputs.source_sha }}
+          PROJECT_VERSION: ${{ needs.dependency-refresh-compare.outputs.project_version }}
+          DEPENDENCY_SET_SHA256: ${{ needs.dependency-refresh-compare.outputs.dependency_set_sha256 }}
+          REFRESH_REASON: ${{ needs.dependency-refresh-compare.outputs.reason }}
+        run: |
+          set -euo pipefail
+          updated_at="$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+          {
+            echo "## Rolling dependency build"
+            echo
+            echo "> This prerelease is mutable. Assets under the fixed \`dependency-latest\` tag are replaced when the resolved Python dependency set changes."
+            echo
+            echo "- Stable source: [\`$SOURCE_TAG\`](https://github.com/$GITHUB_REPOSITORY/releases/tag/$SOURCE_TAG) (\`$SOURCE_SHA\`)"
+            echo "- Project version: \`$PROJECT_VERSION\`"
+            echo "- Dependency set SHA256: \`$DEPENDENCY_SET_SHA256\`"
+            echo "- Refresh reason: \`$REFRESH_REASON\`"
+            echo "- Updated at: \`$updated_at\`"
+            echo
+            echo "Verify downloaded assets with \`SHA256SUMS\`. For immutable, reproducible releases, use a stable \`v*\` release instead."
+          } > release-notes.md
+
+      - name: Move rolling tag to stable source
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_SHA: ${{ needs.dependency-refresh-compare.outputs.source_sha }}
+        run: |
+          set -euo pipefail
+          if gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/dependency-latest" >/dev/null 2>&1; then
+            gh api --method PATCH \
+              "repos/$GITHUB_REPOSITORY/git/refs/tags/dependency-latest" \
+              -f sha="$SOURCE_SHA" \
+              -F force=true >/dev/null
+          else
+            gh api --method POST \
+              "repos/$GITHUB_REPOSITORY/git/refs" \
+              -f ref='refs/tags/dependency-latest' \
+              -f sha="$SOURCE_SHA" >/dev/null
+          fi
+
+      - name: Publish rolling prerelease
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: dependency-latest
+          target_commitish: ${{ needs.dependency-refresh-compare.outputs.source_sha }}
+          name: dependency-latest (${{ needs.dependency-refresh-compare.outputs.source_tag }})
+          body_path: release-notes.md
+          files: release-artifacts/*
+          fail_on_unmatched_files: true
+          overwrite_files: true
+          preserve_order: true
+          generate_release_notes: false
+          prerelease: true
+          make_latest: false
+
+      - name: Remove stale rolling release assets
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          {
+            cat "$RUNNER_TEMP/expected-assets.txt"
+            echo SHA256SUMS
+          } | LC_ALL=C sort > "$RUNNER_TEMP/expected-release-assets.txt"
+          release_id="$(gh api "repos/$GITHUB_REPOSITORY/releases/tags/dependency-latest" --jq .id)"
+          while IFS=$'\t' read -r asset_id asset_name; do
+            if ! grep -Fqx "$asset_name" "$RUNNER_TEMP/expected-release-assets.txt"; then
+              echo "Removing stale rolling asset: $asset_name"
+              gh api --method DELETE \
+                "repos/$GITHUB_REPOSITORY/releases/assets/$asset_id"
+            fi
+          done < <(
+            gh api --paginate \
+              "repos/$GITHUB_REPOSITORY/releases/$release_id/assets?per_page=100" \
+              --jq '.[] | [.id, .name] | @tsv'
+          )
+
+      - name: Verify published rolling prerelease
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_SHA: ${{ needs.dependency-refresh-compare.outputs.source_sha }}
+        run: |
+          set -euo pipefail
+          published_sha="$(gh api \
+            "repos/$GITHUB_REPOSITORY/git/ref/tags/dependency-latest" \
+            --jq .object.sha)"
+          if [ "$published_sha" != "$SOURCE_SHA" ]; then
+            echo "Published rolling tag points to $published_sha, expected $SOURCE_SHA." >&2
+            exit 1
+          fi
+          gh api "repos/$GITHUB_REPOSITORY/releases/tags/dependency-latest" \
+            > "$RUNNER_TEMP/published-dependency-release.json"
+          python - "$RUNNER_TEMP/published-dependency-release.json" release-artifacts <<'PY'
+          import hashlib
+          import json
+          import sys
+          from pathlib import Path
+
+          release_path = Path(sys.argv[1])
+          artifact_dir = Path(sys.argv[2])
+
+          def sha256(path: Path) -> str:
+              digest = hashlib.sha256()
+              with path.open("rb") as handle:
+                  for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+                      digest.update(chunk)
+              return digest.hexdigest()
+
+          release = json.loads(release_path.read_text(encoding="utf-8"))
+          if release.get("tag_name") != "dependency-latest":
+              raise SystemExit("Published release has the wrong tag")
+          if release.get("prerelease") is not True or release.get("draft") is not False:
+              raise SystemExit("Published rolling release flags are invalid")
+
+          local = {path.name: path for path in artifact_dir.iterdir() if path.is_file()}
+          remote = {asset["name"]: asset for asset in release.get("assets", [])}
+          if set(local) != set(remote):
+              raise SystemExit(
+                  "Published asset set mismatch: "
+                  f"missing={sorted(set(local) - set(remote))}, "
+                  f"extra={sorted(set(remote) - set(local))}"
+              )
+          for name, path in sorted(local.items()):
+              digest = sha256(path)
+              asset = remote[name]
+              if asset.get("size") != path.stat().st_size:
+                  raise SystemExit(f"Published size mismatch for {name}")
+              if asset.get("digest") != f"sha256:{digest}":
+                  raise SystemExit(f"Published SHA256 mismatch for {name}")
+          print(f"Verified {len(local)} rolling release assets.")
+          PY
+
   full-golden:
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_full_golden && !inputs.run_offline_windows_only }}
+    if: ${{ github.event_name == 'workflow_dispatch' && !inputs.force_refresh && inputs.run_full_golden && !inputs.run_offline_windows_only }}
     runs-on: ubuntu-latest
 
     steps:
@@ -907,7 +1595,7 @@ jobs:
         run: python -m pytest tests/integration/test_golden_corpus.py -q
 
   live-mcp:
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_live_mcp && !inputs.run_offline_windows_only }}
+    if: ${{ github.event_name == 'workflow_dispatch' && !inputs.force_refresh && inputs.run_live_mcp && !inputs.run_offline_windows_only }}
     runs-on: ubuntu-latest
 
     steps:

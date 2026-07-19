@@ -35,6 +35,7 @@ dev = [
   "build>=1.2,<2",
   "jsonschema>=4,<5",
   "markdown-it-py>=3,<5",
+  "packaging>=24,<27",
   "pytest>=8,<10",
   "pytest-cov>=6,<8",
   "pytest-xdist>=3.6,<4",
