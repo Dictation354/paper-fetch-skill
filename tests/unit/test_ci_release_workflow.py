@@ -314,9 +314,7 @@ class CiReleaseWorkflowTests(unittest.TestCase):
         self.assertIn("releases/latest", workflow_text)
         self.assertIn("Latest stable release tag must start with v", workflow_text)
         self.assertEqual(ROLLING_TARGETS, target_matrix)
-        self.assertIn(
-            '"pip==26.1.2" "packaging==26.2"', repr(resolve_job["steps"])
-        )
+        self.assertIn('"pip==26.1.2" "packaging==26.2"', repr(resolve_job["steps"]))
         self.assertIn("resolve_offline_dependencies.py resolve", workflow_text)
         self.assertIn("dependency-snapshot-${{ matrix.target }}", workflow_text)
 
