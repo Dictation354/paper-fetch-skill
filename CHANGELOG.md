@@ -18,6 +18,7 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 ### Fixed
 
 - Fixed rolling offline builds failing before packaging when clean `setup-python` environments lacked the resolver-only `packaging` dependency; `merge`, `compare`, and pre-build `verify` now remain standard-library bootstrap paths.
+- Fixed rolling prerelease publication against an older stable source commit by using a repository-scoped `ROLLING_RELEASE_TOKEN` for tag and Release mutations while keeping the built-in job token read-only.
 
 ## 3.1.3 - 2026-07-15
 

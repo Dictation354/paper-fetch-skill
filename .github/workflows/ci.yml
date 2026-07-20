@@ -1363,9 +1363,20 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       actions: read
-      contents: write
+      contents: read
 
     steps:
+      - name: Require rolling release token
+        shell: bash
+        env:
+          ROLLING_RELEASE_TOKEN: ${{ secrets.ROLLING_RELEASE_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -z "${ROLLING_RELEASE_TOKEN:-}" ]; then
+            echo "ROLLING_RELEASE_TOKEN Actions secret is required." >&2
+            exit 1
+          fi
+
       - name: Download offline packages
         uses: actions/download-artifact@v8
         with:
@@ -1434,7 +1445,7 @@ jobs:
 
       - name: Move rolling tag to stable source
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.ROLLING_RELEASE_TOKEN }}
           SOURCE_SHA: ${{ needs.dependency-refresh-compare.outputs.source_sha }}
         run: |
           set -euo pipefail
@@ -1453,6 +1464,7 @@ jobs:
       - name: Publish rolling prerelease
         uses: softprops/action-gh-release@v3
         with:
+          token: ${{ secrets.ROLLING_RELEASE_TOKEN }}
           tag_name: dependency-latest
           target_commitish: ${{ needs.dependency-refresh-compare.outputs.source_sha }}
           name: dependency-latest (${{ needs.dependency-refresh-compare.outputs.source_tag }})
@@ -1468,7 +1480,7 @@ jobs:
       - name: Remove stale rolling release assets
         shell: bash
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.ROLLING_RELEASE_TOKEN }}
         run: |
           set -euo pipefail
           {
@@ -1491,7 +1503,7 @@ jobs:
       - name: Verify published rolling prerelease
         shell: bash
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.ROLLING_RELEASE_TOKEN }}
           SOURCE_SHA: ${{ needs.dependency-refresh-compare.outputs.source_sha }}
         run: |
           set -euo pipefail

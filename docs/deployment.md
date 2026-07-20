@@ -63,13 +63,14 @@ CI 自动发布规则：
 - release job 会下载本次运行产出的 `paper-fetch-skill-*` artifacts，确认上面 9 个文件都存在且没有额外文件，然后把它们作为 release assets 上传。
 - `offline-macos-install` 会在 `macos-latest` 上使用 CPython 3.11、3.12、3.13、3.14 矩阵构建本机架构 macOS tarball，执行安装器验证、headful preset 安装布局检查，并用安装后的 `paper-fetch` / `python` 通过 CloakBrowser 启动本机浏览器打开本地 `data:` 页面，确认 macOS 包安装后可实际使用浏览器路径；验证通过后上传 `paper-fetch-skill-offline-macos-*-cp*.tar.gz` artifact。
 - 手动运行 workflow 时，只有在 `v*` tag 上显式设置 `publish_release=true` 才会发布，确保 release tag 和本次构建产物来自同一个 commit。
-- 发布使用 workflow 内置的 `GITHUB_TOKEN`，release job 单独声明 `contents: write` 和 `actions: read` 权限，不需要额外 PAT。
+- 固定 `v*` Release 发布使用 workflow 内置的 `GITHUB_TOKEN`，对应 release job 单独声明 `contents: write` 和 `actions: read` 权限，不需要额外 PAT。
 
 #### 每日滚动依赖 prerelease
 
 除固定版本 Release 外，CI 维护一个 tag 和名称都固定为 `dependency-latest` 的滚动 prerelease。它面向希望继续使用最新稳定版源码、同时获取最新兼容 Python 运行时依赖的用户；该 prerelease 是可变发布，不应作为长期可复现构建的版本锚点。
 
 - workflow 每天北京时间 03:17（UTC 19:17）运行。GitHub 定时任务是尽力调度，平台繁忙时可能延迟。
+- 滚动发布需要仓库 Actions secret `ROLLING_RELEASE_TOKEN`。该 secret 应使用仅授权 `paper-fetch-skill` 的 fine-grained PAT，并只授予 `Contents: Read and write` 与 `Workflows: Read and write`；它仅注入 tag 移动、Release 发布/清理和发布后校验步骤，内置 `GITHUB_TOKEN` 在该 job 中保持只读。未配置 secret 时，发布 job 会在下载大型 artifacts 前立即失败。
 - 每次检测都通过 GitHub 的 latest release API 选择最新的非 prerelease `v*` Release 作为源码基线，不从 `main` 构建安装包。
 - CI 使用固定版本的 `pip` 解析 Linux x86_64 CPython 3.11–3.14、macOS arm64 CPython 3.11–3.14 和 Windows x86_64 CPython 3.13 的全部直接及传递运行时依赖，并把每个 wheel 的名称、版本、文件名和 SHA256 合并到 `dependency-manifest.json`。
 - 只有源码基线或任一目标的依赖集合发生变化时，才会用本次解析并校验过的冻结 wheelhouse 重建全部 9 个安装包。依赖未变化时，构建矩阵和 Release 更新都会跳过，现有 `dependency-latest` 不会被改动。

@@ -388,13 +388,34 @@ class CiReleaseWorkflowTests(unittest.TestCase):
             for step in release_job["steps"]
             if step.get("name") == "Publish rolling prerelease"
         )
+        steps_by_name = {step.get("name"): step for step in release_job["steps"]}
+        rolling_token = "${{ secrets.ROLLING_RELEASE_TOKEN }}"
 
         self.assertEqual(
             {"dependency-refresh-compare", *OFFLINE_JOB_IDS},
             set(release_job["needs"]),
         )
+        self.assertEqual(
+            {"actions": "read", "contents": "read"}, release_job["permissions"]
+        )
         self.assertIn("outputs.changed == 'true'", release_job["if"])
+        self.assertEqual(
+            rolling_token,
+            steps_by_name["Require rolling release token"]["env"][
+                "ROLLING_RELEASE_TOKEN"
+            ],
+        )
+        for step_name in (
+            "Move rolling tag to stable source",
+            "Remove stale rolling release assets",
+            "Verify published rolling prerelease",
+        ):
+            with self.subTest(step_name=step_name):
+                self.assertEqual(
+                    rolling_token, steps_by_name[step_name]["env"]["GH_TOKEN"]
+                )
         self.assertEqual("softprops/action-gh-release@v3", publish_step["uses"])
+        self.assertEqual(rolling_token, publish_step["with"]["token"])
         self.assertEqual("dependency-latest", publish_step["with"]["tag_name"])
         self.assertEqual("true", publish_step["with"]["prerelease"])
         self.assertEqual("false", publish_step["with"]["make_latest"])
@@ -404,6 +425,7 @@ class CiReleaseWorkflowTests(unittest.TestCase):
         self.assertIn("Remove stale rolling release assets", workflow_text)
         self.assertIn("Published rolling tag points to", workflow_text)
         self.assertIn("Published SHA256 mismatch", workflow_text)
+        self.assertNotIn("${{ github.token }}", repr(release_job))
         self.assertEqual(11, len(ROLLING_ASSETS))
         for asset in ROLLING_ASSETS:
             self.assertIn(asset, workflow_text)
