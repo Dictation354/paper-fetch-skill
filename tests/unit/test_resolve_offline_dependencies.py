@@ -3,6 +3,8 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+import subprocess
+import sys
 
 import pytest
 
@@ -216,6 +218,37 @@ def test_verify_snapshot_rejects_hash_and_extra_wheel_drift(tmp_path: Path) -> N
     (runtime_wheels / "extra-1.0-py3-none-any.whl").write_bytes(b"extra")
     with pytest.raises(module.SnapshotError, match="wheel set mismatch"):
         module.verify_snapshot(args)
+
+
+def test_verify_cli_runs_without_resolver_site_packages(tmp_path: Path) -> None:
+    snapshot_root = tmp_path / "snapshot"
+    (snapshot_root / "runtime-wheels").mkdir(parents=True)
+    (snapshot_root / "support-wheels").mkdir()
+    fragment = _fragment("linux-x86_64-cp311")
+    fragment["dependencies"] = []
+    fragment["support_wheels"] = []
+    manifest = _merge(tmp_path / "manifest", fragment)
+
+    completed = subprocess.run(
+        [
+            sys.executable,
+            "-I",
+            "-S",
+            str(REPO_ROOT / "scripts" / "resolve_offline_dependencies.py"),
+            "verify",
+            "--manifest",
+            str(manifest),
+            "--target",
+            "linux-x86_64-cp311",
+            "--snapshot-root",
+            str(snapshot_root),
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert completed.returncode == 0, completed.stderr
 
 
 def test_resolve_rejects_target_mismatch_before_running_pip(tmp_path: Path) -> None:

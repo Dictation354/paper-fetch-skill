@@ -77,7 +77,7 @@ CI 自动发布规则：
 - 如果上一次发布缺少任一预期 asset，CI 会在下载基线文件前将其判为不完整并进入全量重建；`SHA256SUMS`、manifest 或远端 asset digest 校验失败时也会忽略该基线。也可手动运行 `workflow_dispatch` 并设置 `force_refresh=true`，强制重新解析、构建和覆盖全部滚动 assets。并发组会串行化滚动更新，避免两次发布互相覆盖。
 - 下载滚动安装包时应同时下载并核验同一次发布中的 `SHA256SUMS`。固定 tag 下的文件内容会随依赖更新而改变；需要固定内容时应使用具体 `v*` Release。
 
-依赖快照由 `scripts/resolve_offline_dependencies.py` 管理：`resolve` 复用 `pip` 的标准 resolver 生成单目标 wheelhouse，`merge` 生成完整矩阵 manifest，`compare` 判断是否需要更新，`verify` 在构建前拒绝 wheel 缺失、多余或 hash 漂移。构建 job 只消费已验证的本地 wheelhouse，不在滚动构建阶段重新选择依赖版本。
+依赖快照由 `scripts/resolve_offline_dependencies.py` 管理：`resolve` 复用 `pip` 的标准 resolver 和固定版本的 `packaging` 生成单目标 wheelhouse，`merge` 生成完整矩阵 manifest，`compare` 判断是否需要更新，`verify` 在构建前拒绝 wheel 缺失、多余或 hash 漂移。只有 `resolve` 需要第三方解析工具；`merge`、`compare` 和 `verify` 保持标准库自包含，因此离线构建 job 可以在干净的 `setup-python` 环境中先校验 wheelhouse，再切换到 `PIP_NO_INDEX` 构建。构建 job 只消费已验证的本地 wheelhouse，不在滚动构建阶段重新选择依赖版本。
 
 主包版本号同步清单：
 

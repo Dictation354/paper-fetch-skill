@@ -314,7 +314,9 @@ class CiReleaseWorkflowTests(unittest.TestCase):
         self.assertIn("releases/latest", workflow_text)
         self.assertIn("Latest stable release tag must start with v", workflow_text)
         self.assertEqual(ROLLING_TARGETS, target_matrix)
-        self.assertIn('"pip==26.1.2" "packaging==26.2"', workflow_text)
+        self.assertIn(
+            '"pip==26.1.2" "packaging==26.2"', repr(resolve_job["steps"])
+        )
         self.assertIn("resolve_offline_dependencies.py resolve", workflow_text)
         self.assertIn("dependency-snapshot-${{ matrix.target }}", workflow_text)
 
@@ -371,6 +373,7 @@ class CiReleaseWorkflowTests(unittest.TestCase):
                 self.assertIn("resolve_offline_dependencies.py verify", job_text)
                 self.assertIn("PIP_NO_INDEX", job_text)
                 self.assertIn("PIP_FIND_LINKS", job_text)
+                self.assertNotIn("Install pinned resolver tooling", job_text)
         self.assertIn("runtime-wheels", workflow_text)
         self.assertIn("support-wheels", workflow_text)
 

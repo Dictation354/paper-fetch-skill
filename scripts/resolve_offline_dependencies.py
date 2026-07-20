@@ -15,9 +15,6 @@ import tempfile
 import tomllib
 from typing import Any
 
-from packaging.utils import canonicalize_name, parse_wheel_filename
-
-
 SCHEMA_VERSION = 1
 SUPPORT_REQUIREMENTS = ("pip", "setuptools", "wheel")
 
@@ -84,6 +81,8 @@ def _write_json(path: Path, value: dict[str, Any]) -> None:
 
 
 def _project_metadata(project_root: Path) -> tuple[str, str]:
+    from packaging.utils import canonicalize_name
+
     pyproject = project_root / "pyproject.toml"
     try:
         payload = tomllib.loads(pyproject.read_text(encoding="utf-8"))
@@ -135,6 +134,8 @@ def _run(command: list[str], *, cwd: Path | None = None) -> None:
 
 
 def _wheel_record(path: Path) -> dict[str, str]:
+    from packaging.utils import canonicalize_name, parse_wheel_filename
+
     try:
         distribution, version, _build, _tags = parse_wheel_filename(path.name)
     except ValueError as exc:

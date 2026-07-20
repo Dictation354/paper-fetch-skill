@@ -15,6 +15,10 @@
 
 - 滚动更新复用现有 Linux、macOS 和 Windows 离线构建 job 并消费冻结 wheelhouse；发布阶段移动固定 prerelease tag、精确覆盖并核验安装包/manifest/checksum assets，上一次资产缺失或校验失败时触发重建，同时不改变稳定版 latest Release。
 
+### 修复
+
+- 修复干净 `setup-python` 环境缺少仅解析阶段使用的 `packaging` 时，滚动离线构建在实际打包前失败的问题；`merge`、`compare` 与构建前 `verify` 现在保持标准库自包含。
+
 ## 3.1.3 - 2026-07-15
 
 ### 新增

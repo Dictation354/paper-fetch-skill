@@ -15,6 +15,10 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 - Reused the existing Linux, macOS, and Windows offline build jobs for rolling updates with frozen wheelhouses; publishing retargets the fixed prerelease, replaces and verifies its exact installer/manifest/checksum asset set, and treats incomplete or invalid prior assets as a rebuild trigger without changing the stable latest release.
 
+### Fixed
+
+- Fixed rolling offline builds failing before packaging when clean `setup-python` environments lacked the resolver-only `packaging` dependency; `merge`, `compare`, and pre-build `verify` now remain standard-library bootstrap paths.
+
 ## 3.1.3 - 2026-07-15
 
 ### Added
