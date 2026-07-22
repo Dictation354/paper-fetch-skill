@@ -22,7 +22,7 @@ $OfflineEnvKeys = @(
     "MATHML_TO_LATEX_NODE_BIN",
     "PAPER_FETCH_BROWSER_HEADLESS",
     "PYTHONUTF8",
-    "PYTHONIOENCODING",
+    "PYTHONIOENCODING"
 )
 if ($null -ne $InstallerManifest.env_sets -and $null -ne $InstallerManifest.env_sets.offline_env_keys) {
     $OfflineEnvKeys = @($InstallerManifest.env_sets.offline_env_keys | ForEach-Object { [string]$_ })

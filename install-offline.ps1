@@ -37,7 +37,7 @@ $OfflineEnvKeys = @(
     "MATHML_TO_LATEX_NODE_BIN",
     "PAPER_FETCH_BROWSER_HEADLESS",
     "PYTHONUTF8",
-    "PYTHONIOENCODING",
+    "PYTHONIOENCODING"
 )
 
 function Write-Log {

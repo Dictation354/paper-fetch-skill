@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import unittest
 from pathlib import Path
 
@@ -181,6 +182,20 @@ class OfflinePackageBuildTests(unittest.TestCase):
                     line.strip(),
                     f"PowerShell here-string terminator must be flush-left at line {line_number}",
                 )
+
+    def test_windows_powershell_arrays_do_not_end_with_trailing_commas(self) -> None:
+        paths = (
+            REPO_ROOT / "install-offline.ps1",
+            REPO_ROOT / "scripts" / "build-offline-package-windows.ps1",
+            REPO_ROOT / "scripts" / "windows-installer-helper.ps1",
+        )
+
+        for path in paths:
+            script = path.read_text(encoding="utf-8")
+            self.assertIsNone(
+                re.search(r",\s*\)", script),
+                f"PowerShell trailing comma before ')' in {path.relative_to(REPO_ROOT)}",
+            )
 
 
 if __name__ == "__main__":
