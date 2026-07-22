@@ -201,9 +201,7 @@ class AtyponBrowserWorkflowProviderFallbackTests(AtyponBrowserWorkflowProviderTe
         assert raw_payload.content is not None
         self.assertEqual(raw_payload.content.route_kind, "html")
         self.assertEqual(raw_payload.content.fetcher, "camoufox")
-        self.assertEqual(
-            raw_payload.content.diagnostics["html_fetcher"], "camoufox"
-        )
+        self.assertEqual(raw_payload.content.diagnostics["html_fetcher"], "camoufox")
         self.assertEqual(raw_payload.content.browser_context_seed, seed)
         self.assertIn("fulltext:pnas_html_ok", _payload_source_trail(raw_payload))
 

@@ -94,7 +94,9 @@ class IeeeProviderRouteTests(unittest.TestCase):
         self.assertNotIn(
             "fulltext:ieee_browser_html_fail", article.quality.source_trail
         )
-        self.assertIn("browser recovery is not eligible", "\n".join(raw_payload.warnings))
+        self.assertIn(
+            "browser recovery is not eligible", "\n".join(raw_payload.warnings)
+        )
 
     def test_landing_403_uses_selected_browser_and_preserves_seed(self) -> None:
         doi = "10.1109/ACCESS.2024.3352924"

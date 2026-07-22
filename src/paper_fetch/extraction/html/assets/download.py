@@ -160,9 +160,7 @@ def _with_browser_recovery_diagnostics(
         if direct_attempt is not None and direct_attempt.failure is not None
         else {}
     )
-    backend = normalize_text(
-        str(recovered.get("_paper_fetch_browser_backend") or "")
-    )
+    backend = normalize_text(str(recovered.get("_paper_fetch_browser_backend") or ""))
     recovered["_paper_fetch_final_fetcher"] = backend or "selected_browser"
     recovered["_paper_fetch_recovery_attempts"] = [
         {
@@ -182,9 +180,7 @@ def _with_browser_recovery_diagnostics(
                 "stage": "browser",
                 "browser_backend": backend or None,
                 "status": int(recovered.get("status_code") or 0) or None,
-                "content_type": header_value(
-                    recovered.get("headers"), "content-type"
-                ),
+                "content_type": header_value(recovered.get("headers"), "content-type"),
                 "reason": "recovered",
                 "final_fetcher": backend or "selected_browser",
             }.items()
@@ -586,10 +582,13 @@ def resolve_asset_download(
             )
             continue
 
-        if fetch_policy == "browser_first" and _should_use_figure_document_fetcher_for_candidate(
-            kind,
-            candidate_url,
-            document_fetcher,
+        if (
+            fetch_policy == "browser_first"
+            and _should_use_figure_document_fetcher_for_candidate(
+                kind,
+                candidate_url,
+                document_fetcher,
+            )
         ):
             fallback_response = _fetch_document_fallback(
                 kind,
@@ -802,8 +801,7 @@ def resolve_asset_download(
 
         if (
             fetch_policy == "browser_first"
-            and
-            kind.upgrade_targets is not None
+            and kind.upgrade_targets is not None
             and document_fetcher is not None
             and _requires_image_payload(asset)
             and _is_preview_candidate(

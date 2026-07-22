@@ -222,7 +222,9 @@ def _asset_failure_allows_browser_recovery(failure: Mapping[str, Any]) -> bool:
     )
 
 
-def _tier_candidate_builder(base_builder: Any, *, preview: bool) -> Callable[..., list[str]]:
+def _tier_candidate_builder(
+    base_builder: Any, *, preview: bool
+) -> Callable[..., list[str]]:
     def build(*args: Any, **kwargs: Any) -> list[str]:
         asset = kwargs.get("asset")
         candidates = list(base_builder(*args, **kwargs))
@@ -254,9 +256,7 @@ def _tier_candidate_builder(base_builder: Any, *, preview: bool) -> Callable[...
 def _assets_matching_any_failure(
     assets: list[dict[str, Any]], failures: list[dict[str, Any]]
 ) -> list[dict[str, Any]]:
-    failure_tokens = [
-        _download_asset_match_tokens(failure) for failure in failures
-    ]
+    failure_tokens = [_download_asset_match_tokens(failure) for failure in failures]
     return [
         asset
         for asset in assets
@@ -537,9 +537,7 @@ def _run_browser_asset_download_attempt(
                     attempt_body_assets,
                     [
                         dict(failure)
-                        for failure in list(
-                            merged_result.get("asset_failures") or []
-                        )
+                        for failure in list(merged_result.get("asset_failures") or [])
                     ],
                 )
                 if normalize_text(

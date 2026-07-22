@@ -719,9 +719,7 @@ class MdpiProviderTests(AtyponBrowserWorkflowProviderTestCase):
             )
 
         asset_warnings = [
-            warning
-            for warning in warnings
-            if "related assets" in warning
+            warning for warning in warnings if "related assets" in warning
         ]
         self.assertEqual(
             asset_warnings,

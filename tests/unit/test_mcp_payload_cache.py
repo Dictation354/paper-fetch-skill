@@ -112,8 +112,7 @@ class McpPayloadCacheTests(unittest.TestCase):
         )
         self.assertTrue(
             any(
-                entry["provider"] == "science"
-                and entry["status"] == "not_configured"
+                entry["provider"] == "science" and entry["status"] == "not_configured"
                 for entry in providers
             )
         )

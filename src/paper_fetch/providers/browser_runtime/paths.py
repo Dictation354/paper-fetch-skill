@@ -54,9 +54,7 @@ def provider_storage_state_env_var(provider: str) -> str | None:
     return PROVIDER_STORAGE_STATE_ENV_VARS.get(normalize_text(provider).lower())
 
 
-def configured_user_data_dir(
-    env: Mapping[str, str], *, backend: str
-) -> Path | None:
+def configured_user_data_dir(env: Mapping[str, str], *, backend: str) -> Path | None:
     value = browser_env_value(
         env,
         BROWSER_USER_DATA_DIR_ENV_VAR,

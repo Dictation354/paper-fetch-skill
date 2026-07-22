@@ -122,12 +122,8 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
                     ],
                     ["direct", "browser"],
                 )
-                self.assertEqual(
-                    result["assets"][0]["browser_backend"], "camoufox"
-                )
-                self.assertEqual(
-                    result["assets"][0]["final_fetcher"], "camoufox"
-                )
+                self.assertEqual(result["assets"][0]["browser_backend"], "camoufox")
+                self.assertEqual(result["assets"][0]["final_fetcher"], "camoufox")
                 transport.request.assert_called_once()
                 browser_fetcher.assert_called_once()
 
@@ -866,7 +862,10 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
         self.assertEqual(calls[1]["asset_download_concurrency"], 1)
         self.assertEqual(calls[1]["fetch_policy"], "browser_first")
         self.assertEqual(
-            [attempt["stage"] for attempt in result.body_results[0]["recovery_attempts"]],
+            [
+                attempt["stage"]
+                for attempt in result.body_results[0]["recovery_attempts"]
+            ],
             ["direct", "browser"],
         )
         image_fetcher.close.assert_called_once()
