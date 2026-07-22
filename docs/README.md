@@ -22,7 +22,8 @@
 
 1. [`../README.md`](../README.md)
 2. [`cli.md`](cli.md)
-3. [`deployment.md`](deployment.md)
+3. [`browser-backends.md`](browser-backends.md)
+4. [`deployment.md`](deployment.md)
 
 ### 2. 配置 / 运维者
 
@@ -68,7 +69,9 @@
 - [`providers.md`](providers.md)
   - 讲 provider 能力矩阵、路由规则、默认输出、环境变量、缓存和限速。
 - [`browser-runtime.md`](browser-runtime.md)
-  - 讲 browser workflow 使用的 CDP / `cloakbrowser` 运行时边界，并指向 provider、部署和架构文档。
+  - 讲 browser workflow 的 CloakBrowser/CDP 与 Camoufox/Firefox 双后端边界，并指向 provider、部署和架构文档。
+- [`browser-backends.md`](browser-backends.md)
+  - 讲默认 Camoufox、已弃用 CloakBrowser、安装、抓取、headed 认证、离线准备和 publisher live matrix。
 - [`provider-development.md`](provider-development.md)
   - 讲新增出版社 provider 的标准开发流程、typed contract、waterfall、资产语义、测试和文档验收标准。
 - [`onboarding/README.md`](../onboarding/README.md)
@@ -146,7 +149,7 @@
 - 常见值包括 `full_size`、`preview`。非 browser-workflow 的 HTTP-first 路径可能保留 `playwright_canvas_fallback` 诊断；`wiley` / `science` / `pnas` / `annualreviews` / `acs` / `iop` / `aip` / `mdpi` 的 browser-backed HTML 资产主链路只输出 `full_size` 或 `preview`。AMS direct HTTP HTML 正文资产也使用 browser-equivalent headers，并只输出 `full_size` 或 `preview`。
 - `preview` 不是天然错误；当宽高满足阈值且 `source_trail` 有 preview accepted 轨迹时，是可接受降级。
 - preview 降级仍必须导出自包含 Markdown；如果正文图片链接能映射到已下载本地资产，最终 `.md` 不应残留远端图片 URL。
-- `wiley` / `science` / `pnas` / `annualreviews` / `acs` / `iop` / `aip` / `mdpi` 的 challenge 恢复链路会先复用预热正文页中目标 `<img>` 的 canvas 导出；目标图存在但尚未加载时，会先在同一正文页执行带凭据的 `fetch()` 拉取原图字节，再退回图片 URL 直连候选；只接受能识别为图片的 CDP browser image payload，包括浏览器导出的 PNG 和原始 SVG；图片文档 screenshot 和 challenge HTML 不能作为正文图片资产。AMS direct HTTP HTML 成功时不启动 CDP browser，但正文图片请求必须继承浏览器 UA/Referer。
+- `wiley` / `science` / `pnas` / `annualreviews` / `acs` / `iop` / `aip` / `mdpi` 的 challenge 恢复链路会先复用预热正文页中目标 `<img>` 的 canvas 导出；目标图存在但尚未加载时，会先在同一正文页执行带凭据的 `fetch()` 拉取原图字节，再退回图片 URL 直连候选；只接受能识别为图片的 selected-browser image payload，包括浏览器导出的 PNG 和原始 SVG；图片文档 screenshot 和 challenge HTML 不能作为正文图片资产。AMS direct HTTP HTML 成功时不启动浏览器，但正文图片请求必须继承浏览器 UA/Referer。
 - live review 中，只有公式图片发生 preview fallback 时不自动归为 `asset_download_failure`；figure/table preview fallback 仍需要 accepted 轨迹或其它证据才能降噪。资产下载 warning、`asset_failures` 轨迹或 `quality.asset_failures` 会归为 `asset_download_failure`。
 
 ### `semantic_losses`

@@ -20,10 +20,9 @@ $OfflineEnvKeys = @(
     "PAPER_FETCH_FORMULA_TOOLS_DIR",
     "PAPER_FETCH_IMAGE_TOOLS_DIR",
     "MATHML_TO_LATEX_NODE_BIN",
-    "CLOAKBROWSER_HEADLESS",
+    "PAPER_FETCH_BROWSER_HEADLESS",
     "PYTHONUTF8",
     "PYTHONIOENCODING",
-    "PAPER_FETCH_BROWSER_USER_AGENT"
 )
 if ($null -ne $InstallerManifest.env_sets -and $null -ne $InstallerManifest.env_sets.offline_env_keys) {
     $OfflineEnvKeys = @($InstallerManifest.env_sets.offline_env_keys | ForEach-Object { [string]$_ })
@@ -156,6 +155,10 @@ function Build-ProjectWheelhouse {
     $cloakbrowserWheels = @(Get-ChildItem -Path $wheelhouse -Filter "cloakbrowser-*.whl" -ErrorAction SilentlyContinue)
     if ($cloakbrowserWheels.Count -eq 0) {
         throw "Dependency wheelhouse is missing cloakbrowser-*.whl."
+    }
+    $camoufoxWheels = @(Get-ChildItem -Path $wheelhouse -Filter "camoufox-*.whl" -ErrorAction SilentlyContinue)
+    if ($camoufoxWheels.Count -eq 0) {
+        throw "Dependency wheelhouse is missing camoufox-*.whl."
     }
 }
 
@@ -354,10 +357,9 @@ function Write-DefaultOfflineEnv {
             "PAPER_FETCH_FORMULA_TOOLS_DIR" { return (ConvertTo-StagingEnvPath "$Staging/formula-tools") }
             "PAPER_FETCH_IMAGE_TOOLS_DIR" { return (ConvertTo-StagingEnvPath "$Staging/image-tools") }
             "MATHML_TO_LATEX_NODE_BIN" { return (ConvertTo-StagingEnvPath "$Staging/runtime/Lib/site-packages/playwright/driver/node.exe") }
-            "CLOAKBROWSER_HEADLESS" { return "true" }
+            "PAPER_FETCH_BROWSER_HEADLESS" { return "true" }
             "PYTHONUTF8" { return "1" }
             "PYTHONIOENCODING" { return "utf-8" }
-            "PAPER_FETCH_BROWSER_USER_AGENT" { return "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36" }
             default { throw "Unknown offline env key in installer manifest: $Name" }
         }
     }
@@ -386,12 +388,13 @@ function Write-OfflineReadme {
 
 This installer includes the embedded Python runtime, installed Python packages, formula tools, and image-tools configuration for optional conversion tools.
 The offline build does not bundle Ghostscript/libvips from the build host PATH; AMS EPS/TIFF source figure conversion falls back to webpage JPG/PNG candidates when those tools are unavailable.
-It does not redistribute a browser binary for browser-backed providers; cloakbrowser downloads or locates Chrome on first use.
+It does not redistribute a browser binary for browser-backed providers. Default Camoufox may fetch its runtime on the first real browser-backed request; fully offline hosts must preinstall the complete Camoufox runtime.
 Formula conversion uses the bundled Playwright driver Node via `MATHML_TO_LATEX_NODE_BIN`; do not rely on a bare `node` from PATH in Codex Desktop sessions.
 
-Browser-backed providers auto-start a managed cloakbrowser Chrome when `CLOAKBROWSER_CDP_ENDPOINT` is unset.
-Set `CLOAKBROWSER_CDP_ENDPOINT` only when you want to reuse an already-running browser, or set `CLOAKBROWSER_BINARY_PATH` to use a preinstalled Chrome binary.
-Set `CLOAKBROWSER_HEADLESS=false` only when running with a display-capable session.
+Browser-backed providers use native Camoufox by default, without probing or starting CloakBrowser/CDP.
+Set `PAPER_FETCH_BROWSER_BACKEND=cloakbrowser` only for the deprecated compatibility backend; selection never silently falls back between backends.
+`CLOAKBROWSER_CDP_ENDPOINT` and other legacy variables take effect only with that explicit CloakBrowser selection.
+Set `PAPER_FETCH_BROWSER_HEADLESS=false` only when running with a display-capable session.
 '@
     [System.IO.File]::WriteAllText((Join-Path $Staging "README.offline.md"), $content, [System.Text.UTF8Encoding]::new($false))
 }
@@ -444,6 +447,10 @@ function Write-ManifestAndChecksums {
             formula_tools = "formula-tools"
             image_tools = "image-tools"
             cloakbrowser = [ordered]@{
+                python_package = "runtime/Lib/site-packages"
+                browser_binary = "not_bundled"
+            }
+            camoufox = [ordered]@{
                 python_package = "runtime/Lib/site-packages"
                 browser_binary = "not_bundled"
             }

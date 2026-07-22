@@ -283,6 +283,11 @@ class RuntimeContext:
         init=False,
         repr=False,
     )
+    _camoufox_browser_managers: dict[tuple[int, bool, str], Any] = field(
+        default_factory=dict,
+        init=False,
+        repr=False,
+    )
 
     def __post_init__(self) -> None:
         self.env = build_runtime_env() if self.env is None else dict(self.env)
@@ -357,13 +362,54 @@ class RuntimeContext:
 
         return self.new_browser_context(headless=headless, **context_kwargs)
 
+    def new_browser_context_for_runtime_config(
+        self,
+        config: Any,
+        **context_kwargs: Any,
+    ) -> Any:
+        """Create a fresh context using the backend carried by runtime config."""
+
+        backend = str(config.backend).strip().lower()
+        if backend not in {"camoufox", "cloakbrowser"}:
+            raise RuntimeError(f"Unsupported browser backend {config.backend!r}.")
+        if backend != "camoufox":
+            return self.new_browser_context_for_config(
+                headless=bool(config.headless),
+                binary_path=config.binary_path,
+                cdp_endpoint=config.cdp_endpoint,
+                external_new_context=config.external_new_context,
+                profile_dir=config.profile_dir,
+                user_data_dir=config.user_data_dir,
+                **context_kwargs,
+            )
+        key = (
+            threading.get_ident(),
+            bool(config.headless),
+            str(config.binary_path or "").strip(),
+        )
+        with self._browser_context_manager_lock:
+            manager = self._camoufox_browser_managers.get(key)
+            if manager is None:
+                from .providers.browser_runtime.camoufox_manager import (
+                    CamoufoxBrowserManager,
+                )
+
+                manager = CamoufoxBrowserManager(
+                    binary_path=config.binary_path,
+                    headless=config.headless,
+                )
+                self._camoufox_browser_managers[key] = manager
+        return manager.new_context(**context_kwargs)
+
     def close_playwright(self) -> None:
         """Close any browser owned by this runtime context."""
 
         with self._browser_context_manager_lock:
             manager = self._browser_context_manager
             keyed_managers = list(self._browser_context_managers.values())
+            camoufox_managers = list(self._camoufox_browser_managers.values())
             self._browser_context_managers.clear()
+            self._camoufox_browser_managers.clear()
             self._browser_context_manager = None
         seen: set[int] = set()
         if manager is not None:
@@ -374,6 +420,30 @@ class RuntimeContext:
                 continue
             seen.add(id(keyed_manager))
             keyed_manager.close()
+        for camoufox_manager in camoufox_managers:
+            if id(camoufox_manager) in seen:
+                continue
+            seen.add(id(camoufox_manager))
+            camoufox_manager.close()
+
+    def close_camoufox_for_current_thread(self) -> None:
+        """Close Camoufox managers while still on their owning worker thread."""
+
+        owner_thread_id = threading.get_ident()
+        with self._browser_context_manager_lock:
+            owned_items = [
+                (key, manager)
+                for key, manager in self._camoufox_browser_managers.items()
+                if key[0] == owner_thread_id
+            ]
+            for key, _manager in owned_items:
+                self._camoufox_browser_managers.pop(key, None)
+        seen: set[int] = set()
+        for _key, manager in owned_items:
+            if id(manager) in seen:
+                continue
+            seen.add(id(manager))
+            manager.close()
 
     def _browser_lifecycle(self) -> Any:
         with self._browser_context_manager_lock:

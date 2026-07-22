@@ -24,7 +24,7 @@ Builds a CPython 3.11-3.14 offline runtime package containing:
   - private Python launcher under runtime/paper-fetch-python
   - texmath under formula-tools/
   - image-tools directory and installer wrapper for optional Ghostscript/libvips converters
-  - cloakbrowser Python package, which downloads/locates the Chrome binary on first browser-backed use
+  - CloakBrowser and Camoufox Python packages; browser binaries are not bundled
 Linux builds produce a self-extracting .sh installer. macOS builds produce a .tar.gz bundle.
 EOF
 }
@@ -155,8 +155,10 @@ build_project_runtime() {
 
   shopt -s nullglob
   local cloakbrowser_wheels=("$wheelhouse"/cloakbrowser-*.whl)
+  local camoufox_wheels=("$wheelhouse"/camoufox-*.whl)
   shopt -u nullglob
   [ "${#cloakbrowser_wheels[@]}" -gt 0 ] || die "Dependency wheelhouse is missing cloakbrowser-*.whl."
+  [ "${#camoufox_wheels[@]}" -gt 0 ] || die "Dependency wheelhouse is missing camoufox-*.whl."
 
   log "Installing project runtime into package"
   PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 \
@@ -171,7 +173,7 @@ build_project_runtime() {
   "$PYTHON_BIN" -m compileall -q "$site_packages"
 
   PYTHONPATH="$site_packages${PYTHONPATH:+:$PYTHONPATH}" \
-    "$PYTHON_BIN" -X utf8 -c 'import cloakbrowser; import playwright; import paper_fetch; import paper_fetch.mcp.server; from paper_fetch.runtime_browser import BrowserContextManager; assert hasattr(cloakbrowser, "ensure_binary"); assert BrowserContextManager is not None'
+    "$PYTHON_BIN" -X utf8 -c 'import camoufox; import cloakbrowser; import playwright; import paper_fetch; import paper_fetch.mcp.server; from paper_fetch.runtime_browser import BrowserContextManager; assert hasattr(camoufox, "Camoufox"); assert hasattr(cloakbrowser, "ensure_binary"); assert BrowserContextManager is not None'
 }
 
 bundle_formula_tools() {
@@ -288,17 +290,18 @@ write_offline_readme() {
 This package includes an installed Python runtime under `runtime/site-packages`, a private Python launcher at `runtime/paper-fetch-python`, command wrappers under `bin/`, formula tools, and image-tools configuration for optional conversion tools.
 The offline build does not bundle Ghostscript/libvips from the build host PATH; AMS EPS/TIFF source figure conversion falls back to webpage JPG/PNG candidates when those tools are unavailable.
 The `bin/` directory exposes paper-fetch commands only; it does not include a generic `python` wrapper.
-It does not redistribute a browser binary for browser-backed providers; cloakbrowser downloads or locates Chrome on first use.
+It does not redistribute a browser binary for browser-backed providers. Default Camoufox may fetch its runtime on the first real browser-backed request; fully offline hosts must preinstall the complete Camoufox runtime.
 EOF
 
   printf '\n%s\n\n' "$install_line" >> "$staging/README.offline.md"
 
   cat >> "$staging/README.offline.md" <<'EOF'
-Browser-backed providers auto-start a managed cloakbrowser Chrome when `CLOAKBROWSER_CDP_ENDPOINT` is unset.
-Set `CLOAKBROWSER_CDP_ENDPOINT` only when you want to reuse an already-running browser, or set `CLOAKBROWSER_BINARY_PATH` to use a preinstalled Chrome binary.
-Set `CLOAKBROWSER_HEADLESS=false` only when running with a display-capable session.
+Browser-backed providers use native Camoufox by default, without probing or starting CloakBrowser/CDP.
+Set `PAPER_FETCH_BROWSER_BACKEND=cloakbrowser` only for the deprecated compatibility backend; selection never silently falls back between backends.
+`CLOAKBROWSER_CDP_ENDPOINT` and other legacy variables take effect only with that explicit CloakBrowser selection.
+Set `PAPER_FETCH_BROWSER_HEADLESS=false` only when running with a display-capable session.
 
-The installer writes `CLOAKBROWSER_HEADLESS=true` and `PAPER_FETCH_BROWSER_USER_AGENT="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36"` into `offline.env` by default for browser-backed publisher fetches.
+The installer writes `PAPER_FETCH_BROWSER_HEADLESS=true` into `offline.env`. It does not override Camoufox's generated Firefox user agent or fingerprint settings.
 `activate-offline.sh` parses `offline.env` with python-dotenv and exports valid key/value pairs; it does not source the file as shell code.
 EOF
 }
@@ -382,6 +385,10 @@ payload = {
         "formula_tools": "formula-tools",
         "image_tools": "image-tools",
         "cloakbrowser": {
+            "python_package": "runtime/site-packages",
+            "browser_binary": "not_bundled",
+        },
+        "camoufox": {
             "python_package": "runtime/site-packages",
             "browser_binary": "not_bundled",
         },

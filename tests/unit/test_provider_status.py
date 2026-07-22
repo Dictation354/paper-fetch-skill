@@ -17,8 +17,16 @@ from paper_fetch.providers.royalsocietypublishing import RoyalsocietypublishingC
 from paper_fetch.providers.science import ScienceClient
 from paper_fetch.providers.springer import SpringerClient
 from paper_fetch.providers.wiley import WILEY_TDM_CLIENT_TOKEN_ENV_VAR, WileyClient
+from paper_fetch.providers.browser_runtime.backends import camoufox as camoufox_backend
 
-CDP_ENV = {"CLOAKBROWSER_CDP_ENDPOINT": "ws://127.0.0.1:9222/devtools/browser/test"}
+CDP_ENV = {
+    config.BROWSER_BACKEND_ENV_VAR: "cloakbrowser",
+    "CLOAKBROWSER_CDP_ENDPOINT": "ws://127.0.0.1:9222/devtools/browser/test",
+}
+CAMOUFOX_DEPENDENCIES_MISSING = {
+    "probe": "unit_test",
+    "packages": {"playwright": False, "camoufox": False},
+}
 
 
 class DummyTransport:
@@ -117,11 +125,13 @@ class ProviderStatusTests(unittest.TestCase):
         self.assertEqual(checks["playwright_dependency"].status, "ok")
         self.assertEqual(checks["tdm_api_token"].status, "ok")
 
-    def test_wiley_missing_runtime_and_token_is_not_configured_when_cloakbrowser_is_missing(
+    def test_wiley_missing_runtime_and_token_is_not_configured_when_camoufox_is_missing(
         self,
     ) -> None:
         with mock.patch.object(
-            _cloakbrowser, "_dependency_available", return_value=False
+            camoufox_backend,
+            "_dependency_details",
+            return_value=CAMOUFOX_DEPENDENCIES_MISSING,
         ):
             result = WileyClient(DummyTransport(), {}).probe_status()
         checks = {check.name: check for check in result.checks}
@@ -191,7 +201,7 @@ class ProviderStatusTests(unittest.TestCase):
         self.assertEqual(checks["local_requirements"].status, "ok")
         dependency.assert_not_called()
 
-    def test_browser_workflow_providers_missing_cloakbrowser_are_not_configured(
+    def test_browser_workflow_providers_missing_camoufox_are_not_configured(
         self,
     ) -> None:
         for provider in (
@@ -204,7 +214,9 @@ class ProviderStatusTests(unittest.TestCase):
             with (
                 self.subTest(provider=provider),
                 mock.patch.object(
-                    _cloakbrowser, "_dependency_available", return_value=False
+                    camoufox_backend,
+                    "_dependency_details",
+                    return_value=CAMOUFOX_DEPENDENCIES_MISSING,
                 ),
             ):
                 result = self._browser_client(provider, {}).probe_status()
@@ -238,7 +250,10 @@ class ProviderStatusTests(unittest.TestCase):
     def test_browser_workflow_provider_rejects_invalid_cloakbrowser_binary_path_for_managed_browser(
         self,
     ) -> None:
-        env = {config.CLOAKBROWSER_BINARY_PATH_ENV_VAR: "/definitely/missing/chrome"}
+        env = {
+            config.BROWSER_BACKEND_ENV_VAR: "cloakbrowser",
+            config.CLOAKBROWSER_BINARY_PATH_ENV_VAR: "/definitely/missing/chrome",
+        }
         with mock.patch.object(
             _cloakbrowser, "_dependency_available", return_value=True
         ):
@@ -253,7 +268,10 @@ class ProviderStatusTests(unittest.TestCase):
         self.assertEqual(checks["playwright_dependency"].status, "ok")
 
     def test_browser_workflow_provider_rejects_invalid_cdp_endpoint(self) -> None:
-        env = {config.CLOAKBROWSER_CDP_ENDPOINT_ENV_VAR: "not-a-url"}
+        env = {
+            config.BROWSER_BACKEND_ENV_VAR: "cloakbrowser",
+            config.CLOAKBROWSER_CDP_ENDPOINT_ENV_VAR: "not-a-url",
+        }
         with mock.patch.object(
             _cloakbrowser, "_dependency_available", return_value=True
         ):

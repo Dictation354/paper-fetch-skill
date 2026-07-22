@@ -160,22 +160,33 @@ def fetch_html_with_fast_browser(
     config = (
         browser_config
         if isinstance(browser_config, BrowserRuntimeConfig)
-        else load_runtime_config({}, provider=publisher, doi="fast-browser")
+        else load_runtime_config(
+            context.env if context is not None and context.env is not None else {},
+            provider=publisher,
+            doi="fast-browser",
+        )
     )
     if not isinstance(config, BrowserRuntimeConfig):
         raise HtmlExtractionFailure(
             "browser_runtime_unavailable",
-            f"CDP browser runtime is not available for fast {publisher} HTML preflight.",
+            f"Browser runtime is not available for fast {publisher} HTML preflight.",
         )
-    if config.headless != headless or (
-        normalize_text(user_agent) and normalize_text(user_agent) != config.user_agent
-    ):
+    user_agent_changed = bool(
+        config.backend == "cloakbrowser"
+        and normalize_text(user_agent)
+        and normalize_text(user_agent) != config.user_agent
+    )
+    if config.headless != headless or user_agent_changed:
         from dataclasses import replace
 
         config = replace(
             config,
             headless=headless,
-            user_agent=normalize_text(user_agent) or config.user_agent,
+            user_agent=(
+                normalize_text(user_agent) or config.user_agent
+                if config.backend == "cloakbrowser"
+                else None
+            ),
             timeout_ms=timeout_ms or config.timeout_ms,
         )
     return fetch_html_with_browser(
@@ -190,7 +201,7 @@ def fetch_html_with_fast_browser(
     )
 
 
-fetch_html_with_fast_browser.paper_fetch_html_fetcher_name = "cloakbrowser_fast"  # type: ignore[attr-defined]
+fetch_html_with_fast_browser.paper_fetch_html_fetcher_name = "selected_browser_fast"  # type: ignore[attr-defined]
 
 
 def _browser_workflow_html_payload(
@@ -265,11 +276,13 @@ def _fetch_browser_html_payload(
         exc.html_result = html_result
         raise
     fetcher_attr = getattr(html_fetcher, "paper_fetch_html_fetcher_name", None)
-    fetcher_name = (
-        normalize_text(fetcher_attr)
-        if isinstance(fetcher_attr, str)
-        else "cloakbrowser"
-    )
+    runtime_backend_value = runtime.backend
+    runtime_backend = normalize_text(runtime_backend_value)
+    if not runtime_backend:
+        raise RuntimeError("BrowserRuntimeConfig.backend must not be empty.")
+    fetcher_name = runtime_backend
+    if isinstance(fetcher_attr, str) and normalize_text(fetcher_attr).endswith("_fast"):
+        fetcher_name = f"{runtime_backend}_fast"
     return html_result, _browser_workflow_html_payload(
         client,
         html_result,

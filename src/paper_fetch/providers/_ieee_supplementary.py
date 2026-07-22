@@ -27,6 +27,7 @@ from ..http import DEFAULT_FULLTEXT_TIMEOUT_SECONDS, RequestFailure
 from ..http.headers import header_value
 from ..publisher_identity import normalize_doi
 from ..utils import empty_asset_results, normalize_text, strip_html_tags
+from ..runtime import RuntimeContext
 from ._ieee_metadata import IeeeLandingAttempt, _landing_metadata_has_multimedia_scope
 from ._ieee_url import (
     IEEE_BASE_URL,
@@ -37,6 +38,7 @@ from ._ieee_url import (
     _article_number_from_url,
     _is_ignored_ieee_asset_url,
 )
+from .browser_runtime.types import BrowserRuntimeConfig
 
 from bs4 import BeautifulSoup, Tag
 
@@ -48,29 +50,11 @@ IEEE_SUPPLEMENTARY_SEMANTIC_TOKENS = (
     "supplement file",
     "supplemental item",
 )
-IEEE_SUPPLEMENTARY_EXTRA_FILE_SUFFIXES = (
-    ".doc",
-    ".docx",
-    ".ps",
-    ".eps",
-    ".bmp",
-    ".mp4",
-    ".mov",
-    ".wmv",
-    ".avi",
-    ".mp3",
-    ".aiff",
-    ".ra",
-    ".wav",
-    ".tar.gz",
+IEEE_SUPPLEMENTARY_EXTRA_FILE_SUFFIXES = tuple(
+    ".doc .docx .ps .eps .bmp .mp4 .mov .wmv .avi .mp3 .aiff .ra .wav .tar.gz".split()
 )
-IEEE_ASSET_URL_ATTRS = (
-    "href",
-    "src",
-    "data-src",
-    "data-original",
-    "data-full-src",
-    "data-url",
+IEEE_ASSET_URL_ATTRS = tuple(
+    "href src data-src data-original data-full-src data-url".split()
 )
 
 
@@ -435,6 +419,8 @@ def download_ieee_related_assets(
     user_agent: str,
     env: Mapping[str, str],
     asset_profile: str = "all",
+    browser_runtime_config: BrowserRuntimeConfig | None = None,
+    runtime_context: RuntimeContext | None = None,
 ) -> dict[str, list[dict[str, Any]]]:
     if output_dir is None or asset_profile == "none":
         return empty_asset_results()
@@ -457,8 +443,6 @@ def download_ieee_related_assets(
         in {"figure", "table", "formula"}
         and normalize_text(str(item.get("section") or "")).lower() != "supplementary"
     ]
-    if not body_assets and not supplementary_assets:
-        return empty_asset_results()
     merged_metadata = (
         content.merged_metadata if content is not None else raw_payload.merged_metadata
     )
@@ -488,6 +472,30 @@ def download_ieee_related_assets(
     )
     seed_urls = [canonical_landing_url] if canonical_landing_url else []
     concurrency = resolve_asset_download_concurrency(env)
+    if browser_runtime_config is not None:
+        from ._ieee_asset_recovery import download_ieee_assets_with_browser
+
+        return download_ieee_assets_with_browser(
+            transport=transport,
+            article_id=article_id,
+            output_dir=output_dir,
+            asset_profile=asset_profile,
+            body_assets=body_assets,
+            supplementary_assets=supplementary_assets,
+            merged_metadata=dict(merged_metadata or {}),
+            article_number=article_number,
+            canonical_landing_url=canonical_landing_url,
+            seed_urls=seed_urls,
+            concurrency=concurrency,
+            user_agent=user_agent,
+            content=content,
+            browser_runtime_config=browser_runtime_config,
+            runtime_context=runtime_context,
+            download_assets_fn=download_assets,
+            split_assets_fn=split_body_and_supplementary_assets,
+        )
+    if not body_assets and not supplementary_assets:
+        return empty_asset_results()
     body_result = (
         download_assets(
             FIGURE_KIND,

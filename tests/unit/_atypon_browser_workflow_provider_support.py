@@ -257,6 +257,7 @@ class AtyponBrowserWorkflowProviderTestCase(unittest.TestCase):
             artifact_dir=tmp / "artifacts",
             headless=True,
             user_agent="paper-fetch-test/1",
+            backend="cloakbrowser",
         )
 
     def _build_browser_html_raw_payload(

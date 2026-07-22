@@ -21,6 +21,7 @@ class AtyponBrowserWorkflowBrowserRuntimeTests(unittest.TestCase):
             artifact_dir=Path(tmpdir) / "artifacts",
             headless=True,
             user_agent="Mozilla/5.0",
+            backend="cloakbrowser",
         )
 
     def test_normalize_browser_cookie_for_playwright(self) -> None:

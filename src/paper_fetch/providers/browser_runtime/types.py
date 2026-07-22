@@ -15,6 +15,7 @@ class BrowserRuntimeConfig:
     artifact_dir: Path
     headless: bool
     user_agent: str | None
+    backend: str
     timeout_ms: int = 120000
     binary_path: str | None = None
     cdp_endpoint: str | None = None
@@ -23,6 +24,15 @@ class BrowserRuntimeConfig:
     user_data_dir: Path | None = None
     storage_state_path: Path | None = None
     persist_storage_state: bool = True
+
+
+@dataclass(frozen=True)
+class BrowserRuntimeSession:
+    """A fresh selected-backend browser context and its owning manager, if any."""
+
+    backend: str
+    context: Any
+    manager: Any | None = None
 
 
 @dataclass(frozen=True)
@@ -75,6 +85,8 @@ class BrowserContextSeed(TypedDict, total=False):
 
 
 class BrowserRuntimeBackend(Protocol):
+    name: str
+
     def load_runtime_config(
         self,
         env: Mapping[str, str],

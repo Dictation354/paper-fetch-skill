@@ -4,15 +4,18 @@ from __future__ import annotations
 
 import contextlib
 from dataclasses import dataclass, replace
+from importlib import util as importlib_util
 from pathlib import Path
 from typing import Any
 from collections.abc import Callable, Iterable, Mapping
 
 from .auth import AUTH_TARGETS, AuthTarget, browser_auth_provider_names
 from .config import (
+    BROWSER_TIMEOUT_MS_ENV_VAR,
     BROWSER_USER_AGENT_ENV_VAR,
     CLOAKBROWSER_TIMEOUT_MS_ENV_VAR,
     build_runtime_env,
+    configured_browser_backend,
 )
 from .http import RequestCancelledError
 from .publisher_identity import extract_doi, extract_doi_from_url
@@ -100,9 +103,16 @@ def _runtime_env(
 ) -> dict[str, str]:
     runtime_env = build_runtime_env(env)
     if timeout_ms is not None:
+        runtime_env[BROWSER_TIMEOUT_MS_ENV_VAR] = str(timeout_ms)
+        # Keep the legacy mirror for callers that still inspect this helper directly.
         runtime_env[CLOAKBROWSER_TIMEOUT_MS_ENV_VAR] = str(timeout_ms)
     normalized_user_agent = normalize_text(browser_user_agent)
     if normalized_user_agent:
+        if configured_browser_backend(runtime_env) == "camoufox":
+            raise ProviderFailure(
+                ERROR,
+                "--browser-user-agent cannot be used with Camoufox because it would make the generated Firefox fingerprint inconsistent.",
+            )
         runtime_env[BROWSER_USER_AGENT_ENV_VAR] = normalized_user_agent
     return runtime_env
 
@@ -129,9 +139,14 @@ def static_browser_capabilities(
     )
     packages = dependency_details.get("packages")
     package_states = packages if isinstance(packages, Mapping) else {}
+    selected_backend = configured_browser_backend(env)
 
     def package_capability(package: str) -> dict[str, object]:
-        available = bool(package_states.get(package))
+        available = bool(
+            package_states.get(package)
+            if package in package_states
+            else importlib_util.find_spec(package) is not None
+        )
         return {
             "status": "ready" if available else "not_configured",
             "available": available,
@@ -168,6 +183,9 @@ def static_browser_capabilities(
             "storage_state_json_configured",
             "storage_state_json_exists",
             "auto_cdp_browser_enabled",
+            "backend",
+            "browser_user_agent_ignored",
+            "storage_state_path",
         }
     }
     runtime_status = (
@@ -215,11 +233,20 @@ def static_browser_capabilities(
     return {
         "diagnostic_scope": "static_configuration_and_local_dependencies",
         "provider_context": provider_key,
+        "selected_backend": selected_backend,
         "live_checked": False,
         "publisher_page_checked": False,
         "playwright": package_capability("playwright"),
         "cloakbrowser": package_capability("cloakbrowser"),
+        "camoufox": package_capability("camoufox"),
         "chrome_cdp": chrome_cdp,
+        "browser_runtime": {
+            "backend": selected_backend,
+            "status": runtime_status,
+            "available": runtime_status not in {ERROR, "not_configured"},
+            "notes": list(result.notes),
+            "details": safe_runtime_details,
+        },
     }
 
 

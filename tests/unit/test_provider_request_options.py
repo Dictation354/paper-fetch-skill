@@ -336,6 +336,7 @@ class ProviderRequestOptionsTests(unittest.TestCase):
             artifact_dir=Path("/tmp/artifacts"),
             headless=True,
             user_agent="paper-fetch-test/1",
+            backend="cloakbrowser",
         )
 
         mocked_pdf = mock.Mock()
@@ -387,6 +388,7 @@ class ProviderRequestOptionsTests(unittest.TestCase):
             artifact_dir=Path("/tmp/artifacts"),
             headless=True,
             user_agent="paper-fetch-test/1",
+            backend="cloakbrowser",
         )
         fallback_html = browser_runtime.BrowserFetchedHtml(
             source_url="https://onlinelibrary.wiley.com/doi/full/10.1002/ece3.9361",
@@ -453,6 +455,7 @@ class ProviderRequestOptionsTests(unittest.TestCase):
             artifact_dir=Path("/tmp/artifacts"),
             headless=True,
             user_agent="paper-fetch-test/1",
+            backend="cloakbrowser",
         )
         fast_html = browser_runtime.BrowserFetchedHtml(
             source_url="https://onlinelibrary.wiley.com/doi/full/10.1002/ece3.9361",
@@ -1928,6 +1931,7 @@ class ProviderRequestOptionsTests(unittest.TestCase):
             artifact_dir=Path("/tmp/artifacts"),
             headless=True,
             user_agent="paper-fetch-test/1",
+            backend="cloakbrowser",
         )
         raw_payload = RawFulltextPayload(
             provider="science",
@@ -2006,6 +2010,7 @@ class ProviderRequestOptionsTests(unittest.TestCase):
             artifact_dir=Path("/tmp/artifacts"),
             headless=True,
             user_agent="paper-fetch-test/1",
+            backend="cloakbrowser",
             cdp_endpoint="ws://127.0.0.1:9222/devtools/browser/test",
         )
         raw_payload = RawFulltextPayload(

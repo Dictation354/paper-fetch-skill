@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from pathlib import Path
 import tempfile
 import unittest
 
@@ -9,7 +10,7 @@ from paper_fetch.runtime import RuntimeContext
 from paper_fetch.service import FetchStrategy, fetch_paper
 from tests.live._runtime_env import (
     build_isolated_live_env,
-    require_cloakbrowser_or_skip,
+    require_selected_browser_or_skip,
 )
 from tests.provider_benchmark_samples import (
     provider_benchmark_sample,
@@ -18,6 +19,12 @@ from tests.provider_benchmark_samples import (
 
 
 RUN_LIVE = os.environ.get("PAPER_FETCH_RUN_LIVE") == "1"
+RUN_IEEE_BROWSER_LIVE = os.environ.get("PAPER_FETCH_RUN_IEEE_BROWSER_LIVE") == "1"
+IEEE_BROWSER_ASSET_DOI = "10.1109/ACCESS.2024.3414424"
+IEEE_BROWSER_ASSET_URL = (
+    "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/"
+    "6287639/10380310/10558792/liu2-3414424-large.gif"
+)
 ELSEVIER_SAMPLE = provider_benchmark_sample("elsevier")
 SPRINGER_SAMPLE = provider_benchmark_sample("springer")
 WILEY_SAMPLE = provider_benchmark_sample("wiley")
@@ -103,7 +110,7 @@ class LivePublisherTests(unittest.TestCase):
 
     def test_wiley_doi_live_fulltext(self) -> None:
         self._require_env(*WILEY_SAMPLE.required_env)
-        require_cloakbrowser_or_skip(self)
+        require_selected_browser_or_skip(self, self.env)
         article = fetch_article(
             WILEY_SAMPLE.doi,
             transport=HttpTransport(),
@@ -114,7 +121,7 @@ class LivePublisherTests(unittest.TestCase):
 
     def test_science_doi_live_fulltext(self) -> None:
         self._require_env(*SCIENCE_SAMPLE.required_env)
-        require_cloakbrowser_or_skip(self)
+        require_selected_browser_or_skip(self, self.env)
         article = fetch_article(
             SCIENCE_SAMPLE.doi,
             transport=HttpTransport(),
@@ -125,7 +132,7 @@ class LivePublisherTests(unittest.TestCase):
 
     def test_pnas_doi_live_fulltext(self) -> None:
         self._require_env(*PNAS_SAMPLE.required_env)
-        require_cloakbrowser_or_skip(self)
+        require_selected_browser_or_skip(self, self.env)
         article = fetch_article(
             PNAS_SAMPLE.doi,
             transport=HttpTransport(),
@@ -135,7 +142,7 @@ class LivePublisherTests(unittest.TestCase):
         self._assert_matches_sample(article, PNAS_SAMPLE)
 
     def test_ieee_doi_live_fulltext(self) -> None:
-        require_cloakbrowser_or_skip(self)
+        require_selected_browser_or_skip(self, self.env)
         self._require_env(*IEEE_SAMPLE.required_env)
         article = fetch_article(
             IEEE_SAMPLE.doi,
@@ -157,7 +164,6 @@ class LivePublisherTests(unittest.TestCase):
 
     def test_ams_doi_live_fulltext(self) -> None:
         self._require_env(*AMS_SAMPLE.required_env)
-        require_cloakbrowser_or_skip(self)
         article = fetch_article(
             AMS_SAMPLE.doi,
             transport=HttpTransport(),
@@ -175,6 +181,60 @@ class LivePublisherTests(unittest.TestCase):
         )
 
         self._assert_matches_sample(article, COPERNICUS_SAMPLE)
+
+    def test_ieee_camoufox_recovers_known_large_gif_to_local_markdown(self) -> None:
+        if not RUN_IEEE_BROWSER_LIVE:
+            self.skipTest(
+                "Set PAPER_FETCH_RUN_IEEE_BROWSER_LIVE=1 for the protected IEEE asset case."
+            )
+        require_selected_browser_or_skip(self, self.env)
+        with tempfile.TemporaryDirectory(prefix="paper-fetch-ieee-live-") as tmpdir:
+            context = RuntimeContext(
+                env=self.env,
+                transport=HttpTransport(),
+                download_dir=Path(tmpdir),
+                artifact_mode="all",
+            )
+            try:
+                envelope = fetch_paper(
+                    IEEE_BROWSER_ASSET_DOI,
+                    modes={"article", "markdown"},
+                    strategy=FetchStrategy(
+                        allow_metadata_only_fallback=False,
+                        preferred_providers=["ieee"],
+                        asset_profile="body",
+                    ),
+                    context=context,
+                )
+            finally:
+                context.close()
+
+            self.assertIsNotNone(envelope.article)
+            self.assertTrue(envelope.has_fulltext)
+            matching_assets = [
+                asset
+                for asset in envelope.article.assets
+                if IEEE_BROWSER_ASSET_URL
+                in {
+                    asset.url,
+                    asset.download_url,
+                    asset.original_url,
+                    asset.source_url,
+                }
+            ]
+            self.assertEqual(len(matching_assets), 1, envelope.article.assets)
+            asset = matching_assets[0]
+            self.assertTrue(asset.path)
+            asset_path = Path(str(asset.path))
+            self.assertTrue(asset_path.is_file(), asset_path)
+            payload = asset_path.read_bytes()
+            self.assertTrue(payload.startswith((b"GIF87a", b"GIF89a")))
+            self.assertGreater(len(payload), 10)
+            self.assertGreater(int.from_bytes(payload[6:8], "little"), 0)
+            self.assertGreater(int.from_bytes(payload[8:10], "little"), 0)
+            self.assertIsNotNone(envelope.markdown)
+            self.assertIn(asset_path.name, envelope.markdown)
+            self.assertNotIn(IEEE_BROWSER_ASSET_URL, envelope.markdown)
 
     def test_elsevier_url_live_recovers_doi_and_uses_official_fulltext(self) -> None:
         self._require_env(*ELSEVIER_SAMPLE.required_env)

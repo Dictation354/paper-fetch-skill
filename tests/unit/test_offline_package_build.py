@@ -28,6 +28,7 @@ class OfflinePackageBuildTests(unittest.TestCase):
         self.assertIn("$bin/paper-fetch", script)
         self.assertIn("$bin/paper-fetch-install-formula-tools", script)
         self.assertIn("cloakbrowser-*.whl", script)
+        self.assertIn("camoufox-*.whl", script)
         self.assertIn("Dependency wheelhouse is missing cloakbrowser-*.whl", script)
         self.assertIn("-m compileall", script)
         self.assertNotIn("copy_source_snapshot", script)
@@ -37,7 +38,7 @@ class OfflinePackageBuildTests(unittest.TestCase):
         self.assertNotIn("-m playwright install chromium", script)
         self.assertIn("Creating macOS tar.gz archive", script)
 
-    def test_posix_manifest_and_readme_document_cdp_browser_policy(self) -> None:
+    def test_posix_manifest_and_readme_document_browser_backend_policy(self) -> None:
         script = BUILD_OFFLINE_PACKAGE.read_text(encoding="utf-8")
         manifest_block = script[
             script.index("payload = {") : script.index(
@@ -50,17 +51,14 @@ class OfflinePackageBuildTests(unittest.TestCase):
         self.assertIn('"python_runtime": "runtime/site-packages"', manifest_block)
         self.assertIn('"command_wrappers": "bin"', manifest_block)
         self.assertIn('"cloakbrowser"', manifest_block)
+        self.assertIn('"camoufox"', manifest_block)
         self.assertIn('"browser_binary": "not_bundled"', manifest_block)
         self.assertIn('"platform": target_platform', manifest_block)
         self.assertIn('"arch": target_arch', manifest_block)
         self.assertIn("README.offline.md", script)
-        self.assertIn(
-            'PAPER_FETCH_BROWSER_USER_AGENT="Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-            script,
-        )
+        self.assertIn("PAPER_FETCH_BROWSER_HEADLESS=false", script)
         self.assertIn("CLOAKBROWSER_CDP_ENDPOINT", script)
-        self.assertIn("CLOAKBROWSER_BINARY_PATH", script)
-        self.assertNotIn('# PAPER_FETCH_BROWSER_USER_AGENT="Mozilla/5.0', script)
+        self.assertNotIn("PAPER_FETCH_BROWSER_USER_AGENT", script)
         self.assertNotIn('"source_snapshot"', manifest_block)
         self.assertNotIn('"wheelhouse_count"', manifest_block)
         self.assertIn("macos_offline_name_prefix", script)
@@ -91,13 +89,15 @@ class OfflinePackageBuildTests(unittest.TestCase):
         self.assertIn("Offline install should not include the build wheelhouse", script)
         self.assertIn("Purge did not remove the install directory", script)
         self.assertIn("import cloakbrowser", script)
+        self.assertIn("import camoufox", script)
         self.assertIn("import playwright", script)
         self.assertIn(
             "from paper_fetch.runtime_browser import BrowserContextManager", script
         )
         self.assertIn('assert hasattr(cloakbrowser, "ensure_binary")', script)
+        self.assertIn('assert hasattr(camoufox, "Camoufox")', script)
         self.assertNotIn('assert hasattr(cloakbrowser, "launch")', script)
-        self.assertIn("CLOAKBROWSER_HEADLESS=true", script)
+        self.assertIn("PAPER_FETCH_BROWSER_HEADLESS=true", script)
         self.assertIn("Antigravity skill was not installed", script)
         self.assertIn("mcp_config.json", script)
         self.assertIn("activate-offline.sh executed shell code", script)
@@ -126,6 +126,9 @@ class OfflinePackageBuildTests(unittest.TestCase):
         self.assertIn(
             'Get-ChildItem -Path $wheelhouse -Filter "cloakbrowser-*.whl"', script
         )
+        self.assertIn(
+            'Get-ChildItem -Path $wheelhouse -Filter "camoufox-*.whl"', script
+        )
         self.assertIn('browser_binary = "not_bundled"', script)
         self.assertIn("Write-OfflineReadme", script)
         self.assertIn("skill_integrity.py", script)
@@ -138,7 +141,7 @@ class OfflinePackageBuildTests(unittest.TestCase):
         self.assertNotIn("Add-PlaywrightChromium", script)
         self.assertNotIn("-m playwright install chromium", script)
 
-    def test_windows_wrappers_and_manifest_publish_cdp_browser_policy(self) -> None:
+    def test_windows_wrappers_and_manifest_publish_browser_backend_policy(self) -> None:
         script = BUILD_OFFLINE_PACKAGE_WINDOWS.read_text(encoding="utf-8")
         wrapper_block = script[
             script.index("function Write-CmdWrappers") : script.index(
@@ -155,15 +158,13 @@ class OfflinePackageBuildTests(unittest.TestCase):
         self.assertIn("paper-fetch-mcp.cmd", wrapper_block)
         self.assertIn('command_wrappers = "bin"', manifest_block)
         self.assertIn("cloakbrowser = [ordered]@{", manifest_block)
+        self.assertIn("camoufox = [ordered]@{", manifest_block)
         self.assertIn("$OfflineEnvKeys", script)
         self.assertIn("env_sets.offline_env_keys", script)
         self.assertIn("Get-DefaultOfflineEnvValue", script)
-        self.assertIn(
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
-            script,
-        )
+        self.assertIn("PAPER_FETCH_BROWSER_HEADLESS", script)
         self.assertIn("CLOAKBROWSER_CDP_ENDPOINT", script)
-        self.assertNotIn("# PAPER_FETCH_BROWSER_USER_AGENT", script)
+        self.assertNotIn("PAPER_FETCH_BROWSER_USER_AGENT", script)
         self.assertNotIn("project_wheels", manifest_block)
         self.assertNotIn("wheelhouse_count", manifest_block)
         self.assertNotIn("source_snapshot", manifest_block)

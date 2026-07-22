@@ -645,11 +645,13 @@ class CiReleaseWorkflowTests(unittest.TestCase):
         workflow = CI_WORKFLOW.read_text(encoding="utf-8")
 
         self.assertIn("import cloakbrowser", workflow)
+        self.assertIn("import camoufox", workflow)
         self.assertIn("import playwright", workflow)
         self.assertIn(
             "from paper_fetch.runtime_browser import BrowserContextManager", workflow
         )
         self.assertIn('assert hasattr(cloakbrowser, "ensure_binary")', workflow)
+        self.assertIn('assert hasattr(camoufox, "Camoufox")', workflow)
         self.assertIn(
             "Invoke-RuntimePythonScript -Script $browserRuntimeCheck", workflow
         )
@@ -664,16 +666,17 @@ class CiReleaseWorkflowTests(unittest.TestCase):
         self.assertIn("runtime/Lib/site-packages/playwright/driver/node.exe", workflow)
         self.assertIn("$mathmlNode --version", workflow)
 
-    def test_offline_ci_verifies_default_browser_user_agent(self) -> None:
+    def test_offline_ci_preserves_default_camoufox_user_agent(self) -> None:
         workflow = CI_WORKFLOW.read_text(encoding="utf-8")
         linux_verify = LINUX_OFFLINE_VERIFY.read_text(encoding="utf-8")
 
-        self.assertIn("PAPER_FETCH_BROWSER_USER_AGENT", workflow)
         self.assertIn(
-            "offline.env managed block does not enable default browser UA", workflow
+            "must not override the default Camoufox fingerprint user agent",
+            workflow,
         )
+        self.assertIn("PAPER_FETCH_BROWSER_HEADLESS", workflow)
         self.assertIn("PAPER_FETCH_BROWSER_USER_AGENT", linux_verify)
-        self.assertIn("Offline install did not enable default browser UA", linux_verify)
+        self.assertIn("must not override the default Camoufox", linux_verify)
 
     def test_linux_offline_ci_verifies_runtime_package_layout(self) -> None:
         workflow = CI_WORKFLOW.read_text(encoding="utf-8")
@@ -718,7 +721,7 @@ class CiReleaseWorkflowTests(unittest.TestCase):
             'CLOAKBROWSER_CDP_ENDPOINT="ws://127.0.0.1:9222/devtools/browser/..."',
             workflow,
         )
-        self.assertIn('CLOAKBROWSER_HEADLESS="false"', workflow)
+        self.assertIn('PAPER_FETCH_BROWSER_HEADLESS="false"', workflow)
         self.assertIn(
             "macOS runtime package must not include source/build path", workflow
         )

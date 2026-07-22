@@ -45,7 +45,8 @@ pf_host_unregister_mcp() {
 
 pf_host_print_registered_note() {
     echo "  2. Codex MCP server '$PF_MCP_NAME' is registered and will launch via the current python3 environment."
-    echo "     Browser-backed providers auto-start cloakbrowser Chrome unless CLOAKBROWSER_CDP_ENDPOINT points at an existing browser."
+    echo "     Browser backend: Camoufox by default; first fetch may download its runtime."
+    echo "     Use PAPER_FETCH_BROWSER_BACKEND=cloakbrowser only for deprecated compatibility."
 }
 
 pf_skill_main "$@"

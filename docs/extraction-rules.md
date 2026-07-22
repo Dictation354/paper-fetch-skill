@@ -555,7 +555,7 @@ metadata
 <a id="rule-browser-primary-image-download-path"></a>
 ### 浏览器工作流图片下载必须使用浏览器上下文或浏览器等价请求头
 
-- 这条规则约束的是：使用 browser workflow 的 provider 在下载正文 figure / table / formula 图片时，必须以 `RuntimeContext` / `BrowserContextManager` 管理的 CDP browser connection 作为主链路；AMS direct HTTP HTML preflight 成功路径例外，但它的正文图片 HTTP 请求必须继承浏览器 UA 和正文 Referer。同一进程内按 browser 配置复用 keyed browser manager，每个阶段或 worker 线程创建隔离的 seeded context/page，preview fallback 也通过同一线程的 context 获取。Atypon/AMS 这类 lazy image 页面里的 `Blank.svg` / `Blank.png` 只允许作为待加载占位信号，不能作为成功正文 asset 保存；当 `download_url` / `full_size_url` 指向真实 `full-*.jpg` 时，下载候选和最终 `source_url` 必须指向真实图片响应。
+- 这条规则约束的是：使用 browser workflow 的 provider 在下载正文 figure / table / formula 图片时，必须以 `RuntimeContext` / browser runtime facade 管理的 selected-browser context 作为主链路；AMS direct HTTP HTML preflight 成功路径例外，但它的正文图片 HTTP 请求必须继承浏览器 UA 和正文 Referer。同一进程内按 browser 配置复用 keyed browser manager，每个阶段创建隔离的 seeded context/page，preview fallback 也通过同一调用线程的 context 获取。Atypon/AMS 这类 lazy image 页面里的 `Blank.svg` / `Blank.png` 只允许作为待加载占位信号，不能作为成功正文 asset 保存；当 `download_url` / `full_size_url` 指向真实 `full-*.jpg` 时，下载候选和最终 `source_url` 必须指向真实图片响应。
 - 如果违反，用户会看到：目标站点明明在浏览器会话里可见图片，系统却因为普通 HTTP challenge 或重复 context 冷启动而稳定缺图，或者所有本地图片都变成相同的 `Blank.png` 占位图。
 - 它对应的阶段是：`asset-download`、`asset-validation`。
 - Owner：`paper_fetch.providers.browser_workflow.fetchers`。
@@ -571,7 +571,7 @@ metadata
     - [`../tests/unit/test_atypon_browser_workflow_provider_retries.py`](../tests/unit/test_atypon_browser_workflow_provider_retries.py) 中的 `test_wiley_provider_download_related_assets_reuses_shared_browser_fetcher_across_assets`
     - [`../tests/unit/test_ams_provider.py`](../tests/unit/test_ams_provider.py) 中的 `test_ams_direct_http_asset_download_uses_browser_seed_without_runtime`
 - 边界说明：
-  - 这条规则目前适用于 `wiley`、`science`、`pnas`、`annualreviews`、`royalsocietypublishing`、`acs`、`iop`、`aip`、`mdpi` 的 browser workflow HTML 成功路径；AMS direct HTTP HTML 成功路径不启动 CDP browser，但仍必须传递 browser-equivalent seed。
+  - 这条规则目前适用于 `wiley`、`science`、`pnas`、`annualreviews`、`royalsocietypublishing`、`acs`、`iop`、`aip`、`mdpi` 的 browser workflow HTML 成功路径；AMS direct HTTP HTML 成功路径不启动浏览器，但仍必须传递 browser-equivalent seed。
   - 它不改变 `elsevier` XML、`springer` direct HTML 或 PDF fallback 的下载语义。
 
 <a id="rule-table-flatten-or-list"></a>
@@ -1584,7 +1584,7 @@ PNAS 的 supplementary 资产范围见 [Supplementary discovery 必须来自明�
 <a id="rule-mdpi-body-semantics-chrome-removal"></a>
 ### MDPI article body 必须保留正文语义并移除 chrome
 
-- 这条规则约束的是：MDPI CDP browser HTML 只能从 article container 中抽取题名、摘要、正文 section、references、figures、tables、formula 和明确 supplementary section；article menu、下载按钮、分享/引用/metrics、SciProfiles 等站点 chrome 不能进入最终 Markdown，也不能通过全页后缀扫描把正文外链接误判为 supplementary；`#html-keywords` 只进入 `metadata.keywords`，不能进入 Abstract 或独立 Markdown section。
+- 这条规则约束的是：MDPI selected-browser HTML 只能从 article container 中抽取题名、摘要、正文 section、references、figures、tables、formula 和明确 supplementary section；article menu、下载按钮、分享/引用/metrics、SciProfiles 等站点 chrome 不能进入最终 Markdown，也不能通过全页后缀扫描把正文外链接误判为 supplementary；`#html-keywords` 只进入 `metadata.keywords`，不能进入 Abstract 或独立 Markdown section。
 - 如果违反，用户会看到：`Browse Figures`、`Download PDF`、`Article Metrics`、`Share and Cite` 等站点 chrome 混入正文，摘要标题后的单独冒号或 `Keywords:` 残留到正文，`data-nested="2"` 的小节被错误渲染成四级 heading，或者 `asset_profile=body` 下载到正文 scope 外的 supplementary 文件。
 - 它对应的阶段是：`provider-html-or-xml-extraction`、`html-cleanup`、`asset-discovery`、`markdown-normalization`。
 - Owner：`paper_fetch.providers._mdpi_html` compatibility facade；canonical owner 是 `paper_fetch.providers._mdpi_dom` / `paper_fetch.providers._mdpi_assets` / `paper_fetch.providers._mdpi_markdown`。
@@ -1616,7 +1616,7 @@ PNAS 的 supplementary 资产范围见 [Supplementary discovery 必须来自明�
 <a id="rule-iop-body-challenge-cleanup"></a>
 ### IOP article HTML 必须拒绝 challenge 并清理站点 chrome
 
-- 这条规则约束的是：IOPScience CDP browser HTML 只能从 article body / `articleBody` 语义容器中抽取题名、摘要、正文 section、body table、formula image、figure caption 和 references；`Download PDF`、metrics、citation/export、导航、相关内容和 Radware/hCaptcha challenge 页面不能进入最终 Markdown。
+- 这条规则约束的是：IOPScience selected-browser HTML 只能从 article body / `articleBody` 语义容器中抽取题名、摘要、正文 section、body table、formula image、figure caption 和 references；`Download PDF`、metrics、citation/export、导航、相关内容和 Radware/hCaptcha challenge 页面不能进入最终 Markdown。
 - 如果违反，用户会看到：Radware Bot Manager / hCaptcha 页面被当成正文，或者 `Download PDF`、`Article metrics`、`Export citation` 等 IOPScience 操作文案混入 article Markdown。
 - 它对应的阶段是：`provider-html-or-xml-extraction`、`html-cleanup`、`availability-quality`、`markdown-normalization`。
 - Owner：`paper_fetch.providers._iop_html` 与 `paper_fetch.providers.iop`。

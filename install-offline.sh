@@ -29,17 +29,16 @@ MCP_ENV_KEYS=(
   PAPER_FETCH_FORMULA_TOOLS_DIR
   PAPER_FETCH_IMAGE_TOOLS_DIR
   MATHML_TO_LATEX_NODE_BIN
-  CLOAKBROWSER_HEADLESS
+  PAPER_FETCH_BROWSER_HEADLESS
 )
 OFFLINE_ENV_KEYS=(
   PAPER_FETCH_DOWNLOAD_DIR
   PAPER_FETCH_FORMULA_TOOLS_DIR
   PAPER_FETCH_IMAGE_TOOLS_DIR
   MATHML_TO_LATEX_NODE_BIN
-  CLOAKBROWSER_HEADLESS
+  PAPER_FETCH_BROWSER_HEADLESS
   PYTHONUTF8
   PYTHONIOENCODING
-  PAPER_FETCH_BROWSER_USER_AGENT
 )
 SHELL_ENV_KEYS=(
   PAPER_FETCH_ENV_FILE
@@ -47,7 +46,7 @@ SHELL_ENV_KEYS=(
   PAPER_FETCH_FORMULA_TOOLS_DIR
   PAPER_FETCH_IMAGE_TOOLS_DIR
   MATHML_TO_LATEX_NODE_BIN
-  CLOAKBROWSER_HEADLESS
+  PAPER_FETCH_BROWSER_HEADLESS
   PYTHONUTF8
   PYTHONIOENCODING
 )
@@ -57,7 +56,7 @@ ACTIVATE_ENV_KEYS=(
   PAPER_FETCH_FORMULA_TOOLS_DIR
   PAPER_FETCH_IMAGE_TOOLS_DIR
   MATHML_TO_LATEX_NODE_BIN
-  CLOAKBROWSER_HEADLESS
+  PAPER_FETCH_BROWSER_HEADLESS
   PYTHONUTF8
   PYTHONIOENCODING
 )
@@ -182,9 +181,9 @@ Options:
   -h, --help              Show this help.
 
 Environment:
-  CLOAKBROWSER_HEADLESS     Set to false for a headful managed CloakBrowser runtime.
+  PAPER_FETCH_BROWSER_HEADLESS Set to false for a headful managed browser runtime.
   CLOAKBROWSER_CDP_ENDPOINT Optional endpoint for an already-running Chrome/CloakBrowser.
-                            When unset, paper-fetch downloads/starts a managed Chrome via cloakbrowser.
+                            Used only with explicit PAPER_FETCH_BROWSER_BACKEND=cloakbrowser.
 EOF
 }
 
@@ -196,14 +195,14 @@ normalize_mcp_env_keys() {
       PLAYWRIGHT_BROWSERS_PATH|CLOAKBROWSER_BINARY_PATH|CLOAKBROWSER_PROFILE_DIR|CLOAKBROWSER_USER_DATA_DIR)
         continue
         ;;
-      CLOAKBROWSER_HEADLESS)
+      PAPER_FETCH_BROWSER_HEADLESS)
         seen_headless=1
         ;;
     esac
     filtered+=("$key")
   done
   if [ "$seen_headless" != "1" ]; then
-    filtered+=(CLOAKBROWSER_HEADLESS)
+    filtered+=(PAPER_FETCH_BROWSER_HEADLESS)
   fi
   MCP_ENV_KEYS=("${filtered[@]}")
 }
@@ -466,16 +465,12 @@ mathml_node_bin() {
   fi
 }
 
-cloakbrowser_headless_value() {
+browser_headless_value() {
   if [ "$PRESET" = "headful" ]; then
     printf 'false\n'
   else
     printf 'true\n'
   fi
-}
-
-browser_user_agent_value() {
-  printf 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36\n'
 }
 
 installer_env_value() {
@@ -488,8 +483,7 @@ installer_env_value() {
     PAPER_FETCH_FORMULA_TOOLS_DIR) printf '%s\n' "$INSTALL_ROOT/formula-tools" ;;
     PAPER_FETCH_IMAGE_TOOLS_DIR) printf '%s\n' "$INSTALL_ROOT/image-tools" ;;
     MATHML_TO_LATEX_NODE_BIN) mathml_node_bin ;;
-    CLOAKBROWSER_HEADLESS) cloakbrowser_headless_value ;;
-    PAPER_FETCH_BROWSER_USER_AGENT) browser_user_agent_value ;;
+    PAPER_FETCH_BROWSER_HEADLESS) browser_headless_value ;;
     *) die "Unknown installer env key: $key" ;;
   esac
 }
@@ -947,7 +941,7 @@ write_managed_env_file() {
 write_activate_script() {
   local target="$INSTALL_ROOT/activate-offline.sh"
   local default_env_line headless_value reuse_env_value key
-  headless_value="$(cloakbrowser_headless_value)"
+  headless_value="$(browser_headless_value)"
 
   if [ "$REUSE_ENV_FILE" = "1" ]; then
     default_env_line="PAPER_FETCH_DEFAULT_ENV_FILE=$(quote_env_value "$OFFLINE_ENV_FILE")"
@@ -1036,8 +1030,8 @@ paper_fetch_export_default() {
     MATHML_TO_LATEX_NODE_BIN)
       [ -n "\${MATHML_TO_LATEX_NODE_BIN:-}" ] || export MATHML_TO_LATEX_NODE_BIN="\$value"
       ;;
-    CLOAKBROWSER_HEADLESS)
-      [ -n "\${CLOAKBROWSER_HEADLESS:-}" ] || export CLOAKBROWSER_HEADLESS="\$value"
+    PAPER_FETCH_BROWSER_HEADLESS)
+      [ -n "\${PAPER_FETCH_BROWSER_HEADLESS:-}" ] || export PAPER_FETCH_BROWSER_HEADLESS="\$value"
       ;;
     PYTHONUTF8)
       [ -n "\${PYTHONUTF8:-}" ] || export PYTHONUTF8="\$value"
@@ -1062,7 +1056,7 @@ paper_fetch_default_value() {
         command -v node 2>/dev/null || printf 'node\\n'
       fi
       ;;
-    CLOAKBROWSER_HEADLESS) printf '%s\\n' "$headless_value" ;;
+    PAPER_FETCH_BROWSER_HEADLESS) printf '%s\\n' "$headless_value" ;;
     PYTHONUTF8) printf '1\\n' ;;
     PYTHONIOENCODING) printf 'utf-8\\n' ;;
   esac
@@ -1237,8 +1231,10 @@ main() {
   echo "Shell startup file updated: $SHELL_STARTUP_TARGET"
   echo "Install directory: $INSTALL_ROOT"
   echo "Open a new shell, or activate the current one with: source $INSTALL_ROOT/activate-offline.sh"
-  echo "CloakBrowser headless: $(cloakbrowser_headless_value)"
-  echo "Browser-backed providers auto-start cloakbrowser Chrome unless CLOAKBROWSER_CDP_ENDPOINT points at an existing browser."
+  echo "Default browser backend: Camoufox (headless: $(browser_headless_value))"
+  echo "The first real fetch may download the Camoufox runtime; doctor and provider status never download it."
+  echo "For a fully offline host, preinstall the complete Camoufox runtime before fetching."
+  echo "Set PAPER_FETCH_BROWSER_BACKEND=cloakbrowser only for the deprecated compatibility backend."
   echo "Restart Codex, Claude Code, and the Antigravity CLI so they rescan skills and MCP registration."
   echo "Elsevier setup: request a key at https://dev.elsevier.com/, then add ELSEVIER_API_KEY=\"...\" to $OFFLINE_ENV_FILE before fetching Elsevier papers."
 }

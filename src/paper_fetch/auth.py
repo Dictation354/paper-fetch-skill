@@ -5,12 +5,13 @@ from __future__ import annotations
 from dataclasses import dataclass, replace
 import re
 from pathlib import Path
+from typing import Any
 from collections.abc import Callable, Mapping
 
 from .config import (
+    BROWSER_HEADLESS_ENV_VAR,
+    BROWSER_TIMEOUT_MS_ENV_VAR,
     BROWSER_USER_AGENT_ENV_VAR,
-    CLOAKBROWSER_HEADLESS_ENV_VAR,
-    CLOAKBROWSER_TIMEOUT_MS_ENV_VAR,
     WILEY_STORAGE_STATE_JSON_ENV_VAR,
     build_runtime_env,
 )
@@ -24,11 +25,14 @@ from .providers.browser_runtime import (
 )
 from .providers.browser_runtime.paths import (
     runtime_with_default_storage_profile,
-    storage_context_options,
+)
+from .providers.browser_runtime.context import context_options_for_config
+from .providers.browser_runtime.camoufox_manager import (
+    CamoufoxPersistentContextManager,
 )
 from .providers.base import ProviderFailure
 from .reason_codes import ERROR
-from .runtime_browser import BrowserContextManager, browser_context_options
+from .runtime_browser import BrowserContextManager
 from .utils import normalize_text, provider_display_name
 
 
@@ -243,12 +247,12 @@ def authenticate_provider_profile(
     active_url = target_url or auth_target.url
 
     runtime_env = build_runtime_env()
-    runtime_env[CLOAKBROWSER_HEADLESS_ENV_VAR] = "0"
+    runtime_env[BROWSER_HEADLESS_ENV_VAR] = "0"
     legacy_storage_env_var = _LEGACY_AUTH_STORAGE_STATE_ENV_VARS.get(provider_key)
     if legacy_storage_env_var is not None:
         runtime_env.pop(legacy_storage_env_var, None)
     if timeout_ms is not None:
-        runtime_env[CLOAKBROWSER_TIMEOUT_MS_ENV_VAR] = str(timeout_ms)
+        runtime_env[BROWSER_TIMEOUT_MS_ENV_VAR] = str(timeout_ms)
     if browser_user_agent:
         runtime_env[BROWSER_USER_AGENT_ENV_VAR] = browser_user_agent
 
@@ -266,25 +270,41 @@ def authenticate_provider_profile(
 
     profile_dir = runtime.profile_dir or runtime.user_data_dir
     resolved_storage_state_path = storage_state_path(runtime)
-    manager = None
+    manager: Any | None = None
     context = None
     page = None
     final_url: str | None = None
     title: str | None = None
     try:
-        manager = BrowserContextManager(
-            binary_path=runtime.binary_path,
-            cdp_endpoint=runtime.cdp_endpoint,
-            profile_dir=runtime.profile_dir,
-            user_data_dir=runtime.user_data_dir,
-        )
-        context = manager.new_context(
-            headless=False,
-            **browser_context_options(
-                user_agent=normalize_text(runtime.user_agent),
-                **storage_context_options(runtime),
-            ),
-        )
+        if runtime.backend == "camoufox":
+            if browser_user_agent:
+                raise ProviderFailure(
+                    ERROR,
+                    "--browser-user-agent cannot be used with Camoufox because it would make the generated Firefox fingerprint inconsistent.",
+                )
+            if profile_dir is None:
+                raise ProviderFailure(
+                    ERROR,
+                    "Camoufox authentication requires a provider profile directory.",
+                )
+            profile_dir.mkdir(parents=True, exist_ok=True)
+            manager = CamoufoxPersistentContextManager(
+                user_data_dir=str(profile_dir),
+                binary_path=runtime.binary_path,
+                headless=False,
+            )
+            context = manager.new_context()
+        else:
+            manager = BrowserContextManager(
+                binary_path=runtime.binary_path,
+                cdp_endpoint=runtime.cdp_endpoint,
+                profile_dir=runtime.profile_dir,
+                user_data_dir=runtime.user_data_dir,
+            )
+            context = manager.new_context(
+                headless=False,
+                **context_options_for_config(runtime),
+            )
         page = context.new_page()
         page.goto(active_url, wait_until="domcontentloaded", timeout=runtime.timeout_ms)
         _wait_for_manual_completion(

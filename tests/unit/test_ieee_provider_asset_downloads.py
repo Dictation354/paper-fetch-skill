@@ -7,7 +7,7 @@ from ._ieee_provider_support import *
 
 
 class IeeeProviderAssetDownloadTests(unittest.TestCase):
-    def test_ieee_download_related_assets_body_profile_passes_body_figures_tables_only(
+    def test_ieee_download_related_assets_body_profile_passes_figure_table_and_formula(
         self,
     ) -> None:
         doi = "10.1109/ACCESS.2024.3352924"
@@ -33,6 +33,15 @@ class IeeeProviderAssetDownloadTests(unittest.TestCase):
         client = IeeeClient(transport, {})
         raw_payload = client.fetch_raw_fulltext(
             doi, {"doi": doi, "landing_page_url": landing_url}
+        )
+        assert raw_payload.content is not None
+        raw_payload.content.extracted_assets.append(
+            {
+                "kind": "formula",
+                "heading": "Formula 1",
+                "url": f"https://ieeexplore.ieee.org/mediastore/IEEE/content/media/{article_number}/{article_number}-formula-1.gif",
+                "section": "body",
+            }
         )
         raw_payload.content.merged_metadata["landing_page_url"] = (
             f"https://doi.org/{doi}"
@@ -62,7 +71,10 @@ class IeeeProviderAssetDownloadTests(unittest.TestCase):
             mocked_download.call_args.kwargs["headers"]["Referer"], landing_url
         )
         passed_assets = mocked_download.call_args.kwargs["assets"]
-        self.assertEqual([item["kind"] for item in passed_assets], ["figure", "table"])
+        self.assertEqual(
+            [item["kind"] for item in passed_assets],
+            ["figure", "table", "formula"],
+        )
         self.assertTrue(all(item["section"] == "body" for item in passed_assets))
         self.assertNotIn("supplementary", {item.get("kind") for item in passed_assets})
 
@@ -111,6 +123,16 @@ class IeeeProviderAssetDownloadTests(unittest.TestCase):
         client = IeeeClient(transport, {})
         raw_payload = client.fetch_raw_fulltext(
             doi, {"doi": doi, "landing_page_url": landing_url}
+        )
+        self.assertEqual(
+            raw_payload.content.markdown_text.count(
+                f"{article_number}-fig-1-large.gif"
+            ),
+            1,
+        )
+        self.assertNotIn(
+            f"{article_number}-fig-1-small.gif",
+            raw_payload.content.markdown_text,
         )
 
         def opener_requester(opener, url, **kwargs):
@@ -381,9 +403,10 @@ class IeeeProviderAssetDownloadTests(unittest.TestCase):
         self.assertTrue(
             all(item["kind"] == "supplementary" for item in result["asset_failures"])
         )
+        self.assertTrue(all(item["reason"] for item in result["asset_failures"]))
         self.assertTrue(
             all(
-                item["reason"] == "login_or_access_html"
+                item.get("content_type") == "text/html; charset=utf-8"
                 for item in result["asset_failures"]
             )
         )

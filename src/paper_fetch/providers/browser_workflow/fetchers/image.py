@@ -18,6 +18,7 @@ from ....extraction.html.signals import (
 )
 from ....quality.reason_codes import CLOUDFLARE_CHALLENGE
 from ....runtime import RuntimeContext
+from ...browser_runtime.types import BrowserRuntimeConfig
 from ....utils import normalize_text
 from ...browser_runtime.types import BrowserFetchedHtml
 from .context import (
@@ -159,6 +160,7 @@ class _SharedBrowserImageDocumentFetcher(_BaseBrowserDocumentFetcher):
         cdp_endpoint: str | None = None,
         profile_dir: Any = None,
         user_data_dir: Any = None,
+        browser_config: BrowserRuntimeConfig | None = None,
     ) -> None:
         super().__init__(
             browser_context_seed_getter=browser_context_seed_getter,
@@ -171,6 +173,7 @@ class _SharedBrowserImageDocumentFetcher(_BaseBrowserDocumentFetcher):
             cdp_endpoint=cdp_endpoint,
             profile_dir=profile_dir,
             user_data_dir=user_data_dir,
+            browser_config=browser_config,
         )
         self._min_width = min_width
         self._min_height = min_height
@@ -761,6 +764,7 @@ class _ThreadLocalSharedBrowserImageDocumentFetcher(_ThreadLocalSharedDocumentFe
         cdp_endpoint: str | None = None,
         profile_dir: Any = None,
         user_data_dir: Any = None,
+        browser_config: BrowserRuntimeConfig | None = None,
     ) -> None:
         requires_caller_thread = (
             runtime_context is not None and use_runtime_shared_browser
@@ -782,6 +786,7 @@ class _ThreadLocalSharedBrowserImageDocumentFetcher(_ThreadLocalSharedDocumentFe
                 cdp_endpoint=cdp_endpoint,
                 profile_dir=profile_dir,
                 user_data_dir=user_data_dir,
+                browser_config=browser_config,
             ),
         )
 
@@ -800,6 +805,7 @@ def _build_shared_browser_image_fetcher(
     cdp_endpoint: str | None = None,
     profile_dir: Any = None,
     user_data_dir: Any = None,
+    browser_config: BrowserRuntimeConfig | None = None,
 ) -> _ThreadLocalSharedBrowserImageDocumentFetcher:
     return _ThreadLocalSharedBrowserImageDocumentFetcher(
         browser_context_seed_getter=browser_context_seed_getter,
@@ -814,6 +820,7 @@ def _build_shared_browser_image_fetcher(
         cdp_endpoint=cdp_endpoint,
         profile_dir=profile_dir,
         user_data_dir=user_data_dir,
+        browser_config=browser_config,
     )
 
 

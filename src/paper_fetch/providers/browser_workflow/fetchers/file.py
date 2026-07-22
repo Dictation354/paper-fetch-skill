@@ -11,6 +11,7 @@ from ....extraction.html.shared import (
     html_title_snippet as _html_title_snippet,
 )
 from ....runtime import RuntimeContext
+from ...browser_runtime.types import BrowserRuntimeConfig
 from ....utils import normalize_text
 from .context import (
     _BaseBrowserDocumentFetcher,
@@ -34,6 +35,7 @@ class _SharedBrowserFileDocumentFetcher(_BaseBrowserDocumentFetcher):
         cdp_endpoint: str | None = None,
         profile_dir: Any = None,
         user_data_dir: Any = None,
+        browser_config: BrowserRuntimeConfig | None = None,
     ) -> None:
         super().__init__(
             browser_context_seed_getter=browser_context_seed_getter,
@@ -46,6 +48,7 @@ class _SharedBrowserFileDocumentFetcher(_BaseBrowserDocumentFetcher):
             cdp_endpoint=cdp_endpoint,
             profile_dir=profile_dir,
             user_data_dir=user_data_dir,
+            browser_config=browser_config,
         )
 
     def __call__(
@@ -164,6 +167,7 @@ class _ThreadLocalSharedBrowserFileDocumentFetcher(_ThreadLocalSharedDocumentFet
         cdp_endpoint: str | None = None,
         profile_dir: Any = None,
         user_data_dir: Any = None,
+        browser_config: BrowserRuntimeConfig | None = None,
     ) -> None:
         requires_caller_thread = (
             runtime_context is not None and use_runtime_shared_browser
@@ -183,6 +187,7 @@ class _ThreadLocalSharedBrowserFileDocumentFetcher(_ThreadLocalSharedDocumentFet
                 cdp_endpoint=cdp_endpoint,
                 profile_dir=profile_dir,
                 user_data_dir=user_data_dir,
+                browser_config=browser_config,
             ),
         )
 
@@ -200,6 +205,7 @@ def _build_shared_browser_file_fetcher(
     profile_dir: Any = None,
     user_data_dir: Any = None,
     thread_local: bool = False,
+    browser_config: BrowserRuntimeConfig | None = None,
 ) -> _ThreadLocalSharedBrowserFileDocumentFetcher | _SharedBrowserFileDocumentFetcher:
     fetcher_cls: (
         type[_ThreadLocalSharedBrowserFileDocumentFetcher]
@@ -221,4 +227,5 @@ def _build_shared_browser_file_fetcher(
         cdp_endpoint=cdp_endpoint,
         profile_dir=profile_dir,
         user_data_dir=user_data_dir,
+        browser_config=browser_config,
     )

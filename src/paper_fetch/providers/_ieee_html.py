@@ -182,6 +182,12 @@ def _annotate_ieee_inline_media_blocks(article: Tag, source_url: str) -> None:
             block["data-paper-fetch-inline-alt"] = normalize_text(
                 str(asset.get("heading") or asset.get("caption") or "Figure")
             )
+            # The block-level annotation is the canonical inline media node.
+            # Removing nested preview images prevents large+preview duplicates
+            # while retaining captions and links for extraction.
+            for preview in list(block.find_all("img")):
+                if isinstance(preview, Tag):
+                    preview.decompose()
 
 
 def _ieee_marker_counts(article: Tag) -> dict[str, int]:

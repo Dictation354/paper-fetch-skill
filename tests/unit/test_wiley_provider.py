@@ -91,6 +91,7 @@ def test_wiley_browser_workflow_does_not_force_default_http_user_agent(
         fetch_html_with_browser=fake_fetch_html_with_browser,
     )
     env = {
+        config.BROWSER_BACKEND_ENV_VAR: "cloakbrowser",
         config.CLOAKBROWSER_CDP_ENDPOINT_ENV_VAR: "ws://127.0.0.1:9222/devtools/browser/test",
         config.XDG_DATA_HOME_ENV_VAR: str(tmp_path),
     }
@@ -131,6 +132,7 @@ def test_wiley_browser_workflow_uses_explicit_browser_user_agent(
         fetch_html_with_browser=fake_fetch_html_with_browser,
     )
     env = {
+        config.BROWSER_BACKEND_ENV_VAR: "cloakbrowser",
         config.CLOAKBROWSER_CDP_ENDPOINT_ENV_VAR: "ws://127.0.0.1:9222/devtools/browser/test",
         config.XDG_DATA_HOME_ENV_VAR: str(tmp_path),
         config.BROWSER_USER_AGENT_ENV_VAR: chrome_user_agent,

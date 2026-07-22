@@ -86,8 +86,12 @@ _EXPORTS: dict[str, tuple[str, str]] = {
         "build_browser_workflow_pdf_candidates",
     ),
     "download_assets": ("paper_fetch.extraction.html.assets", "download_assets"),
+    "download_browser_backed_related_assets": (
+        ".asset_download",
+        "download_browser_backed_related_assets",
+    ),
     "ensure_runtime_ready": (
-        "paper_fetch.providers._cloakbrowser",
+        "paper_fetch.providers.browser_runtime",
         "ensure_runtime_ready",
     ),
     "extract_pdf_url_from_crossref": (".shared", "extract_pdf_url_from_crossref"),
@@ -112,7 +116,7 @@ _EXPORTS: dict[str, tuple[str, str]] = {
         "fetch_seeded_browser_pdf_payload",
     ),
     "load_runtime_config": (
-        "paper_fetch.providers._cloakbrowser",
+        "paper_fetch.providers.browser_runtime",
         "load_runtime_config",
     ),
     "merge_browser_context_seeds": (
@@ -121,7 +125,7 @@ _EXPORTS: dict[str, tuple[str, str]] = {
     ),
     "merge_provider_owned_authors": (".article", "merge_provider_owned_authors"),
     "probe_runtime_status": (
-        "paper_fetch.providers._cloakbrowser",
+        "paper_fetch.providers.browser_runtime",
         "probe_runtime_status",
     ),
     "rewrite_inline_figure_links": (".html_extraction", "rewrite_inline_figure_links"),

@@ -38,7 +38,7 @@
 
 - 不替代主题检索、文献推荐或综述生成；开放式搜索可先形成候选，当后续需要阅读、总结、比较、核验可读性或获取全文时，再把 DOI、URL、标题、arXiv ID 或引用条目交给 paper-fetch 抓取和核验候选论文全文。
 - 不绕过付费墙或访问授权；可用性取决于 provider、凭据和本机运行环境。
-- Wiley、Science、PNAS、Annual Reviews、Royal Society Publishing、ACS、IOP、AIP、MDPI 的浏览器路径统一使用 CDP browser workflow；未配置外部 endpoint 时由 cloakbrowser 启动受控 Chrome。
+- Wiley、Science、PNAS、Annual Reviews、Royal Society Publishing、ACS、IOP、AIP、MDPI 共用 browser workflow；默认使用原生 Firefox/Juggler Camoufox，已弃用的 CloakBrowser 只能显式选择，见 [`docs/browser-backends.md`](docs/browser-backends.md)。
 - 用户可以自行 fork 后添加新出版社，见 [`onboarding/README.md`](onboarding/README.md)，但是需要人工审核确定全文获取、markdown 转换质量等能力。
 
 ## 效果展示
@@ -174,7 +174,7 @@ Elsevier 官方 XML/API 和 PDF fallback 需要从 <https://dev.elsevier.com/> �
 ELSEVIER_API_KEY="..."
 ```
 
-部分 browser-backed provider 可能需要本机 browser runtime 或手动登录态。默认情况下 paper-fetch 会通过 cloakbrowser 自动下载/定位 Chrome；需要预热或登录时可运行：
+部分 browser-backed provider 可能需要本机 browser runtime 或手动登录态。默认 Camoufox 在第一次实际抓取时可按需下载 runtime；静态诊断不会下载。需要预检或登录时可运行：
 
 ```bash
 paper-fetch browser-preflight
@@ -186,6 +186,7 @@ paper-fetch auth wiley
 ## 文档
 
 - [`docs/deployment.md`](docs/deployment.md)：安装、配置、MCP 注册和更新。
+- [`docs/browser-backends.md`](docs/browser-backends.md)：后端选择、Camoufox runtime、headed 认证、离线准备和 live 验收。
 - [`docs/cli.md`](docs/cli.md)：CLI 输出、artifact、批量抓取和错误码。
 - [`docs/providers.md`](docs/providers.md)：provider 能力、环境变量和运行时配置。
 - [`docs/README.md`](docs/README.md)：完整文档导航。

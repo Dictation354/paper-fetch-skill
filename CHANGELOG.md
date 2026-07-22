@@ -6,17 +6,25 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 3.2.0 - 2026-07-22
+
 ### Added
 
+- Added browser-neutral runtime context/session contracts for native Firefox/Juggler Camoufox and deprecated CloakBrowser, with provider-scoped state and a formal backend guide.
+- Added direct-first selected-browser recovery across IEEE landing, REST HTML, PDF, figure/table/formula assets, multimedia discovery, and supplementary files; recovery is limited to eligible authentication, HTML-challenge, and network failures.
 - Added a daily `dependency-latest` rolling prerelease that resolves the full direct/transitive Python runtime dependency matrix from the latest stable `v*` release, rebuilds all nine offline installers only when the source or resolved wheel set changes, and supports an explicit `force_refresh` recovery run.
 - Added dependency snapshot tooling and contracts for per-target wheel inventories, deterministic cross-platform manifests, dependency-set comparison, and pre-build wheel filename/SHA256 verification.
 
 ### Changed
 
+- Made Camoufox the sole default browser backend. CloakBrowser remains available throughout 3.x only when explicitly selected, emits a one-time `FutureWarning`, and may be removed in 4.0.0; legacy `CLOAKBROWSER_*` variables no longer select it implicitly.
+- Kept backend selection strict with no automatic cross-backend fallback, required every runtime config to carry its backend, and separated Camoufox/CloakBrowser profile state.
+- Constrained Playwright to `<1.61` for the supported `camoufox>=0.5.4,<0.6` combination, reused one thread-affine Camoufox process per runtime context, and optimized full HTML navigation around `commit` plus provider DOM readiness without global image/font/style blocking.
 - Reused the existing Linux, macOS, and Windows offline build jobs for rolling updates with frozen wheelhouses; publishing retargets the fixed prerelease, replaces and verifies its exact installer/manifest/checksum asset set, and treats incomplete or invalid prior assets as a rebuild trigger without changing the stable latest release.
 
 ### Fixed
 
+- Fixed IEEE large/preview media duplication so each normalized inline asset renders once, and distinguished partial asset downloads from batches where every asset failed.
 - Fixed rolling offline builds failing before packaging when clean `setup-python` environments lacked the resolver-only `packaging` dependency; `merge`, `compare`, and pre-build `verify` now remain standard-library bootstrap paths.
 - Fixed rolling prerelease publication against an older stable source commit by using a repository-scoped `ROLLING_RELEASE_TOKEN` for tag and Release mutations while keeping the built-in job token read-only.
 

@@ -5,6 +5,7 @@ node_modules/
 .formula-tools/
 .formula-benchmarks/
 .image-tools/
+.baoyu-skills/
 
 # Python
 .venv/

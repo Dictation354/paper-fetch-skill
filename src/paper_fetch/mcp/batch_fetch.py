@@ -831,6 +831,8 @@ async def _execute_batch_fetch(
                         completed_at=manifest_deps.clock(),
                         error=error,
                     )
+                finally:
+                    runtime_context.close_camoufox_for_current_thread()
 
             def on_completion(
                 event: BatchCompletionEvent[BatchFetchItem, BatchFetchOutcome],

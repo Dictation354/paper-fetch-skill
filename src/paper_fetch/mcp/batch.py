@@ -129,19 +129,22 @@ def _run_batch_check_item(
 ) -> dict[str, Any]:
     from . import fetch_tool
 
-    if mode == "metadata":
-        payload = fetch_tool._call_service_probe_has_fulltext(
-            query, context=context, deps=deps
-        ).to_dict()
-    else:
-        payload = fetch_tool.fetch_paper_payload(
-            query=query,
-            modes=requested_modes,
-            download_dir=None,
-            context=context,
-            deps=deps,
-        )
-    return _batch_check_success_payload(query, payload, mode=mode)
+    try:
+        if mode == "metadata":
+            payload = fetch_tool._call_service_probe_has_fulltext(
+                query, context=context, deps=deps
+            ).to_dict()
+        else:
+            payload = fetch_tool.fetch_paper_payload(
+                query=query,
+                modes=requested_modes,
+                download_dir=None,
+                context=context,
+                deps=deps,
+            )
+        return _batch_check_success_payload(query, payload, mode=mode)
+    finally:
+        context.close_camoufox_for_current_thread()
 
 
 def _run_batch_sync(

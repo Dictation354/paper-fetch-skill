@@ -7,12 +7,150 @@ from paper_fetch.providers import (
     _ieee_html,
     _ieee_metadata,
     _ieee_url,
+    browser_runtime,
 )
 
 from ._ieee_provider_support import *
 
 
 class IeeeProviderRouteTests(unittest.TestCase):
+    def test_landing_nonrecoverable_statuses_do_not_load_browser_runtime(self) -> None:
+        doi = "10.1109/example.landing"
+        landing_url = f"https://doi.org/{doi}"
+        for status in (404, 410, 429, 500):
+            with self.subTest(status=status):
+                client = IeeeClient(
+                    RecordingTransport(
+                        {
+                            ("GET", landing_url): RequestFailure(
+                                status,
+                                f"HTTP {status} for {landing_url}",
+                                url=landing_url,
+                            )
+                        }
+                    ),
+                    {},
+                )
+                with (
+                    mock.patch.object(
+                        ieee_provider.browser_runtime, "load_runtime_config"
+                    ) as mocked_runtime,
+                    self.assertRaises(ieee_provider.ProviderFailure),
+                ):
+                    client._fetch_landing_attempt(
+                        doi, {"doi": doi, "landing_page_url": landing_url}
+                    )
+                mocked_runtime.assert_not_called()
+
+    def test_direct_rest_rate_limit_skips_browser_and_continues_to_pdf(self) -> None:
+        doi = "10.1109/example.429"
+        article_number = "429429"
+        landing_url = f"https://ieeexplore.ieee.org/document/{article_number}/"
+        rest_url = (
+            f"https://ieeexplore.ieee.org/rest/document/{article_number}/"
+            "?logAccess=true"
+        )
+        transport = RecordingTransport(
+            {
+                ("GET", landing_url): {
+                    "status_code": 200,
+                    "headers": {"content-type": "text/html; charset=utf-8"},
+                    "body": _landing_html(
+                        doi=doi, article_number=article_number, dynamic=False
+                    ),
+                    "url": landing_url,
+                },
+                ("GET", rest_url): RequestFailure(
+                    429,
+                    f"HTTP 429 for {rest_url}",
+                    url=rest_url,
+                    retry_after_seconds=30,
+                ),
+            }
+        )
+        client = IeeeClient(transport, {})
+        pdf_result = PdfFetchResult(
+            source_url=f"https://ieeexplore.ieee.org/iel7/{article_number}.pdf",
+            final_url=f"https://ieeexplore.ieee.org/iel7/{article_number}.pdf",
+            pdf_bytes=b"%PDF-1.7 ieee",
+            markdown_text="# IEEE PDF Article\n\n## Results\n\n"
+            + ("PDF body text " * 160),
+            suggested_filename=f"{article_number}.pdf",
+        )
+
+        with (
+            mock.patch.object(client, "_fetch_browser_html_payload") as mocked_browser,
+            mock.patch.object(
+                ieee_provider, "fetch_pdf_over_http", return_value=pdf_result
+            ),
+        ):
+            raw_payload = client.fetch_raw_fulltext(
+                doi, {"doi": doi, "landing_page_url": landing_url}
+            )
+
+        mocked_browser.assert_not_called()
+        self.assertEqual(raw_payload.content.route_kind, "pdf_fallback")
+        article = client.to_article_model({"doi": doi}, raw_payload)
+        self.assertNotIn(
+            "fulltext:ieee_browser_html_fail", article.quality.source_trail
+        )
+        self.assertIn("browser recovery is not eligible", "\n".join(raw_payload.warnings))
+
+    def test_landing_403_uses_selected_browser_and_preserves_seed(self) -> None:
+        doi = "10.1109/ACCESS.2024.3352924"
+        article_number = "10388355"
+        landing_url = f"https://ieeexplore.ieee.org/document/{article_number}/"
+        transport = RecordingTransport(
+            {
+                ("GET", landing_url): RequestFailure(
+                    403,
+                    f"HTTP 403 for {landing_url}",
+                    headers={"content-type": "text/html"},
+                    url=landing_url,
+                )
+            }
+        )
+        client = IeeeClient(transport, {})
+        runtime = mock.Mock(backend="camoufox")
+        browser_result = browser_runtime.BrowserFetchedHtml(
+            source_url=landing_url,
+            final_url=landing_url,
+            html=_landing_html(doi=doi, article_number=article_number).decode("utf-8"),
+            response_status=200,
+            response_headers={"content-type": "text/html"},
+            title="IEEE Dynamic Article",
+            summary="IEEE landing metadata",
+            browser_context_seed={
+                "browser_cookies": [{"name": "sid", "value": "one"}],
+                "browser_final_url": landing_url,
+                "paper_fetch_html_fetcher": "camoufox",
+            },
+        )
+
+        with (
+            mock.patch.object(
+                browser_runtime, "load_runtime_config", return_value=runtime
+            ) as mocked_load,
+            mock.patch.object(
+                browser_runtime,
+                "fetch_html_with_browser",
+                return_value=browser_result,
+            ) as mocked_browser,
+        ):
+            attempt = client._fetch_landing_attempt(
+                doi, {"doi": doi, "landing_page_url": landing_url}
+            )
+
+        self.assertEqual(attempt.article_number, article_number)
+        self.assertEqual(attempt.acquisition_source, "camoufox_browser")
+        self.assertEqual(
+            attempt.browser_context_seed["browser_cookies"][0]["name"], "sid"
+        )
+        self.assertTrue(attempt.diagnostics["browser_attempted"])
+        self.assertEqual(attempt.diagnostics["browser_backend"], "camoufox")
+        mocked_load.assert_called_once()
+        mocked_browser.assert_called_once()
+
     def test_ieee_preferred_provider_is_accepted(self) -> None:
         strategy = FetchStrategy(preferred_providers=["ieee"])
 
@@ -240,9 +378,11 @@ class IeeeProviderRouteTests(unittest.TestCase):
         )
         client = IeeeClient(transport, {})
 
-        raw_payload = client.fetch_raw_fulltext(
-            doi, {"doi": doi, "landing_page_url": landing_url}
-        )
+        with mock.patch.object(browser_runtime, "load_runtime_config") as mocked_load:
+            raw_payload = client.fetch_raw_fulltext(
+                doi, {"doi": doi, "landing_page_url": landing_url}
+            )
+        mocked_load.assert_not_called()
         article = client.to_article_model({"doi": doi}, raw_payload)
 
         self.assertEqual(raw_payload.content.route_kind, "html")
@@ -406,7 +546,8 @@ class IeeeProviderRouteTests(unittest.TestCase):
 
         fake_browser_context = FakeBrowserContext()
         fake_runtime = mock.Mock()
-        fake_runtime.new_playwright_context.return_value = fake_browser_context
+        fake_runtime.env = {"PAPER_FETCH_BROWSER_BACKEND": "cloakbrowser"}
+        fake_runtime.new_browser_context.return_value = fake_browser_context
         client = IeeeClient(RecordingTransport({}), {})
 
         raw_payload = client._fetch_browser_html_payload(
@@ -418,7 +559,7 @@ class IeeeProviderRouteTests(unittest.TestCase):
         )
 
         self.assertEqual(raw_payload.content.route_kind, "html")
-        self.assertEqual(raw_payload.content.fetcher, "playwright_html")
+        self.assertEqual(raw_payload.content.fetcher, "cloakbrowser_ieee_html")
         self.assertEqual(
             raw_payload.content.diagnostics["browser_html"]["payload_source"],
             "rest_response",
@@ -546,7 +687,9 @@ class IeeeProviderRouteTests(unittest.TestCase):
                 ieee_provider,
                 "fetch_pdf_over_http",
                 side_effect=PdfFetchFailure(
-                    "downloaded_file_not_pdf", "Direct PDF did not return a PDF file."
+                    "downloaded_file_not_pdf",
+                    "Direct PDF did not return a PDF file.",
+                    details={"status": 200, "content_type": "text/html"},
                 ),
             ),
             mock.patch.object(

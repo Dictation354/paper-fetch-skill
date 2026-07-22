@@ -19,7 +19,7 @@ DEFAULT_MCP_DOWNLOAD_DIR = DEFAULT_USER_DATA_DIR / "downloads"
 DEFAULT_CLI_DOWNLOAD_DIR = Path("live-downloads")
 DEFAULT_REPO_ROOT = Path(__file__).resolve().parents[2]
 
-DEFAULT_USER_AGENT = "paper-fetch-skill/3.1.3"
+DEFAULT_USER_AGENT = "paper-fetch-skill/3.2.0"
 DEFAULT_PUBLISHER_USER_AGENT = (
     "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
     "(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
@@ -40,6 +40,14 @@ CONFIG_SOURCE_PRECEDENCE = (
 )
 USER_AGENT_ENV_VAR = "PAPER_FETCH_SKILL_USER_AGENT"
 BROWSER_USER_AGENT_ENV_VAR = "PAPER_FETCH_BROWSER_USER_AGENT"
+BROWSER_BACKEND_ENV_VAR = "PAPER_FETCH_BROWSER_BACKEND"
+BROWSER_HEADLESS_ENV_VAR = "PAPER_FETCH_BROWSER_HEADLESS"
+BROWSER_BINARY_PATH_ENV_VAR = "PAPER_FETCH_BROWSER_BINARY_PATH"
+BROWSER_PROFILE_DIR_ENV_VAR = "PAPER_FETCH_BROWSER_PROFILE_DIR"
+BROWSER_USER_DATA_DIR_ENV_VAR = "PAPER_FETCH_BROWSER_USER_DATA_DIR"
+BROWSER_TIMEOUT_MS_ENV_VAR = "PAPER_FETCH_BROWSER_TIMEOUT_MS"
+DEFAULT_BROWSER_BACKEND = "camoufox"
+SUPPORTED_BROWSER_BACKENDS = frozenset({"camoufox", "cloakbrowser"})
 ENV_FILE_ENV_VAR = "PAPER_FETCH_ENV_FILE"
 DOWNLOAD_DIR_ENV_VAR = "PAPER_FETCH_DOWNLOAD_DIR"
 XDG_DATA_HOME_ENV_VAR = "XDG_DATA_HOME"
@@ -61,9 +69,83 @@ CDP_EXTERNAL_NEW_CONTEXT_ENV_VAR = "PAPER_FETCH_CDP_EXTERNAL_NEW_CONTEXT"
 CLOAKBROWSER_PROFILE_DIR_ENV_VAR = "CLOAKBROWSER_PROFILE_DIR"
 CLOAKBROWSER_USER_DATA_DIR_ENV_VAR = "CLOAKBROWSER_USER_DATA_DIR"
 CLOAKBROWSER_TIMEOUT_MS_ENV_VAR = "CLOAKBROWSER_TIMEOUT_MS"
+LEGACY_CLOAKBROWSER_ENV_VARS = (
+    CLOAKBROWSER_HEADLESS_ENV_VAR,
+    CLOAKBROWSER_BINARY_PATH_ENV_VAR,
+    CLOAKBROWSER_CDP_ENDPOINT_ENV_VAR,
+    CLOAKBROWSER_PROFILE_DIR_ENV_VAR,
+    CLOAKBROWSER_USER_DATA_DIR_ENV_VAR,
+    CLOAKBROWSER_TIMEOUT_MS_ENV_VAR,
+)
 AMS_STORAGE_STATE_JSON_ENV_VAR = "PAPER_FETCH_AMS_STORAGE_STATE_JSON"
 WILEY_STORAGE_STATE_JSON_ENV_VAR = "PAPER_FETCH_WILEY_STORAGE_STATE_JSON"
 WILEY_PROFILE_DIR_ENV_VAR = "PAPER_FETCH_WILEY_PROFILE_DIR"
+
+
+@dataclass(frozen=True)
+class BrowserBackendSelection:
+    """Resolved browser backend choice with migration metadata."""
+
+    backend: str
+    explicit: bool
+    deprecated: bool
+    legacy_env_vars: tuple[str, ...] = ()
+
+    @property
+    def notes(self) -> tuple[str, ...]:
+        notes: list[str] = []
+        if self.deprecated:
+            notes.append(
+                "CloakBrowser is deprecated in 3.2.0, remains available throughout "
+                "3.x, and may be removed in 4.0.0."
+            )
+        if self.legacy_env_vars and self.backend != "cloakbrowser":
+            names = ", ".join(self.legacy_env_vars)
+            notes.append(
+                f"Legacy CloakBrowser settings ({names}) do not select the deprecated "
+                f"backend; set {BROWSER_BACKEND_ENV_VAR}=cloakbrowser explicitly to use them."
+            )
+        return tuple(notes)
+
+
+def resolve_browser_backend_selection(
+    env: Mapping[str, str],
+) -> BrowserBackendSelection:
+    """Resolve the backend without probing or importing a browser runtime."""
+
+    raw_value = str(env.get(BROWSER_BACKEND_ENV_VAR, "")).strip()
+    backend = raw_value.lower() or DEFAULT_BROWSER_BACKEND
+    legacy_env_vars = tuple(
+        name for name in LEGACY_CLOAKBROWSER_ENV_VARS if str(env.get(name, "")).strip()
+    )
+    return BrowserBackendSelection(
+        backend=backend,
+        explicit=bool(raw_value),
+        deprecated=bool(raw_value and backend == "cloakbrowser"),
+        legacy_env_vars=legacy_env_vars,
+    )
+
+
+def configured_browser_backend(env: Mapping[str, str]) -> str:
+    """Return the explicitly selected browser backend or the stable default."""
+
+    return resolve_browser_backend_selection(env).backend
+
+
+def browser_env_value(
+    env: Mapping[str, str],
+    generic_name: str,
+    *,
+    legacy_name: str | None = None,
+) -> str:
+    """Resolve a generic browser setting before a backend-specific legacy name."""
+
+    generic = str(env.get(generic_name, "")).strip()
+    if generic or generic_name in env:
+        return generic
+    if legacy_name is None:
+        return ""
+    return str(env.get(legacy_name, "")).strip()
 
 
 def load_env_file(path: Path) -> dict[str, str]:

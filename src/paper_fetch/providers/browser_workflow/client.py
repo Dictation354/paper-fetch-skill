@@ -51,9 +51,8 @@ from .article import (
 )
 from .asset_download import (
     BrowserAssetRecoveryContext,
+    download_browser_backed_related_assets,
     plan_browser_asset_download,
-    retry_failed_browser_assets,
-    run_browser_asset_download_attempt,
 )
 from .profile import ProviderBrowserProfile
 
@@ -528,9 +527,10 @@ class BrowserWorkflowClient(ProviderClient):
                 )
             )
         )
+        camoufox_backend = bool(runtime is not None and runtime.backend == "camoufox")
         asset_download_concurrency = (
             1
-            if external_cdp_endpoint
+            if external_cdp_endpoint or camoufox_backend
             else resolve_asset_download_concurrency(context.env)
         )
         recovery = BrowserAssetRecoveryContext(
@@ -556,7 +556,7 @@ class BrowserWorkflowClient(ProviderClient):
             "transport": self.transport,
             "asset_download_concurrency": asset_download_concurrency,
             "figure_page_fetcher_factory": _MemoizedFigurePageFetcher,
-            "serial_browser_assets": external_cdp_endpoint,
+            "serial_browser_assets": external_cdp_endpoint or camoufox_backend,
         }
         image_fetcher_factory = (
             (lambda **_request: None)
@@ -568,7 +568,7 @@ class BrowserWorkflowClient(ProviderClient):
             if direct_http_asset_mode
             else partial(self._browser_asset_file_fetcher, context)
         )
-        result = run_browser_asset_download_attempt(
+        return download_browser_backed_related_assets(
             plan,
             recovery,
             image_fetcher_factory=image_fetcher_factory,
@@ -576,20 +576,6 @@ class BrowserWorkflowClient(ProviderClient):
             opener_requester=requester,
             deps=self.deps,
         )
-        if result.failures:
-            result = retry_failed_browser_assets(
-                plan,
-                result,
-                recovery,
-                image_fetcher_factory=image_fetcher_factory,
-                file_fetcher_factory=file_fetcher_factory,
-                opener_requester=requester,
-                deps=self.deps,
-            )
-        return {
-            "assets": [*result.body_results, *result.supplementary_results],
-            "asset_failures": result.failures,
-        }
 
     def _browser_asset_image_fetcher(self, context: RuntimeContext, **request):
         profile = self.profile
@@ -610,6 +596,7 @@ class BrowserWorkflowClient(ProviderClient):
             cdp_endpoint=request.get("cdp_endpoint"),
             profile_dir=request.get("profile_dir"),
             user_data_dir=request.get("user_data_dir"),
+            browser_config=request.get("browser_config"),
         )
         # Figures fan out several candidate URLs per asset (full-size, figure
         # page, preview), so the same image URL is frequently fetched more than
@@ -637,6 +624,7 @@ class BrowserWorkflowClient(ProviderClient):
             cdp_endpoint=request.get("cdp_endpoint"),
             profile_dir=request.get("profile_dir"),
             user_data_dir=request.get("user_data_dir"),
+            browser_config=request.get("browser_config"),
             thread_local=True,
         )
 

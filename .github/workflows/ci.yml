@@ -626,7 +626,7 @@ jobs:
       - name: Install browser system dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install "playwright>=1.47,<2"
+          python -m pip install "playwright>=1.47,<1.61"
           python -m playwright install-deps chromium
           sudo apt-get update
           sudo apt-get install -y xvfb
@@ -813,7 +813,7 @@ jobs:
           test -x "$install_root/bin/paper-fetch-install-formula-tools"
           test -x "$install_root/bin/paper-fetch-install-image-tools"
           grep -F -q 'CLOAKBROWSER_CDP_ENDPOINT="ws://127.0.0.1:9222/devtools/browser/..."' "$install_root/offline.env"
-          grep -F -q 'CLOAKBROWSER_HEADLESS="false"' "$install_root/offline.env"
+          grep -F -q 'PAPER_FETCH_BROWSER_HEADLESS="false"' "$install_root/offline.env"
           grep -F -q "PAPER_FETCH_IMAGE_TOOLS_DIR=\"$install_root/image-tools\"" "$install_root/offline.env"
           test -f "$layout_home/.gemini/antigravity-cli/skills/paper-fetch-skill/SKILL.md"
           test -f "$layout_home/.gemini/antigravity-cli/mcp_config.json"
@@ -1157,12 +1157,8 @@ jobs:
           if (-not $offlineEnv.Contains("MATHML_TO_LATEX_NODE_BIN='$offlineEnvRoot/runtime/Lib/site-packages/playwright/driver/node.exe'")) {
             throw "offline.env managed block does not pin bundled MathML Node.`n$offlineEnv"
           }
-          $expectedBrowserUserAgent = "PAPER_FETCH_BROWSER_USER_AGENT='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36'"
-          if (-not $offlineEnv.Contains($expectedBrowserUserAgent)) {
-            throw "offline.env managed block does not enable default browser UA.`n$offlineEnv"
-          }
-          if ($offlineEnv -match "(?m)^\s*#.*PAPER_FETCH_BROWSER_USER_AGENT") {
-            throw "offline.env managed block left default browser UA commented.`n$offlineEnv"
+          if ($offlineEnv -match "(?m)^\s*PAPER_FETCH_BROWSER_USER_AGENT") {
+            throw "offline.env managed block must not override the default Camoufox fingerprint user agent.`n$offlineEnv"
           }
 
           $providerStatusCheck = @'
@@ -1179,10 +1175,12 @@ jobs:
           & $mathmlNode --version | Out-Null
 
           $browserRuntimeCheck = @'
+          import camoufox
           import cloakbrowser
           import playwright
           from paper_fetch.runtime_browser import BrowserContextManager
 
+          assert hasattr(camoufox, "Camoufox")
           assert hasattr(cloakbrowser, "ensure_binary")
           assert BrowserContextManager is not None
           '@
@@ -1194,7 +1192,7 @@ jobs:
             "codex mcp add",
             "PAPER_FETCH_IMAGE_TOOLS_DIR=$installRoot\image-tools",
             "MATHML_TO_LATEX_NODE_BIN=$installRoot\runtime\Lib\site-packages\playwright\driver\node.exe",
-            "CLOAKBROWSER_HEADLESS=true",
+            "PAPER_FETCH_BROWSER_HEADLESS=true",
             "claude mcp remove -s user paper-fetch",
             "claude mcp add -s user"
           )) {

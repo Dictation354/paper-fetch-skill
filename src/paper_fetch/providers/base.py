@@ -858,9 +858,15 @@ class ProviderClient:
             )
 
         if catalog.requires_browser_runtime:
-            from . import _cloakbrowser
+            from ..config import configured_browser_backend
+            from .browser_runtime import probe_runtime_status
 
-            runtime_status = _cloakbrowser.probe_runtime_status(env, provider=self.name)
+            runtime_status = probe_runtime_status(env, provider=self.name)
+            runtime_probe = (
+                "paper_fetch.providers._cloakbrowser.probe_runtime_status"
+                if configured_browser_backend(env) == "cloakbrowser"
+                else "paper_fetch.providers.browser_runtime.probe_runtime_status"
+            )
             if runtime_status.status == ERROR:
                 browser_runtime_status = ERROR
             elif runtime_status.status == READY:
@@ -872,13 +878,13 @@ class ProviderClient:
                     "browser_runtime",
                     browser_runtime_status,
                     (
-                        "CDP browser runtime is configured; CDP connection is not probed."
+                        "Browser runtime is configured; no browser is launched."
                         if browser_runtime_status == OK
-                        else "CDP browser runtime is not configured."
+                        else "Browser runtime is not configured."
                     ),
                     missing_env=runtime_status.missing_env,
                     details={
-                        "probe": "paper_fetch.providers._cloakbrowser.probe_runtime_status",
+                        "probe": runtime_probe,
                         "checks": [check.to_dict() for check in runtime_status.checks],
                     },
                 ),

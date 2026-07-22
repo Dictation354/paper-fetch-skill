@@ -247,7 +247,8 @@ def test_acs_probe_status_uses_browser_runtime_requirements() -> None:
         result = AcsClient(
             transport=None,
             env={
-                "CLOAKBROWSER_CDP_ENDPOINT": "ws://127.0.0.1:9222/devtools/browser/test"
+                "PAPER_FETCH_BROWSER_BACKEND": "cloakbrowser",
+                "CLOAKBROWSER_CDP_ENDPOINT": "ws://127.0.0.1:9222/devtools/browser/test",
             },
         ).probe_status()
 

@@ -17,11 +17,15 @@ from urllib.parse import urlparse
 from bs4 import BeautifulSoup
 
 from ..config import (
+    BROWSER_BINARY_PATH_ENV_VAR,
+    BROWSER_HEADLESS_ENV_VAR,
+    BROWSER_TIMEOUT_MS_ENV_VAR,
     CDP_EXTERNAL_NEW_CONTEXT_ENV_VAR,
     CLOAKBROWSER_BINARY_PATH_ENV_VAR,
     CLOAKBROWSER_CDP_ENDPOINT_ENV_VAR,
     CLOAKBROWSER_HEADLESS_ENV_VAR,
     CLOAKBROWSER_TIMEOUT_MS_ENV_VAR,
+    browser_env_value,
     build_browser_user_agent,
     env_flag_enabled,
     parse_positive_int_env,
@@ -38,9 +42,7 @@ from ..quality.html_signals import looks_like_abstract_redirect
 from ..quality.reason_codes import REDIRECTED_TO_ABSTRACT
 from ..reason_codes import ERROR, NOT_CONFIGURED, OK, READY
 from ..runtime_browser import (
-    BrowserContextManager,
     ManagedBrowserError,
-    browser_context_options,
     browser_page_user_agent,
 )
 from ..reason_codes import (
@@ -49,15 +51,14 @@ from ..reason_codes import (
 )
 from ..utils import normalize_text, provider_display_name, sanitize_filename
 from .browser_runtime.seed import (
-    filter_browser_cookies_for_url,
     merge_browser_context_seeds,
-    normalize_browser_cookies_for_playwright,
 )
 from .browser_runtime.types import (
     BrowserFetchedHtml,
     BrowserRuntimeConfig,
     BrowserRuntimeFailure,
 )
+from .browser_runtime.context import open_browser_context
 from .base import (
     ProviderFailure,
     ProviderStatusResult,
@@ -149,7 +150,11 @@ def _env_flag_false(value: str | None) -> bool:
 
 
 def _configured_binary_path(env: Mapping[str, str]) -> str | None:
-    value = env.get(CLOAKBROWSER_BINARY_PATH_ENV_VAR, "").strip()
+    value = browser_env_value(
+        env,
+        BROWSER_BINARY_PATH_ENV_VAR,
+        legacy_name=CLOAKBROWSER_BINARY_PATH_ENV_VAR,
+    )
     return value or None
 
 
@@ -159,15 +164,19 @@ def _configured_cdp_endpoint(env: Mapping[str, str]) -> str | None:
 
 
 def _configured_user_data_dir(env: Mapping[str, str]) -> Path | None:
-    return _runtime_paths().configured_user_data_dir(env)
+    return _runtime_paths().configured_user_data_dir(env, backend="cloakbrowser")
 
 
 def _default_provider_user_data_dir(env: Mapping[str, str], *, provider: str) -> Path:
-    return _runtime_paths().default_provider_user_data_dir(env, provider=provider)
+    return _runtime_paths().default_provider_user_data_dir(
+        env, provider=provider, backend="cloakbrowser"
+    )
 
 
 def _configured_profile_dir(env: Mapping[str, str], *, provider: str) -> Path | None:
-    return _runtime_paths().configured_profile_dir(env, provider=provider)
+    return _runtime_paths().configured_profile_dir(
+        env, provider=provider, backend="cloakbrowser"
+    )
 
 
 def _configured_storage_state_path(
@@ -177,7 +186,10 @@ def _configured_storage_state_path(
 
 
 def _validate_binary_path(
-    binary_path: str | None, *, require_launch_binary: bool
+    binary_path: str | None,
+    *,
+    require_launch_binary: bool,
+    env_var: str = CLOAKBROWSER_BINARY_PATH_ENV_VAR,
 ) -> None:
     if not require_launch_binary or not binary_path:
         return
@@ -185,12 +197,12 @@ def _validate_binary_path(
     if not path.is_file():
         raise ProviderFailure(
             NOT_CONFIGURED,
-            f"{CLOAKBROWSER_BINARY_PATH_ENV_VAR} is set but does not point to a file: {path}",
+            f"{env_var} is set but does not point to a file: {path}",
         )
     if os.name != "nt" and not os.access(path, os.X_OK):
         raise ProviderFailure(
             NOT_CONFIGURED,
-            f"{CLOAKBROWSER_BINARY_PATH_ENV_VAR} is set but is not executable: {path}",
+            f"{env_var} is set but is not executable: {path}",
         )
 
 
@@ -230,7 +242,13 @@ def load_runtime_config(
     doi: str,
     require_storage_state: bool = False,
 ) -> CloakBrowserRuntimeConfig:
-    headless = not _env_flag_false(env.get(CLOAKBROWSER_HEADLESS_ENV_VAR))
+    headless = not _env_flag_false(
+        browser_env_value(
+            env,
+            BROWSER_HEADLESS_ENV_VAR,
+            legacy_name=CLOAKBROWSER_HEADLESS_ENV_VAR,
+        )
+    )
     artifact_dir = (
         resolve_user_data_dir(env)
         / "publisher-browser-artifacts"
@@ -240,7 +258,15 @@ def load_runtime_config(
     binary_path = _configured_binary_path(env)
     cdp_endpoint = _configured_cdp_endpoint(env)
     _validate_cdp_endpoint(cdp_endpoint, provider=provider)
-    _validate_binary_path(binary_path, require_launch_binary=cdp_endpoint is None)
+    _validate_binary_path(
+        binary_path,
+        require_launch_binary=cdp_endpoint is None,
+        env_var=(
+            BROWSER_BINARY_PATH_ENV_VAR
+            if BROWSER_BINARY_PATH_ENV_VAR in env
+            else CLOAKBROWSER_BINARY_PATH_ENV_VAR
+        ),
+    )
     profile_dir = _configured_profile_dir(env, provider=provider)
     user_data_dir = _configured_user_data_dir(env)
     if cdp_endpoint is None and profile_dir is None and user_data_dir is None:
@@ -258,8 +284,14 @@ def load_runtime_config(
         headless=headless,
         user_agent=build_browser_user_agent(env),
         timeout_ms=parse_positive_int_env(
-            env,
-            CLOAKBROWSER_TIMEOUT_MS_ENV_VAR,
+            {
+                BROWSER_TIMEOUT_MS_ENV_VAR: browser_env_value(
+                    env,
+                    BROWSER_TIMEOUT_MS_ENV_VAR,
+                    legacy_name=CLOAKBROWSER_TIMEOUT_MS_ENV_VAR,
+                )
+            },
+            BROWSER_TIMEOUT_MS_ENV_VAR,
             default=DEFAULT_CLOAKBROWSER_TIMEOUT_MS,
         ),
         binary_path=binary_path,
@@ -268,6 +300,7 @@ def load_runtime_config(
         profile_dir=profile_dir,
         user_data_dir=user_data_dir,
         storage_state_path=storage_state_path,
+        backend="cloakbrowser",
     )
 
 
@@ -295,13 +328,25 @@ def _runtime_probe_details(
         "headless": (
             config.headless
             if config is not None
-            else not _env_flag_false(env.get(CLOAKBROWSER_HEADLESS_ENV_VAR))
+            else not _env_flag_false(
+                browser_env_value(
+                    env,
+                    BROWSER_HEADLESS_ENV_VAR,
+                    legacy_name=CLOAKBROWSER_HEADLESS_ENV_VAR,
+                )
+            )
         ),
         "timeout_ms": config.timeout_ms
         if config is not None
         else parse_positive_int_env(
-            env,
-            CLOAKBROWSER_TIMEOUT_MS_ENV_VAR,
+            {
+                BROWSER_TIMEOUT_MS_ENV_VAR: browser_env_value(
+                    env,
+                    BROWSER_TIMEOUT_MS_ENV_VAR,
+                    legacy_name=CLOAKBROWSER_TIMEOUT_MS_ENV_VAR,
+                )
+            },
+            BROWSER_TIMEOUT_MS_ENV_VAR,
             default=DEFAULT_CLOAKBROWSER_TIMEOUT_MS,
         ),
         "binary_path_configured": bool(
@@ -666,29 +711,16 @@ def _capture_image_payload(
 
 
 def _context_seed(
-    context: Any, *, final_url: str, user_agent: str | None
+    context: Any, *, final_url: str, user_agent: str | None, backend: str
 ) -> dict[str, Any]:
-    already_filtered = False
-    try:
-        cookies = context.cookies([final_url])
-        already_filtered = True
-    except TypeError:
-        try:
-            cookies = context.cookies()
-        except Exception:
-            cookies = []
-    except Exception:
-        cookies = []
-    if not already_filtered:
-        cookies = filter_browser_cookies_for_url(list(cookies or []), final_url)
-    return {
-        "browser_cookies": normalize_browser_cookies_for_playwright(
-            cookies,
-            fallback_url=final_url,
-        ),
-        "browser_user_agent": normalize_text(user_agent) or None,
-        "browser_final_url": final_url,
-    }
+    from .browser_runtime.seed import browser_context_seed_from_session
+
+    return browser_context_seed_from_session(
+        context,
+        final_url=final_url,
+        user_agent=user_agent,
+        backend=backend,
+    )
 
 
 def _safe_close(value: Any) -> None:
@@ -731,7 +763,7 @@ def _save_storage_state(
     result = _runtime_paths().save_storage_state(context, config, filter_url=filter_url)
     if result.get("attempted") and not result.get("saved"):
         logger.debug(
-            "cloakbrowser_storage_state provider=%s action=save_failed path=%s",
+            "browser_storage_state provider=%s action=save_failed path=%s",
             config.provider,
             result.get("path"),
         )
@@ -764,10 +796,16 @@ def fetch_html_with_cloakbrowser(
     latest_browser_context_seed: Mapping[str, Any] | None = None
     latest_storage_state_url: str | None = None
     timeout_ms = max_timeout_ms or config.timeout_ms
-    artifact_dir = config.artifact_dir / "cloakbrowser"
+    backend_name = normalize_text(config.backend).lower()
+    if backend_name not in {"camoufox", "cloakbrowser"}:
+        raise CloakBrowserFailure(
+            "browser_backend_invalid",
+            f"Unsupported browser backend {config.backend!r}.",
+        )
+    artifact_dir = config.artifact_dir / backend_name
     configured_user_agent = normalize_text(config.user_agent)
     trace: dict[str, Any] = {
-        "backend": "cloakbrowser",
+        "backend": backend_name,
         "candidate_count": len(candidate_urls),
         "candidates": [],
         "media_blocking": bool(disable_media),
@@ -787,40 +825,14 @@ def fetch_html_with_cloakbrowser(
         _raise_if_cancelled(runtime_context)
         try:
             connect_started = time.monotonic()
-            context_kwargs = browser_context_options(
-                user_agent=configured_user_agent,
-                **_storage_context_options(config),
+            manager, browser_context = open_browser_context(
+                config,
+                runtime_context=runtime_context,
             )
-            if runtime_context is not None:
-                from ..runtime import RuntimeContext
-
-                if isinstance(runtime_context, RuntimeContext):
-                    browser_context = runtime_context.new_browser_context_for_config(
-                        headless=config.headless,
-                        binary_path=config.binary_path,
-                        cdp_endpoint=config.cdp_endpoint,
-                        external_new_context=config.external_new_context,
-                        profile_dir=config.profile_dir,
-                        user_data_dir=config.user_data_dir,
-                        **context_kwargs,
-                    )
-                else:
-                    browser_context = runtime_context.new_browser_context(
-                        headless=config.headless,
-                        **context_kwargs,
-                    )
-            else:
-                manager = BrowserContextManager(
-                    binary_path=config.binary_path,
-                    cdp_endpoint=config.cdp_endpoint,
-                    external_new_context=config.external_new_context,
-                    profile_dir=config.profile_dir,
-                    user_data_dir=config.user_data_dir,
-                )
-                browser_context = manager.new_context(
-                    headless=config.headless, **context_kwargs
-                )
-            trace["cdp_connect_seconds"] = round(time.monotonic() - connect_started, 3)
+            connect_seconds = round(time.monotonic() - connect_started, 3)
+            trace["browser_connect_seconds"] = connect_seconds
+            if backend_name == "cloakbrowser":
+                trace["cdp_connect_seconds"] = connect_seconds
             external_diagnostics = getattr(
                 browser_context, "_paper_fetch_external_cdp_diagnostics", None
             )
@@ -834,7 +846,11 @@ def fetch_html_with_cloakbrowser(
                     "storage_state_cookie_count": None,
                 }
         except ManagedBrowserError as exc:
-            trace["cdp_connect_seconds"] = round(time.monotonic() - connect_started, 3)
+            trace["browser_connect_seconds"] = round(
+                time.monotonic() - connect_started, 3
+            )
+            if backend_name == "cloakbrowser":
+                trace["cdp_connect_seconds"] = trace["browser_connect_seconds"]
             trace["browser_failure"] = dict(exc.details)
             raise CloakBrowserFailure(
                 exc.code,
@@ -842,7 +858,11 @@ def fetch_html_with_cloakbrowser(
                 details={"trace": trace, "browser_failure": dict(exc.details)},
             ) from exc
         except Exception as exc:
-            trace["cdp_connect_seconds"] = round(time.monotonic() - connect_started, 3)
+            trace["browser_connect_seconds"] = round(
+                time.monotonic() - connect_started, 3
+            )
+            if backend_name == "cloakbrowser":
+                trace["cdp_connect_seconds"] = trace["browser_connect_seconds"]
             message = normalize_text(str(exc)) or "Browser context creation failed."
             raise CloakBrowserFailure(
                 BROWSER_CONTEXT_CREATE_FAILED,
@@ -879,10 +899,12 @@ def fetch_html_with_cloakbrowser(
                 resource_type = normalize_text(
                     str(route.request.resource_type or "")
                 ).lower()
-                if (
-                    disable_media
-                    and resource_type in BROWSER_HTML_BLOCKED_RESOURCE_TYPES
-                ):
+                blocked_types = (
+                    {"media"}
+                    if backend_name == "camoufox"
+                    else BROWSER_HTML_BLOCKED_RESOURCE_TYPES
+                )
+                if disable_media and resource_type in blocked_types:
                     route.abort()
                     return
                 route.continue_()
@@ -907,7 +929,8 @@ def fetch_html_with_cloakbrowser(
             candidate_started = time.monotonic()
             try:
                 logger.debug(
-                    "cloakbrowser_request provider=%s action=request wait_seconds=%s url=%s",
+                    "browser_request backend=%s provider=%s action=request wait_seconds=%s url=%s",
+                    backend_name,
                     publisher,
                     wait_seconds,
                     normalized_url,
@@ -944,7 +967,11 @@ def fetch_html_with_cloakbrowser(
                 else:
                     response = page.goto(
                         normalized_url,
-                        wait_until="domcontentloaded",
+                        wait_until=(
+                            "commit"
+                            if backend_name == "camoufox"
+                            else "domcontentloaded"
+                        ),
                         timeout=timeout_ms,
                     )
                 candidate_trace["navigation_seconds"] = round(
@@ -970,6 +997,14 @@ def fetch_html_with_cloakbrowser(
                         final_url=final_url,
                         user_agent=configured_user_agent
                         or browser_page_user_agent(page),
+                        backend=backend_name,
+                    )
+                    browser_context_seed = merge_browser_context_seeds(
+                        browser_context_seed,
+                        {
+                            "paper_fetch_html_fetcher": backend_name,
+                            "diagnostics": {"browser_backend": backend_name},
+                        },
                     )
                     if browser_context_seed.get(
                         "browser_cookies"
@@ -1033,6 +1068,14 @@ def fetch_html_with_cloakbrowser(
                     browser_context,
                     final_url=final_url,
                     user_agent=configured_user_agent or browser_page_user_agent(page),
+                    backend=backend_name,
+                )
+                browser_context_seed = merge_browser_context_seeds(
+                    browser_context_seed,
+                    {
+                        "paper_fetch_html_fetcher": backend_name,
+                        "diagnostics": {"browser_backend": backend_name},
+                    },
                 )
                 if browser_context_seed.get(
                     "browser_cookies"
@@ -1073,8 +1116,9 @@ def fetch_html_with_cloakbrowser(
                     last_failure = exc
                 else:
                     last_failure = CloakBrowserFailure(
-                        "cloakbrowser_request_failed",
-                        normalize_text(str(exc)) or "CloakBrowser page request failed.",
+                        f"{backend_name}_request_failed",
+                        normalize_text(str(exc))
+                        or f"{backend_name} page request failed.",
                         details={"trace": trace},
                     )
                 continue
@@ -1116,7 +1160,7 @@ def fetch_html_with_cloakbrowser(
                 candidate_trace["block_reason"] = "empty_html_response"
                 last_failure = CloakBrowserFailure(
                     "empty_html_response",
-                    "CloakBrowser returned empty publisher HTML.",
+                    f"{backend_name} returned empty publisher HTML.",
                     browser_context_seed=browser_context_seed,
                     details={"trace": trace},
                 )

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from ._mcp_support import *
+from paper_fetch.providers.browser_runtime.backends import camoufox as camoufox_backend
 
 
 class McpPayloadCacheTests(unittest.TestCase):
@@ -81,7 +82,18 @@ class McpPayloadCacheTests(unittest.TestCase):
             "CROSSREF_MAILTO": "",
             "ELSEVIER_API_KEY": "",
         }
-        with mock.patch.object(mcp_tools, "build_runtime_env", return_value=blank_env):
+        missing_dependencies = {
+            "probe": "unit_test",
+            "packages": {"playwright": False, "camoufox": False},
+        }
+        with (
+            mock.patch.object(mcp_tools, "build_runtime_env", return_value=blank_env),
+            mock.patch.object(
+                camoufox_backend,
+                "_dependency_details",
+                return_value=missing_dependencies,
+            ),
+        ):
             result = mcp_tools.provider_status_tool()
 
         self.assertFalse(result.isError)
@@ -100,7 +112,8 @@ class McpPayloadCacheTests(unittest.TestCase):
         )
         self.assertTrue(
             any(
-                entry["provider"] == "science" and entry["status"] == "ready"
+                entry["provider"] == "science"
+                and entry["status"] == "not_configured"
                 for entry in providers
             )
         )

@@ -28,17 +28,16 @@ $McpEnvKeys = @(
     "PAPER_FETCH_FORMULA_TOOLS_DIR",
     "PAPER_FETCH_IMAGE_TOOLS_DIR",
     "MATHML_TO_LATEX_NODE_BIN",
-    "CLOAKBROWSER_HEADLESS"
+    "PAPER_FETCH_BROWSER_HEADLESS"
 )
 $OfflineEnvKeys = @(
     "PAPER_FETCH_DOWNLOAD_DIR",
     "PAPER_FETCH_FORMULA_TOOLS_DIR",
     "PAPER_FETCH_IMAGE_TOOLS_DIR",
     "MATHML_TO_LATEX_NODE_BIN",
-    "CLOAKBROWSER_HEADLESS",
+    "PAPER_FETCH_BROWSER_HEADLESS",
     "PYTHONUTF8",
     "PYTHONIOENCODING",
-    "PAPER_FETCH_BROWSER_USER_AGENT"
 )
 
 function Write-Log {
@@ -88,13 +87,13 @@ function Normalize-McpEnvKeys {
         )) {
             continue
         }
-        if ($key -eq "CLOAKBROWSER_HEADLESS") {
+        if ($key -eq "PAPER_FETCH_BROWSER_HEADLESS") {
             $seenHeadless = $true
         }
         $filtered.Add($key)
     }
     if (-not $seenHeadless) {
-        $filtered.Add("CLOAKBROWSER_HEADLESS")
+        $filtered.Add("PAPER_FETCH_BROWSER_HEADLESS")
     }
     $script:McpEnvKeys = $filtered.ToArray()
 }
@@ -141,10 +140,6 @@ function ConvertFrom-DotenvValue {
         }
     }
     return $trimmed
-}
-
-function Get-BrowserUserAgent {
-    return "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36"
 }
 
 function Test-RunningOnWindowsPlatform {
@@ -292,10 +287,9 @@ function Get-OfflineEnvValue {
         "PAPER_FETCH_FORMULA_TOOLS_DIR" { return (Join-Path $BundleRoot "formula-tools") }
         "PAPER_FETCH_IMAGE_TOOLS_DIR" { return (Join-Path $BundleRoot "image-tools") }
         "MATHML_TO_LATEX_NODE_BIN" { return (Join-Path $BundleRoot ".venv/Lib/site-packages/playwright/driver/node.exe") }
-        "CLOAKBROWSER_HEADLESS" { return "true" }
+        "PAPER_FETCH_BROWSER_HEADLESS" { return "true" }
         "PYTHONUTF8" { return "1" }
         "PYTHONIOENCODING" { return "utf-8" }
-        "PAPER_FETCH_BROWSER_USER_AGENT" { return (Get-BrowserUserAgent) }
         default { Fail "Unknown offline env key in installer manifest: $Name" }
     }
 }
@@ -303,7 +297,7 @@ function Get-OfflineEnvValue {
 function Format-DotenvAssignment {
     param([string]$Name, [string]$Value)
 
-    if ($Name -in @("PYTHONUTF8", "PYTHONIOENCODING", "CLOAKBROWSER_HEADLESS", "PAPER_FETCH_BROWSER_USER_AGENT")) {
+    if ($Name -in @("PYTHONUTF8", "PYTHONIOENCODING", "PAPER_FETCH_BROWSER_HEADLESS")) {
         return "$Name=$(Quote-DotenvString $Value)"
     }
     return "$Name=$(Quote-DotenvValue $Value)"
@@ -413,8 +407,8 @@ if ([string]::IsNullOrWhiteSpace($env:PAPER_FETCH_IMAGE_TOOLS_DIR)) {
 if ([string]::IsNullOrWhiteSpace($env:MATHML_TO_LATEX_NODE_BIN)) {
     $env:MATHML_TO_LATEX_NODE_BIN = Join-Path $InstallRoot ".venv/Lib/site-packages/playwright/driver/node.exe"
 }
-if ([string]::IsNullOrWhiteSpace($env:CLOAKBROWSER_HEADLESS)) {
-    $env:CLOAKBROWSER_HEADLESS = "true"
+if ([string]::IsNullOrWhiteSpace($env:PAPER_FETCH_BROWSER_HEADLESS)) {
+    $env:PAPER_FETCH_BROWSER_HEADLESS = "true"
 }
 if ([string]::IsNullOrWhiteSpace($env:PYTHONUTF8)) {
     $env:PYTHONUTF8 = "1"
@@ -465,7 +459,7 @@ function Run-SmokeChecks {
     $env:PAPER_FETCH_ENV_FILE = Join-Path $BundleRoot "offline.env"
     $env:PAPER_FETCH_IMAGE_TOOLS_DIR = Join-Path $BundleRoot "image-tools"
     $env:MATHML_TO_LATEX_NODE_BIN = Join-Path $BundleRoot ".venv/Lib/site-packages/playwright/driver/node.exe"
-    $env:CLOAKBROWSER_HEADLESS = "true"
+    $env:PAPER_FETCH_BROWSER_HEADLESS = "true"
     & (Join-Path $BundleRoot ".venv/Scripts/python.exe") -c "from paper_fetch.mcp.fetch_tool import provider_status_payload; payload = provider_status_payload(); assert 'providers' in payload"
     if ($LASTEXITCODE -ne 0) {
         Fail "provider_status_payload smoke check failed."
@@ -509,6 +503,7 @@ Write-Host "Offline installation complete."
 $activateScript = Join-Path $BundleRoot "Activate-Offline.ps1"
 $offlineEnv = Join-Path $BundleRoot "offline.env"
 Write-Host "Activate it with: . $activateScript"
-Write-Host "CloakBrowser headless: true"
-Write-Host "Browser-backed providers auto-start cloakbrowser Chrome unless CLOAKBROWSER_CDP_ENDPOINT points at an existing browser."
+Write-Host "Default browser backend: Camoufox (headless: true)"
+Write-Host "The first real fetch may download Camoufox; fully offline hosts must preinstall its complete runtime."
+Write-Host "Use PAPER_FETCH_BROWSER_BACKEND=cloakbrowser only for deprecated compatibility."
 Write-Host "Elsevier setup: request a key at https://dev.elsevier.com/, then add ELSEVIER_API_KEY=`"...`" to $offlineEnv before fetching Elsevier papers."

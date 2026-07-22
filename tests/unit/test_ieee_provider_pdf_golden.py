@@ -9,6 +9,89 @@ from ._ieee_provider_support import *
 
 
 class IeeeProviderPdfGoldenTests(unittest.TestCase):
+    def test_ieee_pdf_browser_recovery_uses_frozen_allow_list(self) -> None:
+        for status in (404, 410, 429):
+            with self.subTest(status=status):
+                self.assertFalse(
+                    ieee_provider._ieee_pdf_browser_recovery_allowed(
+                        PdfFetchFailure(
+                            "pdf_download_failed",
+                            f"HTTP {status}",
+                            details={
+                                "status": status,
+                                "content_type": "text/html",
+                            },
+                        )
+                    )
+                )
+
+        for failure in (
+            PdfFetchFailure(
+                "pdf_download_failed",
+                "HTTP 403",
+                details={"status": 403, "content_type": "text/html"},
+            ),
+            PdfFetchFailure(
+                "downloaded_file_not_pdf",
+                "HTML challenge",
+                details={
+                    "status": 200,
+                    "content_type": "text/html",
+                    "reason": "publisher_access_challenge",
+                },
+            ),
+            PdfFetchFailure(
+                "pdf_download_failed",
+                "timed out",
+                details={"error_category": "timeout"},
+            ),
+        ):
+            with self.subTest(message=failure.message):
+                self.assertTrue(
+                    ieee_provider._ieee_pdf_browser_recovery_allowed(failure)
+                )
+
+    def test_ieee_direct_pdf_404_does_not_load_browser_runtime(self) -> None:
+        doi = "10.1109/example.404"
+        article_number = "404404"
+        landing_url = f"https://ieeexplore.ieee.org/document/{article_number}/"
+        transport = RecordingTransport({})
+        client = IeeeClient(transport, {})
+        landing_attempt = _ieee_metadata.IeeeLandingAttempt(
+            normalized_doi=doi,
+            landing_url=landing_url,
+            response_url=landing_url,
+            html_text="",
+            merged_metadata={"doi": doi, "article_number": article_number},
+            article_number=article_number,
+            landing_metadata={},
+        )
+        context = RuntimeContext(env={}, transport=transport)
+
+        with (
+            mock.patch.object(
+                ieee_provider,
+                "fetch_pdf_over_http",
+                side_effect=PdfFetchFailure(
+                    "pdf_download_failed",
+                    "HTTP 404",
+                    details={"status": 404, "content_type": "text/html"},
+                ),
+            ),
+            mock.patch.object(
+                ieee_provider.browser_runtime, "load_runtime_config"
+            ) as mocked_runtime,
+            self.assertRaises(PdfFetchFailure),
+        ):
+            client._fetch_pdf_payload(
+                landing_attempt,
+                html_failure_message="HTML unavailable.",
+                warnings=[],
+                context=context,
+            )
+
+        mocked_runtime.assert_not_called()
+
     def test_empty_dynamic_html_falls_back_to_pdf_text_only(self) -> None:
         doi = "10.1109/MPER.1985.5526567"
         article_number = "5526567"
@@ -210,7 +293,7 @@ class IeeeProviderPdfGoldenTests(unittest.TestCase):
         self.assertEqual(article.source, "ieee_pdf")
         self.assertIn("fulltext:ieee_pdf_fallback_ok", article.quality.source_trail)
         diagnostics = raw_payload.content.diagnostics["pdf_fallback"]
-        self.assertEqual(diagnostics["fetcher"], "seeded_browser")
+        self.assertEqual(diagnostics["fetcher"], "camoufox_browser")
         self.assertEqual(
             diagnostics["direct_failure"]["kind"], "downloaded_file_not_pdf"
         )
@@ -263,6 +346,7 @@ class IeeeProviderPdfGoldenTests(unittest.TestCase):
                 side_effect=PdfFetchFailure(
                     "downloaded_file_not_pdf",
                     "Direct PDF fallback candidate did not return a PDF file.",
+                    details={"status": 200, "content_type": "text/html"},
                 ),
             ),
             mock.patch.object(

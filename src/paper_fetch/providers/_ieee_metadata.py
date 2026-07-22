@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import html as html_lib
 import json
 import re
@@ -42,6 +42,9 @@ class IeeeLandingAttempt:
     merged_metadata: dict[str, Any]
     article_number: str
     landing_metadata: dict[str, Any]
+    acquisition_source: str = "direct_http"
+    browser_context_seed: Mapping[str, Any] = field(default_factory=dict)
+    diagnostics: Mapping[str, Any] = field(default_factory=dict)
 
 
 def _boolish(value: Any) -> bool:
@@ -532,9 +535,14 @@ def build_ieee_article_model(
     )
     warnings = list(raw_payload.warnings)
     if asset_failures:
-        warnings.append(
-            f"IEEE related assets were only partially downloaded ({len(asset_failures)} failed)."
-        )
+        if downloaded_assets:
+            warnings.append(
+                f"IEEE related assets were only partially downloaded ({len(asset_failures)} failed)."
+            )
+        else:
+            warnings.append(
+                f"IEEE related assets could not be downloaded ({len(asset_failures)} failed)."
+            )
     if not markdown_text:
         warnings.append("IEEE retrieval did not produce usable Markdown.")
         return metadata_only_article(

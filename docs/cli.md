@@ -31,7 +31,7 @@ paper-fetch fetch --query "10.1186/1471-2105-11-421" \
   --max-tokens full_text
 ```
 
-`--query` 可以是 DOI、论文 landing URL 或标题查询。CLI 默认会优先尝试全文；如果全文不可用，可能返回摘要或 metadata-only 结果。MDPI 的经典数字 URL（例如 `https://www.mdpi.com/2072-4292/18/10/1673`）会先按已知 ISSN 到 journal code 映射推导 DOI；MDPI DOI / DOI URL 也会在 provider 阶段反推对应的数字 article URL，再进入 MDPI CDP browser provider，避免解析阶段被 MDPI direct HTTP/CDN 403 阻断；未知 ISSN 仍按通用 landing URL 解析。URL 中嵌入 DOI 时，resolver 会复用 provider path templates 清理已知 route 后缀，例如 Frontiers 的 `/full` / `/pdf` / `/xml`、IOP 的 `/pdf`、Wiley 的 `/fullpdf` 和 Springer PDF URL 的 `.pdf`，PLOS 这类 `id={doi}` query parameter 也会直接提取 DOI；未知 provider 的 DOI 后缀不会被猜测性剥离。旧式 SICI DOI（例如 `10.1175/1520-0469(1967)024<0241:TEOTAW>2.0.CO;2` 或 Wiley/Blackwell 的 `10.1002/(SICI)...<...>...`）会保留完整 `<...>` / `;` 后缀；对应的 AMS `view/...xml` 或 `downloadpdf/...pdf` URL 可作为 query。官方 PDF fallback 已经下载到真实 PDF 但无法转换成 Markdown 时，会保留已下载的 PDF artifact 并在 warning 中说明 PDF-only 状态，而不是降级成 Crossref metadata-only source。
+`--query` 可以是 DOI、论文 landing URL 或标题查询。CLI 默认会优先尝试全文；如果全文不可用，可能返回摘要或 metadata-only 结果。MDPI 的经典数字 URL（例如 `https://www.mdpi.com/2072-4292/18/10/1673`）会先按已知 ISSN 到 journal code 映射推导 DOI；MDPI DOI / DOI URL 也会在 provider 阶段反推对应的数字 article URL，再进入 MDPI selected-browser provider，避免解析阶段被 MDPI direct HTTP/CDN 403 阻断；未知 ISSN 仍按通用 landing URL 解析。URL 中嵌入 DOI 时，resolver 会复用 provider path templates 清理已知 route 后缀，例如 Frontiers 的 `/full` / `/pdf` / `/xml`、IOP 的 `/pdf`、Wiley 的 `/fullpdf` 和 Springer PDF URL 的 `.pdf`，PLOS 这类 `id={doi}` query parameter 也会直接提取 DOI；未知 provider 的 DOI 后缀不会被猜测性剥离。旧式 SICI DOI（例如 `10.1175/1520-0469(1967)024<0241:TEOTAW>2.0.CO;2` 或 Wiley/Blackwell 的 `10.1002/(SICI)...<...>...`）会保留完整 `<...>` / `;` 后缀；对应的 AMS `view/...xml` 或 `downloadpdf/...pdf` URL 可作为 query。官方 PDF fallback 已经下载到真实 PDF 但无法转换成 Markdown 时，会保留已下载的 PDF artifact 并在 warning 中说明 PDF-only 状态，而不是降级成 Crossref metadata-only source。
 
 上面的命令是临时阅读：正文写 stdout，不归档论文文件。CLI 仍会准备显式的 `./.paper-fetch-tmp` 工作目录，因此不能承诺硬零写盘；完全不落盘请使用 MCP 的临时阅读预设。CLI 没有 cache-only / `prefer_cache` 预设，也没有与 `batch_check(mode="metadata")` 等价的低成本批量 probe。
 
@@ -78,7 +78,7 @@ paper-fetch manifest audit ./papers/example.manifest.json
 
 ## 静态诊断、真实预检与人工认证
 
-`doctor` 汇总 provider 配置、Playwright/CloakBrowser、Chrome/CDP 配置以及 Ghostscript/libvips 的本地状态。它不会启动 Chrome、连接 CDP、访问出版社页面或安装工具：
+`doctor` 汇总 provider 配置、Playwright、所选 CloakBrowser/Camoufox 后端、Chrome/CDP 或本地 Camoufox runtime 配置以及 Ghostscript/libvips 的本地状态。它不会启动浏览器、连接 CDP、下载 Camoufox runtime、访问出版社页面或安装工具：
 
 ```bash
 paper-fetch doctor
@@ -94,7 +94,9 @@ paper-fetch doctor --install-root ~/.local/share/paper-fetch-skill --json
 
 ## Browser 登录态
 
-Browser workflow 优先连接已运行浏览器的 CDP endpoint；未配置时会通过 cloakbrowser 首次下载/定位 Chrome，并自动启动受控 CDP 浏览器。默认 managed 模式在同一进程内复用一个按 provider/browser 配置 keyed 的 browser manager，CLI/MCP 批量并发任务不会为同一个 provider profile 启动多个 Chrome 去抢 `.paper-fetch-profile.lock`；一个 batch 还会保留暂时空闲的 manager，直到 worker 全部终态化，避免条目空档触发反复启停。HTML、PDF fallback 和 browser-backed 资产下载仍各自打开隔离 context/page，并在调用线程建立自己的 CDP 连接，避免跨线程复用 Playwright sync 对象。自动浏览器默认按 publisher 复用本地 `publisher-browser-profiles/<provider>/storage-state.json`，以减少 Science/Wiley 等站点的冷启动 challenge；相关目录变量主要覆盖 managed Chrome 启动目录和 storage-state 保存位置，不承诺完整复用浏览器 profile 的其它状态。需要复用手动验证过的浏览器时，可先启动 Chrome/CloakBrowser 并设置 `CLOAKBROWSER_CDP_ENDPOINT`；外部 CDP 模式以现有 browser context 为准，storage-state 中的 cookies 会尽量注入，UA、viewport 等新 context 参数不保证生效。managed 和外部 CDP 的 runtime-shared browser-backed 资产下载都会串行化，以避免跨线程复用 Playwright sync 对象；普通 HTTP 资产下载仍按配置并发：
+默认后端是原生 Firefox/Juggler Camoufox，HTML、PDF fallback、图片/补充文件、preflight 和 auth 都通过同一 selected-browser facade。CloakBrowser 已弃用，只有显式设置 `PAPER_FETCH_BROWSER_BACKEND=cloakbrowser` 才会使用；两种后端失败时都不会静默切换。完整配置见 [`browser-backends.md`](browser-backends.md)。
+
+显式 CloakBrowser workflow 可以连接已运行浏览器的 CDP endpoint；未配置时由 cloakbrowser 下载/定位 Chrome 并启动受控 CDP 浏览器。managed 模式在同一进程内复用按 provider/browser 配置 keyed 的 manager，HTML、PDF fallback 和 browser-backed 资产仍各自打开隔离 context/page。需要使用下列外部 CDP 配置时，必须同时显式选择已弃用后端：
 
 ```bash
 /path/to/chrome \
@@ -104,6 +106,7 @@ Browser workflow 优先连接已运行浏览器的 CDP endpoint；未配置时�
   --no-first-run
 
 export CLOAKBROWSER_CDP_ENDPOINT="ws://127.0.0.1:9222/devtools/browser/..."
+export PAPER_FETCH_BROWSER_BACKEND="cloakbrowser"
 ```
 
 managed Chrome 启动前会在 `.paper-fetch-profile.lock` 内核验 Chromium 的 `SingletonLock`、`SingletonSocket` 和 `SingletonCookie`。只有当前用户、本地主机且 PID/profile 与 socket 证据共同确认无活跃浏览器时，才把 stale singleton 移入 `<profile>/.paper-fetch-browser-diagnostics/singleton-recovery-*/` 并最多重启一次；活跃、异主机、异 owner 或无法核验的状态绝不删除，并返回 `managed_chrome_profile_in_use`。启动 stderr 只保留有界、脱敏尾部，完整诊断写入同一 diagnostics 根目录。
@@ -115,7 +118,7 @@ paper-fetch auth <provider>
 paper-fetch auth wiley --url "https://onlinelibrary.wiley.com/doi/full/10.1111/example"
 ```
 
-`provider` 来自 browser runtime catalog，例如 `wiley` / `science` / `pnas` / `mdpi` / `royalsocietypublishing` / `annualreviews` / `acs` / `iop` / `aip`。未传 `--url` 时打开内置样例文章；传入 `--url` 时打开用户指定的失败文章页。命令强制 headed 模式，打印 managed Chrome 启动目录和 storage-state 路径，用户在浏览器中完成合法登录或验证后，在终端按 Enter 保存过滤后的本地 storage-state 并退出。AMS 使用 direct HTTP HTML/PDF 路径，不支持 `paper-fetch auth ams`。
+`provider` 来自 browser runtime catalog，例如 `wiley` / `science` / `pnas` / `mdpi` / `royalsocietypublishing` / `annualreviews` / `acs` / `iop` / `aip`。未传 `--url` 时打开内置样例文章；传入 `--url` 时打开用户指定的失败文章页。命令强制 headed 模式，打印所选后端的 profile 和 storage-state 路径，用户在浏览器中完成合法登录或验证后，在终端按 Enter 保存过滤后的本地 storage-state 并退出。AMS 使用 direct HTTP HTML/PDF 路径，不支持 `paper-fetch auth ams`。
 
 如果需要在批量抓取前确认所有 browser-backed provider 的浏览器链路是否能过站点验证，可以先串行运行预检：
 
@@ -128,14 +131,14 @@ paper-fetch browser-preflight --provider wiley --provider science --timeout-ms 1
 
 MCP 的 `browser_preflight` 直接调用同一个 preflight 核心。无参数时与 CLI 一样检查全部 browser provider；单 provider 可传 `provider`，并可同时指定 `test_url`、`timeout_ms`、`browser_user_agent`、`storage_state_path`、`save_storage_state` 和 `detail="full|compact"`。`test_url` / `storage_state_path` 要求显式单 provider；默认 `save_storage_state=true`，因此该 open-world 工具不是只读操作。返回逐 provider `ready/challenge/auth_required/runtime_error/cancelled`、下一步与进度；compact 每项只保留路由字段。一个 provider 失败不抹掉其它已完成结果，取消保留已完成结果并停止后续调度。该工具始终报告未尝试 PDF fallback 和 auth；需要登录或处理 challenge 时只建议用户显式运行 `paper-fetch auth <provider>`。
 
-普通 `paper-fetch fetch --query ...` 抓取在未设置 `CLOAKBROWSER_HEADLESS=0` 且未配置外部 `CLOAKBROWSER_CDP_ENDPOINT` 时默认使用 managed headless Chrome，并确保启动参数包含 `--headless=new`。只有 `paper-fetch auth <provider>`、显式关闭 headless，或连接到已有 headed CDP 浏览器时才会显示浏览器窗口。
+普通 `paper-fetch fetch --query ...` 默认使用 managed headless Camoufox；`PAPER_FETCH_BROWSER_HEADLESS` 控制所选后端。只有 `paper-fetch auth <provider>`、显式关闭 headless，或在显式 CloakBrowser 模式连接已有 headed CDP 浏览器时才显示窗口。
 
 常用参数：
 
 - `--url <url>`：覆盖内置样例文章，打开具体失败文章页。
 - `--timeout-ms <ms>`：设置浏览器导航超时。
-- `--browser-user-agent <ua>`：仅本次认证使用的 browser UA。
-- storage-state 保存位置通过 `CLOAKBROWSER_PROFILE_DIR` 或 `CLOAKBROWSER_USER_DATA_DIR` 覆盖。
+- `--browser-user-agent <ua>`：仅 CloakBrowser 认证使用；Camoufox 会拒绝该参数以保持 Firefox 指纹一致。
+- storage-state 保存位置优先通过 `PAPER_FETCH_BROWSER_PROFILE_DIR` 或 `PAPER_FETCH_BROWSER_USER_DATA_DIR` 覆盖；CloakBrowser 旧变量继续兼容。
 
 storage-state JSON 是主要复用状态，只是本地辅助状态，不绕过权限，也不是跨机器通用凭据；站点 session 可能按时间、网络、设备或浏览器指纹失效。未配置持久凭证不会阻止正常抓取；抓取仍会按当前 browser workflow 和 provider PDF / abstract-only / metadata fallback 运行。手动 auth 后再次抓取同一 provider 会复用同一个 publisher storage-state 文件。
 
@@ -280,7 +283,7 @@ CLI 先在 run lock 内执行只读审计。只有 query、工具版本和关键
 ```json
 {
   "schema_version": 2,
-  "tool_version": "3.1.3",
+  "tool_version": "3.2.0",
   "run_id": "10000000-0000-4000-8000-000000000001",
   "record_id": "20000000-0000-4000-8000-000000000002",
   "index": 2,

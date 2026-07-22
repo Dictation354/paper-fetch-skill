@@ -99,15 +99,14 @@ grep -F -q 'USER_NOTE="keep"' "$INSTALL_ROOT/offline.env"
 grep -F -q 'MATHML_TO_LATEX_NODE_BIN=' "$INSTALL_ROOT/offline.env"
 grep -F -q "PYTHONUTF8=\"1\"" "$INSTALL_ROOT/offline.env"
 grep -F -q "PYTHONIOENCODING=\"utf-8\"" "$INSTALL_ROOT/offline.env"
-expected_browser_user_agent='PAPER_FETCH_BROWSER_USER_AGENT="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36"'
-grep -F -q "$expected_browser_user_agent" "$INSTALL_ROOT/offline.env" || die "Offline install did not enable default browser UA."
-if grep -E -q '^[[:space:]]*#.*PAPER_FETCH_BROWSER_USER_AGENT' "$INSTALL_ROOT/offline.env"; then
-  die "Offline install left default browser UA commented."
+grep -F -q 'PAPER_FETCH_BROWSER_HEADLESS="true"' "$INSTALL_ROOT/offline.env" || die "Offline install did not configure generic browser headless mode."
+if grep -E -q '^[[:space:]]*PAPER_FETCH_BROWSER_USER_AGENT=' "$INSTALL_ROOT/offline.env"; then
+  die "Offline install must not override the default Camoufox fingerprint user agent."
 fi
 
 log "Verifying user shell, skill, and MCP registration"
 grep -F -q "export PAPER_FETCH_ENV_FILE=\"$INSTALL_ROOT/offline.env\"" "$FAKE_HOME/.bashrc"
-grep -F -q "export CLOAKBROWSER_HEADLESS=\"true\"" "$FAKE_HOME/.bashrc"
+grep -F -q "export PAPER_FETCH_BROWSER_HEADLESS=\"true\"" "$FAKE_HOME/.bashrc"
 grep -F -q "$INSTALL_ROOT/bin" "$FAKE_HOME/.bashrc"
 grep -F -q "$INSTALL_ROOT/formula-tools/bin" "$FAKE_HOME/.bashrc"
 grep -F -q "$INSTALL_ROOT/image-tools/bin" "$FAKE_HOME/.bashrc"
@@ -122,7 +121,7 @@ grep -F -q "PAPER_FETCH_ENV_FILE=$INSTALL_ROOT/offline.env" "$FAKE_CLI_LOG"
 grep -F -q "PAPER_FETCH_FORMULA_TOOLS_DIR=$INSTALL_ROOT/formula-tools" "$FAKE_CLI_LOG"
 grep -F -q "PAPER_FETCH_IMAGE_TOOLS_DIR=$INSTALL_ROOT/image-tools" "$FAKE_CLI_LOG"
 grep -F -q "MATHML_TO_LATEX_NODE_BIN=" "$FAKE_CLI_LOG"
-grep -F -q "CLOAKBROWSER_HEADLESS=true" "$FAKE_CLI_LOG"
+grep -F -q "PAPER_FETCH_BROWSER_HEADLESS=true" "$FAKE_CLI_LOG"
 
 "$RUNTIME_PYTHON" - "$FAKE_HOME/.gemini/antigravity-cli/mcp_config.json" "$INSTALL_ROOT" <<'PY'
 import json
@@ -146,7 +145,7 @@ expected = {
     "PAPER_FETCH_FORMULA_TOOLS_DIR": str(install_root / "formula-tools"),
     "PAPER_FETCH_IMAGE_TOOLS_DIR": str(install_root / "image-tools"),
     "MATHML_TO_LATEX_NODE_BIN": str(install_root / "runtime" / "site-packages" / "playwright" / "driver" / "node"),
-    "CLOAKBROWSER_HEADLESS": "true",
+    "PAPER_FETCH_BROWSER_HEADLESS": "true",
 }
 for key, value in expected.items():
     assert env.get(key) == value, (key, env)
@@ -199,11 +198,13 @@ PY
 
 log "Verifying browser runtime package entrypoint"
 "$RUNTIME_PYTHON" - <<'PY'
+import camoufox
 import cloakbrowser
 import playwright
 
 from paper_fetch.runtime_browser import BrowserContextManager
 
+assert hasattr(camoufox, "Camoufox")
 assert hasattr(cloakbrowser, "ensure_binary")
 assert BrowserContextManager is not None
 PY

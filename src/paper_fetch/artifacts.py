@@ -355,14 +355,14 @@ class ArtifactStore:
                     [download_marker(f"{provider_name}_assets_preview_fallback")],
                 )
         if artifacts.asset_failures:
+            asset_failure_message = (
+                f"{provider_display_name(provider_name)} related assets were only partially downloaded "
+                if artifacts.assets
+                else f"{provider_display_name(provider_name)} related assets could not be downloaded "
+            )
             extend_unique(
                 warnings,
-                [
-                    (
-                        f"{provider_display_name(provider_name)} related assets were only partially downloaded "
-                        f"({len(artifacts.asset_failures)} failed)."
-                    )
-                ],
+                [f"{asset_failure_message}({len(artifacts.asset_failures)} failed)."],
             )
             extend_unique(
                 source_trail, [download_marker(f"{provider_name}_asset_failures")]

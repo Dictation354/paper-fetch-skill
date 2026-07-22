@@ -290,8 +290,8 @@ extraction_hints:
   metadata_merge: []
 owner_reuse_exceptions: []
 docs:
-  providers_md_capability_row: "IEEE | Crossref merge + landing metadata | clean-browser HTML -> seeded-browser
-    PDF | HTML body/all assets; PDF fallback is text-only | ieee_html / ieee_pdf"
+  providers_md_capability_row: "IEEE | Crossref merge + landing metadata | direct-first selected-browser
+    HTML/PDF recovery | HTML body/all direct-first browser-recovered assets | ieee_html / ieee_pdf"
   changelog_summary: "Track IEEE implemented provider manifest for Xplore HTML, PDF fallback, and asset
     onboarding sync."
   extraction_rules_summary:

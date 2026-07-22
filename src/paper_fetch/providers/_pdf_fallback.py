@@ -8,7 +8,7 @@ import http.cookiejar
 import urllib.error
 import urllib.parse
 import urllib.request
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
 from collections.abc import Callable, Mapping
@@ -28,6 +28,7 @@ from ..http import (
     PDF_ACCEPT_HEADER,
     RequestCancelledError,
     RequestFailure,
+    classify_network_error,
 )
 from ..http.headers import header_value
 from ..extraction.html.assets.requester import (
@@ -49,6 +50,8 @@ from ._pdf_common import (
     sanitize_storage_state,
 )
 from .browser_runtime.seed import filter_browser_cookies_for_url
+from .browser_runtime.context import open_browser_context
+from .browser_runtime.types import BrowserRuntimeConfig
 import contextlib
 
 PdfFallbackResult = PdfFetchResult
@@ -102,6 +105,7 @@ def _pdf_failure_details_from_response(
     status: int | None,
     headers: Mapping[str, Any] | None,
     body: bytes | bytearray | None,
+    error_category: str | None = None,
 ) -> dict[str, Any]:
     body_bytes = bytes(body or b"") if isinstance(body, (bytes, bytearray)) else b""
     content_type = header_value(headers, "content-type")
@@ -113,6 +117,7 @@ def _pdf_failure_details_from_response(
         "final_url": final_url,
         "status": status,
         "content_type": content_type,
+        "error_category": normalize_text(error_category),
         "title_snippet": title,
         "body_snippet": summary,
     }
@@ -222,6 +227,7 @@ def _request_with_opener(
             None,
             f"Failed to download PDF fallback candidate: {exc.reason or exc}",
             url=url,
+            error_category=classify_network_error(exc),
         ) from exc
 
 
@@ -432,6 +438,7 @@ def fetch_pdf_with_browser(
     profile_dir: Path | str | None = None,
     user_data_dir: Path | str | None = None,
     storage_state_path: Path | None = None,
+    browser_config: BrowserRuntimeConfig | None = None,
     seed_urls: list[str] | None = None,
     allow_pdf_only: bool = False,
     context: RuntimeContext | None = None,
@@ -439,7 +446,11 @@ def fetch_pdf_with_browser(
     _use_runtime_browser: bool = True,
 ) -> PdfFallbackResult:
     _raise_if_cancelled(context)
-    if _allow_thread_handoff and _running_asyncio_loop_active():
+    if (
+        _allow_thread_handoff
+        and _running_asyncio_loop_active()
+        and not (browser_config is not None and browser_config.backend == "camoufox")
+    ):
         with ThreadPoolExecutor(max_workers=1) as executor:
             return executor.submit(
                 fetch_pdf_with_browser,
@@ -457,6 +468,7 @@ def fetch_pdf_with_browser(
                 profile_dir=profile_dir,
                 user_data_dir=user_data_dir,
                 storage_state_path=storage_state_path,
+                browser_config=browser_config,
                 seed_urls=seed_urls,
                 allow_pdf_only=allow_pdf_only,
                 context=context,
@@ -483,6 +495,14 @@ def fetch_pdf_with_browser(
     artifact_dir.mkdir(parents=True, exist_ok=True)
     last_failure: PdfFallbackFailure | None = None
     sanitized_storage_state_path: Path | None = None
+    if browser_config is not None:
+        headless = browser_config.headless
+        binary_path = browser_config.binary_path
+        cdp_endpoint = browser_config.cdp_endpoint
+        external_new_context = browser_config.external_new_context
+        profile_dir = browser_config.profile_dir
+        user_data_dir = browser_config.user_data_dir
+        storage_state_path = storage_state_path or browser_config.storage_state_path
     active_user_agent = normalize_text(browser_user_agent)
     normalized_seed_urls = [
         normalize_text(url) for url in seed_urls or [] if normalize_text(url)
@@ -526,7 +546,17 @@ def fetch_pdf_with_browser(
     manager = None
     browser_context = None
     try:
-        if context is not None and _use_runtime_browser:
+        if browser_config is not None:
+            active_config = replace(
+                browser_config,
+                storage_state_path=sanitized_storage_state_path,
+                persist_storage_state=False,
+            )
+            manager, browser_context = open_browser_context(
+                active_config,
+                runtime_context=context if _use_runtime_browser else None,
+            )
+        elif context is not None and _use_runtime_browser:
             if isinstance(context, RuntimeContext) and any(
                 value is not None
                 for value in (binary_path, cdp_endpoint, profile_dir, user_data_dir)
@@ -821,6 +851,7 @@ def fetch_pdf_over_http(
                 status=exc.status_code,
                 headers=exc.headers,
                 body=exc.body,
+                error_category=str(exc.error_category or ""),
             )
             _write_pdf_failure_html(artifact_dir, exc.body)
             last_failure = PdfFetchFailure(

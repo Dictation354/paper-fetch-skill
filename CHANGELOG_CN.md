@@ -6,17 +6,25 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 3.2.0 - 2026-07-22
+
 ### 新增
 
+- 新增浏览器中立的 runtime context/session 契约，统一承载原生 Firefox/Juggler Camoufox 与已弃用 CloakBrowser，并提供 provider 独立状态和正式后端文档。
+- IEEE landing、REST HTML、PDF、figure/table/formula、multimedia discovery 与 supplementary file 新增 direct-first selected-browser recovery；仅认证失败、HTML challenge 和网络失败进入浏览器恢复。
 - 新增每日 `dependency-latest` 滚动 prerelease：从最新稳定 `v*` Release 解析完整的 Python 直接/传递运行时依赖矩阵，仅在源码或 wheel 集合变化时重建全部 9 个离线安装包，并提供显式 `force_refresh` 恢复入口。
 - 新增依赖快照工具与契约测试，覆盖逐目标 wheel 清单、确定性的跨平台 manifest、依赖集合比较，以及构建前的 wheel 文件名/SHA256 校验。
 
 ### 变更
 
+- Camoufox 改为唯一默认浏览器后端；CloakBrowser 在整个 3.x 中仅可显式选择，首次选择发出一次 `FutureWarning`，最早于 4.0.0 移除；旧 `CLOAKBROWSER_*` 变量不再隐式选择后端。
+- 后端选择保持严格，不做自动跨后端 fallback；所有 runtime config 必须携带 backend，Camoufox/CloakBrowser 状态目录继续隔离。
+- 为 `camoufox>=0.5.4,<0.6` 的已支持组合把 Playwright 约束为 `<1.61`；同一运行时/owning thread 复用 Camoufox 进程，完整 HTML 使用 `commit` 加 provider DOM readiness，且不全局屏蔽图片、字体或样式。
 - 滚动更新复用现有 Linux、macOS 和 Windows 离线构建 job 并消费冻结 wheelhouse；发布阶段移动固定 prerelease tag、精确覆盖并核验安装包/manifest/checksum assets，上一次资产缺失或校验失败时触发重建，同时不改变稳定版 latest Release。
 
 ### 修复
 
+- 修复 IEEE large/preview 内联资源重复渲染，并区分“部分资源失败”和“全部资源未能下载”的警告语义。
 - 修复干净 `setup-python` 环境缺少仅解析阶段使用的 `packaging` 时，滚动离线构建在实际打包前失败的问题；`merge`、`compare` 与构建前 `verify` 现在保持标准库自包含。
 - 修复滚动 prerelease 指向较旧稳定版源码 commit 时的发布权限问题：tag 与 Release 变更改用仓库级 `ROLLING_RELEASE_TOKEN`，同时保持 job 内置 token 只读。
 

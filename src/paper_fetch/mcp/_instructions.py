@@ -25,6 +25,30 @@ DEFAULT_FETCH_NOTES: tuple[str, ...] = (
 )
 
 SKILL_ENVIRONMENT_VARIABLES: tuple[tuple[str, str], ...] = (
+    (
+        "PAPER_FETCH_BROWSER_BACKEND",
+        "Selects camoufox (default) or deprecated cloakbrowser. Selection is strict and never falls back between backends.",
+    ),
+    (
+        "PAPER_FETCH_BROWSER_HEADLESS",
+        "Generic headed/headless setting for the selected managed browser backend.",
+    ),
+    (
+        "PAPER_FETCH_BROWSER_BINARY_PATH",
+        "Optional executable override for the selected browser backend.",
+    ),
+    (
+        "PAPER_FETCH_BROWSER_PROFILE_DIR",
+        "Optional provider storage/profile directory override for the selected backend.",
+    ),
+    (
+        "PAPER_FETCH_BROWSER_USER_DATA_DIR",
+        "Optional fallback provider storage/profile directory override for the selected backend.",
+    ),
+    (
+        "PAPER_FETCH_BROWSER_TIMEOUT_MS",
+        "Generic browser navigation timeout in milliseconds. Defaults to 120000.",
+    ),
     ("ELSEVIER_API_KEY", "Required for official Elsevier full-text access."),
     (
         "WILEY_TDM_CLIENT_TOKEN",
@@ -36,7 +60,7 @@ SKILL_ENVIRONMENT_VARIABLES: tuple[tuple[str, str], ...] = (
     ),
     (
         "PAPER_FETCH_WILEY_PROFILE_DIR",
-        "Optional Wiley profile override; managed default uses provider-scoped storage-state; use CLOAKBROWSER_PROFILE_DIR only to override the managed Chrome startup/storage-state directory or CLOAKBROWSER_CDP_ENDPOINT for an external browser.",
+        "Optional Wiley profile override; the selected backend uses provider-scoped storage-state. CLOAKBROWSER_PROFILE_DIR applies only when the deprecated CloakBrowser backend is explicitly selected.",
     ),
     (
         "CLOAKBROWSER_PROFILE_DIR",
@@ -52,7 +76,7 @@ SKILL_ENVIRONMENT_VARIABLES: tuple[tuple[str, str], ...] = (
     ),
     (
         "CLOAKBROWSER_CDP_ENDPOINT",
-        "Optional Chrome DevTools Protocol endpoint for browser workflows; when set, the existing browser context state wins over new context options and browser-backed asset downloads are serialized; when unset, paper-fetch downloads/starts a managed CloakBrowser Chrome, reuses one process-wide keyed browser manager for matching provider/browser configs, opens thread-owned CDP connections for isolated contexts/pages, and keeps browser-backed asset downloads serialized.",
+        "Deprecated CloakBrowser-only Chrome DevTools Protocol endpoint. It is ignored unless PAPER_FETCH_BROWSER_BACKEND=cloakbrowser is explicitly selected; the default Camoufox path never connects to CDP.",
     ),
     (
         "CLOAKBROWSER_HEADLESS",
@@ -60,11 +84,11 @@ SKILL_ENVIRONMENT_VARIABLES: tuple[tuple[str, str], ...] = (
     ),
     (
         "CLOAKBROWSER_TIMEOUT_MS",
-        "Optional override for CloakBrowser per-request timeout. Defaults to 120000.",
+        "Legacy timeout override read only when deprecated CloakBrowser is explicitly selected. Defaults to 120000.",
     ),
     (
         "PAPER_FETCH_BROWSER_USER_AGENT",
-        "Optional browser/publisher direct User-Agent override; use a normal Chrome UA for publisher CDN or challenge issues.",
+        "Optional CloakBrowser/publisher direct User-Agent override. Camoufox ignores it to preserve a consistent generated Firefox fingerprint.",
     ),
     ("PAPER_FETCH_DOWNLOAD_DIR", "Overrides the default CLI/MCP download directory."),
     ("PAPER_FETCH_RUN_LIVE", "Test-only flag for live publisher integration checks."),

@@ -95,6 +95,7 @@ class PdfFallbackHelperTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmpdir:
             runtime = types.SimpleNamespace(
+                backend="cloakbrowser",
                 artifact_dir=Path(tmpdir),
                 headless=True,
                 user_agent="UnitTest/1.0",

@@ -153,7 +153,16 @@ class AtyponBrowserWorkflowProviderFallbackTests(AtyponBrowserWorkflowProviderTe
             "browser_user_agent": "Mozilla/5.0",
             "browser_final_url": PNAS_SAMPLE.landing_url,
         }
-        mocked_runtime = mock.Mock()
+        mocked_runtime = mock.Mock(
+            return_value=browser_runtime.BrowserRuntimeConfig(
+                provider="pnas",
+                doi=PNAS_SAMPLE.doi,
+                artifact_dir=Path("/tmp/paper-fetch-test-pnas"),
+                headless=True,
+                user_agent=None,
+                backend="camoufox",
+            )
+        )
         mocked_browser = mock.Mock(
             return_value=browser_runtime.BrowserFetchedHtml(
                 source_url=PNAS_SAMPLE.landing_url,
@@ -169,6 +178,7 @@ class AtyponBrowserWorkflowProviderFallbackTests(AtyponBrowserWorkflowProviderTe
         install_browser_workflow_deps(
             client,
             load_runtime_config=mocked_runtime,
+            ensure_runtime_ready=mock.Mock(),
             fetch_html_with_browser=mocked_browser,
             extract_atypon_browser_workflow_markdown=mock.Mock(
                 return_value=(
@@ -190,9 +200,9 @@ class AtyponBrowserWorkflowProviderFallbackTests(AtyponBrowserWorkflowProviderTe
         self.assertIsNotNone(raw_payload.content)
         assert raw_payload.content is not None
         self.assertEqual(raw_payload.content.route_kind, "html")
-        self.assertEqual(raw_payload.content.fetcher, "cloakbrowser")
+        self.assertEqual(raw_payload.content.fetcher, "camoufox")
         self.assertEqual(
-            raw_payload.content.diagnostics["html_fetcher"], "cloakbrowser"
+            raw_payload.content.diagnostics["html_fetcher"], "camoufox"
         )
         self.assertEqual(raw_payload.content.browser_context_seed, seed)
         self.assertIn("fulltext:pnas_html_ok", _payload_source_trail(raw_payload))

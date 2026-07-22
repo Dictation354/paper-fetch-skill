@@ -9,6 +9,7 @@ from .seed import (
     CLOUDFLARE_COOKIE_NAMES,
     _CLOUDFLARE_COOKIE_PREFIXES,
     browser_context_seed_from_mapping,
+    browser_context_seed_from_session,
     browser_context_seed_to_mapping,
     merge_browser_context_seeds,
     normalize_browser_cookie_for_playwright,
@@ -22,7 +23,9 @@ from .types import (
     BrowserRuntimeBackend,
     BrowserRuntimeConfig,
     BrowserRuntimeFailure,
+    BrowserRuntimeSession,
 )
+from .context import browser_context
 
 _API_EXPORTS = {
     "DEFAULT_BROWSER_RUNTIME_BACKEND",
@@ -30,12 +33,14 @@ _API_EXPORTS = {
     "DEFAULT_BROWSER_RUNTIME_WAIT_SECONDS",
     "DEFAULT_BROWSER_RUNTIME_WARM_WAIT_SECONDS",
     "ensure_runtime_ready",
+    "browser_runtime_backend",
     "fetch_html_with_browser",
     "load_runtime_config",
     "probe_runtime_status",
     "save_storage_state",
     "storage_state_path",
     "warm_browser_context",
+    "selected_browser_runtime_backend",
 }
 
 __all__ = [
@@ -51,8 +56,12 @@ __all__ = [
     "BrowserRuntimeBackend",
     "BrowserRuntimeConfig",
     "BrowserRuntimeFailure",
+    "BrowserRuntimeSession",
+    "browser_context",
     "browser_context_seed_from_mapping",
+    "browser_context_seed_from_session",
     "browser_context_seed_to_mapping",
+    "browser_runtime_backend",
     "ensure_runtime_ready",
     "fetch_html_with_browser",
     "load_runtime_config",
@@ -62,6 +71,7 @@ __all__ = [
     "parse_optional_int",
     "probe_runtime_status",
     "save_storage_state",
+    "selected_browser_runtime_backend",
     "storage_state_path",
     "warm_browser_context",
 ]

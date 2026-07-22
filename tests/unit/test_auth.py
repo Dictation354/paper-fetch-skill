@@ -123,7 +123,10 @@ def _install_fake_browser_manager(monkeypatch) -> type[_FakeAuthBrowserManager]:
 def _patch_auth_runtime(
     monkeypatch, tmp_path, env: dict[str, str] | None = None
 ) -> None:
-    runtime_env = {XDG_DATA_HOME_ENV_VAR: str(tmp_path / "xdg")}
+    runtime_env = {
+        "PAPER_FETCH_BROWSER_BACKEND": "cloakbrowser",
+        XDG_DATA_HOME_ENV_VAR: str(tmp_path / "xdg"),
+    }
     if env is not None:
         runtime_env.update(env)
     monkeypatch.setattr(auth, "build_runtime_env", lambda: dict(runtime_env))

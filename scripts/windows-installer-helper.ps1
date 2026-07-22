@@ -23,17 +23,16 @@ $McpEnvKeys = @(
     "PAPER_FETCH_FORMULA_TOOLS_DIR",
     "PAPER_FETCH_IMAGE_TOOLS_DIR",
     "MATHML_TO_LATEX_NODE_BIN",
-    "CLOAKBROWSER_HEADLESS"
+    "PAPER_FETCH_BROWSER_HEADLESS"
 )
 $OfflineEnvKeys = @(
     "PAPER_FETCH_DOWNLOAD_DIR",
     "PAPER_FETCH_FORMULA_TOOLS_DIR",
     "PAPER_FETCH_IMAGE_TOOLS_DIR",
     "MATHML_TO_LATEX_NODE_BIN",
-    "CLOAKBROWSER_HEADLESS",
+    "PAPER_FETCH_BROWSER_HEADLESS",
     "PYTHONUTF8",
     "PYTHONIOENCODING",
-    "PAPER_FETCH_BROWSER_USER_AGENT"
 )
 $InstallerWarnings = New-Object System.Collections.Generic.List[string]
 
@@ -85,13 +84,13 @@ function Normalize-McpEnvKeys {
         )) {
             continue
         }
-        if ($key -eq "CLOAKBROWSER_HEADLESS") {
+        if ($key -eq "PAPER_FETCH_BROWSER_HEADLESS") {
             $seenHeadless = $true
         }
         $filtered.Add($key)
     }
     if (-not $seenHeadless) {
-        $filtered.Add("CLOAKBROWSER_HEADLESS")
+        $filtered.Add("PAPER_FETCH_BROWSER_HEADLESS")
     }
     $script:McpEnvKeys = $filtered.ToArray()
 }
@@ -210,10 +209,6 @@ function ConvertTo-TomlString {
     return '"' + $escaped + '"'
 }
 
-function Get-BrowserUserAgent {
-    return "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36"
-}
-
 function Get-McpEnv {
     $offlineEnv = Join-Path $InstallRoot "offline.env"
     $downloads = Join-Path $InstallRoot "downloads"
@@ -228,7 +223,7 @@ function Get-McpEnv {
         PAPER_FETCH_FORMULA_TOOLS_DIR = (ConvertTo-FullPath $formulaTools)
         PAPER_FETCH_IMAGE_TOOLS_DIR = (ConvertTo-FullPath $imageTools)
         MATHML_TO_LATEX_NODE_BIN = (ConvertTo-FullPath (Get-MathmlToLatexNode))
-        CLOAKBROWSER_HEADLESS = "true"
+        PAPER_FETCH_BROWSER_HEADLESS = "true"
     }
     $ordered = [ordered]@{}
     foreach ($key in $McpEnvKeys) {
@@ -249,10 +244,6 @@ function Set-ProcessRuntimeEnv {
 function Get-OfflineEnvValue {
     param([string]$Name)
 
-    if ($Name -eq "PAPER_FETCH_BROWSER_USER_AGENT") {
-        return (Get-BrowserUserAgent)
-    }
-
     $envMap = Get-McpEnv
     if (-not $envMap.Contains($Name)) {
         throw "Unknown offline env key in installer manifest: $Name"
@@ -263,7 +254,7 @@ function Get-OfflineEnvValue {
 function Format-DotenvAssignment {
     param([string]$Name, [string]$Value)
 
-    if ($Name -in @("PYTHONUTF8", "PYTHONIOENCODING", "CLOAKBROWSER_HEADLESS", "PAPER_FETCH_BROWSER_USER_AGENT")) {
+    if ($Name -in @("PYTHONUTF8", "PYTHONIOENCODING", "PAPER_FETCH_BROWSER_HEADLESS")) {
         return "$Name=$(Quote-DotenvString $Value)"
     }
     return "$Name=$(Quote-DotenvValue $Value)"
@@ -680,10 +671,12 @@ assert "providers" in payload
 '@
 
     $browserRuntimeCheck = @'
+import camoufox
 import cloakbrowser
 import playwright
 from paper_fetch.runtime_browser import BrowserContextManager
 
+assert hasattr(camoufox, "Camoufox")
 assert hasattr(cloakbrowser, "ensure_binary")
 assert BrowserContextManager is not None
 '@

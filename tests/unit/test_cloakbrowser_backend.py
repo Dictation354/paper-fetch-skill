@@ -268,6 +268,7 @@ def _runtime_config(tmp_path):
         artifact_dir=tmp_path / "artifacts",
         headless=True,
         user_agent="paper-fetch-test/1",
+        backend="cloakbrowser",
         timeout_ms=12345,
         cdp_endpoint="ws://127.0.0.1:9222/devtools/browser/test",
     )
@@ -280,6 +281,7 @@ def _runtime_config_without_browser_user_agent(tmp_path):
         artifact_dir=tmp_path / "artifacts",
         headless=True,
         user_agent=None,
+        backend="cloakbrowser",
         timeout_ms=12345,
         cdp_endpoint="ws://127.0.0.1:9222/devtools/browser/test",
     )
@@ -292,6 +294,7 @@ def _wiley_runtime_config(tmp_path):
         artifact_dir=tmp_path / "artifacts",
         headless=True,
         user_agent="paper-fetch-test/1",
+        backend="cloakbrowser",
         timeout_ms=12345,
         cdp_endpoint="ws://127.0.0.1:9222/devtools/browser/test",
     )
@@ -946,13 +949,15 @@ def test_fetch_html_with_fast_browser_returns_pnas_html_when_body_dom_ready_desp
     )
     browser_context = _FakeContext()
     browser_context.page = page
-    runtime_context = RuntimeContext(env={})
+    runtime_context = RuntimeContext(
+        env={"PAPER_FETCH_BROWSER_BACKEND": "cloakbrowser"}
+    )
 
     with mock.patch.object(
         runtime_context,
-        "new_browser_context_for_config",
+        "new_browser_context_for_runtime_config",
         return_value=browser_context,
-    ) as new_browser_context_for_config:
+    ) as new_browser_context_for_runtime_config:
         result = fetch_html_with_fast_browser(
             ["https://www.pnas.org/doi/full/10.1073/pnas.123"],
             publisher="pnas",
@@ -961,7 +966,7 @@ def test_fetch_html_with_fast_browser_returns_pnas_html_when_body_dom_ready_desp
             context=runtime_context,
         )
 
-    new_browser_context_for_config.assert_called_once()
+    new_browser_context_for_runtime_config.assert_called_once()
     assert result.final_url == "https://www.pnas.org/doi/full/10.1073/pnas.123"
     assert "Cloudflare challenge" in result.summary
     assert result.browser_context_seed["browser_user_agent"] == "Mozilla/5.0"
@@ -1164,7 +1169,7 @@ def test_browser_runtime_module_imports() -> None:
     assert hasattr(browser_runtime, "BrowserImagePayload")
     assert (
         browser_runtime.fetch_html_with_browser.paper_fetch_html_fetcher_name
-        == "cloakbrowser"
+        == "selected_browser"
     )
     assert callable(browser_runtime.warm_browser_context)
     assert callable(browser_runtime.load_runtime_config)

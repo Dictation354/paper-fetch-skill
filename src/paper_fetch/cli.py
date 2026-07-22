@@ -1416,7 +1416,7 @@ def _add_auth_arguments(parser: argparse.ArgumentParser) -> None:
         "--timeout-ms",
         type=parse_positive_int_arg,
         default=None,
-        help="CloakBrowser navigation timeout in milliseconds (default: runtime configuration).",
+        help="Browser navigation timeout in milliseconds (default: runtime configuration).",
     )
     parser.add_argument(
         "--browser-user-agent",
@@ -1472,7 +1472,7 @@ def _add_browser_preflight_arguments(parser: argparse.ArgumentParser) -> None:
         "--timeout-ms",
         type=parse_positive_int_arg,
         default=None,
-        help="CloakBrowser navigation timeout in milliseconds (default: runtime configuration).",
+        help="Browser navigation timeout in milliseconds (default: runtime configuration).",
     )
     parser.add_argument(
         "--browser-user-agent",
@@ -1704,7 +1704,8 @@ def build_parser(
         help="Fetch one paper or a query-file batch.",
         description=(
             "Fetch AI-friendly full text for a paper by DOI, URL, or title. "
-            "Use CLOAKBROWSER_CDP_ENDPOINT for browser-backed providers."
+            "Select a managed backend with PAPER_FETCH_BROWSER_BACKEND; "
+            "CLOAKBROWSER_CDP_ENDPOINT remains available for CloakBrowser."
         ),
         parents=[_build_fetch_parent_parser(suppress_defaults=True)],
     )
@@ -1870,8 +1871,8 @@ def _run_auth_namespace(args: argparse.Namespace) -> int:
     if uses_direct_storage_args:
         parser.error(
             "--state-json, --env-file, --no-env-write, and --wait-seconds are unsupported for provider auth; "
-            "auth saves provider-scoped storage-state. Use CLOAKBROWSER_PROFILE_DIR "
-            "or CLOAKBROWSER_USER_DATA_DIR to override that location."
+            "auth saves provider-scoped storage-state. Use PAPER_FETCH_BROWSER_PROFILE_DIR "
+            "or PAPER_FETCH_BROWSER_USER_DATA_DIR to override that location."
         )
     result = authenticate_provider_profile(
         provider=args.provider,

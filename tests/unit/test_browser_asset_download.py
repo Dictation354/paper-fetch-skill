@@ -4,10 +4,17 @@ import base64
 from dataclasses import FrozenInstanceError
 from pathlib import Path
 import threading
+import tempfile
 from types import SimpleNamespace
 from unittest import TestCase, mock
 
-from paper_fetch.extraction.html.assets import FIGURE_KIND, SUPPLEMENTARY_KIND
+from paper_fetch.extraction.html.assets import (
+    FIGURE_KIND,
+    SUPPLEMENTARY_KIND,
+    browser_asset_recovery_allowed,
+    download_assets,
+)
+from paper_fetch.http import RequestFailure
 from paper_fetch.providers.browser_workflow import assets as browser_workflow_assets
 from paper_fetch.providers.browser_workflow.fetchers import (
     image as browser_image_fetcher,
@@ -25,6 +32,285 @@ from tests.unit._browser_workflow_deps import browser_workflow_deps
 
 
 class BrowserWorkflowAssetDownloadTests(TestCase):
+    def test_direct_then_browser_uses_direct_success_without_browser(self) -> None:
+        url = "https://example.test/figure.png"
+        transport = mock.Mock()
+        transport.request.return_value = {
+            "status_code": 200,
+            "headers": {"content-type": "image/png"},
+            "body": png_header(640, 480),
+            "url": url,
+        }
+        browser_fetcher = mock.Mock()
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            result = download_assets(
+                FIGURE_KIND,
+                transport,
+                article_id="10.1109/example",
+                assets=[{"kind": "figure", "url": url, "heading": "Figure 1"}],
+                output_dir=Path(tmpdir),
+                user_agent="test-agent",
+                asset_profile="body",
+                image_document_fetcher=browser_fetcher,
+                fetch_policy="direct_then_browser",
+            )
+
+        self.assertEqual(len(result["assets"]), 1)
+        self.assertEqual(result["asset_failures"], [])
+        self.assertEqual(result["assets"][0]["final_fetcher"], "direct_http")
+        transport.request.assert_called_once()
+        browser_fetcher.assert_not_called()
+
+    def test_direct_then_browser_recovers_401_403_and_html_challenge(self) -> None:
+        url = "https://example.test/figure.png"
+        for direct_response in (
+            RequestFailure(
+                401,
+                "unauthorized",
+                headers={"content-type": "text/html"},
+                url=url,
+            ),
+            RequestFailure(
+                403,
+                "forbidden",
+                headers={"content-type": "text/html"},
+                url=url,
+            ),
+            {
+                "status_code": 200,
+                "headers": {"content-type": "text/html"},
+                "body": b"<html><title>Access denied</title></html>",
+                "url": url,
+            },
+        ):
+            with self.subTest(direct_response=type(direct_response).__name__):
+                transport = mock.Mock()
+                if isinstance(direct_response, Exception):
+                    transport.request.side_effect = direct_response
+                else:
+                    transport.request.return_value = direct_response
+                browser_fetcher = mock.Mock(
+                    return_value={
+                        "status_code": 200,
+                        "headers": {"content-type": "image/png"},
+                        "body": png_header(640, 480),
+                        "url": url,
+                    }
+                )
+                browser_fetcher.browser_backend = "camoufox"
+
+                with tempfile.TemporaryDirectory() as tmpdir:
+                    result = download_assets(
+                        FIGURE_KIND,
+                        transport,
+                        article_id="10.1109/example",
+                        assets=[{"kind": "figure", "url": url, "heading": "Figure 1"}],
+                        output_dir=Path(tmpdir),
+                        user_agent="test-agent",
+                        asset_profile="body",
+                        image_document_fetcher=browser_fetcher,
+                        fetch_policy="direct_then_browser",
+                    )
+
+                self.assertEqual(len(result["assets"]), 1)
+                self.assertEqual(result["asset_failures"], [])
+                self.assertEqual(
+                    [
+                        attempt["stage"]
+                        for attempt in result["assets"][0]["recovery_attempts"]
+                    ],
+                    ["direct", "browser"],
+                )
+                self.assertEqual(
+                    result["assets"][0]["browser_backend"], "camoufox"
+                )
+                self.assertEqual(
+                    result["assets"][0]["final_fetcher"], "camoufox"
+                )
+                transport.request.assert_called_once()
+                browser_fetcher.assert_called_once()
+
+    def test_direct_then_browser_does_not_recover_404_410_or_429(self) -> None:
+        for status in (404, 410, 429):
+            with self.subTest(status=status):
+                url = f"https://example.test/figure-{status}.png"
+                transport = mock.Mock()
+                transport.request.side_effect = RequestFailure(
+                    status,
+                    f"HTTP {status}",
+                    headers={"content-type": "text/html"},
+                    url=url,
+                )
+                browser_fetcher = mock.Mock()
+
+                with tempfile.TemporaryDirectory() as tmpdir:
+                    result = download_assets(
+                        FIGURE_KIND,
+                        transport,
+                        article_id="10.1109/example",
+                        assets=[{"kind": "figure", "url": url, "heading": "Figure 1"}],
+                        output_dir=Path(tmpdir),
+                        user_agent="test-agent",
+                        asset_profile="body",
+                        image_document_fetcher=browser_fetcher,
+                        fetch_policy="direct_then_browser",
+                    )
+
+                self.assertEqual(result["assets"], [])
+                self.assertEqual(len(result["asset_failures"]), 1)
+                browser_fetcher.assert_not_called()
+
+    def test_direct_then_browser_does_not_recover_invalid_scheme(self) -> None:
+        browser_fetcher = mock.Mock()
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            result = download_assets(
+                FIGURE_KIND,
+                mock.Mock(),
+                article_id="10.1109/example",
+                assets=[
+                    {
+                        "kind": "figure",
+                        "url": "file:///tmp/not-an-http-asset.png",
+                        "heading": "Figure 1",
+                    }
+                ],
+                output_dir=Path(tmpdir),
+                user_agent="test-agent",
+                asset_profile="body",
+                image_document_fetcher=browser_fetcher,
+                fetch_policy="direct_then_browser",
+            )
+
+        self.assertEqual(result["assets"], [])
+        self.assertEqual(len(result["asset_failures"]), 1)
+        browser_fetcher.assert_not_called()
+
+    def test_direct_then_browser_falls_back_to_direct_preview_after_browser_failure(
+        self,
+    ) -> None:
+        full_url = "https://example.test/figure-large.png"
+        preview_url = "https://example.test/figure-preview.png"
+        transport = mock.Mock()
+
+        def direct_request(_method, url, **_kwargs):
+            if url == full_url:
+                raise RequestFailure(
+                    403,
+                    "forbidden",
+                    headers={"content-type": "text/html"},
+                    url=url,
+                )
+            self.assertEqual(url, preview_url)
+            return {
+                "status_code": 200,
+                "headers": {"content-type": "image/png"},
+                "body": png_header(320, 240),
+                "url": url,
+            }
+
+        transport.request.side_effect = direct_request
+        browser_fetcher = mock.Mock(return_value=None)
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            result = download_assets(
+                FIGURE_KIND,
+                transport,
+                article_id="10.1109/example",
+                assets=[
+                    {
+                        "kind": "figure",
+                        "url": preview_url,
+                        "full_size_url": full_url,
+                        "preview_url": preview_url,
+                        "heading": "Figure 1",
+                    }
+                ],
+                output_dir=Path(tmpdir),
+                user_agent="test-agent",
+                asset_profile="body",
+                candidate_builder=lambda *_args, **_kwargs: [full_url, preview_url],
+                image_document_fetcher=browser_fetcher,
+                fetch_policy="direct_then_browser",
+            )
+
+        self.assertEqual(result["asset_failures"], [])
+        self.assertEqual(result["assets"][0]["download_tier"], "preview")
+        self.assertEqual(result["assets"][0]["final_fetcher"], "direct_http")
+        browser_fetcher.assert_called_once_with(full_url, mock.ANY)
+
+    def test_direct_then_browser_uses_file_fetcher_for_supplementary(self) -> None:
+        url = "https://example.test/supplement.mp4"
+        transport = mock.Mock()
+        transport.request.side_effect = RequestFailure(
+            403,
+            "forbidden",
+            headers={"content-type": "text/html"},
+            url=url,
+        )
+        file_fetcher = mock.Mock(
+            return_value={
+                "status_code": 200,
+                "headers": {"content-type": "video/mp4"},
+                "body": b"\x00\x00\x00\x18ftypmp42supplementary-video",
+                "url": url,
+            }
+        )
+        file_fetcher.browser_backend = "camoufox"
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            result = download_assets(
+                SUPPLEMENTARY_KIND,
+                transport,
+                article_id="10.1109/example",
+                assets=[
+                    {
+                        "kind": "supplementary",
+                        "source_url": url,
+                        "heading": "Supplementary video",
+                        "section": "supplementary",
+                    }
+                ],
+                output_dir=Path(tmpdir),
+                user_agent="test-agent",
+                asset_profile="all",
+                file_document_fetcher=file_fetcher,
+                fetch_policy="direct_then_browser",
+            )
+
+        self.assertEqual(result["asset_failures"], [])
+        self.assertEqual(result["assets"][0]["content_type"], "video/mp4")
+        self.assertEqual(result["assets"][0]["browser_backend"], "camoufox")
+        file_fetcher.assert_called_once_with(url, mock.ANY)
+
+    def test_browser_recovery_predicate_rejects_local_failures(self) -> None:
+        for reason in (
+            "Unsupported asset URL scheme for file:///tmp/asset.png",
+            "image_conversion_failed: missing ghostscript",
+            "invalid asset URL",
+        ):
+            with self.subTest(reason=reason):
+                self.assertFalse(
+                    browser_asset_recovery_allowed(status=None, reason=reason)
+                )
+
+        for error_category in (
+            "network_error",
+            "timeout",
+            "tls_error",
+            "dns_error",
+            "connection_reset",
+            "connection_closed",
+        ):
+            with self.subTest(error_category=error_category):
+                self.assertTrue(
+                    browser_asset_recovery_allowed(
+                        status=None,
+                        error_category=error_category,
+                    )
+                )
+
     def test_browser_workflow_image_candidates_prefer_download_url(self) -> None:
         download_url = "https://example.test/images/full-figure-from-download-url.jpg"
         full_size_url = "https://example.test/images/full-figure.jpg"
@@ -124,6 +410,7 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
         )
         recovery = BrowserAssetRecoveryContext(
             runtime=SimpleNamespace(
+                backend="cloakbrowser",
                 headless=False,
                 cdp_endpoint="ws://127.0.0.1:9222/devtools/browser/test",
             ),
@@ -227,6 +514,7 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
             figure_call.kwargs["headers"],
             {"Referer": "https://example.test/final"},
         )
+        self.assertEqual(figure_call.kwargs["user_agent"], "test-agent")
         self.assertIs(supplementary_call.args[0], SUPPLEMENTARY_KIND)
         self.assertIs(
             supplementary_call.kwargs["file_document_fetcher"],
@@ -246,6 +534,47 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
         )
         image_fetcher.close.assert_called_once()
         file_fetcher.close.assert_called_once()
+
+    def test_camoufox_http_assets_reuse_generated_firefox_user_agent(self) -> None:
+        plan = BrowserAssetDownloadPlan(
+            article_id="10.5555/example",
+            output_dir=Path("/tmp/browser-assets"),
+            asset_profile="body",
+            body_assets=[
+                {
+                    "kind": "figure",
+                    "url": "https://example.test/figure.png",
+                    "section": "body",
+                }
+            ],
+            supplementary_assets=[],
+        )
+        recovery = BrowserAssetRecoveryContext(
+            runtime=SimpleNamespace(backend="camoufox", headless=True),
+            provider="annualreviews",
+            user_agent="Chrome fallback",
+            browser_context_seed={
+                "browser_user_agent": "Mozilla/5.0 Firefox/152.0",
+                "browser_final_url": "https://example.test/article",
+            },
+            browser_cookies=[],
+            active_seed_urls=["https://example.test/article"],
+        )
+        download_assets = mock.Mock(return_value={"assets": [], "asset_failures": []})
+
+        run_browser_asset_download_attempt(
+            plan,
+            recovery,
+            image_fetcher_factory=mock.Mock(return_value=None),
+            file_fetcher_factory=mock.Mock(return_value=None),
+            opener_requester={"transport": object()},
+            deps=browser_workflow_deps(download_assets=download_assets),
+        )
+
+        self.assertEqual(
+            download_assets.call_args.kwargs["user_agent"],
+            "Mozilla/5.0 Firefox/152.0",
+        )
 
     def test_run_browser_asset_download_attempt_parallelizes_body_and_supplementary(
         self,
@@ -272,7 +601,7 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
             ],
         )
         recovery = BrowserAssetRecoveryContext(
-            runtime=SimpleNamespace(headless=True),
+            runtime=SimpleNamespace(backend="cloakbrowser", headless=True),
             provider="science",
             user_agent="test-agent",
             browser_context_seed={"browser_final_url": "https://example.test/final"},
@@ -340,7 +669,7 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
             ],
         )
         recovery = BrowserAssetRecoveryContext(
-            runtime=SimpleNamespace(headless=True),
+            runtime=SimpleNamespace(backend="cloakbrowser", headless=True),
             provider="science",
             user_agent="test-agent",
             browser_context_seed={"browser_final_url": "https://example.test/final"},
@@ -406,7 +735,7 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
             ],
         )
         recovery = BrowserAssetRecoveryContext(
-            runtime=SimpleNamespace(headless=True),
+            runtime=SimpleNamespace(backend="cloakbrowser", headless=True),
             provider="science",
             user_agent="test-agent",
             browser_context_seed={"browser_final_url": "https://example.test/final"},
@@ -450,6 +779,97 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
             result.supplementary_results,
             [{"kind": "supplementary", "download_url": "supplement.pdf"}],
         )
+
+    def test_direct_then_browser_keeps_direct_concurrency_and_browser_on_caller_thread(
+        self,
+    ) -> None:
+        figure_url = "https://example.test/figure.png"
+        figure = {
+            "kind": "figure",
+            "heading": "Figure 1",
+            "url": figure_url,
+            "section": "body",
+        }
+        plan = BrowserAssetDownloadPlan(
+            article_id="10.1109/example",
+            output_dir=Path("/tmp/browser-assets"),
+            asset_profile="body",
+            body_assets=[figure],
+            supplementary_assets=[],
+            fetch_policy="direct_then_browser",
+            candidate_builder=lambda *_args, **_kwargs: [figure_url],
+        )
+        recovery = BrowserAssetRecoveryContext(
+            runtime=SimpleNamespace(backend="camoufox", headless=True),
+            provider="ieee",
+            user_agent="test-agent",
+            browser_context_seed={},
+            browser_cookies=[],
+            active_seed_urls=["https://example.test/article"],
+        )
+        image_fetcher = mock.Mock()
+        image_fetcher.requires_caller_thread = True
+        image_fetcher.close = mock.Mock()
+        main_thread_id = threading.get_ident()
+        calls: list[dict[str, object]] = []
+
+        def mocked_download_assets(_kind, *_args, **kwargs):
+            self.assertEqual(threading.get_ident(), main_thread_id)
+            calls.append(kwargs)
+            if len(calls) == 1:
+                return {
+                    "assets": [],
+                    "asset_failures": [
+                        {
+                            "kind": "figure",
+                            "heading": "Figure 1",
+                            "source_url": figure_url,
+                            "section": "body",
+                            "status": 403,
+                            "content_type": "text/html",
+                            "reason": "cloudflare_challenge",
+                        }
+                    ],
+                }
+            return {
+                "assets": [
+                    {
+                        **figure,
+                        "download_url": figure_url,
+                        "source_url": figure_url,
+                        "content_type": "image/png",
+                        "browser_backend": "camoufox",
+                        "final_fetcher": "camoufox",
+                    }
+                ],
+                "asset_failures": [],
+            }
+
+        result = run_browser_asset_download_attempt(
+            plan,
+            recovery,
+            image_fetcher_factory=mock.Mock(return_value=image_fetcher),
+            file_fetcher_factory=mock.Mock(return_value=None),
+            opener_requester={
+                "transport": object(),
+                "asset_download_concurrency": 4,
+                "serial_browser_assets": True,
+            },
+            deps=browser_workflow_deps(download_assets=mocked_download_assets),
+        )
+
+        self.assertEqual(len(calls), 2)
+        self.assertIsNone(calls[0]["image_document_fetcher"])
+        self.assertEqual(calls[0]["asset_download_concurrency"], 4)
+        self.assertEqual(calls[0]["fetch_policy"], "direct_then_browser")
+        self.assertIs(calls[1]["image_document_fetcher"], image_fetcher)
+        self.assertEqual(calls[1]["asset_download_concurrency"], 1)
+        self.assertEqual(calls[1]["fetch_policy"], "browser_first")
+        self.assertEqual(
+            [attempt["stage"] for attempt in result.body_results[0]["recovery_attempts"]],
+            ["direct", "browser"],
+        )
+        image_fetcher.close.assert_called_once()
 
     def test_browser_workflow_asset_retry_policy_skips_deterministic_failures(
         self,
@@ -612,7 +1032,7 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
             ],
         )
         recovery = BrowserAssetRecoveryContext(
-            runtime=SimpleNamespace(headless=True),
+            runtime=SimpleNamespace(backend="cloakbrowser", headless=True),
             provider="pnas",
             user_agent="test-agent",
             browser_context_seed={"browser_final_url": "https://example.test/article"},

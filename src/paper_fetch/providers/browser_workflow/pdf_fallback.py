@@ -70,6 +70,7 @@ def fetch_seeded_browser_pdf_payload(
         publisher=provider,
         config=runtime,
         browser_context_seed=browser_context_seed,
+        runtime_context=context,
         lightweight=True,
     )
     _raise_if_cancelled(context)
@@ -97,6 +98,7 @@ def fetch_seeded_browser_pdf_payload(
         profile_dir=getattr(runtime, "profile_dir", None),
         user_data_dir=getattr(runtime, "user_data_dir", None),
         storage_state_path=_runtime_storage_state_path(runtime),
+        browser_config=runtime,
         seed_urls=seed_urls,
         allow_pdf_only=True,
         context=context,

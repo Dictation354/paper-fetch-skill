@@ -4,14 +4,12 @@ from __future__ import annotations
 
 from pathlib import Path
 import tempfile
-import urllib.parse
 from typing import Any
 from collections.abc import Mapping
 
 from ..config import build_browser_user_agent, build_publisher_user_agent
 from ..extraction.html import decode_html
 from ..extraction.html.availability_policy import AvailabilityPolicy
-from ..extraction.html.landing import LandingRedirectLimitExceeded, fetch_landing_html
 from ..extraction.html.provider_rules import (
     IEEE_ACCESS_BLOCK_TEXT_TOKENS,
     IEEE_AVAILABILITY_DROP_KEYWORDS,
@@ -42,7 +40,6 @@ from ..quality.html_signals import (
 )
 from ..reason_codes import (
     ABSTRACT_ONLY,
-    ERROR,
     NO_RESULT,
     NOT_SUPPORTED,
     OK,
@@ -50,12 +47,15 @@ from ..reason_codes import (
 )
 from ..runtime import RuntimeContext
 from ..tracing import download_marker, fulltext_marker, trace_from_markers
-from ..utils import choose_public_landing_page_url, normalize_text
+from ..utils import normalize_text
 from . import _ieee_browser_html as ieee_browser_html
 from . import _ieee_html as ieee_html
+from . import _ieee_landing as ieee_landing
 from . import _ieee_metadata as ieee_metadata
+from . import _ieee_recovery_policy as ieee_recovery_policy
 from . import _ieee_supplementary as ieee_supplementary
 from . import _ieee_url as ieee_url
+from . import browser_runtime
 from ._pdf_common import (
     pdf_asset_output_dir,
     pdf_asset_profile_from_context,
@@ -133,7 +133,6 @@ register_provider_bundle(
 )
 
 IEEE_PDF_FALLBACK_ARTIFACT_DIR_NAME = "ieee_pdf_fallback"
-MAX_IEEE_LANDING_REDIRECTS = 8
 _FETCH_PDF_WITH_BROWSER = fetch_pdf_with_playwright = fetch_pdf_with_browser
 
 
@@ -146,6 +145,10 @@ def _pdf_failure_diagnostics(failure: PdfFetchFailure | None) -> dict[str, Any] 
     return diagnostics
 
 
+_ieee_pdf_browser_recovery_allowed = ieee_recovery_policy.pdf_browser_recovery_allowed
+_ieee_html_browser_recovery_allowed = ieee_recovery_policy.html_browser_recovery_allowed
+
+
 class IeeeClient(ProviderClient):
     name = "ieee"
 
@@ -156,6 +159,10 @@ class IeeeClient(ProviderClient):
         self.browser_user_agent = build_browser_user_agent(env)
 
     def probe_status(self) -> ProviderStatusResult:
+        browser_status = browser_runtime.probe_runtime_status(
+            self.env,
+            provider=self.name,
+        )
         return summarize_capability_status(
             self.name,
             official_provider=self.official_provider,
@@ -163,8 +170,25 @@ class IeeeClient(ProviderClient):
                 build_provider_status_check(
                     "html_route",
                     OK,
-                    "IEEE Xplore direct REST HTML and clean-browser HTML fallback routes are available when the article exposes ml_html/full HTML.",
-                    details={"mode": "direct_rest_html_or_clean_browser_html"},
+                    "IEEE Xplore direct REST HTML and selected-browser HTML fallback routes are available when the article exposes ml_html/full HTML.",
+                    details={"mode": "direct_rest_html_or_selected_browser_html"},
+                ),
+                build_provider_status_check(
+                    "browser_fallback",
+                    OK,
+                    (
+                        "IEEE direct routes remain available; selected-browser recovery "
+                        f"is {browser_status.status}."
+                    ),
+                    details={
+                        "backend": browser_runtime.selected_browser_runtime_backend(
+                            self.env
+                        ).name,
+                        "fallback_status": browser_status.status,
+                        "fallback_available": browser_status.available,
+                        "notes": list(browser_status.notes),
+                        "checks": [check.to_dict() for check in browser_status.checks],
+                    },
                 ),
                 build_provider_status_check(
                     PDF_FALLBACK,
@@ -258,89 +282,18 @@ class IeeeClient(ProviderClient):
             "IEEE publisher metadata is read from the Xplore landing page during full-text retrieval; routing relies on Crossref metadata.",
         )
 
-    def _resolve_landing_url(self, doi: str, metadata: Mapping[str, Any]) -> str:
-        article_number = ieee_url._article_number_from_metadata(metadata)
-        document_url = self._document_url(article_number) if article_number else None
-        return (
-            choose_public_landing_page_url(
-                metadata.get("landing_page_url"),
-                document_url,
-                f"https://doi.org/{urllib.parse.quote(doi, safe='')}",
-            )
-            or f"https://doi.org/{urllib.parse.quote(doi, safe='')}"
-        )
-
     def _fetch_landing_attempt(
-        self, doi: str, metadata: Mapping[str, Any]
+        self,
+        doi: str,
+        metadata: Mapping[str, Any],
+        *,
+        context: RuntimeContext | None = None,
     ) -> ieee_metadata.IeeeLandingAttempt:
-        normalized_doi = normalize_doi(doi)
-        if not normalized_doi:
-            raise ProviderFailure(
-                NOT_SUPPORTED, "IEEE full-text retrieval requires a DOI."
-            )
-        landing_url = self._resolve_landing_url(normalized_doi, metadata)
-        try:
-            landing_fetch = fetch_landing_html(
-                landing_url,
-                transport=self.transport,
-                headers=self._landing_headers(),
-                timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
-                max_redirects=MAX_IEEE_LANDING_REDIRECTS,
-                raise_on_redirect_limit=True,
-                retry_on_transient=True,
-            )
-        except LandingRedirectLimitExceeded as exc:
-            raise ProviderFailure(
-                ERROR,
-                f"IEEE landing retrieval exceeded {MAX_IEEE_LANDING_REDIRECTS} redirects.",
-            ) from exc
-        except RequestFailure as exc:
-            raise map_request_failure(exc) from exc
-
-        landing_metadata = ieee_metadata._parse_landing_metadata(
-            landing_fetch.html_text
-        )
-        article_number = (
-            ieee_url._article_number_from_metadata(landing_metadata)
-            or ieee_url._article_number_from_url(landing_fetch.final_url)
-            or ieee_url._article_number_from_metadata(metadata)
-            or ieee_url._article_number_from_url(landing_url)
-        )
-        if not article_number:
-            raise ProviderFailure(
-                NO_RESULT, "IEEE landing page did not expose an article number."
-            )
-        merged_metadata = ieee_metadata._merge_ieee_metadata(
-            metadata, landing_metadata, landing_fetch.final_url
-        )
-        reference_count = 0
-        try:
-            reference_count = int(landing_metadata.get("referenceCount") or 0)
-        except (TypeError, ValueError):
-            reference_count = 0
-        if reference_count > 0:
-            try:
-                reference_metadata = self._fetch_reference_metadata(
-                    article_number,
-                    self._document_url(article_number),
-                    expected_count=reference_count,
-                )
-            except RequestFailure:
-                reference_metadata = []
-            if reference_metadata:
-                merged_metadata["references"] = reference_metadata
-        if not merged_metadata.get("doi"):
-            merged_metadata["doi"] = normalized_doi
-        merged_metadata["article_number"] = article_number
-        merged_metadata["articleNumber"] = article_number
-        return ieee_metadata.IeeeLandingAttempt(
-            normalized_doi=normalized_doi,
-            landing_url=landing_url,
-            response_url=landing_fetch.final_url,
-            html_text=landing_fetch.html_text,
-            merged_metadata=merged_metadata,
-            article_number=article_number,
-            landing_metadata=landing_metadata,
+        return ieee_landing.fetch_ieee_landing_attempt(
+            self,
+            doi,
+            metadata,
+            context=context,
         )
 
     def _fetch_dynamic_html_payload(
@@ -410,9 +363,11 @@ class IeeeClient(ProviderClient):
                     "section_hints": extraction.section_hints,
                     "marker_counts": extraction.marker_counts,
                 },
+                "landing": dict(landing_attempt.diagnostics),
             },
             reason="Downloaded full text from the IEEE Xplore dynamic HTML route.",
             extracted_assets=extracted_assets,
+            browser_context_seed=landing_attempt.browser_context_seed,
             trace_markers=[fulltext_marker("ieee", "ok", route="html")],
         )
 
@@ -424,6 +379,11 @@ class IeeeClient(ProviderClient):
         context: RuntimeContext,
     ) -> _RawFulltextPayload:
         article_number = landing_attempt.article_number
+        runtime_config = browser_runtime.load_runtime_config(
+            context.env or self.env,
+            provider=self.name,
+            doi=landing_attempt.normalized_doi,
+        )
         return ieee_browser_html.fetch_ieee_browser_html_payload(
             provider_name=self.name,
             browser_user_agent=self.browser_user_agent,
@@ -432,6 +392,7 @@ class IeeeClient(ProviderClient):
             rest_url=self._rest_url(article_number),
             direct_html_failure=direct_html_failure,
             context=context,
+            runtime_config=runtime_config,
             extraction_assets=self._html_extraction_assets_with_landing_payloads,
         )
 
@@ -478,8 +439,22 @@ class IeeeClient(ProviderClient):
             fetcher = "direct_http"
         except PdfFetchFailure as exc:
             direct_failure = exc
+            if not _ieee_pdf_browser_recovery_allowed(exc):
+                raise
+            runtime_config = browser_runtime.load_runtime_config(
+                context.env or self.env,
+                provider=self.name,
+                doi=landing_attempt.normalized_doi,
+            )
+            browser_seed = browser_runtime.merge_browser_context_seeds(
+                landing_attempt.browser_context_seed
+            )
             browser_seed_urls = ieee_url._dedupe_urls(
-                [landing_attempt.response_url, document_url]
+                [
+                    str(browser_seed.get("browser_final_url") or ""),
+                    landing_attempt.response_url,
+                    document_url,
+                ]
             )
 
             def run_browser_pdf(active_artifact_dir: Path):
@@ -492,12 +467,17 @@ class IeeeClient(ProviderClient):
                     artifact_dir=active_artifact_dir,
                     asset_profile=effective_asset_profile,
                     asset_output_dir=asset_output_dir,
-                    browser_user_agent=self.browser_user_agent,
+                    browser_user_agent=normalize_text(
+                        str(browser_seed.get("browser_user_agent") or "")
+                    )
+                    or self.browser_user_agent,
+                    browser_cookies=list(browser_seed.get("browser_cookies") or []),
                     headless=True,
                     referer=document_url,
                     seed_urls=browser_seed_urls,
                     allow_pdf_only=True,
                     context=context,
+                    browser_config=runtime_config,
                 )
 
             try:
@@ -508,7 +488,7 @@ class IeeeClient(ProviderClient):
                         pdf_result = run_browser_pdf(Path(tempdir))
                 else:
                     pdf_result = run_browser_pdf(artifact_dir)
-                fetcher = "seeded_browser"
+                fetcher = f"{runtime_config.backend}_browser"
             except PdfFetchFailure as browser_exc:
                 raise PdfFetchFailure(
                     browser_exc.kind,
@@ -547,8 +527,8 @@ class IeeeClient(ProviderClient):
             diagnostics={PDF_FALLBACK: pdf_diagnostics},
             extracted_assets=pdf_fetch_result_assets(pdf_result),
             reason=(
-                "Downloaded full text from the IEEE Xplore seeded-browser PDF fallback route."
-                if fetcher == "seeded_browser"
+                f"Downloaded full text from the IEEE Xplore {fetcher} PDF fallback route."
+                if fetcher != "direct_http"
                 else "Downloaded full text from the IEEE Xplore direct PDF fallback route."
             ),
             suggested_filename=pdf_result.suggested_filename,
@@ -604,7 +584,9 @@ class IeeeClient(ProviderClient):
         context: RuntimeContext | None = None,
     ) -> _RawFulltextPayload:
         runtime_context = self._runtime_context(context)
-        landing_attempt = self._fetch_landing_attempt(doi, metadata)
+        landing_attempt = self._fetch_landing_attempt(
+            doi, metadata, context=runtime_context
+        )
         pdf_failure_diagnostics: dict[str, Any] | None = None
 
         def run_browser_html(state: ProviderWaterfallState) -> _RawFulltextPayload:
@@ -662,11 +644,6 @@ class IeeeClient(ProviderClient):
                     or ProviderFailure(NO_RESULT, "IEEE dynamic HTML route failed."),
                 ),
                 (
-                    "browser_html",
-                    state.failure("browser_html")
-                    or ProviderFailure(NO_RESULT, "IEEE browser HTML fallback failed."),
-                ),
-                (
                     "pdf",
                     state.failure("pdf")
                     or ProviderFailure(NO_RESULT, "IEEE PDF fallback failed."),
@@ -677,6 +654,9 @@ class IeeeClient(ProviderClient):
                     or ProviderFailure(NO_RESULT, "IEEE abstract fallback failed."),
                 ),
             ]
+            browser_html_failure = state.failure("browser_html")
+            if browser_html_failure is not None:
+                failures.insert(1, ("browser_html", browser_html_failure))
             combined = combine_provider_failures(failures)
             return ProviderFailure(
                 combined.code,
@@ -700,12 +680,19 @@ class IeeeClient(ProviderClient):
                     continue_codes=DEFAULT_WATERFALL_CONTINUE_CODES,
                     failure_warning=lambda failure, _state: (
                         f"IEEE dynamic HTML route was not usable ({failure.message}); "
-                        "attempting clean-browser HTML fallback."
+                        + (
+                            "attempting selected-browser HTML fallback."
+                            if _ieee_html_browser_recovery_allowed(failure)
+                            else "browser recovery is not eligible; continuing to PDF fallback."
+                        )
                     ),
                 ),
                 ProviderWaterfallStep(
                     label="browser_html",
                     run=run_browser_html,
+                    condition=lambda state: _ieee_html_browser_recovery_allowed(
+                        state.failure("html")
+                    ),
                     failure_marker=fulltext_marker(
                         "ieee", "fail", route="browser_html"
                     ),
@@ -760,6 +747,21 @@ class IeeeClient(ProviderClient):
         context: RuntimeContext | None = None,
     ) -> dict[str, list[dict[str, Any]]]:
         context = self._runtime_context(context, output_dir=output_dir)
+        content = raw_payload.content
+        browser_runtime_config = None
+        if (
+            output_dir is not None
+            and asset_profile != "none"
+            and normalize_text(
+                content.route_kind if content is not None else ""
+            ).lower()
+            == "html"
+        ):
+            browser_runtime_config = browser_runtime.load_runtime_config(
+                context.env or self.env,
+                provider=self.name,
+                doi=normalize_doi(doi) or doi,
+            )
         return ieee_supplementary.download_ieee_related_assets(
             self.transport,
             doi,
@@ -769,6 +771,8 @@ class IeeeClient(ProviderClient):
             user_agent=self.user_agent,
             env=context.env,
             asset_profile=asset_profile,
+            browser_runtime_config=browser_runtime_config,
+            runtime_context=context,
         )
 
     def asset_download_failure_warning(

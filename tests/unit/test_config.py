@@ -233,7 +233,10 @@ class ConfigTests(unittest.TestCase):
 
     def test_cli_default_download_dir_uses_xdg_user_data_home(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
-            env = {config.XDG_DATA_HOME_ENV_VAR: tmpdir}
+            env = {
+                config.BROWSER_BACKEND_ENV_VAR: "cloakbrowser",
+                config.XDG_DATA_HOME_ENV_VAR: tmpdir,
+            }
             expected = Path(tmpdir) / "paper-fetch" / "downloads"
 
             resolved = config.resolve_cli_download_dir(env)
@@ -299,6 +302,7 @@ class ConfigTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             runtime_config = browser_runtime.load_runtime_config(
                 {
+                    config.BROWSER_BACKEND_ENV_VAR: "cloakbrowser",
                     config.CLOAKBROWSER_CDP_ENDPOINT_ENV_VAR: "ws://127.0.0.1:9222/devtools/browser/test",
                     config.XDG_DATA_HOME_ENV_VAR: tmpdir,
                 },
@@ -316,7 +320,10 @@ class ConfigTests(unittest.TestCase):
         self,
     ) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
-            env = {config.XDG_DATA_HOME_ENV_VAR: tmpdir}
+            env = {
+                config.BROWSER_BACKEND_ENV_VAR: "cloakbrowser",
+                config.XDG_DATA_HOME_ENV_VAR: tmpdir,
+            }
             science_runtime = browser_runtime.load_runtime_config(
                 env,
                 provider="science",
@@ -341,6 +348,7 @@ class ConfigTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             runtime_config = browser_runtime.load_runtime_config(
                 {
+                    config.BROWSER_BACKEND_ENV_VAR: "cloakbrowser",
                     config.CLOAKBROWSER_CDP_ENDPOINT_ENV_VAR: "ws://127.0.0.1:9222/devtools/browser/test",
                     config.XDG_DATA_HOME_ENV_VAR: tmpdir,
                 },
@@ -356,6 +364,7 @@ class ConfigTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             runtime_config = browser_runtime.load_runtime_config(
                 {
+                    config.BROWSER_BACKEND_ENV_VAR: "cloakbrowser",
                     config.CLOAKBROWSER_CDP_ENDPOINT_ENV_VAR: "ws://127.0.0.1:9222/devtools/browser/test",
                     config.USER_AGENT_ENV_VAR: "paper-fetch-test/1",
                     config.XDG_DATA_HOME_ENV_VAR: tmpdir,
@@ -372,6 +381,7 @@ class ConfigTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             runtime_config = browser_runtime.load_runtime_config(
                 {
+                    config.BROWSER_BACKEND_ENV_VAR: "cloakbrowser",
                     config.CLOAKBROWSER_CDP_ENDPOINT_ENV_VAR: "ws://127.0.0.1:9222/devtools/browser/test",
                     config.USER_AGENT_ENV_VAR: "paper-fetch-test/1",
                     config.BROWSER_USER_AGENT_ENV_VAR: "Mozilla/5.0",
@@ -390,6 +400,7 @@ class ConfigTests(unittest.TestCase):
             browser_binary.chmod(0o755)
             runtime_config = browser_runtime.load_runtime_config(
                 {
+                    config.BROWSER_BACKEND_ENV_VAR: "cloakbrowser",
                     config.CLOAKBROWSER_BINARY_PATH_ENV_VAR: str(browser_binary),
                     config.CLOAKBROWSER_CDP_ENDPOINT_ENV_VAR: "ws://127.0.0.1:9222/devtools/browser/test",
                     config.CLOAKBROWSER_HEADLESS_ENV_VAR: "false",
@@ -414,6 +425,7 @@ class ConfigTests(unittest.TestCase):
             legacy_binary_path = str(Path(tmpdir) / "missing-chrome")
             runtime_config = browser_runtime.load_runtime_config(
                 {
+                    config.BROWSER_BACKEND_ENV_VAR: "cloakbrowser",
                     config.CLOAKBROWSER_BINARY_PATH_ENV_VAR: legacy_binary_path,
                     config.CLOAKBROWSER_CDP_ENDPOINT_ENV_VAR: "ws://127.0.0.1:9222/devtools/browser/test",
                     config.XDG_DATA_HOME_ENV_VAR: tmpdir,
@@ -432,6 +444,7 @@ class ConfigTests(unittest.TestCase):
             with self.assertRaisesRegex(Exception, "CLOAKBROWSER_BINARY_PATH"):
                 browser_runtime.load_runtime_config(
                     {
+                        config.BROWSER_BACKEND_ENV_VAR: "cloakbrowser",
                         config.CLOAKBROWSER_BINARY_PATH_ENV_VAR: missing_binary_path,
                         config.XDG_DATA_HOME_ENV_VAR: tmpdir,
                     },
@@ -444,6 +457,7 @@ class ConfigTests(unittest.TestCase):
             with self.assertRaisesRegex(Exception, "CLOAKBROWSER_CDP_ENDPOINT"):
                 browser_runtime.load_runtime_config(
                     {
+                        config.BROWSER_BACKEND_ENV_VAR: "cloakbrowser",
                         config.CLOAKBROWSER_CDP_ENDPOINT_ENV_VAR: "not-a-url",
                         config.XDG_DATA_HOME_ENV_VAR: tmpdir,
                     },

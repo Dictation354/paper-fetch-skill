@@ -6,7 +6,7 @@ from dataclasses import replace
 import urllib.parse
 import urllib.request
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 from collections.abc import Callable, Mapping, Sequence
 
 from ....http import DEFAULT_FULLTEXT_TIMEOUT_SECONDS, HttpTransport, RequestFailure
@@ -62,6 +62,59 @@ from .state import (
 
 ImageDocumentFetcher = Callable[[str, Mapping[str, Any]], dict[str, Any] | None]
 FileDocumentFetcher = Callable[[str, Mapping[str, Any]], dict[str, Any] | None]
+AssetFetchPolicy = Literal["browser_first", "direct_then_browser"]
+
+_BROWSER_RECOVERABLE_NETWORK_CATEGORIES = {
+    "connection_closed",
+    "connection_reset",
+    "dns_error",
+    "network_error",
+    "timeout",
+    "tls_error",
+}
+_BROWSER_RECOVERABLE_NETWORK_REASON_TOKENS = (
+    "connection closed",
+    "connection reset",
+    "dns",
+    "name resolution",
+    "network error",
+    "remote end closed",
+    "ssl error",
+    "timed out",
+    "timeout",
+    "tls error",
+)
+
+
+def browser_asset_recovery_allowed(
+    *,
+    status: int | None,
+    content_type: str = "",
+    reason: str = "",
+    error_category: str = "",
+) -> bool:
+    """Return whether a failed direct asset request may use browser recovery."""
+
+    if status in {404, 410, 429}:
+        return False
+    if status in {401, 403}:
+        return True
+    if status is None:
+        normalized_category = normalize_text(error_category).lower()
+        normalized_reason = normalize_text(reason).lower()
+        return normalized_category in _BROWSER_RECOVERABLE_NETWORK_CATEGORIES or any(
+            token in normalized_reason
+            for token in _BROWSER_RECOVERABLE_NETWORK_REASON_TOKENS
+        )
+    normalized_type = normalize_text(content_type).split(";", 1)[0].lower()
+    normalized_reason = normalize_text(reason).lower()
+    return status == 200 and (
+        normalized_type in {"text/html", "application/xhtml+xml"}
+        or any(
+            token in normalized_reason
+            for token in ("challenge", "access", "cloudflare", "html")
+        )
+    )
 
 
 def _requires_caller_thread(fetcher: Any) -> bool:
@@ -90,7 +143,55 @@ def _fetch_document_fallback(
     content_type = header_value(response.get("headers"), "content-type")
     if not kind.accepts_response(content_type, bytes(body)):
         return None
-    return dict(response)
+    recovered = dict(response)
+    browser_backend = normalize_text(str(getattr(fetcher, "browser_backend", "")))
+    if browser_backend:
+        recovered["_paper_fetch_browser_backend"] = browser_backend
+    return recovered
+
+
+def _with_browser_recovery_diagnostics(
+    response: Mapping[str, Any],
+    direct_attempt: _AssetDownloadAttempt | None,
+) -> dict[str, Any]:
+    recovered = dict(response)
+    direct_diagnostic = (
+        direct_attempt.failure.diagnostic
+        if direct_attempt is not None and direct_attempt.failure is not None
+        else {}
+    )
+    backend = normalize_text(
+        str(recovered.get("_paper_fetch_browser_backend") or "")
+    )
+    recovered["_paper_fetch_final_fetcher"] = backend or "selected_browser"
+    recovered["_paper_fetch_recovery_attempts"] = [
+        {
+            key: value
+            for key, value in {
+                "stage": "direct",
+                "status": direct_diagnostic.get("status"),
+                "content_type": direct_diagnostic.get("content_type"),
+                "reason": direct_diagnostic.get("reason"),
+                "error_category": direct_diagnostic.get("error_category"),
+            }.items()
+            if value not in (None, "")
+        },
+        {
+            key: value
+            for key, value in {
+                "stage": "browser",
+                "browser_backend": backend or None,
+                "status": int(recovered.get("status_code") or 0) or None,
+                "content_type": header_value(
+                    recovered.get("headers"), "content-type"
+                ),
+                "reason": "recovered",
+                "final_fetcher": backend or "selected_browser",
+            }.items()
+            if value not in (None, "")
+        },
+    ]
+    return recovered
 
 
 def _candidate_source_image_format(candidate_url: str) -> str:
@@ -135,6 +236,43 @@ def _converted_figure_response(
     converted["_paper_fetch_original_source_format"] = conversion.source_format
     converted["_paper_fetch_conversion_tool"] = conversion.tool
     return converted, conversion.source_format
+
+
+def _attach_browser_recovery_diagnostics(
+    download: dict[str, Any], response: Mapping[str, Any]
+) -> None:
+    browser_backend = normalize_text(
+        str(response.get("_paper_fetch_browser_backend") or "")
+    )
+    final_fetcher = normalize_text(
+        str(response.get("_paper_fetch_final_fetcher") or "")
+    )
+    if browser_backend:
+        download["browser_backend"] = browser_backend
+        final_fetcher = final_fetcher or browser_backend
+    if final_fetcher:
+        download["final_fetcher"] = final_fetcher
+    attempts = response.get("_paper_fetch_recovery_attempts")
+    if not isinstance(attempts, list):
+        return
+    normalized_attempts = [
+        dict(attempt) for attempt in attempts if isinstance(attempt, Mapping)
+    ]
+    if not normalized_attempts:
+        return
+    download["recovery_attempts"] = normalized_attempts
+    browser_attempt = next(
+        (
+            attempt
+            for attempt in reversed(normalized_attempts)
+            if attempt.get("stage") == "browser"
+        ),
+        {},
+    )
+    if browser_attempt.get("browser_backend"):
+        download["browser_backend"] = browser_attempt["browser_backend"]
+    if browser_attempt.get("final_fetcher"):
+        download["final_fetcher"] = browser_attempt["final_fetcher"]
 
 
 def _conversion_failure_attempt(
@@ -406,6 +544,7 @@ def resolve_asset_download(
     cookie_opener_builder: Callable[..., urllib.request.OpenerDirector | None],
     opener_requester: Callable[..., dict[str, Any]],
     candidate_url_resolver: Callable[[Mapping[str, Any]], list[str]] | None = None,
+    fetch_policy: AssetFetchPolicy = "browser_first",
 ) -> _AssetDownloadResolution:
     conversion_degraded = False
     candidate_urls = (candidate_url_resolver or kind.candidate_url_resolver)(asset)
@@ -447,7 +586,7 @@ def resolve_asset_download(
             )
             continue
 
-        if _should_use_figure_document_fetcher_for_candidate(
+        if fetch_policy == "browser_first" and _should_use_figure_document_fetcher_for_candidate(
             kind,
             candidate_url,
             document_fetcher,
@@ -536,13 +675,20 @@ def resolve_asset_download(
                         retry_resolution, provenance=("conversion_degraded",)
                     )
                 return retry_resolution
-            fallback_response = _fetch_document_fallback(
-                kind,
-                document_fetcher,
-                candidate_url,
-                asset,
+            fallback_response = (
+                _fetch_document_fallback(kind, document_fetcher, candidate_url, asset)
+                if browser_asset_recovery_allowed(
+                    status=exc.status_code,
+                    content_type=header_value(exc.headers, "content-type"),
+                    reason=str(exc),
+                    error_category=str(getattr(exc, "error_category", "") or ""),
+                )
+                else None
             )
             if fallback_response is not None:
+                fallback_response = _with_browser_recovery_diagnostics(
+                    fallback_response, last_attempt
+                )
                 try:
                     fallback_response, _ = _converted_figure_response(
                         fallback_response,
@@ -610,13 +756,19 @@ def resolve_asset_download(
                         retry_resolution, provenance=("conversion_degraded",)
                     )
                 return retry_resolution
-            fallback_response = _fetch_document_fallback(
-                kind,
-                document_fetcher,
-                candidate_url,
-                asset,
+            fallback_response = (
+                _fetch_document_fallback(kind, document_fetcher, candidate_url, asset)
+                if browser_asset_recovery_allowed(
+                    status=int(response.get("status_code") or 0) or None,
+                    content_type=content_type,
+                    reason=block_reason,
+                )
+                else None
             )
             if fallback_response is not None:
+                fallback_response = _with_browser_recovery_diagnostics(
+                    fallback_response, last_attempt
+                )
                 try:
                     fallback_response, _ = _converted_figure_response(
                         fallback_response,
@@ -649,6 +801,8 @@ def resolve_asset_download(
             continue
 
         if (
+            fetch_policy == "browser_first"
+            and
             kind.upgrade_targets is not None
             and document_fetcher is not None
             and _requires_image_payload(asset)
@@ -692,6 +846,11 @@ def resolve_asset_download(
                     )
 
         try:
+            if fetch_policy == "direct_then_browser":
+                response = {
+                    **dict(response),
+                    "_paper_fetch_final_fetcher": "direct_http",
+                }
             response, _ = (
                 _converted_figure_response(response, source_url=candidate_url)
                 if kind.name == "figure"
@@ -823,6 +982,7 @@ def save_asset_resolution(
             value = asset.get(key)
             if value:
                 download[key] = value
+        _attach_browser_recovery_diagnostics(download, response)
         return download
 
     preview_url = normalize_text(resolved.preview_url)
@@ -857,6 +1017,7 @@ def save_asset_resolution(
         "downloaded_bytes": len(body),
         "section": asset.get("section") or "body",
     }
+    _attach_browser_recovery_diagnostics(download, response)
     if resolved.provenance:
         download["provenance"] = list(resolved.provenance)
     if original_saved_path:
@@ -921,6 +1082,7 @@ def download_assets(
     | None = None,
     opener_requester: Callable[..., dict[str, Any]] | None = None,
     asset_download_concurrency: int | None = None,
+    fetch_policy: AssetFetchPolicy = "browser_first",
 ) -> dict[str, list[dict[str, Any]]]:
     if output_dir is None or not assets:
         return empty_asset_results()
@@ -978,6 +1140,7 @@ def download_assets(
             cookie_opener_builder=active_cookie_opener_builder,
             opener_requester=active_opener_requester,
             candidate_url_resolver=candidate_url_resolver,
+            fetch_policy=fetch_policy,
         ),
         asset_download_concurrency=1
         if document_fetcher_requires_caller_thread
@@ -1005,10 +1168,12 @@ __all__ = [
     "SUPPLEMENTARY_BLOCKING_TITLE_TOKENS",
     "SUPPLEMENTARY_KIND",
     "_CLOUDFLARE_CHALLENGE_TOKENS",
+    "AssetFetchPolicy",
     "FileDocumentFetcher",
     "ImageDocumentFetcher",
     "_build_cookie_seeded_opener",
     "_request_with_opener",
+    "browser_asset_recovery_allowed",
     "download_assets",
     "resolve_asset_download",
     "save_asset_resolution",

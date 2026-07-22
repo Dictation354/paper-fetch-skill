@@ -121,23 +121,22 @@ def _fake_python_script(version: str) -> str:
     PAPER_FETCH_FORMULA_TOOLS_DIR
     PAPER_FETCH_IMAGE_TOOLS_DIR
     MATHML_TO_LATEX_NODE_BIN
-    CLOAKBROWSER_HEADLESS
+    PAPER_FETCH_BROWSER_HEADLESS
     [env_sets.offline_env_keys]
     PAPER_FETCH_DOWNLOAD_DIR
     PAPER_FETCH_FORMULA_TOOLS_DIR
     PAPER_FETCH_IMAGE_TOOLS_DIR
     MATHML_TO_LATEX_NODE_BIN
-    CLOAKBROWSER_HEADLESS
+    PAPER_FETCH_BROWSER_HEADLESS
     PYTHONUTF8
     PYTHONIOENCODING
-    PAPER_FETCH_BROWSER_USER_AGENT
     [env_sets.shell_env_keys]
     PAPER_FETCH_ENV_FILE
     PAPER_FETCH_DOWNLOAD_DIR
     PAPER_FETCH_FORMULA_TOOLS_DIR
     PAPER_FETCH_IMAGE_TOOLS_DIR
     MATHML_TO_LATEX_NODE_BIN
-    CLOAKBROWSER_HEADLESS
+    PAPER_FETCH_BROWSER_HEADLESS
     PYTHONUTF8
     PYTHONIOENCODING
     [env_sets.activate_env_keys]
@@ -146,7 +145,7 @@ def _fake_python_script(version: str) -> str:
     PAPER_FETCH_FORMULA_TOOLS_DIR
     PAPER_FETCH_IMAGE_TOOLS_DIR
     MATHML_TO_LATEX_NODE_BIN
-    CLOAKBROWSER_HEADLESS
+    PAPER_FETCH_BROWSER_HEADLESS
     PYTHONUTF8
     PYTHONIOENCODING
     OUT
@@ -354,7 +353,7 @@ class OfflineInstallTests(unittest.TestCase):
             check=False,
         )
 
-    def test_default_install_writes_cdp_browser_env_hint(self) -> None:
+    def test_default_install_writes_browser_runtime_env_hint(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             bundle, fake_bin, home = self._create_bundle(Path(tmpdir))
             user_env = home / ".config" / "paper-fetch" / ".env"
@@ -367,16 +366,12 @@ class OfflineInstallTests(unittest.TestCase):
                 user_env.read_text(encoding="utf-8"), 'ELSEVIER_API_KEY="secret"\n'
             )
             offline_env = (bundle / "offline.env").read_text(encoding="utf-8")
-            self.assertIn(
-                'PAPER_FETCH_BROWSER_USER_AGENT="Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-                offline_env,
-            )
-            self.assertNotIn("# PAPER_FETCH_BROWSER_USER_AGENT", offline_env)
+            self.assertNotIn("PAPER_FETCH_BROWSER_USER_AGENT", offline_env)
             self.assertIn(
                 'CLOAKBROWSER_CDP_ENDPOINT="ws://127.0.0.1:9222/devtools/browser/..."',
                 offline_env,
             )
-            self.assertIn('CLOAKBROWSER_HEADLESS="true"', offline_env)
+            self.assertIn('PAPER_FETCH_BROWSER_HEADLESS="true"', offline_env)
             self.assertIn(
                 'CLOAKBROWSER_BINARY_PATH="/absolute/path/to/chrome"', offline_env
             )
@@ -394,9 +389,8 @@ class OfflineInstallTests(unittest.TestCase):
                 (bundle / "runtime" / "python-bin").read_text(encoding="utf-8"),
                 f"{fake_bin / 'python3'}\n",
             )
-            self.assertIn("CloakBrowser headless: true", result.stdout)
             self.assertIn(
-                "Browser-backed providers auto-start cloakbrowser Chrome", result.stdout
+                "Default browser backend: Camoufox (headless: true)", result.stdout
             )
 
     def test_default_install_copies_runtime_to_user_data_dir(self) -> None:
@@ -526,8 +520,8 @@ class OfflineInstallTests(unittest.TestCase):
                 f'set -gx PAPER_FETCH_IMAGE_TOOLS_DIR "{bundle / "image-tools"}"',
                 fish_config,
             )
-            self.assertIn('export CLOAKBROWSER_HEADLESS="true"', bashrc)
-            self.assertIn('set -gx CLOAKBROWSER_HEADLESS "true"', fish_config)
+            self.assertIn('export PAPER_FETCH_BROWSER_HEADLESS="true"', bashrc)
+            self.assertIn('set -gx PAPER_FETCH_BROWSER_HEADLESS "true"', fish_config)
             self.assertIn("export MATHML_TO_LATEX_NODE_BIN=", bashrc)
             self.assertIn("set -gx MATHML_TO_LATEX_NODE_BIN ", fish_config)
             self.assertIn('export PYTHONUTF8="1"', bashrc)
@@ -566,8 +560,10 @@ class OfflineInstallTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stderr)
             offline_env = (bundle / "offline.env").read_text(encoding="utf-8")
             self.assertIn("CLOAKBROWSER_CDP_ENDPOINT", offline_env)
-            self.assertIn('CLOAKBROWSER_HEADLESS="false"', offline_env)
-            self.assertIn("CloakBrowser headless: false", result.stdout)
+            self.assertIn('PAPER_FETCH_BROWSER_HEADLESS="false"', offline_env)
+            self.assertIn(
+                "Default browser backend: Camoufox (headless: false)", result.stdout
+            )
 
     def test_cli_registration_uses_offline_env_with_headless_without_legacy_browser_paths(
         self,
@@ -597,7 +593,7 @@ class OfflineInstallTests(unittest.TestCase):
             self.assertIn(
                 f"PAPER_FETCH_IMAGE_TOOLS_DIR={bundle / 'image-tools'}", codex_add
             )
-            self.assertIn("CLOAKBROWSER_HEADLESS=true", codex_add)
+            self.assertIn("PAPER_FETCH_BROWSER_HEADLESS=true", codex_add)
             self.assertFalse(
                 any(arg.startswith("CLOAKBROWSER_BINARY_PATH=") for arg in codex_add)
             )
@@ -633,7 +629,7 @@ class OfflineInstallTests(unittest.TestCase):
             self.assertIn(
                 f'PAPER_FETCH_IMAGE_TOOLS_DIR = "{bundle / "image-tools"}"', config
             )
-            self.assertIn('CLOAKBROWSER_HEADLESS = "true"', config)
+            self.assertIn('PAPER_FETCH_BROWSER_HEADLESS = "true"', config)
             self.assertNotIn("CLOAKBROWSER_BINARY_PATH", config)
             self.assertNotIn("PLAYWRIGHT_BROWSERS_PATH", config)
 
@@ -1111,18 +1107,15 @@ class OfflineInstallTests(unittest.TestCase):
         self.assertIn("Invoke-RuntimePythonScript -Script @'", script)
         self.assertIn("Invoke-RuntimePythonScript -Script $browserRuntimeCheck", script)
         self.assertIn("import cloakbrowser", script)
+        self.assertIn("import camoufox", script)
         self.assertIn("import playwright", script)
         self.assertIn(
             "from paper_fetch.runtime_browser import BrowserContextManager", script
         )
         self.assertIn('assert hasattr(cloakbrowser, "ensure_binary")', script)
+        self.assertIn('assert hasattr(camoufox, "Camoufox")', script)
         self.assertNotIn('assert hasattr(cloakbrowser, "launch")', script)
-        self.assertIn("function Get-BrowserUserAgent", script)
-        self.assertIn(
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
-            script,
-        )
-        self.assertNotIn("# PAPER_FETCH_BROWSER_USER_AGENT", script)
+        self.assertNotIn("PAPER_FETCH_BROWSER_USER_AGENT", script)
         self.assertIn("$OfflineEnvKeys = @(", script)
         self.assertIn("env_sets.offline_env_keys", script)
         self.assertIn("Format-DotenvAssignment", script)
@@ -1133,8 +1126,8 @@ class OfflineInstallTests(unittest.TestCase):
         self.assertIn("MATHML_TO_LATEX_NODE_BIN", script)
         self.assertIn("PAPER_FETCH_IMAGE_TOOLS_DIR", script)
         self.assertIn("playwright/driver/node.exe", script)
-        self.assertIn('CLOAKBROWSER_HEADLESS = "true"', script)
-        self.assertIn("CLOAKBROWSER_HEADLESS", script)
+        self.assertIn('PAPER_FETCH_BROWSER_HEADLESS = "true"', script)
+        self.assertIn("PAPER_FETCH_BROWSER_HEADLESS", script)
         self.assertIn('@("--version")', script)
         self.assertIn(
             '$args += @("--", $McpName, $python, "-X", "utf8", "-m", "paper_fetch.mcp.server")',
@@ -1157,8 +1150,8 @@ class OfflineInstallTests(unittest.TestCase):
 
         self.assertIn("Repo-local legacy Windows offline installer", script)
         self.assertIn("CLOAKBROWSER_CDP_ENDPOINT", script)
-        self.assertIn('"CLOAKBROWSER_HEADLESS"', script)
-        self.assertIn('$env:CLOAKBROWSER_HEADLESS = "true"', script)
+        self.assertIn('"PAPER_FETCH_BROWSER_HEADLESS"', script)
+        self.assertIn('$env:PAPER_FETCH_BROWSER_HEADLESS = "true"', script)
         self.assertIn('$env:PYTHONUTF8 = "1"', script)
         self.assertIn('$env:PYTHONIOENCODING = "utf-8"', script)
         self.assertIn("env_sets.offline_env_keys", script)
@@ -1219,8 +1212,7 @@ class OfflineInstallTests(unittest.TestCase):
         )
         self.assertEqual(
             set(manifest["env_sets"]["offline_env_keys"]),
-            (set(mcp_env_keys) - {"PAPER_FETCH_ENV_FILE"})
-            | {"PAPER_FETCH_BROWSER_USER_AGENT"},
+            set(mcp_env_keys) - {"PAPER_FETCH_ENV_FILE"},
         )
 
     def test_windows_offline_build_writes_default_mathml_node_env(self) -> None:

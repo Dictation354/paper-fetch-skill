@@ -67,7 +67,7 @@ resolve
 - `asset_profile` 语义：`none` / `body` / `all` 下分别下载什么，PDF fallback 是否应保存 `pymupdf4llm` 导出的 PDF 图片。
 - `probe_status()` 的本地检查边界见 [`providers.md`](providers.md#provider-status-local-boundary)。
 
-如果 provider 是开放获取出版社，默认优先 direct HTTP / XML / HTML；不要为了“更稳”直接引入 browser runtime。只有明确存在动态渲染、CDN 对普通 HTTP 拦截或 challenge runtime 需求时，才考虑接入 CDP browser runtime。
+如果 provider 是开放获取出版社，默认优先 direct HTTP / XML / HTML；不要为了“更稳”直接引入 browser runtime。只有明确存在动态渲染、CDN 对普通 HTTP 拦截或 challenge runtime 需求时，才考虑接入 selected-browser runtime。
 
 ## 1.5 用 scaffold 起步
 
@@ -316,7 +316,7 @@ Publisher 私有的 supplementary 属性或埋点必须由 provider extractor �
 - API / metadata 路线用 `build_user_agent(env)` 构造稳定工具 UA；publisher-facing HTML/PDF 直连用浏览器形态 UA，例如 `build_publisher_user_agent(env)` 或 browser workflow 现有 header helper，避免把 `paper-fetch-skill/...` 发给出版社 CDN。
 - 官方 PDF fallback 优先走 `PdfFallbackStrategy`；如果直接调用 `pdf_fetch_result_from_response()` / `pdf_fetch_result_from_bytes()`，应显式允许真实 PDF 的 PDF-only 保留，避免扫描 PDF 无法转 Markdown 时降级成 Crossref metadata-only source。
 - `context.parse_cache` 用于同一次 fetch 内复用 XML root、HTML extraction payload、asset extraction payload。
-- Browser runtime 只能通过 `RuntimeContext`、`BrowserContextManager` 或现有 browser workflow helper 管理；生产路径统一使用 managed/external CDP browser connection 打开 context/page。
+- Browser runtime 只能通过 `RuntimeContext`、browser runtime facade 或现有 browser workflow helper 管理；生产路径统一使用所选后端打开 context/page。只有显式 CloakBrowser 后端可以连接 external CDP。
 - Browser workflow 的 browser-backed HTML、PDF fallback 与资产下载必须通过 `RuntimeContext` / `BrowserContextManager` 管理的 keyed browser manager；managed Chrome 生命周期按进程共享，具体 context/page 必须在调用线程通过线程本地 CDP 连接创建。不得把主线程持有的同步 Playwright page/context 交给 worker 线程使用。
 - 普通 HTTP 资产下载仍可并发；只有显式 thread-private browser fetcher 才能在 worker 线程创建并关闭自己的 page/context/manager，且必须在同一个 worker 线程内关闭这些 sync browser 对象，否则容易残留浏览器子进程。
 

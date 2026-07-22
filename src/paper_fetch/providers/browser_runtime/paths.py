@@ -13,10 +13,13 @@ from urllib.parse import urlparse
 from filelock import FileLock
 
 from ...config import (
+    BROWSER_PROFILE_DIR_ENV_VAR,
+    BROWSER_USER_DATA_DIR_ENV_VAR,
     CLOAKBROWSER_PROFILE_DIR_ENV_VAR,
     CLOAKBROWSER_USER_DATA_DIR_ENV_VAR,
     WILEY_PROFILE_DIR_ENV_VAR,
     WILEY_STORAGE_STATE_JSON_ENV_VAR,
+    browser_env_value,
     resolve_user_data_dir,
 )
 from ...runtime_browser import is_borrowed_browser_context
@@ -34,8 +37,12 @@ PROVIDER_STORAGE_STATE_ENV_VARS = {
 }
 
 
-def default_provider_user_data_dir(env: Mapping[str, str], *, provider: str) -> Path:
+def default_provider_user_data_dir(
+    env: Mapping[str, str], *, provider: str, backend: str
+) -> Path:
     provider_key = sanitize_filename(normalize_text(provider).lower() or "browser")
+    if normalize_text(backend).lower() == "camoufox":
+        provider_key = f"{provider_key}-camoufox"
     return resolve_user_data_dir(env) / "publisher-browser-profiles" / provider_key
 
 
@@ -47,18 +54,41 @@ def provider_storage_state_env_var(provider: str) -> str | None:
     return PROVIDER_STORAGE_STATE_ENV_VARS.get(normalize_text(provider).lower())
 
 
-def configured_user_data_dir(env: Mapping[str, str]) -> Path | None:
-    value = env.get(CLOAKBROWSER_USER_DATA_DIR_ENV_VAR, "").strip()
+def configured_user_data_dir(
+    env: Mapping[str, str], *, backend: str
+) -> Path | None:
+    value = browser_env_value(
+        env,
+        BROWSER_USER_DATA_DIR_ENV_VAR,
+        legacy_name=(
+            CLOAKBROWSER_USER_DATA_DIR_ENV_VAR
+            if normalize_text(backend).lower() == "cloakbrowser"
+            else None
+        ),
+    )
     return Path(value).expanduser() if value else None
 
 
-def configured_profile_dir(env: Mapping[str, str], *, provider: str) -> Path | None:
-    provider_env_var = provider_profile_env_var(provider)
+def configured_profile_dir(
+    env: Mapping[str, str], *, provider: str, backend: str
+) -> Path | None:
+    generic_value = browser_env_value(env, BROWSER_PROFILE_DIR_ENV_VAR)
+    if generic_value:
+        return Path(generic_value).expanduser()
+    provider_env_var = (
+        provider_profile_env_var(provider)
+        if normalize_text(backend).lower() == "cloakbrowser"
+        else None
+    )
     if provider_env_var is not None:
         provider_value = env.get(provider_env_var, "").strip()
         if provider_value:
             return Path(provider_value).expanduser()
-    value = env.get(CLOAKBROWSER_PROFILE_DIR_ENV_VAR, "").strip()
+    value = (
+        env.get(CLOAKBROWSER_PROFILE_DIR_ENV_VAR, "").strip()
+        if normalize_text(backend).lower() == "cloakbrowser"
+        else ""
+    )
     return Path(value).expanduser() if value else None
 
 
@@ -86,7 +116,9 @@ def runtime_with_default_storage_profile(
 
     return replace(
         runtime,
-        user_data_dir=default_provider_user_data_dir(env, provider=provider),
+        user_data_dir=default_provider_user_data_dir(
+            env, provider=provider, backend=runtime.backend
+        ),
     )
 
 

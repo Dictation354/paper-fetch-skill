@@ -27,6 +27,7 @@ def _runtime_config(tmp_path: Path, *, provider: str, doi: str) -> BrowserRuntim
         artifact_dir=tmp_path / "artifacts" / provider,
         headless=True,
         user_agent=None,
+        backend="cloakbrowser",
         cdp_endpoint="ws://127.0.0.1:9222/devtools/browser/test",
     )
 
@@ -144,7 +145,10 @@ def test_browser_preflight_adds_provider_storage_path_for_external_cdp(
             providers=["wiley"],
             timeout_ms=45000,
             browser_user_agent="Mozilla/5.0 preflight-test",
-            env={XDG_DATA_HOME_ENV_VAR: str(tmp_path)},
+            env={
+                "PAPER_FETCH_BROWSER_BACKEND": "cloakbrowser",
+                XDG_DATA_HOME_ENV_VAR: str(tmp_path),
+            },
         )
 
     assert len(results) == 1
@@ -382,6 +386,7 @@ def test_browser_preflight_records_failure_and_continues(tmp_path: Path) -> None
             artifact_dir=tmp_path / "artifacts" / provider,
             headless=True,
             user_agent=None,
+            backend="cloakbrowser",
             user_data_dir=tmp_path / "profiles" / provider,
         )
 

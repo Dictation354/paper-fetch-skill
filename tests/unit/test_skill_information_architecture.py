@@ -87,6 +87,9 @@ def test_environment_documents_precedence_offline_wrapper_and_local_tooling() ->
     assert "--reuse-env-file <path>" in environment
     assert "resource://paper-fetch/provider-catalog" in environment
     for variable in (
+        "PAPER_FETCH_BROWSER_BACKEND",
+        "PAPER_FETCH_BROWSER_HEADLESS",
+        "PAPER_FETCH_BROWSER_TIMEOUT_MS",
         "PAPER_FETCH_CDP_EXTERNAL_NEW_CONTEXT",
         "CLOAKBROWSER_CDP_ENDPOINT",
         "CLOAKBROWSER_BINARY_PATH",

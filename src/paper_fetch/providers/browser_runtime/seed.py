@@ -117,6 +117,43 @@ def filter_browser_cookies_for_url(
     ]
 
 
+def browser_context_seed_from_session(
+    context: Any,
+    *,
+    final_url: str,
+    user_agent: str | None,
+    backend: str,
+    fetcher: str | None = None,
+) -> dict[str, Any]:
+    """Capture a safe reusable seed from a selected-backend browser session."""
+
+    already_filtered = False
+    try:
+        cookies = context.cookies([final_url])
+        already_filtered = True
+    except TypeError:
+        try:
+            cookies = context.cookies()
+        except Exception:
+            cookies = []
+    except Exception:
+        cookies = []
+    if not already_filtered:
+        cookies = filter_browser_cookies_for_url(list(cookies or []), final_url)
+    backend_name = normalize_text(backend).lower()
+    fetcher_name = normalize_text(fetcher) or backend_name
+    return {
+        "browser_cookies": normalize_browser_cookies_for_playwright(
+            list(cookies or []),
+            fallback_url=final_url,
+        ),
+        "browser_user_agent": normalize_text(user_agent) or None,
+        "browser_final_url": normalize_text(final_url) or None,
+        "paper_fetch_html_fetcher": fetcher_name,
+        "diagnostics": {"browser_backend": backend_name},
+    }
+
+
 def browser_context_seed_from_mapping(
     seed: Mapping[str, Any] | None,
 ) -> BrowserContextSeed:

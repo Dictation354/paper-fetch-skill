@@ -683,7 +683,7 @@ class MdpiProviderTests(AtyponBrowserWorkflowProviderTestCase):
         self.assertEqual(result["asset_failures"], [])
         self.assertEqual(saved_bytes, png_header(640, 480))
 
-    def test_mdpi_asset_partial_warning_is_only_emitted_by_artifacts(self) -> None:
+    def test_mdpi_all_asset_failures_are_reported_by_artifacts(self) -> None:
         client = MdpiClient(transport=None, env={})
         failure = {
             "kind": "figure",
@@ -718,14 +718,14 @@ class MdpiProviderTests(AtyponBrowserWorkflowProviderTestCase):
                 source_trail=[],
             )
 
-        partial_warnings = [
+        asset_warnings = [
             warning
             for warning in warnings
-            if "related assets were only partially downloaded" in warning
+            if "related assets" in warning
         ]
         self.assertEqual(
-            partial_warnings,
-            ["MDPI related assets were only partially downloaded (1 failed)."],
+            asset_warnings,
+            ["MDPI related assets could not be downloaded (1 failed)."],
         )
 
     def test_mdpi_extra_real_html_fixtures_extract_fulltext(self) -> None:

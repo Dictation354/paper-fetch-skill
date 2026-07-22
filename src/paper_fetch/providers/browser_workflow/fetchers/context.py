@@ -22,6 +22,8 @@ from ....runtime_browser import browser_context_options
 from ....utils import dedupe_normalized, normalize_text
 from ..._pdf_candidates import BROWSER_WORKFLOW_PDF_URL_TOKENS
 from ...browser_runtime.seed import parse_optional_int
+from ...browser_runtime.context import open_browser_context
+from ...browser_runtime.types import BrowserRuntimeConfig
 from .diagnostics import (
     _compact_failure_diagnostic,
     _context_failure_diagnostic as _build_context_failure_diagnostic,
@@ -94,7 +96,30 @@ def _new_browser_context(
     cdp_endpoint: str | None = None,
     profile_dir: str | Path | None = None,
     user_data_dir: str | Path | None = None,
+    browser_config: BrowserRuntimeConfig | None = None,
 ) -> tuple[Any | None, Any | None, Any]:
+    if browser_config is not None:
+        from dataclasses import replace
+
+        active_config = replace(
+            browser_config,
+            headless=headless,
+            user_agent=(
+                normalize_text(user_agent) or browser_config.user_agent
+                if browser_config.backend == "cloakbrowser"
+                else None
+            ),
+            persist_storage_state=False,
+        )
+        manager, browser_context = open_browser_context(
+            active_config,
+            runtime_context=(
+                runtime_context
+                if runtime_context is not None and use_runtime_shared_browser
+                else None
+            ),
+        )
+        return manager, None, browser_context
     context_kwargs = browser_context_options(user_agent=user_agent)
     if runtime_context is not None and use_runtime_shared_browser:
         if isinstance(runtime_context, RuntimeContext):
@@ -209,6 +234,7 @@ class _BaseBrowserDocumentFetcher:
         cdp_endpoint: str | None = None,
         profile_dir: str | Path | None = None,
         user_data_dir: str | Path | None = None,
+        browser_config: BrowserRuntimeConfig | None = None,
     ) -> None:
         self._browser_context_seed_getter = browser_context_seed_getter
         self._seed_urls_getter = seed_urls_getter
@@ -227,6 +253,7 @@ class _BaseBrowserDocumentFetcher:
         self._user_data_dir = (
             Path(user_data_dir).expanduser() if user_data_dir is not None else None
         )
+        self._browser_config = browser_config
         self._browser_manager = None
         self._context = None
         self._page = None
@@ -269,6 +296,11 @@ class _BaseBrowserDocumentFetcher:
             self._current_seed().get("browser_user_agent")
         ) or normalize_text(self._browser_user_agent)
         try:
+            browser_config_kwargs = (
+                {"browser_config": self._browser_config}
+                if self._browser_config is not None
+                else {}
+            )
             self._browser_manager, _unused_browser, self._context = (
                 _new_browser_context(
                     runtime_context=self._runtime_context,
@@ -279,6 +311,7 @@ class _BaseBrowserDocumentFetcher:
                     cdp_endpoint=self._cdp_endpoint,
                     profile_dir=self._profile_dir,
                     user_data_dir=self._user_data_dir,
+                    **browser_config_kwargs,
                 )
             )
             self._sync_context_cookies()

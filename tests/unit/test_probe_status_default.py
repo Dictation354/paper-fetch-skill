@@ -60,7 +60,10 @@ def test_default_probe_status_without_requirements_is_ready(monkeypatch: Any) ->
 
     result = _client(
         catalog,
-        env={"CLOAKBROWSER_CDP_ENDPOINT": "ws://127.0.0.1:9222/devtools/browser/test"},
+        env={
+            "PAPER_FETCH_BROWSER_BACKEND": "cloakbrowser",
+            "CLOAKBROWSER_CDP_ENDPOINT": "ws://127.0.0.1:9222/devtools/browser/test",
+        },
     ).probe_status()
 
     assert result.status == READY
@@ -77,7 +80,10 @@ def test_default_probe_status_reports_missing_env(monkeypatch: Any) -> None:
 
     result = _client(
         catalog,
-        env={"CLOAKBROWSER_CDP_ENDPOINT": "ws://127.0.0.1:9222/devtools/browser/test"},
+        env={
+            "PAPER_FETCH_BROWSER_BACKEND": "cloakbrowser",
+            "CLOAKBROWSER_CDP_ENDPOINT": "ws://127.0.0.1:9222/devtools/browser/test",
+        },
     ).probe_status()
 
     assert result.status == NOT_CONFIGURED
@@ -121,7 +127,10 @@ def test_default_probe_status_checks_playwright_requirement(monkeypatch: Any) ->
 
     result = _client(
         catalog,
-        env={"CLOAKBROWSER_CDP_ENDPOINT": "ws://127.0.0.1:9222/devtools/browser/test"},
+        env={
+            "PAPER_FETCH_BROWSER_BACKEND": "cloakbrowser",
+            "CLOAKBROWSER_CDP_ENDPOINT": "ws://127.0.0.1:9222/devtools/browser/test",
+        },
     ).probe_status()
 
     checks = {check.name: check for check in result.checks}
@@ -142,7 +151,10 @@ def test_default_probe_status_checks_browser_runtime_without_launch(
 
     result = _client(
         catalog,
-        env={"CLOAKBROWSER_CDP_ENDPOINT": "ws://127.0.0.1:9222/devtools/browser/test"},
+        env={
+            "PAPER_FETCH_BROWSER_BACKEND": "cloakbrowser",
+            "CLOAKBROWSER_CDP_ENDPOINT": "ws://127.0.0.1:9222/devtools/browser/test",
+        },
     ).probe_status()
 
     checks = {check.name: check for check in result.checks}
