@@ -28,6 +28,7 @@
 - 修复干净 `setup-python` 环境缺少仅解析阶段使用的 `packaging` 时，滚动离线构建在实际打包前失败的问题；`merge`、`compare` 与构建前 `verify` 现在保持标准库自包含。
 - 修复滚动 prerelease 指向较旧稳定版源码 commit 时的发布权限问题：tag 与 Release 变更改用仓库级 `ROLLING_RELEASE_TOKEN`，同时保持 job 内置 token 只读。
 - 修复 Windows 离线安装脚本环境变量数组末尾逗号导致打包前 PowerShell 解析失败的问题，并为三个发布脚本增加静态回归契约。
+- 修复稳定版发布 job 因依赖链中按设计跳过的依赖刷新任务而被 GitHub 隐式 `success()` 条件跳过的问题；发布条件现在始终求值，并显式要求全部直接质量门和离线构建成功。
 
 ## 3.1.3 - 2026-07-15
 

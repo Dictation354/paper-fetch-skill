@@ -28,6 +28,7 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 - Fixed rolling offline builds failing before packaging when clean `setup-python` environments lacked the resolver-only `packaging` dependency; `merge`, `compare`, and pre-build `verify` now remain standard-library bootstrap paths.
 - Fixed rolling prerelease publication against an older stable source commit by using a repository-scoped `ROLLING_RELEASE_TOKEN` for tag and Release mutations while keeping the built-in job token read-only.
 - Fixed trailing commas in Windows offline-installer environment arrays that caused PowerShell parser errors before packaging began, with a static regression contract covering all three release scripts.
+- Fixed stable release publication being skipped by GitHub's implicit `success()` status check when the dependency chain contained intentionally skipped refresh jobs; the release condition now always evaluates and explicitly requires every direct quality gate and offline build to succeed.
 
 ## 3.1.3 - 2026-07-15
 

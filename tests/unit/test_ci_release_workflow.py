@@ -19,6 +19,12 @@ OFFLINE_JOB_IDS = (
     "offline-macos-install",
     "offline-windows-x86-64",
 )
+RELEASE_NEED_JOB_IDS = (
+    "lint",
+    "integration",
+    "package-smoke",
+    *OFFLINE_JOB_IDS,
+)
 ROLLING_TARGETS = {
     "linux-x86_64-cp311",
     "linux-x86_64-cp312",
@@ -72,6 +78,7 @@ def _evaluate_github_if(
     force_refresh: bool = False,
     dependency_refresh_result: str = "skipped",
     dependency_changed: bool = False,
+    release_needs_success: bool = True,
 ) -> bool:
     expr = expression.strip()
     if expr.startswith("${{") and expr.endswith("}}"):
@@ -90,6 +97,8 @@ def _evaluate_github_if(
         "needs.dependency-refresh-compare.result",
         "dependency_refresh_result",
     )
+    for job_id in RELEASE_NEED_JOB_IDS:
+        expr = expr.replace(f"needs.{job_id}.result", "release_needs_result")
     expr = expr.replace("github.event_name", "event_name")
     expr = expr.replace("inputs.run_offline_windows_only", "run_offline_windows_only")
     expr = expr.replace("inputs.publish_release", "publish_release")
@@ -107,6 +116,9 @@ def _evaluate_github_if(
                 "dependency_refresh_result": dependency_refresh_result,
                 "publish_release": publish_release,
                 "ref": ref,
+                "release_needs_result": (
+                    "success" if release_needs_success else "failure"
+                ),
                 "run_offline_windows_only": run_offline_windows_only,
             },
         )
@@ -467,12 +479,11 @@ class CiReleaseWorkflowTests(unittest.TestCase):
         release_job = workflow["jobs"]["release-offline-packages"]
         condition = _job_if(workflow, "release-offline-packages")
 
-        self.assertTrue(
-            {"lint", "integration", "package-smoke", *OFFLINE_JOB_IDS}.issubset(
-                release_job["needs"]
-            )
-        )
+        self.assertTrue(set(RELEASE_NEED_JOB_IDS).issubset(release_job["needs"]))
         self.assertNotIn("unit", release_job["needs"])
+        self.assertIn("always()", condition)
+        for job_id in RELEASE_NEED_JOB_IDS:
+            self.assertIn(f"needs.{job_id}.result == 'success'", condition)
         self.assertFalse(
             _evaluate_github_if(condition, event_name="push", ref="refs/heads/main")
         )
@@ -525,6 +536,15 @@ class CiReleaseWorkflowTests(unittest.TestCase):
                 ref="refs/tags/v3.0.0",
                 publish_release=True,
                 force_refresh=True,
+            )
+        )
+        self.assertFalse(
+            _evaluate_github_if(
+                condition,
+                event_name="workflow_dispatch",
+                ref="refs/tags/v3.0.0",
+                publish_release=True,
+                release_needs_success=False,
             )
         )
 
