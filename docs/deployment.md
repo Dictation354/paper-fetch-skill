@@ -82,7 +82,7 @@ CI 自动发布规则：
 
 主包版本号同步清单：
 
-当前默认 Camoufox、CloakBrowser 弃用和 IEEE browser recovery 行为按 SemVer minor 准备为 `3.2.0`；构建脚本不得把高于该版本的 HEAD 降级。
+当前依赖维护补丁按 SemVer patch 准备为 `3.2.1`；构建脚本不得把高于该版本的 HEAD 降级。
 
 - `pyproject.toml` 的 `[project].version` 是 Python 包和离线构建脚本读取的主版本来源。
 - `src/paper_fetch/config.py` 的 `DEFAULT_USER_AGENT` 需要同步默认 `paper-fetch-skill/<version>`。

@@ -6,6 +6,14 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 3.2.1 - 2026-07-25
+
+### 变更
+
+- 将 GitHub Actions 中全部 Python 环境初始化步骤从 `actions/setup-python@v6` 升级到 `actions/setup-python@v7`。
+- 将已弃用 CloakBrowser 的兼容范围从 `>=0.4,<0.5` 扩展到 `>=0.4,<0.6`，覆盖 0.5.x Python wrapper，同时保持 Camoufox 为唯一默认浏览器后端。
+- 将 KaTeX 从 `0.17.0` 升级到 `0.18.1`，并同步根目录与内置公式工具的 manifest 和 lockfile。
+
 ## 3.2.0 - 2026-07-22
 
 ### 新增

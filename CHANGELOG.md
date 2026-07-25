@@ -6,6 +6,14 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 3.2.1 - 2026-07-25
+
+### Changed
+
+- Updated all GitHub Actions Python setup steps from `actions/setup-python@v6` to `actions/setup-python@v7`.
+- Expanded the deprecated CloakBrowser compatibility range from `>=0.4,<0.5` to `>=0.4,<0.6`, covering the 0.5.x Python wrapper while keeping Camoufox as the sole default browser backend.
+- Upgraded KaTeX from `0.17.0` to `0.18.1` and synchronized the root and bundled formula-tool manifests and lockfiles.
+
 ## 3.2.0 - 2026-07-22
 
 ### Added
