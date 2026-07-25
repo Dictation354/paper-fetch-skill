@@ -5,7 +5,7 @@
   "description": "Auxiliary Node tools for MathML to LaTeX evaluation",
   "license": "UNLICENSED",
   "dependencies": {
-    "katex": "0.17.0",
+    "katex": "0.18.1",
     "mathml-to-latex": "1.8.0"
   }
 }
