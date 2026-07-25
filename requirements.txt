@@ -1,3 +1,3 @@
 -e .[dev]
 camoufox>=0.5.4,<0.6
-cloakbrowser>=0.4,<0.5
+cloakbrowser>=0.4,<0.6
