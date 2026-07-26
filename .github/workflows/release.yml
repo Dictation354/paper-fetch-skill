@@ -47,6 +47,7 @@ jobs:
     uses: ./.github/workflows/offline.yml
     with:
       ref: ${{ needs.verify-tag.outputs.tag }}
+      posix_tooling_ref: ${{ github.event_name == 'workflow_dispatch' && github.sha || '' }}
 
   publish:
     needs: [verify-tag, offline]

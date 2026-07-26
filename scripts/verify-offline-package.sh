@@ -161,6 +161,9 @@ source "$INSTALL_ROOT/activate-offline.sh"
 log "Verifying command entrypoints"
 paper-fetch --help >/dev/null
 texmath --help >/dev/null
+printf '<math><mi>x</mi></math>' \
+  | texmath -f mathml -t tex \
+  | grep -q 'x'
 paper-fetch-install-image-tools --target-dir "$INSTALL_ROOT/image-tools" >/dev/null
 
 log "Verifying installed version and skill provenance"

@@ -72,6 +72,8 @@ def test_offline_builds_full_extra_for_supported_python_matrix() -> None:
     assert 'full: "true"' in workflow
     assert "build-offline-package.sh" in workflow
     assert "build-offline-package-windows.ps1" in workflow
+    assert "posix_tooling_ref" in workflow
+    assert 'git show "$TOOLING_REF:scripts/build-offline-package.sh"' in workflow
 
 
 def test_release_emits_sbom_checksums_and_build_provenance() -> None:
@@ -83,6 +85,10 @@ def test_release_emits_sbom_checksums_and_build_provenance() -> None:
     assert "actions/attest-build-provenance@" in workflow
     assert "attestations: write" in workflow
     assert "id-token: write" in workflow
+    assert (
+        "posix_tooling_ref: ${{ github.event_name == 'workflow_dispatch' && github.sha || '' }}"
+        in workflow
+    )
 
 
 def test_actions_are_pinned_to_full_commit_shas() -> None:

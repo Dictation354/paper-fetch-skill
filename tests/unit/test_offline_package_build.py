@@ -38,6 +38,10 @@ class OfflinePackageBuildTests(unittest.TestCase):
         self.assertNotIn("--exclude='./legacy'", script)
         self.assertNotIn("-m playwright install chromium", script)
         self.assertIn("Creating macOS tar.gz archive", script)
+        self.assertIn('"$npm_bin" ci --omit=dev --silent', script)
+        self.assertIn("mathml_to_latex_cli.mjs", script)
+        self.assertIn("MATHML_TO_LATEX_NODE_BIN", script)
+        self.assertNotIn("--no-node", script)
 
     def test_posix_manifest_and_readme_document_browser_backend_policy(self) -> None:
         script = BUILD_OFFLINE_PACKAGE.read_text(encoding="utf-8")
@@ -102,6 +106,7 @@ class OfflinePackageBuildTests(unittest.TestCase):
         self.assertIn("mcp_config.json", script)
         self.assertIn("activate-offline.sh executed shell code", script)
         self.assertIn("MATHML_TO_LATEX_NODE_BIN", script)
+        self.assertIn("<math><mi>x</mi></math>", script)
         self.assertIn("PYTHONUTF8", script)
         self.assertIn("PYTHONIOENCODING", script)
         self.assertIn("paper-fetch doctor", script)

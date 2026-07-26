@@ -6,6 +6,10 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+### Fixed
+
+- Made Linux/macOS offline formula packaging independent of runner-provided `texmath` by reusing the locked `mathml-to-latex` package behind the existing compatibility launcher, and allowed stable-release retries to overlay trusted POSIX packaging tooling without moving an immutable source tag.
+
 ## 4.0.0 - 2026-07-26
 
 ### Breaking

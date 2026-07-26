@@ -176,12 +176,16 @@ build_project_runtime() {
 
 bundle_formula_tools() {
   local staging="$1"
+  local formula_tools="$staging/formula-tools"
+  local node_bin npm_bin
   log "Bundling formula tools"
+  node_bin="$(command -v node || true)"
+  npm_bin="$(command -v npm || true)"
+  [ -n "$node_bin" ] || die "Bundling formula tools requires Node.js."
+  [ -n "$npm_bin" ] || die "Bundling formula tools requires npm."
+
   PYTHONPATH="$staging/runtime/site-packages${PYTHONPATH:+:$PYTHONPATH}" \
-    "$PYTHON_BIN" -m paper_fetch.formula.install --target-dir "$staging/formula-tools" --no-node
-  "$staging/formula-tools/bin/texmath" --help >/dev/null
-  PYTHONPATH="$staging/runtime/site-packages${PYTHONPATH:+:$PYTHONPATH}" \
-    "$PYTHON_BIN" - "$staging/formula-tools" <<'PY'
+    "$PYTHON_BIN" - "$formula_tools" <<'PY'
 from pathlib import Path
 import sys
 
@@ -189,6 +193,37 @@ from paper_fetch.formula.install import stage_bundled_node_workspace
 
 stage_bundled_node_workspace(Path(sys.argv[1]))
 PY
+  "$npm_bin" ci --omit=dev --silent --prefix "$formula_tools"
+
+  mkdir -p "$formula_tools/bin"
+  cat > "$formula_tools/bin/texmath" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+
+TOOLS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+if [ "${1:-}" = "--help" ]; then
+  printf 'paper-fetch bundled MathML-to-LaTeX compatibility launcher\n'
+  exit 0
+fi
+
+node_bin="${MATHML_TO_LATEX_NODE_BIN:-}"
+if [ -z "$node_bin" ]; then
+  node_bin="$(command -v node || true)"
+fi
+if [ -z "$node_bin" ] || [ ! -x "$node_bin" ]; then
+  printf 'Bundled MathML-to-LaTeX launcher requires an executable Node.js runtime.\n' >&2
+  exit 1
+fi
+
+exec "$node_bin" "$TOOLS_DIR/mathml_to_latex_cli.mjs"
+EOF
+  chmod +x "$formula_tools/bin/texmath"
+  MATHML_TO_LATEX_NODE_BIN="$node_bin" \
+    "$formula_tools/bin/texmath" --help >/dev/null
+  printf '<math><mi>x</mi></math>' \
+    | MATHML_TO_LATEX_NODE_BIN="$node_bin" \
+      "$formula_tools/bin/texmath" -f mathml -t tex \
+    | grep -q 'x'
 }
 
 bundle_image_tools() {

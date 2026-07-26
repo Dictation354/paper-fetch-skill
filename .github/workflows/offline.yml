@@ -7,6 +7,10 @@ on:
         description: Git ref to package; defaults to the caller commit
         required: false
         type: string
+      posix_tooling_ref:
+        description: Trusted commit whose POSIX packaging script should overlay an immutable source ref
+        required: false
+        type: string
   workflow_dispatch:
     inputs:
       ref:
@@ -29,6 +33,14 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ inputs.ref || github.sha }}
+      - name: Overlay trusted POSIX release tooling
+        if: ${{ inputs.posix_tooling_ref != '' }}
+        env:
+          TOOLING_REF: ${{ inputs.posix_tooling_ref }}
+        run: |
+          git fetch --no-tags --depth=1 origin "$TOOLING_REF"
+          git show "$TOOLING_REF:scripts/build-offline-package.sh" \
+            > scripts/build-offline-package.sh
       - uses: ./.github/actions/setup-python-deps
         with:
           python-version: ${{ matrix.python-version }}
