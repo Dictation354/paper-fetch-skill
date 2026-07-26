@@ -12,6 +12,7 @@ import xml.etree.ElementTree as ET
 from ..models import SemanticLosses
 from ..publisher_identity import extract_doi, normalize_doi
 from ..utils import dedupe_authors, normalize_text
+from ..xml_security import XmlParseFailure, parse_xml
 from ._article_markdown_common import (
     child_text,
     collect_conversion_notes,
@@ -523,8 +524,16 @@ def parse_jats_xml(
     xml_root: ET.Element | None = None,
 ) -> JatsExtraction | None:
     try:
-        root = xml_root if xml_root is not None else ET.fromstring(xml_body)
-    except ET.ParseError:
+        root = (
+            xml_root
+            if xml_root is not None
+            else parse_xml(
+                xml_body,
+                source="JATS XML payload",
+                allow_external_doctype=True,
+            )
+        )
+    except XmlParseFailure:
         return None
     if not isinstance(root.tag, str) or xml_local_name(root.tag) != "article":
         return None

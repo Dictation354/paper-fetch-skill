@@ -197,7 +197,7 @@ SERVER_SCRIPT = textwrap.dedent(
                         build_provider_status_check(
                             "runtime_env",
                             "not_configured",
-                            "wiley browser runtime requires Playwright and CloakBrowser packages.",
+                            "wiley browser runtime requires Playwright and Camoufox packages.",
                         ),
                         build_provider_status_check(
                             "playwright_dependency",
@@ -217,7 +217,7 @@ SERVER_SCRIPT = textwrap.dedent(
                         build_provider_status_check(
                             "runtime_env",
                             "not_configured",
-                            "science browser runtime requires Playwright and CloakBrowser packages.",
+                            "science browser runtime requires Playwright and Camoufox packages.",
                         ),
                         build_provider_status_check(
                             "playwright_dependency",

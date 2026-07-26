@@ -60,10 +60,10 @@ fixtures:
   - must not include Access Denied
   fixes: []
   baseline_markdown_path: tests/fixtures/golden_criteria/10.1073_pnas.2406303121/extracted.md
-  baseline_markdown_sha256: bbdcafed0498d3208f90bc1de8549a3995ab7d15ea17ecbbb3864168a0d0157e
+  baseline_markdown_sha256: 9bfd93392d232d79c8392ce5d8a40bac4e3274799e9751d0b6bc7e7eecafc534
   review_notes: Semantic review completed against committed fixture evidence.
   markdown_quality_path: tests/fixtures/golden_criteria/10.1073_pnas.2406303121/markdown-quality.json
-  markdown_quality_sha256: 762f88579353b00840316fa21493cf9339e036f65258ad5431e86064524630d8
+  markdown_quality_sha256: 9d992c4f2de6b5cbbddf610072d9faac733b3b54a99a9da27982d688057b9f98
 - fixture: tests/fixtures/block/10.1073_pnas.2509692123
   purpose: abstract_only
   doi: 10.1073/pnas.2509692123

@@ -1195,6 +1195,7 @@ class AmsProviderTests(AtyponBrowserWorkflowProviderTestCase):
                 for candidate in (
                     "denoted as $p(\\mu_{n}, \\sigma_{n}^{2}",
                     "denoted as $p{({\\mu_{n},\\sigma_{n}^{2}",
+                    "denoted as $p(\\mu_{n},\\sigma_{n}^{2}",
                 )
             )
         )
@@ -1220,6 +1221,7 @@ class AmsProviderTests(AtyponBrowserWorkflowProviderTestCase):
                     "*ϕ*<sub>ON</sub>",
                     (
                         "$\\overset{\\cdot}{q}(q, \\phi_{2})$ (blue)",
+                        "$\\overset{\\cdot}{q}(q,\\phi_{2})$ (blue)",
                         "$\\overset{˙}{q}{({q,\\phi_{2}})}$ (blue)",
                     ),
                     "*ϕ*<sub>OFF</sub> (blue)",

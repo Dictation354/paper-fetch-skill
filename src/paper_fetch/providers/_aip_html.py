@@ -411,12 +411,18 @@ def _reference_from_citation_meta(
 
     authors = fields.get("author") or []
     journal = fields.get("journal_title") or fields.get("title") or []
-    year = (fields.get("year") or [None])[0]
-    volume = (fields.get("volume") or [None])[0]
-    pages = (fields.get("pages") or [None])[0]
-    doi = (fields.get("doi") or [None])[0]
+    year_values = fields.get("year") or []
+    volume_values = fields.get("volume") or []
+    page_values = fields.get("pages") or []
+    doi_values = fields.get("doi") or []
+    year = year_values[0] if year_values else None
+    volume = volume_values[0] if volume_values else None
+    pages = page_values[0] if page_values else None
+    doi = doi_values[0] if doi_values else None
     raw_parts = [", ".join(authors), *(journal[:1]), year, volume, pages]
-    raw = normalize_text(", ".join(part for part in raw_parts if normalize_text(part)))
+    raw = normalize_text(
+        ", ".join(str(part) for part in raw_parts if part and normalize_text(part))
+    )
     if not raw:
         raw = normalize_text(value)
     if doi is None:

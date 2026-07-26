@@ -6,6 +6,7 @@ import argparse
 import os
 import shutil
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
 from collections.abc import Sequence
@@ -24,7 +25,7 @@ def log(message: str) -> None:
 
 
 def warn(message: str) -> None:
-    print(f"\033[1;33m!!\033[0m {message}", file=os.sys.stderr)
+    print(f"\033[1;33m!!\033[0m {message}", file=sys.stderr)
 
 
 def _temporary_log_path(log_prefix: str) -> Path:

@@ -42,6 +42,9 @@ class ServiceRuntimeTests(unittest.TestCase):
             paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
             context = RuntimeContext(
                 env={},
+                transport=FixtureHtmlTransport(
+                    {resolved.landing_url: {"body": b"<html><body /></html>"}}
+                ),
                 clients={
                     "crossref": crossref,
                     "science": StubProvider(
@@ -185,10 +188,16 @@ class ServiceRuntimeTests(unittest.TestCase):
             different_context_counter = {"count": 0}
             first_context = RuntimeContext(
                 env={},
+                transport=FixtureHtmlTransport(
+                    {resolved.landing_url: {"body": b"<html><body /></html>"}}
+                ),
                 clients={"crossref": counting_crossref(different_context_counter)},
             )
             second_context = RuntimeContext(
                 env={},
+                transport=FixtureHtmlTransport(
+                    {resolved.landing_url: {"body": b"<html><body /></html>"}}
+                ),
                 clients={"crossref": counting_crossref(different_context_counter)},
             )
 
@@ -198,10 +207,16 @@ class ServiceRuntimeTests(unittest.TestCase):
             contextless_counter = {"count": 0}
             _probe_has_fulltext(
                 resolved.query,
+                transport=FixtureHtmlTransport(
+                    {resolved.landing_url: {"body": b"<html><body /></html>"}}
+                ),
                 clients={"crossref": counting_crossref(contextless_counter)},
             )
             _probe_has_fulltext(
                 resolved.query,
+                transport=FixtureHtmlTransport(
+                    {resolved.landing_url: {"body": b"<html><body /></html>"}}
+                ),
                 clients={"crossref": counting_crossref(contextless_counter)},
             )
         finally:

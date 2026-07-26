@@ -1,5 +1,5 @@
 ---
-title: "10.3390/math11030657"
+title: "Are State-Owned Enterprises Really Ineffective? An Empirical Study Based on Stochastic Frontier Analysis"
 authors: "Chao Liu, Jiaye Lu, Ding Li, Mengyao Jia, Kunru Han"
 doi: "10.3390/math11030657"
 source: "mdpi_html"
@@ -9,13 +9,11 @@ has_abstract: true
 token_estimate: 17800
 ---
 
-# 10.3390/math11030657
+# Are State-Owned Enterprises Really Ineffective? An Empirical Study Based on Stochastic Frontier Analysis
 
 ## Abstract
 
 Technical efficiency (TE) and total factor productivity (TFP) are important criteria to ensure the enhancement of the quality and efficiency of state-owned enterprises (SOEs) and function as important indicators to assess the quality of their accomplishments. The purpose of this study is to explore whether the efficiency of SOEs is higher or lower than that of private enterprises. Transcendental logarithmic production function and stochastic frontier analysis (SFA) are used to assess the TE and TFP of listed central SOEs, local SOEs, and private enterprises, the data of which were taken from 2006–2020. The results show that the sampled private enterprises had the highest average TE during the study period, followed by the central and local SOEs. The private enterprises also had the highest average TFP growth rate, followed by the local and central SOEs. The TFP decompositions show that the TE change (TEC) and technical change (TC) indices of the SOEs were lower than those of the private enterprises. The TC, TEC, and scale change (SC) are limiting the TFP growth rates of the SOEs in labor-intensive industries. The SC of the SOEs has changed less than that of private enterprises in the sampled capital-intensive industries. Northern and southern China had the highest rates of TE and TFP growth. Indeed, this paper measures and decomposes TFP, and analyzes the efficiency of SOEs and private enterprises in different industries and regions in an international context.
-
-## Are State-Owned Enterprises Really Ineffective? An Empirical Study Based on Stochastic Frontier Analysis
 
 ## 1. Introduction
 

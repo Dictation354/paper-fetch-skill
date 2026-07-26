@@ -9,6 +9,7 @@ from collections.abc import Mapping
 from ..artifacts import ArtifactStore
 from ..http import RequestFailure
 from ..models import ArticleModel, AssetProfile
+from ..metadata.types import ProviderMetadata
 from ..runtime import RuntimeContext
 from .base import (
     ProviderFailure,
@@ -19,7 +20,7 @@ from .base import (
 
 @runtime_checkable
 class MetadataProvider(Protocol):
-    def fetch_metadata(self, query: Mapping[str, str | None]) -> dict[str, Any]: ...
+    def fetch_metadata(self, query: Mapping[str, str | None]) -> ProviderMetadata: ...
 
 
 @runtime_checkable

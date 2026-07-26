@@ -339,7 +339,7 @@ resolve
   - 成功时公开 `source="pnas"`。
 - `ams`
   - 固定顺序是 `Crossref/DOI landing -> direct HTTP HTML -> direct HTTP PDF fallback -> abstract-only / metadata-only`。
-  - Direct HTTP preflight 使用浏览器 UA、HTML `Accept` 和正文页 `Referer` 请求 AMS DOI/正文候选，并显式跟随有限次数 3xx `Location` 到 `journals.ametsoc.org/view/journals/.../*_1.xml` 这类正文页；正文质量门槛通过时直接公开 `ams_html`，不启动 cloakbrowser。
+  - Direct HTTP preflight 使用浏览器 UA、HTML `Accept` 和正文页 `Referer` 请求 AMS DOI/正文候选，并显式跟随有限次数 3xx `Location` 到 `journals.ametsoc.org/view/journals/.../*_1.xml` 这类正文页；正文质量门槛通过时直接公开 `ams_html`，不启动 browser runtime。
   - Direct HTTP preflight 失败、challenge、非 HTML 或正文不足时，不再进入 AMS browser HTML 或 seeded-browser PDF fallback；provider 会从 Crossref `citation_pdf_url`、landing/source URL 和 HTML metadata 中收集 `downloadpdf` PDF candidate，并只用 direct HTTP 获取真实 PDF；`paper-fetch browser-preflight` 和 `paper-fetch auth` 不再包含 AMS。
   - HTML 候选只来自 Crossref / DOI landing 的 `journals.ametsoc.org/view/journals/.../*.xml` 页面；AMS 不按 DOI 拼接 direct Playwright 正文路径。
   - 页面声明的 `citation_xml_url` 被显式忽略：不解析、不请求 `/doc/journals/.../*.xml`，也不注册 XML 诊断或 `ams_xml` source。
@@ -391,6 +391,7 @@ resolve
   - 固定顺序是 `selected-browser DOI HTML -> browser-seeded PDF fallback -> metadata-only`。
   - HTML 成功公开 `source="royalsocietypublishing_html"`；PDF fallback 成功公开 `source="royalsocietypublishing_pdf"`。
   - 需要 `ProviderSpec.requires_browser_runtime=True` 的本地 browser runtime；`citation_xml_url` 不作为 XML/JATS 路线；PDF fallback 在 `body/all` 且允许 artifact 落盘时会保存 PDF 导出的正文图片。
+  - Silverchair 同一 figure 的 `/view-large/figure/.../*.tif` 与 CDN `image_*.jpg` 变体按 DOM id 和规范化 figure basename 合并；保留首选 full-size URL、preview URL、图号和最长有效 caption，不把正文 caption 中的交叉引用当作新 figure。
 - `annualreviews`
   - 固定顺序是 `selected-browser landing/full-text HTML -> browser-seeded PDF -> provider-managed abstract_only -> metadata-only`。
   - 需要 `ProviderSpec.requires_browser_runtime=True` 的本地 browser runtime；HTML 成功公开 `source="annualreviews_html"`，PDF fallback 成功公开 `source="annualreviews_pdf"`。
@@ -640,6 +641,7 @@ CLI、Python API、MCP 当前默认值如下：
 - `asset_profile=body|all` 且 artifact mode 允许资产落盘时，PDF / ePDF fallback 会把 `pymupdf4llm` 导出的图片保存到 `<doi>_assets/` 并作为正文 inline asset 进入最终 article；`asset_profile=none` 或 `artifact_mode=none` 不保存本地图片。
 - PDF fallback 无法稳定区分 supplementary，导出的图片统一按正文资产处理。
 - 共享 PDF Markdown 转换会拒绝明显过短或主要由 IEEE 授权页脚组成的结果。
+- 共享转换会在渲染后统一修复 `pymupdf4llm` 1.28.0 的确定性标题漂移，包括同级字母小节漏标、空的封面导航标题、重复 title/running header；规则只调整 Markdown 结构，不按 provider/DOI 分支，也不删除正文文本。
 - PDF 内有大量透明文本层时，会用 PyMuPDF transparent-text 路径二次转换。
 - Windows 上 PyMuPDF 探测 Tesseract 时可能产生本地编码的 stdout/stderr；PDF Markdown 转换会对这类第三方文本子进程输出使用 replacement 解码，避免非 UTF-8 字节让 reader thread 抛出 `UnicodeDecodeError`。
 - 二次转换仍不足时，继续走候选重试或 provider 降级。
@@ -696,8 +698,8 @@ CLI、Python API、MCP 当前默认值如下：
 - 通用 HTML figure 与 supplementary 下载使用 `paper_fetch.extraction.html.assets.state` 状态机。
 - cookie-aware opener/request 统一在 `paper_fetch.extraction.html.assets.requester` 中处理。
 - 网络、opener 或浏览器 document fallback resolve 阶段可并发执行。
-- Browser workflow 的 browser-backed HTML、PDF fallback 与资产下载通过 `paper_fetch.providers.browser_runtime` facade 访问运行时；默认 backend 是 Camoufox，已弃用 CloakBrowser 只能显式选择，provider 代码不应直接调用 backend 私有 helper。
-- CloakBrowser 在同一进程内复用按配置 keyed 的 CDP browser manager。Camoufox 在同一 `RuntimeContext` 的 owning thread 内复用原生 Firefox/Juggler 进程，每次操作新建隔离 context，并串行执行 browser-backed 资产抓取。两者都不跨线程共享 Playwright sync 对象。
+- Browser workflow 的 browser-backed HTML、PDF fallback 与资产下载通过 `paper_fetch.providers.browser_runtime` facade 访问 Camoufox；provider 代码不应直接调用 backend 私有 helper。
+- Camoufox 在同一 `RuntimeContext` 的 owning thread 内复用原生 Firefox/Juggler 进程，每次操作新建隔离 context，并串行执行 browser-backed 资产抓取；Playwright sync 对象不跨线程共享。
 - storage-state/profile 路径由 browser runtime 统一解析；auth、preflight、HTML fetch 和 seeded PDF fallback 使用同一 provider-scoped `storage-state.json`，保存时会过滤到当前 publisher URL、加写锁并原子替换。
 - Browser-backed asset download 在安全的 caller-thread 路径内会在一次 attempt 中复用同一线程的 page/context；遇到 Playwright 线程所有权异常会降级到 per-call close。
 - 文件写入、文件名去重、`source_data/` 分流和失败诊断收集仍串行执行。
@@ -1045,8 +1047,8 @@ IEEE direct landing/REST HTML/PDF/资产与 selected-browser recovery 路线当�
 
 #### `PAPER_FETCH_BROWSER_BACKEND`
 
-- 可选，支持 `camoufox`（默认）与已弃用的 `cloakbrowser`。
-- 后端选择严格，不自动切换；需要临时旧行为时显式设置 `PAPER_FETCH_BROWSER_BACKEND=cloakbrowser`，删除变量会恢复 Camoufox。
+- 可选；省略或设置唯一合法值 `camoufox`。
+- 后端选择严格，其它值被拒绝，不自动切换。
 - Camoufox 覆盖九家 browser-backed provider 的 HTML、PDF fallback、图片/补充文件、preflight 和 auth；AMS 仍是 direct HTTP 路径。
 
 #### 通用 `PAPER_FETCH_BROWSER_*` 配置
@@ -1055,7 +1057,7 @@ IEEE direct landing/REST HTML/PDF/资产与 selected-browser recovery 路线当�
 - `PAPER_FETCH_BROWSER_TIMEOUT_MS`：默认 `120000`，控制浏览器页面导航超时。
 - `PAPER_FETCH_BROWSER_BINARY_PATH`：所选后端的可执行文件覆盖项。
 - `PAPER_FETCH_BROWSER_PROFILE_DIR` / `PAPER_FETCH_BROWSER_USER_DATA_DIR`：所选后端的 profile/storage-state 目录覆盖项。
-- 通用变量优先于对应 `CLOAKBROWSER_*` 旧变量；旧变量本身不选择后端，仅由显式 CloakBrowser 读取。Camoufox 默认目录为 `publisher-browser-profiles/<provider>-camoufox/`。
+- Camoufox 默认目录为 `publisher-browser-profiles/<provider>-camoufox/`。
 - 后端安装、抓取、离线准备和迁移说明见 [`browser-backends.md`](browser-backends.md)。
 
 #### `WILEY_TDM_CLIENT_TOKEN`
@@ -1064,63 +1066,25 @@ IEEE direct landing/REST HTML/PDF/资产与 selected-browser recovery 路线当�
 - 仅用于 `wiley` 的官方 TDM API PDF lane。
 - 未配置时，`wiley` 仍可在 selected-browser runtime 就绪时尝试 HTML 与 seeded-browser PDF/ePDF；已配置时，即使 browser runtime 不就绪，也可单独尝试 TDM PDF fallback。
 
-#### `CLOAKBROWSER_HEADLESS`
-
-- 可选，默认 `true`。
-- 仅在显式选择 CloakBrowser 时，控制自动启动的 Chrome 是否 headless；外部 endpoint 的 headed/headless 由外部浏览器自身决定。
-
-#### `CLOAKBROWSER_BINARY_PATH`
-
-- 可选。
-- 指向预安装 Chrome/CloakBrowser binary 时，`cloakbrowser.ensure_binary()` 会使用该路径并跳过下载；未设置时 cloakbrowser 首次运行会下载/定位自己的 Chromium。
-- 显式 `CLOAKBROWSER_CDP_ENDPOINT` 存在时不需要该变量。
-
-#### `CLOAKBROWSER_USER_DATA_DIR`
-
-- 可选。
-- 未设置 `CLOAKBROWSER_CDP_ENDPOINT` 时，用作自动启动 Chrome 的显式启动目录和 storage-state 保存位置；`CLOAKBROWSER_PROFILE_DIR` 优先级更高。
-- 在显式 CloakBrowser 模式下未设置这些变量时，paper-fetch 按 publisher 使用 `publisher-browser-profiles/<provider>/storage-state.json`；默认 Camoufox 使用 `<provider>-camoufox/storage-state.json`，两者不迁移或混用。
-- 如果使用显式外部 endpoint，请在手动启动浏览器时自行传 `--user-data-dir`。
-
 #### `PAPER_FETCH_WILEY_PROFILE_DIR`
 
 - 可选。
 - Wiley 显式 profile 入口。未设置时，managed browser 按 provider 使用 `publisher-browser-profiles/<provider>/storage-state.json`。Wiley 如需人工验证，运行 `paper-fetch auth wiley [--url ...]` 后再次抓取会复用同一 provider storage-state。
 
-#### `CLOAKBROWSER_PROFILE_DIR`
-
-- 可选。
-- 未设置 `CLOAKBROWSER_CDP_ENDPOINT` 时，用作自动启动 Chrome 的显式启动目录和 storage-state 保存位置；优先级高于 `CLOAKBROWSER_USER_DATA_DIR`，设置后按该目录保存，不自动追加 publisher 名称。
-
-#### `CLOAKBROWSER_CDP_ENDPOINT`
-
-- 仅在显式设置 `PAPER_FETCH_BROWSER_BACKEND=cloakbrowser` 时生效，用于 browser workflow provider。
-- 指向已经运行中的 Chrome/CloakBrowser DevTools Protocol endpoint，例如手动启动浏览器时输出的 `ws://127.0.0.1:9222/devtools/browser/...`。
-- 配置后，browser workflow 的 HTML 抓取、browser-backed 正文/补充资产下载和 seeded PDF/ePDF fallback 会连接该浏览器并在现有 browser context 中新开页面抓取；抓取结束会关闭自己打开的页面并断开连接，不关闭操作者的浏览器窗口。
-- 外部 CDP 模式优先借用现有 browser context；storage-state 中的 cookies 会尽量注入，但 `PAPER_FETCH_BROWSER_USER_AGENT`、viewport 等 new-context 参数不保证生效，应以外部浏览器当前状态为准。managed 和外部 CDP 的 runtime-shared browser-backed 资产下载都会串行化，以避免跨线程复用 Playwright sync 对象；普通 HTTP 资产下载仍按配置并发。
-- 在显式 CloakBrowser 模式且未配置 endpoint 时，paper-fetch 通过 `cloakbrowser.ensure_binary()` 下载/定位 Chrome，并启动受控本机 CDP 浏览器；默认 Camoufox 路径不会探测该 runtime。
-
 #### `PAPER_FETCH_CDP_EXTERNAL_NEW_CONTEXT`
 
-- 默认不设置。仅在显式 CloakBrowser 且配置 `CLOAKBROWSER_CDP_ENDPOINT` 时生效。
-- 设置为 `1` / `true` / `yes` / `on` 后，paper-fetch 会在外部浏览器中创建新的 browser context，而不是借用已有 context。
-- 使用新 context 时 user-agent、viewport 和 storage-state 等 context options 会按 Playwright 新 context 语义应用；默认借用已有 context 时，这些 options 可能被忽略，preflight/status diagnostics 会报告 ignored option 和注入 cookie 数。
+- 默认不设置。只影响显式传入 CDP endpoint 的低层开发/测试调用，不选择生产 backend。
 
 #### `PAPER_FETCH_WILEY_STORAGE_STATE_JSON`
 
 - 可选。
 - Wiley 显式 storage-state 入口。未设置时可使用默认 provider-scoped storage-state；自动过盾失败后可运行 `paper-fetch auth wiley [--url ...]` 保存同一 provider 的本地 storage-state。缺失该 JSON 不阻止 Wiley 抓取。
 
-#### `CLOAKBROWSER_TIMEOUT_MS`
-
-- 可选，默认 `120000`。
-- 控制 browser workflow 的页面导航超时。
-
 #### AGU/Wiley browser UA
 
 - 可选。
 - 用于 Wiley / Science / PNAS / Annual Reviews / Royal Society Publishing / ACS / IOP / AIP / MDPI 的 selected-browser HTML、图片资产恢复和 seeded-browser PDF/ePDF fallback；AMS direct HTTP HTML、direct HTTP PDF fallback 和 EPS/TIFF 源图下载也会复用该 browser UA。
-- 站点触发 challenge 时，优先使用 `paper-fetch auth <provider>` 保存当前默认 Camoufox 的 provider storage-state；需要外部 Chrome 时必须显式选择 CloakBrowser，再配置 `CLOAKBROWSER_CDP_ENDPOINT`。
+- 站点触发 challenge 时，使用 `paper-fetch auth <provider>` 保存 Camoufox 的 provider storage-state。
 
 #### Browser HTML readiness
 
@@ -1200,7 +1164,7 @@ MCP 入口为 `provider_status(provider=None, group=None, detail="full")`。无�
 所有结果都显式带有 `diagnostic_scope="static_configuration_and_local_dependencies"`、`live_network_checked=false` 和 `remote_publisher_health="not_checked"`。其中：
 
 - 配置来源优先级为 process env > 显式 `env_file` > `PAPER_FETCH_ENV_FILE` 指向的文件 > platformdirs 用户配置 > default。报告只含变量名、`source`、`present`、`uses_default` 和 `sensitive`，不包含变量值或配置文件路径。
-- browser 本地能力分别报告 Playwright、CloakBrowser 包是否可导入，以及 Chrome binary/CDP endpoint 是否仅“已配置但未启动/未连接”。静态状态绝不宣称 Chrome、CDP 或出版社页面健康。
+- browser 本地能力分别报告 Playwright、Camoufox 包和已配置 runtime 是否就绪。静态状态绝不宣称浏览器或出版社页面健康。
 - 图片本地能力分别探测 Ghostscript（EPS）与 libvips（TIFF）的候选可执行文件和 `--version` 超时。`image_conversion_backend_missing`、`image_conversion_backend_timeout`、`image_conversion_backend_error` 表示本地转换后端问题；远端资产请求失败沿用网络/资产 reason，不会伪装成后端缺失；一般转换执行失败使用 `image_conversion_failed`。
 - 该调用不会执行 HTTP 请求、打开浏览器或自动安装依赖。CLI 的同一汇总入口是 `paper-fetch doctor [--provider ...|--group ...] [--detail full|compact] [--json]`。
 

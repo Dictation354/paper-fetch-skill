@@ -159,6 +159,14 @@ PYTHONPATH=src python3 scripts/snapshot_expected.py --doi <real-structure-doi>
 
 如果 quality report 已经是 agent-authored fail，可运行 `python3 scripts/onboard_from_manifests.py repair-markdown-quality --provider <provider> --doi <doi>`。该命令只通过 `PROVIDER_ONBOARDING_AGENT_CLI` 派发实现和复审 agent，最多 3 轮；pending report 会被拒绝，需要先完成初次 quality review。
 
+`scripts/onboard_from_manifests.py` 是稳定的兼容 CLI 入口；实现归
+`src/paper_fetch_devtools/onboarding/` 所有，不进入生产 wheel。兼容 loader
+按固定顺序在原脚本 namespace 中执行 `parts/` 下的 discovery、coordinator、
+state machine、review artifact、recovery、worker runtime、commands、summary
+和 parser 模块，因此既保留现有 monkeypatch/退出码/stdout 契约，也不再由单个
+超大实现文件承担全部职责。新规则应进入对应职责模块，不再向根脚本或 loader
+增加业务逻辑。
+
 之后每次改 extraction 都用 provider-local 断言和 `pytest` diff 来审；新增 correction 时继续先写断言再修 provider。
 
 跑完整性 lint：

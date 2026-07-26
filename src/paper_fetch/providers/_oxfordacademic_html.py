@@ -298,8 +298,10 @@ def merge_metadata_with_html(
         html_text
     ) or citation_reference_metadata(merged)
     if references:
-        merged["references"] = references
-    return merged
+        merged_payload: dict[str, Any] = dict(merged)
+        merged_payload["references"] = references
+        return merged_payload
+    return dict(merged)
 
 
 def _supplementary_lines(soup: BeautifulSoup) -> list[str]:

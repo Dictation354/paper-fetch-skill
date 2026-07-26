@@ -115,9 +115,9 @@ fixtures:
   purpose: pdf_fallback
   doi: 10.1021/acsomega.2c02828
   baseline_markdown_path: tests/fixtures/golden_criteria/10.1021_acsomega.2c02828/extracted.md
-  baseline_markdown_sha256: 7bc777f90b06d6cf875518e79ce817ca6b412f5bd52bea5dbe29352de0353149
+  baseline_markdown_sha256: c8832da533d7967d8d2cae718f023668ad46978138436344c4bc0b1ba0de2d29
   markdown_quality_path: tests/fixtures/golden_criteria/10.1021_acsomega.2c02828/markdown-quality.json
-  markdown_quality_sha256: c7c0173520e69b635732570e8ad9e7421e071c0d266836589f34132be486f64d
+  markdown_quality_sha256: 593a8a1d16c770a5b8f6330065c9eb674b353fbc6d8f1236a43f6596b055bed7
   review_notes: Final batch Markdown quality review confirmed by operator; persistent
     quality status=pass.
   sample_representative: true

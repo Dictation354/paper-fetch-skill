@@ -6,8 +6,8 @@ from unittest import mock
 
 from paper_fetch import browser_preflight
 from paper_fetch.config import (
+    BROWSER_TIMEOUT_MS_ENV_VAR,
     BROWSER_USER_AGENT_ENV_VAR,
-    CLOAKBROWSER_TIMEOUT_MS_ENV_VAR,
     XDG_DATA_HOME_ENV_VAR,
 )
 from paper_fetch.providers.browser_runtime import (
@@ -27,8 +27,7 @@ def _runtime_config(tmp_path: Path, *, provider: str, doi: str) -> BrowserRuntim
         artifact_dir=tmp_path / "artifacts" / provider,
         headless=True,
         user_agent=None,
-        backend="cloakbrowser",
-        cdp_endpoint="ws://127.0.0.1:9222/devtools/browser/test",
+        backend="camoufox",
     )
 
 
@@ -74,7 +73,7 @@ def test_static_browser_capabilities_never_claims_live_health() -> None:
                 "playwright_dependency",
                 "ok",
                 "dependencies import",
-                details={"packages": {"playwright": True, "cloakbrowser": True}},
+                details={"packages": {"playwright": True, "camoufox": True}},
             ),
         ],
     )
@@ -87,13 +86,13 @@ def test_static_browser_capabilities_never_claims_live_health() -> None:
     assert report["live_checked"] is False
     assert report["publisher_page_checked"] is False
     assert report["playwright"]["available"] is True
-    assert report["cloakbrowser"]["available"] is True
+    assert report["camoufox"]["available"] is True
     assert report["chrome_cdp"]["status"] == "configured"
     assert report["chrome_cdp"]["reason_code"] == ("cdp_endpoint_configured_not_probed")
     assert report["chrome_cdp"]["connection_checked"] is False
 
 
-def test_browser_preflight_adds_provider_storage_path_for_external_cdp(
+def test_browser_preflight_adds_provider_storage_path_for_camoufox(
     tmp_path: Path,
 ) -> None:
     captured: dict[str, object] = {}
@@ -144,9 +143,7 @@ def test_browser_preflight_adds_provider_storage_path_for_external_cdp(
         results = browser_preflight.run_browser_provider_preflight(
             providers=["wiley"],
             timeout_ms=45000,
-            browser_user_agent="Mozilla/5.0 preflight-test",
             env={
-                "PAPER_FETCH_BROWSER_BACKEND": "cloakbrowser",
                 XDG_DATA_HOME_ENV_VAR: str(tmp_path),
             },
         )
@@ -162,7 +159,7 @@ def test_browser_preflight_adds_provider_storage_path_for_external_cdp(
         tmp_path
         / "paper-fetch"
         / "publisher-browser-profiles"
-        / "wiley"
+        / "wiley-camoufox"
         / "storage-state.json"
     )
     assert captured["publisher"] == "wiley"
@@ -174,13 +171,13 @@ def test_browser_preflight_adds_provider_storage_path_for_external_cdp(
     assert isinstance(runtime, BrowserRuntimeConfig)
     assert (
         runtime.user_data_dir
-        == tmp_path / "paper-fetch" / "publisher-browser-profiles" / "wiley"
+        == tmp_path / "paper-fetch" / "publisher-browser-profiles" / "wiley-camoufox"
     )
     ensure_runtime_ready.assert_called_once_with(runtime)
     runtime_env = captured["env"]
     assert isinstance(runtime_env, dict)
-    assert runtime_env[CLOAKBROWSER_TIMEOUT_MS_ENV_VAR] == "45000"
-    assert runtime_env[BROWSER_USER_AGENT_ENV_VAR] == "Mozilla/5.0 preflight-test"
+    assert runtime_env[BROWSER_TIMEOUT_MS_ENV_VAR] == "45000"
+    assert BROWSER_USER_AGENT_ENV_VAR not in runtime_env
 
 
 def test_browser_preflight_uses_custom_target_and_disables_storage_write(
@@ -386,7 +383,7 @@ def test_browser_preflight_records_failure_and_continues(tmp_path: Path) -> None
             artifact_dir=tmp_path / "artifacts" / provider,
             headless=True,
             user_agent=None,
-            backend="cloakbrowser",
+            backend="camoufox",
             user_data_dir=tmp_path / "profiles" / provider,
         )
 

@@ -38,7 +38,7 @@
 
 - 不替代主题检索、文献推荐或综述生成；开放式搜索可先形成候选，当后续需要阅读、总结、比较、核验可读性或获取全文时，再把 DOI、URL、标题、arXiv ID 或引用条目交给 paper-fetch 抓取和核验候选论文全文。
 - 不绕过付费墙或访问授权；可用性取决于 provider、凭据和本机运行环境。
-- Wiley、Science、PNAS、Annual Reviews、Royal Society Publishing、ACS、IOP、AIP、MDPI 共用 browser workflow；默认使用原生 Firefox/Juggler Camoufox，已弃用的 CloakBrowser 只能显式选择，见 [`docs/browser-backends.md`](docs/browser-backends.md)。
+- Wiley、Science、PNAS、Annual Reviews、Royal Society Publishing、ACS、IOP、AIP、MDPI 共用原生 Firefox/Juggler Camoufox browser workflow，见 [`docs/browser-backends.md`](docs/browser-backends.md)。
 - 用户可以自行 fork 后添加新出版社，见 [`onboarding/README.md`](onboarding/README.md)，但是需要人工审核确定全文获取、markdown 转换质量等能力。
 
 ## 效果展示
@@ -78,7 +78,17 @@ agent 安装 skill 后，可以识别 `paper-fetch-skill` 的适用边界，并�
 - Linux：下载匹配 Python ABI 的 `paper-fetch-skill-offline-linux-x86_64-cp*.sh`。
 - macOS：下载匹配架构和 Python ABI 的 `paper-fetch-skill-offline-macos-<arch>-cp*.tar.gz`。
 
-默认优先选择具体 `v*` Release。需要在最新稳定版源码上使用最新兼容 Python 依赖时，可选择可变的 `dependency-latest` prerelease，并用同一发布中的 `SHA256SUMS` 校验；自动任务每天检测依赖，只有依赖、稳定版源码基线变化，或上一版资产缺失/校验失败时才覆盖资产，异常时也可手动设置 `force_refresh=true` 强制重建。详见 [`docs/deployment.md`](docs/deployment.md#每日滚动依赖-prerelease)。
+每个 `v*` Release 同时提供 `SHA256SUMS`、CycloneDX SBOM 和 GitHub build-provenance attestation。
+
+源码安装按能力分层：
+
+```bash
+python -m pip install .             # 轻量 core
+python -m pip install ".[browser]"  # Camoufox/HTML
+python -m pip install ".[pdf]"      # PDF
+python -m pip install ".[full]"     # browser + PDF
+uv sync --frozen --extra dev --extra full  # 可复现开发环境
+```
 
 Windows 安装后新开 PowerShell，验证 CLI：
 

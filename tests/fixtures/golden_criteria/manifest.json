@@ -790,13 +790,17 @@
       "assets": {
         "bilingual.html": "tests/fixtures/golden_criteria/10.1111_gcb.16386/bilingual.html",
         "expected.json": "tests/fixtures/golden_criteria/10.1111_gcb.16386/expected.json",
-        "original.html": "tests/fixtures/golden_criteria/10.1111_gcb.16386/original.html"
+        "original.html": "tests/fixtures/golden_criteria/10.1111_gcb.16386/original.html",
+        "extracted.md": "tests/fixtures/golden_criteria/10.1111_gcb.16386/extracted.md",
+        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1111_gcb.16386/markdown-quality-prompt.md",
+        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1111_gcb.16386/markdown-quality.json"
       },
       "fixture_family": "golden",
       "title": "10.1111/gcb.16386",
       "landing_url": "https://onlinelibrary.wiley.com/doi/10.1111/gcb.16386",
       "route_kind": "html",
-      "content_type": "text/html"
+      "content_type": "text/html",
+      "expected_outcome": "fulltext"
     },
     "10.1111_gcb.16414": {
       "doi": "10.1111/gcb.16414",
@@ -1516,8 +1520,12 @@
       "fixture_family": "golden",
       "assets": {
         "expected.json": "tests/fixtures/golden_criteria/10.1073_pnas.2305050120/expected.json",
-        "original.html": "tests/fixtures/golden_criteria/10.1073_pnas.2305050120/original.html"
-      }
+        "original.html": "tests/fixtures/golden_criteria/10.1073_pnas.2305050120/original.html",
+        "extracted.md": "tests/fixtures/golden_criteria/10.1073_pnas.2305050120/extracted.md",
+        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1073_pnas.2305050120/markdown-quality-prompt.md",
+        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1073_pnas.2305050120/markdown-quality.json"
+      },
+      "expected_outcome": "fulltext"
     },
     "10.1073_pnas.2310157121": {
       "doi": "10.1073/pnas.2310157121",
@@ -2017,7 +2025,10 @@
         "expected.json": "tests/fixtures/golden_criteria/10.5194_bg-1-1-2004/expected.json",
         "landing.html": "tests/fixtures/golden_criteria/10.5194_bg-1-1-2004/landing.html",
         "original.pdf": "tests/fixtures/golden_criteria/10.5194_bg-1-1-2004/original.pdf",
-        "original.xml": "tests/fixtures/golden_criteria/10.5194_bg-1-1-2004/original.xml"
+        "original.xml": "tests/fixtures/golden_criteria/10.5194_bg-1-1-2004/original.xml",
+        "extracted.md": "tests/fixtures/golden_criteria/10.5194_bg-1-1-2004/extracted.md",
+        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.5194_bg-1-1-2004/markdown-quality-prompt.md",
+        "markdown-quality.json": "tests/fixtures/golden_criteria/10.5194_bg-1-1-2004/markdown-quality.json"
       },
       "fixture_family": "golden",
       "title": "A field-based method for simultaneous measurements of the d18O and d13C of soil CO2 efflux",
@@ -2027,7 +2038,8 @@
       "expected_source": "copernicus_pdf",
       "expected_content_kind": "fulltext",
       "content_type": "application/pdf",
-      "expected_live_status": "fulltext"
+      "expected_live_status": "fulltext",
+      "expected_outcome": "fulltext"
     },
     "10.5194_cp-1-1-2005": {
       "doi": "10.5194/cp-1-1-2005",
@@ -2039,7 +2051,10 @@
         "expected.json": "tests/fixtures/golden_criteria/10.5194_cp-1-1-2005/expected.json",
         "landing.html": "tests/fixtures/golden_criteria/10.5194_cp-1-1-2005/landing.html",
         "original.pdf": "tests/fixtures/golden_criteria/10.5194_cp-1-1-2005/original.pdf",
-        "original.xml": "tests/fixtures/golden_criteria/10.5194_cp-1-1-2005/original.xml"
+        "original.xml": "tests/fixtures/golden_criteria/10.5194_cp-1-1-2005/original.xml",
+        "extracted.md": "tests/fixtures/golden_criteria/10.5194_cp-1-1-2005/extracted.md",
+        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.5194_cp-1-1-2005/markdown-quality-prompt.md",
+        "markdown-quality.json": "tests/fixtures/golden_criteria/10.5194_cp-1-1-2005/markdown-quality.json"
       },
       "fixture_family": "golden",
       "title": "Quantifying the effect of vegetation dynamics on the climate of the Last Glacial Maximum",
@@ -2049,7 +2064,8 @@
       "expected_source": "copernicus_pdf",
       "expected_content_kind": "fulltext",
       "content_type": "application/pdf",
-      "expected_live_status": "fulltext"
+      "expected_live_status": "fulltext",
+      "expected_outcome": "fulltext"
     },
     "10.5194_dwes-1-1-2008": {
       "doi": "10.5194/dwes-1-1-2008",

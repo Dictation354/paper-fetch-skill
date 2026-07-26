@@ -6,7 +6,7 @@
   "prompt_path": "tests/fixtures/golden_criteria/10.1175_bams-d-24-0270.1/markdown-quality-prompt.md",
   "provider": "ams",
   "review_method": "agent_prompt",
-  "reviewed_at": "2026-05-23T00:00:00Z",
+  "reviewed_at": "2026-07-26T11:36:22.704449Z",
   "reviewed_by": "codex-agent",
   "sample_id": "10.1175_bams-d-24-0270.1",
   "schema_version": 2,

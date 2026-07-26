@@ -190,7 +190,7 @@ step 函数放在 provider-owned 模块中，签名使用 `def newpub_fetch_html
 
 ### Provider mypy 分批纳入
 
-当前 mypy 覆盖面包含核心模型、workflow、MCP、HTTP/metadata/markdown、runtime/config/quality、provider base/protocols、provider catalog、PDF fallback shared helpers、HTML extraction、browser runtime、browser workflow、Atypon browser workflow、formula core、shared JATS/common Markdown helpers、CloakBrowser helper，以及第一批真实 provider：`src/paper_fetch/providers/copernicus.py` 和 `src/paper_fetch/providers/_article_markdown_copernicus.py`。后续新增 provider typing 批次必须先跑 targeted mypy 清零，再把文件加入 `pyproject.toml` 的 `[tool.mypy].files`；本地 preflight 与 CI 都通过 `pyproject.toml` 的 `no_site_packages = true` 避免开发机第三方 stub 与 CI Python 版本不一致时阻断项目文件检查。
+当前 mypy 默认覆盖完整 `src/paper_fetch` 生产包。后续新增 provider 必须先跑 targeted mypy 清零，再通过完整包门禁；本地 preflight 与 CI 都通过 `pyproject.toml` 的 `no_site_packages = true` 避免开发机第三方 stub 与 CI Python 版本不一致时阻断项目文件检查。
 
 下一批 backlog 是 arXiv，不应混入 Copernicus 或其它 provider 批次。开始前先运行：
 
@@ -316,7 +316,7 @@ Publisher 私有的 supplementary 属性或埋点必须由 provider extractor �
 - API / metadata 路线用 `build_user_agent(env)` 构造稳定工具 UA；publisher-facing HTML/PDF 直连用浏览器形态 UA，例如 `build_publisher_user_agent(env)` 或 browser workflow 现有 header helper，避免把 `paper-fetch-skill/...` 发给出版社 CDN。
 - 官方 PDF fallback 优先走 `PdfFallbackStrategy`；如果直接调用 `pdf_fetch_result_from_response()` / `pdf_fetch_result_from_bytes()`，应显式允许真实 PDF 的 PDF-only 保留，避免扫描 PDF 无法转 Markdown 时降级成 Crossref metadata-only source。
 - `context.parse_cache` 用于同一次 fetch 内复用 XML root、HTML extraction payload、asset extraction payload。
-- Browser runtime 只能通过 `RuntimeContext`、browser runtime facade 或现有 browser workflow helper 管理；生产路径统一使用所选后端打开 context/page。只有显式 CloakBrowser 后端可以连接 external CDP。
+- Browser runtime 只能通过 `RuntimeContext`、browser runtime facade 或现有 browser workflow helper 管理；生产路径统一使用 Camoufox 打开 context/page。
 - Browser workflow 的 browser-backed HTML、PDF fallback 与资产下载必须通过 `RuntimeContext` / `BrowserContextManager` 管理的 keyed browser manager；managed Chrome 生命周期按进程共享，具体 context/page 必须在调用线程通过线程本地 CDP 连接创建。不得把主线程持有的同步 Playwright page/context 交给 worker 线程使用。
 - 普通 HTTP 资产下载仍可并发；只有显式 thread-private browser fetcher 才能在 worker 线程创建并关闭自己的 page/context/manager，且必须在同一个 worker 线程内关闭这些 sync browser 对象，否则容易残留浏览器子进程。
 

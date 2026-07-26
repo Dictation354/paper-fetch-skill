@@ -171,22 +171,13 @@ def fetch_html_with_fast_browser(
             "browser_runtime_unavailable",
             f"Browser runtime is not available for fast {publisher} HTML preflight.",
         )
-    user_agent_changed = bool(
-        config.backend == "cloakbrowser"
-        and normalize_text(user_agent)
-        and normalize_text(user_agent) != config.user_agent
-    )
-    if config.headless != headless or user_agent_changed:
+    if config.headless != headless:
         from dataclasses import replace
 
         config = replace(
             config,
             headless=headless,
-            user_agent=(
-                normalize_text(user_agent) or config.user_agent
-                if config.backend == "cloakbrowser"
-                else None
-            ),
+            user_agent=None,
             timeout_ms=timeout_ms or config.timeout_ms,
         )
     return fetch_html_with_browser(

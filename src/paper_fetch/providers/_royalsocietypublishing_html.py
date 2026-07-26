@@ -8,7 +8,7 @@ from html import escape
 import re
 from typing import Any
 from collections.abc import Mapping
-from urllib.parse import quote, urljoin
+from urllib.parse import quote, urljoin, urlparse
 
 from bs4 import BeautifulSoup, Tag
 
@@ -115,6 +115,10 @@ _BROKEN_REFERENCE_TABLE_ROW_RE = re.compile(r"^\|\s*\[\s*\|")
 _MARKDOWN_HEADING_RE = re.compile(r"^(#{1,6})\s+(.+?)\s*$")
 _INLINE_MATH_SPAN_RE = re.compile(r"\$[^$\n]+\$")
 _DISPLAY_EQUATION_RE = re.compile(r"(Equation(?:\s+\d+(?:\.\d+)*)?:\s+\$[^$\n]+\$)")
+_ROYAL_FIGURE_BASENAME_RE = re.compile(
+    r"^(?:m_)?([a-z0-9._-]+f\d+[a-z]?)(?:\.[a-z0-9]+)?$",
+    flags=re.IGNORECASE,
+)
 _REFERENCE_LEADING_LABEL_RE = re.compile(
     r"^\s*(?:\[\d+[A-Za-z]?\]|\d+[A-Za-z]?[.)])\s+"
 )
@@ -336,6 +340,11 @@ def _repair_royal_math_text(line: str) -> str:
         r"where Atand $\mathcal{E}_{t}$",
         r"where $A_t$ and $\mathcal{E}_{t}$",
     )
+    line = re.sub(
+        r"where Atand (\$[^$\n]+\$)",
+        r"where $A_t$ and \1",
+        line,
+    )
     return line.replace("εinot", "εi not")
 
 
@@ -524,7 +533,9 @@ def _merge_metadata_with_parsed_html(
         merged["title"] = html_title
     references = references or citation_references_from_metadata(merged)
     if references and not merged.get("references"):
-        merged["references"] = references
+        merged_payload: dict[str, Any] = dict(merged)
+        merged_payload["references"] = references
+        return merged_payload
     return dict(merged)
 
 
@@ -633,7 +644,27 @@ def _royal_society_figure_assets(
     return assets
 
 
-def _asset_external_key(asset: Mapping[str, Any]) -> str:
+def _asset_external_keys(asset: Mapping[str, Any]) -> list[str]:
+    keys: list[str] = []
+    dom_id = normalize_text(str(asset.get("dom_id") or "")).lower()
+    if dom_id:
+        keys.append(f"dom:{dom_id}")
+    for field in (
+        "url",
+        "full_size_url",
+        "original_url",
+        "preview_url",
+        "download_url",
+    ):
+        value = normalize_text(str(asset.get(field) or ""))
+        if not value:
+            continue
+        basename = urlparse(value).path.rsplit("/", 1)[-1]
+        figure_match = _ROYAL_FIGURE_BASENAME_RE.match(basename)
+        if figure_match is not None:
+            key = f"figure:{figure_match.group(1).lower()}"
+            if key not in keys:
+                keys.append(key)
     for field in (
         "url",
         "full_size_url",
@@ -643,22 +674,25 @@ def _asset_external_key(asset: Mapping[str, Any]) -> str:
     ):
         value = normalize_text(str(asset.get(field) or ""))
         if value:
-            return value.lower()
-    return ""
+            key = f"url:{value.lower()}"
+            if key not in keys:
+                keys.append(key)
+    return keys
 
 
 def _merge_asset(existing: dict[str, Any], incoming: Mapping[str, Any]) -> None:
-    for field in ("caption", "heading"):
-        current = normalize_text(str(existing.get(field) or ""))
-        candidate = normalize_text(str(incoming.get(field) or ""))
-        if not candidate:
-            continue
-        if (
-            not current
-            or current.lower() in _GENERIC_FIGURE_HEADINGS
-            or len(candidate) > len(current)
-        ):
-            existing[field] = candidate
+    current_heading = normalize_text(str(existing.get("heading") or ""))
+    candidate_heading = normalize_text(str(incoming.get("heading") or ""))
+    if candidate_heading and (
+        not current_heading or current_heading.lower() in _GENERIC_FIGURE_HEADINGS
+    ):
+        existing["heading"] = candidate_heading
+    current_caption = normalize_text(str(existing.get("caption") or ""))
+    candidate_caption = normalize_text(str(incoming.get("caption") or ""))
+    if candidate_caption and (
+        not current_caption or len(candidate_caption) > len(current_caption)
+    ):
+        existing["caption"] = candidate_caption
     for field in (
         "url",
         "full_size_url",
@@ -681,8 +715,13 @@ def _normalize_extracted_assets(assets: list[dict[str, str]]) -> list[dict[str, 
         asset: dict[str, Any] = dict(item)
         for text_field in ("caption", "heading"):
             if asset.get(text_field):
-                asset[text_field] = _repair_royal_math_text(
-                    normalize_text(str(asset.get(text_field) or ""))
+                asset[text_field] = re.sub(
+                    r"\s*Refer to the image caption for details\.?\s*$",
+                    "",
+                    _repair_royal_math_text(
+                        normalize_text(str(asset.get(text_field) or ""))
+                    ),
+                    flags=re.IGNORECASE,
                 )
         url = normalize_text(
             str(
@@ -701,13 +740,18 @@ def _normalize_extracted_assets(assets: list[dict[str, str]]) -> list[dict[str, 
                 in _GENERIC_FIGURE_HEADINGS
             ):
                 asset["heading"] = "Figure"
-        key_url = _asset_external_key(asset)
-        key = (normalize_text(str(asset.get("kind") or "")).lower(), key_url)
-        if key_url:
-            existing = by_key.get(key)
-            if existing is not None:
-                _merge_asset(existing, asset)
-                continue
+        kind = normalize_text(str(asset.get("kind") or "")).lower()
+        keys = [(kind, key) for key in _asset_external_keys(asset)]
+        existing = next(
+            (by_key[key] for key in keys if key in by_key),
+            None,
+        )
+        if existing is not None:
+            _merge_asset(existing, asset)
+            for key in keys:
+                by_key[key] = existing
+            continue
+        for key in keys:
             by_key[key] = asset
         normalized_assets.append(asset)
     return normalized_assets

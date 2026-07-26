@@ -12,7 +12,7 @@ from collections.abc import Mapping
 
 from ..http import DEFAULT_FULLTEXT_TIMEOUT_SECONDS
 from ..metadata.types import MetadataMergeRule, merge_metadata_layers
-from ..models import article_from_markdown, metadata_only_article
+from ..models import SourceKind, article_from_markdown, metadata_only_article
 from ..publisher_identity import normalize_doi
 from ..reason_codes import PDF_FALLBACK
 from ..tracing import fulltext_marker, trace_from_markers
@@ -528,7 +528,7 @@ def build_ieee_article_model(
         (content.markdown_text if content is not None else "") or ""
     ).strip()
     route = normalize_text(content.route_kind if content is not None else "").lower()
-    source = "ieee_pdf" if route == PDF_FALLBACK else "ieee_html"
+    source: SourceKind = "ieee_pdf" if route == PDF_FALLBACK else "ieee_html"
     trace = list(
         raw_payload.trace
         or trace_from_markers([fulltext_marker("ieee", "ok", route="html")])

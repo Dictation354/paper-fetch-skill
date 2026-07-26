@@ -5,30 +5,28 @@ source: "iop_pdf"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: false
-token_estimate: 13355
+token_estimate: 13231
 ---
 
 # 10.1088/1748-9326/aa9f73
 
-**==> picture [250 x 38] intentionally omitted <==**
+**LETTER • OPEN ACCESS**
 
-**==> picture [82 x 19] intentionally omitted <==**
+Interactions between urban heat islands and heat
 
-**==> picture [84 x 19] intentionally omitted <==**
-
-## waves
+waves
 
 To cite this article: Lei Zhao et al 2018 Environ. Res. Lett. 13 034003
 
-View the article online for updates and enhancements.
+View the <u>article online</u> for updates and enhancements.
 
-## You may also like
+You may also like
 
-- Urban climate effects on extreme temperatures in Madison, Wisconsin, USA Jason Schatz and Christopher J Kucharik
+- <u>Urban climate effects on extreme temperatures in Madison, Wisconsin, USA</u> Jason Schatz and Christopher J Kucharik
 
-- Reduced Urban Heat Island intensity under warmer conditions Anna A Scott, Darryn W Waugh and Ben F Zaitchik
+- <u>Reduced Urban Heat Island intensity under warmer conditions</u> Anna A Scott, Darryn W Waugh and Ben F Zaitchik
 
-- Interaction of urban heat islands and heat waves under current and future climate conditions and their mitigation using green and cool roofs in New York City and Phoenix, Arizona
+- <u>Interaction of urban heat islands and heat waves under current and future climate conditions and their mitigation using green and cool roofs in New York City and Phoenix, Arizona</u>
 
 - Mukul Tewari, Jiachuan Yang, Hiroyuki Kusaka et al.
 
@@ -38,21 +36,19 @@ _Environ. Res. Lett._ **13** (2018) 034003
 
 https://doi.org/10.1088/1748-9326/aa9f73
 
-**==> picture [512 x 43] intentionally omitted <==**
+LETTER
 
-**==> picture [53 x 21] intentionally omitted <==**
-
-## **E-mail: lei.zhao@princeton.edu**
+###### **E-mail: lei.zhao@princeton.edu**
 
 **Keywords:** heat wave, urban heat island, surface evaporation, surface biophysical processes, climate change
 
 Supplementary material for this article is available online
 
-## **Abstract**
+#### **Abstract**
 
 Heat waves (HWs) are among the most damaging climate extremes to human society. Climate models consistently project that HW frequency, severity, and duration will increase markedly over this century. For urban residents, the urban heat island (UHI) effect further exacerbates the heat stress resulting from HWs. Here we use a climate model to investigate the interactions between the UHI and HWs in 50 cities in the United States under current climate and future warming scenarios. We examine UHI2m (defined as urban-rural difference in 2m-height air temperature) and UHIs (defined as urban-rural difference in radiative surface temperature). Our results show significant sensitivity of the interaction between UHI and HWs to local background climate and warming scenarios. Sensitivity also differs between daytime and nighttime. During daytime, cities in the temperate climate region show significant synergistic effects between UHI and HWs in current climate, with an average of 0.4 K higher UHI2m or 2.8 K higher UHIs during HWs than during normal days. These synergistic effects, however, diminish in future warmer climates. In contrast, the daytime synergistic effects for cities in dry regions are insignificant in the current climate, but emerge in future climates. At night, the synergistic effects are similar across climate regions in the current climate, and are stronger in future climate scenarios. We use a biophysical factorization method to disentangle the mechanisms behind the interactions between UHI and HWs that explain the spatial-temporal patterns of the interactions. Results show that the difference in the increase of urban versus rural evaporation and enhanced anthropogenic heat emissions (air conditioning energy use) during HWs are key contributors to the synergistic effects during daytime. The contrast in water availability between urban and rural land plays an important role in determining the contribution of evaporation. At night, the enhanced release of stored and anthropogenic heat during HWs are the primary contributors to the synergistic effects.
 
-## **1. Introduction**
+### **1. Introduction**
 
 Among the many damaging environmental extremes, including hurricanes, floods, and tornados, heat waves
 
@@ -76,11 +72,13 @@ In this study, we use a sub-grid Earth system modeling strategy to investigate t
 
 Our specific objectives include: (1) examining geospatial patterns of the synergistic interactions between UHI and HWs for cities in three climate regions in the United States under current and future climate scenarios; (2) investigating the biophysical drivers of these interactions under distinct climate regimes and different climate scenarios.
 
-## **2.1. Model simulation**
+### **2. Methods**
 
-We used the Community Earth System Model (CESM) (Hurrell _et al_ 2013) to simulate UHIs for 50 selected cities in the United States. We conducted simulations for present-day climate conditions (1972–2004) and two future Representative Concentration Pathway (RCP) scenarios (RCP 4.5 and 8.5 for 2005–2100) at a horizontal resolution of 0.9[o] latitude × 1.25[o] longitude. Please see the supplementary information for more details on the model simulations.
+##### **2.1. Model simulation**
 
-## **2.2. UHI analysis**
+We used the Community Earth System Model (CESM) (Hurrell _et al_ 2013) to simulate UHIs for 50 selected cities in the United States. We conducted simulations for present-day climate conditions (1972–2004) and two future Representative Concentration Pathway (RCP) scenarios (RCP 4.5 and 8.5 for 2005–2100) at a horizontal resolution of 0.9<sup>o</sup> latitude × 1.25<sup>o</sup> longitude. Please see the supplementary information for more details on the model simulations.
+
+##### **2.2. UHI analysis**
 
 We used thirty years of modeled outputs in the current-climate run (1975−2004) and two RCP runs (2071−2100) to represent the present-day and future climatology, respectively, and to analyze UHI intensity. Because the focus of this study is HWs, we restrict our analysis to summer months (June−August). We use hourly outputs at 13:00−15:00 (around midday) and 01:00−03:00 (around midnight) local time to represent daytime and nighttime conditions, respectively. These two sets of times were selected for two reasons. First, they are relatively close to the times of daily maximum and minimum temperature for most of the cities, giving a better representation of the diurnal range of the UHI. Second, the performance of the CLMand the biophysical factorization method (described in the next section) was validated against MODIS observations around these two times (close to the MODIS-Aqua overpassing times) in Zhao _et al_ (2014). We selected
 
@@ -88,10 +86,8 @@ We used thirty years of modeled outputs in the current-climate run (1975−2004)
 
 _Environ. Res. Lett._ **13** (2018) 034003
 
-**==> picture [397 x 208] intentionally omitted <==**
-
-**----- Start of picture text -----**<br>
-50<br>45<br>40<br>35<br>Local Background Climate<br>Temperate<br>30 Continental<br>Dry<br>25<br>120 110 100 90 80 70<br>Longitude ([o])<br>o)<br>Latitude (<br>**----- End of picture text -----**<br>
+<!-- Start of picture text -->
+50<br>45<br>40<br>35<br>Local Background Climate<br>Temperate<br>30 Continental<br>Dry<br>25<br>120 110 100 90 80 70<br>Longitude (o)<br>o)<br>Latitude (<br><!-- End of picture text -->
 
 **Figure 1.** Map of selected cities in the United States. Blue: cities in the Köppen–Geiger temperate climate region; green: cities in the Köppen–Geiger continental region; red: cities in the Köppen–Geiger dry climate region.
 
@@ -99,13 +95,13 @@ _Environ. Res. Lett._ **13** (2018) 034003
 
 We computed UHI2m (Δ _T_ 2m) and UHIs (Δ _T_ s) from the variables generated by the urban and rural sub-grids in the grid cells where our selected cities are located (please see the supplementary information for more details). Although the UHI2m and UHIs differ in various aspects and their magnitudes are not directly comparable (Arnfield 2003), the two UHIs show consistency in terms of the linear supposition property of their biophysical contributions (Zhao _et al_ 2017). One merit of UHIs compared to UHI2m is that the former has a firm and yet simple theoretical basis derived from the surface energy balance principle that underpins the biophysical factorization (described in the next section). In this study, we use this biophysical factorization method to disentangle the mechanism underlying the UHI–HW interactions.
 
-There are multiple ways to define HWs (Perkins 2015, Perkins and Alexander 2013, Robinson 2001, Smith _et al_ 2013). We use the definition from the US National Weather Service (NWS): three or more consecutivedaysofmaximumtemperaturereachingatleast 90[◦] F (32.2[◦] C). We consider that, in each grid cell (a size on the order of 100 × 100 km), its rural sub-grid represents a local background environment for the city. Therefore, for each city we use its rural 2m-height temperature (_T_ 2m _,_ rural) to define HWs. This is consistent
+There are multiple ways to define HWs (Perkins 2015, Perkins and Alexander 2013, Robinson 2001, Smith _et al_ 2013). We use the definition from the US National Weather Service (NWS): three or more consecutivedaysofmaximumtemperaturereachingatleast 90<sup>◦</sup> F (32.2<sup>◦</sup> C). We consider that, in each grid cell (a size on the order of 100 × 100 km), its rural sub-grid represents a local background environment for the city. Therefore, for each city we use its rural 2m-height temperature (_T_ 2m _,_ rural) to define HWs. This is consistent
 
-with weather station observations, as weather stations are mostly located in an open landscape (World Meteorological Organization standard) similar to a rural environment. Using this definition, we divided the 30 years of daily data in each run into two groups: (i) for each city, all sets of three or more consecutive days of modeled midday _T_ 2m _,_ rural larger than 32.2[◦] C were defined as HW days, and their UHI intensities were denoted as UHIHW, while (ii) the remaining days were considered as normal days and hence their UHIs were denoted as UHINM.
+with weather station observations, as weather stations are mostly located in an open landscape (World Meteorological Organization standard) similar to a rural environment. Using this definition, we divided the 30 years of daily data in each run into two groups: (i) for each city, all sets of three or more consecutive days of modeled midday _T_ 2m _,_ rural larger than 32.2<sup>◦</sup> C were defined as HW days, and their UHI intensities were denoted as UHIHW, while (ii) the remaining days were considered as normal days and hence their UHIs were denoted as UHINM.
 
-To ensure the robustness of our analysis to the variations in HW definition, we examine two additional HW definitions (chosen arbitrarily to some extent), one absolute and one relative. The relative definition uses a relative threshold for each city to define HWs (denoted as Def-95Q) rather than a fixed number. Specifically, based on the histogram of summer daily _T_ 2m _,_ rural for each grid cell in each simulation, we define all days whose _T_ 2m _,_ rural are larger than the 95th percentile as HW days. The absolute one relaxes the minimum number of consecutive days of high temperature (90[◦] F) to two days (denoted as Def-2Day). We repeated our analysis for these two HW definitions to check the consistency of patterns identified in the main analysis.
+To ensure the robustness of our analysis to the variations in HW definition, we examine two additional HW definitions (chosen arbitrarily to some extent), one absolute and one relative. The relative definition uses a relative threshold for each city to define HWs (denoted as Def-95Q) rather than a fixed number. Specifically, based on the histogram of summer daily _T_ 2m _,_ rural for each grid cell in each simulation, we define all days whose _T_ 2m _,_ rural are larger than the 95th percentile as HW days. The absolute one relaxes the minimum number of consecutive days of high temperature (90<sup>◦</sup> F) to two days (denoted as Def-2Day). We repeated our analysis for these two HW definitions to check the consistency of patterns identified in the main analysis.
 
-## **2.3. Biophysical factorization analysis**
+##### **2.3. Biophysical factorization analysis**
 
 Total UHIs (Δ _T_ s) can be approximated by linear supposition of various biophysical contributions: urban-rural changes in radiation balance, aerodynamic resistance, Bowen ratio, heat storage and anthropogenic heat (Zhao _et al_ 2014). More details on the calculation can be found in the supplementary information. We quantified each biophysical contribution to Δ _T_ s and compared them between normal and HW days. These evaluations were performed using 30 years
 
@@ -113,31 +109,31 @@ Total UHIs (Δ _T_ s) can be approximated by linear supposition of various bioph
 
 _Environ. Res. Lett._ **13** (2018) 034003
 
-**==> picture [407 x 272] intentionally omitted <==**
-
-**----- Start of picture text -----**<br>
-(a) Daytime: present climate (c) Daytime: 2071-2100 RCP 8.5<br>(b) Nighttime: present climate (d) Nighttime: 2071-2100 RCP 8.5<br>Zone Temperate Continental Dry Sign neg. pos.<br>Magnitude (K) 0.6 1.2 1.8 2.4<br>**----- End of picture text -----**<br>
+<!-- Start of picture text -->
+(a) Daytime: present climate (c) Daytime: 2071-2100 RCP 8.5<br>(b) Nighttime: present climate (d) Nighttime: 2071-2100 RCP 8.5<br>Zone Temperate Continental Dry Sign neg. pos.<br>Magnitude (K) 0.6 1.2 1.8 2.4<br><!-- End of picture text -->
 
 **Figure 2.** Maps of mean differences between UHI2m _,_ HW and UHI2m _,_ NM (UHI2m _,_ HW–UHI2m _,_ NM) during 1975−2004 and 2071−2100 under RCP 8.5 scenario for all selected cities. (_a_), (_b_): current climate (1975−2004); (_c_), (_d_): 2071−2100 RCP 8.5. (_a_), (_c_): daytime; (_b_), (_d_): nighttime. Blue, green and red symbols denote cities in the temperate, continental and dry climate zones, respectively. Solid and open symbols denote positive and negative values, respectively.
 
 **Table 1.** The mean differences between UHIHW and UHINM (UHIHW–UHINM) for the selected cities in the three climate zones in current − − climate (1975 2004) and future RCP 8.5 scenario (2071 2100). (Units: K)
 
-|||Def-NWS|Def-NWS|||Def-95Q|Def-95Q|||Def-2Day|Def-2Day||
+|||Def-N|WS|||Def-|95Q|||Def-|2Day||
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-||Diff in|UHI2m|Diff in|UHIs|Diff in|UHI2m|Diff in|UHIs|Diff in|UHI2m|Diff in|UHIs|
+||Diff in U|HI2m|Diff in|UHIs|Diff in|UHI2m|Diff in|UHIs|Diff in|UHI2m|Diff in|UHIs|
 ||Current|RCP85|Current|RCP85|Current|RCP85|Current|RCP85|Current|RCP85|Current|RCP85|
-||||||**Daytime**||||||||
+||||||**D**|**aytime**|||||||
 |**Temperate**|0.4|−0.4|2.8|−1.1|0.3|−0.2|1.4|−0.4|0.4|−0.4|2.7|−1.2|
 |**Continental**|0.2|−0.4|0.4|−1.7|0.1|−0.2|0.6|−0.4|0.3|−0.4|0.6|−1.8|
 |**Dry**|0.1|0.3|−0.1|0.7|0.1|0.1|0.1|0.5|0.1|0.2|−0.4|0.7|
-||||||**Nighttime**||||||||
+||||||**Ni**|**ghttime**|||||||
 |**Temperate**|0.6|1.2|1.8|1.5|0.1|0.3|0.4|0.3|0.6|1.2|1.8|1.5|
 |**Continental**|0.7|1.0|1.0|1.2|0.1|0.2|0.1|0.4|0.7|0.9|1.7|1.2|
 |**Dry**|0.4|1.2|1.0|1.7|0.2|0.3|0.5|0.7|0.4|1.2|1.0|1.7|
 
 of midday and midnight data from the three simulations (current: 1975–2004; RCP 4.5 and RCP 8.5: 2071–2100) over all selected cities. These analyses allow us to contrast the biophysical drivers between normal and HW days across climate conditions and scenarios.
 
-## **3.1. Interactions between UHI** 2m **and HWs**
+### **3. Results and discussion**
+
+##### **3.1. Interactions between UHI** 2m **and HWs**
 
 We find strong diurnal and climatological signals in the interactions between UHI2m and HWs (figure 2 and table 1). During daytime, UHI2m is 0.4 ± 0.05 K (mean ± 1 standard error) or 80% higher during HW days than during normal days for cities in the
 
@@ -147,10 +143,8 @@ temperate climate zone (humid eastern United States) under current climate (figu
 
 _Environ. Res. Lett._ **13** (2018) 034003
 
-**==> picture [407 x 236] intentionally omitted <==**
-
-**----- Start of picture text -----**<br>
-Daytime Nighttime<br>(a) 5 (c) 5<br>4 4<br>3 3<br>2 2<br>1 1<br>0 0<br>(b) 8 (d) 8<br>7 7<br>6 6<br>5 5<br>4 4<br>3 3<br>2 2<br>1 1<br>0 0<br>-1 -1<br>1975-2004 2071-2100 2071-2100 1975-2004 2071-2100 2071-2100<br>RCP 4.5 RCP 8.5 RCP 4.5 RCP 8.5<br>(K) (K)<br>2m 2m<br>T T<br>(K)Ts (K)Ts<br>**----- End of picture text -----**<br>
+<!-- Start of picture text -->
+Daytime Nighttime<br>(a) 5 (c) 5<br>4 4<br>3 3<br>2 2<br>1 1<br>0 0<br>(b) 8 (d) 8<br>7 7<br>6 6<br>5 5<br>4 4<br>3 3<br>2 2<br>1 1<br>0 0<br>-1 -1<br>1975-2004 2071-2100 2071-2100 1975-2004 2071-2100 2071-2100<br>RCP 4.5 RCP 8.5 RCP 4.5 RCP 8.5<br>(K) (K)<br>2m 2m<br>T T<br>(K)Ts (K)Ts<br><!-- End of picture text -->
 
 **Figure 3.** Air (ΔT2m) and surface UHI (Δ _T_ s) in summer during heat wave and normal days in current climate and future RCP scenarios. Open bars denote temperate region; solid bars denote dry region. Blue bars denote UHI in normal days; red bars denote UHI in heat wave days. (_a_), (_b_): daytime; (_c_), (_d_): nighttime. The error bar denotes ± 1 standard error.
 
@@ -162,7 +156,7 @@ The diurnal pattern is asymmetric as well. At night, despite significant UHI2m�
 
 is 0.6 ± 0.2 K and 0.4 ± 0.1 K larger during HWs than during normal conditions in the temperate and dry region, respectively. These numbers are projected to increase to 1.1 ± 0.1 K (temperate) and 1.0 ± 0.0 K (dry) under RCP 4.5, and 1.2 ± 0.2 K (temperate) and 1.2 ± 0.1 K (dry) under RCP 8.5. These results indicate that the GHG warming scenarios exacerbate the nighttime UHI2m—HW synergistic effects and that these effects remain minimally impacted by the background local climate in future scenarios.
 
-## **3.2. Interactions between surface UHI** s **and HWs**
+##### **3.2. Interactions between surface UHI** s **and HWs**
 
 We also analyzed the interactions between UHIs and HWs. This indicator is important since the radiant temperature is a key component of thermal comfort to urban residents. Moreover, it is closely related to the surface energy balance and hence quite informative as a metric of the city-scale microclimate for the purposeofcomparingdifferentcitiesacrossdiverseclimate conditions.
 
@@ -174,16 +168,16 @@ _Environ. Res. Lett._ **13** (2018) 034003
 
 **Table 2.** Biophysical contributions to UHIs during heat wave and normal days at daytime and nighttime in present-day and future climates. (Unit: K)
 
-||||Present-day climate (1975−2004)|Present-day climate (1975−2004)|Present-day climate (1975−2004)|||
+||||Present-|day climate (1975−20|04)|||
 |---|---|---|---|---|---|---|---|
-||CLM|Calc.|Radiative|Convective|Evaporative|Storage|Anthropogenic|
+||CLM|Calc.|<br>Radiative|<br>Convective|Evaporative|Storage|Anthropogenic|
 |||||Daytime||||
 |**Temperate**|2.8|1.8|−0.2|0.8|1.0|−0.7|1.0|
 |**Dry**|−0.1|−0.1|0.4|0.1|−0.6|−0.5|0.5|
 |||||Nighttime||||
 |**Temperate**|1.8|1.0|0.0|−0.3|−0.2|0.3|1.3|
 |**Dry**|1.0|0.9|0.0|0.0|0.0|0.7|0.2|
-|||||**RCP 8.5 (2071**−**2100)**||||
+||||**RC**|**P 8.5 (2071**−**2100)**||||
 ||**CLM**|**Calc.**|**Radiative**|**Convective**|**Evaporative**|**Storage**|**Anthropogenic**|
 |||||Daytime||||
 |**Temperate**|−1.1|−0.4|−0.1|0.2|−0.9|−0.3|0.7|
@@ -196,17 +190,17 @@ synergistic effect in this region is projected to reverse in future warmer clima
 
 Cities in the dry region do not show any daytime synergistic effects under current climate. The average daytime UHIs is marginally lower during HWs than during normal days for the period 1975–2004 (figure 3(_b_)). Similar with the UHI2m-HW interaction in this region,thesynergisticeffectdevelopsinfuturewarming scenarios. The UHIs is 0.7 ± 0.2 K larger during HWs than during normal days near the end of this century under RCP 8.5 (figure 3(_b_)). At night, the synergistic effect is spatially consistent across climate regions. Undercurrentclimate,thedifferencebetweenUHIs _,_ HW and UHIs _,_ NM is 1.8 ± 0.3 K and 1.0 ± 0.2 K for cities in the temperate and dry region respectively. These numbers are projected to be 1.4 ± 0.2 K and 1.7 ± 0.1 K near the end of this century under RCP 8.5.
 
-## **3.3.**
+##### **3.3.**
 
 Our analysis demonstrates that the spatiotemporal patterns of UHI-HW interactions are robust to different HW definitions (table 1). Although defining HW in the other two ways (Def-95Q and Def-2Day) affects the magnitude of the HW-UHI interactions, the spatiotemporal patterns agree well with results using Def-NWS. The consistency is confirmed for UHI2m and UHIs (table 1), strongly supporting the robustness of the aforementioned spatiotemporal patterns of the UHI-HW interactions.
 
-## **3.4. Biophysical drivers**
+##### **3.4. Biophysical drivers**
 
 Although UHIs and UHI2m are fundamentally distinct concepts (Arnfield 2003), they demonstrate consistent spatiotemporal patterns in terms of their interactions with HWs (figure 3). An important advantage of UHIs is that it has a theoretical basis derived from
 
 the surface energy balance principle that explains the contributions of the biophysical properties of urban surfaces (Zhao _et al_ 2014). Therefore, utilizing this biophysical factorization method, we can disentangle the relative importance of processes that contribute to the UHIs–HW interactions. Because of the consistency between UHIs and UHI2m, and the physical links between surface and air temperature, the physical mechanism behind the UHI2m–HW interactions can be inferred from this analysis of UHIs, but not necessarily in a direct way. For example, a large contribution of convection to the cooling of the surface (reduced UHIs–HW) would imply increased heating of the air (increased UHI2m–HW).
 
-## _3.4.1. Daytime_
+##### _3.4.1. Daytime_
 
 Figure 4 illustrates the biophysical drivers of daytime UHIs during HWs and normal days in current climate and RCP 8.5. Because UHIs–HW interactions show slight differences between RCP 8.5 and RCP 4.5 (figure 3), we present the results of biophysical factorization for RCP 8.5 only. The bars of CLM-modeled ΔTs are shown in figure 4 for comparison as a validation of our biophysical factorization. Under current climate, the positive UHIs–HW synergistic effect in the temperate region primarily comes from the urban-rural difference in the contribution of evaporation (term 3 in supplementary equation (4)) and enhanced anthropogenic heat release (term 5 in equation (4)) during HWs compared to normal days (figure 4(_a_), compare the bars during HWs and normal conditions; and table 2). The contribution from evaporation to UHIs is increased by 1.0 ± 0.1 K during HWs compared to normal days and anthropogenic heat by 1.0 ± 0.2 K in the current climate. This elevated contribution of evaporation during HWs is consistent with observational (Li _et al_ 2015) and modeling studies (Li and BouZeid 2013). Over a water-sufficient surface, an increase of air temperature favors increasing latent heat flux
 
@@ -214,10 +208,8 @@ Figure 4 illustrates the biophysical drivers of daytime UHIs during HWs and norm
 
 _Environ. Res. Lett._ **13** (2018) 034003
 
-**==> picture [407 x 225] intentionally omitted <==**
-
-**----- Start of picture text -----**<br>
-Temperate: present climate Dry: present climate<br>(c)<br>(a) 8 3<br>Heatwave<br>Normal<br>6 2<br>4 1<br>2 0<br>0 -1<br>-2 -2<br>(b) 8 Temperate: 2071-2100 RCP 8.5 (d) 3 Dry: 2071-2100 RCP 8.5<br>6 2<br>4 1<br>2 0<br>0 -1<br>-2 -2<br>CLM Calc. Radiative Convection Evaporation Storage Anthropogenic CLM Calc. Radiative Convection Evaporation Storage Anthropogenic<br>T (K) T (K)<br>T (K) T (K)<br>**----- End of picture text -----**<br>
+<!-- Start of picture text -->
+Temperate: present climate Dry: present climate<br>(c)<br>(a) 8 3<br>Heatwave<br>Normal<br>6 2<br>4 1<br>2 0<br>0 -1<br>-2 -2<br>(b) 8 Temperate: 2071-2100 RCP 8.5 (d) 3 Dry: 2071-2100 RCP 8.5<br>6 2<br>4 1<br>2 0<br>0 -1<br>-2 -2<br>CLM Calc. Radiative Convection Evaporation Storage Anthropogenic CLM Calc. Radiative Convection Evaporation Storage Anthropogenic<br>T (K) T (K)<br>T (K) T (K)<br><!-- End of picture text -->
 
 **Figure 4.** Biophysical contributions to UHIs during heat wave and normal days during daytime. (_a_), (_b_): temperate region; (_c_), (_d_): dry region. (_a_), (_c_): current climate; (_b_), (_d_): 2071–2100 RCP 8.5.
 
@@ -231,22 +223,20 @@ The situation is relatively different in the dry region. The synergistic effect 
 
 _Environ. Res. Lett._ **13** (2018) 034003
 
-**==> picture [407 x 227] intentionally omitted <==**
-
-**----- Start of picture text -----**<br>
-Temperate: present climate Dry: present climate<br>(a) (c)<br>5 5<br>Heatwave<br>Normal<br>4 4<br>3 3<br>2 2<br>1 1<br>0 0<br>-1 -1<br>(b) 5 Temperate: 2071-2100 RCP 8.5 (d) 5 Dry: 2071-2100 RCP 8.5<br>4 4<br>3 3<br>2 2<br>1 1<br>0 0<br>-1 -1<br>CLM Calc. Radiative Convection Evaporation Storage Anthropogenic CLM Calc. Radiative Convection Evaporation Storage Anthropogenic<br>T (K) T (K)<br>T (K) T (K)<br>**----- End of picture text -----**<br>
+<!-- Start of picture text -->
+Temperate: present climate Dry: present climate<br>(a) (c)<br>5 5<br>Heatwave<br>Normal<br>4 4<br>3 3<br>2 2<br>1 1<br>0 0<br>-1 -1<br>(b) 5 Temperate: 2071-2100 RCP 8.5 (d) 5 Dry: 2071-2100 RCP 8.5<br>4 4<br>3 3<br>2 2<br>1 1<br>0 0<br>-1 -1<br>CLM Calc. Radiative Convection Evaporation Storage Anthropogenic CLM Calc. Radiative Convection Evaporation Storage Anthropogenic<br>T (K) T (K)<br>T (K) T (K)<br><!-- End of picture text -->
 
 **Figure 5.** Biophysical contributions to UHIs during heat wave and normal days during nighttime. (_a_), (_b_): temperate region; (_c_), (_d_): dry region. (_a_), (_c_): current climate; (_b_), (_d_): 2071−2100 RCP 8.5.
 
-## _3.4.2. Nighttime_
+##### _3.4.2. Nighttime_
 
-At night, the UHIs—HWs synergistic effects are consistent across climate regions and scenarios. Figure 5 shows that this behavior is primarily the result of significantly elevated anthropogenic heat addition (term 5 in equation (4)) and increased release of stored heat (term 4 in equation (4)) during HWs. Absent solar radiation, convectiveandevaporativeprocessesarerelativelyweak at night. Therefore, contributions from these processes are in general low. This reaffirms the well-established theory that the stored heat in the urban structures and materials, and anthropogenic heat release are the dominant contributors to the UHI at night (Oke 1982). The contribution of evaporation at night comes primarily from soil evaporation (plant stomata are closed at night). Because of the comparative lack of evaporative water in the human-made urban land, soil evaporative cooling in the rural areas contributes a significant fraction to the nighttime UHI in the temperate climate (figure 5). In the dry climate, evaporation contribution to the nighttime UHI is very small (figures 5(_c_) and (_d_)) due to the fact that this term is proportional to the inverse of _𝛽_[2] (_𝛽_ is the Bowen ratio; see supplementary equation (4)). The enhancement of anthropogenic heat addition during HWs is again because of the higher heat released by AC cooling. The elevated release of heat storage at night is from two sources. First, it is from larger increases in heat stored during daytime in urban areas that have much higher thermal admittance compared to rural areas (Ramamurthy _et al_ 2014). The secondsourceliesinthechangesinruralthermaladmittance, which can be sensitive to soil moisture, during HWs. Urban thermal admittance is usually less subject to soil condition change because of the use of humanmade materials. Therefore, if rural soil moisture drops
+At night, the UHIs—HWs synergistic effects are consistent across climate regions and scenarios. Figure 5 shows that this behavior is primarily the result of significantly elevated anthropogenic heat addition (term 5 in equation (4)) and increased release of stored heat (term 4 in equation (4)) during HWs. Absent solar radiation, convectiveandevaporativeprocessesarerelativelyweak at night. Therefore, contributions from these processes are in general low. This reaffirms the well-established theory that the stored heat in the urban structures and materials, and anthropogenic heat release are the dominant contributors to the UHI at night (Oke 1982). The contribution of evaporation at night comes primarily from soil evaporation (plant stomata are closed at night). Because of the comparative lack of evaporative water in the human-made urban land, soil evaporative cooling in the rural areas contributes a significant fraction to the nighttime UHI in the temperate climate (figure 5). In the dry climate, evaporation contribution to the nighttime UHI is very small (figures 5(_c_) and (_d_)) due to the fact that this term is proportional to the inverse of _𝛽_<sup>2</sup> (_𝛽_ is the Bowen ratio; see supplementary equation (4)). The enhancement of anthropogenic heat addition during HWs is again because of the higher heat released by AC cooling. The elevated release of heat storage at night is from two sources. First, it is from larger increases in heat stored during daytime in urban areas that have much higher thermal admittance compared to rural areas (Ramamurthy _et al_ 2014). The secondsourceliesinthechangesinruralthermaladmittance, which can be sensitive to soil moisture, during HWs. Urban thermal admittance is usually less subject to soil condition change because of the use of humanmade materials. Therefore, if rural soil moisture drops
 
 during HWs (as HWs are usually accompanied by droughtsduetoaprecipitation-temperaturefeedback), theurban-ruraldifferenceinthermaladmittancewould becomelargerandthuscontributepositivelytotheUHI (Oke _et al_ 1991, Runnalls and Oke 2000).
 
-The model captured the lag in the release of the elevated heat storage during HWs, that is, the accumulation of stored heat in urban areas in the HW period is gradually released after the atmospheric HW subsides. We find that the heat storage at daytime (stored) and nighttime (released) in the days immediately after the HWs (1−2 d after HW) are on average 5–20 W m[−2] greater than that in normal days. This lag effect lasts up to 2 d in the model. These results are consistent with the previous observational and modeling studies (Li and Bou-Zeid 2013, Li _et al_ 2015).
+The model captured the lag in the release of the elevated heat storage during HWs, that is, the accumulation of stored heat in urban areas in the HW period is gradually released after the atmospheric HW subsides. We find that the heat storage at daytime (stored) and nighttime (released) in the days immediately after the HWs (1−2 d after HW) are on average 5–20 W m<sup>−2</sup> greater than that in normal days. This lag effect lasts up to 2 d in the model. These results are consistent with the previous observational and modeling studies (Li and Bou-Zeid 2013, Li _et al_ 2015).
 
-## **3.5. Limitations**
+##### **3.5. Limitations**
 
 We note four limitations of this study. First, urban land use is not dynamically represented in the current version of CESM. In other words, the urban fraction and geometry in every grid cell are fixed over time. Given that the nighttime UHI shows dependence on the morphological aspects of the city (Oke 1982, Oleson _et al_ 2008), nighttime UHI is likely to increase with urbanization in the future, unless the mitigation of UHI is explicitly taken into account in urban planning. Therefore, the simulated nighttime UHI in the two RCP scenarios in this study are likely lower bounds of the potential nighttime heat stress for growing cities in future climates. Second, although CESM can simulate the dynamic response of building energy use to the environment, its parameterization scheme in the current version is still primitive. The total anthropogenic heat in the model includes only fluxes
 
@@ -254,9 +244,9 @@ We note four limitations of this study. First, urban land use is not dynamically
 
 _Environ. Res. Lett._ **13** (2018) 034003
 
-related to heating and AC, but not traffic-related heat fluxes, potentially causing a slight underestimate in anthropogenic heat. Third, local-scale processes such as advection between adjacent urban and rural land in the same grid cell are not resolved in the CESM. Therefore, impacts of changes in wind speed on the synergistic effects cannot be simulated. According to Li _et al_ (2016), an increase in urban wind speed from 0.1 to 10 m s[−1] during daytime under HWs would increase UHI by less than 0.3 K. Last, our results are based on simulations from one ESM under two RCP scenarios rather than multi-model ensembles. CESM is currently the only ESM that has a sufficiently detailed physicallybased urban land parameterization in CMIP5 (Phase 5 of the Coupled Model Inter-comparison Project) models. If other ESMs or future scenarios show a different trend in precipitation, the outcomes could be different.
+related to heating and AC, but not traffic-related heat fluxes, potentially causing a slight underestimate in anthropogenic heat. Third, local-scale processes such as advection between adjacent urban and rural land in the same grid cell are not resolved in the CESM. Therefore, impacts of changes in wind speed on the synergistic effects cannot be simulated. According to Li _et al_ (2016), an increase in urban wind speed from 0.1 to 10 m s<sup>−1</sup> during daytime under HWs would increase UHI by less than 0.3 K. Last, our results are based on simulations from one ESM under two RCP scenarios rather than multi-model ensembles. CESM is currently the only ESM that has a sufficiently detailed physicallybased urban land parameterization in CMIP5 (Phase 5 of the Coupled Model Inter-comparison Project) models. If other ESMs or future scenarios show a different trend in precipitation, the outcomes could be different.
 
-## **4. Conclusions and implications**
+### **4. Conclusions and implications**
 
 This study investigated the interactions between urban heat islands (UHI) and heat waves (HWs) at a large scale under current and future warmer climates (RCP 4.5 and RCP 8.5) using a global climate model. We examined UHI2m (urban-rural difference in 2m-height air temperature) and UHIs (urban-rural difference in radiativesurfacetemperature),showingconsistentspatiotemporalpatternsbetweenUHI2m andUHIs intheir interactions with HWs. We find strong diurnal and climatologicalsignalsintheinteractions.During daytime, cities in the temperate region show significant UHI— HW synergistic effects in the current climate. These effects are projected to diminish in future scenarios (both RCP 4.5 and RCP 8.5). The opposite occurs in the dry region, where cities show no discernible synergistic effects in the current climate but significant effects in the future. Our biophysical factorization analysis demonstrates that the difference in the increase of urban-rural evaporation and enhanced anthropogenic heat during HWs are key contributors to the synergistic effects during daytime. The contrast in degree of water availability between urban and rural land plays an important role in determining the contribution of evaporation. At night, our results show similar synergistic effects across climate regions and scenarios. The enhanced release of heat storage and anthropogenic heat during HWs are the primary contributors to the synergistic effects at nighttime.
 
@@ -266,7 +256,7 @@ the synergistic effects. Increasing and maintaining the greenness in cities dema
 
 This study highlights the heat risks that urban residents face now and in the projected future. HWs have detrimental impacts on human society and natural ecosystems.TheUHI,anadditionalhotanomalyonthe climatological HW, has already aggravated heat stress on urban residents (Patz _et al_ 2005, Tan _et al_ 2010). These risks are even greater if HWs interact synergistically with UHIs. The synergistic effect that we found in thecurrentclimateexplainscontributionstothegreater risks in urban areas during HWs (Le Tertre _et al_ 2006, Vandentorren _et al_ 2004).
 
-Healthimpactsareakeymotivationforourstudyof UHI—HW interactions on a large scale. Heat extremes have adverse impacts on human health and increase the likelihood of heat-related mortality across different regions in the world (Bobb _et al_ 2014, Huang _et al_ 2011, Kovats and Ebi 2006, O’Neill and Ebi 2009, Wu _et al_ 2014, Zanobetti _et al_ 2012). Our results can be interpreted in the context of HW mortality risk. A study based on 43 communities in the United States found that mortality risk increases as temperature increases during a HW (Anderson and Bell 2011). Using their estimates (7.9% increase in mortality risk for every 1[◦] C increase in average temperature during a HW), and assuming this relationship stays constant in the future, the synergistic effect alone leads to a 3.2% increase in mortality risk in the current climate for temperate cities where risk is fundamentally higher due to humid conditions (Smith _et al_ 2013). Although our results show a diminishing daytime synergistic effect in future warmer climates in this region, urban heat risk will nevertheless increase because the background climatological temperature is rising (GHG warming) and UHI and GHG warming are additive, in addition to factors thatareexpectedtoincreasevulnerabilitysuchaspopulation aging and larger numbers of people with chronic conditions that increase their susceptibility.
+Healthimpactsareakeymotivationforourstudyof UHI—HW interactions on a large scale. Heat extremes have adverse impacts on human health and increase the likelihood of heat-related mortality across different regions in the world (Bobb _et al_ 2014, Huang _et al_ 2011, Kovats and Ebi 2006, O’Neill and Ebi 2009, Wu _et al_ 2014, Zanobetti _et al_ 2012). Our results can be interpreted in the context of HW mortality risk. A study based on 43 communities in the United States found that mortality risk increases as temperature increases during a HW (Anderson and Bell 2011). Using their estimates (7.9% increase in mortality risk for every 1<sup>◦</sup> C increase in average temperature during a HW), and assuming this relationship stays constant in the future, the synergistic effect alone leads to a 3.2% increase in mortality risk in the current climate for temperate cities where risk is fundamentally higher due to humid conditions (Smith _et al_ 2013). Although our results show a diminishing daytime synergistic effect in future warmer climates in this region, urban heat risk will nevertheless increase because the background climatological temperature is rising (GHG warming) and UHI and GHG warming are additive, in addition to factors thatareexpectedtoincreasevulnerabilitysuchaspopulation aging and larger numbers of people with chronic conditions that increase their susceptibility.
 
 The nighttime synergistic effects are consistent across climate zones and scenarios. This raises greater concern as extreme high temperatures at night may be morecloselyassociatedwiththemortalityriskthandaytime (Kusaka _et al_ 2012), possibly because of the lack of relief during cooler nights (Schwartz 2005), as well as higherrelativehumidityatnight,leavingresidentswithoutair-conditioningsubjecttoextremeindoorheatand humidity. Based on the nighttime estimates in Anderson and Bell (2011), the nighttime synergistic effect in the temperate region in this study leads to an increase of 2.2% in mortality risk in current climate; this number is projected to increase to 4.3% by the end of this century under RCP 8.5.
 
@@ -274,15 +264,15 @@ The nighttime synergistic effects are consistent across climate zones and scenar
 
 _Environ. Res. Lett._ **13** (2018) 034003
 
-## **Acknowledgments**
+### **Acknowledgments**
 
 This research was supported by the Carbon Mitigation Initiative and a High Meadows Foundation Fellowship in the Program in Science, Technology and Environmental Policy at Princeton University (to L Z). Q Z is supported by the Director, Office of Science, Office of Biological and Environmental Research of the US Department of Energy under Contract No. DE-AC02-05CH11231 as part of their Regional and Global Climate Modeling program RUBISCO SFA project. E B Z is supported by the US National Science Foundation’s Sustainability Research Network Cooperative Agreement # 1444758 and grant # ICER 1664091. We acknowledge high-performance computing support from Yellowstone (ark:/85065/d7wd3xhc) provided by NCAR’s Computational and Information Systems Laboratory, sponsored by the US National Science Foundation. The authors declare that they have no
 
-## **ORCID iDs**
+### **ORCID iDs**
 
 Lei Zhao https://orcid.org/0000-0002-6481-3786 Kristie L Ebi https://orcid.org/0000-0003-4746-8236 Kaiyu Guan https://orcid.org/0000-0002-3499-6382
 
-## **References**
+### **References**
 
 - Anderson G B and Bell M L 2011 Heat waves in the United States: mortality risk during heat waves and effect modification by heat wave characteristics in 43 US communities _Environ. Health Persp._ **119** 210
 
@@ -360,7 +350,7 @@ Lei Zhao https://orcid.org/0000-0002-6481-3786 Kristie L Ebi https://orcid.org/0
 
 _Environ. Res. Lett._ **13** (2018) 034003
 
-- Nichol J E, Fung W Y, Lam K S and Wong M S 2009 Urban heat island diagnosis using ASTER satellite images and ‘ _in situ_ ’ air temperature _Atmos. Res._ **94** 276–84
+Nichol J E, Fung W Y, Lam K S and Wong M S 2009 Urban heat island diagnosis using ASTER satellite images and ‘ _in situ_ ’ air temperature _Atmos. Res._ **94** 276–84
 
 - O’Neill M S and Ebi K L 2009 Temperature extremes and health: impacts of climate variability and change in the United States _J. Occup. Environ. Med._ **51** 13–25
 
@@ -372,9 +362,7 @@ _Environ. Res. Lett._ **13** (2018) 034003
 
    - CCSM4 CMIP5 climate change scenarios _J. Clim._ **25** 1390–412
 
-- Oleson K, Bonan G B, Feddema J and Vertenstein M 2008 An urban parameterization for a global climate model. Part II: sensitivity to input parameters and the simulated urban heat island in
-
-   - offline simulations _J. Appl. Meteorol. Climatol._ **47** 1061–76
+- Oleson K, Bonan G B, Feddema J and Vertenstein M 2008 An urban parameterization for a global climate model. Part II: sensitivity to input parameters and the simulated urban heat island in offline simulations _J. Appl. Meteorol. Climatol._ **47** 1061–76
 
 - Oleson K _et al_ 2010 _Technical description of version 4.0 of the Community Land Model (CLM)_ NCAR Tech. Note NCAR/TN-478+STR p 257
 

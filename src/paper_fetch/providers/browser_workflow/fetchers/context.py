@@ -9,13 +9,6 @@ from collections.abc import Callable, Mapping
 
 from pathlib import Path
 
-from ....config import (
-    CLOAKBROWSER_BINARY_PATH_ENV_VAR,
-    CLOAKBROWSER_CDP_ENDPOINT_ENV_VAR,
-    CLOAKBROWSER_PROFILE_DIR_ENV_VAR,
-    CLOAKBROWSER_USER_DATA_DIR_ENV_VAR,
-    build_runtime_env,
-)
 from ....logging_utils import emit_structured_log
 from ....runtime import RuntimeContext
 from ....runtime_browser import browser_context_options
@@ -104,11 +97,7 @@ def _new_browser_context(
         active_config = replace(
             browser_config,
             headless=headless,
-            user_agent=(
-                normalize_text(user_agent) or browser_config.user_agent
-                if browser_config.backend == "cloakbrowser"
-                else None
-            ),
+            user_agent=None,
             persist_storage_state=False,
         )
         manager, browser_context = open_browser_context(
@@ -180,18 +169,8 @@ def _resolve_cdp_endpoint(
     *,
     runtime_context: RuntimeContext | None,
 ) -> str | None:
-    endpoint = normalize_text(cdp_endpoint)
-    if endpoint:
-        return endpoint
-    runtime_env = getattr(runtime_context, "env", None)
-    if isinstance(runtime_env, Mapping):
-        endpoint = normalize_text(runtime_env.get(CLOAKBROWSER_CDP_ENDPOINT_ENV_VAR))
-        if endpoint:
-            return endpoint
-    endpoint = normalize_text(
-        build_runtime_env().get(CLOAKBROWSER_CDP_ENDPOINT_ENV_VAR)
-    )
-    return endpoint or None
+    del runtime_context
+    return normalize_text(cdp_endpoint) or None
 
 
 def _resolve_browser_env(
@@ -202,21 +181,13 @@ def _resolve_browser_env(
     profile_dir: str | Path | None = None,
     user_data_dir: str | Path | None = None,
 ) -> dict[str, str | None]:
-    runtime_env = getattr(runtime_context, "env", None)
-    env = runtime_env if isinstance(runtime_env, Mapping) else build_runtime_env()
     return {
-        "binary_path": normalize_text(str(binary_path or ""))
-        or normalize_text(env.get(CLOAKBROWSER_BINARY_PATH_ENV_VAR))
-        or None,
+        "binary_path": normalize_text(str(binary_path or "")) or None,
         "cdp_endpoint": _resolve_cdp_endpoint(
             cdp_endpoint, runtime_context=runtime_context
         ),
-        "profile_dir": normalize_text(str(profile_dir or ""))
-        or normalize_text(env.get(CLOAKBROWSER_PROFILE_DIR_ENV_VAR))
-        or None,
-        "user_data_dir": normalize_text(str(user_data_dir or ""))
-        or normalize_text(env.get(CLOAKBROWSER_USER_DATA_DIR_ENV_VAR))
-        or None,
+        "profile_dir": normalize_text(str(profile_dir or "")) or None,
+        "user_data_dir": normalize_text(str(user_data_dir or "")) or None,
     }
 
 

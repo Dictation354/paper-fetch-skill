@@ -5,7 +5,7 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from paper_fetch.providers import _cloakbrowser, browser_runtime
+from paper_fetch.providers import _playwright_browser, browser_runtime
 
 
 class AtyponBrowserWorkflowBrowserRuntimeTests(unittest.TestCase):
@@ -21,7 +21,7 @@ class AtyponBrowserWorkflowBrowserRuntimeTests(unittest.TestCase):
             artifact_dir=Path(tmpdir) / "artifacts",
             headless=True,
             user_agent="Mozilla/5.0",
-            backend="cloakbrowser",
+            backend="camoufox",
         )
 
     def test_normalize_browser_cookie_for_playwright(self) -> None:
@@ -100,7 +100,7 @@ class AtyponBrowserWorkflowBrowserRuntimeTests(unittest.TestCase):
 
     def test_merge_browser_context_seeds_preserves_fetcher_marker(self) -> None:
         merged = browser_runtime.merge_browser_context_seeds(
-            {"paper_fetch_html_fetcher": "cloakbrowser"},
+            {"paper_fetch_html_fetcher": "camoufox"},
             {"paper_fetch_html_fetcher": "direct_http"},
         )
 
@@ -110,8 +110,8 @@ class AtyponBrowserWorkflowBrowserRuntimeTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             config = self._runtime_config(tmpdir, "wiley", "10.1111/test")
             with mock.patch.object(
-                _cloakbrowser,
-                "fetch_html_with_cloakbrowser",
+                _playwright_browser,
+                "fetch_html_with_playwright",
                 return_value=browser_runtime.BrowserFetchedHtml(
                     source_url="https://onlinelibrary.wiley.com/doi/epdf/10.1111/test",
                     final_url="https://onlinelibrary.wiley.com/doi/10.1111/test",

@@ -11,6 +11,8 @@ import sys
 from pathlib import Path
 from unittest import mock
 
+import pytest
+
 from paper_fetch.formula import convert as formula_conversion
 from tests.golden_criteria import golden_criteria_scenario_asset
 
@@ -659,6 +661,7 @@ class FormulaConversionTests(unittest.TestCase):
         self.assertEqual(process.stdout, "latex\ufffd\n")
         self.assertEqual(process.stderr, "err\ufffd\n")
 
+    @pytest.mark.allow_subprocess
     def test_texmath_exe_under_formula_tools_is_discovered(self) -> None:
         raw_mathml = (
             '<math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi></math>'

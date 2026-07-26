@@ -11,6 +11,7 @@ from collections.abc import Callable, Mapping
 from ..extraction.html import decode_html
 from ..extraction.html.assets.figures import figure_download_candidates
 from ..http.headers import header_value
+from ..models import AssetProfile
 from ..publisher_identity import normalize_doi
 from ..runtime import RuntimeContext
 from ..utils import normalize_text
@@ -31,7 +32,7 @@ def download_ieee_assets_with_browser(
     transport: Any,
     article_id: str,
     output_dir: Path,
-    asset_profile: str,
+    asset_profile: AssetProfile,
     body_assets: list[dict[str, Any]],
     supplementary_assets: list[dict[str, Any]],
     merged_metadata: Mapping[str, Any],

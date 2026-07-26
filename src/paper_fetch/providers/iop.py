@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import contextlib
 from typing import Any
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 
 from ..extraction.html import decode_html
 from ..extraction.html.signals import HtmlExtractionFailure
@@ -146,7 +146,7 @@ def _supplementary_index_failure(
 
 
 def _redact_iop_supplementary_urls(
-    items: list[Mapping[str, Any]],
+    items: Sequence[Mapping[str, Any]],
 ) -> list[dict[str, Any]]:
     redacted: list[dict[str, Any]] = []
     for raw_item in items:
@@ -238,7 +238,7 @@ class IopClient(browser_workflow.BrowserWorkflowClient):
             )
             self.deps.ensure_runtime_ready(runtime)
         except BrowserRuntimeFailure as exc:
-            failures = [
+            runtime_failures = [
                 _supplementary_index_failure(
                     index_url,
                     "iop_supplementary_index_runtime_failed",
@@ -247,7 +247,7 @@ class IopClient(browser_workflow.BrowserWorkflowClient):
                 )
                 for index_url in index_urls
             ]
-            return [], failures
+            return [], runtime_failures
 
         content = raw_payload.content
         browser_context_seed = (
@@ -420,7 +420,7 @@ class IopClient(browser_workflow.BrowserWorkflowClient):
                 )
             )
             assets.extend(supplementary_assets)
-        if content.markdown_text:
+        if content is not None and content.markdown_text:
             assets = _iop_html.suppress_iop_asset_captions_already_in_markdown(
                 assets,
                 content.markdown_text,

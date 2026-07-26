@@ -1,5 +1,5 @@
 ---
-title: "10.3390/rs16010010"
+title: "A NavCom Signal Authentication Scheme Based on Twice Two-Way Satellite Time Transfer"
 authors: "Xiaomei Tang, Sixin Wang, Jiyang Liu, Feixue Wang"
 doi: "10.3390/rs16010010"
 source: "mdpi_html"
@@ -9,13 +9,11 @@ has_abstract: true
 token_estimate: 9276
 ---
 
-# 10.3390/rs16010010
+# A NavCom Signal Authentication Scheme Based on Twice Two-Way Satellite Time Transfer
 
 ## Abstract
 
 Low Earth Orbit (LEO) satellite communication systems typically achieve identity authentication through the encryption and decryption of two-way information, which requires complex key management systems. In contrast, the integration of navigation and communication (NavCom) signals provides novel opportunities for physical observation and authentication solutions due to its measurement functions. This paper introduces a novel signal authentication scheme based on twice two-way satellite time transfer (TWSTT) for LEO satellite systems. It leverages the non-mutated nature of the clock difference to ascertain the legitimacy of the signal by measuring the clock difference of signals at different instances. Unlike traditional authentication methods, this approach directly exploits the temporal and spatial characteristics of the signal, negating the necessity for intricate authorization key systems. Additionally, it adeptly tackles the challenges posed by spoofing interference. The performance analysis indicates that this scheme can achieve a high detection probability for the repeater spoofing signal in the low carrier-to-noise ratio conditions.
-
-## A NavCom Signal Authentication Scheme Based on Twice Two-Way Satellite Time Transfer
 
 ## 1. Introduction
 

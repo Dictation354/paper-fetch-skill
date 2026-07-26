@@ -6,6 +6,24 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 4.0.0 - 2026-07-26
+
+### 破坏性变更
+
+- 移除已弃用的 CloakBrowser 后端和全部 `CLOAKBROWSER_*` 兼容配置；Camoufox 成为唯一受支持的浏览器后端。
+- 默认安装改为轻量 core；浏览器正文提取和 PDF 转换分别需要 `browser`、`pdf` 或 `full` extra。
+
+### 变更
+
+- 新增全局与高风险模块的分支覆盖率报告、完整生产包类型检查、unit 运行状态隔离、有界 cookie-aware 下载和安全 XML 解析。
+- 以 `pyproject.toml` 为项目版本事实源，采用 SPDX 许可证元数据，并补全发布与供应链元数据。
+
+### 修复
+
+- 在保留 `pymupdf4llm` 1.28.0 的前提下稳定共享 PDF Markdown 结构，用无 provider/DOI 特例的规则修复确定性标题漂移。
+- 对 Royal Society Silverchair 的 `view-large` 与 CDN URL 变体做逻辑图片去重，同时保留首选大图 URL、预览 URL、图号和 caption。
+- 在去除 HTML 重复标题 section 并应用 PDF、Royal Society 修复后，刷新并完成全部 26 份受影响 golden 的 agent 审核。
+
 ## 3.2.1 - 2026-07-25
 
 ### 变更

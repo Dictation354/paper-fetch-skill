@@ -104,7 +104,7 @@ def render_elsevier_table_result(table: ET.Element | None) -> ElsevierTableRende
     lossy = False
 
     for row in row_nodes:
-        rendered = [None] * col_count
+        rendered: list[str | None] = [None] * col_count
         for index in range(col_count):
             active_span = active_rowspans[index]
             if active_span is not None and int(active_span.get("remaining") or 0) > 0:

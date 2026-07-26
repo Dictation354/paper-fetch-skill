@@ -579,7 +579,7 @@ class IeeeClient(ProviderClient):
     def fetch_raw_fulltext(
         self,
         doi: str,
-        metadata: ProviderMetadata,
+        metadata: Mapping[str, Any],
         *,
         context: RuntimeContext | None = None,
     ) -> _RawFulltextPayload:
@@ -739,7 +739,7 @@ class IeeeClient(ProviderClient):
     def download_related_assets(
         self,
         doi: str,
-        metadata: ProviderMetadata,
+        metadata: Mapping[str, Any],
         raw_payload: _RawFulltextPayload,
         output_dir: Path | None,
         *,
@@ -769,7 +769,7 @@ class IeeeClient(ProviderClient):
             raw_payload,
             output_dir,
             user_agent=self.user_agent,
-            env=context.env,
+            env=context.env or self.env,
             asset_profile=asset_profile,
             browser_runtime_config=browser_runtime_config,
             runtime_context=context,
@@ -783,7 +783,7 @@ class IeeeClient(ProviderClient):
 
     def to_article_model(
         self,
-        metadata: ProviderMetadata,
+        metadata: Mapping[str, Any],
         raw_payload: _RawFulltextPayload,
         *,
         downloaded_assets: list[Mapping[str, Any]] | None = None,

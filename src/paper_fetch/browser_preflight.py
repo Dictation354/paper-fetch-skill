@@ -13,7 +13,6 @@ from .auth import AUTH_TARGETS, AuthTarget, browser_auth_provider_names
 from .config import (
     BROWSER_TIMEOUT_MS_ENV_VAR,
     BROWSER_USER_AGENT_ENV_VAR,
-    CLOAKBROWSER_TIMEOUT_MS_ENV_VAR,
     build_runtime_env,
     configured_browser_backend,
 )
@@ -104,8 +103,6 @@ def _runtime_env(
     runtime_env = build_runtime_env(env)
     if timeout_ms is not None:
         runtime_env[BROWSER_TIMEOUT_MS_ENV_VAR] = str(timeout_ms)
-        # Keep the legacy mirror for callers that still inspect this helper directly.
-        runtime_env[CLOAKBROWSER_TIMEOUT_MS_ENV_VAR] = str(timeout_ms)
     normalized_user_agent = normalize_text(browser_user_agent)
     if normalized_user_agent:
         if configured_browser_backend(runtime_env) == "camoufox":
@@ -237,7 +234,6 @@ def static_browser_capabilities(
         "live_checked": False,
         "publisher_page_checked": False,
         "playwright": package_capability("playwright"),
-        "cloakbrowser": package_capability("cloakbrowser"),
         "camoufox": package_capability("camoufox"),
         "chrome_cdp": chrome_cdp,
         "browser_runtime": {

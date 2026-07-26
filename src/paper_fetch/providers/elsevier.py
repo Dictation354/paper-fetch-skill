@@ -11,7 +11,7 @@ import uuid
 import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Any
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 
 from ..config import build_user_agent, resolve_asset_download_concurrency
 from ..extraction.html.availability_policy import AvailabilityPolicy
@@ -45,6 +45,7 @@ from ..utils import (
     save_payload,
     strip_html_tags,
 )
+from ..xml_security import XmlParseFailure, parse_xml
 from ._article_markdown_elsevier_document import build_article_structure
 from ._article_markdown_xml import xml_local_name
 from ._asset_retry import (
@@ -265,8 +266,8 @@ def elsevier_xml_root_from_payload(
 ) -> ET.Element | None:
     if context is None:
         try:
-            return ET.fromstring(xml_body)
-        except ET.ParseError:
+            return parse_xml(xml_body, source="Elsevier XML payload")
+        except XmlParseFailure:
             return None
 
     key = context.build_parse_cache_key(
@@ -274,13 +275,13 @@ def elsevier_xml_root_from_payload(
         role="xml_root",
         source=source_url,
         body=xml_body,
-        parser="xml.etree.ElementTree",
+        parser="paper_fetch.xml_security",
     )
 
     def parse_root() -> ET.Element | None:
         try:
-            return ET.fromstring(xml_body)
-        except ET.ParseError:
+            return parse_xml(xml_body, source="Elsevier XML payload")
+        except XmlParseFailure:
             return None
 
     # Reuse the parsed XML tree as read-only state; callers must not mutate it.
@@ -327,7 +328,7 @@ def extract_elsevier_asset_references(
 
         object_type = (element.get("type") or "").strip()
         category = (element.get("category") or "").strip()
-        mimetype = (element.get("mimetype") or "").strip()
+        object_mimetype = (element.get("mimetype") or "").strip()
         ref = (element.get("ref") or source_url).strip()
 
         asset_kind = classify_elsevier_asset_kind(ref, object_type, category)
@@ -337,7 +338,7 @@ def extract_elsevier_asset_references(
             "source_kind": "object",
             "source_ref": ref,
             "source_url": source_url,
-            "content_type": mimetype or None,
+            "content_type": object_mimetype or None,
             "filename_hint": Path(urllib.parse.urlparse(source_url).path).name or ref,
             "object_type": object_type or None,
             "category": category or None,
@@ -359,7 +360,7 @@ def extract_elsevier_asset_references(
         ).strip()
         attachment_eid = (first_xml_child_text(element, "attachment-eid") or "").strip()
         filename = (first_xml_child_text(element, "filename") or "").strip()
-        mimetype = None
+        attachment_mimetype: str | None = None
         extension = (first_xml_child_text(element, "extension") or "").strip().lower()
         if extension:
             clean_extension = extension.lstrip(".")
@@ -368,7 +369,7 @@ def extract_elsevier_asset_references(
                 if filename.lower().endswith(f".{clean_extension}")
                 else f"attachment.{clean_extension}"
             )
-            mimetype = mimetypes.guess_type(filename_for_guess)[0]
+            attachment_mimetype = mimetypes.guess_type(filename_for_guess)[0]
 
         if not attachment_eid:
             continue
@@ -379,7 +380,7 @@ def extract_elsevier_asset_references(
             "source_kind": "attachment",
             "source_ref": attachment_eid,
             "source_url": build_elsevier_object_url(attachment_eid),
-            "content_type": mimetype,
+            "content_type": attachment_mimetype,
             "filename_hint": filename or attachment_eid,
             "attachment_type": attachment_type or None,
         }
@@ -602,7 +603,7 @@ def download_elsevier_related_assets(
         return reference, dict(response), None
 
     def download_body_references(
-        references_to_download: list[Mapping[str, Any]],
+        references_to_download: Sequence[Mapping[str, Any]],
         *,
         concurrency: int,
     ) -> dict[str, list[dict[str, Any]]]:
@@ -920,7 +921,7 @@ class ElsevierClient(ProviderClient):
 
     def _official_payload_is_usable(
         self,
-        metadata: ProviderMetadata,
+        metadata: Mapping[str, Any],
         raw_payload: RawFulltextPayload,
         *,
         context: RuntimeContext | None = None,
@@ -1044,7 +1045,7 @@ class ElsevierClient(ProviderClient):
     def download_related_assets(
         self,
         doi: str,
-        metadata: ProviderMetadata,
+        metadata: Mapping[str, Any],
         raw_payload: RawFulltextPayload,
         output_dir: Path | None,
         *,
@@ -1069,7 +1070,7 @@ class ElsevierClient(ProviderClient):
     def fetch_raw_fulltext(
         self,
         doi: str,
-        metadata: ProviderMetadata,
+        metadata: Mapping[str, Any],
         *,
         context: RuntimeContext | None = None,
     ) -> RawFulltextPayload:
@@ -1171,7 +1172,7 @@ class ElsevierClient(ProviderClient):
 
     def to_article_model(
         self,
-        metadata: ProviderMetadata,
+        metadata: Mapping[str, Any],
         raw_payload: RawFulltextPayload,
         *,
         downloaded_assets: list[Mapping[str, Any]] | None = None,
@@ -1249,7 +1250,7 @@ class ElsevierClient(ProviderClient):
                 metadata=metadata,
                 xml_body=raw_payload.body,
                 xml_path=xml_path,
-                assets=pseudo_assets,
+                assets=[dict(item) for item in pseudo_assets],
                 xml_root=xml_root,
             )
             if structure is not None:

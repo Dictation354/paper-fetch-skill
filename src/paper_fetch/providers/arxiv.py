@@ -27,7 +27,12 @@ from ..http import (
     RequestFailure,
 )
 from ..metadata.types import ProviderMetadata
-from ..models import AssetProfile, article_from_markdown, metadata_only_article
+from ..models import (
+    AssetProfile,
+    SourceKind,
+    article_from_markdown,
+    metadata_only_article,
+)
 from ..provider_catalog import ProviderSpec
 from ..runtime import RuntimeContext
 from ..tracing import download_marker, fulltext_marker, trace_from_markers
@@ -403,7 +408,7 @@ class ArxivClient(ProviderClient):
     def fetch_raw_fulltext(
         self,
         doi: str,
-        metadata: ProviderMetadata,
+        metadata: Mapping[str, Any],
         *,
         context: RuntimeContext | None = None,
     ) -> RawFulltextPayload:
@@ -470,7 +475,7 @@ class ArxivClient(ProviderClient):
     def download_related_assets(
         self,
         doi: str,
-        metadata: ProviderMetadata,
+        metadata: Mapping[str, Any],
         raw_payload: RawFulltextPayload,
         output_dir: Path | None,
         *,
@@ -564,7 +569,7 @@ class ArxivClient(ProviderClient):
 
     def to_article_model(
         self,
-        metadata: ProviderMetadata,
+        metadata: Mapping[str, Any],
         raw_payload: RawFulltextPayload,
         *,
         downloaded_assets: list[Mapping[str, Any]] | None = None,
@@ -588,10 +593,7 @@ class ArxivClient(ProviderClient):
         route = normalize_text(
             content.route_kind if content is not None else ""
         ).lower()
-        source = {
-            PDF_FALLBACK: "arxiv_pdf",
-            "html": "arxiv_html",
-        }.get(route, "arxiv_html")
+        source: SourceKind = "arxiv_pdf" if route == PDF_FALLBACK else "arxiv_html"
         markdown_text = str(
             (content.markdown_text if content is not None else "") or ""
         ).strip()

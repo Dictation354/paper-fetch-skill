@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import base64
 
-from paper_fetch.providers import _cloakbrowser
+from paper_fetch.providers import _playwright_browser
 from paper_fetch.providers.browser_workflow import fetchers as browser_fetchers
 
 from ._atypon_browser_workflow_provider_support import *
@@ -286,7 +286,7 @@ class AtyponBrowserWorkflowProviderAssetFailureTests(
                 load_runtime_config=mock.Mock(return_value=runtime),
                 ensure_runtime_ready=mock.Mock(),
                 fetch_html_with_browser=mock.Mock(
-                    return_value=_cloakbrowser.BrowserFetchedHtml(
+                    return_value=_playwright_browser.BrowserFetchedHtml(
                         source_url=figure_page_url,
                         final_url=figure_page_url,
                         html="<html><body><p>Figure page without direct full-size URL.</p></body></html>",

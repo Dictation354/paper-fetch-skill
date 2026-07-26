@@ -5,7 +5,6 @@ import io
 import logging
 from pathlib import Path
 import socket
-import sys
 import threading
 import time
 from types import SimpleNamespace
@@ -121,15 +120,8 @@ def test_chromium_foreign_host_singleton_is_conservatively_in_use(
     assert inspection.reason == "singleton_lock_remote_host"
 
 
-def test_managed_chrome_args_enforce_headless_when_cloakbrowser_omits_flag(
-    monkeypatch, tmp_path
-) -> None:
-    def build_args(_fingerprint: bool, args: list[str], **_kwargs: Any) -> list[str]:
-        return ["--no-sandbox", *args, "--lang=en-US"]
-
-    monkeypatch.setitem(
-        sys.modules, "cloakbrowser", SimpleNamespace(build_args=build_args)
-    )
+def test_managed_chrome_args_enforce_headless(monkeypatch, tmp_path) -> None:
+    del monkeypatch
 
     args = runtime_browser._build_managed_chrome_args(
         headless=True,
@@ -145,12 +137,7 @@ def test_managed_chrome_args_enforce_headless_when_cloakbrowser_omits_flag(
 def test_managed_chrome_args_keep_headed_mode_when_requested(
     monkeypatch, tmp_path
 ) -> None:
-    def build_args(_fingerprint: bool, args: list[str], **_kwargs: Any) -> list[str]:
-        return ["--no-sandbox", *args, "--lang=en-US"]
-
-    monkeypatch.setitem(
-        sys.modules, "cloakbrowser", SimpleNamespace(build_args=build_args)
-    )
+    del monkeypatch
 
     args = runtime_browser._build_managed_chrome_args(
         headless=False,
@@ -232,7 +219,7 @@ def test_browser_manager_auto_starts_managed_cdp_browser(monkeypatch, tmp_path) 
 
     monkeypatch.setattr(
         runtime_browser,
-        "_resolve_cloakbrowser_binary",
+        "_resolve_browser_binary",
         lambda _binary_path=None: "/tmp/chrome",
     )
     monkeypatch.setattr(runtime_browser, "_unused_tcp_port", lambda: 9333)
@@ -287,7 +274,7 @@ def test_browser_manager_recovers_stale_singletons_before_launch(
 
     monkeypatch.setattr(
         runtime_browser,
-        "_resolve_cloakbrowser_binary",
+        "_resolve_browser_binary",
         lambda _binary_path=None: "/tmp/chrome",
     )
     monkeypatch.setattr(runtime_browser, "_unused_tcp_port", lambda: 9333)
@@ -322,7 +309,7 @@ def test_browser_manager_recovers_new_stale_singletons_and_retries_once(
 
     monkeypatch.setattr(
         runtime_browser,
-        "_resolve_cloakbrowser_binary",
+        "_resolve_browser_binary",
         lambda _binary_path=None: "/tmp/chrome",
     )
 
@@ -376,7 +363,7 @@ def test_managed_chrome_startup_failure_keeps_redacted_bounded_diagnostic(
 
     monkeypatch.setattr(
         runtime_browser,
-        "_resolve_cloakbrowser_binary",
+        "_resolve_browser_binary",
         lambda _binary_path=None: "/tmp/chrome",
     )
     monkeypatch.setattr(runtime_browser, "_unused_tcp_port", lambda: 9333)
@@ -484,7 +471,7 @@ def test_browser_manager_restarts_managed_browser_when_headless_changes(
 
     monkeypatch.setattr(
         runtime_browser,
-        "_resolve_cloakbrowser_binary",
+        "_resolve_browser_binary",
         lambda _binary_path=None: "/tmp/chrome",
     )
     monkeypatch.setattr(runtime_browser, "_unused_tcp_port", lambda: next(ports))
@@ -538,7 +525,7 @@ def test_browser_manager_terminates_managed_browser_when_cdp_connect_fails(
 
     monkeypatch.setattr(
         runtime_browser,
-        "_resolve_cloakbrowser_binary",
+        "_resolve_browser_binary",
         lambda _binary_path=None: "/tmp/chrome",
     )
     monkeypatch.setattr(runtime_browser, "_unused_tcp_port", lambda: 9333)
@@ -612,7 +599,7 @@ def test_browser_manager_profile_lock_timeout_reports_error(
 
     monkeypatch.setattr(
         runtime_browser,
-        "_resolve_cloakbrowser_binary",
+        "_resolve_browser_binary",
         lambda _binary_path=None: "/tmp/chrome",
     )
     monkeypatch.setattr(
@@ -790,7 +777,7 @@ def test_browser_manager_external_new_context_does_not_borrow_existing_context(
     assert diagnostics["borrowed_existing_context"] is False
 
 
-def test_runtime_context_passes_env_cdp_endpoint_to_browser_manager(
+def test_runtime_context_passes_explicit_cdp_endpoint_to_browser_manager(
     monkeypatch,
 ) -> None:
     cdp_context = _FakeCdpContext()
@@ -802,12 +789,13 @@ def test_runtime_context_passes_env_cdp_endpoint_to_browser_manager(
         return cdp_browser
 
     monkeypatch.setattr(runtime_browser, "connect_browser_over_cdp", connect)
-    context = RuntimeContext(
-        env={"CLOAKBROWSER_CDP_ENDPOINT": "ws://127.0.0.1:9222/devtools/browser/test"}
-    )
+    context = RuntimeContext(env={})
 
     try:
-        borrowed = context.new_browser_context(headless=True)
+        borrowed = context.new_browser_context_for_config(
+            headless=True,
+            cdp_endpoint="ws://127.0.0.1:9222/devtools/browser/test",
+        )
         borrowed.close()
     finally:
         context.close()

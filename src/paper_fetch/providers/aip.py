@@ -129,9 +129,9 @@ register_provider_bundle(
             name="aip",
             cleanup=ProviderCleanupRules(
                 markdown_promo_tokens=AIP_MARKDOWN_PROMO_TOKENS,
-                extraction_cleanup_selectors=AIP_SITE_RULE_OVERRIDES[
-                    "remove_selectors"
-                ],
+                extraction_cleanup_selectors=tuple(
+                    AIP_SITE_RULE_OVERRIDES["remove_selectors"]
+                ),
                 post_content_break_tokens=AIP_POST_CONTENT_BREAK_TOKENS,
             ),
             front_matter=ProviderFrontMatterRules(

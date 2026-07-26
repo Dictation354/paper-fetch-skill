@@ -163,10 +163,10 @@ fixtures:
     doi: 10.1146/annurev-med-120811-171056
     baseline_markdown_path:
       tests/fixtures/golden_criteria/10.1146_annurev-med-120811-171056/extracted.md
-    baseline_markdown_sha256: 9fe88f651e5972e83f5f6b5f09d89963db52fcf81cb93bd7a17abbc563619542
+    baseline_markdown_sha256: 1289c3ae7bb8d1830b532ff14ebfb2cdb38cddd3e301792e03e4240041245b87
     markdown_quality_path:
       tests/fixtures/golden_criteria/10.1146_annurev-med-120811-171056/markdown-quality.json
-    markdown_quality_sha256: e0641814deb8da4f67f5f883cf458b05b293e56efc5e6f8864c6aac24f7ec2c8
+    markdown_quality_sha256: a175258b6ed98752789cdd6187df61859cb77a2a2aa005cdbb7346ed33a546b6
     review_notes: Semantic review completed against committed PDF fallback evidence.
     sample_representative: true
     markdown_semantic_reviewed: true

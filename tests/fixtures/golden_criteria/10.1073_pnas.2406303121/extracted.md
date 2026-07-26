@@ -1,5 +1,5 @@
 ---
-title: "10.1073/pnas.2406303121"
+title: "The kinetics of SARS-CoV-2 infection based on a human challenge study"
 authors: "Sarafa A. Iyaniwura, Ruy M. Ribeiro, Carolin Zitzmann, Tin Phan, Ruian Ke, Alan S. Perelson"
 doi: "10.1073/pnas.2406303121"
 source: "pnas"
@@ -9,7 +9,7 @@ has_abstract: true
 token_estimate: 12158
 ---
 
-# 10.1073/pnas.2406303121
+# The kinetics of SARS-CoV-2 infection based on a human challenge study
 
 ## Significance
 
@@ -18,8 +18,6 @@ Studying the early dynamics of severe acute respiratory syndrome coronavirus 2 (
 ## Abstract
 
 Studying the early events that occur after viral infection in humans is difficult unless one intentionally infects volunteers in a human challenge study. Here, we use data about severe acute respiratory syndrome coronavirus 2 (SARS-CoV-2) in such a study in combination with mathematical modeling to gain insights into the relationship between the amount of virus in the upper respiratory tract and the immune response it generates. We propose a set of dynamic models of increasing complexity to dissect the roles of target cell limitation, innate immunity, and adaptive immunity in determining the observed viral kinetics. We introduce an approach for modeling the effect of humoral immunity that describes a decline in infectious virus after immune activation. We fit our models to viral load and infectious titer data from all the untreated infected participants in the study simultaneously. We found that a power-law with a power *h* < 1 describes the relationship between infectious virus and viral load. Viral replication at the early stage of infection is rapid, with a doubling time of ~2 h for viral RNA and ~3 h for infectious virus. We estimate that adaptive immunity is initiated ~7 to 10 d postinfection and appears to contribute to a multiphasic viral decline experienced by some participants; the viral rebound experienced by other participants is consistent with a decline in the interferon response. Altogether, we quantified the kinetics of SARS-CoV-2 infection, shedding light on the early dynamics of the virus and the potential role of innate and adaptive immunity in promoting viral decline during infection.
-
-## The kinetics of SARS-CoV-2 infection based on a human challenge study
 
 ## Main Text
 
@@ -192,81 +190,81 @@ Previously published data were used for this work<sup>8</sup>.
 
 ## References (78 total, showing 78)
 
-1. World Health Organization (WHO), Number of COVID-19 deaths reported to WHO. WHO (2024). https://data.who.int/dashboards/covid19/cases?n=c . Accessed 14 March 2024.
-2. Y.-C. Li, W.-Z. Bai, T. Hashikawa, The neuroinvasive potential of SARS-CoV2 may play a role in the respiratory failure of COVID-19 patients. J. Med. Virol. 92 , 552–555 (2020).
-3. P. Baccam, C. Beauchemin, C. A. Macken, F. G. Hayden, A. S. Perelson, Kinetics of influenza A virus infection in humans. J. Virol. 80 , 7590–7599 (2006).
-4. N. J. Matheson, P. J. Lehner, How does SARS-CoV-2 cause COVID-19? Science 369 , 510–511 (2020).
-5. R. Wölfel et al., Virological assessment of hospitalized patients with COVID-2019. Nature 581 , 465–469 (2020).
-6. World Health Organization (WHO), Timeline: WHO’s COVID-19 response. WHO (2023). https://www.who.int/emergencies/diseases/novel-coronavirus-2019/interactive-timeline . Accessed 14 March 2024.
-7. S. Hakki et al., Onset and window of SARS-CoV-2 infectiousness and temporal correlation with symptom onset: A prospective, longitudinal, community cohort study. Lancet Respir. Med. 10 , 1061–1073 (2022).
-8. B. Killingley et al., Safety, tolerability and viral kinetics during SARS-CoV-2 human challenge in young adults. Nat. Med. 28 , 1031–1041 (2022).
-9. S. M. Kissler et al., Viral dynamics of acute SARS-CoV-2 infection and applications to diagnostic and public health strategies. PLoS Biol. 19 , e3001333 (2021).
-10. R. Ke, C. Zitzmann, D. D. Ho, R. M. Ribeiro, A. S. Perelson, In vivo kinetics of SARS-CoV-2 infection and its relationship with a person’s infectiousness. Proc. Nat. Acad. Sci. U.S.A. 118 , e2111477118 (2021).
-11. R. Ke et al., Daily longitudinal sampling of SARS-CoV-2 infection reveals substantial heterogeneity in infectiousness. Nat. Microbiol. 7 , 640–652 (2022).
-12. N. Heitzman-Breen, S. M. Ciupe, Modeling within-host and aerosol dynamics of SARS-CoV-2: The relationship with infectiousness. PLoS Comput. Biol. 18 , e1009997 (2022).
-13. A. Marc et al., Quantifying the relationship between SARS-CoV-2 viral load and infectiousness. Elife 10 , e69302 (2021).
+1. World Health Organization (WHO), Number of COVID-19 deaths reported to WHO. WHO (2024). https://data.who.int/dashboards/covid19/cases?n=c. Accessed 14 March 2024.
+2. Y.-C. Li, W.-Z. Bai, T. Hashikawa, The neuroinvasive potential of SARS-CoV2 may play a role in the respiratory failure of COVID-19 patients. J. Med. Virol. 92, 552–555 (2020).
+3. P. Baccam, C. Beauchemin, C. A. Macken, F. G. Hayden, A. S. Perelson, Kinetics of influenza A virus infection in humans. J. Virol. 80, 7590–7599 (2006).
+4. N. J. Matheson, P. J. Lehner, How does SARS-CoV-2 cause COVID-19? Science 369, 510–511 (2020).
+5. R. Wölfel et al., Virological assessment of hospitalized patients with COVID-2019. Nature 581, 465–469 (2020).
+6. World Health Organization (WHO), Timeline: WHO’s COVID-19 response. WHO (2023). https://www.who.int/emergencies/diseases/novel-coronavirus-2019/interactive-timeline. Accessed 14 March 2024.
+7. S. Hakki et al., Onset and window of SARS-CoV-2 infectiousness and temporal correlation with symptom onset: A prospective, longitudinal, community cohort study. Lancet Respir. Med. 10, 1061–1073 (2022).
+8. B. Killingley et al., Safety, tolerability and viral kinetics during SARS-CoV-2 human challenge in young adults. Nat. Med. 28, 1031–1041 (2022).
+9. S. M. Kissler et al., Viral dynamics of acute SARS-CoV-2 infection and applications to diagnostic and public health strategies. PLoS Biol. 19, e3001333 (2021).
+10. R. Ke, C. Zitzmann, D. D. Ho, R. M. Ribeiro, A. S. Perelson, In vivo kinetics of SARS-CoV-2 infection and its relationship with a person’s infectiousness. Proc. Nat. Acad. Sci. U.S.A. 118, e2111477118 (2021).
+11. R. Ke et al., Daily longitudinal sampling of SARS-CoV-2 infection reveals substantial heterogeneity in infectiousness. Nat. Microbiol. 7, 640–652 (2022).
+12. N. Heitzman-Breen, S. M. Ciupe, Modeling within-host and aerosol dynamics of SARS-CoV-2: The relationship with infectiousness. PLoS Comput. Biol. 18, e1009997 (2022).
+13. A. Marc et al., Quantifying the relationship between SARS-CoV-2 viral load and infectiousness. Elife 10, e69302 (2021).
 14. J. Carruthers, J. Xu, T. Finnie, I. Hall, A within-host model of SARS-CoV-2 infection. medRxiv [Preprint] (2022). https://doi.org/10.1101/2022.04.22.22274137v1 (Accessed 18 January 2024).
-15. J. D. Challenger et al., Modelling upper respiratory viral load dynamics of SARS-CoV-2. BMC Med. 20 , 25 (2022).
-16. B. Chatterjee, H. S. Sandhu, N. M. Dixit, Modeling recapitulates the heterogeneous outcomes of SARS-CoV-2 infection and quantifies the differences in the innate immune and CD8 T-cell responses between patients experiencing mild and severe symptoms. PLoS Pathog. 18 , e1010630 (2022).
-17. A. Goyal, E. F. Cardozo-Ojeda, J. T. Schiffer, Potency and timing of antiviral therapy as determinants of duration of SARS-CoV-2 shedding and intensity of inflammatory response. Sci. Adv. 6 , eabc7112 (2020).
-18. A. Goyal, D. B. Reeves, E. F. Cardozo-Ojeda, J. T. Schiffer, B. T. Mayer, Viral load and contact heterogeneity predict SARS-CoV-2 transmission and super-spreading events. Elife 10 , e63537 (2021).
-19. A. Goyal, E. R. Duke, E. F. Cardozo-Ojeda, J. T. Schiffer, Modeling explains prolonged SARS-CoV-2 nasal shedding relative to lung shedding in remdesivir-treated rhesus macaques. iScience 25 , 104448 (2022).
-20. N. Néant et al., Modeling SARS-CoV-2 viral kinetics and association with mortality in hospitalized patients from the French COVID cohort. Proc. Natl. Acad. Sci. U.S.A. 118 , e2017962118 (2021).
-21. A. S. Perelson, R. Ke, Mechanistic modeling of SARS-CoV-2 and other infectious diseases and the effects of therapeutics. Clin. Pharmacol. Ther. 109 , 829–840 (2021).
-22. S. Wang et al., Modeling the viral dynamics of SARS-CoV-2 infection. Math. Biosci. 328 , 108438 (2020).
-23. P. Czuppon et al., Success of prophylactic antiviral therapy for SARS-CoV-2: Predicted critical efficacies and impact of different drug-specific mechanisms of action. PLoS Comput. Biol. 17 , e1008752 (2021).
-24. M. Alexandre et al., Modelling the response to vaccine in non-human primates to define SARS-CoV-2 mechanistic correlates of protection. Elife 11 , e75427 (2022).
-25. A. Gonçalves et al., SARS-CoV-2 viral dynamics in non-human primates. PLoS Comput. Biol. 17 , e1008785 (2021).
-26. G. Lingas et al., Effect of remdesivir on viral dynamics in COVID-19 hospitalized patients: A modelling analysis of the randomized, controlled, open-label DisCoVeRy trial. J. Antimicrob Chemother. 77 , 1404–1412 (2022).
-27. G. Lingas et al., Modelling the association between neutralizing antibody levels and SARS-CoV-2 viral dynamics: Implications to define correlates of protection against infection. medRxiv [Preprint] (2023). https://doi.org/10.1101/2023.03.05.23286816 .
-28. A. Marc et al., Impact of variants of concern on SARS-CoV-2 viral dynamics in non-human primates. PLoS Comput. Biol. 19 , e1010721 (2023).
-29. N. K. Vaidya, A. Bloomquist, A. S. Perelson, Modeling within-host dynamics of SARS-CoV-2 infection: A case study in ferrets. Viruses 13 , 1635 (2021).
-30. S. Iwanami et al., Detection of significant antiviral drug effects on COVID-19 with reasonable sample sizes in randomized controlled trials: A modeling study. PLoS Med. 18 , e1003660 (2021).
-31. A. Rohatgi, WebPlotDigitizer–Copyright 2010–2022 Ankit Rohatgi. Automeris.io (2022). https://apps.automeris.io/wpd/ . Accessed 24 February 2023.
-32. H. R. Wagstaffe et al., Mucosal and systemic immune correlates of viral control after SARS-CoV-2 infection challenge in seronegative adults. Sci. Immunol. 9 , eadj9285 (2024).
-33. K. Best, A. S. Perelson, Mathematical modeling of within-host Zika virus dynamics. Immunol. Rev. 285 , 81–96 (2018).
-34. A. U. Neumann et al., Hepatitis C viral dynamics in vivo and the antiviral efficacy of interferon-alpha therapy. Science 282 , 103–107 (1998).
-35. A. S. Perelson, Modelling viral and immune system dynamics. Nat. Rev. Immunol. 2 , 28–36 (2002).
-36. R. J. De Boer, A. S. Perelson, Target cell limited and immune control models of HIV infection: A comparison. J. Theor. Biol. 190 , 201–214 (1998).
-37. A. Gonçalves et al., Timing of antiviral treatment initiation is critical to reduce SARS-CoV-2 viral load. CPT Pharmacometrics Syst. Pharmacol. 9 , 509–514 (2020).
-38. A. García-Sastre, C. A. Biron, Type 1 interferons and the virus-host relationship: A lesson in détente. Science 312 , 879–882 (2006).
-39. M. Sa Ribero, N. Jouvenet, M. Dreux, S. Nisole, Interplay between SARS-CoV-2 and the type I interferon response. PLoS Pathog. 16 , e1008737 (2020).
-40. C. E. Samuel, Antiviral actions of interferons. Clin. Microbiol. Rev. 14 , 778–809 (2001).
-41. T. Phan et al., Modeling the emergence of viral resistance for SARS-CoV-2 during treatment with an anti-spike monoclonal antibody. PLoS Pathog. 20 , e1011680 (2024).
-42. C. E. Samuel, G. S. Knutson, Mechanism of interferon action. Kinetics of decay of the antiviral state and protein phosphorylation in mouse fibroblasts treated with natural and cloned interferons. J. Biol. Chem. 257 , 11796–11801 (1982).
-43. P. R. Somvanshi, K. V. Venkatesh, “Hill equation” in Encyclopedia of Systems Biology , W. Dubitzky, O. Wolkenhauer, K.-H. Cho, H. Yokota, Eds. (Springer, 2013), pp. 892–895.
-44. S. A. S. Lixoft, Monolix|Lixoft. Lixoft (2015). https://lixoft.com/products/monolix/ . Accessed 20 January 2023.
-45. K. P. Burnham, D. R. Anderson, “Practical use of the Information-theoretic approach” in Model Selection and Inference: A Practical Information-Theoretic Approach , K. P. Burnham, D. R. Anderson, Eds. (Springer, 1998), pp. 75–117.
-46. Y. J. Hou et al., SARS-CoV-2 reverse genetics reveals a variable infection gradient in the respiratory tract. Cell 182 , 429–446.e14 (2020).
-47. N. S. Ogando et al., SARS-coronavirus-2 replication in Vero E6 cells: Replication kinetics, rapid adaptation and cytopathology. J. Gen. Virol. 101 , 925–940 (2020).
+15. J. D. Challenger et al., Modelling upper respiratory viral load dynamics of SARS-CoV-2. BMC Med. 20, 25 (2022).
+16. B. Chatterjee, H. S. Sandhu, N. M. Dixit, Modeling recapitulates the heterogeneous outcomes of SARS-CoV-2 infection and quantifies the differences in the innate immune and CD8 T-cell responses between patients experiencing mild and severe symptoms. PLoS Pathog. 18, e1010630 (2022).
+17. A. Goyal, E. F. Cardozo-Ojeda, J. T. Schiffer, Potency and timing of antiviral therapy as determinants of duration of SARS-CoV-2 shedding and intensity of inflammatory response. Sci. Adv. 6, eabc7112 (2020).
+18. A. Goyal, D. B. Reeves, E. F. Cardozo-Ojeda, J. T. Schiffer, B. T. Mayer, Viral load and contact heterogeneity predict SARS-CoV-2 transmission and super-spreading events. Elife 10, e63537 (2021).
+19. A. Goyal, E. R. Duke, E. F. Cardozo-Ojeda, J. T. Schiffer, Modeling explains prolonged SARS-CoV-2 nasal shedding relative to lung shedding in remdesivir-treated rhesus macaques. iScience 25, 104448 (2022).
+20. N. Néant et al., Modeling SARS-CoV-2 viral kinetics and association with mortality in hospitalized patients from the French COVID cohort. Proc. Natl. Acad. Sci. U.S.A. 118, e2017962118 (2021).
+21. A. S. Perelson, R. Ke, Mechanistic modeling of SARS-CoV-2 and other infectious diseases and the effects of therapeutics. Clin. Pharmacol. Ther. 109, 829–840 (2021).
+22. S. Wang et al., Modeling the viral dynamics of SARS-CoV-2 infection. Math. Biosci. 328, 108438 (2020).
+23. P. Czuppon et al., Success of prophylactic antiviral therapy for SARS-CoV-2: Predicted critical efficacies and impact of different drug-specific mechanisms of action. PLoS Comput. Biol. 17, e1008752 (2021).
+24. M. Alexandre et al., Modelling the response to vaccine in non-human primates to define SARS-CoV-2 mechanistic correlates of protection. Elife 11, e75427 (2022).
+25. A. Gonçalves et al., SARS-CoV-2 viral dynamics in non-human primates. PLoS Comput. Biol. 17, e1008785 (2021).
+26. G. Lingas et al., Effect of remdesivir on viral dynamics in COVID-19 hospitalized patients: A modelling analysis of the randomized, controlled, open-label DisCoVeRy trial. J. Antimicrob Chemother. 77, 1404–1412 (2022).
+27. G. Lingas et al., Modelling the association between neutralizing antibody levels and SARS-CoV-2 viral dynamics: Implications to define correlates of protection against infection. medRxiv [Preprint] (2023). https://doi.org/10.1101/2023.03.05.23286816.
+28. A. Marc et al., Impact of variants of concern on SARS-CoV-2 viral dynamics in non-human primates. PLoS Comput. Biol. 19, e1010721 (2023).
+29. N. K. Vaidya, A. Bloomquist, A. S. Perelson, Modeling within-host dynamics of SARS-CoV-2 infection: A case study in ferrets. Viruses 13, 1635 (2021).
+30. S. Iwanami et al., Detection of significant antiviral drug effects on COVID-19 with reasonable sample sizes in randomized controlled trials: A modeling study. PLoS Med. 18, e1003660 (2021).
+31. A. Rohatgi, WebPlotDigitizer–Copyright 2010–2022 Ankit Rohatgi. Automeris.io (2022). https://apps.automeris.io/wpd/. Accessed 24 February 2023.
+32. H. R. Wagstaffe et al., Mucosal and systemic immune correlates of viral control after SARS-CoV-2 infection challenge in seronegative adults. Sci. Immunol. 9, eadj9285 (2024).
+33. K. Best, A. S. Perelson, Mathematical modeling of within-host Zika virus dynamics. Immunol. Rev. 285, 81–96 (2018).
+34. A. U. Neumann et al., Hepatitis C viral dynamics in vivo and the antiviral efficacy of interferon-alpha therapy. Science 282, 103–107 (1998).
+35. A. S. Perelson, Modelling viral and immune system dynamics. Nat. Rev. Immunol. 2, 28–36 (2002).
+36. R. J. De Boer, A. S. Perelson, Target cell limited and immune control models of HIV infection: A comparison. J. Theor. Biol. 190, 201–214 (1998).
+37. A. Gonçalves et al., Timing of antiviral treatment initiation is critical to reduce SARS-CoV-2 viral load. CPT Pharmacometrics Syst. Pharmacol. 9, 509–514 (2020).
+38. A. García-Sastre, C. A. Biron, Type 1 interferons and the virus-host relationship: A lesson in détente. Science 312, 879–882 (2006).
+39. M. Sa Ribero, N. Jouvenet, M. Dreux, S. Nisole, Interplay between SARS-CoV-2 and the type I interferon response. PLoS Pathog. 16, e1008737 (2020).
+40. C. E. Samuel, Antiviral actions of interferons. Clin. Microbiol. Rev. 14, 778–809 (2001).
+41. T. Phan et al., Modeling the emergence of viral resistance for SARS-CoV-2 during treatment with an anti-spike monoclonal antibody. PLoS Pathog. 20, e1011680 (2024).
+42. C. E. Samuel, G. S. Knutson, Mechanism of interferon action. Kinetics of decay of the antiviral state and protein phosphorylation in mouse fibroblasts treated with natural and cloned interferons. J. Biol. Chem. 257, 11796–11801 (1982).
+43. P. R. Somvanshi, K. V. Venkatesh, “Hill equation” in Encyclopedia of Systems Biology, W. Dubitzky, O. Wolkenhauer, K.-H. Cho, H. Yokota, Eds. (Springer, 2013), pp. 892–895.
+44. S. A. S. Lixoft, Monolix|Lixoft. Lixoft (2015). https://lixoft.com/products/monolix/. Accessed 20 January 2023.
+45. K. P. Burnham, D. R. Anderson, “Practical use of the Information-theoretic approach” in Model Selection and Inference: A Practical Information-Theoretic Approach, K. P. Burnham, D. R. Anderson, Eds. (Springer, 1998), pp. 75–117.
+46. Y. J. Hou et al., SARS-CoV-2 reverse genetics reveals a variable infection gradient in the respiratory tract. Cell 182, 429–446.e14 (2020).
+47. N. S. Ogando et al., SARS-coronavirus-2 replication in Vero E6 cells: Replication kinetics, rapid adaptation and cytopathology. J. Gen. Virol. 101, 925–940 (2020).
 48. A. S. Perelson, R. M. Ribeiro, T. Phan, An explanation for SARS-CoV-2 rebound after Paxlovid treatment. medRxiv [Preprint] (2023). https://www.medrxiv.org/content/ (Accessed 15 February 2024).
-49. E. A. Voigt, A. Swick, J. Yin, Rapid induction and persistence of paracrine-induced cellular antiviral states arrest viral infection spread in A549 cells. Virology 496 , 59–66 (2016).
-50. N. Ulker, X. Zhang, C. E. Samuel, Mechanism of interferon action. I. Characterization of a 54-kDa protein induced by gamma interferon with properties similar to a cytoskeletal component. J. Biol. Chem. 262 , 16798–16803 (1987).
-51. J. A. Hay et al., Quantifying the impact of immune history and variant on SARS-CoV-2 viral kinetics and infection rebound: A retrospective cohort study. Elife 11 , e81849 (2022).
-52. C. Zitzmann, R. Ke, R. M. Ribeiro, A. S. Perelson, How robust are estimates of key parameters in standard viral dynamic models? PLoS Comput. Biol. 20 , e1011437 (2024).
-53. R. A. Saenz et al., Dynamics of influenza virus infection and pathology. J. Virol. 84 , 3974–3983 (2010).
-54. R. G. H. Lindeboom et al., Human SARS-CoV-2 challenge uncovers local and systemic response dynamics. Nature 631 , 189–198 (2024).
-55. J. E. Pearson, P. Krapivsky, A. S. Perelson, Stochastic theory of early viral infection: Continuous versus burst production of virions. PLoS Comput. Biol. 7 , e1001058 (2011).
-56. S. Q. Du, W. Yuan, Mathematical modeling of interaction between innate and adaptive immune responses in COVID-19 and implications for viral pathogenesis. J. Med. Virol. 92 , 1615–1628 (2020).
-57. B. Borremans et al., Quantifying antibody kinetics and RNA detection during early-phase SARS-CoV-2 infection by time since symptom onset. Elife 9 , 1–27 (2020).
-58. A. Sette, S. Crotty, Adaptive immunity to SARS-CoV-2 and COVID-19. Cell 184 , 861–880 (2021).
-59. S. Panda, J. L. Ding, Natural antibodies bridge innate and adaptive immunity. J. Immunol. 194 , 13–20 (2015).
-60. R. Sanjuán, Collective infectious units in viruses. Trends Microbiol. 25 , 402–412 (2017).
-61. J. M. Cuevas, M. Durán-Moreno, R. Sanjuán, Multi-virion infectious units arise from free viral particles in an enveloped virus. Nat. Microbiol. 2 , 1–7 (2017).
-62. I. A. Hatton, O. Mazzarisi, A. Altieri, M. Smerlak, Diversity begets stability: Sublinear growth and competitive coexistence across ecosystems. Science 383 , eadg8488 (2024).
-63. N. R. Cheemarla et al., Dynamic innate immune response determines susceptibility to SARS-CoV-2 infection and early replication kinetics. J. Exp. Med. 218 , e20210583 (2021).
-64. M. Gunawardana et al., Early SARS-CoV-2 dynamics and immune responses in unvaccinated participants of an intensely sampled longitudinal surveillance study. Commun. Med. (Lond.) 2 , 129 (2022).
-65. B. Israelow et al., Adaptive immune determinants of viral clearance and protection in mouse models of SARS-CoV-2. Sci. Immunol. 6 , eabl4509 (2021).
-66. P. Moss, The T cell immune response against SARS-CoV-2. Nat. Immunol. 23 , 186–193 (2022).
-67. M. C. Choudhary et al., Emergence of SARS-CoV-2 escape mutations during Bamlanivimab therapy in a phase II randomized clinical trial. Nat. Microbiol. 7 , 1906–1917 (2022).
-68. R. Deo et al., Symptom and viral rebound in untreated SARS-CoV-2 infection. Ann. Intern. Med. 176 , 348–354 (2023).
-69. B. Jensen et al., Emergence of the E484K mutation in SARS-COV-2-infected immunocompromised patients treated with bamlanivimab in Germany. The Lancet Regional Health. Europe 8 , 100164 (2021).
-70. N. Peiffer-Smadja et al., Emergence of E484K mutation following bamlanivimab monotherapy among high-risk patients infected with the alpha variant of SARS-CoV-2. Viruses 13 , 1642 (2021).
-71. G. E. Edelstein et al., SARS-CoV-2 virologic rebound with nirmatrelvir-ritonavir therapy. Ann. Intern. Med. 176 , 1577–1585 (2023).
-72. A. S. Anderson, P. Caubel, J. M. Rusnak; EPIC-HR Trial Investigators, Nirmatrelvir-ritonavir and viral load rebound in Covid-19. N. Engl. J. Med. 387 , 1047–1049 (2022).
-73. N. Petrosillo, SARS-CoV-2 rebound with and without antivirals. Lancet Infect. Dis. 23 , 637–639 (2023).
-74. J. Xu, J. Carruthers, T. Finnie, I. Hall, Simplified within-host and dose-response models of SARS-CoV-2. J. Theor. Biol. 565 , 111447 (2023).
-75. D. Grebennikov et al., Predicting the kinetic coordination of immune response dynamics in SARS-CoV-2 infection: Implications for disease pathogenesis. Mathematics 10 , 3154 (2022).
-76. M. A. Stafford et al., Modeling plasma virus concentration during primary HIV infection. J. Theor. Biol. 203 , 285–301 (2000).
-77. S. M. Ciupe, N. Tuncer, Identifiability of parameters in mathematical models of SARS-CoV-2 infections in humans. Sci. Rep. 12 , 1–14 (2022).
-78. H. Miao, X. Xia, A. S. Perelson, H. Wu, On identifiability of nonlinear ODE models and applications in viral dynamics. SIAM Rev. Soc. Ind. Appl. Math. 53 , 3–39 (2011), https://doi.org/10.1137/090757009 .
+49. E. A. Voigt, A. Swick, J. Yin, Rapid induction and persistence of paracrine-induced cellular antiviral states arrest viral infection spread in A549 cells. Virology 496, 59–66 (2016).
+50. N. Ulker, X. Zhang, C. E. Samuel, Mechanism of interferon action. I. Characterization of a 54-kDa protein induced by gamma interferon with properties similar to a cytoskeletal component. J. Biol. Chem. 262, 16798–16803 (1987).
+51. J. A. Hay et al., Quantifying the impact of immune history and variant on SARS-CoV-2 viral kinetics and infection rebound: A retrospective cohort study. Elife 11, e81849 (2022).
+52. C. Zitzmann, R. Ke, R. M. Ribeiro, A. S. Perelson, How robust are estimates of key parameters in standard viral dynamic models? PLoS Comput. Biol. 20, e1011437 (2024).
+53. R. A. Saenz et al., Dynamics of influenza virus infection and pathology. J. Virol. 84, 3974–3983 (2010).
+54. R. G. H. Lindeboom et al., Human SARS-CoV-2 challenge uncovers local and systemic response dynamics. Nature 631, 189–198 (2024).
+55. J. E. Pearson, P. Krapivsky, A. S. Perelson, Stochastic theory of early viral infection: Continuous versus burst production of virions. PLoS Comput. Biol. 7, e1001058 (2011).
+56. S. Q. Du, W. Yuan, Mathematical modeling of interaction between innate and adaptive immune responses in COVID-19 and implications for viral pathogenesis. J. Med. Virol. 92, 1615–1628 (2020).
+57. B. Borremans et al., Quantifying antibody kinetics and RNA detection during early-phase SARS-CoV-2 infection by time since symptom onset. Elife 9, 1–27 (2020).
+58. A. Sette, S. Crotty, Adaptive immunity to SARS-CoV-2 and COVID-19. Cell 184, 861–880 (2021).
+59. S. Panda, J. L. Ding, Natural antibodies bridge innate and adaptive immunity. J. Immunol. 194, 13–20 (2015).
+60. R. Sanjuán, Collective infectious units in viruses. Trends Microbiol. 25, 402–412 (2017).
+61. J. M. Cuevas, M. Durán-Moreno, R. Sanjuán, Multi-virion infectious units arise from free viral particles in an enveloped virus. Nat. Microbiol. 2, 1–7 (2017).
+62. I. A. Hatton, O. Mazzarisi, A. Altieri, M. Smerlak, Diversity begets stability: Sublinear growth and competitive coexistence across ecosystems. Science 383, eadg8488 (2024).
+63. N. R. Cheemarla et al., Dynamic innate immune response determines susceptibility to SARS-CoV-2 infection and early replication kinetics. J. Exp. Med. 218, e20210583 (2021).
+64. M. Gunawardana et al., Early SARS-CoV-2 dynamics and immune responses in unvaccinated participants of an intensely sampled longitudinal surveillance study. Commun. Med. (Lond.) 2, 129 (2022).
+65. B. Israelow et al., Adaptive immune determinants of viral clearance and protection in mouse models of SARS-CoV-2. Sci. Immunol. 6, eabl4509 (2021).
+66. P. Moss, The T cell immune response against SARS-CoV-2. Nat. Immunol. 23, 186–193 (2022).
+67. M. C. Choudhary et al., Emergence of SARS-CoV-2 escape mutations during Bamlanivimab therapy in a phase II randomized clinical trial. Nat. Microbiol. 7, 1906–1917 (2022).
+68. R. Deo et al., Symptom and viral rebound in untreated SARS-CoV-2 infection. Ann. Intern. Med. 176, 348–354 (2023).
+69. B. Jensen et al., Emergence of the E484K mutation in SARS-COV-2-infected immunocompromised patients treated with bamlanivimab in Germany. The Lancet Regional Health. Europe 8, 100164 (2021).
+70. N. Peiffer-Smadja et al., Emergence of E484K mutation following bamlanivimab monotherapy among high-risk patients infected with the alpha variant of SARS-CoV-2. Viruses 13, 1642 (2021).
+71. G. E. Edelstein et al., SARS-CoV-2 virologic rebound with nirmatrelvir-ritonavir therapy. Ann. Intern. Med. 176, 1577–1585 (2023).
+72. A. S. Anderson, P. Caubel, J. M. Rusnak; EPIC-HR Trial Investigators, Nirmatrelvir-ritonavir and viral load rebound in Covid-19. N. Engl. J. Med. 387, 1047–1049 (2022).
+73. N. Petrosillo, SARS-CoV-2 rebound with and without antivirals. Lancet Infect. Dis. 23, 637–639 (2023).
+74. J. Xu, J. Carruthers, T. Finnie, I. Hall, Simplified within-host and dose-response models of SARS-CoV-2. J. Theor. Biol. 565, 111447 (2023).
+75. D. Grebennikov et al., Predicting the kinetic coordination of immune response dynamics in SARS-CoV-2 infection: Implications for disease pathogenesis. Mathematics 10, 3154 (2022).
+76. M. A. Stafford et al., Modeling plasma virus concentration during primary HIV infection. J. Theor. Biol. 203, 285–301 (2000).
+77. S. M. Ciupe, N. Tuncer, Identifiability of parameters in mathematical models of SARS-CoV-2 infections in humans. Sci. Rep. 12, 1–14 (2022).
+78. H. Miao, X. Xia, A. S. Perelson, H. Wu, On identifiability of nonlinear ODE models and applications in viral dynamics. SIAM Rev. Soc. Ind. Appl. Math. 53, 3–39 (2011), https://doi.org/10.1137/090757009.

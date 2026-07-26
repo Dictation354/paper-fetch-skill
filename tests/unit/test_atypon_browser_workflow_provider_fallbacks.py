@@ -252,7 +252,7 @@ class AtyponBrowserWorkflowProviderFallbackTests(AtyponBrowserWorkflowProviderTe
         self.assertFalse(mocked_browser.call_args_list[1].kwargs["disable_media"])
         self.assertIsNotNone(raw_payload.content)
         assert raw_payload.content is not None
-        self.assertEqual(raw_payload.content.fetcher, "cloakbrowser")
+        self.assertEqual(raw_payload.content.fetcher, "camoufox")
 
     def test_pnas_provider_fetch_result_recovers_pdf_when_html_article_is_abstract_only(
         self,

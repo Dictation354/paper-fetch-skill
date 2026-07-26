@@ -5,11 +5,10 @@
   "markdown_path": "tests/fixtures/golden_criteria/10.1093_bioinformatics_btaa153/extracted.md",
   "prompt_path": "tests/fixtures/golden_criteria/10.1093_bioinformatics_btaa153/markdown-quality-prompt.md",
   "provider": "oxfordacademic",
-  "reviewed_at": "2026-05-25T10:52:13Z",
-  "reviewed_by": "codex-agent",
   "review_method": "agent_prompt",
+  "reviewed_at": "2026-07-26T11:36:22.704449Z",
+  "reviewed_by": "codex-agent",
   "sample_id": "10.1093_bioinformatics_btaa153",
   "schema_version": 2,
-  "source_markdown_sha256": "5f0fac1628a4a7908101a795e9a3976d042db117aa7f21c1a027e0936aee832d",
   "status": "pass"
 }

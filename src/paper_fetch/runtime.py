@@ -15,11 +15,6 @@ from collections.abc import Hashable, Mapping
 
 from .artifacts import DEFAULT_ARTIFACT_MODE, ArtifactMode, ArtifactStore
 from .config import (
-    CDP_EXTERNAL_NEW_CONTEXT_ENV_VAR,
-    CLOAKBROWSER_BINARY_PATH_ENV_VAR,
-    CLOAKBROWSER_CDP_ENDPOINT_ENV_VAR,
-    CLOAKBROWSER_PROFILE_DIR_ENV_VAR,
-    CLOAKBROWSER_USER_DATA_DIR_ENV_VAR,
     HTTP_DISK_CACHE_DIR_ENV_VAR,
     HTTP_DISK_CACHE_ENV_VAR,
     HTTP_DISK_CACHE_MAX_AGE_DAYS_ENV_VAR,
@@ -370,18 +365,8 @@ class RuntimeContext:
         """Create a fresh context using the backend carried by runtime config."""
 
         backend = str(config.backend).strip().lower()
-        if backend not in {"camoufox", "cloakbrowser"}:
-            raise RuntimeError(f"Unsupported browser backend {config.backend!r}.")
         if backend != "camoufox":
-            return self.new_browser_context_for_config(
-                headless=bool(config.headless),
-                binary_path=config.binary_path,
-                cdp_endpoint=config.cdp_endpoint,
-                external_new_context=config.external_new_context,
-                profile_dir=config.profile_dir,
-                user_data_dir=config.user_data_dir,
-                **context_kwargs,
-            )
+            raise RuntimeError(f"Unsupported browser backend {config.backend!r}.")
         key = (
             threading.get_ident(),
             bool(config.headless),
@@ -448,35 +433,11 @@ class RuntimeContext:
     def _browser_lifecycle(self) -> Any:
         with self._browser_context_manager_lock:
             if self._browser_context_manager is None:
-                cdp_endpoint = (
-                    str(
-                        (self.env or {}).get(CLOAKBROWSER_CDP_ENDPOINT_ENV_VAR, "")
-                    ).strip()
-                    or None
-                )
-                binary_path = (
-                    str(
-                        (self.env or {}).get(CLOAKBROWSER_BINARY_PATH_ENV_VAR, "")
-                    ).strip()
-                    or None
-                )
-                profile_dir_value = str(
-                    (self.env or {}).get(CLOAKBROWSER_PROFILE_DIR_ENV_VAR, "")
-                ).strip()
-                user_data_dir_value = str(
-                    (self.env or {}).get(CLOAKBROWSER_USER_DATA_DIR_ENV_VAR, "")
-                ).strip()
-                profile_dir = (
-                    Path(profile_dir_value).expanduser() if profile_dir_value else None
-                )
-                user_data_dir = (
-                    Path(user_data_dir_value).expanduser()
-                    if user_data_dir_value
-                    else None
-                )
-                external_new_context = env_flag_enabled(
-                    self.env or {}, CDP_EXTERNAL_NEW_CONTEXT_ENV_VAR
-                )
+                cdp_endpoint = None
+                binary_path = None
+                profile_dir = None
+                user_data_dir = None
+                external_new_context = False
                 key = self._browser_lifecycle_key(
                     binary_path=binary_path,
                     cdp_endpoint=cdp_endpoint,

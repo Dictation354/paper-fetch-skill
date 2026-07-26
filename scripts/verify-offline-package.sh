@@ -199,13 +199,12 @@ PY
 log "Verifying browser runtime package entrypoint"
 "$RUNTIME_PYTHON" - <<'PY'
 import camoufox
-import cloakbrowser
 import playwright
+import pymupdf
 
 from paper_fetch.runtime_browser import BrowserContextManager
 
 assert hasattr(camoufox, "Camoufox")
-assert hasattr(cloakbrowser, "ensure_binary")
 assert BrowserContextManager is not None
 PY
 

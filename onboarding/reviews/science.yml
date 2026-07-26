@@ -46,10 +46,10 @@ fixtures:
   - must match (?:!\[Figure|\*\*Figure)
   fixes: []
   baseline_markdown_path: tests/fixtures/golden_criteria/10.1126_sciadv.adl6155/extracted.md
-  baseline_markdown_sha256: 00e5565da4f4b4b00a4ba2b7a465e28d3a90cbde1a431a298b3e69b1c1f26355
+  baseline_markdown_sha256: d34c86ac56968736fb4a7a40796adf1e32e1c2780df5b2040464cc2b1abab0e9
   review_notes: Semantic review completed against committed fixture evidence.
   markdown_quality_path: tests/fixtures/golden_criteria/10.1126_sciadv.adl6155/markdown-quality.json
-  markdown_quality_sha256: acdf5edfed73cddf43beb898b55f020fc582a75eb6c530453a6e380989e5f0eb
+  markdown_quality_sha256: c0e905bdbfb7dc4f5d4acba52105b5585047345683018ec0d1a55053fbdcbb18
 - fixture: tests/fixtures/golden_criteria/10.1126_science.adp0212
   purpose: references
   doi: 10.1126/science.adp0212

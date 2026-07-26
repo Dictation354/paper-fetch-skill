@@ -80,10 +80,7 @@ function Normalize-McpEnvKeys {
     $seenHeadless = $false
     foreach ($key in $script:McpEnvKeys) {
         if ($key -in @(
-            "PLAYWRIGHT_BROWSERS_PATH",
-            "CLOAKBROWSER_BINARY_PATH",
-            "CLOAKBROWSER_PROFILE_DIR",
-            "CLOAKBROWSER_USER_DATA_DIR"
+            "PLAYWRIGHT_BROWSERS_PATH"
         )) {
             continue
         }
@@ -247,10 +244,6 @@ function Find-ProjectWheel {
 function Check-BundleAssets {
     Require-Dir (Join-Path $BundleRoot "wheelhouse")
     Require-File (Join-Path $BundleRoot "formula-tools/bin/texmath.exe")
-    $cloakbrowserWheels = @(Get-ChildItem -Path (Join-Path $BundleRoot "wheelhouse") -Filter "cloakbrowser-*.whl" -ErrorAction SilentlyContinue)
-    if ($cloakbrowserWheels.Count -eq 0) {
-        Fail "Bundled wheelhouse is missing cloakbrowser-*.whl."
-    }
 }
 
 function Install-ProjectVenv {
@@ -273,7 +266,7 @@ function Install-ProjectVenv {
     $env:PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD = "1"
 
     Write-Log "Installing paper-fetch-skill from bundled wheelhouse"
-    & $venvPython -m pip install --no-index --find-links (Join-Path $BundleRoot "wheelhouse") --only-binary=:all: $ProjectWheel
+    & $venvPython -m pip install --no-index --find-links (Join-Path $BundleRoot "wheelhouse") --only-binary=:all: "$($ProjectWheel)[full]"
     if ($LASTEXITCODE -ne 0) {
         Fail "Failed to install paper-fetch-skill from bundled wheelhouse."
     }
@@ -310,10 +303,6 @@ function New-ManagedEnvLines {
     foreach ($name in $OfflineEnvKeys) {
         $lines.Add((Format-DotenvAssignment -Name $name -Value ([string](Get-OfflineEnvValue $name))))
     }
-    $lines.Add("# Optional: connect to an already-running Chrome/CloakBrowser CDP endpoint.")
-    $lines.Add("# CLOAKBROWSER_CDP_ENDPOINT='ws://127.0.0.1:9222/devtools/browser/...'")
-    $lines.Add("# Optional: use a preinstalled Chrome/CloakBrowser binary instead of cloakbrowser download.")
-    $lines.Add("# CLOAKBROWSER_BINARY_PATH='C:/path/to/chrome.exe'")
     $lines.Add($ManagedEnd)
     return $lines.ToArray()
 }
@@ -423,11 +412,12 @@ if ([string]::IsNullOrWhiteSpace($env:PYTHONIOENCODING)) {
 function Test-BrowserRuntimePackage {
     $venvPython = Join-Path $BundleRoot ".venv/Scripts/python.exe"
     $code = @'
-import cloakbrowser
+import camoufox
 import playwright
+import pymupdf
 from paper_fetch.runtime_browser import BrowserContextManager
 
-assert hasattr(cloakbrowser, "ensure_binary")
+assert hasattr(camoufox, "Camoufox")
 assert BrowserContextManager is not None
 '@
     & $venvPython -c $code
@@ -505,5 +495,5 @@ $offlineEnv = Join-Path $BundleRoot "offline.env"
 Write-Host "Activate it with: . $activateScript"
 Write-Host "Default browser backend: Camoufox (headless: true)"
 Write-Host "The first real fetch may download Camoufox; fully offline hosts must preinstall its complete runtime."
-Write-Host "Use PAPER_FETCH_BROWSER_BACKEND=cloakbrowser only for deprecated compatibility."
+Write-Host "Browser backend: Camoufox."
 Write-Host "Elsevier setup: request a key at https://dev.elsevier.com/, then add ELSEVIER_API_KEY=`"...`" to $offlineEnv before fetching Elsevier papers."

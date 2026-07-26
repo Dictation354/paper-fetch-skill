@@ -7,6 +7,7 @@ You are reviewing the committed Markdown baseline for provider onboarding.
 - Provider: `royalsocietypublishing`
 - DOI: `10.1098/rsos.150470`
 - Sample ID: `10.1098_rsos.150470`
+- Fixture purpose: `figure`
 - Markdown to review: `tests/fixtures/golden_criteria/10.1098_rsos.150470/extracted.md`
 - Prompt path: `tests/fixtures/golden_criteria/10.1098_rsos.150470/markdown-quality-prompt.md`
 - Report to write: `tests/fixtures/golden_criteria/10.1098_rsos.150470/markdown-quality.json`
@@ -21,9 +22,10 @@ Read the Markdown as a human reviewer. Judge whether it is a usable, provider-ne
 - Publisher chrome, navigation, cookie text, license boilerplate, or download widgets mixed into article content.
 - Broken tables, orphan table rows, malformed formula blocks, or formula text glued to prose.
 - Missing figure captions, empty figure/table sections, or media placeholders presented as content.
-- When the provider manifest has `asset_contract.figures.inline: body`, missing body `![Figure ...](...)` images before References/Figures/Supplementary tail sections is blocking; a caption-only `## Figures` appendix is not enough.
-- When the provider manifest has `asset_contract.figures.download: required`, missing local asset-path rewrites for downloaded figure images is blocking; remote-only image links do not satisfy the asset contract.
-- References that are absent when expected from the article, mostly DOI-only, duplicated, or polluted by unrelated text.
+- Enforce `asset_contract.figures` only when this fixture purpose is listed in the provider manifest `asset_contract.figures.purposes`; for other purposes, remote figure links are not blocking by themselves.
+- For figure-contract purposes with `asset_contract.figures.inline: body`, missing body `![Figure ...](...)` images before References/Figures/Supplementary tail sections is blocking; a caption-only `## Figures` appendix is not enough.
+- For figure-contract purposes with `asset_contract.figures.download: required`, missing local asset-path rewrites for downloaded figure images is blocking; remote-only image links do not satisfy the asset contract.
+- References that are absent when expected from the article, missing recognizable numbering or labels, mostly DOI-only, duplicated, or polluted by unrelated text.
 - JavaScript placeholder links, unresolved template text, severe OCR noise, or repeated article fragments.
 - Any other semantic corruption that would make `extracted.md` unsafe as a golden Markdown baseline.
 

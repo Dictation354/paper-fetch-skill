@@ -1,36 +1,17 @@
-"""CloakBrowser helpers for browser-workflow provider access."""
+"""Shared Playwright helpers for browser-workflow provider access."""
 
 from __future__ import annotations
 
 import base64
-import importlib
-from importlib import metadata as importlib_metadata
-from importlib import util as importlib_util
+import contextlib
 import logging
-import os
 import time
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 from collections.abc import Mapping
-from urllib.parse import urlparse
 
 from bs4 import BeautifulSoup
 
-from ..config import (
-    BROWSER_BINARY_PATH_ENV_VAR,
-    BROWSER_HEADLESS_ENV_VAR,
-    BROWSER_TIMEOUT_MS_ENV_VAR,
-    CDP_EXTERNAL_NEW_CONTEXT_ENV_VAR,
-    CLOAKBROWSER_BINARY_PATH_ENV_VAR,
-    CLOAKBROWSER_CDP_ENDPOINT_ENV_VAR,
-    CLOAKBROWSER_HEADLESS_ENV_VAR,
-    CLOAKBROWSER_TIMEOUT_MS_ENV_VAR,
-    browser_env_value,
-    build_browser_user_agent,
-    env_flag_enabled,
-    parse_positive_int_env,
-    resolve_user_data_dir,
-)
 from ..extraction.image_payloads import (
     image_dimensions_from_bytes,
     image_mime_type_from_bytes,
@@ -40,7 +21,6 @@ from ..extraction.html.signals import detect_html_block, summarize_html
 from ..quality.html_availability import choose_parser, extract_page_title
 from ..quality.html_signals import looks_like_abstract_redirect
 from ..quality.reason_codes import REDIRECTED_TO_ABSTRACT
-from ..reason_codes import ERROR, NOT_CONFIGURED, OK, READY
 from ..runtime_browser import (
     ManagedBrowserError,
     browser_page_user_agent,
@@ -49,7 +29,7 @@ from ..reason_codes import (
     BROWSER_CONTEXT_CREATE_FAILED,
     BROWSER_PAGE_CREATE_FAILED,
 )
-from ..utils import normalize_text, provider_display_name, sanitize_filename
+from ..utils import normalize_text
 from .browser_runtime.seed import (
     merge_browser_context_seeds,
 )
@@ -59,12 +39,6 @@ from .browser_runtime.types import (
     BrowserRuntimeFailure,
 )
 from .browser_runtime.context import open_browser_context
-from .base import (
-    ProviderFailure,
-    ProviderStatusResult,
-    build_provider_status_check,
-    provider_status_check_from_failure,
-)
 from .browser_workflow.fetchers.context import (
     _browser_response_headers,
     _browser_response_status,
@@ -72,7 +46,6 @@ from .browser_workflow.fetchers.context import (
 from .browser_workflow.fetchers.readiness import wait_for_atypon_body_dom_ready
 from .browser_workflow.fetchers.scripts import _LOADED_IMAGE_CANVAS_EXPORT_SCRIPT
 from .browser_workflow.shared import BROWSER_HTML_BLOCKED_RESOURCE_TYPES
-import contextlib
 
 if TYPE_CHECKING:
     from ..runtime import RuntimeContext
@@ -85,381 +58,19 @@ def _runtime_paths():
     return runtime_paths
 
 
-logger = logging.getLogger("paper_fetch.providers.cloakbrowser")
+logger = logging.getLogger("paper_fetch.providers.playwright")
 
 DEFAULT_BROWSER_RUNTIME_MAX_TIMEOUT_MS = 120000
 DEFAULT_BROWSER_RUNTIME_WAIT_SECONDS = 8
 DEFAULT_BROWSER_RUNTIME_WARM_WAIT_SECONDS = 1
-DEFAULT_CLOAKBROWSER_TIMEOUT_MS = DEFAULT_BROWSER_RUNTIME_MAX_TIMEOUT_MS
-CLOAKBROWSER_STATUS_PROBE_ID = "probe://cloakbrowser/status"
 _IMAGE_PAYLOAD_MIN_IMAGE_DIMENSION = 1
 _IMAGE_RESPONSE_BLOCKED_BY_HTML_WRAPPER = "image_response_blocked_by_html_wrapper"
 _IMAGE_PAYLOAD_RESPONSE_ATTR = "_paper_fetch_top_level_response"
 _IMAGE_PAYLOAD_TIMEOUT_ATTR = "_paper_fetch_image_payload_timeout_ms"
 _IMAGE_PAYLOAD_FAILURE_ATTR = "_paper_fetch_image_payload_failure"
 
-CloakBrowserRuntimeConfig = BrowserRuntimeConfig
-CloakBrowserFailure = BrowserRuntimeFailure
-
-
-def _browser_workflow_label(provider: str) -> str:
-    normalized = normalize_text(provider).lower()
-    return f"{provider_display_name(normalized)} browser workflow"
-
-
-def _dependency_available() -> bool:
-    try:
-        return (
-            importlib_util.find_spec("playwright") is not None
-            and importlib_util.find_spec("cloakbrowser") is not None
-        )
-    except (ModuleNotFoundError, ValueError):
-        return False
-
-
-def _dependency_details() -> dict[str, Any]:
-    details: dict[str, Any] = {
-        "probe": "importlib.find_spec",
-        "packages": {
-            "playwright": importlib_util.find_spec("playwright") is not None,
-            "cloakbrowser": importlib_util.find_spec("cloakbrowser") is not None,
-        },
-    }
-    for package, available in details["packages"].items():
-        if not available:
-            continue
-        try:
-            details[f"{package}_version"] = importlib_metadata.version(package)
-        except importlib_metadata.PackageNotFoundError:
-            details[f"{package}_version"] = None
-    return details
-
-
-def _import_cloakbrowser() -> Any:
-    try:
-        return importlib.import_module("cloakbrowser")
-    except Exception as exc:
-        raise ProviderFailure(
-            NOT_CONFIGURED,
-            f"CloakBrowser Python package is not importable: {exc}",
-        ) from exc
-
-
-def _env_flag_false(value: str | None) -> bool:
-    return normalize_text(value).lower() in {"0", "false", "no", "off"}
-
-
-def _configured_binary_path(env: Mapping[str, str]) -> str | None:
-    value = browser_env_value(
-        env,
-        BROWSER_BINARY_PATH_ENV_VAR,
-        legacy_name=CLOAKBROWSER_BINARY_PATH_ENV_VAR,
-    )
-    return value or None
-
-
-def _configured_cdp_endpoint(env: Mapping[str, str]) -> str | None:
-    value = env.get(CLOAKBROWSER_CDP_ENDPOINT_ENV_VAR, "").strip()
-    return value or None
-
-
-def _configured_user_data_dir(env: Mapping[str, str]) -> Path | None:
-    return _runtime_paths().configured_user_data_dir(env, backend="cloakbrowser")
-
-
-def _default_provider_user_data_dir(env: Mapping[str, str], *, provider: str) -> Path:
-    return _runtime_paths().default_provider_user_data_dir(
-        env, provider=provider, backend="cloakbrowser"
-    )
-
-
-def _configured_profile_dir(env: Mapping[str, str], *, provider: str) -> Path | None:
-    return _runtime_paths().configured_profile_dir(
-        env, provider=provider, backend="cloakbrowser"
-    )
-
-
-def _configured_storage_state_path(
-    env: Mapping[str, str], *, provider: str
-) -> Path | None:
-    return _runtime_paths().configured_storage_state_path(env, provider=provider)
-
-
-def _validate_binary_path(
-    binary_path: str | None,
-    *,
-    require_launch_binary: bool,
-    env_var: str = CLOAKBROWSER_BINARY_PATH_ENV_VAR,
-) -> None:
-    if not require_launch_binary or not binary_path:
-        return
-    path = Path(binary_path).expanduser()
-    if not path.is_file():
-        raise ProviderFailure(
-            NOT_CONFIGURED,
-            f"{env_var} is set but does not point to a file: {path}",
-        )
-    if os.name != "nt" and not os.access(path, os.X_OK):
-        raise ProviderFailure(
-            NOT_CONFIGURED,
-            f"{env_var} is set but is not executable: {path}",
-        )
-
-
-def _validate_cdp_endpoint(endpoint: str | None, *, provider: str) -> None:
-    normalized = normalize_text(endpoint)
-    if not normalized:
-        return
-    parsed = urlparse(normalized)
-    if parsed.scheme not in {"ws", "wss", "http", "https"} or not parsed.hostname:
-        workflow_label = _browser_workflow_label(provider)
-        raise ProviderFailure(
-            NOT_CONFIGURED,
-            (
-                f"{workflow_label} has invalid {CLOAKBROWSER_CDP_ENDPOINT_ENV_VAR}: "
-                "expected a ws://, wss://, http://, or https:// URL with a host."
-            ),
-        )
-
-
-def _validate_storage_state_path(
-    storage_state_path: Path | None,
-    *,
-    provider: str,
-    require_storage_state: bool,
-) -> None:
-    _runtime_paths().validate_storage_state_path(
-        storage_state_path,
-        provider=provider,
-        require_storage_state=require_storage_state,
-    )
-
-
-def load_runtime_config(
-    env: Mapping[str, str],
-    *,
-    provider: str,
-    doi: str,
-    require_storage_state: bool = False,
-) -> CloakBrowserRuntimeConfig:
-    headless = not _env_flag_false(
-        browser_env_value(
-            env,
-            BROWSER_HEADLESS_ENV_VAR,
-            legacy_name=CLOAKBROWSER_HEADLESS_ENV_VAR,
-        )
-    )
-    artifact_dir = (
-        resolve_user_data_dir(env)
-        / "publisher-browser-artifacts"
-        / provider
-        / sanitize_filename(doi)
-    )
-    binary_path = _configured_binary_path(env)
-    cdp_endpoint = _configured_cdp_endpoint(env)
-    _validate_cdp_endpoint(cdp_endpoint, provider=provider)
-    _validate_binary_path(
-        binary_path,
-        require_launch_binary=cdp_endpoint is None,
-        env_var=(
-            BROWSER_BINARY_PATH_ENV_VAR
-            if BROWSER_BINARY_PATH_ENV_VAR in env
-            else CLOAKBROWSER_BINARY_PATH_ENV_VAR
-        ),
-    )
-    profile_dir = _configured_profile_dir(env, provider=provider)
-    user_data_dir = _configured_user_data_dir(env)
-    if cdp_endpoint is None and profile_dir is None and user_data_dir is None:
-        user_data_dir = _default_provider_user_data_dir(env, provider=provider)
-    storage_state_path = _configured_storage_state_path(env, provider=provider)
-    _validate_storage_state_path(
-        storage_state_path,
-        provider=provider,
-        require_storage_state=require_storage_state,
-    )
-    return CloakBrowserRuntimeConfig(
-        provider=provider,
-        doi=doi,
-        artifact_dir=artifact_dir,
-        headless=headless,
-        user_agent=build_browser_user_agent(env),
-        timeout_ms=parse_positive_int_env(
-            {
-                BROWSER_TIMEOUT_MS_ENV_VAR: browser_env_value(
-                    env,
-                    BROWSER_TIMEOUT_MS_ENV_VAR,
-                    legacy_name=CLOAKBROWSER_TIMEOUT_MS_ENV_VAR,
-                )
-            },
-            BROWSER_TIMEOUT_MS_ENV_VAR,
-            default=DEFAULT_CLOAKBROWSER_TIMEOUT_MS,
-        ),
-        binary_path=binary_path,
-        cdp_endpoint=cdp_endpoint,
-        external_new_context=env_flag_enabled(env, CDP_EXTERNAL_NEW_CONTEXT_ENV_VAR),
-        profile_dir=profile_dir,
-        user_data_dir=user_data_dir,
-        storage_state_path=storage_state_path,
-        backend="cloakbrowser",
-    )
-
-
-def ensure_runtime_ready(config: CloakBrowserRuntimeConfig) -> None:
-    del config
-    if not _dependency_available():
-        raise ProviderFailure(
-            NOT_CONFIGURED,
-            "Browser workflow requires the playwright and cloakbrowser Python packages.",
-        )
-
-
-def _runtime_probe_details(
-    env: Mapping[str, str],
-    *,
-    provider: str,
-    config: CloakBrowserRuntimeConfig | None = None,
-) -> dict[str, Any]:
-    storage_state_path = (
-        config.storage_state_path
-        if config is not None
-        else _configured_storage_state_path(env, provider=provider)
-    )
-    details: dict[str, Any] = {
-        "headless": (
-            config.headless
-            if config is not None
-            else not _env_flag_false(
-                browser_env_value(
-                    env,
-                    BROWSER_HEADLESS_ENV_VAR,
-                    legacy_name=CLOAKBROWSER_HEADLESS_ENV_VAR,
-                )
-            )
-        ),
-        "timeout_ms": config.timeout_ms
-        if config is not None
-        else parse_positive_int_env(
-            {
-                BROWSER_TIMEOUT_MS_ENV_VAR: browser_env_value(
-                    env,
-                    BROWSER_TIMEOUT_MS_ENV_VAR,
-                    legacy_name=CLOAKBROWSER_TIMEOUT_MS_ENV_VAR,
-                )
-            },
-            BROWSER_TIMEOUT_MS_ENV_VAR,
-            default=DEFAULT_CLOAKBROWSER_TIMEOUT_MS,
-        ),
-        "binary_path_configured": bool(
-            config.binary_path if config is not None else _configured_binary_path(env)
-        ),
-        "cdp_endpoint_configured": bool(
-            config.cdp_endpoint if config is not None else _configured_cdp_endpoint(env)
-        ),
-        "cdp_external_new_context": (
-            config.external_new_context
-            if config is not None
-            else env_flag_enabled(env, CDP_EXTERNAL_NEW_CONTEXT_ENV_VAR)
-        ),
-        "profile_dir_configured": bool(
-            config.profile_dir
-            if config is not None
-            else _configured_profile_dir(env, provider=provider)
-        ),
-        "user_data_dir_configured": bool(
-            config.user_data_dir
-            if config is not None
-            else _configured_user_data_dir(env)
-        ),
-        "storage_state_json_configured": bool(storage_state_path),
-        "auto_cdp_browser_enabled": not bool(
-            config.cdp_endpoint if config is not None else _configured_cdp_endpoint(env)
-        ),
-    }
-    if storage_state_path is not None:
-        details["storage_state_json_exists"] = storage_state_path.is_file()
-    return details
-
-
-def probe_runtime_status(
-    env: Mapping[str, str],
-    *,
-    provider: str,
-    doi: str = CLOAKBROWSER_STATUS_PROBE_ID,
-) -> ProviderStatusResult:
-    checks = []
-    config: CloakBrowserRuntimeConfig | None = None
-    runtime_details = _runtime_probe_details(env, provider=provider)
-    dependency_available = _dependency_available()
-    try:
-        config = load_runtime_config(env, provider=provider, doi=doi)
-        runtime_details = _runtime_probe_details(env, provider=provider, config=config)
-        checks.append(
-            build_provider_status_check(
-                "runtime_env",
-                OK if dependency_available else NOT_CONFIGURED,
-                (
-                    f"{provider} CDP browser runtime environment is configured."
-                    if dependency_available
-                    else f"{provider} CDP browser runtime requires the playwright and cloakbrowser Python packages."
-                ),
-                details=runtime_details,
-            )
-        )
-    except ProviderFailure as exc:
-        checks.append(
-            provider_status_check_from_failure(
-                "runtime_env", exc, details=runtime_details
-            )
-        )
-    except Exception as exc:
-        checks.append(
-            build_provider_status_check(
-                "runtime_env", ERROR, str(exc), details=runtime_details
-            )
-        )
-
-    dependency_details = _dependency_details()
-    if dependency_available:
-        checks.append(
-            build_provider_status_check(
-                "playwright_dependency",
-                OK,
-                "Playwright and CloakBrowser Python packages are importable; CDP connection is not probed.",
-                details=dependency_details,
-            )
-        )
-    else:
-        checks.append(
-            build_provider_status_check(
-                "playwright_dependency",
-                NOT_CONFIGURED,
-                "Playwright or CloakBrowser Python package is not installed.",
-                details=dependency_details,
-            )
-        )
-
-    missing_env: list[str] = []
-    for check in checks:
-        for name in check.missing_env:
-            if name not in missing_env:
-                missing_env.append(name)
-
-    if any(check.status == ERROR for check in checks):
-        status = ERROR
-    elif all(check.status == OK for check in checks):
-        status = READY
-    else:
-        status = NOT_CONFIGURED
-
-    return ProviderStatusResult(
-        provider=provider,
-        status=status,
-        available=status == READY,
-        official_provider=True,
-        missing_env=missing_env,
-        notes=[],
-        checks=list(checks),
-    )
+PlaywrightRuntimeConfig = BrowserRuntimeConfig
+PlaywrightBrowserFailure = BrowserRuntimeFailure
 
 
 def _safe_int(value: Any, *, default: int = 0) -> int:
@@ -523,7 +134,7 @@ def _capture_expected_response(page: Any, request_url: str) -> Any:
         return response
     timeout_ms = (
         _safe_int(getattr(page, _IMAGE_PAYLOAD_TIMEOUT_ATTR, None))
-        or DEFAULT_CLOAKBROWSER_TIMEOUT_MS
+        or DEFAULT_BROWSER_RUNTIME_MAX_TIMEOUT_MS
     )
     try:
         expected_response = page.expect_response(
@@ -736,11 +347,11 @@ def _raise_if_cancelled(runtime_context: RuntimeContext | None) -> None:
         raise RequestCancelledError("Request cancelled.")
 
 
-def _storage_state_path(config: CloakBrowserRuntimeConfig) -> Path | None:
+def _storage_state_path(config: PlaywrightRuntimeConfig) -> Path | None:
     return _runtime_paths().storage_state_path(config)
 
 
-def _storage_context_options(config: CloakBrowserRuntimeConfig) -> dict[str, Any]:
+def _storage_context_options(config: PlaywrightRuntimeConfig) -> dict[str, Any]:
     return _runtime_paths().storage_context_options(config)
 
 
@@ -756,7 +367,7 @@ def _filtered_storage_state_payload(
 
 def _save_storage_state(
     context: Any,
-    config: CloakBrowserRuntimeConfig,
+    config: PlaywrightRuntimeConfig,
     *,
     filter_url: str | None = None,
 ) -> dict[str, Any]:
@@ -770,11 +381,11 @@ def _save_storage_state(
     return result
 
 
-def fetch_html_with_cloakbrowser(
+def fetch_html_with_playwright(
     candidate_urls: list[str],
     *,
     publisher: str,
-    config: CloakBrowserRuntimeConfig,
+    config: PlaywrightRuntimeConfig,
     wait_seconds: int = DEFAULT_BROWSER_RUNTIME_WAIT_SECONDS,
     warm_wait_seconds: int = DEFAULT_BROWSER_RUNTIME_WARM_WAIT_SECONDS,
     max_timeout_ms: int | None = None,
@@ -786,19 +397,19 @@ def fetch_html_with_cloakbrowser(
 ) -> BrowserFetchedHtml:
     del warm_wait_seconds
     if not candidate_urls:
-        raise CloakBrowserFailure(
+        raise PlaywrightBrowserFailure(
             "empty_html_attempts", "No publisher HTML candidates were attempted."
         )
     if return_image_payload:
         disable_media = False
 
-    last_failure: CloakBrowserFailure | None = None
+    last_failure: PlaywrightBrowserFailure | None = None
     latest_browser_context_seed: Mapping[str, Any] | None = None
     latest_storage_state_url: str | None = None
     timeout_ms = max_timeout_ms or config.timeout_ms
     backend_name = normalize_text(config.backend).lower()
-    if backend_name not in {"camoufox", "cloakbrowser"}:
-        raise CloakBrowserFailure(
+    if backend_name != "camoufox":
+        raise PlaywrightBrowserFailure(
             "browser_backend_invalid",
             f"Unsupported browser backend {config.backend!r}.",
         )
@@ -831,8 +442,6 @@ def fetch_html_with_cloakbrowser(
             )
             connect_seconds = round(time.monotonic() - connect_started, 3)
             trace["browser_connect_seconds"] = connect_seconds
-            if backend_name == "cloakbrowser":
-                trace["cdp_connect_seconds"] = connect_seconds
             external_diagnostics = getattr(
                 browser_context, "_paper_fetch_external_cdp_diagnostics", None
             )
@@ -849,10 +458,8 @@ def fetch_html_with_cloakbrowser(
             trace["browser_connect_seconds"] = round(
                 time.monotonic() - connect_started, 3
             )
-            if backend_name == "cloakbrowser":
-                trace["cdp_connect_seconds"] = trace["browser_connect_seconds"]
             trace["browser_failure"] = dict(exc.details)
-            raise CloakBrowserFailure(
+            raise PlaywrightBrowserFailure(
                 exc.code,
                 exc.message,
                 details={"trace": trace, "browser_failure": dict(exc.details)},
@@ -861,10 +468,8 @@ def fetch_html_with_cloakbrowser(
             trace["browser_connect_seconds"] = round(
                 time.monotonic() - connect_started, 3
             )
-            if backend_name == "cloakbrowser":
-                trace["cdp_connect_seconds"] = trace["browser_connect_seconds"]
             message = normalize_text(str(exc)) or "Browser context creation failed."
-            raise CloakBrowserFailure(
+            raise PlaywrightBrowserFailure(
                 BROWSER_CONTEXT_CREATE_FAILED,
                 message,
                 details={
@@ -881,7 +486,7 @@ def fetch_html_with_cloakbrowser(
             page = browser_context.new_page()
         except Exception as exc:
             message = normalize_text(str(exc)) or "Browser page creation failed."
-            raise CloakBrowserFailure(
+            raise PlaywrightBrowserFailure(
                 BROWSER_PAGE_CREATE_FAILED,
                 message,
                 details={
@@ -1112,10 +717,10 @@ def fetch_html_with_cloakbrowser(
                 candidate_trace["error"] = (
                     normalize_text(str(exc)) or exc.__class__.__name__
                 )
-                if isinstance(exc, CloakBrowserFailure):
+                if isinstance(exc, PlaywrightBrowserFailure):
                     last_failure = exc
                 else:
-                    last_failure = CloakBrowserFailure(
+                    last_failure = PlaywrightBrowserFailure(
                         f"{backend_name}_request_failed",
                         normalize_text(str(exc))
                         or f"{backend_name} page request failed.",
@@ -1128,7 +733,7 @@ def fetch_html_with_cloakbrowser(
                     time.monotonic() - candidate_started, 3
                 )
                 candidate_trace["block_reason"] = REDIRECTED_TO_ABSTRACT
-                last_failure = CloakBrowserFailure(
+                last_failure = PlaywrightBrowserFailure(
                     REDIRECTED_TO_ABSTRACT,
                     "Publisher redirected the full-text URL to an abstract page.",
                     browser_context_seed=browser_context_seed,
@@ -1146,7 +751,7 @@ def fetch_html_with_cloakbrowser(
                     time.monotonic() - candidate_started, 3
                 )
                 candidate_trace["block_reason"] = detected.reason
-                last_failure = CloakBrowserFailure(
+                last_failure = PlaywrightBrowserFailure(
                     detected.reason,
                     detected.message,
                     browser_context_seed=browser_context_seed,
@@ -1158,7 +763,7 @@ def fetch_html_with_cloakbrowser(
                     time.monotonic() - candidate_started, 3
                 )
                 candidate_trace["block_reason"] = "empty_html_response"
-                last_failure = CloakBrowserFailure(
+                last_failure = PlaywrightBrowserFailure(
                     "empty_html_response",
                     f"{backend_name} returned empty publisher HTML.",
                     browser_context_seed=browser_context_seed,
@@ -1221,14 +826,14 @@ def fetch_html_with_cloakbrowser(
         _safe_close(manager)
 
     if last_failure is None and latest_browser_context_seed is not None:
-        last_failure = CloakBrowserFailure(
+        last_failure = PlaywrightBrowserFailure(
             "empty_html_attempts",
             "No publisher HTML candidates were attempted.",
             browser_context_seed=latest_browser_context_seed,
             details={"trace": trace},
         )
     if last_failure is None:
-        last_failure = CloakBrowserFailure(
+        last_failure = PlaywrightBrowserFailure(
             "empty_html_attempts",
             "No publisher HTML candidates were attempted.",
             details={"trace": trace},
@@ -1239,21 +844,21 @@ def fetch_html_with_cloakbrowser(
     raise last_failure
 
 
-fetch_html_with_cloakbrowser.paper_fetch_html_fetcher_name = "cloakbrowser"  # type: ignore[attr-defined]
+fetch_html_with_playwright.paper_fetch_html_fetcher_name = "camoufox"  # type: ignore[attr-defined]
 
 
-def fetch_html_with_cloakbrowser_fast(*args: Any, **kwargs: Any) -> BrowserFetchedHtml:
-    return fetch_html_with_cloakbrowser(*args, **kwargs)
+def fetch_html_with_playwright_fast(*args: Any, **kwargs: Any) -> BrowserFetchedHtml:
+    return fetch_html_with_playwright(*args, **kwargs)
 
 
-fetch_html_with_cloakbrowser_fast.paper_fetch_html_fetcher_name = "cloakbrowser_fast"  # type: ignore[attr-defined]
+fetch_html_with_playwright_fast.paper_fetch_html_fetcher_name = "camoufox_fast"  # type: ignore[attr-defined]
 
 
-def warm_browser_context_with_cloakbrowser(
+def warm_browser_context_with_playwright(
     candidate_urls: list[str],
     *,
     publisher: str,
-    config: CloakBrowserRuntimeConfig,
+    config: PlaywrightRuntimeConfig,
     browser_context_seed: Mapping[str, Any] | None = None,
     runtime_context: RuntimeContext | None = None,
     lightweight: bool = False,
@@ -1263,13 +868,13 @@ def warm_browser_context_with_cloakbrowser(
         return merged_seed
 
     try:
-        result = fetch_html_with_cloakbrowser(
+        result = fetch_html_with_playwright(
             candidate_urls,
             publisher=publisher,
             config=config,
             runtime_context=runtime_context,
             lightweight_seed_only=lightweight,
         )
-    except CloakBrowserFailure as exc:
+    except PlaywrightBrowserFailure as exc:
         return merge_browser_context_seeds(merged_seed, exc.browser_context_seed)
     return merge_browser_context_seeds(merged_seed, result.browser_context_seed)

@@ -1,20 +1,12 @@
 {
   "blocking_issue_count": 0,
   "doi": "10.1088/1748-9326/aa9f73",
-  "issues": [
-    {
-      "blocking": false,
-      "evidence": "The PDF text includes front-matter lines such as 'You may also like' before the article abstract, while preserving the article body and tables.",
-      "id": "iop-pdf-front-matter-noise",
-      "severity": "low",
-      "summary": "IOP PDF fallback retains cover-page and recommendation text before the article body."
-    }
-  ],
+  "issues": [],
   "markdown_path": "tests/fixtures/golden_criteria/10.1088_1748-9326_aa9f73/extracted.md",
   "prompt_path": "tests/fixtures/golden_criteria/10.1088_1748-9326_aa9f73/markdown-quality-prompt.md",
   "provider": "iop",
   "review_method": "agent_prompt",
-  "reviewed_at": "2026-05-27T07:21:20Z",
+  "reviewed_at": "2026-07-26T11:36:22.704449Z",
   "reviewed_by": "codex-agent",
   "sample_id": "10.1088_1748-9326_aa9f73",
   "schema_version": 2,

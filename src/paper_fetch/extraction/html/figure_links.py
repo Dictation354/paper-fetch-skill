@@ -6,7 +6,7 @@ import os
 import re
 import urllib.parse
 from typing import Any
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 
 from ...common_patterns import (
     FIGURE_BASENAME_PATTERN,
@@ -139,7 +139,7 @@ def canonical_figure_label_from_asset(asset: Mapping[str, Any]) -> str | None:
 
 
 def inline_figure_markdown_entries(
-    figure_assets: list[Mapping[str, Any]] | None,
+    figure_assets: Sequence[Mapping[str, Any]] | None,
 ) -> list[dict[str, str]]:
     entries: list[dict[str, str]] = []
     for asset in figure_assets or []:
@@ -232,7 +232,7 @@ def _inline_fallback_caption_block(
 def inject_inline_figure_links(
     markdown_text: str,
     *,
-    figure_assets: list[Mapping[str, Any]] | None,
+    figure_assets: Sequence[Mapping[str, Any]] | None,
     clean_markdown_fn: Callable[[str], str],
 ) -> str:
     entries = inline_figure_markdown_entries(figure_assets)
@@ -397,7 +397,7 @@ def inject_inline_figure_links(
 def rewrite_inline_figure_links(
     markdown_text: str,
     *,
-    figure_assets: list[Mapping[str, Any]] | None,
+    figure_assets: Sequence[Mapping[str, Any]] | None,
     clean_markdown_fn: Callable[[str], str],
 ) -> str:
     return inject_inline_figure_links(

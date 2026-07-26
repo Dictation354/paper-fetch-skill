@@ -92,7 +92,7 @@ fixtures:
   - must not include Access Denied
   fixes: []
   baseline_markdown_path: tests/fixtures/golden_criteria/10.1175_bams-d-24-0270.1/extracted.md
-  baseline_markdown_sha256: 57b4ade5df3e6e7bbff2a7be3d92a6dad186c49a04eb41f702fdb917b1cf1c41
+  baseline_markdown_sha256: e2c4a9a8675bd69d9545e75dfec5b89d7a0858b32c6fd606d2f776bcae492ce8
   review_notes: Semantic review completed against committed fixture evidence.
   markdown_quality_path: tests/fixtures/golden_criteria/10.1175_bams-d-24-0270.1/markdown-quality.json
-  markdown_quality_sha256: c52a9ae1a35149fbdddb693cbdc7b9a25610954f9ca43b1f976dde3ef1956f76
+  markdown_quality_sha256: 39cf5ae19403cd6bbc75f4cb5fce060ccdbb996ec1fe316c42f887f52dd98b49

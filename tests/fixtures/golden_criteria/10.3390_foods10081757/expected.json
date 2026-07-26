@@ -1,10 +1,10 @@
 {
   "counts": {
     "abstract_sections": 1,
-    "body_sections": 22,
+    "body_sections": 21,
     "figures": 0,
     "references": 63,
-    "sections": 29,
+    "sections": 28,
     "tables": 0
   },
   "expected_content_kind": "fulltext",

@@ -10,6 +10,8 @@ from collections.abc import Mapping
 from dotenv import dotenv_values
 from platformdirs import user_config_path, user_data_path
 
+from .version import __version__
+
 APP_NAME = "paper-fetch"
 DEFAULT_USER_CONFIG_DIR = user_config_path(APP_NAME, appauthor=False)
 DEFAULT_USER_ENV_FILE = DEFAULT_USER_CONFIG_DIR / ".env"
@@ -19,7 +21,7 @@ DEFAULT_MCP_DOWNLOAD_DIR = DEFAULT_USER_DATA_DIR / "downloads"
 DEFAULT_CLI_DOWNLOAD_DIR = Path("live-downloads")
 DEFAULT_REPO_ROOT = Path(__file__).resolve().parents[2]
 
-DEFAULT_USER_AGENT = "paper-fetch-skill/3.2.1"
+DEFAULT_USER_AGENT = f"paper-fetch-skill/{__version__}"
 DEFAULT_PUBLISHER_USER_AGENT = (
     "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
     "(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
@@ -47,7 +49,7 @@ BROWSER_PROFILE_DIR_ENV_VAR = "PAPER_FETCH_BROWSER_PROFILE_DIR"
 BROWSER_USER_DATA_DIR_ENV_VAR = "PAPER_FETCH_BROWSER_USER_DATA_DIR"
 BROWSER_TIMEOUT_MS_ENV_VAR = "PAPER_FETCH_BROWSER_TIMEOUT_MS"
 DEFAULT_BROWSER_BACKEND = "camoufox"
-SUPPORTED_BROWSER_BACKENDS = frozenset({"camoufox", "cloakbrowser"})
+SUPPORTED_BROWSER_BACKENDS = frozenset({"camoufox"})
 ENV_FILE_ENV_VAR = "PAPER_FETCH_ENV_FILE"
 DOWNLOAD_DIR_ENV_VAR = "PAPER_FETCH_DOWNLOAD_DIR"
 XDG_DATA_HOME_ENV_VAR = "XDG_DATA_HOME"
@@ -62,21 +64,7 @@ HTTP_DISK_CACHE_MAX_BYTES_ENV_VAR = "PAPER_FETCH_HTTP_DISK_CACHE_MAX_BYTES"
 HTTP_DISK_CACHE_MAX_AGE_DAYS_ENV_VAR = "PAPER_FETCH_HTTP_DISK_CACHE_MAX_AGE_DAYS"
 ASSET_DOWNLOAD_CONCURRENCY_ENV_VAR = "PAPER_FETCH_ASSET_DOWNLOAD_CONCURRENCY"
 DEFAULT_ASSET_DOWNLOAD_CONCURRENCY = 4
-CLOAKBROWSER_HEADLESS_ENV_VAR = "CLOAKBROWSER_HEADLESS"
-CLOAKBROWSER_BINARY_PATH_ENV_VAR = "CLOAKBROWSER_BINARY_PATH"
-CLOAKBROWSER_CDP_ENDPOINT_ENV_VAR = "CLOAKBROWSER_CDP_ENDPOINT"
 CDP_EXTERNAL_NEW_CONTEXT_ENV_VAR = "PAPER_FETCH_CDP_EXTERNAL_NEW_CONTEXT"
-CLOAKBROWSER_PROFILE_DIR_ENV_VAR = "CLOAKBROWSER_PROFILE_DIR"
-CLOAKBROWSER_USER_DATA_DIR_ENV_VAR = "CLOAKBROWSER_USER_DATA_DIR"
-CLOAKBROWSER_TIMEOUT_MS_ENV_VAR = "CLOAKBROWSER_TIMEOUT_MS"
-LEGACY_CLOAKBROWSER_ENV_VARS = (
-    CLOAKBROWSER_HEADLESS_ENV_VAR,
-    CLOAKBROWSER_BINARY_PATH_ENV_VAR,
-    CLOAKBROWSER_CDP_ENDPOINT_ENV_VAR,
-    CLOAKBROWSER_PROFILE_DIR_ENV_VAR,
-    CLOAKBROWSER_USER_DATA_DIR_ENV_VAR,
-    CLOAKBROWSER_TIMEOUT_MS_ENV_VAR,
-)
 AMS_STORAGE_STATE_JSON_ENV_VAR = "PAPER_FETCH_AMS_STORAGE_STATE_JSON"
 WILEY_STORAGE_STATE_JSON_ENV_VAR = "PAPER_FETCH_WILEY_STORAGE_STATE_JSON"
 WILEY_PROFILE_DIR_ENV_VAR = "PAPER_FETCH_WILEY_PROFILE_DIR"
@@ -84,28 +72,14 @@ WILEY_PROFILE_DIR_ENV_VAR = "PAPER_FETCH_WILEY_PROFILE_DIR"
 
 @dataclass(frozen=True)
 class BrowserBackendSelection:
-    """Resolved browser backend choice with migration metadata."""
+    """Resolved browser backend choice."""
 
     backend: str
     explicit: bool
-    deprecated: bool
-    legacy_env_vars: tuple[str, ...] = ()
 
     @property
     def notes(self) -> tuple[str, ...]:
-        notes: list[str] = []
-        if self.deprecated:
-            notes.append(
-                "CloakBrowser is deprecated in 3.2.0, remains available throughout "
-                "3.x, and may be removed in 4.0.0."
-            )
-        if self.legacy_env_vars and self.backend != "cloakbrowser":
-            names = ", ".join(self.legacy_env_vars)
-            notes.append(
-                f"Legacy CloakBrowser settings ({names}) do not select the deprecated "
-                f"backend; set {BROWSER_BACKEND_ENV_VAR}=cloakbrowser explicitly to use them."
-            )
-        return tuple(notes)
+        return ()
 
 
 def resolve_browser_backend_selection(
@@ -115,14 +89,9 @@ def resolve_browser_backend_selection(
 
     raw_value = str(env.get(BROWSER_BACKEND_ENV_VAR, "")).strip()
     backend = raw_value.lower() or DEFAULT_BROWSER_BACKEND
-    legacy_env_vars = tuple(
-        name for name in LEGACY_CLOAKBROWSER_ENV_VARS if str(env.get(name, "")).strip()
-    )
     return BrowserBackendSelection(
         backend=backend,
         explicit=bool(raw_value),
-        deprecated=bool(raw_value and backend == "cloakbrowser"),
-        legacy_env_vars=legacy_env_vars,
     )
 
 

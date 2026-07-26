@@ -488,8 +488,8 @@ class AtyponBrowserWorkflowProviderAssetDownloadTests(
             runtime_context.new_browser_context = mock.Mock(
                 side_effect=AssertionError("unkeyed runtime browser should not be used")
             )
-            runtime_context.new_browser_context_for_config = mock.Mock(
-                wraps=runtime_context.new_browser_context_for_config
+            runtime_context.new_browser_context_for_runtime_config = mock.Mock(
+                wraps=runtime_context.new_browser_context_for_runtime_config
             )
             raw_payload = _typed_raw_payload(
                 provider="science",
@@ -508,7 +508,7 @@ class AtyponBrowserWorkflowProviderAssetDownloadTests(
             )
             with (
                 mock.patch(
-                    "paper_fetch.runtime_browser.BrowserContextManager.new_context",
+                    "paper_fetch.providers.browser_runtime.camoufox_manager.CamoufoxBrowserManager.new_context",
                     new=new_private_context,
                 ),
                 mock.patch.object(
@@ -549,8 +549,10 @@ class AtyponBrowserWorkflowProviderAssetDownloadTests(
                 )
 
         runtime_context.new_browser_context.assert_not_called()
-        self.assertEqual(runtime_context.new_browser_context_for_config.call_count, 2)
-        self.assertEqual(len(runtime_context._browser_context_managers), 1)
+        self.assertEqual(
+            runtime_context.new_browser_context_for_runtime_config.call_count, 2
+        )
+        self.assertEqual(len(runtime_context._camoufox_browser_managers), 1)
         self.assertEqual(transport.calls, [])
         self.assertEqual(
             [asset["kind"] for asset in result["assets"]],

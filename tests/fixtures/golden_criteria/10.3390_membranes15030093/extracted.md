@@ -1,5 +1,5 @@
 ---
-title: "10.3390/membranes15030093"
+title: "Simulation of Carbon Dioxide Absorption in a Hollow Fiber Membrane Contactor Under Non-Isothermal Conditions"
 authors: "Youkang Jin, Lei Wang, Jinpeng Bi, Wei Zhao, Hui Zhang, Yuexia Lv, Xi Chen"
 doi: "10.3390/membranes15030093"
 source: "mdpi_html"
@@ -9,13 +9,11 @@ has_abstract: true
 token_estimate: 11239
 ---
 
-# 10.3390/membranes15030093
+# Simulation of Carbon Dioxide Absorption in a Hollow Fiber Membrane Contactor Under Non-Isothermal Conditions
 
 ## Abstract
 
 CO 2 capture by membrane gas absorption technology has been considered a promising alternative to mitigate or stabilize atmospheric CO 2 concentrations. The non-isothermal nature of the CO 2 absorption process in hollow fiber membrane contactors is a critical factor that significantly influences CO 2 removal performance. In the present study, a non-isothermal mathematical model and a two-dimensional computational simulation were carried out to evaluate the CO 2 separation by three typical absorbents in a polyvinylidene fluoride hollow fiber membrane contactor under non-wetting operation mode. The simulation results exhibited good matching with the published experimental data with the deviations in the range of lower than 5%, which validated the reliability of the developed numerical model. A significant temperature increase ranging from 2 to 15 K was observed along the length of the hollow fiber membrane contactor, which further facilitated the absorption and reaction process in this study. The results showed that potassium glycinate exhibited the highest absorption capacity, followed by monoethanolamine and 1-ethyl-3-methylimidazolium. In addition, the mass transfer could be enhanced by increasing the liquid flow rate, absorbent concentration, module length, and membrane porosity, while increasing the gas velocity and CO 2 inlet concentration were unfavorable for the CO 2 removal process.
-
-## Simulation of Carbon Dioxide Absorption in a Hollow Fiber Membrane Contactor Under Non-Isothermal Conditions
 
 ## 1. Introduction
 

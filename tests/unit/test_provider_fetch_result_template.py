@@ -340,7 +340,7 @@ class RawFulltextPayloadMetadataCompatibilityTests(unittest.TestCase):
                     "accepted": True,
                     "reason": "body_sufficient",
                 },
-                "html_fetcher": "cloakbrowser",
+                "html_fetcher": "camoufox",
                 "browser_context_seed": {
                     "browser_final_url": "https://example.test/final"
                 },
@@ -399,7 +399,7 @@ class RawFulltextPayloadMetadataCompatibilityTests(unittest.TestCase):
                     }
                 },
                 reason="typed reason",
-                fetcher="cloakbrowser",
+                fetcher="camoufox",
                 browser_context_seed={
                     "browser_final_url": "https://example.test/final"
                 },
@@ -425,7 +425,7 @@ class RawFulltextPayloadMetadataCompatibilityTests(unittest.TestCase):
             payload.metadata["availability_diagnostics"],
             {"accepted": True, "reason": "body_sufficient"},
         )
-        self.assertEqual(payload.metadata["html_fetcher"], "cloakbrowser")
+        self.assertEqual(payload.metadata["html_fetcher"], "camoufox")
         self.assertEqual(
             payload.metadata["browser_context_seed"],
             {"browser_final_url": "https://example.test/final"},

@@ -2124,6 +2124,7 @@ def test_check_snapshot_requires_prompt_asset_and_agent_pass_report(
     assert failed.value.details["issues"][0]["id"] == "broken-table"
 
 
+@pytest.mark.allow_subprocess
 def test_check_snapshot_uses_default_codex_dispatcher_for_fresh_report(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -2607,6 +2608,7 @@ print("ok")
     assert repair["status"] == "passed"
 
 
+@pytest.mark.allow_subprocess
 def test_repair_markdown_quality_rejects_forbidden_agent_change(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,

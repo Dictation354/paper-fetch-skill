@@ -1,0 +1,33 @@
+name: Set up locked Python environment
+description: Install Python, uv, and the reproducible project environment.
+inputs:
+  python-version:
+    description: CPython version
+    required: true
+  full:
+    description: Install browser and PDF runtime extras
+    required: false
+    default: "false"
+runs:
+  using: composite
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+      with:
+        python-version: ${{ inputs.python-version }}
+        cache: pip
+    - name: Set up uv
+      uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7
+      with:
+        enable-cache: true
+    - name: Sync locked development environment
+      shell: bash
+      env:
+        INSTALL_FULL: ${{ inputs.full }}
+      run: |
+        set -euo pipefail
+        if [ "$INSTALL_FULL" = "true" ]; then
+          uv sync --frozen --extra dev --extra full
+        else
+          uv sync --frozen --extra dev
+        fi

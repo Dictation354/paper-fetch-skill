@@ -24,7 +24,7 @@ Builds a CPython 3.11-3.14 offline runtime package containing:
   - private Python launcher under runtime/paper-fetch-python
   - texmath under formula-tools/
   - image-tools directory and installer wrapper for optional Ghostscript/libvips converters
-  - CloakBrowser and Camoufox Python packages; browser binaries are not bundled
+  - the full browser and PDF extras; browser binaries are not bundled
 Linux builds produce a self-extracting .sh installer. macOS builds produce a .tar.gz bundle.
 EOF
 }
@@ -151,13 +151,11 @@ build_project_runtime() {
   "$PYTHON_BIN" -m pip download \
     --dest "$wheelhouse" \
     --only-binary=:all: \
-    "${wheels[0]}"
+    "${wheels[0]}[full]"
 
   shopt -s nullglob
-  local cloakbrowser_wheels=("$wheelhouse"/cloakbrowser-*.whl)
   local camoufox_wheels=("$wheelhouse"/camoufox-*.whl)
   shopt -u nullglob
-  [ "${#cloakbrowser_wheels[@]}" -gt 0 ] || die "Dependency wheelhouse is missing cloakbrowser-*.whl."
   [ "${#camoufox_wheels[@]}" -gt 0 ] || die "Dependency wheelhouse is missing camoufox-*.whl."
 
   log "Installing project runtime into package"
@@ -167,13 +165,13 @@ build_project_runtime() {
     --no-index \
     --find-links "$wheelhouse" \
     --only-binary=:all: \
-    "${wheels[0]}"
+    "${wheels[0]}[full]"
 
   log "Precompiling Python runtime bytecode"
   "$PYTHON_BIN" -m compileall -q "$site_packages"
 
   PYTHONPATH="$site_packages${PYTHONPATH:+:$PYTHONPATH}" \
-    "$PYTHON_BIN" -X utf8 -c 'import camoufox; import cloakbrowser; import playwright; import paper_fetch; import paper_fetch.mcp.server; from paper_fetch.runtime_browser import BrowserContextManager; assert hasattr(camoufox, "Camoufox"); assert hasattr(cloakbrowser, "ensure_binary"); assert BrowserContextManager is not None'
+    "$PYTHON_BIN" -X utf8 -c 'import camoufox; import playwright; import pymupdf; import paper_fetch; import paper_fetch.mcp.server; from paper_fetch.runtime_browser import BrowserContextManager; assert hasattr(camoufox, "Camoufox"); assert BrowserContextManager is not None'
 }
 
 bundle_formula_tools() {
@@ -296,9 +294,7 @@ EOF
   printf '\n%s\n\n' "$install_line" >> "$staging/README.offline.md"
 
   cat >> "$staging/README.offline.md" <<'EOF'
-Browser-backed providers use native Camoufox by default, without probing or starting CloakBrowser/CDP.
-Set `PAPER_FETCH_BROWSER_BACKEND=cloakbrowser` only for the deprecated compatibility backend; selection never silently falls back between backends.
-`CLOAKBROWSER_CDP_ENDPOINT` and other legacy variables take effect only with that explicit CloakBrowser selection.
+Browser-backed providers use native Camoufox.
 Set `PAPER_FETCH_BROWSER_HEADLESS=false` only when running with a display-capable session.
 
 The installer writes `PAPER_FETCH_BROWSER_HEADLESS=true` into `offline.env`. It does not override Camoufox's generated Firefox user agent or fingerprint settings.
@@ -384,10 +380,6 @@ payload = {
         "installer_manifest": "installer/manifest.json",
         "formula_tools": "formula-tools",
         "image_tools": "image-tools",
-        "cloakbrowser": {
-            "python_package": "runtime/site-packages",
-            "browser_binary": "not_bundled",
-        },
         "camoufox": {
             "python_package": "runtime/site-packages",
             "browser_binary": "not_bundled",

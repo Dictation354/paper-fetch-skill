@@ -1,5 +1,5 @@
 ---
-title: "10.3390/ijerph18094484"
+title: "The Tipping Effect of Delayed Interventions on the Evolution of COVID-19 Incidence"
 authors: "Kristoffer Rypdal"
 doi: "10.3390/ijerph18094484"
 source: "mdpi_html"
@@ -9,13 +9,11 @@ has_abstract: true
 token_estimate: 9538
 ---
 
-# 10.3390/ijerph18094484
+# The Tipping Effect of Delayed Interventions on the Evolution of COVID-19 Incidence
 
 ## Abstract
 
 We combine infectious disease transmission and the non-pharmaceutical (NPI) intervention response to disease incidence into one closed model consisting of two coupled delay differential equations for the incidence rate and the time-dependent reproduction number. The model contains three parameters, the initial reproduction number, the intervention strength, and the response delay. The response is modeled by assuming that the rate of change of the reproduction number is proportional to the negative deviation of the incidence rate from an intervention threshold. This delay dynamical system exhibits damped oscillations in one part of the parameter space, and growing oscillations in another, and these are separated by a surface where the solution is a strictly periodic nonlinear oscillation. For the COVID-19 pandemic, the tipping transition from damped to growing oscillations occurs for response delays of about one week, and suggests that, without vaccination, effective control and mitigation of successive epidemic waves cannot be achieved unless NPIs are implemented in a precautionary manner, rather as a response to the present incidence rate. Vaccination increases the quiet intervals between waves, but with delayed response, future flare-ups can only be prevented by establishing a post-pandemic normal with lower basic reproduction number.
-
-## The Tipping Effect of Delayed Interventions on the Evolution of COVID-19 Incidence
 
 ## 1. Introduction
 

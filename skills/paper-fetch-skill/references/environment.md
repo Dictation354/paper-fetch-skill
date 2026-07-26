@@ -23,21 +23,15 @@
 
 ## Browser backend 与 storage-state
 
-- `PAPER_FETCH_BROWSER_BACKEND`：选择 `camoufox`（默认）或已弃用的 `cloakbrowser`。后端失败不会自动跨后端回退；旧 `CLOAKBROWSER_*` 变量本身不选择后端。
-- `PAPER_FETCH_BROWSER_HEADLESS`、`PAPER_FETCH_BROWSER_TIMEOUT_MS`：所选 managed 后端的 headless 开关与请求超时；默认分别为 `true`、`120000`。
-- `PAPER_FETCH_BROWSER_BINARY_PATH`：所选后端的本地可执行文件覆盖项。
-- `PAPER_FETCH_BROWSER_PROFILE_DIR`、`PAPER_FETCH_BROWSER_USER_DATA_DIR`：所选后端的 provider-scoped profile/storage-state 目录覆盖项。Camoufox 默认使用 `publisher-browser-profiles/<provider>-camoufox/`，不与 CloakBrowser 状态混用。
-- `PAPER_FETCH_BROWSER_USER_AGENT`：managed CloakBrowser/publisher direct 路线的可选浏览器 UA；它与 `PAPER_FETCH_SKILL_USER_AGENT` 分离。Camoufox 忽略该值，以保持其 Firefox 指纹一致。
-- `CLOAKBROWSER_CDP_ENDPOINT`：仅在显式选择 CloakBrowser 时连接已经运行的 Chrome/CloakBrowser CDP endpoint；设置后默认借用既有 browser context。
-- `PAPER_FETCH_CDP_EXTERNAL_NEW_CONTEXT=1`：显式要求在 external CDP browser 内创建新 context；未设置时保留借用既有 context 的兼容行为。
-- `CLOAKBROWSER_BINARY_PATH`、`CLOAKBROWSER_PROFILE_DIR`、`CLOAKBROWSER_USER_DATA_DIR`、`CLOAKBROWSER_HEADLESS`、`CLOAKBROWSER_TIMEOUT_MS`：仅供显式 CloakBrowser 读取的旧兼容变量；对应通用变量优先。
+- `PAPER_FETCH_BROWSER_BACKEND`：可省略或设置为唯一合法值 `camoufox`；其它值被拒绝，不会自动切换 backend。
+- `PAPER_FETCH_BROWSER_HEADLESS`、`PAPER_FETCH_BROWSER_TIMEOUT_MS`：Camoufox managed runtime 的 headless 开关与请求超时；默认分别为 `true`、`120000`。
+- `PAPER_FETCH_BROWSER_BINARY_PATH`：已准备好的 Camoufox runtime executable 覆盖项。
+- `PAPER_FETCH_BROWSER_PROFILE_DIR`、`PAPER_FETCH_BROWSER_USER_DATA_DIR`：provider-scoped profile/storage-state 目录覆盖项。默认使用 `publisher-browser-profiles/<provider>-camoufox/`。
+- `PAPER_FETCH_BROWSER_USER_AGENT`：publisher direct 路线的可选浏览器 UA；它与 `PAPER_FETCH_SKILL_USER_AGENT` 分离。Camoufox 忽略该值，以保持生成的 Firefox 指纹一致。
+- `PAPER_FETCH_CDP_EXTERNAL_NEW_CONTEXT=1`：只影响显式传入 CDP endpoint 的低层开发/测试调用，不选择生产 backend。
 - `PAPER_FETCH_WILEY_STORAGE_STATE_JSON`、`PAPER_FETCH_WILEY_PROFILE_DIR`：Wiley 的兼容 storage/profile 覆盖。常规流程优先使用 provider-scoped storage-state；人工验证只在 preflight/fetch 明确要求时运行 `paper-fetch auth <provider>`。
 
-静态 `paper-fetch doctor --provider <name> --detail full --json` / MCP `provider_status` 不连接 CDP、不启动浏览器、不下载 Camoufox runtime，也不访问出版社页面。需要 live 证明时再运行 CLI `paper-fetch browser-preflight --provider <name>` 或 MCP `browser_preflight(provider=...)`；它们可能更新过滤后的 storage-state，但不会运行 PDF fallback 或自动认证。MCP preflight is open-world：它会访问远端页面、非只读且可能写 storage-state。
-
-managed Chrome 会先在 paper-fetch profile lock 内核验 `SingletonLock`、`SingletonSocket` 与 `SingletonCookie`。只有 owner、本地主机、PID/profile 和 socket 证据共同确认 stale 时，才把它们移入 `<profile>/.paper-fetch-browser-diagnostics/singleton-recovery-*/` 并最多重启一次；无法证明 stale 时返回 `managed_chrome_profile_in_use`，不得手工盲删。启动失败的有界、脱敏 stderr 和 JSON 诊断位于同一 diagnostics 根目录。
-
-browser trace/preflight 的稳定运行时 code 为 `managed_chrome_profile_in_use`、`managed_chrome_exited_before_cdp`、`managed_chrome_cdp_timeout`、`cdp_connect_failed`、`browser_context_create_failed`、`browser_page_create_failed`。优先读取 `code`、`stage`、`exit_code`、`stderr_summary` 和 `diagnostic_path`，不要再把它们折叠成宽泛的 CDP 连接失败。
+静态 `paper-fetch doctor --provider <name> --detail full --json` / MCP `provider_status` 不启动浏览器、不下载 Camoufox runtime，也不访问出版社页面。需要 live 证明时再运行 CLI `paper-fetch browser-preflight --provider <name>` 或 MCP `browser_preflight(provider=...)`；它们可能更新过滤后的 storage-state，但不会运行 PDF fallback 或自动认证。MCP preflight is open-world：它会访问远端页面、非只读且可能写 storage-state。
 
 ## 图片与资产工具
 
@@ -66,5 +60,5 @@ browser trace/preflight 的稳定运行时 code 为 `managed_chrome_profile_in_u
 
 1. 用 `paper-fetch doctor --json` 或 `provider_status(detail="full")` 做无网络静态检查；输出只包含变量名、是否存在和来源层；token, cookie, endpoint, path, and other values are never echoed。
 2. 只有动态 catalog 表明目标依赖 browser runtime 且需要真实链路证明时，运行 `browser-preflight` / `browser_preflight`。
-3. 只有结构化结果为 `challenge` / `auth_required` 时进入人工 auth；`runtime_error` 先修所选 CloakBrowser/CDP 或 Camoufox runtime/工具链。
+3. 只有结构化结果为 `challenge` / `auth_required` 时进入人工 auth；`runtime_error` 先修 Camoufox runtime/工具链。
 4. 配置或合法访问状态没有变化时，不重复抓取；重试边界统一遵循 [`failure-handling.md`](failure-handling.md)。

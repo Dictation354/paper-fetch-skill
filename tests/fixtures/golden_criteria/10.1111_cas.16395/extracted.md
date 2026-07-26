@@ -1,5 +1,5 @@
 ---
-title: "10.1111/cas.16395"
+title: "Current status and future direction of cancer research using artificial intelligence for clinical application"
 authors: "Ryuji Hamamoto, Masaaki Komatsu, Masayoshi Yamada, Kazuma Kobayashi, Masamichi Takahashi, Mototaka Miyake, Shunichi Jinnai, Takafumi Koyama, Nobuji Kouno, Hidenori Machino, Satoshi Takahashi, Ken Asada, Naonori Ueda, Syuzo Kaneko"
 doi: "10.1111/cas.16395"
 source: "wiley_browser"
@@ -9,13 +9,11 @@ has_abstract: true
 token_estimate: 9635
 ---
 
-# 10.1111/cas.16395
+# Current status and future direction of cancer research using artificial intelligence for clinical application
 
 ## Abstract
 
 The expectations for artificial intelligence (AI) technology have increased considerably in recent years, mainly due to the emergence of deep learning. At present, AI technology is being used for various purposes and has brought about change in society. In particular, the rapid development of generative AI technology, exemplified by ChatGPT, has amplified the societal impact of AI. The medical field is no exception, with a wide range of AI technologies being introduced for basic and applied research. Further, AI-equipped software as a medical device (AI-SaMD) is also being approved by regulatory bodies. Combined with the advent of big data, data-driven research utilizing AI is actively pursued. Nevertheless, while AI technology has great potential, it also presents many challenges that require careful consideration. In this review, we introduce the current status of AI-based cancer research, especially from the perspective of clinical application, and discuss the associated challenges and future directions, with the aim of helping to promote cancer research that utilizes effective AI technology.
-
-## Current status and future direction of cancer research using artificial intelligence for clinical application
 
 ## 1 INTRODUCTION
 
@@ -166,90 +164,90 @@ XAI: explainable AI
 
 ## References (87 total, showing 87)
 
-1. 1 LeCun Y , Bengio Y , Hinton G . Deep learning . Nature . 2015 ; 521 : 436 - 444 .
-2. 2 Pandey M , Fernandez M , Gentile F , et al. The transformational role of GPU computing and deep learning in drug discovery . Nat Mach Intell . 2022 ; 4 : 211 - 221 .
-3. 3 Elish MC , Boyd D . Situating methods in the magic of big data and AI . Commun Monogr . 2018 ; 85 : 57 - 80 .
-4. 4 Rosca C , Covrig B , Goanta C , van Dijck G , Spanakis G . Return of the AI: an analysis of legal research on artificial intelligence using topic modeling. Proceedings of the Natural Legal Language Processing Workshop . 2020 3–10.
-5. 5 Gupta S , Modgil S , Lee C-K , Sivarajah U . The future is yesterday: use of AI-driven facial recognition to enhance value in the travel and tourism industry . Inf Syst Front . 2023 ; 25 : 1179 - 1195 .
-6. 6 Moneus AM , Sahari Y . Artificial intelligence and human translation: a contrastive study based on legal texts . Heliyon . 2024 ; 10 :e28106.
-7. 7 Tan K , Wu J , Zhou H , Wang Y , Chen J . Integrating advanced computer Vision and AI algorithms for autonomous driving systems . JTPES . 2024 ; 4 : 41 - 48 .
-8. 8 U.S. Food and Drug Administration (FDA): Artificial intelligence and machine learning (AI/ML)-enabled medical devices . Accessed July 10, 2024. https://www.fda.gov/medical-devices/software-medical-device-samd/artificial-intelligence-and-machine-learning-aiml-enabled-medical-devices 2024 .
-9. 9 Vaswani A , Shazeer N , Parmar N , et al. Attention is all you need . Adv Neural Inf Process Syst . 2017 ; 30 : 5998 - 6008 .
-10. 10 Owens B . How nature readers are using ChatGPT . Nature . 2023 ; 615 : 20 .
-11. 11 Stokel-Walker C , Van Noorden R . What ChatGPT and generative AI mean for science . Nature . 2023 ; 614 : 214 - 216 .
-12. 12 Ichikawa T . Evolution of World's AI Governance Systems Driven by the Fourth AI Boom (ChatGPT): Social Risks of ChatGPT-type AI Systems and Trend of AI Regulation and Governance Policies in the World. IIR Working paper . 2023 WP#23-02.
-13. 13 Singhal K , Azizi S , Tu T , et al. Large language models encode clinical knowledge . Nature . 2023 ; 620 : 172 - 180 .
-14. 14 Tu T , Azizi S , Driess D , et al. Towards generalist biomedical AI . NEJM Ai . 2024 ; 1 : AIoa2300138 .
-15. 15 Hamamoto R , Suvarna K , Yamada M , et al. Application of artificial intelligence Technology in Oncology: towards the establishment of precision medicine . Cancers (Basel) . 2020 ; 12 : 3532 .
-16. 16 Yamada M , Saito Y , Yamada S , Kondo H , Hamamoto R . Detection of flat colorectal neoplasia by artificial intelligence: a systematic review . Best Pract Res Clin Gastroenterol . 2021 ; 52 :101745.
-17. 17 Yamada M , Saito Y , Imaoka H , et al. Development of a real-time endoscopic image diagnosis support system using deep learning technology in colonoscopy . Sci Rep . 2019 ; 9 : 14465 .
-18. 18 Kobayashi K , Hataya R , Kurose Y , et al. Decomposing Normal and abnormal features of medical images for content-based image retrieval of glioma imaging . Med Image Anal . 2021 ; 74 :102227.
-19. 19 Kobayashi K , Miyake M , Takahashi M , Hamamoto R . Observing deep radiomics for the classification of glioma grades . Sci Rep . 2021 ; 11 : 10942 .
-20. 20 Niazi MKK , Parwani AV , Gurcan MN . Digital pathology and artificial intelligence . Lancet Oncol . 2019 ; 20 : e253 - e261 .
-21. 21 Jinnai S , Yamazaki N , Hirano Y , Sugawara Y , Ohe Y , Hamamoto R . The development of a skin cancer classification system for pigmented skin lesions using deep learning . Biomolecules . 2020 ; 10 : 1123 .
-22. 22 Asada K , Kobayashi K , Joutard S , et al. Uncovering prognosis-related genes and pathways by multi-omics analysis in lung cancer . Biomolecules . 2020 ; 10 : 524 .
-23. 23 Kobayashi K , Bolatkan A , Shiina S , Hamamoto R . Fully-connected neural networks with reduced parameterization for predicting histological types of lung cancer from somatic mutations . Biomolecules . 2020 ; 10 : 1249 .
-24. 24 Takahashi S , Asada K , Takasawa K , et al. Predicting deep learning based multi-omics parallel integration survival subtypes in lung cancer using reverse phase protein Array data . Biomolecules . 2020 ; 10 : 1460 .
-25. 25 Edara DC , Vanukuri LP , Sistla V , Kolli VKK . Sentiment analysis and text categorization of cancer medical records with LSTM . Ambient Intell Humaniz Comput . 2023 ; 14 : 5309 - 5325 .
-26. 26 Santos T , Tariq A , Gichoya JW , Trivedi H , Banerjee I . Automatic classification of cancer pathology reports: a systematic review . J Pathol Inform . 2022 ; 13 :100003.
-27. 27 Plesner LL , Müller FC , Nybing JD , et al. Autonomous chest radiograph reporting using AI: estimation of clinical impact . Radiology . 2023 ; 307 :e222268.
-28. 28 Verma M . Personalized medicine and cancer . J Pers Med . 2012 ; 2 : 1 - 14 .
-29. 29 Ginsburg GS , Phillips KA . Precision medicine: from science to value . Health Aff . 2018 ; 37 : 694 - 701 .
-30. 30 Dlamini Z , Francies FZ , Hull R , Marima R . Artificial intelligence (AI) and big data in cancer and precision oncology . Comput Struct Biotechnol J . 2020 ; 18 : 2300 - 2311 .
-31. 31 Hamamoto R , Koyama T , Kouno N , et al. Introducing AI to the molecular tumor board: one direction toward the establishment of precision medicine using large-scale cancer clinical and biological information . Exp Hematol Oncol . 2022 ; 11 : 82 .
-32. 32 McCorduck P , Cfe C . Machines Who Think: A Personal Inquiry into the History and Prospects of Artificial Intelligence . AK Peters/CRC Press; 2004 .
-33. 33 Kaplan A , Haenlein M . Siri, Siri, in my hand: Who's the fairest in the land? On the interpretations, illustrations, and implications of artificial intelligence . Bus Horiz . 2019 ; 62 : 15 - 25 .
-34. 34 Yanase J , Triantaphyllou E . A systematic survey of computer-aided diagnosis in medicine: past and present developments . Expert Syst Appl . 2019 ; 138 :112821.
-35. 35 Shortliffe EH , Buchanan BG . A model of inexact reasoning in medicine . Math Biosci . 1975 ; 23 : 351 - 379 .
-36. 36 Shortliffe EH . Mycin: a knowledge-based computer program applied to infectious diseases. Proceedings of the Annual Symposium on Computer Application in Medical Care . 1977 66.
-37. 37 Yu VL , Fagan LM , Wraith SM , et al. Antimicrobial selection by a computer. A blinded evaluation by infectious diseases experts . JAMA . 1979 ; 242 : 1279 - 1282 .
-38. 38 Laudon KC , Laudon JP . Management information systems: managing the digital firm . Pearson Educación; 2004 .
-39. 39 Kim SJ , Moon WK , Kim S-Y , Chang JM , Kim SM , Cho N . Comparison of two software versions of a commercially available computer-aided detection (CAD) system for detecting breast cancer . Acta Radiol . 2010 ; 51 : 482 - 490 .
-40. 40 Li F , Engelmann R , Doi K , MacMahon H . True detection versus “accidental” detection of small lung cancer by a computer-aided detection (CAD) program on chest radiographs . J Digit Imaging . 2010 ; 23 : 66 - 72 .
-41. 41 Fenton JJ , Green P , Baldwin L-M . Internal validation of procedure codes on Medicare claims for digital mammograms and computer-aided detection . Cancer Epidemiol Biomarkers Prev . 2009 ; 18 : 2186 - 2189 .
-42. 42 He K , Zhang X , Ren S , Sun J . Delving Deep into Rectifiers: Surpassing Human-Level Performance on ImageNet Classification. Proceedings of the 2015 IEEE International Conference on Computer Vision (ICCV) . 2015 1026–1034.
-43. 43 Fu MC . Simulation-based algorithms for Markov decision processes: Monte Carlo tree search from AlphaGo to AlphaZero . Asia-Pac J Oper Res . 2019 ; 36 :1940009.
-44. 44 van Leeuwen KG , Schalekamp S , Rutten MJ , van Ginneken B , de Rooij M . Artificial intelligence in radiology: 100 commercially available products and their scientific evidence . Eur Radiol . 2021 ; 31 : 3797 - 3804 .
-45. 45 Li H , Zhuang S , Li D-a , Zhao J , Ma Y . Benign and malignant classification of mammogram images based on deep learning . Biomed . 2019 ; 51 : 347 - 354 .
-46. 46 Jeyaraj PR , Samuel Nadar ER . Computer-assisted medical image classification for early diagnosis of oral cancer employing deep learning algorithm . J Cancer Res Clin Oncol . 2019 ; 145 : 829 - 837 .
-47. 47 Cai L , Gao J , Zhao D . A review of the application of deep learning in medical image classification and segmentation . Ann Transl Med . 2020 ; 8 : 713 .
-48. 48 Galbusera F , Cina A . Image annotation and curation in radiology: an overview for machine learning practitioners . Eur Radiol Exp . 2024 ; 8 : 11 .
-49. 49 Willemink MJ , Koszek WA , Hardell C , et al. Preparing medical imaging data for machine learning . Radiology . 2020 ; 295 : 4 - 15 .
-50. 50 Das A , Devarampati VK , Nair MS . NAS-SGAN: a semi-supervised generative adversarial network model for atypia scoring of breast cancer histopathological images . IEEE J Biomed Health Inform . 2021 ; 26 : 2276 - 2287 .
-51. 51 Pang T , Wong JHD , Ng WL , Chan CS . Semi-supervised GAN-based radiomics model for data augmentation in breast ultrasound mass classification . Comput Methods Prog Biomed . 2021 ; 203 :106018.
-52. 52 Hossain E , Abdelrahim M , Tanasescu A , et al. Performance of a novel computer-aided diagnosis system in the characterization of colorectal polyps, and its role in meeting preservation and incorporation of valuable endoscopic innovations standards set by the American Society of Gastrointestinal Endoscopy . DEN Open . 2023 ; 3 :e178.
-53. 53 Mori Y , Neumann H , Misawa M , Se K , Bretthauer M . Artificial intelligence in colonoscopy-now on the market. What's next? J Gastroenterol Hepatol . 2021 ; 36 : 7 - 11 .
-54. 54 Desai M , Ausk K , Brannan D , et al. Use of a novel artificial intelligence system leads to the detection of significantly higher number of adenomas during screening and surveillance colonoscopy: results from a large, Prospective, US multi-center, randomized clinical trial . Am J Gastroenterol . 2024 ; 119 : 1383 - 1391 .
-55. 55 Ministry of Economy TaIM . Medical and Welfare Equipment Industry Policy at the Ministry of Economy, Trade and Industry . 2018 https://www.med-device.jp/pdf/20210218-kaigi_11_meti.pdf
-56. 56 National Cancer Center Japan . AI-Based Real-Time Endoscopy Diagnostic Support System Development Aiming to Avoid Missed Colonoscopy . NCC Press Release; 2017 https://www.ncc.go.jp/jp/information/pr_release/2017/0710/index.html
-57. 57 Byrne MF , Critchley-Thorne RJ . Move Over, Colon. It's time for the esophagus to take center stage for artificial intelligence and computer-aided detection of Barrett's! Gastroenterology . 2021 ; 161 : 802 - 804 .
-58. 58 Abdelrahim M , Saiko M , Maeda N , et al. Development and validation of artificial neural networks model for detection of Barrett's neoplasia: a multicenter pragmatic nonrandomized trial (with video) . Gastrointest Endosc . 2023 ; 97 : 422 - 434 .
-59. 59 Yamada M , Shino R , Kondo H , et al. Robust automated prediction of the revised Vienna classification in colonoscopy using deep learning: development and initial external validation . J Gastroenterol . 2022 ; 57 : 879 - 889 .
-60. 60 Fujimoto A , Higuchi K , Akimoto T , et al. Effect of an artificial intelligence-assisted endoscopy in the diagnosis of superficial gastric neoplasms: a multicenter PROSPECTIVE randomized CONTROL trial (gastro-ai-study) . Gastrointest Endosc . 2024 ; 99 : AB21 .
-61. 61 Kawaguchi RK , Takahashi M , Miyake M , et al. Assessing versatile machine learning models for glioma Radiogenomic studies across hospitals . Cancers (Basel) . 2021 ; 13 : 3611 .
-62. 62 Paudyal R , Shah AD , Akin O , et al. Artificial intelligence in CT and MR imaging for oncological applications . Cancer . 2023 ; 15 : 2573 .
-63. 63 Tariq A , Purkayastha S , Padmanaban GP , et al. Current clinical applications of artificial intelligence in radiology and their best supporting evidence . J Am Coll Radiol . 2020 ; 17 : 1371 - 1381 .
-64. 64 National Cancer Center Japan . Jointly developed AI development platform. NCC Press Release . 2021 https://www.ncc.go.jp/jp/information/pr_release/2021/0416/index.html
-65. 65 National Cancer Center Japan . Jointly developed AI technology to precisely extract suspected glioma regions from MRI images. NCC Press Release . 2024 https://www.ncc.go.jp/jp/information/pr_release/2024/0228/index.html
-66. 66 Komatsu M , Sakai A , Dozen A , et al. Towards clinical application of artificial intelligence in ultrasound imaging . Biomedicine . 2021 ; 9 : 720 .
-67. 67 Dozen A , Komatsu M , Sakai A , et al. Image segmentation of the ventricular septum in fetal cardiac ultrasound videos based on deep learning using time-series information . Biomolecules . 2020 ; 10 : 1526 .
-68. 68 Shozu K , Komatsu M , Sakai A , et al. Model-agnostic method for Thoracic Wall segmentation in fetal ultrasound videos . Biomolecules . 2020 ; 10 : 1691 .
-69. 69 Yasutomi S , Arakaki T , Matsuoka R , et al. Shadow estimation for ultrasound images using auto-encoding structures and synthetic shadows . Appl Sci . 2021 ; 11 : 1127 .
-70. 70 Komatsu M , Sakai A , Komatsu R , et al. Detection of cardiac structural abnormalities in fetal ultrasound videos using deep learning . Appl Sci . 2021 ; 11 : 371 .
-71. 71 Sakai A , Komatsu M , Komatsu R , et al. Medical professional enhancement using explainable artificial intelligence in fetal cardiac ultrasound screening . Biomedicine . 2022 ; 10 :551.
-72. 72 Bera K , Schalper KA , Rimm DL , Velcheti V , Madabhushi A . Artificial intelligence in digital pathology—new tools for diagnosis and precision oncology . Nat Rev Clin Oncol . 2019 ; 16 : 703 - 715 .
-73. 73 Coudray N , Ocampo PS , Sakellaropoulos T , et al. Classification and mutation prediction from non-small cell lung cancer histopathology images using deep learning . Nat Med . 2018 ; 24 : 1559 - 1567 .
-74. 74 Echle A , Rindtorff NT , Brinker TJ , Luedde T , Pearson AT , Kather JN . Deep learning in cancer pathology: a new generation of clinical biomarkers . Br J Cancer . 2021 ; 124 : 686 - 696 .
-75. 75 Goyal M , Knackstedt T , Yan S , Hassanpour S . Artificial intelligence-based image classification methods for diagnosis of skin cancer: challenges and opportunities . Comput Biol Med . 2020 ; 127 :104065.
-76. 76 Tschandl P , Rinner C , Apalla Z , et al. Human–computer collaboration for skin cancer recognition . Nat Med . 2020 ; 26 : 1229 - 1234 .
-77. 77 Hamamoto R , Komatsu M , Takasawa K , Asada K , Kaneko S . Epigenetics analysis and integrated analysis of multiomics data, including epigenetic data, using artificial intelligence in the era of precision medicine . Biomolecules . 2020 ; 10 : 62 .
-78. 78 He X , Liu X , Zuo F , Shi H , Jing J . Artificial intelligence-based multi-omics analysis fuels cancer precision medicine . Semin Cancer Biol . 2023 ; 88 : 187 - 200 .
-79. 79 Li S , Harner EJ , Adjeroh DA . Random KNN feature selection-a fast and stable alternative to random forests . BMC Bioinformatics . 2011 ; 12 : 1 - 11 .
-80. 80 Savova GK , Danciu I , Alamudun F , et al. Use of natural language processing to extract clinical cancer phenotypes from electronic medical records . Cancer Res . 2019 ; 79 : 5463 - 5470 .
-81. 81 Wang L , Luo L , Wang Y , Wampfler J , Yang P , Liu H . Natural language processing for populating lung cancer clinical research data . BMC Med Inform Decis Mak . 2019 ; 19 : 1 - 10 .
-82. 82 Aramaki E , Miyabe M , Honda C , et al. KOTOBAKARI study: using natural language processing of patient short narratives to detect cancer related cognitive impairment . MEDINFO 2019: Health and Wellbeing e-Networks for all . IOS Press; 2019 : 1111 - 1115 .
-83. 83 Zhu L , Rong Y , McGee LA , Rwigema J-CM , Patel SH . Testing and validation of a custom retrained large language model for the supportive care of HN patients with external knowledge base . Cancers (Basel) . 2024 ; 16 :2311.
-84. 84 Khene ZE , Bigot P , Mathieu R , Roupret M , Bensalah K , French Committee of Urologic Oncology . Development of a personalized chat model based on the European Association of Urology oncology guidelines: harnessing the power of generative artificial intelligence in clinical practice . Eur Urol Oncol . 2024 ; 7 : 160 - 162 .
-85. 85 Farquhar S , Kossen J , Kuhn L , Gal Y . Detecting hallucinations in large language models using semantic entropy . Nature . 2024 ; 630 : 625 - 630 .
-86. 86 Takahashi S , Takahashi M , Kinoshita M , et al. Fine-tuning approach for segmentation of gliomas in brain magnetic resonance images with a machine learning method to normalize image differences among facilities . Cancers (Basel) . 2021 ; 13 : 1415 .
-87. 87 Murakami M . Overview of medical device regulations and recent updates . JNIPH . 2022 ; 71 : 156 - 162 .
+1. 1 LeCun Y, Bengio Y, Hinton G. Deep learning. Nature. 2015; 521: 436-444.
+2. 2 Pandey M, Fernandez M, Gentile F, et al. The transformational role of GPU computing and deep learning in drug discovery. Nat Mach Intell. 2022; 4: 211-221.
+3. 3 Elish MC, Boyd D. Situating methods in the magic of big data and AI. Commun Monogr. 2018; 85: 57-80.
+4. 4 Rosca C, Covrig B, Goanta C, van Dijck G, Spanakis G. Return of the AI: an analysis of legal research on artificial intelligence using topic modeling. Proceedings of the Natural Legal Language Processing Workshop. 2020 3–10.
+5. 5 Gupta S, Modgil S, Lee C-K, Sivarajah U. The future is yesterday: use of AI-driven facial recognition to enhance value in the travel and tourism industry. Inf Syst Front. 2023; 25: 1179-1195.
+6. 6 Moneus AM, Sahari Y. Artificial intelligence and human translation: a contrastive study based on legal texts. Heliyon. 2024; 10:e28106.
+7. 7 Tan K, Wu J, Zhou H, Wang Y, Chen J. Integrating advanced computer Vision and AI algorithms for autonomous driving systems. JTPES. 2024; 4: 41-48.
+8. 8 U.S. Food and Drug Administration (FDA): Artificial intelligence and machine learning (AI/ML)-enabled medical devices. Accessed July 10, 2024. https://www.fda.gov/medical-devices/software-medical-device-samd/artificial-intelligence-and-machine-learning-aiml-enabled-medical-devices 2024.
+9. 9 Vaswani A, Shazeer N, Parmar N, et al. Attention is all you need. Adv Neural Inf Process Syst. 2017; 30: 5998-6008.
+10. 10 Owens B. How nature readers are using ChatGPT. Nature. 2023; 615: 20.
+11. 11 Stokel-Walker C, Van Noorden R. What ChatGPT and generative AI mean for science. Nature. 2023; 614: 214-216.
+12. 12 Ichikawa T. Evolution of World's AI Governance Systems Driven by the Fourth AI Boom (ChatGPT): Social Risks of ChatGPT-type AI Systems and Trend of AI Regulation and Governance Policies in the World. IIR Working paper. 2023 WP#23-02.
+13. 13 Singhal K, Azizi S, Tu T, et al. Large language models encode clinical knowledge. Nature. 2023; 620: 172-180.
+14. 14 Tu T, Azizi S, Driess D, et al. Towards generalist biomedical AI. NEJM Ai. 2024; 1: AIoa2300138.
+15. 15 Hamamoto R, Suvarna K, Yamada M, et al. Application of artificial intelligence Technology in Oncology: towards the establishment of precision medicine. Cancers (Basel). 2020; 12: 3532.
+16. 16 Yamada M, Saito Y, Yamada S, Kondo H, Hamamoto R. Detection of flat colorectal neoplasia by artificial intelligence: a systematic review. Best Pract Res Clin Gastroenterol. 2021; 52:101745.
+17. 17 Yamada M, Saito Y, Imaoka H, et al. Development of a real-time endoscopic image diagnosis support system using deep learning technology in colonoscopy. Sci Rep. 2019; 9: 14465.
+18. 18 Kobayashi K, Hataya R, Kurose Y, et al. Decomposing Normal and abnormal features of medical images for content-based image retrieval of glioma imaging. Med Image Anal. 2021; 74:102227.
+19. 19 Kobayashi K, Miyake M, Takahashi M, Hamamoto R. Observing deep radiomics for the classification of glioma grades. Sci Rep. 2021; 11: 10942.
+20. 20 Niazi MKK, Parwani AV, Gurcan MN. Digital pathology and artificial intelligence. Lancet Oncol. 2019; 20: e253-e261.
+21. 21 Jinnai S, Yamazaki N, Hirano Y, Sugawara Y, Ohe Y, Hamamoto R. The development of a skin cancer classification system for pigmented skin lesions using deep learning. Biomolecules. 2020; 10: 1123.
+22. 22 Asada K, Kobayashi K, Joutard S, et al. Uncovering prognosis-related genes and pathways by multi-omics analysis in lung cancer. Biomolecules. 2020; 10: 524.
+23. 23 Kobayashi K, Bolatkan A, Shiina S, Hamamoto R. Fully-connected neural networks with reduced parameterization for predicting histological types of lung cancer from somatic mutations. Biomolecules. 2020; 10: 1249.
+24. 24 Takahashi S, Asada K, Takasawa K, et al. Predicting deep learning based multi-omics parallel integration survival subtypes in lung cancer using reverse phase protein Array data. Biomolecules. 2020; 10: 1460.
+25. 25 Edara DC, Vanukuri LP, Sistla V, Kolli VKK. Sentiment analysis and text categorization of cancer medical records with LSTM. Ambient Intell Humaniz Comput. 2023; 14: 5309-5325.
+26. 26 Santos T, Tariq A, Gichoya JW, Trivedi H, Banerjee I. Automatic classification of cancer pathology reports: a systematic review. J Pathol Inform. 2022; 13:100003.
+27. 27 Plesner LL, Müller FC, Nybing JD, et al. Autonomous chest radiograph reporting using AI: estimation of clinical impact. Radiology. 2023; 307:e222268.
+28. 28 Verma M. Personalized medicine and cancer. J Pers Med. 2012; 2: 1-14.
+29. 29 Ginsburg GS, Phillips KA. Precision medicine: from science to value. Health Aff. 2018; 37: 694-701.
+30. 30 Dlamini Z, Francies FZ, Hull R, Marima R. Artificial intelligence (AI) and big data in cancer and precision oncology. Comput Struct Biotechnol J. 2020; 18: 2300-2311.
+31. 31 Hamamoto R, Koyama T, Kouno N, et al. Introducing AI to the molecular tumor board: one direction toward the establishment of precision medicine using large-scale cancer clinical and biological information. Exp Hematol Oncol. 2022; 11: 82.
+32. 32 McCorduck P, Cfe C. Machines Who Think: A Personal Inquiry into the History and Prospects of Artificial Intelligence. AK Peters/CRC Press; 2004.
+33. 33 Kaplan A, Haenlein M. Siri, Siri, in my hand: Who's the fairest in the land? On the interpretations, illustrations, and implications of artificial intelligence. Bus Horiz. 2019; 62: 15-25.
+34. 34 Yanase J, Triantaphyllou E. A systematic survey of computer-aided diagnosis in medicine: past and present developments. Expert Syst Appl. 2019; 138:112821.
+35. 35 Shortliffe EH, Buchanan BG. A model of inexact reasoning in medicine. Math Biosci. 1975; 23: 351-379.
+36. 36 Shortliffe EH. Mycin: a knowledge-based computer program applied to infectious diseases. Proceedings of the Annual Symposium on Computer Application in Medical Care. 1977 66.
+37. 37 Yu VL, Fagan LM, Wraith SM, et al. Antimicrobial selection by a computer. A blinded evaluation by infectious diseases experts. JAMA. 1979; 242: 1279-1282.
+38. 38 Laudon KC, Laudon JP. Management information systems: managing the digital firm. Pearson Educación; 2004.
+39. 39 Kim SJ, Moon WK, Kim S-Y, Chang JM, Kim SM, Cho N. Comparison of two software versions of a commercially available computer-aided detection (CAD) system for detecting breast cancer. Acta Radiol. 2010; 51: 482-490.
+40. 40 Li F, Engelmann R, Doi K, MacMahon H. True detection versus “accidental” detection of small lung cancer by a computer-aided detection (CAD) program on chest radiographs. J Digit Imaging. 2010; 23: 66-72.
+41. 41 Fenton JJ, Green P, Baldwin L-M. Internal validation of procedure codes on Medicare claims for digital mammograms and computer-aided detection. Cancer Epidemiol Biomarkers Prev. 2009; 18: 2186-2189.
+42. 42 He K, Zhang X, Ren S, Sun J. Delving Deep into Rectifiers: Surpassing Human-Level Performance on ImageNet Classification. Proceedings of the 2015 IEEE International Conference on Computer Vision (ICCV). 2015 1026–1034.
+43. 43 Fu MC. Simulation-based algorithms for Markov decision processes: Monte Carlo tree search from AlphaGo to AlphaZero. Asia-Pac J Oper Res. 2019; 36:1940009.
+44. 44 van Leeuwen KG, Schalekamp S, Rutten MJ, van Ginneken B, de Rooij M. Artificial intelligence in radiology: 100 commercially available products and their scientific evidence. Eur Radiol. 2021; 31: 3797-3804.
+45. 45 Li H, Zhuang S, Li D-a, Zhao J, Ma Y. Benign and malignant classification of mammogram images based on deep learning. Biomed. 2019; 51: 347-354.
+46. 46 Jeyaraj PR, Samuel Nadar ER. Computer-assisted medical image classification for early diagnosis of oral cancer employing deep learning algorithm. J Cancer Res Clin Oncol. 2019; 145: 829-837.
+47. 47 Cai L, Gao J, Zhao D. A review of the application of deep learning in medical image classification and segmentation. Ann Transl Med. 2020; 8: 713.
+48. 48 Galbusera F, Cina A. Image annotation and curation in radiology: an overview for machine learning practitioners. Eur Radiol Exp. 2024; 8: 11.
+49. 49 Willemink MJ, Koszek WA, Hardell C, et al. Preparing medical imaging data for machine learning. Radiology. 2020; 295: 4-15.
+50. 50 Das A, Devarampati VK, Nair MS. NAS-SGAN: a semi-supervised generative adversarial network model for atypia scoring of breast cancer histopathological images. IEEE J Biomed Health Inform. 2021; 26: 2276-2287.
+51. 51 Pang T, Wong JHD, Ng WL, Chan CS. Semi-supervised GAN-based radiomics model for data augmentation in breast ultrasound mass classification. Comput Methods Prog Biomed. 2021; 203:106018.
+52. 52 Hossain E, Abdelrahim M, Tanasescu A, et al. Performance of a novel computer-aided diagnosis system in the characterization of colorectal polyps, and its role in meeting preservation and incorporation of valuable endoscopic innovations standards set by the American Society of Gastrointestinal Endoscopy. DEN Open. 2023; 3:e178.
+53. 53 Mori Y, Neumann H, Misawa M, Se K, Bretthauer M. Artificial intelligence in colonoscopy-now on the market. What's next? J Gastroenterol Hepatol. 2021; 36: 7-11.
+54. 54 Desai M, Ausk K, Brannan D, et al. Use of a novel artificial intelligence system leads to the detection of significantly higher number of adenomas during screening and surveillance colonoscopy: results from a large, Prospective, US multi-center, randomized clinical trial. Am J Gastroenterol. 2024; 119: 1383-1391.
+55. 55 Ministry of Economy TaIM. Medical and Welfare Equipment Industry Policy at the Ministry of Economy, Trade and Industry. 2018 https://www.med-device.jp/pdf/20210218-kaigi_11_meti.pdf
+56. 56 National Cancer Center Japan. AI-Based Real-Time Endoscopy Diagnostic Support System Development Aiming to Avoid Missed Colonoscopy. NCC Press Release; 2017 https://www.ncc.go.jp/jp/information/pr_release/2017/0710/index.html
+57. 57 Byrne MF, Critchley-Thorne RJ. Move Over, Colon. It's time for the esophagus to take center stage for artificial intelligence and computer-aided detection of Barrett's! Gastroenterology. 2021; 161: 802-804.
+58. 58 Abdelrahim M, Saiko M, Maeda N, et al. Development and validation of artificial neural networks model for detection of Barrett's neoplasia: a multicenter pragmatic nonrandomized trial (with video). Gastrointest Endosc. 2023; 97: 422-434.
+59. 59 Yamada M, Shino R, Kondo H, et al. Robust automated prediction of the revised Vienna classification in colonoscopy using deep learning: development and initial external validation. J Gastroenterol. 2022; 57: 879-889.
+60. 60 Fujimoto A, Higuchi K, Akimoto T, et al. Effect of an artificial intelligence-assisted endoscopy in the diagnosis of superficial gastric neoplasms: a multicenter PROSPECTIVE randomized CONTROL trial (gastro-ai-study). Gastrointest Endosc. 2024; 99: AB21.
+61. 61 Kawaguchi RK, Takahashi M, Miyake M, et al. Assessing versatile machine learning models for glioma Radiogenomic studies across hospitals. Cancers (Basel). 2021; 13: 3611.
+62. 62 Paudyal R, Shah AD, Akin O, et al. Artificial intelligence in CT and MR imaging for oncological applications. Cancer. 2023; 15: 2573.
+63. 63 Tariq A, Purkayastha S, Padmanaban GP, et al. Current clinical applications of artificial intelligence in radiology and their best supporting evidence. J Am Coll Radiol. 2020; 17: 1371-1381.
+64. 64 National Cancer Center Japan. Jointly developed AI development platform. NCC Press Release. 2021 https://www.ncc.go.jp/jp/information/pr_release/2021/0416/index.html
+65. 65 National Cancer Center Japan. Jointly developed AI technology to precisely extract suspected glioma regions from MRI images. NCC Press Release. 2024 https://www.ncc.go.jp/jp/information/pr_release/2024/0228/index.html
+66. 66 Komatsu M, Sakai A, Dozen A, et al. Towards clinical application of artificial intelligence in ultrasound imaging. Biomedicine. 2021; 9: 720.
+67. 67 Dozen A, Komatsu M, Sakai A, et al. Image segmentation of the ventricular septum in fetal cardiac ultrasound videos based on deep learning using time-series information. Biomolecules. 2020; 10: 1526.
+68. 68 Shozu K, Komatsu M, Sakai A, et al. Model-agnostic method for Thoracic Wall segmentation in fetal ultrasound videos. Biomolecules. 2020; 10: 1691.
+69. 69 Yasutomi S, Arakaki T, Matsuoka R, et al. Shadow estimation for ultrasound images using auto-encoding structures and synthetic shadows. Appl Sci. 2021; 11: 1127.
+70. 70 Komatsu M, Sakai A, Komatsu R, et al. Detection of cardiac structural abnormalities in fetal ultrasound videos using deep learning. Appl Sci. 2021; 11: 371.
+71. 71 Sakai A, Komatsu M, Komatsu R, et al. Medical professional enhancement using explainable artificial intelligence in fetal cardiac ultrasound screening. Biomedicine. 2022; 10:551.
+72. 72 Bera K, Schalper KA, Rimm DL, Velcheti V, Madabhushi A. Artificial intelligence in digital pathology—new tools for diagnosis and precision oncology. Nat Rev Clin Oncol. 2019; 16: 703-715.
+73. 73 Coudray N, Ocampo PS, Sakellaropoulos T, et al. Classification and mutation prediction from non-small cell lung cancer histopathology images using deep learning. Nat Med. 2018; 24: 1559-1567.
+74. 74 Echle A, Rindtorff NT, Brinker TJ, Luedde T, Pearson AT, Kather JN. Deep learning in cancer pathology: a new generation of clinical biomarkers. Br J Cancer. 2021; 124: 686-696.
+75. 75 Goyal M, Knackstedt T, Yan S, Hassanpour S. Artificial intelligence-based image classification methods for diagnosis of skin cancer: challenges and opportunities. Comput Biol Med. 2020; 127:104065.
+76. 76 Tschandl P, Rinner C, Apalla Z, et al. Human–computer collaboration for skin cancer recognition. Nat Med. 2020; 26: 1229-1234.
+77. 77 Hamamoto R, Komatsu M, Takasawa K, Asada K, Kaneko S. Epigenetics analysis and integrated analysis of multiomics data, including epigenetic data, using artificial intelligence in the era of precision medicine. Biomolecules. 2020; 10: 62.
+78. 78 He X, Liu X, Zuo F, Shi H, Jing J. Artificial intelligence-based multi-omics analysis fuels cancer precision medicine. Semin Cancer Biol. 2023; 88: 187-200.
+79. 79 Li S, Harner EJ, Adjeroh DA. Random KNN feature selection-a fast and stable alternative to random forests. BMC Bioinformatics. 2011; 12: 1-11.
+80. 80 Savova GK, Danciu I, Alamudun F, et al. Use of natural language processing to extract clinical cancer phenotypes from electronic medical records. Cancer Res. 2019; 79: 5463-5470.
+81. 81 Wang L, Luo L, Wang Y, Wampfler J, Yang P, Liu H. Natural language processing for populating lung cancer clinical research data. BMC Med Inform Decis Mak. 2019; 19: 1-10.
+82. 82 Aramaki E, Miyabe M, Honda C, et al. KOTOBAKARI study: using natural language processing of patient short narratives to detect cancer related cognitive impairment. MEDINFO 2019: Health and Wellbeing e-Networks for all. IOS Press; 2019: 1111-1115.
+83. 83 Zhu L, Rong Y, McGee LA, Rwigema J-CM, Patel SH. Testing and validation of a custom retrained large language model for the supportive care of HN patients with external knowledge base. Cancers (Basel). 2024; 16:2311.
+84. 84 Khene ZE, Bigot P, Mathieu R, Roupret M, Bensalah K, French Committee of Urologic Oncology. Development of a personalized chat model based on the European Association of Urology oncology guidelines: harnessing the power of generative artificial intelligence in clinical practice. Eur Urol Oncol. 2024; 7: 160-162.
+85. 85 Farquhar S, Kossen J, Kuhn L, Gal Y. Detecting hallucinations in large language models using semantic entropy. Nature. 2024; 630: 625-630.
+86. 86 Takahashi S, Takahashi M, Kinoshita M, et al. Fine-tuning approach for segmentation of gliomas in brain magnetic resonance images with a machine learning method to normalize image differences among facilities. Cancers (Basel). 2021; 13: 1415.
+87. 87 Murakami M. Overview of medical device regulations and recent updates. JNIPH. 2022; 71: 156-162.

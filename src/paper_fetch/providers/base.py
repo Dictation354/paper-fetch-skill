@@ -13,6 +13,7 @@ from ..artifacts import ArtifactStore
 from ..extraction.html import decode_html, render_html_markdown
 from ..http import RequestFailure
 from ..models import ArticleModel, AssetProfile
+from ..metadata.types import ProviderMetadata
 from ..runtime import RuntimeContext
 from ..tracing import (
     TraceEvent,
@@ -76,7 +77,7 @@ class ProviderContent:
     content_type: str
     body: bytes
     markdown_text: str | None = None
-    merged_metadata: dict[str, Any] | None = None
+    merged_metadata: Mapping[str, Any] | None = None
     diagnostics: dict[str, Any] = field(default_factory=dict)
     reason: str | None = None
     fetcher: str | None = None
@@ -154,7 +155,7 @@ class RawFulltextPayload:
     content: ProviderContent | None = None
     warnings: list[str] = field(default_factory=list)
     trace: list[TraceEvent] = field(default_factory=list)
-    merged_metadata: dict[str, Any] | None = None
+    merged_metadata: Mapping[str, Any] | None = None
     needs_local_copy: bool = False
     _legacy_metadata: dict[str, Any] = field(default_factory=dict, repr=False)
 
@@ -444,7 +445,7 @@ class ProviderClient:
     official_provider = True
     waterfall_steps: tuple[WaterfallStep, ...] = ()
 
-    def fetch_metadata(self, query: Mapping[str, str | None]) -> dict[str, Any]:
+    def fetch_metadata(self, query: Mapping[str, str | None]) -> ProviderMetadata:
         raise ProviderFailure(
             NOT_SUPPORTED, f"{self.name} metadata retrieval is not available."
         )
@@ -858,15 +859,10 @@ class ProviderClient:
             )
 
         if catalog.requires_browser_runtime:
-            from ..config import configured_browser_backend
             from .browser_runtime import probe_runtime_status
 
             runtime_status = probe_runtime_status(env, provider=self.name)
-            runtime_probe = (
-                "paper_fetch.providers._cloakbrowser.probe_runtime_status"
-                if configured_browser_backend(env) == "cloakbrowser"
-                else "paper_fetch.providers.browser_runtime.probe_runtime_status"
-            )
+            runtime_probe = "paper_fetch.providers.browser_runtime.probe_runtime_status"
             if runtime_status.status == ERROR:
                 browser_runtime_status = ERROR
             elif runtime_status.status == READY:

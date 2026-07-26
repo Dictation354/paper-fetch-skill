@@ -8,6 +8,7 @@ from typing import Any
 
 from .asset_fields import FULL_SIZE_IMAGE_ATTRS, PREVIEW_IMAGE_ATTRS
 from ...utils import normalize_text
+from ...xml_security import XmlParseFailure, parse_mathml_fragment
 from .provider_rules import (
     provider_display_formula_selectors,
     provider_formula_container_tokens,
@@ -413,8 +414,8 @@ def _parse_mathml(raw_mathml: str) -> ET.Element | None:
         return None
     for candidate in (raw_mathml, raw_mathml.replace("&nbsp;", " ")):
         try:
-            return ET.fromstring(candidate)
-        except ET.ParseError:
+            return parse_mathml_fragment(candidate)
+        except XmlParseFailure:
             continue
     return None
 

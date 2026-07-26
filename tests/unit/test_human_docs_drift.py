@@ -31,6 +31,7 @@ HUMAN_ONLY_API_ALLOWLIST = frozenset(
         "ArticleModel.source",
         "ArtifactStore",
         "AssetRetryPolicy",
+        "BrowserWorkflowClient",
         "DEFAULT_FULLTEXT_TIMEOUT_SECONDS",
         "FetchEnvelope",
         "Figures",

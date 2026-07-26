@@ -4,7 +4,7 @@ import base64
 from typing import Any
 from collections.abc import Callable
 
-from paper_fetch.providers import _cloakbrowser
+from paper_fetch.providers import _playwright_browser
 
 
 PNG_BYTES = base64.b64decode(
@@ -104,7 +104,7 @@ def test_capture_image_payload_returns_png_for_image_response() -> None:
         )
     )
 
-    payload = _cloakbrowser._capture_image_payload(
+    payload = _playwright_browser._capture_image_payload(
         page,
         request_url=image_url,
         final_url=image_url,
@@ -140,7 +140,7 @@ def test_capture_image_payload_uses_canvas_when_response_is_challenge() -> None:
         },
     )
 
-    payload = _cloakbrowser._capture_image_payload(
+    payload = _playwright_browser._capture_image_payload(
         page,
         request_url=image_url,
         final_url=final_url,
@@ -165,7 +165,7 @@ def test_capture_image_payload_preserves_svg() -> None:
         )
     )
 
-    payload = _cloakbrowser._capture_image_payload(
+    payload = _playwright_browser._capture_image_payload(
         page,
         request_url=image_url,
         final_url=image_url,
@@ -187,7 +187,7 @@ def test_capture_image_payload_rejects_html_only() -> None:
         html="<html><body>Image wrapper</body></html>",
     )
 
-    payload = _cloakbrowser._capture_image_payload(
+    payload = _playwright_browser._capture_image_payload(
         page,
         request_url=image_url,
         final_url=image_url,

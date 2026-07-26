@@ -91,9 +91,9 @@ fi
 
 log "Installing paper-fetch-skill Python package"
 if [ "$EDITABLE" = "1" ]; then
-    "$PYTHON_BIN" -m pip install --quiet --editable "$REPO_DIR"
+    "$PYTHON_BIN" -m pip install --quiet --editable "${REPO_DIR}[full]"
 else
-    "$PYTHON_BIN" -m pip install --quiet "$REPO_DIR"
+    "$PYTHON_BIN" -m pip install --quiet "${REPO_DIR}[full]"
 fi
 
 if [ -f "$REPO_DIR/.env.example" ]; then

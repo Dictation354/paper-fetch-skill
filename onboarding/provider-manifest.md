@@ -118,7 +118,7 @@ route_sources:
 |---|---|---:|---|---|
 | `env_requirements` | array[string] | 是 | item string | provider status 和 live sample 所需环境变量。 |
 | `requires_playwright` | boolean | 是 | boolean | 声明是否依赖 browser runtime。 |
-| `requires_browser_runtime` | boolean | 是 | boolean | 声明是否依赖 CloakBrowser runtime。 |
+| `requires_browser_runtime` | boolean | 是 | boolean | 声明是否依赖 Camoufox browser runtime。 |
 | `ping_url` | string/null | 否 | URI 或 `null` | status probe 或人工排查入口。 |
 
 ## `fixtures.doi_samples`

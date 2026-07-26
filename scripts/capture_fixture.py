@@ -828,7 +828,6 @@ def _browser_capture_error(
     normalized_reason = str(reason or "").strip()
     if normalized_reason in {
         "browser_runtime_unavailable",
-        "cloakbrowser_launch_failed",
         "missing_browser_runtime",
         "not_configured",
     }:

@@ -7,7 +7,7 @@ import re
 import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Any
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 
 from ._article_markdown_common import (
     add_figure_once,
@@ -247,15 +247,15 @@ def render_elsevier_display_block(
         return lines
     if display_kind == "table":
         table_refs = extract_elsevier_display_table_refs(element)
-        lines: list[str] = []
+        table_lines: list[str] = []
         for table_ref in table_refs:
             add_elsevier_table_once(
-                lines,
+                table_lines,
                 table_lookup.get(table_ref),
                 used_table_keys,
                 inside_appendix=inside_appendix,
             )
-        return lines
+        return table_lines
     if display_kind == "supplementary":
         return []
     if display_kind == "formula":
@@ -271,7 +271,7 @@ def render_elsevier_blocks(
     *,
     heading_level: int,
     figure_lookup: Mapping[str, Mapping[str, str]] | None = None,
-    figure_entries: list[Mapping[str, str]] | None = None,
+    figure_entries: Sequence[Mapping[str, Any]] | None = None,
     used_figure_keys: set[str] | None = None,
     table_lookup: Mapping[str, Mapping[str, Any]] | None = None,
     used_table_keys: set[str] | None = None,
@@ -727,17 +727,17 @@ def elsevier_supplement_entries(
                 locator = (node.get("locator") or "").strip()
                 if locator:
                     break
-        asset = supplementary_assets.get(locator) or supplementary_assets.get(
+        matched_asset = supplementary_assets.get(locator) or supplementary_assets.get(
             normalize_text(locator)
         )
-        if not asset or asset["path"] in used_paths:
+        if not matched_asset or matched_asset["path"] in used_paths:
             continue
-        used_paths.add(asset["path"])
+        used_paths.add(matched_asset["path"])
         entries.append(
             {
-                "heading": label or Path(asset["path"]).name,
+                "heading": label or Path(matched_asset["path"]).name,
                 "caption": caption,
-                "link": path_relative_to(markdown_path.parent, asset["path"]),
+                "link": path_relative_to(markdown_path.parent, matched_asset["path"]),
                 "path": str(asset["path"]),
                 "section": "supplementary",
             }

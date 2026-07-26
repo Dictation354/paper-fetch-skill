@@ -1,5 +1,5 @@
 ---
-title: "10.3390/w15040758"
+title: "Homogenous UV/Periodate Process for the Treatment of Acid Orange 10 Polluted Water"
 authors: "Maroua Nessaibia, Houria Ghodbane, Hana Ferkous, Slimane Merouani, Manawwer Alam, Marco Balsamo, Yacine Benguerba, Alessandro Erto"
 doi: "10.3390/w15040758"
 source: "mdpi_html"
@@ -9,13 +9,11 @@ has_abstract: true
 token_estimate: 9168
 ---
 
-# 10.3390/w15040758
+# Homogenous UV/Periodate Process for the Treatment of Acid Orange 10 Polluted Water
 
 ## Abstract
 
 The photoactivated periodate (UV/IO 4 −) process is used to investigate the degradation of acid orange 10 (AO10) dye. The photodecomposition of periodate ions produces highly reactive radicals (i.e., • OH, IO 3 •, and IO 4 •) that accelerate dye degradation. Increasing the initial concentration of periodate to 3 mM enhances the dye removal rate, but over 3 mM periodate, the degradation rate slows down. On the contrary, increasing initial dye concentrations reduces the degradation performance. pH is the most critical factor in AO10 breakdown. Salts slow down the degradation of the dye. However, UV/IO 4 − is more efficient in distilled water than natural water. Even at low concentrations, surfactants may affect the dye’s decomposition rate. The addition of sucrose reduced the breakdown of AO10. Although tertbutanol is a very effective • OH radical scavenger, it does not affect the dye breakdown even at the highest concentrations. Accordingly, the AO10 degradation is a non- • OH pathway route. According to retrieved data, the photoactivated periodate method eliminated 56.5 and 60.5% of the initial COD after 60 and 120 min of treatment time; therefore, it can be concluded that the UV/IO 4 − system may treat effluents, especially those containing textile dyes.
-
-## Homogenous UV/Periodate Process for the Treatment of Acid Orange 10 Polluted Water
 
 ## 1. Introduction
 

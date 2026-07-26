@@ -8,14 +8,14 @@ source: "ams_pdf"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: false
-token_estimate: 6355
+token_estimate: 6325
 ---
 
 # Integrating High-Resolution Modeling with Diverse Field Campaign Observations through an Open Science Summer School
 
-## **Integrating High-Resolution Modeling with Diverse Field Campaign Observations through an Open Science Summer School**
+<!-- Start of picture text -->, Ya-Chien Feng e,<br>g, Robert C.<br>, Damao Zhang e<br><!-- End of picture text -->
 
-Maxwell A. Grover[a], Scott Collis[a,b], Daniel Feldman[c], Ann Fridlind[d], Ya-Chien Feng[e], Michael Giansiracusa[f], Sujata Goswami[f], William I. Gustafson Jr.[e], Thijs Heus[g], Robert C. Jackson[a,b], Timothy W. Juliano[i], Lishan Li[h], Joseph R. O’Brien[a], Damao Zhang[e]
+Maxwell A. Grover<sup>a</sup>, Scott Collis<sup>a,b</sup>, Daniel Feldman<sup>c</sup>, Ann Fridlind<sup>d</sup>, Ya-Chien Feng<sup>e</sup>, Michael Giansiracusa<sup>f</sup>, Sujata Goswami<sup>f</sup>, William I. Gustafson Jr.<sup>e</sup>, Thijs Heus<sup>g</sup>, Robert C. Jackson<sup>a,b</sup>, Timothy W. Juliano<sup>i</sup>, Lishan Li<sup>h</sup>, Joseph R. O’Brien<sup>a</sup>, Damao Zhang<sup>e</sup>
 
 > a _Argonne National Laboratory, Lemont, Illinois_
 
@@ -65,11 +65,7 @@ Accepted for publication in _Bulletin of the American Meteorological Society._ D
 
 Brought to you by Peking University | Unauthenticated | Downloaded 05/12/26 10:23 AM UTC
 
-**==> picture [452 x 302] intentionally omitted <==**
-
 **Figure 1.** A picture of all the participants and instructors in 2024 ARM Summer School at Cleveland State University.
-
-**==> picture [452 x 302] intentionally omitted <==**
 
 3
 
@@ -85,15 +81,12 @@ Instructors represented a wide range of scientific expertise and covered the ful
 
 interoperable, and reproducible). Open-source software to work with the data was extensively utilized. The event served as a venue for instructors to gather feedback from and collaborate with scientific users, and to ensure that the students learn new tools available from the ARM user facility. Instructors served as project mentors, collaborating with the individual teams and offered advice and feedback on students’ own research.
 
-|||||||
-|---|---|---|---|---|---|
-|Date|Time|Topic|||Presenter|
-|Sunday<br>19 May 2024|6:00 PM - 7:00 PM|||Welcome and<br>Icebreaker|Maxwell Grover and<br>Scott Collis|
-|Monday<br>20 May 2024|08:30 AM - 09:30<br>AM|||Intro to ARM+<br>Welcome|Sally McFarlane and<br>Jim Mather|
-|||||||
-|Monday<br>20 May 2024|09:30 AM - 10:00<br>AM|||Coffee Break||
-|Monday<br>20 May 2024|10:00 AM - 11:00<br>AM||Intro to ARM Data<br>Workbench||Sujata Goswami and<br>Michael<br>Giansiracusa|
-|||||||
+|Date|Time|Topic|Presenter|
+|---|---|---|---|
+|Sunday<br>19 May 2024|6:00 PM - 7:00 PM|Welcome and<br>Icebreaker|Maxwell Grover and<br>Scott Collis|
+|Monday<br>20 May 2024|08:30 AM - 09:30<br>AM|Intro to ARM+<br>Welcome|Sally McFarlane and<br>Jim Mather|
+|Monday<br>20 May 2024|09:30 AM - 10:00<br>AM|Coffee Break||
+|Monday<br>20 May 2024|10:00 AM - 11:00<br>AM|Intro to ARM Data<br>Workbench|Sujata Goswami and<br>Michael<br>Giansiracusa|
 
 4
 
@@ -101,26 +94,23 @@ Accepted for publication in _Bulletin of the American Meteorological Society._ D
 
 Brought to you by Peking University | Unauthenticated | Downloaded 05/12/26 10:23 AM UTC
 
-||||||
-|---|---|---|---|---|
-|Monday<br>20 May 2024|11:00 AM - 12:00<br>PM||Intro to ARM Open<br>Source Software|Scott Collis and<br>Joseph O'Brien|
-|Monday<br>20 May 2024|12:00 PM - 01:00<br>PM|E|Working Lunch:<br>levator Pitch Intros|Maxwell Grover|
-|Monday<br>20 May 2024|01:00 PM - 01:45<br>PM||Intro to COMBLE-<br>MIP|Timothy Juliano|
-|Monday<br>20 May 2024|01:45 PM - 02:30<br>PM||Intro to LASSO|William Gustafson|
-|Monday<br>20 May 2024|02:30 PM - 03:00<br>PM||Coffee Break||
-|Monday<br>20 May 2024|03:00 PM - 03:45<br>PM||Intro to SAIL and<br>WRF Model Data|Daniel Feldman|
-|Monday<br>20 May 2024|03:45 PM - 05:00<br>PM||Break into Groups!<br>Find data!|Maxwell Grover and<br>Scott Collis|
-|Tuesday<br>21 May 2024|08:30 AM - 09:30<br>AM|A|I/Machine Learning<br>for Data Quality|Mia Li|
-|Tuesday<br>21 May 2024|09:30 AM - 10:00<br>AM||Coffee Break||
-|Tuesday<br>21 May 2024|10:00 AM - 11:00<br>AM||Aerosol+Profiling<br>Measurements in<br>ARM|Damao Zhang and<br>Robert Jackson|
-||||||
-|Tuesday<br>21 May 2024|11:00 AM - 12:00<br>PM|I|ntro to ARM Radar<br>Data Products|Ya-Chien Feng and<br>Joseph O'Brien|
-|Tuesday<br>21 May 2024|12:00 PM - 01:00<br>PM|W|orking Lunch: Intro<br>to xwrf|Maxwell Grover|
-||||||
-|Tuesday<br>21 May 2024|01:00 PM - 05:00<br>PM||Break into Groups:<br>Plot Data!||
-|Wednesday<br>22 May 2024|08:30 AM - 09:30<br>AM||An Introduction to<br>LES Modeling|Thijs Heus|
-|Wednesday<br>22 May 2024|09:30 AM - 10:00<br>AM||Coffee Break||
-|Wednesday<br>22 May 2024|10:00 AM - 11:15<br>AM|A|nalyzing Data from<br>LASSO at Scale|William Gustafson<br>and Maxwell Grover|
+|Monday<br>20 May 2024|11:00 AM - 12:00<br>PM|Intro to ARM Open<br>Source Software|Scott Collis and<br>Joseph O'Brien|
+|---|---|---|---|
+|Monday<br>20 May 2024|12:00 PM - 01:00<br>PM|Working Lunch:<br>Elevator Pitch Intros|Maxwell Grover|
+|Monday<br>20 May 2024|01:00 PM - 01:45<br>PM|Intro to COMBLE-<br>MIP|Timothy Juliano|
+|Monday<br>20 May 2024|01:45 PM - 02:30<br>PM|Intro to LASSO|William Gustafson|
+|Monday<br>20 May 2024|02:30 PM - 03:00<br>PM|Coffee Break||
+|Monday<br>20 May 2024|03:00 PM - 03:45<br>PM|Intro to SAIL and<br>WRF Model Data|Daniel Feldman|
+|Monday<br>20 May 2024|03:45 PM - 05:00<br>PM|Break into Groups!<br>Find data!|Maxwell Grover and<br>Scott Collis|
+|Tuesday<br>21 May 2024|08:30 AM - 09:30<br>AM|AI/Machine Learning<br>for Data Quality|Mia Li|
+|Tuesday<br>21 May 2024|09:30 AM - 10:00<br>AM|Coffee Break||
+|Tuesday<br>21 May 2024|10:00 AM - 11:00<br>AM|Aerosol+Profiling<br>Measurements in<br>ARM|Damao Zhang and<br>Robert Jackson|
+|Tuesday<br>21 May 2024|11:00 AM - 12:00<br>PM|Intro to ARM Radar<br>Data Products|Ya-Chien Feng and<br>Joseph O'Brien|
+|Tuesday<br>21 May 2024|12:00 PM - 01:00<br>PM|Working Lunch: Intro<br>to xwrf|Maxwell Grover|
+|Tuesday<br>21 May 2024|01:00 PM - 05:00<br>PM|Break into Groups:<br>Plot Data!||
+|Wednesday<br>22 May 2024|08:30 AM - 09:30<br>AM|An Introduction to<br>LES Modeling|Thijs Heus|
+|Wednesday<br>22 May 2024|09:30 AM - 10:00<br>AM|Coffee Break||
+|Wednesday<br>22 May 2024|10:00 AM - 11:15<br>AM|Analyzing Data from<br>LASSO at Scale|William Gustafson<br>and Maxwell Grover|
 
 5
 
@@ -128,27 +118,21 @@ Accepted for publication in _Bulletin of the American Meteorological Society._ D
 
 Brought to you by Peking University | Unauthenticated | Downloaded 05/12/26 10:23 AM UTC
 
-|||||||||
-|---|---|---|---|---|---|---|---|
-|Wednesday<br>22 May 2024|11:15 AM - 12:00<br>PM||Instrument<br>Simulators 101 with<br>COMBLE||||Robert Jackson|
-|||||||||
-|Wednesday<br>22 May 2024|12:00 PM - 01:00<br>PM||Working Lunch:<br>Installing Python<br>Locally||||Maxwell Grover|
-|Wednesday<br>22 May 2024|01:00 PM - 05:00<br>PM||Break into Groups:<br>Ask Questions!|||||
-|Thursday<br>23 May 2024|08:30 AM - 10:00<br>AM|||||Radar Data<br>Retrievals|Joseph O'Brien|
-|Thursday<br>23 May 2024|10:00 AM - 10:30<br>AM||Coffee Break|||||
-|Thursday<br>23 May 2024|10:30 AM - 12:00<br>PM|Office Hours: How is<br>it going?||||||
-|Thursday<br>23 May 2024|12:00 PM - 01:00<br>PM||||Working Lunch:<br>Dask 101||Max Grover|
-|||||||||
-|Thursday<br>23 May 2024|01:00 PM - 05:00<br>PM||Draft Presentations<br>and Demos|||||
-|Friday<br>24 May 2024|08:30 AM - 09:00<br>AM||Next Steps with the<br>Jupyterhub+ARM||||Michael<br>Giansiracusa|
-|Friday<br>24 May 2024|09:00 AM - 09:30<br>AM|||LES and Climate<br>Modeling with<br>COMBLE|||Ann Fridlind|
-|||||||||
-|Friday<br>24 May 2024|09:00 AM - 09:30<br>AM||||Survey Time+<br>Coffee||Maxwell Grover and<br>Scott Collis|
-|||||||||
-|Friday<br>24 May 2024|10:00 AM - 12:00<br>PM||||Project<br>Presentations:<br>Notebooks!|||
-|||||||||
-|Friday<br>24 May 2024|12:00 PM - 01:00<br>PM||Working Lunch:<br>Contribute to Pythia||||Maxwell Grover|
-||01:00 PM - 01:30<br>PM|||Closing Remarks|||Maxwell Grover and<br>Scott Collis|
+|Wednesday<br>22 May 2024|11:15 AM - 12:00<br>PM|Instrument<br>Simulators 101 with<br>COMBLE|Robert Jackson|
+|---|---|---|---|
+|Wednesday<br>22 May 2024|12:00 PM - 01:00<br>PM|Working Lunch:<br>Installing Python<br>Locally|Maxwell Grover|
+|Wednesday<br>22 May 2024|01:00 PM - 05:00<br>PM|Break into Groups:<br>Ask Questions!||
+|Thursday<br>23 May 2024|08:30 AM - 10:00<br>AM|Radar Data<br>Retrievals|Joseph O'Brien|
+|Thursday<br>23 May 2024|10:00 AM - 10:30<br>AM|Coffee Break||
+|Thursday<br>23 May 2024|10:30 AM - 12:00<br>PM|Office Hours: How is<br>it going?||
+|Thursday<br>23 May 2024|12:00 PM - 01:00<br>PM|Working Lunch:<br>Dask 101|Max Grover|
+|Thursday<br>23 May 2024|01:00 PM - 05:00<br>PM|Draft Presentations<br>and Demos||
+|Friday<br>24 May 2024|08:30 AM - 09:00<br>AM|Next Steps with the<br>Jupyterhub+ARM|Michael<br>Giansiracusa|
+|Friday<br>24 May 2024|09:00 AM - 09:30<br>AM|LES and Climate<br>Modeling with<br>COMBLE|Ann Fridlind|
+|Friday<br>24 May 2024|09:00 AM - 09:30<br>AM|Survey Time+<br>Coffee|Maxwell Grover and<br>Scott Collis|
+|Friday<br>24 May 2024|10:00 AM - 12:00<br>PM|Project<br>Presentations:<br>Notebooks!||
+|Friday<br>24 May 2024|12:00 PM - 01:00<br>PM|Working Lunch:<br>Contribute to Pythia|Maxwell Grover|
+||01:00 PM - 01:30<br>PM|Closing Remarks|Maxwell Grover and<br>Scott Collis|
 
 **Table 1.** Schedule from the 2024 ARM Summer School including date, time, titles and associated links to the presentations as well as the presenter(s).
 
@@ -177,8 +161,6 @@ Students gained valuable experience forming testable scientific hypotheses and c
 Accepted for publication in _Bulletin of the American Meteorological Society._ DOI 10.1175/BAMS-D-24-0270.1.
 
 Brought to you by Peking University | Unauthenticated | Downloaded 05/12/26 10:23 AM UTC
-
-**==> picture [452 x 254] intentionally omitted <==**
 
 **Figure 3.** Key figures from each group project: (a) Large Scale Forcing Impact on Shallow Cumulus Fields over SGP, (b) CACTI Deep Convection Initiation, (c) Comparing Cold-Air Outbreak Conditions at COMBLE and the North Slope of Alaska (NSA), (d) Aerosol Influence on Snow Albedo During SAIL.
 
@@ -368,7 +350,7 @@ Accepted for publication in _Bulletin of the American Meteorological Society._ D
 
 Brought to you by Peking University | Unauthenticated | Downloaded 05/12/26 10:23 AM UTC
 
-gathered feedback from this year's event, including how students received information about the application process and their experience at the event. Over 60% of students received information about the event from a professor or colleague. All outgoing students indicated that they now had a better understanding of the ARM user facility, data products, open-source computing tools and resources, with 90% of students indicating they strongly agree they left with a better understanding of ARM’s capabilities and associated data products. Most students mentioned they most enjoyed the group projects, especially the hands-on experience and collaboration with others. It is planned that the group projects will continue to be a central pillar of the summer school. Key areas of potential improvement include instruction on collaborative project management using Github/Git and modifying the daily working lunch to a break, allowing students to step away from the content in the middle of the day. The ARM workforce development team looks forward to next year’s event, where they will incorporate changes based on feedback and suggestions from this year’s cohort, thereby improving the ARM Summer School for future participants. Students interested in future workforce development efforts should sign up for the ARM newsletter on https://www.arm.gov/.
+gathered feedback from this year's event, including how students received information about the application process and their experience at the event. Over 60% of students received information about the event from a professor or colleague. All outgoing students indicated that they now had a better understanding of the ARM user facility, data products, open-source computing tools and resources, with 90% of students indicating they strongly agree they left with a better understanding of ARM’s capabilities and associated data products. Most students mentioned they most enjoyed the group projects, especially the hands-on experience and collaboration with others. It is planned that the group projects will continue to be a central pillar of the summer school. Key areas of potential improvement include instruction on collaborative project management using Github/Git and modifying the daily working lunch to a break, allowing students to step away from the content in the middle of the day. The ARM workforce development team looks forward to next year’s event, where they will incorporate changes based on feedback and suggestions from this year’s cohort, thereby improving the ARM Summer School for future participants. Students interested in future workforce development efforts should sign up for the ARM newsletter on <u>https://www.arm.gov/.</u>
 
 ## _Acknowledgements._
 
@@ -384,4 +366,4 @@ Brought to you by Peking University | Unauthenticated | Downloaded 05/12/26 10:2
 
 ## _Data Availability Statement._
 
-All materials from the event are openly available to the community, hosted on Github https://github.com/ARM-Development/arm-summer-school-2024.
+All materials from the event are openly available to the community, hosted on Github <u>https://github.com/ARM-Development/arm-summer-school-2024.</u>

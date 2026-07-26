@@ -23,7 +23,7 @@ from ....config import (
 )
 from ....reason_codes import ERROR, NOT_CONFIGURED, OK, READY
 from ....utils import normalize_text, sanitize_filename
-from ... import _cloakbrowser
+from ... import _playwright_browser
 from ...base import (
     ProviderFailure,
     ProviderStatusResult,
@@ -147,7 +147,7 @@ class CamoufoxBackend:
             timeout_ms=parse_positive_int_env(
                 {BROWSER_TIMEOUT_MS_ENV_VAR: timeout_value},
                 BROWSER_TIMEOUT_MS_ENV_VAR,
-                default=_cloakbrowser.DEFAULT_BROWSER_RUNTIME_MAX_TIMEOUT_MS,
+                default=_playwright_browser.DEFAULT_BROWSER_RUNTIME_MAX_TIMEOUT_MS,
             ),
             binary_path=binary_path,
             profile_dir=profile_dir,
@@ -277,7 +277,7 @@ class CamoufoxBackend:
         config: BrowserRuntimeConfig,
         **kwargs: Any,
     ) -> BrowserFetchedHtml:
-        return _cloakbrowser.fetch_html_with_cloakbrowser(
+        return _playwright_browser.fetch_html_with_playwright(
             candidate_urls,
             publisher=publisher,
             config=config,
@@ -294,7 +294,7 @@ class CamoufoxBackend:
         runtime_context: Any | None = None,
         lightweight: bool = False,
     ) -> dict[str, Any]:
-        return _cloakbrowser.warm_browser_context_with_cloakbrowser(
+        return _playwright_browser.warm_browser_context_with_playwright(
             candidate_urls,
             publisher=publisher,
             config=config,

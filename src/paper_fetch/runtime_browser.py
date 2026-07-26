@@ -22,7 +22,6 @@ from typing import Any
 
 from filelock import FileLock, Timeout
 
-from ._cloakbrowser_runtime import import_cloakbrowser
 from .config import resolve_user_data_dir
 from .reason_codes import (
     BROWSER_CONTEXT_CREATE_FAILED,
@@ -221,9 +220,7 @@ def _cmdline_matches_managed_profile(cmdline: str, profile_dir: Path) -> bool:
     if not normalized:
         return False
     lowered = normalized.lower()
-    browser_named = any(
-        token in lowered for token in ("chrome", "chromium", "cloakbrowser")
-    )
+    browser_named = any(token in lowered for token in ("chrome", "chromium"))
     profile_tokens = {
         f"--user-data-dir={profile_dir}",
         f"--user-data-dir={profile_dir.resolve(strict=False)}",
@@ -579,29 +576,34 @@ def _unused_tcp_port() -> int:
         return int(sock.getsockname()[1])
 
 
-def _resolve_cloakbrowser_binary(binary_path: str | None = None) -> str:
+def _resolve_browser_binary(binary_path: str | None = None) -> str:
     active_binary = str(binary_path or "").strip()
     if active_binary:
         path = Path(active_binary).expanduser()
         if not path.is_file():
             raise RuntimeError(
-                f"CLOAKBROWSER_BINARY_PATH is set but does not point to a file: {path}"
+                f"Configured browser binary does not point to a file: {path}"
             )
         return str(path)
 
     try:
-        cloakbrowser = import_cloakbrowser()
-    except Exception as exc:
-        raise RuntimeError(
-            f"CloakBrowser Python package is not importable: {exc}"
-        ) from exc
+        from playwright.sync_api import sync_playwright
 
-    try:
-        return str(cloakbrowser.ensure_binary())
+        playwright = sync_playwright().start()
+        try:
+            path = Path(playwright.chromium.executable_path)
+        finally:
+            playwright.stop()
     except Exception as exc:
         raise RuntimeError(
-            f"CloakBrowser Chrome binary is not available: {exc}"
+            f"Playwright Chromium binary could not be resolved: {exc}"
         ) from exc
+    if not path.is_file():
+        raise RuntimeError(
+            "Playwright Chromium is not installed; install the browser extra and run "
+            "`playwright install chromium`, or configure a browser binary explicitly."
+        )
+    return str(path)
 
 
 def _build_managed_chrome_args(
@@ -617,27 +619,10 @@ def _build_managed_chrome_args(
         "--no-first-run",
         "--no-default-browser-check",
     ]
-    try:
-        import cloakbrowser
-
-        built_args = list(
-            cloakbrowser.build_args(
-                True,
-                args,
-                locale=DEFAULT_BROWSER_LOCALE,
-                headless=headless,
-            )
-        )
-        has_headless_flag = any(
-            arg == "--headless" or arg.startswith("--headless=") for arg in built_args
-        )
-        if headless and not has_headless_flag:
-            built_args.append("--headless=new")
-        return built_args
-    except Exception:
-        if headless:
-            args.append("--headless=new")
-        return args
+    args.append(f"--lang={DEFAULT_BROWSER_LOCALE}")
+    if headless:
+        args.append("--headless=new")
+    return args
 
 
 def _wait_for_cdp_endpoint(
@@ -867,7 +852,7 @@ class BrowserContextManager:
         profile_dir = self.profile_dir or self.user_data_dir
         if profile_dir is not None:
             return Path(profile_dir).expanduser()
-        return resolve_user_data_dir() / "cloakbrowser-cdp-profile"
+        return resolve_user_data_dir() / "chromium-cdp-profile"
 
     def _ensure_managed_cdp_endpoint(self, *, headless: bool) -> str:
         if (
@@ -881,7 +866,7 @@ class BrowserContextManager:
         self._stop_managed_process()
         self._release_profile_lock()
 
-        binary_path = _resolve_cloakbrowser_binary(self.binary_path)
+        binary_path = _resolve_browser_binary(self.binary_path)
         profile_dir = self._managed_profile_dir()
         profile_dir.mkdir(parents=True, exist_ok=True)
         self._acquire_profile_lock(profile_dir)

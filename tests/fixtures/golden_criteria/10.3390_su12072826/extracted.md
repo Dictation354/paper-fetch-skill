@@ -1,5 +1,5 @@
 ---
-title: "10.3390/su12072826"
+title: "Effectiveness Evaluation of Financing Platform Operation of Buildings Energy Saving Transformation Using ANP-Fuzzy in China: An Empirical Study"
 authors: "Handing Guo, Wanzhen Qiao, Yuehong Zheng"
 doi: "10.3390/su12072826"
 source: "mdpi_html"
@@ -9,13 +9,11 @@ has_abstract: true
 token_estimate: 13417
 ---
 
-# 10.3390/su12072826
+# Effectiveness Evaluation of Financing Platform Operation of Buildings Energy Saving Transformation Using ANP-Fuzzy in China: An Empirical Study
 
 ## Abstract
 
 Building energy saving transformation is an inevitable requirement to achieve sustainable development, which can bring considerable economic, environmental, and social benefits. The key to healthy development of the market lies in the orderly operation of the financing platform. The effectiveness of the financing platform depends on scientific evaluation. Therefore, it is necessary to design a set of systematic and practical evaluation indicators for operational effectiveness of the buildings energy saving transformation financing platform, so as to provide reference for the effective operation of the financing platform, and provide measurement means for scholars to conduct quantitative research on the financing platform. This paper analyzes the effectiveness evaluation content for the financing platform operation of buildings energy saving transformation from the two levels of operation mechanism and operation subject behavior. Combined with the particularity of the financing platform of building energy saving transformation, the operational effectiveness evaluation index system of the financing platform is designed from three levels. The Analytic Network Process (ANP) method is applied to construct network structure, to describe element correlation, and to calculate index weight. The fuzzy comprehensive evaluation (Fuzzy) method was used to carry out quantitative evaluation of qualitative indicators. The Energy Performance Contracting (EPC) financing platform in Beijing was taken as an example to make an empirical analysis. The results show that the operational effectiveness evaluation system of the financing platform of buildings energy saving transformation constructed in this paper has certain practicability. In this evaluation system, scores of target consistency, the degree of information sharing among departments and coordination of operation mechanism are low. Finally, some policy suggestions are put forward to optimize financing platform of buildings energy saving transformation in China.
-
-## Effectiveness Evaluation of Financing Platform Operation of Buildings Energy Saving Transformation Using ANP-Fuzzy in China: An Empirical Study
 
 ## 1. Introduction
 

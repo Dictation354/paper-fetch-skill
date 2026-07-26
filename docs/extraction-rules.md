@@ -1664,6 +1664,7 @@ PNAS 的 supplementary 资产范围见 [Supplementary discovery 必须来自明�
   - [`../tests/unit/test_royalsocietypublishing_provider.py`](../tests/unit/test_royalsocietypublishing_provider.py) 中的 `test_markdown_contract_figure_fixture`
 - 边界说明：
   - 这条规则只针对 Royal Society Publishing/Silverchair 的 HTML figure wrapper；共享 figure container 判定只接受真实 `<figure>`、精确 `class="figure"` 这类显式通用 figure 容器，或显式 Silverchair `fig fig-section` / `js-fig-section` / 受这些祖先约束的 `graphic-wrap`，不能因为普通正文 wrapper、section、anchor id/href 中出现 `-f` 或 `figure` 就提升为 figure。
+  - 同一逻辑 figure 同时暴露 `/view-large/figure/.../*.tif` 和 Silverchair CDN `image_*.jpg` 时，必须按 DOM id 与去除 `m_`/扩展名后的规范化 figure basename 合并；合并结果保留 full-size URL、preview URL、明确图号和最长有效 caption。
   - PDF fallback Markdown 统一由 shared `pymupdf4llm` 转换产生；`body/all` 且允许 artifact 落盘时，PDF 图片由 shared 转换导出到 `<doi>_assets/`。provider 只负责获取并校验真实 PDF、设置 source/route，不添加 provider-owned Markdown cleanup、front matter reconstruction、水印移除或 reference extraction。
   - HTML 正文已包含可读 figure caption 时，远程图 URL 可以只作为资产原始链接保留；最终 Markdown 至少要保留 caption 文本，不能输出空 caption placeholder。
 

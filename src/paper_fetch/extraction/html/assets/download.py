@@ -344,18 +344,19 @@ def _request_asset_candidate(
             headers=request_headers,
             timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
             browser_cookies=browser_cookies,
+            cancel_check=lambda: transport.cancelled,
+            force=kind.name == "supplementary",
         )
         if browser_cookies or active_seed_urls or kind.name == "supplementary"
         else None
     )
-    if opener is None and kind.name == "supplementary":
-        opener = urllib.request.build_opener()
     if opener is not None:
         return opener_requester(
             opener,
             candidate_url,
             headers=request_headers,
             timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
+            cancel_check=lambda: transport.cancelled,
         )
     return transport.request(
         "GET",

@@ -11,7 +11,7 @@ from mcp.client.stdio import StdioServerParameters, stdio_client
 
 from tests.live._runtime_env import (
     build_isolated_live_env,
-    require_cloakbrowser_or_skip,
+    require_selected_browser_or_skip,
 )
 from tests.provider_benchmark_samples import (
     provider_benchmark_sample,
@@ -113,7 +113,7 @@ class LiveMcpServerTests(unittest.IsolatedAsyncioTestCase):
     ) -> None:
         self._require_env(*sample.required_env)
         if needs_browser_runtime:
-            require_cloakbrowser_or_skip(self)
+            require_selected_browser_or_skip(self, self.env)
 
         result, progress_updates, log_messages = await self._call_fetch(
             query=sample.doi,

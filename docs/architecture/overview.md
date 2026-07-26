@@ -108,7 +108,7 @@ Date: 2026-07-10
 
 现有 MCP `batch_resolve` / `batch_check` / `batch_fetch` 与 CLI batch 都通过这个 runner 调度。前两个 probe/resolve 工具保持既有兼容调度；`batch_fetch` 在提交前只调用 catalog-backed URL/DOI 身份 helper 推断 provider lane，一个 lane 限流后把该 lane 的后续输入终态化为未调度，其他 lane 继续。它的 `results` 按原 1-based input index 返回，`completion_order` 单独投影完成顺序，progress 使用完整终态计数。
 
-`RuntimeContext` 是 service/workflow 的显式运行时依赖容器，持有 `env`、`transport`、`clients`、`download_dir`、`cancel_check`、`artifact_store`、可选 `fetch_cache`，以及单次 fetch 生命周期内的 `parse_cache`、`session_cache` 和 `stage_timings`。Browser provider 只依赖 `paper_fetch.providers.browser_runtime` facade；生产 backend 是 CloakBrowser，storage/profile 路径由 `browser_runtime.paths` 统一解析。Browser 生命周期由 CDP-only `paper_fetch.runtime_browser.BrowserContextManager` 管理；managed Chrome manager 会按 browser 配置在同一进程内共享引用，batch scope 在条目引用短暂归零时继续持有 manager，具体 context/page 使用调用线程自己的 CDP 连接，最终 batch/进程退出时清理。manager 在 paper-fetch profile lock 内保守核验 Chromium singleton，只有 PID/profile、socket、host 与 owner 共同证明 stale 时才移入诊断目录并至多重试一次启动。公开 service API 只接受 `context=`；调用方必须先构造 `RuntimeContext`，再交给 `paper_fetch.workflow.pipeline.FetchPipeline`。
+`RuntimeContext` 是 service/workflow 的显式运行时依赖容器，持有 `env`、`transport`、`clients`、`download_dir`、`cancel_check`、`artifact_store`、可选 `fetch_cache`，以及单次 fetch 生命周期内的 `parse_cache`、`session_cache` 和 `stage_timings`。Browser provider 只依赖 `paper_fetch.providers.browser_runtime` facade；生产 backend 是 Camoufox，storage/profile 路径由 `browser_runtime.paths` 统一解析。同一 owning thread 在一个 `RuntimeContext` 内复用 Camoufox process，每项操作创建隔离 context/page，batch/进程退出时统一清理。公开 service API 只接受 `context=`；调用方必须先构造 `RuntimeContext`，再交给 `paper_fetch.workflow.pipeline.FetchPipeline`。
 
 #### 统一抓取验收模型
 
@@ -246,7 +246,7 @@ provider 身份与能力配置统一来自 provider entry module 顶部注册的
 
 ### 10. CI / 回归验证边界
 
-`.github/workflows/ci.yml` 是 CI 命令事实来源：普通 `push` / `pull_request` 运行 `lint`、`integration` 和 `package-smoke`。`integration` 在完整 integration 前显式复用稳定的 CLI/MCP schema、description/resource/skill、落盘、batch、manifest、provenance 与四 adapter acceptance 契约；`package-smoke` 在 checkout 外构建 wheel/sdist，并在干净 venv 验证版本、四个 console scripts、MCP EOF 和静态 provenance。完整 `unit` / `devtools` / unit coverage 留给本地 `scripts/dev-preflight.sh`。CI integration 与本地 unit / integration / devtools 默认复用 `pyproject.toml` 的 `pytest-xdist` 并行配置，不传 `-n 0`。重型 offline/release job 只在 `v*` tag 或手动 `workflow_dispatch` 路径运行，full-golden/live 也只允许显式 dispatch。只有 live MCP、browser provider smoke、共享真实 publisher/API 状态或专门排查顺序问题的测试可串行，并在命令旁说明原因。
+`.github/workflows/ci.yml` 是普通 CI 命令事实来源：`push` / `pull_request` 运行完整 unit branch coverage、integration、devtools、Ruff、完整生产包 mypy、复杂度/抽取规则/版本/依赖漏洞门禁，并对 Python 3.11 与 3.14 分别执行 core unit boundary 和 core/full wheel smoke。CI 与本地 unit / integration / devtools 默认复用 `pyproject.toml` 的 `pytest-xdist` 并行配置，不传 `-n 0`。依赖刷新、离线构建、稳定发布和 live/golden 各自位于独立 workflow；重型 offline/release 只在 `v*` tag 或手动 `workflow_dispatch` 路径运行，full-golden/live 也只允许显式 dispatch。只有 live provider、共享真实 publisher/API 状态或专门排查顺序问题的测试可串行，并在命令旁说明原因。
 
 架构边界由测试强制，而非仅靠文档约定：`tests/unit/test_import_boundaries.py` 阻止 provider-neutral 层 import `providers._*` 与 compat module，`tests/integration/test_architecture_closeout.py` 锁定 service facade、magic-key 契约、import-cycle 和兼容表面边界。更新提取规则文档后先运行 `python3 scripts/validate_extraction_rules.py`，再按变更范围运行并行 unit / integration。
 

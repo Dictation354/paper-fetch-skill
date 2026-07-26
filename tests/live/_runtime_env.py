@@ -25,11 +25,3 @@ def require_selected_browser_or_skip(testcase, env: Mapping[str, str]) -> None:
     backend = configured_browser_backend(env)
     if importlib.util.find_spec(backend) is None:
         testcase.skipTest(f"Selected browser package {backend!r} is not installed.")
-
-
-def require_cloakbrowser_or_skip(testcase) -> None:
-    """Compatibility helper for older live modules with explicit CloakBrowser cases."""
-
-    require_selected_browser_or_skip(
-        testcase, {"PAPER_FETCH_BROWSER_BACKEND": "cloakbrowser"}
-    )

@@ -7,7 +7,7 @@ import re
 import urllib.parse
 from pathlib import Path
 from typing import Any
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 
 from ..common_patterns import (
     EXTENDED_DATA_TABLE_PREFIX_PATTERN,
@@ -251,7 +251,7 @@ SPRINGER_ASSET_RETRY_POLICY = AssetRetryPolicy(
 
 
 def _filter_springer_assets_for_profile(
-    assets: list[Mapping[str, Any]] | None,
+    assets: Sequence[Mapping[str, Any]] | None,
     *,
     asset_profile: AssetProfile,
 ) -> list[dict[str, Any]]:
@@ -777,16 +777,19 @@ class SpringerClient(ProviderClient):
             allow_image_fallback = _springer_allows_extended_data_table_image_fallback(
                 label, table_url
             )
-            markdown, warning, asset = self._render_table_page_markdown(
+            table_page_result = self._render_table_page_markdown(
                 table_url,
                 fallback_label=label,
                 fallback_caption=caption,
                 allow_image_asset=allow_image_fallback,
                 allow_degraded_placeholder=True,
             )
-            if warning:
-                warnings.append(warning)
-            if not markdown:
+            rendered_page_markdown = table_page_result[0]
+            page_warning = table_page_result[1]
+            asset = table_page_result[2]
+            if page_warning:
+                warnings.append(page_warning)
+            if not rendered_page_markdown:
                 node.decompose()
                 continue
 
@@ -796,7 +799,9 @@ class SpringerClient(ProviderClient):
             block = soup.new_tag("p")
             block.string = placeholder
             node.replace_with(block)
-            table_entries.append({"placeholder": placeholder, "markdown": markdown})
+            table_entries.append(
+                {"placeholder": placeholder, "markdown": rendered_page_markdown}
+            )
 
         return str(soup), table_entries, warnings, table_assets
 
@@ -809,7 +814,7 @@ class SpringerClient(ProviderClient):
     def _prepare_html_attempt(
         self,
         doi: str,
-        metadata: ProviderMetadata,
+        metadata: Mapping[str, Any],
         *,
         context: RuntimeContext,
     ) -> SpringerHtmlAttempt:
@@ -819,9 +824,12 @@ class SpringerClient(ProviderClient):
                 NOT_SUPPORTED, "Springer direct HTML retrieval requires a DOI."
             )
 
-        landing_url = choose_public_landing_page_url(
-            metadata.get("landing_page_url"),
-            f"https://doi.org/{urllib.parse.quote(normalized_doi, safe='')}",
+        landing_url = (
+            choose_public_landing_page_url(
+                metadata.get("landing_page_url"),
+                f"https://doi.org/{urllib.parse.quote(normalized_doi, safe='')}",
+            )
+            or f"https://doi.org/{urllib.parse.quote(normalized_doi, safe='')}"
         )
         response, response_url = self._fetch_html_response(landing_url)
         html_text = _springer_html.decode_html(
@@ -965,7 +973,7 @@ class SpringerClient(ProviderClient):
     def download_related_assets(
         self,
         doi: str,
-        metadata: ProviderMetadata,
+        metadata: Mapping[str, Any],
         raw_payload: RawFulltextPayload,
         output_dir: Path | None,
         *,
@@ -1047,7 +1055,7 @@ class SpringerClient(ProviderClient):
     def fetch_raw_fulltext(
         self,
         doi: str,
-        metadata: ProviderMetadata,
+        metadata: Mapping[str, Any],
         *,
         context: RuntimeContext | None = None,
     ) -> RawFulltextPayload:
@@ -1058,9 +1066,12 @@ class SpringerClient(ProviderClient):
                 NOT_SUPPORTED, "Springer direct HTML retrieval requires a DOI."
             )
 
-        landing_url = choose_public_landing_page_url(
-            metadata.get("landing_page_url"),
-            f"https://doi.org/{urllib.parse.quote(normalized_doi, safe='')}",
+        landing_url = (
+            choose_public_landing_page_url(
+                metadata.get("landing_page_url"),
+                f"https://doi.org/{urllib.parse.quote(normalized_doi, safe='')}",
+            )
+            or f"https://doi.org/{urllib.parse.quote(normalized_doi, safe='')}"
         )
         attempt_context: dict[str, Any] = {
             "landing_url": landing_url,
@@ -1184,9 +1195,12 @@ class SpringerClient(ProviderClient):
                 NOT_SUPPORTED, "Springer direct HTML retrieval requires a DOI."
             )
 
-        landing_url = choose_public_landing_page_url(
-            metadata.get("landing_page_url"),
-            f"https://doi.org/{urllib.parse.quote(normalized_doi, safe='')}",
+        landing_url = (
+            choose_public_landing_page_url(
+                metadata.get("landing_page_url"),
+                f"https://doi.org/{urllib.parse.quote(normalized_doi, safe='')}",
+            )
+            or f"https://doi.org/{urllib.parse.quote(normalized_doi, safe='')}"
         )
         attempt_context: dict[str, Any] = {
             "response_url": landing_url,
@@ -1462,7 +1476,7 @@ class SpringerClient(ProviderClient):
 
     def to_article_model(
         self,
-        metadata: ProviderMetadata,
+        metadata: Mapping[str, Any],
         raw_payload: RawFulltextPayload,
         *,
         downloaded_assets: list[Mapping[str, Any]] | None = None,

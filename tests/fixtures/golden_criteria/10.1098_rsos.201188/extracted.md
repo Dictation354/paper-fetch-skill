@@ -8,7 +8,7 @@ source: "royalsocietypublishing_html"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: true
-token_estimate: 12261
+token_estimate: 12269
 ---
 
 # Learning agents in Black–Scholes financial markets
@@ -20,7 +20,9 @@ Black–Scholes (BS) is a remarkable quotation model for European option pricing
 ## 1 Introduction
 
 Econophysics divides into two paradigms. Statistical Econophysics relies on data, fitting certain power laws to existing asset prices at various time scales [1,2]. In statistical Econophysics, zero-intelligence agents have random interactions. Agents are homogeneous and have no learning ability. The central object of study is historical price data. The viewpoint is that interacting zero-intelligence traders’ actions are already incorporated into price fluctuations. The focus is on the macroscopic aggregation of interactions in the form of available data.
+
 While this is an important area of research, agent-based Econophysics offers the opportunity to study the microscopic interactions in more detail, where agents are heterogeneous.
+
 Our objective is to offer a cogent and clear motivation for agent-based Econophysics in the context of option volatilities, whereby learning and interaction are made explicit. To an outsider, it may seem that financial assets are observed at one price, decided by the market. In reality, prices fluctuate throughout the day and there is no equilibrium price: it is always in flux. Interaction between strategic traders and other players is embedded in all transactions and informational channels. Interaction is vital to understanding markets. The motivation for this paper was inspired by the works of Kirman [3] and Follmer et al. [4]. Rather than develop a thorough game theoretic or mean-field model, we advocate something in between. We aim to take a more nuanced view of agent-based Econophysics as espoused by Chakraborti et al. [5].
 
 ### 1.1 Our contribution
@@ -30,6 +32,7 @@ We introduce two different classes of learning models that converge to a consens
 ![Figure 2](https://royalsocietypublishing.org/view-large/figure/17449309/rsos201188f02.tif)
 
 **Figure 2.** Evolution of the agents’ dynamics (4.2): (a) without learning, (b) with learning and εi satisfying the conditions of theorem 4.1, (c) with learning and εi not satisfying the conditions of theorem 4.1, and (d) evolution of the agents’ dynamics with a leader (4.5).
+
 We formalize the multi-dimensional analogues of our two models by using Kronecker products (§[5](#s5), theorems 5.1 and 5.3). Thus, our models show how a volatility curve could function as a global attractor given adaptive agents. We conclude the paper by discussing future work and connections to other fields.
 
 ## 2 Derivatives and social learning
@@ -43,15 +46,19 @@ Most trading is done electronically. To be dominant, firms now invest huge sums 
 ### 2.2 Options markets
 
 Derivative contracts are actively traded across the world’s financial markets with a total estimate value in the trillions of dollars. To get an intuitive understanding of the setting and the issues at hand, let us consider the prototypical example of European options.
+
 A European option is the right to buy or sell an underlying asset at some point in the future at a fixed price, also known as the strike. A call option gives the right to buy an asset and a put option gives the right to sell an asset at the agreed price. On the opposite side of the buyer is the seller who has relinquished his control of exercise. Buyers of puts and calls can exercise the right to buy or sell. Sellers of options have to fulfil obligations when exercised against. The payoff of a buyer of a call option with stock price ST at expiry time T and exercise price K is max{ST − K, 0}, whereas for a put option is max{K − ST, 0}.
+
 To get a price, we input the current stock price S0 (e.g. $101), the exercise price K (e.g. $ 90), the expiry T (e.g. three months from today) and the volatility σ in the Black–Scholes (BS) formula [14–16]:
 Equation: $\text{price} = \text{BS}(S_{0},K,T,\sigma).$
 Volatility, which captures the beliefs about how turbulent the stock price will be, is left up to the market. This parameter is so important that in practice the market trades European calls and puts by quoting volatilities.1
+
 Options can be struck at different strike prices on the same asset (e.g. K = $90, $ 75, $60). If the underlying asset and the time to exercise T (e.g. three months) are the same, one would expect the volatility to be the same at different strikes. In practice, however, the market after the 1987 crash has evolved to exhibit different volatilities. This rather strange phenomenon is referred to as the smile, or smirk (figure 1). Depending on the market, these smirks can be more or less pronounced. For instance, equity markets display a strong skew or smirk. A symmetric smile is more common in foreign exchange options markets. An excellent introduction to volatility smiles is given in [17].
 
 ![Figure 1](https://royalsocietypublishing.org/view-large/figure/17449248/rsos201188f01.tif)
 
 **Figure 1.** (a) A typical implied volatility smile for varying strikes K divided by fixed spot price. Moneyness is K/S0. ATM denotes At-The-Money where K equals S0. (b) Consensus occurs as all traders’ opinions of the implied volatility converge, round by round, to a distinct value for varying strikes.
+
 How does the market decide what the quoted volatility should be (e.g. for a stock index three months from now)? This is a critical but not well-understood question. This is exactly what we aim to study by introducing models of learning agents who update their beliefs about the volatility. Agent-based models on volatility–smile interaction and formation have not been thoroughly addressed in finance or Econophysics. They remain a challenge [18]. Previous attempts have been made, but the focus has never been on the mathematical or specific nature of interaction [19,20]. Furthermore, our work takes into account the physicality of how trading occurs. An alternative perspective is offered in [21,22], again though the nature of interaction is missing. Nevertheless, these early attempts offer a good indication that at least the problem has garnered significant interest in different disciplines.
 
 ### 2.3 Econophysics
@@ -61,23 +68,29 @@ The challenge for physicists is not to force existing physics-based models on hu
 ### 2.4 Knightian uncertainty
 
 Risk and uncertainty are two different concepts [35–37]. Risky assets are those on which the probabilities of random events are well defined and known. For instance, suppose we observe historical data of a stock price. Are we confident to claim we know the distribution of the stock’s returns? If we are, then the stock is considered risky. Its risk is quantifiable. However, if we were unsure of even the correct probability measure, then we would be faced with uncertainty. In a sense, this captures the essence of financial markets. Traders and players use different probability measures when trading and quoting options. No single measure dominates. In fact, there are many models that are consistent with the observation of a finite number of strike volatilities in the market [38–41]. In practice, the choice of a correct probability measure such that a derivative contract is priced correctly is a subjective and quantitative exercise. In any case, no perfect model exists [42–46]. As a result, participants in financial markets are free to choose whichever probability model they calibrate to market data [47–49].
+
 The problem with economics-based models and those in mathematical finance literature is that many times the analysis is centred on a representative agent. In the case of risk and uncertainty, the choice of pricing a derivative contract reduces to choosing a correct equivalent martingale measure under which a derivative claim is replicable. For market-makers and dealers, the choice of models is vast. Each player has to make a choice and inevitably no two institutions will use the same models with the same parameters. In this case, it is remarkable that the market will aggregate the diverse beliefs to arrive at a consensus smile. At the microscopic level, though, the dealers are observing one another’s updates. Hence, our model can be seen as a meta-opinion dynamics framework built upon the individual choices of the dealers.
 
 ### 2.5 Non-Bayesian financial markets
 
 In financial markets, updating occurs at high frequency across geographical locations [50,51]. Agents move simultaneously: cancellations are the norm [52–54]. In practical terms, sequential Bayesian learning models do not seem appropriate [55,56]. Bayesian observational learning examples include [57–59]. These models are sequential in nature. They study herd behaviour. As time passes, a player in turn observes the actions of previous agents and receives a private signal. Each agent has a one-off decision when she updates her posterior probability and takes an action. In some instances, the nth agent may reach the truth as n → ∞.
+
 In DeGroot learning, myopic updating occurs in each iteration. Agents in our set-up have fixed weights but update their responses until consensus is reached. Recently, there have been some experimental papers on the evidence of DeGroot updating [60,61]. Repeated averaging models are our base precisely because they capture the nature of interaction and learning in financial markets so compactly. Players can observe previous choices but not the payoffs of their competitors. A more in-depth discussion of learning in games would take us further away from our goal of studying the mathematical nature of interaction. The reader can consult [62,63] for a game-theoretic perspective.
 
 ## 3 Model description
 
 In mathematical opinion dynamic models, agents take views of other agents into account before arriving at their own updated estimate. Agents can observe other agents’ previous signals.
+
 DeGroot [64] was one of the early developers of such observational learning dynamics. While simple, these models allow us to examine convergence to consensus. In a sense, these types of models are called naive models, as agents can recall perfectly what the other players submitted in the previous round. See the survey papers [65–68].
 
 ### 3.1 Volatility basics
 
 Agents have an initial opinion of the implied volatility, which they update after taking into account volatilities of other agents. A feedback mechanism aids the agents in arriving at the true volatility parameter.
+
 At all times, the focus is on a static picture of the volatility smile. Within this static framework agents are updating their opinion of the true implied volatility. This updating occurs in a high-frequency sense. In an exchange setting, one can think of all bids and offers as visible to agents. The agents initially are unsure of the true value of the implied volatility, but by learning—and feedback—reach consensus on the true parameter. Our first attempt is a naive learning model common in social networks. Learning occurs between trading times. Therefore, our implicit assumption is that no transactions occur while traders are adjusting and learning each other’s quotes.
+
 This rather peculiar feature is market practice. Trading happens at longer intervals than quote updating. This is as true for high-frequency trading of stocks as it is for options markets. Quotes and prices—or rather vols—are changing more frequently than actual transactions.
+
 Each dollar value of an option corresponds to an implied volatility parameter σ(K, T) ∈ (0, 1) that depends on strike and expiry. Implied volatility is quoted in percentage terms.
 
 #### Assumption 3.1.
@@ -99,6 +112,7 @@ The n agents (3.2) are said to reach consensus if for any fixed initial conditio
 #### Definition 3.3 (consensus to a point).
 
 The n agents (3.2) are said to reach consensus to a point if for any initial condition $X_{1} \in \mathbb{R}^{n}$, lim t→∞Xt = c1n, where 1n denotes the n × 1 vector composed of only ones and $c \in \mathbb{R}$. The constant c is often referred to as the consensus value.
+
 For the opinion dynamics (3.2), we introduce the following result by [64] (see also [69] for definitions).
 
 #### Proposition 3.4.
@@ -168,11 +182,13 @@ Equation: $\begin{matrix} {\parallel Y_{t} \parallel} & {= \parallel B_{t}B_{t -
 The first inequality follows by sub-multiplicative property of matrix norms. Moreover, by the law of large numbers $\frac{1}{t}\sum\limits_{k = 1}^{t}\log \parallel B_{k} \parallel_{\infty}\longrightarrow\mathbb{E}\lbrack\log \parallel A_{t} - \mathcal{E}_{t} \parallel_{\infty}\rbrack$, which is negative by assumption. So the exponent ensures that, as the initial opinion $\parallel Y_{0} \parallel_{\infty} < \infty$ is finite,
 Equation: $\lim\limits_{t\rightarrow\infty} \parallel Y_{t} \parallel_{\infty} = 0.$
 Consequently, $Y_{t}\longrightarrow 0$ and every agent reaches consensus. ▪
+
 Note we do not require the stronger condition that $\log \parallel A_{t} - \mathcal{E}_{t} \parallel_{\infty} < 0,$ for all t. Unlike the deterministic case, the random case allows considerable flexibility. Neither self-belief aii > 0 nor positive learning εi is required for all times. However, there must be some interaction and learning for beliefs to converge. As matrix products do not commute, if we were to follow the full expansion of the recursion in any of the dynamics, the result would be long, unwieldy matrix products. Random matrix products and dynamics are an active area of research not only in mathematics but also in physics and control theory [73–78]. While the random case is certainly interesting, in this article our focus is on the first steps of modelling interaction and learning dynamics.
 
 ### 4.3 Consensus with an unknown leader
 
 One criticism of model (4.2) is that feedback, even if it is not perfect, has to be learned. In practice, there might not be a helpful mechanism that provides feedback. An alternative is to have an unknown leader embedded in the set of traders. The agents are unsure who the leader is but by taking averages of other traders, they all arrive at the opinion of the leader. In Markov chain theory, such behaviour is called an absorbing state. The leader guides the system to the true value. We assume that the identity of the leader is unknown to all agents.
+
 Without loss of generality, we assume that the first agent (with corresponding opinion $x_{t}^{1}$) is the leader; it follows that $x_{1}^{1} = \overline{\sigma}$, a1i = 0, i ∈ {2, …, n}, and a11 = 1. Then in this configuration, the opinion dynamics is given by
 Equation 4.5: $X_{t} = AX_{t - 1},\quad A = \begin{pmatrix} 1 & 0 & \ldots & 0 \\ a_{21} & a_{22} & \ldots & a_{2n} \\ \vdots & \vdots & \ldots & \vdots \\ a_{n1} & a_{n2} & \ldots & a_{nn} \end{pmatrix}\operatorname{=:}\begin{pmatrix} 1 & 0 \\ \ast & \overset{\sim}{A} \end{pmatrix},$
 with aij ≥ 0, $\sum\limits_{\, j = 1}^{n}a_{ij} = 1$, aii > 0 for all 1 ≤ i ≤ n, and for at least one i ≥ 2, $\sum\limits_{\, j = 2}^{n}a_{ij} < 1$.
@@ -190,6 +206,7 @@ Equation: $MAM^{- 1} = \begin{pmatrix} 1 & \, & \ast \\ 0 & \, & \overset{\sim}{
 where 0 denotes the zero vector of appropriate dimensions and $\overset{\sim}{A}$ as defined in (4.5). By construction, ${\overset{\sim}{X}}_{t - 1}:=MX_{t - 1}\rightarrow{\overset{\sim}{X}}_{t} = MX_{t} = MAX_{t - 1} = MAM^{- 1}{\overset{\sim}{X}}_{t - 1}$; hence, the consensus error et satisfies the following difference equation
 Equation 4.6: ${\overset{\sim}{X}}_{t} = MAM^{- 1}{\overset{\sim}{X}}_{t - 1} = \begin{pmatrix} 1 & \, & \ast \\ 0 & \, & \overset{\sim}{A} \end{pmatrix}{\overset{\sim}{X}}_{t - 1}; e_{t} = \overset{\sim}{A}e_{t - 1},$
 and the solution of et is then given by $e_{t} = {\overset{\sim}{A}}^{t}e_{1}$.
+
 Because for at least one i, $\sum\limits_{\, j = 2}^{n}a_{ij} < 1$ and $\overset{\sim}{A}$ is substochastic and irreducible, the spectral radius $\rho(\overset{\sim}{A}) < 1$, see lemma 6.28 in [69]; it follows that $\lim\limits_{t\rightarrow\infty}{\overset{\sim}{A}}^{t} = 0$. Therefore, lim t→∞et = 0 and the assertion follows. ▪
 
 #### Corollary 4.5.
@@ -227,6 +244,7 @@ and consequently, the solution et of (5.3) is given by $e_{t} = {((A - \mathcal{
 #### Corollary 5.2.
 
 Consensus to $\overline{\sigma}$ is reached exponentially with the convergence rate given by $\parallel(A - \mathcal{E}) \otimes I_{k}) \parallel_{\infty}$, i.e. $\parallel X_{t} - (1_{n} \otimes \overline{\sigma}) \parallel_{\infty} \leq \parallel(A - \mathcal{E}) \otimes I_{k}) \parallel_{\infty}^{t - 1} \parallel X_{1} - (1_{n} \otimes \overline{\sigma}) \parallel_{\infty}$.
+
 The proof of the above result is very similar to previous corollaries and is omitted.
 
 ### 5.2 Consensus with an unknown leader
@@ -238,6 +256,7 @@ with aij ≥ 0, $\sum\limits_{\, j = 1}^{n}a_{ij} = 1$, aii > 0 for all 1 ≤ i 
 #### Theorem 5.3.
 
 Consider the opinion dynamics in (5.4) and assume that the matrix $\overset{\sim}{A}$ is substochastic and irreducible. Then consensus to $1_{n} \otimes \overline{\sigma}$ is reached, i.e. $\lim\limits_{t\rightarrow\infty}X_{t} = 1_{n} \otimes \overline{\sigma}$.
+
 The proof of theorem 5.3 follows the same line of reasoning as the proof of theorem 4.4 and it is omitted here.
 
 #### Corollary 5.4.
@@ -249,6 +268,7 @@ Let $\parallel \cdot \parallel_{\ast}$ denote some matrix norm such that $\paral
 Consider the opinion dynamics with feedback (4.2) with 10 agents (n = 10), $\overline{\sigma} = 0.375$ and initial condition
 Equation: $X_{1} = {(0.3,0.35,0.37,0.4,0.45,0.5,0.55,0.57,0.6,0.65)}^{\top}.$
 In both exchange-based and OTC markets, it is easy to ascertain who the main market-makers are for options on single stock or commodity [79,80]. Option market-makers are usually investment banks and big trading houses. In this sense, the number of players is not large and thus the models developed always have a finite number of agents, N = 10.
+
 Figure 2 depicts the obtained simulation results for different values of the learning parameters εi, i = 1, …, 10. Specifically, figure 2a shows results without learning, i.e, εi = 0 (here there is no consensus to $\overline{\sigma}$), figure 2b depicts the results for εi = 0.9aii. As stated in theorem 4.1, consensus to $\overline{\sigma}$ is reached. Figure 2c shows results for εi = 0.9aii + 0.94 bi with b4 = 1 and bi = 0 otherwise, i = 1, …, 10. Note that, in this case, the value of ε4 violates the condition of theorem 4.1 (i.e. $\epsilon_{4} \notin(0,a_{44})$) and, as expected, consensus is not reached. Next, consider the opinion dynamics with a leader (4.5) with n = 10 and initial condition
 Equation: $X_{1} = {(\overline{\sigma},0.35,0.37,0.4,0.45,0.5,0.55,0.57,0.6,0.65)}^{\top}.$
 For the leader case, the opinion weights matrix is constructed by replacing the first row of A by (1, 0, …, 0). The corresponding matrix $\overset{\sim}{A}$ (defined in 4.5) is substochastic and irreducible, and $\sum\limits_{i = 2}^{i = 10}a_{ij} < 1$, j = 1, …, 10. Hence, all the conditions of theorem 4.4 are satisfied and consensus to $\overline{\sigma} = 0.375$ is reached. Figure 2d shows the corresponding simulation results. Finally, figure 3 shows the evolution of the vectored opinion dynamics (5.2) with n = 10 and k = 3 (i.e. 10 three-dimensional agents), matrix A as in the case with feedback, (vectored) volatility $\overline{\sigma} = {(0.67,0.22,0.88)}^{\top}$, learning parameters εi = 0.9aii for aii as in A, and initial condition 1k ⊗ X1 with X1 as in the first experiment above.
@@ -260,24 +280,30 @@ For the leader case, the opinion weights matrix is constructed by replacing the 
 ## 7 Arbitrage bounds
 
 We have taken the true volatility parameter as exogenous to our models. Our only requirement is that there is no static arbitrage, by which we mean that all the quotes in volatility which translate to option prices are such that one cannot trade in the different strikes to create a profit. Checking whether a volatility surface is indeed arbitrage-free is non-trivial, nevertheless some sufficient conditions are well known [81–83]. As long as the volatility surface satisfies them our analysis implies global stability towards an arbitrage-free smile.
+
 We parametrize the volatility function (assuming expiry $T\text{~and~}S_{0}$ are fixed) and denote the option price as
 Equation: $\overset{¯}{BS}(K,\sigma(K)) \triangleq {BS}(S_{0},K,T,\sigma(K)).$
 Our attention is on varying K, to ensure no static arbitrage. We assume that the σ(K) translates into unique call option dollar prices. This follows from the strictly positive first derivative of the option price formula with respect to σ. We require two conditions:
-Condition 1: (Call Spread) For 0 < K1 ≤ K2, we have $\overset{¯}{BS}(K_{1},\sigma(K_{1})) \geq \overset{¯}{BS}(K_{2},\sigma(K_{2})).$
-Condition 2: (Butterfly Spread) For 0 < K1 < K2 < K3, $\overset{¯}{BS}(K_{1},\sigma(K_{1})) + (({K_{2} - K1})/({K_{3} - K_{2}})) \times \overset{¯}{BS}(K_{3},\sigma(K_{3})) \geq({K_{3} - K1})/({K_{3} - K_{2}}) \times \overset{¯}{BS}(K_{2},\sigma(K_{2})).$
+
+- Condition 1: (Call Spread) For 0 < K1 ≤ K2, we have $\overset{¯}{BS}(K_{1},\sigma(K_{1})) \geq \overset{¯}{BS}(K_{2},\sigma(K_{2})).$
+- Condition 2: (Butterfly Spread) For 0 < K1 < K2 < K3, $\overset{¯}{BS}(K_{1},\sigma(K_{1})) + (({K_{2} - K1})/({K_{3} - K_{2}})) \times \overset{¯}{BS}(K_{3},\sigma(K_{3})) \geq({K_{3} - K1})/({K_{3} - K_{2}}) \times \overset{¯}{BS}(K_{2},\sigma(K_{2})).$
 
 ## 8 Discussion
 
 ### 8.1 Future work
 
 Social learning is an active area of research in many different fields. By combining aspects of social learning models with dynamical systems, we were able to develop insightful analysis for the volatility smile. This can be extended further. There are several immediate possibilities. Can the number of strikes be infinite? We restricted the models to a finite number of strikes: fixed k. In practical terms, at any given time, there are usually two strikes below and two strikes above the ATM level that are liquid. This means the corresponding quotes are visible or updated for five strikes. One way to circumvent this is to consider arbitrage-free volatility curves. But again, we are faced with the observational nature of our framework. A trader only observes a fixed number of strikes of his competitors. The issue of how to introduce heterogeneity in the volatility curves, which themselves emanate from specific pricing models, remains open.
+
 The number of agents can also be infinite. Perhaps a propagation of chaos type of result could shed some light on how an individual trader interacts with the mean-field limit [89–91]. In this case, we lose the heterogeneity of beliefs and the behaviour we are trying to study would have a different implication. Moreover, considerable technical machinery is required [92,93]. We could study the pure limiting behaviour as t, n → ∞. In our current framework, this would have to be balanced with whether an individual can observe an infinite number of competitors. While the technical subtleties are not insurmountable, the modelling issues are more subjective.
+
 The technical issues in random matrix products, briefly discussed in this paper, assure us that much more work needs to be done on the modelling and mathematical front. For example, the matrices A and $\mathcal{E}$ can be dependent with correlation decreasing in time. Work in this direction has been addressed by Popescu & Vaidya [94].
 
 ### 8.2 Connection
 
 Recently, there has been some rather interesting work at the intersection of computer science and option pricing. Demarzo et al. [95] showed how to use efficient online trading algorithms to price the current value of financial instruments, deriving both upper and lower bounds using online trading algorithms. Moreover, Abernethy et al. [96,97] developed a BS price as sequential two-player zero-sum game. While these papers made an excellent start to bridge the gap between two different academic communities—mainly mathematical finance and theoretical computer science—they do not address the reality of volatility smiles and trading. Our contribution can be viewed as making these connections more concrete. The smile itself is a conundrum and there have even been articles questioning whether it can be solved [98]. The traditional way from the ground up is to develop a stochastic process for the volatility and asset price, possibly introducing jumps or more diffusions through uncertainty [99,100]. Such models have been successfully developed, but the time is ripe to incorporate multi-agent models with arbitrage-free curves.
+
 Introducing learning agents in stochastic differential equation models [101], such as the BS model, is an exciting proposition. Moreover, opinion dynamics as a subject on its own has been studied quite extensively. Recent references that present an expansive discussion in computer science are [8,102]. Econophysics is the right community to develop new models. After all, there is no attachment to utilities of players or stochastic volatility models so entrenched in the mathematical finance community. Free from these shackles, researchers can use a range of tools and techniques to build more sophisticated models. Moreover, there is no restriction or debate on continuous or discrete time. While our framework is discrete, continuous time could perhaps show a way forward to incorporate models from mathematical finance and financial economics [103–105]. Jarrow [106] makes the case for continuous time, arguing that today’s financial markets trade and update at high frequency.
+
 In this paper, we introduce models of learning agents in the context of option trading. A key open question in this setting is how the market comes to a consensus about market volatility, which is reflected in derivative pricing through the BS formula. The framework we have established allows us to explore other areas. Thus far, we took the smile as an exogenous object, proving convergence to equilibrium beliefs. A natural step forward would be to look at the beliefs as probability measures, where each measure corresponds to a different option pricing model. Our learning models focus on interaction between agents. Actually, agents can be interpreted as algorithms. Each algorithm corresponds to a particular belief of a pricing model. Until now, the replication paradigm has led to very sophisticated models. The future may belong to deep hedging arguments [107]. Still, whether we consider models or algorithms, interaction will always be a topic of interest.
 
 ## Data accessibility
@@ -303,6 +329,12 @@ The authors thank Ioannis Panageas, Ionel Popescu, Niels Nygaard and JM Schumach
 ## Footnotes
 
 Using the BS formula with a particular implied volatility, traders obtain a dollar value for the price.
+
+## Figures
+
+- Figure 1
+- Figure 2
+- Figure 3
 
 ## References (108 total, showing 108)
 

@@ -25,6 +25,7 @@ from ..extraction.html.assets.supplementary import (
 from ..extraction.html.parsing import choose_parser
 from ..http import DEFAULT_FULLTEXT_TIMEOUT_SECONDS, RequestFailure
 from ..http.headers import header_value
+from ..models import AssetProfile
 from ..publisher_identity import normalize_doi
 from ..utils import empty_asset_results, normalize_text, strip_html_tags
 from ..runtime import RuntimeContext
@@ -418,7 +419,7 @@ def download_ieee_related_assets(
     *,
     user_agent: str,
     env: Mapping[str, str],
-    asset_profile: str = "all",
+    asset_profile: AssetProfile = "all",
     browser_runtime_config: BrowserRuntimeConfig | None = None,
     runtime_context: RuntimeContext | None = None,
 ) -> dict[str, list[dict[str, Any]]]:

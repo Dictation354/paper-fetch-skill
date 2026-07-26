@@ -55,6 +55,7 @@ from ..utils import (
     extend_unique,
     normalize_text,
 )
+from ..xml_security import XmlParseFailure, parse_xml
 from ._article_markdown_common import (
     first_child,
     first_descendant,
@@ -537,10 +538,14 @@ class CopernicusClient(ProviderClient):
                     candidate, referer=attempt.response_url
                 )
                 try:
-                    xml_root = ET.fromstring(body)
-                except ET.ParseError as exc:
+                    xml_root = parse_xml(
+                        body,
+                        source="Copernicus XML payload",
+                        allow_external_doctype=True,
+                    )
+                except XmlParseFailure as exc:
                     raise ProviderFailure(
-                        NO_RESULT, "Copernicus XML payload could not be parsed."
+                        exc.code, "Copernicus XML payload could not be parsed."
                     ) from exc
                 extraction = self._validate_xml_extraction(
                     parse_copernicus_xml(

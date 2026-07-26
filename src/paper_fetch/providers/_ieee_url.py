@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 import urllib.parse
 from typing import Any
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 
 from ..utils import normalize_text
 
@@ -73,7 +73,7 @@ def _is_ignored_ieee_asset_url(url: str) -> bool:
     return _ieee_asset_url_path(url).endswith(IEEE_SUPPORT_ICON_PATH)
 
 
-def _dedupe_urls(urls: list[str | None]) -> list[str]:
+def _dedupe_urls(urls: Sequence[str | None]) -> list[str]:
     deduped: list[str] = []
     for raw_url in urls:
         url = normalize_text(str(raw_url or ""))

@@ -548,8 +548,10 @@ class IeeeProviderRouteTests(unittest.TestCase):
 
         fake_browser_context = FakeBrowserContext()
         fake_runtime = mock.Mock()
-        fake_runtime.env = {"PAPER_FETCH_BROWSER_BACKEND": "cloakbrowser"}
-        fake_runtime.new_browser_context.return_value = fake_browser_context
+        fake_runtime.env = {"PAPER_FETCH_BROWSER_BACKEND": "camoufox"}
+        fake_runtime.new_browser_context_for_runtime_config.return_value = (
+            fake_browser_context
+        )
         client = IeeeClient(RecordingTransport({}), {})
 
         raw_payload = client._fetch_browser_html_payload(
@@ -561,7 +563,7 @@ class IeeeProviderRouteTests(unittest.TestCase):
         )
 
         self.assertEqual(raw_payload.content.route_kind, "html")
-        self.assertEqual(raw_payload.content.fetcher, "cloakbrowser_ieee_html")
+        self.assertEqual(raw_payload.content.fetcher, "camoufox_ieee_html")
         self.assertEqual(
             raw_payload.content.diagnostics["browser_html"]["payload_source"],
             "rest_response",

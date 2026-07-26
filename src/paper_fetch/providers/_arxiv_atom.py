@@ -15,6 +15,7 @@ from ..http import (
     is_pdf_content_type,
 )
 from ..utils import normalize_text
+from ..xml_security import XmlParseFailure, parse_xml
 from ._arxiv_metadata import _dedupe_strings
 
 ARXIV_API_URL = "https://export.arxiv.org/api/query"
@@ -108,14 +109,18 @@ def _parse_arxiv_atom_result(
     authors = tuple(
         ArxivApiAuthor(name=name)
         for name in _dedupe_strings(
-            _atom_text(author, "atom:name")
-            for author in entry.findall("atom:author", _ARXIV_ATOM_NAMESPACES)
+            [
+                _atom_text(author, "atom:name")
+                for author in entry.findall("atom:author", _ARXIV_ATOM_NAMESPACES)
+            ]
         )
     )
     categories = tuple(
         _dedupe_strings(
-            category.get("term")
-            for category in entry.findall("atom:category", _ARXIV_ATOM_NAMESPACES)
+            [
+                category.get("term")
+                for category in entry.findall("atom:category", _ARXIV_ATOM_NAMESPACES)
+            ]
         )
     )
     primary_category = _atom_attr(entry, "arxiv:primary_category", "term")
@@ -142,8 +147,8 @@ def _parse_arxiv_atom_results(
     body: bytes, *, requested_ids: Sequence[str]
 ) -> list[ArxivApiResult]:
     try:
-        root = ET.fromstring(body.decode("utf-8", errors="replace"))
-    except ET.ParseError as exc:
+        root = parse_xml(body, source="arXiv API Atom XML")
+    except XmlParseFailure as exc:
         raise ValueError(f"Invalid arXiv API Atom XML: {exc}") from exc
     return [
         _parse_arxiv_atom_result(entry, requested_ids=requested_ids)

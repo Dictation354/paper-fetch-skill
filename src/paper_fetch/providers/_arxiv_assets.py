@@ -513,12 +513,14 @@ def _source_figure_image_payload(
         rendered = _render_pdf_source_figure_to_png(body)
         if rendered is None:
             return None
-        png_body, width, height = rendered
-        return png_body, "image/png", width, height
+        png_body, png_width, png_height = rendered
+        return png_body, "image/png", png_width, png_height
     mime_type = image_mime_type_from_bytes(body)
     if not mime_type:
         return None
     dimensions = image_dimensions_from_bytes(body)
+    width: int | None
+    height: int | None
     width, height = dimensions if dimensions is not None else (None, None)
     return bytes(body), mime_type, width, height
 

@@ -30,10 +30,10 @@ fixtures:
   - must match (?m)^\|.+\|$
   fixes: []
   baseline_markdown_path: tests/fixtures/golden_criteria/10.1111_cas.16395/extracted.md
-  baseline_markdown_sha256: b52741125a25db0c2a2502ba0375c8f92b09b7adbab9b8c18681d6a135f10ea1
+  baseline_markdown_sha256: 30813e28f621441843e985a61bbb5753d32d56344b8b11921f28a0219948844c
   review_notes: Semantic review completed against committed fixture evidence.
   markdown_quality_path: tests/fixtures/golden_criteria/10.1111_cas.16395/markdown-quality.json
-  markdown_quality_sha256: 12840090e6cee8dd0344ed85d72aa6ed6f3bf7a51f8ee27a3b558468502d6b9a
+  markdown_quality_sha256: c70b6e406da1f6d07cb5da59eab94bd824320a88b62de338d54c808835eda158
 - fixture: tests/fixtures/golden_criteria/10.1111_gcb.15322
   purpose: formula
   doi: 10.1111/gcb.15322
@@ -107,10 +107,10 @@ fixtures:
   - must not include Access Denied
   fixes: []
   baseline_markdown_path: tests/fixtures/golden_criteria/10.1111_cas.16395/extracted.md
-  baseline_markdown_sha256: b52741125a25db0c2a2502ba0375c8f92b09b7adbab9b8c18681d6a135f10ea1
+  baseline_markdown_sha256: 30813e28f621441843e985a61bbb5753d32d56344b8b11921f28a0219948844c
   review_notes: Semantic review completed against committed fixture evidence.
   markdown_quality_path: tests/fixtures/golden_criteria/10.1111_cas.16395/markdown-quality.json
-  markdown_quality_sha256: 12840090e6cee8dd0344ed85d72aa6ed6f3bf7a51f8ee27a3b558468502d6b9a
+  markdown_quality_sha256: c70b6e406da1f6d07cb5da59eab94bd824320a88b62de338d54c808835eda158
 - fixture: tests/fixtures/golden_criteria/10.1111_gcb.16998
   purpose: abstract_only
   doi: 10.1111/gcb.16998

@@ -10,6 +10,7 @@ from .models import (
     TokenEstimateBreakdown,
 )
 from .service import FetchStrategy, PaperFetchFailure, fetch_paper, resolve_paper
+from .version import __version__
 
 __all__ = [
     "ArticleModel",
@@ -21,6 +22,7 @@ __all__ = [
     "RenderOptions",
     "Section",
     "TokenEstimateBreakdown",
+    "__version__",
     "fetch_paper",
     "resolve_paper",
 ]

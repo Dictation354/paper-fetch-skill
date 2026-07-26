@@ -361,7 +361,7 @@ class GeographyLiveTests(unittest.TestCase):
             sections=[],
             references=[],
             warnings=[
-                "Wiley browser workflow requires the cloakbrowser Python package.",
+                "Wiley browser workflow requires the Camoufox Python package.",
                 "Full text was not available; returning metadata and abstract only.",
             ],
             source_trail=["fulltext:wiley_not_configured", "fallback:metadata_only"],
@@ -374,7 +374,7 @@ class GeographyLiveTests(unittest.TestCase):
 
         self.assertEqual(result.status, "not_configured")
         self.assertEqual(result.error_code, "not_configured")
-        self.assertIn("cloakbrowser", (result.error_message or "").lower())
+        self.assertIn("camoufox", (result.error_message or "").lower())
 
     def test_report_result_flags_unexpected_source_path_on_fulltext(self) -> None:
         envelope = make_envelope(

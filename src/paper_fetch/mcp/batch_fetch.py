@@ -27,19 +27,13 @@ from ..manifest import (
     build_manifest_record,
 )
 from ..manifest_writer import (
-    ManifestAuditStatus,
     ManifestJsonlWriter,
     ManifestPersistenceError,
     RunManifest,
     RunManifestState,
     RunManifestStore,
-    audit_manifest_path,
-    build_run_request_fingerprint,
-    checkpoint_run_manifest,
-    create_run_manifest,
     deterministic_manifest_record_id,
     latest_manifest_records,
-    terminal_run_manifest,
 )
 from ..models import (
     QUALITY_FLAG_CACHED_WITH_CURRENT_REVISION,
@@ -61,6 +55,11 @@ from ..workflow.batch_runner import (
     BatchProgress,
     BatchRunResult,
     run_batch_async,
+)
+from ..workflow.batch_lifecycle import (
+    BatchLifecycleOverwriteError,
+    BatchManifestJournal,
+    prepare_batch_run,
 )
 from ..workflow.types import effective_asset_profile
 from ._deps import MCPDeps, default_mcp_deps
@@ -597,13 +596,6 @@ def _store_for_request(request: BatchFetchRequest) -> RunManifestStore | None:
     )
 
 
-def _recorded_output_path(raw_path: str, *, manifest_path: Path) -> Path:
-    path = Path(raw_path).expanduser()
-    if path.is_absolute() or path.exists():
-        return path
-    return manifest_path.parent / path
-
-
 async def _execute_batch_fetch(
     request: BatchFetchRequest,
     *,
@@ -645,149 +637,46 @@ async def _execute_batch_fetch(
 
     with lock_context:
         run_started = False
-        records: list[ManifestRecord] = []
-        manifest: RunManifest | None = None
+        journal: BatchManifestJournal | None = None
         items: list[BatchFetchItem] = []
-        append_events = False
         run_result: BatchRunResult[BatchFetchItem, BatchFetchOutcome] | None = None
-        record_sequences: dict[tuple[int, int], int] = {}
         envelopes: dict[tuple[int, int], FetchEnvelope] = {}
         saved_results: dict[tuple[int, int], SavedMarkdownResult] = {}
         cache_hits: dict[tuple[int, int], bool] = {}
 
-        def persist_record(record: ManifestRecord) -> None:
-            nonlocal manifest
-            if store is not None:
-                store.append_record(record)
-            records.append(record)
-            record_sequences[(record.index, record.attempt)] = len(records)
-            if store is not None:
-                assert manifest is not None
-                manifest = store.write(checkpoint_run_manifest(manifest, records))
-
-        def terminalize_missing(*, code: str, reason: str) -> None:
-            latest = latest_manifest_records(records)
-            for item in items:
-                previous = latest.get(item.index)
-                if previous is not None and previous.attempt >= item.attempt:
-                    continue
-                persist_record(
-                    _synthetic_aborted_record(
-                        request,
-                        item,
-                        request_parameters=request_parameters,
-                        run_id=effective_run_id,
-                        tool_version=tool_version,
-                        code=code,
-                        reason=reason,
-                        deps=manifest_deps,
-                    )
-                )
-
         try:
-            if request.resume is not None:
-                if store is None:
-                    raise RuntimeError("resume did not resolve a run manifest store")
-                manifest = store.read()
-                if requested_run_id is not None and requested_run_id != manifest.run_id:
-                    raise ValueError("requested run_id differs from the recorded run.")
-                if [item.query for item in manifest.inputs] != request.queries:
-                    raise ValueError(
-                        "queries differ from the recorded run; create a new run instead."
-                    )
-                if (
-                    build_run_request_fingerprint(request.queries, request_parameters)
-                    != manifest.request_fingerprint
-                ):
-                    raise ValueError(
-                        "critical fetch/output configuration differs from the recorded run."
-                    )
-                if manifest.tool_version != tool_version:
-                    raise ValueError(
-                        "tool version differs from the recorded run; create a new run instead."
-                    )
-                report = audit_manifest_path(store.manifest_path, mode="audit")
-                if report.status is ManifestAuditStatus.INVALID:
-                    raise ValueError(
-                        "run manifest is structurally invalid and cannot be resumed."
-                    )
-                records = store.read_records() if store.events_path.is_file() else []
-                for sequence, record in enumerate(records, start=1):
-                    record_sequences[(record.index, record.attempt)] = sequence
-                latest = latest_manifest_records(records)
-                reusable_indices = set(report.reusable_indices)
-                items = [
-                    BatchFetchItem(
-                        index=index,
-                        query=query,
-                        lane_key=_lane_for_query(query),
-                        attempt=(latest[index].attempt + 1 if index in latest else 1),
-                    )
-                    for index, query in enumerate(request.queries, start=1)
-                    if index not in reusable_indices
-                ]
-                if not request.overwrite:
-                    existing_outputs = sorted(
-                        {
-                            str(path)
-                            for item in items
-                            if (previous := latest.get(item.index)) is not None
-                            for artifact in previous.output_artifacts
-                            if (
-                                path := _recorded_output_path(
-                                    artifact.path,
-                                    manifest_path=store.manifest_path,
-                                )
-                            ).exists()
-                        }
-                    )
-                    if existing_outputs:
-                        raise FileExistsError(
-                            "resume would replace existing stale or below-request output; "
-                            "review it and set overwrite=true: "
-                            + ", ".join(existing_outputs)
-                        )
-                effective_run_id = manifest.run_id
-                manifest = store.write(checkpoint_run_manifest(manifest, records))
-                append_events = True
-                run_started = True
-            else:
-                effective_run_id = requested_run_id or manifest_deps.uuid_factory()
-                if store is not None:
-                    if store.manifest_path.exists() and not request.overwrite:
-                        raise FileExistsError(
-                            f"run manifest already exists at {store.manifest_path}; "
-                            "set overwrite=true or choose another path."
-                        )
-                    if store.events_path.exists() and not request.overwrite:
-                        raise FileExistsError(
-                            f"batch event file already exists at {store.events_path}; "
-                            "set overwrite=true or choose another path."
-                        )
-                    events_reference = store.events_reference()
-                else:
-                    events_reference = "<memory>"
-                manifest = create_run_manifest(
-                    run_id=effective_run_id,
-                    tool_version=tool_version,
+            try:
+                prepared = prepare_batch_run(
+                    store=store,
                     queries=request.queries,
                     request_parameters=request_parameters,
-                    started_at=manifest_deps.clock(),
-                    events_path=events_reference,
-                )
-                if store is not None:
-                    manifest = store.create(manifest, overwrite=request.overwrite)
-                run_started = True
-                items = [
-                    BatchFetchItem(
+                    tool_version=tool_version,
+                    requested_run_id=requested_run_id,
+                    resume=request.resume is not None,
+                    overwrite=request.overwrite,
+                    clock=manifest_deps.clock,
+                    uuid_factory=manifest_deps.uuid_factory,
+                    item_factory=lambda index, query, attempt: BatchFetchItem(
                         index=index,
                         query=query,
                         lane_key=_lane_for_query(query),
-                    )
-                    for index, query in enumerate(request.queries, start=1)
-                ]
-
-            reused_count = len(request.queries) - len(items)
+                        attempt=attempt,
+                    ),
+                )
+            except BatchLifecycleOverwriteError as exc:
+                raise FileExistsError(
+                    str(exc).replace("enable overwrite", "set overwrite=true")
+                ) from exc
+            journal = BatchManifestJournal(
+                manifest=prepared.manifest,
+                records=prepared.records,
+                store=store,
+            )
+            items = prepared.items
+            effective_run_id = prepared.run_id
+            append_events = prepared.append_events
+            reused_count = prepared.reused_count
+            run_started = True
             if reused_count:
                 await report_progress(
                     ctx,
@@ -837,7 +726,6 @@ async def _execute_batch_fetch(
             def on_completion(
                 event: BatchCompletionEvent[BatchFetchItem, BatchFetchOutcome],
             ) -> None:
-                nonlocal manifest
                 record = _record_from_batch_result(
                     request,
                     event.result,
@@ -853,16 +741,8 @@ async def _execute_batch_fetch(
                     cache_hits[key] = _cache_hit(outcome.envelope)
                     if outcome.saved_markdown is not None:
                         saved_results[key] = outcome.saved_markdown
-                if store is not None:
-                    assert writer is not None
-                    writer.write(record)
-                    records.append(record)
-                    record_sequences[(record.index, record.attempt)] = len(records)
-                    assert manifest is not None
-                    manifest = store.write(checkpoint_run_manifest(manifest, records))
-                else:
-                    records.append(record)
-                    record_sequences[(record.index, record.attempt)] = len(records)
+                assert journal is not None
+                journal.persist(record, writer=writer)
 
             async def on_progress(
                 progress: BatchProgress[BatchFetchItem, BatchFetchOutcome],
@@ -918,25 +798,17 @@ async def _execute_batch_fetch(
                         f"could not persist complete batch_fetch events: {details}"
                     )
 
-            latest = latest_manifest_records(records)
-            if set(latest) != set(range(1, len(request.queries) + 1)):
-                raise RuntimeError(
-                    "batch_fetch does not have one latest terminal attempt per input."
-                )
-            assert manifest is not None
+            assert journal is not None
+            journal.require_complete(len(request.queries))
             state = (
                 RunManifestState.CANCELLED
                 if run_result is not None and run_result.cancelled
                 else RunManifestState.COMPLETED
             )
-            manifest = terminal_run_manifest(
-                manifest,
-                records,
+            manifest = journal.finish(
                 state=state,
                 completed_at=manifest_deps.clock(),
             )
-            if store is not None:
-                manifest = store.write(manifest)
             await report_progress(
                 ctx,
                 len(request.queries),
@@ -950,9 +822,9 @@ async def _execute_batch_fetch(
             return _compact_run_payload(
                 request,
                 manifest=manifest,
-                records=records,
+                records=journal.records,
                 attempted_indices={item.index for item in items},
-                record_sequences=record_sequences,
+                record_sequences=journal.record_sequences,
                 envelopes=envelopes,
                 saved_results=saved_results,
                 cache_hits=cache_hits,
@@ -961,39 +833,53 @@ async def _execute_batch_fetch(
             )
         except asyncio.CancelledError:
             cancelled.set()
-            if run_started and manifest is not None:
+            if run_started and journal is not None:
                 try:
-                    terminalize_missing(
-                        code="request_cancelled",
-                        reason="Item was interrupted by MCP cooperative cancellation.",
+                    journal.terminalize_missing(
+                        items,
+                        lambda item: _synthetic_aborted_record(
+                            request,
+                            item,
+                            request_parameters=request_parameters,
+                            run_id=effective_run_id,
+                            tool_version=tool_version,
+                            code="request_cancelled",
+                            reason=(
+                                "Item was interrupted by MCP cooperative cancellation."
+                            ),
+                            deps=manifest_deps,
+                        ),
                     )
-                    manifest = terminal_run_manifest(
-                        manifest,
-                        records,
+                    journal.finish(
                         state=RunManifestState.CANCELLED,
                         completed_at=manifest_deps.clock(),
                     )
-                    if store is not None:
-                        store.write(manifest)
                 except Exception:
                     pass
             raise
         except Exception:
             cancelled.set()
-            if run_started and manifest is not None:
+            if run_started and journal is not None:
                 try:
-                    terminalize_missing(
-                        code="batch_interrupted",
-                        reason="Item was not completed because batch_fetch was interrupted.",
+                    journal.terminalize_missing(
+                        items,
+                        lambda item: _synthetic_aborted_record(
+                            request,
+                            item,
+                            request_parameters=request_parameters,
+                            run_id=effective_run_id,
+                            tool_version=tool_version,
+                            code="batch_interrupted",
+                            reason=(
+                                "Item was not completed because batch_fetch was interrupted."
+                            ),
+                            deps=manifest_deps,
+                        ),
                     )
-                    manifest = terminal_run_manifest(
-                        manifest,
-                        records,
+                    journal.finish(
                         state=RunManifestState.INTERRUPTED,
                         completed_at=manifest_deps.clock(),
                     )
-                    if store is not None:
-                        store.write(manifest)
                 except Exception:
                     pass
             raise

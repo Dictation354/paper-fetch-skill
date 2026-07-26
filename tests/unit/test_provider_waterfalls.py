@@ -62,7 +62,7 @@ class PublisherWaterfallTests(unittest.TestCase):
             artifact_dir=tmp / "artifacts",
             headless=True,
             user_agent="paper-fetch-test/1",
-            backend="cloakbrowser",
+            backend="camoufox",
         )
 
     def test_elsevier_official_xml_success_keeps_elsevier_xml_source(self) -> None:
@@ -173,8 +173,10 @@ class PublisherWaterfallTests(unittest.TestCase):
         )
 
         with mock.patch.object(
-            elsevier_provider.ET, "fromstring", wraps=elsevier_provider.ET.fromstring
-        ) as fromstring:
+            elsevier_provider,
+            "parse_xml",
+            wraps=elsevier_provider.parse_xml,
+        ) as parse_xml:
             elsevier_provider.extract_elsevier_asset_references(
                 raw_payload.body,
                 context=context,
@@ -182,7 +184,7 @@ class PublisherWaterfallTests(unittest.TestCase):
             )
             article = client.to_article_model(metadata, raw_payload, context=context)
 
-        self.assertEqual(fromstring.call_count, 1)
+        self.assertEqual(parse_xml.call_count, 1)
         self.assertEqual(article.source, "elsevier_xml")
 
     def test_elsevier_official_xml_usable_records_structured_diagnostics(self) -> None:

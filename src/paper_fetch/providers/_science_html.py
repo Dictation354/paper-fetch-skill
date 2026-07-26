@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import re
 from typing import Any
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 
 from ..quality.html_signals import (
     AAAS_DATALAYER_PATTERN,
@@ -107,8 +107,8 @@ def _science_abstract_role(section: Mapping[str, Any]) -> str:
 
 
 def _rebuild_science_section_hints(
-    frontmatter_sections: list[Mapping[str, Any]],
-    existing_hints: list[Mapping[str, Any]],
+    frontmatter_sections: Sequence[Mapping[str, Any]],
+    existing_hints: Sequence[Mapping[str, Any]],
 ) -> list[dict[str, Any]]:
     rebuilt: list[dict[str, Any]] = []
     for order, section in enumerate(frontmatter_sections):
@@ -128,12 +128,16 @@ def _rebuild_science_section_hints(
         if not isinstance(hint, Mapping):
             continue
         raw_order = hint.get("order")
+        if isinstance(raw_order, int):
+            normalized_order = raw_order + base_order
+        elif str(raw_order or "").isdigit():
+            normalized_order = int(str(raw_order)) + base_order
+        else:
+            normalized_order = base_order + index
         rebuilt.append(
             {
                 **hint,
-                "order": int(raw_order) + base_order
-                if isinstance(raw_order, int) or str(raw_order or "").isdigit()
-                else base_order + index,
+                "order": normalized_order,
             }
         )
     return rebuilt

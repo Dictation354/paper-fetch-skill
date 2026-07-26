@@ -8,7 +8,11 @@ from unittest import mock
 import pytest
 
 from paper_fetch.provider_catalog import PROVIDER_CATALOG
-from paper_fetch.providers import browser_runtime, browser_workflow
+from paper_fetch.providers import (
+    _royalsocietypublishing_html,
+    browser_runtime,
+    browser_workflow,
+)
 from paper_fetch.providers._pdf_common import PdfFetchResult
 from paper_fetch.providers._registry import provider_bundle
 from paper_fetch.providers._royalsocietypublishing_html import (
@@ -86,7 +90,7 @@ def _runtime_config(tmpdir: str, doi: str) -> browser_runtime.BrowserRuntimeConf
         artifact_dir=tmp / "artifacts",
         headless=True,
         user_agent="paper-fetch-test/1",
-        backend="cloakbrowser",
+        backend="camoufox",
     )
 
 
@@ -245,6 +249,84 @@ def test_article_html_fetch_result_downloads_figure_assets_and_rewrites_inline_l
     mocked_builder.assert_called_once()
     shared_fetcher.assert_called_once()
     assert shared_fetcher.call_args.args[0] == figure_url
+
+
+def test_royal_figure_assets_merge_view_large_and_silverchair_by_dom_id() -> None:
+    view_large = (
+        "https://royalsocietypublishing.org/view-large/figure/17448863/"
+        "rsos201200f01.tif"
+    )
+    preview = (
+        "https://trs.silverchair-cdn.com/trs/content_public/journal/rsos/"
+        "m_rsos201200f01.png?Expires=1&Signature=test"
+    )
+
+    assets = _royalsocietypublishing_html._normalize_extracted_assets(
+        [
+            {
+                "kind": "figure",
+                "heading": "Figure 1",
+                "caption": "Canonical caption.",
+                "url": view_large,
+                "full_size_url": view_large,
+                "dom_id": "RSOS201200F1",
+            },
+            {
+                "kind": "figure",
+                "heading": "Canonical caption. Refer to the image caption for details.",
+                "caption": "Canonical caption. Refer to the image caption for details.",
+                "url": preview,
+                "preview_url": preview,
+                "dom_id": "RSOS201200F1",
+            },
+        ]
+    )
+
+    assert assets == [
+        {
+            "kind": "figure",
+            "heading": "Figure 1",
+            "caption": "Canonical caption.",
+            "url": view_large,
+            "full_size_url": view_large,
+            "preview_url": preview,
+            "dom_id": "RSOS201200F1",
+            "section": "body",
+        }
+    ]
+
+
+def test_royal_figure_assets_fall_back_to_canonical_figure_basename() -> None:
+    view_large = (
+        "https://royalsocietypublishing.org/view-large/figure/17448863/"
+        "rsos201200f01.tif"
+    )
+    preview = (
+        "https://trs.silverchair-cdn.com/trs/content_public/journal/rsos/"
+        "m_rsos201200f01.png?Expires=1"
+    )
+
+    assets = _royalsocietypublishing_html._normalize_extracted_assets(
+        [
+            {"kind": "figure", "heading": "Figure 1", "url": view_large},
+            {
+                "kind": "figure",
+                "heading": "Figure 1",
+                "url": preview,
+                "preview_url": preview,
+            },
+            {
+                "kind": "figure",
+                "heading": "Figure 2",
+                "url": preview.replace("f01", "f02"),
+            },
+        ]
+    )
+
+    assert len(assets) == 2
+    assert assets[0]["url"] == view_large
+    assert assets[0]["preview_url"] == preview
+    assert assets[1]["heading"] == "Figure 2"
 
 
 def test_pdf_fallback_uses_citation_pdf_url_after_html_is_not_fulltext() -> None:

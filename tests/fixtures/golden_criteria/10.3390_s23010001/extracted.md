@@ -1,5 +1,5 @@
 ---
-title: "10.3390/s23010001"
+title: "A Review of Data-Driven Approaches and Techniques for Fault Detection and Diagnosis in HVAC Systems"
 authors: "Iva Matetić, Ivan Štajduhar, Igor Wolf, Sandi Ljubic"
 doi: "10.3390/s23010001"
 source: "mdpi_html"
@@ -9,13 +9,11 @@ has_abstract: true
 token_estimate: 26472
 ---
 
-# 10.3390/s23010001
+# A Review of Data-Driven Approaches and Techniques for Fault Detection and Diagnosis in HVAC Systems
 
 ## Abstract
 
 Heating, ventilation, and air conditioning (HVAC) systems are a popular research topic because buildings’ energy is mostly used for heating and/or cooling. These systems heavily rely on sensory measurements and typically make an integral part of the smart building concept. As such, they require the implementation of fault detection and diagnosis (FDD) methodologies, which should assist users in maintaining comfort while consuming minimal energy. Despite the fact that FDD approaches are a well-researched subject, not just for improving the operation of HVAC systems but also for a wider range of systems in industrial processes, there is a lack of application in commercial buildings due to their complexity and low transferability. The aim of this review paper is to present and systematize cutting-edge FDD methodologies, encompassing approaches and special techniques that can be applied in HVAC systems, as well as to provide best-practice heuristics for researchers and solution developers in this domain. While the literature analysis targets the FDD perspective, the main focus is put on the data-driven approach, which covers commonly used models and data pre-processing techniques in the field. Data-driven techniques and FDD solutions based on them, which are most commonly used in recent HVAC research, form the backbone of our study, while alternative FDD approaches are also presented and classified to properly contextualize and round out the review.
-
-## A Review of Data-Driven Approaches and Techniques for Fault Detection and Diagnosis in HVAC Systems
 
 ## 1. Introduction
 

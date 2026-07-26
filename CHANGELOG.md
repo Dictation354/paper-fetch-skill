@@ -6,6 +6,24 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 4.0.0 - 2026-07-26
+
+### Breaking
+
+- Removed the deprecated CloakBrowser backend and all `CLOAKBROWSER_*` compatibility settings. Camoufox is now the only supported browser backend.
+- Made the default installation a lightweight core. Browser extraction and PDF conversion now require the `browser`, `pdf`, or `full` extra.
+
+### Changed
+
+- Added branch-aware global and risk-focused coverage reporting, full-package typing, isolated unit-test runtime state, bounded cookie-aware downloads, and hardened XML parsing.
+- Consolidated project version metadata around `pyproject.toml`, adopted SPDX license metadata, and expanded release and supply-chain metadata.
+
+### Fixed
+
+- Stabilized shared PDF Markdown structure under `pymupdf4llm` 1.28.0 by repairing deterministic heading drift without provider- or DOI-specific rules.
+- Deduplicated Royal Society Silverchair figures across `view-large` and CDN URL variants while preserving the preferred full-size URL, preview URL, label, and caption.
+- Refreshed and agent-reviewed all 26 affected golden snapshots after removing duplicate HTML title sections and applying the PDF and Royal Society fixes.
+
 ## 3.2.1 - 2026-07-25
 
 ### Changed

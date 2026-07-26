@@ -77,10 +77,7 @@ function Normalize-McpEnvKeys {
     $seenHeadless = $false
     foreach ($key in $script:McpEnvKeys) {
         if ($key -in @(
-            "PLAYWRIGHT_BROWSERS_PATH",
-            "CLOAKBROWSER_BINARY_PATH",
-            "CLOAKBROWSER_PROFILE_DIR",
-            "CLOAKBROWSER_USER_DATA_DIR"
+            "PLAYWRIGHT_BROWSERS_PATH"
         )) {
             continue
         }
@@ -302,10 +299,6 @@ function Write-ManagedEnvFile {
         $value = [string](Get-OfflineEnvValue $name)
         $lines.Add((Format-DotenvAssignment -Name $name -Value $value))
     }
-    $lines.Add("# Optional: connect to an already-running Chrome/CloakBrowser CDP endpoint.")
-    $lines.Add("# CLOAKBROWSER_CDP_ENDPOINT='ws://127.0.0.1:9222/devtools/browser/...'")
-    $lines.Add("# Optional: use a preinstalled Chrome/CloakBrowser binary instead of cloakbrowser download.")
-    $lines.Add("# CLOAKBROWSER_BINARY_PATH='C:/path/to/chrome.exe'")
     $lines.Add($OfflineManagedEnd)
     [System.IO.File]::WriteAllLines($target, $lines, [System.Text.UTF8Encoding]::new($false))
 }
@@ -672,12 +665,11 @@ assert "providers" in payload
 
     $browserRuntimeCheck = @'
 import camoufox
-import cloakbrowser
 import playwright
+import pymupdf
 from paper_fetch.runtime_browser import BrowserContextManager
 
 assert hasattr(camoufox, "Camoufox")
-assert hasattr(cloakbrowser, "ensure_binary")
 assert BrowserContextManager is not None
 '@
     Invoke-RuntimePythonScript -Script $browserRuntimeCheck

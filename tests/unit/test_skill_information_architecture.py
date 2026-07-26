@@ -88,15 +88,12 @@ def test_environment_documents_precedence_offline_wrapper_and_local_tooling() ->
     assert "resource://paper-fetch/provider-catalog" in environment
     for variable in (
         "PAPER_FETCH_BROWSER_BACKEND",
+        "PAPER_FETCH_BROWSER_BINARY_PATH",
         "PAPER_FETCH_BROWSER_HEADLESS",
+        "PAPER_FETCH_BROWSER_PROFILE_DIR",
         "PAPER_FETCH_BROWSER_TIMEOUT_MS",
+        "PAPER_FETCH_BROWSER_USER_DATA_DIR",
         "PAPER_FETCH_CDP_EXTERNAL_NEW_CONTEXT",
-        "CLOAKBROWSER_CDP_ENDPOINT",
-        "CLOAKBROWSER_BINARY_PATH",
-        "CLOAKBROWSER_PROFILE_DIR",
-        "CLOAKBROWSER_USER_DATA_DIR",
-        "CLOAKBROWSER_HEADLESS",
-        "CLOAKBROWSER_TIMEOUT_MS",
         "PAPER_FETCH_IMAGE_TOOLS_DIR",
         "PAPER_FETCH_GHOSTSCRIPT_BIN",
         "PAPER_FETCH_VIPS_BIN",

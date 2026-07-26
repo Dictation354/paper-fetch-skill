@@ -8,7 +8,8 @@ Usage: scripts/dev-preflight.sh [--fast] [--coverage] [--skip-integration] [--sk
 Runs the local preflight gate:
   - ruff format check
   - ruff lint
-  - contract-layer mypy against project files
+  - full production-package mypy
+  - complexity and version consistency gates
   - unit tests
   - devtools tests
   - extraction-rules validation
@@ -89,19 +90,24 @@ export PYTHONPATH="${PYTHONPATH:-src}"
 "$PYTHON_BIN" -m ruff check .
 
 if [[ "$run_typecheck" == "1" ]]; then
-  PYTHONPATH=src "$PYTHON_BIN" -m mypy
+  PYTHONPATH=src "$PYTHON_BIN" -m mypy src/paper_fetch
 fi
+"$PYTHON_BIN" scripts/check_complexity_budget.py
+"$PYTHON_BIN" scripts/sync_version.py --check
 
 unit_args=(tests/unit -q --durations=30)
 if [[ "$run_coverage" == "1" ]]; then
   unit_args+=(
     --cov=paper_fetch
+    --cov-branch
     --cov-report=term-missing
     --cov-report=xml
-    --cov-fail-under=40
   )
 fi
 PYTHONPATH=src "$PYTHON_BIN" -m pytest "${unit_args[@]}"
+if [[ "$run_coverage" == "1" ]]; then
+  "$PYTHON_BIN" scripts/report_coverage_focus.py
+fi
 
 if [[ "$run_devtools" == "1" ]]; then
   PYTHONPATH=src "$PYTHON_BIN" -m pytest tests/devtools -q --durations=30

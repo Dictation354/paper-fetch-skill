@@ -182,8 +182,6 @@ Options:
 
 Environment:
   PAPER_FETCH_BROWSER_HEADLESS Set to false for a headful managed browser runtime.
-  CLOAKBROWSER_CDP_ENDPOINT Optional endpoint for an already-running Chrome/CloakBrowser.
-                            Used only with explicit PAPER_FETCH_BROWSER_BACKEND=cloakbrowser.
 EOF
 }
 
@@ -192,7 +190,7 @@ normalize_mcp_env_keys() {
   local filtered=()
   for key in "${MCP_ENV_KEYS[@]}"; do
     case "$key" in
-      PLAYWRIGHT_BROWSERS_PATH|CLOAKBROWSER_BINARY_PATH|CLOAKBROWSER_PROFILE_DIR|CLOAKBROWSER_USER_DATA_DIR)
+      PLAYWRIGHT_BROWSERS_PATH)
         continue
         ;;
       PAPER_FETCH_BROWSER_HEADLESS)
@@ -928,10 +926,6 @@ write_managed_env_file() {
     for key in "${OFFLINE_ENV_KEYS[@]}"; do
       printf '%s=%s\n' "$key" "$(quote_env_value "$(installer_env_value "$key")")"
     done
-    printf '# Optional: connect to an already-running Chrome/CloakBrowser CDP endpoint.\n'
-    printf '# CLOAKBROWSER_CDP_ENDPOINT="ws://127.0.0.1:9222/devtools/browser/..."\n'
-    printf '# Optional: use a preinstalled Chrome/CloakBrowser binary instead of cloakbrowser download.\n'
-    printf '# CLOAKBROWSER_BINARY_PATH="/absolute/path/to/chrome"\n'
     printf '%s\n' "$MANAGED_END"
   } >> "$tmp"
 
@@ -1085,7 +1079,7 @@ EOF
 check_browser_runtime_package() {
   local runtime_python
   runtime_python="$(mcp_python_bin)"
-  "$runtime_python" -c 'import cloakbrowser; import playwright; from paper_fetch.runtime_browser import BrowserContextManager; assert hasattr(cloakbrowser, "ensure_binary"); assert BrowserContextManager is not None'
+  "$runtime_python" -c 'import camoufox; import playwright; import pymupdf; from paper_fetch.runtime_browser import BrowserContextManager; assert hasattr(camoufox, "Camoufox"); assert BrowserContextManager is not None'
 }
 
 run_smoke_checks() {
@@ -1234,7 +1228,7 @@ main() {
   echo "Default browser backend: Camoufox (headless: $(browser_headless_value))"
   echo "The first real fetch may download the Camoufox runtime; doctor and provider status never download it."
   echo "For a fully offline host, preinstall the complete Camoufox runtime before fetching."
-  echo "Set PAPER_FETCH_BROWSER_BACKEND=cloakbrowser only for the deprecated compatibility backend."
+  echo "Browser backend: Camoufox."
   echo "Restart Codex, Claude Code, and the Antigravity CLI so they rescan skills and MCP registration."
   echo "Elsevier setup: request a key at https://dev.elsevier.com/, then add ELSEVIER_API_KEY=\"...\" to $OFFLINE_ENV_FILE before fetching Elsevier papers."
 }

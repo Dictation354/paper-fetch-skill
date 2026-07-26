@@ -19,6 +19,10 @@ logger = logging.getLogger("paper_fetch.providers.browser_workflow")
 class _MemoizedImageDocumentFetcher:
     def __init__(self, fetcher: Any) -> None:
         self._fetcher = fetcher
+        backend = getattr(fetcher, "browser_backend", "")
+        self.browser_backend: str | None = (
+            normalize_text(backend) or None if isinstance(backend, str) else None
+        )
         self.requires_caller_thread = bool(
             getattr(fetcher, "requires_caller_thread", False)
         )

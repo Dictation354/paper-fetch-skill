@@ -1,0 +1,64 @@
+name: Offline packages
+
+on:
+  workflow_call:
+    inputs:
+      ref:
+        description: Git ref to package; defaults to the caller commit
+        required: false
+        type: string
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Git ref to package; defaults to the selected branch
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  posix:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+      - uses: ./.github/actions/setup-python-deps
+        with:
+          python-version: ${{ matrix.python-version }}
+          full: "true"
+      - name: Build full offline package
+        env:
+          PYTHON_BIN: python
+        run: scripts/build-offline-package.sh --output-dir dist
+      - name: Verify offline package
+        if: ${{ runner.os == 'Linux' }}
+        run: scripts/verify-offline-package.sh dist/*.sh
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: offline-${{ runner.os }}-${{ matrix.python-version }}
+          path: dist/*
+
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+      - uses: ./.github/actions/setup-python-deps
+        with:
+          python-version: "3.13"
+          full: "true"
+      - name: Build Windows full offline installer
+        shell: pwsh
+        run: scripts/build-offline-package-windows.ps1 -OutputDir dist -PythonBin python
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: offline-Windows-3.13
+          path: dist/*

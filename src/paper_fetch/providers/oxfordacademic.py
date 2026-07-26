@@ -24,7 +24,12 @@ from ..http import (
     RequestFailure,
 )
 from ..http.headers import header_value
-from ..models import AssetProfile, article_from_markdown, metadata_only_article
+from ..models import (
+    AssetProfile,
+    SourceKind,
+    article_from_markdown,
+    metadata_only_article,
+)
 from ..provider_catalog import BodyTextThresholds, ProviderSpec
 from ..publisher_identity import normalize_doi
 from ..reason_codes import NO_RESULT, OK, PDF_FALLBACK
@@ -563,7 +568,7 @@ class OxfordAcademicClient(ProviderClient):
         route = normalize_text(
             content.route_kind if content is not None else ""
         ).lower()
-        source = (
+        source: SourceKind = (
             "oxfordacademic_pdf" if route == PDF_FALLBACK else "oxfordacademic_html"
         )
         merged_metadata = dict(
@@ -584,10 +589,9 @@ class OxfordAcademicClient(ProviderClient):
                 trace=raw_payload.trace,
             )
         diagnostics = dict(content.diagnostics if content is not None else {})
-        extraction = (
-            diagnostics.get("extraction")
-            if isinstance(diagnostics.get("extraction"), Mapping)
-            else {}
+        extraction_candidate = diagnostics.get("extraction")
+        extraction: Mapping[str, Any] = (
+            extraction_candidate if isinstance(extraction_candidate, Mapping) else {}
         )
         availability = diagnostics.get("availability_diagnostics")
         assets = list(content.extracted_assets if content is not None else [])

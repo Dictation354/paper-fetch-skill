@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 from importlib.resources import files
+from importlib.resources.abc import Traversable
 from pathlib import Path
 from collections.abc import Mapping
 
@@ -130,5 +131,5 @@ def mathml_to_latex_worker_script_candidates(
     return candidates
 
 
-def bundled_formula_resources() -> object:
+def bundled_formula_resources() -> Traversable:
     return files(BUNDLED_FORMULA_RESOURCES_PACKAGE)

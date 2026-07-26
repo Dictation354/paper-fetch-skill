@@ -95,7 +95,7 @@ class PdfFallbackHelperTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmpdir:
             runtime = types.SimpleNamespace(
-                backend="cloakbrowser",
+                backend="camoufox",
                 artifact_dir=Path(tmpdir),
                 headless=True,
                 user_agent="UnitTest/1.0",
@@ -192,7 +192,7 @@ class PdfFallbackHelperTests(unittest.TestCase):
         )
         self.assertTrue(calls[0]["allow_pdf_only"])
 
-    def test_pdf_fallback_uses_cloakbrowser(self) -> None:
+    def test_pdf_fallback_uses_camoufox(self) -> None:
         pdf_url = "https://example.org/article.pdf"
         final_url = "https://example.org/downloaded/article.pdf"
 
@@ -200,7 +200,7 @@ class PdfFallbackHelperTests(unittest.TestCase):
             suggested_filename = "article.pdf"
 
             def save_as(self, path: str) -> None:
-                Path(path).write_bytes(b"%PDF-1.7 cloakbrowser")
+                Path(path).write_bytes(b"%PDF-1.7 camoufox")
 
         class FakeDownloadInfo:
             value = FakeDownload()
@@ -296,7 +296,7 @@ class PdfFallbackHelperTests(unittest.TestCase):
             suggested_filename = "article.pdf"
 
             def save_as(self, path: str) -> None:
-                Path(path).write_bytes(b"%PDF-1.7 cloakbrowser")
+                Path(path).write_bytes(b"%PDF-1.7 camoufox")
 
         class FakeDownloadInfo:
             value = FakeDownload()
@@ -352,7 +352,7 @@ class PdfFallbackHelperTests(unittest.TestCase):
                     return_value=_pdf_common.PdfFetchResult(
                         source_url=pdf_url,
                         final_url="https://example.org/downloaded/article.pdf",
-                        pdf_bytes=b"%PDF-1.7 cloakbrowser",
+                        pdf_bytes=b"%PDF-1.7 camoufox",
                         markdown_text="# Example\n\n## Results\n\nBody text",
                         suggested_filename="article.pdf",
                     ),
@@ -377,7 +377,7 @@ class PdfFallbackHelperTests(unittest.TestCase):
             suggested_filename = "article.pdf"
 
             def save_as(self, path: str) -> None:
-                Path(path).write_bytes(b"%PDF-1.7 cloakbrowser")
+                Path(path).write_bytes(b"%PDF-1.7 camoufox")
 
         class FakeDownloadInfo:
             value = FakeDownload()
@@ -455,7 +455,7 @@ class PdfFallbackHelperTests(unittest.TestCase):
                     return_value=_pdf_common.PdfFetchResult(
                         source_url=pdf_url,
                         final_url="https://example.org/downloaded/article.pdf",
-                        pdf_bytes=b"%PDF-1.7 cloakbrowser",
+                        pdf_bytes=b"%PDF-1.7 camoufox",
                         markdown_text="# Example\n\n## Results\n\nBody text",
                         suggested_filename="article.pdf",
                     ),
@@ -872,6 +872,177 @@ class PdfFallbackHelperTests(unittest.TestCase):
         self.assertEqual(result, default_markdown)
         mocked_stats.assert_not_called()
         mocked_transparent.assert_not_called()
+
+    def test_pdf_markdown_structure_promotes_missing_alpha_subsection(self) -> None:
+        markdown = "\n".join(
+            [
+                "# _a. First project_",
+                "",
+                "First body.",
+                "",
+                "# _b. Second project_",
+                "",
+                "Second body.",
+                "",
+                "_c. Third project_",
+                "",
+                "Third body.",
+            ]
+        )
+
+        normalized = _pdf_common._normalize_pdf_markdown_structure(markdown)
+
+        self.assertIn("# _c. Third project_", normalized)
+
+    def test_pdf_markdown_structure_removes_empty_preamble_noise_heading(self) -> None:
+        markdown = "\n".join(
+            [
+                "## **<u>Further</u>**",
+                "",
+                "###### ANNUAL REVIEWS",
+                "",
+                "Publisher details.",
+                "",
+                "## Introduction",
+                "",
+                "Body.",
+            ]
+        )
+
+        normalized = _pdf_common._normalize_pdf_markdown_structure(markdown)
+
+        self.assertNotIn("Further", normalized)
+        self.assertIn("###### ANNUAL REVIEWS", normalized)
+
+    def test_pdf_markdown_structure_removes_empty_title_h1_in_preamble(self) -> None:
+        markdown = "\n".join(
+            [
+                "Cover text.",
+                "",
+                "## Article category",
+                "",
+                "# A sufficiently descriptive article title",
+                "",
+                "### First Author and Second Author",
+                "",
+                "## Abstract",
+                "",
+                "Abstract body.",
+            ]
+        )
+
+        normalized = _pdf_common._normalize_pdf_markdown_structure(markdown)
+
+        self.assertNotIn("# A sufficiently descriptive article title", normalized)
+        self.assertIn("Article category", normalized)
+        self.assertIn("### First Author and Second Author", normalized)
+
+    def test_pdf_markdown_structure_removes_first_prose_h1_before_author_heading(
+        self,
+    ) -> None:
+        markdown = "\n".join(
+            [
+                "Cover text.",
+                "",
+                "# A sufficiently descriptive article title",
+                "",
+                "### First Author and Second Author",
+                "",
+                "## Abstract",
+                "",
+                "Abstract body.",
+            ]
+        )
+
+        normalized = _pdf_common._normalize_pdf_markdown_structure(markdown)
+
+        self.assertNotIn("# A sufficiently descriptive article title", normalized)
+
+    def test_pdf_markdown_structure_preserves_fragment_h1_before_author_heading(
+        self,
+    ) -> None:
+        markdown = "\n".join(
+            [
+                "Cover text.",
+                "",
+                "# _− i_ **C** 3 **H** 7 **I and C** 3 **H** 8",
+                "",
+                "### First Author and Second Author",
+                "",
+                "## Abstract",
+                "",
+                "Abstract body.",
+            ]
+        )
+
+        normalized = _pdf_common._normalize_pdf_markdown_structure(markdown)
+
+        self.assertIn("# _− i_ **C** 3 **H** 7 **I and C** 3 **H** 8", normalized)
+
+    def test_pdf_markdown_structure_preserves_h1_with_body(self) -> None:
+        markdown = "\n".join(
+            [
+                "# A sufficiently descriptive article title",
+                "",
+                "Author and abstract text.",
+                "",
+                "## Introduction",
+                "",
+                "Body.",
+            ]
+        )
+
+        normalized = _pdf_common._normalize_pdf_markdown_structure(markdown)
+
+        self.assertIn("# A sufficiently descriptive article title", normalized)
+
+    def test_pdf_markdown_structure_demotes_repeated_running_header(self) -> None:
+        running_header = "Author et al.: A repeated running header"
+        markdown = "\n".join(
+            [
+                running_header,
+                "",
+                "## Introduction",
+                "",
+                "Page one.",
+                "",
+                f"## {running_header}",
+                "",
+                "Page two.",
+                "",
+                running_header,
+                "",
+                f"## {running_header}",
+                "",
+                "Page three.",
+            ]
+        )
+
+        normalized = _pdf_common._normalize_pdf_markdown_structure(markdown)
+
+        self.assertNotIn(f"## {running_header}", normalized)
+        self.assertEqual(normalized.count(running_header), 4)
+
+    def test_pdf_markdown_structure_preserves_valid_empty_parent_headings(self) -> None:
+        markdown = "\n".join(
+            [
+                "## 2. Methods",
+                "",
+                "### 2.1 Sampling",
+                "",
+                "Methods body.",
+                "",
+                "## 3. Results",
+                "",
+                "### 3.1 Primary result",
+                "",
+                "Results body.",
+            ]
+        )
+
+        normalized = _pdf_common._normalize_pdf_markdown_structure(markdown)
+
+        self.assertEqual(normalized, markdown)
 
     def test_default_pdf_markdown_protects_pymupdf_text_subprocess_decoding(
         self,

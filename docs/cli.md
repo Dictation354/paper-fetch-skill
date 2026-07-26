@@ -78,7 +78,7 @@ paper-fetch manifest audit ./papers/example.manifest.json
 
 ## 静态诊断、真实预检与人工认证
 
-`doctor` 汇总 provider 配置、Playwright、所选 CloakBrowser/Camoufox 后端、Chrome/CDP 或本地 Camoufox runtime 配置以及 Ghostscript/libvips 的本地状态。它不会启动浏览器、连接 CDP、下载 Camoufox runtime、访问出版社页面或安装工具：
+`doctor` 汇总 provider 配置、Playwright、本地 Camoufox runtime 配置以及 Ghostscript/libvips 的本地状态。它不会启动浏览器、下载 Camoufox runtime、访问出版社页面或安装工具：
 
 ```bash
 paper-fetch doctor
@@ -94,22 +94,7 @@ paper-fetch doctor --install-root ~/.local/share/paper-fetch-skill --json
 
 ## Browser 登录态
 
-默认后端是原生 Firefox/Juggler Camoufox，HTML、PDF fallback、图片/补充文件、preflight 和 auth 都通过同一 selected-browser facade。CloakBrowser 已弃用，只有显式设置 `PAPER_FETCH_BROWSER_BACKEND=cloakbrowser` 才会使用；两种后端失败时都不会静默切换。完整配置见 [`browser-backends.md`](browser-backends.md)。
-
-显式 CloakBrowser workflow 可以连接已运行浏览器的 CDP endpoint；未配置时由 cloakbrowser 下载/定位 Chrome 并启动受控 CDP 浏览器。managed 模式在同一进程内复用按 provider/browser 配置 keyed 的 manager，HTML、PDF fallback 和 browser-backed 资产仍各自打开隔离 context/page。需要使用下列外部 CDP 配置时，必须同时显式选择已弃用后端：
-
-```bash
-/path/to/chrome \
-  --user-data-dir "$HOME/.cache/paper-fetch/browser-profile" \
-  --remote-debugging-address=127.0.0.1 \
-  --remote-debugging-port=9222 \
-  --no-first-run
-
-export CLOAKBROWSER_CDP_ENDPOINT="ws://127.0.0.1:9222/devtools/browser/..."
-export PAPER_FETCH_BROWSER_BACKEND="cloakbrowser"
-```
-
-managed Chrome 启动前会在 `.paper-fetch-profile.lock` 内核验 Chromium 的 `SingletonLock`、`SingletonSocket` 和 `SingletonCookie`。只有当前用户、本地主机且 PID/profile 与 socket 证据共同确认无活跃浏览器时，才把 stale singleton 移入 `<profile>/.paper-fetch-browser-diagnostics/singleton-recovery-*/` 并最多重启一次；活跃、异主机、异 owner 或无法核验的状态绝不删除，并返回 `managed_chrome_profile_in_use`。启动 stderr 只保留有界、脱敏尾部，完整诊断写入同一 diagnostics 根目录。
+4.0 的唯一浏览器后端是原生 Firefox/Juggler Camoufox。HTML、PDF fallback、图片/补充文件、preflight 和 auth 都通过同一 browser-runtime facade；失败不会静默切换其它 backend。默认 core 安装不包含浏览器依赖，使用这些命令前需安装 `paper-fetch-skill[browser]` 或 `[full]`。完整配置见 [`browser-backends.md`](browser-backends.md)。
 
 如果自动过盾失败，可用通用手动 fallback 打开 headed browser：
 
@@ -131,14 +116,14 @@ paper-fetch browser-preflight --provider wiley --provider science --timeout-ms 1
 
 MCP 的 `browser_preflight` 直接调用同一个 preflight 核心。无参数时与 CLI 一样检查全部 browser provider；单 provider 可传 `provider`，并可同时指定 `test_url`、`timeout_ms`、`browser_user_agent`、`storage_state_path`、`save_storage_state` 和 `detail="full|compact"`。`test_url` / `storage_state_path` 要求显式单 provider；默认 `save_storage_state=true`，因此该 open-world 工具不是只读操作。返回逐 provider `ready/challenge/auth_required/runtime_error/cancelled`、下一步与进度；compact 每项只保留路由字段。一个 provider 失败不抹掉其它已完成结果，取消保留已完成结果并停止后续调度。该工具始终报告未尝试 PDF fallback 和 auth；需要登录或处理 challenge 时只建议用户显式运行 `paper-fetch auth <provider>`。
 
-普通 `paper-fetch fetch --query ...` 默认使用 managed headless Camoufox；`PAPER_FETCH_BROWSER_HEADLESS` 控制所选后端。只有 `paper-fetch auth <provider>`、显式关闭 headless，或在显式 CloakBrowser 模式连接已有 headed CDP 浏览器时才显示窗口。
+普通 `paper-fetch fetch --query ...` 默认使用 managed headless Camoufox；`PAPER_FETCH_BROWSER_HEADLESS` 控制 headed/headless。只有 `paper-fetch auth <provider>` 或显式关闭 headless 时才显示窗口。
 
 常用参数：
 
 - `--url <url>`：覆盖内置样例文章，打开具体失败文章页。
 - `--timeout-ms <ms>`：设置浏览器导航超时。
-- `--browser-user-agent <ua>`：仅 CloakBrowser 认证使用；Camoufox 会拒绝该参数以保持 Firefox 指纹一致。
-- storage-state 保存位置优先通过 `PAPER_FETCH_BROWSER_PROFILE_DIR` 或 `PAPER_FETCH_BROWSER_USER_DATA_DIR` 覆盖；CloakBrowser 旧变量继续兼容。
+- `--browser-user-agent <ua>`：Camoufox 会拒绝该参数，以保持生成的 Firefox 指纹一致。
+- storage-state 保存位置优先通过 `PAPER_FETCH_BROWSER_PROFILE_DIR` 或 `PAPER_FETCH_BROWSER_USER_DATA_DIR` 覆盖。
 
 storage-state JSON 是主要复用状态，只是本地辅助状态，不绕过权限，也不是跨机器通用凭据；站点 session 可能按时间、网络、设备或浏览器指纹失效。未配置持久凭证不会阻止正常抓取；抓取仍会按当前 browser workflow 和 provider PDF / abstract-only / metadata fallback 运行。手动 auth 后再次抓取同一 provider 会复用同一个 publisher storage-state 文件。
 
@@ -283,7 +268,7 @@ CLI 先在 run lock 内执行只读审计。只有 query、工具版本和关键
 ```json
 {
   "schema_version": 2,
-  "tool_version": "3.2.1",
+  "tool_version": "4.0.0",
   "run_id": "10000000-0000-4000-8000-000000000001",
   "record_id": "20000000-0000-4000-8000-000000000002",
   "index": 2,

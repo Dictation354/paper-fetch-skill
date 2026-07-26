@@ -15,8 +15,6 @@ from filelock import FileLock
 from ...config import (
     BROWSER_PROFILE_DIR_ENV_VAR,
     BROWSER_USER_DATA_DIR_ENV_VAR,
-    CLOAKBROWSER_PROFILE_DIR_ENV_VAR,
-    CLOAKBROWSER_USER_DATA_DIR_ENV_VAR,
     WILEY_PROFILE_DIR_ENV_VAR,
     WILEY_STORAGE_STATE_JSON_ENV_VAR,
     browser_env_value,
@@ -55,15 +53,8 @@ def provider_storage_state_env_var(provider: str) -> str | None:
 
 
 def configured_user_data_dir(env: Mapping[str, str], *, backend: str) -> Path | None:
-    value = browser_env_value(
-        env,
-        BROWSER_USER_DATA_DIR_ENV_VAR,
-        legacy_name=(
-            CLOAKBROWSER_USER_DATA_DIR_ENV_VAR
-            if normalize_text(backend).lower() == "cloakbrowser"
-            else None
-        ),
-    )
+    del backend
+    value = browser_env_value(env, BROWSER_USER_DATA_DIR_ENV_VAR)
     return Path(value).expanduser() if value else None
 
 
@@ -73,21 +64,13 @@ def configured_profile_dir(
     generic_value = browser_env_value(env, BROWSER_PROFILE_DIR_ENV_VAR)
     if generic_value:
         return Path(generic_value).expanduser()
-    provider_env_var = (
-        provider_profile_env_var(provider)
-        if normalize_text(backend).lower() == "cloakbrowser"
-        else None
-    )
+    del backend
+    provider_env_var = provider_profile_env_var(provider)
     if provider_env_var is not None:
         provider_value = env.get(provider_env_var, "").strip()
         if provider_value:
             return Path(provider_value).expanduser()
-    value = (
-        env.get(CLOAKBROWSER_PROFILE_DIR_ENV_VAR, "").strip()
-        if normalize_text(backend).lower() == "cloakbrowser"
-        else ""
-    )
-    return Path(value).expanduser() if value else None
+    return None
 
 
 def configured_storage_state_path(

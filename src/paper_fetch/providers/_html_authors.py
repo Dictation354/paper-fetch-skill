@@ -7,7 +7,7 @@ from dataclasses import dataclass
 import re
 from typing import Any
 from re import Pattern
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Collection, Mapping
 
 from ..extraction.html.parsing import choose_parser
 from ..utils import dedupe_authors, normalize_text
@@ -121,7 +121,7 @@ def looks_like_affiliation_text(text: str) -> bool:
 def is_ignored_author_text(
     text: str,
     *,
-    ignored_text: set[str],
+    ignored_text: Collection[str],
     count_pattern: Pattern[str] | None = None,
     reject_email: bool = False,
     reject_affiliation: bool = False,
@@ -273,7 +273,7 @@ def extract_property_authors(
     html_text: str,
     *,
     selectors: str,
-    ignored_text: set[str],
+    ignored_text: Collection[str],
     count_pattern: Pattern[str] | None = None,
     reject_email: bool = False,
 ) -> list[str]:
@@ -324,7 +324,7 @@ def extract_selector_authors(
     html_text: str,
     *,
     selectors: tuple[str, ...],
-    ignored_text: set[str],
+    ignored_text: Collection[str],
     node_text: Callable[[Any], str],
     count_pattern: Pattern[str] | None = None,
     reject_email: bool = False,

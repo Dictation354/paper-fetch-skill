@@ -1,16 +1,14 @@
 {
   "blocking_issue_count": 0,
   "doi": "10.1098/rsif.2019.0334",
-  "fresh_review": true,
   "issues": [],
   "markdown_path": "tests/fixtures/golden_criteria/10.1098_rsif.2019.0334/extracted.md",
   "prompt_path": "tests/fixtures/golden_criteria/10.1098_rsif.2019.0334/markdown-quality-prompt.md",
   "provider": "royalsocietypublishing",
   "review_method": "agent_prompt",
-  "reviewed_at": "2026-05-24T06:39:01Z",
-  "reviewed_by": "codex",
+  "reviewed_at": "2026-07-26T11:36:22.704449Z",
+  "reviewed_by": "codex-agent",
   "sample_id": "10.1098_rsif.2019.0334",
   "schema_version": 2,
-  "source_markdown_sha256": "0045878d6324cd38544430b52e264558528c626e7daa59f7e6824e853b9f82d7",
   "status": "pass"
 }

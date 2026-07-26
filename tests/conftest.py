@@ -1,0 +1,190 @@
+"""Global pytest safety policy.
+
+The test process must never inherit paper-fetch's real user data directories.
+Unit tests additionally fail closed when they attempt external networking,
+browser/runtime launch, or an unapproved subprocess.
+"""
+
+from __future__ import annotations
+
+import os
+from pathlib import Path
+import shutil
+import subprocess
+import sys
+import tempfile
+from typing import Any
+
+from platformdirs import user_data_path
+import pytest
+
+
+_REAL_USER_DATA_DIR = Path(user_data_path("paper-fetch", appauthor=False))
+_ISOLATED_ENV_VARS = (
+    "XDG_DATA_HOME",
+    "XDG_CACHE_HOME",
+    "XDG_RUNTIME_DIR",
+    "PAPER_FETCH_DOWNLOAD_DIR",
+    "PAPER_FETCH_BROWSER_PROFILE_DIR",
+    "PAPER_FETCH_BROWSER_USER_DATA_DIR",
+    "PAPER_FETCH_FORMULA_TOOLS_DIR",
+    "PAPER_FETCH_IMAGE_TOOLS_DIR",
+)
+_SAFE_SUBPROCESS_NAMES = frozenset(
+    {
+        Path(sys.executable).name,
+        "bash",
+        "git",
+        "python",
+        "python3",
+        "sh",
+        "zsh",
+    }
+)
+
+
+def _worker_id(config: pytest.Config) -> str:
+    worker_input = getattr(config, "workerinput", None)
+    if isinstance(worker_input, dict):
+        return str(worker_input.get("workerid") or "worker")
+    return "controller"
+
+
+def _snapshot_tree(root: Path) -> dict[str, tuple[int, int, int]]:
+    if not root.exists():
+        return {}
+    snapshot: dict[str, tuple[int, int, int]] = {}
+    for path in sorted(root.rglob("*")):
+        try:
+            stat = path.stat()
+        except OSError:
+            continue
+        snapshot[str(path.relative_to(root))] = (
+            stat.st_mode,
+            stat.st_size,
+            stat.st_mtime_ns,
+        )
+    return snapshot
+
+
+def pytest_configure(config: pytest.Config) -> None:
+    config.addinivalue_line(
+        "markers",
+        "browser: test intentionally exercises a real browser/runtime boundary",
+    )
+    config.addinivalue_line(
+        "markers",
+        "live: test intentionally depends on live network/provider state",
+    )
+    config.addinivalue_line(
+        "markers",
+        "allow_subprocess: test intentionally launches non-allowlisted executables",
+    )
+
+    worker = _worker_id(config)
+    isolated_root = Path(tempfile.mkdtemp(prefix=f"paper-fetch-tests-{worker}-"))
+    config._paper_fetch_isolated_root = isolated_root
+    for name in _ISOLATED_ENV_VARS:
+        value = isolated_root / name.lower().replace("_", "-")
+        value.mkdir(parents=True, exist_ok=True)
+        os.environ[name] = str(value)
+    os.environ["TEXMATH_BIN"] = str(isolated_root / "unavailable-texmath")
+    os.environ["MATHML_TO_LATEX_NODE_BIN"] = str(isolated_root / "unavailable-node")
+    os.environ["PAPER_FETCH_GHOSTSCRIPT_BIN"] = str(
+        isolated_root / "unavailable-ghostscript"
+    )
+    os.environ["PAPER_FETCH_VIPS_BIN"] = str(isolated_root / "unavailable-vips")
+
+    if worker == "controller":
+        config._paper_fetch_real_user_data_snapshot = _snapshot_tree(
+            _REAL_USER_DATA_DIR
+        )
+
+
+def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
+    for item in items:
+        path = Path(str(item.path))
+        if "live" in path.parts:
+            item.add_marker(pytest.mark.live)
+
+
+@pytest.fixture(autouse=True)
+def _paper_fetch_test_safety(
+    request: pytest.FixtureRequest,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Block unsafe process launches and unlock sockets only for live/browser tests."""
+
+    if request.node.get_closest_marker("live") or request.node.get_closest_marker(
+        "browser"
+    ):
+        request.getfixturevalue("socket_enabled")
+        return
+
+    if "unit" not in Path(str(request.node.path)).parts:
+        return
+
+    if request.node.get_closest_marker("allow_subprocess"):
+        return
+
+    from paper_fetch.providers import _playwright_browser
+
+    def blocked_browser_context(*args: Any, **kwargs: Any) -> None:
+        del args, kwargs
+        raise AssertionError(
+            f"{request.node.nodeid} attempted a real browser runtime. "
+            "Mock open_browser_context or mark the test browser."
+        )
+
+    monkeypatch.setattr(
+        _playwright_browser,
+        "open_browser_context",
+        blocked_browser_context,
+    )
+
+    real_popen = subprocess.Popen
+
+    def guarded_popen(*args: Any, **kwargs: Any) -> subprocess.Popen[Any]:
+        command = kwargs.get("args", args[0] if args else None)
+        executable: object | None
+        if isinstance(command, (list, tuple)) and command:
+            executable = command[0]
+        else:
+            executable = command
+        name = Path(os.fspath(executable)).name if executable is not None else ""
+        if name not in _SAFE_SUBPROCESS_NAMES:
+            raise AssertionError(
+                f"{request.node.nodeid} attempted non-allowlisted subprocess: {name!r}. "
+                "Mock the process boundary or mark the test allow_subprocess."
+            )
+        return real_popen(*args, **kwargs)
+
+    monkeypatch.setattr(subprocess, "Popen", guarded_popen)
+
+
+def pytest_sessionfinish(
+    session: pytest.Session, exitstatus: int
+) -> None:  # pragma: no cover - pytest lifecycle hook
+    del exitstatus
+    config = session.config
+    before = getattr(config, "_paper_fetch_real_user_data_snapshot", None)
+    if before is None:
+        return
+    after = _snapshot_tree(_REAL_USER_DATA_DIR)
+    if after != before:
+        changed = sorted(
+            path
+            for path in set(before) | set(after)
+            if before.get(path) != after.get(path)
+        )
+        pytest.exit(
+            "Tests modified the real paper-fetch user data directory: "
+            f"{_REAL_USER_DATA_DIR}. Changed entries: " + ", ".join(changed[:20]),
+            returncode=1,
+        )
+
+
+def pytest_unconfigure(config: pytest.Config) -> None:
+    isolated_root = getattr(config, "_paper_fetch_isolated_root", None)
+    if isinstance(isolated_root, Path):
+        shutil.rmtree(isolated_root, ignore_errors=True)

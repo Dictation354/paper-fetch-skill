@@ -4,35 +4,25 @@ from __future__ import annotations
 
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
-import http.cookiejar
-import urllib.error
 import urllib.parse
-import urllib.request
 from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
 from collections.abc import Callable, Mapping
 
-from ..config import (
-    CDP_EXTERNAL_NEW_CONTEXT_ENV_VAR,
-    CLOAKBROWSER_BINARY_PATH_ENV_VAR,
-    CLOAKBROWSER_CDP_ENDPOINT_ENV_VAR,
-    CLOAKBROWSER_PROFILE_DIR_ENV_VAR,
-    CLOAKBROWSER_USER_DATA_DIR_ENV_VAR,
-    build_runtime_env,
-    env_flag_enabled,
-)
 from ..http import (
     DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
     HttpTransport,
     PDF_ACCEPT_HEADER,
     RequestCancelledError,
     RequestFailure,
-    classify_network_error,
 )
 from ..http.headers import header_value
 from ..extraction.html.assets.requester import (
+    DEFAULT_PDF_MAX_RESPONSE_BYTES,
+    build_cookie_seeded_opener as _build_cookie_seeded_opener,
     cookie_header_for_url as _cookie_header_for_url,
+    request_with_opener as _request_with_opener,
 )
 from ..extraction.html.shared import html_text_snippet, html_title_snippet
 from ..extraction.html.signals import detect_html_block, summarize_html
@@ -67,6 +57,11 @@ def _raise_if_cancelled(context: RuntimeContext | None) -> None:
     cancel_check = getattr(context, "cancel_check", None)
     if callable(cancel_check) and cancel_check() is True:
         raise RequestCancelledError("Request cancelled.")
+
+
+def _transport_cancelled(transport: HttpTransport) -> bool:
+    cancel_check = getattr(transport, "_cancel_check", None)
+    return bool(callable(cancel_check) and cancel_check())
 
 
 @dataclass(frozen=True)
@@ -149,86 +144,6 @@ def _write_pdf_failure_html(
         (artifact_dir / "pdf.failure.html").write_text(text, encoding="utf-8")
     except OSError:
         return
-
-
-def _build_cookie_seeded_opener(
-    seed_urls: list[str] | None,
-    *,
-    headers: Mapping[str, str],
-    timeout: int,
-    browser_cookies: list[dict[str, Any]] | None = None,
-) -> urllib.request.OpenerDirector | None:
-    normalized_seed_urls = [
-        normalize_text(url) for url in seed_urls or [] if normalize_text(url)
-    ]
-    if not normalized_seed_urls and not any(
-        isinstance(cookie, dict) for cookie in browser_cookies or []
-    ):
-        return None
-
-    opener = urllib.request.build_opener(
-        urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar())
-    )
-    seed_headers = {
-        key: value
-        for key, value in dict(headers).items()
-        if str(key).lower() != "accept"
-    }
-    seed_headers.setdefault(
-        "Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
-    )
-
-    for seed_url in normalized_seed_urls:
-        request_headers = dict(seed_headers)
-        cookie_header = _cookie_header_for_url(browser_cookies, seed_url)
-        if cookie_header:
-            request_headers["Cookie"] = cookie_header
-        request = urllib.request.Request(seed_url, headers=request_headers)
-        try:
-            with opener.open(request, timeout=timeout) as response:
-                response.read(1024)
-        except Exception:
-            continue
-
-    return opener
-
-
-def _request_with_opener(
-    opener: urllib.request.OpenerDirector,
-    url: str,
-    *,
-    headers: Mapping[str, str],
-    timeout: int,
-) -> dict[str, Any]:
-    request = urllib.request.Request(url, headers=dict(headers))
-    try:
-        with opener.open(request, timeout=timeout) as response:
-            return {
-                "status_code": int(getattr(response, "status", response.getcode())),
-                "headers": {
-                    str(key).lower(): str(value)
-                    for key, value in response.headers.items()
-                },
-                "body": response.read(),
-                "url": str(response.geturl() or url),
-            }
-    except urllib.error.HTTPError as exc:
-        raise RequestFailure(
-            exc.code,
-            f"HTTP {exc.code} for {url}",
-            body=exc.read(),
-            headers={
-                str(key).lower(): str(value) for key, value in exc.headers.items()
-            },
-            url=str(exc.geturl() or url),
-        ) from exc
-    except urllib.error.URLError as exc:
-        raise RequestFailure(
-            None,
-            f"Failed to download PDF fallback candidate: {exc.reason or exc}",
-            url=url,
-            error_category=classify_network_error(exc),
-        ) from exc
 
 
 def _same_origin(left: str | None, right: str | None) -> bool:
@@ -577,24 +492,14 @@ def fetch_pdf_with_browser(
         else:
             from ..runtime_browser import BrowserContextManager
 
-            runtime_env = build_runtime_env()
-            endpoint = normalize_text(cdp_endpoint) or normalize_text(
-                runtime_env.get(CLOAKBROWSER_CDP_ENDPOINT_ENV_VAR)
-            )
-            active_binary_path = normalize_text(binary_path) or normalize_text(
-                runtime_env.get(CLOAKBROWSER_BINARY_PATH_ENV_VAR)
-            )
-            active_profile_dir = normalize_text(
-                str(profile_dir or "")
-            ) or normalize_text(runtime_env.get(CLOAKBROWSER_PROFILE_DIR_ENV_VAR))
-            active_user_data_dir = normalize_text(
-                str(user_data_dir or "")
-            ) or normalize_text(runtime_env.get(CLOAKBROWSER_USER_DATA_DIR_ENV_VAR))
+            endpoint = normalize_text(cdp_endpoint)
+            active_binary_path = normalize_text(binary_path)
+            active_profile_dir = normalize_text(str(profile_dir or ""))
+            active_user_data_dir = normalize_text(str(user_data_dir or ""))
             manager = BrowserContextManager(
                 binary_path=active_binary_path or None,
                 cdp_endpoint=endpoint or None,
-                external_new_context=external_new_context
-                or env_flag_enabled(runtime_env, CDP_EXTERNAL_NEW_CONTEXT_ENV_VAR),
+                external_new_context=external_new_context,
                 profile_dir=Path(active_profile_dir).expanduser()
                 if active_profile_dir
                 else None,
@@ -823,6 +728,7 @@ def fetch_pdf_over_http(
         headers=request_headers,
         timeout=timeout,
         browser_cookies=browser_cookies,
+        cancel_check=lambda: _transport_cancelled(transport),
     )
 
     for url in candidate_urls:
@@ -833,7 +739,13 @@ def fetch_pdf_over_http(
         try:
             response = (
                 _request_with_opener(
-                    opener, url, headers=per_request_headers, timeout=timeout
+                    opener,
+                    url,
+                    headers=per_request_headers,
+                    timeout=timeout,
+                    failure_label="PDF fallback candidate",
+                    max_response_bytes=DEFAULT_PDF_MAX_RESPONSE_BYTES,
+                    cancel_check=lambda: _transport_cancelled(transport),
                 )
                 if opener is not None
                 else transport.request(

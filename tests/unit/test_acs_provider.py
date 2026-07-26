@@ -4,7 +4,7 @@ from unittest import mock
 
 from paper_fetch import publisher_identity
 from paper_fetch.providers import _acs_html
-from paper_fetch.providers import _cloakbrowser
+from paper_fetch.providers.browser_runtime.backends import camoufox as camoufox_backend
 from paper_fetch.provider_catalog import (
     PROVIDER_CATALOG,
     default_asset_profile_for_provider,
@@ -243,13 +243,17 @@ def test_acs_markdown_review_contract_markers() -> None:
 
 
 def test_acs_probe_status_uses_browser_runtime_requirements() -> None:
-    with mock.patch.object(_cloakbrowser, "_dependency_available", return_value=True):
+    with mock.patch.object(
+        camoufox_backend,
+        "_dependency_details",
+        return_value={
+            "probe": "unit_test",
+            "packages": {"playwright": True, "camoufox": True},
+        },
+    ):
         result = AcsClient(
             transport=None,
-            env={
-                "PAPER_FETCH_BROWSER_BACKEND": "cloakbrowser",
-                "CLOAKBROWSER_CDP_ENDPOINT": "ws://127.0.0.1:9222/devtools/browser/test",
-            },
+            env={"PAPER_FETCH_BROWSER_BACKEND": "camoufox"},
         ).probe_status()
 
     checks = {check.name: check for check in result.checks}

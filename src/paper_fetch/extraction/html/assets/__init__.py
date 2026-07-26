@@ -20,6 +20,9 @@ from .figures import (
     extract_full_size_figure_image_url as extract_full_size_figure_image_url,
 )
 from .dom import (
+    FULL_SIZE_IMAGE_ATTRS as FULL_SIZE_IMAGE_ATTRS,
+    PREVIEW_IMAGE_ATTRS as PREVIEW_IMAGE_ATTRS,
+    _soup_attr_url as _soup_attr_url,
     looks_like_full_size_asset_url as looks_like_full_size_asset_url,
     supplementary_response_block_reason as supplementary_response_block_reason,
 )
@@ -39,6 +42,10 @@ from .supplementary import (
     supplementary_file_suffixes as supplementary_file_suffixes,
     supplementary_text_tokens_for_profile as supplementary_text_tokens_for_profile,
 )
+from .download import (
+    browser_asset_recovery_allowed as browser_asset_recovery_allowed,
+)
+from .figures import FigurePageFetcher as FigurePageFetcher
 
 _PUBLIC_MODULES = (
     _dom,

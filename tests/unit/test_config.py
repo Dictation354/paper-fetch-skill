@@ -234,7 +234,7 @@ class ConfigTests(unittest.TestCase):
     def test_cli_default_download_dir_uses_xdg_user_data_home(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             env = {
-                config.BROWSER_BACKEND_ENV_VAR: "cloakbrowser",
+                config.BROWSER_BACKEND_ENV_VAR: "camoufox",
                 config.XDG_DATA_HOME_ENV_VAR: tmpdir,
             }
             expected = Path(tmpdir) / "paper-fetch" / "downloads"
@@ -296,14 +296,13 @@ class ConfigTests(unittest.TestCase):
         self.assertEqual(config.resolve_cli_download_dir(env), expected)
         self.assertEqual(config.resolve_mcp_download_dir(env), expected)
 
-    def test_cloakbrowser_runtime_config_defaults_to_user_data_artifacts_without_browser_user_agent(
+    def test_camoufox_runtime_config_defaults_to_user_data_artifacts_without_browser_user_agent(
         self,
     ) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             runtime_config = browser_runtime.load_runtime_config(
                 {
-                    config.BROWSER_BACKEND_ENV_VAR: "cloakbrowser",
-                    config.CLOAKBROWSER_CDP_ENDPOINT_ENV_VAR: "ws://127.0.0.1:9222/devtools/browser/test",
+                    config.BROWSER_BACKEND_ENV_VAR: "camoufox",
                     config.XDG_DATA_HOME_ENV_VAR: tmpdir,
                 },
                 provider="science",
@@ -316,12 +315,12 @@ class ConfigTests(unittest.TestCase):
         self.assertIsNone(runtime_config.user_agent)
         self.assertIn("publisher-browser-artifacts", runtime_config.artifact_dir.parts)
 
-    def test_cloakbrowser_runtime_config_defaults_to_provider_user_data_dir_for_managed_browser(
+    def test_camoufox_runtime_config_defaults_to_provider_user_data_dir(
         self,
     ) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             env = {
-                config.BROWSER_BACKEND_ENV_VAR: "cloakbrowser",
+                config.BROWSER_BACKEND_ENV_VAR: "camoufox",
                 config.XDG_DATA_HOME_ENV_VAR: tmpdir,
             }
             science_runtime = browser_runtime.load_runtime_config(
@@ -338,34 +337,19 @@ class ConfigTests(unittest.TestCase):
         expected_root = (
             Path(tmpdir).expanduser() / "paper-fetch" / "publisher-browser-profiles"
         )
-        self.assertEqual(science_runtime.user_data_dir, expected_root / "science")
-        self.assertEqual(pnas_runtime.user_data_dir, expected_root / "pnas")
+        self.assertEqual(
+            science_runtime.user_data_dir, expected_root / "science-camoufox"
+        )
+        self.assertEqual(pnas_runtime.user_data_dir, expected_root / "pnas-camoufox")
         self.assertNotEqual(science_runtime.user_data_dir, pnas_runtime.user_data_dir)
 
-    def test_cloakbrowser_runtime_config_does_not_default_user_data_dir_for_external_cdp(
+    def test_camoufox_runtime_config_does_not_use_shared_tool_user_agent_for_browser(
         self,
     ) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             runtime_config = browser_runtime.load_runtime_config(
                 {
-                    config.BROWSER_BACKEND_ENV_VAR: "cloakbrowser",
-                    config.CLOAKBROWSER_CDP_ENDPOINT_ENV_VAR: "ws://127.0.0.1:9222/devtools/browser/test",
-                    config.XDG_DATA_HOME_ENV_VAR: tmpdir,
-                },
-                provider="science",
-                doi="10.1126/science.ady3136",
-            )
-
-        self.assertIsNone(runtime_config.user_data_dir)
-
-    def test_cloakbrowser_runtime_config_does_not_use_shared_tool_user_agent_for_browser(
-        self,
-    ) -> None:
-        with tempfile.TemporaryDirectory() as tmpdir:
-            runtime_config = browser_runtime.load_runtime_config(
-                {
-                    config.BROWSER_BACKEND_ENV_VAR: "cloakbrowser",
-                    config.CLOAKBROWSER_CDP_ENDPOINT_ENV_VAR: "ws://127.0.0.1:9222/devtools/browser/test",
+                    config.BROWSER_BACKEND_ENV_VAR: "camoufox",
                     config.USER_AGENT_ENV_VAR: "paper-fetch-test/1",
                     config.XDG_DATA_HOME_ENV_VAR: tmpdir,
                 },
@@ -375,14 +359,13 @@ class ConfigTests(unittest.TestCase):
 
         self.assertIsNone(runtime_config.user_agent)
 
-    def test_cloakbrowser_runtime_config_browser_user_agent_overrides_shared_user_agent(
+    def test_camoufox_runtime_config_ignores_browser_user_agent_override(
         self,
     ) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             runtime_config = browser_runtime.load_runtime_config(
                 {
-                    config.BROWSER_BACKEND_ENV_VAR: "cloakbrowser",
-                    config.CLOAKBROWSER_CDP_ENDPOINT_ENV_VAR: "ws://127.0.0.1:9222/devtools/browser/test",
+                    config.BROWSER_BACKEND_ENV_VAR: "camoufox",
                     config.USER_AGENT_ENV_VAR: "paper-fetch-test/1",
                     config.BROWSER_USER_AGENT_ENV_VAR: "Mozilla/5.0",
                     config.XDG_DATA_HOME_ENV_VAR: tmpdir,
@@ -391,20 +374,19 @@ class ConfigTests(unittest.TestCase):
                 doi="10.1126/science.ady3136",
             )
 
-        self.assertEqual(runtime_config.user_agent, "Mozilla/5.0")
+        self.assertIsNone(runtime_config.user_agent)
 
-    def test_cloakbrowser_runtime_config_expands_env_overrides(self) -> None:
+    def test_camoufox_runtime_config_expands_env_overrides(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             browser_binary = Path(tmpdir) / "chrome"
             browser_binary.write_text("#!/bin/sh\n", encoding="utf-8")
             browser_binary.chmod(0o755)
             runtime_config = browser_runtime.load_runtime_config(
                 {
-                    config.BROWSER_BACKEND_ENV_VAR: "cloakbrowser",
-                    config.CLOAKBROWSER_BINARY_PATH_ENV_VAR: str(browser_binary),
-                    config.CLOAKBROWSER_CDP_ENDPOINT_ENV_VAR: "ws://127.0.0.1:9222/devtools/browser/test",
-                    config.CLOAKBROWSER_HEADLESS_ENV_VAR: "false",
-                    config.CLOAKBROWSER_TIMEOUT_MS_ENV_VAR: "12345",
+                    config.BROWSER_BACKEND_ENV_VAR: "camoufox",
+                    config.BROWSER_BINARY_PATH_ENV_VAR: str(browser_binary),
+                    config.BROWSER_HEADLESS_ENV_VAR: "false",
+                    config.BROWSER_TIMEOUT_MS_ENV_VAR: "12345",
                     config.XDG_DATA_HOME_ENV_VAR: tmpdir,
                 },
                 provider="science",
@@ -418,52 +400,29 @@ class ConfigTests(unittest.TestCase):
             str(runtime_config.artifact_dir).startswith(str(Path(tmpdir).expanduser()))
         )
 
-    def test_cloakbrowser_runtime_config_ignores_invalid_legacy_binary_path(
-        self,
-    ) -> None:
-        with tempfile.TemporaryDirectory() as tmpdir:
-            legacy_binary_path = str(Path(tmpdir) / "missing-chrome")
-            runtime_config = browser_runtime.load_runtime_config(
-                {
-                    config.BROWSER_BACKEND_ENV_VAR: "cloakbrowser",
-                    config.CLOAKBROWSER_BINARY_PATH_ENV_VAR: legacy_binary_path,
-                    config.CLOAKBROWSER_CDP_ENDPOINT_ENV_VAR: "ws://127.0.0.1:9222/devtools/browser/test",
-                    config.XDG_DATA_HOME_ENV_VAR: tmpdir,
-                },
-                provider="science",
-                doi="10.1126/science.ady3136",
-            )
-
-        self.assertEqual(runtime_config.binary_path, legacy_binary_path)
-
-    def test_cloakbrowser_runtime_config_rejects_invalid_binary_path_for_managed_browser(
+    def test_camoufox_runtime_config_rejects_invalid_binary_path(
         self,
     ) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             missing_binary_path = str(Path(tmpdir) / "missing-chrome")
-            with self.assertRaisesRegex(Exception, "CLOAKBROWSER_BINARY_PATH"):
+            with self.assertRaisesRegex(Exception, config.BROWSER_BINARY_PATH_ENV_VAR):
                 browser_runtime.load_runtime_config(
                     {
-                        config.BROWSER_BACKEND_ENV_VAR: "cloakbrowser",
-                        config.CLOAKBROWSER_BINARY_PATH_ENV_VAR: missing_binary_path,
+                        config.BROWSER_BACKEND_ENV_VAR: "camoufox",
+                        config.BROWSER_BINARY_PATH_ENV_VAR: missing_binary_path,
                         config.XDG_DATA_HOME_ENV_VAR: tmpdir,
                     },
                     provider="science",
                     doi="10.1126/science.ady3136",
                 )
 
-    def test_cloakbrowser_runtime_config_rejects_invalid_cdp_endpoint(self) -> None:
-        with tempfile.TemporaryDirectory() as tmpdir:
-            with self.assertRaisesRegex(Exception, "CLOAKBROWSER_CDP_ENDPOINT"):
-                browser_runtime.load_runtime_config(
-                    {
-                        config.BROWSER_BACKEND_ENV_VAR: "cloakbrowser",
-                        config.CLOAKBROWSER_CDP_ENDPOINT_ENV_VAR: "not-a-url",
-                        config.XDG_DATA_HOME_ENV_VAR: tmpdir,
-                    },
-                    provider="science",
-                    doi="10.1126/science.ady3136",
-                )
+    def test_removed_cloakbrowser_backend_is_rejected(self) -> None:
+        with self.assertRaisesRegex(Exception, "expected one of: camoufox"):
+            browser_runtime.load_runtime_config(
+                {config.BROWSER_BACKEND_ENV_VAR: "cloakbrowser"},
+                provider="science",
+                doi="10.1126/science.ady3136",
+            )
 
 
 if __name__ == "__main__":

@@ -29,6 +29,7 @@ from .paths import (
     mathml_to_latex_worker_script_candidates,
     texmath_binary_candidates,
 )
+from ..xml_security import XmlParseFailure, parse_trusted_xml_file
 
 BACKEND_AUTO = "auto"
 BACKEND_TEXMATH = "texmath"
@@ -1287,8 +1288,8 @@ def extract_formula_samples_from_xml(
     xml_path: Path, *, limit: int | None = None
 ) -> list[FormulaSample]:
     try:
-        root = ET.parse(xml_path).getroot()
-    except ET.ParseError:
+        root = parse_trusted_xml_file(xml_path)
+    except XmlParseFailure:
         return []
 
     samples: list[FormulaSample] = []

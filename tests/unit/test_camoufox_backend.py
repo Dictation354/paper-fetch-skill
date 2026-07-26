@@ -13,15 +13,9 @@ from paper_fetch.config import (
     BROWSER_PROFILE_DIR_ENV_VAR,
     BROWSER_TIMEOUT_MS_ENV_VAR,
     BROWSER_USER_AGENT_ENV_VAR,
-    CLOAKBROWSER_BINARY_PATH_ENV_VAR,
-    CLOAKBROWSER_CDP_ENDPOINT_ENV_VAR,
-    CLOAKBROWSER_HEADLESS_ENV_VAR,
-    CLOAKBROWSER_PROFILE_DIR_ENV_VAR,
-    CLOAKBROWSER_TIMEOUT_MS_ENV_VAR,
     XDG_DATA_HOME_ENV_VAR,
-    resolve_browser_backend_selection,
 )
-from paper_fetch.providers import _cloakbrowser, browser_runtime
+from paper_fetch.providers import _playwright_browser, browser_runtime
 from paper_fetch.providers.base import ProviderFailure
 from paper_fetch.providers.browser_runtime.backends.camoufox import (
     CamoufoxBackend,
@@ -32,13 +26,12 @@ from paper_fetch.providers.browser_runtime.camoufox_manager import (
     _launch_executable_path,
 )
 from paper_fetch.providers.browser_runtime.context import context_options_for_config
-from paper_fetch.providers.browser_runtime import api as browser_runtime_api
 from paper_fetch.providers.browser_runtime import context as browser_runtime_context
 from paper_fetch.providers.browser_runtime.types import BrowserRuntimeConfig
 from paper_fetch.runtime import RuntimeContext
 
 
-def test_backend_selection_defaults_to_camoufox_and_cloakbrowser_is_explicit() -> None:
+def test_backend_selection_defaults_to_camoufox_and_accepts_explicit_value() -> None:
     assert browser_runtime.selected_browser_runtime_backend({}).name == "camoufox"
     assert (
         browser_runtime.selected_browser_runtime_backend(
@@ -46,33 +39,6 @@ def test_backend_selection_defaults_to_camoufox_and_cloakbrowser_is_explicit() -
         ).name
         == "camoufox"
     )
-    browser_runtime_api._DEPRECATION_WARNED.discard("cloakbrowser")
-    with pytest.warns(FutureWarning, match="deprecated") as warning_records:
-        assert (
-            browser_runtime.selected_browser_runtime_backend(
-                {BROWSER_BACKEND_ENV_VAR: "CLOAKBROWSER"}
-            ).name
-            == "cloakbrowser"
-        )
-        assert (
-            browser_runtime.selected_browser_runtime_backend(
-                {BROWSER_BACKEND_ENV_VAR: "cloakbrowser"}
-            ).name
-            == "cloakbrowser"
-        )
-    assert len(warning_records) == 1
-
-
-def test_legacy_cloakbrowser_environment_does_not_select_cloakbrowser() -> None:
-    selection = resolve_browser_backend_selection(
-        {CLOAKBROWSER_CDP_ENDPOINT_ENV_VAR: "ws://127.0.0.1:9222/devtools/browser/x"}
-    )
-
-    assert selection.backend == "camoufox"
-    assert selection.explicit is False
-    assert selection.deprecated is False
-    assert selection.legacy_env_vars == (CLOAKBROWSER_CDP_ENDPOINT_ENV_VAR,)
-    assert BROWSER_BACKEND_ENV_VAR in selection.notes[0]
 
 
 def test_browser_runtime_config_requires_explicit_backend(tmp_path) -> None:
@@ -86,19 +52,15 @@ def test_browser_runtime_config_requires_explicit_backend(tmp_path) -> None:
         )
 
 
-def test_camoufox_context_failure_never_constructs_cloakbrowser_manager(
+def test_camoufox_context_failure_closes_at_backend_boundary(
     monkeypatch, tmp_path
 ) -> None:
     camoufox_manager = mock.Mock()
     camoufox_manager.return_value.new_context.side_effect = RuntimeError(
         "camoufox failed"
     )
-    cloakbrowser_manager = mock.Mock()
     monkeypatch.setattr(
         browser_runtime_context, "CamoufoxBrowserManager", camoufox_manager
-    )
-    monkeypatch.setattr(
-        browser_runtime_context, "BrowserContextManager", cloakbrowser_manager
     )
     config = BrowserRuntimeConfig(
         provider="ieee",
@@ -113,7 +75,6 @@ def test_camoufox_context_failure_never_constructs_cloakbrowser_manager(
         browser_runtime_context.open_browser_context(config)
 
     camoufox_manager.assert_called_once()
-    cloakbrowser_manager.assert_not_called()
 
 
 def test_invalid_backend_is_strict() -> None:
@@ -135,10 +96,6 @@ def test_camoufox_config_uses_generic_settings_and_separate_profile(tmp_path) ->
         BROWSER_HEADLESS_ENV_VAR: "false",
         BROWSER_TIMEOUT_MS_ENV_VAR: "45678",
         BROWSER_USER_AGENT_ENV_VAR: "Chrome override must be ignored",
-        CLOAKBROWSER_BINARY_PATH_ENV_VAR: "/legacy/chrome",
-        CLOAKBROWSER_HEADLESS_ENV_VAR: "true",
-        CLOAKBROWSER_PROFILE_DIR_ENV_VAR: "/legacy/chrome-profile",
-        CLOAKBROWSER_TIMEOUT_MS_ENV_VAR: "123",
         XDG_DATA_HOME_ENV_VAR: str(tmp_path / "xdg"),
     }
 
@@ -161,29 +118,6 @@ def test_camoufox_config_uses_generic_settings_and_separate_profile(tmp_path) ->
         / "publisher-browser-profiles"
         / "annualreviews-camoufox"
     )
-
-
-def test_cloakbrowser_accepts_generic_browser_settings(tmp_path) -> None:
-    executable = tmp_path / "chrome"
-    executable.write_text("runtime", encoding="utf-8")
-    executable.chmod(0o755)
-
-    config = browser_runtime.load_runtime_config(
-        {
-            BROWSER_BACKEND_ENV_VAR: "cloakbrowser",
-            BROWSER_BINARY_PATH_ENV_VAR: str(executable),
-            BROWSER_HEADLESS_ENV_VAR: "false",
-            BROWSER_TIMEOUT_MS_ENV_VAR: "34567",
-            XDG_DATA_HOME_ENV_VAR: str(tmp_path / "xdg"),
-        },
-        provider="wiley",
-        doi="10.1000/example",
-    )
-
-    assert config.backend == "cloakbrowser"
-    assert config.binary_path == str(executable)
-    assert config.headless is False
-    assert config.timeout_ms == 34567
 
 
 def test_camoufox_generic_profile_override(tmp_path) -> None:
@@ -423,17 +357,17 @@ def test_camoufox_html_navigation_uses_commit_and_keeps_images(
         backend="camoufox",
     )
     monkeypatch.setattr(
-        _cloakbrowser,
+        _playwright_browser,
         "open_browser_context",
         lambda *_args, **_kwargs: (None, context),
     )
     monkeypatch.setattr(
-        _cloakbrowser,
+        _playwright_browser,
         "wait_for_atypon_body_dom_ready",
         lambda *_args, **_kwargs: SimpleNamespace(attempted=True, ready=True),
     )
 
-    result = _cloakbrowser.fetch_html_with_cloakbrowser(
+    result = _playwright_browser.fetch_html_with_playwright(
         ["https://example.test/article"],
         publisher="annualreviews",
         config=config,

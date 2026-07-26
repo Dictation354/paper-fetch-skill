@@ -12,6 +12,8 @@ import tempfile
 import textwrap
 import unittest
 
+import pytest
+
 from ._installer_support import write_executable as _write_executable
 from paper_fetch.skill_integrity import build_skill_bundle_manifest
 
@@ -151,7 +153,7 @@ def _fake_python_script(version: str) -> str:
     OUT
         exit 0
       fi
-      if [[ "$code" == *'cloakbrowser'* ]]; then
+      if [[ "$code" == *'camoufox'* ]]; then
         exit 0
       fi
       exit 0
@@ -216,6 +218,7 @@ def _write_checksums(root: Path) -> None:
     (root / "sha256sums.txt").write_text("".join(lines), encoding="utf-8")
 
 
+@pytest.mark.allow_subprocess
 class OfflineInstallTests(unittest.TestCase):
     def _create_bundle(
         self,
@@ -244,7 +247,7 @@ class OfflineInstallTests(unittest.TestCase):
             bundle / "runtime" / "site-packages" / "paper_fetch" / "skill_integrity.py",
         )
         _write_file(
-            bundle / "runtime" / "site-packages" / "cloakbrowser" / "__init__.py", "\n"
+            bundle / "runtime" / "site-packages" / "camoufox" / "__init__.py", "\n"
         )
         _write_executable(
             bundle / "runtime" / "site-packages" / "playwright" / "driver" / "node",
@@ -367,14 +370,8 @@ class OfflineInstallTests(unittest.TestCase):
             )
             offline_env = (bundle / "offline.env").read_text(encoding="utf-8")
             self.assertNotIn("PAPER_FETCH_BROWSER_USER_AGENT", offline_env)
-            self.assertIn(
-                'CLOAKBROWSER_CDP_ENDPOINT="ws://127.0.0.1:9222/devtools/browser/..."',
-                offline_env,
-            )
+            self.assertNotIn("CLOAKBROWSER_", offline_env)
             self.assertIn('PAPER_FETCH_BROWSER_HEADLESS="true"', offline_env)
-            self.assertIn(
-                'CLOAKBROWSER_BINARY_PATH="/absolute/path/to/chrome"', offline_env
-            )
             self.assertIn(
                 f'PAPER_FETCH_IMAGE_TOOLS_DIR="{bundle / "image-tools"}"', offline_env
             )
@@ -559,7 +556,7 @@ class OfflineInstallTests(unittest.TestCase):
 
             self.assertEqual(result.returncode, 0, result.stderr)
             offline_env = (bundle / "offline.env").read_text(encoding="utf-8")
-            self.assertIn("CLOAKBROWSER_CDP_ENDPOINT", offline_env)
+            self.assertNotIn("CLOAKBROWSER_", offline_env)
             self.assertIn('PAPER_FETCH_BROWSER_HEADLESS="false"', offline_env)
             self.assertIn(
                 "Default browser backend: Camoufox (headless: false)", result.stdout
@@ -1081,13 +1078,13 @@ class OfflineInstallTests(unittest.TestCase):
         combined = linux_script + windows_script
         self.assertNotIn("python -m playwright install chromium", combined)
         self.assertNotIn("-m playwright install chromium", combined)
-        self.assertNotIn("cloakbrowser.ensure_runtime()", combined)
-        self.assertNotIn('assert hasattr(cloakbrowser, "launch")', combined)
+        self.assertNotIn("camoufox.ensure_runtime()", combined)
+        self.assertNotIn('assert hasattr(camoufox, "launch")', combined)
         self.assertIn(
             "from paper_fetch.runtime_browser import BrowserContextManager", combined
         )
 
-    def test_windows_installer_helper_uses_cdp_browser_runtime_smoke(self) -> None:
+    def test_windows_installer_helper_uses_camoufox_runtime_smoke(self) -> None:
         script = WINDOWS_INSTALLER_HELPER.read_text(encoding="utf-8")
 
         self.assertNotIn("[switch]$ProbeLaunch", script)
@@ -1106,22 +1103,19 @@ class OfflineInstallTests(unittest.TestCase):
         )
         self.assertIn("Invoke-RuntimePythonScript -Script @'", script)
         self.assertIn("Invoke-RuntimePythonScript -Script $browserRuntimeCheck", script)
-        self.assertIn("import cloakbrowser", script)
+        self.assertIn("import camoufox", script)
         self.assertIn("import camoufox", script)
         self.assertIn("import playwright", script)
         self.assertIn(
             "from paper_fetch.runtime_browser import BrowserContextManager", script
         )
-        self.assertIn('assert hasattr(cloakbrowser, "ensure_binary")', script)
         self.assertIn('assert hasattr(camoufox, "Camoufox")', script)
-        self.assertNotIn('assert hasattr(cloakbrowser, "launch")', script)
+        self.assertNotIn('assert hasattr(camoufox, "launch")', script)
         self.assertNotIn("PAPER_FETCH_BROWSER_USER_AGENT", script)
         self.assertIn("$OfflineEnvKeys = @(", script)
         self.assertIn("env_sets.offline_env_keys", script)
         self.assertIn("Format-DotenvAssignment", script)
-        self.assertIn("CLOAKBROWSER_CDP_ENDPOINT", script)
-        self.assertIn("# CLOAKBROWSER_BINARY_PATH", script)
-        self.assertNotIn('os.environ.get("CLOAKBROWSER_BINARY_PATH")', script)
+        self.assertNotIn("CLOAKBROWSER_", script)
         self.assertNotIn("probe-launch", script)
         self.assertIn("MATHML_TO_LATEX_NODE_BIN", script)
         self.assertIn("PAPER_FETCH_IMAGE_TOOLS_DIR", script)
@@ -1143,21 +1137,19 @@ class OfflineInstallTests(unittest.TestCase):
         self.assertIn('Name "bundled skill integrity" -Required', script)
         self.assertIn('Name "skill installation" -Required', script)
 
-    def test_windows_offline_installer_declares_cdp_env_hint_without_playwright_runtime_path(
+    def test_windows_offline_installer_declares_camoufox_env_without_playwright_runtime_path(
         self,
     ) -> None:
         script = WINDOWS_INSTALLER.read_text(encoding="utf-8")
 
         self.assertIn("Repo-local legacy Windows offline installer", script)
-        self.assertIn("CLOAKBROWSER_CDP_ENDPOINT", script)
+        self.assertNotIn("CLOAKBROWSER_", script)
         self.assertIn('"PAPER_FETCH_BROWSER_HEADLESS"', script)
         self.assertIn('$env:PAPER_FETCH_BROWSER_HEADLESS = "true"', script)
         self.assertIn('$env:PYTHONUTF8 = "1"', script)
         self.assertIn('$env:PYTHONIOENCODING = "utf-8"', script)
         self.assertIn("env_sets.offline_env_keys", script)
         self.assertIn("Format-DotenvAssignment", script)
-        self.assertIn("# CLOAKBROWSER_BINARY_PATH", script)
-        self.assertNotIn("CLOAKBROWSER_BINARY_PATH is set", script)
         self.assertIn("MATHML_TO_LATEX_NODE_BIN", script)
         self.assertIn("PAPER_FETCH_IMAGE_TOOLS_DIR", script)
         self.assertIn("playwright/driver/node.exe", script)

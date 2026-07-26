@@ -23,6 +23,7 @@ from ..extraction.html.tables import (
     inject_inline_table_blocks,
 )
 from ..models.markdown import normalize_markdown_text
+from ..metadata.types import ProviderMetadata
 from ..quality.html_availability import assess_plain_text_fulltext_availability
 from ..quality.reason_codes import FULLTEXT
 from ..reason_codes import NO_RESULT
@@ -149,7 +150,7 @@ _ARXIV_SECTION_HINT_SKIP_TAGS = {
 @dataclass(frozen=True)
 class ArxivHtmlExtraction:
     markdown_text: str
-    merged_metadata: dict[str, Any]
+    merged_metadata: ProviderMetadata
     extracted_assets: list[dict[str, Any]]
     section_hints: list[dict[str, Any]]
     diagnostics: dict[str, Any]

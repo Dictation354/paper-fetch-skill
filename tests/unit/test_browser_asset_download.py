@@ -406,7 +406,7 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
         )
         recovery = BrowserAssetRecoveryContext(
             runtime=SimpleNamespace(
-                backend="cloakbrowser",
+                backend="camoufox",
                 headless=False,
                 cdp_endpoint="ws://127.0.0.1:9222/devtools/browser/test",
             ),
@@ -510,7 +510,7 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
             figure_call.kwargs["headers"],
             {"Referer": "https://example.test/final"},
         )
-        self.assertEqual(figure_call.kwargs["user_agent"], "test-agent")
+        self.assertEqual(figure_call.kwargs["user_agent"], "seed-agent")
         self.assertIs(supplementary_call.args[0], SUPPLEMENTARY_KIND)
         self.assertIs(
             supplementary_call.kwargs["file_document_fetcher"],
@@ -597,7 +597,7 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
             ],
         )
         recovery = BrowserAssetRecoveryContext(
-            runtime=SimpleNamespace(backend="cloakbrowser", headless=True),
+            runtime=SimpleNamespace(backend="camoufox", headless=True),
             provider="science",
             user_agent="test-agent",
             browser_context_seed={"browser_final_url": "https://example.test/final"},
@@ -665,7 +665,7 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
             ],
         )
         recovery = BrowserAssetRecoveryContext(
-            runtime=SimpleNamespace(backend="cloakbrowser", headless=True),
+            runtime=SimpleNamespace(backend="camoufox", headless=True),
             provider="science",
             user_agent="test-agent",
             browser_context_seed={"browser_final_url": "https://example.test/final"},
@@ -731,7 +731,7 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
             ],
         )
         recovery = BrowserAssetRecoveryContext(
-            runtime=SimpleNamespace(backend="cloakbrowser", headless=True),
+            runtime=SimpleNamespace(backend="camoufox", headless=True),
             provider="science",
             user_agent="test-agent",
             browser_context_seed={"browser_final_url": "https://example.test/final"},
@@ -1031,7 +1031,7 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
             ],
         )
         recovery = BrowserAssetRecoveryContext(
-            runtime=SimpleNamespace(backend="cloakbrowser", headless=True),
+            runtime=SimpleNamespace(backend="camoufox", headless=True),
             provider="pnas",
             user_agent="test-agent",
             browser_context_seed={"browser_final_url": "https://example.test/article"},

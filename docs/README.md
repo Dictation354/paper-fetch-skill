@@ -27,7 +27,7 @@
 
 ### 2. 配置 / 运维者
 
-如果你要准备 API key、下载目录、CloakBrowser 或排障，按这个顺序看：
+如果你要准备 API key、下载目录、Camoufox 或排障，按这个顺序看：
 
 1. [`cli.md`](cli.md)
 2. [`providers.md`](providers.md)
@@ -69,9 +69,9 @@
 - [`providers.md`](providers.md)
   - 讲 provider 能力矩阵、路由规则、默认输出、环境变量、缓存和限速。
 - [`browser-runtime.md`](browser-runtime.md)
-  - 讲 browser workflow 的 CloakBrowser/CDP 与 Camoufox/Firefox 双后端边界，并指向 provider、部署和架构文档。
+  - 讲 browser workflow 的 Camoufox/Firefox 生命周期边界，并指向 provider、部署和架构文档。
 - [`browser-backends.md`](browser-backends.md)
-  - 讲默认 Camoufox、已弃用 CloakBrowser、安装、抓取、headed 认证、离线准备和 publisher live matrix。
+  - 讲 Camoufox 安装、抓取、headed 认证、离线准备和 publisher live matrix。
 - [`provider-development.md`](provider-development.md)
   - 讲新增出版社 provider 的标准开发流程、typed contract、waterfall、资产语义、测试和文档验收标准。
 - [`onboarding/README.md`](../onboarding/README.md)

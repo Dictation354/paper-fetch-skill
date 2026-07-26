@@ -230,7 +230,8 @@ def parse_html_metadata(html_text: str, source_url: str) -> HtmlMetadata:
 
 
 def merge_html_metadata(
-    base_metadata: Mapping[str, Any] | None, html_metadata: HtmlMetadata
+    base_metadata: Mapping[str, Any] | None,
+    html_metadata: Mapping[str, Any],
 ) -> HtmlMetadata:
     base = dict(base_metadata or {})
     merged = dict(base)

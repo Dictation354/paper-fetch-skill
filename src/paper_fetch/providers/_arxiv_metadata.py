@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import copy
 from datetime import datetime
-from typing import Any
+from typing import Any, cast
 from collections.abc import Mapping, Sequence
 import re
 
@@ -184,7 +184,7 @@ def metadata_from_arxiv_result(
             },
         ],
     }
-    return metadata
+    return cast(ProviderMetadata, metadata)
 
 
 def _arxiv_id_from_metadata_or_doi(doi: str | None, metadata: Mapping[str, Any]) -> str:
@@ -249,7 +249,7 @@ def _minimal_arxiv_metadata(
     merged.setdefault("license_urls", list(metadata.get("license_urls") or []))
     merged.setdefault("references", list(metadata.get("references") or []))
     merged["fulltext_links"] = _default_arxiv_fulltext_links(arxiv_id, pdf_url)
-    return merged
+    return cast(ProviderMetadata, merged)
 
 
 def minimal_arxiv_metadata(
@@ -472,4 +472,4 @@ def _merge_arxiv_metadata_layers(
     else:
         merged["references"] = list(merged.get("references") or [])
     merged.pop("source_url", None)
-    return merged
+    return cast(ProviderMetadata, merged)

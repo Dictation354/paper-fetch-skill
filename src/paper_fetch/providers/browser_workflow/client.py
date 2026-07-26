@@ -8,7 +8,6 @@ from typing import Any, cast
 from collections.abc import Mapping
 
 from ...config import (
-    CLOAKBROWSER_CDP_ENDPOINT_ENV_VAR,
     build_browser_user_agent,
     build_publisher_user_agent,
     resolve_asset_download_concurrency,
@@ -78,7 +77,7 @@ class BrowserWorkflowClient(ProviderClient):
     def probe_status(self):
         return self.deps.probe_runtime_status(self.env, provider=self.name)
 
-    def fetch_metadata(self, query: Mapping[str, str | None]) -> dict[str, Any]:
+    def fetch_metadata(self, query: Mapping[str, str | None]) -> ProviderMetadata:
         raise ProviderFailure(
             NOT_SUPPORTED,
             f"{self.name} official metadata retrieval is not implemented; routing relies on Crossref metadata.",
@@ -514,24 +513,9 @@ class BrowserWorkflowClient(ProviderClient):
                 doi=normalized_doi,
             )
             self.deps.ensure_runtime_ready(runtime)
-        runtime_cdp_endpoint = (
-            normalize_text(getattr(runtime, "cdp_endpoint", None))
-            if runtime is not None
-            else ""
-        )
-        external_cdp_endpoint = bool(
-            runtime_cdp_endpoint
-            or normalize_text(
-                (getattr(context, "env", {}) or {}).get(
-                    CLOAKBROWSER_CDP_ENDPOINT_ENV_VAR
-                )
-            )
-        )
         camoufox_backend = bool(runtime is not None and runtime.backend == "camoufox")
         asset_download_concurrency = (
-            1
-            if external_cdp_endpoint or camoufox_backend
-            else resolve_asset_download_concurrency(context.env)
+            1 if camoufox_backend else resolve_asset_download_concurrency(context.env)
         )
         recovery = BrowserAssetRecoveryContext(
             runtime=runtime,
@@ -556,7 +540,7 @@ class BrowserWorkflowClient(ProviderClient):
             "transport": self.transport,
             "asset_download_concurrency": asset_download_concurrency,
             "figure_page_fetcher_factory": _MemoizedFigurePageFetcher,
-            "serial_browser_assets": external_cdp_endpoint or camoufox_backend,
+            "serial_browser_assets": camoufox_backend,
         }
         image_fetcher_factory = (
             (lambda **_request: None)

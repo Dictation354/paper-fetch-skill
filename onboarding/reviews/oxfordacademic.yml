@@ -112,9 +112,9 @@ fixtures:
   purpose: pdf_fallback
   doi: 10.1093/bioinformatics/btaa153
   baseline_markdown_path: tests/fixtures/golden_criteria/10.1093_bioinformatics_btaa153/extracted.md
-  baseline_markdown_sha256: 5f0fac1628a4a7908101a795e9a3976d042db117aa7f21c1a027e0936aee832d
+  baseline_markdown_sha256: 13fcbeac200937d208ceeaf175c5d5f9e3a222f531e558f4d919a50cd15bcdea
   markdown_quality_path: tests/fixtures/golden_criteria/10.1093_bioinformatics_btaa153/markdown-quality.json
-  markdown_quality_sha256: e7c6127cc02145748dab27ac8edf3aae1f16c1a3149a80ffdea057059a203b61
+  markdown_quality_sha256: af14fbf3cfd2278dc80e93079e292b8e4b88fb5904b2bb294beb34e51a2dfef6
   review_notes: Operator semantic review completed; no blocking issues found.
   sample_representative: true
   markdown_semantic_reviewed: true

@@ -336,7 +336,7 @@ class ProviderRequestOptionsTests(unittest.TestCase):
             artifact_dir=Path("/tmp/artifacts"),
             headless=True,
             user_agent="paper-fetch-test/1",
-            backend="cloakbrowser",
+            backend="camoufox",
         )
 
         mocked_pdf = mock.Mock()
@@ -388,7 +388,7 @@ class ProviderRequestOptionsTests(unittest.TestCase):
             artifact_dir=Path("/tmp/artifacts"),
             headless=True,
             user_agent="paper-fetch-test/1",
-            backend="cloakbrowser",
+            backend="camoufox",
         )
         fallback_html = browser_runtime.BrowserFetchedHtml(
             source_url="https://onlinelibrary.wiley.com/doi/full/10.1002/ece3.9361",
@@ -439,7 +439,7 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         self.assertIs(mocked_fetch.call_args_list[1].kwargs["disable_media"], False)
         self.assertIsNotNone(payload.content)
         assert payload.content is not None
-        self.assertEqual(payload.content.fetcher, "cloakbrowser")
+        self.assertEqual(payload.content.fetcher, "camoufox")
         self.assertIn(
             "fulltext:wiley_html_ok",
             [event.marker() for event in payload.trace if event.marker()],
@@ -455,7 +455,7 @@ class ProviderRequestOptionsTests(unittest.TestCase):
             artifact_dir=Path("/tmp/artifacts"),
             headless=True,
             user_agent="paper-fetch-test/1",
-            backend="cloakbrowser",
+            backend="camoufox",
         )
         fast_html = browser_runtime.BrowserFetchedHtml(
             source_url="https://onlinelibrary.wiley.com/doi/full/10.1002/ece3.9361",
@@ -511,7 +511,7 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         self.assertIs(mocked_fetch.call_args_list[1].kwargs["disable_media"], False)
         self.assertIsNotNone(payload.content)
         assert payload.content is not None
-        self.assertEqual(payload.content.fetcher, "cloakbrowser")
+        self.assertEqual(payload.content.fetcher, "camoufox")
         self.assertEqual(payload.content_type, "text/html")
 
     def test_html_asset_download_prefers_direct_full_size_url_before_preview(
@@ -1931,7 +1931,7 @@ class ProviderRequestOptionsTests(unittest.TestCase):
             artifact_dir=Path("/tmp/artifacts"),
             headless=True,
             user_agent="paper-fetch-test/1",
-            backend="cloakbrowser",
+            backend="camoufox",
         )
         raw_payload = RawFulltextPayload(
             provider="science",
@@ -1995,7 +1995,7 @@ class ProviderRequestOptionsTests(unittest.TestCase):
                 call.kwargs["asset_download_concurrency"]
                 for call in mocked_download_assets.call_args_list
             ],
-            [6, 6],
+            [1, 1],
         )
         self.assertEqual(
             [call.args[0] for call in mocked_download_assets.call_args_list],
@@ -2010,7 +2010,7 @@ class ProviderRequestOptionsTests(unittest.TestCase):
             artifact_dir=Path("/tmp/artifacts"),
             headless=True,
             user_agent="paper-fetch-test/1",
-            backend="cloakbrowser",
+            backend="camoufox",
             cdp_endpoint="ws://127.0.0.1:9222/devtools/browser/test",
         )
         raw_payload = RawFulltextPayload(

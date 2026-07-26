@@ -20,6 +20,9 @@ class RequestErrorCategory(StrEnum):
     DNS_ERROR = "dns_error"
     CONNECTION_RESET = "connection_reset"
     CONNECTION_CLOSED = "connection_closed"
+    RESPONSE_TOO_LARGE = "response_too_large"
+    UNSUPPORTED_SCHEME = "unsupported_url_scheme"
+    UNSAFE_REDIRECT = "unsafe_redirect"
 
 
 class RequestFailure(Exception):

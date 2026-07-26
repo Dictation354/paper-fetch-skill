@@ -1,18 +1,37 @@
 [build-system]
-requires = ["setuptools>=69", "wheel"]
+requires = ["setuptools>=77", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "paper-fetch-skill"
-version = "3.2.1"
+version = "4.0.0"
 description = "AI-friendly paper fetch tooling"
 readme = "README.md"
 requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [
+  { name = "Jifei Huang" },
+]
+maintainers = [
+  { name = "Jifei Huang" },
+]
+keywords = ["papers", "markdown", "doi", "mcp", "research"]
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Environment :: Console",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Topic :: Scientific/Engineering :: Information Analysis",
+]
 dependencies = [
   "beautifulsoup4>=4.14,<5",
   "cachetools>=6,<8",
-  "camoufox>=0.5.4,<0.6",
-  "cloakbrowser>=0.4,<0.6",
+  "defusedxml>=0.7.1,<0.8",
   "filetype>=1.2,<2",
   "filelock>=3.20,<4",
   "imagesize>=1.4,<3",
@@ -21,24 +40,47 @@ dependencies = [
   "platformdirs>=4,<5",
   "python-dotenv>=1.2,<2",
   "rapidfuzz>=3,<4",
-  "trafilatura>=2.0,<3",
-  "lxml>=6,<7",
-  "playwright>=1.47,<1.61",
-  "PyMuPDF>=1.27,<2",
-  "pymupdf4llm>=1.27,<2",
   "pydantic>=2,<3",
   "PyYAML>=6,<7",
   "urllib3>=2.2,<3",
 ]
 
+[project.urls]
+Homepage = "https://github.com/Dictation354/paper-fetch-skill"
+Documentation = "https://github.com/Dictation354/paper-fetch-skill/tree/main/docs"
+Repository = "https://github.com/Dictation354/paper-fetch-skill"
+Issues = "https://github.com/Dictation354/paper-fetch-skill/issues"
+Changelog = "https://github.com/Dictation354/paper-fetch-skill/blob/main/CHANGELOG.md"
+
 [project.optional-dependencies]
+browser = [
+  "camoufox>=0.5.4,<0.6",
+  "lxml>=6,<7",
+  "playwright>=1.47,<1.61",
+  "trafilatura>=2.0,<3",
+]
+pdf = [
+  "PyMuPDF>=1.27,<2",
+  "pymupdf4llm>=1.27,<2",
+]
+full = [
+  "camoufox>=0.5.4,<0.6",
+  "lxml>=6,<7",
+  "playwright>=1.47,<1.61",
+  "PyMuPDF>=1.27,<2",
+  "pymupdf4llm>=1.27,<2",
+  "trafilatura>=2.0,<3",
+]
 dev = [
   "build>=1.2,<2",
+  "cyclonedx-bom>=7,<8",
   "jsonschema>=4,<5",
   "markdown-it-py>=3,<5",
   "packaging>=24,<27",
+  "pip-audit>=2.9,<3",
   "pytest>=8,<10",
   "pytest-cov>=6,<8",
+  "pytest-socket>=0.7,<1",
   "pytest-xdist>=3.6,<4",
   "ruff>=0.8,<1",
   "mypy>=1.14,<3",
@@ -96,68 +138,28 @@ ignore = ["B008"]
 [tool.mypy]
 python_version = "3.11"
 mypy_path = "src"
-files = [
-  "src/paper_fetch/models",
-  "src/paper_fetch/workflow",
-  "src/paper_fetch/mcp",
-  "src/paper_fetch/http",
-  "src/paper_fetch/metadata",
-  "src/paper_fetch/markdown",
-  "src/paper_fetch/extraction/html",
-  "src/paper_fetch/extraction/markdown_render",
-  "src/paper_fetch/extraction/citation_anchors.py",
-  "src/paper_fetch/extraction/section_hints.py",
-  "src/paper_fetch/_cloakbrowser_runtime.py",
-  "src/paper_fetch/artifacts.py",
-  "src/paper_fetch/config.py",
-  "src/paper_fetch/runtime.py",
-  "src/paper_fetch/runtime_browser.py",
-  "src/paper_fetch/tracing.py",
-  "src/paper_fetch/reason_codes.py",
-  "src/paper_fetch/arxiv_id.py",
-  "src/paper_fetch/formula/__init__.py",
-  "src/paper_fetch/formula/convert.py",
-  "src/paper_fetch/formula/paths.py",
-  "src/paper_fetch/image_tools/convert.py",
-  "src/paper_fetch/normalize_journal_name.py",
-  "src/paper_fetch/section_vocab.py",
-  "src/paper_fetch/logging_utils.py",
-  "src/paper_fetch/manifest.py",
-  "src/paper_fetch/manifest_writer.py",
-  "src/paper_fetch/publisher_identity.py",
-  "src/paper_fetch/provider_catalog.py",
-  "src/paper_fetch/quality",
-  "src/paper_fetch/providers/__init__.py",
-  "src/paper_fetch/providers/base.py",
-  "src/paper_fetch/providers/protocols.py",
-  "src/paper_fetch/providers/registry.py",
-  "src/paper_fetch/providers/_registry.py",
-  "src/paper_fetch/providers/_waterfall.py",
-  "src/paper_fetch/providers/_asset_retry.py",
-  "src/paper_fetch/providers/_pdf_candidates.py",
-  "src/paper_fetch/providers/_pdf_common.py",
-  "src/paper_fetch/providers/_pdf_fallback.py",
-  "src/paper_fetch/providers/browser_runtime",
-  "src/paper_fetch/providers/browser_workflow",
-  "src/paper_fetch/providers/atypon_browser_workflow",
-  "src/paper_fetch/providers/copernicus.py",
-  "src/paper_fetch/providers/_article_markdown_copernicus.py",
-  "src/paper_fetch/providers/_article_markdown_common.py",
-  "src/paper_fetch/providers/_article_markdown_jats.py",
-  "src/paper_fetch/providers/_cloakbrowser.py",
-  "src/paper_fetch/service.py",
-  "src/paper_fetch/resolve/query.py",
-]
+files = ["src/paper_fetch"]
 check_untyped_defs = true
 ignore_missing_imports = true
 no_site_packages = true
 warn_unused_ignores = true
 
+[tool.coverage.run]
+branch = true
+source = ["paper_fetch"]
+
 [tool.coverage.report]
-fail_under = 40
+fail_under = 82
+show_missing = true
+
+[tool.ruff.lint.mccabe]
+max-complexity = 25
+
+[tool.ruff.lint.pylint]
+max-args = 10
 
 [tool.pytest.ini_options]
-addopts = "-n auto"
+addopts = "-n auto --disable-socket --allow-unix-socket --allow-hosts=127.0.0.1,localhost,::1"
 testpaths = [
   "tests/unit",
   "tests/integration",

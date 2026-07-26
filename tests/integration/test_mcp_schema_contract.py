@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import sys
 import unittest
 from typing import Any
@@ -50,7 +51,7 @@ class McpStdioSchemaContractTests(unittest.IsolatedAsyncioTestCase):
             command=sys.executable,
             args=["-m", "paper_fetch.mcp.server"],
             cwd=str(REPO_ROOT),
-            env={"PYTHONPATH": str(SRC_DIR)},
+            env={**os.environ, "PYTHONPATH": str(SRC_DIR)},
         )
 
         async with stdio_client(server) as (read_stream, write_stream):

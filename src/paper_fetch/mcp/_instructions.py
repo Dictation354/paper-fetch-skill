@@ -27,7 +27,7 @@ DEFAULT_FETCH_NOTES: tuple[str, ...] = (
 SKILL_ENVIRONMENT_VARIABLES: tuple[tuple[str, str], ...] = (
     (
         "PAPER_FETCH_BROWSER_BACKEND",
-        "Selects camoufox (default) or deprecated cloakbrowser. Selection is strict and never falls back between backends.",
+        "Selects the Camoufox browser backend; any other value is rejected.",
     ),
     (
         "PAPER_FETCH_BROWSER_HEADLESS",
@@ -56,39 +56,15 @@ SKILL_ENVIRONMENT_VARIABLES: tuple[tuple[str, str], ...] = (
     ),
     (
         "PAPER_FETCH_WILEY_STORAGE_STATE_JSON",
-        "Optional Wiley browser storage-state JSON override; managed default uses provider-scoped storage-state, while external CDP mode uses the existing browser context state.",
+        "Optional Wiley browser storage-state JSON override; the managed default uses provider-scoped storage-state.",
     ),
     (
         "PAPER_FETCH_WILEY_PROFILE_DIR",
-        "Optional Wiley profile override; the selected backend uses provider-scoped storage-state. CLOAKBROWSER_PROFILE_DIR applies only when the deprecated CloakBrowser backend is explicitly selected.",
-    ),
-    (
-        "CLOAKBROWSER_PROFILE_DIR",
-        "Optional startup/storage-state directory for the managed CloakBrowser Chrome when CLOAKBROWSER_CDP_ENDPOINT is unset.",
-    ),
-    (
-        "CLOAKBROWSER_BINARY_PATH",
-        "Optional preinstalled Chrome/CloakBrowser binary path; cloakbrowser uses it instead of downloading Chromium.",
-    ),
-    (
-        "CLOAKBROWSER_USER_DATA_DIR",
-        "Optional fallback startup/storage-state directory for the managed CloakBrowser Chrome when CLOAKBROWSER_PROFILE_DIR is unset.",
-    ),
-    (
-        "CLOAKBROWSER_CDP_ENDPOINT",
-        "Deprecated CloakBrowser-only Chrome DevTools Protocol endpoint. It is ignored unless PAPER_FETCH_BROWSER_BACKEND=cloakbrowser is explicitly selected; the default Camoufox path never connects to CDP.",
-    ),
-    (
-        "CLOAKBROWSER_HEADLESS",
-        "Optional headed/headless override for the managed CloakBrowser Chrome when CLOAKBROWSER_CDP_ENDPOINT is unset.",
-    ),
-    (
-        "CLOAKBROWSER_TIMEOUT_MS",
-        "Legacy timeout override read only when deprecated CloakBrowser is explicitly selected. Defaults to 120000.",
+        "Optional Wiley profile override for provider-scoped storage state.",
     ),
     (
         "PAPER_FETCH_BROWSER_USER_AGENT",
-        "Optional CloakBrowser/publisher direct User-Agent override. Camoufox ignores it to preserve a consistent generated Firefox fingerprint.",
+        "Optional publisher direct-request User-Agent override. Camoufox ignores it to preserve a consistent generated Firefox fingerprint.",
     ),
     ("PAPER_FETCH_DOWNLOAD_DIR", "Overrides the default CLI/MCP download directory."),
     ("PAPER_FETCH_RUN_LIVE", "Test-only flag for live publisher integration checks."),

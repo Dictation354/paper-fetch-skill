@@ -151,11 +151,7 @@ function Build-ProjectWheelhouse {
     $script:DependencyWheelhouse = $wheelhouse
 
     Write-Log "Downloading Windows dependency wheelhouse"
-    Invoke-Native $PythonBin -m pip download --dest $wheelhouse --only-binary=:all: $projectWheelPath
-    $cloakbrowserWheels = @(Get-ChildItem -Path $wheelhouse -Filter "cloakbrowser-*.whl" -ErrorAction SilentlyContinue)
-    if ($cloakbrowserWheels.Count -eq 0) {
-        throw "Dependency wheelhouse is missing cloakbrowser-*.whl."
-    }
+    Invoke-Native $PythonBin -m pip download --dest $wheelhouse --only-binary=:all: "$($projectWheelPath)[full]"
     $camoufoxWheels = @(Get-ChildItem -Path $wheelhouse -Filter "camoufox-*.whl" -ErrorAction SilentlyContinue)
     if ($camoufoxWheels.Count -eq 0) {
         throw "Dependency wheelhouse is missing camoufox-*.whl."
@@ -171,7 +167,7 @@ function New-BuildVenv {
     if ([string]::IsNullOrWhiteSpace($script:ProjectWheelPath) -or [string]::IsNullOrWhiteSpace($script:DependencyWheelhouse)) {
         throw "Project wheelhouse must be built before creating the Windows build venv."
     }
-    Invoke-Native $buildPython -m pip install --no-index --find-links $script:DependencyWheelhouse $script:ProjectWheelPath
+    Invoke-Native $buildPython -m pip install --no-index --find-links $script:DependencyWheelhouse "$($script:ProjectWheelPath)[full]"
     return $buildPython
 }
 
@@ -234,7 +230,7 @@ function Install-EmbeddedPythonPackages {
     $previousSkip = $env:PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD
     try {
         $env:PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD = "1"
-        Invoke-Native $PythonBin -m pip install --no-index --find-links $script:DependencyWheelhouse --only-binary=:all: --target $sitePackages $script:ProjectWheelPath
+        Invoke-Native $PythonBin -m pip install --no-index --find-links $script:DependencyWheelhouse --only-binary=:all: --target $sitePackages "$($script:ProjectWheelPath)[full]"
     } finally {
         $env:PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD = $previousSkip
     }
@@ -371,10 +367,6 @@ function Write-DefaultOfflineEnv {
     foreach ($name in $OfflineEnvKeys) {
         $lines.Add("$name=$(Quote-DotenvString ([string](Get-DefaultOfflineEnvValue $name)))")
     }
-    $lines.Add("# Optional: connect to an already-running Chrome/CloakBrowser CDP endpoint.")
-    $lines.Add("# CLOAKBROWSER_CDP_ENDPOINT='ws://127.0.0.1:9222/devtools/browser/...'")
-    $lines.Add("# Optional: use a preinstalled Chrome/CloakBrowser binary instead of cloakbrowser download.")
-    $lines.Add("# CLOAKBROWSER_BINARY_PATH='C:/path/to/chrome.exe'")
     $lines.Add($OfflineManagedEnd)
     $content = ($lines.ToArray() -join [Environment]::NewLine) + [Environment]::NewLine
     [System.IO.File]::WriteAllText((Join-Path $Staging "offline.env"), $content, [System.Text.UTF8Encoding]::new($false))
@@ -391,9 +383,7 @@ The offline build does not bundle Ghostscript/libvips from the build host PATH; 
 It does not redistribute a browser binary for browser-backed providers. Default Camoufox may fetch its runtime on the first real browser-backed request; fully offline hosts must preinstall the complete Camoufox runtime.
 Formula conversion uses the bundled Playwright driver Node via `MATHML_TO_LATEX_NODE_BIN`; do not rely on a bare `node` from PATH in Codex Desktop sessions.
 
-Browser-backed providers use native Camoufox by default, without probing or starting CloakBrowser/CDP.
-Set `PAPER_FETCH_BROWSER_BACKEND=cloakbrowser` only for the deprecated compatibility backend; selection never silently falls back between backends.
-`CLOAKBROWSER_CDP_ENDPOINT` and other legacy variables take effect only with that explicit CloakBrowser selection.
+Browser-backed providers use native Camoufox.
 Set `PAPER_FETCH_BROWSER_HEADLESS=false` only when running with a display-capable session.
 '@
     [System.IO.File]::WriteAllText((Join-Path $Staging "README.offline.md"), $content, [System.Text.UTF8Encoding]::new($false))
@@ -446,10 +436,6 @@ function Write-ManifestAndChecksums {
             command_wrappers = "bin"
             formula_tools = "formula-tools"
             image_tools = "image-tools"
-            cloakbrowser = [ordered]@{
-                python_package = "runtime/Lib/site-packages"
-                browser_binary = "not_bundled"
-            }
             camoufox = [ordered]@{
                 python_package = "runtime/Lib/site-packages"
                 browser_binary = "not_bundled"

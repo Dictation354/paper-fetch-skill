@@ -109,14 +109,16 @@ def _install_fake_browser_manager(monkeypatch) -> type[_FakeAuthBrowserManager]:
             cdp_endpoint: str | None = None,
             profile_dir: Path | None = None,
             user_data_dir: Path | None = None,
+            headless: bool = True,
         ) -> None:
             super().__init__()
             self.binary_path = binary_path
             self.cdp_endpoint = cdp_endpoint
             self.profile_dir = profile_dir
             self.user_data_dir = user_data_dir
+            self.headless = headless
 
-    monkeypatch.setattr(auth, "BrowserContextManager", FakeManager)
+    monkeypatch.setattr(auth, "CamoufoxPersistentContextManager", FakeManager)
     return FakeManager
 
 
@@ -124,7 +126,7 @@ def _patch_auth_runtime(
     monkeypatch, tmp_path, env: dict[str, str] | None = None
 ) -> None:
     runtime_env = {
-        "PAPER_FETCH_BROWSER_BACKEND": "cloakbrowser",
+        "PAPER_FETCH_BROWSER_BACKEND": "camoufox",
         XDG_DATA_HOME_ENV_VAR: str(tmp_path / "xdg"),
     }
     if env is not None:
@@ -197,7 +199,11 @@ def test_authenticate_provider_profile_uses_sample_headed_profile_and_storage(
     )
 
     profile_dir = (
-        tmp_path / "xdg" / "paper-fetch" / "publisher-browser-profiles" / "wiley"
+        tmp_path
+        / "xdg"
+        / "paper-fetch"
+        / "publisher-browser-profiles"
+        / "wiley-camoufox"
     )
     storage_state_path = profile_dir / "storage-state.json"
     assert result.provider == "wiley"
@@ -208,8 +214,8 @@ def test_authenticate_provider_profile_uses_sample_headed_profile_and_storage(
     assert result.final_url == auth.AUTH_TARGETS["wiley"].url
     manager = fake_manager.instances[0]
     assert manager.cdp_endpoint is None
-    assert manager.user_data_dir == profile_dir
-    assert manager.new_context_kwargs["headless"] is False
+    assert manager.user_data_dir == str(profile_dir)
+    assert manager.closed is True
     assert "storage_state" not in manager.new_context_kwargs
     assert manager.context.page.goto_calls == [
         (
@@ -246,7 +252,6 @@ def test_authenticate_provider_profile_url_override(monkeypatch, tmp_path) -> No
         provider="wiley",
         target_url=target_url,
         timeout_ms=45000,
-        browser_user_agent="Mozilla/5.0 auth-test",
         confirm=lambda _prompt: None,
     )
 
@@ -254,8 +259,21 @@ def test_authenticate_provider_profile_url_override(monkeypatch, tmp_path) -> No
     assert manager.context.page.goto_calls == [
         (target_url, {"wait_until": "domcontentloaded", "timeout": 45000})
     ]
-    assert manager.new_context_kwargs["user_agent"] == "Mozilla/5.0 auth-test"
     assert result.final_url == target_url
+
+
+def test_authenticate_provider_profile_rejects_user_agent_for_camoufox(
+    monkeypatch, tmp_path
+) -> None:
+    _install_fake_browser_manager(monkeypatch)
+    _patch_auth_runtime(monkeypatch, tmp_path)
+
+    with pytest.raises(ProviderFailure, match="cannot be used with Camoufox"):
+        auth.authenticate_provider_profile(
+            provider="wiley",
+            browser_user_agent="Mozilla/5.0 auth-test",
+            confirm=lambda _prompt: None,
+        )
 
 
 def test_authenticate_provider_profile_rejects_non_browser_provider() -> None:

@@ -1,5 +1,5 @@
 ---
-title: "10.3390/foods10081757"
+title: "Impact of Ultra-High-Pressure Homogenization of Buttermilk for the Production of Yogurt"
 authors: "Louise Krebs, Amélie Bérubé, Jean Iung, Alice Marciniak, Sylvie L. Turgeon, Guillaume Brisson"
 doi: "10.3390/foods10081757"
 source: "mdpi_html"
@@ -9,13 +9,11 @@ has_abstract: true
 token_estimate: 9885
 ---
 
-# 10.3390/foods10081757
+# Impact of Ultra-High-Pressure Homogenization of Buttermilk for the Production of Yogurt
 
 ## Abstract
 
 Despite its nutritional properties, buttermilk (BM) is still poorly valorized due to its high phospholipid (PL) concentration, impairing its techno-functional performance in dairy products. Therefore, the objective of this study was to investigate the impact of ultra-high-pressure homogenization (UHPH) on the techno-functional properties of BM in set and stirred yogurts. BM and skimmed milk (SM) were pretreated by conventional homogenization (15 MPa), high-pressure homogenization (HPH) (150 MPa), and UHPH (300 MPa) prior to yogurt production. Polyacrylamide gel electrophoresis (PAGE) analysis showed that UHPH promoted the formation of large covalently linked aggregates in BM. A more particulate gel microstructure was observed for set SM, while BM gels were finer and more homogeneous. These differences affected the water holding capacity (WHC), which was higher for BM, while a decrease in WHC was observed for SM yogurts with an increase in homogenization pressure. In stirred yogurts, the apparent viscosity was significantly higher for SM, and the pretreatment of BM with UHPH further reduced its viscosity. Overall, our results showed that UHPH could be used for modulating BM and SM yogurt texture properties. The use of UHPH on BM has great potential for lower-viscosity dairy applications (e.g., ready-to-drink yogurts) to deliver its health-promoting properties.
-
-## Impact of Ultra-High-Pressure Homogenization of Buttermilk for the Production of Yogurt
 
 ## 1. Introduction
 

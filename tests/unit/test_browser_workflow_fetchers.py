@@ -5,11 +5,12 @@ import threading
 import types
 from unittest import mock
 
-from paper_fetch.config import CLOAKBROWSER_CDP_ENDPOINT_ENV_VAR
 from paper_fetch.providers import browser_workflow
 from paper_fetch.providers.browser_workflow.fetchers import context as fetcher_context
 from paper_fetch.providers.browser_workflow.fetchers import image as image_fetchers
 from paper_fetch.runtime import RuntimeContext
+
+TEST_CDP_ENDPOINT = "ws://127.0.0.1:9222/devtools/browser/test"
 
 
 class _FakePage:
@@ -101,11 +102,7 @@ def _fake_playwright_cdp_modules(
 
 
 def _runtime_context_with_cdp_and_forbidden_shared_browser() -> RuntimeContext:
-    context = RuntimeContext(
-        env={
-            CLOAKBROWSER_CDP_ENDPOINT_ENV_VAR: "ws://127.0.0.1:9222/devtools/browser/test"
-        }
-    )
+    context = RuntimeContext(env={})
     context.new_browser_context = mock.Mock(
         side_effect=AssertionError("shared runtime browser should not be used")
     )
@@ -133,6 +130,7 @@ def test_threaded_image_fetcher_uses_thread_private_browser_when_runtime_context
         browser_user_agent="UnitTestAgent/1.0",
         runtime_context=runtime_context,
         use_runtime_shared_browser=False,
+        cdp_endpoint=TEST_CDP_ENDPOINT,
     )
     inner_fetcher = fetcher._get_fetcher()
     inner_fetcher._fetch_with_page = mock.Mock(
@@ -360,48 +358,10 @@ def test_image_fetcher_uses_runtime_keyed_context_when_shared_browser_enabled() 
     assert fake_context.closed is True
 
 
-def test_image_fetcher_uses_runtime_env_cdp_endpoint_for_keyed_context() -> None:
-    image_url = "https://example.test/figure.png"
-    fake_context = _FakeContext()
-    runtime_context = RuntimeContext(
-        env={
-            CLOAKBROWSER_CDP_ENDPOINT_ENV_VAR: "ws://127.0.0.1:9222/devtools/browser/env"
-        }
-    )
-    runtime_context.new_browser_context_for_config = mock.Mock(
-        return_value=fake_context
-    )
-    fetcher = browser_workflow._SharedBrowserImageDocumentFetcher(
-        browser_context_seed_getter=lambda: {"browser_user_agent": "UnitTestAgent/1.0"},
-        seed_urls_getter=lambda: [],
-        browser_user_agent="UnitTestAgent/1.0",
-        runtime_context=runtime_context,
-        use_runtime_shared_browser=True,
-    )
-    fetcher._fetch_with_page = mock.Mock(
-        return_value={
-            "status_code": 200,
-            "headers": {"content-type": "image/png"},
-            "body": b"\x89PNG\r\n\x1a\nenv-runtime-image",
-            "url": image_url,
-            "dimensions": {"width": 640, "height": 480},
-        }
-    )
-
-    try:
-        result = fetcher(image_url, {"kind": "figure"})
-    finally:
-        fetcher.close()
-        runtime_context.close()
-
-    assert result is not None
-    call_kwargs = runtime_context.new_browser_context_for_config.call_args.kwargs
-    assert call_kwargs["cdp_endpoint"] == "ws://127.0.0.1:9222/devtools/browser/env"
-
-
 def test_memoized_image_fetcher_preserves_caller_thread_requirement() -> None:
     inner_fetcher = mock.Mock()
     inner_fetcher.requires_caller_thread = True
+    inner_fetcher.browser_backend = "camoufox"
     fetcher = browser_workflow._MemoizedImageDocumentFetcher(inner_fetcher)
 
     assert fetcher.requires_caller_thread is True
@@ -428,6 +388,7 @@ def test_threaded_file_fetcher_uses_thread_private_browser_when_runtime_context_
         browser_user_agent="UnitTestAgent/1.0",
         runtime_context=runtime_context,
         use_runtime_shared_browser=False,
+        cdp_endpoint=TEST_CDP_ENDPOINT,
         thread_local=True,
     )
     inner_fetcher = fetcher._get_fetcher()
@@ -550,6 +511,7 @@ def test_threaded_image_fetcher_closes_thread_private_browser_on_worker_thread()
         browser_user_agent="UnitTestAgent/1.0",
         runtime_context=runtime_context,
         use_runtime_shared_browser=False,
+        cdp_endpoint=TEST_CDP_ENDPOINT,
     )
     errors: list[BaseException] = []
     result_holder: dict[str, object] = {}
@@ -603,6 +565,7 @@ def test_threaded_file_fetcher_closes_thread_private_browser_on_worker_thread() 
         browser_user_agent="UnitTestAgent/1.0",
         runtime_context=runtime_context,
         use_runtime_shared_browser=False,
+        cdp_endpoint=TEST_CDP_ENDPOINT,
         thread_local=True,
     )
     errors: list[BaseException] = []
@@ -658,6 +621,7 @@ def test_threaded_file_fetcher_close_releases_all_thread_private_browser_resourc
         browser_user_agent="UnitTestAgent/1.0",
         runtime_context=runtime_context,
         use_runtime_shared_browser=False,
+        cdp_endpoint=TEST_CDP_ENDPOINT,
         thread_local=True,
     )
 

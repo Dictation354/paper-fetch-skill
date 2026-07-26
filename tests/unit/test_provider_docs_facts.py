@@ -17,8 +17,8 @@ DOCS_PROVIDER_PATH = REPO_ROOT / "docs" / "providers.md"
 ONBOARDING_README_PATH = REPO_ROOT / "onboarding" / "README.md"
 MCP_INSTRUCTIONS_PATH = REPO_ROOT / "src" / "paper_fetch" / "mcp" / "_instructions.py"
 PROVIDER_CATALOG_PATH = REPO_ROOT / "src" / "paper_fetch" / "provider_catalog.py"
-CLOAKBROWSER_PROVIDER_PATH = (
-    REPO_ROOT / "src" / "paper_fetch" / "providers" / "_cloakbrowser.py"
+PLAYWRIGHT_PROVIDER_PATH = (
+    REPO_ROOT / "src" / "paper_fetch" / "providers" / "_playwright_browser.py"
 )
 SKILL_ENTRYPOINT_PATH = REPO_ROOT / "skills" / "paper-fetch-skill" / "SKILL.md"
 CLI_DOC_PATH = REPO_ROOT / "docs" / "cli.md"
@@ -81,8 +81,8 @@ def test_browser_runtime_providers_are_declared_on_provider_specs() -> None:
         assert spec.requires_browser_runtime is True
 
 
-def test_cloakbrowser_helper_does_not_keep_second_browser_provider_table() -> None:
-    source = _read(CLOAKBROWSER_PROVIDER_PATH)
+def test_camoufox_helper_does_not_keep_second_browser_provider_table() -> None:
+    source = _read(PLAYWRIGHT_PROVIDER_PATH)
 
     assert "_BROWSER_WORKFLOW_PROVIDERS" not in source
 
@@ -207,7 +207,7 @@ def test_diagnostics_docs_define_static_live_auth_layers_and_secret_safe_sources
     assert "退出码为 `0=ready`、`1=degraded`、`2=error`" in cli
     assert "不回显 token、cookie、endpoint" in cli
     assert "paper-fetch doctor --json" in deployment
-    assert "不连接 CDP、不启动 Chrome、不请求出版社页面" in deployment
+    assert "不启动浏览器、不请求出版社页面" in deployment
 
     assert "process environment > an explicit `env_file`" in environment
     assert (

@@ -119,9 +119,9 @@ fixtures:
   purpose: pdf_fallback
   doi: 10.1088/1748-9326/aa9f73
   baseline_markdown_path: tests/fixtures/golden_criteria/10.1088_1748-9326_aa9f73/extracted.md
-  baseline_markdown_sha256: 836cf3c033a5678ee52091ef9337a50f88a51dc405b257c12a5bfee1d3eeabc3
+  baseline_markdown_sha256: b5e318042e264c3d5c9c150e73d338449ab62bff357d950dbed89885707e733d
   markdown_quality_path: tests/fixtures/golden_criteria/10.1088_1748-9326_aa9f73/markdown-quality.json
-  markdown_quality_sha256: e17785db55b375740cf9dee2e1bc10013b35f4e5248307096331984610f90022
+  markdown_quality_sha256: f34241a1846d766fb0a58b8a41e5bcd848bef97b3abe90fa5d04c65e5ed3c07a
   review_notes: Agent review confirmed the seeded-browser IOP PDF replay is a real
     application/pdf fallback baseline with source iop_pdf and article body text;
     the retained PDF cover-page recommendation text is tracked as a low-severity

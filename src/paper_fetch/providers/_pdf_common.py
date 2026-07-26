@@ -88,6 +88,21 @@ _MIN_USABLE_PDF_MARKDOWN_WORDS = 250
 _MIN_TRANSPARENT_TEXT_WORDS = 500
 _TRANSPARENT_FALLBACK_WORD_FACTOR = 3
 _PYMUPDF_SUBPROCESS_PATCH_LOCK = threading.RLock()
+_PDF_MARKDOWN_HEADING_PATTERN = re.compile(r"^(#{1,6})\s+(.+?)\s*$")
+_PDF_PROSE_WORD_PATTERN = re.compile(r"[^\W\d_]{3,}", flags=re.UNICODE)
+_PDF_ITALIC_ALPHA_SUBSECTION_PATTERN = re.compile(
+    r"^_([a-z])\.\s+(.+?)_\s*$", flags=re.IGNORECASE
+)
+_PDF_HEADED_ITALIC_ALPHA_SUBSECTION_PATTERN = re.compile(
+    r"^(#{1,6})\s+_([a-z])\.\s+(.+?)_\s*$", flags=re.IGNORECASE
+)
+_PDF_PREAMBLE_NOISE_HEADINGS = frozenset({"further", "letter"})
+_PDF_MAJOR_SECTION_PATTERN = re.compile(
+    r"^(?:\d+(?:\.\d+)*[.)]?\s+)?"
+    r"(?:abstract|introduction|background|methods?|materials and methods|"
+    r"results?|discussion|conclusions?)\b",
+    flags=re.IGNORECASE,
+)
 PDF_ONLY_MARKDOWN_WARNING = "PDF was downloaded but Markdown extraction was not usable."
 PDF_MAX_BYTES_ENV_VAR = "PAPER_FETCH_PDF_MAX_BYTES"
 PDF_MAX_PAGES_ENV_VAR = "PAPER_FETCH_PDF_MAX_PAGES"
@@ -408,6 +423,153 @@ def _render_default_pdf_markdown(
         return str(pymupdf4llm.to_markdown(str(pdf_path), **kwargs) or "")
 
 
+def _canonical_pdf_heading(value: str) -> str:
+    text = re.sub(r"<[^>]+>", " ", str(value or ""))
+    text = re.sub(r"!\[([^\]]*)\]\([^)]*\)", r"\1", text)
+    text = re.sub(r"\[([^\]]+)\]\([^)]*\)", r"\1", text)
+    text = re.sub(r"[*_`~]+", "", text)
+    text = re.sub(r"[^\w]+", " ", text, flags=re.UNICODE)
+    return normalize_text(text).casefold()
+
+
+def _next_nonblank_line_index(lines: Sequence[str], start: int) -> int | None:
+    for index in range(start, len(lines)):
+        if normalize_text(lines[index]):
+            return index
+    return None
+
+
+def _first_major_pdf_section_index(lines: Sequence[str]) -> int | None:
+    for index, line in enumerate(lines):
+        match = _PDF_MARKDOWN_HEADING_PATTERN.match(line.strip())
+        if match is None:
+            continue
+        if _PDF_MAJOR_SECTION_PATTERN.match(_canonical_pdf_heading(match.group(2))):
+            return index
+    return None
+
+
+def _pdf_alpha_subsection_heading_level(lines: Sequence[str]) -> int | None:
+    levels: list[int] = []
+    labels: set[str] = set()
+    for line in lines:
+        match = _PDF_HEADED_ITALIC_ALPHA_SUBSECTION_PATTERN.match(line.strip())
+        if match is None:
+            continue
+        levels.append(len(match.group(1)))
+        labels.add(match.group(2).casefold())
+    if len(labels) < 2:
+        return None
+    return max(set(levels), key=lambda level: (levels.count(level), -level))
+
+
+def _empty_preamble_title_indices(
+    lines: Sequence[str], first_major_index: int | None
+) -> set[int]:
+    indices: set[int] = set()
+    seen_heading = False
+    for index, line in enumerate(lines):
+        if first_major_index is not None and index >= first_major_index:
+            break
+        match = _PDF_MARKDOWN_HEADING_PATTERN.match(line.strip())
+        if match is None:
+            continue
+        if len(match.group(1)) != 1:
+            seen_heading = True
+            continue
+        canonical = _canonical_pdf_heading(match.group(2))
+        next_index = _next_nonblank_line_index(lines, index + 1)
+        next_is_heading = (
+            next_index is not None
+            and _PDF_MARKDOWN_HEADING_PATTERN.match(lines[next_index].strip())
+            is not None
+        )
+        if (
+            (seen_heading or len(_PDF_PROSE_WORD_PATTERN.findall(canonical)) >= 4)
+            and len(canonical.split()) >= 4
+            and next_is_heading
+            and not _PDF_MAJOR_SECTION_PATTERN.match(canonical)
+        ):
+            indices.add(index)
+        seen_heading = True
+    return indices
+
+
+def _normalize_pdf_markdown_structure(markdown_text: str) -> str:
+    """Repair deterministic PyMuPDF heading drift without provider/DOI rules."""
+
+    if not normalize_text(markdown_text):
+        return str(markdown_text or "")
+
+    lines = str(markdown_text).splitlines()
+    canonical_line_counts: dict[str, int] = {}
+    for line in lines:
+        stripped = line.strip()
+        heading_match = _PDF_MARKDOWN_HEADING_PATTERN.match(stripped)
+        value = heading_match.group(2) if heading_match is not None else stripped
+        canonical = _canonical_pdf_heading(value)
+        if canonical:
+            canonical_line_counts[canonical] = (
+                canonical_line_counts.get(canonical, 0) + 1
+            )
+
+    first_major_index = _first_major_pdf_section_index(lines)
+    empty_title_indices = _empty_preamble_title_indices(lines, first_major_index)
+    first_empty_title_index = min(empty_title_indices, default=None)
+    subsection_level = _pdf_alpha_subsection_heading_level(lines)
+    normalized_lines: list[str] = []
+    for index, line in enumerate(lines):
+        stripped = line.strip()
+        heading_match = _PDF_MARKDOWN_HEADING_PATTERN.match(stripped)
+        if heading_match is None:
+            alpha_match = _PDF_ITALIC_ALPHA_SUBSECTION_PATTERN.match(stripped)
+            if alpha_match is not None and subsection_level is not None:
+                normalized_lines.append(f"{'#' * subsection_level} {stripped}")
+            else:
+                normalized_lines.append(line)
+            continue
+
+        raw_heading = heading_match.group(2)
+        canonical = _canonical_pdf_heading(raw_heading)
+        in_preamble = first_major_index is None or index < first_major_index
+        next_index = _next_nonblank_line_index(lines, index + 1)
+        next_is_heading = (
+            next_index is not None
+            and _PDF_MARKDOWN_HEADING_PATTERN.match(lines[next_index].strip())
+            is not None
+        )
+        word_count = len(canonical.split())
+
+        if (
+            first_empty_title_index is not None
+            and index < first_empty_title_index
+            and in_preamble
+        ):
+            normalized_lines.append(raw_heading)
+            continue
+        if (
+            in_preamble
+            and canonical in _PDF_PREAMBLE_NOISE_HEADINGS
+            and next_is_heading
+        ):
+            continue
+        if index in empty_title_indices:
+            continue
+        if (
+            4 <= word_count <= 24
+            and len(canonical) <= 200
+            and canonical_line_counts.get(canonical, 0) >= 3
+        ):
+            normalized_lines.append(raw_heading)
+            continue
+        normalized_lines.append(line)
+
+    normalized = "\n".join(normalized_lines)
+    if str(markdown_text).endswith("\n"):
+        normalized += "\n"
+    return normalized
+
+
 def _render_transparent_pdf_markdown(pdf_path: Path) -> str:
     try:
         from pymupdf4llm.helpers import pymupdf_rag
@@ -638,7 +800,9 @@ def render_pdf_markdown_result(
     source_url: str | None = None,
 ) -> PdfMarkdownRenderResult:
     image_dir = _pdf_image_dir(asset_output_dir, asset_profile)
-    default_markdown = _render_default_pdf_markdown(pdf_path, image_dir=image_dir)
+    default_markdown = _normalize_pdf_markdown_structure(
+        _render_default_pdf_markdown(pdf_path, image_dir=image_dir)
+    )
     default_render = _normalize_pdf_markdown_image_assets(
         default_markdown,
         image_dir=image_dir,
@@ -653,7 +817,9 @@ def render_pdf_markdown_result(
         default_quality=default_quality,
         text_layer_stats=text_layer_stats,
     ):
-        legacy_markdown = _render_transparent_pdf_markdown(pdf_path)
+        legacy_markdown = _normalize_pdf_markdown_structure(
+            _render_transparent_pdf_markdown(pdf_path)
+        )
         legacy_quality = _pdf_markdown_quality(legacy_markdown)
         min_legacy_words = max(
             _MIN_USABLE_PDF_MARKDOWN_WORDS,

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import re
 from typing import Any
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 
 from ..markdown_render import table_format as markdown_table_format
 from ...models import normalize_markdown_text
@@ -401,7 +401,7 @@ def table_placeholder(index: int) -> str:
 def inject_inline_table_blocks(
     markdown_text: str,
     *,
-    table_entries: list[Mapping[str, str]] | None,
+    table_entries: Sequence[Mapping[str, str]] | None,
     clean_markdown_fn: CleanMarkdownFn,
 ) -> str:
     if not table_entries:

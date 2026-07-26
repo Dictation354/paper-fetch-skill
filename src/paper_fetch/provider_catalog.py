@@ -8,8 +8,10 @@ from types import MappingProxyType
 from typing import Any, Literal
 from collections.abc import Callable
 
+from .metadata.types import ProviderMetadata
+
 AssetDefault = Literal["none", "body", "all"]
-MetadataProbeShortCircuit = Callable[[str], dict | None]
+MetadataProbeShortCircuit = Callable[[str], ProviderMetadata | None]
 
 
 @dataclass(frozen=True)

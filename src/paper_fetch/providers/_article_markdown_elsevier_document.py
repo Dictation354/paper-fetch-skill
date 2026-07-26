@@ -12,6 +12,7 @@ import xml.etree.ElementTree as ET
 from ..models import Reference, SemanticLosses
 from ..publisher_identity import extract_doi, normalize_doi
 from ..utils import _extract_year
+from ..xml_security import XmlParseFailure, parse_xml
 from ._article_markdown_common import (
     child_text,
     collect_conversion_notes,
@@ -31,6 +32,7 @@ from ._article_markdown_elsevier import (
     elsevier_table_registry,
     render_elsevier_blocks,
 )
+from ._article_markdown_math import FormulaRenderResult
 from ..utils import dedupe_authors
 
 
@@ -278,8 +280,8 @@ def _build_elsevier_article_structure(
 ) -> ArticleStructure | None:
     if xml_root is None:
         try:
-            root = ET.fromstring(xml_body)
-        except ET.ParseError:
+            root = parse_xml(xml_body, source="Elsevier article XML payload")
+        except XmlParseFailure:
             return None
     else:
         root = xml_root
@@ -294,7 +296,7 @@ def _build_elsevier_article_structure(
 
     used_figure_keys: set[str] = set()
     used_table_keys: set[str] = set()
-    formula_renders = []
+    formula_renders: list[FormulaRenderResult] = []
     abstract_node = first_descendant(root, "abstract")
     body_node = first_descendant(root, "body")
     abstract_lines = render_elsevier_blocks(

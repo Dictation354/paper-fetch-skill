@@ -1,0 +1,49 @@
+name: Opt-in live and golden checks
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_live:
+        description: Run live provider tests
+        required: false
+        default: false
+        type: boolean
+      run_full_golden:
+        description: Run the complete golden corpus
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  live:
+    if: ${{ inputs.run_live }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: ./.github/actions/setup-python-deps
+        with:
+          python-version: "3.11"
+          full: "true"
+      - name: Run shared-state live tests serially
+        env:
+          PAPER_FETCH_RUN_LIVE: "1"
+        run: PYTHONPATH=src uv run pytest tests/live -q -n 0
+
+  full-golden:
+    if: ${{ inputs.run_full_golden }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: ./.github/actions/setup-python-deps
+        with:
+          python-version: "3.11"
+          full: "true"
+      - name: Run complete golden corpus
+        env:
+          PAPER_FETCH_RUN_FULL_GOLDEN: "1"
+        run: |
+          PYTHONPATH=src uv run pytest \
+            tests/integration/test_golden_corpus.py -q

@@ -768,8 +768,9 @@ class FrontiersClient(ProviderClient):
             ).lower()
             in {"figure", "formula"}
         ]
+        merged_metadata = content.merged_metadata if content is not None else None
         article_id = (
-            normalize_doi(str((content.merged_metadata or {}).get("doi") or doi or ""))
+            normalize_doi(str((merged_metadata or {}).get("doi") or doi or ""))
             or normalize_doi(doi)
             or normalize_text(str(metadata.get("title") or ""))
             or raw_payload.source_url
