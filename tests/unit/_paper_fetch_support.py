@@ -3,8 +3,6 @@ from __future__ import annotations
 from pathlib import Path
 from dataclasses import replace
 
-import fitz
-
 from paper_fetch import service as paper_fetch
 from paper_fetch.http import DEFAULT_TIMEOUT_SECONDS, HttpTransport, RequestFailure
 from paper_fetch.models import (
@@ -408,6 +406,8 @@ def sample_html_article() -> paper_fetch.ArticleModel:
 
 
 def build_pdf_bytes(lines: list[str]) -> bytes:
+    import fitz
+
     document = fitz.open()
     page = document.new_page()
     y = 72
