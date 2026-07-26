@@ -8,7 +8,7 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 ### Fixed
 
-- Made Linux/macOS offline formula packaging independent of runner-provided `texmath` by reusing the locked `mathml-to-latex` package behind the existing compatibility launcher, and allowed stable-release retries to overlay trusted POSIX packaging tooling without moving an immutable source tag.
+- Made Linux/macOS offline formula packaging independent of runner-provided `texmath` by reusing the locked `mathml-to-latex` package behind the existing compatibility launcher, normalized relative Windows installer output directories before invoking Inno Setup, and allowed stable-release retries to overlay trusted packaging tooling without moving an immutable source tag.
 
 ## 4.0.0 - 2026-07-26
 

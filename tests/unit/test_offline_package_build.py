@@ -119,6 +119,9 @@ class OfflinePackageBuildTests(unittest.TestCase):
     def test_windows_package_build_creates_runtime_only_staging(self) -> None:
         script = BUILD_OFFLINE_PACKAGE_WINDOWS.read_text(encoding="utf-8")
 
+        self.assertIn(
+            "$OutputDir = [System.IO.Path]::GetFullPath($OutputDir)", script
+        )
         self.assertIn("Copy-RuntimeAssets", script)
         self.assertIn("windows-runtime-wheelhouse", script)
         self.assertIn("runtime/Lib/site-packages", script)

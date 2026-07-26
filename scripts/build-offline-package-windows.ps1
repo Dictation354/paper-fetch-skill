@@ -36,6 +36,7 @@ $BuildDir = if ($env:PAPER_FETCH_OFFLINE_BUILD_DIR) {
 if ([string]::IsNullOrWhiteSpace($OutputDir)) {
     $OutputDir = Join-Path $RepoDir "dist"
 }
+$OutputDir = [System.IO.Path]::GetFullPath($OutputDir)
 $ProjectWheelPath = ""
 $DependencyWheelhouse = ""
 

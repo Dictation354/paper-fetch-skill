@@ -11,6 +11,10 @@ on:
         description: Trusted commit whose POSIX packaging script should overlay an immutable source ref
         required: false
         type: string
+      windows_tooling_ref:
+        description: Trusted commit whose Windows packaging script should overlay an immutable source ref
+        required: false
+        type: string
   workflow_dispatch:
     inputs:
       ref:
@@ -63,6 +67,15 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ inputs.ref || github.sha }}
+      - name: Overlay trusted Windows release tooling
+        if: ${{ inputs.windows_tooling_ref != '' }}
+        shell: bash
+        env:
+          TOOLING_REF: ${{ inputs.windows_tooling_ref }}
+        run: |
+          git fetch --no-tags --depth=1 origin "$TOOLING_REF"
+          git show "$TOOLING_REF:scripts/build-offline-package-windows.ps1" \
+            > scripts/build-offline-package-windows.ps1
       - uses: ./.github/actions/setup-python-deps
         with:
           python-version: "3.13"
