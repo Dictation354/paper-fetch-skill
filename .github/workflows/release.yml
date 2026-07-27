@@ -84,6 +84,28 @@ jobs:
         uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3
         with:
           subject-path: release-assets/**/*
+      - name: Write Chinese stable release notes
+        shell: bash
+        env:
+          VERSION: ${{ needs.verify-tag.outputs.version }}
+        run: |
+          set -euo pipefail
+          heading="## $VERSION - "
+          awk -v heading="$heading" '
+            index($0, heading) == 1 {
+              in_section = 1
+            }
+            in_section && /^## / && index($0, heading) != 1 {
+              exit
+            }
+            in_section {
+              print
+            }
+          ' CHANGELOG_CN.md > release-notes.md
+          if [ ! -s release-notes.md ]; then
+            echo "CHANGELOG_CN.md has no release notes for $VERSION." >&2
+            exit 1
+          fi
       - name: Publish immutable release assets
         env:
           GH_TOKEN: ${{ github.token }}
@@ -91,4 +113,4 @@ jobs:
         run: |
           mapfile -d '' assets < <(find release-assets -type f -print0)
           gh release create "$TAG" "${assets[@]}" \
-            --verify-tag --generate-notes --title "$TAG"
+            --verify-tag --notes-file release-notes.md --title "$TAG"

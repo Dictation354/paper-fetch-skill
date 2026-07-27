@@ -38,10 +38,17 @@ class OfflinePackageBuildTests(unittest.TestCase):
         self.assertNotIn("--exclude='./legacy'", script)
         self.assertNotIn("-m playwright install chromium", script)
         self.assertIn("Creating macOS tar.gz archive", script)
+        self.assertIn("-m paper_fetch.formula.install", script)
+        self.assertIn("--no-node", script)
+        self.assertIn("TEXMATH_VERSION", script)
+        self.assertIn('"$texmath_bin" --version', script)
+        self.assertIn(r"\frac{x_{1}}{\sqrt{y + 1}}", script)
+        self.assertIn(r"\sum\limits_{i}^{n}x^{i}", script)
         self.assertIn('"$npm_bin" ci --omit=dev --silent', script)
         self.assertIn("mathml_to_latex_cli.mjs", script)
-        self.assertIn("MATHML_TO_LATEX_NODE_BIN", script)
-        self.assertNotIn("--no-node", script)
+        self.assertNotIn(
+            "paper-fetch bundled MathML-to-LaTeX compatibility launcher", script
+        )
 
     def test_posix_manifest_and_readme_document_browser_backend_policy(self) -> None:
         script = BUILD_OFFLINE_PACKAGE.read_text(encoding="utf-8")
@@ -106,7 +113,9 @@ class OfflinePackageBuildTests(unittest.TestCase):
         self.assertIn("mcp_config.json", script)
         self.assertIn("activate-offline.sh executed shell code", script)
         self.assertIn("MATHML_TO_LATEX_NODE_BIN", script)
-        self.assertIn("<math><mi>x</mi></math>", script)
+        self.assertIn('texmath --version 2>&1)" = "Version 0.13.2"', script)
+        self.assertIn(r"\frac{x_{1}}{\sqrt{y + 1}}", script)
+        self.assertIn(r"\sum\limits_{i}^{n}x^{i}", script)
         self.assertIn("PYTHONUTF8", script)
         self.assertIn("PYTHONIOENCODING", script)
         self.assertIn("paper-fetch doctor", script)
@@ -146,6 +155,12 @@ class OfflinePackageBuildTests(unittest.TestCase):
         self.assertNotIn('Join-Path $Staging "dist"', script)
         self.assertNotIn("Add-PlaywrightChromium", script)
         self.assertNotIn("-m playwright install chromium", script)
+        self.assertIn("TEXMATH_VERSION", script)
+        self.assertIn("texmath --version", script)
+        self.assertIn(r"\frac{x_{1}}{\sqrt{y + 1}}", script)
+        self.assertIn(r"\sum\limits_{i}^{n}x^{i}", script)
+        self.assertIn("npm ci --omit=dev --silent --prefix", script)
+        self.assertIn("mathml_to_latex_cli.mjs", script)
 
     def test_windows_wrappers_and_manifest_publish_browser_backend_policy(self) -> None:
         script = BUILD_OFFLINE_PACKAGE_WINDOWS.read_text(encoding="utf-8")

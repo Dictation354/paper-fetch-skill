@@ -913,6 +913,7 @@ export PAPER_FETCH_BROWSER_USER_AGENT="Mozilla/5.0 (Windows NT 10.0; Win64; x64)
 
 - 可选。
 - 指定 `texmath` 可执行文件；未配置时先查找公式工具目录，再查找 `PATH`。
+- 官方公式工具安装器和全平台离线包固定使用原生 texmath 0.13.2；复用 PATH 中的同版本程序时会复制到公式工具目录，不保留指向构建机或系统路径的符号链接。
 
 #### `MATHML_TO_LATEX_NODE_BIN`
 

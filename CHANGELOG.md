@@ -6,10 +6,14 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 4.0.1 - 2026-07-27
+
 ### Fixed
 
-- Made Linux/macOS offline formula packaging independent of runner-provided `texmath` by reusing the locked `mathml-to-latex` package behind the existing compatibility launcher, normalized relative Windows installer output directories before invoking Inno Setup, and allowed stable-release retries to overlay trusted packaging tooling without moving an immutable source tag.
-- Restored the daily `dependency-latest` rolling prerelease after the 4.0 CI split, resolved the `full` extra for all nine frozen platform/ABI snapshots, reused the shared offline workflow for verified wheelhouse builds, and reinstated exact asset replacement and post-publication integrity checks with bilingual release notes.
+- Restored native texmath 0.13.2 as the preferred formula backend in Linux, macOS, and Windows offline packages, copied reused POSIX binaries instead of preserving build-host symlinks, and retained the locked `mathml-to-latex` package as the secondary fallback.
+- Normalized relative Windows installer output directories before invoking Inno Setup, and allowed stable-release retries to overlay trusted packaging tooling without moving an immutable source tag.
+- Restored the daily `dependency-latest` rolling prerelease after the 4.0 CI split, resolved the `full` extra for all nine frozen platform/ABI snapshots, reused the shared offline workflow for verified wheelhouse builds, and reinstated exact asset replacement and post-publication integrity checks.
+- Made Chinese the sole language for future release notes: stable releases extract their version section from `CHANGELOG_CN.md`, while rolling prereleases use the Chinese status template instead of generating English notes.
 
 ## 4.0.0 - 2026-07-26
 

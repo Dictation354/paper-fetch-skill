@@ -79,6 +79,14 @@ def test_offline_builds_full_extra_for_supported_python_matrix() -> None:
     assert (
         'git show "$TOOLING_REF:scripts/build-offline-package-windows.ps1"' in workflow
     )
+    assert (
+        workflow.count('git show "$TOOLING_REF:src/paper_fetch/formula/install.py"')
+        == 2
+    )
+    assert "haskell-actions/setup@cd0d9bdd65b20557f41bea4dbe43d0b5fbbfe553" in workflow
+    assert 'ghc-version: "9.10.3"' in workflow
+    assert 'cabal-version: "3.12.1.0"' in workflow
+    assert "ghc-9.10.3-texmath-0.13.2" in workflow
     assert "frozen_dependencies" in workflow
     assert "dependency_tooling_ref" in workflow
     assert "dependency-snapshot-${{ matrix.target }}" in workflow
@@ -104,6 +112,19 @@ def test_release_emits_sbom_checksums_and_build_provenance() -> None:
         "windows_tooling_ref: ${{ github.event_name == 'workflow_dispatch' && github.sha || '' }}"
         in workflow
     )
+
+
+def test_releases_publish_only_chinese_release_notes() -> None:
+    stable = _workflow_text("release.yml")
+    rolling = _workflow_text("rolling-release.yml")
+
+    assert "Write Chinese stable release notes" in stable
+    assert "CHANGELOG_CN.md > release-notes.md" in stable
+    assert "--notes-file release-notes.md" in stable
+    assert "--generate-notes" not in stable
+    assert "Write Chinese rolling release notes" in rolling
+    assert "## English" not in rolling
+    assert "Stable source:" not in rolling
 
 
 def test_actions_are_pinned_to_full_commit_shas() -> None:
@@ -156,4 +177,4 @@ def test_rolling_release_restores_frozen_full_dependency_updates() -> None:
     assert "--latest=false" in workflow
     assert "Remove stale rolling release assets" in workflow
     assert "Verify published rolling prerelease" in workflow
-    assert "## 中文" in workflow
+    assert "Write Chinese rolling release notes" in workflow

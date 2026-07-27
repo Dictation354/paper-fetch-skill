@@ -6,10 +6,14 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 4.0.1 - 2026-07-27
+
 ### 修复
 
-- 离线公式打包改为通过现有兼容启动器复用锁定的 `mathml-to-latex`，不再依赖 runner 提供 `texmath`；调用 Inno Setup 前规范化 Windows 相对输出目录，并允许稳定发布重跑在不移动不可变源码 tag 的前提下覆盖受信任打包工具。
-- 修复 4.0 CI 拆分时中断的每日 `dependency-latest` 滚动 prerelease：为九个冻结平台/ABI 快照解析 `full` extra，复用共享离线 workflow 构建并校验 wheelhouse，恢复精确资产覆盖、发布后完整性验证和中英文 Release 说明。
+- Linux、macOS、Windows 离线包恢复原生 texmath 0.13.2 作为首选公式后端；复用 POSIX 可执行文件时改为复制而非保留构建机符号链接，并继续将锁定的 `mathml-to-latex` 作为二级回退。
+- 调用 Inno Setup 前规范化 Windows 相对输出目录，并允许稳定发布重跑在不移动不可变源码 tag 的前提下覆盖受信任打包工具。
+- 修复 4.0 CI 拆分时中断的每日 `dependency-latest` 滚动 prerelease：为九个冻结平台/ABI 快照解析 `full` extra，复用共享离线 workflow 构建并校验 wheelhouse，恢复精确资产覆盖和发布后完整性验证。
+- 稳定版从 `CHANGELOG_CN.md` 提取对应版本章节，滚动 prerelease 使用中文状态模板；两条发布路径今后都只附带中文 Release Notes，不再生成英文说明。
 
 ## 4.0.0 - 2026-07-26
 

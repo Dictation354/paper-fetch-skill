@@ -160,10 +160,15 @@ source "$INSTALL_ROOT/activate-offline.sh"
 
 log "Verifying command entrypoints"
 paper-fetch --help >/dev/null
-texmath --help >/dev/null
-printf '<math><mi>x</mi></math>' \
-  | texmath -f mathml -t tex \
-  | grep -q 'x'
+test "$(texmath --version 2>&1)" = "Version 0.13.2"
+test "$(
+  printf '%s' '<math xmlns="http://www.w3.org/1998/Math/MathML"><mfrac><msub><mi>x</mi><mn>1</mn></msub><msqrt><mrow><mi>y</mi><mo>+</mo><mn>1</mn></mrow></msqrt></mfrac></math>' \
+    | texmath -f mathml -t tex
+)" = '\frac{x_{1}}{\sqrt{y + 1}}'
+test "$(
+  printf '%s' '<math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><munderover><mo>∑</mo><mi>i</mi><mi>n</mi></munderover><msup><mi>x</mi><mi>i</mi></msup></mrow></math>' \
+    | texmath -f mathml -t tex
+)" = '\sum\limits_{i}^{n}x^{i}'
 paper-fetch-install-image-tools --target-dir "$INSTALL_ROOT/image-tools" >/dev/null
 
 log "Verifying installed version and skill provenance"

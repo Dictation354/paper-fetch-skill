@@ -384,7 +384,7 @@ jobs:
             sha256sum "${expected[@]}" | LC_ALL=C sort -k2 > SHA256SUMS
           )
 
-      - name: Write bilingual rolling release notes
+      - name: Write Chinese rolling release notes
         shell: bash
         env:
           SOURCE_TAG: ${{ needs.compare.outputs.source_tag }}
@@ -396,8 +396,6 @@ jobs:
           set -euo pipefail
           updated_at="$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
           {
-            echo "## 中文"
-            echo
             echo "> 这是可变的滚动预发布版本。解析后的 Python 依赖集合变化时，固定 \`dependency-latest\` 标签下的资产会被替换。"
             echo
             echo "- 稳定源码：[\`$SOURCE_TAG\`](https://github.com/$GITHUB_REPOSITORY/releases/tag/$SOURCE_TAG)（\`$SOURCE_SHA\`）"
@@ -407,20 +405,6 @@ jobs:
             echo "- 更新时间：\`$updated_at\`"
             echo
             echo "请使用 \`SHA256SUMS\` 校验下载资产；需要不可变、可复现版本时，请选择稳定的 \`v*\` Release。"
-            echo
-            echo "---"
-            echo
-            echo "## English"
-            echo
-            echo "> This prerelease is mutable. Assets under the fixed \`dependency-latest\` tag are replaced when the resolved Python dependency set changes."
-            echo
-            echo "- Stable source: [\`$SOURCE_TAG\`](https://github.com/$GITHUB_REPOSITORY/releases/tag/$SOURCE_TAG) (\`$SOURCE_SHA\`)"
-            echo "- Project version: \`$PROJECT_VERSION\`"
-            echo "- Dependency set SHA256: \`$DEPENDENCY_SET_SHA256\`"
-            echo "- Refresh reason: \`$REFRESH_REASON\`"
-            echo "- Updated at: \`$updated_at\`"
-            echo
-            echo "Verify downloaded assets with \`SHA256SUMS\`. For immutable, reproducible releases, use a stable \`v*\` release instead."
           } > release-notes.md
 
       - name: Move rolling tag to stable source

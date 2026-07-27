@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -18,6 +19,9 @@ from .paths import (
     default_user_formula_tools_dir,
     TEXMATH_EXECUTABLE_NAMES,
 )
+
+TEXMATH_VERSION = "0.13.2"
+_TEXMATH_VERSION_PATTERN = re.compile(r"(?m)^Version ([0-9]+(?:\.[0-9]+)+)\s*$")
 
 
 def log(message: str) -> None:
@@ -64,16 +68,28 @@ def _run_with_log(log_prefix: str, args: list[str], *, cwd: Path | None = None) 
         return False
 
 
-def have_working_texmath(path: Path) -> bool:
+def texmath_version(path: Path) -> str | None:
     if not path.exists() or not os.access(path, os.X_OK):
-        return False
-    process = subprocess.run(
-        [str(path), "--help"],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-        check=False,
+        return None
+    try:
+        process = subprocess.run(
+            [str(path), "--version"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+    except OSError:
+        return None
+    if process.returncode != 0:
+        return None
+    match = _TEXMATH_VERSION_PATTERN.search(
+        f"{process.stdout or ''}\n{process.stderr or ''}"
     )
-    return process.returncode == 0
+    return match.group(1) if match else None
+
+
+def have_working_texmath(path: Path) -> bool:
+    return texmath_version(path) == TEXMATH_VERSION
 
 
 def texmath_target_path(target_dir: Path) -> Path:
@@ -117,11 +133,8 @@ def reuse_texmath_from_path(target_dir: Path) -> bool:
     target.parent.mkdir(parents=True, exist_ok=True)
     if target != source:
         target.unlink(missing_ok=True)
-        if os.name == "nt":
-            shutil.copy2(source, target)
-        else:
-            target.symlink_to(source)
-    log(f"Using existing texmath at {source}")
+        shutil.copy2(source, target)
+    log(f"Using existing texmath {TEXMATH_VERSION} at {source}")
     return True
 
 
@@ -129,19 +142,15 @@ def install_texmath_with_cabal(target_dir: Path) -> bool:
     cabal = shutil.which("cabal")
     if not cabal:
         return False
-    log("Attempting to install texmath with cabal")
-    subprocess.run(
-        [cabal, "update"],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-        check=False,
-    )
+    log(f"Attempting to install texmath {TEXMATH_VERSION} with cabal")
+    if not _run_with_log("texmath-cabal-update-", [cabal, "update"]):
+        return False
     return _run_with_log(
         "texmath-cabal-",
         [
             cabal,
             "install",
-            "texmath",
+            f"texmath-{TEXMATH_VERSION}",
             "-fexecutable",
             f"--installdir={target_dir / 'bin'}",
             "--install-method=copy",
@@ -155,13 +164,13 @@ def install_texmath_with_stack(target_dir: Path) -> bool:
     stack = shutil.which("stack")
     if not stack:
         return False
-    log("Attempting to install texmath with stack")
+    log(f"Attempting to install texmath {TEXMATH_VERSION} with stack")
     return _run_with_log(
         "texmath-stack-",
         [
             stack,
             "install",
-            "texmath",
+            f"texmath-{TEXMATH_VERSION}",
             "--flag",
             "texmath:executable",
             "--local-bin-path",
@@ -173,13 +182,13 @@ def install_texmath_with_stack(target_dir: Path) -> bool:
 def ensure_texmath(target_dir: Path) -> bool:
     target = texmath_target_path(target_dir)
     if have_working_texmath(target):
-        log(f"Formula backend ready: texmath ({target})")
+        log(f"Formula backend ready: texmath {TEXMATH_VERSION} ({target})")
         return True
     if reuse_texmath_from_path(target_dir):
         return True
     if install_texmath_with_cabal(target_dir) or install_texmath_with_stack(target_dir):
         if have_working_texmath(target):
-            log(f"Formula backend ready: texmath ({target})")
+            log(f"Formula backend ready: texmath {TEXMATH_VERSION} ({target})")
             return True
         warn(
             "texmath build reported success but the installed binary could not be executed."

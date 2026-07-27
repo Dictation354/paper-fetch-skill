@@ -77,6 +77,8 @@ jobs:
           git fetch --no-tags --depth=1 origin "$TOOLING_REF"
           git show "$TOOLING_REF:scripts/build-offline-package.sh" \
             > scripts/build-offline-package.sh
+          git show "$TOOLING_REF:src/paper_fetch/formula/install.py" \
+            > src/paper_fetch/formula/install.py
       - name: Check out dependency snapshot tooling
         if: ${{ inputs.frozen_dependencies }}
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -87,6 +89,17 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           full: "true"
+      - name: Set up pinned Haskell toolchain
+        id: formula-haskell
+        uses: haskell-actions/setup@cd0d9bdd65b20557f41bea4dbe43d0b5fbbfe553 # v2.11.0
+        with:
+          ghc-version: "9.10.3"
+          cabal-version: "3.12.1.0"
+      - name: Cache Cabal formula dependencies
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ steps.formula-haskell.outputs.cabal-store }}
+          key: cabal-${{ runner.os }}-${{ runner.arch }}-ghc-9.10.3-texmath-0.13.2
       - name: Download frozen dependency snapshot
         if: ${{ inputs.frozen_dependencies }}
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
@@ -138,6 +151,8 @@ jobs:
           git fetch --no-tags --depth=1 origin "$TOOLING_REF"
           git show "$TOOLING_REF:scripts/build-offline-package-windows.ps1" \
             > scripts/build-offline-package-windows.ps1
+          git show "$TOOLING_REF:src/paper_fetch/formula/install.py" \
+            > src/paper_fetch/formula/install.py
       - name: Check out dependency snapshot tooling
         if: ${{ inputs.frozen_dependencies }}
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -148,6 +163,17 @@ jobs:
         with:
           python-version: "3.13"
           full: "true"
+      - name: Set up pinned Haskell toolchain
+        id: formula-haskell
+        uses: haskell-actions/setup@cd0d9bdd65b20557f41bea4dbe43d0b5fbbfe553 # v2.11.0
+        with:
+          ghc-version: "9.10.3"
+          cabal-version: "3.12.1.0"
+      - name: Cache Cabal formula dependencies
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ steps.formula-haskell.outputs.cabal-store }}
+          key: cabal-${{ runner.os }}-${{ runner.arch }}-ghc-9.10.3-texmath-0.13.2
       - name: Download frozen dependency snapshot
         if: ${{ inputs.frozen_dependencies }}
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4

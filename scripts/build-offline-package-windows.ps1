@@ -253,7 +253,25 @@ function Add-FormulaTools {
     if (-not (Test-Path -LiteralPath $texmath)) {
         throw "Missing bundled texmath.exe: $texmath"
     }
-    Invoke-Native $texmath --help
+    $texmathVersion = & $BuildPython -c "from paper_fetch.formula.install import TEXMATH_VERSION; print(TEXMATH_VERSION)"
+    if ($LASTEXITCODE -ne 0) {
+        throw "Could not read the pinned texmath version."
+    }
+    $texmathVersion = $texmathVersion.Trim()
+    $versionOutput = (& $texmath --version 2>&1 | Out-String).Trim()
+    if ($LASTEXITCODE -ne 0 -or $versionOutput -ne "Version $texmathVersion") {
+        throw "Bundled texmath version mismatch: expected $texmathVersion, got $versionOutput."
+    }
+    $complexMathml = '<math xmlns="http://www.w3.org/1998/Math/MathML"><mfrac><msub><mi>x</mi><mn>1</mn></msub><msqrt><mrow><mi>y</mi><mo>+</mo><mn>1</mn></mrow></msqrt></mfrac></math>'
+    $latexOutput = ($complexMathml | & $texmath -f mathml -t tex | Out-String).Trim()
+    if ($LASTEXITCODE -ne 0 -or $latexOutput -ne '\frac{x_{1}}{\sqrt{y + 1}}') {
+        throw "Bundled texmath failed the complex MathML conversion smoke test."
+    }
+    $limitMathml = '<math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><munderover><mo>∑</mo><mi>i</mi><mi>n</mi></munderover><msup><mi>x</mi><mi>i</mi></msup></mrow></math>'
+    $latexOutput = ($limitMathml | & $texmath -f mathml -t tex | Out-String).Trim()
+    if ($LASTEXITCODE -ne 0 -or $latexOutput -ne '\sum\limits_{i}^{n}x^{i}') {
+        throw "Bundled texmath failed the limit-style MathML conversion smoke test."
+    }
 
     $stageNodeWorkspace = @'
 from pathlib import Path
@@ -264,6 +282,12 @@ from paper_fetch.formula.install import stage_bundled_node_workspace
 stage_bundled_node_workspace(Path(sys.argv[1]))
 '@
     Invoke-Native $BuildPython -c $stageNodeWorkspace $target
+    Invoke-Native npm ci --omit=dev --silent --prefix $target
+    $node = (Get-Command node -ErrorAction Stop).Source
+    $nodeLatex = ('<math><mi>x</mi></math>' | & $node (Join-Path $target "mathml_to_latex_cli.mjs") | Out-String).Trim()
+    if ($LASTEXITCODE -ne 0 -or -not $nodeLatex.Contains("x")) {
+        throw "Bundled mathml-to-latex fallback failed its smoke test."
+    }
 }
 
 function Add-ImageTools {

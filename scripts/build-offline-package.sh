@@ -177,12 +177,38 @@ build_project_runtime() {
 bundle_formula_tools() {
   local staging="$1"
   local formula_tools="$staging/formula-tools"
-  local node_bin npm_bin
+  local node_bin npm_bin texmath_bin texmath_version version_output latex_output
   log "Bundling formula tools"
   node_bin="$(command -v node || true)"
   npm_bin="$(command -v npm || true)"
   [ -n "$node_bin" ] || die "Bundling formula tools requires Node.js."
   [ -n "$npm_bin" ] || die "Bundling formula tools requires npm."
+
+  PYTHONPATH="$staging/runtime/site-packages${PYTHONPATH:+:$PYTHONPATH}" \
+    "$PYTHON_BIN" -m paper_fetch.formula.install \
+      --target-dir "$formula_tools" \
+      --no-node
+  texmath_bin="$formula_tools/bin/texmath"
+  [ -x "$texmath_bin" ] || die "Bundled texmath executable is missing: $texmath_bin"
+  texmath_version="$(
+    PYTHONPATH="$staging/runtime/site-packages${PYTHONPATH:+:$PYTHONPATH}" \
+      "$PYTHON_BIN" -c 'from paper_fetch.formula.install import TEXMATH_VERSION; print(TEXMATH_VERSION)'
+  )"
+  version_output="$("$texmath_bin" --version 2>&1)"
+  [ "$version_output" = "Version $texmath_version" ] \
+    || die "Bundled texmath version mismatch: expected $texmath_version, got ${version_output:-<empty>}."
+  latex_output="$(
+    printf '%s' '<math xmlns="http://www.w3.org/1998/Math/MathML"><mfrac><msub><mi>x</mi><mn>1</mn></msub><msqrt><mrow><mi>y</mi><mo>+</mo><mn>1</mn></mrow></msqrt></mfrac></math>' \
+      | "$texmath_bin" -f mathml -t tex
+  )"
+  [ "$latex_output" = '\frac{x_{1}}{\sqrt{y + 1}}' ] \
+    || die "Bundled texmath failed the complex MathML conversion smoke test."
+  latex_output="$(
+    printf '%s' '<math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><munderover><mo>∑</mo><mi>i</mi><mi>n</mi></munderover><msup><mi>x</mi><mi>i</mi></msup></mrow></math>' \
+      | "$texmath_bin" -f mathml -t tex
+  )"
+  [ "$latex_output" = '\sum\limits_{i}^{n}x^{i}' ] \
+    || die "Bundled texmath failed the limit-style MathML conversion smoke test."
 
   PYTHONPATH="$staging/runtime/site-packages${PYTHONPATH:+:$PYTHONPATH}" \
     "$PYTHON_BIN" - "$formula_tools" <<'PY'
@@ -194,35 +220,8 @@ from paper_fetch.formula.install import stage_bundled_node_workspace
 stage_bundled_node_workspace(Path(sys.argv[1]))
 PY
   "$npm_bin" ci --omit=dev --silent --prefix "$formula_tools"
-
-  mkdir -p "$formula_tools/bin"
-  cat > "$formula_tools/bin/texmath" <<'EOF'
-#!/usr/bin/env bash
-set -euo pipefail
-
-TOOLS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-if [ "${1:-}" = "--help" ]; then
-  printf 'paper-fetch bundled MathML-to-LaTeX compatibility launcher\n'
-  exit 0
-fi
-
-node_bin="${MATHML_TO_LATEX_NODE_BIN:-}"
-if [ -z "$node_bin" ]; then
-  node_bin="$(command -v node || true)"
-fi
-if [ -z "$node_bin" ] || [ ! -x "$node_bin" ]; then
-  printf 'Bundled MathML-to-LaTeX launcher requires an executable Node.js runtime.\n' >&2
-  exit 1
-fi
-
-exec "$node_bin" "$TOOLS_DIR/mathml_to_latex_cli.mjs"
-EOF
-  chmod +x "$formula_tools/bin/texmath"
-  MATHML_TO_LATEX_NODE_BIN="$node_bin" \
-    "$formula_tools/bin/texmath" --help >/dev/null
   printf '<math><mi>x</mi></math>' \
-    | MATHML_TO_LATEX_NODE_BIN="$node_bin" \
-      "$formula_tools/bin/texmath" -f mathml -t tex \
+    | "$node_bin" "$formula_tools/mathml_to_latex_cli.mjs" \
     | grep -q 'x'
 }
 
