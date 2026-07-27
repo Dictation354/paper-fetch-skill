@@ -25,6 +25,7 @@ def test_workflows_are_split_by_operational_boundary() -> None:
         "live.yml",
         "offline.yml",
         "release.yml",
+        "rolling-release.yml",
     }
     assert "workflow_call" in _workflow_text("offline.yml")
     assert "uses: ./.github/workflows/offline.yml" in _workflow_text("release.yml")
@@ -76,9 +77,14 @@ def test_offline_builds_full_extra_for_supported_python_matrix() -> None:
     assert "windows_tooling_ref" in workflow
     assert 'git show "$TOOLING_REF:scripts/build-offline-package.sh"' in workflow
     assert (
-        'git show "$TOOLING_REF:scripts/build-offline-package-windows.ps1"'
-        in workflow
+        'git show "$TOOLING_REF:scripts/build-offline-package-windows.ps1"' in workflow
     )
+    assert "frozen_dependencies" in workflow
+    assert "dependency_tooling_ref" in workflow
+    assert "dependency-snapshot-${{ matrix.target }}" in workflow
+    assert "scripts/resolve_offline_dependencies.py verify" in workflow
+    assert "PIP_NO_INDEX" in workflow
+    assert "PIP_FIND_LINKS" in workflow
 
 
 def test_release_emits_sbom_checksums_and_build_provenance() -> None:
@@ -121,3 +127,33 @@ def test_dependency_refresh_resolves_latest_compatible_graph_without_commit() ->
     assert "scripts/audit_dependencies.py" in workflow
     assert "pytest tests/unit -q" in workflow
     assert "git push" not in workflow
+
+
+def test_rolling_release_restores_frozen_full_dependency_updates() -> None:
+    workflow = _workflow_text("rolling-release.yml")
+    assert 'cron: "17 19 * * *"' in workflow
+    assert "force_refresh" in workflow
+    assert "repos/$GITHUB_REPOSITORY/releases/latest" in workflow
+    assert "dependency-latest is immutable" in workflow
+    assert "frozen_dependencies: true" in workflow
+    assert "uses: ./.github/workflows/offline.yml" in workflow
+    for target in (
+        "linux-x86_64-cp311",
+        "linux-x86_64-cp312",
+        "linux-x86_64-cp313",
+        "linux-x86_64-cp314",
+        "macos-arm64-cp311",
+        "macos-arm64-cp312",
+        "macos-arm64-cp313",
+        "macos-arm64-cp314",
+        "windows-x86_64-cp313",
+    ):
+        assert target in workflow
+    assert "ROLLING_RELEASE_TOKEN" in workflow
+    assert "--clobber" in workflow
+    assert "-F prerelease=true" in workflow
+    assert "-f make_latest=false" in workflow
+    assert "--latest=false" in workflow
+    assert "Remove stale rolling release assets" in workflow
+    assert "Verify published rolling prerelease" in workflow
+    assert "## 中文" in workflow

@@ -15,6 +15,15 @@ on:
         description: Trusted commit whose Windows packaging script should overlay an immutable source ref
         required: false
         type: string
+      frozen_dependencies:
+        description: Build from dependency-snapshot-* artifacts produced by the rolling resolver
+        required: false
+        default: false
+        type: boolean
+      dependency_tooling_ref:
+        description: Trusted commit containing the dependency snapshot verifier
+        required: false
+        type: string
   workflow_dispatch:
     inputs:
       ref:
@@ -30,8 +39,31 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
-        python-version: ["3.11", "3.12", "3.13", "3.14"]
+        include:
+          - os: ubuntu-latest
+            python-version: "3.11"
+            target: linux-x86_64-cp311
+          - os: ubuntu-latest
+            python-version: "3.12"
+            target: linux-x86_64-cp312
+          - os: ubuntu-latest
+            python-version: "3.13"
+            target: linux-x86_64-cp313
+          - os: ubuntu-latest
+            python-version: "3.14"
+            target: linux-x86_64-cp314
+          - os: macos-latest
+            python-version: "3.11"
+            target: macos-arm64-cp311
+          - os: macos-latest
+            python-version: "3.12"
+            target: macos-arm64-cp312
+          - os: macos-latest
+            python-version: "3.13"
+            target: macos-arm64-cp313
+          - os: macos-latest
+            python-version: "3.14"
+            target: macos-arm64-cp314
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -45,14 +77,44 @@ jobs:
           git fetch --no-tags --depth=1 origin "$TOOLING_REF"
           git show "$TOOLING_REF:scripts/build-offline-package.sh" \
             > scripts/build-offline-package.sh
+      - name: Check out dependency snapshot tooling
+        if: ${{ inputs.frozen_dependencies }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ inputs.dependency_tooling_ref }}
+          path: .dependency-refresh-automation
       - uses: ./.github/actions/setup-python-deps
         with:
           python-version: ${{ matrix.python-version }}
           full: "true"
+      - name: Download frozen dependency snapshot
+        if: ${{ inputs.frozen_dependencies }}
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: dependency-snapshot-${{ matrix.target }}
+          path: ${{ runner.temp }}/dependency-snapshot
+      - name: Download merged dependency manifest
+        if: ${{ inputs.frozen_dependencies }}
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: dependency-refresh-manifest
+          path: ${{ runner.temp }}/dependency-manifest
       - name: Build full offline package
         env:
           PYTHON_BIN: python
-        run: scripts/build-offline-package.sh --output-dir dist
+        run: |
+          set -euo pipefail
+          if [ "${{ inputs.frozen_dependencies }}" = "true" ]; then
+            snapshot_root="$RUNNER_TEMP/dependency-snapshot"
+            python .dependency-refresh-automation/scripts/resolve_offline_dependencies.py verify \
+              --manifest "$RUNNER_TEMP/dependency-manifest/dependency-manifest.json" \
+              --target "${{ matrix.target }}" \
+              --snapshot-root "$snapshot_root"
+            export PIP_NO_INDEX=1
+            export PIP_DISABLE_PIP_VERSION_CHECK=1
+            export PIP_FIND_LINKS="$snapshot_root/runtime-wheels $snapshot_root/support-wheels"
+          fi
+          scripts/build-offline-package.sh --output-dir dist
       - name: Verify offline package
         if: ${{ runner.os == 'Linux' }}
         run: scripts/verify-offline-package.sh dist/*.sh
@@ -76,13 +138,45 @@ jobs:
           git fetch --no-tags --depth=1 origin "$TOOLING_REF"
           git show "$TOOLING_REF:scripts/build-offline-package-windows.ps1" \
             > scripts/build-offline-package-windows.ps1
+      - name: Check out dependency snapshot tooling
+        if: ${{ inputs.frozen_dependencies }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ inputs.dependency_tooling_ref }}
+          path: .dependency-refresh-automation
       - uses: ./.github/actions/setup-python-deps
         with:
           python-version: "3.13"
           full: "true"
+      - name: Download frozen dependency snapshot
+        if: ${{ inputs.frozen_dependencies }}
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: dependency-snapshot-windows-x86_64-cp313
+          path: ${{ runner.temp }}/dependency-snapshot
+      - name: Download merged dependency manifest
+        if: ${{ inputs.frozen_dependencies }}
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: dependency-refresh-manifest
+          path: ${{ runner.temp }}/dependency-manifest
       - name: Build Windows full offline installer
         shell: pwsh
-        run: scripts/build-offline-package-windows.ps1 -OutputDir dist -PythonBin python
+        run: |
+          if ("${{ inputs.frozen_dependencies }}" -eq "true") {
+            $snapshotRoot = Join-Path $env:RUNNER_TEMP "dependency-snapshot"
+            python .dependency-refresh-automation/scripts/resolve_offline_dependencies.py verify `
+              --manifest (Join-Path $env:RUNNER_TEMP "dependency-manifest/dependency-manifest.json") `
+              --target "windows-x86_64-cp313" `
+              --snapshot-root $snapshotRoot
+            if ($LASTEXITCODE -ne 0) {
+              throw "Frozen Windows dependency snapshot verification failed."
+            }
+            $env:PIP_NO_INDEX = "1"
+            $env:PIP_DISABLE_PIP_VERSION_CHECK = "1"
+            $env:PIP_FIND_LINKS = "$(Join-Path $snapshotRoot 'runtime-wheels') $(Join-Path $snapshotRoot 'support-wheels')"
+          }
+          scripts/build-offline-package-windows.ps1 -OutputDir dist -PythonBin python
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: offline-Windows-3.13

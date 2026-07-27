@@ -231,7 +231,7 @@ def resolve_snapshot(args: argparse.Namespace) -> int:
                 "--dest",
                 str(runtime_wheels),
                 "--only-binary=:all:",
-                str(project_wheels[0]),
+                f"{project_wheels[0]}[full]",
             ]
         )
 

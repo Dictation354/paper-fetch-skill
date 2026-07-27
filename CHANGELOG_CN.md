@@ -6,6 +6,11 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+### 修复
+
+- 离线公式打包改为通过现有兼容启动器复用锁定的 `mathml-to-latex`，不再依赖 runner 提供 `texmath`；调用 Inno Setup 前规范化 Windows 相对输出目录，并允许稳定发布重跑在不移动不可变源码 tag 的前提下覆盖受信任打包工具。
+- 修复 4.0 CI 拆分时中断的每日 `dependency-latest` 滚动 prerelease：为九个冻结平台/ABI 快照解析 `full` extra，复用共享离线 workflow 构建并校验 wheelhouse，恢复精确资产覆盖、发布后完整性验证和中英文 Release 说明。
+
 ## 4.0.0 - 2026-07-26
 
 ### 破坏性变更

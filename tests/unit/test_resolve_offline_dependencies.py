@@ -263,3 +263,54 @@ def test_resolve_rejects_target_mismatch_before_running_pip(tmp_path: Path) -> N
 
     with pytest.raises(module.SnapshotError, match="Resolver target mismatch"):
         module.resolve_snapshot(args)
+
+
+def test_resolve_downloads_full_runtime_extra(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    commands: list[list[str]] = []
+    _project_name, project_version = module._project_metadata(REPO_ROOT)
+    project_wheel = f"paper_fetch_skill-{project_version}-py3-none-any.whl"
+
+    def fake_run(command: list[str], *, cwd: Path | None = None) -> None:
+        del cwd
+        commands.append(command)
+        if "wheel" in command and "--no-deps" in command:
+            destination = Path(command[command.index("--wheel-dir") + 1])
+            destination.mkdir(parents=True, exist_ok=True)
+            (destination / project_wheel).write_bytes(b"project")
+            return
+        destination = Path(command[command.index("--dest") + 1])
+        destination.mkdir(parents=True, exist_ok=True)
+        if destination.name == "support-wheels":
+            (destination / "pip-26.1.2-py3-none-any.whl").write_bytes(b"pip")
+            (destination / "setuptools-80.9.0-py3-none-any.whl").write_bytes(
+                b"setuptools"
+            )
+            (destination / "wheel-0.46.1-py3-none-any.whl").write_bytes(b"wheel")
+        else:
+            (destination / project_wheel).write_bytes(b"project")
+            (destination / "camoufox-0.5.4-py3-none-any.whl").write_bytes(b"camoufox")
+
+    monkeypatch.setattr(module, "_run", fake_run)
+    target = f"{module._host_platform()}-{module._host_arch()}-{module._python_tag()}"
+
+    assert (
+        module.resolve_snapshot(
+            argparse.Namespace(
+                project_root=REPO_ROOT,
+                output_dir=tmp_path / "snapshot",
+                target=target,
+                source_tag=f"v{project_version}",
+                source_sha="1" * 40,
+            )
+        )
+        == 0
+    )
+
+    runtime_download = next(
+        command
+        for command in commands
+        if "download" in command and command[-1].endswith("[full]")
+    )
+    assert runtime_download[-1].endswith(f"{project_wheel}[full]")

@@ -1,0 +1,552 @@
+name: Rolling dependency release
+
+on:
+  schedule:
+    # 03:17 Asia/Shanghai. Avoid the high-load start of the UTC hour.
+    - cron: "17 19 * * *"
+  workflow_dispatch:
+    inputs:
+      force_refresh:
+        description: Force a dependency-latest rebuild even when dependencies are unchanged
+        required: false
+        default: false
+        type: boolean
+
+concurrency:
+  group: paper-fetch-dependency-latest
+  cancel-in-progress: false
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  context:
+    runs-on: ubuntu-latest
+    outputs:
+      source_tag: ${{ steps.source.outputs.source_tag }}
+      source_sha: ${{ steps.source.outputs.source_sha }}
+      project_version: ${{ steps.source.outputs.project_version }}
+    steps:
+      - name: Resolve latest stable release source
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          source_tag="$(gh api "repos/$GITHUB_REPOSITORY/releases/latest" --jq .tag_name)"
+          case "$source_tag" in
+            v*) ;;
+            *)
+              echo "Latest stable release tag must start with v: $source_tag" >&2
+              exit 1
+              ;;
+          esac
+          echo "source_tag=$source_tag" >> "$GITHUB_OUTPUT"
+
+      - name: Refuse immutable rolling release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          release_json="$RUNNER_TEMP/dependency-latest-release.json"
+          release_error="$RUNNER_TEMP/dependency-latest-release.error"
+          if gh api "repos/$GITHUB_REPOSITORY/releases/tags/dependency-latest" \
+            > "$release_json" 2> "$release_error"; then
+            immutable="$(python3 -c 'import json, pathlib, sys; print(str(json.loads(pathlib.Path(sys.argv[1]).read_text()).get("immutable", False)).lower())' "$release_json")"
+            if [ "$immutable" = "true" ]; then
+              echo "dependency-latest is immutable and cannot be rolled forward." >&2
+              exit 1
+            fi
+          elif ! grep -Fq '(HTTP 404)' "$release_error"; then
+            cat "$release_error" >&2
+            exit 1
+          fi
+
+      - name: Check out latest stable source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ steps.release.outputs.source_tag }}
+          path: stable-source
+          fetch-depth: 1
+
+      - name: Publish stable source metadata
+        id: source
+        env:
+          SOURCE_TAG: ${{ steps.release.outputs.source_tag }}
+        run: |
+          set -euo pipefail
+          source_sha="$(git -C stable-source rev-parse HEAD)"
+          project_version="$(python3 -c 'import pathlib, tomllib; print(tomllib.loads(pathlib.Path("stable-source/pyproject.toml").read_text(encoding="utf-8"))["project"]["version"])')"
+          echo "source_tag=$SOURCE_TAG" >> "$GITHUB_OUTPUT"
+          echo "source_sha=$source_sha" >> "$GITHUB_OUTPUT"
+          echo "project_version=$project_version" >> "$GITHUB_OUTPUT"
+
+  resolve:
+    needs: context
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            python-version: "3.11"
+            target: linux-x86_64-cp311
+          - os: ubuntu-latest
+            python-version: "3.12"
+            target: linux-x86_64-cp312
+          - os: ubuntu-latest
+            python-version: "3.13"
+            target: linux-x86_64-cp313
+          - os: ubuntu-latest
+            python-version: "3.14"
+            target: linux-x86_64-cp314
+          - os: macos-latest
+            python-version: "3.11"
+            target: macos-arm64-cp311
+          - os: macos-latest
+            python-version: "3.12"
+            target: macos-arm64-cp312
+          - os: macos-latest
+            python-version: "3.13"
+            target: macos-arm64-cp313
+          - os: macos-latest
+            python-version: "3.14"
+            target: macos-arm64-cp314
+          - os: windows-latest
+            python-version: "3.13"
+            target: windows-x86_64-cp313
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Check out dependency refresh tooling
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Check out latest stable source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ needs.context.outputs.source_sha }}
+          path: stable-source
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install pinned resolver tooling
+        run: python -m pip install "pip==26.1.2" "packaging==26.2"
+
+      - name: Resolve full target dependency snapshot
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/resolve_offline_dependencies.py resolve \
+            --project-root stable-source \
+            --output-dir "$RUNNER_TEMP/dependency-snapshot" \
+            --target "${{ matrix.target }}" \
+            --source-tag "${{ needs.context.outputs.source_tag }}" \
+            --source-sha "${{ needs.context.outputs.source_sha }}"
+
+      - name: Upload target dependency snapshot
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: dependency-snapshot-${{ matrix.target }}
+          path: ${{ runner.temp }}/dependency-snapshot
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 1
+
+  compare:
+    needs: [context, resolve]
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.compare.outputs.changed }}
+      reason: ${{ steps.compare.outputs.reason }}
+      dependency_set_sha256: ${{ steps.compare.outputs.dependency_set_sha256 }}
+      source_tag: ${{ steps.compare.outputs.source_tag }}
+      source_sha: ${{ steps.compare.outputs.source_sha }}
+      project_version: ${{ steps.compare.outputs.project_version }}
+    steps:
+      - name: Check out dependency refresh tooling
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Download target dependency snapshots
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          pattern: dependency-snapshot-*
+          path: dependency-snapshots
+
+      - name: Merge target dependency snapshots
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t fragments < <(find dependency-snapshots -type f -name fragment.json -print | sort)
+          python scripts/resolve_offline_dependencies.py merge \
+            --fragment "${fragments[@]}" \
+            --expected-target \
+              linux-x86_64-cp311 \
+              linux-x86_64-cp312 \
+              linux-x86_64-cp313 \
+              linux-x86_64-cp314 \
+              macos-arm64-cp311 \
+              macos-arm64-cp312 \
+              macos-arm64-cp313 \
+              macos-arm64-cp314 \
+              windows-x86_64-cp313 \
+            --output dependency-manifest.json
+
+      - name: Download and validate rolling release baseline
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p dependency-baseline
+          release_json="$RUNNER_TEMP/dependency-latest-release.json"
+          release_error="$RUNNER_TEMP/dependency-latest-release.error"
+          if gh api "repos/$GITHUB_REPOSITORY/releases/tags/dependency-latest" \
+            > "$release_json" 2> "$release_error"; then
+            if python - "$release_json" <<'PY'
+          import json
+          import sys
+          from pathlib import Path
+
+          expected = {
+              "SHA256SUMS",
+              "dependency-manifest.json",
+              "paper-fetch-skill-offline-linux-x86_64-cp311.sh",
+              "paper-fetch-skill-offline-linux-x86_64-cp312.sh",
+              "paper-fetch-skill-offline-linux-x86_64-cp313.sh",
+              "paper-fetch-skill-offline-linux-x86_64-cp314.sh",
+              "paper-fetch-skill-offline-macos-arm64-cp311.tar.gz",
+              "paper-fetch-skill-offline-macos-arm64-cp312.tar.gz",
+              "paper-fetch-skill-offline-macos-arm64-cp313.tar.gz",
+              "paper-fetch-skill-offline-macos-arm64-cp314.tar.gz",
+              "paper-fetch-skill-windows-x86_64-setup.exe",
+          }
+          release = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
+          assets = {asset["name"]: asset for asset in release.get("assets", [])}
+          actual = set(assets)
+          valid = (
+              release.get("tag_name") == "dependency-latest"
+              and release.get("prerelease") is True
+              and actual == expected
+          )
+          if not valid:
+              print(
+                  "Rolling release is incomplete or malformed; forcing a rebuild. "
+                  f"missing={sorted(expected - actual)}, extra={sorted(actual - expected)}",
+                  file=sys.stderr,
+              )
+              raise SystemExit(1)
+          PY
+            then
+              mkdir -p dependency-baseline-candidate
+              gh release download dependency-latest \
+                --repo "$GITHUB_REPOSITORY" \
+                --pattern dependency-manifest.json \
+                --pattern SHA256SUMS \
+                --dir dependency-baseline-candidate
+              if python - "$release_json" dependency-baseline-candidate <<'PY'
+          import hashlib
+          import json
+          import sys
+          from pathlib import Path
+
+          release = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
+          baseline_dir = Path(sys.argv[2])
+          assets = {asset["name"]: asset for asset in release.get("assets", [])}
+          expected = set(assets)
+
+          checksums = {}
+          checksum_path = baseline_dir / "SHA256SUMS"
+          for line in checksum_path.read_text(encoding="utf-8").splitlines():
+              digest, separator, filename = line.partition("  ")
+              if not separator or filename in checksums:
+                  raise SystemExit("Rolling SHA256SUMS is malformed")
+              checksums[filename] = digest
+          if set(checksums) != expected - {"SHA256SUMS"}:
+              raise SystemExit("Rolling SHA256SUMS has the wrong asset set")
+
+          for filename, digest in checksums.items():
+              if assets[filename].get("digest") != f"sha256:{digest}":
+                  raise SystemExit(f"Rolling asset digest mismatch for {filename}")
+          checksum_digest = hashlib.sha256(checksum_path.read_bytes()).hexdigest()
+          if assets["SHA256SUMS"].get("digest") != f"sha256:{checksum_digest}":
+              raise SystemExit("Rolling SHA256SUMS asset digest mismatch")
+
+          manifest_path = baseline_dir / "dependency-manifest.json"
+          manifest_digest = hashlib.sha256(manifest_path.read_bytes()).hexdigest()
+          if assets["dependency-manifest.json"].get("digest") != f"sha256:{manifest_digest}":
+              raise SystemExit("Rolling dependency manifest asset digest mismatch")
+          PY
+              then
+                cp dependency-baseline-candidate/dependency-manifest.json \
+                  dependency-baseline/dependency-manifest.json
+              fi
+            fi
+          elif ! grep -Fq '(HTTP 404)' "$release_error"; then
+            cat "$release_error" >&2
+            exit 1
+          fi
+
+      - name: Compare resolved dependency set
+        id: compare
+        shell: bash
+        run: |
+          set -euo pipefail
+          force_args=()
+          if [ "${{ inputs.force_refresh || false }}" = "true" ]; then
+            force_args+=(--force)
+          fi
+          python scripts/resolve_offline_dependencies.py compare \
+            --candidate dependency-manifest.json \
+            --baseline dependency-baseline/dependency-manifest.json \
+            --github-output "$GITHUB_OUTPUT" \
+            "${force_args[@]}"
+
+      - name: Upload merged dependency manifest
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: dependency-refresh-manifest
+          path: dependency-manifest.json
+          if-no-files-found: error
+          retention-days: 1
+
+  offline:
+    needs: compare
+    if: ${{ needs.compare.outputs.changed == 'true' }}
+    uses: ./.github/workflows/offline.yml
+    with:
+      ref: ${{ needs.compare.outputs.source_sha }}
+      posix_tooling_ref: ${{ github.sha }}
+      windows_tooling_ref: ${{ github.sha }}
+      frozen_dependencies: true
+      dependency_tooling_ref: ${{ github.sha }}
+
+  publish:
+    needs: [compare, offline]
+    if: >-
+      ${{
+        always() &&
+        needs.compare.result == 'success' &&
+        needs.compare.outputs.changed == 'true' &&
+        needs.offline.result == 'success'
+      }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require rolling release token
+        env:
+          ROLLING_RELEASE_TOKEN: ${{ secrets.ROLLING_RELEASE_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -z "${ROLLING_RELEASE_TOKEN:-}" ]; then
+            echo "ROLLING_RELEASE_TOKEN Actions secret is required." >&2
+            exit 1
+          fi
+
+      - name: Download offline packages
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          pattern: offline-*
+          path: release-assets
+          merge-multiple: true
+
+      - name: Download dependency manifest
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: dependency-refresh-manifest
+          path: release-assets
+
+      - name: Verify rolling release assets and write checksums
+        shell: bash
+        run: |
+          set -euo pipefail
+          expected=(
+            dependency-manifest.json
+            paper-fetch-skill-offline-linux-x86_64-cp311.sh
+            paper-fetch-skill-offline-linux-x86_64-cp312.sh
+            paper-fetch-skill-offline-linux-x86_64-cp313.sh
+            paper-fetch-skill-offline-linux-x86_64-cp314.sh
+            paper-fetch-skill-offline-macos-arm64-cp311.tar.gz
+            paper-fetch-skill-offline-macos-arm64-cp312.tar.gz
+            paper-fetch-skill-offline-macos-arm64-cp313.tar.gz
+            paper-fetch-skill-offline-macos-arm64-cp314.tar.gz
+            paper-fetch-skill-windows-x86_64-setup.exe
+          )
+          printf '%s\n' "${expected[@]}" | LC_ALL=C sort > "$RUNNER_TEMP/expected-assets.txt"
+          find release-assets -maxdepth 1 -type f -printf '%f\n' \
+            | LC_ALL=C sort > "$RUNNER_TEMP/actual-assets.txt"
+          if ! diff -u "$RUNNER_TEMP/expected-assets.txt" "$RUNNER_TEMP/actual-assets.txt"; then
+            echo "Rolling release build did not produce the exact expected asset set." >&2
+            exit 1
+          fi
+          (
+            cd release-assets
+            sha256sum "${expected[@]}" | LC_ALL=C sort -k2 > SHA256SUMS
+          )
+
+      - name: Write bilingual rolling release notes
+        shell: bash
+        env:
+          SOURCE_TAG: ${{ needs.compare.outputs.source_tag }}
+          SOURCE_SHA: ${{ needs.compare.outputs.source_sha }}
+          PROJECT_VERSION: ${{ needs.compare.outputs.project_version }}
+          DEPENDENCY_SET_SHA256: ${{ needs.compare.outputs.dependency_set_sha256 }}
+          REFRESH_REASON: ${{ needs.compare.outputs.reason }}
+        run: |
+          set -euo pipefail
+          updated_at="$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+          {
+            echo "## 中文"
+            echo
+            echo "> 这是可变的滚动预发布版本。解析后的 Python 依赖集合变化时，固定 \`dependency-latest\` 标签下的资产会被替换。"
+            echo
+            echo "- 稳定源码：[\`$SOURCE_TAG\`](https://github.com/$GITHUB_REPOSITORY/releases/tag/$SOURCE_TAG)（\`$SOURCE_SHA\`）"
+            echo "- 项目版本：\`$PROJECT_VERSION\`"
+            echo "- 依赖集合 SHA256：\`$DEPENDENCY_SET_SHA256\`"
+            echo "- 刷新原因：\`$REFRESH_REASON\`"
+            echo "- 更新时间：\`$updated_at\`"
+            echo
+            echo "请使用 \`SHA256SUMS\` 校验下载资产；需要不可变、可复现版本时，请选择稳定的 \`v*\` Release。"
+            echo
+            echo "---"
+            echo
+            echo "## English"
+            echo
+            echo "> This prerelease is mutable. Assets under the fixed \`dependency-latest\` tag are replaced when the resolved Python dependency set changes."
+            echo
+            echo "- Stable source: [\`$SOURCE_TAG\`](https://github.com/$GITHUB_REPOSITORY/releases/tag/$SOURCE_TAG) (\`$SOURCE_SHA\`)"
+            echo "- Project version: \`$PROJECT_VERSION\`"
+            echo "- Dependency set SHA256: \`$DEPENDENCY_SET_SHA256\`"
+            echo "- Refresh reason: \`$REFRESH_REASON\`"
+            echo "- Updated at: \`$updated_at\`"
+            echo
+            echo "Verify downloaded assets with \`SHA256SUMS\`. For immutable, reproducible releases, use a stable \`v*\` release instead."
+          } > release-notes.md
+
+      - name: Move rolling tag to stable source
+        env:
+          GH_TOKEN: ${{ secrets.ROLLING_RELEASE_TOKEN }}
+          SOURCE_SHA: ${{ needs.compare.outputs.source_sha }}
+        run: |
+          set -euo pipefail
+          if gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/dependency-latest" >/dev/null 2>&1; then
+            gh api --method PATCH \
+              "repos/$GITHUB_REPOSITORY/git/refs/tags/dependency-latest" \
+              -f sha="$SOURCE_SHA" \
+              -F force=true >/dev/null
+          else
+            gh api --method POST \
+              "repos/$GITHUB_REPOSITORY/git/refs" \
+              -f ref='refs/tags/dependency-latest' \
+              -f sha="$SOURCE_SHA" >/dev/null
+          fi
+
+      - name: Publish rolling prerelease
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.ROLLING_RELEASE_TOKEN }}
+          SOURCE_SHA: ${{ needs.compare.outputs.source_sha }}
+          SOURCE_TAG: ${{ needs.compare.outputs.source_tag }}
+        run: |
+          set -euo pipefail
+          mapfile -d '' assets < <(find release-assets -maxdepth 1 -type f -print0)
+          if release_id="$(gh api "repos/$GITHUB_REPOSITORY/releases/tags/dependency-latest" --jq .id 2>/dev/null)"; then
+            gh api --method PATCH \
+              "repos/$GITHUB_REPOSITORY/releases/$release_id" \
+              -f name="dependency-latest ($SOURCE_TAG)" \
+              -f body="$(< release-notes.md)" \
+              -F draft=false \
+              -F prerelease=true \
+              -f make_latest=false >/dev/null
+            gh release upload dependency-latest "${assets[@]}" \
+              --repo "$GITHUB_REPOSITORY" \
+              --clobber
+          else
+            gh release create dependency-latest "${assets[@]}" \
+              --repo "$GITHUB_REPOSITORY" \
+              --verify-tag \
+              --target "$SOURCE_SHA" \
+              --title "dependency-latest ($SOURCE_TAG)" \
+              --notes-file release-notes.md \
+              --prerelease \
+              --latest=false
+          fi
+
+      - name: Remove stale rolling release assets
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.ROLLING_RELEASE_TOKEN }}
+        run: |
+          set -euo pipefail
+          {
+            cat "$RUNNER_TEMP/expected-assets.txt"
+            echo SHA256SUMS
+          } | LC_ALL=C sort > "$RUNNER_TEMP/expected-release-assets.txt"
+          release_id="$(gh api "repos/$GITHUB_REPOSITORY/releases/tags/dependency-latest" --jq .id)"
+          while IFS=$'\t' read -r asset_id asset_name; do
+            if ! grep -Fqx "$asset_name" "$RUNNER_TEMP/expected-release-assets.txt"; then
+              echo "Removing stale rolling asset: $asset_name"
+              gh api --method DELETE \
+                "repos/$GITHUB_REPOSITORY/releases/assets/$asset_id"
+            fi
+          done < <(
+            gh api --paginate \
+              "repos/$GITHUB_REPOSITORY/releases/$release_id/assets?per_page=100" \
+              --jq '.[] | [.id, .name] | @tsv'
+          )
+
+      - name: Verify published rolling prerelease
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.ROLLING_RELEASE_TOKEN }}
+          SOURCE_SHA: ${{ needs.compare.outputs.source_sha }}
+        run: |
+          set -euo pipefail
+          published_sha="$(gh api \
+            "repos/$GITHUB_REPOSITORY/git/ref/tags/dependency-latest" \
+            --jq .object.sha)"
+          if [ "$published_sha" != "$SOURCE_SHA" ]; then
+            echo "Published rolling tag points to $published_sha, expected $SOURCE_SHA." >&2
+            exit 1
+          fi
+          gh api "repos/$GITHUB_REPOSITORY/releases/tags/dependency-latest" \
+            > "$RUNNER_TEMP/published-dependency-release.json"
+          python - "$RUNNER_TEMP/published-dependency-release.json" release-assets <<'PY'
+          import hashlib
+          import json
+          import sys
+          from pathlib import Path
+
+          release_path = Path(sys.argv[1])
+          artifact_dir = Path(sys.argv[2])
+
+          def sha256(path: Path) -> str:
+              digest = hashlib.sha256()
+              with path.open("rb") as handle:
+                  for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+                      digest.update(chunk)
+              return digest.hexdigest()
+
+          release = json.loads(release_path.read_text(encoding="utf-8"))
+          if release.get("tag_name") != "dependency-latest":
+              raise SystemExit("Published release has the wrong tag")
+          if release.get("prerelease") is not True or release.get("draft") is not False:
+              raise SystemExit("Published rolling release flags are invalid")
+
+          local = {path.name: path for path in artifact_dir.iterdir() if path.is_file()}
+          remote = {asset["name"]: asset for asset in release.get("assets", [])}
+          if set(local) != set(remote):
+              raise SystemExit(
+                  "Published asset set mismatch: "
+                  f"missing={sorted(set(local) - set(remote))}, "
+                  f"extra={sorted(set(remote) - set(local))}"
+              )
+          for name, path in sorted(local.items()):
+              digest = sha256(path)
+              asset = remote[name]
+              if asset.get("size") != path.stat().st_size:
+                  raise SystemExit(f"Published size mismatch for {name}")
+              if asset.get("digest") != f"sha256:{digest}":
+                  raise SystemExit(f"Published SHA256 mismatch for {name}")
+          print(f"Verified {len(local)} rolling release assets.")
+          PY
