@@ -1,5 +1,7 @@
 # Paper Fetch Skill
 
+[![MCP Toplist](https://mcptoplist.com/badge/glama%2FDictation354%2Fpaper-fetch-skill.svg)](https://mcptoplist.com/server/glama%2FDictation354%2Fpaper-fetch-skill)
+
 > Fetch papers as agent-ready markdown — DOI/URL/title in, structured full text out. CLI · MCP · Skill.
 
 **Paper Fetch Skill** —— 已知论文的 AI 阅读层。
