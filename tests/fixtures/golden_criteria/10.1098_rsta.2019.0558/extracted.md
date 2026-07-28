@@ -70,7 +70,7 @@ The aim of virtual cohorts of cardiac models is to account for inter-patient var
 
 The parameter set for each member of the virtual cohort can be obtained in three ways: first, by having each member of the virtual cohort represent a specific patient from a real-world cohort (1:1 mapping); second, by generating a parameter set from inferred parameter distributions (sampling from inferred distributions); and, third, by completely randomly generating parameters and testing if these result in physiologically plausible models (random variation with acceptance criteria). Figure 1 gives a schematic summary, while the methods are detailed below.
 
-![Figure 1](https://royalsocietypublishing.org/view-large/figure/17919659/rsta20190558f01.tif)
+![Figure 1](https://trs.silverchair-cdn.com/trs/content_public/journal/rsta/378/2173/10.1098_rsta.2019.0558/5/rsta20190558f01.png?Expires=1781645016&Signature=mCg~JCB3JBQ4s~Yz6qOg~NBv3fWkoIIpxi6R3lnBGJKlGMiGKk1yZ3pwBl4Xvb41IZPQCtsy~pgQWcLbSaBvz2nUopKEf63LXQ56MpTgJgcKRDtmmDzB7my-UBK5pmQL2DGWP~1QHT7cUH~6LgUbsyD9MyWSn-2oKF2DrQuOZ~Q1UAV1Ylucqr0GgDsQVx00FHF193o2~mobqEfwsKnjfQiWr5EGctKwEiagArG2PWpZLKF8wdfjtmlyOfMFE9FpbAJO5-nRZInj7MUkeZLW2mMlQvycFfHRa6dYp8z9-ieGiUbYM2J9YS2JP7873yKLzPgiaISudtp9gkgJsS8ZjQ__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA)
 
 **Figure 1.** Schematic of the strategies for obtaining a virtual cohort, based on biophysical models. (Online version in colour.)
 
@@ -94,7 +94,7 @@ The strategies for model development can be separated into development of synthe
 
 Creating a virtual cohort requires the development of a template model for representing each member of the cohort. The template needs to be carefully designed to be able to capture patient variability, physiology, diseases and treatments of interest. In cases where the model is tied to clinical data for specific patients, the model complexity needs to reflect the available clinical data and the time and resources available to create the model. In virtual cohort strategies, where models need to be tuned to represent all or a subset of specific patients, the model parameters must be inferred using nonlinear optimization, statistical or machine learning approaches. The constrained model is subsequently exposed to a validation step, in order to assess its generalization properties for predictions tasks. These three steps are depicted graphically in figure 2.
 
-![Figure 2](https://royalsocietypublishing.org/view-large/figure/17919669/rsta20190558f02.tif)
+![Figure 2](https://trs.silverchair-cdn.com/trs/content_public/journal/rsta/378/2173/10.1098_rsta.2019.0558/5/rsta20190558f02.png?Expires=1781645016&Signature=T61bczJB6c5U1FYDPLM0sEgEvPF~z-XFVISp0sYOcz4t~tKekSQ1bI3L6MHCR2o2blAIMwv91FWEtLwoXgENlr5dDrFNeLUr1sGRGgK6Lg5NyWucCrUlTxDfIaZpuYgeuxXblzj2nyA9O3121sz~EDRu12I1b6TYEtOMvBElK7vXC6e-q6u8p-rcvZeA8E4-YBnwBjTMx5E1619gCiJfZIfllIFmQbqCKmkqbyxsu62p2Eq0oUwT0Db0-m0PNvznxM0IhkffqoY1tBZc1NN836szpKIByVzOAGLzf6y8CkFyYnwyML3Y9PSJLDxpmzZxE2MBGf1wAhKqO-d1WZpfSA__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA)
 
 **Figure 2.** Process of creating a virtual cohort. (a) Defining a template model structure for the members of the cohort, (b) constraining the parameters for the members of the virtual cohort and, (c) validating the models representing specific individual patients and the virtual cohort. (Online version in colour.)
 
@@ -237,11 +237,6 @@ We declare we have no competing interest.
 ## Funding
 
 A.V.P. is supported by RF Government Act No. 211 of 16 March 2013, and RFBR(grant no. 18-29-13008). S.A.N., C.C., C.R. and M.R. are supported by the EPSRCgrant nos (EP/P01268X/1, EP/M012492/1, NS/A000049/1, EP/R045046/1), the BHF(SP/18/6/33805, PG/19/44/34368) and the National Institute for Health Research (NIHR) KCL Biomedical Research Centre. C.R. is supported by the MRCgrant no (MR/S015086/1). C.D.C. is supported by the Rosetrees Trust(M577) and BHF (PG/16/17/32069). R.W.d.S. is supported by CAPES, CNPq and FAPEMIG. This paper came out of the Fickle Heart program at the Isaac Newton Institute meeting, supported by the EPSRC grant no. (EP/R014604/1). E.M.C. and F.H.F. are supported by NIH 1R01HL143450-01 and F.H.F. is supported by NSF CMMI-1762803 for EMC and NSF CMMI-1762553.
-
-## Figures
-
-- Figure 1
-- Figure 2
 
 ## References (102 total, showing 102)
 

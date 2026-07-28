@@ -72,8 +72,7 @@ def test_fake_drift_report_marks_pdf_fallback_source_mismatch() -> None:
 def test_browser_risk_selection_uses_manifest_probe_flags() -> None:
     providers = set(drift.browser_risk_providers())
 
-    assert {"mdpi", "wiley", "science", "pnas"} <= providers
-    assert "ams" not in providers
+    assert {"ams", "mdpi", "wiley", "science", "pnas"} <= providers
     assert "elsevier" not in providers
 
 

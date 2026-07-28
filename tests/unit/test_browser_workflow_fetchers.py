@@ -7,6 +7,7 @@ from unittest import mock
 
 from paper_fetch.providers import browser_workflow
 from paper_fetch.providers.browser_workflow.fetchers import context as fetcher_context
+from paper_fetch.providers.browser_workflow.fetchers import file as file_fetchers
 from paper_fetch.providers.browser_workflow.fetchers import image as image_fetchers
 from paper_fetch.runtime import RuntimeContext
 
@@ -356,6 +357,221 @@ def test_image_fetcher_uses_runtime_keyed_context_when_shared_browser_enabled() 
     assert call_kwargs["cdp_endpoint"] == "ws://127.0.0.1:9222/devtools/browser/test"
     assert call_kwargs["user_agent"] == "UnitTestAgent/1.0"
     assert fake_context.closed is True
+
+
+def test_serial_image_and_file_fetchers_share_ready_article_page_until_owner_closes() -> (
+    None
+):
+    article_url = "https://example.test/article"
+    image_url = "https://example.test/figure-large.gif"
+    file_url = "https://example.test/supplement.pdf"
+    gif_payload = b"GIF89a\x01\x00\x01\x00"
+    pdf_payload = b"%PDF-1.7 supplement"
+
+    class Response:
+        status = 200
+        url = file_url
+        headers = {"content-type": "application/pdf"}
+
+        def body(self) -> bytes:
+            return pdf_payload
+
+    class RequestClient:
+        def __init__(self) -> None:
+            self.calls: list[dict[str, object]] = []
+
+        def get(self, url: str, **kwargs):
+            self.calls.append({"url": url, **kwargs})
+            return Response()
+
+    class Page:
+        def __init__(self) -> None:
+            self.url = "about:blank"
+            self.goto_calls: list[str] = []
+            self.close_calls = 0
+
+        def goto(self, url: str, **_kwargs):
+            self.url = url
+            self.goto_calls.append(url)
+            return None
+
+        def close(self) -> None:
+            self.close_calls += 1
+
+    class Context:
+        def __init__(self) -> None:
+            self.request = RequestClient()
+            self.page = Page()
+            self.new_page_calls = 0
+            self.close_calls = 0
+            self.added_cookies: list[dict[str, str]] = []
+
+        def add_cookies(self, cookies) -> None:
+            self.added_cookies.extend(list(cookies))
+
+        def new_page(self) -> Page:
+            self.new_page_calls += 1
+            return self.page
+
+        def close(self) -> None:
+            self.close_calls += 1
+
+    context = Context()
+    manager = mock.Mock()
+    ready_calls: list[tuple[object, object, str]] = []
+    shared_session = fetcher_context._SharedBrowserPageSession(
+        preserve_seed_page=True,
+        seed_page_ready_waiter=lambda page, active_context, seed_url: (
+            ready_calls.append((page, active_context, seed_url)) or True
+        ),
+    )
+    runtime_context = RuntimeContext(env={})
+    previous_session = fetcher_context._replace_runtime_shared_page_session(
+        runtime_context,
+        shared_session,
+    )
+    seed = {
+        "browser_cookies": [
+            {
+                "name": "session",
+                "value": "latest",
+                "domain": ".example.test",
+                "path": "/",
+            }
+        ],
+        "browser_final_url": article_url,
+    }
+    image_fetcher = image_fetchers._SharedBrowserImageDocumentFetcher(
+        browser_context_seed_getter=lambda: seed,
+        seed_urls_getter=lambda: [article_url],
+        runtime_context=runtime_context,
+    )
+    image_fetcher._fetch_with_page = mock.Mock(
+        return_value={
+            "status_code": 200,
+            "headers": {"content-type": "image/gif"},
+            "body": gif_payload,
+            "url": image_url,
+            "dimensions": {"width": 1, "height": 1},
+        }
+    )
+    file_fetcher = file_fetchers._SharedBrowserFileDocumentFetcher(
+        browser_context_seed_getter=lambda: seed,
+        seed_urls_getter=lambda: [article_url],
+        runtime_context=runtime_context,
+    )
+
+    with mock.patch.object(
+        fetcher_context,
+        "_new_browser_context",
+        return_value=(manager, None, context),
+    ) as new_context:
+        image_result = image_fetcher(image_url, {"kind": "figure"})
+        file_result = file_fetcher(file_url, {"kind": "supplementary"})
+        image_fetcher.close()
+        file_fetcher.close()
+
+    assert image_result is not None
+    assert file_result is not None
+    new_context.assert_called_once()
+    assert context.new_page_calls == 1
+    assert context.page.goto_calls == [article_url]
+    assert ready_calls == [(context.page, context, article_url)]
+    assert context.added_cookies == seed["browser_cookies"]
+    assert context.request.calls[0]["headers"]["Referer"] == article_url
+    assert context.page.close_calls == 0
+    assert context.close_calls == 0
+    manager.close.assert_not_called()
+
+    fetcher_context._restore_runtime_shared_page_session(
+        runtime_context,
+        shared_session,
+        previous_session,
+    )
+    shared_session.close()
+    shared_session.close()
+    runtime_context.close()
+    assert context.page.close_calls == 1
+    assert context.close_calls == 1
+    manager.close.assert_called_once()
+
+
+def test_image_fetcher_does_not_navigate_shared_article_page_to_failed_asset() -> None:
+    article_url = "https://example.test/article"
+    image_url = "https://example.test/figure-large.gif"
+    page = mock.Mock()
+    page.url = article_url
+    context = mock.Mock()
+    shared_session = fetcher_context._SharedBrowserPageSession(preserve_seed_page=True)
+    shared_session.bind(manager=None, context=context, page=page)
+    shared_session.mark_seed_ready(article_url)
+    runtime_context = RuntimeContext(env={})
+    previous_session = fetcher_context._replace_runtime_shared_page_session(
+        runtime_context,
+        shared_session,
+    )
+    fetcher = image_fetchers._SharedBrowserImageDocumentFetcher(
+        browser_context_seed_getter=lambda: {"browser_final_url": article_url},
+        seed_urls_getter=lambda: [article_url],
+        runtime_context=runtime_context,
+    )
+    fetcher._context = context
+    fetcher._page = page
+
+    with (
+        mock.patch.object(
+            fetcher, "_payload_from_warmed_article_image", return_value=None
+        ),
+        mock.patch.object(fetcher, "_payload_from_page_fetch_url", return_value=None),
+        mock.patch.object(fetcher, "_payload_from_context_request", return_value=None),
+    ):
+        result = fetcher._fetch_with_page(image_url)
+
+    assert result is None
+    page.goto.assert_not_called()
+    fetcher_context._restore_runtime_shared_page_session(
+        runtime_context,
+        shared_session,
+        previous_session,
+    )
+    shared_session.close()
+    runtime_context.close()
+
+
+def test_shared_page_session_closes_partial_context_when_page_creation_fails() -> None:
+    image_url = "https://example.test/figure-large.gif"
+    context = mock.Mock()
+    context.new_page.side_effect = RuntimeError("page creation failed")
+    manager = mock.Mock()
+    shared_session = fetcher_context._SharedBrowserPageSession(preserve_seed_page=True)
+    runtime_context = RuntimeContext(env={})
+    previous_session = fetcher_context._replace_runtime_shared_page_session(
+        runtime_context,
+        shared_session,
+    )
+    fetcher = image_fetchers._SharedBrowserImageDocumentFetcher(
+        browser_context_seed_getter=lambda: {},
+        seed_urls_getter=lambda: ["https://example.test/article"],
+        runtime_context=runtime_context,
+    )
+
+    with mock.patch.object(
+        fetcher_context,
+        "_new_browser_context",
+        return_value=(manager, None, context),
+    ):
+        result = fetcher(image_url, {"kind": "figure"})
+
+    assert result is None
+    context.close.assert_called_once()
+    manager.close.assert_called_once()
+    fetcher_context._restore_runtime_shared_page_session(
+        runtime_context,
+        shared_session,
+        previous_session,
+    )
+    shared_session.close()
+    runtime_context.close()
 
 
 def test_memoized_image_fetcher_preserves_caller_thread_requirement() -> None:

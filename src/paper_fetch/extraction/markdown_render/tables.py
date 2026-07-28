@@ -72,6 +72,26 @@ def table_from_entry(entry: Mapping[str, Any]) -> MarkdownTable:
     )
 
 
+def _entry_prefix_rows(entry: Mapping[str, Any]) -> list[str]:
+    return [
+        normalize_text(str(value))
+        for value in entry.get("_table_prefix_rows", []) or []
+        if normalize_text(str(value))
+    ]
+
+
+def _insert_prefix_rows(
+    lines: list[str],
+    table: MarkdownTable,
+    prefix_rows: list[str],
+) -> list[str]:
+    if not prefix_rows:
+        return lines
+    insert_at = 2 + (2 if table.caption else 0)
+    prefix_lines = [line for prefix in prefix_rows for line in (prefix, "")]
+    return [*lines[:insert_at], *prefix_lines, *lines[insert_at:]]
+
+
 def render_table(table: MarkdownTable) -> list[str]:
     lines = [table.label, ""]
     if table.caption:
@@ -113,7 +133,12 @@ def render_image_table_block(entry: Mapping[str, Any]) -> list[str]:
 
 def render_structured_table_block(entry: Mapping[str, Any]) -> list[str]:
     if entry.get("rows"):
-        return render_table(table_from_entry(entry))
+        table = table_from_entry(entry)
+        return _insert_prefix_rows(
+            render_table(table),
+            table,
+            _entry_prefix_rows(entry),
+        )
     return render_image_table_block(
         {
             **entry,
@@ -121,6 +146,51 @@ def render_structured_table_block(entry: Mapping[str, Any]) -> list[str]:
             or "Table content could not be fully converted to Markdown; original table resource is retained below.",
         }
     )
+
+
+def render_structured_list_table_block(entry: Mapping[str, Any]) -> list[str]:
+    """Render an irregular table without implying a reliable GFM grid."""
+
+    table = table_from_entry(entry)
+    lines = [table.label, ""]
+    if table.caption:
+        lines.extend([table.caption, ""])
+    for prefix in _entry_prefix_rows(entry):
+        lines.extend([prefix, ""])
+
+    headers = _cell_texts(table.headers)
+    rows = _row_texts(table.rows)
+    if headers and rows and _same_row(headers, rows[0]):
+        rows = rows[1:]
+    rendered_row = False
+    for row in rows:
+        parts: list[str] = []
+        for index, raw_value in enumerate(row):
+            value = normalize_table_cell_text(raw_value)
+            if not value:
+                continue
+            header = headers[index] if index < len(headers) else ""
+            parts.append(f"{header}: {value}" if header else value)
+        if parts:
+            lines.append(f"- {'; '.join(parts)}")
+            rendered_row = True
+    if not rendered_row and headers:
+        nonempty_headers = [header for header in headers if normalize_text(header)]
+        if nonempty_headers:
+            lines.append("- " + "; ".join(nonempty_headers))
+    if rendered_row or headers:
+        lines.append("")
+    if table.fallback_message:
+        lines.extend([table.fallback_message, ""])
+    if table.image_fallback_url:
+        lines.extend(
+            [render_markdown_image("table", table.label, table.image_fallback_url), ""]
+        )
+    for footnote in table.footnotes:
+        text = normalize_text(footnote)
+        if text:
+            lines.extend([text, ""])
+    return lines
 
 
 def render_table_block(entry: Mapping[str, Any]) -> list[str]:
@@ -131,6 +201,8 @@ def render_table_block(entry: Mapping[str, Any]) -> list[str]:
     ).lower()
     if render_kind == "structured":
         return render_structured_table_block(entry)
+    if render_kind == "structured_list":
+        return render_structured_list_table_block(entry)
     return render_image_table_block(entry)
 
 

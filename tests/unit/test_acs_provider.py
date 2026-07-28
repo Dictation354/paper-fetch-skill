@@ -19,11 +19,22 @@ from paper_fetch.providers._atypon_browser_workflow_profiles import (
 )
 from paper_fetch.providers._registry import provider_bundle
 from paper_fetch.providers.acs import AcsClient
+from paper_fetch.providers.atypon_browser_workflow import (
+    extract_atypon_browser_workflow_markdown,
+)
+from paper_fetch.providers.atypon_browser_workflow.asset_scopes import (
+    extract_browser_workflow_asset_html_scopes,
+)
 from paper_fetch.providers.browser_workflow import BrowserWorkflowClient
+from paper_fetch.providers.browser_workflow.fetchers.readiness import (
+    atypon_body_ready_selectors,
+)
+from tests.golden_criteria import golden_criteria_asset
 
 
 ACS_SAMPLE_DOI = "10.1021/acsomega.4c03987"
 ACS_SAMPLE_LANDING = f"https://pubs.acs.org/doi/{ACS_SAMPLE_DOI}"
+ACS_FORMULA_DOI = "10.1021/acsomega.3c06992"
 
 
 def test_acs_provider_bundle_declares_routing_and_browser_workflow() -> None:
@@ -110,6 +121,13 @@ def test_acs_profile_exposes_provider_owned_hooks_for_article_html_pdf_fallback_
     assert profile.finalize_extraction is not None
 
 
+def test_acs_silverchair_browser_waits_for_article_body() -> None:
+    assert atypon_body_ready_selectors("acs") == (
+        ".article-body",
+        ".widget-ArticleFulltext",
+    )
+
+
 def test_acs_provider_owned_cleanup_removes_copy_chrome_and_extracts_references() -> (
     None
 ):
@@ -162,6 +180,229 @@ def test_acs_provider_owned_cleanup_removes_copy_chrome_and_extracts_references(
     ]
     assert "Google Scholar" not in extraction["references"][0]["raw"]
     assert "CAS duplicate" not in extraction["references"][0]["raw"]
+
+
+def test_acs_silverchair_body_excludes_loaded_figshare_viewer() -> None:
+    body_html = "".join(
+        f"<p>Transition-metal catalyst observation {index} describes a distinct "
+        "industrial reaction condition and its measured conversion response.</p>"
+        for index in range(80)
+    )
+    supplementary_html = "".join(
+        f"<p>Supporting-information experiment S{index} records an auxiliary "
+        "condition that must not replace the article extraction.</p>"
+        for index in range(90)
+    )
+    html = f"""
+    <html>
+      <head>
+        <title>ACS Silverchair Article</title>
+        <meta name="citation_author" content="Ada Example" />
+      </head>
+      <body>
+        <div class="page-column-wrap article-browse_content">
+          <div class="article-body">
+            <div class="abstract">
+              <h2 class="abstract-title">Abstract</h2>
+              <p>Silverchair abstract text with enough detail to remain.</p>
+            </div>
+            <div class="graphical-abstract">
+              <h2 class="graphical-abstract-label">Visual Abstract</h2>
+              <p>Abstract</p>
+            </div>
+            <div class="widget-ArticleFulltext">
+                <div class="article-section-wrapper">
+                  <h2 class="section-title">1. Introduction</h2>
+                  {body_html}
+              </div>
+              <div class="widget-ArticleDataSupplements">
+                <h2 class="supplementary-data-section-title">
+                  Supporting Information
+                    </h2>
+                    <figshare-widget>
+                      <article class="frontend-filesViewer-inlineMode-index-module__container--LzxR7">
+                        {supplementary_html}
+                  </article>
+                </figshare-widget>
+              </div>
+            </div>
+          </div>
+        </div>
+      </body>
+    </html>
+    """
+
+    markdown, extraction = extract_atypon_browser_workflow_markdown(
+        html,
+        ACS_SAMPLE_LANDING,
+        "acs",
+        metadata={"doi": ACS_SAMPLE_DOI, "title": "ACS Silverchair Article"},
+    )
+
+    assert extraction["availability_diagnostics"]["accepted"] is True
+    assert "## 1. Introduction" in markdown
+    assert "Transition-metal catalyst observation 79" in markdown
+    assert "S2 experimental supporting information" not in markdown
+    assert markdown.count("## Abstract") == 1
+    assert "## Visual Abstract" not in markdown
+
+
+def test_acs_silverchair_references_extract_structured_citations() -> None:
+    html = """
+    <div class="ref-list js-splitview-ref-list">
+      <div class="ref false">
+        <div class="ref-content">
+          <div class="ref-label">1.</div>
+          <div class="citation mixed-citation" id="cit1">
+            Example, A.; Author, B. A complete reference title.
+            <i>Chem. Rev.</i> <div class="year">2024</div>, 12, 10-20.
+            <div class="pub-id-doi">
+              <a href="https://doi.org/10.1021/example">DOI</a>
+            </div>
+            <div class="crossref-doi"><a>Crossref</a></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    """
+
+    references = _acs_html.extract_references(html)
+
+    assert references == [
+        {
+            "label": "1.",
+            "raw": (
+                "Example, A.; Author, B. A complete reference title. "
+                "Chem. Rev. 2024, 12, 10-20. DOI"
+            ),
+            "doi": "10.1021/example",
+            "year": "2024",
+        }
+    ]
+
+
+def test_acs_silverchair_supplementary_widget_is_scoped_to_all_assets() -> None:
+    html = """
+    <div class="page-column-wrap article-browse_content">
+      <div class="article-body">
+        <div class="widget-ArticleFulltext">
+          <h2>Results</h2>
+          <p>Article body remains outside the supplementary widget.</p>
+          <div class="widget-ArticleDataSupplements">
+            <h2 class="supplementary-data-section-title">
+              Supporting Information
+            </h2>
+            <a href="https://ndownloader.figstatic.com/files/48275169">
+              Download
+            </a>
+            <a
+              class="openInAnotherWindow js-download-file-gtm-datalayer-event"
+              href="/acsodf/article-supplement/358560/pdf/ao4c03987_si_001/"
+            >
+              sifile1
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+    """
+
+    body_html, supplementary_html = extract_browser_workflow_asset_html_scopes(
+        html,
+        ACS_SAMPLE_LANDING,
+        "acs",
+    )
+    body_assets = _acs_html.scoped_asset_extractor(
+        body_html,
+        ACS_SAMPLE_LANDING,
+        asset_profile="body",
+        supplementary_html_text=supplementary_html,
+    )
+    all_assets = _acs_html.scoped_asset_extractor(
+        body_html,
+        ACS_SAMPLE_LANDING,
+        asset_profile="all",
+        supplementary_html_text=supplementary_html,
+    )
+
+    assert "article-supplement" not in body_html
+    assert "article-supplement" in supplementary_html
+    assert [asset for asset in body_assets if asset["kind"] == "supplementary"] == []
+    assert [
+        asset["url"] for asset in all_assets if asset["kind"] == "supplementary"
+    ] == ["https://pubs.acs.org/acsodf/article-supplement/358560/pdf/ao4c03987_si_001/"]
+
+
+def test_acs_silverchair_structure_fixture_extracts_complete_current_article() -> None:
+    """rule: rule-acs-silverchair-body-assets-references"""
+
+    html = golden_criteria_asset(ACS_SAMPLE_DOI, "original.html").read_text(
+        encoding="utf-8"
+    )
+
+    markdown, extraction = extract_atypon_browser_workflow_markdown(
+        html,
+        ACS_SAMPLE_LANDING,
+        "acs",
+        metadata={
+            "doi": ACS_SAMPLE_DOI,
+            "title": (
+                "Functionalized Metal-Free Carbon Nanosphere Catalyst for the "
+                "Selective C–N Bond Formation under Open-Air Conditions"
+            ),
+        },
+    )
+    body_html, supplementary_html = extract_browser_workflow_asset_html_scopes(
+        html,
+        ACS_SAMPLE_LANDING,
+        "acs",
+    )
+    assets = _acs_html.scoped_asset_extractor(
+        body_html,
+        ACS_SAMPLE_LANDING,
+        asset_profile="all",
+        supplementary_html_text=supplementary_html,
+    )
+
+    assert len(markdown) > 30_000
+    assert "## 1. Introduction" in markdown
+    assert "## 5. Conclusions" in markdown
+    assert "Open figure viewer" not in markdown
+    assert "Close modal" not in markdown
+    assert "View Large" not in markdown
+    assert len(extraction["references"]) == 45
+    assert extraction["references"][0]["year"] == "2018"
+    assert sum(asset["kind"] == "figure" for asset in assets) == 8
+    assert [asset["url"] for asset in assets if asset["kind"] == "supplementary"] == [
+        "https://pubs.acs.org/acsodf/article-supplement/358560/pdf/ao4c03987_si_001/"
+    ]
+
+
+def test_acs_silverchair_formula_fixture_preserves_mathml_and_tables() -> None:
+    html = golden_criteria_asset(ACS_FORMULA_DOI, "original.html").read_text(
+        encoding="utf-8"
+    )
+
+    markdown, extraction = extract_atypon_browser_workflow_markdown(
+        html,
+        f"https://pubs.acs.org/doi/{ACS_FORMULA_DOI}",
+        "acs",
+        metadata={
+            "doi": ACS_FORMULA_DOI,
+            "title": (
+                "General Equation to Estimate the Physicochemical Properties "
+                "of Aliphatic Amines"
+            ),
+        },
+    )
+
+    assert len(markdown) > 45_000
+    assert markdown.count("$$") == 42
+    assert "S_{CNE}" in markdown
+    assert "| *n* | PEI |" in markdown
+    assert "## 3. Conclusions" in markdown
+    assert len(extraction["references"]) == 20
+    assert extraction["references"][0]["year"] == "2015"
 
 
 def test_acs_markdown_review_contract_markers() -> None:

@@ -63,6 +63,7 @@ def test_live_external_state_is_manual_and_serial() -> None:
     assert "workflow_dispatch" in workflow
     assert "schedule:" not in workflow
     assert "tests/live -q -n 0" in workflow
+    assert "--force-enable-socket" in workflow
     assert "tests/integration/test_golden_corpus.py -q" in workflow
 
 

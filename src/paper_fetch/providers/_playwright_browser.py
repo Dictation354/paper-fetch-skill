@@ -35,6 +35,7 @@ from .browser_runtime.seed import (
 )
 from .browser_runtime.types import (
     BrowserFetchedHtml,
+    BrowserHtmlReadiness,
     BrowserRuntimeConfig,
     BrowserRuntimeFailure,
 )
@@ -43,7 +44,10 @@ from .browser_workflow.fetchers.context import (
     _browser_response_headers,
     _browser_response_status,
 )
-from .browser_workflow.fetchers.readiness import wait_for_atypon_body_dom_ready
+from .browser_workflow.fetchers.readiness import (
+    BodyDomReadinessResult,
+    wait_for_atypon_body_dom_ready,
+)
 from .browser_workflow.fetchers.scripts import _LOADED_IMAGE_CANVAS_EXPORT_SCRIPT
 from .browser_workflow.shared import BROWSER_HTML_BLOCKED_RESOURCE_TYPES
 
@@ -63,6 +67,7 @@ logger = logging.getLogger("paper_fetch.providers.playwright")
 DEFAULT_BROWSER_RUNTIME_MAX_TIMEOUT_MS = 120000
 DEFAULT_BROWSER_RUNTIME_WAIT_SECONDS = 8
 DEFAULT_BROWSER_RUNTIME_WARM_WAIT_SECONDS = 1
+DEFAULT_BROWSER_HTML_READINESS = BrowserHtmlReadiness()
 _IMAGE_PAYLOAD_MIN_IMAGE_DIMENSION = 1
 _IMAGE_RESPONSE_BLOCKED_BY_HTML_WRAPPER = "image_response_blocked_by_html_wrapper"
 _IMAGE_PAYLOAD_RESPONSE_ATTR = "_paper_fetch_top_level_response"
@@ -381,21 +386,143 @@ def _save_storage_state(
     return result
 
 
+def _navigate_browser_page(
+    page: Any,
+    *,
+    url: str,
+    timeout_ms: int,
+    return_image_payload: bool,
+) -> Any:
+    if not return_image_payload:
+        return page.goto(url, wait_until="commit", timeout=timeout_ms)
+
+    with contextlib.suppress(Exception):
+        setattr(page, _IMAGE_PAYLOAD_TIMEOUT_ATTR, timeout_ms)
+    response = None
+    top_level_response = None
+    try:
+        with page.expect_response(
+            lambda candidate_response: (
+                normalize_text(str(getattr(candidate_response, "url", "") or "")) == url
+            ),
+            timeout=timeout_ms,
+        ) as response_info:
+            response = page.goto(
+                url,
+                wait_until="domcontentloaded",
+                timeout=timeout_ms,
+            )
+        try:
+            top_level_response = response_info.value
+        except Exception:
+            top_level_response = response
+    except Exception:
+        if response is None:
+            raise
+        top_level_response = response
+
+    with contextlib.suppress(Exception):
+        setattr(
+            page,
+            _IMAGE_PAYLOAD_RESPONSE_ATTR,
+            top_level_response if top_level_response is not None else response,
+        )
+    return response
+
+
+def _wait_for_browser_html_readiness(
+    page: Any,
+    *,
+    publisher: str,
+    readiness: BrowserHtmlReadiness,
+    wait_seconds: int,
+    timeout_ms: int,
+    request_started: float,
+    return_image_payload: bool,
+    runtime_context: RuntimeContext | None,
+    candidate_trace: dict[str, Any],
+) -> BodyDomReadinessResult | None:
+    if return_image_payload:
+        return None
+
+    normalized_selector = normalize_text(readiness.selector)
+    body_readiness = None
+    selector_wait_attempted = False
+    if readiness.wait_for_article_body:
+        _raise_if_cancelled(runtime_context)
+        remaining_timeout_seconds = max(
+            0.0,
+            (float(timeout_ms) / 1000.0) - (time.monotonic() - request_started),
+        )
+        readiness_started = time.monotonic()
+        body_readiness = wait_for_atypon_body_dom_ready(
+            page,
+            publisher,
+            timeout_seconds=min(
+                max(float(wait_seconds), 20.0),
+                remaining_timeout_seconds,
+            ),
+        )
+        candidate_trace["dom_readiness_seconds"] = round(
+            time.monotonic() - readiness_started, 3
+        )
+        candidate_trace["dom_readiness_attempted"] = body_readiness.attempted
+        candidate_trace["dom_readiness_ready"] = body_readiness.ready
+    elif normalized_selector and wait_seconds > 0:
+        _raise_if_cancelled(runtime_context)
+        selector_wait_attempted = True
+        remaining_timeout_ms = max(
+            1,
+            int(
+                ((float(timeout_ms) / 1000.0) - (time.monotonic() - request_started))
+                * 1000
+            ),
+        )
+        selector_timeout_ms = min(
+            max(1, int(wait_seconds) * 1000),
+            remaining_timeout_ms,
+        )
+        selector_started = time.monotonic()
+        try:
+            page.wait_for_selector(
+                normalized_selector,
+                state="attached",
+                timeout=selector_timeout_ms,
+            )
+        except Exception:
+            candidate_trace["selector_readiness_ready"] = False
+        else:
+            candidate_trace["selector_readiness_ready"] = True
+        candidate_trace["selector_readiness_attempted"] = True
+        candidate_trace["selector_readiness_seconds"] = round(
+            time.monotonic() - selector_started,
+            3,
+        )
+
+    if (
+        (body_readiness is None or not body_readiness.attempted)
+        and not selector_wait_attempted
+        and wait_seconds > 0
+    ):
+        _raise_if_cancelled(runtime_context)
+        page.wait_for_timeout(max(0, int(wait_seconds)) * 1000)
+    return body_readiness
+
+
 def fetch_html_with_playwright(
     candidate_urls: list[str],
     *,
     publisher: str,
     config: PlaywrightRuntimeConfig,
     wait_seconds: int = DEFAULT_BROWSER_RUNTIME_WAIT_SECONDS,
-    warm_wait_seconds: int = DEFAULT_BROWSER_RUNTIME_WARM_WAIT_SECONDS,
     max_timeout_ms: int | None = None,
     return_image_payload: bool = False,
     return_screenshot: bool = False,
     disable_media: bool = False,
     lightweight_seed_only: bool = False,
+    readiness: BrowserHtmlReadiness = DEFAULT_BROWSER_HTML_READINESS,
     runtime_context: RuntimeContext | None = None,
 ) -> BrowserFetchedHtml:
-    del warm_wait_seconds
     if not candidate_urls:
         raise PlaywrightBrowserFailure(
             "empty_html_attempts", "No publisher HTML candidates were attempted."
@@ -415,6 +542,7 @@ def fetch_html_with_playwright(
         )
     artifact_dir = config.artifact_dir / backend_name
     configured_user_agent = normalize_text(config.user_agent)
+    normalized_wait_for_selector = normalize_text(readiness.selector)
     trace: dict[str, Any] = {
         "backend": backend_name,
         "candidate_count": len(candidate_urls),
@@ -423,6 +551,9 @@ def fetch_html_with_playwright(
         "return_image_payload": bool(return_image_payload),
         "return_screenshot": bool(return_screenshot),
         "lightweight_seed_only": bool(lightweight_seed_only),
+        "article_body_wait_enabled": bool(readiness.wait_for_article_body),
+        "selector_wait_enabled": bool(normalized_wait_for_selector),
+        "wait_for_selector": normalized_wait_for_selector or None,
         "external_cdp": bool(config.cdp_endpoint),
         "storage_state_path": str(_storage_state_path(config) or ""),
         "storage_state_write_enabled": config.persist_storage_state,
@@ -541,52 +672,15 @@ def fetch_html_with_playwright(
                     normalized_url,
                 )
                 request_started = time.monotonic()
-                response = None
-                top_level_response = None
-                if return_image_payload:
-                    with contextlib.suppress(Exception):
-                        setattr(page, _IMAGE_PAYLOAD_TIMEOUT_ATTR, timeout_ms)
-                    try:
-                        with page.expect_response(
-                            lambda candidate_response, normalized_url=normalized_url: (
-                                normalize_text(
-                                    str(getattr(candidate_response, "url", "") or "")
-                                )
-                                == normalized_url
-                            ),
-                            timeout=timeout_ms,
-                        ) as response_info:
-                            response = page.goto(
-                                normalized_url,
-                                wait_until="domcontentloaded",
-                                timeout=timeout_ms,
-                            )
-                        try:
-                            top_level_response = response_info.value
-                        except Exception:
-                            top_level_response = response
-                    except Exception:
-                        if response is None:
-                            raise
-                        top_level_response = response
-                else:
-                    response = page.goto(
-                        normalized_url,
-                        wait_until=(
-                            "commit"
-                            if backend_name == "camoufox"
-                            else "domcontentloaded"
-                        ),
-                        timeout=timeout_ms,
-                    )
+                response = _navigate_browser_page(
+                    page,
+                    url=normalized_url,
+                    timeout_ms=timeout_ms,
+                    return_image_payload=return_image_payload,
+                )
                 candidate_trace["navigation_seconds"] = round(
                     time.monotonic() - request_started, 3
                 )
-                if top_level_response is None:
-                    top_level_response = response
-                if return_image_payload:
-                    with contextlib.suppress(Exception):
-                        setattr(page, _IMAGE_PAYLOAD_RESPONSE_ATTR, top_level_response)
                 if lightweight_seed_only:
                     final_url = (
                         normalize_text(str(getattr(page, "url", "") or ""))
@@ -630,31 +724,17 @@ def fetch_html_with_playwright(
                         browser_context_seed=browser_context_seed,
                         diagnostics={"browser_runtime_trace": trace},
                     )
-                readiness = None
-                if not return_image_payload:
-                    _raise_if_cancelled(runtime_context)
-                    remaining_timeout_seconds = max(
-                        0.0,
-                        (float(timeout_ms) / 1000.0)
-                        - (time.monotonic() - request_started),
-                    )
-                    readiness_started = time.monotonic()
-                    readiness = wait_for_atypon_body_dom_ready(
-                        page,
-                        publisher,
-                        timeout_seconds=min(
-                            max(float(wait_seconds), 20.0),
-                            remaining_timeout_seconds,
-                        ),
-                    )
-                    candidate_trace["dom_readiness_seconds"] = round(
-                        time.monotonic() - readiness_started, 3
-                    )
-                    candidate_trace["dom_readiness_attempted"] = readiness.attempted
-                    candidate_trace["dom_readiness_ready"] = readiness.ready
-                if (readiness is None or not readiness.attempted) and wait_seconds > 0:
-                    _raise_if_cancelled(runtime_context)
-                    page.wait_for_timeout(max(0, int(wait_seconds)) * 1000)
+                body_readiness = _wait_for_browser_html_readiness(
+                    page,
+                    publisher=publisher,
+                    readiness=readiness,
+                    wait_seconds=wait_seconds,
+                    timeout_ms=timeout_ms,
+                    request_started=request_started,
+                    return_image_payload=return_image_payload,
+                    runtime_context=runtime_context,
+                    candidate_trace=candidate_trace,
+                )
                 final_url = (
                     normalize_text(str(getattr(page, "url", "") or ""))
                     or normalized_url
@@ -743,7 +823,7 @@ def fetch_html_with_playwright(
 
             detected = (
                 None
-                if readiness is not None and readiness.ready
+                if body_readiness is not None and body_readiness.ready
                 else detect_html_block(title or "", summary, status)
             )
             if detected is not None and not return_image_payload:

@@ -504,6 +504,73 @@ class ElsevierMarkdownTests(unittest.TestCase):
         _assert_markdown_table_row(self, markdown, ["Hydrometric", "Station B", "20"])
         self.assertIn("Merged table spans were semantically expanded", markdown)
 
+    def test_elsevier_real_multilevel_header_is_flattened_without_body_header_row(
+        self,
+    ) -> None:
+        markdown = _render_elsevier_golden_markdown("10.1016/j.rse.2024.114346")
+
+        _assert_markdown_table_row(
+            self,
+            markdown,
+            [
+                "Region",
+                "Freeze-up date / Mean value (DOY)",
+                "Freeze-up date / Trend (days per decade)",
+                "Break-up date / Mean value (DOY)",
+                "Break-up date / Trend (days per decade)",
+                "Ice duration / Mean value (days)",
+                "Ice duration / Trend (days per decade)",
+            ],
+        )
+        self.assertNotRegex(
+            markdown,
+            r"(?m)^\|\s*Region\s*\|\s*Mean value \(DOY\)\s*\|\s*Trend",
+        )
+
+    def test_elsevier_overlapping_cals_columns_use_readable_list_fallback(
+        self,
+    ) -> None:
+        xml_body = b"""
+<full-text-retrieval-response xmlns:ce="http://www.elsevier.com/xml/common/dtd">
+  <coredata><dc:title xmlns:dc="http://purl.org/dc/elements/1.1/">Table fallback</dc:title></coredata>
+  <originalText>
+    <xocs:doc xmlns:xocs="http://www.elsevier.com/xml/xocs/dtd">
+      <xocs:serial-item><article><body><ce:sections><ce:section>
+        <ce:section-title>Results</ce:section-title>
+        <ce:table id="tbl1">
+          <ce:label>Table 1</ce:label>
+          <ce:caption><ce:simple-para>Overlapping columns.</ce:simple-para></ce:caption>
+          <tgroup cols="2">
+            <colspec colname="c1"/><colspec colname="c2"/>
+            <thead><row><entry colname="c1">A</entry><entry colname="c1">B</entry></row></thead>
+            <tbody><row><entry colname="c1">1</entry><entry colname="c2">2</entry></row></tbody>
+          </tgroup>
+        </ce:table>
+      </ce:section></ce:sections></body></article></xocs:serial-item>
+    </xocs:doc>
+  </originalText>
+</full-text-retrieval-response>
+"""
+
+        markdown = build_elsevier_markdown(xml_body)
+
+        self.assertIn("- A: 1; B: 2", markdown)
+        self.assertIn(
+            "cell text was retained as a readable list",
+            markdown,
+        )
+        structure = elsevier_document.build_article_structure(
+            provider="elsevier",
+            metadata={"doi": "10.1016/test", "title": "Table fallback"},
+            xml_body=xml_body,
+            xml_path=Path("10.1016_test.xml"),
+            assets=[],
+        )
+        assert structure is not None
+        self.assertEqual(structure.semantic_losses.table_fallback_count, 1)
+        self.assertEqual(structure.semantic_losses.table_layout_degraded_count, 1)
+        self.assertEqual(structure.semantic_losses.table_semantic_loss_count, 0)
+
     def test_elsevier_real_complex_table_records_layout_degradation_quality(
         self,
     ) -> None:

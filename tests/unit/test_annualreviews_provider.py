@@ -5,6 +5,8 @@ import tempfile
 from pathlib import Path
 from unittest import mock
 
+from bs4 import BeautifulSoup
+
 from paper_fetch.provider_catalog import PROVIDER_CATALOG, SOURCE_PROVIDER_MAP
 from paper_fetch.extraction.html.signals import HtmlExtractionFailure
 from paper_fetch.providers import _annualreviews_html, browser_runtime
@@ -244,6 +246,38 @@ def test_markdown_contract_table_fixture() -> None:
     assert "Reference\nSoft, rigid, or hybrid?" not in markdown
     assert "Download as PowerPoint" not in markdown
     assert "Article metrics loading..." not in markdown
+
+
+def test_annualreviews_table_uses_shared_span_and_header_normalization() -> None:
+    soup = BeautifulSoup(
+        """
+<div class="table-container">
+  <table class="html-fulltext-inline-table">
+    <thead>
+      <tr><th rowspan="2">Region</th><th colspan="2">Period</th></tr>
+      <tr><th>Mean</th><th>Trend</th></tr>
+    </thead>
+    <tbody>
+      <tr><td rowspan="2">Asia</td><td>10</td><td>+1</td></tr>
+      <tr><td>11</td><td>+2</td></tr>
+    </tbody>
+  </table>
+  <div class="tabFoot"><p>Source note.</p></div>
+</div>
+""",
+        "html.parser",
+    )
+    table_container = soup.select_one(".table-container")
+    table = soup.select_one("table")
+    assert table_container is not None
+    assert table is not None
+
+    markdown = _annualreviews_html._markdown_table_block(table, table_container)
+
+    assert "| Region | Period / Mean | Period / Trend |" in markdown
+    assert "| Asia" in markdown
+    assert markdown.count("| Asia") == 2
+    assert "Source note." in markdown
 
 
 def test_markdown_contract_formula_fixture() -> None:

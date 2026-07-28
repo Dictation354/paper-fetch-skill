@@ -982,6 +982,62 @@ def test_capture_fixture_maps_browser_pdf_non_pdf_failure_to_non_pdf_content() -
     assert error.route == "browser"
 
 
+def test_browser_pdf_capture_reuses_selected_runtime_backend(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    module = load_script_module("capture_fixture")
+    from paper_fetch.providers import _pdf_fallback, browser_runtime
+
+    runtime_config = object()
+    seen: dict[str, object] = {}
+
+    def fake_load_runtime_config(
+        env: dict[str, str], *, provider: str, doi: str
+    ) -> object:
+        seen["env"] = env
+        seen["provider"] = provider
+        seen["doi"] = doi
+        return runtime_config
+
+    def fake_fetch_pdf_with_browser(
+        candidate_urls: list[str], **kwargs: object
+    ) -> object:
+        seen["candidate_urls"] = candidate_urls
+        seen["browser_config"] = kwargs["browser_config"]
+
+        class Result:
+            pdf_bytes = b"%PDF-1.4\n%%EOF\n"
+            final_url = "https://publisher.test/article.pdf"
+
+        return Result()
+
+    monkeypatch.setenv("PAPER_FETCH_CAPTURE_TEST", "selected-runtime")
+    monkeypatch.setattr(
+        browser_runtime, "load_runtime_config", fake_load_runtime_config
+    )
+    monkeypatch.setattr(
+        _pdf_fallback, "fetch_pdf_with_browser", fake_fetch_pdf_with_browser
+    )
+
+    response = module._capture_browser(
+        "10.1021/example",
+        url="https://pubs.acs.org/doi/pdf/10.1021/example",
+        provider="acs",
+        purpose="pdf_fallback",
+        root=tmp_path,
+        route="browser",
+    )
+
+    assert seen["provider"] == "acs"
+    assert seen["doi"] == "10.1021/example"
+    assert seen["browser_config"] is runtime_config
+    assert seen["candidate_urls"] == ["https://pubs.acs.org/doi/pdf/10.1021/example"]
+    assert isinstance(seen["env"], dict)
+    assert seen["env"]["PAPER_FETCH_CAPTURE_TEST"] == "selected-runtime"
+    assert response["body"] == b"%PDF-1.4\n%%EOF\n"
+
+
 def test_capture_fixture_maps_timeout_to_network_transient(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,

@@ -36,6 +36,14 @@ class BrowserRuntimeSession:
 
 
 @dataclass(frozen=True)
+class BrowserHtmlReadiness:
+    """Select the readiness strategy used after browser HTML navigation."""
+
+    wait_for_article_body: bool = True
+    selector: str | None = None
+
+
+@dataclass(frozen=True)
 class BrowserFetchedHtml:
     source_url: str
     final_url: str

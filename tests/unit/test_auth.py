@@ -160,22 +160,56 @@ def test_upsert_env_file_updates_existing_values(tmp_path) -> None:
     )
 
 
-def test_authenticate_provider_profile_ams_is_not_browser_backed(monkeypatch) -> None:
-    with pytest.raises(ProviderFailure) as raised:
-        auth.authenticate_provider_profile(
-            provider="ams",
-            confirm=lambda _prompt: None,
-        )
+def test_authenticate_provider_profile_ams_saves_filtered_browser_state(
+    monkeypatch, tmp_path
+) -> None:
+    fake_manager = _install_fake_browser_manager(monkeypatch)
+    _patch_auth_runtime(monkeypatch, tmp_path)
 
-    assert raised.value.code == "error"
-    assert "Unsupported auth provider" in raised.value.message
+    result = auth.authenticate_provider_profile(
+        provider="ams",
+        confirm=lambda _prompt: None,
+    )
+
+    profile_dir = (
+        tmp_path / "xdg" / "paper-fetch" / "publisher-browser-profiles" / "ams-camoufox"
+    )
+    storage_state_path = profile_dir / "storage-state.json"
+    assert result.provider == "ams"
+    assert result.profile_dir == profile_dir
+    assert result.storage_state_path == storage_state_path
+    assert result.final_url == auth.AUTH_TARGETS["ams"].url
+    manager = fake_manager.instances[0]
+    assert manager.user_data_dir == str(profile_dir)
+    assert manager.context.page.goto_calls == [
+        (
+            auth.AUTH_TARGETS["ams"].url,
+            {"wait_until": "domcontentloaded", "timeout": 120000},
+        )
+    ]
+    assert json.loads(storage_state_path.read_text(encoding="utf-8")) == {
+        "cookies": [
+            {
+                "name": "sid",
+                "value": "ams",
+                "domain": ".ametsoc.org",
+                "path": "/",
+            }
+        ],
+        "origins": [
+            {
+                "origin": "https://journals.ametsoc.org",
+                "localStorage": [{"name": "ams", "value": "1"}],
+            }
+        ],
+    }
 
 
 def test_browser_auth_provider_names_uses_runtime_catalog() -> None:
     names = auth.browser_auth_provider_names()
 
     assert "wiley" in names
-    assert "ams" not in names
+    assert "ams" in names
     assert "arxiv" not in names
 
 

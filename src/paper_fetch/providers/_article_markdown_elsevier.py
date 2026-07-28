@@ -537,12 +537,16 @@ def elsevier_table_registry(
             entry: dict[str, Any] = {
                 "key": table_key or f"table:{len(entries) + 1}",
                 "kind": "structured",
+                "table_render_kind": table_result.render_kind,
                 "heading": label,
                 "caption": caption,
+                "headers": table_result.headers,
                 "rows": rows,
                 "footnotes": footnotes,
                 "link": link,
             }
+            if table_result.prefix_rows:
+                entry["_table_prefix_rows"] = table_result.prefix_rows
             if table_result.lossy:
                 entry["lossy_message"] = table_result.note
                 entry["conversion_notes"] = (

@@ -24,6 +24,7 @@ from ..http import (
     HttpTransport,
     PDF_MIME_TYPE,
     RequestFailure,
+    redact_url_for_cache,
 )
 from ..http.headers import header_value
 from ..models import (
@@ -130,7 +131,8 @@ PLOS_DOI_JOURNAL_PATTERN = re.compile(
     r"^10\.1371/journal\.(?P<code>[a-z0-9]+)\.", flags=re.IGNORECASE
 )
 PLOS_HOST = "https://journals.plos.org"
-PLOS_ASSET_REDIRECT_STATUSES = {301, 302, 303, 307, 308}
+PLOS_REDIRECT_STATUSES = {301, 302, 303, 307, 308}
+PLOS_MAX_REDIRECTS = 4
 
 
 def _plos_journal_path(doi_or_asset_id: str) -> str:
@@ -289,33 +291,48 @@ def _plos_figure_candidates(
     return list(dict.fromkeys(candidates))
 
 
-def _fetch_plos_redirected_image(
+def _fetch_plos_redirected_response(
     transport: HttpTransport,
     candidate_url: str,
     *,
     headers: Mapping[str, str],
+    retry_on_rate_limit: bool = False,
 ) -> dict[str, Any] | None:
     current_url = candidate_url
-    for _ in range(4):
+    visited_urls: set[str] = set()
+    for _ in range(PLOS_MAX_REDIRECTS + 1):
+        parsed = urllib.parse.urlsplit(current_url)
+        if parsed.scheme.lower() not in {"http", "https"} or not parsed.netloc:
+            return None
+        if current_url in visited_urls:
+            return None
+        visited_urls.add(current_url)
         response = transport.request(
             "GET",
             current_url,
             headers=headers,
             timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
-            retry_on_rate_limit=True,
+            retry_on_rate_limit=retry_on_rate_limit,
             retry_on_transient=True,
         )
         status_code = int(response.get("status_code") or 200)
-        if status_code not in PLOS_ASSET_REDIRECT_STATUSES:
-            return response
+        if status_code not in PLOS_REDIRECT_STATUSES:
+            final_response = dict(response)
+            response_url = (
+                normalize_text(str(response.get("url") or current_url)) or current_url
+            )
+            final_response["url"] = redact_url_for_cache(
+                urllib.parse.urljoin(current_url, response_url)
+            )
+            return final_response
         response_headers = (
             response.get("headers")
             if isinstance(response.get("headers"), Mapping)
             else {}
         )
-        location = header_value(response_headers, "location")
+        location = normalize_text(header_value(response_headers, "location"))
         if not location:
-            return response
+            return None
         current_url = urllib.parse.urljoin(current_url, location)
     return None
 
@@ -381,15 +398,15 @@ class PlosClient(ProviderClient):
     ) -> RawFulltextPayload:
         candidate = _xml_candidate_url(doi)
         try:
-            response = self.transport.request(
-                "GET",
+            response = _fetch_plos_redirected_response(
+                self.transport,
                 candidate,
                 headers=self._xml_headers(),
-                timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
-                retry_on_transient=True,
             )
         except RequestFailure as exc:
             raise map_request_failure(exc) from exc
+        if response is None:
+            raise ProviderFailure(NO_RESULT, "PLOS XML redirect chain was not usable.")
 
         status_code = int(response.get("status_code") or 200)
         if status_code >= 400:
@@ -608,10 +625,11 @@ class PlosClient(ProviderClient):
                 asset_profile=asset_profile,
                 headers=self._asset_headers(),
                 candidate_builder=_plos_figure_candidates,
-                document_fetcher=lambda url, _asset: _fetch_plos_redirected_image(
+                document_fetcher=lambda url, _asset: _fetch_plos_redirected_response(
                     self.transport,
                     url,
                     headers=self._asset_headers(),
+                    retry_on_rate_limit=True,
                 ),
                 asset_download_concurrency=resolve_asset_download_concurrency(
                     context.env

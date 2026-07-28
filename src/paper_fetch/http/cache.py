@@ -85,6 +85,25 @@ class _DiskCacheEntry:
     stored_at: float
 
 
+def _is_sensitive_query_param_name(name: str) -> bool:
+    normalized = name.lower()
+    return (
+        normalized in SENSITIVE_QUERY_PARAM_NAMES
+        or normalized.startswith("x-amz-")
+        or normalized.startswith("x-goog-")
+    )
+
+
+def _url_has_sensitive_query_params(url: str) -> bool:
+    if not url:
+        return False
+    parsed = urllib.parse.urlsplit(url)
+    return any(
+        _is_sensitive_query_param_name(key)
+        for key, _value in urllib.parse.parse_qsl(parsed.query, keep_blank_values=True)
+    )
+
+
 def redact_url_for_cache(url: str) -> str:
     if not url:
         return url
@@ -96,10 +115,7 @@ def redact_url_for_cache(url: str) -> str:
         [
             (
                 key,
-                REDACTED_CACHE_VALUE
-                if key.lower() in SENSITIVE_QUERY_PARAM_NAMES
-                or key.lower().startswith("x-amz-")
-                else value,
+                REDACTED_CACHE_VALUE if _is_sensitive_query_param_name(key) else value,
             )
             for key, value in query_items
         ],
@@ -427,13 +443,19 @@ class CacheMixin:
 
         if self.max_cacheable_body_bytes <= 0:
             return False
+        headers = {
+            str(key).lower(): str(value)
+            for key, value in dict(response.get("headers") or {}).items()
+        }
+        if _url_has_sensitive_query_params(headers.get("location", "")):
+            return False
         body = response.get("body", b"")
         if (
             not isinstance(body, (bytes, bytearray))
             or len(body) > self.max_cacheable_body_bytes
         ):
             return False
-        content_type = str((response.get("headers") or {}).get("content-type") or "")
+        content_type = headers.get("content-type", "")
         return is_textual_content_type(content_type)
 
     def _cache_body_size(self, response: Mapping[str, Any]) -> int:

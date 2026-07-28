@@ -18,6 +18,7 @@ from ...extraction.html.inline import (
     normalize_html_inline_text,
     render_html_inline_node,
 )
+from ...extraction.html.assets.figures import SILVERCHAIR_FIGURE_CONTAINER_SELECTORS
 from ...extraction.html.semantics import (
     ABSTRACT_ATTR_TOKENS as ABSTRACT_TOKENS,
     ANCILLARY_TOKENS,
@@ -472,7 +473,11 @@ def _figure_like_nodes(
     table_nodes = _table_like_nodes(container)
     abstract_anchor = _first_abstract_node(container)
     nodes: list[Tag] = []
-    for selector in (".figure-wrap", "figure"):
+    for selector in (
+        ".figure-wrap",
+        "figure",
+        *SILVERCHAIR_FIGURE_CONTAINER_SELECTORS,
+    ):
         try:
             matches = container.select(selector)
         except Exception:

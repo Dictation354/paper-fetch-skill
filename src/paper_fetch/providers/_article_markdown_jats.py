@@ -593,7 +593,8 @@ def parse_jats_xml(
         table_fallback_count=sum(
             1
             for entry in table_entries
-            if normalize_text(str(entry.get("table_render_kind") or "")) == "fallback"
+            if normalize_text(str(entry.get("table_render_kind") or ""))
+            in {"fallback", "structured_list"}
         ),
         table_layout_degraded_count=sum(
             1

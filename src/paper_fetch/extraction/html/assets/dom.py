@@ -63,6 +63,7 @@ FIGURE_PAGE_HINTS = (
     SPRINGER_FULL_SIZE_IMAGE_LABEL,
     "view figure",
     "open in viewer",
+    "view large",
     "view larger",
     "download figure",
     "download image",

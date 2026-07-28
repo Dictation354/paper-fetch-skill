@@ -35,7 +35,7 @@ While there are several existing frameworks that can be used to describe infecti
 
 We use a standard SIR framework, where dynamics are defined by changes in a population of susceptible (S), infected (I) and recovered (R) hosts. Classically, flow of infection through the system is defined by contact between susceptible and infected individuals, often driven by a β factor, or transmission coefficient. Figure 1 is a compartmental model that depicts this interaction, and adds two additional compartments, labelled with a W (for W.A.I.T.), which influence the flow of hosts from the susceptible to infected compartments—indicated by the dashed lines in the figure.
 
-![Figure 1](https://royalsocietypublishing.org/view-large/figure/19033674/rsif20190334f01.tif)
+![Figure 1](https://trs.silverchair-cdn.com/trs/content_public/journal/rsif/16/158/10.1098_rsif.2019.0334/6/rsif20190334f01.png?Expires=1782305913&Signature=yGSyfPn0u~rYiwBrh1wN6MGuOgIedzJ9VoZ8x2rFf2KsMYmmeMpdzcAeBobJnCDYwZIGAj8CJcU89rf-PUcuj3pXGClP~49IIJ8IzfiIwdjt03nBBe9Z8EaApRlH3UPx-RTQCtrokc0o54qo9fS1M0-r8MTN8zjelQJOvm8K7fUbJn~7KMFIE03QHTh3kS6hv1XcLsmvYqKVRXLIbivt0C9U5KmkdURQvdY2VkrB0uEVS07XH5~4N0btC5NsjiTuq7X3hmChas~bGITJEK7gRMQOiKE3A5rq4w5YlguwJ8s8448buB9k9VCaMkd7KOSV0QYmTcKeP9NvpHjATSLTIg__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA)
 
 **Figure 1.** Adapted SIR compartmental diagram. This depicts a standard SIR style compartmental model with the added compartments (shaded) corresponding to the W.A.I.T. environment. Note the dynamical properties of the Wi and Wu compartments. (Online version in colour.)
 
@@ -88,7 +88,7 @@ Our HCV model represents an adaptation of the SIR W.A.I.T. model outlined in §[
 
 We model the dynamics of needle populations and injection drug users through a series of five ordinary differential equations. The compartments labelled S, IE, IL, Nu and Ni represent the populations of susceptible individuals, early-stage infected individuals (acute HCV infection), late-stage-infected individuals (chronic HCV infection), uninfected needles and infected needles, respectively (figure 2). Here, we refer to all needles in circulation within the entire PWID community. This model is defined by several features:
 
-![Figure 2](https://royalsocietypublishing.org/view-large/figure/19033694/rsif20190334f02.tif)
+![Figure 2](https://trs.silverchair-cdn.com/trs/content_public/journal/rsif/16/158/10.1098_rsif.2019.0334/6/rsif20190334f02.png?Expires=1782305913&Signature=c5DL0nbBjtoCDB2HJ3T~VpJRpRwSTjouWnFYnyf~JRCFooZugqWq-0IGf5dZtjicnDPhWsQ6rGqIVKhLUfdXgqo8osxMqOv1kshBberKheITGs4nHmLnBk3u8BWPEOAPTZqtlu3rGCDZDEDMe2kgisuUT8IGi7wezaZQkkevv09vmU4C4VnCSfzuixDnS5UqhtwMbmHOIeu4-7CPUsvUcXsiewuKMTupKW35kacmXI8vaJQYCYI8vt0TG7SUHa3ouaYSuBrnLcS-EFEN3CApupvEDZefaPWgIIuvnkbwUZZtsKwU-M0UUEcyGCECEbok4sJgBQfFwb5dsuJRcmZtww__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA)
 
 **Figure 2.** HCV compartmental diagram. Red arrows highlight flow of disease through the system, and where there is a colour/transparency gradient there is a flow of infection away from an infected compartment towards an uninfected one. (Online version in colour.)
 
@@ -138,7 +138,7 @@ The left-most factor (under the square root) can be interpreted as the number of
 
 We determine the sensitivities of our parameters on the value of R0 by calculating the PRCC with respect to equation (3.6)—we base our calculation of PRCC on methods used in prior studies [60]. We find that parameters related to an interaction with the environmental reservoir (the population of needles) such as α and β, the couplings between hosts and needles, are at least as central to HCV dynamics as parameters traditionally associated with an epidemic, such as πS, the birthrate of susceptibles, μ, the combined death and cessation rate of PWID, and τ, the rate of progressing to treatment (figure 3). This fortifies the notion that W.A.I.T.-specific properties dictate the spread of HCV, providing opportunities to explore more precise targeting by public health interventions.
 
-![Figure 3](https://royalsocietypublishing.org/view-large/figure/19033702/rsif20190334f03.tif)
+![Figure 3](https://trs.silverchair-cdn.com/trs/content_public/journal/rsif/16/158/10.1098_rsif.2019.0334/6/rsif20190334f03.png?Expires=1782305913&Signature=zVAO5ghhFgv6wz3xRlfDx1k0W4gZi62xjRgW7-Vtu6flxCVSBAOH6tQcJ3JMAqk0PU96eTGbBIxrHoMzH8K2RZLszKuc0vA~0LTn5uw-JkxsFpa1xySLs2hR6czz24Ui1gOrjVyN5yfBG3McoWhIRrYisFXK4dOdDP-mgy2uix6ntQCyBPoAPtbnoGRcNbt2c8hv4MmExsQPkq4SNOXFIOV3LrcPWYeQ9ZLRfLvEZD952JuYVDnhRJXQGjmdz~H-PKEx0PO99-VDGL~cv5pvQD6rm5QkZFvK4nkCEagc~Br--9e~87R7u9gG4jQ64GnRDgGYioqSWmS7PD-fguUQSA__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA)
 
 **Figure 3.** R0 sensitivity in HCV: the partial rank correlation coefficient (PRCC). A PRCC calculation was performed for R0 using Latin hypercube sampling. Parameters were sampled from uniform distributions with widths specified by the ranges given in table 1. The PRCC calculation was repeated for 50 independent iterations. The averages of these iterations are shown here, with the standard deviations for each parameter shown as the error bars. (Online version in colour.)
 
@@ -148,7 +148,7 @@ Having demonstrated the relevance of injection drug equipment in terms of how it
 
 In figure 4b, we demonstrate how changing ku and ki modifies the value of R0. Notice that R0 is reduced by increasing ki across fixed values of ku, and the opposite effect—increasing R0—is observed when increasing ku along fixed values of ki. That is, removing infected needles at an increased rate may decrease infection risk in a population of PWID, while removing uninfected needles can increase the risk. One can also see that increasing ku and ki simultaneously, along the dashed line—where ku = ki—will increase R0. This suggests that if a distinction between infected and uninfected needles cannot be established (as is often the case) then discarding needles indiscriminately can potentially exacerbate the spread of the infection.
 
-![Figure 4](https://royalsocietypublishing.org/view-large/figure/19033705/rsif20190334f04.tif)
+![Figure 4](https://trs.silverchair-cdn.com/trs/content_public/journal/rsif/16/158/10.1098_rsif.2019.0334/6/rsif20190334f04.png?Expires=1782305913&Signature=C9Aij9LjD7Il4ytR6OU4NU5zuuUi88-H66MKqvvAnVFoqGBAwGad1NWAchzkmdrhRqTSwydkemWE0ZGOi7uGJmWHaaHIzm86bXkKpP476-YXwO5rgmPTfTsMyuNSFzcmhLUzBK-Wp442V0DMSlWS~wYLeI6ggfO5eJ9UFZrB8EEi6UfT3pKHBYdH2o7804o6BaSQRoE0e1q60BvXjH9SMIFagrI3rIQOqe-M-35r9Qypa7B2IdXHneletzMMUnPvz7NgnJfNHv4DWnbIYmWk1671HEe~xSGhJv01nCYDZsJsWf2mcJoz02YB28zfN-hILxnhjSPiQX8tpQyGmSDxYg__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA)
 
 **Figure 4.** HCV R0 as a function of various model features. (a) The relationship between the rate of acquisition of clean needles πN and the discard rate of infected needles ki with respect to various values of R0. The curves are contours of R0 and are labelled by the associated R0 value. The vertical and horizontal dashed lines indicate the chosen values for their respective parameters (we fix ku to the value specified in table 1). (b) The relationship between the infected and uninfected needle discard rate, with respect to R0. The diagonal line represents where ku = ki. The ‘x’ indicates the value chosen for ku and ki in the model (we set ku = ki in the model). Notice that moving upwards along this diagonal increases R0. (Online version in colour.)
 
@@ -159,7 +159,7 @@ We highlight this to show the explicit dependence on k in the R0 expression. Not
 
 Next, we considered how certain interventions can modify the transfer rate of needles from infected to uninfected states, through modifying the $\epsilon$ parameter in our study (figure 5). A high $\epsilon$ value would indicate a scenario where needles move quickly from an infected state to an uninfected state. This would apply to settings where viral decay on a needle is high, or when infected needles are directly exchanged for uninfected ones (as in certain needle exchange programmes). The model is run with all uninfected populations initialized at their DFE values (S = 170 000 and Nu = 220 000), and we initialize IE = Nu = 1, and IL = 0. In the high $\epsilon$ scenario, we observe generally slower dynamics and higher overall susceptible population sizes, along with lower infected populations (on long time scales).
 
-![Figure 5](https://royalsocietypublishing.org/view-large/figure/19033708/rsif20190334f05.tif)
+![Figure 5](https://trs.silverchair-cdn.com/trs/content_public/journal/rsif/16/158/10.1098_rsif.2019.0334/6/rsif20190334f05.png?Expires=1782305913&Signature=qTAKwklFtVWQMI4Jv9HV~Vn99SmKu2Rcg7BBnGFV-l4shRX6TXaKqn5hY7~ru38wSiJp9nXCOuaQGaRz-BN5eIzvgFpN1gzNBM0TwhwVMDC73UX2Lge1~Evy3cE8kvq9Lm7jgtVL23sV4bm-tcnjHS-rkcLLCP5QWuJxDYFnX~4n2ljKkgXmcqAueqQJg6dtna9uLvlLy33tAMetMxKny1k4txN4KDC4JKGW56iGAUBqCnmRaSjRYd3TOyp5MzzAdspnyJWGiYJSVQhhHM5fHaqDYbdUZH1Ik85qKZJWZP2uhlldueM0f3vJ8lnI~qVxQlBEgBA5N1v-Q7shCrZvHg__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA)
 
 **Figure 5.** The dynamics of susceptible (blue), early-infected (orange) and late-infected (green) populations in two parameter regimes: high and low $\epsilon$, the conversion rate of needles from infected to uninfected. The solid lines represent the dynamics for $\epsilon = 2\,{day}^{- 1}$ (high $\epsilon$), and dashed lines are the dynamics for $\epsilon = 0.33\, d^{- 1}$ (low $\epsilon$). In the high- $\epsilon$ regime, we find that the susceptible population at equilibrium is ≈4 times that of the low-ε regime, and the infected populations are each $\approx \mkern180mu 89\text{\%}$ of their low- $\epsilon$ counterparts at equilibrium (note the log scale on the y-axis). (Online version in colour.)
 
@@ -190,14 +190,6 @@ This work was supported by Brown University.
 ## Acknowledgements
 
 The authors thank B. Linas, J. Andrews, I. Diakite, S. Robinson, S. Scarpino, N. Harris, B. Marshall and E. Hinton for various contributions on the topic. The authors would also like to thank three reviewers for very helpful comments on a manuscript draft.
-
-## Figures
-
-- Figure 1
-- Figure 2
-- Figure 3
-- Figure 4
-- Figure 5
 
 ## References (65 total, showing 65)
 

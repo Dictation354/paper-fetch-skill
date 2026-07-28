@@ -5,11 +5,10 @@
   "markdown_path": "tests/fixtures/golden_criteria/10.1021_acsomega.3c06992/extracted.md",
   "prompt_path": "tests/fixtures/golden_criteria/10.1021_acsomega.3c06992/markdown-quality-prompt.md",
   "provider": "acs",
-  "reviewed_at": "2026-05-26T10:53:25Z",
-  "reviewed_by": "operator",
   "review_method": "agent_prompt",
+  "reviewed_at": "2026-07-27T08:53:50Z",
+  "reviewed_by": "codex",
   "sample_id": "10.1021_acsomega.3c06992",
-  "source_markdown_sha256": "744aeb6c670d61e5acffcb181ef14ac04a6637eb7d8ff5bf8682ea3a3a94ffa9",
   "schema_version": 2,
   "status": "pass"
 }

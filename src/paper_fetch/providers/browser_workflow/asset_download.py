@@ -19,11 +19,19 @@ from ...models import AssetProfile
 from ...http import RequestCancelledError
 from ...utils import dedupe_normalized, empty_asset_results, normalize_text
 from ..browser_runtime import (
+    BrowserHtmlReadiness,
     BrowserRuntimeFailure,
     merge_browser_context_seeds,
 )
 from .assets import _download_asset_match_tokens, _merge_download_attempt_results
 from .shared import BrowserWorkflowDeps
+
+_FIGURE_PAGE_BROWSER_WAIT_SECONDS = 2
+_SILVERCHAIR_FIGURE_PAGE_BROWSER_WAIT_SECONDS = 5
+_SILVERCHAIR_FIGURE_PAGE_READY_SELECTOR = (
+    "img.content-image[src], img.content-image[data-src]"
+)
+_SILVERCHAIR_FIGURE_PAGE_PROVIDERS = frozenset({"acs", "royalsocietypublishing"})
 
 
 @dataclass(frozen=True)
@@ -395,11 +403,26 @@ def _run_browser_asset_download_attempt(
     def raw_figure_page_fetcher(figure_page_url: str) -> tuple[str, str] | None:
         if recovery.runtime is None:
             return None
+        provider = normalize_text(recovery.provider).lower()
+        wait_for_selector = (
+            _SILVERCHAIR_FIGURE_PAGE_READY_SELECTOR
+            if provider in _SILVERCHAIR_FIGURE_PAGE_PROVIDERS
+            else None
+        )
         try:
             html_result = deps.fetch_html_with_browser(
                 [figure_page_url],
                 publisher=recovery.provider,
                 config=recovery.runtime,
+                readiness=BrowserHtmlReadiness(
+                    wait_for_article_body=False,
+                    selector=wait_for_selector,
+                ),
+                wait_seconds=(
+                    _SILVERCHAIR_FIGURE_PAGE_BROWSER_WAIT_SECONDS
+                    if wait_for_selector
+                    else _FIGURE_PAGE_BROWSER_WAIT_SECONDS
+                ),
                 runtime_context=recovery.runtime_context,
             )
         except BrowserRuntimeFailure:

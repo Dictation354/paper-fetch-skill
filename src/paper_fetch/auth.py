@@ -9,6 +9,7 @@ from typing import Any
 from collections.abc import Callable, Mapping
 
 from .config import (
+    AMS_STORAGE_STATE_JSON_ENV_VAR,
     BROWSER_HEADLESS_ENV_VAR,
     BROWSER_TIMEOUT_MS_ENV_VAR,
     BROWSER_USER_AGENT_ENV_VAR,
@@ -43,6 +44,10 @@ class AuthTarget:
 
 
 AUTH_TARGETS: Mapping[str, AuthTarget] = {
+    "ams": AuthTarget(
+        doi="10.1175/jcli-d-23-0738.1",
+        url="https://journals.ametsoc.org/view/journals/clim/37/24/JCLI-D-23-0738.1.xml",
+    ),
     "wiley": AuthTarget(
         doi="10.1111/gcb.15322",
         url="https://onlinelibrary.wiley.com/doi/full/10.1111/gcb.15322",
@@ -82,6 +87,7 @@ AUTH_TARGETS: Mapping[str, AuthTarget] = {
 }
 
 _LEGACY_AUTH_STORAGE_STATE_ENV_VARS = {
+    "ams": AMS_STORAGE_STATE_JSON_ENV_VAR,
     "wiley": WILEY_STORAGE_STATE_JSON_ENV_VAR,
 }
 

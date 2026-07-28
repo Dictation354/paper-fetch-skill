@@ -3070,13 +3070,12 @@
     "10.1021_acsomega.4c03987": {
       "doi": "10.1021/acsomega.4c03987",
       "publisher": "acs",
-      "title": "Functionalized Metal-Free Carbon Nanosphere Catalyst for the Selective C-N Bond Formation under Open-Air Conditions",
-      "source_url": "https://pubs.acs.org/doi/10.1021/acsomega.4c03987",
-      "fetched_at": "2026-05-26T04:59:09Z",
+      "source_url": "https://pubs.acs.org/acsodf/article/9/33/35676/358560/Functionalized-Metal-Free-Carbon-Nanosphere",
+      "fetched_at": "2026-07-27T08:42:08Z",
       "purpose": "structure",
       "expected_outcome": "fulltext",
       "fixture_family": "golden",
-      "content_type": "text/html;charset=UTF-8",
+      "content_type": "text/html; charset=utf-8",
       "route_kind": "html",
       "origin_kind": "real_replay",
       "usage_kind": "content",
@@ -3091,14 +3090,12 @@
     "10.1021_acsomega.3c06992": {
       "doi": "10.1021/acsomega.3c06992",
       "publisher": "acs",
-      "title": "General Equation to Estimate the Physicochemical Properties of Aliphatic Amines",
-      "source_url": "https://pubs.acs.org/doi/full/10.1021/acsomega.3c06992",
-      "landing_url": "https://pubs.acs.org/doi/10.1021/acsomega.3c06992",
-      "fetched_at": "2026-05-26T10:50:41Z",
+      "source_url": "https://pubs.acs.org/acsodf/article/8/51/49088/341563/General-Equation-to-Estimate-the-Physicochemical",
+      "fetched_at": "2026-07-27T08:42:22Z",
       "purpose": "formula",
       "expected_outcome": "fulltext",
       "fixture_family": "golden",
-      "content_type": "text/html;charset=UTF-8",
+      "content_type": "text/html; charset=utf-8",
       "route_kind": "html",
       "origin_kind": "real_replay",
       "usage_kind": "content",
@@ -3113,10 +3110,8 @@
     "10.1021_acsomega.2c02828": {
       "doi": "10.1021/acsomega.2c02828",
       "publisher": "acs",
-      "title": "General Equation to Express Changes in the Physicochemical Properties of Organic Homologues",
-      "source_url": "https://pubs.acs.org/doi/pdf/10.1021/acsomega.2c02828",
-      "landing_url": "https://pubs.acs.org/doi/10.1021/acsomega.2c02828",
-      "fetched_at": "2026-05-26T10:50:47Z",
+      "source_url": "https://doi.org/10.1021/acsomega.2c02828",
+      "fetched_at": "2026-07-27T08:43:17Z",
       "purpose": "pdf_fallback",
       "expected_outcome": "fulltext",
       "fixture_family": "golden",
@@ -3130,6 +3125,11 @@
         "extracted.md": "tests/fixtures/golden_criteria/10.1021_acsomega.2c02828/extracted.md",
         "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1021_acsomega.2c02828/markdown-quality-prompt.md",
         "markdown-quality.json": "tests/fixtures/golden_criteria/10.1021_acsomega.2c02828/markdown-quality.json"
+      },
+      "diagnostics": {
+        "browser_final_url": "https://pubs.acs.org/acsodf/article-pdf/7/30/26670/3637446/ao2c02828.pdf",
+        "browser_final_url_redacted": false,
+        "capture_source_url": "https://doi.org/10.1021/acsomega.2c02828"
       }
     },
     "10.1088_1748-9326_ab7d02": {

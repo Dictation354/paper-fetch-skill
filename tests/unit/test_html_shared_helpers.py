@@ -254,6 +254,41 @@ class SharedHtmlHelperTests(unittest.TestCase):
             assets[0]["url"], "https://academic.oup.com/content/m_btaa823f4.jpeg"
         )
 
+    def test_extract_figure_assets_reads_silverchair_view_large_page(self) -> None:
+        preview_url = (
+            "https://acs.silverchair-cdn.com/acs/content_public/journal/"
+            "acsodf/9/33/m_ao4c03987_0001.png?Expires=1"
+        )
+        html = f"""
+        <div data-id="fig1" class="fig fig-section">
+          <a class="fig-link"
+             href="/view-large/figure/165496527/ao4c03987_0001.tif">
+            <img class="content-image" src="{preview_url}" />
+          </a>
+          <a class="fig-view-orig"
+             aria-label="View large Figure 1."
+             href="/view-large/figure/165496527/ao4c03987_0001.tif">
+            View Large
+          </a>
+          <div class="fig-label">Figure 1</div>
+          <div class="fig-caption">Benzimidazole-based drug molecules.</div>
+        </div>
+        """
+
+        assets = html_assets.extract_figure_assets(
+            html,
+            "https://pubs.acs.org/acsodf/article/example",
+        )
+
+        self.assertEqual(len(assets), 1)
+        self.assertEqual(assets[0]["url"], preview_url)
+        self.assertEqual(assets[0]["preview_url"], preview_url)
+        self.assertNotIn("full_size_url", assets[0])
+        self.assertEqual(
+            assets[0]["figure_page_url"],
+            "https://pubs.acs.org/view-large/figure/165496527/ao4c03987_0001.tif",
+        )
+
     def test_silverchair_figure_section_images_are_not_formula_assets(self) -> None:
         html = """
 <html>

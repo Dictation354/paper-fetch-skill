@@ -81,11 +81,11 @@ We found no relationship between the degree of inbreeding of individual males an
 
 We found a significant positive effect of body size on reproductive outcomes (estimate = 0.713, s.e. = 0.290, z = 2.454, p = 0.014, figure 1 and table 2). Moreover, we found a significant interaction, indicating that the effect of the propensity to display depended on the extent of inbreeding (Estimate = 6.190, s.e. = 2.400, z = 2.579, p = 0.010, figure 2 and table 2). Here, inbred individuals increasingly benefited from displaying dominance behaviours, while the opposite was true for outbred individuals (figure 2). This model explained 24.6% of the total deviance in the number of offspring per male.
 
-![Figure 1](https://royalsocietypublishing.org/view-large/figure/17410885/rspb20200097f01.tif)
+![Figure 1](https://trs.silverchair-cdn.com/trs/content_public/journal/rspb/287/1927/10.1098_rspb.2020.0097/6/rspb20200097f01.png?Expires=1781670092&Signature=4zO4M1hjplynX6Nv9onfSyEjn5ITb~Cx8CJosyy0O48XfclyvLf7QM~Cq7HNW9br11FBBj4NnF3MF7-R37jgxujWDkzy4nXKYHSWG9hzsS856gk-7hNdPIeklsepgK0--wFeqwZXiTTJsiH8MKthq5EWC8oYSrxG4ayrEc-zPIQasi-acpPAnllD5li73t6wueKCAbI5ODHPi-ZVXrJm4dizVxnF0YO~E4D02rl~pGoAig0gAkByBFXIqxJE~IweHb7f3bkCdx~UxHUwY-U-zmMumtFKxPPTKNrc-SdAOHJ6VXskwRKvvy7kyP0loAE4gGgKagZRRAuZLEoYGGLJ3A__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA)
 
 **Figure 1.** Effect of male body size, represented by a principal component accounting for body size and frequency that they displayed dominance behaviours, on reproductive success (number of survived offspring). The graph shows fitted lines (model predictions, black line) with 95% confidence intervals (shaded area). Observations are solid dots. Dominant males tend to have better reproductive outcomes.
 
-![Figure 2](https://royalsocietypublishing.org/view-large/figure/17410885/rspb20200097f02.tif)
+![Figure 2](https://trs.silverchair-cdn.com/trs/content_public/journal/rspb/287/1927/10.1098_rspb.2020.0097/6/m_rspb20200097f02.png?Expires=1781670092&Signature=LHxl58pipl54iugvBnEFkwVQKwCeR-Vq7-eZl8rDju5gv9-bxMJpHB1UYiuIooCvwzRVYvE40w60mc-7OQsC3AI9WDQFX~kvP4bTCAYyGk2hbxJlvNR8Ebiquq4EY0m2O8I3KA8FQ1xD8x5kcAvSWnUPj2DKspuLm9SVTXFjnMAd8en7dXUGIkotijIR0zDqnid6rA5EI3eaPzOx8c052iIpeLAZE9FPI3XWePHan4FKmrF~WtqwWhDjlDNcqiWWgmKBW5qYYX5z4zSbWl8EFfj6cKilZmGXS9xVXaOk9dovfwNMWXQ-lEEUHH8qa8gGXTaEjR0eS91cs0s8pC8IxA__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA)
 
 **Figure 2.** Illustration of the interactive effect of males' propensity to display dominance behaviours and inbreeding (FIII) on reproductive success (number of offspring). The graphs show fitted lines (model predictions, black lines) with 95% confidence intervals (shaded area). Here, when inbreeding is low, males with a lesser propensity to display may have better reproductive outputs. Conversely, males with higher inbreeding may have improved reproductive success when they display to a greater extent. Note that wide confidence intervals can result from small sample sizes of observed data for specific combinations of dominance and FIII.
 
@@ -138,11 +138,6 @@ This study was supported by USC Research Fellowship C.F.
 ## Acknowledgements
 
 We thank all volunteers and students involved in the RSP dragon study as well as staff at Roma Street Parkland. We also thank Daniel Nugent for valuable discussions and revisions of the manuscript.
-
-## Figures
-
-- Figure 1
-- Figure 2
 
 ## References (103 total, showing 103)
 

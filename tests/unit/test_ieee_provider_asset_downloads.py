@@ -1,12 +1,50 @@
 # ruff: noqa: F403,F405
 from __future__ import annotations
 
+from paper_fetch.providers import _ieee_asset_recovery
 from paper_fetch.providers import _ieee_supplementary
 
 from ._ieee_provider_support import *
 
 
 class IeeeProviderAssetDownloadTests(unittest.TestCase):
+    def test_ieee_article_seed_waits_for_title_and_latest_cookies(self) -> None:
+        class Page:
+            def __init__(self) -> None:
+                self.polls = 0
+
+            def title(self) -> str:
+                return "IEEE article" if self.polls >= 2 else ""
+
+            def wait_for_timeout(self, _milliseconds: int) -> None:
+                self.polls += 1
+
+        class Context:
+            def __init__(self, page: Page) -> None:
+                self.page = page
+
+            def cookies(self, _urls) -> list[dict[str, str]]:
+                if self.page.polls < 2:
+                    return []
+                return [
+                    {
+                        "name": "ieee_session",
+                        "value": "latest",
+                        "domain": ".ieeexplore.ieee.org",
+                        "path": "/",
+                    }
+                ]
+
+        page = Page()
+        self.assertTrue(
+            _ieee_asset_recovery._ieee_article_seed_page_is_ready(
+                page,
+                Context(page),
+                "https://ieeexplore.ieee.org/document/10772041/",
+            )
+        )
+        self.assertEqual(page.polls, 2)
+
     def test_ieee_download_related_assets_body_profile_passes_figure_table_and_formula(
         self,
     ) -> None:
@@ -376,6 +414,13 @@ class IeeeProviderAssetDownloadTests(unittest.TestCase):
                 }
             return {**challenge_html, "url": url}
 
+        runtime_context = RuntimeContext(
+            env={"PAPER_FETCH_ASSET_DOWNLOAD_CONCURRENCY": "1"}
+        )
+        runtime_context.new_browser_context_for_runtime_config = mock.Mock(
+            side_effect=RuntimeError("browser unavailable in unit test")
+        )
+        self.addCleanup(runtime_context.close)
         with tempfile.TemporaryDirectory() as tmpdir:
             with (
                 mock.patch.object(
@@ -391,9 +436,7 @@ class IeeeProviderAssetDownloadTests(unittest.TestCase):
                     raw_payload,
                     Path(tmpdir),
                     asset_profile="all",
-                    context=RuntimeContext(
-                        env={"PAPER_FETCH_ASSET_DOWNLOAD_CONCURRENCY": "1"}
-                    ),
+                    context=runtime_context,
                 )
 
         self.assertEqual(

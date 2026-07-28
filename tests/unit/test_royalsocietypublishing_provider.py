@@ -4,6 +4,7 @@ import re
 import tempfile
 from pathlib import Path
 from unittest import mock
+from urllib.parse import parse_qs, urlparse
 
 import pytest
 
@@ -164,7 +165,22 @@ def test_article_html_fetch_result_downloads_figure_assets_and_rewrites_inline_l
 
     doi = "10.1098/rsos.150470"
     article_url = "https://royalsocietypublishing.org/rsos/article/2/10/150470/example"
-    figure_url = "https://royalsocietypublishing.org/view-large/figure/18113020/rsos150470f01.jpeg"
+    figure_page_url = (
+        "https://royalsocietypublishing.org/view-large/figure/18113020/"
+        "rsos150470f01.tif"
+    )
+    preview_url = (
+        "https://trs.silverchair-cdn.com/trs/content_public/journal/rsos/"
+        "m_rsos150470f01.png?Expires=1&Signature=preview"
+    )
+    figure_url = (
+        "https://trs.silverchair-cdn.com/trs/content_public/journal/rsos/"
+        "rsos150470f01.png?Expires=1&Signature=full+signature&Key-Pair-Id=test"
+    )
+    download_wrapper_url = (
+        "https://trs.silverchair-cdn.com/DownloadFile/DownloadImage.aspx?"
+        f"image={figure_url}&sec=18113020"
+    )
     body_text = (
         "Royal Society body paragraph discusses the fossil record and introduces Figure 1 "
         "as the main visual evidence for the article. " * 80
@@ -176,7 +192,14 @@ def test_article_html_fetch_result_downloads_figure_assets_and_rewrites_inline_l
             "<figure><figcaption>Figure 1. Direct HTML figure caption.</figcaption></figure>",
             f"""
         <div class="fig-section" id="f1" data-id="f1">
-          <a href="{figure_url}"><img src="{figure_url}" alt="Figure 1. Direct HTML figure caption." /></a>
+          <div class="graphic-wrap">
+            <a href="{figure_page_url}">
+              <img src="{preview_url}" alt="Figure 1. Direct HTML figure caption." />
+            </a>
+            <div class="fig-orig">
+              <a class="download-slide" href="{download_wrapper_url}">Download slide</a>
+            </div>
+          </div>
           <div class="fig-label">Figure 1.</div>
           <div class="fig-caption">Direct HTML figure caption.</div>
         </div>
@@ -251,6 +274,193 @@ def test_article_html_fetch_result_downloads_figure_assets_and_rewrites_inline_l
     assert shared_fetcher.call_args.args[0] == figure_url
 
 
+def test_royal_fixture_extracts_signed_original_viewer_and_preview_urls() -> None:
+    fixture_path = Path(
+        "tests/fixtures/golden_criteria/10.1098_rsta.2019.0558/original.html"
+    )
+    extraction = _royalsocietypublishing_html.extract_markdown(
+        fixture_path.read_text(encoding="utf-8"),
+        "https://royalsocietypublishing.org/doi/10.1098/rsta.2019.0558",
+    )
+    figures = [
+        asset for asset in extraction.extracted_assets if asset.get("kind") == "figure"
+    ]
+
+    assert len(figures) == 2
+    for index, asset in enumerate(figures, start=1):
+        full_size_url = str(asset["full_size_url"])
+        preview_url = str(asset["preview_url"])
+        figure_page_url = str(asset["figure_page_url"])
+        assert asset["url"] == full_size_url
+        assert f"rsta20190558f0{index}.png" in urlparse(full_size_url).path
+        assert f"m_rsta20190558f0{index}.png" in urlparse(preview_url).path
+        assert "/view-large/figure/" in figure_page_url
+        assert urlparse(figure_page_url).path.endswith(f"rsta20190558f0{index}.tif")
+        assert set(parse_qs(urlparse(full_size_url).query)) >= {
+            "Expires",
+            "Signature",
+            "Key-Pair-Id",
+        }
+        assert "/view-large/figure/" not in full_size_url
+
+
+def test_royal_download_image_wrapper_rejects_non_silverchair_nested_host() -> None:
+    preview_url = "https://trs.silverchair-cdn.com/path/m_examplef01.png"
+    html = f"""
+    <html><body><div class="article-body">
+      <div class="fig fig-section" data-id="EXAMPLEF1">
+        <div class="fig-label">Figure 1</div>
+        <div class="graphic-wrap">
+          <img src="{preview_url}" alt="Safe preview" />
+          <a class="download-slide"
+             href="https://trs.silverchair-cdn.com/DownloadFile/DownloadImage.aspx?image=https://attacker.test/examplef01.png?Expires=1&Signature=bad&Key-Pair-Id=bad">
+            Download slide
+          </a>
+        </div>
+        <div class="fig-caption">Safe preview</div>
+      </div>
+    </div></body></html>
+    """
+
+    extraction = _royalsocietypublishing_html.extract_markdown(
+        html,
+        "https://royalsocietypublishing.org/doi/10.1098/example",
+    )
+
+    assert len(extraction.extracted_assets) == 1
+    asset = extraction.extracted_assets[0]
+    assert asset["url"] == preview_url
+    assert asset["preview_url"] == preview_url
+    assert "full_size_url" not in asset
+
+
+def test_royal_grouped_slide_url_is_not_assigned_to_the_wrong_figure() -> None:
+    fixture_path = Path(
+        "tests/fixtures/golden_criteria/10.1098_rsos.150470/original.html"
+    )
+    extraction = _royalsocietypublishing_html.extract_markdown(
+        fixture_path.read_text(encoding="utf-8"),
+        "https://royalsocietypublishing.org/doi/10.1098/rsos.150470",
+    )
+    figures = {
+        str(asset["heading"]): asset
+        for asset in extraction.extracted_assets
+        if asset.get("kind") == "figure"
+    }
+
+    assert len(figures) == 5
+    assert "full_size_url" not in figures["Figure 1"]
+    assert "/m_rsos150470f01.jpeg" in figures["Figure 1"]["preview_url"]
+    assert "/rsos150470f02.jpeg" in figures["Figure 2"]["full_size_url"]
+    assert "full_size_url" not in figures["Figure 3"]
+    assert "/rsos150470f04.jpeg" in figures["Figure 4"]["full_size_url"]
+
+
+def test_royal_figure_asset_uses_viewer_only_when_direct_original_is_missing() -> None:
+    doi = "10.1098/rsos.150470"
+    article_url = "https://royalsocietypublishing.org/rsos/article/example"
+    figure_page_url = (
+        "https://royalsocietypublishing.org/view-large/figure/18113020/"
+        "rsos150470f01.tif"
+    )
+    preview_url = (
+        "https://trs.silverchair-cdn.com/trs/content_public/journal/rsos/"
+        "m_rsos150470f01.png?Expires=1&Signature=preview"
+    )
+    full_size_url = (
+        "https://trs.silverchair-cdn.com/trs/content_public/journal/rsos/"
+        "rsos150470f01.png?Expires=2&Signature=fresh&Key-Pair-Id=test"
+    )
+    body_text = "Royal Society figure-page fallback body text. " * 120
+    html = (
+        _royal_article_html(doi=doi, body_text=body_text)
+        .decode("utf-8")
+        .replace(
+            "<figure><figcaption>Figure 1. Direct HTML figure caption.</figcaption></figure>",
+            f"""
+        <div class="fig-section" data-id="RSOS150470F1">
+          <div class="graphic-wrap">
+            <a href="{figure_page_url}">
+              <img src="{preview_url}" alt="Figure 1. Fallback caption." />
+            </a>
+          </div>
+          <div class="fig-label">Figure 1.</div>
+          <div class="fig-caption">Fallback caption.</div>
+        </div>
+        """,
+        )
+    )
+    client = RoyalsocietypublishingClient(AssetTransport({}), {})
+    markdown_text, extraction = client.extract_markdown(
+        html,
+        article_url,
+        metadata={"doi": doi},
+    )
+    raw_payload = _typed_raw_payload(
+        provider="royalsocietypublishing",
+        source_url=article_url,
+        content_type="text/html",
+        body=html.encode("utf-8"),
+        route="html",
+        markdown_text=markdown_text,
+        source_trail=["fulltext:royalsocietypublishing_html_ok"],
+        extraction=extraction,
+        browser_context_seed={"browser_final_url": article_url},
+    )
+    image_bytes = png_header(1200, 800)
+    shared_fetcher = mock.Mock(
+        return_value={
+            "status_code": 200,
+            "headers": {"content-type": "image/png"},
+            "body": image_bytes,
+            "url": full_size_url,
+        }
+    )
+    figure_page_fetch = mock.Mock(
+        return_value=browser_runtime.BrowserFetchedHtml(
+            source_url=figure_page_url,
+            final_url=figure_page_url,
+            html=(
+                "<html><body>"
+                f'<img class="content-image" src="{full_size_url}" />'
+                "</body></html>"
+            ),
+            response_status=200,
+            response_headers={"content-type": "text/html"},
+            title="Figure 1",
+            summary="Full-size Royal Society figure",
+            browser_context_seed={},
+        )
+    )
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        install_browser_workflow_deps(
+            client,
+            load_runtime_config=mock.Mock(return_value=_runtime_config(tmpdir, doi)),
+            ensure_runtime_ready=mock.Mock(),
+            fetch_html_with_browser=figure_page_fetch,
+            _build_shared_browser_image_fetcher=mock.Mock(return_value=shared_fetcher),
+        )
+        result = client.download_related_assets(
+            doi,
+            {"doi": doi},
+            raw_payload,
+            Path(tmpdir),
+            asset_profile="body",
+        )
+
+    figure_page_fetch.assert_called_once()
+    assert figure_page_fetch.call_args.args[0] == [figure_page_url]
+    readiness = figure_page_fetch.call_args.kwargs["readiness"]
+    assert readiness.wait_for_article_body is False
+    assert readiness.selector == "img.content-image[src], img.content-image[data-src]"
+    assert figure_page_fetch.call_args.kwargs["wait_seconds"] == 5
+    shared_fetcher.assert_called_once()
+    assert shared_fetcher.call_args.args[0] == full_size_url
+    assert result["asset_failures"] == []
+    assert result["assets"][0]["download_tier"] == "full_size"
+
+
 def test_royal_figure_assets_merge_view_large_and_silverchair_by_dom_id() -> None:
     view_large = (
         "https://royalsocietypublishing.org/view-large/figure/17448863/"
@@ -260,6 +470,9 @@ def test_royal_figure_assets_merge_view_large_and_silverchair_by_dom_id() -> Non
         "https://trs.silverchair-cdn.com/trs/content_public/journal/rsos/"
         "m_rsos201200f01.png?Expires=1&Signature=test"
     )
+    full_size = preview.replace("m_rsos", "rsos").replace(
+        "Signature=test", "Signature=full"
+    )
 
     assets = _royalsocietypublishing_html._normalize_extracted_assets(
         [
@@ -267,9 +480,11 @@ def test_royal_figure_assets_merge_view_large_and_silverchair_by_dom_id() -> Non
                 "kind": "figure",
                 "heading": "Figure 1",
                 "caption": "Canonical caption.",
-                "url": view_large,
-                "full_size_url": view_large,
+                "url": full_size,
+                "full_size_url": full_size,
+                "figure_page_url": view_large,
                 "dom_id": "RSOS201200F1",
+                "section": "body",
             },
             {
                 "kind": "figure",
@@ -287,8 +502,9 @@ def test_royal_figure_assets_merge_view_large_and_silverchair_by_dom_id() -> Non
             "kind": "figure",
             "heading": "Figure 1",
             "caption": "Canonical caption.",
-            "url": view_large,
-            "full_size_url": view_large,
+            "url": full_size,
+            "full_size_url": full_size,
+            "figure_page_url": view_large,
             "preview_url": preview,
             "dom_id": "RSOS201200F1",
             "section": "body",
@@ -308,7 +524,11 @@ def test_royal_figure_assets_fall_back_to_canonical_figure_basename() -> None:
 
     assets = _royalsocietypublishing_html._normalize_extracted_assets(
         [
-            {"kind": "figure", "heading": "Figure 1", "url": view_large},
+            {
+                "kind": "figure",
+                "heading": "Figure 1",
+                "figure_page_url": view_large,
+            },
             {
                 "kind": "figure",
                 "heading": "Figure 1",
@@ -324,7 +544,8 @@ def test_royal_figure_assets_fall_back_to_canonical_figure_basename() -> None:
     )
 
     assert len(assets) == 2
-    assert assets[0]["url"] == view_large
+    assert assets[0]["figure_page_url"] == view_large
+    assert assets[0]["url"] == preview
     assert assets[0]["preview_url"] == preview
     assert assets[1]["heading"] == "Figure 2"
 
@@ -483,6 +704,7 @@ def test_markdown_contract_structure_fixture() -> None:
     assert "Open figure viewer" not in markdown
     assert "javascript:;" not in markdown
     assert not re.search(r"(?m)^- Figure$", markdown)
+    assert "\n## Figures\n" not in markdown
 
 
 def test_markdown_contract_table_fixture() -> None:
@@ -562,6 +784,7 @@ def test_markdown_contract_figure_fixture() -> None:
     assert "Article navigation" not in markdown
     assert not re.search(r"(?m)^- Figure$", markdown)
     assert re.search("(?:figure|figures 1)", markdown)
+    assert "\n## Figures\n" not in markdown
 
 
 def test_markdown_contract_supplementary_fixture() -> None:

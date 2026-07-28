@@ -598,6 +598,61 @@ class HttpTransportCacheTests(unittest.TestCase):
         self.assertIn("X-Amz-Signature=%2A%2A%2A", redacted)
         self.assertIn("response-content-type=application%2Foctet-stream", redacted)
 
+    def test_url_redaction_covers_google_signed_query_parameters(self) -> None:
+        signed_url = (
+            "https://storage.googleapis.com/plos-corpus-prod/article.xml"
+            "?X-Goog-Algorithm=GOOG4-RSA-SHA256"
+            "&X-Goog-Credential=test-credential"
+            "&X-Goog-Signature=test-signature"
+            "&generation=123"
+        )
+
+        redacted = http_module.redact_url_for_cache(signed_url)
+
+        self.assertNotIn("test-credential", redacted)
+        self.assertNotIn("test-signature", redacted)
+        self.assertIn("X-Goog-Algorithm=%2A%2A%2A", redacted)
+        self.assertIn("X-Goog-Credential=%2A%2A%2A", redacted)
+        self.assertIn("X-Goog-Signature=%2A%2A%2A", redacted)
+        self.assertIn("generation=123", redacted)
+
+    def test_signed_redirect_location_is_not_cached(self) -> None:
+        signed_location = (
+            "https://storage.googleapis.com/plos-corpus-prod/article.xml"
+            "?X-Goog-Credential=test-credential"
+            "&X-Goog-Signature=test-signature"
+        )
+        with tempfile.TemporaryDirectory() as disk_cache_dir:
+            transport = http_module.HttpTransport(
+                cache_ttl=30,
+                cache_capacity=128,
+                disk_cache_dir=disk_cache_dir,
+            )
+            with mock.patch.object(
+                transport,
+                "_perform_request",
+                return_value=FakeHTTPResponse(
+                    b"",
+                    "https://journals.plos.org/plosone/article/file?id=test",
+                    status=302,
+                    headers={
+                        "content-type": "text/html",
+                        "location": signed_location,
+                    },
+                ),
+            ):
+                response = transport.request(
+                    "GET",
+                    "https://journals.plos.org/plosone/article/file?id=test",
+                )
+
+            self.assertEqual(response["headers"]["location"], signed_location)
+            self.assertEqual(len(transport._cache), 0)
+            self.assertEqual(
+                list(Path(disk_cache_dir).rglob("*.json")),
+                [],
+            )
+
     def test_cache_key_redacts_sensitive_query_params(self) -> None:
         transport = http_module.HttpTransport(cache_ttl=30, cache_capacity=128)
 

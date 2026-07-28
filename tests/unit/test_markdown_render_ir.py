@@ -123,6 +123,40 @@ class MarkdownRenderIrTests(unittest.TestCase):
             ],
         )
 
+    def test_table_block_renders_irregular_rows_as_readable_list(self) -> None:
+        rendered = render_table_block(
+            {
+                "kind": "structured",
+                "table_render_kind": "structured_list",
+                "heading": "Table 5",
+                "caption": "Irregular values.",
+                "headers": ["Name", "Value"],
+                "rows": [["A", "1"], ["B"]],
+                "_table_prefix_rows": ["Group A"],
+                "fallback_message": "Grid layout was reduced.",
+                "footnotes": ["Source note."],
+            }
+        )
+
+        self.assertEqual(
+            rendered,
+            [
+                "Table 5",
+                "",
+                "Irregular values.",
+                "",
+                "Group A",
+                "",
+                "- Name: A; Value: 1",
+                "- Name: B",
+                "",
+                "Grid layout was reduced.",
+                "",
+                "Source note.",
+                "",
+            ],
+        )
+
     def test_figure_ir_round_trips_and_renders(self) -> None:
         figure = MarkdownFigure(
             label="Figure 1",

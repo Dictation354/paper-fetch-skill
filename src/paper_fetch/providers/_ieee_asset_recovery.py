@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import time
 from dataclasses import replace
 from pathlib import Path
 from typing import Any
@@ -23,8 +24,45 @@ from .browser_workflow.asset_download import (
     BrowserAssetRecoveryContext,
     download_browser_backed_related_assets,
 )
-from .browser_workflow.fetchers import _MemoizedImageDocumentFetcher
+from .browser_workflow.fetchers import (
+    _MemoizedImageDocumentFetcher,
+    _SharedBrowserPageSession,
+    _replace_runtime_shared_page_session,
+    _restore_runtime_shared_page_session,
+)
 from .browser_workflow.shared import default_browser_workflow_deps
+
+IEEE_ASSET_ARTICLE_READY_TIMEOUT_SECONDS = 10.0
+IEEE_ASSET_ARTICLE_READY_POLL_MS = 500
+
+
+def _ieee_article_seed_page_is_ready(page: Any, context: Any, seed_url: str) -> bool:
+    """Wait for IEEE's initial HTTP 202 verification to populate page state."""
+
+    deadline = time.monotonic() + IEEE_ASSET_ARTICLE_READY_TIMEOUT_SECONDS
+    while time.monotonic() < deadline:
+        title = ""
+        cookies: list[Any] = []
+        try:
+            title = normalize_text(str(page.title() or ""))
+        except Exception:
+            title = ""
+        try:
+            cookies = list(context.cookies([seed_url]) or [])
+        except TypeError:
+            try:
+                cookies = list(context.cookies() or [])
+            except Exception:
+                cookies = []
+        except Exception:
+            cookies = []
+        if title and cookies:
+            return True
+        try:
+            page.wait_for_timeout(IEEE_ASSET_ARTICLE_READY_POLL_MS)
+        except Exception:
+            return False
+    return False
 
 
 def download_ieee_assets_with_browser(
@@ -53,6 +91,14 @@ def download_ieee_assets_with_browser(
         default_browser_workflow_deps(),
         download_assets=download_assets_fn,
         split_body_and_supplementary_assets=split_assets_fn,
+    )
+    shared_page_session = _SharedBrowserPageSession(
+        preserve_seed_page=True,
+        seed_page_ready_waiter=_ieee_article_seed_page_is_ready,
+    )
+    previous_shared_page_session = _replace_runtime_shared_page_session(
+        runtime_context,
+        shared_page_session,
     )
     seed = dict(content.browser_context_seed if content.browser_context_seed else {})
     discovery_failures: list[dict[str, Any]] = []
@@ -155,6 +201,12 @@ def download_ieee_assets_with_browser(
             ]
 
     if not body_assets and not supplementary_assets:
+        _restore_runtime_shared_page_session(
+            runtime_context,
+            shared_page_session,
+            previous_shared_page_session,
+        )
+        shared_page_session.close()
         return {"assets": [], "asset_failures": discovery_failures}
 
     plan = BrowserAssetDownloadPlan(
@@ -217,20 +269,28 @@ def download_ieee_assets_with_browser(
         fetcher.browser_backend = browser_runtime_config.backend
         return fetcher
 
-    recovered = download_browser_backed_related_assets(
-        plan,
-        recovery,
-        image_fetcher_factory=image_fetcher_factory,
-        file_fetcher_factory=file_fetcher_factory,
-        opener_requester={
-            "transport": transport,
-            "asset_download_concurrency": (
-                1 if browser_runtime_config.backend == "camoufox" else concurrency
-            ),
-            "serial_browser_assets": browser_runtime_config.backend == "camoufox",
-        },
-        deps=deps,
-    )
+    try:
+        recovered = download_browser_backed_related_assets(
+            plan,
+            recovery,
+            image_fetcher_factory=image_fetcher_factory,
+            file_fetcher_factory=file_fetcher_factory,
+            opener_requester={
+                "transport": transport,
+                "asset_download_concurrency": (
+                    1 if browser_runtime_config.backend == "camoufox" else concurrency
+                ),
+                "serial_browser_assets": browser_runtime_config.backend == "camoufox",
+            },
+            deps=deps,
+        )
+    finally:
+        _restore_runtime_shared_page_session(
+            runtime_context,
+            shared_page_session,
+            previous_shared_page_session,
+        )
+        shared_page_session.close()
     recovered["asset_failures"] = [
         *list(recovered.get("asset_failures") or []),
         *discovery_failures,

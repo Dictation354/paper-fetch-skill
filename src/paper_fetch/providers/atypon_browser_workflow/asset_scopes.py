@@ -42,6 +42,7 @@ ATYPON_BROWSER_WORKFLOW_SUPPLEMENTARY_SECTION_SELECTORS = (
     "section[id*='supplementary']",
     "section[class*='supplementary']",
     "section[aria-labelledby*='supplementary']",
+    ".widget-ArticleDataSupplements",
 )
 
 
@@ -60,6 +61,13 @@ def _atypon_browser_workflow_supplementary_heading_key(node: Tag) -> str:
 def _is_atypon_browser_workflow_supplementary_section(node: Any) -> bool:
     if not isinstance(node, Tag):
         return False
+    classes = {
+        normalize_text(str(value))
+        for value in (node.get("class") or [])
+        if normalize_text(str(value))
+    }
+    if "widget-ArticleDataSupplements" in classes:
+        return True
     if normalize_text(node.name or "").lower() != "section":
         return False
 
@@ -135,7 +143,9 @@ def _atypon_browser_workflow_supplementary_asset_is_supported(
     asset: Mapping[str, Any],
 ) -> bool:
     url = normalize_text(str(asset.get("url") or "")).lower()
-    return "/doi/suppl/" in url and "/suppl_file/" in url
+    return (
+        "/doi/suppl/" in url and "/suppl_file/" in url or "/article-supplement/" in url
+    )
 
 
 def extract_supplementary_assets(

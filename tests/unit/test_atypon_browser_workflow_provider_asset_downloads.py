@@ -146,30 +146,39 @@ class AtyponBrowserWorkflowProviderAssetDownloadTests(
         """asset-download-contract: provider=acs"""
 
         landing_url = "https://pubs.acs.org/doi/10.1021/acsomega.4c03987"
-        figure_url = "https://pubs.acs.org/cms/10.1021/acsomega.4c03987/asset/images/large/ao4c03987_0001.jpeg"
-        preview_url = "https://pubs.acs.org/cms/10.1021/acsomega.4c03987/asset/images/medium/ao4c03987_0001.gif"
+        figure_page_url = (
+            "https://pubs.acs.org/view-large/figure/1234567/ao4c03987_0001.tif"
+        )
+        figure_url = (
+            "https://oup.silverchair-cdn.com/oup/backfile/Content_public/"
+            "Journal/acsodf/9/30/10.1021_acsomega.4c03987/1/ao4c03987_0001.png"
+        )
+        preview_url = (
+            "https://oup.silverchair-cdn.com/oup/backfile/Content_public/"
+            "Journal/acsodf/9/30/10.1021_acsomega.4c03987/1/"
+            "m_ao4c03987_0001.png"
+        )
         image_body = png_header(640, 480)
         html = f"""
-<article class="article--latest">
-  <div property="articleBody" class="article_content">
-    <div class="NLM_sec">
+<div class="article-body">
+  <div class="widget-ArticleFulltext">
+    <div class="article-section-wrapper">
       <h2>Results</h2>
       <p>{"Body text " * 80}</p>
       <p>Figure 1 shows representative benzimidazole-based drug molecules.</p>
     </div>
-    <figure data-id="fig1" data-index="1" class="article__inlineFigure">
-      <h2 class="fig-label">Figure 1</h2>
-      <a class="internalNav" aria-label="scroll to figure" href="#fig1">
-        <img src="{preview_url}" data-lg-src="{figure_url}" alt="" id="rightTab-gr1" class="rightTab-fig internalNav" />
+    <div class="fig fig-section" id="fig1">
+      <div class="fig-label">Figure 1</div>
+      <a class="fig-view-orig" href="{figure_page_url}">
+        View Large Image
       </a>
-      <figcaption>
-        <div class="hlFld-FigureCaption caption">
-          <p>Figure 1. Benzimidazole-based drug molecules.</p>
-        </div>
-      </figcaption>
-    </figure>
+      <img src="{preview_url}" alt="Benzimidazole-based drug molecules." />
+      <div class="caption">
+        <p>Figure 1. Benzimidazole-based drug molecules.</p>
+      </div>
+    </div>
   </div>
-</article>
+</div>
 """
         transport = AssetTransport({})
         client = acs_provider.AcsClient(transport=transport, env={})
@@ -197,11 +206,28 @@ class AtyponBrowserWorkflowProviderAssetDownloadTests(
                 ),
                 browser_context_seed={},
             )
+            mocked_fetch = mock.Mock(
+                return_value=browser_runtime.BrowserFetchedHtml(
+                    source_url=figure_page_url,
+                    final_url=figure_page_url,
+                    html=(
+                        "<html><head>"
+                        f"<meta property='og:image' content='{figure_url}' />"
+                        "</head><body></body></html>"
+                    ),
+                    response_status=200,
+                    response_headers={"content-type": "text/html"},
+                    title="Figure 1",
+                    summary="Full-size ACS figure",
+                    browser_context_seed={},
+                )
+            )
             mocked_builder = mock.Mock(return_value=shared_fetcher)
             install_browser_workflow_deps(
                 client,
                 load_runtime_config=mock.Mock(return_value=runtime),
                 ensure_runtime_ready=mock.Mock(),
+                fetch_html_with_browser=mocked_fetch,
                 _build_shared_browser_image_fetcher=mocked_builder,
             )
             with (
@@ -232,6 +258,15 @@ class AtyponBrowserWorkflowProviderAssetDownloadTests(
                     asset_profile="body", max_tokens="full_text"
                 )
 
+        mocked_fetch.assert_called_once()
+        self.assertEqual(mocked_fetch.call_args.args[0], [figure_page_url])
+        readiness = mocked_fetch.call_args.kwargs["readiness"]
+        self.assertFalse(readiness.wait_for_article_body)
+        self.assertEqual(
+            readiness.selector,
+            "img.content-image[src], img.content-image[data-src]",
+        )
+        self.assertEqual(mocked_fetch.call_args.kwargs["wait_seconds"], 5)
         mocked_builder.assert_called_once()
         mocked_opener.assert_not_called()
         mocked_request.assert_not_called()

@@ -10,12 +10,12 @@ legal_access:
     onboarding/manifests/ams.yml.
   - onboarding/manifests/ams.yml declares display_source=ams_html and main_path=['landing_html',
     'article_html', 'pdf_fallback', 'abstract_only'].
-  - registered provider bundle sources=ams_html,ams_pdf; requires_browser_runtime=False;
+  - registered provider bundle sources=ams_html,ams_pdf; requires_browser_runtime=True;
     requires_playwright=False.
-  - docs/providers.md documents AMS as a DOI landing to direct HTTP HTML route
-    with direct HTTP PDF fallback; the provider does not enter CDP browser HTML
-    or seeded-browser PDF fallback, and must reject challenges, access gates,
-    empty shells, and non-PDF wrappers.
+  - docs/providers.md documents AMS as a DOI landing to selected-browser HTML
+    route with browser-seeded PDF fallback; normal site JavaScript may run in
+    Camoufox, while unresolved challenges, access gates, empty shells, and
+    non-PDF wrappers must be rejected and reported.
   - 'manifest fixture figure DOI 10.1175/jamc-d-24-0048.1 (high confidence): Provider-local
     tests verify AMS figure asset placement and duplicate figure appendix suppression.'
   - 'manifest fixture formula DOI 10.1175/aies-d-23-0093.1 (high confidence): Provider-local
@@ -24,7 +24,7 @@ legal_access:
     Provider-local tests exercise AMS article assembly on a real fixture that includes
     reference extraction behavior.'
   - 'manifest fixture pdf_fallback DOI 10.1175/bams-d-24-0270.1 (high confidence):
-    Golden fixture records AMS direct HTTP PDF fallback with a real PDF payload and
+    Golden fixture records AMS PDF fallback with a real PDF payload and
     expected output.'
   - 'manifest fixture structure DOI 10.1175/bams-d-24-0223.1 (high confidence): Provider-local
     tests verify AMS/BAMS section ordering, footnotes, and Markdown cleanup from a
@@ -33,6 +33,7 @@ legal_access:
     tests verify AMS image-only table extraction and inline table asset placement.'
 allowed_runtimes:
 - http
+- browser
 forbidden_behaviors:
 - automatic_login
 - captcha_solving
@@ -49,4 +50,6 @@ site_temporary_policy:
 may_continue: true
 notes: Approved only for legal AMS/BAMS access already available in the operator
   environment, including public/open articles and any existing entitlement; do not
-  automate login, solve CAPTCHA, or bypass access gates.
+  automate login, solve CAPTCHA, or bypass access gates. Ordinary publisher JavaScript
+  and silent WAF verification may run during normal browser navigation; an unresolved
+  interactive challenge must stop and be reported for optional manual auth.

@@ -238,7 +238,7 @@ class AtyponBrowserWorkflowCandidateTests(unittest.TestCase):
                     build_pdf_candidates(provider, doi, pdf_url),
                 )
 
-    def test_ams_client_uses_direct_http_pdf_candidates_without_atypon_default_pdf_paths(
+    def test_ams_client_uses_explicit_pdf_candidates_without_atypon_default_pdf_paths(
         self,
     ) -> None:
         doi = "10.1175/jcli-d-23-0738.1"

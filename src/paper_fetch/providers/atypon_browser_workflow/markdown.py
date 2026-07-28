@@ -100,6 +100,7 @@ def extract_browser_workflow_markdown(
         source_url,
         trafilatura_backend=None,
         noise_profile=noise_profile,
+        cleaned_html=True,
     )
     if abstract_sections:
         markdown = _ensure_body_markdown_heading(markdown, title=title)

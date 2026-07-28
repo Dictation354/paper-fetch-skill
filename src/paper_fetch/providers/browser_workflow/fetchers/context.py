@@ -25,6 +25,110 @@ from .diagnostics import (
 import contextlib
 
 logger = logging.getLogger("paper_fetch.providers.browser_workflow")
+_RUNTIME_SHARED_PAGE_SESSION_KEY = ("browser_workflow", "shared_page_session")
+
+
+class _SharedBrowserPageSession:
+    """Lazily owned browser context/page shared by serial document fetchers."""
+
+    def __init__(
+        self,
+        *,
+        preserve_seed_page: bool = False,
+        seed_page_ready_waiter: Callable[[Any, Any, str], bool] | None = None,
+    ) -> None:
+        self.preserve_seed_page = bool(preserve_seed_page)
+        self.seed_page_ready_waiter = seed_page_ready_waiter
+        self.manager: Any | None = None
+        self.context: Any | None = None
+        self.page: Any | None = None
+        self.ready_seed_urls: set[str] = set()
+        self.cookies_seeded = False
+        self._closed = False
+
+    def bind(
+        self,
+        *,
+        manager: Any | None,
+        context: Any,
+        page: Any,
+    ) -> None:
+        self.manager = manager
+        self.context = context
+        self.page = page
+        self._closed = False
+
+    def mark_seed_ready(self, seed_url: str) -> None:
+        normalized_url = normalize_text(seed_url)
+        if normalized_url:
+            self.ready_seed_urls.add(normalized_url)
+
+    def seed_is_ready(self, seed_url: str) -> bool:
+        return normalize_text(seed_url) in self.ready_seed_urls
+
+    def close(self) -> None:
+        if self._closed:
+            return
+        self._closed = True
+        for value in (self.page, self.context, self.manager):
+            if value is not None:
+                with contextlib.suppress(Exception):
+                    value.close()
+        self.page = None
+        self.context = None
+        self.manager = None
+        self.ready_seed_urls.clear()
+        self.cookies_seeded = False
+
+
+def _runtime_shared_page_session(
+    runtime_context: RuntimeContext | None,
+) -> _SharedBrowserPageSession | None:
+    if runtime_context is None:
+        return None
+    value = runtime_context.get_session_cache(
+        _RUNTIME_SHARED_PAGE_SESSION_KEY,
+        copy_value=False,
+    )
+    return value if isinstance(value, _SharedBrowserPageSession) else None
+
+
+def _replace_runtime_shared_page_session(
+    runtime_context: RuntimeContext | None,
+    session: _SharedBrowserPageSession,
+) -> Any | None:
+    if runtime_context is None:
+        return None
+    previous = runtime_context.get_session_cache(
+        _RUNTIME_SHARED_PAGE_SESSION_KEY,
+        copy_value=False,
+    )
+    runtime_context.set_session_cache(
+        _RUNTIME_SHARED_PAGE_SESSION_KEY,
+        session,
+        copy_value=False,
+    )
+    return previous
+
+
+def _restore_runtime_shared_page_session(
+    runtime_context: RuntimeContext | None,
+    session: _SharedBrowserPageSession,
+    previous: Any | None,
+) -> None:
+    if runtime_context is None:
+        return
+    current = runtime_context.get_session_cache(
+        _RUNTIME_SHARED_PAGE_SESSION_KEY,
+        copy_value=False,
+    )
+    if current is not session:
+        return
+    runtime_context.set_session_cache(
+        _RUNTIME_SHARED_PAGE_SESSION_KEY,
+        previous,
+        copy_value=False,
+    )
 
 
 def _looks_like_pdf_navigation_url(url: str | None) -> bool:
@@ -225,6 +329,7 @@ class _BaseBrowserDocumentFetcher:
             Path(user_data_dir).expanduser() if user_data_dir is not None else None
         )
         self._browser_config = browser_config
+        self._shared_page_session = _runtime_shared_page_session(runtime_context)
         self._browser_manager = None
         self._context = None
         self._page = None
@@ -242,6 +347,11 @@ class _BaseBrowserDocumentFetcher:
         raise NotImplementedError
 
     def close(self) -> None:
+        if self._shared_page_session is not None:
+            self._page = None
+            self._context = None
+            self._browser_manager = None
+            return
         if self._page is not None:
             with contextlib.suppress(Exception):
                 self._page.close()
@@ -262,6 +372,12 @@ class _BaseBrowserDocumentFetcher:
     def _ensure_context(self, source_url: str | None = None):
         if self._context is not None:
             return self._context
+        shared_session = self._shared_page_session
+        if shared_session is not None and shared_session.context is not None:
+            self._browser_manager = shared_session.manager
+            self._context = shared_session.context
+            self._page = shared_session.page
+            return self._context
 
         active_user_agent = normalize_text(
             self._current_seed().get("browser_user_agent")
@@ -272,30 +388,52 @@ class _BaseBrowserDocumentFetcher:
                 if self._browser_config is not None
                 else {}
             )
-            self._browser_manager, _unused_browser, self._context = (
-                _new_browser_context(
-                    runtime_context=self._runtime_context,
-                    headless=self._headless,
-                    user_agent=active_user_agent,
-                    use_runtime_shared_browser=self._use_runtime_shared_browser,
-                    binary_path=self._binary_path,
-                    cdp_endpoint=self._cdp_endpoint,
-                    profile_dir=self._profile_dir,
-                    user_data_dir=self._user_data_dir,
-                    **browser_config_kwargs,
-                )
+            manager, _unused_browser, active_context = _new_browser_context(
+                runtime_context=self._runtime_context,
+                headless=self._headless,
+                user_agent=active_user_agent,
+                use_runtime_shared_browser=self._use_runtime_shared_browser,
+                binary_path=self._binary_path,
+                cdp_endpoint=self._cdp_endpoint,
+                profile_dir=self._profile_dir,
+                user_data_dir=self._user_data_dir,
+                **browser_config_kwargs,
             )
+            self._browser_manager = manager
+            self._context = active_context
             self._sync_context_cookies()
             context = self._context
             if context is None:
                 return None
             self._page = context.new_page()
+            if shared_session is not None:
+                shared_session.bind(
+                    manager=self._browser_manager,
+                    context=context,
+                    page=self._page,
+                )
             self._last_context_failure = {}
         except Exception as exc:
             self._last_context_failure = self._context_failure_diagnostic(exc)
             if source_url:
                 self._record_failure(source_url, **self._last_context_failure)
-            self.close()
+            if shared_session is not None:
+                if shared_session.context is not None:
+                    shared_session.close()
+                else:
+                    for value in (
+                        self._page,
+                        self._context,
+                        self._browser_manager,
+                    ):
+                        if value is not None:
+                            with contextlib.suppress(Exception):
+                                value.close()
+                self._page = None
+                self._context = None
+                self._browser_manager = None
+            else:
+                self.close()
             return None
         return self._context
 
@@ -309,11 +447,16 @@ class _BaseBrowserDocumentFetcher:
     def _sync_context_cookies(self) -> None:
         if self._context is None:
             return
+        shared_session = self._shared_page_session
+        if shared_session is not None and shared_session.cookies_seeded:
+            return
         cookies = list(self._current_seed().get("browser_cookies") or [])
         if not cookies:
             return
         with contextlib.suppress(Exception):
             self._context.add_cookies(cookies)
+            if shared_session is not None:
+                shared_session.cookies_seeded = True
 
     def _seed_urls(self) -> list[str]:
         return dedupe_normalized(self._seed_urls_getter())
@@ -332,13 +475,28 @@ class _BaseBrowserDocumentFetcher:
             return
         warmed_count = 0
         for seed_url in self._seed_urls():
+            shared_session = self._shared_page_session
+            if shared_session is not None and shared_session.seed_is_ready(seed_url):
+                self._warmed_seed_urls.add(seed_url)
+                continue
             if not force and seed_url in self._warmed_seed_urls:
                 continue
             if max_urls is not None and warmed_count >= max_urls:
                 break
             try:
                 page.goto(seed_url, wait_until="domcontentloaded", timeout=timeout_ms)
+                if (
+                    shared_session is not None
+                    and shared_session.seed_page_ready_waiter is not None
+                    and not shared_session.seed_page_ready_waiter(
+                        page, self._context, seed_url
+                    )
+                ):
+                    warmed_count += 1
+                    continue
                 self._warmed_seed_urls.add(seed_url)
+                if shared_session is not None:
+                    shared_session.mark_seed_ready(seed_url)
                 warmed_count += 1
             except Exception:
                 warmed_count += 1

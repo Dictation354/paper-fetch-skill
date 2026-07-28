@@ -20,11 +20,12 @@ from tests.provider_benchmark_samples import (
 
 RUN_LIVE = os.environ.get("PAPER_FETCH_RUN_LIVE") == "1"
 RUN_IEEE_BROWSER_LIVE = os.environ.get("PAPER_FETCH_RUN_IEEE_BROWSER_LIVE") == "1"
-IEEE_BROWSER_ASSET_DOI = "10.1109/ACCESS.2024.3414424"
+IEEE_BROWSER_ASSET_DOI = "10.1109/TIM.2024.3509573"
 IEEE_BROWSER_ASSET_URL = (
     "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/"
-    "6287639/10380310/10558792/liu2-3414424-large.gif"
+    "19/10764799/10772041/gu1-3509573-large.gif"
 )
+IEEE_BROWSER_BODY_ASSET_COUNT = 13
 ELSEVIER_SAMPLE = provider_benchmark_sample("elsevier")
 SPRINGER_SAMPLE = provider_benchmark_sample("springer")
 WILEY_SAMPLE = provider_benchmark_sample("wiley")
@@ -163,6 +164,7 @@ class LivePublisherTests(unittest.TestCase):
         self._assert_matches_sample(article, ARXIV_SAMPLE)
 
     def test_ams_doi_live_fulltext(self) -> None:
+        require_selected_browser_or_skip(self, self.env)
         self._require_env(*AMS_SAMPLE.required_env)
         article = fetch_article(
             AMS_SAMPLE.doi,
@@ -232,6 +234,26 @@ class LivePublisherTests(unittest.TestCase):
             self.assertGreater(len(payload), 10)
             self.assertGreater(int.from_bytes(payload[6:8], "little"), 0)
             self.assertGreater(int.from_bytes(payload[8:10], "little"), 0)
+            downloaded_body_assets = [
+                candidate
+                for candidate in envelope.article.assets
+                if candidate.path
+                and candidate.kind in {"figure", "table", "formula"}
+                and "mediastore/IEEE/content/media/" in (candidate.original_url or "")
+            ]
+            self.assertEqual(
+                len(downloaded_body_assets),
+                IEEE_BROWSER_BODY_ASSET_COUNT,
+                downloaded_body_assets,
+            )
+            self.assertTrue(
+                all(
+                    candidate.download_tier == "full_size"
+                    for candidate in downloaded_body_assets
+                ),
+                downloaded_body_assets,
+            )
+            self.assertEqual(envelope.article.quality.asset_failures, [])
             self.assertIsNotNone(envelope.markdown)
             self.assertIn(asset_path.name, envelope.markdown)
             self.assertNotIn(IEEE_BROWSER_ASSET_URL, envelope.markdown)

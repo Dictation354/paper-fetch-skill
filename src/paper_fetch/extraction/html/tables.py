@@ -6,6 +6,14 @@ import re
 from typing import Any
 from collections.abc import Callable, Mapping, Sequence
 
+from ..table_grid import (
+    TableCell,
+    TableConversionReason,
+    TableRow,
+    expand_table_grid,
+    flatten_header_rows,
+    normalize_table,
+)
 from ..markdown_render import table_format as markdown_table_format
 from ...models import normalize_markdown_text
 from ...utils import normalize_text
@@ -47,12 +55,16 @@ def table_cell_data(
     colspan_text = normalize_text(str(cell.get("colspan") or "1")) or "1"
     try:
         rowspan = max(1, int(rowspan_text))
+        rowspan_valid = int(rowspan_text) >= 1
     except ValueError:
         rowspan = 1
+        rowspan_valid = False
     try:
         colspan = max(1, int(colspan_text))
+        colspan_valid = int(colspan_text) >= 1
     except ValueError:
         colspan = 1
+        colspan_valid = False
     class_values: Any = cell.get("class") or []
     if isinstance(class_values, str):
         classes = {
@@ -82,6 +94,7 @@ def table_cell_data(
         "is_header_candidate": bool(is_header_candidate),
         "rowspan": rowspan,
         "colspan": colspan,
+        "span_valid": rowspan_valid and colspan_valid,
     }
 
 
@@ -110,6 +123,50 @@ def table_rows(
             ]
         )
     return rows
+
+
+def _table_cell_to_ir(cell: Mapping[str, Any]) -> TableCell:
+    reasons = (
+        ()
+        if bool(cell.get("span_valid", True))
+        else (TableConversionReason.INVALID_SPAN,)
+    )
+    return TableCell(
+        text=str(cell.get("text") or ""),
+        rowspan=max(1, int(cell.get("rowspan") or 1)),
+        colspan=max(1, int(cell.get("colspan") or 1)),
+        is_header=bool(cell.get("is_header")),
+        is_header_candidate=bool(cell.get("is_header_candidate")),
+        column_start=(
+            int(cell["column_start"]) if cell.get("column_start") is not None else None
+        ),
+        reasons=reasons,
+    )
+
+
+def _table_rows_to_ir(
+    rows: Sequence[Sequence[Mapping[str, Any]]],
+) -> tuple[TableRow, ...]:
+    return tuple(
+        TableRow(
+            cells=tuple(_table_cell_to_ir(cell) for cell in row),
+            role="header"
+            if row and all(cell.get("is_header") for cell in row)
+            else "body",
+        )
+        for row in rows
+    )
+
+
+def _table_cell_from_ir(cell: TableCell) -> dict[str, Any]:
+    return {
+        "text": cell.text,
+        "is_header": cell.is_header,
+        "is_header_candidate": cell.is_header_candidate,
+        "rowspan": 1,
+        "colspan": 1,
+        "span_valid": True,
+    }
 
 
 def table_header_row_count(table: Tag, rows: list[list[dict[str, Any]]]) -> int:
@@ -173,62 +230,18 @@ def leading_full_width_spanner_rows(
 def expanded_table_matrix(
     rows: list[list[dict[str, Any]]],
 ) -> list[list[dict[str, Any]]] | None:
-    if not rows:
+    grid = expand_table_grid(_table_rows_to_ir(rows))
+    if grid.matrix is None:
         return None
-    grid: dict[tuple[int, int], dict[str, Any]] = {}
-    max_width = 0
-
-    for row_index, row in enumerate(rows):
-        col_index = 0
-        for cell in row:
-            while (row_index, col_index) in grid:
-                col_index += 1
-            rowspan = max(1, int(cell.get("rowspan") or 1))
-            colspan = max(1, int(cell.get("colspan") or 1))
-            for row_offset in range(rowspan):
-                for col_offset in range(colspan):
-                    grid[(row_index + row_offset, col_index + col_offset)] = {
-                        "text": cell.get("text") or "",
-                        "is_header": bool(cell.get("is_header")),
-                        "rowspan": 1,
-                        "colspan": 1,
-                    }
-            col_index += colspan
-            max_width = max(max_width, col_index)
-
-    if max_width <= 0:
-        return None
-
-    expanded_rows: list[list[dict[str, Any]]] = []
-    for row_index in range(len(rows)):
-        expanded_row: list[dict[str, Any]] = []
-        for col_index in range(max_width):
-            grid_cell = grid.get((row_index, col_index))
-            if grid_cell is None:
-                return None
-            expanded_row.append(grid_cell)
-        expanded_rows.append(expanded_row)
-    return expanded_rows
+    return [[_table_cell_from_ir(cell) for cell in row] for row in grid.matrix]
 
 
 def flatten_table_header_rows(rows: list[list[dict[str, Any]]]) -> list[str]:
-    if not rows:
-        return []
-    rows = normalize_table_header_rows(rows)
-    width = len(rows[0])
-    headers: list[str] = []
-    for col_index in range(width):
-        parts: list[str] = []
-        for row in rows:
-            if col_index >= len(row):
-                return []
-            text = normalize_text(str(row[col_index].get("text") or ""))
-            if not text:
-                continue
-            if not parts or text != parts[-1]:
-                parts.append(text)
-        headers.append(" / ".join(parts))
-    return headers
+    return list(
+        flatten_header_rows(
+            [tuple(_table_cell_to_ir(cell) for cell in row) for row in rows]
+        )
+    )
 
 
 def normalize_table_header_rows(
@@ -271,25 +284,26 @@ def table_headers_and_data_from_rows(
         if use_thead
         else table_header_row_count_without_thead(rows)
     )
-    matrix = expanded_table_matrix(rows)
-    if matrix is not None:
-        if header_row_count:
-            header_rows = matrix[:header_row_count]
-            headers = flatten_table_header_rows(header_rows)
-            data_rows = matrix[header_row_count:]
-        else:
-            headers = ["" for _index in range(len(matrix[0]))]
-            data_rows = matrix
-        return headers, data_rows, True
-
-    if header_row_count:
-        headers = [normalize_text(str(cell["text"])) for cell in rows[0]]
-        data_rows = rows[header_row_count:]
-    else:
-        width = max(len(row) for row in rows)
-        headers = ["" for _index in range(width)]
-        data_rows = rows
-    return headers, data_rows, False
+    normalized = normalize_table(
+        _table_rows_to_ir(rows),
+        header_row_indices=tuple(range(header_row_count)),
+        lift_leading_full_width_groups=False,
+    )
+    data_rows = [
+        [
+            {
+                "text": text,
+                "is_header": False,
+                "is_header_candidate": False,
+                "rowspan": 1,
+                "colspan": 1,
+                "span_valid": True,
+            }
+            for text in row
+        ]
+        for row in normalized.rows
+    ]
+    return list(normalized.headers), data_rows, normalized.is_rectangular
 
 
 def table_header_row_count_without_thead(rows: list[list[dict[str, Any]]]) -> int:

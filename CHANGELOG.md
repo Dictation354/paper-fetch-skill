@@ -6,6 +6,17 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 4.0.2 - 2026-07-28
+
+### Fixed
+
+- Unified HTML, JATS, and Elsevier/CALS table conversion behind a provider-neutral cell/grid normalizer; flattened multi-row headers, supported named CALS spans, preserved full-width groups, expanded safe rowspan/colspan semantics, and retained irregular grids as readable lists with accurate fallback/layout diagnostics instead of semantic-loss misclassification.
+- Corrected Royal Society Publishing Silverchair figure extraction to preserve signed CDN originals from `DownloadImage.aspx`, model `/view-large/figure/` as an HTML discovery page instead of an image, reject cross-figure grouped-slide URLs, and use selector-driven viewer fallback before preview degradation.
+- Follow bounded PLOS manuscript redirects to signed Google Cloud Storage XML, while redacting all `X-Goog-*` query values and excluding credential-bearing redirect responses from HTTP caches.
+- Restored AMS to the shared Camoufox HTML and browser-seeded PDF workflow so AWS WAF HTTP 202 verification pages are classified as challenges; stateless fetch remains allowed, while `paper-fetch auth ams` and `PAPER_FETCH_AMS_STORAGE_STATE_JSON` provide optional reusable browser state.
+- Migrated ACS extraction to the current Silverchair article structure, preserving the complete `.article-body`, tables, figures, MathML formulas, structured references, and stable article-supplement links while excluding embedded Figshare viewer content and figure UI chrome; refreshed all three ACS golden fixtures, made fixture PDF capture reuse the selected browser runtime, and stopped full-size figure pages from waiting for article-body readiness.
+- Reused one ready IEEE article browser context/page for protected full-size figures, tables, multimedia, and supplementary assets, preserving current cookies and the article Referer without navigating the shared page to asset URLs; aligned HTTP 403/HTML challenge retry selection with the existing browser recovery policy.
+
 ## 4.0.1 - 2026-07-27
 
 ### Fixed

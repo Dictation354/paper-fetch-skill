@@ -1,137 +1,144 @@
 schema_version: 2
 provider: acs
-reviewed_at: '2026-05-26T11:43:29Z'
-reviewed_by: operator
+reviewed_at: '2026-07-27T09:36:00Z'
+reviewed_by: codex
 fixtures:
 - fixture: tests/fixtures/golden_criteria/10.1021_acsomega.4c03987
   purpose: structure
   doi: 10.1021/acsomega.4c03987
   baseline_markdown_path: tests/fixtures/golden_criteria/10.1021_acsomega.4c03987/extracted.md
-  baseline_markdown_sha256: 5ae106460a0ff28143b10e1343b5dbf883b2dfbce559cae822510673e20b85e2
+  baseline_markdown_sha256: e62e42af44195415f7b392cac99e41f31c183f5c28a5899adb5c7a13f8d6505e
   markdown_quality_path: tests/fixtures/golden_criteria/10.1021_acsomega.4c03987/markdown-quality.json
-  markdown_quality_sha256: cd66c19ede9bd7c9d82025661978dc12166b7c0c6b14873aa9a36d17b17f1163
-  review_notes: Final batch Markdown quality review confirmed by operator; persistent
-    quality status=pass.
+  markdown_quality_sha256: cedd181cddd494b521265eedd4096b94f33783355b3d2e465025e43bcd64c5f9
+  review_notes: Current Silverchair replay was manually reviewed; abstract, ten body
+    sections, conclusions, and 45 structured references remain complete and free
+    of figure-viewer chrome.
   sample_representative: true
   markdown_semantic_reviewed: true
   issues: []
   assertions:
   - 'must include ## Abstract'
-  - must include Results and Discussion
   - must not include Download Citation
-  - must not include Article Views
   fixes: []
 - fixture: tests/fixtures/golden_criteria/10.1021_acsomega.4c03987
   purpose: table
   doi: 10.1021/acsomega.4c03987
   baseline_markdown_path: tests/fixtures/golden_criteria/10.1021_acsomega.4c03987/extracted.md
-  baseline_markdown_sha256: 5ae106460a0ff28143b10e1343b5dbf883b2dfbce559cae822510673e20b85e2
+  baseline_markdown_sha256: e62e42af44195415f7b392cac99e41f31c183f5c28a5899adb5c7a13f8d6505e
   markdown_quality_path: tests/fixtures/golden_criteria/10.1021_acsomega.4c03987/markdown-quality.json
-  markdown_quality_sha256: cd66c19ede9bd7c9d82025661978dc12166b7c0c6b14873aa9a36d17b17f1163
-  review_notes: Final batch Markdown quality review confirmed by operator; persistent
-    quality status=pass.
+  markdown_quality_sha256: cedd181cddd494b521265eedd4096b94f33783355b3d2e465025e43bcd64c5f9
+  review_notes: Current Silverchair replay was manually reviewed; three body tables,
+    including Table 1 and OPD conversion columns, remain readable in Markdown.
   sample_representative: true
   markdown_semantic_reviewed: true
   issues: []
   assertions:
   - must include Table 1
   - must include OPD conversion
-  - must match pipe table Markdown
   - must not include Google Scholar
+  - must match (?m)^\|.+\|$
   fixes: []
 - fixture: tests/fixtures/golden_criteria/10.1021_acsomega.3c06992
   purpose: formula
   doi: 10.1021/acsomega.3c06992
   baseline_markdown_path: tests/fixtures/golden_criteria/10.1021_acsomega.3c06992/extracted.md
-  baseline_markdown_sha256: 744aeb6c670d61e5acffcb181ef14ac04a6637eb7d8ff5bf8682ea3a3a94ffa9
+  baseline_markdown_sha256: 0873221c6304e137718f71746a9095d62826e292cccca833b964aaa1a460fa09
   markdown_quality_path: tests/fixtures/golden_criteria/10.1021_acsomega.3c06992/markdown-quality.json
-  markdown_quality_sha256: c736688ac289b63e092a6fc0d2ec41721d2bba1891d396db2e8a47d06d2ebc8c
-  review_notes: Final batch Markdown quality review confirmed by operator; persistent
-    quality status=pass.
+  markdown_quality_sha256: 1c650d24a381e43d5fda098a17f5c5018796d2ebfeee08f4dd0612ea5d9ffddf
+  review_notes: Current Silverchair formula replay was manually reviewed; all 21
+    display formula blocks, S_{CNE}, tables, conclusions, and 20 references remain.
   sample_representative: true
   markdown_semantic_reviewed: true
   issues: []
   assertions:
   - must include NPOH equation
   - must include S_{CNE}
-  - must include LaTeX display formula blocks
-  - must not include '[Formula unavailable]'
+  - must include $$
+  - must not include [Formula unavailable]
   - must not include Download Citation
+  - must match (?s)\$\$.*S_\{CNE\}.*\$\$
   fixes: []
 - fixture: tests/fixtures/golden_criteria/10.1021_acsomega.4c03987
   purpose: figure
   doi: 10.1021/acsomega.4c03987
   baseline_markdown_path: tests/fixtures/golden_criteria/10.1021_acsomega.4c03987/extracted.md
-  baseline_markdown_sha256: 5ae106460a0ff28143b10e1343b5dbf883b2dfbce559cae822510673e20b85e2
+  baseline_markdown_sha256: e62e42af44195415f7b392cac99e41f31c183f5c28a5899adb5c7a13f8d6505e
   markdown_quality_path: tests/fixtures/golden_criteria/10.1021_acsomega.4c03987/markdown-quality.json
-  markdown_quality_sha256: cd66c19ede9bd7c9d82025661978dc12166b7c0c6b14873aa9a36d17b17f1163
-  review_notes: Final batch Markdown quality review confirmed by operator; persistent
-    quality status=pass.
+  markdown_quality_sha256: cedd181cddd494b521265eedd4096b94f33783355b3d2e465025e43bcd64c5f9
+  review_notes: Current Silverchair replay was manually reviewed; eight inline
+    figures retain labels and captions without viewer/modal control text.
   sample_representative: true
   markdown_semantic_reviewed: true
   issues: []
   assertions:
   - must include Figure
-  - must include Benzimidazole-based drug molecules
   - must not include Article Views
-  - must not include Download Citation
+  - must match (?:!\[Figure|\*\*Figure)
   fixes: []
 - fixture: tests/fixtures/golden_criteria/10.1021_acsomega.4c03987
   purpose: supplementary
   doi: 10.1021/acsomega.4c03987
   baseline_markdown_path: tests/fixtures/golden_criteria/10.1021_acsomega.4c03987/extracted.md
-  baseline_markdown_sha256: 5ae106460a0ff28143b10e1343b5dbf883b2dfbce559cae822510673e20b85e2
+  baseline_markdown_sha256: e62e42af44195415f7b392cac99e41f31c183f5c28a5899adb5c7a13f8d6505e
   markdown_quality_path: tests/fixtures/golden_criteria/10.1021_acsomega.4c03987/markdown-quality.json
-  markdown_quality_sha256: cd66c19ede9bd7c9d82025661978dc12166b7c0c6b14873aa9a36d17b17f1163
-  review_notes: Final batch Markdown quality review confirmed by operator; persistent
-    quality status=pass.
+  markdown_quality_sha256: cedd181cddd494b521265eedd4096b94f33783355b3d2e465025e43bcd64c5f9
+  review_notes: Current Silverchair replay was manually reviewed; Supporting
+    Information remains visible while the stable article-supplement asset is tested
+    separately from embedded Figshare viewer URLs.
   sample_representative: true
   markdown_semantic_reviewed: true
   issues: []
   assertions:
   - must include Supporting Information
-  - must include ao4c03987_si_001.pdf
   - must not include Download Citation
+  - must not include ndownloader.figstatic.com
   fixes: []
 - fixture: tests/fixtures/golden_criteria/10.1021_acsomega.4c03987
   purpose: references
   doi: 10.1021/acsomega.4c03987
   baseline_markdown_path: tests/fixtures/golden_criteria/10.1021_acsomega.4c03987/extracted.md
-  baseline_markdown_sha256: 5ae106460a0ff28143b10e1343b5dbf883b2dfbce559cae822510673e20b85e2
+  baseline_markdown_sha256: e62e42af44195415f7b392cac99e41f31c183f5c28a5899adb5c7a13f8d6505e
   markdown_quality_path: tests/fixtures/golden_criteria/10.1021_acsomega.4c03987/markdown-quality.json
-  markdown_quality_sha256: cd66c19ede9bd7c9d82025661978dc12166b7c0c6b14873aa9a36d17b17f1163
-  review_notes: Final batch Markdown quality review confirmed by operator; persistent
-    quality status=pass.
+  markdown_quality_sha256: cedd181cddd494b521265eedd4096b94f33783355b3d2e465025e43bcd64c5f9
+  review_notes: Current Silverchair replay was manually reviewed; 45 numbered
+    citations retain visible text, years, and DOI values without resolver chrome.
   sample_representative: true
   markdown_semantic_reviewed: true
   issues: []
   assertions:
-  - 'must include ## References'
-  - must include Metal Catalysts for Heterogeneous Catalysis
+  - must include Reference
   - must not include Google Scholar
-  - must not include Download Citation
   fixes: []
 - fixture: tests/fixtures/golden_criteria/10.1021_acsomega.2c02828
   purpose: pdf_fallback
   doi: 10.1021/acsomega.2c02828
   baseline_markdown_path: tests/fixtures/golden_criteria/10.1021_acsomega.2c02828/extracted.md
-  baseline_markdown_sha256: c8832da533d7967d8d2cae718f023668ad46978138436344c4bc0b1ba0de2d29
+  baseline_markdown_sha256: 138c12400f6378f1757ab63cd303666b4ce913e8804aa86cc217b4da830ed66a
   markdown_quality_path: tests/fixtures/golden_criteria/10.1021_acsomega.2c02828/markdown-quality.json
-  markdown_quality_sha256: 593a8a1d16c770a5b8f6330065c9eb674b353fbc6d8f1236a43f6596b055bed7
-  review_notes: Final batch Markdown quality review confirmed by operator; persistent
-    quality status=pass.
+  markdown_quality_sha256: 556135b9d38705db08909533e3931576dd18243e2db720ed8dc6366049247b19
+  review_notes: Current article-pdf replay was manually reviewed; the full body is
+    usable, with only nonblocking repeated page chrome and two-column reference
+    ordering artifacts.
   sample_representative: true
   markdown_semantic_reviewed: true
-  issues: []
+  issues:
+  - id: pdf-layout-artifacts
+    severity: low
+    summary: Repeated ACS page chrome and imperfect two-column reference ordering
+      remain in shared PDF Markdown without blocking the complete article body.
   assertions:
   - must include General Equation to Express Changes
   - must include NPOH equation
   - must not include Download Citation
+  - must match (?m)^#{1,2} (?:\*\*)?General Equation to Express Changes
   fixes: []
 final_markdown_quality_review:
   confirmed: true
-  confirmed_by: operator
-  confirmed_at: '2026-05-26T11:43:29Z'
+  confirmed_by: codex
+  confirmed_at: '2026-07-27T09:36:00Z'
   method: final-markdown-quality-review
   fixture_count: 7
-  fresh_markdown_quality_reports: []
+  fresh_markdown_quality_reports:
+  - tests/fixtures/golden_criteria/10.1021_acsomega.4c03987/markdown-quality.json
+  - tests/fixtures/golden_criteria/10.1021_acsomega.3c06992/markdown-quality.json
+  - tests/fixtures/golden_criteria/10.1021_acsomega.2c02828/markdown-quality.json

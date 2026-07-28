@@ -283,6 +283,10 @@ class _SharedBrowserImageDocumentFetcher(_BaseBrowserDocumentFetcher):
             if request_payload is not None:
                 return request_payload
 
+            shared_session = self._shared_page_session
+            if shared_session is not None and shared_session.preserve_seed_page:
+                return None
+
             navigation_response = None
             try:
                 timeout_ms = budget.timeout_ms(_IMAGE_DOCUMENT_NAVIGATION_TIMEOUT_MS)
@@ -364,11 +368,19 @@ class _SharedBrowserImageDocumentFetcher(_BaseBrowserDocumentFetcher):
         if timeout_ms <= 0:
             return None
         try:
+            referer = normalize_text(
+                str(getattr(self._page, "url", "") or "")
+            ) or normalize_text(
+                str(self._current_seed().get("browser_final_url") or "")
+            )
+            request_headers = {
+                "Accept": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8"
+            }
+            if referer:
+                request_headers["Referer"] = referer
             response = self._context.request.get(
                 image_url,
-                headers={
-                    "Accept": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8"
-                },
+                headers=request_headers,
                 timeout=timeout_ms,
             )
         except Exception as exc:

@@ -29,7 +29,7 @@ Our objective is to offer a cogent and clear motivation for agent-based Econophy
 
 We introduce two different classes of learning models that converge to a consensus. Our interest is not in equilibrium but what process leads to it [6–8]. The first introduces a feedback mechanism (§[4.1](#s4a), theorem 4.1) where agents who are off the true ‘hidden’ volatility parameter feel a slight (even infinitesimally so) pull towards it along with the all the other ‘random’ chatter of the market. This model captures the setting where traders have access to an alternative trading venue or an information source provided by brokers and private message boards. The second model incorporates a market leader (e.g. Goldman Sachs) that is confident in its own internal metrics or is privy to client flow (private information) and does not give any weight to outside opinions (§[4.3](#s4c), theorem 4.4). Proving the convergence results (as well as establishing the exponentially fast convergence rates) requires tools from discrete dynamical systems. We showcase as well as complement our theoretical results with experiments (e.g. figure 2a–d), which for example show that if we move away from our models, convergence is no longer guaranteed.
 
-![Figure 2](https://royalsocietypublishing.org/view-large/figure/17449309/rsos201188f02.tif)
+![Figure 2](https://trs.silverchair-cdn.com/trs/content_public/journal/rsos/7/10/10.1098_rsos.201188/9/rsos201188f02.png?Expires=1781820291&Signature=HiZ1sO8sCDeLnYS2N-MIJm0aM~T5tBHlFi3Id8ddnfchNjrzdc1HrEZ8SeZx36s3nFKxGpaTvOW4pqMoxSGC5qzVwU4rMiS9PTblW4a3BFoizFcwkIZzPUzoshAW0RWvDEaNtb9UYu9GbsFX567UgClXEywwi0qB~siP2zPIxy2uS1mLID~P~wRLs28wyzxZQy5cB2AoHAP6zuqRalQ1Zm83z85a6kkMITvV2WPRQg4UfWx-GvlT15zRrl8E-o5JaIf9NnA5WMNDAt5tE4tFocM2Zb88TmYL2G13c8FCTwyOua0n~XCchKKM~Qj9viGa-JSe3LUTCUaOsM~kvEWfng__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA)
 
 **Figure 2.** Evolution of the agents’ dynamics (4.2): (a) without learning, (b) with learning and εi satisfying the conditions of theorem 4.1, (c) with learning and εi not satisfying the conditions of theorem 4.1, and (d) evolution of the agents’ dynamics with a leader (4.5).
 
@@ -55,7 +55,7 @@ Volatility, which captures the beliefs about how turbulent the stock price will 
 
 Options can be struck at different strike prices on the same asset (e.g. K = $90, $ 75, $60). If the underlying asset and the time to exercise T (e.g. three months) are the same, one would expect the volatility to be the same at different strikes. In practice, however, the market after the 1987 crash has evolved to exhibit different volatilities. This rather strange phenomenon is referred to as the smile, or smirk (figure 1). Depending on the market, these smirks can be more or less pronounced. For instance, equity markets display a strong skew or smirk. A symmetric smile is more common in foreign exchange options markets. An excellent introduction to volatility smiles is given in [17].
 
-![Figure 1](https://royalsocietypublishing.org/view-large/figure/17449248/rsos201188f01.tif)
+![Figure 1](https://trs.silverchair-cdn.com/trs/content_public/journal/rsos/7/10/10.1098_rsos.201188/9/rsos201188f01.png?Expires=1781820291&Signature=AMRi4Y5iy~RBoI9zMPnj4Shjw7h8HzaWbeqs4Jxd05Ns3L3MpXUu0Khkvtx9unplAZny1KP2E63Vsw6ENxBbabUWZhGRHR~8ICm~fPN98-3U7O9hSKQI3Yfu62yjPg~7fYp9NwZOP2Gm6fuvME5uOABnLdjokzPDfTZEXruN2wIAmwS5EHTlMouoK5~0Rt1KKfOKwneQoVZp~slW8auUTZJQFy74fpDx7T5cdHQo16rV8B5YU6IezY3elKYIaKT-hfgym-JTwRxbm40C4F-THCn2QOIXGhG7klZA7K9Zlt9sdSNJ0qAGjo7vP2nmMMmA1Js0C~SkWd3nGu-E0LzayQ__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA)
 
 **Figure 1.** (a) A typical implied volatility smile for varying strikes K divided by fixed spot price. Moneyness is K/S0. ATM denotes At-The-Money where K equals S0. (b) Consensus occurs as all traders’ opinions of the implied volatility converge, round by round, to a distinct value for varying strikes.
 
@@ -273,7 +273,7 @@ Figure 2 depicts the obtained simulation results for different values of the lea
 Equation: $X_{1} = {(\overline{\sigma},0.35,0.37,0.4,0.45,0.5,0.55,0.57,0.6,0.65)}^{\top}.$
 For the leader case, the opinion weights matrix is constructed by replacing the first row of A by (1, 0, …, 0). The corresponding matrix $\overset{\sim}{A}$ (defined in 4.5) is substochastic and irreducible, and $\sum\limits_{i = 2}^{i = 10}a_{ij} < 1$, j = 1, …, 10. Hence, all the conditions of theorem 4.4 are satisfied and consensus to $\overline{\sigma} = 0.375$ is reached. Figure 2d shows the corresponding simulation results. Finally, figure 3 shows the evolution of the vectored opinion dynamics (5.2) with n = 10 and k = 3 (i.e. 10 three-dimensional agents), matrix A as in the case with feedback, (vectored) volatility $\overline{\sigma} = {(0.67,0.22,0.88)}^{\top}$, learning parameters εi = 0.9aii for aii as in A, and initial condition 1k ⊗ X1 with X1 as in the first experiment above.
 
-![Figure 3](https://royalsocietypublishing.org/view-large/figure/17449309/rsos201188f03.tif)
+![Figure 3](https://trs.silverchair-cdn.com/trs/content_public/journal/rsos/7/10/10.1098_rsos.201188/9/m_rsos201188f03.png?Expires=1781820291&Signature=gE2Ohbcz-RW1pKWKzQHwMLAHO-a1wmdJ0eBLtRG1bCKaD6ibhZh-F2mYkXnA7G2hRJrzjW6g3-pSl7jdpLA8KhmtqtE6rcO6XYRr6ostXunXNcBejD-oNI0vSWY0JA~~yIozIisKwRbzm~Z1YeDQSFwrPf9ZeZ9m7RSBArbEUDS~jv5REvveE7IUq3h7yUHMemALGcNgG5gSZllihIxd-QEepFPjF0LXGrrbpM4Za-mV4GoeLql2hDOgSSnAhHdkPvLmmHLgZcTUwyvxjVJBKHUNZsIV4Vu8Um5TIUnLUnSsmkHk1T8w0WnpbLxO5Ap~94RvCKb7RfNaqa43IegFDw__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA)
 
 **Figure 3.** Evolution of the multi-dimensional agents’ dynamics with learning (5.2).
 
@@ -329,12 +329,6 @@ The authors thank Ioannis Panageas, Ionel Popescu, Niels Nygaard and JM Schumach
 ## Footnotes
 
 Using the BS formula with a particular implied volatility, traders obtain a dollar value for the price.
-
-## Figures
-
-- Figure 1
-- Figure 2
-- Figure 3
 
 ## References (108 total, showing 108)
 

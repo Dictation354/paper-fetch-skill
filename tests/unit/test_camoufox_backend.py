@@ -27,7 +27,10 @@ from paper_fetch.providers.browser_runtime.camoufox_manager import (
 )
 from paper_fetch.providers.browser_runtime.context import context_options_for_config
 from paper_fetch.providers.browser_runtime import context as browser_runtime_context
-from paper_fetch.providers.browser_runtime.types import BrowserRuntimeConfig
+from paper_fetch.providers.browser_runtime.types import (
+    BrowserHtmlReadiness,
+    BrowserRuntimeConfig,
+)
 from paper_fetch.runtime import RuntimeContext
 
 
@@ -307,6 +310,8 @@ class _Page:
         self.url = "https://example.test/article"
         self.goto_kwargs: dict[str, object] = {}
         self.route_handler = None
+        self.wait_for_selector = mock.Mock()
+        self.wait_for_timeout = mock.Mock()
 
     def goto(self, url: str, **kwargs):
         self.url = url
@@ -384,3 +389,134 @@ def test_camoufox_html_navigation_uses_commit_and_keeps_images(
     context.page.route_handler(image_route)
     image_route.continue_.assert_called_once()
     image_route.abort.assert_not_called()
+
+
+def test_camoufox_figure_page_waits_for_image_selector_without_fixed_sleep(
+    monkeypatch, tmp_path
+) -> None:
+    context = _Context()
+    config = BrowserRuntimeConfig(
+        provider="acs",
+        doi="10.1021/example",
+        artifact_dir=tmp_path,
+        headless=True,
+        user_agent=None,
+        persist_storage_state=False,
+        backend="camoufox",
+    )
+    readiness = mock.Mock()
+    monkeypatch.setattr(
+        _playwright_browser,
+        "open_browser_context",
+        lambda *_args, **_kwargs: (None, context),
+    )
+    monkeypatch.setattr(
+        _playwright_browser,
+        "wait_for_atypon_body_dom_ready",
+        readiness,
+    )
+
+    result = _playwright_browser.fetch_html_with_playwright(
+        ["https://pubs.acs.org/view-large/figure/123/example.tif"],
+        publisher="acs",
+        config=config,
+        wait_seconds=5,
+        readiness=BrowserHtmlReadiness(
+            wait_for_article_body=False,
+            selector="img.content-image[src], img.content-image[data-src]",
+        ),
+    )
+
+    readiness.assert_not_called()
+    context.page.wait_for_selector.assert_called_once_with(
+        "img.content-image[src], img.content-image[data-src]",
+        state="attached",
+        timeout=5000,
+    )
+    context.page.wait_for_timeout.assert_not_called()
+    assert result.response_status == 200
+    trace = result.diagnostics["browser_runtime_trace"]
+    assert trace["article_body_wait_enabled"] is False
+    assert trace["selector_wait_enabled"] is True
+    assert trace["candidates"][0]["selector_readiness_ready"] is True
+
+
+def test_camoufox_figure_page_selector_timeout_is_best_effort(
+    monkeypatch, tmp_path
+) -> None:
+    context = _Context()
+    context.page.wait_for_selector.side_effect = RuntimeError("selector timeout")
+    config = BrowserRuntimeConfig(
+        provider="royalsocietypublishing",
+        doi="10.1098/example",
+        artifact_dir=tmp_path,
+        headless=True,
+        user_agent=None,
+        persist_storage_state=False,
+        backend="camoufox",
+    )
+    monkeypatch.setattr(
+        _playwright_browser,
+        "open_browser_context",
+        lambda *_args, **_kwargs: (None, context),
+    )
+
+    result = _playwright_browser.fetch_html_with_playwright(
+        ["https://royalsocietypublishing.org/view-large/figure/123/example.tif"],
+        publisher="royalsocietypublishing",
+        config=config,
+        wait_seconds=5,
+        readiness=BrowserHtmlReadiness(
+            wait_for_article_body=False,
+            selector="img.content-image[src], img.content-image[data-src]",
+        ),
+    )
+
+    context.page.wait_for_selector.assert_called_once()
+    context.page.wait_for_timeout.assert_not_called()
+    assert result.response_status == 200
+    trace = result.diagnostics["browser_runtime_trace"]
+    assert trace["candidates"][0]["selector_readiness_attempted"] is True
+    assert trace["candidates"][0]["selector_readiness_ready"] is False
+
+
+def test_camoufox_figure_page_without_selector_uses_fixed_wait(
+    monkeypatch, tmp_path
+) -> None:
+    context = _Context()
+    config = BrowserRuntimeConfig(
+        provider="example",
+        doi="10.1234/example",
+        artifact_dir=tmp_path,
+        headless=True,
+        user_agent=None,
+        persist_storage_state=False,
+        backend="camoufox",
+    )
+    body_readiness = mock.Mock()
+    monkeypatch.setattr(
+        _playwright_browser,
+        "open_browser_context",
+        lambda *_args, **_kwargs: (None, context),
+    )
+    monkeypatch.setattr(
+        _playwright_browser,
+        "wait_for_atypon_body_dom_ready",
+        body_readiness,
+    )
+
+    result = _playwright_browser.fetch_html_with_playwright(
+        ["https://example.test/view-large/figure/123/example.tif"],
+        publisher="example",
+        config=config,
+        wait_seconds=2,
+        readiness=BrowserHtmlReadiness(wait_for_article_body=False),
+    )
+
+    body_readiness.assert_not_called()
+    context.page.wait_for_selector.assert_not_called()
+    context.page.wait_for_timeout.assert_called_once_with(2000)
+    assert result.response_status == 200
+    trace = result.diagnostics["browser_runtime_trace"]
+    assert trace["article_body_wait_enabled"] is False
+    assert trace["selector_wait_enabled"] is False

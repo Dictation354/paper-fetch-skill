@@ -102,6 +102,12 @@ class _SharedBrowserFileDocumentFetcher(_BaseBrowserDocumentFetcher):
             return None
         request_headers = {"Accept": "*/*"}
         referer_url = normalize_text(str(asset.get("referer_url") or ""))
+        if not referer_url:
+            referer_url = normalize_text(str(getattr(self._page, "url", "") or ""))
+        if not referer_url:
+            referer_url = normalize_text(
+                str(self._current_seed().get("browser_final_url") or "")
+            )
         if referer_url:
             request_headers["Referer"] = referer_url
         try:

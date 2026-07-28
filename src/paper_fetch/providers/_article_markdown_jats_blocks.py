@@ -2,10 +2,17 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Any
 import urllib.parse
 import xml.etree.ElementTree as ET
 
+from ..extraction.table_grid import (
+    TableConversionReason,
+    TableConversionStatus,
+    normalize_table,
+)
+from ..extraction.xml_tables import parse_xml_table
 from ..extraction.markdown_render import MarkdownList, render_list
 from ._article_markdown_common import (
     XLINK_HREF,
@@ -29,6 +36,25 @@ JATS_BLOCK_LOCAL_NAMES = {
     "table",
     "table-wrap",
 }
+
+
+@dataclass(frozen=True)
+class _JatsTableRenderResult:
+    headers: list[str]
+    rows: list[list[str]]
+    prefix_rows: list[str]
+    status: TableConversionStatus = TableConversionStatus.EXACT
+    reasons: tuple[TableConversionReason, ...] = ()
+    layout_degraded: bool = False
+
+    @property
+    def render_kind(self) -> str:
+        if self.status in {
+            TableConversionStatus.FALLBACK,
+            TableConversionStatus.SEMANTIC_LOSS,
+        }:
+            return "structured_list"
+        return "structured"
 
 
 def _attribute_text(element: ET.Element | None, *names: str) -> str:
@@ -121,41 +147,35 @@ def _figure_entry(figure: ET.Element, source_url: str) -> dict[str, Any] | None:
     return entry
 
 
-def _has_table_spans(table: ET.Element | None) -> bool:
-    if table is None:
-        return False
-    span_attrs = {"namest", "nameend", "morerows", "rowspan", "colspan"}
-    return any(
-        any(node.get(attr) for attr in span_attrs)
-        for node in table.iter()
-        if isinstance(node.tag, str)
-    )
-
-
 def _table_node(table_wrap: ET.Element) -> ET.Element | None:
     if xml_local_name(table_wrap.tag) == "table":
         return table_wrap
     return first_descendant(table_wrap, "table")
 
 
-def _table_rows(table: ET.Element | None) -> list[list[str]]:
-    if table is None:
-        return []
-    rows: list[list[str]] = []
-    for row in table.iter():
-        if not isinstance(row.tag, str) or xml_local_name(row.tag) not in {"row", "tr"}:
-            continue
-        cells: list[str] = []
-        for cell in iter_children(row):
-            if xml_local_name(cell.tag) not in {"entry", "td", "th"}:
-                continue
-            cells.append(normalize_table_cell_text(render_inline_text(cell)))
-        if cells:
-            rows.append(cells)
-    if len(rows) <= 1:
-        return rows
-    max_width = max(len(row) for row in rows)
-    return [row + [""] * (max_width - len(row)) for row in rows]
+def _render_structured_table(table: ET.Element) -> _JatsTableRenderResult:
+    parsed = parse_xml_table(
+        table,
+        render_cell_text=lambda cell: normalize_table_cell_text(
+            render_inline_text(cell)
+        ),
+    )
+    normalized = normalize_table(
+        parsed.rows,
+        declared_width=parsed.declared_width,
+        header_row_indices=tuple(
+            index for index, row in enumerate(parsed.rows) if row.role == "header"
+        ),
+        reasons=parsed.reasons,
+    )
+    return _JatsTableRenderResult(
+        headers=list(normalized.headers),
+        rows=[list(row) for row in normalized.rows],
+        prefix_rows=list(normalized.prefix_rows),
+        status=normalized.status,
+        reasons=normalized.reasons,
+        layout_degraded=normalized.layout_degraded,
+    )
 
 
 def _table_footnotes(table_wrap: ET.Element) -> list[str]:
@@ -176,27 +196,49 @@ def _table_entry(table_wrap: ET.Element) -> tuple[dict[str, Any] | None, bool]:
     label = normalize_text(child_text(table_wrap, "label")) or "Table"
     caption = _caption_text(table_wrap)
     table = _table_node(table_wrap)
-    rows = _table_rows(table)
     key = _element_id(table_wrap) or _element_id(table) or label
-    lossy = _has_table_spans(table)
+    if table is not None:
+        render_result = _render_structured_table(table)
+        headers = render_result.headers
+        rows = render_result.rows
+        lossy = render_result.layout_degraded
+    else:
+        render_result = None
+        headers = []
+        rows = []
+        lossy = False
     if rows:
         entry: dict[str, Any] = {
             "kind": "table",
-            "table_render_kind": "structured",
+            "table_render_kind": (
+                render_result.render_kind if render_result is not None else "structured"
+            ),
             "key": key,
             "anchor_key": key,
             "heading": label,
             "caption": caption,
+            "headers": headers,
             "rows": rows,
             "footnotes": _table_footnotes(table_wrap),
             "section": "body",
             "render_state": "inline",
         }
+        if render_result is not None and render_result.prefix_rows:
+            entry["_table_prefix_rows"] = render_result.prefix_rows
         if lossy:
-            message = (
-                "Merged table spans were flattened into rectangular Markdown cells; "
-                "rowspan/colspan layout fidelity was reduced."
-            )
+            if (
+                render_result is not None
+                and render_result.status == TableConversionStatus.FALLBACK
+            ):
+                message = (
+                    "Irregular table structure could not be represented as a reliable Markdown grid; "
+                    "cell text was retained as a readable list."
+                )
+            else:
+                message = (
+                    "Merged table spans were semantically expanded into rectangular Markdown cells; "
+                    "rowspan/colspan layout fidelity was reduced."
+                )
             entry["lossy_message"] = message
             entry["conversion_notes"] = [message]
         return entry, lossy

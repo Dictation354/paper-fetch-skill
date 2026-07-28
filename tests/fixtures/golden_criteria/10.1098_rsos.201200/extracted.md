@@ -55,13 +55,13 @@ cDNA was produced from the RNA extracted from whole embryos using the above meth
 
 Analysis of gene expression of CPS III in dissected tissues of three adult A. alcalica shows that transcripts were only detected in adult muscle (figure 1a). In situ hybridization methods on A. alcalica embryos at different stages were carried out to investigate whether this restricted muscle expression was established during development (figure 1b–f). Blue coloration indicates hybridization of the complementary RNA probe and shows the strongest expression in the developing somites along the body axis (black arrows). Expression was also detected in migratory muscle precursors (MMP; black arrowheads), which go on to form the body wall and limb musculature, and in the developing pectoral fin buds (white arrows). All regions of the embryo that show expression of CPS III are in the muscle lineage indicating that in A. alcalicaCPS III expression is restricted to muscle tissues in both adults and the developing embryo.
 
-![Figure 1](https://royalsocietypublishing.org/view-large/figure/17448863/rsos201200f01.tif)
+![Figure 1](https://trs.silverchair-cdn.com/trs/content_public/journal/rsos/7/10/10.1098_rsos.201200/9/rsos201200f01.png?Expires=1782048065&Signature=W0XAMsLaE1mfFPK3qyxvaBKPpk0WrB2ZyB0IusmwhylKS41VWmpkaUixTGWXku8LVw-fUc9HORsutMJXNpBJdub4WKRku-725DSKoIsRxFhlXIuZhKX6znBU4yZT~-5bedESi1v0bhaOQpB2-axjmtt1hYP7qrHtwGu5ZKBBHx645weQL5kd6Z-9r8LHyLHprKAePdqIib8yoBuFUbYt~Vp9jSHkA1U2zuO62cLeTtGuXu740OjoSOTrdW2FaWROrKqMlNqfjx2XBL7JdSvVq9VtBtMXUlaYQ~XYI704V~HFUBxjXnAzZDx41LWUl5GS0lG~Xm5nf6vDEezWVU7OlQ__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA)
 
 **Figure 1.** Expression analysis of carbamoyl-phosphate synthetase III (CPS III) from adult tissues and developing embryos of Alcolapia alcalica. (a) Reverse transcriptase PCR and gel electrophoresis showing the muscle-specific expression of CPS III, EF1α shown as normalization control. (b–f) Lateral (c and e) and dorsal (b, d and f) views of in situ hybridization for CPS III in developing A. alcalica embryos at different stages (number of days post fertilization [dpf] indicated). The blue colour indicates the detection of mRNA. The black/brown is endogenous pigment apparent in the retina and the chromatophores. Black arrows show somites, black arrowheads indicate region of migrating muscle progenitors (MMP), white arrows show facial muscle (FM) and white arrowheads indicate developing pectoral fin bud (PFB). Black dots around the yolk and on the body are chromatophores (pigment cells).
 
 Many muscle-specific genes are activated during development by the muscle-specific transcription factor, MyoD. The promoter region of CPS III (3.5 kb upstream of the transcriptional start site) in A. alcalica was compared to that in O. niloticus, X. tropicalis and D. rerio (figure 2). Examination of this region revealed a putative paired E-box MyoD binding site 940–970 bases (CAGGTGACTGTGATTATATAGTTCACAGGTG) upstream of the transcriptional start site of CPS III only in Alcolapia species. Intriguingly, while no pair of MyoD E-boxes were found in the upstream region of any other species examined, O. niloticus does have a single MyoD E-box motif in the same region upstream of CPS III, and within 19 bases of this is a CAGGTT motif which a single point mutation would convert into a pair of E-boxes (CAGGTGACTGTGATTATATAGTTCACAGGTT). This suggests that it is possible that MyoD could bind and activate transcription of CPS III in the muscle of Alcolapia species, but not in the closely related O. niloticus.
 
-![Figure 2](https://royalsocietypublishing.org/view-large/figure/17448864/rsos201200f02.tif)
+![Figure 2](https://trs.silverchair-cdn.com/trs/content_public/journal/rsos/7/10/10.1098_rsos.201200/9/rsos201200f02.png?Expires=1782048065&Signature=QRWmQzxzaNgdRXMJCzdUXjeBi99RgftNETQhm9QdEhEYw-12Aym-k~ieCkEf~MMe-fM-n3yOk2AK5OmyNwANIgXV5NNoR9gY2DMa7XyoohJBvbArTNu5k6MCzXTFbQHRMCTjwNgYOV7vOE3DPzJjhnr~R8Q3Vku5JnLNnaccDS1DJ6wAg7uNPEO2FDV8FMEBV0U9c7N1tGKiX4QELcxHjsA5opt6Oj70x45EhHFdOr0eNfa444zMTh72S-fKB~r6Hn8NNVMREcBVNhgg3iH2W2SmNTZmxf2PuVfqouJeiefbSxC1knMTb5ov8u02gFUfIN1F~ipGscNfGxK1Nlr6WQ__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA)
 
 **Figure 2.** Sequence comparison of a 3500 bp region upstream of exon 1 of CPS III. Presence of generic E-box sites with the consensus motif of CANNTG are annotated by black bars and MyoD preferential E-box motifs of CAG(G/C)TG are represented by blue bars. Insert shows sequence of Alcolapia alcalica potential paired E-box, MyoD enhancer (blue nucleotides) compared to Oreochromis niloticus which has a single MyoD E-box upstream of a ‘presumptive' MyoD E-box (red nucleotides).
 
@@ -69,7 +69,7 @@ Many muscle-specific genes are activated during development by the muscle-specif
 
 Sequence analysis of A. alcalica and A. grahami CPS III revealed a discrepancy in the catalytic triad compared to the published sequence for CPS III in A. grahami (accession number NCBI: AF119250). The coding region for A. alcalica and A. grahami was cloned and sequenced (accession numbers NCBI: MT119353, MT119354). Our data confirmed the error in the published sequence of A. grahami CPS III and shows Alcolapia species maintain a catalytic triad essential for catalysing the breakdown of glutamine (red boxes in figure 3). However, similar to terrestrial vertebrate CPS I which lack either one but usually both residues essential for binding glutamine for utilization by the catalytic triad (arrowheads in figure 3), Alcolapia also lack one of these residues (asterisk in figure 3). This amino acid sequence is consistent with a change in function permitting Alcolapia CPS III to bind and catalyse ammonia directly, an activity usually restricted to terrestrial vertebrate CPS I, as elucidated by extensive previous biochemical analyses [20,21].
 
-![Figure 3](https://royalsocietypublishing.org/view-large/figure/17448866/rsos201200f03.tif)
+![Figure 3](https://trs.silverchair-cdn.com/trs/content_public/journal/rsos/7/10/10.1098_rsos.201200/9/rsos201200f03.png?Expires=1782048065&Signature=gMn2EUPJMzFoz4rWkr-YhqbjfYv6ZZC0X1zAAV44heEGikiahBAooMefjQ0v9dUIF~IaNxsBbgRZ7EJLwRPUEQbC6nwG7avb3wnCUjQXpEuVAoFiiUI1XUmpwltQq0UlsG1wYyXd77So2mHYGr2loYeAikoPLLTFwFL6PIZjne~K~MCSC8poz6td9Z2Z83xtkoE1qBI39mYJ1JgBIj6O0ATwqDyxuXd4Oa161HiOXtGDpTm31TrrNCFy5bg0kl28uLytj833BuZS1NpnYlwKmU7-DJ5m7CQbPnbWeNjErltPRDFQjChewINBolVqWYXecWi~Lsd0bAoVuxS6DojmFQ__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA)
 
 **Figure 3.** Multiple amino acid alignment of residues 278–397 (aligned to Alcolapia alcalica) of carbamoyl-phosphate synthetase I and III from a number of tetrapod and teleost species, respectively. Conserved amino acids are shaded in black, amino acids in the catalytic triad are boxed in red and arrowheads indicate residues vital for glutamine utilization of the catalytic triad. The blue asterisk indicates the divergent glutamine binding residue in Alcolapia species that probably results in a functional change (inability to bind glutamine).
 
@@ -118,12 +118,6 @@ This work was supported by the BBSRC as a studentship to L.J.W. (BB/M011151/1). 
 ## Acknowledgements
 
 The authors are grateful to Antonia Ford and George Turner for their help in collecting the fish from Lake Natron (COSTECH permit no. 2017-259-NA-2011-182) and their continued support in this project.
-
-## Figures
-
-- Figure 1
-- Figure 2
-- Figure 3
 
 ## References (49 total, showing 49)
 

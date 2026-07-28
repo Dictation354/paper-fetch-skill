@@ -277,6 +277,7 @@ class CamoufoxBackend:
         config: BrowserRuntimeConfig,
         **kwargs: Any,
     ) -> BrowserFetchedHtml:
+        kwargs.pop("warm_wait_seconds", None)
         return _playwright_browser.fetch_html_with_playwright(
             candidate_urls,
             publisher=publisher,

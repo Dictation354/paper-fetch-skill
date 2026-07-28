@@ -67,8 +67,22 @@ def _abstract_section_payloads(container: Tag) -> list[dict[str, Any]]:
     return [
         payload
         for payload in collect_html_abstract_blocks(container)
-        if normalize_text(payload.get("text"))
+        if _abstract_payload_is_substantive(payload)
     ]
+
+
+def _abstract_payload_is_substantive(payload: Mapping[str, Any]) -> bool:
+    heading = normalize_heading(str(payload.get("heading") or ""))
+    text = normalize_heading(str(payload.get("text") or ""))
+    if not text or text == heading:
+        return False
+    if heading in {"graphical abstract", "visual abstract"} and text in {
+        "abstract",
+        "graphical abstract",
+        "visual abstract",
+    }:
+        return False
+    return True
 
 
 def _ensure_body_markdown_heading(

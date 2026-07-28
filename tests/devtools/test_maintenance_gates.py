@@ -73,7 +73,7 @@ def test_complexity_budget_rejects_new_and_worsened_symbols() -> None:
 
 def test_release_version_artifacts_are_synchronized() -> None:
     facts = project_version_facts()
-    assert facts.version == "4.0.1"
+    assert facts.version == "4.0.2"
     assert synchronized_version_issues(facts) == []
 
 

@@ -311,6 +311,7 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
         download_url = "https://example.test/images/full-figure-from-download-url.jpg"
         full_size_url = "https://example.test/images/full-figure.jpg"
         preview_url = "https://example.test/skin/site/img/Blank.svg"
+        figure_page_fetcher = mock.Mock()
 
         candidates = (
             browser_workflow_assets._browser_workflow_image_download_candidates(
@@ -321,12 +322,15 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
                     "full_size_url": full_size_url,
                     "url": preview_url,
                     "preview_url": preview_url,
+                    "figure_page_url": "https://example.test/figures/1",
                 },
                 user_agent="test-agent",
+                figure_page_fetcher=figure_page_fetcher,
             )
         )
 
         self.assertEqual(candidates, [download_url, full_size_url, preview_url])
+        figure_page_fetcher.assert_not_called()
 
     def test_browser_image_payload_rejects_blank_placeholder_url(self) -> None:
         body = png_header(640, 480)
@@ -968,6 +972,27 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
                         "section": "body",
                         "status": 403,
                         "reason": "cloudflare_challenge",
+                    }
+                ],
+                retry_scope="body",
+            ),
+            [asset],
+        )
+        self.assertEqual(
+            browser_workflow_assets._assets_matching_download_failures(
+                [asset],
+                [
+                    {
+                        "kind": "figure",
+                        "heading": "Figure 1",
+                        "source_url": "https://example.test/figure.png",
+                        "section": "body",
+                        "status": 403,
+                        "content_type": "text/html",
+                        "reason": (
+                            "Asset candidate did not return image content "
+                            "(content-type: text/html)."
+                        ),
                     }
                 ],
                 retry_scope="body",

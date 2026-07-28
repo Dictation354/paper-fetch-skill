@@ -90,7 +90,7 @@ class CliTests(unittest.TestCase):
             ),
             ("browser-preflight",): (
                 "usage: paper-fetch browser-preflight",
-                "--provider {wiley,science,pnas,mdpi",
+                "--provider {wiley,science,pnas,ams,mdpi",
                 "default: all browser-backed providers",
                 "save provider storage-state JSON on success",
             ),
@@ -373,25 +373,38 @@ class CliTests(unittest.TestCase):
         self.assertTrue(stderr.getvalue().startswith("usage: paper-fetch fetch "))
         self.assertIn("not allowed with argument", stderr.getvalue())
 
-    def test_auth_ams_subcommand_is_not_supported(self) -> None:
+    def test_auth_ams_subcommand_invokes_generic_auth_helper(self) -> None:
+        auth_result = SimpleNamespace(
+            storage_state_path=Path("/tmp/ams-storage-state.json"),
+            profile_dir=Path("/tmp/ams-camoufox"),
+            env_written=False,
+            env_file_path=None,
+            verified=True,
+            final_url="https://journals.ametsoc.org/view/example.xml",
+        )
+        stdout = io.StringIO()
         stderr = io.StringIO()
         original_argv = sys.argv
         sys.argv = ["paper_fetch.py", "auth", "ams"]
         try:
             with (
                 mock.patch.object(
-                    paper_fetch_cli, "authenticate_provider_profile"
+                    paper_fetch_cli,
+                    "authenticate_provider_profile",
+                    return_value=auth_result,
                 ) as authenticate,
+                contextlib.redirect_stdout(stdout),
                 contextlib.redirect_stderr(stderr),
-                self.assertRaises(SystemExit) as raised,
             ):
-                paper_fetch_cli.main()
+                exit_code = paper_fetch_cli.main()
         finally:
             sys.argv = original_argv
 
-        self.assertEqual(raised.exception.code, 2)
-        self.assertIn("invalid choice", stderr.getvalue())
-        authenticate.assert_not_called()
+        self.assertEqual(exit_code, 0)
+        self.assertEqual(stderr.getvalue(), "")
+        self.assertIn("AMS storage state:", stdout.getvalue())
+        authenticate.assert_called_once()
+        self.assertEqual(authenticate.call_args.kwargs["provider"], "ams")
 
     def test_auth_wiley_subcommand_invokes_generic_auth_helper(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

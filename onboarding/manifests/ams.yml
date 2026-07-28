@@ -63,7 +63,7 @@ route_contract:
     min_body_sections: 1
   pdf_fallback:
     success_requires:
-      - AMS downloadpdf route returns PDF bytes over direct HTTP
+      - AMS downloadpdf route returns PDF bytes through browser-seeded fallback
       - PDF response has application/pdf content type or PDF magic bytes
       - PDF text extraction produces body text
     reject_if_any:
@@ -148,7 +148,7 @@ abstract_only_strategy: provider_managed
 probe:
   env_requirements: []
   requires_playwright: false
-  requires_browser_runtime: false
+  requires_browser_runtime: true
   ping_url: https://journals.ametsoc.org/
 fixtures:
   doi_samples:
@@ -158,7 +158,7 @@ fixtures:
       evidence_reason: "Provider-local tests verify AMS/BAMS section ordering, footnotes, and Markdown
         cleanup from a real fixture."
       observed_signals:
-        - direct_http_html
+        - browser_html
         - body_sections
       confidence: high
     table:
@@ -167,7 +167,7 @@ fixtures:
       evidence_reason: "Provider-local tests verify AMS image-only table extraction and inline table asset
         placement."
       observed_signals:
-        - direct_http_html
+        - browser_html
         - body_table
       confidence: high
     formula:
@@ -176,7 +176,7 @@ fixtures:
       evidence_reason: "Provider-local tests verify AMS inline and display formula normalization from
         a real fixture."
       observed_signals:
-        - direct_http_html
+        - browser_html
         - math_markup
       confidence: high
     figure:
@@ -185,7 +185,7 @@ fixtures:
       evidence_reason: "Provider-local tests verify AMS figure asset placement and duplicate figure appendix
         suppression."
       observed_signals:
-        - direct_http_html
+        - browser_html
         - figures
       confidence: high
     supplementary:
@@ -201,13 +201,13 @@ fixtures:
       evidence_reason: "Provider-local tests exercise AMS article assembly on a real fixture that includes
         reference extraction behavior."
       observed_signals:
-        - direct_http_html
+        - browser_html
         - references
       confidence: medium
     pdf_fallback:
       doi: "10.1175/bams-d-24-0270.1"
       evidence_url: "https://journals.ametsoc.org/"
-      evidence_reason: "Golden fixture records AMS direct HTTP PDF fallback with a real PDF payload
+      evidence_reason: "Golden fixture records AMS PDF fallback with a real PDF payload
         and expected output."
       observed_signals:
         - pdf_fallback
@@ -289,6 +289,6 @@ extraction_hints:
   metadata_merge: []
 owner_reuse_exceptions: []
 docs:
-  providers_md_capability_row: "AMS | Crossref | DOI landing -> direct HTTP HTML -> direct HTTP PDF fallback | HTML body/all assets with AMS source figure conversion; PDF fallback uses shared PDF conversion | ams_html / ams_pdf"
-  changelog_summary: "Track AMS implemented provider manifest for direct HTTP HTML/PDF fallback, image tables, and formula handling onboarding sync."
+  providers_md_capability_row: "AMS | Crossref | DOI landing -> selected-browser HTML -> browser-seeded PDF fallback | HTML body/all assets with AMS source figure conversion; PDF fallback uses shared PDF conversion | ams_html / ams_pdf"
+  changelog_summary: "Track AMS implemented provider manifest for browser HTML/PDF fallback, image tables, and formula handling onboarding sync."
   extraction_rules_summary:

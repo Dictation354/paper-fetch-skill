@@ -3,11 +3,14 @@ name: acs
 display_source: acs
 generation:
   generated_by: manual_replay
-  generated_at: '2026-05-26T00:00:00Z'
+  generated_at: '2026-07-27T09:36:00Z'
   source_queries:
     - paper_fetch.provider_catalog acs ProviderSpec
-    - ACS Publications 10.1021 Atypon article pages
-    - ACS Omega 10.1021/acsomega.4c03987 open article route
+    - ACS Publications current Silverchair article pages
+    - ACS Omega 10.1021/acsomega.4c03987 current article-body replay
+    - ACS Omega 10.1021/acsomega.3c06992 current MathML replay
+    - ACS Omega 10.1021/acsomega.2c02828 current article PDF replay
+    - ACS Silverchair fig-section ref-list ArticleDataSupplements selectors
     - ACS 10.1021 table DOI candidates
     - site:pubs.acs.org ACS table article DOI
     - 10.1021 table fixture discovery acs
@@ -127,9 +130,9 @@ markdown_contract:
     doi: 10.1021/acsomega.4c03987
     must_include:
       - Supporting Information
-      - ao4c03987_si_001.pdf
     must_not_include:
       - Download Citation
+      - ndownloader.figstatic.com
   pdf_fallback:
     doi: 10.1021/acsomega.2c02828
     must_include:
@@ -138,7 +141,7 @@ markdown_contract:
     must_not_include:
       - Download Citation
     must_match:
-      - (?m)^# General Equation to Express Changes
+      - (?m)^#{1,2} (?:\*\*)?General Equation to Express Changes
 asset_profile:
   none: []
   body:
@@ -158,8 +161,8 @@ asset_contract:
       - figure
     exception_reason: null
 supplementary_scope:
-  selector: null
-  url_pattern: null
+  selector: .widget-ArticleDataSupplements
+  url_pattern: /acsodf/article-supplement/
 abstract_only_strategy: provider_managed
 probe:
   env_requirements: []
@@ -170,19 +173,21 @@ fixtures:
   doi_samples:
     structure:
       doi: 10.1021/acsomega.4c03987
-      evidence_url: https://pubs.acs.org/doi/10.1021/acsomega.4c03987
-      evidence_reason: ACS Omega open article route is used as the provider smoke
-        sample for title, abstract, body, figure, and reference coverage.
+      evidence_url: https://pubs.acs.org/acsodf/article/9/33/35676/358560/Functionalized-Metal-Free-Carbon-Nanosphere
+      evidence_reason: The 2026-07-27 browser capture records the current ACS
+        Silverchair page. Its .article-body contains one abstract plus ten body
+        sections, including tables, eight figures, conclusions, and 45 references.
       observed_signals:
         - article_html
+        - silverchair_article_body
         - body_sections
-      confidence: medium
+        - ref_list
+      confidence: high
     table:
       doi: 10.1021/acsomega.4c03987
-      evidence_url: https://pubs.acs.org/doi/10.1021/acsomega.4c03987
-      evidence_reason: Retry promoted the existing ACS Omega replay after extracted
-        Markdown showed stable body table coverage, including Table 1 with OPD
-        conversion columns.
+      evidence_url: https://pubs.acs.org/acsodf/article/9/33/35676/358560/Functionalized-Metal-Free-Carbon-Nanosphere
+      evidence_reason: The refreshed Silverchair replay preserves three body
+        tables, including Table 1 with OPD conversion columns, as Markdown tables.
       observed_signals:
         - article_html
         - body_tables
@@ -190,11 +195,10 @@ fixtures:
       confidence: high
     formula:
       doi: 10.1021/acsomega.3c06992
-      evidence_url: https://pubs.acs.org/doi/full/10.1021/acsomega.3c06992
-      evidence_reason: Expanded ACS Omega formula retry promoted this article
-        after the publisher HTML exposed repeated MathML display equations and
-        the ACS Markdown extraction rendered them as LaTeX formula blocks without
-        formula-unavailable placeholders.
+      evidence_url: https://pubs.acs.org/acsodf/article/8/51/49088/341563/General-Equation-to-Estimate-the-Physicochemical
+      evidence_reason: The 2026-07-27 Silverchair capture contains 21 display
+        formulas, which the ACS extraction renders as 21 LaTeX blocks while
+        preserving S_{CNE}, tables, conclusions, and 20 references.
       observed_signals:
         - article_html
         - mathml
@@ -203,45 +207,55 @@ fixtures:
       confidence: high
     figure:
       doi: 10.1021/acsomega.4c03987
-      evidence_url: https://pubs.acs.org/doi/10.1021/acsomega.4c03987
-      evidence_reason: The ACS Omega sample exposes article figures through the shared
-        browser-workflow asset path.
+      evidence_url: https://pubs.acs.org/acsodf/article/9/33/35676/358560/Functionalized-Metal-Free-Carbon-Nanosphere
+      evidence_reason: The refreshed Silverchair replay exposes eight
+        .fig.fig-section figures with captions, CDN previews, and view-large
+        figure-page candidates. Final live review resolves and downloads all
+        eight signed full-size images without warnings.
       observed_signals:
         - article_html
+        - silverchair_fig_section
         - figures
-      confidence: medium
+        - view_large
+      confidence: high
     supplementary:
       doi: 10.1021/acsomega.4c03987
-      evidence_url: https://pubs.acs.org/doi/10.1021/acsomega.4c03987
-      evidence_reason: Retry promoted the existing ACS Omega replay after the captured
-        HTML and Markdown exposed a Supporting Information section and the
-        ao4c03987_si_001.pdf supplementary file.
+      evidence_url: https://pubs.acs.org/acsodf/article/9/33/35676/358560/Functionalized-Metal-Free-Carbon-Nanosphere
+      evidence_reason: The refreshed page exposes Supporting Information in
+        .widget-ArticleDataSupplements. The stable ACS article-supplement link
+        is accepted, while the embedded Figshare downloader is excluded.
       observed_signals:
         - article_html
         - supplementary
         - supporting_information
         - supplementary_pdf
+        - article_supplement
       confidence: high
     references:
       doi: 10.1021/acsomega.4c03987
-      evidence_url: https://pubs.acs.org/doi/10.1021/acsomega.4c03987
-      evidence_reason: The ACS Omega sample includes a references section for provider-owned
-        reference extraction smoke coverage.
+      evidence_url: https://pubs.acs.org/acsodf/article/9/33/35676/358560/Functionalized-Metal-Free-Carbon-Nanosphere
+      evidence_reason: The refreshed .ref-list contains 45 structured references;
+        provider extraction preserves labels, visible citation text, years, and
+        DOI values while removing Crossref and resolver chrome.
       observed_signals:
         - article_html
+        - ref_list
         - references
-      confidence: medium
+        - reference_year
+        - reference_doi
+      confidence: high
     pdf_fallback:
       doi: 10.1021/acsomega.2c02828
-      evidence_url: https://pubs.acs.org/doi/pdf/10.1021/acsomega.2c02828
-      evidence_reason: Retry confirmed ACS public /doi/pdf links can return true
-        PDF bytes when requested with browser-navigation headers and an article-page
-        seed URL; this distinct ACS Omega DOI is used for text-only PDF fallback
-        replay coverage.
+      evidence_url: https://pubs.acs.org/acsodf/article-pdf/7/30/26670/3637446/ao2c02828.pdf
+      evidence_reason: The 2026-07-27 capture reused the selected Camoufox
+        runtime and recorded 2,862,524 valid PDF bytes from the current
+        Silverchair article-pdf route. Shared PDF conversion produces 15 body
+        sections; repeated page chrome and two-column reference order remain a
+        documented nonblocking layout limitation.
       observed_signals:
         - pdf_fallback
-        - public_pdf_link
-        - browser_navigation_headers
+        - browser_runtime
+        - article_pdf
         - pdf_magic
       confidence: high
     abstract_only:
@@ -460,14 +474,19 @@ extraction_hints:
   metadata_merge: []
 owner_reuse_exceptions: []
 docs:
-  providers_md_capability_row: '`acs` | 依赖 Crossref routing | `CloakBrowser HTML ->
-    CloakBrowser-seeded publisher PDF/ePDF -> provider-managed abstract_only` | HTML
-    路线支持 `none` / `body` / `all`；PDF/ePDF fallback 当前 text-only | 中 | ACS 通过 `10.1021/`
-    DOI、用户指定的 `www.acs.org` 域和实际文章 host `pubs.acs.org` 路由；HTML/PDF 路径复用 browser workflow，公开
-    source 为 `acs`'
-  changelog_summary: Add ACS (`acs`) provider routing for `10.1021/`, `www.acs.org`
-    / `pubs.acs.org`, and the shared CloakBrowser HTML plus seeded publisher PDF/ePDF
-    workflow.
-  extraction_rules_summary: ACS 接入复用 Atypon browser workflow：保留正文 section、tables、figures、formula、references、
-    Supporting Information 和 provider-owned author metadata，同时清理 ACS Publications
-    citation/download/metrics chrome；PDF fallback 使用 ACS /doi/pdf 公共链接并带 seeded browser-navigation headers。
+  providers_md_capability_row: '`acs` | 依赖 Crossref routing | `selected-browser
+    Silverchair HTML -> browser-seeded publisher PDF/ePDF -> provider-managed
+    abstract_only` | HTML 路线支持 `none` / `body` / `all`，识别当前 `.article-body`
+    / `.widget-ArticleFulltext`、`.fig.fig-section`、`.ref-list` 和
+    `.widget-ArticleDataSupplements`；PDF/ePDF fallback 支持共享 PDF 图片导出 |
+    中 | ACS 通过 `10.1021/` DOI、用户指定的 `www.acs.org` 域和实际文章 host
+    `pubs.acs.org` 路由，公开 source 为 `acs`'
+  changelog_summary: Refresh ACS (`acs`) for the current Silverchair article DOM,
+    including complete body selection, structured figures/references, stable
+    article-supplement scope, and selected Camoufox PDF fixture capture.
+  extraction_rules_summary: ACS 当前 Silverchair 提取以 `.article-body` 为完整根，
+    保留正文 section、tables、`.fig.fig-section` figures、MathML formula 和
+    `.ref-list` references；Supporting Information 只从原始
+    `.widget-ArticleDataSupplements` 接受稳定 `/article-supplement/` 链接，
+    不让嵌入 Figshare viewer 替换正文。PDF fixture 捕获和 fallback 复用所选
+    Camoufox runtime。

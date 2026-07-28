@@ -103,7 +103,7 @@ paper-fetch auth <provider>
 paper-fetch auth wiley --url "https://onlinelibrary.wiley.com/doi/full/10.1111/example"
 ```
 
-`provider` 来自 browser runtime catalog，例如 `wiley` / `science` / `pnas` / `mdpi` / `royalsocietypublishing` / `annualreviews` / `acs` / `iop` / `aip`。未传 `--url` 时打开内置样例文章；传入 `--url` 时打开用户指定的失败文章页。命令强制 headed 模式，打印所选后端的 profile 和 storage-state 路径，用户在浏览器中完成合法登录或验证后，在终端按 Enter 保存过滤后的本地 storage-state 并退出。AMS 使用 direct HTTP HTML/PDF 路径，不支持 `paper-fetch auth ams`。
+`provider` 来自 browser runtime catalog，例如 `wiley` / `science` / `pnas` / `ams` / `mdpi` / `royalsocietypublishing` / `annualreviews` / `acs` / `iop` / `aip`。未传 `--url` 时打开内置样例文章；传入 `--url` 时打开用户指定的失败文章页。命令强制 headed 模式，打印所选后端的 profile 和 storage-state 路径，用户在浏览器中完成合法登录或验证后，在终端按 Enter 保存过滤后的本地 storage-state 并退出。AMS 抓取不强制预先认证；无保存状态时仍会启动浏览器尝试静默验证，只有站点验证未自动完成时才需要 `paper-fetch auth ams`。
 
 如果需要在批量抓取前确认所有 browser-backed provider 的浏览器链路是否能过站点验证，可以先串行运行预检：
 
@@ -268,7 +268,7 @@ CLI 先在 run lock 内执行只读审计。只有 query、工具版本和关键
 ```json
 {
   "schema_version": 2,
-  "tool_version": "4.0.1",
+  "tool_version": "4.0.2",
   "run_id": "10000000-0000-4000-8000-000000000001",
   "record_id": "20000000-0000-4000-8000-000000000002",
   "index": 2,

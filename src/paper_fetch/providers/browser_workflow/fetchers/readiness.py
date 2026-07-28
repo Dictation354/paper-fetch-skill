@@ -38,6 +38,10 @@ ATYPON_BODY_READY_SELECTORS: Mapping[str, tuple[str, ...]] = {
         ".component-content-html",
         ".article__fulltext",
     ),
+    "acs": (
+        ".article-body",
+        ".widget-ArticleFulltext",
+    ),
     "iop": (
         "[itemprop='articleBody']",
         "[property='articleBody']",

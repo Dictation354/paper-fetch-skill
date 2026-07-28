@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 from datetime import datetime, UTC
 import json
+import os
 import sys
 from pathlib import Path
 from typing import Any
@@ -899,6 +900,14 @@ def _capture_browser(
     root: Path,
     route: str,
 ) -> dict[str, Any]:
+    from paper_fetch.providers.browser_runtime import load_runtime_config
+
+    runtime_env = dict(os.environ)
+    browser_config = load_runtime_config(
+        runtime_env,
+        provider=provider or "unknown",
+        doi=doi,
+    )
     if purpose == "pdf_fallback":
         from paper_fetch.providers._pdf_fallback import (
             PdfFallbackFailure,
@@ -914,6 +923,7 @@ def _capture_browser(
                 [url],
                 artifact_dir=artifact_dir,
                 seed_urls=[seed_url] if seed_url else None,
+                browser_config=browser_config,
             )
         except PdfFallbackFailure as exc:
             raise _browser_capture_error(exc, route=route) from exc
@@ -934,7 +944,8 @@ def _capture_browser(
         result = fetch_html_with_fast_browser(
             [url],
             publisher=provider or "unknown",
-            user_agent=build_browser_user_agent({}),
+            user_agent=build_browser_user_agent(runtime_env),
+            browser_config=browser_config,
         )
     except HtmlExtractionFailure as exc:
         raise _browser_capture_error(exc, route=route) from exc

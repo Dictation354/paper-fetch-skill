@@ -8,10 +8,14 @@ import xml.etree.ElementTree as ET
 from typing import Any
 from collections.abc import Mapping
 
+from ..extraction.table_grid import (
+    TableConversionReason,
+    TableConversionStatus,
+    normalize_table,
+)
+from ..extraction.xml_tables import parse_xml_table
 from ._article_markdown_common import (
     add_table_once,
-    first_child,
-    first_descendant,
     normalize_table_cell_text,
     normalize_text,
     render_inline_text,
@@ -21,162 +25,68 @@ from ._article_markdown_common import (
 
 @dataclass
 class ElsevierTableRenderResult:
+    headers: list[str]
     rows: list[list[str]]
-    lossy: bool = False
+    prefix_rows: list[str]
+    status: TableConversionStatus = TableConversionStatus.EXACT
+    reasons: tuple[TableConversionReason, ...] = ()
     note: str | None = None
 
+    @property
+    def lossy(self) -> bool:
+        return self.status in {
+            TableConversionStatus.LAYOUT_DEGRADED,
+            TableConversionStatus.FALLBACK,
+            TableConversionStatus.SEMANTIC_LOSS,
+        }
 
-def _elsevier_table_rows_in_order(
-    tgroup: ET.Element | None,
-) -> tuple[list[ET.Element], list[ET.Element]]:
-    header_rows: list[ET.Element] = []
-    body_rows: list[ET.Element] = []
-    if tgroup is None:
-        return header_rows, body_rows
-    thead = first_child(tgroup, "thead")
-    tbody = first_child(tgroup, "tbody")
-    if thead is not None:
-        header_rows.extend(
-            child
-            for child in list(thead)
-            if isinstance(child.tag, str) and xml_local_name(child.tag) == "row"
-        )
-    if tbody is not None:
-        body_rows.extend(
-            child
-            for child in list(tbody)
-            if isinstance(child.tag, str) and xml_local_name(child.tag) == "row"
-        )
-    if not header_rows and not body_rows:
-        body_rows.extend(
-            child
-            for child in list(tgroup)
-            if isinstance(child.tag, str) and xml_local_name(child.tag) == "row"
-        )
-    return header_rows, body_rows
-
-
-def _elsevier_table_column_map(tgroup: ET.Element | None) -> tuple[int, dict[str, int]]:
-    if tgroup is None:
-        return 0, {}
-    columns: list[str] = []
-    for child in list(tgroup):
-        if not isinstance(child.tag, str) or xml_local_name(child.tag) != "colspec":
-            continue
-        colname = normalize_text(child.get("colname"))
-        if colname:
-            columns.append(colname)
-    cols_attr = int(normalize_text(tgroup.get("cols")) or 0)
-    col_count = max(cols_attr, len(columns))
-    return col_count, {name: index for index, name in enumerate(columns)}
+    @property
+    def render_kind(self) -> str:
+        if self.status in {
+            TableConversionStatus.FALLBACK,
+            TableConversionStatus.SEMANTIC_LOSS,
+        }:
+            return "structured_list"
+        return "structured"
 
 
 def render_elsevier_table_result(table: ET.Element | None) -> ElsevierTableRenderResult:
     if table is None:
-        return ElsevierTableRenderResult(rows=[])
+        return ElsevierTableRenderResult(headers=[], rows=[], prefix_rows=[])
 
-    tgroup = first_child(table, "tgroup")
-    if tgroup is None:
-        tgroup = first_descendant(table, "tgroup")
-    header_row_nodes, body_row_nodes = _elsevier_table_rows_in_order(tgroup)
-    row_nodes = [*header_row_nodes, *body_row_nodes]
-    if not row_nodes:
-        return ElsevierTableRenderResult(rows=[])
-
-    col_count, col_index_by_name = _elsevier_table_column_map(tgroup)
-    if col_count <= 0:
-        col_count = max(
-            len(
-                [
-                    entry
-                    for entry in list(row)
-                    if isinstance(entry.tag, str)
-                    and xml_local_name(entry.tag) == "entry"
-                ]
-            )
-            for row in row_nodes
-        )
-    if col_count <= 0:
-        return ElsevierTableRenderResult(rows=[])
-
-    active_rowspans: list[dict[str, Any] | None] = [None] * col_count
-    rendered_rows: list[list[str]] = []
-    lossy = False
-
-    for row in row_nodes:
-        rendered: list[str | None] = [None] * col_count
-        for index in range(col_count):
-            active_span = active_rowspans[index]
-            if active_span is not None and int(active_span.get("remaining") or 0) > 0:
-                rendered[index] = str(active_span.get("text") or "")
-                active_span["remaining"] = int(active_span.get("remaining") or 0) - 1
-                if int(active_span.get("remaining") or 0) <= 0:
-                    active_rowspans[index] = None
-
-        cursor = 0
-        entries = [
-            entry
-            for entry in list(row)
-            if isinstance(entry.tag, str) and xml_local_name(entry.tag) == "entry"
-        ]
-        if not entries:
-            continue
-
-        for entry in entries:
-            while cursor < col_count and rendered[cursor] is not None:
-                cursor += 1
-            start_idx = cursor
-            named_start = normalize_text(entry.get("namest"))
-            named_end = normalize_text(entry.get("nameend"))
-            if named_start:
-                if named_start not in col_index_by_name:
-                    return ElsevierTableRenderResult(rows=[])
-                start_idx = col_index_by_name[named_start]
-            if start_idx >= col_count:
-                return ElsevierTableRenderResult(rows=[])
-            end_idx = start_idx
-            if named_end:
-                if named_end not in col_index_by_name:
-                    return ElsevierTableRenderResult(rows=[])
-                end_idx = col_index_by_name[named_end]
-            if end_idx < start_idx or end_idx >= col_count:
-                return ElsevierTableRenderResult(rows=[])
-            if any(
-                rendered[index] is not None for index in range(start_idx, end_idx + 1)
-            ):
-                return ElsevierTableRenderResult(rows=[])
-
-            rowspan = int(normalize_text(entry.get("morerows")) or 0) + 1
-            colspan = end_idx - start_idx + 1
-            if rowspan > 1 or colspan > 1:
-                lossy = True
-
-            text = normalize_table_cell_text(render_inline_text(entry))
-            rendered[start_idx] = text
-            for index in range(start_idx + 1, end_idx + 1):
-                rendered[index] = text
-            if rowspan > 1:
-                for index in range(start_idx, end_idx + 1):
-                    active_rowspans[index] = {
-                        "remaining": max(
-                            int((active_rowspans[index] or {}).get("remaining") or 0),
-                            rowspan - 1,
-                        ),
-                        "text": text,
-                    }
-            cursor = end_idx + 1
-
-        rendered_rows.append([cell if cell is not None else "" for cell in rendered])
-
-    if not rendered_rows:
-        return ElsevierTableRenderResult(rows=[])
-    note = None
-    if lossy:
+    parsed = parse_xml_table(
+        table,
+        render_cell_text=lambda cell: normalize_table_cell_text(
+            render_inline_text(cell)
+        ),
+    )
+    normalized = normalize_table(
+        parsed.rows,
+        declared_width=parsed.declared_width,
+        header_row_indices=tuple(
+            index for index, row in enumerate(parsed.rows) if row.role == "header"
+        ),
+        reasons=parsed.reasons,
+    )
+    note: str | None = None
+    if normalized.status == TableConversionStatus.LAYOUT_DEGRADED:
         note = (
             "Merged table spans were semantically expanded into rectangular Markdown cells; "
             "rowspan/colspan layout fidelity was reduced."
         )
-    return ElsevierTableRenderResult(rows=rendered_rows, lossy=lossy, note=note)
+    elif normalized.status == TableConversionStatus.FALLBACK:
+        note = (
+            "Irregular table structure could not be represented as a reliable Markdown grid; "
+            "cell text was retained as a readable list."
+        )
+    return ElsevierTableRenderResult(
+        headers=list(normalized.headers),
+        rows=[list(row) for row in normalized.rows],
+        prefix_rows=list(normalized.prefix_rows),
+        status=normalized.status,
+        reasons=normalized.reasons,
+        note=note,
+    )
 
 
 def resolve_elsevier_table_locator(table: ET.Element | None) -> str:

@@ -1,14 +1,14 @@
 ---
-title: "General Equation to Express Changes in the Physicochemical Properties of Organic Homologues"
+title: "10.1021/acsomega.2c02828"
 doi: "10.1021/acsomega.2c02828"
 source: "acs"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: false
-token_estimate: 10972
+token_estimate: 10893
 ---
 
-# General Equation to Express Changes in the Physicochemical Properties of Organic Homologues
+# 10.1021/acsomega.2c02828
 
 http://pubs.acs.org/journal/acsodf
 
@@ -22,12 +22,15 @@ Chao-Tun Cao and Chenzhong Cao*
 
 **Read Online**
 
-<!-- Start of picture text -->
-ACCESS Metrics & More Article Recommendations * sı Supporting Information<br><!-- End of picture text -->
+### ACCESS
 
-ABSTRACT: Changes in various physicochemical properties (_P_ (_n_)) of organic compounds with the number of carbon atoms (_n_) can be roughly divided into linear and nonlinear changes. To date, there has been no general equation to express nonlinear changes in the properties of organic homologues. This study proposes a general equation expressing nonlinear changes in the physicochemical properties of organic homologues, including boiling point, viscosity, ionization potential, and vapor pressure, named the “NPOH equation”, as follows: _P_ (n) = _P_ (1) _α_<sup>_n_−</sup><sup>_1_</sup> _e_<sup>∑</sup> d<sup>ni=2</sup> (_β_ /(_i_ − 1)) where _α_ and _β_ are adjustable parameters, and _P_ (1) represents the property of the starting compound (pseudo-value at _n_ = 1) of each homologue. The results show that various nonlinear changes in the properties of homologues can be expressed by the NPOH equation. Linear and nonlinear changes in the properties of homologues can all be correlated with _n_ and the “sum of carbon number effects”, ∑ni=2(1/i − 1). Using these two parameters, a quantitative correlation equation can be established between any two properties of each homologue, providing convenient mutual estimation of the properties of a homologue series. The NPOH equation can also be used in property correlation for structures with functionality located elsewhere along a linear alkyl chain as well as for branched organic compounds. This work can provide new perspectives for studying quantitative structure−property relationships.
+Metrics & More Article Recommendations * **sı** Supporting Information
 
-#### **1. INTRODUCTION**
+ABSTRACT: Changes in various physicochemical properties (_P_ (_n_)) of organic compounds with the number of carbon atoms (_n_) can be roughly divided into linear and nonlinear changes. To date, there has been no general equation to express nonlinear changes in the properties of organic homologues. This study proposes a general equation expressing nonlinear changes in the physicochemical properties of organic homologues, including boiling point, viscosity, ionization potential, and vapor pressure, named the “NPOH equation”, as follows: _P_ (n) = _P_ (1) _α_<sup>_n_−</sup><sup>_1_</sup> _e_<sup>∑</sup> d<sup>ni=2</sup> (_β_ /(_i_ − 1)) where _α_ and _β_ are adjustable parameters, and _P_ (1) represents the property of the starting compound (pseudo-value at _n_ = 1) of each homologue. The results show that various nonlinear changes in the properties of homologues can be expressed by the NPOH equation. Linear and nonlinear changes in the properties of homologues can all be correlated with _n_ and the “sum of carbon number effects”, ∑ni=2(1/i − 1). Using these two
+
+parameters, a quantitative correlation equation can be established between any two properties of each homologue, providing convenient mutual estimation of the properties of a homologue series. The NPOH equation can also be used in property correlation for structures with functionality located elsewhere along a linear alkyl chain as well as for branched organic compounds. This work can provide new perspectives for studying quantitative structure−property relationships.
+
+##### **1. INTRODUCTION**
 
 In 2021, Kontogeorgis et al.<sup>1</sup> investigated the industrial requirements for thermodynamic and transport properties, reporting that: “In terms of models, companies ideally wish for a single universal model for all/many applications, but there is understanding that this is possibly utopian. The second major wish is the need for predictive models validated on extensive experimental databases and not only on just a few available experimental data points.” This shows the importance of molecular modeling. The quantitative structure−property relationship (QSPR) method is important for understanding and predicting compound properties and it has seen rapid development.<sup>2,3</sup> Recently, molecular dynamics and machine learning have also been used in drug design.<sup>4</sup>
 
@@ -47,7 +50,7 @@ https://doi.org/10.1021/acsomega.2c02828 _ACS Omega_ 2022, 7, 26670−26679
 
 <mark>Article</mark>
 
-#### **ACS Omega**
+##### **ACS Omega**
 
 Figure 1. (a) Relationship of boiling point (_T_ b), (b) viscosity (_μ_), and (c) ionization potential (_I_ p) with the carbon atom number (_n_) of _n_ -paraffins.
 
@@ -106,7 +109,7 @@ where _A_ (_n_ + 1) is the physicochemical property value for homologues with (_
 
 Notably, eq 4 was proposed more than 60 years ago, and the inherent change regularity of homologue properties with carbon number _n_ remains unknown. The equations proposed previously provide great insight, but two problems remain: (i) Their physical meaning is unclear, making them difficult to explain; and (ii) they cannot correlate one property to another property for a series of homologues. Therefore, this study investigated the change regularity of homologue properties with carbon atom number _n_ to explore the relationship between the properties of homologues.
 
-#### **2. RESULTS AND DISCUSSION**
+##### **2. RESULTS AND DISCUSSION**
 
 **2.1. Theoretical Analysis.** Changes in the physicochemical properties (_P_) of organic homologues with carbon atom
 
@@ -185,7 +188,9 @@ The above regression analysis results show that eq 16 is more suitable for expre
 
 _2.2.2. Correlation with the Properties of Other Homologues._ Regarding whether eq 15 was applicable to other homologues, cycloalkanes, terminal alkenes, terminal alkynes, linear alcohols, 2-methylparaffins, 2,2-dimethylparaffins, 2,3dimethylparaffins, and 1-cyclopentylparaffins were selected as model compounds for testing. Using the boiling points _T_ b of cycloalkanes, terminal alkenes, terminal alkynes, linear alcohols, 2-methylparaffins, 2,2-dimethylparaffins, 2,3-dimethylparaffins, and 1-cyclopentylparaffins and the partition coefficient _P_ w of alcohols as verification examples, quantitative
 
-correlation analysis was conducted using model equation15. The results are listed in Table 3, showing that the property correlation was very good for each homologue, and that the correlation coefficients (_R_) of the nine equations were all greater than 0.999. These results showed that eq 15 is a general equation that can be used to express the change regularity of properties _P_ of various homologues using carbon atom number _n_.
+correlation analysis was conducted using model equation15. The results are listed in Table 3, showing that the property correlation was very good for each homologue, and that the correlation coefficients (_R_) of the nine equations were all greater than 0.999. These results showed that eq 15 is a general equation that can be used to express the change regularity of properties _P_ of various homologues using carbon atom number
+
+_n_.
 
 The results obtained in Sections 2.2.1 and 2.2.2 show that, regardless of whether the properties of homologues vary linearly or nonlinearly with carbon atom number _n_, they can be related using variables (_n_ − 1) and _S_ CNE.
 
@@ -245,8 +250,6 @@ Table 5. Correlation Equations between the Boiling Point, _T_ b, and Other Prope
 
 When the logarithms of eqs 21 and 22 are removed, they return to eqs 23 and 24
 
-_P_ (_n_) = _P_ (_n_)e _a_ r(_eb_ r)(_n_ 1) _ec S_ r CNE = _P_ (_n_) _kl_ (_n_ 1)e _c S_ r CNE (23) _P_ (_n_) = [_P_ (_n_)] 1e _a_ s(e _b_ s)(_n_ 1)e _c S_ s CNE = [_P_ (_n_)] 1 _mq_ (_n_ 1) _ec S_ s CNE (24)
-
 Equations 23 and 24 express the relationship between two properties of a homologues series, where _k_, _l_, _c_ r, _m_, _q_, and _c_ s are all coefficients. Therefore, one property of homologues can be
 
 **26675**
@@ -280,8 +283,6 @@ Equation 29 can be rewritten as eq 30
 Using eq 30 and employing parameters _V_ c, (_n_ − 1), and _S_ CNE of _n_ -paraffins, the _T_ b values of _n_ -paraffins can be calculated. The average absolute error between the experimental and calculated _T_ b values was 0.94 K for the 17 _n_ -paraffins with _n_ = 2−18.
 
 _2.2.5. Simplification of Equation._ Equations 12 and 13 contain the term _in_ =2 (_i_ 1 1)<sup>,whichisinconvenienttouse.</sup> This section discusses the simplification of this term. According to mathematical principles, for the infinite series _SS_ {1, 1/2, 1/3,..., 1/ _n_ }, the sum of the first _n_ terms is shown in eq 31
-
-_SSn_ = 1 + 1/2 + 1/3 + ··· + 1/ _n_ (31)
 
 Equation 31 can also be approximately expressed as eq 32
 
@@ -341,7 +342,7 @@ The results indicate that eqs 38 and 39 provide very satisfactory results. We no
 
 The above two examples show that the NPOH equation can also be used in property correlation for structures with functionality located elsewhere along a linear alkyl chain as well as for branched organic compounds.
 
-#### **3. CONCLUSIONS**
+##### **3. CONCLUSIONS**
 
 This research shows that various nonlinear change properties of homologues can be expressed using a general equation, named the NPOH equation (eqs 14 or 15), while various linear change properties of homologues can be expressed by general equation16. Therefore, both linear and nonlinear change properties of homologues can be correlated with the
 
@@ -351,7 +352,7 @@ This work can provide a new perspective for studying quantitative structure−pr
 
 ## ■<sup>**ASSOCIATEDCONTENT**</sup>
 
-### * **sı Supporting Information**
+#### * **sı Supporting Information**
 
 The Supporting Information is available free of charge at https://pubs.acs.org/doi/10.1021/acsomega.2c02828.
 
@@ -359,17 +360,17 @@ The Supporting Information is available free of charge at https://pubs.acs.org/d
 
 ## ■<sup>**AUTHORINFORMATION**</sup>
 
-#### **Corresponding Author**
+##### **Corresponding Author**
 
 - Chenzhong Cao − _Key Laboratory of Theoretical Organic Chemistry and Function Molecule, Ministry of Education, School of Chemistry and Chemical Engineering, Hunan University of Science and Technology, Xiangtan 411201, China;_ orcid.org/0000-0001-5224-7716; Email: czcao@hnust.edu.cn
 
-#### **Author**
+##### **Author**
 
 - Chao-Tun Cao − _Key Laboratory of Theoretical Organic Chemistry and Function Molecule, Ministry of Education, School of Chemistry and Chemical Engineering, Hunan University of Science and Technology, Xiangtan 411201, China_
 
 Complete contact information is available at: https://pubs.acs.org/10.1021/acsomega.2c02828
 
-#### **Notes**
+##### **Notes**
 
 The authors declare no competing financial interest.
 
@@ -415,7 +416,9 @@ Properties of Chemicals for Regulatory Purposes. _Chem. Rev._ 2015, _115_, 13093
 
 (24) Atabati, M.; Emamalizadeh, R. A Quantitative Structure Property Relationship for Prediction of Flash Point of Alkanes Using Molecular Connectivity Indices. _Chin. J. Chem. Eng._ 2013, _21_, 420−426.
 
-(25) Mathieu, D. Inductive Modeling of Physico-chemical Properties: Flash Point of Alkanes. _J. Hazard. Mater._ 2010, _179_, 1161−1164. (26) Klopman, G.; Li, J.-Y.; Wang, S.; Dimayuga, M. Computer Automated logP Calculations Based on an Extended Group Contribution Approach. _J. Chem. Inf. Comput. Sci._ 1994, _34_, 752−781. (27) Mukwembi, S.; Nyabadza, F. A New Model for Predicting Boiling Points of Alkanes. _Sci. Rep._ 2021, _11_, No. 24261.
+(25) Mathieu, D. Inductive Modeling of Physico-chemical Properties: Flash Point of Alkanes. _J. Hazard. Mater._ 2010, _179_, 1161−1164.
+
+(26) Klopman, G.; Li, J.-Y.; Wang, S.; Dimayuga, M. Computer Automated logP Calculations Based on an Extended Group Contribution Approach. _J. Chem. Inf. Comput. Sci._ 1994, _34_, 752−781. (27) Mukwembi, S.; Nyabadza, F. A New Model for Predicting Boiling Points of Alkanes. _Sci. Rep._ 2021, _11_, No. 24261.
 
 (28) Cao, C.; Liu, S.; Li, Z. On Molecular Polarizability: 2. Relationship to the Boiling Point of Alkanes and Alcohols. _J. Chem. Inf. Comput. Sci._ 1999, _39_, 1105−1111.
 

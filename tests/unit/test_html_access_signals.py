@@ -52,6 +52,19 @@ class HtmlAccessSignalsTests(unittest.TestCase):
 
         self.assertEqual(signals, ["redirected_to_abstract", "publisher_access_denied"])
 
+    def test_detect_html_access_signals_classifies_aws_waf_202_page_as_challenge(
+        self,
+    ) -> None:
+        text = (
+            "JavaScript is disabled. Please enable JavaScript to verify that "
+            "you're not a robot and reload the page."
+        )
+
+        self.assertEqual(
+            detect_html_access_signals("", text, 202),
+            ["cloudflare_challenge"],
+        )
+
     def test_detect_html_block_treats_check_access_as_paywall(self) -> None:
         failure = detect_html_block(
             "Example article",

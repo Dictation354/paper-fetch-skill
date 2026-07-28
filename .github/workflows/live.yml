@@ -30,7 +30,7 @@ jobs:
       - name: Run shared-state live tests serially
         env:
           PAPER_FETCH_RUN_LIVE: "1"
-        run: PYTHONPATH=src uv run pytest tests/live -q -n 0
+        run: PYTHONPATH=src uv run pytest tests/live -q -n 0 --force-enable-socket
 
   full-golden:
     if: ${{ inputs.run_full_golden }}

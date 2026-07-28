@@ -6,6 +6,17 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 4.0.2 - 2026-07-28
+
+### 修复
+
+- 统一 HTML、JATS 与 Elsevier/CALS 表格的 provider-neutral cell/grid 规范化：扁平化多层表头，支持 CALS named spans，保留整表宽度分组，语义展开可安全处理的 rowspan/colspan，并将不规则网格保留为可读列表和准确的 fallback/布局诊断，避免误报语义丢失。
+- 修正 Royal Society Publishing 的 Silverchair 图片提取：保留 `DownloadImage.aspx` 中的签名 CDN 原图，将 `/view-large/figure/` 如实建模为 HTML 原图发现页，拒绝分组 slide 跨图串接，并在降级 preview 前使用选择器驱动的 viewer 兜底。
+- 受控跟随 PLOS manuscript endpoint 到临时签名 Google Cloud Storage XML 的重定向，同时脱敏全部 `X-Goog-*` 查询值，并禁止含凭证 Location 的重定向响应进入 HTTP cache。
+- 恢复 AMS 共享 Camoufox HTML 与 browser-seeded PDF 工作流，将 AWS WAF HTTP 202 验证页识别为 challenge；无保存状态仍可直接尝试抓取，同时恢复可选的 `paper-fetch auth ams` 与 `PAPER_FETCH_AMS_STORAGE_STATE_JSON` 状态复用。
+- 将 ACS 提取迁移到当前 Silverchair 页面结构：保留完整 `.article-body`、表格、图片、MathML 公式、结构化 references 和稳定 article-supplement 链接，同时隔离嵌入 Figshare viewer 与 figure UI chrome；全面刷新 3 份 ACS golden fixture，让 fixture PDF 抓取复用所选浏览器 runtime，并停止在 full-size 图页上等待文章正文 readiness。
+- IEEE 受保护的 full-size 图片、表格、multimedia 与 supplementary 资产改为复用同一篇已就绪论文页的 browser context/page，持续携带最新 cookie 与论文页 Referer，且不再把共享 page 导航到资产 URL；同时让 HTTP 403/HTML challenge 的重试选择与既有 browser recovery policy 保持一致。
+
 ## 4.0.1 - 2026-07-27
 
 ### 修复

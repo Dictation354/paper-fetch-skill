@@ -1,14 +1,17 @@
 schema_version: 2
 provider: royalsocietypublishing
-reviewed_at: '2026-05-22T10:58:54Z'
-reviewed_by: operator
+reviewed_at: '2026-07-28T03:58:17Z'
+reviewed_by: codex-agent
 fixtures:
 - fixture: tests/fixtures/golden_criteria/10.1098_rsta.2019.0558
   purpose: structure
   doi: 10.1098/rsta.2019.0558
   baseline_markdown_path: tests/fixtures/golden_criteria/10.1098_rsta.2019.0558/extracted.md
-  baseline_markdown_sha256: c416e23d2d4a9f2cde0c195f1dae477e1d023138371499436d46d7f49c150ab1
-  review_notes: Semantic review completed against committed fixture evidence.
+  baseline_markdown_sha256: 23d8416d94f56238634959acf0b9b470a551b021f298fbfbd118644c955c7ed3
+  markdown_quality_path: tests/fixtures/golden_criteria/10.1098_rsta.2019.0558/markdown-quality.json
+  markdown_quality_sha256: c7b725753426d809040052fb27f0e14a62a8a56d8d5c9fd9e084b66156bacc1a
+  review_notes: Final batch Markdown quality review confirmed by codex-agent; persistent
+    quality status=pass.
   sample_representative: true
   markdown_semantic_reviewed: true
   issues: []
@@ -20,14 +23,15 @@ fixtures:
   - must not include Open figure viewer
   - must not match (?m)^- Figure$
   fixes: []
-  markdown_quality_path: tests/fixtures/golden_criteria/10.1098_rsta.2019.0558/markdown-quality.json
-  markdown_quality_sha256: 0b9efbc0a2221baa01fb9d5accffdba997efaa8c21aab490ef82e37fc0c57d19
 - fixture: tests/fixtures/golden_criteria/10.1098_rspb.2020.0097
   purpose: table
   doi: 10.1098/rspb.2020.0097
   baseline_markdown_path: tests/fixtures/golden_criteria/10.1098_rspb.2020.0097/extracted.md
-  baseline_markdown_sha256: 4853dc713b8918e988527179a106243c7bc66bc11f9efbb3fc286bd9e32bdd5b
-  review_notes: Semantic review completed against committed fixture evidence.
+  baseline_markdown_sha256: 434e444c24e835a1ba5e27a3af8ac2949bd9a4f81ae451550d45bd998d4badcf
+  markdown_quality_path: tests/fixtures/golden_criteria/10.1098_rspb.2020.0097/markdown-quality.json
+  markdown_quality_sha256: c7291fdcedfb51d576a772b6cf01f5f4df8cf0de7e02bf44629b43e8e87aaf3a
+  review_notes: Final batch Markdown quality review confirmed by codex-agent; persistent
+    quality status=pass.
   sample_representative: true
   markdown_semantic_reviewed: true
   issues: []
@@ -38,14 +42,15 @@ fixtures:
   - must not include Article navigation
   - must match (?m)^\|.+\|$
   fixes: []
-  markdown_quality_path: tests/fixtures/golden_criteria/10.1098_rspb.2020.0097/markdown-quality.json
-  markdown_quality_sha256: a988c6b389909ff51b1109d8655abed8bfec0a42c55fe4c986be4d9c8e6d598a
 - fixture: tests/fixtures/golden_criteria/10.1098_rsos.201188
   purpose: formula
   doi: 10.1098/rsos.201188
   baseline_markdown_path: tests/fixtures/golden_criteria/10.1098_rsos.201188/extracted.md
-  baseline_markdown_sha256: f78ce7a9b31587480c8d8c7deefcf007ce133223b8fb3b8b7b6ebfc280afe34b
-  review_notes: Semantic review completed against committed fixture evidence.
+  baseline_markdown_sha256: 69c34718097095c60e485af466a66e627d96c2ecb34b2312b136a477657a525c
+  markdown_quality_path: tests/fixtures/golden_criteria/10.1098_rsos.201188/markdown-quality.json
+  markdown_quality_sha256: 19379f40c01fa33936aa78e89e509d75da0f52e0d6d9d196a7f77649a68efd91
+  review_notes: Final batch Markdown quality review confirmed by codex-agent; persistent
+    quality status=pass.
   sample_representative: true
   markdown_semantic_reviewed: true
   issues: []
@@ -56,14 +61,15 @@ fixtures:
   - must not include Download slide
   - must match (?:\$|Equation|BS)
   fixes: []
-  markdown_quality_path: tests/fixtures/golden_criteria/10.1098_rsos.201188/markdown-quality.json
-  markdown_quality_sha256: 83599c21329437682ce8a508b17cecfc94083a25320b85797ebbda138429151e
 - fixture: tests/fixtures/golden_criteria/10.1098_rsos.150470
   purpose: figure
   doi: 10.1098/rsos.150470
   baseline_markdown_path: tests/fixtures/golden_criteria/10.1098_rsos.150470/extracted.md
-  baseline_markdown_sha256: 534c895e8826c070417b151115cf7382cfe9a4c6ab556f93be164ed563a3c229
-  review_notes: Semantic review completed against committed fixture evidence.
+  baseline_markdown_sha256: d1b67c97027d11f64e13e9c6bf6a7aa5286fd85025a28c7e7a05e046a6f27a29
+  markdown_quality_path: tests/fixtures/golden_criteria/10.1098_rsos.150470/markdown-quality.json
+  markdown_quality_sha256: 8f0e9117e06159ace5a99f7a12fa793514f4d72387fa16b9bd5311dc6701aed6
+  review_notes: Final batch Markdown quality review confirmed by codex-agent; persistent
+    quality status=pass.
   sample_representative: true
   markdown_semantic_reviewed: true
   issues: []
@@ -76,14 +82,15 @@ fixtures:
   - must not match (?m)^- Figure$
   - must match (?:figure|figures 1)
   fixes: []
-  markdown_quality_path: tests/fixtures/golden_criteria/10.1098_rsos.150470/markdown-quality.json
-  markdown_quality_sha256: a1513fb549531eeed9f9e6c307d902a4e709554abf690d22ae41d44e004302d3
 - fixture: tests/fixtures/golden_criteria/10.1098_rsif.2019.0334
   purpose: supplementary
   doi: 10.1098/rsif.2019.0334
   baseline_markdown_path: tests/fixtures/golden_criteria/10.1098_rsif.2019.0334/extracted.md
-  baseline_markdown_sha256: e49ee48c9655e30058fa143094e03454df6c13e53ae7dc336ad1c28f8eee8512
-  review_notes: Semantic review completed against committed fixture evidence.
+  baseline_markdown_sha256: f18264c0ffcf5dcd77a4374e40c62a1f4ac4ff6872a1cddbcd31a9077a69be86
+  markdown_quality_path: tests/fixtures/golden_criteria/10.1098_rsif.2019.0334/markdown-quality.json
+  markdown_quality_sha256: 9011fe944973cb6a77e87410f5e81dc6abf9d2fcf9740690676f8c91d7d873eb
+  review_notes: Final batch Markdown quality review confirmed by codex-agent; persistent
+    quality status=pass.
   sample_representative: true
   markdown_semantic_reviewed: true
   issues: []
@@ -93,14 +100,15 @@ fixtures:
   - must not include Download citation
   - must not include Article navigation
   fixes: []
-  markdown_quality_path: tests/fixtures/golden_criteria/10.1098_rsif.2019.0334/markdown-quality.json
-  markdown_quality_sha256: 3787f4f4827df69a86aa9bed218523d1c72928ccf35219c6692b9413a37eacfc
 - fixture: tests/fixtures/golden_criteria/10.1098_rsos.201200
   purpose: references
   doi: 10.1098/rsos.201200
   baseline_markdown_path: tests/fixtures/golden_criteria/10.1098_rsos.201200/extracted.md
-  baseline_markdown_sha256: 0f0db0a6fdb4b1597c8d7c43fddaf4881c8d6a75b400aaea93e4831af047fba6
-  review_notes: Semantic review completed against committed fixture evidence.
+  baseline_markdown_sha256: cf874d506f3b8938d238138ae482a439f737d7c57392b3daa7b968fbd3c30cdd
+  markdown_quality_path: tests/fixtures/golden_criteria/10.1098_rsos.201200/markdown-quality.json
+  markdown_quality_sha256: 7817c1bf3feb00b5740a5d80a53096f2b0cdb54e28002f3c1984743f531965c6
+  review_notes: Final batch Markdown quality review confirmed by codex-agent; persistent
+    quality status=pass.
   sample_representative: true
   markdown_semantic_reviewed: true
   issues: []
@@ -110,24 +118,30 @@ fixtures:
   - must not include Google Scholar
   - must not include Download citation
   fixes: []
-  markdown_quality_path: tests/fixtures/golden_criteria/10.1098_rsos.201200/markdown-quality.json
-  markdown_quality_sha256: 39c549babe0409afb8a4a046a3639075d5f57a0d932b9de04a70ac2e4497fa56
 - fixture: tests/fixtures/golden_criteria/10.1098_rsta.2020.0108
   purpose: pdf_fallback
   doi: 10.1098/rsta.2020.0108
   baseline_markdown_path: tests/fixtures/golden_criteria/10.1098_rsta.2020.0108/extracted.md
   baseline_markdown_sha256: 39cac044fc543ed1709bdf8fe70e68f856278e47cd0641deaa737eaa095aef6c
-  review_notes: Semantic review completed against committed shared text-only PDF conversion baseline; no provider-specific PDF Markdown cleanup is required for this fixture.
+  markdown_quality_path: tests/fixtures/golden_criteria/10.1098_rsta.2020.0108/markdown-quality.json
+  markdown_quality_sha256: 68975c6bad2c4c814e0badf03a1dfc0d0ec899bb9e5152e431368f489a7b8040
+  review_notes: Final batch Markdown quality review confirmed by codex-agent; persistent
+    quality status=pass.
   sample_representative: true
   markdown_semantic_reviewed: true
   issues: []
   assertions:
   - must include non-empty shared PDF Markdown text
-  - must include ## 1. Introduction
+  - 'must include ## 1. Introduction'
   - must include Many recent and spectacular advances in the world of materials
   - must not include Access Denied
   - must not include <html
   - must not include Object moved
   fixes: []
-  markdown_quality_path: tests/fixtures/golden_criteria/10.1098_rsta.2020.0108/markdown-quality.json
-  markdown_quality_sha256: 68975c6bad2c4c814e0badf03a1dfc0d0ec899bb9e5152e431368f489a7b8040
+final_markdown_quality_review:
+  confirmed: true
+  confirmed_by: codex-agent
+  confirmed_at: '2026-07-28T03:58:17Z'
+  method: final-markdown-quality-review
+  fixture_count: 7
+  fresh_markdown_quality_reports: []

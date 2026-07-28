@@ -36,6 +36,7 @@ REFERENCE_LINKOUT_LABEL_PATTERN = re.compile(
 )
 NUMBERED_BIBLIOGRAPHY_SELECTORS = (
     ".ref-list .js-splitview-ref-item",
+    ".ref-list .ref",
     "section[role='doc-bibliography'] [role='listitem'][data-has='label']",
     "#bibliography [role='listitem'][data-has='label']",
     "section[data-title='References'] li[data-counter]",
@@ -65,6 +66,8 @@ REFERENCE_NOISE_SELECTORS = (
     ".google-scholar-ref-link",
     ".google-preview-ref-link",
     ".crossref-ref-link",
+    ".crossref-doi",
+    ".adsDoiReference",
     ".pubmed-ref-link",
     ".xslopenurl",
     ".openurl",
@@ -98,7 +101,7 @@ def _reference_label(node: Any, *, fallback_index: int) -> str | None:
     if explicit_label:
         return explicit_label
 
-    label_node = node.select_one(".label")
+    label_node = node.select_one(".label, .ref-label")
     label_text = _normalized_label(
         label_node.get_text(" ", strip=True) if isinstance(label_node, Tag) else ""
     )
@@ -115,7 +118,7 @@ def _reference_label(node: Any, *, fallback_index: int) -> str | None:
         classes = {item.lower() for item in class_values.split()}
     else:
         classes = {normalize_text(str(item)).lower() for item in class_values}
-    if "js-splitview-ref-item" in classes:
+    if classes & {"js-splitview-ref-item", "ref"}:
         return f"{fallback_index}."
     return None
 
@@ -184,7 +187,16 @@ def _reference_doi(node: Any) -> str | None:
     return None
 
 
-def _reference_year(text: str) -> str | None:
+def _reference_year(node: Any, text: str) -> str | None:
+    if isinstance(node, Tag):
+        year_node = node.select_one(".year")
+        if isinstance(year_node, Tag):
+            year_match = re.search(
+                r"\b((?:18|19|20)\d{2})\b",
+                normalize_text(year_node.get_text(" ", strip=True)),
+            )
+            if year_match is not None:
+                return year_match.group(1)
     matches = list(YEAR_PATTERN.finditer(text))
     if not matches:
         return None
@@ -233,7 +245,7 @@ def extract_numbered_references_from_soup(soup: Any) -> list[dict[str, str | Non
                 "label": label or None,
                 "raw": raw,
                 "doi": _reference_doi(node),
-                "year": _reference_year(raw),
+                "year": _reference_year(node, raw),
             }
         )
 

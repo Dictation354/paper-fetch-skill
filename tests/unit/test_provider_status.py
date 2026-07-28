@@ -42,6 +42,8 @@ class ProviderStatusTests(unittest.TestCase):
             return AcsClient(DummyTransport(), env)
         if provider == "aip":
             return AipClient(DummyTransport(), env)
+        if provider == "ams":
+            return AmsClient(DummyTransport(), env)
         if provider == "science":
             return ScienceClient(DummyTransport(), env)
         if provider == "royalsocietypublishing":
@@ -183,7 +185,14 @@ class ProviderStatusTests(unittest.TestCase):
         self.assertTrue(all(check.status == "ok" for check in checks.values()))
 
     def test_browser_workflow_providers_are_ready_with_camoufox(self) -> None:
-        for provider in ("science", "pnas", "acs", "aip", "royalsocietypublishing"):
+        for provider in (
+            "science",
+            "pnas",
+            "acs",
+            "aip",
+            "ams",
+            "royalsocietypublishing",
+        ):
             with (
                 self.subTest(provider=provider),
                 mock.patch.object(
@@ -203,17 +212,21 @@ class ProviderStatusTests(unittest.TestCase):
                 self.assertEqual(checks["runtime_env"].status, "ok")
                 self.assertEqual(checks["playwright_dependency"].status, "ok")
 
-    def test_ams_status_has_no_browser_runtime_requirement(self) -> None:
-        with mock.patch.object(camoufox_backend, "_dependency_details") as dependency:
+    def test_ams_status_reports_browser_runtime_requirement(self) -> None:
+        with mock.patch.object(
+            camoufox_backend,
+            "_dependency_details",
+            return_value=CAMOUFOX_DEPENDENCIES_READY,
+        ) as dependency:
             result = AmsClient(DummyTransport(), dict(CAMOUFOX_ENV)).probe_status()
         checks = {check.name: check for check in result.checks}
 
         self.assertEqual(result.status, "ready")
         self.assertTrue(result.available)
         self.assertEqual(result.missing_env, [])
-        self.assertEqual(list(checks), ["local_requirements"])
-        self.assertEqual(checks["local_requirements"].status, "ok")
-        dependency.assert_not_called()
+        self.assertEqual(checks["runtime_env"].status, "ok")
+        self.assertEqual(checks["playwright_dependency"].status, "ok")
+        dependency.assert_called_once()
 
     def test_browser_workflow_providers_missing_camoufox_are_not_configured(
         self,
@@ -223,6 +236,7 @@ class ProviderStatusTests(unittest.TestCase):
             "pnas",
             "acs",
             "aip",
+            "ams",
             "royalsocietypublishing",
         ):
             with (

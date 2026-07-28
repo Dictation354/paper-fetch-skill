@@ -361,6 +361,8 @@ def _build_elsevier_article_structure(
             1
             for entry in table_entries
             if normalize_text(str(entry.get("kind") or "")) == "fallback"
+            or normalize_text(str(entry.get("table_render_kind") or ""))
+            == "structured_list"
         ),
         table_layout_degraded_count=sum(
             1

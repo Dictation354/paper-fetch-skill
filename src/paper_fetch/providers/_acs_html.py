@@ -32,9 +32,15 @@ ACS_DOM_CHROME_SELECTORS = (
     ".articleHeaderHistoryDropzone",
     ".articleCitedByDropzone",
     ".TermsAndConditionsDropzone3",
+    ".article-metadata-panel",
     ".authorInformationSection",
+    ".fig.fig-modal",
+    ".graphical-abstract",
     ".refs-header-label",
     ".references-count",
+    ".ref-list",
+    "#sr-fig-viewer-action",
+    ".widget-ArticleDataSupplements",
     "ol#references",
     "script",
 )
@@ -96,6 +102,49 @@ def acs_before_block_normalization(container: Any) -> None:
 
 def acs_body_container(container: Any) -> None:
     _decompose_matching(container, ACS_DOM_CHROME_SELECTORS)
+
+
+def select_content_nodes(container: Any, **_kwargs: Any) -> list[Tag]:
+    """Keep a selected Silverchair ``.article-body`` as the extraction root."""
+
+    if not isinstance(container, Tag):
+        return []
+    classes = {
+        normalize_text(str(value))
+        for value in (container.get("class") or [])
+        if normalize_text(str(value))
+    }
+    return [container] if "article-body" in classes else []
+
+
+def extract_asset_html_scopes(
+    body_container: Any,
+    supplementary_container: Any,
+    *,
+    publisher: str,
+    source_url: str | None = None,
+    raw_body_container: Any | None = None,
+    content_fragment_html,
+    atypon_browser_workflow_supplementary_sections,
+) -> tuple[str, str]:
+    del source_url
+    for node in list(atypon_browser_workflow_supplementary_sections(body_container)):
+        node.decompose()
+
+    supplementary_source = (
+        raw_body_container
+        if isinstance(raw_body_container, Tag)
+        else supplementary_container
+    )
+    supplementary_html = "\n".join(
+        str(node)
+        for node in atypon_browser_workflow_supplementary_sections(supplementary_source)
+        if normalize_text(node.get_text(" ", strip=True))
+    )
+    return (
+        content_fragment_html(body_container, publisher=publisher),
+        supplementary_html,
+    )
 
 
 def _clean_acs_markdown_chrome(markdown_text: str) -> str:
@@ -205,8 +254,10 @@ __all__ = [
     "ATYPON_AUTHOR_NOISE_TEXT",
     "acs_before_block_normalization",
     "acs_body_container",
+    "extract_asset_html_scopes",
     "extract_authors",
     "extract_references",
     "finalize_extraction",
     "scoped_asset_extractor",
+    "select_content_nodes",
 ]

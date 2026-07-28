@@ -13,6 +13,7 @@ from urllib.parse import urlparse
 from filelock import FileLock
 
 from ...config import (
+    AMS_STORAGE_STATE_JSON_ENV_VAR,
     BROWSER_PROFILE_DIR_ENV_VAR,
     BROWSER_USER_DATA_DIR_ENV_VAR,
     WILEY_PROFILE_DIR_ENV_VAR,
@@ -31,6 +32,7 @@ PROVIDER_PROFILE_DIR_ENV_VARS = {
     "wiley": WILEY_PROFILE_DIR_ENV_VAR,
 }
 PROVIDER_STORAGE_STATE_ENV_VARS = {
+    "ams": AMS_STORAGE_STATE_JSON_ENV_VAR,
     "wiley": WILEY_STORAGE_STATE_JSON_ENV_VAR,
 }
 

@@ -69,11 +69,11 @@ MAJ 2005-11-1, a shell missing a large part of the carapace medially [31,45].
 
 See [13,17]; NHMUK R3370, a basicranium with partial otic chambers and fragment of the right maxilla from the Kimmeridge Clay, England, UK (figures 1 and 2).
 
-![Figure 1](https://royalsocietypublishing.org/view-large/figure/18113020/rsos150470f01.jpeg)
+![Figure 1](https://trs.silverchair-cdn.com/trs/content_public/journal/rsos/3/1/10.1098_rsos.150470/6/m_rsos150470f01.jpeg?Expires=1781846689&Signature=irUf41kp50Zx1Hv8zF1A7mVv5FV6lgA9I97FFQBzh5R8h2rRaJ-0ch0lOQ3EyOzyqcf32rDrdHLi3u3TCeymYjZossW028BW8M--OmYUR9F0egJWMlAb8B2Cif5neSSfI6mMzlB5jb4vomdsRG8czMXFouUCs0MtQHAMzLsn3uuYUvEjVYs34mf-xk1H4HovZCnXnNN1KYob6pKxv-WdPzCm8AHoqF9S23yqq7v7VH9xsL6rCu2pgC4HmyQzAKNb~rvYS1JVOFyE9-JUGBMha0YP9Mx1yMTz26hPA6e~4CfuYpfLFpPhYZXLtxvPLdbNBzGAag9QJSVTGWmR~qWJBg__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA)
 
 **Figure 1.** Plesiochelys etalloni, basicranium, NHMUK R3370, Kimmeridge Clay (unknown locality). (a) Photograph in dorsal view; (b) interpretative drawing in dorsal view; (c) photograph in ventral view; (d) interpretative drawing in ventral view; (e) photograph in posterior view; (f) interpretative drawing in posterior view; (g) photograph in left lateral view; (h) interpretative drawing in left lateral view; (i) photograph in right lateral view; (j) interpretative drawing in right lateral view. ap, antrum postoticum; ast, aditus canalis stapedio-temporalis; bo, basioccipital; bs, basisphenoid; co, condylus occipitalis; ct, cavum tympani; ds, dorsum sellae; epi, epipterygoid; ex, exoccipital; faccc, foramen anterius canalis carotici cerebralis; feng, foramen externus nervi glossopharyngei; fm, foramen magnum; fnh, foramen nervi hypoglossi; fnt, foramen nervi trigemini; fpcci, foramen posterius canalis carotici interni; fst, foramen stapedio-temporale; ica, incisura columellae auris; op, opisthotic; pa, parietal; pcl, processus clinoideus; pi, processus interfenestralis; ppr, pila prootica; pr, prootic; pt, pterygoid; ptf, pterygoid fossa; pto, processus trochlearis oticum; qu, quadrate; so, supraoccipital; sq, squamosal; tra, trabecula. Hatchings represent damaged area. Matrix is in grey.
 
-![Figure 2](https://royalsocietypublishing.org/view-large/figure/18113020/rsos150470f02.jpeg)
+![Figure 2](https://trs.silverchair-cdn.com/trs/content_public/journal/rsos/3/1/10.1098_rsos.150470/6/rsos150470f02.jpeg?Expires=1781846689&Signature=2BgUz1~vyijs5PJ6rcFd~WlMOUeEaCLLI3RAfZ5T~6qFTpg6olTaHgTz5FOCescW9GB7apl3O-SsvPINIH3lQUd2A3cRDvZBIOFmS-Lap50isbZO939mjuXnWjPLxW4MTeGJO0gWmPXy9tI9vz3UqFZosqU0z2Ufp3nCXc-DJohDxDY2FtuBY14qvEFDcQdnkAyy4SvtBXiOOiKV~CptXKwz2c0JjgWL8F7qERJ514EDup8IyYQAqg3u9Qq-ox1-0AQneYJw0V~RylkL~kHN3JkTXOA2Ifxnx5aguDFVescdJZvOyfwnlQzQIkoo2eoQLOGQV48IFz4i4guLiu5b0g__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA)
 
 **Figure 2.** Plesiochelys etalloni, basicranium and maxilla, NHMUK R3370, Kimmeridge Clay (unknown locality). (a) Close-up of the area of the dorsum sellae in dorsal view; (b) anterodorsolateral view showing the left wall of the cavum cranii with the entirely ossified pila prootica; (c) right maxilla in dorsal view; (d) right maxilla in ventral view; (e) right maxilla in anterior view; (f) right maxilla in lateral view; (g) right maxilla in medial view. ds, dorsum sellae; faccc, foramen anterius canalis carotici cerebralis; fsm, foramen supramaxillare; lar, labial ridge; lir, lingual ridge; mx, maxilla; pal, palatine; pcl, processus clinoideus; ppr, pila prootica.
 
@@ -157,11 +157,11 @@ Solothurn, Canton of Solothurn, Switzerland. Solothurn Turtle Limestone, uppermo
 
 See [19]. Specimens from the Kimmeridge Clay of Weymouth, Dorset, UK: NHMUK OR44178b, an isolated neural; NHMUK OR45920, right costals 1–3; NHMUK OR45921, a left first costal; NHMUK R2733, a left fourth costal (figures 3 and 4).
 
-![Figure 3](https://royalsocietypublishing.org/view-large/figure/18113060/rsos150470f03.jpeg)
+![Figure 3](https://trs.silverchair-cdn.com/trs/content_public/journal/rsos/3/1/10.1098_rsos.150470/6/m_rsos150470f03.jpeg?Expires=1781846689&Signature=j9ut6Y9mB62xziKPGPwMdsHIs5Dvdmbyj5iRK6L~N3xobqQDiiXgZ4Ivutj5xjDtIWD~aarTs5gHwQhhrqRhGoZxsCdEhRhn~U4KrMXqimYAUkKprYXTn1Vd6BzSDNLFI2UX2DMEFaKCTOkXSvBfah-c3nMSD7f38cTsjAUl~AQ~91nBclIek0JXNoKkyQHen1XtglVv2rf-GHKbr2ZGkGfWaO55mN4JJdGYPryoAplTtCSh6ZYHgN-myEimaGLozz8PIVmo1WY8EfSlSlQxLm4HIZZ32ibGJij5XqofXZIwv6pvel-1Xu6i0txv-mcZ9hAMZkP0LZWpiRvtcH5L6A__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA)
 
 **Figure 3.** Tropidemys langii, Kimmeridge Clay of Weymouth, Dorset, UK. (a–c) NHMUK OR44178b, isolated (fourth?) neural bone in dorsal (a), right lateral (b) and anterior (c) views; (d–f) NHMUK OR45920, right costals 1–3 of a juvenile in dorsal (d), ventral (e) and lateral (f) views; (g–i) NHMUK R2733, large left costal 4 in dorsal (g), anterior (h) and ventral (i) views.
 
-![Figure 4](https://royalsocietypublishing.org/view-large/figure/18113060/rsos150470f04.jpeg)
+![Figure 4](https://trs.silverchair-cdn.com/trs/content_public/journal/rsos/3/1/10.1098_rsos.150470/6/rsos150470f04.jpeg?Expires=1781846689&Signature=wtjmoeBsfZywqs5DGzn67-ZPSCWZFh9LnYwYCpl4dh1g10etE-YKXfUlxkRbTFIiACcPgVwyu4SOOUxOkSlbN8P5W2tgmBStTjAcLhJm-E-vzHMYfCJKBWJqoJQynhgFgJs~jAsUp7nwTkDC-HqR-37mgCkEal-XXfKDg5D2gZ2H5fPiK8WlTl567GIU4NTvi9KRLyN-EVHzDO~gdpquHA1daVKHMwnLOv4Iwbgi3pVRig3MHvfDn3f~dXyOw2WDmPZufvwtMhDuiZRO3ss81mJRotgeq15JAMClZ9clP125FBF1XRJFgz65jQJeyxIxHiQhDKYMBb3rA3dK~iVLFg__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA)
 
 **Figure 4.** Tropidemys langii, isolated left first costal, NHMUK OR45921, Kimmeridge Clay of Weymouth, Dorset, UK. (a) dorsal view; (b) posterior view; (c) anterior view; (d) ventral view; (e) medial view; (f) lateral view. [nu], surface of suture with nuchal; [p1] surface of suture with peripheral 1; [p2] surface of suture with peripheral 2.
 
@@ -221,7 +221,7 @@ Prior to this study, no plesiochelyid species had been clearly identified outsid
 
 The report of remains clearly referable to both Plesiochelys etalloni and Tropidemys langii in the Kimmeridge Clay Formation of southern England is therefore of major importance for the palaeobiogeograhy of plesiochelyid turtles. This is the first time, to the best of our knowledge, that the presence of these species is confirmed outside the Jura Mountains. It shows that, like thalassemydids [20,30], some plesiochelyids had a wide European distribution during the Kimmeridgian and were able to cross relatively large extents of water (figure 5). Because plesiochelyids and thalassemydids are coastal marine turtles that inhabit relatively open environments, the wide distribution of these turtles at the European scale is certainly not a surprise. In fact, we also expect more of these coastal marine turtles to have a broader distribution than currently known.
 
-![Figure 5](https://royalsocietypublishing.org/view-large/figure/18113088/rsos150470f05.jpeg)
+![Figure 5](https://trs.silverchair-cdn.com/trs/content_public/journal/rsos/3/1/10.1098_rsos.150470/6/rsos150470f05.jpeg?Expires=1781846689&Signature=VLX8mEmKYKnuT-qyO9gxY6iG-eTGqIAamZSZ6x15py9K48tlBhnk8cManca-nlYSOkSsMpj2fgJcoaitvdAZgNmYqTPtu~efz3dTXdrluN9nIutg3s9B5WUtoiOd4kMdruuH2Y38uzREvx084qMtpNxmLPNY6ZnS4W2O54XbqkuIrIu4AsL~E9naeecbiBIwtk8XFLcm3zj~zolDlhiC0~OoIfLhRs1DVxae4lTurQ1qge3CRvEDjFexmpELF6NAjVDTXRz2sE5pTv-tggOKEaCeWFQ1WNVjFaEdKWKLVsCMXqV2j6ctx5Jq2J~MaC8WVP5QKhkl~Z29pPjzaPCg5w__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA)
 
 **Figure 5.** Palaeobiogeographic distribution of Plesiochelys etalloni (black) and Tropidemys langii (dark grey). Localities: (1) Moirans-en-Montagne, Department of Jura, France (type locality of Plesiochelys etalloni); (2) Solothurn, Canton of Solothurn, Switzerland (type locality of Tropidemys langii); (3) Glovelier, Canton of Jura, Switzerland; (4) Porrentruy, Canton of Jura, Switzerland; (5) Weymouth, Dorset, UK; (6) unknown locality (specimen NHMUK R3370). Palaeogeographic map from Ron Blakey, Colorado Plateau Geosystems, Arizona, USA (http://cpgeosystems.com/paleomaps.html).
 
@@ -252,14 +252,6 @@ The ‘Section d’archéologie et paléontologie’ (PAL A16) is funded by the 
 ## Acknowledgements
 
 For access to specimens in their care, we thank Loïc Costeur (NMB), Silvan Thüring (NMS), Paul Jeffery and Eliza Howlett (OUMNH), and Heinz Furrer and Christian Klug (PIMUZ). Photographs in figures 1, 2 and 4 were made by Harry Taylor (NHMUK Photo Unit). The three-dimensional model was produced by J.A., Olivier Noaillon and Bernard Migy (PAL 16). Walter Joyce, Adán Pérez-García and the Associate Editor Julia Brenda Desojo are thanked for comments on an earlier version of the manuscript.
-
-## Figures
-
-- Figure 1
-- Figure 2
-- Figure 3
-- Figure 4
-- Figure 5
 
 ## References (58 total, showing 58)
 

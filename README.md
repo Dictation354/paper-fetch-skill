@@ -191,7 +191,7 @@ paper-fetch browser-preflight
 paper-fetch auth wiley
 ```
 
-当前 browser-backed auth/preflight provider 包括 `wiley`、`science`、`pnas`、`mdpi`、`royalsocietypublishing`、`annualreviews`、`acs`、`iop`、`aip`。AMS 使用 direct HTTP HTML/PDF 路径，不支持 `paper-fetch auth ams`。完整 provider、运行时和环境变量说明见 [`docs/providers.md`](docs/providers.md) 与 [`docs/browser-runtime.md`](docs/browser-runtime.md)。
+当前 browser-backed auth/preflight provider 包括 `wiley`、`science`、`pnas`、`ams`、`mdpi`、`royalsocietypublishing`、`annualreviews`、`acs`、`iop`、`aip`。AMS 默认直接启动 Camoufox 尝试站点的静默 JavaScript 验证；已有 provider storage-state 时会自动复用，静默验证失败时可运行 `paper-fetch auth ams` 完成人工验证并保存状态。完整 provider、运行时和环境变量说明见 [`docs/providers.md`](docs/providers.md) 与 [`docs/browser-runtime.md`](docs/browser-runtime.md)。
 
 ## 文档
 

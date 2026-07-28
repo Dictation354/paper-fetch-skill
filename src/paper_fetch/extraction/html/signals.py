@@ -33,6 +33,9 @@ CHALLENGE_PATTERNS = (
     "confirm you are human",
     "complete the security check",
     "h-captcha",
+    "not a robot",
+    "aws waf",
+    "awswaf",
 )
 CLOUDFLARE_CHALLENGE_TITLE_TOKENS = tuple(
     token

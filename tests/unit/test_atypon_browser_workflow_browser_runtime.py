@@ -5,6 +5,7 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
+from paper_fetch.config import AMS_STORAGE_STATE_JSON_ENV_VAR, XDG_DATA_HOME_ENV_VAR
 from paper_fetch.providers import _playwright_browser, browser_runtime
 
 
@@ -44,6 +45,34 @@ class AtyponBrowserWorkflowBrowserRuntimeTests(unittest.TestCase):
         self.assertEqual(cookie["sameSite"], "Lax")
         self.assertTrue(cookie["secure"])
         self.assertTrue(cookie["httpOnly"])
+
+    def test_ams_browser_runtime_allows_missing_state_and_reuses_configured_state(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp_path = Path(tmpdir)
+            state_path = tmp_path / "ams-state.json"
+            state_path.write_text('{"cookies": [], "origins": []}', encoding="utf-8")
+            default_runtime = browser_runtime.load_runtime_config(
+                {XDG_DATA_HOME_ENV_VAR: str(tmp_path)},
+                provider="ams",
+                doi="10.1175/test",
+            )
+            configured_runtime = browser_runtime.load_runtime_config(
+                {
+                    XDG_DATA_HOME_ENV_VAR: str(tmp_path),
+                    AMS_STORAGE_STATE_JSON_ENV_VAR: str(state_path),
+                },
+                provider="ams",
+                doi="10.1175/test",
+            )
+
+        self.assertIsNone(default_runtime.storage_state_path)
+        self.assertEqual(
+            default_runtime.user_data_dir,
+            tmp_path / "paper-fetch" / "publisher-browser-profiles" / "ams-camoufox",
+        )
+        self.assertEqual(configured_runtime.storage_state_path, state_path)
 
     def test_merge_browser_context_seeds_prefers_latest_cookie_and_url(self) -> None:
         merged = browser_runtime.merge_browser_context_seeds(

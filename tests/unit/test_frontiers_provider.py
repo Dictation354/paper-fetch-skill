@@ -40,13 +40,33 @@ def _landing_html() -> bytes:
 """.encode()
 
 
-def _frontiers_xml() -> bytes:
+def _frontiers_xml(*, table_xml: str | None = None) -> bytes:
     body = " ".join(
         [
             "Frontiers XML full text includes reproducible article body content, methods, results, and discussion.",
             "The sediment functioning experiment reports macrofauna survival, oxygen fluxes, and nutrient cycling.",
         ]
         * 18
+    )
+    table_xml = (
+        table_xml
+        or """
+      <table-wrap id="t1">
+        <label>Table 1</label>
+        <caption><p>Experimental seawater temperature conditions.</p></caption>
+        <table>
+          <thead>
+            <tr><th colspan="3"><italic>Lanice conchilega</italic></th></tr>
+          </thead>
+          <tbody>
+            <tr><th>Variable</th><th>Low</th><th>High</th></tr>
+            <tr><td>seawater temperature</td><td>16</td><td>20</td></tr>
+            <tr><th colspan="3"><italic>Abra alba</italic></th></tr>
+            <tr><td>salinity</td><td>34</td><td>35</td></tr>
+          </tbody>
+        </table>
+      </table-wrap>
+"""
     )
     return f"""<?xml version="1.0" encoding="UTF-8"?>
 <article xmlns:xlink="http://www.w3.org/1999/xlink" article-type="research-article">
@@ -77,14 +97,7 @@ def _frontiers_xml() -> bytes:
         <caption><p>Effects of temperature and pH on survival rate.</p></caption>
         <graphic mimetype="image" mime-subtype="tiff" xlink:href="fmars-10-1101972-g001.tif"/>
       </fig>
-      <table-wrap id="t1">
-        <label>Table 1</label>
-        <caption><p>Experimental seawater temperature conditions.</p></caption>
-        <table>
-          <thead><tr><th>Variable</th><th>Low</th><th>High</th></tr></thead>
-          <tbody><tr><td>seawater temperature</td><td>16</td><td>20</td></tr></tbody>
-        </table>
-      </table-wrap>
+      {table_xml}
     </sec>
     <sec id="s2">
       <title>Results</title>
@@ -155,6 +168,14 @@ def test_frontiers_xml_route_fetches_canonical_jats_and_rewrites_figure_url() ->
     )
     assert "seawater temperature" in markdown
     assert re.search(r"(?m)^\|\s*Variable\s*\|\s*Low\s*\|\s*High\s*\|", markdown)
+    assert re.search(r"(?m)^\*Lanice conchilega\*$", markdown)
+    assert not re.search(r"(?m)^\|\s*\*Lanice conchilega\*\s*\|\s*\|\s*\|", markdown)
+    assert re.search(r"(?m)^\|\s*\*Abra alba\*\s*\|\s*\|\s*\|", markdown)
+    lanice_row = markdown.index("*Lanice conchilega*")
+    temperature_row = markdown.index("| seawater temperature")
+    abra_row = markdown.index("| *Abra alba*")
+    salinity_row = markdown.index("| salinity")
+    assert lanice_row < temperature_row < abra_row < salinity_row
     assert "Effects of temperature and pH" in markdown
     assert "Supplementary material" in markdown
     assert "Frontiers reference title" in rendered_markdown
@@ -166,8 +187,162 @@ def test_frontiers_xml_route_fetches_canonical_jats_and_rewrites_figure_url() ->
     assert "fulltext:frontiers_xml_ok" in article.quality.source_trail
     assert article.source == "frontiers_xml"
     assert article.quality.content_kind == "fulltext"
+    assert article.quality.semantic_losses.table_layout_degraded_count == 0
+    assert article.quality.semantic_losses.table_semantic_loss_count == 0
+    assert "table_layout_degraded" not in article.quality.flags
+    assert not any(
+        "merged-cell structure" in warning for warning in article.quality.warnings
+    )
     assert article.metadata.journal == "Frontiers in Marine Science"
     assert article.assets[0].original_url == IMAGE_URL
+
+
+def test_frontiers_jats_semantically_expands_non_global_table_spans() -> None:
+    table_xml = """
+      <table-wrap id="t1">
+        <label>Table 1</label>
+        <caption><p>Span conversion example.</p></caption>
+        <table>
+          <thead>
+            <tr>
+              <th rowspan="2">Metric</th>
+              <th colspan="2">Period</th>
+            </tr>
+            <tr><th>Low</th><th>High</th></tr>
+          </thead>
+          <tbody>
+            <tr><td rowspan="2">CO<sub>2</sub></td><td>1</td><td>2</td></tr>
+            <tr><td>3</td><td>4</td></tr>
+          </tbody>
+        </table>
+      </table-wrap>
+"""
+    transport = _frontiers_transport(
+        {
+            XML_URL: http_response(
+                XML_URL,
+                _frontiers_xml(table_xml=table_xml),
+                "text/xml",
+            )
+        }
+    )
+    client = FrontiersClient(transport, {})
+
+    raw_payload = client.fetch_raw_fulltext(DOI, {"doi": DOI})
+    article = client.to_article_model({"doi": DOI}, raw_payload)
+
+    assert raw_payload.content is not None
+    markdown = raw_payload.content.markdown_text or ""
+    assert re.search(
+        r"(?m)^\|\s*Metric\s*\|\s*Period / Low\s*\|\s*Period / High\s*\|",
+        markdown,
+    )
+    assert re.search(r"(?m)^\|\s*CO<sub>2</sub>\s*\|\s*1\s*\|\s*2\s*\|", markdown)
+    assert re.search(r"(?m)^\|\s*CO<sub>2</sub>\s*\|\s*3\s*\|\s*4\s*\|", markdown)
+    assert article.quality.semantic_losses.table_layout_degraded_count == 1
+    assert article.quality.semantic_losses.table_semantic_loss_count == 0
+    assert "table_layout_degraded" in article.quality.flags
+    assert "table_semantic_loss" not in article.quality.flags
+    assert raw_payload.content.diagnostics is not None
+    assert raw_payload.content.diagnostics["extraction"]["conversion_notes"] == [
+        "- Table 1: Merged table spans were semantically expanded into rectangular Markdown cells; rowspan/colspan layout fidelity was reduced."
+    ]
+
+
+def test_frontiers_jats_supports_cals_named_table_spans() -> None:
+    table_xml = """
+      <table-wrap id="t1">
+        <label>Table 1</label>
+        <caption><p>CALS named span example.</p></caption>
+        <table>
+          <tgroup cols="3">
+            <colspec colname="c1"/>
+            <colspec colname="c2"/>
+            <colspec colname="c3"/>
+            <thead>
+              <row>
+                <entry colname="c1" morerows="1">Metric</entry>
+                <entry namest="c2" nameend="c3">Period</entry>
+              </row>
+              <row>
+                <entry colname="c2">Low</entry>
+                <entry colname="c3">High</entry>
+              </row>
+            </thead>
+            <tbody>
+              <row>
+                <entry colname="c1">CO<sub>2</sub></entry>
+                <entry colname="c2">1</entry>
+                <entry colname="c3">2</entry>
+              </row>
+            </tbody>
+          </tgroup>
+        </table>
+      </table-wrap>
+"""
+    transport = _frontiers_transport(
+        {
+            XML_URL: http_response(
+                XML_URL,
+                _frontiers_xml(table_xml=table_xml),
+                "text/xml",
+            )
+        }
+    )
+    client = FrontiersClient(transport, {})
+
+    raw_payload = client.fetch_raw_fulltext(DOI, {"doi": DOI})
+    article = client.to_article_model({"doi": DOI}, raw_payload)
+
+    assert raw_payload.content is not None
+    markdown = raw_payload.content.markdown_text or ""
+    assert re.search(
+        r"(?m)^\|\s*Metric\s*\|\s*Period / Low\s*\|\s*Period / High\s*\|",
+        markdown,
+    )
+    assert re.search(
+        r"(?m)^\|\s*CO<sub>2</sub>\s*\|\s*1\s*\|\s*2\s*\|",
+        markdown,
+    )
+    assert article.quality.semantic_losses.table_layout_degraded_count == 1
+    assert article.quality.semantic_losses.table_fallback_count == 0
+    assert article.quality.semantic_losses.table_semantic_loss_count == 0
+
+
+def test_frontiers_jats_headerless_invalid_span_keeps_first_data_row() -> None:
+    table_xml = """
+      <table-wrap id="t1">
+        <label>Table 1</label>
+        <caption><p>Headerless malformed span example.</p></caption>
+        <table>
+          <tbody>
+            <tr><td rowspan="invalid">first row</td><td>1</td></tr>
+            <tr><td>second row</td><td>2</td></tr>
+          </tbody>
+        </table>
+      </table-wrap>
+"""
+    transport = _frontiers_transport(
+        {
+            XML_URL: http_response(
+                XML_URL,
+                _frontiers_xml(table_xml=table_xml),
+                "text/xml",
+            )
+        }
+    )
+    client = FrontiersClient(transport, {})
+
+    raw_payload = client.fetch_raw_fulltext(DOI, {"doi": DOI})
+    article = client.to_article_model({"doi": DOI}, raw_payload)
+
+    assert raw_payload.content is not None
+    markdown = raw_payload.content.markdown_text or ""
+    assert re.search(r"(?m)^\|\s*\|\s*\|$", markdown)
+    assert re.search(r"(?m)^\|\s*first row\s*\|\s*1\s*\|", markdown)
+    assert re.search(r"(?m)^\|\s*second row\s*\|\s*2\s*\|", markdown)
+    assert article.quality.semantic_losses.table_layout_degraded_count == 1
+    assert article.quality.semantic_losses.table_semantic_loss_count == 0
 
 
 def test_frontiers_asset_download_resolves_xml_image_filename(tmp_path: Path) -> None:
