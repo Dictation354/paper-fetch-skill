@@ -405,8 +405,13 @@ class HttpTransport(CacheMixin, RetryMixin, BodyMixin):
 
     def _close_response(self, response: Any) -> None:
         close = getattr(response, "close", None)
-        if callable(close):
-            close()
+        try:
+            if callable(close):
+                close()
+        finally:
+            release_conn = getattr(response, "release_conn", None)
+            if callable(release_conn):
+                release_conn()
 
     def request(
         self,

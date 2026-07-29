@@ -25,6 +25,7 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 - Prevented browser/PDF fallbacks from accepting challenge or non-PDF responses, exceeding shared deadlines and transfer limits, crossing origin or credential boundaries, or leaving partial artifacts after cancellation and failed downloads.
 - Corrected JATS formula, table, figure, reference, and supplementary rendering so provider identity mismatches fail closed, semantic losses remain visible, and content/assets cannot be promoted to complete acceptance without the required evidence.
+- Returned discarded redirect and failed HTTP responses to the blocking connection pool after closing them, preventing concurrent Springer figure discovery from exhausting every connection slot and hanging fetch or offline-release smoke checks.
 
 ## 4.0.2 - 2026-07-28
 

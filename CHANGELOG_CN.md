@@ -25,6 +25,7 @@
 
 - 防止 browser/PDF fallback 接受 challenge 或非 PDF 响应、突破共享 deadline/传输上限、跨 origin 或 credential 边界复用状态，以及在取消或下载失败后遗留半成品。
 - 修正 JATS 公式、表格、图片、参考文献与 supplementary 渲染；provider identity 不一致时 fail closed，语义损失保持可见，正文或资产证据不足时不再误升为 complete acceptance。
+- 修复丢弃 HTTP 重定向或异常响应时仅关闭连接却未归还阻塞式连接池的问题，避免 Springer 并发图片发现耗尽连接槽并令 fetch 与离线发布 smoke 无限等待。
 
 ## 4.0.2 - 2026-07-28
 

@@ -87,6 +87,15 @@ def lower_header_map(headers: dict[str, str]) -> dict[str, str]:
 
 
 class HttpTransportCacheTests(unittest.TestCase):
+    def test_discarded_response_is_closed_and_returned_to_the_pool(self) -> None:
+        transport = http_module.HttpTransport()
+        response = FakeHTTPResponse(b"redirect", "https://example.test/redirect")
+
+        transport._close_response(response)
+
+        self.assertTrue(response.closed)
+        self.assertTrue(response.released)
+
     def test_runtime_metadata_cache_ttl_defaults_to_one_day_and_allows_env_override(
         self,
     ) -> None:
@@ -994,7 +1003,7 @@ class HttpTransportCacheTests(unittest.TestCase):
         self.assertTrue(response.released)
         self.assertFalse(response.closed)
 
-    def test_oversized_pooled_response_is_closed_without_releasing_connection(
+    def test_oversized_pooled_response_is_closed_before_returning_pool_slot(
         self,
     ) -> None:
         transport = http_module.HttpTransport(
@@ -1011,7 +1020,7 @@ class HttpTransportCacheTests(unittest.TestCase):
                 )
 
         self.assertTrue(response.closed)
-        self.assertFalse(response.released)
+        self.assertTrue(response.released)
 
     def test_http_error_response_releases_connection_after_request_failure(
         self,
