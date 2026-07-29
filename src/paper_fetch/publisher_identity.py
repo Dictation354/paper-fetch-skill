@@ -8,8 +8,14 @@ import functools
 import re
 import urllib.parse
 import unicodedata
+from dataclasses import asdict, dataclass
+from typing import Any
+from collections.abc import Mapping
+
+from rapidfuzz.fuzz import ratio
 
 from .normalize_journal_name import normalize_journal_name
+from .utils import normalize_text
 from .provider_catalog import (
     doi_prefix_provider_map,
     ordered_provider_specs,
@@ -50,6 +56,10 @@ URL_DOI_ROUTE_SUFFIX_OVERRIDES: dict[str, frozenset[str]] = {
     "frontiers": frozenset({"epub"}),
 }
 URL_DOI_TEMPLATE_MARKERS = ("{doi}", "{doi_quoted}")
+_ARXIV_ID_PATTERN = re.compile(
+    r"(?:arxiv[.:/])?(?P<id>\d{4}\.\d{4,5})(?P<version>v\d+)?",
+    flags=re.IGNORECASE,
+)
 
 
 @functools.lru_cache(maxsize=1)
@@ -303,3 +313,148 @@ def infer_provider_from_signals(
         doi=doi,
     )
     return candidates[0][0] if candidates else None
+
+
+@dataclass(frozen=True)
+class IdentityValidationResult:
+    status: str
+    method: str
+    confidence: str
+    expected_doi: str | None = None
+    observed_doi: str | None = None
+    expected_arxiv_id: str | None = None
+    observed_arxiv_id: str | None = None
+    title_score: float | None = None
+    reason: str | None = None
+
+    @property
+    def mismatch(self) -> bool:
+        return self.status == "mismatch"
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            key: value for key, value in asdict(self).items() if value not in (None, "")
+        }
+
+
+def _arxiv_identity(value: str | None) -> tuple[str, str | None]:
+    normalized = normalize_doi(value)
+    candidate = normalized
+    if candidate.startswith("10.48550/arxiv."):
+        candidate = candidate.removeprefix("10.48550/arxiv.")
+    match = _ARXIV_ID_PATTERN.search(candidate)
+    if not match:
+        return "", None
+    return match.group("id").lower(), (
+        match.group("version").lower() if match.group("version") else None
+    )
+
+
+def _identity_value(mapping: Mapping[str, Any], *keys: str) -> str:
+    for key in keys:
+        value = mapping.get(key)
+        if value not in (None, ""):
+            return str(value)
+    return ""
+
+
+def validate_extracted_identity(
+    expected: Mapping[str, Any],
+    observed: Mapping[str, Any] | None,
+    evidence: Mapping[str, Any] | None = None,
+) -> IdentityValidationResult:
+    """Compare independent response identity before related assets are fetched."""
+
+    observed_mapping = dict(observed or {})
+    evidence_mapping = dict(evidence or {})
+    expected_doi = normalize_doi(_identity_value(expected, "doi")) or None
+    observed_doi = (
+        normalize_doi(
+            _identity_value(evidence_mapping, "doi", "response_doi")
+            or _identity_value(observed_mapping, "response_doi")
+        )
+        or None
+    )
+
+    expected_arxiv, expected_version = _arxiv_identity(
+        _identity_value(expected, "arxiv_id", "doi")
+    )
+    observed_arxiv, observed_version = _arxiv_identity(
+        _identity_value(evidence_mapping, "arxiv_id", "doi")
+        or _identity_value(observed_mapping, "response_arxiv_id")
+    )
+    if expected_arxiv and observed_arxiv:
+        if expected_arxiv != observed_arxiv or (
+            expected_version
+            and observed_version
+            and expected_version != observed_version
+        ):
+            return IdentityValidationResult(
+                status="mismatch",
+                method="arxiv_id",
+                confidence="high",
+                expected_doi=expected_doi,
+                observed_doi=observed_doi,
+                expected_arxiv_id=expected_arxiv + (expected_version or ""),
+                observed_arxiv_id=observed_arxiv + (observed_version or ""),
+                reason="The response arXiv identifier does not match the request.",
+            )
+        return IdentityValidationResult(
+            status="match",
+            method="arxiv_id",
+            confidence="high",
+            expected_doi=expected_doi,
+            observed_doi=observed_doi,
+            expected_arxiv_id=expected_arxiv + (expected_version or ""),
+            observed_arxiv_id=observed_arxiv + (observed_version or ""),
+        )
+
+    if expected_doi and observed_doi:
+        if expected_doi != observed_doi:
+            return IdentityValidationResult(
+                status="mismatch",
+                method="doi",
+                confidence="high",
+                expected_doi=expected_doi,
+                observed_doi=observed_doi,
+                reason="The response DOI does not match the requested DOI.",
+            )
+        return IdentityValidationResult(
+            status="match",
+            method="doi",
+            confidence="high",
+            expected_doi=expected_doi,
+            observed_doi=observed_doi,
+        )
+
+    expected_title = normalize_text(_identity_value(expected, "title"))
+    observed_title = normalize_text(
+        _identity_value(evidence_mapping, "title")
+        or _identity_value(observed_mapping, "response_title")
+    )
+    if expected_title and observed_title:
+        title_score = round(
+            ratio(expected_title.casefold(), observed_title.casefold()), 2
+        )
+        return IdentityValidationResult(
+            status="match" if title_score >= 92.0 else "insufficient",
+            method="title",
+            confidence="medium" if title_score >= 92.0 else "low",
+            expected_doi=expected_doi,
+            observed_doi=observed_doi,
+            title_score=title_score,
+            reason=(
+                None
+                if title_score >= 92.0
+                else "Response title evidence is not strong enough to prove identity."
+            ),
+        )
+
+    return IdentityValidationResult(
+        status="insufficient",
+        method="none",
+        confidence="none",
+        expected_doi=expected_doi,
+        observed_doi=observed_doi,
+        reason="The response did not expose an independent identity signal.",
+    )

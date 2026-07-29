@@ -41,17 +41,36 @@ def test_provider_catalog_payload_exactly_reflects_runtime_catalog() -> None:
             "official": spec.official,
             "sources": sorted(sources_by_provider.get(spec.name, ())),
             "asset_default": spec.asset_default,
+            "routes": [json.loads(json.dumps(route.__dict__)) for route in spec.routes],
             "capabilities": {
                 "html": spec.html_capable,
                 "metadata_probe": spec.probe_capability or None,
                 "provider_managed_abstract_only": (spec.provider_managed_abstract_only),
                 "runtime_kind": (
-                    "browser" if spec.requires_browser_runtime else "direct"
+                    "browser"
+                    if runtime_catalog.provider_requires_browser(spec.name)
+                    else (
+                        "hybrid"
+                        if runtime_catalog.provider_has_browser_route(spec.name)
+                        else "direct"
+                    )
                 ),
                 "requires_browser_runtime": spec.requires_browser_runtime,
+                "browser_required": runtime_catalog.provider_requires_browser(
+                    spec.name
+                ),
+                "browser_optional": any(
+                    route.browser_optional for route in spec.routes
+                ),
                 "requires_playwright": spec.requires_playwright,
                 "supports_static_status": True,
-                "supports_browser_preflight": spec.requires_browser_runtime,
+                "supports_browser_preflight": (
+                    runtime_catalog.provider_supports_browser_preflight(spec.name)
+                ),
+                "auth_supported": runtime_catalog.provider_supports_auth(spec.name),
+                "pdf_conversion": runtime_catalog.provider_requires_pdf_conversion(
+                    spec.name
+                ),
             },
         }
 
@@ -95,7 +114,8 @@ def test_server_registers_readable_provider_catalog_resource() -> None:
     async def read_resource() -> tuple[str, str | None]:
         server = build_server()
         resource = await server._resource_manager.get_resource(
-            PROVIDER_CATALOG_RESOURCE_URI
+            PROVIDER_CATALOG_RESOURCE_URI,
+            context=None,
         )
         assert resource is not None
         return await resource.read(), resource.mime_type

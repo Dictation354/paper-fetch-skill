@@ -140,6 +140,21 @@ class ManifestTraceEvent(_ManifestModel):
     outcome: str = Field(default="info", min_length=1)
     code: str | None = None
     message: str | None = None
+    provider: str | None = None
+    route: str | None = None
+    span_id: str | None = None
+    attempt_id: str | None = None
+    parent_span_id: str | None = None
+    attempt: int | None = Field(default=None, ge=1)
+    http_status: int | None = None
+    error_category: str | None = None
+    retryable: bool | None = None
+    retry_after_seconds: int | None = None
+    target: str | None = None
+    target_sha256: str | None = None
+    started_at: float | None = None
+    finished_at: float | None = None
+    duration_ms: float | None = None
 
 
 class ManifestError(_ManifestModel):
@@ -403,21 +418,7 @@ def _trace_for_record(
     else:
         raw_trace = ()
 
-    events: list[ManifestTraceEvent] = []
-    seen: set[tuple[str, str, str, str | None, str | None]] = set()
-    for value in raw_trace:
-        event = ManifestTraceEvent.model_validate(value)
-        key = (
-            event.stage,
-            event.component,
-            event.outcome,
-            event.code,
-            event.message,
-        )
-        if key not in seen:
-            seen.add(key)
-            events.append(event)
-    return tuple(events)
+    return tuple(ManifestTraceEvent.model_validate(value) for value in raw_trace)
 
 
 def _warnings_for_record(

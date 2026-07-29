@@ -3,9 +3,15 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+import contextlib
+from dataclasses import dataclass
+import time
 from typing import Any
 
 from ..extraction.html import decode_html
+from ..extraction.html.signals import detect_html_block, summarize_html
+from ..failure import FailureDiagnostics
+from ..http import RequestCancelledError, redact_url_for_diagnostics
 from ..http.headers import header_value
 from ..quality.html_availability import (
     HtmlQualityAssessor,
@@ -26,16 +32,55 @@ from ._payloads import (
 from .base import ProviderFailure, RawFulltextPayload
 from .browser_workflow.shared import BROWSER_HTML_BLOCKED_RESOURCE_TYPES
 from .browser_runtime import (
+    BrowserRuntimeFailure,
     BrowserRuntimeConfig,
     browser_context,
     browser_context_seed_from_session,
     merge_browser_context_seeds,
 )
-import contextlib
 
 IEEE_BROWSER_HTML_NAVIGATION_TIMEOUT_MS = 60000
 IEEE_BROWSER_HTML_REST_WAIT_TIMEOUT_MS = 15000
 IEEE_BROWSER_HTML_DOM_WAIT_TIMEOUT_MS = 5000
+IEEE_BROWSER_HTML_POLL_INTERVAL_MS = 250
+
+
+def _remaining_timeout_ms(
+    context: RuntimeContext,
+    maximum_ms: int,
+) -> int:
+    context.raise_if_cancelled()
+    try:
+        value = context.remaining_timeout_ms(maximum_ms)
+        return max(1, min(maximum_ms, int(value)))
+    except (AttributeError, TypeError, ValueError):
+        return maximum_ms
+
+
+def _browser_failure_as_provider_failure(
+    exc: BrowserRuntimeFailure,
+    *,
+    provider_name: str,
+) -> ProviderFailure:
+    details = dict(exc.details)
+    stage = normalize_text(str(details.get("stage") or "")) or None
+    return ProviderFailure(
+        NO_RESULT,
+        exc.message,
+        diagnostics=FailureDiagnostics(
+            provider=provider_name,
+            route="browser_html",
+            stage=stage,
+            error_category=exc.kind,
+            retryable=exc.kind
+            in {
+                "browser_connect_timeout",
+                "browser_navigation_timeout",
+                "browser_rest_wait_timeout",
+            },
+            details={"code": exc.kind, **details},
+        ),
+    )
 
 
 def _playwright_response_headers(response: Any | None) -> dict[str, str]:
@@ -59,6 +104,41 @@ def _playwright_response_status(response: Any | None) -> int | None:
         return int(getattr(response, "status", 0) or 0) or None
     except Exception:
         return None
+
+
+@dataclass(frozen=True)
+class _CapturedRestHtml:
+    source_url: str
+    headers: dict[str, str]
+    html_text: str
+    status: int | None
+
+
+def _capture_rest_html(
+    rest_responses: list[Any],
+    rest_url: str,
+) -> _CapturedRestHtml | None:
+    for response in reversed(rest_responses):
+        try:
+            body = response.body()
+        except Exception:
+            continue
+        if not isinstance(body, (bytes, bytearray)) or not body:
+            continue
+        headers = _playwright_response_headers(response)
+        return _CapturedRestHtml(
+            source_url=ieee_url._absolute_ieee_url(
+                str(getattr(response, "url", "") or rest_url),
+                rest_url,
+            ),
+            headers=headers,
+            html_text=decode_html(
+                bytes(body),
+                content_type=header_value(headers, "content-type"),
+            ),
+            status=_playwright_response_status(response),
+        )
+    return None
 
 
 def fetch_ieee_browser_html_payload(
@@ -101,8 +181,12 @@ def fetch_ieee_browser_html_payload(
     source_url = document_url
     html_text = ""
     browser_context_seed: dict[str, Any] = {}
+    request_started = time.monotonic()
+    with contextlib.suppress(AttributeError):
+        context.ensure_deadline(runtime_config.timeout_ms / 1000.0)
 
     try:
+        _remaining_timeout_ms(context, runtime_config.timeout_ms)
         browser_session_scope = browser_context(
             runtime_config,
             runtime_context=context,
@@ -138,55 +222,71 @@ def fetch_ieee_browser_html_payload(
                 rest_responses.append(response)
 
         page.on("response", remember_rest_response)
+        navigation_timed_out = False
         try:
             navigation_response = page.goto(
                 document_url,
                 wait_until="domcontentloaded",
-                timeout=IEEE_BROWSER_HTML_NAVIGATION_TIMEOUT_MS,
+                timeout=_remaining_timeout_ms(
+                    context, IEEE_BROWSER_HTML_NAVIGATION_TIMEOUT_MS
+                ),
             )
         except PlaywrightTimeoutError:
             navigation_response = None
+            navigation_timed_out = True
+        context.raise_if_cancelled()
         browser_final_url = (
             normalize_text(str(getattr(page, "url", "") or "")) or document_url
         )
         navigation_status = _playwright_response_status(navigation_response)
 
         if not rest_responses:
-            with contextlib.suppress(Exception):
-                page.wait_for_timeout(IEEE_BROWSER_HTML_REST_WAIT_TIMEOUT_MS)
+            rest_wait_deadline = time.monotonic() + (
+                _remaining_timeout_ms(context, IEEE_BROWSER_HTML_REST_WAIT_TIMEOUT_MS)
+                / 1000.0
+            )
+            while not rest_responses and time.monotonic() < rest_wait_deadline:
+                wait_ms = min(
+                    IEEE_BROWSER_HTML_POLL_INTERVAL_MS,
+                    _remaining_timeout_ms(context, IEEE_BROWSER_HTML_POLL_INTERVAL_MS),
+                    max(1, int((rest_wait_deadline - time.monotonic()) * 1000)),
+                )
+                page.wait_for_timeout(wait_ms)
+                context.raise_if_cancelled()
 
-        for response in reversed(rest_responses):
-            try:
-                body = response.body()
-            except Exception:
-                continue
-            if not isinstance(body, (bytes, bytearray)) or not body:
-                continue
-            source_url = ieee_url._absolute_ieee_url(
-                str(getattr(response, "url", "") or rest_url), rest_url
-            )
-            response_headers = _playwright_response_headers(response)
-            html_text = decode_html(
-                bytes(body),
-                content_type=header_value(response_headers, "content-type"),
-            )
-            response_status = _playwright_response_status(response)
+        captured_rest_html = _capture_rest_html(rest_responses, rest_url)
+        if captured_rest_html is not None:
+            source_url = captured_rest_html.source_url
+            response_headers = captured_rest_html.headers
+            html_text = captured_rest_html.html_text
+            response_status = captured_rest_html.status
             payload_source = "rest_response"
-            break
 
         if not html_text:
             with contextlib.suppress(PlaywrightTimeoutError):
                 page.wait_for_selector(
-                    "#article", timeout=IEEE_BROWSER_HTML_DOM_WAIT_TIMEOUT_MS
+                    "#article",
+                    timeout=_remaining_timeout_ms(
+                        context, IEEE_BROWSER_HTML_DOM_WAIT_TIMEOUT_MS
+                    ),
                 )
             try:
                 has_article = page.locator("#article").count() > 0
             except Exception:
                 has_article = False
             if not has_article:
-                raise ProviderFailure(
-                    NO_RESULT,
+                failure_kind = (
+                    "browser_navigation_timeout"
+                    if navigation_timed_out
+                    else "browser_article_not_ready"
+                )
+                raise BrowserRuntimeFailure(
+                    failure_kind,
                     "IEEE browser HTML fallback did not capture REST full-text HTML or #article DOM.",
+                    details={
+                        "stage": "dom_readiness",
+                        "document_url": redact_url_for_diagnostics(document_url),
+                    },
                 )
             html_text = str(page.content() or "")
             browser_final_url = (
@@ -196,6 +296,32 @@ def fetch_ieee_browser_html_payload(
             response_headers = {"content-type": "text/html"}
             response_status = navigation_status
             payload_source = "dom_article"
+            if article_number not in html_text:
+                raise BrowserRuntimeFailure(
+                    "browser_article_identity_missing",
+                    "IEEE #article DOM did not contain the requested article number.",
+                    details={
+                        "stage": "dom_readiness",
+                        "article_number": article_number,
+                    },
+                )
+        title = ""
+        with contextlib.suppress(Exception):
+            title = normalize_text(str(page.title() or ""))
+        html_summary = summarize_html(html_text)
+        detected = detect_html_block(title, html_summary, response_status)
+        if detected is not None:
+            raise BrowserRuntimeFailure(
+                detected.reason,
+                detected.message,
+                details={
+                    "stage": "block_detection",
+                    "status": response_status,
+                    "payload_source": payload_source,
+                },
+            )
+
+        context.raise_if_cancelled()
         browser_context_seed = merge_browser_context_seeds(
             landing_attempt.browser_context_seed,
             browser_context_seed_from_session(
@@ -206,6 +332,87 @@ def fetch_ieee_browser_html_payload(
                 fetcher=f"{runtime_config.backend}_ieee_html",
             ),
         )
+        extraction = ieee_html._extract_ieee_html(
+            html_text,
+            source_url,
+            metadata=landing_attempt.merged_metadata,
+            context=context,
+        )
+        diagnostics = HtmlQualityAssessor("ieee").assess(
+            extraction.markdown_text,
+            landing_attempt.merged_metadata,
+            html_text=extraction.html_text,
+            title=str(landing_attempt.merged_metadata.get("title") or ""),
+            requested_url=(
+                rest_url if payload_source == "rest_response" else document_url
+            ),
+            final_url=source_url,
+            response_status=response_status,
+            section_hints=extraction.section_hints,
+        )
+        if not diagnostics.accepted:
+            raise BrowserRuntimeFailure(
+                "browser_html_quality_failed",
+                availability_failure_message(diagnostics),
+                details={
+                    "stage": "quality",
+                    "availability_diagnostics": diagnostics.to_dict(),
+                },
+            )
+        context.raise_if_cancelled()
+        content_type = header_value(response_headers, "content-type", "text/html")
+        extracted_assets = extraction_assets(extraction, landing_attempt)
+        return build_provider_payload(
+            provider=provider_name,
+            route_kind="html",
+            source_url=source_url,
+            content_type=content_type,
+            body=extraction.html_text.encode("utf-8"),
+            markdown_text=extraction.markdown_text,
+            merged_metadata=landing_attempt.merged_metadata,
+            diagnostics={
+                "availability_diagnostics": diagnostics.to_dict(),
+                "browser_html": {
+                    "fetcher": f"{runtime_config.backend}_ieee_html",
+                    "backend": runtime_config.backend,
+                    "payload_source": payload_source,
+                    "document_url": redact_url_for_diagnostics(document_url),
+                    "rest_url": redact_url_for_diagnostics(rest_url),
+                    "final_url": redact_url_for_diagnostics(browser_final_url),
+                    "navigation_status": navigation_status,
+                    "response_status": response_status,
+                    "timeout_budget_ms": runtime_config.timeout_ms,
+                    "elapsed_ms": round((time.monotonic() - request_started) * 1000, 3),
+                    "remaining_ms": max(
+                        0,
+                        _remaining_timeout_ms(context, runtime_config.timeout_ms),
+                    ),
+                    "direct_html_failure": _provider_failure_diagnostics(
+                        direct_html_failure
+                    ),
+                },
+                "extraction": {
+                    "abstract_sections": extraction.abstract_sections,
+                    "section_hints": extraction.section_hints,
+                    "marker_counts": extraction.marker_counts,
+                },
+            },
+            reason=f"Downloaded full text from the IEEE Xplore {runtime_config.backend} HTML fallback route.",
+            fetcher=f"{runtime_config.backend}_ieee_html",
+            browser_context_seed=browser_context_seed,
+            extracted_assets=extracted_assets,
+            trace_markers=[
+                fulltext_marker("ieee", "fail", route="html"),
+                fulltext_marker("ieee", "ok", route="browser_html"),
+                fulltext_marker("ieee", "ok", route="html"),
+            ],
+        )
+    except BrowserRuntimeFailure as exc:
+        raise _browser_failure_as_provider_failure(
+            exc, provider_name=provider_name
+        ) from exc
+    except RequestCancelledError:
+        raise
     except ProviderFailure:
         raise
     except Exception as exc:
@@ -220,63 +427,3 @@ def fetch_ieee_browser_html_payload(
         if browser_session_scope is not None:
             with contextlib.suppress(Exception):
                 browser_session_scope.__exit__(None, None, None)
-
-    extraction = ieee_html._extract_ieee_html(
-        html_text,
-        source_url,
-        metadata=landing_attempt.merged_metadata,
-        context=context,
-    )
-    diagnostics = HtmlQualityAssessor("ieee").assess(
-        extraction.markdown_text,
-        landing_attempt.merged_metadata,
-        html_text=extraction.html_text,
-        title=str(landing_attempt.merged_metadata.get("title") or ""),
-        requested_url=rest_url if payload_source == "rest_response" else document_url,
-        final_url=source_url,
-        response_status=response_status,
-        section_hints=extraction.section_hints,
-    )
-    if not diagnostics.accepted:
-        raise ProviderFailure(NO_RESULT, availability_failure_message(diagnostics))
-    content_type = header_value(response_headers, "content-type", "text/html")
-    extracted_assets = extraction_assets(extraction, landing_attempt)
-    return build_provider_payload(
-        provider=provider_name,
-        route_kind="html",
-        source_url=source_url,
-        content_type=content_type,
-        body=extraction.html_text.encode("utf-8"),
-        markdown_text=extraction.markdown_text,
-        merged_metadata=landing_attempt.merged_metadata,
-        diagnostics={
-            "availability_diagnostics": diagnostics.to_dict(),
-            "browser_html": {
-                "fetcher": f"{runtime_config.backend}_ieee_html",
-                "backend": runtime_config.backend,
-                "payload_source": payload_source,
-                "document_url": document_url,
-                "rest_url": rest_url,
-                "final_url": browser_final_url,
-                "navigation_status": navigation_status,
-                "response_status": response_status,
-                "direct_html_failure": _provider_failure_diagnostics(
-                    direct_html_failure
-                ),
-            },
-            "extraction": {
-                "abstract_sections": extraction.abstract_sections,
-                "section_hints": extraction.section_hints,
-                "marker_counts": extraction.marker_counts,
-            },
-        },
-        reason=f"Downloaded full text from the IEEE Xplore {runtime_config.backend} HTML fallback route.",
-        fetcher=f"{runtime_config.backend}_ieee_html",
-        browser_context_seed=browser_context_seed,
-        extracted_assets=extracted_assets,
-        trace_markers=[
-            fulltext_marker("ieee", "fail", route="html"),
-            fulltext_marker("ieee", "ok", route="browser_html"),
-            fulltext_marker("ieee", "ok", route="html"),
-        ],
-    )

@@ -3,7 +3,11 @@
 from __future__ import annotations
 
 import json
+import hashlib
+import os
+import stat
 import mimetypes
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from hashlib import sha1, sha256
@@ -140,6 +144,15 @@ def _entry_kind_for_path(path: Path, *, doi: str) -> str:
         return "asset"
     if path.name == f"{base}.fetch-envelope.json":
         return "fetch_envelope"
+    if (
+        path.name.startswith(f"{base}.")
+        and path.name.endswith(".fetch-envelope.json")
+        and len(path.name.removeprefix(f"{base}.").removesuffix(".fetch-envelope.json"))
+        == 64
+    ):
+        # Request-fingerprinted variants are internal candidates. The canonical
+        # compatibility sidecar remains the single MCP index entry.
+        return "fetch_envelope_variant"
     if path.suffix.lower() == ".md":
         return "markdown"
     return "primary_payload"
@@ -209,7 +222,12 @@ def _dedupe_entries(entries: list[dict[str, Any]]) -> list[dict[str, Any]]:
     )
 
 
-def _write_index_unlocked(download_dir: Path, entries: list[dict[str, Any]]) -> None:
+def _write_index_unlocked(
+    download_dir: Path,
+    entries: list[dict[str, Any]],
+    *,
+    commit_guard: Callable[[], None] | None = None,
+) -> None:
     index_path = cache_index_path(download_dir)
     if not download_dir.exists():
         return
@@ -217,7 +235,11 @@ def _write_index_unlocked(download_dir: Path, entries: list[dict[str, Any]]) -> 
         "version": INDEX_VERSION,
         "entries": _dedupe_entries(entries),
     }
-    ArtifactStore.from_download_dir(download_dir).write_json_file(index_path, payload)
+    ArtifactStore.from_download_dir(download_dir).write_json_file(
+        index_path,
+        payload,
+        commit_guard=commit_guard,
+    )
 
 
 def _scoped_file(download_dir: Path, path_text: str) -> Path | None:
@@ -232,13 +254,76 @@ def _scoped_file(download_dir: Path, path_text: str) -> Path | None:
         else:
             path = working_directory_candidate
     try:
-        resolved = path.resolve()
+        absolute = path.absolute()
+        relative = absolute.relative_to(root)
+        current = root
+        for part in relative.parts:
+            current = current / part
+            if current.is_symlink():
+                return None
+        resolved = absolute.resolve(strict=True)
         resolved.relative_to(root)
+        mode = resolved.lstat().st_mode
     except (OSError, ValueError):
         return None
-    if not resolved.is_file():
+    if not stat.S_ISREG(mode):
         return None
     return resolved
+
+
+def read_scoped_file(
+    download_dir: Path,
+    path_text: str,
+    *,
+    max_bytes: int | None = None,
+    expected_size: int | None = None,
+    expected_sha256: str | None = None,
+) -> tuple[Path, bytes] | None:
+    """Open a scope-owned regular file without following a final symlink."""
+
+    resolved = _scoped_file(download_dir, path_text)
+    if resolved is None:
+        return None
+    flags = os.O_RDONLY
+    if hasattr(os, "O_NOFOLLOW"):
+        flags |= os.O_NOFOLLOW
+    try:
+        descriptor = os.open(resolved, flags)
+    except OSError:
+        return None
+    try:
+        before = os.fstat(descriptor)
+        if not stat.S_ISREG(before.st_mode):
+            return None
+        size = int(before.st_size)
+        if expected_size is not None and size != int(expected_size):
+            return None
+        if max_bytes is not None and size > max(0, int(max_bytes)):
+            return None
+        chunks: list[bytes] = []
+        remaining = size
+        while remaining > 0:
+            chunk = os.read(descriptor, min(64 * 1024, remaining))
+            if not chunk:
+                return None
+            chunks.append(chunk)
+            remaining -= len(chunk)
+        after = os.fstat(descriptor)
+        if (
+            before.st_dev != after.st_dev
+            or before.st_ino != after.st_ino
+            or before.st_size != after.st_size
+        ):
+            return None
+        payload = b"".join(chunks)
+        normalized_hash = str(expected_sha256 or "").strip().lower()
+        if normalized_hash and hashlib.sha256(payload).hexdigest() != normalized_hash:
+            return None
+        return resolved, payload
+    except OSError:
+        return None
+    finally:
+        os.close(descriptor)
 
 
 def _markdown_entry_from_front_matter(
@@ -687,6 +772,7 @@ def register_markdown_entry(
     has_fulltext: bool,
     content_kind: str,
     completed_at: str | None = None,
+    commit_guard: Callable[[], None] | None = None,
 ) -> dict[str, Any] | None:
     """Register a just-saved Markdown path using the DOI known by the fetch result."""
 
@@ -735,7 +821,11 @@ def register_markdown_entry(
             for candidate in entries
             if str(candidate.get("path") or "") != entry_path
         ]
-        _write_index_unlocked(download_dir, [*retained, entry])
+        _write_index_unlocked(
+            download_dir,
+            [*retained, entry],
+            commit_guard=commit_guard,
+        )
     return entry
 
 
@@ -901,6 +991,7 @@ __all__ = [
     "list_cache_entries",
     "preferred_cached_entries",
     "read_cache_index",
+    "read_scoped_file",
     "refresh_cache_index_for_doi",
     "refresh_cache_index_for_doi_result",
     "register_markdown_entry",

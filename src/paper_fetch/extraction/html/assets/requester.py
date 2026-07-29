@@ -7,25 +7,35 @@ import http.client
 import urllib.error
 import urllib.parse
 import urllib.request
-from typing import Any
+from typing import Any, cast
 from collections.abc import Callable, Mapping
 
 from ....http import (
+    DEFAULT_SAFE_REMOTE_URL_POLICY,
     DEFAULT_MAX_RESPONSE_BYTES,
     RequestCancelledError,
     RequestErrorCategory,
     RequestFailure,
+    SafeRemoteUrlPolicy,
     classify_network_error,
 )
 from ....http.cache import redact_url_for_cache
 from ....models import normalize_text
+from ....pdf_limits import DEFAULT_PDF_MAX_BYTES
 
-DEFAULT_PDF_MAX_RESPONSE_BYTES = 128 * 1024 * 1024
+DEFAULT_PDF_MAX_RESPONSE_BYTES = DEFAULT_PDF_MAX_BYTES
 _READ_CHUNK_BYTES = 64 * 1024
 _SENSITIVE_REDIRECT_HEADERS = frozenset({"authorization", "cookie", "referer"})
 
 
-def _validated_http_url(url: str, *, label: str) -> urllib.parse.ParseResult:
+def _validated_http_url(
+    url: str,
+    *,
+    label: str,
+    policy: SafeRemoteUrlPolicy | None = None,
+    previous_url: str | None = None,
+    resolve_dns: bool = False,
+) -> urllib.parse.ParseResult:
     normalized = normalize_text(url)
     parsed = urllib.parse.urlparse(normalized)
     if (
@@ -40,6 +50,11 @@ def _validated_http_url(url: str, *, label: str) -> urllib.parse.ParseResult:
             url=normalized,
             error_category=RequestErrorCategory.UNSUPPORTED_SCHEME,
         )
+    (policy or DEFAULT_SAFE_REMOTE_URL_POLICY).validate(
+        normalized,
+        previous_url=previous_url,
+        resolve_dns=resolve_dns,
+    )
     return parsed
 
 
@@ -53,6 +68,10 @@ def _origin(parsed: urllib.parse.ParseResult) -> tuple[str, str, int | None]:
 
 
 class _SafeRedirectHandler(urllib.request.HTTPRedirectHandler):
+    def __init__(self, policy: SafeRemoteUrlPolicy | None = None) -> None:
+        super().__init__()
+        self._policy = policy
+
     def redirect_request(
         self,
         request: urllib.request.Request,
@@ -62,8 +81,18 @@ class _SafeRedirectHandler(urllib.request.HTTPRedirectHandler):
         headers: http.client.HTTPMessage,
         new_url: str,
     ) -> urllib.request.Request | None:
-        source = _validated_http_url(request.full_url, label="redirect source URL")
-        target = _validated_http_url(new_url, label="redirect target URL")
+        source = _validated_http_url(
+            request.full_url,
+            label="redirect source URL",
+            policy=self._policy,
+        )
+        target = _validated_http_url(
+            new_url,
+            label="redirect target URL",
+            policy=self._policy,
+            previous_url=request.full_url,
+            resolve_dns=self._policy is not None,
+        )
         redirected = super().redirect_request(
             request, file_pointer, code, message, headers, new_url
         )
@@ -192,9 +221,11 @@ def build_cookie_seeded_opener(
     *,
     headers: Mapping[str, str],
     timeout: int,
+    timeout_provider: Callable[[], int] | None = None,
     browser_cookies: list[dict[str, Any]] | None = None,
     cancel_check: Callable[[], bool] | None = None,
     force: bool = False,
+    remote_url_policy: SafeRemoteUrlPolicy | None = None,
 ) -> urllib.request.OpenerDirector | None:
     normalized_seed_urls = [
         normalize_text(url) for url in seed_urls or [] if normalize_text(url)
@@ -206,10 +237,12 @@ def build_cookie_seeded_opener(
     ):
         return None
 
+    policy = remote_url_policy or DEFAULT_SAFE_REMOTE_URL_POLICY
     opener = urllib.request.build_opener(
         urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()),
-        _SafeRedirectHandler(),
+        _SafeRedirectHandler(policy),
     )
+    cast(Any, opener)._paper_fetch_remote_url_policy = policy
     seed_headers = {
         key: value
         for key, value in dict(headers).items()
@@ -222,14 +255,24 @@ def build_cookie_seeded_opener(
     for seed_url in normalized_seed_urls:
         if cancel_check is not None and cancel_check():
             raise RequestCancelledError("Request cancelled.")
-        _validated_http_url(seed_url, label="cookie seed URL")
+        _validated_http_url(
+            seed_url,
+            label="cookie seed URL",
+            policy=policy,
+            resolve_dns=True,
+        )
         request_headers = dict(seed_headers)
         cookie_header = cookie_header_for_url(browser_cookies, seed_url)
         if cookie_header:
             request_headers["Cookie"] = cookie_header
         request = urllib.request.Request(seed_url, headers=request_headers)
         try:
-            with opener.open(request, timeout=timeout) as response:
+            active_timeout = (
+                max(1, int(timeout_provider()))
+                if timeout_provider is not None
+                else timeout
+            )
+            with opener.open(request, timeout=active_timeout) as response:
                 response.read(1024)
                 if cancel_check is not None and cancel_check():
                     raise RequestCancelledError("Request cancelled.")
@@ -251,12 +294,24 @@ def request_with_opener(
     max_response_bytes: int = DEFAULT_MAX_RESPONSE_BYTES,
     cancel_check: Callable[[], bool] | None = None,
 ) -> dict[str, Any]:
-    _validated_http_url(url, label=failure_label)
+    policy = getattr(opener, "_paper_fetch_remote_url_policy", None)
+    _validated_http_url(
+        url,
+        label=failure_label,
+        policy=policy,
+        resolve_dns=policy is not None,
+    )
     request = urllib.request.Request(url, headers=dict(headers))
     try:
         with opener.open(request, timeout=timeout) as response:
             final_url = str(response.geturl() or url)
-            _validated_http_url(final_url, label="redirect result URL")
+            _validated_http_url(
+                final_url,
+                label="redirect result URL",
+                policy=policy,
+                previous_url=url,
+                resolve_dns=policy is not None,
+            )
             return {
                 "status_code": int(getattr(response, "status", response.getcode())),
                 "headers": {
@@ -275,7 +330,13 @@ def request_with_opener(
         raise
     except urllib.error.HTTPError as exc:
         final_url = str(exc.geturl() or url)
-        _validated_http_url(final_url, label="HTTP error URL")
+        _validated_http_url(
+            final_url,
+            label="HTTP error URL",
+            policy=policy,
+            previous_url=url,
+            resolve_dns=policy is not None,
+        )
         raise RequestFailure(
             exc.code,
             f"HTTP {exc.code} for {redact_url_for_cache(final_url)}",

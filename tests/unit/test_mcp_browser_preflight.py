@@ -200,7 +200,7 @@ class McpBrowserPreflightAsyncTests(unittest.IsolatedAsyncioTestCase):
             deps=mcp_test_deps(run_browser_provider_preflight=fake_preflight),
         )
 
-        self.assertFalse(result.isError)
+        self.assertFalse(result.is_error)
         self.assertEqual(
             ctx.progress[0],
             (0, 1, "Starting live browser_preflight"),

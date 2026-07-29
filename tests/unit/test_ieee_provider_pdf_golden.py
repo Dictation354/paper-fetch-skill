@@ -288,6 +288,9 @@ class IeeeProviderPdfGoldenTests(unittest.TestCase):
             self.assertEqual(
                 mocked_browser.call_args.kwargs["seed_urls"], [landing_url]
             )
+            browser_request = mocked_browser.call_args.kwargs["request"]
+            self.assertIs(browser_request.runtime, runtime)
+            self.assertEqual(browser_request.expected_identity, {"doi": doi.lower()})
 
         self.assertEqual(raw_payload.content.route_kind, "pdf_fallback")
         self.assertEqual(article.source, "ieee_pdf")

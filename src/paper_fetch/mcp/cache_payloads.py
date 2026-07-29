@@ -14,7 +14,11 @@ from .cache_index import (
     CACHE_INDEX_MODE_RESCAN,
     CACHE_INDEX_MODE_REFRESH,
 )
-from .fetch_cache import FetchCache
+from .fetch_cache import (
+    PUBLIC_CREDENTIAL_SCOPE,
+    FetchCache,
+    credential_scope_from_env,
+)
 from .results import _tool_result, error_payload_from_exception, with_schema_version
 from .schemas import FetchStrategyInput, GetCachedRequest
 
@@ -82,18 +86,40 @@ def get_cached_payload(
     )
     runtime_env = deps.build_runtime_env(env)
     effective_download_dir = _resolve_download_dir(runtime_env, download_dir, deps=deps)
-    return with_schema_version(
-        FetchCache(
+
+    def payload_for_scope(credential_scope: str) -> dict[str, Any]:
+        return FetchCache(
             effective_download_dir,
             refresh_cache_index_for_doi_fn=deps.refresh_cache_index_for_doi,
             preferred_cached_entries_fn=deps.preferred_cached_entries,
+            credential_scope=credential_scope,
         ).get_payload(
             request.doi,
             request=request.to_fetch_request(),
             detail=request.detail,
             preferred_only=request.preferred_only,
         )
+
+    active_scope = credential_scope_from_env(runtime_env)
+    payload = payload_for_scope(active_scope)
+    sidecar = payload.get("sidecar")
+    sidecar_status = (
+        str(sidecar.get("status") or "") if isinstance(sidecar, Mapping) else ""
     )
+    if active_scope != PUBLIC_CREDENTIAL_SCOPE and sidecar_status in {
+        "missing",
+        "credential_scope_mismatch",
+    }:
+        public_payload = payload_for_scope(PUBLIC_CREDENTIAL_SCOPE)
+        public_sidecar = public_payload.get("sidecar")
+        public_status = (
+            str(public_sidecar.get("status") or "")
+            if isinstance(public_sidecar, Mapping)
+            else ""
+        )
+        if public_status not in {"missing", "credential_scope_mismatch"}:
+            payload = public_payload
+    return with_schema_version(payload)
 
 
 def cached_entry_payload(

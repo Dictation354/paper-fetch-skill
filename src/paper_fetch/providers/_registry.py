@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from dataclasses import dataclass
+from dataclasses import replace
+import threading
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any
-from collections.abc import Callable
 
-from ..provider_catalog import ProviderSpec
+from ..provider_catalog import ProviderRouteSpec, ProviderSpec
 
 if TYPE_CHECKING:
     from ..extraction.html.provider_rules import ProviderHtmlRules
@@ -60,49 +61,159 @@ class ProviderBundle:
                 raise ValueError(
                     "Provider bundle HTML rules must match the catalog provider name."
                 )
+        object.__setattr__(
+            self,
+            "catalog",
+            replace(
+                self.catalog,
+                routes=tuple(
+                    replace(
+                        route,
+                        source=route.source
+                        or _default_bundle_route_source(
+                            self.catalog.name,
+                            route,
+                            self.sources,
+                        ),
+                    )
+                    for route in self.catalog.routes
+                ),
+            ),
+        )
+
+
+def _default_bundle_route_source(
+    provider: str,
+    route: ProviderRouteSpec,
+    sources: tuple[str, ...],
+) -> str:
+    if route.kind == "metadata":
+        return sources[0] if provider == "crossref" and sources else route.name
+    suffix = {
+        "html": "_html",
+        "xml": "_xml",
+        "pdf": "_pdf",
+    }.get(route.kind)
+    if suffix is not None:
+        matching = next((source for source in sources if source.endswith(suffix)), None)
+        if matching is not None:
+            return matching
+    if route.kind == "assets":
+        xml_source = next(
+            (source for source in sources if source.endswith("_xml")),
+            None,
+        )
+        if xml_source is not None:
+            return xml_source
+    if sources:
+        return sources[0]
+    return route.name
 
 
 _REGISTERED_PROVIDERS: dict[str, ProviderBundle] = {}
-_ENSURING_PROVIDER_IMPORTS = False
+_REGISTRY_LOCK = threading.RLock()
+_ENSURING_PROVIDER_IMPORTS_THREAD: int | None = None
+_PROVIDER_IMPORT_EVENT: threading.Event | None = None
 
 
 def _ensure_provider_entry_modules_imported() -> None:
-    global _ENSURING_PROVIDER_IMPORTS
-    if _ENSURING_PROVIDER_IMPORTS:
+    global _ENSURING_PROVIDER_IMPORTS_THREAD, _PROVIDER_IMPORT_EVENT
+    current_thread = threading.get_ident()
+    wait_event: threading.Event | None = None
+    with _REGISTRY_LOCK:
+        if _ENSURING_PROVIDER_IMPORTS_THREAD == current_thread:
+            return
+        if _ENSURING_PROVIDER_IMPORTS_THREAD is not None:
+            wait_event = _PROVIDER_IMPORT_EVENT
+        else:
+            _ENSURING_PROVIDER_IMPORTS_THREAD = current_thread
+            _PROVIDER_IMPORT_EVENT = threading.Event()
+    if wait_event is not None:
+        wait_event.wait()
         return
-    _ENSURING_PROVIDER_IMPORTS = True
     try:
         import paper_fetch.providers as provider_entries
 
         provider_entries.import_provider_entry_modules()
     finally:
-        _ENSURING_PROVIDER_IMPORTS = False
+        with _REGISTRY_LOCK:
+            _ENSURING_PROVIDER_IMPORTS_THREAD = None
+            completed_event = _PROVIDER_IMPORT_EVENT
+            _PROVIDER_IMPORT_EVENT = None
+            if completed_event is not None:
+                completed_event.set()
+
+
+def _validate_registration_conflicts(
+    bundle: ProviderBundle,
+    *,
+    name: str,
+) -> None:
+    for existing_name, existing in _REGISTERED_PROVIDERS.items():
+        if existing.catalog.status_order == bundle.catalog.status_order:
+            raise ValueError(
+                "Provider status_order conflict: "
+                f"{name} and {existing_name} both use {bundle.catalog.status_order}."
+            )
+        if (
+            bundle.catalog.client_factory_path
+            and existing.catalog.client_factory_path
+            == bundle.catalog.client_factory_path
+        ):
+            raise ValueError(
+                "Provider client factory conflict: "
+                f"{name} and {existing_name} both use "
+                f"{bundle.catalog.client_factory_path!r}."
+            )
+        duplicate_sources = set(bundle.sources) & set(existing.sources)
+        if duplicate_sources:
+            raise ValueError(
+                "Provider source conflict: "
+                f"{name} and {existing_name} both declare "
+                f"{', '.join(sorted(duplicate_sources))}."
+            )
+        duplicate_domains = {domain.lower() for domain in bundle.catalog.domains} & {
+            domain.lower() for domain in existing.catalog.domains
+        }
+        if duplicate_domains:
+            raise ValueError(
+                "Provider domain conflict: "
+                f"{name} and {existing_name} both declare "
+                f"{', '.join(sorted(duplicate_domains))}."
+            )
 
 
 def register_provider_bundle(bundle: ProviderBundle) -> None:
     name = bundle.catalog.name.strip().lower()
     if not name:
         raise ValueError("Provider bundle catalog name is required.")
-    existing = _REGISTERED_PROVIDERS.get(name)
-    if existing is not None:
-        if existing == bundle:
-            return
-        raise ValueError(f"Provider bundle already registered: {name}")
-    _REGISTERED_PROVIDERS[name] = bundle
+    with _REGISTRY_LOCK:
+        existing = _REGISTERED_PROVIDERS.get(name)
+        if existing is not None:
+            if existing == bundle:
+                return
+            raise ValueError(f"Provider bundle already registered: {name}")
+        _validate_registration_conflicts(bundle, name=name)
+        _REGISTERED_PROVIDERS[name] = bundle
 
 
 def iter_provider_bundles() -> Iterator[ProviderBundle]:
     _ensure_provider_entry_modules_imported()
-    yield from sorted(
-        MappingProxyType(_REGISTERED_PROVIDERS).values(),
-        key=lambda bundle: bundle.catalog.status_order,
-    )
+    with _REGISTRY_LOCK:
+        snapshot = tuple(
+            sorted(
+                MappingProxyType(dict(_REGISTERED_PROVIDERS)).values(),
+                key=lambda bundle: bundle.catalog.status_order,
+            )
+        )
+    yield from snapshot
 
 
 def provider_bundle(name: str) -> ProviderBundle:
     _ensure_provider_entry_modules_imported()
     normalized = str(name or "").strip().lower()
-    try:
-        return _REGISTERED_PROVIDERS[normalized]
-    except KeyError as exc:
-        raise KeyError(f"Unknown provider bundle: {name!r}") from exc
+    with _REGISTRY_LOCK:
+        try:
+            return _REGISTERED_PROVIDERS[normalized]
+        except KeyError as exc:
+            raise KeyError(f"Unknown provider bundle: {name!r}") from exc

@@ -9,6 +9,7 @@ from ...http import PDF_MIME_TYPE, RequestCancelledError
 from ...runtime import RuntimeContext
 from ...tracing import trace_event, trace_from_markers
 from ...reason_codes import PDF_FALLBACK
+from .._pdf_fallback import PdfRequestContext
 from ..base import ProviderContent, RawFulltextPayload
 from ..browser_runtime.api import (
     storage_state_path as browser_runtime_storage_state_path,
@@ -101,7 +102,10 @@ def fetch_seeded_browser_pdf_payload(
         browser_config=runtime,
         seed_urls=seed_urls,
         allow_pdf_only=True,
-        context=context,
+        request=PdfRequestContext(
+            expected_identity={"doi": doi} if doi else None,
+            runtime=context,
+        ),
     )
     _raise_if_cancelled(context)
     payload_warnings = [str(item) for item in warnings or [] if str(item).strip()]
@@ -126,6 +130,7 @@ def fetch_seeded_browser_pdf_payload(
                 message=html_failure_message,
             )
         )
+    pdf_diagnostics = getattr(pdf_result, "diagnostics", None)
     return RawFulltextPayload(
         provider=provider,
         source_url=pdf_result.final_url,
@@ -137,9 +142,16 @@ def fetch_seeded_browser_pdf_payload(
             content_type=PDF_MIME_TYPE,
             body=pdf_result.pdf_bytes,
             markdown_text=pdf_result.markdown_text,
-            diagnostics=(
-                {"html_failure": failure_diagnostics} if failure_diagnostics else {}
-            ),
+            diagnostics={
+                **(
+                    {"html_failure": failure_diagnostics} if failure_diagnostics else {}
+                ),
+                "pdf": (
+                    dict(pdf_diagnostics)
+                    if isinstance(pdf_diagnostics, Mapping)
+                    else {}
+                ),
+            },
             html_failure_reason=html_failure_reason,
             html_failure_message=html_failure_message,
             suggested_filename=pdf_result.suggested_filename,

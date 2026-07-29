@@ -174,9 +174,9 @@ fixtures:
     structure:
       doi: 10.1021/acsomega.4c03987
       evidence_url: https://pubs.acs.org/acsodf/article/9/33/35676/358560/Functionalized-Metal-Free-Carbon-Nanosphere
-      evidence_reason: The 2026-07-27 browser capture records the current ACS
-        Silverchair page. Its .article-body contains one abstract plus ten body
-        sections, including tables, eight figures, conclusions, and 45 references.
+      evidence_reason: The 2026-07-27 browser capture records the current ACS Silverchair
+        page. Its .article-body contains one abstract plus ten body sections, including
+        tables, eight figures, conclusions, and 45 references.
       observed_signals:
         - article_html
         - silverchair_article_body
@@ -186,8 +186,8 @@ fixtures:
     table:
       doi: 10.1021/acsomega.4c03987
       evidence_url: https://pubs.acs.org/acsodf/article/9/33/35676/358560/Functionalized-Metal-Free-Carbon-Nanosphere
-      evidence_reason: The refreshed Silverchair replay preserves three body
-        tables, including Table 1 with OPD conversion columns, as Markdown tables.
+      evidence_reason: The refreshed Silverchair replay preserves three body tables,
+        including Table 1 with OPD conversion columns, as Markdown tables.
       observed_signals:
         - article_html
         - body_tables
@@ -196,9 +196,9 @@ fixtures:
     formula:
       doi: 10.1021/acsomega.3c06992
       evidence_url: https://pubs.acs.org/acsodf/article/8/51/49088/341563/General-Equation-to-Estimate-the-Physicochemical
-      evidence_reason: The 2026-07-27 Silverchair capture contains 21 display
-        formulas, which the ACS extraction renders as 21 LaTeX blocks while
-        preserving S_{CNE}, tables, conclusions, and 20 references.
+      evidence_reason: The 2026-07-27 Silverchair capture contains 21 display formulas,
+        which the ACS extraction renders as 21 LaTeX blocks while preserving S_{CNE},
+        tables, conclusions, and 20 references.
       observed_signals:
         - article_html
         - mathml
@@ -208,10 +208,10 @@ fixtures:
     figure:
       doi: 10.1021/acsomega.4c03987
       evidence_url: https://pubs.acs.org/acsodf/article/9/33/35676/358560/Functionalized-Metal-Free-Carbon-Nanosphere
-      evidence_reason: The refreshed Silverchair replay exposes eight
-        .fig.fig-section figures with captions, CDN previews, and view-large
-        figure-page candidates. Final live review resolves and downloads all
-        eight signed full-size images without warnings.
+      evidence_reason: The refreshed Silverchair replay exposes eight .fig.fig-section
+        figures with captions, CDN previews, and view-large figure-page candidates.
+        Final live review resolves and downloads all eight signed full-size images
+        without warnings.
       observed_signals:
         - article_html
         - silverchair_fig_section
@@ -221,9 +221,9 @@ fixtures:
     supplementary:
       doi: 10.1021/acsomega.4c03987
       evidence_url: https://pubs.acs.org/acsodf/article/9/33/35676/358560/Functionalized-Metal-Free-Carbon-Nanosphere
-      evidence_reason: The refreshed page exposes Supporting Information in
-        .widget-ArticleDataSupplements. The stable ACS article-supplement link
-        is accepted, while the embedded Figshare downloader is excluded.
+      evidence_reason: The refreshed page exposes Supporting Information in .widget-ArticleDataSupplements.
+        The stable ACS article-supplement link is accepted, while the embedded Figshare
+        downloader is excluded.
       observed_signals:
         - article_html
         - supplementary
@@ -235,8 +235,8 @@ fixtures:
       doi: 10.1021/acsomega.4c03987
       evidence_url: https://pubs.acs.org/acsodf/article/9/33/35676/358560/Functionalized-Metal-Free-Carbon-Nanosphere
       evidence_reason: The refreshed .ref-list contains 45 structured references;
-        provider extraction preserves labels, visible citation text, years, and
-        DOI values while removing Crossref and resolver chrome.
+        provider extraction preserves labels, visible citation text, years, and DOI
+        values while removing Crossref and resolver chrome.
       observed_signals:
         - article_html
         - ref_list
@@ -247,11 +247,10 @@ fixtures:
     pdf_fallback:
       doi: 10.1021/acsomega.2c02828
       evidence_url: https://pubs.acs.org/acsodf/article-pdf/7/30/26670/3637446/ao2c02828.pdf
-      evidence_reason: The 2026-07-27 capture reused the selected Camoufox
-        runtime and recorded 2,862,524 valid PDF bytes from the current
-        Silverchair article-pdf route. Shared PDF conversion produces 15 body
-        sections; repeated page chrome and two-column reference order remain a
-        documented nonblocking layout limitation.
+      evidence_reason: The 2026-07-27 capture reused the selected Camoufox runtime
+        and recorded 2,862,524 valid PDF bytes from the current Silverchair article-pdf
+        route. Shared PDF conversion produces 15 body sections; repeated page chrome
+        and two-column reference order remain a documented nonblocking layout limitation.
       observed_signals:
         - pdf_fallback
         - browser_runtime
@@ -278,8 +277,8 @@ fixtures:
       doi: null
       evidence_url: https://pubs.acs.org/
       evidence_reason: Retry did not find a stable ACS empty-shell DOI; candidate
-        empty-shell evidence came from non-ACS or redirect metadata rather than
-        pubs.acs.org article pages.
+        empty-shell evidence came from non-ACS or redirect metadata rather than pubs.acs.org
+        article pages.
       observed_signals: []
       confidence: low
   discovery_proof:
@@ -295,16 +294,15 @@ fixtures:
         - 10.1021/cen-09444-acsnews003
       selected_doi: 10.1021/acsomega.4c03987
       rejections:
-        10.1021/acsinfecdis.0c00778: Metadata retry candidate was not selected
-          because no table-specific landing-page replay signal was verified.
+        10.1021/acsinfecdis.0c00778: Metadata retry candidate was not selected because
+          no table-specific landing-page replay signal was verified.
         10.1021/cen-09343-ad19: Metadata retry candidate was not selected because
           it is not a stable table-specific article replay.
-        10.1021/cen-09444-acsnews003: Metadata retry candidate was not selected
-          because it is C&EN news content and not a stable table-specific article
-          replay.
+        10.1021/cen-09444-acsnews003: Metadata retry candidate was not selected because
+          it is C&EN news content and not a stable table-specific article replay.
       exhausted: false
-      evidence_summary: Existing ACS Omega replay was promoted for table after
-        extracted Markdown showed pipe-table output for Table 1.
+      evidence_summary: Existing ACS Omega replay was promoted for table after extracted
+        Markdown showed pipe-table output for Table 1.
     formula:
       queries:
         - ACS 10.1021 formula equation math DOI candidates
@@ -326,34 +324,33 @@ fixtures:
         - 10.1021/acsomega.5c08380
       selected_doi: 10.1021/acsomega.3c06992
       rejections:
-        10.1021/acsomega.4c03987: Same DOI not selected for formula because the
-          retry confirmed table and supplementary signals but no formula/equation
-          Markdown contract.
+        10.1021/acsomega.4c03987: Same DOI not selected for formula because the retry
+          confirmed table and supplementary signals but no formula/equation Markdown
+          contract.
         10.1021/acsnano.7b07460: Metadata retry candidate was not selected because
           it lacked verified ACS landing-page MathML or equation replay evidence.
-        10.1021/acsomega.2c02828: Article exposes display formula structure, but
-          it is reserved as the distinct PDF fallback DOI sample.
-        10.1021/acsomega.2c06813: Article exposes MathML formula nodes, but the
-          selected DOI had a denser formula set and cleaner rendered contract.
+        10.1021/acsomega.2c02828: Article exposes display formula structure, but it
+          is reserved as the distinct PDF fallback DOI sample.
+        10.1021/acsomega.2c06813: Article exposes MathML formula nodes, but the selected
+          DOI had a denser formula set and cleaner rendered contract.
         10.1021/acsomega.9b00270: Article exposes formula signals, but the selected
           DOI rendered simpler LaTeX formula blocks for regression assertions.
-        10.1021/acsomega.4c00339: Article exposes many MathJax script formula
-          nodes, but its large page is less compact for onboarding replay.
+        10.1021/acsomega.4c00339: Article exposes many MathJax script formula nodes,
+          but its large page is less compact for onboarding replay.
         10.1021/acsomega.0c01540: Article exposes formula signals, but the selected
           DOI rendered clearer SCNE/NPOH equation assertions.
         10.1021/acsomega.0c02856: Article exposes formula signals, but the selected
           DOI rendered clearer SCNE/NPOH equation assertions.
-        10.1021/acsomega.3c00368: Article exposes MathML formula nodes, but the
-          selected DOI had more formula coverage.
-        10.1021/acsomega.4c09457: Article exposes MathML formula nodes, but the
-          selected DOI is the earlier related article and keeps a stable replay
-          size.
+        10.1021/acsomega.3c00368: Article exposes MathML formula nodes, but the selected
+          DOI had more formula coverage.
+        10.1021/acsomega.4c09457: Article exposes MathML formula nodes, but the selected
+          DOI is the earlier related article and keeps a stable replay size.
         10.1021/acsomega.5c08380: Article exposes MathML formula nodes, but it is
           newer and not needed once 10.1021/acsomega.3c06992 passed extraction.
       exhausted: false
-      evidence_summary: Expanded formula retry promoted 10.1021/acsomega.3c06992
-        after project extraction rendered MathML equations as LaTeX blocks with
-        S_{CNE} and no formula-unavailable placeholders.
+      evidence_summary: Expanded formula retry promoted 10.1021/acsomega.3c06992 after
+        project extraction rendered MathML equations as LaTeX blocks with S_{CNE}
+        and no formula-unavailable placeholders.
     supplementary:
       queries:
         - ACS 10.1021 supplementary supporting information DOI candidates
@@ -366,19 +363,18 @@ fixtures:
         - 10.7717/peerj.5069/supp-1
       selected_doi: 10.1021/acsomega.4c03987
       rejections:
-        10.1021/acs.jproteome.8b00702: Metadata retry candidate was not selected
-          because the current ACS Omega replay already has verified Supporting
-          Information HTML and Markdown coverage.
-        10.1038/s41579-019-0299-x: Candidate was not selected because it belongs
-          to a different provider route and only appeared as broad metadata search
-          noise.
-        10.7717/peerj.5069/supp-1: Candidate was not selected because it is a
-          PeerJ supplementary-asset DOI, not an ACS article replay for the shared
-          ACS browser workflow.
+        10.1021/acs.jproteome.8b00702: Metadata retry candidate was not selected because
+          the current ACS Omega replay already has verified Supporting Information
+          HTML and Markdown coverage.
+        10.1038/s41579-019-0299-x: Candidate was not selected because it belongs to
+          a different provider route and only appeared as broad metadata search noise.
+        10.7717/peerj.5069/supp-1: Candidate was not selected because it is a PeerJ
+          supplementary-asset DOI, not an ACS article replay for the shared ACS browser
+          workflow.
       exhausted: false
-      evidence_summary: Existing ACS Omega replay was promoted for supplementary
-        after captured HTML and extracted Markdown exposed Supporting Information
-        and a supplementary PDF link.
+      evidence_summary: Existing ACS Omega replay was promoted for supplementary after
+        captured HTML and extracted Markdown exposed Supporting Information and a
+        supplementary PDF link.
     abstract_only:
       queries:
         - acs 10.1021 abstract only metadata DOI candidates
@@ -393,16 +389,15 @@ fixtures:
         10.1016/j.ymben.2020.10.005: Candidate was not selected because it belongs
           to a different provider route and does not exercise ACS provider-managed
           abstract-only degradation.
-        10.1186/s13321-017-0207-1: Candidate was not selected because it belongs
-          to a different provider route and only provided generic metadata/abstract
-          evidence.
-        10.1186/s13321-017-0247-6: Candidate was not selected because it belongs
-          to a different provider route and does not provide a stable ACS
-          abstract-only replay.
+        10.1186/s13321-017-0207-1: Candidate was not selected because it belongs to
+          a different provider route and only provided generic metadata/abstract evidence.
+        10.1186/s13321-017-0247-6: Candidate was not selected because it belongs to
+          a different provider route and does not provide a stable ACS abstract-only
+          replay.
       exhausted: true
-      evidence_summary: Operator reviewed the abstract-only candidate search and
-        accepted the null ACS sample because available candidates were generic
-        metadata or non-ACS routes rather than stable ACS abstract-only degradation.
+      evidence_summary: Operator reviewed the abstract-only candidate search and accepted
+        the null ACS sample because available candidates were generic metadata or
+        non-ACS routes rather than stable ACS abstract-only degradation.
     access_gate:
       queries:
         - acs 10.1021 access gate paywall DOI candidates
@@ -414,18 +409,17 @@ fixtures:
         - 10.1111/ijcp.12743
       selected_doi: null
       rejections:
-        10.1039/d4sc03921a: Candidate was not selected because it belongs to a
-          different provider route and does not exercise an ACS entitlement gate.
+        10.1039/d4sc03921a: Candidate was not selected because it belongs to a different
+          provider route and does not exercise an ACS entitlement gate.
         10.1044/2022-0919-slp-aud-research: Candidate was not selected because it
           belongs to a different provider route and only matched broad access/paywall
           metadata terms.
-        10.1111/ijcp.12743: Candidate was not selected because it belongs to a
-          different provider route and does not provide stable ACS access-gate
-          replay evidence.
+        10.1111/ijcp.12743: Candidate was not selected because it belongs to a different
+          provider route and does not provide stable ACS access-gate replay evidence.
       exhausted: true
-      evidence_summary: Operator reviewed the access-gate candidate search and
-        accepted the null ACS sample because gate behavior depends on entitlement
-        and challenge state, which the ACS access review forbids bypassing.
+      evidence_summary: Operator reviewed the access-gate candidate search and accepted
+        the null ACS sample because gate behavior depends on entitlement and challenge
+        state, which the ACS access review forbids bypassing.
     empty_shell:
       queries:
         - acs 10.1021 empty shell article shell DOI candidates
@@ -437,18 +431,17 @@ fixtures:
         - 10.1016/j.ijpharm.2021.120586
       selected_doi: null
       rejections:
-        10.2458/azu_acku_pamphlet_s_471_a3_u437_2009: Candidate was not selected
-          because it is not an ACS article route despite matching empty-shell terms.
+        10.2458/azu_acku_pamphlet_s_471_a3_u437_2009: Candidate was not selected because
+          it is not an ACS article route despite matching empty-shell terms.
         10.1007/s40820-020-00423-3: Candidate was not selected because it belongs
           to a different provider route and exposes metadata/fulltext signals rather
           than a stable ACS empty shell.
         10.1016/j.ijpharm.2021.120586: Candidate was not selected because it belongs
-          to a different provider route and does not exercise ACS empty-shell
-          handling.
+          to a different provider route and does not exercise ACS empty-shell handling.
       exhausted: true
-      evidence_summary: Operator reviewed the empty-shell candidate search and
-        accepted the null ACS sample because available candidates were non-ACS or
-        redirect metadata rather than stable pubs.acs.org article shells.
+      evidence_summary: Operator reviewed the empty-shell candidate search and accepted
+        the null ACS sample because available candidates were non-ACS or redirect
+        metadata rather than stable pubs.acs.org article shells.
 extraction_hints:
   datalayer_signal_set: null
   text_marker_signal_set: null
@@ -474,19 +467,15 @@ extraction_hints:
   metadata_merge: []
 owner_reuse_exceptions: []
 docs:
-  providers_md_capability_row: '`acs` | 依赖 Crossref routing | `selected-browser
-    Silverchair HTML -> browser-seeded publisher PDF/ePDF -> provider-managed
-    abstract_only` | HTML 路线支持 `none` / `body` / `all`，识别当前 `.article-body`
-    / `.widget-ArticleFulltext`、`.fig.fig-section`、`.ref-list` 和
-    `.widget-ArticleDataSupplements`；PDF/ePDF fallback 支持共享 PDF 图片导出 |
-    中 | ACS 通过 `10.1021/` DOI、用户指定的 `www.acs.org` 域和实际文章 host
-    `pubs.acs.org` 路由，公开 source 为 `acs`'
+  providers_md_capability_row: '`acs` | 依赖 Crossref routing | `selected-browser Silverchair
+    HTML -> browser-seeded publisher PDF/ePDF -> provider-managed abstract_only` |
+    HTML 路线支持 `none` / `body` / `all`，识别当前 `.article-body` / `.widget-ArticleFulltext`、`.fig.fig-section`、`.ref-list`
+    和 `.widget-ArticleDataSupplements`；PDF/ePDF fallback 支持共享 PDF 图片导出 | 中 | ACS 通过
+    `10.1021/` DOI、用户指定的 `www.acs.org` 域和实际文章 host `pubs.acs.org` 路由，公开 source 为 `acs`'
   changelog_summary: Refresh ACS (`acs`) for the current Silverchair article DOM,
-    including complete body selection, structured figures/references, stable
-    article-supplement scope, and selected Camoufox PDF fixture capture.
-  extraction_rules_summary: ACS 当前 Silverchair 提取以 `.article-body` 为完整根，
-    保留正文 section、tables、`.fig.fig-section` figures、MathML formula 和
-    `.ref-list` references；Supporting Information 只从原始
-    `.widget-ArticleDataSupplements` 接受稳定 `/article-supplement/` 链接，
-    不让嵌入 Figshare viewer 替换正文。PDF fixture 捕获和 fallback 复用所选
-    Camoufox runtime。
+    including complete body selection, structured figures/references, stable article-supplement
+    scope, and selected Camoufox PDF fixture capture.
+  extraction_rules_summary: ACS 当前 Silverchair 提取以 `.article-body` 为完整根， 保留正文 section、tables、`.fig.fig-section`
+    figures、MathML formula 和 `.ref-list` references；Supporting Information 只从原始 `.widget-ArticleDataSupplements`
+    接受稳定 `/article-supplement/` 链接， 不让嵌入 Figshare viewer 替换正文。PDF fixture 捕获和 fallback
+    复用所选 Camoufox runtime。

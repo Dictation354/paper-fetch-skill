@@ -407,6 +407,7 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
                     "section": "supplementary",
                 }
             ],
+            fetch_policy="browser_first",
         )
         recovery = BrowserAssetRecoveryContext(
             runtime=SimpleNamespace(

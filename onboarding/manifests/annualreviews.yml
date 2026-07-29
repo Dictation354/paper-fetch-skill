@@ -3,7 +3,7 @@ name: annualreviews
 display_source: annualreviews_html
 generation:
   generated_by: ai_discovery
-  generated_at: "2026-05-23T00:00:00Z"
+  generated_at: '2026-05-23T00:00:00Z'
   source_queries:
     - Annual Reviews CloakBrowser HTML route analysis for 10.1146/annurev-control-030123-013355
     - Annual Reviews CloakBrowser HTML route analysis for 10.1146/annurev-environ-102511-084654
@@ -14,11 +14,14 @@ generation:
     - Annual Reviews 10.1146 formula equation math DOI candidates
     - site:annualreviews.org Annual Reviews formula equation math article DOI
     - 10.1146 formula equation math fixture discovery annualreviews
-    - Annual Reviews Active Properties Neocortical Pyramidal Neuron Dendrites formula notation DOI
+    - Annual Reviews Active Properties Neocortical Pyramidal Neuron Dendrites formula
+      notation DOI
     - Annual Reviews 10.1146 supplementary supporting information DOI candidates
-    - site:annualreviews.org Annual Reviews supplementary supporting information article DOI
+    - site:annualreviews.org Annual Reviews supplementary supporting information article
+      DOI
     - 10.1146 supplementary supporting information fixture discovery annualreviews
-    - Annual Reviews Active Properties Neocortical Pyramidal Neuron Dendrites supplemental DOI
+    - Annual Reviews Active Properties Neocortical Pyramidal Neuron Dendrites supplemental
+      DOI
   confidence: medium
 routing:
   primary: doi_prefix
@@ -51,10 +54,10 @@ success_criteria:
 route_contract:
   landing_html:
     success_requires:
-      - CloakBrowser loads an Annual Reviews DOI landing page through /content/journals/{doi} or
-        /doi/{doi}
-      - "dynamic full-text container #html_fulltext or #itemFullTextId is present or can be resolved from
-        the landing page"
+      - CloakBrowser loads an Annual Reviews DOI landing page through /content/journals/{doi}
+        or /doi/{doi}
+      - 'dynamic full-text container #html_fulltext or #itemFullTextId is present
+        or can be resolved from the landing page'
       - Crossref or landing metadata identifies an Annual Reviews journal article
     reject_if_any:
       - Cloudflare challenge page
@@ -62,11 +65,11 @@ route_contract:
       - static Full text loading shell without populated dynamic article content
       - Knowable Magazine content or 10.1146/knowable-* DOI
       - issue page or non-article landing page
-    notes: Landing HTML is browser-only discovery input; direct HTTP challenge responses are
-      diagnostic and must not be accepted as successful route output.
+    notes: Landing HTML is browser-only discovery input; direct HTTP challenge responses
+      are diagnostic and must not be accepted as successful route output.
   article_html:
     success_requires:
-      - "CloakBrowser-rendered page contains #html_fulltext or #itemFullTextId"
+      - 'CloakBrowser-rendered page contains #html_fulltext or #itemFullTextId'
       - provider article body contains .articleSection sections
       - title or DOI metadata is present
       - body text includes full-text sections and references
@@ -81,12 +84,12 @@ route_contract:
     min_body_chars: 5000
     min_body_sections: 2
     notes: Provider-owned extraction should target .articleSection body sections,
-      .html-fulltext-responsive-figure figures, and .html-fulltext-inline-table tables instead of
-      the generic Atypon browser extraction path.
+      .html-fulltext-responsive-figure figures, and .html-fulltext-inline-table tables
+      instead of the generic Atypon browser extraction path.
   pdf_fallback:
     success_requires:
-      - seeded-browser PDF navigation uses Crossref full-text URL, landing PDF action, or
-        /doi/pdf/{doi}
+      - seeded-browser PDF navigation uses Crossref full-text URL, landing PDF action,
+        or /doi/pdf/{doi}
       - final response reaches Annual Reviews docserver PDF bytes
       - PDF response has application/pdf content type or PDF magic bytes
       - PDF text extraction produces body text
@@ -117,8 +120,8 @@ markdown_contract:
   structure:
     doi: 10.1146/annurev-control-030123-013355
     must_include:
-      - "## Abstract"
-      - "## References"
+      - '## Abstract'
+      - '## References'
     must_not_include:
       - Article metrics loading...
       - Download as PowerPoint
@@ -148,11 +151,11 @@ markdown_contract:
       - Download as PowerPoint
       - Article metrics loading...
     must_match:
-      - '(?:!\[Figure|\*\*Figure|Figure\s+\d+)'
+      - (?:!\[Figure|\*\*Figure|Figure\s+\d+)
   references:
     doi: 10.1146/annurev-environ-102511-084654
     must_include:
-      - "## References"
+      - '## References'
       - Reference
     must_not_include:
       - Google Scholar
@@ -168,7 +171,7 @@ markdown_contract:
   pdf_fallback:
     doi: 10.1146/annurev-med-120811-171056
     must_include:
-      - "#"
+      - '#'
     must_not_include:
       - Access Denied
 asset_profile:
@@ -185,7 +188,7 @@ asset_contract:
     download: required
     purposes:
       - figure
-    exception_reason:
+    exception_reason: null
 supplementary_scope:
   selector: a[href*="/doi/suppl/"]
   url_pattern: https://www.annualreviews.org/doi/suppl/{doi}
@@ -199,12 +202,10 @@ fixtures:
   doi_samples:
     structure:
       doi: 10.1146/annurev-control-030123-013355
-      evidence_url:
-        https://www.annualreviews.org/content/journals/10.1146/annurev-control-030123-013355
-      evidence_reason: >-
-        CloakBrowser analysis observed a populated Annual Reviews #html_fulltext
-        body with about 82960 characters, full-text sections, figures, tables,
-        references, and Open Access license signals.
+      evidence_url: https://www.annualreviews.org/content/journals/10.1146/annurev-control-030123-013355
+      evidence_reason: 'CloakBrowser analysis observed a populated Annual Reviews
+        #html_fulltext body with about 82960 characters, full-text sections, figures,
+        tables, references, and Open Access license signals.'
       observed_signals:
         - browser_html
         - html_fulltext
@@ -213,10 +214,10 @@ fixtures:
       confidence: medium
     table:
       doi: 10.1146/annurev-control-030123-013355
-      evidence_url:
-        https://www.annualreviews.org/content/journals/10.1146/annurev-control-030123-013355
-      evidence_reason: CloakBrowser and cleaning-chain evidence for annurev-control records body
-        table headings including Table 1 and Table 2 in the committed extracted Markdown.
+      evidence_url: https://www.annualreviews.org/content/journals/10.1146/annurev-control-030123-013355
+      evidence_reason: CloakBrowser and cleaning-chain evidence for annurev-control
+        records body table headings including Table 1 and Table 2 in the committed
+        extracted Markdown.
       observed_signals:
         - browser_html
         - html_fulltext
@@ -224,10 +225,10 @@ fixtures:
       confidence: medium
     formula:
       doi: 10.1146/annurev-neuro-062111-150343
-      evidence_url:
-        https://www.annualreviews.org/content/journals/10.1146/annurev-neuro-062111-150343
-      evidence_reason: Browser capture observed Annual Reviews full text where provider replay
-        preserves I-V curve, g max, and ion notation such as Na+ and Ca2+ in the article body.
+      evidence_url: https://www.annualreviews.org/content/journals/10.1146/annurev-neuro-062111-150343
+      evidence_reason: Browser capture observed Annual Reviews full text where provider
+        replay preserves I-V curve, g max, and ion notation such as Na+ and Ca2+ in
+        the article body.
       observed_signals:
         - browser_html
         - html_fulltext
@@ -236,10 +237,9 @@ fixtures:
       confidence: high
     figure:
       doi: 10.1146/annurev-control-030123-013355
-      evidence_url:
-        https://www.annualreviews.org/content/journals/10.1146/annurev-control-030123-013355
-      evidence_reason: CloakBrowser analysis observed Annual Reviews full text with figures and
-        provider-hosted figure assets under docserver/fulltext routes.
+      evidence_url: https://www.annualreviews.org/content/journals/10.1146/annurev-control-030123-013355
+      evidence_reason: CloakBrowser analysis observed Annual Reviews full text with
+        figures and provider-hosted figure assets under docserver/fulltext routes.
       observed_signals:
         - browser_html
         - figures
@@ -247,11 +247,10 @@ fixtures:
       confidence: medium
     supplementary:
       doi: 10.1146/annurev-neuro-062111-150343
-      evidence_url:
-        https://www.annualreviews.org/content/journals/10.1146/annurev-neuro-062111-150343
-      evidence_reason: Browser capture observed Annual Reviews supplemental material signals,
-        and rendered Markdown preserves article-scoped Supplemental Figure and Supplemental
-        Videos references in body captions.
+      evidence_url: https://www.annualreviews.org/content/journals/10.1146/annurev-neuro-062111-150343
+      evidence_reason: Browser capture observed Annual Reviews supplemental material
+        signals, and rendered Markdown preserves article-scoped Supplemental Figure
+        and Supplemental Videos references in body captions.
       observed_signals:
         - browser_html
         - html_fulltext
@@ -261,11 +260,9 @@ fixtures:
       confidence: high
     references:
       doi: 10.1146/annurev-environ-102511-084654
-      evidence_url:
-        https://www.annualreviews.org/content/journals/10.1146/annurev-environ-102511-084654
-      evidence_reason: >-
-        CloakBrowser analysis observed a populated Annual Reviews #html_fulltext
-        body with about 116328 characters and references coverage.
+      evidence_url: https://www.annualreviews.org/content/journals/10.1146/annurev-environ-102511-084654
+      evidence_reason: 'CloakBrowser analysis observed a populated Annual Reviews
+        #html_fulltext body with about 116328 characters and references coverage.'
       observed_signals:
         - browser_html
         - html_fulltext
@@ -274,9 +271,10 @@ fixtures:
     pdf_fallback:
       doi: 10.1146/annurev-med-120811-171056
       evidence_url: https://www.annualreviews.org/doi/pdf/10.1146/annurev-med-120811-171056
-      evidence_reason: Browser PDF fallback reaches the Annual Reviews docserver PDF for this older
-        Annual Review of Medicine article; Chromium exposes a PDF viewer shell, and the browser
-        request context can refetch the underlying application/pdf payload.
+      evidence_reason: Browser PDF fallback reaches the Annual Reviews docserver PDF
+        for this older Annual Review of Medicine article; Chromium exposes a PDF viewer
+        shell, and the browser request context can refetch the underlying application/pdf
+        payload.
       observed_signals:
         - browser_pdf
         - application_pdf
@@ -284,24 +282,26 @@ fixtures:
         - pdf_fallback
       confidence: medium
     abstract_only:
-      doi:
+      doi: null
       evidence_url: https://www.annualreviews.org/
-      evidence_reason: Recommended Annual Reviews degradation is provider-managed abstract_only
-        after HTML and PDF failure; the supplied examples both have browser-visible full text.
+      evidence_reason: Recommended Annual Reviews degradation is provider-managed
+        abstract_only after HTML and PDF failure; the supplied examples both have
+        browser-visible full text.
       observed_signals: []
       confidence: low
     access_gate:
-      doi:
+      doi: null
       evidence_url: https://www.annualreviews.org/
-      evidence_reason: The supplied examples show purchase or access UI can coexist with
-        browser-visible full text, so no stable access-gate-only DOI sample is selected.
+      evidence_reason: The supplied examples show purchase or access UI can coexist
+        with browser-visible full text, so no stable access-gate-only DOI sample is
+        selected.
       observed_signals: []
       confidence: low
     empty_shell:
-      doi:
+      doi: null
       evidence_url: https://www.annualreviews.org/
-      evidence_reason: The static Full text loading shell is a route rejection signal for Annual
-        Reviews, not a selected fixture sample.
+      evidence_reason: The static Full text loading shell is a route rejection signal
+        for Annual Reviews, not a selected fixture sample.
       observed_signals: []
       confidence: low
   discovery_proof:
@@ -315,9 +315,8 @@ fixtures:
       selected_doi: 10.1146/annurev-control-030123-013355
       rejections: {}
       exhausted: false
-      evidence_summary: Selected 10.1146/annurev-control-030123-013355 because
-        fixtures.doi_samples.table already records provider-local evidence for stable table Markdown
-        assertions.
+      evidence_summary: Selected 10.1146/annurev-control-030123-013355 because fixtures.doi_samples.table
+        already records provider-local evidence for stable table Markdown assertions.
     formula:
       queries:
         - Annual Reviews 10.1146 formula equation math DOI candidates
@@ -333,32 +332,33 @@ fixtures:
         - 10.1146/annurev-med-120811-171056
       selected_doi: 10.1146/annurev-neuro-062111-150343
       rejections:
-        10.1146/annurev-statistics-040522-100329: Candidate exposes GLM notation, but fresh
-          Markdown quality review reported blocking dropped formula content where Annual Reviews
-          inline formula images had no readable text.
-        10.1146/annurev-physchem-032210-103526: Candidate includes mathematical and equation
-          references, but provider replay is less direct than the selected neuro sample's stable
-          I-V and ion notation assertions.
-        10.1146/annurev-physchem-090419-040306: Candidate was rejected after fresh Markdown
-          quality review reported blocking malformed display formula image links and stripped
-          inline formula fragments.
-        10.1146/annurev-control-030123-013355: Same DOI was checked as a potential formula fixture
-          but is not suitable because captured evidence does not expose stable article-scoped
-          formula assertions for this purpose.
-        10.1146/annurev-environ-102511-084654: Same DOI was checked as a potential formula fixture
-          but is not suitable because captured evidence does not expose stable article-scoped
-          formula assertions for this purpose.
-        10.1146/annurev-med-120811-171056: Same DOI was checked as a potential formula fixture but
-          is not suitable because captured evidence does not expose stable article-scoped formula
-          assertions for this purpose.
+        10.1146/annurev-statistics-040522-100329: Candidate exposes GLM notation,
+          but fresh Markdown quality review reported blocking dropped formula content
+          where Annual Reviews inline formula images had no readable text.
+        10.1146/annurev-physchem-032210-103526: Candidate includes mathematical and
+          equation references, but provider replay is less direct than the selected
+          neuro sample's stable I-V and ion notation assertions.
+        10.1146/annurev-physchem-090419-040306: Candidate was rejected after fresh
+          Markdown quality review reported blocking malformed display formula image
+          links and stripped inline formula fragments.
+        10.1146/annurev-control-030123-013355: Same DOI was checked as a potential
+          formula fixture but is not suitable because captured evidence does not expose
+          stable article-scoped formula assertions for this purpose.
+        10.1146/annurev-environ-102511-084654: Same DOI was checked as a potential
+          formula fixture but is not suitable because captured evidence does not expose
+          stable article-scoped formula assertions for this purpose.
+        10.1146/annurev-med-120811-171056: Same DOI was checked as a potential formula
+          fixture but is not suitable because captured evidence does not expose stable
+          article-scoped formula assertions for this purpose.
       exhausted: false
-      evidence_summary: Selected 10.1146/annurev-neuro-062111-150343 because browser capture
-        exposes stable I-V curve and ion notation in provider replay without relying on unreadable
-        inline formula images.
+      evidence_summary: Selected 10.1146/annurev-neuro-062111-150343 because browser
+        capture exposes stable I-V curve and ion notation in provider replay without
+        relying on unreadable inline formula images.
     supplementary:
       queries:
         - Annual Reviews 10.1146 supplementary supporting information DOI candidates
-        - site:annualreviews.org Annual Reviews supplementary supporting information article DOI
+        - site:annualreviews.org Annual Reviews supplementary supporting information
+          article DOI
         - 10.1146 supplementary supporting information fixture discovery annualreviews
       candidates:
         - 10.1146/annurev-neuro-062111-150343
@@ -369,45 +369,51 @@ fixtures:
         - 10.1146/annurev-med-120811-171056
       selected_doi: 10.1146/annurev-neuro-062111-150343
       rejections:
-        10.1146/annurev-physchem-090419-040306: Candidate exposes supplemental material, but the
-          same extracted Markdown failed fresh quality review due malformed formula rendering.
-        10.1146/annurev-statistics-040522-100329: Candidate search result exposes a supplemental
-          material tab, but provider replay did not preserve stable article-scoped supplementary
-          assertions in extracted Markdown.
-        10.1146/annurev-control-030123-013355: Same DOI was checked as a potential supplementary
+        10.1146/annurev-physchem-090419-040306: Candidate exposes supplemental material,
+          but the same extracted Markdown failed fresh quality review due malformed
+          formula rendering.
+        10.1146/annurev-statistics-040522-100329: Candidate search result exposes
+          a supplemental material tab, but provider replay did not preserve stable
+          article-scoped supplementary assertions in extracted Markdown.
+        10.1146/annurev-control-030123-013355: Same DOI was checked as a potential
+          supplementary fixture but is not suitable because captured evidence does
+          not expose stable article-scoped supplementary assertions for this purpose.
+        10.1146/annurev-environ-102511-084654: Same DOI was checked as a potential
+          supplementary fixture but is not suitable because captured evidence does
+          not expose stable article-scoped supplementary assertions for this purpose.
+        10.1146/annurev-med-120811-171056: Same DOI was checked as a potential supplementary
           fixture but is not suitable because captured evidence does not expose stable
           article-scoped supplementary assertions for this purpose.
-        10.1146/annurev-environ-102511-084654: Same DOI was checked as a potential supplementary
-          fixture but is not suitable because captured evidence does not expose stable
-          article-scoped supplementary assertions for this purpose.
-        10.1146/annurev-med-120811-171056: Same DOI was checked as a potential supplementary fixture
-          but is not suitable because captured evidence does not expose stable article-scoped
-          supplementary assertions for this purpose.
       exhausted: false
-      evidence_summary: Selected 10.1146/annurev-neuro-062111-150343 because browser capture
-        exposes Annual Reviews supplemental material signals and provider replay preserves stable
-        Supplemental Figure and Supplemental Videos references.
+      evidence_summary: Selected 10.1146/annurev-neuro-062111-150343 because browser
+        capture exposes Annual Reviews supplemental material signals and provider
+        replay preserves stable Supplemental Figure and Supplemental Videos references.
 extraction_hints:
-  datalayer_signal_set:
-  text_marker_signal_set: []
+  datalayer_signal_set: null
+  text_marker_signal_set: null
   front_matter:
-  asset_retry:
+    exact_texts:
+      - Download PDF
+      - 'Toggle display:'
+    contains_tokens:
+      - 'Access provided by:'
+    publication_keywords:
+      - annual reviews
+  asset_retry: null
   metadata_merge: []
 owner_reuse_exceptions:
   - owner: generic_atypon_browser_workflow
-    reason: >-
-      Annual Reviews dynamic DOM uses #html_fulltext/#itemFullTextId and
-      provider-specific article, figure, and table blocks; generic Atypon browser
-      extraction misclassifies the observed full-text pages as abstract-only.
+    reason: 'Annual Reviews dynamic DOM uses #html_fulltext/#itemFullTextId and provider-specific
+      article, figure, and table blocks; generic Atypon browser extraction misclassifies
+      the observed full-text pages as abstract-only.'
 docs:
-  providers_md_capability_row: "`annualreviews` | Crossref routing | CloakBrowser landing HTML -> seeded-browser
-    PDF -> provider-managed abstract_only -> metadata fallback | HTML body assets; PDF fallback text-only
-    | medium | Annual Reviews uses 10.1146/ DOI routing with Knowable Magazine and non-article exclusions;
-    primary source `annualreviews_html`, PDF fallback `annualreviews_pdf`"
-  changelog_summary: Add Annual Reviews manifest for CloakBrowser HTML with seeded-browser PDF
-    fallback.
-  extraction_rules_summary: >-
-    Annual Reviews requires provider-owned HTML extraction for
-    #html_fulltext/#itemFullTextId, .articleSection,
-    .html-fulltext-responsive-figure, and .html-fulltext-inline-table; generic
-    Atypon extraction is not sufficient.
+  providers_md_capability_row: '`annualreviews` | Crossref routing | CloakBrowser
+    landing HTML -> seeded-browser PDF -> provider-managed abstract_only -> metadata
+    fallback | HTML body assets; PDF fallback text-only | medium | Annual Reviews
+    uses 10.1146/ DOI routing with Knowable Magazine and non-article exclusions; primary
+    source `annualreviews_html`, PDF fallback `annualreviews_pdf`'
+  changelog_summary: Add Annual Reviews manifest for CloakBrowser HTML with seeded-browser
+    PDF fallback.
+  extraction_rules_summary: 'Annual Reviews requires provider-owned HTML extraction
+    for #html_fulltext/#itemFullTextId, .articleSection, .html-fulltext-responsive-figure,
+    and .html-fulltext-inline-table; generic Atypon extraction is not sufficient.'

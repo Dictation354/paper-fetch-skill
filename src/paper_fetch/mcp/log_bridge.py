@@ -7,7 +7,7 @@ import logging
 from typing import Any
 from collections.abc import Mapping
 
-from mcp.server.fastmcp import Context
+from mcp.server.mcpserver import Context
 
 from ..utils import normalize_text
 

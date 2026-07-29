@@ -1,0 +1,2563 @@
+{
+  "provider_count": 19,
+  "providers": [
+    {
+      "asset_default": "none",
+      "capabilities": {
+        "auth_supported": false,
+        "browser_optional": false,
+        "browser_required": false,
+        "html": false,
+        "metadata_probe": "metadata_api",
+        "pdf_conversion": false,
+        "provider_managed_abstract_only": false,
+        "requires_browser_runtime": false,
+        "requires_playwright": false,
+        "runtime_kind": "direct",
+        "supports_browser_preflight": false,
+        "supports_static_status": true
+      },
+      "display_name": "Crossref",
+      "official": false,
+      "provider": "crossref",
+      "routes": [
+        {
+          "acceptance_policy": "metadata_identity",
+          "asset_scope": "none",
+          "auth_supported": false,
+          "browser_optional": false,
+          "browser_preflight": false,
+          "browser_required": false,
+          "concurrency": 2,
+          "hosts": [],
+          "implementation_status": "available",
+          "kind": "metadata",
+          "name": "metadata",
+          "notes": null,
+          "order": 0,
+          "qps": null,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": false,
+          "requires_playwright": false,
+          "source": "crossref_meta",
+          "timeout_seconds": 20,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "temporary_dns"
+          ]
+        }
+      ],
+      "sources": [
+        "crossref_meta"
+      ]
+    },
+    {
+      "asset_default": "none",
+      "capabilities": {
+        "auth_supported": false,
+        "browser_optional": false,
+        "browser_required": false,
+        "html": true,
+        "metadata_probe": "metadata_api",
+        "pdf_conversion": true,
+        "provider_managed_abstract_only": false,
+        "requires_browser_runtime": false,
+        "requires_playwright": false,
+        "runtime_kind": "direct",
+        "supports_browser_preflight": false,
+        "supports_static_status": true
+      },
+      "display_name": "Elsevier",
+      "official": true,
+      "provider": "elsevier",
+      "routes": [
+        {
+          "acceptance_policy": "metadata_identity",
+          "asset_scope": "none",
+          "auth_supported": false,
+          "browser_optional": false,
+          "browser_preflight": false,
+          "browser_required": false,
+          "concurrency": 2,
+          "hosts": [
+            "sciencedirect.com",
+            "elsevier.com"
+          ],
+          "implementation_status": "available",
+          "kind": "metadata",
+          "name": "metadata_api",
+          "notes": null,
+          "order": 0,
+          "qps": null,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": false,
+          "requires_playwright": false,
+          "source": "metadata_api",
+          "timeout_seconds": 20,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "temporary_dns"
+          ]
+        },
+        {
+          "acceptance_policy": "structured_xml_body",
+          "asset_scope": "none",
+          "auth_supported": false,
+          "browser_optional": false,
+          "browser_preflight": false,
+          "browser_required": false,
+          "concurrency": 2,
+          "hosts": [
+            "sciencedirect.com",
+            "elsevier.com"
+          ],
+          "implementation_status": "available",
+          "kind": "xml",
+          "name": "xml_api",
+          "notes": null,
+          "order": 1,
+          "qps": null,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": false,
+          "requires_playwright": false,
+          "source": "elsevier_xml",
+          "timeout_seconds": 20,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "temporary_dns"
+          ]
+        },
+        {
+          "acceptance_policy": "validated_pdf",
+          "asset_scope": "none",
+          "auth_supported": false,
+          "browser_optional": false,
+          "browser_preflight": false,
+          "browser_required": false,
+          "concurrency": 2,
+          "hosts": [
+            "sciencedirect.com",
+            "elsevier.com"
+          ],
+          "implementation_status": "available",
+          "kind": "pdf",
+          "name": "pdf_api",
+          "notes": null,
+          "order": 2,
+          "qps": null,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [
+            "pymupdf4llm"
+          ],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": true,
+          "requires_playwright": false,
+          "source": "elsevier_pdf",
+          "timeout_seconds": 120,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "temporary_dns"
+          ]
+        },
+        {
+          "acceptance_policy": "validated_asset",
+          "asset_scope": "none",
+          "auth_supported": false,
+          "browser_optional": false,
+          "browser_preflight": false,
+          "browser_required": false,
+          "concurrency": 2,
+          "hosts": [
+            "sciencedirect.com",
+            "elsevier.com"
+          ],
+          "implementation_status": "available",
+          "kind": "assets",
+          "name": "object_assets",
+          "notes": null,
+          "order": 3,
+          "qps": null,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": false,
+          "requires_playwright": false,
+          "source": "elsevier_xml",
+          "timeout_seconds": 20,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "temporary_dns"
+          ]
+        }
+      ],
+      "sources": [
+        "elsevier_pdf",
+        "elsevier_xml"
+      ]
+    },
+    {
+      "asset_default": "body",
+      "capabilities": {
+        "auth_supported": false,
+        "browser_optional": false,
+        "browser_required": false,
+        "html": true,
+        "metadata_probe": "routing_signal",
+        "pdf_conversion": true,
+        "provider_managed_abstract_only": true,
+        "requires_browser_runtime": false,
+        "requires_playwright": false,
+        "runtime_kind": "direct",
+        "supports_browser_preflight": false,
+        "supports_static_status": true
+      },
+      "display_name": "Springer",
+      "official": true,
+      "provider": "springer",
+      "routes": [
+        {
+          "acceptance_policy": "metadata_identity",
+          "asset_scope": "body",
+          "auth_supported": false,
+          "browser_optional": false,
+          "browser_preflight": false,
+          "browser_required": false,
+          "concurrency": 2,
+          "hosts": [
+            "springer.com",
+            "springernature.com",
+            "nature.com",
+            "biomedcentral.com"
+          ],
+          "implementation_status": "available",
+          "kind": "metadata",
+          "name": "metadata",
+          "notes": null,
+          "order": 0,
+          "qps": null,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": false,
+          "requires_playwright": false,
+          "source": "metadata",
+          "timeout_seconds": 20,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "temporary_dns"
+          ]
+        },
+        {
+          "acceptance_policy": "provider_html_body",
+          "asset_scope": "body",
+          "auth_supported": false,
+          "browser_optional": false,
+          "browser_preflight": false,
+          "browser_required": false,
+          "concurrency": 2,
+          "hosts": [
+            "springer.com",
+            "springernature.com",
+            "nature.com",
+            "biomedcentral.com"
+          ],
+          "implementation_status": "available",
+          "kind": "html",
+          "name": "direct_html",
+          "notes": null,
+          "order": 1,
+          "qps": null,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": false,
+          "requires_playwright": false,
+          "source": "springer_html",
+          "timeout_seconds": 20,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "temporary_dns"
+          ]
+        },
+        {
+          "acceptance_policy": "validated_pdf",
+          "asset_scope": "body",
+          "auth_supported": false,
+          "browser_optional": false,
+          "browser_preflight": false,
+          "browser_required": false,
+          "concurrency": 2,
+          "hosts": [
+            "springer.com",
+            "springernature.com",
+            "nature.com",
+            "biomedcentral.com"
+          ],
+          "implementation_status": "available",
+          "kind": "pdf",
+          "name": "direct_pdf",
+          "notes": null,
+          "order": 2,
+          "qps": null,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [
+            "pymupdf4llm"
+          ],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": true,
+          "requires_playwright": false,
+          "source": "springer_pdf",
+          "timeout_seconds": 120,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "temporary_dns"
+          ]
+        }
+      ],
+      "sources": [
+        "springer_html",
+        "springer_pdf"
+      ]
+    },
+    {
+      "asset_default": "body",
+      "capabilities": {
+        "auth_supported": true,
+        "browser_optional": true,
+        "browser_required": false,
+        "html": true,
+        "metadata_probe": "routing_signal",
+        "pdf_conversion": true,
+        "provider_managed_abstract_only": true,
+        "requires_browser_runtime": true,
+        "requires_playwright": true,
+        "runtime_kind": "hybrid",
+        "supports_browser_preflight": true,
+        "supports_static_status": true
+      },
+      "display_name": "Wiley",
+      "official": true,
+      "provider": "wiley",
+      "routes": [
+        {
+          "acceptance_policy": "metadata_identity",
+          "asset_scope": "body",
+          "auth_supported": false,
+          "browser_optional": false,
+          "browser_preflight": false,
+          "browser_required": false,
+          "concurrency": 2,
+          "hosts": [
+            "onlinelibrary.wiley.com",
+            "wiley.com",
+            "www.wiley.com"
+          ],
+          "implementation_status": "available",
+          "kind": "metadata",
+          "name": "metadata",
+          "notes": null,
+          "order": 0,
+          "qps": null,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": false,
+          "requires_playwright": false,
+          "source": "metadata",
+          "timeout_seconds": 20,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "temporary_dns"
+          ]
+        },
+        {
+          "acceptance_policy": "provider_html_body",
+          "asset_scope": "body",
+          "auth_supported": true,
+          "browser_optional": true,
+          "browser_preflight": true,
+          "browser_required": false,
+          "concurrency": 1,
+          "hosts": [
+            "onlinelibrary.wiley.com",
+            "wiley.com",
+            "www.wiley.com"
+          ],
+          "implementation_status": "available",
+          "kind": "html",
+          "name": "browser_html",
+          "notes": null,
+          "order": 1,
+          "qps": null,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [
+            "camoufox"
+          ],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": false,
+          "requires_playwright": true,
+          "source": "wiley_browser",
+          "timeout_seconds": 120,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "temporary_dns"
+          ]
+        },
+        {
+          "acceptance_policy": "validated_pdf",
+          "asset_scope": "body",
+          "auth_supported": false,
+          "browser_optional": false,
+          "browser_preflight": false,
+          "browser_required": false,
+          "concurrency": 2,
+          "hosts": [
+            "onlinelibrary.wiley.com",
+            "wiley.com",
+            "www.wiley.com"
+          ],
+          "implementation_status": "available",
+          "kind": "pdf",
+          "name": "tdm_pdf",
+          "notes": null,
+          "order": 2,
+          "qps": null,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [
+            "pymupdf4llm"
+          ],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": true,
+          "requires_playwright": false,
+          "source": "wiley_browser",
+          "timeout_seconds": 120,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "temporary_dns"
+          ]
+        },
+        {
+          "acceptance_policy": "validated_pdf",
+          "asset_scope": "body",
+          "auth_supported": false,
+          "browser_optional": true,
+          "browser_preflight": true,
+          "browser_required": false,
+          "concurrency": 1,
+          "hosts": [
+            "onlinelibrary.wiley.com",
+            "wiley.com",
+            "www.wiley.com"
+          ],
+          "implementation_status": "available",
+          "kind": "pdf",
+          "name": "browser_pdf",
+          "notes": null,
+          "order": 3,
+          "qps": null,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [
+            "camoufox",
+            "pymupdf4llm"
+          ],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": true,
+          "requires_playwright": true,
+          "source": "wiley_browser",
+          "timeout_seconds": 120,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "temporary_dns"
+          ]
+        }
+      ],
+      "sources": [
+        "wiley_browser"
+      ]
+    },
+    {
+      "asset_default": "body",
+      "capabilities": {
+        "auth_supported": true,
+        "browser_optional": false,
+        "browser_required": true,
+        "html": true,
+        "metadata_probe": "routing_signal",
+        "pdf_conversion": true,
+        "provider_managed_abstract_only": true,
+        "requires_browser_runtime": true,
+        "requires_playwright": false,
+        "runtime_kind": "browser",
+        "supports_browser_preflight": true,
+        "supports_static_status": true
+      },
+      "display_name": "Science",
+      "official": true,
+      "provider": "science",
+      "routes": [
+        {
+          "acceptance_policy": "metadata_identity",
+          "asset_scope": "body",
+          "auth_supported": false,
+          "browser_optional": false,
+          "browser_preflight": false,
+          "browser_required": false,
+          "concurrency": 2,
+          "hosts": [
+            "www.science.org",
+            "science.org"
+          ],
+          "implementation_status": "available",
+          "kind": "metadata",
+          "name": "metadata",
+          "notes": null,
+          "order": 0,
+          "qps": null,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": false,
+          "requires_playwright": false,
+          "source": "metadata",
+          "timeout_seconds": 20,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "temporary_dns"
+          ]
+        },
+        {
+          "acceptance_policy": "provider_html_body",
+          "asset_scope": "body",
+          "auth_supported": true,
+          "browser_optional": false,
+          "browser_preflight": true,
+          "browser_required": true,
+          "concurrency": 1,
+          "hosts": [
+            "www.science.org",
+            "science.org"
+          ],
+          "implementation_status": "available",
+          "kind": "html",
+          "name": "browser_html",
+          "notes": null,
+          "order": 1,
+          "qps": null,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [
+            "camoufox"
+          ],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": false,
+          "requires_playwright": true,
+          "source": "science",
+          "timeout_seconds": 120,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "temporary_dns"
+          ]
+        },
+        {
+          "acceptance_policy": "validated_pdf",
+          "asset_scope": "body",
+          "auth_supported": true,
+          "browser_optional": false,
+          "browser_preflight": true,
+          "browser_required": true,
+          "concurrency": 1,
+          "hosts": [
+            "www.science.org",
+            "science.org"
+          ],
+          "implementation_status": "available",
+          "kind": "pdf",
+          "name": "browser_pdf",
+          "notes": null,
+          "order": 2,
+          "qps": null,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [
+            "camoufox",
+            "pymupdf4llm"
+          ],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": true,
+          "requires_playwright": true,
+          "source": "science",
+          "timeout_seconds": 120,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "temporary_dns"
+          ]
+        }
+      ],
+      "sources": [
+        "science"
+      ]
+    },
+    {
+      "asset_default": "body",
+      "capabilities": {
+        "auth_supported": true,
+        "browser_optional": false,
+        "browser_required": true,
+        "html": true,
+        "metadata_probe": "routing_signal",
+        "pdf_conversion": true,
+        "provider_managed_abstract_only": true,
+        "requires_browser_runtime": true,
+        "requires_playwright": false,
+        "runtime_kind": "browser",
+        "supports_browser_preflight": true,
+        "supports_static_status": true
+      },
+      "display_name": "PNAS",
+      "official": true,
+      "provider": "pnas",
+      "routes": [
+        {
+          "acceptance_policy": "metadata_identity",
+          "asset_scope": "body",
+          "auth_supported": false,
+          "browser_optional": false,
+          "browser_preflight": false,
+          "browser_required": false,
+          "concurrency": 2,
+          "hosts": [
+            "www.pnas.org",
+            "pnas.org"
+          ],
+          "implementation_status": "available",
+          "kind": "metadata",
+          "name": "metadata",
+          "notes": null,
+          "order": 0,
+          "qps": null,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": false,
+          "requires_playwright": false,
+          "source": "metadata",
+          "timeout_seconds": 20,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "temporary_dns"
+          ]
+        },
+        {
+          "acceptance_policy": "provider_html_body",
+          "asset_scope": "body",
+          "auth_supported": true,
+          "browser_optional": false,
+          "browser_preflight": true,
+          "browser_required": true,
+          "concurrency": 1,
+          "hosts": [
+            "www.pnas.org",
+            "pnas.org"
+          ],
+          "implementation_status": "available",
+          "kind": "html",
+          "name": "browser_html",
+          "notes": null,
+          "order": 1,
+          "qps": null,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [
+            "camoufox"
+          ],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": false,
+          "requires_playwright": true,
+          "source": "pnas",
+          "timeout_seconds": 120,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "temporary_dns"
+          ]
+        },
+        {
+          "acceptance_policy": "validated_pdf",
+          "asset_scope": "body",
+          "auth_supported": true,
+          "browser_optional": false,
+          "browser_preflight": true,
+          "browser_required": true,
+          "concurrency": 1,
+          "hosts": [
+            "www.pnas.org",
+            "pnas.org"
+          ],
+          "implementation_status": "available",
+          "kind": "pdf",
+          "name": "browser_pdf",
+          "notes": null,
+          "order": 2,
+          "qps": null,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [
+            "camoufox",
+            "pymupdf4llm"
+          ],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": true,
+          "requires_playwright": true,
+          "source": "pnas",
+          "timeout_seconds": 120,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "temporary_dns"
+          ]
+        }
+      ],
+      "sources": [
+        "pnas"
+      ]
+    },
+    {
+      "asset_default": "body",
+      "capabilities": {
+        "auth_supported": false,
+        "browser_optional": true,
+        "browser_required": false,
+        "html": true,
+        "metadata_probe": "routing_signal",
+        "pdf_conversion": true,
+        "provider_managed_abstract_only": true,
+        "requires_browser_runtime": false,
+        "requires_playwright": false,
+        "runtime_kind": "hybrid",
+        "supports_browser_preflight": true,
+        "supports_static_status": true
+      },
+      "display_name": "IEEE",
+      "official": true,
+      "provider": "ieee",
+      "routes": [
+        {
+          "acceptance_policy": "metadata_identity",
+          "asset_scope": "body",
+          "auth_supported": false,
+          "browser_optional": false,
+          "browser_preflight": false,
+          "browser_required": false,
+          "concurrency": 2,
+          "hosts": [
+            "ieeexplore.ieee.org"
+          ],
+          "implementation_status": "available",
+          "kind": "metadata",
+          "name": "metadata",
+          "notes": null,
+          "order": 0,
+          "qps": null,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": false,
+          "requires_playwright": false,
+          "source": "metadata",
+          "timeout_seconds": 20,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "temporary_dns"
+          ]
+        },
+        {
+          "acceptance_policy": "provider_html_body",
+          "asset_scope": "body",
+          "auth_supported": false,
+          "browser_optional": false,
+          "browser_preflight": false,
+          "browser_required": false,
+          "concurrency": 2,
+          "hosts": [
+            "ieeexplore.ieee.org"
+          ],
+          "implementation_status": "available",
+          "kind": "html",
+          "name": "rest_html",
+          "notes": null,
+          "order": 1,
+          "qps": null,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": false,
+          "requires_playwright": false,
+          "source": "ieee_html",
+          "timeout_seconds": 20,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "temporary_dns"
+          ]
+        },
+        {
+          "acceptance_policy": "provider_html_body",
+          "asset_scope": "body",
+          "auth_supported": false,
+          "browser_optional": true,
+          "browser_preflight": true,
+          "browser_required": false,
+          "concurrency": 1,
+          "hosts": [
+            "ieeexplore.ieee.org"
+          ],
+          "implementation_status": "available",
+          "kind": "html",
+          "name": "browser_html",
+          "notes": null,
+          "order": 2,
+          "qps": null,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [
+            "camoufox"
+          ],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": false,
+          "requires_playwright": true,
+          "source": "ieee_html",
+          "timeout_seconds": 120,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "temporary_dns"
+          ]
+        },
+        {
+          "acceptance_policy": "validated_pdf",
+          "asset_scope": "body",
+          "auth_supported": false,
+          "browser_optional": false,
+          "browser_preflight": false,
+          "browser_required": false,
+          "concurrency": 2,
+          "hosts": [
+            "ieeexplore.ieee.org"
+          ],
+          "implementation_status": "available",
+          "kind": "pdf",
+          "name": "direct_pdf",
+          "notes": null,
+          "order": 3,
+          "qps": null,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [
+            "pymupdf4llm"
+          ],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": true,
+          "requires_playwright": false,
+          "source": "ieee_pdf",
+          "timeout_seconds": 120,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "temporary_dns"
+          ]
+        },
+        {
+          "acceptance_policy": "validated_pdf",
+          "asset_scope": "body",
+          "auth_supported": false,
+          "browser_optional": true,
+          "browser_preflight": true,
+          "browser_required": false,
+          "concurrency": 1,
+          "hosts": [
+            "ieeexplore.ieee.org"
+          ],
+          "implementation_status": "available",
+          "kind": "pdf",
+          "name": "browser_pdf",
+          "notes": null,
+          "order": 4,
+          "qps": null,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [
+            "camoufox",
+            "pymupdf4llm"
+          ],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": true,
+          "requires_playwright": true,
+          "source": "ieee_pdf",
+          "timeout_seconds": 120,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "temporary_dns"
+          ]
+        }
+      ],
+      "sources": [
+        "ieee_html",
+        "ieee_pdf"
+      ]
+    },
+    {
+      "asset_default": "body",
+      "capabilities": {
+        "auth_supported": false,
+        "browser_optional": false,
+        "browser_required": false,
+        "html": true,
+        "metadata_probe": "metadata_api",
+        "pdf_conversion": true,
+        "provider_managed_abstract_only": false,
+        "requires_browser_runtime": false,
+        "requires_playwright": false,
+        "runtime_kind": "direct",
+        "supports_browser_preflight": false,
+        "supports_static_status": true
+      },
+      "display_name": "arXiv",
+      "official": true,
+      "provider": "arxiv",
+      "routes": [
+        {
+          "acceptance_policy": "metadata_identity",
+          "asset_scope": "body",
+          "auth_supported": false,
+          "browser_optional": false,
+          "browser_preflight": false,
+          "browser_required": false,
+          "concurrency": 2,
+          "hosts": [
+            "arxiv.org"
+          ],
+          "implementation_status": "available",
+          "kind": "metadata",
+          "name": "atom_metadata",
+          "notes": null,
+          "order": 0,
+          "qps": 0.3333333333333333,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "arxiv_three_second_pacing",
+          "required_packages": [],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": false,
+          "requires_playwright": false,
+          "source": "atom_metadata",
+          "timeout_seconds": 20,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "temporary_dns"
+          ]
+        },
+        {
+          "acceptance_policy": "provider_html_body",
+          "asset_scope": "body",
+          "auth_supported": false,
+          "browser_optional": false,
+          "browser_preflight": false,
+          "browser_required": false,
+          "concurrency": 2,
+          "hosts": [
+            "arxiv.org"
+          ],
+          "implementation_status": "available",
+          "kind": "html",
+          "name": "official_html",
+          "notes": null,
+          "order": 1,
+          "qps": null,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": false,
+          "requires_playwright": false,
+          "source": "arxiv_html",
+          "timeout_seconds": 20,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "temporary_dns"
+          ]
+        },
+        {
+          "acceptance_policy": "validated_pdf",
+          "asset_scope": "body",
+          "auth_supported": false,
+          "browser_optional": false,
+          "browser_preflight": false,
+          "browser_required": false,
+          "concurrency": 2,
+          "hosts": [
+            "arxiv.org"
+          ],
+          "implementation_status": "available",
+          "kind": "pdf",
+          "name": "direct_pdf",
+          "notes": null,
+          "order": 2,
+          "qps": null,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [
+            "pymupdf4llm"
+          ],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": true,
+          "requires_playwright": false,
+          "source": "arxiv_pdf",
+          "timeout_seconds": 120,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "temporary_dns"
+          ]
+        }
+      ],
+      "sources": [
+        "arxiv_html",
+        "arxiv_pdf"
+      ]
+    },
+    {
+      "asset_default": "body",
+      "capabilities": {
+        "auth_supported": false,
+        "browser_optional": false,
+        "browser_required": false,
+        "html": false,
+        "metadata_probe": "routing_signal",
+        "pdf_conversion": true,
+        "provider_managed_abstract_only": false,
+        "requires_browser_runtime": false,
+        "requires_playwright": false,
+        "runtime_kind": "direct",
+        "supports_browser_preflight": false,
+        "supports_static_status": true
+      },
+      "display_name": "Copernicus",
+      "official": true,
+      "provider": "copernicus",
+      "routes": [
+        {
+          "acceptance_policy": "metadata_identity",
+          "asset_scope": "body",
+          "auth_supported": false,
+          "browser_optional": false,
+          "browser_preflight": false,
+          "browser_required": false,
+          "concurrency": 2,
+          "hosts": [],
+          "implementation_status": "available",
+          "kind": "metadata",
+          "name": "metadata",
+          "notes": null,
+          "order": 0,
+          "qps": null,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": false,
+          "requires_playwright": false,
+          "source": "metadata",
+          "timeout_seconds": 20,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "temporary_dns"
+          ]
+        },
+        {
+          "acceptance_policy": "structured_xml_body",
+          "asset_scope": "body",
+          "auth_supported": false,
+          "browser_optional": false,
+          "browser_preflight": false,
+          "browser_required": false,
+          "concurrency": 2,
+          "hosts": [],
+          "implementation_status": "available",
+          "kind": "xml",
+          "name": "xml",
+          "notes": null,
+          "order": 1,
+          "qps": null,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": false,
+          "requires_playwright": false,
+          "source": "copernicus_xml",
+          "timeout_seconds": 20,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "temporary_dns"
+          ]
+        },
+        {
+          "acceptance_policy": "validated_pdf",
+          "asset_scope": "body",
+          "auth_supported": false,
+          "browser_optional": false,
+          "browser_preflight": false,
+          "browser_required": false,
+          "concurrency": 2,
+          "hosts": [],
+          "implementation_status": "available",
+          "kind": "pdf",
+          "name": "direct_pdf",
+          "notes": null,
+          "order": 2,
+          "qps": null,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [
+            "pymupdf4llm"
+          ],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": true,
+          "requires_playwright": false,
+          "source": "copernicus_pdf",
+          "timeout_seconds": 120,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "temporary_dns"
+          ]
+        }
+      ],
+      "sources": [
+        "copernicus_pdf",
+        "copernicus_xml"
+      ]
+    },
+    {
+      "asset_default": "body",
+      "capabilities": {
+        "auth_supported": true,
+        "browser_optional": false,
+        "browser_required": true,
+        "html": true,
+        "metadata_probe": "routing_signal",
+        "pdf_conversion": true,
+        "provider_managed_abstract_only": true,
+        "requires_browser_runtime": true,
+        "requires_playwright": false,
+        "runtime_kind": "browser",
+        "supports_browser_preflight": true,
+        "supports_static_status": true
+      },
+      "display_name": "AMS",
+      "official": true,
+      "provider": "ams",
+      "routes": [
+        {
+          "acceptance_policy": "metadata_identity",
+          "asset_scope": "body",
+          "auth_supported": false,
+          "browser_optional": false,
+          "browser_preflight": false,
+          "browser_required": false,
+          "concurrency": 2,
+          "hosts": [
+            "journals.ametsoc.org",
+            "ametsoc.org"
+          ],
+          "implementation_status": "available",
+          "kind": "metadata",
+          "name": "metadata",
+          "notes": null,
+          "order": 0,
+          "qps": null,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": false,
+          "requires_playwright": false,
+          "source": "metadata",
+          "timeout_seconds": 20,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "temporary_dns"
+          ]
+        },
+        {
+          "acceptance_policy": "provider_html_body",
+          "asset_scope": "body",
+          "auth_supported": true,
+          "browser_optional": false,
+          "browser_preflight": true,
+          "browser_required": true,
+          "concurrency": 1,
+          "hosts": [
+            "journals.ametsoc.org",
+            "ametsoc.org"
+          ],
+          "implementation_status": "available",
+          "kind": "html",
+          "name": "browser_html",
+          "notes": null,
+          "order": 1,
+          "qps": null,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [
+            "camoufox"
+          ],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": false,
+          "requires_playwright": true,
+          "source": "ams_html",
+          "timeout_seconds": 120,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "temporary_dns"
+          ]
+        },
+        {
+          "acceptance_policy": "validated_pdf",
+          "asset_scope": "body",
+          "auth_supported": true,
+          "browser_optional": false,
+          "browser_preflight": true,
+          "browser_required": true,
+          "concurrency": 1,
+          "hosts": [
+            "journals.ametsoc.org",
+            "ametsoc.org"
+          ],
+          "implementation_status": "available",
+          "kind": "pdf",
+          "name": "browser_pdf",
+          "notes": null,
+          "order": 2,
+          "qps": null,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [
+            "camoufox",
+            "pymupdf4llm"
+          ],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": true,
+          "requires_playwright": true,
+          "source": "ams_pdf",
+          "timeout_seconds": 120,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "temporary_dns"
+          ]
+        }
+      ],
+      "sources": [
+        "ams_html",
+        "ams_pdf"
+      ]
+    },
+    {
+      "asset_default": "body",
+      "capabilities": {
+        "auth_supported": true,
+        "browser_optional": false,
+        "browser_required": true,
+        "html": true,
+        "metadata_probe": "routing_signal",
+        "pdf_conversion": true,
+        "provider_managed_abstract_only": false,
+        "requires_browser_runtime": true,
+        "requires_playwright": true,
+        "runtime_kind": "browser",
+        "supports_browser_preflight": true,
+        "supports_static_status": true
+      },
+      "display_name": "MDPI",
+      "official": true,
+      "provider": "mdpi",
+      "routes": [
+        {
+          "acceptance_policy": "metadata_identity",
+          "asset_scope": "body",
+          "auth_supported": false,
+          "browser_optional": false,
+          "browser_preflight": false,
+          "browser_required": false,
+          "concurrency": 2,
+          "hosts": [
+            "www.mdpi.com",
+            "mdpi.com"
+          ],
+          "implementation_status": "available",
+          "kind": "metadata",
+          "name": "metadata",
+          "notes": null,
+          "order": 0,
+          "qps": null,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": false,
+          "requires_playwright": false,
+          "source": "metadata",
+          "timeout_seconds": 20,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "temporary_dns"
+          ]
+        },
+        {
+          "acceptance_policy": "provider_html_body",
+          "asset_scope": "body",
+          "auth_supported": true,
+          "browser_optional": false,
+          "browser_preflight": true,
+          "browser_required": true,
+          "concurrency": 1,
+          "hosts": [
+            "www.mdpi.com",
+            "mdpi.com"
+          ],
+          "implementation_status": "available",
+          "kind": "html",
+          "name": "browser_html",
+          "notes": null,
+          "order": 1,
+          "qps": null,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [
+            "camoufox"
+          ],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": false,
+          "requires_playwright": true,
+          "source": "mdpi_html",
+          "timeout_seconds": 120,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "temporary_dns"
+          ]
+        },
+        {
+          "acceptance_policy": "validated_pdf",
+          "asset_scope": "body",
+          "auth_supported": true,
+          "browser_optional": false,
+          "browser_preflight": true,
+          "browser_required": true,
+          "concurrency": 1,
+          "hosts": [
+            "www.mdpi.com",
+            "mdpi.com"
+          ],
+          "implementation_status": "available",
+          "kind": "pdf",
+          "name": "browser_pdf",
+          "notes": null,
+          "order": 2,
+          "qps": null,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [
+            "camoufox",
+            "pymupdf4llm"
+          ],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": true,
+          "requires_playwright": true,
+          "source": "mdpi_pdf",
+          "timeout_seconds": 120,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "temporary_dns"
+          ]
+        }
+      ],
+      "sources": [
+        "mdpi_html",
+        "mdpi_pdf"
+      ]
+    },
+    {
+      "asset_default": "body",
+      "capabilities": {
+        "auth_supported": true,
+        "browser_optional": false,
+        "browser_required": true,
+        "html": true,
+        "metadata_probe": "routing_signal",
+        "pdf_conversion": true,
+        "provider_managed_abstract_only": false,
+        "requires_browser_runtime": true,
+        "requires_playwright": true,
+        "runtime_kind": "browser",
+        "supports_browser_preflight": true,
+        "supports_static_status": true
+      },
+      "display_name": "Royal Society Publishing",
+      "official": true,
+      "provider": "royalsocietypublishing",
+      "routes": [
+        {
+          "acceptance_policy": "metadata_identity",
+          "asset_scope": "body",
+          "auth_supported": false,
+          "browser_optional": false,
+          "browser_preflight": false,
+          "browser_required": false,
+          "concurrency": 2,
+          "hosts": [
+            "royalsocietypublishing.org"
+          ],
+          "implementation_status": "available",
+          "kind": "metadata",
+          "name": "metadata",
+          "notes": null,
+          "order": 0,
+          "qps": null,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": false,
+          "requires_playwright": false,
+          "source": "metadata",
+          "timeout_seconds": 20,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "temporary_dns"
+          ]
+        },
+        {
+          "acceptance_policy": "provider_html_body",
+          "asset_scope": "body",
+          "auth_supported": true,
+          "browser_optional": false,
+          "browser_preflight": true,
+          "browser_required": true,
+          "concurrency": 1,
+          "hosts": [
+            "royalsocietypublishing.org"
+          ],
+          "implementation_status": "available",
+          "kind": "html",
+          "name": "browser_html",
+          "notes": null,
+          "order": 1,
+          "qps": null,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [
+            "camoufox"
+          ],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": false,
+          "requires_playwright": true,
+          "source": "royalsocietypublishing_html",
+          "timeout_seconds": 120,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "temporary_dns"
+          ]
+        },
+        {
+          "acceptance_policy": "validated_pdf",
+          "asset_scope": "body",
+          "auth_supported": true,
+          "browser_optional": false,
+          "browser_preflight": true,
+          "browser_required": true,
+          "concurrency": 1,
+          "hosts": [
+            "royalsocietypublishing.org"
+          ],
+          "implementation_status": "available",
+          "kind": "pdf",
+          "name": "browser_pdf",
+          "notes": null,
+          "order": 2,
+          "qps": null,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [
+            "camoufox",
+            "pymupdf4llm"
+          ],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": true,
+          "requires_playwright": true,
+          "source": "royalsocietypublishing_pdf",
+          "timeout_seconds": 120,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "temporary_dns"
+          ]
+        }
+      ],
+      "sources": [
+        "royalsocietypublishing_html",
+        "royalsocietypublishing_pdf"
+      ]
+    },
+    {
+      "asset_default": "body",
+      "capabilities": {
+        "auth_supported": true,
+        "browser_optional": false,
+        "browser_required": true,
+        "html": true,
+        "metadata_probe": "routing_signal",
+        "pdf_conversion": true,
+        "provider_managed_abstract_only": true,
+        "requires_browser_runtime": true,
+        "requires_playwright": true,
+        "runtime_kind": "browser",
+        "supports_browser_preflight": true,
+        "supports_static_status": true
+      },
+      "display_name": "Annual Reviews",
+      "official": true,
+      "provider": "annualreviews",
+      "routes": [
+        {
+          "acceptance_policy": "metadata_identity",
+          "asset_scope": "body",
+          "auth_supported": false,
+          "browser_optional": false,
+          "browser_preflight": false,
+          "browser_required": false,
+          "concurrency": 2,
+          "hosts": [
+            "annualreviews.org",
+            "www.annualreviews.org"
+          ],
+          "implementation_status": "available",
+          "kind": "metadata",
+          "name": "metadata",
+          "notes": null,
+          "order": 0,
+          "qps": null,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": false,
+          "requires_playwright": false,
+          "source": "metadata",
+          "timeout_seconds": 20,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "temporary_dns"
+          ]
+        },
+        {
+          "acceptance_policy": "provider_html_body",
+          "asset_scope": "body",
+          "auth_supported": true,
+          "browser_optional": false,
+          "browser_preflight": true,
+          "browser_required": true,
+          "concurrency": 1,
+          "hosts": [
+            "annualreviews.org",
+            "www.annualreviews.org"
+          ],
+          "implementation_status": "available",
+          "kind": "html",
+          "name": "browser_html",
+          "notes": null,
+          "order": 1,
+          "qps": null,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [
+            "camoufox"
+          ],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": false,
+          "requires_playwright": true,
+          "source": "annualreviews_html",
+          "timeout_seconds": 120,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "temporary_dns"
+          ]
+        },
+        {
+          "acceptance_policy": "validated_pdf",
+          "asset_scope": "body",
+          "auth_supported": true,
+          "browser_optional": false,
+          "browser_preflight": true,
+          "browser_required": true,
+          "concurrency": 1,
+          "hosts": [
+            "annualreviews.org",
+            "www.annualreviews.org"
+          ],
+          "implementation_status": "available",
+          "kind": "pdf",
+          "name": "browser_pdf",
+          "notes": null,
+          "order": 2,
+          "qps": null,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [
+            "camoufox",
+            "pymupdf4llm"
+          ],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": true,
+          "requires_playwright": true,
+          "source": "annualreviews_pdf",
+          "timeout_seconds": 120,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "temporary_dns"
+          ]
+        }
+      ],
+      "sources": [
+        "annualreviews_html",
+        "annualreviews_pdf"
+      ]
+    },
+    {
+      "asset_default": "body",
+      "capabilities": {
+        "auth_supported": false,
+        "browser_optional": false,
+        "browser_required": false,
+        "html": false,
+        "metadata_probe": "routing_signal",
+        "pdf_conversion": true,
+        "provider_managed_abstract_only": false,
+        "requires_browser_runtime": false,
+        "requires_playwright": false,
+        "runtime_kind": "direct",
+        "supports_browser_preflight": false,
+        "supports_static_status": true
+      },
+      "display_name": "PLOS",
+      "official": true,
+      "provider": "plos",
+      "routes": [
+        {
+          "acceptance_policy": "metadata_identity",
+          "asset_scope": "body",
+          "auth_supported": false,
+          "browser_optional": false,
+          "browser_preflight": false,
+          "browser_required": false,
+          "concurrency": 2,
+          "hosts": [
+            "journals.plos.org"
+          ],
+          "implementation_status": "available",
+          "kind": "metadata",
+          "name": "metadata",
+          "notes": null,
+          "order": 0,
+          "qps": null,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": false,
+          "requires_playwright": false,
+          "source": "metadata",
+          "timeout_seconds": 20,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "temporary_dns"
+          ]
+        },
+        {
+          "acceptance_policy": "structured_xml_body",
+          "asset_scope": "body",
+          "auth_supported": false,
+          "browser_optional": false,
+          "browser_preflight": false,
+          "browser_required": false,
+          "concurrency": 2,
+          "hosts": [
+            "journals.plos.org"
+          ],
+          "implementation_status": "available",
+          "kind": "xml",
+          "name": "xml",
+          "notes": null,
+          "order": 1,
+          "qps": null,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": false,
+          "requires_playwright": false,
+          "source": "plos_xml",
+          "timeout_seconds": 20,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "temporary_dns"
+          ]
+        },
+        {
+          "acceptance_policy": "validated_pdf",
+          "asset_scope": "body",
+          "auth_supported": false,
+          "browser_optional": false,
+          "browser_preflight": false,
+          "browser_required": false,
+          "concurrency": 2,
+          "hosts": [
+            "journals.plos.org"
+          ],
+          "implementation_status": "available",
+          "kind": "pdf",
+          "name": "direct_pdf",
+          "notes": null,
+          "order": 2,
+          "qps": null,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [
+            "pymupdf4llm"
+          ],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": true,
+          "requires_playwright": false,
+          "source": "plos_pdf",
+          "timeout_seconds": 120,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "temporary_dns"
+          ]
+        }
+      ],
+      "sources": [
+        "plos_pdf",
+        "plos_xml"
+      ]
+    },
+    {
+      "asset_default": "body",
+      "capabilities": {
+        "auth_supported": false,
+        "browser_optional": false,
+        "browser_required": false,
+        "html": true,
+        "metadata_probe": "routing_signal",
+        "pdf_conversion": true,
+        "provider_managed_abstract_only": false,
+        "requires_browser_runtime": false,
+        "requires_playwright": false,
+        "runtime_kind": "direct",
+        "supports_browser_preflight": false,
+        "supports_static_status": true
+      },
+      "display_name": "Oxford Academic",
+      "official": true,
+      "provider": "oxfordacademic",
+      "routes": [
+        {
+          "acceptance_policy": "metadata_identity",
+          "asset_scope": "body",
+          "auth_supported": false,
+          "browser_optional": false,
+          "browser_preflight": false,
+          "browser_required": false,
+          "concurrency": 2,
+          "hosts": [
+            "academic.oup.com"
+          ],
+          "implementation_status": "available",
+          "kind": "metadata",
+          "name": "metadata",
+          "notes": null,
+          "order": 0,
+          "qps": null,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": false,
+          "requires_playwright": false,
+          "source": "metadata",
+          "timeout_seconds": 20,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "temporary_dns"
+          ]
+        },
+        {
+          "acceptance_policy": "provider_html_body",
+          "asset_scope": "body",
+          "auth_supported": false,
+          "browser_optional": false,
+          "browser_preflight": false,
+          "browser_required": false,
+          "concurrency": 2,
+          "hosts": [
+            "academic.oup.com"
+          ],
+          "implementation_status": "available",
+          "kind": "html",
+          "name": "direct_html",
+          "notes": null,
+          "order": 1,
+          "qps": null,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": false,
+          "requires_playwright": false,
+          "source": "oxfordacademic_html",
+          "timeout_seconds": 20,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "temporary_dns"
+          ]
+        },
+        {
+          "acceptance_policy": "validated_pdf",
+          "asset_scope": "body",
+          "auth_supported": false,
+          "browser_optional": false,
+          "browser_preflight": false,
+          "browser_required": false,
+          "concurrency": 2,
+          "hosts": [
+            "academic.oup.com"
+          ],
+          "implementation_status": "available",
+          "kind": "pdf",
+          "name": "direct_pdf",
+          "notes": null,
+          "order": 2,
+          "qps": null,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [
+            "pymupdf4llm"
+          ],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": true,
+          "requires_playwright": false,
+          "source": "oxfordacademic_pdf",
+          "timeout_seconds": 120,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "temporary_dns"
+          ]
+        }
+      ],
+      "sources": [
+        "oxfordacademic_html",
+        "oxfordacademic_pdf"
+      ]
+    },
+    {
+      "asset_default": "body",
+      "capabilities": {
+        "auth_supported": true,
+        "browser_optional": false,
+        "browser_required": true,
+        "html": true,
+        "metadata_probe": "routing_signal",
+        "pdf_conversion": true,
+        "provider_managed_abstract_only": true,
+        "requires_browser_runtime": true,
+        "requires_playwright": false,
+        "runtime_kind": "browser",
+        "supports_browser_preflight": true,
+        "supports_static_status": true
+      },
+      "display_name": "ACS",
+      "official": true,
+      "provider": "acs",
+      "routes": [
+        {
+          "acceptance_policy": "metadata_identity",
+          "asset_scope": "body",
+          "auth_supported": false,
+          "browser_optional": false,
+          "browser_preflight": false,
+          "browser_required": false,
+          "concurrency": 2,
+          "hosts": [
+            "www.acs.org",
+            "pubs.acs.org",
+            "acs.org"
+          ],
+          "implementation_status": "available",
+          "kind": "metadata",
+          "name": "metadata",
+          "notes": null,
+          "order": 0,
+          "qps": null,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": false,
+          "requires_playwright": false,
+          "source": "metadata",
+          "timeout_seconds": 20,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "temporary_dns"
+          ]
+        },
+        {
+          "acceptance_policy": "provider_html_body",
+          "asset_scope": "body",
+          "auth_supported": true,
+          "browser_optional": false,
+          "browser_preflight": true,
+          "browser_required": true,
+          "concurrency": 1,
+          "hosts": [
+            "www.acs.org",
+            "pubs.acs.org",
+            "acs.org"
+          ],
+          "implementation_status": "available",
+          "kind": "html",
+          "name": "browser_html",
+          "notes": null,
+          "order": 1,
+          "qps": null,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [
+            "camoufox"
+          ],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": false,
+          "requires_playwright": true,
+          "source": "acs",
+          "timeout_seconds": 120,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "temporary_dns"
+          ]
+        },
+        {
+          "acceptance_policy": "validated_pdf",
+          "asset_scope": "body",
+          "auth_supported": true,
+          "browser_optional": false,
+          "browser_preflight": true,
+          "browser_required": true,
+          "concurrency": 1,
+          "hosts": [
+            "www.acs.org",
+            "pubs.acs.org",
+            "acs.org"
+          ],
+          "implementation_status": "available",
+          "kind": "pdf",
+          "name": "browser_pdf",
+          "notes": null,
+          "order": 2,
+          "qps": null,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [
+            "camoufox",
+            "pymupdf4llm"
+          ],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": true,
+          "requires_playwright": true,
+          "source": "acs",
+          "timeout_seconds": 120,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "temporary_dns"
+          ]
+        }
+      ],
+      "sources": [
+        "acs"
+      ]
+    },
+    {
+      "asset_default": "body",
+      "capabilities": {
+        "auth_supported": true,
+        "browser_optional": false,
+        "browser_required": true,
+        "html": true,
+        "metadata_probe": "routing_signal",
+        "pdf_conversion": true,
+        "provider_managed_abstract_only": true,
+        "requires_browser_runtime": true,
+        "requires_playwright": true,
+        "runtime_kind": "browser",
+        "supports_browser_preflight": true,
+        "supports_static_status": true
+      },
+      "display_name": "IOP Publishing",
+      "official": true,
+      "provider": "iop",
+      "routes": [
+        {
+          "acceptance_policy": "metadata_identity",
+          "asset_scope": "body",
+          "auth_supported": false,
+          "browser_optional": false,
+          "browser_preflight": false,
+          "browser_required": false,
+          "concurrency": 2,
+          "hosts": [
+            "iopscience.iop.org"
+          ],
+          "implementation_status": "available",
+          "kind": "metadata",
+          "name": "metadata",
+          "notes": null,
+          "order": 0,
+          "qps": null,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": false,
+          "requires_playwright": false,
+          "source": "crossref_metadata",
+          "timeout_seconds": 20,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "temporary_dns"
+          ]
+        },
+        {
+          "acceptance_policy": "jats_body",
+          "asset_scope": "body",
+          "auth_supported": false,
+          "browser_optional": false,
+          "browser_preflight": false,
+          "browser_required": false,
+          "concurrency": 2,
+          "hosts": [
+            "iopscience.iop.org"
+          ],
+          "implementation_status": "unsupported",
+          "kind": "xml",
+          "name": "tdm_xml",
+          "notes": "No stable public or credentialed IOP journal-article XML/TDM endpoint was documented in the 2026-07 access review.",
+          "order": 1,
+          "qps": null,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "endpoint_not_documented",
+          "required_packages": [],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": false,
+          "requires_playwright": false,
+          "source": "iop_xml",
+          "timeout_seconds": 20,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "temporary_dns"
+          ]
+        },
+        {
+          "acceptance_policy": "provider_html_body",
+          "asset_scope": "body",
+          "auth_supported": true,
+          "browser_optional": false,
+          "browser_preflight": true,
+          "browser_required": true,
+          "concurrency": 1,
+          "hosts": [
+            "iopscience.iop.org"
+          ],
+          "implementation_status": "available",
+          "kind": "html",
+          "name": "browser_html",
+          "notes": null,
+          "order": 2,
+          "qps": null,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "selected_browser_serial",
+          "required_packages": [
+            "camoufox"
+          ],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": false,
+          "requires_playwright": true,
+          "source": "iop_html",
+          "timeout_seconds": 120,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "temporary_dns"
+          ]
+        },
+        {
+          "acceptance_policy": "validated_pdf",
+          "asset_scope": "body",
+          "auth_supported": true,
+          "browser_optional": false,
+          "browser_preflight": true,
+          "browser_required": true,
+          "concurrency": 1,
+          "hosts": [
+            "iopscience.iop.org"
+          ],
+          "implementation_status": "available",
+          "kind": "pdf",
+          "name": "browser_pdf",
+          "notes": null,
+          "order": 3,
+          "qps": null,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "selected_browser_serial",
+          "required_packages": [
+            "camoufox",
+            "pymupdf4llm"
+          ],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": true,
+          "requires_playwright": true,
+          "source": "iop_pdf",
+          "timeout_seconds": 120,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "temporary_dns"
+          ]
+        }
+      ],
+      "sources": [
+        "iop_html",
+        "iop_pdf"
+      ]
+    },
+    {
+      "asset_default": "body",
+      "capabilities": {
+        "auth_supported": true,
+        "browser_optional": false,
+        "browser_required": true,
+        "html": true,
+        "metadata_probe": "routing_signal",
+        "pdf_conversion": true,
+        "provider_managed_abstract_only": true,
+        "requires_browser_runtime": true,
+        "requires_playwright": false,
+        "runtime_kind": "browser",
+        "supports_browser_preflight": true,
+        "supports_static_status": true
+      },
+      "display_name": "AIP Publishing",
+      "official": true,
+      "provider": "aip",
+      "routes": [
+        {
+          "acceptance_policy": "metadata_identity",
+          "asset_scope": "body",
+          "auth_supported": false,
+          "browser_optional": false,
+          "browser_preflight": false,
+          "browser_required": false,
+          "concurrency": 2,
+          "hosts": [
+            "pubs.aip.org"
+          ],
+          "implementation_status": "available",
+          "kind": "metadata",
+          "name": "metadata",
+          "notes": null,
+          "order": 0,
+          "qps": null,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": false,
+          "requires_playwright": false,
+          "source": "metadata",
+          "timeout_seconds": 20,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "temporary_dns"
+          ]
+        },
+        {
+          "acceptance_policy": "provider_html_body",
+          "asset_scope": "body",
+          "auth_supported": true,
+          "browser_optional": false,
+          "browser_preflight": true,
+          "browser_required": true,
+          "concurrency": 1,
+          "hosts": [
+            "pubs.aip.org"
+          ],
+          "implementation_status": "available",
+          "kind": "html",
+          "name": "browser_html",
+          "notes": null,
+          "order": 1,
+          "qps": null,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [
+            "camoufox"
+          ],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": false,
+          "requires_playwright": true,
+          "source": "aip_html",
+          "timeout_seconds": 120,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "temporary_dns"
+          ]
+        },
+        {
+          "acceptance_policy": "validated_pdf",
+          "asset_scope": "body",
+          "auth_supported": true,
+          "browser_optional": false,
+          "browser_preflight": true,
+          "browser_required": true,
+          "concurrency": 1,
+          "hosts": [
+            "pubs.aip.org"
+          ],
+          "implementation_status": "available",
+          "kind": "pdf",
+          "name": "browser_pdf",
+          "notes": null,
+          "order": 2,
+          "qps": null,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [
+            "camoufox",
+            "pymupdf4llm"
+          ],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": true,
+          "requires_playwright": true,
+          "source": "aip_pdf",
+          "timeout_seconds": 120,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "temporary_dns"
+          ]
+        }
+      ],
+      "sources": [
+        "aip_html",
+        "aip_pdf"
+      ]
+    },
+    {
+      "asset_default": "body",
+      "capabilities": {
+        "auth_supported": false,
+        "browser_optional": false,
+        "browser_required": false,
+        "html": false,
+        "metadata_probe": "routing_signal",
+        "pdf_conversion": true,
+        "provider_managed_abstract_only": false,
+        "requires_browser_runtime": false,
+        "requires_playwright": false,
+        "runtime_kind": "direct",
+        "supports_browser_preflight": false,
+        "supports_static_status": true
+      },
+      "display_name": "Frontiers",
+      "official": true,
+      "provider": "frontiers",
+      "routes": [
+        {
+          "acceptance_policy": "metadata_identity",
+          "asset_scope": "body",
+          "auth_supported": false,
+          "browser_optional": false,
+          "browser_preflight": false,
+          "browser_required": false,
+          "concurrency": 2,
+          "hosts": [
+            "www.frontiersin.org",
+            "frontiersin.org"
+          ],
+          "implementation_status": "available",
+          "kind": "metadata",
+          "name": "metadata",
+          "notes": null,
+          "order": 0,
+          "qps": null,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": false,
+          "requires_playwright": false,
+          "source": "metadata",
+          "timeout_seconds": 20,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "temporary_dns"
+          ]
+        },
+        {
+          "acceptance_policy": "structured_xml_body",
+          "asset_scope": "body",
+          "auth_supported": false,
+          "browser_optional": false,
+          "browser_preflight": false,
+          "browser_required": false,
+          "concurrency": 2,
+          "hosts": [
+            "www.frontiersin.org",
+            "frontiersin.org"
+          ],
+          "implementation_status": "available",
+          "kind": "xml",
+          "name": "xml",
+          "notes": null,
+          "order": 1,
+          "qps": null,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": false,
+          "requires_playwright": false,
+          "source": "frontiers_xml",
+          "timeout_seconds": 20,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "temporary_dns"
+          ]
+        },
+        {
+          "acceptance_policy": "validated_pdf",
+          "asset_scope": "body",
+          "auth_supported": false,
+          "browser_optional": false,
+          "browser_preflight": false,
+          "browser_required": false,
+          "concurrency": 2,
+          "hosts": [
+            "www.frontiersin.org",
+            "frontiersin.org"
+          ],
+          "implementation_status": "available",
+          "kind": "pdf",
+          "name": "direct_pdf",
+          "notes": null,
+          "order": 2,
+          "qps": null,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [
+            "pymupdf4llm"
+          ],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": true,
+          "requires_playwright": false,
+          "source": "frontiers_pdf",
+          "timeout_seconds": 120,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "temporary_dns"
+          ]
+        }
+      ],
+      "sources": [
+        "frontiers_pdf",
+        "frontiers_xml"
+      ]
+    }
+  ],
+  "resource_uri": "resource://paper-fetch/provider-catalog",
+  "schema_version": 1,
+  "source_count": 33,
+  "source_provider_map": {
+    "acs": "acs",
+    "aip_html": "aip",
+    "aip_pdf": "aip",
+    "ams_html": "ams",
+    "ams_pdf": "ams",
+    "annualreviews_html": "annualreviews",
+    "annualreviews_pdf": "annualreviews",
+    "arxiv_html": "arxiv",
+    "arxiv_pdf": "arxiv",
+    "copernicus_pdf": "copernicus",
+    "copernicus_xml": "copernicus",
+    "crossref_meta": "crossref",
+    "elsevier_pdf": "elsevier",
+    "elsevier_xml": "elsevier",
+    "frontiers_pdf": "frontiers",
+    "frontiers_xml": "frontiers",
+    "ieee_html": "ieee",
+    "ieee_pdf": "ieee",
+    "iop_html": "iop",
+    "iop_pdf": "iop",
+    "mdpi_html": "mdpi",
+    "mdpi_pdf": "mdpi",
+    "oxfordacademic_html": "oxfordacademic",
+    "oxfordacademic_pdf": "oxfordacademic",
+    "plos_pdf": "plos",
+    "plos_xml": "plos",
+    "pnas": "pnas",
+    "royalsocietypublishing_html": "royalsocietypublishing",
+    "royalsocietypublishing_pdf": "royalsocietypublishing",
+    "science": "science",
+    "springer_html": "springer",
+    "springer_pdf": "springer",
+    "wiley_browser": "wiley"
+  },
+  "tool_version": "4.1.0"
+}

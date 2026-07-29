@@ -11,7 +11,7 @@ def _launch_executable_path(binary_path: str | None) -> str:
     if binary_path:
         return binary_path
     pkgman = importlib.import_module("camoufox.pkgman")
-    runtime_path = pkgman.camoufox_path(download_if_missing=True)
+    runtime_path = pkgman.camoufox_path(download_if_missing=False)
     return str(pkgman.launch_path(runtime_path))
 
 

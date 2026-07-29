@@ -35,7 +35,10 @@ from .cache import (
     UNSTABLE_CACHE_HEADER_NAMES,
     _CacheKey,
     _DiskCacheEntry,
+    diagnostic_url_payload,
+    redact_text_for_diagnostics,
     redact_url_for_cache,
+    redact_url_for_diagnostics,
 )
 from .content_types import (
     PDF_ACCEPT_HEADER,
@@ -54,6 +57,7 @@ from .errors import (
     is_timeout_network_error,
     iter_network_error_causes,
 )
+from .json_payload import decode_json_object_response
 from .retry import (
     DEFAULT_TRANSIENT_BACKOFF_BASE_SECONDS,
     DEFAULT_TRANSIENT_RETRIES,
@@ -63,13 +67,22 @@ from .retry import (
 )
 from .transport import (
     DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
+    DEFAULT_MAX_REDIRECTS,
     DEFAULT_PER_HOST_CONCURRENCY,
     DEFAULT_POOL_MAXSIZE,
     DEFAULT_POOL_NUM_POOLS,
     DEFAULT_TIMEOUT_SECONDS,
+    HttpRequestPolicy,
     HttpTransport,
+    HttpTransportOptions,
     _PreparedRequest,
     logger,
+)
+from .url_policy import (
+    DEFAULT_REMOTE_PORTS,
+    DEFAULT_SAFE_REMOTE_URL_POLICY,
+    SafeRemoteUrlPolicy,
+    ValidatedRemoteUrl,
 )
 
 __all__ = [
@@ -84,12 +97,15 @@ __all__ = [
     "DEFAULT_FULLTEXT_TIMEOUT_SECONDS",
     "DEFAULT_MAX_CACHEABLE_BODY_BYTES",
     "DEFAULT_MAX_COMPRESSED_BODY_MULTIPLIER",
+    "DEFAULT_MAX_REDIRECTS",
     "DEFAULT_MAX_RESPONSE_BYTES",
     "DEFAULT_MAX_TOTAL_CACHE_BYTES",
     "DEFAULT_METADATA_CACHE_TTL_SECONDS",
     "DEFAULT_PER_HOST_CONCURRENCY",
     "DEFAULT_POOL_MAXSIZE",
     "DEFAULT_POOL_NUM_POOLS",
+    "DEFAULT_REMOTE_PORTS",
+    "DEFAULT_SAFE_REMOTE_URL_POLICY",
     "DEFAULT_TIMEOUT_SECONDS",
     "DEFAULT_TRANSIENT_BACKOFF_BASE_SECONDS",
     "DEFAULT_TRANSIENT_RETRIES",
@@ -105,10 +121,14 @@ __all__ = [
     "TEXTUAL_CONTENT_TYPES",
     "TRANSIENT_HTTP_STATUS_CODES",
     "UNSTABLE_CACHE_HEADER_NAMES",
+    "HttpRequestPolicy",
     "HttpTransport",
+    "HttpTransportOptions",
     "RequestCancelledError",
     "RequestErrorCategory",
     "RequestFailure",
+    "SafeRemoteUrlPolicy",
+    "ValidatedRemoteUrl",
     "_CacheKey",
     "_DiskCacheEntry",
     "_PreparedRequest",
@@ -117,7 +137,9 @@ __all__ = [
     "build_text_preview",
     "classify_network_error",
     "content_type_base",
+    "decode_json_object_response",
     "decompress_gzip_body",
+    "diagnostic_url_payload",
     "is_pdf_content_type",
     "is_textual_content_type",
     "is_timeout_network_error",
@@ -127,6 +149,8 @@ __all__ = [
     "logger",
     "normalize_content_encoding",
     "parse_retry_after_seconds",
+    "redact_text_for_diagnostics",
     "redact_url_for_cache",
+    "redact_url_for_diagnostics",
     "time",
 ]

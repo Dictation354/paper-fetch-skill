@@ -5,7 +5,10 @@ from pathlib import Path
 import tempfile
 import unittest
 
+import pytest
+
 from paper_fetch.http import HttpTransport
+from paper_fetch.provider_catalog import provider_has_browser_route
 from paper_fetch.runtime import RuntimeContext
 from paper_fetch.service import FetchStrategy, fetch_paper
 from tests.live._runtime_env import (
@@ -13,6 +16,7 @@ from tests.live._runtime_env import (
     require_selected_browser_or_skip,
 )
 from tests.provider_benchmark_samples import (
+    iter_provider_benchmark_samples,
     provider_benchmark_sample,
     source_trail_matches,
 )
@@ -27,14 +31,7 @@ IEEE_BROWSER_ASSET_URL = (
 )
 IEEE_BROWSER_BODY_ASSET_COUNT = 13
 ELSEVIER_SAMPLE = provider_benchmark_sample("elsevier")
-SPRINGER_SAMPLE = provider_benchmark_sample("springer")
-WILEY_SAMPLE = provider_benchmark_sample("wiley")
-SCIENCE_SAMPLE = provider_benchmark_sample("science")
-PNAS_SAMPLE = provider_benchmark_sample("pnas")
 IEEE_SAMPLE = provider_benchmark_sample("ieee")
-ARXIV_SAMPLE = provider_benchmark_sample("arxiv")
-AMS_SAMPLE = provider_benchmark_sample("ams")
-COPERNICUS_SAMPLE = provider_benchmark_sample("copernicus")
 
 
 def fetch_article(query: str, *, transport: HttpTransport, env: dict[str, str]):
@@ -52,6 +49,55 @@ def fetch_article(query: str, *, transport: HttpTransport, env: dict[str, str]):
         context.close()
     assert envelope.article is not None
     return envelope.article
+
+
+@pytest.fixture(scope="module")
+def catalog_live_env():
+    if not RUN_LIVE:
+        pytest.skip("Set PAPER_FETCH_RUN_LIVE=1 to run live publisher smoke tests.")
+    env, tempdir = build_isolated_live_env()
+    try:
+        yield env
+    finally:
+        tempdir.cleanup()
+
+
+@pytest.mark.parametrize(
+    "sample",
+    iter_provider_benchmark_samples(),
+    ids=lambda sample: sample.provider,
+)
+def test_catalog_provider_sample_live_fulltext(sample, catalog_live_env) -> None:
+    missing = [
+        key for key in sample.required_env if not catalog_live_env.get(key, "").strip()
+    ]
+    if missing:
+        pytest.skip(
+            "Missing required environment variables for live test: "
+            + ", ".join(missing)
+        )
+    if provider_has_browser_route(sample.provider):
+
+        class _PytestSkipper:
+            @staticmethod
+            def skipTest(message: str) -> None:
+                pytest.skip(message)
+
+        require_selected_browser_or_skip(_PytestSkipper(), catalog_live_env)
+
+    article = fetch_article(
+        sample.doi,
+        transport=HttpTransport(),
+        env=catalog_live_env,
+    )
+
+    assert article.source == sample.expected_source
+    assert article.quality.has_fulltext
+    assert article.sections
+    assert source_trail_matches(
+        article.quality.source_trail,
+        sample.accepted_live_source_trail_groups,
+    ), article.quality.source_trail
 
 
 class LivePublisherTests(unittest.TestCase):
@@ -88,101 +134,6 @@ class LivePublisherTests(unittest.TestCase):
             ),
             article.quality.source_trail,
         )
-
-    def test_elsevier_doi_live_fulltext(self) -> None:
-        self._require_env(*ELSEVIER_SAMPLE.required_env)
-        article = fetch_article(
-            ELSEVIER_SAMPLE.doi,
-            transport=HttpTransport(),
-            env=self.env,
-        )
-
-        self._assert_matches_sample(article, ELSEVIER_SAMPLE)
-
-    def test_springer_doi_live_fulltext(self) -> None:
-        self._require_env(*SPRINGER_SAMPLE.required_env)
-        article = fetch_article(
-            SPRINGER_SAMPLE.doi,
-            transport=HttpTransport(),
-            env=self.env,
-        )
-
-        self._assert_matches_sample(article, SPRINGER_SAMPLE)
-
-    def test_wiley_doi_live_fulltext(self) -> None:
-        self._require_env(*WILEY_SAMPLE.required_env)
-        require_selected_browser_or_skip(self, self.env)
-        article = fetch_article(
-            WILEY_SAMPLE.doi,
-            transport=HttpTransport(),
-            env=self.env,
-        )
-
-        self._assert_matches_sample(article, WILEY_SAMPLE)
-
-    def test_science_doi_live_fulltext(self) -> None:
-        self._require_env(*SCIENCE_SAMPLE.required_env)
-        require_selected_browser_or_skip(self, self.env)
-        article = fetch_article(
-            SCIENCE_SAMPLE.doi,
-            transport=HttpTransport(),
-            env=self.env,
-        )
-
-        self._assert_matches_sample(article, SCIENCE_SAMPLE)
-
-    def test_pnas_doi_live_fulltext(self) -> None:
-        self._require_env(*PNAS_SAMPLE.required_env)
-        require_selected_browser_or_skip(self, self.env)
-        article = fetch_article(
-            PNAS_SAMPLE.doi,
-            transport=HttpTransport(),
-            env=self.env,
-        )
-
-        self._assert_matches_sample(article, PNAS_SAMPLE)
-
-    def test_ieee_doi_live_fulltext(self) -> None:
-        require_selected_browser_or_skip(self, self.env)
-        self._require_env(*IEEE_SAMPLE.required_env)
-        article = fetch_article(
-            IEEE_SAMPLE.doi,
-            transport=HttpTransport(),
-            env=self.env,
-        )
-
-        self._assert_matches_sample(article, IEEE_SAMPLE)
-
-    def test_arxiv_doi_live_fulltext(self) -> None:
-        self._require_env(*ARXIV_SAMPLE.required_env)
-        article = fetch_article(
-            ARXIV_SAMPLE.doi,
-            transport=HttpTransport(),
-            env=self.env,
-        )
-
-        self._assert_matches_sample(article, ARXIV_SAMPLE)
-
-    def test_ams_doi_live_fulltext(self) -> None:
-        require_selected_browser_or_skip(self, self.env)
-        self._require_env(*AMS_SAMPLE.required_env)
-        article = fetch_article(
-            AMS_SAMPLE.doi,
-            transport=HttpTransport(),
-            env=self.env,
-        )
-
-        self._assert_matches_sample(article, AMS_SAMPLE)
-
-    def test_copernicus_doi_live_fulltext(self) -> None:
-        self._require_env(*COPERNICUS_SAMPLE.required_env)
-        article = fetch_article(
-            COPERNICUS_SAMPLE.doi,
-            transport=HttpTransport(),
-            env=self.env,
-        )
-
-        self._assert_matches_sample(article, COPERNICUS_SAMPLE)
 
     def test_ieee_camoufox_recovers_known_large_gif_to_local_markdown(self) -> None:
         if not RUN_IEEE_BROWSER_LIVE:

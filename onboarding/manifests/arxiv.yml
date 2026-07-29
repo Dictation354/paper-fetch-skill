@@ -3,10 +3,10 @@ name: arxiv
 display_source: arxiv_html
 generation:
   generated_by: manual_replay
-  generated_at: "2026-05-15T00:00:00Z"
+  generated_at: '2026-05-15T00:00:00Z'
   source_queries:
-    - "paper_fetch.provider_catalog arxiv ProviderSpec"
-    - "tests/fixtures/golden_criteria arxiv samples"
+    - paper_fetch.provider_catalog arxiv ProviderSpec
+    - tests/fixtures/golden_criteria arxiv samples
     - arXiv 10.48550 table DOI candidates
     - site:arxiv.org arXiv table article DOI
     - 10.48550 table fixture discovery arxiv
@@ -20,18 +20,21 @@ generation:
 routing:
   primary: doi_prefix
   doi_prefixes:
-    - "10.48550/"
+    - 10.48550/
   domains:
     - arxiv.org
   domain_suffixes: []
   publisher_aliases:
     - arxiv
-  crossref_publisher:
+  crossref_publisher: null
 main_path:
   - article_html
   - pdf_fallback
   - metadata_only
-success_criteria: {}
+success_criteria:
+  article_html: {}
+  pdf_fallback: {}
+  metadata_only: {}
 route_contract:
   article_html:
     success_requires:
@@ -122,10 +125,10 @@ asset_contract:
     download: required
     purposes:
       - figure
-    exception_reason:
+    exception_reason: null
 supplementary_scope:
-  selector:
-  url_pattern:
+  selector: null
+  url_pattern: null
 abstract_only_strategy: not_supported
 probe:
   env_requirements: []
@@ -135,78 +138,83 @@ probe:
 fixtures:
   doi_samples:
     structure:
-      doi: "10.48550/arxiv.2605.06663v1"
-      evidence_url: "https://arxiv.org/html/2605.06663v1"
-      evidence_reason: "Golden fixture exercises the official HTML article route with title, abstract,
-        and body extraction."
+      doi: 10.48550/arxiv.2605.06663v1
+      evidence_url: https://arxiv.org/html/2605.06663v1
+      evidence_reason: Golden fixture exercises the official HTML article route with
+        title, abstract, and body extraction.
       observed_signals:
         - html_article
         - body_sections
       confidence: high
     table:
-      doi: "10.48550/arxiv.2605.06663v1"
-      evidence_url: "https://arxiv.org/html/2605.06663v1"
-      evidence_reason: "Unit tests exercise arXiv table block rendering against the HTML extraction path."
+      doi: 10.48550/arxiv.2605.06663v1
+      evidence_url: https://arxiv.org/html/2605.06663v1
+      evidence_reason: Unit tests exercise arXiv table block rendering against the
+        HTML extraction path.
       observed_signals:
         - html_article
         - table_block_rendering
       confidence: medium
     formula:
-      doi: "10.48550/arxiv.2605.06653v1"
-      evidence_url: "https://arxiv.org/html/2605.06653v1"
-      evidence_reason: "Golden fixture covers arXiv HTML generated from math-heavy source content."
+      doi: 10.48550/arxiv.2605.06653v1
+      evidence_url: https://arxiv.org/html/2605.06653v1
+      evidence_reason: Golden fixture covers arXiv HTML generated from math-heavy
+        source content.
       observed_signals:
         - html_article
         - math_markup
       confidence: medium
     figure:
-      doi: "10.48550/arxiv.2605.06667v1"
-      evidence_url: "https://arxiv.org/html/2605.06667v1"
-      evidence_reason: "Unit coverage for this fixture verifies that arXiv HTML images are retained while
-        repeated appendix captions are suppressed."
+      doi: 10.48550/arxiv.2605.06667v1
+      evidence_url: https://arxiv.org/html/2605.06667v1
+      evidence_reason: Unit coverage for this fixture verifies that arXiv HTML images
+        are retained while repeated appendix captions are suppressed.
       observed_signals:
         - html_article
         - image_assets
       confidence: high
     supplementary:
-      doi:
-      evidence_url: "https://arxiv.org/"
-      evidence_reason: "Current golden corpus does not include an arXiv supplementary-material sample."
+      doi: null
+      evidence_url: https://arxiv.org/
+      evidence_reason: Current golden corpus does not include an arXiv supplementary-material
+        sample.
       observed_signals: []
       confidence: low
     references:
-      doi: "10.48550/arxiv.2605.06663v1"
-      evidence_url: "https://arxiv.org/html/2605.06663v1"
-      evidence_reason: "arXiv HTML extraction has provider-owned reference extraction tests on the official
-        HTML route."
+      doi: 10.48550/arxiv.2605.06663v1
+      evidence_url: https://arxiv.org/html/2605.06663v1
+      evidence_reason: arXiv HTML extraction has provider-owned reference extraction
+        tests on the official HTML route.
       observed_signals:
         - html_article
         - references
       confidence: high
     pdf_fallback:
-      doi: "10.48550/arxiv.1406.2661v1"
-      evidence_url: "https://arxiv.org/pdf/1406.2661v1"
-      evidence_reason: "Golden fixture records arXiv PDF fallback replay for Generative Adversarial Networks."
+      doi: 10.48550/arxiv.1406.2661v1
+      evidence_url: https://arxiv.org/pdf/1406.2661v1
+      evidence_reason: Golden fixture records arXiv PDF fallback replay for Generative
+        Adversarial Networks.
       observed_signals:
         - pdf_fallback
         - application_pdf
       confidence: high
     abstract_only:
-      doi:
-      evidence_url: "https://arxiv.org/"
-      evidence_reason: "The arXiv provider uses HTML or PDF routes in current runtime behavior."
+      doi: null
+      evidence_url: https://arxiv.org/
+      evidence_reason: The arXiv provider uses HTML or PDF routes in current runtime
+        behavior.
       observed_signals: []
       confidence: low
     access_gate:
-      doi:
-      evidence_url: "https://arxiv.org/"
-      evidence_reason: "Current golden corpus has no arXiv access-gate sample."
+      doi: null
+      evidence_url: https://arxiv.org/
+      evidence_reason: Current golden corpus has no arXiv access-gate sample.
       observed_signals: []
       confidence: low
     empty_shell:
-      doi:
-      evidence_url: "https://arxiv.org/"
-      evidence_reason: "Current golden corpus has no arXiv empty-shell sample."
+      doi: null
+      evidence_url: https://arxiv.org/
+      evidence_reason: Current golden corpus has no arXiv empty-shell sample.
       observed_signals: []
       confidence: low
   discovery_proof:
@@ -243,30 +251,42 @@ fixtures:
         - 10.48550/arxiv.2605.06663v1
         - 10.48550/arxiv.2605.06653v1
         - 10.48550/arxiv.2605.06667v1
-      selected_doi:
+      selected_doi: null
       rejections:
-        10.48550/arxiv.2605.06663v1: Same DOI was checked as a potential supplementary fixture but
-          is not suitable because captured evidence does not expose stable article-scoped
-          supplementary assertions for this purpose.
-        10.48550/arxiv.2605.06653v1: Same DOI was checked as a potential supplementary fixture but
-          is not suitable because captured evidence does not expose stable article-scoped
-          supplementary assertions for this purpose.
-        10.48550/arxiv.2605.06667v1: Same DOI was checked as a potential supplementary fixture but
-          is not suitable because captured evidence does not expose stable article-scoped
-          supplementary assertions for this purpose.
+        10.48550/arxiv.2605.06663v1: Same DOI was checked as a potential supplementary
+          fixture but is not suitable because captured evidence does not expose stable
+          article-scoped supplementary assertions for this purpose.
+        10.48550/arxiv.2605.06653v1: Same DOI was checked as a potential supplementary
+          fixture but is not suitable because captured evidence does not expose stable
+          article-scoped supplementary assertions for this purpose.
+        10.48550/arxiv.2605.06667v1: Same DOI was checked as a potential supplementary
+          fixture but is not suitable because captured evidence does not expose stable
+          article-scoped supplementary assertions for this purpose.
       exhausted: true
-      evidence_summary: Exhausted the current arxiv supplementary candidate search after recording
-        provider/domain/prefix queries and rejecting the listed DOI candidate(s); no candidate is
-        suitable for a stable supplementary Markdown fixture.
+      evidence_summary: Exhausted the current arxiv supplementary candidate search
+        after recording provider/domain/prefix queries and rejecting the listed DOI
+        candidate(s); no candidate is suitable for a stable supplementary Markdown
+        fixture.
 extraction_hints:
-  datalayer_signal_set:
-  text_marker_signal_set: []
+  datalayer_signal_set: null
+  text_marker_signal_set: null
   front_matter:
+    exact_texts:
+      - authors
+      - author information
+      - affiliations
+    contains_tokens: []
+    publication_keywords: []
   asset_retry:
+    name: arxiv
+    key_fn: paper_fetch.providers._arxiv_assets:_arxiv_asset_retry_key
+    retryable_failure: paper_fetch.providers._asset_retry:is_retryable_asset_failure
+    failure_match: paper_fetch.providers._arxiv_assets:_arxiv_asset_matches_failure
   metadata_merge: []
 owner_reuse_exceptions: []
 docs:
-  providers_md_capability_row: "arXiv | arXiv ID + optional API enrichment | official HTML -> direct HTTP
-    PDF -> metadata fallback | body HTML assets | arxiv_html / arxiv_pdf"
-  changelog_summary: "Add arXiv provider with official HTML and PDF fallback."
-  extraction_rules_summary:
+  providers_md_capability_row: arXiv | arXiv ID + optional API enrichment | official
+    HTML -> direct HTTP PDF -> metadata fallback | body HTML assets | arxiv_html /
+    arxiv_pdf
+  changelog_summary: Add arXiv provider with official HTML and PDF fallback.
+  extraction_rules_summary: null

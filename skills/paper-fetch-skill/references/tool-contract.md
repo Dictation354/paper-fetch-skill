@@ -37,13 +37,15 @@
 - `get_cached` 默认 `detail="full"`、`preferred_only=false`，保留既有 `entries`、`preferred` 和 index 字段。`preferred_only=true` 的 full 响应只在 `entries` 中保留优选 Markdown/primary payload，并把 `preferred.assets` 置空；`entry_summary` 仍统计 scope 中全部已证明条目。
 - 常规 cache-first 决策使用 `detail="compact"`，并显式传与随后 `fetch_paper` 相同的 `modes`、`strategy`、`include_refs`、`max_tokens` 和 `download_dir`。compact 不返回 `entries`、完整正文、sidecar payload 或资产数组，只返回优选 Markdown/primary entry、内容/置信度、acceptance/asset/warning 摘要、sidecar/request 状态与稳定 SHA-256 fingerprint。
 - 顶层 `status="hit"` 只表示该 DOI 在当前 scope 有身份可证明的 index entry，不表示 fetch-envelope 可复用。只有 `request_satisfied=true` 才表示 sidecar version、extraction revision、payload DOI 均有效，既有 `cached_request_matches()` 严格匹配本次请求，且 payload 包含全部请求 modes。
-- `cached_request` / `cached_request_fingerprint` 描述已存 sidecar；`requested_request` / `requested_request_fingerprint` 描述本次查询。改变 modes、strategy、`include_refs` 或 `max_tokens` 会得到 `request_status="mismatch"`，不能把 entry hit 升级为请求命中。
+- `cached_request` / `cached_request_fingerprint` 描述被选中的 sidecar；`requested_request` / `requested_request_fingerprint` 描述本次查询。FetchEnvelope cache 以 DOI + request fingerprint 保存多版本 sidecar，同一 DOI 的 modes、strategy、`include_refs`、`max_tokens` 变体可以并存，不再由最后一次窄请求覆盖富请求。读取优先精确 fingerprint，再按质量/时间检查兼容候选；不兼容 entry 仍只能得到 `request_status="mismatch"`。
+- fingerprint 同时包含摘要化 `credential_scope`，不保存秘密或本地 state 内容。查询先尝试当前 runtime 的精确 scope；带 API token/storage-state capability 的调用在精确 sidecar 缺失或 scope 不匹配时可以单向复用 public sidecar，public 调用绝不读取 private sidecar，不同 private scope 之间也不复用。
 - `sidecar.status` 明确区分 `ready`、`missing`、`corrupt`、`unreadable`、`version_mismatch`、`extraction_revision_mismatch`、`doi_mismatch`、`invalid_scope` 等状态。损坏/旧版/错误 DOI sidecar 以及 `identity_status="no_proven_entries"` 都令 `request_satisfied=false`，但 cache miss 仍是正常路由结果，不是工具失败。
 - 查询始终限制在显式 `download_dir`，不跨 scope 搜索、不联网。compact acceptance 是当前索引/sidecar 快照的摘要；它不承诺满足未传入的未来请求，命中后仍进入统一 acceptance/report。
 
-## Input Schema Layers
+## Input / Output Schema Layers
 
-- native FastMCP schema 与 Codex/stdio host-safe schema 分开验证。native schema 保留 `FetchStrategyInput` 的结构化 Pydantic 模型和运行时对象，不把 `strategy` 退化为无约束字典；host-safe schema 由同一组 Pydantic request model 生成并内联嵌套结构，不包含宿主无法解析的 `$ref`。
+- native MCPServer schema 与 Codex/stdio host-safe schema 分开验证。native schema 保留 `FetchStrategyInput` 的结构化 Pydantic 模型和运行时对象，不把 `strategy` 退化为无约束字典；host-safe schema 由同一组 Pydantic request model 生成并内联嵌套结构，不包含宿主无法解析的 `$ref`。
+- output schema 仍由 typed Pydantic/TypedDict contract 生成；发布到 `tools/list` 时只移除展示性 `title` 注解与可选字段的 `default: null`。真实 `properties.title` / `properties.default` 字段、`required`、枚举、范围及运行时结构化输出验证均保留。
 - `src/paper_fetch/mcp/schemas.py` 是枚举、范围和规范化的事实源：`modes=article|markdown|metadata`、`include_refs=none|top10|all`、`strategy.asset_profile=none|body|all`、`artifact_mode=markdown-assets|all|none`、batch `mode=article|metadata`、cache `mode=index|refresh|rescan`，以及 cache `detail=full|compact`。工具只暴露当前已实现的字段。
 - batch `queries` 的公开 schema 和运行时验证都要求 `1..50` 项，`concurrency` 要求 `1..8`；所有公开工具输入对象及嵌套 strategy/budget 对象均拒绝未知字段（`additionalProperties=false`）。
 - 兼容请求仍可使用既有 nested `strategy={...}`，包括 `inline_image_budget`；字符串枚举在 Pydantic validator 中继续做去空白和大小写规范化。规范化不是放宽值域，未知枚举、越界数字、过长数组和额外字段会在已注册工具函数执行前失败。
@@ -86,7 +88,7 @@
 
 ## Fetch Notes
 
-- `prefer_cache=true` 会先把查询解析为 DOI，再尝试命中本地匹配的 FetchEnvelope sidecar，之后才走完整抓取流程。
+- `prefer_cache=true` 会先把查询解析为 DOI，再按 DOI + request fingerprint + credential scope 尝试命中本地 FetchEnvelope variant，之后才走完整抓取流程。
 - `artifact_mode="none"` 会关闭 provider artifact 和资产落盘，但仍保留 MCP fetch-envelope sidecar/cache-index 用于 `prefer_cache`、`list_cached` 和资源暴露。
 - `no_download=true` 会避免写入 provider 载荷、资源文件和 fetch-envelope sidecar。
 - MCP 只有 `save_markdown=false`、`no_download=true`、`prefer_cache=false`、`artifact_mode="none"`、`strategy.asset_profile="none"` 的临时阅读组合才承诺完全不落盘。`no_download=true` 不覆盖 `save_markdown=true` 的显式 Markdown 输出。

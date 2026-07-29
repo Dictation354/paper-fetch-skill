@@ -94,7 +94,12 @@ class ProviderWaterfallRunnerTests(unittest.TestCase):
         )
         self.assertEqual(
             [event.marker() for event in payload.trace if event.marker()],
-            ["fulltext:template_html_fail", "fulltext:template_pdf_ok"],
+            [
+                "fulltext:html_fail",
+                "fulltext:template_html_fail",
+                "fulltext:template_pdf_ok",
+                "fulltext:pdf_ok",
+            ],
         )
 
     def test_runner_combines_failures_when_all_steps_fail(self) -> None:

@@ -21,49 +21,9 @@
     },
     "AssetAcceptanceFacet": {
       "properties": {
-        "failed": {
-          "default": 0,
-          "minimum": 0,
-          "title": "Failed",
-          "type": "integer"
-        },
-        "failure_codes": {
-          "default": [],
-          "items": {
-            "type": "string"
-          },
-          "title": "Failure Codes",
-          "type": "array"
-        },
-        "full_size": {
-          "default": 0,
-          "minimum": 0,
-          "title": "Full Size",
-          "type": "integer"
-        },
-        "local": {
-          "default": 0,
-          "minimum": 0,
-          "title": "Local",
-          "type": "integer"
-        },
-        "not_archived": {
-          "default": 0,
-          "minimum": 0,
-          "title": "Not Archived",
-          "type": "integer"
-        },
-        "placeholder_suspected": {
-          "default": 0,
-          "minimum": 0,
-          "title": "Placeholder Suspected",
-          "type": "integer"
-        },
-        "preview": {
-          "default": 0,
-          "minimum": 0,
-          "title": "Preview",
-          "type": "integer"
+        "requested": {
+          "title": "Requested",
+          "type": "boolean"
         },
         "profile": {
           "default": "unknown",
@@ -76,15 +36,83 @@
           "title": "Profile",
           "type": "string"
         },
+        "audited": {
+          "default": false,
+          "title": "Audited",
+          "type": "boolean"
+        },
+        "expected": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Expected"
+        },
+        "discovered": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Discovered",
+          "type": "integer"
+        },
+        "attempted": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Attempted",
+          "type": "integer"
+        },
+        "total": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Total",
+          "type": "integer"
+        },
+        "local": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Local",
+          "type": "integer"
+        },
+        "full_size": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Full Size",
+          "type": "integer"
+        },
+        "preview": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Preview",
+          "type": "integer"
+        },
+        "failed": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Failed",
+          "type": "integer"
+        },
+        "placeholder_suspected": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Placeholder Suspected",
+          "type": "integer"
+        },
+        "not_archived": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Not Archived",
+          "type": "integer"
+        },
         "remote_link_count": {
           "default": 0,
           "minimum": 0,
           "title": "Remote Link Count",
           "type": "integer"
-        },
-        "remote_links_preserved": {
-          "title": "Remote Links Preserved",
-          "type": "boolean"
         },
         "remote_only_count": {
           "default": 0,
@@ -92,18 +120,20 @@
           "title": "Remote Only Count",
           "type": "integer"
         },
-        "requested": {
-          "title": "Requested",
-          "type": "boolean"
+        "failure_codes": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Failure Codes",
+          "type": "array"
         },
         "status": {
           "$ref": "#/$defs/AssetAcceptanceStatus"
         },
-        "total": {
-          "default": 0,
-          "minimum": 0,
-          "title": "Total",
-          "type": "integer"
+        "remote_links_preserved": {
+          "title": "Remote Links Preserved",
+          "type": "boolean"
         }
       },
       "required": [
@@ -120,6 +150,8 @@
         "degraded",
         "failed",
         "unavailable",
+        "unknown",
+        "not_applicable",
         "not_requested"
       ],
       "title": "AssetAcceptanceStatus",
@@ -127,6 +159,23 @@
     },
     "ContentAcceptanceFacet": {
       "properties": {
+        "status": {
+          "$ref": "#/$defs/ContentAcceptanceStatus"
+        },
+        "has_fulltext": {
+          "title": "Has Fulltext",
+          "type": "boolean"
+        },
+        "has_abstract": {
+          "title": "Has Abstract",
+          "type": "boolean"
+        },
+        "token_estimate": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Token Estimate",
+          "type": "integer"
+        },
         "confidence": {
           "anyOf": [
             {
@@ -147,28 +196,11 @@
           "title": "Flags",
           "type": "array"
         },
-        "formulas": {
-          "$ref": "#/$defs/FormulaAcceptanceFacet"
-        },
-        "has_abstract": {
-          "title": "Has Abstract",
-          "type": "boolean"
-        },
-        "has_fulltext": {
-          "title": "Has Fulltext",
-          "type": "boolean"
-        },
-        "status": {
-          "$ref": "#/$defs/ContentAcceptanceStatus"
-        },
         "tables": {
           "$ref": "#/$defs/TableAcceptanceFacet"
         },
-        "token_estimate": {
-          "default": 0,
-          "minimum": 0,
-          "title": "Token Estimate",
-          "type": "integer"
+        "formulas": {
+          "$ref": "#/$defs/FormulaAcceptanceFacet"
         }
       },
       "required": [
@@ -191,6 +223,13 @@
     },
     "FetchAcceptanceFacet": {
       "properties": {
+        "status": {
+          "$ref": "#/$defs/FetchAcceptanceStatus"
+        },
+        "completed": {
+          "title": "Completed",
+          "type": "boolean"
+        },
         "code": {
           "anyOf": [
             {
@@ -202,13 +241,6 @@
           ],
           "default": null,
           "title": "Code"
-        },
-        "completed": {
-          "title": "Completed",
-          "type": "boolean"
-        },
-        "status": {
-          "$ref": "#/$defs/FetchAcceptanceStatus"
         }
       },
       "required": [
@@ -221,36 +253,36 @@
     "FetchAcceptanceReport": {
       "description": "Canonical acceptance report shared by all external adapters.",
       "properties": {
-        "asset": {
-          "$ref": "#/$defs/AssetAcceptanceFacet"
-        },
-        "content": {
-          "$ref": "#/$defs/ContentAcceptanceFacet"
-        },
-        "fetch": {
-          "$ref": "#/$defs/FetchAcceptanceFacet"
-        },
-        "identity": {
-          "$ref": "#/$defs/IdentityAcceptanceFacet"
+        "schema_version": {
+          "const": 1,
+          "title": "Schema Version",
+          "type": "integer"
         },
         "minimum_reader_schema_version": {
           "const": 1,
           "title": "Minimum Reader Schema Version",
           "type": "integer"
         },
-        "output": {
-          "$ref": "#/$defs/OutputAcceptanceFacet"
-        },
         "overall": {
           "$ref": "#/$defs/OverallAcceptanceStatus"
         },
+        "identity": {
+          "$ref": "#/$defs/IdentityAcceptanceFacet"
+        },
+        "fetch": {
+          "$ref": "#/$defs/FetchAcceptanceFacet"
+        },
+        "content": {
+          "$ref": "#/$defs/ContentAcceptanceFacet"
+        },
+        "asset": {
+          "$ref": "#/$defs/AssetAcceptanceFacet"
+        },
+        "output": {
+          "$ref": "#/$defs/OutputAcceptanceFacet"
+        },
         "provenance": {
           "$ref": "#/$defs/ProvenanceAcceptanceFacet"
-        },
-        "schema_version": {
-          "const": 1,
-          "title": "Schema Version",
-          "type": "integer"
         }
       },
       "required": [
@@ -296,19 +328,8 @@
     },
     "IdentityAcceptanceFacet": {
       "properties": {
-        "candidate_count": {
-          "default": 0,
-          "minimum": 0,
-          "title": "Candidate Count",
-          "type": "integer"
-        },
-        "codes": {
-          "default": [],
-          "items": {
-            "type": "string"
-          },
-          "title": "Codes",
-          "type": "array"
+        "status": {
+          "$ref": "#/$defs/IdentityAcceptanceStatus"
         },
         "doi": {
           "anyOf": [
@@ -334,9 +355,6 @@
           "default": null,
           "title": "Expected Doi"
         },
-        "status": {
-          "$ref": "#/$defs/IdentityAcceptanceStatus"
-        },
         "title": {
           "anyOf": [
             {
@@ -348,6 +366,20 @@
           ],
           "default": null,
           "title": "Title"
+        },
+        "candidate_count": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Candidate Count",
+          "type": "integer"
+        },
+        "codes": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Codes",
+          "type": "array"
         }
       },
       "required": [
@@ -380,14 +412,14 @@
       "additionalProperties": true,
       "description": "Structured failure with transport-specific additive facts preserved.",
       "properties": {
-        "reason": {
-          "minLength": 1,
-          "title": "Reason",
-          "type": "string"
-        },
         "status": {
           "minLength": 1,
           "title": "Status",
+          "type": "string"
+        },
+        "reason": {
+          "minLength": 1,
+          "title": "Reason",
           "type": "string"
         }
       },
@@ -401,9 +433,9 @@
     "ManifestOutputArtifact": {
       "description": "Immutable file facts observed at record completion.",
       "properties": {
-        "completed_at": {
-          "format": "date-time",
-          "title": "Completed At",
+        "path": {
+          "minLength": 1,
+          "title": "Path",
           "type": "string"
         },
         "kind": {
@@ -422,23 +454,18 @@
           ],
           "default": null
         },
-        "mtime": {
+        "size": {
           "anyOf": [
             {
-              "format": "date-time",
-              "type": "string"
+              "minimum": 0,
+              "type": "integer"
             },
             {
               "type": "null"
             }
           ],
           "default": null,
-          "title": "Mtime"
-        },
-        "path": {
-          "minLength": 1,
-          "title": "Path",
-          "type": "string"
+          "title": "Size"
         },
         "sha256": {
           "anyOf": [
@@ -453,18 +480,23 @@
           "default": null,
           "title": "Sha256"
         },
-        "size": {
+        "mtime": {
           "anyOf": [
             {
-              "minimum": 0,
-              "type": "integer"
+              "format": "date-time",
+              "type": "string"
             },
             {
               "type": "null"
             }
           ],
           "default": null,
-          "title": "Size"
+          "title": "Mtime"
+        },
+        "completed_at": {
+          "format": "date-time",
+          "title": "Completed At",
+          "type": "string"
         },
         "verification_status": {
           "$ref": "#/$defs/ArtifactVerificationStatus"
@@ -492,16 +524,16 @@
     "ManifestRequest": {
       "description": "Original query plus JSON request semantics covered by the fingerprint.",
       "properties": {
+        "query": {
+          "title": "Query",
+          "type": "string"
+        },
         "parameters": {
           "additionalProperties": {
             "$ref": "#/$defs/JsonValue"
           },
           "title": "Parameters",
           "type": "object"
-        },
-        "query": {
-          "title": "Query",
-          "type": "string"
         }
       },
       "required": [
@@ -513,18 +545,6 @@
     "ManifestSemanticLosses": {
       "description": "Stable compatibility summary derived from acceptance content facets.",
       "properties": {
-        "formula_fallback_count": {
-          "default": 0,
-          "minimum": 0,
-          "title": "Formula Fallback Count",
-          "type": "integer"
-        },
-        "formula_missing_count": {
-          "default": 0,
-          "minimum": 0,
-          "title": "Formula Missing Count",
-          "type": "integer"
-        },
         "table_fallback_count": {
           "default": 0,
           "minimum": 0,
@@ -537,16 +557,28 @@
           "title": "Table Layout Degraded Count",
           "type": "integer"
         },
+        "table_semantic_loss_count": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Table Semantic Loss Count",
+          "type": "integer"
+        },
         "table_legacy_lossy_count": {
           "default": 0,
           "minimum": 0,
           "title": "Table Legacy Lossy Count",
           "type": "integer"
         },
-        "table_semantic_loss_count": {
+        "formula_fallback_count": {
           "default": 0,
           "minimum": 0,
-          "title": "Table Semantic Loss Count",
+          "title": "Formula Fallback Count",
+          "type": "integer"
+        },
+        "formula_missing_count": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Formula Missing Count",
           "type": "integer"
         }
       },
@@ -556,6 +588,22 @@
     "ManifestTraceEvent": {
       "description": "Pydantic wire representation of the canonical TraceEvent.",
       "properties": {
+        "stage": {
+          "minLength": 1,
+          "title": "Stage",
+          "type": "string"
+        },
+        "component": {
+          "minLength": 1,
+          "title": "Component",
+          "type": "string"
+        },
+        "outcome": {
+          "default": "info",
+          "minLength": 1,
+          "title": "Outcome",
+          "type": "string"
+        },
         "code": {
           "anyOf": [
             {
@@ -567,11 +615,6 @@
           ],
           "default": null,
           "title": "Code"
-        },
-        "component": {
-          "minLength": 1,
-          "title": "Component",
-          "type": "string"
         },
         "message": {
           "anyOf": [
@@ -585,16 +628,186 @@
           "default": null,
           "title": "Message"
         },
-        "outcome": {
-          "default": "info",
-          "minLength": 1,
-          "title": "Outcome",
-          "type": "string"
+        "provider": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Provider"
         },
-        "stage": {
-          "minLength": 1,
-          "title": "Stage",
-          "type": "string"
+        "route": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Route"
+        },
+        "span_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Span Id"
+        },
+        "attempt_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Attempt Id"
+        },
+        "parent_span_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Parent Span Id"
+        },
+        "attempt": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Attempt"
+        },
+        "http_status": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Http Status"
+        },
+        "error_category": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Error Category"
+        },
+        "retryable": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Retryable"
+        },
+        "retry_after_seconds": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Retry After Seconds"
+        },
+        "target": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Target"
+        },
+        "target_sha256": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Target Sha256"
+        },
+        "started_at": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Started At"
+        },
+        "finished_at": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Finished At"
+        },
+        "duration_ms": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Duration Ms"
         }
       },
       "required": [
@@ -606,6 +819,17 @@
     },
     "OutputAcceptanceFacet": {
       "properties": {
+        "status": {
+          "$ref": "#/$defs/OutputAcceptanceStatus"
+        },
+        "requested": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/AcceptanceOutputKind"
+          },
+          "title": "Requested",
+          "type": "array"
+        },
         "available": {
           "default": [],
           "items": {
@@ -621,17 +845,6 @@
           },
           "title": "Missing",
           "type": "array"
-        },
-        "requested": {
-          "default": [],
-          "items": {
-            "$ref": "#/$defs/AcceptanceOutputKind"
-          },
-          "title": "Requested",
-          "type": "array"
-        },
-        "status": {
-          "$ref": "#/$defs/OutputAcceptanceStatus"
         }
       },
       "required": [
@@ -664,21 +877,8 @@
     },
     "ProvenanceAcceptanceFacet": {
       "properties": {
-        "failure_codes": {
-          "default": [],
-          "items": {
-            "type": "string"
-          },
-          "title": "Failure Codes",
-          "type": "array"
-        },
-        "fallback_codes": {
-          "default": [],
-          "items": {
-            "type": "string"
-          },
-          "title": "Fallback Codes",
-          "type": "array"
+        "status": {
+          "$ref": "#/$defs/ProvenanceAcceptanceStatus"
         },
         "source": {
           "anyOf": [
@@ -692,20 +892,19 @@
           "default": null,
           "title": "Source"
         },
-        "status": {
-          "$ref": "#/$defs/ProvenanceAcceptanceStatus"
-        },
         "trace_event_count": {
           "default": 0,
           "minimum": 0,
           "title": "Trace Event Count",
           "type": "integer"
         },
-        "unstructured_warning_count": {
-          "default": 0,
-          "minimum": 0,
-          "title": "Unstructured Warning Count",
-          "type": "integer"
+        "fallback_codes": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Fallback Codes",
+          "type": "array"
         },
         "warning_codes": {
           "default": [],
@@ -714,6 +913,20 @@
           },
           "title": "Warning Codes",
           "type": "array"
+        },
+        "failure_codes": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Failure Codes",
+          "type": "array"
+        },
+        "unstructured_warning_count": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Unstructured Warning Count",
+          "type": "integer"
         }
       },
       "required": [
@@ -745,16 +958,16 @@
           "title": "Layout Degraded Count",
           "type": "integer"
         },
-        "legacy_lossy_count": {
-          "default": 0,
-          "minimum": 0,
-          "title": "Legacy Lossy Count",
-          "type": "integer"
-        },
         "semantic_loss_count": {
           "default": 0,
           "minimum": 0,
           "title": "Semantic Loss Count",
+          "type": "integer"
+        },
+        "legacy_lossy_count": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Legacy Lossy Count",
           "type": "integer"
         }
       },
@@ -762,25 +975,65 @@
       "type": "object"
     }
   },
-  "$id": "https://paper-fetch.local/schema/manifest-record-v2.schema.json",
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "description": "One versioned, append-only fetch attempt record.",
   "properties": {
-    "acceptance": {
-      "$ref": "#/$defs/FetchAcceptanceReport"
+    "schema_version": {
+      "const": 2,
+      "title": "Schema Version",
+      "type": "integer"
     },
-    "asset_summary": {
-      "$ref": "#/$defs/AssetAcceptanceFacet"
+    "minimum_reader_schema_version": {
+      "const": 2,
+      "title": "Minimum Reader Schema Version",
+      "type": "integer"
+    },
+    "tool_version": {
+      "minLength": 1,
+      "title": "Tool Version",
+      "type": "string"
+    },
+    "run_id": {
+      "format": "uuid",
+      "title": "Run Id",
+      "type": "string"
+    },
+    "record_id": {
+      "format": "uuid",
+      "title": "Record Id",
+      "type": "string"
+    },
+    "index": {
+      "minimum": 1,
+      "title": "Index",
+      "type": "integer"
     },
     "attempt": {
       "minimum": 1,
       "title": "Attempt",
       "type": "integer"
     },
-    "completed_at": {
-      "format": "date-time",
-      "title": "Completed At",
+    "query": {
+      "title": "Query",
       "type": "string"
+    },
+    "request": {
+      "$ref": "#/$defs/ManifestRequest"
+    },
+    "request_fingerprint": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Request Fingerprint",
+      "type": "string"
+    },
+    "record_status": {
+      "$ref": "#/$defs/ManifestRecordStatus"
+    },
+    "status": {
+      "minLength": 1,
+      "title": "Status",
+      "type": "string"
+    },
+    "identity": {
+      "$ref": "#/$defs/IdentityAcceptanceFacet"
     },
     "doi": {
       "anyOf": [
@@ -793,21 +1046,35 @@
       ],
       "title": "Doi"
     },
-    "error": {
+    "started_at": {
+      "format": "date-time",
+      "title": "Started At",
+      "type": "string"
+    },
+    "completed_at": {
+      "format": "date-time",
+      "title": "Completed At",
+      "type": "string"
+    },
+    "source": {
       "anyOf": [
         {
-          "$ref": "#/$defs/ManifestError"
+          "type": "string"
         },
         {
           "type": "null"
         }
-      ]
+      ],
+      "title": "Source"
     },
-    "failure_codes": {
+    "acceptance": {
+      "$ref": "#/$defs/FetchAcceptanceReport"
+    },
+    "trace": {
       "items": {
-        "type": "string"
+        "$ref": "#/$defs/ManifestTraceEvent"
       },
-      "title": "Failure Codes",
+      "title": "Trace",
       "type": "array"
     },
     "fallback_codes": {
@@ -817,18 +1084,42 @@
       "title": "Fallback Codes",
       "type": "array"
     },
-    "identity": {
-      "$ref": "#/$defs/IdentityAcceptanceFacet"
+    "warning_codes": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Warning Codes",
+      "type": "array"
     },
-    "index": {
-      "minimum": 1,
-      "title": "Index",
-      "type": "integer"
+    "failure_codes": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Failure Codes",
+      "type": "array"
     },
-    "minimum_reader_schema_version": {
-      "const": 2,
-      "title": "Minimum Reader Schema Version",
-      "type": "integer"
+    "warnings": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Warnings",
+      "type": "array"
+    },
+    "semantic_losses": {
+      "$ref": "#/$defs/ManifestSemanticLosses"
+    },
+    "asset_summary": {
+      "$ref": "#/$defs/AssetAcceptanceFacet"
+    },
+    "error": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ManifestError"
+        },
+        {
+          "type": "null"
+        }
+      ]
     },
     "output_artifacts": {
       "items": {
@@ -848,31 +1139,6 @@
       ],
       "title": "Output Path"
     },
-    "query": {
-      "title": "Query",
-      "type": "string"
-    },
-    "record_id": {
-      "format": "uuid",
-      "title": "Record Id",
-      "type": "string"
-    },
-    "record_status": {
-      "$ref": "#/$defs/ManifestRecordStatus"
-    },
-    "request": {
-      "$ref": "#/$defs/ManifestRequest"
-    },
-    "request_fingerprint": {
-      "pattern": "^[0-9a-f]{64}$",
-      "title": "Request Fingerprint",
-      "type": "string"
-    },
-    "run_id": {
-      "format": "uuid",
-      "title": "Run Id",
-      "type": "string"
-    },
     "saved_markdown_path": {
       "anyOf": [
         {
@@ -883,61 +1149,6 @@
         }
       ],
       "title": "Saved Markdown Path"
-    },
-    "schema_version": {
-      "const": 2,
-      "title": "Schema Version",
-      "type": "integer"
-    },
-    "semantic_losses": {
-      "$ref": "#/$defs/ManifestSemanticLosses"
-    },
-    "source": {
-      "anyOf": [
-        {
-          "type": "string"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "title": "Source"
-    },
-    "started_at": {
-      "format": "date-time",
-      "title": "Started At",
-      "type": "string"
-    },
-    "status": {
-      "minLength": 1,
-      "title": "Status",
-      "type": "string"
-    },
-    "tool_version": {
-      "minLength": 1,
-      "title": "Tool Version",
-      "type": "string"
-    },
-    "trace": {
-      "items": {
-        "$ref": "#/$defs/ManifestTraceEvent"
-      },
-      "title": "Trace",
-      "type": "array"
-    },
-    "warning_codes": {
-      "items": {
-        "type": "string"
-      },
-      "title": "Warning Codes",
-      "type": "array"
-    },
-    "warnings": {
-      "items": {
-        "type": "string"
-      },
-      "title": "Warnings",
-      "type": "array"
     }
   },
   "required": [
@@ -972,5 +1183,7 @@
     "saved_markdown_path"
   ],
   "title": "ManifestRecord",
-  "type": "object"
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://paper-fetch.local/schema/manifest-record-v2.schema.json"
 }

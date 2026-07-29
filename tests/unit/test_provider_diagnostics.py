@@ -131,13 +131,40 @@ def test_single_provider_compact_only_returns_routing_fields(tmp_path: Path) -> 
     assert sum(client.calls for client in clients.values()) == 1
 
 
+def test_single_provider_status_only_constructs_selected_client(
+    tmp_path: Path,
+) -> None:
+    captured: dict[str, object] = {}
+    client = _StaticClient("wiley")
+
+    def selected_clients(**kwargs):
+        captured.update(kwargs)
+        return {"wiley": client}
+
+    with mock.patch.object(config, "DEFAULT_USER_ENV_FILE", tmp_path / "missing.env"):
+        payload = provider_status_payload(
+            provider="wiley",
+            detail="compact",
+            build_runtime_env_fn=lambda env=None, **_kwargs: dict(env or {}),
+            build_clients_fn=selected_clients,
+            image_probe_fn=lambda _env: {},
+            browser_probe_fn=lambda _env, **_kwargs: {},
+        )
+
+    assert captured["provider_names"] == ("wiley",)
+    assert [item["provider"] for item in payload["providers"]] == ["wiley"]
+
+
 def test_browser_group_is_catalog_derived_and_filtered(tmp_path: Path) -> None:
     payload = _payload(tmp_path, group="browser", detail="compact")
 
     expected = [
         name
         for name in provider_status_order()
-        if PROVIDER_CATALOG[name].requires_browser_runtime
+        if any(
+            route.browser_required or route.browser_optional
+            for route in PROVIDER_CATALOG[name].routes
+        )
     ]
     assert [item["provider"] for item in payload["providers"]] == expected
     assert selected_provider_status_names(group="browser") == tuple(expected)

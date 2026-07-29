@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import tempfile
 import unittest
+import urllib.parse
 from pathlib import Path
 from unittest import mock
 
@@ -442,16 +443,22 @@ class PublisherWaterfallTests(unittest.TestCase):
                 )
 
     def test_elsevier_transient_doi_xml_failure_uses_pii_xml_fallback(self) -> None:
-        doi = "10.1016/test-campus-entitlement"
+        doi = ELSEVIER_SAMPLE.doi
+        pii = elsevier_provider.extract_elsevier_pii_from_url(
+            ELSEVIER_SAMPLE.landing_url
+        )
+        assert pii
         metadata = {
             "doi": doi,
-            "title": "Elsevier Campus Article",
-            "landing_page_url": "https://linkinghub.elsevier.com/retrieve/pii/S0034425723001712",
+            "title": ELSEVIER_SAMPLE.title,
+            "landing_page_url": ELSEVIER_SAMPLE.landing_url,
             "fulltext_links": [],
         }
         xml_body = (FIXTURE_DIR / ELSEVIER_SAMPLE.fixture_name).read_bytes()
-        doi_url = "https://api.elsevier.com/content/article/doi/10.1016%2Ftest-campus-entitlement"
-        pii_url = "https://api.elsevier.com/content/article/pii/S0034425723001712"
+        doi_url = "https://api.elsevier.com/content/article/doi/" + urllib.parse.quote(
+            doi, safe=""
+        )
+        pii_url = f"https://api.elsevier.com/content/article/pii/{pii}"
         transport = RecordingTransport(
             {
                 ("GET", doi_url): RequestFailure(
@@ -1286,7 +1293,7 @@ class PublisherWaterfallTests(unittest.TestCase):
         self.assertEqual(article.source, "wiley_browser")
         self.assertIn("fulltext:wiley_html_ok", article.quality.source_trail)
 
-    def test_wiley_prefers_browser_pdf_over_tdm_api_when_html_is_not_usable(
+    def test_wiley_prefers_tdm_api_over_browser_pdf_when_token_is_configured(
         self,
     ) -> None:
         doi = WILEY_PDF_SAMPLE.doi
@@ -1334,19 +1341,28 @@ class PublisherWaterfallTests(unittest.TestCase):
             )
             with (
                 mock.patch.object(
-                    wiley_provider, "_fetch_wiley_tdm_pdf_result"
+                    wiley_provider,
+                    "_fetch_wiley_tdm_pdf_result",
+                    return_value=mock.Mock(
+                        source_url=f"https://api.wiley.com/onlinelibrary/tdm/v1/articles/{doi}",
+                        final_url=f"https://api.wiley.com/onlinelibrary/tdm/v1/articles/{doi}",
+                        pdf_bytes=fulltext_pdf_bytes(),
+                        markdown_text=f"# {WILEY_PDF_SAMPLE.title}\n\n## Results\n\n"
+                        + ("Body text " * 120),
+                        suggested_filename="article.pdf",
+                    ),
                 ) as mocked_api,
             ):
                 raw_payload = client.fetch_raw_fulltext(doi, metadata)
                 article = client.to_article_model(metadata, raw_payload)
 
-        mocked_browser_pdf.assert_called_once()
-        mocked_api.assert_not_called()
+        mocked_browser_pdf.assert_not_called()
+        mocked_api.assert_called_once()
         self.assertEqual(_payload_route(raw_payload), "pdf_fallback")
         self.assertEqual(article.source, "wiley_browser")
-        self.assertIn("fulltext:wiley_pdf_browser_ok", article.quality.source_trail)
+        self.assertIn("fulltext:wiley_pdf_api_ok", article.quality.source_trail)
         self.assertIn("fulltext:wiley_pdf_fallback_ok", article.quality.source_trail)
-        self.assertNotIn("fulltext:wiley_pdf_api_ok", article.quality.source_trail)
+        self.assertNotIn("fulltext:wiley_pdf_browser_ok", article.quality.source_trail)
 
     def test_wiley_missing_tdm_token_can_use_browser_pdf_fallback(self) -> None:
         doi = WILEY_PDF_SAMPLE.doi
@@ -1440,7 +1456,7 @@ class PublisherWaterfallTests(unittest.TestCase):
             ],
         )
 
-    def test_wiley_falls_back_to_tdm_api_after_browser_pdf_failure(self) -> None:
+    def test_wiley_falls_back_to_browser_pdf_after_tdm_api_failure(self) -> None:
         doi = WILEY_PDF_SAMPLE.doi
         metadata = {
             "doi": doi,
@@ -1455,9 +1471,21 @@ class PublisherWaterfallTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             runtime = self._runtime_config(tmpdir, "wiley", doi)
             mocked_browser_pdf = mock.Mock(
-                side_effect=browser_workflow.PdfFallbackFailure(
-                    "download_not_triggered",
-                    "Browser PDF download was not triggered.",
+                return_value=RawFulltextPayload(
+                    provider="wiley",
+                    source_url=f"https://onlinelibrary.wiley.com/doi/epdf/{doi}",
+                    content_type="application/pdf",
+                    body=fulltext_pdf_bytes(),
+                    content=ProviderContent(
+                        route_kind="pdf_fallback",
+                        source_url=f"https://onlinelibrary.wiley.com/doi/epdf/{doi}",
+                        content_type="application/pdf",
+                        body=fulltext_pdf_bytes(),
+                        markdown_text=f"# {WILEY_PDF_SAMPLE.title}\n\n## Results\n\n"
+                        + ("Body text " * 120),
+                        suggested_filename="article.pdf",
+                    ),
+                    needs_local_copy=True,
                 )
             )
             install_browser_workflow_deps(
@@ -1488,13 +1516,9 @@ class PublisherWaterfallTests(unittest.TestCase):
                 mock.patch.object(
                     wiley_provider,
                     "_fetch_wiley_tdm_pdf_result",
-                    return_value=mock.Mock(
-                        source_url=f"https://api.wiley.com/onlinelibrary/tdm/v1/articles/{doi}",
-                        final_url=f"https://api.wiley.com/onlinelibrary/tdm/v1/articles/{doi}",
-                        pdf_bytes=fulltext_pdf_bytes(),
-                        markdown_text=f"# {WILEY_PDF_SAMPLE.title}\n\n## Results\n\n"
-                        + ("Body text " * 120),
-                        suggested_filename="article.pdf",
+                    side_effect=wiley_provider.PdfFallbackFailure(
+                        "pdf_download_failed",
+                        "Wiley API PDF fallback failed.",
                     ),
                 ) as mocked_api,
             ):
@@ -1505,10 +1529,10 @@ class PublisherWaterfallTests(unittest.TestCase):
         mocked_api.assert_called_once()
         self.assertEqual(_payload_route(raw_payload), "pdf_fallback")
         self.assertEqual(article.source, "wiley_browser")
-        self.assertIn("fulltext:wiley_pdf_browser_fail", article.quality.source_trail)
-        self.assertIn("fulltext:wiley_pdf_api_ok", article.quality.source_trail)
+        self.assertIn("fulltext:wiley_pdf_api_fail", article.quality.source_trail)
+        self.assertIn("fulltext:wiley_pdf_browser_ok", article.quality.source_trail)
         self.assertIn("fulltext:wiley_pdf_fallback_ok", article.quality.source_trail)
-        self.assertNotIn("fulltext:wiley_pdf_browser_ok", article.quality.source_trail)
+        self.assertNotIn("fulltext:wiley_pdf_api_ok", article.quality.source_trail)
 
     def test_wiley_reports_api_and_browser_pdf_failures_after_html_failure(
         self,

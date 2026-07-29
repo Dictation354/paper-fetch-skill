@@ -38,6 +38,8 @@ from .provider_catalog import (
     PROVIDER_CATALOG,
     ProviderSpec,
     is_official_provider,
+    provider_has_browser_route,
+    provider_supports_browser_preflight,
     provider_status_order,
 )
 from .providers.base import (
@@ -151,9 +153,12 @@ def _provider_in_group(spec: ProviderSpec, group: str) -> bool:
     if group == "official":
         return spec.official
     if group == "browser":
-        return spec.requires_browser_runtime
+        return provider_has_browser_route(spec.name)
     if group == "direct":
-        return not spec.requires_browser_runtime
+        return any(
+            not route.browser_required and not route.browser_optional
+            for route in spec.routes
+        )
     return not spec.official
 
 
@@ -216,7 +221,7 @@ def _provider_summary(
         reason = "Static configuration and local dependencies are ready; remote access was not checked."
         suggested_action = (
             f"paper-fetch browser-preflight --provider {spec.name}"
-            if spec.requires_browser_runtime
+            if provider_supports_browser_preflight(spec.name)
             else "run the requested fetch"
         )
     elif missing_env:
@@ -314,7 +319,11 @@ def provider_status_payload(
         else dict(build_runtime_env_fn(env))
     )
     active_transport = transport or HttpTransport()
-    clients = build_clients_fn(transport=active_transport, env=runtime_env)
+    clients = build_clients_fn(
+        transport=active_transport,
+        env=runtime_env,
+        provider_names=selected_names,
+    )
     providers: list[dict[str, Any]] = []
     for provider_name in selected_names:
         client = clients.get(provider_name)
@@ -381,12 +390,8 @@ def provider_status_payload(
             sensitive_names=_sensitive_configuration_names(configuration_names),
         )
         browser_provider = next(
-            (
-                name
-                for name in selected_names
-                if PROVIDER_CATALOG[name].requires_browser_runtime
-            ),
-            None,
+            (name for name in selected_names if provider_has_browser_route(name)),
+            selected_names[0] if len(selected_names) == 1 else None,
         )
         try:
             browser = browser_probe_fn(runtime_env, provider=browser_provider)

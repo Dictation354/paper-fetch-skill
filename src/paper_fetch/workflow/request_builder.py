@@ -48,6 +48,7 @@ def build_fetch_pipeline_request(
         clients=context.clients if context is not None else clients,
         cancel_check=context.cancel_check if context is not None else cancel_check,
         fetch_cache=fetch_cache,
+        context=context,
         cache_hooks=cache_hooks or FetchPipelineCacheHooks(),
         markdown_save=markdown_save,
     )

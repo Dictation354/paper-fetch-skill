@@ -68,6 +68,8 @@ class AssetAcceptanceStatus(StrEnum):
     DEGRADED = "degraded"
     FAILED = "failed"
     UNAVAILABLE = "unavailable"
+    UNKNOWN = "unknown"
+    NOT_APPLICABLE = "not_applicable"
     NOT_REQUESTED = "not_requested"
 
 
@@ -156,6 +158,10 @@ class AssetAcceptanceSummary(_AcceptanceModel):
 
     requested: bool
     profile: AcceptanceAssetProfile = "unknown"
+    audited: bool = False
+    expected: int | None = Field(default=None, ge=0)
+    discovered: int = Field(default=0, ge=0)
+    attempted: int = Field(default=0, ge=0)
     total: int = Field(default=0, ge=0)
     local: int = Field(default=0, ge=0)
     full_size: int = Field(default=0, ge=0)
@@ -180,6 +186,10 @@ class AssetAcceptanceFacet(AssetAcceptanceSummary):
             raise ValueError("requested assets cannot use not_requested status")
         if self.profile == "none" and self.requested:
             raise ValueError("asset profile none cannot be requested")
+        if self.discovered != self.total:
+            raise ValueError("discovered must match total")
+        if self.attempted > self.discovered:
+            raise ValueError("attempted cannot exceed discovered")
         return self
 
 
@@ -223,7 +233,9 @@ class FetchAcceptanceReport(_AcceptanceModel):
 _ACTION_REQUIRED_CODES = frozenset(
     {"ambiguous", NO_ACCESS, NOT_CONFIGURED, RATE_LIMITED}
 )
-_TRACE_FAILURE_OUTCOMES = frozenset({"fail", "unavailable", "not_usable"})
+_TRACE_FAILURE_OUTCOMES = frozenset(
+    {"fail", "unavailable", "not_usable", RATE_LIMITED, NOT_CONFIGURED}
+)
 _TRACE_WARNING_OUTCOMES = frozenset(
     {"partial", "unavailable", "not_usable", "abstract_only"}
 )
@@ -257,6 +269,16 @@ def _trace_fact_code(event: TraceEvent) -> str:
             normalize_text(event.component).lower() or "unknown",
             normalize_text(event.outcome).lower() or "info",
         )
+    )
+
+
+def _trace_is_failure(event: TraceEvent) -> bool:
+    outcome = normalize_text(event.outcome).lower()
+    code = normalize_text(event.code).lower()
+    return (
+        outcome in _TRACE_FAILURE_OUTCOMES
+        or code in {RATE_LIMITED, NOT_CONFIGURED}
+        or event.http_status == 429
     )
 
 
@@ -430,6 +452,27 @@ def _audited_asset_summary(
     return AssetAcceptanceSummary(
         requested=bool(value("requested", profile != "none")),
         profile=profile,
+        audited=audited,
+        expected=(
+            max(int(value("expected")), 0)
+            if value("expected", None) is not None
+            else None
+        ),
+        discovered=max(int(value("discovered", value("total")) or 0), 0),
+        attempted=max(
+            int(
+                value(
+                    "attempted",
+                    (
+                        int(value("local") or 0)
+                        + int(value("failed") or 0)
+                        + int(value("not_archived") or 0)
+                    ),
+                )
+                or 0
+            ),
+            0,
+        ),
         total=max(int(value("total") or 0), 0),
         local=max(int(value("local") or 0), 0),
         full_size=max(int(value("full_size") or 0), 0),
@@ -465,11 +508,25 @@ def _asset_summary_from_envelope(
         else 0
     )
     failures = list(quality.asset_failures) if requested else []
+    discovered = len(assets) + len(failures)
+    attempted = (
+        sum(
+            bool(normalize_text(asset.path)) or _asset_remote_counts(asset)[0] > 0
+            for asset in assets
+        )
+        + len(failures)
+        if requested
+        else 0
+    )
     not_archived = remote_only_count if requested else 0
     return AssetAcceptanceSummary(
         requested=requested,
         profile=profile,
-        total=len(assets),
+        audited=False,
+        expected=None,
+        discovered=discovered,
+        attempted=attempted,
+        total=discovered,
         local=local,
         full_size=max(local - preview, 0),
         preview=preview,
@@ -486,27 +543,43 @@ def _asset_summary_from_envelope(
 def _asset_facet(
     summary: AssetAcceptanceSummary, *, fetch_completed: bool
 ) -> AssetAcceptanceFacet:
-    if not summary.requested:
+    discovered = summary.discovered or summary.total
+    attempted = summary.attempted or min(
+        discovered,
+        summary.local + summary.failed + summary.not_archived,
+    )
+    normalized_summary = summary.model_copy(
+        update={
+            "discovered": discovered,
+            "attempted": attempted,
+            "total": discovered,
+        }
+    )
+    if not normalized_summary.requested:
         status = AssetAcceptanceStatus.NOT_REQUESTED
     elif not fetch_completed:
         status = AssetAcceptanceStatus.UNAVAILABLE
-    elif summary.failed and summary.local == 0:
+    elif normalized_summary.audited and normalized_summary.expected == 0:
+        status = AssetAcceptanceStatus.NOT_APPLICABLE
+    elif normalized_summary.discovered == 0:
+        status = AssetAcceptanceStatus.UNKNOWN
+    elif normalized_summary.failed and normalized_summary.local == 0:
         status = AssetAcceptanceStatus.FAILED
     elif any(
         (
-            summary.failed,
-            summary.preview,
-            summary.placeholder_suspected,
-            summary.not_archived,
+            normalized_summary.failed,
+            normalized_summary.preview,
+            normalized_summary.placeholder_suspected,
+            normalized_summary.not_archived,
         )
     ):
         status = AssetAcceptanceStatus.DEGRADED
     else:
         status = AssetAcceptanceStatus.COMPLETE
     return AssetAcceptanceFacet(
-        **summary.model_dump(),
+        **normalized_summary.model_dump(),
         status=status,
-        remote_links_preserved=summary.remote_only_count > 0,
+        remote_links_preserved=normalized_summary.remote_only_count > 0,
     )
 
 
@@ -604,18 +677,32 @@ def _provenance_facet(
     failure_code: str | None,
 ) -> ProvenanceAcceptanceFacet:
     normalized_source = normalize_text(source) or None
-    if normalized_source and trace:
+    has_resolve = any(
+        normalize_text(event.stage).lower() == "resolve" for event in trace
+    )
+    has_provider_selection = any(
+        normalize_text(event.stage).lower() in {"metadata", "fulltext"}
+        and (normalize_text(event.provider) or normalize_text(event.component))
+        for event in trace
+    )
+    has_terminal_route = any(
+        normalize_text(event.stage).lower() in {"fulltext", "fallback"}
+        and normalize_text(event.outcome).lower() not in {"attempt", "selected"}
+        for event in trace
+    )
+    if (
+        normalized_source
+        and has_resolve
+        and has_provider_selection
+        and has_terminal_route
+    ):
         status = ProvenanceAcceptanceStatus.COMPLETE
     elif normalized_source or trace:
         status = ProvenanceAcceptanceStatus.PARTIAL
     else:
         status = ProvenanceAcceptanceStatus.MISSING
 
-    trace_failures = [
-        event
-        for event in trace
-        if normalize_text(event.outcome).lower() in _TRACE_FAILURE_OUTCOMES
-    ]
+    trace_failures = [event for event in trace if _trace_is_failure(event)]
     fallback_events = [
         event
         for event in trace
@@ -624,7 +711,7 @@ def _provenance_facet(
         or (
             content.status != ContentAcceptanceStatus.UNAVAILABLE
             and normalize_text(event.stage).lower() == "fulltext"
-            and normalize_text(event.outcome).lower() in _TRACE_FAILURE_OUTCOMES
+            and _trace_is_failure(event)
         )
     ]
     trace_warnings = [
@@ -687,7 +774,13 @@ def _overall_status(
     }:
         return OverallAcceptanceStatus.LIMITED
     if (
-        asset.status in {AssetAcceptanceStatus.DEGRADED, AssetAcceptanceStatus.FAILED}
+        asset.status
+        in {
+            AssetAcceptanceStatus.DEGRADED,
+            AssetAcceptanceStatus.FAILED,
+            AssetAcceptanceStatus.UNKNOWN,
+            AssetAcceptanceStatus.UNAVAILABLE,
+        }
         or provenance.status != ProvenanceAcceptanceStatus.COMPLETE
         or provenance.fallback_codes
         or provenance.warning_codes

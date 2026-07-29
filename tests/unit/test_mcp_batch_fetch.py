@@ -5,6 +5,7 @@ from dataclasses import replace
 from pathlib import Path
 import threading
 import time
+from types import SimpleNamespace
 from typing import Any
 
 import pytest
@@ -24,6 +25,8 @@ from paper_fetch.mcp._deps import default_mcp_deps
 from paper_fetch.mcp.batch_fetch import batch_fetch_tool_async
 from paper_fetch.mcp.server import build_server
 from paper_fetch.models import QUALITY_FLAG_CACHED_WITH_CURRENT_REVISION
+from paper_fetch.reason_codes import RATE_LIMITED
+from paper_fetch.tracing import trace_event
 from tests.paths import REPO_ROOT, SKILL_DIR
 
 from ._mcp_support import sample_envelope
@@ -40,7 +43,16 @@ class RecordingContext:
 
 
 def _deps(fetch_envelope):
-    return replace(default_mcp_deps(), fetch_paper_envelope=fetch_envelope)
+    return replace(
+        default_mcp_deps(),
+        fetch_paper_envelope=fetch_envelope,
+        service_resolve_paper=lambda query, **_kwargs: SimpleNamespace(
+            query=query,
+            provider_hint=f"test-{query}",
+            landing_url=None,
+            doi=query,
+        ),
+    )
 
 
 def _successful_fetch(request, **_kwargs):
@@ -84,8 +96,8 @@ def test_batch_fetch_preserves_input_order_and_completion_metadata_with_bounded_
         )
     )
 
-    assert result.isError is False
-    payload = result.structuredContent
+    assert result.is_error is False
+    payload = result.structured_content
     assert payload is not None
     assert [item["index"] for item in payload["results"]] == [1, 2]
     assert [item["query"] for item in payload["results"]] == [
@@ -106,11 +118,129 @@ def test_batch_fetch_preserves_input_order_and_completion_metadata_with_bounded_
     output_model.model_validate(payload)
 
 
+def test_batch_fetch_uses_item_local_contexts_with_one_shared_transport() -> None:
+    context_ids: list[int] = []
+    transport_ids: list[int] = []
+    timing_ids: list[int] = []
+    barrier = threading.Barrier(2)
+
+    def fetch(request, *, context=None, **_kwargs):
+        assert context is not None
+        context_ids.append(id(context))
+        transport_ids.append(id(context.transport))
+        timing_ids.append(id(context.stage_timings))
+        context.stage_timings[f"item:{request.query}"] = 1.0
+        barrier.wait(timeout=2)
+        return _successful_fetch(request)
+
+    result = asyncio.run(
+        batch_fetch_tool_async(**_temporary_kwargs(deps=_deps(fetch), concurrency=2))
+    )
+
+    assert result.is_error is False
+    assert len(set(context_ids)) == 2
+    assert len(set(timing_ids)) == 2
+    assert len(set(transport_ids)) == 1
+
+
+def test_batch_fetch_resolves_generic_queries_before_assigning_lanes() -> None:
+    queries = ["title-provider-a-now", "title-provider-b", "title-provider-a-later"]
+    providers = {
+        "title-provider-a-now": "provider-a",
+        "title-provider-a-later": "provider-a",
+        "title-provider-b": "provider-b",
+    }
+    calls: list[str] = []
+
+    def resolve(query, **_kwargs):
+        return SimpleNamespace(
+            query=query,
+            provider_hint=providers[query],
+            landing_url=None,
+            doi=None,
+        )
+
+    def fetch(request, **_kwargs):
+        calls.append(request.query)
+        if request.query == "title-provider-a-now":
+            raise RequestFailure(429, "synthetic rate limit", retry_after_seconds=3)
+        return _successful_fetch(request)
+
+    deps = replace(_deps(fetch), service_resolve_paper=resolve)
+    result = asyncio.run(
+        batch_fetch_tool_async(
+            **_temporary_kwargs(
+                queries=queries,
+                concurrency=2,
+                deps=deps,
+            )
+        )
+    )
+
+    assert result.is_error is False
+    assert set(calls) == {"title-provider-a-now", "title-provider-b"}
+    assert result.structured_content["results"][2]["record_status"] == "aborted"
+    assert result.structured_content["lane_cooldowns"][0]["lane"] == "provider-a"
+
+
+def test_batch_fetch_cools_lane_after_recovered_rate_limit() -> None:
+    queries = ["title-first", "title-same-provider"]
+
+    def resolve(query, **_kwargs):
+        return SimpleNamespace(
+            query=query,
+            provider_hint="provider-a",
+            landing_url=None,
+            doi=None,
+        )
+
+    def fetch(request, **_kwargs):
+        envelope = _successful_fetch(request)
+        envelope.trace.append(
+            trace_event(
+                "fulltext",
+                "provider-a_api",
+                RATE_LIMITED,
+                code=RATE_LIMITED,
+                provider="provider-a",
+                route="api",
+                http_status=429,
+                retry_after_seconds=11,
+            )
+        )
+        return envelope
+
+    deps = replace(_deps(fetch), service_resolve_paper=resolve)
+    result = asyncio.run(
+        batch_fetch_tool_async(
+            **_temporary_kwargs(
+                queries=queries,
+                concurrency=2,
+                deps=deps,
+            )
+        )
+    )
+
+    assert result.is_error is False
+    payload = result.structured_content
+    assert payload["results"][0]["record_status"] == "completed"
+    assert payload["results"][1]["record_status"] == "aborted"
+    assert payload["lane_cooldowns"] == [
+        {
+            "lane": "provider-a",
+            "reason_code": RATE_LIMITED,
+            "source_index": 1,
+            "retry_after_seconds": 11.0,
+            "cooldown_seconds": 11.0,
+        }
+    ]
+
+
 def test_batch_fetch_compact_default_never_returns_full_markdown() -> None:
     result = asyncio.run(batch_fetch_tool_async(**_temporary_kwargs()))
 
-    assert result.isError is False
-    payload = result.structuredContent
+    assert result.is_error is False
+    payload = result.structured_content
     assert payload is not None
     assert payload["detail"] == "compact"
     assert payload["content_returned_chars"] == 0
@@ -137,8 +267,8 @@ def test_batch_fetch_continues_after_item_failure_and_terminalizes_every_index()
         )
     )
 
-    assert result.isError is False
-    payload = result.structuredContent
+    assert result.is_error is False
+    payload = result.structured_content
     assert payload is not None
     assert [item["index"] for item in payload["results"]] == [1, 2, 3]
     assert [item["record_status"] for item in payload["results"]] == [
@@ -169,8 +299,8 @@ def test_batch_fetch_continue_on_error_false_stops_new_submissions() -> None:
         )
     )
 
-    assert result.isError is False
-    payload = result.structuredContent
+    assert result.is_error is False
+    payload = result.structured_content
     assert payload is not None
     assert calls == ["first"]
     assert [item["record_status"] for item in payload["results"]] == [
@@ -208,8 +338,8 @@ def test_batch_fetch_rate_limit_aborts_only_limited_lane_and_continues_other_lan
         )
     )
 
-    assert result.isError is False
-    payload = result.structuredContent
+    assert result.is_error is False
+    payload = result.structured_content
     assert payload is not None
     assert [item["record_status"] for item in payload["results"]] == [
         "failed",
@@ -237,8 +367,8 @@ def test_batch_fetch_reports_cache_hit_without_returning_cached_body() -> None:
 
     result = asyncio.run(batch_fetch_tool_async(**_temporary_kwargs(deps=_deps(fetch))))
 
-    assert result.isError is False
-    payload = result.structuredContent
+    assert result.is_error is False
+    payload = result.structured_content
     assert payload is not None
     assert payload["summary"]["cache_hits"] == 2
     assert [item["cache_hit"] for item in payload["results"]] == [True, True]
@@ -254,9 +384,9 @@ def test_batch_fetch_no_download_temporary_read_does_not_write_selected_scope(
         )
     )
 
-    assert result.isError is False
+    assert result.is_error is False
     assert list(tmp_path.iterdir()) == []
-    assert result.structuredContent["persisted"] is False
+    assert result.structured_content["persisted"] is False
 
 
 def test_batch_fetch_archive_returns_hash_path_and_scoped_resource_uri(
@@ -273,8 +403,8 @@ def test_batch_fetch_archive_returns_hash_path_and_scoped_resource_uri(
         )
     )
 
-    assert result.isError is False
-    payload = result.structuredContent
+    assert result.is_error is False
+    payload = result.structured_content
     assert payload is not None
     assert payload["summary"]["saved_markdown"] == 2
     for item in payload["results"]:
@@ -309,8 +439,8 @@ def test_batch_fetch_persistent_partial_run_resumes_only_retry_indices(
             )
         )
     )
-    assert first.isError is False
-    assert first.structuredContent["persisted"] is True
+    assert first.is_error is False
+    assert first.structured_content["persisted"] is True
 
     resumed_calls: list[str] = []
 
@@ -327,8 +457,8 @@ def test_batch_fetch_persistent_partial_run_resumes_only_retry_indices(
         )
     )
 
-    assert resumed.isError is False
-    payload = resumed.structuredContent
+    assert resumed.is_error is False
+    payload = resumed.structured_content
     assert payload is not None
     assert resumed_calls == ["10.1000/two"]
     assert payload["attempted_count"] == 1
@@ -357,8 +487,8 @@ def test_batch_fetch_refuses_existing_persistence_without_overwrite(
         batch_fetch_tool_async(**_temporary_kwargs(run_manifest=str(manifest_path)))
     )
 
-    assert first.isError is False
-    assert second.isError is True
+    assert first.is_error is False
+    assert second.is_error is True
     assert "already exists" in second.content[0].text
 
 
@@ -409,6 +539,43 @@ def test_batch_fetch_task_cancellation_persists_cancelled_complete_index_set(
     )
 
 
+def test_batch_fetch_cancellation_fences_late_markdown_commit(
+    tmp_path: Path,
+) -> None:
+    started = threading.Event()
+
+    def fetch(request, *, cancel_check=None, **_kwargs):
+        started.set()
+        while cancel_check is None or not cancel_check():
+            time.sleep(0.005)
+        return _successful_fetch(request)
+
+    async def scenario() -> None:
+        task = asyncio.create_task(
+            batch_fetch_tool_async(
+                **_temporary_kwargs(
+                    queries=["10.1000/late-write"],
+                    concurrency=1,
+                    no_download=False,
+                    artifact_mode="markdown-assets",
+                    save_markdown=True,
+                    markdown_output_dir=str(tmp_path),
+                    download_dir=tmp_path,
+                    deps=_deps(fetch),
+                )
+            )
+        )
+        assert await asyncio.to_thread(started.wait, 2)
+        task.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await task
+
+    asyncio.run(scenario())
+
+    assert not list(tmp_path.glob("*.md"))
+    assert not list(tmp_path.glob("*.fetch-envelope.json"))
+
+
 def test_batch_fetch_internal_interruption_persists_interrupted_terminal_records(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -423,7 +590,7 @@ def test_batch_fetch_internal_interruption_persists_interrupted_terminal_records
         batch_fetch_tool_async(**_temporary_kwargs(run_manifest=str(manifest_path)))
     )
 
-    assert result.isError is True
+    assert result.is_error is True
     manifest = read_run_manifest(manifest_path)
     events = read_manifest_events(
         resolve_run_events_path(manifest_path, manifest.events_path)
@@ -450,9 +617,9 @@ def test_batch_fetch_validation_rejects_ambiguous_persistence_and_filename() -> 
         batch_fetch_tool_async(**_temporary_kwargs(markdown_filename="same.md"))
     )
 
-    assert persistence.isError is True
+    assert persistence.is_error is True
     assert "resume cannot be combined" in persistence.content[0].text
-    assert filename.isError is True
+    assert filename.is_error is True
     assert "only valid when batch_fetch has one query" in filename.content[0].text
 
 

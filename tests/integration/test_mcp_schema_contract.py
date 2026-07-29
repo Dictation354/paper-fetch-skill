@@ -8,8 +8,10 @@ from typing import Any
 from mcp.client.session import ClientSession
 from mcp.client.stdio import StdioServerParameters, stdio_client
 
-from paper_fetch.auth import browser_auth_provider_names
-from paper_fetch.provider_catalog import provider_status_order
+from paper_fetch.provider_catalog import (
+    browser_preflight_provider_names,
+    provider_status_order,
+)
 from tests.paths import REPO_ROOT, SRC_DIR
 
 
@@ -59,7 +61,7 @@ class McpStdioSchemaContractTests(unittest.IsolatedAsyncioTestCase):
                 await session.initialize()
                 listed = await session.list_tools()
 
-        schemas = {tool.name: tool.inputSchema for tool in listed.tools}
+        schemas = {tool.name: tool.input_schema for tool in listed.tools}
         fetch = schemas["fetch_paper"]
         strategy = _object_branch(fetch["properties"]["strategy"])
         batch_resolve = schemas["batch_resolve"]
@@ -200,7 +202,7 @@ class McpStdioSchemaContractTests(unittest.IsolatedAsyncioTestCase):
                     "detail": ["full", "compact"],
                 },
                 "browser_preflight": {
-                    "provider": list(browser_auth_provider_names()),
+                    "provider": list(browser_preflight_provider_names()),
                     "detail": ["full", "compact"],
                     "timeout_ms": {"minimum": 1, "maximum": 600000},
                 },

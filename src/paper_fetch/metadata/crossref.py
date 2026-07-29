@@ -2,18 +2,22 @@
 
 from __future__ import annotations
 
-import json
 import urllib.parse
 from typing import Any
 from collections.abc import Mapping
 
 from ..config import build_user_agent
 from ..errors import ProviderFailure
-from ..http import DEFAULT_TIMEOUT_SECONDS, HttpTransport, RequestFailure
+from ..http import (
+    DEFAULT_TIMEOUT_SECONDS,
+    HttpTransport,
+    RequestFailure,
+    decode_json_object_response,
+)
 from ..metadata.types import CrossrefMetadata, FulltextLink, ReferenceMetadata
 from ..publisher_identity import normalize_doi
 from ..providers.base import map_request_failure
-from ..reason_codes import NO_RESULT, NOT_SUPPORTED
+from ..reason_codes import IDENTITY_MISMATCH, NO_RESULT, NOT_SUPPORTED
 from ..utils import (
     date_parts_to_string,
     first_list_item,
@@ -65,8 +69,27 @@ class CrossrefLookupClient:
                 )
             except RequestFailure as exc:
                 raise _map_crossref_request_failure(exc) from exc
-            payload = json.loads(response["body"].decode("utf-8"))
-            return self.normalize_message(payload["message"], response["url"])
+            try:
+                payload = decode_json_object_response(
+                    response, label="Crossref", required_keys=("message",)
+                )
+                message = payload["message"]
+                if not isinstance(message, Mapping):
+                    raise RequestFailure(
+                        int(response.get("status_code") or 200),
+                        "Crossref message must be an object.",
+                        url=str(response.get("url") or ""),
+                        error_category="response_schema_mismatch",
+                    )
+            except RequestFailure as exc:
+                raise _map_crossref_request_failure(exc) from exc
+            observed_doi = normalize_doi(str(message.get("DOI") or ""))
+            if observed_doi and observed_doi != doi:
+                raise ProviderFailure(
+                    IDENTITY_MISMATCH,
+                    "Crossref response DOI does not match the endpoint DOI.",
+                )
+            return self.normalize_message(message, response["url"])
 
         if not article_title:
             raise ProviderFailure(
@@ -121,8 +144,21 @@ class CrossrefLookupClient:
         except RequestFailure as exc:
             raise _map_crossref_request_failure(exc) from exc
 
-        payload = json.loads(response["body"].decode("utf-8"))
-        items = payload.get("message", {}).get("items", [])
+        try:
+            payload = decode_json_object_response(
+                response, label="Crossref", required_keys=("message",)
+            )
+            message = payload["message"]
+            if not isinstance(message, Mapping):
+                raise RequestFailure(
+                    int(response.get("status_code") or 200),
+                    "Crossref message must be an object.",
+                    url=str(response.get("url") or ""),
+                    error_category="response_schema_mismatch",
+                )
+        except RequestFailure as exc:
+            raise _map_crossref_request_failure(exc) from exc
+        items = message.get("items", [])
         if not items:
             return []
         return [

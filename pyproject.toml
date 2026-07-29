@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "paper-fetch-skill"
-version = "4.0.2"
+version = "4.1.0"
 description = "AI-friendly paper fetch tooling"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -36,7 +36,7 @@ dependencies = [
   "filelock>=3.20,<4",
   "imagesize>=1.4,<3",
   "idutils>=1.5,<2",
-  "mcp>=1.27,<2",
+  "mcp>=2,<3",
   "platformdirs>=4,<5",
   "python-dotenv>=1.2,<2",
   "rapidfuzz>=3,<4",
@@ -103,6 +103,7 @@ exclude = ["paper_fetch_devtools*"]
 [tool.setuptools.package-data]
 "paper_fetch.resources.arxiv" = ["*.json"]
 "paper_fetch.resources.formula" = ["*.json", "*.mjs"]
+"paper_fetch.resources.journal_routes" = ["*.json"]
 "paper_fetch.resources.manifest" = ["*.json"]
 "paper_fetch.models" = ["*.pyi"]
 

@@ -8,11 +8,10 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 import mimetypes
 from pathlib import Path
-import stat as _stat_module
 import threading
 from typing import Any
 
-from mcp.server.fastmcp import Context
+from mcp.server.mcpserver import Context
 from mcp.types import CallToolResult, ImageContent, TextContent
 
 from ..artifacts import ArtifactMode
@@ -29,9 +28,11 @@ from ..workflow.rendering import save_markdown_to_disk
 from ..workflow.types import effective_asset_profile
 from .batch import report_progress, run_blocking_call
 from .cache_payloads import _MCP_DEFAULT_DOWNLOAD_DIR, _resolve_download_dir
+from .cache_index import read_scoped_file
 from ._deps import MCPDeps, default_mcp_deps
 from .fetch_cache import (
     FetchCache,
+    credential_scope_from_env,
     fetch_envelope_cache_path,
     payload_from_envelope as _payload_from_envelope,
 )
@@ -114,22 +115,31 @@ def _save_markdown_result_for_fetch_request(
         download_dir=download_dir,
         deps=deps,
     )
+    if context is not None:
+        context.raise_if_cancelled()
     saved_path = save_markdown_to_disk(
         envelope,
         output_dir=markdown_output_path,
         render=request.to_render_options(),
         markdown_filename=request.markdown_filename,
         overwrite=overwrite,
+        commit_guard=(context.raise_if_cancelled if context is not None else None),
     )
     if saved_path is None:
         return None
     cache_entry = None
     if envelope.doi:
+        if context is not None:
+            context.raise_if_cancelled()
         cache_entry = FetchCache(
             saved_path.parent,
             refresh_cache_index_for_doi_fn=deps.refresh_cache_index_for_doi,
             register_markdown_entry_fn=deps.register_markdown_entry,
-        ).register_markdown(saved_path, envelope)
+        ).register_markdown(
+            saved_path,
+            envelope,
+            commit_guard=(context.raise_if_cancelled if context is not None else None),
+        )
     return SavedMarkdownResult(
         path=saved_path,
         output_dir=markdown_output_path,
@@ -169,6 +179,7 @@ def _load_cached_fetch_envelope(
     return FetchCache(
         download_dir,
         refresh_cache_index_for_doi_fn=deps.refresh_cache_index_for_doi,
+        credential_scope=credential_scope_from_env(context.env),
     ).load_fetch_envelope(
         request,
         resolve_paper_fn=deps.service_resolve_paper,
@@ -181,12 +192,19 @@ def _write_cached_fetch_envelope(
     envelope: FetchEnvelope,
     request: FetchPaperRequest,
     *,
+    commit_guard: Callable[[], None] | None = None,
+    credential_scope: str = "public",
     deps: MCPDeps = default_mcp_deps(),
 ) -> None:
     FetchCache(
         download_dir,
         refresh_cache_index_for_doi_fn=deps.refresh_cache_index_for_doi,
-    ).write_fetch_envelope(envelope, request)
+        credential_scope=credential_scope,
+    ).write_fetch_envelope(
+        envelope,
+        request,
+        commit_guard=commit_guard,
+    )
 
 
 def _call_service_resolve_paper(
@@ -220,6 +238,7 @@ def _fetch_paper_envelope(
         if context is not None and context.env is not None
         else deps.build_runtime_env(env)
     )
+    cache_credential_scope = credential_scope_from_env(runtime_env)
     cache_download_dir = (
         _resolve_download_dir(runtime_env, download_dir, deps=deps)
         if _needs_download_dir_for_fetch(request)
@@ -236,13 +255,22 @@ def _fetch_paper_envelope(
         )
 
     def write_cached(envelope: FetchEnvelope) -> None:
+        if context is not None:
+            context.raise_if_cancelled()
         if (
             not request.no_download
             and service_download_dir is not None
             and envelope.doi
         ):
             deps.write_cached_fetch_envelope(
-                service_download_dir, envelope, request, deps=deps
+                service_download_dir,
+                envelope,
+                request,
+                commit_guard=(
+                    context.raise_if_cancelled if context is not None else None
+                ),
+                credential_scope=cache_credential_scope,
+                deps=deps,
             )
 
     return (
@@ -262,7 +290,10 @@ def _fetch_paper_envelope(
                 download_dir=cache_download_dir,
                 artifact_mode=request.artifact_mode,
                 no_download=request.no_download,
-                fetch_cache=FetchCache(service_download_dir),
+                fetch_cache=FetchCache(
+                    service_download_dir,
+                    credential_scope=cache_credential_scope,
+                ),
                 cache_hooks=FetchPipelineCacheHooks(
                     load=load_cached, write=write_cached
                 ),
@@ -356,13 +387,19 @@ def resolve_paper_payload(
     runtime_context = context or RuntimeContext(
         env=deps.build_runtime_env(env), transport=transport
     )
-    service_query: str | StructuredResolveRequest = (
-        request.query if request.query is not None else request.to_resolution_request()
-    )
-    resolved = _call_service_resolve_paper(
-        service_query, context=runtime_context, deps=deps
-    )
-    return with_schema_version(resolved.to_dict())
+    try:
+        service_query: str | StructuredResolveRequest = (
+            request.query
+            if request.query is not None
+            else request.to_resolution_request()
+        )
+        resolved = _call_service_resolve_paper(
+            service_query, context=runtime_context, deps=deps
+        )
+        return with_schema_version(resolved.to_dict())
+    finally:
+        if context is None:
+            runtime_context.close()
 
 
 def has_fulltext_payload(
@@ -377,12 +414,16 @@ def has_fulltext_payload(
     runtime_context = context or RuntimeContext(
         env=deps.build_runtime_env(env), transport=transport
     )
-    probe_result = _call_service_probe_has_fulltext(
-        request.query, context=runtime_context, deps=deps
-    )
-    payload = probe_result.to_dict()
-    payload.pop("title", None)
-    return with_schema_version(payload)
+    try:
+        probe_result = _call_service_probe_has_fulltext(
+            request.query, context=runtime_context, deps=deps
+        )
+        payload = probe_result.to_dict()
+        payload.pop("title", None)
+        return with_schema_version(payload)
+    finally:
+        if context is None:
+            runtime_context.close()
 
 
 def fetch_paper_payload(
@@ -486,11 +527,16 @@ def _inline_image_contents(
     article: ArticleModel | None,
     *,
     budget: InlineImageBudget,
+    download_dir: Path | None,
 ) -> tuple[list[TextContent | ImageContent], list[str]]:
     if article is None:
         return [], []
     if budget.disabled:
         return [], []
+    if download_dir is None:
+        return [], [
+            "Local figure assets were omitted because no explicit MCP download scope was available."
+        ]
 
     contents: list[TextContent | ImageContent] = []
     omitted = 0
@@ -512,31 +558,30 @@ def _inline_image_contents(
             omitted += 1
             continue
 
-        try:
-            path_stat = path.stat()
-        except OSError:
-            omitted += 1
-            continue
-        if not _stat_module.S_ISREG(path_stat.st_mode):
-            omitted += 1
-            continue
-        size = path_stat.st_size
-
         if selected_count >= budget.max_images:
             omitted += 1
             continue
-        if (
-            size > budget.max_bytes_per_image
-            or total_bytes + size > budget.max_total_bytes
-        ):
+        expected_size = asset.downloaded_bytes
+        expected_hash: str | None = None
+        for diagnostic in article.quality.asset_summary.diagnostics:
+            if normalize_text(diagnostic.path) != path_text:
+                continue
+            if diagnostic.byte_count is not None:
+                expected_size = diagnostic.byte_count
+            expected_hash = normalize_text(diagnostic.sha256) or None
+            break
+        remaining_budget = budget.max_total_bytes - total_bytes
+        opened = read_scoped_file(
+            download_dir,
+            path_text,
+            max_bytes=min(budget.max_bytes_per_image, remaining_budget),
+            expected_size=expected_size,
+            expected_sha256=expected_hash,
+        )
+        if opened is None:
             omitted += 1
             continue
-
-        try:
-            image_bytes = path.read_bytes()
-        except OSError:
-            omitted += 1
-            continue
+        path, image_bytes = opened
 
         total_bytes += len(image_bytes)
         selected_count += 1
@@ -545,7 +590,7 @@ def _inline_image_contents(
             ImageContent(
                 type="image",
                 data=base64.b64encode(image_bytes).decode("ascii"),
-                mimeType=mime_type,
+                mime_type=mime_type,
             )
         )
 
@@ -562,6 +607,7 @@ def build_fetch_tool_result(
     request: FetchPaperRequest,
     *,
     saved_markdown_path: Path | None = None,
+    download_dir: Path | None = None,
 ) -> CallToolResult:
     payload = _response_payload_from_envelope(envelope, request)
     if saved_markdown_path is not None:
@@ -576,6 +622,7 @@ def build_fetch_tool_result(
         extra_content, image_warnings = _inline_image_contents(
             envelope.article,
             budget=request.strategy.resolved_inline_image_budget(),
+            download_dir=download_dir,
         )
         warnings = list(payload.get("warnings") or [])
         extend_unique(warnings, image_warnings)
@@ -731,8 +778,14 @@ async def fetch_paper_tool_async(
             download_dir=download_dir,
             deps=deps,
         )
+        resolved_download_dir = _resolve_download_dir(
+            runtime_env, download_dir, deps=deps
+        )
         result = build_fetch_tool_result(
-            envelope, request, saved_markdown_path=saved_markdown_path
+            envelope,
+            request,
+            saved_markdown_path=saved_markdown_path,
+            download_dir=resolved_download_dir,
         )
         await report_progress(
             ctx, _FETCH_PROGRESS_TOTAL, _FETCH_PROGRESS_TOTAL, "fetch_paper complete"

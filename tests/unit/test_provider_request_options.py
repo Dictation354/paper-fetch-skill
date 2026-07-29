@@ -433,9 +433,17 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         self.assertEqual(mocked_fetch.call_count, 2)
         self.assertEqual(mocked_fetch.call_args_list[0].kwargs["wait_seconds"], 0)
         self.assertEqual(mocked_fetch.call_args_list[0].kwargs["warm_wait_seconds"], 0)
+        self.assertLessEqual(
+            mocked_fetch.call_args_list[0].kwargs["max_timeout_ms"],
+            15000,
+        )
         self.assertIs(mocked_fetch.call_args_list[0].kwargs["disable_media"], True)
         self.assertEqual(mocked_fetch.call_args_list[1].kwargs["wait_seconds"], 8)
         self.assertEqual(mocked_fetch.call_args_list[1].kwargs["warm_wait_seconds"], 1)
+        self.assertLess(
+            mocked_fetch.call_args_list[1].kwargs["max_timeout_ms"],
+            runtime.timeout_ms,
+        )
         self.assertIs(mocked_fetch.call_args_list[1].kwargs["disable_media"], False)
         self.assertIsNotNone(payload.content)
         assert payload.content is not None
@@ -821,7 +829,7 @@ class ProviderRequestOptionsTests(unittest.TestCase):
                     return {
                         "status_code": 200,
                         "headers": {"content-type": "image/png"},
-                        "body": f"payload:{url}".encode(),
+                        "body": b"\x89PNG\r\n\x1a\n" + f"payload:{url}".encode(),
                         "url": url,
                     }
                 finally:

@@ -1,0 +1,2307 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE article PUBLIC "-//NLM//DTD Journal Publishing DTD v2.3 20070202//EN" "journalpublishing.dtd">
+<article xmlns:mml="http://www.w3.org/1998/Math/MathML" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" article-type="research-article" dtd-version="2.3" xml:lang="EN">
+<front>
+<journal-meta>
+<journal-id journal-id-type="publisher-id">Front. Mar. Sci.</journal-id>
+<journal-title>Frontiers in Marine Science</journal-title>
+<abbrev-journal-title abbrev-type="pubmed">Front. Mar. Sci.</abbrev-journal-title>
+<issn pub-type="epub">2296-7745</issn>
+<publisher>
+<publisher-name>Frontiers Media S.A.</publisher-name>
+</publisher>
+</journal-meta>
+<article-meta>
+<article-id pub-id-type="doi">10.3389/fmars.2023.1101972</article-id>
+<article-categories>
+<subj-group subj-group-type="heading">
+<subject>Marine Science</subject>
+<subj-group>
+<subject>Original Research</subject>
+</subj-group>
+</subj-group>
+</article-categories>
+<title-group>
+<article-title>Ocean acidification and warming modify stimulatory benthos effects on sediment functioning: An experimental study on two ecosystem engineers</article-title>
+</title-group>
+<contrib-group>
+<contrib contrib-type="author">
+<name>
+<surname>Vlaminck</surname>
+<given-names>Ellen</given-names>
+</name>
+<uri xlink:href="https://loop.frontiersin.org/people/2094592"/>
+</contrib>
+<contrib contrib-type="author">
+<name>
+<surname>Moens</surname>
+<given-names>Tom</given-names>
+</name>
+<uri xlink:href="https://loop.frontiersin.org/people/981867"/>
+</contrib>
+<contrib contrib-type="author">
+<name>
+<surname>Braeckman</surname>
+<given-names>Ulrike</given-names>
+</name>
+<uri xlink:href="https://loop.frontiersin.org/people/793302"/>
+</contrib>
+<contrib contrib-type="author" corresp="yes">
+<name>
+<surname>Van Colen</surname>
+<given-names>Carl</given-names>
+</name>
+<xref ref-type="author-notes" rid="fn001">
+<sup>*</sup>
+</xref>
+<uri xlink:href="https://loop.frontiersin.org/people/264296"/>
+</contrib>
+</contrib-group>
+<aff id="aff1">
+<institution>Biology Department, Marine Biology Research Group, Ghent University</institution>, <addr-line>Gent</addr-line>, <country>Belgium</country>
+</aff>
+<author-notes>
+<fn fn-type="edited-by">
+<p>Edited by: Panagiotis D. Dimitriou, University of Crete, Greece</p>
+</fn>
+<fn fn-type="edited-by">
+<p>Reviewed by: Eva Chatzinikolaou, Hellenic Centre for Marine Research, Greece; Ulisse Cardini, Anton Dohrn Zoological Station Naples, Italy</p>
+</fn>
+<fn fn-type="corresp" id="fn001">
+<p>*Correspondence: Carl Van Colen, <email xlink:href="mailto:carl.vancolen@ugent.be">carl.vancolen@ugent.be</email>
+</p>
+</fn>
+<fn fn-type="other" id="fn002">
+<p>This article was submitted to Marine Ecosystem Ecology, a section of the journal Frontiers in Marine Science</p>
+</fn>
+</author-notes>
+<pub-date pub-type="epub">
+<day>20</day>
+<month>02</month>
+<year>2023</year>
+</pub-date>
+<pub-date pub-type="collection">
+<year>2023</year>
+</pub-date>
+<volume>10</volume>
+<elocation-id>1101972</elocation-id>
+<history>
+<date date-type="received">
+<day>18</day>
+<month>11</month>
+<year>2022</year>
+</date>
+<date date-type="accepted">
+<day>06</day>
+<month>02</month>
+<year>2023</year>
+</date>
+</history>
+<permissions>
+<copyright-statement>Copyright &#xa9; 2023 Vlaminck, Moens, Braeckman and Van Colen</copyright-statement>
+<copyright-year>2023</copyright-year>
+<copyright-holder>Vlaminck, Moens, Braeckman and Van Colen</copyright-holder>
+<license xlink:href="http://creativecommons.org/licenses/by/4.0/">
+<p>This is an open-access article distributed under the terms of the Creative Commons Attribution License (CC BY). The use, distribution or reproduction in other forums is permitted, provided the original author(s) and the copyright owner(s) are credited and that the original publication in this journal is cited, in accordance with accepted academic practice. No use, distribution or reproduction is permitted which does not comply with these terms.</p>
+</license>
+</permissions>
+<abstract>
+<p>Many macrofauna have a stimulatory effect on sediment functioning through their burrowing, feeding and irrigation activities. Here, we investigated the single and combined effect of ocean acidification and warming on the stimulatory effect of two key-species inhabiting sandy seabeds in the Southern Bight of the North Sea; the bivalve <italic>Abra alba</italic> and the polychaete <italic>Lanice conchilega</italic>. The species were separately incubated in natural sediment in the laboratory under ambient, low pH (pH: -0.3), warm (T: + 3&#xb0;C) and mimicked climate change (pH: -0.3, T: +3&#xb0;C) conditions. After six weeks of incubation, nutrient and oxygen exchange were measured at the sediment-water interface to estimate aerobic sediment metabolism and nitrogen cycling. Both species facilitate sediment community oxygen consumption, nitrification and denitrification under ambient conditions. The stimulatory effect of <italic>A. alba</italic> disappeared in a low pH environment and decreased over time in the warmer treatments along with increased mortality. In contrast, <italic>L. conchilega</italic> stimulated sediment biogeochemical cycling more when seawater becomes acidified (+ 8 to 41%, depending on the function) but warming had no effect. We explain these species-specific climate change effects by different behavioral and physiological coping strategies that cascade on to sediment biogeochemical cycling, especially through altered oxygenation the sediment matrix.</p>
+</abstract>
+<kwd-group>
+<kwd>macrofauna</kwd>
+<kwd>ocean acidification</kwd>
+<kwd>ocean warming</kwd>
+<kwd>biogeochemistry</kwd>
+<kwd>ecosystem functioning</kwd>
+</kwd-group>
+<contract-sponsor id="cn001">Belgian Federal Science Policy Office<named-content content-type="fundref-id">10.13039/501100002749</named-content>
+</contract-sponsor>
+<contract-sponsor id="cn002">Bijzonder Onderzoeksfonds UGent<named-content content-type="fundref-id">10.13039/501100007229</named-content>
+</contract-sponsor>
+<contract-sponsor id="cn003">Fonds Wetenschappelijk Onderzoek<named-content content-type="fundref-id">10.13039/501100003130</named-content>
+</contract-sponsor>
+<counts>
+<fig-count count="4"/>
+<table-count count="3"/>
+<equation-count count="1"/>
+<ref-count count="74"/>
+<page-count count="12"/>
+<word-count count="5579"/>
+</counts>
+</article-meta>
+</front>
+<body>
+<sec id="s1" sec-type="intro">
+<label>1</label>
+<title>Introduction</title>
+<p>The important role of macrofauna species as benthic ecosystem engineers has long been recognized. Infaunal macrobenthic species are known to alter both the physical structure of and the chemical fluxes within sediments (<xref ref-type="bibr" rid="B36">Laverock et&#xa0;al., 2011</xref>). The foraging movements of macrobenthic species rework the top layer of the sediment [i.e. bioturbation (<xref ref-type="bibr" rid="B42">Meysman et&#xa0;al., 2006</xref>; <xref ref-type="bibr" rid="B34">Kristensen et&#xa0;al., 2012</xref>)], facilitating transport of oxygen and organic matter into deeper layers and of excretion products in and out of the sediment towards the water column. This altered transport of solutes and solids that is driven by physiological and behavioral processes stimulate microbial activity and organic matter mineralization and thus increase turnover of nutrients (<xref ref-type="bibr" rid="B41">Mermillod-Blondin et&#xa0;al., 2004</xref>).</p>
+<p>Over the last decades, human activities have strongly increased the atmospheric carbon dioxide (CO<sub>2</sub>) levels. If no drastic CO<sub>2</sub> mitigation measures are taken, this increase is predicted to continue up to atmospheric CO<sub>2</sub> concentrations of ca. 940 ppm by the end of this century compared to a current value of ca. 416 ppm (NOAA; <xref ref-type="bibr" rid="B17">Collins et&#xa0;al., 2013</xref>). Oceans are counteracting this increase by absorbing CO<sub>2</sub> at a current rate of 10<sup>6</sup> tons per hour (<xref ref-type="bibr" rid="B10">Brewer, 2009</xref>). This absorbing capacity, however, has already led to a decrease in surface-ocean pH of 0.1 units since the start of the industrial revolution (<xref ref-type="bibr" rid="B14">Caldeira and Wickett, 2003</xref>). A further decline of about 0.29 pH units by the end of the 21<sup>st</sup> century is predicted for the open ocean (<xref ref-type="bibr" rid="B17">Collins et&#xa0;al., 2013</xref>; <xref ref-type="bibr" rid="B7">Bindoff et&#xa0;al., 2019</xref>; <xref ref-type="bibr" rid="B1">Allan, 2021</xref>). In coastal shallow waters, acidification rates often follow different trends. These areas are subject to other stressors, such as freshwater inputs (<xref ref-type="bibr" rid="B15">Carstensen and Duarte, 2019</xref>), eutrophication (<xref ref-type="bibr" rid="B13">Cai et&#xa0;al., 2017</xref>) and seasonal variations (<xref ref-type="bibr" rid="B30">Hartman et&#xa0;al., 2019</xref>; <xref ref-type="bibr" rid="B45">Omar et&#xa0;al., 2019</xref>) which may lead to higher acidification rates (<xref ref-type="bibr" rid="B50">Provoost et&#xa0;al., 2010</xref>). On top of their effect on ocean pH, higher concentrations of atmospheric CO<sub>2</sub> and methane enhance the greenhouse effect, thus impacting ocean surface temperature. This is expected to lead to an increase of global (0 &#x2013; 200 m depth) ocean temperature of 1.0 up to 3.2&#xb0;C by the end of this century (<xref ref-type="bibr" rid="B17">Collins et&#xa0;al., 2013</xref>). These alterations in both seawater temperature and pH may challenge marine benthic species and the way in which they affect their environment (<xref ref-type="bibr" rid="B24">Fabry et&#xa0;al., 2008</xref>; <xref ref-type="bibr" rid="B12">Byrne, 2011</xref>; <xref ref-type="bibr" rid="B22">Dupont and P&#xf6;rtner, 2013</xref>; <xref ref-type="bibr" rid="B43">Nagelkerken and Munday, 2016</xref>). Ocean acidification (OA) disrupts acid-base regulations of marine species through the intake of acidified water and calcifying organisms in particular are negatively affected as OA causes the dissolution of their CaCO<sub>3</sub> shells (<xref ref-type="bibr" rid="B40">Matoo et&#xa0;al., 2013</xref>; <xref ref-type="bibr" rid="B63">Thomsen et&#xa0;al., 2015</xref>; <xref ref-type="bibr" rid="B37">Lemasson et&#xa0;al., 2017</xref>; <xref ref-type="bibr" rid="B32">Hurd et&#xa0;al., 2019</xref>; <xref ref-type="bibr" rid="B25">Figuerola et&#xa0;al., 2021</xref>), whereas changing temperatures may move organisms away from their thermal optima (<xref ref-type="bibr" rid="B49">P&#xf6;rtner et&#xa0;al., 2004</xref>; <xref ref-type="bibr" rid="B58">Sokolova et&#xa0;al., 2012</xref>; <xref ref-type="bibr" rid="B53">Reddin et&#xa0;al., 2022</xref>). The consecutive behavioral and physiological acclimation and adaptation to climate change is well documented for macrobenthic species (e.g. <xref ref-type="bibr" rid="B65">Tuomainen and Candolin, 2011</xref>; <xref ref-type="bibr" rid="B46">Ong et&#xa0;al., 2017</xref>; <xref ref-type="bibr" rid="B70">Vlaminck et&#xa0;al., 2022a</xref>; <xref ref-type="bibr" rid="B71">Vlaminck et&#xa0;al., 2022b</xref>). <xref ref-type="bibr" rid="B2">Alma et&#xa0;al. (2020)</xref> for example, found reduced shell strength when the purple-hinge rock scallop was exposed to a pCO<sub>2</sub> of 1050 &#xb5;atm, while <xref ref-type="bibr" rid="B60">Steeves et&#xa0;al. (2018)</xref> predicted increased growth rates of two bivalve species; <italic>Crassostrea virginica</italic> and <italic>Mytilus edulis</italic>, in a warmer climate. <xref ref-type="bibr" rid="B67">Van Colen et&#xa0;al. (2020)</xref> identified a shift in feeding mode of <italic>Scrobicularia plana</italic> from predominantly suspension feeding to deposit feeding, in a warmer and acidified environment. Little research has investigated the cascading effect on ecosystem functioning. For example, previous research has demonstrated that OW increased and OA decreased microbial gene abundance and thus modify structure and functioning of nitrogen cycling microbial communities (<xref ref-type="bibr" rid="B18">Currie et&#xa0;al., 2017</xref>; <xref ref-type="bibr" rid="B54">Seidel et&#xa0;al., 2022</xref>). However, it remains largely unexplored to what extent climate change induced alteration in macrofauna behavior that shape the habitat conditions for the microbial community, i.e. ecosystem engineering, also affect functioning.</p>
+<p>In this study, we aim to improve our understanding of the effects of climate change on single species contributions to ecosystem functioning, with a focus on sediment nitrogen cycling. We studied the effect of climate change on two widely spread key species that are abundant in the Southern Bight of the North Sea: the white furrow shell <italic>Abra alba</italic> and the sand mason, <italic>Lanice conchilega</italic> (<xref ref-type="bibr" rid="B62">Tebble, 1976</xref>; <xref ref-type="bibr" rid="B31">Hartmann-Schr&#xf6;der, 1996</xref>). <italic>Abra alba</italic> is a tellenid bivalve living in the upper layer of the sediment. In search for food, <italic>A. alba</italic> randomly reworks the upper layer of the sediment, impacting organic matter sequestration and resuspension (<xref ref-type="bibr" rid="B6">Bernard et&#xa0;al., 2012</xref>). <italic>Lanice conchilega</italic> is a tube-dwelling polychaete that can occur in high densities, forming reef-like structures that increase local biodiversity (<xref ref-type="bibr" rid="B51">Rabaut et&#xa0;al., 2007</xref>; <xref ref-type="bibr" rid="B20">De Smet et&#xa0;al., 2015</xref>). <italic>Lanice conchilega</italic> acts as a piston pumper that ventilates the sediment, oxygenating deeper layers and stimulating nitrogen cycling (<xref ref-type="bibr" rid="B26">Forster et&#xa0;al., 1999</xref>; <xref ref-type="bibr" rid="B69">Van Hoey et&#xa0;al., 2008</xref>). Recently the effect of ocean acidification on the behavior and ecophysiology of these species has been investigated. <xref ref-type="bibr" rid="B71">Vlaminck et&#xa0;al. (2022b)</xref> found a decreased energy intake and a higher metabolic loss through increased excretion rates for the bivalve. Another study shows that this decreased energy intake, amongst others resulted from a reduced feeding activity (<xref ref-type="bibr" rid="B70">Vlaminck et&#xa0;al., 2022a</xref>). Additionally, <italic>L. conchilega</italic> increased pumping frequency when pH was lowered (<xref ref-type="bibr" rid="B70">Vlaminck et&#xa0;al., 2022a</xref>). Whether this behavioral and physiological plasticity to&#xa0;OA, and possible warming-related acclimation, also translates&#xa0;into altered sediment functioning has hitherto not been investigated.</p>
+<p>In the present work, two microcosm experiments were conducted, where sediments and <italic>Abra alba</italic> and <italic>L. conchilega</italic> individuals were incubated under four different scenarios; a control environment with ambient temperature and pH (CTRL), a scenario with elevated temperature (OW: ocean warming), a scenario with decreased pH (OA: ocean acidification) and a scenario with both an elevated temperature and a decreased pH (CC: climate change). After 6 weeks, nutrient and oxygen fluxes at the sediment-water interface were measured to investigate the effect of <italic>A. alba</italic> and <italic>L. conchilega</italic> on the benthic ecosystem metabolism and biogeochemical cycling under the four scenarios. When pH is lowered, we expect the organisms to cope with hypercapnia according to the previously observed behavioral and physiological changes (<xref ref-type="bibr" rid="B70">Vlaminck et&#xa0;al., 2022a</xref>; <xref ref-type="bibr" rid="B71">Vlaminck et&#xa0;al., 2022b</xref>). More specifically, as <italic>A. alba</italic> is expected to lower respiratory activity and feeding under low pH, we hypothesize that this species&#x2019; contribution to sediment biogeochemistry will decrease. In contrast, as <italic>L. conchilega</italic> is expected to increase its pumping frequency when exposed to low pH seawater, we hypothesize that this species&#x2019; contribution to sediment ecosystem functioning will increase. In addition, ocean warming may alter the contribution of both species, depending on their physiological responses to temperature variability and the warming effects on the metabolic rate of the sediment microbial community.</p>
+</sec>
+<sec id="s2" sec-type="materials and methods">
+<label>2</label>
+<title>Material and methods</title>
+<sec id="s2_1">
+<label>2.1</label>
+<title>Field sampling</title>
+<p>Sediment for all experiments was collected in June 2019 at station 780 (N:51&#xb0;28.292&#x2019;, E:3&#xb0;3.523&#x2019;) in the Belgian part of the North Sea; this station is characterized by fine sandy sediments with an organic carbon content of 0.40% and nitrogen content of 0.04-0.07% (<xref ref-type="bibr" rid="B8">Braeckman et&#xa0;al., 2014</xref>). Multiple Van Veen grabs were deployed from the Research Vessel Simon Stevin. On board of the ship, sediment was first sieved over a 1-mm mesh to eliminate all macrofauna. Subsequently, the sediment was thoroughly mixed before placing it in the experimental set-up. <italic>Abra alba</italic> individuals were collected at the same station and with the same gear on August 27<sup>th</sup> 2019. <italic>Lanice conchilega</italic> individuals were collected at an intertidal sandy beach in Boulogne-sur-Mer (Nord Pas-de-Calais, France: N: 50.7345, E:1.5881) on July 4<sup>th</sup> of the same year; we decided to collect the latter species from intertidal sediments since Van Veen grabs damage these organisms and we wanted to ensure collection of complete, undamaged and similarly sized tubes. <italic>Lanice conchilega</italic> specimens were transported to the laboratory in buckets with sediment and aerated seawater within 4 h after collection, and were incubated in circulating aerated seawater at <italic>in situ</italic> conditions in a climate-controlled room (<xref ref-type="table" rid="T1">
+<bold>Table&#xa0;1</bold>
+</xref>). Water flow (approximately 500 L.h<sup>-1</sup>) was established between two tanks; one incubation tank (120 L) holding the cores with sediment and macrofauna (see 2.2), and one storage tank (80 L) with the pump. On a weekly basis, 30 L of seawater was refreshed to maintain ambient salinity and avoid nutrient build-up. All systems were subjected to a 12:12 h light:dark regime in a temperature-controlled room.</p>
+<table-wrap id="T1" position="float">
+<label>Table&#xa0;1</label>
+<caption>
+<p>Water chemistry over the duration of the experiments: temperature, total pH, salinity, partial pressure of carbon dioxide (pCO<sub>2</sub>), total alkalinity (TA), bicarbonate concentration (<inline-formula>
+<mml:math display="inline" id="im1">
+<mml:mrow>
+<mml:msubsup>
+<mml:mrow>
+<mml:mtext>HCO</mml:mtext>
+</mml:mrow>
+<mml:mn>3</mml:mn>
+<mml:mo>&#x2212;</mml:mo>
+</mml:msubsup>
+</mml:mrow>
+</mml:math>
+</inline-formula>), carbonate concentration (<inline-formula>
+<mml:math display="inline" id="im2">
+<mml:mrow>
+<mml:msubsup>
+<mml:mrow>
+<mml:mtext>CO</mml:mtext>
+</mml:mrow>
+<mml:mn>3</mml:mn>
+<mml:mrow>
+<mml:mn>2</mml:mn>
+<mml:mo>&#x2212;</mml:mo>
+</mml:mrow>
+</mml:msubsup>
+</mml:mrow>
+</mml:math>
+</inline-formula>), saturation state of aragonite (&#x3a9;ar) and saturation state of calcite (&#x3a9;c).</p>
+</caption>
+<table frame="hsides">
+<thead>
+<tr>
+<th colspan="5" align="center">
+<italic>Lanice conchilega</italic>
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th valign="top" align="center">Treatment</th>
+<th valign="top" align="center">Control</th>
+<th valign="top" align="center">Acidification</th>
+<th valign="top" align="center">Temperature</th>
+<th valign="top" align="center">Climate Change</th>
+</tr>
+<tr>
+<td valign="top" align="center">
+<bold>Temperature (&#xb0; C)</bold>
+</td>
+<td valign="top" align="char" char="&#xb1;">18.3 &#xb1; 0.8</td>
+<td valign="top" align="char" char="&#xb1;">19.4 &#xb1; 0.9</td>
+<td valign="top" align="char" char="&#xb1;">21.1 &#xb1; 0.9</td>
+<td valign="top" align="char" char="&#xb1;">21.9 &#xb1; 1.4</td>
+</tr>
+<tr>
+<td valign="top" align="center">
+<bold>pH<sub>T</sub>
+</bold>
+</td>
+<td valign="top" align="char" char="&#xb1;">8.1 &#xb1; 0.2</td>
+<td valign="top" align="char" char="&#xb1;">7.7 &#xb1; 0.3</td>
+<td valign="top" align="char" char="&#xb1;">8.1 &#xb1; 0.2</td>
+<td valign="top" align="char" char="&#xb1;">7.7 &#xb1; 0.2</td>
+</tr>
+<tr>
+<td valign="top" align="center">
+<bold>Salinity</bold>
+</td>
+<td valign="top" align="char" char="&#xb1;">37.1 &#xb1; 1.4</td>
+<td valign="top" align="char" char="&#xb1;">37.4 &#xb1; 1.9</td>
+<td valign="top" align="char" char="&#xb1;">37.4 &#xb1; 1.7</td>
+<td valign="top" align="char" char="&#xb1;">37.9 &#xb1; 1.7</td>
+</tr>
+<tr>
+<td valign="top" align="center">
+<bold>pCO<sub>2</sub> (&#x3bc;atm)</bold>
+</td>
+<td valign="top" align="char" char="&#xb1;">496.3 &#xb1; 65.0</td>
+<td valign="top" align="char" char="&#xb1;">1515.7 &#xb1; 420.5</td>
+<td valign="top" align="char" char="&#xb1;">488.4 &#xb1; 67.8</td>
+<td valign="top" align="char" char="&#xb1;">1297.2 &#xb1; 195.2</td>
+</tr>
+<tr>
+<td valign="top" align="center">
+<bold>TA (&#x3bc;mol kg<sup>-1</sup>)</bold>
+</td>
+<td valign="top" align="char" char="&#xb1;">2608.8 &#xb1; 3.4</td>
+<td valign="top" align="char" char="&#xb1;">2608.6 &#xb1; 4.3</td>
+<td valign="top" align="char" char="&#xb1;">2607.8 &#xb1; 4.1</td>
+<td valign="top" align="char" char="&#xb1;">2606.7 &#xb1; 3.0</td>
+</tr>
+<tr>
+<td valign="top" align="center">
+<inline-formula>
+<mml:math display="inline" id="im3">
+<mml:mrow>
+<mml:msubsup>
+<mml:mrow>
+<mml:mtext>HCO</mml:mtext>
+</mml:mrow>
+<mml:mn>3</mml:mn>
+<mml:mo>&#x2212;</mml:mo>
+</mml:msubsup>
+</mml:mrow>
+</mml:math>
+</inline-formula> <bold>(&#x3bc;mol kg<sup>-1</sup>)</bold>
+</td>
+<td valign="top" align="char" char="&#xb1;">2094.5 &#xb1; 163.8</td>
+<td valign="top" align="char" char="&#xb1;">2326.3 &#xb1; 42.9</td>
+<td valign="top" align="char" char="&#xb1;">2039.7 &#xb1; 173.3</td>
+<td valign="top" align="char" char="&#xb1;">2315.2 &#xb1; 34.4</td>
+</tr>
+<tr>
+<td valign="top" align="center">
+<inline-formula>
+<mml:math display="inline" id="im4">
+<mml:mrow>
+<mml:msubsup>
+<mml:mrow>
+<mml:mtext>CO</mml:mtext>
+</mml:mrow>
+<mml:mn>3</mml:mn>
+<mml:mrow>
+<mml:mn>2</mml:mn>
+<mml:mo>&#x2212;</mml:mo>
+</mml:mrow>
+</mml:msubsup>
+</mml:mrow>
+</mml:math>
+</inline-formula> <bold>(&#x3bc;mol kg<sup>-1</sup>)</bold>
+</td>
+<td valign="top" align="char" char="&#xb1;">210.5 &#xb1; 19.5</td>
+<td valign="top" align="char" char="&#xb1;">115.3 &#xb1; 17.4</td>
+<td valign="top" align="char" char="&#xb1;">232.9 &#xb1; 20.6</td>
+<td valign="top" align="char" char="&#xb1;">119.0 &#xb1; 14.2</td>
+</tr>
+<tr>
+<td valign="top" align="center">
+<bold>&#x3a9;ar</bold>
+</td>
+<td valign="top" align="char" char="&#xb1;">3.2 &#xb1; 1.1</td>
+<td valign="top" align="char" char="&#xb1;">1.8 &#xb1; 0.8</td>
+<td valign="top" align="char" char="&#xb1;">3.6 &#xb1; 1.1</td>
+<td valign="top" align="char" char="&#xb1;">1.8 &#xb1; 0.8</td>
+</tr>
+<tr>
+<td valign="top" align="center">
+<bold>&#x3a9;c</bold>
+</td>
+<td valign="top" align="char" char="&#xb1;">4.7 &#xb1; 1.5</td>
+<td valign="top" align="char" char="&#xb1;">2.6 &#xb1; 1.2</td>
+<td valign="top" align="char" char="&#xb1;">5.2 &#xb1; 1.7</td>
+<td valign="top" align="char" char="&#xb1;">2.7 &#xb1; 1.1</td>
+</tr>
+<tr>
+<td valign="top" colspan="5" align="center">
+<bold><italic>Abra alba</italic></bold>
+</td>
+</tr>
+<tr>
+<td valign="top" align="center">
+<bold>Temperature (&#xb0; C)</bold>
+</td>
+<td valign="top" align="char" char="&#xb1;">19.3 &#xb1; 0.5</td>
+<td valign="top" align="char" char="&#xb1;">19.4 &#xb1; 0.4</td>
+<td valign="top" align="char" char="&#xb1;">22.1 &#xb1; 0.8</td>
+<td valign="top" align="char" char="&#xb1;">22.4 &#xb1; 0.7</td>
+</tr>
+<tr>
+<td valign="top" align="center">
+<bold>pH<sub>T</sub>
+</bold>
+</td>
+<td valign="top" align="char" char="&#xb1;">8.2 &#xb1; 0.03</td>
+<td valign="top" align="char" char="&#xb1;">7.9 &#xb1; 0.08</td>
+<td valign="top" align="char" char="&#xb1;">8.2 &#xb1; 0.8</td>
+<td valign="top" align="char" char="&#xb1;">7.9 &#xb1; 0.07</td>
+</tr>
+<tr>
+<td valign="top" align="center">
+<bold>Salinity</bold>
+</td>
+<td valign="top" align="char" char="&#xb1;">34.2 &#xb1; 0.9</td>
+<td valign="top" align="char" char="&#xb1;">34.0 &#xb1; 0.8</td>
+<td valign="top" align="char" char="&#xb1;">34.7 &#xb1; 1.3</td>
+<td valign="top" align="char" char="&#xb1;">35.0 &#xb1; 1.5</td>
+</tr>
+<tr>
+<td valign="top" align="center">
+<bold>pCO<sub>2</sub> (&#x3bc;atm)</bold>
+</td>
+<td valign="top" align="char" char="&#xb1;">316.9 &#xb1; 21.9</td>
+<td valign="top" align="char" char="&#xb1;">632.9 &#xb1; 126.5</td>
+<td valign="top" align="char" char="&#xb1;">285.5 &#xb1; 21.7</td>
+<td valign="top" align="char" char="&#xb1;">611.4 &#xb1; 105.6</td>
+</tr>
+<tr>
+<td valign="top" align="center">
+<bold>TA (&#x3bc;mol kg<sup>-1</sup>)</bold>
+</td>
+<td valign="top" align="char" char="&#xb1;">2605 &#xb1; 1.3</td>
+<td valign="top" align="char" char="&#xb1;">2605.8 &#xb1; 0.9</td>
+<td valign="top" align="char" char="&#xb1;">2604.5 &#xb1; 2.8</td>
+<td valign="top" align="char" char="&#xb1;">2603.8 &#xb1; 0.5</td>
+</tr>
+<tr>
+<td valign="top" align="center">
+<inline-formula>
+<mml:math display="inline" id="im5">
+<mml:mrow>
+<mml:msubsup>
+<mml:mrow>
+<mml:mtext>HCO</mml:mtext>
+</mml:mrow>
+<mml:mn>3</mml:mn>
+<mml:mo>&#x2212;</mml:mo>
+</mml:msubsup>
+</mml:mrow>
+</mml:math>
+</inline-formula> <bold>(&#x3bc;mol kg<sup>-1</sup>)</bold>
+</td>
+<td valign="top" align="char" char="&#xb1;">1986 &#xb1; 30.6</td>
+<td valign="top" align="char" char="&#xb1;">2210.4 &#xb1; 57.5</td>
+<td valign="top" align="char" char="&#xb1;">1889.7 &#xb1; 41.3</td>
+<td valign="top" align="char" char="&#xb1;">2153.3 &#xb1; 61.2</td>
+</tr>
+<tr>
+<td valign="top" align="center">
+<inline-formula>
+<mml:math display="inline" id="im6">
+<mml:mrow>
+<mml:msubsup>
+<mml:mrow>
+<mml:mtext>CO</mml:mtext>
+</mml:mrow>
+<mml:mn>3</mml:mn>
+<mml:mrow>
+<mml:mn>2</mml:mn>
+<mml:mo>&#x2212;</mml:mo>
+</mml:mrow>
+</mml:msubsup>
+</mml:mrow>
+</mml:math>
+</inline-formula>
+<bold>(&#x3bc;mol kg<sup>-1</sup>)</bold>
+</td>
+<td valign="top" align="char" char="&#xb1;">257.2 &#xb1; 13.2</td>
+<td valign="top" align="char" char="&#xb1;">164.2 &#xb1; 24.5</td>
+<td valign="top" align="char" char="&#xb1;">297.4 &#xb1; 17.2</td>
+<td valign="top" align="char" char="&#xb1;">187.0 &#xb1; 25.6</td>
+</tr>
+<tr>
+<td valign="top" align="center">
+<bold>&#x3a9;ar</bold>
+</td>
+<td valign="top" align="char" char="&#xb1;">3.9 &#xb1; 0.2</td>
+<td valign="top" align="char" char="&#xb1;">2.5 &#xb1; 0.4</td>
+<td valign="top" align="char" char="&#xb1;">4.5 &#xb1; 0.3</td>
+<td valign="top" align="char" char="&#xb1;">2.9 &#xb1; 0.4</td>
+</tr>
+<tr>
+<td valign="top" align="center">
+<bold>&#x3a9;ca</bold>
+</td>
+<td valign="top" align="char" char="&#xb1;">5.7 &#xb1; 0.3</td>
+<td valign="top" align="char" char="&#xb1;">3.6 &#xb1; 0.5</td>
+<td valign="top" align="char" char="&#xb1;">6.6 &#xb1; 0.4</td>
+<td valign="top" align="char" char="&#xb1;">4.1 &#xb1; 0.6</td>
+</tr>
+</tbody>
+</table>
+<table-wrap-foot>
+<fn>
+<p>Standard deviation is given for each value. All tanks were kept at control values before manipulation.</p>
+</fn>
+</table-wrap-foot>
+</table-wrap>
+</sec>
+<sec id="s2_2">
+<label>2.2</label>
+<title>Experimental set-up and seawater manipulation</title>
+<p>Separate experiments were conducted with <italic>A. alba</italic> (from 01/07/2019 to 12/08/2019) and with <italic>L. conchilega</italic> (from 02/09/2019 to 18/10/2019). 32 Plexiglas cores (10 cm internal diameter) were used in each experiment in order to establish a total of 4 replicates for the 4 seawater condition treatments for each of the two sediment types (with and without macrofauna). All cores were filled with sieved and mixed sediment up to approximately 10 cm and distributed over 16 tank systems, 4 replicate tanks for each of the 4 treatments. Sediment (volume = 0.772 &#xb1; 0.006 L) was allowed to settle and stabilize for 7 days, after which <italic>A. alba</italic> or <italic>L. conchilega</italic> individuals were added at natural densities (<italic>A. alba</italic>: n = 9, <italic>L. conchilega</italic>: n = 6; <xref ref-type="bibr" rid="B68">Van Hoey et&#xa0;al., 2014</xref>) to one core in each tank ). A fully crossed experimental design with the factors temperature (ambient or elevated), pH (ambient or lowered) and exposure time (3 or 6 weeks), was followed to investigate the effects of climate change on macrofauna and their effect on sediment biogeochemistry. After one (<italic>L. conchilega</italic>) and two (<italic>A. alba</italic>) weeks of acclimatization to ambient conditions, seawater pH was lowered by 0.1 unit per day and temperature was elevated by 1&#xb0;C per day over a period of three days following a commonly applied gradual change for continental shelf benthos from temperate regions (e.g. <xref ref-type="bibr" rid="B74">Widdicombe and Needham, 2007</xref>, <xref ref-type="bibr" rid="B40">Matoo et&#xa0;al., 2013</xref>; <xref ref-type="bibr" rid="B72">Voet et&#xa0;al., 2022</xref>). Seawater pH manipulation (-0.3 units) was achieved using an IKS Aquastar Industrial control system with pH glass electrodes through the bubbling of pure CO<sub>2</sub>. PH electrodes were 2-point calibrated on a weekly basis with Hanna instrument buffer solutions (pH 4.01 and 7.01). The climate room was set at ambient temperature and an external heating system (Teco Refrigeration technologies; Model: TK2000) was used to manipulate seawater temperature (+3&#xb0;C). Temperature and pH were logged every 15 minutes with the IKS Aquastar system. Twice a week, organisms were fed 5 mL of commercial Shellfish Diet 1800, corresponding roughly to 125 mgC m<sup>-3</sup> (Reed Mariculture Inc., composed of 40% <italic>Isochrysis</italic>, 15% <italic>Pavlova</italic>, 25% <italic>Tetraselmis</italic> and 20% <italic>Thalassiosira weissflogii</italic>) diluted in 16 L of seawater and distributed equally in the 16 tanks. On a weekly basis, salinity was measured with a portable conductivity meter (YSI 30M salinity system). Temperature and pH were measured every week with a portable pH/conductivity meter (Metrohm; Model: 914). This pH electrode was calibrated using a TRIS buffer to allow conversion of the continuously measured pH (NBS) data to total (pH) scale (<xref ref-type="bibr" rid="B21">Dickson, 2010</xref>). Weekly water samples were taken from each tank and filtered through GF/C filter papers for total alkalinity (TA) measurements. The samples were kept at 4&#xb0; C until analysis <italic>via</italic> titration using a HydroFIA TA (CONTROS Systems &amp; Solutions GmbH) at the Flanders Marine Institute (VLIZ). Carbonate chemistry parameters (pH<sub>T</sub>, pCO<sub>2</sub>, <inline-formula>
+<mml:math display="inline" id="im7">
+<mml:mrow>
+<mml:msubsup>
+<mml:mrow>
+<mml:mtext>HCO</mml:mtext>
+</mml:mrow>
+<mml:mn>3</mml:mn>
+<mml:mo>&#x2212;</mml:mo>
+</mml:msubsup>
+</mml:mrow>
+</mml:math>
+</inline-formula>, <inline-formula>
+<mml:math display="inline" id="im8">
+<mml:mrow>
+<mml:msubsup>
+<mml:mrow>
+<mml:mtext>CO</mml:mtext>
+</mml:mrow>
+<mml:mn>3</mml:mn>
+<mml:mrow>
+<mml:mn>2</mml:mn>
+<mml:mo>&#x2212;</mml:mo>
+</mml:mrow>
+</mml:msubsup>
+</mml:mrow>
+</mml:math>
+</inline-formula>, &#x3a9;c and &#x3a9;a) were derived from the measured values for temperature, pH, salinity and TA <italic>via</italic> CO2SYS software (<xref ref-type="bibr" rid="B48">Pierrot et&#xa0;al., 2011</xref>)(<xref ref-type="table" rid="T1">
+<bold>Table&#xa0;1</bold>
+</xref>). Mortality was checked daily and dead organisms (<italic>L. conchilega:</italic> n = 2, <italic>A. alba:</italic> n = 61) were removed to avoid nutrient build-up.</p>
+</sec>
+<sec id="s2_3">
+<label>2.3</label>
+<title>Flux measurements and sampling</title>
+<p>After three and six weeks of incubation, the sediment community oxygen consumption (SCOC) and nutrient exchange at the sediment water interface were quantified, using closed dark incubations of the cores. Sediment cores were closed airtight, cutting them off from the circulation system and allowing us to measure changes in oxygen and nutrient concentrations in the water column. The overlaying sea water was mixed to avoid stratification at a rate low enough to avoid resuspension of the sediment. Oxygen concentration in the overlaying sea water was continuously monitored with Robust Oxygen Optodes (OXROB 10, Pyroscience sensor technology). An optical oxygen meter (FirestingO<sub>2</sub>, Pyroscience) was used to control the sensors. Incubations were run for 3 h, sufficient to measure changes in oxygen and nutrient concentrations while the oxygen concentration of the seawater remained above 60% saturation. Water samples (10 mL) were taken from the total volume of water (0.728 &#xb1; 0.006 L) in the cores, and filtered through Whatman GF/F filters, at the start and end of the closed incubation, to determine nutrient concentrations.</p>
+<p>Oxygen fluxes were calculated from the regression slopes of the oxygen concentration over time, according to Eq. (1).</p>
+<disp-formula>
+<label>(1)</label>
+<mml:math display="block" id="M1">
+<mml:mrow>
+<mml:mtext>SCOC&#xa0;=&#xa0;</mml:mtext>
+<mml:mfrac>
+<mml:mrow>
+<mml:mi>d</mml:mi>
+<mml:mi>C</mml:mi>
+</mml:mrow>
+<mml:mrow>
+<mml:mi>d</mml:mi>
+<mml:mi>t</mml:mi>
+</mml:mrow>
+</mml:mfrac>
+<mml:mfrac>
+<mml:mi>V</mml:mi>
+<mml:mi>A</mml:mi>
+</mml:mfrac>
+</mml:mrow>
+</mml:math>
+</disp-formula>
+<p>where <inline-formula>
+<mml:math display="inline" id="im9">
+<mml:mrow>
+<mml:mfrac>
+<mml:mrow>
+<mml:mi>d</mml:mi>
+<mml:mi>C</mml:mi>
+</mml:mrow>
+<mml:mrow>
+<mml:mi>d</mml:mi>
+<mml:mi>t</mml:mi>
+</mml:mrow>
+</mml:mfrac>
+</mml:mrow>
+</mml:math>
+</inline-formula> is the change in oxygen concentration in the overlying water (in mmol&#x2009;L<sup>&#x2212;1</sup>&#x2009;d<sup>&#x2212;1</sup>), V is the volume of the overlying water (in L), and A is the sediment surface area (in m<sup>2</sup>).</p>
+<p>Nutrient fluxes were calculated as the difference between the nutrient concentrations at the end and start of the incubation. After the closed-core incubations after 3 weeks of incubation, the cores were reconnected to the normal water circulation, in order to be sampled again after 6 weeks of incubation.</p>
+<p>Oxygen Penetration Depth (OPD) were measured in the sediment after 5 weeks of incubation. Oxygen microsensors (Unisense OX100, 100 &#xb5;m tip size) were vertically inserted into the sediment and moved with a Unisense microprofiler at increments of 250 &#xb5;m (two replicate profiles in each core). SensorTracePro software (Unisense) was used to visualize the output. The O<sub>2</sub> microsensor was 2-point calibrated with a 0% oxygen solution (Na-ascorbate solution) and a 100% oxygen solution (obtained through oxygenation of seawater through bubbling).</p>
+</sec>
+<sec id="s2_4">
+<label>2.4</label>
+<title>Mass budget calculations</title>
+<p>Nitrification, denitrification and total mineralization were estimated using the sediment-water exchange fluxes of O<sub>2</sub>, NO<sub>x</sub> and NH<sub>x</sub>. A mass budget of oxygen, nitrate and ammonium in the sediment was constructed as a function of source and sink processes (<xref ref-type="bibr" rid="B56">Soetaert et&#xa0;al., 2001</xref>; <xref ref-type="bibr" rid="B9">Braeckman et&#xa0;al., 2010</xref>). Oxygen, nitrate and ammonium are exchanged across the sediment-water interface. Oxygen is consumed through the oxidation of organic carbon (oxic mineralization) and of ammonium to nitrate (nitrification), or through the re-oxidation of reduced substances formed through anoxic mineralization. The O:C ratio is assumed to equal 1 (Redfield), while 2 moles of oxygen are required for the oxidation of ammonium to nitrate (<xref ref-type="bibr" rid="B56">Soetaert et&#xa0;al., 2001</xref>). Ammonium is the end product of organic nitrogen mineralization and is consumed during denitrification. Nitrification produces nitrate but 0.8 moles of NO<sub>3</sub> are being consumed for each mole of carbon that is denitrified. Part of the reduced substances remain buried in the sediment and are therefore not available for re-oxidation (<xref ref-type="bibr" rid="B56">Soetaert et&#xa0;al., 2001</xref>).</p>
+<p>The rates of change are set to zero, based on the assumption that a geochemical steady state is reached approximately 1 week after the addition of organisms. We assume that the burial of anoxic substances is negligible, allowing us to combine oxic and anoxic mineralization (<xref ref-type="bibr" rid="B9">Braeckman et&#xa0;al., 2010</xref>). To solve the model, an extra equation is added, using the N:C ratio (mean value = 0.1351 mol N mol C<sup>-1</sup>) to appoint the relationship between nitrogen and carbon mineralization, resulting in a set of equations (that were solved using the limSolve package (<xref ref-type="bibr" rid="B59">Soetaert and Van den Meersche, 2017</xref>) in the open source software R version 4.0.4 (<xref ref-type="bibr" rid="B52">R Core Team, 2014</xref>).</p>
+</sec>
+<sec id="s2_5">
+<label>2.5</label>
+<title>Statistical analyses</title>
+<p>Differences in survival of study organisms between treatments at the end of incubation were analyzed using two-way analysis of variances (ANOVA) with temperature and pH as fixed factors, with two levels each (ambient and increased temperature; ambient and lowered pH). Normal distribution and equal variances were assumed and tested with Shapiro and Levene&#x2019;s test respectively. If significant effects were found, Tukey HSD tests were performed to identify pairwise differences. To test the effect of <italic>A. alba</italic> or <italic>L. conchilega</italic> (present or absent), temperature, pH, and time (three or six weeks of incubation) and their interaction on biogeochemical fluxes, linear mixed effects models were constructed for each factor. We allowed random intercepts for tank identity to take the non-independence of the two cores in each tank into account. Step-by-step deletion of single model terms that were not involved in any significant interaction led to the minimal adequate model. The Kenward-Roger method was used to estimate degrees of freedom and calculate F-statistics and associated p-values. When no warming x pH interaction effects are present, the model compares the combined acidified treatments (OA and CC) with the non-acidified treatments (OW and CTRL) combined and/or the warmed (OW and CC) with the non-warmed (CTRL and OA) treatments. Model assumptions were checked graphically; the normality of residuals was numerically confirmed with a Shapiro-Wilk test. Statistical analysis was conducted in R-software version 4.0.4 (R Core Team, 2014) with packages lme4 (<xref ref-type="bibr" rid="B5">Bates et&#xa0;al., 2014</xref>), lmerTest (<xref ref-type="bibr" rid="B35">Kuznetsova et&#xa0;al., 2017</xref>) and MuMIn packages (<xref ref-type="bibr" rid="B4">Barton, 2020</xref>).</p>
+</sec>
+</sec>
+<sec id="s3" sec-type="results">
+<label>3</label>
+<title>Results</title>
+<sec id="s3_1">
+<label>3.1</label>
+<title>Macrofauna survival</title>
+<p>There was no significant temperature, pH or interaction effect on the survival of <italic>L. conchilega.</italic> Increased seawater temperature did, however, significantly reduce the survival of <italic>A. alba</italic> (p-value&lt; 0.05), decreasing its survival by 34 (&#xb1; 0.08) % after 6 weeks of incubation under both warmed conditions (i.e. warming; 50 &#xb1; 19%,and climate change: 42 &#xb1; 13%) compared to the control (67 &#xb1; 15%) and ocean acidification (72 &#xb1; 11%) conditions (<xref ref-type="fig" rid="f1">
+<bold>Figure&#xa0;1</bold>
+</xref>; <xref ref-type="table" rid="T2">
+<bold>Table&#xa0;2</bold>
+</xref>).</p>
+<table-wrap id="T2" position="float">
+<label>Table&#xa0;2</label>
+<caption>
+<p>Linear mixed effects models comparing OPD and biogeochemical cycling in different treatments; seawater temperature, seawater pH<italic>, Abra alba</italic> presence and experimental duration.</p>
+</caption>
+<table frame="hsides">
+<thead>
+<tr>
+<th valign="bottom" align="left"/>
+<th valign="bottom" align="center">NDF</th>
+<th valign="bottom" align="center">DDF</th>
+<th valign="bottom" align="center">F value</th>
+<th valign="bottom" align="center">p-value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th valign="bottom" colspan="5" align="left">Survival</th>
+</tr>
+<tr>
+<td valign="bottom" align="left">
+<italic>OW</italic>
+</td>
+<td valign="bottom" align="center">1</td>
+<td valign="bottom" align="center">12</td>
+<td valign="bottom" align="center">9.527</td>
+<td valign="bottom" align="center">0.00942</td>
+</tr>
+<tr>
+<th valign="bottom" colspan="5" align="left">OPD</th>
+</tr>
+<tr>
+<td valign="bottom" align="left">
+<italic>OA : OW</italic>
+</td>
+<td valign="bottom" align="center">1</td>
+<td valign="bottom" align="center">12</td>
+<td valign="bottom" align="center">5.6471</td>
+<td valign="bottom" align="center">0.03499</td>
+</tr>
+<tr>
+<td valign="bottom" align="left">
+<italic>Organism</italic>
+</td>
+<td valign="bottom" align="center">1</td>
+<td valign="bottom" align="center">15</td>
+<td valign="bottom" align="center">53.4393</td>
+<td valign="bottom" align="center">0.001</td>
+</tr>
+<tr>
+<th valign="bottom" colspan="5" align="left">SCOC</th>
+</tr>
+<tr>
+<td valign="bottom" align="left">
+<italic>OA : Organism</italic>
+</td>
+<td valign="bottom" align="center">1</td>
+<td valign="bottom" align="center">37.453</td>
+<td valign="bottom" align="center">4.5313</td>
+<td valign="bottom" align="center">0.039920</td>
+</tr>
+<tr>
+<td valign="bottom" align="left">
+<italic>Time</italic>
+</td>
+<td valign="bottom" align="center">1</td>
+<td valign="bottom" align="center">37.479</td>
+<td valign="bottom" align="center">12.6190</td>
+<td valign="bottom" align="center">0.01051</td>
+</tr>
+<tr>
+<td valign="bottom" align="left">
+<italic>Organism</italic>
+</td>
+<td valign="bottom" align="center">1</td>
+<td valign="bottom" align="center">37.453</td>
+<td valign="bottom" align="center">19.1636</td>
+<td valign="bottom" align="center">0.001</td>
+</tr>
+<tr>
+<th valign="bottom" colspan="5" align="left">Nitrifrication</th>
+</tr>
+<tr>
+<td valign="bottom" align="left">
+<italic>OA : OW:Organism</italic>
+</td>
+<td valign="bottom" align="center">1</td>
+<td valign="bottom" align="center">29.07</td>
+<td valign="bottom" align="center">4.826</td>
+<td valign="bottom" align="center">0.03616</td>
+</tr>
+<tr>
+<td valign="bottom" align="left">
+<italic>OA : Organism</italic>
+</td>
+<td valign="bottom" align="center">1</td>
+<td valign="bottom" align="center">29.07</td>
+<td valign="bottom" align="center">1.3098</td>
+<td valign="bottom" align="center">0.0196</td>
+</tr>
+<tr>
+<td valign="bottom" align="left">
+<italic>Time</italic>
+</td>
+<td valign="bottom" align="center">1</td>
+<td valign="bottom" align="center">30.735</td>
+<td valign="bottom" align="center">29.4607</td>
+<td valign="bottom" align="center">0.001</td>
+</tr>
+<tr>
+<td valign="bottom" align="left">
+<italic>Organism</italic>
+</td>
+<td valign="bottom" align="center">1</td>
+<td valign="bottom" align="center">29.07</td>
+<td valign="bottom" align="center">31.5985</td>
+<td valign="bottom" align="center">0.001</td>
+</tr>
+<tr>
+<th valign="bottom" colspan="5" align="left">Denitrification</th>
+</tr>
+<tr>
+<td valign="bottom" align="left">
+<italic>OA : OW:Organism</italic>
+</td>
+<td valign="bottom" align="center">1</td>
+<td valign="bottom" align="center">37.619</td>
+<td valign="bottom" align="center">9.9398</td>
+<td valign="bottom" align="center">0.00322</td>
+</tr>
+<tr>
+<td valign="bottom" align="left">
+<italic>Time</italic>
+</td>
+<td valign="bottom" align="center">1</td>
+<td valign="bottom" align="center">37.619</td>
+<td valign="bottom" align="center">5.5406</td>
+<td valign="bottom" align="center">0.023909</td>
+</tr>
+<tr>
+<td valign="bottom" align="left">
+<italic>OW</italic>
+</td>
+<td valign="bottom" align="center">1</td>
+<td valign="bottom" align="center">28.954</td>
+<td valign="bottom" align="center">4.1962</td>
+<td valign="bottom" align="center">0.049678</td>
+</tr>
+<tr>
+<td valign="bottom" align="left">
+<italic>Organism</italic>
+</td>
+<td valign="bottom" align="center">1</td>
+<td valign="bottom" align="center">37.619</td>
+<td valign="bottom" align="center">6.1005</td>
+<td valign="bottom" align="center">0.018168</td>
+</tr>
+</tbody>
+</table>
+<table-wrap-foot>
+<fn>
+<p>Only significant effects are presented in the table.</p>
+</fn>
+</table-wrap-foot>
+</table-wrap>
+<fig id="f1" position="float">
+<label>Figure&#xa0;1</label>
+<caption>
+<p>Effects of temperature and pH on the survival rate of <italic>A. alba</italic> and <italic>L. conchilega</italic> during the 6-week incubation period. Error bars represent standard errors (&#xb1; SE, n = 36).</p>
+</caption>
+<graphic mimetype="image" mime-subtype="tiff" xlink:href="fmars-10-1101972-g001.tif"/>
+</fig>
+</sec>
+<sec id="s3_2">
+<label>3.2</label>
+<title>Nutrient and oxygen fluxes and cycling</title>
+<sec id="s3_2_1">
+<label>3.2.1</label>
+<title>Lanice conchilega</title>
+<p>The presence of <italic>L. conchilega</italic> significantly increased OPD by 31 (&#xb1; 1) %, compared to cores with no <italic>L. conchilega</italic> individuals present (<xref ref-type="fig" rid="f2">
+<bold>Figure&#xa0;2</bold>
+</xref>). Furthermore, <italic>L. conchilega</italic> increased SCOC by 28% under ambient conditions, whereas stimulation in an acidified environment was even greater with a 37 (&#xb1; 8) % increase (<xref ref-type="table" rid="T3">
+<bold>Table&#xa0;3</bold>
+</xref>, interaction effect of OA and organism presence; <xref ref-type="fig" rid="f3">
+<bold>Figure&#xa0;3</bold>
+</xref>; pairwise p-value&lt; 0.001). Similarly, acidified conditions increased the stimulatory effect of <italic>L. conchilega</italic> on nitrification and denitrification, with respective increases of 41 (&#xb1; 7) % and 25 (&#xb1; 7) %, when comparing all non-acidified treatments with all acidified treatments (<xref ref-type="table" rid="T3">
+<bold>Table&#xa0;3</bold>
+</xref>, interaction effect of OA and organism; <xref ref-type="fig" rid="f3">
+<bold>Figure&#xa0;3</bold>
+</xref>; pairwise p-values&lt; 0.001). On average the highest stimulation was found in the CC treatment, although this effect was not significant (p-value = 0.842). Experimental duration did not affect fluxes, therefore time was pooled in the graphic representation of the results (<xref ref-type="fig" rid="f3">
+<bold>Figure&#xa0;3</bold>
+</xref>).</p>
+<table-wrap id="T3" position="float">
+<label>Table&#xa0;3</label>
+<caption>
+<p>Linear mixed effects models comparing OPD and biogeochemical cycling in different treatments; seawater temperature, seawater pH<italic>, Lanice conchilega</italic> presence and experimental duration.</p>
+</caption>
+<table frame="hsides">
+<thead>
+<tr>
+<th valign="bottom" align="left"/>
+<th valign="bottom" align="center">NDF</th>
+<th valign="bottom" align="center">DDF</th>
+<th valign="bottom" align="center">F value</th>
+<th valign="bottom" align="center">p-value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th valign="bottom" colspan="5" align="left">OPD</th>
+</tr>
+<tr>
+<td valign="bottom" align="left">
+<italic>Organism</italic>
+</td>
+<td valign="bottom" align="center">1</td>
+<td valign="bottom" align="center">13</td>
+<td valign="bottom" align="center">37.7055</td>
+<td valign="bottom" align="center">0.001</td>
+</tr>
+<tr>
+<th valign="bottom" colspan="5" align="left">SCOC</th>
+</tr>
+<tr>
+<td valign="bottom" align="left">
+<italic>OA : Organism</italic>
+</td>
+<td valign="bottom" align="center">1</td>
+<td valign="bottom" align="center">40.367</td>
+<td valign="bottom" align="center">6.4167</td>
+<td valign="bottom" align="center">0.015291</td>
+</tr>
+<tr>
+<td valign="bottom" align="left">
+<italic>OA</italic>
+</td>
+<td valign="bottom" align="center">1</td>
+<td valign="bottom" align="center">46.814</td>
+<td valign="bottom" align="center">10.0819</td>
+<td valign="bottom" align="center">0.002648</td>
+</tr>
+<tr>
+<td valign="bottom" align="left">
+<italic>Organism</italic>
+</td>
+<td valign="bottom" align="center">1</td>
+<td valign="bottom" align="center">41.515</td>
+<td valign="bottom" align="center">43.7920</td>
+<td valign="bottom" align="center">0.001</td>
+</tr>
+<tr>
+<th valign="bottom" colspan="5" align="left">Nitrifrication</th>
+</tr>
+<tr>
+<td valign="bottom" align="left">
+<italic>OA : Organism</italic>
+</td>
+<td valign="bottom" align="center">1</td>
+<td valign="bottom" align="center">50.342</td>
+<td valign="bottom" align="center">6.4009</td>
+<td valign="bottom" align="center">0.01458</td>
+</tr>
+<tr>
+<td valign="bottom" align="left">
+<italic>Organism</italic>
+</td>
+<td valign="bottom" align="center">1</td>
+<td valign="bottom" align="center">41.763</td>
+<td valign="bottom" align="center">18.5983</td>
+<td valign="bottom" align="center">0.001</td>
+</tr>
+<tr>
+<th valign="bottom" colspan="5" align="left">Denitrification</th>
+</tr>
+<tr>
+<td valign="bottom" align="left">
+<italic>OA : Organism</italic>
+</td>
+<td valign="bottom" align="center">1</td>
+<td valign="bottom" align="center">48.271</td>
+<td valign="bottom" align="center">5.7905</td>
+<td valign="bottom" align="center">0.019989</td>
+</tr>
+<tr>
+<td valign="bottom" align="left">
+<italic>Organism</italic>
+</td>
+<td valign="bottom" align="center">1</td>
+<td valign="bottom" align="center">40.012</td>
+<td valign="bottom" align="center">18.4244</td>
+<td valign="bottom" align="center">0.0001</td>
+</tr>
+</tbody>
+</table>
+<table-wrap-foot>
+<fn>
+<p>Only significant effects are presented in the table.</p>
+</fn>
+</table-wrap-foot>
+</table-wrap>
+<fig id="f2" position="float">
+<label>Figure&#xa0;2</label>
+<caption>
+<p>Temperature and pH effect on the oxygen penetration depth in the presence (orange circles) and absence (grey triangles) of <italic>L. conchilega</italic> and <italic>A. alba</italic>. Error bars represent the standard errors (&#xb1; SE, n = 4).</p>
+</caption>
+<graphic mimetype="image" mime-subtype="tiff" xlink:href="fmars-10-1101972-g002.tif"/>
+</fig>
+<fig id="f3" position="float">
+<label>Figure&#xa0;3</label>
+<caption>
+<p>Effect of <italic>Lanice conchilega</italic> presence (present: orange bars, absent: grey bars) on sediment community oxygen consumption (SCOC, mmol O<sub>2</sub> m<sup>-2</sup> d<sup>-1</sup>), nitrification, and denitrification rates (mmol N m<sup>-2</sup> d<sup>-1</sup>), in 4 different treatments, with different times pooled because experiment duration did not affect the fluxes and processes. Error bars represent standard errors (&#xb1; SE).</p>
+</caption>
+<graphic mimetype="image" mime-subtype="tiff" xlink:href="fmars-10-1101972-g003.tif"/>
+</fig>
+</sec>
+<sec id="s3_2_2">
+<label>3.2.2</label>
+<title>Abra alba</title>
+<p>Experimental duration significantly affected nitrification and denitrification rates, with respective decreases of 23 (&#xb1; 6) % and 22 (&#xb1; 1) % after six weeks of incubation compared to three weeks of incubation (<xref ref-type="table" rid="T2">
+<bold>Table&#xa0;2</bold>
+</xref>, Time effect; <xref ref-type="fig" rid="f1">
+<bold>Figure&#xa0;1</bold>
+</xref>).</p>
+<p>
+<italic>Abra alba</italic> presence increased OPD by 27 (&#xb1; 6) % in all treatments, when compared to all cores without <italic>A. alba</italic> presence (<xref ref-type="table" rid="T2">
+<bold>Table&#xa0;2</bold>
+</xref>, organism effect; <xref ref-type="fig" rid="f2">
+<bold>Figure&#xa0;2</bold>
+</xref>). Irrespective of the presence of <italic>A. alba</italic>, the interaction of seawater pH and temperature significantly affected OPD (<xref ref-type="table" rid="T2">
+<bold>Table&#xa0;2</bold>
+</xref>, interaction effect of OA and OW; <xref ref-type="fig" rid="f2">
+<bold>Figure&#xa0;2</bold>
+</xref>). On average, OPD in sediments with Abra was deeper in CTRL when compared to OW, OA or CC (17%, 19%, and 6%, respectively).</p>
+<p>In non-acidified conditions, <italic>A. alba</italic> significantly stimulated SCOC resulting in an increase of 35 (&#xb1; 15) % averaged over time (<xref ref-type="table" rid="T2">
+<bold>Table&#xa0;2</bold>
+</xref>, interaction effect of OA and organism; <xref ref-type="fig" rid="f4">
+<bold>Figure&#xa0;4</bold>
+</xref>; pairwise p-value&lt; 0.001). Although the stimulation was on average larger in the CC treatment with <italic>A. alba</italic>, the statistical comparison revealed that SCOC rates did not differ significantly between the sediment with and without <italic>A.alba</italic> in the CC treatment (p = 0.086). This stimulatory effect was absent under acidified conditions. Nitrification and denitrification were both stimulated by the presence of <italic>A. alba</italic> in a control environment (pairwise p-value = 0.001 and 0.010 respectively). This stimulatory effect was absent when either seawater temperature was raised (OW) or pH was lowered (OA) (pairwise p-values all&lt; 0.05). However, nitrification and denitrification rates were stimulated by the presence of <italic>A. alba</italic> under combined warming and acidification, i.e. the CC scenario, with an increase of 61 (&#xb1; 5) % and 110 (&#xb1; 1) % averaged over time respectively (pairwise p-values: 0.008 and 0.010 respectively; <xref ref-type="table" rid="T2">
+<bold>Table&#xa0;2</bold>
+</xref>: OW, OA and organism interaction effect; <xref ref-type="fig" rid="f4">
+<bold>Figure&#xa0;4</bold>
+</xref>).</p>
+<fig id="f4" position="float">
+<label>Figure&#xa0;4</label>
+<caption>
+<p>Effect of <italic>Abra alba</italic> presence (present: orange bars, absent: grey bars) on sediment community oxygen consumption (SCOC, mmol O<sub>2</sub> m<sup>-2</sup> d<sup>-1</sup>), nitrification and denitrification rates (mmol N m<sup>-2</sup> d<sup>-1</sup>), in 4 different treatments at 2 different times. Error bars represent standard errors (&#xb1; SE).</p>
+</caption>
+<graphic mimetype="image" mime-subtype="tiff" xlink:href="fmars-10-1101972-g004.tif"/>
+</fig>
+</sec>
+</sec>
+</sec>
+<sec id="s4" sec-type="discussion">
+<label>4</label>
+<title>Discussion</title>
+<p>This experimental study investigated climate change effects on sediment ecosystem functioning, in particular how macrofauna bioturbation affect nitrogen cycling under simulated climate change conditions.&#x201d;. Interestingly, the effect of climate change differed between the two investigated key species. Both species facilitate biogeochemical cycling under ambient conditions. <italic>Lanice conchilega</italic> stimulates sediment aerobic metabolism and biogeochemical cycling more when seawater becomes acidified, while warming has no significant effect on the species contribution. Contrary, <italic>Abra alba</italic> contributes less in an acidified environment and the contribution in the warmer treatments decreases over time along with lower densities. The measured N cycling process rates in this study, using strongly manipulated and reduced communities, are generally slightly lower than the natural rates described by <xref ref-type="bibr" rid="B64">Toussaint et&#xa0;al. (2021)</xref> for the same location of sediment collection. Nevertheless, the chosen approach does allow for empirical proof and understanding on how different aspects of climate change, i.e. ocean warming and acidification, modify the contribution of marine benthic fauna to nitrogen cycling.</p>
+<p>Laboratory and climate change conditions had no effect on <italic>Lanice conchilega</italic> survival while <italic>Abra alba</italic> survival was reduced both by experiment duration and ocean warming. Although both species are widely spread in temperate continental shelf sea beds, the more abundant occurrence of <italic>L. conchilega</italic> in warmer regions such as the coastlines of Mauritius, Madagascar and Mozambique (<xref ref-type="bibr" rid="B19">Day, 1968</xref>; <xref ref-type="bibr" rid="B38">Lewinsohn and Fishelson, 1967</xref>) as well as this species&#x2019; presence in the lower intertidal zone of estuaries and beaches (<xref ref-type="bibr" rid="B3">Alves et&#xa0;al., 2017</xref>) that are prone to strong diurnal fluctuations in temperature and dryness confirms that this species is more tolerant to suboptimal laboratory conditions, as well as to increased temperature in general.</p>
+<p>
+<italic>Abra alba</italic> and <italic>Lanice conchilega</italic> individuals increased oxygen penetration depth in an environment with ambient pH and temperature which corroborates the found stimulatory effect on biogeochemical cycling of both species under those conditions. Pumping activity of <italic>Lanice conchilega</italic> increased oxygen penetration by 1.32 (&#xb1; 0.16) mm which is similar to the 1.2 mm increase found for similar organism densities by <xref ref-type="bibr" rid="B9">Braeckman et&#xa0;al. (2010)</xref>. Interestingly, even though <italic>L. conchilega</italic> is known to increase pumping frequency in a similarly acidified environment by 30% (<xref ref-type="bibr" rid="B70">Vlaminck et&#xa0;al., 2022a</xref>), oxygen penetration depth did not differ across treatments suggesting that in this experiment seawater conditions did not affect tube structure or ventilation magnitude which could lead to change in oxygenation depth (<xref ref-type="bibr" rid="B34">Kristensen et&#xa0;al., 2012</xref>). Such increased pumping frequency allows the worm to renew the O<sub>2</sub> pool faster in order to cope with the higher metabolic cost associated with inhabiting low pH environments (<xref ref-type="bibr" rid="B11">Briffa et&#xa0;al., 2012</xref>; <xref ref-type="bibr" rid="B66">Turner et&#xa0;al., 2015</xref>). This was for example also observed for the polychaete <italic>Alitta virens</italic> (<xref ref-type="bibr" rid="B29">Godbold and Solan, 2013</xref>) while a similar bio-irrigation response to other environmental stressors, like hypoxia and increased temperature, has been found for different polychaete species (<xref ref-type="bibr" rid="B33">Kristensen, 1983</xref>; <xref ref-type="bibr" rid="B27">Forster and Graf, 1995</xref>; <xref ref-type="bibr" rid="B47">Ouellette et&#xa0;al., 2004</xref>). The pumping of <italic>L. conchilega</italic> transports nitrate into the sediment and increases the availability of oxygen in deeper layers of the sediment (<xref ref-type="bibr" rid="B27">Forster and Graf, 1995</xref>), increasing the surface for coupled nitrification-denitrifcation, stimulating these processes. <xref ref-type="bibr" rid="B28">Foshtomi et&#xa0;al. (2018)</xref> furthermore proofs that <italic>L. conchilega</italic> influences the composition and density of denitrifying communities by changing the availability of nitrate. Higher diversity at depth was observed in <italic>L. conchilega</italic> patches, resulting in high denitrification rates. Increased irrigation activity under low pH conditions can thus explain the observed increased nitrification and denitrifcation rates under simulated ocean acidification and climate change in our study. Warming did however not significantly affect this species contribution to biogeochemical cycling, most likely due to the abovementioned tolerance to temperature fluctuations.</p>
+<p>
+<italic>A. alba</italic> did not stimulate nitrogen cycling in ocean acidification or ocean warming conditions as was the case under ambient and climate change conditions. After 6 weeks of incubation, the stimulatory effect was greatest under ambient conditions where sediment oxygenation was, on average, the deepest in comparison to the other treatments. In a similarly acidified environment, <italic>A. alba</italic> reduced respiration and feeding, especially suspension feeding which is known to create the greatest subsurface advective flows (and hence stimulatory effects <italic>via</italic> sediment oxygenation) by tellinid bivalves (<xref ref-type="bibr" rid="B73">Volkenborn et&#xa0;al., 2012</xref>; <xref ref-type="bibr" rid="B70">Vlaminck et&#xa0;al., 2022a</xref>). These behavioral changes reduce the uptake of low-pH seawater, thereby limiting possible physiological costs related to hypercapnia but at the same time also reduce particle mixing and bio-irrigation, which can therefore explain the observed absence of <italic>A. alba</italic> contribution on all measured functions (SCOC, nitrification and denitrification) under ocean acidification in this study. Interestingly, when combined with warming (i.e. the climate change treatment), <italic>A.alba</italic> did stimulate nitrogen cycling under reduced pH. This difference can possibly be attributed to the lower costs for calcification with higher temperature (<xref ref-type="bibr" rid="B16">Clarke, 1993</xref>; <xref ref-type="bibr" rid="B39">Mancuso et&#xa0;al., 2019</xref>) as demonstrated by the higher saturation state of calcite and aragonite in both warmer treatments (<xref ref-type="table" rid="T1">
+<bold>Table&#xa0;1</bold>
+</xref>). This may leave more energy for feeding and maneuvering in comparison to the single pH treatment where warming was not present, thereby stimulating biogeochemical cycling. This effect however seems to decrease with time when densities dropped at warmer temperatures, i.e. the ocean warming and climate change treatments. <xref ref-type="bibr" rid="B9">Braeckman et&#xa0;al. (2010)</xref> studied the effect of <italic>A.alba</italic> density on bioturbation and its contribution to sediment biogeochemistry. They found decreasing bioturbation rates and ammonium effluxes with decreasing density of <italic>A. alba</italic>. After six weeks of incubation only four <italic>A. alba</italic> individuals remained in the warmer treatments in our study, which is a similar density as the lowest that was used by <xref ref-type="bibr" rid="B9">Braeckman et&#xa0;al. (2010)</xref>, where bioturbation was 78% lower compared to natural densities. Our study shows that at such reduced densities the stimulatory effect can disappear especially in the warming treatment where biogeochemical cycling is boosted in the absence of <italic>A. alba</italic>.</p>
+<p>In conclusion, we show that ocean warming and acidification change the contribution of macrofauna to benthic ecosystem functioning, i.e. biogeochemical cycling. Declines in macrofauna activity or density, as observed for <italic>A. alba</italic>, will ultimately lead to major changes in the contribution of benthos to global nitrogen and carbon cycling (<xref ref-type="bibr" rid="B61">Sweetman et&#xa0;al., 2017</xref>; <xref ref-type="bibr" rid="B55">Snelgrove et&#xa0;al., 2018</xref>). However other effects, such as observed for <italic>L. conchilega</italic>, where ocean acidification increased the contribution of this species to overall sediment metabolism and biogeochemical cycling, could mitigate such reduced sediment functioning related to climate change. The variable results for both key-species depending on physiological tolerance and behavioral plasticity highlight the difficulty to upscale population studies to the community and ecosystem level (<xref ref-type="bibr" rid="B23">Ehrnsten et&#xa0;al., 2020</xref>).</p>
+</sec>
+<sec id="s5" sec-type="data-availability">
+<title>Data availability statement</title>
+<p>The raw data supporting the conclusions of this article will be made available by the authors, without undue reservation.</p>
+</sec>
+<sec id="s6" sec-type="author-contributions">
+<title>Author contributions</title>
+<p>EV and CC contributed to conception and design of the study. EV acquired the data and performed the statistical analysis with the input of UB and CC. EV, CC, UB and TM performed the interpretation of the data. EV wrote the first draft of the manuscript. All authors contributed to the article and approved the submitted version.</p>
+</sec>
+</body>
+<back>
+<sec id="s7" sec-type="funding-information">
+<title>Funding</title>
+<p>Funding for the research leading to this publication was provided through the BRAIN-be project BR/175/A1/PERSUADE of the Belgian Science Policy Office. Additional funding was obtained from the Special Research Fund (BOF) of Ghent University through GOA project 01G02617. Experiments used infrastructure funded by the Flemish Science Fund FWO through project GOH3817N in the framework of EMBRC-Belgium.</p>
+</sec>
+<ack>
+<title>Acknowledgments</title>
+<p>Sampling at sea was performed with logistic support from the Research Vessel Simon Stevin. The authors thank Helena Voet, Hannelore Theetaert, Bart Beuselinck, Bruno Vlaeminck, Annick Van Kenhove, Guy De Smet and Elise Toussaint for their practical and analytical support.</p>
+</ack>
+<sec id="s8" sec-type="COI-statement">
+<title>Conflict of interest</title>
+<p>The authors declare that the research was conducted in the absence of any commercial or financial relationships that could be construed as a potential conflict of interest.</p>
+</sec>
+<sec id="s9" sec-type="disclaimer">
+<title>Publisher&#x2019;s note</title>
+<p>All claims expressed in this article are solely those of the authors and do not necessarily represent those of their affiliated organizations, or those of the publisher, the editors and the reviewers. Any product that may be evaluated in this article, or claim that may be made by its manufacturer, is not guaranteed or endorsed by the publisher.</p>
+</sec>
+<sec id="s10" sec-type="supplementary-material">
+<title>Supplementary material</title>
+<p>The Supplementary Material for this article can be found online at: <ext-link ext-link-type="uri" xlink:href="https://www.frontiersin.org/articles/10.3389/fmars.2023.1101972/full#supplementary-material">https://www.frontiersin.org/articles/10.3389/fmars.2023.1101972/full#supplementary-material</ext-link>
+</p>
+<supplementary-material xlink:href="Table_1.docx" id="SM1" mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document"/>
+</sec>
+<ref-list>
+<title>References</title>
+<ref id="B1">
+<citation citation-type="book">
+<person-group person-group-type="author">
+<name>
+<surname>Allan</surname> <given-names>R. P.</given-names>
+</name>
+<name>
+<surname>Hawkins</surname> <given-names>E.</given-names>
+</name>
+<name>
+<surname>Bellouin</surname> <given-names>N.</given-names>
+</name>
+<name>
+<surname>Collins</surname> <given-names>B.</given-names>
+</name>
+</person-group> (<year>2021</year>). <article-title>IPCC, 2021: Summary for Policymakers. Global Warming of 1.5&#x200a;&#xb0;C</article-title>. <source>An IPCC Special Report on the Impacts of Global Warming of 1.5&#x200a;&#xb0;C above Pre-Industrial Levels and Related Global Greenhouse Gas Emission Pathways, in the Context of Strengthening the Global Res</source>. <publisher-name>IPCC</publisher-name>: <publisher-loc>Geneva, Switzerland</publisher-loc>, 2018.</citation>
+</ref>
+<ref id="B2">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Alma</surname> <given-names>L.</given-names>
+</name>
+<name>
+<surname>Kram</surname> <given-names>K. E.</given-names>
+</name>
+<name>
+<surname>Holtgrieve</surname> <given-names>G. W.</given-names>
+</name>
+<name>
+<surname>Barbarino</surname> <given-names>A.</given-names>
+</name>
+<name>
+<surname>Fiamengo</surname> <given-names>C. J.</given-names>
+</name>
+<name>
+<surname>Padilla-Gami&#xf1;o</surname> <given-names>J. L.</given-names>
+</name>
+</person-group> (<year>2020</year>). <article-title>Ocean acidification and warming effects on the physiology, skeletal properties, and microbiome of the purple-hinge rock scallop</article-title>. <source>Comp. Biochem. Physiol. Part A Mol. Integr. Physiol.</source> <volume>240</volume>, <fpage>110579</fpage>. doi: <pub-id pub-id-type="doi">10.1016/j.cbpa.2019.110579</pub-id>
+</citation>
+</ref>
+<ref id="B3">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Alves</surname> <given-names>R. M. S.</given-names>
+</name>
+<name>
+<surname>Van Colen</surname> <given-names>C.</given-names>
+</name>
+<name>
+<surname>Vincx</surname> <given-names>M.</given-names>
+</name>
+<name>
+<surname>Vanaverbeke</surname> <given-names>J.</given-names>
+</name>
+<name>
+<surname>De Smet</surname> <given-names>B.</given-names>
+</name>
+<name>
+<surname>Guarini</surname> <given-names>J.-M.</given-names>
+</name>
+<etal/>
+</person-group>. (<year>2017</year>). <article-title>A case study on the growth of lanice conchilega (Pallas 1766) aggregations and their ecosystem engineering impact on sedimentary processes</article-title>. <source>J. Exp. Mar. Bio. Ecol.</source> <volume>489</volume>, <fpage>15</fpage>&#x2013;<lpage>23</lpage>. doi:&#xa0;<pub-id pub-id-type="doi">10.1016/j.jembe.2017.01.005</pub-id>
+</citation>
+</ref>
+<ref id="B4">
+<citation citation-type="book">
+<person-group person-group-type="author">
+<name>
+<surname>Barton</surname> <given-names>K.</given-names>
+</name>
+</person-group> (<year>2010</year>). <source>MuMIn: multi-model inference. 2020</source>. R package version 1.1.</citation>
+</ref>
+<ref id="B5">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Bates</surname> <given-names>D.</given-names>
+</name>
+<name>
+<surname>M&#xe4;chler</surname> <given-names>M.</given-names>
+</name>
+<name>
+<surname>Bolker</surname> <given-names>B. M.</given-names>
+</name>
+<name>
+<surname>Walker</surname> <given-names>S. C.</given-names>
+</name>
+</person-group> (<year>2014</year>). <article-title>Fitting linear mixed-effects models using lme4</article-title>. <source>J. Stat. Software</source> <volume>67</volume>. doi:&#xa0;<pub-id pub-id-type="doi">10.18637/jss.v067.i01</pub-id>
+</citation>
+</ref>
+<ref id="B6">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Bernard</surname> <given-names>G.</given-names>
+</name>
+<name>
+<surname>Gr&#xe9;mare</surname> <given-names>A.</given-names>
+</name>
+<name>
+<surname>Maire</surname> <given-names>O.</given-names>
+</name>
+<name>
+<surname>Lecroart</surname> <given-names>P.</given-names>
+</name>
+<name>
+<surname>Meysman</surname> <given-names>F. J. R.</given-names>
+</name>
+<name>
+<surname>Ciutat</surname> <given-names>A.</given-names>
+</name>
+<etal/>
+</person-group>. (<year>2012</year>). <article-title>Experimental assessment of particle mixing fingerprints in the deposit-feeding bivalve abra alba (wood)</article-title>. <source>J. Mar. Res.</source> <volume>70</volume>, <fpage>689</fpage>&#x2013;<lpage>718</lpage>. doi:&#xa0;<pub-id pub-id-type="doi">10.1357/002224012806290705</pub-id>
+</citation>
+</ref>
+<ref id="B7">
+<citation citation-type="book">
+<person-group person-group-type="author">
+<name>
+<surname>Bindoff</surname> <given-names>N. L.</given-names>
+</name>
+<name>
+<surname>Cheung</surname> <given-names>W. W. L.</given-names>
+</name>
+<name>
+<surname>Kairo</surname> <given-names>J. G.</given-names>
+</name>
+<name>
+<surname>Ar&#xed;stegui</surname> <given-names>J.</given-names>
+</name>
+<name>
+<surname>Guinder</surname> <given-names>V. A.</given-names>
+</name>
+<name>
+<surname>Hallberg</surname> <given-names>R.</given-names>
+</name>
+<etal/>
+</person-group>. (<year>2019</year>). <source>Changing ocean, marine ecosystems, and dependent communities</source>. Eds. <person-group person-group-type="editor">
+<name>
+<surname>P&#xf6;rtner</surname> <given-names>H.-O.</given-names>
+</name>
+<name>
+<surname>Roberts</surname> <given-names>D.</given-names>
+</name>
+<name>
+<surname>Masson-Delmotte</surname> <given-names>V.</given-names>
+</name>
+<name>
+<surname>Zhai</surname> <given-names>P.</given-names>
+</name>
+<name>
+<surname>Tignor</surname> <given-names>M.</given-names>
+</name>
+<name>
+<surname>Poloczanska</surname> <given-names>E.</given-names>
+</name>
+</person-group> (<publisher-loc>Switzerland</publisher-loc>: <publisher-name>Intergovernmental Panel on Climate Change</publisher-name>).</citation>
+</ref>
+<ref id="B8">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Braeckman</surname> <given-names>U.</given-names>
+</name>
+<name>
+<surname>Foshtomi</surname> <given-names>M. Y.</given-names>
+</name>
+<name>
+<surname>Van Gansbeke</surname> <given-names>D.</given-names>
+</name>
+<name>
+<surname>Meysman</surname> <given-names>F.</given-names>
+</name>
+<name>
+<surname>Soetaert</surname> <given-names>K.</given-names>
+</name>
+<name>
+<surname>Vincx</surname> <given-names>M.</given-names>
+</name>
+<etal/>
+</person-group>. (<year>2014</year>). <article-title>Variable importance of macrofaunal functional biodiversity for biogeochemical cycling in temperate coastal sediments</article-title>. <source>Ecosystems</source> <volume>17</volume>, <fpage>720</fpage>&#x2013;<lpage>737</lpage>. doi:&#xa0;<pub-id pub-id-type="doi">10.1007/S10021-014-9755-7</pub-id>
+</citation>
+</ref>
+<ref id="B9">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Braeckman</surname> <given-names>U.</given-names>
+</name>
+<name>
+<surname>Provoost</surname> <given-names>P.</given-names>
+</name>
+<name>
+<surname>Gribsholt</surname> <given-names>B.</given-names>
+</name>
+<name>
+<surname>Van Gansbeke</surname> <given-names>D.</given-names>
+</name>
+<name>
+<surname>Middelburg</surname> <given-names>J. J.</given-names>
+</name>
+<name>
+<surname>Soetaert</surname> <given-names>K.</given-names>
+</name>
+<etal/>
+</person-group>. (<year>2010</year>). <article-title>Role of macrofauna functional traits and density in biogeochemical fluxes and bioturbation</article-title>. <source>Mar. Ecol. Prog. Ser.</source> <volume>399</volume>, <fpage>173</fpage>&#x2013;<lpage>186</lpage>. doi:&#xa0;<pub-id pub-id-type="doi">10.3354/meps08336</pub-id>
+</citation>
+</ref>
+<ref id="B10">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Brewer</surname> <given-names>P. G.</given-names>
+</name>
+</person-group> (<year>2009</year>). <article-title>A changing ocean seen with clarity</article-title>. <source>Proc. Natl. Acad. Sci. U. S. A.</source> <volume>106</volume>, <fpage>12213</fpage>&#x2013;<lpage>12214</lpage>. doi:&#xa0;<pub-id pub-id-type="doi">10.1073/pnas.0906815106</pub-id>
+</citation>
+</ref>
+<ref id="B11">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Briffa</surname> <given-names>M.</given-names>
+</name>
+<name>
+<surname>de la Haye</surname> <given-names>K.</given-names>
+</name>
+<name>
+<surname>Munday</surname> <given-names>P. L.</given-names>
+</name>
+</person-group> (<year>2012</year>). <article-title>High CO 2 and marine animal behaviour: Potential mechanisms and ecological consequences</article-title>. <source>Mar. pollut. Bull.</source> <volume>64</volume>, <fpage>1519</fpage>&#x2013;<lpage>1528</lpage>. doi:&#xa0;<pub-id pub-id-type="doi">10.1016/j.marpolbul.2012.05.032</pub-id>
+</citation>
+</ref>
+<ref id="B12">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Byrne</surname> <given-names>M.</given-names>
+</name>
+</person-group> (<year>2011</year>). <article-title>Impact of ocean warming and acidification on marine invertebrate life histroy stages: vulnerabilities and potential for persistence in a changing ocean</article-title>. <source>Oceanogr. Mar. Biol. Annu. Rev.</source> <volume>49</volume>, <fpage>1</fpage>&#x2013;<lpage>42</lpage>.</citation>
+</ref>
+<ref id="B13">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Cai</surname> <given-names>W.-J.</given-names>
+</name>
+<name>
+<surname>Huang</surname> <given-names>W.-J.</given-names>
+</name>
+<name>
+<surname>Luther</surname> <given-names>G. W.</given-names>
+</name>
+<name>
+<surname>Pierrot</surname> <given-names>D.</given-names>
+</name>
+<name>
+<surname>Li</surname> <given-names>M.</given-names>
+</name>
+<name>
+<surname>Testa</surname> <given-names>J.</given-names>
+</name>
+<etal/>
+</person-group>. (<year>2017</year>). <article-title>Redox reactions and weak buffering capacity lead to acidification in the Chesapeake bay</article-title>. <source>Nat. Commun.</source> <volume>8</volume>, <fpage>1</fpage>&#x2013;<lpage>12</lpage>. doi: <pub-id pub-id-type="doi">10.1038/s41467-017-00417-7</pub-id>
+</citation>
+</ref>
+<ref id="B14">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Caldeira</surname> <given-names>K.</given-names>
+</name>
+<name>
+<surname>Wickett</surname> <given-names>M. E. M. E.</given-names>
+</name>
+</person-group> (<year>2003</year>). <article-title>Anthropogenic carbon and ocean pH</article-title>. <source>Nature</source> <volume>425</volume>, <elocation-id>365</elocation-id>. doi:&#xa0;<pub-id pub-id-type="doi">10.1038/425365a</pub-id>
+</citation>
+</ref>
+<ref id="B15">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Carstensen</surname> <given-names>J.</given-names>
+</name>
+<name>
+<surname>Duarte</surname> <given-names>C. M.</given-names>
+</name>
+</person-group> (<year>2019</year>). <article-title>Drivers of pH variability in coastal ecosystems</article-title>. <source>Environ. Sci. Technol.</source> <volume>53</volume>, <fpage>4020</fpage>&#x2013;<lpage>4029</lpage>. doi:&#xa0;<pub-id pub-id-type="doi">10.1021/ACS.EST.8B03655</pub-id>
+</citation>
+</ref>
+<ref id="B16">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Clarke</surname> <given-names>A.</given-names>
+</name>
+</person-group> (<year>1993</year>). <article-title>Temperature and extinction in the sea: a physiologist&#x2019;s view</article-title>. <source>Paleobiology</source> <volume>19</volume>, <fpage>499</fpage>&#x2013;<lpage>518</lpage>. doi: <pub-id pub-id-type="doi">10.1017/S0094837300014111</pub-id>
+</citation>
+</ref>
+<ref id="B17">
+<citation citation-type="book">
+<person-group person-group-type="author">
+<name>
+<surname>Collins</surname> <given-names>M.</given-names>
+</name>
+<name>
+<surname>Knutti</surname> <given-names>R.</given-names>
+</name>
+<name>
+<surname>Arblaster</surname> <given-names>J.</given-names>
+</name>
+<name>
+<surname>Dufresne</surname> <given-names>J.</given-names>
+</name>
+<name>
+<surname>Fichefet</surname> <given-names>T.</given-names>
+</name>
+<name>
+<surname>Friedlingstein</surname> <given-names>P.</given-names>
+</name>
+<etal/>
+</person-group>. (<year>2013</year>). <source>Long-term climate change: Projections, commitments and irreversibility. clim. chang. 2013 phys. sci. basis work. gr. I contrib. to fifth assess. rep. intergov. panel clim. Chang</source>. <fpage>1029</fpage>&#x2013;<lpage>1136</lpage>.</citation>
+</ref>
+<ref id="B18">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Currie</surname> <given-names>A. R.</given-names>
+</name>
+<name>
+<surname>Tait</surname> <given-names>K.</given-names>
+</name>
+<name>
+<surname>Parry</surname> <given-names>H.</given-names>
+</name>
+<name>
+<surname>de Francisco-Mora</surname> <given-names>B.</given-names>
+</name>
+<name>
+<surname>Hicks</surname> <given-names>N.</given-names>
+</name>
+<name>
+<surname>Osborn</surname> <given-names>A. M.</given-names>
+</name>
+<etal/>
+</person-group>. (<year>2017</year>). <article-title>Marine microbial gene abundance and community composition in response to ocean acidification and elevated temperature in two contrasting coastal marine sediments</article-title>. <source>Front. Microbiol.</source> <volume>8</volume>, <elocation-id>1599</elocation-id>. doi: <pub-id pub-id-type="doi">10.3389/fmicb.2017.01599</pub-id>
+</citation>
+</ref>
+<ref id="B19">
+<citation citation-type="book">
+<person-group person-group-type="author">
+<name>
+<surname>Day</surname> <given-names>J. H.</given-names>
+</name>
+</person-group> (<year>1968</year>). <article-title>A Monograph on the Polychaeta of Southern Africa Part 1, Errantia: Part 2, Sedentaria Published by the Trustees of the British Museum (Natural History), London, 1967 Publication no. 656. Pp. viii+ 878. Price&#xa3; 15</article-title>. <source>J Mar Biol Assoc UK</source> <volume>48</volume> (<issue>3</issue>), <fpage>836</fpage>&#x2013;<lpage>836</lpage>.</citation>
+</ref>
+<ref id="B20">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>De Smet</surname> <given-names>B.</given-names>
+</name>
+<name>
+<surname>D&#x2019;Hondt</surname> <given-names>A. S.</given-names>
+</name>
+<name>
+<surname>Verhelst</surname> <given-names>P.</given-names>
+</name>
+<name>
+<surname>Fournier</surname> <given-names>J.</given-names>
+</name>
+<name>
+<surname>Godet</surname> <given-names>L.</given-names>
+</name>
+<name>
+<surname>Desroy</surname> <given-names>N.</given-names>
+</name>
+<etal/>
+</person-group>. (<year>2015</year>). <article-title>Biogenic reefs affect multiple components of intertidal soft-bottom benthic assemblages: The lanice conchilega case study</article-title>. <source>Estuar. Coast. Shelf Sci.</source> <volume>152</volume>, <fpage>44</fpage>&#x2013;<lpage>55</lpage>. doi:&#xa0;<pub-id pub-id-type="doi">10.1016/j.ecss.2014.11.002</pub-id>
+</citation>
+</ref>
+<ref id="B21">
+<citation citation-type="book">
+<person-group person-group-type="author">
+<name>
+<surname>Dickson</surname> <given-names>A. G.</given-names>
+</name>
+</person-group> (<year>2010</year>). <article-title>The carbon dioxide system in seawater: Equilibrium chemistry and measurements</article-title>. In <person-group person-group-type="editor">
+<name>
+<surname>Riebesell</surname> <given-names>U.</given-names>
+</name>
+<name>
+<surname>Fabry</surname> <given-names>V. J</given-names>
+</name>
+<name>
+<surname>Hansson</surname> <given-names>L.</given-names>
+</name>
+</person-group> Eds. <source>Guide to best practices for ocean acidification research and data reporting</source> (<publisher-loc>Luxembourg</publisher-loc>: <publisher-name>Publications Office of the European Union</publisher-name>) <volume>1</volume>, <fpage>17</fpage>&#x2013;<lpage>40</lpage>.</citation>
+</ref>
+<ref id="B22">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Dupont</surname> <given-names>S.</given-names>
+</name>
+<name>
+<surname>P&#xf6;rtner</surname> <given-names>H.</given-names>
+</name>
+</person-group> (<year>2013</year>). <article-title>Marine science: Get ready for ocean acidification</article-title>. <source>Nature</source> <volume>498</volume>, <elocation-id>429</elocation-id>. doi:&#xa0;<pub-id pub-id-type="doi">10.1038/498429a</pub-id>
+</citation>
+</ref>
+<ref id="B23">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Ehrnsten</surname> <given-names>E.</given-names>
+</name>
+<name>
+<surname>Sun</surname> <given-names>X.</given-names>
+</name>
+<name>
+<surname>Humborg</surname> <given-names>C.</given-names>
+</name>
+<name>
+<surname>Norkko</surname> <given-names>A.</given-names>
+</name>
+<name>
+<surname>Savchuk</surname> <given-names>O. P.</given-names>
+</name>
+<name>
+<surname>Slomp</surname> <given-names>C. P.</given-names>
+</name>
+<etal/>
+</person-group>. (<year>2020</year>). <article-title>Understanding environmental changes in temperate coastal seas: Linking models of benthic fauna to carbon and nutrient fluxes</article-title>. <source>Front. Mar. Sci.</source> <volume>7</volume>. doi:&#xa0;<pub-id pub-id-type="doi">10.3389/FMARS.2020.00450</pub-id>
+</citation>
+</ref>
+<ref id="B24">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Fabry</surname> <given-names>V. J.</given-names>
+</name>
+<name>
+<surname>Seibel</surname> <given-names>B. A.</given-names>
+</name>
+<name>
+<surname>Feely</surname> <given-names>R. A.</given-names>
+</name>
+<name>
+<surname>Orr</surname> <given-names>J. C.</given-names>
+</name>
+</person-group> (<year>2008</year>). <article-title>Impacts of ocean acidification on marine fauna and ecosystem processes</article-title>. <source>ICES J. Mar. Sci.</source> <volume>65</volume>, <fpage>414</fpage>&#x2013;<lpage>432</lpage>. doi:&#xa0;<pub-id pub-id-type="doi">10.1093/icesjms/fsn048</pub-id>
+</citation>
+</ref>
+<ref id="B25">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Figuerola</surname> <given-names>B.</given-names>
+</name>
+<name>
+<surname>Hancock</surname> <given-names>A. M.</given-names>
+</name>
+<name>
+<surname>Bax</surname> <given-names>N.</given-names>
+</name>
+<name>
+<surname>Cummings</surname> <given-names>V. J.</given-names>
+</name>
+<name>
+<surname>Downey</surname> <given-names>R.</given-names>
+</name>
+<name>
+<surname>Griffiths</surname> <given-names>H. J.</given-names>
+</name>
+<etal/>
+</person-group>. (<year>2021</year>). <article-title>A review and meta-analysis of potential impacts of ocean acidification on marine calcifiers from the southern ocean</article-title>. <source>Front. Mar. Sci.</source> <volume>8</volume>. doi:&#xa0;<pub-id pub-id-type="doi">10.3389/fmars.2021.584445</pub-id>
+</citation>
+</ref>
+<ref id="B26">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Forster</surname> <given-names>S.</given-names>
+</name>
+<name>
+<surname>Glud</surname> <given-names>R. N.</given-names>
+</name>
+<name>
+<surname>Gundersen</surname> <given-names>J. K.</given-names>
+</name>
+<name>
+<surname>Huettel</surname> <given-names>M.</given-names>
+</name>
+</person-group> (<year>1999</year>). <article-title>
+<italic>In situ</italic> study of bromide tracer and oxygen flux in coastal sediments</article-title>. <source>Estuar. Coast. Shelf Sci.</source> <volume>49</volume>, <fpage>813</fpage>&#x2013;<lpage>827</lpage>. doi:&#xa0;<pub-id pub-id-type="doi">10.1006/ecss.1999.0557</pub-id>
+</citation>
+</ref>
+<ref id="B27">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Forster</surname> <given-names>S.</given-names>
+</name>
+<name>
+<surname>Graf</surname> <given-names>G.</given-names>
+</name>
+</person-group> (<year>1995</year>). <article-title>Impact of irrigation on oxygen flux into the sediment: intermittent pumping by callianassa subterranea and &#x201c;piston-pumping&#x201d; by lanice conchilega</article-title>. <source>Mar. Biol.</source> <volume>123</volume>, <fpage>335</fpage>&#x2013;<lpage>346</lpage>. doi:&#xa0;<pub-id pub-id-type="doi">10.1007/BF00353625</pub-id>
+</citation>
+</ref>
+<ref id="B28">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Foshtomi</surname> <given-names>M. Y.</given-names>
+</name>
+<name>
+<surname>Leliaert</surname> <given-names>F.</given-names>
+</name>
+<name>
+<surname>Derycke</surname> <given-names>S.</given-names>
+</name>
+<name>
+<surname>Willems</surname> <given-names>A.</given-names>
+</name>
+<name>
+<surname>Vincx</surname> <given-names>M.</given-names>
+</name>
+<name>
+<surname>Vanaverbeke</surname> <given-names>J.</given-names>
+</name>
+</person-group> (<year>2018</year>). <article-title>The effect of bio-irrigation by the polychaete Lanice conchilega on active denitrifiers: distribution, diversity and composition of nosZ gene</article-title>. <source>PLoS One</source> <volume>13</volume> (<issue>2</issue>), <elocation-id>e0192391</elocation-id>.</citation>
+</ref>
+<ref id="B29">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Godbold</surname> <given-names>J. A. J. A.</given-names>
+</name>
+<name>
+<surname>Solan</surname> <given-names>M.</given-names>
+</name>
+</person-group> (<year>2013</year>). <article-title>Long-term effects of warming and ocean acidification are modified by seasonal variation in species responses and environmental conditions</article-title>. <source>Philos. Trans. R. Soc B</source> <volume>368</volume>, <fpage>20130186</fpage>. doi:&#xa0;<pub-id pub-id-type="doi">10.1098/rstb.2013.0186</pub-id>
+</citation>
+</ref>
+<ref id="B30">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Hartman</surname> <given-names>S. E.</given-names>
+</name>
+<name>
+<surname>Humphreys</surname> <given-names>M. P.</given-names>
+</name>
+<name>
+<surname>Kivim&#xe4;e</surname> <given-names>C.</given-names>
+</name>
+<name>
+<surname>Woodward</surname> <given-names>E. M. S.</given-names>
+</name>
+<name>
+<surname>Kitidis</surname> <given-names>V.</given-names>
+</name>
+<name>
+<surname>McGrath</surname> <given-names>T.</given-names>
+</name>
+<etal/>
+</person-group>. (<year>2019</year>). <article-title>Seasonality and spatial heterogeneity of the surface ocean carbonate system in the northwest European continental shelf</article-title>. <source>Prog. Oceanogr.</source> <volume>177</volume>, <fpage>101909</fpage>. doi:&#xa0;<pub-id pub-id-type="doi">10.1016/j.pocean.2018.02.005</pub-id>
+</citation>
+</ref>
+<ref id="B31">
+<citation citation-type="book">
+<person-group person-group-type="author">
+<name>
+<surname>Hartmann-Schr&#xf6;der</surname> <given-names>G.</given-names>
+</name>
+</person-group> (<year>1996</year>). <source>Annelida, Borstenw&#xfc;rmer, Polychaeta</source>. <publisher-loc>Jena, Germany</publisher-loc>: <publisher-name>Gustav Fisher Verlag</publisher-name>.</citation>
+</ref>
+<ref id="B32">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Hurd</surname> <given-names>C. L.</given-names>
+</name>
+<name>
+<surname>Beardall</surname> <given-names>J.</given-names>
+</name>
+<name>
+<surname>Comeau</surname> <given-names>S.</given-names>
+</name>
+<name>
+<surname>Cornwall</surname> <given-names>C. E.</given-names>
+</name>
+<name>
+<surname>Havenhand</surname> <given-names>J. N.</given-names>
+</name>
+<name>
+<surname>Munday</surname> <given-names>P. L.</given-names>
+</name>
+<etal/>
+</person-group>. (<year>2019</year>). <article-title>Ocean acidification as a multiple driver: how interactions between changing seawater carbonate parameters affect marine life</article-title>. <source>Mar. Freshw. Res.</source> <volume>71</volume>, <fpage>263</fpage>&#x2013;<lpage>274</lpage>. doi:&#xa0;<pub-id pub-id-type="doi">10.1071/MF19267</pub-id>
+</citation>
+</ref>
+<ref id="B33">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Kristensen</surname> <given-names>E.</given-names>
+</name>
+</person-group> (<year>1983</year>). <article-title>Ventilation and oxygen uptake by three species of nereis (Annelida : Polychaeta). 11. effects of temperature and salinity changes</article-title>. <source>Mar. Ecol. Prog. Ser.</source> <volume>12</volume>, <fpage>299</fpage>&#x2013;<lpage>306</lpage>. doi: <pub-id pub-id-type="doi">10.3354/meps012299</pub-id>
+</citation>
+</ref>
+<ref id="B34">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Kristensen</surname> <given-names>E.</given-names>
+</name>
+<name>
+<surname>Penha-Lopes</surname> <given-names>G.</given-names>
+</name>
+<name>
+<surname>Delefosse</surname> <given-names>M.</given-names>
+</name>
+<name>
+<surname>Valdemarsen</surname> <given-names>T.</given-names>
+</name>
+<name>
+<surname>Quintana</surname> <given-names>C. O.</given-names>
+</name>
+<name>
+<surname>Banta</surname> <given-names>G. T.</given-names>
+</name>
+</person-group> (<year>2012</year>). <article-title>What is bioturbation? the need for a precise definition for fauna in aquatic sciences</article-title>. <source>Mar. Ecol. Prog. Ser.</source> <volume>446</volume>, <fpage>285</fpage>&#x2013;<lpage>302</lpage>. doi:&#xa0;<pub-id pub-id-type="doi">10.3354/meps09506</pub-id>
+</citation>
+</ref>
+<ref id="B35">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Kuznetsova</surname> <given-names>A.</given-names>
+</name>
+<name>
+<surname>Brockhoff</surname> <given-names>P. B.</given-names>
+</name>
+<name>
+<surname>Christensen</surname> <given-names>R. H. B.</given-names>
+</name>
+</person-group> (<year>2017</year>). <article-title>lmerTest package: Tests in linear mixed effects models</article-title>. <source>J. Stat. Software</source> <volume>82</volume>, <fpage>1</fpage>&#x2013;<lpage>26</lpage>. doi:&#xa0;<pub-id pub-id-type="doi">10.18637/JSS.V082.I13</pub-id>
+</citation>
+</ref>
+<ref id="B36">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Laverock</surname> <given-names>B.</given-names>
+</name>
+<name>
+<surname>Gilbert</surname> <given-names>J.</given-names>
+</name>
+<name>
+<surname>Tait</surname> <given-names>K.</given-names>
+</name>
+<name>
+<surname>Osborn</surname> <given-names>A. M.</given-names>
+</name>
+<name>
+<surname>Widdicombe</surname> <given-names>S.</given-names>
+</name>
+</person-group> (<year>2011</year>). <article-title>Bioturbation: impact on the marine nitrogen cycle</article-title>. <source>Biochem. Soc Trans.</source> <volume>39</volume>, <fpage>315</fpage>&#x2013;<lpage>320</lpage>. doi:&#xa0;<pub-id pub-id-type="doi">10.1042/BST0390315</pub-id>
+</citation>
+</ref>
+<ref id="B37">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Lemasson</surname> <given-names>A. J.</given-names>
+</name>
+<name>
+<surname>Fletcher</surname> <given-names>S.</given-names>
+</name>
+<name>
+<surname>Hall-Spencer</surname> <given-names>J. M.</given-names>
+</name>
+<name>
+<surname>Knights</surname> <given-names>A. M.</given-names>
+</name>
+</person-group> (<year>2017</year>). <article-title>Linking the biological impacts of ocean acidification on oysters to changes in ecosystem services: a review</article-title>. <source>J. Exp. Mar. Bio. Ecol.</source> <volume>492</volume>, <fpage>49</fpage>&#x2013;<lpage>62</lpage>. doi: <pub-id pub-id-type="doi">10.1016/j.jembe.2017.01.019</pub-id>
+</citation>
+</ref>
+<ref id="B38">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Lewinsohn</surname> <given-names>C.</given-names>
+</name>
+<name>
+<surname>Fishelson</surname> <given-names>L.</given-names>
+</name>
+</person-group> (<year>1967</year>). <article-title>The second Israel south red Sea expedition 1965, (General report)</article-title>. <source>Isr. J. Zool.</source> <volume>16</volume>, <fpage>59</fpage>&#x2013;<lpage>68</lpage>.</citation>
+</ref>
+<ref id="B39">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Mancuso</surname> <given-names>A.</given-names>
+</name>
+<name>
+<surname>Stagioni</surname> <given-names>M.</given-names>
+</name>
+<name>
+<surname>Prada</surname> <given-names>F.</given-names>
+</name>
+<name>
+<surname>Scarponi</surname> <given-names>D.</given-names>
+</name>
+<name>
+<surname>Piccinetti</surname> <given-names>C.</given-names>
+</name>
+<name>
+<surname>Goffredo</surname> <given-names>S.</given-names>
+</name>
+</person-group> (<year>2019</year>). <article-title>Environmental influence on calcification of the bivalve chamelea gallina along a latitudinal gradient in the Adriatic Sea</article-title>. <source>Sci. Rep.</source> <volume>9</volume>, <fpage>1</fpage>&#x2013;<lpage>11</lpage>. doi: <pub-id pub-id-type="doi">10.1038/s41598-019-47538-1</pub-id>
+</citation>
+</ref>
+<ref id="B40">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Matoo</surname> <given-names>O. B.</given-names>
+</name>
+<name>
+<surname>Ivanina</surname> <given-names>A. V.</given-names>
+</name>
+<name>
+<surname>Ullstad</surname> <given-names>C.</given-names>
+</name>
+<name>
+<surname>Beniash</surname> <given-names>E.</given-names>
+</name>
+<name>
+<surname>Sokolova</surname> <given-names>I. M.</given-names>
+</name>
+</person-group> (<year>2013</year>). <article-title>Interactive effects of elevated temperature and (CO2) levels on metabolism and oxidative stress in two common marine bivalves (Crassostrea virginica and mercenaria mercenaria)</article-title>. <source>Comp. Biochem. Physiol. Part A Mol. Integr. Physiol.</source> <volume>164</volume>, <fpage>545</fpage>&#x2013;<lpage>553</lpage>. doi:&#xa0;<pub-id pub-id-type="doi">10.1016/j.cbpa.2012.12.025</pub-id>
+</citation>
+</ref>
+<ref id="B41">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Mermillod-Blondin</surname> <given-names>F.</given-names>
+</name>
+<name>
+<surname>Rosenberg</surname> <given-names>R.</given-names>
+</name>
+<name>
+<surname>Fran&#xe7;ois-Carcaillet</surname> <given-names>F.</given-names>
+</name>
+<name>
+<surname>Norling</surname> <given-names>K.</given-names>
+</name>
+<name>
+<surname>Mauclaire</surname> <given-names>L.</given-names>
+</name>
+</person-group> (<year>2004</year>). <article-title>Influence of bioturbation by three benthic infaunal species on microbial communities and biogeochemical processes in marine sediment</article-title>. <source>Aquat. Microb. Ecol.</source> <volume>36</volume>, <fpage>271</fpage>&#x2013;<lpage>284</lpage>. doi:&#xa0;<pub-id pub-id-type="doi">10.3354/ame036271</pub-id>
+</citation>
+</ref>
+<ref id="B42">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Meysman</surname> <given-names>F.</given-names>
+</name>
+<name>
+<surname>Middelburg</surname> <given-names>J.</given-names>
+</name>
+<name>
+<surname>Heip</surname> <given-names>C.</given-names>
+</name>
+</person-group> (<year>2006</year>). <article-title>Bioturbation: a fresh look at darwin&#x2019;s last idea</article-title>. <source>Trends Ecol. Evol.</source> <volume>21</volume>, <fpage>688</fpage>&#x2013;<lpage>695</lpage>. doi:&#xa0;<pub-id pub-id-type="doi">10.1016/j.tree.2006.08.002</pub-id>
+</citation>
+</ref>
+<ref id="B43">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Nagelkerken</surname> <given-names>I.</given-names>
+</name>
+<name>
+<surname>Munday</surname> <given-names>P. L. P. L.</given-names>
+</name>
+</person-group> (<year>2016</year>). <article-title>Animal behaviour shapes the ecological effects of ocean acidification and warming: moving from individual to community-level responses</article-title>. <source>Glob. Change Biol.</source> <volume>22</volume>, <fpage>974</fpage>&#x2013;<lpage>989</lpage>. doi:&#xa0;<pub-id pub-id-type="doi">10.1111/gcb.13167</pub-id>
+</citation>
+</ref>
+<ref id="B44">
+<citation citation-type="web">
+<person-group person-group-type="author">
+<collab>NOAA</collab>
+</person-group> <source>Daily CO2</source> (Accessed <access-date>August 1, 2022</access-date>).</citation>
+</ref>
+<ref id="B45">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Omar</surname> <given-names>A. M.</given-names>
+</name>
+<name>
+<surname>Thomas</surname> <given-names>H.</given-names>
+</name>
+<name>
+<surname>Olsen</surname> <given-names>A.</given-names>
+</name>
+<name>
+<surname>Becker</surname> <given-names>M.</given-names>
+</name>
+<name>
+<surname>Skjelvan</surname> <given-names>I.</given-names>
+</name>
+<name>
+<surname>Reverdin</surname> <given-names>G.</given-names>
+</name>
+</person-group> (<year>2019</year>). <article-title>Trends of ocean acidification and pCO2 in the northern north Sea 2003&#x2013;2015</article-title>. <source>J. Geophys. Res. Biogeosci.</source> <volume>124</volume>, <fpage>3088</fpage>&#x2013;<lpage>3103</lpage>. doi: <pub-id pub-id-type="doi">10.1029/2018JG004992</pub-id>
+</citation>
+</ref>
+<ref id="B46">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Ong</surname> <given-names>E. Z.</given-names>
+</name>
+<name>
+<surname>Briffa</surname> <given-names>M.</given-names>
+</name>
+<name>
+<surname>Moens</surname> <given-names>T.</given-names>
+</name>
+<name>
+<surname>Van Colen</surname> <given-names>C.</given-names>
+</name>
+</person-group> (<year>2017</year>). <article-title>Physiological responses to ocean acidification and warming synergistically reduce condition of the common cockle cerastoderma edule</article-title>. <source>Mar. Environ. Res.</source> <volume>130</volume>, <fpage>38</fpage>&#x2013;<lpage>47</lpage>. doi: <pub-id pub-id-type="doi">10.1016/j.marenvres.2017.07.001</pub-id>
+</citation>
+</ref>
+<ref id="B47">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Ouellette</surname> <given-names>D.</given-names>
+</name>
+<name>
+<surname>Desrosiers</surname> <given-names>G.</given-names>
+</name>
+<name>
+<surname>Gagne</surname> <given-names>J. P.</given-names>
+</name>
+<name>
+<surname>Gilbert</surname> <given-names>F.</given-names>
+</name>
+<name>
+<surname>Poggiale</surname> <given-names>J. C.</given-names>
+</name>
+<name>
+<surname>Blier</surname> <given-names>P. U.</given-names>
+</name>
+<etal/>
+</person-group>. (<year>2004</year>). <article-title>Effects of temperature on <italic>in vitro</italic> sediment reworking processes by a gallery biodiffusor, the polychaete neanthes virens</article-title>. <source>Mar. Ecol. Prog. Ser.</source> <volume>266</volume>, <fpage>185</fpage>&#x2013;<lpage>193</lpage>. doi:&#xa0;<pub-id pub-id-type="doi">10.3354/meps266185</pub-id>
+</citation>
+</ref>
+<ref id="B48">
+<citation citation-type="book">
+<person-group person-group-type="author">
+<name>
+<surname>Pierrot</surname> <given-names>D. E.</given-names>
+</name>
+<name>
+<surname>Wallace</surname> <given-names>D. W. R.</given-names>
+</name>
+<name>
+<surname>Lewis</surname> <given-names>E.</given-names>
+</name>
+</person-group> (<year>2011</year>). <source>MS excel program developed for CO2 system calculations</source>. doi:&#xa0;<pub-id pub-id-type="doi">10.3334/CDIAC/OTG.CO2SYS_XLS_CDIAC105A</pub-id>
+</citation>
+</ref>
+<ref id="B49">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>P&#xf6;rtner</surname> <given-names>H. O.</given-names>
+</name>
+<name>
+<surname>Langenbuch</surname> <given-names>M.</given-names>
+</name>
+<name>
+<surname>Reipschl&#xe4;ger</surname> <given-names>A.</given-names>
+</name>
+</person-group> (<year>2004</year>). <article-title>Biological impact of elevated ocean CO2 concentrations: Lessons from animal physiology and earth history</article-title>. <source>J. Oceanogr.</source> <volume>60</volume>, <fpage>705</fpage>&#x2013;<lpage>718</lpage>. doi:&#xa0;<pub-id pub-id-type="doi">10.1007/s10872-004-5763-0</pub-id>
+</citation>
+</ref>
+<ref id="B50">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Provoost</surname> <given-names>P.</given-names>
+</name>
+<name>
+<surname>Van Heuven</surname> <given-names>S.</given-names>
+</name>
+<name>
+<surname>Soetaert</surname> <given-names>K.</given-names>
+</name>
+<name>
+<surname>Laane</surname> <given-names>R.</given-names>
+</name>
+<name>
+<surname>Middelburg</surname> <given-names>J. J.</given-names>
+</name>
+</person-group> (<year>2010</year>). <article-title>Long-term record of pH in the Dutch coastal zone: a major role for eutrophication-induced changes</article-title>. <source>Biogeosci. Discuss</source> <volume>7</volume>, <fpage>4127</fpage>&#x2013;<lpage>4152</lpage>. doi:&#xa0;<pub-id pub-id-type="doi">10.5194/bgd-7-4127-2010</pub-id>
+</citation>
+</ref>
+<ref id="B51">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Rabaut</surname> <given-names>M.</given-names>
+</name>
+<name>
+<surname>Guilini</surname> <given-names>K.</given-names>
+</name>
+<name>
+<surname>Van Hoey</surname> <given-names>G.</given-names>
+</name>
+<name>
+<surname>Vincx</surname> <given-names>M.</given-names>
+</name>
+<name>
+<surname>Degraer</surname> <given-names>S.</given-names>
+</name>
+</person-group> (<year>2007</year>). <article-title>A bio-engineered soft-bottom environment: The impact of lanice conchilega on the benthic species-specific densities and community structure</article-title>. <source>Estuar. Coast. Shelf Sci.</source> <volume>75</volume>, <fpage>525</fpage>&#x2013;<lpage>536</lpage>. doi:&#xa0;<pub-id pub-id-type="doi">10.1016/j.ecss.2007.05.041</pub-id>
+</citation>
+</ref>
+<ref id="B52">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<collab>R Core Team</collab>
+</person-group> (<year>2014</year>). <source>R: A language and environment for statistical computing</source>. <publisher-loc>Vienna, Austria</publisher-loc>: <publisher-name>R Foundation for Statistical Computing</publisher-name>. Available at: <uri xlink:href="http://www.R-project.org/">http://www.R-project.org/</uri>.</citation>
+</ref>
+<ref id="B53">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Reddin</surname> <given-names>C. J.</given-names>
+</name>
+<name>
+<surname>Aberhan</surname> <given-names>M.</given-names>
+</name>
+<name>
+<surname>Raja</surname> <given-names>N. B.</given-names>
+</name>
+<name>
+<surname>Kocsis</surname> <given-names>&#xc1;.T.</given-names>
+</name>
+</person-group> (<year>2022</year>). <article-title>Global warming generates predictable extinctions of warm-and cold-water marine benthic invertebrates <italic>via</italic> thermal habitat loss</article-title>. <source>Glob. Change Biol.</source> <volume>28</volume>, <fpage>5793</fpage>&#x2013;<lpage>5807</lpage>. doi: <pub-id pub-id-type="doi">10.1111/gcb.16333</pub-id>
+</citation>
+</ref>
+<ref id="B54">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Seidel</surname> <given-names>L.</given-names>
+</name>
+<name>
+<surname>Ketzer</surname> <given-names>M.</given-names>
+</name>
+<name>
+<surname>Broman</surname> <given-names>E.</given-names>
+</name>
+<name>
+<surname>Shahabi-Ghahfarokhi</surname> <given-names>S.</given-names>
+</name>
+<name>
+<surname>Rahmati-Abkenar</surname> <given-names>M.</given-names>
+</name>
+<name>
+<surname>Turner</surname> <given-names>S.</given-names>
+</name>
+<etal/>
+</person-group>. (<year>2022</year>). <article-title>Weakened resilience of benthic microbial communities in the face of climate change</article-title>. <source>ISME Commun.</source> <volume>2</volume>, <fpage>1</fpage>&#x2013;<lpage>9</lpage>. doi: <pub-id pub-id-type="doi">10.1038/s43705-022-00104-9</pub-id>
+</citation>
+</ref>
+<ref id="B55">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Snelgrove</surname> <given-names>P. V. R.</given-names>
+</name>
+<name>
+<surname>Soetaert</surname> <given-names>K.</given-names>
+</name>
+<name>
+<surname>Solan</surname> <given-names>M.</given-names>
+</name>
+<name>
+<surname>Thrush</surname> <given-names>S.</given-names>
+</name>
+<name>
+<surname>Wei</surname> <given-names>C.-L.</given-names>
+</name>
+<name>
+<surname>Danovaro</surname> <given-names>R.</given-names>
+</name>
+<etal/>
+</person-group>. (<year>2018</year>). <article-title>Global carbon cycling on a heterogeneous seafloor</article-title>. <source>Trends Ecol. Evol.</source> <volume>33</volume>, <fpage>96</fpage>&#x2013;<lpage>105</lpage>. doi:&#xa0;<pub-id pub-id-type="doi">10.1016/J.TREE.2017.11.004</pub-id>
+</citation>
+</ref>
+<ref id="B56">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Soetaert</surname> <given-names>K.</given-names>
+</name>
+<name>
+<surname>Herman</surname> <given-names>P. M. J.</given-names>
+</name>
+<name>
+<surname>Middelburg</surname> <given-names>J. J.</given-names>
+</name>
+<name>
+<surname>Heip</surname> <given-names>C.</given-names>
+</name>
+<name>
+<surname>Smith</surname> <given-names>C. L.</given-names>
+</name>
+<name>
+<surname>Tett</surname> <given-names>P.</given-names>
+</name>
+<etal/>
+</person-group>. (<year>2001</year>). <article-title>Numerical modelling of the shelf break ecosystem: reproducing benthic and pelagic measurements</article-title>. <source>Deep Sea Res. Part II Top. Stud. Oceanogr.</source> <volume>48</volume> (<issue>14&#x2013;15</issue>), <fpage>3141</fpage>&#x2013;<lpage>3177</lpage>. doi:&#xa0;<pub-id pub-id-type="doi">10.1016/S0967-0645(01)00035-2</pub-id>
+</citation>
+</ref>
+<ref id="B57">
+<citation citation-type="book">
+<person-group person-group-type="author">
+<name>
+<surname>Soetaert</surname> <given-names>K.</given-names>
+</name>
+<name>
+<surname>Van den Meersche</surname> <given-names>K.</given-names>
+</name>
+</person-group> (<year>2009</year>). <source>Package limSolve, solving linear inverse models in r. sunsite.icm.edu.pl</source>.</citation>
+</ref>
+<ref id="B58">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Sokolova</surname> <given-names>I. M.</given-names>
+</name>
+<name>
+<surname>Frederich</surname> <given-names>M.</given-names>
+</name>
+<name>
+<surname>Bagwe</surname> <given-names>R.</given-names>
+</name>
+<name>
+<surname>Lannig</surname> <given-names>G.</given-names>
+</name>
+<name>
+<surname>Sukhotin</surname> <given-names>A. A.</given-names>
+</name>
+</person-group> (<year>2012</year>). <article-title>Energy homeostasis as an integrative tool for assessing limits of environmental stress tolerance in aquatic invertebrates</article-title>. <source>Mar. Environ. Res.</source> <volume>79</volume>, <fpage>1</fpage>&#x2013;<lpage>15</lpage>. doi:&#xa0;<pub-id pub-id-type="doi">10.1016/j.marenvres.2012.04.003</pub-id>
+</citation>
+</ref>
+<ref id="B59">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Soetaert</surname> <given-names>K.</given-names>
+</name>
+<name>
+<surname>Van den Meersche</surname> <given-names>K.</given-names>
+</name>
+<name>
+<surname>van Oevelen</surname> <given-names>D.</given-names>
+</name>
+<name>
+<surname>Soetaert</surname> <given-names>M. K.</given-names>
+</name>
+</person-group> (<year>2017</year>). <article-title>Package &#x2018;limSolve&#x2019;</article-title>.</citation>
+</ref>
+<ref id="B60">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Steeves</surname> <given-names>L. E.</given-names>
+</name>
+<name>
+<surname>Filgueira</surname> <given-names>R. R.</given-names>
+</name>
+<name>
+<surname>Guyondet</surname> <given-names>T.</given-names>
+</name>
+<name>
+<surname>Chasse</surname> <given-names>J.</given-names>
+</name>
+<name>
+<surname>Comeau</surname> <given-names>L.</given-names>
+</name>
+<name>
+<surname>Chass&#xe9;</surname> <given-names>J.</given-names>
+</name>
+<etal/>
+</person-group>. (<year>2018</year>). <article-title>Past, present, and future: performance of two bivalve species under changing environmental conditions</article-title>. <source>Front. Mar. Sci.</source> <volume>5</volume>. doi:&#xa0;<pub-id pub-id-type="doi">10.3389/FMARS.2018.00184</pub-id>
+</citation>
+</ref>
+<ref id="B61">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Sweetman</surname> <given-names>A. K.</given-names>
+</name>
+<name>
+<surname>Thurber</surname> <given-names>A. R.</given-names>
+</name>
+<name>
+<surname>Smith</surname> <given-names>C. R.</given-names>
+</name>
+<name>
+<surname>Levin</surname> <given-names>L. A.</given-names>
+</name>
+<name>
+<surname>Mora</surname> <given-names>C.</given-names>
+</name>
+<name>
+<surname>Wei</surname> <given-names>C.-L.</given-names>
+</name>
+<etal/>
+</person-group>. (<year>2017</year>). <article-title>Major impacts of climate change on deep-sea benthic ecosystems</article-title>. <source>Elem. Sci. Anthr.</source> <volume>5</volume>. doi:&#xa0;<pub-id pub-id-type="doi">10.1525/ELEMENTA.203</pub-id>
+</citation>
+</ref>
+<ref id="B62">
+<citation citation-type="book">
+<person-group person-group-type="author">
+<name>
+<surname>Tebble</surname> <given-names>N.</given-names>
+</name>
+</person-group> (<year>1976</year>). <source>British Bivalve seashells. a handbook for identification</source> (<publisher-loc>Edinburgh</publisher-loc>: <publisher-name>British Museum (Natural History), Her Majesty&#x2019;s Stationary Office</publisher-name>).</citation>
+</ref>
+<ref id="B63">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Thomsen</surname> <given-names>J.</given-names>
+</name>
+<name>
+<surname>Haynert</surname> <given-names>K.</given-names>
+</name>
+<name>
+<surname>Wegner</surname> <given-names>K. M.</given-names>
+</name>
+<name>
+<surname>Melzner</surname> <given-names>F.</given-names>
+</name>
+</person-group> (<year>2015</year>). <article-title>Impact of seawater carbonate chemistry on the calcification of marine bivalves</article-title>. <source>Biogeosciences</source> <volume>12</volume>, <fpage>4209</fpage>&#x2013;<lpage>4220</lpage>. doi: <pub-id pub-id-type="doi">10.5194/bg-12-4209-2015</pub-id>
+</citation>
+</ref>
+<ref id="B64">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Toussaint</surname> <given-names>E.</given-names>
+</name>
+<name>
+<surname>De Borger</surname> <given-names>E.</given-names>
+</name>
+<name>
+<surname>Braeckman</surname> <given-names>U.</given-names>
+</name>
+<name>
+<surname>De Backer</surname> <given-names>A.</given-names>
+</name>
+<name>
+<surname>Soetaert</surname> <given-names>K.</given-names>
+</name>
+<name>
+<surname>Vanaverbeke</surname> <given-names>J.</given-names>
+</name>
+</person-group> (<year>2021</year>). <article-title>Faunal and environmental drivers of carbon and nitrogen cycling along a permeability gradient in shallow north Sea sediments</article-title>. <source>Sci. Total Environ.</source> <volume>767</volume>, <elocation-id>144994</elocation-id>. doi:&#xa0;<pub-id pub-id-type="doi">10.1016/j.scitotenv.2021.144994</pub-id>
+</citation>
+</ref>
+<ref id="B65">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Tuomainen</surname> <given-names>U.</given-names>
+</name>
+<name>
+<surname>Candolin</surname> <given-names>U.</given-names>
+</name>
+</person-group> (<year>2011</year>). <article-title>Behavioural responses to human-induced environmental change</article-title>. <source>Biol. Rev.</source> <volume>86</volume>, <fpage>640</fpage>&#x2013;<lpage>657</lpage>. doi:&#xa0;<pub-id pub-id-type="doi">10.1111/j.1469-185X.2010.00164.x</pub-id>
+</citation>
+</ref>
+<ref id="B66">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Turner</surname> <given-names>L. M.</given-names>
+</name>
+<name>
+<surname>Ricevuto</surname> <given-names>E.</given-names>
+</name>
+<name>
+<surname>Massa-Gallucci</surname> <given-names>A.</given-names>
+</name>
+<name>
+<surname>Gambi</surname> <given-names>M. C.</given-names>
+</name>
+<name>
+<surname>Calosi</surname> <given-names>P.</given-names>
+</name>
+</person-group> (<year>2015</year>). <article-title>Energy metabolism and cellular homeostasis trade-offs provide the basis for a new type of sensitivity to ocean acidification in a marine polychaete at a high-CO2 vent: Adenylate and phosphagen energy pools versus carbonic anhydrase</article-title>. <source>J. Exp. Biol.</source> <volume>218</volume>, <fpage>2148</fpage>&#x2013;<lpage>2151</lpage>. doi:&#xa0;<pub-id pub-id-type="doi">10.1242/jeb.117705</pub-id>
+</citation>
+</ref>
+<ref id="B67">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Van Colen</surname> <given-names>C.</given-names>
+</name>
+<name>
+<surname>Ong</surname> <given-names>E. Z.</given-names>
+</name>
+<name>
+<surname>Briffa</surname> <given-names>M.</given-names>
+</name>
+<name>
+<surname>Wethey</surname> <given-names>D. S.</given-names>
+</name>
+<name>
+<surname>Abatih</surname> <given-names>E.</given-names>
+</name>
+<name>
+<surname>Moens</surname> <given-names>T.</given-names>
+</name>
+<etal/>
+</person-group>. (<year>2020</year>). <article-title>Clam feeding plasticity reduces herbivore vulnerability to ocean warming and acidification</article-title>. <source>Nat. Climate Change</source> <volume>10</volume> (<issue>2</issue>), <fpage>162</fpage>&#x2013;<lpage>166</lpage>. doi: <pub-id pub-id-type="doi">10.1038/s41558-019-0679-2</pub-id>
+</citation>
+</ref>
+<ref id="B68">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Van Hoey</surname> <given-names>G.</given-names>
+</name>
+<name>
+<surname>Birchenough</surname> <given-names>S. N. R.</given-names>
+</name>
+<name>
+<surname>Hostens</surname> <given-names>K.</given-names>
+</name>
+</person-group> (<year>2014</year>). <article-title>Estimating the biological value of soft-bottom sediments with sediment profile imaging and grab sampling</article-title>. <source>J. Sea Res.</source> <volume>86</volume>, <fpage>1</fpage>&#x2013;<lpage>12</lpage>. doi:&#xa0;<pub-id pub-id-type="doi">10.1016/J.SEARES.2013.10.010</pub-id>
+</citation>
+</ref>
+<ref id="B69">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Van Hoey</surname> <given-names>G.</given-names>
+</name>
+<name>
+<surname>Guilini</surname> <given-names>K.</given-names>
+</name>
+<name>
+<surname>Rabaut</surname> <given-names>M.</given-names>
+</name>
+<name>
+<surname>Vincx</surname> <given-names>M.</given-names>
+</name>
+<name>
+<surname>Degraer</surname> <given-names>S.</given-names>
+</name>
+</person-group> (<year>2008</year>). <article-title>Ecological implications of the presence of the tube-building polychaete lanice conchilega on soft-bottom benthic ecosystems</article-title>. <source>Mar. Biol.</source> <volume>154</volume>, <fpage>1009</fpage>&#x2013;<lpage>1019</lpage>. doi:&#xa0;<pub-id pub-id-type="doi">10.1007/s00227-008-0992-1</pub-id>
+</citation>
+</ref>
+<ref id="B70">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Vlaminck</surname> <given-names>E.</given-names>
+</name>
+<name>
+<surname>Cepeda</surname> <given-names>E.</given-names>
+</name>
+<name>
+<surname>Moens</surname> <given-names>T.</given-names>
+</name>
+<name>
+<surname>Van Colen</surname> <given-names>C.</given-names>
+</name>
+</person-group> (<year>2022</year>a). <article-title>Ocean acidification modifies behaviour of shelf seabed macrofauna: A laboratory study on two ecosystem engineers, abra alba and lanice conchilega</article-title>. <source>J. Exp. Mar. Bio. Ecol.</source> <volume>558</volume>, <fpage>151831</fpage>. doi: <pub-id pub-id-type="doi">10.1016/j.jembe.2022.151831</pub-id>
+</citation>
+</ref>
+<ref id="B71">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Vlaminck</surname> <given-names>E.</given-names>
+</name>
+<name>
+<surname>Moens</surname> <given-names>T.</given-names>
+</name>
+<name>
+<surname>Vanaverbeke</surname> <given-names>J.</given-names>
+</name>
+<name>
+<surname>Van Colen</surname> <given-names>C.</given-names>
+</name>
+</person-group> (<year>2022</year>b). <article-title>Physiological response to seawater pH of the bivalve abra alba, a benthic ecosystem engineer, is modulated by low pH</article-title>. <source>Mar. Environ. Res.</source> <volume>179</volume>, <fpage>105704</fpage>. doi: <pub-id pub-id-type="doi">10.1016/j.marenvres.2022.105704</pub-id>
+</citation>
+</ref>
+<ref id="B72">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Voet</surname> <given-names>H.</given-names>
+</name>
+<name>
+<surname>Van Colen</surname> <given-names>C.</given-names>
+</name>
+<name>
+<surname>Vanaverbeke</surname> <given-names>J.</given-names>
+</name>
+</person-group> (<year>2022</year>). <article-title>Climate change effects on the ecophysiology and ecological functioning of an offshore wind farm artificial hard substrate community</article-title>. <source>Sci. Total Environ.</source> <volume>810</volume>, <fpage>152194</fpage>. doi: <pub-id pub-id-type="doi">10.1016/j.scitotenv.2021.152194</pub-id>
+</citation>
+</ref>
+<ref id="B73">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Volkenborn</surname> <given-names>N.</given-names>
+</name>
+<name>
+<surname>Meile</surname> <given-names>C.</given-names>
+</name>
+<name>
+<surname>Polerecky</surname> <given-names>L.</given-names>
+</name>
+<name>
+<surname>Pilditch</surname> <given-names>C. A.</given-names>
+</name>
+<name>
+<surname>Norkko</surname> <given-names>A.</given-names>
+</name>
+<name>
+<surname>Norkko</surname> <given-names>J.</given-names>
+</name>
+<etal/>
+</person-group>. (<year>2012</year>). <article-title>Intermittent bioirrigation and oxygen dynamics in permeable sediments: An experimental and modeling study of three tellinid bivalves</article-title>. <source>J. Mar. Res.</source> <volume>70</volume>, <fpage>794</fpage>&#x2013;<lpage>823</lpage>. doi:&#xa0;<pub-id pub-id-type="doi">10.1357/002224012806770955</pub-id>
+</citation>
+</ref>
+<ref id="B74">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Widdicombe</surname> <given-names>S.</given-names>
+</name>
+<name>
+<surname>Needham</surname> <given-names>H. R.</given-names>
+</name>
+</person-group> (<year>2007</year>). <article-title>Impact of CO2-induced seawater acidification on the burrowing activity of nereis virens and sediment nutrient flux</article-title>. <source>Mar. Ecol. Prog. Ser.</source> <volume>341</volume>, <fpage>111</fpage>&#x2013;<lpage>122</lpage>. doi: <pub-id pub-id-type="doi">10.3354/meps341111</pub-id>
+</citation>
+</ref>
+</ref-list>
+</back>
+</article>

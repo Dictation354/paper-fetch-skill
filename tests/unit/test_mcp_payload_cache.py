@@ -2,7 +2,9 @@
 from __future__ import annotations
 
 from ._mcp_support import *
+from paper_fetch.mcp.fetch_cache import PUBLIC_CREDENTIAL_SCOPE
 from paper_fetch.providers.browser_runtime.backends import camoufox as camoufox_backend
+from paper_fetch.runtime import RuntimeContext
 
 
 class McpPayloadCacheTests(unittest.TestCase):
@@ -29,31 +31,34 @@ class McpPayloadCacheTests(unittest.TestCase):
     def test_build_server_exposes_expected_tool_annotations(self) -> None:
         server = build_server()
         expected = {
-            "resolve_paper": {"readOnlyHint": True, "openWorldHint": True},
-            "has_fulltext": {"readOnlyHint": True, "openWorldHint": True},
+            "resolve_paper": {"read_only_hint": True, "open_world_hint": True},
+            "has_fulltext": {"read_only_hint": True, "open_world_hint": True},
             "fetch_paper": {
-                "readOnlyHint": False,
-                "destructiveHint": False,
-                "idempotentHint": False,
-                "openWorldHint": True,
+                "read_only_hint": False,
+                "destructive_hint": False,
+                "idempotent_hint": False,
+                "open_world_hint": True,
             },
             "batch_fetch": {
-                "readOnlyHint": False,
-                "destructiveHint": False,
-                "idempotentHint": False,
-                "openWorldHint": True,
+                "read_only_hint": False,
+                "destructive_hint": False,
+                "idempotent_hint": False,
+                "open_world_hint": True,
             },
-            "list_cached": {"readOnlyHint": True, "openWorldHint": False},
-            "get_cached": {"readOnlyHint": True, "openWorldHint": False},
-            "batch_resolve": {"readOnlyHint": True, "openWorldHint": True},
-            "batch_check": {"readOnlyHint": True, "openWorldHint": True},
+            "list_cached": {"read_only_hint": True, "open_world_hint": False},
+            "get_cached": {"read_only_hint": True, "open_world_hint": False},
+            "batch_resolve": {"read_only_hint": True, "open_world_hint": True},
+            "batch_check": {"read_only_hint": True, "open_world_hint": True},
             "browser_preflight": {
-                "readOnlyHint": False,
-                "destructiveHint": False,
-                "idempotentHint": False,
-                "openWorldHint": True,
+                "read_only_hint": False,
+                "destructive_hint": False,
+                "idempotent_hint": False,
+                "open_world_hint": True,
             },
-            "provider_status": {"readOnlyHint": True, "openWorldHint": False},
+            "provider_status": {
+                "read_only_hint": True,
+                "open_world_hint": False,
+            },
         }
 
         self.assertEqual(set(server._tool_manager._tools), set(expected))
@@ -96,8 +101,8 @@ class McpPayloadCacheTests(unittest.TestCase):
         ):
             result = mcp_tools.provider_status_tool()
 
-        self.assertFalse(result.isError)
-        providers = result.structuredContent["providers"]
+        self.assertFalse(result.is_error)
+        providers = result.structured_content["providers"]
         self.assertEqual(
             [entry["provider"] for entry in providers],
             list(mcp_tools._PROVIDER_STATUS_ORDER),
@@ -484,8 +489,8 @@ class McpPayloadCacheTests(unittest.TestCase):
                 mcp_tools.fetch_paper_tool_async(query="10.1000/example", modes=["pdf"])
             )
 
-        self.assertTrue(result.isError)
-        self.assertIn("unsupported output modes", result.structuredContent["reason"])
+        self.assertTrue(result.is_error)
+        self.assertIn("unsupported output modes", result.structured_content["reason"])
         mocked_fetch.assert_not_called()
 
     def test_fetch_paper_tool_rejects_invalid_include_refs_before_service_call(
@@ -498,9 +503,9 @@ class McpPayloadCacheTests(unittest.TestCase):
                 )
             )
 
-        self.assertTrue(result.isError)
+        self.assertTrue(result.is_error)
         self.assertIn(
-            "unsupported include_refs value", result.structuredContent["reason"]
+            "unsupported include_refs value", result.structured_content["reason"]
         )
         mocked_fetch.assert_not_called()
 
@@ -515,9 +520,9 @@ class McpPayloadCacheTests(unittest.TestCase):
                 )
             )
 
-        self.assertTrue(result.isError)
+        self.assertTrue(result.is_error)
         self.assertIn(
-            "unsupported asset_profile value", result.structuredContent["reason"]
+            "unsupported asset_profile value", result.structured_content["reason"]
         )
         mocked_fetch.assert_not_called()
 
@@ -532,9 +537,9 @@ class McpPayloadCacheTests(unittest.TestCase):
                 )
             )
 
-        self.assertTrue(result.isError)
+        self.assertTrue(result.is_error)
         self.assertIn(
-            "unsupported artifact_mode value", result.structuredContent["reason"]
+            "unsupported artifact_mode value", result.structured_content["reason"]
         )
         mocked_fetch.assert_not_called()
 
@@ -846,3 +851,74 @@ class McpPayloadCacheTests(unittest.TestCase):
         self.assertFalse(
             any(LOCK_DIRNAME in str(entry.get("path") or "") for entry in entries)
         )
+
+    def test_fetch_cache_keeps_request_variants_and_credential_scopes_separate(
+        self,
+    ) -> None:
+        doi = "10.1000/example"
+        credential_scope = "credential:" + ("a" * 64)
+        with tempfile.TemporaryDirectory() as tmpdir:
+            download_dir = Path(tmpdir)
+            public_cache = FetchCache(
+                download_dir,
+                credential_scope=PUBLIC_CREDENTIAL_SCOPE,
+            )
+            credential_cache = FetchCache(
+                download_dir,
+                credential_scope=credential_scope,
+            )
+            markdown_request = FetchPaperRequest(
+                query=doi,
+                modes=["markdown"],
+                prefer_cache=True,
+            )
+            metadata_request = FetchPaperRequest(
+                query=doi,
+                modes=["metadata"],
+                prefer_cache=True,
+            )
+            public_markdown = sample_envelope(modes={"markdown"}, doi=doi)
+            public_markdown.markdown = "# Public markdown\n"
+            public_metadata = sample_envelope(modes={"metadata"}, doi=doi)
+            assert public_metadata.metadata is not None
+            public_metadata.metadata.title = "Public metadata"
+            private_markdown = sample_envelope(modes={"markdown"}, doi=doi)
+            private_markdown.markdown = "# Credential markdown\n"
+
+            public_cache.write_fetch_envelope(public_markdown, markdown_request)
+            public_cache.write_fetch_envelope(public_metadata, metadata_request)
+            credential_cache.write_fetch_envelope(
+                private_markdown,
+                markdown_request,
+            )
+
+            variant_paths = list(
+                download_dir.glob("10.1000_example.*.fetch-envelope.json")
+            )
+            with RuntimeContext(env={}, download_dir=download_dir) as context:
+                public_markdown_hit = public_cache.load_fetch_envelope(
+                    markdown_request,
+                    resolve_paper_fn=lambda *_args, **_kwargs: sample_resolved_query(
+                        doi
+                    ),
+                    context=context,
+                )
+                public_metadata_hit = public_cache.load_fetch_envelope(
+                    metadata_request,
+                    resolve_paper_fn=lambda *_args, **_kwargs: sample_resolved_query(
+                        doi
+                    ),
+                    context=context,
+                )
+                credential_hit = credential_cache.load_fetch_envelope(
+                    markdown_request,
+                    resolve_paper_fn=lambda *_args, **_kwargs: sample_resolved_query(
+                        doi
+                    ),
+                    context=context,
+                )
+
+        self.assertEqual(len(variant_paths), 3)
+        self.assertEqual(public_markdown_hit.markdown, "# Public markdown\n")
+        self.assertEqual(public_metadata_hit.metadata.title, "Public metadata")
+        self.assertEqual(credential_hit.markdown, "# Credential markdown\n")

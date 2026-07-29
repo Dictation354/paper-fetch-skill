@@ -90,7 +90,7 @@ class CliTests(unittest.TestCase):
             ),
             ("browser-preflight",): (
                 "usage: paper-fetch browser-preflight",
-                "--provider {wiley,science,pnas,ams,mdpi",
+                "--provider {wiley,science,pnas,ieee,ams,mdpi",
                 "default: all browser-backed providers",
                 "save provider storage-state JSON on success",
             ),

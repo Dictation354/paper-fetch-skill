@@ -3,12 +3,12 @@ name: ieee
 display_source: ieee_html
 generation:
   generated_by: manual_replay
-  generated_at: "2026-05-18T00:00:00Z"
+  generated_at: '2026-05-18T00:00:00Z'
   source_queries:
-    - "paper_fetch.provider_catalog ieee ProviderSpec"
-    - "tests/fixtures/golden_criteria ieee samples"
-    - "tests/unit/test_ieee_provider_pdf_golden.py"
-    - "tests/unit/test_ieee_provider_routes.py"
+    - paper_fetch.provider_catalog ieee ProviderSpec
+    - tests/fixtures/golden_criteria ieee samples
+    - tests/unit/test_ieee_provider_pdf_golden.py
+    - tests/unit/test_ieee_provider_routes.py
     - IEEE 10.1109 table DOI candidates
     - site:ieeexplore.ieee.org IEEE table article DOI
     - 10.1109 table fixture discovery ieee
@@ -22,20 +22,24 @@ generation:
 routing:
   primary: doi_prefix
   doi_prefixes:
-    - "10.1109/"
+    - 10.1109/
   domains:
     - ieeexplore.ieee.org
   domain_suffixes: []
   publisher_aliases:
     - ieee
     - institute of electrical and electronics engineers
-  crossref_publisher:
+  crossref_publisher: null
 main_path:
   - landing_html
   - article_html
   - pdf_fallback
   - abstract_only
-success_criteria: {}
+success_criteria:
+  landing_html: {}
+  article_html: {}
+  pdf_fallback: {}
+  abstract_only: {}
 route_contract:
   landing_html:
     success_requires:
@@ -44,7 +48,8 @@ route_contract:
     reject_if_any:
       - challenge page
       - empty shell
-    notes: Landing HTML is discovery-only unless the provider declares it as article content.
+    notes: Landing HTML is discovery-only unless the provider declares it as article
+      content.
   article_html:
     success_requires:
       - provider article container is present
@@ -93,7 +98,7 @@ markdown_contract:
   formula:
     doi: 10.1109/CICTN64563.2025.10932570
     must_include:
-      - '$$'
+      - $$
     must_not_include:
       - '[Formula unavailable]'
     must_match:
@@ -147,10 +152,10 @@ asset_contract:
     download: required
     purposes:
       - figure
-    exception_reason:
+    exception_reason: null
 supplementary_scope:
-  selector:
-  url_pattern:
+  selector: null
+  url_pattern: null
 abstract_only_strategy: provider_managed
 probe:
   env_requirements: []
@@ -160,87 +165,89 @@ probe:
 fixtures:
   doi_samples:
     structure:
-      doi: "10.1109/ACCESS.2024.3352924"
-      evidence_url: "https://ieeexplore.ieee.org/document/10388355/"
-      evidence_reason: "Provider-local golden tests verify IEEE Xplore HTML structure, sections, references,
-        and Markdown cleanup."
+      doi: 10.1109/ACCESS.2024.3352924
+      evidence_url: https://ieeexplore.ieee.org/document/10388355/
+      evidence_reason: Provider-local golden tests verify IEEE Xplore HTML structure,
+        sections, references, and Markdown cleanup.
       observed_signals:
         - html_article
         - body_sections
       confidence: high
     table:
-      doi: "10.1109/TBME.2024.3434477"
-      evidence_url: "https://ieeexplore.ieee.org/document/10612240/"
-      evidence_reason: "Provider-local tests verify IEEE table assets and table-kind preservation from
-        a real fixture."
+      doi: 10.1109/TBME.2024.3434477
+      evidence_url: https://ieeexplore.ieee.org/document/10612240/
+      evidence_reason: Provider-local tests verify IEEE table assets and table-kind
+        preservation from a real fixture.
       observed_signals:
         - html_article
         - body_table
       confidence: high
     formula:
-      doi: "10.1109/CICTN64563.2025.10932570"
-      evidence_url: "https://ieeexplore.ieee.org/document/10932570/"
-      evidence_reason: "Provider-local tests verify IEEE formula extraction and absence of formula-unavailable
-        placeholders."
+      doi: 10.1109/CICTN64563.2025.10932570
+      evidence_url: https://ieeexplore.ieee.org/document/10932570/
+      evidence_reason: Provider-local tests verify IEEE formula extraction and absence
+        of formula-unavailable placeholders.
       observed_signals:
         - html_article
         - math_markup
       confidence: high
     figure:
-      doi: "10.1109/TIM.2024.3509573"
-      evidence_url: "https://ieeexplore.ieee.org/document/10772041/"
-      evidence_reason: "Provider-local tests verify IEEE figure and table markers from the recorded TIM
-        fixture."
+      doi: 10.1109/TIM.2024.3509573
+      evidence_url: https://ieeexplore.ieee.org/document/10772041/
+      evidence_reason: Provider-local tests verify IEEE figure and table markers from
+        the recorded TIM fixture.
       observed_signals:
         - html_article
         - figures
       confidence: high
     supplementary:
-      doi: "10.1109/RITA.2026.3668995"
-      evidence_url: "https://ieeexplore.ieee.org/document/11417163/"
-      evidence_reason: "Provider-local manifest-shape tests record IEEE multimedia and supplementary assets
-        for a real fixture."
+      doi: 10.1109/RITA.2026.3668995
+      evidence_url: https://ieeexplore.ieee.org/document/11417163/
+      evidence_reason: Provider-local manifest-shape tests record IEEE multimedia
+        and supplementary assets for a real fixture.
       observed_signals:
         - html_article
         - multimedia
       confidence: medium
     references:
-      doi: "10.1109/ACCESS.2024.3352924"
-      evidence_url: "https://ieeexplore.ieee.org/document/10388355/"
-      evidence_reason: "Provider-local tests verify IEEE raw citation text overrides DOI-only metadata
-        references."
+      doi: 10.1109/ACCESS.2024.3352924
+      evidence_url: https://ieeexplore.ieee.org/document/10388355/
+      evidence_reason: Provider-local tests verify IEEE raw citation text overrides
+        DOI-only metadata references.
       observed_signals:
         - html_article
         - references
       confidence: high
     pdf_fallback:
-      doi: "10.1109/MPER.1985.5526567"
-      evidence_url: "https://ieeexplore.ieee.org/document/5526567/"
-      evidence_reason: "Provider-local tests exercise legacy IEEE PDF fallback candidates and text-only
-        PDF article assembly."
+      doi: 10.1109/MPER.1985.5526567
+      evidence_url: https://ieeexplore.ieee.org/document/5526567/
+      evidence_reason: Provider-local tests exercise legacy IEEE PDF fallback candidates
+        and text-only PDF article assembly.
       observed_signals:
         - pdf_fallback
         - landing_html
       confidence: high
     abstract_only:
-      doi: "10.1109/PGEC.1967.264619"
-      evidence_url: "https://ieeexplore.ieee.org/document/4038993/"
-      evidence_reason: "Provider-local tests verify IEEE provider-managed abstract-only return when PDF
-        fallback reaches an access challenge."
+      doi: 10.1109/PGEC.1967.264619
+      evidence_url: https://ieeexplore.ieee.org/document/4038993/
+      evidence_reason: Provider-local tests verify IEEE provider-managed abstract-only
+        return when PDF fallback reaches an access challenge.
       observed_signals:
         - abstract_only
         - pdf_fallback_failed
       confidence: high
     access_gate:
-      doi:
-      evidence_url: "https://ieeexplore.ieee.org/"
-      evidence_reason: "Current recorded fixtures do not include a stable IEEE access-gate sample."
+      doi: null
+      evidence_url: https://ieeexplore.ieee.org/
+      evidence_reason: Current recorded fixtures do not include a stable IEEE access-gate
+        sample.
       observed_signals: []
       confidence: low
     empty_shell:
-      doi:
-      evidence_url: "https://ieeexplore.ieee.org/"
-      evidence_reason: "Current recorded fixtures do not include a stable IEEE empty-shell sample."
+      doi: null
+      evidence_url: https://ieeexplore.ieee.org/
+      evidence_reason: Current recorded fixtures do not include a stable IEEE empty-shell
+        sample.
       observed_signals: []
       confidence: low
   discovery_proof:
@@ -266,32 +273,119 @@ fixtures:
       selected_doi: 10.1109/CICTN64563.2025.10932570
       rejections: {}
       exhausted: false
-      evidence_summary: Selected 10.1109/CICTN64563.2025.10932570 because
-        fixtures.doi_samples.formula already records provider-local evidence for stable formula
-        Markdown assertions.
+      evidence_summary: Selected 10.1109/CICTN64563.2025.10932570 because fixtures.doi_samples.formula
+        already records provider-local evidence for stable formula Markdown assertions.
     supplementary:
       queries:
         - IEEE 10.1109 supplementary supporting information DOI candidates
-        - site:ieeexplore.ieee.org IEEE supplementary supporting information article DOI
+        - site:ieeexplore.ieee.org IEEE supplementary supporting information article
+          DOI
         - 10.1109 supplementary supporting information fixture discovery ieee
       candidates:
         - 10.1109/RITA.2026.3668995
       selected_doi: 10.1109/RITA.2026.3668995
       rejections: {}
       exhausted: false
-      evidence_summary: Selected 10.1109/RITA.2026.3668995 because
-        fixtures.doi_samples.supplementary already records provider-local evidence for stable
-        supplementary Markdown assertions.
+      evidence_summary: Selected 10.1109/RITA.2026.3668995 because fixtures.doi_samples.supplementary
+        already records provider-local evidence for stable supplementary Markdown
+        assertions.
 extraction_hints:
-  datalayer_signal_set:
-  text_marker_signal_set: []
+  datalayer_signal_set: null
+  text_marker_signal_set:
+    blocking_markers:
+      - substring: institutional sign in
+        token: ieee_access_or_challenge_page
+        negate: false
+        contains: []
+        absent: []
+        access_gate_context: false
+      - substring: purchase access
+        token: ieee_access_or_challenge_page
+        negate: false
+        contains: []
+        absent: []
+        access_gate_context: false
+    positive_strong:
+      - substring: div class="section
+        token: ieee_section_nodes
+        negate: false
+        contains: []
+        absent: []
+        access_gate_context: false
+      - substring: div class='section
+        token: ieee_section_nodes
+        negate: false
+        contains: []
+        absent: []
+        access_gate_context: false
+    positive_soft:
+      - substring: <figure
+        token: ieee_figure_marker
+        negate: false
+        contains: []
+        absent: []
+        access_gate_context: false
+      - substring: <table
+        token: ieee_table_marker
+        negate: false
+        contains: []
+        absent: []
+        access_gate_context: false
+      - substring: <tex-math
+        token: ieee_formula_marker
+        negate: false
+        contains: []
+        absent: []
+        access_gate_context: false
+      - substring: class="figure
+        token: ieee_figure_marker
+        negate: false
+        contains: []
+        absent: []
+        access_gate_context: false
+      - substring: class='figure
+        token: ieee_figure_marker
+        negate: false
+        contains: []
+        absent: []
+        access_gate_context: false
+      - substring: id="article"
+        token: ieee_article_container
+        negate: false
+        contains: []
+        absent: []
+        access_gate_context: false
+      - substring: id='article'
+        token: ieee_article_container
+        negate: false
+        contains: []
+        absent: []
+        access_gate_context: false
+      - substring: tex-math
+        token: ieee_formula_marker
+        negate: false
+        contains: []
+        absent: []
+        access_gate_context: false
+    abstract_only: []
   front_matter:
+    exact_texts:
+      - authors
+      - author information
+      - affiliations
+    contains_tokens: []
+    publication_keywords: []
   asset_retry:
+    name: ieee
+    key_fn: paper_fetch.providers._ieee_html:_ieee_asset_retry_key
+    retryable_failure: paper_fetch.providers._asset_retry:is_retryable_asset_failure
+    failure_match: null
   metadata_merge: []
 owner_reuse_exceptions: []
 docs:
-  providers_md_capability_row: "IEEE | Crossref merge + landing metadata | direct-first selected-browser
-    HTML/PDF recovery | HTML body/all direct-first browser-recovered assets | ieee_html / ieee_pdf"
-  changelog_summary: "Track IEEE implemented provider manifest for Xplore HTML, PDF fallback, and asset
-    onboarding sync."
-  extraction_rules_summary:
+  providers_md_capability_row: IEEE | Crossref merge + landing metadata | direct-first
+    selected-browser HTML/PDF recovery | HTML body/all direct-first browser-recovered
+    assets | ieee_html / ieee_pdf
+  changelog_summary: Track IEEE implemented provider manifest for Xplore HTML, PDF
+    fallback, and asset onboarding sync.
+  extraction_rules_summary: null

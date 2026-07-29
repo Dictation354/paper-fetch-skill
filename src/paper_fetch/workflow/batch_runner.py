@@ -6,6 +6,7 @@ import asyncio
 from collections import Counter
 from collections.abc import Awaitable, Callable, Hashable, Mapping, Sequence
 from concurrent.futures import ThreadPoolExecutor
+import contextlib
 from dataclasses import dataclass
 from enum import StrEnum
 import inspect
@@ -181,6 +182,82 @@ def _default_failure_classifier(error: Exception) -> BatchFailure:
     )
 
 
+def _cancellation_isolation_due(
+    *,
+    escalated: bool,
+    escalated_at: float | None,
+    clock: Callable[[], float],
+    poll_interval_seconds: float,
+) -> bool:
+    return bool(
+        escalated
+        and escalated_at is not None
+        and clock() - escalated_at >= poll_interval_seconds
+    )
+
+
+async def _isolate_pending_workers(
+    pending: dict[asyncio.Future[ResultT], tuple[int, LaneKey, float]],
+    lane_in_flight: Counter[LaneKey],
+    item_values: tuple[ItemT, ...],
+    *,
+    clock: Callable[[], float],
+    record_result: Callable[
+        [BatchItemResult[ItemT, ResultT]],
+        Awaitable[None],
+    ],
+) -> None:
+    isolated = list(pending.items())
+    pending.clear()
+    for future, (index, key, submitted_at) in isolated:
+        future.cancel()
+        lane_in_flight[key] -= 1
+        await record_result(
+            BatchItemResult(
+                index=index,
+                item=item_values[index],
+                lane_key=key,
+                status=BatchItemStatus.CANCELLED,
+                value=None,
+                failure=BatchFailure(
+                    reason_code="request_cancelled",
+                    message=(
+                        "Batch worker did not converge within the cancellation "
+                        "grace period and was isolated from further commits."
+                    ),
+                    cancelled=True,
+                ),
+                error=None,
+                submitted_at=submitted_at,
+                finished_at=clock(),
+            )
+        )
+
+
+async def _settle_pending_after_task_cancellation(
+    pending: Mapping[asyncio.Future[ResultT], object],
+    *,
+    grace_period_seconds: float,
+    escalation_callback: CancelEscalationCallback | None,
+    already_escalated: bool,
+) -> bool:
+    active_futures = tuple(pending)
+    remaining_futures: set[asyncio.Future[ResultT]] = set(active_futures)
+    if active_futures and grace_period_seconds > 0:
+        _done, remaining_futures = await asyncio.wait(
+            active_futures,
+            timeout=grace_period_seconds,
+        )
+    if not remaining_futures:
+        return True
+    if not already_escalated and escalation_callback is not None:
+        with contextlib.suppress(Exception):
+            escalation_callback()
+    for future in remaining_futures:
+        future.cancel()
+    return False
+
+
 class BatchRunner(Generic[ItemT, ResultT]):
     """Run a bounded batch with one incremental scheduling state machine."""
 
@@ -273,6 +350,7 @@ class BatchRunner(Generic[ItemT, ResultT]):
         cancellation_observed = self._cancel_event.is_set()
         cancellation_started_at = self._clock() if cancellation_observed else None
         cancellation_escalated = False
+        cancellation_escalated_at: float | None = None
 
         loop = asyncio.get_running_loop()
         executor = ThreadPoolExecutor(
@@ -409,7 +487,7 @@ class BatchRunner(Generic[ItemT, ResultT]):
             return cancellation_observed
 
         def maybe_escalate_cancellation() -> None:
-            nonlocal cancellation_escalated
+            nonlocal cancellation_escalated, cancellation_escalated_at
             if (
                 not cancellation_requested()
                 or cancellation_escalated
@@ -420,6 +498,7 @@ class BatchRunner(Generic[ItemT, ResultT]):
             ):
                 return
             cancellation_escalated = True
+            cancellation_escalated_at = self._clock()
             callback = self._cancel_escalation_callback
             if callback is None:
                 return
@@ -470,6 +549,20 @@ class BatchRunner(Generic[ItemT, ResultT]):
                     return_when=asyncio.FIRST_COMPLETED,
                 )
                 if not done:
+                    if _cancellation_isolation_due(
+                        escalated=cancellation_escalated,
+                        escalated_at=cancellation_escalated_at,
+                        clock=self._clock,
+                        poll_interval_seconds=self._cancel_poll_interval_seconds,
+                    ):
+                        shutdown_wait = False
+                        await _isolate_pending_workers(
+                            pending,
+                            lane_in_flight,
+                            item_values,
+                            clock=self._clock,
+                            record_result=record_result,
+                        )
                     continue
 
                 for future in done:
@@ -535,9 +628,12 @@ class BatchRunner(Generic[ItemT, ResultT]):
                     fill_available_slots()
         except asyncio.CancelledError:
             self._cancel_event.set()
-            for future in pending:
-                future.cancel()
-            shutdown_wait = False
+            shutdown_wait = await _settle_pending_after_task_cancellation(
+                pending,
+                grace_period_seconds=self._cancel_grace_period_seconds,
+                escalation_callback=self._cancel_escalation_callback,
+                already_escalated=cancellation_escalated,
+            )
             raise
         finally:
             executor.shutdown(

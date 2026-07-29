@@ -1,6 +1,6 @@
 # Paper Fetch Skill 架构与业务流程
 
-Date: 2026-07-10
+Date: 2026-07-29
 
 ## 状态说明
 
@@ -58,11 +58,12 @@ Date: 2026-07-10
 
 实现边界：
 
-- stdio transport 用后台 stdin reader + async stream pump，避免同步 stdin 阻塞事件循环。
+- MCP runtime 基于官方 Python SDK 2.x 的 `MCPServer` 与 stdio transport，不再维护自定义 stdin reader/stream pump；server 同时服务 2025 握手协议与 2026-07-28 无状态协议，动态 resource 变更在旧协议走 `notifications/resources/list_changed`，在新协议走 `subscriptions/listen` bus。
 - payload/tool 入口通过 `paper_fetch.mcp._deps.MCPDeps` 显式注入 runtime env、service、provider registry 与 cache index 依赖；生产默认由 `default_mcp_deps()` 装配，测试通过构造定制 deps 注入。
 - 所有 MCP tool JSON payload 顶层都带 `schema_version=1`；错误 payload 保留兼容字段 `status` / `reason`，并补充 `code`、`http_status`、`error_category`、`retry_after_seconds`、`provider`、`warnings` 和 `source_trail` 供 host 做机器判断。
+- MCPServer/Pydantic 仍生成并保留完整 typed output contract；注册工具时只从发布到 `tools/list` 的 output schema 移除展示性 `title` 注解和可选字段的 `default: null`。压缩器识别 `properties`、`$defs` 等命名 schema 映射，真实的 `title`/`default` 字段名与全部验证约束保持不变。
 - `resource://paper-fetch/provider-catalog` 由轻量 MCP catalog adapter 在读取时直接投影 runtime `ProviderSpec` 和 `SOURCE_PROVIDER_MAP`；provider/source、browser/runtime、status/preflight 与资产默认不在 server instructions、tool description 或 skill contract 中维护第二张静态表。
-- MCP 上下文有独立回归预算：server instructions 不超过 1500 字符，`fetch_paper` description 不超过 1200 字符，全部 tool description 合计不超过 5000 字符，`tool_count * instructions_length + descriptions_length` 宿主 narrative 不超过 24000 字符。Native tools/list 总字节和 input/output schema 字节分别快照，新工具需单独说明并更新基线，不把 schema 体积混入文案预算。加入第十个 `batch_fetch` 后的基线分别为 `74411` / `70913` bytes，当前 instructions/fetch description/全部 descriptions/host narrative 为 `1093/985/2601/13531` 字符。
+- MCP 上下文有独立回归预算：server instructions 不超过 1500 字符，`fetch_paper` description 不超过 1200 字符，全部 tool description 合计不超过 5000 字符，`tool_count * instructions_length + descriptions_length` 宿主 narrative 不超过 24000 字符。Native tools/list 总字节和 input/output schema 字节分别快照，新工具需单独说明并更新基线，不把 schema 体积混入文案预算。十工具契约在压缩展示性 output-schema 元数据、同时保留命名字段后的基线分别为 `69459` / `65961` bytes，当前 instructions/fetch description/全部 descriptions/host narrative 为 `1093/985/2601/13531` 字符。
 - `fetch_paper` 和批量工具把阻塞抓取放到有界 `ThreadPoolExecutor`，事件循环继续处理 progress / log / cancellation；批量工具保持输入顺序，遇到 rate-limit status/code/category、HTTP 429 或 retry-after 后停止对应 provider/resource lane 的新提交。
 - async `fetch_paper` 用 `RuntimeContext(cancel_check=...)` 创建 cancel-aware `HttpTransport`，service/workflow 只消费 transport。
 
@@ -234,7 +235,7 @@ provider 身份与能力配置统一来自 provider entry module 顶部注册的
 - Browser runtime 使用 backend facade 和集中 storage-state manager；auth、preflight、HTML fetch、seeded PDF fallback 共享 provider-scoped `storage-state.json` 路径、写锁和 atomic write。managed Chrome stderr 使用有界脱敏尾部，启动、CDP 连接、context 和 page 阶段分别发布稳定 code，preflight、provider trace、manifest 与 PDF fallback acceptance 保留同一结构化失败事实。Browser-backed image fetch 对单图 seed warm、page fetch、request-context fetch、直接导航和 image wait 共用一个 wall-clock budget；PDF fallback 只用 lightweight browser warm 采集 cookies/user-agent/final URL，已有 cookie seed 时不再对同一 seed URL 做第二次 browser navigation。External CDP 默认借用既有 context，并在 diagnostics 中报告被忽略的 context options；`PAPER_FETCH_CDP_EXTERNAL_NEW_CONTEXT=1` 可要求在外部浏览器中创建新 context。
 - 本地转换工具链使用进程内有界缓存降低重复探测：Ghostscript/libvips 候选路径、`--version` probe 和工具 env overlay 按相关 env/目录/文件指纹失效；公式转换保留 MathML 结果缓存和 `mathml-to-latex` worker 复用；PDF fallback 对无图片导出路径的同一 PDF hash 复用 Markdown 渲染结果，并在成功结果 diagnostics 中记录 hash、字节数、页数、cache status 和耗时。
 - `ArtifactStore` / `DownloadPolicy` 管理 artifact mode：provider PDF/binary local copy、PDF fallback 源文件、provider 原始 HTML、Markdown 保存、asset 诊断、HTTP textual cache 开关，以及 fetch-envelope/cache-index JSON 的原子写入。
-- `FetchCache` 管理 MCP fetch-envelope sidecar reuse/write 语义与 cache index refresh；sidecar version、`EXTRACTION_REVISION` 校验、resource URI 与 scoped cache resource 语义稳定，实际 JSON materialization 委托给 `ArtifactStore`。MCP cache index 读取会校验 `INDEX_VERSION`；旧版/坏 schema 默认拒绝作为可信 manifest，`list_cached(cache_mode="index")` 只读 manifest，`refresh` 只校验/修剪现有 manifest，`rescan` 只从可证明 DOI 归属的 fetch-envelope sidecar 重建。`get_cached(detail="compact")` 仍由该 facade 读取确定性 sidecar：请求兼容唯一调用 `cached_request_matches()`，质量摘要调用统一 `evaluate_fetch_acceptance()`，request fingerprint 复用 manifest canonical hash；adapter 只裁剪 full/preferred/compact 视图，不复制匹配或验收规则。
+- `FetchCache` 管理 MCP fetch-envelope sidecar reuse/write 语义与 cache index refresh；sidecar version、`EXTRACTION_REVISION` 校验、resource URI 与 scoped cache resource 语义稳定，实际 JSON materialization 委托给 `ArtifactStore`。MCP cache index 读取会校验 `INDEX_VERSION`；旧版/坏 schema 默认拒绝作为可信 manifest，`list_cached(cache_mode="index")` 只读 manifest，`refresh` 只校验/修剪现有 manifest，`rescan` 只从可证明 DOI 归属的 fetch-envelope sidecar 重建。`get_cached(detail="compact")` 仍由该 facade 读取确定性 sidecar：请求兼容唯一调用 `cached_request_matches()`，质量摘要调用统一 `evaluate_fetch_acceptance()`，request fingerprint 复用 manifest canonical hash；adapter 只裁剪 full/preferred/compact 视图，不复制匹配或验收规则。查询先使用当前 runtime 的摘要化 `credential_scope`；带凭据 scope 在精确 sidecar 缺失或 scope 不匹配时可安全复用 public sidecar，public scope 绝不反向读取 API token 或 storage-state sidecar。
 
 ### 9. Transport 层
 
@@ -246,7 +247,7 @@ provider 身份与能力配置统一来自 provider entry module 顶部注册的
 
 ### 10. CI / 回归验证边界
 
-`.github/workflows/ci.yml` 是普通 CI 命令事实来源：`push` / `pull_request` 运行完整 unit branch coverage、integration、devtools、Ruff、完整生产包 mypy、复杂度/抽取规则/版本/依赖漏洞门禁，并对 Python 3.11 与 3.14 分别执行 core unit boundary 和 core/full wheel smoke。CI 与本地 unit / integration / devtools 默认复用 `pyproject.toml` 的 `pytest-xdist` 并行配置，不传 `-n 0`。依赖刷新、离线构建、稳定发布和 live/golden 各自位于独立 workflow；重型 offline/release 只在 `v*` tag 或手动 `workflow_dispatch` 路径运行，full-golden/live 也只允许显式 dispatch。只有 live provider、共享真实 publisher/API 状态或专门排查顺序问题的测试可串行，并在命令旁说明原因。
+`.github/workflows/ci.yml` 是普通 CI 命令事实来源：`push` / `pull_request` 运行完整 unit branch coverage、integration、devtools、Ruff、完整生产包 mypy、复杂度、provider route/catalog/manifest/fixture/docs 治理、抽取规则、版本与依赖漏洞门禁，并对 Python 3.11 与 3.14 分别执行 core unit boundary 和 core/full wheel smoke；隔离 wheel smoke 还会校验安装出的 MCP SDK 主版本为 2 并可构建 `MCPServer`。provider governance 的 runtime 快照与自动路由文档由 `scripts/check_provider_governance.py --update` 生成，正常 CI 只校验，不自动改文件。CI 与本地 unit / integration / devtools 默认复用 `pyproject.toml` 的 `pytest-xdist` 并行配置，不传 `-n 0`。依赖刷新、离线构建、稳定发布和 live/golden 各自位于独立 workflow；重型 offline/release 只在 `v*` tag 或手动 `workflow_dispatch` 路径运行。低频 live/drift 由独立 schedule 串行执行，PR 不接触 publisher 外部状态。只有 live provider、共享真实 publisher/API 状态或专门排查顺序问题的测试可串行，并在命令旁说明原因。
 
 架构边界由测试强制，而非仅靠文档约定：`tests/unit/test_import_boundaries.py` 阻止 provider-neutral 层 import `providers._*` 与 compat module，`tests/integration/test_architecture_closeout.py` 锁定 service facade、magic-key 契约、import-cycle 和兼容表面边界。更新提取规则文档后先运行 `python3 scripts/validate_extraction_rules.py`，再按变更范围运行并行 unit / integration。
 

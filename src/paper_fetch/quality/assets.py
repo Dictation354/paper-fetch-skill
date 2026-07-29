@@ -443,10 +443,18 @@ def build_asset_quality_summary(
             counts.full_size += 1
 
     diagnostics = [row[1] for row in typed_rows]
+    attempted = sum(
+        diagnostic.status != "not_requested"
+        and _asset_requested(diagnostic.kind, diagnostic.request_profile)
+        for diagnostic in diagnostics
+    )
     return AssetQualitySummary(
         audited=True,
         requested=asset_profile != "none",
         profile=asset_profile,
+        expected=None,
+        discovered=len(diagnostics),
+        attempted=attempted,
         total=len(diagnostics),
         local=local,
         full_size=sum(item.full_size for item in by_kind.values()),

@@ -3,11 +3,11 @@ name: elsevier
 display_source: elsevier_xml
 generation:
   generated_by: manual_replay
-  generated_at: "2026-05-18T00:00:00Z"
+  generated_at: '2026-05-18T00:00:00Z'
   source_queries:
-    - "paper_fetch.provider_catalog elsevier ProviderSpec"
-    - "tests/fixtures/golden_criteria elsevier samples"
-    - "tests/unit/test_elsevier_markdown.py"
+    - paper_fetch.provider_catalog elsevier ProviderSpec
+    - tests/fixtures/golden_criteria elsevier samples
+    - tests/unit/test_elsevier_markdown.py
     - Elsevier 10.1016 table DOI candidates
     - site:sciencedirect.com Elsevier table article DOI
     - 10.1016 table fixture discovery elsevier
@@ -15,13 +15,14 @@ generation:
     - site:sciencedirect.com Elsevier formula equation math article DOI
     - 10.1016 formula equation math fixture discovery elsevier
     - Elsevier 10.1016 supplementary supporting information DOI candidates
-    - site:sciencedirect.com Elsevier supplementary supporting information article DOI
+    - site:sciencedirect.com Elsevier supplementary supporting information article
+      DOI
     - 10.1016 supplementary supporting information fixture discovery elsevier
   confidence: high
 routing:
   primary: doi_prefix
   doi_prefixes:
-    - "10.1016/"
+    - 10.1016/
   domains:
     - sciencedirect.com
     - elsevier.com
@@ -31,12 +32,15 @@ routing:
     - elsevier bv
     - elsevier ltd
     - elsevier masson sas
-  crossref_publisher:
+  crossref_publisher: null
 main_path:
   - xml
   - pdf_fallback
   - metadata_only
-success_criteria: {}
+success_criteria:
+  xml: {}
+  pdf_fallback: {}
+  metadata_only: {}
 route_contract:
   xml:
     success_requires:
@@ -119,12 +123,12 @@ asset_contract:
     download: not_applicable
     purposes:
       - figure
-    exception_reason: "Elsevier XML fixtures validate inline figure placement, but the manifest disables
-      body asset downloads because official asset retrieval depends on object-reference API payloads not
-      exposed as onboarding body assets."
+    exception_reason: Elsevier XML fixtures validate inline figure placement, but
+      the manifest disables body asset downloads because official asset retrieval
+      depends on object-reference API payloads not exposed as onboarding body assets.
 supplementary_scope:
-  selector:
-  url_pattern:
+  selector: null
+  url_pattern: null
 abstract_only_strategy: not_supported
 probe:
   env_requirements:
@@ -135,82 +139,85 @@ probe:
 fixtures:
   doi_samples:
     structure:
-      doi: "10.1016/j.rse.2025.114648"
-      evidence_url: "https://www.sciencedirect.com/science/article/pii/S0034425725000525"
-      evidence_reason: "Golden XML fixture and provider benchmark cover Elsevier XML body structure and
-        article section assembly."
+      doi: 10.1016/j.rse.2025.114648
+      evidence_url: https://www.sciencedirect.com/science/article/pii/S0034425725000525
+      evidence_reason: Golden XML fixture and provider benchmark cover Elsevier XML
+        body structure and article section assembly.
       observed_signals:
         - xml_article
         - body_sections
       confidence: high
     table:
-      doi: "10.1016/j.jhydrol.2021.126210"
-      evidence_url: "https://www.sciencedirect.com/"
-      evidence_reason: "Provider-local Markdown tests exercise a real Elsevier body table fixture and
-        table conversion notes."
+      doi: 10.1016/j.jhydrol.2021.126210
+      evidence_url: https://www.sciencedirect.com/
+      evidence_reason: Provider-local Markdown tests exercise a real Elsevier body
+        table fixture and table conversion notes.
       observed_signals:
         - xml_article
         - body_table
       confidence: high
     formula:
-      doi: "10.1016/j.agrformet.2024.109975"
-      evidence_url: "https://www.sciencedirect.com/"
-      evidence_reason: "Provider-local tests exercise equation labels and MathML rendering from the real
-        XML fixture."
+      doi: 10.1016/j.agrformet.2024.109975
+      evidence_url: https://www.sciencedirect.com/
+      evidence_reason: Provider-local tests exercise equation labels and MathML rendering
+        from the real XML fixture.
       observed_signals:
         - xml_article
         - math_markup
       confidence: high
     figure:
-      doi: "10.1016/j.rse.2026.115369"
-      evidence_url: "https://www.sciencedirect.com/"
-      evidence_reason: "Provider-local tests exercise appendix figure placement and Markdown image ordering
-        from the real XML fixture."
+      doi: 10.1016/j.rse.2026.115369
+      evidence_url: https://www.sciencedirect.com/
+      evidence_reason: Provider-local tests exercise appendix figure placement and
+        Markdown image ordering from the real XML fixture.
       observed_signals:
         - xml_article
         - figures
       confidence: high
     supplementary:
-      doi: "10.1016/j.ecolind.2024.112140"
-      evidence_url: "https://www.sciencedirect.com/"
-      evidence_reason: "Provider-local tests exercise Elsevier supplementary-material extraction from
-        the real XML fixture."
+      doi: 10.1016/j.ecolind.2024.112140
+      evidence_url: https://www.sciencedirect.com/
+      evidence_reason: Provider-local tests exercise Elsevier supplementary-material
+        extraction from the real XML fixture.
       observed_signals:
         - xml_article
         - supplementary
       confidence: high
     references:
-      doi: "10.1016/j.agrformet.2024.109975"
-      evidence_url: "https://www.sciencedirect.com/"
-      evidence_reason: "Provider-local tests verify numbered Elsevier XML references and rendered reference
-        formatting."
+      doi: 10.1016/j.agrformet.2024.109975
+      evidence_url: https://www.sciencedirect.com/
+      evidence_reason: Provider-local tests verify numbered Elsevier XML references
+        and rendered reference formatting.
       observed_signals:
         - xml_article
         - references
       confidence: high
     pdf_fallback:
-      doi:
-      evidence_url: "https://www.sciencedirect.com/"
-      evidence_reason: "Current recorded fixtures do not include a reusable Elsevier PDF fallback replay."
+      doi: null
+      evidence_url: https://www.sciencedirect.com/
+      evidence_reason: Current recorded fixtures do not include a reusable Elsevier
+        PDF fallback replay.
       observed_signals: []
       confidence: low
     abstract_only:
-      doi:
-      evidence_url: "https://www.sciencedirect.com/"
-      evidence_reason: "The Elsevier provider currently degrades to metadata-only rather than provider-managed
-        abstract-only."
+      doi: null
+      evidence_url: https://www.sciencedirect.com/
+      evidence_reason: The Elsevier provider currently degrades to metadata-only rather
+        than provider-managed abstract-only.
       observed_signals: []
       confidence: low
     access_gate:
-      doi:
-      evidence_url: "https://www.sciencedirect.com/"
-      evidence_reason: "Current recorded fixtures do not include an Elsevier access-gate sample."
+      doi: null
+      evidence_url: https://www.sciencedirect.com/
+      evidence_reason: Current recorded fixtures do not include an Elsevier access-gate
+        sample.
       observed_signals: []
       confidence: low
     empty_shell:
-      doi:
-      evidence_url: "https://www.sciencedirect.com/"
-      evidence_reason: "Current recorded fixtures do not include an Elsevier empty-shell sample."
+      doi: null
+      evidence_url: https://www.sciencedirect.com/
+      evidence_reason: Current recorded fixtures do not include an Elsevier empty-shell
+        sample.
       observed_signals: []
       confidence: low
   discovery_proof:
@@ -236,32 +243,39 @@ fixtures:
       selected_doi: 10.1016/j.agrformet.2024.109975
       rejections: {}
       exhausted: false
-      evidence_summary: Selected 10.1016/j.agrformet.2024.109975 because
-        fixtures.doi_samples.formula already records provider-local evidence for stable formula
-        Markdown assertions.
+      evidence_summary: Selected 10.1016/j.agrformet.2024.109975 because fixtures.doi_samples.formula
+        already records provider-local evidence for stable formula Markdown assertions.
     supplementary:
       queries:
         - Elsevier 10.1016 supplementary supporting information DOI candidates
-        - site:sciencedirect.com Elsevier supplementary supporting information article DOI
+        - site:sciencedirect.com Elsevier supplementary supporting information article
+          DOI
         - 10.1016 supplementary supporting information fixture discovery elsevier
       candidates:
         - 10.1016/j.ecolind.2024.112140
       selected_doi: 10.1016/j.ecolind.2024.112140
       rejections: {}
       exhausted: false
-      evidence_summary: Selected 10.1016/j.ecolind.2024.112140 because
-        fixtures.doi_samples.supplementary already records provider-local evidence for stable
-        supplementary Markdown assertions.
+      evidence_summary: Selected 10.1016/j.ecolind.2024.112140 because fixtures.doi_samples.supplementary
+        already records provider-local evidence for stable supplementary Markdown
+        assertions.
 extraction_hints:
-  datalayer_signal_set:
-  text_marker_signal_set: []
+  datalayer_signal_set: null
+  text_marker_signal_set: null
   front_matter:
-  asset_retry:
+    exact_texts:
+      - authors
+      - author information
+      - affiliations
+    contains_tokens: []
+    publication_keywords: []
+  asset_retry: null
   metadata_merge: []
 owner_reuse_exceptions: []
 docs:
-  providers_md_capability_row: "Elsevier | Official API | official XML/API -> official API PDF fallback
-    | XML route supports configured asset modes; PDF fallback is text-only | elsevier_xml / elsevier_pdf"
-  changelog_summary: "Track Elsevier implemented provider manifest for XML and PDF fallback onboarding
-    sync."
-  extraction_rules_summary:
+  providers_md_capability_row: Elsevier | Official API | official XML/API -> official
+    API PDF fallback | XML route supports configured asset modes; PDF fallback is
+    text-only | elsevier_xml / elsevier_pdf
+  changelog_summary: Track Elsevier implemented provider manifest for XML and PDF
+    fallback onboarding sync.
+  extraction_rules_summary: null

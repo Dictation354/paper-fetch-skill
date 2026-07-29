@@ -1,0 +1,86 @@
+schema_version: 1
+
+# Every available full-text route family must have a golden replay or an
+# explicit, expiring review waiver. Remove a waiver as soon as its replay lands.
+route_family_waivers:
+  - key: aip:pdf
+    reviewed_at: 2026-07-28
+    expires_at: 2026-10-31
+    reason: AIP has provider-local validated-PDF fallback tests, but no approved reusable PDF golden replay yet.
+  - key: elsevier:pdf
+    reviewed_at: 2026-07-28
+    expires_at: 2026-10-31
+    reason: Elsevier API PDF fallback is credentialed and lacks an approved redistributable PDF golden replay.
+  - key: frontiers:pdf
+    reviewed_at: 2026-07-28
+    expires_at: 2026-10-31
+    reason: Frontiers PDF is covered by provider-local response tests; the new corpus currently records canonical XML only.
+  - key: pnas:pdf
+    reviewed_at: 2026-07-28
+    expires_at: 2026-10-31
+    reason: PNAS PDF recovery has provider-local tests and manifest evidence, but no standalone PDF golden artifact.
+  - key: science:pdf
+    reviewed_at: 2026-07-28
+    expires_at: 2026-10-31
+    reason: Science PDF recovery has provider-local tests and block evidence, but no standalone PDF golden artifact.
+  - key: springer:html:bmc
+    reviewed_at: 2026-07-28
+    expires_at: 2026-10-31
+    reason: BMC routing is classified and unit-tested, while an approved positive BMC HTML replay is still pending.
+  - key: springer:pdf
+    reviewed_at: 2026-07-28
+    expires_at: 2026-10-31
+    reason: Springer validated-PDF fallback is unit-tested but has no approved reusable PDF golden replay.
+  - key: wiley:pdf
+    reviewed_at: 2026-07-28
+    expires_at: 2026-10-31
+    reason: Wiley TDM and browser PDF lanes are tested locally, but the recorded sample is Markdown rather than a PDF replay.
+
+# Browser providers need a real access/block replay; direct XML providers need
+# an abstract-only or empty-body replay. These expiring waivers make existing
+# evidence debt explicit instead of silently treating parser unit tests as replay.
+negative_fixture_waivers:
+  - key: acs:access_block
+    reviewed_at: 2026-07-28
+    expires_at: 2026-10-31
+    reason: ACS challenge and access rejection are unit-tested, but no stable approved real block replay is checked in.
+  - key: aip:access_block
+    reviewed_at: 2026-07-28
+    expires_at: 2026-10-31
+    reason: AIP access-gate rejection is unit-tested, but no stable approved real block replay is checked in.
+  - key: ams:access_block
+    reviewed_at: 2026-07-28
+    expires_at: 2026-10-31
+    reason: AMS WAF rejection is unit-tested, but no stable approved real block replay is checked in.
+  - key: ieee:access_block
+    reviewed_at: 2026-07-28
+    expires_at: 2026-10-31
+    reason: IEEE challenge rejection is unit-tested, but no stable approved real block replay is checked in.
+  - key: iop:access_block
+    reviewed_at: 2026-07-28
+    expires_at: 2026-10-31
+    reason: IOP Radware and hCaptcha rejection are unit-tested, but no approved block replay is checked in.
+  - key: mdpi:access_block
+    reviewed_at: 2026-07-28
+    expires_at: 2026-10-31
+    reason: MDPI invalid-shell rejection is unit-tested, but no stable approved real block replay is checked in.
+  - key: royalsocietypublishing:access_block
+    reviewed_at: 2026-07-28
+    expires_at: 2026-10-31
+    reason: Royal Society access rejection is unit-tested, but no stable approved block replay is checked in.
+  - key: copernicus:xml_empty_or_abstract
+    reviewed_at: 2026-07-28
+    expires_at: 2026-10-31
+    reason: Copernicus empty-body XML is rejected by unit contracts, but no real negative XML replay is checked in.
+  - key: elsevier:xml_empty_or_abstract
+    reviewed_at: 2026-07-28
+    expires_at: 2026-10-31
+    reason: Elsevier structured-body rejection is unit-tested, but no redistributable negative API XML replay is checked in.
+  - key: frontiers:xml_empty_or_abstract
+    reviewed_at: 2026-07-28
+    expires_at: 2026-10-31
+    reason: Frontiers JATS body gating is unit-tested, but no real abstract-only XML replay is checked in.
+  - key: plos:xml_empty_or_abstract
+    reviewed_at: 2026-07-28
+    expires_at: 2026-10-31
+    reason: PLOS JATS body gating is unit-tested, but no real abstract-only XML replay is checked in.

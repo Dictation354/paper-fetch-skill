@@ -39,6 +39,7 @@ from .http import (
     DEFAULT_DISK_CACHE_MAX_BYTES,
     DEFAULT_DISK_CACHE_MAX_ENTRIES,
     HttpTransport,
+    RequestCancelledError,
 )
 from .runtime_browser import BrowserContextManager
 import contextlib
@@ -208,6 +209,8 @@ def build_http_transport_for_context(
         HTTP_DISK_CACHE_MAX_AGE_DAYS_ENV_VAR,
         default=DEFAULT_DISK_CACHE_MAX_AGE_DAYS,
     )
+    from .http import HttpTransportOptions
+
     return HttpTransport(
         pool_num_pools=parse_positive_int_env(
             env, HTTP_POOL_NUM_POOLS_ENV_VAR, default=DEFAULT_POOL_NUM_POOLS
@@ -237,7 +240,7 @@ def build_http_transport_for_context(
             default=DEFAULT_DISK_CACHE_MAX_BYTES,
         ),
         disk_cache_max_age_seconds=disk_cache_max_age_days * 24 * 60 * 60,
-        cancel_check=cancel_check,
+        options=HttpTransportOptions(cancel_check=cancel_check),
     )
 
 
@@ -257,6 +260,8 @@ class RuntimeContext:
     parse_cache: dict[tuple[Hashable, ...], Any] = field(default_factory=dict)
     session_cache: dict[tuple[Hashable, ...], Any] = field(default_factory=dict)
     stage_timings: dict[str, float] = field(default_factory=dict)
+    request_started_at: float = field(default_factory=time.monotonic)
+    deadline_monotonic: float | None = None
     _parse_cache_lock: threading.RLock = field(
         default_factory=threading.RLock, init=False, repr=False
     )
@@ -267,6 +272,9 @@ class RuntimeContext:
         default_factory=threading.RLock, init=False, repr=False
     )
     _stage_timing_lock: threading.RLock = field(
+        default_factory=threading.RLock, init=False, repr=False
+    )
+    _clients_lock: threading.RLock = field(
         default_factory=threading.RLock, init=False, repr=False
     )
     _browser_context_manager_lock: threading.RLock = field(
@@ -283,8 +291,11 @@ class RuntimeContext:
         init=False,
         repr=False,
     )
+    _owns_transport: bool = field(default=False, init=False, repr=False)
+    _closed: bool = field(default=False, init=False, repr=False)
 
     def __post_init__(self) -> None:
+        self._owns_transport = self.transport is None
         self.env = build_runtime_env() if self.env is None else dict(self.env)
         if self.artifact_store is None:
             self.artifact_store = ArtifactStore.from_download_dir(
@@ -307,13 +318,99 @@ class RuntimeContext:
         self.stage_timings.setdefault("formula_seconds", 0.0)
 
     def get_clients(self) -> Mapping[str, object]:
-        if self.clients is None:
-            from .providers.registry import build_clients
+        with self._clients_lock:
+            if self.clients is None:
+                from .providers.registry import build_clients
 
-            assert self.transport is not None
-            assert self.env is not None
-            self.clients = build_clients(self.transport, self.env)
-        return self.clients
+                assert self.transport is not None
+                assert self.env is not None
+                self.clients = build_clients(self.transport, self.env)
+            return self.clients
+
+    def new_request_context(
+        self,
+        *,
+        download_dir: Path | None | object = RUNTIME_UNSET,
+        artifact_mode: ArtifactMode | object = RUNTIME_UNSET,
+        asset_profile: str | None = None,
+        cancel_check: Callable[[], bool] | None | object = RUNTIME_UNSET,
+    ) -> RuntimeContext:
+        """Create an item-local context while reusing the shared HTTP transport.
+
+        Request-mutated fields, parser/session caches, timings, artifact policy, and
+        browser leases stay local to the child. The transport (and therefore its
+        connection pools, per-host semaphores, and HTTP caches) is intentionally
+        shared across batch items.
+        """
+
+        resolved_download_dir = (
+            self.download_dir
+            if download_dir is RUNTIME_UNSET
+            else cast(Path | None, download_dir)
+        )
+        resolved_artifact_mode = (
+            self.artifact_mode
+            if artifact_mode is RUNTIME_UNSET
+            else cast(ArtifactMode, artifact_mode)
+        )
+        resolved_cancel_check = (
+            self.cancel_check
+            if cancel_check is RUNTIME_UNSET
+            else cast(Callable[[], bool] | None, cancel_check)
+        )
+        return RuntimeContext(
+            env=self.env,
+            transport=self.transport,
+            download_dir=resolved_download_dir,
+            artifact_mode=resolved_artifact_mode,
+            asset_profile=asset_profile,
+            cancel_check=resolved_cancel_check,
+        )
+
+    @property
+    def cancelled(self) -> bool:
+        return bool(self.cancel_check is not None and self.cancel_check())
+
+    def raise_if_cancelled(self) -> None:
+        """Fence a commit or expensive stage against cooperative cancellation."""
+
+        if self.cancelled:
+            raise RequestCancelledError("Request cancelled.")
+
+    def ensure_deadline(self, timeout_seconds: float) -> float:
+        """Set one monotonic request deadline without resetting an existing budget."""
+
+        timeout_value = max(0.0, float(timeout_seconds))
+        candidate = self.request_started_at + timeout_value
+        if self.deadline_monotonic is None:
+            self.deadline_monotonic = candidate
+        else:
+            self.deadline_monotonic = min(self.deadline_monotonic, candidate)
+        return self.deadline_monotonic
+
+    def remaining_seconds(self, maximum: float | None = None) -> float:
+        """Return remaining request budget, optionally capped for one operation."""
+
+        self.raise_if_cancelled()
+        if self.deadline_monotonic is None:
+            if maximum is None:
+                return float("inf")
+            return max(0.0, float(maximum))
+        remaining = max(0.0, self.deadline_monotonic - time.monotonic())
+        if maximum is not None:
+            remaining = min(remaining, max(0.0, float(maximum)))
+        return remaining
+
+    def remaining_timeout_ms(
+        self,
+        maximum_ms: int,
+        *,
+        minimum_ms: int = 1,
+    ) -> int:
+        remaining = self.remaining_seconds(maximum_ms / 1000.0)
+        if remaining <= 0:
+            raise TimeoutError("Request deadline exceeded.")
+        return max(minimum_ms, min(maximum_ms, int(remaining * 1000)))
 
     def playwright_browser(self, *, headless: bool = True) -> Any:
         """Return a lazily attached shared CDP browser."""
@@ -513,7 +610,32 @@ class RuntimeContext:
         )
 
     def close(self) -> None:
+        if self._closed:
+            return
+        self._closed = True
+        session_values = list(self.session_cache.values())
+        self.session_cache.clear()
+        seen: set[int] = set()
+        for value in session_values:
+            close = getattr(value, "close", None)
+            if not callable(close) or id(value) in seen:
+                continue
+            seen.add(id(value))
+            with contextlib.suppress(Exception):
+                close()
         self.close_playwright()
+        if self._owns_transport and self.transport is not None:
+            close_transport = getattr(self.transport, "close", None)
+            if callable(close_transport):
+                with contextlib.suppress(Exception):
+                    close_transport()
+
+    def __enter__(self) -> RuntimeContext:
+        return self
+
+    def __exit__(self, exc_type: Any, exc: Any, traceback: Any) -> None:
+        del exc_type, exc, traceback
+        self.close()
 
     def __del__(
         self,
@@ -767,3 +889,18 @@ def resolve_runtime_context(
         session_cache=resolved_session_cache,
         stage_timings=resolved_stage_timings,
     )
+
+
+@contextlib.contextmanager
+def runtime_context_scope(
+    context: RuntimeContext | None = None,
+    **runtime_parts: Any,
+):
+    """Yield a runtime and close it only when this scope created it."""
+
+    runtime = resolve_runtime_context(context, **runtime_parts)
+    try:
+        yield runtime
+    finally:
+        if context is None:
+            runtime.close()

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import get_args
 import unittest
+import xml.etree.ElementTree as ET
 
 from paper_fetch import publisher_identity
 from paper_fetch.provider_catalog import (
@@ -346,6 +347,52 @@ class ProviderCatalogTests(unittest.TestCase):
             provider_for_xml_source("unknown-root", "/tmp/payload.xml"),
             "unknown",
         )
+        neutral = ET.fromstring("<article />")
+        self.assertEqual(
+            provider_for_xml_source(
+                "article",
+                "/tmp/payload.xml",
+                xml_root=neutral,
+            ),
+            "unknown",
+        )
+        for doi, publisher, expected in (
+            ("10.1038/example", "Springer Nature", "springer"),
+            ("10.5194/example", "Copernicus Publications", "copernicus"),
+            ("10.1371/example", "Public Library of Science", "plos"),
+            ("10.3389/example", "Frontiers Media S.A.", "frontiers"),
+        ):
+            with self.subTest(doi=doi):
+                root = ET.fromstring(
+                    "<article><front><journal-meta>"
+                    f"<publisher><publisher-name>{publisher}</publisher-name></publisher>"
+                    "</journal-meta><article-meta>"
+                    f'<article-id pub-id-type="doi">{doi}</article-id>'
+                    "</article-meta></front></article>"
+                )
+                self.assertEqual(
+                    provider_for_xml_source(
+                        "article",
+                        "/tmp/payload.xml",
+                        xml_root=root,
+                    ),
+                    expected,
+                )
+        conflict = ET.fromstring(
+            "<article><front><journal-meta><publisher>"
+            "<publisher-name>Frontiers Media S.A.</publisher-name>"
+            "</publisher></journal-meta><article-meta>"
+            '<article-id pub-id-type="doi">10.1371/conflict</article-id>'
+            "</article-meta></front></article>"
+        )
+        self.assertEqual(
+            provider_for_xml_source(
+                "article",
+                "/tmp/payload.xml",
+                xml_root=conflict,
+            ),
+            "unknown",
+        )
 
     def test_provider_fallback_and_body_thresholds_are_catalog_derived(self) -> None:
         self.assertFalse(provider_emits_html_managed_marker("crossref"))
@@ -379,8 +426,10 @@ class ProviderCatalogTests(unittest.TestCase):
             artifact_store=object(),
             context=object(),
             clients={"crossref": ExplodingProvider()},
-            warnings=warnings,
-            source_trail=source_trail,
+            outputs=fulltext._ProviderAttemptOutputs(
+                warnings=warnings,
+                source_trail=source_trail,
+            ),
         )
 
         self.assertIsNone(article)

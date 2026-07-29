@@ -22,6 +22,10 @@ CANONICAL_FULL_URL = (
 XML_URL = f"https://www.frontiersin.org/journals/marine-science/articles/{DOI}/xml"
 PDF_URL = f"https://www.frontiersin.org/journals/marine-science/articles/{DOI}/pdf"
 IMAGE_URL = "https://www.frontiersin.org/files/Articles/1101972/xml-images/fmars-10-1101972-g001.webp"
+SUPPLEMENT_URL = (
+    "https://www.frontiersin.org/files/Articles/1101972/supplementary-material/"
+    "Table_1.docx"
+)
 
 
 def _landing_html() -> bytes:
@@ -40,7 +44,11 @@ def _landing_html() -> bytes:
 """.encode()
 
 
-def _frontiers_xml(*, table_xml: str | None = None) -> bytes:
+def _frontiers_xml(
+    *,
+    table_xml: str | None = None,
+    supplementary_href: str = "Table_1.docx",
+) -> bytes:
     body = " ".join(
         [
             "Frontiers XML full text includes reproducible article body content, methods, results, and discussion.",
@@ -106,7 +114,7 @@ def _frontiers_xml(*, table_xml: str | None = None) -> bytes:
     <sec id="s10" sec-type="supplementary-material">
       <title>Supplementary material</title>
       <p>The Supplementary Material for this article can be found online.</p>
-      <supplementary-material xlink:href="Table_1.docx" id="SM1" mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document"/>
+      <supplementary-material xlink:href="{supplementary_href}" id="SM1" mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document"/>
     </sec>
   </body>
   <back>
@@ -195,6 +203,59 @@ def test_frontiers_xml_route_fetches_canonical_jats_and_rewrites_figure_url() ->
     )
     assert article.metadata.journal == "Frontiers in Marine Science"
     assert article.assets[0].original_url == IMAGE_URL
+
+
+def test_frontiers_canonical_xml_route_does_not_request_landing_page() -> None:
+    transport = FixtureHtmlTransport(
+        {XML_URL: http_response(XML_URL, _frontiers_xml(), "text/xml")}
+    )
+    client = FrontiersClient(transport, {})
+
+    raw_payload = client.fetch_raw_fulltext(
+        DOI,
+        {"doi": DOI, "landing_page_url": CANONICAL_FULL_URL},
+    )
+
+    assert raw_payload.content is not None
+    assert raw_payload.content.route_kind == "xml"
+    assert [call["url"] for call in transport.calls] == [XML_URL]
+    assert raw_payload.content.diagnostics is not None
+    assert raw_payload.content.diagnostics["route_discovery"] == {
+        "reason": "metadata_canonical",
+        "landing_requested": False,
+    }
+
+
+def test_frontiers_direct_pdf_fallback_does_not_request_landing_page() -> None:
+    transport = FixtureHtmlTransport(
+        {
+            XML_URL: http_response(
+                XML_URL,
+                b"<!doctype html><html>Not XML</html>",
+                "text/html",
+            ),
+            PDF_URL: http_response(
+                PDF_URL,
+                fulltext_pdf_bytes(),
+                "application/pdf",
+            ),
+        }
+    )
+    client = FrontiersClient(transport, {})
+
+    raw_payload = client.fetch_raw_fulltext(
+        DOI,
+        {"doi": DOI, "landing_page_url": CANONICAL_FULL_URL},
+    )
+
+    assert raw_payload.content is not None
+    assert raw_payload.content.route_kind == PDF_FALLBACK
+    assert [call["url"] for call in transport.calls] == [XML_URL, PDF_URL]
+    assert raw_payload.content.diagnostics is not None
+    assert raw_payload.content.diagnostics["route_discovery"] == {
+        "reason": "metadata_canonical",
+        "landing_requested": False,
+    }
 
 
 def test_frontiers_jats_semantically_expands_non_global_table_spans() -> None:
@@ -388,6 +449,112 @@ def test_frontiers_asset_download_resolves_xml_image_filename(tmp_path: Path) ->
     )
     assert f"![Figure 1]({path})" in rendered
     assert IMAGE_URL not in rendered
+
+
+def test_frontiers_supplementary_assets_respect_profile_and_archive_state(
+    tmp_path: Path,
+) -> None:
+    supplement_body = b"PK\x03\x04frontiers-supplement"
+    transport = FixtureHtmlTransport(
+        {
+            XML_URL: http_response(
+                XML_URL,
+                _frontiers_xml(supplementary_href=SUPPLEMENT_URL),
+                "text/xml",
+            ),
+            SUPPLEMENT_URL: http_response(
+                SUPPLEMENT_URL,
+                supplement_body,
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            ),
+        }
+    )
+    client = FrontiersClient(transport, {})
+    raw_payload = client.fetch_raw_fulltext(
+        DOI,
+        {"doi": DOI, "landing_page_url": CANONICAL_FULL_URL},
+    )
+    assert raw_payload.content is not None
+    supplement = next(
+        asset
+        for asset in raw_payload.content.extracted_assets
+        if asset.get("kind") == "supplementary"
+    )
+    raw_payload.content = replace(
+        raw_payload.content,
+        extracted_assets=[supplement],
+    )
+
+    body_result = client.download_related_assets(
+        DOI,
+        {"doi": DOI},
+        raw_payload,
+        tmp_path / "body",
+        asset_profile="body",
+    )
+    all_result = client.download_related_assets(
+        DOI,
+        {"doi": DOI},
+        raw_payload,
+        tmp_path / "all",
+        asset_profile="all",
+    )
+
+    assert body_result == {"assets": [], "asset_failures": []}
+    assert all_result["asset_failures"] == []
+    assert all_result["assets"][0]["download_url"] == SUPPLEMENT_URL
+    assert all_result["assets"][0]["downloaded_bytes"] == len(supplement_body)
+    assert Path(all_result["assets"][0]["path"]).read_bytes() == supplement_body
+    assert [call["url"] for call in transport.calls].count(SUPPLEMENT_URL) == 1
+
+
+def test_frontiers_unresolved_supplementary_asset_maps_to_landing_anchor(
+    tmp_path: Path,
+) -> None:
+    transport = FixtureHtmlTransport(
+        {XML_URL: http_response(XML_URL, _frontiers_xml(), "text/xml")}
+    )
+    client = FrontiersClient(transport, {})
+    raw_payload = client.fetch_raw_fulltext(
+        DOI,
+        {"doi": DOI, "landing_page_url": CANONICAL_FULL_URL},
+    )
+
+    assert raw_payload.content is not None
+    supplement = next(
+        asset
+        for asset in raw_payload.content.extracted_assets
+        if asset.get("kind") == "supplementary"
+    )
+    assert supplement["archive_state"] == "not_archived"
+    assert supplement["link"] == f"{CANONICAL_FULL_URL}#supplementary-material"
+    raw_payload.content = replace(
+        raw_payload.content,
+        extracted_assets=[supplement],
+    )
+
+    result = client.download_related_assets(
+        DOI,
+        {"doi": DOI},
+        raw_payload,
+        tmp_path,
+        asset_profile="all",
+    )
+
+    assert result["assets"] == []
+    assert result["asset_failures"] == [
+        {
+            "kind": "supplementary",
+            "heading": "Supplementary material",
+            "source_url": "Table_1.docx",
+            "section": "supplementary",
+            "reason": (
+                "Frontiers supplementary entry did not expose a downloadable URL."
+            ),
+            "archive_state": "not_archived",
+        }
+    ]
+    assert [call["url"] for call in transport.calls] == [XML_URL]
 
 
 def test_frontiers_pdf_fallback_rejects_html_xml_candidate() -> None:

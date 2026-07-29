@@ -21,6 +21,12 @@ def test_manifest_sync_back_round_trips_runtime_bundle_fields(tmp_path: Path) ->
     tmp_manifest.write_text(
         case.manifest_path.read_text(encoding="utf-8"), encoding="utf-8"
     )
+    manifest_payload = yaml.safe_load(tmp_manifest.read_text(encoding="utf-8"))
+    manifest_payload["extraction_hints"]["datalayer_signal_set"] = None
+    tmp_manifest.write_text(
+        yaml.safe_dump(manifest_payload, sort_keys=False),
+        encoding="utf-8",
+    )
 
     env = os.environ.copy()
     src_path = str(REPO_ROOT / "src")

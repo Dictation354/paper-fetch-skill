@@ -1,6 +1,11 @@
 name: Opt-in live and golden checks
 
 on:
+  schedule:
+    # Weekly offline full-corpus regression.
+    - cron: "17 3 * * 2"
+    # Twice-monthly, low-concurrency publisher drift review.
+    - cron: "41 4 1,15 * *"
   workflow_dispatch:
     inputs:
       run_live:
@@ -19,7 +24,11 @@ permissions:
 
 jobs:
   live:
-    if: ${{ inputs.run_live }}
+    if: >-
+      ${{
+        (github.event_name == 'workflow_dispatch' && inputs.run_live) ||
+        (github.event_name == 'schedule' && github.event.schedule == '41 4 1,15 * *')
+      }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -27,13 +36,39 @@ jobs:
         with:
           python-version: "3.11"
           full: "true"
+      - name: Prepare selected Camoufox runtime explicitly
+        run: uv run python -m camoufox fetch
       - name: Run shared-state live tests serially
         env:
           PAPER_FETCH_RUN_LIVE: "1"
+          PAPER_FETCH_BROWSER_BACKEND: "camoufox"
+          CROSSREF_MAILTO: ${{ secrets.CROSSREF_MAILTO }}
+          ELSEVIER_API_KEY: ${{ secrets.ELSEVIER_API_KEY }}
+          WILEY_TDM_CLIENT_TOKEN: ${{ secrets.WILEY_TDM_CLIENT_TOKEN }}
         run: PYTHONPATH=src uv run pytest tests/live -q -n 0 --force-enable-socket
+      - name: Run browser-risk provider drift report serially
+        env:
+          PAPER_FETCH_RUN_LIVE: "1"
+          PAPER_FETCH_BROWSER_BACKEND: "camoufox"
+          CROSSREF_MAILTO: ${{ secrets.CROSSREF_MAILTO }}
+          WILEY_TDM_CLIENT_TOKEN: ${{ secrets.WILEY_TDM_CLIENT_TOKEN }}
+        run: >-
+          PYTHONPATH=src uv run python scripts/run_provider_drift_report.py
+          --all-browser-risk
+          --output artifacts/provider-drift-report.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: ${{ always() }}
+        with:
+          name: provider-drift-report
+          path: artifacts/provider-drift-report.json
+          if-no-files-found: warn
 
   full-golden:
-    if: ${{ inputs.run_full_golden }}
+    if: >-
+      ${{
+        (github.event_name == 'workflow_dispatch' && inputs.run_full_golden) ||
+        (github.event_name == 'schedule' && github.event.schedule == '17 3 * * 2')
+      }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7

@@ -5,7 +5,7 @@ from __future__ import annotations
 import argparse
 import contextlib
 from collections.abc import Callable, Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime
 import json
 import os
@@ -22,6 +22,7 @@ from .auth import (
 )
 from .artifacts import ArtifactMode, ArtifactStore
 from .browser_preflight import BrowserPreflightResult, run_browser_provider_preflight
+from .provider_catalog import browser_preflight_provider_names
 from .config import build_runtime_env, resolve_cli_download_dir
 from .diagnostics import (
     doctor_payload as build_doctor_payload,
@@ -53,15 +54,14 @@ from .providers.base import ProviderFailure
 from .publisher_identity import (
     extract_doi,
     extract_doi_from_url,
-    infer_provider_from_doi,
-    infer_provider_from_url,
 )
 from .reason_codes import BROWSER_RUNTIME_FAILURE_CODES, ERROR, NO_ACCESS, RATE_LIMITED
 from .runtime import (
+    RuntimeContext,
     build_http_transport_for_context,
     close_shared_browser_managers,
 )
-from .service import FetchStrategy, PaperFetchFailure, fetch_paper
+from .service import FetchStrategy, PaperFetchFailure, fetch_paper, resolve_paper
 from .tracing import merge_trace, trace_from_markers
 from .utils import _extract_year, format_paper_stem, provider_display_name
 from .version import package_version
@@ -77,6 +77,11 @@ from .workflow.batch_lifecycle import (
     BatchLifecycleResumeError,
     BatchManifestJournal,
     prepare_batch_run,
+)
+from .workflow.batch_routing import (
+    initial_provider_lane,
+    provider_lane_limit,
+    resolve_provider_lane,
 )
 from .workflow.pipeline import FetchPipeline, MarkdownSaveSpec
 from .workflow.request_builder import build_fetch_pipeline_request
@@ -448,9 +453,32 @@ def _error_payload(error: Exception) -> dict[str, Any]:
             "status": error.status,
             "reason": error.reason,
             "candidates": error.candidates or None,
+            "provider": error.provider,
+            "route": error.route,
+            "stage": error.stage,
+            "http_status": error.http_status,
+            "error_category": error.error_category,
+            "retryable": error.retryable,
+            "retry_after_seconds": error.retry_after_seconds,
+            "details": error.details,
+            "warnings": error.warnings,
+            "source_trail": error.source_trail,
         }
     if isinstance(error, ProviderFailure):
-        return {"status": error.code, "reason": error.message}
+        return {
+            "status": error.code,
+            "reason": error.message,
+            "provider": error.provider,
+            "route": error.route,
+            "stage": error.stage,
+            "http_status": error.http_status,
+            "error_category": error.error_category,
+            "retryable": error.retryable,
+            "retry_after_seconds": error.retry_after_seconds,
+            "details": error.details,
+            "warnings": error.warnings,
+            "source_trail": error.source_trail,
+        }
     return {"status": ERROR, "reason": str(error)}
 
 
@@ -487,6 +515,7 @@ def run_single_fetch(
     artifact_mode: ArtifactMode,
     transport=None,
     cancel_check: Callable[[], bool] | None = None,
+    context: RuntimeContext | None = None,
 ) -> SingleFetchResult:
     modes = _compute_modes(args)
     render_options = _render_options_from_args(args)
@@ -507,6 +536,7 @@ def run_single_fetch(
                 artifact_mode=artifact_mode,
                 transport=transport,
                 cancel_check=cancel_check,
+                context=context,
                 markdown_save=_markdown_save_spec(
                     args,
                     output_dir=output_dir,
@@ -640,13 +670,26 @@ def _expected_doi_for_query(query: str) -> str | None:
 
 
 def _batch_lane_for_query(query: str) -> str:
-    """Infer a provider lane only from existing catalog-backed identity helpers."""
+    """Infer a provider lane without performing network I/O."""
 
-    provider = infer_provider_from_url(query)
-    if provider:
-        return provider
-    doi = _expected_doi_for_query(query)
-    return infer_provider_from_doi(doi) or "generic"
+    return initial_provider_lane(query)
+
+
+def _resolve_cli_batch_item_lane(
+    item: CliBatchItem,
+    *,
+    context: RuntimeContext,
+) -> CliBatchItem:
+    try:
+        lane_key = resolve_provider_lane(
+            item.query,
+            initial_lane=item.lane_key,
+            context=context,
+            resolver=resolve_paper,
+        )
+    except Exception:
+        return item
+    return replace(item, lane_key=lane_key)
 
 
 def _manifest_output_artifacts(
@@ -787,8 +830,7 @@ def _run_batch_item(
     output_dir: Path,
     runtime_env: Mapping[str, str],
     artifact_mode: ArtifactMode,
-    transport,
-    cancel_check: Callable[[], bool] | None,
+    context: RuntimeContext,
     deps: ManifestBuilderDependencies,
 ) -> CliFetchOutcome:
     started_at = deps.clock()
@@ -799,8 +841,7 @@ def _run_batch_item(
             output_dir=output_dir,
             runtime_env=runtime_env,
             artifact_mode=artifact_mode,
-            transport=transport,
-            cancel_check=cancel_check,
+            context=context,
         )
     except Exception as exc:  # noqa: BLE001 - every batch input gets a terminal record.
         return CliFetchOutcome(
@@ -808,11 +849,14 @@ def _run_batch_item(
             completed_at=deps.clock(),
             error=exc,
         )
-    return CliFetchOutcome(
-        started_at=started_at,
-        completed_at=deps.clock(),
-        result=result,
-    )
+    else:
+        return CliFetchOutcome(
+            started_at=started_at,
+            completed_at=deps.clock(),
+            result=result,
+        )
+    finally:
+        context.close()
 
 
 def _classify_batch_outcome(outcome: CliFetchOutcome) -> BatchFailure | None:
@@ -980,6 +1024,7 @@ def run_batch_fetch(
     with store.run_lock():
         run_started = False
         journal: BatchManifestJournal | None = None
+        batch_context: RuntimeContext | None = None
         try:
             if resume_value:
                 try:
@@ -1046,9 +1091,22 @@ def run_batch_fetch(
                 shared_transport = build_http_transport_for_context(
                     runtime_env,
                     download_dir=output_dir,
-                    cancel_check=None,
+                    cancel_check=cancel_event.is_set,
                     artifact_mode=artifact_mode,
                 )
+                batch_context = RuntimeContext(
+                    env=runtime_env,
+                    transport=shared_transport,
+                    download_dir=output_dir,
+                    artifact_mode=artifact_mode,
+                    cancel_check=cancel_event.is_set,
+                )
+                item_contexts = {
+                    item.index: batch_context.new_request_context(
+                        asset_profile=args.asset_profile,
+                    )
+                    for item in items
+                }
                 with ManifestJsonlWriter(
                     store.events_path,
                     append=append_events,
@@ -1071,6 +1129,20 @@ def run_batch_fetch(
                         journal.persist(record, writer=writer)
 
                     with _cooperative_batch_cancel(cancel_event):
+                        prepared_lanes = run_batch(
+                            items,
+                            lambda item: _resolve_cli_batch_item_lane(
+                                item,
+                                context=item_contexts[item.index],
+                            ),
+                            max_workers=args.batch_concurrency,
+                            lane_key=lambda item: f"resolve:{item.index}",
+                            cancel_event=cancel_event,
+                        )
+                        items = [
+                            result.value if result.value is not None else result.item
+                            for result in prepared_lanes.results
+                        ]
                         run_result = run_batch(
                             items,
                             lambda item: _run_batch_item(
@@ -1079,12 +1151,15 @@ def run_batch_fetch(
                                 output_dir=output_dir,
                                 runtime_env=runtime_env,
                                 artifact_mode=artifact_mode,
-                                transport=shared_transport,
-                                cancel_check=cancel_event.is_set,
+                                context=item_contexts[item.index],
                                 deps=deps,
                             ),
                             max_workers=args.batch_concurrency,
                             lane_key=lambda item: item.lane_key,
+                            lane_limits=lambda lane: provider_lane_limit(
+                                lane,
+                                global_limit=args.batch_concurrency,
+                            ),
                             completion_callback=on_completion,
                             result_classifier=_classify_batch_outcome,
                             cancel_event=cancel_event,
@@ -1133,6 +1208,9 @@ def run_batch_fetch(
                         completed_at=deps.clock(),
                     )
             raise
+        finally:
+            if batch_context is not None:
+                batch_context.close()
 
 
 def _default(value: Any, *, suppress_defaults: bool) -> Any:
@@ -1359,7 +1437,7 @@ def _add_browser_preflight_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--provider",
         action="append",
-        choices=browser_auth_provider_names(),
+        choices=browser_preflight_provider_names(),
         help=(
             "Browser-backed provider to preflight. May be repeated "
             "(default: all browser-backed providers)."

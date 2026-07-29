@@ -22,7 +22,6 @@ from ..utils import empty_asset_results, normalize_text
 from . import _annualreviews_html, browser_workflow
 from ._registry import ProviderBundle, register_provider_bundle
 from .base import RawFulltextPayload
-from .browser_workflow.profile import ProviderBrowserProfile
 
 
 register_provider_bundle(
@@ -81,21 +80,10 @@ register_provider_bundle(
 )
 
 
-ANNUALREVIEWS_BROWSER_PROFILE = ProviderBrowserProfile(
-    name="annualreviews",
+ANNUALREVIEWS_BROWSER_PROFILE = browser_workflow.make_browser_profile(
+    "annualreviews",
     article_source_name="annualreviews_html",
-    label="Annual Reviews",
-    hosts=("www.annualreviews.org", "annualreviews.org"),
-    base_hosts=("www.annualreviews.org",),
-    html_path_templates=(
-        "/content/journals/{doi}",
-        "/doi/{doi}",
-    ),
-    pdf_path_templates=("/doi/pdf/{doi}",),
-    crossref_pdf_position=0,
-    markdown_publisher="annualreviews",
     fallback_author_extractor=_annualreviews_html.extract_authors,
-    shared_browser_image_fetcher=True,
 )
 
 

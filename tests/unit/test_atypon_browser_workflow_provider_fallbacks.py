@@ -779,7 +779,7 @@ class AtyponBrowserWorkflowProviderFallbackTests(AtyponBrowserWorkflowProviderTe
         self.assertTrue(mocked_warm.call_args.kwargs["lightweight"])
         self.assertIsNone(kwargs["seed_urls"])
         self.assertEqual(
-            kwargs["referer"], f"https://www.pnas.org/doi/{PNAS_SAMPLE.doi}"
+            kwargs["referer"], f"https://www.pnas.org/doi/full/{PNAS_SAMPLE.doi}"
         )
         self.assertEqual(
             list(mocked_pdf.call_args.args[0])[:3],

@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import urllib.parse
+import math
 from typing import Any
 from collections.abc import Mapping
 
+from ..failure import FailureDiagnostics
 from ..extraction.html.availability_policy import AvailabilityPolicy
 from ..extraction.html.provider_rules import (
     ATYPON_FRONT_MATTER_CONTAINS_TOKENS,
@@ -20,6 +22,7 @@ from ..extraction.html.provider_rules import (
 )
 from ..http import (
     DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
+    HttpRequestPolicy,
     PDF_ACCEPT_HEADER,
     PDF_MIME_TYPE,
     RequestFailure,
@@ -27,9 +30,11 @@ from ..http import (
 from ..extraction.html.landing import REDIRECT_STATUS_CODES
 from ..provider_catalog import (
     ATYPON_DEFAULT_PDF_PATH_TEMPLATES,
+    ProviderRouteSpec,
     ProviderSpec,
     provider_api_url_template,
 )
+from ..pdf_limits import pdf_max_bytes
 from ..quality.html_signals import WILEY_SIGNAL_SET
 from ..runtime import RuntimeContext
 from ..tracing import fulltext_marker, trace_event
@@ -95,8 +100,34 @@ register_provider_bundle(
                 ),
             ),
             sensitive_headers=("wiley-tdm-client-token",),
-            env_requirements=("CROSSREF_MAILTO",),
+            env_requirements=(),
             requires_playwright=True,
+            routes=(
+                ProviderRouteSpec(name="metadata", kind="metadata"),
+                ProviderRouteSpec(
+                    name="browser_html",
+                    kind="html",
+                    browser_optional=True,
+                    browser_preflight=True,
+                    auth_supported=True,
+                    concurrency=1,
+                    timeout_seconds=120,
+                ),
+                ProviderRouteSpec(
+                    name="tdm_pdf",
+                    kind="pdf",
+                    requires_pdf_conversion=True,
+                ),
+                ProviderRouteSpec(
+                    name="browser_pdf",
+                    kind="pdf",
+                    browser_optional=True,
+                    browser_preflight=True,
+                    requires_pdf_conversion=True,
+                    concurrency=1,
+                    timeout_seconds=120,
+                ),
+            ),
         ),
         html_rules=ProviderHtmlRules(
             name="wiley",
@@ -144,22 +175,38 @@ def _fetch_wiley_tdm_pdf_result(
     artifact_dir=None,
     asset_profile="none",
     asset_output_dir=None,
+    expected_identity: Mapping[str, Any] | None = None,
     timeout: int = DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
+    context: RuntimeContext | None = None,
 ) -> PdfFetchResult:
+    active_timeout = timeout
+    if context is not None:
+        context.ensure_deadline(timeout)
+        active_timeout = max(1, int(math.ceil(context.remaining_seconds(timeout))))
     request_headers = {"Accept": PDF_ACCEPT_HEADER, **dict(headers)}
+    maximum_pdf_bytes = pdf_max_bytes()
     try:
         response = transport.request(
             "GET",
             api_url,
             headers=request_headers,
-            timeout=timeout,
+            timeout=active_timeout,
             retry_on_transient=True,
+            request_policy=HttpRequestPolicy(
+                max_response_bytes=maximum_pdf_bytes,
+                max_compressed_response_bytes=maximum_pdf_bytes,
+            ),
         )
     except RequestFailure as exc:
         raise PdfFallbackFailure(
             "pdf_download_failed",
             f"Failed to download Wiley API PDF fallback candidate: {exc}",
-            details={"source_url": api_url},
+            details={
+                "source_url": api_url,
+                "status": exc.status_code,
+                "error_category": str(exc.error_category or "") or None,
+                "retry_after_seconds": exc.retry_after_seconds,
+            },
         ) from exc
 
     response_headers = {
@@ -177,6 +224,8 @@ def _fetch_wiley_tdm_pdf_result(
             artifact_dir=artifact_dir,
             asset_profile=asset_profile,
             asset_output_dir=asset_output_dir,
+            expected_identity=expected_identity,
+            context=context,
             fetcher=fetch_pdf_over_http,
         ).fetch([redirected_url])
 
@@ -189,6 +238,7 @@ def _fetch_wiley_tdm_pdf_result(
         final_url=final_url,
         not_pdf_message="Wiley API PDF fallback did not return a PDF file.",
         allow_pdf_only=True,
+        expected_identity=expected_identity,
     )
 
 
@@ -276,7 +326,12 @@ class WileyClient(browser_workflow.BrowserWorkflowClient):
             return bootstrap.html_payload
 
         initial_warnings = [*bootstrap.warnings]
-        if bootstrap.runtime is not None:
+        if self.tdm_client_token:
+            initial_warnings.append(
+                f"{self.name} HTML route was not usable "
+                f"({bootstrap.html_failure_reason or 'html_failed'}); attempting Wiley TDM API PDF fallback first."
+            )
+        elif bootstrap.runtime is not None:
             initial_warnings.append(
                 f"{self.name} HTML route was not usable "
                 f"({bootstrap.html_failure_reason or 'html_failed'}); attempting Wiley publisher PDF/ePDF fallback."
@@ -315,9 +370,25 @@ class WileyClient(browser_workflow.BrowserWorkflowClient):
                         asset_profile=effective_asset_profile,
                         doi=bootstrap.normalized_doi,
                     ),
+                    expected_identity={
+                        "doi": bootstrap.normalized_doi,
+                        "title": metadata.get("title"),
+                    },
+                    context=context,
                 )
             except PdfFallbackFailure as exc:
-                raise ProviderFailure(NO_RESULT, exc.message) from exc
+                raise ProviderFailure(
+                    NO_RESULT,
+                    exc.message,
+                    diagnostics=FailureDiagnostics(
+                        route="pdf_api",
+                        stage="download",
+                        http_status=exc.details.get("status"),
+                        error_category=exc.kind,
+                        retryable=True,
+                        details=exc.details,
+                    ),
+                ) from exc
 
             return RawFulltextPayload(
                 provider=self.name,
@@ -396,11 +467,6 @@ class WileyClient(browser_workflow.BrowserWorkflowClient):
         def browser_failure_warning(
             failure: ProviderFailure, _state: ProviderWaterfallState
         ) -> str:
-            if self.tdm_client_token:
-                return (
-                    f"Wiley publisher PDF/ePDF fallback was not usable ({failure.message}); "
-                    "attempting Wiley TDM API PDF fallback."
-                )
             return (
                 f"Wiley publisher PDF/ePDF fallback was not usable ({failure.message})."
             )
@@ -410,7 +476,14 @@ class WileyClient(browser_workflow.BrowserWorkflowClient):
         ) -> str:
             if failure.code == NOT_CONFIGURED:
                 return failure.message
-            return f"Wiley TDM API PDF fallback was not usable ({failure.message})."
+            suffix = (
+                "; attempting Wiley browser PDF/ePDF fallback."
+                if bootstrap.runtime is not None
+                else "."
+            )
+            return (
+                f"Wiley TDM API PDF fallback was not usable ({failure.message}){suffix}"
+            )
 
         def final_failure(state: ProviderWaterfallState) -> ProviderFailure:
             api_failure = next(
@@ -457,15 +530,7 @@ class WileyClient(browser_workflow.BrowserWorkflowClient):
                 + " ".join(failure_parts),
                 missing_env=missing_env,
                 warnings=state.warnings,
-                source_trail=[
-                    fulltext_marker(self.name, "fail", route="html"),
-                    *(
-                        [fulltext_marker(self.name, "fail", route="pdf_browser")]
-                        if bootstrap.runtime is not None
-                        else []
-                    ),
-                    fulltext_marker(self.name, "fail", route="pdf_api"),
-                ],
+                source_trail=state.source_trail,
                 trace=(
                     [
                         trace_event(
@@ -481,39 +546,48 @@ class WileyClient(browser_workflow.BrowserWorkflowClient):
                 ),
             )
 
-        steps = []
-        if bootstrap.runtime is not None:
-            steps.append(
-                ProviderWaterfallStep(
-                    label="browser_pdf",
-                    run=run_browser_pdf,
-                    failure_marker=fulltext_marker(
-                        self.name, "fail", route="pdf_browser"
-                    ),
-                    success_markers=(
-                        fulltext_marker(self.name, "ok", route="pdf_browser"),
-                        fulltext_marker(self.name, "ok", route=PDF_FALLBACK),
-                    ),
-                    failure_warning=browser_failure_warning,
+        browser_step = ProviderWaterfallStep(
+            label="browser_pdf",
+            run=run_browser_pdf,
+            failure_marker=fulltext_marker(self.name, "fail", route="pdf_browser"),
+            success_markers=(
+                fulltext_marker(self.name, "ok", route="pdf_browser"),
+                fulltext_marker(self.name, "ok", route=PDF_FALLBACK),
+            ),
+            failure_warning=browser_failure_warning,
+        )
+        api_step = ProviderWaterfallStep(
+            label="pdf_api",
+            run=run_tdm_api,
+            failure_marker=fulltext_marker(self.name, "fail", route="pdf_api"),
+            success_markers=(
+                fulltext_marker(self.name, "ok", route="pdf_api"),
+                fulltext_marker(self.name, "ok", route=PDF_FALLBACK),
+            ),
+            continue_codes=(NO_RESULT, NOT_CONFIGURED),
+            failure_warning=tdm_failure_warning,
+            success_warning="Full text was extracted from the Wiley TDM API PDF fallback after the HTML path was not usable.",
+        )
+        steps = (
+            [api_step, browser_step]
+            if self.tdm_client_token and bootstrap.runtime is not None
+            else (
+                [api_step]
+                if self.tdm_client_token
+                else (
+                    [browser_step, api_step]
+                    if bootstrap.runtime is not None
+                    else [api_step]
                 )
-            )
-        steps.append(
-            ProviderWaterfallStep(
-                label="pdf_api",
-                run=run_tdm_api,
-                failure_marker=fulltext_marker(self.name, "fail", route="pdf_api"),
-                success_markers=(
-                    fulltext_marker(self.name, "ok", route="pdf_api"),
-                    fulltext_marker(self.name, "ok", route=PDF_FALLBACK),
-                ),
-                continue_codes=(NO_RESULT, NOT_CONFIGURED),
-                failure_warning=tdm_failure_warning,
-                success_warning="Full text was extracted from the Wiley TDM API PDF fallback after the HTML path was not usable.",
             )
         )
 
         return run_provider_waterfall(
             steps,
+            doi=doi,
+            metadata=metadata,
+            context=context,
+            client=self,
             initial_warnings=initial_warnings,
             initial_source_trail=[fulltext_marker(self.name, "fail", route="html")],
             final_failure_factory=final_failure,

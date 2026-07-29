@@ -1,16 +1,14 @@
 {
   "blocking_issue_count": 0,
   "doi": "10.3389/fmars.2023.1101972",
-  "fresh_review": true,
   "issues": [],
   "markdown_path": "tests/fixtures/golden_criteria/10.3389_fmars.2023.1101972/extracted.md",
   "prompt_path": "tests/fixtures/golden_criteria/10.3389_fmars.2023.1101972/markdown-quality-prompt.md",
   "provider": "frontiers",
   "review_method": "agent_prompt",
-  "reviewed_at": "2026-06-26T00:00:00Z",
-  "reviewed_by": "codex-agent",
+  "reviewed_at": "2026-07-28T10:53:50Z",
+  "reviewed_by": "codex",
   "sample_id": "10.3389_fmars.2023.1101972",
   "schema_version": 2,
-  "source_markdown_sha256": "acd50919fc106615321232d5651744f6e502f8c87a55a83668602dc57276d5c4",
   "status": "pass"
 }

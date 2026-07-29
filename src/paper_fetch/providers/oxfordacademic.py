@@ -8,7 +8,17 @@ from typing import Any
 from collections.abc import Mapping, Sequence
 from urllib.parse import quote, urljoin
 
-from ..config import build_publisher_user_agent
+from ..config import (
+    build_publisher_user_agent,
+    resolve_asset_download_concurrency,
+)
+from ..extraction.html.assets import (
+    FIGURE_KIND,
+    SUPPLEMENTARY_KIND,
+    download_assets,
+    html_asset_identity_key,
+    split_body_and_supplementary_assets,
+)
 from ..extraction.html.availability_policy import AvailabilityPolicy
 from ..extraction.html.landing import REDIRECT_STATUS_CODES, fetch_landing_html
 from ..extraction.html.provider_rules import (
@@ -19,6 +29,7 @@ from ..extraction.html.provider_rules import (
 )
 from ..http import (
     DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
+    HttpRequestPolicy,
     HttpTransport,
     PDF_MIME_TYPE,
     RequestFailure,
@@ -31,6 +42,7 @@ from ..models import (
     metadata_only_article,
 )
 from ..provider_catalog import BodyTextThresholds, ProviderSpec
+from ..pdf_limits import pdf_max_bytes
 from ..publisher_identity import normalize_doi
 from ..reason_codes import NO_RESULT, OK, PDF_FALLBACK
 from ..runtime import RuntimeContext
@@ -142,6 +154,47 @@ def _append_unique(values: list[str], candidate: str | None) -> None:
         values.append(normalized)
 
 
+def _filter_oxford_assets(
+    assets: Sequence[Mapping[str, Any]],
+    *,
+    asset_profile: AssetProfile,
+) -> list[dict[str, Any]]:
+    if asset_profile == "none":
+        return []
+    filtered: list[dict[str, Any]] = []
+    for item in assets:
+        asset = dict(item)
+        kind = normalize_text(
+            str(asset.get("kind") or asset.get("asset_type") or "")
+        ).lower()
+        section = normalize_text(str(asset.get("section") or "")).lower()
+        if asset_profile != "all" and (
+            kind == "supplementary" or section == "supplementary"
+        ):
+            continue
+        filtered.append(asset)
+    return filtered
+
+
+def _merge_oxford_assets(
+    extracted_assets: Sequence[Mapping[str, Any]],
+    downloaded_assets: Sequence[Mapping[str, Any]],
+) -> list[dict[str, Any]]:
+    merged: list[dict[str, Any]] = []
+    by_identity: dict[str, dict[str, Any]] = {}
+    for item in [*extracted_assets, *downloaded_assets]:
+        asset = dict(item)
+        identity = html_asset_identity_key(asset)
+        existing = by_identity.get(identity) if identity else None
+        if existing is not None:
+            existing.update(asset)
+            continue
+        merged.append(asset)
+        if identity:
+            by_identity[identity] = asset
+    return merged
+
+
 class OxfordAcademicClient(ProviderClient):
     name = "oxfordacademic"
     landing_max_redirects = 8
@@ -174,6 +227,13 @@ class OxfordAcademicClient(ProviderClient):
     def _html_headers(self) -> dict[str, str]:
         return {
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "User-Agent": self.user_agent,
+        }
+
+    def _asset_headers(self) -> dict[str, str]:
+        return {
+            "Accept": "image/avif,image/webp,image/apng,image/*,*/*;q=0.8",
+            "Referer": "https://academic.oup.com/",
             "User-Agent": self.user_agent,
         }
 
@@ -309,6 +369,7 @@ class OxfordAcademicClient(ProviderClient):
         self, url: str, *, referer: str | None = None
     ) -> Mapping[str, Any]:
         headers = default_pdf_headers(self.user_agent, referer=referer)
+        maximum_pdf_bytes = pdf_max_bytes()
         current_url = url
         response: Mapping[str, Any] = {}
         for redirect_count in range(self.landing_max_redirects + 1):
@@ -318,6 +379,10 @@ class OxfordAcademicClient(ProviderClient):
                 headers=headers,
                 timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
                 retry_on_transient=True,
+                request_policy=HttpRequestPolicy(
+                    max_response_bytes=maximum_pdf_bytes,
+                    max_compressed_response_bytes=maximum_pdf_bytes,
+                ),
             )
             response = dict(response)
             response["url"] = urljoin(
@@ -368,6 +433,10 @@ class OxfordAcademicClient(ProviderClient):
                         "Oxford Academic PDF fallback candidate returned an HTML wrapper or other non-PDF content."
                     ),
                     allow_pdf_only=True,
+                    expected_identity={
+                        "doi": doi,
+                        "title": metadata.get("title"),
+                    },
                 )
             except RequestFailure as exc:
                 last_failure = PdfFetchFailure(
@@ -530,6 +599,10 @@ class OxfordAcademicClient(ProviderClient):
                     continue_codes=DEFAULT_WATERFALL_CONTINUE_CODES,
                 ),
             ],
+            doi=doi,
+            metadata=metadata,
+            context=context,
+            client=self,
             final_failure_factory=final_failure,
         )
 
@@ -563,7 +636,7 @@ class OxfordAcademicClient(ProviderClient):
         asset_failures: list[Mapping[str, Any]] | None = None,
         context: RuntimeContext | None = None,
     ):
-        del downloaded_assets, asset_failures, context
+        del context
         content = raw_payload.content
         route = normalize_text(
             content.route_kind if content is not None else ""
@@ -594,8 +667,11 @@ class OxfordAcademicClient(ProviderClient):
             extraction_candidate if isinstance(extraction_candidate, Mapping) else {}
         )
         availability = diagnostics.get("availability_diagnostics")
-        assets = list(content.extracted_assets if content is not None else [])
-        return article_from_markdown(
+        assets = _merge_oxford_assets(
+            list(content.extracted_assets if content is not None else []),
+            list(downloaded_assets or []),
+        )
+        article = article_from_markdown(
             source=source,
             metadata=merged_metadata,
             doi=normalize_doi(str(merged_metadata.get("doi") or "")) or None,
@@ -610,6 +686,9 @@ class OxfordAcademicClient(ProviderClient):
             else None,
             allow_downgrade_from_diagnostics=True,
         )
+        if asset_failures:
+            article.quality.asset_failures = [dict(item) for item in asset_failures]
+        return article
 
     def download_related_assets(
         self,
@@ -621,8 +700,81 @@ class OxfordAcademicClient(ProviderClient):
         asset_profile: AssetProfile = "all",
         context: RuntimeContext | None = None,
     ) -> dict[str, list[dict[str, Any]]]:
-        del doi, metadata, raw_payload, output_dir, asset_profile, context
-        return empty_asset_results()
+        context = self._runtime_context(context, output_dir=output_dir)
+        if output_dir is None or asset_profile == "none":
+            return empty_asset_results()
+        content = raw_payload.content
+        route = normalize_text(
+            content.route_kind if content is not None else ""
+        ).lower()
+        if route == PDF_FALLBACK:
+            return empty_asset_results()
+        extracted_assets = _filter_oxford_assets(
+            list(content.extracted_assets if content is not None else []),
+            asset_profile=asset_profile,
+        )
+        if not extracted_assets:
+            return empty_asset_results()
+        body_assets, supplementary_assets = split_body_and_supplementary_assets(
+            extracted_assets
+        )
+        body_images = [
+            dict(item)
+            for item in body_assets
+            if normalize_text(
+                str(item.get("kind") or item.get("asset_type") or "")
+            ).lower()
+            in {"figure", "formula"}
+        ]
+        merged_metadata = content.merged_metadata if content is not None else None
+        article_id = (
+            normalize_doi(str((merged_metadata or {}).get("doi") or doi or ""))
+            or normalize_text(str(metadata.get("title") or ""))
+            or raw_payload.source_url
+        )
+        concurrency = resolve_asset_download_concurrency(context.env)
+        body_result = (
+            download_assets(
+                FIGURE_KIND,
+                self.transport,
+                article_id=article_id,
+                assets=body_images,
+                output_dir=output_dir,
+                user_agent=self.user_agent,
+                asset_profile=asset_profile,
+                headers=self._asset_headers(),
+                asset_download_concurrency=concurrency,
+                fetch_policy="direct_then_browser",
+            )
+            if body_images
+            else empty_asset_results()
+        )
+        supplementary_result = (
+            download_assets(
+                SUPPLEMENTARY_KIND,
+                self.transport,
+                article_id=article_id,
+                assets=supplementary_assets,
+                output_dir=output_dir,
+                user_agent=self.user_agent,
+                asset_profile=asset_profile,
+                headers=self._asset_headers(),
+                asset_download_concurrency=concurrency,
+                fetch_policy="direct_then_browser",
+            )
+            if supplementary_assets and asset_profile == "all"
+            else empty_asset_results()
+        )
+        return {
+            "assets": [
+                *list(body_result.get("assets") or []),
+                *list(supplementary_result.get("assets") or []),
+            ],
+            "asset_failures": [
+                *list(body_result.get("asset_failures") or []),
+                *list(supplementary_result.get("asset_failures") or []),
+            ],
+        }
 
     def describe_artifacts(
         self,

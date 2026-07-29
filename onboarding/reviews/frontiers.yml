@@ -7,9 +7,9 @@ fixtures:
   purpose: structure
   doi: 10.3389/fmars.2023.1101972
   baseline_markdown_path: tests/fixtures/golden_criteria/10.3389_fmars.2023.1101972/extracted.md
-  baseline_markdown_sha256: acd50919fc106615321232d5651744f6e502f8c87a55a83668602dc57276d5c4
+  baseline_markdown_sha256: 6abf801de9dc1e191f9259d756ec09a9054595e5e0360542e92cbd2408780eb9
   markdown_quality_path: tests/fixtures/golden_criteria/10.3389_fmars.2023.1101972/markdown-quality.json
-  markdown_quality_sha256: e1a7b481276de0073ad847221cb63ee4eb465c2100e9ab5bf9d071e6b4d13c29
+  markdown_quality_sha256: 1285ead7590c63c5fbd45e4b8b09756596ae51402a966487d7c7c7799dae3cba
   review_notes: Frontiers XML fixture preserves abstract, body sections, figure, table, supplementary scope, and references without publisher chrome.
   sample_representative: true
   markdown_semantic_reviewed: true
@@ -24,9 +24,9 @@ fixtures:
   purpose: table
   doi: 10.3389/fmars.2023.1101972
   baseline_markdown_path: tests/fixtures/golden_criteria/10.3389_fmars.2023.1101972/extracted.md
-  baseline_markdown_sha256: acd50919fc106615321232d5651744f6e502f8c87a55a83668602dc57276d5c4
+  baseline_markdown_sha256: 6abf801de9dc1e191f9259d756ec09a9054595e5e0360542e92cbd2408780eb9
   markdown_quality_path: tests/fixtures/golden_criteria/10.3389_fmars.2023.1101972/markdown-quality.json
-  markdown_quality_sha256: e1a7b481276de0073ad847221cb63ee4eb465c2100e9ab5bf9d071e6b4d13c29
+  markdown_quality_sha256: 1285ead7590c63c5fbd45e4b8b09756596ae51402a966487d7c7c7799dae3cba
   review_notes: Table fixture keeps a readable Markdown table from Frontiers JATS table-wrap content.
   sample_representative: true
   markdown_semantic_reviewed: true
@@ -42,9 +42,9 @@ fixtures:
   purpose: figure
   doi: 10.3389/fmars.2023.1101972
   baseline_markdown_path: tests/fixtures/golden_criteria/10.3389_fmars.2023.1101972/extracted.md
-  baseline_markdown_sha256: acd50919fc106615321232d5651744f6e502f8c87a55a83668602dc57276d5c4
+  baseline_markdown_sha256: 6abf801de9dc1e191f9259d756ec09a9054595e5e0360542e92cbd2408780eb9
   markdown_quality_path: tests/fixtures/golden_criteria/10.3389_fmars.2023.1101972/markdown-quality.json
-  markdown_quality_sha256: e1a7b481276de0073ad847221cb63ee4eb465c2100e9ab5bf9d071e6b4d13c29
+  markdown_quality_sha256: 1285ead7590c63c5fbd45e4b8b09756596ae51402a966487d7c7c7799dae3cba
   review_notes: Figure fixture keeps a body Markdown image and rewritten Frontiers webp asset URL before tail sections.
   sample_representative: true
   markdown_semantic_reviewed: true
@@ -60,9 +60,9 @@ fixtures:
   purpose: supplementary
   doi: 10.3389/fmars.2023.1101972
   baseline_markdown_path: tests/fixtures/golden_criteria/10.3389_fmars.2023.1101972/extracted.md
-  baseline_markdown_sha256: acd50919fc106615321232d5651744f6e502f8c87a55a83668602dc57276d5c4
+  baseline_markdown_sha256: 6abf801de9dc1e191f9259d756ec09a9054595e5e0360542e92cbd2408780eb9
   markdown_quality_path: tests/fixtures/golden_criteria/10.3389_fmars.2023.1101972/markdown-quality.json
-  markdown_quality_sha256: e1a7b481276de0073ad847221cb63ee4eb465c2100e9ab5bf9d071e6b4d13c29
+  markdown_quality_sha256: 1285ead7590c63c5fbd45e4b8b09756596ae51402a966487d7c7c7799dae3cba
   review_notes: Supplementary fixture preserves supplementary-material section text while avoiding unstable fabricated attachment URLs.
   sample_representative: true
   markdown_semantic_reviewed: true
@@ -76,9 +76,9 @@ fixtures:
   purpose: references
   doi: 10.3389/fmars.2023.1101972
   baseline_markdown_path: tests/fixtures/golden_criteria/10.3389_fmars.2023.1101972/extracted.md
-  baseline_markdown_sha256: acd50919fc106615321232d5651744f6e502f8c87a55a83668602dc57276d5c4
+  baseline_markdown_sha256: 6abf801de9dc1e191f9259d756ec09a9054595e5e0360542e92cbd2408780eb9
   markdown_quality_path: tests/fixtures/golden_criteria/10.3389_fmars.2023.1101972/markdown-quality.json
-  markdown_quality_sha256: e1a7b481276de0073ad847221cb63ee4eb465c2100e9ab5bf9d071e6b4d13c29
+  markdown_quality_sha256: 1285ead7590c63c5fbd45e4b8b09756596ae51402a966487d7c7c7799dae3cba
   review_notes: References fixture keeps a references section without Frontiers linkout chrome.
   sample_representative: true
   markdown_semantic_reviewed: true
@@ -92,9 +92,9 @@ fixtures:
   purpose: pdf_fallback
   doi: 10.3389/fmars.2023.1101972
   baseline_markdown_path: tests/fixtures/golden_criteria/10.3389_fmars.2023.1101972/extracted.md
-  baseline_markdown_sha256: acd50919fc106615321232d5651744f6e502f8c87a55a83668602dc57276d5c4
+  baseline_markdown_sha256: 6abf801de9dc1e191f9259d756ec09a9054595e5e0360542e92cbd2408780eb9
   markdown_quality_path: tests/fixtures/golden_criteria/10.3389_fmars.2023.1101972/markdown-quality.json
-  markdown_quality_sha256: e1a7b481276de0073ad847221cb63ee4eb465c2100e9ab5bf9d071e6b4d13c29
+  markdown_quality_sha256: 1285ead7590c63c5fbd45e4b8b09756596ae51402a966487d7c7c7799dae3cba
   review_notes: PDF fallback contract uses the same Frontiers sample DOI, whose canonical PDF route returns application/pdf bytes.
   sample_representative: true
   markdown_semantic_reviewed: true

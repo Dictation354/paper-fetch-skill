@@ -357,6 +357,17 @@ class ArxivProviderTests(unittest.TestCase):
         )
         self.assertEqual(api_client.queries, [["2605.06663v1"]])
 
+    def test_fetch_metadata_rejects_api_result_for_different_arxiv_id(self) -> None:
+        api_client = ReplayArxivApiClient(
+            {"2605.06663v1": _api_payload("2605.06665v1")}
+        )
+        client = ArxivClient(RecordingTransport({}), {}, api_client=api_client)
+
+        with self.assertRaises(ProviderFailure) as raised:
+            client.fetch_metadata({"arxiv_id": "2605.06663v1"})
+
+        self.assertEqual(raised.exception.code, "identity_mismatch")
+
     def test_fetch_metadata_uses_internal_atom_api_client(self) -> None:
         arxiv_id = "2605.06663v1"
         transport = RecordingTransport(

@@ -21,6 +21,7 @@ from ...utils import dedupe_normalized, empty_asset_results, normalize_text
 from ..browser_runtime import (
     BrowserHtmlReadiness,
     BrowserRuntimeFailure,
+    BrowserWarmResult,
     merge_browser_context_seeds,
 )
 from .assets import _download_asset_match_tokens, _merge_download_attempt_results
@@ -41,7 +42,7 @@ class BrowserAssetDownloadPlan:
     asset_profile: AssetProfile
     body_assets: list[dict[str, Any]]
     supplementary_assets: list[dict[str, Any]]
-    fetch_policy: str = "browser_first"
+    fetch_policy: str = "direct_then_browser"
     candidate_builder: Any | None = None
 
 
@@ -149,6 +150,10 @@ def retry_failed_browser_assets(
         browser_context_seed=recovery.browser_context_seed,
         runtime_context=recovery.runtime_context,
     )
+    if isinstance(refreshed_seed, BrowserWarmResult):
+        if not refreshed_seed.accepted or not refreshed_seed.changed:
+            return previous
+        refreshed_seed = refreshed_seed.seed
     retry_result = _run_browser_asset_download_attempt(
         plan,
         recovery,
@@ -187,8 +192,17 @@ def download_browser_backed_related_assets(
         opener_requester=opener_requester,
         deps=deps,
     )
-    recovery_allowed = plan.fetch_policy != "direct_then_browser" or any(
-        _asset_failure_allows_browser_recovery(failure) for failure in result.failures
+    recovery_allowed = bool(
+        deps._assets_matching_download_failures(
+            plan.body_assets,
+            result.failures,
+            retry_scope="body",
+        )
+        or deps._assets_matching_download_failures(
+            plan.supplementary_assets,
+            result.failures,
+            retry_scope="supplementary",
+        )
     )
     if refresh_once and result.failures and recovery_allowed:
         result = retry_failed_browser_assets(

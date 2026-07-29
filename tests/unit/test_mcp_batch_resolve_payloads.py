@@ -113,8 +113,8 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
                 )
             )
 
-        self.assertFalse(result.isError)
-        payload = result.structuredContent
+        self.assertFalse(result.is_error)
+        payload = result.structured_content
         self.assertEqual(payload["schema_version"], 1)
         self.assertEqual(payload["source"], "elsevier_xml")
         self.assertTrue(payload["has_fulltext"])
@@ -150,8 +150,8 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
                 )
             )
 
-        self.assertFalse(result.isError)
-        payload = result.structuredContent
+        self.assertFalse(result.is_error)
+        payload = result.structured_content
         self.assertEqual(payload["article"], None)
         self.assertEqual(payload["markdown"], None)
         self.assertEqual(payload["metadata"]["title"], "Example Article")
@@ -173,12 +173,12 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
                 mcp_tools.fetch_paper_tool_async(query="ambiguous title")
             )
 
-        self.assertTrue(result.isError)
-        self.assertEqual(result.structuredContent["status"], "ambiguous")
-        self.assertEqual(result.structuredContent["schema_version"], 1)
-        self.assertEqual(result.structuredContent["code"], "ambiguous")
+        self.assertTrue(result.is_error)
+        self.assertEqual(result.structured_content["status"], "ambiguous")
+        self.assertEqual(result.structured_content["schema_version"], 1)
+        self.assertEqual(result.structured_content["code"], "ambiguous")
         self.assertEqual(
-            result.structuredContent["candidates"][0]["doi"], "10.1000/example"
+            result.structured_content["candidates"][0]["doi"], "10.1000/example"
         )
 
     def test_fetch_paper_tool_returns_provider_failure_payload_with_specific_status(
@@ -198,17 +198,19 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
                 mcp_tools.fetch_paper_tool_async(query="10.1000/example")
             )
 
-        self.assertTrue(result.isError)
-        self.assertEqual(result.structuredContent["schema_version"], 1)
-        self.assertEqual(result.structuredContent["status"], "no_access")
-        self.assertEqual(result.structuredContent["code"], "no_access")
-        self.assertEqual(result.structuredContent["error_category"], "no_access")
-        self.assertEqual(result.structuredContent["reason"], "Provider request failed.")
-        self.assertEqual(result.structuredContent["warnings"], ["provider warning"])
+        self.assertTrue(result.is_error)
+        self.assertEqual(result.structured_content["schema_version"], 1)
+        self.assertEqual(result.structured_content["status"], "no_access")
+        self.assertEqual(result.structured_content["code"], "no_access")
+        self.assertEqual(result.structured_content["error_category"], "no_access")
         self.assertEqual(
-            result.structuredContent["source_trail"], ["fulltext:provider_failed"]
+            result.structured_content["reason"], "Provider request failed."
         )
-        self.assertIsNone(result.structuredContent["missing_env"])
+        self.assertEqual(result.structured_content["warnings"], ["provider warning"])
+        self.assertEqual(
+            result.structured_content["source_trail"], ["fulltext:provider_failed"]
+        )
+        self.assertIsNone(result.structured_content["missing_env"])
 
     def test_error_payload_from_exception_preserves_provider_failure_code(
         self,
@@ -279,10 +281,10 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
                 mcp_tools.fetch_paper_tool_async(query="10.1000/example")
             )
 
-        self.assertTrue(result.isError)
-        self.assertEqual(result.structuredContent["status"], "no_access")
-        self.assertEqual(result.structuredContent["missing_env"], ["ELSEVIER_API_KEY"])
-        tool_schema.model_validate(result.structuredContent)
+        self.assertTrue(result.is_error)
+        self.assertEqual(result.structured_content["status"], "no_access")
+        self.assertEqual(result.structured_content["missing_env"], ["ELSEVIER_API_KEY"])
+        tool_schema.model_validate(result.structured_content)
 
     def test_fetch_paper_payload_updates_cache_index_for_saved_files(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -447,11 +449,11 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
             )
         )
 
-        self.assertTrue(result.isError)
-        self.assertEqual(result.structuredContent["status"], "error")
+        self.assertTrue(result.is_error)
+        self.assertEqual(result.structured_content["status"], "error")
         self.assertIn(
             "queries must contain at most 50 entries.",
-            result.structuredContent["reason"],
+            result.structured_content["reason"],
         )
 
     def test_batch_check_payload_uses_lightweight_results_and_no_downloads(
@@ -480,7 +482,8 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
         self.assertEqual(payload["results"][0]["query"], "10.1000/one")
         self.assertEqual(payload["results"][0]["doi"], "10.1000/one")
         self.assertEqual(payload["results"][0]["title"], "Title for 10.1000/one")
-        self.assertEqual(payload["results"][0]["has_fulltext"], True)
+        self.assertIsNone(payload["results"][0]["has_fulltext"])
+        self.assertTrue(payload["results"][0]["likely_has_fulltext"])
         self.assertEqual(payload["results"][0]["probe_state"], "likely_yes")
         self.assertEqual(payload["results"][0]["source"], None)
         self.assertEqual(payload["results"][0]["source_trail"], [])
@@ -514,9 +517,9 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
             )
         )
 
-        self.assertTrue(result.isError)
-        self.assertEqual(result.structuredContent["status"], "error")
-        self.assertIn("greater than or equal to 1", result.structuredContent["reason"])
+        self.assertTrue(result.is_error)
+        self.assertEqual(result.structured_content["status"], "error")
+        self.assertIn("greater than or equal to 1", result.structured_content["reason"])
 
     def test_batch_check_tool_rejects_too_many_queries(self) -> None:
         result = asyncio.run(
@@ -526,11 +529,11 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
             )
         )
 
-        self.assertTrue(result.isError)
-        self.assertEqual(result.structuredContent["status"], "error")
+        self.assertTrue(result.is_error)
+        self.assertEqual(result.structured_content["status"], "error")
         self.assertIn(
             "queries must contain at most 50 entries.",
-            result.structuredContent["reason"],
+            result.structured_content["reason"],
         )
 
     def test_batch_check_payload_aborts_on_rate_limit(self) -> None:
@@ -592,11 +595,11 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
             title="Example Article",
         )
 
-        self.assertTrue(result.isError)
-        self.assertEqual(result.structuredContent["status"], "error")
+        self.assertTrue(result.is_error)
+        self.assertEqual(result.structured_content["status"], "error")
         self.assertIn(
             "either query or structured title/authors/year",
-            result.structuredContent["reason"],
+            result.structured_content["reason"],
         )
 
     def test_has_fulltext_tool_serializes_probe_result(self) -> None:
@@ -614,14 +617,14 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
         ):
             result = mcp_tools.has_fulltext_tool(query="10.1000/example")
 
-        self.assertFalse(result.isError)
-        self.assertEqual(result.structuredContent["doi"], "10.1000/example")
-        self.assertEqual(result.structuredContent["state"], "likely_yes")
+        self.assertFalse(result.is_error)
+        self.assertEqual(result.structured_content["doi"], "10.1000/example")
+        self.assertEqual(result.structured_content["state"], "likely_yes")
         self.assertEqual(
-            result.structuredContent["evidence"], ["crossref_fulltext_link"]
+            result.structured_content["evidence"], ["crossref_fulltext_link"]
         )
-        self.assertNotIn("title", result.structuredContent)
-        tool_schema.model_validate(result.structuredContent)
+        self.assertNotIn("title", result.structured_content)
+        tool_schema.model_validate(result.structured_content)
 
     def test_has_fulltext_tool_keeps_ambiguous_error_payload(self) -> None:
         error = PaperFetchFailure(
@@ -639,12 +642,12 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
         ):
             result = mcp_tools.has_fulltext_tool(query="Example title")
 
-        self.assertTrue(result.isError)
-        self.assertEqual(result.structuredContent["status"], "ambiguous")
+        self.assertTrue(result.is_error)
+        self.assertEqual(result.structured_content["status"], "ambiguous")
         self.assertEqual(
-            result.structuredContent["candidates"], [{"doi": "10.1000/one"}]
+            result.structured_content["candidates"], [{"doi": "10.1000/one"}]
         )
-        tool_schema.model_validate(result.structuredContent)
+        tool_schema.model_validate(result.structured_content)
 
     def test_fetch_paper_tool_error_payload_matches_output_schema(self) -> None:
         server = build_server()
@@ -657,9 +660,9 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
             mcp_tools.fetch_paper_tool_async(query="10.1000/example", modes=["pdf"])
         )
 
-        self.assertTrue(result.isError)
-        self.assertEqual(result.structuredContent["status"], "error")
-        tool_schema.model_validate(result.structuredContent)
+        self.assertTrue(result.is_error)
+        self.assertEqual(result.structured_content["status"], "error")
+        tool_schema.model_validate(result.structured_content)
 
     def test_fetch_paper_tool_rejects_negative_inline_image_budget_before_service_call(
         self,
@@ -672,6 +675,6 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
                 )
             )
 
-        self.assertTrue(result.isError)
-        self.assertIn("greater than or equal to 0", result.structuredContent["reason"])
+        self.assertTrue(result.is_error)
+        self.assertIn("greater than or equal to 0", result.structured_content["reason"])
         mocked_fetch.assert_not_called()

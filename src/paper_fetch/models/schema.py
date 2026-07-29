@@ -206,6 +206,9 @@ class AssetQualitySummary:
     audited: bool = False
     requested: bool = False
     profile: AssetProfile = "none"
+    expected: int | None = None
+    discovered: int = 0
+    attempted: int = 0
     total: int = 0
     local: int = 0
     full_size: int = 0

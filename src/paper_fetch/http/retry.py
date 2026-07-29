@@ -4,8 +4,11 @@ from __future__ import annotations
 
 import logging
 import time
+import threading
+from dataclasses import dataclass
 from datetime import datetime, UTC
 from email.utils import parsedate_to_datetime
+from typing import TYPE_CHECKING
 from collections.abc import Mapping
 
 from urllib3.util import Retry
@@ -20,8 +23,32 @@ TRANSIENT_HTTP_STATUS_CODES = frozenset(range(500, 600))
 logger = logging.getLogger("paper_fetch.http")
 
 
+@dataclass(frozen=True)
+class RetryAttemptContext:
+    started_at: float
+    attempt: int
+    cooldown_key: str
+    host_semaphore: threading.BoundedSemaphore | None
+
+
 class RetryMixin:
     """Private retry methods mixed into ``HttpTransport``."""
+
+    if TYPE_CHECKING:
+
+        def _set_cooldown(self, key: str, delay_seconds: float) -> None: ...
+
+        def _sleep_without_host_slot(
+            self,
+            semaphore: threading.BoundedSemaphore | None,
+            seconds: float,
+        ) -> None: ...
+
+        def _wait_for_cooldown(
+            self,
+            key: str,
+            semaphore: threading.BoundedSemaphore | None,
+        ) -> None: ...
 
     def _build_rate_limit_retry_policy(
         self,
@@ -33,7 +60,7 @@ class RetryMixin:
         return Retry(
             total=total,
             status=total,
-            allowed_methods=None,
+            allowed_methods=frozenset({"GET", "HEAD"}),
             status_forcelist={429},
             respect_retry_after_header=True,
             raise_on_status=False,
@@ -53,7 +80,7 @@ class RetryMixin:
             read=total,
             status=total,
             other=total,
-            allowed_methods=None,
+            allowed_methods=frozenset({"GET", "HEAD"}),
             status_forcelist=TRANSIENT_HTTP_STATUS_CODES,
             backoff_factor=max(0.0, float(backoff_base_seconds)),
             respect_retry_after_header=False,
@@ -78,13 +105,12 @@ class RetryMixin:
         status_code: int,
         body: bytes,
         headers_map: Mapping[str, str],
-        request_started_at: float,
-        attempt: int,
         rate_limit_policy: Retry,
         max_rate_limit_wait_seconds: int,
         transient_policy: Retry,
         transient_attempts_made: int,
-    ) -> tuple[bool, Retry, Retry, int]:
+        attempt_context: RetryAttemptContext,
+    ) -> tuple[Retry, Retry, int]:
         retry_after_seconds = parse_retry_after_seconds(headers_map.get("retry-after"))
         rate_limit_wait_seconds: float | None = retry_after_seconds
         if rate_limit_wait_seconds is None:
@@ -107,14 +133,24 @@ class RetryMixin:
                 method=method.upper(),
                 url=redact_url_for_cache(error_url),
                 status=status_code,
-                elapsed_ms=round((time.monotonic() - request_started_at) * 1000, 3),
+                elapsed_ms=round(
+                    (time.monotonic() - attempt_context.started_at) * 1000,
+                    3,
+                ),
                 retry_after_seconds=retry_after_seconds,
-                attempt=attempt,
+                attempt=attempt_context.attempt,
                 reason="rate_limit",
             )
             rate_limit_policy = self._consume_retry(rate_limit_policy)
-            time.sleep(max(0.0, rate_limit_wait_seconds))
-            return True, rate_limit_policy, transient_policy, transient_attempts_made
+            self._set_cooldown(
+                attempt_context.cooldown_key,
+                max(0.0, rate_limit_wait_seconds),
+            )
+            self._wait_for_cooldown(
+                attempt_context.cooldown_key,
+                attempt_context.host_semaphore,
+            )
+            return rate_limit_policy, transient_policy, transient_attempts_made
         if self._retry_remaining(transient_policy) > 0 and transient_policy.is_retry(
             method.upper(), status_code, retry_after_seconds is not None
         ):
@@ -125,19 +161,23 @@ class RetryMixin:
                 method=method.upper(),
                 url=redact_url_for_cache(error_url),
                 status=status_code,
-                elapsed_ms=round((time.monotonic() - request_started_at) * 1000, 3),
+                elapsed_ms=round(
+                    (time.monotonic() - attempt_context.started_at) * 1000,
+                    3,
+                ),
                 retry_after_seconds=retry_after_seconds,
-                attempt=attempt,
+                attempt=attempt_context.attempt,
                 reason="transient_http",
             )
             transient_policy = self._consume_retry(transient_policy)
-            time.sleep(
+            self._sleep_without_host_slot(
+                attempt_context.host_semaphore,
                 self._transient_backoff_seconds(
                     transient_policy, transient_attempts_made
-                )
+                ),
             )
             transient_attempts_made += 1
-            return True, rate_limit_policy, transient_policy, transient_attempts_made
+            return rate_limit_policy, transient_policy, transient_attempts_made
         emit_structured_log(
             logger,
             logging.DEBUG,
@@ -145,9 +185,12 @@ class RetryMixin:
             method=method.upper(),
             url=redact_url_for_cache(error_url),
             status=status_code,
-            elapsed_ms=round((time.monotonic() - request_started_at) * 1000, 3),
+            elapsed_ms=round(
+                (time.monotonic() - attempt_context.started_at) * 1000,
+                3,
+            ),
             retry_after_seconds=retry_after_seconds,
-            attempt=attempt,
+            attempt=attempt_context.attempt,
         )
         raise RequestFailure(
             status_code,

@@ -117,6 +117,17 @@ def test_default_probe_status_checks_playwright_requirement(monkeypatch: Any) ->
     monkeypatch.setattr(
         "paper_fetch.providers.base.importlib.util.find_spec", fake_find_spec
     )
+    monkeypatch.setattr(
+        camoufox_backend,
+        "_dependency_details",
+        lambda: {
+            "probe": "unit_test",
+            "packages": {"playwright": True, "camoufox": True},
+            "package_ready": True,
+            "runtime_installed": True,
+            "download_required": False,
+        },
+    )
     result = _client(
         catalog,
         env={"PAPER_FETCH_BROWSER_BACKEND": "camoufox"},
@@ -142,6 +153,9 @@ def test_default_probe_status_checks_browser_runtime_without_launch(
         lambda: {
             "probe": "unit_test",
             "packages": {"playwright": True, "camoufox": True},
+            "package_ready": True,
+            "runtime_installed": True,
+            "download_required": False,
         },
     )
 
@@ -159,4 +173,5 @@ def test_default_probe_status_checks_browser_runtime_without_launch(
     assert [check["name"] for check in checks["browser_runtime"].details["checks"]] == [
         "runtime_env",
         "playwright_dependency",
+        "browser_runtime",
     ]

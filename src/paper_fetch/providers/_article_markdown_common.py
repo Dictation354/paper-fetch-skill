@@ -110,15 +110,20 @@ def normalize_inline_markup_text(value: str | None) -> str:
 
 
 def render_inline_text(
-    element: ET.Element | None, *, skip_local_names: set[str] | None = None
+    element: ET.Element | None,
+    *,
+    skip_local_names: set[str] | None = None,
+    formula_renders: list[Any] | None = None,
+    source_url: str = "",
 ) -> str:
     if element is None:
         return ""
 
     from ._article_markdown_math import (
-        render_external_mathml_expression,
-        render_inline_formula,
-        render_tex_math,
+        formula_inline_markdown,
+        render_inline_formula_result,
+        render_mathml_formula_result,
+        render_tex_formula_result,
     )
 
     skip_names = skip_local_names or set()
@@ -140,34 +145,55 @@ def render_inline_text(
                     parts.append(child.tail)
                 continue
             if local_name == "math":
-                expression = render_external_mathml_expression(
-                    child, display_mode=False
+                formula_result = render_mathml_formula_result(
+                    child,
+                    display_mode=False,
                 )
-                if expression:
-                    parts.append(f"${expression}$")
+                if formula_renders is not None:
+                    formula_renders.append(formula_result)
+                rendered_formula = formula_inline_markdown(formula_result)
+                if rendered_formula:
+                    parts.append(rendered_formula)
             elif local_name == "inline-formula":
-                expression = render_inline_formula(child)
-                if expression:
-                    parts.append(f"${expression}$")
+                formula_result = render_inline_formula_result(
+                    child,
+                    source_url=source_url,
+                )
+                if formula_renders is not None:
+                    formula_renders.append(formula_result)
+                rendered_formula = formula_inline_markdown(formula_result)
+                if rendered_formula:
+                    parts.append(rendered_formula)
             elif local_name == "tex-math":
-                expression = render_tex_math(child)
-                if expression:
-                    parts.append(f"${expression}$")
+                formula_result = render_tex_formula_result(child)
+                if formula_renders is not None:
+                    formula_renders.append(formula_result)
+                rendered_formula = formula_inline_markdown(formula_result)
+                if rendered_formula:
+                    parts.append(rendered_formula)
             if local_name == "sup":
                 parts.append(
-                    f"<sup>{render_inline_text(child, skip_local_names=skip_names)}</sup>"
+                    "<sup>"
+                    f"{render_inline_text(child, skip_local_names=skip_names, formula_renders=formula_renders, source_url=source_url)}"
+                    "</sup>"
                 )
             elif local_name == "sub":
                 parts.append(
-                    f"<sub>{render_inline_text(child, skip_local_names=skip_names)}</sub>"
+                    "<sub>"
+                    f"{render_inline_text(child, skip_local_names=skip_names, formula_renders=formula_renders, source_url=source_url)}"
+                    "</sub>"
                 )
             elif local_name in {"bold"}:
                 parts.append(
-                    f"**{render_inline_text(child, skip_local_names=skip_names)}**"
+                    "**"
+                    f"{render_inline_text(child, skip_local_names=skip_names, formula_renders=formula_renders, source_url=source_url)}"
+                    "**"
                 )
             elif local_name in {"italic"}:
                 parts.append(
-                    f"*{render_inline_text(child, skip_local_names=skip_names)}*"
+                    "*"
+                    f"{render_inline_text(child, skip_local_names=skip_names, formula_renders=formula_renders, source_url=source_url)}"
+                    "*"
                 )
             elif local_name in {"break", "br"}:
                 parts.append("\n")

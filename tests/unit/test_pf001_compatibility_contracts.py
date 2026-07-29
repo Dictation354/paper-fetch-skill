@@ -224,6 +224,14 @@ class Pf001CompatibilityContractTests(unittest.TestCase):
         )
         for item in payload["results"]:
             self.assertIsNone(
+                item["has_fulltext"],
+                "metadata probes must not claim accepted full text",
+            )
+            self.assertEqual(
+                item["likely_has_fulltext"],
+                item["probe_state"] == "likely_yes" or None,
+            )
+            self.assertIsNone(
                 item["content_kind"],
                 "metadata probes must not claim metadata-only or verified full text",
             )
@@ -376,12 +384,12 @@ class Pf001CompatibilityContractTests(unittest.TestCase):
             "MCP must stop incremental task submission after rate limiting",
         )
 
-    def test_native_fastmcp_tools_list_strategy_is_object_not_host_unknown(
+    def test_native_mcpserver_tools_list_strategy_is_object_not_host_unknown(
         self,
     ) -> None:
         tools = asyncio.run(build_server().list_native_tools())
         fetch_tool = next(tool for tool in tools if tool.name == "fetch_paper")
-        native_schema = fetch_tool.inputSchema
+        native_schema = fetch_tool.input_schema
         strategy_schema = native_schema["properties"]["strategy"]
         object_schema = None
         for branch in strategy_schema.get("anyOf", [strategy_schema]):
@@ -401,7 +409,7 @@ class Pf001CompatibilityContractTests(unittest.TestCase):
         self.assertIsNotNone(
             object_schema,
             (
-                "Native FastMCP tools/list must expose strategy as an object; "
+                "Native MCPServer tools/list must expose strategy as an object; "
                 "a Codex host 'unknown' label is only a host display concern"
             ),
         )

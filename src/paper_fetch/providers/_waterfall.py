@@ -3,18 +3,22 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+import time
 from typing import Any
 from collections.abc import Callable, Mapping
 
 from ..tracing import (
+    TraceContext,
     TraceEvent,
     merge_trace,
     source_trail_from_trace,
     trace_from_markers,
+    trace_event,
 )
 from .base import ProviderFailure, RawFulltextPayload, combine_provider_failures
 from ..reason_codes import (
     ERROR,
+    IDENTITY_MISMATCH,
     NO_ACCESS,
     NO_RESULT,
     NOT_CONFIGURED,
@@ -29,6 +33,7 @@ DEFAULT_WATERFALL_CONTINUE_CODES = (
     ERROR,
     NOT_CONFIGURED,
     NOT_SUPPORTED,
+    IDENTITY_MISMATCH,
 )
 
 
@@ -86,8 +91,9 @@ def _run_step(
     *,
     context: Any = None,
     client: Any = None,
+    invoke_with_request: bool = False,
 ) -> RawFulltextPayload:
-    if doi is None:
+    if not invoke_with_request or doi is None:
         return step.run(state)
     if client is not None:
         return step.run(client, doi, metadata or {}, context=context)
@@ -136,14 +142,8 @@ def _failure_with_marker(
     source_trail = list(failure.source_trail)
     if marker not in source_trail:
         source_trail.append(marker)
-    return ProviderFailure(
-        failure.code,
-        failure.message,
-        retry_after_seconds=failure.retry_after_seconds,
-        missing_env=failure.missing_env,
-        warnings=failure.warnings,
+    return failure.with_updates(
         source_trail=source_trail,
-        trace=failure.trace,
     )
 
 
@@ -155,14 +155,8 @@ def _failure_with_warning(
         return failure
     warnings = list(failure.warnings)
     _append_unique_text(warnings, [normalized])
-    return ProviderFailure(
-        failure.code,
-        failure.message,
-        retry_after_seconds=failure.retry_after_seconds,
-        missing_env=failure.missing_env,
+    return failure.with_updates(
         warnings=warnings,
-        source_trail=failure.source_trail,
-        trace=failure.trace,
     )
 
 
@@ -203,9 +197,7 @@ def _failure_with_state(
         retry_after_values.append(failure.retry_after_seconds)
     trace = merge_trace(trace, failure.trace)
 
-    return ProviderFailure(
-        failure.code,
-        failure.message,
+    return failure.with_updates(
         retry_after_seconds=max(retry_after_values) if retry_after_values else None,
         missing_env=missing_env,
         warnings=warnings,
@@ -226,6 +218,7 @@ def run_provider_waterfall(
     *,
     context: Any = None,
     client: Any = None,
+    invoke_with_request: bool = False,
     initial_warnings: list[str] | tuple[str, ...] | None = None,
     initial_source_trail: list[str] | tuple[str, ...] | None = None,
     final_failure_factory: FinalFailureFactory | None = None,
@@ -234,15 +227,65 @@ def run_provider_waterfall(
     _append_unique_text(state.warnings, list(initial_warnings or []))
     _append_unique_text(state.initial_source_trail, list(initial_source_trail or []))
 
-    for step in steps:
+    for attempt_index, step in enumerate(steps, start=1):
         if step.condition is not None and not step.condition(state):
             continue
+        attempt_started = time.monotonic()
+        attempt_started_epoch = time.time()
+        provider_name = str(getattr(client, "name", "") or "") or None
+        attempt_id = f"{provider_name or 'provider'}:{step.label}:{attempt_index}"
+        span_id = attempt_id
         try:
             payload = _run_step(
-                step, state, doi, metadata, context=context, client=client
+                step,
+                state,
+                doi,
+                metadata,
+                context=context,
+                client=client,
+                invoke_with_request=invoke_with_request,
             )
+            if client is not None and doi is not None:
+                payload = client.validate_raw_payload_identity(
+                    doi, metadata or {}, payload
+                )
         except ProviderFailure as exc:
-            failure = _failure_with_marker(exc, step.failure_marker)
+            failure = exc.with_updates(
+                provider=exc.provider or provider_name,
+                route=exc.route or step.label,
+                stage=exc.stage or "fulltext",
+                trace=merge_trace(
+                    exc.trace,
+                    [
+                        trace_event(
+                            "fulltext",
+                            f"{provider_name}_{step.label}"
+                            if provider_name
+                            else step.label,
+                            "fail",
+                            code=exc.code,
+                            message=exc.message,
+                            context=TraceContext(
+                                provider=provider_name,
+                                route=step.label,
+                                span_id=span_id,
+                                attempt_id=attempt_id,
+                                attempt=attempt_index,
+                                http_status=exc.http_status,
+                                error_category=exc.error_category,
+                                retryable=exc.retryable,
+                                retry_after_seconds=exc.retry_after_seconds,
+                                started_at=attempt_started_epoch,
+                                finished_at=time.time(),
+                                duration_ms=round(
+                                    (time.monotonic() - attempt_started) * 1000, 3
+                                ),
+                            ),
+                        )
+                    ],
+                ),
+            )
+            failure = _failure_with_marker(failure, step.failure_marker)
             if failure.code not in step.continue_codes:
                 raise _failure_with_state(failure, state) from exc
             warning = _resolve_failure_warning(step.failure_warning, failure, state)
@@ -269,6 +312,32 @@ def run_provider_waterfall(
             source_trail = list(state.source_trail)
             _append_unique_text(source_trail, source_trail_from_trace(payload.trace))
             payload.trace = _trace_with_markers(source_trail, payload.trace)
+        prior_failure_trace = [
+            event for _label, failure in state.failures for event in failure.trace
+        ]
+        payload.trace = merge_trace(
+            prior_failure_trace,
+            payload.trace,
+            [
+                trace_event(
+                    "fulltext",
+                    f"{provider_name}_{step.label}" if provider_name else step.label,
+                    "ok",
+                    context=TraceContext(
+                        provider=provider_name,
+                        route=step.label,
+                        span_id=span_id,
+                        attempt_id=attempt_id,
+                        attempt=attempt_index,
+                        started_at=attempt_started_epoch,
+                        finished_at=time.time(),
+                        duration_ms=round(
+                            (time.monotonic() - attempt_started) * 1000, 3
+                        ),
+                    ),
+                )
+            ],
+        )
         return payload
 
     if not state.failures:

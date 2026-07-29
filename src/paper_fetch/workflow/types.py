@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from typing import Any
 from collections.abc import Iterator, Set as AbstractSet
 
+from ..failure import FailureDiagnostics
 from ..metadata.types import ProviderMetadata
 from ..models import AssetProfile
 from ..provider_catalog import (
@@ -13,6 +14,8 @@ from ..provider_catalog import (
     default_asset_profile_for_source,
     provider_names,
 )
+from ..reason_codes import ERROR
+from ..tracing import TraceEvent
 from ..utils import normalize_text
 
 
@@ -64,11 +67,49 @@ class PaperFetchFailure(Exception):
         reason: str,
         *,
         candidates: list[dict[str, Any]] | None = None,
+        retry_after_seconds: int | None = None,
+        warnings: list[str] | None = None,
+        source_trail: list[str] | None = None,
+        trace: list[TraceEvent] | None = None,
+        missing_env: list[str] | None = None,
+        diagnostics: FailureDiagnostics | None = None,
     ) -> None:
         super().__init__(reason)
         self.status = status
         self.reason = reason
         self.candidates = list(candidates or [])
+        self.retry_after_seconds = retry_after_seconds
+        self.warnings = [str(item) for item in (warnings or [])]
+        self.source_trail = [str(item) for item in (source_trail or [])]
+        self.trace = list(trace or [])
+        self.missing_env = [str(item) for item in (missing_env or [])]
+        self.diagnostics = diagnostics or FailureDiagnostics()
+        self.provider = self.diagnostics.provider
+        self.route = self.diagnostics.route
+        self.stage = self.diagnostics.stage
+        self.http_status = self.diagnostics.http_status
+        self.error_category = self.diagnostics.error_category
+        self.retryable = self.diagnostics.retryable
+        self.details = dict(self.diagnostics.details)
+
+    @classmethod
+    def from_provider_failure(
+        cls,
+        failure: object,
+        *,
+        candidates: list[dict[str, Any]] | None = None,
+    ) -> PaperFetchFailure:
+        return cls(
+            str(getattr(failure, "code", ERROR)),
+            str(getattr(failure, "message", failure)),
+            candidates=candidates,
+            retry_after_seconds=getattr(failure, "retry_after_seconds", None),
+            warnings=getattr(failure, "warnings", None),
+            source_trail=getattr(failure, "source_trail", None),
+            trace=getattr(failure, "trace", None),
+            missing_env=getattr(failure, "missing_env", None),
+            diagnostics=FailureDiagnostics.from_failure(failure),
+        )
 
 
 @dataclass(frozen=True)

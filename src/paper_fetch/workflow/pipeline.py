@@ -51,6 +51,7 @@ class FetchPipelineRequest:
     clients: Mapping[str, object] | None = None
     cancel_check: Callable[[], bool] | None = None
     fetch_cache: Any | None = None
+    context: RuntimeContext | None = None
     cache_hooks: FetchPipelineCacheHooks = field(
         default_factory=FetchPipelineCacheHooks
     )
@@ -69,6 +70,8 @@ class FetchPipeline:
     fetch_paper_fn: FetchPaperFn
 
     def runtime_context(self, request: FetchPipelineRequest) -> RuntimeContext:
+        if request.context is not None:
+            return request.context
         artifact_mode: ArtifactMode = (
             "none" if request.no_download else request.artifact_mode
         )
@@ -98,6 +101,7 @@ class FetchPipeline:
 
     def run(self, request: FetchPipelineRequest) -> FetchPipelineResult:
         context = self.runtime_context(request)
+        owns_context = request.context is None
         try:
             cache_hit = False
             cached_envelope = (
@@ -111,10 +115,12 @@ class FetchPipeline:
             else:
                 envelope = self.fetch_with_context(request, context=context)
                 if request.cache_hooks.write is not None:
+                    context.raise_if_cancelled()
                     request.cache_hooks.write(envelope)
 
             saved_markdown_path = None
             if request.markdown_save is not None:
+                context.raise_if_cancelled()
                 saved_markdown_path = save_markdown_to_disk(
                     envelope,
                     output_dir=request.markdown_save.output_dir,
@@ -122,11 +128,13 @@ class FetchPipeline:
                     markdown_filename=request.markdown_save.filename,
                     request_label=request.markdown_save.request_label,
                     overwrite=request.markdown_save.overwrite,
+                    commit_guard=context.raise_if_cancelled,
                 )
                 if (
                     saved_markdown_path is not None
                     and request.markdown_save.on_saved is not None
                 ):
+                    context.raise_if_cancelled()
                     request.markdown_save.on_saved(envelope, saved_markdown_path)
 
             return FetchPipelineResult(
@@ -135,7 +143,8 @@ class FetchPipeline:
                 cache_hit=cache_hit,
             )
         finally:
-            context.close()
+            if owns_context:
+                context.close()
 
 
 __all__ = [

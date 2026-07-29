@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from dataclasses import asdict, dataclass
 from typing import Any
 from collections.abc import Mapping, Sequence
 
@@ -20,8 +21,27 @@ from ..http import RequestCancelledError, RequestFailure
 from ..providers.base import ProviderFailure
 from ..reason_codes import ERROR, NO_ACCESS, NOT_CONFIGURED, RATE_LIMITED
 from ..service import PaperFetchFailure
+from ..tracing import TraceEvent
 
 MCP_OUTPUT_SCHEMA_VERSION = 1
+
+
+@dataclass(frozen=True)
+class _ErrorPayloadContext:
+    code: str | None = None
+    error_category: str | None = None
+    http_status: int | None = None
+    retry_after_seconds: int | None = None
+    provider: str | None = None
+    route: str | None = None
+    stage: str | None = None
+    retryable: bool | None = None
+    details: Mapping[str, Any] | None = None
+    trace: Sequence[TraceEvent] | None = None
+    warnings: Sequence[str] | None = None
+    source_trail: Sequence[str] | None = None
+    candidates: Sequence[Mapping[str, Any]] | None = None
+    missing_env: Sequence[str] | None = None
 
 
 def _dump_payload(payload: Mapping[str, Any]) -> str:
@@ -48,8 +68,8 @@ def _tool_result(
         content.extend(extra_content)
     return CallToolResult(
         content=content,
-        structuredContent=versioned_payload,
-        isError=is_error,
+        structured_content=versioned_payload,
+        is_error=is_error,
     )
 
 
@@ -65,29 +85,27 @@ def _error_payload(
     *,
     status: str,
     reason: str,
-    code: str | None = None,
-    error_category: str | None = None,
-    http_status: int | None = None,
-    retry_after_seconds: int | None = None,
-    provider: str | None = None,
-    warnings: Sequence[str] | None = None,
-    source_trail: Sequence[str] | None = None,
-    candidates: Sequence[Mapping[str, Any]] | None = None,
-    missing_env: Sequence[str] | None = None,
+    context: _ErrorPayloadContext | None = None,
 ) -> dict[str, Any]:
+    error = context or _ErrorPayloadContext()
     return with_schema_version(
         {
             "status": status,
             "reason": reason,
-            "code": code or status,
-            "http_status": http_status,
-            "error_category": error_category or code or status,
-            "retry_after_seconds": retry_after_seconds,
-            "provider": provider,
-            "warnings": [str(item) for item in (warnings or [])],
-            "source_trail": [str(item) for item in (source_trail or [])],
-            "candidates": list(candidates) if candidates else None,
-            "missing_env": list(missing_env) if missing_env else None,
+            "code": error.code or status,
+            "http_status": error.http_status,
+            "error_category": error.error_category or error.code or status,
+            "retry_after_seconds": error.retry_after_seconds,
+            "provider": error.provider,
+            "route": error.route,
+            "stage": error.stage,
+            "retryable": error.retryable,
+            "details": dict(error.details or {}),
+            "trace": [asdict(item) for item in (error.trace or [])],
+            "warnings": [str(item) for item in (error.warnings or [])],
+            "source_trail": [str(item) for item in (error.source_trail or [])],
+            "candidates": list(error.candidates) if error.candidates else None,
+            "missing_env": list(error.missing_env) if error.missing_env else None,
         }
     )
 
@@ -115,15 +133,19 @@ def error_payload_from_exception(error: Exception) -> dict[str, Any]:
         return _error_payload(
             status=ERROR,
             reason=_validation_reason(error),
-            code="validation_error",
-            error_category="validation_error",
+            context=_ErrorPayloadContext(
+                code="validation_error",
+                error_category="validation_error",
+            ),
         )
     if isinstance(error, RequestCancelledError):
         return _error_payload(
             status=ERROR,
             reason="Request cancelled.",
-            code="request_cancelled",
-            error_category="cancelled",
+            context=_ErrorPayloadContext(
+                code="request_cancelled",
+                error_category="cancelled",
+            ),
         )
     if isinstance(error, RequestFailure):
         status = _status_from_http_status(error.status_code)
@@ -137,18 +159,33 @@ def error_payload_from_exception(error: Exception) -> dict[str, Any]:
         return _error_payload(
             status=status,
             reason=str(error),
-            code=code,
-            error_category=category_text,
-            http_status=error.status_code,
-            retry_after_seconds=error.retry_after_seconds,
+            context=_ErrorPayloadContext(
+                code=code,
+                error_category=category_text,
+                http_status=error.status_code,
+                retry_after_seconds=error.retry_after_seconds,
+            ),
         )
     if isinstance(error, PaperFetchFailure):
         return _error_payload(
             status=error.status,
             reason=error.reason,
-            code=error.status,
-            error_category=error.status,
-            candidates=error.candidates,
+            context=_ErrorPayloadContext(
+                code=error.status,
+                error_category=error.status,
+                candidates=error.candidates,
+                http_status=error.http_status,
+                retry_after_seconds=error.retry_after_seconds,
+                provider=error.provider,
+                route=error.route,
+                stage=error.stage,
+                retryable=error.retryable,
+                details=error.details,
+                trace=error.trace,
+                warnings=error.warnings,
+                source_trail=error.source_trail,
+                missing_env=error.missing_env,
+            ),
         )
     if isinstance(error, ProviderFailure):
         status = error.code if error.code in {NO_ACCESS, RATE_LIMITED} else ERROR
@@ -157,18 +194,24 @@ def error_payload_from_exception(error: Exception) -> dict[str, Any]:
         return _error_payload(
             status=status,
             reason=error.message,
-            code=error.code,
-            error_category=error.code,
-            http_status=getattr(error, "http_status", None),
-            retry_after_seconds=error.retry_after_seconds,
-            provider=getattr(error, "provider", None),
-            warnings=error.warnings,
-            source_trail=error.source_trail,
-            missing_env=error.missing_env,
+            context=_ErrorPayloadContext(
+                code=error.code,
+                error_category=error.error_category or error.code,
+                http_status=error.http_status,
+                retry_after_seconds=error.retry_after_seconds,
+                provider=error.provider,
+                route=error.route,
+                stage=error.stage,
+                retryable=error.retryable,
+                details=error.details,
+                trace=error.trace,
+                warnings=error.warnings,
+                source_trail=error.source_trail,
+                missing_env=error.missing_env,
+            ),
         )
     return _error_payload(
         status=ERROR,
         reason=str(error),
-        code=ERROR,
-        error_category=ERROR,
+        context=_ErrorPayloadContext(code=ERROR, error_category=ERROR),
     )

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import replace
+from dataclasses import dataclass, replace
 import urllib.parse
 import urllib.request
 from pathlib import Path
@@ -64,6 +64,19 @@ ImageDocumentFetcher = Callable[[str, Mapping[str, Any]], dict[str, Any] | None]
 FileDocumentFetcher = Callable[[str, Mapping[str, Any]], dict[str, Any] | None]
 AssetFetchPolicy = Literal["browser_first", "direct_then_browser"]
 
+
+@dataclass(frozen=True)
+class _AssetRequestContext:
+    headers: Mapping[str, str] | None
+    user_agent: str
+    browser_context_seed: Mapping[str, Any] | None
+    browser_cookies: list[dict[str, Any]]
+    active_seed_urls: list[str]
+    cookie_opener_builder: Callable[..., urllib.request.OpenerDirector | None]
+    opener_requester: Callable[..., dict[str, Any]]
+    fetch_policy: AssetFetchPolicy
+
+
 _BROWSER_RECOVERABLE_NETWORK_CATEGORIES = {
     "connection_closed",
     "connection_reset",
@@ -73,6 +86,8 @@ _BROWSER_RECOVERABLE_NETWORK_CATEGORIES = {
     "tls_error",
 }
 _BROWSER_RECOVERABLE_NETWORK_REASON_TOKENS = (
+    "challenge",
+    "cloudflare",
     "connection closed",
     "connection reset",
     "dns",
@@ -325,38 +340,46 @@ def _request_asset_candidate(
     transport: HttpTransport,
     candidate_url: str,
     *,
-    headers: Mapping[str, str] | None,
-    user_agent: str,
-    browser_context_seed: Mapping[str, Any] | None,
-    browser_cookies: list[dict[str, Any]],
-    active_seed_urls: list[str],
-    cookie_opener_builder: Callable[..., urllib.request.OpenerDirector | None],
-    opener_requester: Callable[..., dict[str, Any]],
+    request_context: _AssetRequestContext,
 ) -> dict[str, Any]:
-    request_headers = kind.request_headers(headers, user_agent, browser_context_seed)
-    cookie_header = _cookie_header_for_url(browser_cookies, candidate_url)
+    request_headers = kind.request_headers(
+        request_context.headers,
+        request_context.user_agent,
+        request_context.browser_context_seed,
+    )
+    cookie_header = _cookie_header_for_url(
+        request_context.browser_cookies,
+        candidate_url,
+    )
     if cookie_header:
         request_headers["Cookie"] = cookie_header
 
+    browser_first = request_context.fetch_policy == "browser_first"
+    opener_seed_urls = request_context.active_seed_urls if browser_first else []
     opener = (
-        cookie_opener_builder(
-            active_seed_urls,
+        request_context.cookie_opener_builder(
+            opener_seed_urls,
             headers=request_headers,
             timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
-            browser_cookies=browser_cookies,
-            cancel_check=lambda: transport.cancelled,
-            force=kind.name == "supplementary",
+            browser_cookies=request_context.browser_cookies,
+            cancel_check=lambda: bool(getattr(transport, "cancelled", False)),
+            force=kind.name == "supplementary" and browser_first,
         )
-        if browser_cookies or active_seed_urls or kind.name == "supplementary"
+        if browser_first
+        and (
+            request_context.browser_cookies
+            or request_context.active_seed_urls
+            or kind.name == "supplementary"
+        )
         else None
     )
     if opener is not None:
-        return opener_requester(
+        return request_context.opener_requester(
             opener,
             candidate_url,
             headers=request_headers,
             timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
-            cancel_check=lambda: transport.cancelled,
+            cancel_check=lambda: bool(getattr(transport, "cancelled", False)),
         )
     return transport.request(
         "GET",
@@ -473,13 +496,7 @@ def _retry_seeded_figure_candidate(
     asset: Mapping[str, Any],
     candidate: _AssetDownloadCandidate,
     *,
-    headers: Mapping[str, str] | None,
-    user_agent: str,
-    browser_context_seed: Mapping[str, Any] | None,
-    browser_cookies: list[dict[str, Any]],
-    active_seed_urls: list[str],
-    cookie_opener_builder: Callable[..., urllib.request.OpenerDirector | None],
-    opener_requester: Callable[..., dict[str, Any]],
+    request_context: _AssetRequestContext,
     preview_url: str,
     full_size_url: str,
     last_attempt: _AssetDownloadAttempt,
@@ -488,8 +505,8 @@ def _retry_seeded_figure_candidate(
         candidate.url,
         preview_url=preview_url,
         full_size_url=full_size_url,
-        active_seed_urls=active_seed_urls,
-        browser_cookies=browser_cookies,
+        active_seed_urls=request_context.active_seed_urls,
+        browser_cookies=request_context.browser_cookies,
     ):
         return last_attempt, None
     try:
@@ -497,13 +514,7 @@ def _retry_seeded_figure_candidate(
             kind,
             transport,
             candidate.url,
-            headers=headers,
-            user_agent=user_agent,
-            browser_context_seed=browser_context_seed,
-            browser_cookies=browser_cookies,
-            active_seed_urls=active_seed_urls,
-            cookie_opener_builder=cookie_opener_builder,
-            opener_requester=opener_requester,
+            request_context=request_context,
         )
     except RequestFailure as exc:
         return _request_failure_attempt(kind, asset, candidate, exc), None
@@ -544,6 +555,16 @@ def resolve_asset_download(
     fetch_policy: AssetFetchPolicy = "browser_first",
 ) -> _AssetDownloadResolution:
     conversion_degraded = False
+    request_context = _AssetRequestContext(
+        headers=headers,
+        user_agent=user_agent,
+        browser_context_seed=browser_context_seed,
+        browser_cookies=browser_cookies,
+        active_seed_urls=active_seed_urls,
+        cookie_opener_builder=cookie_opener_builder,
+        opener_requester=opener_requester,
+        fetch_policy=fetch_policy,
+    )
     candidate_urls = (candidate_url_resolver or kind.candidate_url_resolver)(asset)
     preview_url, full_size_url = _resolution_preview_fields(kind, asset, candidate_urls)
     if not candidate_urls:
@@ -643,13 +664,7 @@ def resolve_asset_download(
                 kind,
                 transport,
                 candidate_url,
-                headers=headers,
-                user_agent=user_agent,
-                browser_context_seed=browser_context_seed,
-                browser_cookies=browser_cookies,
-                active_seed_urls=active_seed_urls,
-                cookie_opener_builder=cookie_opener_builder,
-                opener_requester=opener_requester,
+                request_context=request_context,
             )
         except RequestFailure as exc:
             last_attempt = _request_failure_attempt(kind, asset, candidate, exc)
@@ -658,13 +673,7 @@ def resolve_asset_download(
                 transport,
                 asset,
                 candidate,
-                headers=headers,
-                user_agent=user_agent,
-                browser_context_seed=browser_context_seed,
-                browser_cookies=browser_cookies,
-                active_seed_urls=active_seed_urls,
-                cookie_opener_builder=cookie_opener_builder,
-                opener_requester=opener_requester,
+                request_context=request_context,
                 preview_url=preview_url,
                 full_size_url=full_size_url,
                 last_attempt=last_attempt,
@@ -739,13 +748,7 @@ def resolve_asset_download(
                 transport,
                 asset,
                 candidate,
-                headers=headers,
-                user_agent=user_agent,
-                browser_context_seed=browser_context_seed,
-                browser_cookies=browser_cookies,
-                active_seed_urls=active_seed_urls,
-                cookie_opener_builder=cookie_opener_builder,
-                opener_requester=opener_requester,
+                request_context=request_context,
                 preview_url=preview_url,
                 full_size_url=full_size_url,
                 last_attempt=last_attempt,

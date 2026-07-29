@@ -15,7 +15,9 @@ from scripts.audit_dependencies import (
 from scripts.check_complexity_budget import (
     ComplexityViolation,
     budget_regressions,
+    update_budget,
 )
+from scripts.check_provider_governance import collect_report
 from scripts.report_coverage_focus import FOCUS_AREAS
 from scripts.sync_version import project_version_facts, synchronized_version_issues
 
@@ -71,9 +73,25 @@ def test_complexity_budget_rejects_new_and_worsened_symbols() -> None:
     assert budget_regressions(baseline, current) == current
 
 
+def test_complexity_budget_update_is_monotonic(tmp_path: Path) -> None:
+    budget = tmp_path / "complexity.json"
+    baseline = [ComplexityViolation("src/a.py", "C901", "owner", 30)]
+    assert update_budget(budget, baseline) == []
+    before = budget.read_bytes()
+
+    regression = [ComplexityViolation("src/a.py", "C901", "owner", 31)]
+    assert update_budget(budget, regression) == regression
+    assert budget.read_bytes() == before
+
+    improvement = [ComplexityViolation("src/a.py", "C901", "owner", 29)]
+    assert update_budget(budget, improvement) == []
+    payload = json.loads(budget.read_text(encoding="utf-8"))
+    assert payload["violations"][0]["value"] == 29
+
+
 def test_release_version_artifacts_are_synchronized() -> None:
     facts = project_version_facts()
-    assert facts.version == "4.0.2"
+    assert facts.version == "4.1.0"
     assert synchronized_version_issues(facts) == []
 
 
@@ -111,3 +129,18 @@ def test_onboarding_compatibility_entrypoint_remains_modular() -> None:
         len((parts_dir / name).read_text(encoding="utf-8").splitlines()) < 2_000
         for name in parts
     )
+
+
+def test_provider_governance_keeps_routes_manifests_fixtures_docs_and_debt_synced() -> (
+    None
+):
+    report = collect_report()
+
+    assert report.errors == ()
+    assert report.provider_count == 19
+    assert report.route_count == 60
+    assert report.route_family_count == 38
+    assert report.waived_route_family_count == 8
+    assert report.negative_coverage_count == 15
+    assert report.waived_negative_coverage_count == 11
+    assert report.complexity_violation_count <= 53

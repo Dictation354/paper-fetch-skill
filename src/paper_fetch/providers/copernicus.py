@@ -620,6 +620,11 @@ class CopernicusClient(ProviderClient):
                     asset_profile=effective_asset_profile,
                     doi=attempt.normalized_doi,
                 ),
+                expected_identity={
+                    "doi": attempt.normalized_doi,
+                    "title": attempt.merged_metadata.get("title"),
+                },
+                context=context,
                 fetcher=fetch_pdf_over_http,
             ).fetch(attempt.pdf_candidates)
         except PdfFetchFailure as exc:

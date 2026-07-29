@@ -8,7 +8,7 @@ from ._ieee_provider_support import *
 
 
 class IeeeProviderAssetDownloadTests(unittest.TestCase):
-    def test_ieee_article_seed_waits_for_title_and_latest_cookies(self) -> None:
+    def test_ieee_article_seed_waits_for_matching_article_dom(self) -> None:
         class Page:
             def __init__(self) -> None:
                 self.polls = 0
@@ -16,34 +16,52 @@ class IeeeProviderAssetDownloadTests(unittest.TestCase):
             def title(self) -> str:
                 return "IEEE article" if self.polls >= 2 else ""
 
+            def content(self) -> str:
+                if self.polls < 2:
+                    return "<html><body>Verifying...</body></html>"
+                return (
+                    '<html><body><article id="article">10772041</article></body></html>'
+                )
+
+            def locator(self, _selector: str):
+                return mock.Mock(count=lambda: 1 if self.polls >= 2 else 0)
+
+            def evaluate(self, *_args):
+                return False
+
             def wait_for_timeout(self, _milliseconds: int) -> None:
                 self.polls += 1
 
         class Context:
-            def __init__(self, page: Page) -> None:
-                self.page = page
-
-            def cookies(self, _urls) -> list[dict[str, str]]:
-                if self.page.polls < 2:
-                    return []
-                return [
-                    {
-                        "name": "ieee_session",
-                        "value": "latest",
-                        "domain": ".ieeexplore.ieee.org",
-                        "path": "/",
-                    }
-                ]
+            pass
 
         page = Page()
         self.assertTrue(
             _ieee_asset_recovery._ieee_article_seed_page_is_ready(
                 page,
-                Context(page),
+                Context(),
                 "https://ieeexplore.ieee.org/document/10772041/",
             )
         )
         self.assertEqual(page.polls, 2)
+
+    def test_ieee_article_seed_rejects_challenge_even_with_article_dom(self) -> None:
+        page = mock.Mock()
+        page.title.return_value = "Just a moment..."
+        page.content.return_value = (
+            '<html><body><article id="article">10772041</article>'
+            "Checking your browser before accessing IEEE Xplore.</body></html>"
+        )
+        page.locator.return_value.count.return_value = 1
+        page.evaluate.return_value = False
+
+        self.assertFalse(
+            _ieee_asset_recovery._ieee_article_seed_page_is_ready(
+                page,
+                mock.Mock(),
+                "https://ieeexplore.ieee.org/document/10772041/",
+            )
+        )
 
     def test_ieee_download_related_assets_body_profile_passes_figure_table_and_formula(
         self,
@@ -156,6 +174,18 @@ class IeeeProviderAssetDownloadTests(unittest.TestCase):
                     "body": gif_payload,
                     "url": table_large_url,
                 },
+                ("GET", supplementary_pdf_url): {
+                    "status_code": 200,
+                    "headers": {"content-type": "application/pdf"},
+                    "body": b"%PDF-1.7 supplementary",
+                    "url": supplementary_pdf_url,
+                },
+                ("GET", supplementary_mp4_url): {
+                    "status_code": 200,
+                    "headers": {"content-type": "video/mp4"},
+                    "body": b"\x00\x00\x00\x18ftypmp42supplementary-video",
+                    "url": supplementary_mp4_url,
+                },
             }
         )
         client = IeeeClient(transport, {})
@@ -232,13 +262,8 @@ class IeeeProviderAssetDownloadTests(unittest.TestCase):
         self.assertEqual(result["assets"][3]["download_tier"], "supplementary_file")
         self.assertEqual(result["assets"][3]["content_type"], "video/mp4")
         self.assertTrue(downloaded_paths_exist)
-        self.assertEqual(mocked_request.call_count, 4)
-        self.assertTrue(
-            any(
-                call.kwargs["headers"].get("Referer") == landing_url
-                for call in mocked_opener.call_args_list
-            )
-        )
+        mocked_request.assert_not_called()
+        mocked_opener.assert_not_called()
 
     def test_ieee_download_related_assets_downloads_mediastore_gifs_without_support_icon_failure(
         self,
@@ -327,8 +352,8 @@ class IeeeProviderAssetDownloadTests(unittest.TestCase):
         self.assertTrue(
             all(item["download_tier"] == "full_size" for item in result["assets"])
         )
-        self.assertEqual(mocked_request.call_count, 2)
-        self.assertEqual(mocked_opener.call_args.args[0], [landing_url])
+        mocked_request.assert_not_called()
+        mocked_opener.assert_not_called()
         self.assertFalse(
             any(
                 "/assets/img/icon.support.gif" in str(call["url"])
@@ -359,6 +384,10 @@ class IeeeProviderAssetDownloadTests(unittest.TestCase):
         rest_url = f"https://ieeexplore.ieee.org/rest/document/{article_number}/?logAccess=true"
         figure_large_url = f"https://ieeexplore.ieee.org/mediastore/IEEE/content/media/{article_number}/{article_number}-fig-1-large.gif"
         table_large_url = f"https://ieeexplore.ieee.org/mediastore/IEEE/content/media/{article_number}/{article_number}-table-1-large.gif"
+        supplementary_pdf_url = (
+            "https://ieeexplore.ieee.org/documents/supplementary.pdf"
+        )
+        supplementary_mp4_url = "https://ieeexplore.ieee.org/documents/multimedia.mp4"
         gif_payload = b"GIF89a\x01\x00\x01\x00\x80\x00\x00\x00\x00\x00\xff\xff\xff,\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02D\x01\x00;"
         transport = RecordingTransport(
             {
@@ -386,6 +415,20 @@ class IeeeProviderAssetDownloadTests(unittest.TestCase):
                     "body": gif_payload,
                     "url": table_large_url,
                 },
+                ("GET", supplementary_pdf_url): RequestFailure(
+                    403,
+                    "HTTP 403 for IEEE supplementary PDF",
+                    body=b"<html>Access denied</html>",
+                    headers={"content-type": "text/html; charset=utf-8"},
+                    url=supplementary_pdf_url,
+                ),
+                ("GET", supplementary_mp4_url): RequestFailure(
+                    403,
+                    "HTTP 403 for IEEE supplementary video",
+                    body=b"<html>Access denied</html>",
+                    headers={"content-type": "text/html; charset=utf-8"},
+                    url=supplementary_mp4_url,
+                ),
             }
         )
         client = IeeeClient(transport, {})

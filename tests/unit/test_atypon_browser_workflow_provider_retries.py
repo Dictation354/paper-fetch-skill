@@ -194,7 +194,7 @@ class AtyponBrowserWorkflowProviderRetryTests(AtyponBrowserWorkflowProviderTestC
                 asset_profile="all",
             )
 
-        mocked_warm.assert_called_once()
+        mocked_warm.assert_not_called()
         figure_calls = [
             call
             for call in mocked_download_assets.call_args_list
@@ -332,7 +332,7 @@ class AtyponBrowserWorkflowProviderRetryTests(AtyponBrowserWorkflowProviderTestC
                 asset_profile="all",
             )
 
-        mocked_warm.assert_called_once()
+        mocked_warm.assert_not_called()
         figure_calls = [
             call
             for call in mocked_download_assets.call_args_list

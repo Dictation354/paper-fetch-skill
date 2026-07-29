@@ -9,7 +9,7 @@ from typing import Any
 
 from .cache import redact_url_for_cache
 from .content_types import STRUCTURED_TEXT_MIME_TYPES, content_type_base
-from .errors import RequestFailure
+from .errors import RequestErrorCategory, RequestFailure
 
 DEFAULT_MAX_RESPONSE_BYTES = 32 * 1024 * 1024
 DEFAULT_MAX_COMPRESSED_BODY_MULTIPLIER = 8
@@ -32,42 +32,55 @@ class BodyMixin:
         status_code: int | None,
         url: str,
         content_encoding: str | None = None,
+        max_response_bytes: int | None = None,
+        max_compressed_response_bytes: int | None = None,
     ) -> bytes:
+        body_limit = (
+            self.max_response_bytes
+            if max_response_bytes is None
+            else max(0, int(max_response_bytes))
+        )
         normalized_content_encoding = normalize_content_encoding(content_encoding)
         if normalized_content_encoding == "gzip":
-            max_compressed_body_bytes = max(
-                self.max_response_bytes,
-                self.max_response_bytes * DEFAULT_MAX_COMPRESSED_BODY_MULTIPLIER,
+            compressed_limit = (
+                max(
+                    body_limit,
+                    body_limit * DEFAULT_MAX_COMPRESSED_BODY_MULTIPLIER,
+                )
+                if max_compressed_response_bytes is None
+                else max(0, int(max_compressed_response_bytes))
             )
-            payload = self._read_raw_bytes(response, max_compressed_body_bytes + 1)
+            payload = self._read_raw_bytes(response, compressed_limit + 1)
         else:
-            payload = self._read_raw_bytes(response, self.max_response_bytes + 1)
+            payload = self._read_raw_bytes(response, body_limit + 1)
         if not isinstance(payload, (bytes, bytearray)):
             payload = bytes(payload or b"")
         body = bytes(payload)
         if normalized_content_encoding == "gzip":
-            if len(body) > max_compressed_body_bytes:
+            if len(body) > compressed_limit:
                 raise RequestFailure(
                     status_code,
                     (
-                        f"Compressed response body exceeded {max_compressed_body_bytes} bytes "
+                        f"Compressed response body exceeded {compressed_limit} bytes "
                         f"for {redact_url_for_cache(url)}"
                     ),
-                    body=body[:max_compressed_body_bytes],
+                    body=body[:compressed_limit],
                     url=redact_url_for_cache(url),
+                    error_category=RequestErrorCategory.RESPONSE_TOO_LARGE,
                 )
             return decompress_gzip_body(
                 body,
                 status_code=status_code,
                 url=url,
-                max_response_bytes=self.max_response_bytes,
+                max_response_bytes=body_limit,
             )
-        if len(body) > self.max_response_bytes:
+        if len(body) > body_limit:
             raise RequestFailure(
                 status_code,
-                f"Response body exceeded {self.max_response_bytes} bytes for {redact_url_for_cache(url)}",
-                body=body[: self.max_response_bytes],
+                f"Response body exceeded {body_limit} bytes for {redact_url_for_cache(url)}",
+                body=body[:body_limit],
                 url=redact_url_for_cache(url),
+                error_category=RequestErrorCategory.RESPONSE_TOO_LARGE,
             )
         return body
 
@@ -144,5 +157,6 @@ def decompress_gzip_body(
             f"Response body exceeded {max_response_bytes} bytes for {redact_url_for_cache(url)}",
             body=decompressed[:max_response_bytes],
             url=redact_url_for_cache(url),
+            error_category=RequestErrorCategory.RESPONSE_TOO_LARGE,
         )
     return decompressed

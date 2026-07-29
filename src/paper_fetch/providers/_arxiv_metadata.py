@@ -18,10 +18,12 @@ from ..arxiv_id import (
     normalize_arxiv_id,
 )
 from ..extraction.html.semantics import SECTION_HEADING_PATTERN
+from ..failure import FailureDiagnostics
 from ..http import PDF_MIME_TYPE
 from ..metadata.types import MetadataMergeRule, ProviderMetadata, merge_metadata_layers
 from ..provider_catalog import register_metadata_probe_short_circuit
-from ..reason_codes import NO_RESULT, NOT_SUPPORTED
+from ..publisher_identity import validate_extracted_identity
+from ..reason_codes import IDENTITY_MISMATCH, NO_RESULT, NOT_SUPPORTED
 from ..utils import dedupe_authors, normalize_text
 from ._arxiv_authors import _AUTHOR_PIPELINE
 from ._arxiv_html import (
@@ -133,7 +135,24 @@ def _result_authors(result: Any) -> list[str]:
 def metadata_from_arxiv_result(
     result: Any, *, requested_arxiv_id: str | None = None
 ) -> ProviderMetadata:
-    arxiv_id = _result_short_id(result) or normalize_arxiv_id(requested_arxiv_id)
+    observed_arxiv_id = _result_short_id(result)
+    normalized_requested_id = normalize_arxiv_id(requested_arxiv_id)
+    if normalized_requested_id and observed_arxiv_id:
+        identity = validate_extracted_identity(
+            {"arxiv_id": normalized_requested_id},
+            {},
+            {"arxiv_id": observed_arxiv_id},
+        )
+        if identity.mismatch:
+            raise ProviderFailure(
+                IDENTITY_MISMATCH,
+                identity.reason
+                or "arXiv API result identifier does not match the request.",
+                diagnostics=FailureDiagnostics(
+                    details={"identity": identity.to_dict()}
+                ),
+            )
+    arxiv_id = observed_arxiv_id or normalized_requested_id
     if not arxiv_id:
         raise ProviderFailure(
             NO_RESULT, "arXiv API result did not include a usable arXiv ID."

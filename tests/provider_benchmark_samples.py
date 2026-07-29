@@ -17,6 +17,7 @@ class ProviderBenchmarkSample:
     expected_source: str
     accepted_live_source_trail_groups: tuple[tuple[str, ...], ...]
     required_env: tuple[str, ...] = ()
+    recommended_env: tuple[str, ...] = ()
     fallback_dois: tuple[str, ...] = ()
     fixture_name: str | None = None
     fixture_kind: str | None = None
@@ -36,7 +37,8 @@ PROVIDER_BENCHMARK_SAMPLES: dict[str, ProviderBenchmarkSample] = {
         landing_url="https://www.sciencedirect.com/science/article/pii/S0034425725000525",
         expected_source="elsevier_xml",
         accepted_live_source_trail_groups=(("fulltext:elsevier_article_ok",),),
-        required_env=("ELSEVIER_API_KEY", "CROSSREF_MAILTO"),
+        required_env=("ELSEVIER_API_KEY",),
+        recommended_env=("CROSSREF_MAILTO",),
         fallback_dois=("10.1016/j.rse.2026.115369",),
         fixture_name=golden_criteria_fixture(
             "10.1016/j.rse.2025.114648", "original.xml"
@@ -52,7 +54,7 @@ PROVIDER_BENCHMARK_SAMPLES: dict[str, ProviderBenchmarkSample] = {
         landing_url="https://www.nature.com/articles/d41586-023-01829-w",
         expected_source="springer_html",
         accepted_live_source_trail_groups=(("fulltext:springer_html_ok",),),
-        required_env=("CROSSREF_MAILTO",),
+        recommended_env=("CROSSREF_MAILTO",),
         fixture_name=golden_criteria_fixture(
             "10.1038/d41586-023-01829-w", "original.html"
         ),
@@ -66,7 +68,7 @@ PROVIDER_BENCHMARK_SAMPLES: dict[str, ProviderBenchmarkSample] = {
         landing_url="https://www.science.org/doi/full/10.1126/science.ady3136",
         expected_source="science",
         accepted_live_source_trail_groups=(("fulltext:science_html_ok",),),
-        required_env=("CROSSREF_MAILTO",),
+        recommended_env=("CROSSREF_MAILTO",),
         fixture_name=golden_criteria_fixture(
             "10.1126/science.ady3136", "original.html"
         ),
@@ -83,7 +85,7 @@ PROVIDER_BENCHMARK_SAMPLES: dict[str, ProviderBenchmarkSample] = {
             ("fulltext:wiley_html_ok",),
             ("fulltext:wiley_pdf_browser_ok", "fulltext:wiley_pdf_fallback_ok"),
         ),
-        required_env=("CROSSREF_MAILTO",),
+        recommended_env=("CROSSREF_MAILTO",),
         fixture_name=golden_criteria_fixture("10.1111/gcb.16414", "original.html"),
         fixture_kind="html",
     ),
@@ -95,7 +97,7 @@ PROVIDER_BENCHMARK_SAMPLES: dict[str, ProviderBenchmarkSample] = {
         landing_url="https://www.pnas.org/doi/full/10.1073/pnas.2406303121",
         expected_source="pnas",
         accepted_live_source_trail_groups=(("fulltext:pnas_html_ok",),),
-        required_env=("CROSSREF_MAILTO",),
+        recommended_env=("CROSSREF_MAILTO",),
         fixture_name=golden_criteria_fixture(
             "10.1073/pnas.2406303121", "original.html"
         ),
@@ -109,7 +111,7 @@ PROVIDER_BENCHMARK_SAMPLES: dict[str, ProviderBenchmarkSample] = {
         landing_url="https://www.mdpi.com/2077-0375/15/3/93",
         expected_source="mdpi_html",
         accepted_live_source_trail_groups=(("fulltext:mdpi_html_ok",),),
-        required_env=("CROSSREF_MAILTO",),
+        recommended_env=("CROSSREF_MAILTO",),
         fixture_name=golden_criteria_fixture(
             "10.3390/membranes15030093", "original.html"
         ),
@@ -152,7 +154,7 @@ PROVIDER_BENCHMARK_SAMPLES: dict[str, ProviderBenchmarkSample] = {
             ("fulltext:ams_html_ok",),
             ("fulltext:ams_pdf_fallback_ok",),
         ),
-        required_env=("CROSSREF_MAILTO",),
+        recommended_env=("CROSSREF_MAILTO",),
         fixture_name=golden_criteria_fixture(
             "10.1175/jcli-d-23-0738.1", "original.html"
         ),
@@ -179,7 +181,7 @@ PROVIDER_BENCHMARK_SAMPLES: dict[str, ProviderBenchmarkSample] = {
         accepted_live_source_trail_groups=(
             ("fulltext:royalsocietypublishing_html_ok",),
         ),
-        required_env=("CROSSREF_MAILTO",),
+        recommended_env=("CROSSREF_MAILTO",),
         fixture_name=golden_criteria_fixture("10.1098/rsta.2019.0558", "original.html"),
         fixture_kind="html",
     ),
@@ -194,7 +196,7 @@ PROVIDER_BENCHMARK_SAMPLES: dict[str, ProviderBenchmarkSample] = {
             ("fulltext:annualreviews_html_ok",),
             ("fulltext:annualreviews_pdf_fallback_ok",),
         ),
-        required_env=("CROSSREF_MAILTO",),
+        recommended_env=("CROSSREF_MAILTO",),
         fixture_name=golden_criteria_fixture(
             "10.1146/annurev-control-030123-013355", "original.html"
         ),
@@ -208,7 +210,7 @@ PROVIDER_BENCHMARK_SAMPLES: dict[str, ProviderBenchmarkSample] = {
         landing_url="https://academic.oup.com/bioinformatics/article/36/11/3409/5802463",
         expected_source="oxfordacademic_html",
         accepted_live_source_trail_groups=(("fulltext:oxfordacademic_html_ok",),),
-        required_env=("CROSSREF_MAILTO",),
+        recommended_env=("CROSSREF_MAILTO",),
         fixture_name=golden_criteria_fixture(
             "10.1093/bioinformatics/btaa161", "original.html"
         ),
@@ -222,7 +224,7 @@ PROVIDER_BENCHMARK_SAMPLES: dict[str, ProviderBenchmarkSample] = {
         landing_url="https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0263725",
         expected_source="plos_xml",
         accepted_live_source_trail_groups=(("fulltext:plos_xml_ok",),),
-        required_env=("CROSSREF_MAILTO",),
+        recommended_env=("CROSSREF_MAILTO",),
         fixture_name=golden_criteria_fixture(
             "10.1371/journal.pone.0263725", "original.xml"
         ),
@@ -239,7 +241,7 @@ PROVIDER_BENCHMARK_SAMPLES: dict[str, ProviderBenchmarkSample] = {
             ("fulltext:frontiers_xml_ok",),
             ("fulltext:frontiers_pdf_fallback_ok",),
         ),
-        required_env=("CROSSREF_MAILTO",),
+        recommended_env=("CROSSREF_MAILTO",),
         fixture_kind="xml",
     ),
     "acs": ProviderBenchmarkSample(
@@ -250,7 +252,7 @@ PROVIDER_BENCHMARK_SAMPLES: dict[str, ProviderBenchmarkSample] = {
         landing_url="https://pubs.acs.org/doi/10.1021/acsomega.4c03987",
         expected_source="acs",
         accepted_live_source_trail_groups=(("fulltext:acs_html_ok",),),
-        required_env=("CROSSREF_MAILTO",),
+        recommended_env=("CROSSREF_MAILTO",),
     ),
     "iop": ProviderBenchmarkSample(
         provider="iop",
@@ -263,7 +265,7 @@ PROVIDER_BENCHMARK_SAMPLES: dict[str, ProviderBenchmarkSample] = {
             ("fulltext:iop_html_ok",),
             ("fulltext:iop_pdf_fallback_ok",),
         ),
-        required_env=("CROSSREF_MAILTO",),
+        recommended_env=("CROSSREF_MAILTO",),
         fixture_name=golden_criteria_fixture(
             "10.1088/1748-9326/ab7d02",
             "original.html",
@@ -281,7 +283,7 @@ PROVIDER_BENCHMARK_SAMPLES: dict[str, ProviderBenchmarkSample] = {
             ("fulltext:aip_html_ok",),
             ("fulltext:aip_pdf_fallback_ok",),
         ),
-        required_env=("CROSSREF_MAILTO",),
+        recommended_env=("CROSSREF_MAILTO",),
         fixture_name=golden_criteria_fixture(
             "10.1063/5.0129134",
             "original.html",
@@ -302,7 +304,8 @@ WILEY_PDF_FALLBACK_SAMPLE = ProviderBenchmarkSample(
         ("fulltext:wiley_pdf_api_ok", "fulltext:wiley_pdf_fallback_ok"),
         ("fulltext:wiley_pdf_browser_ok", "fulltext:wiley_pdf_fallback_ok"),
     ),
-    required_env=("CROSSREF_MAILTO", "WILEY_TDM_CLIENT_TOKEN"),
+    required_env=("WILEY_TDM_CLIENT_TOKEN",),
+    recommended_env=("CROSSREF_MAILTO",),
     fixture_name=golden_criteria_fixture("10.1111/cas.16395", "extracted.md"),
     fixture_kind="markdown",
 )

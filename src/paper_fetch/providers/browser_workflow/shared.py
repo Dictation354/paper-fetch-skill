@@ -277,6 +277,16 @@ def _append_unique(candidates: list[str], candidate: str | None) -> None:
         candidates.append(normalized)
 
 
+def format_doi_path_template(template: str, doi: str) -> str:
+    """Format a route template without letting DOI suffixes become URL syntax."""
+
+    normalized = normalize_text(doi)
+    return template.format(
+        doi=urllib.parse.quote(normalized, safe="/"),
+        doi_quoted=urllib.parse.quote(normalized, safe=""),
+    )
+
+
 def build_browser_workflow_html_candidates(
     doi: str,
     landing_page_url: str | None,
@@ -296,7 +306,9 @@ def build_browser_workflow_html_candidates(
         hosts=hosts, base_hosts=base_hosts, landing_page_url=landing_page_url
     ):
         for template in path_templates:
-            _append_unique(candidates, f"{base}{template.format(doi=doi)}")
+            _append_unique(
+                candidates, f"{base}{format_doi_path_template(template, doi)}"
+            )
     return candidates
 
 
@@ -315,7 +327,10 @@ def build_browser_workflow_pdf_candidates(
         hosts=hosts, base_hosts=base_hosts, landing_page_url=base_seed_url
     ):
         for template in path_templates:
-            _append_unique(generated_candidates, f"{base}{template.format(doi=doi)}")
+            _append_unique(
+                generated_candidates,
+                f"{base}{format_doi_path_template(template, doi)}",
+            )
 
     crossref_candidate = normalize_text(crossref_pdf_url)
     if not crossref_candidate:

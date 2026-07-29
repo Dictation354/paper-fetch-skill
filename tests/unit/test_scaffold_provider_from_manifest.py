@@ -172,6 +172,7 @@ def test_from_manifest_generated_provider_modules_import(tmp_path: Path) -> None
     manifest = _load_arxiv_manifest()
     manifest["name"] = "newmanifest"
     manifest["display_source"] = "newmanifest_html"
+    manifest["routing"]["domains"] = ["newmanifest.example"]  # type: ignore[index]
     manifest["routing"]["publisher_aliases"] = ["newmanifest"]  # type: ignore[index]
     manifest_path = tmp_path / "newmanifest.yml"
     manifest_path.write_text(yaml.safe_dump(manifest), encoding="utf-8")
@@ -308,7 +309,7 @@ def test_from_manifest_probe_requirements_enter_provider_spec(tmp_path: Path) ->
         encoding="utf-8"
     )
 
-    assert 'env_requirements=("CROSSREF_MAILTO",)' in html_text
+    assert "env_requirements=()" in html_text
     assert "requires_playwright=True" in html_text
     assert "requires_browser_runtime=True" in html_text
     assert '# body=("figures", "body_tables", "formula_images")' in html_text

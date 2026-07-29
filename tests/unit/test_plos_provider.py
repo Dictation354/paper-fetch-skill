@@ -4,9 +4,15 @@ from dataclasses import replace
 from pathlib import Path
 import re
 
+import pytest
 import yaml
 
-from paper_fetch.providers.plos import PlosClient, _fetch_plos_redirected_response
+from paper_fetch.providers.base import ProviderFailure
+from paper_fetch.providers.plos import (
+    PLOS_JOURNAL_PATHS,
+    PlosClient,
+    _fetch_plos_redirected_response,
+)
 from paper_fetch.reason_codes import PDF_FALLBACK
 from tests.golden_corpus import (
     build_article_from_fixture,
@@ -70,6 +76,54 @@ def test_plos_runtime_xml_route_fetches_and_converts_jats_fixture() -> None:
     assert article.source == "plos_xml"
     assert article.quality.content_kind == "fulltext"
     assert "fulltext:plos_xml_ok" in article.quality.source_trail
+
+
+def test_unknown_plos_journal_code_uses_canonical_metadata_route() -> None:
+    doi = "10.1371/journal.pnew.0000001"
+    client = PlosClient(FixtureHtmlTransport({}), {})
+
+    journal_path, reason = client._resolve_journal_path(
+        doi,
+        {
+            "doi": doi,
+            "landing_page_url": (f"https://journals.plos.org/plosnew/article?id={doi}"),
+        },
+    )
+
+    assert journal_path == "plosnew"
+    assert reason == "metadata_landing"
+
+
+def test_unknown_plos_journal_code_uses_doi_resolver_without_persisting_rule() -> None:
+    doi = "10.1371/journal.pnew.0000002"
+    resolver_url = f"https://doi.org/{doi}"
+    canonical_url = f"https://journals.plos.org/plosnew/article?id={doi}"
+    resolver_response = http_response(resolver_url, b"", "text/html")
+    resolver_response["url"] = canonical_url
+    client = PlosClient(
+        FixtureHtmlTransport({resolver_url: resolver_response}),
+        {},
+    )
+
+    journal_path, reason = client._resolve_journal_path(doi, {"doi": doi})
+
+    assert journal_path == "plosnew"
+    assert reason == "doi_resolver"
+    assert "pnew" not in PLOS_JOURNAL_PATHS
+
+
+def test_unknown_plos_journal_code_rejects_non_plos_resolver_target() -> None:
+    doi = "10.1371/journal.pwrong.0000001"
+    resolver_url = f"https://doi.org/{doi}"
+    resolver_response = http_response(resolver_url, b"", "text/html")
+    resolver_response["url"] = "https://example.org/article"
+    client = PlosClient(
+        FixtureHtmlTransport({resolver_url: resolver_response}),
+        {},
+    )
+
+    with pytest.raises(ProviderFailure, match="safe journal route"):
+        client._resolve_journal_path(doi, {"doi": doi})
 
 
 def test_plos_runtime_xml_route_follows_relative_and_signed_redirects() -> None:

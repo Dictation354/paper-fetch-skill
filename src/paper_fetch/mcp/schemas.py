@@ -18,7 +18,7 @@ from pydantic import (
 )
 
 from ..artifacts import ArtifactMode
-from ..auth import browser_auth_provider_names
+from ..provider_catalog import browser_preflight_provider_names
 from ..diagnostics import (
     PROVIDER_STATUS_DETAILS,
     PROVIDER_STATUS_GROUPS,
@@ -174,7 +174,7 @@ def _normalize_cache_detail(value: Any) -> str:
 
 def _normalize_browser_preflight_provider(value: Any) -> str:
     normalized = normalize_text(str(value or "")).lower()
-    allowed = browser_auth_provider_names()
+    allowed = browser_preflight_provider_names()
     if normalized not in allowed:
         raise ValueError(
             f"unsupported browser preflight provider {value!r}. Expected one of: "
@@ -261,7 +261,9 @@ ProviderStatusDetailInput: TypeAlias = Annotated[
 BrowserPreflightProviderInput: TypeAlias = Annotated[
     str,
     BeforeValidator(_normalize_browser_preflight_provider),
-    WithJsonSchema({"type": "string", "enum": list(browser_auth_provider_names())}),
+    WithJsonSchema(
+        {"type": "string", "enum": list(browser_preflight_provider_names())}
+    ),
 ]
 BrowserPreflightDetailInput: TypeAlias = Annotated[
     BrowserPreflightDetail,

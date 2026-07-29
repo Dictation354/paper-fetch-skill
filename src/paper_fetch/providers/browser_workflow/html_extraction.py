@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import logging
+from dataclasses import dataclass, replace
+import time
 from typing import TYPE_CHECKING, Any, cast
 from collections.abc import Callable, Mapping
 
@@ -59,6 +61,73 @@ _FAST_BROWSER_HTML_RETRY_KINDS = {
     STRUCTURED_ARTICLE_NOT_FULLTEXT,
     STRUCTURED_MISSING_BODY_SECTIONS,
 }
+
+
+@dataclass(frozen=True)
+class BrowserHtmlFetchPolicy:
+    disable_media: bool = False
+    wait_seconds: int = DEFAULT_BROWSER_RUNTIME_WAIT_SECONDS
+    warm_wait_seconds: int = DEFAULT_BROWSER_RUNTIME_WARM_WAIT_SECONDS
+    max_timeout_ms: int | None = None
+
+
+def _commit_accepted_storage_state(
+    html_result: BrowserFetchedHtml,
+    runtime: BrowserRuntimeConfig,
+    *,
+    context: RuntimeContext | None = None,
+) -> tuple[BrowserFetchedHtml, list[str]]:
+    """Commit staged state only after provider HTML extraction succeeded."""
+
+    stage = html_result.staged_storage_state
+    diagnostics = dict(html_result.diagnostics or {})
+    runtime_trace = (
+        dict(diagnostics.get("browser_runtime_trace") or {})
+        if isinstance(diagnostics.get("browser_runtime_trace"), Mapping)
+        else {}
+    )
+    if stage is not None:
+        from ..browser_runtime.paths import commit_staged_storage_state
+
+        save_result = commit_staged_storage_state(
+            stage,
+            runtime,
+            runtime_context=context,
+        )
+        runtime_trace["storage_state_save"] = save_result
+        diagnostics["browser_runtime_trace"] = runtime_trace
+        warnings = (
+            []
+            if save_result.get("saved")
+            else [
+                "Provider HTML was accepted, but the staged browser storage state "
+                f"could not be saved ({save_result.get('reason') or 'save_failed'})."
+            ]
+        )
+        return (
+            replace(
+                html_result,
+                diagnostics=diagnostics,
+                staged_storage_state=None,
+            ),
+            warnings,
+        )
+
+    storage_result = runtime_trace.get("storage_state_save")
+    if (
+        runtime.persist_storage_state
+        and isinstance(storage_result, Mapping)
+        and not storage_result.get("saved")
+    ):
+        return (
+            replace(html_result, staged_storage_state=None),
+            [
+                "Provider HTML was accepted, but browser storage state was not "
+                f"staged ({storage_result.get('reason') or 'stage_failed'})."
+            ],
+        )
+    return replace(html_result, staged_storage_state=None), []
+
 
 __all__ = [
     "_FAST_BROWSER_HTML_RETRY_KINDS",
@@ -242,19 +311,55 @@ def _fetch_browser_html_payload(
     context: RuntimeContext,
     warnings: list[str] | None = None,
     html_fetcher: Callable[..., BrowserFetchedHtml] = fetch_html_with_browser,
-    disable_media: bool = False,
-    wait_seconds: int = DEFAULT_BROWSER_RUNTIME_WAIT_SECONDS,
-    warm_wait_seconds: int = DEFAULT_BROWSER_RUNTIME_WARM_WAIT_SECONDS,
+    policy: BrowserHtmlFetchPolicy = BrowserHtmlFetchPolicy(),
 ) -> tuple[BrowserFetchedHtml, RawFulltextPayload]:
+    configured_timeout_ms = max(1, int(runtime.timeout_ms))
+    context.ensure_deadline(configured_timeout_ms / 1000.0)
+    operation_cap_ms = min(
+        configured_timeout_ms,
+        policy.max_timeout_ms
+        if policy.max_timeout_ms is not None
+        else configured_timeout_ms,
+    )
+    try:
+        operation_timeout_ms = context.remaining_timeout_ms(operation_cap_ms)
+    except TimeoutError as exc:
+        raise BrowserRuntimeFailure(
+            "browser_connect_timeout",
+            f"{client.name} browser request deadline was exhausted.",
+            details={
+                "timeout_budget_ms": configured_timeout_ms,
+                "remaining_ms": 0,
+            },
+        ) from exc
+    operation_started_at = time.monotonic()
+    fetch_kwargs: dict[str, Any] = {
+        "publisher": client.name,
+        "config": runtime,
+        "wait_seconds": policy.wait_seconds,
+        "warm_wait_seconds": policy.warm_wait_seconds,
+        "max_timeout_ms": operation_timeout_ms,
+        "disable_media": policy.disable_media,
+        "runtime_context": context,
+    }
+    profile = client.require_profile()
+    if profile.html_readiness is not None:
+        fetch_kwargs["readiness"] = profile.html_readiness
     html_result = html_fetcher(
         html_candidates,
-        publisher=client.name,
-        config=runtime,
-        wait_seconds=wait_seconds,
-        warm_wait_seconds=warm_wait_seconds,
-        disable_media=disable_media,
-        runtime_context=context,
+        **fetch_kwargs,
     )
+    result_diagnostics = dict(html_result.diagnostics or {})
+    result_diagnostics["deadline"] = {
+        "timeout_budget_ms": configured_timeout_ms,
+        "operation_timeout_ms": operation_timeout_ms,
+        "elapsed_ms": round((time.monotonic() - operation_started_at) * 1000, 3),
+        "remaining_ms": max(
+            0,
+            int(context.remaining_seconds() * 1000),
+        ),
+    }
+    html_result = replace(html_result, diagnostics=result_diagnostics)
     try:
         markdown_text, extraction = _cached_browser_workflow_markdown(
             client,
@@ -266,6 +371,11 @@ def _fetch_browser_html_payload(
     except HtmlExtractionFailure as exc:
         exc.html_result = html_result
         raise
+    html_result, storage_warnings = _commit_accepted_storage_state(
+        html_result,
+        runtime,
+        context=context,
+    )
     fetcher_attr = getattr(html_fetcher, "paper_fetch_html_fetcher_name", None)
     runtime_backend_value = runtime.backend
     runtime_backend = normalize_text(runtime_backend_value)
@@ -280,7 +390,7 @@ def _fetch_browser_html_payload(
         markdown_text=markdown_text,
         extraction=extraction,
         fetcher=fetcher_name,
-        warnings=warnings,
+        warnings=[*list(warnings or []), *storage_warnings],
     )
 
 
@@ -311,9 +421,12 @@ def _fetch_browser_html_payload_with_fast_path(
             context=context,
             warnings=warnings,
             html_fetcher=html_fetcher,
-            disable_media=True,
-            wait_seconds=_FAST_BROWSER_HTML_WAIT_SECONDS,
-            warm_wait_seconds=_FAST_BROWSER_HTML_WARM_WAIT_SECONDS,
+            policy=BrowserHtmlFetchPolicy(
+                disable_media=True,
+                wait_seconds=_FAST_BROWSER_HTML_WAIT_SECONDS,
+                warm_wait_seconds=_FAST_BROWSER_HTML_WARM_WAIT_SECONDS,
+                max_timeout_ms=_FAST_BROWSER_HTML_TIMEOUT_MS,
+            ),
         )
     except (BrowserRuntimeFailure, HtmlExtractionFailure) as exc:
         if not _should_retry_fast_browser_failure(exc):
@@ -335,7 +448,4 @@ def _fetch_browser_html_payload_with_fast_path(
         context=context,
         warnings=warnings,
         html_fetcher=html_fetcher,
-        disable_media=False,
-        wait_seconds=DEFAULT_BROWSER_RUNTIME_WAIT_SECONDS,
-        warm_wait_seconds=DEFAULT_BROWSER_RUNTIME_WARM_WAIT_SECONDS,
     )

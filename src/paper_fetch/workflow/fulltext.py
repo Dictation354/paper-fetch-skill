@@ -2,13 +2,15 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass, field
 import logging
 from pathlib import Path
 import time
 from typing import Any
-from collections.abc import Iterator, Mapping, Set as AbstractSet
+from collections.abc import Iterator, Mapping, Sequence, Set as AbstractSet
 
 from ..artifacts import ArtifactStore
+from ..failure import FailureDiagnostics
 from ..http import HttpTransport
 from ..logging_utils import emit_structured_log
 from ..models import ArticleModel, AssetProfile, metadata_only_article
@@ -17,14 +19,19 @@ from ..provider_catalog import (
     provider_emits_html_managed_marker,
     provider_managed_abstract_only_names,
 )
+from ..publisher_identity import validate_extracted_identity
 from ..providers.base import ProviderArtifacts, ProviderFailure, ProviderFetchResult
 from ..providers.protocols import AssetProvider, FulltextProvider, RawFulltextProvider
 from ..reason_codes import (
     ABSTRACT_ONLY,
     ERROR,
     METADATA_ONLY,
+    IDENTITY_MISMATCH,
+    NO_ACCESS,
+    NOT_CONFIGURED,
     NOT_SUPPORTED,
     PDF_FALLBACK,
+    RATE_LIMITED,
 )
 from ..quality.reason_codes import FULLTEXT
 from ..runtime import RUNTIME_UNSET, RuntimeContext, resolve_runtime_context
@@ -34,6 +41,7 @@ from ..tracing import (
     fulltext_marker,
     merge_trace,
     resolve_marker,
+    route_marker,
     trace_from_markers,
 )
 from ..utils import (
@@ -43,7 +51,11 @@ from ..utils import (
 from .metadata import fetch_metadata_for_resolved_query
 from .rendering import finalize_article
 from .resolution import resolve_paper
-from .routing import provider_allowed, resolve_query_with_session_cache
+from .routing import (
+    build_official_provider_candidates,
+    provider_allowed,
+    resolve_query_with_session_cache,
+)
 from .shared import source_trail_for_failure
 from .types import FetchStrategy, PaperFetchFailure
 
@@ -192,6 +204,14 @@ def _provider_fetch_result(
         context.asset_profile = previous_asset_profile
 
 
+@dataclass
+class _ProviderAttemptOutputs:
+    warnings: list[str] = field(default_factory=list)
+    source_trail: list[str] = field(default_factory=list)
+    trace: list[TraceEvent] = field(default_factory=list)
+    failures: list[ProviderFailure] = field(default_factory=list)
+
+
 def _try_official_provider(
     *,
     doi: str | None,
@@ -201,11 +221,11 @@ def _try_official_provider(
     artifact_store: ArtifactStore,
     context: RuntimeContext,
     clients: Mapping[str, object],
-    warnings: list[str],
-    source_trail: list[str],
-    trace: list[TraceEvent] | None = None,
+    outputs: _ProviderAttemptOutputs,
 ) -> ArticleModel | None:
-    workflow_trace = trace if trace is not None else []
+    warnings = outputs.warnings
+    source_trail = outputs.source_trail
+    workflow_trace = outputs.trace
     if not doi or not provider_name or not is_official_provider(provider_name):
         return None
     if not provider_allowed(provider_name, strategy):
@@ -240,6 +260,26 @@ def _try_official_provider(
             asset_profile=resolved_asset_profile,
             context=context,
         )
+        observed_article = provider_result.article
+        identity = validate_extracted_identity(
+            {"doi": doi, "title": metadata.get("title")},
+            None,
+            {
+                "doi": observed_article.doi,
+                "title": observed_article.metadata.title,
+            },
+        )
+        if identity.mismatch:
+            raise ProviderFailure(
+                IDENTITY_MISMATCH,
+                identity.reason or "Provider article identity mismatch.",
+                diagnostics=FailureDiagnostics(
+                    provider=provider_name,
+                    route=safe_text(getattr(provider_result.content, "route_kind", ""))
+                    or None,
+                    details={"identity": identity.to_dict()},
+                ),
+            )
         workflow_trace[:] = merge_trace(workflow_trace, provider_result.trace)
         extend_unique(warnings, provider_result.warnings)
         download_warnings, download_trail = artifact_store.save_provider_payload(
@@ -375,6 +415,7 @@ def _try_official_provider(
             extend_unique(source_trail, [fulltext_marker(provider_name, "not_usable")])
         extend_unique(warnings, article.quality.warnings)
     except ProviderFailure as exc:
+        outputs.failures.append(exc)
         workflow_trace[:] = merge_trace(workflow_trace, exc.trace)
         extend_unique(warnings, exc.warnings)
         extend_unique(source_trail, exc.source_trail)
@@ -395,6 +436,54 @@ def _try_official_provider(
     return None
 
 
+def _ranked_fulltext_provider_candidates(
+    *,
+    resolved: object,
+    metadata: Mapping[str, Any],
+    selected_provider: str | None,
+    strategy: FetchStrategy,
+) -> list[tuple[str, str]]:
+    """Return deduplicated, evidence-ranked official full-text candidates."""
+
+    ranked: list[tuple[str, str]] = []
+    seen: set[str] = set()
+    if (
+        selected_provider
+        and is_official_provider(selected_provider)
+        and provider_allowed(selected_provider, strategy)
+    ):
+        ranked.append((selected_provider, "metadata_selected"))
+        seen.add(selected_provider)
+    for provider_name, signal in build_official_provider_candidates(
+        resolved,
+        routing_metadata=metadata,
+        strategy=strategy,
+    ):
+        if provider_name in seen:
+            continue
+        seen.add(provider_name)
+        ranked.append((provider_name, signal))
+    return ranked
+
+
+def _primary_provider_failure(
+    failures: Sequence[ProviderFailure],
+) -> ProviderFailure | None:
+    if not failures:
+        return None
+    priority = {
+        NO_ACCESS: 50,
+        RATE_LIMITED: 40,
+        IDENTITY_MISMATCH: 30,
+        NOT_CONFIGURED: 20,
+        ERROR: 10,
+    }
+    return max(
+        enumerate(failures),
+        key=lambda item: (priority.get(item[1].code, 0), item[0]),
+    )[1]
+
+
 def _fallback_to_metadata_only(
     *,
     metadata: Mapping[str, Any],
@@ -403,12 +492,15 @@ def _fallback_to_metadata_only(
     warnings: list[str],
     source_trail: list[str],
     trace: list[TraceEvent] | None = None,
+    provider_failure: ProviderFailure | None = None,
 ) -> ArticleModel:
     if not metadata:
         raise PaperFetchFailure(
             ERROR, "Unable to resolve metadata or full text for the requested paper."
         )
     if not strategy.allow_metadata_only_fallback:
+        if provider_failure is not None:
+            raise PaperFetchFailure.from_provider_failure(provider_failure)
         raise PaperFetchFailure(
             ERROR, "Full text was not available and metadata-only fallback is disabled."
         )
@@ -487,18 +579,61 @@ def fetch_article(
         trace: list[TraceEvent] = []
 
         fulltext_started_at = time.monotonic()
-        article = _try_official_provider(
-            doi=doi,
+        article = None
+        provider_failures: list[ProviderFailure] = []
+        provider_candidates = _ranked_fulltext_provider_candidates(
+            resolved=resolved,
             metadata=metadata,
-            provider_name=provider_name,
+            selected_provider=provider_name,
             strategy=strategy,
-            artifact_store=runtime.artifact_store,
-            context=runtime,
-            clients=client_registry,
-            warnings=warnings,
-            source_trail=source_trail,
-            trace=trace,
         )
+        for rank, (candidate_provider, signal) in enumerate(
+            provider_candidates,
+            start=1,
+        ):
+            provider_name = candidate_provider
+            source_trail.append(
+                route_marker(
+                    f"provider_candidate_{candidate_provider}_{signal}_rank_{rank}"
+                )
+            )
+            attempt_outputs = _ProviderAttemptOutputs(
+                warnings=warnings,
+                source_trail=source_trail,
+                trace=trace,
+            )
+            article = _try_official_provider(
+                doi=doi,
+                metadata=metadata,
+                provider_name=candidate_provider,
+                strategy=strategy,
+                artifact_store=runtime.artifact_store,
+                context=runtime,
+                clients=client_registry,
+                outputs=attempt_outputs,
+            )
+            provider_failures.extend(attempt_outputs.failures)
+            if article is not None:
+                source_trail.append(
+                    route_marker(f"provider_candidate_{candidate_provider}_accepted")
+                )
+                article = finalize_article(
+                    article,
+                    warnings=warnings,
+                    source_trail=source_trail,
+                    trace=trace,
+                )
+                break
+            source_trail.append(
+                route_marker(f"provider_candidate_{candidate_provider}_rejected")
+            )
+            if any(failure.code == NO_ACCESS for failure in attempt_outputs.failures):
+                source_trail.append(
+                    route_marker(
+                        f"provider_candidate_{candidate_provider}_access_boundary_stop"
+                    )
+                )
+                break
         _record_stage_timing(runtime, "fulltext_seconds", fulltext_started_at)
         if article is not None:
             return article
@@ -516,6 +651,7 @@ def fetch_article(
             warnings=warnings,
             source_trail=source_trail,
             trace=trace,
+            provider_failure=_primary_provider_failure(provider_failures),
         )
     finally:
         if owns_runtime:

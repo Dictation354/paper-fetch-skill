@@ -11,6 +11,10 @@ import xml.etree.ElementTree as ET
 
 from ..models import SemanticLosses
 from ..publisher_identity import extract_doi, normalize_doi
+from ..quality.reason_codes import (
+    STRUCTURED_ARTICLE_NOT_FULLTEXT,
+    STRUCTURED_MISSING_BODY_SECTIONS,
+)
 from ..utils import dedupe_authors, normalize_text
 from ..xml_security import XmlParseFailure, parse_xml
 from ._article_markdown_common import (
@@ -49,6 +53,97 @@ class JatsExtraction:
     references: list[dict[str, Any]]
     semantic_losses: SemanticLosses
     conversion_notes: list[str] = field(default_factory=list)
+    article_type: str | None = None
+    body_section_count: int = 0
+    body_paragraph_count: int = 0
+    body_char_count: int = 0
+
+
+@dataclass(frozen=True)
+class JatsBodyAvailability:
+    accepted: bool
+    reason: str
+    article_type: str | None
+    short_article_policy: bool
+    body_section_count: int
+    body_paragraph_count: int
+    body_char_count: int
+    min_body_chars: int
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "accepted": self.accepted,
+            "reason": self.reason,
+            "article_type": self.article_type,
+            "short_article_policy": self.short_article_policy,
+            "body_metrics": {
+                "body_section_count": self.body_section_count,
+                "body_paragraph_count": self.body_paragraph_count,
+                "body_char_count": self.body_char_count,
+                "min_body_chars": self.min_body_chars,
+            },
+        }
+
+
+_SHORT_JATS_ARTICLE_TYPE_TOKENS = frozenset(
+    {
+        "brief-report",
+        "commentary",
+        "correction",
+        "editorial",
+        "letter",
+        "news",
+        "reply",
+    }
+)
+_SHORT_JATS_MIN_BODY_CHARS = 120
+
+
+def assess_jats_body_availability(
+    extraction: JatsExtraction,
+    *,
+    min_body_chars: int,
+) -> JatsBodyAvailability:
+    """Assess only JATS body prose; abstracts and references never satisfy it."""
+
+    article_type = normalize_text(extraction.article_type).lower() or None
+    short_policy = bool(
+        article_type
+        and any(token in article_type for token in _SHORT_JATS_ARTICLE_TYPE_TOKENS)
+    )
+    effective_min_chars = (
+        min(max(1, int(min_body_chars)), _SHORT_JATS_MIN_BODY_CHARS)
+        if short_policy
+        else max(1, int(min_body_chars))
+    )
+    has_body_structure = extraction.body_section_count > 0 or (
+        short_policy and extraction.body_paragraph_count > 0
+    )
+    accepted = bool(
+        has_body_structure
+        and extraction.body_paragraph_count > 0
+        and extraction.body_char_count >= effective_min_chars
+    )
+    if accepted:
+        reason = (
+            "structured_short_article_body"
+            if short_policy
+            else "structured_body_sections"
+        )
+    elif not has_body_structure or extraction.body_paragraph_count <= 0:
+        reason = STRUCTURED_MISSING_BODY_SECTIONS
+    else:
+        reason = STRUCTURED_ARTICLE_NOT_FULLTEXT
+    return JatsBodyAvailability(
+        accepted=accepted,
+        reason=reason,
+        article_type=article_type,
+        short_article_policy=short_policy,
+        body_section_count=extraction.body_section_count,
+        body_paragraph_count=extraction.body_paragraph_count,
+        body_char_count=extraction.body_char_count,
+        min_body_chars=effective_min_chars,
+    )
 
 
 def _text_from_first_descendant(element: ET.Element | None, local_name: str) -> str:
@@ -138,10 +233,14 @@ def extract_jats_metadata(
     article_meta = _article_meta(root)
     journal_meta = _journal_meta(root)
     title = _text_from_first_descendant(article_meta, "article-title")
-    doi = normalize_doi(_article_id(article_meta, "doi") or str(base.get("doi") or ""))
+    response_doi = normalize_doi(_article_id(article_meta, "doi"))
+    doi = response_doi or normalize_doi(str(base.get("doi") or ""))
     journal_title = _text_from_first_descendant(journal_meta, "journal-title")
     abstract_node = first_child(article_meta, "abstract")
     abstract_text = normalize_text("\n\n".join(_render_paragraph_texts(abstract_node)))
+    article_type = normalize_text(
+        str(root.get("article-type") or base.get("article_type") or "")
+    )
 
     metadata = dict(base)
     metadata.update(
@@ -171,16 +270,35 @@ def extract_jats_metadata(
                 )
             ),
             "references": list(base.get("references") or []),
+            "article_type": article_type or None,
+            "identity_evidence": {
+                key: value
+                for key, value in {
+                    "doi": response_doi or None,
+                    "title": title or None,
+                }.items()
+                if value
+            },
         }
     )
     return metadata
 
 
-def _render_inline_child_without_tail(child: ET.Element) -> str:
+def _render_inline_child_without_tail(
+    child: ET.Element,
+    *,
+    source_url: str = "",
+    formula_renders: list[FormulaRenderResult] | None = None,
+) -> str:
     tail = child.tail
     child.tail = None
     try:
-        rendered = render_inline_text(child, skip_local_names=JATS_BLOCK_LOCAL_NAMES)
+        rendered = render_inline_text(
+            child,
+            skip_local_names=JATS_BLOCK_LOCAL_NAMES,
+            formula_renders=formula_renders,
+            source_url=source_url,
+        )
     finally:
         child.tail = tail
     local_name = xml_local_name(child.tag)
@@ -220,7 +338,7 @@ def _append_embedded_block(
                 lines.extend(render_figure_block(entry))
         return True
     if local_name in {"table-wrap", "table"}:
-        entry, _lossy = _table_entry(node)
+        entry, _lossy = _table_entry(node, source_url)
         if entry is not None:
             table_entries.append(entry)
             assets.append(entry)
@@ -258,7 +376,12 @@ def _render_paragraph_block(
         if xml_local_name(child.tag) in JATS_BLOCK_LOCAL_NAMES
     }
     if not embedded_blocks:
-        text = render_inline_text(paragraph, skip_local_names=JATS_BLOCK_LOCAL_NAMES)
+        text = render_inline_text(
+            paragraph,
+            skip_local_names=JATS_BLOCK_LOCAL_NAMES,
+            formula_renders=formula_renders,
+            source_url=source_url,
+        )
         return [text, ""] if text else []
 
     lines: list[str] = []
@@ -275,7 +398,13 @@ def _render_paragraph_block(
                 formula_renders=formula_renders,
             )
         else:
-            paragraph_parts.append(_render_inline_child_without_tail(child))
+            paragraph_parts.append(
+                _render_inline_child_without_tail(
+                    child,
+                    source_url=source_url,
+                    formula_renders=formula_renders,
+                )
+            )
         if child.tail:
             paragraph_parts.append(child.tail)
     _flush_paragraph_parts(lines, paragraph_parts)
@@ -334,7 +463,7 @@ def _render_blocks(
                     lines.extend([f"**{entry['heading']}** {entry['caption']}", ""])
             continue
         if local_name in {"table-wrap", "table"}:
-            entry, _lossy = _table_entry(child)
+            entry, _lossy = _table_entry(child, source_url)
             if entry is not None:
                 table_entries.append(entry)
                 assets.append(entry)
@@ -386,6 +515,8 @@ def _render_blocks(
 
 
 def _formula_asset_entry(result: FormulaRenderResult) -> dict[str, Any] | None:
+    if result.assets:
+        return dict(result.assets[0])
     image_url = normalize_text(str(result.image_url or ""))
     if not image_url:
         return None
@@ -519,7 +650,7 @@ def extract_jats_references(root: ET.Element) -> list[dict[str, Any]]:
 def parse_jats_xml(
     xml_body: bytes,
     *,
-    source_url: str,
+    source_url: str = "",
     base_metadata: Mapping[str, Any] | None = None,
     xml_root: ET.Element | None = None,
 ) -> JatsExtraction | None:
@@ -553,8 +684,15 @@ def parse_jats_xml(
     assets: list[dict[str, Any]] = []
     table_entries: list[dict[str, Any]] = []
     formula_renders: list[FormulaRenderResult] = []
+    body = first_child(root, "body")
+    body_sections = iter_descendants(body, "sec")
+    body_paragraphs = iter_descendants(body, "p")
+    body_char_count = sum(
+        len(normalize_text(" ".join(paragraph.itertext())))
+        for paragraph in body_paragraphs
+    )
     body_lines = _render_blocks(
-        first_child(root, "body"),
+        body,
         heading_level=2,
         source_url=source_url,
         assets=assets,
@@ -568,6 +706,18 @@ def parse_jats_xml(
         table_entries=table_entries,
         formula_renders=formula_renders,
     )
+    for result in formula_renders:
+        for formula_asset in result.assets:
+            asset_key = normalize_text(
+                str(formula_asset.get("key") or formula_asset.get("link") or "")
+            )
+            if asset_key and any(
+                normalize_text(str(item.get("key") or item.get("link") or ""))
+                == asset_key
+                for item in assets
+            ):
+                continue
+            assets.append(dict(formula_asset))
     supplement_entries = _supplementary_entries(root, source_url)
     for entry in supplement_entries:
         if not any(
@@ -620,6 +770,10 @@ def parse_jats_xml(
         references=references,
         semantic_losses=semantic_losses,
         conversion_notes=conversion_notes,
+        article_type=normalize_text(str(metadata.get("article_type") or "")) or None,
+        body_section_count=len(body_sections),
+        body_paragraph_count=len(body_paragraphs),
+        body_char_count=body_char_count,
     )
 
 
@@ -665,7 +819,9 @@ def build_jats_markdown_document(
 
 
 __all__ = [
+    "JatsBodyAvailability",
     "JatsExtraction",
+    "assess_jats_body_availability",
     "build_jats_markdown_document",
     "extract_jats_authors",
     "extract_jats_metadata",

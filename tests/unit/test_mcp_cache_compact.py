@@ -29,6 +29,21 @@ def _prepared_cache(download_dir: Path) -> None:
     create_cached_fetch_envelope(download_dir, DOI)
 
 
+def _rewrite_sidecar_credential_scope(
+    download_dir: Path,
+    credential_scope: str,
+) -> None:
+    sidecar_path = _sidecar_path(download_dir)
+    sidecar = json.loads(sidecar_path.read_text(encoding="utf-8"))
+    sidecar["credential_scope"] = credential_scope
+    sidecar["request_fingerprint"] = fetch_cache.cache_request_fingerprint(
+        DOI,
+        sidecar["request"],
+        credential_scope=credential_scope,
+    )
+    sidecar_path.write_text(json.dumps(sidecar), encoding="utf-8")
+
+
 def test_get_cached_default_full_preserves_existing_fields(tmp_path: Path) -> None:
     _prepared_cache(tmp_path)
 
@@ -193,6 +208,58 @@ def test_get_cached_reports_cached_payload_missing_requested_mode(
     )
 
 
+@pytest.mark.parametrize(
+    ("modes", "field", "value"),
+    [
+        (["markdown"], "markdown", ""),
+        (["article"], "article", {}),
+        (["metadata"], "metadata", {}),
+    ],
+)
+def test_get_cached_rejects_semantically_empty_requested_outputs(
+    tmp_path: Path,
+    modes: list[str],
+    field: str,
+    value: object,
+) -> None:
+    create_cached_downloads(tmp_path, DOI)
+    create_cached_fetch_envelope(tmp_path, DOI, modes=modes)
+    sidecar_path = _sidecar_path(tmp_path)
+    sidecar = json.loads(sidecar_path.read_text(encoding="utf-8"))
+    sidecar["payload"][field] = value
+    sidecar_path.write_text(json.dumps(sidecar), encoding="utf-8")
+
+    payload = mcp_tools.get_cached_payload(
+        doi=DOI,
+        download_dir=tmp_path,
+        detail="compact",
+        modes=modes,
+    )
+
+    assert payload["request_satisfied"] is False
+    assert payload["sidecar"]["payload_satisfies_request"] is False
+
+
+def test_get_cached_rejects_sidecar_content_flag_schema_conflict(
+    tmp_path: Path,
+) -> None:
+    _prepared_cache(tmp_path)
+    sidecar_path = _sidecar_path(tmp_path)
+    sidecar = json.loads(sidecar_path.read_text(encoding="utf-8"))
+    sidecar["payload"]["has_fulltext"] = False
+    sidecar_path.write_text(json.dumps(sidecar), encoding="utf-8")
+
+    payload = mcp_tools.get_cached_payload(
+        doi=DOI,
+        download_dir=tmp_path,
+        detail="compact",
+    )
+
+    assert payload["request_satisfied"] is False
+    assert payload["sidecar"]["status"] == "invalid"
+    assert payload["sidecar"]["reason_code"] == "cache_sidecar_schema_invalid"
+
+
 def test_get_cached_reports_old_and_corrupt_sidecars_without_false_reuse(
     tmp_path: Path,
 ) -> None:
@@ -249,6 +316,51 @@ def test_get_cached_wrong_scope_is_explicit_miss_and_never_uses_network(
     assert payload["request_satisfied"] is False
     assert str(correct_scope) not in json.dumps(payload)
     create_connection.assert_not_called()
+
+
+def test_get_cached_uses_runtime_credential_scope(tmp_path: Path) -> None:
+    _prepared_cache(tmp_path)
+    runtime_env = mcp_tools.build_runtime_env({"ELSEVIER_API_KEY": "unit-test-secret"})
+    credential_scope = fetch_cache.credential_scope_from_env(runtime_env)
+    _rewrite_sidecar_credential_scope(tmp_path, credential_scope)
+
+    payload = mcp_tools.get_cached_payload(
+        doi=DOI,
+        download_dir=tmp_path,
+        detail="compact",
+        env={"ELSEVIER_API_KEY": "unit-test-secret"},
+    )
+
+    assert payload["request_satisfied"] is True
+    assert payload["sidecar"]["status"] == "ready"
+
+
+def test_get_cached_credential_scope_fallback_is_one_way(tmp_path: Path) -> None:
+    public_cache = tmp_path / "public"
+    private_cache = tmp_path / "private"
+    _prepared_cache(public_cache)
+    _prepared_cache(private_cache)
+    runtime_env = mcp_tools.build_runtime_env({"ELSEVIER_API_KEY": "unit-test-secret"})
+    private_scope = fetch_cache.credential_scope_from_env(runtime_env)
+    _rewrite_sidecar_credential_scope(private_cache, private_scope)
+
+    credentialed_reader = mcp_tools.get_cached_payload(
+        doi=DOI,
+        download_dir=public_cache,
+        detail="compact",
+        env={"ELSEVIER_API_KEY": "unit-test-secret"},
+    )
+    public_reader = mcp_tools.get_cached_payload(
+        doi=DOI,
+        download_dir=private_cache,
+        detail="compact",
+        env={"ELSEVIER_API_KEY": ""},
+    )
+
+    assert credentialed_reader["request_satisfied"] is True
+    assert credentialed_reader["sidecar"]["status"] == "ready"
+    assert public_reader["request_satisfied"] is False
+    assert public_reader["sidecar"]["status"] == "credential_scope_mismatch"
 
 
 def test_get_cached_does_not_treat_unproven_markdown_as_doi_hit(

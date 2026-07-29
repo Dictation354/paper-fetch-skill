@@ -120,7 +120,7 @@ def test_single_manifest_is_explicit_atomic_and_hashes_final_output(
     assert record.request.parameters["format"] == "markdown"
     assert record.status == "ok"
     assert record.acceptance.overall == OverallAcceptanceStatus.COMPLETE
-    assert record.trace[0].stage == "fulltext"
+    assert [event.stage for event in record.trace[:2]] == ["resolve", "fulltext"]
     assert record.fallback_codes == ()
     assert record.output_path == str(output_path)
     assert primary.size == len(body)

@@ -8,7 +8,7 @@ import hashlib
 import json
 from pathlib import Path
 from typing import Any, Literal
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 
 from filelock import FileLock
 from platformdirs import user_runtime_path
@@ -146,7 +146,10 @@ class ArtifactStore:
         encoding: str = "utf-8",
         overwrite: bool = True,
         use_lock: bool = False,
+        commit_guard: Callable[[], None] | None = None,
     ) -> Path:
+        if commit_guard is not None:
+            commit_guard()
         path.parent.mkdir(parents=True, exist_ok=True)
         lock_path = artifact_file_lock_path(path)
         if use_lock:
@@ -160,6 +163,8 @@ class ArtifactStore:
             tmp_path = path.with_suffix(path.suffix + ".part")
             try:
                 tmp_path.write_text(text, encoding=encoding)
+                if commit_guard is not None:
+                    commit_guard()
                 tmp_path.replace(path)
             except Exception:
                 with contextlib.suppress(OSError):
@@ -167,11 +172,21 @@ class ArtifactStore:
                 raise
         return path
 
-    def write_bytes_file(self, path: Path, body: bytes) -> Path:
+    def write_bytes_file(
+        self,
+        path: Path,
+        body: bytes,
+        *,
+        commit_guard: Callable[[], None] | None = None,
+    ) -> Path:
+        if commit_guard is not None:
+            commit_guard()
         path.parent.mkdir(parents=True, exist_ok=True)
         tmp_path = path.with_suffix(path.suffix + ".part")
         try:
             tmp_path.write_bytes(body)
+            if commit_guard is not None:
+                commit_guard()
             tmp_path.replace(path)
         except Exception:
             with contextlib.suppress(OSError):
@@ -186,6 +201,7 @@ class ArtifactStore:
         *,
         overwrite: bool = True,
         use_lock: bool = False,
+        commit_guard: Callable[[], None] | None = None,
     ) -> Path:
         return self.write_text_file(
             path,
@@ -193,6 +209,7 @@ class ArtifactStore:
             encoding="utf-8",
             overwrite=overwrite,
             use_lock=use_lock,
+            commit_guard=commit_guard,
         )
 
     def save_provider_payload(

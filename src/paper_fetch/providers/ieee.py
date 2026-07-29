@@ -24,6 +24,7 @@ from ..http import (
     HttpTransport,
     PDF_MIME_TYPE,
     RequestFailure,
+    redact_url_for_diagnostics,
 )
 from ..http.headers import header_value
 from ..metadata.types import ProviderMetadata
@@ -53,6 +54,7 @@ from . import _ieee_html as ieee_html
 from . import _ieee_landing as ieee_landing
 from . import _ieee_metadata as ieee_metadata
 from . import _ieee_recovery_policy as ieee_recovery_policy
+from . import _ieee_routes as ieee_routes
 from . import _ieee_supplementary as ieee_supplementary
 from . import _ieee_url as ieee_url
 from . import browser_runtime
@@ -65,6 +67,7 @@ from ._pdf_common import (
 from ._pdf_fallback import (
     PdfFallbackStrategy,
     PdfFetchFailure,
+    PdfRequestContext,
     fetch_pdf_over_http,
     fetch_pdf_with_browser,
 )
@@ -110,6 +113,7 @@ register_provider_bundle(
             provider_managed_abstract_only=True,
             client_factory_path="paper_fetch.providers.ieee:IeeeClient",
             status_order=6,
+            routes=ieee_routes.IEEE_ROUTES,
         ),
         html_rules=ProviderHtmlRules(
             name="ieee",
@@ -434,6 +438,8 @@ class IeeeClient(ProviderClient):
                 asset_profile=effective_asset_profile,
                 asset_output_dir=asset_output_dir,
                 seed_urls=[document_url],
+                expected_identity={"doi": landing_attempt.normalized_doi},
+                context=context,
                 fetcher=fetch_pdf_over_http,
             ).fetch(candidates)
             fetcher = "direct_http"
@@ -476,7 +482,10 @@ class IeeeClient(ProviderClient):
                     referer=document_url,
                     seed_urls=browser_seed_urls,
                     allow_pdf_only=True,
-                    context=context,
+                    request=PdfRequestContext(
+                        expected_identity={"doi": landing_attempt.normalized_doi},
+                        runtime=context,
+                    ),
                     browser_config=runtime_config,
                 )
 
@@ -498,14 +507,16 @@ class IeeeClient(ProviderClient):
                         f"Browser fallback failure: {browser_exc.message}"
                     ),
                     details={
-                        "candidates": list(candidates),
+                        "candidates": [
+                            redact_url_for_diagnostics(item) for item in candidates
+                        ],
                         "direct_failure": _pdf_failure_diagnostics(direct_failure),
                         "browser_failure": _pdf_failure_diagnostics(browser_exc),
                     },
                 ) from browser_exc
         pdf_diagnostics = {
             "fetcher": fetcher,
-            "candidates": list(candidates),
+            "candidates": [redact_url_for_diagnostics(item) for item in candidates],
             "direct_failure": _pdf_failure_diagnostics(direct_failure),
         }
         payload_warnings = list(warnings)
@@ -716,6 +727,10 @@ class IeeeClient(ProviderClient):
                     continue_codes=DEFAULT_WATERFALL_CONTINUE_CODES,
                 ),
             ],
+            doi=landing_attempt.normalized_doi,
+            metadata=metadata,
+            context=runtime_context,
+            client=self,
             final_failure_factory=final_failure,
         )
 

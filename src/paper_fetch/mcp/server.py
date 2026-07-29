@@ -2,24 +2,20 @@
 
 from __future__ import annotations
 
-import asyncio
-from contextlib import asynccontextmanager
 from pathlib import Path
-import sys
-import threading
-from types import MethodType
 from typing import Annotated, Any
 from collections.abc import Callable, Mapping
 
-import anyio
 from mcp import types as mcp_types
-from mcp.server.fastmcp import Context, FastMCP
-from mcp.server.fastmcp.resources import FileResource, FunctionResource
+from mcp.server.mcpserver import Context, MCPServer
+from mcp.server.mcpserver.resources import FileResource, FunctionResource
 from mcp.server.lowlevel.server import NotificationOptions
-from mcp.shared.message import SessionMessage
+from mcp.server.stdio import stdio_server
 from mcp.types import CallToolResult, Icon, ToolAnnotations
-from pydantic import AnyUrl, ConfigDict
+from mcp.types.version import MODERN_PROTOCOL_VERSIONS
+from pydantic import ConfigDict
 
+from ..version import __version__
 from ._instructions import fetch_tool_description, server_instructions
 from ._deps import MCPDeps, default_mcp_deps
 from .batch import batch_check_tool_async, batch_resolve_tool_async
@@ -60,6 +56,7 @@ from .output_schemas import (
     ListCachedOutput,
     ProviderStatusOutput,
     ResolvePaperOutput,
+    compact_tool_output_schema,
 )
 from .prompts import summarize_paper_prompt, verify_citation_list_prompt
 from .provider_catalog import (
@@ -90,11 +87,8 @@ from .schemas import (
 )
 
 
-_STDIO_SENTINEL = object()
-
-
-class PaperFetchFastMCP(FastMCP):
-    """FastMCP with strict native validation and host-safe public schemas."""
+class PaperFetchMCPServer(MCPServer):
+    """MCPServer with strict native validation and host-safe public schemas."""
 
     def add_tool(
         self,
@@ -123,9 +117,13 @@ class PaperFetchFastMCP(FastMCP):
         arg_model.model_config = ConfigDict(**strict_config)
         arg_model.model_rebuild(force=True)
         tool.parameters = arg_model.model_json_schema(by_alias=True)
+        tool.fn_metadata.output_schema = compact_tool_output_schema(
+            tool.fn_metadata.output_schema
+        )
+        tool.__dict__.pop("output_schema", None)
 
     async def list_native_tools(self) -> list[mcp_types.Tool]:
-        """Expose the FastMCP-generated schemas for native contract tests."""
+        """Expose the MCPServer-generated schemas for native contract tests."""
 
         return await super().list_tools()
 
@@ -135,64 +133,24 @@ class PaperFetchFastMCP(FastMCP):
         tools = await self.list_native_tools()
         return [
             tool.model_copy(
-                update={"inputSchema": host_safe_tool_input_schema(tool.name)}
+                update={"input_schema": host_safe_tool_input_schema(tool.name)}
             )
             if tool.name in MCP_TOOL_REQUEST_MODELS
             else tool
             for tool in tools
         ]
 
+    async def run_stdio_async(self) -> None:
+        """Run the official v2 stdio transport with legacy resource notifications."""
 
-@asynccontextmanager
-async def _threaded_stdio_server():
-    read_stream_writer, read_stream = anyio.create_memory_object_stream(0)
-    write_stream, write_stream_reader = anyio.create_memory_object_stream(0)
-    loop = asyncio.get_running_loop()
-    incoming: asyncio.Queue[SessionMessage | Exception | object] = asyncio.Queue()
-
-    def stdin_reader() -> None:
-        try:
-            while True:
-                line = sys.stdin.readline()
-                if line == "":
-                    break
-                try:
-                    message = mcp_types.JSONRPCMessage.model_validate_json(line)
-                except Exception as exc:
-                    loop.call_soon_threadsafe(incoming.put_nowait, exc)
-                    continue
-                loop.call_soon_threadsafe(incoming.put_nowait, SessionMessage(message))
-        finally:
-            loop.call_soon_threadsafe(incoming.put_nowait, _STDIO_SENTINEL)
-
-    async def stdin_pump() -> None:
-        async with read_stream_writer:
-            while True:
-                item = await incoming.get()
-                if item is _STDIO_SENTINEL:
-                    break
-                await read_stream_writer.send(item)
-
-    async def stdout_pump() -> None:
-        async with write_stream_reader:
-            async for session_message in write_stream_reader:
-                line = session_message.message.model_dump_json(
-                    by_alias=True, exclude_none=True
-                )
-                sys.stdout.write(line + "\n")
-                sys.stdout.flush()
-
-    reader = threading.Thread(
-        target=stdin_reader, name="paper-fetch-mcp-stdin", daemon=True
-    )
-    reader.start()
-    async with anyio.create_task_group() as task_group:
-        task_group.start_soon(stdin_pump)
-        task_group.start_soon(stdout_pump)
-        try:
-            yield read_stream, write_stream
-        finally:
-            task_group.cancel_scope.cancel()
+        async with stdio_server() as (read_stream, write_stream):
+            await self._lowlevel_server.run(
+                read_stream,
+                write_stream,
+                self._lowlevel_server.create_initialization_options(
+                    NotificationOptions(resources_changed=True)
+                ),
+            )
 
 
 def _default_download_dir(*, deps: MCPDeps = default_mcp_deps()) -> Path:
@@ -219,26 +177,26 @@ def _cache_index_resource_payload(
 
 def _read_only_annotations(*, open_world: bool) -> ToolAnnotations:
     return ToolAnnotations(
-        readOnlyHint=True,
-        openWorldHint=open_world,
+        read_only_hint=True,
+        open_world_hint=open_world,
     )
 
 
 def _fetch_annotations() -> ToolAnnotations:
     return ToolAnnotations(
-        readOnlyHint=False,
-        destructiveHint=False,
-        idempotentHint=False,
-        openWorldHint=True,
+        read_only_hint=False,
+        destructive_hint=False,
+        idempotent_hint=False,
+        open_world_hint=True,
     )
 
 
 def _browser_preflight_annotations() -> ToolAnnotations:
     return ToolAnnotations(
-        readOnlyHint=False,
-        destructiveHint=False,
-        idempotentHint=False,
-        openWorldHint=True,
+        read_only_hint=False,
+        destructive_hint=False,
+        idempotent_hint=False,
+        open_world_hint=True,
     )
 
 
@@ -254,17 +212,17 @@ def _resource_uri_set(
 
 
 def _sync_cache_resources(
-    server: FastMCP,
+    server: MCPServer,
     *,
     download_dir: Path,
     scope_id: str | None = None,
 ) -> bool:
     entries = list_cache_entries(download_dir)
-    # mcp has no public remove_resource() API; relies on internal _resources dict (verified mcp>=1.27).
+    # mcp has no public remove_resource() API; relies on internal _resources dict (verified mcp>=2).
     # The assertion below will fire immediately if a future mcp version changes this layout.
     resources = server._resource_manager._resources
     assert isinstance(resources, dict), (
-        "FastMCP internal layout changed; update _sync_cache_resources for the new mcp version"
+        "MCPServer internal layout changed; update _sync_cache_resources for the new mcp version"
     )
 
     def default_entry_uri(entry_id: object) -> str:
@@ -319,12 +277,12 @@ def _sync_cache_resources(
     for entry in entries:
         uri = entry_uri_for(entry["id"])
         resources[uri] = FileResource(
-            uri=AnyUrl(uri),
+            uri=uri,
             name=f"cached_{entry['id']}",
             description=f"Cached {entry['kind']} for DOI {entry['doi']}.",
             path=Path(str(entry["path"])),
             mime_type=str(entry["mime"]),
-            is_binary=not is_text_mime_type(str(entry["mime"])),
+            encoding=("utf-8" if is_text_mime_type(str(entry["mime"])) else None),
         )
     after_uris = _resource_uri_set(
         resources,
@@ -335,7 +293,7 @@ def _sync_cache_resources(
 
 
 def _sync_resources_for_download_dir(
-    server: FastMCP,
+    server: MCPServer,
     download_dir: Path | None,
     *,
     deps: MCPDeps = default_mcp_deps(),
@@ -382,50 +340,21 @@ async def _notify_resource_list_changed(ctx: Context | None) -> None:
     if ctx is None:
         return
     try:
-        await ctx.session.send_resource_list_changed()
+        if ctx.protocol_version in MODERN_PROTOCOL_VERSIONS:
+            await ctx.notify_resources_changed()
+        else:
+            await ctx.session.send_resource_list_changed()
     except Exception:
         return
 
 
-def _enable_resource_list_changed_capability(server: FastMCP) -> None:
-    original_create_initialization_options = (
-        server._mcp_server.create_initialization_options
-    )
-
-    def create_options_with_resource_notifications(
-        _mcp_server: object,
-        notification_options: NotificationOptions | None = None,
-        experimental_capabilities: dict[str, dict[str, object]] | None = None,
-    ) -> Any:
-        merged_notification_options = NotificationOptions(
-            prompts_changed=notification_options.prompts_changed
-            if notification_options is not None
-            else False,
-            resources_changed=True,
-            tools_changed=notification_options.tools_changed
-            if notification_options is not None
-            else False,
-        )
-        return original_create_initialization_options(
-            notification_options=merged_notification_options,
-            experimental_capabilities=experimental_capabilities,
-        )
-
-    mcp_server: Any = server._mcp_server
-    mcp_server.create_initialization_options = MethodType(
-        create_options_with_resource_notifications,
-        mcp_server,
-    )
-
-
-def build_server() -> PaperFetchFastMCP:
+def build_server() -> PaperFetchMCPServer:
     deps = default_mcp_deps()
-    server = PaperFetchFastMCP(
+    server = PaperFetchMCPServer(
         name="paper-fetch",
         instructions=server_instructions(),
-        json_response=True,
+        version=__version__,
     )
-    _enable_resource_list_changed_capability(server)
 
     server.add_resource(
         FunctionResource.from_function(
@@ -559,14 +488,14 @@ def build_server() -> PaperFetchFastMCP:
             deps=deps,
             **tool_kwargs,
         )
-        if not result.isError:
+        if not result.is_error:
             resources_changed = False
             for sync_dir in _fetch_resource_sync_dirs(
                 parsed_download_dir=parsed_download_dir,
                 no_download=no_download,
                 save_markdown=save_markdown,
                 markdown_saved=bool(
-                    (result.structuredContent or {}).get("saved_markdown_path")
+                    (result.structured_content or {}).get("saved_markdown_path")
                 ),
                 parsed_markdown_output_dir=parsed_markdown_output_dir,
             ):
@@ -599,7 +528,7 @@ def build_server() -> PaperFetchFastMCP:
         if parsed_download_dir is not None:
             tool_kwargs["download_dir"] = parsed_download_dir
         result = list_cached_tool(cache_mode=cache_mode, **tool_kwargs, deps=deps)
-        if not result.isError:
+        if not result.is_error:
             resources_changed = _sync_resources_for_download_dir(
                 server, parsed_download_dir, deps=deps
             )
@@ -643,7 +572,7 @@ def build_server() -> PaperFetchFastMCP:
             **tool_kwargs,
             deps=deps,
         )
-        if not result.isError:
+        if not result.is_error:
             resources_changed = _sync_resources_for_download_dir(
                 server, parsed_download_dir, deps=deps
             )
@@ -734,8 +663,8 @@ def build_server() -> PaperFetchFastMCP:
             deps=deps,
             **tool_kwargs,
         )
-        if not result.isError:
-            payload = result.structuredContent or {}
+        if not result.is_error:
+            payload = result.structured_content or {}
             resources_changed = False
             for sync_dir in _fetch_resource_sync_dirs(
                 parsed_download_dir=parsed_download_dir,
@@ -830,17 +759,7 @@ def build_server() -> PaperFetchFastMCP:
 
 
 def main() -> None:
-    server = build_server()
-
-    async def run_stdio() -> None:
-        async with _threaded_stdio_server() as (read_stream, write_stream):
-            await server._mcp_server.run(
-                read_stream,
-                write_stream,
-                server._mcp_server.create_initialization_options(),
-            )
-
-    anyio.run(run_stdio)
+    build_server().run(transport="stdio")
 
 
 if __name__ == "__main__":

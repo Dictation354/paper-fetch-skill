@@ -1281,7 +1281,7 @@ def infer_source_provider(root: ET.Element, xml_path: Path) -> str:
     from ..provider_catalog import provider_for_xml_source
 
     root_name = xml_local_name(root.tag if isinstance(root.tag, str) else "")
-    return provider_for_xml_source(root_name, str(xml_path))
+    return provider_for_xml_source(root_name, str(xml_path), xml_root=root)
 
 
 def extract_formula_samples_from_xml(

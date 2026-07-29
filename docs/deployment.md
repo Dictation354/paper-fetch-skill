@@ -24,6 +24,10 @@ provider 运行时细节见 [`providers.md`](providers.md)，架构说明见 [`a
 uv sync --frozen --extra dev --extra full
 ```
 
+core 运行时要求 MCP Python SDK 2.x（`mcp>=2,<3`）。server 使用 v2
+`MCPServer`，同时兼容 2025 握手协议客户端和 2026-07-28 现代协议客户端；
+项目不再支持与 MCP Python SDK 1.x 共装。
+
 如果目标是把本仓库的完整本地运行环境一次性准备好，推荐先使用顶层一键安装脚本：
 
 ```bash
@@ -488,8 +492,13 @@ PAPER_FETCH_ENV_FILE=/path/to/.env
 更新当前仓库版本时，进入原来的 Python 环境后重新安装即可：
 
 ```bash
-python3 -m pip install .
+python3 -m pip install --upgrade .
 ```
+
+本次 MCP SDK 主版本升级后，源码开发环境应重新执行 `uv sync --frozen`；在线
+安装应使用上面的 `--upgrade` 命令。安装完成后可用
+`python3 -c "from importlib.metadata import version; print(version('mcp'))"`
+确认主版本为 2，并重启所有已经运行的 MCP host。
 
 如果你还在使用 Codex 或 Claude Code，推荐顺手重跑对应安装脚本，让 skill 和 MCP 一起更新：
 
@@ -517,13 +526,13 @@ PYTHONPATH=src pytest tests/unit/test_cli.py tests/unit/test_service_*.py tests/
 PYTHONPATH=src pytest
 ```
 
-`scripts/dev-preflight.sh` 是本地完整门禁入口：优先使用 repo-local `.venv/bin/python`，不存在时退回 `python3`，也可显式设置 `PYTHON_BIN=/path/to/python`。脚本依次运行 `ruff format --check`、`ruff check`、完整生产包 `mypy`（`pyproject.toml` 配置 `no_site_packages = true`）、复杂度与版本一致性门禁、`tests/unit --durations=30`、`tests/devtools --durations=30`、`scripts/validate_extraction_rules.py --ci` 和 `tests/integration --durations=30`；如果缺少 ruff / mypy / pytest，会提示先运行 `scripts/dev-bootstrap.sh` 或指定已安装依赖的解释器。快速迭代可用 `--fast`，需要单独排除 integration 或 type check 时使用 `--skip-integration` / `--skip-typecheck`。
+`scripts/dev-preflight.sh` 是本地完整门禁入口：优先使用 repo-local `.venv/bin/python`，不存在时退回 `python3`，也可显式设置 `PYTHON_BIN=/path/to/python`。脚本依次运行 `ruff format --check`、`ruff check`、完整生产包 `mypy`（`pyproject.toml` 配置 `no_site_packages = true`）、复杂度、provider route/catalog/manifest/fixture/docs 治理与版本一致性门禁、`tests/unit --durations=30`、`tests/devtools --durations=30`、`scripts/validate_extraction_rules.py --ci` 和 `tests/integration --durations=30`；如果缺少 ruff / mypy / pytest，会提示先运行 `scripts/dev-bootstrap.sh` 或指定已安装依赖的解释器。快速迭代可用 `--fast`，需要单独排除 integration 或 type check 时使用 `--skip-integration` / `--skip-typecheck`。
 
 验证分层如下：
 
 - 本地完整门：`scripts/dev-preflight.sh`，包含完整并行 unit、devtools、integration、Ruff、mypy 和 extraction-rule 校验；发布候选还需单独执行 build/install 终验。
-- 普通 `push` / `pull_request` CI 门：完整并行 unit + branch coverage、integration、devtools、Ruff、完整生产包 mypy、复杂度/版本/抽取规则/漏洞门禁，以及 Python 3.11/3.14 的 core/full wheel smoke。
-- opt-in 门：完整 golden corpus、offline/release 和 live provider 测试只允许相应 `workflow_dispatch` 输入或 `v*` tag 路径；普通 push 不运行真实 publisher、认证 browser 或重型 offline 流程。
+- 普通 `push` / `pull_request` CI 门：完整并行 unit + branch coverage、integration、devtools、Ruff、完整生产包 mypy、复杂度/provider governance/版本/抽取规则/漏洞门禁，以及 Python 3.11/3.14 的 core/full wheel smoke。
+- 独立低频/opt-in 门：完整 golden corpus 每周定时或由对应 `workflow_dispatch` 输入运行；live/provider drift 每月两次串行定时或由显式 dispatch 运行；offline/release 仍只走相应 dispatch 或 `v*` tag。普通 push/PR 不运行真实 publisher、认证 browser 或重型 offline 流程。
 
 所有常规 pytest 步骤继续复用 `pyproject.toml` 的 xdist 并行配置，不传 `-n 0`。关键 workflow 步骤和触发边界由 `tests/unit/test_ci_release_workflow.py` 锁定。
 

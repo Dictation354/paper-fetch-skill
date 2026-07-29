@@ -90,6 +90,10 @@ python -m pip install ".[full]"     # browser + PDF
 uv sync --frozen --extra dev --extra full  # 可复现开发环境
 ```
 
+core 安装包含 MCP Python SDK 2.x（依赖范围 `mcp>=2,<3`）。`paper-fetch-mcp`
+同时服务 2025 握手协议客户端和 2026-07-28 无状态协议客户端；从源码升级后应重新同步
+环境并重启 MCP host。
+
 Windows 安装后新开 PowerShell，验证 CLI：
 
 ```powershell

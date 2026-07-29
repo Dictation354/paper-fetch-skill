@@ -3,12 +3,12 @@ name: springer
 display_source: springer_html
 generation:
   generated_by: manual_replay
-  generated_at: "2026-05-18T00:00:00Z"
+  generated_at: '2026-05-18T00:00:00Z'
   source_queries:
-    - "paper_fetch.provider_catalog springer ProviderSpec"
-    - "tests/fixtures/golden_criteria springer samples"
-    - "tests/unit/test_springer_html_regressions.py"
-    - "tests/unit/test_springer_html_tables.py"
+    - paper_fetch.provider_catalog springer ProviderSpec
+    - tests/fixtures/golden_criteria springer samples
+    - tests/unit/test_springer_html_regressions.py
+    - tests/unit/test_springer_html_tables.py
     - Springer 10.1038 table DOI candidates
     - site:springer.com Springer table article DOI
     - 10.1038 table fixture discovery springer
@@ -22,9 +22,9 @@ generation:
 routing:
   primary: doi_prefix
   doi_prefixes:
-    - "10.1038/"
-    - "10.1007/"
-    - "10.1186/"
+    - 10.1038/
+    - 10.1007/
+    - 10.1186/
   domains:
     - springer.com
     - springernature.com
@@ -35,13 +35,17 @@ routing:
     - springer
     - springer nature
     - springer science and business media llc
-  crossref_publisher:
+  crossref_publisher: null
 main_path:
   - article_html
   - pdf_fallback
   - abstract_only
   - metadata_only
-success_criteria: {}
+success_criteria:
+  article_html: {}
+  pdf_fallback: {}
+  abstract_only: {}
+  metadata_only: {}
 route_contract:
   article_html:
     success_requires:
@@ -152,10 +156,10 @@ asset_contract:
     download: required
     purposes:
       - figure
-    exception_reason:
+    exception_reason: null
 supplementary_scope:
-  selector:
-  url_pattern:
+  selector: null
+  url_pattern: null
 abstract_only_strategy: provider_managed
 probe:
   env_requirements: []
@@ -165,87 +169,89 @@ probe:
 fixtures:
   doi_samples:
     structure:
-      doi: "10.1038/s43247-024-01885-8"
-      evidence_url: "https://www.nature.com/articles/s43247-024-01885-8"
-      evidence_reason: "Provider-local tests build a real Springer/Nature article and verify body, data
-        availability, and code availability sections."
+      doi: 10.1038/s43247-024-01885-8
+      evidence_url: https://www.nature.com/articles/s43247-024-01885-8
+      evidence_reason: Provider-local tests build a real Springer/Nature article and
+        verify body, data availability, and code availability sections.
       observed_signals:
         - html_article
         - body_sections
       confidence: high
     table:
-      doi: "10.1038/s43247-024-01295-w"
-      evidence_url: "https://www.nature.com/articles/s43247-024-01295-w"
-      evidence_reason: "Provider-local table tests exercise a real Nature table page and inline table
-        injection."
+      doi: 10.1038/s43247-024-01295-w
+      evidence_url: https://www.nature.com/articles/s43247-024-01295-w
+      evidence_reason: Provider-local table tests exercise a real Nature table page
+        and inline table injection.
       observed_signals:
         - html_article
         - body_table
       confidence: high
     formula:
-      doi: "10.1038/nature12915"
-      evidence_url: "https://www.nature.com/articles/nature12915"
-      evidence_reason: "Provider-local tests exercise Springer/Nature formula image extraction from a
-        real fixture."
+      doi: 10.1038/nature12915
+      evidence_url: https://www.nature.com/articles/nature12915
+      evidence_reason: Provider-local tests exercise Springer/Nature formula image
+        extraction from a real fixture.
       observed_signals:
         - html_article
         - formula_images
       confidence: high
     figure:
-      doi: "10.1038/s41561-022-00912-7"
-      evidence_url: "https://www.nature.com/articles/s41561-022-00912-7"
-      evidence_reason: "Provider-local tests verify Springer figure placement and downloaded asset rewrite
-        for a real fixture."
+      doi: 10.1038/s41561-022-00912-7
+      evidence_url: https://www.nature.com/articles/s41561-022-00912-7
+      evidence_reason: Provider-local tests verify Springer figure placement and downloaded
+        asset rewrite for a real fixture.
       observed_signals:
         - html_article
         - figures
       confidence: high
     supplementary:
-      doi: "10.1038/s41561-022-00912-7"
-      evidence_url: "https://www.nature.com/articles/s41561-022-00912-7"
-      evidence_reason: "Provider-local tests exercise Springer supplementary section extraction and source-data
-        separation."
+      doi: 10.1038/s41561-022-00912-7
+      evidence_url: https://www.nature.com/articles/s41561-022-00912-7
+      evidence_reason: Provider-local tests exercise Springer supplementary section
+        extraction and source-data separation.
       observed_signals:
         - html_article
         - supplementary
       confidence: high
     references:
-      doi: "10.1007/s10584-011-0143-4"
-      evidence_url: "https://link.springer.com/article/10.1007/s10584-011-0143-4"
-      evidence_reason: "Provider-local tests use a real Springer article fixture while separately verifying
-        numbered reference extraction behavior."
+      doi: 10.1007/s10584-011-0143-4
+      evidence_url: https://link.springer.com/article/10.1007/s10584-011-0143-4
+      evidence_reason: Provider-local tests use a real Springer article fixture while
+        separately verifying numbered reference extraction behavior.
       observed_signals:
         - html_article
         - references
       confidence: medium
     pdf_fallback:
-      doi:
-      evidence_url: "https://link.springer.com/"
-      evidence_reason: "Current recorded fixtures do not include a reusable Springer PDF fallback replay."
+      doi: null
+      evidence_url: https://link.springer.com/
+      evidence_reason: Current recorded fixtures do not include a reusable Springer
+        PDF fallback replay.
       observed_signals: []
       confidence: low
     abstract_only:
-      doi: "10.1007/s00382-018-4286-0"
-      evidence_url: "https://link.springer.com/article/10.1007/s00382-018-4286-0"
-      evidence_reason: "Block fixture coverage verifies Springer preview or abstract-only page cleanup
-        and provider-managed degradation."
+      doi: 10.1007/s00382-018-4286-0
+      evidence_url: https://link.springer.com/article/10.1007/s00382-018-4286-0
+      evidence_reason: Block fixture coverage verifies Springer preview or abstract-only
+        page cleanup and provider-managed degradation.
       observed_signals:
         - abstract_only
         - preview_page
       confidence: medium
     access_gate:
-      doi: "10.1007/s00382-018-4286-0"
-      evidence_url: "https://link.springer.com/article/10.1007/s00382-018-4286-0"
-      evidence_reason: "Block fixture coverage verifies Springer preview text is stripped from Markdown
-        output."
+      doi: 10.1007/s00382-018-4286-0
+      evidence_url: https://link.springer.com/article/10.1007/s00382-018-4286-0
+      evidence_reason: Block fixture coverage verifies Springer preview text is stripped
+        from Markdown output.
       observed_signals:
         - access_gate
         - preview_page
       confidence: medium
     empty_shell:
-      doi:
-      evidence_url: "https://link.springer.com/"
-      evidence_reason: "Current recorded fixtures do not include a Springer empty-shell sample."
+      doi: null
+      evidence_url: https://link.springer.com/
+      evidence_reason: Current recorded fixtures do not include a Springer empty-shell
+        sample.
       observed_signals: []
       confidence: low
   discovery_proof:
@@ -271,31 +277,38 @@ fixtures:
       selected_doi: 10.1038/nature12915
       rejections: {}
       exhausted: false
-      evidence_summary: Selected 10.1038/nature12915 because fixtures.doi_samples.formula already
-        records provider-local evidence for stable formula Markdown assertions.
+      evidence_summary: Selected 10.1038/nature12915 because fixtures.doi_samples.formula
+        already records provider-local evidence for stable formula Markdown assertions.
     supplementary:
       queries:
         - Springer 10.1038 supplementary supporting information DOI candidates
-        - site:springer.com Springer supplementary supporting information article DOI
+        - site:springer.com Springer supplementary supporting information article
+          DOI
         - 10.1038 supplementary supporting information fixture discovery springer
       candidates:
         - 10.1038/s41561-022-00912-7
       selected_doi: 10.1038/s41561-022-00912-7
       rejections: {}
       exhausted: false
-      evidence_summary: Selected 10.1038/s41561-022-00912-7 because
-        fixtures.doi_samples.supplementary already records provider-local evidence for stable
-        supplementary Markdown assertions.
+      evidence_summary: Selected 10.1038/s41561-022-00912-7 because fixtures.doi_samples.supplementary
+        already records provider-local evidence for stable supplementary Markdown
+        assertions.
 extraction_hints:
-  datalayer_signal_set:
-  text_marker_signal_set: []
+  datalayer_signal_set: null
+  text_marker_signal_set: null
   front_matter:
-  asset_retry:
+    exact_texts:
+      - authors
+      - author information
+      - affiliations
+    contains_tokens: []
+    publication_keywords: []
+  asset_retry: null
   metadata_merge: []
 owner_reuse_exceptions: []
 docs:
-  providers_md_capability_row: "Springer | Crossref merge | direct HTML -> direct HTTP PDF | HTML body/all
-    assets; PDF fallback is text-only | springer_html / springer_pdf"
-  changelog_summary: "Track Springer implemented provider manifest for HTML, assets, and PDF fallback
-    onboarding sync."
-  extraction_rules_summary:
+  providers_md_capability_row: Springer | Crossref merge | direct HTML -> direct HTTP
+    PDF | HTML body/all assets; PDF fallback is text-only | springer_html / springer_pdf
+  changelog_summary: Track Springer implemented provider manifest for HTML, assets,
+    and PDF fallback onboarding sync.
+  extraction_rules_summary: null

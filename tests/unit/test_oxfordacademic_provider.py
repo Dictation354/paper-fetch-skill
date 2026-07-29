@@ -7,10 +7,13 @@ import yaml
 from tests.golden_criteria import golden_criteria_asset
 
 from paper_fetch.http import HttpTransport
+from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
 from paper_fetch.provider_catalog import PROVIDER_CATALOG, SOURCE_PROVIDER_MAP
 from paper_fetch.providers import _oxfordacademic_html
 from paper_fetch.providers._registry import provider_bundle
 from paper_fetch.providers.oxfordacademic import OxfordAcademicClient
+from tests.unit._atypon_browser_workflow_provider_support import png_header
+from tests.unit._paper_fetch_support import FixtureHtmlTransport, http_response
 
 
 HTML_DOI = "10.1093/bioinformatics/btaa161"
@@ -72,6 +75,100 @@ def test_client_pdf_candidates_keep_article_pdf_url_and_doi_templates() -> None:
 
     assert candidates[0] == source_url
     assert f"https://academic.oup.com/doi/pdf/{PDF_DOI}" in candidates
+
+
+def test_html_asset_download_supports_none_body_and_all_profiles(
+    tmp_path: Path,
+) -> None:
+    source_url = "https://academic.oup.com/bioinformatics/article/36/11/3409/5802463"
+    figure_url = "https://academic.oup.com/article/figure/f1.png"
+    supplementary_url = "https://academic.oup.com/article/supplement/s1.zip"
+    transport = FixtureHtmlTransport(
+        {
+            figure_url: http_response(
+                figure_url,
+                png_header(16, 12) + b"oxford-figure",
+                "image/png",
+            ),
+            supplementary_url: http_response(
+                supplementary_url,
+                b"PK\x03\x04oxford-supplement",
+                "application/zip",
+            ),
+        }
+    )
+    client = OxfordAcademicClient(transport, {})
+    assets = [
+        {
+            "kind": "figure",
+            "heading": "Figure 1",
+            "url": figure_url,
+            "original_url": figure_url,
+            "section": "body",
+        },
+        {
+            "kind": "supplementary",
+            "heading": "Supplementary data",
+            "url": supplementary_url,
+            "original_url": supplementary_url,
+            "section": "supplementary",
+        },
+    ]
+    raw_payload = RawFulltextPayload(
+        provider="oxfordacademic",
+        source_url=source_url,
+        content_type="text/html",
+        body=b"<article>body</article>",
+        content=ProviderContent(
+            route_kind="html",
+            source_url=source_url,
+            content_type="text/html",
+            body=b"<article>body</article>",
+            markdown_text=f"# Example\n\n![Figure 1]({figure_url})",
+            merged_metadata={"doi": HTML_DOI, "title": "Example"},
+            extracted_assets=assets,
+        ),
+    )
+
+    none_result = client.download_related_assets(
+        HTML_DOI,
+        {"doi": HTML_DOI},
+        raw_payload,
+        tmp_path / "none",
+        asset_profile="none",
+    )
+    body_result = client.download_related_assets(
+        HTML_DOI,
+        {"doi": HTML_DOI},
+        raw_payload,
+        tmp_path / "body",
+        asset_profile="body",
+    )
+    all_result = client.download_related_assets(
+        HTML_DOI,
+        {"doi": HTML_DOI},
+        raw_payload,
+        tmp_path / "all",
+        asset_profile="all",
+    )
+
+    assert none_result == {"assets": [], "asset_failures": []}
+    assert [item["kind"] for item in body_result["assets"]] == ["figure"]
+    assert {item["kind"] for item in all_result["assets"]} == {
+        "figure",
+        "supplementary",
+    }
+    article = client.to_article_model(
+        {"doi": HTML_DOI, "title": "Example"},
+        raw_payload,
+        downloaded_assets=body_result["assets"],
+    )
+    rendered = article.to_ai_markdown(
+        include_refs="all",
+        asset_profile="body",
+        max_tokens="full_text",
+    )
+    assert str(body_result["assets"][0]["path"]) in rendered
 
 
 def test_markdown_contract_structure_fixture() -> None:

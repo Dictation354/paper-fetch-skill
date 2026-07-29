@@ -25,6 +25,8 @@ from .types import (
     BrowserRuntimeConfig,
     BrowserRuntimeFailure,
     BrowserRuntimeSession,
+    BrowserStagedStorageState,
+    BrowserWarmResult,
 )
 from .context import browser_context
 
@@ -59,6 +61,8 @@ __all__ = [
     "BrowserRuntimeConfig",
     "BrowserRuntimeFailure",
     "BrowserRuntimeSession",
+    "BrowserStagedStorageState",
+    "BrowserWarmResult",
     "browser_context",
     "browser_context_seed_from_mapping",
     "browser_context_seed_from_session",

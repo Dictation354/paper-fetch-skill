@@ -24,7 +24,7 @@ from ..extraction.html.provider_rules import (
     ProviderHtmlRules,
 )
 from ..publisher_identity import normalize_doi
-from ..provider_catalog import ProviderSpec
+from ..provider_catalog import ProviderRouteSpec, ProviderSpec
 from ..quality.html_signals import AMS_TEXT_MARKER_SIGNAL_SET
 from ..utils import normalize_text
 from . import _ams_html, browser_workflow
@@ -54,6 +54,28 @@ register_provider_bundle(
             base_domains=("journals.ametsoc.org",),
             crossref_pdf_position=0,
             requires_browser_runtime=True,
+            routes=(
+                ProviderRouteSpec(name="metadata", kind="metadata"),
+                ProviderRouteSpec(
+                    name="browser_html",
+                    kind="html",
+                    browser_required=True,
+                    browser_preflight=True,
+                    auth_supported=True,
+                    requires_playwright=True,
+                    concurrency=1,
+                ),
+                ProviderRouteSpec(
+                    name="browser_pdf",
+                    kind="pdf",
+                    browser_required=True,
+                    browser_preflight=True,
+                    auth_supported=True,
+                    requires_playwright=True,
+                    requires_pdf_conversion=True,
+                    concurrency=1,
+                ),
+            ),
         ),
         html_rules=ProviderHtmlRules(
             name="ams",

@@ -19,6 +19,7 @@ from ..provider_catalog import ProviderSpec
 from ..quality.html_signals import PNAS_SIGNAL_SET
 from . import _pnas_html, browser_workflow
 from ._registry import ProviderBundle, register_provider_bundle
+from .browser_runtime import BrowserHtmlReadiness
 
 
 register_provider_bundle(
@@ -39,7 +40,7 @@ register_provider_bundle(
             client_factory_path="paper_fetch.providers.pnas:PnasClient",
             status_order=5,
             base_domains=("www.pnas.org", "pnas.org"),
-            html_path_templates=("/doi/{doi}", "/doi/full/{doi}"),
+            html_path_templates=("/doi/full/{doi}", "/doi/{doi}"),
             pdf_path_templates=(
                 "/doi/epdf/{doi}",
                 "/doi/pdf/{doi}?download=true",
@@ -79,6 +80,10 @@ register_provider_bundle(
 PNAS_BROWSER_PROFILE = browser_workflow.make_atypon_browser_profile(
     "pnas",
     fallback_author_extractor=_pnas_html.extract_authors,
+    html_readiness=BrowserHtmlReadiness(
+        wait_for_article_body=False,
+        selector='[data-extent="bodymatter"]',
+    ),
 )
 
 

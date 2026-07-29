@@ -8,10 +8,10 @@ import threading
 from typing import Any
 from collections.abc import Callable, Mapping
 
-from mcp.server.fastmcp import Context
+from mcp.server.mcpserver import Context
 from mcp.types import CallToolResult
 
-from ..auth import browser_auth_provider_names
+from ..provider_catalog import browser_preflight_provider_names
 from ..browser_preflight import BrowserPreflightResult
 from ..utils import normalize_text
 from ._deps import MCPDeps, default_mcp_deps
@@ -166,7 +166,7 @@ def _response_payload(
                 "requested": (
                     1
                     if request.provider is not None
-                    else len(browser_auth_provider_names())
+                    else len(browser_preflight_provider_names())
                 ),
                 "completed": len(result_payloads),
                 **counts,
@@ -249,7 +249,9 @@ async def browser_preflight_tool_async(
     except Exception as error:
         return _tool_result(error_payload_from_exception(error), is_error=True)
 
-    total = 1 if request.provider is not None else len(browser_auth_provider_names())
+    total = (
+        1 if request.provider is not None else len(browser_preflight_provider_names())
+    )
     await report_progress(ctx, 0, total, "Starting live browser_preflight")
     cancelled = threading.Event()
     loop = asyncio.get_running_loop()

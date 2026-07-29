@@ -118,6 +118,7 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
             confidence=1.0,
         )
         official_article = sample_article()
+        official_article.doi = resolved.doi
         original_resolve = paper_fetch.resolve_paper
         try:
             paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
@@ -182,6 +183,7 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
             confidence=1.0,
         )
         official_article = sample_article()
+        official_article.doi = resolved.doi
         original_resolve = paper_fetch.resolve_paper
         try:
             paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
@@ -298,6 +300,7 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
             confidence=1.0,
         )
         official_article = sample_article()
+        official_article.doi = resolved.doi
         official_article.source = "wiley_browser"
         original_resolve = paper_fetch.resolve_paper
         try:
@@ -544,3 +547,129 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
                 )
         finally:
             paper_fetch.resolve_paper = original_resolve
+
+    def test_fulltext_tries_second_ranked_official_provider_after_no_result(
+        self,
+    ) -> None:
+        doi = "10.1007/ranked-fallback"
+        resolved = paper_fetch.ResolvedQuery(
+            query=doi,
+            query_kind="doi",
+            doi=doi,
+            landing_url="https://linkinghub.elsevier.com/retrieve/pii/test",
+            provider_hint="elsevier",
+            confidence=1.0,
+        )
+        springer_article = sample_article()
+        springer_article.doi = doi
+        springer_article.source = "springer_html"
+        original_resolve = paper_fetch.resolve_paper
+        try:
+            paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
+            article = fetch_paper_model(
+                doi,
+                clients={
+                    "elsevier": StubProvider(
+                        metadata={
+                            "provider": "elsevier",
+                            "official_provider": True,
+                            "doi": doi,
+                            "title": "Ranked Provider Article",
+                        },
+                        raw_error=paper_fetch.ProviderFailure(
+                            "no_result",
+                            "Elsevier did not expose this migrated article.",
+                        ),
+                    ),
+                    "springer": StubProvider(
+                        metadata={
+                            "provider": "springer",
+                            "official_provider": True,
+                            "doi": doi,
+                            "title": "Ranked Provider Article",
+                        },
+                        raw_payload=RawFulltextPayload(
+                            provider="springer",
+                            source_url="https://link.springer.com/article/test",
+                            content_type="text/html",
+                            body=b"<article>full text</article>",
+                        ),
+                        article=springer_article,
+                    ),
+                },
+            )
+        finally:
+            paper_fetch.resolve_paper = original_resolve
+
+        self.assertEqual(article.source, "springer_html")
+        self.assertIn(
+            "route:provider_candidate_elsevier_rejected",
+            article.quality.source_trail,
+        )
+        self.assertIn(
+            "route:provider_candidate_springer_accepted",
+            article.quality.source_trail,
+        )
+
+    def test_fulltext_access_boundary_stops_ranked_provider_fallback(self) -> None:
+        class CountingProvider(StubProvider):
+            def __init__(self, **kwargs):
+                super().__init__(**kwargs)
+                self.raw_calls = 0
+
+            def fetch_raw_fulltext(self, doi, metadata, *, context=None):
+                self.raw_calls += 1
+                return super().fetch_raw_fulltext(
+                    doi,
+                    metadata,
+                    context=context,
+                )
+
+        doi = "10.1007/access-boundary"
+        resolved = paper_fetch.ResolvedQuery(
+            query=doi,
+            query_kind="doi",
+            doi=doi,
+            landing_url="https://linkinghub.elsevier.com/retrieve/pii/test",
+            provider_hint="elsevier",
+            confidence=1.0,
+        )
+        second = CountingProvider(
+            metadata={
+                "provider": "springer",
+                "official_provider": True,
+                "doi": doi,
+                "title": "Protected Article",
+            },
+            raw_error=AssertionError("second provider must not be attempted"),
+        )
+        original_resolve = paper_fetch.resolve_paper
+        try:
+            paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
+            article = fetch_paper_model(
+                doi,
+                clients={
+                    "elsevier": StubProvider(
+                        metadata={
+                            "provider": "elsevier",
+                            "official_provider": True,
+                            "doi": doi,
+                            "title": "Protected Article",
+                        },
+                        raw_error=paper_fetch.ProviderFailure(
+                            "no_access",
+                            "Authentication is required.",
+                        ),
+                    ),
+                    "springer": second,
+                },
+            )
+        finally:
+            paper_fetch.resolve_paper = original_resolve
+
+        self.assertEqual(article.source, "crossref_meta")
+        self.assertEqual(second.raw_calls, 0)
+        self.assertIn(
+            "route:provider_candidate_elsevier_access_boundary_stop",
+            article.quality.source_trail,
+        )

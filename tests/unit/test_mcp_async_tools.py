@@ -75,7 +75,7 @@ class McpAsyncToolTests(unittest.IsolatedAsyncioTestCase):
             )
             await asyncio.sleep(0.05)
 
-        self.assertFalse(result.isError)
+        self.assertFalse(result.is_error)
         self.assertEqual(
             ctx.progress,
             [
@@ -175,7 +175,7 @@ class McpAsyncToolTests(unittest.IsolatedAsyncioTestCase):
             )
             await asyncio.sleep(0.05)
 
-        self.assertFalse(result.isError)
+        self.assertFalse(result.is_error)
         self.assertEqual(
             ctx.progress,
             [
@@ -198,11 +198,11 @@ class McpAsyncToolTests(unittest.IsolatedAsyncioTestCase):
             mode="metadata",
         )
 
-        self.assertTrue(result.isError)
-        self.assertEqual(result.structuredContent["status"], "error")
+        self.assertTrue(result.is_error)
+        self.assertEqual(result.structured_content["status"], "error")
         self.assertIn(
             "queries must contain at most 50 entries.",
-            result.structuredContent["reason"],
+            result.structured_content["reason"],
         )
 
     async def test_batch_resolve_tool_async_reports_per_query_progress(self) -> None:
@@ -223,7 +223,7 @@ class McpAsyncToolTests(unittest.IsolatedAsyncioTestCase):
             )
             await asyncio.sleep(0.05)
 
-        self.assertFalse(result.isError)
+        self.assertFalse(result.is_error)
         self.assertEqual(
             ctx.progress,
             [
@@ -265,17 +265,17 @@ class McpAsyncToolTests(unittest.IsolatedAsyncioTestCase):
                 ctx=ctx,
             )
 
-        self.assertFalse(result.isError)
-        self.assertEqual(result.structuredContent["schema_version"], 1)
-        self.assertTrue(result.structuredContent["aborted"])
+        self.assertFalse(result.is_error)
+        self.assertEqual(result.structured_content["schema_version"], 1)
+        self.assertTrue(result.structured_content["aborted"])
         self.assertEqual(
-            result.structuredContent["abort_reason"]["status"], "rate_limited"
+            result.structured_content["abort_reason"]["status"], "rate_limited"
         )
         self.assertEqual(
-            result.structuredContent["abort_reason"]["code"], "rate_limited"
+            result.structured_content["abort_reason"]["code"], "rate_limited"
         )
         self.assertEqual(
-            result.structuredContent["abort_reason"]["retry_after_seconds"], 5
+            result.structured_content["abort_reason"]["retry_after_seconds"], 5
         )
         self.assertEqual(seen_queries, ["10.1000/one", "10.1000/two"])
         self.assertEqual(
@@ -287,9 +287,9 @@ class McpAsyncToolTests(unittest.IsolatedAsyncioTestCase):
             queries=[f"10.1000/{index}" for index in range(51)],
         )
 
-        self.assertTrue(result.isError)
-        self.assertEqual(result.structuredContent["status"], "error")
+        self.assertTrue(result.is_error)
+        self.assertEqual(result.structured_content["status"], "error")
         self.assertIn(
             "queries must contain at most 50 entries.",
-            result.structuredContent["reason"],
+            result.structured_content["reason"],
         )

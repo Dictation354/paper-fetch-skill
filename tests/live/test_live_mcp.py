@@ -121,15 +121,15 @@ class LiveMcpServerTests(unittest.IsolatedAsyncioTestCase):
             env_override=env_override,
         )
 
-        self.assertFalse(result.isError)
-        self.assertEqual(result.structuredContent["source"], sample.expected_source)
-        self.assertTrue(result.structuredContent["has_fulltext"])
+        self.assertFalse(result.is_error)
+        self.assertEqual(result.structured_content["source"], sample.expected_source)
+        self.assertTrue(result.structured_content["has_fulltext"])
         self.assertTrue(
             source_trail_matches(
-                result.structuredContent["source_trail"],
+                result.structured_content["source_trail"],
                 sample.accepted_live_source_trail_groups,
             ),
-            result.structuredContent["source_trail"],
+            result.structured_content["source_trail"],
         )
         self.assertEqual(progress_updates[-1], (4, 4, "fetch_paper complete"))
         self.assertTrue(

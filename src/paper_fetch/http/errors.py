@@ -23,6 +23,8 @@ class RequestErrorCategory(StrEnum):
     RESPONSE_TOO_LARGE = "response_too_large"
     UNSUPPORTED_SCHEME = "unsupported_url_scheme"
     UNSAFE_REDIRECT = "unsafe_redirect"
+    INVALID_JSON = "invalid_json"
+    RESPONSE_SCHEMA_MISMATCH = "response_schema_mismatch"
 
 
 class RequestFailure(Exception):
@@ -138,6 +140,25 @@ def classify_network_error(exc: Exception) -> RequestErrorCategory:
     if "temporary failure" in text and "name resolution" in text:
         return RequestErrorCategory.DNS_ERROR
     return RequestErrorCategory.NETWORK_ERROR
+
+
+def is_retryable_network_error(exc: Exception) -> bool:
+    """Allow only transient connection failures; TLS/security errors never retry."""
+
+    category = classify_network_error(exc)
+    if category in {
+        RequestErrorCategory.TIMEOUT,
+        RequestErrorCategory.CONNECTION_RESET,
+        RequestErrorCategory.CONNECTION_CLOSED,
+    }:
+        return True
+    if category != RequestErrorCategory.DNS_ERROR:
+        return False
+    for cause in iter_network_error_causes(exc):
+        if isinstance(cause, socket.gaierror) and cause.errno == socket.EAI_AGAIN:
+            return True
+    text = " ".join(str(item).lower() for item in iter_network_error_causes(exc))
+    return "temporary failure" in text or "try again" in text
 
 
 def build_network_error_detail(exc: Exception) -> str:

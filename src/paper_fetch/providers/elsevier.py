@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import replace
-import json
 import mimetypes
 import urllib.parse
 import uuid
@@ -17,11 +16,14 @@ from ..config import build_user_agent, resolve_asset_download_concurrency
 from ..extraction.html.availability_policy import AvailabilityPolicy
 from ..http import (
     DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
+    HttpRequestPolicy,
     HttpTransport,
     PDF_MIME_TYPE,
     RequestFailure,
+    decode_json_object_response,
     is_xml_content_type,
 )
+from ..http.headers import header_value
 from ..elsevier_identifiers import extract_elsevier_pii_from_url, normalize_elsevier_pii
 from ..metadata.types import ProviderMetadata
 from ..models import (
@@ -30,8 +32,9 @@ from ..models import (
     article_from_structure,
     metadata_only_article,
 )
-from ..provider_catalog import ProviderSpec
-from ..publisher_identity import normalize_doi
+from ..provider_catalog import ProviderRouteSpec, ProviderSpec
+from ..pdf_limits import pdf_max_bytes
+from ..publisher_identity import extract_doi, normalize_doi
 from ..runtime import RuntimeContext
 from ..tracing import download_marker, fulltext_marker, trace_from_markers
 from ..utils import (
@@ -80,6 +83,7 @@ from ._waterfall import (
 )
 from ..reason_codes import (
     ERROR,
+    IDENTITY_MISMATCH,
     NO_ACCESS,
     NO_RESULT,
     NOT_CONFIGURED,
@@ -94,7 +98,7 @@ from ..quality.html_availability import (
 )
 from ..quality.html_signals import ELSEVIER_AVAILABILITY_OVERRIDES
 from ..extraction.html.provider_rules import ProviderHtmlRules
-from ..extraction.html.assets import SUPPLEMENTARY_KIND, download_assets
+from ..extraction.html.assets import FIGURE_KIND, SUPPLEMENTARY_KIND, download_assets
 from ..extraction.html.signals import ASSET_BLOCKING_REASON_TOKENS
 from .base import (
     ProviderArtifacts,
@@ -132,6 +136,16 @@ register_provider_bundle(
             env_requirements=("ELSEVIER_API_KEY",),
             xml_root_tags=("full-text-retrieval-response",),
             xml_file_tokens=("elsevier", "10.1016"),
+            routes=(
+                ProviderRouteSpec(name="metadata_api", kind="metadata"),
+                ProviderRouteSpec(name="xml_api", kind="xml"),
+                ProviderRouteSpec(
+                    name="pdf_api",
+                    kind="pdf",
+                    requires_pdf_conversion=True,
+                ),
+                ProviderRouteSpec(name="object_assets", kind="assets"),
+            ),
         ),
         html_rules=ProviderHtmlRules(
             name="elsevier",
@@ -154,7 +168,7 @@ _ELSEVIER_NON_RETRYABLE_ASSET_REASON_TOKENS = (
     *ASSET_BLOCKING_REASON_TOKENS,
 )
 _ELSEVIER_RETRYABLE_ASSET_REASON_TOKENS = NETWORK_RETRYABLE_REASON_TOKENS
-_ELSEVIER_PII_RETRYABLE_CODES = frozenset({ERROR, RATE_LIMITED})
+_ELSEVIER_PII_RETRYABLE_CODES = frozenset({ERROR, RATE_LIMITED, IDENTITY_MISMATCH})
 
 
 def first_xml_child_text(element: ET.Element, child_local_name: str) -> str | None:
@@ -286,6 +300,52 @@ def elsevier_xml_root_from_payload(
 
     # Reuse the parsed XML tree as read-only state; callers must not mutate it.
     return context.get_or_set_parse_cache(key, parse_root, copy_value=False)
+
+
+def extract_elsevier_xml_identity(xml_body: bytes) -> dict[str, Any]:
+    """Extract independent article identity only from Elsevier coredata."""
+
+    root = elsevier_xml_root_from_payload(xml_body)
+    if root is None:
+        return {}
+    coredata = next(
+        (
+            node
+            for node in root.iter()
+            if isinstance(node.tag, str) and xml_local_name(node.tag) == "coredata"
+        ),
+        None,
+    )
+    if coredata is None:
+        return {}
+    values: dict[str, str] = {}
+    for child in list(coredata):
+        if not isinstance(child.tag, str):
+            continue
+        local_name = xml_local_name(child.tag)
+        if local_name in {"doi", "identifier", "title", "pii", "eid"}:
+            text = normalize_text("".join(child.itertext()))
+            if text and local_name not in values:
+                values[local_name] = text
+    response_doi = normalize_doi(values.get("doi")) or extract_doi(
+        values.get("identifier")
+    )
+    title = normalize_text(values.get("title"))
+    evidence = {
+        key: value
+        for key, value in {
+            "doi": response_doi or None,
+            "title": title or None,
+            "pii": normalize_elsevier_pii(values.get("pii")) or None,
+            "eid": values.get("eid") or None,
+        }.items()
+        if value
+    }
+    return {
+        "response_doi": response_doi or None,
+        "response_title": title or None,
+        "identity_evidence": evidence,
+    }
 
 
 def extract_elsevier_asset_references(
@@ -631,9 +691,37 @@ def download_elsevier_related_assets(
                 continue
             assert response is not None
 
-            content_type = response["headers"].get(
-                "content-type", reference.get("content_type")
+            response_body = response.get("body")
+            body_bytes = (
+                bytes(response_body)
+                if isinstance(response_body, (bytes, bytearray))
+                else b""
             )
+            content_type = header_value(
+                response.get("headers"), "content-type"
+            ) or normalize_text(str(reference.get("content_type") or ""))
+            block_reason = FIGURE_KIND.response_block_reason(
+                content_type,
+                body_bytes,
+            )
+            if block_reason:
+                body_failures.append(
+                    {
+                        "kind": elsevier_asset_result_kind(reference.get("asset_type")),
+                        "asset_type": reference["asset_type"],
+                        "source_kind": reference["source_kind"],
+                        "source_ref": reference["source_ref"],
+                        "source_url": reference["source_url"],
+                        "heading": _elsevier_asset_heading(reference),
+                        "status": int(response.get("status_code") or 0) or None,
+                        "content_type": content_type or None,
+                        "reason": block_reason,
+                        "section": elsevier_asset_result_section(
+                            reference.get("asset_type")
+                        ),
+                    }
+                )
+                continue
             asset_type = reference.get("asset_type")
             output_path = build_asset_output_path(
                 asset_dir,
@@ -653,8 +741,8 @@ def download_elsevier_related_assets(
                     "download_url": reference["source_url"],
                     "source_url": response["url"],
                     "content_type": content_type,
-                    "path": save_payload(output_path, response["body"]),
-                    "downloaded_bytes": len(response["body"]),
+                    "path": save_payload(output_path, body_bytes),
+                    "downloaded_bytes": len(body_bytes),
                     "section": elsevier_asset_result_section(asset_type),
                     "download_tier": "object_reference",
                 }
@@ -823,12 +911,14 @@ class ElsevierClient(ProviderClient):
                 NO_RESULT,
                 f"Elsevier official XML route returned unsupported content type: {content_type}",
             )
+        body = bytes(response["body"])
         return build_provider_payload(
             provider="elsevier",
             route_kind="official",
             source_url=response["url"],
             content_type=content_type,
-            body=response["body"],
+            body=body,
+            diagnostics=extract_elsevier_xml_identity(body),
             reason=reason,
             trace_markers=[fulltext_marker("elsevier", "ok", route=trace_route)],
             needs_local_copy=False,
@@ -859,6 +949,7 @@ class ElsevierClient(ProviderClient):
         effective_asset_profile = asset_profile or pdf_asset_profile_from_context(
             context
         )
+        maximum_pdf_bytes = pdf_max_bytes()
         try:
             response = self.transport.request(
                 "GET",
@@ -868,6 +959,10 @@ class ElsevierClient(ProviderClient):
                 timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
                 retry_on_rate_limit=True,
                 retry_on_transient=True,
+                request_policy=HttpRequestPolicy(
+                    max_response_bytes=maximum_pdf_bytes,
+                    max_compressed_response_bytes=maximum_pdf_bytes,
+                ),
             )
         except RequestFailure as exc:
             raise map_request_failure(
@@ -892,6 +987,7 @@ class ElsevierClient(ProviderClient):
                 final_url=final_url,
                 not_pdf_message="Elsevier official PDF fallback did not return a PDF file.",
                 allow_pdf_only=True,
+                expected_identity={"doi": doi},
             )
         except PdfFetchFailure as exc:
             message = (
@@ -1002,9 +1098,30 @@ class ElsevierClient(ProviderClient):
         except RequestFailure as exc:
             raise map_request_failure(exc) from exc
 
-        payload = json.loads(response["body"].decode("utf-8"))
-        root = payload.get("abstracts-retrieval-response", {})
-        core = root.get("coredata", {}) if isinstance(root, dict) else {}
+        try:
+            payload = decode_json_object_response(
+                response,
+                label="Elsevier abstract API",
+                required_keys=("abstracts-retrieval-response",),
+            )
+            root = payload["abstracts-retrieval-response"]
+            if not isinstance(root, Mapping):
+                raise RequestFailure(
+                    int(response.get("status_code") or 200),
+                    "Elsevier abstract API response root must be an object.",
+                    url=str(response.get("url") or ""),
+                    error_category="response_schema_mismatch",
+                )
+            core = root.get("coredata")
+            if not isinstance(core, Mapping):
+                raise RequestFailure(
+                    int(response.get("status_code") or 200),
+                    "Elsevier abstract API response is missing coredata.",
+                    url=str(response.get("url") or ""),
+                    error_category="response_schema_mismatch",
+                )
+        except RequestFailure as exc:
+            raise map_request_failure(exc) from exc
         metadata: ProviderMetadata = {
             "status": "ok",
             "provider": "elsevier",
@@ -1140,7 +1257,13 @@ class ElsevierClient(ProviderClient):
                 run=run_xml,
                 failure_marker=fulltext_marker("elsevier", "fail", route="xml"),
                 failure_warning=xml_failure_warning,
-                continue_codes=(NO_RESULT, NO_ACCESS, ERROR, RATE_LIMITED),
+                continue_codes=(
+                    NO_RESULT,
+                    NO_ACCESS,
+                    ERROR,
+                    RATE_LIMITED,
+                    IDENTITY_MISMATCH,
+                ),
             ),
             ProviderWaterfallStep(
                 label="pii_xml",
@@ -1151,7 +1274,13 @@ class ElsevierClient(ProviderClient):
                 failure_warning=lambda failure, _state: (
                     f"Elsevier PII XML fallback was not usable ({failure.message}); attempting official PDF fallback."
                 ),
-                continue_codes=(NO_RESULT, NO_ACCESS, ERROR, RATE_LIMITED),
+                continue_codes=(
+                    NO_RESULT,
+                    NO_ACCESS,
+                    ERROR,
+                    RATE_LIMITED,
+                    IDENTITY_MISMATCH,
+                ),
             ),
             ProviderWaterfallStep(
                 label="pdf",
@@ -1168,7 +1297,13 @@ class ElsevierClient(ProviderClient):
                 success_warning="Full text was extracted from the Elsevier API PDF fallback after the XML route was not usable.",
             ),
         ]
-        return run_provider_waterfall(steps)
+        return run_provider_waterfall(
+            steps,
+            doi=normalized_doi,
+            metadata=metadata,
+            context=context,
+            client=self,
+        )
 
     def to_article_model(
         self,

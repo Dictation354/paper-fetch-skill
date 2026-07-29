@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import re
 import urllib.parse
 import xml.etree.ElementTree as ET
@@ -109,11 +109,15 @@ def _render_large_operator_lower_bound(value: str) -> str:
 
 @dataclass
 class FormulaRenderResult:
-    lines: list[str]
+    lines: list[str] = field(default_factory=list)
+    method: str = "unavailable"
+    status: str = "missing"
     fallback_kind: str | None = None
     note: str | None = None
     label: str | None = None
     image_url: str | None = None
+    expression: str | None = None
+    assets: list[dict[str, str]] = field(default_factory=list)
 
 
 def render_tex_math(element: ET.Element | None) -> str:
@@ -136,6 +140,40 @@ def render_external_mathml_expression(
     if result.status == "ok" and result.latex:
         return result.latex
     return render_mathml_expression(element)
+
+
+def _mathml_formula_result(
+    element: ET.Element | None,
+    *,
+    display_mode: bool,
+) -> FormulaRenderResult:
+    if element is None:
+        return FormulaRenderResult()
+    conversion = convert_mathml_element_to_latex(
+        element,
+        display_mode=display_mode,
+    )
+    if conversion.status == "ok" and conversion.latex:
+        return FormulaRenderResult(
+            method=f"mathml:{conversion.backend}",
+            status="ok",
+            expression=conversion.latex,
+        )
+    expression = render_mathml_expression(element)
+    if expression:
+        return FormulaRenderResult(
+            method="internal_mathml",
+            status="fallback",
+            fallback_kind="fallback",
+            note="Formula used the internal MathML fallback renderer.",
+            expression=expression,
+        )
+    return FormulaRenderResult(
+        method=f"mathml:{conversion.backend}",
+        status="missing",
+        fallback_kind="missing",
+        note="Formula MathML conversion failed and exposed no usable fallback.",
+    )
 
 
 def render_mathml_expression(element: ET.Element | None) -> str:
@@ -332,16 +370,106 @@ def render_mathml_expression(element: ET.Element | None) -> str:
     return expression
 
 
-def render_inline_formula(element: ET.Element | None) -> str:
+def _formula_image_asset(image_url: str, label: str | None) -> dict[str, str]:
+    normalized_label = normalize_compact_text(label)
+    heading = f"Formula {normalized_label}" if normalized_label else "Formula"
+    return {
+        "kind": "formula",
+        "key": image_url,
+        "anchor_key": image_url,
+        "heading": heading,
+        "caption": "",
+        "link": image_url,
+        "original_url": image_url,
+        "section": "body",
+        "render_state": "inline",
+    }
+
+
+def render_inline_formula_result(
+    element: ET.Element | None,
+    *,
+    source_url: str = "",
+) -> FormulaRenderResult:
     if element is None:
-        return ""
+        return FormulaRenderResult()
+    label = child_text(element, "label") or None
     math_node = first_descendant(element, "math")
     if math_node is not None:
-        return render_external_mathml_expression(math_node, display_mode=False)
+        result = _mathml_formula_result(math_node, display_mode=False)
+        result.label = normalize_compact_text(label)
+        if result.expression:
+            return result
     tex_node = first_descendant(element, "tex-math")
     if tex_node is not None:
-        return render_tex_math(tex_node)
-    return normalize_compact_text("".join(element.itertext()))
+        expression = render_tex_math(tex_node)
+        if expression:
+            return FormulaRenderResult(
+                method="tex-math",
+                status="fallback",
+                fallback_kind="fallback",
+                note="Formula used the publisher tex-math fallback.",
+                label=normalize_compact_text(label),
+                expression=expression,
+            )
+    image_url = formula_graphic_url(element, source_url=source_url)
+    if image_url:
+        return FormulaRenderResult(
+            method="graphic",
+            status="fallback",
+            fallback_kind="fallback",
+            note="Formula used the publisher formula image fallback.",
+            label=normalize_compact_text(label),
+            image_url=image_url,
+            assets=[_formula_image_asset(image_url, label)],
+        )
+    literal = normalize_compact_text(
+        render_literal_inline_text(element, skip_local_names={"label"})
+    )
+    if literal:
+        return FormulaRenderResult(
+            method="literal_text",
+            status="fallback",
+            fallback_kind="fallback",
+            note="Formula used normalized literal text fallback.",
+            label=normalize_compact_text(label),
+            expression=literal,
+        )
+    placeholder = (
+        f"[Formula unavailable: {normalize_compact_text(label)}]"
+        if normalize_compact_text(label)
+        else "[Formula unavailable]"
+    )
+    return FormulaRenderResult(
+        method="unavailable",
+        status="missing",
+        fallback_kind="missing",
+        note="Formula could not be converted; an explicit placeholder was inserted.",
+        label=normalize_compact_text(label),
+        expression=placeholder,
+    )
+
+
+def formula_inline_markdown(result: FormulaRenderResult) -> str:
+    if result.image_url:
+        return render_markdown_image(
+            "formula",
+            result.label or "Formula",
+            result.image_url,
+        )
+    expression = normalize_compact_text(result.expression)
+    if not expression:
+        return ""
+    return expression if result.status == "missing" else f"${expression}$"
+
+
+def render_inline_formula(element: ET.Element | None) -> str:
+    """Compatibility wrapper returning the un-delimited inline expression."""
+
+    result = render_inline_formula_result(element)
+    if result.image_url:
+        return formula_inline_markdown(result)
+    return normalize_compact_text(result.expression)
 
 
 def formula_graphic_url(element: ET.Element | None, *, source_url: str = "") -> str:
@@ -369,25 +497,31 @@ def render_display_formula_result(
     tex_node = first_descendant(element, "tex-math")
     fallback_kind: str | None = None
     note: str | None = None
+    method = "unavailable"
+    status = "missing"
     if math_node is not None:
-        expression = render_external_mathml_expression(math_node, display_mode=True)
-        if not expression:
-            expression = render_mathml_expression(math_node)
-            if expression:
-                fallback_kind = "fallback"
-                note = "Formula used the internal MathML fallback renderer."
+        math_result = _mathml_formula_result(math_node, display_mode=True)
+        expression = normalize_compact_text(math_result.expression)
+        method = math_result.method
+        status = math_result.status
+        fallback_kind = math_result.fallback_kind
+        note = math_result.note
     else:
         expression = ""
     if not expression and tex_node is not None:
         expression = render_tex_math(tex_node)
         if expression:
             fallback_kind = "fallback"
+            method = "tex-math"
+            status = "fallback"
             note = "Formula used the publisher tex-math fallback."
     image_url = ""
     if not expression:
         image_url = formula_graphic_url(element, source_url=source_url)
         if image_url:
             fallback_kind = "fallback"
+            method = "graphic"
+            status = "fallback"
             note = "Formula used the publisher formula image fallback."
     if not expression:
         expression = normalize_compact_text(
@@ -395,6 +529,8 @@ def render_display_formula_result(
         )
         if expression:
             fallback_kind = "fallback"
+            method = "literal_text"
+            status = "fallback"
             note = "Formula used normalized literal text fallback."
 
     if not expression:
@@ -405,6 +541,8 @@ def render_display_formula_result(
             else "[Formula unavailable]"
         )
         fallback_kind = "missing"
+        method = "unavailable"
+        status = "missing"
         note = "Formula could not be converted; an explicit placeholder was inserted."
 
     lines: list[str] = []
@@ -422,8 +560,39 @@ def render_display_formula_result(
         note = f"{normalize_compact_text(label)}: {note}"
     return FormulaRenderResult(
         lines=lines,
+        method=method,
+        status=status,
         fallback_kind=fallback_kind,
         note=note,
         label=normalize_compact_text(label),
         image_url=image_url or None,
+        expression=expression,
+        assets=[_formula_image_asset(image_url, label)] if image_url else [],
+    )
+
+
+def render_mathml_formula_result(
+    element: ET.Element | None,
+    *,
+    display_mode: bool = False,
+) -> FormulaRenderResult:
+    return _mathml_formula_result(element, display_mode=display_mode)
+
+
+def render_tex_formula_result(element: ET.Element | None) -> FormulaRenderResult:
+    expression = render_tex_math(element)
+    if expression:
+        return FormulaRenderResult(
+            method="tex-math",
+            status="fallback",
+            fallback_kind="fallback",
+            note="Formula used the publisher tex-math fallback.",
+            expression=expression,
+        )
+    return FormulaRenderResult(
+        method="unavailable",
+        status="missing",
+        fallback_kind="missing",
+        note="Formula tex-math content was empty.",
+        expression="[Formula unavailable]",
     )

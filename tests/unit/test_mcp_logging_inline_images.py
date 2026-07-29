@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from ._mcp_support import *
+from paper_fetch.runtime import RuntimeContext
 
 
 class McpLoggingInlineImageTests(unittest.TestCase):
@@ -120,6 +121,7 @@ class McpLoggingInlineImageTests(unittest.TestCase):
                 budget=mcp_tools.FetchPaperRequest(
                     query="10.1000/example"
                 ).strategy.resolved_inline_image_budget(),
+                download_dir=root,
             )
 
         self.assertEqual(len(contents), 6)
@@ -161,7 +163,7 @@ class McpLoggingInlineImageTests(unittest.TestCase):
             ).strategy.resolved_inline_image_budget()
 
             contents, warnings = mcp_tools._inline_image_contents(
-                article, budget=budget
+                article, budget=budget, download_dir=root
             )
 
         self.assertEqual([content.type for content in contents], ["text", "image"])
@@ -189,11 +191,91 @@ class McpLoggingInlineImageTests(unittest.TestCase):
             ).strategy.resolved_inline_image_budget()
 
             contents, warnings = mcp_tools._inline_image_contents(
-                article, budget=budget
+                article, budget=budget, download_dir=Path(tmpdir)
             )
 
         self.assertEqual(contents, [])
         self.assertEqual(warnings, [])
+
+    def test_inline_images_reject_out_of_scope_symlink_and_size_mismatch(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            base = Path(tmpdir)
+            scope = base / "scope"
+            scope.mkdir()
+            outside = base / "outside.png"
+            write_binary(outside, size=32)
+            symlink = scope / "linked.png"
+            symlink.symlink_to(outside)
+            in_scope = scope / "figure.png"
+            write_binary(in_scope, size=32)
+            budget = mcp_tools.FetchPaperRequest(
+                query="10.1000/example"
+            ).strategy.resolved_inline_image_budget()
+
+            for path, recorded_size in (
+                (outside, 32),
+                (symlink, 32),
+                (in_scope, 31),
+            ):
+                article = sample_article()
+                article.assets = [
+                    Asset(
+                        kind="figure",
+                        heading="Unsafe",
+                        path=str(path),
+                        section="body",
+                        downloaded_bytes=recorded_size,
+                    )
+                ]
+                contents, warnings = mcp_tools._inline_image_contents(
+                    article, budget=budget, download_dir=scope
+                )
+                self.assertEqual(contents, [])
+                self.assertIn("omitted from inline MCP image output", warnings[0])
+
+    def test_cached_envelope_with_out_of_scope_asset_is_not_reused(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            base = Path(tmpdir)
+            scope = base / "scope"
+            scope.mkdir()
+            outside = base / "outside.png"
+            write_binary(outside, size=32)
+            article = sample_article()
+            article.assets = [
+                Asset(
+                    kind="figure",
+                    heading="Outside",
+                    path=str(outside),
+                    section="body",
+                    downloaded_bytes=32,
+                )
+            ]
+            envelope = FetchEnvelope(
+                doi=article.doi,
+                source=article.source,
+                has_fulltext=True,
+                article=article,
+                markdown="# Example",
+            )
+            request = FetchPaperRequest(
+                query="10.1000/example",
+                modes=["article"],
+                prefer_cache=True,
+            )
+            cache = FetchCache(scope)
+            cache.write_fetch_envelope(envelope, request)
+
+            restored = cache.load_fetch_envelope(
+                request,
+                resolve_paper_fn=lambda *_args, **_kwargs: sample_resolved_query(
+                    "10.1000/example"
+                ),
+                context=RuntimeContext(env={}, download_dir=scope),
+            )
+
+        self.assertIsNone(restored)
 
     def test_fetch_paper_payload_prefer_cache_reuses_old_sidecar_when_only_inline_budget_changes(
         self,
@@ -272,10 +354,12 @@ class McpLoggingInlineImageTests(unittest.TestCase):
                 },
             )
 
-            result = mcp_tools.build_fetch_tool_result(envelope, request)
+            result = mcp_tools.build_fetch_tool_result(
+                envelope, request, download_dir=Path(tmpdir)
+            )
 
-        self.assertFalse(result.isError)
-        self.assertEqual(result.structuredContent["article"], None)
+        self.assertFalse(result.is_error)
+        self.assertEqual(result.structured_content["article"], None)
         self.assertEqual(
             [content.type for content in result.content], ["text", "text", "image"]
         )
@@ -319,13 +403,15 @@ class McpLoggingInlineImageTests(unittest.TestCase):
                 },
             )
 
-            result = mcp_tools.build_fetch_tool_result(envelope, request)
+            result = mcp_tools.build_fetch_tool_result(
+                envelope, request, download_dir=Path(tmpdir)
+            )
 
-        self.assertFalse(result.isError)
-        self.assertIsNone(result.structuredContent["markdown"])
-        self.assertIsNone(result.structuredContent["article"])
+        self.assertFalse(result.is_error)
+        self.assertIsNone(result.structured_content["markdown"])
+        self.assertIsNone(result.structured_content["article"])
         self.assertEqual(
-            result.structuredContent["metadata"]["title"], "Example Article"
+            result.structured_content["metadata"]["title"], "Example Article"
         )
         self.assertEqual([content.type for content in result.content], ["text"])
 
@@ -367,12 +453,14 @@ class McpLoggingInlineImageTests(unittest.TestCase):
                 },
             )
 
-            result = mcp_tools.build_fetch_tool_result(envelope, request)
+            result = mcp_tools.build_fetch_tool_result(
+                envelope, request, download_dir=Path(tmpdir)
+            )
 
-        self.assertFalse(result.isError)
+        self.assertFalse(result.is_error)
         self.assertIn(
             "![Figure 1](https://example.test/figure-1.png)",
-            result.structuredContent["markdown"],
+            result.structured_content["markdown"],
         )
         self.assertEqual([content.type for content in result.content], ["text"])
 
@@ -412,9 +500,11 @@ class McpLoggingInlineImageTests(unittest.TestCase):
                 strategy={"inline_image_budget": {"max_images": 1}},
             )
 
-            result = mcp_tools.build_fetch_tool_result(envelope, request)
+            result = mcp_tools.build_fetch_tool_result(
+                envelope, request, download_dir=Path(tmpdir)
+            )
 
-        self.assertFalse(result.isError)
+        self.assertFalse(result.is_error)
         self.assertEqual(
             [content.type for content in result.content], ["text", "text", "image"]
         )
@@ -427,6 +517,6 @@ class McpLoggingInlineImageTests(unittest.TestCase):
         ):
             result = mcp_tools.resolve_paper_tool(query="10.1000/example")
 
-        self.assertFalse(result.isError)
-        self.assertEqual(result.structuredContent["doi"], "10.1000/example")
-        self.assertEqual(result.structuredContent["query_kind"], "doi")
+        self.assertFalse(result.is_error)
+        self.assertEqual(result.structured_content["doi"], "10.1000/example")
+        self.assertEqual(result.structured_content["query_kind"], "doi")

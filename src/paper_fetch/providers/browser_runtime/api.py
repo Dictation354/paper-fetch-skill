@@ -16,7 +16,12 @@ from ...config import (
 )
 from ...reason_codes import NOT_CONFIGURED
 from .backends.camoufox import DEFAULT_CAMOUFOX_BACKEND
-from .types import BrowserFetchedHtml, BrowserRuntimeBackend, BrowserRuntimeConfig
+from .types import (
+    BrowserFetchedHtml,
+    BrowserRuntimeBackend,
+    BrowserRuntimeConfig,
+    BrowserWarmResult,
+)
 
 _BROWSER_RUNTIME_BACKENDS: dict[str, BrowserRuntimeBackend] = {
     DEFAULT_CAMOUFOX_BACKEND.name: DEFAULT_CAMOUFOX_BACKEND,
@@ -126,7 +131,7 @@ def warm_browser_context(
     browser_context_seed: Mapping[str, Any] | None = None,
     runtime_context: Any | None = None,
     lightweight: bool = False,
-) -> dict[str, Any]:
+) -> BrowserWarmResult:
     return _backend_for_config(config).warm_context(
         candidate_urls,
         publisher=publisher,

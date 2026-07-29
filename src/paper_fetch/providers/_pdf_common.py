@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import functools
 import os
 import re
 import subprocess
@@ -23,6 +24,8 @@ from cachetools import LRUCache
 from ..common_patterns import WORD_TOKEN_PATTERN
 from ..http import PDF_ACCEPT_HEADER, is_pdf_content_type
 from ..models.markdown import replace_markdown_images
+from ..pdf_limits import pdf_max_bytes
+from ..publisher_identity import extract_doi, validate_extracted_identity
 from ..utils import normalize_text, sanitize_filename
 from .browser_runtime.seed import CLOUDFLARE_COOKIE_NAMES, _CLOUDFLARE_COOKIE_PREFIXES
 
@@ -87,7 +90,6 @@ _IEEE_PDF_LICENSE_MARKERS = (
 _MIN_USABLE_PDF_MARKDOWN_WORDS = 250
 _MIN_TRANSPARENT_TEXT_WORDS = 500
 _TRANSPARENT_FALLBACK_WORD_FACTOR = 3
-_PYMUPDF_SUBPROCESS_PATCH_LOCK = threading.RLock()
 _PDF_MARKDOWN_HEADING_PATTERN = re.compile(r"^(#{1,6})\s+(.+?)\s*$")
 _PDF_PROSE_WORD_PATTERN = re.compile(r"[^\W\d_]{3,}", flags=re.UNICODE)
 _PDF_ITALIC_ALPHA_SUBSECTION_PATTERN = re.compile(
@@ -104,10 +106,8 @@ _PDF_MAJOR_SECTION_PATTERN = re.compile(
     flags=re.IGNORECASE,
 )
 PDF_ONLY_MARKDOWN_WARNING = "PDF was downloaded but Markdown extraction was not usable."
-PDF_MAX_BYTES_ENV_VAR = "PAPER_FETCH_PDF_MAX_BYTES"
 PDF_MAX_PAGES_ENV_VAR = "PAPER_FETCH_PDF_MAX_PAGES"
 PDF_MARKDOWN_CACHE_SIZE_ENV_VAR = "PAPER_FETCH_PDF_MARKDOWN_CACHE_SIZE"
-DEFAULT_PDF_MAX_BYTES = 150 * 1024 * 1024
 DEFAULT_PDF_MAX_PAGES = 1000
 DEFAULT_PDF_MARKDOWN_CACHE_SIZE = 16
 _PDF_MARKDOWN_RENDER_CACHE: (
@@ -155,7 +155,9 @@ def _positive_int_env(name: str, default: int) -> int:
 
 
 def _pdf_max_bytes() -> int:
-    return _positive_int_env(PDF_MAX_BYTES_ENV_VAR, DEFAULT_PDF_MAX_BYTES)
+    """Compatibility alias for older internal callers."""
+
+    return pdf_max_bytes()
 
 
 def _pdf_max_pages() -> int:
@@ -220,6 +222,58 @@ def _pdf_page_count(pdf_path: Path) -> int | None:
             return int(page_count)
     except Exception:
         return None
+
+
+def _pdf_identity_evidence(pdf_path: Path) -> dict[str, Any]:
+    """Read bounded Info/XMP and first-page text identity evidence."""
+
+    try:
+        import pymupdf
+    except Exception:  # pragma: no cover - supported installs include PyMuPDF
+        try:
+            import fitz as pymupdf
+        except Exception:
+            return {}
+    try:
+        with pymupdf.open(str(pdf_path)) as document:
+            metadata = getattr(document, "metadata", None)
+            metadata_mapping = metadata if isinstance(metadata, Mapping) else {}
+            title = normalize_text(str(metadata_mapping.get("title") or ""))
+            metadata_text = "\n".join(
+                normalize_text(str(metadata_mapping.get(key) or ""))
+                for key in ("title", "subject", "keywords", "author")
+            )
+            page_texts: list[str] = []
+            for page_index in range(min(3, int(getattr(document, "page_count", 0)))):
+                page_texts.append(
+                    normalize_text(str(document[page_index].get_text("text") or ""))
+                )
+            first_pages_text = "\n".join(page_texts)[:100_000]
+    except Exception:
+        return {}
+    response_doi = extract_doi(metadata_text) or extract_doi(first_pages_text)
+    if not title and first_pages_text:
+        title = next(
+            (
+                line
+                for line in first_pages_text.splitlines()
+                if 8 <= len(normalize_text(line)) <= 500
+            ),
+            "",
+        )
+    return {
+        key: value
+        for key, value in {
+            "doi": response_doi,
+            "title": title or None,
+            "method": (
+                "pdf_metadata_or_first_pages"
+                if response_doi or title
+                else "pdf_no_identity_evidence"
+            ),
+        }.items()
+        if value
+    }
 
 
 def _cacheable_pdf_markdown_key(
@@ -371,31 +425,51 @@ def _pdf_markdown_quality(markdown_text: str) -> _PdfMarkdownQuality:
     )
 
 
-class _SubprocessTextDecodeReplace:
-    def __enter__(self) -> None:
-        _PYMUPDF_SUBPROCESS_PATCH_LOCK.acquire()
-        self._original_run = subprocess.run
-        self._owner_thread_id = threading.get_ident()
+@functools.cache
+def _prepare_tessdata_environment() -> str | None:
+    """Resolve tessdata with a byte-mode subprocess, avoiding global monkeypatches."""
 
-        def run_with_replace(*args, **kwargs):
-            if (
-                threading.get_ident() == self._owner_thread_id
-                and "errors" not in kwargs
-                and (
-                    kwargs.get("text")
-                    or kwargs.get("universal_newlines")
-                    or kwargs.get("encoding") is not None
-                )
-            ):
-                kwargs = dict(kwargs)
-                kwargs["errors"] = "replace"
-            return self._original_run(*args, **kwargs)
+    configured = normalize_text(os.environ.get("TESSDATA_PREFIX"))
+    if configured:
+        return configured
+    try:
+        completed = subprocess.run(
+            ["tesseract", "--list-langs"],
+            capture_output=True,
+            check=False,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    output = "\n".join(
+        value
+        for value in (completed.stdout, completed.stderr)
+        if isinstance(value, str)
+    )
+    match = re.search(r'List of available languages in "([^"]+)"', output)
+    if match is None:
+        return None
+    tessdata = normalize_text(match.group(1))
+    if not tessdata or not Path(tessdata).is_dir():
+        return None
+    os.environ.setdefault("TESSDATA_PREFIX", tessdata)
+    return tessdata
 
-        subprocess.run = run_with_replace
 
-    def __exit__(self, exc_type, exc, tb) -> None:
-        subprocess.run = self._original_run
-        _PYMUPDF_SUBPROCESS_PATCH_LOCK.release()
+def _call_pdf_renderer_with_tessdata_retry(
+    renderer: Any,
+    *args: Any,
+    **kwargs: Any,
+) -> Any:
+    """Retry the upstream renderer after safe tessdata discovery when decoding fails."""
+
+    try:
+        return renderer(*args, **kwargs)
+    except UnicodeDecodeError:
+        _prepare_tessdata_environment()
+        return renderer(*args, **kwargs)
 
 
 def _render_default_pdf_markdown(
@@ -419,8 +493,14 @@ def _render_default_pdf_markdown(
                 "image_path": str(image_dir),
             }
         )
-    with _SubprocessTextDecodeReplace():
-        return str(pymupdf4llm.to_markdown(str(pdf_path), **kwargs) or "")
+    return str(
+        _call_pdf_renderer_with_tessdata_retry(
+            pymupdf4llm.to_markdown,
+            str(pdf_path),
+            **kwargs,
+        )
+        or ""
+    )
 
 
 def _canonical_pdf_heading(value: str) -> str:
@@ -580,11 +660,15 @@ def _render_transparent_pdf_markdown(pdf_path: Path) -> str:
             "missing_pymupdf4llm",
             "pymupdf4llm is not installed; cannot use PDF fallback.",
         ) from exc
-    with _SubprocessTextDecodeReplace():
-        return str(
-            pymupdf_rag.to_markdown(str(pdf_path), ignore_alpha=True, hdr_info=False)
-            or ""
+    return str(
+        _call_pdf_renderer_with_tessdata_retry(
+            pymupdf_rag.to_markdown,
+            str(pdf_path),
+            ignore_alpha=True,
+            hdr_info=False,
         )
+        or ""
+    )
 
 
 def _pdf_text_layer_stats(pdf_path: Path) -> _PdfTextLayerStats:
@@ -877,6 +961,7 @@ def pdf_fetch_result_from_response(
     source_url: str,
     not_pdf_message: str,
     final_url: str | None = None,
+    expected_identity: Mapping[str, Any] | None = None,
 ) -> PdfFetchResult:
     response_headers = _normalized_response_headers(response)
     resolved_final_url = (
@@ -915,6 +1000,7 @@ def pdf_fetch_result_from_response(
         pdf_bytes=pdf_bytes,
         suggested_filename=filename_from_headers(response_headers),
         allow_pdf_only=allow_pdf_only,
+        expected_identity=expected_identity,
     )
 
 
@@ -956,10 +1042,11 @@ def pdf_fetch_result_from_bytes(
     final_url: str,
     pdf_bytes: bytes,
     suggested_filename: str | None = None,
+    expected_identity: Mapping[str, Any] | None = None,
 ) -> PdfFetchResult:
     pdf_size = len(pdf_bytes)
     pdf_sha256 = hashlib.sha256(pdf_bytes).hexdigest()
-    max_bytes = _pdf_max_bytes()
+    max_bytes = pdf_max_bytes()
     if pdf_size > max_bytes:
         raise PdfFetchFailure(
             "pdf_too_large",
@@ -1000,6 +1087,18 @@ def pdf_fetch_result_from_bytes(
             )
 
         page_count = _pdf_page_count(pdf_path)
+        if page_count is None or page_count <= 0:
+            pdf_path.unlink(missing_ok=True)
+            raise PdfFetchFailure(
+                "invalid_pdf_structure",
+                "PDF fallback payload could not be parsed as a non-empty PDF document.",
+                details={
+                    "source_url": source_url,
+                    "final_url": final_url,
+                    "pdf_bytes": pdf_size,
+                    "pdf_sha256": pdf_sha256,
+                },
+            )
         max_pages = _pdf_max_pages()
         if page_count is not None and page_count > max_pages:
             pdf_path.unlink(missing_ok=True)
@@ -1015,6 +1114,26 @@ def pdf_fetch_result_from_bytes(
                     "pdf_sha256": pdf_sha256,
                 },
             )
+
+        identity_evidence = _pdf_identity_evidence(pdf_path)
+        identity_result = None
+        if isinstance(expected_identity, Mapping) and expected_identity:
+            identity_result = validate_extracted_identity(
+                expected_identity,
+                {},
+                identity_evidence,
+            )
+            if identity_result.mismatch:
+                pdf_path.unlink(missing_ok=True)
+                raise PdfFetchFailure(
+                    "identity_mismatch",
+                    identity_result.reason
+                    or "PDF fallback response identity does not match the request.",
+                    details={
+                        "identity": identity_result.to_dict(),
+                        "pdf_sha256": pdf_sha256,
+                    },
+                )
 
         warnings: list[str] = []
         render_started = time.monotonic()
@@ -1064,6 +1183,14 @@ def pdf_fetch_result_from_bytes(
                 "pdf_sha256": pdf_sha256,
                 "pdf_bytes": pdf_size,
                 "pdf_pages": page_count,
+                "identity": (
+                    identity_result.to_dict()
+                    if identity_result is not None
+                    else {
+                        "status": "not_checked",
+                        "method": identity_evidence.get("method", "none"),
+                    }
+                ),
                 "pdf_markdown_cache": {"status": render_cache_status},
                 "stage_timings": {
                     "pdf_markdown_seconds": round(render_seconds, 6),

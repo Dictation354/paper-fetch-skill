@@ -610,6 +610,81 @@ class CopernicusProviderTests(unittest.TestCase):
         self.assertTrue(table_assets)
         self.assertEqual(table_assets[0]["table_render_kind"], "structured")
 
+    def test_generic_jats_assets_preserve_alternatives_graphic_tables_and_nested_supplements(
+        self,
+    ) -> None:
+        xml = f"""<?xml version="1.0" encoding="UTF-8"?>
+<article xmlns:xlink="http://www.w3.org/1999/xlink">
+  <front><article-meta>
+    <article-id pub-id-type="doi">{DOI}</article-id>
+    <title-group><article-title>JATS asset variants</article-title></title-group>
+  </article-meta></front>
+  <body><sec><title>Results</title><p>{_article_body_text()}</p>
+    <fig id="fig-multi"><label>Figure 2</label><caption><p>Two panels.</p></caption>
+      <graphic xlink:href="panel-a.png" mimetype="image" mime-subtype="png"/>
+      <inline-graphic xlink:href="panel-b.svg" mimetype="image" mime-subtype="svg+xml"/>
+    </fig>
+    <table-wrap id="table-graphic"><label>Table 2</label>
+      <caption><p>Table supplied as an image.</p></caption>
+      <graphic xlink:href="table-2.png" mimetype="image" mime-subtype="png"/>
+    </table-wrap>
+  </sec></body>
+  <back><app-group><supplementary-material>
+    <media xlink:href="data/supplement-1.csv" mimetype="text" mime-subtype="csv"/>
+    <p>Nested file
+      <inline-supplementary-material>
+        <ext-link xlink:href="https://example.test/supplement-2.zip">archive</ext-link>
+      </inline-supplementary-material>
+    </p>
+  </supplementary-material></app-group></back>
+</article>
+""".encode()
+
+        extraction = parse_jats_xml(
+            xml,
+            source_url=XML_URL,
+            base_metadata={"doi": DOI},
+        )
+
+        self.assertIsNotNone(extraction)
+        assert extraction is not None
+        figure = next(
+            asset
+            for asset in extraction.assets
+            if asset["kind"] == "figure" and asset["key"] == "fig-multi"
+        )
+        self.assertEqual(
+            [alternative["url"] for alternative in figure["alternatives"]],
+            [
+                "https://acp.copernicus.org/articles/24/1/2024/panel-a.png",
+                "https://acp.copernicus.org/articles/24/1/2024/panel-b.svg",
+            ],
+        )
+        self.assertEqual(
+            [alternative["panel_index"] for alternative in figure["alternatives"]],
+            [1, 2],
+        )
+        graphic_table = next(
+            asset
+            for asset in extraction.assets
+            if asset["kind"] == "table" and asset["key"] == "table-graphic"
+        )
+        self.assertEqual(graphic_table["table_render_kind"], "fallback")
+        self.assertEqual(
+            graphic_table["alternatives"][0]["url"],
+            "https://acp.copernicus.org/articles/24/1/2024/table-2.png",
+        )
+        supplements = [
+            asset for asset in extraction.assets if asset["kind"] == "supplementary"
+        ]
+        self.assertEqual(
+            {asset["source_href"] for asset in supplements},
+            {
+                "data/supplement-1.csv",
+                "https://example.test/supplement-2.zip",
+            },
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

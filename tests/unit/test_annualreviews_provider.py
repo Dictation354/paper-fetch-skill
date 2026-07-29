@@ -9,6 +9,7 @@ from bs4 import BeautifulSoup
 
 from paper_fetch.provider_catalog import PROVIDER_CATALOG, SOURCE_PROVIDER_MAP
 from paper_fetch.extraction.html.signals import HtmlExtractionFailure
+from paper_fetch.http import RequestFailure
 from paper_fetch.providers import _annualreviews_html, browser_runtime
 from paper_fetch.providers._pdf_common import pdf_fetch_result_from_bytes
 from paper_fetch.providers._registry import provider_bundle
@@ -444,7 +445,18 @@ def test_download_related_assets_fetches_annualreviews_body_figure() -> None:
 </body></html>
 """
     image_body = png_header(640, 480)
-    client = AnnualreviewsClient(transport=AssetTransport({}), env={})
+    client = AnnualreviewsClient(
+        transport=AssetTransport(
+            {
+                ("GET", figure_url): RequestFailure(
+                    403,
+                    "Browser session required.",
+                    url=figure_url,
+                )
+            }
+        ),
+        env={},
+    )
     shared_fetcher = mock.Mock(
         return_value={
             "status_code": 200,

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from dataclasses import asdict
+import json
 from typing import Any
 
 from ..config import DEFAULT_USER_AGENT
@@ -9,6 +11,12 @@ from .. import provider_catalog as runtime_catalog
 
 PROVIDER_CATALOG_RESOURCE_URI = "resource://paper-fetch/provider-catalog"
 PROVIDER_CATALOG_SCHEMA_VERSION = 1
+
+
+def _route_payload(route: Any) -> dict[str, Any]:
+    """Return a route mapping whose containers already match its JSON form."""
+
+    return json.loads(json.dumps(asdict(route)))
 
 
 def runtime_tool_version() -> str:
@@ -31,17 +39,36 @@ def provider_catalog_resource_payload() -> dict[str, Any]:
             "official": spec.official,
             "sources": sorted(grouped_sources.get(spec.name, ())),
             "asset_default": spec.asset_default,
+            "routes": [_route_payload(route) for route in spec.routes],
             "capabilities": {
                 "html": spec.html_capable,
                 "metadata_probe": spec.probe_capability or None,
                 "provider_managed_abstract_only": (spec.provider_managed_abstract_only),
                 "runtime_kind": (
-                    "browser" if spec.requires_browser_runtime else "direct"
+                    "browser"
+                    if runtime_catalog.provider_requires_browser(spec.name)
+                    else (
+                        "hybrid"
+                        if runtime_catalog.provider_has_browser_route(spec.name)
+                        else "direct"
+                    )
                 ),
                 "requires_browser_runtime": spec.requires_browser_runtime,
+                "browser_required": runtime_catalog.provider_requires_browser(
+                    spec.name
+                ),
+                "browser_optional": any(
+                    route.browser_optional for route in spec.routes
+                ),
                 "requires_playwright": spec.requires_playwright,
                 "supports_static_status": True,
-                "supports_browser_preflight": spec.requires_browser_runtime,
+                "supports_browser_preflight": (
+                    runtime_catalog.provider_supports_browser_preflight(spec.name)
+                ),
+                "auth_supported": runtime_catalog.provider_supports_auth(spec.name),
+                "pdf_conversion": runtime_catalog.provider_requires_pdf_conversion(
+                    spec.name
+                ),
             },
         }
         for spec in runtime_catalog.ordered_provider_specs()

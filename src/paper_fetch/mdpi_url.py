@@ -5,22 +5,13 @@ from __future__ import annotations
 import re
 import urllib.parse
 
+from .journal_routes import provider_journal_mapping
 from .publisher_identity import normalize_doi
 from .utils import normalize_text
 
 
 MDPI_HOSTS = {"mdpi.com", "www.mdpi.com"}
-MDPI_ISSN_JOURNAL_CODES = {
-    "1424-8220": "s",
-    "1660-4601": "ijerph",
-    "1996-1073": "en",
-    "2071-1050": "su",
-    "2072-4292": "rs",
-    "2073-4441": "w",
-    "2077-0375": "membranes",
-    "2227-7390": "math",
-    "2304-8158": "foods",
-}
+MDPI_ISSN_JOURNAL_CODES = provider_journal_mapping("mdpi", "issn_journal_codes")
 MDPI_JOURNAL_CODE_ISSNS = {
     journal_code: issn for issn, journal_code in MDPI_ISSN_JOURNAL_CODES.items()
 }

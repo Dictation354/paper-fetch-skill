@@ -15,6 +15,7 @@ from ...provider_catalog import (
 )
 from ...utils import provider_display_name
 from ..base import ProviderFailure, RawFulltextPayload
+from ..browser_runtime import BrowserHtmlReadiness
 
 
 @dataclass
@@ -46,14 +47,20 @@ class ProviderBrowserProfile:
     markdown_publisher: str
     fallback_author_extractor: Callable[[str], list[str]] | None
     shared_browser_image_fetcher: bool
+    html_readiness: BrowserHtmlReadiness | None = None
 
 
-def make_atypon_browser_profile(
+def make_browser_profile(
     name: str,
     *,
     fallback_author_extractor: Callable[[str], list[str]],
     article_source_name: str | None = None,
+    html_readiness: BrowserHtmlReadiness | None = None,
+    markdown_publisher: str | None = None,
+    shared_browser_image_fetcher: bool = True,
 ) -> ProviderBrowserProfile:
+    """Build catalog-owned routing fields plus provider-specific extraction hooks."""
+
     return ProviderBrowserProfile(
         name=name,
         article_source_name=article_source_name,
@@ -63,7 +70,53 @@ def make_atypon_browser_profile(
         html_path_templates=provider_html_path_templates(name),
         pdf_path_templates=provider_pdf_path_templates(name),
         crossref_pdf_position=provider_crossref_pdf_position(name),
-        markdown_publisher=name,
+        markdown_publisher=markdown_publisher or name,
         fallback_author_extractor=fallback_author_extractor,
-        shared_browser_image_fetcher=True,
+        shared_browser_image_fetcher=shared_browser_image_fetcher,
+        html_readiness=html_readiness,
     )
+
+
+def make_atypon_browser_profile(
+    name: str,
+    *,
+    fallback_author_extractor: Callable[[str], list[str]],
+    article_source_name: str | None = None,
+    html_readiness: BrowserHtmlReadiness | None = None,
+) -> ProviderBrowserProfile:
+    return make_browser_profile(
+        name,
+        article_source_name=article_source_name,
+        fallback_author_extractor=fallback_author_extractor,
+        html_readiness=html_readiness,
+    )
+
+
+def browser_profile_catalog_mismatches(
+    profile: ProviderBrowserProfile,
+) -> tuple[str, ...]:
+    expected = {
+        "label": provider_display_name(profile.name),
+        "hosts": provider_domains(profile.name),
+        "base_hosts": provider_base_domains(profile.name),
+        "html_path_templates": provider_html_path_templates(profile.name),
+        "pdf_path_templates": provider_pdf_path_templates(profile.name),
+        "crossref_pdf_position": provider_crossref_pdf_position(profile.name),
+    }
+    mismatches = [
+        field_name
+        for field_name, expected_value in expected.items()
+        if getattr(profile, field_name) != expected_value
+    ]
+    return tuple(mismatches)
+
+
+def validate_browser_profile_catalog_sync(
+    profile: ProviderBrowserProfile,
+) -> None:
+    mismatches = browser_profile_catalog_mismatches(profile)
+    if mismatches:
+        raise ValueError(
+            f"Browser profile {profile.name!r} is out of sync with the provider "
+            f"catalog: {', '.join(mismatches)}"
+        )

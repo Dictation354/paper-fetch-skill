@@ -9,6 +9,7 @@ from pathlib import Path
 from collections.abc import Mapping
 from unittest import mock
 
+from paper_fetch.http import RequestFailure
 from paper_fetch.quality.issues import collect_issue_flags
 from paper_fetch.extraction.html import assets as html_assets
 from paper_fetch.extraction.image_payloads import image_mime_type_from_bytes
@@ -151,6 +152,9 @@ class AssetTransport:
         self, responses: dict[tuple[str, str], dict[str, object] | Exception]
     ) -> None:
         self.responses = responses
+        # Empty mappings model a publisher/CDN access gate for browser-recovery
+        # tests. Non-empty mappings remain strict so unexpected candidates fail.
+        self.missing_requests_are_access_gated = not responses
         self.calls: list[dict[str, object]] = []
 
     def request(
@@ -181,6 +185,14 @@ class AssetTransport:
         )
         key = (method, url)
         if key not in self.responses:
+            if self.missing_requests_are_access_gated:
+                raise RequestFailure(
+                    403,
+                    f"HTTP 403 access gate for {url}",
+                    body=b"<html>Access denied</html>",
+                    headers={"content-type": "text/html"},
+                    url=url,
+                )
             raise AssertionError(f"Missing fake response for {method} {url}")
         response = self.responses[key]
         if isinstance(response, Exception):
@@ -189,6 +201,13 @@ class AssetTransport:
 
 
 class AtyponBrowserWorkflowProviderTestCase(unittest.TestCase):
+    def assert_direct_asset_attempted(self, transport: AssetTransport) -> None:
+        self.assertGreaterEqual(len(transport.calls), 1)
+        self.assertTrue(
+            all(call.get("method") == "GET" for call in transport.calls),
+            transport.calls,
+        )
+
     def _metadata_from_golden_criteria(
         self, article_path: Path, doi: str
     ) -> dict[str, object]:

@@ -3,10 +3,10 @@ name: wiley
 display_source: wiley_browser
 generation:
   generated_by: manual_replay
-  generated_at: "2026-05-15T00:00:00Z"
+  generated_at: '2026-05-15T00:00:00Z'
   source_queries:
-    - "paper_fetch.provider_catalog wiley ProviderSpec"
-    - "tests/fixtures/golden_criteria wiley samples"
+    - paper_fetch.provider_catalog wiley ProviderSpec
+    - tests/fixtures/golden_criteria wiley samples
     - Wiley 10.1002 table DOI candidates
     - site:onlinelibrary.wiley.com Wiley table article DOI
     - 10.1002 table fixture discovery wiley
@@ -14,14 +14,15 @@ generation:
     - site:onlinelibrary.wiley.com Wiley formula equation math article DOI
     - 10.1002 formula equation math fixture discovery wiley
     - Wiley 10.1002 supplementary supporting information DOI candidates
-    - site:onlinelibrary.wiley.com Wiley supplementary supporting information article DOI
+    - site:onlinelibrary.wiley.com Wiley supplementary supporting information article
+      DOI
     - 10.1002 supplementary supporting information fixture discovery wiley
   confidence: high
 routing:
   primary: doi_prefix
   doi_prefixes:
-    - "10.1002/"
-    - "10.1111/"
+    - 10.1002/
+    - 10.1111/
   domains:
     - onlinelibrary.wiley.com
     - wiley.com
@@ -32,12 +33,15 @@ routing:
     - wiley blackwell
     - john wiley and sons
     - john wiley sons
-  crossref_publisher:
+  crossref_publisher: null
 main_path:
   - article_html
   - pdf_fallback
   - abstract_only
-success_criteria: {}
+success_criteria:
+  article_html: {}
+  pdf_fallback: {}
+  abstract_only: {}
 route_contract:
   article_html:
     success_requires:
@@ -141,99 +145,102 @@ asset_contract:
     download: required
     purposes:
       - figure
-    exception_reason:
+    exception_reason: null
 supplementary_scope:
-  selector: "#support-information-section"
-  url_pattern: "/action/downloadSupplement"
+  selector: '#support-information-section'
+  url_pattern: /action/downloadSupplement
 abstract_only_strategy: provider_managed
 probe:
-  env_requirements:
-    - CROSSREF_MAILTO
+  env_requirements: []
   requires_playwright: true
   requires_browser_runtime: true
   ping_url: https://onlinelibrary.wiley.com/
 fixtures:
   doi_samples:
     structure:
-      doi: "10.1111/gcb.16414"
-      evidence_url: "https://onlinelibrary.wiley.com/doi/full/10.1111/gcb.16414"
-      evidence_reason: "Provider benchmark and golden fixture cover the Wiley browser HTML route with
-        body sections."
+      doi: 10.1111/gcb.16414
+      evidence_url: https://onlinelibrary.wiley.com/doi/full/10.1111/gcb.16414
+      evidence_reason: Provider benchmark and golden fixture cover the Wiley browser
+        HTML route with body sections.
       observed_signals:
         - browser_html
         - body_sections
       confidence: high
     table:
-      doi: "10.1111/cas.16395"
-      evidence_url: "https://onlinelibrary.wiley.com/doi/full/10.1111/cas.16395"
-      evidence_reason: "Golden fixture contains body table markup and unit coverage renders it as Markdown
-        table."
+      doi: 10.1111/cas.16395
+      evidence_url: https://onlinelibrary.wiley.com/doi/full/10.1111/cas.16395
+      evidence_reason: Golden fixture contains body table markup and unit coverage
+        renders it as Markdown table.
       observed_signals:
         - browser_html
         - body_table
       confidence: high
     formula:
-      doi: "10.1111/gcb.15322"
-      evidence_url: "https://onlinelibrary.wiley.com/doi/full/10.1111/gcb.15322"
-      evidence_reason: "Golden fixture contains Wiley formula image fallback markup used by provider tests."
+      doi: 10.1111/gcb.15322
+      evidence_url: https://onlinelibrary.wiley.com/doi/full/10.1111/gcb.15322
+      evidence_reason: Golden fixture contains Wiley formula image fallback markup
+        used by provider tests.
       observed_signals:
         - browser_html
         - formula_images
       confidence: high
     figure:
-      doi: "10.1111/gcb.16414"
-      evidence_url: "https://onlinelibrary.wiley.com/doi/full/10.1111/gcb.16414"
-      evidence_reason: "Golden fixture contains inline Wiley figure blocks and figure asset links."
+      doi: 10.1111/gcb.16414
+      evidence_url: https://onlinelibrary.wiley.com/doi/full/10.1111/gcb.16414
+      evidence_reason: Golden fixture contains inline Wiley figure blocks and figure
+        asset links.
       observed_signals:
         - browser_html
         - figures
         - image_assets
       confidence: high
     supplementary:
-      doi: "10.1111/gcb.16414"
-      evidence_url: "https://onlinelibrary.wiley.com/doi/full/10.1111/gcb.16414"
-      evidence_reason: "Golden fixture contains a Supporting Information section with downloadable supplement
-        links."
+      doi: 10.1111/gcb.16414
+      evidence_url: https://onlinelibrary.wiley.com/doi/full/10.1111/gcb.16414
+      evidence_reason: Golden fixture contains a Supporting Information section with
+        downloadable supplement links.
       observed_signals:
         - browser_html
         - supplementary
       confidence: high
     references:
-      doi: "10.1111/gcb.16998"
-      evidence_url: "https://onlinelibrary.wiley.com/doi/full/10.1111/gcb.16998"
-      evidence_reason: "Expected golden criteria records Wiley reference extraction for this fixture."
+      doi: 10.1111/gcb.16998
+      evidence_url: https://onlinelibrary.wiley.com/doi/full/10.1111/gcb.16998
+      evidence_reason: Expected golden criteria records Wiley reference extraction
+        for this fixture.
       observed_signals:
         - browser_html
         - references
       confidence: high
     pdf_fallback:
-      doi: "10.1111/cas.16395"
-      evidence_url: "https://onlinelibrary.wiley.com/doi/full/10.1111/cas.16395"
-      evidence_reason: "Wiley PDF fallback sample exercises publisher PDF and TDM API fallback lanes."
+      doi: 10.1111/cas.16395
+      evidence_url: https://onlinelibrary.wiley.com/doi/full/10.1111/cas.16395
+      evidence_reason: Wiley PDF fallback sample exercises publisher PDF and TDM API
+        fallback lanes.
       observed_signals:
         - browser_html
         - pdf_link
         - pdf_fallback
       confidence: high
     abstract_only:
-      doi: "10.1111/gcb.16998"
-      evidence_url: "https://onlinelibrary.wiley.com/doi/full/10.1111/gcb.16998"
-      evidence_reason: "Unit coverage exercises provider-managed abstract-only return when PDF recovery
-        fails."
+      doi: 10.1111/gcb.16998
+      evidence_url: https://onlinelibrary.wiley.com/doi/full/10.1111/gcb.16998
+      evidence_reason: Unit coverage exercises provider-managed abstract-only return
+        when PDF recovery fails.
       observed_signals:
         - provider_managed_abstract_only
         - browser_html
       confidence: medium
     access_gate:
-      doi:
-      evidence_url: "https://onlinelibrary.wiley.com/"
-      evidence_reason: "Current golden corpus has no Wiley access-gate sample."
+      doi: null
+      evidence_url: https://onlinelibrary.wiley.com/
+      evidence_reason: Current golden corpus has no Wiley access-gate sample.
       observed_signals: []
       confidence: low
     empty_shell:
-      doi:
-      evidence_url: "https://onlinelibrary.wiley.com/"
-      evidence_reason: "Current golden corpus has no Wiley empty-shell sample."
+      doi: null
+      evidence_url: https://onlinelibrary.wiley.com/
+      evidence_reason: Current golden corpus has no Wiley empty-shell sample.
       observed_signals: []
       confidence: low
   discovery_proof:
@@ -247,8 +254,8 @@ fixtures:
       selected_doi: 10.1111/cas.16395
       rejections: {}
       exhausted: false
-      evidence_summary: Selected 10.1111/cas.16395 because fixtures.doi_samples.table already
-        records provider-local evidence for stable table Markdown assertions.
+      evidence_summary: Selected 10.1111/cas.16395 because fixtures.doi_samples.table
+        already records provider-local evidence for stable table Markdown assertions.
     formula:
       queries:
         - Wiley 10.1002 formula equation math DOI candidates
@@ -259,12 +266,13 @@ fixtures:
       selected_doi: 10.1111/gcb.15322
       rejections: {}
       exhausted: false
-      evidence_summary: Selected 10.1111/gcb.15322 because fixtures.doi_samples.formula already
-        records provider-local evidence for stable formula Markdown assertions.
+      evidence_summary: Selected 10.1111/gcb.15322 because fixtures.doi_samples.formula
+        already records provider-local evidence for stable formula Markdown assertions.
     supplementary:
       queries:
         - Wiley 10.1002 supplementary supporting information DOI candidates
-        - site:onlinelibrary.wiley.com Wiley supplementary supporting information article DOI
+        - site:onlinelibrary.wiley.com Wiley supplementary supporting information
+          article DOI
         - 10.1002 supplementary supporting information fixture discovery wiley
       candidates:
         - 10.1111/gcb.16414
@@ -272,16 +280,77 @@ fixtures:
       rejections: {}
       exhausted: false
       evidence_summary: Selected 10.1111/gcb.16414 because fixtures.doi_samples.supplementary
-        already records provider-local evidence for stable supplementary Markdown assertions.
+        already records provider-local evidence for stable supplementary Markdown
+        assertions.
 extraction_hints:
   datalayer_signal_set:
-  text_marker_signal_set: []
+    schema:
+      provider: wiley
+      pattern: \bwindow\.adobeDataLayer\.push\s*\(
+      fields:
+        format_viewed:
+          - - content
+            - item
+            - format-viewed
+          - - content
+            - item
+            - format_viewed
+        item_access:
+          - - content
+            - item
+            - access
+        page_tertiary_section:
+          - - page
+            - tertiary-section
+          - - page
+            - tertiary_section
+      required_fields:
+        - item_access
+        - format_viewed
+        - page_tertiary_section
+    blocking_rules:
+      - kind: field_match
+        match:
+          field: item_access
+          expected: 'no'
+          negate: false
+        token: wiley_access_no
+      - kind: field_match
+        match:
+          field: format_viewed
+          expected: abstract
+          negate: false
+        token: wiley_format_viewed_abstract
+      - kind: field_match
+        match:
+          field: page_tertiary_section
+          expected: abs
+          negate: false
+        token: wiley_page_tertiary_abs
+    strong_rules: []
+    soft_rules: []
+    abstract_only_rules: []
+    presence_rules: []
+  text_marker_signal_set: null
   front_matter:
-  asset_retry:
+    exact_texts:
+      - full access
+      - open access
+      - free access
+      - research article
+      - perspective
+      - review
+      - editorial
+      - commentary
+    contains_tokens:
+      - authors info
+      - affiliations
+    publication_keywords: []
+  asset_retry: null
   metadata_merge: []
 owner_reuse_exceptions: []
 docs:
-  providers_md_capability_row: "Wiley | Crossref merge | CloakBrowser HTML -> seeded-browser publisher
-    PDF/ePDF -> Wiley TDM API PDF | HTML body/all assets | wiley_browser"
-  changelog_summary: "Add Wiley browser HTML provider with PDF and TDM fallback."
-  extraction_rules_summary:
+  providers_md_capability_row: Wiley | Crossref merge | CloakBrowser HTML -> seeded-browser
+    publisher PDF/ePDF -> Wiley TDM API PDF | HTML body/all assets | wiley_browser
+  changelog_summary: Add Wiley browser HTML provider with PDF and TDM fallback.
+  extraction_rules_summary: null

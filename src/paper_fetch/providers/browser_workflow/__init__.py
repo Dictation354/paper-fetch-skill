@@ -11,7 +11,16 @@ _EXPORTS: dict[str, tuple[str, str]] = {
     "BrowserWorkflowClient": (".client", "BrowserWorkflowClient"),
     "PdfFallbackFailure": ("paper_fetch.providers._pdf_fallback", "PdfFallbackFailure"),
     "ProviderBrowserProfile": (".profile", "ProviderBrowserProfile"),
+    "browser_profile_catalog_mismatches": (
+        ".profile",
+        "browser_profile_catalog_mismatches",
+    ),
+    "make_browser_profile": (".profile", "make_browser_profile"),
     "make_atypon_browser_profile": (".profile", "make_atypon_browser_profile"),
+    "validate_browser_profile_catalog_sync": (
+        ".profile",
+        "validate_browser_profile_catalog_sync",
+    ),
     "HtmlExtractionFailure": (
         "paper_fetch.extraction.html.signals",
         "HtmlExtractionFailure",

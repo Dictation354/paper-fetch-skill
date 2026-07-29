@@ -132,7 +132,7 @@ class AtyponBrowserWorkflowProviderAssetDownloadTests(
         mocked_request.assert_not_called()
         shared_fetcher.assert_called_once()
         self.assertEqual(shared_fetcher.call_args.args[0], figure_url)
-        self.assertEqual(transport.calls, [])
+        self.assert_direct_asset_attempted(transport)
         self.assertEqual(result["asset_failures"], [])
         self.assertEqual(len(result["assets"]), 1)
         self.assertEqual(result["assets"][0]["kind"], "figure")
@@ -272,7 +272,7 @@ class AtyponBrowserWorkflowProviderAssetDownloadTests(
         mocked_request.assert_not_called()
         shared_fetcher.assert_called_once()
         self.assertEqual(shared_fetcher.call_args.args[0], figure_url)
-        self.assertEqual(transport.calls, [])
+        self.assert_direct_asset_attempted(transport)
         self.assertEqual(result["asset_failures"], [])
         self.assertEqual(len(result["assets"]), 1)
         self.assertEqual(result["assets"][0]["kind"], "figure")
@@ -355,7 +355,7 @@ class AtyponBrowserWorkflowProviderAssetDownloadTests(
         mocked_builder.assert_called_once()
         mocked_opener.assert_not_called()
         mocked_request.assert_not_called()
-        self.assertEqual(transport.calls, [])
+        self.assert_direct_asset_attempted(transport)
         shared_fetcher.assert_called_once()
         self.assertEqual(shared_fetcher.call_args.args[0], figure_url)
         self.assertEqual(len(result["assets"]), 1)
@@ -467,7 +467,7 @@ class AtyponBrowserWorkflowProviderAssetDownloadTests(
             mocked_file_builder.call_args.kwargs["cdp_endpoint"], cdp_endpoint
         )
         self.assertTrue(mocked_file_builder.call_args.kwargs["thread_local"])
-        self.assertEqual(transport.calls, [])
+        self.assert_direct_asset_attempted(transport)
         shared_image_fetcher.assert_called_once()
         shared_file_fetcher.assert_called_once()
         self.assertEqual(shared_file_fetcher.call_args.args[0], supplementary_url)
@@ -588,7 +588,7 @@ class AtyponBrowserWorkflowProviderAssetDownloadTests(
             runtime_context.new_browser_context_for_runtime_config.call_count, 2
         )
         self.assertEqual(len(runtime_context._camoufox_browser_managers), 1)
-        self.assertEqual(transport.calls, [])
+        self.assert_direct_asset_attempted(transport)
         self.assertEqual(
             [asset["kind"] for asset in result["assets"]],
             ["figure", "supplementary"],
@@ -709,7 +709,7 @@ class AtyponBrowserWorkflowProviderAssetDownloadTests(
         mocked_builder.assert_called_once()
         mocked_opener.assert_not_called()
         mocked_request.assert_not_called()
-        self.assertEqual(transport.calls, [])
+        self.assert_direct_asset_attempted(transport)
         self.assertEqual(
             [call.args[0] for call in shared_fetcher.call_args_list],
             [full_size_url, preview_url],
@@ -819,7 +819,7 @@ class AtyponBrowserWorkflowProviderAssetDownloadTests(
         mocked_builder.assert_called_once()
         mocked_opener.assert_not_called()
         mocked_request.assert_not_called()
-        self.assertEqual(transport.calls, [])
+        self.assert_direct_asset_attempted(transport)
         shared_fetcher.assert_called_once()
         self.assertEqual(shared_fetcher.call_args.args[0], full_size_url)
         self.assertEqual(len(result["assets"]), 1)
@@ -1068,7 +1068,7 @@ class AtyponBrowserWorkflowProviderAssetDownloadTests(
         mocked_builder.assert_called_once()
         mocked_opener.assert_not_called()
         mocked_request.assert_not_called()
-        self.assertEqual(transport.calls, [])
+        self.assert_direct_asset_attempted(transport)
         shared_fetcher.assert_called_once()
         self.assertEqual(shared_fetcher.call_args.args[0], preview_url)
         self.assertEqual(len(result["assets"]), 1)

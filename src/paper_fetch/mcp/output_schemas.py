@@ -1,10 +1,49 @@
-"""Typed MCP tool output schemas used for FastMCP structured output."""
+"""Typed MCP tool output schemas used for MCPServer structured output."""
 
 from __future__ import annotations
 
 from typing import Any
 
 from typing_extensions import TypedDict
+
+
+def compact_tool_output_schema(
+    schema: dict[str, Any] | None,
+) -> dict[str, Any] | None:
+    """Remove presentation-only metadata from a tool output JSON Schema.
+
+    Pydantic emits a title and a ``default: null`` annotation for nearly every
+    optional TypedDict field. Neither affects JSON Schema validation: field
+    optionality is controlled by ``required``, and titles are display metadata.
+    MCP hosts receive every tool schema in ``tools/list``, so retaining those
+    repeated annotations consumes substantial context without strengthening the
+    structured-output contract.
+    """
+
+    named_schema_maps = frozenset(
+        {
+            "$defs",
+            "definitions",
+            "dependentSchemas",
+            "mapping",
+            "patternProperties",
+            "properties",
+        }
+    )
+
+    def compact(value: Any, *, named_children: bool = False) -> Any:
+        if isinstance(value, dict):
+            return {
+                key: compact(child, named_children=key in named_schema_maps)
+                for key, child in value.items()
+                if named_children
+                or (key != "title" and not (key == "default" and child is None))
+            }
+        if isinstance(value, list):
+            return [compact(child) for child in value]
+        return value
+
+    return compact(schema)
 
 
 class ResolvedCandidateOutput(TypedDict, total=False):
@@ -30,6 +69,11 @@ class ErrorPayloadOutput(TypedDict, total=False):
     error_category: str | None
     retry_after_seconds: int | None
     provider: str | None
+    route: str | None
+    stage: str | None
+    retryable: bool | None
+    details: dict[str, Any]
+    trace: list[TraceEventOutput]
     warnings: list[str]
     source_trail: list[str]
     candidates: list[ResolvedCandidateOutput] | None
@@ -132,6 +176,21 @@ class TraceEventOutput(TypedDict, total=False):
     outcome: str
     code: str | None
     message: str | None
+    provider: str | None
+    route: str | None
+    span_id: str | None
+    attempt_id: str | None
+    parent_span_id: str | None
+    attempt: int | None
+    http_status: int | None
+    error_category: str | None
+    retryable: bool | None
+    retry_after_seconds: int | None
+    target: str | None
+    target_sha256: str | None
+    started_at: float | None
+    finished_at: float | None
+    duration_ms: float | None
 
 
 class AssetFailureOutput(TypedDict, total=False):
@@ -237,7 +296,6 @@ class FetchPaperOutput(ErrorPayloadOutput, total=False):
     has_fulltext: bool
     content_kind: str
     has_abstract: bool
-    trace: list[TraceEventOutput]
     token_estimate: int
     token_estimate_breakdown: TokenEstimateBreakdownOutput
     quality: QualityOutput
@@ -258,6 +316,7 @@ class CacheEntryOutput(TypedDict, total=False):
     identity_proof: str
     source: str | None
     has_fulltext: bool | None
+    likely_has_fulltext: bool | None
     content_kind: str | None
     completed_at: str | None
     content_sha256: str | None
@@ -385,7 +444,6 @@ class BatchCheckItemOutput(ErrorPayloadOutput, total=False):
     has_fulltext: bool | None
     content_kind: str | None
     has_abstract: bool | None
-    trace: list[TraceEventOutput]
     token_estimate: int | None
     token_estimate_breakdown: TokenEstimateBreakdownOutput | None
     probe_state: str | None

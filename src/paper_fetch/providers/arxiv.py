@@ -17,6 +17,7 @@ from ..arxiv_id import (
     normalize_arxiv_id,
 )
 from ..config import build_publisher_user_agent, build_user_agent
+from ..failure import FailureDiagnostics
 from ..extraction.html import assets as html_assets
 from ..extraction.html.availability_policy import AvailabilityPolicy
 from ..extraction.html.provider_rules import ProviderHtmlRules
@@ -25,6 +26,7 @@ from ..http import (
     HttpTransport,
     PDF_MIME_TYPE,
     RequestFailure,
+    classify_network_error,
 )
 from ..metadata.types import ProviderMetadata
 from ..models import (
@@ -33,7 +35,7 @@ from ..models import (
     article_from_markdown,
     metadata_only_article,
 )
-from ..provider_catalog import ProviderSpec
+from ..provider_catalog import ProviderRouteSpec, ProviderSpec
 from ..runtime import RuntimeContext
 from ..tracing import download_marker, fulltext_marker, trace_from_markers
 from ..utils import empty_asset_results, normalize_text
@@ -114,6 +116,20 @@ register_provider_bundle(
                 "arxiv_metadata_probe_short_circuit"
             ),
             persist_provider_html=True,
+            routes=(
+                ProviderRouteSpec(
+                    name="atom_metadata",
+                    kind="metadata",
+                    qps=1 / 3,
+                    rate_policy="arxiv_three_second_pacing",
+                ),
+                ProviderRouteSpec(name="official_html", kind="html"),
+                ProviderRouteSpec(
+                    name="direct_pdf",
+                    kind="pdf",
+                    requires_pdf_conversion=True,
+                ),
+            ),
         ),
         html_rules=ProviderHtmlRules(
             name="arxiv",
@@ -211,9 +227,27 @@ class ArxivClient(ProviderClient):
         try:
             search = _ArxivSearch(id_list=[arxiv_id], max_results=1)
             results = list(self.api_client.results(search))
+        except ProviderFailure:
+            raise
         except Exception as exc:
+            error_category = classify_network_error(exc)
             raise ProviderFailure(
-                ERROR, f"arXiv API metadata retrieval failed: {exc}"
+                ERROR,
+                f"arXiv API metadata retrieval failed: {exc}",
+                diagnostics=FailureDiagnostics(
+                    provider=self.name,
+                    route="metadata_api",
+                    stage="fetch_or_decode",
+                    error_category=error_category.value,
+                    retryable=error_category.value
+                    in {
+                        "timeout",
+                        "connection_reset",
+                        "connection_closed",
+                        "dns_error",
+                    },
+                    details={"exception_type": exc.__class__.__name__},
+                ),
             ) from exc
         if not results:
             raise ProviderFailure(
@@ -372,6 +406,12 @@ class ArxivClient(ProviderClient):
                     asset_profile=effective_asset_profile,
                     doi=str(api_metadata.get("doi") or ""),
                 ),
+                expected_identity={
+                    "doi": api_metadata.get("doi"),
+                    "arxiv_id": api_metadata.get("arxiv_id"),
+                    "title": api_metadata.get("title"),
+                },
+                context=context,
                 fetcher=fetch_pdf_over_http,
             ).fetch(candidates)
         except PdfFetchFailure as exc:
@@ -460,6 +500,10 @@ class ArxivClient(ProviderClient):
                     ),
                 ),
             ],
+            doi=doi,
+            metadata=derived_metadata,
+            context=context,
+            client=self,
             initial_warnings=[],
         )
         if not self.api_enrichment_enabled:

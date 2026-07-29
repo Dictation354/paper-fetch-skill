@@ -2,8 +2,16 @@ from __future__ import annotations
 
 import unittest
 from unittest import mock
+from pathlib import Path
+import tempfile
 
 from paper_fetch import publisher_identity
+from paper_fetch.providers.base import (
+    ProviderClient,
+    ProviderContent,
+    ProviderFailure,
+    RawFulltextPayload,
+)
 from paper_fetch.providers._reference_doi import reference_doi_match
 
 
@@ -77,6 +85,55 @@ class PublisherIdentityTests(unittest.TestCase):
             publisher_identity.infer_provider_from_doi("10.1021/acsomega.4c03987"),
             "acs",
         )
+
+    def test_identity_failure_precedes_any_related_asset_write(self) -> None:
+        class IdentityClient(ProviderClient):
+            name = "identity-test"
+
+            def __init__(self) -> None:
+                self.asset_calls = 0
+
+            def fetch_raw_fulltext(self, doi, metadata, *, context=None):
+                del doi, metadata, context
+                content = ProviderContent(
+                    route_kind="xml",
+                    source_url="https://example.test/wrong.xml",
+                    content_type="application/xml",
+                    body=b"<article />",
+                    merged_metadata={
+                        "doi": "10.1000/wrong",
+                        "identity_evidence": {"doi": "10.1000/wrong"},
+                    },
+                )
+                return RawFulltextPayload(
+                    provider=self.name,
+                    source_url=content.source_url,
+                    content_type=content.content_type,
+                    body=content.body,
+                    content=content,
+                )
+
+            def download_related_assets(self, *args, **kwargs):
+                del args, kwargs
+                self.asset_calls += 1
+                raise AssertionError("identity mismatch must stop asset downloads")
+
+            def to_article_model(self, *args, **kwargs):
+                del args, kwargs
+                raise AssertionError("identity mismatch must stop conversion")
+
+        client = IdentityClient()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            with self.assertRaises(ProviderFailure) as raised:
+                client.fetch_result(
+                    "10.1000/expected",
+                    {"doi": "10.1000/expected", "title": "Expected"},
+                    Path(tmpdir),
+                    asset_profile="all",
+                )
+
+        self.assertEqual(raised.exception.code, "identity_mismatch")
+        self.assertEqual(client.asset_calls, 0)
 
     def test_extract_doi_handles_embedded_text_and_trailing_punctuation(self) -> None:
         self.assertEqual(
@@ -276,6 +333,46 @@ class PublisherIdentityTests(unittest.TestCase):
             ),
             "elsevier",
         )
+
+    def test_validate_extracted_identity_rejects_explicit_doi_mismatch(self) -> None:
+        result = publisher_identity.validate_extracted_identity(
+            {"doi": "10.1000/expected", "title": "Expected title"},
+            {},
+            {"doi": "10.1000/other", "title": "Expected title"},
+        )
+
+        self.assertTrue(result.mismatch)
+        self.assertEqual(result.method, "doi")
+        self.assertEqual(result.expected_doi, "10.1000/expected")
+        self.assertEqual(result.observed_doi, "10.1000/other")
+
+    def test_validate_extracted_identity_accepts_strong_title_when_doi_missing(
+        self,
+    ) -> None:
+        result = publisher_identity.validate_extracted_identity(
+            {"doi": "10.1000/expected", "title": "A reproducible research article"},
+            {},
+            {"title": "A reproducible research article"},
+        )
+
+        self.assertFalse(result.mismatch)
+        self.assertEqual(result.status, "match")
+        self.assertEqual(result.method, "title")
+
+    def test_validate_extracted_identity_applies_arxiv_version_rules(self) -> None:
+        unversioned = publisher_identity.validate_extracted_identity(
+            {"doi": "10.48550/arXiv.2605.06665"},
+            {},
+            {"arxiv_id": "2605.06665v2"},
+        )
+        mismatched_version = publisher_identity.validate_extracted_identity(
+            {"doi": "10.48550/arXiv.2605.06665v1"},
+            {},
+            {"arxiv_id": "2605.06665v2"},
+        )
+
+        self.assertEqual(unversioned.status, "match")
+        self.assertTrue(mismatched_version.mismatch)
 
 
 if __name__ == "__main__":

@@ -328,6 +328,10 @@ class BrowserWorkflowClient(ProviderClient):
                     ),
                 )
             ],
+            doi=doi,
+            metadata=metadata,
+            context=context,
+            client=self,
             initial_warnings=[*bootstrap.warnings, initial_warning],
             initial_source_trail=[fulltext_marker(self.name, "fail", route="html")],
         )

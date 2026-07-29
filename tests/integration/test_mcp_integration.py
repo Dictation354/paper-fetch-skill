@@ -143,8 +143,8 @@ SERVER_SCRIPT = textwrap.dedent(
         def probe_status(self):
             return self.result
 
-    def fake_build_clients(*, transport=None, env=None):
-        return {
+    def fake_build_clients(*, transport=None, env=None, provider_names=None):
+        clients = {
             "crossref": FakeProviderClient(
                 ProviderStatusResult(
                     provider="crossref",
@@ -338,6 +338,13 @@ SERVER_SCRIPT = textwrap.dedent(
                 )
             ),
         }
+        if provider_names is None:
+            return clients
+        return {
+            name: clients[name]
+            for name in provider_names
+            if name in clients
+        }
 
     def fake_browser_preflight(
         *,
@@ -447,7 +454,7 @@ class McpStdioIntegrationTests(unittest.IsolatedAsyncioTestCase):
                     ) as session:
                         init_result = await session.initialize()
                         self.assertIsNotNone(init_result.capabilities.resources)
-                        self.assertTrue(init_result.capabilities.resources.listChanged)
+                        self.assertTrue(init_result.capabilities.resources.list_changed)
 
                         listed = await session.list_tools()
                         tool_names = sorted(tool.name for tool in listed.tools)
@@ -467,7 +474,7 @@ class McpStdioIntegrationTests(unittest.IsolatedAsyncioTestCase):
                             ],
                         )
                         self.assertTrue(
-                            all(tool.outputSchema is not None for tool in listed.tools)
+                            all(tool.output_schema is not None for tool in listed.tools)
                         )
                         self.assertTrue(
                             all(tool.annotations is not None for tool in listed.tools)
@@ -476,19 +483,19 @@ class McpStdioIntegrationTests(unittest.IsolatedAsyncioTestCase):
                             tool for tool in listed.tools if tool.name == "batch_fetch"
                         )
                         self.assertEqual(
-                            batch_fetch_tool.inputSchema["properties"]["queries"][
+                            batch_fetch_tool.input_schema["properties"]["queries"][
                                 "maxItems"
                             ],
                             50,
                         )
                         self.assertEqual(
-                            batch_fetch_tool.inputSchema["properties"]["concurrency"][
+                            batch_fetch_tool.input_schema["properties"]["concurrency"][
                                 "maximum"
                             ],
                             8,
                         )
                         self.assertEqual(
-                            batch_fetch_tool.inputSchema["properties"]["detail"][
+                            batch_fetch_tool.input_schema["properties"]["detail"][
                                 "enum"
                             ],
                             ["compact", "bounded"],
@@ -498,10 +505,10 @@ class McpStdioIntegrationTests(unittest.IsolatedAsyncioTestCase):
                             for tool in listed.tools
                             if tool.name == "browser_preflight"
                         )
-                        self.assertFalse(browser_tool.annotations.readOnlyHint)
-                        self.assertFalse(browser_tool.annotations.destructiveHint)
-                        self.assertFalse(browser_tool.annotations.idempotentHint)
-                        self.assertTrue(browser_tool.annotations.openWorldHint)
+                        self.assertFalse(browser_tool.annotations.read_only_hint)
+                        self.assertFalse(browser_tool.annotations.destructive_hint)
+                        self.assertFalse(browser_tool.annotations.idempotent_hint)
+                        self.assertTrue(browser_tool.annotations.open_world_hint)
 
                         prompts = await session.list_prompts()
                         self.assertEqual(
@@ -530,9 +537,9 @@ class McpStdioIntegrationTests(unittest.IsolatedAsyncioTestCase):
                         resolved = await session.call_tool(
                             "resolve_paper", {"query": "10.1000/example"}
                         )
-                        self.assertFalse(resolved.isError)
+                        self.assertFalse(resolved.is_error)
                         self.assertEqual(
-                            resolved.structuredContent["doi"], "10.1000/example"
+                            resolved.structured_content["doi"], "10.1000/example"
                         )
                         structured_resolved = await session.call_tool(
                             "resolve_paper",
@@ -542,32 +549,37 @@ class McpStdioIntegrationTests(unittest.IsolatedAsyncioTestCase):
                                 "year": 2024,
                             },
                         )
-                        self.assertFalse(structured_resolved.isError)
+                        self.assertFalse(structured_resolved.is_error)
                         self.assertEqual(
-                            structured_resolved.structuredContent["query"],
+                            structured_resolved.structured_content["query"],
                             "Example title",
                         )
 
                         probe = await session.call_tool(
                             "has_fulltext", {"query": "10.1000/example"}
                         )
-                        self.assertFalse(probe.isError)
-                        self.assertEqual(probe.structuredContent["state"], "likely_yes")
+                        self.assertFalse(probe.is_error)
                         self.assertEqual(
-                            probe.structuredContent["evidence"],
+                            probe.structured_content["state"], "likely_yes"
+                        )
+                        self.assertEqual(
+                            probe.structured_content["evidence"],
                             ["crossref_fulltext_link"],
                         )
 
                         provider_status = await session.call_tool("provider_status", {})
-                        self.assertFalse(provider_status.isError)
+                        self.assertFalse(
+                            provider_status.is_error,
+                            provider_status.structured_content,
+                        )
                         providers_by_name = {
                             item["provider"]: item
-                            for item in provider_status.structuredContent["providers"]
+                            for item in provider_status.structured_content["providers"]
                         }
                         self.assertEqual(
                             [
                                 item["provider"]
-                                for item in provider_status.structuredContent[
+                                for item in provider_status.structured_content[
                                     "providers"
                                 ]
                             ],
@@ -587,13 +599,13 @@ class McpStdioIntegrationTests(unittest.IsolatedAsyncioTestCase):
                             "provider_status",
                             {"provider": "crossref", "detail": "compact"},
                         )
-                        self.assertFalse(compact_status.isError)
+                        self.assertFalse(compact_status.is_error)
                         self.assertEqual(
-                            compact_status.structuredContent["provider_filter"],
+                            compact_status.structured_content["provider_filter"],
                             "crossref",
                         )
                         self.assertEqual(
-                            compact_status.structuredContent["providers"],
+                            compact_status.structured_content["providers"],
                             [
                                 {
                                     "provider": "crossref",
@@ -608,7 +620,7 @@ class McpStdioIntegrationTests(unittest.IsolatedAsyncioTestCase):
                             ],
                         )
                         self.assertNotIn(
-                            "configuration", compact_status.structuredContent
+                            "configuration", compact_status.structured_content
                         )
 
                         storage_state_path = isolated_dir / "browser" / "wiley.json"
@@ -625,25 +637,25 @@ class McpStdioIntegrationTests(unittest.IsolatedAsyncioTestCase):
                             },
                             progress_callback=preflight_progress_callback,
                         )
-                        self.assertFalse(live_preflight.isError)
+                        self.assertFalse(live_preflight.is_error)
                         self.assertEqual(
-                            live_preflight.structuredContent["status"], "ready"
+                            live_preflight.structured_content["status"], "ready"
                         )
                         self.assertEqual(
-                            live_preflight.structuredContent["results"][0]["status"],
+                            live_preflight.structured_content["results"][0]["status"],
                             "ready",
                         )
                         self.assertEqual(
-                            live_preflight.structuredContent["results"][0][
+                            live_preflight.structured_content["results"][0][
                                 "storage_state"
                             ]["saved"],
                             True,
                         )
                         self.assertFalse(
-                            live_preflight.structuredContent["pdf_fallback_attempted"]
+                            live_preflight.structured_content["pdf_fallback_attempted"]
                         )
                         self.assertFalse(
-                            live_preflight.structuredContent["auth_attempted"]
+                            live_preflight.structured_content["auth_attempted"]
                         )
                         self.assertTrue(storage_state_path.is_file())
                         self.assertEqual(
@@ -665,12 +677,12 @@ class McpStdioIntegrationTests(unittest.IsolatedAsyncioTestCase):
                             },
                             progress_callback=progress_callback,
                         )
-                        self.assertFalse(custom_fetch.isError)
+                        self.assertFalse(custom_fetch.is_error)
                         self.assertEqual(
-                            custom_fetch.structuredContent["article"], None
+                            custom_fetch.structured_content["article"], None
                         )
                         self.assertEqual(
-                            custom_fetch.structuredContent["token_estimate_breakdown"],
+                            custom_fetch.structured_content["token_estimate_breakdown"],
                             {"abstract": 16, "body": 48, "refs": 20},
                         )
                         self.assertEqual(
@@ -703,12 +715,12 @@ class McpStdioIntegrationTests(unittest.IsolatedAsyncioTestCase):
                                 "download_dir": str(isolated_dir),
                             },
                         )
-                        self.assertFalse(custom_cached.isError)
+                        self.assertFalse(custom_cached.is_error)
                         self.assertEqual(
-                            custom_cached.structuredContent["status"], "hit"
+                            custom_cached.structured_content["status"], "hit"
                         )
                         self.assertEqual(
-                            len(custom_cached.structuredContent["entries"]), 4
+                            len(custom_cached.structured_content["entries"]), 4
                         )
 
                         compact_cached = await session.call_tool(
@@ -722,21 +734,22 @@ class McpStdioIntegrationTests(unittest.IsolatedAsyncioTestCase):
                                 "strategy": {"asset_profile": "body"},
                             },
                         )
-                        self.assertFalse(compact_cached.isError)
+                        self.assertFalse(compact_cached.is_error)
                         self.assertEqual(
-                            compact_cached.structuredContent["status"], "hit"
+                            compact_cached.structured_content["status"], "hit"
                         )
-                        self.assertNotIn("entries", compact_cached.structuredContent)
+                        self.assertNotIn("entries", compact_cached.structured_content)
                         self.assertEqual(
-                            set(compact_cached.structuredContent["preferred"]),
+                            set(compact_cached.structured_content["preferred"]),
                             {"markdown", "primary_payload"},
                         )
                         self.assertTrue(
-                            compact_cached.structuredContent["request_satisfied"]
+                            compact_cached.structured_content["request_satisfied"],
+                            compact_cached.structured_content["sidecar"],
                         )
                         self.assertEqual(
                             len(
-                                compact_cached.structuredContent[
+                                compact_cached.structured_content[
                                     "cached_request_fingerprint"
                                 ]
                             ),
@@ -746,9 +759,9 @@ class McpStdioIntegrationTests(unittest.IsolatedAsyncioTestCase):
                         listed_custom = await session.call_tool(
                             "list_cached", {"download_dir": str(isolated_dir)}
                         )
-                        self.assertFalse(listed_custom.isError)
+                        self.assertFalse(listed_custom.is_error)
                         self.assertEqual(
-                            len(listed_custom.structuredContent["entries"]), 4
+                            len(listed_custom.structured_content["entries"]), 4
                         )
 
                         batch = await session.call_tool(
@@ -759,18 +772,18 @@ class McpStdioIntegrationTests(unittest.IsolatedAsyncioTestCase):
                                 "concurrency": 2,
                             },
                         )
-                        self.assertFalse(batch.isError)
-                        self.assertEqual(batch.structuredContent["mode"], "metadata")
-                        self.assertEqual(len(batch.structuredContent["results"]), 2)
+                        self.assertFalse(batch.is_error)
+                        self.assertEqual(batch.structured_content["mode"], "metadata")
+                        self.assertEqual(len(batch.structured_content["results"]), 2)
                         self.assertEqual(
-                            batch.structuredContent["results"][0]["probe_state"],
+                            batch.structured_content["results"][0]["probe_state"],
                             "likely_yes",
                         )
                         self.assertEqual(
-                            batch.structuredContent["results"][0]["source"], None
+                            batch.structured_content["results"][0]["source"], None
                         )
                         self.assertEqual(
-                            batch.structuredContent["results"][0][
+                            batch.structured_content["results"][0][
                                 "token_estimate_breakdown"
                             ],
                             None,
@@ -783,11 +796,11 @@ class McpStdioIntegrationTests(unittest.IsolatedAsyncioTestCase):
                                 "concurrency": 2,
                             },
                         )
-                        self.assertFalse(batch_resolved.isError)
+                        self.assertFalse(batch_resolved.is_error)
                         self.assertEqual(
                             [
                                 item["doi"]
-                                for item in batch_resolved.structuredContent["results"]
+                                for item in batch_resolved.structured_content["results"]
                             ],
                             ["10.1000/custom", "10.1000/other"],
                         )
@@ -808,22 +821,22 @@ class McpStdioIntegrationTests(unittest.IsolatedAsyncioTestCase):
                             },
                             progress_callback=batch_fetch_progress_callback,
                         )
-                        self.assertFalse(batch_fetched.isError)
+                        self.assertFalse(batch_fetched.is_error)
                         self.assertEqual(
                             [
                                 item["index"]
-                                for item in batch_fetched.structuredContent["results"]
+                                for item in batch_fetched.structured_content["results"]
                             ],
                             [1, 2],
                         )
                         self.assertEqual(
-                            batch_fetched.structuredContent["content_returned_chars"],
+                            batch_fetched.structured_content["content_returned_chars"],
                             24,
                         )
                         self.assertTrue(
                             all(
                                 "article" not in item and "markdown" not in item
-                                for item in batch_fetched.structuredContent["results"]
+                                for item in batch_fetched.structured_content["results"]
                             )
                         )
                         self.assertEqual(
@@ -838,11 +851,11 @@ class McpStdioIntegrationTests(unittest.IsolatedAsyncioTestCase):
                         default_fetch = await session.call_tool(
                             "fetch_paper", {"query": "10.1000/default"}
                         )
-                        self.assertFalse(default_fetch.isError)
+                        self.assertFalse(default_fetch.is_error)
                         self.assertTrue(
                             any(
                                 isinstance(
-                                    getattr(message, "root", None),
+                                    message,
                                     mcp_types.ResourceListChangedNotification,
                                 )
                                 for message in protocol_messages
@@ -879,8 +892,8 @@ class McpStdioIntegrationTests(unittest.IsolatedAsyncioTestCase):
 
                         templates = await session.list_resource_templates()
                         template_uris = [
-                            str(template.uriTemplate)
-                            for template in templates.resourceTemplates
+                            str(template.uri_template)
+                            for template in templates.resource_templates
                         ]
                         self.assertIn(
                             "resource://paper-fetch/cached/{entry_id}", template_uris
@@ -959,8 +972,8 @@ class McpStdioIntegrationTests(unittest.IsolatedAsyncioTestCase):
                             "fetch_paper",
                             {"query": "10.1000/example", "modes": ["pdf"]},
                         )
-                        self.assertTrue(invalid.isError)
-                        self.assertIsNone(invalid.structuredContent)
+                        self.assertTrue(invalid.is_error)
+                        self.assertIsNone(invalid.structured_content)
                         self.assertIn(
                             "unsupported output modes",
                             invalid.content[0].text,

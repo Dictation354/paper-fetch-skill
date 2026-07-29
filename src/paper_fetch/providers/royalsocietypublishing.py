@@ -28,7 +28,6 @@ from . import _royalsocietypublishing_html as royal_html
 from . import browser_workflow
 from ._registry import ProviderBundle, register_provider_bundle
 from .base import RawFulltextPayload
-from .browser_workflow.profile import ProviderBrowserProfile
 
 
 register_provider_bundle(
@@ -75,18 +74,10 @@ register_provider_bundle(
 )
 
 
-ROYAL_SOCIETY_BROWSER_PROFILE = ProviderBrowserProfile(
-    name="royalsocietypublishing",
+ROYAL_SOCIETY_BROWSER_PROFILE = browser_workflow.make_browser_profile(
+    "royalsocietypublishing",
     article_source_name="royalsocietypublishing_html",
-    label="Royal Society Publishing",
-    hosts=("royalsocietypublishing.org",),
-    base_hosts=("royalsocietypublishing.org",),
-    html_path_templates=("/doi/{doi}",),
-    pdf_path_templates=("/doi/pdf/{doi}",),
-    crossref_pdf_position=0,
-    markdown_publisher="royalsocietypublishing",
     fallback_author_extractor=royal_html.extract_authors,
-    shared_browser_image_fetcher=True,
 )
 
 

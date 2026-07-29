@@ -50,9 +50,19 @@ def _download_asset_result_key(asset: Mapping[str, Any]) -> str:
 
 
 def _browser_workflow_asset_retry_key(asset: Mapping[str, Any]) -> tuple[Any, ...]:
+    semantic_key = "|".join(
+        value
+        for value in (
+            normalize_text(str(asset.get("kind") or asset.get("asset_type") or "")),
+            normalize_text(str(asset.get("heading") or "")),
+            normalize_text(str(asset.get("caption") or "")),
+            normalize_text(str(asset.get("section") or "")),
+        )
+        if value
+    )
     return (
         _download_asset_retry_scope(asset),
-        _download_asset_result_key(asset),
+        semantic_key or _download_asset_result_key(asset),
     )
 
 

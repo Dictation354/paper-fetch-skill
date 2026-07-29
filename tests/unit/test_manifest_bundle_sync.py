@@ -222,6 +222,6 @@ def test_manifest_sync_back_fields_match_provider_bundle_when_strict(
                 manifest_path=case.manifest_path,
                 field_path=f"success_criteria.{step}",
                 manifest_value=success_criteria.get(step),
-                code_value="non-null sync-back value required for ready/live provider",
+                code_value="non-null sync-back value required for production provider",
             )
         )

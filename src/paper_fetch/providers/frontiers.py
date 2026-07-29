@@ -10,8 +10,10 @@ import re
 import urllib.parse
 
 from ..config import build_publisher_user_agent, resolve_asset_download_concurrency
+from ..failure import FailureDiagnostics
 from ..extraction.html.assets import (
     FIGURE_KIND,
+    SUPPLEMENTARY_KIND,
     download_assets,
     html_asset_identity_key,
     split_body_and_supplementary_assets,
@@ -32,13 +34,17 @@ from ..models import (
     article_from_markdown,
     metadata_only_article,
 )
-from ..provider_catalog import BodyTextThresholds, ProviderSpec
+from ..provider_catalog import (
+    BodyTextThresholds,
+    ProviderSpec,
+    provider_body_text_thresholds,
+)
 from ..publisher_identity import normalize_doi
 from ..reason_codes import NO_RESULT, OK, PDF_FALLBACK
 from ..runtime import RuntimeContext
 from ..tracing import download_marker, fulltext_marker, trace_from_markers
 from ..utils import empty_asset_results, normalize_text
-from ._article_markdown_jats import parse_jats_xml
+from ._article_markdown_jats import assess_jats_body_availability, parse_jats_xml
 from ._payloads import build_provider_payload
 from ._pdf_common import (
     default_pdf_headers,
@@ -132,6 +138,7 @@ class FrontiersArticleRoutes:
     landing_url: str
     xml_url: str | None
     pdf_url: str
+    discovery_reason: str = "metadata_canonical"
 
 
 def _response_body(response: Mapping[str, Any]) -> bytes:
@@ -179,7 +186,11 @@ def _frontiers_legacy_pdf_url(doi: str) -> str:
     return f"{FRONTIERS_HOST}/articles/{normalized}/pdf"
 
 
-def _canonical_routes_from_url(value: str | None) -> FrontiersArticleRoutes | None:
+def _canonical_routes_from_url(
+    value: str | None,
+    *,
+    discovery_reason: str = "metadata_canonical",
+) -> FrontiersArticleRoutes | None:
     if not _is_frontiers_url(value):
         return None
     parsed = urllib.parse.urlparse(normalize_text(value))
@@ -195,6 +206,7 @@ def _canonical_routes_from_url(value: str | None) -> FrontiersArticleRoutes | No
         landing_url=f"{base}/full",
         xml_url=f"{base}/xml",
         pdf_url=f"{base}/pdf",
+        discovery_reason=discovery_reason,
     )
 
 
@@ -205,6 +217,7 @@ def _legacy_routes_from_doi(doi: str) -> FrontiersArticleRoutes:
         landing_url=landing_url,
         xml_url=None,
         pdf_url=_frontiers_legacy_pdf_url(normalized),
+        discovery_reason="legacy_doi_fallback",
     )
 
 
@@ -222,12 +235,18 @@ def _routes_from_landing_metadata(
     final_url: str,
     raw_meta: Mapping[str, Any],
 ) -> FrontiersArticleRoutes | None:
-    routes = _canonical_routes_from_url(final_url)
+    routes = _canonical_routes_from_url(
+        final_url,
+        discovery_reason="landing_redirect",
+    )
     if routes is not None:
         return routes
     for key in ("citation_pdf_url", "citation_fulltext_html_url", "og:url"):
         for value in _raw_meta_values(raw_meta, key):
-            routes = _canonical_routes_from_url(urllib.parse.urljoin(final_url, value))
+            routes = _canonical_routes_from_url(
+                urllib.parse.urljoin(final_url, value),
+                discovery_reason="landing_metadata",
+            )
             if routes is not None:
                 return routes
     return None
@@ -315,26 +334,42 @@ def _normalize_frontiers_extracted_assets(
                     asset["download_url"] = candidate
                     asset["full_size_url"] = candidate
                     break
-        elif kind == "supplementary" and supplementary_anchor:
-            for key in (
-                "download_url",
-                "full_size_url",
-                "url",
-                "original_url",
-                "link",
-                "preview_url",
-            ):
-                value = normalize_text(str(asset.get(key) or ""))
-                if value:
-                    replacements[value] = supplementary_anchor
-            asset.setdefault(
-                "source_url",
-                normalize_text(
-                    str(asset.get("link") or asset.get("original_url") or "")
+        elif kind == "supplementary":
+            source_href = normalize_text(str(asset.get("source_href") or ""))
+            original_value = next(
+                (
+                    normalize_text(str(asset.get(key) or ""))
+                    for key in (
+                        "download_url",
+                        "full_size_url",
+                        "url",
+                        "original_url",
+                        "link",
+                    )
+                    if normalize_text(str(asset.get(key) or ""))
                 ),
+                "",
             )
-            asset["link"] = supplementary_anchor
-            asset["original_url"] = supplementary_anchor
+            source_value = source_href or original_value
+            parsed = urllib.parse.urlparse(source_value)
+            downloadable = parsed.scheme in {"http", "https"} and bool(parsed.netloc)
+            if downloadable:
+                asset["download_url"] = original_value
+                asset["original_url"] = original_value
+                asset["link"] = original_value
+                asset["archive_state"] = "downloadable"
+            elif supplementary_anchor:
+                asset["link"] = supplementary_anchor
+                asset["archive_state"] = "not_archived"
+                asset["not_archived_reason"] = (
+                    "Frontiers supplementary entry did not expose a downloadable URL."
+                )
+            if source_value:
+                asset["source_url"] = source_value
+            elif supplementary_anchor:
+                asset["source_url"] = supplementary_anchor
+            if original_value and not downloadable and supplementary_anchor:
+                replacements[original_value] = supplementary_anchor
         normalized_assets.append(asset)
     return normalized_assets, replacements
 
@@ -466,7 +501,11 @@ class FrontiersClient(ProviderClient):
         return candidates
 
     def route_candidates(
-        self, doi: str, metadata: Mapping[str, Any]
+        self,
+        doi: str,
+        metadata: Mapping[str, Any],
+        *,
+        discover_landing: bool = True,
     ) -> list[FrontiersArticleRoutes]:
         routes: list[FrontiersArticleRoutes] = []
         seen: set[tuple[str | None, str]] = set()
@@ -481,6 +520,9 @@ class FrontiersClient(ProviderClient):
 
         for value in _metadata_frontiers_urls(metadata):
             append_route(_canonical_routes_from_url(value))
+
+        if not discover_landing:
+            return routes
 
         last_failure: ProviderFailure | None = None
         for landing_url in self.landing_candidates(doi, metadata):
@@ -580,14 +622,17 @@ class FrontiersClient(ProviderClient):
             raise ProviderFailure(
                 NO_RESULT, "Frontiers XML response did not parse as a JATS article."
             )
-        if (
-            not normalize_text(extraction.markdown_text)
-            and not extraction.references
-            and not extraction.abstract_sections
-        ):
+        availability = assess_jats_body_availability(
+            extraction,
+            min_body_chars=provider_body_text_thresholds(self.name).min_chars,
+        )
+        if not availability.accepted:
             raise ProviderFailure(
                 NO_RESULT,
-                "Frontiers XML response did not contain article body, references, or abstract text.",
+                "Frontiers XML response did not contain sufficient JATS body prose.",
+                diagnostics=FailureDiagnostics(
+                    details={"availability_diagnostics": availability.to_dict()}
+                ),
             )
 
         merged_metadata = dict(extraction.metadata)
@@ -607,6 +652,10 @@ class FrontiersClient(ProviderClient):
             markdown_text=markdown_text,
             merged_metadata=merged_metadata,
             diagnostics={
+                "route_discovery": {
+                    "reason": route.discovery_reason,
+                    "landing_requested": route.discovery_reason.startswith("landing_"),
+                },
                 "extraction": {
                     "abstract_sections": extraction.abstract_sections,
                     "references": extraction.references,
@@ -614,7 +663,8 @@ class FrontiersClient(ProviderClient):
                     "assets_count": len(normalized_assets),
                     "conversion_notes": list(extraction.conversion_notes),
                     "semantic_losses": asdict(extraction.semantic_losses),
-                }
+                },
+                "availability_diagnostics": availability.to_dict(),
             },
             reason="Downloaded full text from the Frontiers public JATS XML route.",
             extracted_assets=normalized_assets,
@@ -640,6 +690,11 @@ class FrontiersClient(ProviderClient):
                 asset_output_dir=pdf_asset_output_dir(
                     context, asset_profile=effective_asset_profile, doi=doi
                 ),
+                expected_identity={
+                    "doi": doi,
+                    "title": metadata.get("title"),
+                },
+                context=context,
                 fetcher=fetch_pdf_over_http,
             ).fetch([route.pdf_url])
         except PdfFetchFailure as exc:
@@ -656,7 +711,13 @@ class FrontiersClient(ProviderClient):
             body=pdf_result.pdf_bytes,
             markdown_text=pdf_result.markdown_text,
             merged_metadata=article_metadata,
-            diagnostics={PDF_FALLBACK: {"candidates": [route.pdf_url]}},
+            diagnostics={
+                "route_discovery": {
+                    "reason": route.discovery_reason,
+                    "landing_requested": route.discovery_reason.startswith("landing_"),
+                },
+                PDF_FALLBACK: {"candidates": [route.pdf_url]},
+            },
             reason="Downloaded full text from the Frontiers PDF fallback after XML was not usable.",
             suggested_filename=pdf_result.suggested_filename,
             extracted_assets=pdf_fetch_result_assets(pdf_result),
@@ -681,11 +742,57 @@ class FrontiersClient(ProviderClient):
         context: RuntimeContext | None = None,
     ) -> RawFulltextPayload:
         context = self._runtime_context(context)
-        routes = self.route_candidates(doi, metadata)
         failures: list[tuple[str, ProviderFailure]] = []
+
+        direct_routes = self.route_candidates(
+            doi,
+            metadata,
+            discover_landing=False,
+        )
+        for route in direct_routes:
+            try:
+                return self.validate_raw_payload_identity(
+                    doi,
+                    metadata,
+                    self._fetch_xml_payload(route, doi, metadata),
+                )
+            except ProviderFailure as exc:
+                failures.append(("xml", exc))
+
+            xml_failure_message = combine_provider_failures(failures).message
+            try:
+                return self.validate_raw_payload_identity(
+                    doi,
+                    metadata,
+                    self._fetch_pdf_payload(
+                        route,
+                        doi,
+                        metadata,
+                        xml_failure_message=xml_failure_message,
+                        context=context,
+                    ),
+                )
+            except ProviderFailure as exc:
+                failures.append(("pdf", exc))
+
+        discovered_routes = self.route_candidates(
+            doi,
+            metadata,
+            discover_landing=True,
+        )
+        direct_keys = {(route.xml_url, route.pdf_url) for route in direct_routes}
+        routes = [
+            route
+            for route in discovered_routes
+            if (route.xml_url, route.pdf_url) not in direct_keys
+        ]
         for route in routes:
             try:
-                return self._fetch_xml_payload(route, doi, metadata)
+                return self.validate_raw_payload_identity(
+                    doi,
+                    metadata,
+                    self._fetch_xml_payload(route, doi, metadata),
+                )
             except ProviderFailure as exc:
                 failures.append(("xml", exc))
 
@@ -696,12 +803,16 @@ class FrontiersClient(ProviderClient):
         )
         for route in routes:
             try:
-                return self._fetch_pdf_payload(
-                    route,
+                return self.validate_raw_payload_identity(
                     doi,
                     metadata,
-                    xml_failure_message=xml_failure_message,
-                    context=context,
+                    self._fetch_pdf_payload(
+                        route,
+                        doi,
+                        metadata,
+                        xml_failure_message=xml_failure_message,
+                        context=context,
+                    ),
                 )
             except ProviderFailure as exc:
                 failures.append(("pdf", exc))
@@ -757,7 +868,7 @@ class FrontiersClient(ProviderClient):
         if not extracted_assets:
             return empty_asset_results()
 
-        body_assets, _supplementary_assets = split_body_and_supplementary_assets(
+        body_assets, supplementary_assets = split_body_and_supplementary_assets(
             extracted_assets
         )
         body_image_assets = [
@@ -775,20 +886,74 @@ class FrontiersClient(ProviderClient):
             or normalize_text(str(metadata.get("title") or ""))
             or raw_payload.source_url
         )
-        if not body_image_assets:
-            return empty_asset_results()
-        return download_assets(
-            FIGURE_KIND,
-            self.transport,
-            article_id=article_id,
-            assets=body_image_assets,
-            output_dir=output_dir,
-            user_agent=self.user_agent,
-            asset_profile=asset_profile,
-            headers=self._asset_headers(),
-            candidate_builder=_frontiers_figure_candidates,
-            asset_download_concurrency=resolve_asset_download_concurrency(context.env),
-        )
+        concurrency = resolve_asset_download_concurrency(context.env)
+        results: list[Mapping[str, Any]] = []
+        if body_image_assets:
+            results.append(
+                download_assets(
+                    FIGURE_KIND,
+                    self.transport,
+                    article_id=article_id,
+                    assets=body_image_assets,
+                    output_dir=output_dir,
+                    user_agent=self.user_agent,
+                    asset_profile=asset_profile,
+                    headers=self._asset_headers(),
+                    candidate_builder=_frontiers_figure_candidates,
+                    asset_download_concurrency=concurrency,
+                    fetch_policy="direct_then_browser",
+                )
+            )
+        if asset_profile == "all" and supplementary_assets:
+            downloadable = [
+                dict(asset)
+                for asset in supplementary_assets
+                if normalize_text(str(asset.get("archive_state") or ""))
+                != "not_archived"
+            ]
+            if downloadable:
+                results.append(
+                    download_assets(
+                        SUPPLEMENTARY_KIND,
+                        self.transport,
+                        article_id=article_id,
+                        assets=downloadable,
+                        output_dir=output_dir,
+                        user_agent=self.user_agent,
+                        asset_profile=asset_profile,
+                        headers=self._asset_headers(),
+                        asset_download_concurrency=concurrency,
+                        fetch_policy="direct_then_browser",
+                    )
+                )
+            unresolved_failures = [
+                {
+                    "kind": "supplementary",
+                    "heading": asset.get("heading") or "Supplementary material",
+                    "source_url": asset.get("source_url") or asset.get("link") or "",
+                    "section": "supplementary",
+                    "reason": asset.get("not_archived_reason")
+                    or "Frontiers supplementary entry was not archived.",
+                    "archive_state": "not_archived",
+                }
+                for asset in supplementary_assets
+                if normalize_text(str(asset.get("archive_state") or ""))
+                == "not_archived"
+            ]
+            if unresolved_failures:
+                results.append({"assets": [], "asset_failures": unresolved_failures})
+        return {
+            "assets": [
+                dict(asset)
+                for result in results
+                for asset in list(result.get("assets") or [])
+            ],
+            "asset_failures": [
+                dict(failure)
+                for result in results
+                for failure in list(result.get("asset_failures") or [])
+            ],
+        }
 
     def to_article_model(
         self,

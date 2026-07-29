@@ -117,16 +117,44 @@ def _caption_text(container: ET.Element | None) -> str:
     return normalize_text(render_inline_text(caption))
 
 
-def _graphic_url(figure: ET.Element, source_url: str) -> str:
-    for node in iter_descendants(figure, "graphic"):
+def _graphic_alternatives(
+    container: ET.Element,
+    source_url: str,
+) -> list[dict[str, Any]]:
+    alternatives: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for node in container.iter():
+        if not isinstance(node.tag, str):
+            continue
+        local_name = xml_local_name(node.tag)
+        if local_name not in {"graphic", "inline-graphic", "media"}:
+            continue
         url = _urljoin(source_url, _href(node))
-        if url:
-            return url
-    return ""
+        if not url or url in seen:
+            continue
+        seen.add(url)
+        mimetype = _attribute_text(node, "mimetype", "mime-type")
+        mime_subtype = _attribute_text(node, "mime-subtype")
+        if mimetype and mime_subtype and "/" not in mimetype:
+            mimetype = f"{mimetype}/{mime_subtype}"
+        alternatives.append(
+            {
+                "url": url,
+                "original_url": url,
+                "content_type": mimetype or None,
+                "media_type": local_name,
+                "specific_use": _attribute_text(node, "specific-use", "content-type")
+                or None,
+                "source_id": _element_id(node) or None,
+                "panel_index": len(alternatives) + 1,
+            }
+        )
+    return alternatives
 
 
 def _figure_entry(figure: ET.Element, source_url: str) -> dict[str, Any] | None:
-    url = _graphic_url(figure, source_url)
+    alternatives = _graphic_alternatives(figure, source_url)
+    url = normalize_text(alternatives[0]["url"]) if alternatives else ""
     label = normalize_text(child_text(figure, "label")) or "Figure"
     figure_id = _element_id(figure)
     caption = _caption_text(figure)
@@ -143,7 +171,13 @@ def _figure_entry(figure: ET.Element, source_url: str) -> dict[str, Any] | None:
         "render_state": "inline",
     }
     if url:
-        entry.update({"link": url, "original_url": url})
+        entry.update(
+            {
+                "link": url,
+                "original_url": url,
+                "alternatives": alternatives,
+            }
+        )
     return entry
 
 
@@ -192,11 +226,15 @@ def _table_footnotes(table_wrap: ET.Element) -> list[str]:
     return notes
 
 
-def _table_entry(table_wrap: ET.Element) -> tuple[dict[str, Any] | None, bool]:
+def _table_entry(
+    table_wrap: ET.Element,
+    source_url: str = "",
+) -> tuple[dict[str, Any] | None, bool]:
     label = normalize_text(child_text(table_wrap, "label")) or "Table"
     caption = _caption_text(table_wrap)
     table = _table_node(table_wrap)
     key = _element_id(table_wrap) or _element_id(table) or label
+    graphic_alternatives = _graphic_alternatives(table_wrap, source_url)
     if table is not None:
         render_result = _render_structured_table(table)
         headers = render_result.headers
@@ -225,6 +263,10 @@ def _table_entry(table_wrap: ET.Element) -> tuple[dict[str, Any] | None, bool]:
         }
         if render_result is not None and render_result.prefix_rows:
             entry["_table_prefix_rows"] = render_result.prefix_rows
+        if graphic_alternatives:
+            entry["link"] = graphic_alternatives[0]["url"]
+            entry["original_url"] = graphic_alternatives[0]["url"]
+            entry["alternatives"] = graphic_alternatives
         if lossy:
             if (
                 render_result is not None
@@ -242,7 +284,12 @@ def _table_entry(table_wrap: ET.Element) -> tuple[dict[str, Any] | None, bool]:
             entry["lossy_message"] = message
             entry["conversion_notes"] = [message]
         return entry, lossy
-    if caption:
+    if caption or graphic_alternatives:
+        fallback_message = (
+            "Table was supplied as a graphic; its image asset and caption were retained."
+            if graphic_alternatives
+            else "Table content could not be converted to Markdown; caption text was retained."
+        )
         return {
             "kind": "table",
             "table_render_kind": "fallback",
@@ -253,10 +300,17 @@ def _table_entry(table_wrap: ET.Element) -> tuple[dict[str, Any] | None, bool]:
             "footnotes": _table_footnotes(table_wrap),
             "section": "body",
             "render_state": "inline",
-            "fallback_message": "Table content could not be converted to Markdown; caption text was retained.",
-            "conversion_notes": [
-                "Table content could not be converted to Markdown; caption text was retained."
-            ],
+            "fallback_message": fallback_message,
+            "conversion_notes": [fallback_message],
+            **(
+                {
+                    "link": graphic_alternatives[0]["url"],
+                    "original_url": graphic_alternatives[0]["url"],
+                    "alternatives": graphic_alternatives,
+                }
+                if graphic_alternatives
+                else {}
+            ),
         }, True
     return None, False
 
@@ -272,30 +326,53 @@ def _supplementary_entries(root: ET.Element, source_url: str) -> list[dict[str, 
             "supplementary-material",
         }:
             continue
-        url = _urljoin(source_url, _href(node))
-        if not url:
-            continue
         text = normalize_text(render_inline_text(node))
-        title = (
+        base_title = (
             normalize_text(str(node.get(XLINK_TITLE) or node.get("content-type") or ""))
             or text
             or "Supplementary material"
         )
-        key = url or _element_id(node) or title
-        if not key or key in seen:
-            continue
-        seen.add(key)
-        entry: dict[str, Any] = {
-            "kind": "supplementary",
-            "key": key,
-            "anchor_key": key,
-            "heading": title,
-            "caption": text if text and text != title else "",
-            "section": "supplementary",
-        }
-        if url:
-            entry.update({"link": url, "original_url": url})
-        entries.append(entry)
+        link_nodes = [
+            candidate
+            for candidate in node.iter()
+            if isinstance(candidate.tag, str)
+            and xml_local_name(candidate.tag)
+            in {
+                "ext-link",
+                "graphic",
+                "inline-supplementary-material",
+                "media",
+                "supplementary-material",
+            }
+            and _href(candidate)
+        ]
+        if _href(node) and node not in link_nodes:
+            link_nodes.insert(0, node)
+        for link_index, link_node in enumerate(link_nodes, start=1):
+            source_href = _href(link_node)
+            url = _urljoin(source_url, source_href)
+            if not url or url in seen:
+                continue
+            seen.add(url)
+            title = (
+                _attribute_text(link_node, XLINK_TITLE, "content-type") or base_title
+            )
+            key = url or _element_id(link_node) or _element_id(node) or title
+            entry: dict[str, Any] = {
+                "kind": "supplementary",
+                "key": key,
+                "anchor_key": key,
+                "heading": title,
+                "caption": text if text and text != title else "",
+                "section": "supplementary",
+                "link": url,
+                "original_url": url,
+                "source_href": source_href,
+                "content_type": _attribute_text(link_node, "mimetype", "mime-type")
+                or None,
+                "attachment_index": link_index,
+            }
+            entries.append(entry)
     return entries
 
 

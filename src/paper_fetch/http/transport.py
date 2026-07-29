@@ -8,6 +8,7 @@ import threading
 import time
 import urllib.error
 import urllib.parse
+import contextlib
 from contextlib import nullcontext
 from dataclasses import dataclass
 from pathlib import Path
@@ -34,22 +35,30 @@ from .cache import (
 )
 from .errors import (
     RequestCancelledError,
+    RequestErrorCategory,
     RequestFailure,
     build_network_error_detail,
     classify_network_error,
-    is_timeout_network_error,
+    is_retryable_network_error,
 )
 from .retry import (
     DEFAULT_TRANSIENT_BACKOFF_BASE_SECONDS,
     DEFAULT_TRANSIENT_RETRIES,
+    RetryAttemptContext,
     RetryMixin,
 )
+from .url_policy import DEFAULT_SAFE_REMOTE_URL_POLICY, SafeRemoteUrlPolicy
 
 DEFAULT_TIMEOUT_SECONDS = 20
 DEFAULT_FULLTEXT_TIMEOUT_SECONDS = 90
 DEFAULT_POOL_NUM_POOLS = 16
 DEFAULT_POOL_MAXSIZE = 4
 DEFAULT_PER_HOST_CONCURRENCY = 4
+DEFAULT_MAX_REDIRECTS = 5
+REDIRECT_STATUS_CODES = frozenset({301, 302, 303, 307, 308})
+_SENSITIVE_REDIRECT_HEADERS = frozenset(
+    {"authorization", "cookie", "proxy-authorization", "referer"}
+)
 logger = logging.getLogger("paper_fetch.http")
 
 
@@ -58,6 +67,26 @@ class _PreparedRequest:
     method: str
     full_url: str
     headers: Mapping[str, str]
+    follow_redirects: bool = True
+    max_redirects: int = DEFAULT_MAX_REDIRECTS
+    allowed_hosts: tuple[str, ...] | None = None
+
+
+@dataclass(frozen=True)
+class HttpTransportOptions:
+    cancel_check: Callable[[], bool] | None = None
+    remote_url_policy: SafeRemoteUrlPolicy | None = None
+
+
+@dataclass(frozen=True)
+class HttpRequestPolicy:
+    transient_backoff_base_seconds: float = DEFAULT_TRANSIENT_BACKOFF_BASE_SECONDS
+    follow_redirects: bool = True
+    max_redirects: int = DEFAULT_MAX_REDIRECTS
+    allowed_hosts: tuple[str, ...] | None = None
+    max_response_bytes: int | None = None
+    max_compressed_response_bytes: int | None = None
+    cooldown_scope: str | None = None
 
 
 class HttpTransport(CacheMixin, RetryMixin, BodyMixin):
@@ -79,8 +108,9 @@ class HttpTransport(CacheMixin, RetryMixin, BodyMixin):
         disk_cache_max_entries: int | None = None,
         disk_cache_max_bytes: int | None = None,
         disk_cache_max_age_seconds: int | None = None,
-        cancel_check: Callable[[], bool] | None = None,
+        options: HttpTransportOptions | None = None,
     ) -> None:
+        transport_options = options or HttpTransportOptions()
         self.cache_ttl = max(0, int(cache_ttl))
         self.metadata_cache_ttl = max(
             0, int(metadata_cache_ttl if metadata_cache_ttl is not None else cache_ttl)
@@ -121,7 +151,10 @@ class HttpTransport(CacheMixin, RetryMixin, BodyMixin):
                 else DEFAULT_DISK_CACHE_MAX_AGE_SECONDS
             ),
         )
-        self._cancel_check = cancel_check
+        self._cancel_check = transport_options.cancel_check
+        self.remote_url_policy = (
+            transport_options.remote_url_policy or DEFAULT_SAFE_REMOTE_URL_POLICY
+        )
         cache_maxsize = (
             self.max_total_cache_bytes
             if self.max_total_cache_bytes > 0
@@ -138,13 +171,26 @@ class HttpTransport(CacheMixin, RetryMixin, BodyMixin):
         self._cache_stats_lock = threading.Lock()
         self._cache_stats = {key: 0 for key in CACHE_STAT_KEYS}
         self._disk_cache_lock = threading.RLock()
+        self._disk_cache_entries: dict[Path, Any] = {}
+        self._disk_cache_total_bytes = 0
+        self._disk_cache_index_initialized = False
+        self._disk_cache_writes_since_reconcile = 0
+        self._disk_cache_last_reconcile = 0.0
+        self._disk_cache_last_prune = 0.0
         self._host_semaphores: dict[str, threading.BoundedSemaphore] = {}
         self._host_semaphores_lock = threading.Lock()
+        self._cooldown_until: dict[str, float] = {}
+        self._cooldown_lock = threading.RLock()
         self._pool = urllib3.PoolManager(
             num_pools=self.pool_num_pools,
             maxsize=self.pool_maxsize,
             block=True,
         )
+
+    def close(self) -> None:
+        """Release pooled connections owned by this transport."""
+
+        self._pool.clear()
 
     def _host_semaphore_for_url(self, url: str) -> threading.BoundedSemaphore | None:
         hostname = urllib.parse.urlparse(url).hostname
@@ -158,6 +204,67 @@ class HttpTransport(CacheMixin, RetryMixin, BodyMixin):
                 self._host_semaphores[normalized] = semaphore
         return semaphore
 
+    @staticmethod
+    def _cooldown_key_for_url(url: str, scope: str | None = None) -> str:
+        if scope and str(scope).strip():
+            return str(scope).strip().lower()
+        return (urllib.parse.urlparse(url).hostname or "").lower()
+
+    def _set_cooldown(self, key: str, delay_seconds: float) -> None:
+        if not key or delay_seconds <= 0:
+            return
+        with self._cooldown_lock:
+            self._cooldown_until[key] = max(
+                self._cooldown_until.get(key, 0.0),
+                time.monotonic() + delay_seconds,
+            )
+
+    def _cancellable_sleep(self, seconds: float) -> None:
+        if self._cancel_check is None:
+            time.sleep(max(0.0, seconds))
+            return
+        deadline = time.monotonic() + max(0.0, seconds)
+        while True:
+            self._check_cancelled()
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                return
+            time.sleep(min(remaining, 0.1))
+
+    def _sleep_without_host_slot(
+        self,
+        semaphore: threading.BoundedSemaphore | None,
+        seconds: float,
+    ) -> None:
+        if seconds <= 0:
+            return
+        if semaphore is None:
+            self._cancellable_sleep(seconds)
+            return
+        semaphore.release()
+        try:
+            self._cancellable_sleep(seconds)
+        finally:
+            semaphore.acquire()
+
+    def _wait_for_cooldown(
+        self,
+        key: str,
+        semaphore: threading.BoundedSemaphore | None,
+    ) -> None:
+        while key:
+            with self._cooldown_lock:
+                cooldown_deadline = self._cooldown_until.get(key, 0.0)
+                remaining = cooldown_deadline - time.monotonic()
+                if remaining <= 0:
+                    self._cooldown_until.pop(key, None)
+                    return
+            self._sleep_without_host_slot(semaphore, remaining)
+            with self._cooldown_lock:
+                if self._cooldown_until.get(key, 0.0) <= cooldown_deadline:
+                    self._cooldown_until.pop(key, None)
+                    return
+
     @property
     def cancelled(self) -> bool:
         return bool(self._cancel_check and self._cancel_check())
@@ -166,15 +273,125 @@ class HttpTransport(CacheMixin, RetryMixin, BodyMixin):
         if self.cancelled:
             raise RequestCancelledError("Request cancelled.")
 
+    @staticmethod
+    def _enforce_response_limit(
+        response: Mapping[str, Any],
+        *,
+        max_response_bytes: int,
+        url: str,
+    ) -> None:
+        body = response.get("body")
+        if isinstance(body, (bytes, bytearray)) and len(body) > max_response_bytes:
+            raise RequestFailure(
+                int(response.get("status_code") or 0) or None,
+                (
+                    f"Response body exceeded {max_response_bytes} bytes for "
+                    f"{redact_url_for_cache(url)}"
+                ),
+                body=bytes(body[:max_response_bytes]),
+                headers=response.get("headers")
+                if isinstance(response.get("headers"), Mapping)
+                else None,
+                url=redact_url_for_cache(url),
+                error_category=RequestErrorCategory.RESPONSE_TOO_LARGE,
+            )
+
     def _perform_request(self, request: _PreparedRequest, *, timeout: int) -> Any:
-        return self._pool.request(
-            request.method,
-            request.full_url,
-            headers=dict(request.headers),
-            timeout=urllib3.Timeout(connect=timeout, read=timeout),
-            preload_content=False,
-            retries=False,
-            redirect=True,
+        current_url = request.full_url
+        current_method = request.method
+        current_headers = dict(request.headers)
+        visited: set[str] = set()
+        redirects_followed = 0
+        while True:
+            self._check_cancelled()
+            self.remote_url_policy.validate(
+                current_url,
+                allowed_hosts=request.allowed_hosts,
+                resolve_dns=True,
+            )
+            if current_url in visited:
+                raise RequestFailure(
+                    None,
+                    f"Redirect loop for {redact_url_for_cache(current_url)}",
+                    url=redact_url_for_cache(current_url),
+                    error_category=RequestErrorCategory.UNSAFE_REDIRECT,
+                )
+            visited.add(current_url)
+            response = self._pool.request(
+                current_method,
+                current_url,
+                headers=current_headers,
+                timeout=urllib3.Timeout(connect=timeout, read=timeout),
+                preload_content=False,
+                retries=False,
+                redirect=False,
+            )
+            status = int(getattr(response, "status", 0) or 0)
+            location = next(
+                (
+                    str(value)
+                    for key, value in getattr(response, "headers", {}).items()
+                    if str(key).lower() == "location"
+                ),
+                "",
+            ).strip()
+            if (
+                not request.follow_redirects
+                or status not in REDIRECT_STATUS_CODES
+                or not location
+            ):
+                with contextlib.suppress(Exception):
+                    response._paper_fetch_final_url = current_url
+                return response
+            if redirects_followed >= request.max_redirects:
+                self._close_response(response)
+                raise RequestFailure(
+                    status,
+                    (
+                        f"Redirect limit exceeded for "
+                        f"{redact_url_for_cache(request.full_url)}"
+                    ),
+                    headers={
+                        str(key).lower(): str(value)
+                        for key, value in getattr(response, "headers", {}).items()
+                    },
+                    url=redact_url_for_cache(current_url),
+                    error_category=RequestErrorCategory.UNSAFE_REDIRECT,
+                )
+            target_url = urllib.parse.urljoin(current_url, location)
+            self.remote_url_policy.validate(
+                target_url,
+                allowed_hosts=request.allowed_hosts,
+                previous_url=current_url,
+                resolve_dns=False,
+            )
+            old_origin = self._url_origin(current_url)
+            new_origin = self._url_origin(target_url)
+            if old_origin != new_origin:
+                current_headers = {
+                    key: value
+                    for key, value in current_headers.items()
+                    if str(key).lower() not in _SENSITIVE_REDIRECT_HEADERS
+                }
+            if status == 303 and current_method != "HEAD":
+                current_method = "GET"
+                current_headers = {
+                    key: value
+                    for key, value in current_headers.items()
+                    if str(key).lower() not in {"content-length", "content-type"}
+                }
+            self._close_response(response)
+            redirects_followed += 1
+            current_url = target_url
+
+    @staticmethod
+    def _url_origin(url: str) -> tuple[str, str, int]:
+        parsed = urllib.parse.urlsplit(url)
+        scheme = parsed.scheme.lower()
+        return (
+            scheme,
+            (parsed.hostname or "").lower(),
+            parsed.port or (443 if scheme == "https" else 80),
         )
 
     def _release_response(self, response: Any) -> None:
@@ -204,8 +421,19 @@ class HttpTransport(CacheMixin, RetryMixin, BodyMixin):
         max_rate_limit_wait_seconds: int = 5,
         retry_on_transient: bool = False,
         transient_retries: int = DEFAULT_TRANSIENT_RETRIES,
-        transient_backoff_base_seconds: float = DEFAULT_TRANSIENT_BACKOFF_BASE_SECONDS,
+        request_policy: HttpRequestPolicy | None = None,
     ) -> dict[str, Any]:
+        policy = request_policy or HttpRequestPolicy()
+        response_limit = (
+            self.max_response_bytes
+            if policy.max_response_bytes is None
+            else max(0, int(policy.max_response_bytes))
+        )
+        compressed_response_limit = (
+            None
+            if policy.max_compressed_response_bytes is None
+            else max(0, int(policy.max_compressed_response_bytes))
+        )
         if query:
             encoded_query = urllib.parse.urlencode(query, doseq=True)
             separator = "&" if "?" in url else "?"
@@ -221,6 +449,11 @@ class HttpTransport(CacheMixin, RetryMixin, BodyMixin):
             self._increment_cache_stat("bypass")
         cached_response = self._load_cached_response(cache_key)
         if cached_response is not None:
+            self._enforce_response_limit(
+                cached_response,
+                max_response_bytes=response_limit,
+                url=str(cached_response.get("url") or url),
+            )
             self._increment_cache_stat("memory_hit")
             return cached_response
         disk_cache_entry = self._load_disk_cached_entry(cache_key)
@@ -228,6 +461,11 @@ class HttpTransport(CacheMixin, RetryMixin, BodyMixin):
         if disk_cache_entry is not None:
             disk_response = self._clone_response(disk_cache_entry["response"])
             if disk_cache_entry["fresh"]:
+                self._enforce_response_limit(
+                    disk_response,
+                    max_response_bytes=response_limit,
+                    url=str(disk_response.get("url") or url),
+                )
                 self._increment_cache_stat("disk_fresh_hit")
                 if self._store_cached_response(cache_key, disk_response):
                     self._increment_cache_stat("store")
@@ -242,7 +480,10 @@ class HttpTransport(CacheMixin, RetryMixin, BodyMixin):
         elif cache_key is not None:
             self._increment_cache_stat("miss")
         self._check_cancelled()
-        transient_backoff_base_seconds = max(0.0, float(transient_backoff_base_seconds))
+        transient_backoff_base_seconds = max(
+            0.0,
+            float(policy.transient_backoff_base_seconds),
+        )
         rate_limit_policy = self._build_rate_limit_retry_policy(
             enabled=retry_on_rate_limit,
             retries=rate_limit_retries,
@@ -255,8 +496,10 @@ class HttpTransport(CacheMixin, RetryMixin, BodyMixin):
         transient_attempts_made = 0
         attempt = 0
         host_semaphore = self._host_semaphore_for_url(url)
+        cooldown_key = self._cooldown_key_for_url(url, policy.cooldown_scope)
         with host_semaphore if host_semaphore is not None else nullcontext():
             while True:
+                self._wait_for_cooldown(cooldown_key, host_semaphore)
                 self._check_cancelled()
                 attempt += 1
                 request_started_at = time.monotonic()
@@ -272,13 +515,22 @@ class HttpTransport(CacheMixin, RetryMixin, BodyMixin):
                     attempt=attempt,
                 )
                 request = _PreparedRequest(
-                    method=method.upper(), full_url=url, headers=dict(request_headers)
+                    method=method.upper(),
+                    full_url=url,
+                    headers=dict(request_headers),
+                    follow_redirects=policy.follow_redirects,
+                    max_redirects=max(0, int(policy.max_redirects)),
+                    allowed_hosts=policy.allowed_hosts,
                 )
                 response = None
                 response_reusable = False
                 try:
                     response = self._perform_request(request, timeout=timeout)
-                    response_url = response.geturl() or url
+                    response_url = (
+                        getattr(response, "_paper_fetch_final_url", None)
+                        or response.geturl()
+                        or url
+                    )
                     headers_map = {
                         str(key).lower(): str(value)
                         for key, value in response.headers.items()
@@ -288,6 +540,8 @@ class HttpTransport(CacheMixin, RetryMixin, BodyMixin):
                         status_code=response.status,
                         url=response_url,
                         content_encoding=headers_map.get("content-encoding"),
+                        max_response_bytes=response_limit,
+                        max_compressed_response_bytes=compressed_response_limit,
                     )
                     response_reusable = True
                     if int(response.status) == 304 and stale_disk_response is not None:
@@ -322,8 +576,10 @@ class HttpTransport(CacheMixin, RetryMixin, BodyMixin):
                             self._increment_cache_stat("store")
                         return response_payload
                     if int(response.status) >= 400:
+                        status_code = int(response.status)
+                        self._release_response(response)
+                        response = None
                         (
-                            should_retry,
                             rate_limit_policy,
                             transient_policy,
                             transient_attempts_made,
@@ -331,18 +587,21 @@ class HttpTransport(CacheMixin, RetryMixin, BodyMixin):
                             method=method,
                             request_url=url,
                             error_url=response_url,
-                            status_code=int(response.status),
+                            status_code=status_code,
                             body=payload,
                             headers_map=headers_map,
-                            request_started_at=request_started_at,
-                            attempt=attempt,
                             rate_limit_policy=rate_limit_policy,
                             max_rate_limit_wait_seconds=max_rate_limit_wait_seconds,
                             transient_policy=transient_policy,
                             transient_attempts_made=transient_attempts_made,
+                            attempt_context=RetryAttemptContext(
+                                started_at=request_started_at,
+                                attempt=attempt,
+                                cooldown_key=cooldown_key,
+                                host_semaphore=host_semaphore,
+                            ),
                         )
-                        if should_retry:
-                            continue
+                        continue
                     response_payload = {
                         "status_code": int(response.status),
                         "headers": headers_map,
@@ -380,9 +639,10 @@ class HttpTransport(CacheMixin, RetryMixin, BodyMixin):
                             status_code=exc.code,
                             url=error_url,
                             content_encoding=headers_map.get("content-encoding"),
+                            max_response_bytes=response_limit,
+                            max_compressed_response_bytes=compressed_response_limit,
                         )
                         (
-                            should_retry,
                             rate_limit_policy,
                             transient_policy,
                             transient_attempts_made,
@@ -393,21 +653,26 @@ class HttpTransport(CacheMixin, RetryMixin, BodyMixin):
                             status_code=int(exc.code),
                             body=body,
                             headers_map=headers_map,
-                            request_started_at=request_started_at,
-                            attempt=attempt,
                             rate_limit_policy=rate_limit_policy,
                             max_rate_limit_wait_seconds=max_rate_limit_wait_seconds,
                             transient_policy=transient_policy,
                             transient_attempts_made=transient_attempts_made,
+                            attempt_context=RetryAttemptContext(
+                                started_at=request_started_at,
+                                attempt=attempt,
+                                cooldown_key=cooldown_key,
+                                host_semaphore=host_semaphore,
+                            ),
                         )
-                        if should_retry:
-                            continue
+                        continue
                     finally:
                         exc.close()
                 except (urllib3.exceptions.HTTPError, urllib.error.URLError) as exc:
-                    if self._retry_remaining(
-                        transient_policy
-                    ) > 0 and is_timeout_network_error(exc):
+                    if (
+                        method.upper() in {"GET", "HEAD"}
+                        and self._retry_remaining(transient_policy) > 0
+                        and is_retryable_network_error(exc)
+                    ):
                         emit_structured_log(
                             logger,
                             logging.DEBUG,
@@ -423,10 +688,11 @@ class HttpTransport(CacheMixin, RetryMixin, BodyMixin):
                             reason="pool_timeout",
                         )
                         transient_policy = self._consume_retry(transient_policy)
-                        time.sleep(
+                        self._sleep_without_host_slot(
+                            host_semaphore,
                             self._transient_backoff_seconds(
                                 transient_policy, transient_attempts_made
-                            )
+                            ),
                         )
                         transient_attempts_made += 1
                         continue
@@ -450,7 +716,10 @@ class HttpTransport(CacheMixin, RetryMixin, BodyMixin):
                         error_category=classify_network_error(exc),
                     ) from exc
                 except TimeoutError as exc:
-                    if self._retry_remaining(transient_policy) > 0:
+                    if (
+                        method.upper() in {"GET", "HEAD"}
+                        and self._retry_remaining(transient_policy) > 0
+                    ):
                         emit_structured_log(
                             logger,
                             logging.DEBUG,
@@ -466,10 +735,11 @@ class HttpTransport(CacheMixin, RetryMixin, BodyMixin):
                             reason="timeout",
                         )
                         transient_policy = self._consume_retry(transient_policy)
-                        time.sleep(
+                        self._sleep_without_host_slot(
+                            host_semaphore,
                             self._transient_backoff_seconds(
                                 transient_policy, transient_attempts_made
-                            )
+                            ),
                         )
                         transient_attempts_made += 1
                         continue

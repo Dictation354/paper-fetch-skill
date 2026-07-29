@@ -127,7 +127,7 @@ def _budget_payload(
     }
 
 
-def _load_budget(path: Path) -> list[ComplexityViolation]:
+def load_budget(path: Path) -> list[ComplexityViolation]:
     payload: Any = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(payload, dict) or payload.get("schema_version") != 1:
         raise ValueError(f"Unsupported complexity budget schema: {path}")
@@ -161,6 +161,25 @@ def budget_regressions(
     return sorted(set(regressions))
 
 
+def update_budget(
+    path: Path,
+    current: list[ComplexityViolation],
+) -> list[ComplexityViolation]:
+    """Write a baseline only when it is new or monotonically improves."""
+
+    regressions = (
+        budget_regressions(load_budget(path), current) if path.is_file() else []
+    )
+    if regressions:
+        return regressions
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        json.dumps(_budget_payload(current), indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    return []
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--budget", type=Path, default=DEFAULT_BUDGET)
@@ -176,17 +195,24 @@ def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     current = collect_violations()
     if args.update:
-        args.budget.parent.mkdir(parents=True, exist_ok=True)
-        args.budget.write_text(
-            json.dumps(_budget_payload(current), indent=2, sort_keys=True) + "\n",
-            encoding="utf-8",
-        )
+        regressions = update_budget(args.budget, current)
+        if regressions:
+            print(
+                "Refusing to raise or replace the complexity baseline with regressions:",
+                file=sys.stderr,
+            )
+            for item in regressions:
+                print(
+                    f"- {item.path}:{item.symbol} {item.code}={item.value}",
+                    file=sys.stderr,
+                )
+            return 1
         print(f"Updated {args.budget} with {len(current)} violation(s).")
         return 0
     if not args.budget.is_file():
         print(f"Complexity budget is missing: {args.budget}", file=sys.stderr)
         return 2
-    regressions = budget_regressions(_load_budget(args.budget), current)
+    regressions = budget_regressions(load_budget(args.budget), current)
     if regressions:
         print("Complexity budget regressions:", file=sys.stderr)
         for item in regressions:

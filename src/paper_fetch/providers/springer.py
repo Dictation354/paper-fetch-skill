@@ -234,9 +234,62 @@ class SpringerHtmlAttempt:
     extracted_references: list[dict[str, Any]]
     inline_table_assets: list[dict[str, Any]]
     diagnostics: Any
+    site_family: str
     asset_body_html: str = ""
     asset_supplementary_html: str = ""
     asset_source_data_html: str = ""
+
+
+@dataclass(frozen=True)
+class SpringerSiteFamilyProfile:
+    """Internal site-family routing without changing provider identity."""
+
+    name: str
+    domains: tuple[str, ...]
+    doi_prefixes: tuple[str, ...]
+    html_source: str = "springer_html"
+    pdf_source: str = "springer_pdf"
+
+
+SPRINGER_SITE_FAMILY_PROFILES = (
+    SpringerSiteFamilyProfile(
+        name="nature",
+        domains=("nature.com",),
+        doi_prefixes=("10.1038/",),
+    ),
+    SpringerSiteFamilyProfile(
+        name="springerlink",
+        domains=("link.springer.com", "springer.com"),
+        doi_prefixes=("10.1007/",),
+    ),
+    SpringerSiteFamilyProfile(
+        name="bmc",
+        domains=("biomedcentral.com",),
+        doi_prefixes=("10.1186/",),
+    ),
+)
+UNKNOWN_SPRINGER_SITE_FAMILY = SpringerSiteFamilyProfile(
+    name="unknown",
+    domains=(),
+    doi_prefixes=(),
+)
+
+
+def springer_site_family_profile(
+    source_url: str | None,
+    doi: str | None = None,
+) -> SpringerSiteFamilyProfile:
+    host = normalize_text(urllib.parse.urlparse(source_url or "").hostname).lower()
+    normalized_doi = normalize_doi(doi or "")
+    for profile in SPRINGER_SITE_FAMILY_PROFILES:
+        if any(
+            host == domain or host.endswith(f".{domain}") for domain in profile.domains
+        ):
+            return profile
+    for profile in SPRINGER_SITE_FAMILY_PROFILES:
+        if any(normalized_doi.startswith(prefix) for prefix in profile.doi_prefixes):
+            return profile
+    return UNKNOWN_SPRINGER_SITE_FAMILY
 
 
 def _springer_asset_retry_key(asset: Mapping[str, Any]) -> tuple[Any, ...]:
@@ -274,6 +327,12 @@ def _springer_extraction_diagnostics_payload(
     attempt: SpringerHtmlAttempt,
 ) -> dict[str, Any]:
     return {
+        "site_family": attempt.site_family,
+        "route_profile": {
+            "provider": "springer",
+            "site_family": attempt.site_family,
+            "route": "html",
+        },
         "availability_diagnostics": attempt.diagnostics.to_dict(),
         "extraction": {
             "abstract_text": normalize_text(attempt.abstract_sections[0]["text"])
@@ -425,6 +484,10 @@ def _springer_fallback_attempt(
         extracted_references=[],
         inline_table_assets=[],
         diagnostics=None,
+        site_family=springer_site_family_profile(
+            response_url,
+            normalized_doi,
+        ).name,
         asset_source_data_html="",
     )
 
@@ -906,6 +969,10 @@ class SpringerClient(ProviderClient):
             extracted_references=list(extraction_payload.get("references") or []),
             inline_table_assets=table_assets,
             diagnostics=diagnostics,
+            site_family=springer_site_family_profile(
+                response_url,
+                normalized_doi,
+            ).name,
             asset_body_html=asset_body_html,
             asset_supplementary_html=asset_supplementary_html,
             asset_source_data_html=asset_source_data_html,
@@ -943,6 +1010,11 @@ class SpringerClient(ProviderClient):
                 asset_profile=effective_asset_profile,
                 doi=attempt.normalized_doi,
             ),
+            expected_identity={
+                "doi": attempt.normalized_doi,
+                "title": attempt.merged_metadata.get("title"),
+            },
+            context=context,
             fetcher=fetch_pdf_over_http,
         ).fetch(pdf_candidates)
         return build_provider_payload(
@@ -953,6 +1025,14 @@ class SpringerClient(ProviderClient):
             body=pdf_result.pdf_bytes,
             markdown_text=pdf_result.markdown_text,
             merged_metadata=attempt.merged_metadata,
+            diagnostics={
+                "site_family": attempt.site_family,
+                "route_profile": {
+                    "provider": "springer",
+                    "site_family": attempt.site_family,
+                    "route": PDF_FALLBACK,
+                },
+            },
             reason="Downloaded full text from the Springer direct PDF fallback route.",
             suggested_filename=pdf_result.suggested_filename,
             extracted_assets=pdf_fetch_result_assets(pdf_result),
@@ -1306,6 +1386,10 @@ class SpringerClient(ProviderClient):
                         continue_codes=DEFAULT_WATERFALL_CONTINUE_CODES,
                     ),
                 ],
+                doi=doi,
+                metadata=metadata,
+                context=context,
+                client=self,
                 final_failure_factory=final_html_failure,
             )
             return PreparedFetchResultPayload(raw_payload=raw_payload)
@@ -1423,6 +1507,10 @@ class SpringerClient(ProviderClient):
                         ),
                     ),
                 ],
+                doi=doi,
+                metadata=metadata,
+                context=context,
+                client=self,
                 initial_warnings=warnings,
                 initial_source_trail=html_source_trail,
                 final_failure_factory=final_pdf_failure,

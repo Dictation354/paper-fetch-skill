@@ -28,6 +28,7 @@ jobs:
           uv run ruff check .
           PYTHONPATH=src uv run mypy src/paper_fetch
           uv run python scripts/check_complexity_budget.py
+          uv run python scripts/check_provider_governance.py
           uv run python scripts/validate_extraction_rules.py --ci
           uv run python scripts/sync_version.py --check
       - name: Audit locked dependencies
@@ -99,6 +100,7 @@ jobs:
             "$smoke_python" -m pip install "$wheel"
           fi
           "$smoke_python" -c "import paper_fetch; print(paper_fetch.__version__)"
+          "$smoke_python" -c "from importlib.metadata import version; from paper_fetch.mcp.server import build_server; assert version('mcp').split('.', 1)[0] == '2'; assert build_server().name == 'paper-fetch'"
           "$smoke_python" -m paper_fetch.cli --version
 
   package:

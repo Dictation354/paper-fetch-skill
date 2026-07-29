@@ -25,10 +25,16 @@ CAMOUFOX_ENV = {
 CAMOUFOX_DEPENDENCIES_READY = {
     "probe": "unit_test",
     "packages": {"playwright": True, "camoufox": True},
+    "package_ready": True,
+    "runtime_installed": True,
+    "download_required": False,
 }
 CAMOUFOX_DEPENDENCIES_MISSING = {
     "probe": "unit_test",
     "packages": {"playwright": False, "camoufox": False},
+    "package_ready": False,
+    "runtime_installed": False,
+    "download_required": False,
 }
 
 

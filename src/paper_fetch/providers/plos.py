@@ -7,9 +7,11 @@ from pathlib import Path
 from typing import Any
 from collections.abc import Mapping, Sequence
 import re
+import threading
 import urllib.parse
 
 from ..config import build_publisher_user_agent, resolve_asset_download_concurrency
+from ..failure import FailureDiagnostics
 from ..extraction.html.assets import (
     FIGURE_KIND,
     SUPPLEMENTARY_KIND,
@@ -21,12 +23,14 @@ from ..extraction.html.availability_policy import AvailabilityPolicy
 from ..extraction.html.provider_rules import ProviderFrontMatterRules, ProviderHtmlRules
 from ..http import (
     DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
+    HttpRequestPolicy,
     HttpTransport,
     PDF_MIME_TYPE,
     RequestFailure,
     redact_url_for_cache,
 )
 from ..http.headers import header_value
+from ..journal_routes import provider_journal_mapping
 from ..models import (
     AssetProfile,
     SourceKind,
@@ -36,6 +40,7 @@ from ..models import (
 from ..provider_catalog import (
     BodyTextThresholds,
     ProviderSpec,
+    provider_body_text_thresholds,
     provider_pdf_path_templates,
     provider_xml_path_templates,
 )
@@ -43,7 +48,7 @@ from ..publisher_identity import normalize_doi
 from ..runtime import RuntimeContext
 from ..tracing import download_marker, fulltext_marker, trace_from_markers
 from ..utils import empty_asset_results, normalize_text
-from ._article_markdown_jats import parse_jats_xml
+from ._article_markdown_jats import assess_jats_body_availability, parse_jats_xml
 from ._payloads import build_provider_payload
 from ._pdf_common import (
     default_pdf_headers,
@@ -113,26 +118,16 @@ register_provider_bundle(
 )
 
 
-PLOS_JOURNAL_PATHS = {
-    "pbio": "plosbiology",
-    "pcbi": "ploscompbiol",
-    "pclm": "climate",
-    "pdig": "digitalhealth",
-    "pgen": "plosgenetics",
-    "pgph": "globalpublichealth",
-    "pmed": "plosmedicine",
-    "pntd": "plosntds",
-    "pone": "plosone",
-    "ppat": "plospathogens",
-    "pstr": "sustainabilitytransformation",
-    "pwat": "water",
-}
+PLOS_JOURNAL_PATHS = provider_journal_mapping("plos", "journal_paths")
 PLOS_DOI_JOURNAL_PATTERN = re.compile(
     r"^10\.1371/journal\.(?P<code>[a-z0-9]+)\.", flags=re.IGNORECASE
 )
 PLOS_HOST = "https://journals.plos.org"
 PLOS_REDIRECT_STATUSES = {301, 302, 303, 307, 308}
 PLOS_MAX_REDIRECTS = 4
+PLOS_REMOTE_HOSTS = ("plos.org", "storage.googleapis.com")
+PLOS_RESOLVER_HOSTS = ("doi.org", "plos.org")
+PLOS_JOURNAL_PATH_PATTERN = re.compile(r"^[a-z0-9-]+$")
 
 
 def _plos_journal_path(doi_or_asset_id: str) -> str:
@@ -152,12 +147,18 @@ def _plos_journal_path(doi_or_asset_id: str) -> str:
     return journal_path
 
 
-def _candidate_url(doi: str, *, templates: tuple[str, ...]) -> str:
+def _candidate_url(
+    doi: str,
+    *,
+    templates: tuple[str, ...],
+    journal_path: str | None = None,
+) -> str:
     normalized_doi = normalize_doi(doi)
-    journal_path = _plos_journal_path(normalized_doi)
+    resolved_journal_path = journal_path or _plos_journal_path(normalized_doi)
     template = templates[0]
     return (
-        f"{PLOS_HOST}{template.format(doi=normalized_doi, journal_path=journal_path)}"
+        f"{PLOS_HOST}"
+        f"{template.format(doi=normalized_doi, journal_path=resolved_journal_path)}"
     )
 
 
@@ -167,6 +168,38 @@ def _xml_candidate_url(doi: str) -> str:
 
 def _pdf_candidate_url(doi: str) -> str:
     return _candidate_url(doi, templates=provider_pdf_path_templates("plos"))
+
+
+def _plos_journal_path_from_url(value: str | None) -> str | None:
+    parsed = urllib.parse.urlsplit(normalize_text(value))
+    host = normalize_text(parsed.hostname or "").lower()
+    if host != "journals.plos.org":
+        return None
+    parts = [
+        urllib.parse.unquote(part).strip().lower()
+        for part in parsed.path.split("/")
+        if part.strip()
+    ]
+    if len(parts) < 2 or parts[1] != "article":
+        return None
+    journal_path = parts[0]
+    if not PLOS_JOURNAL_PATH_PATTERN.fullmatch(journal_path):
+        return None
+    return journal_path
+
+
+def _metadata_plos_urls(metadata: Mapping[str, Any]) -> list[str]:
+    values: list[str] = []
+    for key in ("landing_page_url", "source_url", "url"):
+        value = normalize_text(str(metadata.get(key) or ""))
+        if value:
+            values.append(value)
+    for item in metadata.get("fulltext_links") or ():
+        if isinstance(item, Mapping):
+            value = normalize_text(str(item.get("url") or ""))
+            if value:
+                values.append(value)
+    return list(dict.fromkeys(values))
 
 
 def _response_body(response: Mapping[str, Any]) -> bytes:
@@ -314,6 +347,10 @@ def _fetch_plos_redirected_response(
             timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
             retry_on_rate_limit=retry_on_rate_limit,
             retry_on_transient=True,
+            request_policy=HttpRequestPolicy(
+                follow_redirects=False,
+                allowed_hosts=PLOS_REMOTE_HOSTS,
+            ),
         )
         status_code = int(response.get("status_code") or 200)
         if status_code not in PLOS_REDIRECT_STATUSES:
@@ -363,6 +400,8 @@ class PlosClient(ProviderClient):
         self.transport = transport
         self.env = dict(env)
         self.user_agent = build_publisher_user_agent(env)
+        self._discovered_journal_paths: dict[str, str] = {}
+        self._journal_path_lock = threading.RLock()
 
     def probe_status(self) -> ProviderStatusResult:
         return summarize_capability_status(
@@ -393,10 +432,80 @@ class PlosClient(ProviderClient):
     def _asset_headers(self) -> dict[str, str]:
         return {"User-Agent": self.user_agent}
 
+    def _resolve_journal_path(
+        self,
+        doi: str,
+        metadata: Mapping[str, Any],
+    ) -> tuple[str, str]:
+        normalized_doi = normalize_doi(doi)
+        match = PLOS_DOI_JOURNAL_PATTERN.match(normalized_doi)
+        if not match:
+            raise ProviderFailure(
+                NO_RESULT,
+                f"PLOS DOI is not in a supported journal.* form: {doi}",
+            )
+        code = match.group("code").lower()
+        configured = PLOS_JOURNAL_PATHS.get(code)
+        if configured:
+            return configured, "versioned_mapping"
+        with self._journal_path_lock:
+            discovered = self._discovered_journal_paths.get(normalized_doi)
+        if discovered:
+            return discovered, "request_cache"
+
+        for value in _metadata_plos_urls(metadata):
+            discovered = _plos_journal_path_from_url(value)
+            if discovered:
+                break
+        discovery_reason = "metadata_landing"
+        if not discovered:
+            resolver_url = (
+                f"https://doi.org/{urllib.parse.quote(normalized_doi, safe='/')}"
+            )
+            try:
+                response = self.transport.request(
+                    "GET",
+                    resolver_url,
+                    headers={
+                        "Accept": "text/html,application/xhtml+xml;q=0.9,*/*;q=0.8",
+                        "User-Agent": self.user_agent,
+                    },
+                    timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
+                    retry_on_transient=True,
+                    request_policy=HttpRequestPolicy(
+                        max_redirects=PLOS_MAX_REDIRECTS,
+                        allowed_hosts=PLOS_RESOLVER_HOSTS,
+                    ),
+                )
+            except RequestFailure as exc:
+                raise map_request_failure(exc) from exc
+            status_code = int(response.get("status_code") or 200)
+            final_url = normalize_text(str(response.get("url") or ""))
+            discovered = (
+                _plos_journal_path_from_url(final_url) if status_code < 400 else None
+            )
+            discovery_reason = "doi_resolver"
+        if not discovered:
+            raise ProviderFailure(
+                NO_RESULT,
+                (
+                    f"PLOS journal code is not configured and canonical landing "
+                    f"discovery did not identify a safe journal route: {code}"
+                ),
+            )
+        with self._journal_path_lock:
+            self._discovered_journal_paths[normalized_doi] = discovered
+        return discovered, discovery_reason
+
     def _fetch_xml_payload(
         self, doi: str, metadata: Mapping[str, Any]
     ) -> RawFulltextPayload:
-        candidate = _xml_candidate_url(doi)
+        journal_path, discovery_reason = self._resolve_journal_path(doi, metadata)
+        candidate = _candidate_url(
+            doi,
+            templates=provider_xml_path_templates("plos"),
+            journal_path=journal_path,
+        )
         try:
             response = _fetch_plos_redirected_response(
                 self.transport,
@@ -435,16 +544,21 @@ class PlosClient(ProviderClient):
             raise ProviderFailure(
                 NO_RESULT, "PLOS XML response did not parse as a JATS article."
             )
-        if (
-            not normalize_text(extraction.markdown_text)
-            and not extraction.references
-            and not extraction.abstract_sections
-        ):
+        availability = assess_jats_body_availability(
+            extraction,
+            min_body_chars=provider_body_text_thresholds(self.name).min_chars,
+        )
+        if not availability.accepted:
             raise ProviderFailure(
                 NO_RESULT,
-                "PLOS XML response did not contain article body, references, or abstract text.",
+                "PLOS XML response did not contain sufficient JATS body prose.",
+                diagnostics=FailureDiagnostics(
+                    details={"availability_diagnostics": availability.to_dict()}
+                ),
             )
 
+        journal_match = PLOS_DOI_JOURNAL_PATTERN.match(normalize_doi(doi))
+        journal_code = journal_match.group("code") if journal_match else ""
         return build_provider_payload(
             provider=self.name,
             route_kind="xml",
@@ -454,6 +568,20 @@ class PlosClient(ProviderClient):
             markdown_text=extraction.markdown_text,
             merged_metadata=extraction.metadata,
             diagnostics={
+                "route_discovery": {
+                    "reason": discovery_reason,
+                    "journal_path": journal_path,
+                    "mapping_suggestion": (
+                        {
+                            "provider": "plos",
+                            "journal_code": journal_code,
+                            "journal_path": journal_path,
+                        }
+                        if discovery_reason
+                        not in {"versioned_mapping", "request_cache"}
+                        else None
+                    ),
+                },
                 "extraction": {
                     "abstract_sections": extraction.abstract_sections,
                     "references": extraction.references,
@@ -461,7 +589,8 @@ class PlosClient(ProviderClient):
                     "assets_count": len(extraction.assets),
                     "conversion_notes": list(extraction.conversion_notes),
                     "semantic_losses": asdict(extraction.semantic_losses),
-                }
+                },
+                "availability_diagnostics": availability.to_dict(),
             },
             reason="Downloaded full text from the PLOS public JATS XML route.",
             extracted_assets=extraction.assets,
@@ -476,7 +605,12 @@ class PlosClient(ProviderClient):
         xml_failure_message: str,
         context: RuntimeContext | None = None,
     ) -> RawFulltextPayload:
-        candidate = _pdf_candidate_url(doi)
+        journal_path, discovery_reason = self._resolve_journal_path(doi, metadata)
+        candidate = _candidate_url(
+            doi,
+            templates=provider_pdf_path_templates("plos"),
+            journal_path=journal_path,
+        )
         effective_asset_profile = pdf_asset_profile_from_context(context)
         try:
             pdf_result = PdfFallbackStrategy(
@@ -487,6 +621,11 @@ class PlosClient(ProviderClient):
                 asset_output_dir=pdf_asset_output_dir(
                     context, asset_profile=effective_asset_profile, doi=doi
                 ),
+                expected_identity={
+                    "doi": doi,
+                    "title": metadata.get("title"),
+                },
+                context=context,
                 fetcher=fetch_pdf_over_http,
             ).fetch([candidate])
         except PdfFetchFailure as exc:
@@ -502,7 +641,13 @@ class PlosClient(ProviderClient):
             body=pdf_result.pdf_bytes,
             markdown_text=pdf_result.markdown_text,
             merged_metadata=article_metadata,
-            diagnostics={PDF_FALLBACK: {"candidates": [candidate]}},
+            diagnostics={
+                "route_discovery": {
+                    "reason": discovery_reason,
+                    "journal_path": journal_path,
+                },
+                PDF_FALLBACK: {"candidates": [candidate]},
+            },
             reason="Downloaded full text from the PLOS printable PDF fallback after XML was not usable.",
             suggested_filename=pdf_result.suggested_filename,
             extracted_assets=pdf_fetch_result_assets(pdf_result),
@@ -529,17 +674,25 @@ class PlosClient(ProviderClient):
         context = self._runtime_context(context)
         failures: list[tuple[str, ProviderFailure]] = []
         try:
-            return self._fetch_xml_payload(doi, metadata)
+            return self.validate_raw_payload_identity(
+                doi,
+                metadata,
+                self._fetch_xml_payload(doi, metadata),
+            )
         except ProviderFailure as exc:
             failures.append(("xml", exc))
 
         xml_failure = failures[-1][1]
         try:
-            return self._fetch_pdf_payload(
+            return self.validate_raw_payload_identity(
                 doi,
                 metadata,
-                xml_failure_message=xml_failure.message,
-                context=context,
+                self._fetch_pdf_payload(
+                    doi,
+                    metadata,
+                    xml_failure_message=xml_failure.message,
+                    context=context,
+                ),
             )
         except ProviderFailure as exc:
             failures.append(("pdf", exc))

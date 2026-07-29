@@ -383,6 +383,9 @@ def coerce_asset_quality_summary(value: Any) -> AssetQualitySummary:
             "audited": value.audited,
             "requested": value.requested,
             "profile": value.profile,
+            "expected": value.expected,
+            "discovered": value.discovered,
+            "attempted": value.attempted,
             "total": value.total,
             "local": value.local,
             "full_size": value.full_size,
@@ -423,6 +426,22 @@ def coerce_asset_quality_summary(value: Any) -> AssetQualitySummary:
         audited=bool(payload.get("audited")),
         requested=bool(payload.get("requested")),
         profile=_asset_profile(payload.get("profile")),
+        expected=(
+            _nonnegative_int(payload.get("expected"))
+            if payload.get("expected") is not None
+            else None
+        ),
+        discovered=_nonnegative_int(payload.get("discovered", payload.get("total"))),
+        attempted=_nonnegative_int(
+            payload.get(
+                "attempted",
+                (
+                    _nonnegative_int(payload.get("local"))
+                    + _nonnegative_int(payload.get("failed"))
+                    + _nonnegative_int(payload.get("not_archived"))
+                ),
+            )
+        ),
         total=_nonnegative_int(payload.get("total")),
         local=_nonnegative_int(payload.get("local")),
         full_size=_nonnegative_int(payload.get("full_size")),

@@ -221,7 +221,7 @@ def test_camoufox_manager_stops_playwright_when_runtime_fetch_fails(
     playwright.stop.assert_called_once_with()
 
 
-def test_camoufox_first_launch_uses_official_runtime_fetcher(monkeypatch) -> None:
+def test_camoufox_first_launch_requires_prepared_official_runtime(monkeypatch) -> None:
     runtime_path = object()
     pkgman = SimpleNamespace(
         camoufox_path=mock.Mock(return_value=runtime_path),
@@ -237,7 +237,7 @@ def test_camoufox_first_launch_uses_official_runtime_fetcher(monkeypatch) -> Non
     )
 
     assert _launch_executable_path(None) == "/runtime/camoufox"
-    pkgman.camoufox_path.assert_called_once_with(download_if_missing=True)
+    pkgman.camoufox_path.assert_called_once_with(download_if_missing=False)
     pkgman.launch_path.assert_called_once_with(runtime_path)
 
 
@@ -281,8 +281,59 @@ def test_camoufox_static_probe_reads_runtime_without_fetching(
     details = _dependency_details()
 
     assert details["runtime_installed"] is True
+    assert details["package_ready"] is True
+    assert details["download_required"] is False
     assert details["runtime_path"] == str(runtime_path)
     forbidden_fetch.assert_not_called()
+
+
+def test_camoufox_runtime_readiness_rejects_missing_runtime_without_download(
+    monkeypatch, tmp_path
+) -> None:
+    backend = CamoufoxBackend()
+    config = BrowserRuntimeConfig(
+        provider="science",
+        doi="10.1126/example",
+        artifact_dir=tmp_path,
+        headless=True,
+        user_agent=None,
+        backend="camoufox",
+    )
+    monkeypatch.setattr(
+        "paper_fetch.providers.browser_runtime.backends.camoufox._dependency_details",
+        lambda: {
+            "packages": {"playwright": True, "camoufox": True},
+            "package_ready": True,
+            "runtime_installed": False,
+            "download_required": True,
+        },
+    )
+
+    with pytest.raises(ProviderFailure, match="runtime is missing"):
+        backend.ensure_runtime_ready(config)
+
+
+def test_camoufox_status_distinguishes_package_and_runtime_readiness(
+    monkeypatch,
+) -> None:
+    monkeypatch.setattr(
+        "paper_fetch.providers.browser_runtime.backends.camoufox._dependency_details",
+        lambda: {
+            "packages": {"playwright": True, "camoufox": True},
+            "package_ready": True,
+            "runtime_installed": False,
+            "download_required": True,
+            "runtime_path": None,
+        },
+    )
+
+    result = CamoufoxBackend().probe_runtime_status({}, provider="science")
+    checks = {check.name: check for check in result.checks}
+
+    assert result.status == "not_configured"
+    assert checks["playwright_dependency"].status == "ok"
+    assert checks["browser_runtime"].status == "not_configured"
+    assert checks["browser_runtime"].details["download_required"] is True
 
 
 def test_runtime_context_closes_camoufox_on_owning_worker_thread() -> None:
@@ -389,6 +440,117 @@ def test_camoufox_html_navigation_uses_commit_and_keeps_images(
     context.page.route_handler(image_route)
     image_route.continue_.assert_called_once()
     image_route.abort.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("status", "title", "html", "final_url", "expected_reason"),
+    [
+        (
+            403,
+            "Forbidden",
+            "<html><body>Forbidden</body></html>",
+            "https://example.test/article",
+            "http_403",
+        ),
+        (
+            200,
+            "Just a moment...",
+            "<html><body>Checking your browser before accessing the site.</body></html>",
+            "https://example.test/article",
+            "cloudflare_challenge",
+        ),
+        (
+            200,
+            "Abstract",
+            "<html><body>Abstract only</body></html>",
+            "https://example.test/doi/abs/10.1000/example",
+            "redirected_to_abstract",
+        ),
+    ],
+)
+def test_lightweight_warm_rejects_unusable_navigation(
+    monkeypatch,
+    tmp_path,
+    status,
+    title,
+    html,
+    final_url,
+    expected_reason,
+) -> None:
+    context = _Context()
+
+    class Response:
+        headers = {"content-type": "text/html"}
+
+        def __init__(self, response_status: int) -> None:
+            self.status = response_status
+
+        def all_headers(self):
+            return dict(self.headers)
+
+    def goto(_url: str, **_kwargs):
+        context.page.url = final_url
+        return Response(status)
+
+    context.page.goto = goto
+    context.page.title = lambda: title
+    context.page.content = lambda: html
+    config = BrowserRuntimeConfig(
+        provider="example",
+        doi="10.1000/example",
+        artifact_dir=tmp_path,
+        headless=True,
+        user_agent=None,
+        persist_storage_state=False,
+        backend="camoufox",
+    )
+    monkeypatch.setattr(
+        _playwright_browser,
+        "open_browser_context",
+        lambda *_args, **_kwargs: (None, context),
+    )
+
+    result = _playwright_browser.warm_browser_context_with_playwright(
+        ["https://example.test/doi/full/10.1000/example"],
+        publisher="example",
+        config=config,
+        lightweight=True,
+    )
+
+    assert result.accepted is False
+    assert result.changed is False
+    assert result.status == status
+    assert result.reason == expected_reason
+
+
+def test_lightweight_warm_reports_no_cookie_change(monkeypatch, tmp_path) -> None:
+    context = _Context()
+    config = BrowserRuntimeConfig(
+        provider="example",
+        doi="10.1000/example",
+        artifact_dir=tmp_path,
+        headless=True,
+        user_agent=None,
+        persist_storage_state=False,
+        backend="camoufox",
+    )
+    monkeypatch.setattr(
+        _playwright_browser,
+        "open_browser_context",
+        lambda *_args, **_kwargs: (None, context),
+    )
+
+    result = _playwright_browser.warm_browser_context_with_playwright(
+        ["https://example.test/article"],
+        publisher="example",
+        config=config,
+        lightweight=True,
+    )
+
+    assert result.accepted is True
+    assert result.changed is False
+    assert result.reason == "no_cookie_change"
+    assert result.cookie_delta == {"added": 0, "updated": 0, "removed": 0}
 
 
 def test_camoufox_figure_page_waits_for_image_selector_without_fixed_sleep(

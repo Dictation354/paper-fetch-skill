@@ -11,9 +11,11 @@ from collections.abc import Mapping
 
 from ..artifacts import ArtifactStore
 from ..extraction.html import decode_html, render_html_markdown
+from ..failure import FailureDiagnostics
 from ..http import RequestFailure
 from ..models import ArticleModel, AssetProfile
 from ..metadata.types import ProviderMetadata
+from ..publisher_identity import normalize_doi, validate_extracted_identity
 from ..runtime import RuntimeContext
 from ..tracing import (
     TraceEvent,
@@ -30,6 +32,7 @@ from ..utils import (
 )
 from ..reason_codes import (
     ERROR,
+    IDENTITY_MISMATCH,
     NO_ACCESS,
     NO_RESULT,
     NOT_CONFIGURED,
@@ -57,6 +60,7 @@ class ProviderFailure(Exception):
         warnings: list[str] | None = None,
         source_trail: list[str] | None = None,
         trace: list[TraceEvent] | None = None,
+        diagnostics: FailureDiagnostics | None = None,
     ) -> None:
         super().__init__(message)
         self.code = code
@@ -68,6 +72,43 @@ class ProviderFailure(Exception):
             str(item) for item in (source_trail or []) if str(item).strip()
         ]
         self.trace = list(trace or [])
+        self.diagnostics = diagnostics or FailureDiagnostics()
+        self.provider = self.diagnostics.provider
+        self.route = self.diagnostics.route
+        self.stage = self.diagnostics.stage
+        self.http_status = self.diagnostics.http_status
+        self.error_category = self.diagnostics.error_category
+        self.retryable = self.diagnostics.retryable
+        self.details = dict(self.diagnostics.details)
+
+    def with_updates(self, **updates: Any) -> ProviderFailure:
+        values: dict[str, Any] = {
+            "code": self.code,
+            "message": self.message,
+            "retry_after_seconds": self.retry_after_seconds,
+            "missing_env": self.missing_env,
+            "warnings": self.warnings,
+            "source_trail": self.source_trail,
+            "trace": self.trace,
+            "diagnostics": self.diagnostics,
+        }
+        diagnostic_updates = {
+            key: updates.pop(key)
+            for key in (
+                "provider",
+                "route",
+                "stage",
+                "http_status",
+                "error_category",
+                "retryable",
+                "details",
+            )
+            if key in updates
+        }
+        if diagnostic_updates:
+            values["diagnostics"] = self.diagnostics.with_updates(**diagnostic_updates)
+        values.update(updates)
+        return ProviderFailure(**values)
 
 
 @dataclass(frozen=True)
@@ -373,22 +414,92 @@ def map_request_failure(
         message = normalize_text(
             str((no_result_messages or {}).get(status_code) or "")
         ) or str(exc)
-        return ProviderFailure(NO_RESULT, message)
+        return ProviderFailure(
+            NO_RESULT,
+            message,
+            diagnostics=FailureDiagnostics(
+                http_status=status_code,
+                error_category=str(exc.error_category or "") or None,
+                retryable=False,
+            ),
+        )
     if status_code in {401, 403}:
-        return ProviderFailure(NO_ACCESS, str(exc))
+        return ProviderFailure(
+            NO_ACCESS,
+            str(exc),
+            diagnostics=FailureDiagnostics(
+                http_status=status_code,
+                error_category=str(exc.error_category or "") or None,
+                retryable=False,
+            ),
+        )
     if status_code == 404:
-        return ProviderFailure(NO_RESULT, str(exc))
+        return ProviderFailure(
+            NO_RESULT,
+            str(exc),
+            diagnostics=FailureDiagnostics(
+                http_status=status_code,
+                error_category=str(exc.error_category or "") or None,
+                retryable=False,
+            ),
+        )
     if status_code == 429:
         return ProviderFailure(
-            RATE_LIMITED, str(exc), retry_after_seconds=exc.retry_after_seconds
+            RATE_LIMITED,
+            str(exc),
+            retry_after_seconds=exc.retry_after_seconds,
+            diagnostics=FailureDiagnostics(
+                http_status=status_code,
+                error_category=RATE_LIMITED,
+                retryable=True,
+            ),
         )
     if status_code in {400, 406, 422}:
-        return ProviderFailure(ERROR, str(exc))
+        return ProviderFailure(
+            ERROR,
+            str(exc),
+            diagnostics=FailureDiagnostics(
+                http_status=status_code,
+                error_category=str(exc.error_category or "") or None,
+                retryable=False,
+            ),
+        )
     if status_code is None:
-        return ProviderFailure(ERROR, str(exc))
+        category = str(exc.error_category or "") or None
+        return ProviderFailure(
+            ERROR,
+            str(exc),
+            diagnostics=FailureDiagnostics(
+                error_category=category,
+                retryable=category
+                in {
+                    "timeout",
+                    "dns_error",
+                    "connection_reset",
+                    "connection_closed",
+                    "network_error",
+                },
+            ),
+        )
     if status_code >= 500:
-        return ProviderFailure(ERROR, str(exc))
-    return ProviderFailure(ERROR, str(exc))
+        return ProviderFailure(
+            ERROR,
+            str(exc),
+            diagnostics=FailureDiagnostics(
+                http_status=status_code,
+                error_category=str(exc.error_category or "") or None,
+                retryable=True,
+            ),
+        )
+    return ProviderFailure(
+        ERROR,
+        str(exc),
+        diagnostics=FailureDiagnostics(
+            http_status=status_code,
+            error_category=str(exc.error_category or "") or None,
+            retryable=False,
+        ),
+    )
 
 
 def combine_provider_failures(
@@ -403,6 +514,7 @@ def combine_provider_failures(
     priority = {
         NO_ACCESS: 0,
         NO_RESULT: 1,
+        IDENTITY_MISMATCH: 1,
         RATE_LIMITED: 2,
         ERROR: 3,
         NOT_CONFIGURED: 4,
@@ -427,9 +539,8 @@ def combine_provider_failures(
         trace = merge_trace(trace, failure.trace)
         if failure.retry_after_seconds is not None:
             retry_after_values.append(failure.retry_after_seconds)
-    return ProviderFailure(
-        selected_failure.code,
-        message,
+    return selected_failure.with_updates(
+        message=message,
         retry_after_seconds=max(retry_after_values) if retry_after_values else None,
         missing_env=missing_env,
         warnings=warnings,
@@ -460,6 +571,7 @@ class ProviderClient:
         artifact_store: ArtifactStore | None = None,
         context: RuntimeContext | None = None,
     ) -> ProviderFetchResult:
+        owns_context = context is None
         context = self._runtime_context(context, output_dir=output_dir)
         active_artifact_store = artifact_store or ArtifactStore.from_download_dir(
             output_dir
@@ -486,6 +598,9 @@ class ProviderClient:
             )
             prepared.raw_payload = self.ensure_html_markdown(
                 prepared.raw_payload, metadata, context=context
+            )
+            prepared.raw_payload = self.validate_raw_payload_identity(
+                doi, metadata, prepared.raw_payload
             )
             raw_payload = prepared.raw_payload
             content = raw_payload.content
@@ -577,6 +692,8 @@ class ProviderClient:
             )
         finally:
             context.asset_profile = previous_asset_profile
+            if owns_context:
+                context.close()
 
     def _runtime_context(
         self, context: RuntimeContext | None, *, output_dir: Path | None = None
@@ -702,6 +819,53 @@ class ProviderClient:
             raw_payload=self.fetch_raw_fulltext(doi, metadata, context=context)
         )
 
+    def validate_raw_payload_identity(
+        self,
+        doi: str,
+        metadata: Mapping[str, Any],
+        raw_payload: RawFulltextPayload,
+    ) -> RawFulltextPayload:
+        content = raw_payload.content
+        merged = dict(raw_payload.merged_metadata or {})
+        if content is not None and isinstance(content.merged_metadata, Mapping):
+            merged.update(content.merged_metadata)
+        evidence: dict[str, Any] = (
+            dict(merged.get("identity_evidence") or {})
+            if isinstance(merged.get("identity_evidence"), Mapping)
+            else {}
+        )
+        content_diagnostics = content.diagnostics if content is not None else {}
+        diagnostic_evidence = content_diagnostics.get("identity_evidence")
+        if isinstance(diagnostic_evidence, Mapping):
+            evidence.update(diagnostic_evidence)
+        for key in ("response_doi", "response_arxiv_id", "response_title"):
+            if key in content_diagnostics and key not in merged:
+                merged[key] = content_diagnostics[key]
+        expected = dict(metadata)
+        expected["doi"] = normalize_doi(doi) or normalize_doi(
+            str(metadata.get("doi") or "")
+        )
+        result = validate_extracted_identity(expected, merged, evidence)
+        diagnostics = dict(content.diagnostics) if content is not None else {}
+        diagnostics["identity"] = result.to_dict()
+        if content is not None:
+            raw_payload.content = replace(content, diagnostics=diagnostics)
+        if result.mismatch:
+            raise ProviderFailure(
+                IDENTITY_MISMATCH,
+                result.reason or "Provider response identity mismatch.",
+                trace=[
+                    TraceEvent(
+                        stage="identity",
+                        component=self.name,
+                        outcome="fail",
+                        code=IDENTITY_MISMATCH,
+                        message=result.reason,
+                    )
+                ],
+            )
+        return raw_payload
+
     def maybe_recover_fetch_result_payload(
         self,
         doi: str,
@@ -766,6 +930,7 @@ class ProviderClient:
                 metadata,
                 context=context,
                 client=self,
+                invoke_with_request=True,
             )
         raise NotImplementedError(
             f"{self.__class__.__name__} must override fetch_raw_fulltext() "
@@ -843,12 +1008,20 @@ class ProviderClient:
                 )
             )
 
-        if catalog.requires_playwright:
+        has_browser_route = any(
+            route.browser_required or route.browser_optional for route in catalog.routes
+        )
+        browser_is_required = any(route.browser_required for route in catalog.routes)
+        if has_browser_route:
             playwright_available = _module_available("playwright.sync_api")
             checks.append(
                 build_provider_status_check(
                     "playwright",
-                    OK if playwright_available else NOT_CONFIGURED,
+                    (
+                        OK
+                        if playwright_available
+                        else (NOT_CONFIGURED if browser_is_required else PARTIAL)
+                    ),
                     (
                         "Playwright Python package is importable; browser installation is not probed."
                         if playwright_available
@@ -858,7 +1031,7 @@ class ProviderClient:
                 )
             )
 
-        if catalog.requires_browser_runtime:
+        if has_browser_route:
             from .browser_runtime import probe_runtime_status
 
             runtime_status = probe_runtime_status(env, provider=self.name)
@@ -868,7 +1041,9 @@ class ProviderClient:
             elif runtime_status.status == READY:
                 browser_runtime_status = OK
             else:
-                browser_runtime_status = NOT_CONFIGURED
+                browser_runtime_status = (
+                    NOT_CONFIGURED if browser_is_required else PARTIAL
+                )
             checks.append(
                 build_provider_status_check(
                     "browser_runtime",
@@ -884,6 +1059,32 @@ class ProviderClient:
                         "checks": [check.to_dict() for check in runtime_status.checks],
                     },
                 ),
+            )
+
+        if any(route.requires_pdf_conversion for route in catalog.routes):
+            pdf_packages = {
+                "fitz": _module_available("fitz"),
+                "pymupdf4llm": _module_available("pymupdf4llm"),
+            }
+            pdf_ready = all(pdf_packages.values())
+            checks.append(
+                build_provider_status_check(
+                    "pdf_conversion",
+                    OK if pdf_ready else PARTIAL,
+                    (
+                        "PDF validation and Markdown conversion packages are importable."
+                        if pdf_ready
+                        else "PDF fallback is only partially ready because PDF conversion packages are missing."
+                    ),
+                    details={
+                        "packages": pdf_packages,
+                        "missing_packages": [
+                            name
+                            for name, available in pdf_packages.items()
+                            if not available
+                        ],
+                    },
+                )
             )
 
         if not checks:
@@ -904,12 +1105,14 @@ class ProviderClient:
             status = ERROR
         elif any(check.status == NOT_CONFIGURED for check in checks):
             status = NOT_CONFIGURED
+        elif any(check.status == PARTIAL for check in checks):
+            status = PARTIAL
         else:
             status = READY
         return ProviderStatusResult(
             provider=self.name,
             status=status,
-            available=status == READY,
+            available=status in {READY, PARTIAL},
             official_provider=catalog.official,
             missing_env=result_missing_env,
             checks=checks,

@@ -54,7 +54,7 @@ class ServiceProbeAndAssetTests(unittest.TestCase):
                                             f"fulltext:{provider_name}_html_ok"
                                         ],
                                     ),
-                                    article=sample_article(),
+                                    article=sample_article(doi),
                                     related_asset_factory=lambda *args, related_asset_calls=related_asset_calls, **kwargs: (
                                         related_asset_calls.append(
                                             kwargs["asset_profile"]
@@ -114,7 +114,7 @@ class ServiceProbeAndAssetTests(unittest.TestCase):
                                 + ("Body text " * 80),
                                 source_trail=["fulltext:science_html_ok"],
                             ),
-                            article=sample_article(),
+                            article=sample_article(resolved.doi),
                             related_asset_factory=lambda *args, **kwargs: (
                                 _ for _ in ()
                             ).throw(
@@ -178,7 +178,7 @@ class ServiceProbeAndAssetTests(unittest.TestCase):
                                 + ("Body text " * 80),
                                 source_trail=["fulltext:science_html_ok"],
                             ),
-                            article=sample_article(),
+                            article=sample_article(resolved.doi),
                             related_assets={
                                 "assets": [
                                     {
@@ -252,7 +252,7 @@ class ServiceProbeAndAssetTests(unittest.TestCase):
                                 + ("Body text " * 80),
                                 source_trail=["fulltext:science_html_ok"],
                             ),
-                            article=sample_article(),
+                            article=sample_article(resolved.doi),
                             related_assets={
                                 "assets": [
                                     {

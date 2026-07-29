@@ -9,7 +9,7 @@ import threading
 from typing import Any
 from collections.abc import Callable, Mapping
 
-from mcp.server.fastmcp import Context
+from mcp.server.mcpserver import Context
 from mcp.types import CallToolResult
 
 from ..reason_codes import ERROR
@@ -82,7 +82,10 @@ def _batch_check_success_payload(
                 "query": query,
                 "doi": payload.get("doi"),
                 "title": title,
-                "has_fulltext": True if payload.get("state") == "likely_yes" else None,
+                "has_fulltext": None,
+                "likely_has_fulltext": (
+                    True if payload.get("state") == "likely_yes" else None
+                ),
                 "content_kind": None,
                 "has_abstract": None,
                 "probe_state": payload.get("state"),
@@ -270,13 +273,16 @@ def batch_resolve_payload(
     request = BatchResolveRequest(queries=queries, concurrency=concurrency)
     runtime_env = deps.build_runtime_env(env)
     runtime_context = RuntimeContext(env=runtime_env)
-    results, abort_reason = _run_batch_sync(
-        queries=request.queries,
-        concurrency=request.concurrency,
-        process_item=lambda query: fetch_tool.resolve_paper_payload(
-            query=query, context=runtime_context, deps=deps
-        ),
-    )
+    try:
+        results, abort_reason = _run_batch_sync(
+            queries=request.queries,
+            concurrency=request.concurrency,
+            process_item=lambda query: fetch_tool.resolve_paper_payload(
+                query=query, context=runtime_context, deps=deps
+            ),
+        )
+    finally:
+        runtime_context.close()
 
     return with_schema_version(
         {
@@ -298,19 +304,22 @@ def batch_check_payload(
     request = BatchCheckRequest(queries=queries, mode=mode, concurrency=concurrency)
     runtime_env = deps.build_runtime_env(env)
     runtime_context = RuntimeContext(env=runtime_env, download_dir=None)
-    runtime_context.get_clients()
-    requested_modes = _BATCH_CHECK_MODES[request.mode]
-    results, abort_reason = _run_batch_sync(
-        queries=request.queries,
-        concurrency=request.concurrency,
-        process_item=lambda query: _run_batch_check_item(
-            query,
-            mode=request.mode,
-            context=runtime_context,
-            requested_modes=requested_modes,
-            deps=deps,
-        ),
-    )
+    try:
+        runtime_context.get_clients()
+        requested_modes = _BATCH_CHECK_MODES[request.mode]
+        results, abort_reason = _run_batch_sync(
+            queries=request.queries,
+            concurrency=request.concurrency,
+            process_item=lambda query: _run_batch_check_item(
+                query,
+                mode=request.mode,
+                context=runtime_context,
+                requested_modes=requested_modes,
+                deps=deps,
+            ),
+        )
+    finally:
+        runtime_context.close()
 
     return with_schema_version(
         {
@@ -346,23 +355,26 @@ async def batch_resolve_tool_async(
     loop = asyncio.get_running_loop()
     bridge = PaperFetchLogBridge(ctx=ctx, loop=loop) if ctx is not None else None
 
-    with ExitStack() as stack:
-        if bridge is not None:
-            stack.enter_context(bridge)
-        try:
-            results, abort_reason = await _run_batch_async(
-                queries=request.queries,
-                concurrency=request.concurrency,
-                process_item=lambda query: fetch_tool.resolve_paper_payload(
-                    query=query, context=runtime_context, deps=deps
-                ),
-                ctx=ctx,
-                progress_prefix="Resolved",
-                cancel_event=cancelled,
-            )
-        except asyncio.CancelledError:
-            cancelled.set()
-            raise
+    try:
+        with ExitStack() as stack:
+            if bridge is not None:
+                stack.enter_context(bridge)
+            try:
+                results, abort_reason = await _run_batch_async(
+                    queries=request.queries,
+                    concurrency=request.concurrency,
+                    process_item=lambda query: fetch_tool.resolve_paper_payload(
+                        query=query, context=runtime_context, deps=deps
+                    ),
+                    ctx=ctx,
+                    progress_prefix="Resolved",
+                    cancel_event=cancelled,
+                )
+            except asyncio.CancelledError:
+                cancelled.set()
+                raise
+    finally:
+        runtime_context.close()
 
     payload = with_schema_version(
         {
@@ -404,32 +416,35 @@ async def batch_check_tool_async(
     runtime_context = RuntimeContext(
         env=runtime_env, download_dir=None, cancel_check=cancelled.is_set
     )
-    runtime_context.get_clients()
-    requested_modes = _BATCH_CHECK_MODES[request.mode]
     loop = asyncio.get_running_loop()
     bridge = PaperFetchLogBridge(ctx=ctx, loop=loop) if ctx is not None else None
 
-    with ExitStack() as stack:
-        if bridge is not None:
-            stack.enter_context(bridge)
-        try:
-            results, abort_reason = await _run_batch_async(
-                queries=request.queries,
-                concurrency=request.concurrency,
-                process_item=lambda query: _run_batch_check_item(
-                    query,
-                    mode=request.mode,
-                    context=runtime_context,
-                    requested_modes=requested_modes,
-                    deps=deps,
-                ),
-                ctx=ctx,
-                progress_prefix="Checked",
-                cancel_event=cancelled,
-            )
-        except asyncio.CancelledError:
-            cancelled.set()
-            raise
+    try:
+        runtime_context.get_clients()
+        requested_modes = _BATCH_CHECK_MODES[request.mode]
+        with ExitStack() as stack:
+            if bridge is not None:
+                stack.enter_context(bridge)
+            try:
+                results, abort_reason = await _run_batch_async(
+                    queries=request.queries,
+                    concurrency=request.concurrency,
+                    process_item=lambda query: _run_batch_check_item(
+                        query,
+                        mode=request.mode,
+                        context=runtime_context,
+                        requested_modes=requested_modes,
+                        deps=deps,
+                    ),
+                    ctx=ctx,
+                    progress_prefix="Checked",
+                    cancel_event=cancelled,
+                )
+            except asyncio.CancelledError:
+                cancelled.set()
+                raise
+    finally:
+        runtime_context.close()
 
     payload = with_schema_version(
         {

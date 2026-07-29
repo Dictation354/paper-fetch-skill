@@ -23,7 +23,7 @@ from paper_fetch.models import (
     SemanticLosses,
     apply_quality_assessment,
 )
-from paper_fetch.reason_codes import METADATA_ONLY, NO_ACCESS
+from paper_fetch.reason_codes import METADATA_ONLY, NO_ACCESS, RATE_LIMITED
 from paper_fetch.tracing import source_trail_from_trace, trace_event
 from paper_fetch.workflow.acceptance import (
     AssetAcceptanceStatus,
@@ -81,7 +81,18 @@ def _envelope(
         quality=Quality(),
     )
     events = list(
-        [trace_event("fulltext", "elsevier", "ok")] if trace is None else trace
+        [
+            trace_event("resolve", "doi_selected", "ok"),
+            trace_event(
+                "fulltext",
+                "elsevier",
+                "ok",
+                provider="elsevier",
+                route="xml",
+            ),
+        ]
+        if trace is None
+        else trace
     )
     article.quality.asset_failures = list(asset_failures or [])
     article.quality.trace = events
@@ -262,6 +273,30 @@ def test_requested_asset_failure_degrades_assets_without_failing_text() -> None:
     assert report.overall == OverallAcceptanceStatus.DEGRADED
 
 
+def test_requested_assets_with_no_discovery_are_unknown_not_complete() -> None:
+    report = evaluate_fetch_acceptance(_envelope(), asset_profile="body")
+
+    assert report.asset.requested is True
+    assert report.asset.discovered == 0
+    assert report.asset.status == AssetAcceptanceStatus.UNKNOWN
+    assert report.overall == OverallAcceptanceStatus.DEGRADED
+
+
+def test_audited_zero_expected_assets_are_not_applicable() -> None:
+    envelope = _envelope()
+    envelope.quality.asset_summary = AssetQualitySummary(
+        audited=True,
+        requested=True,
+        profile="body",
+        expected=0,
+    )
+
+    report = evaluate_fetch_acceptance(envelope, asset_profile="body")
+
+    assert report.asset.status == AssetAcceptanceStatus.NOT_APPLICABLE
+    assert report.asset.expected == 0
+
+
 def test_asset_summary_extension_preserves_preview_placeholder_and_archive_facts() -> (
     None
 ):
@@ -313,6 +348,7 @@ def test_audited_quality_asset_summary_matches_explicit_acceptance_adapter() -> 
     explicit = AssetAcceptanceSummary(
         requested=True,
         profile="body",
+        audited=True,
         total=4,
         local=2,
         full_size=1,
@@ -474,6 +510,38 @@ def test_incomplete_provenance_is_reported_separately() -> None:
     )
 
     assert report.provenance.status == ProvenanceAcceptanceStatus.PARTIAL
+    assert report.overall == OverallAcceptanceStatus.DEGRADED
+
+
+def test_recovered_rate_limit_remains_structured_degradation() -> None:
+    report = evaluate_fetch_acceptance(
+        _envelope(
+            trace=[
+                trace_event("resolve", "doi_selected", "ok"),
+                trace_event(
+                    "fulltext",
+                    "elsevier_api",
+                    RATE_LIMITED,
+                    code=RATE_LIMITED,
+                    provider="elsevier",
+                    route="api",
+                    http_status=429,
+                    retry_after_seconds=7,
+                ),
+                trace_event(
+                    "fulltext",
+                    "elsevier_pdf",
+                    "ok",
+                    provider="elsevier",
+                    route="pdf",
+                ),
+            ]
+        ),
+        asset_profile="none",
+    )
+
+    assert report.fetch.status == FetchAcceptanceStatus.OK
+    assert report.provenance.failure_codes == (RATE_LIMITED,)
     assert report.overall == OverallAcceptanceStatus.DEGRADED
 
 

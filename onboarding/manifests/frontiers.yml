@@ -3,26 +3,26 @@ name: frontiers
 display_source: frontiers_xml
 generation:
   generated_by: ai_discovery
-  generated_at: "2026-06-26T00:00:00Z"
+  generated_at: '2026-06-26T00:00:00Z'
   source_queries:
-    - "Frontiers canonical article page /journals/{journal}/articles/{doi}/full"
-    - "Frontiers public JATS XML route /journals/{journal}/articles/{doi}/xml"
-    - "Frontiers public PDF route /journals/{journal}/articles/{doi}/pdf"
-    - "Frontiers DOI prefix 10.3389 routing review"
-    - "Frontiers 10.3389 table DOI candidates"
-    - "site:frontiersin.org Frontiers table article DOI"
-    - "Frontiers JATS XML table-wrap probe"
-    - "Frontiers 10.3389 formula DOI candidates"
-    - "site:frontiersin.org Frontiers equation article DOI"
-    - "Frontiers JATS XML MathML probe"
-    - "Frontiers 10.3389 supplementary DOI candidates"
-    - "site:frontiersin.org Frontiers supplementary material article DOI"
-    - "Frontiers JATS XML supplementary-material probe"
+    - Frontiers canonical article page /journals/{journal}/articles/{doi}/full
+    - Frontiers public JATS XML route /journals/{journal}/articles/{doi}/xml
+    - Frontiers public PDF route /journals/{journal}/articles/{doi}/pdf
+    - Frontiers DOI prefix 10.3389 routing review
+    - Frontiers 10.3389 table DOI candidates
+    - site:frontiersin.org Frontiers table article DOI
+    - Frontiers JATS XML table-wrap probe
+    - Frontiers 10.3389 formula DOI candidates
+    - site:frontiersin.org Frontiers equation article DOI
+    - Frontiers JATS XML MathML probe
+    - Frontiers 10.3389 supplementary DOI candidates
+    - site:frontiersin.org Frontiers supplementary material article DOI
+    - Frontiers JATS XML supplementary-material probe
   confidence: high
 routing:
   primary: doi_prefix
   doi_prefixes:
-    - "10.3389/"
+    - 10.3389/
   domains:
     - www.frontiersin.org
     - frontiersin.org
@@ -41,16 +41,22 @@ main_path:
 route_sources:
   xml: frontiers_xml
   pdf_fallback: frontiers_pdf
-success_criteria: {}
+success_criteria:
+  landing_html: {}
+  xml: {}
+  pdf_fallback: {}
+  metadata_only: {}
 route_contract:
   landing_html:
     success_requires:
-      - legacy or canonical Frontiers article URL resolves to a canonical journal article page
+      - legacy or canonical Frontiers article URL resolves to a canonical journal
+        article page
       - landing metadata or canonical URL exposes XML and PDF route candidates
     reject_if_any:
       - challenge page
       - empty shell
-    notes: Landing HTML is discovery-only; article content comes from public JATS XML or PDF fallback.
+    notes: Landing HTML is discovery-only; article content comes from public JATS
+      XML or PDF fallback.
   xml:
     success_requires:
       - canonical Frontiers /xml route returns JATS XML
@@ -87,7 +93,7 @@ markdown_contract:
   structure:
     doi: 10.3389/fmars.2023.1101972
     must_include:
-      - "## Abstract"
+      - '## Abstract'
       - Ocean acidification and warming modify stimulatory benthos effects
     must_not_include:
       - Download PDF
@@ -122,14 +128,14 @@ markdown_contract:
   references:
     doi: 10.3389/fmars.2023.1101972
     must_include:
-      - "## References"
+      - '## References'
     must_not_include:
       - Google Scholar
       - Download PDF
   pdf_fallback:
     doi: 10.3389/fmars.2023.1101972
     must_include:
-      - "#"
+      - '#'
     must_not_include:
       - Access Denied
 asset_profile:
@@ -149,10 +155,10 @@ asset_contract:
     download: required
     purposes:
       - figure
-    exception_reason:
+    exception_reason: null
 supplementary_scope:
   selector: supplementary-material, inline-supplementary-material
-  url_pattern: canonical article full page #supplementary-material anchor
+  url_pattern: canonical article full page
 abstract_only_strategy: metadata_only
 probe:
   env_requirements: []
@@ -164,7 +170,8 @@ fixtures:
     structure:
       doi: 10.3389/fmars.2023.1101972
       evidence_url: https://www.frontiersin.org/journals/marine-science/articles/10.3389/fmars.2023.1101972/xml
-      evidence_reason: Frontiers XML probe returned a research article with body sections, abstract, figures, tables, supplementary material, and references.
+      evidence_reason: Frontiers XML probe returned a research article with body sections,
+        abstract, figures, tables, supplementary material, and references.
       observed_signals:
         - jats_xml
         - xml_body_sections
@@ -173,21 +180,24 @@ fixtures:
     table:
       doi: 10.3389/fmars.2023.1101972
       evidence_url: https://www.frontiersin.org/journals/marine-science/articles/10.3389/fmars.2023.1101972/xml
-      evidence_reason: Frontiers XML probe returned table-wrap nodes in the article body.
+      evidence_reason: Frontiers XML probe returned table-wrap nodes in the article
+        body.
       observed_signals:
         - jats_xml
         - body_tables
       confidence: high
     formula:
-      doi:
+      doi: null
       evidence_url: https://www.frontiersin.org/
-      evidence_reason: Current discovery did not select a Frontiers formula-specific sample.
+      evidence_reason: Current discovery did not select a Frontiers formula-specific
+        sample.
       observed_signals: []
       confidence: low
     figure:
       doi: 10.3389/fmars.2023.1101972
       evidence_url: https://www.frontiersin.org/journals/marine-science/articles/10.3389/fmars.2023.1101972/xml
-      evidence_reason: Frontiers XML probe returned figure graphic references that resolve through /files/Articles/{id}/xml-images/*.webp.
+      evidence_reason: Frontiers XML probe returned figure graphic references that
+        resolve through /files/Articles/{id}/xml-images/*.webp.
       observed_signals:
         - jats_xml
         - figures
@@ -196,7 +206,8 @@ fixtures:
     supplementary:
       doi: 10.3389/fmars.2023.1101972
       evidence_url: https://www.frontiersin.org/journals/marine-science/articles/10.3389/fmars.2023.1101972/xml
-      evidence_reason: Frontiers XML probe returned a supplementary-material section and supplementary-material node.
+      evidence_reason: Frontiers XML probe returned a supplementary-material section
+        and supplementary-material node.
       observed_signals:
         - jats_xml
         - supplementary
@@ -212,26 +223,30 @@ fixtures:
     pdf_fallback:
       doi: 10.3389/fmars.2023.1101972
       evidence_url: https://www.frontiersin.org/journals/marine-science/articles/10.3389/fmars.2023.1101972/pdf
-      evidence_reason: Frontiers canonical article PDF route returned application/pdf bytes.
+      evidence_reason: Frontiers canonical article PDF route returned application/pdf
+        bytes.
       observed_signals:
         - pdf_fallback
       confidence: high
     abstract_only:
-      doi:
+      doi: null
       evidence_url: https://www.frontiersin.org/
-      evidence_reason: Frontiers provider uses XML or PDF routes in current runtime behavior.
+      evidence_reason: Frontiers provider uses XML or PDF routes in current runtime
+        behavior.
       observed_signals: []
       confidence: low
     access_gate:
-      doi:
+      doi: null
       evidence_url: https://www.frontiersin.org/
-      evidence_reason: Current discovery did not identify a Frontiers access-gate sample.
+      evidence_reason: Current discovery did not identify a Frontiers access-gate
+        sample.
       observed_signals: []
       confidence: low
     empty_shell:
-      doi:
+      doi: null
       evidence_url: https://www.frontiersin.org/
-      evidence_reason: Current discovery did not identify a Frontiers empty-shell sample.
+      evidence_reason: Current discovery did not identify a Frontiers empty-shell
+        sample.
       observed_signals: []
       confidence: low
   discovery_proof:
@@ -245,7 +260,8 @@ fixtures:
       selected_doi: 10.3389/fmars.2023.1101972
       rejections: {}
       exhausted: false
-      evidence_summary: Selected 10.3389/fmars.2023.1101972 after direct XML probing confirmed table-wrap coverage.
+      evidence_summary: Selected 10.3389/fmars.2023.1101972 after direct XML probing
+        confirmed table-wrap coverage.
     formula:
       queries:
         - Frontiers 10.3389 formula DOI candidates
@@ -253,11 +269,13 @@ fixtures:
         - Frontiers JATS XML MathML probe
       candidates:
         - 10.3389/fmars.2023.1101972
-      selected_doi:
+      selected_doi: null
       rejections:
-        10.3389/fmars.2023.1101972: Selected structure sample does not expose formula-specific assertions.
+        10.3389/fmars.2023.1101972: Selected structure sample does not expose formula-specific
+          assertions.
       exhausted: true
-      evidence_summary: No stable Frontiers formula-specific fixture was selected during this provider addition.
+      evidence_summary: No stable Frontiers formula-specific fixture was selected
+        during this provider addition.
     supplementary:
       queries:
         - Frontiers 10.3389 supplementary DOI candidates
@@ -268,7 +286,8 @@ fixtures:
       selected_doi: 10.3389/fmars.2023.1101972
       rejections: {}
       exhausted: false
-      evidence_summary: Selected 10.3389/fmars.2023.1101972 after XML probing confirmed supplementary-material coverage.
+      evidence_summary: Selected 10.3389/fmars.2023.1101972 after XML probing confirmed
+        supplementary-material coverage.
 extraction_hints:
   datalayer_signal_set: null
   text_marker_signal_set: null
@@ -282,6 +301,11 @@ extraction_hints:
   metadata_merge: []
 owner_reuse_exceptions: []
 docs:
-  providers_md_capability_row: "`frontiers` | Frontiers domain / DOI routing | `landing HTML -> public JATS XML -> direct HTTP PDF -> metadata fallback` | XML route supports body figures and tables; PDF fallback is text/PDF-derived assets | 强 | Frontiers 通过 `10.3389/` DOI prefix 和 `www.frontiersin.org` 路由；XML 成功公开为 `frontiers_xml`，PDF fallback 公开为 `frontiers_pdf`"
+  providers_md_capability_row: '`frontiers` | Frontiers domain / DOI routing | `landing
+    HTML -> public JATS XML -> direct HTTP PDF -> metadata fallback` | XML route supports
+    body figures and tables; PDF fallback is text/PDF-derived assets | 强 | Frontiers
+    通过 `10.3389/` DOI prefix 和 `www.frontiersin.org` 路由；XML 成功公开为 `frontiers_xml`，PDF
+    fallback 公开为 `frontiers_pdf`'
   changelog_summary: Add Frontiers XML-first provider with direct HTTP PDF fallback.
-  extraction_rules_summary: Frontiers reuses shared JATS rendering and rewrites XML graphic filenames to /files/Articles/{id}/xml-images/*.webp asset URLs.
+  extraction_rules_summary: Frontiers reuses shared JATS rendering and rewrites XML
+    graphic filenames to /files/Articles/{id}/xml-images/*.webp asset URLs.

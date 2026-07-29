@@ -2,6 +2,11 @@
 
 from __future__ import annotations
 
+import contextlib
+import hashlib
+import os
+import tempfile
+import urllib.parse
 from dataclasses import dataclass, replace
 import re
 from pathlib import Path
@@ -16,23 +21,40 @@ from .config import (
     WILEY_STORAGE_STATE_JSON_ENV_VAR,
     build_runtime_env,
 )
-from .provider_catalog import ordered_provider_specs
+from .extraction.html.signals import detect_html_block, summarize_html
+from .provider_catalog import (
+    ordered_provider_specs,
+    provider_supports_auth,
+    provider_domain_matches,
+    provider_domains,
+)
 from .providers.browser_runtime import (
     BrowserRuntimeConfig,
+    BrowserStagedStorageState,
     ensure_runtime_ready,
     load_runtime_config,
-    save_storage_state,
     storage_state_path,
 )
 from .providers.browser_runtime.paths import (
+    commit_staged_storage_state,
     runtime_with_default_storage_profile,
+    stage_storage_state,
 )
-from .providers.browser_runtime.context import context_options_for_config
+from .providers.browser_runtime.context import (
+    context_options_for_config,
+    open_browser_context,
+)
 from .providers.browser_runtime.camoufox_manager import (
     CamoufoxPersistentContextManager,
 )
 from .providers.base import ProviderFailure
-from .reason_codes import ERROR
+from .reason_codes import (
+    AUTH_FINAL_URL_INVALID,
+    AUTH_REPLAY_FAILED,
+    AUTH_STATE_SAVE_FAILED,
+    AUTH_STATE_STAGE_FAILED,
+    ERROR,
+)
 from .runtime_browser import BrowserContextManager
 from .utils import normalize_text, provider_display_name
 
@@ -80,6 +102,10 @@ AUTH_TARGETS: Mapping[str, AuthTarget] = {
         doi="10.1088/1748-9326/ab7d02",
         url="https://iopscience.iop.org/article/10.1088/1748-9326/ab7d02",
     ),
+    "ieee": AuthTarget(
+        doi="10.1109/TIM.2024.3509573",
+        url="https://ieeexplore.ieee.org/document/10772041/",
+    ),
     "aip": AuthTarget(
         doi="10.1063/5.0129134",
         url="https://pubs.aip.org/aip/adv/article/12/12/125205/2820011/On-chip-on-demand-delivery-of-K-for-in-vitro",
@@ -106,7 +132,9 @@ class AuthResult:
 
 def browser_auth_provider_names() -> tuple[str, ...]:
     return tuple(
-        spec.name for spec in ordered_provider_specs() if spec.requires_browser_runtime
+        spec.name
+        for spec in ordered_provider_specs()
+        if provider_supports_auth(spec.name)
     )
 
 
@@ -239,6 +267,162 @@ def _runtime_with_auth_storage(
     )
 
 
+def _storage_state_fingerprint(path: Path | None) -> tuple[int, int, int, str] | None:
+    if path is None or not path.is_file():
+        return None
+    try:
+        payload = path.read_bytes()
+        stat_result = path.stat()
+    except OSError:
+        return None
+    return (
+        stat_result.st_ino,
+        stat_result.st_mtime_ns,
+        stat_result.st_size,
+        hashlib.sha256(payload).hexdigest(),
+    )
+
+
+def _browser_page_snapshot(
+    page: Any,
+    *,
+    fallback_url: str,
+) -> tuple[str, str | None, str, int | None]:
+    final_url = normalize_text(str(getattr(page, "url", "") or "")) or fallback_url
+    try:
+        title = normalize_text(str(page.title() or "")) or None
+    except Exception:
+        title = None
+    try:
+        html = str(page.content() or "")
+    except Exception:
+        html = ""
+    response_status = None
+    return final_url, title, html, response_status
+
+
+def _require_accepted_auth_page(
+    page: Any,
+    *,
+    provider: str,
+    provider_label: str,
+    fallback_url: str,
+) -> tuple[str, str | None]:
+    final_url, title, html, status = _browser_page_snapshot(
+        page,
+        fallback_url=fallback_url,
+    )
+    try:
+        hostname = normalize_text(
+            urllib.parse.urlparse(final_url).hostname or ""
+        ).lower()
+    except Exception:
+        hostname = ""
+    fallback_hostname = normalize_text(
+        urllib.parse.urlparse(fallback_url).hostname or ""
+    ).lower()
+    accepted_host = bool(
+        hostname
+        and (
+            provider_domain_matches(provider, hostname)
+            or (not provider_domains(provider) and hostname == fallback_hostname)
+        )
+    )
+    if not accepted_host:
+        raise ProviderFailure(
+            AUTH_FINAL_URL_INVALID,
+            (
+                f"{provider_label} authentication did not return to an accepted "
+                f"provider host ({hostname or 'unknown host'})."
+            ),
+        )
+    detected = detect_html_block(title or "", summarize_html(html), status)
+    if detected is not None:
+        raise ProviderFailure(
+            AUTH_FINAL_URL_INVALID,
+            (
+                f"{provider_label} authentication is still blocked "
+                f"({detected.reason}): {detected.message}"
+            ),
+        )
+    if not title and not normalize_text(html):
+        raise ProviderFailure(
+            AUTH_FINAL_URL_INVALID,
+            f"{provider_label} authentication page did not expose usable content.",
+        )
+    return final_url, title
+
+
+def _verify_staged_auth_state(
+    runtime: BrowserRuntimeConfig,
+    stage: BrowserStagedStorageState,
+    *,
+    target_url: str,
+    provider_label: str,
+) -> tuple[str, str | None]:
+    """Replay a staged state in a fresh context before committing it."""
+
+    stage.path.parent.mkdir(parents=True, exist_ok=True)
+    file_descriptor, temporary_name = tempfile.mkstemp(
+        prefix=f".{stage.path.name}.auth-replay.",
+        suffix=".json",
+        dir=str(stage.path.parent),
+    )
+    os.close(file_descriptor)
+    temporary_path = Path(temporary_name)
+    temporary_path.unlink(missing_ok=True)
+    temporary_lock_path = Path(str(temporary_path) + ".lock")
+    replay_config = replace(
+        runtime,
+        headless=True,
+        storage_state_path=temporary_path,
+        persist_storage_state=False,
+    )
+    replay_stage = replace(stage, path=temporary_path)
+    staged_result = commit_staged_storage_state(replay_stage, replay_config)
+    if not staged_result.get("saved"):
+        raise ProviderFailure(
+            AUTH_REPLAY_FAILED,
+            (
+                f"{provider_label} authentication state could not be prepared for "
+                f"fresh-context replay ({staged_result.get('reason') or 'save_failed'})."
+            ),
+        )
+
+    manager = None
+    context = None
+    page = None
+    try:
+        manager, context = open_browser_context(replay_config)
+        page = context.new_page()
+        page.goto(
+            target_url,
+            wait_until="domcontentloaded",
+            timeout=replay_config.timeout_ms,
+        )
+        return _require_accepted_auth_page(
+            page,
+            provider=runtime.provider,
+            provider_label=provider_label,
+            fallback_url=target_url,
+        )
+    except ProviderFailure:
+        raise
+    except Exception as exc:
+        message = normalize_text(str(exc)) or exc.__class__.__name__
+        raise ProviderFailure(
+            AUTH_REPLAY_FAILED,
+            f"{provider_label} authentication replay failed: {message}",
+        ) from exc
+    finally:
+        for value in (page, context, manager):
+            if value is not None:
+                with contextlib.suppress(Exception):
+                    value.close()
+        temporary_path.unlink(missing_ok=True)
+        temporary_lock_path.unlink(missing_ok=True)
+
+
 def authenticate_provider_profile(
     *,
     provider: str,
@@ -281,6 +465,8 @@ def authenticate_provider_profile(
     page = None
     final_url: str | None = None
     title: str | None = None
+    staged_state: BrowserStagedStorageState | None = None
+    previous_fingerprint = _storage_state_fingerprint(resolved_storage_state_path)
     try:
         if runtime.backend == "camoufox":
             if browser_user_agent:
@@ -320,16 +506,25 @@ def authenticate_provider_profile(
             storage_state_path=resolved_storage_state_path,
             confirm=confirm,
         )
-        final_url = normalize_text(str(getattr(page, "url", "") or "")) or None
-        try:
-            title = normalize_text(str(page.title() or "")) or None
-        except Exception:
-            title = None
-        save_storage_state(
+        final_url, title = _require_accepted_auth_page(
+            page,
+            provider=provider_key,
+            provider_label=provider_label,
+            fallback_url=active_url,
+        )
+        staged_state, stage_result = stage_storage_state(
             context,
             runtime,
-            filter_url=final_url or active_url,
+            filter_url=final_url,
         )
+        if staged_state is None:
+            raise ProviderFailure(
+                AUTH_STATE_STAGE_FAILED,
+                (
+                    f"{provider_label} authentication state could not be staged "
+                    f"({stage_result.get('reason') or 'stage_failed'})."
+                ),
+            )
     except ProviderFailure:
         raise
     except Exception as exc:
@@ -345,10 +540,34 @@ def authenticate_provider_profile(
             except Exception:
                 pass
 
-    if resolved_storage_state_path is None or not resolved_storage_state_path.is_file():
+    if staged_state is None:
         raise ProviderFailure(
-            ERROR,
-            f"{provider_label} authentication did not produce a storage-state JSON: {resolved_storage_state_path}",
+            AUTH_STATE_STAGE_FAILED,
+            f"{provider_label} authentication did not produce staged browser state.",
+        )
+    final_url, title = _verify_staged_auth_state(
+        runtime,
+        staged_state,
+        target_url=active_url,
+        provider_label=provider_label,
+    )
+    save_result = commit_staged_storage_state(staged_state, runtime)
+    if not save_result.get("saved"):
+        raise ProviderFailure(
+            AUTH_STATE_SAVE_FAILED,
+            (
+                f"{provider_label} authentication state could not be committed "
+                f"({save_result.get('reason') or 'save_failed'})."
+            ),
+        )
+    current_fingerprint = _storage_state_fingerprint(resolved_storage_state_path)
+    if current_fingerprint is None or current_fingerprint == previous_fingerprint:
+        raise ProviderFailure(
+            AUTH_STATE_SAVE_FAILED,
+            (
+                f"{provider_label} authentication did not produce a fresh "
+                f"storage-state JSON: {resolved_storage_state_path}"
+            ),
         )
 
     return AuthResult(

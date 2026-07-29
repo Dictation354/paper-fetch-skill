@@ -5,10 +5,10 @@ from typing import Any
 
 import pytest
 from jsonschema import Draft202012Validator
-from mcp.server.fastmcp.exceptions import ToolError
+from mcp.server.mcpserver.exceptions import ToolError
 from pydantic import TypeAdapter, ValidationError
 
-from paper_fetch.auth import browser_auth_provider_names
+from paper_fetch.provider_catalog import browser_preflight_provider_names
 from paper_fetch.mcp.schemas import (
     BatchFetchRequest,
     BrowserPreflightRequest,
@@ -169,7 +169,7 @@ EXPECTED_CONSTRAINT_SNAPSHOT = {
         "detail": ["full", "compact"],
     },
     "browser_preflight": {
-        "provider": list(browser_auth_provider_names()),
+        "provider": list(browser_preflight_provider_names()),
         "detail": ["full", "compact"],
         "timeout_ms": {"minimum": 1, "maximum": 600000},
     },
@@ -186,10 +186,10 @@ EXPECTED_CONSTRAINT_SNAPSHOT = {
 }
 
 
-def test_native_fastmcp_input_schema_snapshot_is_draft_2020_12_and_typed() -> None:
+def test_native_mcpserver_input_schema_snapshot_is_draft_2020_12_and_typed() -> None:
     server = build_server()
     tools = asyncio.run(server.list_native_tools())
-    schemas = {tool.name: tool.inputSchema for tool in tools}
+    schemas = {tool.name: tool.input_schema for tool in tools}
 
     assert _constraint_snapshot(schemas) == EXPECTED_CONSTRAINT_SNAPSHOT
     for schema in schemas.values():
@@ -199,7 +199,7 @@ def test_native_fastmcp_input_schema_snapshot_is_draft_2020_12_and_typed() -> No
 def test_host_safe_normalized_input_schema_snapshot_has_no_references() -> None:
     server = build_server()
     tools = asyncio.run(server.list_tools())
-    schemas = {tool.name: tool.inputSchema for tool in tools}
+    schemas = {tool.name: tool.input_schema for tool in tools}
 
     assert _constraint_snapshot(schemas) == EXPECTED_CONSTRAINT_SNAPSHOT
     assert schemas == {name: host_safe_tool_input_schema(name) for name in schemas}
@@ -384,7 +384,7 @@ def test_native_invalid_input_fails_before_registered_tool_invocation(
     tool.is_async = True
 
     with pytest.raises(ToolError) as exc_info:
-        asyncio.run(server._tool_manager.call_tool(tool_name, arguments))
+        asyncio.run(server._tool_manager.call_tool(tool_name, arguments, context=None))
 
     assert isinstance(exc_info.value.__cause__, ValidationError)
     assert invoked is False

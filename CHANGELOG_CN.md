@@ -6,6 +6,26 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 4.1.0 - 2026-07-29
+
+### 新增
+
+- 新增逐 route 的 provider 契约与治理：runtime catalog 统一记录 route 顺序、可用状态、browser 要求、超时、并发、限流策略、验收规则和资产范围；通过自动生成的 route/catalog 快照、按 route family 统计的 golden replay、带到期日的证据 waiver，以及定时 corpus/provider drift 检查，持续校验代码、manifest、fixture 与文档一致性。
+- 新增共享的类型化失败诊断、route attempt 耗时摘要、远端 JSON 根/schema 校验、fail-closed 公网 URL 校验和可配置 PDF 传输上限，使 provider、HTTP、workflow、CLI、manifest 与 MCP 各层保留同一组机器可读失败事实。
+
+### 变更
+
+- MCP Python SDK 硬依赖由 1.x 升级到 `mcp>=2,<3`，server 与协议模型访问迁移到 v2 `MCPServer` API，自定义 stdio pump 替换为官方 transport；继续兼容 2025 握手协议客户端，并新增 2026-07-28 现代协议与 resource subscription 支持。
+- FetchEnvelope cache 改为按 DOI + request fingerprint 保存多版本，并加入单向 credential capability scope；public、token 与 browser-state 请求可以并存且不会互相覆盖或泄漏，compact cache 投影仍保留确定性的请求与验收证据。
+- 将 publisher identity、route discovery、batch lane 并发、browser capability 与 source ownership 集中到 runtime provider catalog；PLOS 使用版本化 journal route，Springer 显式区分 site family，Frontiers canonical route 改为 direct-first，并用结构化 diagnostics 取代分散的隐式启发式判断。
+- 加固共享 HTTP/cache runtime：cache identity 纳入 credential scope，敏感/private 响应禁止落盘，redirect diagnostics 全程脱敏，磁盘 cache 使用增量索引做 reconcile/prune；瞬态重试类别受控，host/provider cooldown 等待会先释放并发槽。
+- 扩展 Frontiers、Oxford Academic、IEEE、IOP、PLOS、Springer 与 Wiley 的正文提取和资产处理，包括更严格的 JATS identity/body 校验、direct-first 资产下载、显式未归档 supplementary 记录、selected-browser 状态透传和逐 route PDF recovery。
+
+### 修复
+
+- 防止 browser/PDF fallback 接受 challenge 或非 PDF 响应、突破共享 deadline/传输上限、跨 origin 或 credential 边界复用状态，以及在取消或下载失败后遗留半成品。
+- 修正 JATS 公式、表格、图片、参考文献与 supplementary 渲染；provider identity 不一致时 fail closed，语义损失保持可见，正文或资产证据不足时不再误升为 complete acceptance。
+
 ## 4.0.2 - 2026-07-28
 
 ### 修复

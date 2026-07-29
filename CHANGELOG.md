@@ -6,6 +6,26 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 4.1.0 - 2026-07-29
+
+### Added
+
+- Introduced route-level provider contracts and governance: the runtime catalog now records route order, availability, browser requirements, timeouts, concurrency, rate policy, acceptance, and asset scope; generated route/catalog snapshots, route-family golden replay coverage, expiring evidence waivers, and scheduled corpus/provider-drift checks keep code, manifests, fixtures, and docs aligned.
+- Added shared typed failure diagnostics, route-attempt timing summaries, remote JSON root/schema guards, fail-closed public URL validation, and a configurable PDF transfer ceiling so provider, HTTP, workflow, CLI, manifest, and MCP surfaces retain the same machine-readable failure facts.
+
+### Changed
+
+- Upgraded the required MCP Python SDK from 1.x to `mcp>=2,<3`, migrated the server and protocol-model accessors to the v2 `MCPServer` API, replaced the custom stdio pump with the official transport, and retained both legacy 2025 handshake compatibility and modern 2026-07-28 protocol/resource-subscription support.
+- Reworked FetchEnvelope caching around DOI plus request fingerprint variants and one-way credential-capability scopes; public, token, and browser-state requests can coexist without overwriting or leaking into one another, while compact cache projections retain deterministic request and acceptance evidence.
+- Centralized publisher identity, route discovery, batch lane concurrency, browser capability, and source ownership in the runtime provider catalog; versioned PLOS journal routes, Springer site-family profiles, and direct-first Frontiers canonical routes now expose explicit diagnostics instead of relying on scattered heuristics.
+- Hardened the shared HTTP/cache runtime with credential-scoped identities, non-persistence of sensitive/private responses, redacted redirect diagnostics, indexed disk-cache reconciliation and pruning, bounded transient retry categories, and host/provider cooldown waits that release concurrency slots.
+- Expanded provider extraction and asset handling across Frontiers, Oxford Academic, IEEE, IOP, PLOS, Springer, and Wiley, including stronger JATS identity/body validation, direct-first assets, explicit unarchived supplementary records, selected-browser state propagation, and route-specific PDF recovery.
+
+### Fixed
+
+- Prevented browser/PDF fallbacks from accepting challenge or non-PDF responses, exceeding shared deadlines and transfer limits, crossing origin or credential boundaries, or leaving partial artifacts after cancellation and failed downloads.
+- Corrected JATS formula, table, figure, reference, and supplementary rendering so provider identity mismatches fail closed, semantic losses remain visible, and content/assets cannot be promoted to complete acceptance without the required evidence.
+
 ## 4.0.2 - 2026-07-28
 
 ### Fixed

@@ -3,10 +3,10 @@ name: copernicus
 display_source: copernicus_xml
 generation:
   generated_by: manual_replay
-  generated_at: "2026-05-15T00:00:00Z"
+  generated_at: '2026-05-15T00:00:00Z'
   source_queries:
-    - "paper_fetch.provider_catalog copernicus ProviderSpec"
-    - "tests/fixtures/golden_criteria copernicus samples"
+    - paper_fetch.provider_catalog copernicus ProviderSpec
+    - tests/fixtures/golden_criteria copernicus samples
     - Copernicus 10.5194 table DOI candidates
     - site:copernicus Copernicus table article DOI
     - 10.5194 table fixture discovery copernicus
@@ -20,7 +20,7 @@ generation:
 routing:
   primary: doi_prefix
   doi_prefixes:
-    - "10.5194/"
+    - 10.5194/
   domains: []
   domain_suffixes:
     - copernicus.org
@@ -28,13 +28,17 @@ routing:
     - copernicus
     - copernicus publications
     - copernicus gmbh
-  crossref_publisher:
+  crossref_publisher: null
 main_path:
   - landing_html
   - xml
   - pdf_fallback
   - metadata_only
-success_criteria: {}
+success_criteria:
+  landing_html: {}
+  xml: {}
+  pdf_fallback: {}
+  metadata_only: {}
 route_contract:
   landing_html:
     success_requires:
@@ -43,7 +47,8 @@ route_contract:
     reject_if_any:
       - challenge page
       - empty shell
-    notes: Landing HTML is discovery-only unless the provider declares it as article content.
+    notes: Landing HTML is discovery-only unless the provider declares it as article
+      content.
   xml:
     success_requires:
       - article XML root is present
@@ -116,10 +121,10 @@ asset_contract:
     download: required
     purposes:
       - figure
-    exception_reason:
+    exception_reason: null
 supplementary_scope:
-  selector:
-  url_pattern:
+  selector: null
+  url_pattern: null
 abstract_only_strategy: not_supported
 probe:
   env_requirements: []
@@ -129,73 +134,80 @@ probe:
 fixtures:
   doi_samples:
     structure:
-      doi: "10.5194/acp-24-1-2024"
-      evidence_url: "https://acp.copernicus.org/articles/24/1/2024/"
-      evidence_reason: "Golden fixture covers the Copernicus XML route with abstract, body, figures, and
-        references."
+      doi: 10.5194/acp-24-1-2024
+      evidence_url: https://acp.copernicus.org/articles/24/1/2024/
+      evidence_reason: Golden fixture covers the Copernicus XML route with abstract,
+        body, figures, and references.
       observed_signals:
         - xml_article
         - body_sections
         - references
       confidence: high
     table:
-      doi:
-      evidence_url: "https://www.copernicus.org/"
-      evidence_reason: "Current golden corpus does not include a Copernicus table-specific sample."
+      doi: null
+      evidence_url: https://www.copernicus.org/
+      evidence_reason: Current golden corpus does not include a Copernicus table-specific
+        sample.
       observed_signals: []
       confidence: low
     formula:
-      doi:
-      evidence_url: "https://www.copernicus.org/"
-      evidence_reason: "Current golden corpus does not include a Copernicus formula-specific sample."
+      doi: null
+      evidence_url: https://www.copernicus.org/
+      evidence_reason: Current golden corpus does not include a Copernicus formula-specific
+        sample.
       observed_signals: []
       confidence: low
     figure:
-      doi: "10.5194/acp-24-1-2024"
-      evidence_url: "https://acp.copernicus.org/articles/24/1/2024/"
-      evidence_reason: "Expected golden criteria for this XML fixture records figure extraction coverage."
+      doi: 10.5194/acp-24-1-2024
+      evidence_url: https://acp.copernicus.org/articles/24/1/2024/
+      evidence_reason: Expected golden criteria for this XML fixture records figure
+        extraction coverage.
       observed_signals:
         - xml_article
         - figures
       confidence: high
     supplementary:
-      doi:
-      evidence_url: "https://www.copernicus.org/"
-      evidence_reason: "Current golden corpus does not include a Copernicus supplementary-material sample."
+      doi: null
+      evidence_url: https://www.copernicus.org/
+      evidence_reason: Current golden corpus does not include a Copernicus supplementary-material
+        sample.
       observed_signals: []
       confidence: low
     references:
-      doi: "10.5194/acp-24-1-2024"
-      evidence_url: "https://acp.copernicus.org/articles/24/1/2024/"
-      evidence_reason: "Expected golden criteria for this XML fixture records reference extraction coverage."
+      doi: 10.5194/acp-24-1-2024
+      evidence_url: https://acp.copernicus.org/articles/24/1/2024/
+      evidence_reason: Expected golden criteria for this XML fixture records reference
+        extraction coverage.
       observed_signals:
         - xml_article
         - references
       confidence: high
     pdf_fallback:
-      doi: "10.5194/acp-1-1-2001"
-      evidence_url: "https://acp.copernicus.org/articles/1/1/2001/"
-      evidence_reason: "Golden fixture records Copernicus PDF fallback replay for an older article."
+      doi: 10.5194/acp-1-1-2001
+      evidence_url: https://acp.copernicus.org/articles/1/1/2001/
+      evidence_reason: Golden fixture records Copernicus PDF fallback replay for an
+        older article.
       observed_signals:
         - landing_html
         - pdf_fallback
       confidence: high
     abstract_only:
-      doi:
-      evidence_url: "https://www.copernicus.org/"
-      evidence_reason: "The Copernicus provider uses XML or PDF routes in current runtime behavior."
+      doi: null
+      evidence_url: https://www.copernicus.org/
+      evidence_reason: The Copernicus provider uses XML or PDF routes in current runtime
+        behavior.
       observed_signals: []
       confidence: low
     access_gate:
-      doi:
-      evidence_url: "https://www.copernicus.org/"
-      evidence_reason: "Current golden corpus has no Copernicus access-gate sample."
+      doi: null
+      evidence_url: https://www.copernicus.org/
+      evidence_reason: Current golden corpus has no Copernicus access-gate sample.
       observed_signals: []
       confidence: low
     empty_shell:
-      doi:
-      evidence_url: "https://www.copernicus.org/"
-      evidence_reason: "Current golden corpus has no Copernicus empty-shell sample."
+      doi: null
+      evidence_url: https://www.copernicus.org/
+      evidence_reason: Current golden corpus has no Copernicus empty-shell sample.
       observed_signals: []
       confidence: low
   discovery_proof:
@@ -207,18 +219,18 @@ fixtures:
       candidates:
         - 10.5194/acp-24-1-2024
         - 10.5194/acp-1-1-2001
-      selected_doi:
+      selected_doi: null
       rejections:
-        10.5194/acp-24-1-2024: Same DOI was checked as a potential table fixture but is not suitable
-          because captured evidence does not expose stable article-scoped table assertions for this
-          purpose.
-        10.5194/acp-1-1-2001: Same DOI was checked as a potential table fixture but is not suitable
-          because captured evidence does not expose stable article-scoped table assertions for this
-          purpose.
+        10.5194/acp-24-1-2024: Same DOI was checked as a potential table fixture but
+          is not suitable because captured evidence does not expose stable article-scoped
+          table assertions for this purpose.
+        10.5194/acp-1-1-2001: Same DOI was checked as a potential table fixture but
+          is not suitable because captured evidence does not expose stable article-scoped
+          table assertions for this purpose.
       exhausted: true
-      evidence_summary: Exhausted the current copernicus table candidate search after recording
-        provider/domain/prefix queries and rejecting the listed DOI candidate(s); no candidate is
-        suitable for a stable table Markdown fixture.
+      evidence_summary: Exhausted the current copernicus table candidate search after
+        recording provider/domain/prefix queries and rejecting the listed DOI candidate(s);
+        no candidate is suitable for a stable table Markdown fixture.
     formula:
       queries:
         - Copernicus 10.5194 formula equation math DOI candidates
@@ -227,48 +239,50 @@ fixtures:
       candidates:
         - 10.5194/acp-24-1-2024
         - 10.5194/acp-1-1-2001
-      selected_doi:
+      selected_doi: null
       rejections:
-        10.5194/acp-24-1-2024: Same DOI was checked as a potential formula fixture but is not
-          suitable because captured evidence does not expose stable article-scoped formula
-          assertions for this purpose.
-        10.5194/acp-1-1-2001: Same DOI was checked as a potential formula fixture but is not
-          suitable because captured evidence does not expose stable article-scoped formula
-          assertions for this purpose.
+        10.5194/acp-24-1-2024: Same DOI was checked as a potential formula fixture
+          but is not suitable because captured evidence does not expose stable article-scoped
+          formula assertions for this purpose.
+        10.5194/acp-1-1-2001: Same DOI was checked as a potential formula fixture
+          but is not suitable because captured evidence does not expose stable article-scoped
+          formula assertions for this purpose.
       exhausted: true
-      evidence_summary: Exhausted the current copernicus formula candidate search after recording
-        provider/domain/prefix queries and rejecting the listed DOI candidate(s); no candidate is
-        suitable for a stable formula Markdown fixture.
+      evidence_summary: Exhausted the current copernicus formula candidate search
+        after recording provider/domain/prefix queries and rejecting the listed DOI
+        candidate(s); no candidate is suitable for a stable formula Markdown fixture.
     supplementary:
       queries:
         - Copernicus 10.5194 supplementary supporting information DOI candidates
-        - site:copernicus Copernicus supplementary supporting information article DOI
+        - site:copernicus Copernicus supplementary supporting information article
+          DOI
         - 10.5194 supplementary supporting information fixture discovery copernicus
       candidates:
         - 10.5194/acp-24-1-2024
         - 10.5194/acp-1-1-2001
-      selected_doi:
+      selected_doi: null
       rejections:
-        10.5194/acp-24-1-2024: Same DOI was checked as a potential supplementary fixture but is not
-          suitable because captured evidence does not expose stable article-scoped supplementary
-          assertions for this purpose.
-        10.5194/acp-1-1-2001: Same DOI was checked as a potential supplementary fixture but is not
-          suitable because captured evidence does not expose stable article-scoped supplementary
-          assertions for this purpose.
+        10.5194/acp-24-1-2024: Same DOI was checked as a potential supplementary fixture
+          but is not suitable because captured evidence does not expose stable article-scoped
+          supplementary assertions for this purpose.
+        10.5194/acp-1-1-2001: Same DOI was checked as a potential supplementary fixture
+          but is not suitable because captured evidence does not expose stable article-scoped
+          supplementary assertions for this purpose.
       exhausted: true
-      evidence_summary: Exhausted the current copernicus supplementary candidate search after
-        recording provider/domain/prefix queries and rejecting the listed DOI candidate(s); no
-        candidate is suitable for a stable supplementary Markdown fixture.
+      evidence_summary: Exhausted the current copernicus supplementary candidate search
+        after recording provider/domain/prefix queries and rejecting the listed DOI
+        candidate(s); no candidate is suitable for a stable supplementary Markdown
+        fixture.
 extraction_hints:
-  datalayer_signal_set:
-  text_marker_signal_set: []
-  front_matter:
-  asset_retry:
+  datalayer_signal_set: null
+  text_marker_signal_set: null
+  front_matter: null
+  asset_retry: null
   metadata_merge: []
 owner_reuse_exceptions: []
 docs:
-  providers_md_capability_row: "Copernicus | Crossref merge + landing metadata | landing HTML / DOI-derived
-    URL -> NLM/JATS XML -> direct HTTP PDF -> metadata fallback | XML body/all assets | copernicus_xml
-    / copernicus_pdf"
-  changelog_summary: "Add Copernicus XML-first provider with PDF fallback."
-  extraction_rules_summary:
+  providers_md_capability_row: Copernicus | Crossref merge + landing metadata | landing
+    HTML / DOI-derived URL -> NLM/JATS XML -> direct HTTP PDF -> metadata fallback
+    | XML body/all assets | copernicus_xml / copernicus_pdf
+  changelog_summary: Add Copernicus XML-first provider with PDF fallback.
+  extraction_rules_summary: null

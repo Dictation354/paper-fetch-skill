@@ -53,18 +53,24 @@ def test_quality_gate_uses_whole_package_typing_complexity_and_locked_audit() ->
     workflow = _workflow_text("ci.yml")
     assert "mypy src/paper_fetch" in workflow
     assert "scripts/check_complexity_budget.py" in workflow
+    assert "scripts/check_provider_governance.py" in workflow
     assert "scripts/audit_dependencies.py" in workflow
     assert "scripts/sync_version.py --check" in workflow
     assert "uv sync --frozen" in SETUP_ACTION.read_text(encoding="utf-8")
 
 
-def test_live_external_state_is_manual_and_serial() -> None:
+def test_live_external_state_is_scheduled_low_frequency_and_serial() -> None:
     workflow = _workflow_text("live.yml")
     assert "workflow_dispatch" in workflow
-    assert "schedule:" not in workflow
+    assert "schedule:" in workflow
+    assert '"17 3 * * 2"' in workflow
+    assert '"41 4 1,15 * *"' in workflow
     assert "tests/live -q -n 0" in workflow
     assert "--force-enable-socket" in workflow
     assert "tests/integration/test_golden_corpus.py -q" in workflow
+    assert "python -m camoufox fetch" in workflow
+    assert "scripts/run_provider_drift_report.py" in workflow
+    assert "provider-drift-report.json" in workflow
 
 
 def test_offline_builds_full_extra_for_supported_python_matrix() -> None:

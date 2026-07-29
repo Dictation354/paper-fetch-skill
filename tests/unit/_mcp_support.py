@@ -13,6 +13,8 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest import mock
 
+from mcp.types.version import LATEST_HANDSHAKE_VERSION
+
 from paper_fetch.browser_preflight import (
     BrowserPreflightResult,
     run_browser_provider_preflight,
@@ -416,6 +418,7 @@ class FakeContext:
         self.progress: list[tuple[float, float | None, str | None]] = []
         self.session = FakeSession()
         self.request_id = "unit-request"
+        self.protocol_version = LATEST_HANDSHAKE_VERSION
 
     async def report_progress(
         self, progress: float, total: float | None = None, message: str | None = None

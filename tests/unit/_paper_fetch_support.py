@@ -4,7 +4,12 @@ from pathlib import Path
 from dataclasses import replace
 
 from paper_fetch import service as paper_fetch
-from paper_fetch.http import DEFAULT_TIMEOUT_SECONDS, HttpTransport, RequestFailure
+from paper_fetch.http import (
+    DEFAULT_TIMEOUT_SECONDS,
+    HttpRequestPolicy,
+    HttpTransport,
+    RequestFailure,
+)
 from paper_fetch.models import (
     ArticleModel,
     FetchEnvelope,
@@ -232,6 +237,7 @@ class StubProvider:
 class FixtureHtmlTransport(HttpTransport):
     def __init__(self, responses):
         self.responses = responses
+        self.calls: list[dict[str, object]] = []
 
     def request(
         self,
@@ -247,7 +253,61 @@ class FixtureHtmlTransport(HttpTransport):
         retry_on_transient=False,
         transient_retries=2,
         transient_backoff_base_seconds=0.5,
+        follow_redirects=True,
+        max_redirects=5,
+        allowed_hosts=None,
+        max_response_bytes=None,
+        max_compressed_response_bytes=None,
+        request_policy: HttpRequestPolicy | None = None,
     ):
+        policy = request_policy or HttpRequestPolicy(
+            transient_backoff_base_seconds=transient_backoff_base_seconds,
+            follow_redirects=follow_redirects,
+            max_redirects=max_redirects,
+            allowed_hosts=tuple(allowed_hosts) if allowed_hosts is not None else None,
+            max_response_bytes=max_response_bytes,
+            max_compressed_response_bytes=max_compressed_response_bytes,
+        )
+        self.calls.append(
+            {
+                "method": method,
+                "url": url,
+                "headers": dict(headers or {}),
+                "query": dict(query or {}),
+                "timeout": timeout,
+                "retry_on_rate_limit": retry_on_rate_limit,
+                "rate_limit_retries": rate_limit_retries,
+                "max_rate_limit_wait_seconds": max_rate_limit_wait_seconds,
+                "retry_on_transient": retry_on_transient,
+                "transient_retries": transient_retries,
+                "transient_backoff_base_seconds": (
+                    policy.transient_backoff_base_seconds
+                ),
+                "follow_redirects": policy.follow_redirects,
+                "max_redirects": policy.max_redirects,
+                "allowed_hosts": tuple(policy.allowed_hosts or ()),
+                "max_response_bytes": policy.max_response_bytes,
+                "max_compressed_response_bytes": (policy.max_compressed_response_bytes),
+                "request_policy": policy,
+            }
+        )
+        del (
+            headers,
+            query,
+            timeout,
+            retry_on_rate_limit,
+            rate_limit_retries,
+            max_rate_limit_wait_seconds,
+            retry_on_transient,
+            transient_retries,
+            transient_backoff_base_seconds,
+            follow_redirects,
+            max_redirects,
+            allowed_hosts,
+            max_response_bytes,
+            max_compressed_response_bytes,
+            request_policy,
+        )
         if url not in self.responses:
             raise RequestFailure(404, f"Missing fixture response for {url}")
         response = dict(self.responses[url])
@@ -295,7 +355,21 @@ class RecordingTransport(HttpTransport):
         retry_on_transient=False,
         transient_retries=2,
         transient_backoff_base_seconds=0.5,
+        follow_redirects=True,
+        max_redirects=5,
+        allowed_hosts=None,
+        max_response_bytes=None,
+        max_compressed_response_bytes=None,
+        request_policy: HttpRequestPolicy | None = None,
     ):
+        policy = request_policy or HttpRequestPolicy(
+            transient_backoff_base_seconds=transient_backoff_base_seconds,
+            follow_redirects=follow_redirects,
+            max_redirects=max_redirects,
+            allowed_hosts=tuple(allowed_hosts) if allowed_hosts is not None else None,
+            max_response_bytes=max_response_bytes,
+            max_compressed_response_bytes=max_compressed_response_bytes,
+        )
         self.calls.append(
             {
                 "method": method,
@@ -308,7 +382,15 @@ class RecordingTransport(HttpTransport):
                 "max_rate_limit_wait_seconds": max_rate_limit_wait_seconds,
                 "retry_on_transient": retry_on_transient,
                 "transient_retries": transient_retries,
-                "transient_backoff_base_seconds": transient_backoff_base_seconds,
+                "transient_backoff_base_seconds": (
+                    policy.transient_backoff_base_seconds
+                ),
+                "follow_redirects": policy.follow_redirects,
+                "max_redirects": policy.max_redirects,
+                "allowed_hosts": tuple(policy.allowed_hosts or ()),
+                "max_response_bytes": policy.max_response_bytes,
+                "max_compressed_response_bytes": (policy.max_compressed_response_bytes),
+                "request_policy": policy,
             }
         )
         key = (method, url)
@@ -364,9 +446,9 @@ def fetch_paper_model(
     return envelope.article
 
 
-def sample_article() -> paper_fetch.ArticleModel:
+def sample_article(doi: str = "10.1016/test") -> paper_fetch.ArticleModel:
     return ArticleModel(
-        doi="10.1016/test",
+        doi=doi,
         source="elsevier_xml",
         metadata=Metadata(
             title="Example Article",

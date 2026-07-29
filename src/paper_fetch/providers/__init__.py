@@ -7,6 +7,7 @@ from collections.abc import Iterator
 from importlib import import_module
 from pathlib import Path
 import sys
+import threading
 from typing import Any
 
 _EXPORTS: dict[str, tuple[str, str]] = {
@@ -113,25 +114,28 @@ def _provider_entry_discovery_cache_key() -> tuple[tuple[str, int, int], ...]:
 
 
 def _discover_provider_entry_modules() -> tuple[str, ...]:
-    cache_key = _provider_entry_discovery_cache_key()
-    cached = _DISCOVERED_PROVIDER_ENTRY_MODULES_CACHE.get(cache_key)
-    if cached is not None:
-        return cached
-    discovered = list(_BUILTIN_PROVIDER_ENTRY_MODULES)
-    seen: set[str] = set()
-    for module_path, _, _ in cache_key:
-        module_name = Path(module_path).stem
-        if module_name in _BUILTIN_PROVIDER_ENTRY_NAMES or module_name.startswith("_"):
-            continue
-        if module_name in seen:
-            continue
-        seen.add(module_name)
-        if _module_declares_provider_bundle(module_name):
-            discovered.append(f".{module_name}")
-    result = tuple(dict.fromkeys(discovered))
-    _DISCOVERED_PROVIDER_ENTRY_MODULES_CACHE.clear()
-    _DISCOVERED_PROVIDER_ENTRY_MODULES_CACHE[cache_key] = result
-    return result
+    with _PROVIDER_ENTRY_DISCOVERY_LOCK:
+        cache_key = _provider_entry_discovery_cache_key()
+        cached = _DISCOVERED_PROVIDER_ENTRY_MODULES_CACHE.get(cache_key)
+        if cached is not None:
+            return cached
+        discovered = list(_BUILTIN_PROVIDER_ENTRY_MODULES)
+        seen: set[str] = set()
+        for module_path, _, _ in cache_key:
+            module_name = Path(module_path).stem
+            if module_name in _BUILTIN_PROVIDER_ENTRY_NAMES or module_name.startswith(
+                "_"
+            ):
+                continue
+            if module_name in seen:
+                continue
+            seen.add(module_name)
+            if _module_declares_provider_bundle(module_name):
+                discovered.append(f".{module_name}")
+        result = tuple(dict.fromkeys(discovered))
+        _DISCOVERED_PROVIDER_ENTRY_MODULES_CACHE.clear()
+        _DISCOVERED_PROVIDER_ENTRY_MODULES_CACHE[cache_key] = result
+        return result
 
 
 class _ProviderEntryModules:
@@ -150,24 +154,27 @@ class _ProviderEntryModules:
 
 _PROVIDER_ENTRY_MODULES = _ProviderEntryModules()
 _PROVIDER_ENTRY_IMPORTS_COMPLETE = False
+_PROVIDER_ENTRY_IMPORT_LOCK = threading.RLock()
+_PROVIDER_ENTRY_DISCOVERY_LOCK = threading.RLock()
 
 
 def import_provider_entry_modules() -> tuple[str, ...]:
     global _PROVIDER_ENTRY_IMPORTS_COMPLETE
-    imported: list[str] = []
-    for module_name in _discover_provider_entry_modules():
-        if module_name in _IMPORTED_PROVIDER_ENTRY_MODULES:
-            continue
-        import_module(module_name, __name__)
-        _IMPORTED_PROVIDER_ENTRY_MODULES.add(module_name)
-        imported.append(module_name)
-    if imported:
-        provider_catalog = sys.modules.get("paper_fetch.provider_catalog")
-        if provider_catalog is not None:
-            provider_catalog.__dict__["_PROVIDER_CATALOG_CACHE"] = None
-            provider_catalog.__dict__["_SOURCE_PROVIDER_MAP_CACHE"] = None
-    _PROVIDER_ENTRY_IMPORTS_COMPLETE = True
-    return tuple(imported)
+    with _PROVIDER_ENTRY_IMPORT_LOCK:
+        imported: list[str] = []
+        for module_name in _discover_provider_entry_modules():
+            if module_name in _IMPORTED_PROVIDER_ENTRY_MODULES:
+                continue
+            import_module(module_name, __name__)
+            _IMPORTED_PROVIDER_ENTRY_MODULES.add(module_name)
+            imported.append(module_name)
+        if imported:
+            provider_catalog = sys.modules.get("paper_fetch.provider_catalog")
+            if provider_catalog is not None:
+                provider_catalog.__dict__["_PROVIDER_CATALOG_CACHE"] = None
+                provider_catalog.__dict__["_SOURCE_PROVIDER_MAP_CACHE"] = None
+        _PROVIDER_ENTRY_IMPORTS_COMPLETE = True
+        return tuple(imported)
 
 
 __all__ = sorted(_EXPORTS)

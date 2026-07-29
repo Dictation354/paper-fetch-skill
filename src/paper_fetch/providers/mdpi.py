@@ -14,7 +14,7 @@ from ..extraction.html.provider_rules import (
 )
 from ..mdpi_url import is_mdpi_url, mdpi_landing_url_from_doi
 from ..models import AssetProfile
-from ..provider_catalog import ProviderSpec
+from ..provider_catalog import ProviderRouteSpec, ProviderSpec
 from ..publisher_identity import normalize_doi
 from ..reason_codes import PDF_FALLBACK
 from ..runtime import RuntimeContext
@@ -22,7 +22,7 @@ from ..utils import empty_asset_results, normalize_text
 from . import _mdpi_html, browser_workflow
 from ._registry import ProviderBundle, ProviderRenderPolicy, register_provider_bundle
 from .base import RawFulltextPayload
-from .browser_workflow.profile import ProviderBrowserProfile
+from .browser_runtime import BrowserHtmlReadiness
 from .browser_workflow.shared import extract_pdf_url_from_crossref
 
 
@@ -43,6 +43,28 @@ register_provider_bundle(
             base_domains=("www.mdpi.com",),
             requires_playwright=True,
             requires_browser_runtime=True,
+            routes=(
+                ProviderRouteSpec(name="metadata", kind="metadata"),
+                ProviderRouteSpec(
+                    name="browser_html",
+                    kind="html",
+                    browser_required=True,
+                    browser_preflight=True,
+                    auth_supported=True,
+                    requires_playwright=True,
+                    concurrency=1,
+                ),
+                ProviderRouteSpec(
+                    name="browser_pdf",
+                    kind="pdf",
+                    browser_required=True,
+                    browser_preflight=True,
+                    auth_supported=True,
+                    requires_playwright=True,
+                    requires_pdf_conversion=True,
+                    concurrency=1,
+                ),
+            ),
         ),
         html_rules=ProviderHtmlRules(
             name="mdpi",
@@ -74,18 +96,14 @@ register_provider_bundle(
 )
 
 
-MDPI_BROWSER_PROFILE = ProviderBrowserProfile(
-    name="mdpi",
+MDPI_BROWSER_PROFILE = browser_workflow.make_browser_profile(
+    "mdpi",
     article_source_name="mdpi_html",
-    label="MDPI",
-    hosts=("www.mdpi.com", "mdpi.com"),
-    base_hosts=("www.mdpi.com",),
-    html_path_templates=(),
-    pdf_path_templates=(),
-    crossref_pdf_position=0,
-    markdown_publisher="mdpi",
     fallback_author_extractor=_mdpi_html.extract_authors,
-    shared_browser_image_fetcher=True,
+    html_readiness=BrowserHtmlReadiness(
+        wait_for_article_body=False,
+        selector=".html-article-content, #article-contents, .prose-article",
+    ),
 )
 
 

@@ -7,7 +7,7 @@ import re
 import urllib.parse
 from pathlib import Path
 from typing import Any
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 
 from ..artifacts import ArtifactStore
 from ..markdown.images import render_markdown_image
@@ -347,6 +347,7 @@ def save_markdown_to_disk(
     markdown_filename: str | None = None,
     request_label: str = "save_markdown",
     overwrite: bool = True,
+    commit_guard: Callable[[], None] | None = None,
 ) -> Path | None:
     has_usable_fulltext = bool(
         envelope.content_kind == FULLTEXT and envelope.markdown and envelope.article
@@ -372,6 +373,7 @@ def save_markdown_to_disk(
         encoding="utf-8",
         overwrite=overwrite,
         use_lock=True,
+        commit_guard=commit_guard,
     )
     message = f"Markdown full text was saved to {target}."
     _extend_envelope_status(

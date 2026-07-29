@@ -520,13 +520,19 @@ class PresetRuntimeContractTests(unittest.TestCase):
 
             self.assertIsNotNone(cached["markdown"])
             cache_files = {path.name for path in cache_dir.rglob("*") if path.is_file()}
-            self.assertEqual(
-                {
-                    "10.1000_example.fetch-envelope.json",
-                    ".paper-fetch-mcp-cache.json",
-                },
-                {name for name in cache_files if not name.endswith(".lock")},
+            cache_payloads = {
+                name for name in cache_files if name.endswith(".fetch-envelope.json")
+            }
+            self.assertEqual(len(cache_payloads), 2)
+            self.assertIn("10.1000_example.fetch-envelope.json", cache_payloads)
+            self.assertTrue(
+                any(
+                    name.startswith("10.1000_example.")
+                    and name != "10.1000_example.fetch-envelope.json"
+                    for name in cache_payloads
+                )
             )
+            self.assertIn(".paper-fetch-mcp-cache.json", cache_files)
             self.assertEqual(
                 len([name for name in cache_files if name.endswith(".lock")]), 2
             )
@@ -576,7 +582,7 @@ class PresetRuntimeContractTests(unittest.TestCase):
                 {name for name in archive_files if not name.endswith(".lock")},
             )
             self.assertEqual(
-                len([name for name in archive_files if name.endswith(".lock")]), 1
+                len([name for name in archive_files if name.endswith(".lock")]), 2
             )
 
     def test_shared_asset_policy_materializes_none_body_and_all_scopes(self) -> None:

@@ -13,6 +13,11 @@ IMAGE_CONVERSION_BACKEND_MISSING = "image_conversion_backend_missing"
 IMAGE_CONVERSION_BACKEND_READY = "image_conversion_backend_ready"
 IMAGE_CONVERSION_BACKEND_TIMEOUT = "image_conversion_backend_timeout"
 IMAGE_CONVERSION_FAILED = "image_conversion_failed"
+IDENTITY_MISMATCH = "identity_mismatch"
+AUTH_FINAL_URL_INVALID = "auth_final_url_invalid"
+AUTH_REPLAY_FAILED = "auth_replay_failed"
+AUTH_STATE_SAVE_FAILED = "auth_state_save_failed"
+AUTH_STATE_STAGE_FAILED = "auth_state_stage_failed"
 XML_SIZE_EXCEEDED = "xml_size_exceeded"
 XML_DEPTH_EXCEEDED = "xml_depth_exceeded"
 XML_NODE_LIMIT_EXCEEDED = "xml_node_limit_exceeded"
@@ -51,6 +56,7 @@ __all__ = [
     "BROWSER_RUNTIME_FAILURE_CODES",
     "CDP_CONNECT_FAILED",
     "ERROR",
+    "IDENTITY_MISMATCH",
     "IMAGE_CONVERSION_BACKEND_ERROR",
     "IMAGE_CONVERSION_BACKEND_MISSING",
     "IMAGE_CONVERSION_BACKEND_READY",

@@ -133,6 +133,14 @@ def _patch_auth_runtime(
         runtime_env.update(env)
     monkeypatch.setattr(auth, "build_runtime_env", lambda: dict(runtime_env))
     monkeypatch.setattr(auth, "ensure_runtime_ready", lambda _runtime: None)
+    monkeypatch.setattr(
+        auth,
+        "_verify_staged_auth_state",
+        lambda _runtime, _stage, *, target_url, provider_label: (
+            target_url,
+            f"{provider_label} Article",
+        ),
+    )
 
 
 def test_upsert_env_file_updates_existing_values(tmp_path) -> None:
@@ -319,6 +327,72 @@ def test_authenticate_provider_profile_rejects_non_browser_provider() -> None:
         assert "wiley" in str(exc)
     else:
         raise AssertionError("expected non-browser provider auth to fail")
+
+
+def test_auth_save_failure_does_not_verify_or_overwrite_stale_state(
+    monkeypatch, tmp_path
+) -> None:
+    _install_fake_browser_manager(monkeypatch)
+    _patch_auth_runtime(monkeypatch, tmp_path)
+    state_path = (
+        tmp_path
+        / "xdg"
+        / "paper-fetch"
+        / "publisher-browser-profiles"
+        / "wiley-camoufox"
+        / "storage-state.json"
+    )
+    state_path.parent.mkdir(parents=True)
+    old_bytes = b'{"cookies":[{"name":"old"}],"origins":[]}\n'
+    state_path.write_bytes(old_bytes)
+    monkeypatch.setattr(
+        auth,
+        "commit_staged_storage_state",
+        lambda _stage, _runtime: {
+            "attempted": True,
+            "saved": False,
+            "reason": "save_failed",
+        },
+    )
+
+    with pytest.raises(ProviderFailure) as raised:
+        auth.authenticate_provider_profile(
+            provider="wiley",
+            confirm=lambda _prompt: None,
+        )
+
+    assert raised.value.code == "auth_state_save_failed"
+    assert state_path.read_bytes() == old_bytes
+
+
+def test_auth_page_left_on_sso_host_does_not_modify_old_state(
+    monkeypatch, tmp_path
+) -> None:
+    fake_manager = _install_fake_browser_manager(monkeypatch)
+    _patch_auth_runtime(monkeypatch, tmp_path)
+    state_path = (
+        tmp_path
+        / "xdg"
+        / "paper-fetch"
+        / "publisher-browser-profiles"
+        / "wiley-camoufox"
+        / "storage-state.json"
+    )
+    state_path.parent.mkdir(parents=True)
+    old_bytes = b'{"cookies":[{"name":"old"}],"origins":[]}\n'
+    state_path.write_bytes(old_bytes)
+
+    def leave_on_sso(_prompt):
+        fake_manager.instances[0].context.page.url = "https://login.example.test/sso"
+
+    with pytest.raises(ProviderFailure) as raised:
+        auth.authenticate_provider_profile(
+            provider="wiley",
+            confirm=leave_on_sso,
+        )
+
+    assert raised.value.code == "auth_final_url_invalid"
+    assert state_path.read_bytes() == old_bytes
 
 
 def test_authenticate_provider_profile_allows_url_for_catalog_provider_without_sample(

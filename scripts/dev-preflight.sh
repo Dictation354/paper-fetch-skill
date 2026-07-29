@@ -93,6 +93,7 @@ if [[ "$run_typecheck" == "1" ]]; then
   PYTHONPATH=src "$PYTHON_BIN" -m mypy src/paper_fetch
 fi
 "$PYTHON_BIN" scripts/check_complexity_budget.py
+"$PYTHON_BIN" scripts/check_provider_governance.py
 "$PYTHON_BIN" scripts/sync_version.py --check
 
 unit_args=(tests/unit -q --durations=30)

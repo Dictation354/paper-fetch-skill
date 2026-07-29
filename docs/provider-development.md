@@ -359,6 +359,7 @@ Fixtures 规则：
 Golden corpus 规则：
 
 - provider 稳定后，补 representative fixture 和 snapshot 产物。
+- fixture coverage 以 `provider + route family` 计数，不再只按 provider 是否出现；新增 `available` HTML/XML/PDF route 或 Springer site-family 时，必须同时增加对应 golden replay，或在 `quality/provider-governance.yml` 写明经审核且会过期的临时 waiver。browser route 还需要 access/block replay，direct XML route 需要 abstract-only/empty-body replay。
 - `expected.json` 应锁用户可见 summary，不锁无意义格式噪声；Markdown 语义基准只看 `extracted.md`。
 - agent 必须按 `markdown-quality-prompt.md` 阅读 `extracted.md` 并写回 `markdown-quality.json`；该报告必须 `review_method: agent_prompt`、`status: pass` 且没有 blocking issue，最终批量人工 review 才能通过 `finalize-review-artifact --confirmed-final-quality` 把 `markdown_semantic_reviewed` 标为 true。
 - 如果 agent-authored report 为 fail，可用 `repair-markdown-quality --provider <provider> --doi <doi>` 进入自动修复闭环；该命令仍要求先补/更新 provider-local regression test，再修实现并重新 snapshot/review，不会自动把 `markdown_semantic_reviewed` 改为 true。
@@ -370,6 +371,7 @@ Golden corpus 规则：
 ```bash
 PYTHONPATH=src python3 -m pytest tests/unit -q
 PYTHONPATH=src python3 -m pytest tests/integration -q
+PYTHONPATH=src python3 scripts/check_provider_governance.py
 ```
 
 这两条常规 unit / integration 命令默认复用 `pyproject.toml` 中的 `pytest-xdist` 配置，不要额外加 `-n 0`。完整 golden corpus regression 也按 fixture 参数化运行，默认保持并行：
@@ -383,6 +385,12 @@ PAPER_FETCH_RUN_FULL_GOLDEN=1 PYTHONPATH=src python3 -m pytest tests/integration
 ```bash
 python3 scripts/validate_extraction_rules.py
 ```
+
+如果改了 provider route/catalog、manifest、benchmark、fixture 或能力矩阵，先运行
+`python3 scripts/check_provider_governance.py --update` 更新
+`quality/provider-catalog.json` 与 `docs/provider-routes.generated.md`，再运行不带
+`--update` 的命令确认 route-family/negative waiver、manifest sync-back、browser
+profile、docs matrix 与复杂度预算全部一致。生成文件不得手工编辑。
 
 只有 live 测试、共享外部状态测试或排查顺序问题时才串行运行，并在结果中说明原因。
 

@@ -1,17 +1,24 @@
 """Static provider identity, routing, and capability catalog."""
 
 from __future__ import annotations
-from collections.abc import Iterator, Mapping as MappingABC
-from dataclasses import asdict, dataclass
+
 import importlib
+import xml.etree.ElementTree as ET
+from collections.abc import Callable, Iterator, Mapping as MappingABC
+from dataclasses import asdict, dataclass, replace
 from types import MappingProxyType
 from typing import Any, Literal
-from collections.abc import Callable
 
 from .metadata.types import ProviderMetadata
 
 AssetDefault = Literal["none", "body", "all"]
 MetadataProbeShortCircuit = Callable[[str], ProviderMetadata | None]
+ProviderRouteKind = Literal["metadata", "html", "xml", "pdf", "assets"]
+ProviderRouteImplementationStatus = Literal[
+    "available",
+    "not_configured",
+    "unsupported",
+]
 
 
 @dataclass(frozen=True)
@@ -37,6 +44,66 @@ class PdfSourcePathTemplate:
     domain: str
     path_prefix: str
     path_template: str
+
+
+@dataclass(frozen=True)
+class ProviderRouteSpec:
+    """Local requirements and policy for one provider acquisition route."""
+
+    name: str
+    kind: ProviderRouteKind
+    source: str | None = None
+    order: int | None = None
+    implementation_status: ProviderRouteImplementationStatus = "available"
+    browser_required: bool = False
+    browser_optional: bool = False
+    browser_preflight: bool = False
+    auth_supported: bool = False
+    requires_playwright: bool = False
+    requires_pdf_conversion: bool = False
+    requires_formula_tools: bool = False
+    timeout_seconds: int | None = None
+    concurrency: int | None = None
+    qps: float | None = None
+    rate_limit_wait_budget_seconds: float | None = None
+    transient_retry_categories: tuple[str, ...] = ()
+    rate_policy: str | None = None
+    required_packages: tuple[str, ...] = ()
+    hosts: tuple[str, ...] = ()
+    acceptance_policy: str | None = None
+    asset_scope: AssetDefault | None = None
+    notes: str | None = None
+
+    def __post_init__(self) -> None:
+        if self.browser_required and self.browser_optional:
+            raise ValueError(
+                "A provider route cannot be both browser-required and browser-optional."
+            )
+        if (self.browser_required or self.browser_optional) and not (
+            self.requires_playwright
+        ):
+            object.__setattr__(self, "requires_playwright", True)
+        if self.auth_supported and not self.browser_preflight:
+            object.__setattr__(self, "browser_preflight", True)
+        if self.browser_preflight and not (
+            self.browser_required or self.browser_optional
+        ):
+            raise ValueError("Browser preflight requires a browser-backed route.")
+        if self.timeout_seconds is not None and self.timeout_seconds <= 0:
+            raise ValueError("Route timeout_seconds must be positive.")
+        if self.concurrency is not None and not (1 <= self.concurrency <= 8):
+            raise ValueError("Route concurrency must be from 1 to 8.")
+        if self.order is not None and self.order < 0:
+            raise ValueError("Route order must be non-negative.")
+        if self.qps is not None and self.qps <= 0:
+            raise ValueError("Route qps must be positive.")
+        if (
+            self.rate_limit_wait_budget_seconds is not None
+            and self.rate_limit_wait_budget_seconds < 0
+        ):
+            raise ValueError(
+                "Route rate_limit_wait_budget_seconds must be non-negative."
+            )
 
 
 @dataclass(frozen=True)
@@ -73,13 +140,148 @@ class ProviderSpec:
     env_requirements: tuple[str, ...] = ()
     requires_playwright: bool = False
     requires_browser_runtime: bool = False
+    batch_concurrency: int | None = None
+    routes: tuple[ProviderRouteSpec, ...] = ()
 
     def __post_init__(self) -> None:
         if self.requires_playwright and not self.requires_browser_runtime:
             object.__setattr__(self, "requires_browser_runtime", True)
+        effective_batch_concurrency = self.batch_concurrency
+        if effective_batch_concurrency is None:
+            effective_batch_concurrency = 1 if self.requires_browser_runtime else 2
+            object.__setattr__(self, "batch_concurrency", effective_batch_concurrency)
+        if isinstance(effective_batch_concurrency, bool) or not (
+            1 <= effective_batch_concurrency <= 8
+        ):
+            raise ValueError("batch_concurrency must be an integer from 1 to 8.")
+        if not self.routes:
+            routes: list[ProviderRouteSpec] = [
+                ProviderRouteSpec(name="metadata", kind="metadata")
+            ]
+            if self.html_capable:
+                routes.append(
+                    ProviderRouteSpec(
+                        name=(
+                            "browser_html"
+                            if self.requires_browser_runtime
+                            else "direct_html"
+                        ),
+                        kind="html",
+                        browser_required=self.requires_browser_runtime,
+                        browser_preflight=self.requires_browser_runtime,
+                        auth_supported=self.requires_browser_runtime,
+                        requires_playwright=self.requires_playwright,
+                        concurrency=1 if self.requires_browser_runtime else 2,
+                    )
+                )
+            if self.xml_path_templates:
+                routes.append(ProviderRouteSpec(name="xml", kind="xml"))
+            if self.pdf_path_templates or self.pdf_source_path_templates:
+                browser_backed_pdf = self.requires_browser_runtime
+                routes.append(
+                    ProviderRouteSpec(
+                        name="browser_pdf" if browser_backed_pdf else "direct_pdf",
+                        kind="pdf",
+                        browser_required=browser_backed_pdf,
+                        browser_preflight=browser_backed_pdf,
+                        auth_supported=browser_backed_pdf,
+                        requires_playwright=browser_backed_pdf,
+                        requires_pdf_conversion=True,
+                        concurrency=1 if browser_backed_pdf else 2,
+                    )
+                )
+            object.__setattr__(self, "routes", tuple(routes))
+        if self.requires_browser_runtime and not any(
+            route.browser_required or route.browser_optional for route in self.routes
+        ):
+            object.__setattr__(
+                self,
+                "routes",
+                (
+                    *self.routes,
+                    ProviderRouteSpec(
+                        name="browser_html",
+                        kind="html",
+                        browser_required=True,
+                        browser_preflight=True,
+                        auth_supported=True,
+                        requires_playwright=True,
+                        concurrency=1,
+                    ),
+                ),
+            )
+        route_names = [route.name for route in self.routes]
+        if len(route_names) != len(set(route_names)):
+            raise ValueError("Provider route names must be unique.")
+        object.__setattr__(
+            self,
+            "routes",
+            tuple(
+                replace(
+                    route,
+                    order=index if route.order is None else route.order,
+                    hosts=route.hosts or self.domains,
+                    asset_scope=route.asset_scope or self.asset_default,
+                    timeout_seconds=route.timeout_seconds
+                    or _default_route_timeout(route),
+                    concurrency=route.concurrency
+                    or (1 if route.browser_required or route.browser_optional else 2),
+                    rate_limit_wait_budget_seconds=(
+                        route.rate_limit_wait_budget_seconds
+                        if route.rate_limit_wait_budget_seconds is not None
+                        else 5.0
+                    ),
+                    transient_retry_categories=(
+                        route.transient_retry_categories
+                        or (
+                            "timeout",
+                            "connection_reset",
+                            "connection_closed",
+                            "temporary_dns",
+                        )
+                    ),
+                    rate_policy=route.rate_policy or "shared_host_cooldown",
+                    required_packages=route.required_packages
+                    or _default_route_packages(route),
+                    acceptance_policy=route.acceptance_policy
+                    or _default_route_acceptance(route.kind),
+                )
+                for index, route in enumerate(self.routes)
+            ),
+        )
+        route_orders = [route.order for route in self.routes]
+        if route_orders != list(range(len(self.routes))):
+            raise ValueError(
+                "Provider route order must be unique and contiguous from zero."
+            )
 
     def to_dict(self) -> dict[str, object]:
         return asdict(self)
+
+
+def _default_route_timeout(route: ProviderRouteSpec) -> int:
+    if route.browser_required or route.browser_optional:
+        return 120
+    return 120 if route.kind == "pdf" else 20
+
+
+def _default_route_packages(route: ProviderRouteSpec) -> tuple[str, ...]:
+    packages: list[str] = []
+    if route.requires_playwright:
+        packages.append("camoufox")
+    if route.requires_pdf_conversion:
+        packages.append("pymupdf4llm")
+    return tuple(packages)
+
+
+def _default_route_acceptance(kind: ProviderRouteKind) -> str:
+    return {
+        "metadata": "metadata_identity",
+        "html": "provider_html_body",
+        "xml": "structured_xml_body",
+        "pdf": "validated_pdf",
+        "assets": "validated_asset",
+    }[kind]
 
 
 _METADATA_PROBE_SHORT_CIRCUITS: dict[str, MetadataProbeShortCircuit] = {}
@@ -217,6 +419,45 @@ def provider_base_domains(provider_name: str | None) -> tuple[str, ...]:
         spec.base_domains or spec.domains
         if (spec := _provider_spec(provider_name)) is not None
         else ()
+    )
+
+
+def provider_batch_concurrency(provider_name: str | None) -> int:
+    """Return the production batch limit for one resolved provider lane."""
+
+    spec = _provider_spec(provider_name)
+    if spec is None or spec.batch_concurrency is None:
+        return 1
+    return spec.batch_concurrency
+
+
+def provider_routes(provider_name: str | None) -> tuple[ProviderRouteSpec, ...]:
+    spec = _provider_spec(provider_name)
+    return spec.routes if spec is not None else ()
+
+
+def provider_has_browser_route(provider_name: str | None) -> bool:
+    return any(
+        route.browser_required or route.browser_optional
+        for route in provider_routes(provider_name)
+    )
+
+
+def provider_requires_browser(provider_name: str | None) -> bool:
+    return any(route.browser_required for route in provider_routes(provider_name))
+
+
+def provider_supports_browser_preflight(provider_name: str | None) -> bool:
+    return any(route.browser_preflight for route in provider_routes(provider_name))
+
+
+def provider_supports_auth(provider_name: str | None) -> bool:
+    return any(route.auth_supported for route in provider_routes(provider_name))
+
+
+def provider_requires_pdf_conversion(provider_name: str | None) -> bool:
+    return any(
+        route.requires_pdf_conversion for route in provider_routes(provider_name)
     )
 
 
@@ -365,17 +606,114 @@ def provider_persists_provider_html(provider_name: str | None) -> bool:
     return bool(spec and spec.persist_provider_html)
 
 
-def provider_for_xml_source(root_tag: str | None, xml_path: str | None) -> str:
+def _xml_identity_hints(
+    xml_root: ET.Element | None,
+) -> tuple[str, list[str]]:
+    if xml_root is None:
+        return "", []
+    doi = ""
+    publisher_values: list[str] = []
+    for node in xml_root.iter():
+        if not isinstance(node.tag, str):
+            continue
+        local_name = node.tag.rsplit("}", 1)[-1].lower()
+        text = " ".join("".join(node.itertext()).split())
+        if (
+            not doi
+            and local_name == "article-id"
+            and _normalize_catalog_token(node.get("pub-id-type")) == "doi"
+        ):
+            doi = _normalize_catalog_token(text)
+        elif local_name in {"publisher-name", "journal-title"} and text:
+            publisher_values.append(_normalize_catalog_token(text))
+    return doi, publisher_values
+
+
+def _provider_candidates_for_publisher_values(
+    values: list[str],
+) -> set[str]:
+    candidates: set[str] = set()
+    for spec in ordered_provider_specs():
+        aliases = {
+            _normalize_catalog_token(spec.display_name),
+            *(_normalize_catalog_token(alias) for alias in spec.publisher_aliases),
+        }
+        if any(
+            value
+            and any(
+                value == alias or alias in value or value in alias
+                for alias in aliases
+                if alias
+            )
+            for value in values
+        ):
+            candidates.add(spec.name)
+    return candidates
+
+
+def provider_for_xml_source(
+    root_tag: str | None,
+    xml_path: str | None,
+    *,
+    xml_root: ET.Element | None = None,
+    doi: str | None = None,
+    publisher: str | None = None,
+    journal: str | None = None,
+) -> str:
     root_name = _normalize_catalog_token(root_tag)
     lower_path = str(xml_path or "").lower()
-    for spec in ordered_provider_specs():
-        if any(token and token.lower() in lower_path for token in spec.xml_file_tokens):
-            return spec.name
-    for spec in ordered_provider_specs():
-        if root_name and root_name in {
-            _normalize_catalog_token(tag) for tag in spec.xml_root_tags
-        }:
-            return spec.name
+    specs = ordered_provider_specs()
+    path_candidates = {
+        spec.name
+        for spec in specs
+        if any(token and token.lower() in lower_path for token in spec.xml_file_tokens)
+    }
+    root_candidates = {
+        spec.name
+        for spec in specs
+        if root_name
+        and root_name in {_normalize_catalog_token(tag) for tag in spec.xml_root_tags}
+    }
+    extracted_doi, publisher_values = _xml_identity_hints(xml_root)
+    normalized_doi = _normalize_catalog_token(doi) or extracted_doi
+    doi_candidates = {
+        spec.name
+        for spec in specs
+        if normalized_doi
+        and any(
+            normalized_doi.startswith(_normalize_catalog_token(prefix))
+            for prefix in spec.doi_prefixes
+        )
+    }
+    publisher_values.extend(
+        value
+        for value in (
+            _normalize_catalog_token(publisher),
+            _normalize_catalog_token(journal),
+        )
+        if value
+    )
+    publisher_candidates = _provider_candidates_for_publisher_values(publisher_values)
+
+    strong_sets = [
+        candidates
+        for candidates in (doi_candidates, publisher_candidates)
+        if candidates
+    ]
+    if strong_sets:
+        compatible = set.intersection(*strong_sets)
+        if len(compatible) != 1:
+            return "unknown"
+        selected = next(iter(compatible))
+        if len(path_candidates) == 1 and selected not in path_candidates:
+            return "unknown"
+        if root_candidates and selected not in root_candidates:
+            return "unknown"
+        return selected
+    if len(path_candidates) == 1:
+        return next(iter(path_candidates))
+    if len(root_candidates) == 1:
+        return next(iter(root_candidates))
     return "unknown"
 
 
@@ -408,6 +746,14 @@ def provider_names() -> tuple[str, ...]:
 
 def official_provider_names() -> tuple[str, ...]:
     return tuple(spec.name for spec in ordered_provider_specs() if spec.official)
+
+
+def browser_preflight_provider_names() -> tuple[str, ...]:
+    return tuple(
+        spec.name
+        for spec in ordered_provider_specs()
+        if provider_supports_browser_preflight(spec.name)
+    )
 
 
 def provider_status_order() -> tuple[str, ...]:

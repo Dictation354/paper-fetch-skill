@@ -21,6 +21,7 @@ from ....config import (
     parse_positive_int_env,
     resolve_user_data_dir,
 )
+from ....failure import FailureDiagnostics
 from ....reason_codes import ERROR, NOT_CONFIGURED, OK, READY
 from ....utils import normalize_text, sanitize_filename
 from ... import _playwright_browser
@@ -32,7 +33,7 @@ from ...base import (
 )
 from .. import paths as runtime_paths
 from ..context import open_browser_context
-from ..types import BrowserFetchedHtml, BrowserRuntimeConfig
+from ..types import BrowserFetchedHtml, BrowserRuntimeConfig, BrowserWarmResult
 
 CAMOUFOX_STATUS_PROBE_ID = "probe://camoufox/status"
 
@@ -46,7 +47,15 @@ def _dependency_details() -> dict[str, Any]:
         name: importlib_util.find_spec(name) is not None
         for name in ("playwright", "camoufox")
     }
-    details: dict[str, Any] = {"probe": "importlib.find_spec", "packages": packages}
+    package_ready = all(packages.values())
+    details: dict[str, Any] = {
+        "probe": "importlib.find_spec",
+        "packages": packages,
+        "package_ready": package_ready,
+        "runtime_path": None,
+        "runtime_installed": False,
+        "download_required": package_ready,
+    }
     for package, available in packages.items():
         if not available:
             continue
@@ -80,11 +89,27 @@ def _dependency_details() -> dict[str, Any]:
             details["runtime_installed"] = bool(
                 runtime_path is not None and runtime_path.is_dir()
             )
+            details["download_required"] = not details["runtime_installed"]
         except Exception as exc:
-            details["runtime_path"] = None
-            details["runtime_installed"] = False
             details["runtime_probe_error"] = normalize_text(str(exc))
     return details
+
+
+def _package_ready(details: Mapping[str, Any]) -> bool:
+    packages = details.get("packages")
+    if not isinstance(packages, Mapping):
+        return False
+    return bool(
+        details.get("package_ready", all(bool(value) for value in packages.values()))
+    )
+
+
+def _runtime_installed(details: Mapping[str, Any]) -> bool:
+    # The fallback keeps third-party/test probes that predate the richer status
+    # payload compatible. The production probe always supplies runtime_installed.
+    if "runtime_installed" not in details:
+        return _package_ready(details)
+    return bool(details.get("runtime_installed"))
 
 
 class CamoufoxBackend:
@@ -125,10 +150,16 @@ class CamoufoxBackend:
         storage_state_path = runtime_paths.configured_storage_state_path(
             env, provider=provider
         )
+        storage_state_env_var = runtime_paths.provider_storage_state_env_var(provider)
         runtime_paths.validate_storage_state_path(
             storage_state_path,
             provider=provider,
             require_storage_state=require_storage_state,
+            explicit_path=bool(
+                (
+                    env.get(storage_state_env_var, "") if storage_state_env_var else ""
+                ).strip()
+            ),
         )
         timeout_value = browser_env_value(env, BROWSER_TIMEOUT_MS_ENV_VAR)
         return BrowserRuntimeConfig(
@@ -157,13 +188,24 @@ class CamoufoxBackend:
         )
 
     def ensure_runtime_ready(self, config: BrowserRuntimeConfig) -> None:
-        del config
         details = _dependency_details()
-        packages = details["packages"]
-        if not packages["playwright"] or not packages["camoufox"]:
+        if not _package_ready(details):
             raise ProviderFailure(
                 NOT_CONFIGURED,
                 "Camoufox browser workflow requires compatible camoufox and playwright packages.",
+            )
+        if not config.binary_path and not _runtime_installed(details):
+            raise ProviderFailure(
+                NOT_CONFIGURED,
+                "Camoufox Python packages are installed, but the browser runtime is missing. "
+                "Prepare the Camoufox runtime explicitly before fetching.",
+                diagnostics=FailureDiagnostics(
+                    details={
+                        "package_ready": True,
+                        "runtime_installed": False,
+                        "download_required": True,
+                    }
+                ),
             )
 
     def probe_runtime_status(
@@ -177,9 +219,12 @@ class CamoufoxBackend:
         checks = []
         config: BrowserRuntimeConfig | None = None
         details = _dependency_details()
-        available = all(details["packages"].values())
+        package_ready = _package_ready(details)
+        runtime_installed = _runtime_installed(details)
+        available = False
         try:
             config = self.load_runtime_config(env, provider=provider, doi=doi)
+            available = package_ready and bool(config.binary_path or runtime_installed)
             checks.append(
                 build_provider_status_check(
                     "runtime_env",
@@ -202,6 +247,10 @@ class CamoufoxBackend:
                         "browser_user_agent_ignored": bool(
                             normalize_text(env.get(BROWSER_USER_AGENT_ENV_VAR))
                         ),
+                        "package_ready": package_ready,
+                        "runtime_installed": runtime_installed,
+                        "download_required": package_ready
+                        and not bool(config.binary_path or runtime_installed),
                     },
                 )
             )
@@ -212,13 +261,39 @@ class CamoufoxBackend:
         checks.append(
             build_provider_status_check(
                 "playwright_dependency",
-                OK if available else NOT_CONFIGURED,
+                OK if package_ready else NOT_CONFIGURED,
                 (
                     "Camoufox and Playwright Python packages are importable; no browser is launched."
-                    if available
+                    if package_ready
                     else "Camoufox or Playwright Python package is not installed."
                 ),
                 details=details,
+            )
+        )
+        checks.append(
+            build_provider_status_check(
+                "browser_runtime",
+                OK if available else NOT_CONFIGURED,
+                (
+                    "Camoufox browser runtime is installed or an explicit executable is configured."
+                    if available
+                    else (
+                        "Camoufox Python packages are installed, but the browser runtime "
+                        "must be prepared explicitly before fetching."
+                        if package_ready
+                        else "Camoufox browser runtime cannot be used until its Python packages are installed."
+                    )
+                ),
+                details={
+                    "backend": self.name,
+                    "package_ready": package_ready,
+                    "runtime_installed": runtime_installed,
+                    "binary_path_configured": bool(
+                        config is not None and config.binary_path
+                    ),
+                    "download_required": package_ready and not available,
+                    "runtime_path": details.get("runtime_path"),
+                },
             )
         )
 
@@ -294,7 +369,7 @@ class CamoufoxBackend:
         browser_context_seed: Mapping[str, Any] | None = None,
         runtime_context: Any | None = None,
         lightweight: bool = False,
-    ) -> dict[str, Any]:
+    ) -> BrowserWarmResult:
         return _playwright_browser.warm_browser_context_with_playwright(
             candidate_urls,
             publisher=publisher,

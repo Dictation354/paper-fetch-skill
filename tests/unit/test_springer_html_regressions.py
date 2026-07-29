@@ -28,6 +28,21 @@ from tests.golden_criteria import (
 
 
 class SpringerHtmlRegressionTests(unittest.TestCase):
+    def test_springer_internal_site_family_profiles_cover_three_public_families(
+        self,
+    ) -> None:
+        cases = {
+            "https://www.nature.com/articles/s41586-020-1941-5": "nature",
+            "https://link.springer.com/article/10.1007/s10584-011-0143-4": "springerlink",
+            "https://bmcmedicine.biomedcentral.com/articles/10.1186/s12916-024-00001-1": "bmc",
+        }
+        for url, expected in cases.items():
+            with self.subTest(url=url):
+                profile = springer_provider.springer_site_family_profile(url)
+                self.assertEqual(profile.name, expected)
+                self.assertEqual(profile.html_source, "springer_html")
+                self.assertEqual(profile.pdf_source, "springer_pdf")
+
     def test_springer_ai_alt_disclaimer_cleanup_uses_id_contract_not_full_text(
         self,
     ) -> None:

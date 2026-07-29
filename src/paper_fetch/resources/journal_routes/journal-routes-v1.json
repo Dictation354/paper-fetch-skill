@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "plos": {
+    "journal_paths": {
+      "pbio": "plosbiology",
+      "pcbi": "ploscompbiol",
+      "pclm": "climate",
+      "pdig": "digitalhealth",
+      "pgen": "plosgenetics",
+      "pgph": "globalpublichealth",
+      "pmed": "plosmedicine",
+      "pntd": "plosntds",
+      "pone": "plosone",
+      "ppat": "plospathogens",
+      "pstr": "sustainabilitytransformation",
+      "pwat": "water"
+    }
+  },
+  "mdpi": {
+    "issn_journal_codes": {
+      "1424-8220": "s",
+      "1660-4601": "ijerph",
+      "1996-1073": "en",
+      "2071-1050": "su",
+      "2072-4292": "rs",
+      "2073-4441": "w",
+      "2077-0375": "membranes",
+      "2227-7390": "math",
+      "2304-8158": "foods"
+    }
+  }
+}

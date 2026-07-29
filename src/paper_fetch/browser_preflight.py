@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any
 from collections.abc import Callable, Iterable, Mapping
 
-from .auth import AUTH_TARGETS, AuthTarget, browser_auth_provider_names
+from .auth import AUTH_TARGETS, AuthTarget
 from .config import (
     BROWSER_TIMEOUT_MS_ENV_VAR,
     BROWSER_USER_AGENT_ENV_VAR,
@@ -18,8 +18,10 @@ from .config import (
 )
 from .http import RequestCancelledError
 from .publisher_identity import extract_doi, extract_doi_from_url
+from .provider_catalog import browser_preflight_provider_names
 from .providers.base import ProviderFailure
 from .providers.browser_runtime import (
+    BrowserHtmlReadiness,
     BrowserRuntimeConfig,
     BrowserRuntimeFailure,
     ensure_runtime_ready,
@@ -29,6 +31,7 @@ from .providers.browser_runtime import (
     storage_state_path as runtime_storage_state_path,
 )
 from .providers.browser_runtime.paths import runtime_with_default_storage_profile
+from .providers.browser_runtime.paths import commit_staged_storage_state
 from .providers.browser_workflow.client import BrowserWorkflowClient
 from .providers.browser_workflow.shared import (
     BrowserWorkflowDeps,
@@ -121,8 +124,19 @@ def static_browser_capabilities(
 ) -> dict[str, object]:
     """Describe local browser dependencies/config without opening a browser."""
 
-    browser_providers = browser_auth_provider_names()
+    browser_providers = browser_preflight_provider_names()
     provider_key = normalize_text(provider).lower()
+    if provider is not None and provider_key not in browser_providers:
+        return {
+            "diagnostic_scope": "static_configuration_and_local_dependencies",
+            "provider_context": provider_key or None,
+            "status": "not_applicable",
+            "available": False,
+            "reason_code": "browser_route_not_applicable",
+            "message": "This provider does not declare a browser-backed route.",
+            "live_checked": False,
+            "publisher_page_checked": False,
+        }
     if provider_key not in browser_providers:
         provider_key = browser_providers[0]
     result = probe_runtime_status(env, provider=provider_key)
@@ -247,7 +261,7 @@ def static_browser_capabilities(
 
 
 def _unsupported_provider_failure(provider: str) -> ProviderFailure:
-    supported = ", ".join(browser_auth_provider_names())
+    supported = ", ".join(browser_preflight_provider_names())
     return ProviderFailure(
         ERROR,
         f"Unsupported browser preflight provider {provider!r}; supported providers: {supported}.",
@@ -289,6 +303,75 @@ def _provider_client(
     )
 
 
+def _preflight_generic_browser_route(
+    provider_key: str,
+    target: AuthTarget,
+    *,
+    env: Mapping[str, str],
+    storage_state_path: Path | None,
+    save_storage_state: bool,
+    cancel_check: Callable[[], bool] | None,
+) -> BrowserPreflightResult:
+    """Preflight an optional browser recovery route without requiring its client
+    to inherit the browser-workflow provider base class.
+    """
+
+    runtime = load_runtime_config(env, provider=provider_key, doi=target.doi)
+    runtime = _runtime_with_preflight_storage(
+        runtime,
+        env=env,
+        provider=provider_key,
+        storage_state_path=storage_state_path,
+        save_storage_state=save_storage_state,
+    )
+    ensure_runtime_ready(runtime)
+    context = RuntimeContext(env=dict(env), cancel_check=cancel_check)
+    try:
+        html_result = fetch_html_with_browser(
+            [target.url],
+            publisher=provider_key,
+            config=runtime,
+            readiness=BrowserHtmlReadiness(
+                wait_for_article_body=False,
+                selector="#article" if provider_key == "ieee" else None,
+            ),
+            wait_seconds=2,
+            runtime_context=context,
+        )
+        diagnostics = dict(html_result.diagnostics or {})
+        if save_storage_state and html_result.staged_storage_state is not None:
+            save_result = commit_staged_storage_state(
+                html_result.staged_storage_state,
+                runtime,
+                runtime_context=context,
+            )
+            diagnostics["storage_state_save"] = save_result
+            if not save_result.get("saved"):
+                return _failure_result(
+                    provider_key,
+                    target_url=target.url,
+                    storage_state_path=_storage_state_path(runtime),
+                    reason="state_save_failed",
+                    message=(
+                        "Publisher page passed preflight, but the accepted browser "
+                        "storage state could not be saved."
+                    ),
+                    diagnostics=diagnostics,
+                )
+        return BrowserPreflightResult(
+            provider=provider_key,
+            provider_label=provider_display_name(provider_key),
+            ok=True,
+            target_url=target.url,
+            final_url=html_result.final_url,
+            title=html_result.title,
+            storage_state_path=_storage_state_path(runtime),
+            diagnostics=diagnostics,
+        )
+    finally:
+        context.close()
+
+
 def _preflight_metadata(target: AuthTarget) -> dict[str, Any]:
     return {
         "doi": target.doi,
@@ -307,6 +390,24 @@ def _preflight_title_from_payload(raw_payload: Any) -> str | None:
         if title:
             return title
     return None
+
+
+def _preflight_storage_state_save(
+    raw_payload: Any,
+) -> Mapping[str, Any] | None:
+    content = getattr(raw_payload, "content", None)
+    diagnostics = getattr(content, "diagnostics", None)
+    runtime_trace = (
+        diagnostics.get("browser_runtime_trace")
+        if isinstance(diagnostics, Mapping)
+        else None
+    )
+    save_result = (
+        runtime_trace.get("storage_state_save")
+        if isinstance(runtime_trace, Mapping)
+        else None
+    )
+    return save_result if isinstance(save_result, Mapping) else None
 
 
 def _preflight_deps(
@@ -365,7 +466,7 @@ def preflight_browser_provider(
     cancel_check: Callable[[], bool] | None = None,
 ) -> BrowserPreflightResult:
     provider_key = normalize_text(provider).lower()
-    if provider_key not in browser_auth_provider_names():
+    if provider_key not in browser_preflight_provider_names():
         raise _unsupported_provider_failure(provider)
 
     target = _preflight_target(provider_key, target_url)
@@ -382,6 +483,15 @@ def preflight_browser_provider(
     storage_path: dict[str, Path | None] = {"value": None}
     context: RuntimeContext | None = None
     try:
+        if provider_key == "ieee":
+            return _preflight_generic_browser_route(
+                provider_key,
+                target,
+                env=env,
+                storage_state_path=storage_state_path,
+                save_storage_state=save_storage_state,
+                cancel_check=cancel_check,
+            )
         client = _provider_client(provider_key, env=env)
         deps = _preflight_deps(
             env,
@@ -406,6 +516,23 @@ def preflight_browser_provider(
                 reason=bootstrap.html_failure_reason,
                 message=bootstrap.html_failure_message,
                 diagnostics=bootstrap.html_failure_diagnostics,
+            )
+        save_result = _preflight_storage_state_save(raw_payload)
+        if (
+            save_storage_state
+            and save_result is not None
+            and not save_result.get("saved")
+        ):
+            return _failure_result(
+                provider_key,
+                target_url=target.url,
+                storage_state_path=storage_path["value"],
+                reason="state_save_failed",
+                message=(
+                    "Publisher page passed preflight, but the accepted browser "
+                    "storage state could not be saved."
+                ),
+                diagnostics={"storage_state_save": dict(save_result)},
             )
     except RequestCancelledError:
         raise
@@ -475,7 +602,7 @@ def run_browser_provider_preflight(
     selected_providers = (
         _dedupe_providers(providers)
         if providers is not None
-        else browser_auth_provider_names()
+        else browser_preflight_provider_names()
     )
     if (target_url is not None or storage_state_path is not None) and len(
         selected_providers

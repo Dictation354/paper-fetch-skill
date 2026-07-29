@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import fields
 import unittest
+import urllib.parse
 
 from paper_fetch.providers import (
     _atypon_browser_workflow_profiles as atypon_profiles,
@@ -24,6 +25,13 @@ from paper_fetch.providers.acs import AcsClient
 from paper_fetch.providers.aip import AipClient
 from paper_fetch.providers.ams import AmsClient
 from paper_fetch.providers.pnas import PnasClient
+from paper_fetch.providers.mdpi import MdpiClient
+from paper_fetch.providers.mdpi import MDPI_BROWSER_PROFILE
+from paper_fetch.providers.iop import IOP_BROWSER_PROFILE
+from paper_fetch.providers.annualreviews import ANNUALREVIEWS_BROWSER_PROFILE
+from paper_fetch.providers.royalsocietypublishing import (
+    ROYAL_SOCIETY_BROWSER_PROFILE,
+)
 from paper_fetch.providers.science import ScienceClient
 from paper_fetch.providers.wiley import WileyClient
 from tests.provider_benchmark_samples import provider_benchmark_sample
@@ -37,6 +45,26 @@ AIP_SAMPLE = provider_benchmark_sample("aip")
 
 
 class AtyponBrowserWorkflowCandidateTests(unittest.TestCase):
+    def test_shared_doi_path_builder_quotes_reserved_suffix_characters(self) -> None:
+        doi = "10.1000/path?query#fragment%escape"
+        for provider in ("acs", "aip", "wiley", "science", "pnas"):
+            with self.subTest(provider=provider):
+                candidates = [
+                    *build_html_candidates(provider, doi),
+                    *build_pdf_candidates(provider, doi, None),
+                ]
+                self.assertTrue(candidates)
+                for candidate in candidates:
+                    parsed = urllib.parse.urlsplit(candidate)
+                    self.assertIn(parsed.query, {"", "download=true"})
+                    self.assertEqual(parsed.fragment, "")
+                    self.assertNotIn("query", parsed.query)
+                    self.assertNotIn("fragment", parsed.query)
+                    self.assertNotIn("escape", parsed.query)
+                    self.assertIn("%3F", parsed.path)
+                    self.assertIn("%23", parsed.path)
+                    self.assertIn("%25", parsed.path)
+
     def test_atypon_profile_scope_is_catalog_aligned(self) -> None:
         self.assertEqual(
             ATYPON_BROWSER_WORKFLOW_PROVIDER_NAMES,
@@ -49,6 +77,23 @@ class AtyponBrowserWorkflowCandidateTests(unittest.TestCase):
             ValueError, "Unsupported Atypon browser-workflow HTML publisher"
         ):
             build_html_candidates("springer", "10.1007/example")
+
+    def test_all_browser_profiles_derive_routing_fields_from_catalog(self) -> None:
+        profiles = [
+            ScienceClient.profile,
+            PnasClient.profile,
+            WileyClient.profile,
+            AmsClient.profile,
+            AcsClient.profile,
+            AipClient.profile,
+            MDPI_BROWSER_PROFILE,
+            IOP_BROWSER_PROFILE,
+            ANNUALREVIEWS_BROWSER_PROFILE,
+            ROYAL_SOCIETY_BROWSER_PROFILE,
+        ]
+        for profile in profiles:
+            with self.subTest(provider=profile.name):
+                browser_workflow.validate_browser_profile_catalog_sync(profile)
 
     def test_atypon_profiles_register_provider_owned_callbacks(self) -> None:
         for name in ATYPON_BROWSER_WORKFLOW_PROVIDER_NAMES:
@@ -151,6 +196,13 @@ class AtyponBrowserWorkflowCandidateTests(unittest.TestCase):
             ],
         )
         self.assertEqual(
+            build_html_candidates("pnas", PNAS_SAMPLE.doi)[:2],
+            [
+                f"https://www.pnas.org/doi/full/{PNAS_SAMPLE.doi}",
+                f"https://www.pnas.org/doi/{PNAS_SAMPLE.doi}",
+            ],
+        )
+        self.assertEqual(
             build_pdf_candidates("pnas", PNAS_SAMPLE.doi, None)[:3],
             [
                 f"https://www.pnas.org/doi/epdf/{PNAS_SAMPLE.doi}",
@@ -158,6 +210,26 @@ class AtyponBrowserWorkflowCandidateTests(unittest.TestCase):
                 f"https://www.pnas.org/doi/pdf/{PNAS_SAMPLE.doi}",
             ],
         )
+
+    def test_pnas_and_mdpi_use_headless_fulltext_readiness_selectors(self) -> None:
+        cases = (
+            (
+                PnasClient(None, {}),
+                '[data-extent="bodymatter"]',
+            ),
+            (
+                MdpiClient(None, {}),
+                ".html-article-content, #article-contents, .prose-article",
+            ),
+        )
+
+        for client, expected_selector in cases:
+            with self.subTest(provider=client.name):
+                readiness = client.require_profile().html_readiness
+                self.assertIsNotNone(readiness)
+                assert readiness is not None
+                self.assertFalse(readiness.wait_for_article_body)
+                self.assertEqual(readiness.selector, expected_selector)
         self.assertEqual(
             build_pdf_candidates("wiley", WILEY_SAMPLE.doi, None)[:4],
             [
@@ -520,8 +592,8 @@ class AtyponBrowserWorkflowCandidateTests(unittest.TestCase):
         self.assertEqual(
             candidates[:2],
             [
-                f"https://www.pnas.org/doi/{PNAS_SAMPLE.doi}",
                 f"https://www.pnas.org/doi/full/{PNAS_SAMPLE.doi}",
+                f"https://www.pnas.org/doi/{PNAS_SAMPLE.doi}",
             ],
         )
 

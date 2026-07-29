@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 import time
 from dataclasses import replace
 from pathlib import Path
@@ -10,6 +11,7 @@ from typing import Any
 from collections.abc import Callable, Mapping
 
 from ..extraction.html import decode_html
+from ..extraction.html.signals import detect_html_block, summarize_html
 from ..extraction.html.assets.figures import figure_download_candidates
 from ..http.headers import header_value
 from ..models import AssetProfile
@@ -39,24 +41,40 @@ IEEE_ASSET_ARTICLE_READY_POLL_MS = 500
 def _ieee_article_seed_page_is_ready(page: Any, context: Any, seed_url: str) -> bool:
     """Wait for IEEE's initial HTTP 202 verification to populate page state."""
 
+    article_match = re.search(r"/document/([^/?#]+)", seed_url)
+    article_number = normalize_text(article_match.group(1) if article_match else "")
     deadline = time.monotonic() + IEEE_ASSET_ARTICLE_READY_TIMEOUT_SECONDS
     while time.monotonic() < deadline:
         title = ""
-        cookies: list[Any] = []
+        html = ""
         try:
             title = normalize_text(str(page.title() or ""))
         except Exception:
             title = ""
         try:
-            cookies = list(context.cookies([seed_url]) or [])
-        except TypeError:
-            try:
-                cookies = list(context.cookies() or [])
-            except Exception:
-                cookies = []
+            html = str(page.content() or "")
         except Exception:
-            cookies = []
-        if title and cookies:
+            html = ""
+        if detect_html_block(title, summarize_html(html), None) is not None:
+            return False
+        try:
+            has_article = page.locator("#article").count() > 0
+        except Exception:
+            has_article = False
+        rest_document_seen = False
+        try:
+            rest_document_seen = bool(
+                page.evaluate(
+                    """articleNumber => performance.getEntriesByType('resource')
+                      .some(entry => entry.name.includes('/rest/document/' + articleNumber + '/'))""",
+                    article_number,
+                )
+            )
+        except Exception:
+            rest_document_seen = False
+        if rest_document_seen or (
+            has_article and article_number and article_number in html
+        ):
             return True
         try:
             page.wait_for_timeout(IEEE_ASSET_ARTICLE_READY_POLL_MS)

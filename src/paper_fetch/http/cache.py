@@ -7,6 +7,7 @@ import functools
 import hashlib
 import json
 import os
+import re
 import threading
 import time
 import urllib.parse
@@ -30,8 +31,10 @@ DEFAULT_DISK_CACHE_MAX_ENTRIES = 4096
 DEFAULT_DISK_CACHE_MAX_BYTES = 512 * 1024 * 1024
 DEFAULT_DISK_CACHE_MAX_AGE_DAYS = 30
 DEFAULT_DISK_CACHE_MAX_AGE_SECONDS = DEFAULT_DISK_CACHE_MAX_AGE_DAYS * 24 * 60 * 60
-DISK_CACHE_VERSION = 1
+DISK_CACHE_VERSION = 2
 DISK_CACHE_ROOT_NAME = "http-text-get"
+DISK_CACHE_RECONCILE_WRITE_INTERVAL = 256
+DISK_CACHE_RECONCILE_SECONDS = 300
 CACHE_STAT_KEYS = (
     "memory_hit",
     "disk_fresh_hit",
@@ -43,6 +46,7 @@ CACHE_STAT_KEYS = (
 )
 SENSITIVE_CACHE_HEADER_NAMES = {
     "authorization",
+    "cookie",
     "proxy-authorization",
 }
 CACHE_KEY_HEADER_NAMES = {
@@ -65,6 +69,12 @@ SENSITIVE_QUERY_PARAM_NAMES = {
 }
 REDACTED_CACHE_VALUE = "***"
 REDACTED_CACHE_HEADER_DIGEST_PREFIX = "sha256:"
+SENSITIVE_RESPONSE_HEADER_NAMES = {
+    "set-cookie",
+    "set-cookie2",
+    "www-authenticate",
+    "proxy-authenticate",
+}
 _CacheKey = tuple[str, str, tuple[tuple[str, str], ...]]
 
 
@@ -104,6 +114,11 @@ def _url_has_sensitive_query_params(url: str) -> bool:
     )
 
 
+def _secret_cache_digest(name: str, value: str) -> str:
+    raw = f"{name.lower()}\0{value}".encode()
+    return hashlib.sha256(raw).hexdigest()
+
+
 def redact_url_for_cache(url: str) -> str:
     if not url:
         return url
@@ -126,6 +141,87 @@ def redact_url_for_cache(url: str) -> str:
     )
 
 
+def redact_url_for_diagnostics(url: str) -> str:
+    """Remove all query/fragment data from a URL before durable diagnostics."""
+
+    if not url:
+        return url
+    parsed = urllib.parse.urlsplit(url)
+    return urllib.parse.urlunsplit((parsed.scheme, parsed.netloc, parsed.path, "", ""))
+
+
+def diagnostic_url_payload(url: str) -> dict[str, str]:
+    """Return a secret-free URL summary with a correlation digest."""
+
+    if not url:
+        return {}
+    parsed = urllib.parse.urlsplit(url)
+    redacted = redact_url_for_diagnostics(url)
+    return {
+        "url": redacted,
+        "host": str(parsed.hostname or "").lower(),
+        "path": parsed.path,
+        "url_sha256": hashlib.sha256(url.encode("utf-8")).hexdigest(),
+    }
+
+
+_DIAGNOSTIC_URL_IN_TEXT_RE = re.compile(
+    r"(?P<base>(?:https?://|/)[^\s\"'<>?]+)\?[^\s\"'<>]*",
+    re.IGNORECASE,
+)
+_DIAGNOSTIC_SECRET_ASSIGNMENT_RE = re.compile(
+    r"(?P<name>\b(?:x-amz-signature|signature|token|api[_-]?key|access[_-]?key)"
+    r"\s*[=:]\s*)[^\s&;\"'<>]+",
+    re.IGNORECASE,
+)
+
+
+def redact_text_for_diagnostics(value: str) -> str:
+    """Remove URL queries and credential assignments from diagnostic text."""
+
+    text = str(value or "")
+    text = _DIAGNOSTIC_URL_IN_TEXT_RE.sub(
+        lambda match: f"{match.group('base')}?[redacted]",
+        text,
+    )
+    return _DIAGNOSTIC_SECRET_ASSIGNMENT_RE.sub(
+        lambda match: f"{match.group('name')}[redacted]",
+        text,
+    )
+
+
+def _cache_identity_url(url: str) -> str:
+    """Return a secret-safe URL that still distinguishes credential scopes."""
+
+    if not url:
+        return url
+    parsed = urllib.parse.urlsplit(url)
+    if not parsed.query:
+        return urllib.parse.urlunsplit(
+            (parsed.scheme, parsed.netloc, parsed.path, "", "")
+        )
+    identity_query = urllib.parse.urlencode(
+        [
+            (
+                key,
+                (
+                    f"{REDACTED_CACHE_HEADER_DIGEST_PREFIX}"
+                    f"{_secret_cache_digest(key, value)}"
+                )
+                if _is_sensitive_query_param_name(key)
+                else value,
+            )
+            for key, value in urllib.parse.parse_qsl(
+                parsed.query, keep_blank_values=True
+            )
+        ],
+        doseq=True,
+    )
+    return urllib.parse.urlunsplit(
+        (parsed.scheme, parsed.netloc, parsed.path, identity_query, "")
+    )
+
+
 class CacheMixin:
     """Private cache methods mixed into ``HttpTransport``."""
 
@@ -145,6 +241,12 @@ class CacheMixin:
     _cache_stats_lock: threading.Lock
     _cache_stats: dict[str, int]
     _disk_cache_lock: threading.RLock
+    _disk_cache_entries: dict[Path, _DiskCacheEntry]
+    _disk_cache_total_bytes: int
+    _disk_cache_index_initialized: bool
+    _disk_cache_writes_since_reconcile: int
+    _disk_cache_last_reconcile: float
+    _disk_cache_last_prune: float
 
     def _increment_cache_stat(self, name: str, amount: int = 1) -> None:
         if name not in self._cache_stats:
@@ -164,6 +266,10 @@ class CacheMixin:
     ) -> _CacheKey | None:
         if method.upper() != "GET" or self.cache_ttl <= 0 or self.cache_capacity <= 0:
             return None
+        # Key all caller-visible request headers.  This is deliberately stricter
+        # than trying to predict a response's Vary value before the response is
+        # available: every standards-compliant Vary representation is therefore
+        # isolated, while secret values remain one-way digests.
         normalized_headers = tuple(
             sorted(
                 (
@@ -171,17 +277,24 @@ class CacheMixin:
                     self._normalize_header_value_for_cache(str(key), str(value)),
                 )
                 for key, value in headers.items()
-                if str(key).lower() in _cache_key_header_names()
+                if str(key).lower() not in UNSTABLE_CACHE_HEADER_NAMES
             )
         )
-        return (method.upper(), redact_url_for_cache(url), normalized_headers)
+        return (method.upper(), _cache_identity_url(url), normalized_headers)
+
+    def _cache_key_has_credentials(self, cache_key: _CacheKey | None) -> bool:
+        if cache_key is None:
+            return False
+        _method, identity_url, headers = cache_key
+        if REDACTED_CACHE_HEADER_DIGEST_PREFIX in identity_url:
+            return True
+        sensitive_names = _sensitive_cache_header_names()
+        return any(name in sensitive_names for name, _value in headers)
 
     def _normalize_header_value_for_cache(self, key: str, value: str) -> str:
         normalized_key = key.lower()
         if normalized_key in _sensitive_cache_header_names():
-            digest = hashlib.sha256(f"{normalized_key}\0{value}".encode()).hexdigest()[
-                :16
-            ]
+            digest = _secret_cache_digest(normalized_key, value)[:16]
             return f"{REDACTED_CACHE_HEADER_DIGEST_PREFIX}{digest}"
         if normalized_key in UNSTABLE_CACHE_HEADER_NAMES:
             return "<volatile>"
@@ -190,9 +303,20 @@ class CacheMixin:
     def _clone_response(self, response: Mapping[str, Any]) -> dict[str, Any]:
         return {
             "status_code": response.get("status_code"),
-            "headers": dict(response.get("headers") or {}),
+            "headers": self._safe_cached_response_headers(
+                response.get("headers") or {}
+            ),
             "body": response.get("body", b""),
             "url": response.get("url"),
+        }
+
+    def _safe_cached_response_headers(
+        self, headers: Mapping[str, Any]
+    ) -> dict[str, str]:
+        return {
+            str(key).lower(): str(value)
+            for key, value in headers.items()
+            if str(key).lower() not in SENSITIVE_RESPONSE_HEADER_NAMES
         }
 
     def _load_cached_response(
@@ -248,12 +372,17 @@ class CacheMixin:
         return self.disk_cache_dir / DISK_CACHE_ROOT_NAME
 
     def _unlink_disk_cache_path(self, path: Path) -> None:
+        removed = self._disk_cache_entries.pop(path, None)
         try:
             path.unlink()
         except FileNotFoundError:
-            return
+            pass
         except OSError:
             return
+        if removed is not None:
+            self._disk_cache_total_bytes = max(
+                0, self._disk_cache_total_bytes - removed.size
+            )
         with contextlib.suppress(OSError):
             path.parent.rmdir()
 
@@ -285,6 +414,14 @@ class CacheMixin:
                 entries.append(entry)
         return entries
 
+    def _reconcile_disk_cache_index(self) -> None:
+        entries = self._iter_disk_cache_entries()
+        self._disk_cache_entries = {entry.path: entry for entry in entries}
+        self._disk_cache_total_bytes = sum(entry.size for entry in entries)
+        self._disk_cache_index_initialized = True
+        self._disk_cache_writes_since_reconcile = 0
+        self._disk_cache_last_reconcile = time.monotonic()
+
     def _prune_disk_cache(self) -> None:
         if self.disk_cache_dir is None:
             return
@@ -295,8 +432,33 @@ class CacheMixin:
         ):
             return
         with self._disk_cache_lock:
+            monotonic_now = time.monotonic()
+            reconcile_due = (
+                not self._disk_cache_index_initialized
+                or self._disk_cache_writes_since_reconcile
+                >= DISK_CACHE_RECONCILE_WRITE_INTERVAL
+                or monotonic_now - self._disk_cache_last_reconcile
+                >= DISK_CACHE_RECONCILE_SECONDS
+            )
+            if reconcile_due:
+                self._reconcile_disk_cache_index()
+            over_entries = (
+                self.disk_cache_max_entries > 0
+                and len(self._disk_cache_entries) > self.disk_cache_max_entries
+            )
+            over_bytes = (
+                self.disk_cache_max_bytes > 0
+                and self._disk_cache_total_bytes > self.disk_cache_max_bytes
+            )
+            age_prune_due = (
+                self.disk_cache_max_age_seconds > 0
+                and monotonic_now - self._disk_cache_last_prune
+                >= DISK_CACHE_RECONCILE_SECONDS
+            )
+            if not (over_entries or over_bytes or age_prune_due):
+                return
             now = time.time()
-            entries = self._iter_disk_cache_entries()
+            entries = list(self._disk_cache_entries.values())
             survivors: list[_DiskCacheEntry] = []
             for entry in entries:
                 if (
@@ -318,11 +480,12 @@ class CacheMixin:
                 survivors = survivors[remove_count:]
 
             if self.disk_cache_max_bytes > 0:
-                total_bytes = sum(entry.size for entry in survivors)
+                total_bytes = self._disk_cache_total_bytes
                 while survivors and total_bytes > self.disk_cache_max_bytes:
                     entry = survivors.pop(0)
                     total_bytes -= entry.size
                     self._unlink_disk_cache_path(entry.path)
+            self._disk_cache_last_prune = monotonic_now
 
     def _load_disk_cached_entry(
         self, cache_key: _CacheKey | None
@@ -373,6 +536,7 @@ class CacheMixin:
         if (
             cache_key is None
             or self.disk_cache_dir is None
+            or self._cache_key_has_credentials(cache_key)
             or not self._is_cacheable_response(response)
         ):
             return False
@@ -386,7 +550,9 @@ class CacheMixin:
             "version": DISK_CACHE_VERSION,
             "stored_at": time.time(),
             "status_code": int(response.get("status_code") or 200),
-            "headers": dict(response.get("headers") or {}),
+            "headers": self._safe_cached_response_headers(
+                response.get("headers") or {}
+            ),
             "url": str(response.get("url") or ""),
             "body_b64": base64.b64encode(bytes(body)).decode("ascii"),
         }
@@ -403,6 +569,16 @@ class CacheMixin:
                 tmp_path.replace(cache_path)
             except OSError:
                 return False
+            entry = self._disk_cache_entry_from_path(cache_path)
+            if entry is not None:
+                previous = self._disk_cache_entries.get(cache_path)
+                if previous is not None:
+                    self._disk_cache_total_bytes = max(
+                        0, self._disk_cache_total_bytes - previous.size
+                    )
+                self._disk_cache_entries[cache_path] = entry
+                self._disk_cache_total_bytes += entry.size
+                self._disk_cache_writes_since_reconcile += 1
             self._prune_disk_cache()
             return cache_path.exists()
 
@@ -447,6 +623,19 @@ class CacheMixin:
             str(key).lower(): str(value)
             for key, value in dict(response.get("headers") or {}).items()
         }
+        cache_control = {
+            directive.strip().lower()
+            for directive in headers.get("cache-control", "").split(",")
+            if directive.strip()
+        }
+        if (
+            "no-store" in cache_control
+            or "private" in cache_control
+            or "set-cookie" in headers
+            or "set-cookie2" in headers
+            or headers.get("vary", "").strip() == "*"
+        ):
+            return False
         if _url_has_sensitive_query_params(headers.get("location", "")):
             return False
         body = response.get("body", b"")

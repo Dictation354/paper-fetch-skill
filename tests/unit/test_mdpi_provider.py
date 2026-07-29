@@ -674,7 +674,10 @@ class MdpiProviderTests(AtyponBrowserWorkflowProviderTestCase):
         mocked_builder.assert_called_once()
         shared_fetcher.assert_called_once()
         self.assertEqual(shared_fetcher.call_args.args[0], figure_url)
-        self.assertEqual(transport.calls, [])
+        self.assertEqual(
+            [call["url"] for call in transport.calls],
+            [figure_url],
+        )
         self.assertEqual(len(result["assets"]), 1)
         self.assertEqual(result["assets"][0]["download_tier"], "preview")
         self.assertEqual(
