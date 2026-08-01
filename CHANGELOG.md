@@ -6,6 +6,27 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+### Added
+
+- Rebuilt the macOS adaptation against `Dictation354/paper-fetch-skill` v4.1.0 (`fc3bd96e8d781667a2e86e90dc6e8e35a8a26fa7`) with a machine-readable contract, validator, layered audit matrix, and portable Windows/WSL maintenance gates. The contract documents how to replay the isolated adaptation on a refreshed upstream main branch and keeps `/mnt/*` WSL checkouts limited to static evidence.
+- Added fail-closed macOS installation checks for the minimum OS, manifest and checksums, an exact checksummed regular-file inventory with payload symlinks forbidden, standard-GIL CPython ABI and architecture, recursive quarantine state, package/staging path ownership, atomic artifact publication, safe purge, owned upgrades, user configuration, and symlink-preserving Zsh startup updates. Unlisted payload files and purge requests made through symlinks are rejected before user integrations are changed.
+
+### Changed
+
+- Pinned native macOS arm64 offline builds for CPython 3.11–3.14 to `macos-15`, including relocatable texmath Mach-O dependency closure, ad-hoc signing, safe archive extraction, canonical `LC_RPATH` validation, recursive `xattr` checks, and executable Playwright Node verification.
+- Split portable Windows/WSL contract evidence from native macOS evidence. Regular CI now runs the native filesystem-alias node and a serial dual-context test against the pinned official Camoufox `152.0.4-beta.28` app bundle; the test validates the managed cache before Camoufox can inspect or clean it.
+- Pinned both browser extras and the lockfile to `camoufox==0.5.4`, matching the package exercised by the native Mac launch gate. POSIX packaging verifies the downloaded wheel metadata and installed distribution, then records the verified version in the offline manifest. Immutable-tag rebuilds must pass the source checkout's current Mac contract before any overlay; trusted POSIX/Windows tooling refs require full commit SHAs, copy only exact packaging-tool paths, never copy Python wheel source, and are recorded separately in artifact provenance.
+
+### Fixed
+
+- Fixed concurrent or resumed CLI batches colliding on `unknown_unknown_article.*` when a metadata-poor result had no title or DOI. Output naming now falls back to a deterministic 16-character SHA-256 digest of the normalized query, preserving no-overwrite safety without exposing full query URLs in filenames.
+- Fixed prepared official Camoufox app bundles failing to start on native macOS. Managed runtime readiness remains a no-download check, but paper-fetch no longer passes `Contents/MacOS/camoufox` back as a custom executable and therefore no longer makes Camoufox look for `Contents/MacOS/properties.json`. Ephemeral fetch/preflight and persistent authentication contexts share this behavior, while explicit custom executable overrides remain supported.
+- Fixed MCP cache index, fetch-envelope, and resource misses when macOS exposes a temporary scope through `/var` or `/tmp` but canonicalizes saved paths through `/private/var` or `/private/tmp`; equivalent roots now share one safe scope while in-scope symlinks and out-of-scope files remain rejected.
+
+### Limitations
+
+- Offline packages include the Camoufox and Playwright Python dependencies but not the Camoufox browser binary. Prepare it explicitly with `python -m camoufox fetch` before entering a restricted or offline environment, then run `paper-fetch browser-preflight`. A reproducible browser-backed fetch in a fully network-isolated native macOS environment remains an open audit item, so complete offline browser support is not claimed.
+
 ## 4.1.0 - 2026-07-29
 
 ### Added

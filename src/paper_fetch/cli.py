@@ -7,6 +7,7 @@ import contextlib
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, replace
 from datetime import datetime
+from hashlib import sha256
 import json
 import os
 import signal
@@ -63,7 +64,12 @@ from .runtime import (
 )
 from .service import FetchStrategy, PaperFetchFailure, fetch_paper, resolve_paper
 from .tracing import merge_trace, trace_from_markers
-from .utils import _extract_year, format_paper_stem, provider_display_name
+from .utils import (
+    _extract_year,
+    format_paper_stem,
+    normalize_text,
+    provider_display_name,
+)
 from .version import package_version
 from .workflow.batch_runner import (
     BatchCompletionEvent,
@@ -287,14 +293,26 @@ def _should_save_markdown_via_pipeline(
     )
 
 
-def _formatted_output_filename(envelope: FetchEnvelope, *, output_format: str) -> str:
+def _formatted_output_filename(
+    envelope: FetchEnvelope,
+    *,
+    output_format: str,
+    fallback_query: str | None = None,
+) -> str:
     meta = (
         envelope.article.metadata if envelope.article is not None else envelope.metadata
     )
     authors = list(meta.authors) if meta and meta.authors else None
     year = _extract_year(meta.published if meta else None)
     title = meta.title if meta else None
-    stem = format_paper_stem(authors, year, title, doi=envelope.doi)
+    doi = envelope.doi or (
+        _expected_doi_for_query(fallback_query) if fallback_query else None
+    )
+    normalized_query = normalize_text(fallback_query)
+    if not title and not doi and normalized_query:
+        query_digest = sha256(normalized_query.encode("utf-8")).hexdigest()[:16]
+        title = f"article_{query_digest}"
+    stem = format_paper_stem(authors, year, title, doi=doi)
     suffix = {
         "markdown": ".md",
         "json": ".json",
@@ -316,9 +334,12 @@ def save_formatted_output_copy(
     output_format: str,
     render: RenderOptions,
     overwrite: bool = True,
+    fallback_query: str | None = None,
 ) -> Path:
     target = output_dir / _formatted_output_filename(
-        envelope, output_format=output_format
+        envelope,
+        output_format=output_format,
+        fallback_query=fallback_query,
     )
     markdown_override = (
         rewrite_markdown_asset_links(
@@ -551,7 +572,9 @@ def run_single_fetch(
     envelope = result.envelope
     if args.primary_output_to_output_dir:
         target = output_dir / _formatted_output_filename(
-            envelope, output_format=args.format
+            envelope,
+            output_format=args.format,
+            fallback_query=query,
         )
         if args.format == "markdown" and _same_output_path(
             result.saved_markdown_path, target
@@ -565,6 +588,7 @@ def run_single_fetch(
                     output_format=args.format,
                     render=render_options,
                     overwrite=overwrite,
+                    fallback_query=query,
                 )
             except FileExistsError as exc:
                 raise OutputOverwriteRequired(
@@ -592,7 +616,9 @@ def run_single_fetch(
     output_path: Path | None = None
     if args.save_output_copy:
         target = output_dir / _formatted_output_filename(
-            envelope, output_format=args.format
+            envelope,
+            output_format=args.format,
+            fallback_query=query,
         )
         if args.format == "markdown" and _same_output_path(
             result.saved_markdown_path, target
@@ -606,6 +632,7 @@ def run_single_fetch(
                     output_format=args.format,
                     render=render_options,
                     overwrite=overwrite,
+                    fallback_query=query,
                 )
             except FileExistsError as exc:
                 raise OutputOverwriteRequired(

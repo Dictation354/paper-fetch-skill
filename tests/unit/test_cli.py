@@ -14,7 +14,7 @@ from unittest import mock
 from paper_fetch import cli as paper_fetch_cli
 from paper_fetch.config import DOWNLOAD_DIR_ENV_VAR
 from paper_fetch import service as paper_fetch
-from paper_fetch.models import Asset, RenderOptions
+from paper_fetch.models import ArticleModel, Asset, Metadata, RenderOptions
 from paper_fetch.providers.base import ProviderFailure
 
 from ._paper_fetch_support import build_envelope, sample_article
@@ -2303,6 +2303,98 @@ class CliTests(unittest.TestCase):
             self.assertTrue(
                 all(item["saved_markdown_path"] is None for item in result_lines)
             )
+
+    def test_main_batch_disambiguates_metadata_poor_url_outputs(self) -> None:
+        queries = [
+            "https://example.test/preprints/first",
+            "https://example.test/preprints/second",
+        ]
+
+        def fake_fetch(query, *args, **kwargs):
+            del query, args
+            article = ArticleModel(
+                doi=None,
+                source="crossref",
+                metadata=Metadata(),
+            )
+            return paper_fetch.build_fetch_envelope(
+                article, modes=kwargs["modes"], render=kwargs["render"]
+            )
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            output_dir = Path(tmpdir) / "downloads"
+            query_file = Path(tmpdir) / "queries.txt"
+            query_file.write_text("\n".join(queries), encoding="utf-8")
+            stdout = io.StringIO()
+            stderr = io.StringIO()
+
+            with (
+                mock.patch.object(
+                    paper_fetch_cli, "build_runtime_env", return_value={}
+                ),
+                mock.patch.object(
+                    paper_fetch_cli, "fetch_paper", side_effect=fake_fetch
+                ),
+                contextlib.redirect_stdout(stdout),
+                contextlib.redirect_stderr(stderr),
+            ):
+                exit_code = paper_fetch_cli.main(
+                    [
+                        "--query-file",
+                        str(query_file),
+                        "--format",
+                        "both",
+                        "--output-dir",
+                        str(output_dir),
+                        "--artifact-mode",
+                        "none",
+                        "--asset-profile",
+                        "none",
+                        "--batch-concurrency",
+                        "2",
+                    ]
+                )
+
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(stdout.getvalue(), "")
+            self.assertEqual(stderr.getvalue(), "")
+            expected_names = {
+                "unknown_unknown_article_74e87976ecc179f5.both.json",
+                "unknown_unknown_article_0dfd199975f49eeb.both.json",
+            }
+            self.assertEqual(
+                {path.name for path in output_dir.glob("*.both.json")},
+                expected_names,
+            )
+            result_lines = [
+                json.loads(line)
+                for line in (output_dir / "batch-results.jsonl")
+                .read_text(encoding="utf-8")
+                .splitlines()
+            ]
+            self.assertEqual([item["status"] for item in result_lines], ["ok", "ok"])
+            self.assertEqual(
+                {Path(item["output_path"]).name for item in result_lines},
+                expected_names,
+            )
+
+    def test_formatted_output_filename_prefers_fallback_query_doi(self) -> None:
+        envelope = build_envelope(
+            ArticleModel(
+                doi=None,
+                source="crossref",
+                metadata=Metadata(),
+            )
+        )
+
+        self.assertEqual(
+            paper_fetch_cli._formatted_output_filename(
+                envelope,
+                output_format="both",
+                fallback_query="https://doi.org/10.1000/example",
+            ),
+            "unknown_unknown_10.1000_example.both.json",
+        )
 
     def test_main_batch_continues_after_failure_and_returns_status_exit_code(
         self,

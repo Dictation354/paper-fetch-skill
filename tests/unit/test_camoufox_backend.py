@@ -23,6 +23,7 @@ from paper_fetch.providers.browser_runtime.backends.camoufox import (
 )
 from paper_fetch.providers.browser_runtime.camoufox_manager import (
     CamoufoxBrowserManager,
+    CamoufoxPersistentContextManager,
     _launch_executable_path,
 )
 from paper_fetch.providers.browser_runtime.context import context_options_for_config
@@ -191,7 +192,136 @@ def test_camoufox_manager_reuses_browser_and_creates_fresh_contexts(
     )
 
 
-def test_camoufox_manager_stops_playwright_when_runtime_fetch_fails(
+def test_camoufox_official_runtime_path_is_resolved_by_package(monkeypatch) -> None:
+    runtime_path = object()
+    pkgman = SimpleNamespace(
+        camoufox_path=mock.Mock(return_value=runtime_path),
+        launch_path=mock.Mock(
+            return_value="/runtime/Camoufox.app/Contents/MacOS/camoufox"
+        ),
+    )
+    browser = SimpleNamespace(close=mock.Mock())
+    playwright = SimpleNamespace(stop=mock.Mock())
+    playwright_manager = SimpleNamespace(start=mock.Mock(return_value=playwright))
+    new_browser = mock.Mock(return_value=browser)
+
+    def import_module(name: str):
+        if name == "camoufox.pkgman":
+            return pkgman
+        if name == "playwright.sync_api":
+            return SimpleNamespace(
+                sync_playwright=mock.Mock(return_value=playwright_manager)
+            )
+        if name == "camoufox.sync_api":
+            return SimpleNamespace(NewBrowser=new_browser)
+        raise AssertionError(name)
+
+    monkeypatch.setattr(
+        "paper_fetch.providers.browser_runtime.camoufox_manager.importlib.import_module",
+        import_module,
+    )
+
+    manager = CamoufoxBrowserManager(headless=True)
+    assert manager.browser() is browser
+    manager.close()
+
+    pkgman.camoufox_path.assert_called_once_with(download_if_missing=False)
+    pkgman.launch_path.assert_not_called()
+    new_browser.assert_called_once_with(
+        playwright,
+        persistent_context=False,
+        headless=True,
+    )
+
+
+def test_camoufox_persistent_official_runtime_path_is_resolved_by_package(
+    monkeypatch, tmp_path
+) -> None:
+    runtime_path = object()
+    pkgman = SimpleNamespace(
+        camoufox_path=mock.Mock(return_value=runtime_path),
+        launch_path=mock.Mock(
+            return_value="/runtime/Camoufox.app/Contents/MacOS/camoufox"
+        ),
+    )
+    context = SimpleNamespace(close=mock.Mock())
+    playwright = SimpleNamespace(stop=mock.Mock())
+    playwright_manager = SimpleNamespace(start=mock.Mock(return_value=playwright))
+    new_browser = mock.Mock(return_value=context)
+
+    def import_module(name: str):
+        if name == "camoufox.pkgman":
+            return pkgman
+        if name == "playwright.sync_api":
+            return SimpleNamespace(
+                sync_playwright=mock.Mock(return_value=playwright_manager)
+            )
+        if name == "camoufox.sync_api":
+            return SimpleNamespace(NewBrowser=new_browser)
+        raise AssertionError(name)
+
+    monkeypatch.setattr(
+        "paper_fetch.providers.browser_runtime.camoufox_manager.importlib.import_module",
+        import_module,
+    )
+
+    manager = CamoufoxPersistentContextManager(
+        user_data_dir=str(tmp_path / "profile"),
+        headless=False,
+    )
+    assert manager.new_context() is context
+    manager.close()
+
+    pkgman.camoufox_path.assert_called_once_with(download_if_missing=False)
+    pkgman.launch_path.assert_not_called()
+    new_browser.assert_called_once_with(
+        playwright,
+        persistent_context=True,
+        headless=False,
+        user_data_dir=str(tmp_path / "profile"),
+    )
+
+
+def test_camoufox_persistent_explicit_binary_path_is_forwarded(
+    monkeypatch, tmp_path
+) -> None:
+    context = SimpleNamespace(close=mock.Mock())
+    playwright = SimpleNamespace(stop=mock.Mock())
+    playwright_manager = SimpleNamespace(start=mock.Mock(return_value=playwright))
+    new_browser = mock.Mock(return_value=context)
+
+    def import_module(name: str):
+        if name == "playwright.sync_api":
+            return SimpleNamespace(
+                sync_playwright=mock.Mock(return_value=playwright_manager)
+            )
+        if name == "camoufox.sync_api":
+            return SimpleNamespace(NewBrowser=new_browser)
+        raise AssertionError(name)
+
+    monkeypatch.setattr(
+        "paper_fetch.providers.browser_runtime.camoufox_manager.importlib.import_module",
+        import_module,
+    )
+
+    manager = CamoufoxPersistentContextManager(
+        user_data_dir=str(tmp_path / "profile"),
+        binary_path="/custom/camoufox",
+        headless=False,
+    )
+    assert manager.new_context() is context
+    manager.close()
+
+    new_browser.assert_called_once_with(
+        playwright,
+        persistent_context=True,
+        headless=False,
+        user_data_dir=str(tmp_path / "profile"),
+        executable_path="/custom/camoufox",
+    )
+
+
+def test_camoufox_manager_stops_playwright_when_runtime_readiness_check_fails(
     monkeypatch,
 ) -> None:
     playwright = SimpleNamespace(stop=mock.Mock())
@@ -208,14 +338,14 @@ def test_camoufox_manager_stops_playwright_when_runtime_fetch_fails(
 
     monkeypatch.setattr(
         "paper_fetch.providers.browser_runtime.camoufox_manager._launch_executable_path",
-        mock.Mock(side_effect=RuntimeError("download failed")),
+        mock.Mock(side_effect=RuntimeError("runtime not prepared")),
     )
     monkeypatch.setattr(
         "paper_fetch.providers.browser_runtime.camoufox_manager.importlib.import_module",
         import_module,
     )
 
-    with pytest.raises(RuntimeError, match="download failed"):
+    with pytest.raises(RuntimeError, match="runtime not prepared"):
         CamoufoxBrowserManager().browser()
 
     playwright.stop.assert_called_once_with()
@@ -236,9 +366,9 @@ def test_camoufox_first_launch_requires_prepared_official_runtime(monkeypatch) -
         ),
     )
 
-    assert _launch_executable_path(None) == "/runtime/camoufox"
+    assert _launch_executable_path(None) is None
     pkgman.camoufox_path.assert_called_once_with(download_if_missing=False)
-    pkgman.launch_path.assert_called_once_with(runtime_path)
+    pkgman.launch_path.assert_not_called()
 
 
 def test_camoufox_static_probe_reads_runtime_without_fetching(

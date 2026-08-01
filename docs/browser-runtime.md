@@ -1,7 +1,7 @@
 # Browser runtime ownership
 
-生产 browser runtime 只有 Camoufox，并由
-`paper_fetch.providers.browser_runtime` 统一管理。
+生产 browser runtime 只有 Camoufox；browser/full extra 与 lockfile 精确固定
+`camoufox==0.5.4`，并由 `paper_fetch.providers.browser_runtime` 统一管理。
 
 ## 依赖方向
 
@@ -39,6 +39,31 @@ provider 只读取显式 `BrowserRuntimeConfig`，不探测 backend、不持有�
 
 `PAPER_FETCH_BROWSER_USER_AGENT` 只用于允许覆盖 UA 的 direct publisher request；
 Camoufox 启动不接受固定 UA，以避免生成的 Firefox 指纹内部不一致。
+
+默认 managed runtime 会先用 `download_if_missing=False` 确认用户已经显式执行过
+`python -m camoufox fetch`，随后由 Camoufox package 自行解析 active browser
+version。paper-fetch 不会把官方 macOS app 内的 `Contents/MacOS/camoufox` 再当成
+custom executable 传回去，因为 Camoufox 的 bundle metadata 位于
+`Contents/Resources`。只有显式 `PAPER_FETCH_BROWSER_BINARY_PATH` 才作为 custom
+`executable_path` 透传；在 macOS 上优先使用 managed runtime，除非 custom bundle
+明确支持 Camoufox 的 executable-path metadata 语义。
+
+准备好官方 Mac runtime 后，可执行不访问远端 publisher 的原生双 context
+回归：
+
+```bash
+PAPER_FETCH_RUN_NATIVE_CAMOUFOX_TEST=1 \
+  PYTHONPATH=src python -m pytest \
+  tests/integration/test_camoufox_native_macos.py -q -n 0
+```
+
+该 test 串行运行是因为临时 context 与持久 context 共用同一个本地 browser
+runtime；Windows / WSL 只运行对应的 pure-mock unit tests。原生 test 通过
+Camoufox 公开的 `exclude_addons` 参数排除默认扩展，并对实际扩展下载设置失败
+tripwire，因此只验证已预置 managed app bundle 和两类 context 的本地启动，
+不依赖已有扩展缓存，也不验证 Camoufox 默认扩展行为。它还通过 BrowserForge
+公开的 screen constraint 使用固定 synthetic screen，避免原生 CI 依赖已登录的
+WindowServer 或物理显示器。
 
 ## 诊断边界
 

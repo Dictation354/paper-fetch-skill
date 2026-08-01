@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import platform
 import socket
 import tempfile
 import unittest
@@ -298,6 +299,68 @@ class CacheIndexSemanticsTests(unittest.TestCase):
         self.assertEqual(changed_payload_a["status"], "miss")
         self.assertEqual(payload_b["status"], "hit")
         self.assertEqual(payload_b["entries"][0]["doi"], normalize_doi(doi_b))
+
+    def test_cache_scope_accepts_equivalent_filesystem_alias_for_root(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            if platform.system() == "Darwin":
+                canonical_root = root.resolve()
+                root_alias = None
+                for canonical_prefix, alias_prefix in (
+                    (Path("/private/var"), Path("/var")),
+                    (Path("/private/tmp"), Path("/tmp")),
+                ):
+                    try:
+                        relative_root = canonical_root.relative_to(canonical_prefix)
+                    except ValueError:
+                        continue
+                    candidate = alias_prefix / relative_root
+                    if (
+                        candidate != canonical_root
+                        and candidate.resolve() == canonical_root
+                    ):
+                        root_alias = candidate
+                        break
+                if root_alias is None:
+                    self.skipTest(
+                        "native macOS temporary directory exposes neither the "
+                        "/var nor /tmp system alias"
+                    )
+                root = root_alias
+                self.assertNotEqual(root, canonical_root)
+                self.assertEqual(root.resolve(), canonical_root)
+            real_root = root / "real"
+            download_dir = real_root / "papers"
+            download_dir.mkdir(parents=True)
+            alias_root = root / "alias"
+            try:
+                alias_root.symlink_to(real_root, target_is_directory=True)
+            except OSError:
+                self.skipTest("filesystem does not support directory symlinks")
+            aliased_download_dir = alias_root / "papers"
+            markdown = aliased_download_dir / "paper.md"
+            markdown.write_text("# Saved full text\n", encoding="utf-8")
+            expected_markdown = markdown.resolve()
+
+            registered = register_markdown_entry(
+                aliased_download_dir,
+                "10.1000/alias",
+                markdown,
+                source="unit_test",
+                has_fulltext=True,
+                content_kind="fulltext",
+            )
+            payload = mcp_tools.get_cached_payload(
+                doi="10.1000/alias",
+                download_dir=aliased_download_dir,
+            )
+
+        self.assertIsNotNone(registered)
+        self.assertEqual(payload["status"], "hit")
+        self.assertEqual(
+            payload["preferred"]["markdown"]["path"],
+            str(expected_markdown),
+        )
 
     def test_wrong_doi_fetch_envelope_sidecar_is_not_attributed_by_filename(
         self,

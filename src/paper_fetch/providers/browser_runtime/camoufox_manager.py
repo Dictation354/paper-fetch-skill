@@ -7,12 +7,15 @@ import threading
 from typing import Any
 
 
-def _launch_executable_path(binary_path: str | None) -> str:
+def _launch_executable_path(binary_path: str | None) -> str | None:
     if binary_path:
         return binary_path
     pkgman = importlib.import_module("camoufox.pkgman")
-    runtime_path = pkgman.camoufox_path(download_if_missing=False)
-    return str(pkgman.launch_path(runtime_path))
+    # Keep the no-download guard, but let Camoufox resolve its managed bundle.
+    # On macOS, passing Contents/MacOS/camoufox as a custom executable makes
+    # Camoufox look beside it for metadata stored under Contents/Resources.
+    pkgman.camoufox_path(download_if_missing=False)
+    return None
 
 
 class CamoufoxBrowserManager:
@@ -50,8 +53,10 @@ class CamoufoxBrowserManager:
         try:
             launch_kwargs: dict[str, Any] = {
                 "headless": self.headless,
-                "executable_path": _launch_executable_path(self.binary_path),
             }
+            executable_path = _launch_executable_path(self.binary_path)
+            if executable_path is not None:
+                launch_kwargs["executable_path"] = executable_path
             self._browser = sync_api.NewBrowser(
                 self._playwright,
                 persistent_context=False,
@@ -116,8 +121,10 @@ class CamoufoxPersistentContextManager:
             launch_kwargs: dict[str, Any] = {
                 "headless": self.headless,
                 "user_data_dir": self.user_data_dir,
-                "executable_path": _launch_executable_path(self.binary_path),
             }
+            executable_path = _launch_executable_path(self.binary_path)
+            if executable_path is not None:
+                launch_kwargs["executable_path"] = executable_path
             self._context = sync_api.NewBrowser(
                 self._playwright,
                 persistent_context=True,

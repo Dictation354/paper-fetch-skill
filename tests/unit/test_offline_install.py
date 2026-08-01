@@ -4,6 +4,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import platform
 import shutil
 import shlex
 import subprocess
@@ -54,15 +55,37 @@ def _python_tag(version: str) -> str:
     return f"cp{major}{minor}"
 
 
-def _fake_python_script(version: str) -> str:
+def _fake_python_script(
+    version: str,
+    *,
+    machine: str = "x86_64",
+    soabi: str | None = None,
+    abi_flags: str = "",
+    gil_disabled: bool = False,
+) -> str:
     tag = _python_tag(version)
+    soabi = soabi or f"cpython-{tag.removeprefix('cp')}-test"
     real_python = shlex.quote(sys.executable)
     return f"""\
     #!/usr/bin/env bash
     set -euo pipefail
     VERSION="{version}"
     TAG="{tag}"
+    MACHINE="{machine}"
+    SOABI="{soabi}"
+    ABI_FLAGS="{abi_flags or "-"}"
+    GIL_DISABLED="{int(gil_disabled)}"
     REAL_PYTHON={real_python}
+
+    if [[ "${{1:-}}" == "-I" && "${{2:-}}" == "-" ]]; then
+      shift
+      code="$(cat)"
+      exec "$REAL_PYTHON" -I "$@" <<< "$code"
+    fi
+
+    if [[ "${{1:-}}" == "-I" && "${{2:-}}" == "-c" ]]; then
+      shift
+    fi
 
     while [[ "${{1:-}}" == "-X" ]]; do
       shift 2
@@ -71,11 +94,17 @@ def _fake_python_script(version: str) -> str:
     if [[ "${{1:-}}" == "-m" && "${{2:-}}" == "paper_fetch.skill_integrity" ]]; then
       RUNTIME_DIR="$(cd "$(dirname "$0")" && pwd)"
       export PYTHONPATH="$RUNTIME_DIR/site-packages${{PYTHONPATH:+:$PYTHONPATH}}"
+      export PYTHONDONTWRITEBYTECODE=1
       exec "$REAL_PYTHON" "$@"
     fi
 
     if [[ "${{1:-}}" == "-c" ]]; then
       code="${{2:-}}"
+      if [[ "$code" == *'PAPER_FETCH_INTERPRETER_PROBE'* ]]; then
+        printf '%s|cpython|%s|%s|%s|%s|%s\\n' \
+          "$VERSION" "$TAG" "$MACHINE" "$SOABI" "$ABI_FLAGS" "$GIL_DISABLED"
+        exit 0
+      fi
       if [[ "$code" == *'join(map(str, sys.version_info[:3]))'* ]]; then
         echo "$VERSION"
         exit 0
@@ -101,6 +130,9 @@ def _fake_python_script(version: str) -> str:
               ;;
             target.arch)
               grep -oE '"arch"[[:space:]]*:[[:space:]]*"[^"]+"' "$manifest" | head -n 1 | sed -E 's/.*"arch"[[:space:]]*:[[:space:]]*"([^"]+)".*/\\1/'
+              ;;
+            target.minimum_os_version)
+              grep -oE '"minimum_os_version"[[:space:]]*:[[:space:]]*"[^"]+"' "$manifest" | head -n 1 | sed -E 's/.*"minimum_os_version"[[:space:]]*:[[:space:]]*"([^"]+)".*/\\1/'
               ;;
           esac
         fi
@@ -205,6 +237,39 @@ def _fake_uname_script(kernel: str, machine: str) -> str:
     """
 
 
+def _fake_sw_vers_script(product_version: str) -> str:
+    return f"""\
+    #!/usr/bin/env bash
+    case "${{1:-}}" in
+      -productVersion) printf '%s\\n' "{product_version}" ;;
+      *) printf 'ProductVersion:\\t%s\\n' "{product_version}" ;;
+    esac
+    """
+
+
+def _fake_xattr_script() -> str:
+    return """\
+    #!/usr/bin/env bash
+    if [[ "${PAPER_FETCH_TEST_XATTR_ERROR:-0}" == "1" ]]; then
+      printf 'xattr: simulated permission denied\\n' >&2
+      exit 77
+    fi
+    if [[ "${1:-}" == "-r" && "${2:-}" == "-s" && "${3:-}" == "-v" ]]; then
+      root="${4:-}"
+      candidate="${PAPER_FETCH_TEST_QUARANTINED_PATH:-}"
+      if [[ -n "$candidate" && "$candidate" == "$root"/* ]]; then
+        printf '%s: com.apple.quarantine\\n' "$candidate"
+      fi
+      noise_lines="${PAPER_FETCH_TEST_XATTR_NOISE_LINES:-0}"
+      for ((index = 0; index < noise_lines; index += 1)); do
+        printf '%s/noise-%08d: com.apple.provenance\\n' "$root" "$index"
+      done
+      exit 0
+    fi
+    exit 1
+    """
+
+
 def _write_checksums(root: Path) -> None:
     lines: list[str] = []
     for path in sorted(
@@ -230,6 +295,12 @@ class OfflineInstallTests(unittest.TestCase):
         target_arch: str = "x86_64",
         uname_kernel: str = "Linux",
         uname_machine: str = "x86_64",
+        minimum_macos_version: str | None = "15.0",
+        host_macos_version: str = "15.0",
+        python_machine: str | None = None,
+        python_soabi: str | None = None,
+        python_abi_flags: str = "",
+        python_gil_disabled: bool = False,
     ) -> tuple[Path, Path, Path]:
         bundle = root / "bundle"
         bundle.mkdir()
@@ -238,6 +309,7 @@ class OfflineInstallTests(unittest.TestCase):
         shutil.copytree(REPO_ROOT / "installer", bundle / "installer")
 
         manifest_python_tag = manifest_python_tag or _python_tag(python_version)
+        python_machine = python_machine or target_arch
         _write_file(bundle / ".env.example", 'ELSEVIER_API_KEY=""\n')
         _write_file(
             bundle / "runtime" / "site-packages" / "paper_fetch" / "__init__.py", "\n"
@@ -255,7 +327,13 @@ class OfflineInstallTests(unittest.TestCase):
         )
         _write_executable(
             bundle / "runtime" / "paper-fetch-python",
-            _fake_python_script(python_version),
+            _fake_python_script(
+                python_version,
+                machine=python_machine,
+                soabi=python_soabi,
+                abi_flags=python_abi_flags,
+                gil_disabled=python_gil_disabled,
+            ),
         )
         _write_executable(
             bundle / "bin" / "paper-fetch",
@@ -287,6 +365,14 @@ class OfflineInstallTests(unittest.TestCase):
         (bundle / "image-tools" / "bin").mkdir(parents=True, exist_ok=True)
 
         skill_dir = bundle / "skills" / "paper-fetch-skill"
+        target = {
+            "platform": target_platform,
+            "arch": target_arch,
+            "python_tag": manifest_python_tag,
+        }
+        if target_platform == "macos" and minimum_macos_version is not None:
+            target["minimum_os_version"] = minimum_macos_version
+
         manifest = {
             "schema_version": 3,
             "name": "paper-fetch-skill-offline-linux-x86_64",
@@ -294,11 +380,7 @@ class OfflineInstallTests(unittest.TestCase):
             "version": "3.1.3",
             "built_at_utc": "2026-07-15T00:00:00Z",
             "git_revision": "test-revision",
-            "target": {
-                "platform": target_platform,
-                "arch": target_arch,
-                "python_tag": manifest_python_tag,
-            },
+            "target": target,
             "entrypoint": "install-offline.sh",
             "skill_bundle": build_skill_bundle_manifest(
                 skill_dir,
@@ -312,10 +394,24 @@ class OfflineInstallTests(unittest.TestCase):
         )
 
         fake_bin = root / "fake-bin"
-        _write_executable(fake_bin / "python3", _fake_python_script(python_version))
+        _write_executable(
+            fake_bin / "python3",
+            _fake_python_script(
+                python_version,
+                machine=python_machine,
+                soabi=python_soabi,
+                abi_flags=python_abi_flags,
+                gil_disabled=python_gil_disabled,
+            ),
+        )
         _write_executable(
             fake_bin / "uname", _fake_uname_script(uname_kernel, uname_machine)
         )
+        if uname_kernel == "Darwin":
+            _write_executable(
+                fake_bin / "sw_vers", _fake_sw_vers_script(host_macos_version)
+            )
+            _write_executable(fake_bin / "xattr", _fake_xattr_script())
 
         _write_checksums(bundle)
         home = root / "home"
@@ -330,7 +426,7 @@ class OfflineInstallTests(unittest.TestCase):
         *args: str,
         shell: str | None = "/bin/bash",
         extra_env: dict[str, str] | None = None,
-        install_dir: Path | None = None,
+        install_dir: Path | str | None = None,
         use_default_install_dir: bool = False,
     ) -> subprocess.CompletedProcess[str]:
         env = os.environ.copy()
@@ -435,6 +531,11 @@ class OfflineInstallTests(unittest.TestCase):
             root = Path(tmpdir)
             bundle, fake_bin, home = self._create_bundle(root)
             install_root = root / "fixed-install"
+            initial = self._run_installer(
+                bundle, fake_bin, home, install_dir=install_root
+            )
+            self.assertEqual(initial.returncode, 0, initial.stderr)
+
             for stale in ("src", "tests", "wheelhouse", "dist", ".github"):
                 _write_file(install_root / stale / "old.txt", "old\n")
             _write_file(install_root / "pyproject.toml", "[project]\n")
@@ -487,15 +588,132 @@ class OfflineInstallTests(unittest.TestCase):
                 offline_env,
             )
 
+    def test_install_rejects_home_before_removing_existing_content(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            bundle, fake_bin, home = self._create_bundle(root)
+            sentinel = home / "src" / "keep.txt"
+            _write_file(sentinel, "keep\n")
+
+            result = self._run_installer(
+                bundle,
+                fake_bin,
+                home,
+                install_dir=home,
+            )
+
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("Refusing to install into HOME", result.stderr)
+            self.assertEqual(sentinel.read_text(encoding="utf-8"), "keep\n")
+            self.assertFalse((home / ".bashrc").exists())
+            self.assertFalse((home / ".codex").exists())
+
+    def test_install_rejects_nonempty_unowned_directory(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            bundle, fake_bin, home = self._create_bundle(root)
+            install_root = root / "unowned"
+            sentinel = install_root / "src" / "keep.txt"
+            _write_file(sentinel, "keep\n")
+
+            result = self._run_installer(
+                bundle,
+                fake_bin,
+                home,
+                install_dir=install_root,
+            )
+
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("non-empty unowned install directory", result.stderr)
+            self.assertEqual(sentinel.read_text(encoding="utf-8"), "keep\n")
+            self.assertFalse((home / ".bashrc").exists())
+            self.assertFalse((home / ".codex").exists())
+
+    def test_install_rejects_home_ancestor_before_removing_existing_content(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            bundle, fake_bin, home = self._create_bundle(root)
+            sentinel = root / "keep.txt"
+            _write_file(sentinel, "keep\n")
+
+            result = self._run_installer(
+                bundle,
+                fake_bin,
+                home,
+                install_dir=root,
+            )
+
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("ancestor of HOME", result.stderr)
+            self.assertEqual(sentinel.read_text(encoding="utf-8"), "keep\n")
+            self.assertTrue(bundle.is_dir())
+            self.assertFalse((home / ".bashrc").exists())
+            self.assertFalse((home / ".codex").exists())
+
+    def test_install_rejects_symlink_to_nonempty_unowned_directory(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            bundle, fake_bin, home = self._create_bundle(root)
+            actual_target = root / "actual-unowned"
+            sentinel = actual_target / "src" / "keep.txt"
+            _write_file(sentinel, "keep\n")
+            install_link = root / "install-link"
+            install_link.symlink_to(actual_target, target_is_directory=True)
+
+            result = self._run_installer(
+                bundle,
+                fake_bin,
+                home,
+                install_dir=install_link,
+            )
+
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("non-empty unowned install directory", result.stderr)
+            self.assertTrue(install_link.is_symlink())
+            self.assertEqual(sentinel.read_text(encoding="utf-8"), "keep\n")
+            self.assertFalse((home / ".bashrc").exists())
+
+    def test_install_allows_existing_empty_directory(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            bundle, fake_bin, home = self._create_bundle(root)
+            install_root = root / "empty"
+            install_root.mkdir()
+
+            result = self._run_installer(
+                bundle,
+                fake_bin,
+                home,
+                install_dir=install_root,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertTrue((install_root / "runtime" / "python-bin").is_file())
+
     def test_shell_startup_blocks_set_headless_without_legacy_browser_paths(
         self,
     ) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
-            bundle, fake_bin, home = self._create_bundle(Path(tmpdir))
+            root = Path(tmpdir)
+            bundle, fake_bin, home = self._create_bundle(root)
+            bash_install = root / "bash-install"
+            fish_install = root / "fish-install"
 
-            bash_result = self._run_installer(bundle, fake_bin, home, shell="/bin/bash")
+            bash_result = self._run_installer(
+                bundle,
+                fake_bin,
+                home,
+                shell="/bin/bash",
+                install_dir=bash_install,
+            )
             fish_result = self._run_installer(
-                bundle, fake_bin, home, shell="/usr/bin/fish"
+                bundle,
+                fake_bin,
+                home,
+                shell="/usr/bin/fish",
+                install_dir=fish_install,
             )
 
             self.assertEqual(bash_result.returncode, 0, bash_result.stderr)
@@ -505,16 +723,19 @@ class OfflineInstallTests(unittest.TestCase):
                 home / ".config" / "fish" / "conf.d" / "paper-fetch-offline.fish"
             ).read_text(encoding="utf-8")
             self.assertIn(
-                f'export PAPER_FETCH_ENV_FILE="{bundle / "offline.env"}"', bashrc
+                f'export PAPER_FETCH_ENV_FILE="{bash_install / "offline.env"}"',
+                bashrc,
             )
             self.assertIn(
-                f'set -gx PAPER_FETCH_ENV_FILE "{bundle / "offline.env"}"', fish_config
+                f'set -gx PAPER_FETCH_ENV_FILE "{fish_install / "offline.env"}"',
+                fish_config,
             )
             self.assertIn(
-                f'export PAPER_FETCH_IMAGE_TOOLS_DIR="{bundle / "image-tools"}"', bashrc
+                f'export PAPER_FETCH_IMAGE_TOOLS_DIR="{bash_install / "image-tools"}"',
+                bashrc,
             )
             self.assertIn(
-                f'set -gx PAPER_FETCH_IMAGE_TOOLS_DIR "{bundle / "image-tools"}"',
+                f'set -gx PAPER_FETCH_IMAGE_TOOLS_DIR "{fish_install / "image-tools"}"',
                 fish_config,
             )
             self.assertIn('export PAPER_FETCH_BROWSER_HEADLESS="true"', bashrc)
@@ -561,6 +782,354 @@ class OfflineInstallTests(unittest.TestCase):
             self.assertIn(
                 "Default browser backend: Camoufox (headless: false)", result.stdout
             )
+
+    def test_macos_host_below_manifest_minimum_is_rejected_before_writes(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            bundle, fake_bin, home = self._create_bundle(
+                root,
+                python_version="3.14.0",
+                target_platform="macos",
+                target_arch="arm64",
+                uname_kernel="Darwin",
+                uname_machine="arm64",
+                minimum_macos_version="15.0",
+                host_macos_version="14.7.5",
+            )
+            install_root = root / "installed"
+
+            result = self._run_installer(
+                bundle,
+                fake_bin,
+                home,
+                install_dir=install_root,
+                shell="/bin/zsh",
+            )
+
+            self.assertNotEqual(result.returncode, 0)
+            diagnostic = result.stdout + result.stderr
+            self.assertIn("requires macOS 15.0 or newer", diagnostic)
+            self.assertIn("detected macOS 14.7.5", diagnostic)
+            self.assertFalse(install_root.exists())
+            self.assertFalse((home / ".zshrc").exists())
+            self.assertFalse((home / ".codex").exists())
+
+    def test_macos_rejects_rosetta_python_before_writes(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            bundle, fake_bin, home = self._create_bundle(
+                root,
+                python_version="3.14.0",
+                target_platform="macos",
+                target_arch="arm64",
+                uname_kernel="Darwin",
+                uname_machine="arm64",
+                python_machine="x86_64",
+                python_soabi="cpython-314-darwin",
+            )
+            install_root = root / "installed"
+
+            result = self._run_installer(
+                bundle,
+                fake_bin,
+                home,
+                install_dir=install_root,
+                shell="/bin/zsh",
+            )
+
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn(
+                "requires Python interpreter architecture arm64", result.stderr
+            )
+            self.assertIn("detected x86_64", result.stderr)
+            self.assertFalse(install_root.exists())
+            self.assertFalse((home / ".zshrc").exists())
+            self.assertFalse((home / ".codex").exists())
+
+    def test_macos_rejects_nonstandard_cpython_abi_before_writes(self) -> None:
+        cases = (
+            {
+                "name": "free-threaded",
+                "python_soabi": "cpython-314t-darwin",
+                "python_abi_flags": "t",
+                "python_gil_disabled": True,
+                "diagnostic": "standard GIL CPython",
+            },
+            {
+                "name": "debug",
+                "python_soabi": "cpython-314d-darwin",
+                "python_abi_flags": "d",
+                "python_gil_disabled": False,
+                "diagnostic": "standard GIL CPython",
+            },
+            {
+                "name": "nonstandard-soabi",
+                "python_soabi": "custom-314-darwin",
+                "python_abi_flags": "",
+                "python_gil_disabled": False,
+                "diagnostic": "standard SOABI cpython-314-*",
+            },
+        )
+        for case in cases:
+            with (
+                self.subTest(case=case["name"]),
+                tempfile.TemporaryDirectory() as tmpdir,
+            ):
+                root = Path(tmpdir)
+                bundle, fake_bin, home = self._create_bundle(
+                    root,
+                    python_version="3.14.0",
+                    target_platform="macos",
+                    target_arch="arm64",
+                    uname_kernel="Darwin",
+                    uname_machine="arm64",
+                    python_machine="arm64",
+                    python_soabi=case["python_soabi"],
+                    python_abi_flags=case["python_abi_flags"],
+                    python_gil_disabled=case["python_gil_disabled"],
+                )
+                install_root = root / "installed"
+
+                result = self._run_installer(
+                    bundle,
+                    fake_bin,
+                    home,
+                    install_dir=install_root,
+                    shell="/bin/zsh",
+                )
+
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn(case["diagnostic"], result.stderr)
+                self.assertFalse(install_root.exists())
+                self.assertFalse((home / ".zshrc").exists())
+                self.assertFalse((home / ".codex").exists())
+
+    def test_macos_quarantine_fails_before_user_writes(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            bundle, fake_bin, home = self._create_bundle(
+                root,
+                target_platform="macos",
+                target_arch="arm64",
+                uname_kernel="Darwin",
+                uname_machine="arm64",
+            )
+            install_root = root / "installed"
+            quarantined_library = bundle / "formula-tools" / "lib" / "libgmp.dylib"
+            _write_file(quarantined_library, "fake dylib\n")
+            _write_checksums(bundle)
+
+            result = self._run_installer(
+                bundle,
+                fake_bin,
+                home,
+                install_dir=install_root,
+                shell="/bin/zsh",
+                extra_env={
+                    "PAPER_FETCH_TEST_QUARANTINED_PATH": str(quarantined_library),
+                    # A real bundle can emit megabytes of provenance attributes.
+                    # The quarantine match must not be lost to pipefail/SIGPIPE
+                    # when grep exits after an early match.
+                    "PAPER_FETCH_TEST_XATTR_NOISE_LINES": "20000",
+                },
+            )
+
+            self.assertNotEqual(result.returncode, 0)
+            diagnostic = result.stdout + result.stderr
+            self.assertIn("macOS quarantine is present", diagnostic)
+            self.assertIn("within the offline bundle", diagnostic)
+            self.assertIn("xattr -dr com.apple.quarantine", diagnostic)
+            self.assertFalse(install_root.exists())
+            self.assertFalse((home / ".zshrc").exists())
+            self.assertFalse((home / ".codex").exists())
+
+    def test_macos_checksum_failure_precedes_quarantine_check(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            bundle, fake_bin, home = self._create_bundle(
+                root,
+                target_platform="macos",
+                target_arch="arm64",
+                uname_kernel="Darwin",
+                uname_machine="arm64",
+            )
+            quarantined_node = (
+                bundle / "runtime" / "site-packages" / "playwright" / "driver" / "node"
+            )
+            quarantined_node.write_text("tampered\n", encoding="utf-8")
+            install_root = root / "installed"
+
+            result = self._run_installer(
+                bundle,
+                fake_bin,
+                home,
+                install_dir=install_root,
+                shell="/bin/zsh",
+                extra_env={"PAPER_FETCH_TEST_QUARANTINED_PATH": str(quarantined_node)},
+            )
+
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("Verifying bundled file checksums", result.stdout)
+            self.assertNotIn("macOS quarantine is present", result.stderr)
+            self.assertFalse(install_root.exists())
+            self.assertFalse((home / ".zshrc").exists())
+
+    def test_unlisted_runtime_payload_is_rejected_before_bundled_python_runs(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            bundle, fake_bin, home = self._create_bundle(root)
+            install_root = root / "installed"
+            execution_sentinel = root / "sitecustomize-ran"
+            injected = bundle / "runtime" / "site-packages" / "sitecustomize.py"
+            _write_file(
+                injected,
+                "from pathlib import Path\n"
+                f"Path({str(execution_sentinel)!r}).write_text('ran', encoding='utf-8')\n",
+            )
+
+            result = self._run_installer(
+                bundle,
+                fake_bin,
+                home,
+                install_dir=install_root,
+            )
+
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("unlisted payload file(s)", result.stderr)
+            self.assertIn("runtime/site-packages/sitecustomize.py", result.stderr)
+            self.assertFalse(execution_sentinel.exists())
+            self.assertFalse(install_root.exists())
+            self.assertFalse((home / ".bashrc").exists())
+            self.assertFalse((home / ".codex").exists())
+
+    @unittest.skipUnless(
+        sys.platform.startswith(("linux", "darwin")),
+        "POSIX installer regression",
+    )
+    def test_unlisted_top_level_sitecustomize_is_rejected_before_host_python_import(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            machine = platform.machine().lower()
+            target_arch = {"amd64": "x86_64", "aarch64": "arm64"}.get(machine, machine)
+            target_platform = "macos" if sys.platform == "darwin" else "linux"
+            uname_kernel = "Darwin" if target_platform == "macos" else "Linux"
+            bundle, fake_bin, home = self._create_bundle(
+                root,
+                target_platform=target_platform,
+                target_arch=target_arch,
+                manifest_python_tag=_python_tag(platform.python_version()),
+                uname_kernel=uname_kernel,
+                uname_machine=target_arch,
+            )
+            install_root = root / "installed"
+            execution_sentinel = root / "sitecustomize-ran"
+            _write_file(
+                bundle / "sitecustomize.py",
+                "from pathlib import Path\n"
+                f"Path({str(execution_sentinel)!r}).write_text('ran', encoding='utf-8')\n",
+            )
+
+            result = self._run_installer(
+                bundle,
+                fake_bin,
+                home,
+                install_dir=install_root,
+                extra_env={
+                    "PAPER_FETCH_OFFLINE_PYTHON_BIN": sys.executable,
+                    "PYTHONPATH": str(bundle),
+                },
+            )
+
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("unlisted payload file(s)", result.stderr)
+            self.assertIn("sitecustomize.py", result.stderr)
+            self.assertFalse(execution_sentinel.exists())
+            self.assertFalse(install_root.exists())
+            self.assertFalse((home / ".bashrc").exists())
+            self.assertFalse((home / ".codex").exists())
+
+    def test_macos_xattr_inspection_error_fails_closed_before_user_writes(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            bundle, fake_bin, home = self._create_bundle(
+                root,
+                target_platform="macos",
+                target_arch="arm64",
+                uname_kernel="Darwin",
+                uname_machine="arm64",
+            )
+            install_root = root / "installed"
+
+            result = self._run_installer(
+                bundle,
+                fake_bin,
+                home,
+                install_dir=install_root,
+                shell="/bin/zsh",
+                extra_env={"PAPER_FETCH_TEST_XATTR_ERROR": "1"},
+            )
+
+            self.assertNotEqual(result.returncode, 0)
+            diagnostic = result.stdout + result.stderr
+            self.assertIn(
+                "Could not recursively inspect macOS quarantine attributes",
+                diagnostic,
+            )
+            self.assertIn("simulated permission denied", diagnostic)
+            self.assertFalse(install_root.exists())
+            self.assertFalse((home / ".zshrc").exists())
+            self.assertFalse((home / ".codex").exists())
+
+    def test_macos_user_config_uses_application_support(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            bundle, fake_bin, home = self._create_bundle(
+                Path(tmpdir),
+                target_platform="macos",
+                target_arch="arm64",
+                uname_kernel="Darwin",
+                uname_machine="arm64",
+            )
+            macos_env = (
+                home / "Library" / "Application Support" / "paper-fetch" / ".env"
+            )
+            _write_file(macos_env, 'USER_NOTE="keep"\n')
+
+            result = self._run_installer(
+                bundle,
+                fake_bin,
+                home,
+                "--user-config",
+                shell="/bin/zsh",
+            )
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertTrue(macos_env.is_file())
+            self.assertIn(
+                f'PAPER_FETCH_DOWNLOAD_DIR="{bundle / "downloads"}"',
+                macos_env.read_text(encoding="utf-8"),
+            )
+            self.assertFalse((home / ".config" / "paper-fetch" / ".env").exists())
+
+            uninstall = self._run_installer(
+                bundle,
+                fake_bin,
+                home,
+                "--uninstall",
+                shell="/bin/zsh",
+            )
+
+            self.assertEqual(uninstall.returncode, 0, uninstall.stderr)
+            uninstalled_env = macos_env.read_text(encoding="utf-8")
+            self.assertIn('USER_NOTE="keep"', uninstalled_env)
+            self.assertNotIn("# BEGIN paper-fetch offline managed", uninstalled_env)
 
     def test_cli_registration_uses_offline_env_with_headless_without_legacy_browser_paths(
         self,
@@ -894,6 +1463,33 @@ class OfflineInstallTests(unittest.TestCase):
                 ],
             )
 
+    def test_zsh_startup_symlink_is_preserved(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            bundle, fake_bin, home = self._create_bundle(root)
+            zsh_target = home / "config" / "zshrc"
+            _write_file(zsh_target, "keep zsh setting\n")
+            zsh_link = home / ".zshrc"
+            zsh_link.symlink_to(Path("config") / "zshrc")
+
+            result = self._run_installer(bundle, fake_bin, home, shell="/bin/zsh")
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertTrue(zsh_link.is_symlink())
+            installed_content = zsh_target.read_text(encoding="utf-8")
+            self.assertIn("keep zsh setting", installed_content)
+            self.assertIn("# BEGIN paper-fetch offline managed", installed_content)
+
+            uninstall = self._run_installer(
+                bundle, fake_bin, home, "--uninstall", shell="/bin/zsh"
+            )
+
+            self.assertEqual(uninstall.returncode, 0, uninstall.stderr)
+            self.assertTrue(zsh_link.is_symlink())
+            uninstalled_content = zsh_target.read_text(encoding="utf-8")
+            self.assertIn("keep zsh setting", uninstalled_content)
+            self.assertNotIn("# BEGIN paper-fetch offline managed", uninstalled_content)
+
     def test_uninstall_removes_user_level_integrations_without_deleting_bundle_data(
         self,
     ) -> None:
@@ -940,6 +1536,11 @@ class OfflineInstallTests(unittest.TestCase):
             _write_file(
                 home / ".bashrc", f"keep bash before\n{managed}keep bash after\n"
             )
+            linux_user_env = home / ".config" / "paper-fetch" / ".env"
+            _write_file(
+                linux_user_env,
+                f'USER_NOTE="keep"\n{managed}',
+            )
 
             result = self._run_installer(bundle, fake_bin, home, "--uninstall")
 
@@ -972,6 +1573,10 @@ class OfflineInstallTests(unittest.TestCase):
                 (home / ".bashrc").read_text(encoding="utf-8"),
                 "keep bash before\nkeep bash after\n",
             )
+            self.assertEqual(
+                linux_user_env.read_text(encoding="utf-8"),
+                'USER_NOTE="keep"\n',
+            )
             calls = [
                 line.split("\t")
                 for line in cli_log.read_text(encoding="utf-8").splitlines()
@@ -999,11 +1604,215 @@ class OfflineInstallTests(unittest.TestCase):
             self.assertFalse(install_root.exists())
             self.assertIn("Install directory deleted", purge.stdout)
 
+    def test_purge_from_installed_copy_allows_owned_target(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            bundle, fake_bin, home = self._create_bundle(root)
+            install_root = root / "installed"
+            result = self._run_installer(
+                bundle, fake_bin, home, install_dir=install_root
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+
+            purge = self._run_installer(
+                install_root,
+                fake_bin,
+                home,
+                "--purge",
+                install_dir=install_root,
+            )
+
+            self.assertEqual(purge.returncode, 0, purge.stderr)
+            self.assertFalse(install_root.exists())
+            self.assertIn("Install directory deleted", purge.stdout)
+
+    def test_purge_normalizes_owned_dot_path_before_deletion(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            bundle, fake_bin, home = self._create_bundle(root)
+            install_root = root / "installed"
+            result = self._run_installer(
+                bundle, fake_bin, home, install_dir=install_root
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+
+            purge = self._run_installer(
+                bundle,
+                fake_bin,
+                home,
+                "--purge",
+                install_dir=f"{install_root}/.",
+            )
+
+            self.assertEqual(purge.returncode, 0, purge.stderr)
+            self.assertFalse(install_root.exists())
+            self.assertIn(f"Install directory deleted: {install_root}", purge.stdout)
+
+    def test_purge_rejects_owned_symlink_before_removing_integrations(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            bundle, fake_bin, home = self._create_bundle(root)
+            install_root = root / "installed"
+            initial = self._run_installer(
+                bundle,
+                fake_bin,
+                home,
+                install_dir=install_root,
+            )
+            self.assertEqual(initial.returncode, 0, initial.stderr)
+            sentinel = install_root / "keep.txt"
+            _write_file(sentinel, "keep\n")
+            install_link = root / "installed-link"
+            install_link.symlink_to(install_root, target_is_directory=True)
+            installed_skill = (
+                home / ".codex" / "skills" / "paper-fetch-skill" / "SKILL.md"
+            )
+            self.assertTrue(installed_skill.is_file())
+
+            purge = self._run_installer(
+                bundle,
+                fake_bin,
+                home,
+                "--purge",
+                install_dir=f"{install_link}/.",
+            )
+
+            self.assertNotEqual(purge.returncode, 0)
+            self.assertIn("symbolic-link install directory", purge.stderr)
+            self.assertTrue(install_link.is_symlink())
+            self.assertEqual(sentinel.read_text(encoding="utf-8"), "keep\n")
+            self.assertTrue(installed_skill.is_file())
+
+    def test_purge_rejects_uninstalled_bundle_root(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            bundle, fake_bin, home = self._create_bundle(Path(tmpdir))
+
+            result = self._run_installer(
+                bundle,
+                fake_bin,
+                home,
+                "--purge",
+                install_dir=bundle,
+            )
+
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn(
+                "without the runtime/python-bin installer marker", result.stderr
+            )
+            self.assertTrue(bundle.is_dir())
+
+    def test_purge_requires_install_marker_for_every_owned_target(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            bundle, fake_bin, home = self._create_bundle(root)
+            uninstalled_target = root / "other-unpacked-bundle"
+            uninstalled_target.mkdir()
+            shutil.copy2(
+                bundle / "offline-manifest.json",
+                uninstalled_target / "offline-manifest.json",
+            )
+            sentinel = uninstalled_target / "keep.txt"
+            _write_file(sentinel, "keep\n")
+            skill = home / ".codex" / "skills" / "paper-fetch-skill" / "SKILL.md"
+            _write_file(skill, "owned user skill\n")
+
+            result = self._run_installer(
+                bundle,
+                fake_bin,
+                home,
+                "--purge",
+                install_dir=uninstalled_target,
+            )
+
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn(
+                "without the runtime/python-bin installer marker",
+                result.stderr,
+            )
+            self.assertEqual(sentinel.read_text(encoding="utf-8"), "keep\n")
+            self.assertTrue(skill.is_file())
+
+    def test_purge_rejects_home_before_removing_integrations(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            bundle, fake_bin, home = self._create_bundle(root)
+            managed = textwrap.dedent(
+                """
+                keep setting
+                # BEGIN paper-fetch offline managed
+                export PAPER_FETCH_ENV_FILE="/old/offline.env"
+                # END paper-fetch offline managed
+                """
+            ).lstrip()
+            _write_file(home / ".zshrc", managed)
+            skill = home / ".codex" / "skills" / "paper-fetch-skill" / "SKILL.md"
+            _write_file(skill, "owned user skill\n")
+
+            result = self._run_installer(
+                bundle,
+                fake_bin,
+                home,
+                "--purge",
+                install_dir=home,
+                shell="/bin/zsh",
+            )
+
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("Refusing to purge HOME", result.stderr)
+            self.assertTrue(home.is_dir())
+            self.assertTrue(skill.is_file())
+            self.assertEqual((home / ".zshrc").read_text(encoding="utf-8"), managed)
+
+    def test_purge_rejects_home_ancestor_before_removing_integrations(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            bundle, fake_bin, home = self._create_bundle(root)
+            skill = home / ".codex" / "skills" / "paper-fetch-skill" / "SKILL.md"
+            _write_file(skill, "owned user skill\n")
+
+            result = self._run_installer(
+                bundle,
+                fake_bin,
+                home,
+                "--purge",
+                install_dir=root,
+            )
+
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("ancestor of HOME", result.stderr)
+            self.assertTrue(root.is_dir())
+            self.assertTrue(skill.is_file())
+
+    def test_purge_requires_owned_target_manifest_before_removing_integrations(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            bundle, fake_bin, home = self._create_bundle(root)
+            unowned_target = root / "unowned"
+            _write_file(unowned_target / "keep.txt", "keep\n")
+            skill = home / ".codex" / "skills" / "paper-fetch-skill" / "SKILL.md"
+            _write_file(skill, "owned user skill\n")
+
+            result = self._run_installer(
+                bundle,
+                fake_bin,
+                home,
+                "--purge",
+                install_dir=unowned_target,
+            )
+
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("without an owned offline-manifest.json", result.stderr)
+            self.assertTrue((unowned_target / "keep.txt").is_file())
+            self.assertTrue(skill.is_file())
+
     def test_matching_manifest_and_interpreter_tags_are_accepted(self) -> None:
         for python_version, python_tag in (
             ("3.11.9", "cp311"),
             ("3.12.7", "cp312"),
             ("3.13.3", "cp313"),
+            ("3.14.0", "cp314"),
         ):
             with (
                 self.subTest(python_tag=python_tag),

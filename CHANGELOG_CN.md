@@ -6,6 +6,82 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+### 新增
+
+- 以 `Dictation354/paper-fetch-skill` v4.1.0
+  (`fc3bd96e8d781667a2e86e90dc6e8e35a8a26fa7`) 为基线重建 macOS
+  适配合约、validator、Windows / WSL contract gate 和分层审计矩阵；旧 v1
+  合约不再照搬。新增的维护文档说明如何在最新 `upstream/main` 上重放独立适配
+  提交，并明确普通 CI 会在 Ubuntu / Windows 执行 portable gate、`/mnt/*` WSL
+  checkout 只能提供 validator-only 证据。
+- 新增 macOS 安装前的最低系统版本、manifest/checksum、标准 GIL CPython
+  ABI/解释器架构、递归 quarantine 和用户写入顺序检查；构建器还会在 staging
+  清理前拒绝路径穿越包名、危险构建根和没有 ownership marker 的非空目录；
+  临时 wheelhouse 保持在 owned staging 且不进入产物，正式 artifact 采用同目录
+  临时文件原子发布。`--user-config` 使用
+  `~/Library/Application Support/paper-fetch/.env`，safe purge 会拒绝 `/`、
+  HOME 及其祖先、尚未安装的 bundle root 或没有匹配 ownership manifest 的
+  目标；普通安装同样只允许不存在、空目录或同时带 schema 3 manifest 与
+  `runtime/python-bin` marker 的目标。合法升级保留 `offline.env` 和用户配置
+  非 managed 内容，卸载清理 managed block；Zsh 启动文件为 symlink 时保留链接。
+  checksum 清单现在必须精确覆盖 bundle 中全部 regular file，payload symlink 与
+  未列出的附加 payload 都会在用户写入前拒绝；`--purge` 也无条件拒绝 symlink
+  形式的入口。
+
+### 变更
+
+- macOS CPython 3.11–3.14 arm64 离线矩阵固定到 `macos-15`，manifest 声明最低
+  macOS 15.0；四个 tarball 均运行原生安装 verifier，缺少 artifact 会令 job
+  失败。原生 texmath 会携带可迁移的非系统 dylib，使用
+  `@rpath` / `@loader_path` 并进行 ad-hoc codesign，verifier 通过
+  安全 `tarfile.data_filter` 解包、`file -b`、`lipo -archs`、canonical
+  dependency containment、LC_RPATH 和递归闭包检查；随包 Playwright Node
+  仅在闭包通过后实际执行 `--version`。递归 `xattr` 检查发生权限/I/O 错误时
+  也会 fail closed；匹配过程不使用早退管道，并加入大体积 provenance 输出
+  回归，避免 `set -o pipefail` 下的 `SIGPIPE` 漏判。
+- 同步 README、部署和文档索引，区分 Windows、WSL 与原生 Mac 证据；Windows /
+  WSL 绿灯不能替代 Mach-O、`/bin/zsh`、`xattr` 或 Gatekeeper 的原生
+  `macos-15` gate。原生 verifier 实际覆盖嵌套 quarantine、`.zshrc` symlink、
+  owned upgrade 和 user-config；`/var` ↔ `/private/var` cache alias 由原生 CI
+  精确测试。旧上游 `v4.1.0` 标签不可移动或复用，发布本 fork 适配必须提升版本
+  并创建新标签；不可变标签重跑必须先通过源码 checkout 自身的当前 Mac contract，
+  因此不能靠 overlay 把无合约的上游 `v4.1.0` 改造成适配发行版。
+- 普通 CI 的 `macos-15` job 现在显式准备固定的官方 Camoufox
+  `152.0.4-beta.28` app bundle，并串行启动临时与持久 context。原生测试只接受
+  当前用户固定的 managed cache，且在调用 Camoufox 前验证 compatibility flag、
+  active config 与 browser 目录 containment，避免把任意目录交给 package manager
+  清理。
+- browser/full extra 与 lockfile 精确固定 `camoufox==0.5.4`，保证原生 Mac
+  launch gate 与离线产物使用同一 package API。POSIX 构建器还会核验下载 wheel
+  METADATA 与 installed distribution，并把版本写入 offline manifest。
+  POSIX/Windows tooling ref 都必须是
+  完整 commit SHA，只复制精确 packaging-tool 路径且不复制 Python wheel source；
+  manifest 会分别记录源码 `git_revision` 和可选 `tooling_revision`。
+
+### 修复
+
+- 修复并发或续跑 CLI batch 在结果缺少标题和 DOI 时争用
+  `unknown_unknown_article.*` 的问题。主输出文件名现在回退到规范化 query 的
+  16 位 SHA-256 摘要，在不向文件名暴露完整 query URL 的同时继续保持
+  no-overwrite 安全语义。
+- 修复原生 macOS 上已预置的官方 Camoufox app bundle 无法启动的问题：默认
+  managed runtime 继续以 `download_if_missing=False` 保持普通 fetch 不联网下载，
+  但不再把 `Contents/MacOS/camoufox` 误作 custom executable 传回 Camoufox，
+  从而避免错误查找 `Contents/MacOS/properties.json`；临时 fetch/preflight 和
+  持久 auth context 均覆盖该规则，显式 binary override 仍保持透传。
+- 修复 macOS 把 `tempfile` scope 暴露为 `/var/...` 或 `/tmp/...`、而文件
+  canonical path 为 `/private/var/...` 或 `/private/tmp/...` 时 MCP cache index、fetch-envelope 和 resource
+  错误 miss 的问题；等价根路径现在共享同一安全 scope，目录内 symlink 和
+  scope 外文件仍会拒绝。
+
+### 限制
+
+- 离线 runtime 包含 Camoufox / Playwright Python 包，但不包含 Camoufox 浏览器
+  binary，普通 fetch 不会自动下载。进入受限网络或离线环境前需联网用离线
+  runtime 执行 `python -m camoufox fetch`，再运行
+  `paper-fetch browser-preflight` 验证；预置后真正断网的 Camoufox launch
+  仍是开放审计项，因此不宣称完整离线浏览器支持。
+
 ## 4.1.0 - 2026-07-29
 
 ### 新增

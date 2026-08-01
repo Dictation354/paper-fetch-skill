@@ -119,3 +119,78 @@ jobs:
         with:
           name: python-distributions
           path: dist/*
+
+  macos-contract-portable:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: ./.github/actions/setup-python-deps
+        with:
+          python-version: "3.11"
+          full: "true"
+      - name: Run Linux macOS contract gate
+        if: ${{ runner.os == 'Linux' }}
+        run: scripts/test-macos-contract.sh
+      - name: Run Windows macOS contract gate
+        if: ${{ runner.os == 'Windows' }}
+        shell: pwsh
+        run: scripts/test-macos-contract.ps1 -Python .venv/Scripts/python.exe
+
+  macos-native:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: ./.github/actions/setup-python-deps
+        with:
+          python-version: "3.14"
+          full: "true"
+      - name: Validate macOS adaptation contract
+        run: python scripts/validate_macos_adaptation.py
+      - name: Require native Apple Silicon runner
+        run: test "$(uname -m)" = "arm64"
+      - name: Prepare pinned official Camoufox runtime explicitly
+        run: uv run python -m camoufox fetch official/152.0.4-beta.28
+      - name: Verify official Camoufox macOS bundle contexts
+        env:
+          PAPER_FETCH_RUN_NATIVE_CAMOUFOX_TEST: "1"
+        run: >-
+          PYTHONPATH=src uv run pytest
+          tests/integration/test_camoufox_native_macos.py -q -n 0
+      - name: Verify native macOS filesystem alias semantics
+        run: |
+          PYTHONPATH=src uv run pytest \
+            tests/unit/test_cache_index_semantics.py::CacheIndexSemanticsTests::test_cache_scope_accepts_equivalent_filesystem_alias_for_root \
+            -q
+      - name: Set up pinned Haskell toolchain
+        id: formula-haskell
+        uses: haskell-actions/setup@cd0d9bdd65b20557f41bea4dbe43d0b5fbbfe553 # v2.11.0
+        with:
+          ghc-version: "9.10.3"
+          cabal-version: "3.12.1.0"
+      - name: Cache Cabal formula dependencies
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ steps.formula-haskell.outputs.cabal-store }}
+          key: cabal-macOS-ARM64-ghc-9.10.3-texmath-0.13.2
+      - name: Build native macOS arm64 offline package
+        env:
+          PYTHON_BIN: python
+          MACOSX_DEPLOYMENT_TARGET: "15.0"
+        run: |
+          scripts/build-offline-package.sh --output-dir dist
+          test -f dist/paper-fetch-skill-offline-macos-arm64-cp314.tar.gz
+      - name: Verify native macOS package
+        env:
+          PAPER_FETCH_OFFLINE_SKIP_FETCH_SMOKE: "1"
+        run: |
+          scripts/verify-offline-package.sh \
+            dist/paper-fetch-skill-offline-macos-arm64-cp314.tar.gz
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: macos-offline-native-cp314
+          path: dist/paper-fetch-skill-offline-macos-arm64-cp314.tar.gz
+          if-no-files-found: error

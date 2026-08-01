@@ -149,6 +149,8 @@ paper-fetch fetch --query-file ./queries.txt \
 - `json`：`<output-dir>/<paper-stem>.json`
 - `both`：`<output-dir>/<paper-stem>.both.json`
 
+论文元数据无法提供标题且 query 也不含 DOI 时，`paper-stem` 使用规范化 query 的 16 位 SHA-256 摘要（例如 `unknown_unknown_article_<digest>`）。该回退在并发和续跑之间保持稳定，避免不同 URL 结果争用同一个匿名文件名，也不会把完整 query 写入文件名。
+
 如果未提供 `--output-dir`，CLI 使用默认下载目录。默认事件文件是 `<output-dir>/batch-results.jsonl`，可用 `--batch-results <path>` 覆盖；原子 run 摘要默认写在事件文件同目录的 `run-manifest.json`，可用 `--run-manifest <path>` 覆盖。JSONL 每行是一条 schema v2 attempt record；旧的 `index`、`query`、`status`、`doi`、`source`、`output_path`、`saved_markdown_path`、`warnings` 和 `error` 九个顶层字段保持原名和原语义，旧消费者可以继续只读取这些字段。v2 只做增量扩展，不要求消费者一次理解所有新增字段。
 
 ```bash
@@ -315,7 +317,7 @@ CLI 先在 run lock 内执行只读审计。只有 query、工具版本和关键
 - 显式 `--output -` 会强制打印到 stdout，即使同时提供 `--output-dir`。
 - 显式 `--output <path>` 会把主输出写到该路径，`--output-dir` 只作为 artifact / 资产目录。
 
-当 `--output-dir` 承接主输出时，默认文件名来自安全化论文 stem：优先使用首作者姓氏、可选 `_et_al`、年份和标题；元数据不足时回退 DOI 或标题。格式决定后缀：
+当 `--output-dir` 承接主输出时，默认文件名来自安全化论文 stem：优先使用首作者姓氏、可选 `_et_al`、年份和标题；元数据不足时回退 query 中的 DOI，仍无法识别时使用规范化 query 的 16 位 SHA-256 摘要。格式决定后缀：
 
 | 格式 | 主输出文件 |
 | --- | --- |
